@@ -1,5 +1,6 @@
 package com.chengyinhub.business.task;
 
+import com.chengyinhub.common.config.RestoreDispatchGuard;
 import com.chengyinhub.business.domain.RefundApplication;
 import com.chengyinhub.business.mapper.RefundApplicationMapper;
 import com.chengyinhub.business.service.IRefundPayoutService;
@@ -53,6 +54,9 @@ public class RefundReconcileTask {
         // 保证金与报名退款队列隔离；双方仍复用同一已注册调度入口。
         IllegalStateException depositFailure = null;
         try { coopInviteService.reconcileDepositRefunds(); }
+        catch (RestoreDispatchGuard.Blocked paused) {
+            log.info("保证金退款派发暂停 reason=RECOVERY_DISPATCH_BLOCKED");
+        }
         catch (Exception e) {
             log.error("保证金退款对账失败", e);
             depositFailure = new IllegalStateException("保证金退款对账失败，报名退款已继续处理", e);
@@ -107,6 +111,8 @@ public class RefundReconcileTask {
                         String refundNo = r.getRefundNo();
                         if ((refundNo == null || refundNo.trim().isEmpty())
                                 && "registration".equals(r.getSourceType()) && r.getSourceId() != null) {
+                            // A missing restored number is not authority to allocate RF+id again.
+                            if (RestoreDispatchGuard.isRestoreMode()) continue;
                             refundNo = "RF" + r.getSourceId();
                             if (refundApplicationMapper.ensureRefundNo(r.getId(), refundNo) != 1) {
                                 continue;
@@ -119,6 +125,8 @@ public class RefundReconcileTask {
                         wechatPayService.refreshPayoutFromWx(refundNo);
                     }
                     done++;
+                } catch (RestoreDispatchGuard.Blocked paused) {
+                    log.info("退款派发暂停 refundId={} reason=RECOVERY_DISPATCH_BLOCKED", r.getId());
                 } catch (Exception e) {
                     log.error("退款对账处理失败 refundId={} refundNo={}", r.getId(), r.getRefundNo(), e);
                 }

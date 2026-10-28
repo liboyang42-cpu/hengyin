@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.CoopOrderStationFulfillmentMapper">
+    <sql id="receiptColumns">id,order_id as orderId,topic_id as topicId,beneficiary_member_id as beneficiaryMemberId,
+        registration_id as registrationId,station_id as stationId,verification_audit_id as verificationAuditId,
+        sales_basis_amount as salesBasisAmount,order_terms_sha256 as orderTermsSha256,source_fingerprint as sourceFingerprint,
+        fulfilled_at as fulfilledAt,recorded_at as recordedAt</sql>
+    <sql id="auditColumns">id,domain_type as domainType,domain_id as domainId,owner_member_id as ownerMemberId,
+        actor_type as actorType,actor_member_id as actorMemberId,actor_role_code as actorRoleCode,action,target_type as targetType,
+        target_id as targetId,relation_id as relationId,before_json as beforeJson,after_json as afterJson,request_id as requestId,create_time as createTime</sql>
+    <!-- Routing only, before business locks; never authorizes a fact or mutation. -->
+    <select id="selectAuditRegistrationLocation" useCache="false" flushCache="true" resultType="com.chengyinhub.business.domain.CmsRegistration">
+        select r.id,r.owner_type as ownerType,r.owner_id as ownerId from business_audit_event a
+        join cms_registration r on r.id=a.domain_id
+        where a.id=#{auditId} and binary a.domain_type=binary 'REGISTRATION'
+          and binary a.target_type=binary 'CMS_REGISTRATION' and a.target_id=r.id
+    </select>
+    <select id="selectRegistrationForUpdate" useCache="false" flushCache="true" resultType="com.chengyinhub.business.domain.CmsRegistration">
+        select id,owner_type as ownerType,owner_id as ownerId,member_id as memberId,ticket_id as ticketId,
+            payable_amount as payableAmount,payment_status as paymentStatus,registration_status as registrationStatus,
+            verification_status as verificationStatus,verification_time as verificationTime,verifier_id as verifierId,
+            purchase_kind as purchaseKind,order_num as orderNum from cms_registration where id=#{registrationId} for update
+    </select>
+    <select id="selectStationForUpdate" useCache="false" flushCache="true" resultType="com.chengyinhub.business.domain.CmsRegistrationMerchant">
+        select id,topic_id as topicId,member_id as memberId,audit_status as auditStatus,del_flag as delFlag
+        from cms_registration_merchant where id=#{stationId} for update
+    </select>
+    <select id="selectAuditForUpdate" useCache="false" flushCache="true" resultType="com.chengyinhub.business.domain.BusinessAuditEvent">
+        select <include refid="auditColumns"/> from business_audit_event where id=#{auditId} for update
+    </select>
+    <select id="selectVerificationEventsForUpdate" useCache="false" flushCache="true" resultType="com.chengyinhub.business.domain.BusinessAuditEvent">
+        select <include refid="auditColumns"/> from business_audit_event
+        where binary domain_type=binary 'REGISTRATION' and domain_id=#{registrationId}
+          and binary target_type=binary 'CMS_REGISTRATION' and target_id=#{registrationId}
+          and binary action in ('REGISTRATION_STATION_REDEEM','REGISTRATION_REDEEM','GROUP_MEMBER_REDEEM','REGISTRATION_VERIFY_REVERSE')
+        order by id for update
+    </select>
+    <select id="selectEffectiveOrdersForUpdate" useCache="false" flushCache="true" resultType="com.chengyinhub.business.domain.CoopOrder">
+        select id,invite_id as inviteId,topic_id as topicId,from_id as fromId,to_id as toId,to_type as toType,
+            share_mode as shareMode,share_rate as shareRate,fixed_fee as fixedFee,terms_version as termsVersion,
+            role_snapshot as roleSnapshot,scope_type_snapshot as scopeTypeSnapshot,scope_id_snapshot as scopeIdSnapshot,
+            eligible_purchase_kinds_snapshot as eligiblePurchaseKindsSnapshot,fulfillment_evidence_rule_snapshot as fulfillmentEvidenceRuleSnapshot,
+            terms_snapshot as termsSnapshot,status,del_flag as delFlag,create_time as createTime
+        from coop_order where topic_id=#{topicId} and status=0 and del_flag=0
+        order by id for update
+    </select>
+    <select id="selectByAuditForUpdate" useCache="false" flushCache="true" resultType="com.chengyinhub.business.domain.CoopOrderStationFulfillment">
+        select <include refid="receiptColumns"/> from coop_order_station_fulfillment where verification_audit_id=#{auditId} for update
+    </select>
+    <select id="selectByOrderForUpdate" useCache="false" flushCache="true" resultType="com.chengyinhub.business.domain.CoopOrderStationFulfillment">
+        select <include refid="receiptColumns"/> from coop_order_station_fulfillment where order_id=#{orderId} order by registration_id,id for update
+    </select>
+    <!-- The mandatory writer also locks/checks the current verification generation and full source payload.
+         Scalar FKs cannot prove this same-topic/source relationship; no generic/raw insert is exposed. -->
+    <insert id="insertConfirmed" useGeneratedKeys="true" keyProperty="id">
+        insert into coop_order_station_fulfillment
+            (order_id,topic_id,beneficiary_member_id,registration_id,station_id,verification_audit_id,
+             sales_basis_amount,order_terms_sha256,source_fingerprint,fulfilled_at,recorded_at)
+        select o.id,o.topic_id,o.to_id,r.id,s.id,a.id,#{salesBasisAmount},#{orderTermsSha256},#{sourceFingerprint},a.create_time,#{recordedAt}
+        from coop_order o join coop_invite i on i.id=o.invite_id
+        join cms_registration_merchant s on s.id=#{stationId}
+        join cms_registration r on r.id=#{registrationId}
+        join business_audit_event a on a.id=#{verificationAuditId}
+        where o.id=#{orderId} and o.topic_id=#{topicId} and o.to_id=#{beneficiaryMemberId}
+          and binary o.to_type=binary 'merchant' and binary o.role_snapshot=binary 'SUPPLY'
+          and binary o.scope_type_snapshot=binary 'TOPIC' and o.scope_id_snapshot=o.topic_id
+          and binary o.fulfillment_evidence_rule_snapshot=binary 'REGISTRATION_SCAN'
+          and binary o.eligible_purchase_kinds_snapshot=binary 'GUIDED_TICKET' and o.status=0 and o.del_flag=0
+          and i.topic_id=o.topic_id and i.from_id=o.from_id and i.to_id=o.to_id and binary i.to_type=binary 'merchant'
+          and i.invite_type=0 and i.status=1 and i.del_flag=0 and i.supply_station_id=s.id
+          and s.topic_id=o.topic_id and s.member_id=o.to_id and s.audit_status=1 and s.del_flag=0
+          and r.owner_type=1 and r.owner_id=o.topic_id and r.payment_status=2 and r.registration_status=2
+          and r.verification_status=1 and r.verifier_id=o.to_id and r.purchase_kind=1 and r.payable_amount=#{salesBasisAmount}
+          and binary a.domain_type=binary 'REGISTRATION' and a.domain_id=r.id
+          and binary a.target_type=binary 'CMS_REGISTRATION' and a.target_id=r.id
+          and binary a.action=binary 'REGISTRATION_STATION_REDEEM' and a.owner_member_id=o.to_id and a.relation_id=s.id
+          and a.create_time=#{fulfilledAt} and a.create_time &gt;= o.create_time
+          and json_valid(o.terms_snapshot) and binary sha2(o.terms_snapshot,256)=binary #{orderTermsSha256}
+          and binary json_unquote(json_extract(o.terms_snapshot,'$.supplyBillingScope.version'))=binary 'REGISTRATION_STATION_V1'
+          and cast(json_unquote(json_extract(o.terms_snapshot,'$.supplyBillingScope.stationId')) as unsigned)=s.id
+          and cast(json_unquote(json_extract(o.terms_snapshot,'$.supplyBillingScope.topicId')) as unsigned)=o.topic_id
+          and cast(json_unquote(json_extract(o.terms_snapshot,'$.supplyBillingScope.merchantMemberId')) as unsigned)=o.to_id
+    </insert>
+    <!-- No cms_registration_scan or live station configuration is a V1 fallback or read-time attribution. -->
+    <select id="selectV1CandidatesForUpdate" useCache="false" flushCache="true" resultType="com.chengyinhub.business.domain.dto.CoopSettlementCandidate">
+        select f.id as stationFulfillmentId,r.id as registrationId,r.owner_type as ownerType,r.owner_id as ownerId,
+            f.topic_id as sourceTopicId,r.order_num as orderQuantity,r.registration_status as registrationStatus,
+            r.payment_status as paymentStatus,r.verification_status as verificationStatus,
+            case r.purchase_kind when 1 then 'GUIDED_TICKET' else null end as purchaseKind,
+            f.sales_basis_amount as eligibleSalesSnapshot,
+            case when t.id is not null then true else false end as ticketOwnerMatches,
+            t.start_time as fulfillmentStartInclusive,t.end_time as fulfillmentEndExclusive,
+            true as scopeCovered,false as organizerScopeCovered,true as merchantScanPresent,f.fulfilled_at as merchantScanTime,
+            false as groupEvidenceMatchesOrder,r.verification_time as verificationTime
+        from coop_order_station_fulfillment f join cms_registration r on r.id=f.registration_id
+        left join oms_ticket t on t.id=r.ticket_id and t.owner_type=r.owner_type and t.owner_id=r.owner_id
+            and t.del_flag=0 and t.mode=1 and binary t.sub_type=binary 'guided'
+        where f.order_id=#{snapshot.orderId} and f.topic_id=#{snapshot.topicId}
+          and f.station_id=#{snapshot.billingStationId} and f.beneficiary_member_id=#{snapshot.beneficiaryId}
+          and binary f.order_terms_sha256=binary #{snapshot.orderTermsSha256}
+          and r.owner_type=1 and r.owner_id=f.topic_id
+          and f.fulfilled_at &gt;= #{snapshot.fulfillmentStartInclusive} and f.fulfilled_at &lt; #{settlementCutoff}
+        order by r.id,f.id for update
+    </select>
+</mapper>

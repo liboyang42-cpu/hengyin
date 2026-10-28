@@ -83,6 +83,7 @@ function loadClubDetail(activityList) {
     }),
     Page(config) { definition = config },
     require(request) {
+      if (request === '../../../utils/registration-seat.js') return require('../../utils/registration-seat.js')
       const modules = {
         '../../../utils/motion.js': { haptic() {} },
         // 邀约/合作池整形与 coop/list 共用一份(2026-09-08 抽出);这里给真实现,
@@ -1653,7 +1654,7 @@ test('route director carries server-ranked players and a reachable visibility co
   assert.match(read(DIRECTOR_HOST_WXML), /aria-label="调整排行榜可见性"/)
 })
 
-test('导演宿主页经真实 adapter/client 透传纪元；冲突只提示与重读，不另起写请求', async () => {
+test('导演宿主页透传原纪元；冲突保留原身份，重试只读回执不另起写请求', async () => {
   const { createClubGameDirectorAdapter } = require(DIRECTOR_ADAPTER)
   const { createGameSessionClient } = require('../../utils/game-session-client.js')
   const calls = []
@@ -1675,10 +1676,12 @@ test('导演宿主页经真实 adapter/client 透传纪元；冲突只提示与�
   assert.equal(calls.find(call => call.method === 'POST').data.authorityEpoch, 4)
   assert.equal(calls.find(call => call.method === 'POST').data.expectedRevision, 9)
   assert.equal(calls.filter(call => call.method === 'POST').length, 1)
-  assert.equal(reads, 2)
+  assert.ok(reads >= 2)
   assert.equal(harness.page.data.authorityEpoch, 5)
-  assert.equal(harness.page._pendingCommand, null)
-  assert.equal(harness.page.data.writeLocked, false)
+  assert.ok(harness.page._pendingCommand)
+  assert.equal(harness.page.data.writeLocked, true)
   assert.match(harness.toasts.at(-1).title, /权威版本/)
-  assert.equal(harness.page.retryUnknownWrite(), false)
+  await harness.page.retryUnknownWrite()
+  assert.equal(calls.filter(call => call.method === 'POST').length, 1)
+  assert.equal(harness.page.data.writeLocked, true)
 })

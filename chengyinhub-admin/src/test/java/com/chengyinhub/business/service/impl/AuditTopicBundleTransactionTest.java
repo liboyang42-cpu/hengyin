@@ -95,6 +95,7 @@ class AuditTopicBundleTransactionTest {
         topic.setId(77L);
         topic.setMemberId(5L);
         when(topics.selectCmsTopicById(77L)).thenReturn(topic);
+        when(topics.selectCmsTopicByIdForUpdate(77L)).thenReturn(topic);
         when(topics.updateCmsTopic(any())).thenAnswer(invocation -> {
             CmsTopic update = invocation.getArgument(0);
             return jdbc.update("update topic set status=?,user_status=? where id=77",

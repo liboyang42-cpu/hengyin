@@ -73,4 +73,7 @@ public interface ClubMembershipMapper {
     List<ClubMembershipRefundReview> selectRefundReviewsByMember(@Param("clubId") Long clubId,
                                                                  @Param("memberId") Long memberId);
     int insertRefundReview(ClubMembershipRefundReview review);
+    int bindInvoicePaymentProof(@Param("id") Long id, @Param("transactionId") String transactionId,
+            @Param("amountFen") Long amountFen, @Param("snapshotHash") String snapshotHash,
+            @Param("factId") Long factId, @Param("factHash") String factHash);
 }

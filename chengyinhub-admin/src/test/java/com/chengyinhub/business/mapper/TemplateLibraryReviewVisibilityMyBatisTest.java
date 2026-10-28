@@ -104,7 +104,31 @@ class TemplateLibraryReviewVisibilityMyBatisTest {
         }
     }
 
+    @Test
+    void interactionProjectionUsesCanonicalOwnerAndParticipatesInAuditIdentity() throws Exception {
+        DriverManagerDataSource ds = dataSource(); JdbcTemplate jdbc = new JdbcTemplate(ds);
+        seed(jdbc);
+        jdbc.update("insert into cms_member_template(id,member_id,interaction_type) values (701,11,'hidden_menu')");
+        jdbc.update("update cms_template_library set member_template_id=701 where id=5");
+        try (SqlSession session = factory(ds).openSession(true)) {
+            CmsTemplateLibraryMapper mapper = session.getMapper(CmsTemplateLibraryMapper.class);
+            CmsTemplateLibrary row = mapper.selectCmsTemplateLibraryById(5L);
+            assertEquals("hidden_menu", row.getInteractionType());
+            String reviewed = com.chengyinhub.business.service.support.TemplateAuditSnapshot.market(row);
+            assertEquals("hidden_menu", mapper.selectByMemberTemplateForUpdate(701L).get(0).getInteractionType());
+            assertEquals("hidden_menu", mapper.selectTemplatesByCategoryIds(List.of(1L)).get(0).getInteractionType());
+            jdbc.update("update cms_member_template set interaction_type='city_story_card' where id=701");
+            session.clearCache();
+            String changed = com.chengyinhub.business.service.support.TemplateAuditSnapshot.market(mapper.selectCmsTemplateLibraryById(5L));
+            assertEquals(false, com.chengyinhub.business.service.support.TemplateAuditSnapshot.matches(reviewed, changed));
+            jdbc.update("update cms_member_template set member_id=12 where id=701");
+            session.clearCache();
+            org.junit.jupiter.api.Assertions.assertNull(mapper.selectCmsTemplateLibraryById(5L).getInteractionType());
+        }
+    }
+
     private void seed(JdbcTemplate jdbc) {
+        jdbc.execute("create table cms_member_template(id bigint primary key, member_id bigint, interaction_type varchar(32))");
         jdbc.execute("create table cms_template_library("
                 + "id bigint auto_increment primary key,"
                 + "member_id bigint, member_template_id bigint, category_id bigint,"

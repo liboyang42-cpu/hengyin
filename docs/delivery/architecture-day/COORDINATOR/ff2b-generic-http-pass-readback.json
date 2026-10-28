@@ -1,0 +1,76 @@
+{
+  "source_sha": "ff2b0ea1cf0ca3f097de446b5eda85beb3fad1a0",
+  "run": 40152207411,
+  "job": 121045899589,
+  "scope": "PARTIAL_DIAGNOSTIC_SCOPE_GENERIC_ONLY",
+  "artifacts": [
+    {
+      "id": 12583212464,
+      "zip_sha256": "5ff1cffc9e46e7f935da01c330b66aac36035049f6de83bfc35e5c7595cae184",
+      "crc": "PASS"
+    },
+    {
+      "id": 12582882834,
+      "zip_sha256": "fac4b1c2613e7418a6307acab98c818d085db3eb1ecf626c2b5c71d06019db64",
+      "crc": "PASS"
+    }
+  ],
+  "root_verified_sanitized_xml_cases": 26,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "duplicates": 0,
+  "receipt": {
+    "classes": [
+      "GenericGameplayHttpE2eIT"
+    ],
+    "sourceSha": "ff2b0ea1cf0ca3f097de446b5eda85beb3fad1a0",
+    "profile": "github-hosted",
+    "database": "cy_e2e_w1_http_20261025095326_3703_22962",
+    "state": "PASS",
+    "xmlVerified": true,
+    "publicXmlDerivedSanitized": true,
+    "originalXml": {
+      "GenericGameplayHttpE2eIT": {
+        "bytes": 598309,
+        "sha256": "8cae48295d2ca536d0c25baf1c6a0672004bc6cb610830e1b5b9f9963c9128b2"
+      }
+    },
+    "migrationAccepted": false,
+    "businessAccepted": false,
+    "fixtureReportVerified": true,
+    "fixtureFiles": 299,
+    "fixtureReportSha256": "469e00525e02b34d49317044c361f0db31e00c2183c3e9daf61fe26708a7e9b2",
+    "tests": 26,
+    "javaExit": 0,
+    "cleanup": {
+      "mysqlAbsent": true,
+      "redisStoppedAndPortFree": true
+    }
+  },
+  "summary": {
+    "sourceSha": "ff2b0ea1cf0ca3f097de446b5eda85beb3fad1a0",
+    "state": "PASS_PARTIAL_DIAGNOSTIC_SCOPE",
+    "scope": "PARTIAL_DIAGNOSTIC_SCOPE",
+    "classes": {
+      "GenericGameplayHttpE2eIT": 26
+    },
+    "tests": 26,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cleanupAllVerified": true,
+    "businessAccepted": false,
+    "migrationAccepted": false,
+    "completeHttpSuiteAccepted": false
+  },
+  "root_original_xml_bytes_downloaded": false,
+  "prior16failedidentities": "All included in exactreviewed26 verifiedPASS",
+  "not_repeated": [
+    "FreezeGame8andFreezeReuse2passedatf194",
+    "corestandard/storage",
+    "pool/authclosedsubset"
+  ],
+  "all36_on_same_sha": false,
+  "full_governance_complete": false
+}

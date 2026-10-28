@@ -1,0 +1,46 @@
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/LlmClientConfig.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/LlmClientConfig.java
+@@ -6,6 +6,7 @@
+ import org.springframework.context.annotation.Configuration;
+
+ import com.chengyinhub.common.config.AiModelConfig;
++import com.chengyinhub.common.config.AiVoiceConfig;
+ import com.chengyinhub.common.config.AiProviderProperties;
+
+ /**
+@@ -20,11 +21,13 @@
+     private static final Logger log = LoggerFactory.getLogger(LlmClientConfig.class);
+
+     @Bean
+-    public AiHttpAdmission aiHttpAdmission(AiModelConfig text, VisionModelConfig vision, AiProviderProperties props)
++    public AiHttpAdmission aiHttpAdmission(AiModelConfig text, VisionModelConfig vision, AiProviderProperties props,
++            AiVoiceConfig voice)
+     {
+         java.util.List<String> endpoints = new java.util.ArrayList<>();
+         addEndpoint(endpoints, text.getBaseUrl());
+         addEndpoint(endpoints, vision.getBaseUrl());
++        endpoints.add(voice.baseUrl()); // Fixed startup voice origin; the same registry/permits as text and vision.
+         AiProviderProperties.ProviderConfig minimax = props.getProviders() == null
+                 ? null : props.getProviders().get("minimax");
+         if (minimax != null) addEndpoint(endpoints, minimax.getBaseUrl());
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/AiHttpAdmissionTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/AiHttpAdmissionTest.java
+@@ -2,6 +2,7 @@
+
+ import com.alibaba.fastjson2.JSONObject;
+ import com.chengyinhub.common.config.AiModelConfig;
++import com.chengyinhub.common.config.AiVoiceConfig;
+ import com.chengyinhub.common.config.AiProviderProperties;
+ import com.chengyinhub.common.utils.http.HttpUtils;
+ import com.sun.net.httpserver.HttpServer;
+@@ -149,7 +150,9 @@
+         when(text.getBaseUrl()).thenReturn("https://same.invalid/v1");
+         when(vision.getBaseUrl()).thenReturn("https://SAME.invalid:443/v2");
+         LlmClientConfig config = new LlmClientConfig();
+-        AiHttpAdmission gate = config.aiHttpAdmission(text, vision, props);
++        AiVoiceConfig voice = mock(AiVoiceConfig.class);
++        when(voice.baseUrl()).thenReturn("https://same.invalid/voice");
++        AiHttpAdmission gate = config.aiHttpAdmission(text, vision, props, voice);
+         OpenAiCompatibleLlmClient qwen = (OpenAiCompatibleLlmClient) config.qwenLlmClient(text, gate);
+         OpenAiCompatibleLlmClient deepseek = (OpenAiCompatibleLlmClient) config.deepseekLlmClient(text, gate);
+         OpenAiCompatibleLlmClient vl = (OpenAiCompatibleLlmClient) config.visionLlmClient(vision, gate);

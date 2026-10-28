@@ -1,7 +1,7 @@
 package com.chengyinhub.business.service.impl;
 
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.test.util.ReflectionTestUtils;
+import com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport;
 import org.springframework.transaction.*;
 import org.springframework.transaction.support.SimpleTransactionStatus;
 
@@ -20,10 +20,10 @@ final class WechatPaymentIntentTestSupport extends JdbcTemplate {
 
     static WechatPaymentIntentTestSupport install(WechatPayServiceImpl service, Map<String, BigDecimal> amounts) {
         var jdbc = new WechatPaymentIntentTestSupport(amounts);
-        if (ReflectionTestUtils.getField(service, "jsapiService") == null)
-            ReflectionTestUtils.setField(service, "jsapiService", absentOrderSdk());
-        ReflectionTestUtils.setField(service, "paymentIntentJdbc", jdbc);
-        ReflectionTestUtils.setField(service, "paymentIntentTransactions", new PlatformTransactionManager() {
+        if (WechatVerifiedFactTestSupport.getField(service, "jsapiService") == null)
+            WechatVerifiedFactTestSupport.setField(service, "jsapiService", absentOrderSdk());
+        WechatVerifiedFactTestSupport.setField(service, "paymentIntentJdbc", jdbc);
+        WechatVerifiedFactTestSupport.setField(service, "paymentIntentTransactions", new PlatformTransactionManager() {
             public TransactionStatus getTransaction(TransactionDefinition definition) {
                 if (definition.getPropagationBehavior() != TransactionDefinition.PROPAGATION_REQUIRES_NEW
                         && definition.getPropagationBehavior() != TransactionDefinition.PROPAGATION_REQUIRED) {

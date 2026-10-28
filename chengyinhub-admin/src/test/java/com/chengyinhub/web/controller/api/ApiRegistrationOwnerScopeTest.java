@@ -38,10 +38,10 @@ class ApiRegistrationOwnerScopeTest {
 
     private ApiRegistrationController controllerAs(Long memberId) {
         ApiRegistrationController controller = spy(new ApiRegistrationController());
-        ReflectionTestUtils.setField(controller, "registrationService", registrationService);
-        ReflectionTestUtils.setField(controller, "topicService", mock(ICmsTopicService.class));
-        ReflectionTestUtils.setField(controller, "activityService", mock(ICmsActivityService.class));
-        ReflectionTestUtils.setField(controller, "refundService", refundService);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "registrationService", registrationService);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "topicService", mock(ICmsTopicService.class));
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "activityService", mock(ICmsActivityService.class));
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "refundService", refundService);
         when(registrationService.selectCmsRegistrationList(any())).thenReturn(new ArrayList<>());
         when(refundService.selectRefundList(any())).thenReturn(new ArrayList<>());
         doReturn(memberId).when(controller).getAppUserId();
@@ -52,7 +52,7 @@ class ApiRegistrationOwnerScopeTest {
     @NullSource
     @ValueSource(longs = {0L, -1L, Long.MIN_VALUE})
     void list_非法member一律按未登录拒且不发查询(Long memberId) {
-        AjaxResult res = controllerAs(memberId).myRegistrationList("3", null, null);
+        AjaxResult res = RegistrationQueryTestFixtures.wire(controllerAs(memberId)).myRegistrationList("3", null, null);
 
         assertEquals(500, res.get(AjaxResult.CODE_TAG));
         assertEquals("请先登录", res.get(AjaxResult.MSG_TAG));
@@ -64,7 +64,7 @@ class ApiRegistrationOwnerScopeTest {
     @NullSource
     @ValueSource(longs = {0L, -1L, Long.MIN_VALUE})
     void myJoined_非法member一律按未登录拒且不发查询(Long memberId) {
-        AjaxResult res = controllerAs(memberId).myJoined();
+        AjaxResult res = RegistrationQueryTestFixtures.wire(controllerAs(memberId)).myJoined();
 
         assertEquals(500, res.get(AjaxResult.CODE_TAG));
         assertEquals("请先登录", res.get(AjaxResult.MSG_TAG));
@@ -74,7 +74,7 @@ class ApiRegistrationOwnerScopeTest {
 
     @Test
     void list_合法member只查本人() {
-        AjaxResult res = controllerAs(7L).myRegistrationList("3", null, null);
+        AjaxResult res = RegistrationQueryTestFixtures.wire(controllerAs(7L)).myRegistrationList("3", null, null);
 
         assertEquals(200, res.get(AjaxResult.CODE_TAG));
         ArgumentCaptor<CmsRegistration> query = ArgumentCaptor.forClass(CmsRegistration.class);
@@ -84,7 +84,7 @@ class ApiRegistrationOwnerScopeTest {
 
     @Test
     void myJoined_合法member两类查询都只查本人() {
-        AjaxResult res = controllerAs(7L).myJoined();
+        AjaxResult res = RegistrationQueryTestFixtures.wire(controllerAs(7L)).myJoined();
 
         assertEquals(200, res.get(AjaxResult.CODE_TAG));
         ArgumentCaptor<CmsRegistration> query = ArgumentCaptor.forClass(CmsRegistration.class);

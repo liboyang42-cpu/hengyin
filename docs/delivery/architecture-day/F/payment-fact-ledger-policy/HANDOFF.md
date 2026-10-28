@@ -1,0 +1,21 @@
+# F：B持久验证事实与G原分项storage技术切口
+
+结论：复用既有JAR/raw/class-index/hash回读和精确owner机制，追加3类型/3职责/8单向依赖，原56类型/45职责/52方向完整保留，现59类型/48职责/60方向。独立分支codex/architecture-day-f-payment-fact-ledger-policy，parent `0979b03b594b5b5bbc4ad500c89bca6b3d353d70`。实际变动为owners.json与test_collect_jdeps.py及本目录；无producer/parser/Java/workflow/registry/DDL改动。保留f853写owner修复、Query→Size、原3private Mapper/2whole-table facts/2ecbaseline/locking提案。
+
+实际公共观察源码 `de7f432ec6f0c1c6225168ecf2e4808210de42e0`。完整读WechatVerifiedPaymentFact record、WechatVerifiedPaymentFactService、CoopSettlementOriginalLedger，搜索全部生产caller；8条方向逐文件原blob/SHA256/真实源码行及全部62个literal生产命中见source-evidence.json。source references是证据，不是新完整call graph或observed即approved。
+
+新增精确System owner：B_VERIFIED_PAYMENT_FACT_DTO只绑定domain.dto.WechatVerifiedPaymentFact；B_VERIFIED_PAYMENT_FACT_STORE只绑定service.impl.WechatVerifiedPaymentFactService；G_ORIGINAL_SETTLEMENT_LEDGER只绑定service.impl.CoopSettlementOriginalLedger（前缀均com.chengyinhub.business）。不把service/DTO/Mapper混为同一免检owner；Service的Stored、DTO的Reference/Kind只沿原restrictive binary companion机制，无新包前缀放行。
+
+8条合法方向：SDK→FactStore/FactDTO，PaymentFacade→FactDTO，PaymentOutboundPort→FactDTO，FactStore→FactDTO，GOriginalLedger→FactStore/FactDTO，GClaim→GOriginalLedger。对应SDK记录/查询原事实、公开查询签名Reference、G读requireVerified及Claim原成功冲回/归属委托，证据逐条存在。不是授权所有reader可以recordVerified；classgraph不能区分调用具体方法，本片不按该方向批准任何新经济命令。
+
+反向约束：DTO不依赖事实Store、SDK/router/intent/facade、已核实领域门面或两个具体Mapper；FactStore不反调SDK/领域/G原分项storage；G ledger不反调SDK/资金门面/Claim/Topic God，也不能直接引用B事实Mapper绕过requireVerified。SDK原禁止领域interface补齐实际实现类，避免只禁止接口但改用具体类的确定绕过；全部为de7可核对精确FQN，无包通配。新Mapper forbidden reference不是新增private port或整表写权证明，其他未登记caller仍不由此批准。
+
+A集成接缝交root转A核对：de7 RefundServiceImpl:400/408和CmsRegistrationServiceImpl:2165/2171仍用旧register/process；新registerVerified/processVerified全生产Java literal搜索仅4个接口/实现定义。直接FactStore caller有SDK、WxPaymentCallbackInboxServiceImpl和G ledger；未观察到A Refund/CmsRegistration直接依赖FactDTO/Service，不杜撰A新owner或A→B许可。已请求明确A类/后续SHA；本片不把缺证写成业务已接通或确定运行失败，动态/未推代码未知。不修改A/G源码。读回旧Map不等于已验证new fact binding。
+
+新增6个NOT_COMPILED Python协议方法：8条真实类型方向正控、DTO反向/直接Mapper负控、Store/SDK接口与具体领域负控、G ledger反调与绕存储负控、SDK↔Store有class/hash witness的新增环负控、每个新类型缺全部raw source行仍UNKNOWN。原83producer test方法AST逐个不变；producer89/89通过，全架构205/205、0skip、19.077s，输出见python-tests.txt。所有确定违规经原实际checker读fixture ZIP/index/raw，而非替换verdict；这些是假class字节的明确协议fixture，不冒充真实javac。
+
+六可信文件hash见trusted-files.sha256；除owner外均逐字承接0979，旧baseline未扩。candidate不能自改owner/方向、清scope/producer字节来批准。未知JAR/目标/input/index/hash/位置/raw行均沿原UNKNOWN，不把同System别类输出冒充覆盖。反射/XML动态、注解实际方法、Java调用必经Service、DTO传递不可变/纯读、事务传播/领取/fence/原receipt及金额/资金副作用次序都没有由图证明。
+
+G ledger源码有MANDATORY和requireTransaction护栏，FactStore部分证据写原有REQUIRES_NEW，图无法区分读requireVerified或证据记录/资金事务，更不能证明G未另起资金事务。SDK禁止反调class引用可自动红；原回执/退款绑定/全额与部分分币/负数分项等必须由A/B/G既有受控场景和真实DB验证，本片不冻结待定业务政策。不能声称全图无环。
+
+Java/javac/jdeps/JAR/leaf/MySQL/Redis/模型/CI均NOT_RUN；本VM仅Python/静态。原真实模块9边观察口径不变，不借旧CI绿。root唯一审定后双ref及同源真实编译正反控；配套后置工具将独立固定本新完整verifier，现旧0979工具不得浮动接受它。回退只回退门禁policy，不能把新拒绝写入视为业务批准。无新依赖/job/生产访问/业务schema执行。

@@ -76,12 +76,13 @@ class ApiCoopDepositStatusTest {
         when(service.selectCoopInviteById(7L)).thenReturn(pending, paid);
         when(service.depositOwedParty(pending)).thenReturn(1001L);
         when(pay.queryOrderStatus("DEP7")).thenReturn(java.util.Map.of("out_trade_no", "DEP7", "wx_out_trade_no", "WXP_ALIAS",
-                "trade_state", "SUCCESS", "currency", "CNY", "total", "5000", "transaction_id", "TX7"));
-        when(service.markDepositPaid("DEP7", 5000L, "TX7")).thenReturn(true);
+                "trade_state", "SUCCESS", "currency", "CNY", "total", "5000", "transaction_id", "TX7",
+                "verified_fact_id",Long.toString(reference().id()),"verified_fact_hash",reference().hash()));
+        when(service.markDepositPaid("DEP7", 5000L, "TX7", reference())).thenReturn(true);
         AjaxResult result = controller.depositStatus(Collections.<String, Object>singletonMap("inviteId", 7L));
         assertEquals(200, result.get(AjaxResult.CODE_TAG));
         assertEquals("success", ((java.util.Map<?, ?>) result.get(AjaxResult.DATA_TAG)).get("paymentStatus"));
-        org.mockito.Mockito.verify(service).markDepositPaid("DEP7", 5000L, "TX7");
+        org.mockito.Mockito.verify(service).markDepositPaid("DEP7", 5000L, "TX7", reference());
     }
 
     @Test
@@ -98,7 +99,41 @@ class ApiCoopDepositStatusTest {
         when(pay.queryOrderStatus("DEP7")).thenThrow(new RuntimeException("timeout"));
         assertEquals(409, controller.depositStatus(Collections.<String, Object>singletonMap("inviteId", 7L)).get(AjaxResult.CODE_TAG));
         org.mockito.Mockito.verify(service, org.mockito.Mockito.never()).markDepositPaid(org.mockito.ArgumentMatchers.any(),
-                org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
+                org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    void pendingSuccessWithoutAnExactOriginalReferenceCannotBecomePaid() {
+        CoopInvite pending = invite(1);pending.setDepositOutTradeNo("DEP7");
+        when(service.selectCoopInviteById(7L)).thenReturn(pending);
+        when(service.depositOwedParty(pending)).thenReturn(1001L);
+        when(service.markDepositPaid(org.mockito.ArgumentMatchers.eq("DEP7"),org.mockito.ArgumentMatchers.eq(5000L),
+                org.mockito.ArgumentMatchers.eq("TX7"),org.mockito.ArgumentMatchers.any(com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference.class)))
+                .thenAnswer(call -> {
+                    if (!reference().equals(call.getArgument(3))) throw new IllegalStateException("Original verified reference required");
+                    return true;
+                });
+        for (String missing : new String[]{"verified_fact_id","verified_fact_hash"}) {
+            java.util.Map<String,String> unproven = new java.util.HashMap<>(java.util.Map.of("out_trade_no","DEP7",
+                    "wx_out_trade_no","WXP_ALIAS","trade_state","SUCCESS","currency","CNY","total","5000",
+                    "transaction_id","TX7","verified_fact_id",Long.toString(reference().id()),"verified_fact_hash",reference().hash()));
+            unproven.remove(missing);when(pay.queryOrderStatus("DEP7")).thenReturn(unproven);
+            assertEquals(409,controller.depositStatus(Collections.singletonMap("inviteId",7L)).get(AjaxResult.CODE_TAG));
+            assertEquals(1,pending.getDepositStatus());
+        }
+        // Reference validates ID/hash at construction; missing evidence must never enter the write owner.
+        org.mockito.Mockito.verify(service,org.mockito.Mockito.never()).markDepositPaid(
+                org.mockito.ArgumentMatchers.any(),org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(),org.mockito.ArgumentMatchers.any());
+    }
+
+    /** Explicit mock-gateway proof reference; this controller unit does not claim provider/storage verification. */
+    private static com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference reference() {
+        var original = new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact(
+                com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Kind.PAYMENT,
+                "merchant","wx-original","DEP7","WXP_ALIAS","WXP_ALIAS","TX7","TX7","JSAPI","CNY",5000,5000,
+                java.time.Instant.ofEpochSecond(1700000000),null,"SUCCESS");
+        return new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference(7L,original.factHash());
     }
 
     private static CoopInvite invite(int depositStatus) {

@@ -1,89 +1,122 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.chengyinhub.business.mapper.CoopSettlementEvidenceMapper">
-    <select id="selectCandidatesForUpdate" resultType="com.chengyinhub.business.domain.dto.CoopSettlementCandidate">
-        select r.id as registrationId, r.owner_type as ownerType, r.owner_id as ownerId,
-               r.registration_status as registrationStatus, r.payment_status as paymentStatus,
-               r.verification_status as verificationStatus,
-               case r.purchase_kind when 1 then 'GUIDED_TICKET' when 2 then 'SELF_PLAY_PASS'
-                    when 3 then 'EXPLORE_PASS' else null end as purchaseKind,
-               r.payable_amount as eligibleSalesSnapshot,
-               case when #{snapshot.scopeType} = 'TOPIC_EDITION' then true
-                    when exists (select 1 from coop_group_member_verify sm
-                                 where sm.registration_id = r.id and sm.activity_id = #{snapshot.scopeId})
-                    then true else false end as scopeCovered,
-               case when exists (select 1 from coop_group_member_verify om
-                                 where om.registration_id = r.id and om.activity_id = #{snapshot.scopeId})
-                    then true else false end as organizerScopeCovered,
-               exists (select 1 from cms_registration_scan scan
-                       where scan.registration_id = r.id and scan.member_id = #{snapshot.beneficiaryId}
-                         and scan.registration_type = 1 and ifnull(scan.status, 0) &lt;&gt; 2) as merchantScanPresent,
-               (select min(scan.create_time) from cms_registration_scan scan
-                where scan.registration_id = r.id and scan.member_id = #{snapshot.beneficiaryId}
-                  and scan.registration_type = 1 and ifnull(scan.status, 0) &lt;&gt; 2) as merchantScanTime,
-               exists (select 1 from coop_group_member_verify gm
-                       join coop_group_verify gv on gv.activity_id = gm.activity_id
-                       where gm.registration_id = r.id and gv.coop_order_id = #{snapshot.orderId}
-                         and gv.merchant_member_id = #{snapshot.beneficiaryId}
-                         and gv.activity_id = #{snapshot.scopeId}) as groupEvidenceMatchesOrder,
-               (select min(gv.verify_time) from coop_group_member_verify gm
-                join coop_group_verify gv on gv.activity_id = gm.activity_id
-                where gm.registration_id = r.id and gv.coop_order_id = #{snapshot.orderId}
-                  and gv.merchant_member_id = #{snapshot.beneficiaryId}
-                  and gv.activity_id = #{snapshot.scopeId}) as groupVerifyTime,
-               (select min(gm.verify_time) from coop_group_member_verify gm
-                where gm.registration_id = r.id and gm.activity_id = #{snapshot.scopeId}) as groupMemberVerifyTime,
-               r.verification_time as verificationTime
-        from cms_registration r
-        where r.owner_type = 1 and r.owner_id = #{snapshot.commercialContextId}
+    <!-- activityIds 在锁报名之前由 cms_activity.topic_id 解析；从不拿 topic/node id 充当 activity id。 -->
+    <sql id="resolvedActivity">
+        <choose>
+            <when test="activityIds != null and activityIds.size() > 0">
+                gm.activity_id in
+                <foreach collection="activityIds" item="activityId" open="(" separator="," close=")">#{activityId}</foreach>
+            </when>
+            <otherwise>1 = 0</otherwise>
+        </choose>
+    </sql>
+    <sql id="memberGroupPredicate">
+        gm.registration_id = r.id and gm.topic_id = #{snapshot.topicId}
+        and <include refid="resolvedActivity"/>
+        and (r.owner_type = 1 or (r.owner_type = 2 and gm.activity_id = r.owner_id))
+        and gm.verify_time &gt;= ticket.start_time and gm.verify_time &lt; ticket.end_time
+        and gm.verify_time &lt; #{settlementCutoff}
+    </sql>
+    <sql id="merchantScanPredicate">
+        scan.registration_id = r.id and scan.member_id = #{snapshot.beneficiaryId}
+        and scan.registration_type = 1 and ifnull(scan.status, 0) &lt;&gt; 2
+        and #{snapshot.scopeType} in ('TOPIC', 'ACTIVITY')
+        and scan.create_time &gt;= ticket.start_time and scan.create_time &lt; ticket.end_time
+        and scan.create_time &lt; #{settlementCutoff}
+    </sql>
+    <sql id="groupOrderPredicate">
+        <include refid="memberGroupPredicate"/>
+        and gv.topic_id = gm.topic_id and gv.activity_id = gm.activity_id
+        and gv.coop_order_id = #{snapshot.orderId} and gv.merchant_member_id = #{snapshot.beneficiaryId}
+        and #{snapshot.scopeType} in ('TOPIC', 'ACTIVITY')
+        and gv.verify_time &gt;= ticket.start_time and gv.verify_time &lt; ticket.end_time
+        and gv.verify_time &lt; #{settlementCutoff}
+    </sql>
+    <sql id="candidateColumns">
+        r.id as registrationId, r.owner_type as ownerType, r.owner_id as ownerId,
+        #{snapshot.topicId} as sourceTopicId, r.order_num as orderQuantity,
+        r.registration_status as registrationStatus, r.payment_status as paymentStatus,
+        r.verification_status as verificationStatus,
+        case r.purchase_kind when 1 then 'GUIDED_TICKET' when 2 then 'SELF_PLAY_PASS'
+             when 3 then 'EXPLORE_PASS' else null end as purchaseKind,
+        r.payable_amount as eligibleSalesSnapshot,
+        case when ticket.id is not null then true else false end as ticketOwnerMatches,
+        ticket.start_time as fulfillmentStartInclusive, ticket.end_time as fulfillmentEndExclusive,
+        case when #{snapshot.scopeType} = 'TOPIC' and #{snapshot.scopeId} = #{snapshot.topicId} then true
+             when #{snapshot.scopeType} = 'NODE' and exists (
+                 select 1 from cms_topic_node n where n.id = #{snapshot.scopeId} and n.topic_id = #{snapshot.topicId}) then true
+             when #{snapshot.scopeType} = 'ACTIVITY' and r.owner_type = 2 and r.owner_id = #{snapshot.scopeId} then true
+             else false end as scopeCovered,
+        exists (select 1 from coop_group_member_verify gm where <include refid="memberGroupPredicate"/>) as organizerScopeCovered,
+        exists (select 1 from cms_registration_scan scan where <include refid="merchantScanPredicate"/>) as merchantScanPresent,
+        (select min(scan.create_time) from cms_registration_scan scan where <include refid="merchantScanPredicate"/>) as merchantScanTime,
+        exists (select 1 from coop_group_member_verify gm join coop_group_verify gv on gv.activity_id = gm.activity_id
+                where <include refid="groupOrderPredicate"/>) as groupEvidenceMatchesOrder,
+        (select min(gv.verify_time) from coop_group_member_verify gm join coop_group_verify gv on gv.activity_id = gm.activity_id
+                where <include refid="groupOrderPredicate"/>) as groupVerifyTime,
+        (select min(gm.verify_time) from coop_group_member_verify gm where <include refid="memberGroupPredicate"/>) as groupMemberVerifyTime,
+        r.verification_time as verificationTime
+    </sql>
+    <sql id="ticketJoin">
+        left join oms_ticket ticket on ticket.id = r.ticket_id and ticket.owner_type = r.owner_type
+            and ticket.owner_id = r.owner_id and ticket.del_flag = 0
+            and ((r.purchase_kind = 1 and ticket.mode = 1 and ticket.sub_type = 'guided')
+              or (r.purchase_kind = 2 and ticket.mode = 1 and ticket.sub_type = 'self')
+              or (r.purchase_kind = 3 and ticket.mode = 2))
+    </sql>
+    <select id="selectCandidatesForUpdate" useCache="false" flushCache="true" resultType="com.chengyinhub.business.domain.dto.CoopSettlementCandidate">
+        <bind name="activityIds" value="null"/>
+        select <include refid="candidateColumns"/>
+        from cms_registration r <include refid="ticketJoin"/>
+        where r.owner_type = 1 and r.owner_id = #{snapshot.topicId}
         for update
     </select>
-
-    <select id="selectTopicEvidenceCandidatesForUpdate" resultType="com.chengyinhub.business.domain.dto.CoopSettlementCandidate">
-        select r.id as registrationId, r.owner_type as ownerType, r.owner_id as ownerId,
-               r.registration_status as registrationStatus, r.payment_status as paymentStatus,
-               r.verification_status as verificationStatus,
-               case r.purchase_kind when 1 then 'GUIDED_TICKET' when 2 then 'SELF_PLAY_PASS'
-                    when 3 then 'EXPLORE_PASS' else null end as purchaseKind,
-               r.payable_amount as eligibleSalesSnapshot,
-               case when #{snapshot.scopeType} = 'TOPIC_EDITION' then true
-                    when exists (select 1 from coop_group_member_verify sm
-                                 where sm.registration_id = r.id and sm.activity_id = #{snapshot.scopeId})
-                    then true else false end as scopeCovered,
-               case when exists (select 1 from coop_group_member_verify om
-                                 where om.registration_id = r.id and om.activity_id = #{snapshot.scopeId})
-                    then true else false end as organizerScopeCovered,
-               exists (select 1 from cms_registration_scan scan
-                       where scan.registration_id = r.id and scan.member_id = #{snapshot.beneficiaryId}
-                         and scan.registration_type = 1 and ifnull(scan.status, 0) &lt;&gt; 2) as merchantScanPresent,
-               (select min(scan.create_time) from cms_registration_scan scan
-                where scan.registration_id = r.id and scan.member_id = #{snapshot.beneficiaryId}
-                  and scan.registration_type = 1 and ifnull(scan.status, 0) &lt;&gt; 2) as merchantScanTime,
-               exists (select 1 from coop_group_member_verify gm
-                       join coop_group_verify gv on gv.activity_id = gm.activity_id
-                       where gm.registration_id = r.id and gv.coop_order_id = #{snapshot.orderId}
-                         and gv.merchant_member_id = #{snapshot.beneficiaryId}
-                         and gv.activity_id = #{snapshot.scopeId}) as groupEvidenceMatchesOrder,
-               (select min(gv.verify_time) from coop_group_member_verify gm
-                join coop_group_verify gv on gv.activity_id = gm.activity_id
-                where gm.registration_id = r.id and gv.coop_order_id = #{snapshot.orderId}
-                  and gv.merchant_member_id = #{snapshot.beneficiaryId}
-                  and gv.activity_id = #{snapshot.scopeId}) as groupVerifyTime,
-               (select min(gm.verify_time) from coop_group_member_verify gm
-                where gm.registration_id = r.id and gm.activity_id = #{snapshot.scopeId}) as groupMemberVerifyTime,
-               r.verification_time as verificationTime
-        from cms_registration r
-        where (r.owner_type = 1 and r.owner_id = #{snapshot.commercialContextId})
+    <select id="selectTopicEvidenceCandidatesForUpdate" useCache="false" flushCache="true" resultType="com.chengyinhub.business.domain.dto.CoopSettlementCandidate">
+        select <include refid="candidateColumns"/>
+        from cms_registration r <include refid="ticketJoin"/>
+        where (r.owner_type = 1 and r.owner_id = #{snapshot.topicId})
            or (r.owner_type = 2 and
              <choose>
                <when test="activityIds != null and activityIds.size() > 0">
                  r.owner_id in
-                 <foreach collection="activityIds" item="activityId" open="(" separator="," close=")">
-                   #{activityId}
-                 </foreach>
+                 <foreach collection="activityIds" item="activityId" open="(" separator="," close=")">#{activityId}</foreach>
                </when>
                <otherwise>1 = 0</otherwise>
              </choose>)
+        for update
+    </select>
+    <select id="selectTopicCashRowsForUpdate" useCache="false" flushCache="true" resultType="com.chengyinhub.business.domain.CmsRegistration">
+        select r.id, r.owner_type as ownerType, r.owner_id as ownerId, r.member_id as memberId,
+               r.payment_status as paymentStatus, r.registration_status as registrationStatus,
+               r.verification_status as verificationStatus, r.payable_amount as payableAmount,
+               r.owner_id as topicId
+        from cms_registration r
+        where r.owner_type = 1 and r.owner_id = #{topicId}
+        order by r.id
+        for update
+    </select>
+    <!-- 含已删壳，锁真实活动父关系与报名；与上面的主题报名锁持有到同一事务结束。 -->
+    <select id="selectTopicActivityCashRowsForUpdate" useCache="false" flushCache="true" resultType="com.chengyinhub.business.domain.CmsRegistration">
+        select r.id, r.owner_type as ownerType, r.owner_id as ownerId, r.member_id as memberId,
+               r.payment_status as paymentStatus, r.registration_status as registrationStatus,
+               r.verification_status as verificationStatus, r.payable_amount as payableAmount,
+               a.topic_id as topicId
+        from cms_activity a join cms_registration r on r.owner_type = 2 and r.owner_id = a.id
+        where a.topic_id = #{topicId}
+        order by r.id
+        for update
+    </select>
+    <select id="countPaidActivityRegistrations" resultType="int">
+        select count(*) from cms_registration r
+        join cms_activity a on a.id = r.owner_id and a.topic_id = #{topicId}
+        where r.owner_type = 2 and r.payment_status = 2
+    </select>
+    <select id="selectCashBasisBlockingRefundIdsForUpdate" useCache="false" flushCache="true" resultType="long">
+        select refund.id from refund_application refund
+        join cms_registration r on refund.source_type = 'registration' and refund.source_id = r.id
+        where refund.del_flag = 0 and r.owner_type = 1 and r.owner_id = #{topicId}
+          and refund.status in (0, 1)
         for update
     </select>
 </mapper>

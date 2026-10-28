@@ -46,6 +46,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 class AdvancedGameRuntimeServiceImplTest {
@@ -77,6 +78,7 @@ class AdvancedGameRuntimeServiceImplTest {
         teamMapper = mock(PlayTeamMapper.class);
         attemptMapper = mock(PlayAttemptLogMapper.class);
         service = new AdvancedGameRuntimeServiceImpl();
+        com.chengyinhub.business.service.impl.AdvancedActionTestFixtures.transactions(service);
         ReflectionTestUtils.setField(service,"verifiedWeRunService",com.chengyinhub.business.it.R5WeRunFixture.service());
         ReflectionTestUtils.setField(service, "sessionMapper", sessionMapper);
         ReflectionTestUtils.setField(service, "nodeMapper", nodeMapper);
@@ -721,6 +723,167 @@ class AdvancedGameRuntimeServiceImplTest {
     }
 
     @Test
+    void originalSmallGameResumesAfterUnbindWithoutAuthoringTemplateReads() {
+        GameRuntimeSession original = runningSession(fullConfig(), "{}");
+        when(sessionMapper.selectPlayerByOwner(ACTIVITY_ID, TOPIC_ID, NODE_ID, MEMBER_ID)).thenReturn(original);
+        CmsTopicNode current = new CmsTopicNode(); current.setId(NODE_ID); current.setTopicId(TOPIC_ID);
+        when(nodeMapper.selectCmsTopicNodeById(NODE_ID)).thenReturn(current);
+        when(templateMapper.selectCmsMemberTemplateById(any())).thenThrow(new AssertionError("original game must use its original config"));
+
+        Map<String, Object> result = service.start(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID, null);
+
+        assertEquals(51L, result.get("sessionId"));
+        assertEquals(TEMPLATE_ID, original.getTemplateId());
+        assertEquals(fullConfig(), original.getConfigSnapshotJson());
+        verify(nodeMapper).selectCmsTopicNodeById(NODE_ID);
+        verify(templateMapper, never()).selectCmsMemberTemplateById(any());
+        verify(sessionMapper, never()).insert(any());
+        verify(sessionMapper, never()).restartTerminalCas(any());
+    }
+
+    private com.fasterxml.jackson.databind.node.ObjectNode originalContent() {
+        com.fasterxml.jackson.databind.node.ObjectNode content = new com.fasterxml.jackson.databind.ObjectMapper().createObjectNode();
+        content.put("contentSnapshotVersion", 1).put("templateId", TEMPLATE_ID);
+        content.putObject("nodePresentation").put("id", NODE_ID).put("topicId", TOPIC_ID).put("templateId", TEMPLATE_ID);
+        content.putObject("templatePresentation").put("title", "原小游戏");
+        return content;
+    }
+
+    @Test
+    void newNodeGameUsesOriginalPublishedTemplateIdentityAfterAuthorTemplateDelete() throws Exception {
+        ITopicRouteRuntimeService route = mock(ITopicRouteRuntimeService.class);
+        ReflectionTestUtils.setField(service, "topicRouteRuntimeService", route);
+        when(route.nodeAnswers(MEMBER_ID, TOPIC_ID, ACTIVITY_ID, NODE_ID)).thenReturn(originalContent());
+        when(route.nodeRuntimeConfig(MEMBER_ID, TOPIC_ID, NODE_ID, ACTIVITY_ID))
+                .thenReturn(new com.fasterxml.jackson.databind.ObjectMapper().readTree(randomOnlyConfig()));
+        when(route.canPlay(MEMBER_ID, TOPIC_ID, ACTIVITY_ID, NODE_ID)).thenReturn(true);
+        when(route.playInstance(MEMBER_ID, TOPIC_ID, ACTIVITY_ID)).thenReturn("original-route");
+        CmsTopicNode current = new CmsTopicNode(); current.setId(NODE_ID); current.setTopicId(TOPIC_ID); current.setTemplateId(999L);
+        when(nodeMapper.selectCmsTopicNodeById(NODE_ID)).thenReturn(current);
+        AtomicReference<GameRuntimeSession> inserted = new AtomicReference<>();
+        when(sessionMapper.insert(any())).thenAnswer(invocation -> {
+            GameRuntimeSession row = invocation.getArgument(0); row.setId(51L); inserted.set(row); return 1;
+        });
+
+        assertEquals(51L, service.start(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID, null).get("sessionId"));
+        assertEquals(Long.valueOf(TEMPLATE_ID), inserted.get().getTemplateId());
+        assertEquals("original-route", inserted.get().getPlayInstanceId());
+        assertEquals(new com.fasterxml.jackson.databind.ObjectMapper().readTree(originalContent().toString()), new com.fasterxml.jackson.databind.ObjectMapper()
+                .readTree(inserted.get().getStateJson()).path("originalNodeContent"));
+        assertTrue(new com.fasterxml.jackson.databind.ObjectMapper().readTree(inserted.get().getConfigSnapshotJson()).path("random").path("enabled").asBoolean());
+        verify(nodeMapper).selectCmsTopicNodeById(NODE_ID);
+        verify(templateMapper, never()).selectCmsMemberTemplateById(any());
+    }
+
+    @Test
+    void incompleteOrForeignPublishedIdentityNeverUsesLiveAuthorBinding() {
+        ITopicRouteRuntimeService route = mock(ITopicRouteRuntimeService.class);
+        ReflectionTestUtils.setField(service, "topicRouteRuntimeService", route);
+        com.fasterxml.jackson.databind.node.ObjectNode content = originalContent();
+        when(route.nodeAnswers(MEMBER_ID, TOPIC_ID, ACTIVITY_ID, NODE_ID)).thenReturn(content);
+        content.remove("templateId");
+        assertThrows(IllegalStateException.class, () -> service.start(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID, null));
+        content.put("templateId", TEMPLATE_ID);
+        ((com.fasterxml.jackson.databind.node.ObjectNode) content.path("nodePresentation")).put("topicId", TOPIC_ID + 1L);
+        assertThrows(IllegalStateException.class, () -> service.start(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID, null));
+        verify(templateMapper, never()).selectCmsMemberTemplateById(any());
+        verify(sessionMapper, never()).insert(any());
+    }
+
+    @Test
+    void publishedIdentityWithoutOriginalConfigCannotStartFromCurrentTemplate() {
+        ITopicRouteRuntimeService route = mock(ITopicRouteRuntimeService.class);
+        ReflectionTestUtils.setField(service, "topicRouteRuntimeService", route);
+        when(route.nodeAnswers(MEMBER_ID, TOPIC_ID, ACTIVITY_ID, NODE_ID)).thenReturn(originalContent());
+        assertThrows(IllegalStateException.class, () -> service.start(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID, null));
+        verify(templateMapper, never()).selectCmsMemberTemplateById(any());
+        verify(sessionMapper, never()).insert(any());
+    }
+
+    @Test
+    void authorTemplateUnbindCannotBypassOriginalCompletionOrRewardCap() {
+        GameRuntimeSession original = runningSession(randomOnlyConfig(), "{\"draws\":[]}");
+        when(sessionMapper.selectPlayerByOwner(ACTIVITY_ID, TOPIC_ID, NODE_ID, MEMBER_ID)).thenReturn(original);
+        CmsTopicNode current = new CmsTopicNode(); current.setId(NODE_ID); current.setTopicId(TOPIC_ID);
+        when(nodeMapper.selectCmsTopicNodeById(NODE_ID)).thenReturn(current);
+        assertEquals("高级玩法尚未完成", assertThrows(ServiceException.class,
+                () -> service.completeGate(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID)).getMessage());
+        original.setConfigSnapshotJson("{\"schemaVersion\":1,\"scan\":{\"enabled\":true}}");
+        assertTrue(service.rewardCappedToXpBadge(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID));
+        assertFalse(service.rewardCappedToXpBadge(MEMBER_ID + 1L, ACTIVITY_ID, TOPIC_ID, NODE_ID));
+        verify(sessionMapper, never()).updateStateCas(any());
+        verify(templateMapper, never()).selectCmsMemberTemplateById(any());
+    }
+
+    @Test
+    void defaultGameContentReadKeepsOriginalIdentityConfigAndDoesNotExposePrivateBodyInPublicState() throws Exception {
+        GameRuntimeSession row=runningSession(randomOnlyConfig(), "{}");
+        row.setPlayInstanceId("default");
+        var json=new com.fasterxml.jackson.databind.ObjectMapper();
+        var state=json.createObjectNode(); state.putArray("draws");
+        var content=originalContent(); content.put("questionAnswer","secret-original-answer");
+        state.set("originalNodeContent",content); row.setStateJson(state.toString());
+        when(sessionMapper.selectDefaultMemberSessionsByTopic(ACTIVITY_ID,TOPIC_ID,MEMBER_ID)).thenReturn(Arrays.asList(row));
+        when(sessionMapper.selectAccessibleById(row.getId(),MEMBER_ID)).thenReturn(row);
+
+        var first=service.queryDefaultNodeContents(MEMBER_ID,ACTIVITY_ID,TOPIC_ID);
+        assertEquals(TEMPLATE_ID,first.path(String.valueOf(NODE_ID)).path("nodeAnswers").path(String.valueOf(NODE_ID)).path("templateId").asLong());
+        assertEquals(json.readTree(randomOnlyConfig()),first.path(String.valueOf(NODE_ID)).path("nodeConfigs").path(String.valueOf(NODE_ID)));
+        ((com.fasterxml.jackson.databind.node.ObjectNode)first.path(String.valueOf(NODE_ID)).path("nodeAnswers").path(String.valueOf(NODE_ID))).put("templateId",999L);
+        assertEquals(TEMPLATE_ID,service.queryDefaultNodeContents(MEMBER_ID,ACTIVITY_ID,TOPIC_ID).path(String.valueOf(NODE_ID))
+                .path("nodeAnswers").path(String.valueOf(NODE_ID)).path("templateId").asLong());
+        Map<String,Object> view=ReflectionTestUtils.invokeMethod(service,"toView",row,MEMBER_ID);
+        String publicJson=json.writeValueAsString(view);
+        assertFalse(publicJson.contains("secret-original-answer")); assertFalse(publicJson.contains("originalNodeContent"));
+        verify(sessionMapper,never()).insert(any()); verify(sessionMapper,never()).updateStateCas(any());
+        verifyNoInteractions(templateMapper);
+    }
+
+    @Test
+    void defaultGameLegacyHasExplicitOldContentAndCannotBorrowAnotherActorOrScene() {
+        GameRuntimeSession row=runningSession(randomOnlyConfig(),"{}"); row.setPlayInstanceId("default");
+        when(sessionMapper.selectDefaultMemberSessionsByTopic(ACTIVITY_ID,TOPIC_ID,MEMBER_ID)).thenReturn(Arrays.asList(row));
+        var source=service.queryDefaultNodeContents(MEMBER_ID,ACTIVITY_ID,TOPIC_ID).path(String.valueOf(NODE_ID));
+        assertTrue(source.path("legacyNodeContent").asBoolean()); assertFalse(source.has("nodeAnswers"));
+        row.setActivityId(ACTIVITY_ID+1L);
+        assertThrows(IllegalStateException.class,()->service.queryDefaultNodeContents(MEMBER_ID,ACTIVITY_ID,TOPIC_ID));
+        row.setActivityId(ACTIVITY_ID); row.setOwnerId(MEMBER_ID+1L);
+        assertThrows(IllegalStateException.class,()->service.queryDefaultNodeContents(MEMBER_ID,ACTIVITY_ID,TOPIC_ID));
+        verify(sessionMapper,never()).insert(any()); verify(sessionMapper,never()).updateStateCas(any());
+    }
+
+    @Test
+    void restartingAnOriginalGameRetainsPrivateContentWhileAuthorConfigCannotSupplyIt() throws Exception {
+        var json=new com.fasterxml.jackson.databind.ObjectMapper();
+        GameRuntimeSession original=runningSession(randomOnlyConfig(),"{}"); original.setPlayInstanceId("default");
+        original.setStatus(GameRuntimeSession.STATUS_FAILED);
+        var state=json.createObjectNode(); state.set("originalNodeContent",originalContent());
+        original.setStateJson(state.toString());
+        when(sessionMapper.restartTerminalCas(any())).thenReturn(1);
+        ReflectionTestUtils.invokeMethod(service,"restart",original,null,Collections.emptyList(),MEMBER_ID);
+        assertEquals(json.readTree(originalContent().toString()),json.readTree(original.getStateJson()).path("originalNodeContent"));
+
+        var authored=(com.fasterxml.jackson.databind.node.ObjectNode)json.readTree(randomOnlyConfig());
+        authored.set("originalNodeContent",originalContent());
+        CmsMemberTemplate live=new CmsMemberTemplate(); live.setId(TEMPLATE_ID); live.setAdvancedConfigJson(authored.toString());
+        when(templateMapper.selectCmsMemberTemplateById(TEMPLATE_ID)).thenReturn(live);
+        AtomicReference<GameRuntimeSession> inserted=new AtomicReference<>();
+        when(sessionMapper.insert(any())).thenAnswer(call->{GameRuntimeSession row=call.getArgument(0);row.setId(61L);inserted.set(row);return 1;});
+        service.start(MEMBER_ID,ACTIVITY_ID,TOPIC_ID,NODE_ID,null);
+        assertFalse(json.readTree(inserted.get().getStateJson()).has("originalNodeContent"));
+    }
+
+    @Test
+    void originalSnapshotDoesNotBypassCurrentNodeExistenceScopeGuard() {
+        when(nodeMapper.selectCmsTopicNodeById(NODE_ID)).thenReturn(null);
+        when(sessionMapper.selectPlayerByOwner(ACTIVITY_ID, TOPIC_ID, NODE_ID, MEMBER_ID))
+                .thenReturn(runningSession(fullConfig(), "{}"));
+        assertThrows(IllegalArgumentException.class, () -> service.start(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID, null));
+        verify(sessionMapper, never()).insert(any());
+        verify(sessionMapper, never()).restartTerminalCas(any());
+    }
+
+    @Test
     void teamSnapshotDoesNotBypassCurrentMembership() {
         GameRuntimeSession session = runningSession(multiplayerConfig(), "{}");
         session.setOwnerType(GameRuntimeSession.OWNER_TEAM);
@@ -1190,8 +1353,10 @@ class AdvancedGameRuntimeServiceImplTest {
         String saved = session.getStateJson();
         when(attemptMapper.selectByIdempotencyKey("rx-once")).thenReturn(receipt.get());
         Map<String, Object> replay = service.act(MEMBER_ID, 51L, 0, "rx-once", "SUBMIT_REACTION",
-                Collections.singletonMap("roundsMs", java.util.Arrays.asList(900, 900, 900)));
+                Collections.singletonMap("roundsMs", java.util.Arrays.asList(200, 500, 500)));
         assertEquals(first.toString(), replay.toString());
+        assertThrows(ServiceException.class, () -> service.act(MEMBER_ID, 51L, 0, "rx-once", "SUBMIT_REACTION",
+                Collections.singletonMap("roundsMs", java.util.Arrays.asList(900, 900, 900))));
         assertThrows(IllegalStateException.class, () -> service.act(MEMBER_ID, 51L, 1,
                 "rx-another-key", "SUBMIT_REACTION",
                 Collections.singletonMap("roundsMs", java.util.Arrays.asList(120, 120, 120))));
@@ -1201,7 +1366,7 @@ class AdvancedGameRuntimeServiceImplTest {
     }
 
     @Test
-    void reactionLegacyResultReadAndReplayDoNotInventBestOrReaward() {
+    void reactionLegacyResultReadDoesNotInventBestAndUnboundReplayIsRejected() {
         for (boolean passed : new boolean[] {false, true}) {
             String legacy = "{\"reaction\":{\"startedAtMs\":" + (NOW - 9000)
                     + ",\"submitted\":true,\"averageMs\":400,\"passed\":" + passed
@@ -1218,11 +1383,8 @@ class AdvancedGameRuntimeServiceImplTest {
                     + legacy.substring("{\"reaction\":".length(), legacy.length() - 1) + "}}");
             String key = "rx-legacy-" + passed;
             when(attemptMapper.selectByIdempotencyKey(key)).thenReturn(receipt);
-            Map<String, Object> replay = playKit(
-                    service.act(MEMBER_ID, 51L, 0, key, "SUBMIT_REACTION", Collections.emptyMap()), "reaction");
-            assertFalse(replay.containsKey("bestMs"));
-            assertEquals(passed, replay.get("passed"));
-            assertEquals(passed, replay.get("awarded"));
+            assertThrows(ServiceException.class, () ->
+                    service.act(MEMBER_ID, 51L, 0, key, "SUBMIT_REACTION", Collections.emptyMap()));
             assertThrows(IllegalStateException.class, () -> service.act(MEMBER_ID, 51L, 0,
                     "rx-legacy-new-" + passed, "SUBMIT_REACTION",
                     Collections.singletonMap("roundsMs", java.util.Arrays.asList(120, 120, 120))));
@@ -1757,16 +1919,19 @@ class AdvancedGameRuntimeServiceImplTest {
         config.putObject("outcomeRules").put("version",1).putObject("pass");if(!"ALBUM".equals(mode))config.with("outcomeRules").putObject("fail");
         ITopicRouteRuntimeService route=mock(ITopicRouteRuntimeService.class);ReflectionTestUtils.setField(service,"topicRouteRuntimeService",route);when(route.genericPlayer(any(),any(),any())).thenReturn(true);when(route.canPlay(any(),any(),any(),any())).thenReturn(true);when(route.gameplayInstance(any(),any(),any(),any())).thenReturn("quest:r5");when(route.nodeRuntimeConfig(any(),any(),any(),any())).thenReturn(config);
         GameRuntimeSession session=runningSession(config.toString(),"{\"attemptOrdinal\":1}");session.setPlayInstanceId("quest:r5");when(sessionMapper.selectAccessibleById(51L,MEMBER_ID)).thenReturn(session);when(sessionMapper.updateStateCas(any())).thenReturn(1);
-        ReflectionTestUtils.setField(service,"photoEvidenceVerifier",(java.util.function.BiConsumer<String,Long>)(url,member)->{throw new IllegalArgumentException("照片不属于当前会员");});
+        if ("SUBMIT_PHOTO_CHECK".equals(action)) AdvancedActionTestFixtures.photos(service,
+                () -> { throw new AssertionError("Rejected evidence must not call provider"); });
+        java.util.concurrent.atomic.AtomicInteger evidenceChecks = new java.util.concurrent.atomic.AtomicInteger();
+        ReflectionTestUtils.setField(service,"photoEvidenceVerifier",(java.util.function.BiConsumer<String,Long>)(url,member)->{evidenceChecks.incrementAndGet();throw new IllegalArgumentException("照片不属于当前会员");});
         Map<String,Object> evidence = "ALBUM".equals(mode) ? Collections.singletonMap("imageUrls",Collections.singletonList("http://127.0.0.1/profile/unowned.jpg")) : Collections.singletonMap("imageUrl","http://127.0.0.1/profile/unowned.jpg");
-        assertThrows(RuntimeException.class,()->service.act(MEMBER_ID,51L,0,"foreign-photo",action,evidence));verify(sessionMapper,never()).updateStateCas(any());
+        assertThrows(RuntimeException.class,()->service.act(MEMBER_ID,51L,0,"foreign-photo",action,evidence));assertEquals(1, evidenceChecks.get());verify(sessionMapper,never()).updateStateCas(any());
     }
     @org.junit.jupiter.params.ParameterizedTest @org.junit.jupiter.params.provider.ValueSource(strings={"SHOT","REVIEW","CARD","REJECT","DEGRADED","ALBUM"})
     void r5PhotoAndAlbumUseVerifiedServerEvidence(String mode) throws Exception {
         com.fasterxml.jackson.databind.ObjectMapper json=new com.fasterxml.jackson.databind.ObjectMapper();com.fasterxml.jackson.databind.node.ObjectNode config=json.createObjectNode().put("schemaVersion",1);Map<String,Object> payload=new LinkedHashMap<>();String action;
         if("SHOT".equals(mode)){config.putObject("qa").put("enabled",true).put("mode","SHOT");action="SUBMIT_QA";}
         else if("ALBUM".equals(mode)){config.putObject("album").put("enabled",true);action="SUBMIT_ALBUM";payload.put("imageUrls",Arrays.asList("first","second"));}
-        else{config.putObject("photoCheck").put("enabled",true).put("mode","CARD".equals(mode)?"CARD":"").put("fallback","pass").put("maxTries",1).put("minConfidence",60);action="SUBMIT_PHOTO_CHECK";com.chengyinhub.business.service.ai.PhotoCheckVisionService vision=mock(com.chengyinhub.business.service.ai.PhotoCheckVisionService.class);when(vision.review(any(),any(),any())).thenReturn("DEGRADED".equals(mode)?com.chengyinhub.business.service.ai.PhotoCheckVisionResult.degraded("unavailable"):com.chengyinhub.business.service.ai.PhotoCheckVisionResult.concluded(!"REJECT".equals(mode),90,"review"));ReflectionTestUtils.setField(service,"photoCheckVisionService",vision);}
+        else{config.putObject("photoCheck").put("enabled",true).put("mode","CARD".equals(mode)?"CARD":"").put("fallback","pass").put("maxTries",1).put("minConfidence",60);action="SUBMIT_PHOTO_CHECK";com.chengyinhub.business.service.ai.PhotoCheckVisionService vision=mock(com.chengyinhub.business.service.ai.PhotoCheckVisionService.class);when(vision.review(any(),any(),any())).thenReturn("DEGRADED".equals(mode)?com.chengyinhub.business.service.ai.PhotoCheckVisionResult.degraded("unavailable"):com.chengyinhub.business.service.ai.PhotoCheckVisionResult.concluded(!"REJECT".equals(mode),90,"review"));AdvancedActionTestFixtures.photos(service, () -> vision.review(MEMBER_ID, "unit-photo", "unit-requirement"));}
         config.putObject("outcomeRules").put("version",1).putObject("pass");if(!"ALBUM".equals(mode))config.with("outcomeRules").putObject("fail");if(!"ALBUM".equals(mode))payload.put("imageUrl","first");
         java.util.List<String> checked=new ArrayList<>();ReflectionTestUtils.setField(service,"photoEvidenceVerifier",(java.util.function.BiConsumer<String,Long>)(url,member)->{assertEquals(MEMBER_ID,member);checked.add(url);});
         ITopicRouteRuntimeService route=mock(ITopicRouteRuntimeService.class);ReflectionTestUtils.setField(service,"topicRouteRuntimeService",route);when(route.genericPlayer(any(),any(),any())).thenReturn(true);when(route.canPlay(any(),any(),any(),any())).thenReturn(true);when(route.gameplayInstance(any(),any(),any(),any())).thenReturn("quest:r5");when(route.nodeRuntimeConfig(any(),any(),any(),any())).thenReturn(config);

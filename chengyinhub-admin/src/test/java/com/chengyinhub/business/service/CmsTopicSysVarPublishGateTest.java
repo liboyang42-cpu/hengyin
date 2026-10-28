@@ -45,6 +45,22 @@ import static org.mockito.Mockito.when;
  */
 class CmsTopicSysVarPublishGateTest {
 
+    // Unit call context only: mapper doubles are not MySQL/Spring rollback evidence.
+    private boolean publicationWasActive, publicationWasReadOnly;
+    @org.junit.jupiter.api.BeforeEach
+    void enterPublicationWriteContext() {
+        publicationWasActive = org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive();
+        publicationWasReadOnly = org.springframework.transaction.support.TransactionSynchronizationManager.isCurrentTransactionReadOnly();
+        org.springframework.transaction.support.TransactionSynchronizationManager.setActualTransactionActive(true);
+        org.springframework.transaction.support.TransactionSynchronizationManager.setCurrentTransactionReadOnly(false);
+    }
+    @org.junit.jupiter.api.AfterEach
+    void restorePublicationWriteContext() {
+        org.springframework.transaction.support.TransactionSynchronizationManager.setActualTransactionActive(publicationWasActive);
+        org.springframework.transaction.support.TransactionSynchronizationManager.setCurrentTransactionReadOnly(publicationWasReadOnly);
+    }
+
+
     private static final Long TOPIC_ID = 10L;
     private static final Long NODE_BRANCH = 5009L;
     private static final Long NODE_PLAIN = 5008L;
@@ -55,6 +71,12 @@ class CmsTopicSysVarPublishGateTest {
     private CmsMemberTemplateMapper templateMapper;
     private ThemeStateKeyMapper keyMapper;
     private CmsTopicServiceImpl service;
+    private final java.util.List<ThemeStateKey> currentDeclarations = new java.util.ArrayList<>();
+
+    private java.util.List<ThemeStateKey> currentRows(java.util.List<ThemeStateKey> rows) {
+        currentDeclarations.clear(); currentDeclarations.addAll(rows); return rows;
+    }
+
 
     @BeforeEach
     void setUp() {
@@ -65,6 +87,30 @@ class CmsTopicSysVarPublishGateTest {
         chapterMapper = mock(CmsTopicChapterMapper.class);
         templateMapper = mock(CmsMemberTemplateMapper.class);
         keyMapper = mock(ThemeStateKeyMapper.class);
+        when(keyMapper.lockTopicForStateKeyWrite(TOPIC_ID)).thenAnswer(call -> {
+            CmsTopic parent = topicMapper.selectCmsTopicByIdForUpdate(TOPIC_ID);
+            return parent == null ? null : parent.getId();
+        });
+        when(keyMapper.selectByTopicIdForUpdate(TOPIC_ID)).thenAnswer(call -> new java.util.ArrayList<>(currentDeclarations));
+
+        when(chapterMapper.selectByTopicForUpdate(TOPIC_ID)).thenAnswer(call -> {
+            CmsTopicChapter query = new CmsTopicChapter(); query.setTopicId(TOPIC_ID);
+            return chapterMapper.selectCmsTopicChapterList(query);
+        });
+        when(nodeMapper.selectByTopicForUpdate(TOPIC_ID)).thenAnswer(call -> {
+            CmsTopicNode query = new CmsTopicNode(); query.setTopicId(TOPIC_ID);
+            return nodeMapper.selectCmsTopicNodeList(query);
+        });
+        when(templateMapper.selectCmsMemberTemplateByIdsForUpdate(org.mockito.ArgumentMatchers.anyList())).thenAnswer(call -> {
+            java.util.List<Long> ids = call.getArgument(0);
+            java.util.List<CmsMemberTemplate> rows = new java.util.ArrayList<>();
+            for (Long id : ids) {
+                CmsMemberTemplate row = templateMapper.selectCmsMemberTemplateById(id);
+                if (row != null) rows.add(row);
+            }
+            return rows;
+        });
+
         service = new CmsTopicServiceImpl();
         org.springframework.test.util.ReflectionTestUtils.setField(service, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
                 invocation -> "lockTopic".equals(invocation.getMethod().getName())
@@ -75,10 +121,11 @@ class CmsTopicSysVarPublishGateTest {
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
         ReflectionTestUtils.setField(service, "cmsTopicNodeMapper", nodeMapper);
         ReflectionTestUtils.setField(service, "cmsTopicChapterMapper", chapterMapper);
-        ReflectionTestUtils.setField(service, "cmsMemberTemplateMapper", templateMapper);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "cmsMemberTemplateMapper", templateMapper);
         ReflectionTestUtils.setField(service, "themeStateKeyService", new ThemeStateKeyService(keyMapper));
-        ReflectionTestUtils.setField(service, "topicStateKeyRefService",
-                new TopicStateKeyRefService(nodeMapper, templateMapper, chapterMapper));
+        TopicStateKeyRefService references = new TopicStateKeyRefService(nodeMapper, templateMapper, chapterMapper);
+        ReflectionTestUtils.setField(references, "cmsTopicMapper", topicMapper);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "topicStateKeyRefService", references);
         // R18-DRAFT 起 publishDraft 会补建自办活动壳:壳已存在 / 票种查询是发布路径的前置协作者。
         CmsActivityMapper cmsActivityMapper = mock(CmsActivityMapper.class);
         CmsActivity existingShell = new CmsActivity();
@@ -102,7 +149,7 @@ class CmsTopicSysVarPublishGateTest {
                 + "{\"var\":\"sys.outcome.9999\",\"op\":\"EQ\",\"value\":1}]}");
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
+        ServiceException error = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
 
         assertTrue(error.getMessage().contains("系统变量"), error.getMessage());
         assertTrue(error.getMessage().contains("9999"), error.getMessage());
@@ -114,10 +161,10 @@ class CmsTopicSysVarPublishGateTest {
     void blockSysVarNodeInsideThemePublishesWithoutKeyRegistration() {
         publishDraftWithBlock("{\"requires\":["
                 + "{\"var\":\"sys.outcome.5009\",\"op\":\"EQ\",\"value\":1}]}");
-        when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.<ThemeStateKey>emptyList());
+        when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(currentRows(Collections.<ThemeStateKey>emptyList()));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        assertTrue(service.publishDraft(TOPIC_ID));
+        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
 
         verify(topicMapper).publishRouteSnapshot(eq(TOPIC_ID), nullable(String.class), any(Date.class));
     }
@@ -132,7 +179,7 @@ class CmsTopicSysVarPublishGateTest {
                 + "{\"var\":\"sys.passed.9999\",\"op\":\"EQ\",\"value\":1}]}");
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
+        ServiceException error = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
 
         assertTrue(error.getMessage().contains("系统变量"), error.getMessage());
         assertTrue(error.getMessage().contains("9999"), error.getMessage());
@@ -144,10 +191,10 @@ class CmsTopicSysVarPublishGateTest {
     void blockPassedSysVarNodeInsideThemePublishes() {
         publishDraftWithBlock("{\"requires\":["
                 + "{\"var\":\"sys.passed.5009\",\"op\":\"EQ\",\"value\":1}]}");
-        when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.<ThemeStateKey>emptyList());
+        when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(currentRows(Collections.<ThemeStateKey>emptyList()));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        assertTrue(service.publishDraft(TOPIC_ID));
+        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
     }
 
     /**
@@ -161,7 +208,7 @@ class CmsTopicSysVarPublishGateTest {
                 + "{\"op\":\"NODE_COMPLETED\",\"nodeId\":9999}]}");
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
+        ServiceException error = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
 
         assertTrue(error.getMessage().contains("NODE_COMPLETED"), error.getMessage());
         assertTrue(error.getMessage().contains("9999"), error.getMessage());
@@ -172,10 +219,10 @@ class CmsTopicSysVarPublishGateTest {
     void blockNodeCompletedInsideThemePublishes() {
         publishDraftWithBlock("{\"schemaVersion\":1,\"requires\":["
                 + "{\"op\":\"NODE_COMPLETED\",\"nodeId\":5009}]}");
-        when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.<ThemeStateKey>emptyList());
+        when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(currentRows(Collections.<ThemeStateKey>emptyList()));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        assertTrue(service.publishDraft(TOPIC_ID));
+        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
     }
 
     @Test
@@ -185,10 +232,10 @@ class CmsTopicSysVarPublishGateTest {
         when(topicMapper.clearDraftIfDraft(TOPIC_ID)).thenReturn(1);
         when(topicMapper.selectCmsTopicById(TOPIC_ID)).thenReturn(topic);
         stubNodes(plainTemplate(), branchTemplate());
-        when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.singletonList(registered("counter.disposition")));
+        when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(currentRows(Collections.singletonList(registered("counter.disposition"))));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
+        ServiceException error = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
 
         assertTrue(error.getMessage().contains("分支玩法"), error.getMessage());
     }
@@ -200,10 +247,10 @@ class CmsTopicSysVarPublishGateTest {
         when(topicMapper.clearDraftIfDraft(TOPIC_ID)).thenReturn(1);
         when(topicMapper.selectCmsTopicById(TOPIC_ID)).thenReturn(topic);
         stubNodes(plainTemplate(), branchTemplate());
-        when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.singletonList(registered("counter.disposition")));
+        when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(currentRows(Collections.singletonList(registered("counter.disposition"))));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        assertTrue(service.publishDraft(TOPIC_ID));
+        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
     }
 
     private void publishDraftWithBlock(String advancedConfigJson) {
@@ -228,6 +275,9 @@ class CmsTopicSysVarPublishGateTest {
     private static ThemeStateKey registered(String stateKey) {
         ThemeStateKey key = new ThemeStateKey();
         key.setStateKey(stateKey);
+        key.setTopicId(TOPIC_ID);
+        key.setKeyType(ThemeStateKey.TYPE_COUNTER);
+        key.setScope(ThemeStateKey.SCOPE_RUN); key.setLabel(stateKey);
         return key;
     }
 

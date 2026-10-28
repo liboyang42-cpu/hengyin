@@ -1,0 +1,14 @@
+✔ 原1迁移：显式起草先可靠保存 UUID prepareKey，再 prepare，serverRID保存后 execute (9.072364ms)
+✔ 原2迁移：prepare回包丢失后只GET原key；找回成功不再execute且不采用旧额度 (2.272363ms)
+✔ 原3迁移：额度变化不是执行证据，网络失败仍保留原RID且下一次只GET (1.040852ms)
+✔ 原4迁移：PROCESSING和UNKNOWN保持原号；改变灵感不再自动新起 (1.001924ms)
+✔ 原5迁移：关页重开只读恢复，无原输入持久化；明确FAILED保留终态而非删记录 (1.573737ms)
+✔ 原6迁移：generic500不收尾；只有匹配的持久FAILED/SUCCEEDED允许明确新prepare (1.078098ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 22.486767

@@ -1,0 +1,6 @@
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java
+@@ -154 +154,2 @@
+-    private com.chengyinhub.business.service.IWechatPayService wechatPayService;
++    @org.springframework.beans.factory.annotation.Qualifier("wechatPaymentSdkGateway")
++    private com.chengyinhub.business.service.WechatPaymentOperations wechatPayService;

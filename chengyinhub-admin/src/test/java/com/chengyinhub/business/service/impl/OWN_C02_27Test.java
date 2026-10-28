@@ -19,12 +19,23 @@ class OWN_C02_27Test {
         CmsRegistrationMapper registrations = mock(CmsRegistrationMapper.class);
         CmsRegistration registration = new CmsRegistration();
         registration.setId(99L);
+        registration.setMemberId(42L);
+        registration.setOwnerType(1L);
+        registration.setOwnerId(9L);
+        registration.setRegistrationNo("REG99");
+        registration.setRegistrationStatus(2);
         registration.setPaymentStatus(2);
         registration.setPayableAmount(new BigDecimal("10.00"));
         when(registrations.selectCmsRegistrationById(99L)).thenReturn(registration);
         // master 退款入口按报名行加锁读（lockRefundRegistration）。
         when(registrations.selectCmsRegistrationByIdForUpdate(99L)).thenReturn(registration);
+        var topics = mock(com.chengyinhub.business.mapper.CmsTopicMapper.class);
+        var topic = new com.chengyinhub.business.domain.CmsTopic();
+        topic.setId(9L);
+        when(topics.selectCmsTopicById(9L)).thenReturn(topic);
+        RegistrationScopeFixture.currentReads(registrations, null, topics);
         RefundServiceImpl service = new RefundServiceImpl();
+        ReflectionTestUtils.setField(service, "cmsTopicMapper", topics);
         ReflectionTestUtils.setField(service, "refundApplicationMapper", refunds);
         ReflectionTestUtils.setField(service, "cmsRegistrationMapper", registrations);
         when(refunds.insertRefundApplication(any(RefundApplication.class))).thenAnswer(invocation -> {

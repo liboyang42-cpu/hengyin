@@ -40,6 +40,8 @@ class TopicDraftSubmittedOrderTest {
     private CmsTopicMapper topics;
     private CmsTopicChapterMapper chapters;
     private CmsTopicNodeMapper nodes;
+    private List<CmsTopicChapter> chapterRows;
+    private List<CmsTopicNode> nodeRows;
 
     @BeforeEach
     void setUp() throws IllegalAccessException {
@@ -50,28 +52,48 @@ class TopicDraftSubmittedOrderTest {
             field.setAccessible(true);
             if (field.get(service) == null) field.set(service, mock(field.getType()));
         }
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.wireRelocatedCollaborators(service, publicationField -> org.mockito.Mockito.mock(publicationField.getType()));
         topics = (CmsTopicMapper) ReflectionTestUtils.getField(service, "cmsTopicMapper");
         chapters = (CmsTopicChapterMapper) ReflectionTestUtils.getField(service, "cmsTopicChapterMapper");
         nodes = (CmsTopicNodeMapper) ReflectionTestUtils.getField(service, "cmsTopicNodeMapper");
         when(topics.insertCmsTopic(any())).thenAnswer(inv -> {
-            ((CmsTopic) inv.getArgument(0)).setId(TOPIC);
+            CmsTopic inserted = inv.getArgument(0);
+            inserted.setId(TOPIC);
+            // The parent lock must read the actual inserted owner/topic row, not anyLong success.
+            org.mockito.Mockito.doReturn(inserted).when(topics).selectCmsTopicById(TOPIC);
             return 1;
         });
         when(topics.updateCmsTopic(any())).thenReturn(1);
+        chapterRows = new java.util.ArrayList<>();
+        nodeRows = new java.util.ArrayList<>();
+        org.mockito.Mockito.doAnswer(call -> new java.util.ArrayList<>(chapterRows))
+                .when(chapters).selectCmsTopicChapterList(any());
+        org.mockito.Mockito.doAnswer(call -> new java.util.ArrayList<>(nodeRows))
+                .when(nodes).selectCmsTopicNodeList(any());
+        org.mockito.Mockito.doAnswer(call -> chapterRows.removeIf(row -> row.getId().equals(call.getArgument(0))) ? 1 : 0)
+                .when(chapters).deleteCmsTopicChapterById(any());
+        org.mockito.Mockito.doAnswer(call -> nodeRows.removeIf(row -> row.getId().equals(call.getArgument(0))) ? 1 : 0)
+                .when(nodes).deleteCmsTopicNodeById(any());
         AtomicLong chapterIds = new AtomicLong(800L);
         AtomicLong nodeIds = new AtomicLong(900L);
         when(chapters.insertCmsTopicChapter(any())).thenAnswer(inv -> {
             CmsTopicChapter chapter = inv.getArgument(0);
             assertNull(chapter.getId(), "重建不能复用客户端旧章 ID");
             chapter.setId(chapterIds.incrementAndGet());
+            chapterRows.add(chapter);
             return 1;
         });
         when(nodes.insertCmsTopicNode(any())).thenAnswer(inv -> {
             CmsTopicNode node = inv.getArgument(0);
             assertNull(node.getId(), "重建不能复用客户端旧站点 ID");
             node.setId(nodeIds.incrementAndGet());
+            nodeRows.add(node);
             return 1;
         });
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "themeStateKeyService",
+                new com.chengyinhub.business.service.support.ThemeStateKeyService(
+                        mock(com.chengyinhub.business.mapper.ThemeStateKeyMapper.class)));
+        service = com.chengyinhub.business.service.support.TopicPublicationTestWiring.transactional(service);
     }
 
     @Test
@@ -80,7 +102,7 @@ class TopicDraftSubmittedOrderTest {
         dto.setChapters(Arrays.asList(chapter("章甲", 11L, "甲1", "甲2"),
                 chapter("章乙", 12L, "乙1", "乙2")));
 
-        assertEquals(TOPIC, service.createTopic(dto, MEMBER, "creator"));
+        assertEquals(TOPIC, com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).createTopic(dto, MEMBER, "creator"));
 
         assertInsertedOrder(Arrays.asList("章甲", "章乙"), Arrays.asList("甲1", "甲2", "乙1", "乙2"));
         verify(topics).updateTopicDraftState(TOPIC, 1);
@@ -99,10 +121,14 @@ class TopicDraftSubmittedOrderTest {
         when(topics.selectTopicIsDraft(TOPIC)).thenReturn(1);
         CmsTopicChapter oldChapter = new CmsTopicChapter();
         oldChapter.setId(11L);
+        oldChapter.setTopicId(TOPIC);
         CmsTopicNode oldNode = new CmsTopicNode();
         oldNode.setId(101L);
-        when(chapters.selectCmsTopicChapterList(any())).thenReturn(Collections.singletonList(oldChapter));
-        when(nodes.selectCmsTopicNodeList(any())).thenReturn(Collections.singletonList(oldNode));
+        oldNode.setTopicId(TOPIC);
+        oldNode.setStatus(1L);
+        // The original old rows and subsequent inserts/deletes share one fixture table.
+        chapterRows.add(oldChapter);
+        nodeRows.add(oldNode);
         TopicUpdateDTO dto = draft(new TopicUpdateDTO());
         dto.setId(TOPIC);
         ChapterDTO first = chapter("章乙", 12L, "乙1", "乙2");
@@ -111,7 +137,7 @@ class TopicDraftSubmittedOrderTest {
         Collections.reverse(second.getNodes());
         dto.setChapters(Arrays.asList(first, second));
 
-        assertEquals(TOPIC, service.updateTopicByOwner(dto, MEMBER, "creator"));
+        assertEquals(TOPIC, com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwner(dto, MEMBER, "creator"));
 
         verify(chapters).deleteCmsTopicChapterById(11L);
         verify(nodes).deleteCmsTopicNodeById(101L);

@@ -44,6 +44,47 @@ class RepoFixture(unittest.TestCase):
 
 
 class ManifestContract(RepoFixture):
+    def test_station_proposal_is_exact_auxiliary_not_an_execution_exemption(self):
+        path = "docs/delivery/architecture-day/G/supply-order-fulfillment-contract/PROPOSED_TABLE.sql"
+        text = "CREATE TABLE coop_order_station_fulfillment (id BIGINT);\n"
+        self.write(path, text)
+        canonical = "chengyinhub-admin/sql/migration_20261025_coop_order_station_fulfillment.sql"
+        self.write(canonical, text)
+        report = audit_inventory(self.tmp)
+        self.assertEqual([], report["problems"])
+        self.assertEqual([(path, "AUXILIARY_NOT_EXECUTED")],
+                         [(item["path"], item["classification"]) for item in report["auxiliarySql"]])
+        self.assertEqual([canonical], [item["path"] for item in report["migrations"]])
+        manifest = build_manifest(self.tmp, TARGET, dependencies={})
+        self.assertEqual([canonical], [item["path"] for item in manifest["migrations"]])
+        unknown = path.replace("PROPOSED_TABLE.sql", "UNREVIEWED_TABLE.sql")
+        self.write(unknown, text)
+        self.assertEqual({("UNMANAGED_SQL_LOCATION", unknown)},
+                         {(item["code"], item["path"]) for item in audit_inventory(self.tmp)["problems"]})
+        with self.assertRaises(LedgerError) as rejected:
+            build_manifest(self.tmp, TARGET, dependencies={})
+        self.assertEqual("SQL inventory is unsafe", str(rejected.exception))
+
+    def test_architecture_day_auxiliary_paths_are_exact_not_directory_exceptions(self):
+        reviewed = {
+            "chengyinhub-admin/src/test/resources/architecture-day-a-fixture.sql": "TEST_FIXTURE",
+            "chengyinhub-admin/src/test/resources/it-schema/official-broadcast-delivery-it-schema.sql": "TEST_FIXTURE",
+            "docs/delivery/architecture-day/A/schema-candidate.sql": "AUXILIARY_NOT_EXECUTED",
+            "docs/delivery/architecture-day/A/schema-preflight.sql": "AUXILIARY_NOT_EXECUTED",
+        }
+        for path in reviewed:
+            self.write(path)
+        report = audit_inventory(self.tmp)
+        self.assertEqual([], report["problems"])
+        self.assertEqual([], report["migrations"])
+        self.assertEqual(reviewed, {item["path"]: item["classification"] for item in report["auxiliarySql"]})
+        unknown = [str(Path(path).with_name("unreviewed-" + Path(path).name)) for path in reviewed]
+        for path in unknown:
+            self.write(path)
+        report = audit_inventory(self.tmp)
+        self.assertEqual({("UNMANAGED_SQL_LOCATION", path) for path in unknown},
+                         {(item["code"], item["path"]) for item in report["problems"]})
+
     def test_generic_route_runtime_schema_is_explicit_test_fixture(self):
         path = "chengyinhub-admin/src/test/resources/it-schema/generic-route-runtime-it-schema.sql"
         self.write(path, "CREATE TABLE topic_route_session(id BIGINT);\n")
@@ -824,6 +865,53 @@ class CliSafety(RepoFixture):
 
 
 class HistorySchemaContract(unittest.TestCase):
+    def test_wp08_schema_guard_waits_for_original_effect_tables_and_im_identity(self):
+        root = Path(__file__).resolve().parent.parent
+        dependencies = json.loads(
+            (root / "ci/migration-dependencies.json").read_text(encoding="utf-8")
+        )["dependencies"]
+        consumer = "20261023_g_wp08_delivery_jobs_paused"
+        required = {
+            "20261013_b_im_notification_intent",
+            "20261013_roam_reward_delivery",
+            "20261013_roam_badge_delivery",
+            "member_exp_earned_20261011",
+            "20261012_im_media_visibility",
+        }
+        self.assertTrue(required.issubset(set(dependencies[consumer])))
+        manifest = build_manifest(root, target_commit=TARGET, dependencies=dependencies)
+        positions = {item["migrationId"]: item["order"] for item in manifest["migrations"]}
+        # Visibility already depends on original IM message idempotency. Do not duplicate
+        # or replace that edge: WP08's third assertion needs all three columns + its unique key.
+        for provider in required | {"im_send_idempotency_20260913"}:
+            with self.subTest(provider=provider):
+                self.assertLess(positions[provider], positions[consumer])
+
+    def test_wp08_missing_guard_prerequisite_is_rejected_by_manifest_gate(self):
+        from migration_gates import check_manifest_dependency_order
+
+        root = Path(__file__).resolve().parent.parent
+        dependencies = json.loads(
+            (root / "ci/migration-dependencies.json").read_text(encoding="utf-8")
+        )["dependencies"]
+        consumer = "20261023_g_wp08_delivery_jobs_paused"
+        # Reject either missing edge even if unrelated lexical ordering happens to place its
+        # table first. A valid manifest must carry the required dependency explicitly.
+        required = {"member_exp_earned_20261011", "20261012_im_media_visibility"}
+        for missing in ({"member_exp_earned_20261011"}, {"20261012_im_media_visibility"}, required):
+            with self.subTest(missing=missing):
+                broken = dict(dependencies)
+                broken[consumer] = [dep for dep in dependencies[consumer] if dep not in missing]
+                manifest = build_manifest(root, target_commit=TARGET, dependencies=broken)
+                problems = check_manifest_dependency_order(manifest, [], dependencies)
+                self.assertIn("ledger order/dependency metadata mismatch: " + consumer, problems)
+                if missing == required:
+                    # Restore the exact original three-edge entry: its registration really
+                    # sorts before both omitted providers in the canonical repository graph.
+                    positions = {item["migrationId"]: item["order"] for item in manifest["migrations"]}
+                    for provider in required:
+                        self.assertLess(positions[consumer], positions[provider])
+
     def test_ticket_source_migration_expands_payable_component_check(self):
         root = Path(__file__).resolve().parent.parent
         sql = (

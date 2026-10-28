@@ -1,0 +1,26 @@
+{
+  "base": "f281df751ce002f6409f29a8be4201c4f4a62695",
+  "status": "ISOLATED_FULL_REGRESSION_CANDIDATE_NOT_ACCEPTED",
+  "components": {
+    "previous_photo": "root bb4 + C83 + E1162 as f281",
+    "migration": "765..a638 F/A/D layout/parser/scope + D tests10",
+    "G": "765..be00 full G657 + root explicit testenv/cleanup",
+    "C": "83a..7929 first closure/P1 cached read/current completion fact wiring"
+  },
+  "merge_resolution": [
+    "Workflow/registry/test total conflicts resolved by union of all original batches; D current source declares10; all new Photo/G batches retained",
+    "C and D each added equivalent active-page fixture; preserved D existing pages array/push and real lifecycle guard",
+    "Retained root orderedMembers compiler fix and original C IT exact-owned-schema cleanup",
+    "Added C fingerprint actual migration to ThemeRuntime fixture, same-column definition to PredictRace fixture",
+    "Applied C supplied G negative fixture dependency injection patch; business assertions unchanged",
+    "Declared actual C fingerprint and Photo schema dependency order"
+  ],
+  "known_open": [
+    "C complete Photo orchestration not implemented in this candidate; P1 remains",
+    "B payment old-close/new-attempt P1 not integrated",
+    "G positive financial write/readback/unknown policies pending independent review",
+    "F complete compiled dependency producer pending",
+    "WP08 signup durable notification producer pending",
+    "No formal merge, production DDL/deployment or complete WP/Q/G acceptance"
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "node": "24.19.0",
+  "command": "node --test --test-isolation=none --test-reporter=tap <each file separately>",
+  "files": [
+    {
+      "file": "play-my-completed-method-contract.test.js",
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "file": "play-my-completed-selfplay-client.test.js",
+      "tests": 9,
+      "pass": 9,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "file": "square-activity-publish-mapping-contract.test.js",
+      "tests": 9,
+      "pass": 9,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "file": "profile-first-run-state-contract.test.js",
+      "tests": 106,
+      "pass": 106,
+      "fail": 0,
+      "skipped": 0
+    }
+  ],
+  "totals": {
+    "tests": 125,
+    "pass": 125,
+    "fail": 0,
+    "skipped": 0
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "base": "13becff8bb4099ee1ee2a53e3eef280d7f2f18b3",
+  "applied_to_owner_files": false,
+  "files": {
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubMembershipServiceImpl.java": {
+      "base_sha256": "2661588408cca6dbb78eef9fafc8f6f3722cdaa1488c69be4733496ea14d2f7d",
+      "candidate_sha256": "e39a13dc421e4d6054d4b743eadd2f4ac76d6dcd3c6c32ad2461f7bc21ff60c0",
+      "API_references_migrated": 1
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantCommerceService.java": {
+      "base_sha256": "b8970f3c40a11698886b3529624f177a17c110d5a0615739cae2c4dce9e0ae3d",
+      "candidate_sha256": "f0c96e90e12d2d86e2adc7b0e2ba916263ba5bb804660e3801401916c025033c",
+      "API_references_migrated": 1
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubMembershipServiceImplTest.java": {
+      "base_sha256": "e9814e326f53953074d7b6d8caba64008c42285871eedf38257bc1a48f4a3a2b",
+      "candidate_sha256": "3829fc265b529377b13ff2e2c68de3002c292dd81238938957ce92e58c58f5aa",
+      "API_references_migrated": 6
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/MerchantCommerceServiceTest.java": {
+      "base_sha256": "b780b70d8120341d672be5e8a52fac55c804889d64d4ba90c7eb816b55d233be",
+      "candidate_sha256": "a772a85883e973d77401332a3f4557e91179c419b7135853e2c6e0ba6eca6957",
+      "API_references_migrated": 4
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java": {
+      "base_sha256": "c53f6793f07b85ceb4f3f789a67a150d9c56529b140ffc3f586d0fa83e6cbd4c",
+      "candidate_sha256": "7d4739896b20b9d1fa83e97f8a626028c25e835ef5b1369689390ef2833eb799",
+      "API_references_migrated": 1
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopDepositSettlementAttemptTest.java": {
+      "base_sha256": "21a1e140ef899a37c889d6ca9e0c244276f204dc1567d9f7dc797aad5da9af44",
+      "candidate_sha256": "3a6e478f01e9e411042bba1e604039645c5622167cad5fa0f979f2a1da764472",
+      "API_references_migrated": 7
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopDepositSettlementAttemptMySqlIT.java": {
+      "base_sha256": "45f342766fc387d11bd65dc8abb2a8d7c512caf8a89830bc9b158acd69784e73",
+      "candidate_sha256": "7127686aad3c1af5dad63d19cbd8e7a86f980ad26eb29d57130fd1316f811407",
+      "API_references_migrated": 2
+    }
+  },
+  "other-domain-owners.review.patch_context_check": "PASS on exact B13 public source temp copy only",
+  "other-domain-fixtures.review.patch_context_check": "PASS on exact B13 public source temp copy only",
+  "g-deposit-close.review.patch_context_check": "PASS on exact B13 public source temp copy only"
+}

@@ -1,9 +1,13 @@
 // 可复用路线地图组件:给 topicId 自取主题章节,渲染节点 marker + 橙色 polyline。
-// 路线逻辑搬自 pages/topic/index/index.js:buildRouteMap(贴路线优先,节点直连兜底)。
+// 与主题详情复用同一分章投影；只有明确验证的供应商几何可画为道路。
 const toast = require('../../../../utils/toast.js');
+const routePreview = require('../../../../utils/topic-route-preview.js');
 const app = getApp();
 
 Component({
+  lifetimes: {
+    detached() { this._routeDetached = true; this._routeReadEpoch = (this._routeReadEpoch || 0) + 1; }
+  },
   properties: {
     topicId: {
       type: null,
@@ -22,6 +26,7 @@ Component({
   data: {
     routeReady: false,
     routeIsRoad: false,
+    routeSourceText: '',
     mapLatitude: 0,
     mapLongitude: 0,
     routeMarkers: [],
@@ -31,22 +36,30 @@ Component({
 
   methods: {
     loadRoute(topicId) {
+      if (this._routeDetached) return;
       const that = this;
+      const epoch = this._routeReadEpoch = (this._routeReadEpoch || 0) + 1;
+      const session = app.getSession(), revision = session.getRevision();
+      const current = () => !that._routeDetached && that._routeReadEpoch === epoch
+        && app.getSession() === session && session.getRevision() === revision;
+      that.setData(routePreview.build([]));
       app.sendRequest({
         hideLoading: true,
         url: '/api/topic/info-to-user',
         method: 'POST',
         data: { id: topicId },
         success(res) {
-          if (res.code == '200' && res.data && res.data.chaptersList) {
+          if (!current()) return;
+          if (res.code == '200' && res.data && String(res.data.id) === String(topicId) && res.data.chaptersList) {
             that.buildRouteMap(res.data.chaptersList);
           } else {
-            that.setData({ routeReady: false });
+            that.setData(routePreview.build([]));
             that.triggerEvent('empty');
           }
         },
         fail() {
-          that.setData({ routeReady: false });
+          if (!current()) return;
+          that.setData(routePreview.build([]));
           that.triggerEvent('empty');
         }
       });
@@ -54,99 +67,9 @@ Component({
 
     // 拍平章节节点 → marker + polyline(贴路线优先,否则节点直连)
     buildRouteMap(chaptersList) {
-      const that = this;
-      const chapters = chaptersList || [];
+      const view = routePreview.build(chaptersList);
+      this.setData(view, () => this.triggerEvent(view.routeReady ? 'ready' : 'empty'));
 
-      const nodes = [];
-      chapters.forEach(function (c) {
-        (c.nodes || []).forEach(function (n) { nodes.push(n); });
-      });
-      nodes.sort(function (a, b) {
-        return (Number(a.sortId) || 0) - (Number(b.sortId) || 0);
-      });
-
-      const valid = nodes.filter(function (n) {
-        const lat = Number(n.latitude);
-        const lng = Number(n.longitude);
-        return n.latitude && n.longitude && !isNaN(lat) && !isNaN(lng);
-      });
-
-      if (valid.length === 0) {
-        that.setData({ routeReady: false });
-        that.triggerEvent('empty');
-        return;
-      }
-
-      const markers = valid.map(function (n, i) {
-        return {
-          id: i,
-          latitude: Number(n.latitude),
-          longitude: Number(n.longitude),
-          width: 24,
-          height: 24,
-          iconPath: '/images/icon_map4.png',
-          callout: {
-            content: (i + 1) + (n.name ? ' ' + n.name : ''),
-            color: '#FFFFFF',
-            bgColor: '#1A1A1A',   /* 去紫:原生 map 的 callout 用 JS 字面量,吃不到 CSS var,根 token 改了这里不会跟着变 */
-            padding: 6,
-            borderRadius: 8,
-            fontSize: 11,
-            display: 'BYCLICK'
-          }
-        };
-      });
-
-      let linePoints = [];
-      let hasRoad = false;
-      chapters.forEach(function (c) {
-        if (c.routeGeometry) {
-          try {
-            const seg = JSON.parse(c.routeGeometry);
-            if (Array.isArray(seg) && seg.length) {
-              seg.forEach(function (p) {
-                const lat = Number(p.latitude !== undefined ? p.latitude : p.lat);
-                const lng = Number(p.longitude !== undefined ? p.longitude : p.lng);
-                if (!isNaN(lat) && !isNaN(lng)) {
-                  linePoints.push({ latitude: lat, longitude: lng });
-                }
-              });
-              hasRoad = true;
-            }
-          } catch (e) {
-            // 解析失败走兜底
-          }
-        }
-      });
-      if (!hasRoad) {
-        linePoints = valid.map(function (n) {
-          return { latitude: Number(n.latitude), longitude: Number(n.longitude) };
-        });
-      }
-
-      const polyline = linePoints.length >= 2 ? [{
-        points: linePoints,
-        color: '#1A1A1A',   /* 同上:polyline 颜色也是字面量,与 callout 保持同色系 */
-        width: 5,
-        borderColor: '#FFFFFF',
-        borderWidth: 1,
-        arrowLine: true
-      }] : [];
-
-      that.setData({
-        routeReady: true,
-        routeIsRoad: hasRoad,
-        mapLatitude: Number(valid[0].latitude),
-        mapLongitude: Number(valid[0].longitude),
-        routeMarkers: markers,
-        routePolyline: polyline,
-        routeIncludePoints: linePoints.length ? linePoints : markers.map(function (m) {
-          return { latitude: m.latitude, longitude: m.longitude };
-        })
-      }, function () {
-        // 地图数据就位:通知父组件可截图(发布预览快照用)
-        that.triggerEvent('ready');
-      });
     },
 
     // 截取当前路线地图为临时图片(发布静态预览图用),返回 Promise<tempImagePath>

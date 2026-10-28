@@ -1,0 +1,4 @@
+a0fd4851d59d21d377c364fafa5d65e95b9f9337af48ce085ef31107b177b835  chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicCreateOpenClubPoolTest.java
+6c649fe5d669eacf1ea0b624eacc18436b44c5b1c6db8225ad4770bbc2d87d5f  chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicCreateSaveDraftSideEffectTest.java
+f51cde93179656bf91da1bc1b63a87c6f89ad9f4ba4a7344a59dce926144018c  chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicUpdateByOwnerTest.java
+88b373427e24a04c6ae34c93f35e32cdc100f461dcce496db7ffb6e402799749  docs/delivery/architecture-day/A/topic-publication-fixtures-347b/DELIVERY.md

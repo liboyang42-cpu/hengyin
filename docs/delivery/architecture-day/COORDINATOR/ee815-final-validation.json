@@ -1,0 +1,54 @@
+{
+  "source_sha": "ee815c108b791f7f2dbf801d50e4d302419e754f",
+  "standard_ci_run": 40128663849,
+  "real_storage_run": 40128669303,
+  "standard_ci": "FAIL",
+  "backend_xml": {
+    "xml_files": 1933,
+    "counts": {
+      "pass": 14819,
+      "skipped": 633,
+      "failure": 1
+    },
+    "unique": 15453,
+    "duplicate_cases": 0
+  },
+  "backend_failed_cases": [
+    {
+      "class": "com.chengyinhub.business.it.P0DeregistrationMySqlIT",
+      "name": "dueDeregistrationScopesCleanupToTheUserKeepsFinanceAndIsolatesReRegistration",
+      "cause": "Canonical fixture lacks verified_payment_fact_id column used by actual OmsOrderMapper"
+    }
+  ],
+  "real_storage": "PLAN_FAILED; zero storage runners started; Graph source declaration mismatch33/32; corrected metadata not yet hosted-validated",
+  "residual_owners": {
+    "root": "Graph registry810, diagnostic .md document and final artifact integration",
+    "C": "3 actual U1 finite request-proof failures and2 expired exact anchors",
+    "F": "Actual multiple public merge-bases manual comparison refusal, preserve trusted boundary",
+    "H": "P0 deregistration real canonical fixture schema caller"
+  },
+  "skip_meaning": "Environment-gated testcase skips do not prove business acceptance; required storage cases must execute in dedicated run",
+  "all_complete": false,
+  "old_ca0e_failure_error_replay": {
+    "count": 38,
+    "exact_class_and_case_now_pass": 38,
+    "missing_or_skip_or_nonpass": 0,
+    "scope": "Exact old failed/error testcase keys compared across original XML; not overall system acceptance"
+  },
+  "dependency_scan": {
+    "source": "ee815c108b791f7f2dbf801d50e4d302419e754f",
+    "artifact": "chengyin-dependency-scan-1",
+    "critical_high_matches": 0,
+    "remaining": [
+      {
+        "id": "GHSA-crwc-vw2r-qr6m",
+        "severity": "Medium"
+      },
+      {
+        "id": "GHSA-5j4c-8p2g-v4jx",
+        "severity": "Low"
+      }
+    ],
+    "note": "Original Zod High absent in same-source Grype report; not live browser renderer acceptance"
+  }
+}

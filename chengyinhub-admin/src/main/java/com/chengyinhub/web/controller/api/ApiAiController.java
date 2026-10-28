@@ -19,7 +19,11 @@ import com.chengyinhub.business.domain.dto.ai.AiTemplateFillReq;
 import com.chengyinhub.business.domain.dto.ai.AiSafetyPrecheckReq;
 import com.chengyinhub.business.domain.dto.ai.AiThemeDraftReq;
 import com.chengyinhub.business.domain.dto.ai.AiChapterOverviewReq;
-import com.chengyinhub.business.domain.vo.ai.AiThemeDraftRequestState;
+import com.chengyinhub.business.domain.dto.ai.AiThemeDraftPrepareReq;
+import com.chengyinhub.business.domain.dto.ai.AiThemeDraftExecuteReq;
+import com.chengyinhub.business.domain.vo.ai.AiThemeDraftIntentView;
+import com.chengyinhub.business.domain.vo.ai.AiThemeDraftIntentState;
+import com.chengyinhub.business.domain.vo.ai.AiThemeDraftRecoveryItem;
 import com.chengyinhub.business.service.IAiCreatorService;
 import com.chengyinhub.business.service.impl.AiThemeDraftRequestService;
 import com.chengyinhub.business.service.ai.AiServiceException;
@@ -151,109 +155,127 @@ public class ApiAiController extends BaseController
         }
     }
 
-    @Operation(summary = "AI主题草稿:一句话→主题骨架")
+    @Operation(summary = "主题草稿旧提交入口已关闭")
     @RateLimiter(time = 60, count = 20, limitType = LimitType.MEMBER)
     @PostMapping("/theme/draft")
     public AjaxResult themeDraft(@RequestBody AiThemeDraftReq req)
     {
+        if (resolveMemberId() == null) return error("请先登录");
+        return draftError(400, "请先准备本次起草", "AI_DRAFT_PREPARE_REQUIRED", null);
+    }
+
+    @Operation(summary = "准备主题草稿原请求")
+    @RateLimiter(time = 60, count = 20, limitType = LimitType.MEMBER)
+    @PostMapping("/theme/draft/prepare")
+    public AjaxResult themeDraftPrepare(@RequestBody AiThemeDraftPrepareReq req)
+    {
         Long memberId = resolveMemberId();
         if (memberId == null) return error("请先登录");
-        String gate = gateThemeDraftRole(memberId);
-        if (gate != null) return error(gate);
-        if (req != null && req.getRequestId() != null && !req.getRequestId().trim().isEmpty())
-        {
-            return themeDraftWithRequestId(req, memberId);
-        }
-
-        try
-        {
-            return success(aiCreatorService.themeDraft(req, memberId));
-        }
-        catch (AiServiceException e)
-        {
-            return error(e.getMessage());
+        try {
+            return success(themeDraftRequests.prepare(memberId, req));
+        } catch (AiThemeDraftRequestService.IntentRejectedException refused) {
+            return draftRejected(refused);
+        } catch (AiThemeDraftRequestService.StateUnavailableException unavailable) {
+            return draftUnavailable(memberId, unavailable);
         }
     }
 
-    /** 带 requestId 的草稿:同一 requestId 只生成一次,重复提交回放原结果或原状态。 */
-    private AjaxResult themeDraftWithRequestId(AiThemeDraftReq req, Long memberId)
+    @Operation(summary = "执行已准备的主题草稿原请求")
+    @RateLimiter(time = 60, count = 20, limitType = LimitType.MEMBER)
+    @PostMapping("/theme/draft/execute")
+    public AjaxResult themeDraftExecute(@RequestBody AiThemeDraftExecuteReq req)
     {
-        if (!AiThemeDraftRequestService.isValidRequestId(req.getRequestId()))
-        {
-            return draftError(com.chengyinhub.common.constant.HttpStatus.BAD_REQUEST, "请求编号无效,请重新发起",
-                    "AI_DRAFT_INVALID_REQUEST", null);
+        Long memberId = resolveMemberId();
+        if (memberId == null) return error("请先登录");
+        try {
+            AiThemeDraftIntentView view = themeDraftRequests.execute(memberId, req);
+            if (view == null) return draftError(500, "暂时无法确认原请求", "AI_DRAFT_STATE_UNAVAILABLE", null);
+            if (view.state() == AiThemeDraftIntentState.SUCCEEDED) {
+                if (view.resultAvailable() && view.result() != null) return success(view);
+                if ("AI_DRAFT_RESULT_EXPIRED".equals(view.reasonCode()))
+                    return draftError(409, "原草稿已生成，正文已过期", "AI_DRAFT_RESULT_EXPIRED", view);
+                return draftError(503, "原草稿已生成，正文暂时不可用", "AI_DRAFT_RESULT_UNAVAILABLE", view);
+            }
+            if (view.state() == AiThemeDraftIntentState.FAILED)
+                return draftError(500, "AI 起草未成功", "AI_DRAFT_FAILED", view);
+            if (view.state() == AiThemeDraftIntentState.UNKNOWN)
+                return draftError(409, "原请求结果仍待确认", "AI_DRAFT_OUTCOME_UNKNOWN", view);
+            return draftError(409, "原请求尚未完成，请查看原结果", "AI_DRAFT_IN_PROGRESS", view);
+        } catch (AiThemeDraftRequestService.IntentRejectedException refused) {
+            return draftRejected(refused);
+        } catch (AiThemeDraftRequestService.StateUnavailableException unavailable) {
+            return draftUnavailable(memberId, unavailable);
         }
-        AiThemeDraftRequestState state;
-        try
-        {
-            state = themeDraftRequests.submit(req, memberId);
-        }
-        catch (AiThemeDraftRequestService.StateUnavailableException e)
-        {
-            logger.error("[AiThemeDraft] request state unavailable memberId={}", memberId, e);
-            return draftError(com.chengyinhub.common.constant.HttpStatus.ERROR, "AI 起草暂时不可用,请稍后重试",
-                    "AI_DRAFT_STATE_UNAVAILABLE", null);
-        }
-        if (AiThemeDraftRequestState.SUCCEEDED.equals(state.getState()))
-        {
-            AjaxResult ok = success(state.getResult());
-            ok.put("requestId", state.getRequestId());
-            ok.put("requestState", state.getState());
-            ok.put("replayed", state.isReplayed());
-            return ok;
-        }
-        if (AiThemeDraftRequestState.FAILED.equals(state.getState()))
-        {
-            return draftError(com.chengyinhub.common.constant.HttpStatus.ERROR, state.getMessage(),
-                    "AI_DRAFT_FAILED", state);
-        }
-        if (AiThemeDraftRequestState.PROCESSING.equals(state.getState()))
-        {
-            return draftError(com.chengyinhub.common.constant.HttpStatus.CONFLICT, "上一次起草还在进行中,请稍后查看结果",
-                    "AI_DRAFT_IN_PROGRESS", state);
-        }
-        return draftError(com.chengyinhub.common.constant.HttpStatus.CONFLICT, "上一次起草的结果暂时无法确认,请稍后查看",
-                "AI_DRAFT_OUTCOME_UNKNOWN", state);
     }
 
-    private static AjaxResult draftError(int code, String msg, String errorCode, AiThemeDraftRequestState state)
+    @Operation(summary = "按原请求或准备编号回读本人的草稿事实")
+    @RateLimiter(time = 60, count = 60, limitType = LimitType.MEMBER)
+    @GetMapping("/theme/draft/request")
+    public AjaxResult themeDraftRequest(@RequestParam(required = false) String requestId,
+            @RequestParam(required = false) String prepareKey)
+    {
+        Long memberId = resolveMemberId();
+        if (memberId == null) return error("请先登录");
+        if ((requestId == null) == (prepareKey == null)
+                || (requestId != null && requestId.isBlank()) || (prepareKey != null && prepareKey.isBlank()))
+            return draftError(400, "请提供一个原请求编号", "AI_DRAFT_INVALID_REQUEST", null);
+        try {
+            return success(requestId != null ? themeDraftRequests.readIntent(memberId, requestId)
+                    : themeDraftRequests.readPrepared(memberId, prepareKey));
+        } catch (AiThemeDraftRequestService.IntentRejectedException refused) {
+            return draftRejected(refused);
+        } catch (AiThemeDraftRequestService.StateUnavailableException unavailable) {
+            return draftUnavailable(memberId, unavailable);
+        }
+    }
+
+    @Operation(summary = "找回本人原草稿请求及已知结果事实")
+    @RateLimiter(time = 60, count = 60, limitType = LimitType.MEMBER)
+    @GetMapping("/theme/draft/recovery")
+    public AjaxResult themeDraftRecovery(@RequestParam(required = false) Long beforeId)
+    {
+        Long memberId = resolveMemberId();
+        if (memberId == null) return error("请先登录");
+        try {
+            java.util.List<AiThemeDraftRecoveryItem> pending = themeDraftRequests.readRecovery(memberId, beforeId);
+            if (pending == null) return draftError(500, "暂时无法确认原请求", "AI_DRAFT_STATE_UNAVAILABLE", null);
+            java.util.List<DraftRecoveryView> items = pending.subList(0, Math.min(20, pending.size())).stream()
+                    .map(item -> new DraftRecoveryView(item.cursor().toString(), item.prepareKey(), item.requestId(),
+                            item.state(), item.reasonCode(), item.createdAt(), item.executeBefore(), item.resultExpiresAt(),
+                            item.productType())).toList();
+            java.util.Map<String, Object> data = new java.util.LinkedHashMap<>();
+            data.put("items", items);
+            data.put("nextCursor", pending.size() > 20 ? items.get(items.size() - 1).cursor() : null);
+            return success(data);
+        } catch (AiThemeDraftRequestService.IntentRejectedException refused) {
+            return draftRejected(refused);
+        } catch (AiThemeDraftRequestService.StateUnavailableException unavailable) {
+            return draftUnavailable(memberId, unavailable);
+        }
+    }
+
+    // Decimal strings retain the full MySQL BIGINT cursor across JavaScript clients.
+    private record DraftRecoveryView(String cursor, String prepareKey, String requestId,
+            AiThemeDraftIntentState state, String reasonCode, java.time.Instant createdAt,
+            java.time.Instant executeBefore, java.time.Instant resultExpiresAt, Integer productType) { }
+
+    private static AjaxResult draftError(int code, String msg, String errorCode, AiThemeDraftIntentView view)
     {
         AjaxResult result = new AjaxResult(code, msg);
         result.put("errorCode", errorCode);
-        if (state != null)
-        {
-            result.put("requestId", state.getRequestId());
-            result.put("requestState", state.getState());
-        }
+        if (view != null) result.put(AjaxResult.DATA_TAG, view);
         return result;
     }
 
-    /**
-     * 按 requestId 回读本人的 AI 主题草稿请求(状态 + 结果)。只读:不调模型、不动额度。
-     * 键按登录会员隔离,别人的 requestId 在这里恒为 NOT_FOUND。
-     */
-    @Operation(summary = "AI主题草稿请求回读")
-    @RateLimiter(time = 60, count = 60, limitType = LimitType.MEMBER)
-    @GetMapping("/theme/draft/request")
-    public AjaxResult themeDraftRequest(@RequestParam(required = false) String requestId)
+    private static AjaxResult draftRejected(AiThemeDraftRequestService.IntentRejectedException refused)
     {
-        Long memberId = resolveMemberId();
-        if (memberId == null) return error("请先登录");
-        if (!AiThemeDraftRequestService.isValidRequestId(requestId))
-        {
-            return draftError(com.chengyinhub.common.constant.HttpStatus.BAD_REQUEST, "请求编号无效",
-                    "AI_DRAFT_INVALID_REQUEST", null);
-        }
-        try
-        {
-            return success(themeDraftRequests.read(memberId, requestId));
-        }
-        catch (AiThemeDraftRequestService.StateUnavailableException e)
-        {
-            logger.error("[AiThemeDraft] readback unavailable memberId={}", memberId, e);
-            return draftError(com.chengyinhub.common.constant.HttpStatus.ERROR, "暂时查不到上一次起草的结果,请稍后再试",
-                    "AI_DRAFT_STATE_UNAVAILABLE", null);
-        }
+        return draftError(refused.getCode(), "本次起草暂不能继续", refused.getErrorCode(), refused.getIntent());
+    }
+
+    private AjaxResult draftUnavailable(Long memberId, RuntimeException unavailable)
+    {
+        logger.error("[AiThemeDraft] state unavailable memberId={} failureType={}", memberId, unavailable.getClass().getSimpleName());
+        return draftError(500, "暂时无法确认原请求，请稍后回读", "AI_DRAFT_STATE_UNAVAILABLE", null);
     }
 
     @Operation(summary = "简单 AI 主题草稿剩余额度")

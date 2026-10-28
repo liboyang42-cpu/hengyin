@@ -1,0 +1,4 @@
+7bf3e9ad4f24dcb5bc940e8175e77e2fa5953c761376b7a8d4333f2d37e4b41d  chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopComplaintCommittedNoticeMySqlIT.java
+761370dda904f061f3ed421c28cb2d4d9c9f13efafad898dedb18a62f65cbc75  chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopComplaintServiceImplTest.java
+c6daee54590799f46a9b0a4ca9fc0e0cdac271e81875f972a4167f2a7c455b22  chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopComplaintServiceImpl.java
+199092f4f2953fc4dd22da6fa3b9536cbab0405e52ebfdda68fa62dc5d4a737c  docs/delivery/architecture-day/D/complaint-close-notice-hook/README.md

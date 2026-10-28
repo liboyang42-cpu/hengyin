@@ -1,0 +1,216 @@
+{
+  "task": "H-TG-runtime-consumption",
+  "contract": "ROOT_FINAL_CONTRACT_V3",
+  "parent": "e306ae9b38555262651991591d433876ae9069b3",
+  "parent_tree": "582e67d4a40596ef61ecd3d0a7dd6085996e03e4",
+  "candidate": "containing commit; full SHA also in delivery message",
+  "owned_files": 26,
+  "shared_review_files": 6,
+  "test_wiring_review_files": 1,
+  "new_test_source_methods": 45,
+  "test_execution": "NOT_RUN",
+  "compilation": "NOT_RUN",
+  "mysql_redis_http_wechat_provider": "NOT_RUN",
+  "all_complete": false,
+  "shared_baseline": "parent + G TG1-TG2/shared-producer-ports.review.patch.b64; G other shared hunks retained by root",
+  "entries": [
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/play/PlayBasicCommandApplication.java",
+      "delivery": "owned",
+      "parent_blob": "c628d1e4f523c2840e4121a4bdfd9f09e5299c75",
+      "composed_postimage_sha256": "36817db7ddaa5b402ba94886015733ec39cc6c5738bd9f8b848dbb44d31bd8f8"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/play/PlayEntryApplication.java",
+      "delivery": "owned",
+      "parent_blob": "278b316c2f025c316080e12f01fc6973bfdc495f",
+      "composed_postimage_sha256": "880130f2d497881d75d28d319e49fed3f91165be19a7710e6405c9da82031cf5"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/play/PlayNodeContext.java",
+      "delivery": "owned",
+      "parent_blob": "09925d61a38ac520ca73df7a4d6743bdd9a33bf1",
+      "composed_postimage_sha256": "024eaaadf0b5de03a650449ac45068bebeec1bbd7a69c123e13c93ba9436f9cf"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/play/PlayNodeQueryApplication.java",
+      "delivery": "owned",
+      "parent_blob": "e3bec8d113f5f9bdb59d9ecf6dc31b1f081305a1",
+      "composed_postimage_sha256": "7d547e6e3bf8bc8e6926fd248424e9e9c18138ae43519b7bab0d09ae9103940f"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/play/PlayPreferenceApplication.java",
+      "delivery": "owned",
+      "parent_blob": "ea23efaa45579b1227009889c13641daaf441b00",
+      "composed_postimage_sha256": "161c178b2d6489f1e0661bc3fcad2da50b6fe2066f0fc8eb6789c68c876cb6a0"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AdvancedGameRuntimeServiceImplTest.java",
+      "delivery": "owned",
+      "parent_blob": "94f89104e6a196c8873013c447c2043aaf2f9ec6",
+      "composed_postimage_sha256": "cb6ee8a276e7b50a7e360295a65a16bc3ea9cb773962665ce6c52048abf87c29"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameSharedRouteQueryTest.java",
+      "delivery": "owned",
+      "parent_blob": "84c1ab49ec55f6343cda1a5f64f6fa5f0242ae5a",
+      "composed_postimage_sha256": "a638966061221f9f96944252df7415bde87622d0c0131478c69a47fc85b86f52"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/NodeHintUnlockApplicationTest.java",
+      "delivery": "owned",
+      "parent_blob": "5a932300ca90f30fdcc43ca76b190d7768a86fa7",
+      "composed_postimage_sha256": "577ca5d03beb654af6ffcd1626a9aa6f66da8852867307810ae47044332d80d9"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayJourneyReadServiceImplTest.java",
+      "delivery": "owned",
+      "parent_blob": "d8ca7d3ac517713ba0377355b20c923a1d96fbb9",
+      "composed_postimage_sha256": "963a828e369f77c5776cd3de716f2f4e87676435bd6c5a7af24fc8b64df60e08"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PublishedNodeContentConsumptionTest.java",
+      "delivery": "owned",
+      "parent_blob": null,
+      "composed_postimage_sha256": "ff291d0d34bfa11bfe0b5a3d2bdd18bf1ea5059c19130bc6886e4a276d9d4681"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PuzzlePlayServiceImplTest.java",
+      "delivery": "owned",
+      "parent_blob": "7768e72b6ac7fff9541d75e9f43f50a29ea03eb3",
+      "composed_postimage_sha256": "dd9596e712756516683eacdba9e62bd6658f01255851eb49dbb567eafbac802f"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/ThemeCharacterServiceTest.java",
+      "delivery": "owned",
+      "parent_blob": "0733d43d59e92fda4493e1b677532199bc8fff2d",
+      "composed_postimage_sha256": "7cfeda029b8c38aeecb143fd861fe03d7101249030cde374c2b6f4f20cee35ed"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayEncounterControllerTest.java",
+      "delivery": "owned",
+      "parent_blob": "e672c19977a2caa39c427ea5f0e549784ce602a7",
+      "composed_postimage_sha256": "3ab65a6e3673ab3d942df2c66e1f11dbe60bd0065b8c73beb5b792dc220bc35f"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressCompletionTruthTest.java",
+      "delivery": "owned",
+      "parent_blob": "2957369dfb28fbf29a214269ec3e5538a10dc21d",
+      "composed_postimage_sha256": "e4dd94efb5147bbfdfeb14c0ec967053389ba924ada20b610bd978af6267506f"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayPuzzleHintTest.java",
+      "delivery": "owned",
+      "parent_blob": "84f4380c9499d5590863acc455607dfc5541794d",
+      "composed_postimage_sha256": "ade2919049df5cc7e67c34fd8ca2724aa20eb1a670916311186b9cac17e6234e"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySensorResultTest.java",
+      "delivery": "owned",
+      "parent_blob": "3fa07a32098bd8264b3791a98c84a4b0642f8dce",
+      "composed_postimage_sha256": "544e759ccd981b15c3f84be381e795979e4d278762b3a3962ada8ae698941efb"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/service/play/PlayFrozenContentProjectionTest.java",
+      "delivery": "owned",
+      "parent_blob": null,
+      "composed_postimage_sha256": "02fed4f7785c2497843cac1ffd7a6bed5ff81e54487843a9385b78da929842ff"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/service/play/PlayFrozenPreferenceAdmissionTest.java",
+      "delivery": "owned",
+      "parent_blob": null,
+      "composed_postimage_sha256": "c07e9c383e949bc10559e8450673c9b4b1a60a6f126f16711774d00806a9e593"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/GameRuntimeSessionMapper.java",
+      "delivery": "owned",
+      "parent_blob": "d449379f2153af6be20093741d4075e7d7fd3614",
+      "composed_postimage_sha256": "e9271daf94548ca2d1700e3f5c4b3a699058bac3ed8bf5973a5bb651bd833e58"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IAdvancedGameRuntimeService.java",
+      "delivery": "owned",
+      "parent_blob": "43bc5e1ac54976178962d1a3bf73866fa0004204",
+      "composed_postimage_sha256": "220befef829f18ac4dd7e2f47b80adada1c02ee3f9b2ddbc5529dc997b02ba44"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IGameSessionRuntimeService.java",
+      "delivery": "shared_review",
+      "parent_blob": "fd189e5663e2447902bba6fef1d340e998a0589f",
+      "composed_postimage_sha256": "82f15009131939e1d1ad69633e4e9bf1227e16151af8eaaedabb09bf1cc01a92"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ITopicRouteRuntimeService.java",
+      "delivery": "shared_review",
+      "parent_blob": "0dbfff9c075b3f665e615a5555caf47eae420cd5",
+      "composed_postimage_sha256": "fa32575bf7468c5a0cbf995c5bbc9bb86c848cf88a965d098d3dc91f28cce1c4"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AdvancedGameRuntimeServiceImpl.java",
+      "delivery": "owned",
+      "parent_blob": "3d182681070436e5fce80fdfe6f54371e16dd793",
+      "composed_postimage_sha256": "44190e5abab50d14a48ef92fb357608c4681535e1626d84d549346c23cea9caa"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java",
+      "delivery": "shared_review",
+      "parent_blob": "c669a2ea4c7d4ad705976ddcf14a1e70c7ec1830",
+      "composed_postimage_sha256": "63497e45bed630016b33e72e5664c5a14560fd463d8f6b9c351e2114b290f289"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayEncounterServiceImpl.java",
+      "delivery": "owned",
+      "parent_blob": "0d1e0f26ec456f5f94ae66fbe0d46f28bc2875b0",
+      "composed_postimage_sha256": "cb0117b24fde4ad79bfbdd50d4ef24cd4ce6943e6ecef16308d53773c345b508"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayJourneyReadServiceImpl.java",
+      "delivery": "owned",
+      "parent_blob": "0ecf115361893bc1f18fff2a18748a2b6d33b4ba",
+      "composed_postimage_sha256": "576048fd2f49951504b0460f0de7d91e426cc78bc51de50a9e0e4d8d5ae90a1c"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PuzzlePlayServiceImpl.java",
+      "delivery": "owned",
+      "parent_blob": "7a66a3c6e2f26124ee808bb26296a7a890e7b18a",
+      "composed_postimage_sha256": "c56b08feeff88594f9c4e88e4f4ab58747b9c81201591a95bc303f9f8eca1454"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java",
+      "delivery": "shared_review",
+      "parent_blob": "2e6e460c1ee412cb9e9a856a24c9877d62c19651",
+      "composed_postimage_sha256": "38b7857a3ff1d57c2c8716440b57c58e9412324619459512182fdd1227ee9c83"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/JourneyInitialState.java",
+      "delivery": "shared_review",
+      "parent_blob": "3b2d27550feffc228163b98417fa3c9e06e3428f",
+      "composed_postimage_sha256": "a13e5521c4f7050e5ff2a1048c0869738b9d22978f42aeef4e4403f74119094e"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/NodeJourneySnapshot.java",
+      "delivery": "shared_review",
+      "parent_blob": "0c2a8ae89e8f83c3c0b1c56c3ce7b0bd4c194a9e",
+      "composed_postimage_sha256": "7c9a287117dafce3bdeffdaf130fb7fb097f5d5bef98c4955a753b5a5f34b407"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/ThemeCharacterService.java",
+      "delivery": "owned",
+      "parent_blob": "82569f963294b6ec0b18b137e550810856ce5a52",
+      "composed_postimage_sha256": "ddc3def04423fbac0ad50a6092892112c1107931ae9fac12b710d337c86c8f3c"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/GameRuntimeSessionMapper.xml",
+      "delivery": "owned",
+      "parent_blob": "6a1d299960ffac918507bec562035b1f6d9bc795",
+      "composed_postimage_sha256": "712805bb012441e37bb27c57baf32cc0f322a0ad7a2f1fd2cb2a59bd0281567e"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PlayNodeAccessTestFixtures.java",
+      "delivery": "test_wiring_review",
+      "parent_blob": "ce4f870e6e24a63d3a9b383af7ecf3105eefd125",
+      "composed_postimage_sha256": "1edc6bacb5ed26b88f3ee880cb632bcc4ff42c8fe17c17e2fdbc5ef35e58c34f"
+    }
+  ]
+}

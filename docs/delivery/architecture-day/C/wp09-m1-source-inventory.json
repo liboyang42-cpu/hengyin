@@ -1,0 +1,2871 @@
+{
+  "latest_root_source_compared": "6ecaea01e0e1a3f3182189615bc00cf9f791fd47",
+  "latest_root_identical_scope_files": 63,
+  "status": "DOC_ONLY_M1_CONTRACT_NOT_AUTHORIZED_FOR_SOURCE_CHANGES",
+  "base": "9a2dcf21aef4d7aec7a14065a2601bd86aaad805",
+  "old_plan_commit": "d359cd2de8d4b5f78fc2f998db969ad8ae657327",
+  "controller_blob": "d529fcb93849a03783e2e5d979afd188179c7be7",
+  "counts": {
+    "shared_implementations": 14,
+    "d359_reference_files": 55,
+    "d359_direct_new_files": 41,
+    "current_reference_files": 59,
+    "current_direct_new_files": 45
+  },
+  "limitations": [
+    "lexical overload callers are conservative union, not AST resolution",
+    "source counts are not executed tests",
+    "no Java/MySQL/CI executed"
+  ],
+  "source_files": [
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java",
+      "sha256": "8431d90ceb7f87205a82ef50d36f231437a5590564bf0000570786c21be42550"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IPuzzlePlayService.java",
+      "sha256": "b1041394dcccd4aff3b56529becb631b63bfc0908b189d07619e443b6d2239d1"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PuzzlePlayServiceImpl.java",
+      "sha256": "8806a82a99dcfcfc3f86c6879ac80caff12a479498a63b78ea0fafaf4c654172"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/CurrentPlayRegistration.java",
+      "sha256": "53495a67081e3c3215a872f340796a66cbb8af05ebc685118a2228fded2e6ebe"
+    }
+  ],
+  "shared_helpers": [
+    {
+      "symbol": "isDelistedNode",
+      "signature": "private boolean isDelistedNode(CmsTopicNode node)",
+      "line": 1205,
+      "body_sha256": "a61bba1e9e34d078bfafdd997c493af385d87727bc106740d186ac49176fdd30",
+      "shared_calls_in_lexical_order": [],
+      "dependency_calls_in_lexical_order": [
+        [
+          "node",
+          "getStatus"
+        ],
+        [
+          "Long",
+          "valueOf"
+        ],
+        [
+          "node",
+          "getStatus"
+        ]
+      ],
+      "callers": [
+        {
+          "symbol": "checkinOnce",
+          "line": 1559
+        },
+        {
+          "symbol": "answerOnce",
+          "line": 1706
+        },
+        {
+          "symbol": "submitPreference",
+          "line": 1938
+        },
+        {
+          "symbol": "sensorResult",
+          "line": 2127
+        },
+        {
+          "symbol": "arriveOnce",
+          "line": 2197
+        },
+        {
+          "symbol": "photo",
+          "line": 2403
+        },
+        {
+          "symbol": "routeAccessError",
+          "line": 2654
+        }
+      ]
+    },
+    {
+      "symbol": "hasCompletedNodeFact",
+      "signature": "private boolean hasCompletedNodeFact(Long memberId, String activityId, CmsTopicNode node)",
+      "line": 1215,
+      "body_sha256": "aba9ceaa00f720c1eed9d00c783a4de69070a60be98ad0cd0fedf9b8d35c7ff9",
+      "shared_calls_in_lexical_order": [
+        "hasCompletedNodeFact"
+      ],
+      "dependency_calls_in_lexical_order": [
+        [
+          "StringUtils",
+          "isNotBlank"
+        ],
+        [
+          "activityId",
+          "trim"
+        ],
+        [
+          "Long",
+          "valueOf"
+        ],
+        [
+          "activityId",
+          "trim"
+        ]
+      ],
+      "callers": [
+        {
+          "symbol": "checkinOnce",
+          "line": 1559
+        },
+        {
+          "symbol": "answerOnce",
+          "line": 1706
+        },
+        {
+          "symbol": "submitPreference",
+          "line": 1939
+        },
+        {
+          "symbol": "sensorResult",
+          "line": 2127
+        },
+        {
+          "symbol": "arriveOnce",
+          "line": 2197
+        },
+        {
+          "symbol": "photo",
+          "line": 2403
+        },
+        {
+          "symbol": "routeAccessError",
+          "line": 2654
+        }
+      ]
+    },
+    {
+      "symbol": "hasCompletedNodeFact",
+      "signature": "private boolean hasCompletedNodeFact(Long memberId, Long actId, CmsTopicNode node)",
+      "line": 1226,
+      "body_sha256": "b3e2d093209c1c3eb5c8a494e9954a184889b2cb60a753ff3657381955b266eb",
+      "shared_calls_in_lexical_order": [
+        "findNodeProgressRow"
+      ],
+      "dependency_calls_in_lexical_order": [
+        [
+          "node",
+          "getId"
+        ],
+        [
+          "node",
+          "getTopicId"
+        ],
+        [
+          "node",
+          "getId"
+        ],
+        [
+          "Integer",
+          "valueOf"
+        ],
+        [
+          "row",
+          "getStatus"
+        ]
+      ],
+      "callers": [
+        {
+          "symbol": "hasCompletedNodeFact",
+          "line": 1222
+        },
+        {
+          "symbol": "checkinOnce",
+          "line": 1559
+        },
+        {
+          "symbol": "answerOnce",
+          "line": 1706
+        },
+        {
+          "symbol": "submitPreference",
+          "line": 1939
+        },
+        {
+          "symbol": "sensorResult",
+          "line": 2127
+        },
+        {
+          "symbol": "arriveOnce",
+          "line": 2197
+        },
+        {
+          "symbol": "photo",
+          "line": 2403
+        },
+        {
+          "symbol": "routeAccessError",
+          "line": 2654
+        }
+      ]
+    },
+    {
+      "symbol": "findNodeProgressRow",
+      "signature": "private PlayerNodeProgress findNodeProgressRow(Long memberId, Long actId, Long topicId, Long nodeId)",
+      "line": 2366,
+      "body_sha256": "d5eb3e4a03d420b02f8fea3ec8f233ee9b249fced80f3898af65df19cb38ccfb",
+      "shared_calls_in_lexical_order": [],
+      "dependency_calls_in_lexical_order": [
+        [
+          "probe",
+          "setMemberId"
+        ],
+        [
+          "probe",
+          "setActivityId"
+        ],
+        [
+          "probe",
+          "setNodeId"
+        ],
+        [
+          "probe",
+          "setTopicId"
+        ],
+        [
+          "playerNodeProgressService",
+          "selectPlayerNodeProgressList"
+        ],
+        [
+          "rows",
+          "isEmpty"
+        ],
+        [
+          "rows",
+          "get"
+        ]
+      ],
+      "callers": [
+        {
+          "symbol": "hasCompletedNodeFact",
+          "line": 1229
+        },
+        {
+          "symbol": "photo",
+          "line": 2438
+        },
+        {
+          "symbol": "photo",
+          "line": 2471
+        }
+      ]
+    },
+    {
+      "symbol": "isPrevDone",
+      "signature": "private boolean isPrevDone(Long memberId, Long actId, CmsTopicNode node)",
+      "line": 2622,
+      "body_sha256": "12b7c9b86a50e849cc05fff3d0f143e0b1cc4c36e1e78fd4b9da980ee6ca6510",
+      "shared_calls_in_lexical_order": [],
+      "dependency_calls_in_lexical_order": [
+        [
+          "node",
+          "getSortId"
+        ],
+        [
+          "node",
+          "getSortId"
+        ],
+        [
+          "allProbe",
+          "setTopicId"
+        ],
+        [
+          "node",
+          "getTopicId"
+        ],
+        [
+          "allProbe",
+          "setStatus"
+        ],
+        [
+          "cmsTopicNodeService",
+          "selectCmsTopicNodeList"
+        ],
+        [
+          "doneProbe",
+          "setMemberId"
+        ],
+        [
+          "doneProbe",
+          "setActivityId"
+        ],
+        [
+          "playerNodeProgressService",
+          "selectPlayerNodeProgressList"
+        ],
+        [
+          "p",
+          "getStatus"
+        ],
+        [
+          "p",
+          "getStatus"
+        ],
+        [
+          "doneIds",
+          "add"
+        ],
+        [
+          "p",
+          "getNodeId"
+        ],
+        [
+          "n",
+          "getSortId"
+        ],
+        [
+          "n",
+          "getSortId"
+        ],
+        [
+          "doneIds",
+          "contains"
+        ],
+        [
+          "n",
+          "getId"
+        ]
+      ],
+      "callers": [
+        {
+          "symbol": "routeAccessError",
+          "line": 2661
+        }
+      ]
+    },
+    {
+      "symbol": "routeAccessError",
+      "signature": "private String routeAccessError(Long memberId, Long actId, Long topicId, CmsTopicNode node,\n                                    String routeActionId)",
+      "line": 2648,
+      "body_sha256": "e6769a2e0c2d9c09b1da55312bff0fb568c5c4681000e9bff0eff2e05e1ce0ed",
+      "shared_calls_in_lexical_order": [
+        "isDelistedNode",
+        "hasCompletedNodeFact",
+        "resolveMode",
+        "isPrevDone",
+        "unlockGateError"
+      ],
+      "dependency_calls_in_lexical_order": [
+        [
+          "topicRouteRuntimeService",
+          "canPlay"
+        ],
+        [
+          "node",
+          "getId"
+        ]
+      ],
+      "callers": [
+        {
+          "symbol": "checkinOnce",
+          "line": 1589
+        },
+        {
+          "symbol": "answerOnce",
+          "line": 1728
+        },
+        {
+          "symbol": "revealPuzzle",
+          "line": 1834
+        },
+        {
+          "symbol": "puzzleHint",
+          "line": 1893
+        },
+        {
+          "symbol": "resolvePreferencePlayCtx",
+          "line": 2015
+        },
+        {
+          "symbol": "sensorResult",
+          "line": 2135
+        },
+        {
+          "symbol": "arriveOnce",
+          "line": 2236
+        },
+        {
+          "symbol": "photo",
+          "line": 2467
+        },
+        {
+          "symbol": "unlockHint",
+          "line": 3815
+        }
+      ]
+    },
+    {
+      "symbol": "unlockGateError",
+      "signature": "private String unlockGateError(Long memberId, Long actId, CmsTopicNode node)",
+      "line": 2671,
+      "body_sha256": "3104b58df412bd81f71e1b2dd60864207f2c83e3472f95e3c06f1715f01f3cc9",
+      "shared_calls_in_lexical_order": [],
+      "dependency_calls_in_lexical_order": [
+        [
+          "node",
+          "getUnlockAfterNodeId"
+        ],
+        [
+          "node",
+          "getUnlockAfterNodeId"
+        ],
+        [
+          "probe",
+          "setMemberId"
+        ],
+        [
+          "probe",
+          "setActivityId"
+        ],
+        [
+          "probe",
+          "setNodeId"
+        ],
+        [
+          "node",
+          "getUnlockAfterNodeId"
+        ],
+        [
+          "playerNodeProgressService",
+          "selectPlayerNodeProgressList"
+        ],
+        [
+          "p",
+          "getStatus"
+        ],
+        [
+          "p",
+          "getStatus"
+        ],
+        [
+          "cmsTopicNodeService",
+          "selectCmsTopicNodeById"
+        ],
+        [
+          "node",
+          "getUnlockAfterNodeId"
+        ],
+        [
+          "StringUtils",
+          "isNotBlank"
+        ],
+        [
+          "prev",
+          "getName"
+        ],
+        [
+          "prev",
+          "getName"
+        ]
+      ],
+      "callers": [
+        {
+          "symbol": "resolvePreferencePlayCtx",
+          "line": 2013
+        },
+        {
+          "symbol": "photo",
+          "line": 2427
+        },
+        {
+          "symbol": "routeAccessError",
+          "line": 2663
+        }
+      ]
+    },
+    {
+      "symbol": "activityTimeError",
+      "signature": "private String activityTimeError(CmsActivity activity)",
+      "line": 2705,
+      "body_sha256": "3822bd46c79cefc2ec34e509b26345daf9e32cf4907f637c6ba517d5626753f6",
+      "shared_calls_in_lexical_order": [],
+      "dependency_calls_in_lexical_order": [
+        [
+          "activity",
+          "getStartDate"
+        ],
+        [
+          "now",
+          "before"
+        ],
+        [
+          "activity",
+          "getStartDate"
+        ],
+        [
+          "activity",
+          "getEndDate"
+        ],
+        [
+          "now",
+          "before"
+        ],
+        [
+          "activity",
+          "getEndDate"
+        ]
+      ],
+      "callers": [
+        {
+          "symbol": "nodes",
+          "line": 376
+        },
+        {
+          "symbol": "resolveCtx",
+          "line": 2993
+        }
+      ]
+    },
+    {
+      "symbol": "resolveMode",
+      "signature": "private int resolveMode(Long activityId, Long topicId)",
+      "line": 2723,
+      "body_sha256": "3dc35637a0bf84fde9f174c2855275b70a825a5928985cc78358451946d6d05e",
+      "shared_calls_in_lexical_order": [
+        "firstTicketMode",
+        "firstTicketMode"
+      ],
+      "dependency_calls_in_lexical_order": [
+        [
+          "cmsTopicService",
+          "selectCmsTopicById"
+        ],
+        [
+          "topic",
+          "getProductType"
+        ],
+        [
+          "topic",
+          "getProductType"
+        ]
+      ],
+      "callers": [
+        {
+          "symbol": "nodes",
+          "line": 460
+        },
+        {
+          "symbol": "checkinOnce",
+          "line": 1567
+        },
+        {
+          "symbol": "answerOnce",
+          "line": 1714
+        },
+        {
+          "symbol": "revealPuzzle",
+          "line": 1829
+        },
+        {
+          "symbol": "puzzleHint",
+          "line": 1888
+        },
+        {
+          "symbol": "resolvePreferencePlayCtx",
+          "line": 2018
+        },
+        {
+          "symbol": "sensorResult",
+          "line": 2137
+        },
+        {
+          "symbol": "arriveOnce",
+          "line": 2205
+        },
+        {
+          "symbol": "photo",
+          "line": 2421
+        },
+        {
+          "symbol": "routeAccessError",
+          "line": 2655
+        },
+        {
+          "symbol": "isTopicCompleted",
+          "line": 2770
+        },
+        {
+          "symbol": "advanceProgress",
+          "line": 3236
+        }
+      ]
+    },
+    {
+      "symbol": "firstTicketMode",
+      "signature": "private Integer firstTicketMode(Long ownerType, Long ownerId)",
+      "line": 2737,
+      "body_sha256": "0afc1bbfb558d69db805bb71e26fe077b503ef98f52ce138aaa3dc8c8fb4ce9e",
+      "shared_calls_in_lexical_order": [],
+      "dependency_calls_in_lexical_order": [
+        [
+          "probe",
+          "setOwnerType"
+        ],
+        [
+          "probe",
+          "setOwnerId"
+        ],
+        [
+          "omsTicketService",
+          "selectOmsTicketList"
+        ],
+        [
+          "t",
+          "getMode"
+        ],
+        [
+          "t",
+          "getMode"
+        ]
+      ],
+      "callers": [
+        {
+          "symbol": "resolveMode",
+          "line": 2732
+        },
+        {
+          "symbol": "resolveMode",
+          "line": 2733
+        }
+      ]
+    },
+    {
+      "symbol": "isNightNow",
+      "signature": "private boolean isNightNow()",
+      "line": 2945,
+      "body_sha256": "94893673888555223257fd8840f994b2418bf59e7ea1351e4dd8722911c0db0f",
+      "shared_calls_in_lexical_order": [],
+      "dependency_calls_in_lexical_order": [
+        [
+          "Calendar",
+          "getInstance"
+        ]
+      ],
+      "callers": [
+        {
+          "symbol": "resolveCtx",
+          "line": 3021
+        }
+      ]
+    },
+    {
+      "symbol": "resolveCtx",
+      "signature": "private PlayCtx resolveCtx(Long memberId, String activityId, String topicId, CmsTopicNode node)",
+      "line": 2967,
+      "body_sha256": "50cae236b272e89f8681a70381933d8d2f97b00d8f159a2e1986ba684a3c1018",
+      "shared_calls_in_lexical_order": [
+        "resolveCtx"
+      ],
+      "dependency_calls_in_lexical_order": [],
+      "callers": [
+        {
+          "symbol": "checkinOnce",
+          "line": 1564
+        },
+        {
+          "symbol": "answerOnce",
+          "line": 1711
+        },
+        {
+          "symbol": "revealPuzzle",
+          "line": 1827
+        },
+        {
+          "symbol": "puzzleHint",
+          "line": 1886
+        },
+        {
+          "symbol": "resolvePreferencePlayCtx",
+          "line": 2009
+        },
+        {
+          "symbol": "sensorResult",
+          "line": 2131
+        },
+        {
+          "symbol": "arriveOnce",
+          "line": 2202
+        },
+        {
+          "symbol": "photo",
+          "line": 2407
+        },
+        {
+          "symbol": "unlockHint",
+          "line": 3811
+        }
+      ]
+    },
+    {
+      "symbol": "resolveCtx",
+      "signature": "private PlayCtx resolveCtx(Long memberId, String activityId, String topicId, CmsTopicNode node,\n            Long registrationId)",
+      "line": 2972,
+      "body_sha256": "ff5044f2894e9f5245e1987b8fa6a21ad00cdb8404d3cf5a6f4a8ed92102c3b0",
+      "shared_calls_in_lexical_order": [
+        "activityTimeError",
+        "isNightNow"
+      ],
+      "dependency_calls_in_lexical_order": [
+        [
+          "StringUtils",
+          "isNotBlank"
+        ],
+        [
+          "activityId",
+          "trim"
+        ],
+        [
+          "Long",
+          "valueOf"
+        ],
+        [
+          "cmsActivityService",
+          "selectCmsActivityById"
+        ],
+        [
+          "activity",
+          "getTopicId"
+        ],
+        [
+          "activity",
+          "getTopicId"
+        ],
+        [
+          "node",
+          "getTopicId"
+        ],
+        [
+          "CurrentPlayRegistration",
+          "require"
+        ],
+        [
+          "denied",
+          "getMessage"
+        ],
+        [
+          "currentPlayActivityMapper",
+          "selectCmsActivityByIdForUpdate"
+        ],
+        [
+          "node",
+          "getTopicId"
+        ],
+        [
+          "activity",
+          "getTopicId"
+        ],
+        [
+          "activity",
+          "getTopicId"
+        ],
+        [
+          "StringUtils",
+          "isBlank"
+        ],
+        [
+          "Long",
+          "valueOf"
+        ],
+        [
+          "node",
+          "getTopicId"
+        ],
+        [
+          "node",
+          "getTopicId"
+        ],
+        [
+          "topicRouteRuntimeService",
+          "hasRunningSession"
+        ],
+        [
+          "CurrentPlayRegistration",
+          "requireToContinue"
+        ],
+        [
+          "CurrentPlayRegistration",
+          "require"
+        ],
+        [
+          "denied",
+          "getMessage"
+        ]
+      ],
+      "callers": [
+        {
+          "symbol": "checkinOnce",
+          "line": 1564
+        },
+        {
+          "symbol": "answerOnce",
+          "line": 1711
+        },
+        {
+          "symbol": "revealPuzzle",
+          "line": 1827
+        },
+        {
+          "symbol": "puzzleHint",
+          "line": 1886
+        },
+        {
+          "symbol": "resolvePreferencePlayCtx",
+          "line": 2009
+        },
+        {
+          "symbol": "sensorResult",
+          "line": 2131
+        },
+        {
+          "symbol": "arriveOnce",
+          "line": 2202
+        },
+        {
+          "symbol": "photo",
+          "line": 2407
+        },
+        {
+          "symbol": "resolveCtx",
+          "line": 2969
+        },
+        {
+          "symbol": "unlockHint",
+          "line": 3811
+        }
+      ]
+    },
+    {
+      "symbol": "leadGateError",
+      "signature": "private String leadGateError(Long actId, CmsTopicNode node)",
+      "line": 3034,
+      "body_sha256": "9161df4311230e335c0520d1a19b1123318ad0cf06ee4d329788e86ed336748a",
+      "shared_calls_in_lexical_order": [],
+      "dependency_calls_in_lexical_order": [
+        [
+          "gameSessionRuntimeService",
+          "routeSessionStatus"
+        ],
+        [
+          "clubLeadMapper",
+          "selectByActivity"
+        ],
+        [
+          "st",
+          "getStatus"
+        ],
+        [
+          "st",
+          "getStatus"
+        ],
+        [
+          "st",
+          "getStatus"
+        ],
+        [
+          "node",
+          "getChapterId"
+        ],
+        [
+          "st",
+          "getCurrentChapterId"
+        ],
+        [
+          "node",
+          "getChapterId"
+        ],
+        [
+          "st",
+          "getCurrentChapterId"
+        ],
+        [
+          "cmsTopicChapterService",
+          "selectCmsTopicChapterById"
+        ],
+        [
+          "st",
+          "getCurrentChapterId"
+        ],
+        [
+          "cmsTopicChapterService",
+          "selectCmsTopicChapterById"
+        ],
+        [
+          "node",
+          "getChapterId"
+        ],
+        [
+          "cur",
+          "getSortId"
+        ],
+        [
+          "mine",
+          "getSortId"
+        ],
+        [
+          "mine",
+          "getSortId"
+        ],
+        [
+          "cur",
+          "getSortId"
+        ],
+        [
+          "logger",
+          "warn"
+        ],
+        [
+          "unavailable",
+          "getClass"
+        ],
+        [
+          "Collections",
+          "singletonMap"
+        ]
+      ],
+      "callers": [
+        {
+          "symbol": "checkinOnce",
+          "line": 1585
+        },
+        {
+          "symbol": "answerOnce",
+          "line": 1716
+        },
+        {
+          "symbol": "revealPuzzle",
+          "line": 1832
+        },
+        {
+          "symbol": "puzzleHint",
+          "line": 1891
+        },
+        {
+          "symbol": "resolvePreferencePlayCtx",
+          "line": 2011
+        },
+        {
+          "symbol": "sensorResult",
+          "line": 2138
+        },
+        {
+          "symbol": "arriveOnce",
+          "line": 2232
+        },
+        {
+          "symbol": "photo",
+          "line": 2425
+        },
+        {
+          "symbol": "photo",
+          "line": 2465
+        },
+        {
+          "symbol": "unlockHint",
+          "line": 3813
+        }
+      ]
+    }
+  ],
+  "caller_orders": [
+    {
+      "symbol": "nodes",
+      "signature": "public AjaxResult nodes(Long activityId, Long topicId)",
+      "shared_calls_in_lexical_order": [
+        "activityTimeError",
+        "hintUnlockCost",
+        "resolveMode"
+      ]
+    },
+    {
+      "symbol": "checkinOnce",
+      "signature": "private AjaxResult checkinOnce(String activityId, String code, String topicId,\n            String routeActionId, Integer expectedRouteVersion, Long registrationId, String intendedNodeId,\n            String runtimeInstance, Integer authorityEpoch)",
+      "shared_calls_in_lexical_order": [
+        "isDelistedNode",
+        "hasCompletedNodeFact",
+        "resolveCtx",
+        "resolveMode",
+        "leadGateError",
+        "routeAccessError"
+      ]
+    },
+    {
+      "symbol": "answerOnce",
+      "signature": "private AjaxResult answerOnce(String activityId, String nodeId, String answer, String topicId,\n            String routeActionId, Integer expectedRouteVersion, String runtimeInstance, Integer authorityEpoch)",
+      "shared_calls_in_lexical_order": [
+        "isDelistedNode",
+        "hasCompletedNodeFact",
+        "resolveCtx",
+        "resolveMode",
+        "leadGateError",
+        "routeAccessError"
+      ]
+    },
+    {
+      "symbol": "revealPuzzle",
+      "signature": "public AjaxResult revealPuzzle(String activityId, String nodeId, String topicId,\n            String routeActionId, Integer expectedRouteVersion)",
+      "shared_calls_in_lexical_order": [
+        "resolveCtx",
+        "resolveMode",
+        "leadGateError",
+        "routeAccessError"
+      ]
+    },
+    {
+      "symbol": "puzzleHint",
+      "signature": "public AjaxResult puzzleHint(String activityId, String nodeId, String topicId, Integer level)",
+      "shared_calls_in_lexical_order": [
+        "resolveCtx",
+        "resolveMode",
+        "leadGateError",
+        "routeAccessError"
+      ]
+    },
+    {
+      "symbol": "resolvePreferencePlayCtx",
+      "signature": "private PreferencePlayCtx resolvePreferencePlayCtx(Long memberId, Long nodeId, String activityId, String topicId,\n                                                        String routeActionId)",
+      "shared_calls_in_lexical_order": [
+        "resolveCtx",
+        "leadGateError",
+        "unlockGateError",
+        "routeAccessError",
+        "resolveMode"
+      ]
+    },
+    {
+      "symbol": "sensorResult",
+      "signature": "public AjaxResult sensorResult(@RequestBody SensorResultRequest request)",
+      "shared_calls_in_lexical_order": [
+        "isDelistedNode",
+        "hasCompletedNodeFact",
+        "resolveCtx",
+        "routeAccessError",
+        "resolveMode",
+        "leadGateError"
+      ]
+    },
+    {
+      "symbol": "arriveOnce",
+      "signature": "private AjaxResult arriveOnce(String activityId, String nodeId, String longitude, String latitude, String topicId,\n            String routeActionId, Integer expectedRouteVersion, String accuracy, String runtimeInstance, Integer authorityEpoch)",
+      "shared_calls_in_lexical_order": [
+        "isDelistedNode",
+        "hasCompletedNodeFact",
+        "resolveCtx",
+        "resolveMode",
+        "leadGateError",
+        "routeAccessError"
+      ]
+    },
+    {
+      "symbol": "photo",
+      "signature": "public AjaxResult photo(String activityId, String nodeId, String picUrl, String topicId,\n            String routeActionId, Integer expectedRouteVersion)",
+      "shared_calls_in_lexical_order": [
+        "isDelistedNode",
+        "hasCompletedNodeFact",
+        "resolveCtx",
+        "resolveMode",
+        "leadGateError",
+        "unlockGateError",
+        "findNodeProgressRow",
+        "leadGateError",
+        "routeAccessError",
+        "findNodeProgressRow"
+      ]
+    },
+    {
+      "symbol": "isTopicCompleted",
+      "signature": "private boolean isTopicCompleted(Long memberId, Long actId, Long topicId, int total, int done)",
+      "shared_calls_in_lexical_order": [
+        "resolveMode"
+      ]
+    },
+    {
+      "symbol": "advanceProgress",
+      "signature": "private Map<String, Object> advanceProgress(Long memberId, CmsTopicNode node, Long actId, String picUrl,\n            Integer puzzleScore, String completionMode, RewardPolicy rewardPolicy,\n            String routeActionId, Integer expectedRouteVersion, String trustedOutcomeCode,\n            Long approvedProgressId)",
+      "shared_calls_in_lexical_order": [
+        "resolveMode"
+      ]
+    },
+    {
+      "symbol": "unlockHint",
+      "signature": "public AjaxResult unlockHint(Long nodeId, String activityId, String topicId)",
+      "shared_calls_in_lexical_order": [
+        "resolveCtx",
+        "leadGateError",
+        "routeAccessError",
+        "hintUnlockCost"
+      ]
+    }
+  ],
+  "test_files": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/ComplaintPickerOwnerType3RealDbIT.java",
+      "d359_reference": true,
+      "d359_direct_new": false,
+      "current_direct_new": false,
+      "sha256": "04c71fb3802637a846277d74223e97d0406eb2b0d152e5ac2c5f630307423a61",
+      "constructor_lines": [],
+      "helper_reflections": [],
+      "access_bindings": [
+        {
+          "line": 174,
+          "statement": "ReflectionTestUtils.setField(impl, \"cmsRegistrationMapper\", s.getMapper(CmsRegistrationMapper.class));"
+        },
+        {
+          "line": 335,
+          "statement": "ReflectionTestUtils.setField(c, \"omsTicketService\", mock(IOmsTicketService.class));"
+        }
+      ],
+      "calls_current_fixture": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ShopDayGameThenPhotoH2Test.java",
+      "d359_reference": true,
+      "d359_direct_new": false,
+      "current_direct_new": false,
+      "sha256": "6f779c5ee28692160fbeeaeab9fba982e2e028e35fc372cad779913b5b18d883",
+      "constructor_lines": [],
+      "helper_reflections": [],
+      "access_bindings": [],
+      "calls_current_fixture": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/SpoilerIsNotAnswerGateTest.java",
+      "d359_reference": true,
+      "d359_direct_new": false,
+      "current_direct_new": false,
+      "sha256": "1f63b4c47ce3917aba4cd12a68c0a46eaa2af0cd1b394fe5cc6e43359938b6fc",
+      "constructor_lines": [],
+      "helper_reflections": [],
+      "access_bindings": [],
+      "calls_current_fixture": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java",
+      "d359_reference": true,
+      "d359_direct_new": true,
+      "current_direct_new": true,
+      "sha256": "12f1db22623e4ec8c4e5fcaf33c038bc9998989dfa6f8732158b9e43d49d57b0",
+      "constructor_lines": [
+        498
+      ],
+      "helper_reflections": [
+        "isPrevDone"
+      ],
+      "access_bindings": [
+        {
+          "line": 499,
+          "statement": "ReflectionTestUtils.setField(guard, \"cmsTopicNodeService\", nodeRead);"
+        },
+        {
+          "line": 500,
+          "statement": "ReflectionTestUtils.setField(guard, \"playerNodeProgressService\", progressRead);"
+        }
+      ],
+      "calls_current_fixture": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayKitBingoRuntimeTest.java",
+      "d359_reference": true,
+      "d359_direct_new": false,
+      "current_direct_new": false,
+      "sha256": "348ee1c9d9c694bd70a17791bcb09ac27c2011b0f820756716c7bfb8bd1c4b38",
+      "constructor_lines": [],
+      "helper_reflections": [],
+      "access_bindings": [],
+      "calls_current_fixture": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/util/AdvancedGamePublicProjectionTest.java",
+      "d359_reference": true,
+      "d359_direct_new": false,
+      "current_direct_new": false,
+      "sha256": "36ce224171dd12ac7c0e6870eb090744498f453e05f3a2948def2892e83f49e8",
+      "constructor_lines": [],
+      "helper_reflections": [],
+      "access_bindings": [],
+      "calls_current_fixture": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/util/ChapterAtmospherePresetTest.java",
+      "d359_reference": true,
+      "d359_direct_new": false,
+      "current_direct_new": false,
+      "sha256": "a48b86ba38f1e0baeca7850376bdab20c08491e297f63e5acff6e9180b694785",
+      "constructor_lines": [],
+      "helper_reflections": [],
+      "access_bindings": [],
+      "calls_current_fixture": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/common/utils/GeoDistanceUtilsTest.java",
+      "d359_reference": true,
+      "d359_direct_new": false,
+      "current_direct_new": false,
+      "sha256": "31752a6952f0fb050fc1764a5d066403546163c05f020ba44d337ce052e7b00d",
+      "constructor_lines": [],
+      "helper_reflections": [],
+      "access_bindings": [],
+      "calls_current_fixture": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/framework/aspectj/DeadlockRetryEntryPointContractTest.java",
+      "d359_reference": true,
+      "d359_direct_new": false,
+      "current_direct_new": false,
+      "sha256": "d92c48289c176875e319210db3569e8bc4b678780f9de85817f50741ef4b2734",
+      "constructor_lines": [],
+      "helper_reflections": [],
+      "access_bindings": [],
+      "calls_current_fixture": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayBranchNodeVisibilityTest.java",
+      "d359_reference": true,
+      "d359_direct_new": true,
+      "current_direct_new": true,
+      "sha256": "fe13b917780dabd1f2fc19dd12871a123c81dd70bf6c3abe58421c2be60ad5d0",
+      "constructor_lines": [
+        52
+      ],
+      "helper_reflections": [],
+      "access_bindings": [
+        {
+          "line": 54,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsActivityService\", activityService);"
+        },
+        {
+          "line": 56,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicService\", topicService);"
+        },
+        {
+          "line": 57,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicNodeService\", nodeService);"
+        },
+        {
+          "line": 58,
+          "statement": "ReflectionTestUtils.setField(controller, \"topicRouteRuntimeService\", routeRuntimeService);"
+        },
+        {
+          "line": 59,
+          "statement": "ReflectionTestUtils.setField(controller, \"playerNodeProgressService\","
+        },
+        {
+          "line": 65,
+          "statement": "ReflectionTestUtils.setField(controller, \"omsTicketService\","
+        },
+        {
+          "line": 67,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicChapterService\", mock(ICmsTopicChapterService.class));"
+        }
+      ],
+      "calls_current_fixture": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayCheckinDuplicateCodeTest.java",
+      "d359_reference": true,
+      "d359_direct_new": true,
+      "current_direct_new": true,
+      "sha256": "7066f6ffbbee05663ca6540aeee9113a1a0c34a58ad4ea526378671110b55b53",
+      "constructor_lines": [
+        40
+      ],
+      "helper_reflections": [],
+      "access_bindings": [
+        {
+          "line": 43,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicNodeService\", nodeService);"
+        },
+        {
+          "line": 44,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsActivityService\", activityService);"
+        }
+      ],
+      "calls_current_fixture": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayCheckinLiveCodeTest.java",
+      "d359_reference": true,
+      "d359_direct_new": true,
+      "current_direct_new": true,
+      "sha256": "44b7c147d6641ee25c13a30c46f31bad6619fa834fb6b9f1a4d658f5f82a1188",
+      "constructor_lines": [
+        51
+      ],
+      "helper_reflections": [
+        "activityTimeError"
+      ],
+      "access_bindings": [
+        {
+          "line": 54,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicNodeService\", nodeService);"
+        },
+        {
+          "line": 55,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsActivityService\", activityService);"
+        },
+        {
+          "line": 79,
+          "statement": "for(Object[] binding:new Object[][]{{\"gameSessionRuntimeService\",runtime},{\"shopDayProofService\",proofs},{\"cmsTopicService\",topics},{\"topicRouteRuntimeService\",routes},{\"cmsRegistrationService\",registrations},{\"playerNodeProgressService\",progress},{\"smsCouponHistoryService\",coupons}})ReflectionTestUtils.setField(controller,(String)binding[0],binding[1]);"
+        },
+        {
+          "line": 83,
+          "statement": "com.chengyinhub.business.mapper.CmsRegistrationMapper registrationMapper=mock(com.chengyinhub.business.mapper.CmsRegistrationMapper.class);ReflectionTestUtils.setField(controller,\"cmsRegistrationMapper\",registrationMapper);"
+        },
+        {
+          "line": 155,
+          "statement": "ReflectionTestUtils.setField(controller, \"playerNodeProgressService\", progress);"
+        }
+      ],
+      "calls_current_fixture": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayCompletedRouteSourcesTest.java",
+      "d359_reference": true,
+      "d359_direct_new": true,
+      "current_direct_new": true,
+      "sha256": "fa98d87b7bfbe01722036b3cf18997b66a6209dd74b21280d5c85b92393d900a",
+      "constructor_lines": [
+        32
+      ],
+      "helper_reflections": [],
+      "access_bindings": [
+        {
+          "line": 38,
+          "statement": "ReflectionTestUtils.setField(controller, \"playerNodeProgressService\", progress);"
+        },
+        {
+          "line": 40,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsActivityService\", activities);"
+        },
+        {
+          "line": 41,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicService\", topics);"
+        },
+        {
+          "line": 42,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicNodeService\", nodes);"
+        },
+        {
+          "line": 43,
+          "statement": "ReflectionTestUtils.setField(controller, \"topicRouteRuntimeService\", routes);"
+        }
+      ],
+      "calls_current_fixture": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayCurrentUseBoundaryTest.java",
+      "d359_reference": true,
+      "d359_direct_new": true,
+      "current_direct_new": true,
+      "sha256": "c334b4817ab937587e8d1ab33dd659c1302c0dbc2554c7ee8c68504953f59ad0",
+      "constructor_lines": [
+        26
+      ],
+      "helper_reflections": [],
+      "access_bindings": [
+        {
+          "line": 46,
+          "statement": "ReflectionTestUtils.setField(controller,\"clubLeadMapper\",noLead);"
+        },
+        {
+          "line": 47,
+          "statement": "ReflectionTestUtils.setField(controller,\"currentPlayActivityMapper\",activities);"
+        },
+        {
+          "line": 48,
+          "statement": "ReflectionTestUtils.setField(controller,\"cmsRegistrationMapper\",registrations);"
+        },
+        {
+          "line": 49,
+          "statement": "ReflectionTestUtils.setField(controller,\"cmsActivityService\",activityService);"
+        },
+        {
+          "line": 50,
+          "statement": "ReflectionTestUtils.setField(controller,\"cmsTopicNodeService\",nodes);"
+        },
+        {
+          "line": 51,
+          "statement": "ReflectionTestUtils.setField(controller,\"cmsTopicService\",topics);"
+        },
+        {
+          "line": 52,
+          "statement": "ReflectionTestUtils.setField(controller,\"playerNodeProgressService\",progress);"
+        },
+        {
+          "line": 53,
+          "statement": "ReflectionTestUtils.setField(controller,\"topicRouteRuntimeService\",routes);"
+        }
+      ],
+      "calls_current_fixture": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayDelistedCompletedRetryContractTest.java",
+      "d359_reference": true,
+      "d359_direct_new": true,
+      "current_direct_new": true,
+      "sha256": "b5bcd5a414ce43e014ff55d880003892b651eddf0807495ee9e68b292006f035",
+      "constructor_lines": [
+        106
+      ],
+      "helper_reflections": [],
+      "access_bindings": [
+        {
+          "line": 121,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsActivityService\", activityService);"
+        },
+        {
+          "line": 126,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsRegistrationMapper\", registrationMapper);"
+        },
+        {
+          "line": 127,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicNodeService\", nodeService);"
+        },
+        {
+          "line": 128,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicService\", topicService);"
+        },
+        {
+          "line": 130,
+          "statement": "ReflectionTestUtils.setField(controller, \"playerNodeProgressService\", progressService);"
+        },
+        {
+          "line": 139,
+          "statement": "ReflectionTestUtils.setField(controller, \"clubLeadMapper\","
+        },
+        {
+          "line": 148,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicChapterService\", mock(ICmsTopicChapterService.class));"
+        },
+        {
+          "line": 149,
+          "statement": "ReflectionTestUtils.setField(controller, \"omsTicketService\", mock(IOmsTicketService.class));"
+        },
+        {
+          "line": 154,
+          "statement": "ReflectionTestUtils.setField(sensorChallenges, \"playerNodeProgressService\", progressService);"
+        },
+        {
+          "line": 222,
+          "statement": "ReflectionTestUtils.setField(controller, \"topicRouteRuntimeService\","
+        }
+      ],
+      "calls_current_fixture": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayEndingCompanionFactTest.java",
+      "d359_reference": true,
+      "d359_direct_new": true,
+      "current_direct_new": true,
+      "sha256": "8b2b760053dee7bc2e0ef3a5608077085ec21ffb63c16110affa601242cc44a8",
+      "constructor_lines": [
+        69
+      ],
+      "helper_reflections": [],
+      "access_bindings": [
+        {
+          "line": 71,
+          "statement": "ReflectionTestUtils.setField(controller, \"playerNodeProgressService\", progressService);"
+        },
+        {
+          "line": 72,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicNodeService\", nodeService);"
+        },
+        {
+          "line": 73,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicService\", topicService);"
+        },
+        {
+          "line": 74,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsActivityService\", activityService);"
+        }
+      ],
+      "calls_current_fixture": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayGpsGeofenceValidationTest.java",
+      "d359_reference": true,
+      "d359_direct_new": true,
+      "current_direct_new": true,
+      "sha256": "4584e0e7a34f7ace0c67e0e57b3ed7ce0211d431026a76cbf6bb7fe6b2381d66",
+      "constructor_lines": [
+        91
+      ],
+      "helper_reflections": [],
+      "access_bindings": [
+        {
+          "line": 93,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicNodeService\", nodeService);"
+        },
+        {
+          "line": 94,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsActivityService\", activityService);"
+        },
+        {
+          "line": 96,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicService\", topicService);"
+        },
+        {
+          "line": 99,
+          "statement": "ReflectionTestUtils.setField(controller, \"playerNodeProgressService\", progressService);"
+        },
+        {
+          "line": 107,
+          "statement": "ReflectionTestUtils.setField(controller, \"omsTicketService\", mock(IOmsTicketService.class));"
+        },
+        {
+          "line": 110,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicChapterService\", mock(ICmsTopicChapterService.class));"
+        },
+        {
+          "line": 111,
+          "statement": "ReflectionTestUtils.setField(controller, \"clubLeadMapper\","
+        }
+      ],
+      "calls_current_fixture": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayHintUnlockTest.java",
+      "d359_reference": true,
+      "d359_direct_new": true,
+      "current_direct_new": true,
+      "sha256": "d45eb3a93b2b52dd5b3b62690bb746029f40c70ed9fbd34bccaf114fa85347ea",
+      "constructor_lines": [
+        80
+      ],
+      "helper_reflections": [],
+      "access_bindings": [
+        {
+          "line": 82,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicNodeService\", nodeSvc);"
+        },
+        {
+          "line": 93,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsActivityService\", activitySvc);"
+        },
+        {
+          "line": 113,
+          "statement": "ReflectionTestUtils.setField(controller, \"playerNodeProgressService\","
+        },
+        {
+          "line": 119,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicService\", topicSvc);"
+        },
+        {
+          "line": 120,
+          "statement": "ReflectionTestUtils.setField(controller, \"omsTicketService\","
+        },
+        {
+          "line": 122,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicChapterService\","
+        }
+      ],
+      "calls_current_fixture": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayHistoryFulfillmentAccessTest.java",
+      "d359_reference": true,
+      "d359_direct_new": true,
+      "current_direct_new": true,
+      "sha256": "394d8307ca022dcca5205611193d0182945d4de223d6b4c731d368bddd631142",
+      "constructor_lines": [
+        71
+      ],
+      "helper_reflections": [],
+      "access_bindings": [
+        {
+          "line": 73,
+          "statement": "ReflectionTestUtils.setField(controller, \"playerNodeProgressService\", progressService);"
+        },
+        {
+          "line": 74,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicNodeService\", nodeService);"
+        },
+        {
+          "line": 75,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicService\", topicService);"
+        },
+        {
+          "line": 76,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsActivityService\", activityService);"
+        }
+      ],
+      "calls_current_fixture": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayHistoryNodesContractTest.java",
+      "d359_reference": true,
+      "d359_direct_new": true,
+      "current_direct_new": true,
+      "sha256": "b3e2f2295bb6961ff3df6712f5fb57d8a26a9598e0ff65fb60a6c48cc4e8af16",
+      "constructor_lines": [
+        83
+      ],
+      "helper_reflections": [],
+      "access_bindings": [
+        {
+          "line": 85,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsActivityService\", activityService);"
+        },
+        {
+          "line": 87,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicService\", topicService);"
+        },
+        {
+          "line": 88,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicNodeService\", nodeService);"
+        },
+        {
+          "line": 89,
+          "statement": "ReflectionTestUtils.setField(controller, \"playerNodeProgressService\", progressService);"
+        },
+        {
+          "line": 92,
+          "statement": "ReflectionTestUtils.setField(controller, \"omsTicketService\","
+        },
+        {
+          "line": 94,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicChapterService\", mock(ICmsTopicChapterService.class));"
+        },
+        {
+          "line": 96,
+          "statement": "ReflectionTestUtils.setField(controller, \"topicRouteRuntimeService\", mock(ITopicRouteRuntimeService.class));"
+        }
+      ],
+      "calls_current_fixture": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayHistoryNodesOldEntryContractTest.java",
+      "d359_reference": true,
+      "d359_direct_new": true,
+      "current_direct_new": true,
+      "sha256": "d85b0f804c23b645672372457005a609178861b264d8281fd48e62c70e4f210d",
+      "constructor_lines": [
+        76
+      ],
+      "helper_reflections": [],
+      "access_bindings": [
+        {
+          "line": 78,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsActivityService\", activityService);"
+        },
+        {
+          "line": 80,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicService\", topicService);"
+        },
+        {
+          "line": 81,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicNodeService\", nodeService);"
+        },
+        {
+          "line": 82,
+          "statement": "ReflectionTestUtils.setField(controller, \"playerNodeProgressService\", progressService);"
+        },
+        {
+          "line": 85,
+          "statement": "ReflectionTestUtils.setField(controller, \"omsTicketService\","
+        },
+        {
+          "line": 87,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicChapterService\", mock(ICmsTopicChapterService.class));"
+        },
+        {
+          "line": 89,
+          "statement": "ReflectionTestUtils.setField(controller, \"topicRouteRuntimeService\", mock(ITopicRouteRuntimeService.class));"
+        }
+      ],
+      "calls_current_fixture": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayLeadSpectatorGateTest.java",
+      "d359_reference": true,
+      "d359_direct_new": true,
+      "current_direct_new": true,
+      "sha256": "dd9ecf9266f859d97bda88b5ef30d1b7a7501fb6a07eecc6df43b5d41bd90ff7",
+      "constructor_lines": [
+        58
+      ],
+      "helper_reflections": [],
+      "access_bindings": [
+        {
+          "line": 60,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsActivityService\", activityService);"
+        },
+        {
+          "line": 62,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicService\", topicService);"
+        },
+        {
+          "line": 63,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicNodeService\", nodeService);"
+        },
+        {
+          "line": 65,
+          "statement": "ReflectionTestUtils.setField(controller, \"playerNodeProgressService\","
+        },
+        {
+          "line": 71,
+          "statement": "ReflectionTestUtils.setField(controller, \"omsTicketService\","
+        },
+        {
+          "line": 73,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicChapterService\", mock(ICmsTopicChapterService.class));"
+        }
+      ],
+      "calls_current_fixture": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayLeaderboardTest.java",
+      "d359_reference": true,
+      "d359_direct_new": true,
+      "current_direct_new": true,
+      "sha256": "d8936a386365dec730fd0da88529f2cf41b8fb1098d7f969a12868c4e7a6e435",
+      "constructor_lines": [
+        49
+      ],
+      "helper_reflections": [],
+      "access_bindings": [
+        {
+          "line": 52,
+          "statement": "ReflectionTestUtils.setField(controller, \"playerNodeProgressService\", progressService);"
+        },
+        {
+          "line": 55,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsActivityService\", activityService);"
+        },
+        {
+          "line": 175,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicService\", topics);"
+        },
+        {
+          "line": 251,
+          "statement": "ReflectionTestUtils.setField(controller, \"gameSessionRuntimeService\", runtime);"
+        }
+      ],
+      "calls_current_fixture": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayMyCompletedSelfPlayContractTest.java",
+      "d359_reference": true,
+      "d359_direct_new": true,
+      "current_direct_new": true,
+      "sha256": "e278913d50b979684763ee4a8407ecf94eda12de0396d593989e4263bf0d02f5",
+      "constructor_lines": [
+        70
+      ],
+      "helper_reflections": [],
+      "access_bindings": [
+        {
+          "line": 72,
+          "statement": "ReflectionTestUtils.setField(controller, \"playerNodeProgressService\", progressService);"
+        },
+        {
+          "line": 74,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsActivityService\", activityService);"
+        },
+        {
+          "line": 75,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicService\", topicService);"
+        },
+        {
+          "line": 76,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicNodeService\", nodeService);"
+        },
+        {
+          "line": 78,
+          "statement": "ReflectionTestUtils.setField(controller, \"topicRouteRuntimeService\", routeService);"
+        }
+      ],
+      "calls_current_fixture": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayNodeNpcPreferenceTest.java",
+      "d359_reference": true,
+      "d359_direct_new": true,
+      "current_direct_new": true,
+      "sha256": "a65786d89ba950907983c2467713155e2ca275790a3498d4f55d4e33a2ebf859",
+      "constructor_lines": [
+        62
+      ],
+      "helper_reflections": [],
+      "access_bindings": [
+        {
+          "line": 64,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsActivityService\", activityService);"
+        },
+        {
+          "line": 66,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicService\", topicService);"
+        },
+        {
+          "line": 67,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicNodeService\", nodeService);"
+        },
+        {
+          "line": 69,
+          "statement": "ReflectionTestUtils.setField(controller, \"playerNodeProgressService\","
+        },
+        {
+          "line": 75,
+          "statement": "ReflectionTestUtils.setField(controller, \"omsTicketService\", mock(IOmsTicketService.class));"
+        },
+        {
+          "line": 76,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicChapterService\", mock(ICmsTopicChapterService.class));"
+        }
+      ],
+      "calls_current_fixture": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayPhotoRetryAndFailureContractTest.java",
+      "d359_reference": true,
+      "d359_direct_new": true,
+      "current_direct_new": true,
+      "sha256": "83441954357e09879253dfd79f484317e7f66e8189fab10cdb606fa62a485a20",
+      "constructor_lines": [
+        73
+      ],
+      "helper_reflections": [],
+      "access_bindings": [
+        {
+          "line": 87,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsActivityService\", activityService);"
+        },
+        {
+          "line": 89,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicNodeService\", nodeService);"
+        },
+        {
+          "line": 90,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicService\", topicService);"
+        },
+        {
+          "line": 92,
+          "statement": "ReflectionTestUtils.setField(controller, \"playerNodeProgressService\", progressService);"
+        },
+        {
+          "line": 101,
+          "statement": "ReflectionTestUtils.setField(controller, \"clubLeadMapper\","
+        },
+        {
+          "line": 111,
+          "statement": "ReflectionTestUtils.setField(sensorChallenges, \"playerNodeProgressService\", progressService);"
+        },
+        {
+          "line": 243,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicService\","
+        }
+      ],
+      "calls_current_fixture": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressCompletionTruthTest.java",
+      "d359_reference": true,
+      "d359_direct_new": true,
+      "current_direct_new": true,
+      "sha256": "fdc81175e323ea8ce7ce3e7a54c18eb7e7e84e48e58e03d686e98e35be535540",
+      "constructor_lines": [
+        113
+      ],
+      "helper_reflections": [],
+      "access_bindings": [
+        {
+          "line": 115,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicNodeService\", nodeService);"
+        },
+        {
+          "line": 116,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsActivityService\", activityService);"
+        },
+        {
+          "line": 118,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsRegistrationMapper\", registrationMapper);"
+        },
+        {
+          "line": 119,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicService\", topicService);"
+        },
+        {
+          "line": 122,
+          "statement": "ReflectionTestUtils.setField(controller, \"playerNodeProgressService\", progressService);"
+        },
+        {
+          "line": 133,
+          "statement": "ReflectionTestUtils.setField(controller, \"omsTicketService\", mock(IOmsTicketService.class));"
+        },
+        {
+          "line": 136,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicChapterService\", mock(ICmsTopicChapterService.class));"
+        },
+        {
+          "line": 137,
+          "statement": "ReflectionTestUtils.setField(controller, \"clubLeadMapper\","
+        },
+        {
+          "line": 346,
+          "statement": "com.chengyinhub.business.service.ITopicRouteRuntimeService runtime=mock(com.chengyinhub.business.service.ITopicRouteRuntimeService.class);ReflectionTestUtils.setField(controller,\"topicRouteRuntimeService\",runtime);"
+        },
+        {
+          "line": 360,
+          "statement": "ReflectionTestUtils.setField(controller,\"topicRouteRuntimeService\",runtime);"
+        },
+        {
+          "line": 379,
+          "statement": "ReflectionTestUtils.setField(controller, \"topicRouteRuntimeService\", runtime);"
+        },
+        {
+          "line": 679,
+          "statement": "ReflectionTestUtils.setField(controller,\"topicRouteRuntimeService\",runtime);when(runtime.canPlay(eq(PLAYER),eq(TOPIC),eq(ACTIVITY),eq(NODE),anyString())).thenReturn(true);when(runtime.genericPlayer(PLAYER,TOPIC,ACTIVITY)).thenReturn(true);"
+        }
+      ],
+      "calls_current_fixture": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressCouponGrantFailureTest.java",
+      "d359_reference": true,
+      "d359_direct_new": true,
+      "current_direct_new": true,
+      "sha256": "1d9481cdd989862e46488adf4009a8182d27f822d46e88cdb30c8421e3cbd6a8",
+      "constructor_lines": [
+        26
+      ],
+      "helper_reflections": [],
+      "access_bindings": [],
+      "calls_current_fixture": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressIdempotencyTest.java",
+      "d359_reference": true,
+      "d359_direct_new": true,
+      "current_direct_new": true,
+      "sha256": "bc10b71f699eab7291363592c981abe47bf2c2a11b2d06523cdf290c423e36e7",
+      "constructor_lines": [
+        96
+      ],
+      "helper_reflections": [],
+      "access_bindings": [
+        {
+          "line": 98,
+          "statement": "ReflectionTestUtils.setField(controller, \"playerNodeProgressService\", progressService);"
+        },
+        {
+          "line": 99,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicNodeService\", nodeService);"
+        },
+        {
+          "line": 105,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicService\", cmsTopicService);"
+        },
+        {
+          "line": 109,
+          "statement": "ReflectionTestUtils.setField(controller, \"omsTicketService\", mock(IOmsTicketService.class));"
+        }
+      ],
+      "calls_current_fixture": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayPuzzleHintTest.java",
+      "d359_reference": true,
+      "d359_direct_new": true,
+      "current_direct_new": true,
+      "sha256": "5c54e6577eac4c0b13f0d2e4b193ae8713830e65bd672b63d5387c9bcd543271",
+      "constructor_lines": [
+        50
+      ],
+      "helper_reflections": [],
+      "access_bindings": [
+        {
+          "line": 87,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicNodeService\", nodeService);"
+        },
+        {
+          "line": 93,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicService\", topicService);"
+        },
+        {
+          "line": 94,
+          "statement": "ReflectionTestUtils.setField(controller, \"omsTicketService\", mock(IOmsTicketService.class));"
+        },
+        {
+          "line": 98,
+          "statement": "ReflectionTestUtils.setField(controller, \"playerNodeProgressService\", progressService);"
+        }
+      ],
+      "calls_current_fixture": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayRouteConflictHttpContractTest.java",
+      "d359_reference": true,
+      "d359_direct_new": false,
+      "current_direct_new": false,
+      "sha256": "e3b60bad9f73de7e8711ed163dd11d78aba084d904d04626c4e886a3d8b2cf88",
+      "constructor_lines": [],
+      "helper_reflections": [],
+      "access_bindings": [
+        {
+          "line": 103,
+          "statement": "ReflectionTestUtils.setField(controller, \"playerNodeProgressService\", progressService);"
+        },
+        {
+          "line": 104,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicNodeService\", nodeService);"
+        },
+        {
+          "line": 105,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicService\", cmsTopicService);"
+        },
+        {
+          "line": 106,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsActivityService\", activityService);"
+        },
+        {
+          "line": 110,
+          "statement": "ReflectionTestUtils.setField(controller, \"omsTicketService\", mock(IOmsTicketService.class));"
+        },
+        {
+          "line": 126,
+          "statement": "ReflectionTestUtils.setField(controller, \"clubLeadMapper\", mock(ClubLeadMapper.class));"
+        },
+        {
+          "line": 131,
+          "statement": "ReflectionTestUtils.setField(controller, \"topicRouteRuntimeService\", runtimeService);"
+        }
+      ],
+      "calls_current_fixture": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayRouteContractTest.java",
+      "d359_reference": true,
+      "d359_direct_new": false,
+      "current_direct_new": false,
+      "sha256": "3dc9d99f00f1a3014a931646256a72069f23c2c8095a5681b996351dc5cb9412",
+      "constructor_lines": [],
+      "helper_reflections": [],
+      "access_bindings": [],
+      "calls_current_fixture": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySelfPlayPassGateTest.java",
+      "d359_reference": true,
+      "d359_direct_new": true,
+      "current_direct_new": true,
+      "sha256": "7d9a5dbf281c1608f5e65734d6378ca6cc60e96773ef1b032c56e8e974ad3f42",
+      "constructor_lines": [
+        61
+      ],
+      "helper_reflections": [],
+      "access_bindings": [
+        {
+          "line": 63,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsActivityService\", activityService);"
+        },
+        {
+          "line": 65,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicService\", topicService);"
+        },
+        {
+          "line": 66,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicNodeService\", nodeService);"
+        },
+        {
+          "line": 68,
+          "statement": "ReflectionTestUtils.setField(controller, \"playerNodeProgressService\","
+        },
+        {
+          "line": 74,
+          "statement": "ReflectionTestUtils.setField(controller, \"omsTicketService\", mock(IOmsTicketService.class));"
+        },
+        {
+          "line": 75,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicChapterService\", mock(ICmsTopicChapterService.class));"
+        },
+        {
+          "line": 153,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsRegistrationMapper\", mapper);"
+        },
+        {
+          "line": 154,
+          "statement": "ReflectionTestUtils.setField(controller, \"currentPlayActivityMapper\", mock(com.chengyinhub.business.mapper.CmsActivityMapper.class));"
+        },
+        {
+          "line": 156,
+          "statement": "ReflectionTestUtils.setField(controller, \"topicRouteRuntimeService\", routes);"
+        }
+      ],
+      "calls_current_fixture": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySensorResultTest.java",
+      "d359_reference": true,
+      "d359_direct_new": true,
+      "current_direct_new": true,
+      "sha256": "d8327b52b34a40a02791d6656f881b63c7dbb1b4bf189c5e5846474509a5f792",
+      "constructor_lines": [
+        53
+      ],
+      "helper_reflections": [],
+      "access_bindings": [
+        {
+          "line": 57,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsActivityService\", activities);"
+        },
+        {
+          "line": 59,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicNodeService\", nodeService);"
+        },
+        {
+          "line": 60,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicService\", topicService);"
+        },
+        {
+          "line": 62,
+          "statement": "ReflectionTestUtils.setField(controller, \"playerNodeProgressService\", progressService);"
+        },
+        {
+          "line": 74,
+          "statement": "ReflectionTestUtils.setField(sensorChallenges, \"playerNodeProgressService\", progressService);"
+        },
+        {
+          "line": 78,
+          "statement": "ReflectionTestUtils.setField(controller, \"clubLeadMapper\", clubLeadMapper);"
+        }
+      ],
+      "calls_current_fixture": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayUnlockGateTest.java",
+      "d359_reference": true,
+      "d359_direct_new": true,
+      "current_direct_new": true,
+      "sha256": "da22f371adec52a20daa63400a3c45e971e3413e9525bda14855b09444a0e3b9",
+      "constructor_lines": [
+        41
+      ],
+      "helper_reflections": [
+        "unlockGateError"
+      ],
+      "access_bindings": [
+        {
+          "line": 44,
+          "statement": "ReflectionTestUtils.setField(controller, \"playerNodeProgressService\", progressService);"
+        },
+        {
+          "line": 45,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicNodeService\", nodeService);"
+        }
+      ],
+      "calls_current_fixture": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayVitalsOnTest.java",
+      "d359_reference": true,
+      "d359_direct_new": false,
+      "current_direct_new": false,
+      "sha256": "cc650eeffc3187362d5f8883cd495f2fb90f216af5c46b26ae081761c3967809",
+      "constructor_lines": [],
+      "helper_reflections": [],
+      "access_bindings": [],
+      "calls_current_fixture": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/BasicPlayCommandFixtures.java",
+      "d359_reference": true,
+      "d359_direct_new": false,
+      "current_direct_new": false,
+      "sha256": "126a0534d4017b786dc379ae60fed5317187c0d3804ee549b629d031d5f3f7ee",
+      "constructor_lines": [],
+      "helper_reflections": [],
+      "access_bindings": [],
+      "calls_current_fixture": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/CityStationOrderAcceptanceTest.java",
+      "d359_reference": true,
+      "d359_direct_new": true,
+      "current_direct_new": true,
+      "sha256": "d1e6b2736a57f7f150f01418f162b7015d8f027b2ae99e90f2f8fd95322a8a60",
+      "constructor_lines": [
+        87
+      ],
+      "helper_reflections": [
+        "isPrevDone"
+      ],
+      "access_bindings": [
+        {
+          "line": 88,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicNodeService\", nodes);"
+        },
+        {
+          "line": 89,
+          "statement": "ReflectionTestUtils.setField(controller, \"playerNodeProgressService\", progress);"
+        }
+      ],
+      "calls_current_fixture": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ClubLeadGateTest.java",
+      "d359_reference": true,
+      "d359_direct_new": true,
+      "current_direct_new": true,
+      "sha256": "889eff7835074d3eabb804892c867cdba4c9b9012700d6dd736cb085af1b0f89",
+      "constructor_lines": [
+        33
+      ],
+      "helper_reflections": [
+        "leadGateError"
+      ],
+      "access_bindings": [
+        {
+          "line": 36,
+          "statement": "ReflectionTestUtils.setField(controller, \"clubLeadMapper\", clubLeadMapper);"
+        },
+        {
+          "line": 37,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicChapterService\", chapterService);"
+        },
+        {
+          "line": 101,
+          "statement": "ReflectionTestUtils.setField(controller, \"gameSessionRuntimeService\", runtime);"
+        },
+        {
+          "line": 122,
+          "statement": "ReflectionTestUtils.setField(controller, \"clubLeadMapper\", null);"
+        },
+        {
+          "line": 128,
+          "statement": "ReflectionTestUtils.setField(controller, \"gameSessionRuntimeService\", runtime);"
+        },
+        {
+          "line": 149,
+          "statement": "ReflectionTestUtils.setField(controller, \"gameSessionRuntimeService\", runtime);"
+        }
+      ],
+      "calls_current_fixture": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/CollectIdempotencyTest.java",
+      "d359_reference": true,
+      "d359_direct_new": true,
+      "current_direct_new": true,
+      "sha256": "98ca67aa7699c6129f52422541187376e68a7bc91a029f5d2b52c2e06134937c",
+      "constructor_lines": [
+        37
+      ],
+      "helper_reflections": [],
+      "access_bindings": [],
+      "calls_current_fixture": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/CurrentPlayControllerFixtures.java",
+      "d359_reference": true,
+      "d359_direct_new": false,
+      "current_direct_new": false,
+      "sha256": "50ca8ea8e71a9cb241d7484612aecf6bf6889be6d7e86751b157a97b59b7ccab",
+      "constructor_lines": [],
+      "helper_reflections": [],
+      "access_bindings": [
+        {
+          "line": 34,
+          "statement": "ReflectionTestUtils.setField(controller, \"clubLeadMapper\", noLead);"
+        },
+        {
+          "line": 43,
+          "statement": "ReflectionTestUtils.setField(controller, \"currentPlayActivityMapper\", activityMapper);"
+        },
+        {
+          "line": 47,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsRegistrationMapper\","
+        }
+      ],
+      "calls_current_fixture": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/FreeOrderCancelEntryGateAcceptanceTest.java",
+      "d359_reference": true,
+      "d359_direct_new": true,
+      "current_direct_new": true,
+      "sha256": "3eb947b9a9fe6ded76ec3e033807cde30793c7774ebe2d3272d6e107ab9b4cd9",
+      "constructor_lines": [
+        82
+      ],
+      "helper_reflections": [],
+      "access_bindings": [],
+      "calls_current_fixture": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/GameplayControllerProtectionTest.java",
+      "d359_reference": true,
+      "d359_direct_new": false,
+      "current_direct_new": false,
+      "sha256": "b16b942d87a3ada55de82b8437841b0397357441a4ca89ccc8f2c203d86b47ff",
+      "constructor_lines": [],
+      "helper_reflections": [],
+      "access_bindings": [],
+      "calls_current_fixture": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/JourneyPublishFreezeTest.java",
+      "d359_reference": true,
+      "d359_direct_new": true,
+      "current_direct_new": true,
+      "sha256": "43ff6184b177f8c0eb11c6ce487f9648d853ef100b9028afa077c94597ff33cc",
+      "constructor_lines": [
+        124
+      ],
+      "helper_reflections": [],
+      "access_bindings": [
+        {
+          "line": 227,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicNodeService\", nodeService);"
+        },
+        {
+          "line": 228,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsActivityService\", activityService);"
+        },
+        {
+          "line": 230,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicService\", topicService);"
+        },
+        {
+          "line": 232,
+          "statement": "ReflectionTestUtils.setField(controller, \"topicRouteRuntimeService\", runtime);"
+        },
+        {
+          "line": 233,
+          "statement": "ReflectionTestUtils.setField(controller, \"playerNodeProgressService\", progressService);"
+        },
+        {
+          "line": 243,
+          "statement": "ReflectionTestUtils.setField(controller, \"omsTicketService\", mock(IOmsTicketService.class));"
+        },
+        {
+          "line": 244,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicChapterService\", mock(ICmsTopicChapterService.class));"
+        },
+        {
+          "line": 245,
+          "statement": "ReflectionTestUtils.setField(controller, \"clubLeadMapper\", mock(ClubLeadMapper.class));"
+        }
+      ],
+      "calls_current_fixture": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/LogAttemptFailureTest.java",
+      "d359_reference": true,
+      "d359_direct_new": true,
+      "current_direct_new": true,
+      "sha256": "a6e4c7b58a20761f1ddf9df7ea5606ed8a854106bc45061b1acc2de7ab98a161",
+      "constructor_lines": [
+        42
+      ],
+      "helper_reflections": [],
+      "access_bindings": [],
+      "calls_current_fixture": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/NodeMedalClaimTest.java",
+      "d359_reference": true,
+      "d359_direct_new": true,
+      "current_direct_new": true,
+      "sha256": "7e41789b2f8b431dc04268f5dfa2ca5e65cfc4bd4f2ca3b62ec347a81854ec65",
+      "constructor_lines": [
+        61
+      ],
+      "helper_reflections": [],
+      "access_bindings": [],
+      "calls_current_fixture": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/O08PrivateLocationReadPathTest.java",
+      "d359_reference": true,
+      "d359_direct_new": true,
+      "current_direct_new": true,
+      "sha256": "50dc1f44d670b72576241b76fb3c95462f0b05a61ee0c6721825b5b538c6d897",
+      "constructor_lines": [
+        307
+      ],
+      "helper_reflections": [],
+      "access_bindings": [
+        {
+          "line": 316,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsActivityService\", activityService);"
+        },
+        {
+          "line": 318,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicService\", topicService);"
+        },
+        {
+          "line": 319,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicNodeService\", nodeService);"
+        },
+        {
+          "line": 320,
+          "statement": "ReflectionTestUtils.setField(controller, \"topicRouteRuntimeService\", mock(ITopicRouteRuntimeService.class));"
+        },
+        {
+          "line": 321,
+          "statement": "ReflectionTestUtils.setField(controller, \"playerNodeProgressService\","
+        },
+        {
+          "line": 327,
+          "statement": "ReflectionTestUtils.setField(controller, \"omsTicketService\","
+        },
+        {
+          "line": 329,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicChapterService\", mock(ICmsTopicChapterService.class));"
+        },
+        {
+          "line": 390,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicService\", mock(ICmsTopicService.class));"
+        }
+      ],
+      "calls_current_fixture": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PhotoOwnerBindingContractTest.java",
+      "d359_reference": true,
+      "d359_direct_new": true,
+      "current_direct_new": true,
+      "sha256": "34593e9fb3ee109f81a9831304df5ec2f5d3053cb8b92dc8663e302e7b3c8109",
+      "constructor_lines": [
+        80
+      ],
+      "helper_reflections": [],
+      "access_bindings": [
+        {
+          "line": 94,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsActivityService\", activityService);"
+        },
+        {
+          "line": 96,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicNodeService\", nodeService);"
+        },
+        {
+          "line": 97,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicService\", topicService);"
+        },
+        {
+          "line": 99,
+          "statement": "ReflectionTestUtils.setField(controller, \"playerNodeProgressService\", progressService);"
+        },
+        {
+          "line": 108,
+          "statement": "ReflectionTestUtils.setField(controller, \"clubLeadMapper\","
+        },
+        {
+          "line": 118,
+          "statement": "ReflectionTestUtils.setField(sensorChallenges, \"playerNodeProgressService\", progressService);"
+        }
+      ],
+      "calls_current_fixture": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PhotoReviewRewardContractTest.java",
+      "d359_reference": true,
+      "d359_direct_new": true,
+      "current_direct_new": true,
+      "sha256": "fec29f33cd81802190f81d778d8f57b0f188ad37e39cfdf7989e781b1f2fccdd",
+      "constructor_lines": [
+        103
+      ],
+      "helper_reflections": [],
+      "access_bindings": [
+        {
+          "line": 117,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsActivityService\", activityService);"
+        },
+        {
+          "line": 119,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicNodeService\", nodeService);"
+        },
+        {
+          "line": 120,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicService\", topicService);"
+        },
+        {
+          "line": 122,
+          "statement": "ReflectionTestUtils.setField(controller, \"playerNodeProgressService\", progressService);"
+        },
+        {
+          "line": 134,
+          "statement": "ReflectionTestUtils.setField(controller, \"clubLeadMapper\","
+        },
+        {
+          "line": 140,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicChapterService\", chapterService);"
+        }
+      ],
+      "calls_current_fixture": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PlayCommandIntentTest.java",
+      "d359_reference": true,
+      "d359_direct_new": true,
+      "current_direct_new": true,
+      "sha256": "1e586a3bfb2962e6d5186170ee699407df29c74fe14c626e3a42ea7747668ead",
+      "constructor_lines": [
+        31
+      ],
+      "helper_reflections": [],
+      "access_bindings": [
+        {
+          "line": 38,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicNodeService\", nodes);"
+        },
+        {
+          "line": 39,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsActivityService\", activities);"
+        }
+      ],
+      "calls_current_fixture": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PlayProgressVarsTest.java",
+      "d359_reference": true,
+      "d359_direct_new": true,
+      "current_direct_new": true,
+      "sha256": "e7cf6229c14686fb7af664fe4fb7a3ca379fc540fb77c2d742fd0333591dd7e6",
+      "constructor_lines": [
+        55
+      ],
+      "helper_reflections": [],
+      "access_bindings": [
+        {
+          "line": 68,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicNodeService\", nodeService);"
+        },
+        {
+          "line": 69,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsActivityService\", activityService);"
+        },
+        {
+          "line": 71,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicService\", topicService);"
+        },
+        {
+          "line": 72,
+          "statement": "ReflectionTestUtils.setField(controller, \"playerNodeProgressService\", progressService);"
+        },
+        {
+          "line": 74,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicChapterService\", chapterService);"
+        }
+      ],
+      "calls_current_fixture": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PlayResolveModeTest.java",
+      "d359_reference": true,
+      "d359_direct_new": true,
+      "current_direct_new": true,
+      "sha256": "ff2bfe9f31e90afe9cc42470845d04d9834a4d9055d4541b16a5e774643ed884",
+      "constructor_lines": [
+        47
+      ],
+      "helper_reflections": [
+        "resolveMode"
+      ],
+      "access_bindings": [
+        {
+          "line": 48,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicService\", topicSvc);"
+        },
+        {
+          "line": 49,
+          "statement": "ReflectionTestUtils.setField(controller, \"omsTicketService\", ticketSvc);"
+        }
+      ],
+      "calls_current_fixture": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PlaySelfPlayCompletionTest.java",
+      "d359_reference": true,
+      "d359_direct_new": true,
+      "current_direct_new": true,
+      "sha256": "4f7552231f89be5c5a3b2f6688c94e8225609705f637ced58373ef190a1199e9",
+      "constructor_lines": [
+        54
+      ],
+      "helper_reflections": [],
+      "access_bindings": [
+        {
+          "line": 55,
+          "statement": "ReflectionTestUtils.setField(controller, \"playerNodeProgressService\", progressService);"
+        },
+        {
+          "line": 56,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicNodeService\", nodeService);"
+        },
+        {
+          "line": 60,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicService\","
+        },
+        {
+          "line": 65,
+          "statement": "ReflectionTestUtils.setField(controller, \"omsTicketService\","
+        }
+      ],
+      "calls_current_fixture": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ShopDayExperienceLayerContractTest.java",
+      "d359_reference": true,
+      "d359_direct_new": true,
+      "current_direct_new": true,
+      "sha256": "3165ca10d66c65e37bbf9389a3a3c457f835e5604c95a5d34ba581b68ad3654e",
+      "constructor_lines": [
+        98
+      ],
+      "helper_reflections": [],
+      "access_bindings": [
+        {
+          "line": 100,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicNodeService\", nodeService);"
+        },
+        {
+          "line": 101,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsActivityService\", activityService);"
+        },
+        {
+          "line": 106,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsRegistrationMapper\", registrationMapper);"
+        },
+        {
+          "line": 107,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicService\", topicService);"
+        },
+        {
+          "line": 114,
+          "statement": "ReflectionTestUtils.setField(controller, \"clubLeadMapper\","
+        },
+        {
+          "line": 116,
+          "statement": "ReflectionTestUtils.setField(controller, \"playerNodeProgressService\", progressService);"
+        },
+        {
+          "line": 118,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicChapterService\", mock(ICmsTopicChapterService.class));"
+        }
+      ],
+      "calls_current_fixture": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/TopicRouteFrozenSessionReadSideTest.java",
+      "d359_reference": true,
+      "d359_direct_new": true,
+      "current_direct_new": true,
+      "sha256": "fddf6550b1d7e840d495fc030817289ab149de187b7c24b66460ac6530558867",
+      "constructor_lines": [
+        44
+      ],
+      "helper_reflections": [],
+      "access_bindings": [
+        {
+          "line": 54,
+          "statement": "ReflectionTestUtils.setField(controller, \"playerNodeProgressService\", progressService);"
+        },
+        {
+          "line": 66,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsActivityService\", activityService);"
+        },
+        {
+          "line": 70,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicNodeService\", nodeService);"
+        },
+        {
+          "line": 77,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicService\", topicService);"
+        },
+        {
+          "line": 83,
+          "statement": "ReflectionTestUtils.setField(controller, \"topicRouteRuntimeService\", runtime);"
+        },
+        {
+          "line": 114,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicService\", topicService);"
+        },
+        {
+          "line": 118,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicNodeService\", nodeService);"
+        },
+        {
+          "line": 125,
+          "statement": "ReflectionTestUtils.setField(controller, \"playerNodeProgressService\", progressService);"
+        },
+        {
+          "line": 132,
+          "statement": "ReflectionTestUtils.setField(controller, \"topicRouteRuntimeService\", runtime);"
+        }
+      ],
+      "calls_current_fixture": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/PlayHintUnlockMySqlIT.java",
+      "d359_reference": false,
+      "d359_direct_new": false,
+      "current_direct_new": true,
+      "sha256": "5a3c14e88b0e11e33209492f59fb3350be8a22bb1eccea06f64226e2ce35c366",
+      "constructor_lines": [
+        135
+      ],
+      "helper_reflections": [],
+      "access_bindings": [
+        {
+          "line": 156,
+          "statement": "ReflectionTestUtils.setField(target, \"cmsTopicNodeService\", nodes);"
+        },
+        {
+          "line": 158,
+          "statement": "ReflectionTestUtils.setField(target, \"cmsTopicService\", topics);"
+        },
+        {
+          "line": 160,
+          "statement": "ReflectionTestUtils.setField(target, \"cmsActivityService\", activities);"
+        },
+        {
+          "line": 161,
+          "statement": "ReflectionTestUtils.setField(target, \"currentPlayActivityMapper\", sql.getMapper(CmsActivityMapper.class));"
+        },
+        {
+          "line": 162,
+          "statement": "ReflectionTestUtils.setField(target, \"cmsRegistrationMapper\", sql.getMapper(CmsRegistrationMapper.class));"
+        },
+        {
+          "line": 163,
+          "statement": "ReflectionTestUtils.setField(target, \"clubLeadMapper\", sql.getMapper(ClubLeadMapper.class));"
+        }
+      ],
+      "calls_current_fixture": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/PlayLeadAdmissionFailureMySqlIT.java",
+      "d359_reference": false,
+      "d359_direct_new": false,
+      "current_direct_new": true,
+      "sha256": "2a5c9939ec45bfd000f25d7c617cdf48b4ceff76c255b801ff67856f1e58c3b6",
+      "constructor_lines": [
+        157
+      ],
+      "helper_reflections": [],
+      "access_bindings": [
+        {
+          "line": 175,
+          "statement": "ReflectionTestUtils.setField(target, \"cmsTopicNodeService\", nodes);"
+        },
+        {
+          "line": 177,
+          "statement": "ReflectionTestUtils.setField(target, \"cmsTopicService\", topics);"
+        },
+        {
+          "line": 179,
+          "statement": "ReflectionTestUtils.setField(target, \"cmsActivityService\", activities);"
+        },
+        {
+          "line": 180,
+          "statement": "ReflectionTestUtils.setField(target, \"currentPlayActivityMapper\", sql.getMapper(CmsActivityMapper.class));"
+        },
+        {
+          "line": 181,
+          "statement": "ReflectionTestUtils.setField(target, \"cmsRegistrationMapper\", sql.getMapper(CmsRegistrationMapper.class));"
+        },
+        {
+          "line": 182,
+          "statement": "ReflectionTestUtils.setField(target, \"clubLeadMapper\", sql.getMapper(ClubLeadMapper.class));"
+        },
+        {
+          "line": 247,
+          "statement": "ReflectionTestUtils.setField(controller, \"topicRouteRuntimeService\", routeProxy.getProxy());"
+        }
+      ],
+      "calls_current_fixture": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ArchitectureDayGCompletionFallbackTest.java",
+      "d359_reference": false,
+      "d359_direct_new": false,
+      "current_direct_new": true,
+      "sha256": "8767bf17f87e70e85461c7c93dce1d859f016740df47f7e033d88a452f9c743d",
+      "constructor_lines": [
+        45
+      ],
+      "helper_reflections": [],
+      "access_bindings": [
+        {
+          "line": 57,
+          "statement": "ReflectionTestUtils.setField(controller, \"playerNodeProgressService\", progress);"
+        },
+        {
+          "line": 59,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsActivityService\", mock(ICmsActivityService.class));"
+        },
+        {
+          "line": 60,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicService\", topics);"
+        },
+        {
+          "line": 61,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicNodeService\", nodes);"
+        },
+        {
+          "line": 63,
+          "statement": "ReflectionTestUtils.setField(controller, \"topicRouteRuntimeService\", routes);"
+        }
+      ],
+      "calls_current_fixture": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PlayLeadAdmissionFailureTest.java",
+      "d359_reference": false,
+      "d359_direct_new": false,
+      "current_direct_new": true,
+      "sha256": "146dad795cb9093cdd59921b4d4ffde27fb70e52882ccef0423794a3a4c04d90",
+      "constructor_lines": [
+        55
+      ],
+      "helper_reflections": [],
+      "access_bindings": [
+        {
+          "line": 58,
+          "statement": "ReflectionTestUtils.setField(controller, \"clubLeadMapper\", leads);"
+        },
+        {
+          "line": 63,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsTopicNodeService\", nodes);"
+        },
+        {
+          "line": 67,
+          "statement": "ReflectionTestUtils.setField(controller, \"cmsActivityService\", activities);"
+        },
+        {
+          "line": 75,
+          "statement": "when(topics.selectCmsTopicById(300L)).thenReturn(topic); ReflectionTestUtils.setField(controller, \"cmsTopicService\", topics);"
+        },
+        {
+          "line": 81,
+          "statement": "ReflectionTestUtils.setField(controller, \"topicRouteRuntimeService\", routes);"
+        },
+        {
+          "line": 86,
+          "statement": "ReflectionTestUtils.setField(controller, \"playerNodeProgressService\", progress);"
+        }
+      ],
+      "calls_current_fixture": true
+    }
+  ],
+  "puzzle_direct_construct_files": [
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PuzzlePlayServiceImplTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PuzzleRevealArrivalFactTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayPuzzleHintTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/JourneyPublishFreezeTest.java"
+  ]
+}

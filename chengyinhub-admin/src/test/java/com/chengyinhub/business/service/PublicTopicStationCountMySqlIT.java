@@ -2,7 +2,7 @@ package com.chengyinhub.business.service;
 
 import com.chengyinhub.business.domain.*;
 import com.chengyinhub.business.mapper.*;
-import com.chengyinhub.business.service.impl.CmsTopicServiceImpl;
+import com.chengyinhub.business.service.impl.TopicQueryService;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageInterceptor;
@@ -26,7 +26,7 @@ class PublicTopicStationCountMySqlIT {
     private String database;
     private JdbcTemplate admin;
     private CmsTopicNodeMapper nodes;
-    private CmsTopicServiceImpl service;
+    private TopicQueryService service;
     private final QueryCounter counter = new QueryCounter();
 
     @BeforeAll void setup() throws Exception {
@@ -73,11 +73,7 @@ class PublicTopicStationCountMySqlIT {
         factory.setPlugins(counter, paging);
         SqlSessionTemplate session = new SqlSessionTemplate(factory.getObject());
         nodes = session.getMapper(CmsTopicNodeMapper.class);
-        service = new CmsTopicServiceImpl();
-        org.springframework.test.util.ReflectionTestUtils.setField(service, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
-                invocation -> "lockTopic".equals(invocation.getMethod().getName())
-                        ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(service, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
-                        : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
+        service = new TopicQueryService();
         ReflectionTestUtils.setField(service, "cmsTopicMapper", session.getMapper(CmsTopicMapper.class));
         ReflectionTestUtils.setField(service, "cmsTopicNodeMapper", nodes);
     }

@@ -1,0 +1,246 @@
+{
+  "base": "d586c143eb0a4499aeb15cbb3d173496f18b83e2",
+  "production_java_census_complete": true,
+  "callers_unchanged": [
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCoopPoolController.java",
+      "base_blob": "eedbf0f045bf3c35ea9418f528008284567f8029",
+      "sites": [
+        {
+          "line": 113,
+          "text": "List<CmsTopic> topics = cmsTopicService.selectCmsTopicList(probe);"
+        }
+      ]
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiProjectController.java",
+      "base_blob": "9658d624a743100ae0e03c377adfdc4897002504",
+      "sites": [
+        {
+          "line": 231,
+          "text": "List<CmsTopic> topics = cmsTopicService.selectCmsTopicList(topicQuery);"
+        }
+      ]
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPublishController.java",
+      "base_blob": "08df0378fc25c37b74458345f7cb0ece817b2506",
+      "sites": [
+        {
+          "line": 120,
+          "text": "List<CmsTopic> topics = cmsTopicService.selectCmsTopicList(tq);"
+        }
+      ]
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java",
+      "base_blob": "fe2d26e7220104a01f9927cd7d384741d0111ff0",
+      "sites": [
+        {
+          "line": 1487,
+          "text": "TopicTemplateDetailVO detail = cmsTopicService.buildTopicTemplateDetail("
+        },
+        {
+          "line": 1678,
+          "text": "cmsTopic = cmsTopicService.selectCmsTopicDetailById(topicId, memberId);"
+        },
+        {
+          "line": 2068,
+          "text": "? cmsTopicService.selectPublicCmsTopicList(cmsTopic)"
+        },
+        {
+          "line": 2069,
+          "text": ": cmsTopicService.selectCmsTopicList(cmsTopic);"
+        },
+        {
+          "line": 2218,
+          "text": "list = cmsTopicService.selectPublicCmsTopicList(cmsTopic);"
+        },
+        {
+          "line": 2359,
+          "text": "list = cmsTopicService.selectCmsTopicList(cmsTopic);"
+        },
+        {
+          "line": 2581,
+          "text": "cmsTopic = cmsTopicService.selectMerchantVisibleCmsTopicById(topicId);"
+        },
+        {
+          "line": 2583,
+          "text": "cmsTopic = cmsTopicService.selectMerchantManagedCmsTopicById(topicId, merchantOwnerMemberId);"
+        }
+      ]
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicTemplateController.java",
+      "base_blob": "9633de1ccce2affd53d8595278f5659dd5d94d55",
+      "sites": [
+        {
+          "line": 63,
+          "text": "return AjaxResult.success(cmsTopicService.buildTopicTemplateListVO(\"1\".equals(recommendedOnly)));"
+        },
+        {
+          "line": 90,
+          "text": "cmsTopicService.buildPublicTopicTemplateDetail("
+        }
+      ]
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiUmsMemberController.java",
+      "base_blob": "b15f16ff358298d9cb15942e4f0897716c6dfbb7",
+      "sites": [
+        {
+          "line": 416,
+          "text": "List<CmsTopic> list = cmsTopicService.selectCmsTopicList(query);"
+        },
+        {
+          "line": 445,
+          "text": "List<CmsTopic> allTopics = cmsTopicService.selectCmsTopicList(query);"
+        }
+      ]
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsTopicController.java",
+      "base_blob": "cc6749d812aa3f3cbe920b804ddef70ec405c009",
+      "sites": [
+        {
+          "line": 137,
+          "text": "cmsTopicService.selectCmsTopicList(cmsTopic));"
+        },
+        {
+          "line": 154,
+          "text": "List<CmsTopic> candidates = cmsTopicService.selectCmsTopicList(cmsTopic);"
+        }
+      ]
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubSessionServiceImpl.java",
+      "base_blob": "a3233861379a1f9f7ee36215063e8e9485467e66",
+      "sites": [
+        {
+          "line": 93,
+          "text": "List<CmsTopic> owned = topicService.selectPublicCmsTopicList(probe);"
+        }
+      ]
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ExploreCompletionReadServiceImpl.java",
+      "base_blob": "12f718318d7ff8e76e2e387ba45875fa63dbf6c2",
+      "sites": [
+        {
+          "line": 305,
+          "text": "candidates = safeList(topicService.selectCmsTopicList(query));"
+        }
+      ]
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ImServiceImpl.java",
+      "base_blob": "d9f4b616caf02a84235fec50ea631e523d9c744d",
+      "sites": [
+        {
+          "line": 253,
+          "text": ": cmsTopicMapper.selectCmsTopicDetailById(topicId, viewerId);"
+        },
+        {
+          "line": 801,
+          "text": "CmsTopic topic = cmsTopicMapper.selectCmsTopicDetailById(topicId, null);"
+        }
+      ]
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ProjectPlayerReadServiceImpl.java",
+      "base_blob": "29207e8c81e92922e838bdf147da08878e244380",
+      "sites": [
+        {
+          "line": 390,
+          "text": "List<CmsTopic> myTopics = topicService.selectCmsTopicList(topicProbe);"
+        }
+      ]
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/ClubPostReferenceGuard.java",
+      "base_blob": "b10c7790442b05f022c82e718b2696d737925cab",
+      "sites": [
+        {
+          "line": 101,
+          "text": "return cmsTopicMapper.selectCmsTopicDetailById(topicId, null) != null;"
+        }
+      ]
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubController.java",
+      "base_blob": "213aa097883b43e557ba7c87e0605cbcdd3db3dc",
+      "sites": [
+        {
+          "line": 425,
+          "text": "Map<Long, Integer> counts = cmsTopicService.selectUpcomingTopicCounts(clubIds);"
+        },
+        {
+          "line": 626,
+          "text": "club.setTopicCount(cmsTopicService.selectCmsTopicList(tProbe).size());"
+        },
+        {
+          "line": 1209,
+          "text": "for (CmsTopic t : cmsTopicService.selectCmsTopicList(tq)) {"
+        },
+        {
+          "line": 1359,
+          "text": "List<CmsTopic> topics = cmsTopicService.selectPublicCmsTopicList(probe);"
+        }
+      ]
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCoopController.java",
+      "base_blob": "7ec507c207f260e2f186dfaa57e7b2c65bbd3739",
+      "sites": [
+        {
+          "line": 1255,
+          "text": "List<CmsTopic> topics = cmsTopicService.selectCmsTopicList(probe);"
+        }
+      ]
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiStatsController.java",
+      "base_blob": "d00d29d136b363a856f6d68584a085d0418b4f13",
+      "sites": [
+        {
+          "line": 86,
+          "text": "List<CmsTopic> topics = cmsTopicService.selectCmsTopicList(topicProbe);"
+        }
+      ]
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/play/PlayEntryApplication.java",
+      "base_blob": "278b316c2f025c316080e12f01fc6973bfdc495f",
+      "sites": [
+        {
+          "line": 102,
+          "text": "if (!registered && !leadSpectator && cmsTopicService.selectCmsTopicDetailById(tId, memberId) == null) {"
+        }
+      ]
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantAggregateReadServiceImpl.java",
+      "base_blob": "d3762439f6dceac013739d221ff33f507e98d95b",
+      "sites": [
+        {
+          "line": 365,
+          "text": "List<CmsTopic> topics = safe(topicService.selectCmsTopicList(query));"
+        },
+        {
+          "line": 534,
+          "text": "for (CmsTopic topic : safe(topicService.selectCmsTopicList(topicQuery))) {"
+        }
+      ]
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantInsightServiceImpl.java",
+      "base_blob": "6ac4a268086b2f29a8ca0bc3d87c7f999cee2c0b",
+      "sites": [
+        {
+          "line": 229,
+          "text": "List<com.chengyinhub.business.domain.CmsTopic> topics = cmsTopicService.selectCmsTopicList(query);"
+        }
+      ]
+    }
+  ]
+}

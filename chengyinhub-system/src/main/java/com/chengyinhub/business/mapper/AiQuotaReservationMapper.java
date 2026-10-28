@@ -7,6 +7,8 @@ import java.util.List;
 public interface AiQuotaReservationMapper {
     int insertPrepared(AiQuotaReservationRecord row);
     AiQuotaReservationRecord selectByReceipt(@Param("receipt") String receipt);
+    AiQuotaReservationRecord selectByReceiptForUpdate(@Param("receipt") String receipt);
+    int requestAsrNotSentRefund(@Param("receipt") String receipt,@Param("fence") Long fence);
     int recordReserved(@Param("receipt") String receipt, @Param("generation") String generation, @Param("used") Long used);
     int advanceStage(@Param("receipt") String receipt, @Param("stage") String stage);
     int recordOutcome(@Param("receipt") String receipt, @Param("state") String state, @Param("reason") String reason);

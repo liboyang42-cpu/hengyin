@@ -1,6 +1,9 @@
 package com.chengyinhub.web.task;
 
 import com.chengyinhub.business.service.impl.AlarmService;
+import com.chengyinhub.common.utils.LogCorrelation;
+import com.chengyinhub.quartz.util.QuartzJobCorrelation;
+import java.util.Map;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.quartz.listeners.JobListenerSupport;
@@ -29,18 +32,26 @@ public class QuartzFailureAlarmConfig {
                     // 任务参数和异常消息可能包含个人数据，仅投递任务标识和异常类型。
                     // 按任务限频：每分钟一跑的任务持续失败时，10 分钟内同一任务只尝试投递一次，
                     // 避免把告警通道刷成噪音；不同任务互不抑制。
-                    try {
+                    String runId = QuartzJobCorrelation.runId(context);
+                    try (LogCorrelation.Scope ignored = LogCorrelation.open("-".equals(runId) ? Map.of()
+                            : Map.of(LogCorrelation.REQUEST_ID, runId, LogCorrelation.JOB_RUN_ID, runId))) {
                         Throwable cause = rootCause(failure);
+                        String correlation = "-".equals(runId) ? "" : ", jobRunId=" + runId;
                         alarmService.alarmThrottled(eventKey(context.getJobDetail().getKey()), "定时任务失败",
-                                "job=" + context.getJobDetail().getKey()
-                                + ", errorType=" + cause.getClass().getSimpleName());
+                                "job=" + safeJobKey(context.getJobDetail().getKey())
+                                + ", errorType=" + cause.getClass().getSimpleName() + correlation);
                     } catch (RuntimeException alarmFailure) {
-                        getLog().error("任务失败告警投递异常 job={} errorType={}", context.getJobDetail().getKey(),
-                                alarmFailure.getClass().getSimpleName());
+                        getLog().error("任务失败告警投递异常 event={} jobRunId={} errorType={}",
+                                eventKey(context.getJobDetail().getKey()), runId, alarmFailure.getClass().getSimpleName());
                     }
                 }
             }
         };
+    }
+
+    static String safeJobKey(org.quartz.JobKey key) {
+        String value = key == null ? null : key.toString();
+        return value != null && value.matches("[A-Za-z0-9_.-]{1,128}") ? value : "UNAVAILABLE";
     }
 
     /**

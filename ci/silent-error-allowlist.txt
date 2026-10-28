@@ -1,4 +1,5 @@
 # U5 silentError 白名单册子 —— ci/silent-error-gate.js 读这个文件。
+chengyinhub-xcx/pages/merchant/citynode/index.js 1  # 2026-10-24 /api/verify/citynode/redeem：业务拒绝、网络/异常回执交原核销workflow，当前页modal明确展示失败或UNKNOWN；写前持久占原账号+据点+玩家，重扫只查原结果；login revision与页面epoch淘汰迟回包，避免全局toast污染新页。
 chengyinhub-xcx/utils/content-report.js 4  # 2026-10-20 举报原因读取和主题/广场模板/个人玩法三处提交：业务拒绝及网络失败均由当前页面显式 toast，结束在途状态；关闭通道 toast 避免双弹与换号后的旧响应提示，followup-a1-content-report-entries 覆盖失败和页面/身份失效。
 chengyinhub-xcx/subpackageA/pages/myproject/index.js 2  # 2026-10-20 审核记录读取失败落弹层 error 并 toast，可重试；申诉业务拒绝/网络失败明确 toast 且释放在途，关闭通道 toast 避免双弹，离页/换号后不提示旧结果，followup-a2-audit-appeal-timeline 覆盖失败恢复。
 chengyinhub-xcx/components/cy/club-direct-ledger/index.js 1  # 计酬账目读取失败由 cy-inline-error 显示取回失败并提供重试；旧请求和切号响应被 epoch 拒绝，关闭全局 toast 避免重复提示。
@@ -132,7 +133,6 @@ chengyinhub-xcx/pages/mylike/mylike.js 4  # 2026-09-21 收藏双域:列表失败
 chengyinhub-xcx/components/cy/scene-qr-ticket/index.js 1  # 2026-08-25 状态底座:失败落页内错误态(cy-error / cy-inline-error / state:error / stale-error),通用 toast 会双弹
 chengyinhub-xcx/pages/square/components/cy/post-compose/index.js 3  # 选活动两路读取落activityError并给重试；发布失败由当前编辑器显式提示，关闭、切号或旧请求错误不能污染新界面
 chengyinhub-xcx/pages/publish/activity/index.js 4  # 2026-08-25 状态底座:失败落页内错误态(cy-error / cy-inline-error / state:error / stale-error),通用 toast 会双弹;2026-09-12 编辑回填 /api/activity/info 同口径 +1
-chengyinhub-xcx/pages/publish/fabu/index.js 1  # 2026-08-25 状态底座:AI 安全预检失败按可用性红线降级放行(不堵发布路),其余为页内错误态承接;两类都不该再弹通用 toast
 chengyinhub-xcx/pages/publish/fabu/theme-runtime-structure.js 1  # 2026-10-28 文档二 L3 到达与引导:换个方式写入失败,非 200 原样落半屏内 structureError(cy-inline-error),网络失败 cyToast 一句,不再叠加统一 toast
 chengyinhub-xcx/pages/publish/temp/index.js 3  # 2026-10-26 03恢复冻结包：权限、提交、模板详情失败落当前表单error；归属变化淘汰旧结果；采用调用移至独立模块，原4减至3
 chengyinhub-xcx/pages/search2/index.js 1  # 2026-08-25 状态底座:失败落页内错误态(cy-error / cy-inline-error / state:error / stale-error),通用 toast 会双弹
@@ -211,7 +211,7 @@ chengyinhub-xcx/utils/community-post-api.js 1  # canonical 社区内部 call 的
 # 2026-10-13 前端owner逐literal/回调/WXML闭包审阅；仅实名登记，不增加冻结BASELINE_TOTAL或任何UNREVIEWED额度。
 chengyinhub-xcx/app.js 1  # /api/config/features 背景读取失败finish(null)，社区读写旗保持false；owner/token/epoch校验淘汰旧回包，不伪造功能已启用
 chengyinhub-xcx/pages/privacy/index.js 1  # requestOwnMedia统一入口：401/403清自有媒体并显示权限反馈，其他错误传done或mediaError；epoch/owner/token隔离，重试写失败不会假报成功
-chengyinhub-xcx/pages/publish/fabu/index.js 6  # 2026-10-26 03恢复冻结包：edit-detail按作者/seq恢复权限；选模板myinfo有token及toast；copy前myinfo与draft失败落nodeCopyError且unknown锁；节点myinfo失败落nodeBindingError；adoption-home失败保留空列表不伪造模板。采用调用移至独立模块，原8减至6；另1处既有precheck显式skip标签保持原记录
+chengyinhub-xcx/pages/publish/fabu/index.js 6  # 2026-10-28 整合后实际六处：作者详情、AI安全预检、选模板myinfo、copy前myinfo、copy草稿、节点绑定myinfo；发布预检未使用silentError，不重复登记。
 chengyinhub-xcx/pages/shezhi/shezhi.js 1  # user/info真实401/403显示WXML错误标题并清账号资料，500留旧资料或留白；该处仅读取，club/my路由判据失败toast已记原1处
 chengyinhub-xcx/subpackageB/pages/im/chat/index.js 1  # 解除拉黑失败由当前会话tips或dc.failed明确显示；epoch/账号/会话隔离迟到回包，不静默写失败、不污染新页面
 chengyinhub-xcx/subpackageMember/complaint/index.js 2  # mine读取401/403/参数错误落WXML且owner/seq/hidden隔离；report真实写失败落submitError并保持可重试，不报成功；主题读取另记1处

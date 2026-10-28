@@ -1,0 +1,15 @@
+{
+  "source_sha": "fac5fba822187569c0e20c64bf4c87e660f6b28a",
+  "run_id": 40047105810,
+  "workflow_conclusion": "failure",
+  "backend_job_conclusion": "success",
+  "actual_downloaded_jar_sha256": "081be5cea9b06d71e72330579454e803eef855af5bc8c788bfe0e67cb882d686",
+  "startup_in_isolated_CI_passed": true,
+  "verified_jdeps_evidence_hashes": 11,
+  "static_observation_only": true,
+  "limits": [
+    "No production deploy",
+    "Static compiled module graph is not complete domain/reflection/MyBatis graph or approved architecture baseline",
+    "Whole CI must be rerun after exact fixture/test path fixes"
+  ]
+}

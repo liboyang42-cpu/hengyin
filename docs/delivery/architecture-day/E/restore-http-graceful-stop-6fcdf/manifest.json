@@ -1,0 +1,64 @@
+{
+  "parent": "6fcdf747e17cb5094121f609ae33f7734fda2ae7",
+  "parent_tree": "02e30bd0778ad2eff63b091429b89e7f17895f8f",
+  "repository": "liboyang42-cpu/hengyin",
+  "code_file_count": 4,
+  "code_patch_bytes": 31800,
+  "code_patch_sha256": "c2996e6a95587555431fe7cef7959ba9be3aa2133148264a503cc650b19cf35b",
+  "files": [
+    {
+      "path": "ci/restore_application_http_runtime.py",
+      "preimage_git_blob_sha1": "5ef9d26f581e1b87502727b9981cd27c0f329bae",
+      "postimage_git_blob_sha1": "51799e4ee52d558e27f235bd7a6015f5190efeee",
+      "preimage_sha256": "17c1453a19a3b387475b73a12dcf85621c7a70689b6360d283e94b1b73a49767",
+      "postimage_sha256": "dbe1c872b454300c01fae0c62b2b6ec973cfdd89f8b0fb238b8a69453e0028eb",
+      "postimage_bytes": 23278
+    },
+    {
+      "path": "ci/restore_application_http_probe.py",
+      "preimage_git_blob_sha1": "fac9fb74acf850fc816fe8848f396a8c56865877",
+      "postimage_git_blob_sha1": "c94713586601fbdc28f4301dcd318afcedcf71d6",
+      "preimage_sha256": "053c5b569d5fb8507d400a52b49613fa3e13d412e6b1448ef9ef99f80038a73a",
+      "postimage_sha256": "e011055181575d1fcdd710d3e4f4d74b788dcbd5047104c55e6039409bca96ff",
+      "postimage_bytes": 49155
+    },
+    {
+      "path": "ci/test_restore_application_http_probe.py",
+      "preimage_git_blob_sha1": "b82ce2c718d326df24cfb2decf6f9aa94aec9405",
+      "postimage_git_blob_sha1": "6ce76e982afcdbf0b3b5d0fa1ad1f37b06835450",
+      "preimage_sha256": "970c23730d9e45c501d26ebe8c9773afe55bca7b5c55249bb9817511236330d0",
+      "postimage_sha256": "1451dd127ef7da595da829cc0a70c2255490abca4ee8f8f4a20037958fc49ea6",
+      "postimage_bytes": 41852
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RestoreHttpApplicationChild.java",
+      "preimage_git_blob_sha1": "93ae4a8a48eff1e883d87fff8170a921c8183db1",
+      "postimage_git_blob_sha1": "9120087e14bf8484376d9396495a1f4b874881cc",
+      "preimage_sha256": "5071cf19737f5d59f7fed4fb1d5b4f815ccef938a5d352c9baf340bbaf932a08",
+      "postimage_sha256": "07db92056af28476888e7075890b78d3d5a5c2c5876964fbd184ea1e00b8dc45",
+      "postimage_bytes": 27299
+    }
+  ],
+  "readme_sha256": "82c7187497cba84a707c83c306c6cfcd511af50225998fae2f35bfd2e82b8064",
+  "checks": {
+    "preimage_blob_identity": "MATCH",
+    "code_patch_apply_check": "CLEAN",
+    "diff_whitespace": "NO_DIAGNOSTICS",
+    "finite_secret_pattern_scan": "NO_MATCHES",
+    "full_gitleaks_scan": "NOT_RUN"
+  },
+  "tests": "NOT_RUN",
+  "parser_import_checks": "NOT_RUN",
+  "compile": "NOT_RUN",
+  "java_mysql_redis_http": "NOT_RUN",
+  "fault_injection": "NOT_RUN",
+  "ci": "NOT_RUN",
+  "new_direct_control_methods": 8,
+  "original_cases_and_negative_assertions": "retained; fixed successful JavaPID fixtures to PID1; added non-PID1 lifecycle rejection",
+  "limitations": [
+    "No executed Docker/JVM/Quartz shutdown proof",
+    "No executed five-boot/backup/restore/cleanup proof",
+    "Official source semantics are reference, not runtime version attestation",
+    "Root must perform complete secret scan and unified controlled verification"
+  ]
+}

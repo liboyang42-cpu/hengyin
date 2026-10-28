@@ -6,6 +6,7 @@
 
     <resultMap type="MerchantChapterApplication" id="MerchantChapterApplicationResult">
         <result property="id" column="id" />
+        <result property="applicationRound" column="application_round" />
         <result property="topicId" column="topic_id" />
         <result property="chapterId" column="chapter_id" />
         <result property="merchantId" column="merchant_id" />
@@ -40,10 +41,14 @@
     </resultMap>
 
     <sql id="selectMerchantChapterApplicationVo">
-        select id, topic_id, chapter_id, merchant_id, status, source, replacement_of_offer_id, message, audit_remark, audit_member_id,
+        select id, application_round, topic_id, chapter_id, merchant_id, status, source, replacement_of_offer_id, message, audit_remark, audit_member_id,
                handle_time, del_flag, create_by, create_time, update_by, update_time
           from merchant_chapter_application
     </sql>
+
+    <select id="selectApplicationRoundForUpdate" resultType="java.lang.Long" useCache="false" flushCache="true">
+        select application_round from merchant_chapter_application where id=#{id} for update
+    </select>
 
     <select id="selectMerchantChapterApplicationById" parameterType="Long"
             resultMap="MerchantChapterApplicationResult">
@@ -58,7 +63,7 @@
     </select>
 
     <select id="selectByIdIncludingDeletedForUpdate" parameterType="Long"
-            resultMap="MerchantChapterApplicationResult">
+            resultMap="MerchantChapterApplicationResult" useCache="false" flushCache="true">
         <include refid="selectMerchantChapterApplicationVo" />
         where id = #{id}
         for update
@@ -70,7 +75,7 @@
         limit 1
     </select>
 
-    <select id="selectByChapterAndMerchantForUpdate" resultMap="MerchantChapterApplicationResult">
+    <select id="selectByChapterAndMerchantForUpdate" resultMap="MerchantChapterApplicationResult" useCache="false" flushCache="true">
         <include refid="selectMerchantChapterApplicationVo" />
         where chapter_id = #{chapterId} and merchant_id = #{merchantId} and del_flag = 0
         limit 1 for update
@@ -83,7 +88,7 @@
     </select>
 
     <select id="selectByTopicId" resultMap="MerchantChapterApplicationListResult">
-        select a.id, a.topic_id, a.chapter_id, a.merchant_id, a.status, a.source, a.replacement_of_offer_id, a.message, a.audit_remark,
+        select a.id, a.application_round, a.topic_id, a.chapter_id, a.merchant_id, a.status, a.source, a.replacement_of_offer_id, a.message, a.audit_remark,
                a.audit_member_id, a.handle_time, a.del_flag, a.create_by, a.create_time, a.update_by, a.update_time,
                t.name as topic_name, t.img_url as topic_img_url, t.start_date, t.end_date,
                t.circle_theme_code, c.name as chapter_name, m.name as merchant_name,
@@ -109,7 +114,7 @@
     </select>
 
     <select id="selectByMerchantId" resultMap="MerchantChapterApplicationListResult">
-        select a.id, a.topic_id, a.chapter_id, a.merchant_id, a.status, a.source, a.replacement_of_offer_id, a.message, a.audit_remark,
+        select a.id, a.application_round, a.topic_id, a.chapter_id, a.merchant_id, a.status, a.source, a.replacement_of_offer_id, a.message, a.audit_remark,
                a.audit_member_id, a.handle_time, a.del_flag, a.create_by, a.create_time, a.update_by, a.update_time,
                t.name as topic_name, t.img_url as topic_img_url, t.start_date, t.end_date,
                t.circle_theme_code, c.name as chapter_name, m.name as merchant_name,
@@ -135,7 +140,7 @@
     </select>
 
     <select id="selectByPublisherId" resultMap="MerchantChapterApplicationListResult">
-        select a.id, a.topic_id, a.chapter_id, a.merchant_id, a.status, a.source, a.replacement_of_offer_id, a.message, a.audit_remark,
+        select a.id, a.application_round, a.topic_id, a.chapter_id, a.merchant_id, a.status, a.source, a.replacement_of_offer_id, a.message, a.audit_remark,
                a.audit_member_id, a.handle_time, a.del_flag, a.create_by, a.create_time, a.update_by, a.update_time,
                t.name as topic_name, t.img_url as topic_img_url, t.start_date, t.end_date,
                t.circle_theme_code, c.name as chapter_name, m.name as merchant_name,
@@ -191,6 +196,7 @@
             useGeneratedKeys="true" keyProperty="id">
         insert into merchant_chapter_application
         <trim prefix="(" suffix=")" suffixOverrides=",">
+            application_round,
             <if test="topicId != null">topic_id,</if>
             <if test="chapterId != null">chapter_id,</if>
             <if test="merchantId != null">merchant_id,</if>
@@ -206,6 +212,7 @@
             <if test="delFlag != null">del_flag,</if>
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
+            1,
             <if test="topicId != null">#{topicId},</if>
             <if test="chapterId != null">#{chapterId},</if>
             <if test="merchantId != null">#{merchantId},</if>
@@ -232,7 +239,8 @@
                handle_time = null,
                create_by = #{createBy},
                create_time = now(),
-               update_time = now()
+               update_time = now(),
+               application_round = CASE WHEN application_round IS NULL THEN 1 ELSE application_round + 1 END
          where id = #{id} and status = 2 and del_flag = 0
     </update>
 
@@ -245,7 +253,8 @@
                handle_time = null,
                create_by = #{createBy},
                create_time = now(),
-               update_time = now()
+               update_time = now(),
+               application_round = CASE WHEN application_round IS NULL THEN 1 ELSE application_round + 1 END
          where id = #{id} and status = 0 and del_flag = 2
     </update>
 
@@ -255,7 +264,8 @@
                replacement_of_offer_id = #{replacementOfOfferId},
                message = #{message}, audit_remark = null,
                audit_member_id = #{auditMemberId}, handle_time = #{handleTime},
-               create_by = #{createBy}, create_time = #{createTime}, update_time = now()
+               create_by = #{createBy}, create_time = #{createTime}, update_time = now(),
+               application_round = CASE WHEN application_round IS NULL THEN 1 ELSE application_round + 1 END
          where id = #{id} and topic_id = #{topicId} and chapter_id = #{chapterId}
            and merchant_id = #{merchantId} and status = 0 and del_flag = 2
     </update>

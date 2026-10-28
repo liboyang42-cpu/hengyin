@@ -1,0 +1,19 @@
+{
+  "source": "6fcdf747e17cb5094121f609ae33f7734fda2ae7",
+  "run": 40232916855,
+  "attempt": 1,
+  "artifact": 12613314717,
+  "class": "com.chengyinhub.business.service.impl.CoopDepositSettlementAttemptMySqlIT",
+  "source_file_sha256": "0d292144938e141211505fc14c3ed4ab43e7b87952cfd631c66c0ee395b6eb30",
+  "zip_sha256": "5321bca616b28d535f444a727f66e37a0ccfb9ef1d9b195f78a048fcdc7c4515",
+  "CRC": "PASS",
+  "exact_original_source_methods": 12,
+  "actual_tests": 12,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "duplicates": 0,
+  "cleanup": "INDEPENDENT_EXACT_CLEAN",
+  "accepted": true,
+  "not_full_funds_or_provider_acceptance": true
+}

@@ -1,0 +1,7 @@
+PASS standalone WP11: all 3 cache paths remain at public baseline; frozen candidate untouched
+PASS XML parses; all prior mapper statements unchanged; additions are 2 SELECTs and 1 result map
+PASS original group guard, route projection, counterparty and markRead bodies unchanged
+PASS latest visibility/order matches legacy message selector
+PASS prior suite counts unchanged: 53 / 9 / 14
+PASS regenerated WP11 source patch and 8 source/test file SHA-256 match manifest
+NOT RUN Java compilation, JUnit, MySQL, EXPLAIN, load or network tests

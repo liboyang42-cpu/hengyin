@@ -80,7 +80,7 @@ test('六种节点完成入口先同步伏笔，再用同步后的版本提交',
       _routeWritePayload(action, nodeId, payload) {
         assert.equal(action, kind);
         assert.equal(this._routeState.version, 4, '完成请求不能提前生成旧版本');
-        const body = Object.assign({}, payload, { expectedRouteVersion: this._routeState.version });
+        const body = Object.assign({}, payload, { expectedRouteVersion: this._routeState.version, routeActionId: 'sync-' + kind });
         Object.defineProperty(body, '_bindRouteContext', { value: fields => Object.assign(body, fields) });
         return body;
       },

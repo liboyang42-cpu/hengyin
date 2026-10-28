@@ -1,0 +1,90 @@
+{
+  "state": "SOURCE_EXECUTION_PLAN_NOT_DISPATCHED",
+  "source_sha": "<NEW_PUBLIC_CANDIDATE_FULL40>",
+  "ref": "<NEW_PUBLIC_CANDIDATE_REF>",
+  "preconditions": [
+    "All remaining H owned SOURCE integrated with donor postimages",
+    "Unified original-case/caller/source-registry review and exact selected class admission",
+    "Secret and whitespace scan; isolated public SHA pinned",
+    "Do not dispatch same source/entry twice without concrete new failure and repair"
+  ],
+  "entries": [
+    {
+      "workflow": "ci.yml",
+      "inputs": {
+        "validation_scope": "selected",
+        "selected_jobs": "backend",
+        "mini_shards": "[]"
+      },
+      "reason": "Actual failed backend and changed shared publication/transaction fixtures; secret scan remains mandatory",
+      "acceptance_scope": "PARTIAL backend/source controls; never full original workflow green"
+    },
+    {
+      "workflow": "real-storage-it.yml",
+      "inputs": {
+        "source_sha": "<FROZEN_FULL40>",
+        "old_source_sha": "",
+        "batch": "architecture-day-integrated-changes",
+        "classes": "Wp04CoopOrderScopeMySqlIT,Wp04OriginalRefundMySqlIT,CoopOrderStationFulfillmentMySqlIT,GameplayReskinMySqlIT,CashWithdrawFundEvidenceMySqlIT,TopicContentCopyMySqlIT,CoopDepositSettlementAttemptMySqlIT,CoopDepositRefundMybatisIntegrationTest,CoopSupplyStationMySqlIT,FundsProcessRecoveryMySqlIT,CrossDomainFaultIsolationMySqlIT,RestoreMoneyDispatchMySqlIT,Wp04OriginalProducerMySqlIT,Wp04PaidHalfStateMySqlIT,Wp04ApprovedRefundFenceMySqlIT,CoopSettlementManualCaseReadMySqlIT,TopicPublicationBindingMySqlIT,TopicContentGraphMySqlIT,TopicContentBudgetMySqlIT,AuditTopicCurrentPublicationMySqlIT",
+        "timezone": "UTC"
+      },
+      "reason": "Twelve actual failed classes plus eight proven changed fixture/caller consumers",
+      "classes": [
+        "Wp04CoopOrderScopeMySqlIT",
+        "Wp04OriginalRefundMySqlIT",
+        "CoopOrderStationFulfillmentMySqlIT",
+        "GameplayReskinMySqlIT",
+        "CashWithdrawFundEvidenceMySqlIT",
+        "TopicContentCopyMySqlIT",
+        "CoopDepositSettlementAttemptMySqlIT",
+        "CoopDepositRefundMybatisIntegrationTest",
+        "CoopSupplyStationMySqlIT",
+        "FundsProcessRecoveryMySqlIT",
+        "CrossDomainFaultIsolationMySqlIT",
+        "RestoreMoneyDispatchMySqlIT",
+        "Wp04OriginalProducerMySqlIT",
+        "Wp04PaidHalfStateMySqlIT",
+        "Wp04ApprovedRefundFenceMySqlIT",
+        "CoopSettlementManualCaseReadMySqlIT",
+        "TopicPublicationBindingMySqlIT",
+        "TopicContentGraphMySqlIT",
+        "TopicContentBudgetMySqlIT",
+        "AuditTopicCurrentPublicationMySqlIT"
+      ],
+      "assertions": "Exact registered case identities/XML/source/hash zero required skip, every owned schema/container cleanup; original failures remain347b evidence"
+    },
+    {
+      "workflow": "isolated-authenticated-redis-recovery.yml",
+      "inputs": {
+        "probe_mode": "gameplay-capacity-mixed"
+      },
+      "reason": "Original isolated-driver import failure; same pinned task venv plus first-failure finalization source now repaired"
+    },
+    {
+      "workflow": "isolated-authenticated-redis-recovery.yml",
+      "inputs": {
+        "probe_mode": "restore-application-startup"
+      },
+      "reason": "Original no-app pre-start failure and exact failed lifecycle handling source now repaired; success still requires five real boots and all original business checks"
+    },
+    {
+      "workflow": "backend-jar.yml",
+      "inputs": {
+        "source_sha": "<FROZEN_FULL40>",
+        "run_http_fixtures": false,
+        "run_restore_fixtures": true,
+        "restore_scope": "payment-gap-diagnostic"
+      },
+      "reason": "One fixed actual source-create diagnostic before seven duplicate unknown failures; not a full acceptance result",
+      "after_canary": "Read original operation/exit/reason/hash and exact cleanup; if usable, execute original full-seven once on same source only if no repair is needed. If concrete new fix needed, source package/newSHA first; full-seven required for complete cohort claim."
+    }
+  ],
+  "unchanged_successes_not_dispatched": [
+    "fb871 client fifteen shards10767 original native cases",
+    "fast architecture/mini-static/migration-layout/migration-safety unchanged source",
+    "347b dependency audit/SBOM (POM/dependency pin unchanged)",
+    "347b HTTP36 unchanged consumers/fixture routing",
+    "347b Clm8 and remaining unaffected accepted storage classes"
+  ],
+  "all_complete": false
+}

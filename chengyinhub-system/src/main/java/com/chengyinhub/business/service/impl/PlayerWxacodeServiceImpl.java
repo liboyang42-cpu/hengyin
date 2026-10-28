@@ -109,6 +109,8 @@ public class PlayerWxacodeServiceImpl implements IPlayerWxacodeService {
             return storage.url(cached);
         }
 
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+
         String lockKey = cacheKey + LOCK_SUFFIX;
         String lockOwner = UUID.randomUUID().toString();
         if (!Boolean.TRUE.equals(redisCache.setIfAbsent(
@@ -323,6 +325,7 @@ public class PlayerWxacodeServiceImpl implements IPlayerWxacodeService {
     private static final class HttpWxCodeGateway implements WxCodeGateway {
         @Override
         public WxCodeResponse generate(String accessToken, String requestJson) {
+            com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
             HttpURLConnection connection = null;
             try {
                 connection = (HttpURLConnection) new URL(ENDPOINT + "?access_token=" + accessToken).openConnection();

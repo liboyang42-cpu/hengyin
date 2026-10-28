@@ -1,0 +1,45 @@
+{
+  "parent": "91e78c448f69b2e3e3407acc111ff460c4a37ebb",
+  "sourceOnlyTree": "3af133770de4b78a744746d151125d395bdd05b5",
+  "branch": "codex/architecture-day-e-photo-lock-read",
+  "newMySqlCases": 1,
+  "javaExecuted": false,
+  "mysqlExecuted": false,
+  "files": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/PhotoCheckIntentLockReadMySqlIT.java",
+      "sha256": "90d0823d309f3b6a64f97fc0b807c80e7570d91e0922efa7a0098c9b64240f5b"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/PhotoCheckIntentMapper.xml",
+      "sha256": "6bf251137839bb4f18485cbab1724568f1c019e3b3c05817f63f758bdf769115"
+    }
+  ],
+  "frozenTests": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/PhotoCheckIntentMySqlIT.java",
+      "cases": 10,
+      "sha256": "2338ca0c8d2b65a052fd952930cd005866c392b2810c4720f6e60121c2b8f2af"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/PhotoCheckIntentServiceTest.java",
+      "cases": 16,
+      "sha256": "db92c5f9397e53835762017bfd789cae41d96aa08c6c9028770c6380de38c4cc"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/PhotoCheckIntentRecoveryMySqlIT.java",
+      "cases": 4,
+      "sha256": "4828df64093a2fa31b052e1e66c3d0d98eafbc404dd6ed98f0700a8ac63189e3"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/PhotoCheckIntentRecoveryReadTest.java",
+      "cases": 5,
+      "sha256": "9ab0af3e1c5c936e624ecedf2d63ef613c7db0d03e57b079dfd076a56c9332d2"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/PhotoCheckIntentFreshReadMySqlIT.java",
+      "cases": 3,
+      "sha256": "2649cfe4b991e5ddafe2c13f12bf389cc7bb05aacc0d32c7da67697fd35d8250"
+    }
+  ]
+}

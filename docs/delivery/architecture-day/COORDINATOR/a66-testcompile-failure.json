@@ -1,0 +1,68 @@
+{
+  "source": "a66cfe6ed86306026fc4409f38938202611b0aa9",
+  "run": 40226989357,
+  "attempt": 1,
+  "backend_job": 121270474287,
+  "stage": "maven-compiler-plugin:testCompile",
+  "log_sha256": "10546880341c35cc8e5f926fb7e5e851a603391bf280e1a1dd91e6faa21951ea",
+  "diagnostics": [
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicPublishDraftTest.java",
+      "lines": [
+        87,
+        457
+      ],
+      "type": "int literal supplied to existing Long setter; use1L"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicPublishJourneyStoryGateTest.java",
+      "lines": [
+        98,
+        100
+      ],
+      "type": "Missing existing CmsMemberTemplate domain import"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementPerMerchantTest.java",
+      "lines": [
+        174
+      ],
+      "type": "Missing existing Mockito.never static import"
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiCoopControllerInviteAuthzTest.java",
+      "lines": [
+        568,
+        571
+      ],
+      "type": "Missing existing Assertions.assertNull static import"
+    }
+  ],
+  "diagnostic_count": 7,
+  "affected_test_files": 4,
+  "new_repair_source": "All seven compiler diagnostics fixed together; NOT_RETESTED",
+  "source_case_assertion_and_production_unchanged": true,
+  "admin_runtime_pass_claim": false,
+  "not_7_business_bugs": true,
+  "remaining_executions_not_started": [
+    "remaining19 storage",
+    "mixed",
+    "full restore",
+    "cohort diagnostic"
+  ],
+  "all_complete": false,
+  "storage_admission_independent_readback": {
+    "run": 40227001786,
+    "job": 121270502946,
+    "artifact": 12612235053,
+    "zip_sha256": "2db9d94edcf1b1fd0a30140ca0ef21a1c71471e8a6d77b389996eb0b49352c79",
+    "original_zip_crc": "PASS",
+    "same_seven_testCompile_diagnostics": true,
+    "actual_business_cases": 0,
+    "registered_source_cases": 13,
+    "source": "a66cfe6ed86306026fc4409f38938202611b0aa9",
+    "attempt": 1,
+    "cleanup": "CLEAN_NO_RESIDUAL_SCHEMAS_EXACT_CONTAINER_REMOVED",
+    "business_accepted": false
+  }
+}

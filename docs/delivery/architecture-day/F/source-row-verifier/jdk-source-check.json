@@ -1,0 +1,38 @@
+{
+  "kind": "PUBLIC_OPENJDK21_SOURCE_REVIEW_NOT_RUNTIME_OUTPUT",
+  "ref": "jdk-21+35",
+  "actual_jdk_leaf_execution": "NOT_RUN; cloud VM Java forbidden",
+  "historical_artifact_read": "GitHub artifact API Forbidden; no raw leaf evidence obtained",
+  "sources": [
+    {
+      "file": "TypeEnter.java",
+      "url": "https://raw.githubusercontent.com/openjdk/jdk21u/jdk-21+35/src/jdk.compiler/share/classes/com/sun/tools/javac/comp/TypeEnter.java",
+      "sha256": "07bdc5afa3160cd5d0ad46d28dab85a9b0988db9eba0ed0d32cd2e48914d8d00"
+    },
+    {
+      "file": "ClassWriter.java",
+      "url": "https://raw.githubusercontent.com/openjdk/jdk21u/jdk-21+35/src/jdk.compiler/share/classes/com/sun/tools/javac/jvm/ClassWriter.java",
+      "sha256": "36a9e82fb45746d92dbea4a04dcbe29f3bac610096fee045cb23005e2955e267"
+    },
+    {
+      "file": "Dependencies.java",
+      "url": "https://raw.githubusercontent.com/openjdk/jdk21u/jdk-21+35/src/jdk.jdeps/share/classes/com/sun/tools/classfile/Dependencies.java",
+      "sha256": "fc6250e7b510c7294875842446485535fa522f9af004bd8ab6d1416d98259023"
+    },
+    {
+      "file": "JdepsTask.java",
+      "url": "https://raw.githubusercontent.com/openjdk/jdk21u/jdk-21+35/src/jdk.jdeps/share/classes/com/sun/tools/jdeps/JdepsTask.java",
+      "sha256": "30ba86a94ffc4002b8a2486c12c1c586999a833ef506dfa90257fe894bf44bfc"
+    },
+    {
+      "file": "JdepsFilter.java",
+      "url": "https://raw.githubusercontent.com/openjdk/jdk21u/jdk-21+35/src/jdk.jdeps/share/classes/com/sun/tools/jdeps/JdepsFilter.java",
+      "sha256": "017cb28cac657049ea2b4150413c245deda452bb07c1764656d8dcd11de38b36"
+    },
+    {
+      "file": "JdepsWriter.java",
+      "url": "https://raw.githubusercontent.com/openjdk/jdk21u/jdk-21+35/src/jdk.jdeps/share/classes/com/sun/tools/jdeps/JdepsWriter.java",
+      "sha256": "e34d3e505f19b1c5846f1d6f576649243f44c0dfc7fd0950778ebed9b495c5fe"
+    }
+  ]
+}

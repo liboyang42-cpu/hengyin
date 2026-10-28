@@ -1,0 +1,43 @@
+{
+  "base_sha": "d2d09a0deec78e298d0a814eca65bf80b8e121cb",
+  "application_type": "com.chengyinhub.web.service.verify.CityNodeRedemptionApplication",
+  "normalized_command_body_sha256": "65ae89c962596845fe96b8f4d2bcbeedf8e57b7a9ea2de14d1f34eaa75989558",
+  "unchanged_controller_methods": {
+    "public AjaxResult issueDynCode(Long registrationId, Integer seatNo)": "848c5d273a47b749437b8575af1938598bfb175f3ebce4e4fbba62ca041a94e1",
+    "public AjaxResult seatReceipt(Long registrationId, Integer seatNo, Long activityId)": "18dfd25e4b52aa52bded21124ee0d0b14163fa39068305d7142e439e2ace6548",
+    "public AjaxResult issueCityNodeCode(Long poiId)": "9c2b7e6963406ce0a36328d3380ee94aa1326cf7de4cd439b0c9be0d72d13ee2",
+    "public AjaxResult issueGroupCode(Long activityId)": "05b7e6f8938e59efa176b11317de9aa5c5c114a763175576206edcc57c9d68b7",
+    "public AjaxResult redeemGroupCode(String code)": "7c3c453687cfe2fc0e39987ba705e4aec70767d0fef23d3f6fbdb542d16bde14",
+    "private long appUid()": "2b100af5ca37d5145c34352acd5f74c46914131e4e0122413f788a74abec95f6"
+  },
+  "fixtures": {
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiVerifyControllerTest.java": {
+      "cases": 19,
+      "assertion_verify_lines_sha256": "12ea47eb7c7d2fae75e8e1dd292176443ee82afd92c7ccf440f09f6ccd3b0127"
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/MerchantStaffRevocationAcceptanceTest.java": {
+      "cases": 2,
+      "assertion_verify_lines_sha256": "c207dd147cc6c306dab58d9cc7e3631c8bd5601dbb27aa0b446a1466161c9790"
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationEquityMybatisIntegrationTest.java": {
+      "cases": 5,
+      "assertion_verify_lines_sha256": "047694eea3cdf1fa68d90bbde1271a96f21d39c8ee7850ed415882e037318cfd"
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/RoamLocationRetentionMySqlIT.java": {
+      "cases": 21,
+      "assertion_verify_lines_sha256": "ea95058e2bfe46fa5c63ad38ef259c1b958a19c68d98f329218098e0afba84cd"
+    }
+  },
+  "shared_privacy_it_outside_city_wiring_unchanged": true,
+  "untouched_other_owners": {
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/verify/RegistrationTicketApplication.java": "95403c9ed59b9333b347d2b04e7b5ceed21d51b82c11afb1b7436df7a3962ce0",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java": "edceeb9eff9bb32e44cfecb6bcc2f042378a8667153a02c14bdf1c74fd588fa8",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/RoamMapper.java": "f17d334fdb499ab409ce89d09ac08e022071d2e09dcbc9d1c0d814dc494564ae",
+    "chengyinhub-system/src/main/resources/mapper/business/RoamMapper.xml": "7a1545d1ea7f4f460e930d8baf553cba031841d1d67d9512246abe592d1ad3d0",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SmsCouponHistoryServiceImpl.java": "3b3225036b8afe964e2677bcebd076d3812f47b063874a14d781a109e779b066"
+  },
+  "java_executed": false,
+  "controller_lines_before": 216,
+  "controller_lines_after": 151,
+  "application_lines": 104
+}

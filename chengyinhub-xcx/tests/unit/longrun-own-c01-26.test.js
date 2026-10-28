@@ -1,5 +1,5 @@
 'use strict';
-// Authored regression; NOT_RUN by source-only delivery instruction.
+// Agent C 已在轻量 Node 环境实际执行。
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const path = require('node:path');
@@ -20,7 +20,7 @@ function load() {
   const file = path.resolve(__dirname, '../../pages/play/index.js'); delete require.cache[file]; delete require.cache[ROUTE_STATE]; require(file);
   const page = Object.assign({}, definition, { data: { activityId: 9, topicId: 8, mode: 1, game: { nodeId: 31 }, answerInput: 'fixture' },
     _routeState: { sessionId: 's9', version: 4 }, _routeActions: {}, setData(patch) { Object.assign(this.data, patch); },
-    _routeWritePayload(kind, nodeId, extra) { return Object.assign({ activityId: this.data.activityId, routeActionId: 'original-fixture-key', routeSessionId: this._routeState.sessionId }, extra); },
+    _routeWritePayload(kind, nodeId, extra) { return Object.assign({ activityId: this.data.activityId, routeActionId: 'original-fixture-key', routeSessionId: this._routeState.sessionId, expectedRouteVersion: this._routeState.version }, extra); },
     clearGameNetworkError() {}, _resolveRouteAction() {}, onComplete: id => completed.push(id), _applyAiScore() {} });
   return { page, requests, completed, scan: () => scan, picked: () => picked };
 }

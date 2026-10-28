@@ -219,6 +219,9 @@ public interface ICmsRegistrationService
      */
     public String applyConfirmedWechatPaymentWithinTransaction(Map<String, String> resultMap);
 
+    /** 原范围事务内重复支付准入校验；不写支付状态、消费回执、积分或库存。 */
+    String checkConfirmedWechatPaymentWithinTransaction(Map<String, String> resultMap);
+
     /** 零现金报名专用完成入口；不得伪造微信 SUCCESS 回调。 */
     public String completeZeroAmountPayment(String registrationNo);
 
@@ -277,9 +280,8 @@ public interface ICmsRegistrationService
      * ({@code TeamGroupServiceImpl.cancelActivityByOwner})都走这里。这两条路以前各写一份,
      * 积分回补(读改写 vs CAS)与权益失效原因已经漂移过;差异只允许通过下面三个参数表达。
      *
-     * <p><b>调用前提</b>:调用方必须先向微信确认该单未支付(查询为 NOTPAY/USERPAYING/PAYERROR 时
-     * 还须先关闭微信订单,或查询为 CLOSED/REVOKED,或 ORDER_NOT_EXIST 已过宽限);
-     * 查单失败/未知态一律不得调用本方法。
+     * <p><b>调用前提</b>:原关单观察通过 settleClosedPayingOne 的原订单锁、原 attempt 与持久成功事实守卫后
+     * 才执行此资源释放实现；NOT_FOUND、查单失败或未知态均不证明未执行。
      *
      * @param releaseReason {@code registration_entitlement.invalid_reason},取 EntitlementInvalidReason 常量
      * @param updateBy      积分回补 CAS 写进 update_by 的来源标识
@@ -288,6 +290,11 @@ public interface ICmsRegistrationService
      * @return true=本次关闭;false=竞态下已支付/已变化,跳过
      */
     public boolean settlePayingOne(Long registrationId, String releaseReason, String updateBy, int finalStatus);
+
+    /** Original CLOSED observation: topic/order current locks, exact attempt and durable-success guard
+     * must precede the existing close CAS and resource release in the same transaction. */
+    boolean settleClosedPayingOne(CmsRegistration observed, String observedWxOutTradeNo,
+                                 String releaseReason, String updateBy, int finalStatus);
 
     /**
      * 核销码补偿:已支付但核销码为空的报名单 id 列表(供定时任务扫描,近7天限批)。
@@ -365,15 +372,11 @@ public interface ICmsRegistrationService
                                       String actorRoleCode);
 
     /**
-     * 唯一中标时的核销:据点由**服务端**按 memberId + topicId + audit_status=1 + del_flag=0
-     * 查出来,不是客户端传的,所以不需要再回读复核一遍归属 —— 行为与原 verifyAndSettle 一致,
-     * 只是额外把这一站的身份落进核销流水。
+     * 唯一中标时的核销:station 是服务端查出的候选快照。
+     * 核销事务按 topic→registration 锁序重新读取原报名和该据点当前归属/中标态，
+     * 将同一个实际 station 写入流水与核销审计；不从快照推断原合作单计酬归属。
      *
-     * ★ 与 verifyAndSettleForStation 的分界是**输入可信度**,不是站数:
-     *   客户端能指定的那条必须事务内复核,服务端自己筛出来的那条不必。
-     *   把单中标也塞进严格路径,只会给一条本来好好的链路平白加上新的拒绝理由。
-     *
-     * @param station 服务端查出的唯一中标记录,只用于流水归属
+     * @param station 服务端查出的唯一中标候选，使用其 ID 在原事务内重新核对
      */
     boolean verifyAndSettleForOwnStation(CmsRegistration registration, Long verifierId, Long payeeId,
                                          CmsRegistrationMerchant station);

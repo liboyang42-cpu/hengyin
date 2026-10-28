@@ -15,6 +15,7 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.chengyinhub.common.constant.HttpStatus;
 import com.chengyinhub.common.core.domain.AjaxResult;
+import com.chengyinhub.common.exception.ServiceException;
 import com.chengyinhub.common.core.domain.model.LoginUser;
 import com.chengyinhub.common.core.page.PageDomain;
 import com.chengyinhub.common.core.page.TableDataInfo;
@@ -140,6 +141,25 @@ public class BaseController
     public AjaxResult error(String message)
     {
         return AjaxResult.error(message);
+    }
+
+    /** Preserve the existing coded service-error response used by authoring endpoints. */
+    protected static AjaxResult codedServiceException(ServiceException e)
+    {
+        if (e.getCode() == null)
+        {
+            return AjaxResult.error(e.getMessage());
+        }
+        AjaxResult result = new AjaxResult(e.getCode(), e.getMessage());
+        if (e.getDetailMessage() != null)
+        {
+            result.put("errorCode", e.getDetailMessage());
+        }
+        if (e.getData() != null)
+        {
+            result.put(AjaxResult.DATA_TAG, e.getData());
+        }
+        return result;
     }
 
     /**

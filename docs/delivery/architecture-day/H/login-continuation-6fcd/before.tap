@@ -1,0 +1,110 @@
+TAP version 13
+# Subtest: H continuation: login in flight then leaving the original Page must not join
+not ok 1 - H continuation: login in flight then leaving the original Page must not join
+  ---
+  duration_ms: 9.964757
+  type: 'test'
+  location: '/tmp/h-login-fix/work/xcx/tests/unit/guest-browse-login-on-write.test.js:312:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    leaving during login must cancel the old join
+
+    1 !== 0
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 1
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/tmp/h-login-fix/work/xcx/tests/unit/guest-browse-login-on-write.test.js:316:10)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+  ...
+# Subtest: H continuation: changing the original invite must not write the replacement target
+not ok 2 - H continuation: changing the original invite must not write the replacement target
+  ---
+  duration_ms: 2.258528
+  type: 'test'
+  location: '/tmp/h-login-fix/work/xcx/tests/unit/guest-browse-login-on-write.test.js:319:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    login cannot migrate the original action to another invite
+
+    1 !== 0
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 1
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/tmp/h-login-fix/work/xcx/tests/unit/guest-browse-login-on-write.test.js:322:10)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: H continuation: same live Page and original invite continue exactly once
+ok 3 - H continuation: same live Page and original invite continue exactly once
+  ---
+  duration_ms: 2.158507
+  type: 'test'
+  ...
+# Subtest: H continuation: hide then return and a different instance of the same route cannot revive the old join
+not ok 4 - H continuation: hide then return and a different instance of the same route cannot revive the old join
+  ---
+  duration_ms: 2.376757
+  type: 'test'
+  location: '/tmp/h-login-fix/work/xcx/tests/unit/guest-browse-login-on-write.test.js:333:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    hide-return
+
+    1 !== 0
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 1
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/tmp/h-login-fix/work/xcx/tests/unit/guest-browse-login-on-write.test.js:339:40)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: H continuation: account change or same-token A-B-A after login result cannot inherit the original join
+not ok 5 - H continuation: account change or same-token A-B-A after login result cannot inherit the original join
+  ---
+  duration_ms: 2.66414
+  type: 'test'
+  location: '/tmp/h-login-fix/work/xcx/tests/unit/guest-browse-login-on-write.test.js:343:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    account/session revision changed
+
+    1 !== 0
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 1
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/tmp/h-login-fix/work/xcx/tests/unit/guest-browse-login-on-write.test.js:349:28)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: H continuation: cancelling login preserves pending UNKNOWN storage without dispatch
+ok 6 - H continuation: cancelling login preserves pending UNKNOWN storage without dispatch
+  ---
+  duration_ms: 1.940939
+  type: 'test'
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 2
+# fail 4
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 44.075849

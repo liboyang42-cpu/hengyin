@@ -25,8 +25,10 @@ Component({
     receipt: '',
     failText: '',
   },
+  lifetimes: { detached() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1; } },
+  pageLifetimes: { hide() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1; } },
   observers: {
-    show(visible) { if (visible) this.reset() },
+    show(visible) { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1; if (visible) this.reset() },
   },
   methods: {
     reset() {
@@ -77,7 +79,7 @@ Component({
     },
     backToPick() { if (!this._busy) this.setData({ stage: 'pick' }) },
     submit() {
-      if (app.ensureLoginFor && !app.ensureLoginFor('report', () => this.submit())) return; // 2026-10-24 游客写前登录
+      if (app.ensureLoginFor && !app.ensureLoginFor('report', () => this.submit(), { owner: this, target: () => [this.properties.targetType, this.properties.targetId, this.properties.show, this._requestId, this._reasonCode, this._policyVersion] })) return; // 2026-10-24 游客写前登录
       if (this._busy) return
       const checked = model.checkDescription(this.data.description)
       if (!checked.ok) { this.setData({ descriptionError: checked.error }); return }

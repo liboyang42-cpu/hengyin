@@ -1,0 +1,26 @@
+{
+  "schema": "one additive ALTER, no old DDL edits or historical request backfill; not executed",
+  "recorded_utc": "2026-10-24T06:31:24.190300+00:00",
+  "parent": "26bd53dd79662557f59a7b1dea4987fc6e5d2eee",
+  "A": {
+    "production": "f676dd7229c8e3324b3711b81532d56ced4e0101",
+    "tests": "2450fa60c7451cc1853e37ecc3831f3cfbcb3db0",
+    "byte_exact_paths": 23,
+    "original_fund_fact_migration_preserved": true,
+    "prior_test_methods_removed": 0
+  },
+  "B": {
+    "candidate": "dc87a41ebc4a18d696d094554e5f91a08f32a03f",
+    "byte_exact_paths": 5,
+    "interface_methods": "explicit abstract overloads; existing implementations and E2E fixture updated"
+  },
+  "G": {
+    "candidate": "961af5d8856ade6cfc7a40080fa88b438e0f3776",
+    "applied": "only original observed-attempt closure/fence private method and two new exact tests",
+    "omitted_fixture": "ae7 legacy CoopSettlementTest NOTPAY scenario no longer exists on current root; current original assertions preserved byte-exact"
+  },
+  "source_wiring": "withdraw submit/query use immutable DTO overloads; old actual call sites removed",
+  "java_db_ci": "NOT_RUN; source/static checks do not constitute acceptance",
+  "H_review": "in progress for actual A+B composition",
+  "all_complete": false
+}

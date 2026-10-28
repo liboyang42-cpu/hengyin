@@ -111,17 +111,17 @@ class ExploreScanDispatchTest {
 
         controller = spy(new ApiRegistrationController());
         doReturn(MERCHANT).when(controller).getAppUserId();
-        ReflectionTestUtils.setField(controller, "registrationService", regSvc);
-        ReflectionTestUtils.setField(controller, "cmsActivityService", activitySvc);
-        ReflectionTestUtils.setField(controller, "topicService", topicSvc);
-        ReflectionTestUtils.setField(controller, "perkLedgerService", perkSvc);
-        ReflectionTestUtils.setField(controller, "pointsAwardService", pointsSvc);
-        ReflectionTestUtils.setField(controller, "topicChapterService", chapterSvc);
-        ReflectionTestUtils.setField(controller, "growthService", mock(IGrowthService.class));
-        ReflectionTestUtils.setField(controller, "registrationMerchantService",
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "registrationService", regSvc);
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "cmsActivityService", activitySvc);
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "topicService", topicSvc);
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "perkLedgerService", perkSvc);
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "pointsAwardService", pointsSvc);
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "topicChapterService", chapterSvc);
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "growthService", mock(IGrowthService.class));
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "registrationMerchantService",
                 mock(com.chengyinhub.business.service.ICmsRegistrationMerchantService.class));
-        ReflectionTestUtils.setField(controller, "dynSecret", "test-secret");
-        ReflectionTestUtils.setField(controller, "merchantAccessService", merchantAccessService);
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "dynSecret", "test-secret");
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "merchantAccessService", merchantAccessService);
         when(merchantAccessService.require(MERCHANT, MerchantPermission.VERIFY))
                 .thenReturn(new MerchantAccessContext(MERCHANT, 11L, MERCHANT,
                         MerchantRoleCode.MERCHANT_OWNER));
@@ -527,7 +527,7 @@ class ExploreScanDispatchTest {
         assertFalse(data.containsKey("completionEarnedXp"));
         assertTrue(String.valueOf(result.get("msg")).contains("请勿重复提供权益"));
         org.mockito.Mockito.verifyNoInteractions(pointsSvc);
-        org.mockito.Mockito.verifyNoInteractions(ReflectionTestUtils.getField(controller, "growthService"));
+        org.mockito.Mockito.verifyNoInteractions(ReflectionTestUtils.getField(RegistrationRedemptionTestFixtures.application(controller), "growthService"));
     }
 
 }

@@ -1,0 +1,129 @@
+{
+  "kind": "SOURCE_ONLY_NOT_JAVA_OR_RAW_GRAPH",
+  "source": "322875cf84cce61161876e12fd37bfb68b568a1e",
+  "parent": "d2d09a0deec78e298d0a814eca65bf80b8e121cb",
+  "ticket_blob_unchanged_from_d2": true,
+  "records": [
+    {
+      "source": "322875cf84cce61161876e12fd37bfb68b568a1e",
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/verify/CityNodeRedemptionApplication.java",
+      "git_blob": "3f3cab713d8d8a8f4526751b813489cd8d538d17",
+      "sha256": "80fe9c8a7e9ee056510605376e066dcd654f24d0d4278f7c895f8aa61fbfa8cd",
+      "selected_lines": [
+        {
+          "line": 28,
+          "source": "    private final IMerchantAccessService merchantAccessService;"
+        },
+        {
+          "line": 29,
+          "source": "    private final RoamMapper roamMapper;"
+        },
+        {
+          "line": 30,
+          "source": "    private final ISmsCouponHistoryService couponHistoryService;"
+        },
+        {
+          "line": 31,
+          "source": "    private final BusinessAuditEventMapper businessAuditEventMapper;"
+        },
+        {
+          "line": 32,
+          "source": "    private final String dynSecret;"
+        },
+        {
+          "line": 34,
+          "source": "    public CityNodeRedemptionApplication(IMerchantAccessService merchantAccessService, RoamMapper roamMapper,"
+        },
+        {
+          "line": 44,
+          "source": "    @Transactional(rollbackFor = Exception.class)"
+        },
+        {
+          "line": 47,
+          "source": "        MerchantAccessContext access = merchantAccessService.require("
+        },
+        {
+          "line": 59,
+          "source": "        roamMapper.lockClaimOwner(playerId);"
+        },
+        {
+          "line": 60,
+          "source": "        CityNodeVO poi = roamMapper.selectMerchantNodeDetail(poiId);"
+        },
+        {
+          "line": 66,
+          "source": "        Long couponId = roamMapper.selectPendingCityNodeCouponId(poiId, playerId);"
+        },
+        {
+          "line": 69,
+          "source": "        int flipped = roamMapper.redeemCityNodeReward(poiId, playerId);"
+        },
+        {
+          "line": 72,
+          "source": "        boolean couponSkipped = couponId > 0 && couponHistoryService.isCouponNotIssuable(couponId);"
+        },
+        {
+          "line": 75,
+          "source": "        } else if (couponId > 0 && !couponHistoryService.grantCouponById(playerId, couponId)) {"
+        },
+        {
+          "line": 76,
+          "source": "            // C1 库存耗尽:抛业务异常触发本方法 @Transactional 回滚(status 翻转+占坑一并撤,允许补货后重扫),"
+        },
+        {
+          "line": 94,
+          "source": "        if (businessAuditEventMapper.insertBusinessAuditEvent(audit) != 1) {"
+        }
+      ]
+    },
+    {
+      "source": "322875cf84cce61161876e12fd37bfb68b568a1e",
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/verify/RegistrationTicketApplication.java",
+      "git_blob": "a379d78d39e81908819f58020b02d18be496ecaa",
+      "sha256": "95403c9ed59b9333b347d2b04e7b5ceed21d51b82c11afb1b7436df7a3962ce0",
+      "selected_lines": [
+        {
+          "line": 32,
+          "source": "    private final ICmsRegistrationService registrationService;"
+        },
+        {
+          "line": 33,
+          "source": "    private final RegistrationSeatService registrationSeatService;"
+        },
+        {
+          "line": 34,
+          "source": "    private final ICmsActivityService activityService;"
+        },
+        {
+          "line": 35,
+          "source": "    private final IPerkLedgerService perkLedgerService;"
+        },
+        {
+          "line": 36,
+          "source": "    private final QrcodeServiceImpl qrcodeService;"
+        },
+        {
+          "line": 37,
+          "source": "    private final String dynSecret;"
+        },
+        {
+          "line": 39,
+          "source": "    public RegistrationTicketApplication(ICmsRegistrationService registrationService,"
+        }
+      ]
+    }
+  ],
+  "callers": [
+    "322875cf84cce61161876e12fd37bfb68b568a1e:chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiVerifyController.java:24:import com.chengyinhub.web.service.verify.RegistrationTicketApplication;",
+    "322875cf84cce61161876e12fd37bfb68b568a1e:chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiVerifyController.java:25:import com.chengyinhub.web.service.verify.CityNodeRedemptionApplication;",
+    "322875cf84cce61161876e12fd37bfb68b568a1e:chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiVerifyController.java:39:    private static final long DYN_TTL_MS = RegistrationTicketApplication.DYN_TTL_MS;",
+    "322875cf84cce61161876e12fd37bfb68b568a1e:chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiVerifyController.java:42:    private RegistrationTicketApplication registrationTicketApplication;",
+    "322875cf84cce61161876e12fd37bfb68b568a1e:chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiVerifyController.java:61:    private CityNodeRedemptionApplication cityNodeRedemptionApplication;",
+    "322875cf84cce61161876e12fd37bfb68b568a1e:chengyinhub-admin/src/main/java/com/chengyinhub/web/service/verify/CityNodeRedemptionApplication.java:26:public class CityNodeRedemptionApplication {",
+    "322875cf84cce61161876e12fd37bfb68b568a1e:chengyinhub-admin/src/main/java/com/chengyinhub/web/service/verify/CityNodeRedemptionApplication.java:27:    private static final Logger logger = LoggerFactory.getLogger(CityNodeRedemptionApplication.class);",
+    "322875cf84cce61161876e12fd37bfb68b568a1e:chengyinhub-admin/src/main/java/com/chengyinhub/web/service/verify/CityNodeRedemptionApplication.java:34:    public CityNodeRedemptionApplication(IMerchantAccessService merchantAccessService, RoamMapper roamMapper,",
+    "322875cf84cce61161876e12fd37bfb68b568a1e:chengyinhub-admin/src/main/java/com/chengyinhub/web/service/verify/RegistrationTicketApplication.java:28:public class RegistrationTicketApplication {",
+    "322875cf84cce61161876e12fd37bfb68b568a1e:chengyinhub-admin/src/main/java/com/chengyinhub/web/service/verify/RegistrationTicketApplication.java:29:    private static final Logger logger = LoggerFactory.getLogger(RegistrationTicketApplication.class);",
+    "322875cf84cce61161876e12fd37bfb68b568a1e:chengyinhub-admin/src/main/java/com/chengyinhub/web/service/verify/RegistrationTicketApplication.java:39:    public RegistrationTicketApplication(ICmsRegistrationService registrationService,"
+  ]
+}

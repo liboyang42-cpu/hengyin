@@ -1,0 +1,32 @@
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java
+@@ -93,2 +93,5 @@
++    @Autowired
++    private com.chengyinhub.business.service.ICoopSettlementClaimService coopSettlementClaimService;
++
+     @Autowired
+     private org.springframework.beans.factory.ObjectProvider<com.chengyinhub.business.service.IWechatPayService> paymentAttemptGateway;
+@@ -2200,6 +2203,13 @@
+         if (completed) {
+             return "SUCCESS";
+         }
++        // Preserve the original fact/hash recovery identity after the business transaction has rolled back.
++        if (verifiedReference != null) {
++            try { coopSettlementClaimService.retainClosedPaidHalfStateSuccess(registration.getId(), verifiedReference); }
++            catch (RuntimeException unavailableRecovery) {
++                return registrationPaymentCallbackFailure(outTradeNo, "verified_cash_recovery_not_completed");
++            }
++        }
+         // 业务判定失败时 applyWechatPayCallback 已按原因告警,事务回滚、inbox 释放待微信重投。
+         return outcome[0] != null && !"SUCCESS".equalsIgnoreCase(outcome[0]) ? outcome[0]
+                 : registrationPaymentCallbackFailure(outTradeNo, "callback_not_completed");
+@@ -2247,6 +2257,9 @@
+                 if (!matchesFrozenWechatAmount(registration, resultMap.get("total"))) {
+                     return registrationPaymentCallbackFailure(outTradeNo, "amount_mismatch");
+                 }
++                // Before Ae6's early return; G mirrors its complete original-order test and retains only after rollback.
++                coopSettlementClaimService.requirePaidHalfStateCashAdmission(registration.getId(),
++                        checkedVerifiedPayment(resultMap).reference());
+                 if (lockedOrder.topic() != null && Integer.valueOf(1).equals(lockedOrder.topic().getIsSettlement())
+                         && lockedOrder.rows().stream().anyMatch(row -> !isSameCompletedPayment(row, verified.transactionId()))) {
+                     // Keep the immutable B fact; standard callbacks also retain their original verified inbox.

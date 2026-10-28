@@ -1,6 +1,7 @@
 const { applyPreviewAction } = require('../../../../utils/game-preview-action.js');
 const toast = require('../../../../utils/toast.js');
 const { id, integer } = require('../../../../utils/orient-score-view.js');
+const photoPending = require('../../utils/advanced-photo-pending.js');
 const app = getApp();
 const { safeUserMessage } = require('../../../../utils/transport/safe-user-message.js');
 const { buildActionKey, buildUnitId } = require('../../utils/play-action-key.js');
@@ -46,7 +47,10 @@ Component({
   pageLifetimes: { hide() { this.stopDrawAudio(); this.stopBackgroundMusic(); } },
   methods: {
     sessionRequestContext() {
+      let issuedAt = '';
+      try { issuedAt = wx.getStorageSync('authorization_issued_at') || ''; } catch (_) {}
       return { memberId: String(app.getUserID() || ''),
+        loginGeneration: String(app._featureFlagsEpoch || 0) + ':' + String(issuedAt),
         sessionId: String((this.data.state || {}).sessionId || ''),
         nodeId: String((this.data.node || {}).nodeId || ''),
         topicId: String(this.data.topicId || ''), activityId: String(this.data.activityId || ''),
@@ -54,7 +58,7 @@ Component({
     },
     currentRequestContext(context, requireSession = true) {
       const current = this.sessionRequestContext();
-      return current.memberId === context.memberId
+      return current.memberId === context.memberId && current.loginGeneration === context.loginGeneration
         && current.epoch === context.epoch && current.nodeId === context.nodeId
         && current.topicId === context.topicId && current.activityId === context.activityId
         && (!requireSession || current.sessionId === context.sessionId);
@@ -113,6 +117,7 @@ Component({
         const pending = wx.getStorageSync(this.pendingKey());
         if (pending) {
           this._unknownCommand = pending.command;
+          this._unknownRequestContext = Object.assign({}, context, { sessionId: String(pending.state.sessionId || '') });
           this.setData({ loading: false, acting: false, unknown: true, readingBack: false,
             state: pending.state, error: '', unknownText: '正在查询原请求结果，请勿重新提交' });
           return this.resolveUnknown();
@@ -127,6 +132,25 @@ Component({
         this.setData({ loading: false, error: '玩法标识不完整，请重新进入' }); return;
       }
       this.setData({ loading: true, acting: false, unknown: false, readingBack: false, error: '', state: null });
+      let restored;
+      try { restored = photoPending.read(wx, context); }
+      catch (error) { this.setData({ loading: false, unknown: true, error: error.message }); return; }
+      if (restored) {
+        this._photoPending = restored;
+        this._unknownCommand = restored.value.command;
+        this._unknownAction = 'SUBMIT_PHOTO_CHECK';
+        this._unknownVersion = restored.value.command.version;
+        return this.request('/api/play/advanced/state', 'GET', { sessionId: restored.value.command.sessionId }).then(res => {
+          if (!this.currentRequestContext(context, false)) return;
+          const original = Object.assign({}, context, { sessionId: String(restored.value.command.sessionId) });
+          if (Number(res.code) !== 200 || !this.responseMatchesSession(res.data, original)) throw Error('original photo session unavailable');
+          this.hydrate(res.data);
+          this._unknownRequestContext = this.sessionRequestContext();
+          this.setData({ loading: false, unknown: true, readingBack: false, unknownText: '照片结果待确认，请核对原提交' });
+        }).catch(() => {
+          if (this.currentRequestContext(context, false)) this.setData({ loading: false, unknown: true, error: '照片原局暂时无法读取，请稍后核对' });
+        });
+      }
       this.request('/api/play/advanced/start', 'POST', scope).then(res => {
         if (!this.currentRequestContext(context, false)) return;
         if (res.code == 200 || res.code == '200') this.hydrate(res.data || {});
@@ -225,7 +249,7 @@ Component({
       const context = this.sessionRequestContext();
       const sessionId = this.data.state.sessionId;
       const version = this.data.state.version;
-      const body = payload || {};
+      const body = JSON.parse(JSON.stringify(payload || {}));
       // 幂等键由「session + 服务端 version + 动作 + 入参」派生：同一次意图重试复用同一个键，
       // 服务端 selectByIdempotencyKey 才能 replay；写成功后 version 前进，下一动作自动换键。
       const idempotencyKey = buildActionKey(sessionId, version, name, body);
@@ -237,17 +261,30 @@ Component({
       const command = {
         sessionId, version, idempotencyKey, action: name, payload: body
       };
-      // Persist only original identity, not answers/photos or the command payload.
-      const original = { sessionId, version, idempotencyKey, action: name };
+      const isPhoto = name === 'SUBMIT_PHOTO_CHECK';
+      let capturedPhoto;
+      if (isPhoto) {
+        try { capturedPhoto = this._photoPending = photoPending.save(wx, context, command); }
+        catch (error) { this.setData({ acting: false, error: error.message }); this.emitActionFail(name, sessionId); return Promise.resolve(false); }
+      }
+      // 普通动作只持久化脱敏身份；照片沿既有 photoPending 保存原本站媒体引用。
+      const original = isPhoto ? command : { sessionId, version, idempotencyKey, action: name };
       const originalState = { sessionId, version, nodeId: this.data.state.nodeId,
         ownerId: this.data.state.ownerId, ownerType: this.data.state.ownerType,
         challenge: this.data.state.challenge ? {} : null };
       const pendingKey = this.pendingKey();
-      try { wx.setStorageSync(pendingKey, { command: original, state: originalState }); }
+      try { if (!isPhoto) wx.setStorageSync(pendingKey, { command: original, state: originalState }); }
       catch (_) { this.setData({ acting: false, error: '原请求记录无法保存，尚未提交' }); return; }
       this._unknownCommand = original;
+      this._unknownRequestContext = context;
       return this.request('/api/play/advanced/action', 'POST', command).then(res => {
+        if (capturedPhoto && Number(res.code) === 200 && this.responseMatchesSession(res.data, context)) photoPending.clear(wx, capturedPhoto);
         if (!this.currentRequestContext(context)) return;
+        if (isPhoto && Number(res.code) !== 200 && !(res.data && res.data.intentNotExecuted === true)) {
+          this._unknownAction = name; this._unknownRequestContext = context;
+          this._unknownCommand = JSON.parse(JSON.stringify(command));
+          this.enterUnknown(version); return false;
+        }
         if (res.code == 200 || res.code == '200') {
           if (!this.responseMatchesSession(res.data, context, name)) throw new Error('session response mismatch');
           wx.removeStorageSync(pendingKey);
@@ -257,6 +294,7 @@ Component({
           this.setData({ acting: false });
           return true;
         }
+        if (capturedPhoto) photoPending.clear(wx, capturedPhoto);
         if (Number(res.code) === 409 && res.data && this.responseMatchesSession(res.data.view, context)) {
           wx.removeStorageSync(pendingKey);
           this._unknownCommand = null;
@@ -281,6 +319,7 @@ Component({
       }).catch(() => {
         if (!this.currentRequestContext(context)) return;
         this._unknownAction = name;
+        this._unknownRequestContext = context;
         this._unknownChallengeGame = body.game;
         this._unknownCommand = original;
         this.enterUnknown(version);
@@ -298,8 +337,10 @@ Component({
     resolveUnknown() {
       if (this.data.readingBack || !this._unknownCommand || !this.data.state) return Promise.resolve(false);
       const original = this._unknownCommand;
+      if (!this._unknownRequestContext || !this.currentRequestContext(this._unknownRequestContext)) return Promise.resolve(false);
       const context = this.sessionRequestContext();
       const pendingKey = this.pendingKey();
+      const capturedPhoto = original.action === 'SUBMIT_PHOTO_CHECK' ? this._photoPending : null;
       this.setData({ readingBack: true });
       return this.request('/api/play/advanced/receipt', 'GET', {
         sessionId: original.sessionId, idempotencyKey: original.idempotencyKey
@@ -310,7 +351,8 @@ Component({
             || receipt.idempotencyKey !== original.idempotencyKey
             || !this.responseMatchesSession(receipt.view, context, original.action)) throw new Error('Original receipt unconfirmed');
         // hydrate already rejects older versions. A historical receipt proves this request only.
-        wx.removeStorageSync(pendingKey);
+        if (capturedPhoto) photoPending.clear(wx, capturedPhoto);
+        else wx.removeStorageSync(pendingKey);
         this.hydrate(receipt.view);
         if (!this.currentRequestContext(context, false)) return true;
         this._unknownCommand = null;

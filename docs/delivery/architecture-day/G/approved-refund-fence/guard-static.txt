@@ -1,0 +1,1 @@
+SOURCE/INDEX ONLY PASS: query20/interface20 IDs; full real scope/current APPROVED independent of old/new owner/del/payout; locks before refund read before first original write; original pipeline guard actually called; new2 unit+4 IT declarations, actual0; H recovery changes excluded from this commit. Java/MySQL/CI NOT_RUN.

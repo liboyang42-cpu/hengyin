@@ -1,3 +1,4 @@
+// 2026-10-28 整批公共合并源9a330f5a：原hosted生成器实测5553控件，非external的tap2414/event2718；全部证据仍pending，不代业务或设备验收。
 // 2026-10-20 修复并集实测：城市定位开关2个tap、四处登录/重试CTA、隐私与录音动作重分类；差异逐项见 docs/plans/mini-completion-20261020/anchor-receipt.json。
 // 2026-10-05 弹窗整合后按最终源码重建实测，精确分母同步；动作验收要求不变。
 const test = require('node:test')
@@ -618,8 +619,7 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮
   // 2026-10-28 #652 合 master(#610):master −5 与本线 +8 合流，重建实测 2186。
   // 2026-10-28 L9 再并 master(#652 模板页货架改版):重建实测 tap 2406 → 2414,增减与 master 自身台账变化逐项一致。
   // 2026-10-28 L9 再并 master(#656 章节翻转过场):整屏轻点继续 + 通关「继续」「保存通关卡」+3,tap 2414 → 2417(重建实测,与 master 台账变化一致)。
-  // 2026-10-28 并 master(#658 后)合流 integrate/devfix-20261027:master 2417 叠加本线相对合并基 −15(2179 → 2164),合并树重建实测 2402。
-  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 2402)  /* 2026-10-25 地图底部横滑卡片(点卡 = 点列表行)+1,重建实测 2182 → 2183。 */  /* 2026-10-25 官方地点卡:相册图、小红书行、评分星、发布评价、取景卡等新增 tap,重建实测 2177 → 2182。 */  /* 2026-10-07 动态绑定补齐4条tap。2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
+  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 2414)  /* 2026-10-25 地图底部横滑卡片(点卡 = 点列表行)+1,重建实测 2182 → 2183。 */  /* 2026-10-25 官方地点卡:相册图、小红书行、评分星、发布评价、取景卡等新增 tap,重建实测 2177 → 2182。 */  /* 2026-10-07 动态绑定补齐4条tap。2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
      onFrameShutter / onFrameCancel),其中 uploadPhotoFrame 与 onFrameShutter 是
      actionClass=external(real-device-required)、不进 local 分母 ⇒ 进账的是
      onFrameCancel(玩家端「退出取景」)+ clearPhotoFrame(商家端删图),1787 → 1789(重建实测)。 */
@@ -874,8 +874,7 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮
   // 2026-10-28 #652 合 master(#610):master +2 与本线 +7 合流，重建实测 2564。
   // 2026-10-28 L9 再并 master(#652):事件合同 2688 → 2695(重建实测)。
   // 2026-10-28 L9 再并 master(#656):通关过场 bind:continue / bind:save +2,事件合同 2695 → 2697。
-  // 2026-10-28 并 master(#658 后)合流 integrate/devfix-20261027:master 2697 叠加本线相对合并基 +13(2555 → 2568),合并树重建实测 2710。
-  assert.equal(local.filter((item) => item.interactionMode === 'event-contract').length, 2710)  /* 2026-10-15 PR10 复查:七处登录引导 cta/primary、口碑缺参返回 cta、modal-host 多行 bindinput 全是事件合同,+9(重建实测)。 */  /* F-L5C-06 帖文详情社区未开放空态新增返回 CTA,事件合同 +1(与 E2 合并后实测)。 */  /* F-W1-12 口碑管理登录失效可见态新增「重新登录」事件合同 +1。 */  /* 2026-10-06 profile 订单/项目错误态新增两个 cy-error 重试事件后按最终树重建。 */  /* 2026-09-20 门店分身对话输入与关闭事件接线后按最终树重建。 */  /* 2026-09-20 合批收口:工作区实名接线批 + 底栏 v8 把组件事件/disabledtap 接进台账,本地合同净增 20 条 ⇒ 2107→2127 按最终树重建实测 */  /* 2026-09-19 收口批+开表接线落 master(经 #1115/#1117):41d21a41e 玩法开表三控件进合同,2104→2107 按最终树重建实测 */  // 2026-09-12 rebase #1068/#1070 后重建：接力签 1963；审核收口后 1963→1968。
+  assert.equal(local.filter((item) => item.interactionMode === 'event-contract').length, 2718)  /* 2026-10-15 PR10 复查:七处登录引导 cta/primary、口碑缺参返回 cta、modal-host 多行 bindinput 全是事件合同,+9(重建实测)。 */  /* F-L5C-06 帖文详情社区未开放空态新增返回 CTA,事件合同 +1(与 E2 合并后实测)。 */  /* F-W1-12 口碑管理登录失效可见态新增「重新登录」事件合同 +1。 */  /* 2026-10-06 profile 订单/项目错误态新增两个 cy-error 重试事件后按最终树重建。 */  /* 2026-09-20 门店分身对话输入与关闭事件接线后按最终树重建。 */  /* 2026-09-20 合批收口:工作区实名接线批 + 底栏 v8 把组件事件/disabledtap 接进台账,本地合同净增 20 条 ⇒ 2107→2127 按最终树重建实测 */  /* 2026-09-19 收口批+开表接线落 master(经 #1115/#1117):41d21a41e 玩法开表三控件进合同,2104→2107 按最终树重建实测 */  // 2026-09-12 rebase #1068/#1070 后重建：接力签 1963；审核收口后 1963→1968。
   // 商家承接接入 cy-date-range-sheet 后新增 confirm / cancel 两条事件合同，1662 → 1664。
   // 合作页将会话失效与无权限拆为两个 cy-empty CTA，新增 goLogin / goWorkbench 两条事件合同，1664 → 1666。
   //   带一个 bind:cta 首发引导(+1),净 -2;同批新增两条 cy-state-shell 的 bind:primary
@@ -1741,8 +1740,7 @@ test('合并后可达动作 variant 全部进入台账且 handler 真源可定�
   // 2026-10-28 #652 合 master(#610):master +2 与本线 +15 合流，重建实测 5158。
   // 2026-10-28 L9 再并 master(#652):+31 −16,控件 5513 → 5528(重建实测,与 master 台账变化逐项一致)。
   // 2026-10-28 L9 再并 master(#656):+6,控件 5528 → 5534(重建实测,与 master 台账变化逐项一致)。
-  // 2026-10-28 并 master(#658 后)合流 integrate/devfix-20261027:master 5534 叠加本线相对合并基 −3(5137 → 5134),合并树重建实测 5531。
-  assert.equal(ledger.controlCount, 5531)
+  assert.equal(ledger.controlCount, 5553)
   // 搜索主题与其它结果拆成互斥点击 +1，合计 3268 → 3271（取动作账本重建实测）。
   // 合作页新增会话失效/无权限两个独立 cy-empty CTA，3271 → 3273。
   // 2026-09-02 俱乐部客户系统落地，3273 → 3295。

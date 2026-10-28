@@ -1,0 +1,45 @@
+{
+  "observed_source": "b9b894b170d75b4e6315f2bde41ede8f551522c6",
+  "evidence_kind": "PUBLIC_SOURCE_ONLY_NOT_COMPILED",
+  "references": [
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicQueryService.java",
+      "git_blob": "5761420d9ee62d2b0e34e2640369b749652c9d70",
+      "sha256": "b71ce412fdd55d5de9224bfbc12bb54c8a4ae455bb58b58fd1d6275bd49bf016",
+      "selected_lines": [
+        {
+          "line": 20,
+          "source": "import com.chengyinhub.business.service.support.TopicSizeLimits;"
+        },
+        {
+          "line": 450,
+          "source": "            int end = offset + Math.min(TopicSizeLimits.MAX_NODES, orderedIds.size() - offset);"
+        }
+      ]
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/TopicSizeLimits.java",
+      "git_blob": "1ba566b86f7cb6b9f821cdd72c465d37c591a4f2",
+      "sha256": "9ea1e248e74d91cc4861ac3d54479e99d8531e67a0c81f9cf1023d6732bca14f",
+      "selected_lines": [
+        {
+          "line": 13,
+          "source": "public final class TopicSizeLimits"
+        },
+        {
+          "line": 15,
+          "source": "    public static final int MAX_CHAPTERS = 30;"
+        },
+        {
+          "line": 16,
+          "source": "    public static final int MAX_NODES = 300;"
+        },
+        {
+          "line": 18,
+          "source": "    private TopicSizeLimits()"
+        }
+      ]
+    }
+  ],
+  "actual_compiled_raw": "NOT_RUN"
+}

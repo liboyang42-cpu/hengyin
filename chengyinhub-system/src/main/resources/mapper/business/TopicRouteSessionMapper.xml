@@ -64,7 +64,7 @@
         where member_id = #{memberId} and topic_id = #{topicId} and play_instance_id = 'default'
         order by id limit 2
     </select>
-    <select id="selectAccessibleByIdForUpdate" resultMap="RouteSession">
+    <select id="selectAccessibleByIdForUpdate" resultMap="RouteSession" useCache="false" flushCache="true">
         select <include refid="sessionColumns"/> from topic_route_session where id=#{id} and member_id=#{memberId} for update
     </select>
     <select id="selectAccessibleById" resultMap="RouteSession">

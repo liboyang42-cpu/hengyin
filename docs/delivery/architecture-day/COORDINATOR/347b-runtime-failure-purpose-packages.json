@@ -1,0 +1,572 @@
+{
+  "schema": 1,
+  "source": "347bcd0226c3bed71616e38ea7c1391fc76efe5c",
+  "backend_run": 40220558637,
+  "job": 121251116626,
+  "artifact": 12609615426,
+  "classification": "Actual failed assertions/errors, not179 independent production bugs; source/test prerequisite defects must be proved",
+  "admin_test_results": {
+    "tests": 15386,
+    "failures": 58,
+    "errors": 121,
+    "skipped": 647
+  },
+  "owners": {
+    "A": [
+      {
+        "class": "com.chengyinhub.business.longrun.OWN_C04_22Test",
+        "failed": 1,
+        "cases": [
+          "staleUnknownQueryCannotWriteTerminalReceiptOrEscalateFromOldSnapshot"
+        ],
+        "sample_cause": [
+          "\nWanted but not invoked:\nmemberCashWithdrawMapper.updateReceiptIfProcessing(\n    <any>\n);\n-> at com.chengyinhub.business.longrun.OWN_C04_22Test.staleUnknownQueryCannotWriteTerminalReceiptOrEscalateFromOldSnapshot(OWN_C04_22Test.java:83)\n\nHowever, there were exactly 6 interactions with this mock:\nmemberCashWithdrawMappe"
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.service.impl.RestoreMoneyDispatchTest",
+        "failed": 1,
+        "cases": [
+          "masterV1LateSuccessRetainsItsOwnOriginalHashAndHasNoSecondEconomicEffect"
+        ],
+        "sample_cause": [
+          "fixed restore-money contract failed: master-SUCCESS ==> expected: <0> but was: <1>"
+        ]
+      },
+      {
+        "class": "com.chengyinhub.web.controller.api.DoublePaymentReproductionTest",
+        "failed": 1,
+        "cases": [
+          "topicWithCoopOrder_paysMerchantOnlyThroughCoopLedger"
+        ],
+        "sample_cause": [
+          "expected: <核销成功> but was: <所选据点不属于当前商家或路线>"
+        ]
+      }
+    ],
+    "E": [
+      {
+        "class": "com.chengyinhub.business.service.CoopInviteServiceImplTest",
+        "failed": 6,
+        "cases": [
+          "insertInvite_rejectsDuplicatePendingInviteToSameTarget",
+          "insertInvite_topicLevelPendingInviteDoesNotBlockANodeLevelInviteToTheSameTarget",
+          "insert_allowsFirstClubInviteWhenNoClubAcceptedYet",
+          "officialMerchantInvites_rejectWholeBatchWhenAnyRecipientAlreadyHasPendingInvite",
+          "selectList_terminalizesExpiredRowsBeforeReading",
+          "officialMerchantInvites_topicLevelPendingDoesNotBlockNodeInvite"
+        ],
+        "sample_cause": [
+          "Unexpected exception type thrown, expected: <com.chengyinhub.common.exception.ServiceException> but was: <java.lang.NullPointerException>",
+          "Cannot invoke \"java.lang.Boolean.booleanValue()\""
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.service.FreeExploreSupplyNodeTermsAcceptanceTest$Terms",
+        "failed": 1,
+        "cases": [
+          "list_sameInvite_sentSideAndReceivedSide_carryIdenticalTerms"
+        ],
+        "sample_cause": [
+          "Cannot invoke \"java.lang.Boolean.booleanValue()\""
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.service.impl.CoopSupplyStationContractTest",
+        "failed": 1,
+        "cases": [
+          "readNamesUseOnlyExactOriginalTupleAndNeverFirstCurrentStationFallback"
+        ],
+        "sample_cause": [
+          "Cannot invoke \"java.lang.Boolean.booleanValue()\""
+        ]
+      },
+      {
+        "class": "com.chengyinhub.web.controller.api.ApiCoopControllerInviteAuthzTest",
+        "failed": 1,
+        "cases": [
+          "list_marksCompletedHeldDepositAsRefundPending"
+        ],
+        "sample_cause": [
+          "Cannot invoke \"java.lang.Boolean.booleanValue()\""
+        ]
+      },
+      {
+        "class": "com.chengyinhub.web.controller.api.ApiCoopSupplyStationsTest",
+        "failed": 1,
+        "cases": [
+          "existingInviteViewClassifiesRealClassicAndLegacyTypesWithoutManufacturingStation"
+        ],
+        "sample_cause": [
+          "Cannot invoke \"java.lang.Boolean.booleanValue()\""
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.service.CmsTopicPublishNarrativeNpcGuardTest",
+        "failed": 5,
+        "cases": [
+          "availableBlockNarrativeNpcPublishes",
+          "legacyBlockWithoutNarrativeNpcDoesNotTouchNpcProfiles",
+          "availableStoryFlowNarrativeNpcPublishes",
+          "foreignBlockNarrativeNpcBlocksPublish",
+          "foreignStoryFlowNarrativeNpcBlocksPublish"
+        ],
+        "sample_cause": [
+          "Cannot invoke \"com.chengyinhub.business.service.ITopicRouteRuntimeService.deriveTemplateCluesForPublication(com.chengyinhub.business.domain.CmsTopic)\" because \"this.topicRouteRuntimeService\" is null",
+          "Cannot invoke \"com.chengyinhub.business.service.ITopicRouteRuntimeService.deriveTemplateCluesForPublication(com.chengyinhub.business.domain.CmsTopic)\" because \"this.topicRouteRuntimeService\" is null"
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.service.CmsTopicRoutePublishPolicyTest",
+        "failed": 5,
+        "cases": [
+          "approvedBranchGraphPublishesLatestNormalizedSnapshot",
+          "publishDraftRejectsAnEdgeWithoutADeterministicReachabilityFixture",
+          "successfulPublishCopiesTheNormalizedDraftIntoThePublishedSnapshot",
+          "professionalSubmissionRejectsInvalidRouteBeforeGoingOnline",
+          "approvedLinearTopicPublishesNullGraphAndAdvancesPublishedVersion"
+        ],
+        "sample_cause": [
+          "Cannot invoke \"com.chengyinhub.business.service.support.ThemeStateKeyService.listCurrentDeclarations(java.lang.Long)\" because \"<local3>.themeStateKeyService\" is null",
+          "Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <java.lang.NullPointerException>"
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.service.CmsTopicPublishStateKeyGuardTest",
+        "failed": 17,
+        "cases": [
+          "approvedTopicSnapshotPassesWhenRegistered",
+          "legacyChapterCannotTreatDeclaredThoughtTagAsANumericVariable",
+          "allReferencedKeysRegisteredPublishes",
+          "unparsableJourneyRulesFailClosed",
+          "unregisteredKeyBlocksSimplePublishWithKeyAndNode",
+          "undeclaredThoughtDoneInChapterConditionStillBlocksPublish",
+          "legacyTopicWithoutAnyReferenceDoesNotTouchRegistry",
+          "declaredThoughtDonePublishesWithoutRegisteringRuntimeTag",
+          "journeyRulesExhaustTagMustBeRegistered",
+          "chapterStoryFlowBeatWhenRegisteredPublishes",
+          "journeyRulesExhaustTagRegisteredPublishes",
+          "r5OutcomeRejectsDisabledHpAndLuckDomains",
+          "declaredThoughtDoneCanBeReadByChapterConditions",
+          "disabledJourneyRulesStillRequireExhaustTagRegistration",
+          "chapterStoryFlowBeatWhenUnregisteredKeyBlocksPublish",
+          "optionTagIsAutoRegisteredOnPublish_butCounterStillBlocks",
+          "r5OutcomeRejectsUnknownSystemDomainAndUnregisteredCounter"
+        ],
+        "sample_cause": [
+          "主题发布内容冻结服务缺失",
+          "Unexpected exception type thrown, expected: <com.chengyinhub.common.exception.ServiceException> but was: <java.lang.IllegalStateException>"
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.service.CmsTopicSysVarPublishGateTest",
+        "failed": 8,
+        "cases": [
+          "blockSysVarNodeOutsideThemeBlocksPublish",
+          "blockNodeCompletedOutsideThemeBlocksPublish",
+          "blockPassedSysVarNodeOutsideThemeBlocksPublish",
+          "blockPassedSysVarNodeInsideThemePublishes",
+          "journeyStoryDispositionNodeMustBeBranch",
+          "journeyStoryDispositionNodeBranchPublishes",
+          "blockNodeCompletedInsideThemePublishes",
+          "blockSysVarNodeInsideThemePublishesWithoutKeyRegistration"
+        ],
+        "sample_cause": [
+          "Unexpected exception type thrown, expected: <com.chengyinhub.common.exception.ServiceException> but was: <java.lang.NullPointerException>",
+          "Unexpected exception type thrown, expected: <com.chengyinhub.common.exception.ServiceException> but was: <java.lang.NullPointerException>"
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.service.TopicPublishJourneyStoryGateTest",
+        "failed": 12,
+        "cases": [
+          "storyNpcMustBeAvailableInTopicAtPublishTime",
+          "epilogueRelationKeyWithWrongTypeBlocksPublish",
+          "storyChapterMustExistInTopicAtPublishTime",
+          "thoughtBlockWithRegisteredKeyPublishesFine",
+          "legacyTopicWithoutStoryPublishesUntouched",
+          "registeredStoryKeysPublish",
+          "unregisteredOptionalClueBlocksPublish",
+          "registeredRelationTypeEpilogueKeyPublishes",
+          "storyWithoutAnyConditionDoesNotTouchRegistry",
+          "unregisteredEpilogueRelationKeyBlocksPublish",
+          "unregisteredStoryKeyBlocksPublishWithSourceLabel",
+          "thoughtBlockReferencingUnknownThoughtBlocksPublish"
+        ],
+        "sample_cause": [
+          "Unexpected exception type thrown, expected: <com.chengyinhub.common.exception.ServiceException> but was: <java.lang.NullPointerException>",
+          "Unexpected exception type thrown, expected: <com.chengyinhub.common.exception.ServiceException> but was: <java.lang.NullPointerException>"
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.service.support.TopicPublicationDeclarationsTest",
+        "failed": 10,
+        "cases": [
+          "ordinaryCreationCheckDoesNotImplicitlySwitchToPublishingBecauseATransactionIsActive",
+          "checksDoNotMutateAnyCallerOwnedDeclarationMetadataOrRuntimeInput",
+          "nestedJourneyStillRejectsInactiveDispositionNodeWithOriginalSceneDiagnostic",
+          "runtimeReferencesDoNotConsultLiveDeclarationsToRepairAMissingCapturedKey",
+          "bothFormalChecksUseTheCapturedProjectionWithoutDeclarationRereadsOrDerivation",
+          "formalRuntimeReferencesUseLockedTopicAndTemplateProjectionRatherThanStaleCallerOrOrdinaryReads",
+          "readonlyPreviewAcceptsOriginalGeneratedClueNamesWithoutPersistingThem",
+          "formalBranchReusesTheExistingDiagnosticBeforeCallingCompleteFreeze",
+          "ordinaryChecksRemainReadOnlyWithoutTransactionOrCurrentLocks",
+          "nestedSceneAndChapterBudgetReuseOneCurrentProjectionIncludingNpcNodeScope"
+        ],
+        "sample_cause": [
+          "Unexpected exception thrown: java.lang.IllegalArgumentException: 请选择当前场景 [topicId=7, path=themeRuntimeConfigJson]",
+          "请选择当前场景 [topicId=7, path=themeRuntimeConfigJson]"
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.service.support.TopicPublicationDiagnosticsTest",
+        "failed": 10,
+        "cases": [
+          "nestedSceneReferenceKeepsTheActualSceneIndexInsteadOfPretendingTopLevelStory",
+          "malformedThemeConfigurationKeepsIllegalArgumentAndAddsOriginalField",
+          "validCompositionPersistsTheSameNormalizedBytesThroughTheOriginalFacade",
+          "malformedTemplateCaughtByTheEarlierStateKeyCollectorStillHasNodeLocation",
+          "contradictoryCombinationReachesRealDeterministicGateAndNeverPersists",
+          "foreignJourneyChapterKeepsServiceExceptionAndExistingReferenceExplanation",
+          "undeclaredRouteVariableIsRejectedByTheExistingStructureValidatorBeforeSnapshot",
+          "databaseFailureIsPropagatedWithoutBeingRelabeledAsAuthorConfiguration",
+          "missingTemplateItemReportsActualNodeAndTemplateDespiteDuplicateDisplayNames",
+          "foreignCompletedNodeReportsTheOriginalTemplateAndRetainsScopeRejection"
+        ],
+        "sample_cause": [
+          "Unexpected exception type thrown, expected: <com.chengyinhub.common.exception.ServiceException> but was: <java.lang.IllegalStateException>",
+          "Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <java.lang.IllegalStateException>"
+        ]
+      }
+    ],
+    "G": [
+      {
+        "class": "com.chengyinhub.business.service.impl.CoopSettlementGroupBasisTest",
+        "failed": 6,
+        "cases": [
+          "merchantWhoNeverScannedGroupCode_getsZero",
+          "clubLeadFee_unchangedByD22",
+          "groupBasis_shareRateMode",
+          "conservationStillHolds",
+          "groupBasis_snapshotMatchesAmount",
+          "merchantWhoServedGroup_paidByGroupHeads"
+        ],
+        "sample_cause": [
+          "MANUAL_REPAIR:ORIGINAL_ORDER_SCOPE_IDENTITY_UNPROVEN",
+          "MANUAL_REPAIR:ORIGINAL_ORDER_SCOPE_IDENTITY_UNPROVEN"
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.service.impl.CoopSettlementPerMerchantTest",
+        "failed": 5,
+        "cases": [
+          "eachMerchantPaidOnlyForOwnVerifiedHeads_fixedFee",
+          "eachMerchantPaidOnlyForOwnVerifiedSales_shareRate",
+          "merchantLineSnapshotsOwnVerifiedNumbers",
+          "clubLeadFeeStillUsesTopicWideVerified",
+          "cityDirectedDropout_onlyVisitedMerchantPaid"
+        ],
+        "sample_cause": [
+          "MANUAL_REPAIR:ORIGINAL_ORDER_SCOPE_IDENTITY_UNPROVEN",
+          "MANUAL_REPAIR:ORIGINAL_ORDER_SCOPE_IDENTITY_UNPROVEN"
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.service.impl.CoopSettlementTest",
+        "failed": 1,
+        "cases": [
+          "settleCoopTopic_skipsAlreadySettledOrder_stillWritesInitiatorAndPlatform"
+        ],
+        "sample_cause": [
+          "MANUAL_REPAIR:ORIGINAL_ORDER_SCOPE_IDENTITY_UNPROVEN"
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.service.impl.Wp04TopicSettlementEntryGuardsTest",
+        "failed": 4,
+        "cases": [
+          "provenNoneZeroContractPreservesIdentityBeforeDepositRefund",
+          "nonzeroPlanComposesConservedPayablesWithoutChangingPercentages",
+          "nullPlanCannotUseLiveShareRateOrTopicWideEvidence",
+          "staleSalesArgumentCannotRewriteCurrentLockedCashBasis"
+        ],
+        "sample_cause": [
+          "MANUAL_REPAIR:ORIGINAL_ORDER_SCOPE_IDENTITY_UNPROVEN",
+          "MANUAL_REPAIR:ORIGINAL_ORDER_SCOPE_IDENTITY_UNPROVEN"
+        ]
+      }
+    ],
+    "H": [
+      {
+        "class": "com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImplTest",
+        "failed": 2,
+        "cases": [
+          "restartingAnOriginalGameRetainsPrivateContentWhileAuthorConfigCannotSupplyIt",
+          "newNodeGameUsesOriginalPublishedTemplateIdentityAfterAuthorTemplateDelete"
+        ],
+        "sample_cause": [
+          "expected: com.fasterxml.jackson.databind.node.ObjectNode@6c909d5c<{\"contentSnapshotVersion\":1,\"templateId\":39,\"nodePresentation\":{\"id\":29,\"topicId\":19,\"templateId\":39},\"templatePresentation\":{\"title\":\"原小游戏\"}}> but was: com.fasterxml.jackson.databind.node.ObjectNode@e2962c0<{\"contentSnapshotVersion\":1,\"templateId\":39,\"n",
+          "expected: com.fasterxml.jackson.databind.node.ObjectNode@9a9d487<{\"contentSnapshotVersion\":1,\"templateId\":39,\"nodePresentation\":{\"id\":29,\"topicId\":19,\"templateId\":39},\"templatePresentation\":{\"title\":\"原小游戏\"}}> but was: com.fasterxml.jackson.databind.node.ObjectNode@1ec39423<{\"contentSnapshotVersion\":1,\"templateId\":39,\"n"
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.service.impl.GameSharedRouteQueryTest",
+        "failed": 1,
+        "cases": [
+          "sharedClueLabelsUseOriginalCompleteDeclarationsInsteadOfLiveRegistry"
+        ],
+        "sample_cause": [
+          "expected: <1> but was: <0>"
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.service.impl.GameplayDraftCopyTest",
+        "failed": 1,
+        "cases": [
+          "nativeThreeThemeCopiesSaveWithRealNodeMappingsAndRequireChallengeReselectionForPublish"
+        ],
+        "sample_cause": [
+          "Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <java.lang.IllegalStateException>"
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.service.impl.GameplayQaPickTemplateReuseTest",
+        "failed": 3,
+        "cases": [
+          "frozenTemplateOriginalReceiptAndInstanceGuardsSurviveReuseAcrossThemes",
+          "exportedPickCapabilityUsesExistingRuleCompilerAndKeepsFreeRetryAndClientProofGuards",
+          "twoThemesUseTheSamePickJudgeButKeepQuestionsStateAndCompletionProofSeparate"
+        ],
+        "sample_cause": [
+          "gameplayRuntime 条目须为对象",
+          "gameplayRuntime 条目须为对象"
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.service.impl.GameplayReskinRuntimeServiceTest",
+        "failed": 7,
+        "cases": [
+          "templateFeesAndRationsUseTheBoundResourceAndBusinessReplayIsFree",
+          "configuredActionCeilingRejectsTheNextPaidTaskWithoutChangingResources",
+          "zeroHpUsesTheSameTeamChallengeOrQuestionAlternativeAfterReskin",
+          "aFrozenWorldEndingDisablesAnOutstandingChallengeAndRejectsEveryNewProof",
+          "allThreeConfigurationsSavePublishAndFreezeThroughTheSameServices",
+          "allThreeThemesFollowTheSameScriptToAnExecutedWorldEnding",
+          "allThreePublishedThemesCanExplicitlyCloseToTheirConfiguredFallbackWithoutSpending"
+        ],
+        "sample_cause": [
+          "正式发布的声明派生必须加入主题写事务",
+          "正式发布的声明派生必须加入主题写事务"
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.service.impl.GameplaySupportMatrixRuntimeTest",
+        "failed": 7,
+        "cases": [
+          "everyProofTypeSavesPublishesAndChargesTheBoundTeamResource(String)[1]",
+          "everyProofTypeSavesPublishesAndChargesTheBoundTeamResource(String)[2]",
+          "everyProofTypeSavesPublishesAndChargesTheBoundTeamResource(String)[3]",
+          "everyProofTypeSavesPublishesAndChargesTheBoundTeamResource(String)[4]",
+          "everyProofTypeSavesPublishesAndChargesTheBoundTeamResource(String)[5]",
+          "everyProofTypeSavesPublishesAndChargesTheBoundTeamResource(String)[6]",
+          "legacyChallengeAnswerWithoutAdvancedProofCannotPublishAndFixedReferenceCanBeJudged"
+        ],
+        "sample_cause": [
+          "正式发布的声明派生必须加入主题写事务",
+          "正式发布的声明派生必须加入主题写事务"
+        ]
+      },
+      {
+        "class": "com.chengyinhub.web.controller.api.ApiPlayPuzzleHintTest",
+        "failed": 1,
+        "cases": [
+          "admittedUnregisteredBrowseUsesPublishedOrdinaryAndNonTemplateContentWithoutRuntimeEntry"
+        ],
+        "sample_cause": [
+          "expected: <2> but was: <0>"
+        ]
+      }
+    ],
+    "D": [
+      {
+        "class": "com.chengyinhub.business.service.CmsTopicPublishDraftTest",
+        "failed": 14,
+        "cases": [
+          "draftSimple_publishesOnline",
+          "draftPro_blocksUnregisteredStateKeyBeforeReview",
+          "draftPublish_buildsSelfHostActivityShellWhenMissing",
+          "draftSimpleWithReviewFlag_doesNotDuplicateOpenSpotCheck",
+          "refreshedEscalatedReviewReturnsItsPersistedState",
+          "heldDraftSimple_staysOfflineAndRequestsHumanReview",
+          "directPublicationStillEnforcesOnlineQuota",
+          "heldDraftPro_keepsBundleReviewButDoesNotGoOnline",
+          "draftSimpleWithReviewFlag_publishesAsPostReview_andQueuesSpotCheck",
+          "draftPublish_doesNotBuildShellForMerchantPoolTopic",
+          "draftFreeExploreWithRecruitDeadline_submitsProjectReview",
+          "draftPro_publishesWhileAuditRemainsPending",
+          "draftAiSimple_publishesOnline",
+          "draftPublish_doesNotDuplicateExistingShell"
+        ],
+        "sample_cause": [
+          "Cannot invoke \"com.chengyinhub.business.service.ITopicRouteRuntimeService.deriveTemplateCluesForPublication(com.chengyinhub.business.domain.CmsTopic)\" because \"this.topicRouteRuntimeService\" is null",
+          "Unexpected exception type thrown, expected: <com.chengyinhub.common.exception.ServiceException> but was: <java.lang.NullPointerException>"
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.service.TopicDraftPartialSaveGateTest",
+        "failed": 14,
+        "cases": [
+          "nameOnlyDraftWithNullChaptersSaves",
+          "draftDisappearingBeforeLockedPublishDoesNotBecomePublic",
+          "draftAllowsTicketWithoutTimeWindow",
+          "directPublishStillRejectsTicketWithoutTimeWindow",
+          "draftUpdateRejectsBlankedName",
+          "publishDoesNotRewriteDraftFlag",
+          "nameOnlyAiSimpleDraftSaves",
+          "draftUpdateSkipsPublishOnlyCompleteness",
+          "directPublishStillBuildsSelfHostShell",
+          "incompleteDraftPublishIsRejected",
+          "persistedReversedSaleWindowBlocksPublication",
+          "pendingReviewUpdateStillRequiresRecruitDeadline",
+          "draftRejectsNegativeTicketPrice",
+          "completeDraftPublishesWithTheSameId"
+        ],
+        "sample_cause": [
+          "",
+          ""
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.service.TopicEditActivityShellTicketSyncChainTest",
+        "failed": 8,
+        "cases": [
+          "twoIdenticalSessionsStayEditableInsteadOfBrickingTheTopic",
+          "anotherActivitysShellTicketIsNotTouchedByThisTopicSync",
+          "adminAddingATicketOnAFreeExploreShellIsRefusedInsteadOfMintingAnUnkeyedOne",
+          "topicTicketIdentityIsNeverBorrowedFromAnotherTopic",
+          "editingTopicWithoutTouchingTicketsKeepsBothRowsInPlace",
+          "droppingAnUnsoldTicketDeletesItsShellRowAtomically",
+          "editingTopicKeepsSoldShellTicketAndRecomputesRemainingFromSoldSeats",
+          "selfHostClassicShellTicketMustNotBrickTheNextTopicEdit"
+        ],
+        "sample_cause": [
+          "Cannot invoke \"com.chengyinhub.business.service.ITopicRouteRuntimeService.deriveTemplateCluesForPublication(com.chengyinhub.business.domain.CmsTopic)\" because \"this.topicRouteRuntimeService\" is null",
+          "Cannot invoke \"com.chengyinhub.business.service.ITopicRouteRuntimeService.deriveTemplateCluesForPublication(com.chengyinhub.business.domain.CmsTopic)\" because \"this.topicRouteRuntimeService\" is null"
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.service.TopicPendingReviewSelfHostShellTest",
+        "failed": 3,
+        "cases": [
+          "proDraftPublish_whilePendingReview_createsPublicShell",
+          "simpleDraftPublish_stillCreatesPublicShell",
+          "proDraftPublish_withOverdueDebt_isRejectedAtSubmission"
+        ],
+        "sample_cause": [
+          "发布状态键声明需要原发布写事务",
+          "发布状态键声明需要原发布写事务"
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.service.TopicSaleReviewDecouplingTest",
+        "failed": 2,
+        "cases": [
+          "priceEdit_resetsSaleReview",
+          "storyAndNameEdit_keepsSaleReview_andRefreshesThePendingTask"
+        ],
+        "sample_cause": [
+          "Cannot invoke \"com.chengyinhub.business.service.ITopicRouteRuntimeService.deriveTemplateCluesForPublication(com.chengyinhub.business.domain.CmsTopic)\" because \"this.topicRouteRuntimeService\" is null",
+          "Cannot invoke \"com.chengyinhub.business.service.ITopicRouteRuntimeService.deriveTemplateCluesForPublication(com.chengyinhub.business.domain.CmsTopic)\" because \"this.topicRouteRuntimeService\" is null"
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.service.TopicUpdateByOwnerTest",
+        "failed": 4,
+        "cases": [
+          "rejectedSave_republishesSelfHostActivityShell",
+          "rejectedTopic_republishesAndResubmitsAudit",
+          "pendingSave_publishesSelfHostActivityShell",
+          "pendingReviewSave_stillSubmitsCommercialReview"
+        ],
+        "sample_cause": [
+          "Cannot invoke \"com.chengyinhub.business.service.ITopicRouteRuntimeService.deriveTemplateCluesForPublication(com.chengyinhub.business.domain.CmsTopic)\" because \"this.topicRouteRuntimeService\" is null",
+          "Cannot invoke \"com.chengyinhub.business.service.ITopicRouteRuntimeService.deriveTemplateCluesForPublication(com.chengyinhub.business.domain.CmsTopic)\" because \"this.topicRouteRuntimeService\" is null"
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.service.impl.ChapterFlowTransactionTest",
+        "failed": 1,
+        "cases": [
+          "auditTaskFailureRollsBackTheCompletedV2Rebuild"
+        ],
+        "sample_cause": [
+          "Unexpected exception type thrown, expected: <java.lang.IllegalStateException> but was: <java.lang.NullPointerException>"
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.service.impl.ChapterFlowWriteServiceTest",
+        "failed": 4,
+        "cases": [
+          "auditTaskReadbackThatIsNotAnOpenTaskFailsTheSubmission",
+          "escalatedAuditTaskReadbackIsReportedAsEscalated",
+          "submittedV2EditFreezesAfterRebuildAndRefreshesOneTopicTask",
+          "submittedSimpleDraftPublishesWhileSavingItKeepsItPrivate"
+        ],
+        "sample_cause": [
+          "Unexpected exception type thrown, expected: <java.lang.IllegalStateException> but was: <java.lang.NullPointerException>",
+          "Cannot invoke \"com.chengyinhub.business.service.ITopicRouteRuntimeService.deriveTemplateCluesForPublication(com.chengyinhub.business.domain.CmsTopic)\" because \"this.topicRouteRuntimeService\" is null"
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.service.impl.TopicCreateOpenClubPoolTest",
+        "failed": 9,
+        "cases": [
+          "createTopic_clubBound_neverOpensPublicClubPool",
+          "createTopic_persists_open_club_pool_flag_for_city_orientation",
+          "createTopic_autoAttachedClub_neverOpensPublicClubPool",
+          "createTopic_persists_owned_completion_reward_coupon",
+          "createTopic_neverOpensClubPoolForFreeExplore",
+          "createTopic_carriesRecruitDeadlineButMustNotJumpStraightIntoRecruiting",
+          "createTopic_keeps_explicit_closed_switch_for_city_orientation",
+          "createTopic_clubBound_ignoresExplicitOpen",
+          "createTopic_defaults_open_club_pool_to_open_for_city_orientation"
+        ],
+        "sample_cause": [
+          "发布状态键声明需要原发布写事务",
+          "发布状态键声明需要原发布写事务"
+        ]
+      },
+      {
+        "class": "com.chengyinhub.business.service.impl.TopicCreateSaveDraftSideEffectTest",
+        "failed": 2,
+        "cases": [
+          "publishedProCreateSubmitsPostReviewAndBuildsPublicShell",
+          "publishedSimpleCreateStillBuildsSelfHostShell"
+        ],
+        "sample_cause": [
+          "发布状态键声明需要原发布写事务",
+          "发布状态键声明需要原发布写事务"
+        ]
+      }
+    ]
+  },
+  "scope": "Only actual failure-connected code/callers/fixtures; no new all-repo audit or per-patch tests",
+  "shared_ownership": {
+    "TopicPublicationTestWiring.java": "D only; E/H consume original wire/set/get interface",
+    "restore_application_http_probe/runtime.py": "C",
+    "isolated-authenticated-redis-recovery.yml and authenticated_redis_recovery_probe.py": "F",
+    "restore_business_reconciliation_host.py": "B",
+    "rootSQL_registry_CI_actualintegration": "root"
+  },
+  "additional_mysql_failures": {
+    "G": [
+      "Wp04CoopOrderScopeMySqlIT: original11/3ERROR supply_station_id missing fixture column",
+      "Wp04OriginalRefundMySqlIT: original25/2FAIL8ERROR first shared missing supply_station_id",
+      "CoopOrderStationFulfillmentMySqlIT: original12/9ERROR frozen-window-scope conflict"
+    ],
+    "H": [
+      "GameplayReskinMySqlIT: real1ERROR missing current topic dependency in manual Spring fixture"
+    ]
+  },
+  "all_complete": false
+}

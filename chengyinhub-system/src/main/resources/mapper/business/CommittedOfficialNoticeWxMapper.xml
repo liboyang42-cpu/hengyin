@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.CommittedOfficialNoticeWxMapper">
+    <resultMap id="Intent" type="com.chengyinhub.business.domain.CommittedOfficialNoticeWx">
+        <id property="id" column="id"/>
+        <result property="noticeType" column="notice_type"/>
+        <result property="wxPayloadJson" column="wx_payload_json"/>
+        <result property="eventKey" column="event_key"/>
+        <result property="recipient" column="recipient"/>
+        <result property="title" column="title"/>
+        <result property="body" column="body"/>
+        <result property="imIntentId" column="im_intent_id"/>
+        <result property="requestHash" column="request_hash"/>
+        <result property="wxState" column="wx_state"/>
+        <result property="ownerToken" column="owner_token"/>
+    </resultMap>
+    <sql id="columns">id,notice_type,wx_payload_json,event_key,recipient,title,body,im_intent_id,request_hash,wx_state,owner_token</sql>
+    <insert id="insert" parameterType="com.chengyinhub.business.domain.CommittedOfficialNoticeWx">
+        insert ignore into committed_official_notice_wx
+            (notice_type,wx_payload_json,event_key,recipient,title,body,im_intent_id,request_hash,wx_state,created_at)
+        values (#{noticeType},#{wxPayloadJson},#{eventKey},#{recipient},#{title},#{body},#{imIntentId},#{requestHash},'PENDING',now(3))
+    </insert>
+    <select id="selectByKeyForUpdate" resultMap="Intent" useCache="false" flushCache="true">
+        select <include refid="columns"/> from committed_official_notice_wx where event_key=#{eventKey} for update
+    </select>
+    <select id="selectByIdForUpdate" resultMap="Intent" useCache="false" flushCache="true">
+        select <include refid="columns"/> from committed_official_notice_wx where id=#{id} for update
+    </select>
+    <!-- Commit UNKNOWN before crossing the external boundary. It is never reset by a lease or a poller. -->
+    <update id="claimUnknown">
+        update committed_official_notice_wx set wx_state='UNKNOWN',owner_token=#{ownerToken},attempted_at=now(3)
+        where id=#{id} and wx_state='PENDING' and owner_token is null
+    </update>
+    <update id="accepted">
+        update committed_official_notice_wx set wx_state='ACCEPTED',accepted_at=now(3)
+        where id=#{id} and wx_state='UNKNOWN' and owner_token=#{ownerToken}
+    </update>
+    <select id="maxPendingId" resultType="java.lang.Long" useCache="false" flushCache="true">
+        select max(id) from committed_official_notice_wx where notice_type='OFFICIAL_BROADCAST' and wx_state='PENDING'
+    </select>
+    <select id="selectPendingPage" resultType="java.lang.Long" useCache="false" flushCache="true">
+        select id from committed_official_notice_wx
+        where notice_type='OFFICIAL_BROADCAST' and wx_state='PENDING' and id &gt; #{afterId} and id &lt;= #{maxId} order by id limit 100
+    </select>
+</mapper>

@@ -8,7 +8,6 @@ import com.chengyinhub.business.domain.CmsActivity;
 import com.chengyinhub.business.domain.CmsMemberTemplate;
 import com.chengyinhub.business.domain.CmsRegistration;
 import com.chengyinhub.business.domain.CmsTopic;
-import com.chengyinhub.business.domain.CmsTopicChapter;
 import com.chengyinhub.business.domain.CmsTopicNode;
 import com.chengyinhub.business.domain.JourneyRules;
 import com.chengyinhub.business.domain.PlayerNodeProgress;
@@ -33,9 +32,8 @@ import com.chengyinhub.business.service.IPlayEncounterService;
 import com.chengyinhub.business.service.ITopicCompletionAwardService;
 import com.chengyinhub.business.service.IShopDayProofService;
 import com.chengyinhub.business.service.ITopicRouteRuntimeService;
-import com.chengyinhub.business.service.support.ChapterNarrativeBlocks;
+import com.chengyinhub.business.service.impl.TopicRoutePublicationCompiler.JourneyTemplateProbe;
 import com.chengyinhub.business.domain.JourneyStory;
-import com.chengyinhub.business.util.ChapterBlockReadSupport;
 import com.chengyinhub.business.service.support.JourneyCheckActionId;
 import com.chengyinhub.business.service.support.NodeAccessPolicy;
 import com.chengyinhub.business.service.support.NodeJourneySnapshot;
@@ -58,7 +56,7 @@ import com.chengyinhub.business.service.support.GameplaySurvivalEngine;
 import com.chengyinhub.business.service.support.GameplayToolState;
 import com.chengyinhub.business.service.support.GameplayCooperationEngine;
 import com.chengyinhub.business.service.support.GameplayToolState.Reason;
-import com.chengyinhub.business.service.support.GameplayTemplateRules;
+import com.chengyinhub.business.service.support.GameplayActionProjection;
 import com.chengyinhub.business.service.support.GameplaySupportMatrix;
 import com.chengyinhub.business.service.support.JourneyStatLinks;
 import com.chengyinhub.business.service.support.TopicRouteModePolicy;
@@ -86,7 +84,6 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -110,13 +107,6 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     /** 检定运行时系统键:不进键注册表,只由服务端写本局 state(共享契约 v2/v3)。 */
     private static final String SYS_HP = "sys.hp";
     private static final String SYS_LUCK = "sys.luck";
-    /** 思维阁抬高后的幸运上限;没有这个变量时以配置值为准。 */
-    private static final String SYS_LUCK_MAX = "sys.luck.max";
-    /** 念头进度变量前缀;想通了再往 tags 里写 {@code thought.<key>.done}。 */
-    private static final String THOUGHT_PREFIX = "thought.";
-    /** 上一次同步读到的微信运动今日步数,用来算这一段走了多少。 */
-    private static final String SYS_STEPS_LAST = "sys.steps.last";
-    private static final String SYS_STEPS_DAY = "sys.steps.day";
     /** 今日步数的合理上限:超过这个数的只可能是伪造或解密错了。 */
     private static final int MAX_TODAY_STEPS = 200000;
     private static final String SYS_EXHAUSTED = "sys.exhausted";
@@ -166,6 +156,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     private final NodeAccessPolicy accessPolicy = new NodeAccessPolicy();
     private final TopicCompletionPolicy completionPolicy = new TopicCompletionPolicy();
     private final TopicCompletionRulePolicy completionRulePolicy = new TopicCompletionRulePolicy();
+    private final TopicRouteNarrativeProgress narrativeProgress;
 
     /**
      * M1 回执自带新世界:写接口回包追加这一站刷新后的 Encounter。
@@ -275,6 +266,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         this.d20 = d20 == null ? secureD20() : d20;
         this.clock = clock == null ? Clock.system(ZoneId.of("Asia/Shanghai")) : clock;
         this.reachabilityProvider = reachabilityProvider;
+        this.narrativeProgress = new TopicRouteNarrativeProgress(topicMapper, JSON, engine, completionRulePolicy, themeEngine);
     }
 
     @Override
@@ -288,12 +280,28 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         if (!TopicRouteState.BRANCH_GRAPH.equals(routeMode(scope))) {
             // 老线性主题照旧无局;配了旅程规则/块状态的线性主题建局,与分支共用 state_json。
             List<CmsTopicNode> liveNodes = nodes(topicId);
-            JourneyTemplateProbe probe = new JourneyTemplateProbe(liveNodes);
+            JourneyTemplateProbe probe = publicationCompiler().probe(liveNodes);
             if (!journeyConfigured(scope, probe)) return linearState(scope, liveNodes);
             return toLinearView(ensureJourneySession(scope, probe), scope, liveNodes);
         }
         TopicRouteSession session = ensureBranchSession(scope);
         return toAvailableView(session, nodes(topicId));
+    }
+
+    /** Read the original current run; entry commands retain all initialization and role assignment. */
+    @Override
+    @Transactional(readOnly = true)
+    public TopicRouteState queryState(Long memberId, Long topicId, Long activityId) {
+        if (gameSessionRuntimeService != null) {
+            TopicRouteState shared = gameSessionRuntimeService.querySharedRouteState(memberId, topicId, activityId);
+            if (shared != null) return shared;
+        }
+        Scope scope = currentScope(memberId, topicId, activityId, false);
+        TopicRouteSession session = currentSession(memberId, topicId, scope.activityId);
+        if (session == null) return null;
+        TopicRouteState view = toView(session);
+        view.setRouteMode(sessionRouteMode(session));
+        return view;
     }
 
     @Override
@@ -356,9 +364,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     }
 
     private JsonNode openingSnapshot(TopicRouteSession session) {
-        if (session == null) return null;
-        try { return JSON.readTree(session.getConfigSnapshotJson()).get("openingChapter"); }
-        catch (Exception e) { throw new IllegalStateException("开局快照不可用", e); }
+        return narrativeProgress.openingSnapshot(session);
     }
 
     @Override
@@ -413,28 +419,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         }
         TopicRouteEngine.State state = readEngineState(session.getStateJson());
 
-        // 得到念头 = 在故事里读到了那个 thought 块。没得到的不替玩家开始累积。
-        Set<String> known = new LinkedHashSet<String>();
-        for (JsonNode row : rules.getThoughts()) known.add(row.path("key").asText());
-        if (claim != null && !claim.isEmpty()) {
-            Set<String> available = claimableThoughts(session, state);
-            for (String key : claim) {
-                String var = THOUGHT_PREFIX + key;
-                if (!known.contains(key)) throw new IllegalArgumentException("念头不存在");
-                if (!state.getVariables().containsKey(var) && !state.getTags().contains(var + ".done")) {
-                    if (!available.contains(key)) throw new IllegalArgumentException("尚未读到这个念头");
-                    state.getVariables().put(var, Integer.valueOf(0));
-                }
-            }
-        }
-
-        if (todaySteps >= 0) {
-            Number last=state.getVariables().get(SYS_STEPS_LAST),day=state.getVariables().get(SYS_STEPS_DAY);
-            int delta = day == null ? 0 : readingDay > day.longValue() ? todaySteps
-                    : readingDay == day.longValue() && last != null ? Math.max(0, todaySteps - last.intValue()) : 0;
-            themeEngine.chapterSteps(state,delta);
-            accumulateThoughtSteps(state, rules, todaySteps, readingDay);
-        }
+        narrativeProgress.progressThoughts(session, state, rules, claim, todaySteps, readingDay);
 
         session.setStateJson(writeSettled(session, state));
         session.setUpdateTime(new Date());
@@ -445,92 +430,13 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         return routeView(session, scope);
     }
 
-    /** 只认建局冻结的章节、节点顺序和条件；旧局缺证据时不接受客户端认领。 */
-    private Set<String> claimableThoughts(TopicRouteSession session, TopicRouteEngine.State state) {
-        Set<String> keys = new LinkedHashSet<String>();
-        final JsonNode root;
-        try { root = JSON.readTree(session.getConfigSnapshotJson()); }
-        catch (Exception invalid) { throw new IllegalStateException("故事快照不可用", invalid); }
-        JsonNode chapters = root == null ? null : root.get("thoughtChapters");
-        if (chapters == null || !chapters.isArray()) return keys;
-        boolean openingPending = root.has("openingChapter") && !state.getTags().contains("sys.opening.done");
-        for (JsonNode chapter : chapters) {
-            if (openingPending && !chapter.path("opening").asBoolean(false)) continue;
-            boolean reached = chapter.path("opening").asBoolean(false);
-            for (JsonNode id : chapter.path("nodeIds")) {
-                if (Long.valueOf(id.asLong()).equals(state.getCurrentNodeId())
-                        || state.getCompletedNodeIds().contains(id.asLong())) reached = true;
-            }
-            // 无节点的过场依靠此前必经节点的完成事实证明已到达。
-            if (!reached && chapter.path("nodeIds").size() == 0) {
-                reached = true;
-                for (JsonNode id : chapter.path("requiredBefore")) {
-                    if (!state.getCompletedNodeIds().contains(id.asLong())) reached = false;
-                }
-            }
-            if (!reached) continue;
-            List<Object> blocks = JSON.convertValue(chapter.path("blocks"), new TypeReference<List<Object>>() { });
-            for (Object item : ChapterBlockReadSupport.projectForPlayer(blocks,
-                    state.getCompletedNodeIds(), state.getTags())) {
-                if (!(item instanceof Map)) continue;
-                Map<?, ?> block = (Map<?, ?>) item;
-                if ("thought".equals(block.get("type")) && block.get("thoughtKey") instanceof String) {
-                    keys.add((String) block.get("thoughtKey"));
-                }
-            }
-        }
-        return keys;
-    }
-
-    /** 只累计当日单调增长的读数；日期推进才重置，旧局首次记录日期仅建立基线。 */
-    private void accumulateThoughtSteps(TopicRouteEngine.State state, JourneyRules rules, int todaySteps, long day) {
-        Number previousDay = state.getVariables().get(SYS_STEPS_DAY);
-        Number last = state.getVariables().get(SYS_STEPS_LAST);
-        if (previousDay != null && day < previousDay.longValue()) return;
-        boolean sameDay = previousDay != null && day == previousDay.longValue();
-        int delta = sameDay && last != null ? Math.max(0, todaySteps - last.intValue())
-                : previousDay != null && day > previousDay.longValue() ? todaySteps : 0;
-        state.getVariables().put(SYS_STEPS_DAY, Long.valueOf(day));
-        state.getVariables().put(SYS_STEPS_LAST,
-                Integer.valueOf(sameDay && last != null ? Math.max(todaySteps, last.intValue()) : todaySteps));
-        if (delta <= 0) return;
-        for (JsonNode row : rules.getThoughts()) {
-            if (!row.hasNonNull("need")) continue;              // 只靠选项想通的念头不走步数
-            String var = THOUGHT_PREFIX + row.path("key").asText();
-            if (state.getTags().contains(var + ".done")) continue;
-            Number progress = state.getVariables().get(var);
-            if (progress == null) continue;
-            int need = row.path("need").asInt();
-            int next = Math.min(need, progress.intValue() + delta);
-            state.getVariables().put(var, Integer.valueOf(next));
-            if (next >= need) markThoughtDone(state, rules, var);
-        }
-    }
-
     /**
      * 伏笔的条件结算(2026-09-22 用户裁决「伏笔不能只是微信步数,回答出特定选项和条件时也有」):
      * when 满足即得到、doneWhen 满足即想通(条件间任一满足)。没得到的不会被想通 —— 伏笔没埋就应验
      * 是剧情错乱。幂等:已得到的不重置进度,已想通的不重复加成。
      */
     private void settleThoughts(TopicRouteEngine.State state, JourneyRules rules) {
-        for (JsonNode row : rules.getThoughts()) {
-            String var = THOUGHT_PREFIX + row.path("key").asText();
-            if (state.getTags().contains(var + ".done")) continue;
-            boolean obtained = state.getVariables().containsKey(var);
-            if (!obtained && row.has("when") && conditionPasses(row.get("when"), state)) {
-                state.getVariables().put(var, Integer.valueOf(0));
-                obtained = true;
-            }
-            if (obtained && row.has("doneWhen") && conditionPasses(row.get("doneWhen"), state)) {
-                markThoughtDone(state, rules, var);
-            }
-        }
-    }
-
-    /** 想通了:打标签,幸运上限 +1。运行时上限可以超过配置值(2026-09-22 用户拍板)。 */
-    private void markThoughtDone(TopicRouteEngine.State state, JourneyRules rules, String var) {
-        if (!state.getTags().add(var + ".done")) return;
-        state.getVariables().put(SYS_LUCK_MAX, Integer.valueOf(luckMaxOf(state, rules) + 1));
+        narrativeProgress.settleThoughts(state, rules);
     }
 
     /** 本局状态写回前先结算伏笔:选项标签、判定成败、到站都可能刚让某个伏笔满足条件。 */
@@ -549,31 +455,17 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     }
 
     private Long nextOpeningNode(JsonNode opening, TopicRouteEngine.State state) {
-        for (JsonNode block : opening.path("blocks")) {
-            if ("node".equals(block.path("type").asText())
-                    && !state.getCompletedNodeIds().contains(block.path("nodeId").asLong())) {
-                return block.path("nodeId").asLong();
-            }
-        }
-        return null;
+        return narrativeProgress.nextOpeningNode(opening, state);
     }
 
     private boolean openingAllows(TopicRouteSession session, Long nodeId) {
-        JsonNode opening = openingSnapshot(session);
-        if (opening == null) return true;
-        TopicRouteEngine.State state = readEngineState(session.getStateJson());
-        // nodeId 为空 = 没带节点上下文,开局没做完就不是开局里那一个,按拒绝算。
-        return state.getTags().contains("sys.opening.done")
-                || (nodeId != null && nodeId.equals(nextOpeningNode(opening, state)));
+        return narrativeProgress.openingAllows(session, nodeId);
     }
 
     private int statusOf(TopicRouteEngine.State state) { return "ENDED".equals(state.getStatus()) ? TopicRouteSession.STATUS_ENDED : "COMPLETED".equals(state.getStatus()) ? TopicRouteSession.STATUS_COMPLETED : TopicRouteSession.STATUS_RUNNING; }
 
     private void keepOpeningRunning(TopicRouteSession session, TopicRouteEngine.State state) {
-        if (!state.getThemeRuntime().has("result") && openingSnapshot(session) != null && !state.getTags().contains("sys.opening.done")) {
-            session.setStatus(TopicRouteSession.STATUS_RUNNING);
-            session.setCompletedAt(null);
-        }
+        narrativeProgress.keepOpeningRunning(session, state);
     }
 
     /**
@@ -583,70 +475,11 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
      * (与未完成节点之后的正文一样的口径)。</p>
      */
     private void appendThoughts(TopicRouteState view, TopicRouteSession session, TopicRouteEngine.State state) {
-        JourneyRules rules = sessionRules(session);
-        view.setThoughtCount(rules.getThoughts().size());
-        if (rules.getThoughts().size() == 0) return;
-        List<Map<String, Object>> rows = new ArrayList<Map<String, Object>>();
-        for (JsonNode row : rules.getThoughts()) {
-            String key = row.path("key").asText();
-            String var = THOUGHT_PREFIX + key;
-            boolean done = state.getTags().contains(var + ".done");
-            Number progress = state.getVariables().get(var);
-            if (!done && progress == null) continue;          // 还没得到
-            Map<String, Object> item = new LinkedHashMap<String, Object>();
-            item.put("key", key);
-            item.put("name", row.path("name").asText());
-            if (row.hasNonNull("desc")) item.put("desc", row.path("desc").asText());
-            int need = row.path("need").asInt(0);           // 只靠选项想通的念头 need=0,菜单不显示步数
-            item.put("need", need);
-            item.put("progress", done ? need : (progress == null ? 0 : progress.intValue()));
-            item.put("done", done);
-            rows.add(item);
-        }
-        if (!rows.isEmpty()) view.setThoughts(rows);
+        narrativeProgress.appendThoughts(view, session, state);
     }
 
     private void appendOpening(TopicRouteState view, TopicRouteSession session, TopicRouteEngine.State state) {
-        JsonNode frozen = openingSnapshot(session);
-        if (frozen == null) return;
-        Map<String, Object> opening = JSON.convertValue(frozen, new TypeReference<Map<String, Object>>() { });
-        boolean complete = state.getTags().contains("sys.opening.done");
-        opening.put("complete", complete);
-        opening.put("ready", nextOpeningNode(frozen, state) == null);
-        boolean themeComplete = TopicRouteState.COMPLETED.equals(view.getStatus());
-        if (complete && !TopicRouteState.BRANCH_GRAPH.equals(view.getRouteMode())) {
-            try {
-                JsonNode snapshot = JSON.readTree(session.getConfigSnapshotJson());
-                JsonNode nodes = snapshot.path(NodeJourneySnapshot.NODE_ANSWERS_KEY);
-                int done = 0;
-                for (Long id : state.getCompletedNodeIds()) if (nodes.has(String.valueOf(id))) done++;
-                themeComplete = completionRulePolicy.isCompleted(
-                        snapshot.path("topicCompleteRule").asText(null), nodes.size(), done);
-            } catch (Exception e) { throw new IllegalStateException("通关规则不可用", e); }
-        }
-        opening.put("themeComplete", complete && themeComplete);
-        JsonNode lastGame = null;
-        for (JsonNode block : frozen.path("blocks")) {
-            if ("node".equals(block.path("type").asText())) {
-                lastGame = NodeJourneySnapshot.answer(session.getConfigSnapshotJson(), block.path("nodeId").asLong());
-            }
-        }
-        opening.put("rewardPolicy", lastGame != null && SensorChallengePolicy.isPhotoFilter(
-                lastGame.path("validationMethod").asInt(), lastGame.path("sensorType").asText())
-                ? RewardPolicy.XP_BADGE_ONLY.name() : RewardPolicy.FULL.name());
-        List<Object> blocks = JSON.convertValue(frozen.path("blocks"), new TypeReference<List<Object>>() { });
-        opening.put("blocks", ChapterBlockReadSupport.projectForPlayer(blocks, state.getCompletedNodeIds(), state.getTags()));
-        view.setOpening(opening);
-        if (complete) return;
-        Long next = nextOpeningNode(frozen, state);
-        view.setStatus("ACTIVE");
-        view.setCurrentNodeId(next); view.setRecommendedNodeId(next);
-        for (Map.Entry<Long, String> node : view.getNodeStates().entrySet()) {
-            if (!TopicRouteState.COMPLETED.equals(node.getValue())) {
-                node.setValue(node.getKey().equals(next) ? TopicRouteState.PLAYABLE : TopicRouteState.HIDDEN);
-            }
-        }
-        if (next != null) view.getNodeStates().put(next, TopicRouteState.PLAYABLE);
+        narrativeProgress.appendOpening(view, session, state);
     }
 
     @Override
@@ -690,7 +523,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         if (original == null ? genericPlayer(memberId,topicId,activityId) : genericPlayer(original)) throw new ServiceException("通用个人局请使用任务结算",409);
         if (!TopicRouteState.BRANCH_GRAPH.equals(routeMode(scope))) {
             List<CmsTopicNode> liveNodes = nodes(topicId);
-            JourneyTemplateProbe probe = new JourneyTemplateProbe(liveNodes);
+            JourneyTemplateProbe probe = publicationCompiler().probe(liveNodes);
             if (original == null && !journeyConfigured(scope, probe)) return linearState(scope, liveNodes);
             return advanceLinear(scope, original == null ? ensureJourneySession(scope, probe) : original,
                     expectedVersion, routeActionId, outcome);
@@ -826,7 +659,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
             journeySession = ensureBranchSession(scope);
             routeState = toAvailableView(journeySession, nodes);
         } else {
-            JourneyTemplateProbe probe = new JourneyTemplateProbe(nodes);
+            JourneyTemplateProbe probe = publicationCompiler().probe(nodes);
             if (journeyConfigured(scope, probe)) {
                 // 线性主题建局后 has requires/effects 的块同样受本局状态约束。
                 journeySession = ensureJourneySession(scope, probe);
@@ -1056,7 +889,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
             String failCostTag = textField(context.check, "failCostTag");
             if (failCostTag != null && !failCostTag.isEmpty()) {
                 context.state.getTags().add(failCostTag);
-                failCostLabel = failCostTagLabel(topicId, failCostTag);
+                failCostLabel = failCostTagLabel(context.session, failCostTag);
             }
             if (context.rules.getHp().isEnabled()) {
                 int damage = (tier == null ? 0 : tier.getDamage())
@@ -1218,9 +1051,9 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
      * 代价标签的展示名:注册表里该 tag 的 label。未注册 / 没填 label / 注册表未注入一律回落
      * 空串,不抛错 —— 回执只是展示,不能因为展示名缺失把一次已经成立的结算打回。
      */
-    private String failCostTagLabel(Long topicId, String tag) {
-        if (themeStateKeyMapper == null) return "";
-        List<ThemeStateKey> rows = themeStateKeyMapper.selectByTopicId(topicId);
+    private String failCostTagLabel(TopicRouteSession session, String tag) {
+        List<ThemeStateKey> rows = JourneyInitialState.frozenDefinitions(session.getConfigSnapshotJson());
+        if (rows == null) rows = themeStateKeyMapper == null ? null : themeStateKeyMapper.selectByTopicId(session.getTopicId());
         if (rows == null) return "";
         for (ThemeStateKey row : rows) {
             if (row != null && tag.equals(row.getStateKey())) {
@@ -1238,13 +1071,65 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     @Override
     @Transactional(readOnly = true)
     public JsonNode nodeAnswers(Long memberId, Long topicId, Long activityId, Long nodeId) {
+        if (nodeId == null || nodeId <= 0L) return null;
+        JsonNode snapshot = queryNodeContentSnapshot(memberId, topicId, activityId, nodeId);
+        JsonNode answer = NodeJourneySnapshot.answerFromSnapshot(snapshot, nodeId);
+        if (NodeJourneySnapshot.hasContent(answer)
+                && answer.path("nodePresentation").path("topicId").asLong() != topicId)
+            throw new IllegalStateException("本局内容归属不可用");
+        return answer;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public JsonNode queryNodeContentSnapshot(Long memberId, Long topicId, Long activityId, Long nodeId) {
         if (memberId == null || memberId <= 0L || topicId == null || topicId <= 0L
-                || nodeId == null || nodeId <= 0L) {
-            return null;
-        }
+                || nodeId != null && nodeId <= 0L) return null;
+        JsonNode shared = gameSessionRuntimeService == null ? null
+                : gameSessionRuntimeService.querySharedRouteSnapshot(memberId, topicId, activityId, nodeId);
+        if (shared != null) return shared;
         TopicRouteSession session = currentScopedSession(memberId, topicId, activityId);
-        if (session == null || !memberId.equals(session.getMemberId())) return null;
-        return NodeJourneySnapshot.answer(session.getConfigSnapshotJson(), nodeId);
+        if (session != null) {
+            if (!memberId.equals(session.getMemberId())) throw new IllegalStateException("本局内容归属不可用");
+            // An old existing run is never filled from a newer publication.
+            JsonNode snapshot = session.getConfigSnapshotJson() == null ? JSON.createObjectNode()
+                    : validator.readTree(session.getConfigSnapshotJson()).deepCopy();
+            NodeJourneySnapshot.requireContentSnapshot(snapshot);
+            if (snapshot.isObject()) {
+                ((ObjectNode) snapshot).remove(java.util.Arrays.asList("gameSessionId", "teamId", "authorityEpoch", "runtimeInstance"));
+                ((ObjectNode) snapshot).put("contentRouteSessionId", session.getId());
+                if (NodeJourneySnapshot.hasContentSnapshots(snapshot))
+                    ((ObjectNode) snapshot).set("contentTags", JSON.valueToTree(readEngineState(session.getStateJson()).getTags()));
+            }
+            if (nodeId != null) {
+                JsonNode answer = NodeJourneySnapshot.answerFromSnapshot(snapshot, nodeId);
+                if (NodeJourneySnapshot.hasContent(answer)
+                        && (answer.path("nodePresentation").path("id").asLong() != nodeId
+                        || answer.path("nodePresentation").path("topicId").asLong() != topicId))
+                    throw new IllegalStateException("本局内容归属不可用");
+            }
+            return snapshot;
+        }
+        JsonNode publication=publishedContentSnapshot(topicId);
+        JsonNode games=advancedGameRuntimeService == null ? null
+                : advancedGameRuntimeService.queryDefaultNodeContents(memberId,activityId,topicId);
+        if (games == null || games.isEmpty()) return publication;
+        ObjectNode content=publication == null ? JSON.createObjectNode() : (ObjectNode) publication.deepCopy();
+        content.set("originalNodeGames",games.deepCopy());
+        return content;
+    }
+
+    /** Caller admission remains at the original command/query boundary; no session is created here. */
+    private JsonNode publishedContentSnapshot(Long topicId) {
+        CmsTopic topic = topicMapper.selectCmsTopicById(topicId);
+        if (topic == null || topic.getPublishedConfigVersion() == null || topic.getPublishedConfigVersion() <= 0L
+                || topic.getPublishedRouteGraphJson() == null || topic.getPublishedRouteGraphJson().trim().isEmpty()) return null;
+        JsonNode snapshot = validator.readTree(topic.getPublishedRouteGraphJson());
+        if (!NodeJourneySnapshot.hasContentSnapshots(snapshot)) return null;
+        NodeJourneySnapshot.requireContentSnapshot(snapshot);
+        ObjectNode copy = (ObjectNode) snapshot.deepCopy();
+        copy.remove(java.util.Arrays.asList("contentRouteSessionId", "contentTags", "gameSessionId", "teamId", "authorityEpoch", "runtimeInstance"));
+        return copy;
     }
 
     private TopicRouteSession ensureBranchSession(Scope scope) {
@@ -1305,7 +1190,23 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     private boolean journeyConfigured(Scope scope, JourneyTemplateProbe probe) {
         // 已有本局:旅程是否启用以建局快照为准 —— 创作者之后清空模板/主题规则也不退回无局线性读模型。
         if (currentSession(scope.memberId, scope.topic.getId(), scope.activityId) != null) return true;
-        if (scope.topic.getPublishedRouteGraphJson() != null && validator.readTree(scope.topic.getPublishedRouteGraphJson()).path("runtimeSnapshotVersion").asInt() == 1) return true;
+        if (scope.topic.getPublishedRouteGraphJson() != null) {
+            JsonNode published = validator.readTree(scope.topic.getPublishedRouteGraphJson());
+            if (published.path("runtimeSnapshotVersion").asInt() == 1) {
+                if (!NodeJourneySnapshot.hasContentSnapshots(published)) return true; // original V1 contract
+                NodeJourneySnapshot.requireContentSnapshot(published);
+                // ROOT_FINAL_CONTRACT_V3: original helpers consume frozen facts, never future live author rows.
+                String frozenRules = NodeJourneySnapshot.journeyRules(published.toString());
+                if (frozenRules == null) throw new IllegalStateException("本局数值规则快照不可用");
+                JsonNode ruleFields = validator.readTree(frozenRules);
+                if (JourneyRules.parse(frozenRules).hasRuntimeState() || ruleFields.path("attributes").size() > 0
+                        || ruleFields.path("statLinks").size() > 0 || published.path("themeConfig").isObject()
+                        || JourneyStory.openingChapterId(NodeJourneySnapshot.journeyStory(published.toString())) != null) return true;
+                for (JsonNode block : published.path("nodeConfigs"))
+                    if (blockNeedsJourneyState(block.toString())) return true;
+                return false;
+            }
+        }
         List<CmsTopicNode> liveNodes = probe.liveNodes;
         if (JourneyStory.openingChapterId(scope.topic.getJourneyStoryJson()) != null) return true;
         if (liveNodes.isEmpty()) return false;
@@ -1316,63 +1217,6 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
             if (blockNeedsJourneyState(configByTemplate.get(node.getTemplateId()))) return true;
         }
         return false;
-    }
-
-    /**
-     * 一次请求内的节点模板配置备忘:无本局时的建局判定与建局冻结共用同一次模板查询。
-     * 只随调用链传递、不落字段 —— 不做跨请求缓存,创作者改模板对下一次请求立即生效。
-     */
-    private final class JourneyTemplateProbe {
-        private final List<CmsTopicNode> liveNodes;
-        private Map<Long, CmsMemberTemplate> templates;
-        private Map<Long, String> configByTemplate;
-
-        private JourneyTemplateProbe(List<CmsTopicNode> liveNodes) {
-            this.liveNodes = liveNodes;
-        }
-
-        private Map<Long, String> configs() {
-            if (configByTemplate == null) {
-                configByTemplate = new LinkedHashMap<Long, String>();
-                for (Map.Entry<Long, CmsMemberTemplate> row : templatesById().entrySet()) {
-                    configByTemplate.put(row.getKey(), row.getValue().getAdvancedConfigJson());
-                }
-            }
-            return configByTemplate;
-        }
-
-        /** 同一次模板查询的实体表:建局冻结答案判定字段与块配置共用,别对同一请求再查一次。 */
-        private Map<Long, CmsMemberTemplate> templatesById() {
-            if (templates == null) templates = templateEntities(liveNodes);
-            return templates;
-        }
-    }
-
-    /** 主题下节点绑定模板的 advancedConfigJson(按模板 id);templateMapper 缺失/无绑定返回空表。 */
-    private Map<Long, String> templateConfigs(List<CmsTopicNode> liveNodes) {
-        Map<Long, String> configByTemplate = new LinkedHashMap<Long, String>();
-        for (Map.Entry<Long, CmsMemberTemplate> row : templateEntities(liveNodes).entrySet()) {
-            configByTemplate.put(row.getKey(), row.getValue().getAdvancedConfigJson());
-        }
-        return configByTemplate;
-    }
-
-    /** 节点绑定模板的实体(按模板 id);templateMapper 缺失 / 无绑定返回空表。 */
-    private Map<Long, CmsMemberTemplate> templateEntities(List<CmsTopicNode> liveNodes) {
-        Map<Long, CmsMemberTemplate> byId = new LinkedHashMap<Long, CmsMemberTemplate>();
-        if (templateMapper == null) return byId;
-        Set<Long> templateIds = new LinkedHashSet<Long>();
-        for (CmsTopicNode node : liveNodes) {
-            if (node.getTemplateId() != null && node.getTemplateId() > 0L) templateIds.add(node.getTemplateId());
-        }
-        if (templateIds.isEmpty()) return byId;
-        List<CmsMemberTemplate> templates =
-                templateMapper.selectCmsMemberTemplateByIds(new ArrayList<Long>(templateIds));
-        if (templates == null) return byId;
-        for (CmsMemberTemplate template : templates) {
-            if (template != null && template.getId() != null) byId.put(template.getId(), template);
-        }
-        return byId;
     }
 
     /**
@@ -1387,7 +1231,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     public JsonNode trustedGuidedRouteEffects(JsonNode frozen,Long nodeId,JsonNode verifiedAnswers) {
         JsonNode config=frozen.path("nodeConfigs").path(String.valueOf(nodeId));ArrayNode effects=TrustedNodeEffects.rootEffects(frozen,nodeId);
         if("ANSWER".equals(basicCompletionKind(frozen,nodeId))) {if(!verifyGuidedRouteAnswer(frozen,nodeId,verifiedAnswers))throw new IllegalArgumentException("答案未通过服务端判定");return effects;}
-        for(String[] choice:AdvancedGameRuntimeServiceImpl.verifiedObjectiveChoices(config,verifiedAnswers))for(JsonNode effect:trustedChoiceEffects(frozen,nodeId,choice[0],choice[1]))effects.add(effect.deepCopy());
+        for(String[] choice:AdvancedActionJudgement.verifiedObjectiveChoices(config,verifiedAnswers))for(JsonNode effect:trustedChoiceEffects(frozen,nodeId,choice[0],choice[1]))effects.add(effect.deepCopy());
         return effects;
     }
 
@@ -1400,332 +1244,35 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         return choice == null || choice.effects == null ? JSON.createArrayNode() : choice.effects;
     }
 
+    /** A publication operation owns its compiler inputs; it never captures this runtime or changes transactions. */
+    private TopicRoutePublicationCompiler publicationCompiler() {
+        return new TopicRoutePublicationCompiler(nodeMapper, templateMapper, cmsTopicChapterMapper,
+                themeStateKeyMapper, clock, JSON, validator, topicMapper);
+    }
+
     @Override
     public String compileTemplateRules(CmsTopic topic) {
-        CmsTopicNode query = new CmsTopicNode(); query.setTopicId(topic.getId());
-        List<CmsTopicNode> actual = nodeMapper.selectCmsTopicNodeList(query);
-        if (actual == null) actual = Collections.emptyList();
-        actual = new ArrayList<>(actual);
-        actual.sort(Comparator.comparing(CmsTopicNode::getSortId, Comparator.nullsLast(Long::compareTo)).thenComparing(CmsTopicNode::getId, Comparator.nullsLast(Long::compareTo)));
-        JourneyTemplateProbe probe = new JourneyTemplateProbe(actual);
-        ObjectNode configs = JSON.createObjectNode(); boolean configured = false;
-        for (CmsTopicNode node : actual) {
-            JsonNode config = readBlockConfig(probe.configs().get(node.getTemplateId()));
-            configs.set(String.valueOf(node.getId()), config == null ? JSON.createObjectNode() : config);
-            configured |= hasTemplateInteraction(config);
-        }
-        ObjectNode chapterDefinition = null;
-        String authorJson = topic.getThemeRuntimeConfigJson();
-        JsonNode authored = authorJson==null || authorJson.trim().isEmpty()?null:validator.readTree(authorJson);
-        boolean chapterRequirements = hasChapterRequirements(authored);
-        if (chapterRequirements) {
-            try { chapterDefinition = ThemeRuntimeConfig.parseDraft(authorJson); }
-            catch (IllegalArgumentException invalid) {
-                List<CmsTopicChapter> chapters = runtimeChapters(topic.getId());
-                StringBuilder context = new StringBuilder(invalid.getMessage());
-                for (JsonNode chapter : authored.path("chapters")) if (chapter.has("completion") || chapter.has("exclusiveGroups") || chapter.has("extraNodes")) {
-                    int index = chapter.path("index").asInt(-1); CmsTopicChapter real = index>=0 && index<chapters.size()?chapters.get(index):null;
-                    context.append("；章节 ").append(real==null?"index="+index:real.getName()+"("+real.getId()+", index="+index+")").append(" 节点 ");
-                    for (CmsTopicNode node : actual) if (real!=null && real.getId().equals(node.getChapterId())) context.append(node.getId()).append(' ');
-                    context.append(chapter.path("exclusiveGroups")).append(' ').append(chapter.path("extraNodes"));
-                }
-                throw new IllegalArgumentException(context.toString(),invalid);
-            }
-        }
-        if(!configured && topic.getThemeRuntimeConfigJson()!=null && (topic.getThemeRuntimeConfigJson().contains("interactionRules") || topic.getThemeRuntimeConfigJson().contains("interactionTools") || topic.getThemeRuntimeConfigJson().contains("outcomeRules"))) {
-            ObjectNode sceneDefinition=ThemeRuntimeConfig.parseDraft(topic.getThemeRuntimeConfigJson());
-            for(JsonNode scene:sceneDefinition.path("scenes"))for(JsonNode block:scene.path("nodeConfigs"))configured |= hasTemplateInteraction(block);
-        }
-        boolean regenerateQuests = authored != null && authored.path("gameplayRuntime").path("acts").size() > 0 && authored.path("gameplayRuntime").path("quests").size() == 0;
-        boolean effectSlots=false;for(JsonNode config:configs)effectSlots |= config.path("interactionRules").has("resourceSlots");
-        if (!configured && !chapterRequirements && !regenerateQuests && effectSlots) {
-            ObjectNode definition=ThemeRuntimeConfig.parseDraft(topic.getThemeRuntimeConfigJson());
-            ObjectNode resolved=GameplayTemplateRules.resolveNodeConfigs(definition,configs,nodeTemplateIds(actual));
-            com.chengyinhub.business.service.support.TemplateResourceSlots.assertEffectTargets(resolved,JourneyRules.parse(topic.getJourneyRulesJson()),definition);
-            if(definition==null)throw new IllegalArgumentException("原效果资源槽需要主题绑定");
-            Set<Long> nodeIds=new LinkedHashSet<>();for(CmsTopicNode node:actual)if(node.getId()!=null)nodeIds.add(node.getId());
-            assertCompiledReferences(definition,nodeIds,topic);return definition.toString();
-        }
-        if (!configured && !chapterRequirements && !regenerateQuests && (topic.getThemeRuntimeConfigJson()==null || !topic.getThemeRuntimeConfigJson().contains("tpl_node_") && !topic.getThemeRuntimeConfigJson().contains("templateTools"))) return topic.getThemeRuntimeConfigJson();
-        ObjectNode definition = chapterDefinition == null ? ThemeRuntimeConfig.parseDraft(topic.getThemeRuntimeConfigJson()) : chapterDefinition;
-        if (definition == null) definition = JSON.createObjectNode().put("schemaVersion",1).put("capacity",0);
-        excludeCompiledChallengeQuests(definition);
-        List<CmsTopicChapter> chapters = null;
-        if (!definition.has("gameplayRuntime") || definition.path("gameplayRuntime").path("quests").size()==0) {
-            ObjectNode game = definition.with("gameplayRuntime"); if(!game.has("runtimeScope"))game.put("runtimeScope","PLAYER");
-            if(!game.has("survival"))game.putObject("survival").put("zeroHpPolicy","BLOCK_HP_COST").put("actionLimitPolicy","BLOCK_OVERFLOW");
-            ArrayNode preservedActs = game.path("acts").isArray() ? ((ArrayNode)game.path("acts")).deepCopy() : JSON.createArrayNode();
-            ArrayNode acts = game.putArray("acts"), quests = game.putArray("quests");
-            Map<Long,List<CmsTopicNode>> groups = new LinkedHashMap<>();
-            chapters = runtimeChapters(topic.getId());
-            for(CmsTopicChapter chapter:chapters)groups.put(chapter.getId(),new ArrayList<>());
-            for(CmsTopicNode node:actual) {
-                if(node.getId()==null)continue;
-                if(node.getChapterId()!=null && !groups.containsKey(node.getChapterId())) throw new IllegalArgumentException("模板规则节点未绑定本主题真实章节");
-                if (game.path("survival").path("zeroChallenge").path("version").asInt()==2
-                        && GameplaySurvivalEngine.challengeNode(definition,node.getId())) continue;
-                groups.computeIfAbsent(node.getChapterId(), key->new ArrayList<>()).add(node);
-            }
-            int actIndex = 0;
-            for(Map.Entry<Long,List<CmsTopicNode>> group:groups.entrySet()) {
-                if (group.getValue().isEmpty()) continue;
-                ObjectNode act = actIndex < preservedActs.size() ? (ObjectNode)preservedActs.get(actIndex++).deepCopy() : null;
-                if (act == null) {
-                    act = JSON.createObjectNode().put("actKey", group.getKey()==null?"route_nodes":"chapter_"+group.getKey());
-                    act.putObject("completionRule").put("type","ALL");
-                }
-                acts.add(act);
-                String actKey = act.path("actKey").asText(); ArrayNode members=act.putArray("questKeys");
-                for(CmsTopicNode node:group.getValue()) {
-                    String questKey="node_"+node.getId(); members.add(questKey);
-                    quests.addObject().put("questKey",questKey).put("actKey",actKey).put("nodeId",node.getId()).put("locationKey","node_"+node.getId()).put("settlementSlot",questKey);
-                }
-            }
-            while (actIndex < preservedActs.size()) acts.add(preservedActs.get(actIndex++).deepCopy());
-        }
-        if (chapterRequirements) compileChapterRequirements(definition, actual, chapters == null ? runtimeChapters(topic.getId()) : chapters);
-        Map<Long,String> actKeys = new LinkedHashMap<>();
-        for(JsonNode quest:definition.path("gameplayRuntime").path("quests")) actKeys.put(quest.path("nodeId").asLong(),quest.path("actKey").asText());
-        Map<Long,Long> templateIds = nodeTemplateIds(actual);
-        resolveTemplateScenes(definition, templateIds, JourneyRules.parse(topic.getJourneyRulesJson()));
-        ThemeRuntimeConfig.assertJourneyReferences(definition, JourneyRules.parse(topic.getJourneyRulesJson()));
-        // 与冻结时一致：场景节点配置覆盖模板配置后再生成费用与投票适配。
-        ObjectNode templateConfigs = configs.deepCopy();
-        ThemeRuntimeConfig.freeze(definition,0,clock.millis()).path("nodeConfigs").fields()
-                .forEachRemaining(row -> configs.set(row.getKey(),row.getValue().deepCopy()));
-        for (CmsTopicNode node : actual) {
-            CmsMemberTemplate template = probe.templatesById().get(node.getTemplateId());
-            int method = template == null || template.getValidationMethod() == null ? -1 : template.getValidationMethod().intValue();
-            GameplaySupportMatrix.validateNode(definition,node.getId(),node.getName(),configs.path(String.valueOf(node.getId())),method,true);
-            for (JsonNode scene : definition.path("scenes")) if (scene.path("nodeConfigs").has(String.valueOf(node.getId())))
-                GameplaySupportMatrix.validateNode(definition,node.getId(),node.getName(),scene.path("nodeConfigs").path(String.valueOf(node.getId())),method,true);
-        }
-        GameplaySupportMatrix.validateChallenge(definition,configs);
-        for (JsonNode scene : definition.path("scenes")) {
-            ObjectNode sceneConfigs = templateConfigs.deepCopy();
-            scene.path("nodeConfigs").fields().forEachRemaining(row -> sceneConfigs.set(row.getKey(),row.getValue().deepCopy()));
-            GameplaySupportMatrix.validateChallenge(definition,sceneConfigs);
-        }
-        com.chengyinhub.business.service.support.TemplateResourceSlots.assertEffectTargets(GameplayTemplateRules.resolveNodeConfigs(definition,configs,templateIds),JourneyRules.parse(topic.getJourneyRulesJson()),definition);
-        JsonNode story = topic.getJourneyStoryJson()==null || topic.getJourneyStoryJson().trim().isEmpty() ? JSON.createObjectNode() : validator.readTree(topic.getJourneyStoryJson());
-        registerTemplateClues(configs, topic);
-        ObjectNode compiled=GameplayTemplateRules.merge(definition,configs,actKeys,templateIds,story,finalChapter(topic,chapters == null ? runtimeChapters(topic.getId()) : chapters));
-        assertStoryEndingChapters(compiled,runtimeChapters(topic.getId()));
-        // 保存和发布会再次编译草稿；作者绑定只在冻结边界移除。
-        if (definition.has("templateBindings")) compiled.set("templateBindings", definition.get("templateBindings").deepCopy());
-        if (definition.has("scenes")) compiled.set("scenes",definition.get("scenes").deepCopy());
-        Set<Long> nodeIds=new LinkedHashSet<>();for(CmsTopicNode node:actual)if(node.getId()!=null)nodeIds.add(node.getId());
-        assertCompiledReferences(compiled,nodeIds,topic);return compiled.toString();
-    }
-
-    private void excludeCompiledChallengeQuests(ObjectNode definition) {
-        JsonNode game = definition.path("gameplayRuntime");
-        if (game.path("survival").path("zeroChallenge").path("version").asInt()!=2) return;
-        Set<String> removed = new LinkedHashSet<>();
-        Iterator<JsonNode> quests = game.path("quests").elements();
-        while (quests.hasNext()) {
-            JsonNode quest = quests.next(); String key = quest.path("questKey").asText();
-            // 只转换编译器的默认身份，带作者结算字段的任务继续由发布闸拒绝。
-            if (quest.size()==5 && quest.has("actKey") && key.matches("node_[1-9][0-9]*")
-                    && key.equals(quest.path("locationKey").asText()) && key.equals(quest.path("settlementSlot").asText())
-                    && GameplaySurvivalEngine.challengeNode(definition,quest.path("nodeId").asLong())) {
-                removed.add(key); quests.remove();
-            }
-        }
-        if (removed.isEmpty()) return;
-        Iterator<JsonNode> acts = game.path("acts").elements();
-        while (acts.hasNext()) {
-            JsonNode act = acts.next(); boolean changed = false;
-            Iterator<JsonNode> members = act.path("questKeys").elements();
-            while (members.hasNext()) if (removed.contains(members.next().asText())) { members.remove(); changed = true; }
-            if (changed && act.path("questKeys").isEmpty()) acts.remove();
-        }
-    }
-
-    private boolean hasChapterRequirements(JsonNode definition) {
-        if (definition == null) return false;
-        for (JsonNode chapter : definition.path("chapters")) if (chapter.has("completion") || chapter.has("exclusiveGroups") || chapter.has("extraNodes")) return true;
-        return false;
-    }
-
-    /** 最终章：按章节顺序最后一个非结局章（结局章不在路线里）。 */
-    private JsonNode finalChapter(CmsTopic topic, List<CmsTopicChapter> chapters) {
-        Set<Long> endingIds = JourneyStory.endingChapterIds(topic.getJourneyStoryJson());
-        CmsTopicChapter last = null;
-        for (CmsTopicChapter chapter : chapters) if (chapter.getId() != null && !endingIds.contains(chapter.getId())) last = chapter;
-        return last == null ? null : JSON.createObjectNode().put("id", last.getId()).put("name", last.getName() == null ? "" : last.getName());
-    }
-
-    private List<CmsTopicChapter> runtimeChapters(Long topicId) {
-        CmsTopicChapter query = new CmsTopicChapter(); query.setTopicId(topicId);
-        List<CmsTopicChapter> rows = cmsTopicChapterMapper == null ? null : cmsTopicChapterMapper.selectCmsTopicChapterList(query);
-        List<CmsTopicChapter> chapters = rows == null ? new ArrayList<>() : new ArrayList<>(rows);
-        chapters.sort(Comparator.comparing(CmsTopicChapter::getSortId,Comparator.nullsLast(Long::compareTo)).thenComparing(CmsTopicChapter::getId,Comparator.nullsLast(Long::compareTo)));
-        return chapters;
-    }
-
-    private void compileChapterRequirements(ObjectNode definition, List<CmsTopicNode> actual, List<CmsTopicChapter> chapters) {
-        Map<Long,CmsTopicNode> nodes = new LinkedHashMap<>();
-        for (CmsTopicNode node : actual) if (node.getId()!=null) nodes.put(node.getId(),node);
-        for (JsonNode settings : definition.path("chapters")) {
-            if (!settings.has("completion") && !settings.has("exclusiveGroups") && !settings.has("extraNodes")) continue;
-            int index = settings.path("index").asInt();
-            if (index<0 || index>=chapters.size()) throw new IllegalArgumentException("章节 index="+index+" 节点 "+settings.path("extraNodes")+"：章节不存在");
-            CmsTopicChapter chapter = chapters.get(index);
-            Map<Long,ObjectNode> quests = new LinkedHashMap<>();
-            Set<String> actKeys = new LinkedHashSet<>();
-            for (JsonNode quest : definition.path("gameplayRuntime").path("quests")) {
-                CmsTopicNode node = nodes.get(quest.path("nodeId").asLong());
-                if (node!=null && chapter.getId().equals(node.getChapterId())) { quests.put(node.getId(),(ObjectNode)quest); actKeys.add(quest.path("actKey").asText()); }
-            }
-            String label = "章节 "+chapter.getName()+"("+chapter.getId()+", index="+index+")";
-            Map<Long,String> exclusive = new LinkedHashMap<>(), extra = new LinkedHashMap<>();
-            int groupIndex = 0;
-            for (JsonNode group : settings.path("exclusiveGroups")) {
-                String groupKey = "ch"+chapter.getId()+"_g"+(++groupIndex);
-                for (JsonNode member : group) {
-                    long nodeId = member.asLong();
-                    if (!quests.containsKey(nodeId)) throw new IllegalArgumentException(label+" 节点 "+nodeId+"：节点不属于本章运行任务");
-                    if (exclusive.put(nodeId,groupKey)!=null) throw new IllegalArgumentException(label+" 节点 "+nodeId+"：节点重复属于互斥组");
-                }
-            }
-            for (JsonNode row : settings.path("extraNodes")) {
-                long nodeId = row.path("nodeId").asLong();
-                if (!quests.containsKey(nodeId)) throw new IllegalArgumentException(label+" 节点 "+nodeId+"：节点不属于本章运行任务");
-                if (exclusive.containsKey(nodeId)) throw new IllegalArgumentException(label+" 节点 "+nodeId+"：互斥节点不能同时作为额外节点");
-                if (extra.put(nodeId,row.path("slot").asText())!=null) throw new IllegalArgumentException(label+" 节点 "+nodeId+"：额外节点重复");
-            }
-            ObjectNode act = null;
-            if (actKeys.size()==1) for (JsonNode row : definition.path("gameplayRuntime").path("acts")) if (actKeys.contains(row.path("actKey").asText())) act=(ObjectNode)row;
-            if (act==null || act.path("questKeys").size()!=quests.size()) throw new IllegalArgumentException(label+" 节点 "+quests.keySet()+"：章节须完整绑定同一个真实幕");
-            JsonNode completion = settings.path("completion");
-            int counted = quests.size()-extra.size();
-            int capacity = counted-exclusive.size()+groupIndex;
-            if(counted==0 && !"ANY_N".equals(completion.path("type").asText()))throw new IllegalArgumentException(label+" 节点 "+quests.keySet()+"：本章没有计数任务，额外节点不能占满本章全部站点");
-            if ("ANY_N".equals(completion.path("type").asText()) && (completion.path("quantity").asInt()<1 || completion.path("quantity").asInt()>capacity)) throw new IllegalArgumentException(label+" 节点 "+quests.keySet()+"：任选数量须为1.."+capacity+"，额外节点不计数，互斥组最多选一个");
-            if (completion.isObject()) {
-                ObjectNode rule = completion.deepCopy(); rule.remove("overflowSlot");
-                act.set("completionRule",rule);
-            }
-            else act.putObject("completionRule").put("type","ALL");
-            for (Map.Entry<Long,ObjectNode> quest : quests.entrySet()) {
-                quest.getValue().remove(Arrays.asList("exclusiveGroup","extraSlot","extraOnly"));
-                if (exclusive.containsKey(quest.getKey())) quest.getValue().put("exclusiveGroup",exclusive.get(quest.getKey()));
-                if (extra.containsKey(quest.getKey())) quest.getValue().put("extraSlot",extra.get(quest.getKey())).put("extraOnly",true);
-                else if (completion.has("overflowSlot")) quest.getValue().put("extraSlot",completion.path("overflowSlot").asText());
-            }
-        }
-    }
-
-    private Map<Long,Long> nodeTemplateIds(List<CmsTopicNode> nodes) {
-        Map<Long,Long> templateIds = new LinkedHashMap<>();
-        for (CmsTopicNode node : nodes) if (node.getId()!=null && node.getTemplateId()!=null && node.getTemplateId()>0) templateIds.put(node.getId(),node.getTemplateId());
-        return templateIds;
-    }
-
-    private void resolveTemplateScenes(ObjectNode definition, Map<Long,Long> templateIds, JourneyRules rules) {
-        for (JsonNode scene : definition.path("scenes")) if (scene.has("nodeConfigs")) {
-            ObjectNode resolved = GameplayTemplateRules.resolveNodeConfigs(definition,scene.get("nodeConfigs"),templateIds);
-            com.chengyinhub.business.service.support.TemplateResourceSlots.assertEffectTargets(resolved,rules,definition);
-        }
-    }
-    private void assertStoryEndingChapters(JsonNode config,List<CmsTopicChapter> chapters) {
-        Set<Long> ids=new LinkedHashSet<>();for(CmsTopicChapter chapter:chapters)ids.add(chapter.getId());
-        for(JsonNode plan:config.path("gameplayRuntime").path("plans"))if(plan.has("storyEndingId") && !ids.contains(plan.path("endingChapterId").asLong()))throw new IllegalArgumentException("节点 "+plan.path("operationNodeId").asText()+" 方案 "+plan.path("endingKey").asText()+" 结局章不属于本主题");
-    }
-
-    private boolean hasTemplateInteraction(JsonNode config) { return config!=null && (GameplayTemplateRules.hasSettlementRules(config) || config.has("interactionTools") || config.has("outcomeRules")); }
-
-    private static final java.util.regex.Pattern TEMPLATE_CLUE = java.util.regex.Pattern.compile("^clue\\.h_[0-9a-f]{12}$");
-    /** 模板「线索」工具按线索名称生成 clue.h_ 标识（同名同键），保存/发布时自动登记为有/无标记，名称取模板里写的线索名。 */
-    private void registerTemplateClues(JsonNode config, CmsTopic topic) {
-        if (themeStateKeyMapper == null || topic.getId() == null) return;
-        Map<String,String> labels = new LinkedHashMap<>(); collectTemplateClues(config, labels);
-        if (labels.isEmpty()) return;
-        Set<String> existing = new LinkedHashSet<>();
-        List<ThemeStateKey> rows = themeStateKeyMapper.selectByTopicId(topic.getId());
-        if (rows != null) for (ThemeStateKey row : rows) existing.add(row.getStateKey());
-        Date now = new Date();
-        for (Map.Entry<String,String> clue : labels.entrySet()) if (!existing.contains(clue.getKey())) {
-            ThemeStateKey row = new ThemeStateKey(); row.setTopicId(topic.getId()); row.setStateKey(clue.getKey());
-            row.setKeyType(ThemeStateKey.TYPE_FLAG); row.setScope(ThemeStateKey.SCOPE_RUN); row.setLabel(clue.getValue()); row.setInitialValue(0);
-            row.setCreateTime(now); row.setUpdateTime(now); themeStateKeyMapper.upsertThemeStateKey(row);
-        }
-    }
-    private static void collectTemplateClues(JsonNode n, Map<String,String> labels) {
-        if (n.isObject()) {
-            JsonNode names = n.path("clues");
-            if (names.isObject()) names.fields().forEachRemaining(row -> { if (TEMPLATE_CLUE.matcher(row.getKey()).matches() && row.getValue().isTextual()) labels.put(row.getKey(), row.getValue().asText()); });
-            String var = n.path("var").asText("");
-            if (TEMPLATE_CLUE.matcher(var).matches()) labels.putIfAbsent(var, var);
-            n.forEach(child -> collectTemplateClues(child, labels));
-        } else if (n.isArray()) n.forEach(child -> collectTemplateClues(child, labels));
-    }
-
-    private void assertCompiledReferences(ObjectNode config,Set<Long> nodeIds,CmsTopic topic) {
-        registerTemplateClues(config, topic);
-        Set<String> stateKeys=new LinkedHashSet<>();
-        List<ThemeStateKey> keys=themeStateKeyMapper==null?null:themeStateKeyMapper.selectByTopicId(topic.getId());
-        if(keys!=null)for(ThemeStateKey key:keys)stateKeys.add(key.getStateKey());
-        ThemeRuntimeConfig.assertReferences(config,nodeIds,stateKeys,JourneyRules.parse(topic.getJourneyRulesJson()));
+        return publicationCompiler().compileTemplateRules(topic);
     }
 
     @Override
     public String freezePublication(CmsTopic topic, String routeSnapshot) {
-        List<CmsTopicNode> liveNodes = nodes(topic.getId());
-        if (liveNodes.isEmpty()) throw new IllegalArgumentException("主题没有可运行节点");
-        JourneyTemplateProbe publicationProbe=new JourneyTemplateProbe(liveNodes);
-        com.chengyinhub.business.service.support.AdvancedGameConfigValidator authorValidator=new com.chengyinhub.business.service.support.AdvancedGameConfigValidator();
-        for(Map.Entry<Long,String> entry:publicationProbe.configs().entrySet())if(entry.getValue()!=null && validator.readTree(entry.getValue()).path("outcomeRules").path("version").asInt()==1)entry.setValue(authorValidator.validateAndNormalize(entry.getValue()));
-        String compiled = compileTemplateRules(topic);
-        ObjectNode authoredDefinition=ThemeRuntimeConfig.parseDraft(topic.getThemeRuntimeConfigJson());
-        if(authoredDefinition!=null)for(JsonNode scene:authoredDefinition.path("scenes"))for(JsonNode block:scene.path("nodeConfigs"))if(block.path("outcomeRules").path("version").asInt()==1)authorValidator.validateAndNormalize(block.toString());
-        CmsTopic publish = new CmsTopic();
-        org.springframework.beans.BeanUtils.copyProperties(topic, publish);
-        publish.setThemeRuntimeConfigJson(compiled);
-        publish.setPublishedThemeRuntimeConfigJson(compiled);
-        ObjectNode frozen = (ObjectNode) validator.readTree(freezeJourney(
-                routeSnapshot == null ? linearSnapshot(liveNodes) : routeSnapshot, publish, liveNodes,publicationProbe));
-        frozen.put("runtimeSnapshotVersion", 1);
-        frozen.put("r5AuthorValidationVersion",1);
-        frozen.put("routeMode", topic.getRouteMode() == null ? "LINEAR" : topic.getRouteMode());
-        ObjectNode definition = ThemeRuntimeConfig.parse(compiled);
-        if (definition != null) {
-            for(JsonNode scene:definition.path("scenes"))if(scene.has("nodeConfigs"))
-                ((ObjectNode)scene).set("nodeConfigs",GameplayTemplateRules.resolveNodeConfigs(definition,scene.path("nodeConfigs"),nodeTemplateIds(liveNodes)));
-            definition.remove("templateBindings");
-            if(frozen.path("themeConfig").has("nodeConfigs"))definition.set("nodeConfigs",frozen.path("themeConfig").path("nodeConfigs").deepCopy());
-            frozen.set("themeDefinition", definition);
-        }
-        ArrayNode stations = frozen.putArray("routeStations");
-        for (CmsTopicNode node : liveNodes) {
-            ObjectNode station = stations.addObject(); station.put("nodeId", node.getId());
-            station.put("nodeName", node.getName());
-            if (node.getChapterId() != null) station.put("chapterId", node.getChapterId());
-            if (node.getMerchantMemberId() != null) station.put("merchantMemberId", node.getMerchantMemberId());
-            station.put("scanReady",node.getMerchantMemberId()!=null && node.getMerchantMemberId()>0 || node.getCheckinCode()!=null && !node.getCheckinCode().trim().isEmpty());
-            if(node.getLongitude()!=null)station.put("longitude",node.getLongitude());if(node.getLatitude()!=null)station.put("latitude",node.getLatitude());
-        }
-        Set<Long> nodeIds=new LinkedHashSet<>();for(CmsTopicNode node:liveNodes)nodeIds.add(node.getId());
-        if(frozen.path("themeConfig").isObject())assertCompiledReferences((ObjectNode)frozen.path("themeConfig"),nodeIds,topic);
-        validateGameplayRuntime(frozen);
-        return write(frozen);
+        return publicationCompiler().freezePublication(topic, routeSnapshot);
+    }
+
+    @Override
+    public void deriveTemplateCluesForPublication(CmsTopic topic) {
+        publicationCompiler().deriveTemplateCluesForPublication(topic);
+    }
+
+    @Override
+    public String freezePublication(CmsTopic topic, String routeSnapshot, List<ThemeStateKey> declarations) {
+        return publicationCompiler().freezePublication(topic, routeSnapshot, declarations);
     }
 
     @Override
     public String freezePublishedJourney(CmsTopic topic) {
-        if (topic == null || topic.getPublishedConfigVersion() == null || topic.getPublishedConfigVersion() <= 0) {
-            throw new IllegalStateException("主题尚未发布");
-        }
-        JsonNode published = topic.getPublishedRouteGraphJson() == null ? null
-                : validator.readTree(topic.getPublishedRouteGraphJson());
-        if (published != null && published.path("runtimeSnapshotVersion").asInt() == 1) {
-            JsonNode frozen = validator.readTree(freezeJourney(published.toString(), topic, java.util.Collections.emptyList()));
-            validateGameplayRuntime(frozen);
-            return frozen.toString();
-        }
-        List<CmsTopicNode> liveNodes = nodes(topic.getId());
-        return freezeJourney(published == null ? linearSnapshot(liveNodes) : published.toString(), topic, liveNodes);
+        return publicationCompiler().freezePublishedJourney(topic);
     }
 
     @Override
@@ -1736,7 +1283,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
             if(answer.path("validationMethod").asInt()==3)return !answer.path("correctAnswer").asText().trim().isEmpty() && answer.path("correctAnswer").asText().trim().equalsIgnoreCase(submitted);
             String expected=answer.path("questionAnswer").asText();return !expected.trim().isEmpty() && normalizeBasicAnswer(expected).equalsIgnoreCase(normalizeBasicAnswer(submitted));
         }
-        return AdvancedGameRuntimeServiceImpl.verifyObjectiveAnswers(frozen.path("nodeConfigs").path(String.valueOf(nodeId)),answers);
+        return AdvancedActionJudgement.verifyObjectiveAnswers(frozen.path("nodeConfigs").path(String.valueOf(nodeId)),answers);
     }
 
     private String normalizeBasicAnswer(String value) {
@@ -1745,376 +1292,28 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         return normalized.toString();
     }
 
-    private void validateGameplayRuntime(JsonNode frozen) {
-        JsonNode theme=frozen.path("themeConfig"),game=theme.path("gameplayRuntime");
-        if (!game.isObject()) return;
-        GameplaySupportMatrix.validateChallenge(theme,frozen.path("nodeConfigs"));
-        for (JsonNode station : frozen.path("routeStations")) {
-            long nodeId = station.path("nodeId").asLong();
-            GameplaySupportMatrix.validateNode(theme,nodeId,station.path("nodeName").asText(null),
-                    frozen.path("nodeConfigs").path(String.valueOf(nodeId)),
-                    frozen.path(NodeJourneySnapshot.NODE_ANSWERS_KEY).path(String.valueOf(nodeId)).path("validationMethod").asInt(-1));
-        }
-        boolean team="TEAM".equals(game.path("runtimeScope").asText());
-        boolean tasks=game.path("quests").size()>0;
-        if (!team && !tasks && game.path("acts").size()==0 && game.path("survival").size()==0 && game.path("initialGrants").size()==0) return;
-        if (!"LINEAR".equals(frozen.path("routeMode").asText())) throw new IllegalArgumentException("通用任务使用幕与任务前置推进，请选择线性路线");
-        if ((team && theme.path("replayEnabled").asBoolean()) || theme.path("rescueLimit").asInt()>0 || theme.has("actionSources")) throw new IllegalArgumentException("通用任务不能组合旧自动救援或信号行动计数，队伍局不使用个人重玩");
-        for (JsonNode grant:theme.path("grants")) if (!"ENDING".equals(grant.path("source").asText())) throw new IllegalArgumentException("通用收益须配置在任务或章节中，不能启用旧节点信号发放");
-        for (JsonNode chapter:theme.path("chapters")) if (chapter.path("eggs").size()>0) throw new IllegalArgumentException("通用局章节彩蛋触发尚未接通");
-        if (!tasks) throw new IllegalArgumentException("通用运行规则须配置实际幕和任务");
-        if (tasks) {
-            JsonNode survival=game.path("survival");
-            if (!GameplaySupportMatrix.zeroHpPolicies(true).contains(survival.path("zeroHpPolicy").asText()) || !"BLOCK_OVERFLOW".equals(survival.path("actionLimitPolicy").asText())) throw new IllegalArgumentException("通用任务须显式配置H0策略与BLOCK_OVERFLOW");
-        }
-        if (!team) for (JsonNode act:game.path("acts")) if (act.path("hostUnlock").asBoolean()) throw new IllegalArgumentException("个人自玩没有工作人员解锁通道");
-        Set<Long> questNodes=new LinkedHashSet<>();
-        for (JsonNode quest:game.path("quests")) {
-            long nodeId=quest.path("nodeId").asLong();
-            if(GameplaySurvivalEngine.challengeNode(theme,nodeId))throw new IllegalArgumentException("归零挑战节点不能作为普通任务");
-            if (!questNodes.add(nodeId)) throw new IllegalArgumentException("任务须独占节点");
-            boolean merchant=false;
-            for (JsonNode station:frozen.path("routeStations")) if (station.path("nodeId").asLong()==nodeId && station.path("merchantMemberId").asLong()>0) merchant=true;
-            if (!team && !merchant && !hasVerifiedPublicationArrival(frozen,nodeId)) throw new IllegalArgumentException("个人任务须使用真实商户到达或已验证扫码/GPS节点，工作人员点位请建队伍场次");
-            if(!team && quest.has("facilityKey"))for(JsonNode facility:game.path("facilities"))if(facility.path("facilityKey").asText().equals(quest.path("facilityKey").asText()) && (!"OWNER".equals(facility.path("scope").asText()) || !"OWNER".equals(facility.path("targetScope").asText()) || facility.has("arrivalLocationKey")))throw new IllegalArgumentException("个人任务只绑定无需工作人员到达核验的OWNER设施");
-            validateGameplayNode(frozen,nodeId);
-        }
-        if(!team)for(JsonNode facility:game.path("facilities"))if(facility.has("arrivalLocationKey"))throw new IllegalArgumentException("个人设施没有工作人员到达核验通道");
-        for(JsonNode facility:game.path("facilities"))if(facility.has("operationNodeId")) {
-            validateGameplayNode(frozen,facility.path("operationNodeId").asLong());
-            if(!team) {boolean merchant=false;for(JsonNode station:frozen.path("routeStations"))if(station.path("nodeId").asLong()==facility.path("operationNodeId").asLong() && station.path("merchantMemberId").asLong()>0)merchant=true;if(!merchant && !hasVerifiedPublicationArrival(frozen,facility.path("operationNodeId").asLong()))throw new IllegalArgumentException("个人设施操作须使用真实商户到达或已验证扫码/GPS节点");}
-        }
-        for (JsonNode plan:game.path("plans")) if (plan.has("operationNodeId")) validateGameplayNode(frozen,plan.path("operationNodeId").asLong());
-        for (JsonNode act:game.path("acts")) if ("ANY_N".equals(act.path("completionRule").path("type").asText())) for (JsonNode chapter:theme.path("chapters")) {
-            boolean overlaps=false;for (JsonNode q:game.path("quests")) if (q.path("actKey").asText().equals(act.path("actKey").asText()) && containsNode(chapter.path("binding").path("nodeIds"),q.path("nodeId").asLong())) overlaps=true;
-            if (overlaps && !com.chengyinhub.business.service.support.GameplayTaskEngine.chapterMatchesAct(theme,chapter,act)) throw new IllegalArgumentException("任选幕的章节绑定须完整匹配本幕任务节点");
-        }
+    private String basicCompletionKind(JsonNode frozen,Long nodeId) {
+        return TopicRoutePublicationCompiler.basicCompletionKind(frozen, nodeId);
     }
 
-    private String basicCompletionKind(JsonNode frozen,Long nodeId) {
-        JsonNode config=frozen.path("nodeConfigs").path(String.valueOf(nodeId));
-        int method=frozen.path(NodeJourneySnapshot.NODE_ANSWERS_KEY).path(String.valueOf(nodeId)).path("validationMethod").asInt(-1);
-        return GameplaySupportMatrix.basicCompletionKind(config,method);
-    }
-    private boolean hasVerifiedPublicationArrival(JsonNode frozen, Long nodeId) {
-        if (basicCompletionKind(frozen, nodeId) != null) return true;
-        if (frozen.path("nodeConfigs").path(String.valueOf(nodeId)).path("outcomeRules").path("version").asInt() != 1) return false;
-        int method = frozen.path(NodeJourneySnapshot.NODE_ANSWERS_KEY).path(String.valueOf(nodeId)).path("validationMethod").asInt(-1);
-        if (method != 4 && method != 5) return false;
-        // 参与方式只证明到达，不替代 R5 玩法的服务端结算。
-        validateParticipationNode(frozen, nodeId, method == 4 ? "SCAN" : "GPS");
-        return true;
-    }
     static boolean gameplayAddon(String field) {
         return GameplaySupportMatrix.addon(field);
     }
-    private void validateGameplayNode(JsonNode frozen,Long nodeId) {
-        String kind=basicCompletionKind(frozen,nodeId);if(kind==null){validateObjectiveGroup(frozen.path("nodeConfigs").path(String.valueOf(nodeId)));return;}
-        validateParticipationNode(frozen, nodeId, kind);
-    }
-    private void validateParticipationNode(JsonNode frozen, Long nodeId, String kind) {
-        JsonNode station=null;for(JsonNode row:frozen.path("routeStations"))if(row.path("nodeId").asLong()==nodeId)station=row;
-        if(station==null)throw new IllegalArgumentException("基础玩法节点不属于本主题");
-        if("SCAN".equals(kind) && !station.path("scanReady").asBoolean())throw new IllegalArgumentException("扫码玩法须配置真实节点码或商户动态码入口");
-        if("ANSWER".equals(kind)) {JsonNode answer=frozen.path(NodeJourneySnapshot.NODE_ANSWERS_KEY).path(String.valueOf(nodeId));String expected=answer.path(answer.path("validationMethod").asInt()==1?"questionAnswer":"correctAnswer").asText();if(expected.trim().isEmpty())throw new IllegalArgumentException("问答玩法须配置服务端真实答案");}
-        if("GPS".equals(kind)) {try {double lng=Double.parseDouble(station.path("longitude").asText()),lat=Double.parseDouble(station.path("latitude").asText());if(!Double.isFinite(lng)||!Double.isFinite(lat)||lng< -180||lng>180||lat< -90||lat>90)throw new NumberFormatException();}catch(NumberFormatException invalid){throw new IllegalArgumentException("GPS玩法须配置有效站点坐标");}}
-    }
-    private void validateObjectiveGroup(JsonNode config) {
-        if(config.has("outcomeRules")){if(!GameplaySupportMatrix.r5CompletionProof(config))throw new IllegalArgumentException("R5 玩法尚无服务端结果桥");return;}
-        boolean objective=false;java.util.Iterator<Map.Entry<String,JsonNode>> fields=config.fields();
-        while(fields.hasNext()) {
-            Map.Entry<String,JsonNode> field=fields.next();if(!field.getValue().path("enabled").asBoolean())continue;
-            if(gameplayAddon(field.getKey()))continue;
-            if(!Arrays.asList("qa","sort","match","classify").contains(field.getKey()))throw new IllegalArgumentException("任务只支持问答、排序、连线与分类客观题组");
-            if ("qa".equals(field.getKey()) && (!Arrays.asList("TYPE","PICK").contains(field.getValue().path("mode").asText()) || field.getValue().path("maxTries").asInt()>0)) throw new IllegalArgumentException("任务问答须可免费重答且有服务端答案");
-            if ("sort".equals(field.getKey()) && field.getValue().path("maxAttempts").asInt()>0) throw new IllegalArgumentException("任务排序须可免费重答");
-            objective=true;
-        }
-        if(!objective)throw new IllegalArgumentException("任务节点需要服务端判定题组");
-    }
 
     private String freezeJourney(String snapshot, CmsTopic topic, List<CmsTopicNode> liveNodes) {
-        return freezeJourney(snapshot, topic, liveNodes, new JourneyTemplateProbe(liveNodes));
-    }
-
-    /**
-     * R18:主题各章节 blocks 里的叙事块按站点组装成旧契约形状;章节 mapper 缺失
-     * (手工 new 的单测)或章节没有物化 blocks 都按空处理,坏块只跳过不抛 ——
-     * 冻结不能因为一段脏数据把整局建不出来。
-     */
-    private Map<Long, ObjectNode> storyNarrativeByNode(CmsTopic topic) {
-        Map<Long, ObjectNode> byNode = new LinkedHashMap<Long, ObjectNode>();
-        if (cmsTopicChapterMapper == null || topic == null || topic.getId() == null) return byNode;
-        CmsTopicChapter probe = new CmsTopicChapter();
-        probe.setTopicId(topic.getId());
-        List<CmsTopicChapter> chapters = cmsTopicChapterMapper.selectCmsTopicChapterList(probe);
-        if (chapters == null) return byNode;
-        for (CmsTopicChapter chapter : chapters) {
-            if (chapter == null || chapter.getBlocksJson() == null || chapter.getBlocksJson().trim().isEmpty()) {
-                continue;
-            }
-            byNode.putAll(ChapterNarrativeBlocks.assembleByNode(chapter.getBlocksJson()));
-        }
-        return byNode;
+        return publicationCompiler().freezeJourney(snapshot, topic, liveNodes);
     }
 
     /** 建局冻结:模板探测由调用方传入,建局判定 / 块配置 / 判定字段冻结共用同一次模板查询。 */
     private String freezeJourney(String snapshot, CmsTopic topic, List<CmsTopicNode> liveNodes,
                                  JourneyTemplateProbe probe) {
-        return freezeJourney(snapshot, topic, liveNodes, probe.configs(), probe.templatesById());
+        return publicationCompiler().freezeJourney(snapshot, topic, liveNodes, probe);
     }
 
-    /** 建局冻结:模板配置与实体由调用方传入(同一次查询),块配置与判定字段一起冻结。 */
-    private String freezeJourney(String snapshot, CmsTopic topic, List<CmsTopicNode> liveNodes,
-                                 Map<Long, String> configByTemplate,
-                                 Map<Long, CmsMemberTemplate> templatesById) {
-        return freezeJourney(snapshot,topic,liveNodes,configByTemplate,templatesById,0);
-    }
+
     private String freezeJourney(String snapshot,CmsTopic topic,List<CmsTopicNode> liveNodes,
                                  Map<Long,String> configByTemplate,Map<Long,CmsMemberTemplate> templatesById,int sceneIndex) {
-        final JsonNode parsed;
-        try {
-            parsed = JSON.readTree(snapshot);
-        } catch (Exception unusableSnapshot) {
-            throw new IllegalStateException("路线快照不可用", unusableSnapshot);
-        }
-        if (parsed == null || !parsed.isObject()) throw new IllegalStateException("路线快照不可用");
-        ObjectNode root = (ObjectNode) parsed;
-        FrozenAttributeDefinitions.copyPublishedDefinition(root);
-        Map<Long,Long> templateIds = nodeTemplateIds(liveNodes);
-        if (root.path("runtimeSnapshotVersion").asInt() == 1) {
-            if (root.path("themeDefinition").isObject()) {
-                ObjectNode config = ThemeRuntimeConfig.freeze((ObjectNode) root.path("themeDefinition"), sceneIndex, clock.millis());
-                for (JsonNode chapter : config.path("chapters")) {
-                    for (JsonNode old : root.path("themeConfig").path("chapters")) {
-                        if (chapter.path("index").asInt() == old.path("index").asInt() && old.has("binding")) {
-                            ((ObjectNode) chapter).set("binding", old.path("binding").deepCopy());
-                        }
-                    }
-                }
-                config.set("legacyMedals", root.path("themeConfig").path("legacyMedals").deepCopy());
-                root.set("themeConfig", config);
-                applySceneNodes(root, config);
-                root.set("themeConfig",mergeFrozenTemplateRules(root,config,templateIds,finalChapter(topic,runtimeChapters(topic.getId()))));
-                freezeClueContent(root,liveNodes,templatesById);
-            }
-            return write(root);
-        }
-        ObjectNode nodeJourney = root.putObject(NodeJourneySnapshot.NODE_JOURNEY_KEY);
-        ObjectNode nodeConfigs = root.putObject("nodeConfigs");
-        Map<Long, ObjectNode> storyByNode = storyNarrativeByNode(topic);
-        for (CmsTopicNode node : liveNodes) {
-            if (node.getId() == null || node.getTemplateId() == null || node.getTemplateId() <= 0L) continue;
-            ObjectNode block = nodeJourney.putObject(String.valueOf(node.getId()));
-            JsonNode blockConfig = readBlockConfig(configByTemplate.get(node.getTemplateId()));
-            nodeConfigs.set(String.valueOf(node.getId()), blockConfig == null ? JSON.createObjectNode() : blockConfig.deepCopy());
-            NodeJourneySnapshot.copyMechanicSegments(blockConfig, block);
-            ObjectNode story = storyByNode.get(node.getId());
-            if (story != null) {
-                java.util.Iterator<String> segments = story.fieldNames();
-                while (segments.hasNext()) {
-                    String segment = segments.next();
-                    block.set(segment, story.get(segment));
-                }
-            }
-        }
-        try {
-            JourneyRules authoredRules = journeyRules(topic);
-            root.set(NodeJourneySnapshot.JOURNEY_RULES_KEY, JSON.valueToTree(authoredRules));
-            FrozenAttributeDefinitions.copyPublishedDefinition(root);
-            JourneyInitialState.freezeKeys(root, root.has("attributeDefinition") || themeStateKeyMapper == null ? null
-                    : themeStateKeyMapper.selectByTopicId(topic.getId()), authoredRules);
-        } catch (IllegalArgumentException unusableRules) {
-            throw new IllegalStateException("旅程数值规则不可用", unusableRules);
-        }
-        ObjectNode themeConfig = com.chengyinhub.business.service.support.ThemeRuntimeConfig.parse(
-                topic.getPublishedThemeRuntimeConfigJson());
-        ObjectNode selectedTheme = themeConfig == null ? null
-                : com.chengyinhub.business.service.support.ThemeRuntimeConfig.freeze(themeConfig, sceneIndex, clock.millis());
-        String story = selectedTheme != null && selectedTheme.has("journeyStory")
-                ? selectedTheme.get("journeyStory").toString() : topic.getJourneyStoryJson();
-        root.put(NodeJourneySnapshot.JOURNEY_STORY_KEY, story == null ? "" : story.trim());
-        root.put("topicCompleteRule", topic == null ? null : topic.getCompleteRuleJson());
-        Long openingId = JourneyStory.openingChapterId(story);
-        freezeThoughtChapters(root, topic, liveNodes, openingId, story);
-        if (openingId != null) {
-            CmsTopicChapter chapterProbe = new CmsTopicChapter(); chapterProbe.setTopicId(topic.getId());
-            List<CmsTopicChapter> chapters = cmsTopicChapterMapper == null ? null
-                    : cmsTopicChapterMapper.selectCmsTopicChapterList(chapterProbe);
-            CmsTopicChapter opening = null;
-            if (chapters != null) for (CmsTopicChapter chapter : chapters) {
-                if (openingId.equals(chapter.getId())) { opening = chapter; break; }
-            }
-            if (opening == null) throw new IllegalStateException("开局流程不可用");
-            ObjectNode frozen = root.putObject("openingChapter");
-            frozen.put("chapterId", openingId); frozen.put("opening", true);
-            frozen.put("name", opening.getName()); frozen.put("idxLabel", "序章");
-            frozen.put("imgArr", opening.getImgArr()); frozen.put("audioUrl", opening.getAudioUrl());
-            frozen.put("atmospherePreset", opening.getAtmospherePreset());
-            frozen.set("blocks", JSON.valueToTree(ChapterBlockReadSupport.resolveFromTopicNodes(opening, liveNodes)));
-        }
-        freezeNodeAnswers(root.putObject(NodeJourneySnapshot.NODE_ANSWERS_KEY), liveNodes, templatesById);
-        if (selectedTheme != null) {
-            ObjectNode frozen = selectedTheme;
-            for(JsonNode ch:frozen.path("chapters")) {
-                int index=ch.path("index").asInt();JsonNode binding=JSON.createObjectNode().path("missing");
-                for(JsonNode candidate:root.path("thoughtChapters"))if(candidate.path("authorIndex").asInt(-1)==index)binding=candidate;
-                if(!binding.isObject())throw new IllegalArgumentException("背包配置引用未知章节");
-                ((ObjectNode)ch).set("binding",binding.deepCopy());
-            }
-            ArrayNode legacy=frozen.putArray("legacyMedals");
-            if(topic.getFinishMedalImg()!=null && !topic.getFinishMedalImg().trim().isEmpty()){ObjectNode medal=legacy.addObject();medal.put("id","legacy_finish");medal.put("kind","MEDAL");medal.put("name",topic.getFinishMedalName()==null?"通关勋章":topic.getFinishMedalName());medal.put("image",topic.getFinishMedalImg());medal.put("legacySource","FINISH");}
-            for(CmsTopicNode node:liveNodes){CmsMemberTemplate tpl=templatesById.get(node.getTemplateId());if(tpl==null || tpl.getMedalImg()==null || tpl.getMedalImg().trim().isEmpty())continue;ObjectNode medal=legacy.addObject();medal.put("id","legacy_node_"+node.getId());medal.put("kind","MEDAL");medal.put("name",tpl.getMedalName()==null?"节点奖牌":tpl.getMedalName());medal.put("image",tpl.getMedalImg());medal.put("legacySource","NODE_RANK");medal.put("nodeId",node.getId());}
-            root.set("themeConfig", frozen);applySceneNodes(root,frozen);
-            root.set("themeConfig",mergeFrozenTemplateRules(root,frozen,templateIds,finalChapter(topic,runtimeChapters(topic.getId()))));
-            freezeClueContent(root,liveNodes,templatesById);
-        }
-        return write(root);
-    }
-
-    /**
-     * 线索内容冻结：模板「剧情」里标签与本模板线索名相同的段落（正文与图片）即该线索内容。
-     * 内容随发布冻结，玩家只在本队/全场实际取得线索后由会话视图按来源站点回读；剧情 JSON 本身从不下发。
-     */
-    private void freezeClueContent(ObjectNode root,List<CmsTopicNode> liveNodes,Map<Long,CmsMemberTemplate> templatesById) {
-        // 发布时冻结一次；建局等后续再冻结沿用发布版本，不随模板后续编辑变化
-        if(root.has("clueContent"))return;
-        ObjectNode out=JSON.createObjectNode();
-        if(liveNodes!=null && templatesById!=null)for(CmsTopicNode node:liveNodes) {
-            if(node==null || node.getId()==null)continue;
-            JsonNode clues=root.path("nodeConfigs").path(String.valueOf(node.getId())).path("clues");
-            CmsMemberTemplate template=templatesById.get(node.getTemplateId());
-            if(!clues.isObject() || clues.size()==0 || template==null || template.getStoryJson()==null || template.getStoryJson().trim().isEmpty())continue;
-            JsonNode beats;
-            try{beats=JSON.readTree(template.getStoryJson());}catch(Exception unreadable){continue;}
-            if(!beats.isArray())continue;
-            ObjectNode byClue=JSON.createObjectNode();
-            clues.fields().forEachRemaining(clue->{
-                String name=clue.getValue().asText("").trim();ArrayNode blocks=JSON.createArrayNode();
-                if(!name.isEmpty())for(JsonNode beat:beats)if(name.equals(beat.path("tag").asText("").trim())) {
-                    ObjectNode block=blocks.addObject().put("text",beat.path("text").asText(""));ArrayNode images=block.putArray("images");
-                    JsonNode imgs=beat.path("imgs").isArray()?beat.path("imgs"):JSON.createArrayNode().add(beat.path("img"));
-                    for(JsonNode image:imgs)if(image.isTextual() && !image.asText().trim().isEmpty())images.add(image.asText().trim());
-                }
-                if(blocks.size()>0)byClue.set(clue.getKey(),blocks);
-            });
-            if(byClue.size()>0){ObjectNode row=out.putObject(String.valueOf(node.getId()));row.put("title",node.getName()==null?"":node.getName());row.set("clues",byClue);}
-        }
-        root.set("clueContent",out);
-    }
-
-    private ObjectNode mergeFrozenTemplateRules(ObjectNode snapshot,ObjectNode config,Map<Long,Long> templateIds,JsonNode finalChapter) {
-        Map<Long,String> acts=new LinkedHashMap<>();for(JsonNode quest:config.path("gameplayRuntime").path("quests"))acts.put(quest.path("nodeId").asLong(),quest.path("actKey").asText());
-        if (!snapshot.has("nodeConfigs")) return GameplayTemplateRules.merge(config,snapshot.path("nodeConfigs"),acts,templateIds,null,finalChapter);
-        JsonNode declarations = snapshot.path("nodeConfigs").deepCopy();
-        ObjectNode resolved = GameplayTemplateRules.resolveNodeConfigs(config,declarations,templateIds);
-        com.chengyinhub.business.service.support.TemplateResourceSlots.assertEffectTargets(resolved,JourneyRules.parse(snapshot.path(NodeJourneySnapshot.JOURNEY_RULES_KEY).toString()),config);
-        snapshot.set("nodeConfigs",resolved);
-        ObjectNode mechanics = JSON.createObjectNode(); mechanics.set("nodeConfigs", resolved);
-        applySceneNodes(snapshot, mechanics);
-        ObjectNode definition = config.deepCopy();
-        if (definition.has("nodeConfigs")) definition.set("nodeConfigs",resolved.deepCopy());
-        if (definition.has("templateBindings")) ThemeRuntimeConfig.assertJourneyReferences(definition,JourneyRules.parse(snapshot.path(NodeJourneySnapshot.JOURNEY_RULES_KEY).toString()));
-        JsonNode story=snapshot.path(NodeJourneySnapshot.JOURNEY_STORY_KEY);
-        if(story.isTextual())story=story.asText().trim().isEmpty()?JSON.createObjectNode():validator.readTree(story.asText());
-        return snapshot.path("runtimeSnapshotVersion").asInt()==1
-                ? GameplayTemplateRules.mergeFrozen(definition,declarations,acts,story)
-                : GameplayTemplateRules.merge(definition,declarations,acts,templateIds,story,finalChapter);
-    }
-
-    private void freezeThoughtChapters(ObjectNode root, CmsTopic topic, List<CmsTopicNode> nodes, Long openingId,
-                                      String effectiveStory) {
-        com.fasterxml.jackson.databind.node.ArrayNode frozen = root.putArray("thoughtChapters");
-        // 独立保留结局正文；不加入玩家推进章节列表，读侧仅投影已选结局。
-        ObjectNode endingChapters = root.putObject("endingChapters");
-        if (cmsTopicChapterMapper == null) return;
-        CmsTopicChapter probe = new CmsTopicChapter(); probe.setTopicId(topic.getId());
-        List<CmsTopicChapter> rows = cmsTopicChapterMapper.selectCmsTopicChapterList(probe);
-        if (rows == null) return;
-        List<CmsTopicChapter> chapters = new ArrayList<CmsTopicChapter>(rows);
-        chapters.sort(Comparator.comparing(CmsTopicChapter::getSortId, Comparator.nullsLast(Long::compareTo))
-                .thenComparing(CmsTopicChapter::getId, Comparator.nullsLast(Long::compareTo)));
-        Set<Long> endingIds = new LinkedHashSet<Long>(JourneyStory.endingChapterIds(topic.getJourneyStoryJson()));
-        endingIds.addAll(JourneyStory.endingChapterIds(effectiveStory));
-        Set<Long> requiredBefore = new LinkedHashSet<Long>();
-        int authorIndex=-1;
-        for (CmsTopicChapter chapter : chapters) {
-            authorIndex++;
-            if (chapter.getId() == null) continue;
-            if (endingIds.contains(chapter.getId())) {
-                if (topic.getId().equals(chapter.getTopicId())) {
-                    ObjectNode ending = endingChapters.putObject(String.valueOf(chapter.getId()));
-                    ending.put("id", chapter.getId());
-                    ending.put("name", chapter.getName());
-                    ending.put("atmospherePreset", chapter.getAtmospherePreset());
-                    ending.put("audioUrl", chapter.getAudioUrl());
-                    ending.set("blocks", JSON.valueToTree(ChapterBlockReadSupport.resolve(
-                            chapter, Collections.<CmsTopicNode>emptyList())));
-                }
-                continue;
-            }
-            Set<Long> nodeIds = new LinkedHashSet<Long>();
-            for (CmsTopicNode node : nodes) if (chapter.getId().equals(node.getChapterId())) nodeIds.add(node.getId());
-            ObjectNode row = frozen.addObject();
-            row.put("chapterId", chapter.getId());
-            row.put("authorIndex",authorIndex);
-            row.put("opening", chapter.getId().equals(openingId));
-            row.put("requiresOpening",openingId!=null);
-            row.set("nodeIds", JSON.valueToTree(nodeIds));
-            row.set("requiredBefore", JSON.valueToTree(requiredBefore));
-            row.set("blocks", JSON.valueToTree(ChapterBlockReadSupport.resolveFromTopicNodes(chapter, nodes)));
-            if (ChapterBlockReadSupport.isRequiredChapter(chapter)) requiredBefore.addAll(nodeIds);
-        }
-    }
-
-    /**
-     * 建局冻结模板判定字段(R18-FREEZE):validationMethod 与各验证方式的答案 / 揭示 / 偏好 /
-     * 传感器配置。每个在架节点写一条(没绑定模板也写空对象,封死新局回退);模板行取不到时
-     * 只留空对象。奖励字段(券 / 探索值 / 条件奖励规则)不在此列,仍读实时。
-     */
-    private void freezeNodeAnswers(ObjectNode nodeAnswers, List<CmsTopicNode> liveNodes,
-                                   Map<Long, CmsMemberTemplate> templates) {
-        Map<Long, CmsMemberTemplate> byId = templates == null
-                ? Collections.<Long, CmsMemberTemplate>emptyMap() : templates;
-        for (CmsTopicNode node : liveNodes) {
-            if (node.getId() == null) continue;
-            ObjectNode target = nodeAnswers.putObject(String.valueOf(node.getId()));
-            if (node.getTemplateId() == null || node.getTemplateId() <= 0L) continue;
-            CmsMemberTemplate template = byId.get(node.getTemplateId());
-            if (template == null) continue;
-            if (template.getValidationMethod() != null) {
-                target.put("validationMethod", template.getValidationMethod().intValue());
-            }
-            if (template.getPhotoReview() != null) {
-                target.put("photoReview", template.getPhotoReview().intValue());
-            }
-            putAnswerText(target, "questionAnswer", template.getQuestionAnswer());
-            putAnswerText(target, "correctAnswer", template.getCorrectAnswer());
-            putAnswerText(target, "answerReveal", template.getAnswerReveal());
-            putAnswerText(target, "questionA", template.getQuestionA());
-            putAnswerText(target, "questionB", template.getQuestionB());
-            putAnswerText(target, "questionC", template.getQuestionC());
-            putAnswerText(target, "questionD", template.getQuestionD());
-            putAnswerText(target, "preferenceJson", template.getPreferenceJson());
-            putAnswerText(target, "sensorType", template.getSensorType());
-            putAnswerText(target, "sensorConfig", template.getSensorConfig());
-        }
-    }
-
-    /** 冻结字段拷贝:null 不写(建局时没有这个字段 = 冻结成「没有」)。 */
-    private static void putAnswerText(ObjectNode target, String field, String value) {
-        if (value != null) target.put(field, value);
-    }
-
-    /** 冻结用块配置解析:坏 JSON / 非对象一律当成没配(发布门禁负责拦,建局不因坏块失败)。 */
-    private JsonNode readBlockConfig(String raw) {
-        if (raw == null || raw.trim().isEmpty()) return null;
-        try {
-            JsonNode config = JSON.readTree(raw);
-            return config != null && config.isObject() ? config : null;
-        } catch (Exception unusableBlockConfig) {
-            return null;
-        }
+        return publicationCompiler().freezeJourney(snapshot, topic, liveNodes, configByTemplate, templatesById, sceneIndex);
     }
 
     /**
@@ -2127,7 +1326,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     }
 
     private JourneyRules journeyRules(CmsTopic topic) {
-        return JourneyRules.parse(topic == null ? null : topic.getJourneyRulesJson());
+        return TopicRoutePublicationCompiler.journeyRules(topic);
     }
 
     /** 本局适用的数值规则:优先读建局冻结值;老局快照没有该键时回退实时主题配置。 */
@@ -2258,13 +1457,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
 
     /** 线性局快照:没有 edges(正是它区别于分支快照的判别依据),只留起终点与空变量表。 */
     private String linearSnapshot(List<CmsTopicNode> liveNodes) {
-        ObjectNode snapshot = JSON.createObjectNode();
-        snapshot.put("schemaVersion", 1);
-        if (!liveNodes.isEmpty()) snapshot.put("startNodeId", liveNodes.get(0).getId().longValue());
-        ArrayNode terminals = snapshot.putArray("terminalNodeIds");
-        if (!liveNodes.isEmpty()) terminals.add(liveNodes.get(liveNodes.size() - 1).getId().longValue());
-        snapshot.putObject("variables");
-        return write(snapshot);
+        return publicationCompiler().linearSnapshot(liveNodes);
     }
 
     /**
@@ -2541,11 +1734,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     }
 
     private List<CmsTopicNode> nodes(Long topicId) {
-        CmsTopicNode probe = new CmsTopicNode(); probe.setTopicId(topicId); probe.setStatus(1L);
-        List<CmsTopicNode> result = nodeMapper.selectCmsTopicNodeList(probe);
-        if (result == null) return Collections.emptyList();
-        result = new ArrayList<CmsTopicNode>(result);
-        result.sort(Comparator.comparingLong(n -> n.getSortId() == null ? 0L : n.getSortId())); return result;
+        return publicationCompiler().nodes(topicId);
     }
 
     private JsonNode sharedSnapshot(Long memberId, Long topicId, Long activityId, Long nodeId) {
@@ -2557,6 +1746,11 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     }
     private Scope requireScope(Long memberId, Long topicId, Long activityId,boolean newUse) {
         if (sharedSnapshot(memberId, topicId, activityId, null) != null) throw new ServiceException("队伍共享局请使用本场共享命令", 409);
+        return currentScope(memberId, topicId, activityId, newUse);
+    }
+
+    /** The original scope/registration facts, without invoking the legacy shared snapshot refresh path. */
+    private Scope currentScope(Long memberId, Long topicId, Long activityId, boolean newUse) {
         if (memberId == null || memberId <= 0L || topicId == null || topicId <= 0L) throw new IllegalArgumentException("参数有误");
         CmsTopic topic = topicMapper.selectCmsTopicById(topicId);
         if (topic == null || Integer.valueOf(2).equals(topic.getDelFlag())) throw new IllegalArgumentException("主题不存在");
@@ -2686,8 +1880,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
                 ? TopicRouteState.LINEAR : TopicRouteState.BRANCH_GRAPH;
     }
     private TopicRouteEngine.State readEngineState(String json) {
-        try { return JSON.readValue(json, TopicRouteEngine.State.class); }
-        catch (Exception e) { throw new IllegalStateException("路线局状态不可用", e); }
+        return narrativeProgress.readEngineState(json);
     }
     private String write(Object value) { try { return JSON.writeValueAsString(value); }
         catch (Exception e) { throw new IllegalStateException("路线状态序列化失败", e); } }
@@ -3642,14 +2835,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
      * 全通过不同);空数组 = 不成立,不是无条件成立。
      */
     private boolean anyConditionPasses(JsonNode conditions, TopicRouteEngine.State state) {
-        if (conditions == null || !conditions.isArray() || conditions.size() == 0) return false;
-        ArrayNode single = JSON.createArrayNode();
-        for (JsonNode condition : conditions) {
-            single.removeAll();
-            single.add(condition);
-            if (engine.conditionsPass(single, state)) return true;
-        }
-        return false;
+        return narrativeProgress.anyConditionPasses(conditions, state);
     }
 
     /** mods[].when 按契约 v3 是单条 cond,路线图那套 conditionsPass 只吃数组,这里包一层。 */
@@ -3669,11 +2855,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     }
 
     private boolean conditionPasses(JsonNode condition, TopicRouteEngine.State state) {
-        if (condition == null || condition.isNull()) return true;
-        if (condition.isArray()) return anyConditionPasses(condition, state);
-        ArrayNode single = JSON.createArrayNode();
-        single.add(condition);
-        return engine.conditionsPass(single, state);
+        return narrativeProgress.conditionPasses(condition, state);
     }
 
     private JourneyRules.Tier tierOf(JourneyRules rules, String tier) {
@@ -3705,9 +2887,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
      * 主题里,思维阁的奖励等于不存在。只抬不降:取两者较大值。
      */
     private int luckMaxOf(TopicRouteEngine.State state, JourneyRules rules) {
-        int configured = rules.getLuck().getMax();
-        Number raised = state.getVariables().get(SYS_LUCK_MAX);
-        return raised == null ? configured : Math.max(configured, raised.intValue());
+        return narrativeProgress.luckMaxOf(state, rules);
     }
 
     /** 判据的真源在 {@link TopicRouteEngine.State#isExhausted()} —— Encounter 也用同一个。 */
@@ -3947,10 +3127,21 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     @Override
     public JsonNode nodeRuntimeConfig(Long memberId,Long topicId,Long nodeId,Long activityId) {
         JsonNode shared = sharedSnapshot(memberId, topicId, activityId, nodeId);
-        if (shared != null) return shared.path("nodeConfigs").get(String.valueOf(nodeId));
+        if (shared != null) { JsonNode config=shared.path("nodeConfigs").get(String.valueOf(nodeId)); return config==null?null:config.deepCopy(); }
         TopicRouteSession session=currentSession(memberId,topicId,activityId);
-        if(session==null || !themeConfig(session).isObject())return null;
-        return validator.readTree(session.getConfigSnapshotJson()).path("nodeConfigs").get(String.valueOf(nodeId));
+        if(session==null) {
+            JsonNode publication=queryNodeContentSnapshot(memberId,topicId,activityId,nodeId);
+            if(publication==null)return null;
+            NodeJourneySnapshot.answerFromSnapshot(publication,nodeId);
+            publication=NodeJourneySnapshot.nodeContentSource(publication,nodeId);
+            JsonNode config=publication.path("nodeConfigs").get(String.valueOf(nodeId));
+            return config==null?null:config.deepCopy();
+        }
+        JsonNode snapshot=validator.readTree(session.getConfigSnapshotJson());
+        // New original content also exists for non-generic legacy mechanics, without themeConfig.
+        if(!snapshot.path("themeConfig").isObject() && !NodeJourneySnapshot.hasContent(NodeJourneySnapshot.answerFromSnapshot(snapshot,nodeId)))return null;
+        JsonNode config=snapshot.path("nodeConfigs").get(String.valueOf(nodeId));
+        return config==null?null:config.deepCopy();
     }
 
     private void applyThemeRescue(TopicRouteSession session,TopicRouteEngine.State state,JourneyRules rules) {
@@ -3960,14 +3151,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         if(state.getThemeRuntime().path("finishAfterRescue").asBoolean()){state.getThemeRuntime().remove("finishAfterRescue");state.setStatus("COMPLETED");}
         String tag=rules.getRecovery().getExhaustTag();if(tag!=null && !tag.trim().isEmpty())state.getTags().add(tag);
     }
-    private void applySceneNodes(ObjectNode root,JsonNode frozen) {
-        frozen.path("nodeConfigs").fields().forEachRemaining(row->{
-            root.with("nodeConfigs").set(row.getKey(),row.getValue().deepCopy());
-            ObjectNode block=root.with(NodeJourneySnapshot.NODE_JOURNEY_KEY).with(row.getKey());
-            block.remove(java.util.Arrays.asList("requires","effects","check","mistakeTier",NodeJourneySnapshot.CHOICE_EFFECTS_KEY,NodeJourneySnapshot.PLAYABLES_KEY,NodeJourneySnapshot.BRANCH_OUTCOMES_KEY));
-            NodeJourneySnapshot.copyMechanicSegments(row.getValue(),block);
-        });
-    }
+
     @Override
     public Map<String,Object> themeCard(Long memberId,Long sessionId) {
         if(memberId==null || memberId<=0 || sessionId==null)throw new IllegalArgumentException("参数不正确");
@@ -4043,7 +3227,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         if (session == null) return JSON.createObjectNode().path("missing");
         return validator.readTree(session.getConfigSnapshotJson()).path("themeConfig");
     }
-    private boolean containsNode(JsonNode ids,Long id) {if(id==null)return false;for(JsonNode value:ids)if(value.asLong()==id)return true;return false;}
+    private boolean containsNode(JsonNode ids,Long id) { return TopicRoutePublicationCompiler.containsNode(ids, id); }
     private boolean chapterNodesDone(JsonNode binding,TopicRouteEngine.State state) {for(JsonNode id:binding.path("nodeIds"))if(!state.getCompletedNodeIds().contains(id.asLong()))return false;return true;}
     private boolean chapterReached(JsonNode binding,TopicRouteEngine.State state) {
         if(!binding.isObject() || binding.path("ending").asBoolean())return false;
@@ -4324,107 +3508,15 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     }
 
     public static ObjectNode gameplayChallengeSummary(JsonNode theme,TopicRouteEngine.State state) {
-        ObjectNode view=new GameplaySurvivalEngine().challengeView(theme,state);
-        int limit=view.path("limit").asInt(),count=state.getThemeRuntime().path("zeroChallenges").path("used").asInt();
-        GameplayToolState.usage(view,limit,count,"OWNER");
-        boolean passed=false;
-        for(JsonNode submission:state.getThemeRuntime().path("challenge").path("submissions"))if(submission.path("receipt").path("success").asBoolean())passed=true;
-        Reason reason=count>=limit?Reason.CHALLENGE_LIMIT:!state.getThemeRuntime().path("awaitingChallenge").asBoolean()?Reason.RULE_BLOCKED:null;
-        return GameplayToolState.availability(view,reason,passed);
+        return GameplayActionProjection.gameplayChallengeSummary(theme, state);
     }
     /** 供个人与共享局复用的动作摘要；归属和可用性须由调用方先按真实当前局判断。 */
     public static ObjectNode gameplayActionSummary(JsonNode theme,JourneyRules rules,TopicRouteEngine.State ownerState,
                                                    TopicRouteEngine.State worldState,String operation,String contentId) {
-        ObjectNode summary=JSON.createObjectNode(),costs=summary.putObject("costs");
-        JsonNode game=theme.path("gameplayRuntime"),content=null,facility=null;
-        boolean quest=operation.startsWith("QUEST_") || "GAMEPLAY_PREVIEW".equals(operation);
-        if(quest)for(JsonNode row:game.path("quests"))if(contentId.equals(row.path("questKey").asText()))content=row;
-        if(quest && content!=null && content.has("facilityKey"))for(JsonNode row:game.path("facilities"))if(content.path("facilityKey").asText().equals(row.path("facilityKey").asText()))facility=row;
-        if("FACILITY_USE".equals(operation) || "OPERATION_START".equals(operation) || "OPERATION_CANCEL".equals(operation))for(JsonNode row:game.path("facilities"))if(contentId.equals(row.path("facilityKey").asText()))content=row;
-        if("RECOVER".equals(operation))for(JsonNode row:game.path("survival").path("recoveries"))if(contentId.equals(row.path("recoveryKey").asText()))content=row;
-        if(operation.startsWith("PLAN_") || "PLAN".equals(operation))for(JsonNode row:game.path("plans"))if(contentId.equals(row.path("endingKey").asText()))content=row;
-        if(content==null)return JSON.createObjectNode();
-        if(!operation.endsWith("CANCEL")) {addActionCosts(costs,content);if(facility!=null)addActionCosts(costs,facility);}
-        JsonNode optional=content.has("costOptions")?content:facility!=null && facility.has("costOptions")?facility:null;
-        if(optional!=null) {
-            ArrayNode options=summary.putArray("costOptions");
-            for(JsonNode option:optional.path("costOptions")) {
-                ObjectNode row=option.deepCopy(),fees=costs.deepCopy();addActionCosts(fees,option);
-                boolean affordable=true;
-                try {new ThemeRuntimeEngine().settle(theme,ownerState.copy(),rules,"preview:costOption",fees,JSON.createArrayNode());}
-                catch(IllegalArgumentException|IllegalStateException unavailable){affordable=false;}
-                row.put("affordable",affordable);row.set("shortfall",affordable?JSON.createArrayNode():gameplayCostShortfall(theme,rules,ownerState,fees));options.add(row);
-            }
-        }
-        summary.put("scope",facility!=null?facility.path("scope").asText("OWNER"):content.path("scope").asText("OWNER"));
-        summary.put("targetScope",facility!=null?facility.path("targetScope").asText("OWNER"):content.path("targetScope").asText("OWNER"));
-        if(quest) {
-            GameplayToolState.usage(summary,1,ownerState.getThemeRuntime().path("gameplay").path("slots").has(content.path("settlementSlot").asText())?1:0,"OWNER");
-            if(facility!=null)summary.set("facility",facilityActionSummary(facility,ownerState,worldState));
-            if(!operation.endsWith("CANCEL"))summary.put("paymentOperation","QUEST_RESOLVE");
-        } else if("RECOVER".equals(operation))GameplayToolState.usage(summary,content.path("limit").asInt(),ownerState.getThemeRuntime().path("recoveries").path(contentId).asInt(),"OWNER");
-        else if(operation.startsWith("PLAN_") || "PLAN".equals(operation)) {
-            summary.put("scope","WORLD").put("targetScope","PARTICIPANTS").put("limit",1).put("remainingCount",worldState!=null && worldState.getThemeRuntime().path("cooperation").path("executedPlans").has(contentId)?0:1);
-            GameplayToolState.usage(summary,1,summary.path("remainingCount").asInt()==0?1:0,"WORLD");
-            if(content.path("materialCost").isArray())costs.set("resourceCosts",content.path("materialCost").deepCopy());
-            summary.put("paymentOperation","PLAN_EXECUTE");
-        } else {
-            ObjectNode usage=facilityActionSummary(content,ownerState,worldState);summary.setAll(usage);
-            if(!operation.endsWith("CANCEL"))summary.put("paymentOperation","FACILITY_USE");
-        }
-        Reason reason=summary.path("remainingCount").asInt()==0 || summary.has("facility") && summary.path("facility").path("remainingCount").asInt()==0?Reason.LIMIT_REACHED:null;
-        boolean affordable=true;
-        if(optional!=null) {
-            affordable=false;for(JsonNode option:summary.path("costOptions"))if(option.path("affordable").asBoolean())affordable=true;
-        } else if(!operation.startsWith("PLAN") && !operation.endsWith("CANCEL"))try {
-            new ThemeRuntimeEngine().settle(theme,ownerState.copy(),rules,"view:costs",costs,JSON.createArrayNode());
-        } catch(IllegalArgumentException|IllegalStateException unavailable) {affordable=false;}
-        if(reason==null && !affordable)reason=Reason.INSUFFICIENT_RESOURCES;
-        if(reason==Reason.INSUFFICIENT_RESOURCES && "FACILITY_USE".equals(operation) && "OWNER".equals(content.path("targetScope").asText())
-                && new GameplayCooperationEngine().facilityRecoveryNoEffect(theme,rules,ownerState,content,Collections.singletonList(ownerState)))reason=null;
-        if(summary.has("facilityKey") && "PARTICIPANTS".equals(summary.path("targetScope").asText())) {
-            summary.putArray("participantCatalog");summary.put("payerRequired",true);
-        }
-        GameplayToolState.availability(summary,reason,false);
-        JourneyInitialState.redactHidden(rules,summary);return summary;
-    }
-    private static ObjectNode facilityActionSummary(JsonNode facility,TopicRouteEngine.State ownerState,TopicRouteEngine.State worldState) {
-        TopicRouteEngine.State countState="WORLD".equals(facility.path("scope").asText())?worldState:ownerState;
-        int count=countState==null?0:countState.getThemeRuntime().path("cooperation").path("facilities").path(facility.path("settlementSlot").asText()).path("count").asInt();
-        ObjectNode view=JSON.createObjectNode().put("facilityKey",facility.path("facilityKey").asText()).put("scope",facility.path("scope").asText()).put("targetScope",facility.path("targetScope").asText());
-        GameplayToolState.usage(view,facility.path("limit").asInt(),count,facility.path("scope").asText("OWNER"));
-        return GameplayToolState.availability(view,count>=facility.path("limit").asInt()?Reason.LIMIT_REACHED:null,false);
+        return GameplayActionProjection.gameplayActionSummary(theme, rules, ownerState, worldState, operation, contentId);
     }
     public static ArrayNode gameplayCostShortfall(JsonNode theme,JourneyRules rules,TopicRouteEngine.State state,JsonNode costs) {
-        ArrayNode missing=JSON.createArrayNode();ThemeRuntimeEngine inventory=new ThemeRuntimeEngine();TopicRouteEngine.State available=state.copy();
-        ObjectNode materials=JSON.createObjectNode();ArrayNode paid=materials.putArray("resourceCosts");
-        for(JsonNode row:costs.path("resourceCosts")) {
-            String key=row.path("itemId").asText();int held=state.getThemeRuntime().path("inventory").path(key).asInt(),needed=row.path("quantity").asInt();
-            if(needed>held)missing.addObject().put("type","ITEM").put("key",key).put("missing",needed-held);
-            if(Math.min(held,needed)>0)paid.addObject().put("itemId",key).put("quantity",Math.min(held,needed));
-        }
-        if(!paid.isEmpty())inventory.settle(theme,available,rules,"preview:costOption:materials",materials,JSON.createArrayNode());
-        Map<String,Integer> stats=new LinkedHashMap<>();stats.put("sys.hp",costs.path("hpCost").asInt());stats.put("sys.luck",costs.path("luckCost").asInt());
-        for(JsonNode row:costs.path("statCosts"))stats.put(row.path("statKey").asText(),row.path("amount").asInt());
-        for(Map.Entry<String,Integer> entry:stats.entrySet())if(entry.getValue()>0) {
-            String key=entry.getKey();int min=key.startsWith("sys.")?0:JourneyInitialState.numericAttribute(rules,key).path("min").asInt();
-            if(!key.startsWith("sys.") && !JourneyInitialState.numericAttribute(rules,key).path("visible").asBoolean(true))continue;
-            long deficit=(long)inventory.reduceStatCost(theme,available,key,entry.getValue())-JourneyInitialState.numericValue(available,key)+min;
-            if(deficit>0)missing.addObject().put("type","STAT").put("key",key).put("missing",deficit);
-        }
-        long actions=((Number)state.getVariables().getOrDefault("sys.actions",0)).longValue()+costs.path("actionCost").asInt()-theme.path("actionLimit").asInt();
-        if(theme.has("actionLimit") && actions>0)missing.addObject().put("type","STAT").put("key","sys.actions").put("missing",actions);
-        return missing;
-    }
-    private static void addActionCosts(ObjectNode costs,JsonNode source) {
-        for(String field:Arrays.asList("hpCost","luckCost","actionCost"))if(source.has(field))costs.put(field,costs.path(field).asInt()+source.path(field).asInt());
-        for(String field:Arrays.asList("statCosts","resourceCosts")) {
-            if(!source.path(field).isArray())continue;
-            String key="statCosts".equals(field)?"statKey":"itemId",value="statCosts".equals(field)?"amount":"quantity";
-            Map<String,Integer> totals=new LinkedHashMap<>();for(JsonNode row:costs.path(field))totals.put(row.path(key).asText(),row.path(value).asInt());
-            for(JsonNode row:source.path(field))totals.put(row.path(key).asText(),totals.getOrDefault(row.path(key).asText(),0)+row.path(value).asInt());
-            ArrayNode result=costs.putArray(field);totals.forEach((id,amount)->result.addObject().put(key,id).put(value,amount));
-        }
+        return GameplayActionProjection.gameplayCostShortfall(theme, rules, state, costs);
     }
 
     @Override
@@ -4479,6 +3571,11 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         return state.getThemeRuntime().path("gameplay").path("arrivals").path(String.valueOf(nodeId)).asBoolean(false);
     }
 
+    private String routeIntentFingerprint(Object fields) {
+        try { return java.util.HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(write(fields).getBytes(StandardCharsets.UTF_8))); }
+        catch(NoSuchAlgorithmException impossible) { throw new IllegalStateException("动作摘要算法不可用",impossible); }
+    }
+
     @Override
     @Transactional(isolation=Isolation.READ_COMMITTED,rollbackFor=Exception.class)
     public Map<String,Object> recordPlayerArrival(Long memberId,Long topicId,Long activityId,Long nodeId,String actionId,Integer expectedVersion) {return recordPlayerArrival(memberId,topicId,activityId,nodeId,actionId,expectedVersion,"SCAN");}
@@ -4486,24 +3583,31 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     @Transactional(isolation=Isolation.READ_COMMITTED,rollbackFor=Exception.class)
     public Map<String,Object> recordPlayerArrival(Long memberId,Long topicId,Long activityId,Long nodeId,String actionId,Integer expectedVersion,String kind) {
         if(!Arrays.asList("SCAN","GPS","ANSWER").contains(kind))throw new IllegalArgumentException("到达来源不支持");
+        if(actionId==null || !actionId.matches("[A-Za-z0-9:_-]{1,80}") || expectedVersion==null || expectedVersion<0 || nodeId==null || nodeId<=0)throw new IllegalArgumentException("必须提供到达动作标识、目标和期望版本");
         requireScope(memberId,topicId,activityId);
         TopicRouteSession session=currentSession(memberId,topicId,activityId);
-        if(!genericPlayer(session) || !Integer.valueOf(TopicRouteSession.STATUS_RUNNING).equals(session.getStatus()))throw new ServiceException("本局不是运行中的通用个人局",409);
-        String key="arrival:"+kind+":"+(actionId==null?java.util.UUID.randomUUID().toString():actionId);
-        if(!key.matches("[A-Za-z0-9:_-]{1,96}"))throw new IllegalArgumentException("扫码动作标识不正确");
+        if(!genericPlayer(session))throw new ServiceException("本局不是通用个人局",409);
+        String key="arrival:"+actionId;
+        String receiptId="arrival-receipt:"+routeIntentFingerprint(Arrays.asList("arrival:v2",key,kind,nodeId,expectedVersion));
         TopicRouteAction replay=routeMapper.selectActionByAction(session.getId(),memberId,key);
-        if(replay!=null){if(!nodeId.equals(replay.getNodeId()))throw new ServiceException("动作标识已用于其他站点",409);return JSON.convertValue(validator.readTree(replay.getResponseJson()),new TypeReference<Map<String,Object>>(){});}
-        if(expectedVersion!=null && !expectedVersion.equals(session.getVersion()))throw new ServiceException("本局已更新，请刷新",409);
+        if(replay!=null){if(!receiptId.equals(replay.getReceiptId()))throw new ServiceException("动作标识已用于其他输入",409);return JSON.convertValue(validator.readTree(replay.getResponseJson()),new TypeReference<Map<String,Object>>(){});}
+        for(String legacyKind:Arrays.asList("SCAN","GPS","ANSWER")) {
+            if(routeMapper.selectActionByAction(session.getId(),memberId,"arrival:"+legacyKind+":"+actionId)!=null)throw new ServiceException("历史到达身份缺少原版本指纹，请核对原回执",409);
+        }
+        if(!Integer.valueOf(TopicRouteSession.STATUS_RUNNING).equals(session.getStatus()))throw new ServiceException("本局已结束",409);
+        if(!expectedVersion.equals(session.getVersion()))throw new ServiceException("本局已更新，请刷新",409);
         if(!canPlay(memberId,topicId,activityId,nodeId,actionId))throw new ServiceException("该站当前不可到达",409);
         TopicRouteEngine.State state=readEngineState(session.getStateJson());state.getThemeRuntime().with("gameplay").with("arrivals").put(String.valueOf(nodeId),true);
         state.getThemeRuntime().with("gameplay").with("arrivalFacts").putObject(String.valueOf(nodeId)).put("kind",kind).put("receiptId",key).put("arrivedAt",clock.millis());bindBasicCompletion(session,state,nodeId);
-        TopicRouteAction action=new TopicRouteAction();action.setSessionId(session.getId());action.setMemberId(memberId);action.setNodeId(nodeId);action.setActionId(key);action.setReceiptId(key);action.setOutcomeCode("TASK_ARRIVAL");action.setResponseJson("{}");action.setCreateTime(new Date(clock.millis()));
+        TopicRouteAction action=new TopicRouteAction();action.setSessionId(session.getId());action.setMemberId(memberId);action.setNodeId(nodeId);action.setActionId(key);action.setReceiptId(receiptId);action.setOutcomeCode("TASK_ARRIVAL");action.setResponseJson("{}");action.setCreateTime(new Date(clock.millis()));
         try {if(routeMapper.insertAction(action)!=1)throw new IllegalStateException("扫码回执登记失败");}
-        catch(DuplicateKeyException duplicate){TopicRouteAction winner=routeMapper.selectActionByAction(session.getId(),memberId,key);if(winner==null || !nodeId.equals(winner.getNodeId()))throw new ServiceException("动作标识已用于其他站点",409);return JSON.convertValue(validator.readTree(winner.getResponseJson()),new TypeReference<Map<String,Object>>(){});}
+        catch(DuplicateKeyException duplicate){TopicRouteAction winner=routeMapper.selectActionByAction(session.getId(),memberId,key);if(winner==null || !receiptId.equals(winner.getReceiptId()))throw new ServiceException("动作标识已用于其他输入",409);return JSON.convertValue(validator.readTree(winner.getResponseJson()),new TypeReference<Map<String,Object>>(){});}
         Integer version=session.getVersion();session.setStateJson(write(state));session.setUpdateTime(new Date(clock.millis()));
         if(routeMapper.updateStateCas(session)!=1)throw new ServiceException("本局已更新，请刷新",409);
         session.setVersion(version+1);Map<String,Object> view=themeViewOf(session);
-        if(routeMapper.updateActionResponse(action.getId(),write(view))!=1)throw new IllegalStateException("扫码回执保存失败");return view;
+        String savedResponse=write(view);
+        if(routeMapper.updateActionResponse(action.getId(),savedResponse)!=1)throw new IllegalStateException("扫码回执保存失败");
+        return JSON.convertValue(validator.readTree(savedResponse),new TypeReference<Map<String,Object>>(){});
     }
 
     @Override
@@ -4578,7 +3682,8 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         TopicRouteSession session=routeMapper.selectAccessibleById(sessionId,memberId);
         if(session==null)throw new ServiceException("本局不存在或无权操作",403);
         if(!genericPlayer(session))throw new ServiceException("本局不是通用个人局",409);
-        String key="gameplay:"+actionId,receiptId="gameplay-receipt:"+shortHash(key+":"+operation+":"+contentId+":"+choiceKey+":"+discardRewards+":"+previewVersion+(costOption==null?"":":"+costOption)+(weRun==null?"":":"+shortHash(weRun.toString())));
+        if(version==null || version<0)throw new IllegalArgumentException("必须提供期望版本");
+        String key="gameplay:"+actionId,receiptId="gameplay-receipt:"+routeIntentFingerprint(Arrays.asList("gameplay:v2",key,version,operation,contentId,choiceKey,discardRewards,previewVersion,costOption,weRun));
         TopicRouteAction replay=routeMapper.selectActionByAction(sessionId,memberId,key);
         if(replay!=null){if(!receiptId.equals(replay.getReceiptId()))throw new ServiceException("动作标识已用于其他操作",409);return JSON.convertValue(validator.readTree(replay.getResponseJson()),new TypeReference<Map<String,Object>>(){});}
         requireScope(memberId,session.getTopicId(),session.getActivityId());
@@ -4664,7 +3769,9 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         if (scoreActive) orientRouteSettlement.complete(session, state);
         session.setVersion(version+1);Map<String,Object> view=themeViewOf(session);
         JourneyInitialState.redactHidden(rules,result);view.put("settlement",JSON.convertValue(result,new TypeReference<Map<String,Object>>(){}));
-        if(routeMapper.updateActionResponse(action.getId(),write(view))!=1)throw new IllegalStateException("动作回执保存失败");return view;
+        String savedResponse=write(view);
+        if(routeMapper.updateActionResponse(action.getId(),savedResponse)!=1)throw new IllegalStateException("动作回执保存失败");
+        return JSON.convertValue(validator.readTree(savedResponse),new TypeReference<Map<String,Object>>(){});
     }
 
     @Override
@@ -4679,8 +3786,9 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         TopicRouteSession session=routeMapper.selectAccessibleById(sessionId,memberId);
         if(session==null)throw new ServiceException("本局不存在或无权操作",403);
         if (operation == null || !java.util.Arrays.asList("USE","DISCARD","RECEIVE","END","RESCUE","CHAPTER_START","CHAPTER_END").contains(operation) || (!"END".equals(operation) && !"RESCUE".equals(operation) && (contentId == null || contentId.length() > 96))) throw new IllegalArgumentException("动作参数不正确");
+        if(version==null || version<0)throw new IllegalArgumentException("必须提供期望版本");
         String key="theme:"+actionId;
-        String receiptId="theme-receipt:"+shortHash(key+":"+operation+":"+contentId+(discardOwned==null?"":":"+discardOwned));
+        String receiptId="theme-receipt:"+routeIntentFingerprint(Arrays.asList("theme:v2",key,version,operation,contentId,discardOwned));
         TopicRouteAction replay=routeMapper.selectActionByAction(sessionId,memberId,key);
         if(replay!=null){
             if(!operation.equals(replay.getOutcomeCode()) || !receiptId.equals(replay.getReceiptId())) throw new ServiceException("动作标识已用于其他操作",409);
@@ -4765,7 +3873,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         boolean branch = TopicRouteState.BRANCH_GRAPH.equals(routeMode(scope));
         Set<Long> replayNodes = new LinkedHashSet<Long>(); for(CmsTopicNode n:liveNodes)replayNodes.add(n.getId());
         int index=routeMapper.countRuns(previous.getActivityId(),previous.getTopicId(),memberId);
-        JourneyTemplateProbe replayProbe=new JourneyTemplateProbe(liveNodes);
+        JourneyTemplateProbe replayProbe=publicationCompiler().probe(liveNodes);
         JsonNode published = scope.topic.getPublishedRouteGraphJson() == null ? null : validator.readTree(scope.topic.getPublishedRouteGraphJson());
         String snapshot = published != null && published.path("runtimeSnapshotVersion").asInt() == 1
                 ? freezeJourney(published.toString(), scope.topic, liveNodes, replayProbe.configs(), replayProbe.templatesById(), index)
@@ -4815,57 +3923,6 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
             this.memberId = memberId; this.activityId = activityId; this.topic = topic;
             this.registrations = registrations;
         }
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public JsonNode queryNodeContentSnapshot(Long memberId, Long topicId, Long activityId, Long nodeId) {
-        if (memberId == null || memberId <= 0L || topicId == null || topicId <= 0L
-                || nodeId != null && nodeId <= 0L) return null;
-        JsonNode shared = gameSessionRuntimeService == null ? null
-                : gameSessionRuntimeService.querySharedRouteSnapshot(memberId, topicId, activityId, nodeId);
-        if (shared != null) return shared;
-        TopicRouteSession session = currentScopedSession(memberId, topicId, activityId);
-        if (session != null) {
-            if (!memberId.equals(session.getMemberId())) throw new IllegalStateException("本局内容归属不可用");
-            // An old existing run is never filled from a newer publication.
-            JsonNode snapshot = session.getConfigSnapshotJson() == null ? JSON.createObjectNode()
-                    : validator.readTree(session.getConfigSnapshotJson()).deepCopy();
-            NodeJourneySnapshot.requireContentSnapshot(snapshot);
-            if (snapshot.isObject()) {
-                ((ObjectNode) snapshot).remove(java.util.Arrays.asList("gameSessionId", "teamId", "authorityEpoch", "runtimeInstance"));
-                ((ObjectNode) snapshot).put("contentRouteSessionId", session.getId());
-                if (NodeJourneySnapshot.hasContentSnapshots(snapshot))
-                    ((ObjectNode) snapshot).set("contentTags", JSON.valueToTree(readEngineState(session.getStateJson()).getTags()));
-            }
-            if (nodeId != null) {
-                JsonNode answer = NodeJourneySnapshot.answerFromSnapshot(snapshot, nodeId);
-                if (NodeJourneySnapshot.hasContent(answer)
-                        && (answer.path("nodePresentation").path("id").asLong() != nodeId
-                        || answer.path("nodePresentation").path("topicId").asLong() != topicId))
-                    throw new IllegalStateException("本局内容归属不可用");
-            }
-            return snapshot;
-        }
-        JsonNode publication=publishedContentSnapshot(topicId);
-        JsonNode games=advancedGameRuntimeService == null ? null
-                : advancedGameRuntimeService.queryDefaultNodeContents(memberId,activityId,topicId);
-        if (games == null || games.isEmpty()) return publication;
-        ObjectNode content=publication == null ? JSON.createObjectNode() : (ObjectNode) publication.deepCopy();
-        content.set("originalNodeGames",games.deepCopy());
-        return content;
-    }
-
-    private JsonNode publishedContentSnapshot(Long topicId) {
-        CmsTopic topic = topicMapper.selectCmsTopicById(topicId);
-        if (topic == null || topic.getPublishedConfigVersion() == null || topic.getPublishedConfigVersion() <= 0L
-                || topic.getPublishedRouteGraphJson() == null || topic.getPublishedRouteGraphJson().trim().isEmpty()) return null;
-        JsonNode snapshot = validator.readTree(topic.getPublishedRouteGraphJson());
-        if (!NodeJourneySnapshot.hasContentSnapshots(snapshot)) return null;
-        NodeJourneySnapshot.requireContentSnapshot(snapshot);
-        ObjectNode copy = (ObjectNode) snapshot.deepCopy();
-        copy.remove(java.util.Arrays.asList("contentRouteSessionId", "contentTags", "gameSessionId", "teamId", "authorityEpoch", "runtimeInstance"));
-        return copy;
     }
 
 }

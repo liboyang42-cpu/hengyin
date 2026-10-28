@@ -1,0 +1,11 @@
+test_candidate_cannot_self_approve_foreign_mapper_or_scope_consumer (ci.architecture.test_gate.StationFulfillmentTechnicalOwnerTest.test_candidate_cannot_self_approve_foreign_mapper_or_scope_consumer) ... architecture gate FAIL-CLOSED: POLICY_CHANGE: candidate changed trusted policy: ci/architecture/owners.json
+architecture gate FAIL-CLOSED: POLICY_CHANGE: candidate changed trusted policy: ci/architecture/owners.json
+ok
+test_exact_source_boundaries_are_registered_without_inventing_managed_services (ci.architecture.test_gate.StationFulfillmentTechnicalOwnerTest.test_exact_source_boundaries_are_registered_without_inventing_managed_services) ... ok
+test_exact_two_mapper_three_scope_and_four_record_consumers_do_not_expand_business_permissions (ci.architecture.test_gate.StationFulfillmentTechnicalOwnerTest.test_exact_two_mapper_three_scope_and_four_record_consumers_do_not_expand_business_permissions) ... ok
+test_existing_compiled_reference_rules_restrict_leafs_consumers_backrefs_and_keep_missing_graph_unknown (ci.architecture.test_gate.StationFulfillmentTechnicalOwnerTest.test_existing_compiled_reference_rules_restrict_leafs_consumers_backrefs_and_keep_missing_graph_unknown) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.363s
+
+OK

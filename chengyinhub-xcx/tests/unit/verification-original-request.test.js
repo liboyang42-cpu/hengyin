@@ -56,12 +56,27 @@ test('late old callback cannot remove a newer attempt after exact confirmation',
   h.workflow.run(key, done => { oldDone = done; }, () => assert.fail('stale callback'));
   const old = h.workflow.pendingRequest(key).requestId;
   assert.equal(h.workflow.confirmRequest(key, old), true);
-  h.workflow.run(key, done => done({ status: 'unknown' }), () => {});
+  let replacement;
+  assert.equal(h.workflow.run(key, (done, identity) => { replacement = identity.requestId; done({ status: 'unknown' }); }, () => {}), true);
   const current = h.workflow.pendingRequest(key).requestId;
+  assert.equal(replacement, current);
   assert.notEqual(current, old);
   oldDone({ status: 'success' });
+  oldDone({ status: 'failed' });
   assert.equal(h.workflow.pendingRequest(key).requestId, current);
   assert.equal(h.workflow.isBusy(key), true);
+});
+
+test('exact confirmation retires callback before synchronous abort can settle a replacement', () => {
+  const h = fixture(); let oldDone, aborted = 0;
+  h.workflow.run(key, done => { oldDone = done; return { abort() { aborted++; oldDone({ status: 'success' }); } }; },
+    () => assert.fail('confirmed original callback must be retired'));
+  const old = h.workflow.pendingRequest(key).requestId;
+  assert.equal(h.workflow.confirmRequest(key, old), true); assert.equal(aborted, 1);
+  assert.equal(h.workflow.run(key, done => done({ status: 'unknown' }), () => {}), true);
+  const current = h.workflow.pendingRequest(key).requestId;
+  assert.notEqual(current, old); oldDone({ status: 'success' });
+  assert.equal(h.workflow.pendingRequest(key).requestId, current); assert.equal(h.workflow.isBusy(key), true);
 });
 
 test('storage failure keeps the exact pending record and lock', () => {

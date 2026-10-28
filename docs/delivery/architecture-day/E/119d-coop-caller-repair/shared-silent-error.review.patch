@@ -1,0 +1,13 @@
+diff --git a/ci/silent-error-allowlist.txt b/ci/silent-error-allowlist.txt
+index 4909b9fec08134014d61b97a005af8074f89759c..70c6c3cbbc05ae53b774c81f6a237adc57ba366a 100644
+--- a/ci/silent-error-allowlist.txt
++++ b/ci/silent-error-allowlist.txt
+@@ -64,7 +64,7 @@ chengyinhub-xcx/pages/activity/official-mine/index.js 1  # UNREVIEWED_BASELINE_2
+ chengyinhub-xcx/pages/address/address.js 1  # UNREVIEWED_BASELINE_20260818:1 存量未审查,禁止新增
+ chengyinhub-xcx/pages/club/detail/index.js 6  # UNREVIEWED_BASELINE_20260818:7 存量未审查,禁止新增(2026-08-26:旧场次创建调用迁入 event-ops,申报 7→6,冻结数不动)
+ chengyinhub-xcx/pages/club/detail/index.js 0  # 游戏导演旧场次加载调用已迁入 event-ops；保留清零收据
+-chengyinhub-xcx/pages/coop/invite/index.js 3  # UNREVIEWED_BASELINE_20260818:4 存量未审查,禁止新增(2026-08-19:本线删掉了 /api/topic/info-to-user 那一处,申报 4→3;冻结数不动 —— 它是 BASELINE_TOTAL 的加数,且额度只许往下走)
++chengyinhub-xcx/pages/coop/invite/index.js 5  # REVIEWED_20261025_E: 原3处主题/对象列表错误态保留；新增owner主题类型分页读取→supplyTopicError+retrySupplyTopic、同主题目标商家站点GET→item.supplyError+retrySupplyStations；均有cy-error显式反馈/原session+epoch围栏，避免全局重复toast；仅此页精确5处
+ chengyinhub-xcx/pages/coop/list/index.js 1  # 2026-09-07 合作池整块删除(用户拍板)后,这一档存量从 2 减到 1;剩下那处是 /api/coop/list 协作邀请列表,失败由页内 listState/listErrorKind 承接并给重试
+ chengyinhub-xcx/pages/coop/list/index.js 1  # 2026-09-05 官方邀约拉取:失败时页面用 officialInvitesError 显式出错并给重试,silentError 只压全局 toast
+ chengyinhub-xcx/pages/coop/nearby/index.js 2  # UNREVIEWED_BASELINE_20260818:2 存量未审查,禁止新增

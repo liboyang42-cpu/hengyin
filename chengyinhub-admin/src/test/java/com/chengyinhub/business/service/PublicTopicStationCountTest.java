@@ -3,7 +3,7 @@ package com.chengyinhub.business.service;
 import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.mapper.CmsTopicMapper;
 import com.chengyinhub.business.mapper.CmsTopicNodeMapper;
-import com.chengyinhub.business.service.impl.CmsTopicServiceImpl;
+import com.chengyinhub.business.service.impl.TopicQueryService;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -16,11 +16,7 @@ import static org.mockito.Mockito.*;
 class PublicTopicStationCountTest {
     @Test
     void publicCardsUseCurrentVisibleNodesInsteadOfSavedSnapshot() throws Exception {
-        CmsTopicServiceImpl service = new CmsTopicServiceImpl();
-        org.springframework.test.util.ReflectionTestUtils.setField(service, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
-                invocation -> "lockTopic".equals(invocation.getMethod().getName())
-                        ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(service, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
-                        : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
+        TopicQueryService service = new TopicQueryService();
         CmsTopicMapper topics = mock(CmsTopicMapper.class);
         CmsTopicNodeMapper nodes = mock(CmsTopicNodeMapper.class);
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topics);

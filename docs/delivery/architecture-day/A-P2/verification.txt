@@ -1,0 +1,37 @@
+2026-10-23T20:10:25.277650+00:00
+SCOPE: lightweight source/static checks only; no Java/backend/DB/CI execution
+COMMAND: python3 docs/delivery/architecture-day/A-P2/verify-static.py
+PASS SOURCE: recovery locks original before channel I/O; DEBIT-only takes existing manual path with no channel/fact/credit write
+PASS SOURCE: strict refund/intent/channel gates unchanged; old UNKNOWN is not classified as local-only
+PASS SOURCE NEGATIVE CONTROL: removing recovery call restores query/UNKNOWN before any local-only classification
+PASS SOURCE: exactly nine channel-query fixtures gain SUBMIT_INTENT; original assertions/manual DEBIT-only fixtures unchanged
+ADAPTED METHOD: sync_success_marksSuccess
+ADAPTED METHOD: sync_success_capturesWechatDetailId
+ADAPTED METHOD: sync_fail_claimThenRefundOnce
+ADAPTED METHOD: sync_fail_capturesChannelErrorCode
+ADAPTED METHOD: sync_fail_lostClaim_noRefund
+ADAPTED METHOD: sync_fail_refundClaimLost_failsClosedAndAlarms
+ADAPTED METHOD: sync_fail_refundThrows_manualAndAlarm
+ADAPTED METHOD: sync_unknown_staysProcessing_noRefund
+ADAPTED METHOD: sync_stuckTooLong_escalatesToManual
+NOT RUN: CashWithdrawFundEvidenceTest.java @Test count=24
+NOT RUN: CashWithdrawFundEvidenceMySqlIT.java @Test count=23
+PASS SOURCE: root displaySnapshot fixture correction retained; committed-debit process-exit injection and same-original races present
+PASS SOURCE: only five scoped Java files and A-P2 docs changed; frozen A/WP12 worktrees unchanged; diff check passed
+NOT RUN: Java compilation/tests, real MySQL/Redis/backend/channel integration, CI dispatch; no DDL executed
+COMMAND: python3 docs/delivery/architecture-day/A/validate-static.py
+PASS: Mapper XML well-formed; 25 statement IDs match Java interface; fact properties mapped
+PASS: no fact UPDATE/DELETE statements; generic receipt writer cannot replace evidence pointers
+PASS: B/shared production/CI and existing migrations unchanged; only the new authorized schema candidate allowed
+PASS: seven bank/freeze/bounty/points methods remain byte-for-byte unchanged
+PASS: dedicated new tests contain no conditional skip or H2 fallback
+NOT RUN: Java compilation/unit tests, H2 tests, MySQL tests, Redis/backend/WeChat integration
+COMMAND: python3 ci/secret-file-gate.py
+SECRET-FILE-GATE PASS: 当前 Git tree 无密钥/证书文件或私钥正文
+COMMAND: git diff --check 3bc4bb08caaba4cc300f2df25f90c4a070033bfc
+(no output; exit 0)
+PASS: changed tracked/untracked candidate files pass project secret-file gate and known-credential pattern scan
+LIMIT: no gitleaks executable/full entropy or history scan
+EXTERNAL STATUS (coordinator supplied, not executed/read by A): run40015838344 compiled production/tests; A19 all failed BeforeEach due Mockito fixture; no business assertion result
+NOT RUN: new Java compilation/unit/MySQL tests; Redis/backend/WeChat integration; CI dispatch
+NO ACTION: DDL execution, real transfer, merge/deploy/master push

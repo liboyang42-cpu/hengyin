@@ -1,0 +1,93 @@
+{
+  "base": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+  "files": [
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CashWithdrawAdminController.java",
+      "sha256": "3e901e9d8777fbd529101db064cd040e5f81590635243bc239d999fe54c6b7a8"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_21MySqlIT.java",
+      "sha256": "daf45b56607aed641a672213cb90c1c47a205b601b9afe031ac5107c308de5ce"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_21Test.java",
+      "sha256": "c3d137ac4319c724e849521024fadfae371b226cec4dbd57a4fb899193258b34"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_22Test.java",
+      "sha256": "15d004d9fb23039af2021ed1ebe6a667a80b07c7501a3ac50e2f26c5e261cc65"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/BothWithdrawalLegsRejectPlayerCooldownTest.java",
+      "sha256": "2abe73cc90cfe03b42d0039d6b9ff46e3aaabd4a59aca73a3c351bfd46c8012c"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CashWithdrawFrozenRequeryH2Test.java",
+      "sha256": "918234afe5946c9486e975339017d0276fffd536436cdfed42e51138bf9eeea2"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CashWithdrawStateMachineTest.java",
+      "sha256": "45b46dae42856aa1b362e2e70c3799a08ddde5ad831dcf90b24d23cde1bbd782"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/FundIdempotencyConcurrencyTest.java",
+      "sha256": "e6458983b35a282b0ad32edf26d77624a45b05744f341ad000a021165b5e5217"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CashWithdrawEvidenceFixture.java",
+      "sha256": "bb07d036810b557d89e4448404346ec634f02fd934136f229bf87e0d9c86dc2d"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CashWithdrawFundEvidenceMySqlIT.java",
+      "sha256": "0002caf8aeae7e1bbb8fca30443daf97d27f0d156efc7dba2a9b3fbb5ed56e4a"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CashWithdrawFundEvidenceTest.java",
+      "sha256": "1305f09aaa775a35a886d4ffee509639cf7e2f586afb54a16aee28d54fbfcd0d"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CashWithdrawServiceTest.java",
+      "sha256": "847275220782019379540ce624e7d8352e56697ee34429bdf8afa49d7ff679d2"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/business/CashWithdrawAdminControllerSafetyTest.java",
+      "sha256": "e291d1edb57eeb1cea65ebcd50b1215cabcd13136137d171705316a37eb07f06"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/resources/architecture-day-a-fixture.sql",
+      "sha256": "89968b001565b04aebc1689e5e1dc0587f0c508aca13b722d6aeb383933f74b1"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/CashWithdrawFundFact.java",
+      "sha256": "19ebc460c902795d83342d978e65e1847ea7b4d38ade7c8c6ef8abb0bc04ca5b"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/MemberCashWithdrawMapper.java",
+      "sha256": "3400e88caf2c9e926db923be51673ff2b2e33e192a923e6bbd60a5fea318510b"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java",
+      "sha256": "89670480459bdfd520c16c6bb1af3a8bb02baea3a408af0f23b51336443cbd7d"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/WithdrawalBalanceAdmissionService.java",
+      "sha256": "5344bc0204e4dce01a4d1ca6af8b65541d1f271b1a2e2c57de7fd935fda71eb8"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/MemberCashWithdrawMapper.xml",
+      "sha256": "f5b3823f0f2ff46d09ab9515432f08eab5638e05c3b0a3bd1bbeef21e9576719"
+    },
+    {
+      "path": "chengyinhub-ui/src/views/business/cashwithdraw/index.vue",
+      "sha256": "e8e6856f673a0bc6ecc17217d24d7c13844ee41a8132a49379d42f73e6f2d724"
+    },
+    {
+      "path": "chengyinhub-ui/tests/unit/cashwithdraw-migration-contract.test.js",
+      "sha256": "80be999bd007b4b933d944ec8bb7fabc00fd9da74954eee7d034262c926770a3"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20261023_cash_withdraw_fund_fact.sql",
+      "sha256": "cf981d89214b219c41639537f301f2b55b2b568f2d310c06621e6df473b3f4ba"
+    }
+  ]
+}

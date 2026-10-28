@@ -15,7 +15,7 @@
   <scroll-view class="simple-ai__scroll" scroll-y="true">
     <view class="simple-ai__body">
       <view class="simple-ai__hero" wx:if="{{!aiPlan || planOpen}}">
-        <text class="simple-ai__kicker">{{mode === 2 ? '自由探索 · 章节承接路线' : '城市定向 · 集合式路线'}}</text>
+        <text class="simple-ai__kicker">{{aiPlan ? (aiPlanProductType === 2 ? '自由探索 · 章节承接路线' : (aiPlanProductType === 1 ? '城市定向 · 集合式路线' : '原起草模式待确认')) : (mode === 2 ? '自由探索 · 章节承接路线' : '城市定向 · 集合式路线')}}</text>
         <text class="simple-ai__title">{{aiPlan ? '这条路线，已经有了轮廓。' : '嗨，想做一条什么样的路线？'}}</text>
       </view>
 
@@ -40,7 +40,7 @@
                           reduced-motion="{{reducedMotion}}" />
       <!-- P-43(2026-10-27):失败时给一个明确的重试(结果未确认时是「查看结果」),输入框里的描述原样保留 -->
       <cy-inline-error wx:elif="{{aiError}}" kind="data"
-                       title="这次没能生成，你的描述已保留" sub="{{aiError}}"
+                       title="这次没能继续" sub="{{aiError}}"
                        action="{{aiIdea ? (aiDraftPending ? '查看结果' : '重试') : ''}}" bind:action="retryAiPlan" />
       <!-- 稿 F5(99:5984):额度为 0 时界面上就写「今日额度已用完」,不是等他点了才说。
            发送键已经置灰(is-exhausted),但灰着不给理由 —— 顶部那行「还可生成 0 次」
@@ -48,10 +48,21 @@
       <cy-inline-error wx:elif="{{!aiPlan && aiQuotaLoaded && aiRemaining <= 0}}" kind="data"
                        title="今日额度已用完" sub="可改用手动创建" />
 
+      <view class="simple-ai__section-heading">
+        <text wx:if="{{aiIntentLabel}}">{{aiIntentLabel}}</text>
+        <cy-btn variant="secondary" bindtap="openAiHistory">历史起草记录</cy-btn>
+        <cy-btn variant="secondary" bindtap="openLocalAiHistory">本机保留记录</cy-btn>
+      </view>
+      <view wx:if="{{aiIntentIdentity}}" class="simple-ai__section-sub">{{aiIntentIdentity}}</view>
+      <view wx:if="{{aiRecoveryLoading}}" class="simple-ai__section-sub">正在查找历史起草记录…</view>
+      <cy-btn wx:if="{{aiCanContinue}}" variant="secondary" bindtap="continueAiDraft">继续原起草</cy-btn>
+      <cy-btn wx:if="{{aiCanConfirmNew}}" variant="secondary" disabled="{{aiGenerating || aiRecoveryLoading}}" bindtap="requestConfirmedNewAiAction">确认后另起一次</cy-btn>
+      <view wx:if="{{aiHistoryPreviewLabel}}" class="simple-ai__section-sub">{{aiHistoryPreviewLabel}}</view>
+
       <block wx:if="{{aiPlan && !planOpen}}">
         <view class="simple-ai__summary" wx:if="{{interestText || aiIdea}}">{{interestText ? interestText + (aiIdea ? ' · ' + aiIdea : '') : aiIdea}}</view>
         <view class="simple-ai__draft">
-          <image class="simple-ai__draft-img" src="{{mode === 2 ? '/images/route_free_cover.png' : '/images/route_city_cover.png'}}" mode="aspectFill" />
+          <image wx:if="{{aiPlanModeKnown}}" class="simple-ai__draft-img" src="{{aiPlanProductType === 2 ? '/images/route_free_cover.png' : '/images/route_city_cover.png'}}" mode="aspectFill" />
           <view class="simple-ai__draft-shade"></view>
           <view class="simple-ai__draft-over">
             <text class="simple-ai__draft-t">{{aiPlan.title}}</text>
@@ -70,13 +81,13 @@
       <block wx:if="{{aiPlan && planOpen}}">
         <view class="simple-ai__section-heading">
           <text>AI 为你整理的初稿</text>
-          <text class="simple-ai__section-state">可编辑</text>
+          <text class="simple-ai__section-state">{{aiPlanModeKnown ? '可编辑' : '只读 · 原模式待确认'}}</text>
         </view>
         <cy-card class="simple-ai__card">
           <text class="simple-ai__field-label">主题名称<text class="req" aria-hidden="true">*</text></text>
-          <input class="simple-ai__field-input" value="{{aiPlan.title}}" bindinput="onAiPlanTitleInput" maxlength="30" aria-label="主题名称" />
+          <input class="simple-ai__field-input" value="{{aiPlan.title}}" bindinput="onAiPlanTitleInput" disabled="{{!aiPlanModeKnown}}" maxlength="30" aria-label="主题名称" />
           <text class="simple-ai__field-label simple-ai__field-label--space">故事简介</text>
-          <textarea class="simple-ai__story" value="{{aiPlan.storyline}}" bindinput="onAiPlanStoryInput" maxlength="500" fixed="{{true}}" aria-label="故事简介" />
+          <textarea class="simple-ai__story" value="{{aiPlan.storyline}}" bindinput="onAiPlanStoryInput" disabled="{{!aiPlanModeKnown}}" maxlength="500" fixed="{{true}}" aria-label="故事简介" />
         </cy-card>
 
         <view class="simple-ai__section-heading simple-ai__section-heading--locations">
@@ -89,8 +100,8 @@
           <view class="simple-ai__node-head">
             <text class="simple-ai__node-num">{{nodeIndex + 1}}</text>
             <view class="simple-ai__node-copy">
-              <input class="simple-ai__node-name" value="{{node.name}}" bindinput="onAiNodeNameInput" data-index="{{nodeIndex}}" maxlength="30" aria-label="第{{nodeIndex + 1 || 1}}个节点名称" />
-              <textarea class="simple-ai__node-story" value="{{node.description}}" bindinput="onAiNodeStoryInput" data-index="{{nodeIndex}}" maxlength="300" fixed="{{true}}" aria-label="第{{nodeIndex + 1 || 1}}个节点故事" />
+              <input class="simple-ai__node-name" value="{{node.name}}" bindinput="onAiNodeNameInput" disabled="{{!aiPlanModeKnown}}" data-index="{{nodeIndex}}" maxlength="30" aria-label="第{{nodeIndex + 1 || 1}}个节点名称" />
+              <textarea class="simple-ai__node-story" value="{{node.description}}" bindinput="onAiNodeStoryInput" disabled="{{!aiPlanModeKnown}}" data-index="{{nodeIndex}}" maxlength="300" fixed="{{true}}" aria-label="第{{nodeIndex + 1 || 1}}个节点故事" />
             </view>
           </view>
           <view class="simple-ai__poi {{node.confirmed ? 'is-confirmed' : ''}}" bindtap="confirmAiNodePoi" data-index="{{nodeIndex}}" aria-role="button" aria-label="第{{nodeIndex + 1 || 1}}个节点，{{node.confirmed ? '修改地点' : '确认地点'}}" hover-class="cy-pressed" hover-stay-time="80">
@@ -116,11 +127,13 @@
       <textarea class="simple-ai__input" value="{{aiIdea}}" bindinput="onAiIdeaInput" maxlength="300" auto-height="{{true}}" placeholder="说说你想要的路线…" placeholder-class="simple-ai__placeholder" fixed="{{true}}" aria-label="路线灵感" />
     </view>
     <!-- W10b #22:上一次起草结果未确认时,这颗键只回读那一次(查看结果),不另起一次,也不受额度置灰影响。 -->
-    <view class="simple-ai__send {{aiGenerating ? 'is-loading' : ''}} {{(!aiDraftPending && aiQuotaLoaded && aiRemaining <= 0) ? 'is-exhausted' : ''}}" bindtap="generateAiPlan" aria-role="button" aria-label="{{aiDraftPending ? '查看上一次起草结果' : '生成主题草稿'}}" aria-disabled="{{aiGenerating || (!aiDraftPending && aiQuotaLoaded && aiRemaining <= 0)}}" hover-class="{{aiGenerating || (!aiDraftPending && aiQuotaLoaded && aiRemaining <= 0) ? 'none' : 'cy-pressed'}}" hover-stay-time="80">
+    <view class="simple-ai__send {{aiGenerating ? 'is-loading' : ''}} {{(!aiDraftPending && aiQuotaLoaded && aiRemaining <= 0) ? 'is-exhausted' : ''}}" bindtap="generateAiPlan" aria-role="button" aria-label="{{aiDraftPending ? '查看上一次起草结果' : (aiIntentLabel ? '另起一次起草' : '生成主题草稿')}}" aria-disabled="{{aiGenerating || (!aiDraftPending && aiQuotaLoaded && aiRemaining <= 0)}}" hover-class="{{aiGenerating || (!aiDraftPending && aiQuotaLoaded && aiRemaining <= 0) ? 'none' : 'cy-pressed'}}" hover-stay-time="80">
       <text wx:if="{{aiGenerating}}" class="simple-ai__send-t">…</text>
       <text wx:elif="{{aiDraftPending}}" class="simple-ai__send-t">查看</text>
       <view wx:else class="simple-ai__send-ic"><cy-icon name="arrow-right" size="40" /></view>
     </view>
   </view>
+  <cy-option-sheet wx:if="{{aiHistoryShow}}" id="ai-history-sheet" show="{{aiHistoryShow}}" title="选择原起草记录" items="{{aiHistoryItems}}" default-index="{{-1}}"
+                   bind:select="onAiHistorySelect" bind:cancel="onAiHistoryCancel" />
   </block>
 </view>

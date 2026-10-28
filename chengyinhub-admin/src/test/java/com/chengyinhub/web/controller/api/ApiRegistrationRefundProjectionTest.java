@@ -50,38 +50,38 @@ class ApiRegistrationRefundProjectionTest {
         when(registrations.selectCmsRegistrationList(org.mockito.ArgumentMatchers.any()))
                 .thenReturn(java.util.Collections.singletonList(row));
         when(activities.selectCmsActivityById(200L)).thenReturn(activity);
-        ReflectionTestUtils.setField(controller, "registrationService", registrations);
-        ReflectionTestUtils.setField(controller, "activityService", activities);
-        ReflectionTestUtils.setField(controller, "refundService", mock(IRefundService.class));
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "registrationService", registrations);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "activityService", activities);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "refundService", mock(IRefundService.class));
         com.chengyinhub.business.service.support.RegistrationCancellationReadService projection =
                 new com.chengyinhub.business.service.support.RegistrationCancellationReadService(
                         registrations, mock(IRefundService.class));
         ReflectionTestUtils.setField(projection, "activityCancelManualRefundCaseMapper", cases);
-        ReflectionTestUtils.setField(controller, "cancellationReadService", projection);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "cancellationReadService", projection);
 
-        assertEquals(200, controller.getRegistrationDetail("12").get("code"));
+        assertEquals(200, RegistrationQueryTestFixtures.wire(controller).getRegistrationDetail("12").get("code"));
 
         assertEquals(false, row.getRefundInfo().refundable);
         assertEquals("人工评估结果：不予退款", row.getRefundInfo().reason);
         assertEquals("NO_REFUND", row.getManualRefundCaseStatus());
         verify(cases).selectPlayerCaseStatus(12L, 99L);
         when(cases.selectPlayerCaseStatus(12L, 99L)).thenReturn("PENDING_ASSESSMENT");
-        assertEquals(200, controller.myRegistrationList("3", "0", null).get("code"));
+        assertEquals(200, RegistrationQueryTestFixtures.wire(controller).myRegistrationList("3", "0", null).get("code"));
         assertEquals("活动已取消，该订单正在人工评估退款", row.getRefundInfo().reason);
         String[] statuses = {"MANUAL_REFUND_REQUIRED", "MANUAL_REFUND_RECORDED", "MANUAL_REFUND_EVIDENCE_VERIFIED"};
         String[] reasons = {"人工评估已通过，等待退款处理", "人工退款已登记，等待凭证复核", "人工退款凭证已复核"};
         for (int i = 0; i < statuses.length; i++) {
             when(cases.selectPlayerCaseStatus(12L, 99L)).thenReturn(statuses[i]);
-            assertEquals(200, controller.getRegistrationDetail("12").get("code"));
+            assertEquals(200, RegistrationQueryTestFixtures.wire(controller).getRegistrationDetail("12").get("code"));
             assertEquals(false, row.getRefundInfo().refundable);
             assertEquals(reasons[i], row.getRefundInfo().reason);
         }
         when(cases.selectPlayerCaseStatus(12L, 99L)).thenReturn(null);
-        assertEquals(200, controller.getRegistrationDetail("12").get("code"));
+        assertEquals(200, RegistrationQueryTestFixtures.wire(controller).getRegistrationDetail("12").get("code"));
         assertEquals(true, row.getRefundInfo().refundable);
         org.mockito.Mockito.clearInvocations(cases);
         row.setMemberId(100L);
-        org.junit.jupiter.api.Assertions.assertNotEquals(200, controller.getRegistrationDetail("12").get("code"));
+        org.junit.jupiter.api.Assertions.assertNotEquals(200, RegistrationQueryTestFixtures.wire(controller).getRegistrationDetail("12").get("code"));
         org.mockito.Mockito.verifyNoInteractions(cases);
     }
 
@@ -110,23 +110,23 @@ class ApiRegistrationRefundProjectionTest {
         activity.setStartDate(new java.util.Date(System.currentTimeMillis() + 5 * 86400000L));
         when(registrations.selectCmsRegistrationById(13L)).thenReturn(row);
         when(activities.selectCmsActivityById(201L)).thenReturn(activity);
-        ReflectionTestUtils.setField(controller, "registrationService", registrations);
-        ReflectionTestUtils.setField(controller, "activityService", activities);
-        ReflectionTestUtils.setField(controller, "refundService", mock(IRefundService.class));
-        ReflectionTestUtils.setField(controller, "cancellationReadService",
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "registrationService", registrations);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "activityService", activities);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "refundService", mock(IRefundService.class));
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "cancellationReadService",
                 new com.chengyinhub.business.service.support.RegistrationCancellationReadService(
                         registrations, mock(IRefundService.class)));
 
-        assertEquals(200, controller.getRegistrationDetail("13").get("code"));
+        assertEquals(200, RegistrationQueryTestFixtures.wire(controller).getRegistrationDetail("13").get("code"));
         assertEquals(true, row.getRefundInfo().refundable);
         assertEquals("可免费取消", row.getRefundInfo().reason);
 
         row.setPointUsed(100L);
-        assertEquals(200, controller.getRegistrationDetail("13").get("code"));
+        assertEquals(200, RegistrationQueryTestFixtures.wire(controller).getRegistrationDetail("13").get("code"));
         assertEquals("可免费取消,已用积分退回账户", row.getRefundInfo().reason);
 
         row.setWechatPaymentAmount(new java.math.BigDecimal("9.90"));
-        assertEquals(200, controller.getRegistrationDetail("13").get("code"));
+        assertEquals(200, RegistrationQueryTestFixtures.wire(controller).getRegistrationDetail("13").get("code"));
         assertEquals("可全额退款,原路退回(预计1-3个工作日)", row.getRefundInfo().reason, "有现金的单文案不变");
     }
 
@@ -134,7 +134,7 @@ class ApiRegistrationRefundProjectionTest {
     void keepsLatestRefundForEachRegistrationAndScopesItToCurrentMember() {
         IRefundService refundService = mock(IRefundService.class);
         ApiRegistrationController controller = new ApiRegistrationController();
-        ReflectionTestUtils.setField(controller, "refundService", refundService);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "refundService", refundService);
 
         RefundApplication newest = refund(11L, RefundApplication.PAYOUT_PROCESSING);
         RefundApplication older = refund(11L, RefundApplication.PAYOUT_SUCCESS);
@@ -144,7 +144,7 @@ class ApiRegistrationRefundProjectionTest {
 
         @SuppressWarnings("unchecked")
         Map<Long, RefundApplication> result = (Map<Long, RefundApplication>) ReflectionTestUtils.invokeMethod(
-                controller, "latestRegistrationRefunds", 99L);
+                RegistrationQueryTestFixtures.application(controller), "latestRegistrationRefunds", 99L);
 
         assertEquals(RefundApplication.PAYOUT_PROCESSING, result.get(11L).getPayoutStatus());
         assertEquals(RefundApplication.PAYOUT_SUCCESS, result.get(12L).getPayoutStatus());

@@ -1,0 +1,7 @@
+# Bean fixture真实邀请通知后续
+
+parent86fb0cfe46eac351a63a92ba7ebea8196e5d6906，保持4bb/86fb冻结。实际读31ec329768ecc2b23e09466bf46754d12fe569d6的ChapterApplicationInviteNotice及MerchantChapterApplicationServiceImpl.inviteNotice。原fixture确有两个MerchantChapter应用cycle及联合场景，不能自动inert这个新必需依赖。
+
+只改原SupportedStackServiceCyclesTest与本目录：MerchantChapter应用在fixture中时必接真实InviteNotice→真实CommittedOfficialNoticeService→原真实IM/Wx与原PTM/具名scheduler边界。组合正控断言非mock/同一managed实例；新增真实子类仅加invite→原Merchant应用的错误反向eager字段，须循环失败，未mock掉两端。旧13行/旧3原始test/inert handler不变；无生产/owner/CI更改。
+
+预期32→33 JUnit；**Java/编译/Spring/JAR/DB/CI均NOT_RUN**。只做diff/source核对/秘密扫描，不借任何MySQL4或旧32结果。必须与root已纳31ec源码组合，独立86fb旧父树缺该类型不表示可退成mock。Complaint仍未作为真实bean注册，本片不宣称其闭环或整个装配无环。所有Mapper/外部PTM/scheduler/Alarm仍为明确inert边界，不证明真实事务/审计/投递。

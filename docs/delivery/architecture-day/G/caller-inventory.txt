@@ -1,0 +1,826 @@
+# G caller inventory; baseline 2ec68899099a1e250df0949a8383bf85b5d3ffe0 plus G candidate files
+# Static lexical search, includes definitions/tests/comments; reflection/runtime wiring not proved.
+
+## settlement production and tests
+command arguments: ["rg", "-n", "--glob", "*.java", "--glob", "*.xml", "--glob", "*.js", "--glob", "*.vue", "executeTopicSettlement\\(|settleCoopTopic\\(|snapshotReader\\.read\\(|coopSettlementClaimService\\.(prepare|persist)|finalizeForSale\\(|recordPaidRegistration\\(|recordOnPayment\\(|verifyAndSettle\\(|appendExecutedAdjustment\\(|settlementClaimService\\.claim\\(", "chengyinhub-admin/src", "chengyinhub-system/src"]
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ISettlementEntryService.java:12:    int recordOnPayment(CmsRegistration registration);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ISettlementEntryService.java:15:    int recordPaidRegistration(CmsRegistration registration, Long merchantId);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ICmsTopicService.java:55:    int executeTopicSettlement();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ITopicSaleFinalizationService.java:9:    Date finalizeForSale(Long topicId);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ICmsRegistrationService.java:333:    public boolean verifyAndSettle(CmsRegistration registration, Long verifierId, Long payeeId,
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ICmsRegistrationService.java:337:    boolean verifyAndSettle(CmsRegistration registration, Long verifierId, Long payeeId,
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ICoopSettlementClaimService.java:12:    void appendExecutedAdjustment(Long claimId, String eventKey, java.math.BigDecimal signedAmount);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicSaleFinalizationServiceImpl.java:115:    public Date finalizeForSale(Long topicId) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicSaleFinalizationServiceImpl.java:192:        if (topicMapper.finalizeForSale(topicId, finalizeNow, finalizeNow) != 1) {
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSettlementIdempotencyTest.java:91:        int settled = svc.executeTopicSettlement();
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSettlementIdempotencyTest.java:103:        int settled = svc.executeTopicSettlement();
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSettlementIdempotencyTest.java:136:        assertEquals(1, svc.executeTopicSettlement(),
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSettlementIdempotencyTest.java:138:        assertEquals(0, svc.executeTopicSettlement(),
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementClaimServiceImpl.java:54:    public void appendExecutedAdjustment(Long claimId, String eventKey, BigDecimal signedAmount) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementClaimServiceImpl.java:89:        CoopSettlementSnapshot snapshot = snapshotReader.read(order);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java:1093:    public int executeTopicSettlement() {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java:1269:        settleCoopTopic(topic, totalSales);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java:1342:    void settleCoopTopic(CmsTopic topic, BigDecimal totalSales) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java:1406:                    ? null : coopSettlementClaimService.prepare(o, now);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java:1505:            coopSettlementClaimService.persist(nonePlan, null);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java:1519:                coopSettlementClaimService.persist(originPlan, s);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:2328:        settlementEntryService.recordOnPayment(registration);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:2348:                settlementEntryService.recordOnPayment(sibling);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:2844:    public boolean verifyAndSettle(CmsRegistration registration, Long verifierId, Long payeeId,
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:2846:        return verifyAndSettle(registration, verifierId, payeeId, validationMethod,
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:2852:    public boolean verifyAndSettle(CmsRegistration registration, Long verifierId, Long payeeId,
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:2994:        settlementEntryService.recordPaidRegistration(registration, payeeId);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:3210:        // —— verifyAndSettle(①/② 整单核销)与 redeemExploreChapterAndRecord(③ 按章核销)都汇到这里。
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ExploreNeverWholeOrderSettleTest.java:104:                () -> service.verifyAndSettle(reg(PurchaseKind.EXPLORE_PASS), VERIFIER, PAYEE, null));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ExploreNeverWholeOrderSettleTest.java:108:        verify(settlementSvc, never()).recordPaidRegistration(any(), anyLong());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ExploreNeverWholeOrderSettleTest.java:116:        assertTrue(service.verifyAndSettle(reg(PurchaseKind.GUIDED_TICKET), VERIFIER, PAYEE, null));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ExploreNeverWholeOrderSettleTest.java:119:        verify(settlementSvc).recordPaidRegistration(any(), org.mockito.ArgumentMatchers.eq(PAYEE));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ExploreNeverWholeOrderSettleTest.java:132:        assertTrue(service.verifyAndSettle(reg(null), VERIFIER, PAYEE, null));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ExploreNeverWholeOrderSettleTest.java:134:        verify(settlementSvc).recordPaidRegistration(any(), anyLong());
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SettlementEntryServiceImpl.java:60:    public int recordOnPayment(CmsRegistration registration) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SettlementEntryServiceImpl.java:84:        return recordPaidRegistration(registration, activity.getMemberId(), activity);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SettlementEntryServiceImpl.java:97:    public int recordPaidRegistration(CmsRegistration registration, Long merchantId) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SettlementEntryServiceImpl.java:98:        return recordPaidRegistration(registration, merchantId, null);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SettlementEntryServiceImpl.java:101:    private int recordPaidRegistration(CmsRegistration registration, Long merchantId, CmsActivity loadedActivity) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SettlementEntryServiceImpl.java:353:        return settlementClaimService.claim(SettlementClaim.request(contextType, registration.getOwnerId(),
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantPayableServiceImpl.java:113:        SettlementClaim claim = settlementClaimService.claim(SettlementClaim.request(
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ReferralBountyHookWiringTest.java:124:        service.verifyAndSettle(guidedTicket(), MERCHANT, PAYEE, 1);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ReferralBountyHookWiringTest.java:161:        service.verifyAndSettle(guidedTicket(), MERCHANT, PAYEE, 1);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AuditTaskServiceImpl.java:1605:                topicSaleFinalizationService.finalizeForSale(task.getBizId());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/it/ExploreAllianceMvpRealDbIT.java:344:                    () -> service(s).finalizeForSale(TOPIC));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/it/ExploreAllianceMvpRealDbIT.java:358:            Date startedAt = service(s).finalizeForSale(TOPIC);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/it/ExploreAllianceMvpRealDbIT.java:371:            assertNotNull(service(s).finalizeForSale(TOPIC));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/it/ExploreAllianceMvpRealDbIT.java:412:            assertNotNull(service(s).finalizeForSale(TOPIC));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/it/ExploreAllianceMvpRealDbIT.java:425:                    () -> service(s).finalizeForSale(TOPIC));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/SettlementTriggerNotExposedTest.java:26:        assertFalse(src.contains("executeTopicSettlement()"),
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RevshareGateWiringTest.java:45:        int sell = s.indexOf("topicSaleFinalizationService.finalizeForSale(topicId)");
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/FreeExplorePriceLockAcceptanceTest.java:143:        verify(cmsTopicMapper, never()).finalizeForSale(anyLong(), any(), any());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ProductSourceWiringTest.java:134:        assertEquals(1, countOccurrences(src, "cmsRegistrationService.verifyAndSettle("),
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ProductSourceWiringTest.java:138:        assertEquals(0, countOccurrences(src, "settlementEntryService.recordPaidRegistration("),
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/StoreVerifyGrowthDeliveryTransactionTest.java:167:        assertTrue(registrationService.verifyAndSettle(registration(), 77L, 77L, 1));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/StoreVerifyGrowthDeliveryTransactionTest.java:179:                    () -> registrationService.verifyAndSettle(registration(), 77L, 77L, 1));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/StoreVerifyGrowthDeliveryTransactionTest.java:246:        assertTrue(service.verifyAndSettle(activityTicket, 77L, 77L, 1));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/StoreVerifyGrowthDeliveryTransactionTest.java:267:        assertTrue(service.verifyAndSettle(activityTicket, 77L, 77L, 1));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ExploreRedeemRecordTest.java:306:        verify(settlementSvc, never()).recordPaidRegistration(any(), anyLong());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/WholeOrderVerificationReverseTest.java:211:        assertTrue(service.verifyAndSettle(again, ORGANIZER, ORGANIZER, null));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicRecruitDeadlineServiceTest.java:92:        verify(finalizationService, never()).finalizeForSale(anyLong());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicRecruitDeadlineServiceTest.java:106:        verify(finalizationService, never()).finalizeForSale(anyLong());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicRecruitDeadlineServiceTest.java:122:        verify(finalizationService, never()).finalizeForSale(TOPIC_ID);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopSettlementClaimServiceImplTest.java:50:        when(snapshotReader.read(order)).thenReturn(snapshot);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopSettlementClaimServiceImplTest.java:121:        service.appendExecutedAdjustment(11L, "REFUND:9001", new BigDecimal("-0.01"));
+chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CmsTopicMapper.java:148:    int finalizeForSale(@Param("id") Long id, @Param("sellingStartedAt") Date sellingStartedAt,
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ExploreNeverSettledWholeOrderTest.java:111:                () -> service.recordPaidRegistration(reg(2L, PurchaseKind.EXPLORE_PASS), ORGANIZER));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ExploreNeverSettledWholeOrderTest.java:125:        assertEquals(0, service.recordOnPayment(reg(2L, PurchaseKind.EXPLORE_PASS)));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ExploreNeverSettledWholeOrderTest.java:138:        service.recordOnPayment(reg(2L, PurchaseKind.GUIDED_TICKET));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ExploreNeverSettledWholeOrderTest.java:147:        assertEquals(0, service.recordOnPayment(reg(1L, PurchaseKind.GUIDED_TICKET)));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ExploreNeverSettledWholeOrderTest.java:158:        service.recordOnPayment(reg(2L, null));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementGroupBasisTest.java:137:        svc.settleCoopTopic(topic(), new BigDecimal("5000"));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementGroupBasisTest.java:148:        svc.settleCoopTopic(topic(), new BigDecimal("5000"));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementGroupBasisTest.java:163:        svc.settleCoopTopic(topic(), new BigDecimal("5000"));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementGroupBasisTest.java:172:        svc.settleCoopTopic(topic(), new BigDecimal("5000"));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementGroupBasisTest.java:182:        svc.settleCoopTopic(topic(), new BigDecimal("5000"));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementGroupBasisTest.java:194:        svc.settleCoopTopic(topic(), new BigDecimal("5000"));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationVerificationAuditTransactionBoundaryTest.java:57:                () -> service.verifyAndSettle(registration(), 9001L, 9001L, 1,
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationVerificationAuditTransactionBoundaryTest.java:71:        assertTrue(service.verifyAndSettle(registration(), 9001L, 9001L, 1,
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationVerificationAuditTransactionBoundaryTest.java:102:        }).when(settlements).recordPaidRegistration(any(), any());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/SettlementRateConvergenceTest.java:395:        assertEquals(1, topicSvc.executeTopicSettlement());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ArchitectureDayGSettlementGuardsTest.java:132:                () -> service.recordPaidRegistration(registration, 9L));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ArchitectureDayGSettlementGuardsTest.java:166:        assertEquals(2, service.recordPaidRegistration(registration, 9L));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationVerifyAndSettleTest.java:111:    private boolean verifyAndSettle() {
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationVerifyAndSettleTest.java:112:        return service.verifyAndSettle(reg(), MERCHANT, PAYEE, 1);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationVerifyAndSettleTest.java:123:                () -> service.verifyAndSettle(row, MERCHANT, PAYEE, 1)).getMessage());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationVerifyAndSettleTest.java:125:        verify(settlementSvc, never()).recordPaidRegistration(any(), any());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationVerifyAndSettleTest.java:139:        assertTrue(service.verifyAndSettle(row, MERCHANT, PAYEE, 1));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationVerifyAndSettleTest.java:154:                    () -> service.verifyAndSettle(row, MERCHANT, PAYEE, 1)).getMessage());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationVerifyAndSettleTest.java:181:        assertTrue(verifyAndSettle());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationVerifyAndSettleTest.java:185:        o.verify(settlementSvc).recordPaidRegistration(any(), eq(PAYEE));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationVerifyAndSettleTest.java:197:        assertFalse(verifyAndSettle());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationVerifyAndSettleTest.java:200:        verify(settlementSvc, never()).recordPaidRegistration(any(), anyLong());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationVerifyAndSettleTest.java:221:        verify(settlementSvc, never()).recordPaidRegistration(any(), anyLong());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationVerifyAndSettleTest.java:235:        verify(settlementSvc, never()).recordPaidRegistration(any(), anyLong());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationVerifyAndSettleTest.java:249:        verify(settlementSvc, never()).recordPaidRegistration(any(), anyLong());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationVerifyAndSettleTest.java:258:                .when(settlementSvc).recordPaidRegistration(any(), anyLong());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationVerifyAndSettleTest.java:270:        verifyAndSettle();
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationVerifyAndSettleTest.java:272:        verify(settlementSvc).recordPaidRegistration(any(), eq(PAYEE));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationVerifyAndSettleTest.java:280:        assertTrue(service.verifyAndSettle(reg(), MERCHANT, PAYEE, 1,
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationVerifyAndSettleTest.java:284:        verify(settlementSvc).recordPaidRegistration(any(), eq(PAYEE));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationVerifyAndSettleTest.java:303:                () -> service.verifyAndSettle(reg(), MERCHANT, PAYEE, 1,
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationVerifyAndSettleTest.java:317:        verifyAndSettle();
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationVerifyAndSettleTest.java:331:        verifyAndSettle();
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationVerifyAndSettleTest.java:349:        assertTrue(verifyAndSettle());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationVerifyAndSettleTest.java:398:        verify(settlementSvc, never()).recordPaidRegistration(any(), anyLong());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationVerifyAndSettleTest.java:472:        verify(settlementSvc).recordPaidRegistration(any(), eq(MERCHANT));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationVerifyAndSettleTest.java:489:        verify(settlementSvc, never()).recordPaidRegistration(any(), anyLong());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicLifecycleWiringTest.java:48:        assertFalse(method.contains("finalizeForSale("), "锁价不得绕过 canonical15 显式提审直接开售");
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementTest.java:182:        svc.settleCoopTopic(topic, new BigDecimal("100"));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementTest.java:260:        assertEquals(1, svc.executeTopicSettlement(), "既有 PLATFORM 行 → 幂等跳过,不是硬失败");
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementTest.java:275:        assertEquals(1, svc.executeTopicSettlement());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementTest.java:316:        svc.settleCoopTopic(topic, new BigDecimal("100"));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementTest.java:340:        svc.settleCoopTopic(topic, new BigDecimal("100"));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementTest.java:373:        svc.settleCoopTopic(topic, new BigDecimal("100"));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementTest.java:410:        svc.settleCoopTopic(topic, new BigDecimal("100"));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementTest.java:482:                () -> svc.settleCoopTopic(topic, new BigDecimal("100")));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementTest.java:500:        svc.settleCoopTopic(topic, new BigDecimal("100"));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementTest.java:516:        svc.settleCoopTopic(topic, new BigDecimal("100"));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AuditTaskCommercialReviewTest.java:311:        verify(saleFinalizationService).finalizeForSale(9L);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AuditTaskCommercialReviewTest.java:337:        verify(saleFinalizationService).finalizeForSale(9L);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:125:        when(topicMapper.finalizeForSale(eq(TOPIC_ID), any(Date.class), any(Date.class))).thenReturn(1);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:139:                () -> service.finalizeForSale(TOPIC_ID));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:143:        verify(topicMapper, never()).finalizeForSale(any(Long.class), any(Date.class), any(Date.class));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:157:                () -> service.finalizeForSale(TOPIC_ID));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:164:                () -> service.finalizeForSale(TOPIC_ID));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:176:        IllegalStateException error = assertThrows(IllegalStateException.class, () -> service.finalizeForSale(TOPIC_ID));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:181:        verify(topicMapper, never()).finalizeForSale(any(Long.class), any(Date.class), any(Date.class));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:196:        service.finalizeForSale(TOPIC_ID);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:204:        order.verify(topicMapper).finalizeForSale(eq(TOPIC_ID), any(Date.class), any(Date.class));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:217:                () -> service.finalizeForSale(TOPIC_ID));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:221:        verify(topicMapper, never()).finalizeForSale(any(Long.class), any(Date.class), any(Date.class));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:235:                () -> service.finalizeForSale(TOPIC_ID));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:239:        verify(topicMapper, never()).finalizeForSale(any(Long.class), any(Date.class), any(Date.class));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:275:                () -> staleService.finalizeForSale(TOPIC_ID));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:278:        verify(topicMapper, never()).finalizeForSale(any(Long.class), any(Date.class), any(Date.class));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:287:        IllegalStateException error = assertThrows(IllegalStateException.class, () -> service.finalizeForSale(TOPIC_ID));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:290:        verify(topicMapper, never()).finalizeForSale(any(Long.class), any(Date.class), any(Date.class));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:300:        IllegalStateException error = assertThrows(IllegalStateException.class, () -> service.finalizeForSale(TOPIC_ID));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:310:        IllegalStateException noOrganizer = assertThrows(IllegalStateException.class, () -> service.finalizeForSale(TOPIC_ID));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:315:        IllegalStateException multipleOrganizers = assertThrows(IllegalStateException.class, () -> service.finalizeForSale(TOPIC_ID));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:330:        Date finalized = service.finalizeForSale(TOPIC_ID);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:333:        verify(topicMapper).finalizeForSale(eq(TOPIC_ID), eq(Date.from(NOW)), eq(Date.from(NOW)));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:339:        when(topicMapper.finalizeForSale(eq(TOPIC_ID), any(Date.class), any(Date.class))).thenReturn(0);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:341:        IllegalStateException error = assertThrows(IllegalStateException.class, () -> service.finalizeForSale(TOPIC_ID));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:354:        assertEquals(persisted, service.finalizeForSale(TOPIC_ID));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:355:        verify(topicMapper, never()).finalizeForSale(any(Long.class), any(Date.class), any(Date.class));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:367:                () -> service.finalizeForSale(TOPIC_ID));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:370:        verify(topicMapper, never()).finalizeForSale(any(Long.class), any(Date.class), any(Date.class));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:378:                () -> service.finalizeForSale(TOPIC_ID));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:381:        verify(topicMapper, never()).finalizeForSale(any(Long.class), any(Date.class), any(Date.class));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:389:                () -> service.finalizeForSale(TOPIC_ID));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:392:        verify(topicMapper, never()).finalizeForSale(any(Long.class), any(Date.class), any(Date.class));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:400:        assertEquals(Date.from(NOW), service.finalizeForSale(TOPIC_ID));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:422:                () -> service.finalizeForSale(TOPIC_ID));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:535:        assertEquals(Date.from(NOW), service.finalizeForSale(TOPIC_ID));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:537:        verify(topicMapper).finalizeForSale(TOPIC_ID, Date.from(NOW), Date.from(NOW));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:612:                () -> service.finalizeForSale(TOPIC_ID));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:615:        verify(topicMapper, never()).finalizeForSale(eq(TOPIC_ID), any(Date.class), any(Date.class));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:712:        service.finalizeForSale(TOPIC_ID);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:715:        verify(topicMapper).finalizeForSale(eq(TOPIC_ID), any(Date.class), any(Date.class));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:733:        assertTrue(assertThrows(IllegalStateException.class, () -> service.finalizeForSale(TOPIC_ID))
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:735:        verify(topicMapper, never()).finalizeForSale(any(), any(), any());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:802:        service.finalizeForSale(TOPIC_ID);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:805:        verify(topicMapper).finalizeForSale(eq(TOPIC_ID), eq(Date.from(NOW)), eq(Date.from(NOW)));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:817:                () -> service.finalizeForSale(TOPIC_ID));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:820:        verify(topicMapper, never()).finalizeForSale(any(Long.class), any(Date.class), any(Date.class));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:832:                () -> service.finalizeForSale(TOPIC_ID));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:836:        verify(topicMapper, never()).finalizeForSale(any(Long.class), any(Date.class), any(Date.class));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:849:                () -> service.finalizeForSale(TOPIC_ID));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:857:        verify(topicMapper, never()).finalizeForSale(any(Long.class), any(Date.class), any(Date.class));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:878:        service.finalizeForSale(TOPIC_ID);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:892:        service.finalizeForSale(TOPIC_ID);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:900:        order.verify(topicMapper).finalizeForSale(eq(TOPIC_ID), any(Date.class), any(Date.class));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:919:        service.finalizeForSale(TOPIC_ID);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:934:        service.finalizeForSale(TOPIC_ID);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:946:        service.finalizeForSale(TOPIC_ID);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:951:        order.verify(topicMapper).finalizeForSale(eq(TOPIC_ID), any(Date.class), any(Date.class));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:963:                () -> service.finalizeForSale(TOPIC_ID));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:966:        verify(topicMapper, never()).finalizeForSale(any(Long.class), any(Date.class), any(Date.class));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:978:                () -> service.finalizeForSale(TOPIC_ID));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:983:        verify(topicMapper, never()).finalizeForSale(any(Long.class), any(Date.class), any(Date.class));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java:992:        service.finalizeForSale(TOPIC_ID);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/SettlementEntryServiceImplTest.java:102:        int rows = service.recordPaidRegistration(registration, 3L);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/SettlementEntryServiceImplTest.java:154:                () -> service.recordPaidRegistration(registration, 3L));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/SettlementEntryServiceImplTest.java:191:                () -> service.recordPaidRegistration(registration, 8L));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/SettlementEntryServiceImplTest.java:223:                () -> service.recordPaidRegistration(registration, 8L));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/SettlementEntryServiceImplTest.java:286:        int rows = service.recordPaidRegistration(registration, 8L);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/SettlementEntryServiceImplTest.java:321:                () -> service.recordPaidRegistration(registration, 3L));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/SettlementEntryServiceImplTest.java:334:        int rows = service.recordPaidRegistration(registration, 3L);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/SettlementEntryServiceImplTest.java:368:                () -> service.recordPaidRegistration(registration, 3L));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/SettlementEntryServiceImplTest.java:408:                () -> service.recordPaidRegistration(registration, 3L));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/SettlementEntryServiceImplTest.java:480:        int rows = service.recordOnPayment(registration);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/SettlementEntryServiceImplTest.java:509:        int rows = service.recordOnPayment(registration);
+chengyinhub-admin/src/test/java/com/chengyinhub/web/task/SettlementTaskTest.java:33:        when(topicService.executeTopicSettlement()).thenReturn(1);
+chengyinhub-admin/src/test/java/com/chengyinhub/web/task/SettlementTaskTest.java:46:        when(topicService.executeTopicSettlement()).thenReturn(1);
+chengyinhub-admin/src/test/java/com/chengyinhub/web/task/SettlementTaskTest.java:52:        verify(topicService).executeTopicSettlement();
+chengyinhub-admin/src/test/java/com/chengyinhub/web/task/SettlementTaskTest.java:61:        when(topicService.executeTopicSettlement()).thenThrow(new RuntimeException("topic boom"));
+chengyinhub-admin/src/main/java/com/chengyinhub/web/task/SettlementTask.java:49:            int topicCount = cmsTopicService.executeTopicSettlement();
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ScanContextSharedGateTest.java:131:        verify(regSvc, never()).verifyAndSettle(any(), anyLong(), anyLong(), any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ScanContextSharedGateTest.java:212:        verify(regSvc, never()).verifyAndSettle(any(), anyLong(), anyLong(), any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ScanContextSharedGateTest.java:213:        verify(regSvc, never()).verifyAndSettle(any(), anyLong(), anyLong(), any(), anyLong(), any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ScanContextSharedGateTest.java:229:        verify(regSvc, never()).verifyAndSettle(any(), anyLong(), anyLong(), any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ScanContextSharedGateTest.java:230:        verify(regSvc, never()).verifyAndSettle(any(), anyLong(), anyLong(), any(), anyLong(), any());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementPerMerchantTest.java:169:        svc.settleCoopTopic(topic(), new BigDecimal("5000"));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementPerMerchantTest.java:201:        svc.settleCoopTopic(topic(), new BigDecimal("5000"));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementPerMerchantTest.java:224:        svc.settleCoopTopic(topic(), new BigDecimal("50"));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementPerMerchantTest.java:252:        svc.settleCoopTopic(topic(), new BigDecimal("5000"));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementPerMerchantTest.java:271:        svc.settleCoopTopic(topic(), new BigDecimal("5000"));
+chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubLeadController.java:470:            if (!cmsRegistrationService.verifyAndSettle(reg, memberId, merchantId, null)) {
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationVerifyGateTest.java:276:        verify(regSvc, never()).verifyAndSettle(any(), anyLong(), anyLong(), any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationVerifyGateTest.java:309:        verify(regSvc, never()).verifyAndSettle(any(), anyLong(), anyLong(), any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationVerifyGateTest.java:406:        when(regSvc.verifyAndSettle(any(), eq(OWNER), eq(OWNER), any(), eq(MEMBER),
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationVerifyGateTest.java:411:        verify(regSvc).verifyAndSettle(any(), eq(OWNER), eq(OWNER), any(), eq(MEMBER),
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationVerifyGateTest.java:454:        verify(regSvc, never()).verifyAndSettle(any(), anyLong(), anyLong(), any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationVerifyGateTest.java:467:        verify(regSvc, never()).verifyAndSettle(any(), anyLong(), any(), any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationVerifyGateTest.java:481:        when(regSvc.verifyAndSettle(any(), anyLong(), any(), any())).thenReturn(true);
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationVerifyGateTest.java:488:        verify(regSvc).verifyAndSettle(any(), verifier.capture(), payee.capture(), any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationVerifyGateTest.java:502:        verify(regSvc, never()).verifyAndSettle(any(), anyLong(), any(), any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationVerifyGateTest.java:518:        verify(regSvc, never()).verifyAndSettle(any(), anyLong(), any(), any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationVerifyGateTest.java:539:        verify(regSvc, never()).verifyAndSettle(any(), anyLong(), any(), any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationVerifyGateTest.java:553:        verify(regSvc, never()).verifyAndSettle(any(), anyLong(), any(), any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationVerifyGateTest.java:591:        verify(regSvc, never()).verifyAndSettle(any(), anyLong(), any(), any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationVerifyGateTest.java:612:        verify(regSvc, never()).verifyAndSettle(any(), anyLong(), any(), any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationVerifyGateTest.java:633:        verify(regSvc, never()).verifyAndSettle(any(), anyLong(), any(), any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationVerifyGateTest.java:683:        verify(regSvc, never()).verifyAndSettle(any(), anyLong(), any(), any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationVerifyGateTest.java:731:        verify(regSvc, never()).verifyAndSettle(any(), anyLong(), any(), any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationVerifyGateTest.java:744:        verify(regSvc, never()).verifyAndSettle(any(), anyLong(), any(), any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationVerifyGateTest.java:757:        verify(regSvc, never()).verifyAndSettle(any(), anyLong(), any(), any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationVerifyGateTest.java:808:        when(regSvc.verifyAndSettle(any(), eq(MEMBER), anyLong(), any())).thenReturn(false);
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationVerifyGateTest.java:822:        when(regSvc.verifyAndSettle(any(), anyLong(), anyLong(), any())).thenReturn(true);
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationVerifyGateTest.java:828:        verify(regSvc).verifyAndSettle(any(), eq(MEMBER), payee.capture(), any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationVerifyGateTest.java:843:        verify(regSvc, never()).verifyAndSettle(any(), anyLong(), anyLong(), any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationVerifyGateTest.java:860:        verify(regSvc, never()).verifyAndSettle(any(), anyLong(), anyLong(), any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationVerifyGateTest.java:877:        verify(regSvc, never()).verifyAndSettle(any(), anyLong(), anyLong(), any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationVerifyGateTest.java:878:        verify(regSvc, never()).verifyAndSettle(any(), anyLong(), anyLong(), any(), anyLong(), any());
+chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java:1148:     * → {@code list.size()>0} → {@code verifyAndSettle(reg, memberId, memberId)}
+chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java:1713:                            ? registrationService.verifyAndSettle(cmsRegistration,
+chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java:1715:                            : registrationService.verifyAndSettle(cmsRegistration,
+chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java:1870:                                        ? registrationService.verifyAndSettle(
+chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java:1873:                                        : registrationService.verifyAndSettle(
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ScanTypeOwnerMismatchGateTest.java:49: * → {@code verifyAndSettle(reg, memberId, memberId)} ⇒ <b>整单票款结算给一个跟本单毫无关系的商家</b>,
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ScanTypeOwnerMismatchGateTest.java:115:        verify(regSvc, never()).verifyAndSettle(any(), anyLong(), anyLong(), any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ScanTypeOwnerMismatchGateTest.java:129:        verify(regSvc, never()).verifyAndSettle(any(), anyLong(), anyLong(), any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ScanTypeOwnerMismatchGateTest.java:140:        verify(regSvc, never()).verifyAndSettle(any(), anyLong(), anyLong(), any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ScanTypeOwnerMismatchGateTest.java:160:        verify(regSvc, never()).verifyAndSettle(any(), anyLong(), anyLong(), any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ScanTypeOwnerMismatchGateTest.java:175:        verify(regSvc, never()).verifyAndSettle(any(), anyLong(), anyLong(), any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/DoublePaymentReproductionTest.java:78: * {@link SettlementEntryServiceImpl} 和 {@link CmsTopicServiceImpl#executeTopicSettlement()}；
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/DoublePaymentReproductionTest.java:85: * 并 stub {@code recordPaidRegistration(any(), anyLong())} 返回 0，以模拟路径 a 被互斥；
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/DoublePaymentReproductionTest.java:253:        assertEquals(1, topicService.executeTopicSettlement());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ExploreScanDispatchTest.java:151:     * 且**绝不能**走 verifyAndSettle(那会把整单票款结算给扫码的这一家 = 资损)。
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ExploreScanDispatchTest.java:172:        verify(regSvc, never()).verifyAndSettle(any(), anyLong(), anyLong(), any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ExploreScanDispatchTest.java:439:        when(regSvc.verifyAndSettle(any(), anyLong(), anyLong(), any())).thenReturn(true);
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ExploreScanDispatchTest.java:444:        verify(regSvc).verifyAndSettle(any(), eq(999L), eq(999L), any());
+chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/AuditWorkbenchController.java:285:                topicSaleFinalizationService.finalizeForSale(topicId);
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/D9SettleTest.java:150:        }).when(settlementEntryService).recordPaidRegistration(any(), anyLong());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/D9SettleTest.java:152:        // [P0-21] 全团结算已改走 verifyAndSettle(条件置位+入账+台账同一事务)。
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/D9SettleTest.java:163:            settlementEntryService.recordPaidRegistration(r, payee);
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/D9SettleTest.java:165:        }).when(registrationService).verifyAndSettle(any(), anyLong(), anyLong(), any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/business/AuditWorkbenchControllerTest.java:416:        verify(finalizationService).finalizeForSale(9L);
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/business/AuditWorkbenchControllerTest.java:434:        verify(finalizationService, never()).finalizeForSale(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/business/AuditWorkbenchControllerTest.java:453:        verify(finalizationService, never()).finalizeForSale(any());
+
+## completion writers/readers and tests
+command arguments: ["rg", "-n", "--glob", "*.java", "--glob", "*.xml", "--glob", "*.js", "--glob", "*.vue", "insertPlayerNodeProgress\\(|markGameDone\\(|markRedeemed\\(|restoreToPending\\(|invalidateByRegistration\\(|isExploreCompleted\\(|isCompletedCompletionFact\\(|sessionStatuses\\(|countCompletedParticipants\\(|selectPlayerNodeOutcome\\(|insertPlayerNodeOutcome\\(|updateStoryStateCas\\(|selectRouteLeaderboard\\(|grantOnce\\(|findCurrentCompletedRoutes\\(|selectCurrentCompletedRoutes\\(", "chengyinhub-admin/src", "chengyinhub-system/src"]
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/IPlayerNodeProgressService.java:22:    int insertPlayerNodeProgress(PlayerNodeProgress playerNodeProgress);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/IPlayerNodeProgressService.java:39:    List<LeaderboardItemVO> selectRouteLeaderboard(Long activityId, Long topicId, int limit);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ITopicRouteRuntimeService.java:121:    Map<String, Integer> sessionStatuses(List<TopicRouteSession> scopes);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ITopicRouteRuntimeService.java:125:    int countCompletedParticipants(Long topicId);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_15Test.java:31:        when(mapper.insertPlayerNodeOutcome(any())).thenReturn(1);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_15Test.java:40:        verify(mapper).insertPlayerNodeOutcome(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_15Test.java:45:        when(mapper.selectPlayerNodeOutcome(30L,7L,50L)).thenReturn(existing);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_15Test.java:47:        verify(mapper, never()).insertPlayerNodeOutcome(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_15Test.java:54:        verify(mapper).insertPlayerNodeOutcome(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_07MySqlIT.java:110:        assertTrue(producer.grantOnce(700L,501L,30L));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_07MySqlIT.java:114:        assertFalse(producer.grantOnce(700L,501L,30L));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_07MySqlIT.java:121:        RuntimeException failure=assertThrows(RuntimeException.class,()->producer.grantOnce(700L,501L,30L));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_07MySqlIT.java:126:        assertTrue(producer.grantOnce(700L,501L,30L)); assertEquals(1L,count("sms_coupon_history"));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_07MySqlIT.java:139:        assertTrue(producer.grantOnce(700L,501L,30L));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_07MySqlIT.java:142:        assertFalse(producer.grantOnce(700L,501L,30L)); assertEquals(0,state(43));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_07MySqlIT.java:160:        assertFalse(producer.grantOnce(700L,501L,30L), "旧身份未明的占位不允许变成补发");
+chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_07MySqlIT.java:171:        assertFalse(producer.grantOnce(700L,501L,30L));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_20Test.java:61:        when(mapper.selectPlayerNodeOutcome(30L,7L,50L)).thenReturn(new GamePlayerNodeOutcome());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_20Test.java:63:        when(mapper.updateStoryStateCas(any())).thenReturn(0);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/CompletedRouteFactReader.java:23:    public List<TopicRouteSession> findCurrentCompletedRoutes(Long memberId) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/CompletedRouteFactReader.java:27:        return mapper.selectCurrentCompletedRoutes(memberId);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_07Test.java:134:        assertTrue(producer.grantOnce(700L,501L,30L));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_07Test.java:136:        assertThrows(IllegalStateException.class,() -> producer.grantOnce(700L,501L,30L));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_07Test.java:137:        assertThrows(IllegalStateException.class,() -> producer.grantOnce(700L,501L,30L));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicCompletionAwardServiceTest.java:31:        f.service.grantOnce(9L, 7L, 11L, redemptionTime, RewardPolicy.FULL);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicCompletionAwardServiceTest.java:47:        assertEquals(36, f.service.grantOnce(9L, 7L, 11L, redemptionTime).getEarnedXp());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicCompletionAwardServiceTest.java:48:        assertFalse(f.service.grantOnce(9L, 7L, 11L, redemptionTime).isFirstCompletion());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicCompletionAwardServiceTest.java:59:                .when(f.coupons).grantOnce(7L, 9L, 88L);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicCompletionAwardServiceTest.java:62:                () -> f.service.grantOnce(9L, 7L, 11L, new Date(1000L)));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicCompletionAwardServiceTest.java:72:        f.service.grantOnce(9L, 7L, 11L, new Date(1000L), RewardPolicy.XP_BADGE_ONLY);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicCompletionAwardServiceTest.java:75:        verify(f.coupons, never()).grantOnce(anyLong(), anyLong(), anyLong());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicCompletionAwardServiceTest.java:105:        assertEquals(36, f.service.grantOnce(9L, 7L, 11L, new Date(1000L)).getEarnedXp());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicCompletionAwardServiceTest.java:111:        verify(f.coupons).grantOnce(7L, 9L, 88L);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicCompletionAwardServiceTest.java:125:        f.service.grantOnce(9L, 7L, 11L, new Date(1000L));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicCompletionAwardServiceTest.java:128:        verify(f.coupons, never()).grantOnce(anyLong(), anyLong(), anyLong());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicCompletionAwardServiceTest.java:137:        assertEquals(0, f.service.grantOnce(9L, 7L, 12L, new Date(1000L)).getEarnedXp());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicCompletionAwardServiceTest.java:140:        verify(f.coupons, never()).grantOnce(anyLong(), anyLong(), anyLong());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicCompletionAwardServiceTest.java:151:        f.service.grantOnce(9L, 7L, 11L, new Date(1000L));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ShopDayProofServiceTest.java:31:        when(mapper.insertPlayerNodeProgress(any())).thenReturn(1);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ShopDayProofServiceTest.java:41:        verify(mapper).insertPlayerNodeProgress(saved);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ITopicCompletionCouponRewardService.java:7:    boolean grantOnce(Long topicId, Long memberId, Long couponId);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/IShopDayProofService.java:19:    boolean markGameDone(Long memberId, Long activityId, Long topicId, Long nodeId);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/it/JourneyThoughtProgressMySqlIT.java:451:        public boolean markGameDone(Long memberId, Long activityId, Long topicId, Long nodeId) { return true; }
+chengyinhub-admin/src/test/java/com/chengyinhub/business/it/ThemeRuntimeMySqlIT.java:645:        assertFalse(runtime.isCompleted(7L,10L,0L,2,2));assertEquals(0,runtime.countCompletedParticipants(10L));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RedeemExploreReadViewMySqlIT.java:317:                        .grantOnce(MEMBER, TOPIC, 0L, null);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicCompletionCouponRewardServiceImpl.java:29:    public boolean grantOnce(Long topicId, Long memberId, Long couponId)
+chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CompletedRouteFactMapperMySqlIT.java:76:        List<TopicRouteSession> rows = reader.findCurrentCompletedRoutes(7L);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CompletedRouteFactMapperMySqlIT.java:83:        assertEquals(List.of(99L), reader.findCurrentCompletedRoutes(8L).stream()
+chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CompletedRouteFactMapperMySqlIT.java:91:        TopicRouteSession row = reader.findCurrentCompletedRoutes(7L).get(0);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CompletedRouteFactMapperMySqlIT.java:102:        assertTrue(mapper.selectCurrentCompletedRoutes(null).isEmpty());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CompletedRouteFactMapperMySqlIT.java:103:        assertTrue(mapper.selectCurrentCompletedRoutes(0L).isEmpty());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CompletedRouteFactMapperMySqlIT.java:104:        assertTrue(reader.findCurrentCompletedRoutes(9L).isEmpty());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CompletedRouteFactMapperMySqlIT.java:113:        assertEquals(reader.findCurrentCompletedRoutes(7L).stream().map(TopicRouteSession::getId).toList(),
+chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CompletedRouteFactMapperMySqlIT.java:114:                reader.findCurrentCompletedRoutes(7L).stream().map(TopicRouteSession::getId).toList());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RedemptionRewardClawbackMyBatisTest.java:234:            awards.grantOnce(MEMBER, TOPIC, ACTIVITY, new java.util.Date());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RedemptionRewardClawbackMyBatisTest.java:243:            awards.grantOnce(MEMBER, TOPIC, ACTIVITY, new java.util.Date());   // 玩家重新通关(勋章已在)
+chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RedemptionRewardClawbackMyBatisTest.java:245:            awards.grantOnce(MEMBER, TOPIC, ACTIVITY, new java.util.Date());   // 再触发一次通关判定
+chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RedemptionRewardClawbackMyBatisTest.java:247:            awards.grantOnce(MEMBER, TOPIC, ACTIVITY + 1, new java.util.Date());   // 换一场再通关:冲回标记已消费,不许再领
+chengyinhub-admin/src/test/java/com/chengyinhub/business/it/JourneyFullFlowMySqlIT.java:860:        public boolean markGameDone(Long memberId, Long activityId, Long topicId, Long nodeId) {
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PerkLedgerServiceTest.java:625:        when(entitlementMapper.markRedeemed(REG, CH1)).thenReturn(1);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PerkLedgerServiceTest.java:658:        o.verify(entitlementMapper).markRedeemed(REG, CH1);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PerkLedgerServiceTest.java:666:        when(entitlementMapper.markRedeemed(REG, CH1)).thenReturn(0);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PerkLedgerServiceTest.java:676:        when(entitlementMapper.markRedeemed(REG, CH1)).thenReturn(1);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PerkLedgerServiceTest.java:689:        when(entitlementMapper.markRedeemed(REG, CH1)).thenReturn(1);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PerkLedgerServiceTest.java:700:        when(entitlementMapper.markRedeemed(REG, CH1)).thenReturn(1);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PerkLedgerServiceTest.java:741:        org.mockito.Mockito.doReturn(true, false).when(spyService).isExploreCompleted(REG, TOPIC);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PerkLedgerServiceTest.java:759:        org.mockito.Mockito.doReturn(true).when(spyService).isExploreCompleted(REG, TOPIC);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PerkLedgerServiceTest.java:812:        when(entitlementMapper.markRedeemed(REG, CH1)).thenReturn(1);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PerkLedgerServiceTest.java:825:        when(entitlementMapper.markRedeemed(REG, CH1)).thenReturn(1);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PerkLedgerServiceTest.java:838:        when(entitlementMapper.markRedeemed(REG, CH1)).thenReturn(1);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PerkLedgerServiceTest.java:855:        when(entitlementMapper.markRedeemed(REG, CH1)).thenReturn(1);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PerkLedgerServiceTest.java:895:        verify(entitlementMapper).restoreToPending(REG, CH1);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PerkLedgerServiceTest.java:911:        verify(entitlementMapper, never()).restoreToPending(anyLong(), anyLong());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PerkLedgerServiceTest.java:954:        inOrder.verify(entitlementMapper).restoreToPending(REG, CH1);      // 权益退回可核销
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PerkLedgerServiceTest.java:1022:        verify(entitlementMapper).restoreToPending(REG, CH1);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PerkLedgerServiceTest.java:1038:        verify(entitlementMapper, never()).restoreToPending(anyLong(), anyLong());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PerkLedgerServiceTest.java:1052:        verify(entitlementMapper, never()).restoreToPending(anyLong(), anyLong());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PerkLedgerServiceTest.java:1063:        assertTrue(service.isExploreCompleted(REG, TOPIC));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PerkLedgerServiceTest.java:1072:        assertFalse(service.isExploreCompleted(REG, TOPIC));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PerkLedgerServiceTest.java:1085:        assertTrue(service.isExploreCompleted(REG, TOPIC));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PerkLedgerServiceTest.java:1094:        assertFalse(service.isExploreCompleted(REG, TOPIC));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PerkLedgerServiceTest.java:1108:        assertFalse(service.isExploreCompleted(REG, TOPIC), "角色不足不得通关");
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PerkLedgerServiceTest.java:1109:        assertFalse(service.isExploreCompleted(REG, TOPIC), "需求组不足不得通关");
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PerkLedgerServiceTest.java:1110:        assertTrue(service.isExploreCompleted(REG, TOPIC));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PerkLedgerServiceTest.java:1124:        assertFalse(service.isExploreCompleted(REG, TOPIC));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PerkLedgerServiceTest.java:1140:        when(entitlementMapper.invalidateByRegistration(REG, "REFUND")).thenReturn(3);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PerkLedgerServiceTest.java:1143:        verify(entitlementMapper).invalidateByRegistration(REG, "REFUND");
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PerkLedgerServiceTest.java:1167:        verify(entitlementMapper).restoreToPending(REG, CH1);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PerkLedgerServiceTest.java:1181:        verify(entitlementMapper, never()).restoreToPending(anyLong(), anyLong());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/forward20261015/PlayerGrowthConcurrencyMySqlIT.java:231:        contend(service -> assertTrue(completion(service, badges).grantOnce(1L, 22L, 0L, null).isFirstCompletion()),
+chengyinhub-admin/src/test/java/com/chengyinhub/business/forward20261015/PlayerGrowthConcurrencyMySqlIT.java:232:                service -> assertTrue(completion(service, badges).grantOnce(1L, 11L, 0L, null).isFirstCompletion()), true);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/forward20261015/PlayerGrowthConcurrencyMySqlIT.java:297:        Future<TopicCompletionAwardVO> one = workers.submit(() -> completion.grantOnce(1L, 11L, 0L, null));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/forward20261015/PlayerGrowthConcurrencyMySqlIT.java:301:            two = workers.submit(() -> completion.grantOnce(1L, 11L, 0L, null));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ExploreRedeemIdempotentTest.java:106:        when(entitlementMapper.markRedeemed(REG, CH1)).thenReturn(1);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ExploreRedeemIdempotentTest.java:156:        verify(entitlementMapper, never()).markRedeemed(anyLong(), anyLong());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ExploreRedeemIdempotentTest.java:171:        when(entitlementMapper.markRedeemed(REG, CH1)).thenReturn(0);   // 已核销过 ⇒ CAS 必然打回
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ExploreRedeemIdempotentTest.java:185:        verify(entitlementMapper).markRedeemed(REG, CH1);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ExploreRedeemIdempotentTest.java:280:        when(entitlementMapper.markRedeemed(REG, CH1)).thenReturn(0);   // 已被 A 家核销
+chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/GameSessionRuntimeMapper.java:90:    int updateStoryStateCas(GameStoryState state);
+chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/GameSessionRuntimeMapper.java:123:    int insertPlayerNodeOutcome(GamePlayerNodeOutcome outcome);
+chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/GameSessionRuntimeMapper.java:124:    GamePlayerNodeOutcome selectPlayerNodeOutcome(@Param("sessionId") Long sessionId,
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RedemptionRewardClawbackService.java:83:            // 通关积分的 eventId 与发放侧一致:grantOnce(..., pointsSourceId = registration.ownerId)
+chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/PlayerNodeProgressMapper.java:23:    int insertPlayerNodeProgress(PlayerNodeProgress playerNodeProgress);
+chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/PlayerNodeProgressMapper.java:46:    List<com.chengyinhub.business.domain.vo.LeaderboardItemVO> selectRouteLeaderboard(
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicCompletionAwardServiceImpl.java:41:    public TopicCompletionAwardVO grantOnce(Long memberId, Long topicId, Long pointsSourceId, Date occurredAt) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicCompletionAwardServiceImpl.java:42:        return grantOnce(memberId, topicId, pointsSourceId, occurredAt, RewardPolicy.FULL);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicCompletionAwardServiceImpl.java:48:    public TopicCompletionAwardVO grantOnce(Long memberId, Long topicId, Long pointsSourceId, Date occurredAt,
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicCompletionAwardServiceImpl.java:104:                couponRewardService.grantOnce(topicId, memberId, topic.getCompleteRewardCouponId()); // 日志 uk 判重
+chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/PlayerRouteLeaderboardMyBatisTest.java:102:                    .selectRouteLeaderboard(ACT, TOPIC, 50);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/PlayerRouteLeaderboardMyBatisTest.java:127:            assertEquals(List.of(7L), mapper.selectRouteLeaderboard(501L, TOPIC, 50).stream()
+chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/PlayerRouteLeaderboardMyBatisTest.java:129:            assertEquals(0, mapper.selectRouteLeaderboard(0L, TOPIC, 50).size());
+chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/RegistrationEntitlementMapper.java:45:    public int markRedeemed(@Param("registrationId") Long registrationId,
+chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/RegistrationEntitlementMapper.java:52:    public int invalidateByRegistration(@Param("registrationId") Long registrationId,
+chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/RegistrationEntitlementMapper.java:64:    public int restoreToPending(@Param("registrationId") Long registrationId,
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ExploreCompletionReadServiceImpl.java:78:        vo.setCompleted(perkLedgerService.isExploreCompleted(registrationId, topicId));
+chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CompletedRouteFactMapper.java:10:    List<TopicRouteSession> selectCurrentCompletedRoutes(@Param("memberId") Long memberId);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java:338:            topicCompletionAwardService.grantOnce(memberId, topicId, activityId, null, RewardPolicy.XP_BADGE_ONLY);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java:340:            topicCompletionAwardService.grantOnce(memberId, topicId, activityId, null);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java:857:    public Map<String, Integer> sessionStatuses(List<TopicRouteSession> scopes) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java:892:    public int countCompletedParticipants(Long topicId) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ShopDayProofServiceImpl.java:60:            if (playerNodeProgressMapper.insertPlayerNodeProgress(progress) != 1) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ShopDayProofServiceImpl.java:95:                playerNodeProgressMapper.insertPlayerNodeProgress(row);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ShopDayProofServiceImpl.java:151:    public boolean markGameDone(Long memberId, Long activityId, Long topicId, Long nodeId) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:3341:        if (perkLedgerService.isExploreCompleted(registration.getId(), topicId)) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:3346:            TopicCompletionAwardVO award = topicCompletionAwardService.grantOnce(registration.getMemberId(), topicId,
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundDeadlineGateTest.java:219:        verify(entitlements, never()).invalidateByRegistration(anyLong(), any());
+chengyinhub-admin/src/test/java/com/chengyinhub/framework/aspectj/DeadlockRetryEntryPointContractTest.java:140:                            .contains("topicCompletionAwardService.grantOnce(")) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayerNodeProgressServiceImpl.java:54:    public int insertPlayerNodeProgress(PlayerNodeProgress playerNodeProgress)
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayerNodeProgressServiceImpl.java:58:        return playerNodeProgressMapper.insertPlayerNodeProgress(playerNodeProgress);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayerNodeProgressServiceImpl.java:80:    public List<LeaderboardItemVO> selectRouteLeaderboard(Long activityId, Long topicId, int limit)
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayerNodeProgressServiceImpl.java:82:        return playerNodeProgressMapper.selectRouteLeaderboard(activityId, topicId, limit);
+chengyinhub-admin/src/test/java/com/chengyinhub/web/service/PreferencePlayServiceTest.java:99:        when(ledger.isExploreCompleted(12L, 9L)).thenReturn(true);
+chengyinhub-admin/src/test/java/com/chengyinhub/web/service/PreferencePlayServiceTest.java:106:        verify(ledger).isExploreCompleted(12L, 9L);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplayReskinFixture.java:235:        when(gameMapper.updateStoryStateCas(any())).thenAnswer(call->{GameStoryState row=call.getArgument(0);row.setRevision(row.getRevision()+1);owners.put(row.getOwnerType()+":"+row.getOwnerId(),row);return 1;});
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PerkLedgerServiceImpl.java:290:        int released = entitlementMapper.invalidateByRegistration(registrationId, reason);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PerkLedgerServiceImpl.java:439:        if (entitlementMapper.markRedeemed(registrationId, chapterId) == 0) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PerkLedgerServiceImpl.java:587:                && isExploreCompleted(r.getRegistrationId(), r.getTopicId());
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PerkLedgerServiceImpl.java:604:            entitlementMapper.restoreToPending(r.getRegistrationId(), r.getChapterId());
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PerkLedgerServiceImpl.java:636:        boolean completedNow = r.getTopicId() != null && isExploreCompleted(r.getRegistrationId(), r.getTopicId());
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PerkLedgerServiceImpl.java:699:    public boolean isExploreCompleted(Long registrationId, Long topicId) {
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/JourneyPublishFreezeTest.java:249:        when(progressService.insertPlayerNodeProgress(any(PlayerNodeProgress.class))).thenReturn(1);
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/JourneyPublishFreezeTest.java:253:        when(completionAwardService.grantOnce(anyLong(), anyLong(), anyLong(), any()))
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayGpsGeofenceValidationTest.java:170:        when(progressService.insertPlayerNodeProgress(any())).thenReturn(1);
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayGpsGeofenceValidationTest.java:172:        when(completionAwardService.grantOnce(anyLong(), anyLong(), anyLong(), any()))
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayGpsGeofenceValidationTest.java:186:        verify(progressService, never()).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayGpsGeofenceValidationTest.java:189:        verify(completionAwardService, never()).grantOnce(anyLong(), anyLong(), anyLong(), any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayDelistedCompletedRetryContractTest.java:231:        when(progressService.insertPlayerNodeProgress(any())).thenReturn(1);
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayDelistedCompletedRetryContractTest.java:233:        when(completionAwardService.grantOnce(anyLong(), anyLong(), anyLong(), any()))
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayDelistedCompletedRetryContractTest.java:235:        when(completionAwardService.grantOnce(anyLong(), anyLong(), anyLong(), any(), any(RewardPolicy.class)))
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayDelistedCompletedRetryContractTest.java:273:        when(progressService.insertPlayerNodeProgress(any())).thenThrow(new DuplicateKeyException("uk_progress"));
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayDelistedCompletedRetryContractTest.java:321:        verify(progressService, times(1)).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayDelistedCompletedRetryContractTest.java:336:        verify(progressService, times(1)).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayDelistedCompletedRetryContractTest.java:354:        verify(progressService, never()).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayDelistedCompletedRetryContractTest.java:367:        verify(progressService, times(1)).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayDelistedCompletedRetryContractTest.java:379:        verify(progressService, times(1)).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayDelistedCompletedRetryContractTest.java:394:        verify(progressService, times(1)).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayDelistedCompletedRetryContractTest.java:408:        verify(progressService, never()).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayDelistedCompletedRetryContractTest.java:423:        verify(progressService, never()).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayDelistedCompletedRetryContractTest.java:452:        verify(progressService, never()).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayDelistedCompletedRetryContractTest.java:464:        verify(progressService, never()).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayDelistedCompletedRetryContractTest.java:490:        verify(progressService, never()).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayDelistedCompletedRetryContractTest.java:512:        verify(progressService, never()).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationCompletionCouponTest.java:58: * 通关判定只观察 {@link IPerkLedgerService#isExploreCompleted(Long, Long)} 的票侧结果;
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationCompletionCouponTest.java:177:        when(perkLedgerService.isExploreCompleted(REGISTRATION, TOPIC))
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationCompletionCouponTest.java:216:        verify(couponRewardService, never()).grantOnce(TOPIC, PLAYER, COUPON);
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationCompletionCouponTest.java:234:        verify(couponRewardService, never()).grantOnce(TOPIC, PLAYER, COUPON);
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationCompletionCouponTest.java:237:        verify(perkLedgerService, never()).isExploreCompleted(REGISTRATION, TOPIC);
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationCompletionCouponTest.java:251:        verify(perkLedgerService, never()).isExploreCompleted(anyLong(), anyLong());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationCompletionCouponTest.java:266:        verify(perkLedgerService, never()).isExploreCompleted(anyLong(), anyLong());
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:293:        if (runtimeMapper.updateStoryStateCas(owner) != 1) throw error("GAME_STATE_CONFLICT", "运行控制账已更新");
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:530:        if (runtimeMapper.updateStoryStateCas(owner) != 1) throw error("GAME_STATE_CONFLICT", "归属账已更新");
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:1478:        if (runtimeMapper.updateStoryStateCas(owner) != 1) throw error("GAME_STATE_CONFLICT", "本队状态已更新，请刷新");
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:3237:        GamePlayerNodeOutcome outcome = runtimeMapper.selectPlayerNodeOutcome(
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:3270:        if (runtimeMapper.updateStoryStateCas(story) != 1) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:3289:        if (runtimeMapper.selectPlayerNodeOutcome(session.getId(), actor.getMemberId(), station.getNodeId()) != null) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:3308:        GamePlayerNodeOutcome existing = runtimeMapper.selectPlayerNodeOutcome(
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:5078:        GamePlayerNodeOutcome existing = runtimeMapper.selectPlayerNodeOutcome(
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:5097:        if (runtimeMapper.insertPlayerNodeOutcome(outcome) != 1) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:5098:            existing = runtimeMapper.selectPlayerNodeOutcome(session.getId(), memberId, station.getNodeId());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayRouteConflictHttpContractTest.java:141:        when(progressService.insertPlayerNodeProgress(any())).thenAnswer(inv -> {
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayRouteConflictHttpContractTest.java:249:        org.mockito.Mockito.verify(progressService, org.mockito.Mockito.never()).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PhotoReviewRewardContractTest.java:199:        when(progressService.insertPlayerNodeProgress(any())).thenReturn(1);
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PhotoReviewRewardContractTest.java:201:        when(completionAwardService.grantOnce(anyLong(), anyLong(), anyLong(), any()))
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PhotoReviewRewardContractTest.java:230:        verify(service).insertPlayerNodeProgress(captor.capture());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PhotoReviewRewardContractTest.java:265:        when(progressService.insertPlayerNodeProgress(any()))
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PhotoReviewRewardContractTest.java:284:        when(progressService.insertPlayerNodeProgress(any()))
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PhotoReviewRewardContractTest.java:299:        when(progressService.insertPlayerNodeProgress(any()))
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PhotoReviewRewardContractTest.java:315:        when(progressService.insertPlayerNodeProgress(any()))
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameSessionIndependentRevisionMySqlIT.java:197:        assertEquals("COMPLETED",mapper.selectPlayerNodeOutcome(50L,7L,11L).getStatus());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameSessionIndependentRevisionMySqlIT.java:207:        assertNull(mapper.selectPlayerNodeOutcome(50L,9L,11L));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameSessionIndependentRevisionMySqlIT.java:216:        assertEquals("COMPLETED",mapper.selectPlayerNodeOutcome(50L,7L,11L).getStatus());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameSessionIndependentRevisionMySqlIT.java:229:        assertEquals("FALLBACK_COMPLETED",mapper.selectPlayerNodeOutcome(50L,7L,11L).getStatus());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameSessionIndependentRevisionMySqlIT.java:286:        assertNull(mapper.selectPlayerNodeOutcome(50L,7L,11L));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PartialChapterAftercareTest.java:79:        verify(entitlements,never()).invalidateByRegistration(anyLong(),anyString());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PhotoOwnerBindingContractTest.java:158:        when(progressService.insertPlayerNodeProgress(any())).thenReturn(1);
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PhotoOwnerBindingContractTest.java:161:        when(completionAwardService.grantOnce(anyLong(), anyLong(), anyLong(), any()))
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PhotoOwnerBindingContractTest.java:199:        verify(progressService, never()).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PhotoOwnerBindingContractTest.java:211:        verify(progressService).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PhotoOwnerBindingContractTest.java:246:        verify(progressService).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PhotoOwnerBindingContractTest.java:278:        verify(progressService).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PhotoOwnerBindingContractTest.java:288:        when(progressService.insertPlayerNodeProgress(any()))
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/IPerkLedgerService.java:211:    boolean isExploreCompleted(Long registrationId, Long topicId);
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/TopicRouteFrozenSessionReadSideTest.java:76:        when(runtime.sessionStatuses(any())).thenReturn(Collections.singletonMap(
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayHistoryFulfillmentAccessTest.java:340:        verify(progressService, never()).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameSessionVerifyStationGateAcceptanceTest.java:121:        when(runtimeMapper.insertPlayerNodeOutcome(any())).thenAnswer(invocation -> {
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameSessionVerifyStationGateAcceptanceTest.java:203:        verify(runtimeMapper, never()).insertPlayerNodeOutcome(any());
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ITopicCompletionAwardService.java:8:    TopicCompletionAwardVO grantOnce(Long memberId, Long topicId, Long pointsSourceId, Date occurredAt);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ITopicCompletionAwardService.java:10:    TopicCompletionAwardVO grantOnce(Long memberId, Long topicId, Long pointsSourceId, Date occurredAt,
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressIdempotencyTest.java:147:        when(progressService.insertPlayerNodeProgress(any())).thenReturn(1);
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressIdempotencyTest.java:242:        when(progressService.insertPlayerNodeProgress(any())).thenThrow(
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressIdempotencyTest.java:250:        verify(shopDayProofService, never()).markGameDone(anyLong(), anyLong(), anyLong(), anyLong());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressIdempotencyTest.java:263:        when(progressService.insertPlayerNodeProgress(any())).thenThrow(
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressIdempotencyTest.java:266:        when(shopDayProofService.markGameDone(MEMBER, ACTIVITY, TOPIC, NODE)).thenReturn(true);
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressIdempotencyTest.java:270:        verify(shopDayProofService).markGameDone(MEMBER, ACTIVITY, TOPIC, NODE);
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressIdempotencyTest.java:277:        when(progressService.insertPlayerNodeProgress(any())).thenThrow(
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressIdempotencyTest.java:280:        when(shopDayProofService.markGameDone(MEMBER, ACTIVITY, TOPIC, NODE)).thenReturn(false);
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressIdempotencyTest.java:302:        when(progressService.insertPlayerNodeProgress(any())).thenThrow(
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressIdempotencyTest.java:305:        when(shopDayProofService.markGameDone(MEMBER, ACTIVITY, TOPIC, NODE)).thenReturn(true);
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressIdempotencyTest.java:348:        verify(progressService).insertPlayerNodeProgress(inserted.capture());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressIdempotencyTest.java:443:        verify(topicCompletionCouponRewardService, never()).grantOnce(anyLong(), anyLong(), anyLong());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressIdempotencyTest.java:484:        verify(topicCompletionCouponRewardService).grantOnce(TOPIC, MEMBER, 919L);
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressIdempotencyTest.java:493:        when(progressService.insertPlayerNodeProgress(any())).thenThrow(
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressIdempotencyTest.java:505:        when(perkLedgerService.isExploreCompleted(eq(777L), eq(TOPIC))).thenReturn(true);
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressIdempotencyTest.java:591:        when(progressService.insertPlayerNodeProgress(any())).thenThrow(
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressIdempotencyTest.java:637:        when(progressService.insertPlayerNodeProgress(any())).thenThrow(
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressIdempotencyTest.java:703:        when(progressService.insertPlayerNodeProgress(any())).thenThrow(dbError);
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressIdempotencyTest.java:712:        when(progressService.insertPlayerNodeProgress(any())).thenThrow(
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressIdempotencyTest.java:725:        when(progressService.insertPlayerNodeProgress(any())).thenThrow(
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressIdempotencyTest.java:740:        verify(topicCompletionCouponRewardService, never()).grantOnce(anyLong(), anyLong(), anyLong());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressIdempotencyTest.java:807:        when(progressService.insertPlayerNodeProgress(any())).thenThrow(
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressIdempotencyTest.java:822:        when(perkLedgerService.isExploreCompleted(eq(777L), eq(TOPIC))).thenReturn(true);
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiCreativeSquareReadModelBudgetTest.java:215:        verify(f.routeRuntimeService, times(1)).sessionStatuses(anyList());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImplTest.java:120:        when(runtimeMapper.insertPlayerNodeOutcome(any())).thenReturn(1);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImplTest.java:518:        verify(runtimeMapper, never()).updateStoryStateCas(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImplTest.java:698:        verify(runtimeMapper, never()).updateStoryStateCas(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImplTest.java:1346:        when(runtimeMapper.insertPlayerNodeOutcome(any())).thenAnswer(invocation -> {
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImplTest.java:1377:        when(runtimeMapper.insertPlayerNodeOutcome(any())).thenAnswer(invocation -> {
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImplTest.java:1418:        verify(runtimeMapper, never()).insertPlayerNodeOutcome(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImplTest.java:1453:        verify(runtimeMapper, never()).insertPlayerNodeOutcome(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImplTest.java:1516:        when(runtimeMapper.insertPlayerNodeOutcome(any())).thenAnswer(invocation -> {
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImplTest.java:1621:        when(runtimeMapper.insertPlayerNodeOutcome(any())).thenAnswer(invocation -> {
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImplTest.java:1636:        verify(runtimeMapper).insertPlayerNodeOutcome(any(GamePlayerNodeOutcome.class));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImplTest.java:1994:        when(runtimeMapper.insertPlayerNodeOutcome(any())).thenAnswer(invocation -> {
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImplTest.java:2396:        verify(runtimeMapper, never()).updateStoryStateCas(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImplTest.java:2408:        when(runtimeMapper.selectPlayerNodeOutcome(SESSION, PLAYER, NODE)).thenReturn(
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImplTest.java:2421:        verify(runtimeMapper, never()).updateStoryStateCas(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImplTest.java:2434:        when(runtimeMapper.selectPlayerNodeOutcome(SESSION, PLAYER, NODE)).thenReturn(
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImplTest.java:2438:        when(runtimeMapper.updateStoryStateCas(story)).thenReturn(1);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImplTest.java:2462:        when(runtimeMapper.selectPlayerNodeOutcome(SESSION, PLAYER, NODE)).thenReturn(
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImplTest.java:2466:        when(runtimeMapper.updateStoryStateCas(story)).thenReturn(1);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImplTest.java:2491:        when(runtimeMapper.selectPlayerNodeOutcome(SESSION, PLAYER, NODE)).thenReturn(
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImplTest.java:2495:        when(runtimeMapper.updateStoryStateCas(story)).thenReturn(1);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImplTest.java:2519:        when(runtimeMapper.selectPlayerNodeOutcome(SESSION, PLAYER, NODE)).thenReturn(
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImplTest.java:2523:        when(runtimeMapper.updateStoryStateCas(story)).thenReturn(1);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImplTest.java:2549:        when(runtimeMapper.selectPlayerNodeOutcome(SESSION, PLAYER, NODE)).thenReturn(
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImplTest.java:2553:        when(runtimeMapper.updateStoryStateCas(story)).thenReturn(1);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImplTest.java:2577:        when(runtimeMapper.selectPlayerNodeOutcome(SESSION, PLAYER, NODE)).thenReturn(
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImplTest.java:2581:        when(runtimeMapper.updateStoryStateCas(story)).thenReturn(1);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImplTest.java:712:        verify(awards).grantOnce(7L, 10L, 0L, null);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImplTest.java:748:        verify(awards).grantOnce(7L, 10L, 0L, null, com.chengyinhub.common.constant.RewardPolicy.XP_BADGE_ONLY);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImplTest.java:749:        verify(awards, never()).grantOnce(anyLong(), anyLong(), anyLong(), any());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImplTest.java:1525:        Map<String, Integer> statuses = runtime.sessionStatuses(Collections.singletonList(scope));
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressCompletionTruthTest.java:63:        when(perkLedgerService.isExploreCompleted(REGISTRATION, TOPIC)).thenReturn(true);
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressCompletionTruthTest.java:66:        when(perkLedgerService.isExploreCompleted(REGISTRATION, TOPIC)).thenReturn(false);
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressCompletionTruthTest.java:198:        when(progressService.insertPlayerNodeProgress(any())).thenReturn(1);
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressCompletionTruthTest.java:201:        when(completionAwardService.grantOnce(anyLong(), anyLong(), anyLong(), any()))
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressCompletionTruthTest.java:221:        verify(perkLedgerService, never()).isExploreCompleted(anyLong(), anyLong());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressCompletionTruthTest.java:222:        verify(completionAwardService, never()).grantOnce(anyLong(), anyLong(), anyLong(), any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressCompletionTruthTest.java:245:        when(perkLedgerService.isExploreCompleted(REGISTRATION, TOPIC)).thenReturn(false);
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressCompletionTruthTest.java:253:        verify(perkLedgerService, never()).isExploreCompleted(anyLong(), anyLong());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressCompletionTruthTest.java:254:        verify(completionAwardService, never()).grantOnce(anyLong(), anyLong(), anyLong(), any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressCompletionTruthTest.java:294:        verify(completionAwardService, never()).grantOnce(anyLong(), anyLong(), anyLong(), any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressCompletionTruthTest.java:315:        verify(progressService, never()).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressCompletionTruthTest.java:349:        verify(runtime).recordPlayerArrival(PLAYER,TOPIC,ACTIVITY,NODE,null,null,"GPS");verify(progressService,never()).insertPlayerNodeProgress(any());verify(pointsAwardService,never()).award(anyLong(),anyLong(),anyLong(),any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressCompletionTruthTest.java:363:        verify(progressService,never()).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressCompletionTruthTest.java:365:        verify(completionAwardService,never()).grantOnce(anyLong(),anyLong(),anyLong(),any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressCompletionTruthTest.java:384:        verify(completionAwardService, never()).grantOnce(anyLong(), anyLong(), anyLong(), any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressCompletionTruthTest.java:399:        verify(completionAwardService).grantOnce(PLAYER, TOPIC, ACTIVITY, null);
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressCompletionTruthTest.java:400:        verify(perkLedgerService, never()).isExploreCompleted(anyLong(), anyLong());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressCompletionTruthTest.java:466:        verify(progressService, never()).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressCompletionTruthTest.java:467:        verify(completionAwardService, never()).grantOnce(anyLong(), anyLong(), anyLong(), any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressCompletionTruthTest.java:494:        when(progressService.insertPlayerNodeProgress(any())).thenAnswer(call -> {
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressCompletionTruthTest.java:544:        verify(perkLedgerService, never()).isExploreCompleted(anyLong(), anyLong());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressCompletionTruthTest.java:683:        AjaxResult pick=controller.answer(String.valueOf(ACTIVITY),String.valueOf(NODE),"c",null,"pick-proof",3);assertEquals(200,pick.get("code"));verify(runtime).recordPlayerArrival(PLAYER,TOPIC,ACTIVITY,NODE,"pick-proof",3,"ANSWER");verify(progressService,never()).insertPlayerNodeProgress(any());verify(pointsAwardService,never()).award(anyLong(),anyLong(),anyLong(),any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressCompletionTruthTest.java:695:        verify(progressService).insertPlayerNodeProgress(inserted.capture());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySensorResultTest.java:103:        when(progressService.insertPlayerNodeProgress(any())).thenReturn(1);
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySensorResultTest.java:111:        when(completion.grantOnce(MEMBER, TOPIC, ACTIVITY, null, RewardPolicy.XP_BADGE_ONLY))
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySensorResultTest.java:113:        when(completion.grantOnce(MEMBER, TOPIC, ACTIVITY, null))
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySensorResultTest.java:123:        verify(progressService, never()).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySensorResultTest.java:126:        verify(completion, never()).grantOnce(anyLong(), anyLong(), anyLong(), any(), any(RewardPolicy.class));
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySensorResultTest.java:141:        verify(progressService, never()).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySensorResultTest.java:158:        verify(completion).grantOnce(MEMBER, TOPIC, ACTIVITY, null, RewardPolicy.XP_BADGE_ONLY);
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySensorResultTest.java:159:        verify(completion, never()).grantOnce(MEMBER, TOPIC, ACTIVITY, null);
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySensorResultTest.java:179:        when(progressService.insertPlayerNodeProgress(any())).thenThrow(new DuplicateKeyException("uk_progress"));
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySensorResultTest.java:181:        when(proof.markGameDone(MEMBER, ACTIVITY, TOPIC, NODE)).thenReturn(true);
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySensorResultTest.java:190:        verify(proof).markGameDone(MEMBER, ACTIVITY, TOPIC, NODE);
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySensorResultTest.java:193:        verify(completion).grantOnce(MEMBER, TOPIC, ACTIVITY, null, RewardPolicy.XP_BADGE_ONLY);
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySensorResultTest.java:222:        when(proof.markGameDone(MEMBER, ACTIVITY, TOPIC, NODE)).thenReturn(true);
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySensorResultTest.java:223:        when(progressService.insertPlayerNodeProgress(any())).thenThrow(new DuplicateKeyException("uk_progress"));
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySensorResultTest.java:232:        verify(completion, never()).grantOnce(anyLong(), anyLong(), anyLong(), any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySensorResultTest.java:233:        verify(completion, never()).grantOnce(anyLong(), anyLong(), anyLong(), any(), any(RewardPolicy.class));
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySensorResultTest.java:251:        verify(progressService, never()).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySensorResultTest.java:270:        verify(progressService, never()).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySensorResultTest.java:290:        verify(progressService, never()).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySensorResultTest.java:315:        verify(completion).grantOnce(MEMBER, TOPIC, ACTIVITY, null);
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySensorResultTest.java:316:        verify(completion, never()).grantOnce(
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySensorResultTest.java:332:        verify(progressService, never()).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySensorResultTest.java:352:        verify(progressService, never()).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySensorResultTest.java:370:        verify(progressService).insertPlayerNodeProgress(inserted.capture());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySensorResultTest.java:395:        verify(progressService, never()).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySensorResultTest.java:401:        verify(progressService).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySensorResultTest.java:426:        verify(progressService, never()).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySensorResultTest.java:460:        verify(progressService, never()).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySensorResultTest.java:474:        verify(progressService, never()).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySensorResultTest.java:487:        verify(progressService, never()).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySensorResultTest.java:498:        verify(progressService, never()).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySensorResultTest.java:507:        verify(progressService, never()).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySensorResultTest.java:516:        verify(progressService, never()).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySensorResultTest.java:530:        verify(progressService, never()).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySensorResultTest.java:543:        verify(progressService, never()).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySensorResultTest.java:557:        verify(progressService, never()).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySensorResultTest.java:591:        verify(progressService, never()).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySensorResultTest.java:598:        when(progressService.insertPlayerNodeProgress(any())).thenThrow(new DuplicateKeyException("uk_progress"));
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySensorResultTest.java:615:        verify(progressService, never()).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySensorResultTest.java:624:        verify(progressService, never()).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySensorResultTest.java:632:        verify(progressService, never()).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GenericRouteRuntimeServiceTest.java:87:        when(mapper.updateStoryStateCas(any())).thenAnswer(call -> { GameStoryState saved = call.getArgument(0); saved.setRevision(saved.getRevision() + 1); return 1; });
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GenericRouteRuntimeServiceTest.java:143:        verify(mapper, never()).updateStoryStateCas(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GenericRouteRuntimeServiceTest.java:212:        assertEquals(unchanged,owner.getVariablesJson());verify(mapper,never()).updateStoryStateCas(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GenericRouteRuntimeServiceTest.java:434:        verify(mapper,never()).updateStoryStateCas(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayHistoryNodesContractTest.java:359:        verify(progressService, never()).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayHistoryNodesContractTest.java:375:        verify(progressService, never()).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayHistoryNodesContractTest.java:398:        verify(progressService, never()).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayHistoryNodesOldEntryContractTest.java:202:        verify(progressService, never()).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayHistoryNodesOldEntryContractTest.java:218:        verify(progressService, never()).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ArchitectureDayGCompletionFallbackTest.java:61:        when(routes.sessionStatuses(any())).thenReturn(Map.of());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicCompletionAwardContextTest.java:79:            assertTrue(award.grantOnce(11L, 7L, 100L, null, RewardPolicy.XP_BADGE_ONLY).isFirstCompletion());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicCompletionAwardContextTest.java:86:                    () -> award.grantOnce(11L, 8L, 100L, null, RewardPolicy.XP_BADGE_ONLY));
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayMyCompletedSelfPlayContractTest.java:81:        when(routeService.sessionStatuses(any())).thenReturn(Collections.emptyMap());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayMyCompletedSelfPlayContractTest.java:182:        when(routeService.sessionStatuses(any())).thenReturn(statuses);
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayMyCompletedSelfPlayContractTest.java:200:        when(routeService.sessionStatuses(any())).thenReturn(statuses);
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayMyCompletedSelfPlayContractTest.java:248:        when(perkLedgerService.isExploreCompleted(700L, ACTIVITY_TOPIC)).thenReturn(true);
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayPuzzleHintTest.java:97:        when(progressService.insertPlayerNodeProgress(any())).thenReturn(1);
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayPuzzleHintTest.java:181:        verify(progressService).insertPlayerNodeProgress(progress.capture());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayPuzzleHintTest.java:211:        verify(progressService, never()).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayPhotoRetryAndFailureContractTest.java:145:        when(progressService.insertPlayerNodeProgress(any())).thenReturn(1);
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayPhotoRetryAndFailureContractTest.java:148:        when(completionAwardService.grantOnce(anyLong(), anyLong(), anyLong(), any()))
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayPhotoRetryAndFailureContractTest.java:170:        when(progressService.insertPlayerNodeProgress(any())).thenThrow(new DuplicateKeyException("uk_progress"));
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayPhotoRetryAndFailureContractTest.java:198:        when(progressService.insertPlayerNodeProgress(any())).thenThrow(new DuplicateKeyException("uk_progress"));
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayPhotoRetryAndFailureContractTest.java:233:        verify(progressService, never()).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayPhotoRetryAndFailureContractTest.java:282:        verify(progressService, never()).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayPhotoRetryAndFailureContractTest.java:295:        verify(progressService, never()).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayPhotoRetryAndFailureContractTest.java:309:        verify(progressService, never()).insertPlayerNodeProgress(any());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicCompletionCouponRewardServiceImplTest.java:49:        assertTrue(service.grantOnce(21L, 8L, 5L));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicCompletionCouponRewardServiceImplTest.java:61:        assertFalse(service.grantOnce(21L, 8L, 5L));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicCompletionCouponRewardServiceImplTest.java:74:            assertThrows(IllegalStateException.class, () -> service.grantOnce(21L, 8L, 5L));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicCompletionCouponRewardServiceImplTest.java:85:            assertThrows(IllegalStateException.class, () -> service.grantOnce(21L, 8L, 5L));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicCompletionCouponRewardServiceImplTest.java:93:        assertFalse(service.grantOnce(21L, 8L, 5L));
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayLeaderboardTest.java:191:        when(progressService.selectRouteLeaderboard(ACT, 300L, 50))
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayLeaderboardTest.java:208:        when(progressService.selectRouteLeaderboard(0L, 300L, 50))
+chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayLeaderboardTest.java:244:        verify(progressService, org.mockito.Mockito.never()).selectRouteLeaderboard(any(), any(), anyInt());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ShopDayGameThenPhotoH2Test.java:113:        assertTrue(service.markGameDone(MEMBER, ACTIVITY, TOPIC, NODE), "答对游戏应把 status 推到 1");
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ShopDayGameThenPhotoH2Test.java:138:        service.markGameDone(MEMBER, ACTIVITY, TOPIC, NODE);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ShopDayGameThenPhotoH2Test.java:152:        service.markGameDone(MEMBER, ACTIVITY, TOPIC, NODE);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ShopDayGameThenPhotoH2Test.java:165:        service.markGameDone(MEMBER, ACTIVITY, TOPIC, NODE);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ShopDayGameThenPhotoH2Test.java:194:        assertTrue(service.markGameDone(MEMBER, ACTIVITY, TOPIC, NODE), "第一次答完命中 1 行");
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ShopDayGameThenPhotoH2Test.java:195:        assertFalse(service.markGameDone(MEMBER, ACTIVITY, TOPIC, NODE), "第二次恒 0 行 ⇒ 不发第二份 XP");
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ShopDayGameThenPhotoH2Test.java:199:        assertFalse(service.markGameDone(MEMBER, ACTIVITY, TOPIC, NODE),
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ExploreRedeemRecordTest.java:165:        when(perkSvc.isExploreCompleted(REG, TOPIC)).thenReturn(false);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ExploreRedeemRecordTest.java:180:        when(perkSvc.isExploreCompleted(REG, TOPIC)).thenReturn(false);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ExploreRedeemRecordTest.java:203:        when(perkSvc.isExploreCompleted(REG, TOPIC)).thenReturn(false);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ExploreRedeemRecordTest.java:223:        when(perkSvc.isExploreCompleted(REG, TOPIC)).thenReturn(false);   // 才核销 1/3 章
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ExploreRedeemRecordTest.java:233:        when(perkSvc.isExploreCompleted(REG, TOPIC)).thenReturn(true);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ExploreRedeemRecordTest.java:241:        verify(completionAwardService).grantOnce(reg().getMemberId(), TOPIC, reg().getOwnerId(), redemption.getCreateTime());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ExploreRedeemRecordTest.java:246:        when(perkSvc.isExploreCompleted(REG, TOPIC)).thenReturn(true);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ExploreRedeemRecordTest.java:250:        when(completionAwardService.grantOnce(any(), eq(TOPIC), any(), any())).thenReturn(award);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ExploreRedeemRecordTest.java:260:        when(perkSvc.isExploreCompleted(REG, TOPIC)).thenReturn(true);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ExploreRedeemRecordTest.java:262:                .grantOnce(any(), eq(TOPIC), any(), any());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ExploreRedeemRecordTest.java:272:        when(perkSvc.isExploreCompleted(REG, TOPIC)).thenReturn(false);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ExploreRedeemRecordTest.java:302:        when(perkSvc.isExploreCompleted(REG, TOPIC)).thenReturn(true);   // 连通关时也不入账
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ExploreRedeemRecordTest.java:365:        when(perkSvc.isExploreCompleted(REG, TOPIC)).thenReturn(false);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ExploreRedeemRecordTest.java:394:        verify(completionAwardService, never()).grantOnce(any(), any(), any(), any());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayerNodeArrivalSharingH2Test.java:229:        assertFalse(service.markGameDone(MEMBER, ACTIVITY, TOPIC, GAME_ONLY), "没有到店行,游戏完成无处推进");
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CompletedRouteFactReaderTest.java:29:        assertThrows(IllegalArgumentException.class, () -> reader.findCurrentCompletedRoutes(null));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CompletedRouteFactReaderTest.java:30:        assertThrows(IllegalArgumentException.class, () -> reader.findCurrentCompletedRoutes(0L));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CompletedRouteFactReaderTest.java:31:        assertThrows(IllegalArgumentException.class, () -> reader.findCurrentCompletedRoutes(-1L));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CompletedRouteFactReaderTest.java:41:        when(mapper.selectCurrentCompletedRoutes(7L)).thenReturn(List.of(activity, self));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CompletedRouteFactReaderTest.java:43:        List<TopicRouteSession> facts = reader.findCurrentCompletedRoutes(7L);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CompletedRouteFactReaderTest.java:49:        verify(mapper, times(1)).selectCurrentCompletedRoutes(7L);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CompletedRouteFactReaderTest.java:57:        when(mapper.selectCurrentCompletedRoutes(7L)).thenReturn(List.of(
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CompletedRouteFactReaderTest.java:63:        Set<String> routeOnly = reader.findCurrentCompletedRoutes(7L).stream()
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CompletedRouteFactReaderTest.java:70:        verify(mapper, times(1)).selectCurrentCompletedRoutes(7L);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ExploreCompletionReadServiceImplTest.java:111:        when(perkLedgerService.isExploreCompleted(REG, TOPIC)).thenReturn(true);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ExploreCompletionReadServiceImplTest.java:211:        when(perkLedgerService.isExploreCompleted(REG, TOPIC)).thenReturn(false);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ExploreCompletionReadServiceImplTest.java:514:        when(perkLedgerService.isExploreCompleted(REG, TOPIC)).thenReturn(false);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ExploreScanReplayCandidateTest.java:71:        verify(entitlements, never()).markRedeemed(any(), any());
+chengyinhub-admin/src/main/java/com/chengyinhub/web/service/PreferencePlayService.java:207:                    && perkLedgerService.isExploreCompleted(row.getId(), topicId)) return true;
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PhotoReviewProgressMybatisIntegrationTest.java:128:        assertEquals(1, mapper.insertPlayerNodeProgress(p));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PhotoReviewProgressMybatisIntegrationTest.java:205:        assertThrows(DuplicateKeyException.class, () -> mapper.insertPlayerNodeProgress(dup));
+chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCreativeSquareController.java:344:                : topicRouteRuntimeService.sessionStatuses(routeScopes);
+chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCreativeSquareController.java:1237:                : topicRouteRuntimeService.sessionStatuses(routeScopes);
+chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCreativeSquareController.java:1252:                    ? perkLedgerService.isExploreCompleted(explore.getId(), activity.getTopicId())
+chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java:2598:        return perkLedgerService.isExploreCompleted(explore.getId(), topicId);
+chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java:2606:    private boolean isCompletedCompletionFact(com.chengyinhub.business.domain.CmsTopic topic,
+chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java:2865:     * topicRouteCompletionCoordinator.advance(有写)、topicCompletionAwardService.grantOnce(有写+发徽章)。
+chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java:3023:            rows = playerNodeProgressService.insertPlayerNodeProgress(p);
+chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java:3051:            if (rows == 0 && shopDay && shopDayProofService.markGameDone(memberId, actId, node.getTopicId(), node.getId())) {
+chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java:3178:                    ? topicCompletionAwardService.grantOnce(memberId, node.getTopicId(), actId, null)
+chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java:3179:                    : topicCompletionAwardService.grantOnce(memberId, node.getTopicId(), actId, null, completionPolicy);
+chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java:3304:                : topicRouteRuntimeService.sessionStatuses(routeScopes);
+chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java:3324:            boolean routeCompleted = isCompletedCompletionFact(completionTopic, routeStatus,
+chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java:3360:            boolean selfCompleted = isCompletedCompletionFact(selfTopic, selfRouteStatus, null,
+chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java:3415:                ? playerNodeProgressService.selectRouteLeaderboard(boardActivityId, boardTopicId, 50)
+
+## fact tables and source separation
+command arguments: ["rg", "-n", "--glob", "*.java", "--glob", "*.xml", "--glob", "*.js", "--glob", "*.vue", "player_node_progress|topic_route_session|game_story_state|game_player_node_outcome|registration_entitlement|normalCompleters|fallbackCompleters", "chengyinhub-system/src/main/resources/mapper/business"]
+chengyinhub-system/src/main/resources/mapper/business/PersonalExplorationExportMapper.xml:8: <select id="upper" resultType="long">select coalesce(max(s.id),0) from topic_route_session s where <include refid="ownedCompleted"/></select>
+chengyinhub-system/src/main/resources/mapper/business/PersonalExplorationExportMapper.xml:10:  select count(*) from (select s.id from topic_route_session s where <include refid="ownedCompleted"/> and s.id &lt;= #{upper} limit 1001) bounded
+chengyinhub-system/src/main/resources/mapper/business/PersonalExplorationExportMapper.xml:20:  from topic_route_session s
+chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml:243:                       from registration_entitlement e
+chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml:1101:                      and not exists (select 1 from player_node_progress p where p.member_id = r.member_id
+chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml:1108:          and exists (select 1 from player_node_progress p where p.member_id = r.member_id
+chengyinhub-system/src/main/resources/mapper/business/PlayerNodeProgressMapper.xml:25:        select id, play_instance_id, member_id, activity_id, topic_id, node_id, status, checkin_time, pic_url, review_status, longitude, latitude, puzzle_score, completion_mode, del_flag, create_time from player_node_progress
+chengyinhub-system/src/main/resources/mapper/business/PlayerNodeProgressMapper.xml:37:                and play_instance_id=coalesce((select r.play_instance_id from topic_route_session r where r.member_id=player_node_progress.member_id and r.topic_id=player_node_progress.topic_id and r.activity_id=player_node_progress.activity_id order by r.id desc limit 1),'default')
+chengyinhub-system/src/main/resources/mapper/business/PlayerNodeProgressMapper.xml:45:        from player_node_progress
+chengyinhub-system/src/main/resources/mapper/business/PlayerNodeProgressMapper.xml:56:        insert into player_node_progress
+chengyinhub-system/src/main/resources/mapper/business/PlayerNodeProgressMapper.xml:95:         不是「节点通关没有」(那是 registration_entitlement)。原来的 `status = 0` 会让
+chengyinhub-system/src/main/resources/mapper/business/PlayerNodeProgressMapper.xml:100:        update player_node_progress
+chengyinhub-system/src/main/resources/mapper/business/PlayerNodeProgressMapper.xml:110:        update player_node_progress
+chengyinhub-system/src/main/resources/mapper/business/PlayerNodeProgressMapper.xml:118:        update player_node_progress
+chengyinhub-system/src/main/resources/mapper/business/PlayerNodeProgressMapper.xml:122:          and play_instance_id=coalesce((select r.play_instance_id from topic_route_session r where r.member_id=#{memberId} and r.topic_id=#{topicId} and r.activity_id=#{activityId} order by r.id desc limit 1),'default')
+chengyinhub-system/src/main/resources/mapper/business/PlayerNodeProgressMapper.xml:134:                  from player_node_progress p
+chengyinhub-system/src/main/resources/mapper/business/PlayerNodeProgressMapper.xml:187:          from player_node_progress p
+chengyinhub-system/src/main/resources/mapper/business/PlayerNodeProgressMapper.xml:190:           and p.play_instance_id=coalesce((select r.play_instance_id from topic_route_session r where r.member_id=p.member_id and r.topic_id=p.topic_id and r.activity_id=p.activity_id order by r.id desc limit 1),'default')
+chengyinhub-system/src/main/resources/mapper/business/PlayerNodeProgressMapper.xml:198:    <!-- D-13 分支主题排行榜(N-02):一主题一榜,读每位玩家本场最新一局 topic_route_session
+chengyinhub-system/src/main/resources/mapper/business/PlayerNodeProgressMapper.xml:205:               (select count(*) from player_node_progress p
+chengyinhub-system/src/main/resources/mapper/business/PlayerNodeProgressMapper.xml:213:          from topic_route_session r
+chengyinhub-system/src/main/resources/mapper/business/PlayerNodeProgressMapper.xml:216:           and r.id = (select max(x.id) from topic_route_session x
+chengyinhub-system/src/main/resources/mapper/business/CompletedRouteFactMapper.xml:21:        from topic_route_session r
+chengyinhub-system/src/main/resources/mapper/business/CompletedRouteFactMapper.xml:24:            from topic_route_session
+chengyinhub-system/src/main/resources/mapper/business/ViewCreativeSquareMapper.xml:220:        from player_node_progress
+chengyinhub-system/src/main/resources/mapper/business/ViewCreativeSquareMapper.xml:236:        from player_node_progress
+chengyinhub-system/src/main/resources/mapper/business/ExplorationAnniversaryMapper.xml:8:    from topic_route_session s join cms_topic on cms_topic.id=s.topic_id
+chengyinhub-system/src/main/resources/mapper/business/OrientScoringMapper.xml:66:        select <include refid="sessionColumns"/> from topic_route_session where id = #{id} for update
+chengyinhub-system/src/main/resources/mapper/business/OrientScoringMapper.xml:69:        select <include refid="sessionColumns"/> from topic_route_session where id = #{id}
+chengyinhub-system/src/main/resources/mapper/business/OrientScoringMapper.xml:98:          from player_node_progress
+chengyinhub-system/src/main/resources/mapper/business/OrientScoringMapper.xml:185:          from topic_route_session r
+chengyinhub-system/src/main/resources/mapper/business/OrientScoringMapper.xml:190:           and r.id = (select max(x.id) from topic_route_session x
+chengyinhub-system/src/main/resources/mapper/business/OrientMapper.xml:207:        select count(1) from player_node_progress
+chengyinhub-system/src/main/resources/mapper/business/OrientMapper.xml:256:            from player_node_progress p
+chengyinhub-system/src/main/resources/mapper/business/TopicEditionFundsMapper.xml:96:                                      and exists (select 1 from registration_entitlement e
+chengyinhub-system/src/main/resources/mapper/business/TopicEditionFundsMapper.xml:105:                                      and exists (select 1 from registration_entitlement e
+chengyinhub-system/src/main/resources/mapper/business/ClubEventOpsMapper.xml:585:          from player_node_progress
+chengyinhub-system/src/main/resources/mapper/business/ClubEventOpsMapper.xml:613:                 (select min(p.checkin_time) from player_node_progress p
+chengyinhub-system/src/main/resources/mapper/business/ClubEventOpsMapper.xml:620:                 or exists (select 1 from player_node_progress p
+chengyinhub-system/src/main/resources/mapper/business/MerchantInsightMapper.xml:39:          join registration_entitlement e on e.topic_id = o.topic_id and e.chapter_id = o.chapter_id
+chengyinhub-system/src/main/resources/mapper/business/MerchantInsightMapper.xml:45:          left join player_node_progress p on p.member_id = r.member_id and p.activity_id = r.owner_id
+chengyinhub-system/src/main/resources/mapper/business/PersonalExplorationGoalMapper.xml:26:    from topic_route_session s where s.member_id=#{owner} and s.status=1 and s.topic_id &gt; 0
+chengyinhub-system/src/main/resources/mapper/business/OrientSessionMapper.xml:19:        select <include refid="orientColumns"/> from topic_route_session where id=#{id} and member_id=#{memberId} limit 1
+chengyinhub-system/src/main/resources/mapper/business/OrientSessionMapper.xml:22:        select <include refid="orientColumns"/> from topic_route_session where id=#{id} and member_id=#{memberId} for update
+chengyinhub-system/src/main/resources/mapper/business/OrientSessionMapper.xml:25:        update topic_route_session set phase=#{phase},update_time=#{updateTime}
+chengyinhub-system/src/main/resources/mapper/business/OrientSessionMapper.xml:30:        update topic_route_session set status=#{status},phase=#{phase},completed_at=#{endedAt},
+chengyinhub-system/src/main/resources/mapper/business/OrientSessionMapper.xml:47:        select min(checkin_time) from player_node_progress
+chengyinhub-system/src/main/resources/mapper/business/TopicOnsiteMetricsMapper.xml:49:                    select 1 from player_node_progress p
+chengyinhub-system/src/main/resources/mapper/business/TopicOnsiteMetricsMapper.xml:86:    <!-- queue_joined_at 只认 player_node_progress.checkin_time；service_started_at 只认 redemption.create_time。 -->
+chengyinhub-system/src/main/resources/mapper/business/TopicOnsiteMetricsMapper.xml:92:          from registration_entitlement e
+chengyinhub-system/src/main/resources/mapper/business/TopicOnsiteMetricsMapper.xml:97:          left join player_node_progress p on p.member_id = r.member_id and p.activity_id = r.owner_id
+chengyinhub-system/src/main/resources/mapper/business/TopicOnsiteMetricsMapper.xml:128:          from registration_entitlement e
+chengyinhub-system/src/main/resources/mapper/business/TopicOnsiteMetricsMapper.xml:134:          join player_node_progress p on p.member_id = r.member_id and p.activity_id = r.owner_id
+chengyinhub-system/src/main/resources/mapper/business/ClubMapper.xml:501:                         select 1 from registration_entitlement entitlement
+chengyinhub-system/src/main/resources/mapper/business/GameRuntimeSessionMapper.xml:68:                       select 1 from topic_route_action a join topic_route_session r on r.id=a.session_id
+chengyinhub-system/src/main/resources/mapper/business/GameRuntimeSessionMapper.xml:84:          and s.play_instance_id=coalesce((select r.play_instance_id from topic_route_session r
+chengyinhub-system/src/main/resources/mapper/business/GameRuntimeSessionMapper.xml:108:          and s.play_instance_id=coalesce((select r.play_instance_id from topic_route_session r
+chengyinhub-system/src/main/resources/mapper/business/GameRuntimeSessionMapper.xml:125:          and s.play_instance_id=coalesce((select r.play_instance_id from topic_route_session r
+chengyinhub-system/src/main/resources/mapper/business/GameSessionRuntimeMapper.xml:275:          left join player_node_progress p on p.member_id=m.member_id and p.activity_id=s.activity_id
+chengyinhub-system/src/main/resources/mapper/business/GameSessionRuntimeMapper.xml:334:                  from player_node_progress p
+chengyinhub-system/src/main/resources/mapper/business/GameSessionRuntimeMapper.xml:352:               (select count(case when o.status='COMPLETED' then 1 end) from game_player_node_outcome o
+chengyinhub-system/src/main/resources/mapper/business/GameSessionRuntimeMapper.xml:354:               (select count(case when o.status='FALLBACK_COMPLETED' then 1 end) from game_player_node_outcome o
+chengyinhub-system/src/main/resources/mapper/business/GameSessionRuntimeMapper.xml:576:          left join game_player_node_outcome o on o.game_session_id=s.id and o.team_id=t.id
+chengyinhub-system/src/main/resources/mapper/business/GameSessionRuntimeMapper.xml:582:                      select 1 from game_player_node_outcome done
+chengyinhub-system/src/main/resources/mapper/business/GameSessionRuntimeMapper.xml:640:                  from player_node_progress p
+chengyinhub-system/src/main/resources/mapper/business/GameSessionRuntimeMapper.xml:653:                    then (select count(distinct p.member_id) from player_node_progress p
+chengyinhub-system/src/main/resources/mapper/business/GameSessionRuntimeMapper.xml:661:                            from game_player_node_outcome o where o.game_session_id=s.id) end as normalCompleters,
+chengyinhub-system/src/main/resources/mapper/business/GameSessionRuntimeMapper.xml:663:                  from game_player_node_outcome o where o.game_session_id=s.id) as fallbackCompleters,
+chengyinhub-system/src/main/resources/mapper/business/GameSessionRuntimeMapper.xml:672:                            then (select count(distinct p.node_id) from player_node_progress p
+chengyinhub-system/src/main/resources/mapper/business/GameSessionRuntimeMapper.xml:677:                            else (select count(distinct o.node_id) from game_player_node_outcome o
+chengyinhub-system/src/main/resources/mapper/business/GameSessionRuntimeMapper.xml:698:               (select count(1) from game_player_node_outcome o
+chengyinhub-system/src/main/resources/mapper/business/GameSessionRuntimeMapper.xml:714:                  from player_node_progress p
+chengyinhub-system/src/main/resources/mapper/business/GameSessionRuntimeMapper.xml:727:                    then (select count(distinct p.member_id) from player_node_progress p
+chengyinhub-system/src/main/resources/mapper/business/GameSessionRuntimeMapper.xml:734:                    else (select count(case when o.status='COMPLETED' then 1 end) from game_player_node_outcome o
+chengyinhub-system/src/main/resources/mapper/business/GameSessionRuntimeMapper.xml:736:               (select count(case when o.status='FALLBACK_COMPLETED' then 1 end) from game_player_node_outcome o
+chengyinhub-system/src/main/resources/mapper/business/GameSessionRuntimeMapper.xml:759:          left join game_player_node_outcome o
+chengyinhub-system/src/main/resources/mapper/business/GameSessionRuntimeMapper.xml:771:          from game_story_state where game_session_id=#{sessionId} order by owner_type, owner_id
+chengyinhub-system/src/main/resources/mapper/business/GameSessionRuntimeMapper.xml:777:          from game_story_state where game_session_id=#{sessionId} and owner_type=#{ownerType}
+chengyinhub-system/src/main/resources/mapper/business/GameSessionRuntimeMapper.xml:784:          from game_story_state where game_session_id=#{sessionId} and owner_type=#{ownerType}
+chengyinhub-system/src/main/resources/mapper/business/GameSessionRuntimeMapper.xml:790:        insert ignore into game_story_state
+chengyinhub-system/src/main/resources/mapper/business/GameSessionRuntimeMapper.xml:799:        update game_story_state set variables_json=#{variablesJson}, applied_choices_json=#{appliedChoicesJson},
+chengyinhub-system/src/main/resources/mapper/business/GameSessionRuntimeMapper.xml:908:        insert ignore into game_player_node_outcome
+chengyinhub-system/src/main/resources/mapper/business/GameSessionRuntimeMapper.xml:922:          from game_player_node_outcome
+chengyinhub-system/src/main/resources/mapper/business/GameSessionRuntimeMapper.xml:931:          from game_player_node_outcome
+chengyinhub-system/src/main/resources/mapper/business/GameSessionRuntimeMapper.xml:1018:              left join game_player_node_outcome o on o.game_session_id=s.id and o.team_id=t.id
+chengyinhub-system/src/main/resources/mapper/business/GameSessionRuntimeMapper.xml:1032:                           from game_player_node_outcome o
+chengyinhub-system/src/main/resources/mapper/business/MonthlyRecapMapper.xml:12:        from topic_route_session s join cms_topic on cms_topic.id=s.topic_id
+chengyinhub-system/src/main/resources/mapper/business/ClubMemberMapper.xml:154:        · 用时 = 个人实测:player_node_progress 每人每团的 MAX-MIN 打卡时刻,再对已通关的团求和。
+chengyinhub-system/src/main/resources/mapper/business/ClubMemberMapper.xml:208:                  player_node_progress 的进度是【按活动隔离】的(migration_play_progress_points.sql:13
+chengyinhub-system/src/main/resources/mapper/business/ClubMemberMapper.xml:218:                from player_node_progress p
+chengyinhub-system/src/main/resources/mapper/business/ShopDayMerchantRosterMapper.xml:41:          join registration_entitlement e on e.topic_id = o.topic_id and e.chapter_id = o.chapter_id
+chengyinhub-system/src/main/resources/mapper/business/ShopDayMerchantRosterMapper.xml:50:          left join player_node_progress p on p.member_id = r.member_id and p.activity_id = r.owner_id
+chengyinhub-system/src/main/resources/mapper/business/MerchantDeskMapper.xml:196:               (select count(*) from registration_entitlement e where e.chapter_id = o.chapter_id and e.status = 0)
+chengyinhub-system/src/main/resources/mapper/business/RegistrationEntitlementMapper.xml:24:        from registration_entitlement
+chengyinhub-system/src/main/resources/mapper/business/RegistrationEntitlementMapper.xml:28:        insert into registration_entitlement
+chengyinhub-system/src/main/resources/mapper/business/RegistrationEntitlementMapper.xml:58:        from registration_entitlement e
+chengyinhub-system/src/main/resources/mapper/business/RegistrationEntitlementMapper.xml:75:        from registration_entitlement
+chengyinhub-system/src/main/resources/mapper/business/RegistrationEntitlementMapper.xml:81:        update registration_entitlement
+chengyinhub-system/src/main/resources/mapper/business/RegistrationEntitlementMapper.xml:91:        update registration_entitlement
+chengyinhub-system/src/main/resources/mapper/business/RegistrationEntitlementMapper.xml:126:        update registration_entitlement e
+chengyinhub-system/src/main/resources/mapper/business/RegistrationEntitlementMapper.xml:137:        select count(*) from registration_entitlement
+chengyinhub-system/src/main/resources/mapper/business/RegistrationEntitlementMapper.xml:143:        from registration_entitlement e
+chengyinhub-system/src/main/resources/mapper/business/TopicRouteSessionMapper.xml:28:        insert into topic_route_session(activity_id,topic_id,member_id,play_instance_id,config_version,
+chengyinhub-system/src/main/resources/mapper/business/TopicRouteSessionMapper.xml:36:        select JSON_EXTRACT(state_json,'$.themeRuntime.result') from topic_route_session
+chengyinhub-system/src/main/resources/mapper/business/TopicRouteSessionMapper.xml:41:    <select id="countRuns" resultType="int">select count(*) from topic_route_session where activity_id=#{activityId} and topic_id=#{topicId} and member_id=#{memberId}</select>
+chengyinhub-system/src/main/resources/mapper/business/TopicRouteSessionMapper.xml:43:        select <include refid="sessionColumns"/> from topic_route_session
+chengyinhub-system/src/main/resources/mapper/business/TopicRouteSessionMapper.xml:47:        select <include refid="sessionColumns"/> from topic_route_session
+chengyinhub-system/src/main/resources/mapper/business/TopicRouteSessionMapper.xml:53:        select <include refid="sessionColumns"/> from topic_route_session
+chengyinhub-system/src/main/resources/mapper/business/TopicRouteSessionMapper.xml:57:        select <include refid="sessionColumns"/> from topic_route_session
+chengyinhub-system/src/main/resources/mapper/business/TopicRouteSessionMapper.xml:63:        select <include refid="sessionColumns"/> from topic_route_session
+chengyinhub-system/src/main/resources/mapper/business/TopicRouteSessionMapper.xml:68:        select <include refid="sessionColumns"/> from topic_route_session where id=#{id} and member_id=#{memberId} for update
+chengyinhub-system/src/main/resources/mapper/business/TopicRouteSessionMapper.xml:71:        select <include refid="sessionColumns"/> from topic_route_session where id=#{id} and member_id=#{memberId} limit 1
+chengyinhub-system/src/main/resources/mapper/business/TopicRouteSessionMapper.xml:74:        select <include refid="sessionColumns"/> from topic_route_session
+chengyinhub-system/src/main/resources/mapper/business/TopicRouteSessionMapper.xml:75:        where id in (select max(id) from topic_route_session group by activity_id,topic_id,member_id)
+chengyinhub-system/src/main/resources/mapper/business/TopicRouteSessionMapper.xml:86:        update topic_route_session set state_json=#{stateJson},status=#{status},current_node_id=#{currentNodeId},
+chengyinhub-system/src/main/resources/mapper/business/TopicRouteSessionMapper.xml:106:        select distinct member_id from topic_route_session where topic_id=#{topicId}
+chengyinhub-system/src/main/resources/mapper/business/TopicRouteSessionMapper.xml:110:        select count(distinct member_id) from topic_route_session where topic_id=#{topicId}
+
+## current frontend consumers
+command arguments: ["rg", "-n", "--glob", "*.java", "--glob", "*.xml", "--glob", "*.js", "--glob", "*.vue", "/api/play/(my-completed|checkin|arrive|leaderboard)|QUEST_RESOLVE|/gameplay/action", "chengyinhub-xcx/pages", "chengyinhub-xcx/utils", "chengyinhub-ui/src"]
+chengyinhub-xcx/pages/play/utils/play-accuracy.js:3:// 与漫游轨迹过滤同口径(utils/roam-track-filter.js 的 accuracy > 80);后端 /api/play/arrive 也按 80m 拒绝,
+chengyinhub-xcx/pages/play/utils/theme-backpack.js:296:      if (!['QUEST_RESOLVE', 'FACILITY_USE'].includes(input.operation)) return this._themeGameplayCommand(input);
+chengyinhub-xcx/pages/play/utils/theme-backpack.js:305:      if (input.operation === 'QUEST_RESOLVE' && row.choices && row.choices.length > 1) {
+chengyinhub-xcx/pages/play/utils/theme-gameplay.js:84:    const operation = hasState ? summary.operation : active ? allowed('QUEST_RESOLVE', key) || previewAllowed('QUEST_RESOLVE', key) ? 'QUEST_RESOLVE' : 'OPEN_QUEST' : 'QUEST_START';
+chengyinhub-xcx/pages/play/utils/theme-gameplay.js:91:      actionText: proofPending ? '待审核' : operation === 'QUEST_START' ? '开始任务' : operation === 'QUEST_RESOLVE' ? source.trustedPass === true ? '结算任务' : '完成任务' : '打开任务',
+chengyinhub-xcx/pages/play/utils/theme-gameplay.js:95:      choices: personal ? [...new Set(available.filter(action => action.contentId === key && ['QUEST_RESOLVE', 'GAMEPLAY_PREVIEW'].includes(action.operation) && action.choiceKey).map(action => action.choiceKey))].map((choiceKey, index) => ({ choiceKey, label: '方案 ' + (index + 1) })) : (quest.choices || []).map((choice, index) => ({ choiceKey: choice.choiceKey, label: choice.label || choice.title || '方案 ' + (index + 1) })),
+chengyinhub-xcx/pages/play/utils/theme-gameplay.js:135:// 任务回执：开始任务不预留、不扣费；只有 QUEST_RESOLVE 真实结算（未被拦截）后，才按结算输出列出已扣数额。
+chengyinhub-xcx/pages/play/utils/theme-gameplay.js:139:  if (operation !== 'QUEST_RESOLVE' || result.settled === false || result.status === 'BLOCKED_COST' || result.competitionLost === true
+chengyinhub-xcx/pages/play/utils/theme-player-ops.js:8:const actionNames = { QUEST_START: '开始任务', QUEST_RESOLVE: '结算任务', QUEST_CANCEL: '取消任务', OPERATION_START: '开始操作任务', OPERATION_CANCEL: '取消操作任务', RECOVER: '使用恢复方式', VOTE_CAST: '签署首选票', ACCEPT_SET: '签署接受清单', CONSENSUS_CAST: '签署共识票' };
+chengyinhub-xcx/pages/play/utils/theme-player-ops.js:35:    for (const choice of choices.length ? choices : [{ suffix: '', fields: {} }]) commands.push({ label: target.label + ' · 结算任务' + choice.suffix, command: { action: 'QUEST_RESOLVE', payload: { ...target.payload, ...choice.fields } } });
+chengyinhub-xcx/pages/play/merchant/index.js:34:  return request('/api/play/checkin', data)
+chengyinhub-xcx/pages/play/index.js:3220:  /** 升级3:同行者榜(GET /api/play/leaderboard,score=完成关数)。入口在通关 sheet。 */
+chengyinhub-xcx/pages/play/index.js:3229:    req('/api/play/leaderboard', 'GET', params).then((res) => {
+chengyinhub-xcx/pages/play/index.js:5207:      return req('/api/play/arrive', 'POST', this._routeWritePayload('arrive', nodeId, { nodeId, longitude: loc.longitude, latitude: loc.latitude, accuracy: playAccuracy.accuracyOf(loc) }));
+chengyinhub-xcx/pages/play/index.js:5249:      return req('/api/play/checkin', 'POST', this._retriedRouteWriteBody(payload, isGame && retryAttempt));
+chengyinhub-xcx/pages/play/index.js:7628:  // 档位数字必须是真的:累计完成主题数取 /api/play/my-completed(成长中心同一条只读接口),
+chengyinhub-xcx/pages/play/index.js:7688:      url: '/api/play/my-completed', method: 'POST', hideLoading: true, silentError: true,
+chengyinhub-xcx/pages/play/index.js:7947:    // 通关→广场发布:发帖时活动选择器列出已通关活动(本场已在 /api/play/my-completed 中),选中即关联
+chengyinhub-xcx/pages/roam/index.js:4481:   * ★ 这里曾经并行发两条:一条 `/api/play/arrive`(play 域)+ 一条 `/api/roam/shop/visit`(roam 域),
+chengyinhub-xcx/pages/square/components/activity-picker/index.js:44:        url: '/api/play/my-completed?for_public_reference=true',

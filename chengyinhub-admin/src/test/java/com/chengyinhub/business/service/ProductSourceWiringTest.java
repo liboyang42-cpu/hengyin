@@ -67,7 +67,17 @@ class ProductSourceWiringTest {
     /** 创建主题会逐字段落章节；权益门槛不能只由小程序校验。 */
     @Test
     void topicCreateValidatesNonPositivePerkThresholdAtTheSharedRule() throws Exception {
-        String src = sourceOf("chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java");
+        String src = sourceOf("chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/TopicContentWriteGuard.java");
+        String writer = sourceOf("chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicContentGraphAuthoringServiceImpl.java");
+        String facade = sourceOf("chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java");
+        assertEquals(2, countOccurrences(facade, "contentGraphAuthoringService.saveTopicChapters("),
+                "创建与编辑两条主链均须委托真实内容图owner");
+        assertEquals(1, countOccurrences(writer, "contentWriteGuard.assertChapterShapeForTopic(chapterDTO, topicId)"),
+                "V1章节写口必须进入共享内容规则");
+        assertEquals(1, countOccurrences(writer, "contentWriteGuard.assertChapterShapeForTopic(chapter, topicId)"),
+                "V2块编译写口必须进入共享内容规则");
+        assertEquals(1, countOccurrences(src, "assertChapterShape(chapter, direct)"),
+                "形状入口必须转给原共享形状算法");
         assertEquals(1, countOccurrences(src,
                         "ChapterRecruitmentRules.assertPerkMinValueForTerms(termsMode, c.getPerkMinValue())"),
                 "主题发布必须在落库前校验权益门槛正数及其与条款档位的匹配，不能只靠小程序输入框");
@@ -151,7 +161,7 @@ class ProductSourceWiringTest {
      */
     @Test
     void copyTopicCarriesProductType() throws Exception {
-        String src = sourceOf("chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java");
+        String src = sourceOf("chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicContentCopyServiceImpl.java");
         assertEquals(1, countOccurrences(src, "newTopic.setProductType(original.getProductType())"),
                 "copyTopicBasicInfo 必须手抄 productType —— 它是手抄清单,加字段不会自动带;"
                         + "漏了会让模板复制持续新生 product_type=NULL,NULL 集合永不收敛");
@@ -160,7 +170,7 @@ class ProductSourceWiringTest {
     /** 复制章节同样要带上全部承接与供给条款字段(同一个手抄陷阱的另一处)。 */
     @Test
     void copyChaptersCarryConfigFields() throws Exception {
-        String src = sourceOf("chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java");
+        String src = sourceOf("chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicContentCopyServiceImpl.java");
         for (String f : new String[]{"setCategory(originalChapter.getCategory())",
                 "setCategoryId(originalChapter.getCategoryId())",
                 "setRecruitEnabled(originalChapter.getRecruitEnabled())",

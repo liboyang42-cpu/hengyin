@@ -22,8 +22,7 @@ import static org.mockito.Mockito.when;
 /**
  * 提交动作的接线:事务内判定(act)→ 事务外收尾铸卡(finishPendingCardMint)。
  *
- * <p>收尾必须在控制器这一层、act 返回之后做:act 是 {@code @Transactional},它一返回,
- * 代理就已经提交并归还了连接;铸卡要并行等抠图与认物最多 4 秒,放在事务里就是占着库连接等。
+ * <p>收尾必须在控制器这一层、act 的显式事务已返回之后做:铸卡要并行等抠图与认物最多 4 秒,放在事务里就是占着库连接等。
  */
 class ApiAdvancedPlayControllerTest {
 
@@ -63,4 +62,17 @@ class ApiAdvancedPlayControllerTest {
         order.verify(runtimeService).finishPendingCardMint(judged);
         assertEquals(new com.fasterxml.jackson.databind.ObjectMapper().valueToTree(finished), result.get(AjaxResult.DATA_TAG), "回包必须是收尾之后的那一份,不然当场出卡丢了");
     }
+    @Test
+    void unknownPhotoKeepsOriginalIdentityAndNeverMintsOrLeaksInternalCause() {
+        when(runtimeService.act(anyLong(), anyLong(), any(), anyString(), anyString(), anyMap()))
+                .thenThrow(new com.chengyinhub.business.service.ai.AiProviderOutcomeUnknownException(
+                        "private provider diagnostic", new IllegalStateException("private database diagnostic")));
+        AjaxResult response = controller.action(Map.of("sessionId", 51, "version", 0,
+                "idempotencyKey", "original-photo", "action", "SUBMIT_PHOTO_CHECK"));
+        org.junit.jupiter.api.Assertions.assertEquals(520, response.get("code"));
+        org.junit.jupiter.api.Assertions.assertEquals(true, response.get("intentUnknown"));
+        org.junit.jupiter.api.Assertions.assertFalse(response.toString().contains("private"));
+        org.mockito.Mockito.verify(runtimeService, org.mockito.Mockito.never()).finishPendingCardMint(anyMap());
+    }
+
 }

@@ -42,36 +42,60 @@
           and media_hash = UNHEX(#{mediaHash})
     </select>
 
-    <select id="selectDueIds" resultType="long">
+    <!-- Five is the existing application budget; a smaller stored budget remains authoritative. -->
+    <sql id="retryBudget">LEAST(max_attempts, 5)</sql>
+    <sql id="eligibleDue">
+        attempt_count &lt; <include refid="retryBudget"/> AND next_attempt_at &lt;= NOW(3)
+        AND (state = 0 OR (state = 3 AND last_error_code = 'PRE_DISPATCH_UNAVAILABLE'))
+    </sql>
+    <sql id="unsafeToDispatch">
+        (state = 1 AND lease_until &lt;= NOW(3))
+        OR (state in (0, 3) AND attempt_count &gt;= <include refid="retryBudget"/>)
+        OR (state = 3 AND (last_error_code IS NULL OR last_error_code != 'PRE_DISPATCH_UNAVAILABLE'))
+    </sql>
+    <sql id="stopUnsafe">
+        update club_post_media_review_outbox
+        set last_error_code = CASE
+                WHEN state = 1 OR (state = 3 AND
+                    (last_error_code IS NULL OR last_error_code != 'PRE_DISPATCH_UNAVAILABLE'))
+                THEN 'REVIEW_OUTCOME_UNKNOWN' ELSE 'REVIEW_ATTEMPTS_EXHAUSTED' END,
+            state = 5, lease_until = null, update_time = NOW(3)
+    </sql>
+    <update id="retireUnsafeBatch">
+        <include refid="stopUnsafe"/>
+        where (<include refid="unsafeToDispatch"/>) order by id limit #{limit}
+    </update>
+    <update id="retireUnsafeById">
+        <include refid="stopUnsafe"/>
+        where id = #{id} AND (<include refid="unsafeToDispatch"/>)
+    </update>
+    <select id="selectDueIds" resultType="long" useCache="false" flushCache="true">
         select id from club_post_media_review_outbox
-        where ((state in (0, 3) and next_attempt_at &lt;= NOW(3))
-               or (state = 1 and lease_until &lt;= NOW(3)))
+        where <include refid="eligibleDue"/>
         order by next_attempt_at asc, id asc
         limit #{limit}
     </select>
 
     <select id="countBacklog" resultType="long">
         select count(*) from club_post_media_review_outbox
-        where state in (0, 1, 3)
+        where state in (0, 1, 3, 5)
     </select>
 
     <select id="selectOldestBacklogCreatedAt" resultType="java.util.Date">
         select min(create_time)
         from club_post_media_review_outbox
-        where state in (0, 1, 3)
+        where state in (0, 1, 3, 5)
     </select>
 
     <update id="claim">
         update club_post_media_review_outbox
         set state = 1, owner_token = UNHEX(#{ownerToken}), fence_token = fence_token + 1,
             lease_until = TIMESTAMPADD(SECOND, 120, NOW(3)),
-            attempt_count = attempt_count + 1, update_time = NOW(3)
-        where id = #{id}
-          and ((state in (0, 3) and next_attempt_at &lt;= NOW(3))
-               or (state = 1 and lease_until &lt;= NOW(3)))
+            attempt_count = attempt_count + 1, last_error_code = null, update_time = NOW(3)
+        where id = #{id} AND (<include refid="eligibleDue"/>)
     </update>
 
-    <select id="selectOwned" resultMap="OutboxResult">
+    <select id="selectOwned" resultMap="OutboxResult" useCache="false" flushCache="true">
         select <include refid="columns"/>
         from club_post_media_review_outbox
         where id = #{id} and state = 1 and owner_token = UNHEX(#{ownerToken})
@@ -92,6 +116,24 @@
             next_attempt_at = #{nextAttemptAt}, last_error_code = #{errorCode}, update_time = NOW(3)
         where id = #{id} and state = 1
           and owner_token = UNHEX(#{ownerToken}) and fence_token = #{fenceToken}
+          and lease_until &gt; NOW(3) and attempt_count &lt; <include refid="retryBudget"/>
+          and #{errorCode} = 'PRE_DISPATCH_UNAVAILABLE'
+    </update>
+
+    <!-- State 5 is stopped/manual, never DONE. A late original worker may attach its trace
+         only to its unchanged fence, and cannot overwrite a different original trace. -->
+    <update id="markManualReview">
+        update club_post_media_review_outbox
+        set state = 5, lease_until = null,
+            trace_hash = COALESCE(trace_hash, UNHEX(#{traceHash})),
+            last_error_code = #{errorCode}, update_time = NOW(3)
+        where id = #{id} and fence_token = #{fenceToken} and owner_token = UNHEX(#{ownerToken})
+          and (state = 1 or (state = 5 and last_error_code = 'REVIEW_OUTCOME_UNKNOWN'
+                   and #{errorCode} = 'REVIEW_OUTCOME_UNKNOWN'))
+          and (#{traceHash} IS NULL or trace_hash IS NULL or trace_hash = UNHEX(#{traceHash}))
+          and (#{errorCode} = 'REVIEW_OUTCOME_UNKNOWN'
+               or (#{errorCode} = 'REVIEW_ATTEMPTS_EXHAUSTED'
+                   and attempt_count &gt;= <include refid="retryBudget"/>))
     </update>
 
     <update id="markStale">

@@ -1,0 +1,25 @@
+PASS completePaymentSuccess outside authorized capture/forward is byte-identical to parent
+PASS entire producer source outside authorized method/injection/capture/forward is byte-identical
+PASS QR loop and WX/synchronization tail are byte-identical
+PASS unchanged shared source chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ImServiceImpl.java
+PASS unchanged shared source chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationCheckoutServiceImpl.java
+PASS unchanged shared source chengyinhub-system/src/main/java/com/chengyinhub/business/service/ISystemNotificationIntentService.java
+PASS unchanged shared source chengyinhub-system/src/main/java/com/chengyinhub/business/task/ImNotificationDeliveryTask.java
+PASS unchanged shared source chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/util/ScheduleUtils.java
+INVENTORY 9 UNEXECUTED Java tests RegistrationSignupIntentTest.java; old method identities retained=0
+INVENTORY 18 UNEXECUTED Java tests SignupNoticeAfterCommitPersistenceMySqlIT.java; old method identities retained=5
+INVENTORY 4 UNEXECUTED Java tests StandaloneCheckoutSignupNoticeAcceptanceTest.java; old method identities retained=4
+INVENTORY 2 UNEXECUTED Java tests RegistrationSignupNoticeCardTest.java; old method identities retained=2
+INVENTORY 1 UNEXECUTED Java tests RegistrationPaymentAtomicityContractTest.java; old method identities retained=1
+INVENTORY 4 UNEXECUTED Java tests ImFoundationBMybatisIntegrationTest.java; old method identities retained=4
+INVENTORY 6 UNEXECUTED Java tests ImNotificationIntentTest.java; old method identities retained=6
+NOTE Java inventory/source preservation checks do not compile or execute Java
+RUN /opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 -m unittest ci.test_signup_intent_producer ci.test_official_broadcast_delivery_migration
+............
+----------------------------------------------------------------------
+Ran 12 tests in 0.025s
+
+OK
+PASS git diff --check
+PASS bounded credential-pattern scan on all owned source/tests/docs (no pattern hits)
+NOT RUN: Maven / javac / JUnit / MySQL / Redis / backend / CI / production DDL

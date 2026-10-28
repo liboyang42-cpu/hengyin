@@ -190,7 +190,7 @@ Component({
       });
     },
     // 组件被卸载(页面退出)时也要把没发出去的正文存下来
-    detached() {
+    detached() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1;
       this.persist();
       this._disposed = true;
       this._composeVisible = false;
@@ -199,14 +199,14 @@ Component({
   },
 
   pageLifetimes: {
-    hide() { this._composeVisible = false; this.cancelPublish(); },
+    hide() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1; this._composeVisible = false; this.cancelPublish(); },
     show() { this._composeVisible = !!this.data.show; },
   },
 
   observers: {
     // 每次拉起都重新取一次正文:优先用行内 composer 带过来的半截,
     // 没有才回 storage 捡草稿。关闭时存一次 —— 组件不卸载,所以不能只靠 detached。
-    show(open) {
+    show(open) { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1;
       if (this._disposed) return;
       this._composeVisible = !!open;
       this.cancelPublish();
@@ -252,6 +252,7 @@ Component({
 
   methods: {
     cancelPublish() {
+      this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1;
       const pending = this._publishContext;
       this._publishContext = null;
       this._submitting = false;
@@ -558,12 +559,25 @@ Component({
     },
 
     onPublish() {
-      if (app.ensureLoginFor && !app.ensureLoginFor('post', () => this.onPublish())) return; // 2026-10-24 游客写前登录
+      if (this._disposed || !this._composeVisible) return;
+      if (app.ensureLoginFor && !app.ensureLoginFor('post', () => this.onPublish(), {
+        owner: this,
+        target: () => [this.data.clubId, !!this.data.editMode, this._editId,
+          this.data.postRef && this.data.postRef.refType, this.data.postRef && this.data.postRef.refId,
+          !!this.data.asAnnouncement, !!this.data.canAnnounce, this.composeSnapshot(),
+          this._editDataId, this._editDataType, this.data.selectedActivity && this.data.selectedActivity.activityId, this._composeVisible]
+      })) return; // 两个原入口及现存组件的续登目标均保留
       const that = this;
       if (that._disposed || !that._composeVisible) return;
       if (String(app.getUserID() || '') !== String(that._memberId || '')) {
         that.onCancel();
         cyToast('登录身份已变化，请重新打开编辑器');
+        return;
+      }
+      // Club creation keeps its separate authorization; community writes keep the original square gate.
+      if ((!that.data.clubId || that.data.editMode)
+          && (typeof app.canUseCommunity !== 'function' || !app.canUseCommunity(true))) {
+        cyToast('当前账号未开放广场发布');
         return;
       }
       const content = String(that.data.content || '').trim();

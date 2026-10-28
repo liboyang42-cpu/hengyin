@@ -1,0 +1,70 @@
+{
+  "source_sha": "66e9e1798bf0b3e1c2b7e6cb2b6ab13a3b3e1329",
+  "run": 40036832794,
+  "verdict": "FAILURE_NOT_ACCEPTED",
+  "raw_xml_files": 1767,
+  "raw_xml_totals": {
+    "tests": 14031,
+    "failures": 5,
+    "errors": 0,
+    "skipped": 633
+  },
+  "failed_suites": [
+    {
+      "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.impl.PlayKitPhotoCheckRuntimeTest.xml",
+      "sha256": "f7c1676e108de32c82cea5d2317485e750c779daf0c26b61a21f398db311968d",
+      "tests": 17,
+      "failures": 2,
+      "errors": 0,
+      "skipped": 0,
+      "cases": [
+        {
+          "name": "模型判过且置信度达标才通过并给分",
+          "message": "过了不能再交 ==> Unexpected exception type thrown, expected: <java.lang.IllegalStateException> but was: <com.chengyinhub.common.exception.ServiceException>"
+        },
+        {
+          "name": "负控_客户端score字段对判定毫无影响",
+          "message": "Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <com.chengyinhub.common.exception.ServiceException>"
+        }
+      ]
+    },
+    {
+      "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.impl.ObjectCardMintHookTest.xml",
+      "sha256": "79e65b465e9f79c5e114d07af55c90ec5ea8702df81c47305efad5e0eb977bb2",
+      "tests": 18,
+      "failures": 2,
+      "errors": 0,
+      "skipped": 0,
+      "cases": [
+        {
+          "name": "负控_过了再交不再铸第二张卡",
+          "message": "Unexpected exception type thrown, expected: <java.lang.IllegalStateException> but was: <com.chengyinhub.common.exception.ServiceException>"
+        },
+        {
+          "name": "act带事务而收尾不带",
+          "message": "expected: <true> but was: <false>"
+        }
+      ]
+    },
+    {
+      "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.impl.AdvancedPhotoOrchestrationTest.xml",
+      "sha256": "f01ca1fc5e62a9b91c3b46fe85c3ac493c885d3dbe98bcd9a79b52e64c87303d",
+      "tests": 16,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 0,
+      "cases": [
+        {
+          "name": "newAttemptWithSameRejectedPhotoCountsAgainButOriginalReplayDoesNot",
+          "message": "expected: <true> but was: <false>"
+        }
+      ]
+    }
+  ],
+  "not_executed": [
+    "subsequent MyBatis suites including Theme Photo four-stage/APPLIED rollback",
+    "full Spring isolated startup",
+    "compiled jdeps observation and tested Jar custody steps as applicable"
+  ],
+  "owner": "C gets exact3 test suites; source/fixture contract diagnosis required; no broad assertThrows or Tx weakening"
+}

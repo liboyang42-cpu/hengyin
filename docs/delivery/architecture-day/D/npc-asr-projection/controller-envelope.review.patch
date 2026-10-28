@@ -1,0 +1,26 @@
+--- a/chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAiNpcController.java
++++ b/chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAiNpcController.java
+@@ -362,9 +362,8 @@
+             stored=npcChatService.storedShopRequest(requestId,userId,nodeId);
+             if (stored!=null) return success(stored);
+             com.chengyinhub.business.domain.vo.ai.NpcChatResp asr=npcAsrIntentService.readOutcome("shop",nodeId,requestId,userId);
+-            AjaxResult failed=AjaxResult.error("语音识别没成功，稍后再试");
+-            failed.put("data",asr!=null?asr:com.chengyinhub.business.service.impl.NpcAsrIntentService.unavailable(requestId,"ASR_STATE_UNAVAILABLE"));
+-            return failed;
++            return AjaxResult.success("语音识别没成功，稍后再试",
++                    asr!=null?asr:com.chengyinhub.business.service.impl.NpcAsrIntentService.unavailable(requestId,"ASR_STATE_UNAVAILABLE"));
+         }
+     }
+
+@@ -374,8 +373,10 @@
+         if ("RECEIVED".equals(receipt.getState()) && !receipt.isBodyErased()
+                 && !receipt.isHandoffStarted() && "".equals(receipt.getTranscript()))
+             result=AjaxResult.error("没听清，再说一次");
+-        else if ("UNKNOWN".equals(receipt.getState()) || "NOT_SENT".equals(receipt.getState()))
++        else if ("NOT_SENT".equals(receipt.getState()))
+             result=AjaxResult.error("语音识别没成功，稍后再试");
++        else if ("UNKNOWN".equals(receipt.getState()))
++            result=AjaxResult.success("语音识别没成功，稍后再试");
+         else result=AjaxResult.success();
+         result.put("data",com.chengyinhub.business.service.impl.NpcAsrIntentService.outcome(receipt));
+         return result;

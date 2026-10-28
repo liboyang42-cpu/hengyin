@@ -266,7 +266,19 @@
           </cy-btn>
         </view>
       </block>
-      <cy-inline-error kind="error" wx:if="{{voiceError}}" title="暂未完成" sub="{{voiceError}}" />
+
+      <view wx:if="{{voiceUnknown}}">
+        <text>原结果未知，仍可能完成并占用额度。不会自动重发。</text>
+        <cy-btn variant="secondary" bindtap="refreshVoice" disabled="{{voiceBusy}}">查询原请求</cy-btn>
+        <cy-btn variant="secondary" bindtap="confirmNewVoiceRequest" disabled="{{voiceBusy}}">确认后另起独立请求</cy-btn>
+      </view>
+      <view wx:for="{{voiceHistory}}" wx:key="requestId">
+        <text>原声音请求 · {{item.state}}</text>
+        <cy-btn variant="ghost" data-request="{{item.requestId}}" bindtap="readVoiceHistory">查看原结果</cy-btn>
+      </view>
+      <text wx:if="{{voiceHistoryResult}}">{{voiceHistoryResult}}</text>
+      <cy-inline-error kind="error" wx:if="{{voiceError}}" title="暂未完成" sub="{{voiceError}}"
+        action="{{voiceUnknown ? '查询原请求' : ''}}" bind:action="refreshVoice" />
       <!-- M-28:麦克风权限被拒后,直达设置页打开「麦克风」(scope.record) -->
       <cy-btn wx:if="{{voiceNeedSetting}}" variant="secondary" bindtap="openRecordSetting">去设置开启麦克风</cy-btn>
       <cy-btn wx:if="{{voiceUnknown}}" variant="secondary" bindtap="refreshVoice">查询生成状态</cy-btn>

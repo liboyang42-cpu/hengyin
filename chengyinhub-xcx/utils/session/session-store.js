@@ -33,12 +33,14 @@ function createSessionStore(options) {
   var onClear = options.onClear;
   var now = options.now || Date.now;
   var defaultTokenTtlMs = Math.max(60 * 1000, Number(options.defaultTokenTtlMs) || 24 * 60 * 60 * 1000);
+  var revision = 0;
 
   if (!storage) {
     throw new Error('session-store: 缺少 wx 存储提供方');
   }
 
   function set(field, value) {
+    if (field !== 'avatar' && field !== 'nickname') revision++;
     target[field] = value;
     storage.setStorageSync(field, value);
   }
@@ -76,9 +78,12 @@ function createSessionStore(options) {
 
   return {
     target: target,
+    // In-memory callback fence; it grants no authority and stores no identity or token.
+    getRevision: function () { return revision; },
 
     // 登录成功要么整份身份落地，要么回滚到旧快照。页面不能看到“新 token + 旧 role”之类半账号。
     applySnapshot: function (snapshot) {
+      revision++;
       snapshot = snapshot || {};
       var next = {};
       var previousTarget = {};
@@ -117,6 +122,7 @@ function createSessionStore(options) {
 
     // 启动恢复:仅在 Storage 值为真时写回,复刻 `if (x = getStorageSync(key)) ...` 的「空值不覆盖」语义。
     restore: function () {
+      revision++;
       var storedToken = storage.getStorageSync('authorization');
       if (storedToken) {
         var expiresAt = Number(storage.getStorageSync(AUTH_EXPIRES_AT_KEY));
@@ -167,6 +173,7 @@ function createSessionStore(options) {
 
     // 清空会话:仅清七个会话 key(内存+Storage),不动 debug_user_view 等非会话键。
     clearSession: function () {
+      revision++;
       var clearedIdentity = { userId: target.user_id || storage.getStorageSync('user_id') || '' };
       for (var i = 0; i < SESSION_FIELDS.length; i++) {
         var field = SESSION_FIELDS[i];

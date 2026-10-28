@@ -811,7 +811,8 @@
          limit 1
     </select>
 
-    <select id="selectReceiptForUpdate" resultMap="GameReceiptResult">
+    <!-- 锁后必须重查数据库；useCache=false 本身不会清掉 SESSION 一阶缓存中的空结果。 -->
+    <select id="selectReceiptForUpdate" resultMap="GameReceiptResult" useCache="false" flushCache="true">
         select id, game_session_id, activity_id, node_id, actor_member_id, actor_perspective,
                request_id, request_hash, action, outcome, reason_code, revision, result_json,
                create_time, update_time

@@ -1,0 +1,217 @@
+{
+  "public_baseline": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+  "parent_source": "00fc58c50febc3366f78af600c8f12636cd13de5",
+  "parent_tree": "b0ae8ba46eca8bcc3c2e61abb5a6c4e2536e101c",
+  "worktree": "/workspace/architecture-day-d-w19-owner",
+  "branch": "codex/architecture-day-d-w19-owner",
+  "local_head_before_candidate": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+  "source_files": [
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantOfferServiceImpl.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/MerchantChapterOfferWithdrawTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/FreeExploreNodeSupplyMySqlIT.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/MerchantOfferOwnerNoticeIntentTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/MerchantOfferOwnerNoticeIntentMySqlIT.java",
+    "ci/test_w19_owner_notice_intent.py"
+  ],
+  "java_inventory": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/MerchantChapterOfferWithdrawTest.java",
+      "tests": 10,
+      "methods": [
+        "exitNotifiesOnlyTheServerSelectedAffectedPaidPlayersAfterCommit",
+        "lockedRequiredChapterPausesBeforeExitAndKeepsFulfilledTerms",
+        "optionalChapterExitDoesNotPauseTheRoute",
+        "anotherMerchantCannotExitTheOffer",
+        "changedScopeInTheLockedReadCannotExit",
+        "repeatingTheSameExitKeepsTheFirstReasonAndDoesNotPauseAgain",
+        "failedPauseCannotProceedToDeactivateOrReleaseTheSlot",
+        "failedOfferUpdateCannotReleaseTheApprovalOrAdvanceTheCanonical",
+        "blankOrOverlongReasonIsRejectedBeforeReadingAnyOffer",
+        "circleSupplyAndClosedHistoricalOfferStayOutsideThisEntry"
+      ],
+      "new": false,
+      "executed_by_D": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/FreeExploreNodeSupplyMySqlIT.java",
+      "tests": 8,
+      "methods": [
+        "m1_editApprovedNode_updatesOnlyMyRow_resetsAuditTraceInDb_neighboursByteIdentical",
+        "m2_blankAddress_rejected_nodeTableUnchanged",
+        "m2_invalidCoordinates_rejected_nodeTableUnchanged",
+        "m3_enroll_persistsServerResolvedFields_andFreezesChapterTerms",
+        "m3_duplicateEnroll_rejectedByUniqueKey_noSecondRow",
+        "m3_withdraw_touchesOnlyCallersOwnOffer",
+        "m3_withdrawSomeoneElsesOffer_rejected_nothingChanges",
+        "m4_sameInvite_sentAndReceivedProjectionCarryIdenticalTerms_strangerSeesNone"
+      ],
+      "new": false,
+      "executed_by_D": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/MerchantOfferOwnerNoticeIntentTest.java",
+      "tests": 11,
+      "methods": [
+        "outsideOriginalTransactionRejectsBeforeLookupOrAnyAction",
+        "firstOriginalIntentIsEnqueuedBeforeCommitAndWakesOnlyItsId",
+        "existingIdentityIsWokenWithoutRebuildingLivePayloadOrRetryingWx",
+        "missingOrInvalidIntentReceiptCannotRegisterCallbacks",
+        "invalidOriginalRecipientOrContentCannotEnqueueOrWake",
+        "intentConflictCannotBecomeAcceptedWake",
+        "wxFalseIsOneOutsideTransactionAttemptAndCannotRepeatIm",
+        "rejectedWxQueueDoesNotUndoTheOriginalImWake",
+        "wxChannelExceptionIsUnknownAndCannotCauseAnotherAttemptOrIm",
+        "wronglyInlineExecutorCannotCallWxInsideDatabaseTransaction",
+        "repeatedHelperReusesIdButDoesNotScheduleAnotherWxAttempt"
+      ],
+      "new": true,
+      "executed_by_D": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/MerchantOfferOwnerNoticeIntentMySqlIT.java",
+      "tests": 21,
+      "methods": [
+        "originalExitAndPendingIntentExistBeforeCommitButNeitherChannelRuns",
+        "rollbackRestoresExitAndApprovalWithZeroIntentOrWake",
+        "intentInsertThenFailureRollsBackOriginalBusinessAndIntentTogether",
+        "unauthorizedExitLeavesBusinessIntentMessagesAndWakeUntouched",
+        "losingOfferCasCannotEnqueueIntentOrRetireApproval",
+        "rejectedImQueueKeepsPendingAndOriginalTaskRecoversIt",
+        "lostWakeRecoversOriginalIdAndLateWakeCannotDuplicateMessageOrUnread",
+        "repeatedExitKeepsOriginalReasonAndCannotRegisterAnotherWake",
+        "historicalExitWithoutOriginalIntentNeverBackfillsOne",
+        "historicalExitWithOriginalPendingIsRecoveredWithoutAnotherProducerOrWx",
+        "lostExitCommitAcknowledgementReplaysWithoutNewIntentOrWxAttempt",
+        "lostDeliveryCommitAcknowledgementReadsOriginalReceiptInsteadOfSendingAgain",
+        "twoWorkersReadOneOriginalMessageAndIncrementUnreadOnce",
+        "liveOwnerAndTopicChangesCannotRebuildOriginalRecipientOrPayload",
+        "existingOriginalIntentOnWinnerIsReusedWithoutLiveRebuildOrNewWx",
+        "invalidOriginalOwnerRollsBackExitAndApprovalWithoutIntentOrExternalAction",
+        "intentFailureAlsoRollsBackRequiredChapterPauseWithoutChangingFrozenTerms",
+        "messageUnreadAndReceiptFailureRollBackTogetherAndPendingCanRecover",
+        "sameEventDifferentRecipientOrContentIsRejectedWithoutChangingOriginal",
+        "concurrentExitRequestsOnlyLetOneWinnerProduceIntentAndChannelAttempts",
+        "wxUnknownIsOneOutsideTransactionAttemptAndImRecoveryNeverResendsIt"
+      ],
+      "new": true,
+      "executed_by_D": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiCoopOfferWithdrawTest.java",
+      "tests": 10,
+      "methods": [
+        "postRouteMatchesExistingMiniProgramWithdrawalCall",
+        "missingOrNonPositivePrincipalCannotReachMerchantOrBusinessService",
+        "loginResolutionFailureReturnsExistingLoginError",
+        "permissionDenialPreservesCodeAndCannotWithdraw",
+        "accessOwnerMustBePresentBeforeBusinessWrite",
+        "malformedOfferAndReasonShapeCannotReachBusinessWrite",
+        "requiredWithdrawalUsesResolvedOwnerAndExposesEnrollmentPaused",
+        "optionalWithdrawalReturnsSuccessWithoutClaimingEnrollmentPaused",
+        "serviceOwnsReasonValidationAndBusinessFailureIsVisible",
+        "unexpectedProgrammingFailureIsNotTurnedIntoSuccess"
+      ],
+      "new": false,
+      "executed_by_D": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiCoopOfferWithdrawRouteTest.java",
+      "tests": 8,
+      "methods": [
+        "requiredSupplyUsesAuthenticatedOwnerAndReturnsPausedState",
+        "optionalSupplyDoesNotClaimEnrollmentPaused",
+        "inactiveMerchantCannotWithdraw",
+        "unauthenticatedRequestDoesNotReachMerchantGuard",
+        "malformedIdsAreRejectedBeforeBusinessWrite",
+        "emptyRequestBodyIsRejected",
+        "anotherMerchantsSupplyIsDeniedByService",
+        "missingReasonReachesExistingValidationWithoutInventingReason"
+      ],
+      "new": false,
+      "executed_by_D": false
+    }
+  ],
+  "unchanged_shared_sources": [
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCoopController.java",
+      "sha256": "c4b118f8107459749161f09c55ebf179819a2b8d1f63601b4b23d6dd33329887",
+      "unchanged_from_parent": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ImServiceImpl.java",
+      "sha256": "c42698d6d21525fd17921e5f1beaaa757b92d5f8ace5af8e4a6327693b1d1c4b",
+      "unchanged_from_parent": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ISystemNotificationIntentService.java",
+      "sha256": "efc7f6a956738131dd1eb1b70a424a6020822e790c68690f2fa3e30bba696d0c",
+      "unchanged_from_parent": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/notify/NotifyChannel.java",
+      "sha256": "4b6b9898cf66a8363a063c3212d323c8fe6b80c711115053a4a8e1e6658d2d39",
+      "unchanged_from_parent": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/notify/InAppNotifyChannel.java",
+      "sha256": "e37204002713f2d0e6a56a37d3cb391b8fb577abd913500e438c08a21bd48227",
+      "unchanged_from_parent": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/notify/WxSubscribeChannel.java",
+      "sha256": "596ae863f73bc985e67fb223937f9e707a95509de226749f032302886f172af6",
+      "unchanged_from_parent": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NotifyServiceImpl.java",
+      "sha256": "afc7297a53273ad49bf3740977c35caf1881550fc909fd8ee2a7d1fa58d6174a",
+      "unchanged_from_parent": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/CommittedBusinessNotice.java",
+      "sha256": "f1d97648913cb8c5026da8606d16977e5aca3f00ce46d0cf0fa16240d71d5e7e",
+      "unchanged_from_parent": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/ImNotificationDeliveryTask.java",
+      "sha256": "4b7e09df442d7311e24fbc52def8022fb0db22e98e16bbc4563c35e8304bff2d",
+      "unchanged_from_parent": true
+    },
+    {
+      "path": "chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/util/ScheduleUtils.java",
+      "sha256": "90dd7154c56fa192e467b80ebfd88e5a96147f70ff6cc652c20503fdf2f31c11",
+      "unchanged_from_parent": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/MerchantChapterOfferMapper.xml",
+      "sha256": "3259ded45f1dc6275115f5d125b5e816dd99e31a3be91db38f41ef2f3978c212",
+      "unchanged_from_parent": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/MerchantChapterApplicationMapper.xml",
+      "sha256": "03e00e7ea634f0767b3de403b7d9510720c7dcafaa979b6e0b5df656f74bbf92",
+      "unchanged_from_parent": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/RegistrationEntitlementMapper.xml",
+      "sha256": "25ac8dc50c37bd645f868ee9863571d53f2da2e4ec3f490953d1594ee0b9db81",
+      "unchanged_from_parent": true
+    }
+  ],
+  "java_executed_by_D": false,
+  "mysql_executed_by_D": false,
+  "ci_dispatched_by_D": false,
+  "production_ddl_executed": false,
+  "production_migration_added": false,
+  "real_wx_calls": 0,
+  "parent_materialization": {
+    "tree_directory_objects_verified": 1167,
+    "public_changed_blobs_verified": 339,
+    "excluded_non_task_artifact": {
+      "path": "chengyinhub-xcx/scripts/uiaudit/action-ledger.json",
+      "size": 33062054,
+      "git_blob": "f1cd9054d2127aff867b91c18c53b61e9624cad2",
+      "reason": "connector transport closed on oversized content; original index SHA retained via skip-worktree; no modifications to this artifact"
+    }
+  }
+}

@@ -45,6 +45,7 @@ class OWN_C04_11Test {
         ReflectionTestUtils.setField(controller, "npcFeatureFlags", flags);
         ReflectionTestUtils.setField(controller, "npcChatService", chat);
         ReflectionTestUtils.setField(controller, "speechToTextService", speech);
+        com.chengyinhub.business.service.impl.NpcAsrTestFixture.wireController(controller,speech);
         ReflectionTestUtils.setField(controller, "cmsTopicNodeService", nodes);
         ReflectionTestUtils.setField(controller, "playTeamMapper", registration);
     }

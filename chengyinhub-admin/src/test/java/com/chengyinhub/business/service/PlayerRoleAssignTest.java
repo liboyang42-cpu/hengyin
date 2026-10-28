@@ -10,11 +10,14 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 /**
@@ -72,6 +75,36 @@ class PlayerRoleAssignTest {
     void invalidIds_returnNull() {
         assertNull(service.assignOrGet(null, ACT));
         assertNull(service.assignOrGet(MEMBER, 0L));
+    }
+
+    @Test
+    void readAssignedReturnsOriginalWithoutAllocating() {
+        PlayerActivityRole original = roleOf("DECODER");
+        when(mapper.selectByActivityAndMember(ACT, MEMBER)).thenReturn(original);
+        assertSame(original, service.readAssigned(MEMBER, ACT));
+        verify(mapper).selectByActivityAndMember(ACT, MEMBER);
+        verifyNoMoreInteractions(mapper);
+    }
+
+    @Test
+    void readAssignedMissingAndInvalidIdsNeverAllocate() {
+        assertNull(service.readAssigned(MEMBER, ACT));
+        verify(mapper).selectByActivityAndMember(ACT, MEMBER);
+        assertNull(service.readAssigned(null, ACT));
+        assertNull(service.readAssigned(0L, ACT));
+        assertNull(service.readAssigned(MEMBER, null));
+        assertNull(service.readAssigned(MEMBER, 0L));
+        verifyNoMoreInteractions(mapper);
+    }
+
+    @Test
+    void readAssignedDoesNotHideStorageFailure() {
+        IllegalStateException failure = new IllegalStateException("role storage unavailable");
+        when(mapper.selectByActivityAndMember(ACT, MEMBER)).thenThrow(failure);
+        assertSame(failure, assertThrows(IllegalStateException.class,
+                () -> service.readAssigned(MEMBER, ACT)));
+        verify(mapper).selectByActivityAndMember(ACT, MEMBER);
+        verifyNoMoreInteractions(mapper);
     }
 
     private static PlayerActivityRole roleOf(String code) {

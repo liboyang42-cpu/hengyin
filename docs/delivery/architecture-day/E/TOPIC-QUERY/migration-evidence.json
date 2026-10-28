@@ -1,0 +1,117 @@
+{
+  "base": "d586c143eb0a4499aeb15cbb3d173496f18b83e2",
+  "base_blob": "e9183c6528637c6ac7bba3f12f52cb3ae4c2fd6a",
+  "moved_exact_bodies": [
+    {
+      "method_name": "selectPublicCmsTopicById",
+      "parameters": "(Longid)",
+      "body_sha256": "3ee159e86cf1bf37c8e47b54de1e1c420e1454260acab5a0edd5776fe16d962e"
+    },
+    {
+      "method_name": "selectCmsTopicDetailById",
+      "parameters": "(Longid,LongviewerMemberId)",
+      "body_sha256": "56102092e35b8ea30d6b15c65af982375e91263863572ae4853877b93fc6d788"
+    },
+    {
+      "method_name": "selectMerchantVisibleCmsTopicById",
+      "parameters": "(Longid)",
+      "body_sha256": "f63745fed65a27db599ea8aea5c0223c7885bfef509dbebaa5efe20f8f10d7d5"
+    },
+    {
+      "method_name": "selectMerchantManagedCmsTopicById",
+      "parameters": "(Longid,LongmerchantId)",
+      "body_sha256": "d54a6e0df8f1a0147c568e18dfa22a80d229e2e94f6addee23009b539f7226da"
+    },
+    {
+      "method_name": "selectCmsTopicList",
+      "parameters": "(CmsTopiccmsTopic)",
+      "body_sha256": "fcfa08963399ab67d10d486a231d4a8b76114fe047b93441df2d51daf7917cb9"
+    },
+    {
+      "method_name": "selectUpcomingTopicCounts",
+      "parameters": "(List<Long>clubIds)",
+      "body_sha256": "452664c63b05957b1be50e5ecff9f5bb0bfceb21baae48ae66cacc85836a4705"
+    },
+    {
+      "method_name": "selectPublicCmsTopicList",
+      "parameters": "(CmsTopiccmsTopic)",
+      "body_sha256": "d108235854708bfd2eaed2c8ad0f47486f55b9805eb462471b5b4ef963f6076d"
+    },
+    {
+      "method_name": "refreshPublicNodeCounts",
+      "parameters": "(List<CmsTopic>topics)",
+      "body_sha256": "66b6e87c202810152b8345bf640b543926516c411e28bc31a95548fc1f01c57d"
+    },
+    {
+      "method_name": "selectTopicTemplateList",
+      "parameters": "()",
+      "body_sha256": "73a439fb73700dbc3f4c00d0397efeae9b8797814f5bbb1d8914d3886d3476ba"
+    },
+    {
+      "method_name": "buildTopicTemplateListVO",
+      "parameters": "()",
+      "body_sha256": "9c11df0ba44ac179cb0a99a9595bbea040937e33b45f031130043117c67240ff"
+    },
+    {
+      "method_name": "buildTopicTemplateListVO",
+      "parameters": "(booleanrecommendedOnly)",
+      "body_sha256": "fa1ff239b1f9fd92f7dabe60922c26873d8ab3fec27575fd2604f44eee68941e"
+    },
+    {
+      "method_name": "buildTopicTemplateDetail",
+      "parameters": "(Longid,booleanviewerIsMerchant)",
+      "body_sha256": "6697192130f8a9a8c0398dbab16f52303c2761d72c3a992a296a43bec8ec90e4"
+    },
+    {
+      "method_name": "buildTopicTemplateDetail",
+      "parameters": "(Longid,booleanviewerCanViewRecruitment,IntegermerchantCategoryId)",
+      "body_sha256": "3da27631fa1e7cd316e6a1d4ae5127d1ade9aca2ffb18d82eba6db84c9384ee8"
+    },
+    {
+      "method_name": "buildPublicTopicTemplateDetail",
+      "parameters": "(Longid,LongviewerMemberId,booleanviewerIsMerchant,IntegermerchantCategoryId)",
+      "body_sha256": "1550fc541b00c19853e98ad1a338f8f5373b5eded3a44402e6537594576e5e39"
+    },
+    {
+      "method_name": "buildTopicTemplateDetailFromSnapshot",
+      "parameters": "(CmsTopictopic,booleanviewerCanViewRecruitment,IntegermerchantCategoryId)",
+      "body_sha256": "a1bac72a404efdeb8c3c7097cf7ecab6940edd290e464b214d1ae5d5768c93ef"
+    },
+    {
+      "method_name": "applyTemplateMeta",
+      "parameters": "(com.chengyinhub.business.domain.vo.TopicTemplateDetailVOvo,LongtopicId,booleanviewerCanViewRecruitment)",
+      "body_sha256": "2642d5b0360356afeb8864747ae5a7eed36bb350da5517279a704d6401f66065"
+    },
+    {
+      "method_name": "toEffortVO",
+      "parameters": "(com.chengyinhub.business.domain.CmsTopicChapterTemplateMetacm)",
+      "body_sha256": "8349544a53c7a6b6ff7e4ea6cd91960e4105dc569c8fbc2e838a9fe7e01bda7d"
+    },
+    {
+      "method_name": "splitCsv",
+      "parameters": "(Stringraw)",
+      "body_sha256": "4f7f2594883eb482a9897d4ea3624c772bc13dcfc8ea90671eb232aaabca04b0"
+    },
+    {
+      "method_name": "splitLines",
+      "parameters": "(Stringraw)",
+      "body_sha256": "1f594edaee8620a6c41f908a98111b20b29db28bfd74b49baeb8856ac4ff62cd"
+    },
+    {
+      "method_name": "splitBy",
+      "parameters": "(Stringraw,Stringregex)",
+      "body_sha256": "be7c730cacbb212458c206778210037131f6dc76dc3ff746f328c5cb835ecfb2"
+    },
+    {
+      "method_name": "normalizeRouteShape",
+      "parameters": "(java.util.List<CmsTopicNode>nodes)",
+      "body_sha256": "8e49b3b7271be744a3bbc5fcb62ce386f2926906c109372ec7e9a62a6872aa4c"
+    }
+  ],
+  "shared_null_list_helper_exact": true,
+  "retained_exact_method_bodies": 128,
+  "public_delegates": 13,
+  "source_lines_before": 4150,
+  "source_lines_after_patch": 3606,
+  "owner_lines": 666
+}

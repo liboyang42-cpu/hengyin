@@ -1,0 +1,110 @@
+[
+  {
+    "name": "unknown",
+    "state": "UNKNOWN",
+    "transcript": null,
+    "handoffStarted": false,
+    "bodyErased": false,
+    "outcomeStatus": "PROCESSING",
+    "safetyDecision": "UNKNOWN",
+    "errorCode": "REQUEST_OUTCOME_UNKNOWN",
+    "asrReason": "ASR_OUTCOME_UNKNOWN",
+    "asrResumable": false
+  },
+  {
+    "name": "state-unavailable",
+    "state": null,
+    "transcript": null,
+    "handoffStarted": false,
+    "bodyErased": false,
+    "outcomeStatus": "PROCESSING",
+    "safetyDecision": "UNKNOWN",
+    "errorCode": "REQUEST_OUTCOME_UNKNOWN",
+    "asrReason": "ASR_STATE_UNAVAILABLE",
+    "asrResumable": false
+  },
+  {
+    "name": "handoff-started",
+    "state": "RECEIVED",
+    "transcript": "private original",
+    "handoffStarted": true,
+    "bodyErased": false,
+    "outcomeStatus": "PROCESSING",
+    "safetyDecision": "UNKNOWN",
+    "errorCode": "REQUEST_OUTCOME_UNKNOWN",
+    "asrReason": "ASR_TEXT_HANDOFF_STARTED",
+    "asrResumable": false
+  },
+  {
+    "name": "in-flight",
+    "state": "IN_FLIGHT",
+    "transcript": null,
+    "handoffStarted": false,
+    "bodyErased": false,
+    "outcomeStatus": "PROCESSING",
+    "safetyDecision": "NOT_RUN",
+    "errorCode": "REQUEST_IN_PROGRESS",
+    "asrReason": "ASR_IN_FLIGHT",
+    "asrResumable": false
+  },
+  {
+    "name": "received",
+    "state": "RECEIVED",
+    "transcript": "private original",
+    "handoffStarted": false,
+    "bodyErased": false,
+    "outcomeStatus": "PROCESSING",
+    "safetyDecision": "NOT_RUN",
+    "errorCode": "REQUEST_IN_PROGRESS",
+    "asrReason": "ASR_RECEIVED",
+    "asrResumable": true
+  },
+  {
+    "name": "not-sent",
+    "state": "NOT_SENT",
+    "transcript": null,
+    "handoffStarted": false,
+    "bodyErased": false,
+    "outcomeStatus": "FAILED",
+    "safetyDecision": "NOT_RUN",
+    "errorCode": "ASR_NOT_SENT",
+    "asrReason": "ASR_NOT_SENT",
+    "asrResumable": false
+  },
+  {
+    "name": "empty",
+    "state": "RECEIVED",
+    "transcript": "",
+    "handoffStarted": false,
+    "bodyErased": false,
+    "outcomeStatus": "FAILED",
+    "safetyDecision": "NOT_RUN",
+    "errorCode": "ASR_EMPTY_TEXT",
+    "asrReason": "ASR_EMPTY_TEXT",
+    "asrResumable": false
+  },
+  {
+    "name": "erased",
+    "state": "RECEIVED",
+    "transcript": null,
+    "handoffStarted": false,
+    "bodyErased": true,
+    "outcomeStatus": "FAILED",
+    "safetyDecision": "NOT_RUN",
+    "errorCode": "ASR_TEXT_UNAVAILABLE",
+    "asrReason": "ASR_TEXT_UNAVAILABLE",
+    "asrResumable": false
+  },
+  {
+    "name": "missing-body",
+    "state": "RECEIVED",
+    "transcript": null,
+    "handoffStarted": false,
+    "bodyErased": false,
+    "outcomeStatus": "FAILED",
+    "safetyDecision": "NOT_RUN",
+    "errorCode": "ASR_TEXT_UNAVAILABLE",
+    "asrReason": "ASR_TEXT_UNAVAILABLE",
+    "asrResumable": false
+  }
+]

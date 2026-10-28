@@ -69,6 +69,15 @@ class CoopSettlementPayoutTransactionTest {
                         ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(target, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
                         : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         ReflectionTestUtils.setField(target, "transactionManager", transactionManager);
+        ReflectionTestUtils.setField(target, "coopSettlementOriginalMapper", mock(com.chengyinhub.business.mapper.CoopSettlementOriginalMapper.class));
+        ReflectionTestUtils.setField(target, "coopSettlementAdjustmentMapper", mock(com.chengyinhub.business.mapper.CoopSettlementAdjustmentMapper.class));
+        com.chengyinhub.business.mapper.CmsTopicMapper topics = mock(com.chengyinhub.business.mapper.CmsTopicMapper.class);
+        when(topics.selectCmsTopicByIdForUpdate(TOPIC_ID)).thenAnswer(call -> jdbc.queryForObject(
+                "SELECT id FROM cms_topic WHERE id=? FOR UPDATE", (rs, n) -> {
+                    com.chengyinhub.business.domain.CmsTopic topic = new com.chengyinhub.business.domain.CmsTopic();
+                    topic.setId(rs.getLong(1)); return topic;
+                }, TOPIC_ID));
+        ReflectionTestUtils.setField(target, "cmsTopicMapper", topics);
         ReflectionTestUtils.setField(target, "coopSettlementMapper", settlementMapper());
         ReflectionTestUtils.setField(target, "coopComplaintMapper", complaintMapper());
         ReflectionTestUtils.setField(target, "settlementDebtLedger", mock(com.chengyinhub.business.service.support.SettlementDebtLedger.class));
@@ -156,6 +165,8 @@ class CoopSettlementPayoutTransactionTest {
     }
 
     private void createSchemaAndFixture() {
+        jdbc.execute("CREATE TABLE cms_topic (id BIGINT PRIMARY KEY)");
+        jdbc.update("INSERT INTO cms_topic(id) VALUES (?)", TOPIC_ID);
         jdbc.execute("CREATE TABLE coop_settlement ("
                 + "id BIGINT PRIMARY KEY, settlement_route VARCHAR(32), source_contract_type VARCHAR(48),"
                 + "source_contract_id BIGINT, commercial_context_type VARCHAR(32), commercial_context_id BIGINT,"

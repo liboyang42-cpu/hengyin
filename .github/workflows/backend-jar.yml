@@ -18,6 +18,20 @@ on:
         required: false
         type: boolean
         default: false
+      run_restore_fixtures:
+        description: 同提交隔离恢复：默认七项，显式诊断仅 payment-gap 或 voice-gap；与 HTTP 互斥且只构建一次 JAR
+        required: false
+        type: boolean
+        default: false
+      restore_scope:
+        description: full-seven 完整验收或固定 payment-gap/voice-gap-diagnostic（DIAGNOSTIC_PARTIAL，非完整通过）
+        required: false
+        type: choice
+        default: full-seven
+        options:
+          - full-seven
+          - payment-gap-diagnostic
+          - voice-gap-diagnostic
 
 permissions:
   contents: read
@@ -27,9 +41,42 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  admission:
+    name: Validate manual source and exclusive mode
+    if: github.repository == 'liboyang42-cpu/hengyin' && github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      SOURCE_SHA: ${{ inputs.source_sha }}
+      WORKFLOW_SHA: ${{ github.workflow_sha }}
+      RUN_HTTP_FIXTURES: ${{ inputs.run_http_fixtures }}
+      RUN_RESTORE_FIXTURES: ${{ inputs.run_restore_fixtures }}
+      RESTORE_SCOPE: ${{ inputs.restore_scope }}
+    steps:
+      - name: Validate source and exclusive mode
+        run: |
+          test "$GITHUB_REPOSITORY" = liboyang42-cpu/hengyin
+          test "$GITHUB_EVENT_NAME" = workflow_dispatch
+          [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]
+          case "$RUN_HTTP_FIXTURES:$RUN_RESTORE_FIXTURES" in
+            false:false|true:false|false:true) ;;
+            *) echo "Select exactly one optional fixture mode, or neither for the original JAR build" >&2; exit 2 ;;
+          esac
+          case "$RESTORE_SCOPE" in
+            full-seven) ;;
+            payment-gap-diagnostic|voice-gap-diagnostic)
+              test "$RUN_RESTORE_FIXTURES" = true
+              test "$RUN_HTTP_FIXTURES" = false ;;
+            *) echo "Unknown fixed restore scope" >&2; exit 2 ;;
+          esac
+          if [[ "$RUN_RESTORE_FIXTURES" = true ]]; then
+            test "$SOURCE_SHA" = "$GITHUB_SHA"
+            test "$SOURCE_SHA" = "$WORKFLOW_SHA"
+          fi
   jar:
     name: Build backend jar
-    if: github.repository == 'liboyang42-cpu/hengyin' && !inputs.run_http_fixtures
+    needs: admission
+    if: github.repository == 'liboyang42-cpu/hengyin' && !inputs.run_http_fixtures && !inputs.run_restore_fixtures
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
@@ -74,7 +121,16 @@ jobs:
           if-no-files-found: error
   http-fixtures:
     name: Run isolated HTTP fixtures
-    if: github.repository == 'liboyang42-cpu/hengyin' && github.event_name == 'workflow_dispatch' && inputs.run_http_fixtures
+    needs: admission
+    if: github.repository == 'liboyang42-cpu/hengyin' && github.event_name == 'workflow_dispatch' && inputs.run_http_fixtures && !inputs.run_restore_fixtures
     uses: ./.github/workflows/gameplay-http-e2e.yml
     with:
       source_sha: ${{ inputs.source_sha }}
+  restore-fixtures:
+    name: ${{ inputs.restore_scope != 'full-seven' && format('DIAGNOSTIC_PARTIAL {0} restore', inputs.restore_scope) || 'Run seven isolated restore cohorts' }}
+    needs: admission
+    if: github.repository == 'liboyang42-cpu/hengyin' && github.event_name == 'workflow_dispatch' && inputs.run_restore_fixtures && !inputs.run_http_fixtures
+    uses: ./.github/workflows/isolated-restore-business-reconciliation.yml
+    with:
+      source_sha: ${{ inputs.source_sha }}
+      restore_scope: ${{ inputs.restore_scope }}

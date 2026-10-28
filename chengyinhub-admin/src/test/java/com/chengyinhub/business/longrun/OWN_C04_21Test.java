@@ -57,6 +57,7 @@ public class OWN_C04_21Test {
         MemberCashWithdrawMapper cash = mock(MemberCashWithdrawMapper.class);
         MemberCashWithdraw original = new MemberCashWithdraw();
         original.setId(1L); original.setMemberId(7L); original.setAmount(new BigDecimal("100"));
+        original.setDelFlag(0); original.setOpenid("openid"); original.setOutBatchNo("CW1"); original.setOutDetailNo("CD1");
         original.setStatus(MemberCashWithdraw.STATUS_SUCCESS);
         when(cash.selectByIdForUpdate(1L)).thenReturn(original);
         WithdrawalFrozenAmountResolver resolver = mock(WithdrawalFrozenAmountResolver.class);
@@ -74,9 +75,10 @@ public class OWN_C04_21Test {
         PlayerWithdrawalCooldownMapper cooldown = mock(PlayerWithdrawalCooldownMapper.class);
         MemberCashWithdraw original = new MemberCashWithdraw();
         original.setId(1L); original.setMemberId(7L); original.setAmount(new BigDecimal("100"));
+        original.setDelFlag(0); original.setOpenid("openid"); original.setOutBatchNo("CW1"); original.setOutDetailNo("CD1");
         original.setStatus(MemberCashWithdraw.STATUS_PROCESSING);
-        original.setOpenid("openid"); original.setOutBatchNo("CW1"); original.setOutDetailNo("CD1");
-        when(cash.selectByIdForUpdate(1L)).thenReturn(original);
+        when(cash.selectById(1L)).thenReturn(original);
+        new com.chengyinhub.business.service.impl.CashWithdrawEvidenceFixture(cash);
         when(members.selectBalanceForUpdate(7L)).thenReturn(new BigDecimal("160"));
         when(bounty.selectFrozenAmountsForUpdate(eq(7L), any())).thenReturn(Collections.emptyList());
         when(cooldown.selectUnexpiredAmountsForUpdate(7L)).thenReturn(Collections.emptyList());
@@ -115,7 +117,7 @@ public class OWN_C04_21Test {
         when(members.selectUmsMemberById(7L)).thenReturn(member);
         com.chengyinhub.common.config.WxPayConfig config = mock(com.chengyinhub.common.config.WxPayConfig.class);
         when(config.getAppid()).thenReturn("wx-appid");
-        when(config.getMerchantId()).thenReturn("merchant");
+        when(config.getMerchantId()).thenReturn("unit-merchant");
         MerchantReferralBountyService bounty = mock(MerchantReferralBountyService.class);
         IPlayerWithdrawalCooldownService cooldown = mock(IPlayerWithdrawalCooldownService.class);
         when(bounty.frozenAmount(7L)).thenReturn(BigDecimal.ZERO);
@@ -132,6 +134,7 @@ public class OWN_C04_21Test {
         ReflectionTestUtils.setField(caller, "wxPayConfig", config);
         ReflectionTestUtils.setField(caller, "frozenAmountResolver", new WithdrawalFrozenAmountResolver(bounty, cooldown));
         ReflectionTestUtils.setField(caller, "balanceAdmissionService", admission);
+        ReflectionTestUtils.setField(caller, "transferIntents", evidence());
         assertThrows(IllegalStateException.class, () -> caller.withdraw(7L, new BigDecimal("100")));
         verifyNoInteractions(provider);
         // 只允许写 CW/CD 原业务号；不得改写原回执状态。
@@ -139,6 +142,7 @@ public class OWN_C04_21Test {
         verify(cash, never()).updateStatusIfProcessing(any());
         verify(members, never()).deductWithdrawableBalance(anyLong(), any(), any());
         verify(members, never()).addBalance(anyLong(), any());
+        verify(admission).debitCash(1L, 7L, new BigDecimal("100.00"), "unit-merchant", "wx-appid", "城瘾分润提现");
     }
 
     @Test void bountyFailureRollsBackItsNestedBoundaryAfterMemberThenBountyLock() {
@@ -214,15 +218,24 @@ public class OWN_C04_21Test {
         });
         when(members.deductWithdrawableBalance(anyLong(), any(), any())).thenAnswer(i ->
                 service.deductWithdrawableBalance(i.getArgument(0), i.getArgument(1), i.getArgument(2)) ? 1 : 0);
-        when(cash.selectByIdForUpdate(anyLong())).thenAnswer(i -> cash.selectById(i.getArgument(0)));
+        new com.chengyinhub.business.service.impl.CashWithdrawEvidenceFixture(cash);
         fixtureSources(resolver);
         return new WithdrawalBalanceAdmissionService(members, resolver, cash, transferIntents);
     }
     private static com.chengyinhub.business.mapper.CashWithdrawTransferIntentMapper evidence() {
-        var mapper = mock(com.chengyinhub.business.mapper.CashWithdrawTransferIntentMapper.class);
-        when(mapper.insert(any())).thenReturn(1);
-        return mapper;
+        return new com.chengyinhub.business.service.CashWithdrawIntentTestSupport().mapper;
     }
+    /** Explicit historical master debit snapshot, not a synthesized fund-ledger association. */
+    public static com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent seedSnapshot(
+            com.chengyinhub.business.service.CashWithdrawIntentTestSupport storage, MemberCashWithdraw row,
+            String merchant, String appid, boolean submitted) {
+        var original = com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent.create(row, merchant, appid,
+                "城瘾分润提现", new BigDecimal("100.00"), new BigDecimal("100.00").subtract(row.getAmount()));
+        original = com.chengyinhub.business.service.CashWithdrawIntentTestSupport.flags(original, submitted, false);
+        assertEquals(1, storage.mapper.insert(original));
+        return original;
+    }
+
     private static void fixtureSources(WithdrawalFrozenAmountResolver resolver) {
         MerchantReferralBountyMapper bounty = mock(MerchantReferralBountyMapper.class);
         PlayerWithdrawalCooldownMapper cooldown = mock(PlayerWithdrawalCooldownMapper.class);

@@ -14,6 +14,7 @@
         <result property="topicId"    column="topic_id"    />
         <result property="originApplyId"    column="origin_apply_id"    />
         <result property="nodeId"    column="node_id"    />
+        <result property="supplyStationId" column="supply_station_id"/>
         <result property="gameId"    column="game_id"    />
         <result property="targetLevel"    column="target_level"    />
         <result property="status"    column="status"    />
@@ -44,7 +45,7 @@
     </resultMap>
 
     <sql id="selectCoopInviteVo">
-        select id, invite_type, from_type, from_id, to_type, to_id, topic_id, origin_apply_id, node_id, game_id, target_level, status, message, handle_time, handle_reason, expire_time, config_deadline, share_mode, share_rate, fixed_fee, deposit_amount, deposit_status, deposit_out_trade_no, deposit_refund_no, deposit_refund_state, deposit_refund_amount, deposit_refund_lease_token, deposit_refund_lease_at, deposit_refund_requested_at, deposit_refund_confirmed_at, deposit_paid_transaction_id, create_by, create_time, update_by, update_time, del_flag from coop_invite
+        select id, invite_type, from_type, from_id, to_type, to_id, topic_id, origin_apply_id, node_id, supply_station_id, game_id, target_level, status, message, handle_time, handle_reason, expire_time, config_deadline, share_mode, share_rate, fixed_fee, deposit_amount, deposit_status, deposit_out_trade_no, deposit_refund_no, deposit_refund_state, deposit_refund_amount, deposit_refund_lease_token, deposit_refund_lease_at, deposit_refund_requested_at, deposit_refund_confirmed_at, deposit_paid_transaction_id, create_by, create_time, update_by, update_time, del_flag from coop_invite
     </sql>
 
     <select id="selectCoopInviteList" parameterType="CoopInvite" resultMap="CoopInviteResult">
@@ -105,7 +106,7 @@
     </select>
 
     <!-- B1-4:同意路径按行锁,防两家同时点同意抢同一槽位 -->
-    <select id="selectCoopInviteByIdForUpdate" parameterType="Long" resultMap="CoopInviteResult">
+    <select id="selectCoopInviteByIdForUpdate" parameterType="Long" resultMap="CoopInviteResult" useCache="false" flushCache="true">
         <include refid="selectCoopInviteVo"/>
         where id = #{id} and del_flag = 0 for update
     </select>
@@ -121,6 +122,7 @@
             <if test="topicId != null">topic_id,</if>
             <if test="originApplyId != null">origin_apply_id,</if>
             <if test="nodeId != null">node_id,</if>
+            <if test="supplyStationId != null">supply_station_id,</if>
             <if test="gameId != null">game_id,</if>
             <if test="targetLevel != null">target_level,</if>
             <if test="status != null">status,</if>
@@ -145,6 +147,7 @@
             <if test="topicId != null">#{topicId},</if>
             <if test="originApplyId != null">#{originApplyId},</if>
             <if test="nodeId != null">#{nodeId},</if>
+            <if test="supplyStationId != null">#{supplyStationId},</if>
             <if test="gameId != null">#{gameId},</if>
             <if test="targetLevel != null">#{targetLevel},</if>
             <if test="status != null">#{status},</if>
@@ -304,6 +307,16 @@
         order by coalesce(deposit_refund_lease_at,create_time),id limit 100
     </select>
 
+    <!-- First consistent read in the caller's fresh short transaction, after the original invite lock.
+         Every B writer locks that same invite before appending facts; no inherited RR snapshot or
+         whole-fact-table locking scan. Two rows reject ambiguity, never choose latest/current merchant. -->
+    <select id="selectDepositPaidFactReferences" resultType="map" useCache="false" flushCache="true">
+        select id,fact_hash from wx_verified_payment_fact
+        where fact_kind='PAYMENT' and business_out_trade_no=#{outTradeNo}
+          and transaction_id=#{transactionId}
+        order by id limit 2
+    </select>
+
     <!-- 资金恢复按原事实读取，软删展示过滤不能吞掉已提交资金责任。 -->
     <select id="selectDepositFactByIdForUpdate" resultMap="CoopInviteResult" useCache="false" flushCache="true">
         <include refid="selectCoopInviteVo"/> where id=#{id} and invite_type != 2 for update
@@ -316,4 +329,80 @@
         <include refid="selectCoopInviteVo"/> where topic_id=#{topicId} and status=1 and del_flag=0
         order by id for update
     </select>
+    <resultMap id="SupplyStationResult" type="com.chengyinhub.business.domain.CmsRegistrationMerchant">
+        <id property="id" column="id"/>
+        <result property="topicId" column="topic_id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="addressName" column="address_name"/>
+        <result property="auditStatus" column="audit_status"/>
+        <result property="delFlag" column="del_flag"/>
+    </resultMap>
+    <sql id="eligibleSupplyStation">
+        select id, topic_id, member_id, address_name, audit_status, del_flag
+        from cms_registration_merchant
+        where topic_id = #{topicId} and member_id = #{merchantMemberId}
+          and audit_status = 1 and del_flag = 0
+    </sql>
+    <select id="selectSupplyStations" resultMap="SupplyStationResult" useCache="false" flushCache="true">
+        <include refid="eligibleSupplyStation"/>
+        order by id asc
+    </select>
+    <select id="selectSupplyStationForUpdate" resultMap="SupplyStationResult" useCache="false" flushCache="true">
+        <include refid="eligibleSupplyStation"/>
+        and id = #{stationId}
+        for update
+    </select>
+    <!-- Read only the exact selected station identity. Withdrawn historical rows can still supply their name,
+         but a changed topic/merchant never can. No fallback to any other station. -->
+    <select id="selectSupplyStationNames" resultMap="SupplyStationResult" useCache="false" flushCache="true">
+        select id, topic_id, member_id, address_name, audit_status, del_flag from cms_registration_merchant
+        where
+        <choose>
+            <when test="invites != null and invites.size() > 0">
+                <foreach collection="invites" item="invite" open="(" close=")" separator=" or ">
+                    (id = #{invite.supplyStationId} and topic_id = #{invite.topicId} and member_id = #{invite.toId})
+                </foreach>
+            </when>
+            <otherwise>1 = 0</otherwise>
+        </choose>
+    </select>
+    <resultMap id="SupplyOrderResult" type="com.chengyinhub.business.domain.CoopOrder">
+        <id property="id" column="id"/>
+        <result property="inviteId" column="invite_id"/><result property="regId" column="reg_id"/>
+        <result property="topicId" column="topic_id"/><result property="gameId" column="game_id"/>
+        <result property="fromId" column="from_id"/><result property="toId" column="to_id"/>
+        <result property="toType" column="to_type"/><result property="status" column="status"/>
+        <result property="delFlag" column="del_flag"/><result property="termsSnapshot" column="terms_snapshot"/>
+        <result property="roleSnapshot" column="role_snapshot"/><result property="scopeTypeSnapshot" column="scope_type_snapshot"/>
+        <result property="scopeIdSnapshot" column="scope_id_snapshot"/>
+        <result property="eligiblePurchaseKindsSnapshot" column="eligible_purchase_kinds_snapshot"/>
+        <result property="fulfillmentEvidenceRuleSnapshot" column="fulfillment_evidence_rule_snapshot"/>
+    </resultMap>
+    <sql id="supplyOrderColumns">
+        id, invite_id, reg_id, topic_id, game_id, from_id, to_id, to_type, status, del_flag, terms_snapshot,
+        role_snapshot, scope_type_snapshot, scope_id_snapshot, eligible_purchase_kinds_snapshot, fulfillment_evidence_rule_snapshot
+    </sql>
+    <!-- Same effective predicate as existing CoopOrderMapper.selectEffectiveOrdersByTopicId. -->
+    <sql id="effectiveSupplyOrders">
+        select <include refid="supplyOrderColumns"/> from coop_order
+        where topic_id = #{topicId} and to_type = 'merchant' and to_id = #{merchantMemberId}
+          and status = 0 and del_flag = 0
+          and not exists (select 1 from coop_invite legacy_invite
+                          where legacy_invite.id = coop_order.invite_id and legacy_invite.invite_type = 2)
+        order by id asc
+    </sql>
+    <select id="selectEffectiveSupplyOrders" resultMap="SupplyOrderResult" useCache="false" flushCache="true">
+        <include refid="effectiveSupplyOrders"/>
+    </select>
+    <select id="selectEffectiveSupplyOrdersForUpdate" resultMap="SupplyOrderResult" useCache="false" flushCache="true">
+        <include refid="effectiveSupplyOrders"/>
+        for update
+    </select>
+    <select id="selectOriginalCoopOrdersForUpdate" resultMap="SupplyOrderResult" useCache="false" flushCache="true">
+        select <include refid="supplyOrderColumns"/> from coop_order
+        where del_flag = 0 and (invite_id = #{inviteId}
+            <if test="regId != null">or reg_id = #{regId}</if>)
+        order by id asc for update
+    </select>
+
 </mapper>

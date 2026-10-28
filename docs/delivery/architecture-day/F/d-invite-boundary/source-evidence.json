@@ -1,0 +1,13 @@
+{
+  "kind": "READ_ONLY_SOURCE_NOT_COMPILED",
+  "source": "31ec329768ecc2b23e09466bf46754d12fe569d6",
+  "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/ChapterApplicationInviteNotice.java",
+  "sha256": "4cdfe649b13e904ad9017df3afa0226ee69489171291893a520484006d0a62ee",
+  "caller_lines": [
+    "31ec329768ecc2b23e09466bf46754d12fe569d6:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantChapterApplicationServiceImpl.java:54:    private com.chengyinhub.business.service.support.ChapterApplicationInviteNotice inviteNotice;",
+    "31ec329768ecc2b23e09466bf46754d12fe569d6:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantChapterApplicationServiceImpl.java:500:            inviteNotice.submit(topic.getId(), invite.getId(), invite.getApplicationRound(), merchantMemberId);",
+    "31ec329768ecc2b23e09466bf46754d12fe569d6:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantChapterApplicationServiceImpl.java:508:        inviteNotice.submit(topic.getId(), invite.getId(), invite.getApplicationRound(), merchantMemberId);",
+    "31ec329768ecc2b23e09466bf46754d12fe569d6:chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/ChapterApplicationInviteNotice.java:10:public class ChapterApplicationInviteNotice {",
+    "31ec329768ecc2b23e09466bf46754d12fe569d6:chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/ChapterApplicationInviteNotice.java:12:    public ChapterApplicationInviteNotice(CommittedOfficialNoticeService notices) { this.notices=notices; }"
+  ]
+}

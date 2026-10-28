@@ -54,7 +54,7 @@ class TopicCopyRecruitmentGuardTest {
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
         ReflectionTestUtils.setField(service, "cmsTopicChapterMapper", chapterMapper);
         ReflectionTestUtils.setField(service, "cmsTopicNodeMapper", nodeMapper);
-        ReflectionTestUtils.setField(service, "sysCategoryService", mock(ISysCategoryService.class));
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "sysCategoryService", mock(ISysCategoryService.class));
         // CORE OWN-C03-13：复制写入章节后须生成有效身份，否则 fail-closed；夹具按真实插入回填 id。
         java.util.concurrent.atomic.AtomicLong chapterIds = new java.util.concurrent.atomic.AtomicLong(600L);
         org.mockito.Mockito.when(chapterMapper.insertCmsTopicChapter(org.mockito.ArgumentMatchers.any(CmsTopicChapter.class))).thenAnswer(invocation -> {
@@ -90,7 +90,7 @@ class TopicCopyRecruitmentGuardTest {
         when(nodeMapper.selectCmsTopicNodeList(any())).thenReturn(Collections.emptyList());
 
         IllegalStateException error = assertThrows(IllegalStateException.class,
-                () -> service.copyCmsTopic(SOURCE_TOPIC, Collections.<String, Object>singletonMap("copyType", 2)));
+                () -> com.chengyinhub.business.service.support.TopicCopyTestWiring.owner(service).copyCmsTopic(SOURCE_TOPIC, Collections.<String, Object>singletonMap("copyType", 2)));
 
         assertTrue(error.getMessage().contains("0到127"));
         org.mockito.ArgumentCaptor<CmsTopicChapter> copied = org.mockito.ArgumentCaptor
@@ -124,7 +124,7 @@ class TopicCopyRecruitmentGuardTest {
                 .thenReturn(Collections.singletonList(revshare));
         when(nodeMapper.selectCmsTopicNodeList(any())).thenReturn(Collections.emptyList());
 
-        service.copyCmsTopic(SOURCE_TOPIC, Collections.<String, Object>singletonMap("copyType", 2));
+        com.chengyinhub.business.service.support.TopicCopyTestWiring.owner(service).copyCmsTopic(SOURCE_TOPIC, Collections.<String, Object>singletonMap("copyType", 2));
 
         org.mockito.ArgumentCaptor<CmsTopicChapter> copied = org.mockito.ArgumentCaptor
                 .forClass(CmsTopicChapter.class);
@@ -154,7 +154,7 @@ class TopicCopyRecruitmentGuardTest {
                 .thenReturn(Collections.singletonList(revshare));
 
         IllegalStateException error = assertThrows(IllegalStateException.class,
-                () -> service.copyCmsTopic(SOURCE_TOPIC, Collections.<String, Object>singletonMap("copyType", 2)));
+                () -> com.chengyinhub.business.service.support.TopicCopyTestWiring.owner(service).copyCmsTopic(SOURCE_TOPIC, Collections.<String, Object>singletonMap("copyType", 2)));
 
         assertTrue(error.getMessage().contains("必须配置每人次人头费上限"));
         verify(chapterMapper, never()).insertCmsTopicChapter(any(CmsTopicChapter.class));
@@ -182,7 +182,7 @@ class TopicCopyRecruitmentGuardTest {
                 .thenReturn(Collections.singletonList(chapter));
 
         IllegalStateException error = assertThrows(IllegalStateException.class,
-                () -> service.copyCmsTopic(SOURCE_TOPIC, Collections.<String, Object>singletonMap("copyType", 2)));
+                () -> com.chengyinhub.business.service.support.TopicCopyTestWiring.owner(service).copyCmsTopic(SOURCE_TOPIC, Collections.<String, Object>singletonMap("copyType", 2)));
 
         assertTrue(error.getMessage().contains("权益最低价值"));
         verify(chapterMapper, never()).insertCmsTopicChapter(any(CmsTopicChapter.class));

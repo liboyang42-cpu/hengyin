@@ -51,7 +51,7 @@ class DeadlockRetryEntryPointContractTest {
 
     private static final String PLAY = "src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java";
     private static final String JOURNEY = "src/main/java/com/chengyinhub/web/controller/api/ApiPlayJourneyActionController.java";
-    private static final String REGISTRATION = "src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java";
+    private static final String REGISTRATION = "src/main/java/com/chengyinhub/web/service/registration/RegistrationRedemptionApplication.java";
     private static final String ROUTE_RUNTIME =
             "../chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java";
 
@@ -286,6 +286,7 @@ class DeadlockRetryEntryPointContractTest {
     void callersOfServiceLevelRetryBoundariesStayNonTransactional() throws Exception {
         assertFalse(ApiPlayJourneyActionController.class.isAnnotationPresent(Transactional.class));
         assertFalse(ApiRegistrationController.class.isAnnotationPresent(Transactional.class));
+        assertFalse(com.chengyinhub.web.service.registration.RegistrationRedemptionApplication.class.isAnnotationPresent(Transactional.class));
         for (Method method : ApiRegistrationController.class.getDeclaredMethods())
             assertFalse(method.isAnnotationPresent(Transactional.class), method + " must not start a Controller transaction");
         assertFalse(ApiPlayProgressController.class.isAnnotationPresent(Transactional.class));

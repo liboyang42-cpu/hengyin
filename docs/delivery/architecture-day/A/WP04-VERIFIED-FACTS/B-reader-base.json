@@ -1,0 +1,8 @@
+{
+  "source": "041534c7681e480f80eb8afc911f65bf1ed13eda",
+  "composed_gateway_parent": "3893bc66d097ff4980ea0b76f3285197f0a3fbe3",
+  "file": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatVerifiedPaymentFactService.java",
+  "sha256": "8b1b56c7e3ffc028c47e294bf7766130e5082e2fbad70885a329f0e6abdb5d5d",
+  "required_change": "Existing requireVerified signature; independent read-only REQUIRES_NEW avoids older business RR view",
+  "applied_to_B_source": false
+}

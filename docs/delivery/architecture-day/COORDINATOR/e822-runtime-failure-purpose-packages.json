@@ -1,0 +1,374 @@
+{
+  "source": "e82229ef85e58159078a42956560356074192541",
+  "run": 40228119362,
+  "attempt": 1,
+  "job": 121273974170,
+  "artifact": 12612221509,
+  "zip_sha256": "afa3757b0e93fed2012397c322894d8bce5ad4055903c4c9aefbf81c7b381afc",
+  "crc": "PASS",
+  "original_report_hashes_verified": 1894,
+  "totals": {
+    "tests": 15392,
+    "skipped": 647,
+    "failures": 15,
+    "errors": 25
+  },
+  "failed_classes": 13,
+  "duplicate_case_ids": 0,
+  "classification": "40 failed testcase results across13 classes, not40 independent business bugs",
+  "owners": {
+    "D": [
+      "CmsTopicPublishNarrativeNpcGuardTest",
+      "CmsTopicPublishStateKeyGuardTest",
+      "CmsTopicRoutePublishPolicyTest",
+      "TopicDraftSubmittedOrderTest"
+    ],
+    "E": [
+      "TopicPublicationDeclarationsTest",
+      "TopicPublicationDiagnosticsTest",
+      "TopicSaleReviewDecouplingTest"
+    ],
+    "H": [
+      "GameplayDraftCopyTest",
+      "GameplayReskinRuntimeServiceTest",
+      "GameplaySupportMatrixRuntimeTest"
+    ],
+    "G": [
+      "CoopDepositPaymentSettlementTest",
+      "CoopSettlementTest"
+    ],
+    "A": [
+      "ApiCoopControllerInviteAuthzTest"
+    ]
+  },
+  "source_only_no_per_patch_execution": true,
+  "independent_same_source_runtime_groups_continue": [
+    40228802075,
+    40228818909,
+    40228826843,
+    40228832838
+  ],
+  "failures": [
+    {
+      "class": "com.chengyinhub.business.service.CmsTopicPublishNarrativeNpcGuardTest",
+      "case": "availableBlockNarrativeNpcPublishes",
+      "kind": "error",
+      "type": "java.lang.NullPointerException",
+      "message": "Cannot invoke \"com.chengyinhub.business.service.ITopicRouteRuntimeService.deriveTemplateCluesForPublication(com.chengyinhub.business.domain.CmsTopic)\" because \"this.topicRouteRuntimeService\" is null",
+      "cause": ""
+    },
+    {
+      "class": "com.chengyinhub.business.service.CmsTopicPublishNarrativeNpcGuardTest",
+      "case": "legacyBlockWithoutNarrativeNpcDoesNotTouchNpcProfiles",
+      "kind": "error",
+      "type": "java.lang.NullPointerException",
+      "message": "Cannot invoke \"com.chengyinhub.business.service.ITopicRouteRuntimeService.deriveTemplateCluesForPublication(com.chengyinhub.business.domain.CmsTopic)\" because \"this.topicRouteRuntimeService\" is null",
+      "cause": ""
+    },
+    {
+      "class": "com.chengyinhub.business.service.CmsTopicPublishNarrativeNpcGuardTest",
+      "case": "availableStoryFlowNarrativeNpcPublishes",
+      "kind": "error",
+      "type": "java.lang.NullPointerException",
+      "message": "Cannot invoke \"com.chengyinhub.business.service.ITopicRouteRuntimeService.deriveTemplateCluesForPublication(com.chengyinhub.business.domain.CmsTopic)\" because \"this.topicRouteRuntimeService\" is null",
+      "cause": ""
+    },
+    {
+      "class": "com.chengyinhub.business.service.CmsTopicPublishNarrativeNpcGuardTest",
+      "case": "foreignBlockNarrativeNpcBlocksPublish",
+      "kind": "failure",
+      "type": "org.opentest4j.AssertionFailedError",
+      "message": "Unexpected exception type thrown, expected: <com.chengyinhub.common.exception.ServiceException> but was: <java.lang.NullPointerException>",
+      "cause": "Caused by: java.lang.NullPointerException: Cannot invoke \"com.chengyinhub.business.service.ITopicRouteRuntimeService.deriveTemplateCluesForPublication(com.chengyinhub.business.domain.CmsTopic)\" because \"this.topicRouteRuntimeService\" is null"
+    },
+    {
+      "class": "com.chengyinhub.business.service.CmsTopicPublishNarrativeNpcGuardTest",
+      "case": "foreignStoryFlowNarrativeNpcBlocksPublish",
+      "kind": "failure",
+      "type": "org.opentest4j.AssertionFailedError",
+      "message": "Unexpected exception type thrown, expected: <com.chengyinhub.common.exception.ServiceException> but was: <java.lang.NullPointerException>",
+      "cause": "Caused by: java.lang.NullPointerException: Cannot invoke \"com.chengyinhub.business.service.ITopicRouteRuntimeService.deriveTemplateCluesForPublication(com.chengyinhub.business.domain.CmsTopic)\" because \"this.topicRouteRuntimeService\" is null"
+    },
+    {
+      "class": "com.chengyinhub.business.service.CmsTopicPublishStateKeyGuardTest",
+      "case": "legacyChapterCannotTreatDeclaredThoughtTagAsANumericVariable",
+      "kind": "failure",
+      "type": "org.opentest4j.AssertionFailedError",
+      "message": "Unexpected exception type thrown, expected: <com.chengyinhub.common.exception.ServiceException> but was: <java.lang.IllegalStateException>",
+      "cause": "Caused by: java.lang.IllegalStateException: 正式引用收集章节归属不一致"
+    },
+    {
+      "class": "com.chengyinhub.business.service.CmsTopicPublishStateKeyGuardTest",
+      "case": "undeclaredThoughtDoneInChapterConditionStillBlocksPublish",
+      "kind": "failure",
+      "type": "org.opentest4j.AssertionFailedError",
+      "message": "Unexpected exception type thrown, expected: <com.chengyinhub.common.exception.ServiceException> but was: <java.lang.IllegalStateException>",
+      "cause": "Caused by: java.lang.IllegalStateException: 正式引用收集章节归属不一致"
+    },
+    {
+      "class": "com.chengyinhub.business.service.CmsTopicPublishStateKeyGuardTest",
+      "case": "declaredThoughtDoneCanBeReadByChapterConditions",
+      "kind": "error",
+      "type": "java.lang.IllegalStateException",
+      "message": "正式引用收集章节归属不一致",
+      "cause": ""
+    },
+    {
+      "class": "com.chengyinhub.business.service.CmsTopicRoutePublishPolicyTest",
+      "case": "approvedBranchGraphPublishesLatestNormalizedSnapshot",
+      "kind": "error",
+      "type": "java.lang.NullPointerException",
+      "message": "Cannot invoke \"com.chengyinhub.business.service.support.ThemeStateKeyService.listCurrentDeclarations(java.lang.Long)\" because \"<local3>.themeStateKeyService\" is null",
+      "cause": ""
+    },
+    {
+      "class": "com.chengyinhub.business.service.CmsTopicRoutePublishPolicyTest",
+      "case": "publishDraftRejectsAnEdgeWithoutADeterministicReachabilityFixture",
+      "kind": "failure",
+      "type": "org.opentest4j.AssertionFailedError",
+      "message": "Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <java.lang.NullPointerException>",
+      "cause": "Caused by: java.lang.NullPointerException: Cannot invoke \"com.chengyinhub.business.service.ITopicRouteRuntimeService.deriveTemplateCluesForPublication(com.chengyinhub.business.domain.CmsTopic)\" because \"this.topicRouteRuntimeService\" is null"
+    },
+    {
+      "class": "com.chengyinhub.business.service.CmsTopicRoutePublishPolicyTest",
+      "case": "successfulPublishCopiesTheNormalizedDraftIntoThePublishedSnapshot",
+      "kind": "error",
+      "type": "java.lang.NullPointerException",
+      "message": "Cannot invoke \"com.chengyinhub.business.service.ITopicRouteRuntimeService.deriveTemplateCluesForPublication(com.chengyinhub.business.domain.CmsTopic)\" because \"this.topicRouteRuntimeService\" is null",
+      "cause": ""
+    },
+    {
+      "class": "com.chengyinhub.business.service.CmsTopicRoutePublishPolicyTest",
+      "case": "professionalSubmissionRejectsInvalidRouteBeforeGoingOnline",
+      "kind": "failure",
+      "type": "org.opentest4j.AssertionFailedError",
+      "message": "Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <java.lang.NullPointerException>",
+      "cause": "Caused by: java.lang.NullPointerException: Cannot invoke \"com.chengyinhub.business.service.ITopicRouteRuntimeService.deriveTemplateCluesForPublication(com.chengyinhub.business.domain.CmsTopic)\" because \"this.topicRouteRuntimeService\" is null"
+    },
+    {
+      "class": "com.chengyinhub.business.service.CmsTopicRoutePublishPolicyTest",
+      "case": "approvedLinearTopicPublishesNullGraphAndAdvancesPublishedVersion",
+      "kind": "error",
+      "type": "java.lang.NullPointerException",
+      "message": "Cannot invoke \"com.chengyinhub.business.service.support.ThemeStateKeyService.listCurrentDeclarations(java.lang.Long)\" because \"<local3>.themeStateKeyService\" is null",
+      "cause": ""
+    },
+    {
+      "class": "com.chengyinhub.business.service.TopicDraftSubmittedOrderTest",
+      "case": "createDraftAssignsChapterAndPerChapterNodeOrderFromSubmittedArrays",
+      "kind": "error",
+      "type": "java.lang.IllegalStateException",
+      "message": "主题不存在或已变化，拒绝修改内容",
+      "cause": ""
+    },
+    {
+      "class": "com.chengyinhub.business.service.TopicSaleReviewDecouplingTest",
+      "case": "storyAndNameEdit_keepsSaleReview_andRefreshesThePendingTask",
+      "kind": "failure",
+      "type": "org.mockito.exceptions.verification.NeverWantedButInvoked",
+      "message": "\niTopicSaleCanonicalMutationService.invalidateApprovedCanonical(\n    <any long>,\n    <any string>\n);\nNever wanted here:\n-> at com.chengyinhub.business.service.TopicSaleReviewDecouplingTest.storyAndNameEdit_keepsSaleReview_andRefreshesThePendingTask(TopicSaleReviewDecouplingTest.java:243)\nBut invoked here:\n-> at com.chengyinhub.business.service.impl.CmsTopicServiceImpl.invalidateApprovedCanonical(CmsTopicServiceImpl.java:3097) with arguments: [7, topic-content-rebuild]\n",
+      "cause": ""
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.CoopDepositPaymentSettlementTest",
+      "case": "lateSuccessAfterCloseAcceptanceOrExceptionFreezesInsteadOfDeducting(boolean)[1]",
+      "kind": "error",
+      "type": "java.lang.IllegalStateException",
+      "message": "DEPOSIT_PAYMENT_SUCCESS_DURING_CLOSE inviteId=89",
+      "cause": ""
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.CoopDepositPaymentSettlementTest",
+      "case": "lateSuccessAfterCloseAcceptanceOrExceptionFreezesInsteadOfDeducting(boolean)[2]",
+      "kind": "error",
+      "type": "java.lang.IllegalStateException",
+      "message": "DEPOSIT_PAYMENT_SUCCESS_DURING_CLOSE inviteId=89",
+      "cause": ""
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.CoopSettlementTest",
+      "case": "settleCoopTopic_closeReadbackSuccessConsumesExactTypedReferenceAndNeverSetsOff",
+      "kind": "error",
+      "type": "java.lang.IllegalStateException",
+      "message": "主题结算失败 1 个(成功 0 个): topicId=717: DEPOSIT_PAYMENT_SUCCESS_DURING_CLOSE inviteId=99",
+      "cause": ""
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.GameplayDraftCopyTest",
+      "case": "nativeThreeThemeCopiesSaveWithRealNodeMappingsAndRequireChallengeReselectionForPublish",
+      "kind": "error",
+      "type": "java.lang.StackOverflowError",
+      "message": "",
+      "cause": ""
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.GameplayReskinRuntimeServiceTest",
+      "case": "templateFeesAndRationsUseTheBoundResourceAndBusinessReplayIsFree",
+      "kind": "error",
+      "type": "java.lang.IllegalStateException",
+      "message": "主题属性声明身份不一致",
+      "cause": ""
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.GameplayReskinRuntimeServiceTest",
+      "case": "configuredActionCeilingRejectsTheNextPaidTaskWithoutChangingResources",
+      "kind": "error",
+      "type": "java.lang.IllegalStateException",
+      "message": "主题属性声明身份不一致",
+      "cause": ""
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.GameplayReskinRuntimeServiceTest",
+      "case": "zeroHpUsesTheSameTeamChallengeOrQuestionAlternativeAfterReskin",
+      "kind": "error",
+      "type": "java.lang.IllegalStateException",
+      "message": "主题属性声明身份不一致",
+      "cause": ""
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.GameplayReskinRuntimeServiceTest",
+      "case": "aFrozenWorldEndingDisablesAnOutstandingChallengeAndRejectsEveryNewProof",
+      "kind": "error",
+      "type": "java.lang.IllegalStateException",
+      "message": "主题属性声明身份不一致",
+      "cause": ""
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.GameplayReskinRuntimeServiceTest",
+      "case": "allThreeConfigurationsSavePublishAndFreezeThroughTheSameServices",
+      "kind": "error",
+      "type": "java.lang.IllegalStateException",
+      "message": "主题属性声明身份不一致",
+      "cause": ""
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.GameplayReskinRuntimeServiceTest",
+      "case": "allThreeThemesFollowTheSameScriptToAnExecutedWorldEnding",
+      "kind": "error",
+      "type": "java.lang.IllegalStateException",
+      "message": "主题属性声明身份不一致",
+      "cause": ""
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.GameplayReskinRuntimeServiceTest",
+      "case": "allThreePublishedThemesCanExplicitlyCloseToTheirConfiguredFallbackWithoutSpending",
+      "kind": "error",
+      "type": "java.lang.IllegalStateException",
+      "message": "主题属性声明身份不一致",
+      "cause": ""
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.GameplaySupportMatrixRuntimeTest",
+      "case": "everyProofTypeSavesPublishesAndChargesTheBoundTeamResource(String)[1]",
+      "kind": "error",
+      "type": "java.lang.IllegalStateException",
+      "message": "主题属性声明身份不一致",
+      "cause": ""
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.GameplaySupportMatrixRuntimeTest",
+      "case": "everyProofTypeSavesPublishesAndChargesTheBoundTeamResource(String)[2]",
+      "kind": "error",
+      "type": "java.lang.IllegalStateException",
+      "message": "主题属性声明身份不一致",
+      "cause": ""
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.GameplaySupportMatrixRuntimeTest",
+      "case": "everyProofTypeSavesPublishesAndChargesTheBoundTeamResource(String)[3]",
+      "kind": "error",
+      "type": "java.lang.IllegalStateException",
+      "message": "主题属性声明身份不一致",
+      "cause": ""
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.GameplaySupportMatrixRuntimeTest",
+      "case": "everyProofTypeSavesPublishesAndChargesTheBoundTeamResource(String)[4]",
+      "kind": "error",
+      "type": "java.lang.IllegalStateException",
+      "message": "主题属性声明身份不一致",
+      "cause": ""
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.GameplaySupportMatrixRuntimeTest",
+      "case": "everyProofTypeSavesPublishesAndChargesTheBoundTeamResource(String)[5]",
+      "kind": "error",
+      "type": "java.lang.IllegalStateException",
+      "message": "主题属性声明身份不一致",
+      "cause": ""
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.GameplaySupportMatrixRuntimeTest",
+      "case": "everyProofTypeSavesPublishesAndChargesTheBoundTeamResource(String)[6]",
+      "kind": "error",
+      "type": "java.lang.IllegalStateException",
+      "message": "主题属性声明身份不一致",
+      "cause": ""
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.GameplaySupportMatrixRuntimeTest",
+      "case": "legacyChallengeAnswerWithoutAdvancedProofCannotPublishAndFixedReferenceCanBeJudged",
+      "kind": "failure",
+      "type": "org.opentest4j.AssertionFailedError",
+      "message": "Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <java.lang.IllegalStateException>",
+      "cause": "Caused by: java.lang.IllegalStateException: 主题属性声明身份不一致"
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.GameplaySupportMatrixRuntimeTest",
+      "case": "publishRejectsUnsupportedOrdinarySensorWithNodeTypeAndTool",
+      "kind": "failure",
+      "type": "org.opentest4j.AssertionFailedError",
+      "message": "Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <java.lang.IllegalStateException>",
+      "cause": "Caused by: java.lang.IllegalStateException: 主题属性声明身份不一致"
+    },
+    {
+      "class": "com.chengyinhub.business.service.support.TopicPublicationDeclarationsTest",
+      "case": "nestedJourneyStillRejectsInactiveDispositionNodeWithOriginalSceneDiagnostic",
+      "kind": "failure",
+      "type": "org.opentest4j.AssertionFailedError",
+      "message": "Unexpected exception type thrown, expected: <com.chengyinhub.common.exception.ServiceException> but was: <java.lang.IllegalArgumentException>",
+      "cause": "Caused by: java.lang.IllegalArgumentException: 结局配置 dispositionNodeId=12 没有被任何结局的 when 引用(sys.outcome.12):处置结局会全部落到 fallback [topicId=7, path=themeRuntimeConfigJson]"
+    },
+    {
+      "class": "com.chengyinhub.business.service.support.TopicPublicationDeclarationsTest",
+      "case": "formalBranchReusesTheExistingDiagnosticBeforeCallingCompleteFreeze",
+      "kind": "failure",
+      "type": "org.opentest4j.AssertionFailedError",
+      "message": "expected: <true> but was: <false>",
+      "cause": ""
+    },
+    {
+      "class": "com.chengyinhub.business.service.support.TopicPublicationDiagnosticsTest",
+      "case": "nestedSceneReferenceKeepsTheActualSceneIndexInsteadOfPretendingTopLevelStory",
+      "kind": "failure",
+      "type": "org.opentest4j.AssertionFailedError",
+      "message": "expected: <true> but was: <false>",
+      "cause": ""
+    },
+    {
+      "class": "com.chengyinhub.business.service.support.TopicPublicationDiagnosticsTest",
+      "case": "foreignJourneyChapterKeepsServiceExceptionAndExistingReferenceExplanation",
+      "kind": "failure",
+      "type": "org.opentest4j.AssertionFailedError",
+      "message": "expected: <true> but was: <false>",
+      "cause": ""
+    },
+    {
+      "class": "com.chengyinhub.business.service.support.TopicPublicationDiagnosticsTest",
+      "case": "foreignCompletedNodeReportsTheOriginalTemplateAndRetainsScopeRejection",
+      "kind": "failure",
+      "type": "org.opentest4j.AssertionFailedError",
+      "message": "expected: <true> but was: <false>",
+      "cause": ""
+    },
+    {
+      "class": "com.chengyinhub.web.controller.api.ApiCoopControllerInviteAuthzTest",
+      "case": "listPreservesSupplyStationUnknownConfirmedAndNotApplicableStates",
+      "kind": "failure",
+      "type": "org.opentest4j.AssertionFailedError",
+      "message": "expected: <true> but was: <null>",
+      "cause": ""
+    }
+  ],
+  "all_complete": false
+}

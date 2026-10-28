@@ -99,7 +99,7 @@ class TopicJourneyStorySaveTest {
         ReflectionTestUtils.setField(svc, "clubService", mock(IClubService.class));
         ReflectionTestUtils.setField(svc, "xpBudgetService", mock(IXpBudgetService.class));
         ReflectionTestUtils.setField(svc, "auditTaskService", mock(IAuditTaskService.class));
-        ReflectionTestUtils.setField(svc, "omsTicketService", mock(IOmsTicketService.class));
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(svc, "omsTicketService", mock(IOmsTicketService.class));
 
         when(registrationMapper.selectCmsRegistrationList(any())).thenReturn(Collections.<CmsRegistration>emptyList());
         when(activityMapper.selectCmsActivityList(any())).thenReturn(Collections.<CmsActivity>emptyList());
@@ -171,7 +171,7 @@ class TopicJourneyStorySaveTest {
     void draftEdit_persistsStoryAndRemapsChapterIdAfterRebuild() {
         topic(0, 1);
 
-        svc.updateTopicByOwner(dtoWithStory(STORY), ME, "me");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(dtoWithStory(STORY), ME, "me");
 
         List<CmsTopic> updates = capturedTopicUpdates();
         String stored = updates.get(0).getJourneyStoryJson();
@@ -187,7 +187,7 @@ class TopicJourneyStorySaveTest {
     void draftEdit_withoutStory_leavesColumnUntouched() {
         topic(0, 1);
 
-        svc.updateTopicByOwner(dtoWithStory(null), ME, "me");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(dtoWithStory(null), ME, "me");
 
         ArgumentCaptor<CmsTopic> captor = ArgumentCaptor.forClass(CmsTopic.class);
         verify(topicMapper).updateCmsTopic(captor.capture());
@@ -202,7 +202,7 @@ class TopicJourneyStorySaveTest {
                 + "{\"code\":\"a\",\"title\":\"A\",\"when\":[{\"op\":\"HAS_TAG\",\"value\":\"tag.x\"}]}]}}";
 
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
-                () -> svc.updateTopicByOwner(dtoWithStory(illegal), ME, "me"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(dtoWithStory(illegal), ME, "me"));
 
         assertTrue(error.getMessage().contains("fallback"), error.getMessage());
         verify(topicMapper, never()).updateCmsTopic(any(CmsTopic.class));
@@ -214,7 +214,7 @@ class TopicJourneyStorySaveTest {
         String foreign = "{\"schemaVersion\":1,\"stages\":[{\"chapterId\":999,\"end\":{}}]}";
 
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
-                () -> svc.updateTopicByOwner(dtoWithStory(foreign), ME, "me"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(dtoWithStory(foreign), ME, "me"));
 
         assertTrue(error.getMessage().contains("章节不属于本主题"), error.getMessage());
         verify(topicMapper, never()).updateCmsTopic(any(CmsTopic.class));

@@ -5,7 +5,7 @@ import com.wechat.pay.java.core.exception.ServiceException;
 import com.wechat.pay.java.service.transferbatch.TransferBatchService;
 import com.wechat.pay.java.service.transferbatch.model.*;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.util.ReflectionTestUtils;
+import com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport;
 
 import java.math.BigDecimal;
 import java.util.Map;
@@ -17,15 +17,18 @@ import static org.mockito.Mockito.*;
 /** SDK doubles test gateway classification only; no real transfer or MySQL is exercised. */
 class WechatPayTransferClassificationTest {
     private final TransferBatchService sdk = mock(TransferBatchService.class);
-    private final WechatPayServiceImpl gateway = new WechatPayServiceImpl();
+    private final WechatPayServiceImpl gateway = WechatVerifiedFactTestSupport.gateway();
 
-    WechatPayTransferClassificationTest() {
-        ReflectionTestUtils.setField(gateway, "transferBatchService", sdk);
+    WechatPayTransferClassificationTest() throws ReflectiveOperationException {
+        WechatVerifiedFactTestSupport.setField(gateway, "transferBatchService", sdk);
         WxPayConfig config = mock(WxPayConfig.class);
         when(config.getMerchantId()).thenReturn("merchant");
-        ReflectionTestUtils.setField(gateway, "wxPayConfig", config);
-        ReflectionTestUtils.setField(gateway, "transferClientMchid", "merchant");
-        ReflectionTestUtils.setField(gateway, "transferClientWxAppid", "wx-origin");
+        when(config.getAppid()).thenReturn("wx-origin");
+        WechatVerifiedFactTestSupport.setField(gateway, "wxPayConfig", config);
+        var binding = Class.forName(WechatPaymentSdkGateway.class.getName() + "$TransferClientBinding")
+                .getDeclaredConstructor(TransferBatchService.class, String.class, String.class, String.class);
+        binding.setAccessible(true);
+        WechatVerifiedFactTestSupport.setField(gateway, "transferClientBinding", binding.newInstance(sdk, "merchant", "wx-origin", null));
     }
 
     @Test
@@ -94,7 +97,7 @@ class WechatPayTransferClassificationTest {
         assertDefinite(gateway.transferToBalance(null, "CD500", BigDecimal.ONE, "open", "提现", "wx"));
         assertDefinite(gateway.transferToBalance("CW500", " ", BigDecimal.ONE, "open", "提现", "wx"));
         verifyNoInteractions(sdk);
-        ReflectionTestUtils.setField(gateway, "transferBatchService", null);
+        WechatVerifiedFactTestSupport.setField(gateway, "transferBatchService", null);
         assertDefinite(submit());
     }
 
@@ -193,7 +196,7 @@ class WechatPayTransferClassificationTest {
     @Test
     void changedMerchantOrUncommittedSubmitNeverCallsSdkAndCannotInventChannelFailure() {
         var intent = intent();
-        WxPayConfig config = (WxPayConfig) ReflectionTestUtils.getField(gateway, "wxPayConfig");
+        WxPayConfig config = (WxPayConfig) WechatVerifiedFactTestSupport.getField(gateway, "wxPayConfig");
         when(config.getMerchantId()).thenReturn("changed-merchant");
         var result = gateway.transferToBalance(intent);
         assertEquals("true", result.get("notSent"));
@@ -229,7 +232,8 @@ class WechatPayTransferClassificationTest {
     @Test
     void localRejectCarriesOnlyTheMatchingOriginalHashAndCorruptEvidenceNeverCallsSdk() {
         var original = intent();
-        ReflectionTestUtils.setField(gateway, "transferBatchService", null);
+        WechatVerifiedFactTestSupport.setField(gateway, "transferBatchService", null);
+        WechatVerifiedFactTestSupport.setField(gateway, "transferClientBinding", null);
         var reject = gateway.transferToBalance(original);
         assertEquals("true", reject.get("notSent"));
         assertEquals(original.requestHash(), reject.get("requestHash"));
@@ -250,6 +254,32 @@ class WechatPayTransferClassificationTest {
         return new com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent(i.withdrawId(), i.memberId(),
                 i.mchid(), i.appid(), i.outBatchNo(), i.outDetailNo(), i.amountFen(), i.openid(), i.remark(),
                 i.requestVersion(), i.requestHash(), i.balanceBefore(), i.balanceAfter(), true, false);
+    }
+
+    @Test
+    void twoPublishedV1ConstructorsRetainTheirOriginalHashAndCannotExchangeSources() {
+        var snapshot = intent();
+        var ledger = com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent.fromRequest(500L,
+                snapshot.mchid(), snapshot.appid(), snapshot.outBatchNo(), snapshot.outDetailNo(),
+                snapshot.amountYuan(), snapshot.openid(), snapshot.remark()).withSubmissionIntentId(900L);
+        assertDoesNotThrow(snapshot::requireValid); assertDoesNotThrow(ledger::requireValid);
+        assertEquals(com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent.OriginalSource.TRANSFER_INTENT,
+                snapshot.originalSource());
+        assertEquals(com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent.OriginalSource.FUND_FACT,
+                ledger.originalSource());
+        assertEquals(snapshot.requestHash(), snapshot.canonicalRequestHash());
+        assertEquals(ledger.requestHash(), ledger.canonicalRequestHash());
+        assertThrows(IllegalArgumentException.class, () -> snapshot.withSubmissionIntentId(900L));
+        var wrongLedger = new com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent(500L, 900L,
+                snapshot.mchid(), snapshot.appid(), snapshot.outBatchNo(), snapshot.outDetailNo(), snapshot.amountFen(),
+                snapshot.openid(), snapshot.remark(), 1, snapshot.requestHash());
+        assertThrows(IllegalArgumentException.class, wrongLedger::requireValid);
+        var wrongSnapshot = new com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent(snapshot.withdrawId(),
+                snapshot.memberId(), snapshot.mchid(), snapshot.appid(), snapshot.outBatchNo(), snapshot.outDetailNo(),
+                snapshot.amountFen(), snapshot.openid(), snapshot.remark(), 1, ledger.requestHash(),
+                snapshot.balanceBefore(), snapshot.balanceAfter(), true, false);
+        assertThrows(IllegalStateException.class, wrongSnapshot::requireValid);
+        verifyNoInteractions(sdk);
     }
 
     private TransferBatchGet batch(String status) {

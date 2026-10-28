@@ -1,0 +1,9 @@
+[SELFTEST][U1] RED caught; restored GREEN — 不存在的 /api Mapping 会阻断，拼接后缀与路由段数不会 fail-open
+[SELFTEST][U2] RED caught; restored GREEN — 真实 lintRepo 扫描路径能判红并恢复绿
+[SELFTEST][U3] RED caught; restored GREEN — 零绑定 handler-like 方法会阻断
+[SELFTEST][U4] RED caught; restored GREEN — WXML 零消费会阻断，this.data bracket 真实消费不会被注释掩码误报
+[SELFTEST][U5] RED caught; restored GREEN — resolve(null)、纯副作用、helper 仅关闭 loading/写空 message/参数错位及 success-only toast 都会红；fail 内可见 toast/错误态与显式逐项登记会绿
+[SELFTEST][ROAM-NAMING] RED caught; restored GREEN — retryReco/reco 死链必须删除，goal/onGoalTap 必须 WXML 可见且真实绑定，四个 key 禁止 baseline 逃逸
+[SELFTEST][WARN-AS-ERROR] RED caught; restored GREEN — --warn-as-error 下占位/开发者口径/裸网络/半角逗号/超长提示文案会进入失败判定
+[SELFTEST][BASELINE-RATCHET] RED caught; restored GREEN — 未命中、增长、等量换 key 或缺 digest 真红；显式删除并调小棘轮后恢复绿
+UI-GATE-0 selftest:PASS (U1-U5 五条均完成变异红→撤销→绿)

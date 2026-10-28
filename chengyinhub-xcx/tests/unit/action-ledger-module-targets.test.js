@@ -80,8 +80,63 @@ test('module constants, export aliases and callback aliases retain conservative 
 
 test('named imports remain conservative until their export binding is proven', () => {
   fixture(simple, 'pick();', result =>
+    assert.deepEqual(writes(result), ['/api/fixture/chosen']),
+  "const { chosen: pick } = require('./helper.js');")
+  for (const source of [
+    simple.replace('module.exports = { chosen, unrelated };', 'module.exports = { chosen: unrelated, unrelated };'),
+    simple.replace('module.exports = { chosen, unrelated };', 'module.exports = exportsForRuntime();'),
+    simple.replace('function chosen() {', 'function chosen(value = unrelated()) {'),
+    simple.replace('function chosen() {', "const dependency = require('./unknown.js');\nfunction chosen() { dependency.run();"),
+  ]) fixture(source, 'pick();', result =>
     assert.deepEqual(writes(result), ['/api/fixture/chosen', '/api/fixture/unrelated']),
   "const { chosen: pick } = require('./helper.js');")
+})
+
+test('named pure helpers do not import uncalled receipt or write siblings', () => {
+  const source = `const record = value => value && typeof value === 'object';
+  const valid = value => record(value) && value.id > 0;
+  function chosen(value) { return valid(value); }
+  function readReceipt() { app.sendRequest({url:'/api/verify/seat/receipt',method:'POST'}); }
+  function unrelated() { app.sendRequest({url:'/api/fixture/save',method:'POST'}); }
+  module.exports = { record, valid, chosen, readReceipt, unrelated };
+  `
+  fixture(source, 'pick({id:1});', result => assert.deepEqual(result.primaryApis, []),
+    "const { chosen: pick, readReceipt, unrelated } = require('./helper.js');")
+})
+
+test('actual registration-seat login helpers do not acquire the seat recovery API', () => {
+  fixture('', 'const original = captureLogin(app, wx); loginCurrent(app, wx, original);', result => {
+    assert.deepEqual(result.primaryApis, [])
+    assert.ok(!result.apis.includes('/api/verify/seat/receipt'))
+  }, `const { captureLogin, loginCurrent } = require(${JSON.stringify(path.join(ROOT, 'utils/registration-seat.js'))});`)
+})
+
+test('named callback and alias escapes keep every potentially reachable write', () => {
+  for (const action of ['Promise.resolve().then(pick);', 'const later = pick; later();']) {
+    fixture(simple, action, result =>
+      assert.deepEqual(writes(result), ['/api/fixture/chosen', '/api/fixture/unrelated']),
+    "const { chosen: pick } = require('./helper.js');")
+  }
+})
+
+test('named helper direct closure retains both true writes and called receipt queries', () => {
+  const source = `function shared() { app.sendRequest({url:'/api/fixture/shared',method:'POST'}); }
+  function readReceipt() { app.sendRequest({url:'/api/verify/seat/receipt',method:'POST'}); }
+  const chosen = function () { shared(); readReceipt(); app.sendRequest({url:'/api/fixture/chosen',method:'POST'}); };
+  function unrelated() { app.sendRequest({url:'/api/fixture/unrelated',method:'POST'}); }
+  module.exports = { shared, readReceipt, chosen, unrelated };
+  `
+  fixture(source, 'pick();', result => {
+    assert.deepEqual(result.primaryApis, ['/api/fixture/chosen', '/api/fixture/shared', '/api/verify/seat/receipt'])
+    assert.deepEqual(writes(result), ['/api/fixture/chosen', '/api/fixture/shared', '/api/verify/seat/receipt'])
+  }, "const { chosen: pick } = require('./helper.js');")
+})
+
+test('unused named imports and string-only calls do not manufacture targets', () => {
+  for (const action of ['const value = 1;', '// pick();\n', 'const sample = "pick()";']) {
+    fixture(simple, action, result => assert.deepEqual(result.primaryApis, []),
+      "const { chosen: pick } = require('./helper.js');")
+  }
 })
 
 test('new writes inside the selected method cannot be hidden by a fixed endpoint map', () => {
@@ -89,6 +144,11 @@ test('new writes inside the selected method cannot be hidden by a fixed endpoint
     "app.sendRequest({url:'/api/fixture/chosen',method:'POST'}); app.sendRequest({url:'/api/fixture/new-write',method:'POST'});"),
   'api.chosen();', result =>
     assert.deepEqual(writes(result), ['/api/fixture/chosen', '/api/fixture/new-write']))
+  fixture(simple.replace("app.sendRequest({url:'/api/fixture/chosen',method:'POST'});",
+    "app.sendRequest({url:'/api/fixture/chosen',method:'POST'}); app.sendRequest({url:'/api/fixture/new-write',method:'POST'});"),
+  'pick();', result =>
+    assert.deepEqual(writes(result), ['/api/fixture/chosen', '/api/fixture/new-write']),
+  "const { chosen: pick } = require('./helper.js');")
 })
 
 test('commented and string-only inline requires do not manufacture write targets', () => {

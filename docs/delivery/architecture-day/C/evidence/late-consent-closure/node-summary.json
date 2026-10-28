@@ -1,0 +1,109 @@
+{
+  "files": [
+    {
+      "file": "advanced-game-receipt-contract.tap",
+      "exitCode": 0,
+      "tests": 60,
+      "pass": 60,
+      "fail": 0,
+      "skipped": 0,
+      "sha256": "b08d5fabb94c774605ada910540c4c11602a068b4e28359bcedb5e6e1479c467"
+    },
+    {
+      "file": "play-qa-recovery-contract.tap",
+      "exitCode": 0,
+      "tests": 6,
+      "pass": 6,
+      "fail": 0,
+      "skipped": 0,
+      "sha256": "58bce94556ce747b5a50b7db76239d1eba67888b8e8d51d16fd74a484815546c"
+    },
+    {
+      "file": "separate-consent-feature.tap",
+      "exitCode": 0,
+      "tests": 25,
+      "pass": 25,
+      "fail": 0,
+      "skipped": 0,
+      "sha256": "0be87175214b178e9ade03056a8f94cfd064c2f47b2fd6a104fa97f5098f2b3d"
+    },
+    {
+      "file": "play-qa-photo-upload-contract.tap",
+      "exitCode": 0,
+      "tests": 12,
+      "pass": 12,
+      "fail": 0,
+      "skipped": 0,
+      "sha256": "96c2935409ce3e6a654bc3a488ef5a1b0145924ae6b082d11fb6ee63555695d8"
+    },
+    {
+      "file": "advanced-game-object-card-relay.tap",
+      "exitCode": 0,
+      "tests": 8,
+      "pass": 8,
+      "fail": 0,
+      "skipped": 0,
+      "sha256": "4e8e2ba6def493cf298b5953866b9da8899cb6cfa2d0655ce41a2806196bbf21"
+    },
+    {
+      "file": "playkit-photocheck-server-judge-contract.tap",
+      "exitCode": 0,
+      "tests": 6,
+      "pass": 6,
+      "fail": 0,
+      "skipped": 0,
+      "sha256": "09edd7c6352d48c8d2fc07502d0006d108d76f75196c815fce7902ebbe3e5f14"
+    },
+    {
+      "file": "playkit-photocheck-frame-contract.tap",
+      "exitCode": 0,
+      "tests": 20,
+      "pass": 20,
+      "fail": 0,
+      "skipped": 0,
+      "sha256": "12fbf5531d6a062f47d0b5e6149a8ce4fe349a8fd009051c4ebb87908db96ab4"
+    },
+    {
+      "file": "object-card-page-lifecycle.tap",
+      "exitCode": 0,
+      "tests": 3,
+      "pass": 3,
+      "fail": 0,
+      "skipped": 0,
+      "sha256": "5903a37e20b641bdc116a47392abf9a6d48570c54d5fc1bf6b7ac94e47137c4d"
+    },
+    {
+      "file": "advanced-game-variants-recovery.tap",
+      "exitCode": 0,
+      "tests": 7,
+      "pass": 7,
+      "fail": 0,
+      "skipped": 0,
+      "sha256": "af0768e6a657e7321012d897b163773eb25853e32524e7e9d6ae90c75f5ab4af"
+    },
+    {
+      "file": "advanced-game-draw-audio.tap",
+      "exitCode": 0,
+      "tests": 4,
+      "pass": 4,
+      "fail": 0,
+      "skipped": 0,
+      "sha256": "673b919d410f31b5b24d4303abac88e2654073aef6a3be473b84dddd59844ce1"
+    },
+    {
+      "file": "architecture-day-c-intent.tap",
+      "exitCode": 0,
+      "tests": 7,
+      "pass": 7,
+      "fail": 0,
+      "skipped": 0,
+      "sha256": "26c62991b48b85c5d961c7da939a4560345924c1ecb0ade2692bd80d1a2a107c"
+    }
+  ],
+  "totals": {
+    "tests": 158,
+    "pass": 158,
+    "fail": 0,
+    "skipped": 0
+  }
+}

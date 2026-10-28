@@ -48,7 +48,7 @@ class ChapterFlowCopyTest
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
         ReflectionTestUtils.setField(service, "cmsTopicChapterMapper", chapterMapper);
         ReflectionTestUtils.setField(service, "cmsTopicNodeMapper", nodeMapper);
-        ReflectionTestUtils.setField(service, "sysCategoryService", mock(ISysCategoryService.class));
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "sysCategoryService", mock(ISysCategoryService.class));
 
         CmsTopic sourceTopic = new CmsTopic();
         sourceTopic.setId(41L);
@@ -90,7 +90,7 @@ class ChapterFlowCopyTest
             return 1;
         }).when(nodeMapper).insertCmsTopicNode(any());
 
-        service.copyCmsTopic(41L, Collections.<String, Object>singletonMap("copyType", 2));
+        com.chengyinhub.business.service.support.TopicCopyTestWiring.owner(service).copyCmsTopic(41L, Collections.<String, Object>singletonMap("copyType", 2));
 
         ArgumentCaptor<CmsTopicChapter> copied = ArgumentCaptor.forClass(CmsTopicChapter.class);
         verify(chapterMapper).updateCmsTopicChapter(copied.capture());
@@ -127,8 +127,8 @@ class ChapterFlowCopyTest
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
         ReflectionTestUtils.setField(service, "cmsTopicChapterMapper", chapterMapper);
         ReflectionTestUtils.setField(service, "cmsTopicNodeMapper", nodeMapper);
-        ReflectionTestUtils.setField(service, "npcProfileMapper", npcMapper);
-        ReflectionTestUtils.setField(service, "sysCategoryService", mock(ISysCategoryService.class));
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "npcProfileMapper", npcMapper);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "sysCategoryService", mock(ISysCategoryService.class));
 
         CmsTopic sourceTopic = new CmsTopic();
         sourceTopic.setId(41L);
@@ -187,7 +187,7 @@ class ChapterFlowCopyTest
             return 1;
         }).when(npcMapper).insertNodeNpc(any());
 
-        service.copyCmsTopic(41L, Collections.<String, Object>singletonMap("copyType", 2));
+        com.chengyinhub.business.service.support.TopicCopyTestWiring.owner(service).copyCmsTopic(41L, Collections.<String, Object>singletonMap("copyType", 2));
 
         ArgumentCaptor<CmsTopicChapter> copied = ArgumentCaptor.forClass(CmsTopicChapter.class);
         verify(chapterMapper).updateCmsTopicChapter(copied.capture());

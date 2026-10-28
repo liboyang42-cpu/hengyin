@@ -52,7 +52,7 @@ public class CashWithdrawAdminController extends BaseController {
         return success(cashWithdrawService.requery(id));
     }
 
-    /** 人工补单双人流程：第一人登记(3→4)，第二个不同账号复核后才回补余额(4→2)。 */
+    /** 人工补单：扣款及渠道事实校验通过后，第一人登记(3→4)，第二个不同账号复核回补(4→2)。 */
     @PreAuthorize("@ss.hasPermi('business:cashwithdraw:manage')")
     @Log(title = "提现人工补单", businessType = BusinessType.UPDATE)
     @PostMapping("/manual-refund")
@@ -72,7 +72,12 @@ public class CashWithdrawAdminController extends BaseController {
             return AjaxResult.error("状态已变化，请刷新后重新确认");
         }
         boolean verifying = body.getStatus() == MemberCashWithdraw.STATUS_REFUND_PENDING_REVIEW;
-        boolean ok = cashWithdrawService.manualRefund(body.getId(), getUsername(), body.getManualNote(), body.getStatus());
+        boolean ok;
+        try {
+            ok = cashWithdrawService.manualRefund(body.getId(), getUsername(), body.getManualNote(), body.getStatus());
+        } catch (IllegalStateException investigation) {
+            return AjaxResult.error(investigation.getMessage());
+        }
         if (!ok) {
             return AjaxResult.error("状态已变化或回补失败，请刷新后重试");
         }

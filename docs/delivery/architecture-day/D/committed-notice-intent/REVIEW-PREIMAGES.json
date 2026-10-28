@@ -1,0 +1,7 @@
+[
+  {
+    "path": "chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/util/ScheduleUtils.java",
+    "base_sha256": "90dd7154c56fa192e467b80ebfd88e5a96147f70ff6cc652c20503fdf2f31c11",
+    "patch_result_sha256": "908134983a04bf48e7701e0a1d83c984a6534286be20ddb992e0f5aed4a2b9cf"
+  }
+]

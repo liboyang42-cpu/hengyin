@@ -43,6 +43,7 @@ class DataRetentionServiceImplTest {
         ReflectionTestUtils.setField(svc, "bizEventLogMapper", eventMapper);
         ReflectionTestUtils.setField(svc, "npcChatLogMapper", npcChatMapper);
         ReflectionTestUtils.setField(svc, "npcChatRequestMapper", npcChatRequestMapper);
+        ReflectionTestUtils.setField(svc,"npcAsrIntents",mock(com.chengyinhub.business.mapper.NpcAsrIntentMapper.class));
         cutoff = new Date();
     }
 

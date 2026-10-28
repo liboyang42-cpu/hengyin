@@ -1,0 +1,1003 @@
+TAP version 13
+# Subtest: 合法 5MiB:真实链上传一次并提交 SUBMIT_QA
+ok 1 - 合法 5MiB:真实链上传一次并提交 SUBMIT_QA
+  ---
+  duration_ms: 36.676847
+  type: 'test'
+  ...
+# Subtest: 已知 15MiB:共享预检拒绝,不发网络,可操作文案,绝不提交
+ok 2 - 已知 15MiB:共享预检拒绝,不发网络,可操作文案,绝不提交
+  ---
+  duration_ms: 5.481698
+  type: 'test'
+  ...
+# Subtest: 上传在途切到 B 会话:旧回包不得提交到新题,可重新拍
+ok 3 - 上传在途切到 B 会话:旧回包不得提交到新题,可重新拍
+  ---
+  duration_ms: 5.227041
+  type: 'test'
+  ...
+# Subtest: 同会话版本前进:旧回包同样不得提交
+ok 4 - 同会话版本前进:旧回包同样不得提交
+  ---
+  duration_ms: 6.338499
+  type: 'test'
+  ...
+# Subtest: 非 qa kit 的 shoot 不得上传/提交
+ok 5 - 非 qa kit 的 shoot 不得上传/提交
+  ---
+  duration_ms: 5.656278
+  type: 'test'
+  ...
+# Subtest: 双击:上传在途时只起一次请求,不静默丢第二张
+ok 6 - 双击:上传在途时只起一次请求,不静默丢第二张
+  ---
+  duration_ms: 4.321509
+  type: 'test'
+  ...
+# Subtest: advanced-game acting/unknown 时不装成功,给可恢复提示
+ok 7 - advanced-game acting/unknown 时不装成功,给可恢复提示
+  ---
+  duration_ms: 3.599307
+  type: 'test'
+  ...
+# Subtest: 未知 size(旧组件):照常上传;失败不提交,换图可重试
+ok 8 - 未知 size(旧组件):照常上传;失败不提交,换图可重试
+  ---
+  duration_ms: 5.277797
+  type: 'test'
+  ...
+# Subtest: 上传中离页 abort:迟到的成功不得提交
+ok 9 - 上传中离页 abort:迟到的成功不得提交
+  ---
+  duration_ms: 4.669364
+  type: 'test'
+  ...
+# Subtest: Photo 上传保留受管 assetId，动作只携带 canonical media 引用
+ok 10 - Photo 上传保留受管 assetId，动作只携带 canonical media 引用
+  ---
+  duration_ms: 11.99028
+  type: 'test'
+  ...
+# Subtest: Photo 上传缺 assetId 时拒绝动作，不回退为 URL 身份
+ok 11 - Photo 上传缺 assetId 时拒绝动作，不回退为 URL 身份
+  ---
+  duration_ms: 8.878706
+  type: 'test'
+  ...
+# Subtest: H-C9: A→B→A 同意记录迟到拒绝不得修改新登录 UI
+not ok 12 - H-C9: A→B→A 同意记录迟到拒绝不得修改新登录 UI
+  ---
+  duration_ms: 7.178975
+  type: 'test'
+  location: '/workspace/hengyin-c/chengyinhub-xcx/tests/unit/play-qa-photo-upload-contract.test.js:340:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    old consent rejection must not reset the active card panel
+    + actual - expected
+    ... Skipped lines
+
+      {
+        activityId: '',
+        advancedPlay: {
+          node: null,
+          show: false
+    ...
+            mode: 'CARD',
+    +       photoFailSeq: 1,
+            sessionId: 'session-A',
+            type: 'photocheck',
+            version: 4
+          },
+          show: true
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    communityPostWrite: false
+    r5OutcomeReply: ~
+    r5Verdict:
+      show: false
+      kind: 'win'
+      text: ''
+      images:
+    themeTradeForm: ~
+    themeTradePreview: ~
+    themeTradeError: ''
+    themeTradeUnknown: false
+    themeRecoveryText: ''
+    themePlanKey: ''
+    themePlanForm: ~
+    themePlanAcceptKeys:
+    themePlanError: ''
+    themePlanUnknown: false
+    themePlanResult: ~
+    zeroHpView: ~
+    zeroHpCountdown: ''
+    zeroHpBusy: false
+    zeroHpError: ''
+    zeroHpPermissionDenied: false
+    themeBag:
+      contents:
+      items:
+      clues:
+      slots:
+      pendingRows:
+      actionRows:
+      challengeNodes:
+      planRows:
+      tradeTargets:
+      tradeRows:
+      used: 0
+      capacity: 6
+      hpEnabled: false
+    themeBackpackOpen: false
+    themeBackpackTab: 'items'
+    themeBagTabs:
+      0:
+        key: 'items'
+        label: '物品'
+      1:
+        key: 'clues'
+        label: '线索'
+      2:
+        key: 'game'
+        label: '任务'
+    themeCostChoice: ~
+    themeRewardPreview: ~
+    themePendingClaim: ~
+    themeItemDetail: ~
+    themeQuestChoice: ~
+    themeBagBusy: false
+    themeBagUnknown: false
+    themeBagError: ''
+    themeHistoryOpen: false
+    themeHistoryRows:
+    themeHistoryMore: false
+    themeCardSessionId: 0
+    themeResultCard: ~
+    themeRecordsState: ~
+    themeRecordsBusy: false
+    themeRecordsError: ''
+    themeRecordsReadFailure: false
+    themeReplayBusy: false
+    themeReplayUnconfirmed: false
+    playerOperationsOpen: false
+    playerOperationAvailable: false
+    playerOperationRows:
+    playerManualRows:
+    playerExitText: ''
+    playerRunText: ''
+    playerOperationForm: ~
+    playerExitConfirm: false
+    playerOperationError: ''
+    playerOperationUnknown: false
+    playerArrivalProof: ~
+    tagSheetShow: false
+    tagSheetItems:
+    privacyGateShow: false
+    loading: true
+    reducedMotion: false
+    statusBarHeight: 44
+    chrome:
+      actionTop: 54
+      actionRight: 12
+      contentTop: 100
+      sheetTop: 99
+    emptyTip: ''
+    emptyKind: ''
+    timeBanner: ''
+    isPreview: false
+    isMock: false
+    activityId: ''
+    topicId: ''
+    mode: 1
+    serverMode: 1
+    modeLabel: '城市定向'
+    routeNotice: ''
+    routeRefreshing: false
+    journeyAttributes:
+    screen: ''
+    gpsOk: false
+    gpsLowAcc: false
+    gpsHint: '开始后可开启定位，也可扫码到达'
+    runState: 'idle'
+    runHoldLeft: 0
+    runHoldPct: 0
+    chapterCount: 0
+    searchPlaces:
+    chapterPick:
+      show: false
+      cur: 0
+    chapterFull: false
+    chapterParas:
+    album:
+      show: false
+      cur: 0
+      title: ''
+      images:
+    storyIntro:
+      show: false
+    startState:
+      show: false
+      rows:
+    storyDistText: ''
+    storyThoughts:
+    chapterGameAnchor: ''
+    storyMap: false
+    storyMapCenter: ~
+    oddFlick: -1
+    storyChat: false
+    soundOn: true
+    chapterGate:
+      show: false
+      number: 1
+      total: 1
+      title: ''
+      subtitle: ''
+    navMeta:
+      km: '0.0'
+      dur: '—'
+      eta: '—'
+    chapter:
+      idxLabel: '第一章'
+      name: ''
+      description: ''
+      cover: ''
+      mileage: ''
+      timeText: ''
+      atmospherePreset: 'DEFAULT'
+      atmosphereClass: 'atmosphere--default'
+    previewEnding:
+      show: false
+      list:
+      idx: 0
+    bootStage: ''
+    chapterCards:
+    rewardDrop:
+      show: false
+      text: ''
+      badges:
+    ringSegs:
+    topicName: ''
+    topicCover: ''
+    topicDesc: ''
+    seatTiles:
+    packOpen: false
+    packShake: false
+    packBurst: false
+    hero:
+      show: false
+      open: false
+      node: ~
+      style: ''
+      bodyTop: 0
+      ry: 0
+      spun: false
+      turned: false
+      sx: 0
+      ss: '1'
+      faded: false
+      collapsed: false
+      scrollTop: 0
+    shopNpc:
+      show: false
+      open: false
+      name: ''
+      greeting: ''
+      started: false
+      msgs:
+      input: ''
+      thinking: false
+      thinkPhase: 0
+      nodeId: 0
+      ry: 0
+      recording: false
+    chapStory:
+      show: false
+      open: false
+      title: ''
+      lines:
+      audio: ''
+      audioDur: ''
+      playing: false
+      barAway: false
+      frames: 0
+    myRole: ~
+    roleCard:
+      show: false
+      code: ''
+      name: ''
+      iconName: 'star'
+      desc: ''
+      skill: ''
+      confirmed: false
+    gameModule:
+      enabled: false
+      loading: false
+      error: ''
+      sheetShow: false
+      sessionId: 0
+      activityId: 0
+      status: ''
+      revision: 0
+      snapshotAt: ''
+      stale: false
+      canSubmitTask: false
+      role:
+        code: ''
+        name: ''
+      nodes:
+      teamActions:
+      story:
+        visibleVariables:
+        ending: ~
+      write:
+        status: 'idle'
+        requestId: ''
+        message: ''
+        canRetry: false
+    board:
+      show: false
+      loading: false
+      list:
+      me: ~
+    packDim: false
+    packTear: false
+    packSink: false
+    headIn: false
+    tearPct: 0
+    packGrab: false
+    packSnap: false
+    packTorn: false
+    tearSealStyle: ''
+    tearMouthStyle: ''
+    blastRays:
+    blastShards:
+    measuring: false
+    tileH: 0
+    nodes:
+    total: 0
+    merchantCount: 0
+    doneCount: 0
+    allDone: false
+    remainingGameCount: 0
+    fmNodes:
+    fmPolyline:
+    fmPlayer: ~
+    fmCenter:
+      lat: 31.2304
+      lng: 121.4737
+    fmSubkey: ''
+    fmLayerStyle: 1
+    nextNode: ~
+    sheet:
+      show: false
+      node: ~
+      continueText: '前往下一站'
+    advancedPlay:
+      show: false
+      node: ~
+    game:
+    answerInput: ''
+    answerSel: ''
+    preference:
+      loading: false
+      error: ''
+      steps:
+      stepIndex: 0
+      choices:
+      inheritedTags:
+      answerHere: false
+      submitting: false
+      result: ~
+      pendingTag: ~
+      tagDisclosure: ~
+      progress: ~
+      availableTagValues:
+    newLifeOS:
+      loading: false
+      show: false
+      tags:
+      resultCards:
+      mapAnchors:
+      mapNodes:
+      actions7Days:
+      actions30Days:
+    scanning: false
+    photoTaken: false
+    gWrong: false
+    gNetErr: ''
+    gNetRetryable: false
+    gRetryType: ''
+    gWriteUnknown: false
+    shownHints:
+    canHint: false
+    canReveal: false
+    hintLabel: '1/2'
+    revealed: false
+    wrongCount: 0
+    hintUnlocking: false
+    puzzleScoreCap: 100
+    playKit:
+      show: true
+      kit:
+        type: 'photocheck'
+        mode: 'CARD'
+        sessionId: 'session-A'
+        version: 4
+    journeyCheck:
+      show: false
+      loading: false
+      error: ''
+      nodeId: 0
+      checkId: ''
+      skill: ''
+      tier: ''
+      mods:
+      advantage: false
+      disadvantage: false
+      receipt: ~
+    flyScore: false
+    flyText: ''
+    lockHint: false
+    medal:
+      show: false
+    couponToast: false
+    couponText: ''
+    couponBurst:
+    nav:
+      active: false
+      targetNodeId: ~
+      targetName: ''
+      remainM: 0
+      totalM: 0
+      hit50: false
+      hit90: false
+    navBubble:
+      show: false
+      text: ''
+    lead:
+      exists: false
+      status: 0
+      isLeader: false
+      arrived: 0
+      total: 0
+      meArrived: false
+      chapterName: ''
+      broadcast: ''
+      members:
+    leadLoadError: false
+    leadUnlockChecking: false
+    sceneIn: false
+    showJournal: false
+    journalDot: false
+    journalCards:
+    sessionToolsOpen: false
+    freeMap: false
+    sceneStack:
+    sceneCurrent: ~
+    sceneConfirm:
+      show: false
+      action: ~
+      pending: ~
+    story:
+      show: false
+      title: ''
+      step: ''
+      cover: ''
+      text: ''
+    focusAnchor: ''
+    nextChapterText: ''
+    frag:
+      show: false
+      text: ''
+      step: ''
+    nightHint: false
+    showFinish: false
+    celebrationEvent: ''
+    finishScore: 0
+    finishPuzzleScore: 0
+    finishPuzzleCount: 0
+    finishPuzzleBest: 0
+    finishMedals: 0
+    finishMedalList:
+    medalScreen:
+      show: false
+      items:
+      title: ''
+      sub: ''
+      stats:
+      record: ~
+    finishSnap: ''
+    finishSnapError: false
+    finishPhotos:
+    canReplayJournal: false
+    branchPath:
+    finishRouteRecommendation: ~
+    voucher:
+      show: false
+    ticket:
+      show: false
+      url: ''
+      code: ''
+      loading: false
+      expiresAt: 0
+    reviewElapsed: ''
+    reviewDistance: ''
+    reviewEmpty: true
+    finishBadge: ~
+    milestone: ~
+    stageEnd: ~
+    ending:
+      show: false
+      opener: ''
+      fragments:
+    endingError: false
+    audioPlaying: false
+    audioLoading: false
+    audioError: ''
+    audioNodeId: ~
+    regId: ''
+  actual:
+    communityPostWrite: false
+    r5OutcomeReply: ~
+    r5Verdict:
+      show: false
+      kind: 'win'
+      text: ''
+      images:
+    themeTradeForm: ~
+    themeTradePreview: ~
+    themeTradeError: ''
+    themeTradeUnknown: false
+    themeRecoveryText: ''
+    themePlanKey: ''
+    themePlanForm: ~
+    themePlanAcceptKeys:
+    themePlanError: ''
+    themePlanUnknown: false
+    themePlanResult: ~
+    zeroHpView: ~
+    zeroHpCountdown: ''
+    zeroHpBusy: false
+    zeroHpError: ''
+    zeroHpPermissionDenied: false
+    themeBag:
+      contents:
+      items:
+      clues:
+      slots:
+      pendingRows:
+      actionRows:
+      challengeNodes:
+      planRows:
+      tradeTargets:
+      tradeRows:
+      used: 0
+      capacity: 6
+      hpEnabled: false
+    themeBackpackOpen: false
+    themeBackpackTab: 'items'
+    themeBagTabs:
+      0:
+        key: 'items'
+        label: '物品'
+      1:
+        key: 'clues'
+        label: '线索'
+      2:
+        key: 'game'
+        label: '任务'
+    themeCostChoice: ~
+    themeRewardPreview: ~
+    themePendingClaim: ~
+    themeItemDetail: ~
+    themeQuestChoice: ~
+    themeBagBusy: false
+    themeBagUnknown: false
+    themeBagError: ''
+    themeHistoryOpen: false
+    themeHistoryRows:
+    themeHistoryMore: false
+    themeCardSessionId: 0
+    themeResultCard: ~
+    themeRecordsState: ~
+    themeRecordsBusy: false
+    themeRecordsError: ''
+    themeRecordsReadFailure: false
+    themeReplayBusy: false
+    themeReplayUnconfirmed: false
+    playerOperationsOpen: false
+    playerOperationAvailable: false
+    playerOperationRows:
+    playerManualRows:
+    playerExitText: ''
+    playerRunText: ''
+    playerOperationForm: ~
+    playerExitConfirm: false
+    playerOperationError: ''
+    playerOperationUnknown: false
+    playerArrivalProof: ~
+    tagSheetShow: false
+    tagSheetItems:
+    privacyGateShow: false
+    loading: true
+    reducedMotion: false
+    statusBarHeight: 44
+    chrome:
+      actionTop: 54
+      actionRight: 12
+      contentTop: 100
+      sheetTop: 99
+    emptyTip: ''
+    emptyKind: ''
+    timeBanner: ''
+    isPreview: false
+    isMock: false
+    activityId: ''
+    topicId: ''
+    mode: 1
+    serverMode: 1
+    modeLabel: '城市定向'
+    routeNotice: ''
+    routeRefreshing: false
+    journeyAttributes:
+    screen: ''
+    gpsOk: false
+    gpsLowAcc: false
+    gpsHint: '开始后可开启定位，也可扫码到达'
+    runState: 'idle'
+    runHoldLeft: 0
+    runHoldPct: 0
+    chapterCount: 0
+    searchPlaces:
+    chapterPick:
+      show: false
+      cur: 0
+    chapterFull: false
+    chapterParas:
+    album:
+      show: false
+      cur: 0
+      title: ''
+      images:
+    storyIntro:
+      show: false
+    startState:
+      show: false
+      rows:
+    storyDistText: ''
+    storyThoughts:
+    chapterGameAnchor: ''
+    storyMap: false
+    storyMapCenter: ~
+    oddFlick: -1
+    storyChat: false
+    soundOn: true
+    chapterGate:
+      show: false
+      number: 1
+      total: 1
+      title: ''
+      subtitle: ''
+    navMeta:
+      km: '0.0'
+      dur: '—'
+      eta: '—'
+    chapter:
+      idxLabel: '第一章'
+      name: ''
+      description: ''
+      cover: ''
+      mileage: ''
+      timeText: ''
+      atmospherePreset: 'DEFAULT'
+      atmosphereClass: 'atmosphere--default'
+    previewEnding:
+      show: false
+      list:
+      idx: 0
+    bootStage: ''
+    chapterCards:
+    rewardDrop:
+      show: false
+      text: ''
+      badges:
+    ringSegs:
+    topicName: ''
+    topicCover: ''
+    topicDesc: ''
+    seatTiles:
+    packOpen: false
+    packShake: false
+    packBurst: false
+    hero:
+      show: false
+      open: false
+      node: ~
+      style: ''
+      bodyTop: 0
+      ry: 0
+      spun: false
+      turned: false
+      sx: 0
+      ss: '1'
+      faded: false
+      collapsed: false
+      scrollTop: 0
+    shopNpc:
+      show: false
+      open: false
+      name: ''
+      greeting: ''
+      started: false
+      msgs:
+      input: ''
+      thinking: false
+      thinkPhase: 0
+      nodeId: 0
+      ry: 0
+      recording: false
+    chapStory:
+      show: false
+      open: false
+      title: ''
+      lines:
+      audio: ''
+      audioDur: ''
+      playing: false
+      barAway: false
+      frames: 0
+    myRole: ~
+    roleCard:
+      show: false
+      code: ''
+      name: ''
+      iconName: 'star'
+      desc: ''
+      skill: ''
+      confirmed: false
+    gameModule:
+      enabled: false
+      loading: false
+      error: ''
+      sheetShow: false
+      sessionId: 0
+      activityId: 0
+      status: ''
+      revision: 0
+      snapshotAt: ''
+      stale: false
+      canSubmitTask: false
+      role:
+        code: ''
+        name: ''
+      nodes:
+      teamActions:
+      story:
+        visibleVariables:
+        ending: ~
+      write:
+        status: 'idle'
+        requestId: ''
+        message: ''
+        canRetry: false
+    board:
+      show: false
+      loading: false
+      list:
+      me: ~
+    packDim: false
+    packTear: false
+    packSink: false
+    headIn: false
+    tearPct: 0
+    packGrab: false
+    packSnap: false
+    packTorn: false
+    tearSealStyle: ''
+    tearMouthStyle: ''
+    blastRays:
+    blastShards:
+    measuring: false
+    tileH: 0
+    nodes:
+    total: 0
+    merchantCount: 0
+    doneCount: 0
+    allDone: false
+    remainingGameCount: 0
+    fmNodes:
+    fmPolyline:
+    fmPlayer: ~
+    fmCenter:
+      lat: 31.2304
+      lng: 121.4737
+    fmSubkey: ''
+    fmLayerStyle: 1
+    nextNode: ~
+    sheet:
+      show: false
+      node: ~
+      continueText: '前往下一站'
+    advancedPlay:
+      show: false
+      node: ~
+    game:
+    answerInput: ''
+    answerSel: ''
+    preference:
+      loading: false
+      error: ''
+      steps:
+      stepIndex: 0
+      choices:
+      inheritedTags:
+      answerHere: false
+      submitting: false
+      result: ~
+      pendingTag: ~
+      tagDisclosure: ~
+      progress: ~
+      availableTagValues:
+    newLifeOS:
+      loading: false
+      show: false
+      tags:
+      resultCards:
+      mapAnchors:
+      mapNodes:
+      actions7Days:
+      actions30Days:
+    scanning: false
+    photoTaken: false
+    gWrong: false
+    gNetErr: ''
+    gNetRetryable: false
+    gRetryType: ''
+    gWriteUnknown: false
+    shownHints:
+    canHint: false
+    canReveal: false
+    hintLabel: '1/2'
+    revealed: false
+    wrongCount: 0
+    hintUnlocking: false
+    puzzleScoreCap: 100
+    playKit:
+      show: true
+      kit:
+        type: 'photocheck'
+        mode: 'CARD'
+        sessionId: 'session-A'
+        version: 4
+        photoFailSeq: 1
+    journeyCheck:
+      show: false
+      loading: false
+      error: ''
+      nodeId: 0
+      checkId: ''
+      skill: ''
+      tier: ''
+      mods:
+      advantage: false
+      disadvantage: false
+      receipt: ~
+    flyScore: false
+    flyText: ''
+    lockHint: false
+    medal:
+      show: false
+    couponToast: false
+    couponText: ''
+    couponBurst:
+    nav:
+      active: false
+      targetNodeId: ~
+      targetName: ''
+      remainM: 0
+      totalM: 0
+      hit50: false
+      hit90: false
+    navBubble:
+      show: false
+      text: ''
+    lead:
+      exists: false
+      status: 0
+      isLeader: false
+      arrived: 0
+      total: 0
+      meArrived: false
+      chapterName: ''
+      broadcast: ''
+      members:
+    leadLoadError: false
+    leadUnlockChecking: false
+    sceneIn: false
+    showJournal: false
+    journalDot: false
+    journalCards:
+    sessionToolsOpen: false
+    freeMap: false
+    sceneStack:
+    sceneCurrent: ~
+    sceneConfirm:
+      show: false
+      action: ~
+      pending: ~
+    story:
+      show: false
+      title: ''
+      step: ''
+      cover: ''
+      text: ''
+    focusAnchor: ''
+    nextChapterText: ''
+    frag:
+      show: false
+      text: ''
+      step: ''
+    nightHint: false
+    showFinish: false
+    celebrationEvent: ''
+    finishScore: 0
+    finishPuzzleScore: 0
+    finishPuzzleCount: 0
+    finishPuzzleBest: 0
+    finishMedals: 0
+    finishMedalList:
+    medalScreen:
+      show: false
+      items:
+      title: ''
+      sub: ''
+      stats:
+      record: ~
+    finishSnap: ''
+    finishSnapError: false
+    finishPhotos:
+    canReplayJournal: false
+    branchPath:
+    finishRouteRecommendation: ~
+    voucher:
+      show: false
+    ticket:
+      show: false
+      url: ''
+      code: ''
+      loading: false
+      expiresAt: 0
+    reviewElapsed: ''
+    reviewDistance: ''
+    reviewEmpty: true
+    finishBadge: ~
+    milestone: ~
+    stageEnd: ~
+    ending:
+      show: false
+      opener: ''
+      fragments:
+    endingError: false
+    audioPlaying: false
+    audioLoading: false
+    audioError: ''
+    audioNodeId: ~
+    regId: ''
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (/workspace/hengyin-c/chengyinhub-xcx/tests/unit/play-qa-photo-upload-contract.test.js:375:10)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+1..12
+# tests 12
+# suites 0
+# pass 11
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 123.268574

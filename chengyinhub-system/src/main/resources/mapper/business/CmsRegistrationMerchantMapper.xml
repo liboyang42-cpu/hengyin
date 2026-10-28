@@ -187,7 +187,18 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         update cms_registration_merchant
         set audit_status = 1, status = 1, audit_time = now(), update_time = now()
         where id = #{id}
+          and del_flag = 0
           and (audit_status is null or audit_status = 0)
+    </update>
+
+    <!-- Cancel and winner selection compete on this same row; neither can overwrite the other's terminal. -->
+    <update id="cancelUnwonByMember">
+        update cms_registration_merchant
+        set del_flag = 2, update_by = #{username}, update_time = #{updateTime}
+        where id = #{id}
+          and member_id = #{memberId}
+          and del_flag = 0
+          and (audit_status is null or audit_status in (0, 2))
     </update>
 
     <!-- 调配驳回与选中共用 audit_status=0/null 起点；两个 CAS 并发时只能一个成功。 -->
@@ -282,6 +293,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         </trim>
         where id = #{id}
     </update>
+
+    <select id="selectForDeletionByIdForUpdate" resultMap="CmsRegistrationMerchantResult" useCache="false" flushCache="true">
+        <include refid="selectCmsRegistrationMerchantVo"/>
+        where id = #{id} for update
+    </select>
 
     <delete id="deleteCmsRegistrationMerchantById" parameterType="Long">
         delete from cms_registration_merchant where id = #{id}

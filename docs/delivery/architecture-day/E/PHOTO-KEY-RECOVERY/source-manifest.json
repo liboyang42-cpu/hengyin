@@ -1,0 +1,40 @@
+{
+  "parent": "1162a0e672fc1c07d4592fc3ee9f1eb6b6df1cc9",
+  "branch": "codex/architecture-day-e-photo-key-recovery",
+  "worktree": "/workspace/hengyin-e-photo-key",
+  "sourceOnlyTree": "a4c7c004d5f0b21a59554c9a556e9c5856e47175",
+  "newUnitCases": 5,
+  "newMySqlCases": 4,
+  "javaExecuted": false,
+  "mysqlExecuted": false,
+  "files": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/PhotoCheckIntentRecoveryMySqlIT.java",
+      "sha256": "4828df64093a2fa31b052e1e66c3d0d98eafbc404dd6ed98f0700a8ac63189e3"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/PhotoCheckIntentRecoveryReadTest.java",
+      "sha256": "9ab0af3e1c5c936e624ecedf2d63ef613c7db0d03e57b079dfd076a56c9332d2"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckIntentService.java",
+      "sha256": "36be3f1a0c904506e389b2e10fd19d73b47a89f3e7208f1e1e80873e5eb4bb1a"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/PhotoCheckIntentMapper.xml",
+      "sha256": "a1ba0fc93ba62868e2ae9da592280fc263ac6b22d005a4cb7ef8ddff1fe12ff7"
+    }
+  ],
+  "frozenTests": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/PhotoCheckIntentServiceTest.java",
+      "cases": 16,
+      "sha256": "db92c5f9397e53835762017bfd789cae41d96aa08c6c9028770c6380de38c4cc"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/PhotoCheckIntentMySqlIT.java",
+      "cases": 10,
+      "sha256": "2338ca0c8d2b65a052fd952930cd005866c392b2810c4720f6e60121c2b8f2af"
+    }
+  ]
+}

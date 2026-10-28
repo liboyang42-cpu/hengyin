@@ -1,0 +1,40 @@
+{
+  "publicBaseline": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+  "dependencyCommit": "bb4a1852018238b9280602714f4358863d7da9e2",
+  "dependencyTree": "d45f445b00cf7d0e7dde043faa61a5001365e83d",
+  "sourceOnlyTree": "c1bc76bfc3f42b52896658d5db2fe6a15ad2d65f",
+  "worktree": "/workspace/hengyin-e-photo",
+  "branch": "codex/architecture-day-e-photo-intent",
+  "javaExecuted": false,
+  "mysqlExecuted": false,
+  "files": [
+    {
+      "path": "chengyinhub-admin/sql/migration_photo_check_intent_20261023.sql",
+      "sha256": "8671f805d52071ce1067838b21581ff53d278be34b8fd4a744b4b14183cbad6e"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/PhotoCheckIntentMySqlIT.java",
+      "sha256": "9c4976da3245b71cb40b4382a946389d425f5acf1a6b62be88c55747ffa210c9"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/PhotoCheckIntentServiceTest.java",
+      "sha256": "db92c5f9397e53835762017bfd789cae41d96aa08c6c9028770c6380de38c4cc"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/PhotoCheckIntentRow.java",
+      "sha256": "6762d330117d89f19acc855e9951bcfce55c8d9ec5d675388f12585b4b1608a9"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/PhotoCheckIntentMapper.java",
+      "sha256": "732b66157915d271be000e72f52dc1050636de0b8bdf7ac11c96f5dddf64b985"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckIntentService.java",
+      "sha256": "dc40a6f5f7ee4438d63f161ced55339bdaca6af6a9dcd88a20572b0350de0bca"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/PhotoCheckIntentMapper.xml",
+      "sha256": "e2b2bb181415e0083037bb5d7aea41793fe51176478a3f559726d302905b63d5"
+    }
+  ]
+}

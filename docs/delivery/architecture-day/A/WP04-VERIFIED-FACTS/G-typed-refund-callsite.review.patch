@@ -1,0 +1,35 @@
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/ICoopSettlementClaimService.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/ICoopSettlementClaimService.java
+@@ -7,6 +7,9 @@
+ import java.util.Date;
+
+ public interface ICoopSettlementClaimService {
++    void reverseCompletedRegistrationRefund(Long refundId,
++            com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference success);
++
+     CoopSettlementPlan prepare(CoopOrder order, Date settlementSnapshotAt);
+     void persist(CoopSettlementPlan plan, CoopSettlement head);
+     void appendExecutedAdjustment(Long claimId, String eventKey, java.math.BigDecimal signedAmount);
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java
+@@ -137,6 +137,7 @@
+     @Autowired
+     private AlarmService alarmService;
+     @Autowired private WechatVerifiedPaymentFactService verifiedPaymentFacts;
++    @Autowired private com.chengyinhub.business.service.ICoopSettlementClaimService coopSettlementClaims;
+
+     /** P1:退款回调先按 notify_hash 落 inbox 去重;状态推进仍由下方既有 CAS 负责。 */
+     @Autowired
+@@ -434,8 +435,10 @@
+                         requireSameRefundIdentity(original, current);
+                         boolean sameOriginal = verified == null ? matchesRefundFacts(current, locked, originalFacts)
+                                 : matchesVerifiedRefundOriginal(verified.facts(), current, locked);
+-                        return sameOriginal
+-                                && applyRefundPayoutEvent(current, refundStatus);
++                        boolean applied = sameOriginal && applyRefundPayoutEvent(current, refundStatus);
++                        if (applied && verified != null)
++                            coopSettlementClaims.reverseCompletedRegistrationRefund(current.getId(), verified.reference());
++                        return applied;
+                     }
+                 };
+         return verified != null

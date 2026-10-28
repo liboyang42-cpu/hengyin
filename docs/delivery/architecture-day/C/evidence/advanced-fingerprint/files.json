@@ -1,0 +1,38 @@
+[
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AdvancedGameRuntimeServiceImpl.java",
+    "sha256": "7230075ade4f694a67a928fb39ec62a02504588add114758486475b36005070b"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/PlayAttemptLog.java",
+    "sha256": "4818134d9c6576a91f4a2d0933a22e81c2532bffedca2ce9fc75103db737713b"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/PlayAttemptLogMapper.java",
+    "sha256": "e5de6bdc692241c90f7a076a353da7d5164416f71b08bfcedf46000cab4da5df"
+  },
+  {
+    "path": "chengyinhub-system/src/main/resources/mapper/business/PlayAttemptLogMapper.xml",
+    "sha256": "7f7a62f6ba1ea6f85b3d937d5b0cbcfd558f2d963d063bbbffebf865062007ae"
+  },
+  {
+    "path": "chengyinhub-admin/sql/migration_20261023_advanced_command_fingerprint.sql",
+    "sha256": "d1c413a6abab0a4f613a2ef7c41914adb1b6e69b0de51d6cb08a01d08a88951f"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AdvancedCommandFingerprintTest.java",
+    "sha256": "3017ad0ca81673a55761020043b1a17b19b3b9a5a5a7afe9e135d16136c132ff"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AdvancedGameRuntimeServiceImplTest.java",
+    "sha256": "bc4eef6f59c543b738af5b8ae64d7758cc3f884b6e00944de0c3cc120ebaa901"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/AdvancedCommandFingerprintMySqlIT.java",
+    "sha256": "b80b92b58a462d413978bbc5e4cc045aeb9e6012b358182fb863a16fd26f8897"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/AdvancedGameRuntimeMySqlIT.java",
+    "sha256": "b9e7533b3d8e87b03c7672ba30ce7b1a9caed50ed919c5ca212ca21a4e3b1816"
+  }
+]

@@ -1,0 +1,103 @@
+--- a/chengyinhub-common/src/main/java/com/chengyinhub/common/utils/http/HttpUtils.java
++++ b/chengyinhub-common/src/main/java/com/chengyinhub/common/utils/http/HttpUtils.java
+@@ -144,6 +144,25 @@
+     public static String sendJsonPost(String url, String json, String bearer,
+             long deadlineNanos, AttemptLease lease, java.util.Map<String, String> additionalHeaders)
+     {
++        return sendJsonPostEncoded(url, json == null ? null : () -> json.getBytes(StandardCharsets.UTF_8),
++                bearer, deadlineNanos, lease, additionalHeaders);
++    }
++
++    /**
++     * Takes exclusive ownership of fresh UTF-8 JSON bytes. The caller must never mutate/reuse them,
++     * including after a timeout: the original physical worker may still own the request entity.
++     * Same authenticated single-attempt path; no body clone or String re-encoding.
++     */
++    public static String sendJsonPostBytes(String url, byte[] json, String bearer,
++            long deadlineNanos, AttemptLease lease)
++    {
++        return sendJsonPostEncoded(url, json == null ? null : () -> json,
++                bearer, deadlineNanos, lease, java.util.Map.of());
++    }
++
++    private static String sendJsonPostEncoded(String url, java.util.function.Supplier<byte[]> encode, String bearer,
++            long deadlineNanos, AttemptLease lease, java.util.Map<String, String> additionalHeaders)
++    {
+         if (lease == null || !lease.transfer())
+         {
+             throw notSent("third-party HTTP lease unavailable");
+@@ -157,7 +176,7 @@
+             {
+                 throw notSent("invalid third-party HTTP authorization");
+             }
+-            if (json == null || Thread.currentThread().isInterrupted())
++            if (encode == null || Thread.currentThread().isInterrupted())
+             {
+                 throw notSent("third-party HTTP request not started");
+             }
+@@ -171,7 +190,7 @@
+             if (remaining <= 0) throw notSent("third-party HTTP total timeout");
+             long boundedDeadline = now + Math.min(remaining,
+                     TimeUnit.MILLISECONDS.toNanos(policy.totalTimeoutMs));
+-            byte[] body = json.getBytes(StandardCharsets.UTF_8);
++            byte[] body = encode.get();
+             if (remainingMillis(boundedDeadline) <= 0) throw notSent("third-party HTTP total timeout");
+             handedToAttempt = true;
+             return executeAttempt("POST", target, body, MediaType.APPLICATION_JSON_VALUE,
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/OpenAiCompatibleLlmClient.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/OpenAiCompatibleLlmClient.java
+@@ -168,17 +168,17 @@
+         String phase = "local";
+         try (HttpUtils.AttemptLease lease = admission.acquire(url))
+         {
+-            String json;
++            byte[] json;
+             try
+             {
+-                json = body.toJSONString();
++                json = JSON.toJSONBytes(body);
+             }
+             catch (RuntimeException invalid)
+             {
+                 throw new AiProviderNotSentException();
+             }
+             phase = "transport";
+-            String result = HttpUtils.sendJsonPost(url, json, apiKey, deadline, lease);
++            String result = HttpUtils.sendJsonPostBytes(url, json, apiKey, deadline, lease);
+             // The String-only common API does not expose a success status; do not invent one.
+             phase = "parse";
+             return responseText(result);
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckVisionService.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckVisionService.java
+@@ -196,12 +196,28 @@
+     {
+         try
+         {
+-            byte[] digest = java.security.MessageDigest.getInstance("SHA-256")
+-                    .digest(encoded.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+-            return java.util.HexFormat.of().formatHex(digest);
++            var digest = java.security.MessageDigest.getInstance("SHA-256");
++            // Preserve String.getBytes(UTF_8) replacement/continuation semantics with bounded buffers.
++            // The writer carries a surrogate across chunk boundaries and flushes it on close.
++            try (var writer = new java.io.OutputStreamWriter(new java.security.DigestOutputStream(
++                    java.io.OutputStream.nullOutputStream(), digest), java.nio.charset.StandardCharsets.UTF_8))
++            {
++                char[] chunk = new char[4096];
++                for (int offset = 0; offset < encoded.length(); offset += chunk.length)
++                {
++                    int count = Math.min(chunk.length, encoded.length() - offset);
++                    encoded.getChars(offset, offset + count, chunk, 0);
++                    writer.write(chunk, 0, count);
++                }
++            }
++            return java.util.HexFormat.of().formatHex(digest.digest());
+         }
+         catch (java.security.NoSuchAlgorithmException impossible)
+         {
+             throw new IllegalStateException("SHA-256 unavailable", impossible);
+         }
++        catch (java.io.IOException impossible)
++        {
++            throw new IllegalStateException("Photo input hash unavailable", impossible);
++        }
+     }

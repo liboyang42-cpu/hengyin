@@ -14,7 +14,7 @@ function fixture(kind) {
     start() { state.starts++; }, resume() { state.starts++; }, pause() {} };
   const client = upload.createUploadClient({ getUserID: () => member,
     getAuthorization: () => 'fixture', getBaseUrl: () => 'https://fixture',
-    wxUploadFile(options) { state.uploads.push(options); options.success({ data: '{"code":200,"url":"https://fixture/media"}' }); return { abort() {} }; },
+    wxUploadFile(options) { state.uploads.push(options); options.success({ data: '{"code":200,"assetId":73,"url":"https://fixture/media"}' }); return { abort() {} }; },
     setTimer: () => 1, clearTimer() {} });
   const app = { requestSeparateConsent: () => Promise.resolve(), globalData: {}, getUserID: () => member, getUploadClient: () => client,
     sendRequest(options) { state.requests.push(options); if (!state.holdRequest) options.success({ code: 200, data: { voiceStatus: 2 } }); } };
@@ -23,10 +23,12 @@ function fixture(kind) {
     authorize: () => state.permission, canvasToTempFilePath: o => { state.export = o; } };
   const file = path.join(__dirname, '../../', kind === 'merchant'
     ? 'pages/merchant/decor/ai-npc/index.js' : 'pages/topic/components/cy/node-npc-form/index.js');
+  require('../helpers/voice-enrollment-environment.cjs').install(app, wx);
   vm.runInNewContext(fs.readFileSync(file, 'utf8'), {
     getApp: () => app, wx, Page: d => { definition = d; }, Component: d => { definition = d; },
     setTimeout(fn) { state.timers.push(fn); return state.timers.length; }, clearTimeout() {}, console,
     require(id) {
+      if (id.endsWith('voice-enrollment-journal.js')) return require('../../utils/voice-enrollment-journal.js');
       if (id.endsWith('pixel-avatar.js')) return { AVATAR_IDS: ['one'], stringifyCode: () => 'px1:one', isPixelAvatar: () => false };
       if (id.endsWith('pixel-avatar-data.js')) return { AVATARS: { one: { name: 'fixture' } } };
       if (id.endsWith('pixel-portrait.js')) return { squareCrop: () => ({ size: 32 }), buildPortrait: () => ({ fixture: true }), drawPortrait() {} };
@@ -38,6 +40,8 @@ function fixture(kind) {
   }, { filename: file });
   const target = Object.assign({}, kind === 'merchant' ? definition : definition.methods);
   target.data = JSON.parse(JSON.stringify(definition.data));
+  // Real node voice commands require an open form and a concrete node scope.
+  if (kind === 'node') Object.assign(target.data, { show: true, nodeId: 1 });
   target.setData = (patch, callback) => {
     state.patches.push(patch);
     for (const [key, value] of Object.entries(patch)) {

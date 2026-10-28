@@ -36,10 +36,14 @@ public class GameplayReskinFixture {
     final CmsMemberTemplateMapper templateMapper = mock(CmsMemberTemplateMapper.class);
     final GameSessionRuntimeMapper gameMapper = mock(GameSessionRuntimeMapper.class);
     final PlayTeamMapper teamMapper = mock(PlayTeamMapper.class);
+    final ThemeStateKeyMapper keyMapper = mock(ThemeStateKeyMapper.class);
     final CmsTopicServiceImpl publisher = new CmsTopicServiceImpl();
     final TopicRouteRuntimeServiceImpl route;
     final GameSessionRuntimeServiceImpl runtime = new GameSessionRuntimeServiceImpl();
+    // Author prototypes are not persisted rows and must never acquire another theme's identity.
     final List<ThemeStateKey> keys = new ArrayList<>();
+    private final Map<Long, Map<String, ThemeStateKey>> declarations = new LinkedHashMap<>();
+    private long declarationSequence = 20000;
     GameSession session;
     CmsTopic topic;
     JsonNode variant, snapshot;
@@ -69,11 +73,12 @@ public class GameplayReskinFixture {
     }
     public GameplayReskinFixture() throws Exception {
         for(Field field:CmsTopicServiceImpl.class.getDeclaredFields()) if(field.isAnnotationPresent(Autowired.class))
-            ReflectionTestUtils.setField(publisher,field.getName(),mock(field.getType()));
+            com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(publisher, field.getName(),mock(field.getType()));
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.wireRelocatedCollaborators(publisher, publicationField -> org.mockito.Mockito.mock(publicationField.getType()));
         ReflectionTestUtils.setField(publisher,"cmsTopicMapper",topicMapper);
         ReflectionTestUtils.setField(publisher,"cmsTopicChapterMapper",chapterMapper);
         ReflectionTestUtils.setField(publisher,"cmsTopicNodeMapper",nodeMapper);
-        ReflectionTestUtils.setField(publisher,"cmsMemberTemplateMapper",templateMapper);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(publisher, "cmsMemberTemplateMapper",templateMapper);
         // CORE OWN-C03-15：自办活动插入后须生成有效身份，否则 fail-closed；夹具按真实插入回填 id。
         CmsActivityMapper shellActivities=(CmsActivityMapper)ReflectionTestUtils.getField(publisher,"cmsActivityMapper");
         when(shellActivities.insertCmsActivity(any())).thenAnswer(i->{((com.chengyinhub.business.domain.CmsActivity)i.getArgument(0)).setId(880001L);return 1;});
@@ -82,11 +87,21 @@ public class GameplayReskinFixture {
         when(freeTickets.selectOmsTicketList(any())).thenReturn(Collections.emptyList());
         when(noOffers.selectByTopic(anyLong())).thenReturn(Collections.emptyList());
         wireAuthoringGuards(topicMapper, chapterMapper, nodeMapper, templateMapper, freeTickets, noOffers);
-        ThemeStateKeyMapper keyMapper=mock(ThemeStateKeyMapper.class);
-        when(keyMapper.selectByTopicId(anyLong())).thenReturn(keys);
+        when(keyMapper.lockTopicForStateKeyWrite(anyLong())).thenAnswer(call -> {
+            CmsTopic parent = topics.get(call.getArgument(0)); return parent == null ? null : parent.getId();
+        });
+        when(keyMapper.upsertThemeStateKey(any())).thenAnswer(call -> persistDeclaration(call.getArgument(0)));
+        when(keyMapper.selectByTopicId(anyLong())).thenAnswer(call -> storedDeclarations(call.getArgument(0)));
+        when(keyMapper.selectByTopicIdForUpdate(anyLong())).thenAnswer(call -> storedDeclarations(call.getArgument(0)));
+        when(keyMapper.selectByTopicIdAndStateKey(anyLong(), anyString()))
+                .thenAnswer(call -> storedDeclaration(call.getArgument(0), call.getArgument(1)));
+        when(keyMapper.selectByTopicIdAndStateKeyForUpdate(anyLong(), anyString()))
+                .thenAnswer(call -> storedDeclaration(call.getArgument(0), call.getArgument(1)));
         keyService=new ThemeStateKeyService(keyMapper);
         ReflectionTestUtils.setField(publisher,"themeStateKeyService",keyService);
-        ReflectionTestUtils.setField(publisher,"topicStateKeyRefService",new TopicStateKeyRefService(nodeMapper,templateMapper,chapterMapper));
+        TopicStateKeyRefService currentReferences=new TopicStateKeyRefService(nodeMapper,templateMapper,chapterMapper);
+        ReflectionTestUtils.setField(currentReferences,"cmsTopicMapper",topicMapper);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(publisher, "topicStateKeyRefService",currentReferences);
         for(String name:Arrays.asList("rescue","load_ok","end01","end02","end03","end04","ev01","ev02","ev03","ev04","ev05")) {
             ThemeStateKey key=new ThemeStateKey();key.setStateKey("clue."+name);key.setKeyType("flag");key.setScope("run");key.setInitialValue(0);keys.add(key);
         }
@@ -98,21 +113,105 @@ public class GameplayReskinFixture {
         when(topicMapper.publishRouteSnapshot(anyLong(),anyString(),any())).thenAnswer(call->{CmsTopic row=topics.get(call.getArgument(0));row.setPublishedRouteGraphJson(call.getArgument(1));row.setPublishedConfigVersion(1L);row.setPublishedThemeRuntimeConfigJson(row.getThemeRuntimeConfigJson());return 1;});
         when(chapterMapper.insertCmsTopicChapter(any())).thenAnswer(call->{CmsTopicChapter row=call.getArgument(0);row.setId(++sequence);chapters.put(row.getId(),row);return 1;});
         when(chapterMapper.selectCmsTopicChapterList(any())).thenAnswer(call->{CmsTopicChapter q=call.getArgument(0);List<CmsTopicChapter> result=new ArrayList<>();for(CmsTopicChapter row:chapters.values())if(row.getTopicId().equals(q.getTopicId()))result.add(row);return result;});
+        when(chapterMapper.selectByTopicForUpdate(anyLong())).thenAnswer(call -> chapters.values().stream()
+                .filter(row -> row.getTopicId().equals(call.getArgument(0))).toList());
         when(nodeMapper.insertCmsTopicNode(any())).thenAnswer(call->{CmsTopicNode row=call.getArgument(0);row.setId(++sequence);nodes.put(row.getId(),row);return 1;});
         when(nodeMapper.selectCmsTopicNodeList(any())).thenAnswer(call->{CmsTopicNode q=call.getArgument(0);List<CmsTopicNode> result=new ArrayList<>();for(CmsTopicNode row:nodes.values())if(row.getTopicId().equals(q.getTopicId()))result.add(row);return result;});
+        when(nodeMapper.selectByTopicForUpdate(anyLong())).thenAnswer(call -> nodes.values().stream()
+                .filter(row -> row.getTopicId().equals(call.getArgument(0))).toList());
         when(nodeMapper.selectCmsTopicNodeById(anyLong())).thenAnswer(call->nodes.get(call.getArgument(0)));
         when(nodeMapper.deleteCmsTopicNodeById(anyLong())).thenAnswer(call -> nodes.remove(call.getArgument(0)) == null ? 0 : 1);
         when(chapterMapper.deleteCmsTopicChapterById(anyLong())).thenAnswer(call -> chapters.remove(call.getArgument(0)) == null ? 0 : 1);
         when(templateMapper.selectCmsMemberTemplateById(anyLong())).thenAnswer(call->templates.get(call.getArgument(0)));
         when(templateMapper.selectCmsMemberTemplateByIds(any())).thenAnswer(call->{List<CmsMemberTemplate> result=new ArrayList<>();for(Long id:(List<Long>)call.getArgument(0))if(templates.containsKey(id))result.add(templates.get(id));return result;});
+        when(templateMapper.selectCmsMemberTemplateByIdsForUpdate(any())).thenAnswer(call -> {
+            List<Long> ids=call.getArgument(0);
+            return ids.stream().map(templates::get).filter(Objects::nonNull).toList();
+        });
         for(JsonNode raw:resource("reference.json").path("templates")) {
             CmsMemberTemplate template=new CmsMemberTemplate();template.setId(raw.path("id").asLong());template.setMemberId(7L);template.setStatus(1L);template.setDraftStatus(1);template.setTitle(raw.path("title").asText());template.setValidationMethod(raw.path("validationMethod").asInt());template.setAdvancedConfigJson(new AdvancedGameConfigValidator().validateAndNormalize(raw.path("config").toString()));template.setQuestionAnswer(raw.path("answer").asText(null));templates.put(template.getId(),template);
         }
         route=new TopicRouteRuntimeServiceImpl(mock(TopicRouteSessionMapper.class),topicMapper,nodeMapper,templateMapper,mock(PlayerNodeProgressMapper.class),null,mock(CmsRegistrationMapper.class),null,mock(IShopDayProofService.class),()->1L,()->10,Clock.systemUTC(),RouteReachabilityProvider.UNKNOWN);
         ReflectionTestUtils.setField(route,"cmsTopicChapterMapper",chapterMapper);ReflectionTestUtils.setField(route,"themeStateKeyMapper",keyMapper);
-        ReflectionTestUtils.setField(publisher,"topicRouteRuntimeService",route);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(publisher, "topicRouteRuntimeService",route);
         activeTopics=topicMapper;activeGames=gameMapper;configureRuntime();
+        // Use the same platform transaction/proxy mechanism as useSql; connections remain unit doubles.
+        javax.sql.DataSource data=mock(javax.sql.DataSource.class);
+        when(data.getConnection()).thenAnswer(call -> {
+            java.sql.Connection connection=mock(java.sql.Connection.class);
+            when(connection.getAutoCommit()).thenReturn(true);return connection;
+        });
+        var tx=new org.springframework.jdbc.datasource.DataSourceTransactionManager(data);
+        var advice=new org.springframework.transaction.interceptor.TransactionInterceptor(tx,
+                new org.springframework.transaction.annotation.AnnotationTransactionAttributeSource());
+        var keyProxy=new org.springframework.aop.framework.ProxyFactory(keyService);keyProxy.setProxyTargetClass(true);keyProxy.addAdvice(advice);
+        keyService=(ThemeStateKeyService)keyProxy.getProxy();
+        ReflectionTestUtils.setField(publisher,"themeStateKeyService",keyService);
+        var authorProxy=new org.springframework.aop.framework.ProxyFactory(publisher);authorProxy.setInterfaces(ICmsTopicService.class);authorProxy.addAdvice(advice);
+        authoring=(ICmsTopicService)authorProxy.getProxy();
+        var gameProxy=new org.springframework.aop.framework.ProxyFactory(runtime);gameProxy.setInterfaces(IGameSessionRuntimeService.class);gameProxy.addAdvice(advice);
+        play=(IGameSessionRuntimeService)gameProxy.getProxy();
     }
+
+    /** Unit model of ThemeStateKeyMapper.xml: unique (topic_id,state_key), generated id, id order. */
+    private int persistDeclaration(ThemeStateKey input) {
+        assertNotNull(input.getTopicId());
+        assertTrue(topics.containsKey(input.getTopicId()), "声明必须属于实际已创建的主题");
+        Map<String, ThemeStateKey> rows = declarations.computeIfAbsent(input.getTopicId(), ignored -> new LinkedHashMap<>());
+        ThemeStateKey previous = rows.get(input.getStateKey());
+        ThemeStateKey next = copyDeclaration(input);
+        if (previous == null) {
+            next.setId(++declarationSequence);
+            input.setId(next.getId()); // Same insert-generated identity consumed by the real writer.
+        } else {
+            // Duplicate registration does not replace identity/type/scope/create_time.
+            next.setId(previous.getId());
+            next.setKeyType(previous.getKeyType());
+            next.setScope(previous.getScope());
+            next.setCreateTime(previous.getCreateTime());
+            if (next.getMinValue() == null) next.setMinValue(previous.getMinValue());
+            if (next.getMaxValue() == null) next.setMaxValue(previous.getMaxValue());
+            if (next.getDisplayType() == null) next.setDisplayType(previous.getDisplayType());
+            if (next.getColor() == null) next.setColor(previous.getColor());
+            if (next.getIcon() == null) next.setIcon(previous.getIcon());
+            if (next.getSortOrder() == null) next.setSortOrder(previous.getSortOrder());
+            if (next.getVisible() == null) next.setVisible(previous.getVisible());
+            if (next.getPersistScope() == null) next.setPersistScope(previous.getPersistScope());
+            if (next.getRulesJson() == null) next.setRulesJson(previous.getRulesJson());
+        }
+        rows.put(next.getStateKey(), copyDeclaration(next));
+        return previous == null ? 1 : 2;
+    }
+
+    private List<ThemeStateKey> storedDeclarations(Long topicId) {
+        Map<String, ThemeStateKey> rows = declarations.get(topicId);
+        if (rows == null) return new ArrayList<>();
+        List<ThemeStateKey> result = new ArrayList<>();
+        for (ThemeStateKey row : rows.values()) result.add(copyDeclaration(row));
+        result.sort(Comparator.comparing(ThemeStateKey::getId));
+        return result;
+    }
+
+    private ThemeStateKey storedDeclaration(Long topicId, String stateKey) {
+        Map<String, ThemeStateKey> rows = declarations.get(topicId);
+        ThemeStateKey row = rows == null ? null : rows.get(stateKey);
+        return row == null ? null : copyDeclaration(row);
+    }
+
+    private static ThemeStateKey copyDeclaration(ThemeStateKey row) {
+        ThemeStateKey copy = new ThemeStateKey();
+        org.springframework.beans.BeanUtils.copyProperties(row, copy);
+        if (row.getCreateTime() != null) copy.setCreateTime(new Date(row.getCreateTime().getTime()));
+        if (row.getUpdateTime() != null) copy.setUpdateTime(new Date(row.getUpdateTime().getTime()));
+        return copy;
+    }
+
+    void registerDeclarations(Long topicId, List<ThemeStateKey> definitions) {
+        List<ThemeStateKey> inputs = new ArrayList<>();
+        for (ThemeStateKey definition : definitions) inputs.add(copyDeclaration(definition));
+        keyService.register(topicId, inputs); // Real validation, parent fence and original Spring transaction.
+    }
+
     private void wireAuthoringGuards(CmsTopicMapper topics, CmsTopicChapterMapper chapters,
                                      CmsTopicNodeMapper nodes, CmsMemberTemplateMapper templates,
                                      OmsTicketMapper tickets, MerchantChapterOfferMapper offers) {
@@ -171,13 +270,13 @@ public class GameplayReskinFixture {
     void publish(JsonNode skin) throws Exception {
         variant=skin;
         TopicCreateDTO identity=new TopicCreateDTO();identity.setName(skin.path("name").asText());identity.setSaveDraft(1);identity.setPublishMode("simple");identity.setProductType(1);
-        Long id=authoring.createTopic(identity,7L,"配置作者");
-        keyService.register(id,keys);
+        Long id=com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(authoring).createTopic(identity,7L,"配置作者");
+        registerDeclarations(id,keys);
         TopicUpdateDTO update=JSON.convertValue(definition(skin),TopicUpdateDTO.class);update.setId(id);
-        assertThrows(RuntimeException.class,()->authoring.updateTopicByOwner(update,8L,"外来作者"));
-        assertEquals(id,authoring.updateTopicByOwner(update,7L,"配置作者"));
+        assertThrows(RuntimeException.class,()->com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(authoring).updateTopicByOwner(update,8L,"外来作者"));
+        assertEquals(id,com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(authoring).updateTopicByOwner(update,7L,"配置作者"));
         topic=activeTopics.selectCmsTopicById(id);assertNotNull(topic);
-        assertTrue(authoring.publishDraft(id));topic=activeTopics.selectCmsTopicById(id);snapshot=JSON.readTree(topic.getPublishedRouteGraphJson());
+        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(authoring).publishDraft(id));topic=activeTopics.selectCmsTopicById(id);snapshot=JSON.readTree(topic.getPublishedRouteGraphJson());
         assertFalse(snapshot.toString().contains("resourceSlots"));assertFalse(snapshot.toString().contains("templateBindings"));
         assertSameFrozenTheme(snapshot.path("themeConfig"),JSON.readTree(route.freezePublishedJourney(topic)).path("themeConfig"));
     }
@@ -243,11 +342,17 @@ public class GameplayReskinFixture {
     void useSql(org.mybatis.spring.SqlSessionTemplate database) {
         sql=database;activeTopics=sql.getMapper(CmsTopicMapper.class);activeGames=sql.getMapper(GameSessionRuntimeMapper.class);
         CmsTopicNodeMapper realNodes=sql.getMapper(CmsTopicNodeMapper.class);CmsTopicChapterMapper realChapters=sql.getMapper(CmsTopicChapterMapper.class);CmsMemberTemplateMapper realTemplates=sql.getMapper(CmsMemberTemplateMapper.class);
-        ThemeStateKeyMapper realKeys=sql.getMapper(ThemeStateKeyMapper.class);keyService=new ThemeStateKeyService(realKeys);
-        ReflectionTestUtils.setField(publisher,"cmsTopicMapper",activeTopics);ReflectionTestUtils.setField(publisher,"cmsTopicNodeMapper",realNodes);ReflectionTestUtils.setField(publisher,"cmsTopicChapterMapper",realChapters);ReflectionTestUtils.setField(publisher,"cmsMemberTemplateMapper",realTemplates);
+        ThemeStateKeyMapper realKeys=sql.getMapper(ThemeStateKeyMapper.class);
+        var keysProxy = new org.springframework.aop.framework.ProxyFactory(new ThemeStateKeyService(realKeys));
+        keysProxy.setProxyTargetClass(true);
+        keysProxy.addAdvice(new org.springframework.transaction.interceptor.TransactionInterceptor(
+                new org.springframework.jdbc.datasource.DataSourceTransactionManager(sql.getConfiguration().getEnvironment().getDataSource()),
+                new org.springframework.transaction.annotation.AnnotationTransactionAttributeSource()));
+        keyService=(ThemeStateKeyService)keysProxy.getProxy();
+        ReflectionTestUtils.setField(publisher,"cmsTopicMapper",activeTopics);ReflectionTestUtils.setField(publisher,"cmsTopicNodeMapper",realNodes);ReflectionTestUtils.setField(publisher,"cmsTopicChapterMapper",realChapters);com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(publisher, "cmsMemberTemplateMapper",realTemplates);
         wireAuthoringGuards(activeTopics, realChapters, realNodes, realTemplates,
                 sql.getMapper(OmsTicketMapper.class), sql.getMapper(MerchantChapterOfferMapper.class));
-        ReflectionTestUtils.setField(publisher,"themeStateKeyService",keyService);ReflectionTestUtils.setField(publisher,"topicStateKeyRefService",new TopicStateKeyRefService(realNodes,realTemplates,realChapters));
+        ReflectionTestUtils.setField(publisher,"themeStateKeyService",keyService);com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(publisher, "topicStateKeyRefService",new TopicStateKeyRefService(realNodes,realTemplates,realChapters));
         ReflectionTestUtils.setField(route,"topicMapper",activeTopics);ReflectionTestUtils.setField(route,"nodeMapper",realNodes);ReflectionTestUtils.setField(route,"cmsTopicChapterMapper",realChapters);ReflectionTestUtils.setField(route,"templateMapper",realTemplates);ReflectionTestUtils.setField(route,"themeStateKeyMapper",realKeys);
         ReflectionTestUtils.setField(runtime,"runtimeMapper",activeGames);ReflectionTestUtils.setField(runtime,"playTeamMapper",sql.getMapper(PlayTeamMapper.class));
         org.springframework.jdbc.datasource.DataSourceTransactionManager tx=new org.springframework.jdbc.datasource.DataSourceTransactionManager(sql.getSqlSessionFactory().getConfiguration().getEnvironment().getDataSource());

@@ -16,6 +16,8 @@ const recommend = require('./utils/play-recommend.js'); // P0 推荐评分(纯�
 const { buildPlayRoute, createSessionClock, formatElapsed } = require('../../utils/play-ui-contract.js');
 const { readPausedRun, writePausedRun, clearRunSession, saveServerPausedRun, clearServerRunSession, readServerPausedRun, newerPausedRun } = require('./utils/play-run-session.js');
 const { resolveLeadMemberTicket } = require('./utils/lead-ticket-scan.js');
+const { seatTarget, seatKey, seatRecovery, seatChoice, captureLogin, loginCurrent } = require('../../utils/registration-seat.js');
+const { classifyVerificationOutcome, createVerificationWorkflow } = require('../../utils/merchant-verification.js');
 const { routeColorForKey, ROUTE_BORDER_COLOR } = require('../../utils/play-visual-tokens.js');
 const { getPlayMapState, getPlayRouteNodeState } = require('../../utils/play-state-contract.js');
 const gameSessionClient = require('../../utils/game-session-client.js');
@@ -931,8 +933,15 @@ Page({
     });
   },
   _handleRouteConflict(response, kind, nodeId) {
+    if (response && (response.intentUnknown || Number(response.code) === 520)) return false;
     if (!isRouteConflict(response)) return false;
-    this._resolveRouteAction(kind, nodeId);
+    const store = this._routeActions, sessionKey = this._sessionKey(), runtime = String((this._routeState || {}).sessionId || '');
+    // 只有服务端确认原意图未执行，且用户确认后，才释放身份供下一次点击创建新意图。
+    if (response.intentNotExecuted) cyModal.show({
+      title: '原操作未执行', content: '路线状态已更新。确认结束原意图，再检查当前状态后重新操作？', confirmText: '确认',
+      success: result => { if (result.confirm && this._isPlayAccountCurrent() && store === this._routeActions
+        && sessionKey === this._sessionKey() && runtime === String((this._routeState || {}).sessionId || '')) this._resolveRouteAction(kind, nodeId); },
+    });
     this.setData({ routeNotice: '路线状态有更新，正在同步…' });
     this.refreshRouteState();
     return true;
@@ -974,6 +983,7 @@ Page({
     this.suspendOrientLifecycle();
     this.setData({ arrivalGuard: null });
     this._playDisposed = true;
+    if (this._leadVerificationWorkflow) { this._leadVerificationWorkflow.destroy(); this._leadVerificationWorkflow = null; }
     this._leadArrivalEpoch = (this._leadArrivalEpoch || 0) + 1; this._leadArriving = false;
     this._themeRecordsDisposed = true;
     this._themeRecordsEpoch = (this._themeRecordsEpoch || 0) + 1;
@@ -4112,7 +4122,7 @@ Page({
       if (acceptProjection) that._versionedRouteState = that._routeStateVersionKnown(routeInput) ? routeState : null;
       that._routeNodeCatalog = catalog;
       if (routeState.thoughtCount > 0) that._askWeRunOnce();
-      if (that._routeActions) that._routeActions.clear();
+      // 加载/轮询不是原命令终态，不能清除待确认身份。
       const chapter = that.buildChapter(d, nodes);
       // 成功已落地:此后回调里的后处理(rebuild / 会话时钟 / 角色卡)再抛错,不该冒充「加载失败」
       // 把已经渲染出来的首屏盖成错误页 —— 重试只会重跑同一段计算,用户永远出不去。异常仍打 console。
@@ -4807,7 +4817,7 @@ Page({
         lead: {
           exists: true, status: d.status || 1, isLeader: !!d.isLeader,
           arrived: d.arrived || 0, total: d.total || 0, meArrived: !!d.meArrived,
-          chapterName: d.chapterName || '', broadcast: d.broadcast || '',
+          chapterName: d.chapterName || '', currentChapterId: d.currentChapterId, nextChapterId: d.nextChapterId, broadcast: d.broadcast || '',
           members: (d.members || []).slice(0, 8)
         },
         leadLoadError: false,
@@ -4915,6 +4925,7 @@ Page({
     const that = this;
     if (!this._isPlayAccountCurrent() || !this._canUseLeadTools() || !this.data.activityId) return;
     const context = this._leadOperationContext();
+    const seatLogin = captureLogin(app, wx);
     const sequence = this._leadTicketScanSequence = (this._leadTicketScanSequence || 0) + 1;
     const isCurrent = () => that._isLeadOperationContextCurrent(context, true)
       && sequence === that._leadTicketScanSequence;
@@ -4928,6 +4939,30 @@ Page({
         const ticket = resolveLeadMemberTicket(scan.result);
         if (ticket.error) {
           that.diegetic(ticket.error);
+          return;
+        }
+        const request = { url: '/api/registration/scan_group_member_ticket', method: 'POST',
+          data: { code: ticket.code, activityId: context.activityId } };
+        const target = seatTarget(request);
+        if (target) {
+          const seatCurrent = () => isCurrent() && loginCurrent(app, wx, seatLogin);
+          if (!seatCurrent()) return;
+          if (!that._leadVerificationWorkflow) that._leadVerificationWorkflow = createVerificationWorkflow({
+            deadlineMs: 15000, storage: wx, getOwner: () => app.getUserID && app.getUserID() });
+          const key = seatKey(context.owner, target);
+          that._leadVerificationWorkflow.run(key, done => app.sendRequest({
+            url: '/api/registration/scan_group_member_ticket', method: 'POST', data: request.data,
+            hideLoading: true, autoErrorToast: false,
+            success: r => done(classifyVerificationOutcome(r, 'success', undefined, request)),
+            fail: (r, status) => done(classifyVerificationOutcome(r, 'fail', status, request)),
+            successStatusAbnormal: (r, status) => done(classifyVerificationOutcome(r, 'abnormal', status, request))
+          }), result => {
+            if (!seatCurrent()) return;
+            if (result.status === 'success') motion.haptic({ type: 'medium', reducedMotion: that.data.reducedMotion });
+            that.diegetic(result.status === 'unknown'
+              ? '原席位结果待确认；再次扫描同一席位只查询结果，请勿改选席位重发'
+              : result.response && result.response.msg || '核销未提交');
+          }, seatRecovery(app, target, seatCurrent));
           return;
         }
         loadingShown = true; cyLoading.show('正在核销');
@@ -4954,68 +4989,64 @@ Page({
   },
   leadUnlock() {
     if (!this._isPlayAccountCurrent() || !this._canUseLeadTools() || !this.data.activityId) return;
+    if (this._leadUnlockIntent && this._leadUnlockIntent.inFlight
+      && this._isLeadOperationContextCurrent(this._leadUnlockIntent.context, true)) return;
     const context = this._leadOperationContext();
-    const key = JSON.stringify([context.owner, context.activityId, context.sessionKey]);
-    const intents = this._leadUnlockIntents = this._leadUnlockIntents || Object.create(null);
-    let intent = intents[key];
-    const current = () => this._leadUnlockIntent === intent && this._isLeadOperationContextCurrent(context, true);
-    const audit = () => {
-      if (!current()) return;
-      this._leadUnlockInFlight = false; this._leadUnlockChecking = true;
-      intent.auditToken = this._leadUnlockAuditToken = (this._leadUnlockAuditToken || 0) + 1;
-      this.setData({ leadUnlockChecking: true });
-      this.loadTeamProgress({ unlockAuditToken: intent.auditToken });
-    };
-    if (intent) {
-      this._leadUnlockIntent = intent;
-      // 已有放行读回在途时再点不再追加读取;读回中断(换页回来等)后再点才重新核对。
-      if (intent.phase === 'checking' && !this._leadUnlockChecking) audit();
-      return;
-    }
-    intent = intents[key] = { key, context, phase: 'confirming' };
+    const store = scopedRouteActionStore([context.owner, context.sessionKey, 'lead-chapter'], wx);
+    const lead = this.data.lead || {};
+    const original = { activityId: context.activityId, expectedChapterId: lead.currentChapterId == null ? 0 : lead.currentChapterId,
+      targetChapterId: lead.nextChapterId };
+    let body;
+    try { body = store.payload('unlock', context.activityId, {}, original); }
+    catch (error) { this.diegetic(error.message); return; }
+    const intent = { context, body };
     this._leadUnlockIntent = intent;
-    this._leadUnlockInFlight = true; this._leadUnlockChecking = false;
-    this.setData({ leadUnlockChecking: false });
-    const release = () => { if (intents[key] === intent) delete intents[key]; };
-    let modalSettled = false, loadingShown = false;
-    const finishLoading = () => { if (loadingShown) { loadingShown = false; cyLoading.hide(); } };
-    cyModal.show({
-      title: '解锁下一章节',
-      content: '确认让全队进入下一章节?',
-      confirmText: '确认解锁',
-      success: (res) => {
-        if (modalSettled) return;
-        modalSettled = true;
-        if (!current()) { release(); return; }
-        if (!res.confirm) { release(); this._leadUnlockInFlight = false; this.diegetic('已取消解锁'); return; }
-        intent.phase = 'submitting';
-        loadingShown = true; cyLoading.show('正在放行');
-        req('/api/club/lead/unlock-chapter', 'POST', { activityId: context.activityId }).then((r) => {
-          finishLoading();
-          if (r.httpFail) {
-            intent.phase = 'checking';
-            if (current()) { this.diegetic('章节放行结果待确认，正在读取队伍进度'); audit(); }
-            return;
-          }
-          release();
-          if (!current()) return;
+    const current = () => this._leadUnlockIntent === intent && this._isLeadOperationContextCurrent(context, true);
+    const submit = () => {
+      if (!current()) return;
+      intent.inFlight = true;
+      this._leadUnlockInFlight = true;
+      this.setData({ leadUnlockChecking: true });
+      const input = Object.assign({}, body, { commandId: body.routeActionId });
+      const request = body.receiptOnly
+        ? req('/api/club/lead/unlock-chapter-receipt', 'GET', { activityId: body.activityId, commandId: body.routeActionId }, undefined, true)
+        : req('/api/club/lead/unlock-chapter', 'POST', input);
+      request.then(response => {
+        const validReceipt = Number(response.code) === 200 && response.data
+          && response.data.commandId === body.routeActionId
+          && Number(response.data.expectedChapterId) === Number(body.expectedChapterId)
+          && Number(response.data.targetChapterId) === Number(body.targetChapterId);
+        const unknown = response.netFail || response.httpFail || Number(response.code) === 520 || Number(response.code) === 200 && !validReceipt;
+        // 原请求的未知事实属于原账号/场次，即使页面已换场也必须保留；不写当前页状态。
+        if (unknown && typeof body._markIntentUnknown === 'function') body._markIntentUnknown();
+        if (!current()) return;
+        if (unknown) {
+          // 队伍当前章发生变化不能证明“本命令”执行过；只保留原身份查回执。
+          body.receiptOnly = true;
+          this._leadUnlockUnknown = true;
+          if (typeof body._markIntentUnknown === 'function') body._markIntentUnknown();
+          this.diegetic('章节放行结果待确认，再点放行只查询原命令');
+          return;
+        }
+        this._leadUnlockUnknown = false;
+        if (response.intentNotExecuted) {
+          cyModal.show({ title: '原操作未执行', content: '期望章节已变化。确认结束原意图，再检查当前章节后操作？', confirmText: '确认',
+            success: result => { if (result.confirm && current()) store.resolve('unlock', context.activityId); } });
+        } else if (Number(response.code) === 200 || Number(response.code) !== 409 && !body.receiptOnly) store.resolve('unlock', context.activityId);
+        this.diegetic(response.msg || '请核对本场章节');
+        this.loadTeamProgress();
+      }).catch(() => { if (current()) this.diegetic('章节放行结果待确认，再点放行只查询原命令'); })
+        .finally(() => {
+          intent.inFlight = false;
+          if (this._leadUnlockIntent !== intent) return;
           this._leadUnlockInFlight = false;
-          const ok = r.code == 200 || r.code == '200';
-          this.diegetic(r.msg || (ok ? '已放行' : '章节放行失败，请重试'));
-          if (ok) this.loadTeamProgress();
-        }).catch(() => {
-          finishLoading(); release();
-          if (!current()) return;
-          this._leadUnlockInFlight = false;
-          this.diegetic('章节放行没有送达，请检查网络后重试');
+          if (current()) this.setData({ leadUnlockChecking: !!this._leadUnlockUnknown });
         });
-      },
-      fail: () => {
-        if (modalSettled) return;
-        modalSettled = true; release();
-        if (current()) { this._leadUnlockInFlight = false; this.diegetic('解锁确认未打开，请重试'); }
-      }
-    });
+    };
+    if (body.receiptOnly) { submit(); return; }
+    if (!body.targetChapterId) { store.resolve('unlock', context.activityId); this.diegetic('本场没有可放行的下一章'); return; }
+    cyModal.show({ title: '解锁下一章节', content: '确认放行选定的下一章节？', confirmText: '确认解锁',
+      success: result => { if (!current()) return; if (result.confirm) submit(); else store.resolve('unlock', context.activityId); } });
   },
   leadBroadcast() {
     if (!this._isPlayAccountCurrent()) return;
@@ -6644,14 +6675,22 @@ Page({
     const regId = this.data.regId;
     if (!regId) { this._explainMissingEntryQr(); return; }
     const owner = this._boundPlayOwner(), sessionKey = this._sessionKey();
+    const login = captureLogin(app, wx);
+    if (!loginCurrent(app, wx, login)) return;
     const sequence = this._ticketIssueSequence = (this._ticketIssueSequence || 0) + 1;
-    const current = () => this._isPlayAccountCurrent() && owner === this._playOwner
+    const current = () => loginCurrent(app, wx, login) && this._isPlayAccountCurrent() && owner === this._playOwner
       && !this.data.isPreview && !this.data.isMock && this.data.regId === regId
       && sequence === this._ticketIssueSequence && sessionKey === this._sessionKey();
     this.setData({ ticket: { show: this.data.ticket.show, url: '', code: '', loading: true, expiresAt: 0 } });
     req('/api/verify/dyncode/issue', 'POST', { registrationId: regId }).then((res) => {
       if (!current()) return;
       if (String(res.code) === '200' && res.data) {
+        if (seatChoice(res.data, regId)) {
+          // 旧优惠券出码调用也走同一明确选席组件；不能把整单默认成第一席。
+          that.setData({ 'ticket.loading': false, 'ticket.url': '', 'ticket.code': '' });
+          that.openScene('qr-ticket', { registrationId: regId });
+          return;
+        }
         that.setData({ 'ticket.url': res.data.qrcodeUrl || '', 'ticket.code': res.data.code || '', 'ticket.loading': false, 'ticket.expiresAt': res.data.expiresAt || 0 });
       } else {
         that.setData({ 'ticket.loading': false });
@@ -7129,12 +7168,26 @@ Page({
     /* ★ 业务身份 + 题目版本隔离:照片是异步上传的,回来时必须仍是**同一 session、同一版本**
        (页面 kit 与 advanced-game 权威 state 都要对得上)。否则玩家在同一页面切到别的节点/会话后,
        旧回包会经 game.action 把上一题的照片提交到下一题/下一个会话。 */
-    const intent = { owner: this._boundPlayOwner(), sessionKey: this._sessionKey(),
+    const nodeIdentity = () => [((game.data || {}).node || {}).nodeId, ((game.data || {}).state || {}).nodeId,
+      (this._kit() || {}).nodeId, ((this.data.advancedPlay || {}).node || {}).nodeId]
+      .map(id => id == null ? '' : String(id)).join(':');
+    const question = { sessionId: state.sessionId, version: state.version, nodeId: nodeIdentity() };
+    const intent = { owner: this._boundPlayOwner(), login: this._capturePlayLoginContext(), sessionKey: this._sessionKey(),
       epoch: this._playLoadEpoch, active: this.data.advancedPlay, game, settled: false, loading: false };
     this._kitPhotoIntent = intent;
-    const contextCurrent = () => this._isPlayAccountCurrent() && intent.owner === this._playOwner
-      && intent.sessionKey === this._sessionKey() && intent.epoch === this._playLoadEpoch
-      && this.data.advancedPlay === intent.active && this._advancedGameComponent() === game;
+    const contextCurrent = () => {
+      const login = this._capturePlayLoginContext();
+      return this._isPlayAccountCurrent() && intent.owner === this._playOwner
+        && intent.login.authorization === login.authorization && intent.login.generation === login.generation
+        && intent.sessionKey === this._sessionKey() && intent.epoch === this._playLoadEpoch
+        && this.data.advancedPlay === intent.active && this._advancedGameComponent() === game;
+    };
+    const sameQuestion = () => {
+      const currentState = (game.data || {}).state, currentKit = this._kit();
+      return currentState && currentState.sessionId === question.sessionId
+        && sameVersion(currentState.version, question.version) && currentKit.sessionId === question.sessionId
+        && sameVersion(currentKit.version, question.version) && nodeIdentity() === question.nodeId;
+    };
     const settle = () => {
       if (intent.settled) return false;
       intent.settled = true;
@@ -7154,21 +7207,19 @@ Page({
       // 组件拍照回调带了真实 size 就交给共享入口按生产 10MB 预检:超限不发起 wxUploadFile,
       // 直接给「压缩/换文件」可操作文案;size 未知(旧组件/拿不到)按 undefined 放行,由服务端拦截。
       fileSizes: [detail && detail.size],
+      mapResult: option.name === 'SUBMIT_PHOTO_CHECK' ? data => ({ url: data.url,
+        photoReference: (typeof data.assetId !== 'number' || Number.isSafeInteger(data.assetId))
+          && /^[1-9][0-9]{0,18}$/.test(String(data.assetId || '')) ? 'media-asset:' + data.assetId : '' }) : undefined,
       onDone: (r) => {
         const owned = this._kitPhotoIntent === intent && contextCurrent();
         if (!settle()) return;
         if (operation.isAborted()) return;
         operation.finish();
         if (!owned) return;
-        const url = r && r.ok && r.results && r.results[0];
+        const uploaded = r && r.ok && r.results && r.results[0];
+        const url = option.name === 'SUBMIT_PHOTO_CHECK' ? uploaded && uploaded.photoReference : uploaded;
         const currentGame = this.selectComponent('#advancedGame');
-        const currentState = currentGame && currentGame.data && currentGame.data.state;
-        const currentKit = this._kit();
-        const sameQuestion = currentState && currentState.sessionId === state.sessionId
-          && sameVersion(currentState.version, state.version)
-          && currentKit.sessionId === state.sessionId
-          && sameVersion(currentKit.version, state.version);
-        if (!sameQuestion) {
+        if (!sameQuestion()) {
           fail('题目已变化，上一张照片未提交');
           return;
         }
@@ -7190,21 +7241,15 @@ Page({
       },
     }));
     if (option.name === 'SUBMIT_PHOTO_CHECK') {
-      app.requestSeparateConsent('photo', () => !operation.isAborted()).then(() => {
-        const currentGame = this.selectComponent('#advancedGame');
-        const currentState = currentGame && currentGame.data && currentGame.data.state;
-        const currentKit = this._kit();
-        if (operation.isAborted()) return;
-        if (!currentState || currentState.sessionId !== state.sessionId || !sameVersion(currentState.version, state.version)
-            || currentKit.sessionId !== state.sessionId || !sameVersion(currentKit.version, state.version)) {
-          settle(); operation.finish();
-          fail('题目已变化，照片未发送'); return;
-        }
+      const consentCurrent = () => !operation.isAborted() && this._kitPhotoIntent === intent && contextCurrent() && sameQuestion();
+      app.requestSeparateConsent('photo', consentCurrent).then(() => {
+        if (!consentCurrent()) { settle(); operation.finish(); return; }
         upload();
       }).catch(error => {
+        const owned = consentCurrent();
         settle();
         if (operation.isAborted()) return;
-        operation.finish(); fail(error.message);
+        operation.finish(); if (owned) fail(error.message);
       });
     } else upload();
   },

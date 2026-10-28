@@ -1,0 +1,32 @@
+{
+  "class": "com.chengyinhub.business.service.impl.TopicContentCopyMySqlIT",
+  "expected_tests": 25,
+  "gates": {},
+  "case_names": [
+    "completeCopyTypeThreeCommitsWholeContentGraphAndMemberSlot",
+    "sameOwnerKeepsCompletionRuleAndSharesOnlyUnreferencedTemplate",
+    "officialCopyUsesPlatformSlotAndDoesNotInferSourceFromMemberId",
+    "officialMemberParameterRejectsBeforeAnyWrite",
+    "nonPlatformOfficialSourceRejectsBeforeAnyWrite",
+    "missingSourceRejectsWithoutContentWrites",
+    "deletedSourceRejectsWithoutContentWrites",
+    "zeroTopicInsertRejectsBeforeChildren",
+    "secondChapterFailureRollsBackTopicSlotAndBothChapters",
+    "nodeFailureRollsBackClonedTemplateAndAllEarlierRows",
+    "npcFailureRollsBackNodeTemplateAndContentSlot",
+    "runtimePatchFailureRollsBackCompleteChildren",
+    "graphPatchFailureRollsBackChildrenAndRuntimePatch",
+    "blockPatchFailureRollsBackCopiedGraph",
+    "storyPatchFailureRollsBackEveryContentTable",
+    "officialMissingPersistedSlotRollsBackInsertedTopic",
+    "memberSlotZeroRowsRemainsAnExplicitUnfixedLegacyRisk",
+    "collaboratorZeroRowsRemainsAnExplicitUnfixedLegacyRisk",
+    "defaultBasicCopyKeepsExistingDefaultsWithoutInventingContentSlot",
+    "malformedCopyTypeKeepsExistingBasicConversion",
+    "callerRollbackAfterFullCopyRollsBackWholeGraph",
+    "transferOriginalOfflineFailureRollsBackRealCopyAndClubBinding",
+    "transferSquareFailureRollsBackRealCopyAndOriginalVisibility",
+    "transferSuccessKeepsOuterAlgorithmAndDoesNotCopyCollaborators",
+    "repeatedCopyCreatesIndependentGraphsRatherThanInventedIdempotency"
+  ]
+}

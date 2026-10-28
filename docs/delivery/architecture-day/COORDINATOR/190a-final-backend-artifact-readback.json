@@ -1,0 +1,91 @@
+{
+  "source_sha": "190a97098e9ba8c1db3d0439e19adf28c9848468",
+  "source_tree": "54e5f9488ae6ec6fc5f9040912bb0f1ea9a6966b",
+  "run": 40137286127,
+  "backend_job": 121001506266,
+  "jar_sha256": "41d3bcaf1a611f5eefa7417106016f253186d747cb97e046ce83630ceeb52085",
+  "jar_bytes": 118965054,
+  "real_artifact_hash_verified": true,
+  "evidence_file_hashes_verified": 292,
+  "original_metadata_sha256": "8677e1b9859e41f9e6ad36afbaf3939e74443589d4a60866ed2240f90f9cd129",
+  "original_private_mapper_report_sha256": "c3a5b814900a038b5cc4b5a465fc59d3c4626387457e3a513bd0c427103ed60d",
+  "original_control_report_sha256": "e2af0da150b3acb491090617065c6f8302d2461bc299abbf447f21900d1bb4a0",
+  "compiled_private_mapper_verdict": "PASS_SCOPED_COMPILED_REFERENCES",
+  "compiled_findings": [],
+  "coverage": "THREE_DECLARED_TARGET_TYPES_ONLY",
+  "technical_direction_coverage": "DECLARED_TECHNICAL_OWNER_TYPES_ONLY",
+  "full_application_startup": "PASS_REAL_PACKAGED_HEALTH_MYSQL_REDIS_CACHE_HTTP401",
+  "atomic_python": {
+    "status": "PASS",
+    "executed": 88,
+    "failures": 0,
+    "errors": 0
+  },
+  "negative_restored_verdict": "EXPECTED_RED_THEN_RESTORED",
+  "controls": {
+    "sdk-router": {
+      "negative": {
+        "scope_verdict": "BLOCKED",
+        "result_sha256": "3817329986e57598b78fd24741b6a20eb602f11a6d953954825f2747fd7dc97a",
+        "expected_raw_reference": {
+          "source_class": "com.chengyinhub.business.service.impl.WechatPaymentSdkGateway",
+          "source_owner": "chengyinhub-system",
+          "source_sha256": "040ccdccf688c2d2fb593a35f15b9510caf3a4145253ef7b79ab106b379e9b23",
+          "target_class": "com.chengyinhub.business.service.impl.WechatPaymentCallbackRouter",
+          "target_owner": "chengyinhub-system",
+          "target_sha256": "7b8d941f36a9cce761596579d4e885c46ed23199f5b7091049b8bd178dddc4b4"
+        }
+      },
+      "restored": {
+        "scope_verdict": "PASS_DECLARED_OWNER_DIRECTIONS",
+        "result_sha256": "8d0880c7d0e414f4ab60dad917bae92f47e8c6236b96fb400e254e9fcc407c14",
+        "expected_raw_reference": null
+      }
+    },
+    "dto-facade": {
+      "negative": {
+        "scope_verdict": "BLOCKED",
+        "result_sha256": "59bfc1b354f35fbeeb3e85931724315f6aca1c023a940b809d5b0d5892a59148",
+        "expected_raw_reference": {
+          "source_class": "com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent",
+          "source_owner": "chengyinhub-system",
+          "source_sha256": "3f5da4a3a497648dfc0c0ba3f3e4aebe8d56fa67733ea4b050de5b3bed512715",
+          "target_class": "com.chengyinhub.business.service.impl.WechatPayServiceImpl",
+          "target_owner": "chengyinhub-system",
+          "target_sha256": "0c97b04bdf8f2fdc02a9c5631f20ec51d976c9314c1d7b109770e2d32bfb82b1"
+        }
+      },
+      "restored": {
+        "scope_verdict": "PASS_DECLARED_OWNER_DIRECTIONS",
+        "result_sha256": "85db4f145389157829ee36a0e9a9ffa3457b69b31cb25cc762cbed76a5a8f01d",
+        "expected_raw_reference": null
+      }
+    },
+    "common-framework": {
+      "negative": {
+        "scope_verdict": "BLOCKED",
+        "result_sha256": "14614964a18828c3e5f5e063448260895e7440c24de795281c3ba2edb8853dd4",
+        "expected_raw_reference": {
+          "source_class": "com.chengyinhub.common.utils.LogCorrelation",
+          "source_owner": "chengyinhub-common",
+          "source_sha256": "7b55ee7fbd4174da8c27ecadadf3bec90e306c1da8945be2779d3ab8b24de6aa",
+          "target_class": "com.chengyinhub.framework.web.trace.RequestIdFilter",
+          "target_owner": "chengyinhub-framework",
+          "target_sha256": "9cc985443efbae2251d13cfafe74df8b3a67c0e0ab551cc5f0ce1617794f9541"
+        }
+      },
+      "restored": {
+        "scope_verdict": "PASS_DECLARED_OWNER_DIRECTIONS",
+        "result_sha256": "d2b92b2e68182e063c92ff9749ebc64e85eb2624fd4e057e22f1fa9883e0eb66",
+        "expected_raw_reference": null
+      }
+    }
+  },
+  "verifier_sha": "d58288edc65e4c57bc98ef61253fb084f38642f1",
+  "limitations": [
+    "class-reference scoped proof only, not method authorization or full graph SCC acceptance",
+    "Not production deployment or real external provider acceptance"
+  ],
+  "standard_workflow": "FAIL solely stale original Mini TTL assertion plus dependent aggregate; source-only test repair C83 applied for next candidate",
+  "all_complete": false
+}

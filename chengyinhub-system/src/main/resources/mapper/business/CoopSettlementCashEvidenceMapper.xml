@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.CoopSettlementCashEvidenceMapper">
+    <resultMap id="Close" type="com.chengyinhub.business.domain.CoopSettlementCashClose">
+        <result property="id" column="id"/>
+        <result property="topicId" column="topic_id"/>
+        <result property="commercialContextType" column="commercial_context_type"/>
+        <result property="commercialContextId" column="commercial_context_id"/>
+        <result property="closeKind" column="close_kind"/>
+        <result property="initiatorMemberId" column="initiator_member_id"/>
+        <result property="originalSalesBasis" column="original_sales_basis"/>
+        <result property="originalContributionCount" column="original_contribution_count"/>
+        <result property="platformRate" column="platform_rate"/>
+        <result property="guaranteeBaseRate" column="guarantee_base_rate"/>
+        <result property="guaranteeStepRate" column="guarantee_step_rate"/>
+        <result property="guaranteeMaxMerchant" column="guarantee_max_merchant"/>
+        <result property="originalVerifiedMerchantCount" column="original_verified_merchant_count"/>
+        <result property="originCalculationVersion" column="origin_calculation_version"/>
+        <result property="contractSnapshot" column="contract_snapshot"/>
+        <result property="sourceFingerprint" column="source_fingerprint"/>
+        <result property="closedAt" column="closed_at"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+    <insert id="insertClose" useGeneratedKeys="true" keyProperty="id">
+        insert into coop_settlement_cash_close (topic_id, commercial_context_type, commercial_context_id, close_kind, initiator_member_id, original_sales_basis, original_contribution_count, platform_rate, guarantee_base_rate, guarantee_step_rate, guarantee_max_merchant, original_verified_merchant_count, origin_calculation_version, contract_snapshot, source_fingerprint, closed_at)
+        select #{topicId}, #{commercialContextType}, #{commercialContextId}, #{closeKind}, #{initiatorMemberId}, #{originalSalesBasis}, #{originalContributionCount}, #{platformRate}, #{guaranteeBaseRate}, #{guaranteeStepRate}, #{guaranteeMaxMerchant}, #{originalVerifiedMerchantCount}, #{originCalculationVersion}, #{contractSnapshot}, #{sourceFingerprint}, #{closedAt}
+        from cms_topic r where r.id=#{topicId} and (r.member_id &lt;=> #{initiatorMemberId})
+          and (r.fee_platform_rate &lt;=> #{platformRate}) and (r.fee_guarantee_base_rate &lt;=> #{guaranteeBaseRate})
+          and (r.fee_guarantee_step_rate &lt;=> #{guaranteeStepRate}) and (r.fee_guarantee_max_merchant &lt;=> #{guaranteeMaxMerchant})
+    </insert>
+    <select id="selectCloseForUpdate" resultMap="Close" useCache="false" flushCache="true">
+        select id, topic_id, commercial_context_type, commercial_context_id, close_kind, initiator_member_id, original_sales_basis, original_contribution_count, platform_rate, guarantee_base_rate, guarantee_step_rate, guarantee_max_merchant, original_verified_merchant_count, origin_calculation_version, contract_snapshot, source_fingerprint, closed_at, created_at from coop_settlement_cash_close
+        where topic_id=#{topicId} for update
+    </select>
+    <resultMap id="Contribution" type="com.chengyinhub.business.domain.CoopSettlementCashContribution">
+        <result property="id" column="id"/>
+        <result property="cashCloseId" column="cash_close_id"/>
+        <result property="registrationId" column="registration_id"/>
+        <result property="payerRegistrationId" column="payer_registration_id"/>
+        <result property="parentOrderNo" column="parent_order_no"/>
+        <result property="registrationNo" column="registration_no"/>
+        <result property="payerOrderNo" column="payer_order_no"/>
+        <result property="ownerType" column="owner_type"/>
+        <result property="ownerId" column="owner_id"/>
+        <result property="sourceTopicId" column="source_topic_id"/>
+        <result property="snapshotPaymentStatus" column="snapshot_payment_status"/>
+        <result property="snapshotRegistrationStatus" column="snapshot_registration_status"/>
+        <result property="snapshotVerificationStatus" column="snapshot_verification_status"/>
+        <result property="snapshotPayableAmount" column="snapshot_payable_amount"/>
+        <result property="salesBasisAmount" column="sales_basis_amount"/>
+        <result property="registrationSnapshot" column="registration_snapshot"/>
+        <result property="sourceFingerprint" column="source_fingerprint"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+    <insert id="insertContribution" useGeneratedKeys="true" keyProperty="id">
+        insert into coop_settlement_cash_contribution (cash_close_id, registration_id, payer_registration_id, parent_order_no, registration_no, payer_order_no, owner_type, owner_id, source_topic_id, snapshot_payment_status, snapshot_registration_status, snapshot_verification_status, snapshot_payable_amount, sales_basis_amount, registration_snapshot, source_fingerprint)
+        select #{cashCloseId}, #{registrationId}, #{payerRegistrationId}, #{parentOrderNo}, #{registrationNo}, #{payerOrderNo}, #{ownerType}, #{ownerId}, #{sourceTopicId}, #{snapshotPaymentStatus}, #{snapshotRegistrationStatus}, #{snapshotVerificationStatus}, #{snapshotPayableAmount}, #{salesBasisAmount}, #{registrationSnapshot}, #{sourceFingerprint}
+        from cms_registration r join cms_registration payer on payer.id=#{payerRegistrationId}
+        where r.id=#{registrationId} and r.owner_type=#{ownerType} and r.owner_id=#{ownerId}
+          and binary r.registration_no=binary #{registrationNo}
+          and payer.owner_type=r.owner_type and payer.owner_id=r.owner_id and payer.member_id=r.member_id
+          and binary payer.registration_no=binary #{payerOrderNo}
+          and (binary r.parent_order_no &lt;=> binary #{parentOrderNo})
+          and (binary payer.parent_order_no &lt;=> binary r.parent_order_no)
+          and ((r.parent_order_no is null and payer.id=r.id)
+            or (r.parent_order_no is not null and r.parent_order_no regexp '[^[:space:]]'
+              and payer.payable_amount is not null and payer.payable_amount&gt;0
+              and not exists (
+                select 1 from cms_registration sibling
+                where binary sibling.parent_order_no=binary r.parent_order_no
+                  and (not (sibling.owner_type &lt;=> r.owner_type)
+                    or not (sibling.owner_id &lt;=> r.owner_id) or not (sibling.member_id &lt;=> r.member_id)
+                    or sibling.payable_amount is null or sibling.payable_amount&lt;0
+                    or (sibling.id&lt;&gt;payer.id and sibling.payable_amount&lt;&gt;0)))))
+          and (r.payment_status &lt;=> #{snapshotPaymentStatus})
+          and (r.registration_status &lt;=> #{snapshotRegistrationStatus})
+          and (r.verification_status &lt;=> #{snapshotVerificationStatus})
+          and (r.payable_amount &lt;=> #{snapshotPayableAmount})
+          and #{salesBasisAmount}=case when r.payment_status=2 and r.registration_status=2 then r.payable_amount else 0 end
+    </insert>
+    <select id="selectContributionForUpdate" resultMap="Contribution" useCache="false" flushCache="true">
+        select id, cash_close_id, registration_id, payer_registration_id, parent_order_no, registration_no, payer_order_no, owner_type, owner_id, source_topic_id, snapshot_payment_status, snapshot_registration_status, snapshot_verification_status, snapshot_payable_amount, sales_basis_amount, registration_snapshot, source_fingerprint, created_at from coop_settlement_cash_contribution
+        where registration_id=#{registrationId} for update
+    </select>
+    <resultMap id="Event" type="com.chengyinhub.business.domain.CoopSettlementCashEvent">
+        <result property="id" column="id"/>
+        <result property="cashCloseId" column="cash_close_id"/>
+        <result property="eventType" column="event_type"/>
+        <result property="sourceId" column="source_id"/>
+        <result property="sourceRegistrationId" column="source_registration_id"/>
+        <result property="sourceAmount" column="source_amount"/>
+        <result property="sourceSnapshot" column="source_snapshot"/>
+        <result property="sourceFingerprint" column="source_fingerprint"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+    <insert id="insertEvent" useGeneratedKeys="true" keyProperty="id">
+        insert into coop_settlement_cash_event (cash_close_id, event_type, source_id, source_registration_id, source_amount, source_snapshot, source_fingerprint)
+        select #{cashCloseId}, #{eventType}, #{sourceId}, #{sourceRegistrationId}, #{sourceAmount}, #{sourceSnapshot}, #{sourceFingerprint}
+        from refund_application r where r.id=#{sourceId} and binary r.source_type=binary 'registration'
+          and r.source_id=#{sourceRegistrationId} and r.status=1 and r.del_flag=0
+          and r.refund_amount=#{sourceAmount}
+    </insert>
+    <select id="selectEventForUpdate" resultMap="Event" useCache="false" flushCache="true">
+        select id, cash_close_id, event_type, source_id, source_registration_id, source_amount, source_snapshot, source_fingerprint, created_at from coop_settlement_cash_event
+        where cash_close_id=#{cashCloseId} and event_type=#{eventType} and source_id=#{sourceId} for update
+    </select>
+</mapper>

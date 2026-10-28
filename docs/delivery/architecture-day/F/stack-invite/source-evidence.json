@@ -1,0 +1,9 @@
+{
+  "kind": "SOURCE_DIFF_ONLY_NOT_JAVA",
+  "source": "31ec329768ecc2b23e09466bf46754d12fe569d6",
+  "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/ChapterApplicationInviteNotice.java",
+  "sha256": "4cdfe649b13e904ad9017df3afa0226ee69489171291893a520484006d0a62ee",
+  "body": "package com.chengyinhub.business.service.support;\n\nimport org.springframework.stereotype.Service;\nimport org.springframework.transaction.annotation.Propagation;\nimport org.springframework.transaction.annotation.Transactional;\nimport org.springframework.transaction.support.TransactionSynchronizationManager;\n\n/** Only a fresh invitation INSERT or a successful original reinvite CAS submits this event. */\n@Service\npublic class ChapterApplicationInviteNotice {\n    private final CommittedOfficialNoticeService notices;\n    public ChapterApplicationInviteNotice(CommittedOfficialNoticeService notices) { this.notices=notices; }\n\n    @Transactional(propagation=Propagation.MANDATORY, rollbackFor=Exception.class)\n    public Long submit(Long topicId, Long applicationId, Long round, Long recipient) {\n        if (!TransactionSynchronizationManager.isActualTransactionActive())\n            throw new IllegalStateException(\"邀请通知必须与原申请事务一起登记\");\n        if (topicId==null || topicId<=0 || applicationId==null || applicationId<=0 || round==null || round<=0)\n            throw new IllegalStateException(\"缺少可核实的原邀请轮次\");\n        // Domain scope + original application + persisted attempt + event; never a clock or a random request key.\n        String key=\"chapter-app:\"+topicId+\":\"+applicationId+\":\"+round+\":invite\";\n        return notices.enqueueOfficial(key,recipient,\"章节承接邀请\",\"请在主题承接进度中接受或拒绝邀请\");\n    }\n}\n",
+  "java": "NOT_RUN",
+  "expected_junit_invocations": 33
+}

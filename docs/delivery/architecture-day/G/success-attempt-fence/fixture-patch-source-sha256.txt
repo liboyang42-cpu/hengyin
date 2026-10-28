@@ -1,0 +1,3 @@
+be1ad7b858a260d11e263933d296bf5191936d4cc0d791e6232e62ca036170ff  chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatVerifiedFactTestSupport.java
+27bf2668f917dc7f15245dcb15d7aba0daefffb733a728395546080ddb3cb4c0  chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatVerifiedFactFactoryTest.java
+6bca6dc5f50736af41eb31d8fc546d45f390ce1ca0096b7d24b46cf6676fa340  chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/SignupNoticeAfterCommitPersistenceMySqlIT.java

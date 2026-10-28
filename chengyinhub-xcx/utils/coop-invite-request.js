@@ -5,13 +5,17 @@ const responseCode = value => typeof value === 'number' && Number.isInteger(valu
   || typeof value === 'string' && /^[1-5][0-9]{2}$/.test(value) ? Number(value) : 0;
 const exactId = value => typeof value === 'string' && parseInviteId(value) === value;
 function context(payload) {
-  return { inviteType: Number(payload.inviteType), topicId: parseInviteId(payload.topicId),
+  const result = { inviteType: Number(payload.inviteType), topicId: parseInviteId(payload.topicId),
     toType: payload.toType, toId: parseInviteId(payload.toId),
     scope: Number(payload.inviteType) === 0 && payload.scope === 'MERCHANT' ? 'MERCHANT' : '' };
+  if (payload.supplyStationId != null) result.supplyStationId = parseInviteId(payload.supplyStationId);
+  return result;
 }
 function writeKey(owner, payload) {
   const c = context(payload);
-  return owner + ':coop-invite:' + JSON.stringify([c.inviteType, c.scope, c.topicId, c.toId]);
+  const fields = [c.inviteType, c.scope, c.topicId, c.toId];
+  if (Object.prototype.hasOwnProperty.call(c, 'supplyStationId')) fields.push(c.supplyStationId);
+  return owner + ':coop-invite:' + JSON.stringify(fields);
 }
 function receipt(value) {
   if (!value || typeof value !== 'object' || !validRequestId(value.requestId)) return null;
@@ -21,8 +25,11 @@ function receipt(value) {
   if (value.state !== 'CREATED' || !exactId(value.inviteId) || !exactId(value.topicId) || !exactId(value.toId)
       || ![0, 1].includes(value.inviteType) || value.toType !== (value.inviteType === 1 ? 'club' : 'merchant')
       || !['', 'MERCHANT'].includes(value.scope) || value.inviteType === 1 && value.scope !== '') return null;
-  return { state: value.state, requestId: value.requestId, inviteId: value.inviteId,
+  if (value.supplyStationId != null && (!exactId(value.supplyStationId) || value.inviteType !== 0)) return null;
+  const result = { state: value.state, requestId: value.requestId, inviteId: value.inviteId,
     inviteType: value.inviteType, topicId: value.topicId, toType: value.toType, toId: value.toId, scope: value.scope };
+  if (value.supplyStationId != null) result.supplyStationId = value.supplyStationId;
+  return result;
 }
 function matches(row, payload) {
   const c = context(payload);

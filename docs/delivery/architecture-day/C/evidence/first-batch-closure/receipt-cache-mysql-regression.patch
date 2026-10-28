@@ -1,0 +1,45 @@
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/it/ClubLeadChapterIntentMySqlIT.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/it/ClubLeadChapterIntentMySqlIT.java
+@@ -121,4 +121,42 @@
+     }
+     private long chapter() { return jdbc.queryForObject("SELECT current_chapter_id FROM club_lead_state WHERE activity_id=100", Long.class); }
+     private int receipts() { return jdbc.queryForObject("SELECT COUNT(*) FROM game_command_receipt WHERE activity_id=100", Integer.class); }
++
++// H-C-01: real Mapper first-level cache must not turn a post-lock reread into a cached miss.
++    @Test void receiptReadAfterWaitingForAggregateLockMustSeeCommittedWinner() throws Exception {
++        String request = \"lead:\" + java.util.HexFormat.of().formatHex(
++                java.security.MessageDigest.getInstance(\"SHA-256\").digest(\"cache-winner\".getBytes(java.nio.charset.StandardCharsets.UTF_8))).substring(0,48);
++        CountDownLatch aggregateHeld = new CountDownLatch(1), cachedMiss = new CountDownLatch(1);
++        ExecutorService pool = Executors.newFixedThreadPool(2);
++        try {
++            Future<?> writer = pool.submit(() -> {
++                TransactionTemplate tx = new TransactionTemplate(transactions);
++                tx.setIsolationLevel(org.springframework.transaction.TransactionDefinition.ISOLATION_READ_COMMITTED);
++                tx.executeWithoutResult(status -> {
++                    sql.getMapper(ClubLeadMapper.class).lockClubOwner(5L);
++                    aggregateHeld.countDown();
++                    try { assertTrue(cachedMiss.await(10, TimeUnit.SECONDS)); }
++                    catch (InterruptedException e) { Thread.currentThread().interrupt(); throw new IllegalStateException(e); }
++                    assertEquals(200, controller.unlockChapter(\"100\", \"cache-winner\", 10L, 20L).get(\"code\"));
++                });
++            });
++            assertTrue(aggregateHeld.await(10, TimeUnit.SECONDS));
++            Future<?> reader = pool.submit(() -> {
++                TransactionTemplate tx = new TransactionTemplate(transactions);
++                tx.setIsolationLevel(org.springframework.transaction.TransactionDefinition.ISOLATION_READ_COMMITTED);
++                tx.executeWithoutResult(status -> {
++                    GameSessionRuntimeMapper mapper = sql.getMapper(GameSessionRuntimeMapper.class);
++                    assertNull(mapper.selectReceiptForUpdate(100L,9L,request));
++                    cachedMiss.countDown();
++                    sql.getMapper(ClubLeadMapper.class).lockClubOwner(5L); // waits for real winner commit
++                    GameCommandReceipt committed = mapper.selectReceiptForUpdate(100L,9L,request);
++                    assertNotNull(committed, \"same Spring/MyBatis session must reread DB after the wait\");
++                    assertEquals(\"APPLIED\",committed.getOutcome());
++                });
++            });
++            writer.get(15,TimeUnit.SECONDS); reader.get(15,TimeUnit.SECONDS);
++            assertEquals(20L,chapter()); assertEquals(1,receipts());
++        } finally { cachedMiss.countDown(); pool.shutdownNow(); }
++    }
++
+ }

@@ -69,6 +69,7 @@ class NpcChatServiceTest {
     private RoamMapper roamMapper;
     private ScheduledExecutorService scheduledExecutorService;
     private ScheduledFuture<?> leaseHeartbeat;
+    private com.chengyinhub.business.mapper.NpcAsrIntentMapper asrIntents;
 
     @BeforeEach
     void setUp() {
@@ -107,6 +108,8 @@ class NpcChatServiceTest {
                 mock(org.springframework.transaction.PlatformTransactionManager.class);
         when(transactions.getTransaction(any())).thenAnswer(inv -> new org.springframework.transaction.support.SimpleTransactionStatus());
         NpcChatWriteService writes = new NpcChatWriteService(npcChatRequestMapper, npcChatLogMapper, transactions);
+        asrIntents=mock(com.chengyinhub.business.mapper.NpcAsrIntentMapper.class);
+        ReflectionTestUtils.setField(writes,"asrIntents",asrIntents);
         when(npcChatRequestMapper.renewLease(anyLong(), anyString(), anyString(), any(Date.class))).thenReturn(1);
         doReturn(leaseHeartbeat).when(scheduledExecutorService).scheduleAtFixedRate(any(Runnable.class),
                 eq(5000L), eq(5000L), eq(TimeUnit.MILLISECONDS));
@@ -536,6 +539,44 @@ class NpcChatServiceTest {
         NpcChatResp result=service.storedShopRequest(stored.getRequestId(),USER_ONE,21L);
         assertEquals("UNKNOWN",result.getSafetyDecision());assertEquals("REQUEST_OUTCOME_UNKNOWN",result.getErrorCode());
         assertTrue(!result.isRetryable());verifyNoInteractions(aiGatewayService);
+    }
+
+
+    private com.chengyinhub.business.domain.NpcAsrIntent originalAsr(NpcChatReq request) {
+        NpcProfile profile=new NpcProfile();profile.setId(8L);profile.setPersona("你是店主。");
+        profile.setScopeType(2);profile.setScopeId(42L);
+        when(npcProfileMapper.selectEnabledByScope(2,42L)).thenReturn(Collections.singletonList(profile));
+        var row=new com.chengyinhub.business.domain.NpcAsrIntent();row.setId(1L);row.setUserId(USER_ONE);
+        row.setRequestId(request.getRequestId());row.setNodeId(21L);row.setMerchantMemberId(42L);
+        row.setState("RECEIVED");row.setHandoffStarted(true);row.setTranscript("原转写");
+        row.setQuotaReservation("ai:gen:limit:gen:"+USER_ONE+":20261013|01234567890123456789012345678901");
+        when(asrIntents.selectForUpdate(USER_ONE,request.getRequestId())).thenReturn(row);
+        when(asrIntents.claimTextAdmission(USER_ONE,request.getRequestId(),-21L)).thenAnswer(call -> {
+            if (row.isTextAdmitted()) return 0;row.setTextAdmitted(true);return 1;
+        });
+        return row;
+    }
+    @Test void asrTextWinnerTransfersOriginalQuotaAndRepeatedRequestDoesNotChargeAgain() {
+        NpcChatReq request=req("asr-shared-quota","原转写");var original=originalAsr(request);
+        when(aiGatewayService.generateNpcAsrHandoff(any(com.chengyinhub.business.service.ai.NpcAsrQuotaHandoff.class),anyString(),anyString()))
+                .thenReturn(new AiGatewayResult("original-trace","原回答","deepseek",0));
+        assertEquals("SUCCEEDED",service.chatWithShop(request.getRequestId(),USER_ONE,21L,42L,"本店事实","原转写").getOutcomeStatus());
+        assertEquals("原回答",service.chatWithShop(request.getRequestId(),USER_ONE,21L,42L,"本店事实","原转写").getSafeText());
+        var quota=org.mockito.ArgumentCaptor.forClass(com.chengyinhub.business.service.ai.NpcAsrQuotaHandoff.class);
+        verify(aiGatewayService).generateNpcAsrHandoff(quota.capture(),anyString(),eq("原转写"));
+        assertEquals(original.getQuotaReservation(),quota.getValue().reservation());assertEquals(Long.valueOf(42L),quota.getValue().merchantMemberId());
+        assertEquals(USER_ONE,quota.getValue().memberId());assertEquals(Long.valueOf(21L),quota.getValue().nodeId());
+        verify(aiGatewayService,never()).generate(anyLong(),anyString(),anyString(),anyString(),anyString());
+        verify(asrIntents,times(1)).claimTextAdmission(USER_ONE,request.getRequestId(),-21L);
+    }
+    @Test void asrMerchantOrFrozenTranscriptMismatchCannotAdmitOrReachEitherGatewayPath() {
+        NpcChatReq request=req("asr-frozen-owner","原转写");var original=originalAsr(request);
+        original.setMerchantMemberId(43L);
+        service.chatWithShop(request.getRequestId(),USER_ONE,21L,42L,"本店事实","原转写");
+        original.setMerchantMemberId(42L);
+        service.chatWithShop(request.getRequestId(),USER_ONE,21L,42L,"本店事实","替换内容");
+        verify(asrIntents,never()).claimTextAdmission(anyLong(),anyString(),anyLong());
+        verify(npcChatRequestMapper,never()).insertNpcChatRequest(any());org.mockito.Mockito.verifyNoInteractions(aiGatewayService);
     }
 
 }

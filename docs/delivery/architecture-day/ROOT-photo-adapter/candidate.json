@@ -1,0 +1,65 @@
+{
+  "base": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+  "scope": "quota original reservation planning and prepared vision adapter; durable intent and runtime orchestration supplied separately by E and C",
+  "status": "ISOLATED_CI_CANDIDATE_NOT_ACCEPTED",
+  "verification": "Java not run locally; pending authorized GitHub CI",
+  "known_open": [
+    "No durable PhotoCheckIntentService in this candidate",
+    "Advanced runtime still uses legacy review until C integration",
+    "Provider, production DDL and deployment not executed"
+  ],
+  "files": [
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiGatewayService.java",
+      "sha256": "19e60307f8a209cc70b91f4c4cc24ba0368d0e9aa61c6cc581396dba5ff159c9"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java",
+      "sha256": "57ac8d76590de725edc3f8d8710715449a6ae56db72f017c31af66224eb7588b"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/OpenAiCompatibleLlmClient.java",
+      "sha256": "1cd2d40a37a66bd080e9c941c8997d0fa7948f9183a972ff33b5e827398cac2a"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckVisionService.java",
+      "sha256": "b8591c99ba2d5dc24b695950491755ace3e67be431e14747ae9c981f528cf5b2"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckIntentCommand.java",
+      "sha256": "b617dd4f6461c5cde95f418b96f5409d65cf0fb6aec3cb1c292db216e421e23c"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckIntentState.java",
+      "sha256": "e937b69ab084d9bd655e4549553d303bca50e3aae7b2261e7292d3c98af8490d"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckIntentView.java",
+      "sha256": "b946ff3ea01765798035a43ddd0f7b6841bdaa642b563d443a41320d2d175c44"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/PhotoCheckVisionServiceTest.java",
+      "sha256": "845b3c8311cf1aeb4cc92f528152bcbb8c56a8811fb158ff85c5a6b415f6a7ce"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/Pr69V3PhotoCheckCrossAccountTest.java",
+      "sha256": "265aa86954e83210c7c5059b4cfa5a8658542c4b9553b7056f9b44b2c4df4b41"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/impl/AiQuotaReservationRedisIT.java",
+      "sha256": "60bf44a2fd2310de771562d042ac9f5c5488384c6b59a8152a27f1e854787802"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/impl/PhotoCheckQuotaPoolTest.java",
+      "sha256": "43b91e94ae149d7b963a3d5d9cf3ff270f0749e150f009c98d8a4a0ae1ec95b7"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ObjectCardMintHookTest.java",
+      "sha256": "4c70288465d66407b3acaa30ed443716e1a3ee130887602e664921bce7e59988"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayKitPhotoCheckRuntimeTest.java",
+      "sha256": "c2909d4cb9c45fb15263a260d7d2ee3f69d93f64a4c3737622a4488847cd21ce"
+    }
+  ]
+}

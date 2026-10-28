@@ -42,7 +42,7 @@ class GameplayDraftCopyTest {
         }
         ThemeRuntimeConfig.parse(compiled.toString());
         topic.setThemeRuntimeConfigJson(compiled.toString());
-        assertNotNull(service.freezePublication(topic, null));
+        assertNotNull(freezePublication(service, topic));
         assertEquals(compiled, json.readTree(service.compileTemplateRules(topic)), "再次保存不重复生成或改写幕");
     }
 
@@ -55,7 +55,7 @@ class GameplayDraftCopyTest {
         assertEquals("unmatched", compiled.path("gameplayRuntime").path("acts").get(2).path("actKey").asText());
         ThemeRuntimeConfig.parseDraft(compiled.toString());
         topic.setThemeRuntimeConfigJson(compiled.toString());
-        assertTrue(assertThrows(IllegalArgumentException.class, () -> service.freezePublication(topic, null)).getMessage().contains("不能为空"));
+        assertTrue(assertThrows(IllegalArgumentException.class, () -> freezePublication(service, topic)).getMessage().contains("不能为空"));
     }
 
     @Test void nativeThreeThemeCopiesSaveWithRealNodeMappingsAndRequireChallengeReselectionForPublish() throws Exception {
@@ -84,7 +84,7 @@ class GameplayDraftCopyTest {
             TopicRouteRuntimeServiceImpl service = service(nodes, chapters, templates);
             ThemeStateKeyMapper stateMapper = mock(ThemeStateKeyMapper.class); List<ThemeStateKey> stateKeys = new ArrayList<>();
             // 与 GameplayReskinFixture 的现场线索注册相同；这些状态不属于本次结构复制。
-            for (String key : Arrays.asList("rescue", "load_ok", "end01", "end02", "end03", "end04", "ev01", "ev02", "ev03", "ev04", "ev05")) { ThemeStateKey state = new ThemeStateKey(); state.setStateKey("clue." + key); stateKeys.add(state); }
+            for (String key : Arrays.asList("rescue", "load_ok", "end01", "end02", "end03", "end04", "ev01", "ev02", "ev03", "ev04", "ev05")) { ThemeStateKey state = new ThemeStateKey(); state.setTopicId(77L); state.setStateKey("clue." + key); state.setKeyType("flag"); state.setScope("run"); state.setInitialValue(0); stateKeys.add(state); }
             when(stateMapper.selectByTopicId(77L)).thenReturn(stateKeys); ReflectionTestUtils.setField(service, "themeStateKeyMapper", stateMapper);
             JsonNode compiled = json.readTree(service.compileTemplateRules(topic));
             assertEquals(7, compiled.path("gameplayRuntime").path("acts").size(), form.path("name").asText());
@@ -99,8 +99,9 @@ class GameplayDraftCopyTest {
             assertEquals(operationId, compiled.path("gameplayRuntime").path("plans").get(0).path("operationNodeId").asLong());
             ThemeRuntimeConfig.parseDraft(compiled.toString()); topic.setThemeRuntimeConfigJson(compiled.toString());
             assertEquals(compiled, json.readTree(service.compileTemplateRules(topic)), "首次保存后再次保存不漂移");
-            String error = assertThrows(IllegalArgumentException.class, () -> service.freezePublication(topic, null)).getMessage();
+            String error = assertThrows(IllegalArgumentException.class, () -> freezePublication(service, topic)).getMessage();
             assertTrue(error.contains("完成证明"), error);
+            assertEquals(json.valueToTree(stateKeys), json.valueToTree(stateMapper.selectByTopicIdForUpdate(77L)));
             ObjectNode ready = ((ObjectNode)compiled).deepCopy();
             ObjectNode challenge = (ObjectNode)json.readTree(originalThemes.get(skinIndex++).path("detail").path("themeRuntimeConfig").asText()).path("gameplayRuntime").path("survival").path("zeroChallenge").deepCopy();
             Set<Long> challengeIds = new HashSet<>(Arrays.asList(clients.get("copy_1"), clients.get("copy_2")));
@@ -111,7 +112,9 @@ class GameplayDraftCopyTest {
             while (quests.hasNext()) { JsonNode quest = quests.next(); if (challengeIds.contains(quest.path("nodeId").asLong())) { challengeKeys.add(quest.path("questKey").asText()); quests.remove(); } }
             for (JsonNode act : game.path("acts")) { Iterator<JsonNode> members = act.path("questKeys").iterator(); while (members.hasNext()) if (challengeKeys.contains(members.next().asText())) members.remove(); }
             topic.setThemeRuntimeConfigJson(ready.toString());
-            assertNotNull(service.freezePublication(topic, null), "重选本主题真实挑战及客观题备选后可发布");
+            assertNotNull(freezePublication(service, topic), "重选本主题真实挑战及客观题备选后可发布");
+            assertEquals(json.valueToTree(stateKeys), json.valueToTree(stateMapper.selectByTopicId(77L)));
+            assertEquals(json.valueToTree(stateKeys), json.valueToTree(stateMapper.selectByTopicIdForUpdate(77L)));
         }
     }
 
@@ -166,10 +169,41 @@ class GameplayDraftCopyTest {
     }
     private TopicRouteRuntimeServiceImpl service(List<CmsTopicNode> nodes, List<CmsTopicChapter> chapters, List<CmsMemberTemplate> sourceTemplates) {
         CmsTopicNodeMapper mapper = mock(CmsTopicNodeMapper.class); when(mapper.selectCmsTopicNodeList(any())).thenReturn(nodes);
+        when(mapper.selectByTopicForUpdate(77L)).thenReturn(nodes);
         CmsMemberTemplateMapper templates = mock(CmsMemberTemplateMapper.class); when(templates.selectCmsMemberTemplateByIds(any())).thenReturn(sourceTemplates);
+        when(templates.selectCmsMemberTemplateByIdsForUpdate(any())).thenAnswer(call -> {
+            List<Long> ids=call.getArgument(0);
+            return sourceTemplates.stream().filter(row -> ids.contains(row.getId())).toList();
+        });
         CmsTopicChapterMapper chapterMapper = mock(CmsTopicChapterMapper.class); when(chapterMapper.selectCmsTopicChapterList(any())).thenReturn(chapters);
+        when(chapterMapper.selectByTopicForUpdate(77L)).thenReturn(chapters);
         TopicRouteRuntimeServiceImpl service = new TopicRouteRuntimeServiceImpl(mock(TopicRouteSessionMapper.class), mock(CmsTopicMapper.class), mapper,
                 templates, mock(PlayerNodeProgressMapper.class), null, null, null, mock(IShopDayProofService.class), () -> 1L, () -> 10, Clock.systemUTC(), RouteReachabilityProvider.UNKNOWN);
         ReflectionTestUtils.setField(service, "cmsTopicChapterMapper", chapterMapper); return service;
+    }
+
+    /** Real Spring JDBC transaction lifecycle; JDBC/Mapper doubles remain explicit unit boundaries. */
+    private String freezePublication(TopicRouteRuntimeServiceImpl service, CmsTopic topic) throws Exception {
+        CmsTopicMapper topics=(CmsTopicMapper)ReflectionTestUtils.getField(service,"topicMapper");
+        when(topics.selectCmsTopicByIdForUpdate(topic.getId())).thenReturn(topic);
+        ThemeStateKeyMapper keys=(ThemeStateKeyMapper)ReflectionTestUtils.getField(service,"themeStateKeyMapper");
+        if(keys==null) {
+            keys=mock(ThemeStateKeyMapper.class);
+            when(keys.selectByTopicId(topic.getId())).thenReturn(ThemeStateKeyDeclarationSnapshot.includingRuleAttributes(
+                    topic.getId(),Collections.emptyList(),com.chengyinhub.business.domain.JourneyRules.parse(topic.getJourneyRulesJson())));
+            ReflectionTestUtils.setField(service,"themeStateKeyMapper",keys);
+        }
+        ThemeStateKeyMapper originalKeys=keys;
+        doReturn(topic.getId()).when(keys).lockTopicForStateKeyWrite(topic.getId());
+        // Restubbing must not execute the previous bridge and bind this answer to its nested plain read.
+        doAnswer(call -> originalKeys.selectByTopicId(call.getArgument(0)))
+                .when(keys).selectByTopicIdForUpdate(topic.getId());
+        javax.sql.DataSource data=mock(javax.sql.DataSource.class);
+        java.sql.Connection connection=mock(java.sql.Connection.class);
+        when(data.getConnection()).thenReturn(connection);when(connection.getAutoCommit()).thenReturn(true);
+        var transaction=new org.springframework.transaction.support.TransactionTemplate(
+                new org.springframework.jdbc.datasource.DataSourceTransactionManager(data));
+        try { return transaction.execute(status -> service.freezePublication(topic,null)); }
+        finally { verify(connection).close(); }
     }
 }

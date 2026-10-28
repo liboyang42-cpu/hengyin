@@ -11,7 +11,7 @@ import com.chengyinhub.business.mapper.MerchantChapterApplicationMapper;
 import com.chengyinhub.business.mapper.MerchantChapterOfferMapper;
 import com.chengyinhub.business.mapper.MmsMerchantMapper;
 import com.chengyinhub.business.service.impl.MerchantChapterApplicationServiceImpl;
-import com.chengyinhub.business.service.support.CommittedBusinessNotice;
+import com.chengyinhub.business.service.support.ChapterApplicationInviteNotice;
 import com.chengyinhub.business.service.support.TopicSupplyReviewService;
 import com.chengyinhub.common.constant.ProductType;
 import com.chengyinhub.system.domain.SysCategory;
@@ -52,7 +52,7 @@ class ChapterInviteSlotOnAcceptV2Test {
     private CmsTopicMapper topicMapper;
     private MmsMerchantMapper merchantMapper;
     private MerchantChapterOfferMapper offerMapper;
-    private CommittedBusinessNotice committedNotice;
+    private ChapterApplicationInviteNotice committedNotice;
     private MerchantChapterApplicationServiceImpl service;
 
     @BeforeEach
@@ -62,12 +62,13 @@ class ChapterInviteSlotOnAcceptV2Test {
         topicMapper = mock(CmsTopicMapper.class);
         merchantMapper = mock(MmsMerchantMapper.class);
         offerMapper = mock(MerchantChapterOfferMapper.class);
-        committedNotice = mock(CommittedBusinessNotice.class);
+        committedNotice = mock(ChapterApplicationInviteNotice.class);
         ISysCategoryService categoryService = mock(ISysCategoryService.class);
         service = new MerchantChapterApplicationServiceImpl();
         ReflectionTestUtils.setField(service, "supplyReviewService", mock(TopicSupplyReviewService.class));
         ReflectionTestUtils.setField(service, "applicationMapper", applicationMapper);
-        ReflectionTestUtils.setField(service, "committedNotice", committedNotice);
+        ReflectionTestUtils.setField(service, "inviteNotice", committedNotice);
+        ReflectionTestUtils.setField(service, "auditTaskMapper", mock(com.chengyinhub.business.mapper.AuditTaskMapper.class));
         ReflectionTestUtils.setField(service, "chapterMapper", chapterMapper);
         ReflectionTestUtils.setField(service, "topicMapper", topicMapper);
         ReflectionTestUtils.setField(service, "merchantMapper", merchantMapper);
@@ -170,6 +171,7 @@ class ChapterInviteSlotOnAcceptV2Test {
     void acceptingWhenSlotTakenIsRefusedAndStateUnchanged() {
         MerchantChapterApplication invite = pendingInvite();
         when(applicationMapper.selectMerchantChapterApplicationById(APPLICATION)).thenReturn(invite);
+        when(applicationMapper.selectByIdIncludingDeletedForUpdate(APPLICATION)).thenReturn(invite);
         when(applicationMapper.selectByChapterAndStatus(CHAPTER, MerchantChapterApplication.STATUS_APPROVED))
                 .thenReturn(Collections.singletonList(approvedBy(OTHER_MERCHANT)));
 
@@ -179,13 +181,14 @@ class ChapterInviteSlotOnAcceptV2Test {
         assertTrue(error.getMessage().contains("已满"), error.getMessage());
         assertEquals(Integer.valueOf(MerchantChapterApplication.STATUS_PENDING), invite.getStatus());
         verify(applicationMapper, never()).updateAudit(any(), any(), any(), any(), any());
-        verify(committedNotice, never()).sendAfterCommit(any(), any(), any(), any(), any());
+        verify(committedNotice, never()).submitOutcome(any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test
     void acceptingWithFreeSlotApprovesAndOnlyThenReserves() {
         MerchantChapterApplication invite = pendingInvite();
         when(applicationMapper.selectMerchantChapterApplicationById(APPLICATION)).thenReturn(invite);
+        when(applicationMapper.selectByIdIncludingDeletedForUpdate(APPLICATION)).thenReturn(invite);
         when(applicationMapper.selectByChapterAndStatus(CHAPTER, MerchantChapterApplication.STATUS_APPROVED))
                 .thenReturn(Collections.<MerchantChapterApplication>emptyList());
 
@@ -201,6 +204,7 @@ class ChapterInviteSlotOnAcceptV2Test {
     void decliningIsAllowedEvenWhenFullAndNeverChecksCapacity() {
         MerchantChapterApplication invite = pendingInvite();
         when(applicationMapper.selectMerchantChapterApplicationById(APPLICATION)).thenReturn(invite);
+        when(applicationMapper.selectByIdIncludingDeletedForUpdate(APPLICATION)).thenReturn(invite);
         when(applicationMapper.selectByChapterAndStatus(CHAPTER, MerchantChapterApplication.STATUS_APPROVED))
                 .thenReturn(Collections.singletonList(approvedBy(OTHER_MERCHANT)));
 
@@ -211,6 +215,7 @@ class ChapterInviteSlotOnAcceptV2Test {
         // 只有受邀商家本人能接受；主办方不能代为批准邀请
         MerchantChapterApplication other = pendingInvite();
         when(applicationMapper.selectMerchantChapterApplicationById(APPLICATION)).thenReturn(other);
+        when(applicationMapper.selectByIdIncludingDeletedForUpdate(APPLICATION)).thenReturn(other);
         assertThrows(IllegalStateException.class, () -> service.audit(APPLICATION, PUBLISHER, true, "代批"));
         assertThrows(IllegalStateException.class, () -> service.respondInvite(APPLICATION, PUBLISHER, true));
     }

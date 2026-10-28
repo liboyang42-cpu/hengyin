@@ -10,8 +10,8 @@ const RESULT_SHEET_MS = 2000;
 const subscribe = require('../../../utils/subscribe.js');
 const merchantTheme = require('../../../utils/merchant-theme.js');
 const { isRecordList } = require('../../../utils/response-shape.js');
-const { toTimestamp, chinaParts } = require('../../../utils/datetime.js');
 const { parseInviteId } = require('../../../utils/coop-invite-view.js');
+const { toTimestamp, chinaParts } = require('../../../utils/datetime.js');
 const { createVerificationWorkflow } = require('../../../utils/verification-readback.js');
 const inviteRequest = require('../../../utils/coop-invite-request.js');
 const RECRUIT_CLOSED_TEXT = '主题不在招商期，暂不能发起邀约';
@@ -37,6 +37,7 @@ function buildTopicOptions(rows) {
     return {
       id: t.id,
       name: t.name,
+      productType: t.productType,
       closed: t.inviteWindowOpen === false,
       parts: {
         date: topicDateText(t.startDate),
@@ -129,6 +130,9 @@ Page({
     // 选中后回显在触发器上的那行:同名主题要带识别信息(topicName 仍是纯名,它要传给下游页与结果面板)
     topicPick: '',
     topicClosed: false,
+    supplyTopicState: 'idle',
+    supplyTopicError: '',
+    supplyStationRequired: false,
     resultSheet: { show: false, kind: 'success', title: '', sub: '', meta: '', pill: '',
       why: '', primaryText: '', secondaryText: '', duration: 2000 },
     operationScope: '',
@@ -194,6 +198,7 @@ Page({
     if (presetTarget) this._setSelected([presetTarget]);
     if (!this.data.topicId) this.loadMyTopics();
     this.loadTargets();
+    this.loadSupplyTopic();
   },
 
   onShow() {
@@ -217,9 +222,17 @@ Page({
       this._setSelected(preset ? [preset] : []);
       if (!this._topicFromRoute) this.loadMyTopics();
       this.loadTargets();
+      this.loadSupplyTopic();
     }
+    if (this._supplyNeedsRefresh && !this._submitting) { this._supplyNeedsRefresh = false; this.loadSupplyTopic(); }
   },
-  onHide() { this._hidden = true; this._stopInviteWrites(); merchantTheme.merchantPageRestore(); },
+  onHide() {
+    this._hidden = true; this._supplyViewEpoch = (this._supplyViewEpoch || 0) + 1;
+    this._supplyNeedsRefresh = true;
+    if (this._submitting) this.setData({ sendResult: '原邀约结果待确认，请先查看邀约列表，勿重复发送' });
+    this._stopInviteWrites();
+    merchantTheme.merchantPageRestore();
+  },
   onUnload() {
     this._unloaded = true;
     this._invalidateRequests();
@@ -238,6 +251,8 @@ Page({
   _invalidateRequests() {
     this._topicsEpoch = (this._topicsEpoch || 0) + 1;
     this._targetsEpoch = (this._targetsEpoch || 0) + 1;
+    this._supplyTopicEpoch = (this._supplyTopicEpoch || 0) + 1;
+    this._supplyRequests = {};
     this._stopInviteWrites();
     this._topicsLoading = false;
     this._targetsLoading = false;
@@ -270,7 +285,9 @@ Page({
     return this._inviteWriteWorkflow;
   },
   _inviteWriteKey(target) {
-    return inviteRequest.writeKey(memberId(app), this._invitePayload(target.toId));
+    if (target.key) return target.key;
+    const payload = target.payload || this._invitePayload(target.toId);
+    return inviteRequest.writeKey(memberId(app), payload);
   },
   _requestReadback() {
     if (!this._receiptReader) {
@@ -295,11 +312,15 @@ Page({
           receiptHasMore: patch.receiptHasMore === undefined ? this.data.receiptHasMore : patch.receiptHasMore,
         }),
         received: row => {
-          if (row.state !== 'CREATED' || !inviteRequest.matches(row, this._invitePayload(row.toId))) return;
-          const key = this._inviteWriteKey({ toId: row.toId });
+          const target = this.data.unknownTargets.concat(this.data.selected).find(t => parseInviteId(t.toId) === row.toId);
+          const payload = target && target.payload || this._invitePayload(row.toId);
+          if (row.state !== 'CREATED' || !inviteRequest.matches(row, payload)) return;
+          const key = this._inviteWriteKey(target || { toId: row.toId });
           let pending;
           try { pending = this._inviteWorkflow().pendingRequest(key); }
           catch (error) { return '本机待办无法读取，原结果仍待确认'; }
+          if (payload.supplyStationId && (!pending || pending.requestId !== row.requestId))
+            return '该原邀请未匹配本机冻结据点请求，请保留原号核对，勿重复发送';
           if (pending && (pending.legacy || pending.requestId !== row.requestId || !this._inviteWorkflow().confirmRequest(key, row.requestId))) return '本机原请求仍待确认，请勿重复发送';
           this._confirmedInvites = this._confirmedInvites || {};
           this._confirmedInvites[key] = row;
@@ -333,7 +354,10 @@ Page({
 
   _topicsScope() { return 'topics|' + identityKey(); },
   _targetsScope() { return 'targets|' + this.data.activeType + '|' + identityKey(); },
-  _submitScope() { return [this.data.activeType, this.data.operationScope, this.data.topicId, identityKey()].join('|'); },
+  _submitScope() { return [this.data.activeType, this.data.operationScope, this.data.topicId, identityKey(),
+    this._supplyViewEpoch || 0, this.data.shareMode, this.data.fixedFee].join('|'); },
+  _confirmationScope() { return this._submitScope() + '|' + JSON.stringify(
+    this.data.selected.map(target => [String(target.toId), target.supplyStationId || ''])); },
 
   _stopRefreshWhenSettled() {
     if (!this._topicsLoading && !this._targetsLoading) stopPullDownRefresh();
@@ -343,9 +367,11 @@ Page({
     const map = {};
     list.forEach(function (target) { map[String(target.toId)] = true; });
     this.setData({ selected: list, selectedMap: map });
+    this.refreshSupplyStations();
   },
 
   toggleTarget(e) {
+    if (this._submitting) return;
     if (this.data.presetTarget) return;
     const toId = e.currentTarget.dataset.toid;
     if (toId === undefined || toId === null || toId === '') return;
@@ -361,12 +387,14 @@ Page({
   },
 
   switchShareMode(e) {
+    if (this._submitting) return;
     const mode = Number(e.detail && e.detail.key !== undefined ? e.detail.key : e.currentTarget.dataset.mode);
     if (mode !== 0 && mode !== 2) return;
     this.setData({ shareMode: mode });
   },
 
   onFeeInput(e) {
+    if (this._submitting) return;
     const value = Number(e.detail.value);
     this.setData({ fixedFee: Number.isFinite(value) && value > 0 ? value : null });
   },
@@ -391,7 +419,7 @@ Page({
     waitForInitialSession(this, app, this._reloadAfterLogin);
     return false;
   },
-  _reloadAfterLogin() { if (!this.data.topicId) this.loadMyTopics(true); this.loadTargets(true); },
+  _reloadAfterLogin() { if (!this.data.topicId) this.loadMyTopics(true); this.loadTargets(true); this.loadSupplyTopic(); },
   onLogin() { return retryLogin(this, app, this._reloadAfterLogin); },
 
   loadMyTopics(force) {
@@ -456,11 +484,142 @@ Page({
   },
 
   onTopicChange(e) {
+    if (this._unloaded || this._hidden || this._dataIdentity !== identityKey()) return;
     const idx = Number(e.detail.value);
     const t = this.data.myTopics[idx];
     if (!t) return;
+    if (parseInviteId(t.id) === parseInviteId(this.data.topicId)) return;
+    // Changing the visible topic retires this page's old callbacks, not the
+    // durable original request. Returning to the topic cannot adopt its old epoch.
     this._stopInviteWrites();
     this.setData({ unknownTargets: [], topicIndex: idx, topicId: t.id, topicName: t.name, topicPick: t.short || t.name, topicClosed: !!t.closed });
+    this.loadSupplyTopic(t.productType);
+  },
+
+  _supplyScope(toId) {
+    return [identityKey(), this.data.operationScope, this.data.topicId, this._supplyViewEpoch || 0, toId || ''].join('|');
+  },
+
+  loadSupplyTopic(productType) {
+    if (this._submitting) return;
+    this._supplyTopicEpoch = (this._supplyTopicEpoch || 0) + 1;
+    this._supplyRequests = {};
+    this._preparedSupplyScope = '';
+    this.setData({ selected: this.data.selected.map(target => Object.assign({}, target, {
+      supplyState: 'idle', supplyStations: [], supplyStationIndex: -1, supplyStationId: '', supplyStationName: '', supplyScope: '',
+    })), supplyStationRequired: false, supplyTopicError: '' });
+    if (Number(this.data.activeType) !== 0 || !this.data.topicId) {
+      this.setData({ supplyTopicState: 'not-required' }); return;
+    }
+    if (!this._requireSession()) return;
+    const scope = this._supplyScope(), epoch = this._supplyTopicEpoch;
+    const current = () => !this._hidden && !this._unloaded && epoch === this._supplyTopicEpoch && scope === this._supplyScope();
+    const apply = value => {
+      if (!current()) return;
+      if (Number(value) !== 1 && Number(value) !== 2) { fail('无法确认主题类型，请刷新主题列表'); return; }
+      this.setData({ supplyTopicState: 'ready', supplyStationRequired: Number(value) === 1, supplyTopicError: '' });
+      this.refreshSupplyStations();
+    };
+    const fail = value => {
+      if (!current() || this._recoverReadSession(value, epoch, 'supplyTopic')) return;
+      this.setData({ supplyTopicState: 'error', supplyTopicError: typeof value === 'string' ? value : failureText(value, '无法读取主题，请重试') });
+    };
+    if (Number(productType) === 1 || Number(productType) === 2) { apply(productType); return; }
+    this.setData({ supplyTopicState: 'loading' });
+    // Route presets do not carry an authoritative product type. Reuse the existing owner list;
+    // walk its real pages instead of interpreting nodeId or a route parameter as a station/type.
+    const readPage = pageNum => {
+      if (!current()) return;
+      app.sendRequest({ hideLoading: true, url: '/api/topic/list', method: 'POST',
+        data: { is_my: 1, scope: this.data.operationScope, invite_target: 'merchant', pageNum, pageSize: 50 },
+        success: res => {
+          if (!current()) return;
+          const data = res && String(res.code) === '200' && res.data;
+          if (!data || !isNamedRecordList(data.rows, 'id')) { fail(res && String(res.code) !== '200' ? res : '主题信息无法确认，请重试'); return; }
+          const topic = data.rows.find(row => parseInviteId(row.id) === parseInviteId(this.data.topicId));
+          if (topic) { apply(topic.productType); return; }
+          const total = Number(data.total);
+          if (data.rows.length && Number.isSafeInteger(total) && pageNum * 50 < total) { readPage(pageNum + 1); return; }
+          fail('没有读到原主题，请刷新后重新选择');
+        }, fail,
+        successStatusAbnormal: (res, status) => fail({ code: failureStatus(res, status), msg: res && res.msg }),
+      });
+    };
+    readPage(1);
+  },
+
+  refreshSupplyStations(force) {
+    if (this._submitting) return;
+    if (Number(this.data.activeType) !== 0 || !this.data.supplyStationRequired || this.data.supplyTopicState !== 'ready') return;
+    if (this._hidden || this._unloaded) return;
+    this._supplyRequests = this._supplyRequests || {};
+    for (const target of this.data.selected) {
+      const merchantMemberId = parseInviteId(target.toId), topicId = parseInviteId(this.data.topicId);
+      if (!merchantMemberId || !topicId) continue;
+      const scope = this._supplyScope(merchantMemberId);
+      if (this._supplyRequests[merchantMemberId] === scope || (!force && target.supplyScope === scope && target.supplyState === 'ready')) continue;
+      this._supplyRequests[merchantMemberId] = scope;
+      const topicEpoch = this._supplyTopicEpoch;
+      const current = () => !this._hidden && !this._unloaded && scope === this._supplyScope(merchantMemberId)
+        && this._supplyRequests[merchantMemberId] === scope && topicEpoch === this._supplyTopicEpoch;
+      const update = patch => {
+        if (!current()) return;
+        const selected = this.data.selected.map(row => String(row.toId) === String(target.toId) ? Object.assign({}, row, patch) : row);
+        this.setData({ selected });
+      };
+      update({ supplyState: 'loading', supplyError: '', supplyScope: scope, supplyStations: [], supplyStationIndex: -1, supplyStationId: '', supplyStationName: '' });
+      const fail = value => {
+        if (!current() || this._recoverReadSession(value, topicEpoch, 'supplyTopic')) return;
+        update({ supplyState: 'error', supplyError: failureText(value, '据点读取失败，请重试') });
+        delete this._supplyRequests[merchantMemberId];
+      };
+      app.sendRequest({ hideLoading: true, url: '/api/coop/supply-stations', method: 'GET',
+        data: { topicId, merchantMemberId },
+        success: res => {
+          if (!current()) return;
+          const data = res && String(res.code) === '200' && res.data;
+          const stations = data && data.requiresSupplyStation === true && data.stations;
+          if (!isRecordList(stations) || stations.some(row => !parseInviteId(row.supplyStationId) || typeof row.stationName !== 'string' || !row.stationName.trim())
+              || new Set(stations.map(row => parseInviteId(row.supplyStationId))).size !== stations.length) { fail(res); return; }
+          update({ supplyState: 'ready', supplyStations: stations.map(row => ({ supplyStationId: parseInviteId(row.supplyStationId), stationName: row.stationName })) });
+          if (this._supplyRequests[merchantMemberId] === scope) delete this._supplyRequests[merchantMemberId];
+        }, fail, successStatusAbnormal: fail,
+      });
+    }
+  },
+
+  retrySupplyTopic() { this.loadSupplyTopic(); },
+  retrySupplyStations() { this.refreshSupplyStations(true); },
+  onSupplyStationChange(e) {
+    if (this._submitting) return;
+    const toId = String(e.currentTarget.dataset.toid), index = Number(e.detail.value);
+    const target = this.data.selected.find(row => String(row.toId) === toId);
+    if (!target || target.supplyState !== 'ready' || target.supplyScope !== this._supplyScope(parseInviteId(target.toId))
+        || !Number.isSafeInteger(index) || index < 0 || !target.supplyStations[index]) return;
+    const station = target.supplyStations[index];
+    this.setData({ selected: this.data.selected.map(row => row === target ? Object.assign({}, row, {
+      supplyStationIndex: index, supplyStationId: station.supplyStationId, supplyStationName: station.stationName,
+    }) : row) });
+  },
+
+  _supplyReady() {
+    if (this._hidden || this._unloaded || (this._dataIdentity !== undefined && this._dataIdentity !== identityKey())) {
+      toast('页面或账号已变化，请重新打开邀约'); return false;
+    }
+    if (Number(this.data.activeType) !== 0) return true;
+    if (this.data.supplyTopicState !== 'ready') { toast('请先确认主题类型'); return false; }
+    if (!this.data.supplyStationRequired) return true;
+    const ids = [];
+    for (const target of this.data.selected) {
+      const id = parseInviteId(target.supplyStationId);
+      if (target.supplyState !== 'ready' || target.supplyScope !== this._supplyScope(parseInviteId(target.toId))
+          || !id || !target.supplyStations.some(row => row.supplyStationId === id)) {
+        toast(target.supplyState === 'ready' && !target.supplyStations.length ? '暂无已确定据点' : '请为每个商家明确选择核销据点'); return false;
+      }
+      if (ids.includes(id)) { toast('不同邀约不能选择同一据点'); return false; }
+      ids.push(id);
+    }
+    return true;
   },
 
   onMessageInput(e) { this.setData({ message: e.detail.value }); },
@@ -542,6 +701,7 @@ Page({
 
   sendInvite() {
     if (this.data.submitting) return;
+    if (!this._supplyReady()) return;
     if (this.data.topicsState !== 'ready' || this.data.targetsState !== 'ready') {
       toast('请先恢复主题与合作对象列表');
       return;
@@ -576,6 +736,7 @@ Page({
     const termsText = this.data.shareMode === 2
       ? (terms.feeName + ' · ¥' + Number(this.data.fixedFee || 0).toFixed(2) + ' ' + terms.feeUnit)
       : '引流合作 · 不产生现金结算';
+    this._preparedSupplyScope = this._confirmationScope();
     this.setData({
       inviteModal: {
         show: true,
@@ -612,6 +773,11 @@ Page({
   confirmInvite() {
     if (this._submitting || this._hidden || this._unloaded) return;
     if (!memberId(app) || this._dataIdentity !== identityKey()) return;
+    if (!this._supplyReady()) return;
+    if (Number(this.data.activeType) === 0 && this._preparedSupplyScope !== this._confirmationScope()) {
+      this.setData({ sendResult: '邀约对象或核销据点已变化，请重新确认' });
+      toast('对象或据点已变，请重新确认'); return;
+    }
     if (Number(this.data.shareMode) === 2
         && !(Number.isFinite(Number(this.data.fixedFee)) && Number(this.data.fixedFee) > 0)) {
       this.setData({ 'inviteModal.show': false });
@@ -640,7 +806,7 @@ Page({
     const unknownTargets = this.data.unknownTargets.slice();
     const addUnknown = target => {
       if (!unknownTargets.some(t => parseInviteId(t.toId) === parseInviteId(target.toId))) {
-        unknownTargets.push({ toId: target.toId, name: target.name });
+        unknownTargets.push({ toId: target.toId, name: target.name, key: target.key, payload: target.payload });
       }
     };
     if (this._receiptReader) this._receiptReader.destroy();
@@ -662,7 +828,7 @@ Page({
       if (i >= targets.length) return finish();
       const target = targets[i];
       const accepted = workflow.run(target.key, function (done, identity) {
-        that._inviteWritingTarget = { toId: target.toId, name: target.name };
+        that._inviteWritingTarget = { toId: target.toId, name: target.name, key: target.key, payload: target.payload };
         const payload = JSON.stringify(Object.assign({}, target.payload, { requestId: identity.requestId }));
         const classify = (res, status) => isCurrent() ? inviteRequest.classify(res, status, identity.requestId) : { status: 'unknown' };
         return app.sendRequest({
@@ -813,6 +979,10 @@ Page({
     if (data.operationScope) payload.scope = data.operationScope;
     if (inviteType === 1 && this.data.originApplyId) payload.originApplyId = this.data.originApplyId;
     if (shareMode === 2) payload.fixedFee = data.fixedFee;
+    if (inviteType === 0 && data.supplyStationRequired) {
+      const target = data.selected.find(row => String(row.toId) === String(toId));
+      payload.supplyStationId = parseInviteId(target && target.supplyStationId);
+    }
     return payload;
   },
 

@@ -140,7 +140,7 @@ Page({
   },
 
   lickClick(e) {
-    if (app.ensureLoginFor && !app.ensureLoginFor('like', () => this.lickClick(e))) return; // 2026-10-24 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('like', () => this.lickClick(e), { owner: this, target: () => [this.data.list[feedIndexFromEvent(e)] && this.data.list[feedIndexFromEvent(e)].id] })) return; // 2026-10-24 游客写前登录
     var that = this
     let index = feedIndexFromEvent(e);
     let type = (e.detail && e.detail.type) || e.currentTarget.dataset.type;
@@ -195,7 +195,7 @@ Page({
   },
 
   favoriteClick(e) {
-    if (app.ensureLoginFor && !app.ensureLoginFor('like', () => this.favoriteClick(e))) return; // 2026-10-24 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('like', () => this.favoriteClick(e), { owner: this, target: () => [this.data.list[feedIndexFromEvent(e)] && this.data.list[feedIndexFromEvent(e)].id] })) return; // 2026-10-24 游客写前登录
     const index = feedIndexFromEvent(e);
     const item = this.data.list[index];
     if (!item || !item.id) return;
@@ -232,7 +232,7 @@ Page({
   },
 
   followClick(e) {
-    if (app.ensureLoginFor && !app.ensureLoginFor('like', () => this.followClick(e))) return; // 2026-10-24 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('like', () => this.followClick(e), { owner: this, target: () => [this.data.list[feedIndexFromEvent(e)] && this.data.list[feedIndexFromEvent(e)].id, this.data.list[feedIndexFromEvent(e)] && this.data.list[feedIndexFromEvent(e)].memberId] })) return; // 2026-10-24 游客写前登录
     var that = this
     const index = feedIndexFromEvent(e);
     let topicList = that.data.list
@@ -365,7 +365,7 @@ Page({
   onReportReasonCancel() { reportSheet.cancel(this); },
 
   reportSquare: function (id = this.data.currentActionId) {
-    if (app.ensureLoginFor && !app.ensureLoginFor('report', () => this.reportSquare(id))) return; // 2026-10-24 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('report', () => this.reportSquare(id), { owner: this, target: () => [id, this.data.list.some(row => String(row.id) === String(id))] })) return; // 2026-10-24 游客写前登录
     const that = this;
     const owner = String(app.getUserID() || ''), current = () => !that._unloaded && owner === String(app.getUserID() || '');
     const item = that.data.list.find(row => String(row.id) === String(id));
@@ -530,7 +530,7 @@ Page({
     });
   },
 
-  onUnload() {
+  onUnload() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1;
     this._unloaded = true;
     reportSheet.cancel(this);
     this._feedRequestId = (this._feedRequestId || 0) + 1;
@@ -832,7 +832,7 @@ Page({
     else settle();
   },
 
-  onHide() { merchantTheme.merchantPageRestore(); },
+  onHide() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1; merchantTheme.merchantPageRestore(); },
 
   initMapLocation: function () {
     var that = this;

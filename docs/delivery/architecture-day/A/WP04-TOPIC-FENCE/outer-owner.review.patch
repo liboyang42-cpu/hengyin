@@ -1,0 +1,29 @@
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java
+@@ -138,6 +138,7 @@
+         if (operatorMemberId == null || !operatorMemberId.equals(r.getMemberId())) {
+             throw new RuntimeException("无权取消他人报名");
+         }
++        r = RegistrationTopicFence.lock(r, cmsRegistrationMapper, cmsActivityMapper, cmsTopicMapper).registration();
+         if (r.getPaymentStatus() == null || r.getPaymentStatus() != 2) {
+             throw new RuntimeException("仅已支付报名可取消退款");
+         }
+@@ -339,6 +340,7 @@
+         if (!topicOwner && !clubOwner) {
+             throw new RuntimeException("无权操作:只有主题作者或承接俱乐部主理人可以清退");
+         }
++        r = RegistrationTopicFence.lock(r, cmsRegistrationMapper, cmsActivityMapper, cmsTopicMapper).registration();
+         if (r.getPaymentStatus() == null || r.getPaymentStatus() != 2) {
+             throw new RuntimeException("仅已支付报名可退款");
+         }
+@@ -550,8 +552,8 @@
+     /** @param refuseSettled 主题取消传 true:有订单的钱已结算出去就整次 409,不经退款核心冲回(RV-p6line F1) */
+     private com.chengyinhub.business.domain.dto.ActivityCancelResult cancelActivity(
+             Long activityId, Long ownerMemberId, Long actorMemberId, String reason, boolean refuseSettled) {
+-        com.chengyinhub.business.domain.CmsActivity act = cmsActivityMapper
+-                .selectCmsActivityByIdForUpdate(activityId);
++        com.chengyinhub.business.domain.CmsActivity act = RegistrationTopicFence.lockActivity(
++                cmsActivityMapper.selectCmsActivityById(activityId), cmsActivityMapper, cmsTopicMapper);
+         // 这三条抛 ServiceException 而非裸 RuntimeException:文案是写给主办方看的,入口据此原样回显;
+         // 非预期异常(NPE/SQL)则走 Exception 分支给中性文案 —— 类型就是「该不该给用户看」的判据。
+         if (act == null || (act.getDelFlag() != null && act.getDelFlag() == 2)) {

@@ -1,0 +1,127 @@
+CI source observation: public combined089790aaf3254f62ebbc79394b8aaf5fa66cb2b5 director.js
+SHA256=a0b7fb6f2a7434fad72223559cb9a578f18f64fc8b55ed0f1d8ae5b737c8c8fa
+
+Before edits:
+BL-80: tests4 pass3 fail1 skipped0, exit1 (fixed500-character method slice omitted clicked)
+CL-20 with old D module: tests2 pass2 fail0 skipped0.
+CL-20 with exact combined director module and old fixture: tests2 pass0 fail2 skipped0, exit1.
+Failures: 0 !== 1 at :54; draft '成功后清空' !== '' at :78.
+Combined module source was substituted only through a temporary Node loader hook, without editing production checkout files or replacing any guard function.
+
+After edits, actual full output:
+
+$ node chengyinhub-xcx/tests/unit/batch4-api-contract.test.js
+✔ BL-76 POST /api/merchant/verification-records:无参,VERIFY_RECORD_READ,按 owner 取 CmsRegistrationScan 倒序全量 (2.239153ms)
+✔ BL-77 POST /api/merchant/coupon-summary:COUPON_MANAGE,返回 couponCount/couponTotal/received/verified (0.812868ms)
+✔ BL-79 POST /api/object-card/rename:表单参数 id/title(非 JSON 体),上限 64,返回 PlayerObjectCardVO.title (0.288025ms)
+✔ BL-80 GET /api/official/broadcast/{id}/stats:白名单+发布者本人,站内人数与通道回执分开 (1.632527ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 11.809894
+
+exit=0
+
+$ node chengyinhub-xcx/tests/unit/mini-verify-v1-cl20-director-broadcast-draft.test.js
+✔ CL-20 广播请求断网(结果待核对):草稿原文保留,解锁后重开半屏仍带回 (13.595652ms)
+✔ CL-20 广播被后端驳回:草稿保留;写成功才清空(正控) (2.536452ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 21.547678
+
+exit=0
+
+$ node chengyinhub-xcx/tests/unit/official-broadcast-stats.test.js
+✔ 点通知卡读该条复盘,成功显示触达与点击 (3.419778ms)
+✔ 后端拒绝/形状不对/网络失败如实提示,可再点重试 (0.922384ms)
+✔ 列表已刷新换了条目时,迟到的复盘不写到别的卡上 (2.203579ms)
+✔ 接线:通知卡可点、复盘就地替换原触达行;不改主标题;回调不用 this 方法简写 (0.41003ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 13.789656
+
+exit=0
+
+$ node chengyinhub-xcx/tests/unit/official-pages-state-contract.test.js
+✔ 官方邀约写操作同步防重，失败留在原卡片且重试前不假更新列表 (8.801279ms)
+✔ 官方邀约动作错误与忙碌态使用现有 inline-error，并暴露无障碍状态 (0.5956ms)
+✔ 我的发布拒绝畸形 rows，不能把未知载荷冒充两个空列表 (1.72803ms)
+✔ 我的发布严格区分 0 与 unknown，未知状态、对象、方式和范围不伪装成空值 (0.998038ms)
+✔ 我的发布刷新保留已确认快照，失败进入局部错误且较早响应不能覆盖新结果 (0.521818ms)
+✔ 我的发布首载、刷新、局部错误与未知数字文案在视图层分离 (0.535929ms)
+✔ negative control: 移除同步锁、严格列表或 unknown 投影时合同必须判红 (4.003679ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 23.88465
+
+exit=0
+
+$ node chengyinhub-ui/tests/unit/official-broadcast-submission-contract.test.js
+✔ 发布响应只确认提交；UNKNOWN/部分成功不能从响应文案推断全部送达 (6.411503ms)
+✔ 待发/部分成功/UNKNOWN 的主状态显示未全部确认，非法状态不冒充送达 (0.367976ms)
+✔ 无权限或缺受众仍拒绝发布，结果文案修改不产生额外请求 (1.157229ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 14.943776
+
+exit=0
+
+$ node chengyinhub-ui/tests/unit/official-enum-text-contract.test.js
+✔ 官方 v3 控制状态未知/null 一律「状态待确认」, 合法 NORMAL/PAUSED 保留 (1.01929ms)
+✔ 官方 v3 控制状态未知时模板不渲染正常态, 也不发暂停/恢复动作 (0.346804ms)
+✔ 官方 v3 全部展示 helper 走 enumText, 不被 Object 原型污染 (0.463971ms)
+✔ 官方 360 参与/发奖/暂停通知/绑定类型全部走业务名, 不裸露原始枚举 (0.196867ms)
+✔ 官方 v3 ROAM_SESSION_AREA 只读展示, 不进编辑器可选合同 (0.203608ms)
+✔ 官方 v3 预览不再裸露 missionType, 已知枚举仍映射业务名 (0.362789ms)
+✔ 官方 v3 organizerSummary 不再直接显示 OFFICIAL (0.336719ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 12.158201
+
+exit=0
+
+$ node /tmp/d-cl20-combined-runner.js after
+✔ CL-20 广播请求断网(结果待核对):草稿原文保留,解锁后重开半屏仍带回 (17.068034ms)
+✔ CL-20 广播被后端驳回:草稿保留;写成功才清空(正控) (2.254507ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 25.649261
+
+exit=0
+
+Java compile/JUnit/MySQL NOT RUN for this followup. No CI dispatch/rerun or production operation performed.
+Backend log retrieval failed: Transport closed. Java NPE diagnosis uses coordinator-reported XML and source review.

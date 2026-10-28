@@ -1,0 +1,5 @@
+76f2b36fa4b68f2f33d65d17c05a4c9ea9ff9e82e09fceae38623bd8ea42a0a8  chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CombinedCoreHttpWorkload.java
+3540ac72111ccbb1bcb061aba6842a5b52baa19f3717546cb4808c313a0b8043  chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainCombinedLoadMySqlIT.java
+5e783855240c8457ec9049722452ea7cc0ab288d0ad2a7d854b99e1d53e6f829  chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CombinedContextConfigurationTest.java
+663a5b1788bf5bf99b5788adb682ad97e81d4f98668216e1b42a45a50de8ee6e  chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainStorageFixture.java
+3c999e40fa48a3f97e8560b4a77ff8f9b9d84cdc3f9e2533009425ea1b0af9a8  chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainTransportStage.java

@@ -1,0 +1,2206 @@
+[
+  {
+    "method": "selectTopicsForSettlement",
+    "line": 322,
+    "end_line": 324,
+    "selfcalls": [],
+    "dependencies": [
+      "cmsTopicMapper"
+    ]
+  },
+  {
+    "method": "processRecruitDeadlines",
+    "line": 327,
+    "end_line": 422,
+    "selfcalls": [
+      "effectiveOffers",
+      "hasCashObligation",
+      "transitionRecruitingToDraft"
+    ],
+    "dependencies": [
+      "cmsTopicMapper",
+      "notifyService",
+      "pricingService",
+      "topicCommercialReviewService",
+      "topicLifecycleService"
+    ]
+  },
+  {
+    "method": "transitionRecruitingToDraft",
+    "line": 424,
+    "end_line": 426,
+    "selfcalls": [],
+    "dependencies": [
+      "topicLifecycleService"
+    ]
+  },
+  {
+    "method": "effectiveOffers",
+    "line": 429,
+    "end_line": 440,
+    "selfcalls": [],
+    "dependencies": [
+      "merchantChapterOfferMapper"
+    ]
+  },
+  {
+    "method": "hasCashObligation",
+    "line": 442,
+    "end_line": 451,
+    "selfcalls": [],
+    "dependencies": []
+  },
+  {
+    "method": "advanceSaleLifecycle",
+    "line": 454,
+    "end_line": 456,
+    "selfcalls": [],
+    "dependencies": []
+  },
+  {
+    "method": "copyCmsTopic",
+    "line": 464,
+    "end_line": 466,
+    "selfcalls": [
+      "copyCmsTopicWithContentOwner"
+    ],
+    "dependencies": []
+  },
+  {
+    "method": "transferToClub",
+    "line": 471,
+    "end_line": 497,
+    "selfcalls": [
+      "copyCmsTopic",
+      "syncCreativeSquarePostVisibility",
+      "updateCmsTopic"
+    ],
+    "dependencies": []
+  },
+  {
+    "method": "copyOfficialCmsTopic",
+    "line": 503,
+    "end_line": 511,
+    "selfcalls": [
+      "copyCmsTopicWithContentOwner"
+    ],
+    "dependencies": [
+      "productRoleService"
+    ]
+  },
+  {
+    "method": "copyCmsTopicWithContentOwner",
+    "line": 518,
+    "end_line": 564,
+    "selfcalls": [
+      "copyChaptersAndNodes",
+      "copyCollaborators",
+      "copyTopicBasicInfo",
+      "declareRequiredPlatformContentSlot",
+      "preserveSameOwnerCopiedCompletionRule",
+      "remapCopiedJourneyStory",
+      "selectCmsTopicById"
+    ],
+    "dependencies": [
+      "cmsTopicMapper",
+      "productRoleService"
+    ]
+  },
+  {
+    "method": "preserveSameOwnerCopiedCompletionRule",
+    "line": 567,
+    "end_line": 589,
+    "selfcalls": [
+      "nullToEmpty"
+    ],
+    "dependencies": [
+      "cmsTopicMapper",
+      "cmsTopicNodeMapper",
+      "topicCompletionRulePolicy"
+    ]
+  },
+  {
+    "method": "declareRequiredPlatformContentSlot",
+    "line": 596,
+    "end_line": 604,
+    "selfcalls": [],
+    "dependencies": [
+      "productRoleService"
+    ]
+  },
+  {
+    "method": "copyTopicBasicInfo",
+    "line": 609,
+    "end_line": 672,
+    "selfcalls": [],
+    "dependencies": []
+  },
+  {
+    "method": "copyChaptersAndNodes",
+    "line": 679,
+    "end_line": 806,
+    "selfcalls": [
+      "assertCopiedChapterRecruitment",
+      "copyNodes",
+      "remapTemplateRuleIdentities"
+    ],
+    "dependencies": [
+      "cmsTopicChapterMapper",
+      "cmsTopicMapper",
+      "topicRouteConfigValidator"
+    ]
+  },
+  {
+    "method": "assertCopiedChapterRecruitment",
+    "line": 809,
+    "end_line": 823,
+    "selfcalls": [
+      "assertCopiedChapterSupplyTerms"
+    ],
+    "dependencies": [
+      "sysCategoryService"
+    ]
+  },
+  {
+    "method": "assertCopiedChapterSupplyTerms",
+    "line": 826,
+    "end_line": 839,
+    "selfcalls": [],
+    "dependencies": []
+  },
+  {
+    "method": "copyNodes",
+    "line": 846,
+    "end_line": 989,
+    "selfcalls": [
+      "copyNodeNpc",
+      "copyTemplateForOwner"
+    ],
+    "dependencies": [
+      "cmsMemberTemplateMapper",
+      "cmsTopicNodeMapper",
+      "npcProfileMapper"
+    ]
+  },
+  {
+    "method": "copyNodeNpc",
+    "line": 997,
+    "end_line": 1017,
+    "selfcalls": [],
+    "dependencies": [
+      "NodeNpcService"
+    ]
+  },
+  {
+    "method": "copyTemplateForOwner",
+    "line": 1028,
+    "end_line": 1058,
+    "selfcalls": [],
+    "dependencies": [
+      "cmsMemberTemplateMapper"
+    ]
+  },
+  {
+    "method": "copyCollaborators",
+    "line": 1063,
+    "end_line": 1088,
+    "selfcalls": [],
+    "dependencies": [
+      "cmsCollaboratorsMapper"
+    ]
+  },
+  {
+    "method": "executeTopicSettlement",
+    "line": 1097,
+    "end_line": 1148,
+    "selfcalls": [
+      "resolveRuleFor",
+      "selectTopicsForSettlement",
+      "settleTopic",
+      "validateCommissionSettings"
+    ],
+    "dependencies": [
+      "settlementRuleService"
+    ]
+  },
+  {
+    "method": "resolveRuleFor",
+    "line": 1176,
+    "end_line": 1193,
+    "selfcalls": [
+      "validateCommissionSettings"
+    ],
+    "dependencies": [
+      "settlementRuleService"
+    ]
+  },
+  {
+    "method": "validateCommissionSettings",
+    "line": 1195,
+    "end_line": 1222,
+    "selfcalls": [],
+    "dependencies": []
+  },
+  {
+    "method": "settleTopic",
+    "line": 1227,
+    "end_line": 1294,
+    "selfcalls": [
+      "lockTopicCashBasis",
+      "refundTopicDeposits",
+      "requireClassicTopicCashBasis",
+      "settleCoopTopicFromCashBasis",
+      "validateZeroCashCoopContracts"
+    ],
+    "dependencies": [
+      "cmsRegistrationMapper",
+      "cmsTopicMapper",
+      "coopOrderMapper",
+      "pointsAwardService"
+    ]
+  },
+  {
+    "method": "calculateCommissions",
+    "line": 1299,
+    "end_line": 1333,
+    "selfcalls": [
+      "validateCommissionDistribution"
+    ],
+    "dependencies": []
+  },
+  {
+    "method": "validateCommissionDistribution",
+    "line": 1338,
+    "end_line": 1350,
+    "selfcalls": [],
+    "dependencies": []
+  },
+  {
+    "method": "settleCoopTopicFromCashBasis",
+    "line": 1362,
+    "end_line": 1513,
+    "selfcalls": [
+      "applyUnpaidDepositSetoffs",
+      "assertSettlementConservation",
+      "joinVerifiedRegIds",
+      "lockTopicCashBasis",
+      "newSettlementLine",
+      "refundTopicDeposits",
+      "requireClassicTopicCashBasis",
+      "resolveOrderPayee"
+    ],
+    "dependencies": [
+      "coopOrderMapper",
+      "coopSettlementClaimService",
+      "coopSettlementMapper",
+      "pricingService"
+    ]
+  },
+  {
+    "method": "lockTopicCashBasis",
+    "line": 1516,
+    "end_line": 1530,
+    "selfcalls": [],
+    "dependencies": [
+      "coopSettlementEvidenceMapper"
+    ]
+  },
+  {
+    "method": "validateZeroCashCoopContracts",
+    "line": 1533,
+    "end_line": 1553,
+    "selfcalls": [],
+    "dependencies": [
+      "coopSettlementClaimService"
+    ]
+  },
+  {
+    "method": "requireClassicTopicCashBasis",
+    "line": 1556,
+    "end_line": 1560,
+    "selfcalls": [],
+    "dependencies": []
+  },
+  {
+    "method": "applyUnpaidDepositSetoffs",
+    "line": 1569,
+    "end_line": 1630,
+    "selfcalls": [
+      "newSettlementLine"
+    ],
+    "dependencies": [
+      "ICoopInviteService",
+      "coopInviteMapper",
+      "coopInviteService"
+    ]
+  },
+  {
+    "method": "resolvePendingDepositPaymentForSettlement",
+    "line": 1636,
+    "end_line": 1675,
+    "selfcalls": [],
+    "dependencies": [
+      "coopInviteMapper",
+      "coopInviteService",
+      "wechatPayService"
+    ]
+  },
+  {
+    "method": "newSettlementLine",
+    "line": 1678,
+    "end_line": 1695,
+    "selfcalls": [],
+    "dependencies": []
+  },
+  {
+    "method": "resolveOrderPayee",
+    "line": 1703,
+    "end_line": 1709,
+    "selfcalls": [],
+    "dependencies": [
+      "clubService"
+    ]
+  },
+  {
+    "method": "assertSettlementConservation",
+    "line": 1715,
+    "end_line": 1730,
+    "selfcalls": [],
+    "dependencies": []
+  },
+  {
+    "method": "refundTopicDeposits",
+    "line": 1733,
+    "end_line": 1735,
+    "selfcalls": [],
+    "dependencies": [
+      "coopInviteService"
+    ]
+  },
+  {
+    "method": "alarmPendingDepositRefund",
+    "line": 1737,
+    "end_line": 1745,
+    "selfcalls": [],
+    "dependencies": [
+      "alarmService"
+    ]
+  },
+  {
+    "method": "payoutDueCoopSettlements",
+    "line": 1748,
+    "end_line": 1785,
+    "selfcalls": [
+      "payoutOneDueCoopSettlement"
+    ],
+    "dependencies": [
+      "coopSettlementMapper",
+      "notifyService"
+    ]
+  },
+  {
+    "method": "payoutOneDueCoopSettlement",
+    "line": 1788,
+    "end_line": 1841,
+    "selfcalls": [
+      "requireExactlyOne"
+    ],
+    "dependencies": [
+      "coopComplaintMapper",
+      "coopSettlementAdjustmentMapper",
+      "coopSettlementMapper",
+      "umsMemberBalanceDetailService",
+      "umsMemberMapper"
+    ]
+  },
+  {
+    "method": "requireExactlyOne",
+    "line": 1843,
+    "end_line": 1847,
+    "selfcalls": [],
+    "dependencies": []
+  },
+  {
+    "method": "joinVerifiedRegIds",
+    "line": 1850,
+    "end_line": 1859,
+    "selfcalls": [],
+    "dependencies": []
+  },
+  {
+    "method": "coopVerifiedSales",
+    "line": 1862,
+    "end_line": 1865,
+    "selfcalls": [],
+    "dependencies": [
+      "cmsRegistrationMapper"
+    ]
+  },
+  {
+    "method": "merchantVerifiedSales",
+    "line": 1868,
+    "end_line": 1871,
+    "selfcalls": [],
+    "dependencies": [
+      "cmsRegistrationMapper"
+    ]
+  },
+  {
+    "method": "selectCmsTopicById",
+    "line": 1884,
+    "end_line": 1886,
+    "selfcalls": [],
+    "dependencies": [
+      "cmsTopicMapper"
+    ]
+  },
+  {
+    "method": "selectRoamReferralEnabledById",
+    "line": 1889,
+    "end_line": 1891,
+    "selfcalls": [],
+    "dependencies": [
+      "cmsTopicMapper"
+    ]
+  },
+  {
+    "method": "selectPublicCmsTopicById",
+    "line": 1894,
+    "end_line": 1898,
+    "selfcalls": [
+      "refreshPublicNodeCounts"
+    ],
+    "dependencies": [
+      "cmsTopicMapper"
+    ]
+  },
+  {
+    "method": "selectCmsTopicDetailById",
+    "line": 1901,
+    "end_line": 1906,
+    "selfcalls": [
+      "refreshPublicNodeCounts"
+    ],
+    "dependencies": [
+      "cmsTopicMapper"
+    ]
+  },
+  {
+    "method": "selectMerchantVisibleCmsTopicById",
+    "line": 1909,
+    "end_line": 1914,
+    "selfcalls": [
+      "refreshPublicNodeCounts"
+    ],
+    "dependencies": [
+      "cmsTopicMapper"
+    ]
+  },
+  {
+    "method": "selectMerchantManagedCmsTopicById",
+    "line": 1917,
+    "end_line": 1922,
+    "selfcalls": [
+      "refreshPublicNodeCounts"
+    ],
+    "dependencies": [
+      "cmsTopicMapper"
+    ]
+  },
+  {
+    "method": "selectCmsTopicList",
+    "line": 1931,
+    "end_line": 1935,
+    "selfcalls": [
+      "refreshPublicNodeCounts"
+    ],
+    "dependencies": [
+      "cmsTopicMapper"
+    ]
+  },
+  {
+    "method": "selectUpcomingTopicCounts",
+    "line": 1938,
+    "end_line": 1949,
+    "selfcalls": [],
+    "dependencies": [
+      "cmsTopicMapper"
+    ]
+  },
+  {
+    "method": "selectPublicCmsTopicList",
+    "line": 1952,
+    "end_line": 1956,
+    "selfcalls": [
+      "refreshPublicNodeCounts"
+    ],
+    "dependencies": [
+      "cmsTopicMapper"
+    ]
+  },
+  {
+    "method": "refreshPublicNodeCounts",
+    "line": 1958,
+    "end_line": 1968,
+    "selfcalls": [
+      "nullToEmpty"
+    ],
+    "dependencies": [
+      "cmsTopicMapper"
+    ]
+  },
+  {
+    "method": "insertCmsTopic",
+    "line": 1977,
+    "end_line": 1994,
+    "selfcalls": [],
+    "dependencies": [
+      "cmsTopicMapper",
+      "productRoleService"
+    ]
+  },
+  {
+    "method": "createTopicByPublisher",
+    "line": 2008,
+    "end_line": 2089,
+    "selfcalls": [
+      "declareRequiredPlatformContentSlot",
+      "resolvePayeeMemberId"
+    ],
+    "dependencies": [
+      "clubService",
+      "cmsTopicMapper",
+      "productRoleService"
+    ]
+  },
+  {
+    "method": "resolvePayeeMemberId",
+    "line": 2095,
+    "end_line": 2109,
+    "selfcalls": [],
+    "dependencies": []
+  },
+  {
+    "method": "updateCmsTopic",
+    "line": 2119,
+    "end_line": 2142,
+    "selfcalls": [
+      "assertOrdinarySupplyRestored",
+      "assertSellingFrozenPatch",
+      "invalidateApprovedCanonical"
+    ],
+    "dependencies": [
+      "cmsTopicMapper"
+    ]
+  },
+  {
+    "method": "casUserStatus",
+    "line": 2157,
+    "end_line": 2173,
+    "selfcalls": [
+      "assertOrdinarySupplyRestored",
+      "syncCreativeSquarePostVisibility"
+    ],
+    "dependencies": [
+      "cmsTopicMapper"
+    ]
+  },
+  {
+    "method": "assertOrdinarySupplyRestored",
+    "line": 2176,
+    "end_line": 2179,
+    "selfcalls": [
+      "ordinarySupplyResumeBlockReason"
+    ],
+    "dependencies": []
+  },
+  {
+    "method": "topicSupplyAutoOnlineBlockReason",
+    "line": 2183,
+    "end_line": 2185,
+    "selfcalls": [
+      "ordinarySupplyResumeBlockReason"
+    ],
+    "dependencies": [
+      "cmsTopicMapper"
+    ]
+  },
+  {
+    "method": "ordinarySupplyResumeBlockReason",
+    "line": 2187,
+    "end_line": 2244,
+    "selfcalls": [],
+    "dependencies": [
+      "OrdinarySupplyReplacementPolicy",
+      "cmsTopicChapterMapper",
+      "merchantChapterOfferMapper"
+    ]
+  },
+  {
+    "method": "syncCreativeSquarePostVisibility",
+    "line": 2253,
+    "end_line": 2258,
+    "selfcalls": [],
+    "dependencies": [
+      "umsCreativeSquareService"
+    ]
+  },
+  {
+    "method": "assertSellingFrozenPatch",
+    "line": 2260,
+    "end_line": 2273,
+    "selfcalls": [],
+    "dependencies": []
+  },
+  {
+    "method": "deleteCmsTopicByIds",
+    "line": 2282,
+    "end_line": 2284,
+    "selfcalls": [],
+    "dependencies": [
+      "cmsTopicMapper"
+    ]
+  },
+  {
+    "method": "deleteCmsTopicById",
+    "line": 2293,
+    "end_line": 2295,
+    "selfcalls": [],
+    "dependencies": [
+      "cmsTopicMapper"
+    ]
+  },
+  {
+    "method": "selectCmsTopicNumByMemberId",
+    "line": 2304,
+    "end_line": 2306,
+    "selfcalls": [],
+    "dependencies": [
+      "cmsTopicMapper"
+    ]
+  },
+  {
+    "method": "selectOnlineThemeNumByMemberId",
+    "line": 2309,
+    "end_line": 2311,
+    "selfcalls": [],
+    "dependencies": [
+      "cmsTopicMapper"
+    ]
+  },
+  {
+    "method": "selectTopicTemplateList",
+    "line": 2314,
+    "end_line": 2316,
+    "selfcalls": [],
+    "dependencies": [
+      "cmsTopicMapper"
+    ]
+  },
+  {
+    "method": "buildTopicTemplateListVO",
+    "line": 2319,
+    "end_line": 2321,
+    "selfcalls": [
+      "buildTopicTemplateListVO"
+    ],
+    "dependencies": []
+  },
+  {
+    "method": "buildTopicTemplateListVO",
+    "line": 2324,
+    "end_line": 2418,
+    "selfcalls": [
+      "refreshPublicNodeCounts"
+    ],
+    "dependencies": [
+      "cmsTopicChapterMapper",
+      "cmsTopicMapper",
+      "cmsTopicNodeMapper",
+      "cmsTopicTemplateMetaMapper"
+    ]
+  },
+  {
+    "method": "buildTopicTemplateDetail",
+    "line": 2421,
+    "end_line": 2423,
+    "selfcalls": [
+      "buildTopicTemplateDetail"
+    ],
+    "dependencies": []
+  },
+  {
+    "method": "buildTopicTemplateDetail",
+    "line": 2426,
+    "end_line": 2430,
+    "selfcalls": [
+      "buildTopicTemplateDetailFromSnapshot"
+    ],
+    "dependencies": [
+      "cmsTopicMapper"
+    ]
+  },
+  {
+    "method": "buildPublicTopicTemplateDetail",
+    "line": 2434,
+    "end_line": 2450,
+    "selfcalls": [
+      "buildTopicTemplateDetailFromSnapshot",
+      "refreshPublicNodeCounts"
+    ],
+    "dependencies": [
+      "cmsTopicMapper"
+    ]
+  },
+  {
+    "method": "buildTopicTemplateDetailFromSnapshot",
+    "line": 2452,
+    "end_line": 2630,
+    "selfcalls": [
+      "applyTemplateMeta",
+      "normalizeRouteShape"
+    ],
+    "dependencies": [
+      "RecruitmentWindowPolicy",
+      "cmsMemberTemplateMapper",
+      "cmsTopicChapterMapper",
+      "cmsTopicNodeMapper",
+      "merchantChapterApplicationService",
+      "sysCategoryService"
+    ]
+  },
+  {
+    "method": "applyTemplateMeta",
+    "line": 2642,
+    "end_line": 2741,
+    "selfcalls": [
+      "splitCsv",
+      "splitLines",
+      "toEffortVO"
+    ],
+    "dependencies": [
+      "cmsTopicTemplateMetaMapper"
+    ]
+  },
+  {
+    "method": "toEffortVO",
+    "line": 2744,
+    "end_line": 2771,
+    "selfcalls": [],
+    "dependencies": []
+  },
+  {
+    "method": "splitCsv",
+    "line": 2774,
+    "end_line": 2776,
+    "selfcalls": [
+      "splitBy"
+    ],
+    "dependencies": []
+  },
+  {
+    "method": "splitLines",
+    "line": 2779,
+    "end_line": 2781,
+    "selfcalls": [
+      "splitBy"
+    ],
+    "dependencies": []
+  },
+  {
+    "method": "splitBy",
+    "line": 2783,
+    "end_line": 2795,
+    "selfcalls": [],
+    "dependencies": []
+  },
+  {
+    "method": "normalizeRouteShape",
+    "line": 2804,
+    "end_line": 2859,
+    "selfcalls": [],
+    "dependencies": []
+  },
+  {
+    "method": "selectTopicIsTemplate",
+    "line": 2862,
+    "end_line": 2864,
+    "selfcalls": [],
+    "dependencies": [
+      "cmsTopicMapper"
+    ]
+  },
+  {
+    "method": "saveAsTemplate",
+    "line": 2867,
+    "end_line": 2869,
+    "selfcalls": [],
+    "dependencies": [
+      "cmsTopicMapper"
+    ]
+  },
+  {
+    "method": "updateTopicDraftState",
+    "line": 2872,
+    "end_line": 2874,
+    "selfcalls": [],
+    "dependencies": [
+      "cmsTopicMapper"
+    ]
+  },
+  {
+    "method": "selectDraftTopicIds",
+    "line": 2877,
+    "end_line": 2879,
+    "selfcalls": [],
+    "dependencies": [
+      "cmsTopicMapper"
+    ]
+  },
+  {
+    "method": "selectTopicIsDraft",
+    "line": 2882,
+    "end_line": 2884,
+    "selfcalls": [],
+    "dependencies": [
+      "cmsTopicMapper"
+    ]
+  },
+  {
+    "method": "markContentSafetyHold",
+    "line": 2887,
+    "end_line": 2890,
+    "selfcalls": [],
+    "dependencies": [
+      "cmsTopicMapper"
+    ]
+  },
+  {
+    "method": "markReviewFlag",
+    "line": 2893,
+    "end_line": 2896,
+    "selfcalls": [],
+    "dependencies": [
+      "cmsTopicMapper"
+    ]
+  },
+  {
+    "method": "graduateBeta",
+    "line": 2899,
+    "end_line": 2902,
+    "selfcalls": [],
+    "dependencies": [
+      "cmsTopicMapper"
+    ]
+  },
+  {
+    "method": "publishDraft",
+    "line": 2906,
+    "end_line": 2908,
+    "selfcalls": [
+      "publishDraftInternal"
+    ],
+    "dependencies": []
+  },
+  {
+    "method": "publishDraftWithReview",
+    "line": 2912,
+    "end_line": 2914,
+    "selfcalls": [
+      "publishDraftInternal"
+    ],
+    "dependencies": []
+  },
+  {
+    "method": "publishDraft",
+    "line": 2918,
+    "end_line": 2921,
+    "selfcalls": [
+      "publishDraftInternal"
+    ],
+    "dependencies": []
+  },
+  {
+    "method": "publishDraftWithReview",
+    "line": 2925,
+    "end_line": 2928,
+    "selfcalls": [
+      "publishDraftInternal"
+    ],
+    "dependencies": []
+  },
+  {
+    "method": "canResubmitSupplyReview",
+    "line": 2931,
+    "end_line": 2935,
+    "selfcalls": [],
+    "dependencies": [
+      "cmsTopicMapper",
+      "supplyReviewService"
+    ]
+  },
+  {
+    "method": "requireChapterDraftMedia",
+    "line": 2940,
+    "end_line": 2955,
+    "selfcalls": [],
+    "dependencies": []
+  },
+  {
+    "method": "publishDraftInternal",
+    "line": 2957,
+    "end_line": 3061,
+    "selfcalls": [
+      "assertBlockNarrativeNpcReferences",
+      "assertBlockSysVarReferences",
+      "assertBranchGraphOnlyForOrienteering",
+      "assertJourneyStoryReferences",
+      "assertOrdinarySupplyRestored",
+      "assertPublishReady",
+      "assertStateKeysRegistered",
+      "assertThemeRuntimeReferences",
+      "assertThoughtRefsResolvable",
+      "ensureSelfHostActivityShell",
+      "isSimplePublishMode",
+      "noBundleReview",
+      "normalizedBranchRouteForPublish",
+      "requestContentSafetyRelistReview",
+      "submitDraftSpotCheck",
+      "submitPublishedProjectReview",
+      "submitTopicBundle",
+      "syncCreativeSquarePostVisibility"
+    ],
+    "dependencies": [
+      "CircleThemePublishPolicy",
+      "TopicBundleReviewService",
+      "auditTaskService",
+      "cmsTopicChapterMapper",
+      "cmsTopicMapper",
+      "merchantCircleSupplyProfileMapper",
+      "supplyReviewService",
+      "topicBundleReviewService",
+      "topicCommercialReviewService"
+    ]
+  },
+  {
+    "method": "submitDraftSpotCheck",
+    "line": 3067,
+    "end_line": 3081,
+    "selfcalls": [
+      "nullToEmpty"
+    ],
+    "dependencies": [
+      "auditTaskService"
+    ]
+  },
+  {
+    "method": "assertPublishReady",
+    "line": 3104,
+    "end_line": 3143,
+    "selfcalls": [
+      "assertAiSimpleNodeLocations",
+      "chaptersFromNodeRows",
+      "nullToEmpty"
+    ],
+    "dependencies": [
+      "OmsTicketWriteValidator",
+      "omsTicketMapper"
+    ]
+  },
+  {
+    "method": "chaptersFromNodeRows",
+    "line": 3150,
+    "end_line": 3164,
+    "selfcalls": [
+      "nullToEmpty"
+    ],
+    "dependencies": [
+      "cmsTopicNodeMapper"
+    ]
+  },
+  {
+    "method": "publishApprovedRouteSnapshot",
+    "line": 3168,
+    "end_line": 3174,
+    "selfcalls": [
+      "publishValidatedRouteSnapshot"
+    ],
+    "dependencies": [
+      "cmsTopicMapper"
+    ]
+  },
+  {
+    "method": "publishValidatedRouteSnapshot",
+    "line": 3176,
+    "end_line": 3192,
+    "selfcalls": [
+      "assertBlockNarrativeNpcReferences",
+      "assertBlockSysVarReferences",
+      "assertJourneyStoryReferences",
+      "assertStateKeysRegistered",
+      "assertThemeRuntimeReferences",
+      "assertThoughtRefsResolvable",
+      "normalizedBranchRouteForPublish"
+    ],
+    "dependencies": [
+      "cmsTopicMapper"
+    ]
+  },
+  {
+    "method": "syncInitialAttributeKeys",
+    "line": 3209,
+    "end_line": 3224,
+    "selfcalls": [],
+    "dependencies": [
+      "themeStateKeyService"
+    ]
+  },
+  {
+    "method": "assertThoughtRefsResolvable",
+    "line": 3233,
+    "end_line": 3257,
+    "selfcalls": [],
+    "dependencies": [
+      "cmsTopicChapterMapper"
+    ]
+  },
+  {
+    "method": "autoRegisterOptionTags",
+    "line": 3267,
+    "end_line": 3289,
+    "selfcalls": [],
+    "dependencies": [
+      "themeStateKeyService"
+    ]
+  },
+  {
+    "method": "assertStateKeysRegistered",
+    "line": 3291,
+    "end_line": 3386,
+    "selfcalls": [
+      "autoRegisterOptionTags",
+      "journeyRulesExhaustTag",
+      "journeyStoryRelationKeys",
+      "journeyStoryStateKeyRefs"
+    ],
+    "dependencies": [
+      "TopicStateKeyRefService",
+      "themeStateKeyService",
+      "topicStateKeyRefService"
+    ]
+  },
+  {
+    "method": "journeyRulesExhaustTag",
+    "line": 3395,
+    "end_line": 3412,
+    "selfcalls": [],
+    "dependencies": []
+  },
+  {
+    "method": "journeyStorySaveContext",
+    "line": 3423,
+    "end_line": 3431,
+    "selfcalls": [
+      "nullToEmpty"
+    ],
+    "dependencies": [
+      "JourneyStoryValidator",
+      "cmsTopicChapterMapper"
+    ]
+  },
+  {
+    "method": "journeyStoryAvailableNpcIds",
+    "line": 3438,
+    "end_line": 3458,
+    "selfcalls": [
+      "nullToEmpty"
+    ],
+    "dependencies": [
+      "NpcProfileService",
+      "cmsTopicNodeMapper",
+      "npcProfileMapper"
+    ]
+  },
+  {
+    "method": "assertBlockNarrativeNpcReferences",
+    "line": 3470,
+    "end_line": 3548,
+    "selfcalls": [
+      "blockNarrativeNpcId",
+      "declareNpc",
+      "journeyStoryAvailableNpcIds",
+      "nullToEmpty"
+    ],
+    "dependencies": [
+      "cmsMemberTemplateMapper",
+      "cmsTopicChapterMapper",
+      "cmsTopicNodeMapper"
+    ]
+  },
+  {
+    "method": "assertBlockSysVarReferences",
+    "line": 3557,
+    "end_line": 3614,
+    "selfcalls": [
+      "nullToEmpty"
+    ],
+    "dependencies": [
+      "advancedGameConfigValidator",
+      "cmsMemberTemplateMapper",
+      "cmsTopicNodeMapper"
+    ]
+  },
+  {
+    "method": "declareNpc",
+    "line": 3617,
+    "end_line": 3624,
+    "selfcalls": [],
+    "dependencies": []
+  },
+  {
+    "method": "blockNarrativeNpcId",
+    "line": 3627,
+    "end_line": 3641,
+    "selfcalls": [],
+    "dependencies": []
+  },
+  {
+    "method": "persistJourneyStoryAfterChapterRebuild",
+    "line": 3649,
+    "end_line": 3684,
+    "selfcalls": [],
+    "dependencies": [
+      "JourneyStoryValidator",
+      "cmsTopicMapper",
+      "journeyStoryValidator"
+    ]
+  },
+  {
+    "method": "remapCopiedJourneyStory",
+    "line": 3694,
+    "end_line": 3713,
+    "selfcalls": [],
+    "dependencies": [
+      "cmsTopicMapper"
+    ]
+  },
+  {
+    "method": "assertThemeRuntimeReferences",
+    "line": 3719,
+    "end_line": 3751,
+    "selfcalls": [
+      "assertJourneyStoryReferences",
+      "nullToEmpty"
+    ],
+    "dependencies": [
+      "cmsMemberTemplateMapper",
+      "cmsTopicChapterMapper",
+      "cmsTopicNodeMapper",
+      "themeStateKeyService"
+    ]
+  },
+  {
+    "method": "assertJourneyStoryReferences",
+    "line": 3753,
+    "end_line": 3807,
+    "selfcalls": [
+      "blockIsBranch",
+      "blockWritesOutcome",
+      "journeyStoryAvailableNpcIds",
+      "nullToEmpty"
+    ],
+    "dependencies": [
+      "JourneyStoryValidator",
+      "cmsMemberTemplateMapper",
+      "cmsTopicChapterMapper",
+      "cmsTopicNodeMapper",
+      "journeyStoryValidator"
+    ]
+  },
+  {
+    "method": "blockWritesOutcome",
+    "line": 3810,
+    "end_line": 3824,
+    "selfcalls": [],
+    "dependencies": []
+  },
+  {
+    "method": "blockIsBranch",
+    "line": 3827,
+    "end_line": 3838,
+    "selfcalls": [],
+    "dependencies": []
+  },
+  {
+    "method": "journeyStoryStateKeyRefs",
+    "line": 3841,
+    "end_line": 3857,
+    "selfcalls": [],
+    "dependencies": []
+  },
+  {
+    "method": "journeyStoryRelationKeys",
+    "line": 3860,
+    "end_line": 3870,
+    "selfcalls": [],
+    "dependencies": []
+  },
+  {
+    "method": "remapRebuiltTemplateNodes",
+    "line": 3872,
+    "end_line": 3888,
+    "selfcalls": [
+      "copyTemplateForOwner",
+      "nullToEmpty"
+    ],
+    "dependencies": [
+      "cmsMemberTemplateMapper",
+      "cmsTopicNodeMapper"
+    ]
+  },
+  {
+    "method": "remapTemplateRuleIdentities",
+    "line": 3890,
+    "end_line": 3905,
+    "selfcalls": [],
+    "dependencies": []
+  },
+  {
+    "method": "persistTemplateInteractionRules",
+    "line": 3907,
+    "end_line": 3914,
+    "selfcalls": [],
+    "dependencies": [
+      "cmsTopicMapper",
+      "topicRouteRuntimeService"
+    ]
+  },
+  {
+    "method": "requiresFullRuntimeSnapshot",
+    "line": 3916,
+    "end_line": 3925,
+    "selfcalls": [],
+    "dependencies": []
+  },
+  {
+    "method": "normalizedBranchRouteForPublish",
+    "line": 3928,
+    "end_line": 3945,
+    "selfcalls": [
+      "declaredRouteOutcomes",
+      "nullToEmpty",
+      "requiresFullRuntimeSnapshot"
+    ],
+    "dependencies": [
+      "cmsTopicNodeMapper",
+      "topicRouteConfigValidator",
+      "topicRoutePublishGate",
+      "topicRouteRuntimeService"
+    ]
+  },
+  {
+    "method": "configureCircleCandidates",
+    "line": 3949,
+    "end_line": 4012,
+    "selfcalls": [
+      "nullToEmpty"
+    ],
+    "dependencies": [
+      "CircleThemePublishPolicy",
+      "cmsTopicChapterMapper",
+      "cmsTopicMapper",
+      "productRoleService"
+    ]
+  },
+  {
+    "method": "reviewCircleSupplies",
+    "line": 4016,
+    "end_line": 4046,
+    "selfcalls": [],
+    "dependencies": [
+      "CircleThemePublishPolicy",
+      "cmsTopicChapterMapper",
+      "cmsTopicMapper",
+      "merchantCircleSupplyProfileMapper",
+      "productRoleService"
+    ]
+  },
+  {
+    "method": "createTopic",
+    "line": 4057,
+    "end_line": 4061,
+    "selfcalls": [
+      "createTopicInternal"
+    ],
+    "dependencies": []
+  },
+  {
+    "method": "createTopicV2",
+    "line": 4065,
+    "end_line": 4067,
+    "selfcalls": [
+      "createTopicV2WithReview"
+    ],
+    "dependencies": []
+  },
+  {
+    "method": "createTopicV2WithReview",
+    "line": 4071,
+    "end_line": 4074,
+    "selfcalls": [
+      "createTopicInternal"
+    ],
+    "dependencies": []
+  },
+  {
+    "method": "resolveMerchantPoolFlag",
+    "line": 4099,
+    "end_line": 4111,
+    "selfcalls": [],
+    "dependencies": [
+      "clubLeaderService"
+    ]
+  },
+  {
+    "method": "resolveOpenClubPool",
+    "line": 4138,
+    "end_line": 4146,
+    "selfcalls": [],
+    "dependencies": []
+  },
+  {
+    "method": "createTopicInternal",
+    "line": 4148,
+    "end_line": 4414,
+    "selfcalls": [
+      "assertAiSimpleNoGameConfiguration",
+      "assertAiSimpleNodeLocations",
+      "assertBingoCouponsOwned",
+      "assertChapterRecruitmentOnlyForFreeExplore",
+      "assertClubLeadOnlyForCityOrienteering",
+      "assertCollaboratorIdShape",
+      "assertThemeRuntimeReferences",
+      "calculateTemplateCount",
+      "calculateTotalDistance",
+      "calculateTotalTime",
+      "ensureSelfHostActivityShell",
+      "extractNodesForStatistics",
+      "firstLocationAddress",
+      "isSimplePublishMode",
+      "noBundleReview",
+      "nodesForDistance",
+      "normalizeTeamConfig",
+      "normalizedBranchRouteForPublish",
+      "persistJourneyStoryAfterChapterRebuild",
+      "persistTemplateInteractionRules",
+      "publishBeforeReview",
+      "remapRebuiltTemplateNodes",
+      "remapTemplateRuleIdentities",
+      "requireChapterDraftMedia",
+      "requiresFullRuntimeSnapshot",
+      "resolveMerchantPoolFlag",
+      "resolveOpenClubPool",
+      "resolveProductType",
+      "saveCollaborators",
+      "saveRouteDefinition",
+      "saveTickets",
+      "saveTopicChapters",
+      "submitPublishedProjectReview",
+      "submitTopicBundle",
+      "syncInitialAttributeKeys",
+      "updateTopicStatistics"
+    ],
+    "dependencies": [
+      "JourneyStoryValidator",
+      "auditTaskService",
+      "clubService",
+      "cmsTopicMapper",
+      "couponRewardAuthorizationService",
+      "journeyRulesValidator",
+      "journeyStoryValidator",
+      "productRoleService",
+      "topicCompletionRulePolicy",
+      "xpBudgetService"
+    ]
+  },
+  {
+    "method": "updateTopicByOwner",
+    "line": 4426,
+    "end_line": 4429,
+    "selfcalls": [
+      "updateTopicByOwnerInternal"
+    ],
+    "dependencies": []
+  },
+  {
+    "method": "updateTopicByOwnerV2",
+    "line": 4433,
+    "end_line": 4436,
+    "selfcalls": [
+      "updateTopicByOwnerV2WithReview"
+    ],
+    "dependencies": []
+  },
+  {
+    "method": "updateTopicByOwnerV2WithReview",
+    "line": 4440,
+    "end_line": 4443,
+    "selfcalls": [
+      "updateTopicByOwnerInternal"
+    ],
+    "dependencies": []
+  },
+  {
+    "method": "updateTopicByOwnerInternal",
+    "line": 4445,
+    "end_line": 4519,
+    "selfcalls": [
+      "applyWhitelistEdit",
+      "assertLegacyChapterFlowWritable",
+      "isSimplePublishMode",
+      "noBundleReview",
+      "publishBeforeReview",
+      "rebuildTopicContent",
+      "submitTopicBundle"
+    ],
+    "dependencies": [
+      "auditTaskService",
+      "cmsTopicMapper",
+      "supplyReviewService",
+      "topicBundleReviewService"
+    ]
+  },
+  {
+    "method": "submitTopicBundle",
+    "line": 4521,
+    "end_line": 4537,
+    "selfcalls": [
+      "attachCommercialPublicationState",
+      "publishBeforeReview"
+    ],
+    "dependencies": [
+      "TopicBundleReviewService",
+      "auditTaskService",
+      "topicBundleReviewService"
+    ]
+  },
+  {
+    "method": "requestContentSafetyRelistReview",
+    "line": 4540,
+    "end_line": 4569,
+    "selfcalls": [
+      "findOpenTopicTaskId"
+    ],
+    "dependencies": [
+      "auditTaskService",
+      "cmsTopicMapper"
+    ]
+  },
+  {
+    "method": "findOpenTopicTaskId",
+    "line": 4571,
+    "end_line": 4584,
+    "selfcalls": [],
+    "dependencies": [
+      "auditTaskService"
+    ]
+  },
+  {
+    "method": "publishBeforeReview",
+    "line": 4594,
+    "end_line": 4618,
+    "selfcalls": [
+      "ensureSelfHostActivityShell",
+      "publishValidatedRouteSnapshot",
+      "requestContentSafetyRelistReview",
+      "syncCreativeSquarePostVisibility"
+    ],
+    "dependencies": [
+      "cmsTopicMapper",
+      "quotaService"
+    ]
+  },
+  {
+    "method": "submitPublishedProjectReview",
+    "line": 4620,
+    "end_line": 4625,
+    "selfcalls": [],
+    "dependencies": [
+      "commercialTopicPolicy",
+      "topicCommercialReviewService"
+    ]
+  },
+  {
+    "method": "attachCommercialPublicationState",
+    "line": 4627,
+    "end_line": 4640,
+    "selfcalls": [],
+    "dependencies": [
+      "cmsTopicMapper"
+    ]
+  },
+  {
+    "method": "noBundleReview",
+    "line": 4642,
+    "end_line": 4652,
+    "selfcalls": [
+      "attachCommercialPublicationState"
+    ],
+    "dependencies": [
+      "cmsTopicMapper"
+    ]
+  },
+  {
+    "method": "applyWhitelistEdit",
+    "line": 4661,
+    "end_line": 4696,
+    "selfcalls": [],
+    "dependencies": [
+      "cmsTopicMapper"
+    ]
+  },
+  {
+    "method": "rebuildTopicContent",
+    "line": 4706,
+    "end_line": 4933,
+    "selfcalls": [
+      "assertAiSimpleNoGameConfiguration",
+      "assertAiSimpleNodeLocations",
+      "assertBingoCouponsOwned",
+      "assertChapterRecruitmentOnlyForFreeExplore",
+      "assertClubLeadOnlyForCityOrienteering",
+      "assertCollaboratorIdShape",
+      "assertRebuildPayloadComplete",
+      "assertTopicDeletable",
+      "calculateTemplateCount",
+      "calculateTotalDistance",
+      "calculateTotalTime",
+      "compileChapterFlow",
+      "deleteTopicEditableChildren",
+      "deleteTopicEditableNonFlowChildren",
+      "existingNodeUnlocks",
+      "extractNodesForStatistics",
+      "firstLocationAddress",
+      "invalidateApprovedCanonical",
+      "isSimplePublishMode",
+      "journeyStorySaveContext",
+      "nodesForDistance",
+      "normalizeTeamConfig",
+      "persistJourneyStoryAfterChapterRebuild",
+      "persistTemplateInteractionRules",
+      "preserveOmittedAuthorConfig",
+      "refreshPendingSaleReview",
+      "refreshSelfHostActivity",
+      "remapRebuiltTemplateNodes",
+      "remapTemplateRuleIdentities",
+      "requireChapterDraftMedia",
+      "resolveMerchantPoolFlag",
+      "resolveProductType",
+      "restoreHiddenNodes",
+      "restoreNodeUnlocks",
+      "saleTerms",
+      "saveCollaborators",
+      "saveRouteDefinition",
+      "saveTickets",
+      "saveTopicChapters",
+      "selectHiddenNodeIds",
+      "shouldCompileChapterFlow",
+      "submitPublishedProjectReview",
+      "syncInitialAttributeKeys"
+    ],
+    "dependencies": [
+      "CommercialTopicPolicy",
+      "auditTaskService",
+      "clubService",
+      "cmsTopicMapper",
+      "commercialTopicPolicy",
+      "couponRewardAuthorizationService",
+      "journeyRulesValidator",
+      "journeyStoryValidator",
+      "topicCompletionRulePolicy",
+      "xpBudgetService"
+    ]
+  },
+  {
+    "method": "saleTerms",
+    "line": 4936,
+    "end_line": 4943,
+    "selfcalls": [],
+    "dependencies": [
+      "CommercialTopicPolicy",
+      "commercialTopicPolicy"
+    ]
+  },
+  {
+    "method": "refreshPendingSaleReview",
+    "line": 4949,
+    "end_line": 4967,
+    "selfcalls": [],
+    "dependencies": [
+      "auditTaskService",
+      "cmsTopicMapper",
+      "topicCommercialReviewService"
+    ]
+  },
+  {
+    "method": "existingNodeUnlocks",
+    "line": 4969,
+    "end_line": 4980,
+    "selfcalls": [
+      "nullToEmpty"
+    ],
+    "dependencies": [
+      "cmsTopicNodeMapper"
+    ]
+  },
+  {
+    "method": "restoreNodeUnlocks",
+    "line": 4982,
+    "end_line": 4997,
+    "selfcalls": [],
+    "dependencies": [
+      "cmsTopicNodeMapper"
+    ]
+  },
+  {
+    "method": "preserveOmittedAuthorConfig",
+    "line": 5000,
+    "end_line": 5023,
+    "selfcalls": [],
+    "dependencies": []
+  },
+  {
+    "method": "invalidateApprovedCanonical",
+    "line": 5025,
+    "end_line": 5029,
+    "selfcalls": [],
+    "dependencies": [
+      "canonicalMutationService"
+    ]
+  },
+  {
+    "method": "assertRebuildPayloadComplete",
+    "line": 5046,
+    "end_line": 5076,
+    "selfcalls": [
+      "nullToEmpty"
+    ],
+    "dependencies": [
+      "cmsCollaboratorsMapper",
+      "cmsTopicChapterMapper",
+      "omsTicketMapper"
+    ]
+  },
+  {
+    "method": "selectHiddenNodeIds",
+    "line": 5079,
+    "end_line": 5087,
+    "selfcalls": [
+      "nullToEmpty"
+    ],
+    "dependencies": [
+      "cmsTopicNodeMapper"
+    ]
+  },
+  {
+    "method": "restoreHiddenNodes",
+    "line": 5090,
+    "end_line": 5101,
+    "selfcalls": [],
+    "dependencies": [
+      "cmsTopicNodeMapper"
+    ]
+  },
+  {
+    "method": "deleteTopicEditableChildren",
+    "line": 5110,
+    "end_line": 5113,
+    "selfcalls": [
+      "deleteTopicChapterFlow",
+      "deleteTopicEditableNonFlowChildren"
+    ],
+    "dependencies": []
+  },
+  {
+    "method": "deleteTopicChapterFlow",
+    "line": 5115,
+    "end_line": 5126,
+    "selfcalls": [
+      "nullToEmpty"
+    ],
+    "dependencies": [
+      "cmsTopicChapterMapper",
+      "cmsTopicNodeMapper"
+    ]
+  },
+  {
+    "method": "deleteTopicEditableNonFlowChildren",
+    "line": 5134,
+    "end_line": 5141,
+    "selfcalls": [
+      "nullToEmpty"
+    ],
+    "dependencies": [
+      "cmsCollaboratorsMapper"
+    ]
+  },
+  {
+    "method": "nullToEmpty",
+    "line": 5143,
+    "end_line": 5145,
+    "selfcalls": [],
+    "dependencies": []
+  },
+  {
+    "method": "refreshSelfHostActivity",
+    "line": 5156,
+    "end_line": 5187,
+    "selfcalls": [
+      "assertSoldActivityTimeLocationUntouched",
+      "ensureSelfHostActivityShell",
+      "nullToEmpty"
+    ],
+    "dependencies": [
+      "cmsActivityMapper",
+      "cmsTopicMapper",
+      "omsTicketService"
+    ]
+  },
+  {
+    "method": "ensureSelfHostActivityShell",
+    "line": 5203,
+    "end_line": 5222,
+    "selfcalls": [
+      "generateSelfHostActivity",
+      "nullToEmpty"
+    ],
+    "dependencies": [
+      "cmsActivityMapper"
+    ]
+  },
+  {
+    "method": "ensureSelfHostActivityShell",
+    "line": 5232,
+    "end_line": 5249,
+    "selfcalls": [
+      "ensureSelfHostActivityShell"
+    ],
+    "dependencies": [
+      "cmsTopicMapper"
+    ]
+  },
+  {
+    "method": "assertSoldActivityTimeLocationUntouched",
+    "line": 5259,
+    "end_line": 5269,
+    "selfcalls": [
+      "countActivityOpenSaleRegistrations",
+      "sameSecondOrBothNull"
+    ],
+    "dependencies": []
+  },
+  {
+    "method": "countActivityOpenSaleRegistrations",
+    "line": 5276,
+    "end_line": 5287,
+    "selfcalls": [],
+    "dependencies": [
+      "cmsRegistrationMapper"
+    ]
+  },
+  {
+    "method": "sameSecondOrBothNull",
+    "line": 5289,
+    "end_line": 5294,
+    "selfcalls": [],
+    "dependencies": []
+  },
+  {
+    "method": "extractNodesForStatistics",
+    "line": 5297,
+    "end_line": 5302,
+    "selfcalls": [
+      "extractAllNodes"
+    ],
+    "dependencies": []
+  },
+  {
+    "method": "extractAllNodes",
+    "line": 5304,
+    "end_line": 5316,
+    "selfcalls": [],
+    "dependencies": []
+  },
+  {
+    "method": "nodesForDistance",
+    "line": 5319,
+    "end_line": 5339,
+    "selfcalls": [],
+    "dependencies": []
+  },
+  {
+    "method": "isSimplePublishMode",
+    "line": 5341,
+    "end_line": 5343,
+    "selfcalls": [],
+    "dependencies": []
+  },
+  {
+    "method": "assertAiSimpleNodeLocations",
+    "line": 5352,
+    "end_line": 5369,
+    "selfcalls": [
+      "extractAllNodes",
+      "validateCoordinate"
+    ],
+    "dependencies": []
+  },
+  {
+    "method": "assertAiSimpleNoGameConfiguration",
+    "line": 5372,
+    "end_line": 5380,
+    "selfcalls": [
+      "extractAllNodes"
+    ],
+    "dependencies": []
+  },
+  {
+    "method": "validateCoordinate",
+    "line": 5382,
+    "end_line": 5394,
+    "selfcalls": [],
+    "dependencies": []
+  },
+  {
+    "method": "calculateTotalDistance",
+    "line": 5396,
+    "end_line": 5414,
+    "selfcalls": [],
+    "dependencies": []
+  },
+  {
+    "method": "calculateTotalTime",
+    "line": 5416,
+    "end_line": 5428,
+    "selfcalls": [],
+    "dependencies": []
+  },
+  {
+    "method": "calculateTemplateCount",
+    "line": 5430,
+    "end_line": 5443,
+    "selfcalls": [],
+    "dependencies": []
+  },
+  {
+    "method": "calculateChapterDistance",
+    "line": 5445,
+    "end_line": 5447,
+    "selfcalls": [
+      "calculateTotalDistance"
+    ],
+    "dependencies": []
+  },
+  {
+    "method": "calculateCrossChapterDistance",
+    "line": 5449,
+    "end_line": 5460,
+    "selfcalls": [],
+    "dependencies": []
+  },
+  {
+    "method": "saveChaptersAndNodes",
+    "line": 5462,
+    "end_line": 5498,
+    "selfcalls": [
+      "assertChapterShapeForTopic",
+      "saveNodes"
+    ],
+    "dependencies": [
+      "cmsTopicChapterMapper"
+    ]
+  },
+  {
+    "method": "saveTopicChapters",
+    "line": 5501,
+    "end_line": 5511,
+    "selfcalls": [
+      "compileChapterFlow",
+      "saveChaptersAndNodes",
+      "shouldCompileChapterFlow"
+    ],
+    "dependencies": []
+  },
+  {
+    "method": "shouldCompileChapterFlow",
+    "line": 5513,
+    "end_line": 5523,
+    "selfcalls": [],
+    "dependencies": []
+  },
+  {
+    "method": "compileChapterFlow",
+    "line": 5529,
+    "end_line": 5621,
+    "selfcalls": [
+      "assertChapterShapeForTopic",
+      "assertTemplateOwned",
+      "deleteTopicChapterFlow"
+    ],
+    "dependencies": [
+      "cmsMemberTemplateMapper",
+      "cmsTopicChapterMapper",
+      "cmsTopicNodeMapper"
+    ]
+  },
+  {
+    "method": "assertLegacyChapterFlowWritable",
+    "line": 5624,
+    "end_line": 5632,
+    "selfcalls": [
+      "nullToEmpty"
+    ],
+    "dependencies": [
+      "cmsTopicChapterMapper"
+    ]
+  },
+  {
+    "method": "assertChapterShapeForTopic",
+    "line": 5634,
+    "end_line": 5639,
+    "selfcalls": [
+      "assertChapterShape"
+    ],
+    "dependencies": [
+      "ClubDirectMerchantPolicy",
+      "cmsTopicMapper",
+      "productRoleService"
+    ]
+  },
+  {
+    "method": "assertChapterShape",
+    "line": 5642,
+    "end_line": 5642,
+    "selfcalls": [
+      "assertChapterShape"
+    ],
+    "dependencies": []
+  },
+  {
+    "method": "assertChapterShape",
+    "line": 5644,
+    "end_line": 5683,
+    "selfcalls": [
+      "assertAllowedValidationMethods"
+    ],
+    "dependencies": [
+      "sysCategoryService"
+    ]
+  },
+  {
+    "method": "assertAllowedValidationMethods",
+    "line": 5686,
+    "end_line": 5696,
+    "selfcalls": [],
+    "dependencies": []
+  },
+  {
+    "method": "saveNodes",
+    "line": 5698,
+    "end_line": 5727,
+    "selfcalls": [
+      "assertTemplateOwned"
+    ],
+    "dependencies": [
+      "cmsTopicNodeMapper"
+    ]
+  },
+  {
+    "method": "saveNodes",
+    "line": 5730,
+    "end_line": 5732,
+    "selfcalls": [
+      "saveNodes"
+    ],
+    "dependencies": []
+  },
+  {
+    "method": "saveRouteDefinition",
+    "line": 5735,
+    "end_line": 5769,
+    "selfcalls": [
+      "assertBranchGraphOnlyForOrienteering",
+      "containsNodeKey",
+      "declaredRouteOutcomes"
+    ],
+    "dependencies": [
+      "cmsTopicMapper",
+      "topicRouteConfigValidator"
+    ]
+  },
+  {
+    "method": "declaredRouteOutcomes",
+    "line": 5771,
+    "end_line": 5809,
+    "selfcalls": [
+      "nullToEmpty"
+    ],
+    "dependencies": [
+      "cmsMemberTemplateMapper",
+      "cmsTopicNodeMapper"
+    ]
+  },
+  {
+    "method": "assertBranchGraphOnlyForOrienteering",
+    "line": 5811,
+    "end_line": 5816,
+    "selfcalls": [],
+    "dependencies": []
+  },
+  {
+    "method": "containsNodeKey",
+    "line": 5818,
+    "end_line": 5829,
+    "selfcalls": [],
+    "dependencies": []
+  },
+  {
+    "method": "firstLocationAddress",
+    "line": 5831,
+    "end_line": 5851,
+    "selfcalls": [],
+    "dependencies": []
+  },
+  {
+    "method": "deleteTopicByOwner",
+    "line": 5911,
+    "end_line": 5945,
+    "selfcalls": [
+      "assertTopicDeletable",
+      "nullToEmpty",
+      "syncCreativeSquarePostVisibility"
+    ],
+    "dependencies": [
+      "cmsActivityMapper",
+      "cmsRegistrationMapper",
+      "cmsTopicMapper"
+    ]
+  },
+  {
+    "method": "assertTopicDeletable",
+    "line": 5972,
+    "end_line": 5987,
+    "selfcalls": [
+      "countTopicRegistrationsByPaymentStatus"
+    ],
+    "dependencies": []
+  },
+  {
+    "method": "countTopicRegistrationsByPaymentStatus",
+    "line": 5989,
+    "end_line": 5996,
+    "selfcalls": [],
+    "dependencies": [
+      "cmsRegistrationMapper"
+    ]
+  },
+  {
+    "method": "assertTemplateOwned",
+    "line": 6019,
+    "end_line": 6045,
+    "selfcalls": [],
+    "dependencies": [
+      "cmsMemberTemplateMapper"
+    ]
+  },
+  {
+    "method": "assertCollaboratorIdShape",
+    "line": 6048,
+    "end_line": 6057,
+    "selfcalls": [],
+    "dependencies": []
+  },
+  {
+    "method": "saveCollaborators",
+    "line": 6059,
+    "end_line": 6073,
+    "selfcalls": [],
+    "dependencies": [
+      "cmsCollaboratorsMapper"
+    ]
+  },
+  {
+    "method": "normalizeTeamConfig",
+    "line": 6093,
+    "end_line": 6104,
+    "selfcalls": [],
+    "dependencies": []
+  },
+  {
+    "method": "resolveProductType",
+    "line": 6106,
+    "end_line": 6115,
+    "selfcalls": [],
+    "dependencies": []
+  },
+  {
+    "method": "assertChapterRecruitmentOnlyForFreeExplore",
+    "line": 6118,
+    "end_line": 6130,
+    "selfcalls": [],
+    "dependencies": []
+  },
+  {
+    "method": "assertClubLeadOnlyForCityOrienteering",
+    "line": 6140,
+    "end_line": 6148,
+    "selfcalls": [],
+    "dependencies": []
+  },
+  {
+    "method": "saveTickets",
+    "line": 6173,
+    "end_line": 6270,
+    "selfcalls": [
+      "nullToEmpty",
+      "topicTicketPairingKey"
+    ],
+    "dependencies": [
+      "OmsTicketWriteValidator",
+      "omsTicketMapper"
+    ]
+  },
+  {
+    "method": "topicTicketPairingKey",
+    "line": 6276,
+    "end_line": 6280,
+    "selfcalls": [],
+    "dependencies": []
+  },
+  {
+    "method": "updateTopicStatistics",
+    "line": 6282,
+    "end_line": 6285,
+    "selfcalls": [],
+    "dependencies": []
+  },
+  {
+    "method": "generateSelfHostActivity",
+    "line": 6292,
+    "end_line": 6327,
+    "selfcalls": [],
+    "dependencies": [
+      "cmsActivityMapper",
+      "omsTicketService"
+    ]
+  },
+  {
+    "method": "assertBingoCouponsOwned",
+    "line": 6336,
+    "end_line": 6342,
+    "selfcalls": [],
+    "dependencies": [
+      "couponRewardAuthorizationService"
+    ]
+  }
+]

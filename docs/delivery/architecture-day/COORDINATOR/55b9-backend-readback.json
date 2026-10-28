@@ -1,0 +1,30 @@
+{
+  "source_sha": "55b9e722fcfeeb118781a35ad077ed23849f86b0",
+  "run": 40132354873,
+  "attempt": 2,
+  "xml_files": 1934,
+  "unique_testcases": 15459,
+  "duplicate_testcases": 0,
+  "xml_counts": {
+    "passed": 14826,
+    "skipped": 633
+  },
+  "selected_suites": {
+    "com.chengyinhub.business.service.RegistrationSeatSettlementReaderTest": {
+      "passed": 4
+    },
+    "com.chengyinhub.business.it.P0DeregistrationMySqlIT": {
+      "passed": 1
+    },
+    "com.chengyinhub.business.service.impl.NpcAsrTerminalFenceBarrierTest": {
+      "passed": 3
+    },
+    "com.chengyinhub.upgrade.SupportedStackServiceCyclesTest": {
+      "passed": 35
+    }
+  },
+  "full_application_startup": "PASS_JOB120988405767_PACKAGED_APP_HEALTH_DB_REDIS_CACHE_HTTP401",
+  "atomic_python": "86PASS_2ERROR_FIXTURE_MISSING_APPLICATION_ROUND",
+  "compiled_and_tested_jar_provenance": "SKIPPED_AFTER_ATOMIC_FAILURE",
+  "all_complete": false
+}

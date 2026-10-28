@@ -98,6 +98,11 @@ class RefundDeadlineGateTest {
         topic.setId(TOPIC);
         topic.setMemberId(MEMBER);
         when(topicMapper.selectCmsTopicById(anyLong())).thenReturn(topic);
+        when(topicMapper.selectCmsTopicByIdForUpdate(anyLong())).thenReturn(topic);
+        when(regMapper.selectCmsRegistrationByIdForUpdate(anyLong()))
+                .thenAnswer(call -> regMapper.selectCmsRegistrationById(call.getArgument(0)));
+        when(activityMapper.selectCmsActivityByIdForUpdate(anyLong()))
+                .thenAnswer(call -> activityMapper.selectCmsActivityById(call.getArgument(0)));
     }
 
     private CmsRegistration paidTopicRegistration() {
@@ -229,6 +234,9 @@ class RefundDeadlineGateTest {
         r.setPurchaseKind(PurchaseKind.EXPLORE_PASS);
         r.setVerificationStatus(1);
         when(regMapper.selectCmsRegistrationById(REG)).thenReturn(r);
+        // The topic-first fence must first see the original row; the later chapter
+        // snapshot read is deliberately missing, as this negative control requires.
+        org.mockito.Mockito.doReturn(r, (CmsRegistration) null).when(regMapper).selectCmsRegistrationByIdForUpdate(REG);
         IActivityCancelManualRefundCaseService cases = mock(IActivityCancelManualRefundCaseService.class);
         IRefundService refunds = mock(IRefundService.class);
         ReflectionTestUtils.setField(service, "manualRefundCaseService", cases);

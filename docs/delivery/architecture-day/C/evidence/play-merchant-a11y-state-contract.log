@@ -1,0 +1,10 @@
+✔ 探店日商家页的错误、提交与授权状态具备可访问语义 (1.33499ms)
+✔ 负控：移除防重复提交语义后契约必须判红 (2.0807ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 9.893249

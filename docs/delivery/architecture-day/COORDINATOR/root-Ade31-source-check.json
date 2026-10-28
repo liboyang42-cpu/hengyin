@@ -1,0 +1,42 @@
+{
+  "candidate_parent": "00fc58c50febc3366f78af600c8f12636cd13de5",
+  "A_exact_production_test_files": [
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsRegistrationController.java",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsRegistrationMerchantController.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/MerchantRegistrationCancellationMySqlIT.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationFundsMybatisIntegrationTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/business/CmsRegistrationControllerSafetyTest.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CmsRegistrationMerchantMapper.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ICmsRegistrationMerchantService.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationMerchantServiceImpl.java",
+    "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMerchantMapper.xml"
+  ],
+  "original_assertions_preserved": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/business/CmsRegistrationControllerSafetyTest.java",
+      "original_unchanged": 10,
+      "current_declared": 13
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationFundsMybatisIntegrationTest.java",
+      "original_unchanged": 92,
+      "current_declared": 94
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/MerchantRegistrationCancellationMySqlIT.java",
+      "original_unchanged": 8,
+      "current_declared": 15
+    }
+  ],
+  "protected_unchanged_vs_integration_parent": [
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPayServiceImpl.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationCheckoutServiceImpl.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementClaimServiceImpl.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicOperationsScopeAuthorizer.java"
+  ],
+  "worker_static_script_note": "The original script reaches only its final protected-source 6788 equality assertion and fails there because root previously integrated G changes. Earlier checks passed; original script is retained. Own A source/test blobs match reviewed de31 exactly and protected files equal actual integration parent00fc.",
+  "java_mysql_this_patch": "NOT_YET_RUN"
+}

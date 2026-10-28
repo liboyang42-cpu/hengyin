@@ -6,7 +6,9 @@ const { execFileSync } = require('node:child_process');
 const { navigationEntries, runtimeSources } = require('./nav-route-provenance');
 
 const root = path.resolve(__dirname, '../../..');
-const files = execFileSync('git', ['ls-files'], { cwd: root, encoding: 'utf8' }).trim().split('\n');
+// The complete tracked manifest exceeds execFileSync's default 1 MiB on the merged tree.
+// Retain the entire manifest and a bounded buffer; overflow must still fail, never truncate.
+const files = execFileSync('git', ['ls-files'], { cwd: root, encoding: 'utf8', maxBuffer: 8 * 1024 * 1024 }).trim().split('\n');
 const texts = files.filter(file => /\.(js|json|wxml|vue|html|java|xml|sql|yml|yaml|properties|ts)$/.test(file)
   && !file.includes('/node_modules/') && !file.endsWith('action-ledger.json')).map(file => {
     const content = fs.readFileSync(path.join(root, file), 'utf8');

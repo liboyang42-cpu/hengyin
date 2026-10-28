@@ -1,0 +1,40 @@
+TAP version 13
+# Subtest: A 的成功迟到后不能删除 B 的 pending，也不能清理 A 的未知身份
+ok 1 - A 的成功迟到后不能删除 B 的 pending，也不能清理 A 的未知身份
+  ---
+  duration_ms: 4.486542
+  type: 'test'
+  ...
+# Subtest: A UNKNOWN 后切 B，retry 不复制 A 命令到 B key、不以 B token 发送
+ok 2 - A UNKNOWN 后切 B，retry 不复制 A 命令到 B key、不以 B token 发送
+  ---
+  duration_ms: 1.781649
+  type: 'test'
+  ...
+# Subtest: A→B→A 的新登录代次拒绝原请求迟到；同页重初始化也隔离旧命令
+ok 3 - A→B→A 的新登录代次拒绝原请求迟到；同页重初始化也隔离旧命令
+  ---
+  duration_ms: 0.84048
+  type: 'test'
+  ...
+# Subtest: 页面移出栈后忽略原写回调，保留原回执索引
+ok 4 - 页面移出栈后忽略原写回调，保留原回执索引
+  ---
+  duration_ms: 0.5622
+  type: 'test'
+  ...
+# Subtest: A 打开的确认弹窗在 B 登录后不能执行旧操作
+ok 5 - A 打开的确认弹窗在 B 登录后不能执行旧操作
+  ---
+  duration_ms: 0.434221
+  type: 'test'
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 27.280951

@@ -1,0 +1,80 @@
+{
+  "source_sha": "4da950c59809c4367b2b136b519dbda5e5952ece",
+  "source_tree": "934c9eb1330229430b2b83c635f65e71b99d4c76",
+  "run": 40145649954,
+  "job": 121026298730,
+  "attempt": 1,
+  "artifact": 12580476932,
+  "zip_sha256": "f5260a09a52fa22af990d726fbd5bd232b425e2886c6474c529e61b2359f694d",
+  "zip_crc": "PASS",
+  "artifact_files": 6,
+  "result": "PASS_SCOPED_AUTHENTICATED_REFUND_LEASE_REDIS_RECOVERY",
+  "full_governance_complete": false,
+  "schema": {
+    "builder_exit": 0,
+    "base_tables": 227,
+    "seed_negative_controls": "6/6",
+    "manifest_migrations": 547,
+    "executed_pending_plan_count": 256,
+    "final_tables": 429,
+    "base_seed_migration_errors": [
+      0,
+      0,
+      0
+    ],
+    "old_c": "REPLACED_UNAPPLIED_EXACT_HASHED_PAIR",
+    "strict_v2": "Executed via original runner preflight/DDL/postcheck",
+    "data_or_postdeploy_acceptance": false
+  },
+  "prepared_jar_sha256": "33d9109da0dac42dce5cdcc3e41f77772721fb43a77a556fa46152a10f8a0ea3",
+  "jar_limit": "Prepared host JAR hash and readonly mounted launch in same job; no independent downloaded JAR bytes or in-container runtime rehash proof",
+  "observations": {
+    "events": 18,
+    "actor": 1,
+    "refund_id": 20,
+    "actor_captcha_negative_controls": [
+      "WRONG_CODE",
+      "UNKNOWN_UUID_EXPIRED",
+      "CONSUMED_UUID_EXPIRED"
+    ],
+    "lease_response_database_digest_equal": true,
+    "duplicate_claim_wrong_fence_rejected": true,
+    "paused_redis_release_http": 200,
+    "paused_redis_release_business": 401,
+    "fault_full_refund_row_unchanged": true,
+    "same_actor_recovery_release_business": 200,
+    "release_replay_business": 500,
+    "protected_sets": 15,
+    "protected_before_settlement_cleanup_equal": true,
+    "same_pids_before_after": [
+      4133,
+      2759,
+      2871
+    ],
+    "same_database_uuid": true,
+    "observed_socket_destinations": 3,
+    "external_or_dns_attempts": 0
+  },
+  "cleanup": {
+    "exact_owned_containers": 3,
+    "independent_no_such_for_all": true,
+    "application_log": "PRESERVED",
+    "terminal_exit": 0,
+    "cleanup_unknown": 0,
+    "network_limit": "Cleanup function enforces owned network removal+independent absence but original report lacks separate network identity receipt; no invented inventory"
+  },
+  "limits": [
+    "Fixture admin single original actor, not multi-tenant UAT",
+    "No cash movement: protected money tables empty; only no-new-row/state-preservation evidence",
+    "No UI/human CAPTCHA/device/channel/provider acceptance",
+    "Not whole-business restart/recovery/rollback or fixed-budget capacity acceptance"
+  ],
+  "artifact_file_sha256": {
+    "entry.log": "7a5ef7c5ea9d9330ba583a46ae6a91030b598d8ad671ddcf3c61ff2b89a79d88",
+    "cy-auth.r3z0Vk0l/authenticated-redis-recovery.json": "1e17d322e893f57c30e62dc95bcef00172126065913b17867c45c71b53e88d9d",
+    "cy-auth.r3z0Vk0l/application.log": "8de65cf0bd0e919e72ee5f963a8329fd3f54bbea05a5eb0395bf3f43c305259b",
+    "cy-auth.r3z0Vk0l/network.trace": "6deff724be2a4cf22602d03a0eabd165dbb4c4cb37e0178633c8c95a3b0dc18b",
+    "cy-auth.r3z0Vk0l/schema-summary.json": "5eb5af29a79282867b45f6a852eefb94c3c618019336cfed0f8118c7ce7e1b04",
+    "cy-auth.r3z0Vk0l/isolation.log": "251d48c256341954338e43e9370810079d22e860ec99ca0c4552d3630bf0daca"
+  }
+}

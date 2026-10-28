@@ -6,6 +6,12 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.CoopInvite;
+import com.chengyinhub.business.domain.Club;
+import com.chengyinhub.business.domain.CmsRegistrationMerchant;
+import com.chengyinhub.business.domain.CmsTopicNode;
+import com.chengyinhub.business.domain.MmsMerchant;
+import com.chengyinhub.business.mapper.CoopInviteMapper;
+import com.chengyinhub.business.service.impl.CoopInviteServiceImpl;
 import com.chengyinhub.business.access.merchant.IMerchantAccessService;
 import com.chengyinhub.business.access.merchant.MerchantAccessContext;
 import com.chengyinhub.business.access.merchant.MerchantPermission;
@@ -14,24 +20,33 @@ import com.chengyinhub.business.service.ICoopClubApplyService;
 import com.chengyinhub.business.service.ICoopInviteService;
 import com.chengyinhub.business.service.INotifyService;
 import com.chengyinhub.common.core.domain.AjaxResult;
+import com.chengyinhub.common.constant.ProductType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Collections;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 /**
@@ -549,6 +564,150 @@ class ApiCoopControllerInviteAuthzTest {
         assertTrue(sent.get(0).getDepositRefundPending(), "主题已结算但退款仍冻结时必须给付款方重试入口");
     }
 
+    @Test
+    @SuppressWarnings("unchecked")
+    void listPreservesSupplyStationUnknownConfirmedAndNotApplicableStates() {
+        Club receivingClub = new Club();
+        receivingClub.setId(7001L); receivingClub.setMemberId(ME); receivingClub.setName("当前主理人的俱乐部"); receivingClub.setDelFlag(0);
+        Club invitedClub = new Club();
+        invitedClub.setId(INVITEE); invitedClub.setMemberId(OTHER); invitedClub.setName("受邀俱乐部"); invitedClub.setDelFlag(0);
+        when(clubService.selectClubsByMemberId(ME)).thenReturn(Collections.singletonList(receivingClub));
+        when(clubService.selectClubById(receivingClub.getId())).thenReturn(receivingClub);
+        when(clubService.selectClubById(invitedClub.getId())).thenReturn(invitedClub);
+        for (Long member : Arrays.asList(ME, INVITEE, OTHER)) {
+            MmsMerchant merchant = new MmsMerchant();
+            merchant.setId(ME.equals(member) ? 9001L : member + 9000L);
+            merchant.setMemberId(member); merchant.setStatus(1L); merchant.setName("商家" + member);
+            when(((com.chengyinhub.business.service.IMmsMerchantService) ReflectionTestUtils.getField(c, "mmsMerchantService"))
+                    .selectMmsMerchantByMemberId(member)).thenReturn(merchant);
+        }
+
+        Map<Long, CmsTopic> topics = new LinkedHashMap<>();
+        Map<Long, CmsRegistrationMerchant> stations = new LinkedHashMap<>();
+        Map<Long, CmsTopicNode> nodes = new LinkedHashMap<>();
+        List<CoopInvite> stored = new ArrayList<>();
+        for (int direction = 0; direction < 2; direction++) {
+            Long publisher = direction == 0 ? ME : OTHER;
+            Long merchantMember = direction == 0 ? INVITEE : ME;
+            for (int state = 0; state < 5; state++) {
+                Long topicId = TOPIC + direction * 10L + state + 1L;
+                CmsTopic topic = new CmsTopic();
+                topic.setId(topicId); topic.setMemberId(publisher); topic.setStatus(1); topic.setDelFlag(0);
+                topic.setName("原路线" + topicId);
+                // An existing historical topic without product type is unknown, not a deleted/hidden topic.
+                if (state != 0) topic.setProductType(ProductType.ORIENTEERING);
+                topics.put(topicId, topic);
+                CoopInvite row = invite(state == 3 ? 1 : state == 4 ? CoopInvite.TYPE_LEGACY_MERCHANT_NODE : 0);
+                row.setId(701L + direction * 10L + state); row.setTopicId(topicId);
+                row.setFromType("merchant"); row.setFromId(publisher);
+                row.setToType(state == 3 ? "club" : CoopInvite.TO_MERCHANT);
+                row.setToId(state == 3 ? (direction == 0 ? invitedClub.getId() : receivingClub.getId()) : merchantMember);
+                row.setStatus(1); row.setDelFlag(0);
+                if (state == 1) {
+                    CmsRegistrationMerchant station = new CmsRegistrationMerchant();
+                    station.setId(601L + direction); station.setTopicId(topicId); station.setMemberId(merchantMember);
+                    station.setAuditStatus(1L); station.setDelFlag(0); station.setAddressName("原确认据点" + station.getId());
+                    stations.put(station.getId(), station);
+                    row.setSupplyStationId(station.getId());
+                } else if (state == 4) {
+                    CmsTopicNode node = new CmsTopicNode();
+                    node.setId(901L + direction); node.setTopicId(topicId); node.setMerchantMemberId(merchantMember); node.setStatus(1L);
+                    nodes.put(node.getId(), node); row.setNodeId(node.getId());
+                }
+                stored.add(row);
+            }
+        }
+        when(cmsTopicService.selectCmsTopicById(any())).thenAnswer(call -> topics.get(call.getArgument(0)));
+
+        // The actual read owner attaches station facts; only its mapper boundary supplies detached stored rows.
+        CoopInviteMapper mapper = mock(CoopInviteMapper.class);
+        when(mapper.selectCoopInviteListReadOnly(any(), any())).thenAnswer(call -> {
+            CoopInvite query = call.getArgument(0);
+            List<CoopInvite> rows = new ArrayList<>();
+            for (CoopInvite source : stored) {
+                if ((query.getFromId() != null && !query.getFromId().equals(source.getFromId()))
+                        || (query.getFromType() != null && !query.getFromType().equals(source.getFromType()))
+                        || (query.getToId() != null && !query.getToId().equals(source.getToId()))
+                        || (query.getToType() != null && !query.getToType().equals(source.getToType()))
+                        || (query.getTopicId() != null && !query.getTopicId().equals(source.getTopicId()))
+                        || (query.getStatus() != null && !query.getStatus().equals(source.getStatus()))) continue;
+                CoopInvite detached = new CoopInvite();
+                org.springframework.beans.BeanUtils.copyProperties(source, detached);
+                rows.add(detached);
+            }
+            return rows;
+        });
+        when(mapper.selectSupplyStationNames(anyList())).thenAnswer(call -> {
+            List<CmsRegistrationMerchant> matches = new ArrayList<>();
+            for (CoopInvite original : (List<CoopInvite>) call.getArgument(0)) {
+                CmsRegistrationMerchant station = stations.get(original.getSupplyStationId());
+                if (station != null && Objects.equals(station.getTopicId(), original.getTopicId())
+                        && Objects.equals(station.getMemberId(), original.getToId())) matches.add(station);
+            }
+            return matches;
+        });
+        CoopInviteServiceImpl reader = spy(new CoopInviteServiceImpl());
+        ReflectionTestUtils.setField(reader, "coopInviteMapper", mapper);
+        ReflectionTestUtils.setField(c, "coopInviteService", reader);
+
+        AjaxResult result = c.list(null);
+
+        assertEquals(200, result.get("code"));
+        Map<String, Object> data = (Map<String, Object>) result.get("data");
+        for (int direction = 0; direction < 2; direction++) {
+            List<CoopInvite> views = (List<CoopInvite>) data.get(direction == 0 ? "sent" : "received");
+            assertEquals(5, views.size());
+            Map<Long, CoopInvite> byId = new LinkedHashMap<>();
+            for (CoopInvite view : views) assertNull(byId.put(view.getId(), view), "独立邀约不得被错误合并或重复");
+            long first = 701L + direction * 10L;
+            CoopInvite legacy = byId.get(first);
+            CoopInvite confirmed = byId.get(first + 1L);
+            CoopInvite classicUnbound = byId.get(first + 2L);
+            CoopInvite club = byId.get(first + 3L);
+            CoopInvite node = byId.get(first + 4L);
+            assertNull(legacy.getRequiresSupplyStation());
+            assertEquals(Boolean.TRUE, confirmed.getRequiresSupplyStation());
+            assertEquals(Boolean.FALSE, club.getRequiresSupplyStation());
+            assertNull(legacy.getSupplyStationId());
+            assertNull(legacy.getSupplyStationName());
+            assertEquals(Long.valueOf(601L + direction), confirmed.getSupplyStationId());
+            assertEquals(stations.get(confirmed.getSupplyStationId()).getAddressName(), confirmed.getSupplyStationName());
+            assertEquals(Boolean.TRUE, classicUnbound.getRequiresSupplyStation());
+            assertNull(classicUnbound.getSupplyStationId(), "经典主题需站不等于已经确认原站");
+            assertNull(classicUnbound.getSupplyStationName());
+            assertEquals(Boolean.FALSE, node.getRequiresSupplyStation());
+            assertNull(node.getSupplyStationId(), "旧节点邀约不得自动变为新站点绑定");
+            assertNull(node.getSupplyStationName());
+            assertEquals(nodes.get(node.getNodeId()).getTopicId(), node.getTopicId());
+            assertNull(club.getSupplyStationId());
+            assertNull(club.getSupplyStationName());
+            for (int state = 0; state < 5; state++) {
+                CoopInvite source = stored.get(direction * 5 + state);
+                CoopInvite view = byId.get(source.getId());
+                assertNotSame(source, view);
+                assertEquals(source.getTopicId(), view.getTopicId());
+                assertEquals(source.getFromId(), view.getFromId());
+                assertEquals(source.getFromType(), view.getFromType());
+                assertEquals(source.getToId(), view.getToId());
+                assertEquals(source.getToType(), view.getToType());
+                assertEquals(source.getNodeId(), view.getNodeId());
+                assertEquals(source.getSupplyStationId(), view.getSupplyStationId());
+                assertEquals(topics.get(source.getTopicId()).getName(), view.getTopicName());
+                assertEquals(source.getFromId(), topics.get(source.getTopicId()).getMemberId());
+                assertNull(source.getRequiresSupplyStation(), "卡面投影不得当成原持久化事实回写");
+                assertNull(source.getSupplyStationName());
+                assertNull(source.getTopicName());
+                assertEquals(Integer.valueOf(1), source.getStatus());
+                assertEquals(Integer.valueOf(0), source.getDelFlag());
+            }
+        }
+        verify(merchantAccessService).require(ME, MerchantPermission.COOP_MANAGE);
+        verify(mapper, never()).insertCoopInvite(any());
+        verify(mapper, never()).updateCoopInvite(any());
+        verify(mapper, never()).expirePendingInvites(any());
+        verifyNoInteractions(notifyService);
+    }
+
     /**
      * ★ club 发布的邀约里 from_id 存的是 clubId,不是 memberId(F-53 的语义分叉)。
      * 受邀方接受后,订阅消息与 1:1 会话必须打给俱乐部主理人;把 clubId 当 memberId 用
@@ -597,8 +756,95 @@ class ApiCoopControllerInviteAuthzTest {
         com.chengyinhub.business.domain.CoopInviteRequestReceipt row = new com.chengyinhub.business.domain.CoopInviteRequestReceipt();
         row.setRequestId(body.getRequestId()); row.setInviteId(9007199254740993L);
         row.setInviteType(body.getInviteType()); row.setTopicId(body.getTopicId());
-        row.setToType(body.getToType()); row.setToId(body.getToId()); row.setScope("");
-        return com.chengyinhub.business.domain.dto.CoopInviteRequestResult.created(row, replayed);
+        row.setToType(body.getToType()); row.setToId(body.getToId());
+        row.setScope(body.getScope() == null ? "" : body.getScope());
+        return com.chengyinhub.business.domain.dto.CoopInviteRequestResult.created(row, replayed, body.getSupplyStationId());
+    }
+
+    private void runFirstOriginalRequestCallback() {
+        org.mockito.Mockito.doAnswer(call -> {
+            CoopInvite input = call.getArgument(1);
+            ((Runnable) call.getArgument(2)).run();
+            input.setId(9007199254740993L);
+            return receiptResult(input, false);
+        }).when(coopInviteService).createOrReplayInvite(org.mockito.ArgumentMatchers.eq(ME), any(), any());
+    }
+
+    @Test
+    void stationCreationKeepsOperatorPrincipalSeparateFromAuthorizedContractOwnerForBothCallers() {
+        for (boolean originalRequest : new boolean[] { false, true }) {
+            org.mockito.Mockito.clearInvocations(coopInviteService, merchantAccessService, notifyService);
+            CmsTopic topic = new CmsTopic(); topic.setId(TOPIC); topic.setMemberId(OTHER); topic.setProductType(1);
+            when(cmsTopicService.selectCmsTopicById(TOPIC)).thenReturn(topic);
+            when(merchantAccessService.require(ME, MerchantPermission.PROJECT_MANAGE))
+                    .thenReturn(new MerchantAccessContext(ME, 9001L, OTHER, "manager"));
+            CmsRegistrationMerchant station = new CmsRegistrationMerchant();
+            station.setId(601L); station.setTopicId(TOPIC); station.setMemberId(INVITEE);
+            when(coopInviteService.listSupplyStations(TOPIC, INVITEE, OTHER)).thenReturn(List.of(station));
+            org.mockito.Mockito.doAnswer(call -> { ((CoopInvite) call.getArgument(0)).setId(77L); return 1; })
+                    .when(coopInviteService).insertCoopInvite(any());
+            runFirstOriginalRequestCallback();
+            CoopInvite request = invite(0); request.setScope("MERCHANT"); request.setSupplyStationId(601L);
+            request.setFromId(12345L); request.setFromType("talent"); request.setNodeId(555L);
+            if (originalRequest) request.setRequestId("vr_delegated_station");
+
+            AjaxResult result = c.invite(request);
+
+            assertEquals(200, result.get("code"));
+            assertEquals(OTHER, request.getFromId()); assertEquals("merchant", request.getFromType());
+            assertEquals(Long.valueOf(601L), request.getSupplyStationId()); assertNull(request.getNodeId());
+            verify(merchantAccessService).require(ME, MerchantPermission.PROJECT_MANAGE);
+            verify(coopInviteService).listSupplyStations(TOPIC, INVITEE, OTHER);
+            verify(coopInviteService, never()).listSupplyStations(TOPIC, INVITEE, ME);
+            if (originalRequest) {
+                verify(coopInviteService).createOrReplayInvite(org.mockito.ArgumentMatchers.eq(ME),
+                        org.mockito.ArgumentMatchers.same(request), any());
+                verify(coopInviteService, never()).insertCoopInvite(any());
+                com.chengyinhub.business.domain.dto.CoopInviteRequestResult receipt =
+                        (com.chengyinhub.business.domain.dto.CoopInviteRequestResult) result.get("data");
+                assertEquals("601", receipt.getSupplyStationId()); assertEquals("MERCHANT", receipt.getScope());
+            } else {
+                verify(coopInviteService).insertCoopInvite(request);
+                verify(coopInviteService, never()).createOrReplayInvite(any(), any(), any());
+            }
+            verify(notifyService).notifyCoopInvited(org.mockito.ArgumentMatchers.eq(INVITEE), any(), any());
+        }
+    }
+
+    @Test
+    void stationValidationRejectionsRemainFailuresBeforePersistenceAndNotificationForBothCallers() {
+        for (boolean originalRequest : new boolean[] { false, true }) {
+            for (String failure : List.of("missing", "foreign", "exception", "null-message", "unsupported", "club")) {
+                org.mockito.Mockito.clearInvocations(coopInviteService, notifyService);
+                CmsTopic topic = new CmsTopic(); topic.setId(TOPIC); topic.setMemberId(ME);
+                topic.setProductType("unsupported".equals(failure) ? 2 : 1);
+                when(cmsTopicService.selectCmsTopicById(TOPIC)).thenReturn(topic);
+                org.mockito.Mockito.doReturn(List.of()).when(coopInviteService).listSupplyStations(TOPIC, INVITEE, ME);
+                if ("exception".equals(failure) || "null-message".equals(failure))
+                    org.mockito.Mockito.doThrow(new IllegalStateException("exception".equals(failure) ? "原据点不可用" : null))
+                            .when(coopInviteService).listSupplyStations(TOPIC, INVITEE, ME);
+                runFirstOriginalRequestCallback();
+                CoopInvite request = invite("club".equals(failure) ? 1 : 0);
+                if (!"missing".equals(failure)) request.setSupplyStationId(601L);
+                if (originalRequest) request.setRequestId("vr_station_" + failure.replace('-', '_'));
+
+                AjaxResult result = c.invite(request);
+
+                assertEquals(500, result.get("code"), failure);
+                String expected = switch (failure) {
+                    case "missing" -> "请选择本主题该商家的真实核销据点";
+                    case "foreign" -> "所选据点不属于本主题受邀商家或已绑定原合作单";
+                    case "exception" -> "原据点不可用";
+                    case "null-message" -> "核销据点无法确认";
+                    default -> "该邀约不支持据点计酬确认";
+                };
+                assertEquals(expected, msg(result));
+                verify(coopInviteService, never()).insertCoopInvite(any());
+                verifyNoInviteNotification();
+                if ("missing".equals(failure) || "unsupported".equals(failure) || "club".equals(failure))
+                    verify(coopInviteService, never()).listSupplyStations(any(), any(), any());
+            }
+        }
     }
 
     @Test

@@ -1,0 +1,192 @@
+{
+  "status": "STATIC_ONLY",
+  "construction_parent": "2454c644508ca9e4ef1b2c1565d271bd56c1cd92",
+  "B_source_donor_commit": "13becff8bb4099ee1ee2a53e3eef280d7f2f18b3",
+  "source_counts": {
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RegistrationTopicFenceMySqlIT.java": {
+      "before": {
+        "declared_tests": 34,
+        "dynamic": [],
+        "nested": [],
+        "gates": [],
+        "conditions": [],
+        "required_database_bases": []
+      },
+      "after": {
+        "declared_tests": 45,
+        "dynamic": [],
+        "nested": [],
+        "gates": [],
+        "conditions": [],
+        "required_database_bases": []
+      }
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationFundsMybatisIntegrationTest.java": {
+      "before": {
+        "declared_tests": 96,
+        "dynamic": [],
+        "nested": [],
+        "gates": [
+          [
+            "CHENGYIN_FUNDS_MYSQL_IT",
+            "1"
+          ]
+        ],
+        "conditions": [],
+        "required_database_bases": []
+      },
+      "after": {
+        "declared_tests": 96,
+        "dynamic": [],
+        "nested": [],
+        "gates": [
+          [
+            "CHENGYIN_FUNDS_MYSQL_IT",
+            "1"
+          ]
+        ],
+        "conditions": [],
+        "required_database_bases": []
+      }
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PaymentCallbackFenceEntryTest.java": {
+      "before": {
+        "declared_tests": 10,
+        "dynamic": [],
+        "nested": [],
+        "gates": [],
+        "conditions": [],
+        "required_database_bases": []
+      },
+      "after": {
+        "declared_tests": 11,
+        "dynamic": [],
+        "nested": [],
+        "gates": [],
+        "conditions": [],
+        "required_database_bases": []
+      }
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundNotificationMybatisIntegrationTest.java": {
+      "before": {
+        "declared_tests": 9,
+        "dynamic": [],
+        "nested": [],
+        "gates": [
+          [
+            "CHENGYIN_FUNDS_MYSQL_IT",
+            "1"
+          ]
+        ],
+        "conditions": [],
+        "required_database_bases": []
+      },
+      "after": {
+        "declared_tests": 9,
+        "dynamic": [],
+        "nested": [],
+        "gates": [
+          [
+            "CHENGYIN_FUNDS_MYSQL_IT",
+            "1"
+          ]
+        ],
+        "conditions": [],
+        "required_database_bases": []
+      }
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundManualPayoutTest.java": {
+      "before": {
+        "declared_tests": 19,
+        "dynamic": [],
+        "nested": [],
+        "gates": [],
+        "conditions": [],
+        "required_database_bases": []
+      },
+      "after": {
+        "declared_tests": 23,
+        "dynamic": [],
+        "nested": [],
+        "gates": [],
+        "conditions": [],
+        "required_database_bases": []
+      }
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PayingSettlementSingleImplementationContractTest.java": {
+      "before": {
+        "declared_tests": 2,
+        "dynamic": [],
+        "nested": [],
+        "gates": [],
+        "conditions": [],
+        "required_database_bases": []
+      },
+      "after": {
+        "declared_tests": 2,
+        "dynamic": [],
+        "nested": [],
+        "gates": [],
+        "conditions": [],
+        "required_database_bases": []
+      }
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/task/OrderClosePayingReconcileTaskContractTest.java": {
+      "before": {
+        "declared_tests": 2,
+        "dynamic": [],
+        "nested": [],
+        "gates": [],
+        "conditions": [],
+        "required_database_bases": []
+      },
+      "after": {
+        "declared_tests": 3,
+        "dynamic": [],
+        "nested": [],
+        "gates": [],
+        "conditions": [],
+        "required_database_bases": []
+      }
+    }
+  },
+  "preserved_original_cases": {
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RegistrationTopicFenceMySqlIT.java": 34,
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationFundsMybatisIntegrationTest.java": 96,
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PaymentCallbackFenceEntryTest.java": 10,
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundNotificationMybatisIntegrationTest.java": 9,
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundManualPayoutTest.java": 19,
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PayingSettlementSingleImplementationContractTest.java": {
+      "all_original_case_names_retained": 2,
+      "wiring_assertions_manually_reviewed": true
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/task/OrderClosePayingReconcileTaskContractTest.java": {
+      "all_original_case_names_retained": 2,
+      "wiring_assertions_manually_reviewed": true
+    }
+  },
+  "economic_CAS_release_and_terminal_methods": "unchanged",
+  "business_lock_before_attempt_guard_before_original_release": true,
+  "production_B_G_CLM_commerce_CI_DDL_changes": [],
+  "executed_Java_MySQL_CI_DDL_SDK": false,
+  "sha256": {
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RegistrationTopicFenceMySqlIT.java": "315c105ab1e8d6f064df585735f7ca759d7edf365351e98c181d08d669851057",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PaymentCallbackFenceEntryTest.java": "a2becf3759a876e973a20dc6d099573de899d84136dad231b41ca947a094b723",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundNotificationMybatisIntegrationTest.java": "bac1769d8a171b5e98ccadee864f76fa3071c6e2b76c3de76d6e2d01b426a9eb",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationFundsMybatisIntegrationTest.java": "89a44035908e3cbb4b314dd26ad6347cbfec08bc5f1b0cbb61f9a8e3c0f8249a",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PayingSettlementSingleImplementationContractTest.java": "f897eaabababccd37c787991c17b0773e7401c668b621fa54814b7338a121d69",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundManualPayoutTest.java": "ba67133fdf700f0a44a7c8beccfd93c5dc9c26873662c25187884280b02dcf86",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/task/OrderClosePayingReconcileTaskContractTest.java": "52d81a00293765cecf8c9319e536b4d33dfae56447e759ccc239b4d06f289157",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ICmsRegistrationService.java": "b5ed7bfa2bd4c1aeedcfe0056a5aba16bc83372528811ba20366610876373776",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java": "b0f0332e6f65b13eae2c6d2f709f9d39a66014b6a69762993d24d096ffc82b2b",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java": "6a40bbf430d95a14daf1db3365d1c4c9bdc11aecf210c186654a7a1d10952fd9",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java": "8c5f3845ea7070c7c819ae3edb86eb3e90436a9bdfed5d27514845eea139f5b2",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java": "281330da9382e24759988a652e6fef2905dba11aa69a4d884a3e51f1f24e3755",
+    "docs/delivery/architecture-day/A/CLOSED-SUCCESS-GUARD/README.md": "32c0ed2b549d0b53f0ebbdf26993f9f724f917d920dee98821d02c88c28ae6b7",
+    "docs/delivery/architecture-day/A/CLOSED-SUCCESS-GUARD/g-deposit-close.review.patch": "8b9c76143208f9233d2dd47024e2b43be399d2aec2583bca00f0ee2e5083133e",
+    "docs/delivery/architecture-day/A/CLOSED-SUCCESS-GUARD/other-domain-fixtures.review.patch": "3cf5c1842f00562e27f5fac952717ba15dca40e0208fb4b732d667585f72d85a",
+    "docs/delivery/architecture-day/A/CLOSED-SUCCESS-GUARD/other-domain-owners.review.patch": "854684e2d48418c1d0c50984e3646e34a5c1fb80e644466dcc93769821df6548",
+    "docs/delivery/architecture-day/A/CLOSED-SUCCESS-GUARD/owner-patch-bases.json": "a5febebec19629b334ccce62bc828086edb30e4a3b9e1407e99558e45c946b0e",
+    "docs/delivery/architecture-day/A/CLOSED-SUCCESS-GUARD/verify_static.py": "edb5c2490833a20b3784d84b4f117aeb01edc60fb9cf921faeea6f83bb3a1bef"
+  }
+}

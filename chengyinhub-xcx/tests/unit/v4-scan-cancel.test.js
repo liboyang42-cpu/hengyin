@@ -28,6 +28,7 @@ function loadPage() {
     offLocationChange() {},
     getStorageSync: () => '', setStorageSync() {}, removeStorageSync() {},
   }
+  // 原局上下文由用例显式回包；不能和 master 的手动回包同时响应两次。
   const app = { sendRequest(options) { requests.push(options) }, getUserID: () => 9, globalData: {} }
   global.getApp = () => app
   global.Page = (value) => { definition = value }

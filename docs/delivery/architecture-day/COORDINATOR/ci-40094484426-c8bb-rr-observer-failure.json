@@ -1,0 +1,22 @@
+{
+  "run_id": 40094484426,
+  "source_sha": "c8bbcea8f0e7cde67a23cb5fdd4f40b5d5c6db9d",
+  "verdict": "FAIL",
+  "executed": {
+    "passed": 8,
+    "failures": 5,
+    "errors": 0,
+    "skipped": 0
+  },
+  "cleanup": "CLEAN",
+  "failure_tests": [
+    "successfulParticipatingMutationAndDoneCommitTogetherWithoutReleasingTheCompletedClaim",
+    "successfulMutationAndDoneRollBackTogetherAndThenReleaseTheSameClaimOnOuterRollback",
+    "throwingMutationReleasesOriginalOwnerAndFenceOnlyAfterExplicitOuterRollback",
+    "falseMutationReleasesOriginalOwnerAndFenceOnlyAfterOuterRollback",
+    "oldOuterRepeatableReadViewCanVerifyAndApplyANewCommittedFactInItsOriginalDomainTransaction"
+  ],
+  "source_diagnosis": "Common test-only inboxNumber used an ordinary SELECT under intentional old outer RR snapshot. Independently claimed PROCESSING was observed as NEW0 or absent at AtomicCommitProbe831/participating491; unrelated ordinary fact/link count0 controls intentionally prove unchanged caller isolation.",
+  "minimal_repair": "Only inboxNumber uses same-transaction FOR UPDATE when actual transaction is active. Preserve all original expected states, zero release assertions, physical observer old visibility and original RR isolation/count controls. No production change.",
+  "repair_status": "SOURCE_ONLY_RECHECK_PENDING"
+}

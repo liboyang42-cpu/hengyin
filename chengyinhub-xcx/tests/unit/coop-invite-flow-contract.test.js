@@ -8,6 +8,7 @@ const root = (...p) => path.join(__dirname, '../..', ...p)
 const read = (...p) => fs.readFileSync(root(...p), 'utf8')
 const WXML = () => read('pages/coop/invite/index.wxml')
 const JS = () => read('pages/coop/invite/index.js')
+const { maskJsNonCode } = require('../../../ci/api-existence-gate.js')
 
 function loadInvitePage(options = {}) {
   const previous = { Page: global.Page, getApp: global.getApp, wx: global.wx }
@@ -91,31 +92,37 @@ test('现役 type0/type1 邀约只使用结果口径', () => {
 // ① 金额行不许再出现像整场总价的「固定 ×」与按人单位同屏;
 // ② 确认弹层那条条款必须带上单位,否则双方点确认时看到的不是同一条约定。
 test('CU-M-98 确认条款与金额行同源,且单位不省', () => {
-  const env = loadInvitePage()
-  try {
-    const cases = [
-      { activeType: 1, expect: '按核销人头付带队费 · ¥12.00 / 每核销 1 人' },
-      { activeType: 0, expect: '按核销付费 · ¥12.00 / 人' },
-    ]
-    for (const testCase of cases) {
+  const cases = [
+    { activeType: 1, expect: '按核销人头付带队费 · ¥12.00 / 每核销 1 人' },
+    { activeType: 0, expect: '按核销付费 · ¥12.00 / 人' },
+  ]
+  for (const testCase of cases) {
+    const env = loadInvitePage()
+    try {
       const page = env.page
-      page.data = JSON.parse(JSON.stringify(page.data))
-      page.onLoad({ type: String(testCase.activeType) })
-      page.data.topicsState = 'ready'
-      page.data.targetsState = 'ready'
-      page.data.topicId = 301
-      page.data.selected = [{ toId: 18, name: '外滩夜行俱乐部', logo: '', meta: '' }]
+      page.onLoad({ type: String(testCase.activeType), topicId: '301', toId: '18', toName: '合作对象' })
+      if (testCase.activeType === 0) {
+        const metadata = env.requests.find(request => request.url === '/api/topic/list')
+        assert.ok(metadata, '主题类型必须从原 owner 读取路径确认')
+        metadata.success({ code: 200, data: { rows: [{ id: '301', name: '原主题', productType: 1 }], total: 1 } })
+        const stations = env.requests.find(request => request.url === '/api/coop/supply-stations')
+        assert.ok(stations, '经典商家邀约必须读取获准据点')
+        stations.success({ code: 200, data: { requiresSupplyStation: true,
+          stations: [{ supplyStationId: '101', stationName: '原核销据点' }] } })
+        page.onSupplyStationChange({ currentTarget: { dataset: { toid: '18' } }, detail: { value: 0 } })
+      }
       page.data.shareMode = 2
       page.data.fixedFee = 12
       page.sendInvite()
+      assert.equal(page.data.inviteModal.show, true, '必须检验本次成功打开的确认弹层')
       assert.equal(page.data.inviteModal.termsText, testCase.expect)
       assert.equal(page.data.feeName, testCase.expect.split(' · ')[0],
         '金额行左边的名字必须就是确认弹层里那个名字')
       assert.ok(page.data.inviteModal.termsText.indexOf(page.data.feeUnit) > 0,
         '确认弹层不得省掉计价单位')
+    } finally {
+      env.restore()
     }
-  } finally {
-    env.restore()
   }
 })
 
@@ -237,6 +244,9 @@ test('逐条串行发送并保留目标级失败回执', () => {
   assert.match(js, /function step\(i\)/)
   assert.match(js, /const target = targets\[i\]/)
   assert.match(js, /this\._invitePayload\(target\.toId\)/)
+  assert.match(js, /payload:\s*this\._invitePayload\(target\.toId\)/)
+  assert.match(js, /JSON\.stringify\(Object\.assign\(\{\}, target\.payload, \{ requestId: identity\.requestId \}\)\)/)
+  assert.doesNotMatch(js, /that\._invitePayload\(target\.toId\)/, '串行外呼必须消费确认时冻结的 payload，不在每次发送时重建据点')
   assert.match(js, /okNames\.push\(target\.name\)/)
   assert.match(js, /failed\.push\(target\.name \+ ':'/)
   assert.match(js, /workflow\.run\(target\.key/)
@@ -281,7 +291,9 @@ test('type2 的 tab、节点 UI、请求与 payload 分支全部撤销，预置�
   const wxml = WXML()
   assert.match(js, /if \(presetTarget\) this\._setSelected\(\[presetTarget\]\)/)
   assert.match(js, /if \(this\.data\.presetTarget\) return;/)
-  assert.doesNotMatch(js + wxml, /inviteTypeTabs|activeType\s*===\s*2|loadNodes|nodeId|nodeIndex|nodesState|邀商家做节点|承接节点/)
+  assert.doesNotMatch(js + wxml, /inviteTypeTabs|activeType\s*===\s*2|loadNodes|nodeIndex|nodesState|邀商家做节点|承接节点/)
+  // 站点校验注释可以解释 nodeId 不可冒充站点；可执行分支与 UI 仍禁止节点身份。
+  assert.doesNotMatch(maskJsNonCode(js) + wxml, /\bnodeId\b/)
   assert.doesNotMatch(wxml, /<cy-tabs\b/)
 })
 
@@ -429,7 +441,11 @@ test('W3 成功/明确失败/UNKNOWN三分；重试失败对象不清其他UNKNO
     env.requests[1].success({ code: 400, msg: '明确拒绝' })
     env.requests[2].fail({})
     assert.deepEqual(env.page.data.selected, [{ toId: 22, name: '乙店' }])
-    assert.deepEqual(env.page.data.unknownTargets, [{ toId: 33, name: '丙店' }])
+    assert.deepEqual(env.page.data.unknownTargets, [{ toId: 33, name: '丙店',
+      key: '7:coop-invite:[1,"","9","33"]', payload: { inviteType: 1, toType: 'club', toId: 33,
+        topicId: 9, shareMode: 0, message: '邀请贵俱乐部来参加活动' } }])
+    assert.equal(env.page._inviteWorkflow().pendingRequest(env.page.data.unknownTargets[0].key).requestId,
+      JSON.parse(env.requests[2].data).requestId, '摘要保留真实原请求号，不只保留显示名称')
     env.page.confirmInvite()
     assert.equal(JSON.parse(env.requests[3].data).toId, 22)
     okInvite(env.requests[3])
@@ -453,7 +469,11 @@ test('W3 成功、明确失败、UNKNOWN与本次未提交同批出现时保留�
     env.requests[2].fail({})
     assert.equal(env.requests.length, 3, '第四个对象尚未POST')
     assert.deepEqual(env.page.data.selected, [targets[1], targets[3]])
-    assert.deepEqual(env.page.data.unknownTargets, [targets[2]])
+    assert.deepEqual(env.page.data.unknownTargets, [{ ...targets[2],
+      key: '7:coop-invite:[1,"","9","33"]', payload: { inviteType: 1, toType: 'club', toId: 33,
+        topicId: 9, shareMode: 0, message: '邀请贵俱乐部来参加活动' } }])
+    assert.equal(env.page._inviteWorkflow().pendingRequest(env.page.data.unknownTargets[0].key).requestId,
+      JSON.parse(env.requests[2].data).requestId)
     for (const summary of [/已发起 1 条/, /明确失败 1 条/, /本次未提交 1 个对象/, /另有 1 条原邀请结果待确认/]) {
       assert.match(env.page.data.sendResult, summary)
       assert.match(env.page.data.resultSheet.sub, summary)
@@ -538,11 +558,20 @@ for (const change of ['hide', 'unload', 'identity', 'topic']) {
       }
       if (change === 'topic') {
         env.page.data.myTopics = [{ id: 10, name: 'B' }, { id: 9, name: 'A' }]
-        env.page.onTopicChange({ detail: { value: 0 } }); env.page.onTopicChange({ detail: { value: 1 } })
+        const epoch = env.page._submitEpoch
+        env.page.onTopicChange({ detail: { value: 1 } })
+        assert.equal(env.page._submitEpoch, epoch, '相同主题事件不能退休原活跃命令')
+        assert.equal(env.page._submitting, true)
+        env.page.onTopicChange({ detail: { value: 0 } })
+        assert.equal(env.page.data.topicId, 10, '真实主题切换必须发生，不能靠 busy 提前返回伪装往返')
+        assert.notEqual(env.page._submitEpoch, epoch)
+        env.page.onTopicChange({ detail: { value: 1 } })
+        assert.equal(env.page.data.topicId, 9)
       }
       env.page._setSelected([{ toId: 22, name: '乙店' }]); env.page.confirmInvite()
       const before = snapshot(env), busy = env.page._submitting
       old.success({ code: 200, data: { inviteId: 501 } }); old.fail({})
+      okInvite(old)
       assert.equal(snapshot(env), before); assert.equal(env.page._submitting, busy)
       assert.equal(env.page.data.submitting, true)
     } finally { env.restore() }
@@ -790,4 +819,30 @@ for (const code of ['2e2', '4e2', ' 200', '0200']) test('W4畸形状态码不按
   assert.equal(env.storage.size, 1); assert.equal(env.page.data.unknownTargets.length, 1)
   assert.match(env.page.data.receiptError, /暂无法查询/)
  } finally { env.restore() }
+})
+
+test('据点邀请原请求身份包含冻结据点，历史无据点键保持原格式', () => {
+  const request = require('../../utils/coop-invite-request.js')
+  const legacy = { inviteType: 0, topicId: '17', toType: 'merchant', toId: '23', scope: '' }
+  assert.equal(request.writeKey('7', legacy), '7:coop-invite:[0,"","17","23"]')
+  const first = { ...legacy, supplyStationId: '31' }, second = { ...legacy, supplyStationId: '32' }
+  assert.notEqual(request.writeKey('7', first), request.writeKey('7', second))
+  assert.notEqual(request.writeKey('7', first), request.writeKey('7', legacy))
+  const row = { state: 'CREATED', requestId: 'original_1', inviteId: '41', inviteType: 0,
+    topicId: '17', toType: 'merchant', toId: '23', scope: '', supplyStationId: '31' }
+  assert.equal(request.matches(request.receipt(row), first), true)
+  assert.equal(request.matches(request.receipt(row), second), false)
+  const old = { ...row }; delete old.supplyStationId
+  assert.equal(request.matches(request.receipt(old), first), false, '旧回执不能补造据点证明')
+  assert.equal(request.matches(request.receipt(old), legacy), true)
+  assert.equal(request.receipt({ ...row, supplyStationId: 31 }), null, '新据点ID沿原精确字符串投影')
+  assert.equal(request.receipt({ ...row, inviteType: 1, toType: 'club' }), null)
+})
+
+test('结果未知保留确认时原payload和key，不能用选择器未来据点重建原号', () => {
+  const source = JS()
+  assert.match(source, /target\.payload \|\| this\._invitePayload\(target\.toId\)/)
+  assert.match(source, /unknownTargets\.push\(\{ toId: target\.toId, name: target\.name, key: target\.key, payload: target\.payload \}\)/)
+  assert.match(source, /pending\.requestId !== row\.requestId/)
+  assert.match(source, /payload\.supplyStationId && \(!pending \|\| pending\.requestId !== row\.requestId\)/)
 })

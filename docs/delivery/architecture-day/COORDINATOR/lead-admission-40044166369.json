@@ -1,0 +1,68 @@
+{
+  "source_sha": "9a2dcf21aef4d7aec7a14065a2601bd86aaad805",
+  "run_id": 40044166369,
+  "status": "PASS",
+  "classes": [
+    {
+      "class": "com.chengyinhub.business.it.PlayLeadAdmissionFailureMySqlIT",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "cleanup": {
+        "mysql_leftover_schemas": [],
+        "mysql_schemas_after": [
+          "information_schema",
+          "mysql",
+          "performance_schema",
+          "sys"
+        ],
+        "status": "CLEAN"
+      },
+      "receipt_sha256": "081352a31e60fb41b634a914ae75f1c111811712373e83598afb1d313377b154",
+      "xml_sha256": "623b66b26368ec7db1c5b8e3af50c6cd6edc0e5f60bf46ced2c897a8e3776bb8",
+      "cases": [
+        "realLeadStorageFaultRollsBackTheOriginalBasicActionClaimWithoutTerminalReceipt",
+        "preferenceLeadStorageFaultCannotCreateBranchSessionBeforeEitherHttpAdmission",
+        "preferenceLeadStorageFaultCannotCreateJourneySessionBeforeEitherHttpAdmission",
+        "realLeadStorageFaultReturnsNoHintAndHasZeroEconomicOrRegistrationEffect"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.it.PlayHintUnlockMySqlIT",
+      "tests": 10,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "cleanup": {
+        "mysql_leftover_schemas": [],
+        "mysql_schemas_after": [
+          "information_schema",
+          "mysql",
+          "performance_schema",
+          "sys"
+        ],
+        "status": "CLEAN"
+      },
+      "receipt_sha256": "59b648c318f86fa90d157d6278c22a3ff2e3310338b78dfbe9c7e6c6a71a06ad",
+      "xml_sha256": "9586eb6fc71be85bca8ef56e4f9cd909896545843adb178adff21a9abdc5921f",
+      "cases": [
+        "balanceLostAfterPrecheckRollsBackHintLedgerButRetainsOtherCommittedSpend",
+        "twoConnectionsSerializeOriginalRegistrationAndDebitOnce",
+        "disabledRuleStillRequiresEntitlementAndWritesNoPoints",
+        "legalActivityUsesOneRealDebitAndOriginalEventIdentity",
+        "unauthorizedOrWrongScopeNeverReturnsHintsOrChangesEconomicState",
+        "ledgerWriteThenThrowRollsBackRealRowAndLeavesDebitUntouched",
+        "duplicateAfterLostReplyAndReconstructionKeepsOneDebitAcrossAuthorizedScopes",
+        "debitWriteThenThrowRollsBackBothRealBalanceAndLedgerBeforeOriginalRetry",
+        "legalSelfPlayUsesOneRealDebitAndOriginalEventIdentity",
+        "revokedRegistrationBlocksPreviouslyPurchasedHintWithoutChangingItsOriginalLedger"
+      ]
+    }
+  ],
+  "limits": [
+    "Direct handler/real Spring transaction/MyBatis; not actual HTTP/JWT identity",
+    "Catalogue/node/template and preference engine are explicit doubles",
+    "No complete WP09 application extraction or all gameplay correctness claim"
+  ]
+}

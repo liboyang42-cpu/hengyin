@@ -31,6 +31,16 @@
       'PREPARED','PRE_RESERVE',#{requestLeaseToken},date_add(now(3),interval 120 second),0,0,now(3),now(3),now(3))
   </insert>
   <select id="selectByReceipt" resultMap="Record">select * from ai_quota_reservation where receipt_key=#{receipt}</select>
+  <select id="selectByReceiptForUpdate" resultMap="Record" useCache="false" flushCache="true">
+    select * from ai_quota_reservation where receipt_key=#{receipt} for update
+  </select>
+  <update id="requestAsrNotSentRefund">
+    update ai_quota_reservation set state='REFUND_DUE',stage='ASR_NOT_SENT',
+      decision_reason='ASR_NOT_SENT',next_attempt_at=now(3),completed_at=null,updated_at=now(3)
+    where receipt_key=#{receipt} and fence_version=#{fence} and owner_token is null
+      and state in ('PREPARED','RESERVED','UNCERTAIN','RETAINED')
+      and stage in ('PRE_RESERVE','ASR_STARTED')
+  </update>
   <select id="selectById" resultMap="Record">select * from ai_quota_reservation where id=#{id}</select>
   <update id="recordReserved">
     update ai_quota_reservation set generation=#{generation},used_after_reserve=#{used},state='RESERVED',
@@ -38,14 +48,16 @@
     where receipt_key=#{receipt} and state='PREPARED' and owner_token is null and request_lease_until &gt; now(3)
   </update>
   <update id="advanceStage">
-    update ai_quota_reservation set stage=#{stage},request_lease_until=date_add(now(3),interval 120 second),updated_at=now(3)
+    update ai_quota_reservation set stage=case when stage='ASR_STARTED' then stage else #{stage} end,
+      request_lease_until=date_add(now(3),interval 120 second),updated_at=now(3)
     where receipt_key=#{receipt} and state='RESERVED' and owner_token is null and request_lease_until &gt; now(3)
   </update>
   <update id="recordOutcome">
-    update ai_quota_reservation set state=#{state},stage='RESULT_CLASSIFIED',decision_reason=#{reason},
+    update ai_quota_reservation set state=#{state},stage=case when stage='ASR_STARTED' then stage else 'RESULT_CLASSIFIED' end,decision_reason=#{reason},
       next_attempt_at=now(3),updated_at=now(3),completed_at=case when #{state}='RETAINED' then now(3) else null end
     where receipt_key=#{receipt} and state in ('PREPARED','RESERVED') and owner_token is null
       and request_lease_until &gt; now(3)
+      and (#{state}&lt;&gt;'REFUND_DUE' or stage&lt;&gt;'ASR_STARTED')
   </update>
   <select id="selectDue" resultMap="Record">
     select * from ai_quota_reservation

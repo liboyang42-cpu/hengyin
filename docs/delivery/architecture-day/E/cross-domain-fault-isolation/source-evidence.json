@@ -1,0 +1,58 @@
+{
+  "repository": "liboyang42-cpu/hengyin",
+  "parent": "fa5c263440573992701263d6bee60830844a49b8",
+  "branch": "codex/architecture-day-e-cross-domain-isolation",
+  "source_patch_sha256": "de5718f09263c2837dad05b6568b50619cca687c59f3e7a801486e1c1183b6f4",
+  "postimages": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainFaultIsolationMySqlIT.java",
+      "sha256": "6c08bb4cb5936ccceee7e41ef7d88a948fb24fffe1683d725d71e41458c99194"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainStorageFixture.java",
+      "sha256": "eef820e7a34843b98dd62f26ed6c7e5fb3b397b7c3794b6590df597b86bb30b1"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainTransportStage.java",
+      "sha256": "d6820d27a9a8283821916fddf86454527a2d2a3d1c84ed5ef21f5dcd1da516b2"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CrossDomainSubscriptionProvider.java",
+      "sha256": "de737482af11b74e64f699f57e0a5746d73112c1fe602fa48b6cdfd685159e2a"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/quartz/util/CrossDomainSchedulerStage.java",
+      "sha256": "b588fb2a34680e3fffd88363b9ba366b0b01524f9e67182d1791449d86807138"
+    }
+  ],
+  "test_source": {
+    "class": "CrossDomainFaultIsolationMySqlIT",
+    "cases": [
+      "sameWindowRetainsOriginalEconomicIdentitiesAndRequiresUnpoisonedNotificationProgress"
+    ],
+    "declared_case_count": 1,
+    "executed_case_count": 0
+  },
+  "execution": {
+    "java_compile": "NOT_RUN",
+    "junit": "NOT_RUN",
+    "node_python_tests": "NOT_RUN",
+    "mysql_redis": "NOT_RUN",
+    "http": "NOT_RUN",
+    "containers": "NOT_RUN",
+    "fault_injection": "NOT_RUN",
+    "ci": "NOT_RUN",
+    "full_gitleaks": "NOT_RUN"
+  },
+  "source_controls": {
+    "git_diff_cached_check": "clean",
+    "limited_added_source_secret_patterns": 0
+  },
+  "source_only_limits": [
+    "controlled provider/media/consent/audience/token boundaries, not provider acceptance",
+    "loopback HTTP and fake map connection, not DNS/TLS hard-stop",
+    "real SQL/Redis/domain effects required by SOURCE but not executed",
+    "same parent Druid pool; child probe retains its original separate pools",
+    "root owns registry/workflow admission and final same-source acceptance"
+  ]
+}

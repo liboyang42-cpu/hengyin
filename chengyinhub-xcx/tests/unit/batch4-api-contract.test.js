@@ -69,19 +69,39 @@ test('BL-79 POST /api/object-card/rename:表单参数 id/title(非 JSON 体),上
   assert.ok(fieldsOf(SYS + 'domain/vo/PlayerObjectCardVO.java').has('title'))
 })
 
-test('BL-80 GET /api/official/broadcast/{id}/stats:白名单+发布者本人,返回 reached/clicked', () => {
+test('BL-80 GET /api/official/broadcast/{id}/stats:白名单+发布者本人,站内人数与通道回执分开', () => {
   const src = assertMapping('ApiOfficialEventController.java', '/api/official', 'Get', '/broadcast/{id}/stats')
   const body = methodBody(src, 'public AjaxResult broadcastStats(@PathVariable("id") Long id)', 1400)
   assert.match(body, /if \(!canPublish\(me\)\) return error\("无官方发布权限"\)/)
   assert.match(body, /officialBroadcastService\.getById\(id, me\)/)
   assert.match(body, /bc\.getSenderAccount\(\)\.equals\(me\)/, 'V1 通知只给发布者本人')
   assert.match(body, /officialEventV2Service\.broadcastStatsForOperator\(id, me\)/)
-  // W8 起触达统计迁入 OfficialBroadcastDeliveryService.summary：reachStats 先按发布者归属取单条，再委托 summary。
-  const stats = methodBody(readRepo(SYS + 'service/impl/OfficialBroadcastServiceImpl.java'), 'public java.util.Map<String, Object> reachStats(Long broadcastId, Long actorMemberId)', 200)
-  assert.match(stats, /getById\(broadcastId, actorMemberId\);\s*return delivery\.summary\(broadcastId\);/)
-  const summary = methodBody(readRepo(SYS + 'service/impl/OfficialBroadcastDeliveryService.java'), 'public Map<String,Object> summary(Long id)', 900)
-  assert.match(summary, /out\.put\("reached",\s*counts\.get\("INAPP_STORED"\)\)/)
-  assert.match(summary, /out\.put\("clicked",\s*logs\.countClicked\(id\)\)/)
+  // W8 keeps the owner gate in reachStats and delivery-state accounting in summary.
+  const impl = readRepo(SYS + 'service/impl/OfficialBroadcastServiceImpl.java')
+  const stats = impl.match(/public java\.util\.Map<String, Object> reachStats\(Long broadcastId, Long actorMemberId\) \{[\s\S]*?\n    \}/)
+  assert.ok(stats, '必须读取完整归属方法，不借相邻方法证明')
+  assert.match(stats[0], /getById\(broadcastId, actorMemberId\)/)
+  assert.match(stats[0], /m\.put\("reached", logMapper\.countInappReached\(broadcastId\)\)/)
+  assert.match(stats[0], /m\.put\("channelReached", logMapper\.countReached\(broadcastId\)\)/)
+  assert.match(stats[0], /usesDurableDelivery\(broadcast\).*delivery\.summary\(broadcastId\)/)
+  assert.match(stats[0], /else m\.putAll\(legacyDeliverySummary\(broadcastId\)\)/)
+  const delivery = readRepo(SYS + 'service/impl/OfficialBroadcastDeliveryService.java')
+  const summary = delivery.match(/public Map<String,Object> summary\(Long id\)\{[\s\S]*?\n \}/)
+  assert.ok(summary, '必须找到完整投递状态复盘方法')
+  assert.match(summary[0], /out\.put\("reached",\s*counts\.get\("INAPP_STORED"\)\)/)
+  assert.match(summary[0], /out\.put\("clicked",\s*logs\.countClicked\(id\)\)/)
+  assert.match(summary[0], /out\.put\("deliveryCounts",counts\)/, '渠道受理与 UNKNOWN 分列，不能冒充站内人数')
+  assert.match(summary[0], /"CHANNEL_ACCEPTED"/)
+  assert.match(summary[0], /"UNKNOWN"/)
+  const mapper = readRepo('chengyinhub-system/src/main/resources/mapper/business/OfficialBroadcastLogMapper.xml')
+  for (const id of ['countInappReached', 'countClicked']) {
+    const query = mapper.match(new RegExp('<select id="' + id + '"[^>]*>([\\s\\S]*?)</select>'))
+    assert.ok(query, '缺少 ' + id + ' 查询')
+    assert.match(query[1], /channel\s*=\s*'inapp'/, '人数只计站内，不混订阅回执')
+    assert.match(query[1], /reached\s*=\s*1/)
+    assert.match(query[1], /delivery_state\s+in\s*\('SUCCESS',\s*'INAPP_STORED'\)/, '两种原投递协议均只计已证实站内送达')
+    assert.doesNotMatch(query[1], /UNKNOWN|FAILED|CHANNEL_ACCEPTED/, '未知/失败/订阅受理均不能计作站内人数')
+  }
   // 入口挂在「我发布的」列表,其通知来源仍是 my-published.broadcasts
   assert.match(src, /data\.put\("broadcasts", officialBroadcastService\.listBySender\(memberId, memberId\)\)/)
 })

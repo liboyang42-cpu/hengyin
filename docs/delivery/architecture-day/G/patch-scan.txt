@@ -1,0 +1,5 @@
+PASS repository ci/secret-file-gate.py: tracked tree has no forbidden key/certificate files or private-key body
+PASS staged delta credential-pattern scan: 21 files, 5 categories, no findings
+NOT_RUN gitleaks: executable not installed; no claim of full gitleaks coverage
+PASS scope review: 7 newly added owned Java/XML files; remaining changes confined to G delivery; no C/funds/CI/schema source changed
+Java compile/tests and MySQL remain NOT_RUN; scan is not behavioral validation

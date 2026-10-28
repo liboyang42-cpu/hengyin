@@ -1,0 +1,66 @@
+{
+  "parent": "a480e4083618120332539d0ac49c7e51e9db6839",
+  "xmlStaticChecks": [
+    {
+      "mapper": "ClubLeadMapper",
+      "statement": "selectByActivityForUpdate",
+      "useCache": false,
+      "flushCache": true,
+      "sqlSuffix": "for update"
+    },
+    {
+      "mapper": "ClubLeadMapper",
+      "statement": "lockClubOwner",
+      "useCache": false,
+      "flushCache": true,
+      "sqlSuffix": "for update"
+    },
+    {
+      "mapper": "TopicRouteSessionMapper",
+      "statement": "selectAccessibleByIdForUpdate",
+      "useCache": false,
+      "flushCache": true,
+      "sqlSuffix": "for update"
+    },
+    {
+      "mapper": "GameRuntimeSessionMapper",
+      "statement": "selectByIdForUpdate",
+      "useCache": false,
+      "flushCache": true,
+      "sqlSuffix": "for update"
+    },
+    {
+      "mapper": "GameRuntimeSessionMapper",
+      "statement": "selectAccessibleByIdForUpdate",
+      "useCache": false,
+      "flushCache": true,
+      "sqlSuffix": "for update"
+    },
+    {
+      "mapper": "PlayAttemptLogMapper",
+      "statement": "selectByIdempotencyKeyForUpdate",
+      "useCache": false,
+      "flushCache": true,
+      "sqlSuffix": "for update"
+    }
+  ],
+  "gitDiffCheck": "PASS",
+  "rootOwnedFixturePatchApplyCheck": "PASS against C parent; root must adapt latest owned fixtures",
+  "baselineSourceMatchesParent": true,
+  "gitleaks": {
+    "version": "8.24.3",
+    "result": "no leaks found",
+    "exitCode": 0,
+    "config": ".gitleaks.toml",
+    "ignoreChanges": false
+  },
+  "notRun": [
+    "Java compilation",
+    "JUnit including 6 mapped-statement cases",
+    "MySQL",
+    "Redis",
+    "WeChat simulator/device",
+    "full miniprogram suite",
+    "final combined action ledger"
+  ]
+}

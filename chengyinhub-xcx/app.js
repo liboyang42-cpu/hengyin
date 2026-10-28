@@ -248,7 +248,10 @@ App({
   // requireLogin({ reason }) → Promise<boolean>;唯一实现在 utils/auth/require-login.js。
   getLoginGuard: function () {
     var that = this;
-    if (!this._loginGuard) this._loginGuard = requireLoginGuard.createRequireLogin({ getApp: function () { return that; } });
+    if (!this._loginGuard) this._loginGuard = requireLoginGuard.createRequireLogin({
+      getApp: function () { return that; },
+      getPages: function () { return typeof getCurrentPages === 'function' ? getCurrentPages() : null; }
+    });
     return this._loginGuard;
   },
   requireLogin: function (options) {
@@ -256,9 +259,9 @@ App({
   },
   // 写入口同步用法:if (!app.ensureLoginFor('club', () => this.joinClub(e))) return;
   // 已登录 → true,调用方照原样同步往下走;游客 → false,弹窗,登录成功后 resume() 恢复原动作恰好一次。
-  ensureLoginFor: function (reason, resume) {
+  ensureLoginFor: function (reason, resume, context) {
     if (requireLoginGuard.hasSession(this)) return true;
-    this.getLoginGuard().withLogin({ reason: reason }, resume);
+    this.getLoginGuard().withLogin(Object.assign({}, context, { reason: reason }), resume);
     return false;
   },
   // 旧开发版假会话的 token 标记。F-W1-01 已删除写入它的开发版假用户兜底;保留常量只用于

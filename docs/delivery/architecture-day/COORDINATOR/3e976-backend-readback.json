@@ -1,0 +1,21 @@
+{
+  "source_sha": "3e976bcefb2a14b19600e6bc4a20029767d58b75",
+  "run": 40130007237,
+  "xml_files": 1933,
+  "unique_testcases": 15453,
+  "duplicate_testcases": 0,
+  "xml_counts": {
+    "passed": 14820,
+    "skipped": 633
+  },
+  "selected_suites": {
+    "com.chengyinhub.business.it.P0DeregistrationMySqlIT": {
+      "passed": 1
+    },
+    "com.chengyinhub.business.service.impl.NpcAsrTerminalFenceBarrierTest": {
+      "passed": 3
+    }
+  },
+  "full_application_startup": "FAIL_REAL_REGISTRATION_SETTLEMENT_SEAT_CYCLE",
+  "all_complete": false
+}

@@ -9,13 +9,15 @@ import com.chengyinhub.business.domain.dto.ai.AiMerchantPlanReq;
 import com.chengyinhub.business.domain.dto.ai.AiMerchantTaskSuggestReq;
 import com.chengyinhub.business.domain.dto.ai.AiNodeGenReq;
 import com.chengyinhub.business.domain.dto.ai.AiSafetyPrecheckReq;
-import com.chengyinhub.business.domain.dto.ai.AiThemeDraftReq;
+import com.chengyinhub.business.domain.dto.ai.AiThemeDraftPrepareReq;
 import com.chengyinhub.business.domain.vo.ai.AiClubDesignResp;
 import com.chengyinhub.business.domain.vo.ai.AiMerchantPlanResp;
 import com.chengyinhub.business.domain.vo.ai.AiMerchantTaskSuggestResp;
 import com.chengyinhub.business.domain.vo.ai.AiNodeGenResp;
 import com.chengyinhub.business.domain.vo.ai.AiSafetyPrecheckResp;
-import com.chengyinhub.business.domain.vo.ai.AiThemeDraftResp;
+import com.chengyinhub.business.domain.vo.ai.AiThemeDraftIntentView;
+import com.chengyinhub.business.domain.vo.ai.AiThemeDraftIntentState;
+import com.chengyinhub.business.service.impl.AiThemeDraftRequestService;
 import com.chengyinhub.business.domain.vo.ai.AiThemeDraftQuotaResp;
 import com.chengyinhub.business.service.IAiCreatorService;
 import com.chengyinhub.business.service.ai.AiServiceException;
@@ -35,6 +37,7 @@ import static org.mockito.Mockito.when;
 class ApiAiControllerTest {
 
     private IAiCreatorService aiCreatorService;
+    private AiThemeDraftRequestService themeDraftRequests;
     private TestableApiAiController controller;
 
     private static final Long CLUB_MEMBER_ID = 1001L;
@@ -43,6 +46,7 @@ class ApiAiControllerTest {
     @BeforeEach
     void setUp() {
         aiCreatorService = mock(IAiCreatorService.class);
+        themeDraftRequests = mock(AiThemeDraftRequestService.class);
         when(aiCreatorService.resolveRoleFor(CLUB_MEMBER_ID)).thenReturn("club");
         when(aiCreatorService.resolveRoleFor(PLAYER_MEMBER_ID)).thenReturn("player");
     }
@@ -50,18 +54,21 @@ class ApiAiControllerTest {
     private TestableApiAiController clubController() {
         TestableApiAiController c = new TestableApiAiController(CLUB_MEMBER_ID);
         ReflectionTestUtils.setField(c, "aiCreatorService", aiCreatorService);
+        ReflectionTestUtils.setField(c, "themeDraftRequests", themeDraftRequests);
         return c;
     }
 
     private TestableApiAiController playerController() {
         TestableApiAiController c = new TestableApiAiController(PLAYER_MEMBER_ID);
         ReflectionTestUtils.setField(c, "aiCreatorService", aiCreatorService);
+        ReflectionTestUtils.setField(c, "themeDraftRequests", themeDraftRequests);
         return c;
     }
 
     private TestableApiAiController nullMemberController() {
         TestableApiAiController c = new TestableApiAiController(null);
         ReflectionTestUtils.setField(c, "aiCreatorService", aiCreatorService);
+        ReflectionTestUtils.setField(c, "themeDraftRequests", themeDraftRequests);
         return c;
     }
 
@@ -110,27 +117,24 @@ class ApiAiControllerTest {
 
     @Test
     void themeDraftReturnsSuccessForClub() {
-        AiThemeDraftResp mockResp = new AiThemeDraftResp();
-        mockResp.setTraceId("trace-td");
-        when(aiCreatorService.themeDraft(any(AiThemeDraftReq.class), eq(CLUB_MEMBER_ID)))
-                .thenReturn(mockResp);
-
-        AjaxResult result = clubController().themeDraft(new AiThemeDraftReq());
-
+        AiThemeDraftIntentView prepared = new AiThemeDraftIntentView("td2_0123456789abcdef0123456789abcdef",
+                AiThemeDraftIntentState.PREPARED, false, true, false, null, null, null, null, 1);
+        AiThemeDraftPrepareReq input = new AiThemeDraftPrepareReq("7c9e6679-7425-40de-944b-e07fc1f90ae7", "club", 1, null);
+        when(themeDraftRequests.prepare(CLUB_MEMBER_ID, input)).thenReturn(prepared);
+        AjaxResult result = clubController().themeDraftPrepare(input);
         assertEquals(200, result.get(AjaxResult.CODE_TAG));
+        assertEquals(prepared, result.get(AjaxResult.DATA_TAG));
     }
 
     @Test
     void themeDraftAllowsPlayerForSimpleCreation() {
-        AiThemeDraftResp mockResp = new AiThemeDraftResp();
-        mockResp.setTraceId("trace-player-td");
-        when(aiCreatorService.themeDraft(any(AiThemeDraftReq.class), eq(PLAYER_MEMBER_ID)))
-                .thenReturn(mockResp);
-
-        AjaxResult result = playerController().themeDraft(new AiThemeDraftReq());
-
+        AiThemeDraftIntentView prepared = new AiThemeDraftIntentView("td2_0123456789abcdef0123456789abcdef",
+                AiThemeDraftIntentState.PREPARED, false, true, false, null, null, null, null, 1);
+        AiThemeDraftPrepareReq input = new AiThemeDraftPrepareReq("7c9e6679-7425-40de-944b-e07fc1f90ae7", "player", 1, null);
+        when(themeDraftRequests.prepare(PLAYER_MEMBER_ID, input)).thenReturn(prepared);
+        AjaxResult result = playerController().themeDraftPrepare(input);
         assertEquals(200, result.get(AjaxResult.CODE_TAG));
-        verify(aiCreatorService).themeDraft(any(AiThemeDraftReq.class), eq(PLAYER_MEMBER_ID));
+        verify(themeDraftRequests).prepare(PLAYER_MEMBER_ID, input);
     }
 
     @Test
@@ -280,6 +284,7 @@ class ApiAiControllerTest {
                 .thenReturn(new com.chengyinhub.business.domain.vo.ai.MerchantInsightResp());
         TestableApiAiController c = new TestableApiAiController(MERCHANT_MEMBER_ID);
         ReflectionTestUtils.setField(c, "aiCreatorService", aiCreatorService);
+        ReflectionTestUtils.setField(c, "themeDraftRequests", themeDraftRequests);
         ReflectionTestUtils.setField(c, "merchantInsightService", insightService);
         ReflectionTestUtils.setField(c, "merchantAccessService",
                 merchantAccess(MERCHANT_MEMBER_ID, MERCHANT_MEMBER_ID,

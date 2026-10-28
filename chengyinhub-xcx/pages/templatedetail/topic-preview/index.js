@@ -81,7 +81,12 @@ Page({
     this.load();
   },
 
+  onHide() {
+    this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1;
+  },
+
   onUnload() {
+    this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1;
     this._unloaded = true;
     this._seq = (this._seq || 0) + 1;
     if (this._enterTimer) clearTimeout(this._enterTimer);
@@ -202,7 +207,7 @@ Page({
 
   // 主题模板 = 整包复制成我的草稿，进专业编辑器(与原模板页「配置」同一条链路)
   useTemplate() {
-    if (app.ensureLoginFor && !app.ensureLoginFor('publish', () => this.useTemplate())) return; // 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('publish', () => this.useTemplate(), { owner: this, target: () => [this._id, this._scope] })) return; // 游客写前登录
     if (this._readonly) { cyToast('当前岗位仅可浏览模板'); return; }
     // 后端每次调用都整包复制出新草稿，连点两下就是两份：在途时挡住
     if (this._using) { cyToast('正在配置，请稍候'); return; }

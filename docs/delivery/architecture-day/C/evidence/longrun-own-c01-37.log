@@ -1,0 +1,11 @@
+✔ old preference load cannot populate same node in a different session (33.586199ms)
+✔ old preference submit cannot send after thought wait changes game (5.423913ms)
+✔ result completion is bound to original game and consumed once (4.067612ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 49.328809

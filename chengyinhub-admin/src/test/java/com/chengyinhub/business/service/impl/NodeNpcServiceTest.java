@@ -42,7 +42,7 @@ import static org.mockito.Mockito.when;
  *   ② 文本同步送检拦在落库前,头像(非预设)落库后异步送检,且 bizType 必须是 NODE_NPC 不是商家资料;
  *   ③ 一节点一条:第二次保存是 update 同一条;下架过的行回到待审(audit_status=0 + enabled=0),
  *      过审前玩家读不到 —— 不写回 enabled=1 这条路;
- *   ④ 声音状态机:先落 PENDING 再打上游,失败清 voice_id —— 与门店分身同一套语义。
+ *   ④ 声音状态机:先落原身份/PENDING 再打上游,UNKNOWN 保留原任务,仅可信 NOT_SENT 可为 FAILED —— 与门店分身同一套语义。
  */
 class NodeNpcServiceTest {
 
@@ -55,6 +55,8 @@ class NodeNpcServiceTest {
     private IWxContentSecurityService wxSec;
     private VoiceCloneClient voice;
     private NodeNpcService service;
+    private static final String CANONICAL_SAMPLE = "media-asset:41";
+    private com.chengyinhub.business.service.ai.NpcVoiceEnrollmentFixture enrollment;
 
 
     private static final String REGISTRY_AUDIO_KEY = "upload/0123456789abcdef0123456789abcdef.mp3";
@@ -197,13 +199,17 @@ class NodeNpcServiceTest {
         voice = mock(VoiceCloneClient.class);
         service = new NodeNpcService(nodeGate, mapper, wxSec, voice);
         com.chengyinhub.business.service.support.AppMediaReferenceGuard media = mock(com.chengyinhub.business.service.support.AppMediaReferenceGuard.class);
-        when(media.requireAttachment(org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.eq(true))).thenAnswer(call -> call.getArgument(1));
-        when(media.processingUrl(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.eq("AUDIO"))).thenAnswer(call -> call.getArgument(0));
+        when(media.requireAttachment(org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.eq(true)))
+                .thenAnswer(call -> ((String)call.getArgument(1)).startsWith("media-asset:") ? call.getArgument(1) : CANONICAL_SAMPLE);
+        when(media.processingUrl(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.eq("AUDIO"))).thenReturn("/profile/a.mp3");
         org.springframework.test.util.ReflectionTestUtils.setField(service, "mediaReferences", media);
         org.springframework.test.util.ReflectionTestUtils.setField(service, "consentGuard", org.mockito.Mockito.mock(com.chengyinhub.business.service.ConsentGuard.class));
 
         when(nodeGate.requireOwnLiveNode(ME, NODE)).thenReturn(node());
         when(mapper.selectNodeNpcByNodeId(NODE)).thenReturn(null);
+        enrollment = new com.chengyinhub.business.service.ai.NpcVoiceEnrollmentFixture(
+                mapper, voice, 4, NODE, () -> mapper.selectNodeNpcByNodeId(NODE));
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "voiceEnrollmentService", enrollment.service);
     }
 
     private static CmsTopicNode node() {
@@ -452,13 +458,15 @@ class NodeNpcServiceTest {
         service.voiceEnroll(ME, ME, NODE, "/profile/a.mp3");
 
         ArgumentCaptor<NpcProfile> cap = ArgumentCaptor.forClass(NpcProfile.class);
-        verify(mapper, org.mockito.Mockito.times(2)).updateNodeNpcVoice(cap.capture());
+        verify(mapper, org.mockito.Mockito.times(3)).updateNodeNpcVoice(cap.capture());
         List<NpcProfile> writes = cap.getAllValues();
         assertEquals(Integer.valueOf(NodeNpcService.VOICE_PENDING), writes.get(0).getVoiceStatus(),
                 "必须先落复刻中再打上游 —— 反过来的话上游成功而落库失败 = 花了钱没记住");
-        assertEquals("/profile/a.mp3", writes.get(0).getVoiceSample());
+        assertEquals(CANONICAL_SAMPLE, writes.get(0).getVoiceSample());
+        assertEquals(Integer.valueOf(NodeNpcService.VOICE_PENDING), writes.get(1).getVoiceStatus());
         assertEquals("cosyvoice-v2-abc", writes.get(1).getVoiceId());
-        assertEquals(Integer.valueOf(NodeNpcService.VOICE_READY), writes.get(1).getVoiceStatus());
+        assertEquals("cosyvoice-v2-abc", writes.get(2).getVoiceId());
+        assertEquals(Integer.valueOf(NodeNpcService.VOICE_READY), writes.get(2).getVoiceStatus());
         InOrder order = inOrder(mapper, voice);
         order.verify(mapper).updateNodeNpcVoice(any(NpcProfile.class));
         order.verify(voice).enroll("/profile/a.mp3");
@@ -466,28 +474,44 @@ class NodeNpcServiceTest {
 
     @Test
     @Timeout(5)
-    void voiceEnroll_upstreamFailureClearsVoiceId() {
+    void voiceEnroll_unconfirmedFailureKeepsOriginalUnknownIdentity() {
         when(mapper.selectNodeNpcByNodeId(NODE)).thenReturn(existing(555L, NODE, 1));
         when(mapper.updateNodeNpcVoice(any(NpcProfile.class))).thenReturn(1);
         when(voice.usable()).thenReturn(true);
         when(voice.enroll(anyString())).thenThrow(new AiServiceException("录音太短"));
+        NpcProfile result = service.voiceEnroll(ME, ME, NODE, "/profile/a.mp3");
+        assertEquals("UNKNOWN", result.getVoiceIntentState());
+        assertEquals("VOICE_PROVIDER_OUTCOME_UNKNOWN", result.getVoiceReasonCode());
+        ArgumentCaptor<NpcProfile> cap = ArgumentCaptor.forClass(NpcProfile.class);
+        verify(mapper).updateNodeNpcVoice(cap.capture());
+        assertEquals(Integer.valueOf(NodeNpcService.VOICE_PENDING), cap.getValue().getVoiceStatus());
+        assertNull(cap.getValue().getVoiceId());
+        assertEquals(result.getVoiceIntentId(), service.voiceEnroll(ME, ME, NODE, "/profile/a.mp3").getVoiceIntentId());
+        verify(voice, org.mockito.Mockito.times(1)).enroll(anyString());
+    }
 
-        assertEquals("录音太短",
-                assertThrows(IllegalStateException.class,
-                        () -> service.voiceEnroll(ME, ME, NODE, "/profile/a.mp3")).getMessage());
-
+    @Test
+    void voiceEnroll_trustedNotSentKeepsTheKnownFailedStateWithoutReexecution() {
+        when(mapper.selectNodeNpcByNodeId(NODE)).thenReturn(existing(555L, NODE, 1));
+        when(mapper.updateNodeNpcVoice(any(NpcProfile.class))).thenReturn(1);
+        when(voice.usable()).thenReturn(true);
+        when(voice.enroll(anyString())).thenThrow(new AiServiceException("local admission", new com.chengyinhub.business.service.ai.AiProviderNotSentException()));
+        NpcProfile result = service.voiceEnroll(ME, ME, NODE, "/profile/a.mp3");
+        assertEquals("NOT_SENT", result.getVoiceIntentState());
         ArgumentCaptor<NpcProfile> cap = ArgumentCaptor.forClass(NpcProfile.class);
         verify(mapper, org.mockito.Mockito.times(2)).updateNodeNpcVoice(cap.capture());
         NpcProfile failed = cap.getAllValues().get(1);
         assertEquals(Integer.valueOf(NodeNpcService.VOICE_FAILED), failed.getVoiceStatus());
-        assertNull(failed.getVoiceId(), "失败必须清 voice_id,别让半成品音色被拿去合成");
+        assertNull(failed.getVoiceId(), "明确未派发没有新的音色 id");
+        assertEquals(result.getVoiceIntentId(), service.voiceEnroll(ME, ME, NODE, "/profile/a.mp3").getVoiceIntentId());
+        verify(voice, org.mockito.Mockito.times(1)).enroll(anyString());
     }
 
     @Test
     @Timeout(5)
     void voiceEnroll_sameSampleWhilePendingIsIdempotent() {
         NpcProfile row = existing(555L, NODE, 1);
-        row.setVoiceSample("/profile/a.mp3");
+        row.setVoiceSample(CANONICAL_SAMPLE);
         row.setVoiceStatus(NodeNpcService.VOICE_PENDING);
         when(mapper.selectNodeNpcByNodeId(NODE)).thenReturn(row);
 
@@ -530,9 +554,7 @@ class NodeNpcServiceTest {
     }
 
     /**
-     * ★「上游失败也要留下失败状态」依赖方法**不在事务里**:@Transactional(rollbackFor=Exception.class)
-     * + 抛异常 会把刚写的 VOICE_FAILED 一起回滚,商家永远看不到「可重试」,状态 3 不可达。
-     * 门店分身那条路没有事务,这里必须一致(见 NodeNpcService.voiceEnroll 注释)。
+     * 外部动作不在业务事务中；原身份/UNKNOWN/原音色在短独立事务保存，不能随请求异常回滚。
      */
     @Test
     @Timeout(5)

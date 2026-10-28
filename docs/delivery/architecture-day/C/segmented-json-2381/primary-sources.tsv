@@ -1,0 +1,7 @@
+source	sha256
+https://repo.maven.apache.org/maven2/org/apache/httpcomponents/httpcore/4.4.16/httpcore-4.4.16-sources.jar!org/apache/http/entity/InputStreamEntity.java	84c8aa31249437a330d2b49a3d63a33ab7b5e8109b8d21e2c8486a2b531d4eae
+https://repo.maven.apache.org/maven2/org/apache/httpcomponents/httpcore/4.4.16/httpcore-4.4.16-sources.jar!org/apache/http/protocol/RequestContent.java	d2f0f8839ce3e70fc813179dfe47dce185061127bab446066c6a5d26832e9db2
+https://repo.maven.apache.org/maven2/org/apache/httpcomponents/httpclient/4.5.14/httpclient-4.5.14-sources.jar!org/apache/http/impl/execchain/RequestEntityProxy.java	c6e31103e3b02d5d0663e4b677adb58cb4f9c4ee19b8fa64e4807a8021d23c27
+https://repo.maven.apache.org/maven2/org/apache/httpcomponents/httpclient/4.5.14/httpclient-4.5.14-sources.jar!org/apache/http/impl/client/HttpClientBuilder.java	42f13f123c482b8dae081e33af849d55706f9e1c4d57cccf3df0527bfa8baf4d
+https://raw.githubusercontent.com/alibaba/fastjson2/2.0.57/core/src/main/java/com/alibaba/fastjson2/writer/ObjectWriterBaseModule.java	e0ea12cad3ed43f49743785ad4e82fe1372177269ebaf0359d88cfbc3fc34e18
+https://raw.githubusercontent.com/alibaba/fastjson2/2.0.57/core/src/main/java/com/alibaba/fastjson2/JSON.java	3b989c3a90d10692f72581ba3a3fd0b5b323fc8258091507ba1a431c308c63f7

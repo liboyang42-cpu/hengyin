@@ -1,0 +1,64 @@
+TAP version 13
+# Subtest: photo: separate refusal affects only that invocation; acceptance must persist exact scoped document
+ok 1 - photo: separate refusal affects only that invocation; acceptance must persist exact scoped document
+  ---
+  duration_ms: 11.223758
+  type: 'test'
+  ...
+# Subtest: voice: separate refusal affects only that invocation; acceptance must persist exact scoped document
+ok 2 - voice: separate refusal affects only that invocation; acceptance must persist exact scoped document
+  ---
+  duration_ms: 1.433245
+  type: 'test'
+  ...
+# Subtest: failed consent persistence and obsolete actor/token/page modal callbacks never authorize provider work
+ok 3 - failed consent persistence and obsolete actor/token/page modal callbacks never authorize provider work
+  ---
+  duration_ms: 5.086283
+  type: 'test'
+  ...
+# Subtest: actual play photo handler waits for separate consent and genuine readback before upload and runtime action
+ok 4 - actual play photo handler waits for separate consent and genuine readback before upload and runtime action
+  ---
+  duration_ms: 29.922784
+  type: 'test'
+  ...
+# Subtest: actual photo upload without an asset identity never reaches the runtime action
+ok 5 - actual photo upload without an asset identity never reaches the runtime action
+  ---
+  duration_ms: 13.075661
+  type: 'test'
+  ...
+# Subtest: actual photo consent persistence failure sends neither upload nor runtime action
+ok 6 - actual photo consent persistence failure sends neither upload nor runtime action
+  ---
+  duration_ms: 11.775302
+  type: 'test'
+  ...
+# Subtest: actual play refuse keeps photo private and sends no runtime action
+ok 7 - actual play refuse keeps photo private and sends no runtime action
+  ---
+  duration_ms: 8.166908
+  type: 'test'
+  ...
+# Subtest: actual play question keeps photo private and sends no runtime action
+ok 8 - actual play question keeps photo private and sends no runtime action
+  ---
+  duration_ms: 5.772416
+  type: 'test'
+  ...
+# Subtest: actual play leave keeps photo private and sends no runtime action
+ok 9 - actual play leave keeps photo private and sends no runtime action
+  ---
+  duration_ms: 5.393938
+  type: 'test'
+  ...
+1..9
+# tests 9
+# suites 0
+# pass 9
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 119.062809

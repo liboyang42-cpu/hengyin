@@ -1,0 +1,38 @@
+{
+  "C_candidate": "ca5bbbec2818df3ee43d25ac433977ca3f720a71",
+  "C_production_base": "9a2dcf21aef4d7aec7a14065a2601bd86aaad805",
+  "H_C_before_M1_review": "6552e1829e14515baedf1fea57677264dd82b85b",
+  "root_assembly_parent": "b32dd687ceff4807b7f1210b1645e69ad2018cca",
+  "scope": "Six authorized production files; shared14 algorithms + complete unlock application; no new schema or dependencies",
+  "root_static_move_check": {
+    "original_controller_methods": 106,
+    "shared_algorithms": 14,
+    "original_puzzle_bodies_preserved": 9,
+    "economic_fragment_token_equal": true,
+    "original59_source_case_names_preserved": true,
+    "new_direct_application_cases": 16
+  },
+  "root_hint10_patch": {
+    "test_prefix_including_all10_bodies_wrappers_cleanup_byte_unchanged": true,
+    "actor_extraction_outside_application_transaction": true,
+    "actual_writable_transaction_connection_id_and_latch_assertions_moved_to_first_application_node_read_before_locks": true
+  },
+  "related_frontend_node_tests": {
+    "files": 5,
+    "tests": 144,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "gitleaks_C_docs": "0 findings",
+  "Java_MySQL_startup_equivalence": "PENDING_CONTROLLED_SOURCE_BOUND_RUN",
+  "known_unchanged_P2": [
+    "Balance precheck prevents replay when points now insufficient",
+    "Ledger before/after snapshot may be stale under concurrent other consumption"
+  ],
+  "limits": [
+    "Mechanical source equality is not runtime equivalence",
+    "Existing14 MySQL regression must run new source; full Spring app/startup/SCC readback required",
+    "Source-plan ambiguous original94 prose does not replace actual59-file/raw-suite regression inventory"
+  ]
+}

@@ -2148,14 +2148,23 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
                     // 复用 quotaService.lockAndCheckThemeOnline(锁+复查单一实现,返回 err 不抛)——
                     // 不用 runWithThemeOnlineGuard 是因其抛 ServiceException 会把 review() 外层事务毒成 rollback-only。
                     // 行锁持至 review() 事务提交,消除 TOCTOU。
-                    CmsTopic exist = cmsTopicMapper.selectCmsTopicById(bizId);
-                    Long ownerId = exist != null ? exist.getMemberId() : null;
+                    // This RR read only locates the member lock; it cannot decide publication state.
+                    CmsTopic ownerLocator = cmsTopicMapper.selectCmsTopicById(bizId);
+                    Long ownerId = ownerLocator != null ? ownerLocator.getMemberId() : null;
                     // 无归属会员(官方/存量脏数据)不占任何人的个人配额:保持旧行为直接上架,不许被闸卡死
                     String quotaErr = (ownerId != null && ownerId > 0)
                             ? quotaService.lockAndCheckThemeOnline(ownerId, bizId)
                             : null;
-                    String supplyErr = quotaErr == null
-                            ? cmsTopicServiceProvider.getObject().topicSupplyAutoOnlineBlockReason(bizId) : null;
+                    // Keep member → topic order and use the complete current row for every state decision.
+                    CmsTopic exist = cmsTopicMapper.selectCmsTopicByIdForUpdate(bizId);
+                    if (exist == null) throw new ServiceException("主题不存在，请刷新审核后重试", HttpStatus.CONFLICT);
+                    if (!java.util.Objects.equals(ownerId, exist.getMemberId())) {
+                        throw new ServiceException("主题归属已变化，请刷新审核后重试", HttpStatus.CONFLICT);
+                    }
+                    // This is a new decision, not the exact receipt replay handled in review().
+                    // Even quota-denied/already-published branches can build a shell below, so the
+                    // existing locked publication preflight must always enforce the physical budget.
+                    String supplyErr = cmsTopicServiceProvider.getObject().topicSupplyAutoOnlineBlockReason(bizId);
                     String onlineErr = quotaErr != null ? quotaErr : supplyErr;
                     boolean alreadyPublished = exist != null && Integer.valueOf(1).equals(exist.getStatus())
                             && exist.getPublishedConfigVersion() != null && exist.getPublishedConfigVersion() > 0L;

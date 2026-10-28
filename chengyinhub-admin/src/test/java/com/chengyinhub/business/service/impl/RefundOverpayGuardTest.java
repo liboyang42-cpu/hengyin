@@ -33,7 +33,13 @@ class RefundOverpayGuardTest {
         CmsRegistrationMapper regMapper = mock(CmsRegistrationMapper.class);
         when(regMapper.selectCmsRegistrationById(reg.getId())).thenReturn(reg);
         when(regMapper.selectCmsRegistrationByIdForUpdate(reg.getId())).thenReturn(reg);
+        var topics = mock(com.chengyinhub.business.mapper.CmsTopicMapper.class);
+        var topic = new com.chengyinhub.business.domain.CmsTopic();
+        topic.setId(9L);
+        when(topics.selectCmsTopicById(9L)).thenReturn(topic);
+        RegistrationScopeFixture.currentReads(regMapper, null, topics);
         RefundServiceImpl service = new RefundServiceImpl();
+        ReflectionTestUtils.setField(service, "cmsTopicMapper", topics);
         ReflectionTestUtils.setField(service, "cmsRegistrationMapper", regMapper);
         ReflectionTestUtils.setField(service, "refundApplicationMapper", appMapper);
         return service;
@@ -43,6 +49,10 @@ class RefundOverpayGuardTest {
         CmsRegistration sub = new CmsRegistration();
         sub.setId(SUB_ORDER_ID);
         sub.setMemberId(MEMBER_ID);
+        sub.setOwnerType(1L);
+        sub.setOwnerId(9L);
+        sub.setRegistrationNo("R007");
+        sub.setRegistrationStatus(2);
         sub.setPaymentStatus(2);
         sub.setPayableAmount(BigDecimal.ZERO);              // 多票从单:应付 0(汇总在首单)
         sub.setTotalAmount(new BigDecimal("100.00"));       // 本票票面 100

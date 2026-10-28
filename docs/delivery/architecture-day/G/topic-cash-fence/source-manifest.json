@@ -1,0 +1,25 @@
+{
+  "parent": "cc91b0845e3abd4a2060d54a857c8c179bd22d4f",
+  "java": "NOT_RUN",
+  "mysql": "NOT_RUN",
+  "ci": "NOT_RUN",
+  "files": {
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ArchitectureDayGSettlementGuardsTest.java": "c13a3a232420361330b6983a4982947b535c5a29cbc5ce4c140264593196abd4",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopSettlementClaimServiceImplTest.java": "c59fa1a503055ba55c717d260c49f35163b63b85d9b69a102bf2ad86ecf598a8",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/SettlementRateConvergenceTest.java": "1c44c87e8ad438e6bf5572d9185330ca8c0e962a6963326b2695bea73745fcc1",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicEditionFinalizationServiceTest.java": "ed41f0ee57753d4263297582236236fe332e91240720afce37c285f00d3fc3fa",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSettlementIdempotencyTest.java": "def3b080e42d991a4beadf535123893d66499565cb11db3f98f9ad76b0fe4c33",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/Wp04CoopSettlementContractTest.java": "d8d772d5be0a9dcb91ae9e212b268ccc068f52b6ce728751f4e7c7fd5f9d64dc",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementPayoutTransactionTest.java": "a174d428c257d86e5e2a3f4ef6f68cfebddeff36b1824ef9bc17c0c46bf4f487",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementTest.java": "25f700479892032cba41064f31d4c40020ef80e61f87e3a7d08b9a82cdd7d6c8",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/Wp04TopicSettlementEntryGuardsTest.java": "684b2c1f9d485c46100e331846c6129031ddc4475950cb80c95a0354f3440e1b",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/DoublePaymentReproductionTest.java": "fb722f45d4c8059dccacdd4e303b3cc1c5ec7246500805a31b09578bec04a2be",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CoopSettlementMapper.java": "4f4281b4e0c1a929152af4211ac0152af759915d40451ef4b4c80ef61eeef7db",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java": "d32aecd4f901809178134e46a1d884611ade04d1ec182324830180a5798d2f7a",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementClaimServiceImpl.java": "92e5510c59d2d5c30f8a002a46d89b9f7e088061139aab4b94162326861c6ee6",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicEditionFinalizationServiceImpl.java": "2c686b4f25b88643cf5742810ef6080f595bbf0026f4dd36cef68a4c3bdcebb1",
+    "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementMapper.xml": "b5b5a020d35164738529471b75a95c5dc33586558cbe2010cccfcddd0dcae1f8",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/Wp04TopicCashFenceMySqlIT.java": "17b03d0f6da4edc9cb2fc194f50bcea3cd647817b0e7392ee8d0dd90a37395dd",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementTopicFenceTest.java": "16682fa2cbda4224be67f1fcbcdba8f6606fb7f73eab898193fb173d54088c99"
+  }
+}

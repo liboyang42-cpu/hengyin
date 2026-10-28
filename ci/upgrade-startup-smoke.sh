@@ -65,7 +65,7 @@ PY_TRACE
 }
 
 check_trace_runtime() {
-  docker run --rm --name "$RUN_NAME-trace-check" --network none --read-only --cap-drop ALL \
+  docker run --rm --name "$RUN_NAME-trace-check" "${POOL_LABEL[@]}" --network none --read-only --cap-drop ALL \
     --user "$(id -u):$(id -g)" -v "$OUT/trace-runtime:/trace-runtime:ro" \
     -e LD_SHOW_AUXV=1 -e LD_TRACE_LOADED_OBJECTS=1 --entrypoint /trace-runtime/loader "$JDK_IMAGE" \
     --inhibit-cache --library-path /trace-runtime/lib --list /trace-runtime/strace > "$OUT/trace-resolved"
@@ -141,7 +141,7 @@ if seen != set(expected):
     raise ValueError(f"Target trace runtime dependency missing: {sorted(set(expected) - seen)}")
 print(f"PASS target trace runtime same-process vDSO={int(auxv['SYSINFO_EHDR'], 16):#x}; kind={vdso_kind}; bundled dependencies={len(seen)}")
 PY_RESOLVED
-  docker run --rm --name "$RUN_NAME-trace-check" --network none --read-only --cap-drop ALL \
+  docker run --rm --name "$RUN_NAME-trace-check" "${POOL_LABEL[@]}" --network none --read-only --cap-drop ALL \
     --user "$(id -u):$(id -g)" -v "$OUT/trace-runtime:/trace-runtime:ro" \
     --entrypoint /trace-runtime/loader "$JDK_IMAGE" \
     --inhibit-cache --library-path /trace-runtime/lib /trace-runtime/strace --version > "$OUT/trace-version"
@@ -149,7 +149,7 @@ PY_RESOLVED
 }
 
 start_traced_application() {
-  docker run -d --name "$RUN_NAME-app" --network "$RUN_NAME" --dns 127.0.0.1 \
+  docker run -d --name "$RUN_NAME-app" "${POOL_LABEL[@]}" --network "$RUN_NAME" --dns 127.0.0.1 \
     --read-only --tmpfs /tmp:rw,size=256m --cap-drop ALL --cap-add SYS_PTRACE \
     --user "$(id -u):$(id -g)" \
     -v "$OUT/trace-runtime:/trace-runtime:ro" \
@@ -164,6 +164,133 @@ start_traced_application() {
     -jar /application.jar --spring.config.location=file:/fixture/application.properties \
     "--spring.datasource.druid.master.url=jdbc:mysql://$MYSQL_IP:3306/upgrade_startup_probe?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC" \
     "--spring.data.redis.host=$REDIS_IP" "${POOL_PROFILE[@]}" >/dev/null
+}
+
+pool_execution_evidence() {
+  python3 -I - "$ROOT" "$JAR" "$OUT" "$RUN_NAME" "$1" <<'PY_POOL_IDENTITY'
+import hashlib, json, os, re, subprocess, sys
+from pathlib import Path
+root, jar, out = map(Path, sys.argv[1:4])
+name, phase = sys.argv[4:]
+path = out / 'pool-execution.json'
+report = json.loads(path.read_text()) if path.exists() else {}
+def output(args):
+    return subprocess.run(args, check=True, capture_output=True, text=True, timeout=15).stdout.strip()
+def digest():
+    h = hashlib.sha256()
+    with jar.open('rb') as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b''): h.update(chunk)
+    return {'sha256': h.hexdigest(), 'size': jar.stat().st_size}
+try:
+    assert re.fullmatch(r'cy-startup-\d+-\d+', name)
+    source = output(['git', '-C', str(root), 'rev-parse', 'HEAD'])
+    tree = output(['git', '-C', str(root), 'rev-parse', 'HEAD^{tree}'])
+    assert re.fullmatch('[0-9a-f]{40}', source) and source == os.environ['GITHUB_SHA']
+    assert re.fullmatch('[0-9a-f]{40}', tree)
+    run, attempt = os.environ['GITHUB_RUN_ID'], os.environ['GITHUB_RUN_ATTEMPT']
+    assert re.fullmatch('[1-9][0-9]*', run) and re.fullmatch('[1-9][0-9]*', attempt)
+    identity = {'sourceSha': source, 'sourceTree': tree, 'runId': run, 'runAttempt': attempt}
+    current = digest()
+    if phase == 'before':
+        assert not report
+        report = dict(identity, jarBefore=current, taskName=name,
+                      jarProof='runner/mounted-file digests only; no independent downloaded JAR verification')
+    else:
+        assert phase in ('running', 'after')
+        assert all(report[k] == v for k, v in identity.items())
+        assert report['jarBefore'] == current and report['taskName'] == name
+        obj, = json.loads(output(['docker', '--context', 'default', 'container', 'inspect', name + '-app']))
+        assert obj['Name'] == '/' + name + '-app'
+        assert obj['Config']['Labels']['com.chengyin.pool-recovery'] == name
+        assert re.fullmatch('[0-9a-f]{64}', obj['Id'])
+        mount, = [m for m in obj['Mounts'] if m['Destination'] == '/application.jar']
+        assert mount['Type'] == 'bind' and mount['Source'] == str(jar.resolve()) and mount['RW'] is False
+        raw = output(['docker', '--context', 'default', 'exec', obj['Id'], 'sha256sum', '/application.jar'])
+        assert re.fullmatch(r'[0-9a-f]{64}  /application\.jar', raw)
+        assert raw.split()[0] == current['sha256']
+        if phase == 'after': assert report['appContainerId'] == obj['Id']
+        report['appContainerId'] = obj['Id']
+        report['jarMounted' + phase.title()] = current
+        report['jar' + phase.title()] = current
+    report['result'] = 'PASS_SOURCE_JAR_UNCHANGED' if phase == 'after' else 'RECORDED_' + phase.upper()
+except Exception as exc:
+    report['result'] = 'FAIL_EXECUTION_IDENTITY'
+    report['failurePhase'] = phase
+    report['failureType'] = type(exc).__name__
+    raise
+finally:
+    path.write_text(json.dumps(report, indent=2) + '\n')
+PY_POOL_IDENTITY
+}
+
+pool_owned_cleanup() {
+  python3 -I - "$OUT" "$RUN_NAME" "$1" <<'PY_POOL_CLEANUP'
+import json, re, subprocess, sys
+from pathlib import Path
+out, name, original = Path(sys.argv[1]), sys.argv[2], int(sys.argv[3])
+report = {'taskName': name, 'originalExitCode': original, 'removed': [], 'errors': []}
+owned_ids = set()
+def call(args):
+    return subprocess.run(['docker', '--context', 'default'] + args,
+                          check=True, capture_output=True, text=True, timeout=15).stdout
+def inventory(kind):
+    text = call([kind, 'ls'] + (['--all'] if kind == 'container' else []) + ['--no-trunc', '--format', '{{json .}}'])
+    rows = [json.loads(line) for line in text.splitlines()]
+    key = 'Names' if kind == 'container' else 'Name'
+    assert len({r[key] for r in rows}) == len(rows)
+    return {r[key]: r['ID'] for r in rows}
+def error(stage, exc):
+    report['errors'].append({'stage': stage, 'type': type(exc).__name__,
+                             'returnCode': getattr(exc, 'returncode', None)})
+try:
+    assert re.fullmatch(r'cy-startup-\d+-\d+', name)
+    # The old probe field was a literal, never a measured connection timeout.
+    receipt = out / 'pool-recovery.json'
+    if receipt.exists():
+        try:
+            value = json.loads(receipt.read_text())
+            value['profile'].pop('connectTimeoutMs', None)
+            value['connectTimeoutObservation'] = 'UNKNOWN_NOT_MEASURED'
+            receipt.write_text(json.dumps(value, indent=2) + '\n')
+        except Exception as exc: error('receipt-profile-correction', exc)
+    for kind, names in [('container', [name + '-' + s for s in ('app', 'mysql', 'redis', 'trace-check')]),
+                        ('network', [name])]:
+        try: before = inventory(kind)
+        except Exception as exc:
+            error(kind + '-inventory-before', exc)
+            continue
+        for target in names:
+            if target not in before: continue
+            try:
+                identifier = before[target]
+                assert re.fullmatch('[0-9a-f]{64}', identifier)
+                obj, = json.loads(call([kind, 'inspect', identifier]))
+                assert obj['Id'] == identifier and obj['Name'] == ('/' if kind == 'container' else '') + target
+                labels = obj['Config'].get('Labels') if kind == 'container' else obj.get('Labels')
+                assert (labels or {}).get('com.chengyin.pool-recovery') == name
+                if kind == 'network': assert obj['Internal'] is True
+                owned_ids.add(identifier)
+                call([kind, 'rm'] + (['--force'] if kind == 'container' else []) + [identifier])
+                report['removed'].append({'kind': kind, 'name': target, 'id': identifier})
+            except Exception as exc: error(kind + '-remove-' + target, exc)
+    # Successful, independent inventories distinguish absence from daemon failure.
+    remaining = []
+    for kind in ('container', 'network'):
+        try:
+            rows = inventory(kind)
+            for target, identifier in rows.items():
+                if target in {name, *(name + '-' + s for s in ('app', 'mysql', 'redis', 'trace-check'))} or identifier in owned_ids:
+                    remaining.append({'kind': kind, 'name': target, 'id': identifier})
+        except Exception as exc: error(kind + '-inventory-after', exc)
+    report['remaining'] = remaining
+except Exception as exc:
+    error('receipt-or-scope', exc)
+report['result'] = 'PASS_OWNED_RESOURCES_ABSENT' if not report['errors'] and not report.get('remaining') else 'FAIL_OWNED_CLEANUP'
+(out / 'pool-cleanup.json').write_text(json.dumps(report, indent=2) + '\n')
+if report['result'] != 'PASS_OWNED_RESOURCES_ABSENT':
+    print('FAIL pool cleanup: ' + json.dumps(report), file=sys.stderr)
+    sys.exit(1)
+PY_POOL_CLEANUP
 }
 
 case "$(uname -s)" in
@@ -199,23 +326,36 @@ command -v python3 >/dev/null
 docker info >/dev/null
 # Pool fault scenario is opt-in for the exact isolated hosted workflow only.
 POOL_PROFILE=()
+POOL_LABEL=()
 if [ "${CHENGYIN_CI_POOL_RECOVERY:-false}" = true ]; then
   python3 -I "$ROOT/ci/pool_recovery_probe.py" --check-execution-only
   test "$(command docker context inspect --format '{{.Endpoints.docker.Host}}')" = unix:///var/run/docker.sock
   POOL_PROFILE=(--spring.datasource.druid.maxActive=20 --spring.datasource.druid.maxWait=5000 --spring.datasource.druid.socketTimeout=60000)
 fi
 RUN_NAME="cy-startup-$$-$RANDOM"
+if [ "${CHENGYIN_CI_POOL_RECOVERY:-false}" = true ]; then
+  POOL_LABEL=(--label "com.chengyin.pool-recovery=$RUN_NAME")
+fi
 OUT=$(mktemp -d "${TMPDIR:-/tmp}/cy-startup.XXXXXXXX")
 chmod 755 "$OUT"
 STRACE=$(command -v strace)
 # Keep the tracer's loader/libc closure separate from the application's image libraries.
-prepare_trace_runtime
+if [ "${CHENGYIN_CI_POOL_RECOVERY:-false}" != true ]; then prepare_trace_runtime; fi
 cleanup() {
   local result=$?
   trap - EXIT
   docker logs "$RUN_NAME-app" > "$OUT/application.log" 2>&1 || true
-  docker rm -f "$RUN_NAME-app" "$RUN_NAME-mysql" "$RUN_NAME-redis" "$RUN_NAME-trace-check" >/dev/null 2>&1 || true
-  docker network rm "$RUN_NAME" >/dev/null 2>&1 || true
+  if [ "${CHENGYIN_CI_POOL_RECOVERY:-false}" = true ]; then
+    # Continue every owned cleanup attempt while preserving the original failure code.
+    set +e
+    local evidence_result=0 cleanup_result=0
+    pool_execution_evidence after || evidence_result=$?
+    pool_owned_cleanup "$result" || cleanup_result=$?
+    if [ "$result" -eq 0 ] && { [ "$evidence_result" -ne 0 ] || [ "$cleanup_result" -ne 0 ]; }; then result=1; fi
+  else
+    docker rm -f "$RUN_NAME-app" "$RUN_NAME-mysql" "$RUN_NAME-redis" "$RUN_NAME-trace-check" >/dev/null 2>&1 || true
+    docker network rm "$RUN_NAME" >/dev/null 2>&1 || true
+  fi
   echo "Startup evidence: $OUT (exit=$result)"
   if [ "$result" -ne 0 ]; then
     if [ -f "$OUT/health.log" ]; then cat "$OUT/health.log"; fi
@@ -224,18 +364,22 @@ cleanup() {
   exit "$result"
 }
 trap cleanup EXIT
+if [ "${CHENGYIN_CI_POOL_RECOVERY:-false}" = true ]; then
+  pool_execution_evidence before
+  prepare_trace_runtime
+fi
 JDK_IMAGE=maven:3.9.11-eclipse-temurin-21@sha256:6fdc855a6ed81d288ca7ca37ac6ff5e9308b612485c0801d70b25a858c83d237
 MYSQL_IMAGE=mysql:8.0.45@sha256:4af1f8815716546f5b12410f7621f37f93db8dd11a184706ef59111930b8c2ff
 REDIS_IMAGE=redis:7.4-alpine@sha256:858f009f9709ce576febc734aa78b8f6d624b82571f9ddb6bda4377c833b3499
 for image in "$JDK_IMAGE" "$MYSQL_IMAGE" "$REDIS_IMAGE"; do docker image inspect "$image" >/dev/null 2>&1 || docker pull "$image"; done
 check_trace_runtime
-docker network create --internal "$RUN_NAME" >/dev/null
+docker network create --internal "${POOL_LABEL[@]}" "$RUN_NAME" >/dev/null
 test "$(docker network inspect "$RUN_NAME" --format '{{.Internal}}')" = true
-docker run -d --name "$RUN_NAME-mysql" --network "$RUN_NAME" --tmpfs /var/lib/mysql:rw,size=768m \
+docker run -d --name "$RUN_NAME-mysql" "${POOL_LABEL[@]}" --network "$RUN_NAME" --tmpfs /var/lib/mysql:rw,size=768m \
   -e MYSQL_ALLOW_EMPTY_PASSWORD=yes -e MYSQL_DATABASE=upgrade_startup_probe \
   -e MYSQL_USER=startup_probe -e MYSQL_PASSWORD=synthetic-local-only \
   "$MYSQL_IMAGE" --skip-log-bin --default-time-zone=+00:00 >/dev/null
-docker run -d --name "$RUN_NAME-redis" --network "$RUN_NAME" --tmpfs /data:rw,size=64m \
+docker run -d --name "$RUN_NAME-redis" "${POOL_LABEL[@]}" --network "$RUN_NAME" --tmpfs /data:rw,size=64m \
   "$REDIS_IMAGE" redis-server --save '' --appendonly no >/dev/null
 ready=false
 for attempt in $(seq 1 90); do
@@ -251,6 +395,7 @@ docker exec -i "$RUN_NAME-mysql" mysql -uroot upgrade_startup_probe < "$FIXTURE/
 MYSQL_IP=$(docker inspect "$RUN_NAME-mysql" --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
 REDIS_IP=$(docker inspect "$RUN_NAME-redis" --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
 start_traced_application
+if [ "${CHENGYIN_CI_POOL_RECOVERY:-false}" = true ]; then pool_execution_evidence running; fi
 ready=false
 for attempt in $(seq 1 120); do
   docker logs "$RUN_NAME-app" > "$OUT/application.log" 2>&1

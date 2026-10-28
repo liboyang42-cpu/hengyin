@@ -20,6 +20,69 @@ public final class JourneyInitialState {
 
     private JourneyInitialState() { }
 
+    /** Complete author definitions only; old key/label snapshots return null, never invented types. */
+    public static List<ThemeStateKey> frozenDefinitions(String snapshotJson) {
+        if (snapshotJson == null || snapshotJson.trim().isEmpty()) return null;
+        final JsonNode snapshot;
+        try { snapshot = JSON.readTree(snapshotJson); }
+        catch (Exception invalid) { throw new IllegalArgumentException("状态键快照不可用", invalid); }
+        return frozenDefinitions(snapshot);
+    }
+
+    public static List<ThemeStateKey> frozenDefinitions(JsonNode snapshot) {
+        if (snapshot == null || !snapshot.has("stateKeySnapshotVersion")) return null;
+        JsonNode version = snapshot.get("stateKeySnapshotVersion");
+        if (!version.isIntegralNumber() || !version.canConvertToInt() || version.asInt() != 1
+                || !snapshot.path("stateKeys").isArray()) throw new IllegalArgumentException("状态键定义快照不可用");
+        List<ThemeStateKey> result = new ArrayList<>();
+        Set<String> names = new HashSet<>();
+        for (JsonNode row : snapshot.path("stateKeys")) {
+            if (!row.isObject() || !row.path("key").isTextual()
+                    || !row.path("stateKey").isTextual() || !row.path("key").asText().equals(row.path("stateKey").asText())
+                    || !row.path("topicId").isIntegralNumber() || !row.path("topicId").canConvertToLong() || row.path("topicId").asLong() <= 0
+                    || !ThemeStateKey.KEY_NAME.matcher(row.path("key").asText()).matches()
+                    || !names.add(row.path("key").asText())) throw new IllegalArgumentException("状态键定义快照不可用");
+            for (String field : java.util.Arrays.asList("keyType", "scope", "label", "displayType", "color", "icon", "persistScope", "rulesJson")) {
+                JsonNode value = row.get(field);
+                if (value == null || !value.isNull() && !value.isTextual()) throw new IllegalArgumentException("状态键定义快照不可用");
+            }
+            for (String field : java.util.Arrays.asList("initialValue", "minValue", "maxValue", "sortOrder")) {
+                JsonNode value = row.get(field);
+                if (value == null || !value.isNull() && (!value.isIntegralNumber() || !value.canConvertToInt()))
+                    throw new IllegalArgumentException("状态键定义快照不可用");
+            }
+            if (!row.has("visible") || !row.path("visible").isNull() && !row.path("visible").isBoolean())
+                throw new IllegalArgumentException("状态键定义快照不可用");
+            ThemeStateKey key = new ThemeStateKey();
+            key.setTopicId(row.path("topicId").asLong());
+            key.setStateKey(row.path("key").asText());
+            key.setKeyType(row.path("keyType").asText(null));
+            key.setScope(row.path("scope").asText(null));
+            key.setLabel(row.path("label").asText(null));
+            key.setInitialValue(row.hasNonNull("initialValue") ? row.path("initialValue").asInt() : null);
+            key.setMinValue(row.hasNonNull("minValue") ? row.path("minValue").asInt() : null);
+            key.setMaxValue(row.hasNonNull("maxValue") ? row.path("maxValue").asInt() : null);
+            key.setSortOrder(row.hasNonNull("sortOrder") ? row.path("sortOrder").asInt() : null);
+            key.setDisplayType(row.path("displayType").asText(null));
+            key.setColor(row.path("color").asText(null));
+            key.setIcon(row.path("icon").asText(null));
+            key.setPersistScope(row.path("persistScope").asText(null));
+            key.setRulesJson(row.path("rulesJson").asText(null));
+            key.setVisible(row.hasNonNull("visible") ? row.path("visible").asBoolean() : null);
+            result.add(key);
+        }
+        return result;
+    }
+
+    /** New definitions must travel with their original numeric/visibility rules. */
+    public static String frozenDefinitionRules(String snapshotJson) {
+        if (frozenDefinitions(snapshotJson) == null) return null;
+        String rules = NodeJourneySnapshot.journeyRules(snapshotJson);
+        if (rules == null) throw new IllegalArgumentException("状态键规则快照不可用");
+        return rules;
+    }
+
+
     /** 数值目标只引用已启用的 counter 属性，不以显示名或幸运值替代。 */
     public static JsonNode numericAttribute(JourneyRules rules, String key) {
         if (rules != null && rules.isStateEnabled() && key != null && key.startsWith("counter.")) {
@@ -161,7 +224,16 @@ public final class JourneyInitialState {
         }
     }
 
+    /** Fresh publication only: full author declarations, never session values or technical IDs. */
+    public static void freezeKeys(ObjectNode snapshot, List<ThemeStateKey> keys, JourneyRules rules, Long topicId) {
+        List<ThemeStateKey> complete = ThemeStateKeyDeclarationSnapshot.includingRuleAttributes(topicId, keys, rules);
+        snapshot.set("stateKeys", ThemeStateKeyDeclarationSnapshot.capture(topicId, complete));
+        snapshot.put("stateKeySnapshotVersion", 1);
+    }
+
     public static List<ThemeStateKey> visibleKeys(List<ThemeStateKey> liveKeys, JourneyRules rules, String snapshot) {
+        List<ThemeStateKey> definitions = frozenDefinitions(snapshot);
+        if (definitions != null) return visibleKeys(definitions, rules);
         List<ThemeStateKey> keys = liveKeys;
         if (snapshot != null) {
             try {

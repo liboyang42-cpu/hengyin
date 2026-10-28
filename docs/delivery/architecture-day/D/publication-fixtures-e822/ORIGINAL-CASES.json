@@ -1,0 +1,110 @@
+[
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicPublishNarrativeNpcGuardTest.java",
+    "originalCases": [
+      "foreignBlockNarrativeNpcBlocksPublish",
+      "availableBlockNarrativeNpcPublishes",
+      "legacyBlockWithoutNarrativeNpcDoesNotTouchNpcProfiles",
+      "foreignStoryFlowNarrativeNpcBlocksPublish",
+      "availableStoryFlowNarrativeNpcPublishes"
+    ],
+    "currentCases": [
+      "foreignBlockNarrativeNpcBlocksPublish",
+      "availableBlockNarrativeNpcPublishes",
+      "legacyBlockWithoutNarrativeNpcDoesNotTouchNpcProfiles",
+      "foreignStoryFlowNarrativeNpcBlocksPublish",
+      "availableStoryFlowNarrativeNpcPublishes"
+    ]
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicPublishStateKeyGuardTest.java",
+    "originalCases": [
+      "unregisteredKeyBlocksSimplePublishWithKeyAndNode",
+      "allReferencedKeysRegisteredPublishes",
+      "optionTagIsAutoRegisteredOnPublish_butCounterStillBlocks",
+      "legacyTopicWithoutAnyReferenceDoesNotTouchRegistry",
+      "journeyRulesExhaustTagMustBeRegistered",
+      "journeyRulesExhaustTagRegisteredPublishes",
+      "disabledJourneyRulesStillRequireExhaustTagRegistration",
+      "unparsableJourneyRulesFailClosed",
+      "approvedTopicSnapshotBlocksUnregisteredKey",
+      "approvedTopicSnapshotPassesWhenRegistered",
+      "chapterStoryFlowBeatWhenUnregisteredKeyBlocksPublish",
+      "chapterStoryFlowBeatWhenRegisteredPublishes",
+      "declaredThoughtDonePublishesWithoutRegisteringRuntimeTag",
+      "undeclaredThoughtDoneStillBlocksPublish",
+      "thoughtDeclaredByAnotherTopicDoesNotAuthorizeThisTopic",
+      "malformedThoughtRulesCannotAuthorizeRuntimeTag",
+      "declaredThoughtDoesNotAuthorizeUnregisteredOrdinaryKey",
+      "declaredThoughtCannotBeWrittenByAdvancedNodeEffects",
+      "declaredThoughtDoneCanBeReadByChapterConditions",
+      "undeclaredThoughtDoneInChapterConditionStillBlocksPublish",
+      "legacyChapterCannotTreatDeclaredThoughtTagAsANumericVariable",
+      "genericHpAndLuckChapterCostsAndItemsPublishWithoutSkillChecks",
+      "r5HpOutcomePublishesWithoutRegisteringSystemKeyAndFrozenFailClampsBeforeZeroPolicy",
+      "r5OutcomeRejectsUnknownSystemDomainAndUnregisteredCounter",
+      "r5OutcomeRejectsDisabledHpAndLuckDomains"
+    ],
+    "currentCases": [
+      "unregisteredKeyBlocksSimplePublishWithKeyAndNode",
+      "allReferencedKeysRegisteredPublishes",
+      "optionTagIsAutoRegisteredOnPublish_butCounterStillBlocks",
+      "legacyTopicWithoutAnyReferenceDoesNotTouchRegistry",
+      "journeyRulesExhaustTagMustBeRegistered",
+      "journeyRulesExhaustTagRegisteredPublishes",
+      "disabledJourneyRulesStillRequireExhaustTagRegistration",
+      "unparsableJourneyRulesFailClosed",
+      "approvedTopicSnapshotBlocksUnregisteredKey",
+      "approvedTopicSnapshotPassesWhenRegistered",
+      "chapterStoryFlowBeatWhenUnregisteredKeyBlocksPublish",
+      "chapterStoryFlowBeatWhenRegisteredPublishes",
+      "declaredThoughtDonePublishesWithoutRegisteringRuntimeTag",
+      "undeclaredThoughtDoneStillBlocksPublish",
+      "thoughtDeclaredByAnotherTopicDoesNotAuthorizeThisTopic",
+      "malformedThoughtRulesCannotAuthorizeRuntimeTag",
+      "declaredThoughtDoesNotAuthorizeUnregisteredOrdinaryKey",
+      "declaredThoughtCannotBeWrittenByAdvancedNodeEffects",
+      "declaredThoughtDoneCanBeReadByChapterConditions",
+      "undeclaredThoughtDoneInChapterConditionStillBlocksPublish",
+      "legacyChapterCannotTreatDeclaredThoughtTagAsANumericVariable",
+      "genericHpAndLuckChapterCostsAndItemsPublishWithoutSkillChecks",
+      "r5HpOutcomePublishesWithoutRegisteringSystemKeyAndFrozenFailClampsBeforeZeroPolicy",
+      "r5OutcomeRejectsUnknownSystemDomainAndUnregisteredCounter",
+      "r5OutcomeRejectsDisabledHpAndLuckDomains"
+    ]
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicRoutePublishPolicyTest.java",
+    "originalCases": [
+      "publishDraftRejectsBranchGraphForNonOrienteeringTopic",
+      "publishDraftRejectsAnEdgeWithoutADeterministicReachabilityFixture",
+      "successfulPublishCopiesTheNormalizedDraftIntoThePublishedSnapshot",
+      "professionalSubmissionRejectsInvalidRouteBeforeGoingOnline",
+      "approvedBranchGraphPublishesLatestNormalizedSnapshot",
+      "pendingTopicCannotAdvancePublishedSnapshot",
+      "approvedLinearTopicPublishesNullGraphAndAdvancesPublishedVersion",
+      "declaredOutcomesComeOnlyFromTheNodeActualGameplayTrigger"
+    ],
+    "currentCases": [
+      "publishDraftRejectsBranchGraphForNonOrienteeringTopic",
+      "publishDraftRejectsAnEdgeWithoutADeterministicReachabilityFixture",
+      "successfulPublishCopiesTheNormalizedDraftIntoThePublishedSnapshot",
+      "professionalSubmissionRejectsInvalidRouteBeforeGoingOnline",
+      "approvedBranchGraphPublishesLatestNormalizedSnapshot",
+      "pendingTopicCannotAdvancePublishedSnapshot",
+      "approvedLinearTopicPublishesNullGraphAndAdvancesPublishedVersion",
+      "declaredOutcomesComeOnlyFromTheNodeActualGameplayTrigger"
+    ]
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicDraftSubmittedOrderTest.java",
+    "originalCases": [
+      "createDraftAssignsChapterAndPerChapterNodeOrderFromSubmittedArrays",
+      "rebuildDraftUsesNewSubmittedOrderAndRestartsNodeOrderForEachChapter"
+    ],
+    "currentCases": [
+      "createDraftAssignsChapterAndPerChapterNodeOrderFromSubmittedArrays",
+      "rebuildDraftUsesNewSubmittedOrderAndRestartsNodeOrderForEachChapter"
+    ]
+  }
+]

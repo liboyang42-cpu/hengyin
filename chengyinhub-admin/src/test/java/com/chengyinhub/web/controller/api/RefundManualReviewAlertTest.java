@@ -36,7 +36,7 @@ class RefundManualReviewAlertTest {
     private static final Long ACTIVITY = 900L;
     private static final Long MEMBER = 99L;
 
-    private final Logger controllerLogger = (Logger) LoggerFactory.getLogger(ApiRegistrationController.class);
+    private final Logger controllerLogger = (Logger) LoggerFactory.getLogger(com.chengyinhub.web.service.registration.RegistrationQueryApplication.class);
     private final ListAppender<ILoggingEvent> logAppender = new ListAppender<>();
 
     private Level originalLogLevel;
@@ -71,9 +71,9 @@ class RefundManualReviewAlertTest {
 
         when(registrations.selectCmsRegistrationById(REG)).thenReturn(row);
         when(activities.selectCmsActivityById(ACTIVITY)).thenReturn(activity);
-        ReflectionTestUtils.setField(controller, "registrationService", registrations);
-        ReflectionTestUtils.setField(controller, "activityService", activities);
-        ReflectionTestUtils.setField(controller, "refundService", mock(IRefundService.class));
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "registrationService", registrations);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "activityService", activities);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "refundService", mock(IRefundService.class));
 
         originalLogLevel = controllerLogger.getLevel();
         logAppender.start();
@@ -97,7 +97,7 @@ class RefundManualReviewAlertTest {
 
     @Test
     void manualReviewOrder_isLoggedAndTellsNextStep() {
-        assertEquals(200, controller.getRegistrationDetail(String.valueOf(REG)).get("code"));
+        assertEquals(200, RegistrationQueryTestFixtures.wire(controller).getRegistrationDetail(String.valueOf(REG)).get("code"));
 
         assertTrue(row.getRefundInfo().manualReview, "缺锚点必须落 manualReview 档");
         assertTrue(String.valueOf(row.getRefundDeadlineDisplay()).contains("联系客服"),

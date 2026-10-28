@@ -5,6 +5,10 @@ import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.CmsTopicChapter;
 import com.chengyinhub.business.domain.CmsTopicNode;
 import com.chengyinhub.business.domain.NpcProfile;
+import com.chengyinhub.business.domain.MmsMerchant;
+import com.chengyinhub.business.mapper.MmsMerchantMapper;
+import com.chengyinhub.business.service.support.MerchantNpcIdentityDirectory;
+import org.mockito.ArgumentCaptor;
 import com.chengyinhub.business.mapper.CmsMemberTemplateMapper;
 import com.chengyinhub.business.mapper.CmsTopicChapterMapper;
 import com.chengyinhub.business.mapper.CmsTopicMapper;
@@ -22,6 +26,8 @@ import java.util.Collections;
 import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -45,7 +51,9 @@ class CmsTopicPublishNarrativeNpcGuardTest {
     private CmsTopicMapper topicMapper;
     private CmsTopicNodeMapper nodeMapper;
     private CmsMemberTemplateMapper templateMapper;
+    private CmsTopicChapterMapper chapterMapper;
     private NpcProfileMapper npcProfileMapper;
+    private MmsMerchantMapper merchantMapper;
     private CmsTopicServiceImpl service;
 
     @BeforeEach
@@ -54,8 +62,29 @@ class CmsTopicPublishNarrativeNpcGuardTest {
         when(topicMapper.selectCmsTopicByIdForUpdate(anyLong()))
                 .thenAnswer(inv -> topicMapper.selectCmsTopicById(inv.getArgument(0)));
         nodeMapper = mock(CmsTopicNodeMapper.class);
+        chapterMapper = mock(CmsTopicChapterMapper.class);
         templateMapper = mock(CmsMemberTemplateMapper.class);
         npcProfileMapper = mock(NpcProfileMapper.class);
+        merchantMapper = mock(MmsMerchantMapper.class);
+
+        when(chapterMapper.selectByTopicForUpdate(TOPIC_ID)).thenAnswer(call -> {
+            CmsTopicChapter query = new CmsTopicChapter(); query.setTopicId(TOPIC_ID);
+            return chapterMapper.selectCmsTopicChapterList(query);
+        });
+        when(nodeMapper.selectByTopicForUpdate(TOPIC_ID)).thenAnswer(call -> {
+            CmsTopicNode query = new CmsTopicNode(); query.setTopicId(TOPIC_ID);
+            return nodeMapper.selectCmsTopicNodeList(query);
+        });
+        when(templateMapper.selectCmsMemberTemplateByIdsForUpdate(org.mockito.ArgumentMatchers.anyList())).thenAnswer(call -> {
+            java.util.List<Long> ids = call.getArgument(0);
+            java.util.List<CmsMemberTemplate> rows = new java.util.ArrayList<>();
+            for (Long id : ids) {
+                CmsMemberTemplate row = templateMapper.selectCmsMemberTemplateById(id);
+                if (row != null) rows.add(row);
+            }
+            return rows;
+        });
+
         service = new CmsTopicServiceImpl();
         org.springframework.test.util.ReflectionTestUtils.setField(service, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
                 invocation -> "lockTopic".equals(invocation.getMethod().getName())
@@ -65,20 +94,29 @@ class CmsTopicPublishNarrativeNpcGuardTest {
                 mock(com.chengyinhub.business.service.support.SettlementDebtLedger.class));
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
         ReflectionTestUtils.setField(service, "cmsTopicNodeMapper", nodeMapper);
-        ReflectionTestUtils.setField(service, "cmsMemberTemplateMapper", templateMapper);
-        ReflectionTestUtils.setField(service, "topicStateKeyRefService",
-                new TopicStateKeyRefService(nodeMapper, templateMapper, mock(com.chengyinhub.business.mapper.CmsTopicChapterMapper.class)));
-        ReflectionTestUtils.setField(service, "npcProfileMapper", npcProfileMapper);
+        ReflectionTestUtils.setField(service, "cmsTopicChapterMapper", chapterMapper);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "cmsMemberTemplateMapper", templateMapper);
+        TopicStateKeyRefService references = new TopicStateKeyRefService(nodeMapper, templateMapper, chapterMapper);
+        ReflectionTestUtils.setField(references, "cmsTopicMapper", topicMapper);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "topicStateKeyRefService", references);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "npcProfileMapper", npcProfileMapper);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "merchantNpcIdentityDirectory",
+                new MerchantNpcIdentityDirectory(merchantMapper));
         // R18-DRAFT:发布时补建自办活动壳 —— 成功路径会走到这两个协作者,不在场就是 NPE 假红。
         ReflectionTestUtils.setField(service, "cmsActivityMapper",
                 mock(com.chengyinhub.business.mapper.CmsActivityMapper.class));
-        ReflectionTestUtils.setField(service, "omsTicketService",
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "omsTicketService",
                 mock(com.chengyinhub.business.service.IOmsTicketService.class));
         // R19-DRAFT2:发布闸读票种(完整度),不在场就是 NPE 假红。
         ReflectionTestUtils.setField(service, "omsTicketMapper",
                 mock(com.chengyinhub.business.mapper.OmsTicketMapper.class));
         when(topicMapper.updateCmsTopic(any(CmsTopic.class))).thenReturn(1);
         when(topicMapper.publishRouteSnapshot(any(Long.class), nullable(String.class), any(Date.class))).thenReturn(1);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "themeStateKeyService",
+                new com.chengyinhub.business.service.support.ThemeStateKeyService(
+                        mock(com.chengyinhub.business.mapper.ThemeStateKeyMapper.class)));
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+        service = com.chengyinhub.business.service.support.TopicPublicationTestWiring.transactional(service);
     }
 
     /**
@@ -102,7 +140,7 @@ class CmsTopicPublishNarrativeNpcGuardTest {
                 .thenReturn(Collections.singletonList(profile(5L)));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
+        ServiceException error = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
 
         assertTrue(error.getMessage().contains("npcId=99"), error.getMessage());
         assertTrue(error.getMessage().contains("enter"), error.getMessage());
@@ -124,7 +162,7 @@ class CmsTopicPublishNarrativeNpcGuardTest {
                 .thenReturn(Collections.singletonList(profile(5L)));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        assertTrue(service.publishDraft(TOPIC_ID));
+        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
 
         verify(topicMapper).publishRouteSnapshot(any(Long.class), nullable(String.class), any(Date.class));
     }
@@ -142,7 +180,7 @@ class CmsTopicPublishNarrativeNpcGuardTest {
                 "{\"schemaVersion\":1,\"timer\":{\"enabled\":true}}")));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        assertTrue(service.publishDraft(TOPIC_ID));
+        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
 
         verify(npcProfileMapper, never()).selectEnabledByScope(anyInt(), anyLong());
     }
@@ -167,7 +205,7 @@ class CmsTopicPublishNarrativeNpcGuardTest {
                 .thenReturn(Collections.singletonList(profile(5L)));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
+        ServiceException error = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
 
         assertTrue(error.getMessage().contains("npcId=99"), error.getMessage());
         assertTrue(error.getMessage().contains("故事流"), error.getMessage());
@@ -191,9 +229,122 @@ class CmsTopicPublishNarrativeNpcGuardTest {
                 .thenReturn(Collections.singletonList(profile(5L)));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        assertTrue(service.publishDraft(TOPIC_ID));
+        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
 
         verify(topicMapper).publishRouteSnapshot(any(Long.class), nullable(String.class), any(Date.class));
+    }
+
+    @Test
+    void merchantBlockNarrativeUsesMerchantRowIdInsteadOfOwnerMemberId() {
+        merchantBlock(5L);
+        when(merchantMapper.selectMmsMerchantList(any(MmsMerchant.class)))
+                .thenReturn(Collections.singletonList(availableMerchant()));
+        NpcProfile merchantNpc = profile(5L); merchantNpc.setScopeType(2); merchantNpc.setScopeId(700L);
+        when(npcProfileMapper.selectEnabledByScope(2, 700L)).thenReturn(Collections.singletonList(merchantNpc));
+
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
+
+        ArgumentCaptor<MmsMerchant> query = ArgumentCaptor.forClass(MmsMerchant.class);
+        verify(merchantMapper).selectMmsMerchantList(query.capture());
+        assertEquals(Long.valueOf(210L), query.getValue().getMemberId());
+        verify(npcProfileMapper).selectEnabledByScope(2, 700L);
+        verify(npcProfileMapper, never()).selectEnabledByScope(2, 210L);
+        verify(topicMapper).publishRouteSnapshot(any(Long.class), nullable(String.class), any(Date.class));
+    }
+
+    @Test
+    void ownerMemberNumericAliasCannotMakeAForeignMerchantNpcAvailable() {
+        merchantBlock(99L);
+        when(merchantMapper.selectMmsMerchantList(any(MmsMerchant.class)))
+                .thenReturn(Collections.singletonList(availableMerchant()));
+        when(npcProfileMapper.selectEnabledByScope(2, 700L)).thenReturn(Collections.singletonList(profile(5L)));
+        // This decoy would authorize the old member-id-as-scope-id bug.
+        when(npcProfileMapper.selectEnabledByScope(2, 210L)).thenReturn(Collections.singletonList(profile(99L)));
+
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+        ServiceException error = assertThrows(ServiceException.class,
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
+
+        assertTrue(error.getMessage().contains("npcId=99"), error.getMessage());
+        assertTrue(error.getMessage().contains("enter"), error.getMessage());
+        verify(npcProfileMapper, never()).selectEnabledByScope(2, 210L);
+        verify(topicMapper, never()).publishRouteSnapshot(any(Long.class), nullable(String.class), any(Date.class));
+    }
+
+    @Test
+    void unavailableMerchantCannotContributeItsScopeTwoNpc() {
+        merchantBlock(5L);
+        MmsMerchant disabled = availableMerchant(); disabled.setAccountStatus(0L);
+        when(merchantMapper.selectMmsMerchantList(any(MmsMerchant.class)))
+                .thenReturn(Collections.singletonList(disabled));
+        when(npcProfileMapper.selectEnabledByScope(2, 700L)).thenReturn(Collections.singletonList(profile(5L)));
+
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+        ServiceException error = assertThrows(ServiceException.class,
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
+
+        assertTrue(error.getMessage().contains("npcId=5"), error.getMessage());
+        verify(npcProfileMapper, never()).selectEnabledByScope(2, 700L);
+        verify(npcProfileMapper, never()).selectEnabledByScope(2, 210L);
+        verify(topicMapper, never()).publishRouteSnapshot(any(Long.class), nullable(String.class), any(Date.class));
+    }
+
+    @Test
+    void merchantLookupFailurePropagatesWithoutPublishingOrNumericFallback() {
+        merchantBlock(5L);
+        IllegalStateException original = new IllegalStateException("controlled directory storage refusal");
+        when(merchantMapper.selectMmsMerchantList(any(MmsMerchant.class))).thenThrow(original);
+
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+        assertSame(original, assertThrows(IllegalStateException.class,
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID)));
+
+        verify(npcProfileMapper, never()).selectEnabledByScope(2, 700L);
+        verify(npcProfileMapper, never()).selectEnabledByScope(2, 210L);
+        verify(topicMapper, never()).publishRouteSnapshot(any(Long.class), nullable(String.class), any(Date.class));
+    }
+
+    @Test
+    void journeyStoryMerchantSpeakerUsesTheSameResolvedScopeTwoIdentity() {
+        merchantBlock(5L);
+        CmsTopic topic = topicMapper.selectCmsTopicById(TOPIC_ID);
+        topic.setJourneyStoryJson("{\"schemaVersion\":1,\"call\":{\"npcId\":5,\"opener\":\"开场\"},"
+                + "\"stages\":[{\"chapterId\":11,\"end\":{\"changed\":[{\"when\":null,\"text\":\"a\"}]}}]}");
+        when(templateMapper.selectCmsMemberTemplateById(TEMPLATE_ID))
+                .thenReturn(template("{\"schemaVersion\":1,\"timer\":{\"enabled\":true}}"));
+        when(templateMapper.selectCmsMemberTemplateByIds(any())).thenReturn(Collections.singletonList(
+                template("{\"schemaVersion\":1,\"timer\":{\"enabled\":true}}")));
+        CmsTopicNode node = topicNode(); node.setMerchantMemberId(210L); node.setChapterId(11L);
+        when(nodeMapper.selectCmsTopicNodeList(any(CmsTopicNode.class))).thenReturn(Collections.singletonList(node));
+        useStoryFlowBlocks("[]");
+        when(merchantMapper.selectMmsMerchantList(any(MmsMerchant.class)))
+                .thenReturn(Collections.singletonList(availableMerchant()));
+        NpcProfile merchantNpc = profile(5L); merchantNpc.setScopeType(2); merchantNpc.setScopeId(700L);
+        when(npcProfileMapper.selectEnabledByScope(2, 700L)).thenReturn(Collections.singletonList(merchantNpc));
+
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
+
+        verify(npcProfileMapper).selectEnabledByScope(2, 700L);
+        verify(npcProfileMapper, never()).selectEnabledByScope(2, 210L);
+        verify(topicMapper).publishRouteSnapshot(any(Long.class), nullable(String.class), any(Date.class));
+    }
+
+    private void merchantBlock(long npcId) {
+        when(topicMapper.clearDraftIfDraft(TOPIC_ID)).thenReturn(1);
+        when(topicMapper.selectCmsTopicById(TOPIC_ID)).thenReturn(simpleDraft());
+        CmsTopicNode node = topicNode(); node.setMerchantMemberId(210L);
+        when(nodeMapper.selectCmsTopicNodeList(any(CmsTopicNode.class))).thenReturn(Collections.singletonList(node));
+        CmsMemberTemplate block = template("{\"enter\":{\"npcId\":" + npcId + ",\"opener\":\"风\"}}");
+        when(templateMapper.selectCmsMemberTemplateById(TEMPLATE_ID)).thenReturn(block);
+        when(templateMapper.selectCmsMemberTemplateByIds(any())).thenReturn(Collections.singletonList(block));
+    }
+
+    private static MmsMerchant availableMerchant() {
+        MmsMerchant row = new MmsMerchant();
+        row.setId(700L); row.setMemberId(210L); row.setStatus(1L); row.setAccountStatus(1L); row.setDelFlag(0);
+        return row;
     }
 
     private void useStoryFlowBlocks(String blocksJson) {
@@ -201,7 +352,6 @@ class CmsTopicPublishNarrativeNpcGuardTest {
         chapter.setId(11L);
         chapter.setTopicId(TOPIC_ID);
         chapter.setBlocksJson(blocksJson);
-        CmsTopicChapterMapper chapterMapper = mock(CmsTopicChapterMapper.class);
         when(chapterMapper.selectCmsTopicChapterList(any(CmsTopicChapter.class)))
                 .thenReturn(Collections.singletonList(chapter));
         ReflectionTestUtils.setField(service, "cmsTopicChapterMapper", chapterMapper);

@@ -1,0 +1,9 @@
+a4104da7a55d7f25aed169e6340535802537b241b47ffecc3c353685fafbba82  chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckIntentService.java
+76e93f19b2359e360d4f9b8ee7a25acc4d1f5c5ba58856c8607d10e0e050e939  chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/PhotoCheckIntentServiceTest.java
+df6be7424036cb4efec0a768b34161e34a72cc64df32cb2385fce7d75081721d  chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/PhotoCheckIntentFreshReadMySqlIT.java
+c599d30046c24e16f57733fd8bac58128a8653dc94aa8609164dbff3249c434e  docs/delivery/architecture-day/F/photo-read-lifecycle-722fb/README.md
+0ad94102b567be7c5251b39507a0dd3f7b3601177e9caca76b6c80fcd0609c82  docs/delivery/architecture-day/F/photo-read-lifecycle-722fb/NEW-METHODS.tsv
+9183d2310f8fbf36c443b5212d3d8d49bc68e87798bae7de759eac3c6765f1cd  docs/delivery/architecture-day/F/photo-read-lifecycle-722fb/CALLERS.tsv
+315b404464b21ae8aec11b2b42c5c0ae0e05208d1472f824841b5b7f0feb6640  docs/delivery/architecture-day/F/photo-read-lifecycle-722fb/owned-source.patch.b64
+7a91efa14278ad1532a647fd7464fadfc4b19e27d091e2df2489a564c3da11d8  docs/delivery/architecture-day/F/photo-read-lifecycle-722fb/PATCHES.sha256
+2b5aea8ab11ca0c849c25323226f81f2e1e2dd640b70ba8f9619cc6a021c2256  docs/delivery/architecture-day/F/photo-read-lifecycle-722fb/SOURCE-POSTIMAGES.sha256

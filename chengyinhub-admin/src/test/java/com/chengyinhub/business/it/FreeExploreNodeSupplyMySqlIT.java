@@ -68,7 +68,9 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.ArgumentMatchers.*;
 
 /**
  * 自由探索商家验收卡的**真库**一截:SC-FREE-NODE-EDIT(M1/M2)、SC-FREE-SUPPLY(M3)、SC-FREE-TERMS(M4)。
@@ -145,7 +147,8 @@ class FreeExploreNodeSupplyMySqlIT {
                 "migration_20261003_merchant_offer_withdrawal_columns.sql",
                 "migration_club_direct_merchant_receivable_20261004.sql"));
         MIGRATIONS.put("merchant_chapter_application", List.of(
-                "migration_20261003_merchant_offer_withdrawal_columns.sql"));
+                "migration_20261003_merchant_offer_withdrawal_columns.sql",
+                "migration_20261024_d_chapter_application_round.sql"));
         MIGRATIONS.put("cms_member_template", List.of(
                 "migration_question_media_20260816.sql",
                 "migration_20260820_new_city_preference_chain.sql",
@@ -523,6 +526,8 @@ class FreeExploreNodeSupplyMySqlIT {
 
         CmsTopicNodeServiceImpl nodes = new CmsTopicNodeServiceImpl();
         ReflectionTestUtils.setField(nodes, "cmsTopicNodeMapper", sql.getMapper(CmsTopicNodeMapper.class));
+        com.chengyinhub.business.service.support.TopicContentBudgetTestWiring.wire(nodes,
+                topicMapper, chapterMapper, sql.getMapper(CmsTopicNodeMapper.class));
         CmsTopicChapterServiceImpl chapters = new CmsTopicChapterServiceImpl();
         ReflectionTestUtils.setField(chapters, "cmsTopicChapterMapper", chapterMapper);
         CmsMemberTemplateServiceImpl templates = new CmsMemberTemplateServiceImpl();
@@ -552,6 +557,14 @@ class FreeExploreNodeSupplyMySqlIT {
         ReflectionTestUtils.setField(offers, "registrationEntitlementMapper", entitlements);
         ReflectionTestUtils.setField(offers, "businessNotice", notice);
         ReflectionTestUtils.setField(offers, "notifyService", notify);
+        com.chengyinhub.business.service.ISystemNotificationIntentService ownerIntents =
+                mock(com.chengyinhub.business.service.ISystemNotificationIntentService.class);
+        when(ownerIntents.findIntentId(anyString())).thenReturn(null);
+        when(ownerIntents.enqueue(anyLong(), anyInt(), anyString(), nullable(String.class), anyString())).thenReturn(9001L);
+        ReflectionTestUtils.setField(offers, "systemNotificationIntents", ownerIntents);
+        ReflectionTestUtils.setField(offers, "imService", mock(com.chengyinhub.business.service.IImService.class));
+        ReflectionTestUtils.setField(offers, "ownerNoticeWxChannel", mock(com.chengyinhub.business.notify.WxSubscribeChannel.class));
+        ReflectionTestUtils.setField(offers, "ownerNoticeExecutor", mock(java.util.concurrent.ScheduledExecutorService.class));
         ReflectionTestUtils.setField(offers, "applicationMapper", applicationMapper);
         ReflectionTestUtils.setField(offers, "cmsTopicService", topicService);
         ReflectionTestUtils.setField(offers, "chapterMapper", chapterMapper);

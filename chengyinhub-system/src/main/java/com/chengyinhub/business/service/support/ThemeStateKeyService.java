@@ -8,6 +8,8 @@ import com.chengyinhub.common.utils.DateUtils;
 import com.chengyinhub.common.utils.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -203,7 +205,7 @@ public class ThemeStateKeyService {
     }
 
     private Long lockRegistry(Long topicId) {
-        themeStateKeyMapper.lockTopic(topicId);
+        lockTopic(topicId);
         themeStateKeyMapper.ensureRegistryVersion(topicId);
         return themeStateKeyMapper.lockRegistryVersion(topicId);
     }
@@ -257,6 +259,24 @@ public class ThemeStateKeyService {
         return definition;
     }
 
+    /** Explicit publication producer. Preview/runtime reads must keep using their original path.
+     * Caller reuses this projection through validation/hash/freeze in the same transaction. */
+    @Transactional(propagation = Propagation.MANDATORY, rollbackFor = Exception.class)
+    public List<ThemeStateKey> listCurrentDeclarations(Long topicId) {
+        if (!TransactionSynchronizationManager.isActualTransactionActive()
+                || TransactionSynchronizationManager.isCurrentTransactionReadOnly()) {
+            throw invalid(ERR_INVALID, "状态键声明当前读需要原发布写事务");
+        }
+        if (topicId == null || topicId <= 0L) throw invalid(ERR_INVALID, "主题编号无效");
+        lockTopic(topicId);
+        List<ThemeStateKey> rows = themeStateKeyMapper.selectByTopicIdForUpdate(topicId);
+        if (rows == null) throw invalid(ERR_INVALID, "状态键声明读取未知");
+        for (ThemeStateKey row : rows) {
+            if (row == null || !topicId.equals(row.getTopicId())) throw invalid(ERR_INVALID, "状态键声明归属不一致");
+        }
+        return List.copyOf(rows);
+    }
+
     /**
      * 删除某主题的一个键;该键本来就不在时返回 false(不报错)。
      *
@@ -275,6 +295,12 @@ public class ThemeStateKeyService {
         boolean deleted = themeStateKeyMapper.deleteByTopicIdAndStateKey(topicId, stateKey) > 0;
         if (deleted) themeStateKeyMapper.advanceRegistryVersion(topicId);
         return deleted;
+    }
+
+    private void lockTopic(Long topicId) {
+        if (!topicId.equals(themeStateKeyMapper.lockTopicForStateKeyWrite(topicId))) {
+            throw invalid(ERR_INVALID, "主题不存在,无法修改状态键声明");
+        }
     }
 
     /**

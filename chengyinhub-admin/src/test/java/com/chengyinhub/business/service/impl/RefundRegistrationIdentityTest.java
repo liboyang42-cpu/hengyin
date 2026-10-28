@@ -19,12 +19,14 @@ class RefundRegistrationIdentityTest {
     private final CmsActivityMapper activities = mock(CmsActivityMapper.class);
     private final CmsTopicMapper topics = mock(CmsTopicMapper.class);
     private final RefundServiceImpl service = new RefundServiceImpl();
+    private CmsActivity activity;
 
     private CmsRegistration setup(long ownerType) {
         ReflectionTestUtils.setField(service, "refundApplicationMapper", refunds);
         ReflectionTestUtils.setField(service, "cmsRegistrationMapper", registrations);
         ReflectionTestUtils.setField(service, "cmsActivityMapper", activities);
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topics);
+        RegistrationScopeFixture.currentReads(registrations, activities, topics);
         CmsRegistration row = new CmsRegistration();
         row.setId(9007199254740993L);
         row.setMemberId(71L);
@@ -40,10 +42,12 @@ class RefundRegistrationIdentityTest {
             inserted.setId(1001L);
             return 1;
         });
-        CmsActivity activity = new CmsActivity();
+        activity = new CmsActivity();
+        activity.setId(row.getOwnerId());
         activity.setMemberId(81L);
         when(activities.selectCmsActivityById(row.getOwnerId())).thenReturn(activity);
         CmsTopic topic = new CmsTopic();
+        topic.setId(row.getOwnerId());
         topic.setMemberId(82L);
         when(topics.selectCmsTopicById(row.getOwnerId())).thenReturn(topic);
         return row;
@@ -69,21 +73,32 @@ class RefundRegistrationIdentityTest {
     @Test
     void missingMerchantFactCannotBeReplacedByClientMerchant() {
         CmsRegistration row = setup(2L);
-        when(activities.selectCmsActivityById(row.getOwnerId())).thenReturn(null);
+        // The original scope exists; only its authoritative merchant fact is absent.
+        activity.setMemberId(null);
         RefundApplication request = request(row);
         service.saveRefund(request);
         assertIdentity(request, row, null);
+        // Losing the whole original scope is a refusal, not a successful unknown-merchant refund.
+        when(activities.selectCmsActivityById(row.getOwnerId())).thenReturn(null);
+        assertThrows(com.chengyinhub.common.exception.ServiceException.class,
+                () -> service.saveRefund(request(row)));
+        verify(refunds, times(1)).insertRefundApplication(any());
     }
 
     @Test
     void missingLegacyIdentityNeverAdoptsCallerSuppliedBuyerOrOwner() {
         CmsRegistration row = setup(2L);
         row.setMemberId(null);
-        row.setOwnerType(null);
-        row.setOwnerId(null);
+        activity.setMemberId(null);
         RefundApplication request = request(row);
         service.saveRefund(request);
         assertIdentity(request, row, null);
+        // A missing buyer remains missing within a known scope; a missing scope itself must refuse.
+        row.setOwnerType(null);
+        row.setOwnerId(null);
+        assertThrows(com.chengyinhub.common.exception.ServiceException.class,
+                () -> service.saveRefund(request(row)));
+        verify(refunds, times(1)).insertRefundApplication(any());
     }
 
     @Test

@@ -1,0 +1,26 @@
+Actual lightweight checks in /workspace/architecture-day-d-frequency, 2026-10-23 UTC.
+
+Before production edit (new regressions already written):
+member-lock-in-inapp-transaction: FAIL
+frequency-recheck-in-inapp-transaction: FAIL
+exit=1
+This is a static source check, NOT a Java/JUnit red execution.
+
+After edit:
+OfficialBroadcastDeliveryTest: original 12 tests preserved; total 15 (NOT EXECUTED)
+OfficialBroadcastDeliveryMySqlIT: original 7 tests preserved; total 8 (NOT EXECUTED)
+OfficialEventContractTest: original 17 tests preserved; total 17 (NOT EXECUTED)
+PASS: member -> delivery -> frequency -> real IM -> SUCCESS order within independent transaction
+PASS: existing member FOR UPDATE mapper, delivery clears MyBatis local cache, dispatch suspends outer transaction
+exit=0
+
+git diff --check: exit=0
+
+NOT RUN: Java compile/package, JUnit, MySQL DDL/locking/rollback/concurrency, real process restart, real WeChat.
+No Java backend, database, H2 or runner started in this cloud VM.
+No production schema or data accessed. Proposed production SELECT preflight NOT RUN. No production DDL executed.
+
+H commit fetch: GitHub API 422 No commit found for SHA: 4f1096a2.
+H report at that ref: GitHub API 404 No commit found for the ref 4f1096a2.
+Frozen D parent e71777f375fcbb19a17b46647c36391ec03ed3b4 exists on public GitHub.
+Local reconstruction before edits: git write-tree = 7a836874abeec1d9af3a23770dcc5d7e6868a4cf (exact parent tree).

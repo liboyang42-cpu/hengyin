@@ -40,6 +40,7 @@ class PartialChapterAftercareTest {
         CmsTopic topic = new CmsTopic();topic.setId(990028L);topic.setMemberId(9003L);
         when(activities.selectCmsActivityById(24L)).thenReturn(activity);
         when(topics.selectCmsTopicById(990028L)).thenReturn(topic);
+        RegistrationScopeFixture.currentReads(registrations, activities, topics);
         List<RegistrationEntitlement> chapters = new ArrayList<>();
         for (long id=124; id<=127; id++) {
             RegistrationEntitlement e = new RegistrationEntitlement(); e.setRegistrationId(78L);

@@ -74,7 +74,7 @@ class TopicTransferToClubTest {
         when(clubService.selectClubById(200L)).thenReturn(club200);
         ClubLeader activeLeader = new ClubLeader(); activeLeader.setStatus(1);
         when(clubLeaderService.selectClubLeaderByMemberId(9L)).thenReturn(activeLeader);
-        when(cmsTopicService.transferToClub(100L, 9L, 200L)).thenReturn(555L);
+        when(com.chengyinhub.business.service.support.TopicPublicationTestWiring.wire(cmsTopicService).transferToClub(100L, 9L, 200L)).thenReturn(555L);
 
         AjaxResult r = owner.transferToClub("100", "200", null);
 
@@ -102,7 +102,7 @@ class TopicTransferToClubTest {
         }).when(target).copyCmsTopic(org.mockito.ArgumentMatchers.eq(100L), any());
 
         ICmsTopicService service = transactionalProxy(target, dataSource);
-        assertEquals(555L, service.transferToClub(100L, 9L, 200L));
+        assertEquals(555L, com.chengyinhub.business.service.support.TopicPublicationTestWiring.wire(service).transferToClub(100L, 9L, 200L));
         assertEquals(200L, jdbc.queryForObject("select club_id from cms_topic where id = 555", Long.class));
         assertEquals(0, jdbc.queryForObject("select user_status from cms_topic where id = 100", Integer.class));
     }
@@ -123,7 +123,7 @@ class TopicTransferToClubTest {
         }).when(target).copyCmsTopic(org.mockito.ArgumentMatchers.eq(100L), any());
         ICmsTopicService service = transactionalProxy(target, dataSource);
 
-        assertThrows(RuntimeException.class, () -> service.transferToClub(100L, 9L, 200L));
+        assertThrows(RuntimeException.class, () -> com.chengyinhub.business.service.support.TopicPublicationTestWiring.wire(service).transferToClub(100L, 9L, 200L));
         assertEquals(1, jdbc.queryForObject("select count(*) from cms_topic", Integer.class),
                 "下架失败时复制出的新主题必须回滚");
         assertEquals(1, jdbc.queryForObject("select user_status from cms_topic where id = 100", Integer.class),

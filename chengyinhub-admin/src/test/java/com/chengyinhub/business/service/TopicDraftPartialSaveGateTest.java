@@ -92,6 +92,7 @@ class TopicDraftPartialSaveGateTest {
             } catch (Exception ignore) {
             }
         }
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.wireRelocatedCollaborators(svc, publicationField -> org.mockito.Mockito.mock(publicationField.getType()));
         topicMapper = (CmsTopicMapper) ReflectionTestUtils.getField(svc, "cmsTopicMapper");
         nodeMapper = (CmsTopicNodeMapper) ReflectionTestUtils.getField(svc, "cmsTopicNodeMapper");
         ticketMapper = (OmsTicketMapper) ReflectionTestUtils.getField(svc, "omsTicketMapper");
@@ -99,33 +100,42 @@ class TopicDraftPartialSaveGateTest {
         // 状态键/引用的收集是无状态协作者:用真实现装进去,发布闸才算真跑过(不是被 mock 短路)。
         ReflectionTestUtils.setField(svc, "themeStateKeyService",
                 new ThemeStateKeyService(mock(ThemeStateKeyMapper.class)));
-        ReflectionTestUtils.setField(svc, "topicStateKeyRefService",
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(svc, "topicStateKeyRefService",
                 new TopicStateKeyRefService(nodeMapper, mock(CmsMemberTemplateMapper.class), chapterMapper));
 
         when(topicMapper.insertCmsTopic(any(CmsTopic.class))).thenAnswer(inv -> {
             CmsTopic topic = inv.getArgument(0);
             topic.setId(TOPIC);
-            when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(topic);
+            org.mockito.Mockito.doReturn(topic).when(topicMapper).selectCmsTopicById(TOPIC);
             return 1;
         });
         when(topicMapper.updateCmsTopic(any(CmsTopic.class))).thenReturn(1);
-        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC))
-                .thenAnswer(inv -> topicMapper.selectCmsTopicById(TOPIC));
+        // when(currentRead) executes the bridge and records its nested ordinary read; thenAnswer
+        // would overwrite that ordinary read with a self-call (the original XML's line-114 loop).
+        // doAnswer attaches only to the current-read method and preserves the persisted-row port.
+        org.mockito.Mockito.doAnswer(inv -> topicMapper.selectCmsTopicById(TOPIC))
+                .when(topicMapper).selectCmsTopicByIdForUpdate(TOPIC);
         when(topicMapper.publishRouteSnapshot(anyLong(), any(), any())).thenReturn(1);
+        java.util.List<CmsTopicChapter> writtenChapters = new ArrayList<>();
+        java.util.List<CmsTopicNode> writtenNodes = new ArrayList<>();
         when(chapterMapper.selectCmsTopicChapterList(any(CmsTopicChapter.class)))
-                .thenReturn(Collections.<CmsTopicChapter>emptyList());
+                .thenAnswer(call -> new ArrayList<>(writtenChapters));
         when(nodeMapper.selectCmsTopicNodeList(any(CmsTopicNode.class)))
-                .thenReturn(Collections.<CmsTopicNode>emptyList());
+                .thenAnswer(call -> new ArrayList<>(writtenNodes));
+        org.mockito.Mockito.doAnswer(call -> writtenChapters.removeIf(row -> row.getId().equals(call.getArgument(0))) ? 1 : 0)
+                .when(chapterMapper).deleteCmsTopicChapterById(anyLong());
+        org.mockito.Mockito.doAnswer(call -> writtenNodes.removeIf(row -> row.getId().equals(call.getArgument(0))) ? 1 : 0)
+                .when(nodeMapper).deleteCmsTopicNodeById(anyLong());
         when(ticketMapper.selectOmsTicketList(any(OmsTicket.class)))
                 .thenReturn(Collections.<OmsTicket>emptyList());
         // CORE OWN-C03-13/15：章节、自办活动插入后须生成有效身份，否则 fail-closed；夹具按真实插入回填 id。
         java.util.concurrent.atomic.AtomicLong ids = new java.util.concurrent.atomic.AtomicLong(600L);
         org.mockito.Mockito.lenient().when(chapterMapper.insertCmsTopicChapter(any(CmsTopicChapter.class))).thenAnswer(inv -> {
-            ((CmsTopicChapter) inv.getArgument(0)).setId(ids.incrementAndGet());
+            CmsTopicChapter row = inv.getArgument(0); row.setId(ids.incrementAndGet()); writtenChapters.add(row);
             return 1;
         });
         org.mockito.Mockito.lenient().when(nodeMapper.insertCmsTopicNode(any(CmsTopicNode.class))).thenAnswer(inv -> {
-            ((CmsTopicNode) inv.getArgument(0)).setId(ids.incrementAndGet());
+            CmsTopicNode row = inv.getArgument(0); row.setId(ids.incrementAndGet()); writtenNodes.add(row);
             return 1;
         });
         CmsActivityMapper shellActivities = (CmsActivityMapper) ReflectionTestUtils.getField(svc, "cmsActivityMapper");
@@ -133,6 +143,7 @@ class TopicDraftPartialSaveGateTest {
             ((CmsActivity) inv.getArgument(0)).setId(880001L);
             return 1;
         });
+        svc = com.chengyinhub.business.service.support.TopicPublicationTestWiring.transactional(svc);
     }
 
     // ---------- 夹具 ----------
@@ -209,7 +220,7 @@ class TopicDraftPartialSaveGateTest {
         TopicCreateDTO dto = aiSimpleFreeExploreDto(1);
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
-        Long id = svc.createTopic(dto, MEMBER, "creator");
+        Long id = com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).createTopic(dto, MEMBER, "creator");
 
         assertEquals(TOPIC, id, "存草稿必须回服务端 id(注册状态键/试检查要靠它)");
         verify(topicMapper).insertCmsTopic(any(CmsTopic.class));
@@ -224,7 +235,7 @@ class TopicDraftPartialSaveGateTest {
         dto.setTickets(null);
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
-        Long id = svc.createTopic(dto, MEMBER, "creator");
+        Long id = com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).createTopic(dto, MEMBER, "creator");
 
         assertEquals(TOPIC, id);
         verify(topicMapper).updateTopicDraftState(TOPIC, 1);
@@ -236,7 +247,7 @@ class TopicDraftPartialSaveGateTest {
         dto.setName("  ");
 
         IllegalArgumentException e = assertThrows(IllegalArgumentException.class,
-                () -> svc.createTopic(dto, MEMBER, "creator"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).createTopic(dto, MEMBER, "creator"));
 
         assertTrue(e.getMessage().contains("主题名称"), e.getMessage());
         verify(topicMapper, never()).insertCmsTopic(any());
@@ -256,7 +267,7 @@ class TopicDraftPartialSaveGateTest {
         dto.setChapters(new ArrayList<ChapterDTO>(Arrays.asList(chapter)));
 
         IllegalArgumentException e = assertThrows(IllegalArgumentException.class,
-                () -> svc.createTopic(dto, MEMBER, "creator"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).createTopic(dto, MEMBER, "creator"));
 
         assertTrue(e.getMessage().contains("纬度无效"), e.getMessage());
         verify(topicMapper, never()).insertCmsTopic(any());
@@ -273,7 +284,7 @@ class TopicDraftPartialSaveGateTest {
         dto.setTickets(new ArrayList<ActivityTicketRequest>(Arrays.asList(t)));
 
         ServiceException e = assertThrows(ServiceException.class,
-                () -> svc.createTopic(dto, MEMBER, "creator"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).createTopic(dto, MEMBER, "creator"));
 
         assertTrue(e.getMessage().contains("价格"), e.getMessage());
         verify(ticketMapper, never()).insertOmsTicket(any());
@@ -289,7 +300,7 @@ class TopicDraftPartialSaveGateTest {
         dto.setTickets(new ArrayList<ActivityTicketRequest>(Arrays.asList(t)));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
-        svc.createTopic(dto, MEMBER, "creator");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).createTopic(dto, MEMBER, "creator");
 
         verify(ticketMapper).insertOmsTicket(any(OmsTicket.class));
     }
@@ -304,7 +315,7 @@ class TopicDraftPartialSaveGateTest {
                 .thenReturn(Collections.singletonList(ticket("早鸟票", null, null)));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
-        IllegalStateException e = assertThrows(IllegalStateException.class, () -> svc.publishDraft(TOPIC));
+        IllegalStateException e = assertThrows(IllegalStateException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).publishDraft(TOPIC));
 
         String msg = e.getMessage();
         assertTrue(msg.contains("简单 AI 主题至少需要一个已确认地点"), "缺节点要指名:" + msg);
@@ -319,15 +330,16 @@ class TopicDraftPartialSaveGateTest {
         CmsTopic draft = aiSimpleDraftTopic();
         draft.setRecruitDeadline(new Date(System.currentTimeMillis() + 86_400_000L));
         when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(draft);
-        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(draft);
-        when(((com.chengyinhub.business.service.support.TopicSupplyReviewService) org.springframework.test.util.ReflectionTestUtils.getField(svc, "supplyReviewService")).lockTopic(TOPIC)).thenReturn(draft);
+        org.mockito.Mockito.doReturn(draft).when(topicMapper).selectCmsTopicByIdForUpdate(TOPIC);
+        org.mockito.Mockito.doReturn(draft).when((com.chengyinhub.business.service.support.TopicSupplyReviewService)
+                org.springframework.test.util.ReflectionTestUtils.getField(svc, "supplyReviewService")).lockTopic(TOPIC);
         when(nodeMapper.selectCmsTopicNodeList(any(CmsTopicNode.class)))
                 .thenReturn(Collections.singletonList(nodeWithCoords("31.23", "121.45")));
         when(ticketMapper.selectOmsTicketList(any(OmsTicket.class))).thenReturn(Collections.singletonList(
                 ticket("早鸟票", new Date(1_800_000_000_000L), new Date(1_800_003_600_000L))));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
-        assertTrue(svc.publishDraft(TOPIC));
+        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).publishDraft(TOPIC));
 
         ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
         verify(topicMapper).updateCmsTopic(cap.capture());
@@ -351,7 +363,7 @@ class TopicDraftPartialSaveGateTest {
                 .thenReturn(Collections.singletonList(invalid));
 
         IllegalStateException error = assertThrows(IllegalStateException.class,
-                () -> svc.publishDraft(TOPIC));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).publishDraft(TOPIC));
 
         assertTrue(error.getMessage().contains("售票结束日期不能早于开始日期"), error.getMessage());
         verify(topicMapper, never()).updateCmsTopic(any(CmsTopic.class));
@@ -363,13 +375,14 @@ class TopicDraftPartialSaveGateTest {
         CmsTopic draft = aiSimpleDraftTopic();
         draft.setRecruitDeadline(new Date(System.currentTimeMillis() + 86_400_000L));
         when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(draft);
-        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(null);
-        when(((com.chengyinhub.business.service.support.TopicSupplyReviewService) org.springframework.test.util.ReflectionTestUtils.getField(svc, "supplyReviewService")).lockTopic(TOPIC)).thenReturn(null);
+        org.mockito.Mockito.doReturn(null).when(topicMapper).selectCmsTopicByIdForUpdate(TOPIC);
+        org.mockito.Mockito.doReturn(null).when((com.chengyinhub.business.service.support.TopicSupplyReviewService)
+                org.springframework.test.util.ReflectionTestUtils.getField(svc, "supplyReviewService")).lockTopic(TOPIC);
         when(nodeMapper.selectCmsTopicNodeList(any(CmsTopicNode.class)))
                 .thenReturn(Collections.singletonList(nodeWithCoords("31.23", "121.45")));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
-        assertThrows(IllegalStateException.class, () -> svc.publishDraft(TOPIC));
+        assertThrows(IllegalStateException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).publishDraft(TOPIC));
 
         verify(topicMapper, never()).updateCmsTopic(any(CmsTopic.class));
         verify(topicMapper, never()).publishRouteSnapshot(anyLong(), any(), any());
@@ -383,7 +396,7 @@ class TopicDraftPartialSaveGateTest {
         dto.setRecruitDeadline(new Date(System.currentTimeMillis() + 86_400_000L));
 
         IllegalArgumentException e = assertThrows(IllegalArgumentException.class,
-                () -> svc.createTopic(dto, MEMBER, "creator"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).createTopic(dto, MEMBER, "creator"));
 
         assertTrue(e.getMessage().contains("至少需要一个已确认地点"), e.getMessage());
         verify(topicMapper, never()).insertCmsTopic(any());
@@ -395,7 +408,7 @@ class TopicDraftPartialSaveGateTest {
         withConfirmedChapter(dto);
 
         RuntimeException e = assertThrows(RuntimeException.class,
-                () -> svc.createTopic(dto, MEMBER, "creator"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).createTopic(dto, MEMBER, "creator"));
 
         assertTrue(e.getMessage().contains("招募截止"), e.getMessage());
         verify(topicMapper, never()).insertCmsTopic(any());
@@ -413,7 +426,7 @@ class TopicDraftPartialSaveGateTest {
         dto.setTickets(new ArrayList<ActivityTicketRequest>(Arrays.asList(t)));
 
         ServiceException e = assertThrows(ServiceException.class,
-                () -> svc.createTopic(dto, MEMBER, "creator"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).createTopic(dto, MEMBER, "creator"));
 
         assertTrue(e.getMessage().contains("票务结束时间"), e.getMessage());
         verify(ticketMapper, never()).insertOmsTicket(any());
@@ -435,7 +448,7 @@ class TopicDraftPartialSaveGateTest {
         dto.setTickets(new ArrayList<ActivityTicketRequest>());
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
-        Long id = svc.updateTopicByOwner(dto, MEMBER, "creator");
+        Long id = com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(dto, MEMBER, "creator");
 
         assertEquals(TOPIC, id, "草稿编辑就地改,不新建");
         verify(topicMapper).updateCmsTopic(any(CmsTopic.class));
@@ -456,7 +469,7 @@ class TopicDraftPartialSaveGateTest {
         dto.setTickets(new ArrayList<ActivityTicketRequest>());
 
         RuntimeException e = assertThrows(RuntimeException.class,
-                () -> svc.updateTopicByOwner(dto, MEMBER, "creator"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(dto, MEMBER, "creator"));
 
         assertTrue(e.getMessage().contains("招募截止"), e.getMessage());
     }
@@ -474,7 +487,7 @@ class TopicDraftPartialSaveGateTest {
         dto.setTickets(new ArrayList<ActivityTicketRequest>());
 
         IllegalArgumentException e = assertThrows(IllegalArgumentException.class,
-                () -> svc.updateTopicByOwner(dto, MEMBER, "creator"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(dto, MEMBER, "creator"));
 
         assertTrue(e.getMessage().contains("主题名称"), e.getMessage());
         verify(topicMapper, never()).updateCmsTopic(any(CmsTopic.class));
@@ -488,7 +501,7 @@ class TopicDraftPartialSaveGateTest {
         withConfirmedChapter(dto);
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
-        svc.createTopic(dto, MEMBER, "creator");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).createTopic(dto, MEMBER, "creator");
 
         CmsActivityMapper activityMapper = (CmsActivityMapper) ReflectionTestUtils.getField(svc, "cmsActivityMapper");
         verify(activityMapper).insertCmsActivity(any(CmsActivity.class));
@@ -502,13 +515,14 @@ class TopicDraftPartialSaveGateTest {
         CmsTopic draft = aiSimpleDraftTopic();
         draft.setRecruitDeadline(new Date(System.currentTimeMillis() + 86_400_000L));
         when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(draft);
-        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(draft);
-        when(((com.chengyinhub.business.service.support.TopicSupplyReviewService) org.springframework.test.util.ReflectionTestUtils.getField(svc, "supplyReviewService")).lockTopic(TOPIC)).thenReturn(draft);
+        org.mockito.Mockito.doReturn(draft).when(topicMapper).selectCmsTopicByIdForUpdate(TOPIC);
+        org.mockito.Mockito.doReturn(draft).when((com.chengyinhub.business.service.support.TopicSupplyReviewService)
+                org.springframework.test.util.ReflectionTestUtils.getField(svc, "supplyReviewService")).lockTopic(TOPIC);
         when(nodeMapper.selectCmsTopicNodeList(any(CmsTopicNode.class)))
                 .thenReturn(Collections.singletonList(nodeWithCoords("31.23", "121.45")));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
-        assertTrue(svc.publishDraft(TOPIC));
+        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).publishDraft(TOPIC));
 
         verify(topicMapper).clearDraftIfDraft(eq(TOPIC));
         verify(topicMapper, never()).updateTopicDraftState(anyLong(), any());
@@ -522,7 +536,7 @@ class TopicDraftPartialSaveGateTest {
         dto.setName(null);
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
-        assertThrows(IllegalArgumentException.class, () -> svc.createTopic(dto, MEMBER, "creator"));
+        assertThrows(IllegalArgumentException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).createTopic(dto, MEMBER, "creator"));
         verify(topicMapper, never()).insertCmsTopic(any());
     }
 }

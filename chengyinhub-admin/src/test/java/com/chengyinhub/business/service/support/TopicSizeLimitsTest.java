@@ -61,7 +61,7 @@ class TopicSizeLimitsTest {
     @Test
     void bothSavePathsRejectBeforeTouchingAnyMapper() {
         // 未注入任何 mapper:若校验不是第一步,这里会是 NPE 而不是 400 语义的校验异常
-        CmsTopicServiceImpl service = new CmsTopicServiceImpl();
+        var service = new com.chengyinhub.business.service.impl.TopicContentGraphAuthoringServiceImpl();
         assertThrows(ChapterFlowValidationException.class, () -> ReflectionTestUtils.invokeMethod(service,
                 "saveChaptersAndNodes", chapters(31, 1), 1L, "author", 7L, false));
         assertThrows(ChapterFlowValidationException.class, () -> ReflectionTestUtils.invokeMethod(service,
@@ -71,20 +71,23 @@ class TopicSizeLimitsTest {
     @Test
     void publishCountsRowsAlreadyInTheDatabase() {
         CmsTopicServiceImpl service = new CmsTopicServiceImpl();
+        var topicMapper = mock(com.chengyinhub.business.mapper.CmsTopicMapper.class);
+        ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
+        when(topicMapper.lockTopicContentBudget(5L)).thenReturn(5L);
         CmsTopicChapterMapper chapterMapper = mock(CmsTopicChapterMapper.class);
         CmsTopicNodeMapper nodeMapper = mock(CmsTopicNodeMapper.class);
         ReflectionTestUtils.setField(service, "cmsTopicChapterMapper", chapterMapper);
         ReflectionTestUtils.setField(service, "cmsTopicNodeMapper", nodeMapper);
         List<CmsTopicChapter> thirtyOne = new ArrayList<>();
         for (int i = 0; i < 31; i++) thirtyOne.add(new CmsTopicChapter());
-        when(chapterMapper.selectCmsTopicChapterList(any())).thenReturn(thirtyOne);
-        when(nodeMapper.selectCmsTopicNodeList(any())).thenReturn(Collections.<CmsTopicNode>emptyList());
+        when(chapterMapper.countContentByTopicForUpdate(5L)).thenReturn((long) thirtyOne.size());
+        when(nodeMapper.countContentByTopicForUpdate(5L)).thenReturn(0L);
 
         IllegalStateException e = assertThrows(IllegalStateException.class,
-                () -> ReflectionTestUtils.invokeMethod(service, "assertTopicSizeWithinLimits", 5L));
+                () -> ReflectionTestUtils.invokeMethod(com.chengyinhub.business.service.support.TopicPublicationTestWiring.owner(service, "assertTopicSizeWithinLimits"), "assertTopicSizeWithinLimits", 5L));
         assertEquals("发布前请先调整:主题最多 30 章,当前 31 章,请合并或删减章节", e.getMessage());
 
-        when(chapterMapper.selectCmsTopicChapterList(any())).thenReturn(thirtyOne.subList(0, 30));
-        ReflectionTestUtils.invokeMethod(service, "assertTopicSizeWithinLimits", 5L);
+        when(chapterMapper.countContentByTopicForUpdate(5L)).thenReturn((long) thirtyOne.subList(0, 30).size());
+        ReflectionTestUtils.invokeMethod(com.chengyinhub.business.service.support.TopicPublicationTestWiring.owner(service, "assertTopicSizeWithinLimits"), "assertTopicSizeWithinLimits", 5L);
     }
 }

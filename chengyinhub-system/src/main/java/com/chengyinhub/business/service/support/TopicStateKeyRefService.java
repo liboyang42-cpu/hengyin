@@ -55,6 +55,8 @@ public class TopicStateKeyRefService {
     private final CmsTopicNodeMapper cmsTopicNodeMapper;
     private final CmsMemberTemplateMapper cmsMemberTemplateMapper;
     private final CmsTopicChapterMapper cmsTopicChapterMapper;
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.chengyinhub.business.mapper.CmsTopicMapper cmsTopicMapper;
 
     public TopicStateKeyRefService(CmsTopicNodeMapper cmsTopicNodeMapper,
                                    CmsMemberTemplateMapper cmsMemberTemplateMapper,
@@ -62,6 +64,82 @@ public class TopicStateKeyRefService {
         this.cmsTopicNodeMapper = cmsTopicNodeMapper;
         this.cmsMemberTemplateMapper = cmsMemberTemplateMapper;
         this.cmsTopicChapterMapper = cmsTopicChapterMapper;
+    }
+
+    /** Short-lived server-only inputs, not an HTTP DTO or a cross-request cache. */
+    public static final class CurrentContent {
+        private final CmsTopic topic;
+        private final List<CmsTopicNode> nodes;
+        private final List<CmsTopicChapter> chapters;
+        private final Map<Long, CmsMemberTemplate> templates;
+        private CurrentContent(CmsTopic topic, List<CmsTopicNode> nodes, List<CmsTopicChapter> chapters,
+                Map<Long, CmsMemberTemplate> templates) {
+            this.topic = topic;
+            this.nodes = Collections.unmodifiableList(new ArrayList<>(nodes));
+            this.chapters = Collections.unmodifiableList(new ArrayList<>(chapters));
+            this.templates = Collections.unmodifiableMap(new LinkedHashMap<>(templates));
+        }
+        public CmsTopic topic() { return topic; }
+        public List<CmsTopicNode> nodes() { return nodes; }
+        public List<CmsTopicNode> activeNodes() {
+            List<CmsTopicNode> active = new ArrayList<>();
+            for (CmsTopicNode node : nodes) if (Long.valueOf(1L).equals(node.getStatus())) active.add(node);
+            return Collections.unmodifiableList(active);
+        }
+        public List<CmsTopicChapter> chapters() { return chapters; }
+        public Map<Long, CmsMemberTemplate> templates() { return templates; }
+    }
+
+    private static void requirePublicationTransaction() {
+        if (!org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()
+                || org.springframework.transaction.support.TransactionSynchronizationManager.isCurrentTransactionReadOnly())
+            throw new IllegalStateException("正式引用收集必须加入主题写事务");
+    }
+
+    public CurrentContent currentForPublication(CmsTopic topic) {
+        requirePublicationTransaction();
+        if (topic == null || topic.getId() == null || topic.getId() <= 0 || cmsTopicMapper == null)
+            throw new IllegalStateException("正式引用收集主题依赖缺失");
+        if (cmsTopicChapterMapper == null || cmsTopicNodeMapper == null || cmsMemberTemplateMapper == null)
+            throw new IllegalStateException("正式引用收集子内容依赖缺失");
+        CmsTopic current = cmsTopicMapper.selectCmsTopicByIdForUpdate(topic.getId());
+        if (current == null || !topic.getId().equals(current.getId())) throw new IllegalStateException("正式引用收集主题身份不一致");
+        List<CmsTopicChapter> chapters = cmsTopicChapterMapper.selectByTopicForUpdate(topic.getId());
+        List<CmsTopicNode> nodes = cmsTopicNodeMapper.selectByTopicForUpdate(topic.getId());
+        if (chapters == null || nodes == null) throw new IllegalStateException("正式引用收集内容未知");
+        for (CmsTopicChapter chapter : chapters) if (chapter == null || chapter.getId() == null || chapter.getId() <= 0
+                || !topic.getId().equals(chapter.getTopicId()))
+            throw new IllegalStateException("正式引用收集章节归属不一致");
+        Set<Long> templateIds = new java.util.TreeSet<>();
+        for (CmsTopicNode node : nodes) {
+            if (node == null || node.getId() == null || node.getId() <= 0 || !topic.getId().equals(node.getTopicId()))
+                throw new IllegalStateException("正式引用收集节点归属不一致");
+            if (node.getTemplateId() != null && node.getTemplateId() > 0) templateIds.add(node.getTemplateId());
+        }
+        Map<Long, CmsMemberTemplate> templates = new LinkedHashMap<>();
+        if (!templateIds.isEmpty()) {
+            List<CmsMemberTemplate> rows = cmsMemberTemplateMapper.selectCmsMemberTemplateByIdsForUpdate(new ArrayList<>(templateIds));
+            if (rows == null || rows.size() != templateIds.size()) throw new IllegalStateException("正式引用收集模板未知");
+            for (CmsMemberTemplate row : rows) if (row == null || !templateIds.contains(row.getId()) || templates.put(row.getId(), row) != null)
+                throw new IllegalStateException("正式引用收集模板身份不一致");
+        }
+        List<CmsTopicNode> ordered = new ArrayList<>(nodes);
+        ordered.sort(java.util.Comparator.comparing(CmsTopicNode::getSortId, java.util.Comparator.nullsFirst(Long::compareTo)));
+        return new CurrentContent(current, ordered, chapters, templates);
+    }
+
+    public RefCollection collectForPublication(CmsTopic topic) { return collectCurrent(currentForPublication(topic)); }
+
+    public RefCollection collectCurrent(CurrentContent content) {
+        requirePublicationTransaction();
+        if (content == null) throw new IllegalStateException("正式引用收集投影缺失");
+        RefCollection refs = new RefCollection();
+        for (CmsTopicNode node : content.activeNodes())
+            collectNode(node, content.topic(), refs, content.templates().get(node.getTemplateId()));
+        collectJourneyRules(content.topic(), refs);
+        collectJourneyStory(content.topic(), refs);
+        collectChapters(content.chapters(), refs);
+        return refs;
     }
 
     /** 收集该主题当前引用的全部状态键与解析问题。主题为空返回空结果,不抛。 */
@@ -124,6 +202,11 @@ public class TopicStateKeyRefService {
             return;
         }
         CmsMemberTemplate template = cmsMemberTemplateMapper.selectCmsMemberTemplateById(templateId);
+        collectNode(node, topic, refs, template);
+    }
+
+    private void collectNode(CmsTopicNode node, CmsTopic topic, RefCollection refs, CmsMemberTemplate template) {
+        Long templateId = node.getTemplateId();
         if (template == null || StringUtils.isEmpty(template.getAdvancedConfigJson())) {
             return;
         }
@@ -269,6 +352,10 @@ public class TopicStateKeyRefService {
         if (chapters == null) {
             return;
         }
+        collectChapters(chapters, refs);
+    }
+
+    private void collectChapters(List<CmsTopicChapter> chapters, RefCollection refs) {
         for (CmsTopicChapter chapter : chapters) {
             if (chapter == null || StringUtils.isEmpty(chapter.getBlocksJson())) {
                 continue;

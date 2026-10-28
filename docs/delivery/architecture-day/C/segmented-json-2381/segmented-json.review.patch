@@ -1,0 +1,301 @@
+--- a/chengyinhub-common/src/main/java/com/chengyinhub/common/utils/http/HttpUtils.java
++++ b/chengyinhub-common/src/main/java/com/chengyinhub/common/utils/http/HttpUtils.java
+@@ -40,2 +40,3 @@
+ import org.apache.http.entity.ByteArrayEntity;
++import org.apache.http.entity.InputStreamEntity;
+ import org.apache.http.impl.client.CloseableHttpClient;
+@@ -146,3 +147,3 @@
+     {
+-        return sendJsonPostEncoded(url, json == null ? null : () -> json.getBytes(StandardCharsets.UTF_8),
++        return sendJsonPostEncoded(url, json == null ? null : () -> new ByteArrayEntity(json.getBytes(StandardCharsets.UTF_8)),
+                 bearer, deadlineNanos, lease, additionalHeaders);
+@@ -158,3 +159,3 @@
+     {
+-        return sendJsonPostEncoded(url, json == null ? null : () -> json,
++        return sendJsonPostEncoded(url, json == null ? null : () -> new ByteArrayEntity(json),
+                 bearer, deadlineNanos, lease, java.util.Map.of());
+@@ -162,3 +163,23 @@
+
+-    private static String sendJsonPostEncoded(String url, java.util.function.Supplier<byte[]> encode, String bearer,
++    /** Exclusive small JSON ends and immutable unescaped ASCII content; one cursor and one physical lease. */
++    public static String sendJsonPostParts(String url, byte[] prefix, String ascii, byte[] suffix, String bearer,
++            long deadlineNanos, AttemptLease lease)
++    {
++        final JsonPartsInputStream source;
++        try { source = new JsonPartsInputStream(prefix, ascii, suffix); }
++        catch (RuntimeException | Error failure)
++        {
++            try { if (lease != null) lease.close(); } catch (RuntimeException | Error cleanup) { failure.addSuppressed(cleanup); }
++            throw failure;
++        }
++        try (AttemptLease owned = source.own(lease))
++        {
++            return sendJsonPostEncoded(url, () -> {
++                source.validate();
++                return new InputStreamEntity(source, source.length);
++            }, bearer, deadlineNanos, owned, java.util.Map.of());
++        }
++    }
++
++    private static String sendJsonPostEncoded(String url, java.util.function.Supplier<HttpEntity> encode, String bearer,
+             long deadlineNanos, AttemptLease lease, java.util.Map<String, String> additionalHeaders)
+@@ -192,6 +213,6 @@
+                     TimeUnit.MILLISECONDS.toNanos(policy.totalTimeoutMs));
+-            byte[] body = encode.get();
++            HttpEntity body = encode.get();
+             if (remainingMillis(boundedDeadline) <= 0) throw notSent("third-party HTTP total timeout");
+             handedToAttempt = true;
+-            return executeAttempt("POST", target, body, MediaType.APPLICATION_JSON_VALUE,
++            return executeAttemptEntity("POST", target, body, MediaType.APPLICATION_JSON_VALUE,
+                     Constants.UTF8, false, policy, boundedDeadline, bearer, lease, headers).body;
+@@ -335,17 +356,41 @@
+     {
+-        AtomicReference<HttpRequestBase> activeRequest = new AtomicReference<>();
+-        AtomicBoolean cancelled = new AtomicBoolean(false);
+-        AttemptState state = lease == null ? null : new AttemptState(lease);
+-        FutureTask<AttemptResult> attempt = new FutureTask<>(() -> {
+-            try
+-            {
+-                if (state != null && !state.startWorker()) throw notSent("third-party HTTP request cancelled");
+-                return executeBlocking(method, target, body, requestContentType, responseCharset,
+-                        trustAnyCertificate, policy, deadlineNanos, activeRequest, cancelled, bearer, state, headers);
+-            }
+-            finally
+-            {
+-                if (state != null) state.finishWorker();
+-            }
+-        });
++        return executeAttemptEntity(method, target, body == null ? null : new ByteArrayEntity(body), requestContentType,
++                responseCharset, trustAnyCertificate, policy, deadlineNanos, bearer, lease, headers);
++    }
++
++    private static AttemptResult executeAttemptEntity(String method, URL target, HttpEntity body,
++            String requestContentType, String responseCharset, boolean trustAnyCertificate,
++            RequestPolicy policy, long deadlineNanos, String bearer, AttemptLease lease, java.util.Map<String, String> headers)
++    {
++        final AttemptState state;
++        try { state = lease == null ? null : new AttemptState(lease); }
++        catch (RuntimeException | Error failure)
++        {
++            try { if (lease != null) lease.complete(); } catch (RuntimeException | Error cleanup) { failure.addSuppressed(cleanup); }
++            throw failure; // Nothing was submitted; never hide an allocation Error.
++        }
++        final AtomicReference<HttpRequestBase> activeRequest;
++        final AtomicBoolean cancelled;
++        final FutureTask<AttemptResult> attempt;
++        try
++        {
++            activeRequest = new AtomicReference<>(); cancelled = new AtomicBoolean(false);
++            attempt = new FutureTask<>(() -> {
++                try
++                {
++                    if (state != null && !state.startWorker()) throw notSent("third-party HTTP request cancelled");
++                    return executeBlockingEntity(method, target, body, requestContentType, responseCharset,
++                            trustAnyCertificate, policy, deadlineNanos, activeRequest, cancelled, bearer, state, headers);
++                }
++                finally
++                {
++                    if (state != null) state.finishWorker();
++                }
++            });
++        }
++        catch (RuntimeException | Error failure)
++        {
++            try { if (state != null) state.cancelBeforeDispatch(); } catch (RuntimeException | Error cleanup) { failure.addSuppressed(cleanup); }
++            throw failure;
++        }
+         try
+@@ -359,2 +404,8 @@
+         }
++        catch (RuntimeException | Error failure)
++        {
++            try { if (state != null) state.cancelBeforeDispatch(); } catch (RuntimeException | Error cleanup) { failure.addSuppressed(cleanup); }
++            try { attempt.cancel(true); HTTP_EXECUTOR.remove(attempt); } catch (RuntimeException | Error cleanup) { failure.addSuppressed(cleanup); }
++            throw failure; // A won physical worker still owns the lease through its original finally.
++        }
+         try
+@@ -419,2 +470,12 @@
+     {
++        return executeBlockingEntity(method, target, body == null ? null : new ByteArrayEntity(body), requestContentType,
++                responseCharset, trustAnyCertificate, policy, deadlineNanos, activeRequest, cancelled, bearer, state, headers);
++    }
++
++    private static AttemptResult executeBlockingEntity(String method, URL target, HttpEntity body,
++            String requestContentType, String responseCharset, boolean trustAnyCertificate,
++            RequestPolicy policy, long deadlineNanos,
++            AtomicReference<HttpRequestBase> activeRequest, AtomicBoolean cancelled,
++            String bearer, AttemptState state, java.util.Map<String, String> headers)
++    {
+         HttpRequestBase request = null;
+@@ -427,3 +488,3 @@
+             }
+-            request = createRequest(method, target, body, requestContentType,
++            request = createRequestEntity(method, target, body, requestContentType,
+                     policy, deadlineNanos);
+@@ -532,2 +593,8 @@
+     {
++        return createRequestEntity(method, target, body == null ? null : new ByteArrayEntity(body), requestContentType, policy, deadlineNanos);
++    }
++
++    private static HttpRequestBase createRequestEntity(String method, URL target, HttpEntity body,
++            String requestContentType, RequestPolicy policy, long deadlineNanos)
++    {
+         HttpRequestBase request;
+@@ -538,3 +605,3 @@
+             {
+-                post.setEntity(new ByteArrayEntity(body));
++                post.setEntity(body);
+             }
+@@ -785,2 +852,87 @@
+     /** A release-only lease: close releases only if transport has not claimed ownership. */
++    /** Memory-only segments; no file, socket, custom producer or shared mutable read cursor. */
++    private static final class JsonPartsInputStream extends InputStream
++    {
++        private byte[] prefix, suffix;
++        private String ascii;
++        private long position, length;
++        private boolean closed;
++
++        private JsonPartsInputStream(byte[] prefix, String ascii, byte[] suffix)
++        {
++            this.prefix = prefix; this.ascii = ascii; this.suffix = suffix;
++        }
++
++        private AttemptLease own(AttemptLease original)
++        {
++            if (original == null || !original.transfer())
++            {
++                close();
++                throw notSent("third-party HTTP lease unavailable");
++            }
++            try
++            {
++                return new AttemptLease(() -> { close(); original.complete(); });
++            }
++            catch (RuntimeException | Error failure)
++            {
++                close();
++                try { original.complete(); } catch (RuntimeException | Error cleanup) { failure.addSuppressed(cleanup); }
++                throw failure;
++            }
++        }
++
++        private void validate()
++        {
++            if (closed || prefix == null || ascii == null || suffix == null) throw notSent("invalid third-party HTTP request");
++            for (int i = 0; i < ascii.length(); i++)
++            {
++                char value = ascii.charAt(i);
++                if (value < 32 || value > 126 || value == '"' || value == '\\') throw notSent("invalid third-party HTTP request");
++            }
++            length = (long) prefix.length + ascii.length() + suffix.length;
++        }
++
++        @Override public int read()
++        {
++            if (closed || position >= length) return -1;
++            long at = position++;
++            if (at < prefix.length) return prefix[(int) at] & 255;
++            at -= prefix.length;
++            return at < ascii.length() ? ascii.charAt((int) at) : suffix[(int) (at - ascii.length())] & 255;
++        }
++
++        @Override public int read(byte[] bytes, int offset, int count)
++        {
++            Objects.checkFromIndexSize(offset, count, bytes.length);
++            if (count == 0) return 0;
++            if (closed || position >= length) return -1;
++            int copied;
++            if (position < prefix.length)
++            {
++                copied = (int) Math.min(count, prefix.length - position);
++                System.arraycopy(prefix, (int) position, bytes, offset, copied);
++            }
++            else if (position - prefix.length < ascii.length())
++            {
++                int start = (int) (position - prefix.length);
++                copied = Math.min(count, ascii.length() - start);
++                for (int i = 0; i < copied; i++) bytes[offset + i] = (byte) ascii.charAt(start + i);
++            }
++            else
++            {
++                int start = (int) (position - prefix.length - ascii.length());
++                copied = Math.min(count, suffix.length - start);
++                System.arraycopy(suffix, start, bytes, offset, copied);
++            }
++            position += copied;
++            return copied;
++        }
++
++        @Override public void close()
++        {
++            closed = true; prefix = null; ascii = null; suffix = null;
++        }
++    }
++
+     public static final class AttemptLease implements AutoCloseable
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/OpenAiCompatibleLlmClient.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/OpenAiCompatibleLlmClient.java
+@@ -10,2 +10,3 @@
+ import com.alibaba.fastjson2.JSONWriter;
++import java.util.Arrays;
+ import com.chengyinhub.common.config.AiModelConfig;
+@@ -178,5 +179,7 @@
+             byte[] json;
++            VisionParts parts;
+             try
+             {
+-                json = encodeBody(body, image, systemPrompt, userPrompt, model);
++                parts = visionParts(body, image);
++                json = parts == null ? encodeBody(body, image, systemPrompt, userPrompt, model) : null;
+             }
+@@ -187,3 +190,4 @@
+             phase = "transport";
+-            String result = HttpUtils.sendJsonPostBytes(url, json, apiKey, deadline, lease);
++            String result = parts == null ? HttpUtils.sendJsonPostBytes(url, json, apiKey, deadline, lease)
++                    : HttpUtils.sendJsonPostParts(url, parts.prefix(), parts.image(), parts.suffix(), apiKey, deadline, lease);
+             // The String-only common API does not expose a success status; do not invent one.
+@@ -215,3 +219,43 @@
+     }
++
++    private record VisionParts(byte[] prefix, String image, byte[] suffix) { }
++
++    /** Split only the original fixed image string position; neither marker is sent or persisted. */
++    private static VisionParts visionParts(JSONObject body, String image)
++    {
++        // Below the pinned writer's initial 8192 bytes there is no large-array materialization to remove.
++        if (image == null || image.length() <= 8192 || body == null || body.getClass() != JSONObject.class) return null;
++        JSONWriter.Context context = new JSONWriter.Context(JSONFactory.getDefaultObjectWriterProvider());
++        if (context.getFeatures() != 0
++                || !context.getObjectWriter(JSONObject.class).getClass().getName().equals("com.alibaba.fastjson2.writer.ObjectWriterImplMap")
++                || !context.getObjectWriter(JSONArray.class).getClass().getName().equals("com.alibaba.fastjson2.writer.ObjectWriterImplList")) return null;
++        for (int i = 0; i < image.length(); i++)
++        {
++            char value = image.charAt(i);
++            if (value < 32 || value > 126 || value == '"' || value == '\\') return null;
++        }
++        JSONArray messages = body.getJSONArray("messages");
++        if (messages == null || messages.isEmpty()) return null;
++        JSONObject user = messages.getJSONObject(messages.size() - 1);
++        JSONArray content = user.getJSONArray("content");
++        if (content == null || content.isEmpty()) return null;
++        JSONObject imagePart = content.getJSONObject(0).getJSONObject("image_url");
++        if (imagePart == null || !image.equals(imagePart.get("url"))) return null;
++        byte[] empty, marker;
++        try
++        {
++            imagePart.put("url", ""); empty = JSON.toJSONBytes(body);
++            if (empty.length > 8192 || (long) empty.length + image.length() >= 67108864L) return null;
++            // Optional optimization only; preserve the original metadata/codec size behavior otherwise.
++            imagePart.put("url", "!"); marker = JSON.toJSONBytes(body);
++        }
++        finally { imagePart.put("url", image); }
++        if (marker.length != empty.length + 1) return null;
++        int at = 0;
++        while (at < empty.length && empty[at] == marker[at]) at++;
++        if (at == 0 || at >= empty.length || marker[at] != '!' || empty[at - 1] != '"' || empty[at] != '"') return null;
++        for (int i = at; i < empty.length; i++) if (empty[i] != marker[i + 1]) return null;
++        return new VisionParts(Arrays.copyOf(empty, at), image, Arrays.copyOfRange(empty, at, empty.length));
++    }
+
+     /** Preserve the pinned default UTF-8 codec; reserve space before the image's trailing text grows it again. */

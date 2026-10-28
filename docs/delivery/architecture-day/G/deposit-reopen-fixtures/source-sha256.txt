@@ -1,0 +1,1 @@
+385deabef7e42e79cf1acdcf32df5d3fe442d23402f904765a08f76cbe185395  chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopInviteServiceImplTest.java

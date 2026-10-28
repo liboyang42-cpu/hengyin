@@ -61,25 +61,27 @@ class ClubPostMediaReviewServiceTest {
     }
 
     @Test
-    void externalFailureKeepsCommittedTaskRetryableThenOneReceiptMakesItTerminal() {
+    void provenPreDispatchFailureRetriesOriginalTaskThenOneReceiptMakesItTerminal() {
         ClubPostMediaReviewOutbox firstAttempt = task(1);
         ClubPostMediaReviewOutbox secondAttempt = task(2);
         when(transactionService.claim(TASK_ID)).thenReturn(firstAttempt, secondAttempt, null);
         when(postMapper.selectClubPostById(POST_ID)).thenReturn(currentPost());
-        when(memberMapper.selectUmsMemberById(MEMBER_ID)).thenReturn(member());
+        when(memberMapper.selectUmsMemberById(MEMBER_ID))
+                .thenThrow(new org.springframework.dao.DataAccessResourceFailureException("local read unavailable"))
+                .thenReturn(member());
         when(securityService.submitMediaCheckOne(IWxContentSecurityService.BIZ_TYPE_CLUB_POST,
                 POST_ID, MEDIA_URL, "wx-openid"))
-                .thenReturn(null, "trace-success");
+                .thenReturn("trace-success");
         when(callbackInboxService.isRegistered("trace-success")).thenReturn(true);
         when(transactionService.markSubmitted(secondAttempt, "trace-success")).thenReturn(true);
 
-        assertFalse(service.dispatchOne(TASK_ID), "微信外呼失败不能把任务误标成功");
+        assertFalse(service.dispatchOne(TASK_ID), "外呼前读取失败不能把任务误标成功");
         assertTrue(service.dispatchOne(TASK_ID), "重试拿到 trace + inbox 回执后才能终态");
         assertFalse(service.dispatchOne(TASK_ID), "终态任务不能再次送审");
 
-        verify(transactionService).retryTransient(firstAttempt, "WX_NO_RECEIPT");
+        verify(transactionService).retryTransient(firstAttempt, ClubPostMediaReviewOutbox.PRE_DISPATCH_UNAVAILABLE);
         verify(transactionService).markSubmitted(secondAttempt, "trace-success");
-        verify(securityService, times(2)).submitMediaCheckOne(
+        verify(securityService, times(1)).submitMediaCheckOne(
                 IWxContentSecurityService.BIZ_TYPE_CLUB_POST, POST_ID, MEDIA_URL, "wx-openid");
     }
 
@@ -173,7 +175,7 @@ class ClubPostMediaReviewServiceTest {
     }
 
     @Test
-    void firstExternalTransientFailureStopsTheBatchAndLeavesHealthyRowsForNextMinute() {
+    void firstUnknownOutcomeStopsTheBatchWithoutRequeueingIt() {
         Long firstId = 18L;
         Long secondId = 19L;
         ClubPostMediaReviewOutbox first = task(1);
@@ -187,7 +189,7 @@ class ClubPostMediaReviewServiceTest {
 
         assertEquals(0, service.retryDue());
 
-        verify(transactionService).retryTransient(first, "WX_NO_RECEIPT");
+        verify(transactionService).markUnknown(first, null);
         verify(transactionService, never()).claim(secondId);
     }
 
@@ -217,39 +219,70 @@ class ClubPostMediaReviewServiceTest {
     }
 
     @Test
-    void retryBeyondAlertThresholdUsesWebhookAlarmAndRemainsRecoverable() {
+    void finalPreDispatchFailureTriggersBudgetAlarmWithoutCallingProvider() {
         ClubPostMediaReviewOutbox fifthAttempt = task(5);
         when(transactionService.claim(TASK_ID)).thenReturn(fifthAttempt);
-        when(postMapper.selectClubPostById(POST_ID)).thenReturn(currentPost());
-        when(memberMapper.selectUmsMemberById(MEMBER_ID)).thenReturn(member());
-        when(securityService.submitMediaCheckOne(IWxContentSecurityService.BIZ_TYPE_CLUB_POST,
-                POST_ID, MEDIA_URL, "wx-openid")).thenReturn(null);
+        when(postMapper.selectClubPostById(POST_ID))
+                .thenThrow(new org.springframework.dao.DataAccessResourceFailureException("local read unavailable"));
 
         assertFalse(service.dispatchOne(TASK_ID));
 
-        verify(transactionService).retryTransient(fifthAttempt, "WX_NO_RECEIPT");
+        verify(transactionService).retryTransient(fifthAttempt, ClubPostMediaReviewOutbox.PRE_DISPATCH_UNAVAILABLE);
         verify(alarmService).alarm(eq("俱乐部动态图片送审持续失败"), contains("attempts=5"));
     }
 
     @Test
-    void terminalWriteLossLeavesTaskRecoverableAndDocumentsAtLeastOnceRepeatWindow() {
+    void terminalWriteLossPreservesOriginalTraceAndNeverAuthorizesResubmission() {
         ClubPostMediaReviewOutbox firstLease = task(1);
-        ClubPostMediaReviewOutbox recoveredLease = task(2);
-        when(transactionService.claim(TASK_ID)).thenReturn(firstLease, recoveredLease);
+        when(transactionService.claim(TASK_ID)).thenReturn(firstLease, (ClubPostMediaReviewOutbox) null);
         when(postMapper.selectClubPostById(POST_ID)).thenReturn(currentPost());
         when(memberMapper.selectUmsMemberById(MEMBER_ID)).thenReturn(member());
         when(securityService.submitMediaCheckOne(IWxContentSecurityService.BIZ_TYPE_CLUB_POST,
-                POST_ID, MEDIA_URL, "wx-openid")).thenReturn("trace-before-crash", "trace-after-recovery");
+                POST_ID, MEDIA_URL, "wx-openid")).thenReturn("trace-before-crash");
         when(callbackInboxService.isRegistered("trace-before-crash")).thenReturn(true);
-        when(callbackInboxService.isRegistered("trace-after-recovery")).thenReturn(true);
         when(transactionService.markSubmitted(firstLease, "trace-before-crash")).thenReturn(false);
-        when(transactionService.markSubmitted(recoveredLease, "trace-after-recovery")).thenReturn(true);
 
-        assertFalse(service.dispatchOne(TASK_ID), "微信已受理但本地终态写失败时必须保留可恢复状态");
-        assertTrue(service.dispatchOne(TASK_ID), "lease 恢复后允许再次送审并收口，合同是 at-least-once");
-
-        verify(securityService, times(2)).submitMediaCheckOne(
+        assertFalse(service.dispatchOne(TASK_ID));
+        assertFalse(service.dispatchOne(TASK_ID), "原任务停止后不能再外呼");
+        verify(transactionService).markUnknown(firstLease, "trace-before-crash");
+        verify(securityService, times(1)).submitMediaCheckOne(
                 IWxContentSecurityService.BIZ_TYPE_CLUB_POST, POST_ID, MEDIA_URL, "wx-openid");
+    }
+
+    @Test
+    void fifthAttemptCanStillStoreItsSuccessfulOriginalReceipt() {
+        ClubPostMediaReviewOutbox last = task(5);
+        when(transactionService.claim(TASK_ID)).thenReturn(last);
+        when(postMapper.selectClubPostById(POST_ID)).thenReturn(currentPost());
+        when(memberMapper.selectUmsMemberById(MEMBER_ID)).thenReturn(member());
+        when(securityService.submitMediaCheckOne(IWxContentSecurityService.BIZ_TYPE_CLUB_POST,
+                POST_ID, MEDIA_URL, "wx-openid")).thenReturn("trace-final");
+        when(callbackInboxService.isRegistered("trace-final")).thenReturn(true);
+        when(transactionService.markSubmitted(last, "trace-final")).thenReturn(true);
+        assertTrue(service.dispatchOne(TASK_ID));
+        verify(transactionService).markSubmitted(last, "trace-final");
+        verify(transactionService, never()).retryTransient(last, ClubPostMediaReviewOutbox.PRE_DISPATCH_UNAVAILABLE);
+    }
+
+    @Test
+    void providerExceptionAndMissingInboxReceiptBothStopWithUnknownOriginalIdentity() {
+        ClubPostMediaReviewOutbox first = task(1);
+        ClubPostMediaReviewOutbox second = task(1);
+        second.setId(18L);
+        when(transactionService.claim(TASK_ID)).thenReturn(first);
+        when(transactionService.claim(18L)).thenReturn(second);
+        when(postMapper.selectClubPostById(POST_ID)).thenReturn(currentPost());
+        when(memberMapper.selectUmsMemberById(MEMBER_ID)).thenReturn(member());
+        when(securityService.submitMediaCheckOne(IWxContentSecurityService.BIZ_TYPE_CLUB_POST,
+                POST_ID, MEDIA_URL, "wx-openid"))
+                .thenThrow(new IllegalStateException("reply lost")).thenReturn("original-trace");
+        assertFalse(service.dispatchOne(TASK_ID));
+        assertFalse(service.dispatchOne(18L));
+        verify(transactionService).markUnknown(first, null);
+        verify(transactionService).markUnknown(second, "original-trace");
+        verify(transactionService, never()).retryTransient(eq(first), anyString());
+        verify(transactionService, never()).retryTransient(eq(second), anyString());
+        verify(postMapper, never()).updateClubPost(org.mockito.ArgumentMatchers.any());
     }
 
     private ClubPostMediaReviewOutbox task(int attemptCount) {

@@ -1,0 +1,88 @@
+{
+  "sourceSha": "fb871607e4c4a5a038776201ff0b785f999f9ab1",
+  "evidenceKind": "READ_EXISTING_GITHUB_LOGS_NO_BUILD_OR_PROBE_EXECUTED",
+  "observations": [
+    {
+      "runId": 40219261122,
+      "jobId": 121247151219,
+      "entry": "ClmCommercePaymentProofMySqlIT",
+      "stage": "MODEL_RESOLUTION_FAILED_TESTS_NOT_RUN",
+      "logUrl": "https://github.com/liboyang42-cpu/hengyin/actions/runs/40219261122/job/121247151219",
+      "excerpts": [
+        "Creating settings.xml with server-id: github",
+        "Cache Size: ~146 MB (152674761 B)",
+        "Cache restored from key: setup-java-Linux-x64-maven-0ea77dcc91feead05a75d8f04a264c813aee27a4da06a487d4799f85861eca64",
+        "[ERROR] Non-resolvable import POM: The following artifacts could not be resolved: com.fasterxml.jackson:jackson-bom:pom:2.21.7 (present, but unavailable): Could not find artifact com.fasterxml.jackson:jackson-bom:pom:2.21.7 in central (https://repo.maven.apache.org/maven2) @ line 57, column 25",
+        "[ERROR] Non-resolvable import POM: The following artifacts could not be resolved: tools.jackson:jackson-bom:pom:3.1.7 (present, but unavailable): Could not find artifact tools.jackson:jackson-bom:pom:3.1.7 in central (https://repo.maven.apache.org/maven2) @ line 64, column 25",
+        "[ERROR] Non-resolvable import POM: The following artifacts could not be resolved: org.springframework.boot:spring-boot-dependencies:pom:4.1.1 (present, but unavailable): Could not find artifact org.springframework.boot:spring-boot-dependencies:pom:4.1.1 in central (https://repo.maven.apache.org/maven2) @ line 117, column 25",
+        "[ERROR]     Non-resolvable import POM: The following artifacts could not be resolved: com.fasterxml.jackson:jackson-bom:pom:2.21.7 (present, but unavailable): Could not find artifact com.fasterxml.jackson:jackson-bom:pom:2.21.7 in central (https://repo.maven.apache.org/maven2) @ line 57, column 25 -> [Help 2]"
+      ],
+      "explicitHttp404InLog": false
+    },
+    {
+      "runId": 40219261122,
+      "jobId": 121247151229,
+      "entry": "CoopOrderStationFulfillmentMySqlIT",
+      "stage": "MODEL_PASSED_TEST_COMPILE_FAILED",
+      "logUrl": "https://github.com/liboyang42-cpu/hengyin/actions/runs/40219261122/job/121247151229",
+      "excerpts": [
+        "Creating settings.xml with server-id: github",
+        "Cache Size: ~146 MB (152674761 B)",
+        "Cache restored from key: setup-java-Linux-x64-maven-0ea77dcc91feead05a75d8f04a264c813aee27a4da06a487d4799f85861eca64",
+        "[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.15.0:testCompile (default-testCompile) on project chengyinhub-admin: Compilation failure: Compilation failure: "
+      ],
+      "explicitHttp404InLog": false
+    },
+    {
+      "runId": 40219238315,
+      "jobId": 121247109875,
+      "entry": "Backend",
+      "stage": "MODEL_PASSED_TEST_COMPILE_FAILED",
+      "logUrl": "https://github.com/liboyang42-cpu/hengyin/actions/runs/40219238315/job/121247109875",
+      "excerpts": [
+        "Creating settings.xml with server-id: github",
+        "Cache Size: ~146 MB (152674761 B)",
+        "Cache restored from key: setup-java-Linux-x64-maven-0ea77dcc91feead05a75d8f04a264c813aee27a4da06a487d4799f85861eca64",
+        "[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.15.0:testCompile (default-testCompile) on project chengyinhub-admin: Compilation failure: Compilation failure: "
+      ],
+      "explicitHttp404InLog": false
+    },
+    {
+      "runId": 40219238315,
+      "jobId": 121247109763,
+      "entry": "SBOM build",
+      "stage": "MODEL_PASSED_TEST_COMPILE_FAILED_NO_SBOM",
+      "logUrl": "https://github.com/liboyang42-cpu/hengyin/actions/runs/40219238315/job/121247109763",
+      "excerpts": [
+        "Creating settings.xml with server-id: github",
+        "Cache Size: ~146 MB (152674761 B)",
+        "Cache restored from key: setup-java-Linux-x64-maven-0ea77dcc91feead05a75d8f04a264c813aee27a4da06a487d4799f85861eca64",
+        "[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.15.0:testCompile (default-testCompile) on project chengyinhub-admin: Compilation failure: Compilation failure: "
+      ],
+      "explicitHttp404InLog": false
+    },
+    {
+      "runId": 40219266741,
+      "jobId": 121247076937,
+      "entry": "HTTP FreezeGame online prerequisite",
+      "stage": "MODEL_PASSED_TEST_COMPILE_FAILED_NO_HTTP",
+      "logUrl": "https://github.com/liboyang42-cpu/hengyin/actions/runs/40219266741/job/121247076937",
+      "excerpts": [
+        "Creating settings.xml with server-id: github",
+        "Cache Size: ~146 MB (152674761 B)",
+        "Cache restored from key: setup-java-Linux-x64-maven-0ea77dcc91feead05a75d8f04a264c813aee27a4da06a487d4799f85861eca64",
+        "[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.15.0:testCompile (default-testCompile) on project chengyinhub-admin: Compilation failure: Compilation failure: "
+      ],
+      "explicitHttp404InLog": false
+    }
+  ],
+  "notVerified": [
+    "cache archive byte digest/producer",
+    "original cached remote repository ID",
+    "runner global settings contents",
+    "actual HTTP status/edge response",
+    "recovery by retry"
+  ],
+  "sourceDecision": "NO_RUNTIME_SOURCE_CHANGE_JUSTIFIED",
+  "tests": "NOT_RUN_BY_F"
+}

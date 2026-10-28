@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "observed_run": 40084928209,
+  "observed_source": "07359d3dac777b67090f7febfbaed68b3ec5d336",
+  "parent": "c4a00a4c47f0144c4c66e9dba3c0efb2b66d034b",
+  "failure_stage": "Admin testCompile",
+  "executed": 0,
+  "expected": 4,
+  "cleanup": "CLEAN",
+  "changes": "Checked Exception declaration, missing assertTrue/any imports, preserve typed Integer equality without overload ambiguity",
+  "production_source_changed": false,
+  "assertions_removed": false,
+  "Java_test_execution": "NOT_RUN after repairs",
+  "files": {
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationFundsMybatisIntegrationTest.java": "8a3383040e5f01449f6d5d76d029f3704790e4344ebaec449c8f66ed1b9514cf",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TandianriBatch0FundsMybatisIntegrationTest.java": "274c794b2c1beb8f5597cc12daf7ed8b7a9da3ef973b0f24765637a8acd542a6",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPayCallbackForgedSignatureTest.java": "50cc324783eb5b07303b9a9205ae1085a532679492331772d8968d5863f0a17e",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AuditTopicCurrentPublicationMySqlIT.java": "981f8556567a6ec0dbda5ca0e5a4a9cbc227027d3fa2086fc4c10df21aba4fd9"
+  }
+}

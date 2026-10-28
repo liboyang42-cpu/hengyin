@@ -1,0 +1,11 @@
+2026-10-23T20:21:53.061999+00:00
+PASS SOURCE: only two when/thenAnswer restubs changed to doAnswer/when
+PASS SOURCE: injection SQL/write-then-throw bodies and all remaining assertions byte-for-byte unchanged
+PASS SOURCE: root displaySnapshot fixture correction retained; all 23 IT methods retained
+PASS SOURCE: only one test source and this task docs changed; frozen A/A-P2/WP12 worktrees unchanged
+SECRET-FILE-GATE PASS: 当前 Git tree 无密钥/证书文件或私钥正文
+PASS: changed/untracked files passed project secret-file gate and known-credential pattern scan
+LIMIT: no full gitleaks entropy/history scan
+PASS: git diff --check 88fae34ca16597b69f55271078d028658e438ffb
+NOT RUN: Java compilation/tests, real MySQL/Redis/backend/channel integration, CI dispatch
+EXTERNAL STATUS (coordinator supplied): combined089790aaf run40016650848 A19=17pass/2error; cleanup CLEAN; no claim that this fix has rerun

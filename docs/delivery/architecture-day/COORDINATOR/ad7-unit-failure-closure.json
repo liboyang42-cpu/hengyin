@@ -1,0 +1,73 @@
+{
+  "run": 40039894119,
+  "source_sha": "ad7e59fbf6a20e85e741318afe654c5411bf1101",
+  "overall": "FAILURE_NOT_ACCEPTED",
+  "raw_xml_files": 1768,
+  "raw_counts": {
+    "tests": 14045,
+    "failures": 1,
+    "errors": 1,
+    "skipped": 633
+  },
+  "failures": [
+    {
+      "suite": "com.chengyinhub.business.service.impl.PlayKitPhotoCheckRuntimeTest",
+      "tests": 17,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 0,
+      "xml_sha256": "e5183e5b454744fd4e8d6758a9623abe5ba89ea5e1e575a07722d904dc978016",
+      "cases": [
+        {
+          "name": "负控_客户端score字段对判定毫无影响",
+          "message": "expected: <照片地址不能为空且最多512字> but was: <照片地址不能为空且最多 512 字>"
+        }
+      ]
+    },
+    {
+      "suite": "com.chengyinhub.business.service.impl.AdvancedPhotoOrchestrationTest",
+      "tests": 17,
+      "failures": 0,
+      "errors": 1,
+      "skipped": 0,
+      "xml_sha256": "416dd5513eb1450e840002496ebce4eca67869461dd463aabbc4c0ac01a8be93",
+      "cases": [
+        {
+          "name": "newAttemptWithSameRejectedPhotoCountsAgainButOriginalReplayDoesNot",
+          "message": "Cannot invoke \"com.chengyinhub.business.domain.PlayAttemptLog.setId(java.lang.Long)\" because \"log\" is null"
+        }
+      ]
+    }
+  ],
+  "selected_unit_evidence": [
+    {
+      "suite": "com.chengyinhub.business.service.impl.ObjectCardMintHookTest",
+      "tests": 18,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "xml_sha256": "60b17eb185eacdb80654d3b7a2ab1172f8ef600d49f5c5e438fc982dc9054721"
+    },
+    {
+      "suite": "com.chengyinhub.business.service.impl.MerchantOfferOwnerNoticeIntentTest",
+      "tests": 11,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "xml_sha256": "bcead8090405b218e10951c31a45b00c267ed6a68216efa40cea68889dba1a80"
+    },
+    {
+      "suite": "com.chengyinhub.business.service.impl.AiCreatorServiceImplTest",
+      "tests": 37,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "xml_sha256": "786a44e949e7f91a2b0005553bca06844c3b81b69d290e560fcfc021dfd375b6"
+    }
+  ],
+  "root_fix": "Only expected Chinese spacing and Mockito non-invoking doAnswer re-stubbing, with explicit writable-transaction guards on all fake locked rows/insert; no production change",
+  "not_executed": [
+    "later MyBatis/Theme/APPLIED",
+    "full startup/Jar/jdeps"
+  ]
+}

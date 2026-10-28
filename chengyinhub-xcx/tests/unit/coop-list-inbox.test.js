@@ -209,7 +209,7 @@ test('官方邀约切换身份:旧身份在途回包作废,新身份立即发起
 // (CoopInvite.message 与 handleReason 是两个独立字段),而本页发的是 message ⇒ 对方永远看不到理由。
 test('E-03 收件箱拒绝必须发 handleReason(后端拒绝分支读的就是它);负控发回 message 即红', () => {
   const REASON = '档期冲突，下次再约';
-  const load = (mutate) => {
+  const load = (mutate, role = 'user') => {
     let definition;
     const requests = [];
     const app = { globalData: {}, getUserID: () => 1, getUserRole: () => role || 'user', sendRequest(o) { requests.push(o); } };

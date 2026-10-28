@@ -1,0 +1,18 @@
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubMembershipServiceImpl.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubMembershipServiceImpl.java
+@@ -1127,5 +1127,5 @@
+                                                            String requestId,
+                                                            String wechatState, String observedWxNo) {
+-        if (!wechatPayService.lockPaymentAttemptForUpdate(invoice.getOutTradeNo(), observedWxNo)) {
++        if (!wechatPayService.lockClosablePaymentAttemptForUpdate(invoice.getOutTradeNo(), observedWxNo)) {
+             throw new ServiceException("支付尝试已变化，未关闭当前账单", HttpStatus.CONFLICT);
+         }
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantCommerceService.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantCommerceService.java
+@@ -205,5 +205,5 @@
+     private boolean closeObservedOrder(OmsOrder order, String observedWxOutTradeNo) {
+         return Boolean.TRUE.equals(paymentTransaction().execute(status -> {
+-            if (!wechatPayService.lockPaymentAttemptForUpdate(order.getOrderSn(), observedWxOutTradeNo)) return false;
++            if (!wechatPayService.lockClosablePaymentAttemptForUpdate(order.getOrderSn(), observedWxOutTradeNo)) return false;
+             return orderMapper.markCommerceOrderClosed(order.getId()) == 1;
+         }));

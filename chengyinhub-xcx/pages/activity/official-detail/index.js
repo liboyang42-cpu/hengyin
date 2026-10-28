@@ -180,6 +180,7 @@ Page({
   },
 
   onHide() {
+    this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1;
     if (this._recovery) this._recovery.dispose();
     this._hidden = true;
     this._fetchSeq = (this._fetchSeq || 0) + 1;
@@ -192,6 +193,7 @@ Page({
   },
 
   onUnload() {
+    this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1;
     if (this._recovery) this._recovery.dispose();
     this._disposed = true;
     merchantTheme.merchantPageRestore();
@@ -568,7 +570,7 @@ Page({
   onPolicyChange(ev) { this.setData({ policyChecked: !!(ev && ev.detail && ev.detail.checked) }); },
 
   doSignup() {
-    if (app.ensureLoginFor && !app.ensureLoginFor('signup', () => this.doSignup())) return;
+    if (app.ensureLoginFor && !app.ensureLoginFor('signup', () => this.doSignup(), { owner: this, target: () => [this.data.id] })) return;
     if (participationInvalid(this.data.e)) { toast('参与资格已失效'); return; }
     if (this.data.e && this.data.e._policyTitle && !this.data.policyChecked) { toast('请先勾选安全须知'); return; }
     if (!exactId(this.data.id) || this._disposed || this._hidden) return;

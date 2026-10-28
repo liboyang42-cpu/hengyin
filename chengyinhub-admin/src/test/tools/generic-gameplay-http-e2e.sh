@@ -19,15 +19,23 @@ case "$PROFILE" in
   *) echo 'Unknown HTTP execution profile.' >&2; exit 2 ;;
 esac
 export CHENGYIN_HTTP_E2E_TESTS=${CHENGYIN_HTTP_E2E_TESTS:-GenericGameplayHttpE2eIT}
+export CHENGYIN_HTTP_E2E_REDIS_PORT=${CHENGYIN_HTTP_E2E_REDIS_PORT:-6387}
 [[ "$CHENGYIN_HTTP_E2E_TESTS" != ,* && "$CHENGYIN_HTTP_E2E_TESTS" != *, && "$CHENGYIN_HTTP_E2E_TESTS" != *,,* ]] || { echo 'Malformed HTTP test selection.' >&2; exit 2; }
 IFS=',' read -r -a SELECTED <<< "$CHENGYIN_HTTP_E2E_TESTS"
 [[ ${#SELECTED[@]} -gt 0 ]] || exit 2
 SEEN=','
 for CLASS in "${SELECTED[@]}"; do
-  case "$CLASS" in GenericGameplayHttpE2eIT|FreezeGameHttpE2eIT|FreezeReuseThemeHttpE2eIT) ;; *) echo 'Unreviewed HTTP test selection.' >&2; exit 2 ;; esac
+  case "$CLASS" in GenericGameplayHttpE2eIT|FreezeGameHttpE2eIT|FreezeReuseThemeHttpE2eIT|CrossDomainCombinedLoadMySqlIT) ;; *) echo 'Unreviewed HTTP test selection.' >&2; exit 2 ;; esac
   [[ "$SEEN" != *",$CLASS,"* ]] || { echo 'Duplicate HTTP test selection.' >&2; exit 2; }
   SEEN="$SEEN$CLASS,"
 done
+if [[ "$SEEN" == *",CrossDomainCombinedLoadMySqlIT,"* ]]; then
+  [[ "$CHENGYIN_HTTP_E2E_TESTS" == CrossDomainCombinedLoadMySqlIT && "${HTTP_SCOPE:-}" == controlled-combination && "$PROFILE" == github-hosted && "${GITHUB_EVENT_NAME:-}" == workflow_dispatch ]] || { echo 'Controlled combination requires its exact manual hosted single-class partial scope.' >&2; exit 2; }
+  # Same task's Redis process/database, separate original economic schema and gate.
+  export CHENGYIN_AI_REDIS_IT_PORT="$CHENGYIN_HTTP_E2E_REDIS_PORT"
+  export CHENGYIN_AI_REDIS_IT_DATABASE=15
+  export B_PAYMENT_FACT_DDL_APPROVED=1
+fi
 if [[ "$PROFILE" == github-hosted && ${#SELECTED[@]} != 1 ]]; then echo 'Each hosted job must run one class with its own schema and Redis.' >&2; exit 2; fi
 if [[ "${1:-}" == --check-profile && $# == 1 ]]; then exit 0; fi
 [[ $# == 0 ]] || { echo 'Unknown HTTP runner argument.' >&2; exit 2; }
@@ -50,7 +58,6 @@ JAVA_MAJOR=$(printf '%s' "$JAVA_VERSION" | sed -E 's/.*version "([0-9]+).*/\1/')
 [[ "$JAVA_MAJOR" == 21 ]] || { echo 'This HTTP fixture requires JDK21.' >&2; exit 2; }
 JVM_FLAGS='-Xmx1024m -Djava.security.manager=allow --add-opens=java.base/java.lang=ALL-UNNAMED'
 export CHENGYIN_MYBATIS_IT_HOST=127.0.0.1
-export CHENGYIN_HTTP_E2E_REDIS_PORT=${CHENGYIN_HTTP_E2E_REDIS_PORT:-6387}
 export CHENGYIN_HTTP_E2E_DATABASE=cy_e2e_w1_http_$(date +%Y%m%d%H%M%S)_$$_${RANDOM}
 OUT="$ROOT/chengyinhub-admin/target/http-e2e"
 PUBLIC="$OUT/public"
@@ -73,7 +80,11 @@ with socket.socket() as probe:
     try: probe.bind(('127.0.0.1', int(port)))
     except OSError: raise SystemExit('Redis port occupied; never reuse/stop another process')
 PY
-TEMP_DIR=$(mktemp -d)
+if [[ "$CHENGYIN_HTTP_E2E_TESTS" == CrossDomainCombinedLoadMySqlIT ]]; then
+  TEMP_DIR=$(mktemp -d /tmp/cy-http-budget.XXXXXXXX)
+else
+  TEMP_DIR=$(mktemp -d)
+fi
 REDIS_PID=''
 JAVA_STATUS=98
 export CHENGYIN_HTTP_E2E_STAGE=schema
@@ -87,6 +98,10 @@ cleanup() {
   set +e
   MYSQL_CLEAN=false
   REDIS_CLEAN=false
+  BUDGET_VERIFIED=0
+  if [[ "$CHENGYIN_HTTP_E2E_TESTS" == CrossDomainCombinedLoadMySqlIT ]]; then
+    python3 -I ci/combined_http_budget.py finalize "$TEMP_DIR" "$ORIGINAL" || BUDGET_VERIFIED=$?
+  fi
   PRESENT=$(mysql_owned --execute="SELECT SCHEMA_NAME FROM information_schema.schemata WHERE SCHEMA_NAME='$CHENGYIN_HTTP_E2E_DATABASE'")
   QUERY_STATUS=$?
   if [[ "$QUERY_STATUS" == 0 && -z "$PRESENT" ]]; then
@@ -110,13 +125,33 @@ PY
     fi
   fi
   if [[ -n "$REDIS_PID" ]]; then kill "$REDIS_PID" 2>/dev/null; wait "$REDIS_PID" 2>/dev/null; fi
-  if python3 - <<'PY'
+  if [[ "$CHENGYIN_HTTP_E2E_TESTS" == CrossDomainCombinedLoadMySqlIT ]]; then
+    if python3 -I - <<'PY'
+import importlib.util, pathlib
+spec=importlib.util.spec_from_file_location('fixed_budget_cleanup',pathlib.Path.cwd()/'ci/combined_http_budget.py')
+owner=importlib.util.module_from_spec(spec);spec.loader.exec_module(owner)
+owner.read_redis_cleanup_proof()
+PY
+    then REDIS_CLEAN=true; fi
+  elif python3 - <<'PY'
 import os,socket
 with socket.socket() as probe:
     probe.bind(('127.0.0.1',int(os.environ['CHENGYIN_HTTP_E2E_REDIS_PORT'])))
 PY
   then REDIS_CLEAN=true; fi
-  rm -rf "$TEMP_DIR"
+  if [[ "$CHENGYIN_HTTP_E2E_TESTS" == CrossDomainCombinedLoadMySqlIT ]]; then
+    if python3 -I - <<'PY'
+import importlib.util, pathlib
+spec=importlib.util.spec_from_file_location('fixed_budget_private_cleanup',pathlib.Path.cwd()/'ci/combined_http_budget.py')
+owner=importlib.util.module_from_spec(spec);spec.loader.exec_module(owner)
+owner.read_private_cleanup_proof()
+PY
+    then rm -rf "$TEMP_DIR"
+    else echo 'Private budget journal retained: exact container removal is unconfirmed.' >&2; fi
+  else
+    rm -rf "$TEMP_DIR"
+  fi
+  if [[ "$ORIGINAL" == 0 && "$BUDGET_VERIFIED" != 0 ]]; then ORIGINAL=2; CHENGYIN_HTTP_E2E_STAGE=cleanup; fi
   if [[ "$ORIGINAL" == 0 && ( "$MYSQL_CLEAN" != true || "$REDIS_CLEAN" != true ) ]]; then CHENGYIN_HTTP_E2E_STAGE=cleanup; fi
   CHENGYIN_HTTP_E2E_ORIGINAL_EXIT="$ORIGINAL" python3 ci/test_http_e2e_entry.py finalize --output "$PUBLIC" --java-exit "$JAVA_STATUS" --mysql-clean "$MYSQL_CLEAN" --redis-clean "$REDIS_CLEAN"
   VERIFIED=$?
@@ -129,6 +164,10 @@ python3 chengyinhub-admin/src/test/tools/generic-gameplay-fresh-schema.py \
   --profile "$PROFILE" --execute --port "$CHENGYIN_MYBATIS_IT_PORT" --user "${CHENGYIN_MYBATIS_IT_USER:-root}" \
   --database "$CHENGYIN_HTTP_E2E_DATABASE" --report "$CHENGYIN_HTTP_E2E_SCHEMA_REPORT" > "$OUT/fresh-schema.log" 2>&1
 CHENGYIN_HTTP_E2E_STAGE=redis-start
+if [[ "$CHENGYIN_HTTP_E2E_TESTS" == CrossDomainCombinedLoadMySqlIT ]]; then
+  python3 -I ci/combined_http_budget.py prepare "$TEMP_DIR"
+  CHENGYIN_HTTP_E2E_STAGE=redis-ready
+else
 redis-server --bind 127.0.0.1 --port "$CHENGYIN_HTTP_E2E_REDIS_PORT" --protected-mode yes \
   --save '' --appendonly no --dir "$TEMP_DIR" > "$TEMP_DIR/redis.log" 2>&1 &
 REDIS_PID=$!
@@ -140,6 +179,7 @@ for ATTEMPT in {1..50}; do
   sleep 0.1
 done
 [[ "$READY" == 1 ]] || { echo 'Private Redis not ready.' >&2; exit 2; }
+fi
 CHENGYIN_HTTP_E2E_STAGE=java-tmp
 mkdir -p "${TMPDIR:-/tmp}/javatmp"
 CHENGYIN_HTTP_E2E_STAGE=java-tests
@@ -147,8 +187,12 @@ JAVA_STATUS=0
 MAVEN_MODE=(-o)
 if [[ "$PROFILE" == github-hosted ]]; then MAVEN_MODE=(-B); fi
 # pom appends its existing Mockito startup javaagent to argLine.
+if [[ "$CHENGYIN_HTTP_E2E_TESTS" == CrossDomainCombinedLoadMySqlIT ]]; then
+  python3 -I ci/combined_http_budget.py run "$TEMP_DIR" > "$OUT/budget-run.log" 2>&1 || JAVA_STATUS=$?
+else
 SERVER_ADDRESS=127.0.0.1 mvn "${MAVEN_MODE[@]}" -q -pl chengyinhub-admin -am test "-DargLine=$JVM_FLAGS -Djava.io.tmpdir=${TMPDIR:-/tmp}/javatmp -Djava.awt.headless=true" "-Dtest=$CHENGYIN_HTTP_E2E_TESTS" \
   -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false > "$OUT/run.log" 2>&1 || JAVA_STATUS=$?
+fi
 CHENGYIN_HTTP_E2E_STAGE=xml-verify
 python3 ci/test_http_e2e_entry.py verify --classes "$CHENGYIN_HTTP_E2E_TESTS" --reports chengyinhub-admin/target/surefire-reports --output "$PUBLIC"
 [[ "$JAVA_STATUS" == 0 ]]
