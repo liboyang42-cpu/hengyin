@@ -125,7 +125,9 @@ page { background: var(--cy-comp-sheet-player-page); }
 .mt-list { background: #000; } /* ds-ok */
 
 /* 点位卡:290×316,深灰底,上方类型小牌,下方小尾巴;正面照片 + 名字压图;背面介绍,上滑展开 */
-.pdim--clear { background: transparent !important; }
+/* 点位卡的透明收起层必须压在卡片(.pc z 40)下面:共用 .pdim 是 z 60(给半屏 z 70 垫底用),
+   原样用会盖住卡片,点卡片任何地方都点在这层上 → 卡片一点就收、翻不了面也展不开。39 仍高于地图、筛选行和底部卡片条。 */
+.pdim--clear { background: transparent !important; z-index: 39; }
 .pc { position: absolute; left: 50%; z-index: 40; width: 558rpx; height: 608rpx; margin-left: -279rpx; opacity: 0; transform: translateY(52rpx) scale(.16); transform-origin: 50% calc(100% + 40rpx);
   transition: transform .42s cubic-bezier(.5,0,.7,.4), opacity .1s ease .36s; } /* 收回:先缩回点位,最后一下才淡掉 */
 .pc.is-in { opacity: 1; transform: none; transition: transform .5s cubic-bezier(.34,1.32,.64,1), opacity .12s ease; }
@@ -234,9 +236,10 @@ page { background: var(--cy-comp-sheet-player-page); }
 /* 2026-10-25 业主:顶部一行 = 筛选(文字)+ 地图 / 列表(图标);底部横滑卡片(漫游首页「附近活动」卡,加高,与标题左缘对齐) */
 .mt-toprow { position: absolute; left: 23rpx; right: 23rpx; z-index: 20; display: flex; align-items: center; gap: 14rpx; transition: opacity .25s ease; }
 .mt-toprow__chips { flex: 1; min-width: 0; white-space: nowrap; }
+.mt-toprow .mt-chip { padding: 0 20rpx; margin-right: 12rpx; font-size: 24rpx; gap: 8rpx; } /* ds-ok 同 .mt-chip 原型定值;四枚筛选与图标切换并排时整行放得下,不被截在图标边上 */
 .mt-toprow .mt-chip:last-child { margin-right: 0; }
 .mt-toprow .mt-mode { flex: none; height: 65rpx; padding: 4rpx; }
-.mt-toprow .mt-mode__i { min-width: 74rpx; padding: 0; color: rgba(255,255,255,.6); } /* ds-ok 同 .mt-mode__i 未选 */
+.mt-toprow .mt-mode__i { min-width: 64rpx; padding: 0; color: rgba(255,255,255,.6); } /* ds-ok 同 .mt-mode__i 未选 */
 .mt-toprow .mt-mode__i.is-on { color: var(--cy-color-play-ink); }
 .nb.map-open .mt-toprow { opacity: 0; pointer-events: none; }
 /* 业主 2026-10-25:不加黑色渐变,卡片直接压在地图上;标题用和筛选胶囊同底的小牌,地图上也读得清 */
