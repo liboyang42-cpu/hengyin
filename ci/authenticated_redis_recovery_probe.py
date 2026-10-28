@@ -395,7 +395,9 @@ def prepare(name, schema, out, private, port):
     exit_code = None
     try:
         sys.argv = ['build_schema.py', '--schema', schema, '--host', '127.0.0.1', '--port', str(port),
-                    '--user', 'root', '--password', os.environ['CHENGYIN_AUTH_FIXTURE_DB_PASSWORD']]
+                    '--user', 'root',
+                    # token_urlsafe 约 1/64 以「-」开头,分开传会被 argparse 当成选项(偶发 exit 2);用 = 形式
+                    '--password=' + os.environ['CHENGYIN_AUTH_FIXTURE_DB_PASSWORD']]
         with contextlib.redirect_stdout(log), contextlib.redirect_stderr(log):
             exit_code = builder.main()
     finally:
