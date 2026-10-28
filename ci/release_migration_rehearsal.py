@@ -40,7 +40,8 @@ from ci.migration_ledger import build_manifest  # noqa: E402
 from ci.release_manifest import migration_diff  # noqa: E402
 from ci.sql_splitter import split_statements, executable_statement  # noqa: E402
 
-PACK_DIR = REPO / "docs/delivery/release-closeout-20261022"
+# 当前发布包；docs/delivery/release-closeout-20261022 保留为历史记录，不再随 HEAD 刷新。
+PACK_DIR = REPO / "docs/delivery/release-closeout-20261028"
 PACK_JSON = PACK_DIR / "release-migration-pack.json"
 PRECHECK_SQL = PACK_DIR / "release-migration-precheck.sql"
 PASSWORD_ENV = "CHENGYIN_REHEARSAL_MYSQL_PASSWORD"
@@ -69,6 +70,9 @@ SYNTHETIC_ROWS = [
     "VALUES (9101, 'hp', 'number', 'run', NOW(3), NOW(3))",
     "INSERT INTO topic_route_session(topic_id, member_id, config_version, config_snapshot_json, state_json, seed, "
     "create_time, update_time) VALUES (9101, 1, 1, '{}', '{}', 1, NOW(3), NOW(3))",
+    # 品牌形象图并入门店相册（20261027）：一张已在相册、一张待追加、一个分号分隔。
+    "UPDATE mms_merchant SET derivatives = 'https://example.invalid/b1.jpg;https://example.invalid/b2.jpg', "
+    "gallery = '[\"https://example.invalid/b1.jpg\"]' WHERE id = 9801",
 ]
 
 # 合成的已有页面形态（不代表生产状态）：四个后台角色都已配置过页面，且收款审核/打款授权按
@@ -118,6 +122,21 @@ NEGATIVE_CONTROLS = [
      "INSERT INTO sys_menu(menu_name, parent_id, order_num, menu_type, visible, status, perms) "
      "SELECT 'dup', parent_id, 99, 'F', '0', '0', perms FROM sys_menu WHERE perms = 'business:clubpayee:verify'",
      "BLOCKED_PREREQ"),
+    ("20261023_wx_pay_order_intent", "ALTER TABLE wx_pay_order_intent ADD COLUMN rehearsal_bogus INT NULL", "CONFLICT"),
+    ("20261024_cash_withdraw_transfer_intent",
+     "ALTER TABLE member_cash_withdraw_transfer_intent DROP INDEX uk_cash_transfer_batch", "CONFLICT"),
+    ("20261026_official_broadcast_delivery", "DROP TABLE official_broadcast_creation", "PARTIAL"),
+    ("20261024_official_roam_challenges", "ALTER TABLE roam_poi MODIFY badge_code VARCHAR(40) NULL", "CONFLICT"),
+    ("20261024_community_open_flags",
+     "INSERT INTO sys_config(config_name, config_key, config_value, config_type) "
+     "VALUES ('dup', 'feature.flag.communityPostWrite', 'false', 'N')", "CONFLICT"),
+    ("20261026_user_invoice_menu", "UPDATE sys_menu SET menu_type = 'C' WHERE perms = 'business:userInvoice:reconcile'",
+     "CONFLICT"),
+    ("20261027_orient_scoring_menu_grants",
+     "INSERT INTO sys_role_menu(role_id, menu_id) SELECT r.role_id, m.menu_id FROM sys_role r JOIN sys_menu m "
+     "WHERE r.role_key = 'cy_finance' AND r.del_flag = '0' AND m.perms = 'business:orientScoring:review'", "CONFLICT"),
+    ("w8_refund_fulfillment_recovery_20261026",
+     "ALTER TABLE refund_application DROP INDEX idx_refund_fulfillment_recovery", "PARTIAL"),
 ]
 
 
@@ -131,6 +150,39 @@ def release_set(base):
     items = sorted(diff["changes"], key=lambda c: c["order"])
     return diff, [{k: c[k] for k in ("migrationId", "path", "sha256", "baseSha256", "change", "order", "dependsOn")}
                   for c in items]
+
+
+EXECUTION_ROUNDS = ("A_PRE_DEPLOY_REQUIRED", "B_PRE_DEPLOY", "C_OWNER_GATED_DATA")
+
+
+def execution_rounds(items):
+    """Owner order: PRE_DEPLOY_REQUIRED (plus in-set prerequisites) first, other pre-deploy next, data last.
+
+    Each round keeps step order; the result must still respect every declared in-set dependency.
+    """
+    by_id = {m["migrationId"]: m for m in items}
+    first = set()
+    pending = [m["migrationId"] for m in items if m["phase"] == "PRE_DEPLOY_REQUIRED"]
+    while pending:
+        migration_id = pending.pop()
+        if migration_id not in first:
+            first.add(migration_id)
+            pending.extend(d for d in by_id[migration_id]["dependsOn"] if d in by_id)
+    rounds = {name: [] for name in EXECUTION_ROUNDS}
+    for m in sorted(items, key=lambda m: m["step"]):
+        if m["migrationId"] in first:
+            rounds["A_PRE_DEPLOY_REQUIRED"].append(m["migrationId"])
+        elif m["phase"] == "OWNER_GATED_DATA":
+            rounds["C_OWNER_GATED_DATA"].append(m["migrationId"])
+        else:
+            rounds["B_PRE_DEPLOY"].append(m["migrationId"])
+    seen = set()
+    for migration_id in [i for name in EXECUTION_ROUNDS for i in rounds[name]]:
+        missing = [d for d in by_id[migration_id]["dependsOn"] if d in by_id and d not in seen]
+        if missing:
+            raise ValueError("execution rounds break dependency: %s needs %s" % (migration_id, missing))
+        seen.add(migration_id)
+    return rounds
 
 
 def compare_pack(pack, computed):
@@ -148,13 +200,22 @@ def compare_pack(pack, computed):
 
 
 
+# 已审阅的单次执行迁移（普通 ADD COLUMN / CREATE TABLE，直接重跑必报 1060/1050）：只在新鲜预检为 APPLIED 时跳过。
+SINGLE_APPLY = frozenset({
+    "club_welcome_note_20261022",
+    "20261023_wx_pay_order_intent",
+    "20261024_cash_withdraw_transfer_intent",
+    "20261026_official_broadcast_delivery",
+})
+
+
 def rerun_action(item, status):
-    """Only the reviewed single-apply migration may skip, after a fresh APPLIED readback."""
+    """Only reviewed single-apply migrations may skip, after a fresh APPLIED readback."""
     policy = item.get("rerunPolicy", "EXECUTE")
-    single_apply = item["migrationId"] == "club_welcome_note_20261022"
-    if single_apply:
+    if item["migrationId"] in SINGLE_APPLY:
         if policy != "PRECHECK_SKIP_APPLIED" or status != "APPLIED":
-            raise ValueError("welcome_note rerun refused: policy=%s, status=%s" % (policy, status))
+            raise ValueError("single-apply rerun refused: %s policy=%s, status=%s"
+                             % (item["migrationId"], policy, status))
         return "PRECHECK_SKIP_APPLIED"
     if policy != "EXECUTE":
         raise ValueError("unreviewed rerun policy: %s" % item["migrationId"])
@@ -383,12 +444,14 @@ def main():
     expected_after = {m["migrationId"]: set(m["expectedAfterApply"]) for m in pack["migrations"]}
     pack_by_id = {m["migrationId"]: m for m in pack["migrations"]}
     known_delta = {m["migrationId"]: m["rerunKnownDelta"] for m in pack["migrations"] if m.get("rerunKnownDelta")}
-    release_ids = [m["migrationId"] for m in computed]
+    rounds = execution_rounds(pack["migrations"])
+    release_ids = [i for name in EXECUTION_ROUNDS for i in rounds[name]]
 
     from scripts.e2e import build_schema as bs
     a.password = os.environ.get(PASSWORD_ENV, "")
     bs.validate_target(a)
-    report = {"base": diff["base"], "head": diff["head"], "releaseCount": len(computed), "steps": []}
+    report = {"base": diff["base"], "head": diff["head"], "releaseCount": len(computed),
+              "executionRounds": rounds, "steps": []}
 
     def fail(message, **extra):
         report["result"] = "FAIL"
@@ -463,7 +526,7 @@ def main():
                 delta = known_delta.get(migration_id) if rerun else None
                 before = schema_fingerprint(cur)
                 if rerun:
-                    status = run_precheck(cur).get(migration_id) if migration_id == "club_welcome_note_20261022" else None
+                    status = run_precheck(cur).get(migration_id) if migration_id in SINGLE_APPLY else None
                     try:
                         action = rerun_action(pack_by_id[migration_id], status)
                     except ValueError as error:
@@ -522,6 +585,13 @@ def main():
                            ["points.deduct.rate_yuan_per_point", "0.02"]]:
             return fail("积分配置种子回读不符合原迁移", observed=points_rows)
 
+        cur.execute("SELECT derivatives, gallery FROM mms_merchant WHERE id = 9801")
+        gallery_row = list(cur.fetchone())
+        report["steps"].append({"step": "brand-gallery-readback", "row": gallery_row})
+        if gallery_row[0] != "https://example.invalid/b1.jpg;https://example.invalid/b2.jpg" or \
+                json.loads(gallery_row[1]) != ["https://example.invalid/b1.jpg", "https://example.invalid/b2.jpg"]:
+            return fail("品牌形象图未按原顺序去重追加进相册，或 derivatives 被改动", observed=gallery_row)
+
         # Preserve the raw failure as an explicit negative control; never pretend this SQL is idempotent.
         before_probe = schema_fingerprint(cur)
         raw_problems = []
@@ -551,13 +621,13 @@ def main():
             cur.execute(mutation)
             status = run_precheck(cur).get(migration_id)
             control = {"migrationId": migration_id, "expected": expected, "status": status}
-            if migration_id == "club_welcome_note_20261022":
+            if migration_id in SINGLE_APPLY:
                 try:
                     rerun_action(pack_by_id[migration_id], status)
                 except ValueError:
                     control["rerunRefused"] = True
                 else:
-                    return fail("welcome_note 坏状态未拒绝重跑/跳过", negativeControl=control)
+                    return fail("单次执行迁移坏状态未拒绝重跑/跳过", negativeControl=control)
             controls.append(control)
             if status != expected:
                 return fail("负控未转红：%s 判为 %s" % (migration_id, status), negativeControls=controls)
