@@ -1,0 +1,33 @@
+{
+  "public_baseline": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+  "delta_parent": "051c1c108653eeb1cbc4f3b69f8ae25728c99e34",
+  "source_sha256": "88157a9294ba692a23328d4322364bbf12420a4dd66ae4daf7c5e803db5f0655",
+  "files": {
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/Wp04CoopSettlementEvidenceMySqlIT.java": "3e7698ca6e1ab42900b27c7a4ba8c3953debe0bbcf15fe2e1f351889149cbf63",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopSettlementClaimServiceImplTest.java": "7cc4aa7b76f5c0d763b6e8c21f0a2460d6fc3e03bf446dd5f4f153e36d7f5000",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopSettlementContractTest.java": "311fc0fb14dd6c801902b3399c5a403db304b08a213a1433a0aebde5c8dcda9b",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TandianriBatch0FundsMybatisIntegrationTest.java": "def5bd6000114b892be1f283e384269b3e15f62e035b7214c9f781a9f0ee9918",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSettlementEvidenceServiceTest.java": "f615154e36695026aa40a9cea45796f16c47daf594719fbcf778d3bfeba52cb3",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSettlementIdempotencyTest.java": "d4459543b56c1de9eedd8a88a15de91188e80bca6b112ef92a1c78b9a1d71831",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/Wp04CoopSettlementContractTest.java": "4d519c9ed7fca63026a422086b986892d74020067d7d6fc9ebe020fcd2a58974",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementGroupBasisTest.java": "23fadab5b3b03721f072e2f61f1b52c0917d158464d4c3d1cb68553196095002",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementPerMerchantTest.java": "8cd2e0ec65e5019e0167cfb4fa68c8b404298ea6923bff70363c688c491fff01",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementTest.java": "195ee91a9097043faed2e05d4ee3b3c5771f0ec0c14c157b4db19f696430c06c",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PreparedCoopPlanFixture.java": "2df2c025ea5a17cfe0ca28ee8f97cb26cf4432f201043e2e388756268dd7e2a3",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/Wp04TopicSettlementEntryGuardsTest.java": "6d1992ae53d1fd907eb4a7f07e57a6435a6b3dc270e46cf3956ea18a5a6b9e74",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/dto/CoopSettlementCandidate.java": "bb7f029ce24a5ae3bd75dd6665f89eacee9026fcd62ad3d64074013717d042ea",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/dto/CoopSettlementSnapshot.java": "964ffd1b3d8c7672fab97add3154bafde32349d9dca3df3ceeffaf1da9c86fe2",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CoopSettlementEvidenceMapper.java": "8d9b2d7d05d02e429aa69b35f9d2d6797ecef8c4a83b4cbaabfc523f9f49d3d9",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java": "558d55f2b4bac3ab8c7c1892aff9e883f38cf3179e79fd80d744c8b29260b352",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementClaimServiceImpl.java": "04211a4ed5274c4afb8b17ba310507c9e12f729c05ea5c95598ba984c3690658",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/FrozenCoopOrderSettlementSnapshotReader.java": "f09149912f8898e0d2d3cb4c942cd513c103f1e0f2a878698e7bfc5b3f6cfad4",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicSettlementEvidenceService.java": "c1fb393bf2cc6b277290aceef87cdd23755b964ba7d340aaae1bb23bc6e1fc7a",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UnavailableCoopOrderSettlementSnapshotReader.java": "e6bff8e217a1ec1cf087f19f8b0dc67f078b73d8478a8f61d0dff624ab4ef0d3",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/CoopSettlementContract.java": "18e851706129c9bbe528ac41bde1a7171c9d772cb0c7caeee7abae27044532a2",
+    "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementEvidenceMapper.xml": "bb4e481a04034ea633390eb17bd175d2c704adacf70643647bab09129ab57df1"
+  },
+  "b_method_sha256": "d05821905783aa40bc58ff45f52cfa5c123d299c5a709b697786b69ba7ec3a05",
+  "funds_code_changed": true,
+  "java_executed": false,
+  "mysql_executed": false
+}

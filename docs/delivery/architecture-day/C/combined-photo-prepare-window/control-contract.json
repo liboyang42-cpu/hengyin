@@ -1,0 +1,27 @@
+{
+  "parentSourceSha": "21cbd7772ba17640c3684766abc3fc3107081039",
+  "status": "SOURCE_ONLY_NOT_RUN",
+  "actualPriorFailurePredicate": "UNKNOWN",
+  "configurationClass": "com.chengyinhub.business.it.CombinedContextConfigurationTest",
+  "originalConfigurationMethodsPreserved": 7,
+  "resultingConfigurationMethods": 9,
+  "newConfigurationMethods": [
+    "photoNeverReadRetainsConnectionAcrossIndependentTransaction",
+    "photoPrepareFailureProjectionKeepsOnlyReviewedCodesAndCause"
+  ],
+  "originalBusinessMethods": 1,
+  "originalExpectedCoreHttpRequests": 240,
+  "compileSourcesUnchanged": true,
+  "minimumClassSetUnchanged": true,
+  "productionSourceModified": false,
+  "transactionSynchronizationStrategyModified": false,
+  "poolBudgetModified": false,
+  "providerConcurrencyModified": false,
+  "sharedReviewsNotApplied": [
+    "http-failure-projection.review.patch",
+    "photo-owned-read-short-transaction.review.patch"
+  ],
+  "productionReviewStatus": "NEEDS_ROOT_DECISION",
+  "proposedSharedControl": "FailureDiagnosticTest.test_photo_prepare_projection_is_fixed_source_bound_and_diagnostic_only",
+  "runtimeAcceptanceClaimed": false
+}

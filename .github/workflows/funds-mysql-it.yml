@@ -188,6 +188,8 @@ jobs:
           CHENGYIN_TEST_MYSQL_USER: root
           CHENGYIN_TEST_MYSQL_PASSWORD: ''
           CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX: _gh${{ github.run_id }}
+          B_PAYMENT_FACT_DDL_APPROVED: '1'
+          A_REGISTRATION_PAYMENT_FACT_DDL_APPROVED: '1'
       - name: Stop Oracle MySQL scratch
         if: always() && steps.mysql.outputs.container != ''
         env:

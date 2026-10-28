@@ -55,12 +55,12 @@ class ApiRegistrationCountByDateAccessTest {
                 return PRINCIPAL;
             }
         };
-        ReflectionTestUtils.setField(controller, "registrationService", registrationService);
-        ReflectionTestUtils.setField(controller, "registrationMerchantService", merchantRegistrationService);
-        ReflectionTestUtils.setField(controller, "topicService", topicService);
-        ReflectionTestUtils.setField(controller, "activityService", activityService);
-        ReflectionTestUtils.setField(controller, "clubMemberService", clubMemberService);
-        ReflectionTestUtils.setField(controller, "merchantAccessService", accessService);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "registrationService", registrationService);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "registrationMerchantService", merchantRegistrationService);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "topicService", topicService);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "activityService", activityService);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "clubMemberService", clubMemberService);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "merchantAccessService", accessService);
         when(registrationService.countByParticipateDate(any(), any()))
                 .thenReturn(Collections.emptyList());
     }
@@ -72,7 +72,7 @@ class ApiRegistrationCountByDateAccessTest {
         topic.setMemberId(PRINCIPAL);
         when(topicService.selectCmsTopicById(TOPIC)).thenReturn(topic);
 
-        AjaxResult result = controller.countByDate("1", String.valueOf(TOPIC));
+        AjaxResult result = RegistrationQueryTestFixtures.wire(controller).countByDate("1", String.valueOf(TOPIC));
 
         assertEquals(200, result.get(AjaxResult.CODE_TAG));
         verify(accessService, never()).require(any(), any());
@@ -90,7 +90,7 @@ class ApiRegistrationCountByDateAccessTest {
         when(merchantRegistrationService.selectCmsRegistrationMerchantList(any()))
                 .thenReturn(Collections.singletonList(new CmsRegistrationMerchant()));
 
-        AjaxResult result = controller.countByDate("1", String.valueOf(TOPIC));
+        AjaxResult result = RegistrationQueryTestFixtures.wire(controller).countByDate("1", String.valueOf(TOPIC));
 
         assertEquals(200, result.get(AjaxResult.CODE_TAG));
         ArgumentCaptor<CmsRegistrationMerchant> query =
@@ -111,7 +111,7 @@ class ApiRegistrationCountByDateAccessTest {
         when(accessService.require(PRINCIPAL, MerchantPermission.VERIFY_RECORD_READ))
                 .thenThrow(new ServiceException("商家身份无效或权限不足", 403));
 
-        AjaxResult result = controller.countByDate("1", String.valueOf(TOPIC));
+        AjaxResult result = RegistrationQueryTestFixtures.wire(controller).countByDate("1", String.valueOf(TOPIC));
 
         assertEquals(403, result.get(AjaxResult.CODE_TAG));
         verify(registrationService, never()).countByParticipateDate(any(), any());
@@ -127,7 +127,7 @@ class ApiRegistrationCountByDateAccessTest {
                 .thenReturn(new MerchantAccessContext(
                         PRINCIPAL, 11L, OWNER, MerchantRoleCode.MERCHANT_CHECKIN));
 
-        AjaxResult result = controller.countByDate("2", "401");
+        AjaxResult result = RegistrationQueryTestFixtures.wire(controller).countByDate("2", "401");
 
         assertEquals(403, result.get(AjaxResult.CODE_TAG));
         verify(registrationService, never()).countByParticipateDate(any(), any());

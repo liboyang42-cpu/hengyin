@@ -121,6 +121,16 @@ class PlayerNodeArrivalSharingH2Test {
 
         ShopDayProofServiceImpl target = new ShopDayProofServiceImpl();
         ReflectionTestUtils.setField(target, "playerNodeProgressMapper", progressMapper);
+        com.chengyinhub.business.service.impl.PlayerNodeProgressServiceImpl owner =
+                new com.chengyinhub.business.service.impl.PlayerNodeProgressServiceImpl();
+        ReflectionTestUtils.setField(owner, "playerNodeProgressMapper", progressMapper);
+        com.chengyinhub.business.mapper.TopicRouteSessionMapper noRoute =
+                org.mockito.Mockito.mock(com.chengyinhub.business.mapper.TopicRouteSessionMapper.class);
+        // 原H2 fixture明确无route session、使用default；真实owner执行实例解析。
+        org.mockito.Mockito.when(noRoute.selectCurrentByOwner(org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any())).thenReturn(null);
+        ReflectionTestUtils.setField(owner, "routeSessions", noRoute);
+        ReflectionTestUtils.setField(target, "playerNodeProgressService", owner);
         ReflectionTestUtils.setField(target, "cmsTopicNodeMapper", nodeMapper);
         service = target;
 

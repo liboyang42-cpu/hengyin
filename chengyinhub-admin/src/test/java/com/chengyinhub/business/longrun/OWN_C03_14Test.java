@@ -51,6 +51,7 @@ class OWN_C03_14Test {
                 if (field.getType().getPackage().getName().endsWith(".mapper")) mapperMocks.add(dependency);
             }
         }
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.wireRelocatedCollaborators(service, publicationField -> org.mockito.Mockito.mock(publicationField.getType()));
         topics = (CmsTopicMapper) ReflectionTestUtils.getField(service, "cmsTopicMapper");
         collaborators = (CmsCollaboratorsMapper) ReflectionTestUtils.getField(service, "cmsCollaboratorsMapper");
         chapters = (CmsTopicChapterMapper) ReflectionTestUtils.getField(service, "cmsTopicChapterMapper");
@@ -90,12 +91,12 @@ class OWN_C03_14Test {
     }
 
     private Long create(TopicCreateDTO dto, boolean v2) {
-        return v2 ? service.createTopicV2(dto, 42L, "creator") : service.createTopic(dto, 42L, "creator");
+        return v2 ? com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).createTopicV2(dto, 42L, "creator") : com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).createTopic(dto, 42L, "creator");
     }
 
     private Long update(TopicUpdateDTO dto, boolean v2) {
-        return v2 ? service.updateTopicByOwnerV2(dto, 42L, "creator")
-                : service.updateTopicByOwner(dto, 42L, "creator");
+        return v2 ? com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwnerV2(dto, 42L, "creator")
+                : com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwner(dto, 42L, "creator");
     }
 
     private void noMapperWrites() {
@@ -190,7 +191,7 @@ class OWN_C03_14Test {
 
     @Test void ownerGateStillPrecedesCollaboratorValidation() {
         RuntimeException error = assertThrows(RuntimeException.class,
-                () -> service.updateTopicByOwner(payload(Collections.singletonList(null)), 77L, "other"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwner(payload(Collections.singletonList(null)), 77L, "other"));
         assertEquals("无权编辑该主题", error.getMessage());
         noMapperWrites();
         verifyNoInteractions(collaborators);

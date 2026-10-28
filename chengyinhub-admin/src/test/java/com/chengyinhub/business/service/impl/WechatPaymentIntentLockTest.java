@@ -13,7 +13,7 @@ class WechatPaymentIntentLockTest {
     @Test
     void allFourBusinessesFreezeTheFirstChannelAndUnknownRetryCannotChangeIt() {
         for (String no : new String[]{"CLM1", "TPLTM_1", "DEP1", "REG1"}) {
-            WechatPayServiceImpl service = new WechatPayServiceImpl();
+            WechatPayServiceImpl service = WechatVerifiedFactTestSupport.gateway();
             var db = WechatPaymentIntentTestSupport.install(service, Map.of(no, BigDecimal.TEN));
             freeze(service, no, "wx-mini", "JSAPI", "openid", "description");
             assertEquals(1, db.intents.size());
@@ -31,7 +31,7 @@ class WechatPaymentIntentLockTest {
 
     @Test
     void unknownOriginalBlocksASecondNumberForTheSameBusiness() {
-        WechatPayServiceImpl service = new WechatPayServiceImpl();
+        WechatPayServiceImpl service = WechatVerifiedFactTestSupport.gateway();
         var db = WechatPaymentIntentTestSupport.install(service, Map.of("REG1", BigDecimal.TEN, "REG2", BigDecimal.TEN));
         freeze(service, "REG1", "wx-mini", "JSAPI", "openid", "description");
         assertThrows(PaymentPreorderException.class,
@@ -42,7 +42,7 @@ class WechatPaymentIntentLockTest {
 
     @Test
     void closedProofPermitsFreshNumberButNeverOverwritesOrReusesOriginal() {
-        WechatPayServiceImpl service = new WechatPayServiceImpl();
+        WechatPayServiceImpl service = WechatVerifiedFactTestSupport.gateway();
         var db = WechatPaymentIntentTestSupport.install(service, Map.of("REG1", BigDecimal.TEN, "REG2", BigDecimal.TEN));
         freeze(service, "REG1", "wx-mini", "JSAPI", "openid", "description");
         db.intents.get("merchant:REG1").put("closed_confirmed_at", new java.sql.Timestamp(1));
@@ -57,7 +57,7 @@ class WechatPaymentIntentLockTest {
 
     @Test
     void changedOriginalParametersOrUncommittedBusinessCannotSubmit() {
-        WechatPayServiceImpl service = new WechatPayServiceImpl();
+        WechatPayServiceImpl service = WechatVerifiedFactTestSupport.gateway();
         var db = WechatPaymentIntentTestSupport.install(service, Map.of("REG1", BigDecimal.TEN));
         freeze(service, "REG1", "wx-mini", "JSAPI", "openid", "description");
         assertThrows(PaymentPreorderException.class,
@@ -76,10 +76,10 @@ class WechatPaymentIntentLockTest {
 
     @Test
     void sdkTimeoutHappensAfterIntentCommitAndChangingAppidCannotCallSdkAgain() {
-        WechatPayServiceImpl service = new WechatPayServiceImpl();
+        WechatPayServiceImpl service = WechatVerifiedFactTestSupport.gateway();
         var db = WechatPaymentIntentTestSupport.install(service, Map.of("DEP1", BigDecimal.TEN));
         var sdk = org.mockito.Mockito.mock(com.wechat.pay.java.service.payments.app.AppServiceExtension.class);
-        org.springframework.test.util.ReflectionTestUtils.setField(service, "appServiceExtension", sdk);
+        WechatVerifiedFactTestSupport.setField(service, "appServiceExtension", sdk);
         org.mockito.Mockito.when(sdk.prepayWithRequestPayment(org.mockito.ArgumentMatchers.any())).thenAnswer(call -> {
             assertEquals(1, db.commits);
             assertFalse(TransactionSynchronizationManager.isActualTransactionActive());
@@ -96,23 +96,23 @@ class WechatPaymentIntentLockTest {
         amount.setCurrency("CNY");
         request.setAmount(amount);
         assertThrows(PaymentPreorderException.class,
-                () -> org.springframework.test.util.ReflectionTestUtils.invokeMethod(service, "prepayApp", request));
+                () -> WechatVerifiedFactTestSupport.invokeMethod(service, "prepayApp", request));
         request.setAppid("OTHER");
         assertThrows(PaymentPreorderException.class,
-                () -> org.springframework.test.util.ReflectionTestUtils.invokeMethod(service, "prepayApp", request));
+                () -> WechatVerifiedFactTestSupport.invokeMethod(service, "prepayApp", request));
         org.mockito.Mockito.verify(sdk, org.mockito.Mockito.times(1)).prepayWithRequestPayment(org.mockito.ArgumentMatchers.any());
         assertEquals("wx-app", db.intents.get("merchant:DEP1").get("appid"));
     }
 
     @Test
     void historicalUnfrozenProviderOrderCannotBeOverwrittenByCurrentChannel() {
-        WechatPayServiceImpl service = new WechatPayServiceImpl();
+        WechatPayServiceImpl service = WechatVerifiedFactTestSupport.gateway();
         var db = WechatPaymentIntentTestSupport.install(service, Map.of("REG1", BigDecimal.TEN));
         var sdk = org.mockito.Mockito.mock(com.wechat.pay.java.service.payments.jsapi.JsapiService.class);
         var historical = new com.wechat.pay.java.service.payments.model.Transaction();
         historical.setAppid("original-mini");
         org.mockito.Mockito.when(sdk.queryOrderByOutTradeNo(org.mockito.ArgumentMatchers.any())).thenReturn(historical);
-        org.springframework.test.util.ReflectionTestUtils.setField(service, "jsapiService", sdk);
+        WechatVerifiedFactTestSupport.setField(service, "jsapiService", sdk);
         assertTrue(assertThrows(PaymentPreorderException.class,
                 () -> freeze(service, "REG1", "new-app", "APP", "", "description")).isResultUncertain());
         assertTrue(db.intents.isEmpty());

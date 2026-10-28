@@ -215,8 +215,23 @@ class ActivityPublishRoleGateTest
     {
         when(roleService.resolveRole(member)).thenReturn(IRoleService.ROLE_CLUB);
         ITeamGroupService refundCore = mock(ITeamGroupService.class);
-        when(refundCore.cancelActivityByOwner(9L, MEMBER_ID, "天气原因"))
-                .thenReturn(new ActivityCancelResult(1, 0, 0));
+        CmsActivity original = new CmsActivity();
+        original.setId(9L);
+        original.setMemberId(MEMBER_ID);
+        original.setDelFlag(0);
+        original.setPublishStatus(1L);
+        var activities = mock(com.chengyinhub.business.mapper.CmsActivityMapper.class);
+        when(activities.selectCmsActivityById(9L)).thenReturn(original);
+        when(activities.selectCmsActivityByIdForUpdate(9L)).thenReturn(original);
+        var payments = com.chengyinhub.business.service.CancellationPhaseTestSupport.stubEmptyObservation(
+                refundCore, new com.chengyinhub.business.domain.dto.RegistrationCancellationPayments.Scope(
+                        2L, 9L, null, MEMBER_ID, null, Collections.emptyList()));
+        when(refundCore.cancelActivityWithObservedPayments(9L, MEMBER_ID, MEMBER_ID,
+                "天气原因", false, payments)).thenAnswer(call -> {
+            org.junit.jupiter.api.Assertions.assertTrue(
+                    org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive());
+            return new ActivityCancelResult(1, 0, 0);
+        });
         com.chengyinhub.business.service.impl.ClubEventOpsServiceImpl realWrapUp =
                 new com.chengyinhub.business.service.impl.ClubEventOpsServiceImpl(
                         mock(com.chengyinhub.business.access.club.IClubAccessService.class),
@@ -227,13 +242,26 @@ class ActivityPublishRoleGateTest
                         mock(com.chengyinhub.business.mapper.ClubLeadMapper.class),
                         mock(com.chengyinhub.business.service.IClubRoleAssignmentService.class),
                         refundCore);
+        com.chengyinhub.business.service.CancellationPhaseTestSupport.wireTransactions(realWrapUp,
+                com.chengyinhub.business.service.CancellationPhaseTestSupport.memoryTransactions());
+        ReflectionTestUtils.setField(realWrapUp, "cancellationActivityMapper", activities);
+        ReflectionTestUtils.setField(realWrapUp, "cancellationTopicMapper",
+                mock(com.chengyinhub.business.mapper.CmsTopicMapper.class));
         ReflectionTestUtils.setField(controller, "clubEventOpsService", realWrapUp);
 
         AjaxResult result = controller.activityCancel("9", "天气原因", null);
 
         assertEquals(200, result.get(AjaxResult.CODE_TAG));
-        verify(refundCore).cancelActivityByOwner(9L, MEMBER_ID, "天气原因");
-        verify(refundCore, never()).cancelActivityByOwner(MEMBER_ID, 9L, "天气原因");
+        verify(refundCore).cancelActivityWithObservedPayments(
+                9L, MEMBER_ID, MEMBER_ID, "天气原因", false, payments);
+        verify(refundCore, never()).cancelActivityWithObservedPayments(
+                MEMBER_ID, 9L, MEMBER_ID, "天气原因", false, payments);
+        org.mockito.InOrder phases = org.mockito.Mockito.inOrder(refundCore);
+        phases.verify(refundCore).captureCancellationPayments(2L, 9L);
+        phases.verify(refundCore).observeCancellationPayments(payments);
+        phases.verify(refundCore).cancelActivityWithObservedPayments(
+                9L, MEMBER_ID, MEMBER_ID, "天气原因", false, payments);
+        verify(refundCore, never()).cancelActivityByOwner(anyLong(), anyLong(), anyString());
     }
 
     /** [C8-05] 商家主办:按商家权限解析店主,退款核心收到 (活动, 店主, 实际操作员工)。不看俱乐部角色。 */

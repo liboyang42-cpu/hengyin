@@ -54,7 +54,10 @@ function loadPage(options = {}) {
     createInnerAudioContext: () => audio,
     getSystemInfoSync: () => ({}),
   }
+  require('../helpers/voice-enrollment-environment.cjs').install(app, wx);
   const localRequire = (id) => {
+    if (id.endsWith('voice-enrollment-journal.js')) return require('../../utils/voice-enrollment-journal.js');
+    if (id.endsWith('modal.js')) return { show() {} };
     if (id.endsWith('toast.js')) return function () {}
     if (id.endsWith('modal.js')) return { show() {} }
     if (id.endsWith('merchant-theme.js')) return { merchantPageShow() {}, merchantPageRestore() {} }
@@ -79,7 +82,8 @@ function loadPage(options = {}) {
   }
   page._request = (url, payload) => {
     state.requests.push({ url, payload })
-    return Promise.resolve({ data: { voiceStatus: 2 } })
+    return Promise.resolve({ data: { voiceStatus: 2, voiceSample: 'media-asset:73',
+      voiceRequestId: payload && payload.voiceRequestId, voiceIntentId: 17, voiceIntentState: 'READY', voiceSelected: true } })
   }
   state.page = page
   return state
@@ -184,7 +188,7 @@ test('录音不足 10 秒时明确拒绝', async () => {
 
 test('合法录音上传一次并携带声音授权发起复刻', async () => {
   const h = loadPage({
-    onWxUpload(opts) { opts.success({ data: JSON.stringify({ code: 200, url: 'https://cdn/voice.mp3' }) }) },
+    onWxUpload(opts) { opts.success({ data: JSON.stringify({ code: 200, assetId: 73, url: 'https://cdn/voice.mp3' }) }) },
   })
   h.page.onVoiceConsentChange({ detail: { checked: true } })
   h.page.onVoiceHoldStart()
@@ -198,7 +202,7 @@ test('合法录音上传一次并携带声音授权发起复刻', async () => {
 
   assert.equal(h.wxUploads, 1)
   assert.equal(h.requests[0].url, '/api/merchant/npc/voice/enroll')
-  assert.equal(h.requests[0].payload.voiceSample, 'https://cdn/voice.mp3')
+  assert.equal(h.requests[0].payload.voiceSample, 'media-asset:73')
   assert.equal(h.requests[0].payload.voiceConsent, true)
 })
 

@@ -1,0 +1,68 @@
+{
+  "state": "ALL_NECESSARY_REPAIR_SOURCE_ASSEMBLED_NOT_EXECUTION_ACCEPTANCE",
+  "parent_source": "347bcd0226c3bed71616e38ea7c1391fc76efe5c",
+  "new_candidate_identity": "Externally bound to the public commit/tree containing this source manifest; not self-referential",
+  "complete_scope": "WP00-WP17/Q1-Q10/A01-A15/T01-T22/G0-G5; all_complete=false",
+  "donor_sources": {
+    "A_funds": "85b80b0299e7ab5c1f4122d0b8404f2d14dfb681",
+    "A_publication": "4309f2119d73a4f706cc166968df0d03eb7bbb80",
+    "B_host_patch_sha256": "643a71fb35fe795f65a320d978776f719473c7b29e7b86457ac054a5cdc86bc7",
+    "B_canary_patch_sha256": "f71c1a4a2cdf0454819e9150801528e0224eb2831f99a84add85d5fcf2e4b66f",
+    "C_failed_lifecycle": "62ca0e7d26a827d0cf78c5aeb3c0eabf5c29c625",
+    "C_isolation": "6c39192df6d3ede992c4dd9109f629cf9f57c0e0",
+    "D_publication": "a119071a7d1dbe68d4db55876653db0a57eb2782",
+    "E_nullable_guards": "a3ae2ac1d331d386963eef896b6175b76c374fd1",
+    "E_publication": "936f360beea3f0c66caa0444946ca33f7826f185",
+    "F_interpreter_cleanup": "5f1ea6613071954cc41761579567d7b46f8eb493",
+    "G_settlement": "c9a16be03cdedff2d636ad6ab51d3eff1d80626e",
+    "H_game": "9dc5f7cdf49eb955b1cf272179c2d2dbc73ee494",
+    "H_shell": "81391e906cfbda3152821d0d031baf0cbf2b9a80"
+  },
+  "root_production_changes": [
+    "CmsTopicServiceImpl: reject first unpaid continuation after original-attempt late SUCCESS before setoff; explicit replay consumes original verified fact",
+    "CoopInviteServiceImpl and ApiCoopController: preserve Boolean nullable classification without auto-unboxing"
+  ],
+  "source_checks": {
+    "storage_classes": 76,
+    "storage_declared_tests": 920,
+    "source_precheck_problems": 0,
+    "changed_python_syntax_files": 11,
+    "changed_java_test_files": 46,
+    "original_test_method_declarations": 721,
+    "current_test_method_declarations": 728,
+    "lost_original_test_methods": 0,
+    "parameterized_case_count": "Not derived from method count; original values retained and future XML must bind exact expansions"
+  },
+  "unchanged": [
+    "client and action ledger",
+    "canonical old SQL and station migration",
+    "POM and dependency pins",
+    "auth/RBAC/JWT/provider/UNKNOWN policy"
+  ],
+  "prior_execution_evidence_only": {
+    "source": "347bcd0226c3bed71616e38ea7c1391fc76efe5c",
+    "http_run": 40220849379,
+    "http_actual_cases_pass": 36,
+    "storage_full_class_passes": 64,
+    "storage_actual_cases_pass": 708,
+    "storage_failed_classes": 12,
+    "backend_run": 40220558637,
+    "admin_tests": 15386,
+    "admin_failures": 58,
+    "admin_errors": 121,
+    "admin_optional_or_default_skips": 647,
+    "not_179_independent_bugs": true,
+    "raw_HTTP_original_XML": "Runner hash only, not independently downloaded",
+    "whole_business_accepted": false
+  },
+  "source_not_run": [
+    "Java compilation",
+    "JUnit",
+    "MySQL/Redis/fault/restore",
+    "HTTP",
+    "CI"
+  ],
+  "remaining_unknown": "Actual source-create Docker rejection requires fixed diagnostic canary. First failure, original seven-cohort acceptance, exact cleanup and no provider release remain strict.",
+  "production_merge_deploy_WeChat_paid_calls": "NOT_AUTHORIZED_NOT_EXECUTED",
+  "all_complete": false
+}

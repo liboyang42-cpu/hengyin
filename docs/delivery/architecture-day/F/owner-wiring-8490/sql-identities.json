@@ -1,0 +1,334 @@
+{
+  "comparison_source": "8490765f0572dae8ec3468f4e75d0ff6f4760b12",
+  "purpose": "Targeted public SQL identity handoff only, not exemptions/baseline/source-gate verdict. Original writer, scope/cache and unknown rules remain active.",
+  "statements": [
+    {
+      "source_sha": "54c524ca99204804b6b84af517359eabc8c6ee8d",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementManualCaseMapper.xml#insertIgnore",
+      "namespace": "com.chengyinhub.business.mapper.CoopSettlementManualCaseMapper",
+      "operation": "insert",
+      "file_git_blob": "39fd36c6bc9ccf08494ad586bf9851c0a9231dbd",
+      "file_sha256": "12d5e27c243a2ec39ba09e66b4d862ba1c408c0939aee011422c4587365d08be",
+      "statement_sha256": "bde8d80a0fd590dcb90b29a2498aad78ae9b406c960944196043e45b4d8cfe31",
+      "table_hints": [],
+      "analysis": "UNKNOWN"
+    },
+    {
+      "source_sha": "54c524ca99204804b6b84af517359eabc8c6ee8d",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementManualCaseMapper.xml#selectByKeyForUpdate",
+      "namespace": "com.chengyinhub.business.mapper.CoopSettlementManualCaseMapper",
+      "operation": "select",
+      "file_git_blob": "39fd36c6bc9ccf08494ad586bf9851c0a9231dbd",
+      "file_sha256": "12d5e27c243a2ec39ba09e66b4d862ba1c408c0939aee011422c4587365d08be",
+      "statement_sha256": "81f609d3519195c86627e2a72e764b8758a138c58b0827c57e768720b551421f",
+      "table_hints": [],
+      "analysis": "UNKNOWN"
+    },
+    {
+      "source_sha": "54c524ca99204804b6b84af517359eabc8c6ee8d",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementManualCaseMapper.xml#selectOpenTopicForUpdate",
+      "namespace": "com.chengyinhub.business.mapper.CoopSettlementManualCaseMapper",
+      "operation": "select",
+      "file_git_blob": "39fd36c6bc9ccf08494ad586bf9851c0a9231dbd",
+      "file_sha256": "12d5e27c243a2ec39ba09e66b4d862ba1c408c0939aee011422c4587365d08be",
+      "statement_sha256": "94918dfa1ce243084091feeed47fbebf37628966f9b9c813c427f3ea93ed68f2",
+      "table_hints": [],
+      "analysis": "UNKNOWN"
+    },
+    {
+      "source_sha": "54c524ca99204804b6b84af517359eabc8c6ee8d",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementOriginalMapper.xml#selectOriginalRegistrationsForUpdate",
+      "namespace": "com.chengyinhub.business.mapper.CoopSettlementOriginalMapper",
+      "operation": "select",
+      "file_git_blob": "db31cfef8995115eebbad142abf6d674bb886220",
+      "file_sha256": "be1deb5594c9ef205629224211883f486a020ea306a1f0b9750492478b7114bf",
+      "statement_sha256": "232ba56d9899c974e9f885a600103944bef611a3df736c76098f772dd09f8836",
+      "table_hints": [],
+      "analysis": "UNKNOWN"
+    },
+    {
+      "source_sha": "54c524ca99204804b6b84af517359eabc8c6ee8d",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementOriginalMapper.xml#selectPaymentVerifiedReferenceForUpdate",
+      "namespace": "com.chengyinhub.business.mapper.CoopSettlementOriginalMapper",
+      "operation": "select",
+      "file_git_blob": "db31cfef8995115eebbad142abf6d674bb886220",
+      "file_sha256": "be1deb5594c9ef205629224211883f486a020ea306a1f0b9750492478b7114bf",
+      "statement_sha256": "0ce2ef0646e4610b548e9519d08980d526e0f952180eeb20097d8ed97656fe8c",
+      "table_hints": [],
+      "analysis": "UNKNOWN"
+    },
+    {
+      "source_sha": "54c524ca99204804b6b84af517359eabc8c6ee8d",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementOriginalMapper.xml#selectOriginalDetailsForHeadForUpdate",
+      "namespace": "com.chengyinhub.business.mapper.CoopSettlementOriginalMapper",
+      "operation": "select",
+      "file_git_blob": "db31cfef8995115eebbad142abf6d674bb886220",
+      "file_sha256": "be1deb5594c9ef205629224211883f486a020ea306a1f0b9750492478b7114bf",
+      "statement_sha256": "ec10a247c2c9c81f1b162954d3fc7309f0e6292f1ca54207c03e2cb0f271eb16",
+      "table_hints": [],
+      "analysis": "UNKNOWN"
+    },
+    {
+      "source_sha": "54c524ca99204804b6b84af517359eabc8c6ee8d",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementOriginalMapper.xml#selectTopicHeadsForUpdate",
+      "namespace": "com.chengyinhub.business.mapper.CoopSettlementOriginalMapper",
+      "operation": "select",
+      "file_git_blob": "db31cfef8995115eebbad142abf6d674bb886220",
+      "file_sha256": "be1deb5594c9ef205629224211883f486a020ea306a1f0b9750492478b7114bf",
+      "statement_sha256": "710e542c11d3ee120977ad77d4e905d71a43ecdcf4af533f2b7382e8d55e50ce",
+      "table_hints": [],
+      "analysis": "UNKNOWN"
+    },
+    {
+      "source_sha": "379d5615608663c47302598ba238447b264c2bba",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/AiQuotaReservationMapper.xml#selectByReceiptForUpdate",
+      "namespace": "com.chengyinhub.business.mapper.AiQuotaReservationMapper",
+      "operation": "select",
+      "file_git_blob": "7c96378afcf3a6f1b782528dc52ada585b7778f3",
+      "file_sha256": "d95e94a074f85e4556f205d3f84fbb745df76ff82a90012921a9f97632784f8c",
+      "statement_sha256": "190fd42e37dfda5e0542e73f86114e49f9d86b67890a64a139a6fe3545755003",
+      "table_hints": [],
+      "analysis": "UNKNOWN"
+    },
+    {
+      "source_sha": "379d5615608663c47302598ba238447b264c2bba",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/AiQuotaReservationMapper.xml#requestAsrNotSentRefund",
+      "namespace": "com.chengyinhub.business.mapper.AiQuotaReservationMapper",
+      "operation": "update",
+      "file_git_blob": "7c96378afcf3a6f1b782528dc52ada585b7778f3",
+      "file_sha256": "d95e94a074f85e4556f205d3f84fbb745df76ff82a90012921a9f97632784f8c",
+      "statement_sha256": "a9ca963fe0771b28bc4526ccec1aef9ba9a952cf71acbe21bceada06025fcd68",
+      "table_hints": [
+        "ai_quota_reservation"
+      ],
+      "analysis": "LITERAL_SHAPE_ONLY"
+    },
+    {
+      "source_sha": "379d5615608663c47302598ba238447b264c2bba",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/AiQuotaReservationMapper.xml#advanceStage",
+      "namespace": "com.chengyinhub.business.mapper.AiQuotaReservationMapper",
+      "operation": "update",
+      "file_git_blob": "7c96378afcf3a6f1b782528dc52ada585b7778f3",
+      "file_sha256": "d95e94a074f85e4556f205d3f84fbb745df76ff82a90012921a9f97632784f8c",
+      "statement_sha256": "9865705c6fce8d2335b6ac66a7b215bd062ca291de9693704a4bf5a7fc64d0c5",
+      "table_hints": [
+        "ai_quota_reservation"
+      ],
+      "analysis": "LITERAL_SHAPE_ONLY"
+    },
+    {
+      "source_sha": "379d5615608663c47302598ba238447b264c2bba",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/AiQuotaReservationMapper.xml#recordOutcome",
+      "namespace": "com.chengyinhub.business.mapper.AiQuotaReservationMapper",
+      "operation": "update",
+      "file_git_blob": "7c96378afcf3a6f1b782528dc52ada585b7778f3",
+      "file_sha256": "d95e94a074f85e4556f205d3f84fbb745df76ff82a90012921a9f97632784f8c",
+      "statement_sha256": "94b8811383c4f441d55c47d9f08e664d0e9ae2eb730ac86b986227cf77a81af5",
+      "table_hints": [
+        "ai_quota_reservation"
+      ],
+      "analysis": "LITERAL_SHAPE_ONLY"
+    },
+    {
+      "source_sha": "379d5615608663c47302598ba238447b264c2bba",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/NpcAsrIntentMapper.xml#selectForUpdate",
+      "namespace": "com.chengyinhub.business.mapper.NpcAsrIntentMapper",
+      "operation": "select",
+      "file_git_blob": "c5348180552646fd21abadfb77fb082e4505853f",
+      "file_sha256": "c0e2d0806bfaa8d794810698855c3b473b3d9bbd9eef0d95fa8eb8f87c61d4df",
+      "statement_sha256": "00266cc1276f89f8d90d30abefa627e098ba12c549630d88b970cbb5b3d503f3",
+      "table_hints": [],
+      "analysis": "UNKNOWN"
+    },
+    {
+      "source_sha": "379d5615608663c47302598ba238447b264c2bba",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/NpcAsrIntentMapper.xml#insert",
+      "namespace": "com.chengyinhub.business.mapper.NpcAsrIntentMapper",
+      "operation": "insert",
+      "file_git_blob": "c5348180552646fd21abadfb77fb082e4505853f",
+      "file_sha256": "c0e2d0806bfaa8d794810698855c3b473b3d9bbd9eef0d95fa8eb8f87c61d4df",
+      "statement_sha256": "70a49dd30cfd17134d0be9f179cd60b7872ea2177bdcdf801347e13cbc5dfe4f",
+      "table_hints": [
+        "npc_asr_intent"
+      ],
+      "analysis": "LITERAL_SHAPE_ONLY"
+    },
+    {
+      "source_sha": "379d5615608663c47302598ba238447b264c2bba",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/NpcAsrIntentMapper.xml#finishNotSent",
+      "namespace": "com.chengyinhub.business.mapper.NpcAsrIntentMapper",
+      "operation": "update",
+      "file_git_blob": "c5348180552646fd21abadfb77fb082e4505853f",
+      "file_sha256": "c0e2d0806bfaa8d794810698855c3b473b3d9bbd9eef0d95fa8eb8f87c61d4df",
+      "statement_sha256": "f15d9781a79b1d6d6643da9d640cce9deb2c6fb6c83b62cd5d2361e3196da39d",
+      "table_hints": [
+        "npc_asr_intent"
+      ],
+      "analysis": "LITERAL_SHAPE_ONLY"
+    },
+    {
+      "source_sha": "379d5615608663c47302598ba238447b264c2bba",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/NpcAsrIntentMapper.xml#selectQuotaRefundPending",
+      "namespace": "com.chengyinhub.business.mapper.NpcAsrIntentMapper",
+      "operation": "select",
+      "file_git_blob": "c5348180552646fd21abadfb77fb082e4505853f",
+      "file_sha256": "c0e2d0806bfaa8d794810698855c3b473b3d9bbd9eef0d95fa8eb8f87c61d4df",
+      "statement_sha256": "e0f6d1a6f5490c1ceb752e1c05a84e55a46cbd2c4fdc8d960e76beb975931dc7",
+      "table_hints": [],
+      "analysis": "UNKNOWN"
+    },
+    {
+      "source_sha": "379d5615608663c47302598ba238447b264c2bba",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/NpcAsrIntentMapper.xml#selectQuotaRefundProof",
+      "namespace": "com.chengyinhub.business.mapper.NpcAsrIntentMapper",
+      "operation": "select",
+      "file_git_blob": "c5348180552646fd21abadfb77fb082e4505853f",
+      "file_sha256": "c0e2d0806bfaa8d794810698855c3b473b3d9bbd9eef0d95fa8eb8f87c61d4df",
+      "statement_sha256": "350ba7ab551c0794e0f2ce8ad74dd2350b37502ac2d8069663bdc555ffd2bb99",
+      "table_hints": [],
+      "analysis": "UNKNOWN"
+    },
+    {
+      "source_sha": "379d5615608663c47302598ba238447b264c2bba",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/NpcAsrIntentMapper.xml#completeQuotaRefund",
+      "namespace": "com.chengyinhub.business.mapper.NpcAsrIntentMapper",
+      "operation": "update",
+      "file_git_blob": "c5348180552646fd21abadfb77fb082e4505853f",
+      "file_sha256": "c0e2d0806bfaa8d794810698855c3b473b3d9bbd9eef0d95fa8eb8f87c61d4df",
+      "statement_sha256": "ea1cd312ee5444dccae633eae600d78927b4e9d87af179c876f7d6d6d491195f",
+      "table_hints": [
+        "npc_asr_intent"
+      ],
+      "analysis": "LITERAL_SHAPE_ONLY"
+    },
+    {
+      "source_sha": "379d5615608663c47302598ba238447b264c2bba",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/NpcAsrIntentMapper.xml#beginHandoff",
+      "namespace": "com.chengyinhub.business.mapper.NpcAsrIntentMapper",
+      "operation": "update",
+      "file_git_blob": "c5348180552646fd21abadfb77fb082e4505853f",
+      "file_sha256": "c0e2d0806bfaa8d794810698855c3b473b3d9bbd9eef0d95fa8eb8f87c61d4df",
+      "statement_sha256": "00387e110b2ff6539a06cab72c067646ad2ce078c0d5612e2c42c606f285dce5",
+      "table_hints": [
+        "npc_asr_intent"
+      ],
+      "analysis": "LITERAL_SHAPE_ONLY"
+    },
+    {
+      "source_sha": "379d5615608663c47302598ba238447b264c2bba",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/NpcAsrIntentMapper.xml#claimTextAdmission",
+      "namespace": "com.chengyinhub.business.mapper.NpcAsrIntentMapper",
+      "operation": "update",
+      "file_git_blob": "c5348180552646fd21abadfb77fb082e4505853f",
+      "file_sha256": "c0e2d0806bfaa8d794810698855c3b473b3d9bbd9eef0d95fa8eb8f87c61d4df",
+      "statement_sha256": "d3663f3e8fce5b06ab3e70977fce16ab89168efb4a6cc0340e571424ea441e1d",
+      "table_hints": [
+        "npc_asr_intent"
+      ],
+      "analysis": "LITERAL_SHAPE_ONLY"
+    },
+    {
+      "source_sha": "f61b8ea8c829d0b4e050a8b61ac592ae819a8a09",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/NpcVoiceEnrollmentMapper.xml#find",
+      "namespace": "com.chengyinhub.business.mapper.NpcVoiceEnrollmentMapper",
+      "operation": "select",
+      "file_git_blob": "6f6a73ed695aa2ba14356319bc8b70dc760ea149",
+      "file_sha256": "28697392443caa067d5aead57d9e07683ae4c0c491a2e1c471a848257d6e7acb",
+      "statement_sha256": "a5413df91fba291d5543718bf6108a1eee552b525bd33720015871c5fb817861",
+      "table_hints": [],
+      "analysis": "UNKNOWN"
+    },
+    {
+      "source_sha": "f61b8ea8c829d0b4e050a8b61ac592ae819a8a09",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/NpcVoiceEnrollmentMapper.xml#findRequest",
+      "namespace": "com.chengyinhub.business.mapper.NpcVoiceEnrollmentMapper",
+      "operation": "select",
+      "file_git_blob": "6f6a73ed695aa2ba14356319bc8b70dc760ea149",
+      "file_sha256": "28697392443caa067d5aead57d9e07683ae4c0c491a2e1c471a848257d6e7acb",
+      "statement_sha256": "e9fb8564dd32fd505316aae7b7ff5939faf98104f7bd82e7e049846023b896db",
+      "table_hints": [],
+      "analysis": "UNKNOWN"
+    },
+    {
+      "source_sha": "f61b8ea8c829d0b4e050a8b61ac592ae819a8a09",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/NpcVoiceEnrollmentMapper.xml#findById",
+      "namespace": "com.chengyinhub.business.mapper.NpcVoiceEnrollmentMapper",
+      "operation": "select",
+      "file_git_blob": "6f6a73ed695aa2ba14356319bc8b70dc760ea149",
+      "file_sha256": "28697392443caa067d5aead57d9e07683ae4c0c491a2e1c471a848257d6e7acb",
+      "statement_sha256": "bf9a45a1ea723268aaa263dbc27f51f3bb0ea14a07dc033cc73b861bd8ba293a",
+      "table_hints": [],
+      "analysis": "UNKNOWN"
+    },
+    {
+      "source_sha": "f61b8ea8c829d0b4e050a8b61ac592ae819a8a09",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/NpcVoiceEnrollmentMapper.xml#findLatest",
+      "namespace": "com.chengyinhub.business.mapper.NpcVoiceEnrollmentMapper",
+      "operation": "select",
+      "file_git_blob": "6f6a73ed695aa2ba14356319bc8b70dc760ea149",
+      "file_sha256": "28697392443caa067d5aead57d9e07683ae4c0c491a2e1c471a848257d6e7acb",
+      "statement_sha256": "ea838e00b3a4e8c89cc69bb3bcd165011cb0b4e8a80dcf6466786ebc0289364f",
+      "table_hints": [],
+      "analysis": "UNKNOWN"
+    },
+    {
+      "source_sha": "f61b8ea8c829d0b4e050a8b61ac592ae819a8a09",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/NpcVoiceEnrollmentMapper.xml#history",
+      "namespace": "com.chengyinhub.business.mapper.NpcVoiceEnrollmentMapper",
+      "operation": "select",
+      "file_git_blob": "6f6a73ed695aa2ba14356319bc8b70dc760ea149",
+      "file_sha256": "28697392443caa067d5aead57d9e07683ae4c0c491a2e1c471a848257d6e7acb",
+      "statement_sha256": "79af27ff560f88c83fa4883afa926f3fffc700c7f8ba77d2940e92321c132697",
+      "table_hints": [],
+      "analysis": "UNKNOWN"
+    },
+    {
+      "source_sha": "f61b8ea8c829d0b4e050a8b61ac592ae819a8a09",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/NpcVoiceEnrollmentMapper.xml#insert",
+      "namespace": "com.chengyinhub.business.mapper.NpcVoiceEnrollmentMapper",
+      "operation": "insert",
+      "file_git_blob": "6f6a73ed695aa2ba14356319bc8b70dc760ea149",
+      "file_sha256": "28697392443caa067d5aead57d9e07683ae4c0c491a2e1c471a848257d6e7acb",
+      "statement_sha256": "1f2a3b347202429902eb24611fc51f5d1e764d6ccf208382b5864e6f5c24ee20",
+      "table_hints": [
+        "npc_voice_enrollment_intent"
+      ],
+      "analysis": "LITERAL_SHAPE_ONLY"
+    },
+    {
+      "source_sha": "f61b8ea8c829d0b4e050a8b61ac592ae819a8a09",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/NpcVoiceEnrollmentMapper.xml#complete",
+      "namespace": "com.chengyinhub.business.mapper.NpcVoiceEnrollmentMapper",
+      "operation": "update",
+      "file_git_blob": "6f6a73ed695aa2ba14356319bc8b70dc760ea149",
+      "file_sha256": "28697392443caa067d5aead57d9e07683ae4c0c491a2e1c471a848257d6e7acb",
+      "statement_sha256": "295ff431487812fcc6a010de9a9af4beddc7c800da37c3c86a2f96adfcbeabf4",
+      "table_hints": [
+        "npc_voice_enrollment_intent"
+      ],
+      "analysis": "LITERAL_SHAPE_ONLY"
+    },
+    {
+      "source_sha": "e57f0a32037bf88b2abf1626cca4760714d88592",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementManualCaseReadMapper.xml#selectList",
+      "namespace": "com.chengyinhub.business.mapper.CoopSettlementManualCaseReadMapper",
+      "operation": "select",
+      "file_git_blob": "a4d73d51671cf666337f56de90f04a8cfed01023",
+      "file_sha256": "542d963307a956901c972118c924e0607c5181d70e2501acfd2c6f925a6fe8dc",
+      "statement_sha256": "1c79c43eccf820afd2d63d0b67273da5184d4ec7910a0360b1a54ecccd128ffb",
+      "table_hints": [],
+      "analysis": "UNKNOWN"
+    },
+    {
+      "source_sha": "e57f0a32037bf88b2abf1626cca4760714d88592",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementManualCaseReadMapper.xml#selectById",
+      "namespace": "com.chengyinhub.business.mapper.CoopSettlementManualCaseReadMapper",
+      "operation": "select",
+      "file_git_blob": "a4d73d51671cf666337f56de90f04a8cfed01023",
+      "file_sha256": "542d963307a956901c972118c924e0607c5181d70e2501acfd2c6f925a6fe8dc",
+      "statement_sha256": "001617f46dbe58d80b17a208657a9e8ac938605f6106d5c7ab295caf13066eda",
+      "table_hints": [],
+      "analysis": "UNKNOWN"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+test_duplicate_changed_or_injected_control_input_is_refused (test_compiled_controls.CompiledControlSourceTest.test_duplicate_changed_or_injected_control_input_is_refused) ... ok
+test_empty_class_and_interface_fixture_sources_have_no_business_calls_or_fabricated_edges (test_compiled_controls.CompiledControlSourceTest.test_empty_class_and_interface_fixture_sources_have_no_business_calls_or_fabricated_edges) ... ok
+test_leaf_only_without_ci_cannot_launch_tools_or_claim_an_application_verdict (test_compiled_controls.CompiledControlSourceTest.test_leaf_only_without_ci_cannot_launch_tools_or_claim_an_application_verdict) ... ok
+test_output_outside_owned_ignored_target_is_refused_before_any_tool (test_compiled_controls.CompiledControlSourceTest.test_output_outside_owned_ignored_target_is_refused_before_any_tool) ... ok
+test_three_actual_source_fixtures_only_insert_one_uncalled_method (test_compiled_controls.CompiledControlSourceTest.test_three_actual_source_fixtures_only_insert_one_uncalled_method) ... ok
+test_without_actual_ci_prerequisites_it_writes_unknown_without_launching_any_tool (test_compiled_controls.CompiledControlSourceTest.test_without_actual_ci_prerequisites_it_writes_unknown_without_launching_any_tool) ... ok
+test_wrong_or_dirty_frozen_verifier_is_refused_before_loading_any_code (test_compiled_controls.CompiledControlSourceTest.test_wrong_or_dirty_frozen_verifier_is_refused_before_loading_any_code) ... ok
+test_wrong_repository_short_identity_and_invalid_attempt_are_not_ci_permission (test_compiled_controls.CompiledControlSourceTest.test_wrong_repository_short_identity_and_invalid_attempt_are_not_ci_permission) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.005s
+
+OK

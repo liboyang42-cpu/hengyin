@@ -1,0 +1,9 @@
+diff --git a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatVerifiedPaymentFactService.java b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatVerifiedPaymentFactService.java
+index 24c1e2391..af4606584 100644
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatVerifiedPaymentFactService.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatVerifiedPaymentFactService.java
+@@ -160 +160,3 @@ public class WechatVerifiedPaymentFactService {
+-    @org.springframework.transaction.annotation.Transactional(propagation = org.springframework.transaction.annotation.Propagation.MANDATORY)
++    @org.springframework.transaction.annotation.Transactional(
++            propagation = org.springframework.transaction.annotation.Propagation.MANDATORY,
++            noRollbackFor = ConflictException.class)

@@ -1,0 +1,17 @@
+✔ play 页 LINEAR 保持 sortId，BRANCH_GRAPH 只消费服务端下一站 (28.777649ms)
+✔ play 页完成请求只追加稳定 routeActionId 和 expectedRouteVersion (4.345686ms)
+✔ play 页版本冲突不会重放动作，而是刷新服务端路线状态 (3.048694ms)
+✔ 路线同步失败或状态不可用时禁用旧 PLAYABLE 节点 (4.723743ms)
+✔ 标准路线 status 优先呈现 ACTIVE、COMPLETED 与 UNAVAILABLE (4.109618ms)
+✔ play 页通过只读 route-state 接口恢复权威当前节点 (3.424618ms)
+✔ 分支节点完成后同页重新读取 nodes，让刚解锁地点进入当前页面 (7.850392ms)
+✔ 所有会完成节点的请求都走统一路线动作上下文与冲突恢复 (3.834712ms)
+✔ 分支地图、手记与完赛足迹都消费真实 decisionLog 顺序 (2.142498ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 177.248403

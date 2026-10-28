@@ -1,0 +1,82 @@
+{
+  "files": [
+    {
+      "file": "advanced-game-draw-audio.tap",
+      "tests": 4,
+      "pass": 4,
+      "fail": 0,
+      "skipped": 0,
+      "sha256": "d93c22528d45224ee66af1d5fa79e2779c1dda947e335c5109e41b352115460f"
+    },
+    {
+      "file": "advanced-game-object-card-relay.tap",
+      "tests": 8,
+      "pass": 8,
+      "fail": 0,
+      "skipped": 0,
+      "sha256": "6dbc73748b08e85dd2edb1c0af6a3ab6c43c6cc677f7b58118aab5219afb178c"
+    },
+    {
+      "file": "advanced-game-receipt-contract.tap",
+      "tests": 59,
+      "pass": 59,
+      "fail": 0,
+      "skipped": 0,
+      "sha256": "1be11d4a52d3a70922ec82e0595cf844459006e282889cc2ebc636936fc99440"
+    },
+    {
+      "file": "advanced-game-variants-recovery.tap",
+      "tests": 7,
+      "pass": 7,
+      "fail": 0,
+      "skipped": 0,
+      "sha256": "d0d5ed323b2ef3fabe385cba17aa9fceef87416ab1c6a5bc32f75414885cee07"
+    },
+    {
+      "file": "architecture-day-c-intent.tap",
+      "tests": 7,
+      "pass": 7,
+      "fail": 0,
+      "skipped": 0,
+      "sha256": "558f0711276b9a8e20d874df5cdb04585081e37d4cb5811efa55ea3333ad5891"
+    },
+    {
+      "file": "object-card-page-lifecycle.tap",
+      "tests": 3,
+      "pass": 3,
+      "fail": 0,
+      "skipped": 0,
+      "sha256": "3220352540b62df175d2dd675e8e1cb95b4ef229db23ad488e1bc91998192cca"
+    },
+    {
+      "file": "play-qa-photo-upload-contract.tap",
+      "tests": 11,
+      "pass": 11,
+      "fail": 0,
+      "skipped": 0,
+      "sha256": "079afe2aeae7c5be1449f1eb6e12bc333d8624463ace20050f3ac66e35eafc0a"
+    },
+    {
+      "file": "playkit-photocheck-frame-contract.tap",
+      "tests": 20,
+      "pass": 20,
+      "fail": 0,
+      "skipped": 0,
+      "sha256": "7c030b7df733336d161dc241cdbe5ef07dea77e5c376ce631889a778669578f0"
+    },
+    {
+      "file": "playkit-photocheck-server-judge-contract.tap",
+      "tests": 6,
+      "pass": 6,
+      "fail": 0,
+      "skipped": 0,
+      "sha256": "374f0e89e57a8d952c7677f64ea4fed52b5c2a909ada7eab1f8a0dda15532724"
+    }
+  ],
+  "totals": {
+    "tests": 125,
+    "pass": 125,
+    "fail": 0,
+    "skipped": 0
+  }
+}

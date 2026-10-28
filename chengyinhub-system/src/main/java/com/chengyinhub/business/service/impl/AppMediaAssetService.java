@@ -58,6 +58,7 @@ public class AppMediaAssetService {
     }
     @Transactional
     public Map<String,Object> stage(Long memberId,String objectKey) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         if(memberId==null || memberId<=0 || objectKey==null || !objectKey.matches("upload/[0-9a-f]{32}\\.(mp3|m4a|aac|wav|glb|jpg|jpeg|png|gif)"))
             throw new ServiceException("媒体归属或文件来源无效");
         Map<String,Object> row=new LinkedHashMap<>(); row.put("memberId",memberId);row.put("objectKey",objectKey);
@@ -76,6 +77,7 @@ public class AppMediaAssetService {
     }
     @Transactional
     public Map<String,Object> retry(Long id,Long memberId) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         Map<String,Object> row=owned(mapper.selectForUpdate(id),memberId);
         int version=((Number)row.get("version")).intValue();
         if(mapper.retry(id,memberId,version)!=1)throw new ServiceException("媒体当前状态不允许重新提审");

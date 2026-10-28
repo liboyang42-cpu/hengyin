@@ -1,0 +1,18 @@
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/quartz/util/CrossDomainSchedulerStage.java b/chengyinhub-admin/src/test/java/com/chengyinhub/quartz/util/CrossDomainSchedulerStage.java
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/quartz/util/CrossDomainSchedulerStage.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/quartz/util/CrossDomainSchedulerStage.java
+@@ -88,7 +88,13 @@ public final class CrossDomainSchedulerStage implements AutoCloseable {
+         boolean authenticated,expectedKill,closed;
+         Child(String alias) throws Exception {
+             String cp=System.getProperty("surefire.test.class.path",System.getProperty("java.class.path"));assertNotNull(cp);assertFalse(cp.isBlank());
+-            ProcessBuilder launch=new ProcessBuilder(Path.of(System.getProperty("java.home"),"bin","java").toString(),"-cp",cp,SchedulerFenceProcessProbe.class.getName());
++            List<String> arguments=new ArrayList<>();
++            arguments.add(Path.of(System.getProperty("java.home"),"bin","java").toString());
++            // Fixed test-only heap candidate, not an RSS cap or a capacity acceptance claim.
++            if("CrossDomainCombinedLoadMySqlIT".equals(System.getenv("CHENGYIN_HTTP_E2E_TESTS")))
++                arguments.add("-Xmx64m");
++            arguments.addAll(List.of("-cp",cp,SchedulerFenceProcessProbe.class.getName()));
++            ProcessBuilder launch=new ProcessBuilder(arguments);
+             launch.redirectErrorStream(true);launch.environment().clear();
+             launch.environment().putAll(Map.of("RUNNER_ENVIRONMENT","github-hosted","WP14_URL",url,"WP14_SCHEMA",schema,"WP14_ORIGINAL",original,
+                     "WP14_ALIAS",alias,"CHENGYIN_MYBATIS_IT_USER",user,"CHENGYIN_MYBATIS_IT_PASSWORD",password));

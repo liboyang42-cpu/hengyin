@@ -1,0 +1,6 @@
+fd6673dfc33a5c620a89ac65082c9bb515abd8eeb73a9baff7cf58a5f6b509fd  ci/migration_gates.py
+5a6b87fc2e4f77141493ceee62fd444384edc7ce92327ab7fcf6c3a35bea00ac  ci/test_migration_gates.py
+2a3a4348240b4e21cbf764b5d69bb00249003afe50f64ae7c974c356f0c41b31  docs/delivery/architecture-day/G/119d-migration-gates/README.md
+ef46451f367eea30279e28bd53fbc6a80c9f50b96c904347b3e0698630adb101  docs/delivery/architecture-day/G/119d-migration-gates/sql-inventory.review.patch.b64
+73c360e3f8878e4ebb0c71d08cf7f12b08180fe60aaea86fe0f4caed0a7502ef  /tmp/g-119d-review/ci/migration_ledger.py
+e935d4605972a1e58756ac593f3570ab4a8d2dec3ebdf59d7e50b60c9d51aa9a  /tmp/g-119d-review/ci/test_migration_ledger.py

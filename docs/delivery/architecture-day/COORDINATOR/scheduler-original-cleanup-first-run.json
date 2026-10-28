@@ -1,0 +1,25 @@
+{
+  "run": 40039899867,
+  "source_sha": "ad7e59fbf6a20e85e741318afe654c5411bf1101",
+  "class": "com.chengyinhub.quartz.util.SchedulerSessionLockMySqlIT",
+  "business_tests": 3,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "cleanup": {
+    "mysql_leftover_schemas": [
+      "chengyin_mybatis_scheduler_lock_gh899867a1"
+    ],
+    "mysql_schemas_after": [
+      "chengyin_mybatis_scheduler_lock_gh899867a1",
+      "information_schema",
+      "mysql",
+      "performance_schema",
+      "sys"
+    ],
+    "status": "LEFTOVER"
+  },
+  "verdict": "FAIL_CLEANUP_NOT_ACCEPTED",
+  "raw_xml_sha256": "30e6750884def6f6ad872a2a76e304b157b85497a11451c0cdf3a56b8a9d2040",
+  "root_fix": "Original3 business bodies byte-unchanged; explicit exclusive CREATE proves exact suite schema ownership; close pool then drop only ownedSchema and independently confirm count0. No sweep, no production changes."
+}

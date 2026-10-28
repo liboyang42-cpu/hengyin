@@ -1,0 +1,78 @@
+First exact workflow pure-entry command:
+python3 -m unittest -v ci/test_http_e2e_entry.py chengyinhub-admin/src/test/tools/test_generic_gameplay_vps_guard.py chengyinhub-admin/src/test/tools/test_generic_gameplay_fresh_schema.py
+
+/workspace/hengyin-f-4da9-http-entry-repair/ci/test_http_e2e_entry.py:549: SyntaxWarning: invalid escape sequence '\`'
+  self.assertIn('DROP DATABASE \`$CHENGYIN_HTTP_E2E_DATABASE\`',shell)
+test_existing_finalize_prints_safe_primary_failure_before_refusing_receipt (ci.test_http_e2e_entry.FailureDiagnosticTest.test_existing_finalize_prints_safe_primary_failure_before_refusing_receipt) ... ok
+test_failed_expected_xml_exposes_counts_method_and_source_line_only (ci.test_http_e2e_entry.FailureDiagnosticTest.test_failed_expected_xml_exposes_counts_method_and_source_line_only) ... ok
+test_fixed_category_parser_does_not_export_other_fields_or_unknown_text (ci.test_http_e2e_entry.FailureDiagnosticTest.test_fixed_category_parser_does_not_export_other_fields_or_unknown_text) ... ok
+test_fixed_http_categories_are_exact_public_literals_not_dynamic_messages (ci.test_http_e2e_entry.FailureDiagnosticTest.test_fixed_http_categories_are_exact_public_literals_not_dynamic_messages) ... ok
+test_hosted_online_vps_offline_and_existing_finalize_maven_failure (ci.test_http_e2e_entry.FailureDiagnosticTest.test_hosted_online_vps_offline_and_existing_finalize_maven_failure) ... ok
+test_projection_rejects_untrusted_metadata_and_missing_report (ci.test_http_e2e_entry.FailureDiagnosticTest.test_projection_rejects_untrusted_metadata_and_missing_report) ... ok
+test_schema_exception_metadata_never_exports_sql_stderr_or_messages (ci.test_http_e2e_entry.FailureDiagnosticTest.test_schema_exception_metadata_never_exports_sql_stderr_or_messages) ... ok
+test_standard_maven_help_plugin_and_sensitive_message_projection (ci.test_http_e2e_entry.FailureDiagnosticTest.test_standard_maven_help_plugin_and_sensitive_message_projection) ... ok
+test_exact_reviewed_classes_only (ci.test_http_e2e_entry.HttpReceiptTest.test_exact_reviewed_classes_only) ... ok
+test_existing_baseline_quartz_tables_and_foreign_keys_are_not_replayed (ci.test_http_e2e_entry.HttpReceiptTest.test_existing_baseline_quartz_tables_and_foreign_keys_are_not_replayed) ... ok
+test_owned_cleanup_is_required_and_old_fixture_sql_contract_unchanged (ci.test_http_e2e_entry.HttpReceiptTest.test_owned_cleanup_is_required_and_old_fixture_sql_contract_unchanged) ... ok
+test_parameter_case_type_index_value_unknown_missing_duplicate_and_skip_are_red (ci.test_http_e2e_entry.HttpReceiptTest.test_parameter_case_type_index_value_unknown_missing_duplicate_and_skip_are_red) ... ok
+test_published_xml_has_no_secret_properties_or_streams (ci.test_http_e2e_entry.HttpReceiptTest.test_published_xml_has_no_secret_properties_or_streams) ... ok
+test_real_counts_and_no_skips_or_hidden_case_failures (ci.test_http_e2e_entry.HttpReceiptTest.test_real_counts_and_no_skips_or_hidden_case_failures) ... ok
+test_reviewed_ordinary_and_value_source_expansion_is_26_8_2 (ci.test_http_e2e_entry.HttpReceiptTest.test_reviewed_ordinary_and_value_source_expansion_is_26_8_2) ... ok
+test_shell_exit_zero_does_not_replace_xml_or_cleanup (ci.test_http_e2e_entry.HttpReceiptTest.test_shell_exit_zero_does_not_replace_xml_or_cleanup) ... ok
+test_summary_requires_all_three_once_same_source (ci.test_http_e2e_entry.HttpReceiptTest.test_summary_requires_all_three_once_same_source) ... ok
+test_workflow_is_manual_three_isolated_standard_jobs_with_pinned_mysql (ci.test_http_e2e_entry.HttpReceiptTest.test_workflow_is_manual_three_isolated_standard_jobs_with_pinned_mysql) ... ok
+test_registered_jar_manual_router_defaults_to_jar_and_calls_same_commit_http_only_on_opt_in (ci.test_http_e2e_entry.ManualRouterTest.test_registered_jar_manual_router_defaults_to_jar_and_calls_same_commit_http_only_on_opt_in) ... ok
+test_schema_guard_honest_hosted_or_original_vps_only (ci.test_http_e2e_entry.ProfileTest.test_schema_guard_honest_hosted_or_original_vps_only) ... ok
+test_shell_rejects_identity_and_selector_before_heavy_tools (ci.test_http_e2e_entry.ProfileTest.test_shell_rejects_identity_and_selector_before_heavy_tools) ... ok
+test_foreign_target_invalid_port_and_wrong_java_are_rejected (chengyinhub-admin.src.test.tools.test_generic_gameplay_vps_guard.VpsRunnerGuardTest.test_foreign_target_invalid_port_and_wrong_java_are_rejected) ... ok
+test_mac_linux_without_vps_flag_and_missing_target_are_rejected (chengyinhub-admin.src.test.tools.test_generic_gameplay_vps_guard.VpsRunnerGuardTest.test_mac_linux_without_vps_flag_and_missing_target_are_rejected) ... ok
+test_schema_execution_requires_explicit_vps_before_planning_or_mysql (chengyinhub-admin.src.test.tools.test_generic_gameplay_vps_guard.VpsRunnerGuardTest.test_schema_execution_requires_explicit_vps_before_planning_or_mysql) ... ok
+test_base_seed_is_not_classified_as_production_cleanup (chengyinhub-admin.src.test.tools.test_generic_gameplay_fresh_schema.FreshSchemaTest.test_base_seed_is_not_classified_as_production_cleanup) ... ok
+test_baseline_assertion_is_applied_not_skipped (chengyinhub-admin.src.test.tools.test_generic_gameplay_fresh_schema.FreshSchemaTest.test_baseline_assertion_is_applied_not_skipped) ... ok
+test_complete_repository_dry_run_keeps_new_runtime_ddl (chengyinhub-admin.src.test.tools.test_generic_gameplay_fresh_schema.FreshSchemaTest.test_complete_repository_dry_run_keeps_new_runtime_ddl) ... ok
+test_execution_keeps_same_connection_for_transaction_and_routine_delimiters (chengyinhub-admin.src.test.tools.test_generic_gameplay_fresh_schema.FreshSchemaTest.test_execution_keeps_same_connection_for_transaction_and_routine_delimiters) ... ok
+test_execution_refuses_existing_schema_and_wrong_mysql_before_create (chengyinhub-admin.src.test.tools.test_generic_gameplay_fresh_schema.FreshSchemaTest.test_execution_refuses_existing_schema_and_wrong_mysql_before_create) ... ok
+test_false_baseline_assertion_fails_execution (chengyinhub-admin.src.test.tools.test_generic_gameplay_fresh_schema.FreshSchemaTest.test_false_baseline_assertion_fails_execution) ... ok
+test_mixed_cleanup_keeps_persistent_ddl_without_production_dml (chengyinhub-admin.src.test.tools.test_generic_gameplay_fresh_schema.FreshSchemaTest.test_mixed_cleanup_keeps_persistent_ddl_without_production_dml) ... ok
+test_prepared_ddl_and_executable_comment_ddl_are_preserved (chengyinhub-admin.src.test.tools.test_generic_gameplay_fresh_schema.FreshSchemaTest.test_prepared_ddl_and_executable_comment_ddl_are_preserved) ... ok
+test_remote_host_real_schema_and_external_sql_are_refused (chengyinhub-admin.src.test.tools.test_generic_gameplay_fresh_schema.FreshSchemaTest.test_remote_host_real_schema_and_external_sql_are_refused) ... ok
+test_runner_assert_skipped_but_ddl_is_preserved (chengyinhub-admin.src.test.tools.test_generic_gameplay_fresh_schema.FreshSchemaTest.test_runner_assert_skipped_but_ddl_is_preserved) ... ok
+test_specific_production_cleanup_and_temporary_guards_are_skipped (chengyinhub-admin.src.test.tools.test_generic_gameplay_fresh_schema.FreshSchemaTest.test_specific_production_cleanup_and_temporary_guards_are_skipped) ... ok
+test_unknown_annotation_invalid_sql_and_misclassified_ddl_fail_closed (chengyinhub-admin.src.test.tools.test_generic_gameplay_fresh_schema.FreshSchemaTest.test_unknown_annotation_invalid_sql_and_misclassified_ddl_fail_closed) ... ok
+test_existing_a8_file_is_byte_identical_to_master (chengyinhub-admin.src.test.tools.test_generic_gameplay_fresh_schema.MigrationGuardTest.test_existing_a8_file_is_byte_identical_to_master) ... fatal: invalid object name 'master'.
+ERROR
+test_historical_v51_original_bytes_are_frozen_and_planner_rejects_drift (chengyinhub-admin.src.test.tools.test_generic_gameplay_fresh_schema.MigrationGuardTest.test_historical_v51_original_bytes_are_frozen_and_planner_rejects_drift) ... ok
+test_new_cdn_guard_absent_valid_replay_and_invalid_rows (chengyinhub-admin.src.test.tools.test_generic_gameplay_fresh_schema.MigrationGuardTest.test_new_cdn_guard_absent_valid_replay_and_invalid_rows) ... ok
+test_supersession_only_after_replacement_is_recorded (chengyinhub-admin.src.test.tools.test_generic_gameplay_fresh_schema.MigrationGuardTest.test_supersession_only_after_replacement_is_recorded) ... ok
+test_v51_forward_preasserts_before_update_and_is_empty_only_transactional (chengyinhub-admin.src.test.tools.test_generic_gameplay_fresh_schema.MigrationGuardTest.test_v51_forward_preasserts_before_update_and_is_empty_only_transactional) ... ok
+
+======================================================================
+ERROR: test_existing_a8_file_is_byte_identical_to_master (chengyinhub-admin.src.test.tools.test_generic_gameplay_fresh_schema.MigrationGuardTest.test_existing_a8_file_is_byte_identical_to_master)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/hengyin-f-4da9-http-entry-repair/chengyinhub-admin/src/test/tools/test_generic_gameplay_fresh_schema.py", line 118, in test_existing_a8_file_is_byte_identical_to_master
+    self.assertEqual(subprocess.check_output(['git', 'show', 'master:' + path], cwd=tool.ROOT), (tool.ROOT / path).read_bytes())
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/subprocess.py", line 466, in check_output
+    return run(*popenargs, stdout=PIPE, timeout=timeout, check=True,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['git', 'show', 'master:chengyinhub-admin/sql/migration_seed_merchant_game_a8_20260823.sql']' returned non-zero exit status 128.
+
+----------------------------------------------------------------------
+Ran 41 tests in 5.971s
+
+FAILED (errors=1)
+
+Workflow prerequisite restored without moving any existing branch: git branch master origin/master
+origin/master=892efe6f765a5748065569fd886ee9b00ef71d4b
+Only original errored A8 case rerun:
+python3 -m unittest -v chengyinhub-admin/src/test/tools/test_generic_gameplay_fresh_schema.py -k test_existing_a8_file_is_byte_identical_to_master
+
+test_existing_a8_file_is_byte_identical_to_master (chengyinhub-admin.src.test.tools.test_generic_gameplay_fresh_schema.MigrationGuardTest.test_existing_a8_file_is_byte_identical_to_master) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.004s
+
+OK

@@ -45,6 +45,7 @@ class CmsTopicPublishNarrativeNpcGuardTest {
     private CmsTopicMapper topicMapper;
     private CmsTopicNodeMapper nodeMapper;
     private CmsMemberTemplateMapper templateMapper;
+    private CmsTopicChapterMapper chapterMapper;
     private NpcProfileMapper npcProfileMapper;
     private CmsTopicServiceImpl service;
 
@@ -54,8 +55,28 @@ class CmsTopicPublishNarrativeNpcGuardTest {
         when(topicMapper.selectCmsTopicByIdForUpdate(anyLong()))
                 .thenAnswer(inv -> topicMapper.selectCmsTopicById(inv.getArgument(0)));
         nodeMapper = mock(CmsTopicNodeMapper.class);
+        chapterMapper = mock(CmsTopicChapterMapper.class);
         templateMapper = mock(CmsMemberTemplateMapper.class);
         npcProfileMapper = mock(NpcProfileMapper.class);
+
+        when(chapterMapper.selectByTopicForUpdate(TOPIC_ID)).thenAnswer(call -> {
+            CmsTopicChapter query = new CmsTopicChapter(); query.setTopicId(TOPIC_ID);
+            return chapterMapper.selectCmsTopicChapterList(query);
+        });
+        when(nodeMapper.selectByTopicForUpdate(TOPIC_ID)).thenAnswer(call -> {
+            CmsTopicNode query = new CmsTopicNode(); query.setTopicId(TOPIC_ID);
+            return nodeMapper.selectCmsTopicNodeList(query);
+        });
+        when(templateMapper.selectCmsMemberTemplateByIdsForUpdate(org.mockito.ArgumentMatchers.anyList())).thenAnswer(call -> {
+            java.util.List<Long> ids = call.getArgument(0);
+            java.util.List<CmsMemberTemplate> rows = new java.util.ArrayList<>();
+            for (Long id : ids) {
+                CmsMemberTemplate row = templateMapper.selectCmsMemberTemplateById(id);
+                if (row != null) rows.add(row);
+            }
+            return rows;
+        });
+
         service = new CmsTopicServiceImpl();
         org.springframework.test.util.ReflectionTestUtils.setField(service, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
                 invocation -> "lockTopic".equals(invocation.getMethod().getName())
@@ -65,20 +86,27 @@ class CmsTopicPublishNarrativeNpcGuardTest {
                 mock(com.chengyinhub.business.service.support.SettlementDebtLedger.class));
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
         ReflectionTestUtils.setField(service, "cmsTopicNodeMapper", nodeMapper);
-        ReflectionTestUtils.setField(service, "cmsMemberTemplateMapper", templateMapper);
-        ReflectionTestUtils.setField(service, "topicStateKeyRefService",
-                new TopicStateKeyRefService(nodeMapper, templateMapper, mock(com.chengyinhub.business.mapper.CmsTopicChapterMapper.class)));
-        ReflectionTestUtils.setField(service, "npcProfileMapper", npcProfileMapper);
+        ReflectionTestUtils.setField(service, "cmsTopicChapterMapper", chapterMapper);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "cmsMemberTemplateMapper", templateMapper);
+        TopicStateKeyRefService references = new TopicStateKeyRefService(nodeMapper, templateMapper, chapterMapper);
+        ReflectionTestUtils.setField(references, "cmsTopicMapper", topicMapper);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "topicStateKeyRefService", references);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "npcProfileMapper", npcProfileMapper);
         // R18-DRAFT:发布时补建自办活动壳 —— 成功路径会走到这两个协作者,不在场就是 NPE 假红。
         ReflectionTestUtils.setField(service, "cmsActivityMapper",
                 mock(com.chengyinhub.business.mapper.CmsActivityMapper.class));
-        ReflectionTestUtils.setField(service, "omsTicketService",
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "omsTicketService",
                 mock(com.chengyinhub.business.service.IOmsTicketService.class));
         // R19-DRAFT2:发布闸读票种(完整度),不在场就是 NPE 假红。
         ReflectionTestUtils.setField(service, "omsTicketMapper",
                 mock(com.chengyinhub.business.mapper.OmsTicketMapper.class));
         when(topicMapper.updateCmsTopic(any(CmsTopic.class))).thenReturn(1);
         when(topicMapper.publishRouteSnapshot(any(Long.class), nullable(String.class), any(Date.class))).thenReturn(1);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "themeStateKeyService",
+                new com.chengyinhub.business.service.support.ThemeStateKeyService(
+                        mock(com.chengyinhub.business.mapper.ThemeStateKeyMapper.class)));
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+        service = com.chengyinhub.business.service.support.TopicPublicationTestWiring.transactional(service);
     }
 
     /**
@@ -102,7 +130,7 @@ class CmsTopicPublishNarrativeNpcGuardTest {
                 .thenReturn(Collections.singletonList(profile(5L)));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
+        ServiceException error = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
 
         assertTrue(error.getMessage().contains("npcId=99"), error.getMessage());
         assertTrue(error.getMessage().contains("enter"), error.getMessage());
@@ -124,7 +152,7 @@ class CmsTopicPublishNarrativeNpcGuardTest {
                 .thenReturn(Collections.singletonList(profile(5L)));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        assertTrue(service.publishDraft(TOPIC_ID));
+        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
 
         verify(topicMapper).publishRouteSnapshot(any(Long.class), nullable(String.class), any(Date.class));
     }
@@ -142,7 +170,7 @@ class CmsTopicPublishNarrativeNpcGuardTest {
                 "{\"schemaVersion\":1,\"timer\":{\"enabled\":true}}")));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        assertTrue(service.publishDraft(TOPIC_ID));
+        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
 
         verify(npcProfileMapper, never()).selectEnabledByScope(anyInt(), anyLong());
     }
@@ -167,7 +195,7 @@ class CmsTopicPublishNarrativeNpcGuardTest {
                 .thenReturn(Collections.singletonList(profile(5L)));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
+        ServiceException error = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
 
         assertTrue(error.getMessage().contains("npcId=99"), error.getMessage());
         assertTrue(error.getMessage().contains("故事流"), error.getMessage());
@@ -191,7 +219,7 @@ class CmsTopicPublishNarrativeNpcGuardTest {
                 .thenReturn(Collections.singletonList(profile(5L)));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        assertTrue(service.publishDraft(TOPIC_ID));
+        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
 
         verify(topicMapper).publishRouteSnapshot(any(Long.class), nullable(String.class), any(Date.class));
     }
@@ -201,7 +229,6 @@ class CmsTopicPublishNarrativeNpcGuardTest {
         chapter.setId(11L);
         chapter.setTopicId(TOPIC_ID);
         chapter.setBlocksJson(blocksJson);
-        CmsTopicChapterMapper chapterMapper = mock(CmsTopicChapterMapper.class);
         when(chapterMapper.selectCmsTopicChapterList(any(CmsTopicChapter.class)))
                 .thenReturn(Collections.singletonList(chapter));
         ReflectionTestUtils.setField(service, "cmsTopicChapterMapper", chapterMapper);

@@ -2,6 +2,7 @@ package com.chengyinhub.business.mapper;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import org.apache.ibatis.annotations.Param;
 import com.chengyinhub.business.domain.CoopInvite;
 
@@ -9,6 +10,20 @@ import com.chengyinhub.business.domain.CoopInvite;
  * 协作邀请 Mapper 接口(P1.5)
  */
 public interface CoopInviteMapper {
+    List<com.chengyinhub.business.domain.CmsRegistrationMerchant> selectSupplyStations(
+            @Param("topicId") Long topicId, @Param("merchantMemberId") Long merchantMemberId);
+    com.chengyinhub.business.domain.CmsRegistrationMerchant selectSupplyStationForUpdate(
+            @Param("stationId") Long stationId, @Param("topicId") Long topicId,
+            @Param("merchantMemberId") Long merchantMemberId);
+    List<com.chengyinhub.business.domain.CoopOrder> selectEffectiveSupplyOrders(
+            @Param("topicId") Long topicId, @Param("merchantMemberId") Long merchantMemberId);
+    List<com.chengyinhub.business.domain.CoopOrder> selectEffectiveSupplyOrdersForUpdate(
+            @Param("topicId") Long topicId, @Param("merchantMemberId") Long merchantMemberId);
+    List<com.chengyinhub.business.domain.CoopOrder> selectOriginalCoopOrdersForUpdate(
+            @Param("inviteId") Long inviteId, @Param("regId") Long regId);
+    List<com.chengyinhub.business.domain.CmsRegistrationMerchant> selectSupplyStationNames(
+            @Param("invites") List<CoopInvite> invites);
+
 
     public CoopInvite selectCoopInviteById(Long id);
 
@@ -63,6 +78,9 @@ public interface CoopInviteMapper {
         @Param("expectedAmount") java.math.BigDecimal expectedAmount,@Param("status") Integer status,
         @Param("amount") java.math.BigDecimal amount);
     CoopInvite selectDepositFactByIdForUpdate(@Param("id") Long id);
+    /** Original locally consumed TX + business identity only; no latest/current-attempt selection. */
+    List<Map<String,Object>> selectDepositPaidFactReferences(@Param("outTradeNo") String outTradeNo,
+        @Param("transactionId") String transactionId);
     Long selectClubOwnerForDepositQueryNowait(@Param("clubId") Long clubId);
     List<CoopInvite> selectDepositsForRefundReconcile();
     List<CoopInvite> selectAcceptedByTopicForUpdate(@Param("topicId") Long topicId);

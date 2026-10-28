@@ -1,0 +1,117 @@
+{
+  "parent": "971b77d2b06539102587a4a1588df64743f82bfe",
+  "comparedPublicCandidate": "07172e6fddf28f99ea4ad214b5c92cfe7608e441",
+  "files": [
+    {
+      "file": "advanced-game-receipt-contract.tap",
+      "exitCode": 0,
+      "tests": 60,
+      "pass": 60,
+      "fail": 0,
+      "skipped": 0,
+      "sha256": "fb59a51086c60f6394cd0947278c31f1920e5ea4814f107caa8b4fa2c79cceef"
+    },
+    {
+      "file": "play-qa-recovery-contract.tap",
+      "exitCode": 0,
+      "tests": 6,
+      "pass": 6,
+      "fail": 0,
+      "skipped": 0,
+      "sha256": "49bc95af6ee3e459b64a9a17794975adb6b290f89c04402b38e3486ee7b6b0d6"
+    },
+    {
+      "file": "separate-consent-feature.tap",
+      "exitCode": 0,
+      "tests": 9,
+      "pass": 9,
+      "fail": 0,
+      "skipped": 0,
+      "sha256": "f65d2e01fdccc9d24bdd5b5499fc6d218f4b00475f2114055289a1c2c7c5a01c"
+    },
+    {
+      "file": "play-qa-photo-upload-contract.tap",
+      "exitCode": 0,
+      "tests": 11,
+      "pass": 11,
+      "fail": 0,
+      "skipped": 0,
+      "sha256": "be73e64dd9136b33229dbc65ae07e2e4b5b29156112eeb215e6b97933185730c"
+    },
+    {
+      "file": "advanced-game-object-card-relay.tap",
+      "exitCode": 0,
+      "tests": 8,
+      "pass": 8,
+      "fail": 0,
+      "skipped": 0,
+      "sha256": "80631bf6105b42ae3e076c83f020e48dff417b1195c49a0c4d02401c64908be1"
+    },
+    {
+      "file": "playkit-photocheck-server-judge-contract.tap",
+      "exitCode": 0,
+      "tests": 6,
+      "pass": 6,
+      "fail": 0,
+      "skipped": 0,
+      "sha256": "dd49c804780ab6cfb2522985a80f3fcdf07690aa54bfa17f730e46f9980c37b7"
+    },
+    {
+      "file": "playkit-photocheck-frame-contract.tap",
+      "exitCode": 0,
+      "tests": 20,
+      "pass": 20,
+      "fail": 0,
+      "skipped": 0,
+      "sha256": "7218d17f8fbbce466be7fb42b92419f879f29dcdf55c7dd42bd93d683594e244"
+    },
+    {
+      "file": "object-card-page-lifecycle.tap",
+      "exitCode": 0,
+      "tests": 3,
+      "pass": 3,
+      "fail": 0,
+      "skipped": 0,
+      "sha256": "3ba866c78344b88ba512e9283b46fd66e1bc7e62ce5198a1b43db698eab91220"
+    },
+    {
+      "file": "advanced-game-variants-recovery.tap",
+      "exitCode": 0,
+      "tests": 7,
+      "pass": 7,
+      "fail": 0,
+      "skipped": 0,
+      "sha256": "701baca78fd809541b237e6506af567ddbe22b3e5fb9db1b169057fafc9d4292"
+    },
+    {
+      "file": "advanced-game-draw-audio.tap",
+      "exitCode": 0,
+      "tests": 4,
+      "pass": 4,
+      "fail": 0,
+      "skipped": 0,
+      "sha256": "a8fa2689b3b1fd8019d606805ab6fea93b30fb1d592784c979619f86543349f2"
+    },
+    {
+      "file": "architecture-day-c-intent.tap",
+      "exitCode": 0,
+      "tests": 7,
+      "pass": 7,
+      "fail": 0,
+      "skipped": 0,
+      "sha256": "c89d135c5fb60a3aeb49cd09940112a6b8bcd926e66bc4f3d21c2acef30f26fc"
+    }
+  ],
+  "totals": {
+    "tests": 141,
+    "pass": 141,
+    "fail": 0,
+    "skipped": 0
+  },
+  "notRun": [
+    "Java",
+    "MySQL",
+    "full miniprogram suite",
+    "WeChat simulator/device"
+  ]
+}

@@ -84,6 +84,9 @@ class NpcChatUserDataMyBatisIT {
         try (InputStream in = Resources.getResourceAsStream("mapper/business/NpcChatRequestMapper.xml")) {
             new XMLMapperBuilder(in, cfg, "mapper/business/NpcChatRequestMapper.xml", cfg.getSqlFragments()).parse();
         }
+        try(InputStream in=Resources.getResourceAsStream("mapper/business/NpcAsrIntentMapper.xml")) {
+            new XMLMapperBuilder(in,cfg,"mapper/business/NpcAsrIntentMapper.xml",cfg.getSqlFragments()).parse();
+        }
         return new SqlSessionFactoryBuilder().build(cfg);
     }
 
@@ -106,7 +109,26 @@ class NpcChatUserDataMyBatisIT {
             if (!java.nio.file.Files.exists(mediaMigration)) mediaMigration = java.nio.file.Paths.get("sql/migration_20261012_npc_chat_media_asset.sql");
             org.springframework.jdbc.datasource.init.ScriptUtils.executeSqlScript(s.getConnection(),
                     new org.springframework.core.io.FileSystemResource(mediaMigration.toFile()));
+            try(java.sql.ResultSet existing=st.executeQuery("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name='npc_asr_intent'")) {
+                if(existing.next() && existing.getInt(1)==0) {
+                    java.nio.file.Path asrMigration=java.nio.file.Paths.get("chengyinhub-admin/sql/migration_20261024_d_npc_asr_intent.sql");
+                    if(!java.nio.file.Files.exists(asrMigration))asrMigration=java.nio.file.Paths.get("sql/migration_20261024_d_npc_asr_intent.sql");
+                    org.springframework.jdbc.datasource.init.ScriptUtils.executeSqlScript(s.getConnection(),
+                            new org.springframework.core.io.FileSystemResource(asrMigration.toFile()));
+
+                }
+            }
+            try (java.sql.ResultSet columns=st.executeQuery("SELECT COUNT(*) FROM information_schema.columns "
+                    +"WHERE table_schema=DATABASE() AND table_name='npc_asr_intent' AND column_name='quota_reservation'")) {
+                if (columns.next() && columns.getInt(1)==0) {
+                    java.nio.file.Path asrQuotaMigration=java.nio.file.Paths.get("chengyinhub-admin/sql/migration_20261024_d_npc_asr_shared_quota.sql");
+                    if(!java.nio.file.Files.exists(asrQuotaMigration))asrQuotaMigration=java.nio.file.Paths.get("sql/migration_20261024_d_npc_asr_shared_quota.sql");
+                    org.springframework.jdbc.datasource.init.ScriptUtils.executeSqlScript(s.getConnection(),
+                            new org.springframework.core.io.FileSystemResource(asrQuotaMigration.toFile()));
+                }
+            }
             st.execute("DELETE FROM npc_chat_request");
+            st.execute("DELETE FROM npc_asr_intent");
             return s;
         } catch (Throwable t) {
             // ★ 2026-08-14:原本是 Assumptions.assumeTrue(false, ...) —— 库连不上就整套 skip,
@@ -189,6 +211,7 @@ class NpcChatUserDataMyBatisIT {
             javax.sql.DataSource source = template.getSqlSessionFactory().getConfiguration().getEnvironment().getDataSource();
             NpcChatWriteService writes = new NpcChatWriteService(template.getMapper(NpcChatRequestMapper.class),
                     template.getMapper(NpcChatLogMapper.class), new DataSourceTransactionManager(source));
+            ReflectionTestUtils.setField(writes,"asrIntents",template.getMapper(com.chengyinhub.business.mapper.NpcAsrIntentMapper.class));
             ReflectionTestUtils.setField(svc, "npcChatWriteService", writes);
             ApiAiNpcController controller = spy(new ApiAiNpcController());
             ReflectionTestUtils.setField(controller, "npcChatDataService", svc);

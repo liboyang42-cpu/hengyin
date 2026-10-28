@@ -1,0 +1,84 @@
+{
+  "source_sha": "ccd55005c75d105f8245b0591e63adcd0dd15280",
+  "source_binding": "GitHub run headSha and exact fixed ref; rebuilt JAR bytes not retained in artifact",
+  "run": 40140513624,
+  "job": 121011084232,
+  "artifact_id": 12579050590,
+  "artifact_zip_sha256": "0c95af72b13821bf0268e56414f0bc3f5b1f75e5112dabc802ec2cdc0835d1aa",
+  "zip_crc_verified": true,
+  "zip_seven_files_match_download": true,
+  "raw_files_sha256": {
+    "entry.log": "fc4e96ff0da60551e7f25b02cd68dc6414e0d82d1195c024f5e220e868be3723",
+    "cy-startup.WK97miNQ/mysql-version": "f1a2bb7eb59eb149d9d95981af9b04619645a8e7b5622a891c513874f1119753",
+    "cy-startup.WK97miNQ/pool-recovery.json": "a1215725e1ac47967a346f9b0e08425c29ce3acac49cf0fd226b42e33657f129",
+    "cy-startup.WK97miNQ/pool-recovery-health.log": "2150e2247f83ae20b74007058c8d7eb95d7a8e016d2acb8ca175051af3f438a7",
+    "cy-startup.WK97miNQ/application.log": "31e87430a5d10942f5fce80cfa97b3e8f387cc4ef16ad86c91bb62b3e07e8acf",
+    "cy-startup.WK97miNQ/network.trace": "2a99df91f5de6efb0a708c82f748d50707cecaaca5e471dcbaf8b3e3411af7f3",
+    "cy-startup.WK97miNQ/isolation.log": "5ffd9ad977c3783cfa1613e0b1de91fe245a6fae0272796bdcf0825b55006951"
+  },
+  "receipt_result": "PASS_BOUNDED_POOL_TIMEOUT_RELEASE_SAME_PROCESS_RECOVERY",
+  "acceptance": "OBSERVED_BOUNDED_READ_POOL_TIMEOUT_AND_SAME_PROCESS_RECOVERY_WITH_PROVENANCE_CLEANUP_GAPS",
+  "read_path": "POST /api/common/dict",
+  "profile_observed": {
+    "max_active": 20,
+    "max_wait_ms": 5000,
+    "connect_timeout_ms": null,
+    "report_static_connect_timeout_ms_not_treated_as_runtime": 5000
+  },
+  "blocked_select_counts": [
+    1,
+    8,
+    20
+  ],
+  "native_timeout_wait_ms": 5001,
+  "overflow": {
+    "request": 20,
+    "http": 200,
+    "businessCode": 500,
+    "emptyData": false,
+    "elapsedSeconds": 5.061
+  },
+  "holder_release_acknowledged": true,
+  "held_requests_succeeded": 20,
+  "fresh_recovery_reads": [
+    {
+      "request": "after0",
+      "http": 200,
+      "businessCode": 200,
+      "emptyData": true,
+      "elapsedSeconds": 0.044
+    },
+    {
+      "request": "after1",
+      "http": 200,
+      "businessCode": 200,
+      "emptyData": true,
+      "elapsedSeconds": 0.044
+    },
+    {
+      "request": "after2",
+      "http": 200,
+      "businessCode": 200,
+      "emptyData": true,
+      "elapsedSeconds": 0.044
+    }
+  ],
+  "before_after_pid_checks": "APP3340_MYSQL2695_REDIS2793_UNCHANGED_RUNNING_NO_OOM",
+  "before_after_database_uuid_and_table_checksum": "UNCHANGED",
+  "network_log_observation": {
+    "socket_destinations": 24,
+    "external_or_dns_attempts": 0,
+    "published_ports": false
+  },
+  "outer_container_network_cleanup": "NOT_INDEPENDENTLY_PROVEN",
+  "actual_rebuilt_jar_sha256": null,
+  "original_native_jar_4ef3_reused": false,
+  "next_owner": "F",
+  "limits": [
+    "No capacity/RPS/SLA acceptance",
+    "No payment/user-write/business-recovery coverage",
+    "No proof of connectTimeout runtime value",
+    "No retroactive invention of original JAR bytes or post-deletion inventory"
+  ],
+  "all_complete": false
+}

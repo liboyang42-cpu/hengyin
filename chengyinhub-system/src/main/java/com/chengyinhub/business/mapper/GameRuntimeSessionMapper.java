@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 public interface GameRuntimeSessionMapper {
+    /** Same member/team visibility as the existing selectors, only the no-route default instance. */
     List<GameRuntimeSession> selectDefaultMemberSessionsByTopic(@Param("activityId") Long activityId,
             @Param("topicId") Long topicId, @Param("memberId") Long memberId);
 

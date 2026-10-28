@@ -12,7 +12,7 @@ import com.chengyinhub.business.mapper.CmsTopicChapterMapper;
 import com.chengyinhub.business.mapper.CmsTopicMapper;
 import com.chengyinhub.business.mapper.CmsTopicNodeMapper;
 import com.chengyinhub.business.mapper.CmsTopicTemplateMetaMapper;
-import com.chengyinhub.business.service.impl.CmsTopicServiceImpl;
+import com.chengyinhub.business.service.impl.TopicQueryService;
 import com.chengyinhub.business.util.EvidenceLevel;
 import com.chengyinhub.business.util.TemplateStatus;
 import com.chengyinhub.common.constant.ProductType;
@@ -48,7 +48,7 @@ import static org.mockito.Mockito.when;
  */
 class TopicTemplateMetaBuildTest {
 
-    private CmsTopicServiceImpl service;
+    private TopicQueryService service;
     private CmsTopicMapper cmsTopicMapper;
     private CmsTopicChapterMapper cmsTopicChapterMapper;
     private CmsTopicNodeMapper cmsTopicNodeMapper;
@@ -61,11 +61,7 @@ class TopicTemplateMetaBuildTest {
 
     @BeforeEach
     void setUp() {
-        service = new CmsTopicServiceImpl();
-        org.springframework.test.util.ReflectionTestUtils.setField(service, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
-                invocation -> "lockTopic".equals(invocation.getMethod().getName())
-                        ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(service, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
-                        : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
+        service = new TopicQueryService();
         cmsTopicMapper = mock(CmsTopicMapper.class);
         cmsTopicChapterMapper = mock(CmsTopicChapterMapper.class);
         cmsTopicNodeMapper = mock(CmsTopicNodeMapper.class);
@@ -84,7 +80,13 @@ class TopicTemplateMetaBuildTest {
         when(cmsTopicChapterMapper.selectCmsTopicChapterList(any())).thenReturn(Arrays.asList(chapter()));
         when(cmsTopicNodeMapper.selectCmsTopicNodeList(any())).thenReturn(Collections.emptyList());
         when(categoryService.selectSysCategoryById(18L)).thenReturn(activeCategory());
-        when(merchantChapterApplicationService.getRecruitmentStats(anyLong(), any())).thenReturn(stats());
+        when(merchantChapterApplicationService.getRecruitmentStatsByChapters(org.mockito.ArgumentMatchers.anyMap()))
+                .thenAnswer(invocation -> {
+                    java.util.Map<Long, Integer> requested = invocation.getArgument(0);
+                    java.util.Map<Long, MerchantChapterRecruitmentStats> result = new java.util.LinkedHashMap<>();
+                    for (Long chapterId : requested.keySet()) result.put(chapterId, stats());
+                    return result;
+                });
     }
 
     /** 附表无行 = 该模板尚未录入元数据,是合法状态,不能被渲染成任何确定结论。 */

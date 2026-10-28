@@ -44,6 +44,7 @@ public class HttpWebhookTransport implements WebhookTransport {
 
     @Override
     public TransportResponse post(String url, String jsonBody) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         HttpURLConnection conn = null;
         try {
             conn = (HttpURLConnection) new URL(url).openConnection();

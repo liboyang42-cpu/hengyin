@@ -1,0 +1,10 @@
+test_duplicate_changed_or_injected_control_input_is_refused (test_compiled_controls.CompiledControlSourceTest.test_duplicate_changed_or_injected_control_input_is_refused) ... ok
+test_output_outside_owned_ignored_target_is_refused_before_any_tool (test_compiled_controls.CompiledControlSourceTest.test_output_outside_owned_ignored_target_is_refused_before_any_tool) ... ok
+test_three_actual_source_fixtures_only_insert_one_uncalled_method (test_compiled_controls.CompiledControlSourceTest.test_three_actual_source_fixtures_only_insert_one_uncalled_method) ... ok
+test_without_actual_ci_prerequisites_it_writes_unknown_without_launching_any_tool (test_compiled_controls.CompiledControlSourceTest.test_without_actual_ci_prerequisites_it_writes_unknown_without_launching_any_tool) ... ok
+test_wrong_repository_short_identity_and_invalid_attempt_are_not_ci_permission (test_compiled_controls.CompiledControlSourceTest.test_wrong_repository_short_identity_and_invalid_attempt_are_not_ci_permission) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.004s
+
+OK

@@ -1,0 +1,255 @@
+{
+  "state": "FINAL_SOURCE_SELECTED_SHARDS_PREPARED_NOT_RUN",
+  "old_source": "119d3f87bbf89162d47db837c404b361915d1b81",
+  "jobs": [
+    "fast_gates",
+    "backend",
+    "mini_unit",
+    "mini_static",
+    "dependency_audit",
+    "migration_safety"
+  ],
+  "mini_test_files": [
+    "tests/unit/action-ledger.test.js",
+    "tests/unit/coop-four-page-state-contract.test.js",
+    "tests/unit/coop-invite-edit-exit-contract.test.js",
+    "tests/unit/coop-invite-entry-type-contract.test.js",
+    "tests/unit/coop-invite-flow-contract.test.js",
+    "tests/unit/coop-list-inbox.test.js",
+    "tests/unit/coop-supply-station-contract.test.js",
+    "tests/unit/cu-c-113-topic-option-identity.test.js",
+    "tests/unit/fabu-template-binding-copy.test.js",
+    "tests/unit/g4-coop-topic-style-contract.test.js",
+    "tests/unit/get-auth-matrix-contract.test.js",
+    "tests/unit/malformed-list-response.test.js",
+    "tests/unit/merchant-top-level-theme-contract.test.js",
+    "tests/unit/mini-static-evidence-d192.test.js",
+    "tests/unit/official-inbox-contract.test.js",
+    "tests/unit/official-inbox-refresh-feedback-bl207.test.js",
+    "tests/unit/official-pages-state-contract.test.js",
+    "tests/unit/play-qa-choice-feedback.test.js",
+    "tests/unit/play-qa-completed-handoff.test.js",
+    "tests/unit/play-qa-photo-upload-contract.test.js",
+    "tests/unit/play-qa-recovery-contract.test.js",
+    "tests/unit/playkit-fidelity-contract.test.js",
+    "tests/unit/playkit-sort-match-classify-contract.test.js",
+    "tests/unit/silent-error-reviewed-recovery.test.js",
+    "tests/unit/template-search-scope-contract.test.js",
+    "tests/unit/template-tab-failure-state-contract.test.js",
+    "tests/unit/template-use-visible-lifecycle-contract.test.js",
+    "tests/unit/tg3-qa-shared-instance-contract.test.js",
+    "tests/unit/ui-integrity-u1-seat-callers-ee815.test.js",
+    "tests/unit/verification-unknown-adapters.test.js"
+  ],
+  "always_secret_scan": true,
+  "basis": {
+    "changed_test_files": "All nine actually modified unit files retained",
+    "qa": "Every direct playkit-qa production source reader retained",
+    "official": "Actual five actions and refresh/visible-state callers",
+    "invite": "Frozen payload, original entry/type, owner-target station choices and retry/account lifecycle",
+    "library": "Two default-error read changes, real retry/search/visible lifecycle and actual adoption caller",
+    "metadata": "Original ledger, precise baseline anchors and source silent-error controls"
+  },
+  "excluded_unaffected": [
+    "admin_ui",
+    "admin_ui_contract",
+    "unchanged mini unit files outside explicit source impact"
+  ],
+  "other_entries": [
+    "architecture-day-integrated-changes storage: actual matrix never executed",
+    "all-three HTTP36: actual HTTP never executed",
+    "gameplay-capacity-mixed: actual workload never executed",
+    "restore-application-startup: actual full application never executed",
+    "backend-jar run_restore_fixtures: seven original cohorts never executed"
+  ],
+  "same_source_required": true,
+  "full_ci_claim_allowed": false,
+  "mini_shards": [
+    1,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    15,
+    18,
+    19,
+    20
+  ],
+  "native_manifest_files": 1511,
+  "native_manifest_sha256": "49f2adbf7ceb6eca9d1f80296617db51adb5cbaee93ef9358df0171a0780a47a",
+  "mini_file_shard_mapping": [
+    {
+      "file": "tests/unit/action-ledger.test.js",
+      "native_sorted_index": 11,
+      "shard": 12
+    },
+    {
+      "file": "tests/unit/coop-four-page-state-contract.test.js",
+      "native_sorted_index": 305,
+      "shard": 6
+    },
+    {
+      "file": "tests/unit/coop-invite-edit-exit-contract.test.js",
+      "native_sorted_index": 308,
+      "shard": 9
+    },
+    {
+      "file": "tests/unit/coop-invite-entry-type-contract.test.js",
+      "native_sorted_index": 309,
+      "shard": 10
+    },
+    {
+      "file": "tests/unit/coop-invite-flow-contract.test.js",
+      "native_sorted_index": 311,
+      "shard": 12
+    },
+    {
+      "file": "tests/unit/coop-list-inbox.test.js",
+      "native_sorted_index": 314,
+      "shard": 15
+    },
+    {
+      "file": "tests/unit/coop-supply-station-contract.test.js",
+      "native_sorted_index": 322,
+      "shard": 3
+    },
+    {
+      "file": "tests/unit/cu-c-113-topic-option-identity.test.js",
+      "native_sorted_index": 342,
+      "shard": 3
+    },
+    {
+      "file": "tests/unit/fabu-template-binding-copy.test.js",
+      "native_sorted_index": 422,
+      "shard": 3
+    },
+    {
+      "file": "tests/unit/g4-coop-topic-style-contract.test.js",
+      "native_sorted_index": 446,
+      "shard": 7
+    },
+    {
+      "file": "tests/unit/get-auth-matrix-contract.test.js",
+      "native_sorted_index": 467,
+      "shard": 8
+    },
+    {
+      "file": "tests/unit/malformed-list-response.test.js",
+      "native_sorted_index": 627,
+      "shard": 8
+    },
+    {
+      "file": "tests/unit/merchant-top-level-theme-contract.test.js",
+      "native_sorted_index": 744,
+      "shard": 5
+    },
+    {
+      "file": "tests/unit/mini-static-evidence-d192.test.js",
+      "native_sorted_index": 763,
+      "shard": 4
+    },
+    {
+      "file": "tests/unit/official-inbox-contract.test.js",
+      "native_sorted_index": 838,
+      "shard": 19
+    },
+    {
+      "file": "tests/unit/official-inbox-refresh-feedback-bl207.test.js",
+      "native_sorted_index": 840,
+      "shard": 1
+    },
+    {
+      "file": "tests/unit/official-pages-state-contract.test.js",
+      "native_sorted_index": 843,
+      "shard": 4
+    },
+    {
+      "file": "tests/unit/play-qa-choice-feedback.test.js",
+      "native_sorted_index": 928,
+      "shard": 9
+    },
+    {
+      "file": "tests/unit/play-qa-completed-handoff.test.js",
+      "native_sorted_index": 929,
+      "shard": 10
+    },
+    {
+      "file": "tests/unit/play-qa-photo-upload-contract.test.js",
+      "native_sorted_index": 930,
+      "shard": 11
+    },
+    {
+      "file": "tests/unit/play-qa-recovery-contract.test.js",
+      "native_sorted_index": 931,
+      "shard": 12
+    },
+    {
+      "file": "tests/unit/playkit-fidelity-contract.test.js",
+      "native_sorted_index": 960,
+      "shard": 1
+    },
+    {
+      "file": "tests/unit/playkit-sort-match-classify-contract.test.js",
+      "native_sorted_index": 977,
+      "shard": 18
+    },
+    {
+      "file": "tests/unit/silent-error-reviewed-recovery.test.js",
+      "native_sorted_index": 1291,
+      "shard": 12
+    },
+    {
+      "file": "tests/unit/template-search-scope-contract.test.js",
+      "native_sorted_index": 1377,
+      "shard": 18
+    },
+    {
+      "file": "tests/unit/template-tab-failure-state-contract.test.js",
+      "native_sorted_index": 1379,
+      "shard": 20
+    },
+    {
+      "file": "tests/unit/template-use-visible-lifecycle-contract.test.js",
+      "native_sorted_index": 1380,
+      "shard": 1
+    },
+    {
+      "file": "tests/unit/tg3-qa-shared-instance-contract.test.js",
+      "native_sorted_index": 1384,
+      "shard": 5
+    },
+    {
+      "file": "tests/unit/ui-integrity-u1-seat-callers-ee815.test.js",
+      "native_sorted_index": 1434,
+      "shard": 15
+    },
+    {
+      "file": "tests/unit/verification-unknown-adapters.test.js",
+      "native_sorted_index": 1480,
+      "shard": 1
+    }
+  ],
+  "mapping_reference": "https://github.com/nodejs/node/blob/v22.x/lib/internal/test_runner/runner.js#L103-L120 and #L637-L641: sorted glob; index % total == shard-1",
+  "mapping_evidence": "Source enumeration only; actual hosted Node22 discovery selftest and same-manifest receipts remain mandatory",
+  "first_failed_shards_retained": [
+    1,
+    5,
+    8,
+    12,
+    15,
+    18
+  ],
+  "unselected_shards": [
+    2,
+    13,
+    14,
+    16,
+    17
+  ]
+}

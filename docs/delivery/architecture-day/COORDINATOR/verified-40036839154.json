@@ -1,0 +1,13 @@
+{
+  "run": 40036839154,
+  "source_sha": "66e9e1798bf0b3e1c2b7e6cb2b6ab13a3b3e1329",
+  "class": "com.chengyinhub.business.service.RegistrationFundsMybatisIntegrationTest",
+  "tests": 94,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "cleanup": "CLEAN",
+  "xml_sha256": "640b07fcc3383bca6f8a1237d32c21da61cd7dcd760ee645da613e18e741bf68",
+  "receipt_sha256": "2362a5cc30f4d7007c96fecc5d2e924806f0cf3cf13e59db3acebcc1b5960cc9",
+  "scope": "Real services/mappers and declared cases only; no HTTP/JWT/device/real providers/full settlement or strict in-flight revocation proof."
+}

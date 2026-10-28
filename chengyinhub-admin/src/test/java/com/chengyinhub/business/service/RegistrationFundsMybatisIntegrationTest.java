@@ -6,11 +6,13 @@ import com.chengyinhub.business.mapper.CmsActivityMapper;
 import com.chengyinhub.business.mapper.CmsRegistrationMapper;
 import com.chengyinhub.business.mapper.CmsRegistrationScanMapper;
 import com.chengyinhub.business.mapper.CmsTopicNodeMapper;
+import com.chengyinhub.business.mapper.CmsTopicMapper;
 import com.chengyinhub.business.mapper.UmsMemberMapper;
 import com.chengyinhub.business.mapper.UmsMemberBalanceDetailMapper;
 import com.chengyinhub.business.mapper.UmsMemberPointsDetailMapper;
 import com.chengyinhub.business.mapper.OmsTicketMapper;
 import com.chengyinhub.business.domain.CmsRegistration;
+import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.SettlementRule;
 import com.chengyinhub.business.domain.dto.RegistrationOrderResult;
 import com.chengyinhub.business.domain.dto.RegistrationRequest;
@@ -43,6 +45,7 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -99,10 +102,14 @@ class RegistrationFundsMybatisIntegrationTest {
     private IPerkLedgerService perkLedgerService;
     private PlatformTransactionManager transactionManager;
     private SqlSessionTemplate template;
+    private com.chengyinhub.business.service.WechatPaymentOperations localPaymentGuards;
     private CmsRegistrationServiceImpl registrationTarget;
+    private com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService verifiedFacts;
 
     @BeforeAll
     void createDatabaseAndService() throws Exception {
+        assertEquals("1", System.getenv("B_PAYMENT_FACT_DDL_APPROVED"));
+        assertEquals("1", System.getenv("A_REGISTRATION_PAYMENT_FACT_DDL_APPROVED"));
         new PiiCryptoService(TEST_PII_KEY, "funds-it-hmac").register();
         DriverManagerDataSource admin = dataSource(MYSQL.adminUrl());
         try (Connection c = admin.getConnection(); Statement s = c.createStatement()) {
@@ -116,6 +123,12 @@ class RegistrationFundsMybatisIntegrationTest {
             s.execute("CREATE DATABASE " + MYSQL.databaseName() + " CHARACTER SET utf8mb4");
         }
         dataSource = dataSource(MYSQL.databaseUrl());
+        try (Connection connection = dataSource.getConnection()) {
+            ScriptUtils.executeSqlScript(connection, new FileSystemResource("sql/migration_wx_payment_callback_inbox_outbox_20260725.sql"));
+            ScriptUtils.executeSqlScript(connection, new FileSystemResource("sql/migration_20261024_wx_verified_payment_fact.sql"));
+            ScriptUtils.executeSqlScript(connection, new FileSystemResource("sql/migration_20261023_wx_pay_order_intent.sql"));
+        }
+        verifiedFacts = com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.realFacts(dataSource);
         template = new SqlSessionTemplate(buildFactory(dataSource));
         registrationMapper = template.getMapper(CmsRegistrationMapper.class);
 
@@ -125,6 +138,10 @@ class RegistrationFundsMybatisIntegrationTest {
 
                 org.mockito.Mockito.mock(com.chengyinhub.business.service.impl.FirstReviewPointsClawbackService.class));
         registrationTarget = target;
+        ReflectionTestUtils.setField(target, "verifiedPaymentFacts", verifiedFacts);
+        ReflectionTestUtils.setField(target, "coopSettlementClaimService", mock(ICoopSettlementClaimService.class));
+        ReflectionTestUtils.setField(target, "registrationPaymentFactMapper",
+                template.getMapper(com.chengyinhub.business.mapper.CmsRegistrationPaymentFactMapper.class));
         ReflectionTestUtils.setField(target, "platformMemberId", 1L);
         org.springframework.test.util.ReflectionTestUtils.setField(target, "growthService",
                 org.mockito.Mockito.mock(com.chengyinhub.business.service.IGrowthService.class));
@@ -153,12 +170,20 @@ class RegistrationFundsMybatisIntegrationTest {
         ReflectionTestUtils.setField(target, "settlementEntryService", settlementEntryService);
 
         transactionManager = new DataSourceTransactionManager(dataSource);
+        // Domain current-attempt checks use real local SQL; outbound query/close doubles never replace this guard.
+        localPaymentGuards = org.mockito.Mockito.spy(
+                com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.realPaymentGuards(
+                        dataSource, "mch-funds-it", verifiedFacts));
+        var localGuardBeans = new org.springframework.beans.factory.support.StaticListableBeanFactory();
+        localGuardBeans.addBean("localPaymentGuards", localPaymentGuards);
+        ReflectionTestUtils.setField(target, "paymentAttemptGateway", localGuardBeans.getBeanProvider(
+                com.chengyinhub.business.service.WechatPaymentOperations.class));
         // 2026-09-16: 回调 inbox 去重(cc36b4552)是支付/退款回调的必经一步,本套手工装配漏注入即 NPE。
         // 2026-10-22 W3:报名支付回调改走 inbox process fence,业务在 fence 事务内提交;
         // inbox 自身语义由 WxPaymentCallbackInboxServiceImplTest / WxPaymentCallbackFencingMySqlIT 覆盖,
         // 这里用直通桩:每次都在独立事务里跑业务 mutation,失败整笔回滚。
         ReflectionTestUtils.setField(target, "wxPaymentCallbackInboxService",
-                PaymentCallbackInboxStubs.passThrough(transactionManager));
+                PaymentCallbackInboxStubs.passThrough(transactionManager, verifiedFacts));
         java.util.concurrent.ScheduledExecutorService noticeExecutor =
                 mock(java.util.concurrent.ScheduledExecutorService.class);
         when(noticeExecutor.schedule(org.mockito.ArgumentMatchers.any(Runnable.class),
@@ -171,6 +196,7 @@ class RegistrationFundsMybatisIntegrationTest {
         ReflectionTestUtils.setField(target, "committedBusinessNotice",
                 new com.chengyinhub.business.service.support.CommittedBusinessNotice(
                         mock(INotifyService.class), mock(AlarmService.class), transactionManager, noticeExecutor));
+        wireSignupNoticeFixture(target);
         TransactionInterceptor interceptor = new TransactionInterceptor(transactionManager, new AnnotationTransactionAttributeSource());
         ProxyFactory proxyFactory = new ProxyFactory(target);
         proxyFactory.setInterfaces(ICmsRegistrationService.class, IRegistrationCreationTransaction.class);
@@ -187,6 +213,9 @@ class RegistrationFundsMybatisIntegrationTest {
         registrationOrderService = orderTarget;
 
         refundService = new RefundServiceImpl();
+        ICoopSettlementClaimService originalRefundOwner = mock(ICoopSettlementClaimService.class);
+        when(originalRefundOwner.hasFrozenOriginalRefundComponents(org.mockito.ArgumentMatchers.anyLong())).thenReturn(false);
+        ReflectionTestUtils.setField(refundService, "coopSettlementClaimService", originalRefundOwner);
 
         org.springframework.test.util.ReflectionTestUtils.setField(refundService, "firstReviewPointsClawback",
 
@@ -202,8 +231,45 @@ class RegistrationFundsMybatisIntegrationTest {
         ReflectionTestUtils.setField(refundService, "settlementDebtLedger", mock(com.chengyinhub.business.service.support.SettlementDebtLedger.class));
     }
 
+    /** Notification persistence is covered by D's dedicated IT; keep this suite's real financial writes. */
+    private void wireSignupNoticeFixture(CmsRegistrationServiceImpl target) {
+        ISystemNotificationIntentService intents = mock(ISystemNotificationIntentService.class);
+        // Mockito's boxed Long default is 0, which the production guard correctly rejects as an invalid receipt.
+        when(intents.findIntentId(org.mockito.ArgumentMatchers.anyString())).thenReturn(null);
+        when(intents.enqueue(org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.anyInt(),
+                org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString(),
+                org.mockito.ArgumentMatchers.anyString())).thenReturn(1L);
+        ReflectionTestUtils.setField(target, "systemNotificationIntents", intents);
+        IImService im = mock(IImService.class);
+        when(im.deliverSystemNotification(org.mockito.ArgumentMatchers.anyLong())).thenReturn(1L);
+        ReflectionTestUtils.setField(target, "imService", im);
+
+        // Read only actual rows from this suite's narrow topic fixture, without inventing missing topic facts.
+        CmsTopicMapper topics = mock(CmsTopicMapper.class);
+        when(topics.selectCmsTopicById(any(Long.class))).thenAnswer(call -> {
+            List<CmsTopic> rows = new JdbcTemplate(dataSource).query("SELECT * FROM cms_topic WHERE id = ?",
+                    new BeanPropertyRowMapper<>(CmsTopic.class), call.getArgument(0, Long.class));
+            return rows.isEmpty() ? null : rows.get(0);
+        });
+        when(topics.selectCmsTopicByIdForUpdate(any(Long.class))).thenAnswer(call -> {
+            List<CmsTopic> rows = new JdbcTemplate(dataSource).query("SELECT * FROM cms_topic WHERE id = ? FOR UPDATE",
+                    new BeanPropertyRowMapper<>(CmsTopic.class), call.getArgument(0, Long.class));
+            return rows.isEmpty() ? null : rows.get(0);
+        });
+        ReflectionTestUtils.setField(target, "cmsTopicMapper", topics);
+    }
+
     @BeforeEach
     void resetSchema() throws Exception {
+        clearInvocations(localPaymentGuards);
+        // SQL originals/facts are recreated per case. Their unit inbox must have the same
+        // lifetime; retain reference conflict checks and repeated mutation within each case.
+        ReflectionTestUtils.setField(registrationTarget, "wxPaymentCallbackInboxService",
+                PaymentCallbackInboxStubs.passThrough(transactionManager, verifiedFacts));
+        // Existing suite recreates its own scratch schema per case; never disable immutable triggers during execution.
+        execute("DROP TABLE IF EXISTS cms_registration_payment_fact");
+        execute("DELETE FROM wx_verified_payment_fact_rejection", "DELETE FROM wx_verified_payment_fact",
+                "DELETE FROM wx_payment_callback_outbox", "DELETE FROM wx_pay_order_intent");
         execute("DROP TABLE IF EXISTS cms_registration_scan", "DROP TABLE IF EXISTS cms_member_template",
                 "DROP TABLE IF EXISTS cms_topic_node",
                 "DROP TABLE IF EXISTS club_edition_compensation_terms",
@@ -306,7 +372,11 @@ class RegistrationFundsMybatisIntegrationTest {
                         + " CHECK (JSON_TYPE(verified_registration_ids_json)='ARRAY' AND JSON_LENGTH(verified_registration_ids_json)>0),"
                         + " CHECK (JSON_TYPE(unverified_registration_ids_json)='ARRAY' AND JSON_LENGTH(unverified_registration_ids_json)>0)) ENGINE=InnoDB"
         );
+        try (Connection connection = dataSource.getConnection()) {
+            ScriptUtils.executeSqlScript(connection, new FileSystemResource("sql/migration_20261024_registration_payment_fact.sql"));
+        }
         execute("INSERT INTO ums_member(id,status,point,del_flag) VALUES (7,1,100,0)",
+                "INSERT INTO cms_topic(id,member_id,product_type) VALUES (99,1,1)",
                 "INSERT INTO cms_points_setting(id,value,type,status,del_flag) VALUES (2,10,1,1,0),(3,5,1,1,0)",
                 "INSERT INTO cms_activity(id,member_id,name,status,publish_status,del_flag,start_date,end_date) VALUES (55,1,'本地活动',1,1,0,DATE_SUB(NOW(),INTERVAL 1 DAY),DATE_ADD(NOW(),INTERVAL 1 DAY))",
                 "INSERT INTO oms_ticket(id,owner_type,owner_id,name,price,start_time,end_time,total_inventory,remaining_inventory,del_flag) VALUES (9,2,55,'本地票',100,DATE_ADD(NOW(),INTERVAL 1 HOUR),DATE_ADD(NOW(),INTERVAL 1 DAY),10,0,0)",
@@ -332,6 +402,130 @@ class RegistrationFundsMybatisIntegrationTest {
         String version = text("SELECT VERSION()");
         assertTrue(version.startsWith("8.0.45"),
                 "Funds MySQL IT 必须运行在 Oracle MySQL 8.0.45，实际为 " + version);
+    }
+
+    @Test
+    void disabledGenericAdminAddCannotCreateRefundablePointsOrInventory() throws Exception {
+        execute("INSERT INTO ums_member(id,status,point,del_flag) VALUES(8,1,100,0)");
+        long registrations = number("SELECT COUNT(*) FROM cms_registration");
+        long memberPoints = number("SELECT point FROM ums_member WHERE id=8");
+        long inventory = number("SELECT remaining_inventory FROM oms_ticket WHERE id=9");
+        long ledgers = number("SELECT COUNT(*) FROM ums_member_points_detail");
+        com.chengyinhub.web.controller.business.CmsRegistrationController controller =
+                new com.chengyinhub.web.controller.business.CmsRegistrationController();
+        ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrationService);
+        CmsRegistration forged = new CmsRegistration();
+        forged.setId(900001L);
+        forged.setRegistrationNo("FORGED-ADMIN-POST");
+        forged.setMemberId(8L);
+        forged.setTicketId(9L);
+        forged.setPointUsed(1000L);
+        forged.setPointsReturned(0);
+        forged.setOrderNum(1L);
+        forged.setRegistrationStatus(1);
+        forged.setPaymentStatus(2);
+
+        com.chengyinhub.common.core.domain.AjaxResult rejected = controller.add(forged);
+
+        assertEquals(403, rejected.get(com.chengyinhub.common.core.domain.AjaxResult.CODE_TAG));
+        assertEquals("REGISTRATION_GENERIC_CREATE_DISABLED", rejected.get("errorCode"));
+        assertEquals(registrations, number("SELECT COUNT(*) FROM cms_registration"));
+        assertEquals(0, number("SELECT COUNT(*) FROM cms_registration WHERE id=900001"));
+        assertEquals(memberPoints, number("SELECT point FROM ums_member WHERE id=8"));
+        assertEquals(inventory, number("SELECT remaining_inventory FROM oms_ticket WHERE id=9"));
+        assertEquals(ledgers, number("SELECT COUNT(*) FROM ums_member_points_detail"));
+    }
+
+    @Test
+    void adminEditOfZeroPointOrderCannotMintPointsOrMoveInventoryOnMemberCancellation() throws Exception {
+        assertAdminEditCannotRewriteCancellationBasis(0, 0L);
+    }
+
+    @Test
+    void adminEditOfPrepaidPointOrderReturnsOnlyTheOriginalDeductionOnMemberCancellation() throws Exception {
+        assertAdminEditCannotRewriteCancellationBasis(1, 100L);
+    }
+
+    private void assertAdminEditCannotRewriteCancellationBasis(int usePoints, long expectedDeduction) throws Exception {
+        execute("UPDATE oms_ticket SET remaining_inventory=10,start_time=DATE_ADD(NOW(),INTERVAL 10 DAY),"
+                        + "end_time=DATE_ADD(NOW(),INTERVAL 11 DAY) WHERE id=9",
+                "UPDATE cms_activity SET start_date=DATE_ADD(NOW(),INTERVAL 10 DAY),"
+                        + "end_date=DATE_ADD(NOW(),INTERVAL 11 DAY) WHERE id=55",
+                "INSERT INTO ums_member(id,status,point,del_flag) VALUES (8,1,37,0)",
+                "INSERT INTO oms_ticket(id,owner_type,owner_id,name,price,total_inventory,remaining_inventory,del_flag) "
+                        + "VALUES (10,2,55,'另一张票',10,4,3,0)");
+        // Real transactional creation: reserve two units and debit/log the original points, no staged fake debit.
+        CmsRegistration original = registrationService.createRegistration(7L, 2, 55L, 9L, usePoints,
+                "资金边界测试", "fixture-contact", null, null, 2, null, null, null);
+        long id = original.getId();
+        assertEquals(expectedDeduction, number("SELECT point_used FROM cms_registration WHERE id=" + id));
+        assertEquals(100 - expectedDeduction, number("SELECT point FROM ums_member WHERE id=7"));
+        assertEquals(8, number("SELECT remaining_inventory FROM oms_ticket WHERE id=9"));
+        assertEquals(expectedDeduction == 0 ? 0 : 1,
+                number("SELECT COUNT(*) FROM ums_member_points_detail WHERE member_id=7 AND event_id=" + id));
+        long pointsFlowsBeforeEdit = number("SELECT COUNT(*) FROM ums_member_points_detail");
+        String originalNo = text("SELECT registration_no FROM cms_registration WHERE id=" + id);
+        Map<String, Object> before = new JdbcTemplate(dataSource).queryForMap(
+                "SELECT * FROM cms_registration WHERE id=?", id);
+
+        com.chengyinhub.web.controller.business.CmsRegistrationController controller =
+                new com.chengyinhub.web.controller.business.CmsRegistrationController();
+        ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrationService);
+        com.chengyinhub.common.core.domain.entity.SysUser admin =
+                new com.chengyinhub.common.core.domain.entity.SysUser();
+        admin.setUserId(1L);
+        com.chengyinhub.common.core.domain.model.LoginUser login =
+                new com.chengyinhub.common.core.domain.model.LoginUser(1L, null, admin,
+                        new java.util.HashSet<>(java.util.Arrays.asList("business:registration:edit", "business:registration:pii")));
+        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
+                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                        login, null, java.util.Collections.emptyList()));
+        try {
+            CmsRegistration submitted = new CmsRegistration();
+            submitted.setId(id);
+            submitted.setPointUsed(1000L);
+            submitted.setPointsReturned(0);
+            submitted.setMemberId(8L);
+            submitted.setTicketId(10L);
+            submitted.setOrderNum(100L);
+            submitted.setRegistrationNo("REPLACED-NUMBER");
+            submitted.setParentOrderNo("REPLACED-PARENT");
+            submitted.setRequestFingerprint("f".repeat(64));
+            submitted.setOwnerType(1L);
+            submitted.setOwnerId(999L);
+            submitted.setTicketName("正常标签编辑仍生效");
+            assertEquals(200, controller.edit(submitted).get("code"));
+        } finally {
+            org.springframework.security.core.context.SecurityContextHolder.clearContext();
+        }
+        Map<String, Object> afterEdit = new JdbcTemplate(dataSource).queryForMap(
+                "SELECT * FROM cms_registration WHERE id=?", id);
+        for (String column : before.keySet()) {
+            if (!"ticket_name".equalsIgnoreCase(column) && !"update_time".equalsIgnoreCase(column)) {
+                assertEquals(before.get(column), afterEdit.get(column), "protected original column: " + column);
+            }
+        }
+        assertEquals("正常标签编辑仍生效", afterEdit.get("ticket_name"));
+        assertEquals(pointsFlowsBeforeEdit, number("SELECT COUNT(*) FROM ums_member_points_detail"));
+        assertTrue(registrationService.cancelRegistration(id, 7L, "original-member"));
+        assertEquals(100, number("SELECT point FROM ums_member WHERE id=7"));
+        assertEquals(37, number("SELECT point FROM ums_member WHERE id=8"));
+        assertEquals(10, number("SELECT remaining_inventory FROM oms_ticket WHERE id=9"));
+        assertEquals(3, number("SELECT remaining_inventory FROM oms_ticket WHERE id=10"));
+        assertEquals(3, number("SELECT registration_status FROM cms_registration WHERE id=" + id));
+        assertEquals(originalNo, text("SELECT registration_no FROM cms_registration WHERE id=" + id));
+        assertEquals(expectedDeduction, number("SELECT point_used FROM cms_registration WHERE id=" + id));
+        assertEquals(1, number("SELECT points_returned FROM cms_registration WHERE id=" + id));
+        // Cancellation currently returns points without creating a new points ledger row: preserve/read that contract.
+        assertEquals(pointsFlowsBeforeEdit, number("SELECT COUNT(*) FROM ums_member_points_detail"));
+        if (expectedDeduction > 0) {
+            assertEquals(expectedDeduction, number("SELECT SUM(change_points) FROM ums_member_points_detail WHERE member_id=7 AND event_id=" + id));
+            assertEquals(2, number("SELECT change_type FROM ums_member_points_detail WHERE member_id=7 AND event_id=" + id));
+        }
+        assertTrue(registrationService.cancelRegistration(id, 7L, "same-original-replay"));
+        assertEquals(100, number("SELECT point FROM ums_member WHERE id=7"));
+        assertEquals(10, number("SELECT remaining_inventory FROM oms_ticket WHERE id=9"));
+        assertEquals(pointsFlowsBeforeEdit, number("SELECT COUNT(*) FROM ums_member_points_detail"));
     }
 
     /**
@@ -719,7 +913,7 @@ class RegistrationFundsMybatisIntegrationTest {
         long registrationId = createOrReplay(request).getPrimary().getId();
         // 期事实在【建单之后】才补齐：归因判定发生在冻结那一刻，先建单再补事实不削弱本用例，
         // 反而把两跳拆得更干净 —— 第一跳证明 create 没写归因列，第二跳证明冻结也造不出来。
-        // (本套件的 service fixture 没有接 cmsTopicMapper，建单期间 activity.topic_id 必须保持为空。)
+        // (保留原夹具：建单时活动未绑定主题，随后才补齐归因冻结所需事实。)
         execute("INSERT INTO cms_topic(id,club_id,selling_started_at,sale_end_at) VALUES"
                         + " (23,7,'2020-01-01 00:00:00','2030-01-01 00:00:00')",
                 "UPDATE cms_activity SET topic_id=23,club_id=7 WHERE id=55",
@@ -771,7 +965,8 @@ class RegistrationFundsMybatisIntegrationTest {
 
     @Test
     void paymentCreatesScansOnlyFromActivityAuthoritativeTopic() throws Exception {
-        execute("UPDATE cms_activity SET topic_id=3,member_id=NULL WHERE id=55",
+        execute("INSERT INTO cms_topic(id,member_id,product_type) VALUES (3,1,1)",
+                "UPDATE cms_activity SET topic_id=3,member_id=NULL WHERE id=55",
                 "UPDATE cms_registration SET owner_type=2,owner_id=55,purchase_kind=NULL WHERE id=11",
                 "INSERT INTO cms_member_template(id,member_id,validation_method,del_flag) VALUES (30,300,1,0),(550,5500,1,0)",
                 "INSERT INTO cms_topic_node(topic_id,name,template_id) VALUES (3,'真实主题节点',30),(55,'错误 ownerId 主题节点',550)");
@@ -828,7 +1023,7 @@ class RegistrationFundsMybatisIntegrationTest {
     }
 
     @Test
-    void concurrentRefundCallbacksReturnDeductedPointsExactlyOnce() throws Exception {
+    void concurrentUnverifiedRefundObservationsCannotReturnDeductedPoints() throws Exception {
         execute("UPDATE cms_registration SET payment_status=2,registration_status=2,point_used=20,points_returned=0 WHERE id=11",
                 "UPDATE ums_member SET point=80 WHERE id=7");
         CountDownLatch ready = new CountDownLatch(2);
@@ -839,15 +1034,15 @@ class RegistrationFundsMybatisIntegrationTest {
             Future<String> b = pool.submit(() -> callbackAfter(ready, start, "REFUND"));
             ready.await();
             start.countDown();
-            assertEquals("SUCCESS", a.get());
-            assertEquals("SUCCESS", b.get());
+            assertEquals("FAIL", a.get());
+            assertEquals("FAIL", b.get());
         } finally {
             pool.shutdownNow();
         }
-        assertEquals(100, number("SELECT point FROM ums_member WHERE id=7"));
-        assertEquals(1, number("SELECT points_returned FROM cms_registration WHERE id=11"));
-        assertEquals(4, number("SELECT payment_status FROM cms_registration WHERE id=11"));
-        assertEquals(3, number("SELECT registration_status FROM cms_registration WHERE id=11"));
+        assertEquals(80, number("SELECT point FROM ums_member WHERE id=7"));
+        assertEquals(0, number("SELECT points_returned FROM cms_registration WHERE id=11"));
+        assertEquals(2, number("SELECT payment_status FROM cms_registration WHERE id=11"));
+        assertEquals(2, number("SELECT registration_status FROM cms_registration WHERE id=11"));
     }
 
     @Test
@@ -996,7 +1191,6 @@ class RegistrationFundsMybatisIntegrationTest {
                 "UPDATE ums_member SET point=80 WHERE id=7",
                 "UPDATE oms_ticket SET remaining_inventory=5 WHERE id=9");
         IWechatPayService wechat = mock(IWechatPayService.class);
-        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
 
         RuntimeException rejected = assertThrows(RuntimeException.class,
@@ -1018,7 +1212,6 @@ class RegistrationFundsMybatisIntegrationTest {
                         + "pay_expire_time=DATE_ADD(NOW(),INTERVAL 3 DAY) WHERE id=11",
                 "UPDATE oms_ticket SET remaining_inventory=5 WHERE id=9");
         IWechatPayService wechat = mock(IWechatPayService.class);
-        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         Map<String, String> payParams = new HashMap<>();
         payParams.put("package", "prepay_id=cr527-live");
@@ -1039,7 +1232,6 @@ class RegistrationFundsMybatisIntegrationTest {
     void expiredPayingOrderQuerySuccessIsAppliedAsPaymentCallback() throws Exception {
         prepareExpiredPayingOrder();
         IWechatPayService wechat = mock(IWechatPayService.class);
-        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         when(wechat.queryOrderStatus("T20260724PAY")).thenReturn(wxQuery("SUCCESS"));
         AlarmService alarm = mock(AlarmService.class);
@@ -1064,7 +1256,6 @@ class RegistrationFundsMybatisIntegrationTest {
     void expiredPayingOrderQueryNotPayClosesOrderAndReleasesHeldResources() throws Exception {
         prepareExpiredPayingOrder();
         IWechatPayService wechat = mock(IWechatPayService.class);
-        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         when(wechat.queryOrderStatus("T20260724PAY")).thenReturn(wxQuery("NOTPAY"));
         when(wechat.closePaymentAttempt("T20260724PAY", "T20260724PAY")).thenReturn(true);
@@ -1094,7 +1285,6 @@ class RegistrationFundsMybatisIntegrationTest {
     void restartResetsCursorButNeverDoubleClosesOrDoubleReleases() throws Exception {
         prepareExpiredPayingOrder();
         IWechatPayService wechat = mock(IWechatPayService.class);
-        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         when(wechat.queryOrderStatus("T20260724PAY")).thenReturn(wxQuery("NOTPAY"));
         when(wechat.closePaymentAttempt("T20260724PAY", "T20260724PAY")).thenReturn(true);
@@ -1126,7 +1316,6 @@ class RegistrationFundsMybatisIntegrationTest {
     void expiredPayingOrderQueryFailureLeavesOrderUntouchedAndAlarms() throws Exception {
         prepareExpiredPayingOrder();
         IWechatPayService wechat = mock(IWechatPayService.class);
-        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         when(wechat.queryOrderStatus("T20260724PAY")).thenThrow(new RuntimeException("微信查单超时"));
         AlarmService alarm = mock(AlarmService.class);
@@ -1154,7 +1343,6 @@ class RegistrationFundsMybatisIntegrationTest {
     void expiredMultiTicketPayingOrderIsNotSplitByUnpaidCloseTask() throws Exception {
         prepareExpiredMultiTicketPayingOrder();
         IWechatPayService wechat = mock(IWechatPayService.class);
-        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         when(wechat.queryOrderStatus("T20260724PAY")).thenReturn(wxQuery("SUCCESS"));
         AlarmService alarm = mock(AlarmService.class);
@@ -1176,7 +1364,6 @@ class RegistrationFundsMybatisIntegrationTest {
     void expiredMultiTicketPayingOrderNotPayClosesWholeParentOrder() throws Exception {
         prepareExpiredMultiTicketPayingOrder();
         IWechatPayService wechat = mock(IWechatPayService.class);
-        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         when(wechat.queryOrderStatus("T20260724PAY")).thenReturn(wxQuery("NOTPAY"));
         when(wechat.closePaymentAttempt("T20260724PAY", "T20260724PAY")).thenReturn(true);
@@ -1198,9 +1385,8 @@ class RegistrationFundsMybatisIntegrationTest {
         Map<String, String> observed = wxQuery("CLOSED");
         observed.put("wx_out_trade_no", "old-wx-attempt");
         when(wechat.queryOrderStatus("T20260724PAY")).thenReturn(observed);
-        when(wechat.lockPaymentAttemptForUpdate("T20260724PAY", "old-wx-attempt")).thenReturn(false);
         orderCloseTask(wechat, mock(AlarmService.class)).reconcileExpiredPaying();
-        verify(wechat).lockPaymentAttemptForUpdate("T20260724PAY", "old-wx-attempt");
+        verify(localPaymentGuards).lockClosablePaymentAttemptForUpdate("T20260724PAY", "old-wx-attempt");
         assertEquals(1, number("SELECT payment_status FROM cms_registration WHERE id=11"));
         assertEquals(1, number("SELECT registration_status FROM cms_registration WHERE id=11"));
         assertEquals(5, number("SELECT remaining_inventory FROM oms_ticket WHERE id=9"));
@@ -1230,7 +1416,6 @@ class RegistrationFundsMybatisIntegrationTest {
         prepareExpiredPayingOrder();
         setPayExpireTime(11L, System.currentTimeMillis() - 10 * 60 * 1000L);
         IWechatPayService wechat = mock(IWechatPayService.class);
-        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         when(wechat.queryOrderStatus("T20260724PAY"))
                 .thenThrow(new WechatOrderNotExistException("ORDER_NOT_EXIST", null));
@@ -1253,7 +1438,6 @@ class RegistrationFundsMybatisIntegrationTest {
         prepareExpiredPayingOrder();
         setPayExpireTime(11L, System.currentTimeMillis() - 110 * 60 * 1000L);
         IWechatPayService wechat = mock(IWechatPayService.class);
-        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         when(wechat.queryOrderStatus("T20260724PAY"))
                 .thenThrow(new WechatOrderNotExistException("ORDER_NOT_EXIST", null));
@@ -1276,7 +1460,6 @@ class RegistrationFundsMybatisIntegrationTest {
                         + "payable_amount,wechat_payment_amount,payment_status,registration_status,pay_expire_time,verification_status,points_returned) "
                         + "VALUES (2000,'TLATE',1,99,'后到单',7,0,100,100,1,1,DATE_SUB(NOW(),INTERVAL 3 DAY),0,0)");
         IWechatPayService wechat = mock(IWechatPayService.class);
-        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         when(wechat.queryOrderStatus(org.mockito.ArgumentMatchers.startsWith("STUCK")))
                 .thenThrow(new RuntimeException("微信查单超时"));
@@ -1315,7 +1498,6 @@ class RegistrationFundsMybatisIntegrationTest {
                         + "SELECT 3500+i,CONCAT('CAPLATE',i),1,99,'后到单',7,0,100,100,1,1,"
                         + "DATE_SUB(NOW(),INTERVAL 3 DAY),0,0 FROM n");
         IWechatPayService wechat = mock(IWechatPayService.class);
-        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         when(wechat.queryOrderStatus(org.mockito.ArgumentMatchers.startsWith("CAPSTUCK")))
                 .thenThrow(new RuntimeException("微信查单超时"));
@@ -1361,7 +1543,6 @@ class RegistrationFundsMybatisIntegrationTest {
     void expiredPayingOrderPayErrorClosesWechatOrderBeforeLocalClose() throws Exception {
         prepareExpiredPayingOrder();
         IWechatPayService wechat = mock(IWechatPayService.class);
-        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         when(wechat.queryOrderStatus("T20260724PAY")).thenReturn(wxQuery("PAYERROR"));
         when(wechat.closePaymentAttempt("T20260724PAY", "T20260724PAY")).thenReturn(true);
@@ -1379,7 +1560,6 @@ class RegistrationFundsMybatisIntegrationTest {
     private void assertCloseFailureLeavesOrderUntouched(String tradeState) throws Exception {
         prepareExpiredPayingOrder();
         IWechatPayService wechat = mock(IWechatPayService.class);
-        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         when(wechat.queryOrderStatus("T20260724PAY")).thenReturn(wxQuery(tradeState));
         when(wechat.closePaymentAttempt("T20260724PAY", "T20260724PAY")).thenThrow(new RuntimeException("关闭订单异常：ORDERPAID"));
@@ -1403,7 +1583,6 @@ class RegistrationFundsMybatisIntegrationTest {
     void activityCancelWithPayingOrderPaidOnWechatAppliesPaymentThenRefunds() throws Exception {
         preparePayingOrderOnActivity();
         IWechatPayService wechat = mock(IWechatPayService.class);
-        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         when(wechat.queryOrderStatus("T20260724PAY")).thenReturn(wxQuery("SUCCESS"));
         IRefundService refunds = mock(IRefundService.class);
@@ -1433,7 +1612,6 @@ class RegistrationFundsMybatisIntegrationTest {
     void activityCancelWithPayingOrderUnpaidOnWechatClosesItFirst() throws Exception {
         preparePayingOrderOnActivity();
         IWechatPayService wechat = mock(IWechatPayService.class);
-        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         when(wechat.queryOrderStatus("T20260724PAY")).thenReturn(wxQuery("NOTPAY"));
         when(wechat.closePaymentAttempt("T20260724PAY", "T20260724PAY")).thenReturn(true);
@@ -1469,7 +1647,6 @@ class RegistrationFundsMybatisIntegrationTest {
     void activityCancelWithMultiTicketPayingOrderUnpaidEndsCancelledNotExpired() throws Exception {
         preparePayingMultiTicketOrderOnActivity();
         IWechatPayService wechat = mock(IWechatPayService.class);
-        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         when(wechat.queryOrderStatus("T20260724PAY")).thenReturn(wxQuery("NOTPAY"));
         when(wechat.closePaymentAttempt("T20260724PAY", "T20260724PAY")).thenReturn(true);
@@ -1489,7 +1666,6 @@ class RegistrationFundsMybatisIntegrationTest {
     void activityCancelWithPayingOrderQueryFailureRejectsCancellation() throws Exception {
         preparePayingOrderOnActivity();
         IWechatPayService wechat = mock(IWechatPayService.class);
-        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         when(wechat.queryOrderStatus("T20260724PAY")).thenThrow(new RuntimeException("微信查单超时"));
         IRefundService refunds = mock(IRefundService.class);
@@ -1519,7 +1695,6 @@ class RegistrationFundsMybatisIntegrationTest {
                 + "(12,'T20260724SECOND',2,55,'资金并发测试',7,9,0,100,100,1,1,"
                 + "DATE_ADD(NOW(),INTERVAL 3 DAY),0,0)");
         IWechatPayService wechat = mock(IWechatPayService.class);
-        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         // selectCmsRegistrationList 是 order by id desc ⇒ 先处理 id=12(可关),后处理 id=11(查单失败)。
         Map<String, String> second = wxQuery("NOTPAY");
@@ -1557,7 +1732,6 @@ class RegistrationFundsMybatisIntegrationTest {
                 + "(12,'T20260724SECOND',2,55,'资金并发测试',7,9,0,100,100,1,1,"
                 + "DATE_ADD(NOW(),INTERVAL 3 DAY),0,0)");
         IWechatPayService wechat = mock(IWechatPayService.class);
-        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         // selectCmsRegistrationList 是 order by id desc ⇒ plan 顺序为 id=12(NOTPAY)、id=11(SUCCESS)。
         Map<String, String> second = wxQuery("NOTPAY");
@@ -1588,7 +1762,6 @@ class RegistrationFundsMybatisIntegrationTest {
         preparePayingOrderOnActivity();
         execute("UPDATE cms_registration SET pay_expire_time=NULL WHERE id=11");
         IWechatPayService wechat = mock(IWechatPayService.class);
-        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         when(wechat.queryOrderStatus("T20260724PAY"))
                 .thenThrow(new WechatOrderNotExistException("ORDER_NOT_EXIST", null));
@@ -1608,7 +1781,6 @@ class RegistrationFundsMybatisIntegrationTest {
         preparePayingOrderOnActivity();
         setPayExpireTime(11L, System.currentTimeMillis() - 10 * 60 * 1000L);
         IWechatPayService wechat = mock(IWechatPayService.class);
-        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         when(wechat.queryOrderStatus("T20260724PAY"))
                 .thenThrow(new WechatOrderNotExistException("ORDER_NOT_EXIST", null));
@@ -1651,7 +1823,6 @@ class RegistrationFundsMybatisIntegrationTest {
         preparePayingOrderOnActivity();
         execute("UPDATE cms_registration SET point_used=0 WHERE id=11");
         IWechatPayService wechat = mock(IWechatPayService.class);
-        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         when(wechat.queryOrderStatus("T20260724PAY")).thenReturn(wxQuery("NOTPAY"));
         when(wechat.closePaymentAttempt("T20260724PAY", "T20260724PAY")).thenReturn(true);
@@ -1667,7 +1838,6 @@ class RegistrationFundsMybatisIntegrationTest {
     void activityCancelQueryFailureAlarmsOperations() throws Exception {
         preparePayingOrderOnActivity();
         IWechatPayService wechat = mock(IWechatPayService.class);
-        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         when(wechat.queryOrderStatus("T20260724PAY")).thenThrow(new RuntimeException("微信查单超时"));
         AlarmService alarm = mock(AlarmService.class);
@@ -1675,7 +1845,7 @@ class RegistrationFundsMybatisIntegrationTest {
         assertThrows(com.chengyinhub.common.exception.ServiceException.class,
                 () -> cancelActivity(activityCancellation(wechat, mock(IRefundService.class), alarm)));
 
-        verify(alarm).alarm(org.mockito.ArgumentMatchers.contains("查单失败"),
+        verify(alarm).alarm(org.mockito.ArgumentMatchers.contains("支付查证未确认"),
                 org.mockito.ArgumentMatchers.contains("registrationId=11"));
     }
 
@@ -1684,7 +1854,6 @@ class RegistrationFundsMybatisIntegrationTest {
     void activityCancelWechatCloseFailureAlarmsOperations() throws Exception {
         preparePayingOrderOnActivity();
         IWechatPayService wechat = mock(IWechatPayService.class);
-        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         when(wechat.queryOrderStatus("T20260724PAY")).thenReturn(wxQuery("NOTPAY"));
         when(wechat.closePaymentAttempt("T20260724PAY", "T20260724PAY")).thenThrow(new RuntimeException("关闭订单异常：ORDERPAID"));
@@ -1693,7 +1862,7 @@ class RegistrationFundsMybatisIntegrationTest {
         assertThrows(com.chengyinhub.common.exception.ServiceException.class,
                 () -> cancelActivity(activityCancellation(wechat, mock(IRefundService.class), alarm)));
 
-        verify(alarm).alarm(org.mockito.ArgumentMatchers.contains("关微信单失败"),
+        verify(alarm).alarm(org.mockito.ArgumentMatchers.contains("原支付关闭未确认"),
                 org.mockito.ArgumentMatchers.contains("registrationId=11"));
         assertEquals(1, number("SELECT payment_status FROM cms_registration WHERE id=11"));
         assertEquals(0, number("SELECT COUNT(*) FROM cms_activity WHERE id=55 AND cancel_time IS NOT NULL"));
@@ -1727,7 +1896,6 @@ class RegistrationFundsMybatisIntegrationTest {
     void payParamsAreReturnedOnlyAfterPayingIsDurableSoConcurrentCancelCannotWin() throws Exception {
         execute("UPDATE cms_registration SET owner_type=2,owner_id=55,ticket_id=9 WHERE id=11");
         IWechatPayService wechat = mock(IWechatPayService.class);
-        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         Map<String, String> payParams = new HashMap<>();
         payParams.put("package", "prepay_id=durable-11");
@@ -1749,7 +1917,6 @@ class RegistrationFundsMybatisIntegrationTest {
     void uncertainWechatPreorderFailureKeepsPayingForLateSuccessRecovery() throws Exception {
         execute("UPDATE cms_registration SET owner_type=2,owner_id=55,ticket_id=9 WHERE id=11");
         IWechatPayService wechat = mock(IWechatPayService.class);
-        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         when(wechat.createOrder(org.mockito.ArgumentMatchers.any(CmsRegistration.class)))
                 .thenThrow(PaymentPreorderException.resultUncertain("微信响应未知", null));
@@ -1767,7 +1934,6 @@ class RegistrationFundsMybatisIntegrationTest {
     void laterLocalPreorderRejectionKeepsOriginalPayingForLateSuccess() throws Exception {
         execute("UPDATE cms_registration SET owner_type=2,owner_id=55,ticket_id=9 WHERE id=11");
         IWechatPayService wechat = mock(IWechatPayService.class);
-        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         when(wechat.createOrder(org.mockito.ArgumentMatchers.any(CmsRegistration.class)))
                 .thenThrow(PaymentPreorderException.definiteFailure("本地参数错误", null));
@@ -1786,7 +1952,6 @@ class RegistrationFundsMybatisIntegrationTest {
     void applicationServiceOwnsQuoteCreateReplayPreorderAndResponseMapping() throws Exception {
         execute("UPDATE oms_ticket SET remaining_inventory=100 WHERE id=9");
         IWechatPayService wechat = mock(IWechatPayService.class);
-        when(wechat.lockPaymentAttemptForUpdate(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(wechat.isReady()).thenReturn(true);
         Map<String, String> payParams = new HashMap<>();
         payParams.put("package", "prepay_id=application-flow");
@@ -2349,6 +2514,17 @@ class RegistrationFundsMybatisIntegrationTest {
         callback.put("transaction_id", "WX-TX-11");
         callback.put("trade_state", tradeState);
         callback.put("total", "10000");
+        if ("SUCCESS".equals(tradeState)) {
+            var fact = new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact(
+                    com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Kind.PAYMENT,
+                    "mch-funds-it", "wx-funds-it", "T20260724PAY", "T20260724PAY", "T20260724PAY",
+                    "WX-TX-11", "WX-TX-11", "JSAPI", "CNY", 10000, 10000,
+                    java.time.Instant.parse("2026-10-24T00:00:00Z"), null, "SUCCESS");
+            var reference = verifiedFacts.recordVerified(fact);
+            callback.put("verified_fact_id", Long.toString(reference.id())); callback.put("verified_fact_hash", reference.hash());
+            callback.put("wx_out_trade_no", fact.wxOutTradeNo()); callback.put("mchid", fact.mchid());
+            callback.put("appid", fact.appid()); callback.put("trade_type", fact.tradeType()); callback.put("currency", fact.currency());
+        }
         return callback;
     }
 
@@ -2402,6 +2578,10 @@ class RegistrationFundsMybatisIntegrationTest {
             IWechatPayService wechat, IRefundService refunds, AlarmService alarm) {
         com.chengyinhub.business.service.impl.TeamGroupServiceImpl target =
                 new com.chengyinhub.business.service.impl.TeamGroupServiceImpl();
+        ReflectionTestUtils.setField(target, "cancellationTransactions", transactionManager);
+        ReflectionTestUtils.setField(target, "verifiedPaymentFacts", verifiedFacts);
+        ReflectionTestUtils.setField(target, "cmsTopicMapper",
+                ReflectionTestUtils.getField(registrationTarget, "cmsTopicMapper"));
         ReflectionTestUtils.setField(target, "cmsRegistrationMapper", template.getMapper(CmsRegistrationMapper.class));
         ReflectionTestUtils.setField(target, "cmsActivityMapper", template.getMapper(CmsActivityMapper.class));
         ReflectionTestUtils.setField(target, "omsTicketMapper", template.getMapper(OmsTicketMapper.class));
@@ -2415,15 +2595,27 @@ class RegistrationFundsMybatisIntegrationTest {
         ReflectionTestUtils.setField(target, "alarmService", alarm);
         // 本套检查支付/退票落库；站内通知持久化另由取消通知事务测试覆盖。
         IImService notices = mock(IImService.class);
-        when(notices.sendSystem(any(), any(), any(), any())).thenReturn(1L);
+        when(notices.sendSystem(any(), any(), any(), any())).thenAnswer(call -> {
+            assertTrue(org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive(),
+                    "取消通知必须仍在生产最终应用事务内");
+            assertTrue(org.springframework.transaction.support.TransactionSynchronizationManager.hasResource(dataSource),
+                    "取消报名、库存、积分和通知必须共用本套 SQL 数据源事务");
+            return 1L;
+        });
         ReflectionTestUtils.setField(target, "imService", notices);
         return target;
     }
 
-    /** 与生产 @Transactional 同一提交边界:取消在一个事务里,抛异常整体回滚。 */
+    /** 生产入口自行分段；最终报名/库存/积分/通知由其内部原 SQL manager 原子提交或回滚。 */
     private void cancelActivity(com.chengyinhub.business.service.impl.TeamGroupServiceImpl target) {
-        new TransactionTemplate(transactionManager).executeWithoutResult(
-                tx -> target.cancelActivityByOwner(55L, 1L, "场地临时不可用"));
+        assertFalse(org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive(),
+                "调用取消入口前不能持有外层事务");
+        try {
+            target.cancelActivityByOwner(55L, 1L, "场地临时不可用");
+        } finally {
+            assertFalse(org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive(),
+                    "最终 phase 完成或失败后再独立读回资金与库存");
+        }
     }
 
     /** 用 JVM 时间经 JDBC 写 pay_expire_time,与任务读回比较走同一时区换算(避开库 NOW() 与 JVM 错位,§5-9)。 */
@@ -2438,6 +2630,7 @@ class RegistrationFundsMybatisIntegrationTest {
 
     /** §5-3:微信查单返回的原生 map(queryOrderStatus 与回调 resultMap 同键)。 */
     private Map<String, String> wxQuery(String tradeState) {
+        if ("SUCCESS".equals(tradeState)) return callback(tradeState); // Same explicit original provider fact as normal callbacks.
         Map<String, String> query = new HashMap<>();
         query.put("out_trade_no", "T20260724PAY");
         query.put("wx_out_trade_no", "T20260724PAY");
@@ -2452,7 +2645,6 @@ class RegistrationFundsMybatisIntegrationTest {
         ReflectionTestUtils.setField(task, "cmsRegistrationService", registrationService);
         ReflectionTestUtils.setField(task, "wechatPayService", wechat);
         ReflectionTestUtils.setField(task, "alarmService", alarm);
-        ReflectionTestUtils.setField(task, "paymentTransactions", transactionManager);
         return task;
     }
 
@@ -2571,6 +2763,8 @@ class RegistrationFundsMybatisIntegrationTest {
                 new SpringManagedTransactionFactory(), ds));
         configuration.getTypeAliasRegistry().registerAliases("com.chengyinhub.business.domain");
         addMapper(configuration, CmsRegistrationMapper.class, "mapper/business/CmsRegistrationMapper.xml");
+        addMapper(configuration, com.chengyinhub.business.mapper.CmsRegistrationPaymentFactMapper.class,
+                "mapper/business/CmsRegistrationPaymentFactMapper.xml");
         addMapper(configuration, CmsActivityMapper.class, "mapper/business/CmsActivityMapper.xml");
         addMapper(configuration, OmsTicketMapper.class, "mapper/business/OmsTicketMapper.xml");
         addMapper(configuration, UmsMemberMapper.class, "mapper/business/UmsMemberMapper.xml");

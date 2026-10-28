@@ -63,6 +63,7 @@ class LegacyChoiceCompletionRollbackAcceptanceTest {
         CmsActivityMapper activityMapper = mock(CmsActivityMapper.class);
         PlayTeamMapper teamMapper = mock(PlayTeamMapper.class);
         service = new AdvancedGameRuntimeServiceImpl();
+        com.chengyinhub.business.service.impl.AdvancedActionTestFixtures.transactions(service);
         ReflectionTestUtils.setField(service, "verifiedWeRunService", com.chengyinhub.business.it.R5WeRunFixture.service());
         ReflectionTestUtils.setField(service, "sessionMapper", sessionMapper);
         ReflectionTestUtils.setField(service, "nodeMapper", nodeMapper);

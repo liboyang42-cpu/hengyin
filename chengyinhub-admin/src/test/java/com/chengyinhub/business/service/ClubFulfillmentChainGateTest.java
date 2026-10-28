@@ -52,10 +52,15 @@ class ClubFulfillmentChainGateTest {
         ReflectionTestUtils.setField(service, "cmsRegistrationMapper", registrationMapper);
         ReflectionTestUtils.setField(service, "cmsActivityMapper", activityMapper);
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
+        com.chengyinhub.business.service.impl.RegistrationScopeFixture
+                .currentReads(registrationMapper, activityMapper, topicMapper);
         ReflectionTestUtils.setField(service, "clubMapper", clubMapper);
 
         CmsRegistration reg = new CmsRegistration();
         reg.setId(1L);
+        reg.setMemberId(88L);
+        reg.setRegistrationNo("REG-" + reg.getId());
+        reg.setRegistrationStatus(2);
         reg.setOwnerType(2L);          // 场次报名 —— 俱乐部办团卖的恒是这一档
         reg.setOwnerId(50L);
         reg.setPaymentStatus(0);       // 故意未支付:让它卡在下游,证明授权闸已经放行
@@ -78,6 +83,7 @@ class ClubFulfillmentChainGateTest {
         club.setMemberId(7L);          // 调用者是承接俱乐部的主理人
         club.setDelFlag(0);
         when(clubMapper.selectClubById(9L)).thenReturn(club);
+        when(clubMapper.selectClubByIdForUpdate(9L)).thenReturn(club);
 
         RuntimeException e = assertThrows(RuntimeException.class,
                 () -> service.cancelPaidRegistrationByOwner(1L, 7L));
@@ -98,10 +104,15 @@ class ClubFulfillmentChainGateTest {
         ReflectionTestUtils.setField(service, "cmsRegistrationMapper", registrationMapper);
         ReflectionTestUtils.setField(service, "cmsActivityMapper", activityMapper);
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
+        com.chengyinhub.business.service.impl.RegistrationScopeFixture
+                .currentReads(registrationMapper, activityMapper, topicMapper);
         ReflectionTestUtils.setField(service, "clubMapper", clubMapper);
 
         CmsRegistration reg = new CmsRegistration();
         reg.setId(2L);
+        reg.setMemberId(88L);
+        reg.setRegistrationNo("REG-" + reg.getId());
+        reg.setRegistrationStatus(2);
         reg.setOwnerType(2L);
         reg.setOwnerId(51L);
         when(registrationMapper.selectCmsRegistrationById(2L)).thenReturn(reg);
@@ -112,12 +123,15 @@ class ClubFulfillmentChainGateTest {
         session.setClubId(9L);
         when(activityMapper.selectCmsActivityById(51L)).thenReturn(session);
         CmsTopic topic = new CmsTopic();
+        topic.setId(71L);
         topic.setMemberId(999L);
         when(topicMapper.selectCmsTopicById(71L)).thenReturn(topic);
         Club club = new Club();
+        club.setId(9L);
         club.setMemberId(7L);
         club.setDelFlag(0);
         when(clubMapper.selectClubById(9L)).thenReturn(club);
+        when(clubMapper.selectClubByIdForUpdate(9L)).thenReturn(club);
 
         RuntimeException e = assertThrows(RuntimeException.class,
                 () -> service.cancelPaidRegistrationByOwner(2L, 12345L));
@@ -139,11 +153,16 @@ class ClubFulfillmentChainGateTest {
         ReflectionTestUtils.setField(service, "cmsRegistrationMapper", registrationMapper);
         ReflectionTestUtils.setField(service, "cmsActivityMapper", activityMapper);
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
+        com.chengyinhub.business.service.impl.RegistrationScopeFixture
+                .currentReads(registrationMapper, activityMapper, topicMapper);
         ReflectionTestUtils.setField(service, "perkLedgerService",
                 mock(com.chengyinhub.business.service.IPerkLedgerService.class));
 
         CmsRegistration reg = new CmsRegistration();
         reg.setId(11L);
+        reg.setMemberId(88L);
+        reg.setRegistrationNo("REG-" + reg.getId());
+        reg.setRegistrationStatus(2);
         reg.setOwnerType(2L);
         reg.setOwnerId(50L);
         reg.setPaymentStatus(2);
@@ -188,9 +207,14 @@ class ClubFulfillmentChainGateTest {
         ReflectionTestUtils.setField(service, "cmsRegistrationMapper", registrationMapper);
         ReflectionTestUtils.setField(service, "cmsActivityMapper", activityMapper);
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
+        com.chengyinhub.business.service.impl.RegistrationScopeFixture
+                .currentReads(registrationMapper, activityMapper, topicMapper);
 
         CmsRegistration reg = new CmsRegistration();
         reg.setId(12L);
+        reg.setMemberId(88L);
+        reg.setRegistrationNo("REG-" + reg.getId());
+        reg.setRegistrationStatus(2);
         reg.setOwnerType(2L);
         reg.setOwnerId(50L);
         reg.setPaymentStatus(2);

@@ -1,0 +1,1202 @@
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_03Test.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_03Test.java
+index cf5d771159f88f58e2f67e8aae9c56362343d8f6..82641fe846d04b714399eb92b48bc9b338f09674 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_03Test.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_03Test.java
+@@ -72,27 +72,27 @@
+ 
+     @Test
+     void legacyCrossChapterReorderKeepsPredecessorByIdentity() {
+-        assertEquals(TOPIC, service.updateTopicByOwner(edit(false, true, true), MEMBER, "creator"));
++        assertEquals(TOPIC, com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwner(edit(false, true, true), MEMBER, "creator"));
+         assertRestored(901L, 902L); // dependent inserted before its predecessor, in another chapter
+     }
+ 
+     @Test
+     void compiledBlocksAlsoKeepPredecessorAfterReorder() {
+-        assertEquals(TOPIC, service.updateTopicByOwnerV2WithReview(edit(true, true, true), MEMBER, "creator").getTopicId());
++        assertEquals(TOPIC, com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwnerV2WithReview(edit(true, true, true), MEMBER, "creator").getTopicId());
+         assertRestored(901L, 902L);
+     }
+ 
+     @Test
+     void retainedDependentCannotSilentlyLoseDeletedPredecessor() {
+         IllegalArgumentException failure = assertThrows(IllegalArgumentException.class,
+-                () -> service.updateTopicByOwner(edit(false, true, false), MEMBER, "creator"));
++                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwner(edit(false, true, false), MEMBER, "creator"));
+         assertTrue(failure.getMessage().contains("前置解锁引用不在本次提交里"));
+         verify(nodes, never()).updateCmsTopicNode(any(CmsTopicNode.class));
+     }
+ 
+     @Test
+     void removedDependentDoesNotKeepAnOrphanRelation() {
+-        assertEquals(TOPIC, service.updateTopicByOwner(edit(false, false, true), MEMBER, "creator"));
++        assertEquals(TOPIC, com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwner(edit(false, false, true), MEMBER, "creator"));
+         verify(nodes, never()).updateCmsTopicNode(any(CmsTopicNode.class));
+     }
+ 
+@@ -100,7 +100,7 @@
+     void failedPredecessorWriteCannotReportSuccessfulUpdate() {
+         when(nodes.updateCmsTopicNode(any(CmsTopicNode.class))).thenReturn(0);
+         IllegalStateException failure = assertThrows(IllegalStateException.class,
+-                () -> service.updateTopicByOwner(edit(false, true, true), MEMBER, "creator"));
++                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwner(edit(false, true, true), MEMBER, "creator"));
+         assertTrue(failure.getMessage().contains("前置解锁保存失败"));
+     }
+ 
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_10Test.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_10Test.java
+index 8d6ce48db4e04d6865a5cc37044b0a06c97960d6..7eea466dca17092b57b7b228b2fb23cf99c47563 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_10Test.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_10Test.java
+@@ -70,7 +70,7 @@
+     void zeroMainRowUpdateStopsBeforeDeletingChildren() {
+         when(topics.updateCmsTopic(any(CmsTopic.class))).thenReturn(0);
+         IllegalStateException failure = assertThrows(IllegalStateException.class,
+-                () -> service.updateTopicByOwner(dto, 42L, "creator"));
++                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwner(dto, 42L, "creator"));
+         assertTrue(failure.getMessage().contains("未重建章节与节点"));
+         verify(nodes, never()).deleteCmsTopicNodeById(any());
+         verify(chapters, never()).deleteCmsTopicChapterById(any());
+@@ -81,7 +81,7 @@
+     @Test
+     void oneMainRowPreservesExistingExplicitReplacementBehavior() {
+         when(topics.updateCmsTopic(any(CmsTopic.class))).thenReturn(1);
+-        assertEquals(Long.valueOf(700L), service.updateTopicByOwner(dto, 42L, "creator"));
++        assertEquals(Long.valueOf(700L), com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwner(dto, 42L, "creator"));
+         verify(nodes).deleteCmsTopicNodeById(11L);
+         verify(chapters).deleteCmsTopicChapterById(1L);
+     }
+@@ -90,7 +90,7 @@
+     void unexpectedAffectedCountDoesNotContinueReplacement() {
+         when(topics.updateCmsTopic(any(CmsTopic.class))).thenReturn(2);
+         assertThrows(IllegalStateException.class,
+-                () -> service.updateTopicByOwner(dto, 42L, "creator"));
++                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwner(dto, 42L, "creator"));
+         verify(nodes, never()).deleteCmsTopicNodeById(any());
+         verify(chapters, never()).deleteCmsTopicChapterById(any());
+     }
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_12Test.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_12Test.java
+index c485c60ad5841522350f996c3cdcb256e35bcf57..3be297f3245483e06ac5886f046e709e7d3dccf7 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_12Test.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_12Test.java
+@@ -52,7 +52,7 @@
+     }
+     @Test void validGeneratedIdentityKeepsExistingDraftFlow() {
+         insertResult(1, 700L);
+-        assertEquals(Long.valueOf(700), service.createTopic(draft(), 42L, "creator"));
++        assertEquals(Long.valueOf(700), com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).createTopic(draft(), 42L, "creator"));
+         verify(topics).updateTopicDraftState(700L, 1);
+     }
+ 
+@@ -71,7 +71,7 @@
+     }
+     private void assertRejectedBeforeChildren() {
+         IllegalStateException failure = assertThrows(IllegalStateException.class,
+-                () -> service.createTopic(draft(), 42L, "creator"));
++                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).createTopic(draft(), 42L, "creator"));
+         assertTrue(failure.getMessage().contains("未生成有效主题身份"));
+         verify(topics, never()).updateTopicDraftState(any(), any());
+         verify(chapters, never()).insertCmsTopicChapter(any());
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_13Test.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_13Test.java
+index 4f1d4cfd893e46a3289ee8091c92b6e03118ccae..0e945bba512faacdff3e56896863c999a157dc0c 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_13Test.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_13Test.java
+@@ -94,9 +94,9 @@
+                     .when(nodes).insertCmsTopicNode(any(CmsTopicNode.class));
+         }
+         Object save() {
+-            if (compiled) return ReflectionTestUtils.invokeMethod(service, "compileChapterFlow",
++            if (compiled) return ReflectionTestUtils.invokeMethod(com.chengyinhub.business.service.support.TopicGraphTestWiring.graph(service), "compileChapterFlow",
+                     Collections.singletonList(chapter), 700L, "creator", 42L, false, false);
+-            return ReflectionTestUtils.invokeMethod(service, "saveChaptersAndNodes",
++            return ReflectionTestUtils.invokeMethod(com.chengyinhub.business.service.support.TopicGraphTestWiring.graph(service), "saveChaptersAndNodes",
+                     Collections.singletonList(chapter), 700L, "creator", 42L, false);
+         }
+     }
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_14Test.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_14Test.java
+index 3c5768ebcd20a356ad3ffc49d62723d3f330ae25..0cdaefb656a41e8b08bff9d4e26d71a91ce53335 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_14Test.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_14Test.java
+@@ -90,12 +90,12 @@
+     }
+ 
+     private Long create(TopicCreateDTO dto, boolean v2) {
+-        return v2 ? service.createTopicV2(dto, 42L, "creator") : service.createTopic(dto, 42L, "creator");
++        return v2 ? com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).createTopicV2(dto, 42L, "creator") : com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).createTopic(dto, 42L, "creator");
+     }
+ 
+     private Long update(TopicUpdateDTO dto, boolean v2) {
+-        return v2 ? service.updateTopicByOwnerV2(dto, 42L, "creator")
+-                : service.updateTopicByOwner(dto, 42L, "creator");
++        return v2 ? com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwnerV2(dto, 42L, "creator")
++                : com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwner(dto, 42L, "creator");
+     }
+ 
+     private void noMapperWrites() {
+@@ -190,7 +190,7 @@
+ 
+     @Test void ownerGateStillPrecedesCollaboratorValidation() {
+         RuntimeException error = assertThrows(RuntimeException.class,
+-                () -> service.updateTopicByOwner(payload(Collections.singletonList(null)), 77L, "other"));
++                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwner(payload(Collections.singletonList(null)), 77L, "other"));
+         assertEquals("无权编辑该主题", error.getMessage());
+         noMapperWrites();
+         verifyNoInteractions(collaborators);
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_18Test.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_18Test.java
+index 658b46a622ba188bc82d5714a816769a5ca9b20e..c4fa62c0fd03f8a01f2530d1a77824d59d730caa 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_18Test.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_18Test.java
+@@ -54,7 +54,7 @@
+                 .when(nodes).insertCmsTopicNode(any(CmsTopicNode.class));
+     }
+     @Test void createDraftWithMissingNodeDurationStoresZeroTotal() {
+-        assertEquals(Long.valueOf(700), service.createTopic(fill(new TopicCreateDTO()), 42L, "creator"));
++        assertEquals(Long.valueOf(700), com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).createTopic(fill(new TopicCreateDTO()), 42L, "creator"));
+         ArgumentCaptor<CmsTopic> inserted = ArgumentCaptor.forClass(CmsTopic.class);
+         verify(topics).insertCmsTopic(inserted.capture());
+         assertEquals(Long.valueOf(0), inserted.getValue().getTotalTime());
+@@ -62,7 +62,7 @@
+     @Test void editDraftWithMissingNodeDurationStoresZeroTotal() {
+         TopicUpdateDTO dto = fill(new TopicUpdateDTO());
+         dto.setId(700L);
+-        assertEquals(Long.valueOf(700), service.updateTopicByOwner(dto, 42L, "creator"));
++        assertEquals(Long.valueOf(700), com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwner(dto, 42L, "creator"));
+         ArgumentCaptor<CmsTopic> patch = ArgumentCaptor.forClass(CmsTopic.class);
+         verify(topics).updateCmsTopic(patch.capture());
+         assertEquals(Long.valueOf(0), patch.getValue().getTotalTime());
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicPublishDraftTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicPublishDraftTest.java
+index 7f29db915617cae0b27d43dee7f5e4d7c4ab2f53..6dd74b6e9c3472ff438053f663fa9dd66c54e495 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicPublishDraftTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicPublishDraftTest.java
+@@ -139,7 +139,7 @@
+         CmsTopic nonDraft = new CmsTopic(); nonDraft.setId(9L); nonDraft.setMemberId(7L);
+         when(cmsTopicMapper.selectCmsTopicById(9L)).thenReturn(nonDraft);
+         when(((com.chengyinhub.business.service.support.TopicSupplyReviewService) ReflectionTestUtils.getField(svc, "supplyReviewService")).lockTopic(9L)).thenReturn(nonDraft);
+-        assertFalse(svc.publishDraft(9L), "非草稿不应发布(审核绕过防护)");
++        assertFalse(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(svc).publishDraft(9L), "非草稿不应发布(审核绕过防护)");
+         verify(cmsTopicMapper, never()).updateCmsTopic(any());
+         verify(topicBundleReviewService, never()).freezeForSubmission(anyLong(), anyLong());
+     }
+@@ -153,7 +153,7 @@
+         // R19-DRAFT2:可发布的主题必须有名字(草稿保存时已要求非空)。
+         t.setName("夜跑"); t.setImgUrl("media-asset:901");
+         when(cmsTopicMapper.selectCmsTopicById(1L)).thenReturn(t);
+-        assertTrue(svc.publishDraft(1L));
++        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(svc).publishDraft(1L));
+         ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
+         verify(cmsTopicMapper).updateCmsTopic(cap.capture());
+         assertEquals(Integer.valueOf(1), cap.getValue().getStatus(), "简易版发布 → 已上架");
+@@ -174,7 +174,7 @@
+         t.setName("夜跑"); t.setImgUrl("media-asset:901");
+         when(cmsTopicMapper.selectCmsTopicById(1L)).thenReturn(t);
+ 
+-        assertTrue(svc.publishDraft(1L));
++        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(svc).publishDraft(1L));
+ 
+         ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
+         verify(cmsTopicMapper).updateCmsTopic(cap.capture());
+@@ -197,7 +197,7 @@
+         open.setSourceType("post_review_flag");
+         when(auditTaskService.selectAuditTaskList(any())).thenReturn(Collections.singletonList(open));
+ 
+-        assertTrue(svc.publishDraft(1L));
++        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(svc).publishDraft(1L));
+ 
+         verify(auditTaskService, never()).submit(anyString(), any(), any(), anyString(), anyString());
+     }
+@@ -215,7 +215,7 @@
+         topic.setRecruitDeadline(new java.util.Date(System.currentTimeMillis() + 86_400_000L));
+         when(cmsTopicMapper.selectCmsTopicById(8L)).thenReturn(topic);
+ 
+-        assertTrue(svc.publishDraft(8L));
++        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(svc).publishDraft(8L));
+ 
+         verify(topicCommercialReviewService).submitProjectReview(
+                 8L, 100L, com.chengyinhub.business.domain.enums.TopicLifecycleState.RECRUITING);
+@@ -236,7 +236,7 @@
+         when(cmsTopicNodeMapper.selectCmsTopicNodeList(any(CmsTopicNode.class)))
+                 .thenReturn(Collections.singletonList(aiNode));
+ 
+-        assertTrue(svc.publishDraft(3L));
++        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(svc).publishDraft(3L));
+ 
+         ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
+         verify(cmsTopicMapper).updateCmsTopic(cap.capture());
+@@ -253,7 +253,7 @@
+         t.setId(2L); t.setPublishMode("pro"); t.setMemberId(100L); t.setName("夜跑");
+         when(cmsTopicMapper.selectCmsTopicById(2L)).thenReturn(t);
+         com.chengyinhub.business.domain.vo.TopicBundleSubmitResultVO result =
+-                svc.publishDraftWithReview(2L);
++                com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(svc).publishDraftWithReview(2L);
+         ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
+         verify(cmsTopicMapper).updateCmsTopic(cap.capture());
+         assertEquals(Integer.valueOf(1), cap.getValue().getStatus(), "专业版发布 → 上架待后审");
+@@ -279,7 +279,7 @@
+         t.setReason(com.chengyinhub.business.util.TopicContentSafetyHold.REASON);
+         when(cmsTopicMapper.selectCmsTopicById(1L)).thenReturn(t);
+ 
+-        svc.publishDraft(1L);
++        com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(svc).publishDraft(1L);
+ 
+         ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
+         verify(cmsTopicMapper, org.mockito.Mockito.atLeast(0)).updateCmsTopic(cap.capture());
+@@ -302,7 +302,7 @@
+         open.setId(901L); open.setStatus(com.chengyinhub.business.domain.AuditTask.STATUS_PENDING);
+         when(auditTaskService.selectAuditTaskList(any())).thenReturn(Collections.singletonList(open));
+ 
+-        com.chengyinhub.business.domain.vo.TopicBundleSubmitResultVO result = svc.publishDraftWithReview(2L);
++        com.chengyinhub.business.domain.vo.TopicBundleSubmitResultVO result = com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(svc).publishDraftWithReview(2L);
+ 
+         verify(auditTaskService).submitOrRefreshTopicBundle(eq(2L), eq(100L), anyString());
+         verify(cmsTopicMapper, never()).updateCmsTopic(any());
+@@ -318,7 +318,7 @@
+         IQuotaService quota = (IQuotaService) ReflectionTestUtils.getField(svc, "quotaService");
+         when(quota.lockAndCheckThemeOnline(100L, 2L)).thenReturn("在架额度已满");
+         org.junit.jupiter.api.Assertions.assertThrows(com.chengyinhub.common.exception.ServiceException.class,
+-                () -> svc.publishDraftWithReview(2L));
++                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(svc).publishDraftWithReview(2L));
+         verify(cmsTopicMapper, never()).updateCmsTopic(any());
+         verify(cmsTopicMapper, never()).publishRouteSnapshot(anyLong(), nullable(String.class), any());
+     }
+@@ -335,7 +335,7 @@
+         when(auditTaskService.selectAuditTaskById(901L)).thenReturn(task);
+ 
+         com.chengyinhub.business.domain.vo.TopicBundleSubmitResultVO result =
+-                svc.publishDraftWithReview(2L);
++                com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(svc).publishDraftWithReview(2L);
+ 
+         assertEquals("ESCALATED", result.getReviewState());
+     }
+@@ -357,7 +357,7 @@
+         when(cmsMemberTemplateMapper.selectCmsMemberTemplateById(101L)).thenReturn(template);
+         when(themeStateKeyMapper.selectByTopicId(4L)).thenReturn(Collections.<ThemeStateKey>emptyList());
+ 
+-        ServiceException error = assertThrows(ServiceException.class, () -> svc.publishDraft(4L));
++        ServiceException error = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(svc).publishDraft(4L));
+ 
+         assertTrue(error.getMessage().contains("clue.ledger_page"), error.getMessage());
+         verify(cmsTopicMapper, never()).updateCmsTopic(any(CmsTopic.class));
+@@ -386,7 +386,7 @@
+         when(cmsActivityMapper.selectCmsActivityList(any(CmsActivity.class)))
+                 .thenReturn(Collections.<CmsActivity>emptyList());
+ 
+-        assertTrue(svc.publishDraft(5L));
++        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(svc).publishDraft(5L));
+ 
+         verify(cmsActivityMapper).insertCmsActivity(any(CmsActivity.class));
+     }
+@@ -400,7 +400,7 @@
+         t.setMerchantStatus(1);
+         when(cmsTopicMapper.selectCmsTopicById(6L)).thenReturn(t);
+ 
+-        assertTrue(svc.publishDraft(6L));
++        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(svc).publishDraft(6L));
+ 
+         verify(cmsActivityMapper, never()).insertCmsActivity(any(CmsActivity.class));
+     }
+@@ -417,7 +417,7 @@
+         when(cmsActivityMapper.selectCmsActivityList(any(CmsActivity.class)))
+                 .thenReturn(Collections.singletonList(existing));
+ 
+-        assertTrue(svc.publishDraft(7L));
++        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(svc).publishDraft(7L));
+ 
+         verify(cmsActivityMapper, never()).insertCmsActivity(any(CmsActivity.class));
+     }
+@@ -433,7 +433,7 @@
+         when(cmsTopicMapper.selectCmsTopicByIdForUpdate(91L)).thenReturn(locked);
+         when(cmsTopicMapper.clearDraftIfDraft(91L)).thenReturn(1);
+         com.chengyinhub.common.exception.ServiceException error = org.junit.jupiter.api.Assertions.assertThrows(
+-                com.chengyinhub.common.exception.ServiceException.class, () -> svc.publishDraftWithReview(91L, 7L));
++                com.chengyinhub.common.exception.ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(svc).publishDraftWithReview(91L, 7L));
+         org.junit.jupiter.api.Assertions.assertEquals(403, error.getCode());
+         org.mockito.Mockito.verify(cmsTopicMapper, org.mockito.Mockito.never()).clearDraftIfDraft(91L);
+         org.mockito.Mockito.verify(topicBundleReviewService, org.mockito.Mockito.never()).freezeForSubmission(91L, 8L);
+@@ -449,10 +449,10 @@
+                 (com.chengyinhub.business.service.support.TopicSupplyReviewService) ReflectionTestUtils.getField(svc, "supplyReviewService");
+         when(gate.canResubmit(locked)).thenReturn(true);
+         when(cmsTopicMapper.clearDraftIfDraft(91L)).thenReturn(0);
+-        org.junit.jupiter.api.Assertions.assertNull(svc.publishDraftWithReview(91L));
++        org.junit.jupiter.api.Assertions.assertNull(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(svc).publishDraftWithReview(91L));
+         org.mockito.Mockito.verify(gate, org.mockito.Mockito.never()).canResubmit(locked);
+         com.chengyinhub.common.exception.ServiceException error = org.junit.jupiter.api.Assertions.assertThrows(
+-                com.chengyinhub.common.exception.ServiceException.class, () -> svc.publishDraftWithReview(91L, null));
++                com.chengyinhub.common.exception.ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(svc).publishDraftWithReview(91L, null));
+         org.junit.jupiter.api.Assertions.assertEquals(403, error.getCode());
+         org.mockito.Mockito.verify(topicBundleReviewService, org.mockito.Mockito.never()).freezeForSubmission(91L, 7L);
+     }
+@@ -464,7 +464,7 @@
+         when(cmsTopicMapper.selectCmsTopicById(92L)).thenReturn(topic);
+         when(mediaAssetMapper.select(902L)).thenReturn(java.util.Map.of(
+                 "id", 902L, "ownerType", "APP", "memberId", 7L, "reviewState", "HOLD"));
+-        ServiceException error = assertThrows(ServiceException.class, () -> svc.publishDraftWithReview(92L, 7L));
++        ServiceException error = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(svc).publishDraftWithReview(92L, 7L));
+         assertEquals(422, error.getCode());
+         verify(mediaAssetMapper).select(902L);
+         verify(cmsTopicMapper, never()).clearDraftIfDraft(92L);
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicPublishNarrativeNpcGuardTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicPublishNarrativeNpcGuardTest.java
+index 53d7f1cb486db360eed487786604b1a0e1b952c4..f8325b6cb294c7ffbbfc7073329ac9ff85b84fe1 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicPublishNarrativeNpcGuardTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicPublishNarrativeNpcGuardTest.java
+@@ -102,7 +102,7 @@
+                 .thenReturn(Collections.singletonList(profile(5L)));
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+-        ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
++        ServiceException error = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
+ 
+         assertTrue(error.getMessage().contains("npcId=99"), error.getMessage());
+         assertTrue(error.getMessage().contains("enter"), error.getMessage());
+@@ -124,7 +124,7 @@
+                 .thenReturn(Collections.singletonList(profile(5L)));
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+-        assertTrue(service.publishDraft(TOPIC_ID));
++        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
+ 
+         verify(topicMapper).publishRouteSnapshot(any(Long.class), nullable(String.class), any(Date.class));
+     }
+@@ -142,7 +142,7 @@
+                 "{\"schemaVersion\":1,\"timer\":{\"enabled\":true}}")));
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+-        assertTrue(service.publishDraft(TOPIC_ID));
++        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
+ 
+         verify(npcProfileMapper, never()).selectEnabledByScope(anyInt(), anyLong());
+     }
+@@ -167,7 +167,7 @@
+                 .thenReturn(Collections.singletonList(profile(5L)));
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+-        ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
++        ServiceException error = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
+ 
+         assertTrue(error.getMessage().contains("npcId=99"), error.getMessage());
+         assertTrue(error.getMessage().contains("故事流"), error.getMessage());
+@@ -191,7 +191,7 @@
+                 .thenReturn(Collections.singletonList(profile(5L)));
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+-        assertTrue(service.publishDraft(TOPIC_ID));
++        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
+ 
+         verify(topicMapper).publishRouteSnapshot(any(Long.class), nullable(String.class), any(Date.class));
+     }
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicPublishStateKeyGuardTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicPublishStateKeyGuardTest.java
+index b40f3c48eaef97edfa7f7908f7b24ec913dbee41..57bc652510823d415373e84a9f11d95d72e9c731 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicPublishStateKeyGuardTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicPublishStateKeyGuardTest.java
+@@ -104,7 +104,7 @@
+         when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.singletonList(registered("clue.ledger_page")));
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+-        ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
++        ServiceException error = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
+ 
+         assertTrue(error.getMessage().contains("counter.coins"), error.getMessage());
+         assertTrue(error.getMessage().contains("书房"), error.getMessage());
+@@ -126,7 +126,7 @@
+                 registered("counter.coins"), registered("tag.hurried")));
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+-        assertTrue(service.publishDraft(TOPIC_ID));
++        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
+ 
+         ArgumentCaptor<CmsTopic> captured = ArgumentCaptor.forClass(CmsTopic.class);
+         verify(topicMapper).updateCmsTopic(captured.capture());
+@@ -147,7 +147,7 @@
+                 Collections.singletonList(registered("tag.m_pest")));
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+-        assertTrue(service.publishDraft(TOPIC_ID));
++        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
+         ArgumentCaptor<ThemeStateKey> upserted = ArgumentCaptor.forClass(ThemeStateKey.class);
+         verify(keyMapper).upsertThemeStateKey(upserted.capture());
+         assertEquals("tag.m_pest", upserted.getValue().getStateKey());
+@@ -164,7 +164,7 @@
+                 "{\"schemaVersion\":1,\"timer\":{\"enabled\":true}}"));
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+-        assertTrue(service.publishDraft(TOPIC_ID));
++        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
+ 
+         verify(keyMapper, never()).selectByTopicId(anyLong());
+     }
+@@ -184,7 +184,7 @@
+         when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.<ThemeStateKey>emptyList());
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+-        ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
++        ServiceException error = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
+ 
+         assertTrue(error.getMessage().contains("tag.injured"), error.getMessage());
+         assertTrue(error.getMessage().contains("主题数值规则"), "要说明这个键是主题级规则要的,不是节点引用:" + error.getMessage());
+@@ -202,7 +202,7 @@
+         when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.singletonList(registered("tag.injured")));
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+-        assertTrue(service.publishDraft(TOPIC_ID));
++        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
+ 
+         verify(topicMapper).publishRouteSnapshot(eq(TOPIC_ID), nullable(String.class), any(Date.class));
+     }
+@@ -223,7 +223,7 @@
+         when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.<ThemeStateKey>emptyList());
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+-        ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
++        ServiceException error = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
+ 
+         assertTrue(error.getMessage().contains("tag.injured"), error.getMessage());
+         assertTrue(error.getMessage().contains("主题数值规则"), "要说明这个键是主题级规则要的:" + error.getMessage());
+@@ -239,7 +239,7 @@
+         when(topicMapper.selectCmsTopicById(TOPIC_ID)).thenReturn(topic);
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+-        ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
++        ServiceException error = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
+ 
+         assertTrue(error.getMessage().contains("旅程数值规则"), error.getMessage());
+         verify(topicMapper, never()).updateCmsTopic(any(CmsTopic.class));
+@@ -255,7 +255,7 @@
+         when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.<ThemeStateKey>emptyList());
+ 
+         ServiceException error = assertThrows(ServiceException.class,
+-                () -> service.publishApprovedRouteSnapshot(TOPIC_ID));
++                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishApprovedRouteSnapshot(TOPIC_ID));
+ 
+         assertTrue(error.getMessage().contains("clue.ledger_page"), error.getMessage());
+         verify(topicMapper, never()).publishRouteSnapshot(any(Long.class), nullable(String.class), any(Date.class));
+@@ -271,7 +271,7 @@
+         when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.singletonList(registered("clue.ledger_page")));
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+-        service.publishApprovedRouteSnapshot(TOPIC_ID);
++        com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishApprovedRouteSnapshot(TOPIC_ID);
+ 
+         verify(topicMapper).publishRouteSnapshot(eq(TOPIC_ID), nullable(String.class), any(Date.class));
+     }
+@@ -297,7 +297,7 @@
+         when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.<ThemeStateKey>emptyList());
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+-        ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
++        ServiceException error = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
+ 
+         assertTrue(error.getMessage().contains("clue.receipt_071"), error.getMessage());
+         assertTrue(error.getMessage().contains("章节故事流"),
+@@ -321,7 +321,7 @@
+                 .thenReturn(Collections.singletonList(registered("clue.receipt_071")));
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+-        assertTrue(service.publishDraft(TOPIC_ID));
++        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
+ 
+         verify(topicMapper).publishRouteSnapshot(eq(TOPIC_ID), nullable(String.class), any(Date.class));
+     }
+@@ -345,7 +345,7 @@
+         when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.<ThemeStateKey>emptyList());
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+-        service.publishApprovedRouteSnapshot(TOPIC_ID);
++        com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishApprovedRouteSnapshot(TOPIC_ID);
+ 
+         verify(topicMapper).publishRouteSnapshot(eq(TOPIC_ID), nullable(String.class), any(Date.class));
+         verify(keyMapper, never()).upsertThemeStateKey(any(ThemeStateKey.class));
+@@ -379,7 +379,7 @@
+         when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.<ThemeStateKey>emptyList());
+ 
+         ServiceException error = assertThrows(ServiceException.class,
+-                () -> service.publishApprovedRouteSnapshot(TOPIC_ID));
++                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishApprovedRouteSnapshot(TOPIC_ID));
+         assertTrue(error.getMessage().contains("counter.missing"), error.getMessage());
+         verify(topicMapper, never()).publishRouteSnapshot(any(Long.class), nullable(String.class), any(Date.class));
+         verify(keyMapper, never()).upsertThemeStateKey(any(ThemeStateKey.class));
+@@ -402,7 +402,7 @@
+             when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.<ThemeStateKey>emptyList());
+ 
+             ServiceException error = assertThrows(ServiceException.class,
+-                    () -> service.publishApprovedRouteSnapshot(TOPIC_ID));
++                    () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishApprovedRouteSnapshot(TOPIC_ID));
+             assertTrue(error.getMessage().contains("thought.window.done") && error.getMessage().contains("节点"), error.getMessage());
+             verify(topicMapper, never()).publishRouteSnapshot(any(Long.class), nullable(String.class), any(Date.class));
+             verify(keyMapper, never()).upsertThemeStateKey(any(ThemeStateKey.class));
+@@ -422,7 +422,7 @@
+         when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.<ThemeStateKey>emptyList());
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+-        service.publishApprovedRouteSnapshot(TOPIC_ID);
++        com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishApprovedRouteSnapshot(TOPIC_ID);
+         verify(topicMapper).publishRouteSnapshot(eq(TOPIC_ID), nullable(String.class), any(Date.class));
+         verify(keyMapper, never()).upsertThemeStateKey(any(ThemeStateKey.class));
+     }
+@@ -439,7 +439,7 @@
+         when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.<ThemeStateKey>emptyList());
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+-        ServiceException error = assertThrows(ServiceException.class, () -> service.publishApprovedRouteSnapshot(TOPIC_ID));
++        ServiceException error = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishApprovedRouteSnapshot(TOPIC_ID));
+         assertTrue(error.getMessage().contains("thought.other.done") && error.getMessage().contains("章节故事流"));
+         verify(topicMapper, never()).publishRouteSnapshot(any(Long.class), nullable(String.class), any(Date.class));
+     }
+@@ -456,7 +456,7 @@
+         when(chapterMapper.selectCmsTopicChapterList(any(CmsTopicChapter.class))).thenReturn(Collections.singletonList(chapter));
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+-        ServiceException error = assertThrows(ServiceException.class, () -> service.publishApprovedRouteSnapshot(TOPIC_ID));
++        ServiceException error = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishApprovedRouteSnapshot(TOPIC_ID));
+         assertTrue(error.getMessage().contains("HAS_TAG"), error.getMessage());
+         verify(topicMapper, never()).publishRouteSnapshot(any(Long.class), nullable(String.class), any(Date.class));
+     }
+@@ -469,7 +469,7 @@
+         when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.<ThemeStateKey>emptyList());
+ 
+         ServiceException error = assertThrows(ServiceException.class,
+-                () -> service.publishApprovedRouteSnapshot(TOPIC_ID));
++                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishApprovedRouteSnapshot(TOPIC_ID));
+         assertTrue(error.getMessage().contains(message), error.getMessage());
+         verify(topicMapper, never()).publishRouteSnapshot(any(Long.class), nullable(String.class), any(Date.class));
+         verify(keyMapper, never()).upsertThemeStateKey(any(ThemeStateKey.class));
+@@ -510,11 +510,11 @@
+         when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.<ThemeStateKey>emptyList());
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+-        service.publishApprovedRouteSnapshot(TOPIC_ID);
++        com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishApprovedRouteSnapshot(TOPIC_ID);
+         verify(topicMapper).publishRouteSnapshot(eq(TOPIC_ID), nullable(String.class), any(Date.class));
+         topic.setThemeRuntimeConfigJson(legacy);
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+-        assertThrows(IllegalArgumentException.class, () -> service.publishApprovedRouteSnapshot(TOPIC_ID));
++        assertThrows(IllegalArgumentException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishApprovedRouteSnapshot(TOPIC_ID));
+     }
+ 
+     @Test
+@@ -533,7 +533,7 @@
+         ReflectionTestUtils.setField(service, "cmsTopicChapterMapper", chapterMapper);
+         String authored = templateMapper.selectCmsMemberTemplateById(101L).getAdvancedConfigJson();
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+-        assertTrue(service.publishDraft(TOPIC_ID));
++        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
+         ArgumentCaptor<String> snapshot = ArgumentCaptor.forClass(String.class);
+         verify(topicMapper).publishRouteSnapshot(eq(TOPIC_ID), snapshot.capture(), any(Date.class));
+         JsonNode frozen = new ObjectMapper().readTree(snapshot.getValue());
+@@ -557,11 +557,11 @@
+     void r5OutcomeRejectsUnknownSystemDomainAndUnregisteredCounter() throws Exception {
+         r5OutcomeDraft("sys.foo");
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+-        RuntimeException unknown = assertThrows(RuntimeException.class, () -> service.publishDraft(TOPIC_ID));
++        RuntimeException unknown = assertThrows(RuntimeException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
+         assertTrue(unknown.getMessage().contains("数值绑定类型无效"), unknown.getMessage());
+         r5OutcomeDraft("counter.unregistered");
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+-        RuntimeException counter = assertThrows(RuntimeException.class, () -> service.publishDraft(TOPIC_ID));
++        RuntimeException counter = assertThrows(RuntimeException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
+         assertTrue(counter.getMessage().contains("状态键未注册") && counter.getMessage().contains("counter.unregistered"), counter.getMessage());
+         verify(topicMapper, never()).publishRouteSnapshot(anyLong(), nullable(String.class), any(Date.class));
+     }
+@@ -572,7 +572,7 @@
+             CmsTopic topic = r5OutcomeDraft(target);
+             topic.setJourneyRulesJson("{\"schemaVersion\":1,\"stateEnabled\":true,\"hp\":{\"enabled\":false},\"luck\":{\"enabled\":false}}");
+             com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+-            RuntimeException disabled = assertThrows(RuntimeException.class, () -> service.publishDraft(TOPIC_ID));
++            RuntimeException disabled = assertThrows(RuntimeException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
+             assertTrue(disabled.getMessage().contains("未启用"), disabled.getMessage());
+         }
+         verify(topicMapper, never()).publishRouteSnapshot(anyLong(), nullable(String.class), any(Date.class));
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicRoutePublishPolicyTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicRoutePublishPolicyTest.java
+index 59839a810b668fa7499b4f3851249eaa7fbc9550..93a6076cc1d8092995cdcc2b2dd21ab1a63b90a4 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicRoutePublishPolicyTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicRoutePublishPolicyTest.java
+@@ -57,7 +57,7 @@
+         when(topicMapper.selectCmsTopicById(10L)).thenReturn(topic);
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+-        assertThrows(IllegalArgumentException.class, () -> service.publishDraft(10L));
++        assertThrows(IllegalArgumentException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(10L));
+     }
+ 
+     @Test
+@@ -93,7 +93,7 @@
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+-                () -> service.publishDraft(10L));
++                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(10L));
+ 
+         assertEquals("路线 edge impossible 没有确定性可达状态夹具", error.getMessage());
+         verify(topicMapper, never()).updateCmsTopic(any(CmsTopic.class));
+@@ -138,7 +138,7 @@
+                 .thenReturn(Arrays.asList(node(1L, null), node(2L, null)));
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+-        assertEquals(true, service.publishDraft(10L));
++        assertEquals(true, com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(10L));
+ 
+         org.mockito.ArgumentCaptor<String> snapshot = org.mockito.ArgumentCaptor.forClass(String.class);
+         verify(topicMapper).publishRouteSnapshot(eq(10L), snapshot.capture(), any(java.util.Date.class));
+@@ -190,7 +190,7 @@
+         when(topicMapper.selectCmsTopicById(10L)).thenReturn(topic);
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+-        assertThrows(IllegalArgumentException.class, () -> service.publishDraft(10L));
++        assertThrows(IllegalArgumentException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(10L));
+ 
+         verify(topicMapper, never()).publishRouteSnapshot(
+                 any(Long.class), any(), any(java.util.Date.class));
+@@ -221,7 +221,7 @@
+                 .thenReturn(Arrays.asList(node(1L, null), node(2L, null)));
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+-        service.publishApprovedRouteSnapshot(10L);
++        com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishApprovedRouteSnapshot(10L);
+ 
+         org.mockito.ArgumentCaptor<String> snapshot = org.mockito.ArgumentCaptor.forClass(String.class);
+         verify(topicMapper).publishRouteSnapshot(eq(10L), snapshot.capture(), any(java.util.Date.class));
+@@ -242,7 +242,7 @@
+         when(topicMapper.selectCmsTopicById(10L)).thenReturn(topic);
+ 
+         IllegalStateException error = assertThrows(IllegalStateException.class,
+-                () -> service.publishApprovedRouteSnapshot(10L));
++                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishApprovedRouteSnapshot(10L));
+ 
+         assertEquals("主题尚未成功通过审核，拒绝推进路线发布快照", error.getMessage());
+         verify(topicMapper, never()).publishRouteSnapshot(
+@@ -265,7 +265,7 @@
+         when(topicMapper.publishRouteSnapshot(eq(10L), eq(null), any(java.util.Date.class))).thenReturn(1);
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+-        service.publishApprovedRouteSnapshot(10L);
++        com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishApprovedRouteSnapshot(10L);
+ 
+         verify(topicMapper).publishRouteSnapshot(
+                 eq(10L), nullable(String.class), any(java.util.Date.class));
+@@ -304,7 +304,7 @@
+         d20.setAdvancedConfigJson("{\"diceRoll\":{\"enabled\":true,\"mode\":\"d20\"}}");
+         when(templateMapper.selectCmsMemberTemplateById(104L)).thenReturn(d20);
+ 
+-        Map<Long, Set<String>> declared = ReflectionTestUtils.invokeMethod(service,
++        Map<Long, Set<String>> declared = ReflectionTestUtils.invokeMethod(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service),
+                 "declaredRouteOutcomes", 10L);
+ 
+         assertEquals(set("PREFERENCE_RESULT:HISTORY", "PREFERENCE_RESULT:ART"), declared.get(1L));
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicSysVarPublishGateTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicSysVarPublishGateTest.java
+index 816b9fa9e73468a9136473ca07b911fac2a7da76..f7aceee092dd26d7b46b1369a2061c97507be0f4 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicSysVarPublishGateTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicSysVarPublishGateTest.java
+@@ -102,7 +102,7 @@
+                 + "{\"var\":\"sys.outcome.9999\",\"op\":\"EQ\",\"value\":1}]}");
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+-        ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
++        ServiceException error = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
+ 
+         assertTrue(error.getMessage().contains("系统变量"), error.getMessage());
+         assertTrue(error.getMessage().contains("9999"), error.getMessage());
+@@ -117,7 +117,7 @@
+         when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.<ThemeStateKey>emptyList());
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+-        assertTrue(service.publishDraft(TOPIC_ID));
++        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
+ 
+         verify(topicMapper).publishRouteSnapshot(eq(TOPIC_ID), nullable(String.class), any(Date.class));
+     }
+@@ -132,7 +132,7 @@
+                 + "{\"var\":\"sys.passed.9999\",\"op\":\"EQ\",\"value\":1}]}");
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+-        ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
++        ServiceException error = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
+ 
+         assertTrue(error.getMessage().contains("系统变量"), error.getMessage());
+         assertTrue(error.getMessage().contains("9999"), error.getMessage());
+@@ -147,7 +147,7 @@
+         when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.<ThemeStateKey>emptyList());
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+-        assertTrue(service.publishDraft(TOPIC_ID));
++        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
+     }
+ 
+     /**
+@@ -161,7 +161,7 @@
+                 + "{\"op\":\"NODE_COMPLETED\",\"nodeId\":9999}]}");
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+-        ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
++        ServiceException error = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
+ 
+         assertTrue(error.getMessage().contains("NODE_COMPLETED"), error.getMessage());
+         assertTrue(error.getMessage().contains("9999"), error.getMessage());
+@@ -175,7 +175,7 @@
+         when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.<ThemeStateKey>emptyList());
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+-        assertTrue(service.publishDraft(TOPIC_ID));
++        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
+     }
+ 
+     @Test
+@@ -188,7 +188,7 @@
+         when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.singletonList(registered("counter.disposition")));
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+-        ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
++        ServiceException error = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
+ 
+         assertTrue(error.getMessage().contains("分支玩法"), error.getMessage());
+     }
+@@ -203,7 +203,7 @@
+         when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.singletonList(registered("counter.disposition")));
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+-        assertTrue(service.publishDraft(TOPIC_ID));
++        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
+     }
+ 
+     private void publishDraftWithBlock(String advancedConfigJson) {
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/NodeTemplateOwnershipTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/NodeTemplateOwnershipTest.java
+index 02331f0d8de5ca33e8a21af9863038613862fd83..03a076bf6051c45374736f088c1f4da1fb899a36 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/NodeTemplateOwnershipTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/NodeTemplateOwnershipTest.java
+@@ -85,7 +85,7 @@
+     }
+ 
+     private void save(List<NodeDTO> nodes, Long memberId) {
+-        ReflectionTestUtils.invokeMethod(service, "saveNodes", nodes, TOPIC, 1L, "tester", memberId);
++        ReflectionTestUtils.invokeMethod(com.chengyinhub.business.service.support.TopicGraphTestWiring.graph(service), "saveNodes", nodes, TOPIC, 1L, "tester", memberId);
+     }
+ 
+     /** ★挂他人模板 ⇒ 拒。这是洞本身。 */
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicPendingReviewSelfHostShellTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicPendingReviewSelfHostShellTest.java
+index 14653b664085b95f8f9245ebb39a6bd09f1e277f..9a57456a9ac442fab2331a323eca9740f5765193 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicPendingReviewSelfHostShellTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicPendingReviewSelfHostShellTest.java
+@@ -120,7 +120,7 @@
+         when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(pending, pending, topic(1, "pro"));
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
+-        assertTrue(svc.publishDraft(TOPIC));
++        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(svc).publishDraft(TOPIC));
+ 
+         ArgumentCaptor<CmsTopic> topicCap = ArgumentCaptor.forClass(CmsTopic.class);
+         verify(topicMapper).updateCmsTopic(topicCap.capture());
+@@ -141,7 +141,7 @@
+         when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(draft, published);
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
+-        assertTrue(svc.publishDraft(TOPIC));
++        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(svc).publishDraft(TOPIC));
+ 
+         ArgumentCaptor<CmsTopic> topicCap = ArgumentCaptor.forClass(CmsTopic.class);
+         verify(topicMapper).updateCmsTopic(topicCap.capture());
+@@ -268,7 +268,7 @@
+                 .when(ledger()).requireNoOverdueDebt(OWNER);
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
+-        ServiceException e = assertThrows(ServiceException.class, () -> svc.publishDraft(TOPIC));
++        ServiceException e = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(svc).publishDraft(TOPIC));
+ 
+         assertTrue(e.getMessage().startsWith("SETTLEMENT_DEBT_OVERDUE"), e.getMessage());
+         verify(topicMapper, never()).updateCmsTopic(any(CmsTopic.class));
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicProductTypeTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicProductTypeTest.java
+index a00acac9ab452f702ab6ce087ada33a914eed01e..9b0d297b662133457884bb14eb2c5a8c8e0954e6 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicProductTypeTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicProductTypeTest.java
+@@ -62,14 +62,14 @@
+         org.mockito.Mockito.when(roles.activeContentSlot(31L)).thenReturn(role);
+         ChapterDTO chapter = new ChapterDTO(); chapter.setTermsMode("REVSHARE");
+         chapter.setMaxPerHeadFee(new java.math.BigDecimal("0.01"));
+-        assertDoesNotThrow(() -> ReflectionTestUtils.invokeMethod(service, "assertChapterShapeForTopic", chapter, 31L));
++        assertDoesNotThrow(() -> ReflectionTestUtils.invokeMethod(com.chengyinhub.business.service.support.TopicGraphTestWiring.guard(service), "assertChapterShapeForTopic", chapter, 31L));
+         chapter.setMaxPerHeadFee(null);
+-        assertThrows(IllegalStateException.class, () -> ReflectionTestUtils.invokeMethod(service, "assertChapterShapeForTopic", chapter, 31L));
++        assertThrows(IllegalStateException.class, () -> ReflectionTestUtils.invokeMethod(com.chengyinhub.business.service.support.TopicGraphTestWiring.guard(service), "assertChapterShapeForTopic", chapter, 31L));
+         chapter.setMaxPerHeadFee(new java.math.BigDecimal("0.01"));
+         role.setEntityType("MEMBER");
+-        assertThrows(IllegalStateException.class, () -> ReflectionTestUtils.invokeMethod(service, "assertChapterShapeForTopic", chapter, 31L));
++        assertThrows(IllegalStateException.class, () -> ReflectionTestUtils.invokeMethod(com.chengyinhub.business.service.support.TopicGraphTestWiring.guard(service), "assertChapterShapeForTopic", chapter, 31L));
+         role.setEntityType("CLUB"); topic.setCircleThemeCode("circle-test");
+-        assertThrows(IllegalStateException.class, () -> ReflectionTestUtils.invokeMethod(service, "assertChapterShapeForTopic", chapter, 31L));
++        assertThrows(IllegalStateException.class, () -> ReflectionTestUtils.invokeMethod(com.chengyinhub.business.service.support.TopicGraphTestWiring.guard(service), "assertChapterShapeForTopic", chapter, 31L));
+     }
+ 
+     private CmsTopicServiceImpl service;
+@@ -111,7 +111,7 @@
+     }
+ 
+     private void assertChapterShape(ChapterDTO chapter) {
+-        ReflectionTestUtils.invokeMethod(service, "assertChapterShape", chapter);
++        ReflectionTestUtils.invokeMethod(com.chengyinhub.business.service.support.TopicGraphTestWiring.guard(service), "assertChapterShape", chapter);
+     }
+ 
+     // ------------------------------------------------ resolveProductType:定型
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicPublishJourneyStoryGateTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicPublishJourneyStoryGateTest.java
+index 3042f4cbd29770a362348f605947622886ddb4b8..f628097f12d0ad73389c9cca1a41806cdf35cc35 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicPublishJourneyStoryGateTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicPublishJourneyStoryGateTest.java
+@@ -95,7 +95,7 @@
+         when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.<ThemeStateKey>emptyList());
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+-        ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
++        ServiceException error = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
+ 
+         assertTrue(error.getMessage().contains("clue.page"), error.getMessage());
+         assertTrue(error.getMessage().contains("剧情配置"), "要说明这个键是剧情配置要的:" + error.getMessage());
+@@ -110,7 +110,7 @@
+         when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.<ThemeStateKey>emptyList());
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+-        ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
++        ServiceException error = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
+ 
+         assertTrue(error.getMessage().contains("clue.voice"), error.getMessage());
+         assertTrue(error.getMessage().contains("剧情配置"), error.getMessage());
+@@ -127,7 +127,7 @@
+                 registered("clue.page"), registered("tag.hurried"), registered("clue.voice")));
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+-        assertTrue(service.publishDraft(TOPIC_ID));
++        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
+ 
+         verify(topicMapper).publishRouteSnapshot(anyLong(), any(), any());
+     }
+@@ -143,7 +143,7 @@
+         when(npcProfileMapper.selectEnabledByScope(4, 501L)).thenReturn(Collections.singletonList(npc));
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+-        assertTrue(service.publishDraft(TOPIC_ID));
++        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
+ 
+         verify(keyMapper, never()).selectByTopicId(anyLong());
+     }
+@@ -155,7 +155,7 @@
+                 .thenReturn(Collections.singletonList(chapter(CHAPTER)));
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+-        ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
++        ServiceException error = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
+ 
+         assertTrue(error.getMessage().contains("引用无效"), error.getMessage());
+         assertTrue(error.getMessage().contains("章节"), error.getMessage());
+@@ -175,7 +175,7 @@
+         when(npcProfileMapper.selectEnabledByScope(4, 501L)).thenReturn(Collections.singletonList(available));
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+-        ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
++        ServiceException error = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
+ 
+         assertTrue(error.getMessage().contains("引用无效"), error.getMessage());
+         assertTrue(error.getMessage().contains("NPC"), error.getMessage());
+@@ -190,7 +190,7 @@
+         when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.<ThemeStateKey>emptyList());
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+-        ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
++        ServiceException error = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
+ 
+         assertTrue(error.getMessage().contains("relation.arong"), error.getMessage());
+         assertTrue(error.getMessage().contains("剧情配置"), error.getMessage());
+@@ -207,7 +207,7 @@
+                 registered("relation.arong", ThemeStateKey.TYPE_FLAG)));
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+-        ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
++        ServiceException error = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
+ 
+         assertTrue(error.getMessage().contains("relation.arong"), error.getMessage());
+         assertTrue(error.getMessage().contains("relation"), error.getMessage());
+@@ -229,7 +229,7 @@
+         when(npcProfileMapper.selectEnabledByScope(4, 501L)).thenReturn(Collections.singletonList(available));
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+-        assertTrue(service.publishDraft(TOPIC_ID));
++        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
+ 
+         verify(topicMapper).publishRouteSnapshot(anyLong(), any(), any());
+     }
+@@ -237,7 +237,7 @@
+     @Test
+     void legacyTopicWithoutStoryPublishesUntouched() {
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+-        assertTrue(service.publishDraft(TOPIC_ID));
++        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
+ 
+         verify(keyMapper, never()).selectByTopicId(anyLong());
+     }
+@@ -263,7 +263,7 @@
+                 .thenReturn(Collections.singletonList(withThought));
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+-        ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
++        ServiceException error = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
+         assertTrue(error.getMessage().contains("念头"), error.getMessage());
+         assertTrue(error.getMessage().contains("nosuch"), "要报出是哪个 key 对不上:" + error.getMessage());
+     }
+@@ -280,7 +280,7 @@
+                 .thenReturn(Collections.singletonList(withThought));
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+-        assertTrue(service.publishDraft(TOPIC_ID));
++        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
+     }
+ 
+     private static CmsTopic draft() {
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleReviewDecouplingTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleReviewDecouplingTest.java
+index 571673ec03beeb108e40938dc5ca2f7fd0f6b7b1..c4b67e13824b83d15a48cf2a0df31f17e5476bb1 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleReviewDecouplingTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleReviewDecouplingTest.java
+@@ -184,7 +184,7 @@
+ 
+     @Test
+     void storyAndNameEdit_keepsSaleReview_andRefreshesThePendingTask() {
+-        svc.updateTopicByOwner(dto("新名字", null, "5"), ME, "me");
++        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(dto("新名字", null, "5"), ME, "me");
+ 
+         verify(canonicalMutationService, never()).invalidateApprovedCanonical(anyLong(), anyString());
+         verify(commercialReviewService, times(1)).submitSaleReview(TOPIC, ME);
+@@ -192,7 +192,7 @@
+ 
+     @Test
+     void priceEdit_resetsSaleReview() {
+-        svc.updateTopicByOwner(dto("旧名字", null, "8"), ME, "me");
++        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(dto("旧名字", null, "8"), ME, "me");
+ 
+         verify(canonicalMutationService, times(1)).invalidateApprovedCanonical(eq(TOPIC), eq("topic-content-rebuild"));
+         verify(commercialReviewService, never()).submitSaleReview(anyLong(), anyLong());
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplayReskinFixture.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplayReskinFixture.java
+index 0e083e2a3ae529869b34c6b5936fb1c707a3bb08..13035dd238d86045bdf68db5eb9a63837636a839 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplayReskinFixture.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplayReskinFixture.java
+@@ -171,13 +171,13 @@
+     void publish(JsonNode skin) throws Exception {
+         variant=skin;
+         TopicCreateDTO identity=new TopicCreateDTO();identity.setName(skin.path("name").asText());identity.setSaveDraft(1);identity.setPublishMode("simple");identity.setProductType(1);
+-        Long id=authoring.createTopic(identity,7L,"配置作者");
++        Long id=com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(authoring).createTopic(identity,7L,"配置作者");
+         keyService.register(id,keys);
+         TopicUpdateDTO update=JSON.convertValue(definition(skin),TopicUpdateDTO.class);update.setId(id);
+-        assertThrows(RuntimeException.class,()->authoring.updateTopicByOwner(update,8L,"外来作者"));
+-        assertEquals(id,authoring.updateTopicByOwner(update,7L,"配置作者"));
++        assertThrows(RuntimeException.class,()->com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(authoring).updateTopicByOwner(update,8L,"外来作者"));
++        assertEquals(id,com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(authoring).updateTopicByOwner(update,7L,"配置作者"));
+         topic=activeTopics.selectCmsTopicById(id);assertNotNull(topic);
+-        assertTrue(authoring.publishDraft(id));topic=activeTopics.selectCmsTopicById(id);snapshot=JSON.readTree(topic.getPublishedRouteGraphJson());
++        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(authoring).publishDraft(id));topic=activeTopics.selectCmsTopicById(id);snapshot=JSON.readTree(topic.getPublishedRouteGraphJson());
+         assertFalse(snapshot.toString().contains("resourceSlots"));assertFalse(snapshot.toString().contains("templateBindings"));
+         assertSameFrozenTheme(snapshot.path("themeConfig"),JSON.readTree(route.freezePublishedJourney(topic)).path("themeConfig"));
+     }
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PersonalGameplayRuntimeServiceTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PersonalGameplayRuntimeServiceTest.java
+index 4ffb84cbe29ccf3ad6fd910f5741a0f139666724..8ae3c98443a651b00cf70ca70b616c672d582c5f 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PersonalGameplayRuntimeServiceTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PersonalGameplayRuntimeServiceTest.java
+@@ -523,7 +523,7 @@
+         CmsMemberTemplate first=templates.selectCmsMemberTemplateByIds(Collections.emptyList()).get(0);first.setValidationMethod(4);first.setAdvancedConfigJson("{\"schemaVersion\":1,\"interactionRules\":{\"hpCost\":2}}");topic.setThemeRuntimeConfigJson(null);
+         CmsTopicServiceImpl cms=new CmsTopicServiceImpl();CmsTopicMapper topics=mock(CmsTopicMapper.class);when(topics.selectCmsTopicById(10L)).thenReturn(topic);when(topics.updateCmsTopic(any())).thenAnswer(call->{topic.setThemeRuntimeConfigJson(((CmsTopic)call.getArgument(0)).getThemeRuntimeConfigJson());return 1;});
+         org.springframework.test.util.ReflectionTestUtils.setField(cms,"cmsTopicMapper",topics);org.springframework.test.util.ReflectionTestUtils.setField(cms,"topicRouteRuntimeService",service);
+-        org.springframework.test.util.ReflectionTestUtils.invokeMethod(cms,"persistTemplateInteractionRules",10L);JsonNode persisted=json.readTree(topic.getThemeRuntimeConfigJson());assertEquals(11,persisted.path("gameplayRuntime").path("facilities").path(0).path("operationNodeId").asInt());assertEquals("tpl_node_11",persisted.path("gameplayRuntime").path("quests").path(0).path("facilityKey").asText());assertEquals(2,persisted.path("gameplayRuntime").path("facilities").path(0).path("hpCost").asInt());
++        org.springframework.test.util.ReflectionTestUtils.invokeMethod(com.chengyinhub.business.service.support.TopicGraphTestWiring.graph(cms),"persistTemplateInteractionRules",10L);JsonNode persisted=json.readTree(topic.getThemeRuntimeConfigJson());assertEquals(11,persisted.path("gameplayRuntime").path("facilities").path(0).path("operationNodeId").asInt());assertEquals("tpl_node_11",persisted.path("gameplayRuntime").path("quests").path(0).path("facilityKey").asText());assertEquals(2,persisted.path("gameplayRuntime").path("facilities").path(0).path("hpCost").asInt());
+     }
+ 
+     @Test void templateTradeAndVoteToolsSaveAndFreezeTheActualWorldScopeAndCurrentScene() throws Exception {
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicCreateOpenClubPoolTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicCreateOpenClubPoolTest.java
+index aa9fa7c42587a292d1a67d6ff265f29e2d102898..04d0cab68d6f4404626550f22948dfc73ecfb7f1 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicCreateOpenClubPoolTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicCreateOpenClubPoolTest.java
+@@ -105,7 +105,7 @@
+     @Test
+     void createTopic_persists_open_club_pool_flag_for_city_orientation() {
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
+-        svc.createTopic(cityOrientationDto(1), 42L, "tester");
++        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).createTopic(cityOrientationDto(1), 42L, "tester");
+         ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
+         verify(cmsTopicMapper).insertCmsTopic(cap.capture());
+         assertEquals(1, cap.getValue().getOpenClubPool());
+@@ -119,7 +119,7 @@
+     @Test
+     void createTopic_rejectsClubLeadForFreeExploreBeforePersisting() {
+         IllegalStateException ex = assertThrows(IllegalStateException.class,
+-                () -> svc.createTopic(freeExploreDto(1), 42L, "tester"));
++                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).createTopic(freeExploreDto(1), 42L, "tester"));
+ 
+         // 断到具体这道闸:同一段写入前校验里章节招商闸抛的是同型 IllegalStateException,
+         // 只断"抛了"会被相邻那道闸接住 = 假绿。
+@@ -156,7 +156,7 @@
+         Date deadline = dto.getRecruitDeadline();
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
+-        svc.createTopic(dto, 42L, "tester");
++        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).createTopic(dto, 42L, "tester");
+ 
+         ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
+         verify(cmsTopicMapper).insertCmsTopic(cap.capture());
+@@ -171,7 +171,7 @@
+     void createTopic_defaults_open_club_pool_to_open_for_city_orientation() {
+         // 2026-09-15 裁决 12B:未传 = 开(专业版与简易版统一默认开,主办可手动关)。
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
+-        svc.createTopic(cityOrientationDto(null), 42L, "tester");
++        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).createTopic(cityOrientationDto(null), 42L, "tester");
+         ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
+         verify(cmsTopicMapper).insertCmsTopic(cap.capture());
+         assertEquals(1, cap.getValue().getOpenClubPool(),
+@@ -182,7 +182,7 @@
+     void createTopic_keeps_explicit_closed_switch_for_city_orientation() {
+         // 主办手动关 = 显式 0,必须如实落库(默认开不等于写死开)。
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
+-        svc.createTopic(cityOrientationDto(0), 42L, "tester");
++        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).createTopic(cityOrientationDto(0), 42L, "tester");
+         ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
+         verify(cmsTopicMapper).insertCmsTopic(cap.capture());
+         assertEquals(0, cap.getValue().getOpenClubPool());
+@@ -195,7 +195,7 @@
+     @Test
+     void createTopic_neverOpensClubPoolForFreeExplore() {
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
+-        svc.createTopic(freeExploreDto(null), 42L, "tester");
++        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).createTopic(freeExploreDto(null), 42L, "tester");
+         ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
+         verify(cmsTopicMapper).insertCmsTopic(cap.capture());
+         assertEquals(0, cap.getValue().getOpenClubPool());
+@@ -212,7 +212,7 @@
+         dto.setClubId(9L);
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
+-        svc.createTopic(dto, 42L, "tester");
++        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).createTopic(dto, 42L, "tester");
+ 
+         ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
+         verify(cmsTopicMapper).insertCmsTopic(cap.capture());
+@@ -228,7 +228,7 @@
+         dto.setClubId(9L);
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
+-        svc.createTopic(dto, 42L, "tester");
++        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).createTopic(dto, 42L, "tester");
+ 
+         ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
+         verify(cmsTopicMapper).insertCmsTopic(cap.capture());
+@@ -241,7 +241,7 @@
+         stubMyOwnedClub(9L);
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
+-        svc.createTopic(cityOrientationDto(null), 42L, "tester");
++        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).createTopic(cityOrientationDto(null), 42L, "tester");
+ 
+         ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
+         verify(cmsTopicMapper).insertCmsTopic(cap.capture());
+@@ -285,7 +285,7 @@
+         dto.setChapters(Collections.singletonList(chapter));
+ 
+         IllegalStateException ex = assertThrows(IllegalStateException.class,
+-                () -> svc.createTopic(dto, 42L, "tester"));
++                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).createTopic(dto, 42L, "tester"));
+ 
+         assertTrue(ex.getMessage().contains("仅自由探索主题"));
+         verify(cmsTopicMapper, Mockito.never()).insertCmsTopic(Mockito.any(CmsTopic.class));
+@@ -320,7 +320,7 @@
+             dto.setChapters(Collections.singletonList(chapter));
+ 
+             IllegalStateException ex = assertThrows(IllegalStateException.class,
+-                    () -> svc.createTopic(dto, 42L, "tester"));
++                    () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).createTopic(dto, 42L, "tester"));
+             assertTrue(ex.getMessage().contains("0到127"), "maxMerchant=" + maxMerchant + ", 实际:" + ex.getMessage());
+         }
+     }
+@@ -331,7 +331,7 @@
+         dto.setCompleteRewardCouponId(77L);
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
+-        svc.createTopic(dto, 42L, "tester");
++        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).createTopic(dto, 42L, "tester");
+ 
+         ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
+         verify(cmsTopicMapper).insertCmsTopic(cap.capture());
+@@ -347,7 +347,7 @@
+         dto.setPublishMode("ai_simple");
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
+-        assertThrows(IllegalArgumentException.class, () -> svc.createTopic(dto, 42L, "tester"));
++        assertThrows(IllegalArgumentException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).createTopic(dto, 42L, "tester"));
+     }
+ 
+     @Test
+@@ -361,7 +361,7 @@
+         dto.setChapters(Arrays.asList(chapter));
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
+-        assertThrows(IllegalArgumentException.class, () -> svc.createTopic(dto, 42L, "tester"));
++        assertThrows(IllegalArgumentException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).createTopic(dto, 42L, "tester"));
+     }
+ 
+     @Test
+@@ -379,6 +379,6 @@
+         dto.setChapters(Arrays.asList(chapter));
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
+-        assertThrows(IllegalArgumentException.class, () -> svc.createTopic(dto, 42L, "tester"));
++        assertThrows(IllegalArgumentException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).createTopic(dto, 42L, "tester"));
+     }
+ }
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicCreateSaveDraftSideEffectTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicCreateSaveDraftSideEffectTest.java
+index 42585313f4fc07af0844390036a8041fdde7d4ff..4e57d51921801db2d1c5642d44b3838a6411dcdb 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicCreateSaveDraftSideEffectTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicCreateSaveDraftSideEffectTest.java
+@@ -98,7 +98,7 @@
+     @Test
+     void draftCreateSkipsSelfHostShellAndAudit() {
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
+-        svc.createTopic(dto(1), 42L, "tester");
++        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).createTopic(dto(1), 42L, "tester");
+ 
+         ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
+         verify(topicMapper).insertCmsTopic(cap.capture());
+@@ -112,7 +112,7 @@
+     @Test
+     void publishedProCreateSubmitsPostReviewAndBuildsPublicShell() {
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
+-        svc.createTopic(dto(null), 42L, "tester");
++        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).createTopic(dto(null), 42L, "tester");
+ 
+         verify(activityMapper).insertCmsActivity(any(CmsActivity.class));
+         verify(auditTaskService).submit(anyString(), anyLong(), anyLong(), anyString(), anyString());
+@@ -125,7 +125,7 @@
+         TopicCreateDTO simple = dto(null);
+         simple.setPublishMode("simple");
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
+-        svc.createTopic(simple, 42L, "tester");
++        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).createTopic(simple, 42L, "tester");
+ 
+         verify(activityMapper).insertCmsActivity(any(CmsActivity.class));
+         verify(auditTaskService, never()).submit(anyString(), anyLong(), anyLong(), anyString(), anyString());
+@@ -140,7 +140,7 @@
+     @Test
+     void proAndDraftCreateDoNotClaimMachinePassed() {
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
+-        svc.createTopic(dto(1), 42L, "tester");
++        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).createTopic(dto(1), 42L, "tester");
+         ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
+         verify(topicMapper).insertCmsTopic(cap.capture());
+         assertTrue(!Integer.valueOf(1).equals(cap.getValue().getCheckStatus()), "草稿不得写 check_status=1");
+@@ -158,7 +158,7 @@
+                 .when(ledger).requireNoOverdueDebt(42L);
+ 
+         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
+-        ServiceException e = assertThrows(ServiceException.class, () -> svc.createTopic(dto(null), 42L, "tester"));
++        ServiceException e = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).createTopic(dto(null), 42L, "tester"));
+ 
+         assertTrue(e.getMessage().startsWith("SETTLEMENT_DEBT_OVERDUE"), e.getMessage());
+         verify(activityMapper, never()).insertCmsActivity(any(CmsActivity.class));
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/OldClientUpgradeRequiredContractTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/OldClientUpgradeRequiredContractTest.java
+index 4022b7c7fdfaad2970de2dbbabbbc7eb254241bc..43591ee1b442554e3f071abc65fe577ee7640300 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/OldClientUpgradeRequiredContractTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/OldClientUpgradeRequiredContractTest.java
+@@ -65,7 +65,7 @@
+         ReflectionTestUtils.setField(service, "cmsTopicChapterMapper", chapterMapper);
+ 
+         ChapterFlowClientUpgradeRequiredException e = assertThrows(ChapterFlowClientUpgradeRequiredException.class,
+-                () -> ReflectionTestUtils.invokeMethod(service, "assertLegacyChapterFlowWritable", 7L));
++                () -> ReflectionTestUtils.invokeMethod(com.chengyinhub.business.service.support.TopicGraphTestWiring.guard(service), "assertLegacyChapterFlowWritable", 7L));
+ 
+         assertEquals("请更新小程序后编辑该主题", e.getMessage());
+     }

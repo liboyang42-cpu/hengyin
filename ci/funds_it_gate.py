@@ -121,8 +121,8 @@ EXPECTED = {
     # 2026-09-19 RUN-01:88 → 89,+1 = autoVerifyExpiredSessions_scansOnlyEligibleAndCasGuardsRace。
     # 2026-09-21 CYV-P1-003:+2 人工退款冻结/解冻与 RR 旧快照并发负控；+1 服务端版本锁定 8.0.45。
     # 2026-10-03:92 → 93，新增已取消活动在 RR 旧快照下仍拒核销的真库用例。
-    # Payment attempt fencing adds one stale-attempt regression; count remains exact and skips forbidden.
-    "RegistrationFundsMybatisIntegrationTest": 98,
+    # Frozen merge retains both original source sets: 101 real @Test methods.
+    "RegistrationFundsMybatisIntegrationTest": 101,
     # 2026-09-15:9 → 10,+1 = cityNodeFrozenCouponSurvivesStockFailureAndConcurrentRetry
     # (f178b58ae 有意新增:据点冻结券在库存失败后保留权益、并发重试只发一张)。
     # 2026-09-17 release-0917 集成:fix-club-0917 拍板6 停用 verify_answer,删掉 5 条答题验票真库 IT
@@ -141,7 +141,7 @@ EXPECTED = {
     "ExploreScanReplayRealDbIT": 4,
     # 2026-09-16 提现闸(用户硬规则「等所有玩家都退不了才可提现」):14 → 16,+2 = 活动/主题结算选单
     # 在仍有已付未退未核销、退款截止未到的票时不入选(活动结束早于集合 / 自由定向票期长于主题)。
-    "TandianriBatch0FundsMybatisIntegrationTest": 16,
+    "TandianriBatch0FundsMybatisIntegrationTest": 17,
     "ShopDayOneTicketMySqlIT": 5,
     # 2026-08-17 R9:11 → 18,+7 = R6 产品迁移真库重放与两向歧义(此前零执行证据)、
     # R6 资金终结闭环 11 条回读逐条消费、R7 两条写前 guard 的三条错 schema 负控
@@ -256,10 +256,9 @@ EXPECTED = {
     # 2026-09-21 CYV-P1-002:主理人转让与活动取消在 MySQL RR/RC 下的锁后权限、
     # 精确 topic/club/activity scope 和并发退款幂等。
     "ClubEventTransferCancellationMySqlIT": 3,
-    # 2026-10-28:20 → 9。F3 套票退款冻结/履约恢复 11 条真库用例随 F3 线移到草稿 PR #642(商城暂停);
-    # 保留 4 条资金用例(写入回执丢失回滚 ×2 / 渠道失败后锁内历史 / 伪造退款身份)。
-    "RefundRetryAndRemainderMySqlIT": 9,
-    "SignupNoticeAfterCommitPersistenceMySqlIT": 5,
+    # Frozen merge retains master nine financial cases plus original UNKNOWN recovery.
+    "RefundRetryAndRemainderMySqlIT": 10,
+    "SignupNoticeAfterCommitPersistenceMySqlIT": 18,
     "TopicLikeDesiredStateMySqlIT": 3,
     "MonitorMissingJobsMySqlIT": 3,
     "MemberPasswordWidthMySqlIT": 3,

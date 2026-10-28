@@ -10,6 +10,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const { createSessionStore } = require('../../utils/session/session-store.js');
+const { createSessionManager } = require('../../utils/session/session-manager.js');
 const guard = require('../../utils/auth/require-login.js');
 
 const root = path.resolve(__dirname, '../..');
@@ -17,17 +18,17 @@ const read = rel => fs.readFileSync(path.join(root, rel), 'utf8');
 const settle = async () => { for (let i = 0; i < 40; i++) await Promise.resolve(); };
 
 function mountApp({ consent = true, cached = false } = {}) {
-  let app; const storage = new Map(), requests = [], logins = [];
+  let app; const storage = new Map(), requests = [], logins = [], pages = [{}];
   if (consent) storage.set('cy_usage_choice_v1', { privacy_policy: 'v2.1', user_service_agreement: 'v2.2' });
   const wx = { getStorageSync: k => storage.get(k), setStorageSync: (k, v) => storage.set(k, v), removeStorageSync: k => storage.delete(k),
     request: r => { requests.push(r); return { abort() {} }; }, login: r => logins.push(r), showLoading() {}, hideLoading() {}, hideToast() {} };
-  vm.runInNewContext(read('app.js'), { App: a => { app = a; }, wx, console, setTimeout, clearTimeout,
+  vm.runInNewContext(read('app.js'), { App: a => { app = a; }, wx, console, setTimeout, clearTimeout, getCurrentPages: () => pages,
     require: f => f === './utils/toast.js' ? Object.assign(() => {}, { hide() {} }) : require(path.join(root, f)) });
   app.getSession = (() => { const session = createSessionStore({ target: app.globalData, wx }); return () => session; })();
   app.isDevEnv = () => false; app.globalData.siteBaseUrl = 'http://127.0.0.1:8129';
   app.openPrivacyAuthorizationPage = () => {};
   if (cached) { app.getSession().setUserID('7'); app.getSession().setAuthorization('cached-token'); }
-  return { app, wx, storage, requests, logins };
+  return { app, wx, storage, requests, logins, pages };
 }
 
 // ---------- A) 冷启动 ----------
@@ -189,12 +190,13 @@ for (const [file, name, reason] of WRITE_ENTRIES) {
     assert.ok(m, file + ' 找不到 ' + name);
     assert.match(m[2], new RegExp("if \\(app\\.ensureLoginFor && !app\\.ensureLoginFor\\('" + reason + "', \\(\\) => this\\." + name + '\\('),
       name + ' 第一行必须是写前登录闸,登录后恢复的是同一个函数');
+    assert.match(m[2], /owner: this, target: \(\) => \[/, name + ' 必须声明原页面/组件和稳定业务身份');
   });
 }
 
 test('C 工具层写入口:举报 run() 与建队 createActivityTeam 也先过闸', () => {
-  assert.match(read('utils/content-report.js'), /app\.ensureLoginFor && !app\.ensureLoginFor\('report', function \(\) \{ run\(page, app, id, submit\); \}\)\) return false;/);
-  assert.match(read('subpackageMember/utils/team-up.js'), /app\.ensureLoginFor && !app\.ensureLoginFor\('team', \(\) => createActivityTeam\(app, activityId, maxMembers, joinMode, callbacks\)\)\) return/);
+  assert.match(read('utils/content-report.js'), /app\.ensureLoginFor && !app\.ensureLoginFor\('report', function \(\) \{ run\(page, app, id, submit\); \}, \{ owner: page, target: \(\) => \[id, page\.data && page\.data\.id, page\.data && page\.data\.clubId\] \}\)\) return false;/);
+  assert.match(read('subpackageMember/utils/team-up.js'), /app\.ensureLoginFor && !app\.ensureLoginFor\('team', \(\) => createActivityTeam\(app, activityId, maxMembers, joinMode, callbacks\), callbacks && callbacks\.loginContext\)\) return/);
 });
 
 test('C 漫游开局:游客走 app.requireLogin({ reason: roam }),不再静默 firstLogin;取消不报错', () => {
@@ -278,4 +280,109 @@ test('C 扫门口码开始游玩:scan-entry 声明为写请求,游客 401 由请
   const call = src.slice(src.indexOf("url: '/api/play/scan-entry'"), src.indexOf('finishDoorSceneFallback() {'));
   assert.match(call, /write: true, loginReason: 'play',/);
   assert.match(call, /if \(!\(Number\(status\) === 401 && !app\.getUserID\(\)\)\) cyToast\('这张码无法打开'\);/);
+});
+
+// H: exercise the real login helper, app facade and original team Page with a controlled login response.
+function continuationFixture() {
+  const h = mountApp(), modals = [];
+  let definition, finishLogin;
+  vm.runInNewContext(read('pages/team/join/index.js'), {
+    Page: page => { definition = page; }, getApp: () => h.app,
+    require: id => { assert.equal(id, '../../../utils/toast.js'); return () => {}; },
+    getCurrentPages: () => h.pages, wx: h.wx, setTimeout: () => 0,
+  });
+  const page = Object.assign({}, definition, { route: 'pages/team/join/index', inviteCode: 'original-invite' });
+  page.data = JSON.parse(JSON.stringify(definition.data));
+  page.setData = patch => Object.assign(page.data, patch);
+  h.pages.splice(0, h.pages.length, page);
+  h.app._loginGuard = guard.createRequireLogin({ getApp: () => h.app, getPages: () => h.pages,
+    show: options => modals.push(options) });
+  const manager = createSessionManager({ session: h.app.getSession(), wxLogin: () => Promise.resolve({ code: 'controlled-code' }),
+    exchangeCode: () => new Promise(resolve => { finishLogin = () => resolve({ token: 'signed-in',
+      data: { id: '7', userType: 1, role: 'player' } }); }) });
+  h.app.firstLogin = () => manager.ensureSession().then(result => {
+    if (h.afterLogin) h.afterLogin();
+    return result;
+  });
+  return Object.assign(h, { page, modals, finish: () => finishLogin(),
+    confirm: async () => { modals[0].success({ confirm: true }); await settle(); },
+    writes: () => h.requests.filter(request => request.url.endsWith('/api/team/join')) });
+}
+
+test('H continuation: login in flight then leaving the original Page must not join', async () => {
+  const h = continuationFixture(); h.page.join(); await h.confirm();
+  if (h.page.onUnload) h.page.onUnload(); h.pages.length = 0;
+  h.finish(); await settle();
+  assert.equal(h.writes().length, 0, 'leaving during login must cancel the old join');
+});
+
+test('H continuation: changing the original invite must not write the replacement target', async () => {
+  const h = continuationFixture(); h.page.join(); await h.confirm();
+  h.page.inviteCode = 'replacement-invite'; h.finish(); await settle();
+  assert.equal(h.writes().length, 0, 'login cannot migrate the original action to another invite');
+});
+
+test('H continuation: same live Page and original invite continue exactly once', async () => {
+  const h = continuationFixture(); h.page.join(); h.page.join();
+  assert.equal(h.modals.length, 1); assert.equal(h.writes().length, 0);
+  await h.confirm(); h.finish(); await settle();
+  assert.equal(h.writes().length, 1);
+  assert.equal(JSON.parse(h.writes()[0].data).inviteCode, 'original-invite');
+});
+
+test('H continuation: hide then return and a different instance of the same route cannot revive the old join', async () => {
+  for (const mode of ['hide-return', 'replacement-page']) {
+    const h = continuationFixture(); h.page.join(); await h.confirm();
+    if (mode === 'hide-return') {
+      if (h.page.onHide) h.page.onHide(); if (h.page.onShow) h.page.onShow();
+    } else h.pages[0] = { route: h.page.route };
+    h.finish(); await settle(); assert.equal(h.writes().length, 0, mode);
+  }
+});
+
+test('H continuation: account change or same-token A-B-A after login result cannot inherit the original join', async () => {
+  for (const aba of [false, true]) {
+    const h = continuationFixture(); h.page.join(); await h.confirm();
+    h.afterLogin = () => {
+      h.app.getSession().clearSession();
+      h.app.getSession().applySnapshot({ user_id: '8', authorization: 'other', user_type: 1, role: 'player' });
+      if (aba) h.app.getSession().applySnapshot({ user_id: '7', authorization: 'signed-in', user_type: 1, role: 'player' });
+    };
+    h.finish();
+    await settle(); assert.equal(h.writes().length, 0, 'account/session revision changed');
+  }
+});
+
+test('H continuation: cancelling login preserves pending UNKNOWN storage without dispatch', async () => {
+  const h = continuationFixture();
+  const voice = { version: 1, active: '11111111-1111-4111-8111-111111111111', records: [{
+    requestId: '11111111-1111-4111-8111-111111111111', intentId: '7', previousIntentId: null, state: 'UNKNOWN', createdAt: 1 }] };
+  const director = { activityId: '31', requestId: 'original-request', action: 'BROADCAST', nodeId: null, expectedRevision: 0 };
+  h.wx.setStorageSync('npc_voice_v1:7:merchant', voice);
+  h.wx.setStorageSync('cy.gameDirector.pendingWrite.m7.a31', director);
+  h.page.join(); h.modals[0].success({ confirm: false }); await settle();
+  assert.equal(h.writes().length, 0);
+  assert.deepEqual(h.wx.getStorageSync('npc_voice_v1:7:merchant'), voice);
+  assert.deepEqual(h.wx.getStorageSync('cy.gameDirector.pendingWrite.m7.a31'), director);
+});
+
+test('H continuation: guest revision ABA while the modal is open cannot start a stale login', async () => {
+  const h = continuationFixture(); let loginCalls = 0;
+  const login = h.app.firstLogin; h.app.firstLogin = () => { loginCalls++; return login(); };
+  h.page.join(); h.app.getSession().setUserID('8'); h.app.getSession().clearSession();
+  await h.confirm(); assert.equal(loginCalls, 0); assert.equal(h.writes().length, 0);
+});
+
+test('H continuation: real login attempt rejects guest-account ABA before the exchange reply', async () => {
+  const h = continuationFixture(); h.page.join(); await h.confirm();
+  h.app.getSession().setUserID('8'); h.app.getSession().clearSession();
+  h.finish(); await settle();
+  assert.equal(h.writes().length, 0); assert.ok(!h.app.getUserID(), 'a retired attempt must not restore an account');
+});
+
+test('H continuation: a fresh explicit click after hiding can use its own live context', async () => {
+  const h = continuationFixture(); h.page.join(); await h.confirm();
+  h.page.onHide(); h.page.join(); h.finish(); await settle();
+  assert.equal(h.writes().length, 1, 'only the new explicit action may continue');
+  assert.equal(JSON.parse(h.writes()[0].data).inviteCode, 'original-invite');
 });

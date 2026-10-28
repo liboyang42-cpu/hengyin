@@ -1,0 +1,1985 @@
+{
+  "schema": 1,
+  "baseline": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+  "meaning": "技术module/namespace观察与经root明确批准的窄business_policy分开；observed writers不授业务写权。",
+  "modules": {
+    "chengyinhub-admin": "入口与测试宿主；新增生产写调用必须审阅，不从 Controller 行数判断架构。",
+    "chengyinhub-system": "业务与持久层；每个 Mapper namespace 为独立技术写 owner，不能因同属 system 模块默认允许跨表写。",
+    "chengyinhub-common": "共享基础代码；所有新增生产调用/持久副作用按 UNKNOWN 审阅，不能仅凭 Maven 无新增依赖放行。",
+    "chengyinhub-framework": "框架与鉴权配置；F 不修改鉴权，变更需相应 owner 审阅。",
+    "chengyinhub-quartz": "调度及其自身 job/log Mapper；跨业务恢复入口仍须确认持久源及实际调度可达性。",
+    "chengyinhub-generator": "代码生成器及元数据 Mapper；不将生成模板当成已审业务写路径。"
+  },
+  "legacy": "存量仅按 statement 的 path#id、内容哈希及传递 include 哈希精确识别。多 owner 表保持显式多值，不归并为一个万能 owner。没有目录通配豁免或自增 baseline。",
+  "unknown": "动态表/字段、foreach/if/choose、include properties、未解析或循环引用及复杂 SQL 均保持 UNKNOWN；table_hints/column_hints 不完整时不猜 owner。DELETE 的字段集合为空不表示无写效果。",
+  "business_domain_assignment": "原两AI事实与root明确指定的NPC voice/ASR两意图表仅登记各自唯一writer namespace；原三private_ports保持。注册不批准ASR额度、用户余额/个人表写权、运行授权或方法级语义。 本次仅新增G coop_settlement_manual_case控制事实的唯一writer，保留原三private_ports；D quota recovery只经原NpcAsrIntentMapper确认原NOT_SENT proof并完成pending，不新增namespace或ASR/其它资金表通配写权。",
+  "business_policy": {
+    "schema": 1,
+    "coverage": "PARTIAL",
+    "scope": [
+      "AI_QUOTA_RESERVATION",
+      "PHOTO_CHECK_INTENT",
+      "NPC_VOICE_ENROLLMENT_INTENT",
+      "NPC_ASR_INTENT",
+      "COOP_SETTLEMENT_MANUAL_CASE"
+    ],
+    "facts": [
+      {
+        "id": "AI_QUOTA_RESERVATION",
+        "table": "ai_quota_reservation",
+        "coverage": "whole_table",
+        "business_owner": "AI_QUOTA_RECOVERY"
+      },
+      {
+        "id": "PHOTO_CHECK_INTENT",
+        "table": "photo_check_intent",
+        "coverage": "whole_table",
+        "business_owner": "AI_PHOTO_INTENT"
+      },
+      {
+        "id": "NPC_VOICE_ENROLLMENT_INTENT",
+        "table": "npc_voice_enrollment_intent",
+        "coverage": "whole_table",
+        "business_owner": "E_NPC_VOICE_ENROLLMENT"
+      },
+      {
+        "id": "NPC_ASR_INTENT",
+        "table": "npc_asr_intent",
+        "coverage": "whole_table",
+        "business_owner": "D_NPC_ASR_INTENT"
+      },
+      {
+        "id": "COOP_SETTLEMENT_MANUAL_CASE",
+        "table": "coop_settlement_manual_case",
+        "coverage": "whole_table",
+        "business_owner": "G_ORIGINAL_MANUAL_CASES"
+      }
+    ],
+    "pure_writers": [
+      {
+        "module": "chengyinhub-system",
+        "namespace": "com.chengyinhub.business.mapper.AiQuotaReservationMapper",
+        "business_owner": "AI_QUOTA_RECOVERY",
+        "command_id": "ai-quota-recovery"
+      },
+      {
+        "module": "chengyinhub-system",
+        "namespace": "com.chengyinhub.business.mapper.PhotoCheckIntentMapper",
+        "business_owner": "AI_PHOTO_INTENT",
+        "command_id": "photo-check-intent"
+      },
+      {
+        "module": "chengyinhub-system",
+        "namespace": "com.chengyinhub.business.mapper.NpcVoiceEnrollmentMapper",
+        "business_owner": "E_NPC_VOICE_ENROLLMENT",
+        "command_id": "npc-voice-enrollment-intent"
+      },
+      {
+        "module": "chengyinhub-system",
+        "namespace": "com.chengyinhub.business.mapper.NpcAsrIntentMapper",
+        "business_owner": "D_NPC_ASR_INTENT",
+        "command_id": "npc-asr-intent"
+      },
+      {
+        "module": "chengyinhub-system",
+        "namespace": "com.chengyinhub.business.mapper.CoopSettlementManualCaseMapper",
+        "business_owner": "G_ORIGINAL_MANUAL_CASES",
+        "command_id": "coop-original-manual-case"
+      }
+    ],
+    "private_ports": [
+      {
+        "target": "com.chengyinhub.business.mapper.AiQuotaReservationMapper",
+        "owner": "chengyinhub-system",
+        "consumer": "com.chengyinhub.business.service.ai.AiQuotaRecoveryService"
+      },
+      {
+        "target": "com.chengyinhub.business.mapper.PhotoCheckIntentMapper",
+        "owner": "chengyinhub-system",
+        "consumer": "com.chengyinhub.business.service.ai.PhotoCheckIntentService"
+      },
+      {
+        "target": "com.chengyinhub.business.mapper.AiThemeDraftIntentMapper",
+        "owner": "chengyinhub-system",
+        "consumer": "com.chengyinhub.business.service.impl.AiThemeDraftRequestService"
+      }
+    ]
+  },
+  "technical_dependency_policy": {
+    "schema": 1,
+    "coverage": "PARTIAL",
+    "observed_source": "06a571b1247620a9bdcea068be0ded973671d17c",
+    "meaning": "Explicit technical responsibility classes and restrictive binary companions, not business table/field authorization. Existing global debt/baselines remain outside this new acyclic cut. Shared observation anchor 986; additional exact frozen sources: A configuration 1e74766d3832953af2b8bc621e984f2e43601dc6, G judgement ca9d608e5c7a193d402ca51d52a1f6a456ef0f91, E narrative 1b743737f374e6b4c251e2819062c510b11488f5. Not a compiled graph or baseline. D final publication/content/self-host source 7f7752a16b010a5f6a0f3790919f722b80a1384f. Follow-up exact sources: public 06a571b1247620a9bdcea068be0ded973671d17c/A immutable DTO; B 0ffb9c8fee278c11fe47aa6bcfd95745c9e73850; D 4061bac25dbe113574632dde61d4ae416185db77; G 2457bf1851c0573df7a69270a4532b00b9e8404c; F MDC 1fb99670c066496c3b19da6b3ac4b132e14ab785. Structural directions only; no lock/immutability/log-safety proof. E_TOPIC_QUERY exact System class from 9e14a73e50c9afd5c8f38027c3ecd059967a51d3; existing seven read-side dependencies retained, no transitive read-only or table authority inference. Wiring sources: G 54c524ca99204804b6b84af517359eabc8c6ee8d, D 379d5615608663c47302598ba238447b264c2bba, C f61b8ea8c829d0b4e050a8b61ac592ae819a8a09; exact G rollback callback binary $1 is explicit, never a prefix consumer grant. No compiled evidence or transaction/amount proof. G e57f0a32037bf88b2abf1626cca4760714d88592 read service/SELECT port only; read->producer records actual VERSION constant reference, not permission to invoke producer mutations or proof of transitive read-only. G 4e5ee6e1acafa5cd4efbf366c29445d5d5c1249e: exact mapper-only RegistrationSeatSettlementReader; consumers only settlement evidence and original seat-service compatibility delegate. Constructor RegistrationSeatMapper, verifiedSeatsForGroup is original MANDATORY/current-read contract. No Mapper namespace/table-write grant or transitive read/transaction proof. Exact b626f425625ccae793aa84a44147fe557c8df6ef compiled blockers: G claim and B router use original immutable payment Reference DTO; fact store uses canonical original-order lock interface/Snapshot/MissingOrderException; intent store only queries confirmed external success before original prepay/close/retry. Four declared owner directions, no table/Mapper/command/incoming grant. CityNode->Ticket remains prohibited; its constant coupling is fixed in C source, not waived. Class references do not prove method-level economic authorization.",
+    "owners": [
+      {
+        "id": "A_WITHDRAW_ADMISSION",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.support.WithdrawalBalanceAdmissionService"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.ICashWithdrawService",
+          "com.chengyinhub.business.service.impl.CashWithdrawServiceImpl"
+        ]
+      },
+      {
+        "id": "C_HINT_APPLICATION",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.IPuzzlePlayService",
+          "com.chengyinhub.business.service.impl.PuzzlePlayServiceImpl"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.web.controller.api.ApiPlayProgressController"
+        ]
+      },
+      {
+        "id": "C_NODE_ACCESS",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.support.PlayNodeAccessService"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.web.controller.api.ApiPlayProgressController"
+        ]
+      },
+      {
+        "id": "D_CONTENT_GRAPH",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.ITopicContentGraphAuthoringService",
+          "com.chengyinhub.business.service.impl.TopicContentGraphAuthoringServiceImpl"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.ICmsTopicService",
+          "com.chengyinhub.business.service.impl.CmsTopicServiceImpl"
+        ]
+      },
+      {
+        "id": "D_CONTENT_COPY",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.ITopicContentCopyService",
+          "com.chengyinhub.business.service.impl.TopicContentCopyServiceImpl"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.ICmsTopicService",
+          "com.chengyinhub.business.service.impl.CmsTopicServiceImpl"
+        ]
+      },
+      {
+        "id": "D_CONTENT_RULES",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.support.TopicContentWriteGuard",
+          "com.chengyinhub.business.service.support.TopicRouteOutcomeReader",
+          "com.chengyinhub.business.service.support.TopicAuthoredGraphIds"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.ICmsTopicService",
+          "com.chengyinhub.business.service.impl.CmsTopicServiceImpl"
+        ]
+      },
+      {
+        "id": "E_QUOTA_RECOVERY",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.ai.AiQuotaRecoveryService"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.IAiCreatorService",
+          "com.chengyinhub.business.service.impl.AiCreatorServiceImpl",
+          "com.chengyinhub.business.service.ai.AiGatewayService"
+        ]
+      },
+      {
+        "id": "G_SETTLEMENT_EVIDENCE",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.impl.TopicSettlementEvidenceService"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.ICmsTopicService",
+          "com.chengyinhub.business.service.impl.CmsTopicServiceImpl",
+          "com.chengyinhub.business.service.ICmsRegistrationService",
+          "com.chengyinhub.business.service.impl.CmsRegistrationServiceImpl",
+          "com.chengyinhub.business.service.RegistrationSeatService"
+        ]
+      },
+      {
+        "id": "C_PLAY_BASIC_COMMAND",
+        "module": "chengyinhub-admin",
+        "members": [
+          "com.chengyinhub.web.service.play.PlayBasicCommandApplication"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.web.controller.api.ApiPlayProgressController",
+          "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl"
+        ]
+      },
+      {
+        "id": "C_PLAY_BASIC_INTENT",
+        "module": "chengyinhub-admin",
+        "members": [
+          "com.chengyinhub.web.service.play.PlayBasicIntentApplication"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.web.controller.api.ApiPlayProgressController",
+          "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl"
+        ]
+      },
+      {
+        "id": "C_PLAY_COMPLETION_FACTS",
+        "module": "chengyinhub-admin",
+        "members": [
+          "com.chengyinhub.web.service.play.PlayCompletionFacts"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.web.controller.api.ApiPlayProgressController",
+          "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl"
+        ]
+      },
+      {
+        "id": "C_PLAY_ENTRY",
+        "module": "chengyinhub-admin",
+        "members": [
+          "com.chengyinhub.web.service.play.PlayEntryApplication"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.web.controller.api.ApiPlayProgressController",
+          "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl"
+        ]
+      },
+      {
+        "id": "C_PLAY_HISTORY_QUERY",
+        "module": "chengyinhub-admin",
+        "members": [
+          "com.chengyinhub.web.service.play.PlayHistoryQueryApplication"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.web.controller.api.ApiPlayProgressController",
+          "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl"
+        ]
+      },
+      {
+        "id": "C_PLAY_NODE_COMPLETION",
+        "module": "chengyinhub-admin",
+        "members": [
+          "com.chengyinhub.web.service.play.PlayNodeCompletionApplication"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.web.controller.api.ApiPlayProgressController",
+          "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl"
+        ]
+      },
+      {
+        "id": "C_PLAY_NODE_CONTEXT",
+        "module": "chengyinhub-admin",
+        "members": [
+          "com.chengyinhub.web.service.play.PlayNodeContext"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.web.controller.api.ApiPlayProgressController",
+          "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl"
+        ]
+      },
+      {
+        "id": "C_PLAY_NODE_QUERY",
+        "module": "chengyinhub-admin",
+        "members": [
+          "com.chengyinhub.web.service.play.PlayNodeQueryApplication"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.web.controller.api.ApiPlayProgressController",
+          "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl"
+        ]
+      },
+      {
+        "id": "C_PLAY_PHOTO_COMMAND",
+        "module": "chengyinhub-admin",
+        "members": [
+          "com.chengyinhub.web.service.play.PlayPhotoCommandApplication"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.web.controller.api.ApiPlayProgressController",
+          "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl"
+        ]
+      },
+      {
+        "id": "C_PLAY_PLAYER_QUERY",
+        "module": "chengyinhub-admin",
+        "members": [
+          "com.chengyinhub.web.service.play.PlayPlayerQueryApplication"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.web.controller.api.ApiPlayProgressController",
+          "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl"
+        ]
+      },
+      {
+        "id": "C_PLAY_PREFERENCE",
+        "module": "chengyinhub-admin",
+        "members": [
+          "com.chengyinhub.web.service.play.PlayPreferenceApplication"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.web.controller.api.ApiPlayProgressController",
+          "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl"
+        ]
+      },
+      {
+        "id": "C_PLAY_PUZZLE_COMMAND",
+        "module": "chengyinhub-admin",
+        "members": [
+          "com.chengyinhub.web.service.play.PlayPuzzleCommandApplication"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.web.controller.api.ApiPlayProgressController",
+          "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl"
+        ]
+      },
+      {
+        "id": "C_PLAY_TASK_PRESENTATION",
+        "module": "chengyinhub-admin",
+        "members": [
+          "com.chengyinhub.web.service.play.PlayTaskPresentation"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.web.controller.api.ApiPlayProgressController",
+          "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl"
+        ]
+      },
+      {
+        "id": "A_SHARED_RUN_CONTROL",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.impl.GameSharedRunControl"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.IGameSessionRuntimeService",
+          "com.chengyinhub.business.service.ITopicRouteRuntimeService",
+          "com.chengyinhub.business.service.IAdvancedGameRuntimeService",
+          "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl"
+        ]
+      },
+      {
+        "id": "E_ROUTE_PUBLICATION",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.impl.TopicRoutePublicationCompiler"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.IGameSessionRuntimeService",
+          "com.chengyinhub.business.service.ITopicRouteRuntimeService",
+          "com.chengyinhub.business.service.IAdvancedGameRuntimeService",
+          "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl"
+        ]
+      },
+      {
+        "id": "E_GAMEPLAY_PROJECTION",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.support.GameplayActionProjection"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.IGameSessionRuntimeService",
+          "com.chengyinhub.business.service.ITopicRouteRuntimeService",
+          "com.chengyinhub.business.service.IAdvancedGameRuntimeService",
+          "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl"
+        ]
+      },
+      {
+        "id": "A_SESSION_CONFIGURATION",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.impl.GameSessionConfiguration"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.IGameSessionRuntimeService",
+          "com.chengyinhub.business.service.ITopicRouteRuntimeService",
+          "com.chengyinhub.business.service.IAdvancedGameRuntimeService",
+          "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl"
+        ]
+      },
+      {
+        "id": "G_ACTION_JUDGEMENT",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.impl.AdvancedActionJudgement"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.IGameSessionRuntimeService",
+          "com.chengyinhub.business.service.ITopicRouteRuntimeService",
+          "com.chengyinhub.business.service.IAdvancedGameRuntimeService",
+          "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl"
+        ]
+      },
+      {
+        "id": "E_ROUTE_NARRATIVE",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.impl.TopicRouteNarrativeProgress"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.IGameSessionRuntimeService",
+          "com.chengyinhub.business.service.ITopicRouteRuntimeService",
+          "com.chengyinhub.business.service.IAdvancedGameRuntimeService",
+          "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl"
+        ]
+      },
+      {
+        "id": "D_PUBLICATION",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.impl.TopicPublicationService"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.ICmsTopicService",
+          "com.chengyinhub.business.service.impl.CmsTopicServiceImpl"
+        ]
+      },
+      {
+        "id": "D_PUBLICATION_CONTENT_GUARD",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.support.TopicPublicationContentGuard"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.ICmsTopicService",
+          "com.chengyinhub.business.service.impl.CmsTopicServiceImpl"
+        ]
+      },
+      {
+        "id": "D_SELF_HOST_ACTIVITY",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.support.TopicSelfHostActivityService"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.ICmsTopicService",
+          "com.chengyinhub.business.service.impl.CmsTopicServiceImpl"
+        ]
+      },
+      {
+        "id": "B_PAYMENT_FACADE",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.IWechatPayService",
+          "com.chengyinhub.business.service.impl.WechatPayServiceImpl"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.impl.CashWithdrawServiceImpl"
+        ]
+      },
+      {
+        "id": "B_PAYMENT_OUTBOUND_PORT",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.WechatPaymentOperations"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.IWechatPayService",
+          "com.chengyinhub.business.service.impl.WechatPayServiceImpl",
+          "com.chengyinhub.business.service.impl.WechatPaymentCallbackRouter"
+        ]
+      },
+      {
+        "id": "B_PAYMENT_SDK",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.impl.WechatPaymentSdkGateway"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.IWechatPayService",
+          "com.chengyinhub.business.service.impl.WechatPayServiceImpl",
+          "com.chengyinhub.business.service.impl.WechatPaymentCallbackRouter",
+          "com.chengyinhub.business.service.IClubMembershipService",
+          "com.chengyinhub.business.service.IMerchantCommerceService",
+          "com.chengyinhub.business.service.ICoopInviteService",
+          "com.chengyinhub.business.service.ICmsRegistrationService",
+          "com.chengyinhub.business.service.IRefundService",
+          "com.chengyinhub.business.service.impl.ClubMembershipServiceImpl",
+          "com.chengyinhub.business.service.impl.MerchantCommerceService",
+          "com.chengyinhub.business.service.impl.CoopInviteServiceImpl",
+          "com.chengyinhub.business.service.impl.CmsRegistrationServiceImpl",
+          "com.chengyinhub.business.service.impl.RefundServiceImpl",
+          "com.chengyinhub.business.service.IRefundPayoutService",
+          "com.chengyinhub.business.service.impl.RefundPayoutServiceImpl",
+          "com.chengyinhub.business.service.ICashWithdrawService",
+          "com.chengyinhub.business.service.impl.CashWithdrawServiceImpl",
+          "com.chengyinhub.business.mapper.WechatVerifiedPaymentFactMapper",
+          "com.chengyinhub.business.mapper.CoopSettlementOriginalMapper"
+        ]
+      },
+      {
+        "id": "B_PAYMENT_ROUTER",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.impl.WechatPaymentCallbackRouter",
+          "com.chengyinhub.business.service.WechatPaymentCallbackOwner",
+          "com.chengyinhub.business.service.WechatRefundCallbackOwner"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.IWechatPayService",
+          "com.chengyinhub.business.service.impl.WechatPayServiceImpl",
+          "com.chengyinhub.business.service.impl.WechatPaymentSdkGateway",
+          "com.chengyinhub.business.service.impl.WechatPaymentIntentStore"
+        ]
+      },
+      {
+        "id": "B_PAYMENT_INTENTS",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.impl.WechatPaymentIntentStore"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.IWechatPayService",
+          "com.chengyinhub.business.service.impl.WechatPayServiceImpl",
+          "com.chengyinhub.business.service.impl.WechatPaymentSdkGateway",
+          "com.chengyinhub.business.service.impl.WechatPaymentCallbackRouter",
+          "com.chengyinhub.business.service.IClubMembershipService",
+          "com.chengyinhub.business.service.IMerchantCommerceService",
+          "com.chengyinhub.business.service.ICoopInviteService",
+          "com.chengyinhub.business.service.ICmsRegistrationService",
+          "com.chengyinhub.business.service.IRefundService"
+        ]
+      },
+      {
+        "id": "B_PAYMENT_ORDER_LOCK",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.WechatPaymentOrderOwner",
+          "com.chengyinhub.business.service.impl.JdbcWechatPaymentOrderOwner"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.IWechatPayService",
+          "com.chengyinhub.business.service.impl.WechatPayServiceImpl",
+          "com.chengyinhub.business.service.impl.WechatPaymentSdkGateway",
+          "com.chengyinhub.business.service.impl.WechatPaymentCallbackRouter",
+          "com.chengyinhub.business.service.impl.WechatPaymentIntentStore"
+        ]
+      },
+      {
+        "id": "A_TRANSFER_INTENT_DTO",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.ICashWithdrawService",
+          "com.chengyinhub.business.service.impl.CashWithdrawServiceImpl",
+          "com.chengyinhub.business.service.IWechatPayService",
+          "com.chengyinhub.business.service.impl.WechatPayServiceImpl",
+          "com.chengyinhub.business.service.impl.WechatPaymentSdkGateway"
+        ]
+      },
+      {
+        "id": "A_TRANSFER_INTENT_STORAGE",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.mapper.CashWithdrawTransferIntentMapper"
+        ],
+        "allowed_consumers": [
+          "com.chengyinhub.business.service.support.WithdrawalBalanceAdmissionService",
+          "com.chengyinhub.business.service.impl.CashWithdrawServiceImpl"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.support.WithdrawalBalanceAdmissionService",
+          "com.chengyinhub.business.service.ICashWithdrawService",
+          "com.chengyinhub.business.service.impl.CashWithdrawServiceImpl",
+          "com.chengyinhub.business.service.IWechatPayService",
+          "com.chengyinhub.business.service.impl.WechatPayServiceImpl",
+          "com.chengyinhub.business.service.impl.WechatPaymentSdkGateway"
+        ],
+        "restricted_packages": {
+          "com.chengyinhub.business.service.": [],
+          "com.chengyinhub.business.mapper.": [
+            "com.chengyinhub.business.mapper.CashWithdrawTransferIntentMapper"
+          ]
+        }
+      },
+      {
+        "id": "D_CONTENT_SIZE_POLICY",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.support.TopicSizeLimits"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.ICmsTopicService",
+          "com.chengyinhub.business.service.impl.CmsTopicServiceImpl",
+          "com.chengyinhub.business.service.support.TopicContentWriteGuard",
+          "com.chengyinhub.business.service.impl.TopicPublicationService"
+        ]
+      },
+      {
+        "id": "G_CASH_CLAIM",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.ICoopSettlementClaimService",
+          "com.chengyinhub.business.service.impl.CoopSettlementClaimServiceImpl"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.ICmsTopicService",
+          "com.chengyinhub.business.service.impl.CmsTopicServiceImpl"
+        ]
+      },
+      {
+        "id": "G_EDITION_FINALIZATION",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.ITopicEditionFinalizationService",
+          "com.chengyinhub.business.service.impl.TopicEditionFinalizationServiceImpl"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.ICmsTopicService",
+          "com.chengyinhub.business.service.impl.CmsTopicServiceImpl"
+        ]
+      },
+      {
+        "id": "F_LOG_CONTEXT",
+        "module": "chengyinhub-common",
+        "members": [
+          "com.chengyinhub.common.utils.LogCorrelation"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.framework.web.trace.RequestIdFilter",
+          "com.chengyinhub.framework.manager.AsyncManager",
+          "com.chengyinhub.quartz.util.QuartzJobCorrelation",
+          "com.chengyinhub.business.service.impl.AlarmService"
+        ]
+      },
+      {
+        "id": "F_REQUEST_CONTEXT",
+        "module": "chengyinhub-framework",
+        "members": [
+          "com.chengyinhub.framework.web.trace.RequestIdFilter"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.framework.manager.AsyncManager",
+          "com.chengyinhub.quartz.util.QuartzJobCorrelation",
+          "com.chengyinhub.business.service.impl.AlarmService"
+        ]
+      },
+      {
+        "id": "F_ASYNC_CONTEXT",
+        "module": "chengyinhub-framework",
+        "members": [
+          "com.chengyinhub.framework.manager.AsyncManager"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.framework.web.trace.RequestIdFilter",
+          "com.chengyinhub.quartz.util.QuartzJobCorrelation",
+          "com.chengyinhub.business.service.impl.AlarmService"
+        ]
+      },
+      {
+        "id": "F_QUARTZ_CONTEXT",
+        "module": "chengyinhub-quartz",
+        "members": [
+          "com.chengyinhub.quartz.util.QuartzJobCorrelation"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.framework.web.trace.RequestIdFilter",
+          "com.chengyinhub.framework.manager.AsyncManager",
+          "com.chengyinhub.quartz.util.AbstractQuartzJob",
+          "com.chengyinhub.quartz.service.MySqlSchedulerCoordinator"
+        ]
+      },
+      {
+        "id": "E_TOPIC_QUERY",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.impl.TopicQueryService"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.ICmsTopicService",
+          "com.chengyinhub.business.service.impl.CmsTopicServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicPublicationService",
+          "com.chengyinhub.business.service.impl.CoopSettlementClaimServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicEditionFinalizationServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicSaleFinalizationServiceImpl",
+          "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl",
+          "com.chengyinhub.business.service.impl.GameSharedRunControl"
+        ]
+      },
+      {
+        "id": "B_VERIFIED_PAYMENT_FACT_DTO",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService",
+          "com.chengyinhub.business.service.IWechatPayService",
+          "com.chengyinhub.business.service.impl.WechatPayServiceImpl",
+          "com.chengyinhub.business.service.WechatPaymentOperations",
+          "com.chengyinhub.business.service.impl.WechatPaymentSdkGateway",
+          "com.chengyinhub.business.service.impl.WechatPaymentCallbackRouter",
+          "com.chengyinhub.business.service.impl.WechatPaymentIntentStore",
+          "com.chengyinhub.business.service.IClubMembershipService",
+          "com.chengyinhub.business.service.impl.ClubMembershipServiceImpl",
+          "com.chengyinhub.business.service.IMerchantCommerceService",
+          "com.chengyinhub.business.service.impl.MerchantCommerceService",
+          "com.chengyinhub.business.service.ICoopInviteService",
+          "com.chengyinhub.business.service.impl.CoopInviteServiceImpl",
+          "com.chengyinhub.business.service.ICmsRegistrationService",
+          "com.chengyinhub.business.service.impl.CmsRegistrationServiceImpl",
+          "com.chengyinhub.business.service.IRefundService",
+          "com.chengyinhub.business.service.impl.RefundServiceImpl",
+          "com.chengyinhub.business.service.IRefundPayoutService",
+          "com.chengyinhub.business.service.impl.RefundPayoutServiceImpl",
+          "com.chengyinhub.business.service.ICashWithdrawService",
+          "com.chengyinhub.business.service.impl.CashWithdrawServiceImpl",
+          "com.chengyinhub.business.service.ICoopSettlementClaimService",
+          "com.chengyinhub.business.service.impl.CoopSettlementClaimServiceImpl",
+          "com.chengyinhub.business.service.impl.CoopSettlementOriginalLedger",
+          "com.chengyinhub.business.mapper.WechatVerifiedPaymentFactMapper",
+          "com.chengyinhub.business.mapper.CoopSettlementOriginalMapper"
+        ]
+      },
+      {
+        "id": "B_VERIFIED_PAYMENT_FACT_STORE",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.IWechatPayService",
+          "com.chengyinhub.business.service.impl.WechatPayServiceImpl",
+          "com.chengyinhub.business.service.WechatPaymentOperations",
+          "com.chengyinhub.business.service.impl.WechatPaymentSdkGateway",
+          "com.chengyinhub.business.service.impl.WechatPaymentCallbackRouter",
+          "com.chengyinhub.business.service.impl.WechatPaymentIntentStore",
+          "com.chengyinhub.business.service.IClubMembershipService",
+          "com.chengyinhub.business.service.impl.ClubMembershipServiceImpl",
+          "com.chengyinhub.business.service.IMerchantCommerceService",
+          "com.chengyinhub.business.service.impl.MerchantCommerceService",
+          "com.chengyinhub.business.service.ICoopInviteService",
+          "com.chengyinhub.business.service.impl.CoopInviteServiceImpl",
+          "com.chengyinhub.business.service.ICmsRegistrationService",
+          "com.chengyinhub.business.service.impl.CmsRegistrationServiceImpl",
+          "com.chengyinhub.business.service.IRefundService",
+          "com.chengyinhub.business.service.impl.RefundServiceImpl",
+          "com.chengyinhub.business.service.IRefundPayoutService",
+          "com.chengyinhub.business.service.impl.RefundPayoutServiceImpl",
+          "com.chengyinhub.business.service.ICashWithdrawService",
+          "com.chengyinhub.business.service.impl.CashWithdrawServiceImpl",
+          "com.chengyinhub.business.service.ICoopSettlementClaimService",
+          "com.chengyinhub.business.service.impl.CoopSettlementClaimServiceImpl",
+          "com.chengyinhub.business.service.impl.CoopSettlementOriginalLedger",
+          "com.chengyinhub.business.mapper.CoopSettlementOriginalMapper"
+        ]
+      },
+      {
+        "id": "G_ORIGINAL_SETTLEMENT_LEDGER",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.impl.CoopSettlementOriginalLedger"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.IWechatPayService",
+          "com.chengyinhub.business.service.impl.WechatPayServiceImpl",
+          "com.chengyinhub.business.service.WechatPaymentOperations",
+          "com.chengyinhub.business.service.impl.WechatPaymentSdkGateway",
+          "com.chengyinhub.business.service.impl.WechatPaymentCallbackRouter",
+          "com.chengyinhub.business.service.impl.WechatPaymentIntentStore",
+          "com.chengyinhub.business.service.ICoopSettlementClaimService",
+          "com.chengyinhub.business.service.impl.CoopSettlementClaimServiceImpl",
+          "com.chengyinhub.business.service.IRefundService",
+          "com.chengyinhub.business.service.impl.RefundServiceImpl",
+          "com.chengyinhub.business.service.IRefundPayoutService",
+          "com.chengyinhub.business.service.impl.RefundPayoutServiceImpl",
+          "com.chengyinhub.business.service.ICmsTopicService",
+          "com.chengyinhub.business.service.impl.CmsTopicServiceImpl",
+          "com.chengyinhub.business.service.ICmsRegistrationService",
+          "com.chengyinhub.business.service.impl.CmsRegistrationServiceImpl",
+          "com.chengyinhub.business.mapper.WechatVerifiedPaymentFactMapper",
+          "com.chengyinhub.business.service.impl.CoopSettlementOriginalProducer",
+          "com.chengyinhub.business.service.impl.CoopSettlementManualCases"
+        ]
+      },
+      {
+        "id": "C_REGISTRATION_TICKET_APPLICATION",
+        "module": "chengyinhub-admin",
+        "members": [
+          "com.chengyinhub.web.service.verify.RegistrationTicketApplication"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.web.controller.api.ApiVerifyController",
+          "com.chengyinhub.common.core.controller.BaseController"
+        ]
+      },
+      {
+        "id": "C_CITY_NODE_REDEMPTION_APPLICATION",
+        "module": "chengyinhub-admin",
+        "members": [
+          "com.chengyinhub.web.service.verify.CityNodeRedemptionApplication"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.web.controller.api.ApiVerifyController",
+          "com.chengyinhub.common.core.controller.BaseController"
+        ]
+      },
+      {
+        "id": "D_COMPLAINT_CLOSE_REPORTER_NOTICE",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.support.ComplaintCloseReporterNotice"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.ICoopComplaintService",
+          "com.chengyinhub.business.service.impl.CoopComplaintServiceImpl"
+        ]
+      },
+      {
+        "id": "SHARED_BUSINESS_AUDIT_PORT",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.mapper.BusinessAuditEventMapper"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.support.ComplaintCloseReporterNotice",
+          "com.chengyinhub.business.service.ICoopComplaintService",
+          "com.chengyinhub.business.service.impl.CoopComplaintServiceImpl"
+        ]
+      },
+      {
+        "id": "D_CHAPTER_INVITE_NOTICE",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.support.ChapterApplicationInviteNotice"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.IMerchantChapterApplicationService",
+          "com.chengyinhub.business.service.impl.MerchantChapterApplicationServiceImpl"
+        ]
+      },
+      {
+        "id": "E_VOICE_PROVIDER_CLIENT",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.ai.VoiceCloneClient",
+          "com.chengyinhub.business.service.ai.DashScopeVoiceClient"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.ai.LlmClientConfig",
+          "com.chengyinhub.web.controller.api.ApiMerchantController",
+          "com.chengyinhub.business.service.impl.NodeNpcService",
+          "com.chengyinhub.business.service.impl.NpcChatService",
+          "com.chengyinhub.business.service.ai.NpcVoiceEnrollmentService",
+          "com.chengyinhub.business.service.impl.NpcAsrIntentService",
+          "com.chengyinhub.web.controller.api.ApiAiNpcController"
+        ]
+      },
+      {
+        "id": "E_LLM_CLIENT_FACTORY",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.ai.LlmClientConfig"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.web.controller.api.ApiMerchantController",
+          "com.chengyinhub.business.service.impl.NodeNpcService",
+          "com.chengyinhub.business.service.impl.NpcChatService"
+        ]
+      },
+      {
+        "id": "F_AI_HTTP_ADMISSION",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.ai.AiHttpAdmission"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.ai.LlmClientConfig",
+          "com.chengyinhub.business.service.ai.VoiceCloneClient",
+          "com.chengyinhub.business.service.ai.DashScopeVoiceClient",
+          "com.chengyinhub.web.controller.api.ApiMerchantController",
+          "com.chengyinhub.business.service.impl.NodeNpcService",
+          "com.chengyinhub.business.service.impl.NpcChatService"
+        ]
+      },
+      {
+        "id": "E_VOICE_CONFIGURATION",
+        "module": "chengyinhub-common",
+        "members": [
+          "com.chengyinhub.common.config.AiVoiceConfig"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.ai.LlmClientConfig",
+          "com.chengyinhub.business.service.ai.AiHttpAdmission",
+          "com.chengyinhub.business.service.ai.VoiceCloneClient",
+          "com.chengyinhub.business.service.ai.DashScopeVoiceClient",
+          "com.chengyinhub.web.controller.api.ApiMerchantController",
+          "com.chengyinhub.business.service.impl.NodeNpcService",
+          "com.chengyinhub.business.service.impl.NpcChatService"
+        ]
+      },
+      {
+        "id": "C_REGISTRATION_QUERY_APPLICATION",
+        "module": "chengyinhub-admin",
+        "members": [
+          "com.chengyinhub.web.service.registration.RegistrationQueryApplication"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.web.controller.api.ApiRegistrationController",
+          "com.chengyinhub.common.core.controller.BaseController",
+          "com.chengyinhub.business.service.impl.CmsRegistrationServiceImpl",
+          "com.chengyinhub.business.mapper.CmsRegistrationMapper",
+          "com.chengyinhub.business.mapper.CmsRegistrationPaymentFactMapper",
+          "com.chengyinhub.business.service.impl.RefundServiceImpl",
+          "com.chengyinhub.business.mapper.RefundApplicationMapper",
+          "com.chengyinhub.business.service.impl.RegistrationCheckoutServiceImpl",
+          "com.chengyinhub.web.service.registration.RegistrationRedemptionApplication"
+        ]
+      },
+      {
+        "id": "C_REGISTRATION_REDEMPTION_APPLICATION",
+        "module": "chengyinhub-admin",
+        "members": [
+          "com.chengyinhub.web.service.registration.RegistrationRedemptionApplication"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.web.controller.api.ApiRegistrationController",
+          "com.chengyinhub.web.controller.api.ApiVerifyController",
+          "com.chengyinhub.common.core.controller.BaseController"
+        ],
+        "restricted_packages": {
+          "com.chengyinhub.business.mapper.": [
+            "com.chengyinhub.business.mapper.CoopOrderMapper"
+          ],
+          "com.chengyinhub.business.service.": [
+            "com.chengyinhub.business.service.ICmsRegistrationService",
+            "com.chengyinhub.business.service.IClubMemberService",
+            "com.chengyinhub.business.service.ICmsTopicService",
+            "com.chengyinhub.business.service.ICmsActivityService",
+            "com.chengyinhub.business.service.ICmsRegistrationMerchantService",
+            "com.chengyinhub.business.service.IPerkLedgerService",
+            "com.chengyinhub.business.service.IExploreCollectibleService",
+            "com.chengyinhub.business.service.ICmsTopicChapterService",
+            "com.chengyinhub.business.service.IPointsAwardService",
+            "com.chengyinhub.business.service.IGrowthService",
+            "com.chengyinhub.business.service.RegistrationSeatService",
+            "com.chengyinhub.business.service.RegistrationSeatService$Receipt",
+            "com.chengyinhub.business.service.support.ExploreTicketUsePolicy"
+          ],
+          "com.chengyinhub.business.access.merchant.": [
+            "com.chengyinhub.business.access.merchant.IMerchantAccessService",
+            "com.chengyinhub.business.access.merchant.MerchantAccessContext",
+            "com.chengyinhub.business.access.merchant.MerchantPermission"
+          ]
+        }
+      },
+      {
+        "id": "E_NPC_VOICE_ENROLLMENT",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.ai.NpcVoiceEnrollmentService"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.impl.NodeNpcService",
+          "com.chengyinhub.business.service.impl.NpcChatService",
+          "com.chengyinhub.web.controller.api.ApiMerchantController",
+          "com.chengyinhub.web.controller.api.ApiAiNpcController"
+        ]
+      },
+      {
+        "id": "E_NPC_VOICE_INTENT_STORAGE",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.mapper.NpcVoiceEnrollmentMapper"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.ai.NpcVoiceEnrollmentService",
+          "com.chengyinhub.business.service.impl.NodeNpcService",
+          "com.chengyinhub.business.service.impl.NpcChatService",
+          "com.chengyinhub.web.controller.api.ApiMerchantController",
+          "com.chengyinhub.web.controller.api.ApiAiNpcController"
+        ],
+        "allowed_consumers": [
+          "com.chengyinhub.business.service.ai.NpcVoiceEnrollmentService"
+        ]
+      },
+      {
+        "id": "D_NPC_ASR_INTENT",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.impl.NpcAsrIntentService"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.web.controller.api.ApiAiNpcController",
+          "com.chengyinhub.web.controller.api.ApiMerchantController"
+        ]
+      },
+      {
+        "id": "D_NPC_ASR_INTENT_STORAGE",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.mapper.NpcAsrIntentMapper"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.impl.NpcAsrIntentService",
+          "com.chengyinhub.business.service.impl.NpcChatService",
+          "com.chengyinhub.business.service.impl.NodeNpcService",
+          "com.chengyinhub.web.controller.api.ApiAiNpcController",
+          "com.chengyinhub.web.controller.api.ApiMerchantController",
+          "com.chengyinhub.business.service.ai.AiQuotaRecoveryService"
+        ],
+        "allowed_consumers": [
+          "com.chengyinhub.business.service.impl.NpcAsrIntentService",
+          "com.chengyinhub.business.service.impl.NpcChatWriteService",
+          "com.chengyinhub.business.service.impl.DataRetentionServiceImpl",
+          "com.chengyinhub.business.service.ai.AiQuotaRecoveryService"
+        ]
+      },
+      {
+        "id": "E_STT_PROVIDER",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.ai.SpeechToTextService",
+          "com.chengyinhub.business.service.ai.impl.DashScopeSpeechToTextService",
+          "com.chengyinhub.business.service.ai.impl.NoopSpeechToTextService"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.impl.NpcAsrIntentService",
+          "com.chengyinhub.business.service.ai.NpcVoiceEnrollmentService",
+          "com.chengyinhub.business.service.impl.NpcChatService",
+          "com.chengyinhub.business.service.impl.NodeNpcService",
+          "com.chengyinhub.web.controller.api.ApiAiNpcController",
+          "com.chengyinhub.web.controller.api.ApiMerchantController"
+        ]
+      },
+      {
+        "id": "E_STT_FACTORY",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.ai.impl.SpeechToTextConfig"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.impl.NpcAsrIntentService",
+          "com.chengyinhub.business.service.ai.NpcVoiceEnrollmentService",
+          "com.chengyinhub.business.service.impl.NpcChatService",
+          "com.chengyinhub.business.service.impl.NodeNpcService",
+          "com.chengyinhub.web.controller.api.ApiAiNpcController",
+          "com.chengyinhub.web.controller.api.ApiMerchantController"
+        ]
+      },
+      {
+        "id": "E_CLM_SHARED_PROOF_PORT",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.mapper.ClubMembershipMapper"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.impl.ClubMembershipServiceImpl",
+          "com.chengyinhub.business.service.impl.MerchantCommerceService",
+          "com.chengyinhub.web.controller.api.ApiMerchantController",
+          "com.chengyinhub.business.service.impl.WechatPaymentSdkGateway"
+        ]
+      },
+      {
+        "id": "E_COMMERCE_SHARED_PROOF_PORT",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.mapper.OmsOrderMapper"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.impl.ClubMembershipServiceImpl",
+          "com.chengyinhub.business.service.impl.MerchantCommerceService",
+          "com.chengyinhub.web.controller.api.ApiMerchantController",
+          "com.chengyinhub.business.service.impl.WechatPaymentSdkGateway"
+        ]
+      },
+      {
+        "id": "H_CLUB_POST_MEDIA_REVIEW",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.impl.ClubPostMediaReviewServiceImpl"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.impl.ClubPostServiceImpl",
+          "com.chengyinhub.web.controller.api.ApiMerchantController"
+        ]
+      },
+      {
+        "id": "H_CLUB_POST_MEDIA_TRANSACTION",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.impl.ClubPostMediaReviewTransactionService"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.impl.ClubPostMediaReviewServiceImpl",
+          "com.chengyinhub.business.service.impl.ClubPostServiceImpl",
+          "com.chengyinhub.web.controller.api.ApiMerchantController"
+        ]
+      },
+      {
+        "id": "H_CLUB_POST_MEDIA_STORAGE",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.mapper.ClubPostMediaReviewOutboxMapper"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.impl.ClubPostMediaReviewServiceImpl",
+          "com.chengyinhub.business.service.impl.ClubPostMediaReviewTransactionService",
+          "com.chengyinhub.business.service.impl.ClubPostServiceImpl",
+          "com.chengyinhub.web.controller.api.ApiMerchantController"
+        ],
+        "allowed_consumers": [
+          "com.chengyinhub.business.service.impl.ClubPostMediaReviewServiceImpl",
+          "com.chengyinhub.business.service.impl.ClubPostMediaReviewTransactionService"
+        ]
+      },
+      {
+        "id": "G_ORIGINAL_PRODUCER",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.impl.CoopSettlementOriginalProducer"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.ICmsTopicService",
+          "com.chengyinhub.business.service.impl.CmsTopicServiceImpl",
+          "com.chengyinhub.business.service.IWechatPayService",
+          "com.chengyinhub.business.service.impl.WechatPayServiceImpl",
+          "com.chengyinhub.business.service.impl.WechatPaymentSdkGateway",
+          "com.chengyinhub.business.service.impl.WechatPaymentCallbackRouter",
+          "com.chengyinhub.business.service.IRefundService",
+          "com.chengyinhub.business.service.impl.RefundServiceImpl",
+          "com.chengyinhub.business.service.IRefundPayoutService",
+          "com.chengyinhub.business.service.impl.RefundPayoutServiceImpl",
+          "com.chengyinhub.business.mapper.WechatVerifiedPaymentFactMapper"
+        ],
+        "restricted_packages": {
+          "com.chengyinhub.business.mapper.": [
+            "com.chengyinhub.business.mapper.CmsTopicMapper",
+            "com.chengyinhub.business.mapper.CoopSettlementOriginalMapper",
+            "com.chengyinhub.business.mapper.CoopSettlementCashEvidenceMapper",
+            "com.chengyinhub.business.mapper.RegistrationSeatMapper"
+          ]
+        }
+      },
+      {
+        "id": "G_ORIGINAL_MANUAL_CASES",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.impl.CoopSettlementManualCases",
+          "com.chengyinhub.business.service.impl.CoopSettlementManualCases$1"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.ICmsTopicService",
+          "com.chengyinhub.business.service.impl.CmsTopicServiceImpl",
+          "com.chengyinhub.business.service.IWechatPayService",
+          "com.chengyinhub.business.service.impl.WechatPayServiceImpl",
+          "com.chengyinhub.business.service.impl.WechatPaymentSdkGateway",
+          "com.chengyinhub.business.service.impl.WechatPaymentCallbackRouter",
+          "com.chengyinhub.business.service.IRefundService",
+          "com.chengyinhub.business.service.impl.RefundServiceImpl",
+          "com.chengyinhub.business.service.IRefundPayoutService",
+          "com.chengyinhub.business.service.impl.RefundPayoutServiceImpl",
+          "com.chengyinhub.business.service.impl.CoopSettlementOriginalProducer",
+          "com.chengyinhub.business.service.impl.CoopSettlementOriginalLedger"
+        ],
+        "restricted_packages": {
+          "com.chengyinhub.business.mapper.": [
+            "com.chengyinhub.business.mapper.CoopSettlementManualCaseMapper"
+          ]
+        }
+      },
+      {
+        "id": "G_ORIGINAL_MANUAL_STORAGE",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.mapper.CoopSettlementManualCaseMapper"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.ICmsTopicService",
+          "com.chengyinhub.business.service.impl.CmsTopicServiceImpl",
+          "com.chengyinhub.business.service.IWechatPayService",
+          "com.chengyinhub.business.service.impl.WechatPayServiceImpl",
+          "com.chengyinhub.business.service.impl.WechatPaymentSdkGateway",
+          "com.chengyinhub.business.service.impl.WechatPaymentCallbackRouter",
+          "com.chengyinhub.business.service.IRefundService",
+          "com.chengyinhub.business.service.impl.RefundServiceImpl",
+          "com.chengyinhub.business.service.IRefundPayoutService",
+          "com.chengyinhub.business.service.impl.RefundPayoutServiceImpl",
+          "com.chengyinhub.business.service.impl.CoopSettlementManualCases",
+          "com.chengyinhub.business.service.impl.CoopSettlementOriginalProducer",
+          "com.chengyinhub.business.service.impl.CoopSettlementOriginalLedger"
+        ],
+        "allowed_consumers": [
+          "com.chengyinhub.business.service.impl.CoopSettlementManualCases",
+          "com.chengyinhub.business.service.impl.CoopSettlementManualCases$1"
+        ]
+      },
+      {
+        "id": "G_ORIGINAL_ALLOCATION",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.support.CoopOriginalAllocation"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.ICmsTopicService",
+          "com.chengyinhub.business.service.impl.CmsTopicServiceImpl",
+          "com.chengyinhub.business.service.IWechatPayService",
+          "com.chengyinhub.business.service.impl.WechatPayServiceImpl",
+          "com.chengyinhub.business.service.impl.WechatPaymentSdkGateway",
+          "com.chengyinhub.business.service.impl.WechatPaymentCallbackRouter",
+          "com.chengyinhub.business.service.IRefundService",
+          "com.chengyinhub.business.service.impl.RefundServiceImpl",
+          "com.chengyinhub.business.service.IRefundPayoutService",
+          "com.chengyinhub.business.service.impl.RefundPayoutServiceImpl",
+          "com.chengyinhub.business.service.impl.CoopSettlementOriginalProducer",
+          "com.chengyinhub.business.service.impl.CoopSettlementOriginalLedger",
+          "com.chengyinhub.business.service.impl.CoopSettlementManualCases"
+        ]
+      },
+      {
+        "id": "D_NPC_ASR_QUOTA_HANDOFF",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.ai.NpcAsrQuotaHandoff"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.ai.AiQuotaRecoveryService",
+          "com.chengyinhub.business.service.ai.AiGatewayService",
+          "com.chengyinhub.business.service.ai.impl.AiGatewayServiceImpl",
+          "com.chengyinhub.business.service.impl.NpcAsrIntentService",
+          "com.chengyinhub.business.service.impl.NpcChatService",
+          "com.chengyinhub.business.service.impl.NpcChatWriteService",
+          "com.chengyinhub.business.mapper.NpcAsrIntentMapper",
+          "com.chengyinhub.business.mapper.AiQuotaReservationMapper",
+          "com.chengyinhub.business.service.ai.impl.DashScopeSpeechToTextService"
+        ]
+      },
+      {
+        "id": "G_ORIGINAL_MANUAL_READ",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.impl.CoopSettlementManualCaseReadService"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.ICmsTopicService",
+          "com.chengyinhub.business.service.impl.CmsTopicServiceImpl",
+          "com.chengyinhub.business.service.IWechatPayService",
+          "com.chengyinhub.business.service.impl.WechatPayServiceImpl",
+          "com.chengyinhub.business.service.impl.WechatPaymentSdkGateway",
+          "com.chengyinhub.business.service.impl.WechatPaymentCallbackRouter",
+          "com.chengyinhub.business.service.IRefundService",
+          "com.chengyinhub.business.service.impl.RefundServiceImpl",
+          "com.chengyinhub.business.service.IRefundPayoutService",
+          "com.chengyinhub.business.service.impl.RefundPayoutServiceImpl",
+          "com.chengyinhub.business.service.impl.CoopSettlementManualCases",
+          "com.chengyinhub.business.service.impl.CoopSettlementOriginalLedger",
+          "com.chengyinhub.business.mapper.CoopSettlementManualCaseMapper"
+        ],
+        "restricted_packages": {
+          "com.chengyinhub.business.mapper.": [
+            "com.chengyinhub.business.mapper.CoopSettlementManualCaseReadMapper",
+            "com.chengyinhub.business.mapper.CoopSettlementManualCaseReadMapper$Record"
+          ]
+        }
+      },
+      {
+        "id": "G_ORIGINAL_MANUAL_READ_PORT",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.mapper.CoopSettlementManualCaseReadMapper"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.ICmsTopicService",
+          "com.chengyinhub.business.service.impl.CmsTopicServiceImpl",
+          "com.chengyinhub.business.service.IWechatPayService",
+          "com.chengyinhub.business.service.impl.WechatPayServiceImpl",
+          "com.chengyinhub.business.service.impl.WechatPaymentSdkGateway",
+          "com.chengyinhub.business.service.impl.WechatPaymentCallbackRouter",
+          "com.chengyinhub.business.service.IRefundService",
+          "com.chengyinhub.business.service.impl.RefundServiceImpl",
+          "com.chengyinhub.business.service.IRefundPayoutService",
+          "com.chengyinhub.business.service.impl.RefundPayoutServiceImpl",
+          "com.chengyinhub.business.service.impl.CoopSettlementManualCases",
+          "com.chengyinhub.business.service.impl.CoopSettlementOriginalLedger",
+          "com.chengyinhub.business.mapper.CoopSettlementManualCaseMapper",
+          "com.chengyinhub.business.service.impl.CoopSettlementManualCaseReadService",
+          "com.chengyinhub.business.service.impl.CoopSettlementOriginalProducer"
+        ]
+      },
+      {
+        "id": "G_SETTLEMENT_SEAT_READER",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.RegistrationSeatSettlementReader"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.ICmsRegistrationService",
+          "com.chengyinhub.business.service.impl.CmsRegistrationServiceImpl",
+          "com.chengyinhub.business.service.RegistrationSeatService",
+          "com.chengyinhub.business.service.ICoopSettlementClaimService",
+          "com.chengyinhub.business.service.impl.CoopSettlementClaimServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicSettlementEvidenceService",
+          "com.chengyinhub.business.service.ICmsTopicService",
+          "com.chengyinhub.business.service.impl.CmsTopicServiceImpl",
+          "com.chengyinhub.business.service.IWechatPayService",
+          "com.chengyinhub.business.service.impl.WechatPayServiceImpl",
+          "com.chengyinhub.business.service.impl.WechatPaymentSdkGateway",
+          "com.chengyinhub.business.service.IRefundPayoutService",
+          "com.chengyinhub.business.service.impl.RefundPayoutServiceImpl"
+        ],
+        "allowed_consumers": [
+          "com.chengyinhub.business.service.impl.TopicSettlementEvidenceService",
+          "com.chengyinhub.business.service.RegistrationSeatService"
+        ],
+        "restricted_packages": {
+          "com.chengyinhub.business.mapper.": [
+            "com.chengyinhub.business.mapper.RegistrationSeatMapper"
+          ],
+          "com.chengyinhub.business.service.": [
+            "com.chengyinhub.business.service.RegistrationSeatSettlementReader"
+          ]
+        }
+      },
+      {
+        "id": "G_STATION_FULFILLMENT_STORAGE",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.mapper.CoopOrderStationFulfillmentMapper"
+        ],
+        "allowed_consumers": [
+          "com.chengyinhub.business.service.impl.CoopSettlementClaimServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicSettlementEvidenceService"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.impl.CoopSettlementClaimServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicSettlementEvidenceService",
+          "com.chengyinhub.business.service.impl.FrozenCoopOrderSettlementSnapshotReader",
+          "com.chengyinhub.business.service.impl.WechatPaymentSdkGateway",
+          "com.chengyinhub.business.service.impl.CmsTopicServiceImpl",
+          "com.chengyinhub.business.service.impl.CmsRegistrationServiceImpl"
+        ],
+        "restricted_packages": {
+          "com.chengyinhub.business.service.": [],
+          "com.chengyinhub.business.mapper.": [
+            "com.chengyinhub.business.mapper.CoopOrderStationFulfillmentMapper"
+          ],
+          "com.chengyinhub.web.": []
+        }
+      },
+      {
+        "id": "G_STATION_SCOPE",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.service.support.CoopOrderStationScope"
+        ],
+        "allowed_consumers": [
+          "com.chengyinhub.business.service.impl.CoopSettlementClaimServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicSettlementEvidenceService",
+          "com.chengyinhub.business.service.impl.FrozenCoopOrderSettlementSnapshotReader"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.impl.CoopSettlementClaimServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicSettlementEvidenceService",
+          "com.chengyinhub.business.service.impl.FrozenCoopOrderSettlementSnapshotReader",
+          "com.chengyinhub.business.service.impl.WechatPaymentSdkGateway",
+          "com.chengyinhub.business.service.impl.CmsTopicServiceImpl",
+          "com.chengyinhub.business.service.impl.CmsRegistrationServiceImpl"
+        ],
+        "restricted_packages": {
+          "com.chengyinhub.business.service.": [
+            "com.chengyinhub.business.service.support.CoopOrderStationScope",
+            "com.chengyinhub.business.service.support.CanonicalDigest"
+          ],
+          "com.chengyinhub.business.mapper.": [],
+          "com.chengyinhub.web.": []
+        }
+      },
+      {
+        "id": "G_STATION_FULFILLMENT_RECORD",
+        "module": "chengyinhub-system",
+        "members": [
+          "com.chengyinhub.business.domain.CoopOrderStationFulfillment"
+        ],
+        "allowed_consumers": [
+          "com.chengyinhub.business.mapper.CoopOrderStationFulfillmentMapper",
+          "com.chengyinhub.business.service.support.CoopOrderStationScope",
+          "com.chengyinhub.business.service.impl.CoopSettlementClaimServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicSettlementEvidenceService"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.service.impl.CoopSettlementClaimServiceImpl",
+          "com.chengyinhub.business.service.impl.TopicSettlementEvidenceService",
+          "com.chengyinhub.business.service.impl.FrozenCoopOrderSettlementSnapshotReader",
+          "com.chengyinhub.business.service.impl.WechatPaymentSdkGateway",
+          "com.chengyinhub.business.service.impl.CmsTopicServiceImpl",
+          "com.chengyinhub.business.service.impl.CmsRegistrationServiceImpl",
+          "com.chengyinhub.business.mapper.CoopOrderStationFulfillmentMapper",
+          "com.chengyinhub.business.service.support.CoopOrderStationScope"
+        ],
+        "restricted_packages": {
+          "com.chengyinhub.business.service.": [],
+          "com.chengyinhub.business.mapper.": [],
+          "com.chengyinhub.web.": []
+        }
+      }
+    ],
+    "allowed_directions": [
+      [
+        "A_WITHDRAW_ADMISSION",
+        "A_TRANSFER_INTENT_STORAGE"
+      ],
+      [
+        "A_TRANSFER_INTENT_STORAGE",
+        "A_TRANSFER_INTENT_DTO"
+      ],
+      [
+        "A_WITHDRAW_ADMISSION",
+        "A_TRANSFER_INTENT_DTO"
+      ],
+      [
+        "C_HINT_APPLICATION",
+        "C_NODE_ACCESS"
+      ],
+      [
+        "D_CONTENT_GRAPH",
+        "D_CONTENT_COPY"
+      ],
+      [
+        "D_CONTENT_GRAPH",
+        "D_CONTENT_RULES"
+      ],
+      [
+        "D_CONTENT_COPY",
+        "D_CONTENT_RULES"
+      ],
+      [
+        "C_PLAY_BASIC_COMMAND",
+        "C_PLAY_BASIC_INTENT"
+      ],
+      [
+        "C_PLAY_BASIC_COMMAND",
+        "C_PLAY_COMPLETION_FACTS"
+      ],
+      [
+        "C_PLAY_BASIC_COMMAND",
+        "C_PLAY_NODE_COMPLETION"
+      ],
+      [
+        "C_PLAY_BASIC_COMMAND",
+        "C_PLAY_NODE_CONTEXT"
+      ],
+      [
+        "C_PLAY_BASIC_COMMAND",
+        "C_PLAY_TASK_PRESENTATION"
+      ],
+      [
+        "C_PLAY_COMPLETION_FACTS",
+        "C_PLAY_NODE_CONTEXT"
+      ],
+      [
+        "C_PLAY_ENTRY",
+        "C_PLAY_COMPLETION_FACTS"
+      ],
+      [
+        "C_PLAY_ENTRY",
+        "C_PLAY_NODE_CONTEXT"
+      ],
+      [
+        "C_PLAY_ENTRY",
+        "C_PLAY_NODE_QUERY"
+      ],
+      [
+        "C_PLAY_HISTORY_QUERY",
+        "C_PLAY_COMPLETION_FACTS"
+      ],
+      [
+        "C_PLAY_NODE_COMPLETION",
+        "C_PLAY_COMPLETION_FACTS"
+      ],
+      [
+        "C_PLAY_NODE_COMPLETION",
+        "C_PLAY_NODE_CONTEXT"
+      ],
+      [
+        "C_PLAY_NODE_QUERY",
+        "C_PLAY_COMPLETION_FACTS"
+      ],
+      [
+        "C_PLAY_NODE_QUERY",
+        "C_PLAY_NODE_CONTEXT"
+      ],
+      [
+        "C_PLAY_PHOTO_COMMAND",
+        "C_PLAY_COMPLETION_FACTS"
+      ],
+      [
+        "C_PLAY_PHOTO_COMMAND",
+        "C_PLAY_NODE_COMPLETION"
+      ],
+      [
+        "C_PLAY_PHOTO_COMMAND",
+        "C_PLAY_NODE_CONTEXT"
+      ],
+      [
+        "C_PLAY_PHOTO_COMMAND",
+        "C_PLAY_TASK_PRESENTATION"
+      ],
+      [
+        "C_PLAY_PLAYER_QUERY",
+        "C_PLAY_COMPLETION_FACTS"
+      ],
+      [
+        "C_PLAY_PREFERENCE",
+        "C_PLAY_NODE_COMPLETION"
+      ],
+      [
+        "C_PLAY_PREFERENCE",
+        "C_PLAY_NODE_CONTEXT"
+      ],
+      [
+        "C_PLAY_PUZZLE_COMMAND",
+        "C_PLAY_NODE_COMPLETION"
+      ],
+      [
+        "C_PLAY_PUZZLE_COMMAND",
+        "C_PLAY_NODE_CONTEXT"
+      ],
+      [
+        "C_PLAY_BASIC_COMMAND",
+        "C_HINT_APPLICATION"
+      ],
+      [
+        "C_PLAY_ENTRY",
+        "C_HINT_APPLICATION"
+      ],
+      [
+        "C_PLAY_NODE_QUERY",
+        "C_HINT_APPLICATION"
+      ],
+      [
+        "C_PLAY_PUZZLE_COMMAND",
+        "C_HINT_APPLICATION"
+      ],
+      [
+        "C_PLAY_NODE_CONTEXT",
+        "C_NODE_ACCESS"
+      ],
+      [
+        "E_ROUTE_NARRATIVE",
+        "E_ROUTE_PUBLICATION"
+      ],
+      [
+        "D_PUBLICATION",
+        "D_PUBLICATION_CONTENT_GUARD"
+      ],
+      [
+        "D_PUBLICATION",
+        "D_SELF_HOST_ACTIVITY"
+      ],
+      [
+        "D_PUBLICATION_CONTENT_GUARD",
+        "D_CONTENT_RULES"
+      ],
+      [
+        "B_PAYMENT_FACADE",
+        "B_PAYMENT_OUTBOUND_PORT"
+      ],
+      [
+        "B_PAYMENT_FACADE",
+        "B_PAYMENT_SDK"
+      ],
+      [
+        "B_PAYMENT_FACADE",
+        "B_PAYMENT_ROUTER"
+      ],
+      [
+        "B_PAYMENT_FACADE",
+        "A_TRANSFER_INTENT_DTO"
+      ],
+      [
+        "B_PAYMENT_OUTBOUND_PORT",
+        "A_TRANSFER_INTENT_DTO"
+      ],
+      [
+        "B_PAYMENT_SDK",
+        "B_PAYMENT_OUTBOUND_PORT"
+      ],
+      [
+        "B_PAYMENT_SDK",
+        "B_PAYMENT_INTENTS"
+      ],
+      [
+        "B_PAYMENT_SDK",
+        "A_TRANSFER_INTENT_DTO"
+      ],
+      [
+        "B_PAYMENT_INTENTS",
+        "B_PAYMENT_ORDER_LOCK"
+      ],
+      [
+        "G_CASH_CLAIM",
+        "G_SETTLEMENT_EVIDENCE"
+      ],
+      [
+        "F_REQUEST_CONTEXT",
+        "F_LOG_CONTEXT"
+      ],
+      [
+        "F_ASYNC_CONTEXT",
+        "F_LOG_CONTEXT"
+      ],
+      [
+        "F_QUARTZ_CONTEXT",
+        "F_LOG_CONTEXT"
+      ],
+      [
+        "D_CONTENT_GRAPH",
+        "D_CONTENT_SIZE_POLICY"
+      ],
+      [
+        "D_CONTENT_RULES",
+        "D_CONTENT_SIZE_POLICY"
+      ],
+      [
+        "E_TOPIC_QUERY",
+        "D_CONTENT_SIZE_POLICY"
+      ],
+      [
+        "B_VERIFIED_PAYMENT_FACT_STORE",
+        "B_VERIFIED_PAYMENT_FACT_DTO"
+      ],
+      [
+        "B_PAYMENT_SDK",
+        "B_VERIFIED_PAYMENT_FACT_STORE"
+      ],
+      [
+        "B_PAYMENT_SDK",
+        "B_VERIFIED_PAYMENT_FACT_DTO"
+      ],
+      [
+        "B_PAYMENT_FACADE",
+        "B_VERIFIED_PAYMENT_FACT_DTO"
+      ],
+      [
+        "B_PAYMENT_OUTBOUND_PORT",
+        "B_VERIFIED_PAYMENT_FACT_DTO"
+      ],
+      [
+        "G_ORIGINAL_SETTLEMENT_LEDGER",
+        "B_VERIFIED_PAYMENT_FACT_STORE"
+      ],
+      [
+        "G_ORIGINAL_SETTLEMENT_LEDGER",
+        "B_VERIFIED_PAYMENT_FACT_DTO"
+      ],
+      [
+        "G_CASH_CLAIM",
+        "G_ORIGINAL_SETTLEMENT_LEDGER"
+      ],
+      [
+        "D_COMPLAINT_CLOSE_REPORTER_NOTICE",
+        "SHARED_BUSINESS_AUDIT_PORT"
+      ],
+      [
+        "E_VOICE_PROVIDER_CLIENT",
+        "F_AI_HTTP_ADMISSION"
+      ],
+      [
+        "E_VOICE_PROVIDER_CLIENT",
+        "E_VOICE_CONFIGURATION"
+      ],
+      [
+        "E_LLM_CLIENT_FACTORY",
+        "F_AI_HTTP_ADMISSION"
+      ],
+      [
+        "E_LLM_CLIENT_FACTORY",
+        "E_VOICE_CONFIGURATION"
+      ],
+      [
+        "C_PLAY_NODE_COMPLETION",
+        "SHARED_BUSINESS_AUDIT_PORT"
+      ],
+      [
+        "C_CITY_NODE_REDEMPTION_APPLICATION",
+        "SHARED_BUSINESS_AUDIT_PORT"
+      ],
+      [
+        "D_CHAPTER_INVITE_NOTICE",
+        "SHARED_BUSINESS_AUDIT_PORT"
+      ],
+      [
+        "C_REGISTRATION_REDEMPTION_APPLICATION",
+        "C_REGISTRATION_QUERY_APPLICATION"
+      ],
+      [
+        "E_NPC_VOICE_ENROLLMENT",
+        "E_NPC_VOICE_INTENT_STORAGE"
+      ],
+      [
+        "E_NPC_VOICE_ENROLLMENT",
+        "E_VOICE_PROVIDER_CLIENT"
+      ],
+      [
+        "D_NPC_ASR_INTENT",
+        "D_NPC_ASR_INTENT_STORAGE"
+      ],
+      [
+        "D_NPC_ASR_INTENT",
+        "E_STT_PROVIDER"
+      ],
+      [
+        "E_STT_PROVIDER",
+        "F_AI_HTTP_ADMISSION"
+      ],
+      [
+        "E_STT_PROVIDER",
+        "E_VOICE_CONFIGURATION"
+      ],
+      [
+        "E_STT_FACTORY",
+        "E_STT_PROVIDER"
+      ],
+      [
+        "H_CLUB_POST_MEDIA_REVIEW",
+        "H_CLUB_POST_MEDIA_TRANSACTION"
+      ],
+      [
+        "H_CLUB_POST_MEDIA_REVIEW",
+        "H_CLUB_POST_MEDIA_STORAGE"
+      ],
+      [
+        "H_CLUB_POST_MEDIA_TRANSACTION",
+        "H_CLUB_POST_MEDIA_STORAGE"
+      ],
+      [
+        "G_ORIGINAL_PRODUCER",
+        "G_ORIGINAL_SETTLEMENT_LEDGER"
+      ],
+      [
+        "G_ORIGINAL_PRODUCER",
+        "G_ORIGINAL_MANUAL_CASES"
+      ],
+      [
+        "G_ORIGINAL_PRODUCER",
+        "G_ORIGINAL_ALLOCATION"
+      ],
+      [
+        "G_ORIGINAL_PRODUCER",
+        "B_VERIFIED_PAYMENT_FACT_STORE"
+      ],
+      [
+        "G_ORIGINAL_PRODUCER",
+        "B_VERIFIED_PAYMENT_FACT_DTO"
+      ],
+      [
+        "G_ORIGINAL_MANUAL_CASES",
+        "G_ORIGINAL_MANUAL_STORAGE"
+      ],
+      [
+        "G_ORIGINAL_MANUAL_CASES",
+        "B_VERIFIED_PAYMENT_FACT_DTO"
+      ],
+      [
+        "E_QUOTA_RECOVERY",
+        "D_NPC_ASR_INTENT_STORAGE"
+      ],
+      [
+        "E_QUOTA_RECOVERY",
+        "D_NPC_ASR_QUOTA_HANDOFF"
+      ],
+      [
+        "G_ORIGINAL_MANUAL_READ",
+        "G_ORIGINAL_MANUAL_READ_PORT"
+      ],
+      [
+        "G_ORIGINAL_MANUAL_READ",
+        "G_ORIGINAL_PRODUCER"
+      ],
+      [
+        "G_SETTLEMENT_EVIDENCE",
+        "G_SETTLEMENT_SEAT_READER"
+      ],
+      [
+        "G_CASH_CLAIM",
+        "B_VERIFIED_PAYMENT_FACT_DTO"
+      ],
+      [
+        "B_PAYMENT_ROUTER",
+        "B_VERIFIED_PAYMENT_FACT_DTO"
+      ],
+      [
+        "B_VERIFIED_PAYMENT_FACT_STORE",
+        "B_PAYMENT_ORDER_LOCK"
+      ],
+      [
+        "B_PAYMENT_INTENTS",
+        "B_VERIFIED_PAYMENT_FACT_STORE"
+      ],
+      [
+        "G_CASH_CLAIM",
+        "G_STATION_FULFILLMENT_STORAGE"
+      ],
+      [
+        "G_SETTLEMENT_EVIDENCE",
+        "G_STATION_FULFILLMENT_STORAGE"
+      ],
+      [
+        "G_CASH_CLAIM",
+        "G_STATION_SCOPE"
+      ],
+      [
+        "G_SETTLEMENT_EVIDENCE",
+        "G_STATION_SCOPE"
+      ],
+      [
+        "G_STATION_FULFILLMENT_STORAGE",
+        "G_STATION_FULFILLMENT_RECORD"
+      ],
+      [
+        "G_STATION_SCOPE",
+        "G_STATION_FULFILLMENT_RECORD"
+      ],
+      [
+        "G_CASH_CLAIM",
+        "G_STATION_FULFILLMENT_RECORD"
+      ],
+      [
+        "G_SETTLEMENT_EVIDENCE",
+        "G_STATION_FULFILLMENT_RECORD"
+      ]
+    ],
+    "exact_directions": [
+      {
+        "source_owner": "G_CASH_CLAIM",
+        "target_owner": "B_VERIFIED_PAYMENT_FACT_DTO",
+        "references": [
+          [
+            "com.chengyinhub.business.service.ICoopSettlementClaimService",
+            "com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact"
+          ],
+          [
+            "com.chengyinhub.business.service.ICoopSettlementClaimService",
+            "com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact$Reference"
+          ],
+          [
+            "com.chengyinhub.business.service.impl.CoopSettlementClaimServiceImpl",
+            "com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact"
+          ],
+          [
+            "com.chengyinhub.business.service.impl.CoopSettlementClaimServiceImpl",
+            "com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact$Reference"
+          ]
+        ]
+      },
+      {
+        "source_owner": "B_PAYMENT_ROUTER",
+        "target_owner": "B_VERIFIED_PAYMENT_FACT_DTO",
+        "references": [
+          [
+            "com.chengyinhub.business.service.impl.WechatPaymentCallbackRouter",
+            "com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact"
+          ],
+          [
+            "com.chengyinhub.business.service.impl.WechatPaymentCallbackRouter",
+            "com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact$Reference"
+          ]
+        ]
+      },
+      {
+        "source_owner": "B_VERIFIED_PAYMENT_FACT_STORE",
+        "target_owner": "B_PAYMENT_ORDER_LOCK",
+        "references": [
+          [
+            "com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService",
+            "com.chengyinhub.business.service.WechatPaymentOrderOwner"
+          ],
+          [
+            "com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService",
+            "com.chengyinhub.business.service.WechatPaymentOrderOwner$Snapshot"
+          ],
+          [
+            "com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService",
+            "com.chengyinhub.business.service.WechatPaymentOrderOwner$MissingOrderException"
+          ]
+        ]
+      },
+      {
+        "source_owner": "B_PAYMENT_INTENTS",
+        "target_owner": "B_VERIFIED_PAYMENT_FACT_STORE",
+        "references": [
+          [
+            "com.chengyinhub.business.service.impl.WechatPaymentIntentStore",
+            "com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService"
+          ]
+        ]
+      }
+    ]
+  },
+  "boundary_registration": {
+    "schema": 1,
+    "legacy_source": "477696c8eb2fa24bd3d7febc896415bf0d1b67c0",
+    "scope_roots": [
+      "chengyinhub-system/src/main/java/com/chengyinhub/business/service/",
+      "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/",
+      "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/",
+      "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/"
+    ]
+  },
+  "statement_write_owners": [
+    {
+      "key": "chengyinhub-system/src/main/resources/mapper/business/WechatVerifiedPaymentFactMapper.xml#insertRecovery",
+      "owner": "chengyinhub-system:com.chengyinhub.business.mapper.WechatVerifiedPaymentFactMapper",
+      "table": "wx_payment_callback_outbox",
+      "kind": "insert",
+      "sha256": "3de6cc822e34c39f678762f37980b5d76f3098f7c0a5d1d161a1df4678b5a85a",
+      "reviewed_source": "9b284f0111b4337e388fc18d797b11c62112cd82",
+      "contract": "B_ORIGINAL_FACT_RECOVERY"
+    },
+    {
+      "key": "chengyinhub-system/src/main/resources/mapper/business/WechatVerifiedPaymentFactMapper.xml#completeRecovery",
+      "owner": "chengyinhub-system:com.chengyinhub.business.mapper.WechatVerifiedPaymentFactMapper",
+      "table": "wx_payment_callback_outbox",
+      "kind": "update",
+      "sha256": "e79cb5eeb2302bb96c6dc1fc136c3f7e74b36656d026b89e9acd7f3eeb535b44",
+      "reviewed_source": "9b284f0111b4337e388fc18d797b11c62112cd82",
+      "contract": "B_ORIGINAL_FACT_RECOVERY"
+    }
+  ]
+}

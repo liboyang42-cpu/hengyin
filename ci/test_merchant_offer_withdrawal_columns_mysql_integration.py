@@ -18,6 +18,7 @@ from ci.sql_splitter import split_statements
 REPO = pathlib.Path(__file__).resolve().parent.parent
 SQL_DIR = REPO / "chengyinhub-admin/sql"
 MIGRATION = SQL_DIR / "migration_20261003_merchant_offer_withdrawal_columns.sql"
+ROUND_MIGRATION = SQL_DIR / "migration_20261024_d_chapter_application_round.sql"
 PREFIX = "cy_offer_withdraw_columns_it_"
 TABLES = ("merchant_chapter_offer", "merchant_chapter_application")
 TARGET_COLUMNS = ("withdraw_reason", "withdraw_required", "replacement_of_offer_id")
@@ -102,6 +103,13 @@ class MerchantOfferWithdrawalColumnsMysqlIntegrationTest(unittest.TestCase):
                            "VALUES (1,9,10,20,1,1,'existing invitation',30),"
                            "(2,9,11,21,2,0,'existing rejected application',30)")
         self.before = self.snapshot()
+        # The current application projection also needs the independent round migration.
+        # Apply its canonical SQL after history exists, while withdrawal columns remain absent.
+        self.migrate(ROUND_MIGRATION)
+        self.assertEqual(self.before, self.snapshot(self.before))
+        with self.connect() as connection, connection.cursor() as cursor:
+            cursor.execute("SELECT id,application_round FROM merchant_chapter_application ORDER BY id")
+            self.assertEqual(((1, None), (2, None)), cursor.fetchall())
 
     def snapshot(self, columns=None):
         rows = {}
@@ -112,16 +120,16 @@ class MerchantOfferWithdrawalColumnsMysqlIntegrationTest(unittest.TestCase):
                 rows[table] = (tuple(item[0] for item in cursor.description), cursor.fetchall())
         return rows
 
-    def run_migration(self):
+    def run_migration(self, migration=MIGRATION):
         env = os.environ.copy()
         env["CHENGYIN_DB_SSH_HOST"] = "local"
         env["CHENGYIN_MYSQL_IT_PASSWORD"] = self.password
         return subprocess.run([sys.executable, str(REPO / "ci/run_migration.py"),
-                               "--config", self.config.name, "--sql", str(MIGRATION)],
+                               "--config", self.config.name, "--sql", str(migration)],
                               cwd=REPO, env=env, capture_output=True, text=True, timeout=30)
 
-    def migrate(self):
-        result = self.run_migration()
+    def migrate(self, migration=MIGRATION):
+        result = self.run_migration(migration)
         self.assertEqual(0, result.returncode, result.stdout + result.stderr)
 
     def projection(self, cursor, mapper, sql_id):
@@ -147,6 +155,8 @@ class MerchantOfferWithdrawalColumnsMysqlIntegrationTest(unittest.TestCase):
                 with self.assertRaises(pymysql.err.OperationalError) as raised:
                     self.projection(cursor, mapper, sql_id)
                 self.assertEqual(1054, raised.exception.args[0])
+                if mapper == "MerchantChapterApplicationMapper":
+                    self.assertIn("replacement_of_offer_id", str(raised.exception))
         self.migrate()
         self.assertEqual(self.before, self.snapshot(self.before))
         self.assertEqual((

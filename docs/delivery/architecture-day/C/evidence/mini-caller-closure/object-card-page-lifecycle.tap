@@ -1,0 +1,28 @@
+TAP version 13
+# Subtest: 藏品册隐藏后迟到图片不重启动画，卸载后列表不更新页面
+ok 1 - 藏品册隐藏后迟到图片不重启动画，卸载后列表不更新页面
+  ---
+  duration_ms: 2.71101
+  type: 'test'
+  ...
+# Subtest: 藏品册同页分类后发成功先到时，旧成功不得覆盖最新列表、堆与详情
+ok 2 - 藏品册同页分类后发成功先到时，旧成功不得覆盖最新列表、堆与详情
+  ---
+  duration_ms: 3.034697
+  type: 'test'
+  ...
+# Subtest: 藏品册同页新分类仍在加载时，旧失败不得退回筛选、结束 loading 或改详情
+ok 3 - 藏品册同页新分类仍在加载时，旧失败不得退回筛选、结束 loading 或改详情
+  ---
+  duration_ms: 1.496237
+  type: 'test'
+  ...
+1..3
+# tests 3
+# suites 0
+# pass 3
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 24.794178

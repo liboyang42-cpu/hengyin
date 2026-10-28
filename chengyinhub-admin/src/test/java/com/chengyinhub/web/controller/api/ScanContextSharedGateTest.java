@@ -74,17 +74,17 @@ class ScanContextSharedGateTest {
 
         controller = spy(new ApiRegistrationController());
         doReturn(MERCHANT).when(controller).getAppUserId();
-        ReflectionTestUtils.setField(controller, "registrationService", regSvc);
-        ReflectionTestUtils.setField(controller, "cmsActivityService", activitySvc);
-        ReflectionTestUtils.setField(controller, "topicService", mock(ICmsTopicService.class));
-        ReflectionTestUtils.setField(controller, "perkLedgerService", mock(IPerkLedgerService.class));
-        ReflectionTestUtils.setField(controller, "pointsAwardService", mock(IPointsAwardService.class));
-        ReflectionTestUtils.setField(controller, "growthService", mock(IGrowthService.class));
-        ReflectionTestUtils.setField(controller, "registrationMerchantService",
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "registrationService", regSvc);
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "cmsActivityService", activitySvc);
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "topicService", mock(ICmsTopicService.class));
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "perkLedgerService", mock(IPerkLedgerService.class));
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "pointsAwardService", mock(IPointsAwardService.class));
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "growthService", mock(IGrowthService.class));
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "registrationMerchantService",
                 mock(ICmsRegistrationMerchantService.class));
-        ReflectionTestUtils.setField(controller, "dynSecret", "test-secret");
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "dynSecret", "test-secret");
         IMerchantAccessService merchantAccessService = mock(IMerchantAccessService.class);
-        ReflectionTestUtils.setField(controller, "merchantAccessService", merchantAccessService);
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "merchantAccessService", merchantAccessService);
         when(merchantAccessService.require(MERCHANT, MerchantPermission.VERIFY))
                 .thenReturn(new MerchantAccessContext(MERCHANT, 11L, MERCHANT,
                         MerchantRoleCode.MERCHANT_OWNER));

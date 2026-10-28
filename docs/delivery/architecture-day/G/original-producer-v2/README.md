@@ -1,0 +1,51 @@
+# G4d 原分项/实际席位生产接线 V2
+
+Parent `8490765f0572dae8ec3468f4e75d0ff6f4760b12`，独立 G 分支。代码交付不代表验收。遵照用户本批要求，**未运行任何测试、Java、MySQL、CI或中途审查**；无DDL/外呼/部署。保留其他owner改动，root仅按本提交增量装配。
+
+## 生产调用闭环
+
+- CmsTopicServiceImpl 原topic fence/当前报名/退款guard → 原冻结Claim.prepare → 原费率/受款/五分项计算；负毛利先登记回滚后恢复信息，再由原守恒断言回滚 → 原head/claim/detail同事务写入 → **CoopSettlementOriginalProducer.freezeOriginals** → 原Ledger.freezeOriginals(close, contributions, components) → 保证金退款原意图 → 原CAS/积分提交。任何producer缺证据/插入失败仍回滚本主题，不能先提交原heads。
+- TopicSettlementEvidenceService.lockCandidates → 已解析实际activity IDs → C RegistrationSeatService.verifiedSeatsForGroup(topicId, activityId, cutoff)，保留其原当前锁读/不完整多人票拒绝 → canonical seat ID去重/冻结票窗过滤 → CoopSettlementContract固定费乘**实际已核销席位数**。绝不按order_num展开。原个人单席扫码仍是单席证据；多人缺canonical来源继续拒结。已冻结TOPIC_EDITION/MERCHANT_PARTICIPATION的COOP_GROUP_VERIFY使用原团码/报名/收款/封窗判定，仍拒绝CLUB未冻结收款、NODE/ACTIVITY现金及未证来源。
+- 新Producer复用4d6f原来源读取/证明/冻结方向，扩展已批准多订单：完整当前现金选集；parent NULL只自付，不借同会员另一单；非NULL父单按同原parent/member唯一正额payer，不取minID；微信原总额必须等原family现金，不推断混合支付。
+- A-owned consumed-payment leaf优先，原Reference经B requireVerified核对原biz/TX/总额；没有consumed关联才查严格原DONE+fact link。无fallback到latest/当前merchant。现Ledger再次核验并使用原SQL写路径；G没有改Ledger任一方法或公共component字段。
+- 平台佣金与发起人保底按原head总额及原付款订单现金权重，精确整数分的最大余数分配，同余数报名ID升序。商家/带队项复制真实claim/detail，保留旧claim_id NOT NULL，不伪造claim。组织者利润=每原付款订单现金减其已分配原成本；全head与逐付款订单、close三层守恒交现Ledger实际校验。保证金抵扣后的原现金头若无法对应仍拒结；不另选跨资金来源分配政策。
+- close.contract_snapshot保留原head的lineType/shareMode/shareRate/fixedFee/原额/coopOrderId、canonical席位原事实、原payment Reference及版本；component保留receiver/amount/claim/payment/计算版本。G只冻结，不决定退款可退性。MERCHANT_VERIFY混合承载比例与固定费，区分冲回责任需root给B合同，不把全部费用自行同比退。
+
+## 负组织者利润
+
+全主题负毛利沿原计算，不置0；逐订单分币后残差为负同样停止整个close。原交易物理回滚后才脱离已结束资源、独立短事务持久化 `coop_settlement_manual_case` 的 MANUAL_REQUIRED、原额/原分项来源快照及确定hash身份；不扣余额、不扣押金、不生成债务、不写已付。已有该topic未处置case会阻止自动正金额重试。此表仅人工控制证据，不是支付/债务/自动判赔平台；没有处置worker/资金入口。
+
+新增migration `migration_20261024_coop_negative_margin_manual.sql` 为source-only additive单表。上线预检须MySQL8/InnoDB、table/index/constraint名字全不存在；无历史回填、无默认金额/责任人。失败/回退保留原资金事实、close/component和manual身份；停结算写入口，不删除表或回到五参退款。未执行DDL。
+
+## 新测试源码精确清单（全部NOT_RUN）
+
+CoopSettlementOriginalProducerTest（7）：
+1. positiveFrozenHeadsProduceConservedOriginalOrderComponents
+2. inlineConsumedReferenceIsUsedWithoutHistoricalInboxLookup
+3. missingOriginalPaymentReceiptCannotFreezeAHead
+4. merchantComponentCopiesExactOriginalClaimWithoutInventingClaimForAccounting
+5. perOrderNegativeMarginDefersTheWholeCloseWithoutDebitingAnyone
+6. largestRemainderTiesUseRegistrationIdRegardlessOfInputOrder
+7. largestRemainderUsesExactCashWeightsAndPreservesHeadTotal
+
+CoopSettlementSeatBillingTest（6）：
+1. fourPurchasedSeatsButOnlyTwoVerifiedChargeTwiceAndNeverExpandOrderQuantity
+2. frozenGroupReceiptAndCanonicalSeatsUseTheSameFixedFeeWithoutIndividualScans
+3. repeatedCanonicalSeatIdentityIsChargedOnce
+4. unverifiedAndCutoffSeatsNeverBecomeFeeEligibility
+5. missingCanonicalMultiSeatEvidenceStillRefusesInsteadOfMultiplyingBoughtQuantity
+6. foreignSeatScopeCannotEnterTheFrozenContract
+
+CoopSettlementManualCasesTest（3）：
+1. negativeMarginIsRetainedOnlyAfterBusinessRollbackInANewTransaction
+2. committedTransactionNeverCreatesANegativeMarginManualReceipt
+3. openManualCaseBlocksAutomaticSettlementWithoutResolvingOrWritingIt
+
+Wp04OriginalProducerMySqlIT（3个声明，未运行）：
+1. actualProducerFreezesAllOriginalComponentsAndExactReplayCreatesNothing
+2. failureAfterFirstRealComponentRollsBackEntireCloseButPreservesConsumedPaymentFacts
+3. physicalRollbackLeavesOneDurableManualCaseAndNoEconomicsOrClaimedTopic
+
+该IT复用已有Wp04OriginalRefundMySqlIT独占UUID/显式全连接参数/GitHub-hosted准入和精确cleanup及原P0DDL，不改B文件；另要求WP04_ORIGINAL_PRODUCER_DDL_APPROVED=1，并继承WP04_ORIGINAL_REFUND_DDL_APPROVED=1。canonical原DDL、原SQL和实际Producer/Ledger/mapper事务，provider为明确夹具；不声称SDK或资金全链验收。
+
+原测试方法/断言不删；仅给OriginalCloseRefundHistoryFixture与PreparedCoopPlanFixture的既有组合测试显式注入producer持久化端口double，范围仍为原组合金额/幂等。真实Producer/SQL职责由上述新增独立源码承接，未用其mock证明真库成功。CI/registry由root最后统一登记、审查和回归，本片未改。

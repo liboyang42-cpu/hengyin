@@ -1,0 +1,76 @@
+TAP version 13
+# Subtest: 剧情认领与开章完成使用 JSON，保留局信息及版本
+ok 1 - 剧情认领与开章完成使用 JSON，保留局信息及版本
+  ---
+  duration_ms: 3.473091
+  type: 'test'
+  ...
+# Subtest: advanced completion refreshes route before the base write and stops on refresh failure
+ok 2 - advanced completion refreshes route before the base write and stops on refresh failure
+  ---
+  duration_ms: 0.511051
+  type: 'test'
+  ...
+# Subtest: completed run returns to its entry; unfinished chapter stays in play
+ok 3 - completed run returns to its entry; unfinished chapter stays in play
+  ---
+  duration_ms: 0.390934
+  type: 'test'
+  ...
+# Subtest: 六种节点完成入口先同步伏笔，再用同步后的版本提交
+ok 4 - 六种节点完成入口先同步伏笔，再用同步后的版本提交
+  ---
+  duration_ms: 7.786579
+  type: 'test'
+  ...
+# Subtest: 同步失败不阻核心动作；等待认领成功后再同步，拒绝运动授权仍能继续
+ok 5 - 同步失败不阻核心动作；等待认领成功后再同步，拒绝运动授权仍能继续
+  ---
+  duration_ms: 1.624036
+  type: 'test'
+  ...
+# Subtest: note own entry uses server text, not object coercion
+ok 6 - note own entry uses server text, not object coercion
+  ---
+  duration_ms: 1.037684
+  type: 'test'
+  ...
+# Subtest: 开始拒绝后向当前打字组件发恢复序号，并允许再次开始
+ok 7 - 开始拒绝后向当前打字组件发恢复序号，并允许再次开始
+  ---
+  duration_ms: 1.475918
+  type: 'test'
+  ...
+# Subtest: unknown保持等待，权威回读确认开始后允许提交，不依赖丢失的原回包
+ok 8 - unknown保持等待，权威回读确认开始后允许提交，不依赖丢失的原回包
+  ---
+  duration_ms: 0.685346
+  type: 'test'
+  ...
+# Subtest: 旧局迟到失败不解锁当前节点；pickPlayKit只认服务端started布尔
+ok 9 - 旧局迟到失败不解锁当前节点；pickPlayKit只认服务端started布尔
+  ---
+  duration_ms: 0.476951
+  type: 'test'
+  ...
+# Subtest: 草稿试玩开始也向打字组件确认，但不写正式请求
+ok 10 - 草稿试玩开始也向打字组件确认，但不写正式请求
+  ---
+  duration_ms: 0.685467
+  type: 'test'
+  ...
+# Subtest: F-R2S-01:微信运动回调迟迟不回时,步数同步最多等 8 秒,之后照常提交玩家动作
+ok 11 - F-R2S-01:微信运动回调迟迟不回时,步数同步最多等 8 秒,之后照常提交玩家动作
+  ---
+  duration_ms: 1.391474
+  type: 'test'
+  ...
+1..11
+# tests 11
+# suites 0
+# pass 11
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 60.240985

@@ -15,12 +15,13 @@ const PAGE = '../../pages/publish/fabu/index.js';
 let sent = [];
 let storage = {};
 let toasts = [];
+let actorId = 42;
 
 global.getApp = () => ({
   globalData: { statusBarHeight: 20, navBarHeight: 44 },
   sendRequest: (p) => { sent.push(p); },
   chooseImage: () => {},
-  getUserID: () => 42,
+  getUserID: () => actorId,
   getNickname: () => '测试创作者',
   getAvatar: () => '',
   getUserInfo: () => null,
@@ -43,6 +44,7 @@ let pageConfig = null;
 global.Page = (cfg) => { pageConfig = cfg; };
 
 beforeEach(() => {
+  actorId = 42;
   sent = [];
   storage = {};
   toasts = [];
@@ -141,6 +143,18 @@ test('共用玩法列出节点，另存副本传完整作者字段且成功后�
   assert.equal(p._nodeBindingDraft.templateId, 88);
   assert.equal(p._nodeBindingDraft.slotDigest, binding.slotDigest(binding.slotsOf(source)));
   assert.equal(p.data.nodeSharedSites.length, 1);
+});
+
+test('会员内容另存保留服务端原interactionType，不按validationMethod猜玩法语义', () => {
+  const { p, source } = sharedPage();
+  source.interactionType = 'city_story_card';
+  p.onCopyBoundTemplate();
+  sent.find(r => r.url === '/api/template/myinfo').success({ code: 200, data: source });
+  const payload = JSON.parse(sent.find(r => r.url === '/api/template/draft').data);
+  assert.equal(payload.interactionType, source.interactionType);
+  assert.equal(payload.advancedConfigJson, source.advancedConfigJson);
+  assert.equal(Object.hasOwn(payload, 'id'), false);
+  assert.equal(p.data.nodesForm.templateId, 31, '写入确认前不改变原绑定');
 });
 
 test('另存失败或回包不确定保留原绑定且不自动重试', () => {
@@ -350,4 +364,179 @@ test('删除节点：从互斥组/额外节点/运行任务里明确移出并说
   assert.equal(refs.before.length, 2);
   assert.equal(refs.gameBefore.facilities.length, 2, '撤销用的原运行结构完整保留');
   assert.equal(p._removeNodeRuleRefs({ id: 999 }), null, '没被引用的节点不改配置');
+});
+
+const libraryPage = (start, size) => Array.from({ length: size }, (_, i) => ({
+  id: start + i, title: '可采用内容' + (start + i), advancedConfigJson: '{}',
+}));
+
+test('完整公共库读取未进home推荐切片的内容，翻完所有页才显示ready且不产生采用写入', () => {
+  const p = makePage(); p._refreshSupportMatrix = () => {};
+  p.getPublicTempList();
+  const first = sent.at(-1);
+  assert.equal(first.url, '/api/template/list');
+  assert.deepEqual(first.data, { pageNum: 1, pageSize: 100 });
+  first.success({ code: 200, data: { rows: libraryPage(1, 100), total: 101 } });
+  assert.equal(p.data.publicTempState, 'loading');
+  assert.deepEqual(p.data.publicTempList, []);
+  const second = sent.at(-1);
+  assert.equal(second.url, '/api/template/list');
+  assert.deepEqual(second.data, { pageNum: 2, pageSize: 100 });
+  second.success({ code: 200, data: { rows: libraryPage(701, 1), total: 101 } });
+  assert.equal(p.data.publicTempState, 'ready');
+  assert.equal(p.data.publicTempList.length, 101);
+  assert.equal(p.data.publicTempList.at(-1).id, 701, '非home推荐项也可被选择');
+  assert.equal(sent.some(r => /homeData|adopt-draft|\/draft$/.test(r.url)), false);
+});
+
+test('公共库真实空结果与分页失败分开，已取部分不能伪装完整或自动采用', () => {
+  const p = makePage(); p._refreshSupportMatrix = () => {};
+  p.getPublicTempList();
+  sent.at(-1).success({ code: 200, data: { rows: [], total: 0 } });
+  assert.equal(p.data.publicTempState, 'ready');
+  assert.deepEqual(p.data.publicTempList, []);
+  p.getPublicTempList();
+  sent.at(-1).success({ code: 200, data: { rows: libraryPage(1, 100), total: 101 } });
+  sent.at(-1).fail({});
+  assert.equal(p.data.publicTempState, 'error');
+  assert.deepEqual(p.data.publicTempList, []);
+  assert.equal(sent.some(r => r.url === '/api/template/adopt-draft'), false);
+});
+
+test('公共库缺总数、重复页与总数前空页明确失败，不吞成空库或截断结果', () => {
+  for (const bad of [
+    { rows: [], total: 'bad' }, { rows: [] }, { rows: libraryPage(1, 1), total: 2 },
+  ]) {
+    const p = makePage(); p._refreshSupportMatrix = () => {};
+    p.getPublicTempList();
+    sent.at(-1).success({ code: 200, data: bad });
+    if (bad.total === 2) sent.at(-1).success({ code: 200, data: { rows: libraryPage(1, 1), total: 2 } });
+    assert.equal(p.data.publicTempState, 'error');
+    assert.deepEqual(p.data.publicTempList, []);
+  }
+  const p = makePage(); p._refreshSupportMatrix = () => {};
+  p.getPublicTempList();
+  sent.at(-1).success({ code: 200, data: { rows: libraryPage(1, 1), total: 2 } });
+  sent.at(-1).success({ code: 200, data: { rows: [], total: 2 } });
+  assert.equal(p.data.publicTempState, 'error');
+  assert.deepEqual(p.data.publicTempList, []);
+});
+
+test('公共库回包绑定账号、经营scope和页面代次，旧读取不能覆盖新读取', () => {
+  for (const mutate of [
+    p => { actorId = 43; }, p => { p.data.operationScope = 'MERCHANT'; },
+    p => { p._loginContinuationEpoch = (p._loginContinuationEpoch || 0) + 1; },
+    p => { p._unloaded = true; },
+  ]) {
+    actorId = 42;
+    const p = makePage(); p._refreshSupportMatrix = () => {};
+    p.getPublicTempList(); const old = sent.at(-1);
+    mutate(p);
+    old.success({ code: 200, data: { rows: libraryPage(1, 1), total: 1 } });
+    assert.deepEqual(p.data.publicTempList, []);
+    old.fail({});
+    assert.equal(p.data.publicTempState, 'loading', '旧回包连错误态也不能覆盖新归属');
+  }
+  actorId = 42;
+  const p = makePage(); p._refreshSupportMatrix = () => {};
+  p.getPublicTempList(); const old = sent.at(-1);
+  p.getPublicTempList(); const fresh = sent.at(-1);
+  fresh.success({ code: 200, data: { rows: libraryPage(9, 1), total: 1 } });
+  old.success({ code: 200, data: { rows: libraryPage(1, 1), total: 1 } });
+  assert.deepEqual(p.data.publicTempList.map(r => r.id), [9]);
+});
+
+test('采用已确认但个人详情未回读时重复确认不创建第二份草稿', () => {
+  const p = makePage(); p.data.nodesForm = { _localId: 'original', name: '', templateId: 0 };
+  p.selectTemp(tap(libraryRow, 'public')); p.confirmTemp();
+  sent.find(r => r.url === '/api/template/adopt-draft').success({ code: 200, data: 9001 });
+  p.confirmTemp();
+  assert.equal(sent.filter(r => r.url === '/api/template/adopt-draft').length, 1);
+  sent.find(r => r.url === '/api/template/myinfo').success({ code: 200,
+    data: { id: 9001, title: '原内容采用稿', advancedConfigJson: '{}' } });
+  assert.equal(p.data.nodesForm.templateId, 9001);
+});
+
+test('公共采用写回迟到时换节点不触发个人详情或把新节点绑定成旧内容', () => {
+  const p = makePage(); p.data.nodesForm = { _localId: 'original', name: '', templateId: 0 };
+  p.selectTemp(tap(libraryRow, 'public')); p.confirmTemp();
+  p.data.nodesForm = { _localId: 'next', name: '新节点', templateId: 66 };
+  sent.find(r => r.url === '/api/template/adopt-draft').success({ code: 200, data: 9001 });
+  assert.equal(sent.some(r => r.url === '/api/template/myinfo'), false);
+  assert.equal(p.data.nodesForm.templateId, 66);
+  assert.equal(sent.filter(r => r.url === '/api/template/adopt-draft').length, 1);
+});
+
+test('个人采用详情回读绑定原节点、账号、主题、scope及页面代次，不改原草稿身份', () => {
+  for (const mutate of [
+    p => { p.data.nodesForm = { _localId: 'other', templateId: 66 }; },
+    p => { p.data.nodesForm._localId = 'changed-in-place'; },
+    p => { actorId = 43; }, p => { p.data.operationScope = 'MERCHANT'; },
+    p => { p.data.editingTopicId = 'other-topic'; },
+    p => { p._loginContinuationEpoch = (p._loginContinuationEpoch || 0) + 1; },
+    p => { p._unloaded = true; },
+  ]) {
+    actorId = 42; const begin = sent.length;
+    const p = makePage(); p.data.nodesForm = { _localId: 'original', templateId: 0, name: '' };
+    p.selectTemp(tap(libraryRow, 'public')); p.confirmTemp();
+    sent.slice(begin).find(r => r.url === '/api/template/adopt-draft').success({ code: 200, data: 9001 });
+    const detail = sent.slice(begin).find(r => r.url === '/api/template/myinfo');
+    assert.equal(detail.data.id, 9001);
+    mutate(p); const expected = p.data.nodesForm.templateId;
+    detail.success({ code: 200, data: { id: 9001, title: '旧内容', advancedConfigJson: '{}' } });
+    assert.equal(p.data.nodesForm.templateId, expected);
+    assert.equal(sent.slice(begin).filter(r => r.url === '/api/template/adopt-draft').length, 1);
+  }
+});
+
+test('我的模板补读也受原节点和账号围栏，不仅比较选中模板id', () => {
+  for (const mutate of [
+    p => { p.data.nodesForm = { _localId: 'other', templateId: 66 }; },
+    p => { actorId = 43; },
+  ]) {
+    actorId = 42; const begin = sent.length;
+    const p = makePage(); p.data.nodesForm = { _localId: 'original', templateId: 0, name: '' };
+    p.selectTemp(tap({ id: 31, title: '我的模板' }, 'mine')); p.confirmTemp();
+    const detail = sent.slice(begin).find(r => r.url === '/api/template/myinfo');
+    mutate(p); const expected = p.data.nodesForm.templateId;
+    detail.success({ code: 200, data: { id: 31, title: '旧内容', advancedConfigJson: '{}' } });
+    assert.equal(p.data.nodesForm.templateId, expected);
+  }
+});
+
+test('换节点后可重读同一个个人模板，旧回包不清掉新读的singleflight', () => {
+  const p = makePage(); p.data.nodesForm = { _localId: 'original', templateId: 0, name: '' };
+  p._bindNodeTemplate({ id: 31, title: '我的模板' });
+  const old = sent.at(-1);
+  p.data.nodesForm = { _localId: 'other', templateId: 0, name: '' };
+  p._bindNodeTemplate({ id: 31, title: '我的模板' });
+  const fresh = sent.at(-1);
+  assert.notEqual(fresh, old, '同ID但不同节点不是同一次读取');
+  old.success({ code: 200, data: { id: 31, title: '旧节点回读', advancedConfigJson: '{}' } });
+  assert.equal(p.data.nodesForm.templateId, 0);
+  assert.equal(p._loadingSelectedTemplate, 31);
+  fresh.success({ code: 200, data: { id: 31, title: '新节点回读', advancedConfigJson: '{}' } });
+  assert.equal(p.data.nodesForm.templateId, 31);
+  assert.equal(p.data.nodesForm.templateInfo.title, '新节点回读');
+  assert.equal(p._loadingSelectedTemplate, 0);
+});
+
+test('同一节点新建现成玩法的EventChannel可跨编辑器导航返回，迟到旧目标不能绑定', () => {
+  const navigate = wx.navigateTo;
+  try {
+    for (const changed of [false, true]) {
+      const p = makePage(); p.data.nodesForm = { _localId: 'original', templateId: 0, name: '' };
+      p._nodeSupportContext = () => ({});
+      let opened;
+      wx.navigateTo = options => { opened = options; };
+      p.onCreateGame({ currentTarget: { dataset: {} } });
+      assert.ok(opened.url.startsWith('/pages/publish/temp/index?from=fabu'));
+      p._loginContinuationEpoch = (p._loginContinuationEpoch || 0) + 1; // 正常打开子编辑器会hide
+      if (changed) p.data.nodesForm = { _localId: 'other', templateId: 66, name: '' };
+      opened.events.templateCreated({ id: 9091, title: '既有编辑器新内容', advancedConfigJson: '{}' });
+      assert.equal(p.data.nodesForm.templateId, changed ? 66 : 9091);
+      opened.complete();
+      assert.equal(p._navigating, false);
+    }
+  } finally { wx.navigateTo = navigate; }
 });

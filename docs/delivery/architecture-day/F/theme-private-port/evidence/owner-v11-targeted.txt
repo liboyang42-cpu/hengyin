@@ -1,0 +1,21 @@
+test_v11_admin_closure_keeps_real_module_and_byte_hashes (test_collect_jdeps.PrivatePortsReadbackTest.test_v11_admin_closure_keeps_real_module_and_byte_hashes) ... ok
+test_v11_each_new_responsibility_blocks_its_original_god (test_collect_jdeps.PrivatePortsReadbackTest.test_v11_each_new_responsibility_blocks_its_original_god) ... ok
+test_v11_reverse_query_entry_cycle_has_admin_witnesses (test_collect_jdeps.PrivatePortsReadbackTest.test_v11_reverse_query_entry_cycle_has_admin_witnesses) ... ok
+test_v11_non_application_helpers_cannot_hide_god_backref_behind_runtime_port (test_collect_jdeps.PrivatePortsReadbackTest.test_v11_non_application_helpers_cannot_hide_god_backref_behind_runtime_port) ... ok
+test_v11_narrative_compiler_leaf_direction_does_not_allow_reverse_cycle (test_collect_jdeps.PrivatePortsReadbackTest.test_v11_narrative_compiler_leaf_direction_does_not_allow_reverse_cycle) ... ok
+test_v11_public_runtime_port_does_not_prove_read_only_or_null_semantics (test_collect_jdeps.PrivatePortsReadbackTest.test_v11_public_runtime_port_does_not_prove_read_only_or_null_semantics) ... ok
+test_v11_missing_new_input_or_incorrect_admin_location_is_unknown (test_collect_jdeps.PrivatePortsReadbackTest.test_v11_missing_new_input_or_incorrect_admin_location_is_unknown) ... ok
+test_v11_cli_cannot_turn_missing_graph_or_same_admin_god_edge_green (test_collect_jdeps.PrivatePortsReadbackTest.test_v11_cli_cannot_turn_missing_graph_or_same_admin_god_edge_green) ... ok
+test_declared_owner_directions_use_verified_same_module_refs_without_a_second_jdeps (test_collect_jdeps.PrivatePortsReadbackTest.test_declared_owner_directions_use_verified_same_module_refs_without_a_second_jdeps) ... ok
+test_third_cli_pass_blocked_unknown_are_zero_one_two (test_collect_jdeps.PrivatePortsReadbackTest.test_third_cli_pass_blocked_unknown_are_zero_one_two) ... ok
+test_god_backreference_is_blocked_despite_forged_safe_owner_JSON (test_collect_jdeps.PrivatePortsReadbackTest.test_god_backreference_is_blocked_despite_forged_safe_owner_JSON) ... ok
+test_v11_candidate_cannot_delete_new_owner_or_clear_original_god (test_gate.PrivatePortPolicyFreezeTest.test_v11_candidate_cannot_delete_new_owner_or_clear_original_god) ... architecture gate FAIL-CLOSED: POLICY_CHANGE: candidate changed trusted policy: ci/architecture/owners.json
+architecture gate FAIL-CLOSED: POLICY_CHANGE: candidate changed trusted policy: ci/architecture/owners.json
+architecture gate FAIL-CLOSED: POLICY_CHANGE: candidate changed trusted policy: ci/architecture/owners.json
+ok
+test_three_private_ports_do_not_approve_a_third_whole_table_fact_or_command (test_gate.PrivatePortPolicyFreezeTest.test_three_private_ports_do_not_approve_a_third_whole_table_fact_or_command) ... ok
+
+----------------------------------------------------------------------
+Ran 13 tests in 1.063s
+
+OK

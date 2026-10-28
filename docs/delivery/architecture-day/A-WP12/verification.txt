@@ -1,0 +1,18 @@
+2026-10-23T19:59:59.854025+00:00
+SCOPE: lightweight source/static checks only; no Java/backend/database execution
+COMMAND: python3 docs/delivery/architecture-day/A-WP12/audit_static.py
+PASS: source counterexample before fix forwards lifecycle 1/2/3/4; after fix forwards none
+PASS: unchanged dynamic MyBatis predicate skips null; single-line negative control restores the hole; permissions unchanged
+PASS: parsed state-token mutations/predicates and deletes in 10 scoped mappers: 76 statements indexed
+PASS: 38 existing suites indexed by source type; every Java suite remains NOT_RUN
+PASS: frozen A commit/worktree unchanged; only one production boundary and its existing safety test modified
+NOT RUN: Java compilation, Java/H2/MySQL tests, backend/Redis/WeChat integration
+COMMAND: python3 ci/secret-file-gate.py
+SECRET-FILE-GATE PASS: 当前 Git tree 无密钥/证书文件或私钥正文
+COMMAND: git diff --check 2ec68899099a1e250df0949a8383bf85b5d3ffe0
+(no output; exit 0)
+PASS: changed tracked/untracked files passed project secret-file gate and known-credential pattern scan
+LIMIT: no gitleaks executable; no full entropy/history secret scan performed
+PASS: original /workspace/hengyin remains clean at public baseline; frozen A remains unchanged (audit assertion)
+NOT RUN: Java compilation; all Java/H2/MySQL tests; backend/Redis/WeChat integration; CI workflow dispatch
+NO ACTION: DDL/migration execution, production access, real payment, merge/deploy/master push

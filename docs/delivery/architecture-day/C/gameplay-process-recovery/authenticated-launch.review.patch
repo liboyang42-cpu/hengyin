@@ -1,0 +1,21 @@
+diff --git a/ci/authenticated-redis-recovery.sh b/ci/authenticated-redis-recovery.sh
+--- a/ci/authenticated-redis-recovery.sh
++++ b/ci/authenticated-redis-recovery.sh
+@@ -30,3 +30,6 @@
+   rmdir "$PRIVATE" || unknown=1
+   if [ "$unknown" -ne 0 ]; then result=1; fi
++  if [[ "${CHENGYIN_CI_GAMEPLAY_PROCESS_RECOVERY:-false}" == true ]]; then
++    if ! python3 -I "$ROOT/ci/gameplay_process_recovery_probe.py" finalize "$RUN_NAME" "$SCHEMA" "$OUT" "$result"; then result=1; fi
++  fi
+   printf 'Fixture terminal exit=%s cleanupUnknown=%s evidence=%s\n' "$result" "$unknown" "$OUT"
+@@ -56,3 +59,10 @@
+ MYSQL_IP=$(docker inspect "$MYSQL_CID" --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
+ REDIS_IP=$(docker inspect "$REDIS_CID" --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
++if [[ "${CHENGYIN_CI_GAMEPLAY_PROCESS_RECOVERY:-false}" == true ]]; then
++  # Same owned resources, JAR, canonical schema, tracing preparation and EXIT cleanup.
++  # This explicit child profile replaces the one app launch; it does not claim refund acceptance.
++  python3 -I "$ROOT/ci/gameplay_process_recovery_probe.py" --check-host-only
++  timeout --signal=TERM --kill-after=20s 920s python3 -I "$ROOT/ci/gameplay_process_recovery_probe.py" run "$RUN_NAME" "$SCHEMA" "$OUT" "$PRIVATE/credentials.json"
++  exit 0
++fi
+ docker run -d --name "$RUN_NAME-app" --label "chengyin.auth-recovery=$RUN_NAME" --network "$RUN_NAME" --dns 127.0.0.1 \

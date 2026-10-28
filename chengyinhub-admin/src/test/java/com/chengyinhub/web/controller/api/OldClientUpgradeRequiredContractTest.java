@@ -65,7 +65,7 @@ class OldClientUpgradeRequiredContractTest
         ReflectionTestUtils.setField(service, "cmsTopicChapterMapper", chapterMapper);
 
         ChapterFlowClientUpgradeRequiredException e = assertThrows(ChapterFlowClientUpgradeRequiredException.class,
-                () -> ReflectionTestUtils.invokeMethod(service, "assertLegacyChapterFlowWritable", 7L));
+                () -> ReflectionTestUtils.invokeMethod(com.chengyinhub.business.service.support.TopicGraphTestWiring.guard(service), "assertLegacyChapterFlowWritable", 7L));
 
         assertEquals("请更新小程序后编辑该主题", e.getMessage());
     }

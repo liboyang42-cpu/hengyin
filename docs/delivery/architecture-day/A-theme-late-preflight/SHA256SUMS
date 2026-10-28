@@ -1,0 +1,8 @@
+e7abea0913695dd3419f05ccef160efd61062f8e13b098abf98baa8c9ac7f940  chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java
+011c0480bb0bb31ee0cc9b546605bdd708784919a106e8b0637a4d0533298f10  chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/impl/AiGatewayPreparedLatePreflightTest.java
+76129d281b6548c42b2ccbde972e6a0c5b01ccebe0641556ca3a30baa8d16fd1  docs/delivery/architecture-day/A-theme-late-preflight/README.md
+54acf2f633038da7e13b2165c0ba024bab0aea94051489c8a38579ff744c2fda  docs/delivery/architecture-day/A-theme-late-preflight/baseline-witness.json
+1d192c78d8cc1f093bd71e8859b7324f212b8d3ccfb29462a56428b19f3e5ca9  docs/delivery/architecture-day/A-theme-late-preflight/gateway-and-test.patch.gz
+960362c189e0fe315792007168d8fc552095ea6c6b107d3e030d2193fbe5aafb  docs/delivery/architecture-day/A-theme-late-preflight/source-evidence.json
+d93b78a79290d3abdc0fe26e141762023802663167175a1cb6f8df35637db45e  docs/delivery/architecture-day/A-theme-late-preflight/verification.json
+e6b903ff15e4b54dfebbef5e6390f1da0849f08145ace637f071e993883449a9  docs/delivery/architecture-day/A-theme-late-preflight/verify_static.py

@@ -1,0 +1,25 @@
+{
+  "core_source": "08b3feaea460533112da40991254b7777bf19bd3",
+  "D_source": "2ed90eac3f9c991c9f54f3817a5d6d4d7c7b8f9f",
+  "D_parent": "00fc58c50febc3366f78af600c8f12636cd13de5",
+  "reviewed_delta_files": 13,
+  "owned_source_hash_manifest": "ALL_MATCHED",
+  "scope_verifier": "PASS; original player supplier/algorithm/permission/lock/CAS/return unchanged outside owner intent connection",
+  "source_static_tests": 7,
+  "harness_selftests": 46,
+  "planned_real_storage_cases": {
+    "owner_intent": 21,
+    "original_supply": 8
+  },
+  "planned_unit_cases": {
+    "owner_intent_new": 11,
+    "original_withdraw": 10,
+    "original_controller": 18
+  },
+  "java_mysql": "NOT_YET_RUN",
+  "WX_real_calls": 0,
+  "production_ddl": false,
+  "production_activation": false,
+  "accepted": false,
+  "provider_unknown_quota_fix": "b453b6e source+2 parameterized unit cases awaiting same full CI; preserves generic input UNKNOWN refund policy"
+}

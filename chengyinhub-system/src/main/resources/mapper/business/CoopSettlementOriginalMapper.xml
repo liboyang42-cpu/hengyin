@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.CoopSettlementOriginalMapper">
+    <resultMap id="Component" type="com.chengyinhub.business.domain.CoopSettlementOriginalComponent">
+        <result property="id" column="id"/>
+        <result property="cashCloseId" column="cash_close_id"/>
+        <result property="topicId" column="topic_id"/>
+        <result property="sourceRegistrationId" column="source_registration_id"/>
+        <result property="payerRegistrationId" column="payer_registration_id"/>
+        <result property="settlementId" column="settlement_id"/>
+        <result property="sourceClaimId" column="source_claim_id"/>
+        <result property="paymentFactId" column="payment_fact_id"/>
+        <result property="paymentFactHash" column="payment_fact_hash"/>
+        <result property="receiverKind" column="receiver_kind"/>
+        <result property="receiverMemberId" column="receiver_member_id"/>
+        <result property="lineType" column="line_type"/>
+        <result property="originalAmount" column="original_amount"/>
+        <result property="originalOrderCash" column="original_order_cash"/>
+        <result property="calculationVersion" column="calculation_version"/>
+        <result property="sourceFingerprint" column="source_fingerprint"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+    <resultMap id="Receipt" type="com.chengyinhub.business.domain.CoopSettlementRefundReceipt">
+        <result property="id" column="id"/>
+        <result property="cashCloseId" column="cash_close_id"/>
+        <result property="topicId" column="topic_id"/>
+        <result property="refundId" column="refund_id"/>
+        <result property="verifiedFactId" column="verified_fact_id"/>
+        <result property="verifiedFactKind" column="verified_fact_kind"/>
+        <result property="verifiedFactHash" column="verified_fact_hash"/>
+        <result property="sourceRegistrationId" column="source_registration_id"/>
+        <result property="payerRegistrationId" column="payer_registration_id"/>
+        <result property="currency" column="currency"/>
+        <result property="refundAmount" column="refund_amount"/>
+        <result property="totalAmount" column="total_amount"/>
+        <result property="cumulativeBefore" column="cumulative_before"/>
+        <result property="cumulativeAfter" column="cumulative_after"/>
+        <result property="reversedAmount" column="reversed_amount"/>
+        <result property="calculationVersion" column="calculation_version"/>
+        <result property="sourceFingerprint" column="source_fingerprint"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+    <resultMap id="Adjustment" type="com.chengyinhub.business.domain.CoopSettlementOriginalAdjustment">
+        <result property="id" column="id"/>
+        <result property="cashCloseId" column="cash_close_id"/>
+        <result property="componentId" column="component_id"/>
+        <result property="receiptId" column="receipt_id"/>
+        <result property="settlementId" column="settlement_id"/>
+        <result property="amount" column="amount"/>
+        <result property="payerRegistrationId" column="payer_registration_id"/>
+        <result property="headWasPaid" column="head_was_paid"/>
+        <result property="walletDebit" column="wallet_debit"/>
+        <result property="debtAmount" column="debt_amount"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+    <sql id="paymentRecoveryTarget">
+        select r.id as registrationId,r.registration_no as registrationNo,r.transaction_id as transactionId,
+               r.payment_status as paymentStatus,r.registration_status as registrationStatus,r.wechat_payment_amount as wechatPaymentAmount,
+               case when r.owner_type=1 then r.owner_id when r.owner_type=2 then a.topic_id else null end as topicId,
+               case when r.owner_type=1 and r.owner_id&gt;0 then true when r.owner_type=2 and a.id is not null then true else false end as relationPresent
+        from cms_registration r left join cms_activity a on r.owner_type=2 and a.id=r.owner_id where r.id=#{registrationId}
+    </sql>
+    <select id="selectPaymentRecoveryTarget" resultType="com.chengyinhub.business.domain.dto.CoopPaymentRecoveryTarget" useCache="false" flushCache="true">
+        <include refid="paymentRecoveryTarget"/>
+    </select>
+    <select id="selectPaymentRecoveryTargetForUpdate" resultType="com.chengyinhub.business.domain.dto.CoopPaymentRecoveryTarget" useCache="false" flushCache="true">
+        <include refid="paymentRecoveryTarget"/> for update
+    </select>
+    <select id="selectClosedPaymentRecoveryForUpdate" resultType="com.chengyinhub.business.domain.WxPaymentCallbackOutbox" useCache="false" flushCache="true">
+        select id,biz_type as bizType,biz_id as bizId,idempotency_key as idempotencyKey,money_affecting as moneyAffecting,state
+        from wx_payment_callback_outbox where idempotency_key=#{key} for update
+    </select>
+    <!-- Raw current refund history, including legacy owner and soft-deleted financial evidence.
+         Scope comes from the actual registration/activity parent, never redundant refund.owner_* or existing originals. -->
+    <select id="selectApprovedRegistrationRefundIdsForOriginalCloseForUpdate" resultType="long" useCache="false" flushCache="true">
+        select refund.id from refund_application refund
+        join cms_registration r on refund.source_type='registration' and r.id=refund.source_id
+        left join cms_activity a on r.owner_type=2 and a.id=r.owner_id
+        where refund.status=1 and ((r.owner_type=1 and r.owner_id=#{topicId})
+            or (r.owner_type=2 and a.topic_id=#{topicId}))
+        order by refund.id for update
+    </select>
+    <select id="selectOriginalRegistrationsForUpdate" resultType="com.chengyinhub.business.domain.CmsRegistration" useCache="false" flushCache="true">
+        select id,registration_no as registrationNo,parent_order_no as parentOrderNo,owner_type as ownerType,owner_id as ownerId,
+               member_id as memberId,order_num as orderNum,payment_status as paymentStatus,registration_status as registrationStatus,
+               verification_status as verificationStatus,payable_amount as payableAmount,wechat_payment_amount as wechatPaymentAmount,
+               transaction_id as transactionId from cms_registration where owner_type=1 and owner_id=#{topicId} order by id for update
+    </select>
+    <select id="selectPaymentVerifiedReferenceForUpdate" resultMap="VerifiedReference" useCache="false" flushCache="true">
+        select l.fact_id as id,l.fact_hash as hash from cms_registration r
+        join wx_payment_callback_inbox i on i.biz_type=1 and i.biz_id=r.id and i.event_type='SUCCESS' and i.state=2
+          and i.notify_hash=unhex(sha2(concat('PAY:',r.transaction_id,':SUCCESS'),256))
+        join wx_payment_callback_fact_link l on l.inbox_id=i.id and binary l.notify_hash=binary lower(hex(i.notify_hash))
+        join wx_verified_payment_fact pf on pf.id=l.fact_id and pf.fact_hash=l.fact_hash and pf.fact_kind='PAYMENT'
+          and binary pf.business_out_trade_no=binary r.registration_no and binary pf.transaction_id=binary r.transaction_id
+          and pf.amount_fen=r.wechat_payment_amount*100
+        where r.id=#{registrationId} for update
+    </select>
+    <select id="selectOriginalDetailsForHeadForUpdate" resultType="com.chengyinhub.business.domain.CoopSettlementDetail" useCache="false" flushCache="true">
+        select id,settlement_id as settlementId,claim_id as claimId,registration_id as registrationId,origin_amount as originAmount
+        from coop_settlement_detail where settlement_id=#{settlementId} order by id for update
+    </select>
+    <update id="bindHeadToClose">
+        update coop_settlement head join coop_settlement_cash_close c on c.id=#{cashCloseId} and c.topic_id=head.topic_id
+        set head.cash_close_id=#{cashCloseId},head.cash_head_kind=#{receiverKind}
+        where head.id=#{settlementId} and head.topic_id=#{topicId}
+          and (head.cash_close_id is null or head.cash_close_id=#{cashCloseId})
+          and ((#{receiverKind}='MEMBER' and head.merchant_id&gt;0 and head.payee_type&lt;&gt;'platform')
+            or (#{receiverKind}='ACCOUNTING' and head.merchant_id is null and head.payee_type='platform'
+              and head.line_type in ('PLATFORM','DEPOSIT_DEDUCTION')))
+    </update>
+    <sql id="originalComponentInsertBase">
+        insert into coop_settlement_original_component
+            (cash_close_id,topic_id,source_registration_id,payer_registration_id,settlement_id,source_claim_id,payment_fact_id,payment_fact_hash,
+             receiver_kind,receiver_member_id,line_type,original_amount,original_order_cash,calculation_version,source_fingerprint)
+        select #{cashCloseId},#{topicId},#{sourceRegistrationId},#{payerRegistrationId},#{settlementId},#{sourceClaimId},#{paymentFactId},#{paymentFactHash},
+               #{receiverKind},#{receiverMemberId},#{lineType},#{originalAmount},#{originalOrderCash},#{calculationVersion},#{sourceFingerprint}
+        from coop_settlement h join coop_settlement_cash_close c on c.id=h.cash_close_id and c.topic_id=h.topic_id
+        join coop_settlement_cash_contribution r on r.cash_close_id=c.id and r.registration_id=#{sourceRegistrationId}
+        join coop_settlement_cash_contribution payer on payer.cash_close_id=c.id and payer.registration_id=#{payerRegistrationId}
+        join wx_verified_payment_fact pf on pf.id=#{paymentFactId} and pf.fact_hash=#{paymentFactHash}
+        join cms_registration paid_reg on paid_reg.id=payer.registration_id
+        where h.id=#{settlementId} and c.id=#{cashCloseId} and c.topic_id=#{topicId}
+          and r.payer_registration_id=payer.registration_id and payer.payer_registration_id=payer.registration_id
+          and pf.fact_kind='PAYMENT' and binary pf.business_out_trade_no=binary payer.registration_no
+          and pf.currency='CNY' and pf.total_fen=#{originalOrderCash}*100 and pf.amount_fen=pf.total_fen
+          and binary paid_reg.registration_no=binary pf.business_out_trade_no
+          and binary paid_reg.transaction_id=binary pf.transaction_id and paid_reg.wechat_payment_amount*100=pf.amount_fen
+    </sql>
+    <sql id="originalComponentFrozenScope">
+          and #{originalOrderCash}=cast(json_unquote(json_extract(payer.registration_snapshot,'$.wechatPaymentAmount')) as decimal(15,2))
+          and binary h.line_type=binary #{lineType} and binary h.cash_head_kind=binary #{receiverKind}
+          and (h.merchant_id &lt;=&gt; #{receiverMemberId})
+          and ((h.line_type in ('MERCHANT_VERIFY','LEAD_FEE') and exists (
+                select 1 from coop_settlement_detail d join settlement_claim sc on sc.id=d.claim_id
+                where d.settlement_id=h.id and d.claim_id=#{sourceClaimId}
+                  and d.registration_id=r.registration_id and d.origin_amount=#{originalAmount}
+                  and sc.fulfillment_type='REGISTRATION' and sc.fulfillment_id=r.registration_id
+                  and sc.commercial_context_type=h.commercial_context_type and sc.commercial_context_id=h.commercial_context_id
+                  and sc.beneficiary_role=h.beneficiary_role and sc.beneficiary_id=h.beneficiary_id
+                  and sc.service_unit=h.service_unit and sc.settlement_route='COOP_ORDER'
+                  and sc.source_contract_type=h.source_contract_type and sc.source_contract_id=h.source_contract_id))
+            or (h.line_type in ('PLATFORM','INITIATOR_GUARANTEE','INITIATOR_MARGIN')
+                and #{sourceClaimId} is null and r.registration_id=payer.registration_id))
+    </sql>
+    <insert id="insertComponent" useGeneratedKeys="true" keyProperty="id">
+        <include refid="originalComponentInsertBase"/>
+          and not exists (select 1 from cms_registration_payment_fact consumed
+              where consumed.registration_id=payer.registration_id)
+          and exists (select 1 from wx_payment_callback_inbox pi join wx_payment_callback_fact_link pl on pl.inbox_id=pi.id
+                and binary pl.notify_hash=binary lower(hex(pi.notify_hash))
+              where pi.biz_type=1 and pi.biz_id=payer.registration_id and pi.event_type='SUCCESS' and pi.state=2
+                and pi.notify_hash=unhex(sha2(concat('PAY:',pf.transaction_id,':SUCCESS'),256))
+                and pl.fact_id=pf.id and pl.fact_hash=pf.fact_hash)
+        <include refid="originalComponentFrozenScope"/>
+    </insert>
+    <!-- Separate statement: an inline receipt never waits for/claims a mutable inbox under the topic lock. -->
+    <insert id="insertConsumedPaymentComponent" useGeneratedKeys="true" keyProperty="id">
+        <include refid="originalComponentInsertBase"/>
+          and exists (select 1 from cms_registration_payment_fact consumed
+              where consumed.registration_id=payer.registration_id
+                and binary consumed.registration_no=binary pf.business_out_trade_no
+                and consumed.payment_fact_id=pf.id and binary consumed.payment_fact_hash=binary pf.fact_hash
+                and binary consumed.transaction_id=binary pf.transaction_id)
+        <include refid="originalComponentFrozenScope"/>
+    </insert>
+    <select id="selectComponentsForPayerForUpdate" resultMap="Component" useCache="false" flushCache="true">
+        select * from coop_settlement_original_component where cash_close_id=#{cashCloseId} and payer_registration_id=#{payerRegistrationId} order by settlement_id,source_registration_id for update
+    </select>
+    <select id="selectComponentsForCloseForUpdate" resultMap="Component" useCache="false" flushCache="true">
+        select * from coop_settlement_original_component where cash_close_id=#{cashCloseId} order by settlement_id,source_registration_id for update
+    </select>
+    <select id="selectTopicHeadsForUpdate" resultType="com.chengyinhub.business.domain.CoopSettlement" useCache="false" flushCache="true">
+        select id,topic_id as topicId,merchant_id as merchantId,amount,status,line_type as lineType,
+               coop_order_id as coopOrderId,share_mode as shareMode,share_rate as shareRate,fixed_fee as fixedFee
+        from coop_settlement where topic_id=#{topicId} order by id for update
+    </select>
+    <select id="selectHeadCreditAmountsForUpdate" resultType="java.math.BigDecimal" useCache="false" flushCache="true">
+        select change_balance from ums_member_balance_detail
+        where member_id=#{memberId} and event_type=5 and event_id=#{settlementId} and change_type=1 and change_balance&gt;0
+          and change_reason=concat('Coop结算打款 - 主题',#{topicId}) order by id for update
+    </select>
+    <select id="selectRefundForUpdate" resultType="com.chengyinhub.business.domain.RefundApplication" useCache="false" flushCache="true">
+        select id,refund_no as refundNo,source_type as sourceType,source_id as sourceId,status,
+               refund_amount as refundAmount,paid_amount as paidAmount,payout_status as payoutStatus,
+               payout_method as payoutMethod,payout_receipt_url as payoutReceiptUrl,
+               payout_handler_id as payoutHandlerId,payout_handled_at as payoutHandledAt,
+               payout_reviewer2_id as payoutReviewer2Id,payout_reviewed2_at as payoutReviewed2At
+        from refund_application where id=#{refundId} and del_flag=0 for update
+    </select>
+    <sql id="refundScope">
+        select f.id as refundId,f.source_type as sourceType,f.source_id as sourceId,
+               r.id as registrationId,r.owner_type as ownerType,r.owner_id as ownerId,
+               case when r.owner_type=1 then r.owner_id when r.owner_type=2 then a.topic_id else null end as topicId,
+               case when r.owner_type=1 and r.owner_id is not null then true
+                    when r.owner_type=2 and a.id is not null then true else false end as relationPresent
+        from refund_application f left join cms_registration r on f.source_type='registration' and r.id=f.source_id
+        left join cms_activity a on r.owner_type=2 and a.id=r.owner_id
+        where f.id=#{refundId} and f.del_flag=0
+    </sql>
+    <select id="selectRefundScope" resultType="com.chengyinhub.business.domain.dto.CoopOriginalRefundScope" useCache="false" flushCache="true">
+        <include refid="refundScope"/>
+    </select>
+    <select id="selectRefundScopeForUpdate" resultType="com.chengyinhub.business.domain.dto.CoopOriginalRefundScope" useCache="false" flushCache="true">
+        <include refid="refundScope"/> for update
+    </select>
+    <resultMap id="VerifiedReference" type="com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact$Reference">
+        <constructor><arg column="id" javaType="_long"/><arg column="hash" javaType="java.lang.String"/></constructor>
+    </resultMap>
+    <select id="selectRefundVerifiedReferenceForUpdate" resultMap="VerifiedReference" useCache="false" flushCache="true">
+        select l.fact_id as id,l.fact_hash as hash
+        from refund_application f join wx_payment_callback_inbox i
+          on i.biz_type=2 and i.biz_id=f.id and i.event_type='SUCCESS'
+          and i.notify_hash=unhex(sha2(concat('REFUND:',f.refund_no,':SUCCESS'),256))
+        join wx_payment_callback_fact_link l on l.inbox_id=i.id and binary l.notify_hash=binary lower(hex(i.notify_hash))
+        where f.id=#{refundId} and f.del_flag=0 and f.status=1 and f.payout_status=1
+        for update
+    </select>
+    <insert id="insertReceipt" useGeneratedKeys="true" keyProperty="id">
+        insert into coop_settlement_refund_receipt
+            (cash_close_id,topic_id,refund_id,verified_fact_id,verified_fact_kind,verified_fact_hash,source_registration_id,payer_registration_id,
+             currency,refund_amount,total_amount,cumulative_before,cumulative_after,reversed_amount,calculation_version,source_fingerprint)
+        select #{cashCloseId},#{topicId},#{refundId},#{verifiedFactId},#{verifiedFactKind},#{verifiedFactHash},#{sourceRegistrationId},#{payerRegistrationId},
+               #{currency},#{refundAmount},#{totalAmount},#{cumulativeBefore},#{cumulativeAfter},#{reversedAmount},#{calculationVersion},#{sourceFingerprint}
+        from refund_application f join coop_settlement_cash_close c on c.id=#{cashCloseId} and c.topic_id=#{topicId}
+        join coop_settlement_cash_contribution r on r.cash_close_id=c.id and r.registration_id=f.source_id
+        where f.id=#{refundId} and f.del_flag=0 and f.source_type='registration' and f.status=1
+          and ((#{verifiedFactKind}='WX' and f.payout_status=1 and exists (
+                select 1 from wx_payment_callback_inbox i join wx_payment_callback_fact_link l on l.inbox_id=i.id and binary l.notify_hash=binary lower(hex(i.notify_hash))
+                join wx_verified_payment_fact pf on pf.id=l.fact_id and pf.fact_hash=l.fact_hash
+                where i.biz_type=2 and i.biz_id=f.id and i.event_type='SUCCESS'
+                  and i.notify_hash=unhex(sha2(concat('REFUND:',f.refund_no,':SUCCESS'),256))
+                  and pf.id=#{verifiedFactId} and pf.fact_hash=#{verifiedFactHash} and pf.fact_kind='REFUND'
+                  and binary pf.merchant_event_no=binary f.refund_no and binary pf.business_out_trade_no=binary r.payer_order_no
+                  and pf.amount_fen=#{refundAmount}*100 and pf.total_fen=#{totalAmount}*100 and pf.currency=#{currency}))
+            or (#{verifiedFactKind}='MANUAL' and f.payout_status=4 and f.payout_handler_id&gt;0
+                and f.payout_reviewer2_id&gt;0 and f.payout_handler_id&lt;&gt;f.payout_reviewer2_id
+                and f.payout_receipt_url is not null and f.payout_handled_at is not null and f.payout_reviewed2_at is not null
+                and #{verifiedFactId}=f.id))
+          and f.refund_amount=#{refundAmount} and f.source_id=#{sourceRegistrationId} and r.payer_registration_id=#{payerRegistrationId}
+    </insert>
+    <select id="selectReceiptForUpdate" resultMap="Receipt" useCache="false" flushCache="true">
+        select * from coop_settlement_refund_receipt where refund_id=#{refundId} order by id for update
+    </select>
+    <select id="selectReceiptsForPayerForUpdate" resultMap="Receipt" useCache="false" flushCache="true">
+        select * from coop_settlement_refund_receipt where cash_close_id=#{cashCloseId} and payer_registration_id=#{payerRegistrationId} order by id for update
+    </select>
+    <insert id="insertAdjustment" useGeneratedKeys="true" keyProperty="id">
+        insert into coop_settlement_original_adjustment
+            (cash_close_id,component_id,receipt_id,settlement_id,payer_registration_id,amount,head_was_paid,wallet_debit,debt_amount)
+        select #{cashCloseId},#{componentId},#{receiptId},#{settlementId},#{payerRegistrationId},#{amount},#{headWasPaid},#{walletDebit},#{debtAmount}
+        from coop_settlement_original_component c join coop_settlement_refund_receipt r
+          on r.cash_close_id=c.cash_close_id and r.payer_registration_id=c.payer_registration_id
+        where c.id=#{componentId} and r.id=#{receiptId} and c.cash_close_id=#{cashCloseId} and c.settlement_id=#{settlementId}
+          and c.payer_registration_id=#{payerRegistrationId}
+    </insert>
+    <select id="selectAdjustmentsForReceiptForUpdate" resultMap="Adjustment" useCache="false" flushCache="true">
+        select * from coop_settlement_original_adjustment where receipt_id=#{receiptId} order by id for update
+    </select>
+    <select id="selectAdjustmentsForSettlementForUpdate" resultMap="Adjustment" useCache="false" flushCache="true">
+        select * from coop_settlement_original_adjustment where settlement_id=#{settlementId} order by id for update
+    </select>
+</mapper>

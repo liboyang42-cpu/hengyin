@@ -65,6 +65,12 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         select id, registration_no, parent_order_no, request_id, request_fingerprint, owner_type, owner_id, activity_title, ticket_id, ticket_name, ticket_price, member_id, real_name, phone, email, address, address_id, participate_date, order_num, original_amount, discount_amount, total_amount, point_used, point_deduct_amount, point_deduct_rate, max_point_deduct, payable_amount, payment_status, payment_type, payment_time, transaction_id, point_payment_amount, wechat_payment_amount, fee_platform_rate, registration_status, pay_expire_time, topic_id, purchase_kind, refund_policy_code, refund_policy_version, refund_deadline, expires_at, create_by, create_time, update_by, update_time, verification_code, qrcode_url, verification_status, verification_time, first_successful_scan_at, verifier_id,points_returned from cms_registration
     </sql>
 
+    <select id="selectCancellationRowsForUpdate" resultMap="CmsRegistrationResult" useCache="false" flushCache="true">
+        <include refid="selectCmsRegistrationVo"/>
+        where owner_type = #{ownerType} and owner_id = #{ownerId}
+        order by id asc for update
+    </select>
+
     <select id="selectPaidByTicket" parameterType="Long" resultMap="CmsRegistrationResult">
         <include refid="selectCmsRegistrationVo"/>
         where ticket_id = #{ticketId} and payment_status = 2

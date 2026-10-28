@@ -1,0 +1,102 @@
+[
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubLeadController.java",
+    "sha256": "df8e7569a5d6c72a24d8edd008730c29b35948552a54a72c4ff0ef92b2cffded"
+  },
+  {
+    "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java",
+    "sha256": "3ae04f8aebdc86701180284860962e72c8e24e58dee913e6e877527fb5b1113b"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplayTemplateSlotRuntimeTest.java",
+    "sha256": "32712f6ae14e267fffde1c5ef544924b89c18a7abd7f2ad3d548ea35b1e08682"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PersonalGameplayRuntimeServiceTest.java",
+    "sha256": "f42f9b5aacc7caa7d91dee1c30bf1568c977bd7d01b2aff2713d83a0fd815ac3"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ClubLeadFlowTest.java",
+    "sha256": "bacda939dd908cbb4adf029df76a7d41cbda8f03e0624c34e800aef6f2dd920f"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/ClubLeadMapper.java",
+    "sha256": "2715d9cd4c76e30c23d70f92bb12085aad946c45c5d58ae228f4e3c2fdbb1472"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java",
+    "sha256": "d4424128e726d7404ec0951bbae8495455e1f99b48ec5c5a235693b884d09f17"
+  },
+  {
+    "path": "chengyinhub-system/src/main/resources/mapper/business/ClubLeadMapper.xml",
+    "sha256": "dfd5a307f1cd7df635b94ce922fb122f6ebad4b9d4253d48c0692f80a2c002f3"
+  },
+  {
+    "path": "chengyinhub-xcx/pages/club/topic-detail/director.js",
+    "sha256": "4281b2a5dc18b459299999b30cc8e1fe7c0374eb0d1dad4f545fe032d5546529"
+  },
+  {
+    "path": "chengyinhub-xcx/pages/play/index.js",
+    "sha256": "52e064a7bb1e95abd90dc02e223beae71248faf5de47810bd39ae3719ca95f1a"
+  },
+  {
+    "path": "chengyinhub-xcx/pages/play/merchant/index.js",
+    "sha256": "ccc46df197a4845bbb1559c9b167a6c272deb79ed894aacae9d902d5afc26405"
+  },
+  {
+    "path": "chengyinhub-xcx/pages/play/utils/play-route-state.js",
+    "sha256": "fd0b1569e6830e8fcfa982d41307c18d78d02eff70eec9f6f22082962f9170b8"
+  },
+  {
+    "path": "chengyinhub-xcx/tests/unit/club-game-director-contract.test.js",
+    "sha256": "d589a2543d8344792e2ed477919ab83328b13e9c88104ac19841104951855751"
+  },
+  {
+    "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-24.test.js",
+    "sha256": "ee8ee6e4b6f6dafed409bd81c01200507ba0ad5945b5b88cd0532b19d104071b"
+  },
+  {
+    "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-26.test.js",
+    "sha256": "4b685b95bd10ee0485b838d78267bec55f592eb9bf6ef1163af64caca0667d04"
+  },
+  {
+    "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-34.test.js",
+    "sha256": "73b3c854eb06ac79730af1f494b49a88dde5b4eed4db95b49007d4b6474ca3dc"
+  },
+  {
+    "path": "chengyinhub-xcx/tests/unit/play-generic-flow.test.js",
+    "sha256": "b4a410ddd760f54842de57234fc14c5b26a4cf98d036c970202876b45b8231b0"
+  },
+  {
+    "path": "chengyinhub-xcx/tests/unit/play-proof-receipt-contract.test.js",
+    "sha256": "00558c23112131f850cd1217869fbd6ecaac55f7f0d9ea27a874a3674f4026f6"
+  },
+  {
+    "path": "chengyinhub-xcx/tests/unit/play-request-recovery.test.js",
+    "sha256": "5c585a1467602b1c8fb8c07bdfbda11db4d3dee18218b59906faf9a3aa42cb35"
+  },
+  {
+    "path": "chengyinhub-xcx/tests/unit/v4-scan-cancel.test.js",
+    "sha256": "ec764448e5386adbedb8d34df8a519d77cc4cc4d61e8f4f1b968ad480f52f0d4"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/ClubLeadChapterIntentMySqlIT.java",
+    "sha256": "1a51c5f7cdc9a9d38445828aa9616287650fd141eb02fa6480779d7cbf34137d"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ClubLeadChapterIntentTest.java",
+    "sha256": "d95274181d5ad5b171e04d2ef216727d04739fdc7abd20fcbd9e7e3cc39f70b1"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PlayCommandIntentTest.java",
+    "sha256": "ebc33329b7c78d5b2126f068f4869d83c5dd3d54c5e8f3cea6b7957ac3475adc"
+  },
+  {
+    "path": "chengyinhub-xcx/tests/unit/architecture-day-c-director-isolation.test.js",
+    "sha256": "b332f821cbc047f430b0aa2e263d80ca1e0eeea0bfb2a0e52ac3f77a676fa7ec"
+  },
+  {
+    "path": "chengyinhub-xcx/tests/unit/architecture-day-c-intent.test.js",
+    "sha256": "f89ec0b37c69afa31927c966d3cc1d2ac14df38c1a805fedb368ab3743ef7f11"
+  }
+]

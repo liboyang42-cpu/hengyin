@@ -56,6 +56,7 @@ class ClubMembershipExitCallbackTransactionBoundaryTest {
     private PlatformTransactionManager transactions;
     private IClubMembershipService service;
     private ClubMembershipInvoice invoice;
+    private final VerifiedPaymentProofFixtures proof=new VerifiedPaymentProofFixtures();
 
     @BeforeEach
     void setUp() {
@@ -100,7 +101,8 @@ class ClubMembershipExitCallbackTransactionBoundaryTest {
         assertTrue(memberDeletedBeforeCommit.await(5, TimeUnit.SECONDS));
 
         Future<Boolean> callback = workers.submit(() -> service.handlePaidInvoice(
-                invoice.getOutTradeNo(), true, 9900, "wx-tx-after-exit"));
+                invoice.getOutTradeNo(), true, 9900, "wx-tx-after-exit",
+                proof.issue(invoice.getOutTradeNo(),9900,"wx-tx-after-exit")));
         assertTrue(callbackReachedClubLock.await(5, TimeUnit.SECONDS));
         assertFalse(callback.isDone(), "退出事务持有 club 锁时，支付回调必须等待，不能先发 ACTIVE 权益");
 
@@ -117,6 +119,11 @@ class ClubMembershipExitCallbackTransactionBoundaryTest {
                                                    ClubMembershipMapper memberships) {
         ClubMembershipServiceImpl target = new ClubMembershipServiceImpl();
         ReflectionTestUtils.setField(target, "clubMapper", clubs);
+        ReflectionTestUtils.setField(target,"verifiedPaymentFacts",proof.reader);
+        ReflectionTestUtils.setField(target,"transactionManager",transactions);
+        IWechatPayService localAttempt=mock(IWechatPayService.class);
+        when(localAttempt.lockPaymentAttemptForUpdate(invoice.getOutTradeNo(),invoice.getOutTradeNo())).thenReturn(true);
+        ReflectionTestUtils.setField(target,"wechatPayService",localAttempt);
         ReflectionTestUtils.setField(target, "clubMemberMapper", members);
         ReflectionTestUtils.setField(target, "clubMembershipMapper", memberships);
         ReflectionTestUtils.setField(target, "businessAuditEventMapper", auditMapper());
@@ -175,6 +182,11 @@ class ClubMembershipExitCallbackTransactionBoundaryTest {
                 eq("wx-tx-after-exit"), any(Date.class)))
                 .thenReturn(1);
         when(mapper.insertRefundReview(any())).thenReturn(1);
+        when(mapper.bindInvoicePaymentProof(eq(invoice.getId()),eq("wx-tx-after-exit"),eq(9900L),
+                eq(invoice.getSnapshotHash()),any(),any())).thenAnswer(call->{
+            invoice.setStatus(ClubMembershipInvoice.STATUS_PAID);invoice.setTransactionId("wx-tx-after-exit");
+            invoice.setVerifiedPaymentFactId(call.getArgument(4));invoice.setVerifiedPaymentFactHash(call.getArgument(5));return 1;
+        });
         when(mapper.insertTerm(any(ClubMembershipTerm.class))).thenAnswer(call -> {
             ClubMembershipTerm term = call.getArgument(0, ClubMembershipTerm.class);
             jdbc.update("insert into granted_term(status) values (?)", term.getStatus());

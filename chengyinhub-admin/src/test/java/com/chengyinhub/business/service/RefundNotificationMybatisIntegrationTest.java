@@ -56,6 +56,8 @@ class RefundNotificationMybatisIntegrationTest {
     private boolean created;
     private TransactionTemplate transaction;
     private IRefundService service;
+    private RefundServiceImpl refundTarget;
+    private com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService factsReader;
     private NotifyServiceImpl notifications;
     private final List<NotifyMessage> delivered = new CopyOnWriteArrayList<>();
     private final List<Integer> observedPayoutStates = new CopyOnWriteArrayList<>();
@@ -71,48 +73,69 @@ class RefundNotificationMybatisIntegrationTest {
         DriverManagerDataSource ds = new DriverManagerDataSource(mysql.databaseUrl(), mysql.user(), mysql.password());
         jdbc = new JdbcTemplate(ds);
         System.out.println("Refund notification MySQL version=" + jdbc.queryForObject("SELECT VERSION()", String.class));
-        String base = new String(Files.readAllBytes(Paths.get("../sql/base_schema_20260818.sql")), StandardCharsets.UTF_8);
-        int start = base.indexOf("CREATE TABLE `refund_application` (");
-        jdbc.execute(base.substring(start, base.indexOf("\n/*!40101 SET", start)));
-        // Existing migration_merchant_aftercare_timeout_20260917.sql: RefundApplicationMapper 读 platform_takeover_at(退款台转平台呈现)。
-        jdbc.execute("ALTER TABLE refund_application ADD COLUMN platform_takeover_at DATETIME NULL");
-        Configuration config = new Configuration(new Environment("refund-notification", new SpringManagedTransactionFactory(), ds));
-        config.getTypeAliasRegistry().registerAliases("com.chengyinhub.business.domain");
-        config.addMapper(RefundApplicationMapper.class);
-        String resource = "mapper/business/RefundApplicationMapper.xml";
-        try (InputStream input = getClass().getClassLoader().getResourceAsStream(resource)) {
-            new XMLMapperBuilder(input, config, resource, config.getSqlFragments()).parse();
+        assertEquals("1", System.getenv("B_PAYMENT_FACT_DDL_APPROVED"));
+        java.nio.file.Path root = Files.exists(Paths.get("sql/base_schema_20260818.sql")) ? Paths.get("") : Paths.get("..");
+        String base = Files.readString(root.resolve("sql/base_schema_20260818.sql"));
+        for (String table : new String[]{"refund_application", "cms_registration", "cms_activity", "cms_topic"}) {
+            int from = base.indexOf("CREATE TABLE `" + table + "` (");
+            int close = base.indexOf("\n) ENGINE", from);
+            int to = base.indexOf(';', close);
+            assertTrue(from >= 0 && close > from && to > close, table);
+            jdbc.execute(base.substring(from, to + 1));
         }
-        RefundApplicationMapper mapper = new SqlSessionTemplate(new SqlSessionFactoryBuilder().build(config))
-                .getMapper(RefundApplicationMapper.class);
+        // Current activity reads project these parent-topic fields even for standalone activity rows.
+        jdbc.execute("ALTER TABLE cms_topic ADD COLUMN team_mode TINYINT NOT NULL DEFAULT 0,"
+                + " ADD COLUMN team_max_members INT NOT NULL DEFAULT 4");
+        new org.springframework.jdbc.datasource.init.ResourceDatabasePopulator(
+                new org.springframework.core.io.FileSystemResource(root.resolve("chengyinhub-admin/sql/migration_20260919_cms_registration_selfplay_ticket_columns_nullable.sql").toFile()),
+                new org.springframework.core.io.FileSystemResource(root.resolve("chengyinhub-admin/sql/migration_20261023_wx_pay_order_intent.sql").toFile()),
+                new org.springframework.core.io.FileSystemResource(root.resolve("chengyinhub-admin/sql/migration_20260930_registration_first_successful_scan.sql").toFile()),
+                new org.springframework.core.io.FileSystemResource(root.resolve("chengyinhub-admin/sql/migration_merchant_aftercare_timeout_20260917.sql").toFile()),
+                new org.springframework.core.io.FileSystemResource(root.resolve("chengyinhub-admin/sql/migration_wx_payment_callback_inbox_outbox_20260725.sql").toFile()),
+                new org.springframework.core.io.FileSystemResource(root.resolve("chengyinhub-admin/sql/migration_20261024_wx_verified_payment_fact.sql").toFile())).execute(ds);
+        var factory = new org.mybatis.spring.SqlSessionFactoryBean(); factory.setDataSource(ds);
+        factory.setTypeAliasesPackage("com.chengyinhub.business.domain");
+        factory.setMapperLocations(new org.springframework.core.io.ClassPathResource("mapper/business/RefundApplicationMapper.xml"),
+                new org.springframework.core.io.ClassPathResource("mapper/business/CmsRegistrationMapper.xml"),
+                new org.springframework.core.io.ClassPathResource("mapper/business/CmsActivityMapper.xml"),
+                new org.springframework.core.io.ClassPathResource("mapper/business/CmsTopicMapper.xml"));
+        var sql = new SqlSessionTemplate(factory.getObject());
+        RefundApplicationMapper mapper = sql.getMapper(RefundApplicationMapper.class);
+        factsReader = com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.realFacts(ds);
         notifications = new NotifyServiceImpl();
         setChannel(this::captureCommittedRefund);
-        RefundServiceImpl target = new RefundServiceImpl();
-        org.springframework.test.util.ReflectionTestUtils.setField(target, "firstReviewPointsClawback",
+        refundTarget = new RefundServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(refundTarget, "firstReviewPointsClawback",
                 org.mockito.Mockito.mock(com.chengyinhub.business.service.impl.FirstReviewPointsClawbackService.class));
-        ReflectionTestUtils.setField(target, "refundApplicationMapper", mapper);
-        CmsRegistration registration = new CmsRegistration();
-        registration.setRegistrationNo("REG11");
-        registration.setWechatPaymentAmount(new BigDecimal("30.00"));
-        CmsRegistrationMapper registrations = mock(CmsRegistrationMapper.class);
-        when(registrations.selectCmsRegistrationById(11L)).thenReturn(registration);
-        when(registrations.selectCmsRegistrationByIdForUpdate(11L)).thenReturn(registration);
-        ReflectionTestUtils.setField(target, "cmsRegistrationMapper", registrations);
-        ReflectionTestUtils.setField(target, "notifyService", notifications);
-        // 2026-09-16: 回调 inbox 去重是 handleRefundNotify 的必经一步(cc36b4552),本套此前从未真跑过
-        // ⇒ 手工装配漏注入即 NPE。inbox 语义另有 WxPaymentCallbackInboxServiceImplTest 覆盖,这里桩掉。
-        ReflectionTestUtils.setField(target, "wxPaymentCallbackInboxService",
-                mock(IWxPaymentCallbackInboxService.class));
+        ReflectionTestUtils.setField(refundTarget, "refundApplicationMapper", mapper);
+        ReflectionTestUtils.setField(refundTarget, "cmsRegistrationMapper", sql.getMapper(CmsRegistrationMapper.class));
+        ReflectionTestUtils.setField(refundTarget, "cmsActivityMapper", sql.getMapper(CmsActivityMapper.class));
+        ReflectionTestUtils.setField(refundTarget, "cmsTopicMapper", sql.getMapper(com.chengyinhub.business.mapper.CmsTopicMapper.class));
+        ReflectionTestUtils.setField(refundTarget, "verifiedPaymentFacts", factsReader);
+        var originalOwner = mock(ICoopSettlementClaimService.class);
+        when(originalOwner.hasFrozenOriginalRefundComponents(anyLong())).thenReturn(false);
+        ReflectionTestUtils.setField(refundTarget, "coopSettlementClaimService", originalOwner);
+        ReflectionTestUtils.setField(refundTarget, "alarmService", mock(com.chengyinhub.business.service.impl.AlarmService.class));
+        ReflectionTestUtils.setField(refundTarget, "notifyService", notifications);
         DataSourceTransactionManager tx = new DataSourceTransactionManager(ds);
         transaction = new TransactionTemplate(tx);
-        ProxyFactory proxy = new ProxyFactory(target);
+        ProxyFactory proxy = new ProxyFactory(refundTarget);
         proxy.setInterfaces(IRefundService.class);
         proxy.addAdvice(new TransactionInterceptor(tx, new AnnotationTransactionAttributeSource()));
         service = (IRefundService) proxy.getProxy();
     }
 
     @BeforeEach void reset() {
-        jdbc.update("DELETE FROM refund_application");
+        jdbc.update("DELETE FROM wx_payment_callback_fact_link"); jdbc.update("DELETE FROM wx_payment_callback_inbox");
+        jdbc.update("DELETE FROM wx_verified_payment_fact_rejection"); jdbc.update("DELETE FROM wx_verified_payment_fact");
+        jdbc.update("DELETE FROM refund_application"); jdbc.update("DELETE FROM cms_registration"); jdbc.update("DELETE FROM cms_activity");
+        jdbc.update("INSERT INTO cms_activity(id,member_id,topic_id,start_date,is_settlement,del_flag)"
+                + " VALUES(22,3,NULL,DATE_ADD(NOW(),INTERVAL 72 HOUR),0,0)");
+        jdbc.update("INSERT INTO cms_registration(id,registration_no,transaction_id,owner_type,owner_id,member_id,"
+                + "original_amount,total_amount,payment_status,registration_status,wechat_payment_amount,payable_amount,pay_expire_time)"
+                + " VALUES(11,'REG11','TX11',2,22,91,30,30,4,3,30,30,DATE_ADD(NOW(),INTERVAL 1 HOUR))");
+        ReflectionTestUtils.setField(refundTarget, "wxPaymentCallbackInboxService",
+                PaymentCallbackInboxStubs.passThrough(transaction.getTransactionManager(), factsReader));
         delivered.clear();
         observedPayoutStates.clear();
         setChannel(this::captureCommittedRefund);
@@ -125,8 +148,9 @@ class RefundNotificationMybatisIntegrationTest {
     }
 
     @Test void confirmedCashRefundNotifiesPayerOnlyAfterCommitAndOnlyOnce() {
+        Map<String, String> originalSuccess = facts("SUCCESS");
         transaction.executeWithoutResult(tx -> {
-            assertTrue(service.handleRefundNotify(facts("SUCCESS")));
+            assertTrue(service.handleRefundNotify(originalSuccess));
             assertTrue(delivered.isEmpty(), "提交前不能发送到账通知");
         });
         assertEquals(1, payoutStatus());
@@ -183,6 +207,8 @@ class RefundNotificationMybatisIntegrationTest {
             String cash, long points, IRefundPayoutService payout) {
         CmsRegistration registration = new CmsRegistration();
         registration.setId(11L); registration.setMemberId(91L);
+        registration.setRegistrationNo("REG11"); registration.setRegistrationStatus(2);
+        registration.setPayableAmount(new BigDecimal(cash));
         registration.setPaymentStatus(2); registration.setVerificationStatus(0);
         registration.setOwnerType(2L); registration.setOwnerId(22L);
         registration.setWechatPaymentAmount(new BigDecimal(cash)); registration.setPointUsed(points);
@@ -197,13 +223,14 @@ class RefundNotificationMybatisIntegrationTest {
         UmsMemberMapper members =
                 mock(UmsMemberMapper.class);
         when(members.addPoints(91L, (int) points)).thenReturn(1);
-        CmsActivity activity = new CmsActivity();
+        CmsActivity activity = new CmsActivity(); activity.setId(22L); activity.setMemberId(3L);
         // 场次退款窗口 = 集合前 24 小时(RefundPolicy,5.9 拍板);+24h 恰好落在边界,
         // 执行时多走一毫秒即判「已错过集合前24小时」—— 用 +72h 表示「远未到窗口」。
         activity.setStartDate(new Date(System.currentTimeMillis() + 3 * 86400000L));
         CmsActivityMapper activities =
                 mock(CmsActivityMapper.class);
         when(activities.selectCmsActivityById(22L)).thenReturn(activity);
+        when(activities.selectCmsActivityByIdForUpdate(22L)).thenReturn(activity);
         IRefundService application = mock(IRefundService.class);
         when(application.saveRefund(any())).thenAnswer(call -> {
             ((RefundApplication) call.getArgument(0)).setId(7L);
@@ -224,8 +251,9 @@ class RefundNotificationMybatisIntegrationTest {
     }
 
 @Test void rolledBackSuccessRemainsRetryableAndOnlyCommittedRetryNotifies() {
+        Map<String, String> originalSuccess = facts("SUCCESS");
         transaction.executeWithoutResult(tx -> {
-            assertTrue(service.handleRefundNotify(facts("SUCCESS")));
+            assertTrue(service.handleRefundNotify(originalSuccess));
             assertEquals(1, payoutStatus());
             tx.setRollbackOnly();
         });
@@ -322,9 +350,10 @@ class RefundNotificationMybatisIntegrationTest {
         verifyNoInteractions(payout);
     }
 
-    private static Map<String, String> facts(String status) {
-        return Map.of("outRefundNo", "RF11", "outTradeNo", "REG11", "status", status,
-                "refund", "1250", "total", "3000", "currency", "CNY");
+    private Map<String, String> facts(String status) {
+        Map<String, String> facts = Map.of("outRefundNo", "RF11", "outTradeNo", "REG11", "status", status,
+                "refund", "1250", "total", "3000", "currency", "CNY", "mchid", "merchant", "refundId", "WX-RF11");
+        return "SUCCESS".equals(status) ? ARefundFactFixture.bindSuccess(factsReader, facts, "TX11") : facts;
     }
 
     private int payoutStatus() {

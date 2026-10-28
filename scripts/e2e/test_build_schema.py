@@ -766,5 +766,186 @@ class AdminRolePayeeForwardContractTest(unittest.TestCase):
         self.assertNotRegex(sql, r"(?im)^\s*(SET|CALL|PREPARE|EXECUTE|COMMIT|START|ALTER|TRUNCATE)\b")
 
 
+
+class NoticeFreshForwardSelectionTest(unittest.TestCase):
+    """Pure selector/routing controls; no MySQL success or application acceptance is claimed."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.manifest = build_schema.build_manifest(build_schema.REPO, target_commit="a" * 40)
+        cls.selected = build_schema.migrations_after_baseline(cls.manifest["migrations"])
+
+    def copies(self):
+        import copy
+        return copy.deepcopy({"migrations": self.manifest["migrations"], "selected": self.selected})
+
+    def assert_rejected_before_connect(self, rows):
+        with mock.patch.object(sys, "argv", ["build_schema.py", "--schema", "cy_e2e_notice", "--drop"]), \
+                mock.patch.object(build_schema, "build_manifest", return_value=rows), \
+                mock.patch.object(build_schema, "migrations_after_baseline", return_value=rows["selected"]), \
+                mock.patch.object(build_schema, "connect") as connect, \
+                mock.patch.object(build_schema, "run_file") as run:
+            with self.assertRaisesRegex(RuntimeError, "notice forward"):
+                build_schema.main()
+            connect.assert_not_called()
+            run.assert_not_called()
+
+    def test_exact_canonical_pair_preserves_every_other_pending_item_and_phase(self):
+        rows = self.copies()
+        plan = build_schema.notice_forward_plan(rows["migrations"], rows["selected"])
+        self.assertEqual([row for row in rows["selected"] if row["migrationId"] != build_schema.NOTICE_OLD],
+                         plan["selected"])
+        self.assertEqual(len(self.selected) - 1, len(plan["selected"]))
+        self.assertEqual(self.manifest["migrations"], rows["migrations"])
+        self.assertEqual(self.selected, rows["selected"])
+        self.assertEqual({row["migrationId"] for row in self.selected if row.get("executionPhase") == "POST_DEPLOY"},
+                         {row["migrationId"] for row in plan["selected"] if row.get("executionPhase") == "POST_DEPLOY"})
+        self.assertEqual(set(build_schema.NOTICE_FORWARD_FILES), set(plan["fingerprints"]))
+
+    def test_no_pair_does_not_add_notice_identity_or_freshness_requirements(self):
+        candidate = [{"migrationId": "other", "path": "other.sql"}]
+        self.assertIsNone(build_schema.notice_forward_plan(candidate, candidate))
+        producer = next(row for row in self.selected if row["migrationId"] == build_schema.NOTICE_PRODUCER)
+        self.assertIsNone(build_schema.notice_forward_plan([producer], [producer]))
+
+    def test_missing_duplicate_or_nonpending_pair_fails_before_connect(self):
+        for collection in ("migrations", "selected"):
+            for key in build_schema.NOTICE_FORWARD_FILES:
+                with self.subTest(collection=collection, missing=key):
+                    rows = self.copies()
+                    rows[collection] = [row for row in rows[collection] if row["migrationId"] != key]
+                    self.assert_rejected_before_connect(rows)
+        rows = self.copies()
+        rows["migrations"].append(next(row for row in rows["migrations"]
+                                       if row["migrationId"] == build_schema.NOTICE_OLD))
+        self.assert_rejected_before_connect(rows)
+        rows = self.copies()
+        rows["selected"] = [dict(row, sha256="0" * 64) if row["migrationId"] == build_schema.NOTICE_V2 else row
+                            for row in rows["selected"]]
+        self.assert_rejected_before_connect(rows)
+
+    def test_any_manifest_identity_hash_or_phase_drift_fails_before_connect(self):
+        for key in build_schema.NOTICE_FORWARD_FILES:
+            for field, value in (("migrationId", "wrong"), ("path", "wrong.sql"),
+                                 ("sha256", "0" * 64), ("executionPhase", "POST_DEPLOY")):
+                with self.subTest(migration=key, field=field):
+                    rows = self.copies()
+                    next(row for row in rows["migrations"] if row["migrationId"] == key)[field] = value
+                    self.assert_rejected_before_connect(rows)
+
+    def test_any_original_or_forward_file_byte_drift_fails_before_connect(self):
+        read_bytes = pathlib.Path.read_bytes
+        for path, _ in build_schema.NOTICE_FORWARD_FILES.values():
+            with self.subTest(path=path):
+                target = build_schema.REPO / path
+                def drift(file):
+                    value = read_bytes(file)
+                    return value + b"\n" if file == target else value
+                with mock.patch.object(pathlib.Path, "read_bytes", drift):
+                    self.assert_rejected_before_connect(self.copies())
+
+    def test_producer_dependency_global_order_or_pending_order_drift_fails_before_connect(self):
+        for key in build_schema.NOTICE_FORWARD_FILES:
+            with self.subTest(dependency=key):
+                rows = self.copies()
+                next(row for row in rows["migrations"] if row["migrationId"] == key)["dependsOn"] = []
+                self.assert_rejected_before_connect(rows)
+        rows = self.copies()
+        rows["migrations"] = [row for row in rows["migrations"]
+                              if row["migrationId"] != "20261013_b_im_notification_intent"]
+        self.assert_rejected_before_connect(rows)
+        for collection in ("migrations", "selected"):
+            with self.subTest(order=collection):
+                rows = self.copies()
+                indices = [next(i for i, row in enumerate(rows[collection]) if row["migrationId"] == key)
+                           for key in (build_schema.NOTICE_PRODUCER, build_schema.NOTICE_OLD)]
+                a, b = indices
+                rows[collection][a], rows[collection][b] = rows[collection][b], rows[collection][a]
+                if collection == "migrations":
+                    for i, row in enumerate(rows[collection], 1):
+                        row["order"] = i
+                self.assert_rejected_before_connect(rows)
+        rows = self.copies()
+        next(row for row in rows["migrations"] if row["migrationId"] == build_schema.NOTICE_V2)["order"] += 1
+        self.assert_rejected_before_connect(rows)
+
+    def test_existing_including_typed_or_unknown_schema_rejects_even_drop_before_mutation(self):
+        # A schema count of one covers ordinary, typed and unknown existing schemas alike;
+        # no DROP/CREATE/table probe/import is allowed to reinterpret them as fresh.
+        for row in ((1,), None, (None,), (), (0, 1), (-1,), ("0",), (False,)):
+            for flags in ([], ["--drop"]):
+                with self.subTest(schema_readback=row, flags=flags):
+                    admin = mock.Mock(); cursor = admin.cursor.return_value
+                    cursor.fetchone.side_effect = [("8.0.45", "isolated-test"), row]
+                    with mock.patch.object(sys, "argv", ["build_schema.py", "--schema", "cy_e2e_notice"] + flags), \
+                            mock.patch.object(build_schema, "build_manifest", return_value=self.manifest), \
+                            mock.patch.object(build_schema, "migrations_after_baseline", return_value=self.selected), \
+                            mock.patch.object(build_schema, "connect", return_value=admin) as connect, \
+                            mock.patch.object(build_schema, "run_file") as run:
+                        with self.assertRaisesRegex(RuntimeError, "nonexistent fresh scratch"):
+                            build_schema.main()
+                    self.assertEqual(1, connect.call_count); run.assert_not_called()
+                    admin.close.assert_called_once_with()
+                    self.assertEqual(["SELECT VERSION(), @@version_comment",
+                                      "SELECT COUNT(*) FROM information_schema.schemata WHERE schema_name=%s"],
+                                     [call.args[0] for call in cursor.execute.call_args_list])
+
+    def test_concurrent_create_is_not_adopted_or_imported(self):
+        admin = mock.Mock(); cursor = admin.cursor.return_value
+        cursor.fetchone.side_effect = [("8.0.45", "isolated-test"), (0,)]
+        def execute(sql, *args):
+            if sql.startswith("CREATE DATABASE"):
+                raise RuntimeError("controlled concurrent schema creation")
+        cursor.execute.side_effect = execute
+        with mock.patch.object(sys, "argv", ["build_schema.py", "--schema", "cy_e2e_notice", "--drop"]), \
+                mock.patch.object(build_schema, "build_manifest", return_value=self.manifest), \
+                mock.patch.object(build_schema, "migrations_after_baseline", return_value=self.selected), \
+                mock.patch.object(build_schema, "connect", return_value=admin) as connect, \
+                mock.patch.object(build_schema, "run_file") as run, mock.patch("builtins.print") as emitted:
+            with self.assertRaisesRegex(RuntimeError, "concurrent schema"):
+                build_schema.main()
+        self.assertEqual(1, connect.call_count); run.assert_not_called()
+        admin.close.assert_called_once_with()
+        self.assertEqual("CREATE DATABASE `cy_e2e_notice` DEFAULT CHARACTER SET utf8mb4",
+                         cursor.execute.call_args_list[-1].args[0])
+        self.assertFalse(any("REPLACED_UNAPPLIED" in str(call) for call in emitted.call_args_list))
+
+    def test_fresh_route_runs_real_v2_gate_and_stops_before_ddl_even_keep_going(self):
+        admin = mock.Mock(); admin.cursor.return_value.fetchone.side_effect = [("8.0.45", "isolated-test"), (0,)]
+        connection = mock.Mock(); cursor = connection.cursor.return_value
+        cursor.connection = connection; cursor.fetchone.side_effect = [(227,), (256,)]
+        def execute(sql, *args):
+            if "ASSERT_FAILED_before_start_schema_preflight" in sql:
+                raise RuntimeError("controlled original strict v2 preflight failure")
+        cursor.execute.side_effect = execute
+        original_run = build_schema.run_file
+        def route(cur, path, label, results, *args, **kwargs):
+            # Other files are routing doubles only. The v2 gate is never mocked successful:
+            # run its exact original SQL splitter/assertion runner and inject a real cursor failure.
+            return original_run(cur, path, label, results, *args, **kwargs) if label == build_schema.NOTICE_V2 else True
+        with mock.patch.object(sys, "argv", ["build_schema.py", "--schema", "cy_e2e_notice", "--drop", "--keep-going"]), \
+                mock.patch.object(build_schema, "build_manifest", return_value=self.manifest), \
+                mock.patch.object(build_schema, "migrations_after_baseline", return_value=self.selected), \
+                mock.patch.object(build_schema, "connect", side_effect=[admin, connection]), \
+                mock.patch.object(build_schema, "run_file", side_effect=route) as run, \
+                mock.patch.object(build_schema, "verify_seed_negative_controls", return_value=6), \
+                mock.patch("builtins.print") as emitted:
+            self.assertEqual(1, build_schema.main())
+        ordered = [row for row in self.selected if row.get("executionPhase") != "POST_DEPLOY"
+                   and row["migrationId"] != build_schema.NOTICE_OLD]
+        ids = [row["migrationId"] for row in ordered]
+        self.assertEqual(["baseline", "baseline-seed"] + ids[:ids.index(build_schema.NOTICE_V2) + 1],
+                         [call.args[2] for call in run.call_args_list])
+        self.assertFalse(run.call_args_list[-1].kwargs["keep_going"])
+        self.assertFalse(any("ALTER TABLE" in call.args[0] for call in cursor.execute.call_args_list))
+        self.assertFalse(any(call.args[0].startswith("DROP") for call in admin.cursor.return_value.execute.call_args_list))
+        records = [str(call) for call in emitted.call_args_list if "REPLACED_UNAPPLIED" in str(call)]
+        self.assertEqual(1, len(records))
+        for _, digest in build_schema.NOTICE_FORWARD_FILES.values():
+            self.assertIn(digest, records[0])
+        self.assertTrue(any("controlled original strict v2 preflight failure" in str(call)
+                            for call in emitted.call_args_list))
+        admin.close.assert_called_once_with(); connection.close.assert_called_once_with()
+
 if __name__ == "__main__":
     unittest.main()

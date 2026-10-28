@@ -90,6 +90,12 @@ public class WxSubscribeMsgServiceImpl implements IWxSubscribeMsgService {
 
     private boolean send(String openid, String templateId, String page, Map<String, String> fields,
                          Long memberId, String templateKey, String businessEvent) {
+        return send(openid, templateId, page, fields, memberId, templateKey, businessEvent, false);
+    }
+
+    private boolean send(String openid, String templateId, String page, Map<String, String> fields,
+                         Long memberId, String templateKey, String businessEvent, boolean frozenPage) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         if (StringUtils.isEmpty(openid)) {
             log.debug("[订阅消息] 无 openid,跳过 templateChars={}", safeLength(templateId)); // 用户没走微信登录,属正常
             return false;
@@ -117,7 +123,7 @@ public class WxSubscribeMsgServiceImpl implements IWxSubscribeMsgService {
             }
             data.append("}");
             String body = "{\"touser\":\"" + openid + "\",\"template_id\":\"" + templateId
-                    + "\",\"page\":\"" + (StringUtils.isEmpty(page) ? defaultPage : page)
+                    + "\",\"page\":\"" + (frozenPage ? page : (StringUtils.isEmpty(page) ? defaultPage : page))
                     + "\",\"data\":" + data + "}";
             String resp = post(SEND_URL + "?access_token=" + token, body);
             // ⚠️ 微信 send 失败也返 HTTP 200 + body {"errcode":40003,...};不解析 errcode 就是把失败当成功记。
@@ -141,6 +147,7 @@ public class WxSubscribeMsgServiceImpl implements IWxSubscribeMsgService {
             log.info("[订阅消息] send ok templateChars={}", safeLength(templateId));
             return true;
         } catch (Exception ex) {
+            if (ex instanceof com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) throw paused;
             log.warn("[订阅消息] 发送失败 templateChars={} reason={}",
                     safeLength(templateId), ex.getClass().getSimpleName());
             return false;
@@ -176,6 +183,7 @@ public class WxSubscribeMsgServiceImpl implements IWxSubscribeMsgService {
 
     /** HTTP 缝:HttpUtils 是静态方法且本仓 Mockito 无 inline mock maker,测试覆写此方法注入响应。 */
     String post(String url, String body) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         return HttpUtils.sendPost(url, body, "application/json");
     }
 
@@ -204,14 +212,37 @@ public class WxSubscribeMsgServiceImpl implements IWxSubscribeMsgService {
 
     @Override
     public boolean notifyBeforeStart(Long memberId, String topicName, String whenText) {
-        // 模板【活动开始提醒】:活动名称 thing1 / 开始时间 date5 / 活动地点 thing8 / 备注 thing7 / 用户昵称 thing12
+        PreparedBeforeStart message = prepareBeforeStart(memberId, topicName, whenText);
+        return message != null && sendPreparedBeforeStart(message);
+    }
+
+    @Override
+    public PreparedBeforeStart prepareBeforeStart(Long memberId, String topicName, String whenText) {
+        // Original BEFORE_START template and five fields; no broadcast-template fallback.
         Map<String, String> f = new HashMap<>();
         f.put("thing1", clip(topicName));
         f.put("date5", wxDate5(whenText));
         f.put("thing8", "详见活动详情");
         f.put("thing7", "请准时到场");
         f.put("thing12", nickOf(memberId));
-        return sendToMember(memberId, "tplBeforeStart", "before_start", tplBeforeStart, defaultPage, f);
+        if (StringUtils.isEmpty(tplBeforeStart)) {
+            warnTplMissing("tplBeforeStart", "before_start");
+            return null;
+        }
+        String openid = openidOf(memberId);
+        if (StringUtils.isEmpty(openid)) return null;
+        return new PreparedBeforeStart(memberId, openid, tplBeforeStart, defaultPage, f);
+    }
+
+    @Override
+    public boolean sendPreparedBeforeStart(PreparedBeforeStart message) {
+        if (message == null || message.memberId() == null || message.memberId() <= 0
+                || StringUtils.isEmpty(message.openid()) || StringUtils.isEmpty(message.templateId())
+                || message.page() == null || message.fields() == null
+                || !message.fields().keySet().equals(java.util.Set.of("thing1", "date5", "thing8", "thing7", "thing12")))
+            throw new IllegalArgumentException("出发提醒冻结微信输入无效");
+        return send(message.openid(), message.templateId(), message.page(), message.fields(),
+                message.memberId(), "tplBeforeStart", "before_start", true);
     }
 
     @Override

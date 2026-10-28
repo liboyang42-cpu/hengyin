@@ -1,0 +1,87 @@
+Immutable public parent source; source checks only, no Java/MySQL execution.
+EEEEE.E
+======================================================================
+ERROR: test_callback_only_wakes_original_im_id_without_old_fanout (ci.test_w19_owner_notice_intent.W19OwnerNoticeProducerContract.test_callback_only_wakes_original_im_id_without_old_fanout)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/architecture-day-d-w19-owner/ci/test_w19_owner_notice_intent.py", line 55, in test_callback_only_wakes_original_im_id_without_old_fanout
+    producer = self.producer()
+               ^^^^^^^^^^^^^^^
+  File "/workspace/architecture-day-d-w19-owner/ci/test_w19_owner_notice_intent.py", line 25, in producer
+    return method(self.source, 'private void registerOwnerWithdrawalNotice(')
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/architecture-day-d-w19-owner/ci/test_w19_owner_notice_intent.py", line 10, in method
+    start = source.index(marker)
+            ^^^^^^^^^^^^^^^^^^^^
+ValueError: substring not found
+
+======================================================================
+ERROR: test_existing_identity_is_not_rebuilt_or_sent_again_to_wx (ci.test_w19_owner_notice_intent.W19OwnerNoticeProducerContract.test_existing_identity_is_not_rebuilt_or_sent_again_to_wx)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/architecture-day-d-w19-owner/ci/test_w19_owner_notice_intent.py", line 48, in test_existing_identity_is_not_rebuilt_or_sent_again_to_wx
+    producer = self.producer()
+               ^^^^^^^^^^^^^^^
+  File "/workspace/architecture-day-d-w19-owner/ci/test_w19_owner_notice_intent.py", line 25, in producer
+    return method(self.source, 'private void registerOwnerWithdrawalNotice(')
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/architecture-day-d-w19-owner/ci/test_w19_owner_notice_intent.py", line 10, in method
+    start = source.index(marker)
+            ^^^^^^^^^^^^^^^^^^^^
+ValueError: substring not found
+
+======================================================================
+ERROR: test_only_original_exit_winner_registers_owner_intent (ci.test_w19_owner_notice_intent.W19OwnerNoticeProducerContract.test_only_original_exit_winner_registers_owner_intent)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/architecture-day-d-w19-owner/ci/test_w19_owner_notice_intent.py", line 28, in test_only_original_exit_winner_registers_owner_intent
+    registration = self.withdraw.index('registerOwnerWithdrawalNotice(')
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: substring not found
+
+======================================================================
+ERROR: test_original_transaction_is_required_before_intent_lookup (ci.test_w19_owner_notice_intent.W19OwnerNoticeProducerContract.test_original_transaction_is_required_before_intent_lookup)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/architecture-day-d-w19-owner/ci/test_w19_owner_notice_intent.py", line 34, in test_original_transaction_is_required_before_intent_lookup
+    producer = self.producer()
+               ^^^^^^^^^^^^^^^
+  File "/workspace/architecture-day-d-w19-owner/ci/test_w19_owner_notice_intent.py", line 25, in producer
+    return method(self.source, 'private void registerOwnerWithdrawalNotice(')
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/architecture-day-d-w19-owner/ci/test_w19_owner_notice_intent.py", line 10, in method
+    start = source.index(marker)
+            ^^^^^^^^^^^^^^^^^^^^
+ValueError: substring not found
+
+======================================================================
+ERROR: test_permanent_event_and_original_payload_are_enqueued_before_callback (ci.test_w19_owner_notice_intent.W19OwnerNoticeProducerContract.test_permanent_event_and_original_payload_are_enqueued_before_callback)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/architecture-day-d-w19-owner/ci/test_w19_owner_notice_intent.py", line 40, in test_permanent_event_and_original_payload_are_enqueued_before_callback
+    producer = self.producer()
+               ^^^^^^^^^^^^^^^
+  File "/workspace/architecture-day-d-w19-owner/ci/test_w19_owner_notice_intent.py", line 25, in producer
+    return method(self.source, 'private void registerOwnerWithdrawalNotice(')
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/architecture-day-d-w19-owner/ci/test_w19_owner_notice_intent.py", line 10, in method
+    start = source.index(marker)
+            ^^^^^^^^^^^^^^^^^^^^
+ValueError: substring not found
+
+======================================================================
+ERROR: test_wx_has_one_existing_executor_attempt_and_no_recovery_enqueue (ci.test_w19_owner_notice_intent.W19OwnerNoticeProducerContract.test_wx_has_one_existing_executor_attempt_and_no_recovery_enqueue)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/architecture-day-d-w19-owner/ci/test_w19_owner_notice_intent.py", line 62, in test_wx_has_one_existing_executor_attempt_and_no_recovery_enqueue
+    wx = method(self.source, 'private void scheduleOwnerWithdrawalWx(')
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/architecture-day-d-w19-owner/ci/test_w19_owner_notice_intent.py", line 10, in method
+    start = source.index(marker)
+            ^^^^^^^^^^^^^^^^^^^^
+ValueError: substring not found
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.006s
+
+FAILED (errors=6)

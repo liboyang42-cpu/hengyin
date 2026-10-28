@@ -1,0 +1,42 @@
+{
+  "baseline": "322875cf84cce61161876e12fd37bfb68b568a1e",
+  "mechanicalCommit": "dded84876a53bc8c61106c203c62a21304ab68d5",
+  "issuanceBodyEquivalentAfterActorAndAjaxAdaptation": true,
+  "unchangedControllerMethodBodies": [
+    "public AjaxResult issueDynCode(Long registrationId, Integer seatNo)",
+    "public AjaxResult seatReceipt(Long registrationId, Integer seatNo, Long activityId)",
+    "public AjaxResult redeemCityNodeCode(String code)",
+    "public AjaxResult issueGroupCode(Long activityId)",
+    "public AjaxResult redeemGroupCode(String code)"
+  ],
+  "javaLexicalBalanceOnly": [
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiVerifyController.java",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/verify/CityNodeRedemptionApplication.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationEquityMybatisIntegrationTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiVerifyControllerTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/MerchantStaffRevocationAcceptanceTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/RoamLocationRetentionMySqlIT.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/service/verify/CityNodeRedemptionApplicationTest.java"
+  ],
+  "notExecuted": [
+    "Java compilation",
+    "JUnit",
+    "MySQL",
+    "HTTP/JWT",
+    "Spring app startup",
+    "DevTools/real device",
+    "CI"
+  ],
+  "redBeforeFix": {
+    "tests": 8,
+    "pass": 4,
+    "fail": 4,
+    "skipped": 0,
+    "failures": [
+      "role revision late write callback",
+      "account ABA/hidden-page late callback",
+      "camera role ABA",
+      "same-page UNKNOWN readback"
+    ]
+  }
+}

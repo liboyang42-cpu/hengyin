@@ -27,6 +27,7 @@ public class WxSubscribeChannel implements NotifyChannel {
 
     @Override
     public boolean send(NotifyMessage m) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         try {
             switch (m.event()) {
                 case REFUND:

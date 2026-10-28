@@ -1,0 +1,200 @@
+{
+  "source": "f1fe75d646f8ae57864ee5603c68e70e7fabc854",
+  "run": 40237890983,
+  "attempt": 1,
+  "artifact": 12615468923,
+  "ZIP_sha256": "15adbea84a7c4bac5fed985338ec453af5d06616bda916fac6d4eeb66d6402e7",
+  "CRC": "PASS",
+  "original3JSON_source_run_attempt_verified": true,
+  "original_receipts": {
+    "restore-http-provenance": {
+      "canonicalToolSha256": "fead7bfce99af5aadeb15b696190fade40109f37d25233aa401116d10ea1279c",
+      "classPostimages": {
+        "RestoreHttpApplicationChild$FixtureEndpoints.class": "07815c58118e26c8bc96e7ab176c80a8c784a6330b3127e0ccd0017c13f97755",
+        "RestoreHttpApplicationChild$MapperObservations.class": "b43e81e5da6d9c088c5f3b796b03487a8a2f2cd70708caa7e500a80babd86893",
+        "RestoreHttpApplicationChild$Observations.class": "e2bfeff598d6fee49d77467e0de1f3b33764b83fc26f1a51404734a695e367bb",
+        "RestoreHttpApplicationChild.class": "37b52da2e9d694f77ecd8e5c15664e3c2b079ded16eb51bd7b7544a20f7b7a93"
+      },
+      "fullHttpBoundary": "TEST_CLASSPATH_CHILD_PLUS_UNCHANGED_PRODUCTION_JAR",
+      "jarSha256": "a4b7d84f7db76e1686038526c01fd30102f1601171eb08078837cf9951aaa5c2",
+      "providerBoundary": "CONTROLLED_WITHDRAWAL_WIRE_AND_HISTORICAL_PAYMENT_FACT_NOT_WECHAT_SDK_OR_SIGNATURE_ACCEPTANCE",
+      "runAttempt": "1",
+      "runId": "40237890983",
+      "sourceMysqlCid": "c73bfaa943c6b90be1c6252d8edca90644e4d3e1894373d6622ff18e5428e846",
+      "sourceSha": "f1fe75d646f8ae57864ee5603c68e70e7fabc854",
+      "targetMysqlCid": "2d0d136eb7e30ed01b01fdb122fe26669efc2d2f164f621f14c2ce947e4575ff"
+    },
+    "restore-http-application": {
+      "allDispatchDomainsFenced": "NOT_CLAIMED_SPECIFIC_REAL_OWNERS_ONLY",
+      "applicationDiagnostic": {
+        "cid": "6334ad9c506b04af647895dd721875aa5cd3ada3436de495167118b48ddefb2f",
+        "logSummary": {
+          "exceptionTypes": [
+            "java.lang.IllegalStateException"
+          ],
+          "markers": {
+            "Application run failed": false,
+            "CONTROLLED_PROVIDER_NO_SEND": false,
+            "RECOVERY_DISPATCH_BLOCKED": false,
+            "Started RuoYiApplication": false
+          },
+          "result": "FIXED_MARKERS_ONLY",
+          "sampleBytes": 10001,
+          "sampleSha256": "c4d451133e707f1af9de2628be63100c8e80a7f9c7dfaa3e8b59cebb2fbdaede",
+          "sampleTruncated": false
+        },
+        "result": "EXACT_APP_OBSERVED",
+        "state": {
+          "ExitCode": 0,
+          "OOMKilled": false,
+          "Pid": 4913,
+          "Restarting": false,
+          "Running": true
+        }
+      },
+      "applicationStartAttempted": true,
+      "applicationStop": "UNKNOWN",
+      "boots": [],
+      "checks": [],
+      "completeBoots": [],
+      "firstFailureDiagnostic": {
+        "phase": "SOURCE_APPLICATION_START",
+        "reasonCode": "APP_READINESS_TIMEOUT",
+        "substage": "APPLICATION_SLOT_START",
+        "type": "ValueError"
+      },
+      "firstFailurePhase": "SOURCE_APPLICATION_START",
+      "firstFailureType": "ValueError",
+      "jarSha256": "a4b7d84f7db76e1686038526c01fd30102f1601171eb08078837cf9951aaa5c2",
+      "networkId": "8aa5aeb51f2e214953d142826a663b18fb34addf497291989b83feeceb0280f4",
+      "ownedAppCids": [
+        "6334ad9c506b04af647895dd721875aa5cd3ada3436de495167118b48ddefb2f"
+      ],
+      "phase": "SOURCE_APPLICATION_START",
+      "productionDispatchRelease": false,
+      "readyBootObservations": [],
+      "redisCid": "b747055bed0d1458da6ba51a92ca3fd5ba9b83e9c4a1c5413d2e42e7ff513b76",
+      "removedAppCids": [],
+      "resourceCleanup": "PENDING_OUTER_OWNER",
+      "result": "NOT_COMPLETED",
+      "runAttempt": "1",
+      "runId": "40237890983",
+      "schema": "cy_e2e_auth_2d96f5ca07f947cda23c8e6860e19052",
+      "scope": "test-owned full Spring HTTP restore startup; controlled original withdrawal-complete and late payment gap only",
+      "sourceMysqlCid": "c73bfaa943c6b90be1c6252d8edca90644e4d3e1894373d6622ff18e5428e846",
+      "sourceOnlyUntilHostedRun": false,
+      "sourceServerUuid": "4aa01b77-d0bf-11f1-b15e-7a6c06e29a1d",
+      "sourceSha": "f1fe75d646f8ae57864ee5603c68e70e7fabc854",
+      "stopFailureDiagnostic": {
+        "phase": "APPLICATION_STOP",
+        "reasonCode": "APP_BOOT_IDENTITY_REJECTED",
+        "substage": "APPLICATION_STOP",
+        "type": "ValueError"
+      },
+      "stoppedApp": {
+        "cid": "6334ad9c506b04af647895dd721875aa5cd3ada3436de495167118b48ddefb2f",
+        "exitCode": 0,
+        "hostPid": 4913,
+        "oomKilled": false,
+        "restarting": false,
+        "running": true
+      },
+      "substage": "APPLICATION_SLOT_START",
+      "targetMysqlCid": "2d0d136eb7e30ed01b01fdb122fe26669efc2d2f164f621f14c2ce947e4575ff",
+      "targetServerUuid": "5759dc42-d0bf-11f1-a8da-5e9de936d30f"
+    },
+    "restore-http-cleanup": {
+      "absence": [
+        {
+          "absent": true,
+          "id": "cy-auth-2d96f5ca07f947cda23c8e6860e19052-app",
+          "kind": "container"
+        },
+        {
+          "absent": true,
+          "id": "cy-auth-2d96f5ca07f947cda23c8e6860e19052-restore-mysql",
+          "kind": "container"
+        },
+        {
+          "absent": true,
+          "id": "cy-auth-2d96f5ca07f947cda23c8e6860e19052-mysql",
+          "kind": "container"
+        },
+        {
+          "absent": true,
+          "id": "cy-auth-2d96f5ca07f947cda23c8e6860e19052-redis",
+          "kind": "container"
+        },
+        {
+          "absent": true,
+          "id": "cy-auth-2d96f5ca07f947cda23c8e6860e19052",
+          "kind": "network"
+        },
+        {
+          "absent": true,
+          "id": "6334ad9c506b04af647895dd721875aa5cd3ada3436de495167118b48ddefb2f",
+          "kind": "container"
+        },
+        {
+          "absent": true,
+          "id": "2d0d136eb7e30ed01b01fdb122fe26669efc2d2f164f621f14c2ce947e4575ff",
+          "kind": "container"
+        },
+        {
+          "absent": true,
+          "id": "c73bfaa943c6b90be1c6252d8edca90644e4d3e1894373d6622ff18e5428e846",
+          "kind": "container"
+        },
+        {
+          "absent": true,
+          "id": "b747055bed0d1458da6ba51a92ca3fd5ba9b83e9c4a1c5413d2e42e7ff513b76",
+          "kind": "container"
+        }
+      ],
+      "applicationLogStatus": "PRESERVED",
+      "applicationStartAttempted": true,
+      "confirmedPreStartFailure": false,
+      "finalizationFailures": [],
+      "firstFailurePhase": "SOURCE_APPLICATION_START",
+      "firstFailureType": "ValueError",
+      "originalExit": 1,
+      "originalOwnerCleanup": {
+        "cleanup": "CONFIRMED_EXACT_OWNED_REMOVAL",
+        "ownedRemoved": [
+          {
+            "id": "6334ad9c506b04af647895dd721875aa5cd3ada3436de495167118b48ddefb2f",
+            "independentNoSuch": true,
+            "name": "cy-auth-2d96f5ca07f947cda23c8e6860e19052-app"
+          },
+          {
+            "id": "2d0d136eb7e30ed01b01fdb122fe26669efc2d2f164f621f14c2ce947e4575ff",
+            "independentNoSuch": true,
+            "name": "cy-auth-2d96f5ca07f947cda23c8e6860e19052-restore-mysql"
+          },
+          {
+            "id": "c73bfaa943c6b90be1c6252d8edca90644e4d3e1894373d6622ff18e5428e846",
+            "independentNoSuch": true,
+            "name": "cy-auth-2d96f5ca07f947cda23c8e6860e19052-mysql"
+          },
+          {
+            "id": "b747055bed0d1458da6ba51a92ca3fd5ba9b83e9c4a1c5413d2e42e7ff513b76",
+            "independentNoSuch": true,
+            "name": "cy-auth-2d96f5ca07f947cda23c8e6860e19052-redis"
+          }
+        ]
+      },
+      "productionDispatchRelease": false,
+      "resourceCleanup": "CONFIRMED_EXACT_OWNED_REMOVAL",
+      "result": "NOT_ACCEPTED",
+      "runAttempt": "1",
+      "runId": "40237890983",
+      "schema": "cy_e2e_auth_2d96f5ca07f947cda23c8e6860e19052",
+      "sourceSha": "f1fe75d646f8ae57864ee5603c68e70e7fabc854"
+    }
+  },
+  "new_first_failure": "SOURCE_APPLICATION_START/APP_READINESS_TIMEOUT; original child IllegalStateException only; exact cause UNKNOWN",
+  "old137_not_a_current_success_proof": true,
+  "independent_resources_absent": true,
+  "business_accepted": false,
+  "all_complete": false
+}

@@ -24,7 +24,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
-import static com.chengyinhub.web.controller.api.ApiRegistrationController.filterEndedOverWeek;
+import static com.chengyinhub.web.service.registration.RegistrationQueryApplication.filterEndedOverWeek;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -42,7 +42,7 @@ import static org.mockito.Mockito.when;
  * (真实商家号有已支付订单却看到整屏空列表)。两个用途分工见
  * {@link #orderList_keepsEndedOverWeekOrders()} 与 {@link #myJoined_wiresFilter_hidesOverWeekKeepsRecent()}。
  *
- * 纯逻辑走 {@link ApiRegistrationController#filterEndedOverWeek} 静态 helper 直接断言;
+ * 纯逻辑走 {@link com.chengyinhub.web.service.registration.RegistrationQueryApplication#filterEndedOverWeek} 静态 helper 直接断言;
  * 列表接口 wiring / 详情不受影响走 spy 控制器(stub getAppUserId + service)。
  */
 class ApiRegistrationHideEndedTest {
@@ -156,11 +156,11 @@ class ApiRegistrationHideEndedTest {
         ICmsActivityService activityService = mock(ICmsActivityService.class);
         IRefundService refundService = mock(IRefundService.class);
         IOmsTicketService ticketService = mock(IOmsTicketService.class);
-        ReflectionTestUtils.setField(controller, "registrationService", registrationService);
-        ReflectionTestUtils.setField(controller, "topicService", topicService);
-        ReflectionTestUtils.setField(controller, "activityService", activityService);
-        ReflectionTestUtils.setField(controller, "refundService", refundService);
-        ReflectionTestUtils.setField(controller, "omsTicketService", ticketService);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "registrationService", registrationService);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "topicService", topicService);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "activityService", activityService);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "refundService", refundService);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "omsTicketService", ticketService);
         when(refundService.selectRefundList(any())).thenReturn(new ArrayList<>());
         // UI-20 返修:product_type 为 NULL 的主题会按票 mode 回落,票服务必须给真数据而不是留 null 字段
         OmsTicket freeExploreTicket = new OmsTicket();
@@ -181,7 +181,7 @@ class ApiRegistrationHideEndedTest {
         when(topicService.selectCmsTopicById(10L)).thenReturn(recentTopic);
         when(activityService.selectCmsActivityById(20L)).thenReturn(oldActivity);
 
-        AjaxResult res = controller.myRegistrationList("3", "0", null);
+        AjaxResult res = RegistrationQueryTestFixtures.wire(controller).myRegistrationList("3", "0", null);
         TableDataInfo data = (TableDataInfo) res.get(AjaxResult.DATA_TAG);
         assertEquals(2, data.getRows().size(), "订单账本必须保留结束>7天的单,否则「已完成/已退款」Tab 恒空");
         List<Long> keptIds = new ArrayList<>();
@@ -199,11 +199,11 @@ class ApiRegistrationHideEndedTest {
         ICmsActivityService activityService = mock(ICmsActivityService.class);
         IRefundService refundService = mock(IRefundService.class);
         IOmsTicketService ticketService = mock(IOmsTicketService.class);
-        ReflectionTestUtils.setField(controller, "registrationService", registrationService);
-        ReflectionTestUtils.setField(controller, "topicService", topicService);
-        ReflectionTestUtils.setField(controller, "activityService", activityService);
-        ReflectionTestUtils.setField(controller, "refundService", refundService);
-        ReflectionTestUtils.setField(controller, "omsTicketService", ticketService);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "registrationService", registrationService);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "topicService", topicService);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "activityService", activityService);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "refundService", refundService);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "omsTicketService", ticketService);
         when(refundService.selectRefundList(any())).thenReturn(new ArrayList<>());
         when(ticketService.selectOmsTicketList(any())).thenReturn(new ArrayList<>());
         doReturn(100L).when(controller).getAppUserId();
@@ -217,7 +217,7 @@ class ApiRegistrationHideEndedTest {
         when(topicService.selectCmsTopicById(10L)).thenReturn(recentTopic);
         when(activityService.selectCmsActivityById(20L)).thenReturn(oldActivity);
 
-        AjaxResult res = controller.myJoined();
+        AjaxResult res = RegistrationQueryTestFixtures.wire(controller).myJoined();
         @SuppressWarnings("unchecked")
         List<CmsRegistration> rows = (List<CmsRegistration>) res.get(AjaxResult.DATA_TAG);
         assertEquals(1, rows.size(), "我的参与也应隐藏结束超过 7 天的活动");
@@ -232,11 +232,11 @@ class ApiRegistrationHideEndedTest {
         ICmsRegistrationScanService scanService = mock(ICmsRegistrationScanService.class);
         IRefundService refundService = mock(IRefundService.class);
         IUmsMemberService umsMemberService = mock(IUmsMemberService.class);
-        ReflectionTestUtils.setField(controller, "registrationService", registrationService);
-        ReflectionTestUtils.setField(controller, "topicService", topicService);
-        ReflectionTestUtils.setField(controller, "registrationScanService", scanService);
-        ReflectionTestUtils.setField(controller, "refundService", refundService);
-        ReflectionTestUtils.setField(controller, "umsMemberService", umsMemberService);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "registrationService", registrationService);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "topicService", topicService);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "registrationScanService", scanService);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "refundService", refundService);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "umsMemberService", umsMemberService);
         when(refundService.selectRefundList(any())).thenReturn(new ArrayList<>());
         doReturn(100L).when(controller).getAppUserId();
 
@@ -249,7 +249,7 @@ class ApiRegistrationHideEndedTest {
         when(umsMemberService.selectUmsMemberById(200L)).thenReturn(organizer);
         when(scanService.selectCmsRegistrationScanList(any())).thenReturn(new ArrayList<CmsRegistrationScan>());
 
-        AjaxResult res = controller.getRegistrationDetail("5");
+        AjaxResult res = RegistrationQueryTestFixtures.wire(controller).getRegistrationDetail("5");
         assertEquals(200, res.get(AjaxResult.CODE_TAG), "详情接口应正常返回 200");
         CmsRegistration got = (CmsRegistration) res.get(AjaxResult.DATA_TAG);
         assertTrue(got != null && got.getId() == 5L, "结束超 7 天的单,详情仍可查到");

@@ -1,0 +1,43 @@
+{
+  "source_sha": "d49c12b820419308236010e0710f96d7bf48c4c9",
+  "run": "40062173653",
+  "verdict": "PASS",
+  "tests": 23,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "cleanup": "CLEAN",
+  "original22_and_new_ACK_test_actual_names": [
+    "typedNotSentRefundsOriginalPlanOnceButKeepsDurableFailedIdentity",
+    "committedOutcomeLostReplyAndFailedResultCacheKeepOriginalKnownFact",
+    "ordinaryInputFailureAndInvalidDraftRemainFailedAndNeverRegenerate",
+    "bodyWriteFailureKeepsOriginalPrepareAndCommittedClaimAckLossNeverExecutes",
+    "fixedAbsoluteTtlExpiredSuccessAndPrecisePurgeKeepMetadata",
+    "schemaGlobalCheckConflictFailsBeforeDdlAndPostcheckFailureIsNotHidden",
+    "repeatableReadCachedNullThenCurrentLockFindsOriginalPrepare",
+    "nullCheckBypassesAndDuplicateIdentityAreRejectedByRealSchema",
+    "genLatePlanRejectedAfterRealRetainIsFailedWithoutUnsentProofOrReplayEffects",
+    "originalProductTypeRemainsAcrossPrepareExecutionRecoveryAndNullableUnknown",
+    "changedRoleAndConfigRejectBeforeAnyQuotaOrExternalEffects",
+    "recoveryNonPositiveCursorAndRealDatabaseFailureAreNotEmptyResults",
+    "concurrentClaimRunsRealCreatorOnceAndLoserOnlySeesInFlight",
+    "recoveryMapperExplainUsesOwnerIdRangeAndFixedNewestLookahead",
+    "genPoolConsumesPersistedPlanWithoutPlayerDoubleCharge",
+    "expiredOriginalPlanRefusesWithoutQuotaAndContextPurgeUsesOriginalDeadline",
+    "concurrentPrepareCommitsOneOriginalIdentityWithoutEconomicEffects",
+    "prepareAndOwnerRefusalsHaveNoQuotaReviewOrModelEffects",
+    "committedPrepareAckLossKeepsOriginalIdentityWithoutContextOrExternalEffects",
+    "successSurvivesCacheLossAndRequestReplay",
+    "genReceivedOutputReviewFailurePersistsReceivedAndRetainsOriginalQuotaOnReplay",
+    "typedUnknownSurvivesBodyDeletionAndRestartWithoutRefundOrResend",
+    "recoveryFindsLostSuccessfulReplyWithDeadlineAndDescendingOwnerPages"
+  ],
+  "xml_sha256": "64f8e27234bb44d1d81ba3cb9cfe0b7ecd3370da929aa53f1bfbec9a69b0ae6f",
+  "receipt_sha256": "2025408b1dd53af5cc48f532c8535a56a254f107749970995eefb95ad00eabc4",
+  "not_proven": [
+    "HTTP/JWT35 runtime",
+    "D content graph equivalence",
+    "suppliers/production/device",
+    "new G integrated source"
+  ]
+}

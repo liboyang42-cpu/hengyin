@@ -5,6 +5,7 @@ import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Date;
 
 /**
  * 商家主题报名Mapper接口
@@ -24,6 +25,9 @@ public interface CmsRegistrationMerchantMapper
 
     /** 多据点核销事务内锁定所选记录,防止复核后被并发改归属或撤销。 */
     CmsRegistrationMerchant selectCmsRegistrationMerchantByIdForUpdate(Long id);
+
+    /** 后台整批删除的当前读；调用方按主键升序锁住全部目标后复验 scope/状态。 */
+    CmsRegistrationMerchant selectForDeletionByIdForUpdate(Long id);
 
     /**
      * 查询商家主题报名列表
@@ -49,6 +53,10 @@ public interface CmsRegistrationMerchantMapper
      */
     public int updateCmsRegistrationMerchant(CmsRegistrationMerchant cmsRegistrationMerchant);
 
+    /** Only the current owner may cancel an active, unwon registration; never write a stale review snapshot. */
+    int cancelUnwonByMember(@Param("id") Long id, @Param("memberId") Long memberId,
+                           @Param("username") String username, @Param("updateTime") Date updateTime);
+
     /**
      * 商家编辑承接信息的原子 CAS：归属、删除态、报名态和择优态必须仍与读取时一致。
      * limit_num 固定参与 SET，允许把原有数字显式清回 NULL。
@@ -60,7 +68,7 @@ public interface CmsRegistrationMerchantMapper
                                            @Param("rejected") boolean rejected);
 
     /**
-     * A-13 防双中标:compare-and-set 原子占槽——仅待定(audit_status=0/null)可置中标(=1)。
+     * A-13 防双中标:compare-and-set 原子占槽——仅未删除且待定(audit_status=0/null)可置中标(=1)。
      * 返回受影响行数;并发/重复确认下只有一方得 1,其余得 0,不再靠先读后写。
      */
     public int confirmWinnerIfPending(Long id);

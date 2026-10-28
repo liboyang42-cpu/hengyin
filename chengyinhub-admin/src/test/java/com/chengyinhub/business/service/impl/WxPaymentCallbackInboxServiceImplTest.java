@@ -153,7 +153,8 @@ class WxPaymentCallbackInboxServiceImplTest
     {
         WxPaymentCallbackClaimService claimService = mock(WxPaymentCallbackClaimService.class);
         WxPaymentCallbackMutationService mutationService = mock(WxPaymentCallbackMutationService.class);
-        WxPaymentCallbackClaim claim = WxPaymentCallbackClaim.acquired("hash", "owner-a", 7L);
+        WxPaymentCallbackClaim claim = WxPaymentCallbackClaim.acquired(
+                WxPaymentCallbackInboxServiceImpl.sha256Hex("notify"), "owner-a", 7L);
         when(claimService.claim(anyString())).thenReturn(claim);
         when(mutationService.apply(any(WxPaymentCallbackClaim.class),
                 any(IWxPaymentCallbackInboxService.Mutation.class))).thenReturn(false);

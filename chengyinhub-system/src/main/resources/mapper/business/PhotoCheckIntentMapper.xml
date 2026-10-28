@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.PhotoCheckIntentMapper">
+    <resultMap id="Intent" type="com.chengyinhub.business.domain.PhotoCheckIntentRow">
+        <id property="id" column="id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="sessionId" column="session_id"/>
+        <result property="actionKey" column="action_key"/>
+        <result property="requestFingerprint" column="request_fingerprint"/>
+        <result property="contextJson" column="context_json"/>
+        <result property="imageReference" column="image_reference"/>
+        <result property="reservation" column="reservation"/>
+        <result property="originalDay" column="original_day"/>
+        <result property="nonce" column="nonce"/>
+        <result property="state" column="state"/>
+        <result property="providerState" column="provider_state"/>
+        <result property="reasonCode" column="reason_code"/>
+        <result property="encodedInputSha256" column="encoded_input_sha256"/>
+        <result property="modelName" column="model_name"/>
+        <result property="promptVersion" column="prompt_version"/>
+        <result property="encoderVersion" column="encoder_version"/>
+        <result property="resultPass" column="result_pass"/>
+        <result property="resultConfidence" column="result_confidence"/>
+        <result property="resultReason" column="result_reason"/>
+        <result property="resultDegraded" column="result_degraded"/>
+        <result property="attemptLogId" column="attempt_log_id"/>
+    </resultMap>
+    <insert id="insertPrepared" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO photo_check_intent
+        (member_id, session_id, action_key, request_fingerprint, context_json, image_reference,
+         reservation, original_day, nonce, state, created_at, updated_at)
+        VALUES (#{memberId}, #{sessionId}, #{actionKey}, #{requestFingerprint}, #{contextJson},
+                #{imageReference}, #{reservation}, #{originalDay}, #{nonce}, 'PREPARED', NOW(3), NOW(3))
+        ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID(id)
+    </insert>
+    <select id="selectByKey" resultMap="Intent">
+        SELECT * FROM photo_check_intent
+        WHERE member_id=#{memberId} AND session_id=#{sessionId} AND action_key=#{actionKey}
+    </select>
+    <!-- Current locking recovery read, also used after upsert. flushCache clears the
+         SqlSession first-level cached null; useCache=false alone only bypasses second-level cache.
+         FOR UPDATE sees the committed original even under an older RR read view. -->
+    <select id="selectByKeyForUpdate" resultMap="Intent" useCache="false" flushCache="true">
+        SELECT * FROM photo_check_intent
+        WHERE member_id=#{memberId} AND session_id=#{sessionId} AND action_key=#{actionKey}
+        FOR UPDATE
+    </select>
+    <!-- NEVER can still bind a SqlSession to an empty Spring synchronization. REQUIRES_NEW
+         commits do not invalidate that suspended session's cached PREPARED/IN_FLIGHT rows.
+         Clear its first-level cache and use a current read after an original-session lock. -->
+    <select id="selectOwned" resultMap="Intent" useCache="false" flushCache="true">
+        SELECT * FROM photo_check_intent
+        WHERE id=#{id} AND member_id=#{memberId} AND request_fingerprint=#{fingerprint}
+        FOR UPDATE
+    </select>
+    <select id="selectForUpdate" resultMap="Intent" useCache="false" flushCache="true">
+        SELECT * FROM photo_check_intent WHERE id=#{id} AND request_fingerprint=#{fingerprint} FOR UPDATE
+    </select>
+    <update id="claim">
+        UPDATE photo_check_intent SET state='IN_FLIGHT', updated_at=NOW(3)
+        WHERE id=#{id} AND member_id=#{memberId} AND request_fingerprint=#{fingerprint} AND state='PREPARED'
+    </update>
+    <update id="saveSnapshot">
+        UPDATE photo_check_intent
+        SET encoded_input_sha256=#{encodedInputSha256}, model_name=#{modelName},
+            prompt_version=#{promptVersion}, encoder_version=#{encoderVersion}, updated_at=NOW(3)
+        WHERE id=#{id} AND request_fingerprint=#{requestFingerprint} AND state='IN_FLIGHT'
+          AND encoded_input_sha256 IS NULL
+    </update>
+    <update id="saveResult">
+        UPDATE photo_check_intent
+        SET state='RESULT_READY', provider_state=#{providerState}, reason_code=#{reasonCode},
+            result_pass=#{resultPass}, result_confidence=#{resultConfidence}, result_reason=#{resultReason},
+            result_degraded=#{resultDegraded}, updated_at=NOW(3)
+        WHERE id=#{id} AND request_fingerprint=#{requestFingerprint} AND state='IN_FLIGHT'
+    </update>
+    <update id="markUnknown">
+        UPDATE photo_check_intent SET state='UNKNOWN', provider_state='UNKNOWN',
+            reason_code='EXECUTION_UNCERTAIN', updated_at=NOW(3)
+        WHERE id=#{id} AND request_fingerprint=#{fingerprint} AND state='IN_FLIGHT'
+    </update>
+    <!-- C owns request_fingerprint migration. Only its existing terminal receipt may apply. -->
+    <select id="countMatchingReceipt" resultType="int">
+        SELECT COUNT(*) FROM photo_check_intent i JOIN play_attempt_log p
+          ON p.id=#{attemptLogId} AND p.member_id=i.member_id AND p.idempotency_key=i.action_key
+         AND p.request_fingerprint=i.request_fingerprint AND p.attempt_type=8
+        WHERE i.id=#{id} AND i.request_fingerprint=#{fingerprint}
+    </select>
+    <update id="markApplied">
+        UPDATE photo_check_intent SET state='APPLIED', attempt_log_id=#{attemptLogId}, updated_at=NOW(3)
+        WHERE id=#{id} AND request_fingerprint=#{fingerprint} AND state='RESULT_READY'
+    </update>
+</mapper>

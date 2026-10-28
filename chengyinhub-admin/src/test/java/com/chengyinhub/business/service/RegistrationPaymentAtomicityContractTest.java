@@ -31,7 +31,9 @@ class RegistrationPaymentAtomicityContractTest {
         int method = service.indexOf("String handleWechatPayCallback");
         int register = service.indexOf("wxPaymentCallbackInboxService.register(", method);
         int fence = service.indexOf("wxPaymentCallbackInboxService.process(", method);
-        int apply = service.indexOf("applyWechatPayCallback(registration, resultMap)", method);
+        int apply = service.indexOf("applyWechatPayCallback(registration, originalFacts)", method);
+        int mutationDefinition = service.indexOf("IWxPaymentCallbackInboxService.Mutation mutation =", method);
+        int verifiedFence = service.indexOf("wxPaymentCallbackInboxService.processVerified(", method);
         int machine = service.indexOf("private String applyWechatPayCallback");
         int claim = service.indexOf("claimPaymentSuccess", machine);
         int settlement = service.indexOf("settlementEntryService.recordOnPayment", machine);
@@ -39,7 +41,8 @@ class RegistrationPaymentAtomicityContractTest {
 
         assertTrue(method > 0, "支付回调必须保留在公开 Service interface");
         // 2026-10-22 W3:回调整链改由 inbox fence 的事务承载(业务推进与 inbox DONE 同一事务提交)。
-        assertTrue(register > method && fence > register && apply > fence,
+        assertTrue(register > method && mutationDefinition > register && apply > mutationDefinition
+                        && verifiedFence > apply && fence > verifiedFence,
                 "支付回调必须先登记 inbox,再经 process fence 领取处理权后才推进业务");
         assertTrue(machine > 0, "支付状态机必须只在 fence/调用方事务内执行");
         assertTrue(mutation.contains("@Transactional\n    public boolean apply("),

@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
  * 出发前提醒定时任务(I2)。
  *
  * 扫 24h 内出发的经典定向(mode=1)票种,给已支付成员发出发前订阅提醒
- * (redis 去重,粒度「票 × 人」、只有真下发成功才写键 ⇒ 失败的下一轮重试,成功的不重发)。
+ * (原票次 × 收件人持久身份；提交领取后 UNKNOWN 只能读取原结果，绝不由 cron 自动重发)。
  * 在 RuoYi「定时任务」注册:invokeTarget = beforeStartNotifyTask.run(),cron 建议每小时一次。
  *
  * ⚠️ 现状(2026-09-15):sys_job id=102 仍为【暂停】,启用迁移
@@ -37,6 +37,7 @@ public class BeforeStartNotifyTask {
     private AlarmService alarmService;
 
     public void run() {
+        if (com.chengyinhub.common.config.RestoreDispatchGuard.isRestoreMode()) return;
         try {
             BeforeStartNotifyResult r = teamGroupService.notifyBeforeStartBatch();
             String summary = "scanned=" + r.getScanned()
@@ -46,7 +47,7 @@ public class BeforeStartNotifyTask {
             if (r.getFailed() > 0) {
                 log.error("出发前提醒存在发送失败 {}", summary);
                 alarmService.alarm("出发前提醒发送失败",
-                        summary + ",查 [订阅消息] 日志定位 errcode");
+                        summary + ",查持久原意图及 [订阅消息] 日志；UNKNOWN 须查证，勿另号重发");
             } else {
                 // 0 条也要留痕:没有这行时「没人需要发」和「整批静默失败」在日志上长得一样
                 log.info("出发前提醒任务完成 {}", summary);

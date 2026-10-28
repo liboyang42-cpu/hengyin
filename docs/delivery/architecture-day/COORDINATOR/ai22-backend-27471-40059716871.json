@@ -1,0 +1,82 @@
+{
+  "source_sha": "27471b00989e15f7641f4ee77c497cca2f9e53c1",
+  "backend_run": "40059716871",
+  "workflow_result": "FAILURE_NODE_LEDGER_ONLY",
+  "backend_job": "SUCCESS",
+  "raw_xml_files_verified": 1848,
+  "raw_multi_phase_xml_totals": {
+    "tests": 14613,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 619
+  },
+  "warning": "Totals span phases, not a deduplicated unique-case denominator; no dynamic WeChat or provider acceptance.",
+  "selected_actual_suites": {
+    "com.chengyinhub.business.service.impl.AiCreatorServiceImplTest": {
+      "tests": 37,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "com.chengyinhub.business.service.impl.AiCreatorPlayerDraftQuotaTest": {
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "com.chengyinhub.web.controller.api.ApiAiControllerTest": {
+      "tests": 23,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "jar_sha256": "1fb9f77ecfc95a68def340b33b9ca3c7581235af4dd03625fbe51754b892386f",
+  "startup_passed": true,
+  "jdeps_evidence_hashes_verified": 11,
+  "system_jar_equal_packaged": true,
+  "architecture_verdict": "PASS_SCOPED_COMPILED_REFERENCES",
+  "architecture_scope": "TWO_DECLARED_TARGET_TYPES_ONLY",
+  "AI22": {
+    "run": "40059719580",
+    "xml_sha256": "072e67c86535c7abf65773edcd156ab523c87cf5e83e7e4e339328800254b979",
+    "receipt_sha256": "6d0ef8ae4d678d6bca5edce88530a52188cabc609c1ddc7fbcced994a53106b6",
+    "tests": 22,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cleanup": "CLEAN",
+    "source_declared_and_executed_names_equal": true,
+    "names": [
+      "typedNotSentRefundsOriginalPlanOnceButKeepsDurableFailedIdentity",
+      "committedOutcomeLostReplyAndFailedResultCacheKeepOriginalKnownFact",
+      "ordinaryInputFailureAndInvalidDraftRemainFailedAndNeverRegenerate",
+      "bodyWriteFailureKeepsOriginalPrepareAndCommittedClaimAckLossNeverExecutes",
+      "fixedAbsoluteTtlExpiredSuccessAndPrecisePurgeKeepMetadata",
+      "schemaGlobalCheckConflictFailsBeforeDdlAndPostcheckFailureIsNotHidden",
+      "repeatableReadCachedNullThenCurrentLockFindsOriginalPrepare",
+      "nullCheckBypassesAndDuplicateIdentityAreRejectedByRealSchema",
+      "genLatePlanRejectedAfterRealRetainIsFailedWithoutUnsentProofOrReplayEffects",
+      "originalProductTypeRemainsAcrossPrepareExecutionRecoveryAndNullableUnknown",
+      "changedRoleAndConfigRejectBeforeAnyQuotaOrExternalEffects",
+      "recoveryNonPositiveCursorAndRealDatabaseFailureAreNotEmptyResults",
+      "concurrentClaimRunsRealCreatorOnceAndLoserOnlySeesInFlight",
+      "recoveryMapperExplainUsesOwnerIdRangeAndFixedNewestLookahead",
+      "genPoolConsumesPersistedPlanWithoutPlayerDoubleCharge",
+      "expiredOriginalPlanRefusesWithoutQuotaAndContextPurgeUsesOriginalDeadline",
+      "concurrentPrepareCommitsOneOriginalIdentityWithoutEconomicEffects",
+      "prepareAndOwnerRefusalsHaveNoQuotaReviewOrModelEffects",
+      "successSurvivesCacheLossAndRequestReplay",
+      "genReceivedOutputReviewFailurePersistsReceivedAndRetainsOriginalQuotaOnReplay",
+      "typedUnknownSurvivesBodyDeletionAndRestartWithoutRefundOrResend",
+      "recoveryFindsLostSuccessfulReplyWithDeadlineAndDescendingOwnerPages"
+    ]
+  },
+  "not_proven": [
+    "New H ACK-loss23 case",
+    "New A HTTP35 case",
+    "D graph32/MySQL equivalence",
+    "production DDL/deployment/provider/device",
+    "global architecture completion"
+  ]
+}

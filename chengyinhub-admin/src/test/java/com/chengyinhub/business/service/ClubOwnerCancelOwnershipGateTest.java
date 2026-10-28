@@ -72,6 +72,10 @@ class ClubOwnerCancelOwnershipGateTest {
 
     private TeamGroupServiceImpl service(CmsActivity activity, Club club) {
         TeamGroupServiceImpl service = new TeamGroupServiceImpl();
+        ReflectionTestUtils.setField(service,"cancellationTransactions",CancellationPhaseTestSupport.memoryTransactions());
+        ReflectionTestUtils.setField(service,"verifiedPaymentFacts",
+                mock(com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService.class));
+
         activityMapper = mock(CmsActivityMapper.class);
         registrationMapper = mock(CmsRegistrationMapper.class);
         clubMapper = mock(ClubMapper.class);
@@ -84,7 +88,11 @@ class ClubOwnerCancelOwnershipGateTest {
         when(activityMapper.updateCmsActivity(any(CmsActivity.class))).thenReturn(1);
         when(registrationMapper.selectCmsRegistrationList(any(CmsRegistration.class)))
                 .thenReturn(Collections.<CmsRegistration>emptyList());
+        when(registrationMapper.selectCancellationRowsForUpdate(2L,ACTIVITY_ID))
+                .thenReturn(Collections.emptyList());
         when(clubMapper.selectClubById(CLUB_ID)).thenReturn(club);
+        when(clubMapper.selectClubByIdForUpdate(CLUB_ID))
+                .thenAnswer(call -> clubMapper.selectClubById(CLUB_ID));
         return service;
     }
 
@@ -225,10 +233,19 @@ class ClubOwnerCancelOwnershipGateTest {
     /** 真 TeamGroupServiceImpl(只 mock 持久化),装一张已付款单以验证兜底链路真的退了钱。 */
     private TeamGroupServiceImpl topicEndTeamGroupWithRefund(CmsActivity session) {
         TeamGroupServiceImpl teamGroup = new TeamGroupServiceImpl();
+        ReflectionTestUtils.setField(teamGroup,"cancellationTransactions",CancellationPhaseTestSupport.memoryTransactions());
+        ReflectionTestUtils.setField(teamGroup,"verifiedPaymentFacts",
+                mock(com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService.class));
+        com.chengyinhub.business.mapper.CmsTopicMapper phaseTopics =
+                mock(com.chengyinhub.business.mapper.CmsTopicMapper.class);
+        CmsTopic phaseTopic = new CmsTopic(); phaseTopic.setId(TOPIC_ID);
+        when(phaseTopics.selectCmsTopicByIdForUpdate(TOPIC_ID)).thenReturn(phaseTopic);
+        ReflectionTestUtils.setField(teamGroup,"cmsTopicMapper",phaseTopics);
         activityMapper = mock(CmsActivityMapper.class);
         registrationMapper = mock(CmsRegistrationMapper.class);
         clubMapper = mock(ClubMapper.class);
         when(activityMapper.selectCmsActivityByIdForUpdate(ACTIVITY_ID)).thenReturn(session);
+        when(activityMapper.selectCmsActivityById(ACTIVITY_ID)).thenReturn(session);
         when(activityMapper.updateCmsActivity(any(CmsActivity.class))).thenReturn(1);
 
         CmsRegistration paid = paidRegistration();
@@ -238,7 +255,11 @@ class ClubOwnerCancelOwnershipGateTest {
                     ? Collections.singletonList(paid) : Collections.<CmsRegistration>emptyList();
         });
         when(registrationMapper.selectCmsRegistrationByIdForUpdate(paid.getId())).thenReturn(paid);
+        when(registrationMapper.selectCancellationRowsForUpdate(2L,ACTIVITY_ID))
+                .thenReturn(Collections.singletonList(paid));
         when(clubMapper.selectClubById(CLUB_ID)).thenReturn(club(CURRENT_OWNER));
+        when(clubMapper.selectClubByIdForUpdate(CLUB_ID))
+                .thenAnswer(call -> clubMapper.selectClubById(CLUB_ID));
 
         IRefundService refundService = mock(IRefundService.class);
         when(refundService.saveRefund(any(RefundApplication.class))).thenAnswer(invocation -> {

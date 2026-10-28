@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.LinkedHashSet;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -37,6 +38,8 @@ import com.chengyinhub.business.mapper.CmsTopicMapper;
 import com.chengyinhub.business.mapper.ImBlockMapper;
 import com.chengyinhub.business.mapper.ImConversationMapper;
 import com.chengyinhub.business.mapper.ImConversationMemberMapper;
+import com.chengyinhub.business.mapper.ImConversationMemberMapper.ConversationSummary;
+import com.chengyinhub.business.mapper.ImConversationMemberMapper.ClubConversationSummary;
 import com.chengyinhub.business.mapper.ImMessageMapper;
 import com.chengyinhub.business.mapper.ImNotificationIntentMapper;
 import com.chengyinhub.business.mapper.ImPollMapper;
@@ -115,29 +118,31 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
     @Override
     public List<Map<String, Object>> listConversations(Long memberId)
     {
-        List<ImConversationMember> mine = memberMapper.selectMyConversations(memberId);
+        List<ConversationSummary> mine = memberMapper.selectMyConversationSummaries(memberId);
         List<Map<String, Object>> out = new ArrayList<>();
         Map<Long, ImMessage> latestVisible = new HashMap<>();
         if (mine == null)
         {
             return out;
         }
-        for (ImConversationMember m : mine)
+        Map<Long, ClubConversationSummary> clubs = listClubSummaries(mine, memberId);
+        for (ConversationSummary m : mine)
         {
-            ImConversation c = conversationMapper.selectImConversationById(m.getConversationId());
+            ImConversation c = m.getConversation();
             if (c == null)
             {
                 continue;
             }
-            if (!hasActiveGroupAccess(c, memberId, false))
+            Long clubId = Integer.valueOf(ImConversation.TYPE_GROUP).equals(c.getType()) ? clubIdOf(c) : null;
+            ClubConversationSummary club = clubId == null ? null : clubs.get(clubId);
+            if (clubId == null ? !hasActiveGroupAccess(c, memberId, false) : !hasActiveClubSummaryAccess(club, memberId))
             {
                 continue;
             }
             Map<String, Object> row = new HashMap<>();
             row.put("conversationId", c.getId());
             row.put("type", c.getType());
-            List<ImMessage> visible = messageMapper.selectVisiblePage(c.getId(), memberId, null, 1);
-            ImMessage latest = visible == null || visible.isEmpty() ? null : visible.get(0);
+            ImMessage latest = m.getLatest();
             if (latest != null)
             {
                 latestVisible.put(c.getId(), latest);
@@ -149,7 +154,7 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
             row.put("lastMsgAt", latest == null ? null : latest.getCreateTime());
             row.put("unread", m.getUnreadCount());
             row.put("muted", m.getMuted() == null ? 0 : m.getMuted());
-            row.put("counterparty", counterpartyOf(c, memberId));
+            row.put("counterparty", clubId == null ? summaryCounterparty(m, memberId) : clubSummaryCounterparty(c, club));
             out.add(row);
         }
         out.sort((left, right) -> {
@@ -167,6 +172,66 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
             return Long.compare(bId, aId);
         });
         return out;
+    }
+
+    private Map<Long, ClubConversationSummary> listClubSummaries(List<ConversationSummary> summaries, Long memberId)
+    {
+        Set<Long> ids = new LinkedHashSet<>();
+        for (ConversationSummary summary : summaries)
+        {
+            ImConversation c = summary.getConversation();
+            Long id = c != null && Integer.valueOf(ImConversation.TYPE_GROUP).equals(c.getType()) ? clubIdOf(c) : null;
+            if (id != null) ids.add(id);
+        }
+        Map<Long, ClubConversationSummary> clubs = new HashMap<>();
+        if (!ids.isEmpty())
+        {
+            for (ClubConversationSummary club : memberMapper.selectClubConversationSummaries(memberId, new ArrayList<>(ids)))
+                clubs.put(club.getId(), club);
+        }
+        return clubs;
+    }
+
+    private boolean hasActiveClubSummaryAccess(ClubConversationSummary club, Long memberId)
+    {
+        return club != null && memberId != null && Long.valueOf(1L).equals(club.getStatus())
+                && Integer.valueOf(0).equals(club.getDelFlag())
+                && (memberId.equals(club.getMemberId()) || Boolean.TRUE.equals(club.getViewerMember()));
+    }
+
+    private Map<String, Object> clubSummaryCounterparty(ImConversation c, Club club)
+    {
+        Map<String, Object> cp = new HashMap<>();
+        cp.put("id", 0); cp.put("bizKey", c.getBizKey());
+        cp.put("nickname", club.getName()); cp.put("avatar", club.getLogo() == null ? "" : club.getLogo());
+        cp.put("memberCount", club.getMemberCount()); cp.put("clubId", club.getId());
+        return cp;
+    }
+
+    private Map<String, Object> summaryCounterparty(ConversationSummary summary, Long memberId)
+    {
+        Integer type = summary.getConversation().getType();
+        if (Integer.valueOf(ImConversation.TYPE_SYSTEM).equals(type)
+                || Integer.valueOf(ImConversation.TYPE_MERCHANT).equals(type)
+                || Integer.valueOf(ImConversation.TYPE_GROUP).equals(type))
+        {
+            return counterpartyOf(summary.getConversation(), memberId);
+        }
+        Map<String, Object> cp = new HashMap<>();
+        Long otherId = summary.getCounterpartyId();
+        UmsMember profile = summary.getCounterpartyProfile();
+        if (otherId == null)
+        {
+            cp.put("id", 0);
+        }
+        else
+        {
+            cp.put("id", otherId);
+        }
+        cp.put("nickname", profile == null ? "" : profile.getNickname() != null
+                ? profile.getNickname() : profile.getName());
+        cp.put("avatar", profile == null ? "" : profile.getAvatar());
+        return cp;
     }
 
     /** 只投影当前读者所见卡片；历史原文、请求摘要与数据库行保持原值。 */
@@ -1228,26 +1293,9 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
     @Override
     public int unreadTotal(Long memberId)
     {
-        int total = 0;
-        for (Map<String, Object> row : listConversations(memberId))
-        {
-            if (Integer.valueOf(1).equals(row.get("muted")))
-            {
-                continue;
-            }
-            // A-06:群聊(type=4)在小程序不露出(im/list 显式过滤),总红点必须与列表同口径排除 ——
-            // 否则用户会看到一个点进去也清不掉的角标(未读在被隐藏的群会话里)。
-            if (Integer.valueOf(ImConversation.TYPE_GROUP).equals(row.get("type")))
-            {
-                continue;
-            }
-            Object unread = row.get("unread");
-            if (unread instanceof Number)
-            {
-                total += ((Number) unread).intValue();
-            }
-        }
-        return total;
+        // 与原列表累加同口径；隐藏群聊在 SQL 中排除，不做消息/资料投影。
+        Long total = memberMapper.sumInboxUnread(memberId);
+        return total == null ? 0 : total.intValue();
     }
 
     @Override
@@ -1343,6 +1391,7 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
     @Transactional(rollbackFor = Exception.class)
     public Long deliverSystemNotification(Long intentId)
     {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         Map<String, Object> intent = notificationIntentMapper.selectByIdForUpdate(intentId);
         if (intent == null) throw new ServiceException("原通知不存在", 404);
         if ("DELIVERED".equals(intent.get("status")))

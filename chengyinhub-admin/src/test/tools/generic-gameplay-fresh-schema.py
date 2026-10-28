@@ -20,8 +20,9 @@ ROOT = pathlib.Path(__file__).resolve().parents[4]
 sys.path.insert(0, str(ROOT))
 from ci.sql_splitter import split_statements, executable_statement, unterminated_token, delimiter_error
 from ci.run_migration import statement_assertion
-from ci.migration_ledger import _ordered_migrations, EXPLICIT_MANAGED_SQL
-from scripts.e2e.build_schema import scratch_schema_sql
+from ci.migration_ledger import build_manifest
+from scripts.e2e.build_schema import (scratch_schema_sql, migrations_after_baseline, notice_forward_plan,
+                                      NOTICE_OLD, NOTICE_V2, NOTICE_FORWARD_FILES)
 
 
 def plan_file(path, migration=False, data_only=False):
@@ -75,21 +76,29 @@ def build_plan():
     included = {m['path'] for m in baseline['migrations'] + baseline['reconciledMigrations']}
     if len(included) != baseline['migrationCount'] + baseline['reconciledCount']:
         raise ValueError('Duplicate folded migration')
-    migrations = [{'migrationId': p.stem[len('migration_'):], 'path': str(p.relative_to(ROOT))}
-                  for p in (ROOT / 'chengyinhub-admin/sql').glob('migration_*.sql')]
-    migrations.extend({'migrationId': identity, 'path': path}
-                      for path, identity in EXPLICIT_MANAGED_SQL.items())
-    dependencies = json.loads((ROOT / 'ci/migration-dependencies.json').read_text())['dependencies']
-    ordered = _ordered_migrations(migrations, dependencies)
+    head = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
+    manifest = build_manifest(ROOT, target_commit=head, dependency_path=ROOT / 'ci/migration-dependencies.json')
+    ordered = manifest['migrations']
+    # Reuse full canonical source/baseline/data-only custody checks. Keep data-only
+    # files below so their original HTTP-fixture skips remain explicit in the report.
+    migrations_after_baseline(ordered)
+    pending = [m for m in ordered if m['path'] not in included]
+    notice_forward = notice_forward_plan(ordered, pending)
+    selected = notice_forward['selected'] if notice_forward else pending
     files = [plan_file(ROOT / record['path']) for record in [baseline['baseSchema'], policy['baselineSeed']]]
     # The frozen baseline already contains all 11 Quartz tables and their foreign keys.
-    for m in ordered:
-        if m['path'] not in included:
-            files.append(plan_file(ROOT / m['path'], True, m['path'] in policy['dataOnlyMigrations']))
-    return {'mode': 'DRY_RUN', 'baselineIncluded': sorted(included), 'files': files,
-            'ordering': 'existing ledger dependency topology',
-            'appliedStatements': sum(len(f['apply']) for f in files),
-            'skippedStatements': sum(len(f['skipped']) for f in files)}
+    for m in selected:
+        files.append(plan_file(ROOT / m['path'], True, m['path'] in policy['dataOnlyMigrations']))
+    result = {'mode': 'DRY_RUN', 'baselineIncluded': sorted(included), 'files': files,
+              'ordering': 'existing ledger dependency topology',
+              'manifest': {'targetCommit': head, 'migrationCount': len(ordered), 'ordering': manifest['ordering']},
+              'appliedStatements': sum(len(f['apply']) for f in files),
+              'skippedStatements': sum(len(f['skipped']) for f in files)}
+    if notice_forward:
+        result['noticeForward'] = {'state': 'PLANNED_UNAPPLIED',
+                                  'oldMigrationId': NOTICE_OLD, 'replacementMigrationId': NOTICE_V2,
+                                  'fingerprints': notice_forward['fingerprints']}
+    return result
 
 
 def mysql_command(args):
@@ -132,6 +141,18 @@ def safe_failure_diagnostic(error, plan):
 
 
 def execute(args, plan):
+    notice_forward = plan.get('noticeForward')
+    notice_paths = {NOTICE_FORWARD_FILES[key][0] for key in (NOTICE_OLD, NOTICE_V2)}
+    if notice_forward is not None or any(file.get('path') in notice_paths for file in plan['files']):
+        # Rebuild through the same canonical contract before any MySQL call. A stale
+        # hash, injected old file, edited skip/apply payload or partial pair is not executable.
+        expected = build_plan()
+        if plan.get('mode') != 'DRY_RUN' or 'completed' in plan:
+            raise ValueError('Notice forward execution plan drift: state')
+        for key in ('noticeForward', 'manifest', 'baselineIncluded', 'ordering',
+                    'files', 'appliedStatements', 'skippedStatements'):
+            if key not in plan or plan[key] != expected.get(key):
+                raise ValueError('Notice forward execution plan drift: ' + key)
     command = mysql_command(args)
     env = dict(os.environ, MYSQL_PWD=os.environ.get('CHENGYIN_MYBATIS_IT_PASSWORD', ''))
 
@@ -150,6 +171,10 @@ def execute(args, plan):
     plan['currentPhase'] = 'schema-create'
     run('CREATE DATABASE `' + args.database + '` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;')
     plan.update(mode='EXECUTING', database=args.database, completed=[])
+    if notice_forward is not None:
+        notice_forward['state'] = 'REPLACED_UNAPPLIED'
+        print('REPLACED_UNAPPLIED %s -> %s fingerprints=%s' %
+              (NOTICE_OLD, NOTICE_V2, json.dumps(notice_forward['fingerprints'], sort_keys=True)))
     for file in plan['files']:
         plan['currentPhase'] = 'schema-apply'
         plan['currentFile'] = file['path']

@@ -167,6 +167,17 @@ class GameSessionRuntimeMapperSqlTest {
     }
 
     @Test
+    void receiptRereadClearsSessionCacheIncludingAnEarlierMiss() throws Exception {
+        Configuration configuration = new Configuration();
+        try (InputStream in = Resources.getResourceAsStream(XML)) {
+            new XMLMapperBuilder(in, configuration, XML, configuration.getSqlFragments()).parse();
+        }
+        var statement = configuration.getMappedStatement(NS + "selectReceiptForUpdate");
+        assertTrue(statement.isFlushCacheRequired(), "锁后回读不能复用等待前的空结果");
+        assertFalse(statement.isUseCache(), "命令回执锁读不能命中二阶缓存");
+    }
+
+    @Test
     void hintLevelsComeOnlyFromAppliedPlayerHintReceipts() throws Exception {
         String sql = sql("selectPlayerHintLevels", params());
         assertTrue(sql.contains("game_session_id=? and actor_member_id=?"), sql);

@@ -1,0 +1,31 @@
+--- a/ci/architecture/collect_jdeps.py
++++ b/ci/architecture/collect_jdeps.py
+@@ -135 +135 @@
+-def parse_output(text, index, inputs, selected_references=None):
++def parse_output(text, index, inputs, selected_references=None, source_rows=None):
+@@ -147,0 +148,2 @@
++            if source_rows is not None:
++                source_rows.add(source)
+@@ -400 +402,2 @@
+-            _, _, missing, unknown, seen = parse_output(files["jdeps.stdout.txt"].decode(), index, inputs, selected)
++            source_rows = set()
++            _, _, missing, unknown, seen = parse_output(files["jdeps.stdout.txt"].decode(), index, inputs, selected, source_rows)
+@@ -423,0 +427,4 @@
++                for owner, binding in dependency_policy["owners"].items():
++                    for member in binding["members"]:
++                        if member not in source_rows:
++                            result["review_items"].append({"reason": "OWNER_SOURCE_ROWS_MISSING", "owner": owner, "type": member})
+--- a/ci/architecture/test_collect_jdeps.py
++++ b/ci/architecture/test_collect_jdeps.py
+@@ -1025,0 +1026,11 @@
++    def test_missing_declared_source_rows_is_unknown_even_with_all_modules_and_class_bytes(self):
++        member = self.owner_member("D_CONTENT_RULES")
++        text = (self.output / "jdeps.stdout.txt").read_text()
++        filtered = "\n".join(line for line in text.splitlines() if not line.strip().startswith(member + " -> "))
++        self.assertNotEqual(text, filtered)
++        self.replace_evidence("jdeps.stdout.txt", filtered.encode())
++        report = self.check_directions()
++        self.assert_unknown(report)
++        self.assertIn({"reason": "OWNER_SOURCE_ROWS_MISSING", "owner": "D_CONTENT_RULES", "type": member}, report["review_items"])
++        self.assertEqual("UNKNOWN", report["technical_dependencies"]["verdict"])
++

@@ -1,0 +1,37 @@
+[
+  {
+    "file": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiVerifyControllerTest.java",
+    "oldCases": 19,
+    "newCases": 19,
+    "allOriginalAssertionsInOrder": true,
+    "originalAssertionSha256": "487ec0513a49257e4d3814533c2b549a63b5e78a5f35f80167c4d77e376781aa"
+  },
+  {
+    "file": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/MerchantStaffRevocationAcceptanceTest.java",
+    "oldCases": 2,
+    "newCases": 2,
+    "allOriginalAssertionsInOrder": true,
+    "originalAssertionSha256": "a48c13a2f3e974fb565100840c32e1d158799780b2f3565ad25e56b0f5709929"
+  },
+  {
+    "file": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/RoamLocationRetentionMySqlIT.java",
+    "oldCases": 21,
+    "newCases": 21,
+    "allOriginalAssertionsInOrder": true,
+    "originalAssertionSha256": "d1784dbdb225cdc7cbe0eec28c463239cf6a08df363663018e9b5cccdf0964dd"
+  },
+  {
+    "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationEquityMybatisIntegrationTest.java",
+    "oldCases": 5,
+    "newCases": 6,
+    "allOriginalAssertionsInOrder": true,
+    "originalAssertionSha256": "ab1be9dd4a0660c323b6ceccd689c3fe9454a7c21f6aed935f2cf8b1804cbe5f"
+  },
+  {
+    "file": "chengyinhub-admin/src/test/java/com/chengyinhub/web/service/verify/CityNodeRedemptionApplicationTest.java",
+    "oldCases": 8,
+    "newCases": 17,
+    "allOriginalAssertionsInOrder": true,
+    "originalAssertionSha256": "4245832e43b89bc4589b895276561d1b4387993e1e9afd84473440820050ba24"
+  }
+]

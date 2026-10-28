@@ -1,0 +1,32 @@
+chengyinhub-admin/sql/migration_20261013_b_im_notification_intent.sql:23:SELECT '原站内通知意图投递', 'DEFAULT', 'imNotificationDeliveryTask.deliverPending()',
+chengyinhub-admin/sql/migration_20261013_b_im_notification_intent.sql:27:    SELECT 1 FROM sys_job WHERE invoke_target = 'imNotificationDeliveryTask.deliverPending()'
+chengyinhub-admin/sql/migration_20261013_roam_reward_delivery.sql:24:SELECT '原漫游掉落补交付', 'DEFAULT', 'roamRewardDeliveryTask.run()', '0 0/10 * * * ?', '3', '1', '1',
+chengyinhub-admin/sql/migration_20261013_roam_reward_delivery.sql:26:WHERE NOT EXISTS (SELECT 1 FROM sys_job WHERE invoke_target = 'roamRewardDeliveryTask.run()');
+chengyinhub-admin/sql/migration_20261013_roam_reward_delivery.sql:31:FROM sys_job WHERE invoke_target = 'roamRewardDeliveryTask.run()';
+chengyinhub-admin/sql/migration_20261023_g_wp08_delivery_jobs_paused.sql:40: (CAST('imNotificationDeliveryTask.deliverPending()' AS BINARY),CAST('roamRewardDeliveryTask.run()' AS BINARY))
+chengyinhub-admin/sql/migration_20261023_g_wp08_delivery_jobs_paused.sql:48: '^(imNotificationDeliveryTask|com[.]chengyinhub[.]business[.]task[.]ImNotificationDeliveryTask)[.]deliverPending([(][)])?$|^(roamRewardDeliveryTask|com[.]chengyinhub[.]business[.]task[.]RoamRewardDeliveryTask)[.]run([(][)])?$','c')
+chengyinhub-admin/sql/migration_20261023_g_wp08_delivery_jobs_paused.sql:50: (CAST('imNotificationDeliveryTask.deliverPending()' AS BINARY),CAST('roamRewardDeliveryTask.run()' AS BINARY)));
+chengyinhub-admin/sql/migration_20261023_g_wp08_delivery_jobs_paused.sql:53:SELECT '原站内通知意图投递','DEFAULT','imNotificationDeliveryTask.deliverPending()','0 0/1 * * * ?','3','1','1','system',NOW(),
+chengyinhub-admin/sql/migration_20261023_g_wp08_delivery_jobs_paused.sql:55:WHERE NOT EXISTS (SELECT 1 FROM sys_job WHERE CAST(TRIM(invoke_target) AS BINARY)=CAST('imNotificationDeliveryTask.deliverPending()' AS BINARY));
+chengyinhub-admin/sql/migration_20261023_g_wp08_delivery_jobs_paused.sql:57:SELECT '原漫游掉落补交付','DEFAULT','roamRewardDeliveryTask.run()','0 0/10 * * * ?','3','1','1','system',NOW(),
+chengyinhub-admin/sql/migration_20261023_g_wp08_delivery_jobs_paused.sql:59:WHERE NOT EXISTS (SELECT 1 FROM sys_job WHERE CAST(TRIM(invoke_target) AS BINARY)=CAST('roamRewardDeliveryTask.run()' AS BINARY));
+chengyinhub-admin/sql/migration_20261023_g_wp08_delivery_jobs_paused.sql:64: (CAST('imNotificationDeliveryTask.deliverPending()' AS BINARY),CAST('roamRewardDeliveryTask.run()' AS BINARY));
+chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/util/ScheduleUtils.java:40:            Map.entry("imNotificationDeliveryTask.deliverPending()", "com.chengyinhub.business.task.ImNotificationDeliveryTask"),
+chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/util/ScheduleUtils.java:49:            Map.entry("roamRewardDeliveryTask.run()", "com.chengyinhub.business.task.RoamRewardDeliveryTask"),
+chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/util/AbstractQuartzJob.java:47:                        if (!SpringUtils.getBean(SysJobServiceImpl.class).isCurrentInvocation(sysJob,
+chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/service/MySqlSchedulerCoordinator.java:53:    public synchronized void registerQuartz(Runnable refresh, Runnable stop) {
+chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/service/MySqlSchedulerCoordinator.java:139:        String canonical = CanonicalJobTarget.canonical(target);
+chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/service/MySqlSchedulerCoordinator.java:184:            this.target = target; this.canonical = CanonicalJobTarget.canonical(target);
+chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/service/impl/SysJobServiceImpl.java:61:        coordinator.registerQuartz(this::refreshPersistedSchedule, () -> {
+chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/service/impl/SysJobServiceImpl.java:74:                .append(CanonicalJobTarget.canonical(job.getInvokeTarget())).append('|').append(job.getCronExpression()).append('|')
+chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/service/impl/SysJobServiceImpl.java:96:        String canonical = CanonicalJobTarget.canonical(job.getInvokeTarget());
+chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/service/impl/SysJobServiceImpl.java:103:    public boolean isCurrentInvocation(SysJob scheduled, boolean manual) {
+chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/service/impl/SysJobServiceImpl.java:106:                && CanonicalJobTarget.canonical(current.getInvokeTarget()).equals(CanonicalJobTarget.canonical(scheduled.getInvokeTarget()));
+chengyinhub-system/src/main/java/com/chengyinhub/business/task/ImNotificationDeliveryTask.java:12:@Component("imNotificationDeliveryTask")
+chengyinhub-system/src/main/java/com/chengyinhub/business/task/ImNotificationDeliveryTask.java:29:                try { imService.deliverSystemNotification(id); }
+chengyinhub-system/src/main/java/com/chengyinhub/business/task/RoamRewardDeliveryTask.java:7:@Component("roamRewardDeliveryTask")
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/IImService.java:89:    Long enqueueSystemNotification(Long toMemberId, Integer msgType, String content, String extraJson, String eventKey);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/IImService.java:92:    Long deliverSystemNotification(Long intentId);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ImServiceImpl.java:1321:        return enqueueSystemNotification(recipient, msgType, content, extraJson, eventKey);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ImServiceImpl.java:1326:    public Long enqueueSystemNotification(Long toMemberId, Integer msgType, String content, String extraJson, String eventKey)
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ImServiceImpl.java:1344:    public Long deliverSystemNotification(Long intentId)

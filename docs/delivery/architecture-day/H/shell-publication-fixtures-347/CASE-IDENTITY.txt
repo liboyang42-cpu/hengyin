@@ -1,0 +1,42 @@
+# 347b 原 case 身份（文本源码清单，不是执行证据）
+
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicEditActivityShellTicketSyncChainTest.java
+347b blob 09efc8b51af8560125ef214c1d350dd1b9e68ac0
+WIP blob 01d436b352ebd62c054f0197b95a95e62d140885
+原 @Test 声明 18
+  void editingTopicKeepsSoldShellTicketAndRecomputesRemainingFromSoldSeats()
+  void editingTopicWithoutTouchingTicketsKeepsBothRowsInPlace()
+  void droppingASoldTicketFromTheEditFailsClosedWithoutDestroyingIt()
+  void droppingAnUnsoldTicketDeletesItsShellRowAtomically()
+  void topicTicketIdentityIsNeverBorrowedFromAnotherTopic()
+  void repricingASoldSessionIsRefusedRatherThanQuietlyRebuiltUnderTheSoldSeats()
+  void twoIdenticalSessionsStayEditableInsteadOfBrickingTheTopic()
+  void concurrentlyChangedTopicTicketFailsClosedInsteadOfSilentlyInsertingASecondOne()
+  void failedConditionalOrphanDeleteFailsClosed()
+  void shellTicketPointingAtAnotherTopicsTicketIsTreatedAsAnOrphanNotAsAMatch()
+  void anotherActivitysShellTicketIsNotTouchedByThisTopicSync()
+  void adminAddingATicketOnAFreeExploreShellIsRefusedInsteadOfMintingAnUnkeyedOne()
+  void aGenuinelyUnkeyedShellRowStillForcesUnknownInventoryAndBlocksSync()
+  void addingATicketOnASelfHostClassicShellIsRefused()
+  void selfHostClassicShellTicketMustNotBrickTheNextTopicEdit()
+  void addingATicketOnAMerchantRunClassicActivityStaysAllowed()
+  void addingATicketOnAShellOfATopicWithoutAnOwnerStaysAllowed()
+  void addingATicketOnAnActivityWithoutATopicStaysAllowed()
+
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicPendingReviewSelfHostShellTest.java
+347b blob 637e290acc1d23a4895ccaa9cb998b42157d0ae0
+WIP blob c6f47ea252da075c31d683925a8cdce67d5c102a
+原 @Test 声明 13
+  void proDraftPublish_whilePendingReview_createsPublicShell()
+  void simpleDraftPublish_stillCreatesPublicShell()
+  void approvedTopic_ensureShell_isIdempotent()
+  void explicitMemberOnlySelfHostShellCarriesItsActualClubScope()
+  void publicClubSelfHostTopicsRemainPublicForBothExplicitAndLegacyFlags()
+  void memberOnlyWithoutActualClubCannotSilentlyCreateAPublicShellOrCopyTickets()
+  void pendingTopic_ensureShell_neverBuilds()
+  void rejectedTopic_ensureShell_neverBuilds()
+  void merchantPoolTopic_ensureShell_neverBuilds()
+  void existingShell_ensureShell_neverBuilds()
+  void proDraftPublish_withOverdueDebt_isRejectedAtSubmission()
+  void approvedTopic_becameOverdueDuringReview_doesNotThrowAndBuildsNoShell()
+  void debtClearedAfterApproval_refreshBuildsTheMissingShell()

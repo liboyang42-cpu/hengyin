@@ -12,6 +12,9 @@ import pathlib
 import re
 import tempfile
 import unittest
+import os
+import textwrap
+from unittest import mock
 
 _HERE = pathlib.Path(__file__).resolve().parent
 _SPEC = importlib.util.spec_from_file_location("real_storage_it", _HERE / "real_storage_it.py")
@@ -80,14 +83,146 @@ def c01_cases(nested=True, status="passed"):
 
 
 class RegistryContractTest(unittest.TestCase):
+    def test_callback_inbox_registration_and_scratch_admission_are_exact(self):
+        reg = registry()
+        fqcn = 'com.chengyinhub.business.it.RegistrationCallbackIntentMySqlIT'
+        self.assertEqual([fqcn], reg['batches']['architecture-day-payment-inbox']['classes'])
+        self.assertEqual(14, reg['classes'][fqcn]['tests'])
+        self.assertEqual(['mysql'], reg['classes'][fqcn]['storage'])
+        self.assertEqual({'B_PAYMENT_INTENT_DDL_APPROVED': '1'}, reg['classes'][fqcn]['gates'])
+        line = next(line.strip() for line in WORKFLOW.read_text().splitlines()
+                    if line.strip().startswith('B_PAYMENT_INTENT_DDL_APPROVED:'))
+        self.assertEqual("B_PAYMENT_INTENT_DDL_APPROVED: ${{ (matrix.simple == 'WechatPaymentIntentMySqlIT' || matrix.simple == 'RegistrationCallbackIntentMySqlIT' || matrix.simple == 'CoopDepositSettlementAttemptMySqlIT' || matrix.simple == 'CashWithdrawFundEvidenceMySqlIT' || matrix.simple == 'RefundPayoutMybatisIntegrationTest' || matrix.simple == 'FundsProcessRecoveryMySqlIT') && '1' || '' }}", line)
+        flag = "A_REGISTRATION_PAYMENT_FACT_DDL_APPROVED"
+        line = next(line.strip() for line in WORKFLOW.read_text().splitlines()
+                    if line.strip().startswith(flag + ":"))
+        self.assertEqual("A_REGISTRATION_PAYMENT_FACT_DDL_APPROVED: ${{ (matrix.simple == 'RegistrationCallbackIntentMySqlIT' || matrix.simple == 'RegistrationTopicFenceMySqlIT' || matrix.simple == 'RegistrationFundsMybatisIntegrationTest' || matrix.simple == 'RefundPayoutMybatisIntegrationTest' || matrix.simple == 'RefundRetryAndRemainderMySqlIT' || matrix.simple == 'RestoreMoneyDispatchMySqlIT') && '1' || '' }}", line)
+        self.assertEqual({flag: "1"}, rs.child_env({flag: "1"}, {}))
+
+    def test_refund_lifecycle_batch_has_unique_original_suites_and_exact_gates(self):
+        reg = registry()
+        expected = {
+            'com.chengyinhub.business.service.RefundPayoutMybatisIntegrationTest': 30,
+            'com.chengyinhub.business.service.impl.RefundRetryAndRemainderMySqlIT': 6,
+            'com.chengyinhub.business.service.CoopDepositRefundMybatisIntegrationTest': 36,
+        }
+        self.assertEqual(list(expected), reg['batches']['architecture-day-refund-lifecycle']['classes'])
+        self.assertEqual(72, sum(expected.values()))
+        self.assertEqual([], workflow_problems(WORKFLOW.read_text(), reg))
+        for fqcn, count in expected.items():
+            with self.subTest(fqcn=fqcn):
+                entry = reg['classes'][fqcn]
+                self.assertEqual(count, entry['tests'])
+                self.assertEqual(['mysql'], entry['storage'])
+                expected_gates = {'CHENGYIN_FUNDS_MYSQL_IT': '1'}
+                if fqcn == 'com.chengyinhub.business.service.RefundPayoutMybatisIntegrationTest':
+                    expected_gates['B_PAYMENT_INTENT_DDL_APPROVED'] = '1'
+                self.assertEqual(expected_gates, entry['gates'])
+                facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
+                self.assertEqual([], problems)
+                self.assertEqual(count, facts['declared_tests'])
+                env = rs.class_env(reg, fqcn, mysql_port=33060, suffix='_unit_a1', timezone='UTC')
+                self.assertEqual('1', env['CHENGYIN_FUNDS_MYSQL_IT'])
+                self.assertEqual('127.0.0.1', env['CHENGYIN_TEST_MYSQL_HOST'])
+                self.assertEqual('_unit_a1', env['CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX'])
+        self.assertIn(next(n for n in expected if n.endswith('.RefundRetryAndRemainderMySqlIT')),
+                      reg['batches']['port-prelaunch-69']['classes'])
+
+    def test_refund_disabled_gate_or_stale_count_fails_existing_precheck(self):
+        for fqcn in registry()['batches']['architecture-day-refund-lifecycle']['classes']:
+            for mutation in ('gate', 'count'):
+                with self.subTest(fqcn=fqcn, mutation=mutation):
+                    reg = registry()
+                    if mutation == 'gate': reg['classes'][fqcn]['gates'] = {}
+                    else: reg['classes'][fqcn]['tests'] -= 1
+                    _, problems = rs.precheck(reg, _HERE.parent, fqcn)
+                    self.assertTrue(problems, 'missing gate or stale count must fail, never silently skip')
+
+    def test_registered_literal_scratch_admissions_are_present_in_workflow(self):
+        workflow = WORKFLOW.read_text().splitlines()
+        for fqcn in registry()['classes']:
+            source = _HERE.parent / 'chengyinhub-admin/src/test/java' / (fqcn.replace('.', '/') + '.java')
+            for flag in re.findall(r'assertEquals\(\s*"1"\s*,\s*System.getenv\("([A-Z0-9_]+)"\)\)',
+                                   rs.strip_java_comments(source.read_text())):
+                with self.subTest(fqcn=fqcn, flag=flag):
+                    line = next(line.strip() for line in workflow if line.strip().startswith(flag + ':'))
+                    consumers = re.findall(r"matrix.simple == '([^']+)'", line)
+                    self.assertIn(fqcn.rsplit('.', 1)[1], consumers)
+
+    def test_topic_cash_fixture_admission_survives_child_environment_filter(self):
+        flag = 'WP04_TOPIC_CASH_DDL_APPROVED'
+        line = next(line.strip() for line in WORKFLOW.read_text().splitlines()
+                    if line.strip().startswith(flag + ':'))
+        self.assertEqual("WP04_TOPIC_CASH_DDL_APPROVED: ${{ matrix.simple == 'Wp04TopicCashFenceMySqlIT' && '1' || '' }}", line)
+        source = _HERE.parent / 'chengyinhub-admin/src/test/java/com/chengyinhub/business/it/Wp04TopicCashFenceMySqlIT.java'
+        self.assertIn('assertEquals("1", System.getenv("' + flag + '"))', source.read_text())
+        self.assertEqual({flag: '1'}, rs.child_env({flag: '1', 'CHENGYIN_FUNDS_MYSQL_IT': '1'}, {}))
+
     def test_registry_is_valid(self):
         self.assertEqual([], rs.validate_registry(registry()))
+
+    def test_verified_payment_facts_have_exact_isolated_storage_admission(self):
+        reg = registry()
+        fqcn = 'com.chengyinhub.business.it.WechatVerifiedPaymentFactMySqlIT'
+        self.assertEqual([fqcn], reg['batches']['architecture-day-verified-payment-facts']['classes'])
+        self.assertEqual({'tests': 4, 'storage': ['mysql'], 'gates': {}}, reg['classes'][fqcn])
+        flag = 'B_PAYMENT_FACT_DDL_APPROVED'
+        line = next(line.strip() for line in WORKFLOW.read_text().splitlines()
+                    if line.strip().startswith(flag + ':'))
+        self.assertEqual("B_PAYMENT_FACT_DDL_APPROVED: ${{ (matrix.simple == 'OmsOrderCommerceGuardMySqlIT' || matrix.simple == 'ClmCommercePaymentProofMySqlIT' || matrix.simple == 'WechatVerifiedPaymentFactMySqlIT' || matrix.simple == 'RegistrationTopicFenceMySqlIT' || matrix.simple == 'RefundNotificationMybatisIntegrationTest' || matrix.simple == 'RefundRetryAndRemainderMySqlIT' || matrix.simple == 'RegistrationFundsMybatisIntegrationTest' || matrix.simple == 'RefundPayoutMybatisIntegrationTest' || matrix.simple == 'CrossDomainFaultIsolationMySqlIT' || matrix.simple == 'RestoreMoneyDispatchMySqlIT') && '1' || '' }}", line)
+        self.assertEqual({flag: '1'}, rs.child_env({flag: '1'}, {}))
+        facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
+        self.assertEqual([], problems)
+        self.assertEqual(4, facts['declared_tests'])
+
+    def test_original_refund_has_exact_isolated_storage_admission(self):
+        reg = registry()
+        fqcn = 'com.chengyinhub.business.it.Wp04OriginalRefundMySqlIT'
+        self.assertEqual([fqcn], reg['batches']['architecture-day-original-refund']['classes'])
+        self.assertEqual({'tests': 25, 'storage': ['mysql'], 'gates': {}}, reg['classes'][fqcn])
+        flag = 'WP04_ORIGINAL_REFUND_DDL_APPROVED'
+        line = next(line.strip() for line in WORKFLOW.read_text().splitlines()
+                    if line.strip().startswith(flag + ':'))
+        self.assertEqual("WP04_ORIGINAL_REFUND_DDL_APPROVED: ${{ (matrix.simple == 'Wp04OriginalRefundMySqlIT' || matrix.simple == 'Wp04CoopOrderScopeMySqlIT' || matrix.simple == 'CoopOrderStationFulfillmentMySqlIT' || matrix.simple == 'Wp04OriginalProducerMySqlIT' || matrix.simple == 'CoopSettlementManualCaseReadMySqlIT') && '1' || '' }}", line)
+        self.assertEqual({flag: '1'}, rs.child_env({flag: '1'}, {}))
+        facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
+        self.assertEqual([], problems)
+        self.assertEqual(25, facts['declared_tests'])
+
+    def test_original_producer_keeps_both_exact_scratch_admissions(self):
+        reg = registry()
+        fqcn = 'com.chengyinhub.business.it.Wp04OriginalProducerMySqlIT'
+        self.assertEqual(3, reg['classes'][fqcn]['tests'])
+        workflow = WORKFLOW.read_text()
+        self.assertIn("WP04_ORIGINAL_PRODUCER_DDL_APPROVED: ${{ matrix.simple == 'Wp04OriginalProducerMySqlIT' && '1' || '' }}", workflow)
+        source = (_HERE.parent / 'chengyinhub-admin/src/test/java/com/chengyinhub/business/it/Wp04OriginalProducerMySqlIT.java').read_text()
+        self.assertIn('System.getenv("WP04_ORIGINAL_PRODUCER_DDL_APPROVED")', source)
+        self.assertIn('db.isolatedOriginalSchema()', source)
+        flags = {'WP04_ORIGINAL_REFUND_DDL_APPROVED': '1', 'WP04_ORIGINAL_PRODUCER_DDL_APPROVED': '1'}
+        self.assertEqual(flags, rs.child_env(flags, {}))
+        facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
+        self.assertEqual([], problems)
+        self.assertEqual(3, facts['declared_tests'])
+
+    def test_manual_case_read_keeps_exact_scratch_admission(self):
+        reg = registry()
+        fqcn = 'com.chengyinhub.business.it.CoopSettlementManualCaseReadMySqlIT'
+        self.assertEqual({'tests': 3, 'storage': ['mysql'], 'gates': {}, 'note': reg['classes'][fqcn]['note']}, reg['classes'][fqcn])
+        self.assertIn("WP04_MANUAL_CASE_READ_DDL_APPROVED: ${{ matrix.simple == 'CoopSettlementManualCaseReadMySqlIT' && '1' || '' }}", WORKFLOW.read_text())
+        source = (_HERE.parent / 'chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CoopSettlementManualCaseReadMySqlIT.java').read_text()
+        self.assertIn('schema.isolatedOriginalSchema()', source)
+        self.assertIn('System.getenv("WP04_MANUAL_CASE_READ_DDL_APPROVED")', source)
+        flags = {'WP04_ORIGINAL_REFUND_DDL_APPROVED': '1', 'WP04_MANUAL_CASE_READ_DDL_APPROVED': '1'}
+        self.assertEqual(flags, rs.child_env(flags, {}))
+        facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
+        self.assertEqual([], problems)
+        self.assertEqual(3, facts['declared_tests'])
 
     def test_payment_intent_requires_its_exact_hosted_ddl_approval(self):
         reg = registry()
         members = reg["batches"]["payment-intent-correctness"]["classes"]
         self.assertEqual(4, len(members))
-        for fqcn, count in zip(members[:2], (4, 3)):
+        for fqcn, count in zip(members[:2], (4, 14)):
             with self.subTest(fqcn=fqcn):
                 self.assertEqual(count, reg["classes"][fqcn]["tests"])
                 report, problems = rs.precheck(reg, _HERE.parent, fqcn)
@@ -111,6 +246,246 @@ class RegistryContractTest(unittest.TestCase):
         self.assertNotIn("B_PAYMENT_INTENT_DDL_APPROVED", rs.child_env(inherited, {}))
         self.assertEqual([], rs.scan_java('// assertEquals("1", System.getenv("B_PAYMENT_INTENT_DDL_APPROVED"));')["gates"])
 
+    def test_deposit_attempt_requires_its_existing_exact_payment_intent_admission(self):
+        reg = registry()
+        fqcn = 'com.chengyinhub.business.service.impl.CoopDepositSettlementAttemptMySqlIT'
+        flag = 'B_PAYMENT_INTENT_DDL_APPROVED'
+        self.assertEqual({'tests': 12, 'storage': ['mysql'], 'gates': {flag: '1'}},
+                         {key: reg['classes'][fqcn][key] for key in ('tests', 'storage', 'gates')})
+        for batch in ('architecture-day-deposit-attempt', 'architecture-day-integrated-changes'):
+            self.assertEqual(1, reg['batches'][batch]['classes'].count(fqcn))
+        facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
+        self.assertEqual([], problems)
+        self.assertEqual(12, facts['declared_tests'])
+        self.assertEqual([{'named': flag, 'matches': '1'}], facts['source_gates'])
+        for gates in ({}, {flag: '0'}, {flag: 'true'}):
+            rejected = copy.deepcopy(reg)
+            rejected['classes'][fqcn]['gates'] = gates
+            with self.subTest(gates=gates):
+                self.assertTrue(rs.precheck(rejected, _HERE.parent, fqcn)[1],
+                                'missing/wrong explicit approval must fail before storage, never silently skip')
+        inherited = {'PATH': '/usr/bin', flag: '1'}
+        self.assertNotIn(flag, rs.child_env(inherited, {}))
+        extra = rs.class_env(reg, fqcn, mysql_port=40001, suffix='_gh123456a1')
+        self.assertEqual('1', extra[flag])
+        self.assertEqual('1', rs.child_env({'PATH': '/usr/bin', flag: '0'}, extra)[flag])
+        approval_line = next(line.strip() for line in WORKFLOW.read_text().splitlines()
+                             if line.strip().startswith(flag + ':'))
+        self.assertIn("matrix.simple == 'CoopDepositSettlementAttemptMySqlIT'", approval_line)
+
+    def test_order_scope_uses_original_isolated_fixture_without_broadening_admission(self):
+        reg = registry()
+        fqcn = 'com.chengyinhub.business.it.Wp04CoopOrderScopeMySqlIT'
+        self.assertEqual({'tests': 11, 'storage': ['mysql'], 'gates': {}}, reg['classes'][fqcn])
+        for batch in ('architecture-day-funds-closure', 'architecture-day-integrated-changes'):
+            self.assertEqual(1, reg['batches'][batch]['classes'].count(fqcn))
+        facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
+        self.assertEqual([], problems)
+        self.assertEqual(11, facts['declared_tests'])
+        source = (_HERE.parent / facts['path']).read_text()
+        self.assertIn('new Wp04OriginalRefundMySqlIT()', source)
+        self.assertIn('storage.isolatedOriginalSchema()', source)
+        self.assertIn('storage.dropOnlyThisSuccessfullyCreatedDatabase()', source)
+        inherited = (_HERE.parent / 'chengyinhub-admin/src/test/java/com/chengyinhub/business/it/Wp04OriginalRefundMySqlIT.java').read_text()
+        self.assertIn('assertEquals("1",System.getenv("WP04_ORIGINAL_REFUND_DDL_APPROVED"))', inherited)
+        self.assertIn('assertEquals("github-hosted",System.getenv("RUNNER_ENVIRONMENT"))', inherited)
+
+    def test_station_redemption_caller_uses_owned_hosted_database_and_keeps_g_boundary_explicit(self):
+        reg = registry()
+        fqcn = 'com.chengyinhub.business.it.RegistrationStationFulfillmentMySqlIT'
+        self.assertEqual({'tests': 9, 'storage': ['mysql'], 'gates': {}, 'database_base': 'architecture_a'}, reg['classes'][fqcn])
+        facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
+        self.assertEqual([], problems)
+        self.assertEqual(9, facts['declared_tests'])
+        for batch in ('architecture-day-registration-write', 'architecture-day-funds-closure', 'architecture-day-integrated-changes'):
+            self.assertEqual(1, reg['batches'][batch]['classes'].count(fqcn))
+        source = (_HERE.parent / facts['path']).read_text()
+        self.assertIn('assertEquals("github-hosted", System.getenv("RUNNER_ENVIRONMENT"))', source)
+        self.assertIn('assertNotNull(System.getenv("CHENGYIN_TEST_MYSQL_" + key))', source)
+        self.assertIn('if (created)', source)
+        self.assertIn('DROP DATABASE', source)
+        self.assertIn('WHERE schema_name=?', source)
+        self.assertIn('mock(ICoopSettlementClaimService.class)', source)
+
+    def test_confirmed_station_proof_uses_canonical_source_and_original_isolated_gate(self):
+        reg = registry()
+        fqcn = 'com.chengyinhub.business.it.CoopOrderStationFulfillmentMySqlIT'
+        self.assertEqual({'tests': 13, 'storage': ['mysql'], 'gates': {}}, reg['classes'][fqcn])
+        for batch in ('architecture-day-funds-closure', 'architecture-day-integrated-changes'):
+            self.assertEqual(1, reg['batches'][batch]['classes'].count(fqcn))
+        facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
+        self.assertEqual([], problems)
+        self.assertEqual(13, facts['declared_tests'])
+        source = (_HERE.parent / facts['path']).read_text()
+        self.assertIn('new Wp04CoopOrderScopeMySqlIT()', source)
+        self.assertIn('flow.canonicalScopeAndCash()', source)
+        self.assertIn('flow.onlyOwnedCleanup()', source)
+        self.assertIn('migration_20261025_coop_order_station_fulfillment.sql', source)
+        inherited = (_HERE.parent / 'chengyinhub-admin/src/test/java/com/chengyinhub/business/it/Wp04OriginalRefundMySqlIT.java').read_text()
+        self.assertIn('assertEquals("1",System.getenv("WP04_ORIGINAL_REFUND_DDL_APPROVED"))', inherited)
+
+    def test_supply_station_invite_source_requires_real_mysql_and_owned_cleanup(self):
+        reg = registry()
+        fqcn = 'com.chengyinhub.business.service.impl.CoopSupplyStationMySqlIT'
+        self.assertEqual({'tests': 7, 'storage': ['mysql'], 'gates': {}}, reg['classes'][fqcn])
+        for batch in ('architecture-day-funds-closure', 'architecture-day-integrated-changes'):
+            self.assertEqual(1, reg['batches'][batch]['classes'].count(fqcn))
+        facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
+        self.assertEqual([], problems)
+        self.assertEqual(7, facts['declared_tests'])
+        source = (_HERE.parent / facts['path']).read_text()
+        self.assertIn('Explicit scratch connection required: ', source)
+        self.assertIn('CHENGYIN_MYBATIS_IT_', source)
+        self.assertIn('if(ownedSchema==null)return;', source)
+        self.assertIn('DROP DATABASE', source)
+        self.assertIn('WHERE schema_name=?', source)
+        self.assertIn('new CoopInviteServiceImpl()', source)
+        self.assertIn('new DataSourceTransactionManager(source)', source)
+
+    def test_reuse_publication_and_declarations_cannot_omit_real_storage_source_cases(self):
+        reg = registry()
+        expected = {
+            'com.chengyinhub.business.it.TemplateAdoptionRoundTripMySqlIT': 6,
+            'com.chengyinhub.business.it.ThemeStateKeyDeclarationMySqlIT': 6,
+            'com.chengyinhub.business.service.impl.TopicPublicationBindingMySqlIT': 9,
+        }
+        for fqcn, count in expected.items():
+            with self.subTest(fqcn=fqcn):
+                self.assertEqual(count, reg['classes'][fqcn]['tests'])
+                self.assertEqual(['mysql'], reg['classes'][fqcn]['storage'])
+                self.assertEqual({}, reg['classes'][fqcn]['gates'])
+                self.assertEqual(1, reg['batches']['architecture-day-integrated-changes']['classes'].count(fqcn))
+                facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
+                self.assertEqual([], problems)
+                self.assertEqual(count, facts['declared_tests'])
+                stale = copy.deepcopy(reg)
+                stale['classes'][fqcn]['tests'] -= 1
+                self.assertTrue(rs.precheck(stale, _HERE.parent, fqcn)[1])
+
+    def test_funds_process_source_has_exact_gates_count_and_unique_batch_routes(self):
+        reg = registry()
+        fqcn = 'com.chengyinhub.business.service.impl.FundsProcessRecoveryMySqlIT'
+        gates = {'B_PAYMENT_INTENT_DDL_APPROVED': '1', 'B_FUNDS_PROCESS_RECOVERY_APPROVED': '1'}
+        self.assertEqual({'tests': 14, 'storage': ['mysql'], 'gates': gates,
+                          'database_base': 'architecture_a'},
+                         {key: reg['classes'][fqcn][key] for key in ('tests', 'storage', 'gates', 'database_base')})
+        for batch in ('architecture-day-funds-closure', 'architecture-day-integrated-changes'):
+            self.assertEqual(1, reg['batches'][batch]['classes'].count(fqcn))
+        facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
+        self.assertEqual([], problems)
+        self.assertEqual(14, facts['declared_tests'])
+        for flag in gates:
+            denied = copy.deepcopy(reg)
+            denied['classes'][fqcn]['gates'].pop(flag)
+            self.assertTrue(rs.precheck(denied, _HERE.parent, fqcn)[1])
+        stale = copy.deepcopy(reg)
+        stale['classes'][fqcn]['tests'] = 13
+        self.assertTrue(rs.precheck(stale, _HERE.parent, fqcn)[1])
+        env = rs.class_env(reg, fqcn, mysql_port=33060, suffix='_unit_b_funds')
+        for flag in gates:
+            self.assertEqual('1', env[flag])
+            self.assertNotIn(flag, rs.child_env({flag: '1', 'PATH': '/usr/bin'}, {}))
+            self.assertEqual([], rs.scan_java('// assertEquals("1", System.getenv("' + flag + '"));')['gates'])
+        self.assertIsNone(rs.GATE_NAME_RE.fullmatch('B_FUNDS_ARBITRARY_APPROVED'))
+        self.assertEqual([], workflow_problems(WORKFLOW.read_text(), reg))
+        self.assertIn("B_FUNDS_PROCESS_RECOVERY_APPROVED: " +
+                      "${{ matrix.simple == 'FundsProcessRecoveryMySqlIT' && '1' || '' }}",
+                      WORKFLOW.read_text())
+
+    def test_funds_process_artifact_step_exports_only_exact_source_json(self):
+        workflow = WORKFLOW.read_text()
+        step = workflow.split('      - name: Collect funds process JSON receipts\n', 1)[1]
+        step = step.split('      - name: Upload class receipt\n', 1)[0]
+        self.assertIn("if: always() && matrix.simple == 'FundsProcessRecoveryMySqlIT'", step)
+        script = textwrap.dedent(step.split("          python3 - <<'PY'\n", 1)[1]
+                                 .split('          PY\n', 1)[0])
+        for case in ('valid', 'missing', 'bad_sha', 'symlink', 'invalid_json', 'foreign_identity', 'foreign_workflow', 'missing_run', 'missing_identity'):
+            with self.subTest(case=case), tempfile.TemporaryDirectory() as temp:
+                original = pathlib.Path.cwd()
+                try:
+                    os.chdir(temp)
+                    source = pathlib.Path('candidate/chengyinhub-admin/target/funds-process-recovery') / SHA / 'run'
+                    if case != 'missing':
+                        source.mkdir(parents=True)
+                        (source / 'identity.json').write_text('{bad' if case == 'invalid_json'
+                                                             else json.dumps({'sourceSha': '0' * 40 if case == 'foreign_identity' else SHA}))
+                        (source / 'stdout.log').write_text('private diagnostic sentinel')
+                        if case == 'missing_identity':
+                            (source / 'identity.json').rename(source / 'other.json')
+                    if case == 'symlink':
+                        outside = pathlib.Path('outside.json')
+                        outside.write_text('{}')
+                        (source / 'escape.json').symlink_to(outside.resolve())
+                    with mock.patch.dict(os.environ, {'SOURCE_SHA': 'not-a-sha' if case == 'bad_sha' else SHA,
+                                                     'GITHUB_SHA': '0' * 40 if case == 'foreign_workflow' else SHA,
+                                                     'GITHUB_RUN_ID': '' if case == 'missing_run' else '123',
+                                                     'GITHUB_RUN_ATTEMPT': '2'}):
+                        if case == 'valid':
+                            exec(script, {})
+                            output = pathlib.Path('out/funds-process-recovery') / SHA / 'run'
+                            self.assertEqual({'sourceSha': SHA}, json.loads((output / 'identity.json').read_text()))
+                            self.assertEqual(['identity.json'], sorted(path.name for path in output.iterdir()))
+                            index = json.loads(pathlib.Path('out/funds-process-evidence-index.json').read_text())
+                            self.assertEqual((SHA, '123', '2'), (index['sourceSha'], index['runId'], index['runAttempt']))
+                            self.assertEqual({'run/identity.json': __import__('hashlib').sha256((output / 'identity.json').read_bytes()).hexdigest()}, index['files'])
+                        else:
+                            with self.assertRaises(ValueError):
+                                exec(script, {})
+                    self.assertEqual([], list(pathlib.Path('out').rglob('*.log')))
+                    self.assertEqual([], list(pathlib.Path('out').rglob('escape.json')))
+                finally:
+                    os.chdir(original)
+
+    def test_cross_domain_isolation_has_both_stores_and_its_existing_fact_approval(self):
+        reg = registry()
+        fqcn = 'com.chengyinhub.business.it.CrossDomainFaultIsolationMySqlIT'
+        self.assertEqual({'tests': 1, 'storage': ['mysql', 'redis'], 'gates': {}},
+                         {key: reg['classes'][fqcn][key] for key in ('tests', 'storage', 'gates')})
+        self.assertEqual(1, reg['batches']['architecture-day-integrated-changes']['classes'].count(fqcn))
+        facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
+        self.assertEqual([], problems)
+        self.assertEqual(1, facts['declared_tests'])
+        stale = copy.deepcopy(reg)
+        stale['classes'][fqcn]['tests'] = 0
+        self.assertTrue(rs.precheck(stale, _HERE.parent, fqcn)[1])
+        env = rs.class_env(reg, fqcn, mysql_port=33060, redis_port=36379, suffix='_unit_isolation')
+        self.assertEqual('127.0.0.1', env['CHENGYIN_MYBATIS_IT_HOST'])
+        self.assertEqual('33060', env['CHENGYIN_MYBATIS_IT_PORT'])
+        self.assertIn('CHENGYIN_MYBATIS_IT_PASSWORD', env)
+        self.assertEqual('127.0.0.1', env['CHENGYIN_AI_REDIS_IT_HOST'])
+        self.assertEqual('36379', env['CHENGYIN_AI_REDIS_IT_PORT'])
+        self.assertEqual('0', env['CHENGYIN_AI_REDIS_IT_DATABASE'])
+        helper = (_HERE.parent / 'chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainStorageFixture.java').read_text()
+        self.assertIn('assertEquals("1", required("B_PAYMENT_FACT_DDL_APPROVED"))', helper)
+        flag = next(line.strip() for line in WORKFLOW.read_text().splitlines()
+                    if line.strip().startswith('B_PAYMENT_FACT_DDL_APPROVED:'))
+        self.assertIn("matrix.simple == 'CrossDomainFaultIsolationMySqlIT'", flag)
+        self.assertEqual([], workflow_problems(WORKFLOW.read_text(), reg))
+
+    def test_restore_money_source_routes_the_fixed_child_and_both_original_fact_approvals(self):
+        reg = registry()
+        fqcn = 'com.chengyinhub.business.service.RestoreMoneyDispatchMySqlIT'
+        self.assertEqual({'tests': 1, 'storage': ['mysql'], 'gates': {}, 'database_base': 'architecture_a'},
+                         {key: reg['classes'][fqcn][key] for key in ('tests', 'storage', 'gates', 'database_base')})
+        for batch in ('architecture-day-funds-closure', 'architecture-day-integrated-changes'):
+            self.assertEqual(1, reg['batches'][batch]['classes'].count(fqcn))
+        facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
+        self.assertEqual([], problems)
+        self.assertEqual(1, facts['declared_tests'])
+        stale = copy.deepcopy(reg)
+        stale['classes'][fqcn]['tests'] = 0
+        self.assertTrue(rs.precheck(stale, _HERE.parent, fqcn)[1])
+        env = rs.class_env(reg, fqcn, mysql_port=33060, suffix='_unit_restore')
+        self.assertEqual('architecture_a', env['CHENGYIN_TEST_MYSQL_DATABASE_BASE'])
+        self.assertEqual('_unit_restore', env['CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX'])
+        self.assertEqual('127.0.0.1', env['CHENGYIN_TEST_MYSQL_HOST'])
+        workflow = WORKFLOW.read_text()
+        for flag in ('B_PAYMENT_FACT_DDL_APPROVED', 'A_REGISTRATION_PAYMENT_FACT_DDL_APPROVED'):
+            line = next(line.strip() for line in workflow.splitlines() if line.strip().startswith(flag + ':'))
+            self.assertIn("matrix.simple == 'RestoreMoneyDispatchMySqlIT'", line)
+        self.assertNotIn('CHENGYIN_RESTORE_MODE:', workflow)
+        self.assertEqual([], workflow_problems(workflow, reg))
+
     def test_batch_totals_match_the_remaining_receipt(self):
         # 23 条真库 + OWN_C01_51 外层 4 条普通；AI 15+7；E04-07 5+5（原回执41/43新增回归）；E02-22 9 + E02-25 2 + 三夹具 3；B05 3；F3 12（含死锁重试负控）。
         # 类条数全局唯一，按 master 侧登记：冲回 3→4、券生命周期 12→16、分享快照并发 2→3（extra-storage 71→76）。
@@ -118,14 +493,52 @@ class RegistryContractTest(unittest.TestCase):
         # port-prelaunch-69(W8)：退款通知 9 + 退款重试余量 5 + 漫游定位留存 21。
         # p0-acceptance-ac1(AC1)：核销 5 + 跨账号 3 + 城市跑 2 + 自由探索供给闸 2 + 注销 1。
         # port-*：同批 master 侧移植，类与条数同原批；port-core-funds 27；port-ai-quota 22；port-f3-growth 12；port-f3-evidence 4。
-        expected = {"core-funds": 27, "ai-quota": 22, "e04-07-coupon": 10, "community-e02": 14,
-                    "b05-visibility": 3, "f3-growth": 12, "extra-storage": 131,
+        expected = {"core-funds": 27, "ai-quota": 24, "e04-07-coupon": 10, "community-e02": 14,
+                    "b05-visibility": 3, "f3-growth": 12, "extra-storage": 133,
                     "port-e04-07-coupon": 10, "port-community-e02": 14, "port-b05-visibility": 3,
-                    "port-extra-storage": 131,
-                    "port-core-funds": 27, "port-ai-quota": 22,
+                    "port-extra-storage": 133,
+                    "port-core-funds": 27, "port-ai-quota": 24,
                     "port-f3-growth": 12, "port-f3-evidence": 4,
-                    "funnel-max-date": 4, "port-prelaunch-69": 35,
-                    "p0-acceptance-ac1": 13, "payment-intent-correctness": 19}
+                    "funnel-max-date": 4, "port-prelaunch-69": 36,
+                    "p0-acceptance-ac1": 13, "architecture-day-batch1": 77,
+                    "architecture-day-wave2": 85, "architecture-day-photo": 15,
+                    "architecture-day-broadcast-migration": 10, "architecture-day-settlement": 7,
+                    "architecture-day-state-recovery": 51,
+                    "architecture-day-runtime-governance": 37,
+                    "architecture-day-registration-write": 120,
+                    "architecture-day-im-revocation": 2,
+                    "architecture-day-w19-owner-notice": 29,
+                    "architecture-day-play-scheduler": 16,
+                    "architecture-day-cash-expand": 45,
+                    "architecture-day-ai-not-sent": 4,
+                    "architecture-day-lead-admission": 14,
+                    "architecture-day-topic-copy": 28,
+                    "architecture-day-topic-authoring": 32,
+                    "architecture-day-theme-intent": 23,
+                    "architecture-day-payment-intent": 4,
+                    "architecture-day-payment-inbox": 14,
+                    "architecture-day-verified-payment-facts": 4,
+                    "architecture-day-registration-seats": 7,
+                    "architecture-day-original-refund": 25,
+                    "architecture-day-deposit-attempt": 12,
+                    "architecture-day-topic-content-budget": 15,
+                    "architecture-day-committed-official-notice": 19,
+                    "architecture-day-complaint-committed-notice": 11,
+                    "architecture-day-complaint-notice-rejection": 8,
+                    "architecture-day-chapter-application-round": 20,
+                    "architecture-day-citynode-original-receipt": 6,
+                    "architecture-day-registration-topic-fence": 46,
+                    "architecture-day-topic-cash-fence": 5,
+                    "architecture-day-scheduler-two-process": 3,
+                    "architecture-day-cash-recovery": 10,
+                    "architecture-day-funds-closure": 274,
+                    "architecture-day-npc-voice-asr": 14,
+                    "architecture-day-clm-commerce-proof": 8,
+                    "architecture-day-media-retry-budget": 8,
+                    "architecture-day-before-start-notice": 12,
+                    "architecture-day-commerce-generic-guard": 6,
+                    "architecture-day-refund-lifecycle": 72,
+                    "architecture-day-integrated-changes": 922, "payment-intent-correctness": 30}
         reg = registry()
         totals = {name: sum(reg["classes"][fqcn]["tests"] for fqcn in batch["classes"])
                   for name, batch in reg["batches"].items()}
@@ -138,7 +551,7 @@ class RegistryContractTest(unittest.TestCase):
             "com.chengyinhub.business.service.impl.ImLegacyReadLockMySqlIT": (5, "CHENGYIN_IM_LEGACY_LOCK_MYSQL_IT"),
             "com.chengyinhub.business.it.CoopClubApplyInboxMySqlIT": (1, None),
             "com.chengyinhub.business.it.CoopServiceRealDbIT": (1, None),
-            "com.chengyinhub.business.it.TemplateAdoptionRoundTripMySqlIT": (4, None),
+            "com.chengyinhub.business.it.TemplateAdoptionRoundTripMySqlIT": (6, None),
             "com.chengyinhub.business.mapper.ActivityCancelPlayerProjectionMyBatisIT": (1, None),
             "com.chengyinhub.business.service.TemplateClearFieldsMySqlIT": (3, None),
             "com.chengyinhub.business.service.impl.GameplayReskinMySqlIT": (1, None),
@@ -154,6 +567,55 @@ class RegistryContractTest(unittest.TestCase):
                 facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
                 self.assertEqual([], problems)
                 self.assertEqual([], facts["nested"])
+
+    def test_registration_and_revocation_batches_require_current_counts_and_real_gates(self):
+        reg = registry()
+        expected = {
+            "com.chengyinhub.business.service.RegistrationFundsMybatisIntegrationTest": (96, {"CHENGYIN_FUNDS_MYSQL_IT": "1"}),
+            "com.chengyinhub.business.it.MerchantRegistrationCancellationMySqlIT": (15, {}),
+            "com.chengyinhub.business.it.RegistrationStationFulfillmentMySqlIT": (9, {}),
+        }
+        self.assertEqual(list(expected), reg["batches"]["architecture-day-registration-write"]["classes"])
+        revoked = "com.chengyinhub.business.service.impl.ImActivityTeamRevocationMySqlIT"
+        self.assertEqual([revoked], reg["batches"]["architecture-day-im-revocation"]["classes"])
+        expected[revoked] = (2, {})
+        for fqcn, (count, gates) in expected.items():
+            self.assertEqual(count, reg["classes"][fqcn]["tests"])
+            self.assertEqual(gates, reg["classes"][fqcn]["gates"])
+            facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
+            self.assertEqual([], problems)
+            self.assertEqual(count, facts["declared_tests"])
+            self.assertEqual([], facts["nested"])
+
+    def test_w19_owner_notification_requires_new_intent_and_original_supply_regression(self):
+        reg = registry()
+        expected = {
+            "com.chengyinhub.business.service.impl.MerchantOfferOwnerNoticeIntentMySqlIT": (21, {"CHENGYIN_FUNDS_MYSQL_IT": "1"}),
+            "com.chengyinhub.business.it.FreeExploreNodeSupplyMySqlIT": (8, {}),
+        }
+        self.assertEqual(list(expected), reg["batches"]["architecture-day-w19-owner-notice"]["classes"])
+        for fqcn, (count, gates) in expected.items():
+            self.assertEqual(count, reg["classes"][fqcn]["tests"])
+            self.assertEqual(gates, reg["classes"][fqcn]["gates"])
+            facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
+            self.assertEqual([], problems)
+            self.assertEqual(count, facts["declared_tests"])
+            self.assertEqual([], facts["nested"])
+
+    def test_play_and_scheduler_batch_preserves_exact_non_dynamic_cases(self):
+        reg = registry()
+        expected = {
+            "com.chengyinhub.business.it.PlayHintUnlockMySqlIT": 10,
+            "com.chengyinhub.quartz.util.SchedulerSessionLockMySqlIT": 3,
+            "com.chengyinhub.quartz.util.SchedulerHandoffBoundaryMySqlIT": 3,
+        }
+        self.assertEqual(list(expected), reg["batches"]["architecture-day-play-scheduler"]["classes"])
+        for fqcn, count in expected.items():
+            self.assertEqual(count, reg["classes"][fqcn]["tests"])
+            facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
+            self.assertEqual([], problems)
+            self.assertEqual(count, facts["declared_tests"])
+            self.assertEqual([], facts["nested"])
 
     def test_cloudten_routes_keep_their_namespace_and_never_claim_hosted_is_vps(self):
         reg = registry()
@@ -474,6 +936,117 @@ class SummaryTest(unittest.TestCase):
                 self.assertTrue(any("cleanup" in problem for problem in summary["problems"]))
 
 
+class FinalEntryBindingTest(unittest.TestCase):
+    WORKFLOW = {'repository': 'liboyang42-cpu/hengyin', 'run_id': '123', 'run_attempt': '2',
+                'workflow_sha': SHA, 'workflow_ref': 'refs/heads/codex/candidate', 'job': 'summary'}
+
+    def test_parent_restore_mode_is_absent_not_an_approval_or_silently_filtered(self):
+        self.assertEqual({'PATH': '/bin'}, rs.child_env({'PATH': '/bin'}, {}))
+        for value in ('', 'false', 'true', 'invalid', None):
+            for base, extra in (({'CHENGYIN_RESTORE_MODE': value}, {}),
+                                ({}, {'CHENGYIN_RESTORE_MODE': value})):
+                with self.subTest(value=value, extra=bool(extra)), self.assertRaises(rs.GateError):
+                    rs.child_env(base, extra)
+        reg = registry()
+        reg['classes'][E04]['gates']['CHENGYIN_RESTORE_MODE'] = 'true'
+        self.assertTrue(rs.validate_class_entry(E04, reg['classes'][E04]))
+        self.assertEqual(('B_PAYMENT_INTENT_DDL_APPROVED', 'B_FUNDS_PROCESS_RECOVERY_APPROVED'),
+                         rs.REVIEWED_APPROVAL_GATES)
+
+    def test_B_native_identity_requires_same_workflow_sha_without_context_replacement(self):
+        fqcn = 'com.chengyinhub.business.service.impl.FundsProcessRecoveryMySqlIT'
+        env = {'GITHUB_SHA': SHA}
+        rs.require_class_source(fqcn, SHA, env)
+        self.assertEqual({'GITHUB_SHA': SHA}, env)
+        for observed in ('', '0' * 40):
+            with self.subTest(observed=observed), self.assertRaises(rs.GateError):
+                rs.require_class_source(fqcn, SHA, {'GITHUB_SHA': observed})
+        # Original two-source M1 remains supported; it does not emit B's GITHUB_SHA directory.
+        rs.require_class_source('com.chengyinhub.business.it.PlayHintUnlockMySqlIT', SHA, {})
+
+    def receipt(self, fqcn):
+        count = registry()['classes'][fqcn]['tests']
+        return dict(SummaryTest.receipt(fqcn), schema=rs.RECEIPT_SCHEMA, expected_tests=count,
+                    workflow=dict(self.WORKFLOW, job='storage_it'),
+                    executed={'tests': count, 'failures': 0, 'errors': 0, 'skipped': 0},
+                    maven={'exit_code': 0}, precheck={'candidate': {'sha': SHA}},
+                    cleanup={'status': 'CLEAN', 'mysql_leftover_schemas': []},
+                    teardown={'mysql': {'removed': True}})
+
+    def summary(self, receipts):
+        reg = registry()
+        planned = [item for item in rs.plan(reg, SHA, 'core-funds', '', 'UTC') if item['class'] in (E04, C01)]
+        with tempfile.TemporaryDirectory() as temp:
+            for index, receipt in enumerate(receipts):
+                path = pathlib.Path(temp, str(index)); path.mkdir()
+                (path / 'receipt.json').write_text(json.dumps(receipt))
+            return rs.summarize(reg, temp, planned, 'core-funds', SHA, workflow=self.WORKFLOW)[0]
+
+    def test_same_run_exact_original_execution_and_cleanup_receipts_pass(self):
+        self.assertEqual('PASS', self.summary([self.receipt(E04), self.receipt(C01)])['verdict'])
+
+    def test_foreign_duplicate_missing_or_incomplete_receipts_cannot_be_promoted(self):
+        cases = ('run_id', 'run_attempt', 'workflow_sha', 'repository', 'workflow_ref', 'job',
+                 'duplicate', 'missing', 'schema', 'count', 'skip', 'maven', 'candidate',
+                 'unknown_cleanup', 'missing_readback', 'missing_teardown', 'malformed', 'boolean_exit', 'unknown_class')
+        for case in cases:
+            receipts = [self.receipt(E04), self.receipt(C01)]
+            receipt = receipts[-1]
+            if case in self.WORKFLOW:
+                receipt['workflow'][case] = 'foreign'
+            elif case == 'duplicate': receipts.append(copy.deepcopy(receipt))
+            elif case == 'missing': receipts.pop()
+            elif case == 'schema': receipt['schema'] = 'foreign'
+            elif case == 'count': receipt['executed']['tests'] -= 1
+            elif case == 'skip': receipt['executed']['skipped'] = 1
+            elif case == 'maven': receipt['maven']['exit_code'] = 98
+            elif case == 'candidate': receipt['precheck']['candidate']['sha'] = '0' * 40
+            elif case == 'unknown_cleanup': receipt['cleanup']['status'] = 'UNKNOWN'
+            elif case == 'missing_readback': receipt['cleanup'].pop('mysql_leftover_schemas')
+            elif case == 'missing_teardown': receipt.pop('teardown')
+            elif case == 'malformed': receipt['executed'] = None
+            elif case == 'boolean_exit': receipt['maven']['exit_code'] = False
+            elif case == 'unknown_class': receipt['class'] = ''
+            with self.subTest(case=case):
+                self.assertEqual('FAIL', self.summary(receipts)['verdict'])
+
+    def test_summary_cli_and_download_bind_the_current_attempt(self):
+        env = dict(GITHUB_REPOSITORY=self.WORKFLOW['repository'], GITHUB_RUN_ID='123',
+                   GITHUB_RUN_ATTEMPT='2', GITHUB_SHA=SHA, GITHUB_REF=self.WORKFLOW['workflow_ref'],
+                   GITHUB_JOB='summary', SOURCE_SHA=SHA, BATCH='core-funds', PLANNED='[]')
+        with mock.patch.object(rs, 'summarize', side_effect=rs.GateError('controlled stop')) as call:
+            with self.assertRaises(rs.GateError):
+                rs.cmd_summarize(mock.Mock(), env)
+        self.assertEqual(self.WORKFLOW, {key: call.call_args.kwargs['workflow'][key] for key in self.WORKFLOW})
+        self.assertIn('pattern: rs-class-*-a${{ github.run_attempt }}', WORKFLOW.read_text())
+
+    def test_theme_runtime_keeps_native_parameterized_backend_entry(self):
+        reg = registry()
+        self.assertFalse(any(rs.simple_name(name) == 'ThemeRuntimeMySqlIT' for name in reg['classes']))
+        source = (_HERE / 'backend-test.sh').read_text()
+        self.assertIn('ThemeRuntimeMySqlIT', source)
+        self.assertIn('MYBATIS_ITS', source)
+        self.assertIn('assert_it_ran.py', source)
+        self.assertIn('-Dtest="$IT_LIST"', source)
+
+    def test_failed_collection_or_matrix_cannot_be_hidden_by_pass_receipts(self):
+        for result in ('success', 'failure', 'cancelled', 'UNKNOWN'):
+            with self.subTest(result=result), tempfile.TemporaryDirectory() as temp:
+                env = dict(GITHUB_REPOSITORY=self.WORKFLOW['repository'], GITHUB_RUN_ID='123',
+                           GITHUB_RUN_ATTEMPT='2', GITHUB_SHA=SHA, GITHUB_REF=self.WORKFLOW['workflow_ref'],
+                           GITHUB_JOB='summary', SOURCE_SHA=SHA, BATCH='core-funds', PLANNED='[]',
+                           STORAGE_MATRIX_RESULT=result)
+                args = __import__('argparse').Namespace(receipts=temp, out=str(pathlib.Path(temp, 'out')))
+                with mock.patch.object(rs, 'summarize', return_value=({'verdict': 'PASS', 'problems': []}, [])), \
+                     mock.patch.object(rs, 'summary_markdown', return_value='controlled summary'):
+                    code = rs.cmd_summarize(args, env)
+                self.assertEqual(0 if result == 'success' else 1, code)
+                written = json.loads(pathlib.Path(args.out, 'summary.json').read_text())
+                self.assertEqual('PASS' if result == 'success' else 'FAIL', written['verdict'])
+                self.assertEqual(result, written['storage_matrix_result'])
+        self.assertEqual(2, WORKFLOW.read_text().count('STORAGE_MATRIX_RESULT: ${{ needs.storage_it.result }}'))
+
+
 class FakeClock:
     def __init__(self, step):
         self.now = 0.0
@@ -631,6 +1204,9 @@ class RunFlowTest(unittest.TestCase):
         self.assertEqual("3.2.5", receipt["toolchain"]["surefire"])
         self.assertEqual("CLEAN", receipt["cleanup"]["status"])
         self.assertTrue((self.out / "surefire-reports").is_dir())
+        raw = self.out / "surefire-reports" / ("TEST-%s.xml" % C01)
+        self.assertEqual({raw.name: __import__('hashlib').sha256(raw.read_bytes()).hexdigest()},
+                         receipt['surefire_xml_sha256'])
 
     def test_fail_when_nested_dropped_and_leftover_recorded(self):
         code, receipt = self.run_class(c01_cases(nested=False), schemas_after=("mysql", "sys", "cyit_leak"))
@@ -707,8 +1283,11 @@ def workflow_problems(text, reg):
         problems.append("every job must run on GitHub-hosted ubuntu-latest")
     if len(re.findall(r"^    timeout-minutes: \d+$", text, re.MULTILINE)) != len(runs_on):
         problems.append("every job needs timeout-minutes")
-    if "      max-parallel: 20\n" not in text or "      fail-fast: false\n" not in text:
-        problems.append("matrix must keep max-parallel: 20 and fail-fast: false")
+    matrix_jobs = [block for block in re.findall(r"^  [A-Za-z0-9_]+:\n([\s\S]*?)(?=^  [A-Za-z0-9_]+:|\Z)", text, re.MULTILINE)
+                   if re.search(r"^      matrix:\s*$", block, re.MULTILINE)]
+    if not matrix_jobs or any("      max-parallel: 20\n" not in block or "      fail-fast: false\n" not in block
+                              for block in matrix_jobs):
+        problems.append("every matrix must keep max-parallel: 20 and fail-fast: false")
     steps = re.split(r"\n(?=      - )", text)
     for step in steps:
         if "uses: actions/checkout@" in step and "persist-credentials: false" not in step:
@@ -748,6 +1327,8 @@ class WorkflowContractTest(unittest.TestCase):
             "self-hosted": self.text.replace("runs-on: ubuntu-latest", "runs-on: [self-hosted, chengyin]", 1),
             "parallel cap": self.text.replace("max-parallel: 20", "max-parallel: 50", 1),
             "batch choice drift": self.text.replace("          - extra-storage\n", "", 1),
+            "batch choice order": self.text.replace("          - payment-intent-correctness\n          - core-funds\n",
+                                                    "          - core-funds\n          - payment-intent-correctness\n", 1),
             "secrets": self.text.replace("TIMEZONE: ${{ inputs.timezone }}",
                                          "TIMEZONE: ${{ secrets.DB_PASSWORD }}", 1),
             "write permission": self.text.replace("  contents: read\n", "  contents: write\n", 1),
@@ -756,6 +1337,224 @@ class WorkflowContractTest(unittest.TestCase):
             with self.subTest(label):
                 self.assertNotEqual(self.text, mutated, "negative control could not mutate: " + label)
                 self.assertTrue(workflow_problems(mutated, registry()), label)
+
+
+
+class M1PairTest(unittest.TestCase):
+    """Gate-only synthetic receipts/HEAD stubs. These are not Java/MySQL/canonical evidence."""
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = pathlib.Path(self.temp.name)
+        self.env = {"SOURCE_SHA": SHA, "OLD_SOURCE_SHA": "a" * 40, "BATCH": rs.M1_PAIR_BATCH,
+                    "CLASSES": "", "TIMEZONE": "UTC", "GITHUB_RUN_ID": "40050022063", "GITHUB_RUN_ATTEMPT": "2",
+                    "GITHUB_SHA": "b" * 40, "GITHUB_REPOSITORY": "liboyang42-cpu/hengyin",
+                    "PAIR_STORAGE_RESULT": "success", "PAIR_SUMMARY_RESULT": "success"}
+        self.old, self.new = self.root / "old", self.root / "new"
+
+    def receipts(self):
+        records = []
+        suffix = rs.database_suffix(self.env["GITHUB_RUN_ID"], self.env["GITHUB_RUN_ATTEMPT"])
+        for side, directory, sha in (("old", self.old, self.env["OLD_SOURCE_SHA"]), ("new", self.new, SHA)):
+            for fqcn, count in rs.M1_PAIR_CLASSES.items():
+                record = {"schema": rs.RECEIPT_SCHEMA, "class": fqcn, "source_sha": sha, "batch": rs.M1_PAIR_BATCH,
+                          "workflow": rs.workflow_facts(self.env), "verdict": "PASS", "maven": {"exit_code": 0},
+                          "precheck": {"candidate": {"sha": sha}}, "cleanup": {"status": "CLEAN", "mysql_leftover_schemas": []},
+                          "env_profile": {"CHENGYIN_MYBATIS_IT_DB_SUFFIX": suffix, "CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX": suffix},
+                          "executed": {"tests": count, "passed": count, "failures": 0, "errors": 0, "skipped": 0,
+                                       "testcases": [{"classname": fqcn, "name": "synthetic%d" % i, "status": "passed"} for i in range(count)]}}
+                path = directory / rs.simple_name(fqcn) / "receipt.json"
+                records.append((path, record))
+        return records
+
+    def verify(self, mutate=None, env=None):
+        records = self.receipts()
+        if mutate:
+            mutate(records)
+        for path, record in records:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps(record))
+        return rs.verify_m1_pair_receipts(registry(), self.old, self.new, env or self.env)
+
+    def test_pair_request_requires_two_distinct_complete_sources(self):
+        self.assertEqual({"old": "a" * 40, "new": SHA}, rs.m1_pair_request(registry(), self.env))
+        for change in ({"OLD_SOURCE_SHA": ""}, {"OLD_SOURCE_SHA": SHA}, {"SOURCE_SHA": "branch"},
+                       {"OLD_SOURCE_SHA": "a" * 39}, {"OLD_SOURCE_SHA": "a" * 40 + "\n"}):
+            with self.subTest(change=change), self.assertRaises(rs.GateError):
+                rs.m1_pair_request(registry(), dict(self.env, **change))
+
+    def test_pair_rejects_other_batches_subsets_and_timezones(self):
+        for change in ({"BATCH": "architecture-day-topic-copy"}, {"CLASSES": "PlayHintUnlockMySqlIT"},
+                       {"CLASSES": "PlayHintUnlockMySqlIT,PlayLeadAdmissionFailureMySqlIT"}, {"TIMEZONE": "invalid"}):
+            with self.subTest(change=change), self.assertRaises(rs.GateError):
+                rs.m1_pair_request(registry(), dict(self.env, **change))
+
+    def test_pair_rejects_registry_class_count_storage_or_gate_drift(self):
+        cls = next(iter(rs.M1_PAIR_CLASSES))
+        for field, value in (("tests", 11), ("nested", ["Hidden"]), ("storage", ["mysql", "redis"]), ("gates", {"CHENGYIN_BAD": "1"})):
+            reg = copy.deepcopy(registry()); reg["classes"][cls][field] = value
+            with self.subTest(field=field), self.assertRaises(rs.GateError):rs.m1_pair_request(reg, self.env)
+        for members in ([cls], [cls, cls], [cls, C01]):
+            reg = copy.deepcopy(registry()); reg["batches"][rs.M1_PAIR_BATCH]["classes"] = members
+            with self.assertRaises(rs.GateError):rs.m1_pair_request(reg, self.env)
+
+    def plan_args(self, source=None):
+        return ["m1-pair-plan", "--source", str(source or _HERE.parent), "--old-source", str(source or _HERE.parent),
+                "--out", str(self.root / "out"), "--github-output", str(self.root / "outputs")]
+
+    def test_pair_plan_reuses_real_source_precheck_and_binds_four_jobs(self):
+        # Only Git HEAD metadata is stubbed; actual current source/static gates are read.
+        from unittest.mock import patch
+        import types
+        with patch.object(rs.subprocess, "run", side_effect=[types.SimpleNamespace(stdout="a" * 40 + "\n"), types.SimpleNamespace(stdout=SHA + "\n")]):
+            self.assertEqual(0, rs.main(self.plan_args(), self.env))
+        outputs = dict(line.split("=", 1) for line in (self.root / "outputs").read_text().splitlines())
+        matrix, sides, planned = (json.loads(outputs[key]) for key in ("matrix", "sides", "planned"))
+        self.assertEqual(4, len(matrix)); self.assertEqual(2, len(planned)); self.assertEqual(2, len(sides))
+        self.assertEqual({(side, sha, cls) for side, sha in (("old", "a" * 40), ("new", SHA)) for cls in rs.M1_PAIR_CLASSES},
+                         {(item["side"], item["source_sha"], item["class"]) for item in matrix})
+        proof = json.loads((self.root / "out/pair-plan.json").read_text())
+        self.assertEqual(14, proof["tests_per_side"]); self.assertEqual(matrix, proof["matrix"])
+
+    def test_pair_plan_wrong_head_publishes_no_matrix(self):
+        from unittest.mock import patch
+        import types
+        for heads in ([SHA], ["a" * 40, "a" * 40]):
+            with self.subTest(heads=heads), patch.object(rs.subprocess, "run", side_effect=[types.SimpleNamespace(stdout=head + "\n") for head in heads]):
+                self.assertEqual(1, rs.main(self.plan_args(), self.env))
+            self.assertFalse((self.root / "outputs").exists()); self.assertFalse((self.root / "out/pair-plan.json").exists())
+
+    def test_pair_plan_missing_old_and_real_dynamic_tests_fail_before_matrix(self):
+        self.assertEqual(1, rs.main(self.plan_args(), dict(self.env, OLD_SOURCE_SHA="")))
+        from unittest.mock import patch
+        import types
+        source = self.root / "dynamic-source"
+        (source / "pom.xml").parent.mkdir(parents=True)
+        (source / "pom.xml").write_text("<project><java.version>21</java.version></project>")
+        for cls, count in rs.M1_PAIR_CLASSES.items():
+            path = source / "chengyinhub-admin/src/test/java" / (cls.replace(".", "/") + ".java")
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text("class Sample {" + "".join("@Test void t%d(){}" % i for i in range(count)) + "@ParameterizedTest void hidden(){} }")
+        with patch.object(rs.subprocess, "run", return_value=types.SimpleNamespace(stdout="a" * 40 + "\n")):
+            self.assertEqual(1, rs.main(self.plan_args(source), self.env))
+        self.assertFalse((self.root / "outputs").exists())
+
+    def test_ordinary_plan_outputs_remain_exact_original_matrix_and_sha12(self):
+        from unittest.mock import patch
+        import types
+        args = ["plan", "--source", str(_HERE.parent), "--github-output", str(self.root / "outputs")]
+        with patch.object(rs.subprocess, "run", return_value=types.SimpleNamespace(stdout=SHA + "\n")):
+            self.assertEqual(0, rs.main(args, dict(self.env, OLD_SOURCE_SHA="")))
+        outputs = dict(line.split("=", 1) for line in (self.root / "outputs").read_text().splitlines())
+        self.assertEqual({"matrix", "sha12"}, set(outputs)); self.assertEqual(SHA[:12], outputs["sha12"])
+        self.assertEqual(rs.plan(registry(), SHA, rs.M1_PAIR_BATCH, "", "UTC"), json.loads(outputs["matrix"]))
+        self.assertTrue(all(set(item) == {"class", "simple"} for item in json.loads(outputs["matrix"])))
+
+    def test_pair_provenance_success_is_explicitly_not_canonical_verdict(self):
+        result = self.verify()
+        self.assertEqual("PASS", result["verdict"]); self.assertEqual(4, len(result["receipts"]))
+        self.assertTrue(result["not_canonical_verdict"]); self.assertEqual("_gh022063a2", result["suffix"])
+
+    def test_pair_rejects_cross_source_precheck_batch_or_missing_old(self):
+        for field, value in (("source_sha", SHA), ("batch", "core-funds"), ("schema", "other")):
+            with self.subTest(field=field), self.assertRaises(rs.GateError):
+                self.verify(lambda rows: rows[0][1].update({field: value}))
+        with self.assertRaises(rs.GateError):self.verify(lambda rows: rows[0][1]["precheck"]["candidate"].update(sha=SHA))
+        with self.assertRaises(rs.GateError):self.verify(lambda rows: rows[-1][1].update(source_sha=self.env["OLD_SOURCE_SHA"]))
+        with self.assertRaises(rs.GateError):self.verify(env=dict(self.env, OLD_SOURCE_SHA=""))
+
+    def test_pair_rejects_cross_run_attempt_workflow_or_repository(self):
+        for field, value in (("run_id", "40050022064"), ("run_attempt", "1"), ("workflow_sha", "c" * 40), ("repository", "other/repo")):
+            with self.subTest(field=field), self.assertRaises(rs.GateError):
+                self.verify(lambda rows: rows[0][1]["workflow"].update({field: value}))
+        for change in ({"GITHUB_RUN_ID": ""}, {"GITHUB_RUN_ATTEMPT": "0"}, {"GITHUB_SHA": "branch"}, {"GITHUB_REPOSITORY": "private/other"}):
+            with self.assertRaises(rs.GateError):self.verify(env=dict(self.env, **change))
+
+    def test_pair_rejects_any_suffix_override(self):
+        for key in ("CHENGYIN_MYBATIS_IT_DB_SUFFIX", "CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX"):
+            with self.assertRaises(rs.GateError):self.verify(lambda rows: rows[0][1]["env_profile"].update({key: "_gh022064a2"}))
+
+    def test_pair_rejects_nonclean_maven_failure_skip_count_or_duplicate_cases(self):
+        changes = [lambda r: r.update(verdict="FAIL"), lambda r: r["cleanup"].update(status="UNKNOWN"),
+                   lambda r: r["cleanup"].update(mysql_leftover_schemas=["leftover"]), lambda r: r["cleanup"].pop("mysql_leftover_schemas"),
+                   lambda r: r["maven"].update(exit_code=1), lambda r: r["executed"].update(skipped=1),
+                   lambda r: r["executed"].update(tests=9), lambda r: r["executed"]["testcases"][0].update(status="skipped"),
+                   lambda r: r["executed"]["testcases"].__setitem__(0, r["executed"]["testcases"][1])]
+        for change in changes:
+            with self.subTest(change=change), self.assertRaises(rs.GateError):self.verify(lambda rows: change(rows[0][1]))
+
+    def test_pair_rejects_missing_duplicate_or_foreign_class_artifact(self):
+        with self.assertRaises(rs.GateError):self.verify(lambda rows: rows.pop())
+        # Fresh paths from the previous partial attempt are overwritten by verify().
+        with self.assertRaises(rs.GateError):self.verify(lambda rows: rows[0][1].update({"class": rows[1][1]["class"]}))
+        with self.assertRaises(rs.GateError):self.verify(lambda rows: rows[0][1].update({"class": C01}))
+        extra = self.old / "unexpected/receipt.json"; extra.parent.mkdir(parents=True); extra.write_text("{}")
+        with self.assertRaises(rs.GateError):self.verify()
+
+    def test_failed_source_summary_or_storage_prevents_provenance_pass(self):
+        for key in ("PAIR_STORAGE_RESULT", "PAIR_SUMMARY_RESULT"):
+            with self.assertRaises(rs.GateError):self.verify(env=dict(self.env, **{key: "failure"}))
+
+    def test_pair_verify_cli_fails_closed_and_preserves_failure_artifact(self):
+        out = self.root / "pair-provenance.json"
+        self.assertEqual(1, rs.main(["m1-pair-verify", "--old-receipts", str(self.old), "--new-receipts", str(self.new), "--out", str(out)], self.env))
+        self.assertEqual("FAIL", json.loads(out.read_text())["verdict"])
+
+
+def m1_workflow_problems(text):
+    required = ["      old_source_sha:\n", "if: inputs.old_source_sha == ''", "id: pair_plan",
+                "run: python3 ci/real_storage_it.py m1-pair-plan --source candidate --old-source old-candidate",
+                "SOURCE_SHA: ${{ matrix.source_sha || inputs.source_sha }}", "VALIDATED_SOURCE_SHA: ${{ matrix.source_sha || inputs.source_sha }}",
+                "ref: ${{ matrix.source_sha || inputs.source_sha }}", "pair_summary:\n",
+                "include: ${{ fromJSON(needs.plan.outputs.pair_sides) }}", "PLANNED: ${{ needs.plan.outputs.pair_planned }}",
+                "pattern: rs-m1-${{ matrix.side }}-${{ matrix.source_sha }}-*-a${{ github.run_attempt }}",
+                "name: rs-m1-summary-${{ matrix.side }}-${{ matrix.source_sha }}-a${{ github.run_attempt }}",
+                "format('rs-m1-{0}-{1}-{2}-a{3}', matrix.side, matrix.source_sha, matrix.simple, github.run_attempt)",
+                "needs: [plan, storage_it, pair_summary]", "PAIR_SUMMARY_RESULT: ${{ needs.pair_summary.result }}",
+                "run: python3 gate/ci/real_storage_it.py m1-pair-verify --old-receipts old-receipts --new-receipts new-receipts",
+                "ref: f671227c0bd483b290a72c04ca2ed60bb5f7748e", "evidence/docs/delivery/architecture-day/C/evidence/wp09-m1-equivalence/compare_receipts.py",
+                "format('rs-class-{0}-a{1}', matrix.simple, github.run_attempt)",
+                "python3 evidence/docs/delivery/architecture-day/C/evidence/wp09-m1-equivalence/test_compare_receipts.py",
+                "python3 evidence/docs/delivery/architecture-day/C/evidence/wp09-m1-comparator-patches/test_member_fk_review.py",
+                "pattern: rs-class-*-a${{ github.run_attempt }}", "PLANNED: ${{ needs.plan.outputs.matrix }}"]
+    problems = ["missing M1 workflow contract: " + item for item in required if item not in text]
+    for job, mode in (("summary", "=="), ("pair_summary", "!="), ("compare", "!=")):
+        block = re.search(r"^  " + job + r":\n([\s\S]*?)(?=^  \w+:|\Z)", text, re.MULTILINE)
+        if not block or "inputs.old_source_sha " + mode + " ''" not in block.group(1):problems.append("wrong mode guard: " + job)
+    if re.search(r"^\s+(?:GITHUB_RUN_ID|GITHUB_RUN_ATTEMPT|CHENGYIN_MYBATIS_IT_DB_SUFFIX):", text, re.MULTILINE):problems.append("original run/suffix overridden")
+    return problems
+
+
+class M1PairWorkflowTest(unittest.TestCase):
+    def test_each_matrix_keeps_its_own_parallel_limit(self):
+        text = WORKFLOW.read_text()
+        prefix, pair = text.split("  pair_summary:\n", 1)
+        for old, new in [("      max-parallel: 20\n", "      max-parallel: 50\n"),
+                         ("      max-parallel: 20\n", ""),
+                         ("      fail-fast: false\n", "      fail-fast: true\n")]:
+            with self.subTest(old=old, new=new):
+                mutated = prefix + "  pair_summary:\n" + pair.replace(old, new, 1)
+                self.assertNotEqual(text, mutated)
+                self.assertTrue(workflow_problems(mutated, registry()))
+
+    def test_pair_workflow_and_original_manual_gates(self):
+        text = WORKFLOW.read_text()
+        self.assertEqual([], workflow_problems(text, registry()))
+        self.assertEqual([], m1_workflow_problems(text))
+
+    def test_pair_artifact_source_attempt_freeze_and_mode_negative_controls(self):
+        text = WORKFLOW.read_text()
+        for old, new in [("matrix.source_sha }}-*-a${{ github.run_attempt }}", "matrix.source_sha }}-*"),
+                         ("ref: f671227c0bd483b290a72c04ca2ed60bb5f7748e", "ref: master"),
+                         ("python3 evidence/docs/delivery/architecture-day/C/evidence/wp09-m1-equivalence/test_compare_receipts.py", "true"),
+                         ("python3 evidence/docs/delivery/architecture-day/C/evidence/wp09-m1-comparator-patches/test_member_fk_review.py", "true"),
+                         ("VALIDATED_SOURCE_SHA: ${{ matrix.source_sha || inputs.source_sha }}", "VALIDATED_SOURCE_SHA: ${{ inputs.source_sha }}"),
+                         ("inputs.old_source_sha == ''", "inputs.old_source_sha != ''"),
+                         ("PAIR_SUMMARY_RESULT: ${{ needs.pair_summary.result }}", "PAIR_SUMMARY_RESULT: success"),
+                         ("pattern: rs-class-*-a${{ github.run_attempt }}", "pattern: rs-m1-*")]:
+            with self.subTest(old=old):
+                mutated = text.replace(old, new)
+                self.assertNotEqual(text, mutated); self.assertTrue(m1_workflow_problems(mutated))
 
 
 if __name__ == "__main__":

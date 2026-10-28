@@ -1,0 +1,128 @@
+{
+  "source_sha": "4cda5e4a329c41450bdd2b3cdfc18b28f041b073",
+  "source_tree": "008a21f1c177b5943bca3d754b446c6b26663ada",
+  "run": 40142070334,
+  "job": 121015706846,
+  "artifact_id": 12578594691,
+  "artifact_zip_sha256": "4cd53a9ecd4a585273b1dcb39a53dc90ab58e39a68cdf966e3c1efa7a4e04a4e",
+  "zip_crc_and_nine_files_verified": true,
+  "raw_files_sha256": {
+    "entry.log": "d3cef215fb1aed26e51478f59aea13ee5c63bf843c8e726a41fe0740145b31d6",
+    "cy-startup.Zs6ywDPj/mysql-version": "f1a2bb7eb59eb149d9d95981af9b04619645a8e7b5622a891c513874f1119753",
+    "cy-startup.Zs6ywDPj/pool-recovery.json": "65052fb1d90f44deba45b17f950087fc089fb522dfcb16509b74707208c3a334",
+    "cy-startup.Zs6ywDPj/pool-recovery-health.log": "03d3378e168350fac527a58e9c6046adebb03b7b4df635ef2f274ee6f2b213da",
+    "cy-startup.Zs6ywDPj/pool-cleanup.json": "1e25e8ff318b5730705da3a4b49b39138de3edec825ae2225b8ce901f4d3b708",
+    "cy-startup.Zs6ywDPj/pool-execution.json": "f2939c34a1670b195add69dcbd64633c3a131bd7f52df33bc8e7f6b86b1c1f3d",
+    "cy-startup.Zs6ywDPj/application.log": "e3da2e8f95ce130790bd1ca3df72b7e359efc7e570bc1942aa0a24405d0d13f4",
+    "cy-startup.Zs6ywDPj/network.trace": "56688e6e65e5f102f32a30ed1d878367e425e38d9e8f38c7ee8db266e49c6aea",
+    "cy-startup.Zs6ywDPj/isolation.log": "d86eafebb7cbf998b70782d3cfec59918506b288d15b991f3c82bd2e0e12dd39"
+  },
+  "status": "PASS_SCOPED_BOUNDED_POOL_RUNTIME_IDENTITY_AND_OWNED_CLEANUP",
+  "execution_identity": {
+    "sourceSha": "4cda5e4a329c41450bdd2b3cdfc18b28f041b073",
+    "sourceTree": "008a21f1c177b5943bca3d754b446c6b26663ada",
+    "runId": "40142070334",
+    "runAttempt": "1",
+    "jarBefore": {
+      "sha256": "ffdb4647e5293b398ef4b49dd502c25f1062ab6b431ea26c78ffc67998b8e171",
+      "size": 118957957
+    },
+    "taskName": "cy-startup-2269-9265",
+    "jarProof": "runner/mounted-file digests only; no independent downloaded JAR verification",
+    "result": "PASS_SOURCE_JAR_UNCHANGED",
+    "appContainerId": "70111940c6c29d081a551ff12e8a16f041488f3768689eb5770ff8411bbf31a4",
+    "jarMountedRunning": {
+      "sha256": "ffdb4647e5293b398ef4b49dd502c25f1062ab6b431ea26c78ffc67998b8e171",
+      "size": 118957957
+    },
+    "jarRunning": {
+      "sha256": "ffdb4647e5293b398ef4b49dd502c25f1062ab6b431ea26c78ffc67998b8e171",
+      "size": 118957957
+    },
+    "jarMountedAfter": {
+      "sha256": "ffdb4647e5293b398ef4b49dd502c25f1062ab6b431ea26c78ffc67998b8e171",
+      "size": 118957957
+    },
+    "jarAfter": {
+      "sha256": "ffdb4647e5293b398ef4b49dd502c25f1062ab6b431ea26c78ffc67998b8e171",
+      "size": 118957957
+    }
+  },
+  "owned_cleanup": {
+    "taskName": "cy-startup-2269-9265",
+    "originalExitCode": 0,
+    "removed": [
+      {
+        "kind": "container",
+        "name": "cy-startup-2269-9265-app",
+        "id": "70111940c6c29d081a551ff12e8a16f041488f3768689eb5770ff8411bbf31a4"
+      },
+      {
+        "kind": "container",
+        "name": "cy-startup-2269-9265-mysql",
+        "id": "f13fe11f0fa0d42c2b160263ea131cf493165ebed97ec8e143302fbf3b4d7464"
+      },
+      {
+        "kind": "container",
+        "name": "cy-startup-2269-9265-redis",
+        "id": "72c43535d23356ad31e140703dd380600e5210ce78fbd77bd9f9d462e6f43f67"
+      },
+      {
+        "kind": "network",
+        "name": "cy-startup-2269-9265",
+        "id": "b5e58445cf934f7fd5a4810bc9761b93881bca76789c8e6b2de6acf2e4e5a266"
+      }
+    ],
+    "errors": [],
+    "remaining": [],
+    "result": "PASS_OWNED_RESOURCES_ABSENT"
+  },
+  "native_timeout_ms": 5001,
+  "overflow": {
+    "request": 20,
+    "http": 200,
+    "businessCode": 500,
+    "emptyData": false,
+    "elapsedSeconds": 5.076
+  },
+  "held_requests_passed": 20,
+  "fresh_recovery_reads": [
+    {
+      "request": "after0",
+      "http": 200,
+      "businessCode": 200,
+      "emptyData": true,
+      "elapsedSeconds": 0.057
+    },
+    {
+      "request": "after1",
+      "http": 200,
+      "businessCode": 200,
+      "emptyData": true,
+      "elapsedSeconds": 0.054
+    },
+    {
+      "request": "after2",
+      "http": 200,
+      "businessCode": 200,
+      "emptyData": true,
+      "elapsedSeconds": 0.055
+    }
+  ],
+  "same_process_pids": [
+    3446,
+    2768,
+    2864
+  ],
+  "same_process_and_database_uuid_checksum": "VERIFIED_UNCHANGED",
+  "connect_timeout_observation": "UNKNOWN_NOT_MEASURED",
+  "jar_independent_downloaded_bytes_verification": false,
+  "core_ccd5_original_4ef3_artifact_equivalence_claimed": false,
+  "limits": [
+    "Only read-only dictionary path, not end-to-end user-business recovery",
+    "No capacity/RPS/latency SLA claim",
+    "Actual runtime JAR isffdb... on4cda, original4ef3 onccd5 retained as separate evidence",
+    "Host/mounted-file digests observed; full newJAR bytes not uploaded or independently recomputed"
+  ],
+  "full_scope_complete": false
+}

@@ -1,0 +1,55 @@
+{
+  "status": "STATIC_ONLY",
+  "parent": "f31a3745a31a8cad71997b228b731c34212a117a",
+  "C_dependency": "f1cfe74d58b766e385e639d40385e208790644a8",
+  "java_mysql_ci_executed": false,
+  "counts": {
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/WholeOrderVerificationReverseTest.java": {
+      "declared_tests": 9,
+      "dynamic": [],
+      "nested": [],
+      "gates": [],
+      "conditions": [],
+      "required_database_bases": []
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/StoreVerifyGrowthDeliveryTransactionTest.java": {
+      "declared_tests": 4,
+      "dynamic": [],
+      "nested": [],
+      "gates": [
+        [
+          "CHENGYIN_FUNDS_MYSQL_IT",
+          "1"
+        ]
+      ],
+      "conditions": [],
+      "required_database_bases": []
+    }
+  },
+  "preserved_original_unit_bodies": 6,
+  "preserved_growth_test_count": 4,
+  "production_change": "required Mapper injection and original C five-line guard only",
+  "direct_caller_inventory": [
+    "CmsRegistrationController.reverseWholeOrderVerification (/verification/reverse, existing business:registration:reverseRedeem permission)",
+    "ICmsRegistrationService 3-parameter/4-parameter overload",
+    "WholeOrderVerificationReverseTest",
+    "StoreVerifyGrowthDeliveryTransactionTest"
+  ],
+  "sha256": {
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/StoreVerifyGrowthDeliveryTransactionTest.java": "06d0c1524ab442a175851ca80f4ed32b04c596e36e14582847740208376edaa1",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/WholeOrderVerificationReverseTest.java": "7029037197a6e99fba582825a818de39a9a4b9edec10c46d91a976ba29010cbd",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java": "d05f35a81c55a29b2cce89dbe3cea6b41e15884c77dac7defc36d49c3decbf17"
+  },
+  "C_contract_sha256": {
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/RegistrationSeatService.java": "e99e3a2aa07da08108397f5655e00215d39ce9fe187b6776760e4e8e2d09f719",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/RegistrationSeatMapper.java": "e4c7b8c122608c56e59a93c1a7e55d6b555462f649716b42b77d0703ba1a1c2d",
+    "chengyinhub-system/src/main/resources/mapper/business/RegistrationSeatMapper.xml": "731e46b866661616146f5484f4ca96ba877c46ba8a3e5d276be1ecff70f298a3"
+  },
+  "not_verified": [
+    "Java compilation",
+    "JUnit",
+    "real seat XML/reversal concurrency",
+    "transaction rollback/cleanup",
+    "full seat aftersales and G original-allocation reversal"
+  ]
+}

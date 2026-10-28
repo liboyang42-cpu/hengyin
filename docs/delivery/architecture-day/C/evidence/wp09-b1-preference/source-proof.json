@@ -1,0 +1,39 @@
+{
+  "parent": "dfe083a89cd5538b7df77c6d407da3908e9a1cc8",
+  "checks": {
+    "exact_existing_two_line_move_only": true,
+    "identity_registration_node_ownership_before_lead": true,
+    "old_route_before_lead_source_negative_control": true,
+    "original_two_IT_bodies_unchanged": true,
+    "hint10_and_Theme_unchanged": true,
+    "mapper_xml_parse": "8 parsed; not MyBatis loading",
+    "route_canonical_DDL": "2 unique CREATE matches; not MySQL execution"
+  },
+  "files": [
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java",
+      "sha256": "8431d90ceb7f87205a82ef50d36f231437a5590564bf0000570786c21be42550",
+      "lexical_delimiters": "PASS",
+      "source_test_methods": 0,
+      "new_test_methods": 0
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PlayLeadAdmissionFailureTest.java",
+      "sha256": "146dad795cb9093cdd59921b4d4ffde27fb70e52882ccef0423794a3a4c04d90",
+      "lexical_delimiters": "PASS",
+      "source_test_methods": 16,
+      "new_test_methods": 5
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/PlayLeadAdmissionFailureMySqlIT.java",
+      "sha256": "2a5c9939ec45bfd000f25d7c617cdf48b4ceff76c255b801ff67856f1e58c3b6",
+      "lexical_delimiters": "PASS",
+      "source_test_methods": 4,
+      "new_test_methods": 2
+    }
+  ],
+  "java_compile": "NOT RUN",
+  "junit": "NOT RUN",
+  "mysql": "NOT RUN",
+  "ci_dispatch": "NOT PERFORMED"
+}

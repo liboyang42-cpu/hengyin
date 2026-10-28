@@ -1,0 +1,22 @@
+{
+  "task": "E/WP11-VERIFY",
+  "parent_tree": "0d72d6e273d4aacd8f6560676aac0f9c21b58a2e",
+  "test_count": 7,
+  "java_run": false,
+  "mysql_run": false,
+  "explain_run": false,
+  "group_and_route_domain_storage": "MOCK_ONLY",
+  "gitleaks_run": false,
+  "source_sha256": "cedcf147c1b47494a9960c6b72ab28fde09d0492ba1f7b58ed9a7e3ae11adcd7",
+  "files": [
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ImConversationQueryScopeMySqlIT.java",
+    "docs/delivery/architecture-day/E/WP11-VERIFY/README.md",
+    "docs/delivery/architecture-day/E/WP11-VERIFY/preparation.json"
+  ],
+  "static_scope_check": "PASS",
+  "limited_token_pattern_scan": "PASS",
+  "local_starting_commit": "4516029348b12dc7b784b03f1cb640a06bfb7488",
+  "remote_implementation_commit": "3c48996106c63ee75d4d1c93403396a3d7a8bf15",
+  "required_parent_if_a_new_ci_candidate_is_published": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+  "publication_layer": "PREPARATION_TREE_ONLY_NO_COMMIT_OR_REF"
+}

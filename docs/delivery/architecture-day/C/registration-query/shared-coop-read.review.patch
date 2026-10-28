@@ -1,0 +1,20 @@
+--- a/chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java
++++ b/chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java
+@@ -1494,15 +1494,8 @@
+      * 改造成报名流程,也是在给 select() 那笔外包旧账补合同。
+      */
+     private boolean hasEffectiveMerchantCoopOrder(Long topicId, Long memberId) {
+-        if (topicId == null || memberId == null) {
+-            return false;
+-        }
+-        for (CoopOrder o : coopOrderMapper.selectEffectiveOrdersByTopicId(topicId)) {
+-            if ("merchant".equals(o.getToType()) && memberId.equals(o.getToId())) {
+-                return true;
+-            }
+-        }
+-        return false;
++        return com.chengyinhub.web.service.registration.RegistrationQueryApplication.hasEffectiveMerchantCoopOrder(
++                coopOrderMapper, topicId, memberId);
+     }
+
+     /** [D22] 组织槽核销资格,真源在 {@link IClubMemberService#isTopicOrganizer} —— 两个 controller 共用它。 */

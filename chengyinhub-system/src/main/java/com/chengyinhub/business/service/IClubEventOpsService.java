@@ -43,6 +43,15 @@ public interface IClubEventOpsService {
      */
     ActivityCancelResult cancelActivityForAuthorizedTopicCancellation(
             Long actorMemberId, Long topicId, Long clubId, Long activityId, String reason);
+    /** Already-authorized topic cancellation: capture under the original scope transaction, no SDK. */
+    com.chengyinhub.business.domain.dto.RegistrationCancellationPayments captureAuthorizedTopicCancellationPayments(
+            Long actorMemberId, Long topicId, Long clubId, Long activityId, String reason);
+
+    /** Join the original full topic cancellation transaction with the exact earlier observations. */
+    ActivityCancelResult cancelAuthorizedTopicWithObservedPayments(Long actorMemberId, Long topicId,
+            Long clubId, Long activityId, String reason,
+            com.chengyinhub.business.domain.dto.RegistrationCancellationPayments observed);
+
     ClubEventCancellationStateVO getCancellationState(Long actorMemberId, Long clubId, Long activityId);
 
     /**

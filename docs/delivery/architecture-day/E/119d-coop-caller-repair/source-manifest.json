@@ -1,0 +1,42 @@
+{
+  "parent": "119d3f87bbf89162d47db837c404b361915d1b81",
+  "code_files": [
+    {
+      "path": "chengyinhub-xcx/tests/unit/coop-list-inbox.test.js",
+      "original_blob_sha1": "a2e08c9aa67390531d1189561b0f07bbf0db953a",
+      "original_sha256": "204a3758f9b1b4b0de19fdcd5b28a12ae08df3e9d414eb36e60a766587d3c790",
+      "postimage_blob_sha1": "c30e1dfbe1af35eef94adb99deeb5597f42e8e55",
+      "postimage_sha256": "a9e6c31304df599e9c030e785add32cf708192eaefbbcf9d49b38efed7bf98c0"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/coop-invite-flow-contract.test.js",
+      "original_blob_sha1": "0cb934d5c294e76af32c1d1306be6c7f9f5148ed",
+      "original_sha256": "a6a8b65c18b6f58521994a8c46dcc46cc3cb9cbb3104404bf79cdaa490adc55f",
+      "postimage_blob_sha1": "6e1f89dfe1d86ead52c715e6b3d0365758fe31be",
+      "postimage_sha256": "155ab0be5f5c9f8fc490b03817a8b9d68a1879536268c6280c39d71e4166b1bd"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/get-auth-matrix-contract.test.js",
+      "original_blob_sha1": "9f9456ca9aa8869cdcdcfe74c42855229f5b6859",
+      "original_sha256": "c7dce151e7100b0a530ff48273a8e9e9a63a12fb891621ce06a79245602ceb77",
+      "postimage_blob_sha1": "aa5ac759151846d2ae44381e1bd14521f94460b3",
+      "postimage_sha256": "b68309259810372f4146c67763c07a319f496c2076c3d22b87d1c445a1d15118"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/coop/invite/index.js",
+      "original_blob_sha1": "f037080823250d3add488927cebd5cb5287d73bc",
+      "original_sha256": "3b5d8dd82c79d4e5992e90bc0554b4d272e8a3e9ddd3d355088fa68a2230411f",
+      "postimage_blob_sha1": "88d2f65375a4198a2b239cb2cf91af88f586891e",
+      "postimage_sha256": "cd1a85dc2f08c5b3187ed43684aad268df1374453ab77f539fee9463bfa2e091"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/coop-supply-station-contract.test.js",
+      "original_blob_sha1": "f5659252700b209bfd5a3cea55cf2d8fcf9989ae",
+      "original_sha256": "37e75bc375ccd3b6564c8f55b40374c309a9494360dabb9399d21854bbb87793",
+      "postimage_blob_sha1": "f7bd3a03530989760a72d54d82d4fccd52b10522",
+      "postimage_sha256": "32ba27332be1e93b176be608c48517fd9bb73a7ced456e3a74d7fd8a8be186c2"
+    }
+  ],
+  "code_patch_sha256": "d1c4d5b68c0467d61e4c1f534a8e4f1fa7d93e99ea43965194fd72c853828062",
+  "validation": "NOT_RUN"
+}

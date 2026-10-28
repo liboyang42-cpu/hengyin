@@ -54,6 +54,8 @@ import static org.mockito.Mockito.when;
  */
 class CoopInviteServiceImplTest {
 
+    // In-memory persistence behavior for the new locked original-invite/order funnel; not a DB proof.
+    private final java.util.Map<Long,CoopInvite> fixtureRows = new java.util.HashMap<>();
     private CoopInviteMapper coopInviteMapper;
     private CoopOrderMapper coopOrderMapper;
     private CoopCreditLogMapper coopCreditLogMapper;
@@ -67,6 +69,9 @@ class CoopInviteServiceImplTest {
     private MmsMerchantMapper mmsMerchantMapper;
     private ICoopClubApplyService coopClubApplyService;
     private INotifyService notifyService;
+    private com.chengyinhub.business.service.impl.WechatPaymentIntentStore paymentIntentStore;
+    private org.springframework.jdbc.core.JdbcTemplate paymentIntentJdbc;
+    private com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService verifiedPaymentFacts;
 
     @BeforeEach
     void setUp() {
@@ -75,11 +80,35 @@ class CoopInviteServiceImplTest {
         coopCreditLogMapper = mock(CoopCreditLogMapper.class);
         clubMapper = mock(com.chengyinhub.business.mapper.ClubMapper.class);
         cmsTopicMapper = mock(com.chengyinhub.business.mapper.CmsTopicMapper.class);
-        when(coopInviteMapper.selectCoopInviteById(any())).thenAnswer(call ->
-                coopInviteMapper.selectCoopInviteByIdForUpdate(call.getArgument(0)));
+        when(coopInviteMapper.selectCoopInviteById(any())).thenAnswer(call -> {
+            CoopInvite row = coopInviteMapper.selectCoopInviteByIdForUpdate(call.getArgument(0));
+            if (row != null) fixtureRows.put(row.getId(), row);
+            return row;
+        });
+        org.mockito.Mockito.doAnswer(call -> {
+            CoopInvite update = call.getArgument(0);
+            if (update == null) return 1; // Mockito matcher evaluation when an old case overrides this stub.
+            CoopInvite row = fixtureRows.get(update.getId());
+            if (row != null && update.getStatus() != null) row.setStatus(update.getStatus());
+            return 1;
+        }).when(coopInviteMapper).updateCoopInvite(any());
+        when(coopInviteMapper.selectOriginalCoopOrdersForUpdate(any(), any())).thenReturn(Collections.emptyList());
+        org.mockito.Mockito.doAnswer(call -> {
+            CoopOrder row = call.getArgument(0); row.setId(800L); return 1;
+        }).when(coopOrderMapper).insertCoopOrder(any());
         when(cmsTopicMapper.selectCmsTopicByIdForUpdate(any())).thenAnswer(call ->
                 cmsTopicMapper.selectCmsTopicById(call.getArgument(0)));
         svc = new CoopInviteServiceImpl();
+        // Real B retry guard/order locator; only JDBC results and provider-proof read are unit doubles.
+        paymentIntentJdbc = mock(org.springframework.jdbc.core.JdbcTemplate.class);
+        verifiedPaymentFacts = mock(com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService.class);
+        var paymentOrderOwner = new com.chengyinhub.business.service.impl.JdbcWechatPaymentOrderOwner();
+        ReflectionTestUtils.setField(paymentOrderOwner, "paymentIntentJdbc", paymentIntentJdbc);
+        paymentIntentStore = new com.chengyinhub.business.service.impl.WechatPaymentIntentStore();
+        ReflectionTestUtils.setField(paymentIntentStore, "paymentIntentJdbc", paymentIntentJdbc);
+        ReflectionTestUtils.setField(paymentIntentStore, "businessOwner", paymentOrderOwner);
+        ReflectionTestUtils.setField(paymentIntentStore, "verifiedFacts", verifiedPaymentFacts);
+        ReflectionTestUtils.setField(svc, "paymentIntentStore", paymentIntentStore);
         org.springframework.test.util.ReflectionTestUtils.setField(svc, "commercialReviewService",
                 org.mockito.Mockito.mock(com.chengyinhub.business.service.ITopicCommercialReviewService.class));
         ReflectionTestUtils.setField(svc, "depositRefundService", mock(com.chengyinhub.business.service.impl.CoopDepositRefundService.class));
@@ -125,7 +154,7 @@ class CoopInviteServiceImplTest {
     /** 造一个 type1 俱乐部邀约(to_id=clubId,主理人=leaderId) */
     private CoopInvite clubInvite(Long id, Integer status, Long clubId, Long leaderId, Integer depositStatus) {
         CoopInvite c = new CoopInvite();
-        c.setId(id); c.setStatus(status); c.setInviteType(1); c.setToType("club"); c.setToId(clubId);
+        c.setId(id); c.setDelFlag(0); c.setStatus(status); c.setInviteType(1); c.setToType("club"); c.setToId(clubId);
         c.setFromType("merchant"); c.setFromId(300L);
         c.setDepositStatus(depositStatus);
         com.chengyinhub.business.domain.Club club = new com.chengyinhub.business.domain.Club();
@@ -138,6 +167,7 @@ class CoopInviteServiceImplTest {
     private CoopInvite inv(Long id, Integer status) {
         CoopInvite c = new CoopInvite();
         c.setId(id);
+        c.setDelFlag(0);
         c.setStatus(status);
         c.setInviteType(0);
         c.setFromType("talent");
@@ -198,6 +228,7 @@ class CoopInviteServiceImplTest {
         invite.setTopicId(7L);
         CmsTopic topic = new CmsTopic();
         topic.setId(7L);
+        topic.setDelFlag(0);
         topic.setClubId(7001L);
         topic.setLifecycle(1);
         topic.setRecruitDeadline(futureRecruitDeadline());
@@ -763,6 +794,7 @@ class CoopInviteServiceImplTest {
         invite.setToId(201L);
         CmsTopic topic = new CmsTopic();
         topic.setId(7L);
+        topic.setDelFlag(0);
         topic.setLifecycle(1);
         topic.setClubId(73L);
         topic.setDelFlag(0);
@@ -851,6 +883,7 @@ class CoopInviteServiceImplTest {
     void insertInvite_rejectsFrozenPricingRosterForMerchantAndClubBeforeWriting() {
         CmsTopic pricing = new CmsTopic();
         pricing.setId(7L);
+        pricing.setDelFlag(0);
         pricing.setLifecycle(TopicLifecycleState.PRICING.getCode());
         pricing.setRecruitDeadline(futureRecruitDeadline());
         pricing.setDelFlag(0);
@@ -900,6 +933,7 @@ class CoopInviteServiceImplTest {
         when(coopInviteMapper.selectCoopInviteByIdForUpdate(1L)).thenReturn(target);
         CmsTopic topic = new CmsTopic();
         topic.setId(7L);
+        topic.setDelFlag(0);
         topic.setClubId(88L);
         topic.setLifecycle(1);
         topic.setRecruitDeadline(futureRecruitDeadline());
@@ -937,6 +971,7 @@ class CoopInviteServiceImplTest {
         when(coopInviteMapper.selectCoopInviteByIdForUpdate(1L)).thenReturn(target);
         com.chengyinhub.business.domain.CmsTopic open = new com.chengyinhub.business.domain.CmsTopic();
         open.setId(7L);
+        open.setDelFlag(0);
         open.setLifecycle(1);   // 未锁价:把「锁价闸」排除掉,让容量闸成为唯一会拦的东西
         open.setRecruitDeadline(futureRecruitDeadline());
         when(cmsTopicMapper.selectCmsTopicByIdForUpdate(7L)).thenReturn(open);
@@ -975,6 +1010,7 @@ class CoopInviteServiceImplTest {
         when(coopInviteMapper.selectCoopInviteByIdForUpdate(1L)).thenReturn(target);
         com.chengyinhub.business.domain.CmsTopic open = new com.chengyinhub.business.domain.CmsTopic();
         open.setId(7L);
+        open.setDelFlag(0);
         open.setLifecycle(1);
         open.setRecruitDeadline(futureRecruitDeadline());
         when(cmsTopicMapper.selectCmsTopicByIdForUpdate(7L)).thenReturn(open);
@@ -1001,6 +1037,7 @@ class CoopInviteServiceImplTest {
         when(coopInviteMapper.selectCoopInviteByIdForUpdate(1L)).thenReturn(target);
         com.chengyinhub.business.domain.CmsTopic open = new com.chengyinhub.business.domain.CmsTopic();
         open.setId(7L);
+        open.setDelFlag(0);
         open.setLifecycle(1);
         open.setRecruitDeadline(futureRecruitDeadline());
         when(cmsTopicMapper.selectCmsTopicByIdForUpdate(7L)).thenReturn(open);
@@ -1027,6 +1064,7 @@ class CoopInviteServiceImplTest {
         when(coopInviteMapper.selectCoopInviteByIdForUpdate(1L)).thenReturn(target);
         CmsTopic open = new CmsTopic();
         open.setId(7L);
+        open.setDelFlag(0);
         open.setMemberId(9003L);
         open.setClubId(7001L);
         open.setLifecycle(1);
@@ -1055,6 +1093,7 @@ class CoopInviteServiceImplTest {
         when(coopInviteMapper.selectCoopInviteByIdForUpdate(1L)).thenReturn(target);
         com.chengyinhub.business.domain.CmsTopic open = new com.chengyinhub.business.domain.CmsTopic();
         open.setId(7L);
+        open.setDelFlag(0);
         open.setLifecycle(1);
         open.setRecruitDeadline(futureRecruitDeadline());
         when(cmsTopicMapper.selectCmsTopicByIdForUpdate(7L)).thenReturn(open);
@@ -1089,6 +1128,7 @@ class CoopInviteServiceImplTest {
         when(coopInviteMapper.selectCoopInviteByIdForUpdate(1L)).thenReturn(target);
         com.chengyinhub.business.domain.CmsTopic open = new com.chengyinhub.business.domain.CmsTopic();
         open.setId(7L);
+        open.setDelFlag(0);
         open.setLifecycle(1);
         open.setRecruitDeadline(futureRecruitDeadline());
         when(cmsTopicMapper.selectCmsTopicByIdForUpdate(7L)).thenReturn(open);
@@ -1118,6 +1158,7 @@ class CoopInviteServiceImplTest {
         when(coopInviteMapper.selectCoopInviteByIdForUpdate(1L)).thenReturn(target);
         com.chengyinhub.business.domain.CmsTopic open = new com.chengyinhub.business.domain.CmsTopic();
         open.setId(7L);
+        open.setDelFlag(0);
         open.setLifecycle(1);
         open.setRecruitDeadline(futureRecruitDeadline());
         when(cmsTopicMapper.selectCmsTopicByIdForUpdate(7L)).thenReturn(open);
@@ -1149,6 +1190,7 @@ class CoopInviteServiceImplTest {
         when(coopInviteMapper.selectCoopInviteByIdForUpdate(1L)).thenReturn(target);
         com.chengyinhub.business.domain.CmsTopic open = new com.chengyinhub.business.domain.CmsTopic();
         open.setId(7L);
+        open.setDelFlag(0);
         open.setLifecycle(1);
         open.setRecruitDeadline(futureRecruitDeadline());
         when(cmsTopicMapper.selectCmsTopicByIdForUpdate(7L)).thenReturn(open);
@@ -1172,6 +1214,7 @@ class CoopInviteServiceImplTest {
         when(coopInviteMapper.selectCoopInviteByIdForUpdate(1L)).thenReturn(target);
         com.chengyinhub.business.domain.CmsTopic open = new com.chengyinhub.business.domain.CmsTopic();
         open.setId(7L);
+        open.setDelFlag(0);
         open.setLifecycle(1);
         open.setRecruitDeadline(futureRecruitDeadline());
         when(cmsTopicMapper.selectCmsTopicByIdForUpdate(7L)).thenReturn(open);
@@ -1195,6 +1238,7 @@ class CoopInviteServiceImplTest {
         when(coopInviteMapper.selectCoopInviteByIdForUpdate(1L)).thenReturn(target);
         com.chengyinhub.business.domain.CmsTopic open = new com.chengyinhub.business.domain.CmsTopic();
         open.setId(7L);
+        open.setDelFlag(0);
         open.setLifecycle(1);
         open.setRecruitDeadline(futureRecruitDeadline());
         when(cmsTopicMapper.selectCmsTopicByIdForUpdate(7L)).thenReturn(open);
@@ -1218,6 +1262,7 @@ class CoopInviteServiceImplTest {
         when(coopInviteMapper.selectCoopInviteByIdForUpdate(1L)).thenReturn(target);
         com.chengyinhub.business.domain.CmsTopic open = new com.chengyinhub.business.domain.CmsTopic();
         open.setId(7L);
+        open.setDelFlag(0);
         open.setLifecycle(1);
         open.setRecruitDeadline(futureRecruitDeadline());
         when(cmsTopicMapper.selectCmsTopicByIdForUpdate(7L)).thenReturn(open);
@@ -1240,6 +1285,7 @@ class CoopInviteServiceImplTest {
         when(coopInviteMapper.selectCoopInviteByIdForUpdate(1L)).thenReturn(target);
         CmsTopic open = new CmsTopic();
         open.setId(7L);
+        open.setDelFlag(0);
         open.setLifecycle(1);
         open.setRecruitDeadline(futureRecruitDeadline());
         when(cmsTopicMapper.selectCmsTopicByIdForUpdate(7L)).thenReturn(open);
@@ -1315,6 +1361,7 @@ class CoopInviteServiceImplTest {
         target.setFixedFee(fixedFee);
         CmsTopic open = new CmsTopic();
         open.setId(7L);
+        open.setDelFlag(0);
         open.setLifecycle(1);
         open.setRecruitDeadline(futureRecruitDeadline());
         when(cmsTopicMapper.selectCmsTopicByIdForUpdate(7L)).thenReturn(open);
@@ -1383,6 +1430,7 @@ class CoopInviteServiceImplTest {
         when(coopInviteMapper.selectCoopInviteByIdForUpdate(1L)).thenReturn(target);
         com.chengyinhub.business.domain.CmsTopic open = new com.chengyinhub.business.domain.CmsTopic();
         open.setId(7L);
+        open.setDelFlag(0);
         open.setLifecycle(1);
         open.setRecruitDeadline(futureRecruitDeadline());
         when(cmsTopicMapper.selectCmsTopicByIdForUpdate(7L)).thenReturn(open);
@@ -1416,6 +1464,7 @@ class CoopInviteServiceImplTest {
         when(coopInviteMapper.selectCoopInviteByIdForUpdate(1L)).thenReturn(target);
         final CmsTopic open = new CmsTopic();
         open.setId(7L);
+        open.setDelFlag(0);
         open.setLifecycle(1);
         open.setRecruitDeadline(futureRecruitDeadline());
         final List<String> calls = new ArrayList<>();
@@ -1459,6 +1508,9 @@ class CoopInviteServiceImplTest {
 
     @Test
     void accept_gameLevel_generatesOrderAndSupersedesPending() {
+        CmsTopic originalTopic = new CmsTopic(); originalTopic.setId(100L); originalTopic.setDelFlag(0);
+        originalTopic.setLifecycle(1); originalTopic.setRecruitDeadline(futureRecruitDeadline());
+        when(cmsTopicMapper.selectCmsTopicByIdForUpdate(100L)).thenReturn(originalTopic);
         CoopInvite target = inv(1L, 0);
         target.setGameId(5L);
         target.setTopicId(100L);
@@ -1508,6 +1560,9 @@ class CoopInviteServiceImplTest {
 
     @Test
     void accept_selfExploration_doesNotWriteConfigDeadline() {
+        CmsTopic originalTopic = new CmsTopic(); originalTopic.setId(7L); originalTopic.setDelFlag(0);
+        originalTopic.setLifecycle(1); originalTopic.setRecruitDeadline(futureRecruitDeadline());
+        when(cmsTopicMapper.selectCmsTopicByIdForUpdate(7L)).thenReturn(originalTopic);
         // 阻断#8 / 台账 1-11:主题级邀约没有「配置游戏」步骤,接受时不得写 72h 死线
         CoopInvite target = inv(1L, 0);
         target.setTopicId(7L); // gameId null → 自由定向(主题级)
@@ -1529,10 +1584,14 @@ class CoopInviteServiceImplTest {
         CoopOrder existing = new CoopOrder();
         existing.setId(777L);
         existing.setRegId(55L);
-        when(coopOrderMapper.selectCoopOrderByRegId(55L))
+        CoopInvite original = inv(88L, 1);
+        when(coopInviteMapper.selectCoopInviteByIdForUpdate(88L)).thenReturn(original);
+        existing.setInviteId(88L); existing.setFromId(100L); existing.setToId(200L); existing.setToType("merchant");
+        when(coopInviteMapper.selectOriginalCoopOrdersForUpdate(88L, 55L))
                 .thenReturn(java.util.Collections.singletonList(existing));
 
         CoopOrder order = new CoopOrder();
+        order.setInviteId(88L); order.setFromId(100L); order.setToId(200L); order.setToType("merchant");
         order.setRegId(55L);
         Long id = svc.createCoopOrder(order);
 
@@ -1543,7 +1602,7 @@ class CoopInviteServiceImplTest {
     @Test
     void createCoopOrder_rebuildsServerOwnedContractFields() {
         CoopInvite invite = new CoopInvite();
-        invite.setId(88L);
+        invite.setId(88L); invite.setStatus(1); invite.setDelFlag(0);
         invite.setInviteType(1);
         invite.setToType("club");
         invite.setTopicId(7L);
@@ -1551,9 +1610,12 @@ class CoopInviteServiceImplTest {
         invite.setShareMode(2);
         invite.setFixedFee(new BigDecimal("12"));
         when(coopInviteMapper.selectCoopInviteById(88L)).thenReturn(invite);
+        when(coopInviteMapper.selectCoopInviteByIdForUpdate(88L)).thenReturn(invite);
+        CmsTopic originalTopic = new CmsTopic(); originalTopic.setId(7L); originalTopic.setDelFlag(0);
+        when(cmsTopicMapper.selectCmsTopicByIdForUpdate(7L)).thenReturn(originalTopic);
 
         CoopOrder order = new CoopOrder();
-        order.setInviteId(88L);
+        order.setInviteId(88L); order.setTopicId(7L); order.setToType("club");
         order.setRoleSnapshot("FORGED");
         order.setScopeTypeSnapshot("FORGED");
         order.setScopeIdSnapshot(999L);
@@ -1848,7 +1910,8 @@ class CoopInviteServiceImplTest {
     @Test
     void markTopicDepositsDue_marksUnpaidAndDoesNotBlockOnNotifyFailure() {
         CmsTopic topic = new CmsTopic();
-        topic.setId(7L); topic.setName("测试主题");
+        topic.setId(7L);
+        topic.setDelFlag(0); topic.setName("测试主题");
         CoopInvite due = inv(1L, 1);
         due.setTopicId(7L); due.setInviteType(0); due.setToType("merchant"); due.setToId(200L); due.setDepositStatus(0);
         CoopInvite frozen = inv(2L, 1);
@@ -1868,7 +1931,8 @@ class CoopInviteServiceImplTest {
     @Test
     void markTopicDepositsDue_sendsNoticeOnlyAfterCommit() {
         CmsTopic topic = new CmsTopic();
-        topic.setId(7L); topic.setName("测试主题");
+        topic.setId(7L);
+        topic.setDelFlag(0); topic.setName("测试主题");
         CoopInvite due = inv(1L, 1);
         due.setTopicId(7L); due.setInviteType(0); due.setToType("merchant"); due.setToId(200L); due.setDepositStatus(0);
         when(cmsTopicMapper.selectCmsTopicById(7L)).thenReturn(topic);
@@ -2051,10 +2115,90 @@ class CoopInviteServiceImplTest {
     }
 
     @Test
+    void prepareDeposit_retryWithoutConfirmedCloseLeavesOriginalIdentityAndDoesNotCas() {
+        CoopInvite invite = originalDepositRetry(false);
+        IllegalStateException error = assertThrows(IllegalStateException.class, this::prepareOriginalDepositRetry);
+        assertTrue(error.getMessage().contains("原保证金支付身份"));
+        assertOriginalDepositRetryUnchanged(invite);
+        verify(verifiedPaymentFacts).hasConfirmedExternalSuccess("DEP1T100");
+        verify(paymentIntentJdbc).queryForList(
+                org.mockito.ArgumentMatchers.startsWith("SELECT * FROM wx_pay_order_intent"), eq("DEP"), eq(1L));
+        verify(coopInviteMapper, never()).updateDeposit(any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void prepareDeposit_confirmedSuccessEvenWithClosedAttemptCannotCreateNewPendingCas() {
+        CoopInvite invite = originalDepositRetry(true);
+        when(verifiedPaymentFacts.hasConfirmedExternalSuccess("DEP1T100")).thenReturn(true);
+        IllegalStateException error = assertThrows(IllegalStateException.class, this::prepareOriginalDepositRetry);
+        assertTrue(error.getMessage().contains("原保证金支付身份"));
+        assertOriginalDepositRetryUnchanged(invite);
+        verify(paymentIntentJdbc, never()).queryForList(
+                org.mockito.ArgumentMatchers.startsWith("SELECT * FROM wx_pay_order_intent"), eq("DEP"), eq(1L));
+        verify(coopInviteMapper, never()).updateDeposit(any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void prepareDeposit_confirmedClosedRetryReusesOriginalBusinessNoAfterLockedProof() {
+        originalDepositRetry(true);
+        when(coopInviteMapper.updateDeposit(eq(1L), eq(1), eq("DEP1T100"),
+                org.mockito.ArgumentMatchers.isNull(), eq(new BigDecimal("50.00")))).thenReturn(1);
+        Map<String, Object> prepared = prepareOriginalDepositRetry();
+        assertEquals("DEP1T100", prepared.get("outTradeNo"));
+        assertEquals(new BigDecimal("50.00"), prepared.get("amount"));
+        assertEquals(100L, prepared.get("payerMemberId"));
+        var order = org.mockito.Mockito.inOrder(paymentIntentJdbc, verifiedPaymentFacts, coopInviteMapper);
+        order.verify(paymentIntentJdbc).queryForList(
+                org.mockito.ArgumentMatchers.startsWith("SELECT id,deposit_amount"), eq("DEP1T100"));
+        order.verify(verifiedPaymentFacts).hasConfirmedExternalSuccess("DEP1T100");
+        order.verify(paymentIntentJdbc).queryForList(
+                org.mockito.ArgumentMatchers.startsWith("SELECT * FROM wx_pay_order_intent"), eq("DEP"), eq(1L));
+        order.verify(coopInviteMapper).updateDeposit(1L, 1, "DEP1T100", null, new BigDecimal("50.00"));
+        verify(coopInviteMapper, times(1)).updateDeposit(any(), any(), any(), any(), any());
+    }
+
+    private CoopInvite originalDepositRetry(boolean closed) {
+        CoopInvite invite = clubInvite(1L, 1, 8001L, 100L, 5);
+        invite.setTopicId(7L); invite.setDepositAmount(new BigDecimal("50.00"));
+        invite.setDepositOutTradeNo("DEP1T100");
+        when(coopInviteMapper.selectCoopInviteByIdForUpdate(1L)).thenReturn(invite);
+        CmsTopic topic = new CmsTopic(); topic.setId(7L);
+        topic.setDelFlag(0); topic.setLifecycle(3);
+        when(cmsTopicMapper.selectCmsTopicById(7L)).thenReturn(topic);
+        when(paymentIntentJdbc.queryForList(org.mockito.ArgumentMatchers.startsWith("SELECT id,deposit_amount"), eq("DEP1T100")))
+                .thenReturn(List.of(Map.of("id", 1L, "amount", new BigDecimal("50.00"), "payable", 0)));
+        Map<String, Object> attempt = new java.util.HashMap<>();
+        attempt.put("business_out_trade_no", "DEP1T100"); attempt.put("biz_type", "DEP"); attempt.put("biz_id", 1L);
+        attempt.put("mchid", "merchant"); attempt.put("out_trade_no", "WXP_ORIGINAL_ALIAS");
+        attempt.put("total_fen", 5000L); attempt.put("currency", "CNY"); attempt.put("trade_type", "JSAPI");
+        attempt.put("appid", "wx-original"); attempt.put("request_hash", "a".repeat(64));
+        attempt.put("closed_confirmed_at", closed ? new java.sql.Timestamp(1700000000000L) : null);
+        when(paymentIntentJdbc.queryForList(org.mockito.ArgumentMatchers.startsWith("SELECT * FROM wx_pay_order_intent"), eq("DEP"), eq(1L)))
+                .thenReturn(List.of(attempt));
+        return invite;
+    }
+
+    /** Unit transaction flag only; this does not execute/prove a database transaction or row lock. */
+    private Map<String, Object> prepareOriginalDepositRetry() {
+        boolean originalTransaction = TransactionSynchronizationManager.isActualTransactionActive();
+        TransactionSynchronizationManager.setActualTransactionActive(true);
+        try { return svc.prepareDeposit(1L, 100L); }
+        finally { TransactionSynchronizationManager.setActualTransactionActive(originalTransaction); }
+    }
+
+    private void assertOriginalDepositRetryUnchanged(CoopInvite invite) {
+        assertEquals(5, invite.getDepositStatus());
+        assertEquals("DEP1T100", invite.getDepositOutTradeNo());
+        assertEquals(new BigDecimal("50.00"), invite.getDepositAmount());
+        assertNull(invite.getDepositPaidTransactionId());
+    }
+
+    @Test
     void historicalQueryDoesNotDisguiseDatabaseErrorsAsIdentityUpdates() {
         CoopInvite invite=inv(1L,3);invite.setTopicId(7L);invite.setDepositStatus(4);
         when(coopInviteMapper.selectCoopInviteByIdForUpdate(1L)).thenReturn(invite);
-        CmsTopic topic=new CmsTopic();topic.setId(7L);topic.setClubId(73L);
+        CmsTopic topic=new CmsTopic();topic.setId(7L);
+        topic.setDelFlag(0);topic.setClubId(73L);
         when(cmsTopicMapper.selectCmsTopicByIdForUpdate(7L)).thenReturn(topic);
         org.springframework.jdbc.UncategorizedSQLException failure=new org.springframework.jdbc.UncategorizedSQLException(
                 "test","select",new java.sql.SQLException("broken SQL","42000",1064));
@@ -2067,15 +2211,20 @@ class CoopInviteServiceImplTest {
         CoopInvite c = clubInvite(1L, 0, 8001L, 100L, 1);
         c.setDepositAmount(new BigDecimal("50.00"));
         when(coopInviteMapper.selectByDepositOutTradeNoForUpdate("DEP1")).thenReturn(c);
-        when(coopInviteMapper.markDepositPaidConfirmed(eq(1L), eq("DEP1"), any(), eq("wx1"))).thenReturn(1);
-        assertTrue(svc.markDepositPaid("DEP1", 5000L, "wx1"));
+        c.setDepositOutTradeNo("DEP1");
+        when(coopInviteMapper.selectCoopInviteByIdForUpdate(1L)).thenReturn(c);
+        when(coopInviteMapper.markDepositPaidConfirmed(eq(1L), eq("DEP1"), any(), eq("wx1"))).thenAnswer(call -> {
+            c.setDepositStatus(2);c.setDepositPaidTransactionId("wx1");return 1;
+        });
+        var reference = originalDepositProof("DEP1",5000L,"wx1");
+        assertTrue(consumeDeposit("DEP1",5000L,"wx1",reference));
         verify(coopInviteMapper).markDepositPaidConfirmed(eq(1L), eq("DEP1"), any(), eq("wx1")); // 2已缴冻结
     }
 
     @Test
     void markDepositPaid_unknownOrder_false() {
         when(coopInviteMapper.selectByDepositOutTradeNoForUpdate("DEPX")).thenReturn(null);
-        assertEquals(false, svc.markDepositPaid("DEPX", 5000L, "wx1"));
+        assertEquals(false, consumeDeposit("DEPX",5000L,"wx1",originalDepositProof("DEPX",5000L,"wx1")));
     }
 
     @Test
@@ -2086,11 +2235,53 @@ class CoopInviteServiceImplTest {
         when(coopInviteMapper.selectByDepositOutTradeNoForUpdate("DEP2")).thenReturn(legacy);
         when(coopInviteMapper.selectCoopInviteById(1L)).thenReturn(legacy);
 
-        assertEquals(false, svc.markDepositPaid("DEP2", 5000L, "wx1"));
+        assertEquals(false, consumeDeposit("DEP2",5000L,"wx1",originalDepositProof("DEP2",5000L,"wx1")));
         assertEquals(0, svc.deductDeposit(1L));
         assertEquals(0, svc.settleDepositRefunded(1L, "REF2"));
 
         verify(coopInviteMapper, never()).updateDeposit(any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void unverifiedThreeArgumentWriteIsNotAPublicInterfaceOrServiceEntry() throws Exception {
+        assertThrows(NoSuchMethodException.class,()->ICoopInviteService.class.getMethod("markDepositPaid",String.class,Long.class,String.class));
+        assertThrows(NoSuchMethodException.class,()->CoopInviteServiceImpl.class.getMethod("markDepositPaid",String.class,Long.class,String.class));
+        var apply=CoopInviteServiceImpl.class.getDeclaredMethod("applyConfirmedDepositPaid",String.class,Long.class,String.class);
+        assertTrue(java.lang.reflect.Modifier.isPrivate(apply.getModifiers()));
+    }
+
+    @Test
+    void missingOrMismatchedOriginalReferenceCannotReachThePrivatePaidCas() {
+        originalDepositProof("DEP1",5000L,"wx1");
+        var wrong=new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference(999L,"b".repeat(64));
+        when(verifiedPaymentFacts.requireConsumablePayment(null)).thenThrow(new IllegalArgumentException("Original reference required"));
+        when(verifiedPaymentFacts.requireConsumablePayment(wrong)).thenThrow(new com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService.ConflictException());
+        assertThrows(IllegalArgumentException.class,()->consumeDeposit("DEP1",5000L,"wx1",null));
+        assertThrows(IllegalStateException.class,()->consumeDeposit("DEP1",5000L,"wx1",wrong));
+        verify(coopInviteMapper,never()).selectByDepositOutTradeNoForUpdate(any());
+        verify(coopInviteMapper,never()).markDepositPaidConfirmed(any(),any(),any(),any());
+    }
+
+    private com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference originalDepositProof(String no,long amountFen,String tx) {
+        var payment = new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact(
+                com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Kind.PAYMENT,"merchant","wx-original",
+                no,no,no,tx,tx,"JSAPI","CNY",amountFen,amountFen,java.time.Instant.ofEpochSecond(1700000000),null,"SUCCESS");
+        var reference = new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference(7L,payment.factHash());
+        when(verifiedPaymentFacts.requireVerified(reference)).thenReturn(
+                new com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService.Stored(reference,payment));
+        when(verifiedPaymentFacts.findPaymentRecovery(reference)).thenReturn(java.util.Optional.empty());
+        when(verifiedPaymentFacts.requireConsumablePayment(reference)).thenReturn(
+                new com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService.Stored(reference,payment));
+        ReflectionTestUtils.setField(svc,"depositVerifiedFacts",verifiedPaymentFacts);return reference;
+    }
+
+    /** Unit lifecycle flag only, not a database transaction or rollback proof. */
+    private boolean consumeDeposit(String no,long amountFen,String tx,
+            com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference reference) {
+        boolean old=TransactionSynchronizationManager.isActualTransactionActive();
+        TransactionSynchronizationManager.setActualTransactionActive(true);
+        try { return svc.markDepositPaid(no,amountFen,tx,reference); }
+        finally { TransactionSynchronizationManager.setActualTransactionActive(old); }
     }
 
     @Test

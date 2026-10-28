@@ -51,11 +51,24 @@ EXPLICIT_MANAGED_SQL = {
         "seed_refund_manual_menu_20260714",
 }
 EXPLICIT_AUXILIARY_SQL = {
+    # Architecture-day A/D: exact disposable test fixtures and non-executed
+    # review proposals; canonical executable migrations remain fully checked.
+    "chengyinhub-admin/src/test/resources/architecture-day-a-fixture.sql": "TEST_FIXTURE",
+    "chengyinhub-admin/src/test/resources/it-schema/official-broadcast-delivery-it-schema.sql": "TEST_FIXTURE",
+    "docs/delivery/architecture-day/A/schema-candidate.sql": "AUXILIARY_NOT_EXECUTED",
+    "docs/delivery/architecture-day/A/schema-preflight.sql": "AUXILIARY_NOT_EXECUTED",
+    # Historical source-only station proposal; canonical executable DDL is the
+    # separately managed migration_20261025_coop_order_station_fulfillment.sql.
+    "docs/delivery/architecture-day/G/supply-order-fulfillment-contract/PROPOSED_TABLE.sql":
+        "AUXILIARY_NOT_EXECUTED",
     # Only the reviewed synthetic schema for the disposable, network-isolated startup gate.
     "ci/upgrade-startup/schema.sql": "TEST_FIXTURE",
     "chengyinhub-admin/sql/_四账映射与守恒规则_20260725.sql": "REFERENCE_ONLY",
     "chengyinhub-admin/sql/seed_official_content_template.sql": "REFERENCE_ONLY",
     "chengyinhub-admin/src/test/resources/it-schema/cms-topic-it-schema.sql": "TEST_FIXTURE",
+    "chengyinhub-admin/src/test/resources/it-schema/wp10-content-copy-scratch.sql": "TEST_FIXTURE",
+    "chengyinhub-admin/src/test/resources/it-schema/wp10-content-graph-scratch.sql": "TEST_FIXTURE",
+    "chengyinhub-admin/src/test/resources/fixtures/im-club-conversation-batch.sql": "TEST_FIXTURE",
     "chengyinhub-admin/src/test/resources/it-schema/coop-it-schema.sql": "TEST_FIXTURE",
     # #398 F1 移植:view_coupon_history 联表视图的测试建表资源(SELECT 照抄 base_schema_20260818),
     # 只在 H2 内存库里执行,不进发布台账、不在生产跑。

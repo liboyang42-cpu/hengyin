@@ -92,9 +92,11 @@ function createSessionManager(deps) {
   function loginSucceeded(result) {
     var owner = String(session.getUserID() || '');
     var authorization = session.getAuthorization();
+    var revision = typeof session.getRevision === 'function' ? session.getRevision() : null;
     // 回调前仍可能换号；用闭包核验，避免把 token 复制到登录结果。
     result.isCurrentSession = function () {
-      return String(session.getUserID() || '') === owner && session.getAuthorization() === authorization;
+      return String(session.getUserID() || '') === owner && session.getAuthorization() === authorization
+        && (revision === null || session.getRevision() === revision);
     };
     return result;
   }
@@ -102,8 +104,10 @@ function createSessionManager(deps) {
   function doLogin() {
     var owner = String(session.getUserID() || '');
     var authorization = session.getAuthorization();
+    var revision = typeof session.getRevision === 'function' ? session.getRevision() : null;
     function isCurrent() {
-      return String(session.getUserID() || '') === owner && session.getAuthorization() === authorization;
+      return String(session.getUserID() || '') === owner && session.getAuthorization() === authorization
+        && (revision === null || session.getRevision() === revision);
     }
     function sessionChanged() {
       return { ok: false, authed: false, reason: 'sessionChanged' };

@@ -9,8 +9,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 腾讯位置服务逆地理编码实现。密钥仅从服务端环境配置读取。
@@ -23,11 +24,15 @@ public class MapGeocodeServiceImpl implements IMapGeocodeService {
     private static final String FORWARD_GEOCODE_URL = "https://apis.map.qq.com/ws/geocoder/v1/?address=";
     /** 供应商可信度门槛:>=7 才是门牌/道路级定位,以下是区县或城市中心的回退值。 */
     private static final int MIN_RELIABILITY = 7;
-    private static final long CACHE_TTL_MILLIS = 5 * 60 * 1000L;
-    private static final int MAX_CACHE_SIZE = 2000;
+    static final long CITY_CACHE_BYTES = 512L * 1024;
+    static final long CITY_ENTRY_BYTES = 1024;
+    private static final int MAX_ADDRESS_CHARACTERS = 512;
+    private static final int MAX_REGION_CHARACTERS = 128;
 
-    private final Map<String, CityCacheEntry> cityCache = new ConcurrentHashMap<>();
-    private final Map<String, Object> requestLocks = new ConcurrentHashMap<>();
+    private final MapResponseCache cityCache = new MapResponseCache(CITY_CACHE_BYTES, CITY_ENTRY_BYTES,
+            TimeUnit.MINUTES.toNanos(5), this::nanoTime);
+    /** Shared reverse/forward work budget, not a thread pool. Cold duplicates never wait. */
+    private final Set<String> inFlight = new HashSet<>();
 
     @Autowired
     private TencentMapClient tencentMapClient;
@@ -39,47 +44,45 @@ public class MapGeocodeServiceImpl implements IMapGeocodeService {
         }
 
         String cacheKey = coordinateGrid(longitude, latitude);
-        String cached = readCachedCity(cacheKey);
+        String cached = cityCache.get(cacheKey);
         if (cached != null) {
             return cached;
         }
 
-        Object newLock = new Object();
-        Object lock = requestLocks.putIfAbsent(cacheKey, newLock);
-        if (lock == null) {
-            lock = newLock;
-        }
+        String requestKey = "C|" + cacheKey;
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+        if (!claim(requestKey)) return null;
         try {
-            synchronized (lock) {
-                cached = readCachedCity(cacheKey);
-                if (cached != null) {
-                    return cached;
-                }
-                String city = requestCity(longitude, latitude);
-                if (!StringUtils.isEmpty(city)) {
-                    cacheCity(cacheKey, city);
-                }
-                return city;
-            }
+            cached = cityCache.get(cacheKey);
+            if (cached != null) return cached;
+            String city = requestCity(longitude, latitude);
+            if (StringUtils.isEmpty(city) || !cityCache.accepts(cacheKey, city)) return null;
+            cityCache.put(cacheKey, city);
+            return city;
         } catch (Exception e) {
             log.warn("[MapGeocode] reverse geocode request failed: {}", e.getClass().getSimpleName());
             return null;
         } finally {
-            requestLocks.remove(cacheKey, lock);
+            synchronized (inFlight) { inFlight.remove(requestKey); }
         }
     }
 
     @Override
     public double[] suggestCoords(String address, String region) {
-        if (!tencentMapClient.isReady() || StringUtils.isEmpty(address)) {
+        if (!tencentMapClient.isReady() || address == null || address.length() > MAX_ADDRESS_CHARACTERS
+                || (region != null && region.length() > MAX_REGION_CHARACTERS) || StringUtils.isEmpty(address)) {
             return null;
         }
+        String cleanAddress = address.trim(), cleanRegion = region == null ? "" : region.trim();
+        String requestKey = "F|" + cleanAddress.length() + ":" + cleanAddress + cleanRegion.length() + ":" + cleanRegion;
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+        if (!claim(requestKey)) return null;
         try {
             StringBuilder url = new StringBuilder(FORWARD_GEOCODE_URL).append(urlEncode(address.trim()));
             if (!StringUtils.isEmpty(region)) {
                 url.append("&region=").append(urlEncode(region.trim()));
             }
-            JSONObject root = JSONObject.parseObject(requestGeocode(url.toString()));
+            JSONObject root = parseProviderResponse(requestGeocode(url.toString()));
             int status = root == null ? -1 : root.getIntValue("status", -1);
             if (status != 0) {
                 log.warn("[MapGeocode] provider rejected forward geocode, status={}", status);
@@ -106,6 +109,8 @@ public class MapGeocodeServiceImpl implements IMapGeocodeService {
         } catch (Exception e) {
             log.warn("[MapGeocode] forward geocode request failed: {}", e.getClass().getSimpleName());
             return null;
+        } finally {
+            synchronized (inFlight) { inFlight.remove(requestKey); }
         }
     }
 
@@ -119,7 +124,7 @@ public class MapGeocodeServiceImpl implements IMapGeocodeService {
 
     private String requestCity(double longitude, double latitude) {
         String url = GEOCODE_URL + latitude + "," + longitude;
-        JSONObject root = JSONObject.parseObject(requestGeocode(url));
+        JSONObject root = parseProviderResponse(requestGeocode(url));
         int status = root == null ? -1 : root.getIntValue("status", -1);
         if (status != 0) {
             log.warn("[MapGeocode] provider rejected reverse geocode, status={}", status);
@@ -134,34 +139,15 @@ public class MapGeocodeServiceImpl implements IMapGeocodeService {
         return StringUtils.isEmpty(city) ? component.getString("province") : city;
     }
 
-    private String readCachedCity(String cacheKey) {
-        CityCacheEntry entry = cityCache.get(cacheKey);
-        if (entry == null) {
-            return null;
-        }
-        if (entry.expiresAt < System.currentTimeMillis()) {
-            cityCache.remove(cacheKey, entry);
-            return null;
-        }
-        return entry.city;
-    }
-
-    private void cacheCity(String cacheKey, String city) {
-        if (cityCache.size() >= MAX_CACHE_SIZE) {
-            removeExpiredEntries();
-        }
-        if (cityCache.size() < MAX_CACHE_SIZE) {
-            cityCache.put(cacheKey, new CityCacheEntry(city, System.currentTimeMillis() + CACHE_TTL_MILLIS));
+    private boolean claim(String key) {
+        synchronized (inFlight) {
+            return inFlight.size() < TencentMapClient.MAX_IN_FLIGHT && inFlight.add(key);
         }
     }
 
-    private void removeExpiredEntries() {
-        long now = System.currentTimeMillis();
-        for (Map.Entry<String, CityCacheEntry> entry : cityCache.entrySet()) {
-            if (entry.getValue().expiresAt < now) {
-                cityCache.remove(entry.getKey(), entry.getValue());
-            }
-        }
+    private JSONObject parseProviderResponse(String response) {
+        return response == null || response.length() > TencentMapClient.MAX_RESPONSE_BYTES
+                ? null : JSONObject.parseObject(response);
     }
 
     private String coordinateGrid(double longitude, double latitude) {
@@ -173,13 +159,7 @@ public class MapGeocodeServiceImpl implements IMapGeocodeService {
         return tencentMapClient.get(url);
     }
 
-    private static final class CityCacheEntry {
-        private final String city;
-        private final long expiresAt;
-
-        private CityCacheEntry(String city, long expiresAt) {
-            this.city = city;
-            this.expiresAt = expiresAt;
-        }
+    protected long nanoTime() {
+        return System.nanoTime();
     }
 }

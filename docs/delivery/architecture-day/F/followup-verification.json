@@ -1,0 +1,42 @@
+{
+  "kind": "UNCOMMITTED_PYTHON_STATIC_ONLY",
+  "parent_sha": "1ce4132abb4c4c1ceb92c28fd244382c3ff3f45c",
+  "code_diff_sha256": "27a64f1fa7338881142c8249178ebe80d1be0e4fd999e470eeae673981653c52",
+  "checks": [
+    {
+      "name": "followup-selftests",
+      "exit_code": 0,
+      "output": "followup-selftests.txt",
+      "sha256": "b054cfe6ad70c8bcc6f61aa8be10fb5a50fb1ebe9d92d9efcc2437c8a1afdf5f",
+      "environment": {}
+    },
+    {
+      "name": "followup-ci-cost",
+      "exit_code": 0,
+      "output": "followup-ci-cost.txt",
+      "sha256": "5411067fc233ad715ee8203b895cdaec0ada4b4ab49225076825e60c78a8628b",
+      "environment": {}
+    },
+    {
+      "name": "followup-assert",
+      "exit_code": 0,
+      "output": "followup-assert.txt",
+      "sha256": "03f0d605d6bf1ad0ac899fce32f4c64774c4fa1d9e808fa6b9419ec98ef3cc9c",
+      "environment": {
+        "GATE_SELFTEST": "1",
+        "GATE": "/workspace/hengyin-architecture-f/ci/assert_it_ran.py"
+      }
+    }
+  ],
+  "not_run": [
+    "candidate commit/push",
+    "GitHub CI",
+    "Java compilation/tests",
+    "MySQL/Redis",
+    "Docker/SSH/VPS",
+    "business chain"
+  ],
+  "pending": "specific CI candidate commit exception; freeze verifier SHA before final wiring is executable",
+  "existing_workflow_outside_architecture_steps": "BYTE_IDENTICAL",
+  "fixed_baseline": "UNCHANGED_EXACT_REGENERATION_MATCH"
+}

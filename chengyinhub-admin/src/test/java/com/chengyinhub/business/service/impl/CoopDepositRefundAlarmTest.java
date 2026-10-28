@@ -34,6 +34,7 @@ class CoopDepositRefundAlarmTest {
     private IWechatPayService wechat;
     private AlarmService alarms;
     private CoopDepositRefundService service;
+    private com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference originalPayment;
 
     @BeforeEach
     void setUp() {
@@ -56,17 +57,28 @@ class CoopDepositRefundAlarmTest {
             row.setId(90L); row.setDelFlag(0); row.setDepositStatus(2);
             row.setDepositOutTradeNo("DEP90T100"); row.setDepositRefundNo("RDEP90T100");
             row.setDepositAmount(new BigDecimal("50.00")); row.setDepositRefundAmount(new BigDecimal("50.00"));
-            row.setDepositRefundState("PENDING"); row.setDepositRefundLeaseToken(lease.get());
+            row.setDepositPaidTransactionId("TX90"); row.setDepositRefundState("DISPATCHING"); row.setDepositRefundLeaseToken(lease.get());
             return row;
         });
         when(wechat.queryRefundFacts("RDEP90T100")).thenReturn(Collections.singletonMap("status", "NOT_FOUND"));
+        // Explicit original-evidence port, not a provider/current-intent/SQL proof.
+        var fact=new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact(
+                com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Kind.PAYMENT,"original-merchant","original-app",
+                "DEP90T100","WXP-ORIGINAL90","WXP-ORIGINAL90","TX90","TX90","APP","CNY",5000,5000,
+                java.time.Instant.parse("2026-10-24T00:00:00Z"),null,"SUCCESS");
+        originalPayment=new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference(90L,fact.factHash());
+        var facts=mock(WechatVerifiedPaymentFactService.class);
+        when(facts.requireVerified(originalPayment)).thenReturn(new WechatVerifiedPaymentFactService.Stored(originalPayment,fact));
+        ReflectionTestUtils.setField(service,"verifiedPaymentFacts",facts);
+        when(mapper.selectDepositPaidFactReferences("DEP90T100","TX90")).thenReturn(java.util.List.of(
+                java.util.Map.of("id",90L,"fact_hash",originalPayment.hash())));
         when(mapper.renewDepositRefundDispatch(eq(90L), anyString())).thenReturn(1);
         when(mapper.finishDepositRefundDispatch(eq(90L), anyString(), anyString())).thenReturn(1);
     }
 
     @Test
     void unknownChannelResultKeepsDepositHeldAndRaisesActionableAlarm() {
-        when(wechat.submitRefund(anyString(), anyString(), any(), any(), anyString())).thenReturn(RefundRequestResult.UNKNOWN);
+        when(wechat.submitRefund(eq(originalPayment), eq("DEP90T100"), eq("RDEP90T100"), eq(new BigDecimal("50.00")), eq(new BigDecimal("50.00")), eq("合作保证金退款"))).thenReturn(RefundRequestResult.UNKNOWN);
 
         service.refresh(90L, true);
 
@@ -77,7 +89,7 @@ class CoopDepositRefundAlarmTest {
 
     @Test
     void definitiveChannelFailureGoesManualAndRaisesActionableAlarm() {
-        when(wechat.submitRefund(anyString(), anyString(), any(), any(), anyString())).thenReturn(RefundRequestResult.DEFINITIVE_FAILED);
+        when(wechat.submitRefund(eq(originalPayment), eq("DEP90T100"), eq("RDEP90T100"), eq(new BigDecimal("50.00")), eq(new BigDecimal("50.00")), eq("合作保证金退款"))).thenReturn(RefundRequestResult.DEFINITIVE_FAILED);
 
         service.refresh(90L, true);
 
@@ -89,7 +101,7 @@ class CoopDepositRefundAlarmTest {
     /** 负控:渠道已受理只记处理中,不得误告警(否则告警会被当噪音屏蔽)。 */
     @Test
     void acceptedChannelResultIsProcessingWithoutAlarm() {
-        when(wechat.submitRefund(anyString(), anyString(), any(), any(), anyString())).thenReturn(RefundRequestResult.ACCEPTED);
+        when(wechat.submitRefund(eq(originalPayment), eq("DEP90T100"), eq("RDEP90T100"), eq(new BigDecimal("50.00")), eq(new BigDecimal("50.00")), eq("合作保证金退款"))).thenReturn(RefundRequestResult.ACCEPTED);
 
         service.refresh(90L, true);
 

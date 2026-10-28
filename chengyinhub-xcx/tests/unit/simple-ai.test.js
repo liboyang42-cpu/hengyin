@@ -1,123 +1,37 @@
-const { test, beforeEach } = require('node:test');
+const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-
-const PAGE = '../../pages/publish/simple/index.js';
+const { harness, view, DRAFT } = require('./simple-ai-v2-guards.test.js');
 const WXML = path.join(__dirname, '../../pages/publish/simple/index.wxml');
-
-let sent = [];
-let pageConfig = null;
-
-global.getApp = () => ({
-  getUserID: () => 7,
-  sendRequest: (request) => { sent.push(request); },
-  getAuthorization: () => '',
-});
-global.wx = {
-  navigateBack: () => {},
-  choosePoi: () => {},
-  setStorageSync: () => {},
-  navigateTo: () => {},
-};
-global.Page = (config) => { pageConfig = config; };
-
-beforeEach(() => {
-  sent = [];
-  pageConfig = null;
-  delete require.cache[require.resolve(PAGE)];
-  require(PAGE);
-});
-
-function makePage() {
-  const page = Object.assign({}, pageConfig);
-  page.data = JSON.parse(JSON.stringify(pageConfig.data));
-  page.setData = (patch) => {
-    Object.keys(patch).forEach((key) => {
-      const parts = key.replace(/\[(\d+)\]/g, '.$1').split('.');
-      let target = page.data;
-      for (let i = 0; i < parts.length - 1; i++) target = target[parts[i]];
-      target[parts[parts.length - 1]] = patch[key];
-    });
-  };
-  return page;
-}
+let pageConfig;
+function makePage() { const h = harness(); pageConfig = h.page; return h.page; }
 
 test('简单 AI 入口加载并展示玩家的剩余额度', () => {
-  const page = makePage();
-  page.onLoad({ mode: '2' });
-
+  const h = harness(); const page = h.page;
   assert.equal(page.data.mode, 2);
-  assert.equal(sent[0].url, '/api/ai/theme/draft/quota');
-  assert.equal(sent[0].method, 'POST');
-
-  sent[0].success({ code: 200, data: { limited: true, remaining: 2 } });
-  assert.equal(page.data.aiQuotaLoaded, true);
-  assert.equal(page.data.aiRemaining, 2);
+  const quota = h.take('/quota'); assert.equal(quota.method, 'POST');
+  h.finish(quota, { code: 200, data: { limited: true, remaining: 2 } });
+  assert.equal(page.data.aiQuotaLoaded, true); assert.equal(page.data.aiRemaining, 2);
 });
-
 test('成功生成后用响应中的额度刷新提示', () => {
-  const page = makePage();
-  page.onLoad({ mode: '1' });
-  sent[0].success({ code: 200, data: { limited: true, remaining: 3 } });
-  page.setData({ aiIdea: '老城夜游' });
-
-  page.generateAiPlan();
-  const request = sent[1];
-  assert.equal(request.url, '/api/ai/theme/draft');
-  request.success({
-    code: 200,
-    data: {
-      traceId: 'trace-1',
-      remainingQuota: 2,
-      draft: { title: '夜游', storyline: '沿街探索', nodes: [{ merchantName: '第一站', task: '观察招牌' }] }
-    }
-  });
-
-  assert.equal(page.data.aiPlan.title, '夜游');
-  assert.equal(page.data.aiRemaining, 2);
+  const h = harness({ entry: { mode: '1' } }); h.ready();
+  h.finish(h.prepare(), { code: 200, data: view('SUCCEEDED', { productType: 1, replayed: false, resultAvailable: true,
+    result: { traceId: 'trace-1', remainingQuota: 2, draft: { title: '夜游', storyline: '沿街探索', nodes: [{ merchantName: '第一站', task: '观察招牌' }] } } }) });
+  assert.equal(h.page.data.mode, 1); assert.equal(h.page.data.aiPlan.title, '夜游'); assert.equal(h.page.data.aiRemaining, 2);
 });
-
 test('AI 返回超过三站的草稿时保持 fail-closed，不进入后续编辑', () => {
-  const page = makePage();
-  page.onLoad({ mode: '2' });
-  sent[0].success({ code: 200, data: { limited: true, remaining: 3 } });
-  page.setData({ aiIdea: '给我一条四站城市路线' });
-
-  page.generateAiPlan();
-  sent[1].success({
-    code: 200,
-    data: {
-      traceId: 'trace-too-many-nodes',
-      remainingQuota: 2,
-      draft: {
-        title: '四站路线',
-        nodes: Array.from({ length: 4 }, (_, index) => ({ merchantName: '第' + (index + 1) + '站' })),
-      },
-    },
-  });
-
-  assert.equal(page.data.aiPlan, null, '超过已定上限的草稿不能被当作可编辑结果');
-  assert.match(page.data.aiError, /不超过 3 个节点/);
-  assert.equal(page.data.aiRemaining, 3, '结构不合格响应不能被前端显示为已扣额度');
+  const h = harness(); h.ready();
+  h.finish(h.prepare(), { code: 200, data: view('SUCCEEDED', { replayed: false, resultAvailable: true,
+    result: { traceId: 'many', remainingQuota: 2, draft: { title: '四站路线', nodes: Array.from({ length: 4 }, (_, i) => ({ merchantName: '站' + i })) } } }) });
+  assert.equal(h.page.data.aiPlan, null); assert.match(h.page.data.aiError, /不超过 3 个节点/); assert.equal(h.page.data.aiRemaining, 3);
 });
-
 test('AI 重试失败时保留已经生成的草稿与节点', () => {
-  const page = makePage();
-  page.onLoad({ mode: '2' });
-  sent[0].success({ code: 200, data: { limited: true, remaining: 3 } });
-  const previousPlan = { title: '老城夜游', storyline: '沿街探索' };
-  const previousNodes = [{ name: '第一站', confirmed: false }];
-  page.setData({ aiIdea: '换一种说法', aiPlan: previousPlan, aiPlanNodes: previousNodes });
-
-  page.generateAiPlan();
-  sent[1].fail({ errMsg: 'request:fail timeout' });
-  sent[1].complete();
-
-  assert.deepEqual(page.data.aiPlan, previousPlan);
-  assert.deepEqual(page.data.aiPlanNodes, previousNodes);
-  assert.match(page.data.aiError, /网络暂时不可用/);
-  assert.equal(page.data.aiGenerating, false);
+  const h = harness(); h.ready(); const previousPlan = { title: '老城夜游', storyline: '沿街探索' }, previousNodes = [{ name: '第一站', confirmed: true }];
+  h.page.setData({ aiPlan: previousPlan, aiPlanNodes: previousNodes });
+  const request = h.prepare(); request.fail({ errMsg: 'request:fail timeout' }); request.complete();
+  assert.deepEqual(h.page.data.aiPlan, previousPlan); assert.deepEqual(h.page.data.aiPlanNodes, previousNodes);
+  assert.match(h.page.data.aiError, /网络暂时不可用/); assert.equal(h.page.data.aiGenerating, false);
 });
 
 test('AI 进度与错误使用同一互斥状态链，不得在 complete 前同屏', () => {
@@ -142,7 +56,9 @@ test('页面不再暴露已禁用的模式切换 / 就地建玩法能力', () =>
 });
 
 test('置灰的主 CTA 必须自己给理由:disabledtap 与 canEnterAiEditor 同判据', () => {
-  const page = makePage();
+  const h = harness(); h.ready();
+  h.finish(h.prepare(), { code: 200, data: view('SUCCEEDED', { resultAvailable: true, result: DRAFT }) });
+  const page = h.page;
   page.data.aiPlan = { title: '有标题', storyline: '' };
   page.data.aiPlanNodes = [{ name: '一站', confirmed: false, longitude: '', latitude: '' }];
   // 前提:这就是按钮置灰的那一态

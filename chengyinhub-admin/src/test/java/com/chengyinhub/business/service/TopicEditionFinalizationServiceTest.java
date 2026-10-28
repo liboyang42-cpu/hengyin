@@ -74,6 +74,10 @@ class TopicEditionFinalizationServiceTest {
         when(refundMapper.countUnsettledRefundsByTopic(TOPIC)).thenReturn(0);
         service = new TopicEditionFinalizationServiceImpl(mapper, compensationService, payeeService, clubService,
                 fundsService, new EditionFinalFactGate(complaintMapper, refundMapper));
+        com.chengyinhub.business.mapper.CmsTopicMapper topics = mock(com.chengyinhub.business.mapper.CmsTopicMapper.class);
+        com.chengyinhub.business.domain.CmsTopic topic = new com.chengyinhub.business.domain.CmsTopic(); topic.setId(TOPIC);
+        when(topics.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(topic);
+        org.springframework.test.util.ReflectionTestUtils.setField(service,"topicMapper",topics);
     }
 
     /** 开售冻结的条款：履约窗结束落在 NOW 之前 ⇒ 「期已结束」这一条默认成立。 */
@@ -862,4 +866,29 @@ class TopicEditionFinalizationServiceTest {
         batch.setTotalAmount(new BigDecimal("1980.00"));
         return batch;
     }
+    @Test
+    void finalReplayStillAcquiresTopicBeforeFinalizationHead() {
+        com.chengyinhub.business.mapper.CmsTopicMapper topics = (com.chengyinhub.business.mapper.CmsTopicMapper)
+                org.springframework.test.util.ReflectionTestUtils.getField(service, "topicMapper");
+        TopicEditionFinalization original = new TopicEditionFinalization(); original.setTopicId(TOPIC);
+        when(mapper.selectFinalizationForUpdate(TOPIC)).thenReturn(original);
+        org.junit.jupiter.api.Assertions.assertSame(original, service.finalizeEdition(TOPIC, NOW, 9L));
+        org.mockito.InOrder order = org.mockito.Mockito.inOrder(topics, mapper);
+        order.verify(topics).selectCmsTopicByIdForUpdate(TOPIC);
+        order.verify(mapper).selectFinalizationForUpdate(TOPIC);
+        org.mockito.Mockito.verifyNoInteractions(fundsService);
+    }
+
+    @Test
+    void missingTopicCannotGenerateFinalizationOrBatchSideEffects() {
+        com.chengyinhub.business.mapper.CmsTopicMapper topics = (com.chengyinhub.business.mapper.CmsTopicMapper)
+                org.springframework.test.util.ReflectionTestUtils.getField(service, "topicMapper");
+        when(topics.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(null);
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class,
+                () -> service.finalizeEdition(TOPIC, NOW, 9L));
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class,
+                () -> service.createBatch(TOPIC, CLUB, 9L));
+        org.mockito.Mockito.verifyNoInteractions(mapper, fundsService);
+    }
+
 }

@@ -33,6 +33,9 @@ public interface ITopicRouteRuntimeService {
     default JsonNode trustedChoiceEffects(JsonNode snapshot, Long nodeId, String kit, String option) { throw new UnsupportedOperationException(); }
     default String compileTemplateRules(com.chengyinhub.business.domain.CmsTopic topic) { return topic.getThemeRuntimeConfigJson(); }
     default String freezePublication(com.chengyinhub.business.domain.CmsTopic topic, String routeSnapshot) { throw new UnsupportedOperationException(); }
+    default void deriveTemplateCluesForPublication(com.chengyinhub.business.domain.CmsTopic topic) { throw new UnsupportedOperationException(); }
+    default String freezePublication(com.chengyinhub.business.domain.CmsTopic topic, String routeSnapshot,
+            List<com.chengyinhub.business.domain.ThemeStateKey> declarations) { throw new UnsupportedOperationException(); }
     default String freezePublishedJourney(com.chengyinhub.business.domain.CmsTopic topic) { throw new UnsupportedOperationException(); }
     default List<Map<String,Object>> themeHistory(Long memberId,Long topicId,Long beforeSessionId,Integer limit) {return themeHistory(memberId,topicId);}
     default Map<String,Object> themeCard(Long memberId,Long sessionId) {throw new UnsupportedOperationException();}
@@ -56,6 +59,8 @@ public interface ITopicRouteRuntimeService {
     /** 本人在该主题/场次是否有进行中的局(用于「已开局可打完」)；默认无。 */
     default boolean hasRunningSession(Long memberId, Long topicId, Long activityId) { return false; }
     TopicRouteState state(Long memberId, Long topicId, Long activityId);
+    /** Pure current-run projection; null means no initialized session. Never initializes or refreshes state. */
+    TopicRouteState queryState(Long memberId, Long topicId, Long activityId);
     TopicRouteState completeOpening(Long memberId, Long topicId, Long activityId, Long chapterId, Integer expectedVersion);
     void requireOpeningAccess(Long memberId, Long topicId, Long activityId, Long nodeId);
 
@@ -210,12 +215,18 @@ public interface ITopicRouteRuntimeService {
 
     /**
      * 本局开局的模板判定字段快照(R18-FREEZE):validationMethod 与各验证方式的答案 / 揭示 /
-     * 偏好 / 传感器配置。没有本局或老快照没有 nodeAnswers 键时返回 null,调用方回退实时模板。
+     * 偏好 / 传感器配置，以及带 contentSnapshotVersion 的原内容身份/呈现。
+     * 仅服务端消费；按原个人 scope 或已授权共享 TEAM/站点映射读取，返回防御性副本。
+     * 不建局、不刷新或写回。没有本局时只读已发布的新内容；有旧局缺字段则保留旧路，不借未来发布补齐；
+     * 新标志损坏/缺原身份不能回退 live，提示、答案和揭示必须继续走原授权投影。
      */
     default JsonNode nodeAnswers(Long memberId, Long topicId, Long nodeId) {
         return nodeAnswers(memberId, topicId, null, nodeId);
     }
     JsonNode nodeAnswers(Long memberId, Long topicId, Long activityId, Long nodeId);
+    /** Server-only pure read: original run first (even old/incomplete), otherwise its admitted publication.
+     * A null nodeId captures one request's immutable source; it never creates/refreshes a runtime. */
+    default JsonNode queryNodeContentSnapshot(Long memberId, Long topicId, Long activityId, Long nodeId) { return null; }
 
     /**
      * R18-RECEIPT 收口:本局当前 hp / luck(当前值,数值规则冻结优先,老局回退实时主题规则)。

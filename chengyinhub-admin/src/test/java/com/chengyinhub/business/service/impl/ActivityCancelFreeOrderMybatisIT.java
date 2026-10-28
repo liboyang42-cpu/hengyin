@@ -32,7 +32,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.transaction.support.TransactionTemplate;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -112,7 +111,7 @@ class ActivityCancelFreeOrderMybatisIT {
     private CmsRegistrationMapper regMapper;
     private CmsActivityMapper activityMapper;
     private OmsTicketMapper ticketMapper;
-    private TransactionTemplate transaction;
+    private DataSourceTransactionManager transactionManager;
 
     private IRefundService refundService;
     private IRefundPayoutService refundPayoutService;
@@ -153,7 +152,7 @@ class ActivityCancelFreeOrderMybatisIT {
         regMapper = sql.getMapper(CmsRegistrationMapper.class);
         activityMapper = sql.getMapper(CmsActivityMapper.class);
         ticketMapper = sql.getMapper(OmsTicketMapper.class);
-        transaction = new TransactionTemplate(new DataSourceTransactionManager(ds));
+        transactionManager = new DataSourceTransactionManager(ds);
 
         System.out.println("R9-16 cancel MySQL version=" + jdbc.queryForObject("SELECT VERSION()", String.class));
     }
@@ -171,6 +170,8 @@ class ActivityCancelFreeOrderMybatisIT {
         });
 
         service = new TeamGroupServiceImpl();
+        com.chengyinhub.business.service.CancellationPhaseTestSupport.wireTeamTransactions(
+                service, transactionManager);
 
         org.springframework.test.util.ReflectionTestUtils.setField(service, "firstReviewPointsClawback",
 
@@ -365,8 +366,8 @@ class ActivityCancelFreeOrderMybatisIT {
     // ------------------------------------------------------------------ helpers
 
     private ActivityCancelResult cancel(long activityId) {
-        return transaction.execute(status ->
-                service.cancelActivityByOwner(activityId, OWNER, "无法履约"));
+        // The real service commits capture, observes without locks, then owns the final SQL transaction.
+        return service.cancelActivityByOwner(activityId, OWNER, "无法履约");
     }
 
     /** 免费/拦下的订单:不得建退款单、不得触发打款、不得登记人工案件。 */

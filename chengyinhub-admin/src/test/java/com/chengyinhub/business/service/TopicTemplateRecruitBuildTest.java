@@ -9,7 +9,7 @@ import com.chengyinhub.business.mapper.CmsTopicChapterMapper;
 import com.chengyinhub.business.mapper.CmsTopicMapper;
 import com.chengyinhub.business.mapper.CmsTopicNodeMapper;
 import com.chengyinhub.business.domain.vo.TopicTemplateDetailVO;
-import com.chengyinhub.business.service.impl.CmsTopicServiceImpl;
+import com.chengyinhub.business.service.impl.TopicQueryService;
 import com.chengyinhub.system.domain.SysCategory;
 import com.chengyinhub.system.service.ISysCategoryService;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,7 +36,7 @@ import static org.mockito.Mockito.*;
  */
 class TopicTemplateRecruitBuildTest {
 
-    private CmsTopicServiceImpl service;
+    private TopicQueryService service;
     private CmsTopicMapper cmsTopicMapper;
     private CmsTopicChapterMapper cmsTopicChapterMapper;
     private CmsTopicNodeMapper cmsTopicNodeMapper;
@@ -48,11 +48,7 @@ class TopicTemplateRecruitBuildTest {
 
     @BeforeEach
     void setUp() {
-        service = new CmsTopicServiceImpl();
-        org.springframework.test.util.ReflectionTestUtils.setField(service, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
-                invocation -> "lockTopic".equals(invocation.getMethod().getName())
-                        ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(service, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
-                        : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
+        service = new TopicQueryService();
         cmsTopicMapper = mock(CmsTopicMapper.class);
         cmsTopicChapterMapper = mock(CmsTopicChapterMapper.class);
         cmsTopicNodeMapper = mock(CmsTopicNodeMapper.class);
@@ -130,8 +126,8 @@ class TopicTemplateRecruitBuildTest {
                 .thenReturn(Collections.singletonList(chapter(1L, 1, 2, null)));
         when(cmsTopicNodeMapper.selectCmsTopicNodeList(any()))
                 .thenReturn(Arrays.asList(node(11L), node(12L)));
-        when(merchantChapterApplicationService.getRecruitmentStats(1L, 2))
-                .thenReturn(stats(1, 1, 1, 1, 1));
+        when(merchantChapterApplicationService.getRecruitmentStatsByChapters(Collections.singletonMap(1L, 2)))
+                .thenReturn(Collections.singletonMap(1L, stats(1, 1, 1, 1, 1)));
 
         TopicTemplateDetailVO vo = service.buildTopicTemplateDetail(TOPIC, true);
 
@@ -153,8 +149,8 @@ class TopicTemplateRecruitBuildTest {
         when(cmsTopicChapterMapper.selectCmsTopicChapterList(any()))
                 .thenReturn(Collections.singletonList(chapter(1L, 1, 2, "PERK")));
         when(cmsTopicNodeMapper.selectCmsTopicNodeList(any())).thenReturn(Collections.emptyList());
-        when(merchantChapterApplicationService.getRecruitmentStats(1L, 2))
-                .thenReturn(stats(0, 1, 0, 1, 1));
+        when(merchantChapterApplicationService.getRecruitmentStatsByChapters(Collections.singletonMap(1L, 2)))
+                .thenReturn(Collections.singletonMap(1L, stats(0, 1, 0, 1, 1)));
         for (int scenario = 0; scenario < 4; scenario++) {
             CmsTopic closed = topic(null);
             if (scenario == 0) closed.setRecruitDeadline(new Date(0));
@@ -182,7 +178,7 @@ class TopicTemplateRecruitBuildTest {
         TopicTemplateDetailVO vo = service.buildTopicTemplateDetail(TOPIC, true);
 
         assertNull(vo.getChapters().get(0).getRecruitStatus());
-        verify(merchantChapterApplicationService, never()).getRecruitmentStats(anyLong(), any());
+        verify(merchantChapterApplicationService, never()).getRecruitmentStatsByChapters(org.mockito.ArgumentMatchers.anyMap());
     }
 
     @Test
@@ -194,8 +190,8 @@ class TopicTemplateRecruitBuildTest {
                 .thenReturn(Collections.singletonList(chapter));
         when(cmsTopicNodeMapper.selectCmsTopicNodeList(any()))
                 .thenReturn(Collections.singletonList(node(11L)));
-        when(merchantChapterApplicationService.getRecruitmentStats(1L, 2))
-                .thenReturn(stats(0, 0, 0, 0, 2));
+        when(merchantChapterApplicationService.getRecruitmentStatsByChapters(Collections.singletonMap(1L, 2)))
+                .thenReturn(Collections.singletonMap(1L, stats(0, 0, 0, 0, 2)));
 
         TopicTemplateDetailVO vo = service.buildTopicTemplateDetail(TOPIC, true);
 
@@ -215,7 +211,7 @@ class TopicTemplateRecruitBuildTest {
         TopicTemplateDetailVO vo = service.buildTopicTemplateDetail(TOPIC, true);
 
         assertNull(vo.getChapters().get(0).getRecruitStatus());
-        verify(merchantChapterApplicationService, never()).getRecruitmentStats(anyLong(), any());
+        verify(merchantChapterApplicationService, never()).getRecruitmentStatsByChapters(org.mockito.ArgumentMatchers.anyMap());
     }
 
     @Test
@@ -231,7 +227,7 @@ class TopicTemplateRecruitBuildTest {
         TopicTemplateDetailVO vo = service.buildTopicTemplateDetail(TOPIC, true);
 
         assertNull(vo.getChapters().get(0).getRecruitStatus());
-        verify(merchantChapterApplicationService, never()).getRecruitmentStats(anyLong(), any());
+        verify(merchantChapterApplicationService, never()).getRecruitmentStatsByChapters(org.mockito.ArgumentMatchers.anyMap());
     }
 
     @Test
@@ -247,7 +243,7 @@ class TopicTemplateRecruitBuildTest {
         TopicTemplateDetailVO vo = service.buildTopicTemplateDetail(TOPIC, true);
 
         assertNull(vo.getChapters().get(0).getRecruitStatus());
-        verify(merchantChapterApplicationService, never()).getRecruitmentStats(anyLong(), any());
+        verify(merchantChapterApplicationService, never()).getRecruitmentStatsByChapters(org.mockito.ArgumentMatchers.anyMap());
     }
 
     @Test
@@ -263,7 +259,7 @@ class TopicTemplateRecruitBuildTest {
         assertNull(vo.getChapters().get(0).getRecruitStatus());
         assertFalse(vo.getViewerIsMerchant());
         // 非商家视角一次都不许查招商统计(不是查了再藏)
-        verify(merchantChapterApplicationService, never()).getRecruitmentStats(anyLong(), any());
+        verify(merchantChapterApplicationService, never()).getRecruitmentStatsByChapters(org.mockito.ArgumentMatchers.anyMap());
     }
 
     @Test
@@ -279,7 +275,7 @@ class TopicTemplateRecruitBuildTest {
         // 即使 maxMerchant=4（存量默认）也不能凭名额推导开放招商
         assertNull(vo.getChapters().get(0).getRecruitStatus());
         assertNull(vo.getChapters().get(1).getRecruitStatus());
-        verify(merchantChapterApplicationService, never()).getRecruitmentStats(anyLong(), any());
+        verify(merchantChapterApplicationService, never()).getRecruitmentStatsByChapters(org.mockito.ArgumentMatchers.anyMap());
     }
 
     @Test
@@ -293,15 +289,15 @@ class TopicTemplateRecruitBuildTest {
                 .thenReturn(Arrays.asList(coffee, bookstore));
         when(cmsTopicNodeMapper.selectCmsTopicNodeList(any()))
                 .thenReturn(Collections.singletonList(node(11L)));
-        when(merchantChapterApplicationService.getRecruitmentStats(1L, 2))
-                .thenReturn(stats(0, 0, 0, 0, 2));
+        when(merchantChapterApplicationService.getRecruitmentStatsByChapters(Collections.singletonMap(1L, 2)))
+                .thenReturn(Collections.singletonMap(1L, stats(0, 0, 0, 0, 2)));
 
         TopicTemplateDetailVO vo = service.buildTopicTemplateDetail(TOPIC, true, 18);
 
         assertNotNull(vo.getChapters().get(0).getRecruitStatus());
         assertNull(vo.getChapters().get(1).getRecruitStatus());
-        verify(merchantChapterApplicationService).getRecruitmentStats(1L, 2);
-        verify(merchantChapterApplicationService, never()).getRecruitmentStats(2L, 2);
+        verify(merchantChapterApplicationService).getRecruitmentStatsByChapters(Collections.singletonMap(1L, 2));
+        verify(merchantChapterApplicationService, never()).getRecruitmentStatsByChapters(Collections.singletonMap(2L, 2));
     }
 
     @Test
@@ -316,7 +312,7 @@ class TopicTemplateRecruitBuildTest {
         TopicTemplateDetailVO vo = service.buildTopicTemplateDetail(TOPIC, true);
 
         assertNull(vo.getChapters().get(0).getRecruitStatus());
-        verify(merchantChapterApplicationService, never()).getRecruitmentStats(anyLong(), any());
+        verify(merchantChapterApplicationService, never()).getRecruitmentStatsByChapters(org.mockito.ArgumentMatchers.anyMap());
     }
 
     @Test
@@ -331,7 +327,7 @@ class TopicTemplateRecruitBuildTest {
         TopicTemplateDetailVO vo = service.buildTopicTemplateDetail(TOPIC, true);
 
         assertNull(vo.getChapters().get(0).getRecruitStatus());
-        verify(merchantChapterApplicationService, never()).getRecruitmentStats(anyLong(), any());
+        verify(merchantChapterApplicationService, never()).getRecruitmentStatsByChapters(org.mockito.ArgumentMatchers.anyMap());
     }
 
     @Test
@@ -348,7 +344,7 @@ class TopicTemplateRecruitBuildTest {
         TopicTemplateDetailVO vo = service.buildTopicTemplateDetail(TOPIC, true);
 
         assertNull(vo.getChapters().get(0).getRecruitStatus());
-        verify(merchantChapterApplicationService, never()).getRecruitmentStats(anyLong(), any());
+        verify(merchantChapterApplicationService, never()).getRecruitmentStatsByChapters(org.mockito.ArgumentMatchers.anyMap());
     }
 
     @Test
@@ -363,7 +359,7 @@ class TopicTemplateRecruitBuildTest {
         TopicTemplateDetailVO vo = service.buildTopicTemplateDetail(TOPIC, true);
 
         assertNull(vo.getChapters().get(0).getRecruitStatus());
-        verify(merchantChapterApplicationService, never()).getRecruitmentStats(anyLong(), any());
+        verify(merchantChapterApplicationService, never()).getRecruitmentStatsByChapters(org.mockito.ArgumentMatchers.anyMap());
     }
 
     @Test

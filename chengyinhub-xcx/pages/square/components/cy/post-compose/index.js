@@ -170,7 +170,7 @@ Component({
       });
     },
     // 组件被卸载(页面退出)时也要把没发出去的正文存下来
-    detached() {
+    detached() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1;
       this.persist();
       this._disposed = true;
       this._composeVisible = false;
@@ -179,14 +179,14 @@ Component({
   },
 
   pageLifetimes: {
-    hide() { this._composeVisible = false; this.cancelPublish(); },
+    hide() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1; this._composeVisible = false; this.cancelPublish(); },
     show() { this._composeVisible = !!this.data.show; },
   },
 
   observers: {
     // 每次拉起都重新取一次正文:优先用行内 composer 带过来的半截,
     // 没有才回 storage 捡草稿。关闭时存一次 —— 组件不卸载,所以不能只靠 detached。
-    show(open) {
+    show(open) { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1;
       if (this._disposed) return;
       this._composeVisible = !!open;
       this.cancelPublish();
@@ -518,7 +518,7 @@ Component({
     },
 
     onPublish() {
-      if (app.ensureLoginFor && !app.ensureLoginFor('post', () => this.onPublish())) return; // 2026-10-24 游客写前登录
+      if (app.ensureLoginFor && !app.ensureLoginFor('post', () => this.onPublish(), { owner: this, target: () => [this._editId, this._editDataId, this._editDataType, this.data.selectedActivity && this.data.selectedActivity.activityId, this._composeVisible] })) return; // 2026-10-24 游客写前登录
       const that = this;
       if (that._disposed || !that._composeVisible) return;
       if (String(app.getUserID() || '') !== String(that._memberId || '')) {

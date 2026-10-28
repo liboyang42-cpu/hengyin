@@ -37,3 +37,8 @@
    只减淡不位移:位移要配 .cy-motion-reduced 兜底,而那个类挂在组件外的祖先上,
    isolated 下同样够不着 —— 与其留个撤不掉的位移,不如按仓库既有组件按压类的做法只减淡。 */
 .cy-pressed { opacity: .88; }
+
+.seat-choice { display: flex; flex-direction: column; gap: var(--cy-space-4); padding: var(--cy-space-5); color: var(--cy-text-title); }
+.seat-choice__title { font-size: var(--cy-font-subtitle); font-weight: 700; }
+.seat-choice__input { height: var(--cy-btn-h); padding: 0 var(--cy-space-4); background: var(--cy-color-bg-glass); border-radius: var(--cy-radius-pill); }
+.seat-choice__switch { text-align: center; padding: var(--cy-space-4); color: var(--cy-text-title); }

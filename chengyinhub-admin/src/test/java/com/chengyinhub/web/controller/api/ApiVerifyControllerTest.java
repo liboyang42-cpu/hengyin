@@ -1,5 +1,9 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.web.service.verify.CityNodeRedemptionApplication;
+
+import com.chengyinhub.web.service.verify.RegistrationTicketApplication;
+
 import com.chengyinhub.business.access.merchant.IMerchantAccessService;
 import com.chengyinhub.business.access.merchant.MerchantAccessContext;
 import com.chengyinhub.business.access.merchant.MerchantPermission;
@@ -48,6 +52,7 @@ class ApiVerifyControllerTest {
     private BusinessAuditEventMapper auditMapper;
     private QrcodeServiceImpl qrcodeService;
     private TestableApiVerifyController controller;
+    private CityNodeRedemptionApplication cityNodeRedemptionApplication;
 
     @BeforeEach
     void setUp() {
@@ -68,12 +73,7 @@ class ApiVerifyControllerTest {
                 org.mockito.ArgumentMatchers.anyInt(), org.mockito.ArgumentMatchers.anyInt()))
                 .thenReturn("https://oss/qr.png");
         controller = new TestableApiVerifyController(ME);
-        ReflectionTestUtils.setField(controller, "registrationService", registrationService);
-        ReflectionTestUtils.setField(controller, "activityService", activityService);
-        ReflectionTestUtils.setField(controller, "roamMapper", roamMapper);
         ReflectionTestUtils.setField(controller, "merchantAccessService", merchantAccessService);
-        ReflectionTestUtils.setField(controller, "couponHistoryService", couponHistoryService);
-        ReflectionTestUtils.setField(controller, "businessAuditEventMapper", auditMapper);
         when(auditMapper.insertBusinessAuditEvent(any())).thenReturn(1);
         when(merchantAccessService.require(ME, MerchantPermission.VERIFY))
                 .thenReturn(new MerchantAccessContext(ME, MERCHANT_ROW_ID,
@@ -86,9 +86,12 @@ class ApiVerifyControllerTest {
                 org.mockito.Mockito.mock(com.chengyinhub.business.service.IPerkLedgerService.class);
         org.mockito.Mockito.when(perkSvc.isTicketFullyConsumed(org.mockito.ArgumentMatchers.eq(1), org.mockito.ArgumentMatchers.anyLong()))
                 .thenReturn(true);
-        ReflectionTestUtils.setField(controller, "perkLedgerService", perkSvc);
-        ReflectionTestUtils.setField(controller, "qrcodeService", qrcodeService);
-        ReflectionTestUtils.setField(controller, "dynSecret", SECRET);
+        ReflectionTestUtils.setField(controller, "registrationTicketApplication", new RegistrationTicketApplication(
+                registrationService, mock(com.chengyinhub.business.service.RegistrationSeatService.class),
+                activityService, perkSvc, qrcodeService, SECRET));
+        cityNodeRedemptionApplication = new CityNodeRedemptionApplication(
+                merchantAccessService, roamMapper, couponHistoryService, auditMapper, qrcodeService, SECRET);
+        ReflectionTestUtils.setField(controller, "cityNodeRedemptionApplication", cityNodeRedemptionApplication);
     }
 
     @Test
@@ -128,8 +131,9 @@ class ApiVerifyControllerTest {
     @Test
     void rejects_not_logged_in() {
         TestableApiVerifyController anon = new TestableApiVerifyController(0L);
-        ReflectionTestUtils.setField(anon, "registrationService", registrationService);
-        ReflectionTestUtils.setField(anon, "dynSecret", SECRET);
+        ReflectionTestUtils.setField(anon, "registrationTicketApplication", new RegistrationTicketApplication(
+                registrationService, mock(com.chengyinhub.business.service.RegistrationSeatService.class), activityService,
+                mock(com.chengyinhub.business.service.IPerkLedgerService.class), qrcodeService, SECRET));
         AjaxResult r = anon.issueDynCode(1L);
         assertEquals(500, r.get(AjaxResult.CODE_TAG));
         assertEquals("请先登录", r.get(AjaxResult.MSG_TAG));
@@ -257,7 +261,7 @@ class ApiVerifyControllerTest {
         when(roamMapper.selectMerchantNodeDetail(51L)).thenReturn(poi);
         when(roamMapper.redeemCityNodeReward(51L, 7001L)).thenReturn(1);
         assertEquals(200, controller.redeemCityNodeCode(cityNodeCode(51L, 7001L)).get(AjaxResult.CODE_TAG));
-        ISmsCouponHistoryService service = (ISmsCouponHistoryService) ReflectionTestUtils.getField(controller, "couponHistoryService");
+        ISmsCouponHistoryService service = (ISmsCouponHistoryService) ReflectionTestUtils.getField(cityNodeRedemptionApplication, "couponHistoryService");
         verify(service).grantCouponById(7001L, 88L);
         verify(service, never()).grantCouponById(7001L, 99L);
     }
@@ -267,7 +271,7 @@ class ApiVerifyControllerTest {
         // C-30:据点券被平台手动失效 → 核销照常(翻转+审计),不发券,不报「库存不足」
         when(roamMapper.selectMerchantNodeDetail(51L)).thenReturn(cityNode(MERCHANT_ROW_ID));
         when(roamMapper.redeemCityNodeReward(51L, 7001L)).thenReturn(1);
-        ISmsCouponHistoryService service = (ISmsCouponHistoryService) ReflectionTestUtils.getField(controller, "couponHistoryService");
+        ISmsCouponHistoryService service = (ISmsCouponHistoryService) ReflectionTestUtils.getField(cityNodeRedemptionApplication, "couponHistoryService");
         when(service.isCouponNotIssuable(88L)).thenReturn(true);
 
         AjaxResult result = controller.redeemCityNodeCode(cityNodeCode(51L, 7001L));
@@ -331,7 +335,7 @@ class ApiVerifyControllerTest {
     @Test
     void cityNodeAnonymousRedeemFailsBeforeAccessOrAudit() {
         TestableApiVerifyController anonymous = new TestableApiVerifyController(0L);
-        ReflectionTestUtils.setField(anonymous, "businessAuditEventMapper", auditMapper);
+        ReflectionTestUtils.setField(anonymous, "cityNodeRedemptionApplication", cityNodeRedemptionApplication);
 
         AjaxResult result = anonymous.redeemCityNodeCode(cityNodeCode(51L, 7001L));
 

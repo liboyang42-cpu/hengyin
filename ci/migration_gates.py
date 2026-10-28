@@ -47,7 +47,8 @@ _AUX_SQL_PREFIXES = ("_precheck_", "_deploy_", "bak_")
 # 实测仓库里有 7 条 DELETE FROM sys_job ... invoke_target='xxxTask.run()'。
 _INSERT_STMT = re.compile(r"^\s*(?:INSERT|REPLACE)\b", re.IGNORECASE)
 
-# PROCEDURE/FUNCTION/TRIGGER 必须由 tokenizer 识别到的自定义 delimiter 完整结束。
+# 复合 routine 必须由 tokenizer 识别到的自定义 delimiter 完整结束。
+# 唯一默认分号形状是下方完整匹配的单条拒绝 SIGNAL trigger，没有内部语句分隔符。
 # 只解析 CREATE 头部：字符串/普通注释正文不会被当成 routine，
 # 而 /*!... DEFINER=...*/ 是 MySQL 可执行注释，其中的 token 仍必须参与判定。
 _ROUTINE_KINDS = {"PROCEDURE", "FUNCTION", "TRIGGER"}
@@ -68,6 +69,16 @@ _LEADING_SQL_COMMENTS_THEN_SELECT = re.compile(
 )
 
 _INVALID_DEFINER = object()
+
+_REJECT_TRIGGER_IDENTIFIER = r"(?:`(?:``|[^`])+`|[A-Za-z_$][A-Za-z0-9_$]*)"
+_SINGLE_REJECT_TRIGGER = re.compile(
+    r"CREATE\s+TRIGGER\s+" + _REJECT_TRIGGER_IDENTIFIER
+    + r"\s+BEFORE\s+(?:UPDATE|DELETE)\s+ON\s+" + _REJECT_TRIGGER_IDENTIFIER
+    + r"(?:\s*\.\s*" + _REJECT_TRIGGER_IDENTIFIER + r")?"
+    + r"\s+FOR\s+EACH\s+ROW\s+SIGNAL\s+SQLSTATE\s+'45000'"
+    + r"\s+SET\s+MESSAGE_TEXT\s*=\s*'(?:''|\\.|[^'\\])*'\s*",
+    re.IGNORECASE | re.DOTALL,
+)
 
 
 def _create_tokens(statement):
@@ -324,7 +335,9 @@ def check_sql_text(path, text):
                 "%s: 第 %d 条语句的 CREATE DEFINER 账号或对象头不完整/非法，\n"
                 "      无法安全判定是否为 routine；必须 fail-closed。" % (path, idx)
             )
-        elif shape and (terminator is None or terminator == ";"):
+        elif shape and (terminator is None or terminator == ";") and not (
+                shape == "TRIGGER" and terminator == ";"
+                and _SINGLE_REJECT_TRIGGER.fullmatch(executable)):
             problems.append(
                 "%s: 第 %d 条语句是 CREATE %s,但没有由自定义 DELIMITER 完整结束,\n"
                 "      BEGIN...END 里的分号会被切错；必须使用受校验的独立行 DELIMITER 指令。"
@@ -562,7 +575,7 @@ def check_dependency_order(batch_files, all_migration_files, dependencies):
 
 
 def check_dependency_ratchet(current_deps, master_deps):
-    """依赖声明【只许加不许删】(相对 github/master)。
+    """依赖声明【只许加不许删】(相对该批固定祖先基线)。
 
     没有这一条,上面那道顺序门一行 JSON 就能消掉:把 A 依赖 B 那条边删了,顺序门看不见边、
     当场转绿,而落库时该 1054 还是 1054。**「闸红了就把闸拆了」是最省事的绕法,必须先堵死。**
@@ -582,15 +595,38 @@ def check_dependency_ratchet(current_deps, master_deps):
     return problems
 
 
-def master_dependencies(root):
-    """取 github/master(回退 origin/master)上那一版 dependencies;取不到返回 None。"""
-    for ref in ("github/master", "origin/master"):
+def master_dependencies(root, base=None):
+    """Read the batch's fixed ancestor, never a later live-master declaration set.
+
+    Without --base, use the merge-base with the original remote preference. Explicit
+    unreadable/non-ancestor bases fail closed; they must not fall back to another ref.
+    """
+    refs = (base,) if base is not None else ("github/master", "origin/master")
+    for ref in refs:
         try:
+            resolved = subprocess.run(
+                ["git", "-C", root, "rev-parse", "--verify", "%s^{commit}" % ref],
+                capture_output=True, text=True)
+            if resolved.returncode != 0:
+                continue
+            commit = resolved.stdout.strip()
+            if base is None:
+                common = subprocess.run(
+                    ["git", "-C", root, "merge-base", commit, "HEAD"],
+                    capture_output=True, text=True)
+                if common.returncode != 0:
+                    continue
+                commit = common.stdout.strip()
+            ancestor = subprocess.run(
+                ["git", "-C", root, "merge-base", "--is-ancestor", commit, "HEAD"],
+                capture_output=True, text=True)
+            if ancestor.returncode != 0:
+                continue
             out = subprocess.run(
-                ["git", "-C", root, "show", "%s:%s" % (ref, DEPENDENCIES_JSON)],
+                ["git", "-C", root, "show", "%s:%s" % (commit, DEPENDENCIES_JSON)],
                 capture_output=True, text=True)
             if out.returncode == 0:
-                return json.loads(out.stdout)["dependencies"], ref
+                return json.loads(out.stdout)["dependencies"], commit
         except (OSError, ValueError, KeyError):
             pass
     return None, None
@@ -689,8 +725,19 @@ def check_manifest_dependency_order(manifest, batch, dependencies):
     return problems
 
 
+def _schema_contract_dump(node):
+    # Python 3.13+ omits empty AST lists by default. The reviewed fingerprints
+    # include them (e.g. Call.keywords=[]); retain those exact bytes on hosted
+    # Python 3.14 instead of replacing hashes or accepting a second source plan.
+    if sys.version_info >= (3, 13):
+        return ast.dump(node, show_empty=True)
+    return ast.dump(node)
+
+
 def check_schema_manifest_order_source(source):
-    """Bind the gate to the real schema runner's import, ordered selection and execution."""
+    """Exact ledger pipeline + the one approved fresh-only notice forward plan."""
+    import hashlib
+
     try:
         tree = ast.parse(source)
     except SyntaxError:
@@ -698,34 +745,113 @@ def check_schema_manifest_order_source(source):
     imported = any(isinstance(node, ast.ImportFrom) and node.module == "ci.migration_ledger"
                    and any(alias.name == "build_manifest" and alias.asname is None
                            for alias in node.names) for node in tree.body)
-    main = next((node for node in tree.body if isinstance(node, ast.FunctionDef)
-                 and node.name == "main"), None)
-    if not imported or main is None:
+    mains = [node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "main"]
+    if not imported or len(mains) != 1:
         return ["schema runner must import the shared build_manifest and define main"]
+    main = mains[0]
+    problems = []
+    # Source-contract fingerprints of the already approved 6fcd runner, not a second
+    # migration/file allowlist. Parse only: never import or execute the runner under review.
+    # Pin the selector's identity/dependency checks and its loopback/scratch guard too;
+    # a valid call site cannot lend proof to a fake replacement or a foreign database.
+    contracts = {
+        'ALLOWED_HOSTS': '2b430974e32ce8845a3849c5ed78816bcd63829a6503d7b414927801cc68ddd4',
+        'SCRATCH_SCHEMA': 'd01e4e12bb1f2547ede9032f190e258fb07b90ade698fbc547bd7ef6c1933020',
+        'validate_target': 'e81885977856a74699cea1967c18a1017b3731d498b749c51d0f8a11171dd4a1',
+        'connect': '61c0251d63524541132ffdfe1fc5586126daddcc609bc0134045f35644d4801b',
+        'NOTICE_FORWARD_FILES': '7b5ec4c83406a6ae16a674593400f24808a3cf81774b8ffebf0dd0c9792f274b',
+        'NOTICE_PRODUCER': '22159e17f7ec6a3148ce47336d07e02077dc34a698d507a61369b7efb2707196',
+        'NOTICE_OLD': 'ea92bb087d55f82092043e1eaa8a0ef4eb035a1bbdf675cf71961f339715a2bd',
+        'NOTICE_V2': 'fc92ac6b04a54d3f69d4c748819a46f0e820da9781647928fc91a32f6108704d',
+        'notice_forward_plan': 'df04e9a8cbbfdd83df9920382eadff6c4fdddbcf9dcefa121ab1f8bb3b316ca3',
+    }
+    for name, digest in contracts.items():
+        definitions = [node for node in tree.body
+                       if (isinstance(node, ast.FunctionDef) and node.name == name)
+                       or (isinstance(node, ast.Assign) and len(node.targets) == 1
+                           and isinstance(node.targets[0], ast.Name) and node.targets[0].id == name)]
+        if len(definitions) != 1:
+            problems.append("schema runner must preserve notice forward contract: " + name)
+            continue
+        node = definitions[0]
+        if isinstance(node, ast.FunctionDef):
+            # Exclude Python 3.12's added *empty* type_params field from the digest.
+            if node.decorator_list or node.returns or node.type_comment or getattr(node, "type_params", []):
+                problems.append("schema runner must preserve notice forward function: " + name)
+            shape = repr((_schema_contract_dump(node.args),
+                          [_schema_contract_dump(statement) for statement in node.body]))
+        else:
+            shape = _schema_contract_dump(node)
+        if hashlib.sha256(shape.encode()).hexdigest() != digest:
+            problems.append("schema runner must preserve notice forward contract: " + name)
+
     expected = [
         'manifest = build_manifest(REPO, target_commit=head, dependency_path=REPO / "ci/migration-dependencies.json")',
         'all_migrations = manifest["migrations"]',
         'selected = migrations_after_baseline(all_migrations)',
+        'notice_forward = notice_forward_plan(all_migrations, selected)',
+        'deferred = [m for m in selected if m.get("executionPhase") == "POST_DEPLOY"]',
         'ordered = [m for m in selected if m.get("executionPhase") != "POST_DEPLOY"]',
     ]
     indices = []
-    problems = []
     for statement in expected:
         wanted = ast.parse(statement).body[0]
         target = wanted.targets[0].id
         writes = [node for node in ast.walk(main) if isinstance(node, ast.Name)
                   and isinstance(node.ctx, (ast.Store, ast.Del)) and node.id == target]
-        matches = [i for i, node in enumerate(main.body)
-                   if ast.dump(node) == ast.dump(wanted)]
-        if len(matches) != 1 or len(writes) != 1:
+        matches = [i for i, node in enumerate(main.body) if ast.dump(node) == ast.dump(wanted)]
+        if len(matches) != 1 or len(writes) != (2 if target == "ordered" else 1):
             problems.append("schema runner must preserve ledger selection: " + target)
         else:
             indices.append(matches[0])
+
+    # This whole direct try/finally is the sole legal second assignment to ordered.
+    # The exact absence check, CREATE without IF NOT EXISTS, reporting and close all
+    # precede imports/run_file. Existing or concurrently created schemas cannot be adopted.
+    expected_prepare = ast.parse("""\
+try:
+    cur = c.cursor()
+    cur.execute("SELECT VERSION(), @@version_comment")
+    ver = cur.fetchone()
+    print("目标实例: %s / %s  @ %s:%d" % (ver[0], ver[1], a.host, a.port))
+    if notice_forward:
+        # This check precedes every DROP/CREATE/import, including explicit --drop.
+        cur.execute("SELECT COUNT(*) FROM information_schema.schemata WHERE schema_name=%s", (a.schema,))
+        fresh = cur.fetchone()
+        if (not isinstance(fresh, (tuple, list)) or len(fresh) != 1
+                or type(fresh[0]) is not int or fresh[0] != 0):
+            raise RuntimeError("notice forward requires a nonexistent fresh scratch schema; --drop cannot bypass")
+        # No IF NOT EXISTS: a concurrent creator must fail, never adopt an unknown/typed schema.
+        cur.execute("CREATE DATABASE `%s` DEFAULT CHARACTER SET utf8mb4" % a.schema)
+        ordered = [m for m in notice_forward["selected"] if m.get("executionPhase") != "POST_DEPLOY"]
+        print("REPLACED_UNAPPLIED %s -> %s fingerprints=%s" %
+              (NOTICE_OLD, NOTICE_V2, json.dumps(notice_forward["fingerprints"], sort_keys=True)))
+    else:
+        if a.drop:
+            cur.execute("DROP DATABASE IF EXISTS `%s`" % a.schema)
+        cur.execute("CREATE DATABASE IF NOT EXISTS `%s` DEFAULT CHARACTER SET utf8mb4" % a.schema)
+finally:
+    c.close()
+""").body[0]
+    expected_connect = ast.parse('c = connect(a)').body[0]
+    expected_reconnect = ast.parse('c = connect(a, a.schema)').body[0]
+    preparations = [i for i, node in enumerate(main.body) if ast.dump(node) == ast.dump(expected_prepare)]
+    if (len(preparations) != 1 or preparations[0] == 0
+            or ast.dump(main.body[preparations[0] - 1]) != ast.dump(expected_connect)
+            or preparations[0] + 1 >= len(main.body)
+            or ast.dump(main.body[preparations[0] + 1]) != ast.dump(expected_reconnect)):
+        problems.append("schema runner must preserve fresh-only notice preparation")
+    validation = ast.parse('validate_target(a)').body[0]
+    validated = [i for i, node in enumerate(main.body) if ast.dump(node) == ast.dump(validation)]
+    if len(validated) != 1 or not indices or validated[0] >= indices[0]:
+        problems.append("schema runner must validate its scratch target before selection")
+
     expected_loop = ast.parse(
         'for m in ordered:\n'
+        '    strict_notice = bool(notice_forward) and m["migrationId"] == NOTICE_V2\n'
         '    ok = run_file(cur, REPO / m["path"], m["migrationId"], results, '
-        'keep_going=a.keep_going, schema_only=True, observations=observations)\n'
-        '    if not ok and not a.keep_going:\n'
+        'keep_going=False if strict_notice else a.keep_going, schema_only=True, observations=observations)\n'
+        '    if not ok and (strict_notice or not a.keep_going):\n'
         '        break\n').body[0]
     expected_close = ast.parse('c.close()').body[0]
     loops = []
@@ -733,20 +859,64 @@ def check_schema_manifest_order_source(source):
         if (isinstance(node, ast.Try) and not node.handlers and not node.orelse
                 and len(node.finalbody) == 1
                 and ast.dump(node.finalbody[0]) == ast.dump(expected_close)):
-            loops.extend(i for statement in node.body
-                         if ast.dump(statement) == ast.dump(expected_loop))
-    # Nested or duplicate loops cannot borrow a valid direct try-body loop's proof.
+            loops.extend(i for statement in node.body if ast.dump(statement) == ast.dump(expected_loop))
     ledger_loops = [node for node in ast.walk(main) if isinstance(node, ast.For)
                     and any(isinstance(reference, ast.Name) and reference.id == "ordered"
                             for reference in ast.walk(node.iter))]
-    if (len(loops) != 1 or len(ledger_loops) != 1 or len(indices) != 4
-            or indices != sorted(indices) or (loops and indices[-1] >= loops[0])):
+    if (len(loops) != 1 or len(ledger_loops) != 1 or len(indices) != len(expected)
+            or indices != sorted(indices) or len(preparations) != 1
+            or not loops or indices[-1] >= preparations[0] or preparations[0] >= loops[0]):
         problems.append("schema runner must execute the ledger selection in its original order")
-    flow = {"manifest", "all_migrations", "selected", "ordered"}
-    for node in ast.walk(main):
+
+    calls = [node for node in ast.walk(main) if isinstance(node, ast.Call)
+             and isinstance(node.func, ast.Name) and node.func.id == "run_file"]
+    expected_calls = [ast.parse(expression, mode="eval").body for expression in (
+        'run_file(cur, BASELINE, "baseline", results, keep_going=True)',
+        'run_file(cur, BASELINE_SEED, "baseline-seed", results, keep_going=False)',
+        'run_file(cur, REPO / m["path"], m["migrationId"], results, '
+        'keep_going=False if strict_notice else a.keep_going, schema_only=True, observations=observations)',
+    )]
+    if sorted(map(ast.dump, calls)) != sorted(map(ast.dump, expected_calls)):
+        problems.append("schema runner must not add or change run_file calls")
+    connections = [node for node in ast.walk(main) if isinstance(node, ast.Call)
+                   and isinstance(node.func, ast.Name) and node.func.id == "connect"]
+    if sorted(map(ast.dump, connections)) != sorted(map(ast.dump, [expected_connect.value, expected_reconnect.value])):
+        problems.append("schema runner must preserve its exact scratch connections")
+    # The other three loops only report failures/observations. An extra loop may not
+    # replay another selection even if it does not mention `ordered`.
+    if len([node for node in ast.walk(main) if isinstance(node, (ast.For, ast.AsyncFor, ast.While))]) != 4:
+        problems.append("schema runner must not add execution loops")
+    flow = {"manifest", "all_migrations", "selected", "ordered", "notice_forward", "deferred"}
+    protected = flow | set(contracts) | {"build_manifest", "migrations_after_baseline", "run_file"}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Name) and isinstance(node.ctx, (ast.Store, ast.Del)) and node.id in protected:
+            # Only the six direct ledger assignments, the approved fresh assignment
+            # and original top-level constants are legal writes to these identities.
+            parents = [parent for parent in ast.walk(tree) if isinstance(parent, ast.Assign)
+                       and len(parent.targets) == 1 and parent.targets[0] is node]
+            allowed = any(parent in main.body and any(ast.dump(parent) == ast.dump(ast.parse(text).body[0])
+                                                     for text in expected) for parent in parents)
+            allowed = allowed or any(parent in tree.body and node.id in contracts for parent in parents)
+            allowed = allowed or (node.id == "ordered" and len(preparations) == 1
+                                   and node in list(ast.walk(main.body[preparations[0]])))
+            if not allowed:
+                problems.append("schema runner must not rebind ledger/notice contracts: " + node.id)
+        if isinstance(node, (ast.Import, ast.ImportFrom)):
+            for alias in node.names:
+                bound = alias.asname or alias.name.split(".")[0]
+                if bound in protected and not (isinstance(node, ast.ImportFrom)
+                        and node.module == "ci.migration_ledger" and alias.name == "build_manifest" and alias.asname is None):
+                    problems.append("schema runner must not shadow ledger/notice contracts: " + bound)
         if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
             if isinstance(node.func.value, ast.Name) and node.func.value.id in flow:
                 problems.append("schema runner must not mutate ledger selection")
+        if (isinstance(node, ast.Attribute) and isinstance(node.ctx, (ast.Store, ast.Del))
+                and isinstance(node.value, ast.Name) and node.value.id == "a"
+                and node.attr in {"schema", "host", "port"}):
+            problems.append("schema runner must not change its validated scratch target")
+        if isinstance(node, (ast.Subscript, ast.Attribute)) and isinstance(node.ctx, (ast.Store, ast.Del)):
+            if any(isinstance(ref, ast.Name) and ref.id in protected for ref in ast.walk(node.value)):
+                problems.append("schema runner must not overwrite ledger/notice selection")
     return problems
 
 
@@ -756,14 +926,16 @@ def _cmd_dep_order(root, argv):
     --base 形态下由本函数自己算批(见 select_added_migrations)—— 批的口径就是这道门禁的
     判据本身,放在 shell 里算过一次就出过一次假阳性,收回来放在能被单测钉住的地方。
     """
+    explicit_base = None
     if argv[:1] == ["--base"]:
         if len(argv) < 2:
             print("::error::dep-order --base 缺少基线 ref")
             return 1
-        batch = select_added_migrations(root, argv[1])
+        explicit_base = argv[1]
+        batch = select_added_migrations(root, explicit_base)
         if batch is None:
-            print("  (取不到基线 diff,跳过,不阻塞)")
-            return 0
+            print("::error::无法读取指定基线 diff，不得跳过依赖检查")
+            return 1
     else:
         batch = [os.path.basename(p) for p in argv
                  if os.path.basename(p).startswith("migration_")]
@@ -771,8 +943,11 @@ def _cmd_dep_order(root, argv):
 
     # ★ 声明棘轮必须在「本批为空就跳过」【之前】跑:删一条依赖边跟本分支有没有新增迁移无关,
     #   任何一个 PR 都能删。放在早退之后 = 闸放错了层,一个不带新迁移的 PR 就能把边删干净。
-    master_deps, master_ref = master_dependencies(root)
+    master_deps, master_ref = master_dependencies(root, explicit_base)
     if master_deps is None:
+        if explicit_base is not None:
+            print("::error::无法读取指定祖先基线的依赖声明，不得回退到 live master")
+            return 1
         print("  (取不到 github/master 上的依赖声明,本次不校验「只许加不许删」)")
     else:
         lost = check_dependency_ratchet(dependencies, master_deps)

@@ -185,6 +185,38 @@ class ApiTemplateMerchantOperatorScopeTest {
     }
 
     @Test
+    void sourceAdoptionAcceptsOnlyLibraryIdentityWithoutRequiringPublicContentCopy() throws Exception {
+        when(publishService.saveOrUpdateDraft(any(), eq(OWNER), eq("operator901"))).thenReturn(76L);
+        MockMvcBuilders.standaloneSetup(controller).build().perform(post("/api/template/adopt-draft")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"originalTemplateId\":16,\"scope\":\"MERCHANT\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data").value(76));
+        ArgumentCaptor<CmsTemplatePublishRequest> body = ArgumentCaptor.forClass(CmsTemplatePublishRequest.class);
+        verify(publishService).saveOrUpdateDraft(body.capture(), eq(OWNER), eq("operator901"));
+        assertEquals(16L, body.getValue().getOriginalTemplateId());
+        assertEquals(Boolean.TRUE, body.getValue().getAdoptSourceOnly());
+        verify(couponAuthorizationService, never()).assertOwnedRewardCoupon(any(), any());
+    }
+
+    @Test
+    void sourceAdoptionIgnoresDiscardedClientCouponButOrdinaryDraftStillChecksIt() {
+        CmsTemplatePublishRequest adopting = request("MERCHANT");
+        adopting.setTitle(null); adopting.setOriginalTemplateId(16L); adopting.setCouponId(999L);
+        when(publishService.saveOrUpdateDraft(any(), eq(OWNER), eq("operator901"))).thenReturn(76L);
+        assertEquals(200, controller.adoptDraft(adopting).get(AjaxResult.CODE_TAG));
+        verify(couponAuthorizationService, never()).assertOwnedRewardCoupon(any(), any());
+
+        CmsTemplatePublishRequest ordinary = request("MERCHANT"); ordinary.setCouponId(999L);
+        org.mockito.Mockito.doThrow(new IllegalArgumentException("非本主体优惠券"))
+                .when(couponAuthorizationService).assertOwnedRewardCoupon(999L, OWNER);
+        assertEquals(500, controller.draft(ordinary).get(AjaxResult.CODE_TAG));
+        verify(couponAuthorizationService).assertOwnedRewardCoupon(999L, OWNER);
+        verify(publishService, never()).saveOrUpdateDraft(eq(ordinary), any(), any());
+    }
+
+    @Test
     void sourceAdoptionAcceptsJsonBodyAndPersonalOwner() throws Exception {
         when(adoptionService.adopt(eq(PRINCIPAL), eq(PRINCIPAL), any(), eq("operator901")))
                 .thenReturn(java.util.Map.of("draftId", "9007199254740993", "status", "COMPLETED"));

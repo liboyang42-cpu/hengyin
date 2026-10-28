@@ -58,6 +58,8 @@ Component({
   properties: {
     show: { type: Boolean, value: false },
     mode: { type: String, value: 'type' },        // type | pick | shot
+    sessionId: { type: String, value: '' },      // Original runtime identity; never a client-generated business ID.
+    nodeId: { type: String, value: '' },
     theme: { type: String, value: 'dark' },       // dark | light
     title: { type: String, value: '' },
     imageUrl: { type: String, value: '' },
@@ -115,7 +117,14 @@ Component({
       if (!value || this.data.finished || this.data.passed || this.data.judge !== false) return;
       this.setData({ submitted: false, ctaDisabled: !this.data.optionList.some(o => o.state === 'is-on') });
     },
-    'show, options, mode, multi, passed, finished, judge, lastOptionId, lastOptionIds, feedbackText, feedbackImages': function (show, options, mode, multi, passed, finished) {
+    'show, options, mode, multi, passed, finished, judge, lastOptionId, lastOptionIds, feedbackText, feedbackImages, sessionId, nodeId': function (show, options, mode, multi, passed, finished) {
+      if (this._qaDisposed) return;
+      this._qaEpoch = (this._qaEpoch || 0) + 1;
+      const identity = JSON.stringify([String(this.data.sessionId || ''), String(this.data.nodeId || '')]);
+      const fresh = this._qaIdentity !== identity || this._qaVisible !== !!show;
+      this._qaIdentity = identity;
+      this._qaVisible = !!show;
+      if (this._introTimer) { clearTimeout(this._introTimer); this._introTimer = null; }
       if (!show) return;
       const chosen = this.data.lastOptionIds && this.data.lastOptionIds.length
         ? this.data.lastOptionIds : [this.data.lastOptionId];
@@ -142,6 +151,7 @@ Component({
           ? (this.data.feedbackImages || []).slice() : [],
         submitted: false,
         fbHead: passed ? HEAD_OK : HEAD_NO, playing: false, intro: !passed && !finished,
+        burning: fresh ? false : !!this.data.burning,
         triesCap: this.data.judge === false || finished ? 0 : cappedTries(this.data.maxTries, opts.length),
         ctaLabel: passed ? '继续' : (confirmPick ? '确认选择' : (mode === 'shot' ? '拍一张' : '提交')),
         // 多选一进来一个都没勾,按钮就得是灰的 —— 亮着一颗按不动的按钮比灰着更糟
@@ -153,14 +163,27 @@ Component({
         else stage.begin();
       }
       // rAF 在这儿不行:页面不渲染时它不走,题会永远停在「只有题干」那一屏
-      if (this._introTimer) clearTimeout(this._introTimer);
-      this._introTimer = setTimeout(() => this.setData({ intro: false }), INTRO_MS);
+      const context = this._qaContext();
+      this._introTimer = setTimeout(() => { if (this._isQaContextCurrent(context)) this.setData({ intro: false }); }, INTRO_MS);
     },
   },
   lifetimes: {
-    detached() { if (this._introTimer) { clearTimeout(this._introTimer); this._introTimer = null; } },
+    detached() {
+      this._qaDisposed = true; this._qaVisible = false; this._qaEpoch = (this._qaEpoch || 0) + 1;
+      if (this._introTimer) { clearTimeout(this._introTimer); this._introTimer = null; }
+    },
   },
   methods: {
+    _qaContext() {
+      // 只读的异步快照，不创建/写回 observer 监听的组件属性。
+      return Object.freeze({ epoch: this._qaEpoch || 0,
+        identity: JSON.stringify([String(this.data.sessionId || ''), String(this.data.nodeId || '')]) });
+    },
+    _isQaContextCurrent(context) {
+      return !!context && !this._qaDisposed && this._qaVisible !== false
+        && context.epoch === (this._qaEpoch || 0)
+        && context.identity === JSON.stringify([String(this.data.sessionId || ''), String(this.data.nodeId || '')]);
+    },
     /** 服务端给的那个 answerId 排在第几个。没给、或找不着就是 -1(那就什么都不亮)。 */
     _answerIndex() {
       const id = String(this.data.answerId || '');
@@ -223,11 +246,14 @@ Component({
       if (this.data.passed) { this.triggerEvent('continue'); return; }
       if (this.data.finished || this.data.submitted) return;
       if (this.data.mode === 'shot') {
+        const context = this._qaContext();
+        if (!this._isQaContextCurrent(context)) return;
         /* 拍照:交上来的是**图片地址**,不是「我拍过了」。判不了照片内容,
            但得留痕 —— 商家事后想看玩家到底交了什么,这是唯一的证据。 */
         wx.chooseMedia({
           count: 1, mediaType: ['image'], sourceType: ['camera', 'album'], sizeType: ['compressed'],
           success: (res) => {
+            if (!this._isQaContextCurrent(context)) return;
             const file = (res && res.tempFiles && res.tempFiles[0]) || {};
             const path = file.tempFilePath || '';
             if (!path) { cyToast('没拿到照片'); return; }

@@ -111,6 +111,24 @@
     </block>
 
     </view>
+    <view wx:if="{{activeType === 0 && topicId && (supplyStationRequired || supplyTopicState === 'loading' || supplyTopicState === 'error')}}" class="card">
+      <text class="card-title">核销据点</text>
+      <view class="card-hint">每条邀约明确选择一个据点；商家接受后冻结，订单间不能重复使用。</view>
+      <cy-skeleton wx:if="{{supplyTopicState === 'loading'}}" />
+      <cy-error wx:elif="{{supplyTopicState === 'error'}}" title="无法确认主题" sub="{{supplyTopicError}}" retry="重新读取" bind:retry="retrySupplyTopic" />
+      <block wx:elif="{{supplyStationRequired}}">
+        <view class="card-hint" wx:if="{{!selected.length}}">先选择合作商家，再选择该商家的已确定据点。</view>
+        <view wx:for="{{selected}}" wx:key="toId" class="target-main">
+          <view class="target-name">{{item.name}}</view>
+          <cy-skeleton wx:if="{{item.supplyState === 'loading'}}" />
+          <cy-error wx:elif="{{item.supplyState === 'error'}}" title="据点读取失败" sub="{{item.supplyError}}" retry="刷新据点" bind:retry="retrySupplyStations" />
+          <cy-empty wx:elif="{{item.supplyState === 'ready' && !item.supplyStations.length}}" title="暂无已确定据点" cta="刷新据点" bind:cta="retrySupplyStations" />
+          <cy-dropdown wx:elif="{{item.supplyState === 'ready'}}" merchant="{{true}}" mode="selector" range="{{item.supplyStations}}" range-key="stationName" value="{{item.supplyStationIndex}}" data-toid="{{item.toId}}" bind:change="onSupplyStationChange" aria-label="为{{item.name}}选择核销据点">
+            <view class="picker-row"><text>{{item.supplyStationName || '请选择一个据点'}}</text><cy-icon class="picker-arrow" name="arrow-right" size="28" /></view>
+          </cy-dropdown>
+        </view>
+      </block>
+    </view>
     <view wx:if="{{activeType !== 1 && !presetTarget}}" class="nearby-row" bindtap="goNearby" aria-role="button" aria-label="查看附近商家，含未入驻商家可电话联系" hover-class="cy-pressed" hover-stay-time="80">
       <text>附近商家 · 含未入驻商家可电话联系</text><cy-icon class="picker-arrow" name="arrow-right" size="28" />
     </view>
@@ -130,6 +148,7 @@
         <view class="target-action target-action--locked">已锁定</view>
       </view>
       <view class="iv-terms"><view><text class="iv-terms-label">拟议条款 · 对方接受并成单后锁定</text><text class="iv-terms-value">{{inviteModal.termsText}}</text></view><cy-icon name="check" size="28" /></view>
+      <view wx:if="{{supplyStationRequired}}" class="iv-terms" wx:for="{{selected}}" wx:key="toId"><view><text class="iv-terms-label">{{item.name}} · 接受后冻结</text><text class="iv-terms-value">核销据点：{{item.supplyStationName}} · #{{item.supplyStationId}}</text></view></view>
       <view class="iv-hero"><text class="iv-type">协作邀请</text><text class="iv-topic">{{topicName ? ('关联主题 · ' + topicName) : '整主题合作邀请'}}</text></view>
       <view class="iv-copy">对方会在「收到的」中确认本次协作。</view>
       <view class="iv-message"><text class="iv-message-title">邀请语</text><textarea class="iv-message-input" value="{{message}}" bindinput="onMessageInput" placeholder="写下想对对方说的话" placeholder-class="iv-message-placeholder" maxlength="100" /></view>

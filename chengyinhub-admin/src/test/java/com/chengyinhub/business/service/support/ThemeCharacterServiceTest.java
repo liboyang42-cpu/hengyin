@@ -52,6 +52,62 @@ class ThemeCharacterServiceTest {
     private CmsTopicMapper topics;
     private ThemeCharacterService service;
 
+    private String freezeDefinitions() throws Exception {
+        ObjectMapper json = new ObjectMapper();
+        com.fasterxml.jackson.databind.node.ObjectNode snapshot = json.createObjectNode();
+        snapshot.set("journeyRules", json.readTree(RULES));
+        JourneyInitialState.freezeKeys(snapshot, keys.selectByTopicId(TOPIC), JourneyRules.parse(RULES), TOPIC);
+        assertEquals(1, snapshot.path("stateKeySnapshotVersion").asInt(), "use the real new producer, not hand-built historical metadata");
+        return snapshot.toString();
+    }
+
+    @Test
+    void originalCardUsesPublishedDefinitionsAndRulesAfterLiveAuthorChanges() throws Exception {
+        String snapshot = freezeDefinitions();
+        TopicRouteSession original = session(41L, 6, TopicRouteSession.STATUS_RUNNING,
+                "{\"variables\":{\"counter.str\":99,\"counter.focus\":7}}");
+        original.setConfigSnapshotJson(snapshot);
+        when(sessions.selectHistoryPage(eq(MEMBER), eq(TOPIC), isNull(), eq(1))).thenReturn(Collections.singletonList(original));
+        topics.selectCmsTopicById(TOPIC).setJourneyRulesJson("{\"schemaVersion\":1,\"stateEnabled\":false}");
+        when(keys.selectByTopicId(TOPIC)).thenThrow(new AssertionError("original card must not reread author definitions"));
+
+        List<Map<String, Object>> rows = rows(service.card(MEMBER, TOPIC));
+        assertEquals(2, rows.size()); assertEquals("counter.focus", rows.get(0).get("stateKey"));
+        assertEquals(7, rows.get(0).get("value"));
+        assertEquals("力量", rows.get(1).get("label")); assertEquals(20, rows.get(1).get("value"));
+        assertEquals("topic", rows.get(1).get("persistScope"));
+        verify(characters, never()).updateIfNewer(any()); verify(characters, never()).insertIfAbsent(any());
+        assertEquals(snapshot, original.getConfigSnapshotJson());
+    }
+
+    @Test
+    void newRunSeedsOriginalPublishedPersistPolicyWithoutChangingCarryLedgerPolicy() throws Exception {
+        String snapshot = freezeDefinitions();
+        TopicRouteSession previous = session(41L, 6, TopicRouteSession.STATUS_COMPLETED,
+                "{\"variables\":{\"counter.str\":9,\"counter.focus\":1}}");
+        when(sessions.selectHistoryPage(eq(MEMBER), eq(TOPIC), isNull(), eq(1))).thenReturn(Collections.singletonList(previous));
+        when(keys.selectByTopicId(TOPIC)).thenThrow(new AssertionError("new run must use its publication's definitions"));
+        TopicRouteEngine.State next = new TopicRouteEngine.State();
+        JourneyRules rules = JourneyRules.parse(RULES); JourneyInitialState.initialize(rules, next);
+
+        service.seedRun(MEMBER, TOPIC, rules, next, snapshot);
+
+        assertEquals(9, next.getVariables().get("counter.str").intValue());
+        assertEquals(5, next.getVariables().get("counter.focus").intValue());
+        ArgumentCaptor<ThemeCharacter> written = ArgumentCaptor.forClass(ThemeCharacter.class);
+        verify(characters).updateIfNewer(written.capture());
+        assertEquals(41L, written.getValue().getSourceSessionId()); assertEquals(6, written.getValue().getSourceVersion());
+        assertEquals("{\"counter.str\":9}", written.getValue().getValuesJson());
+    }
+
+    @Test
+    void unsupportedDefinitionVersionDoesNotReadLiveOrWriteCarryValues() {
+        TopicRouteEngine.State next = new TopicRouteEngine.State();
+        assertThrows(IllegalArgumentException.class, () -> service.seedRun(MEMBER, TOPIC, JourneyRules.parse(RULES), next,
+                "{\"stateKeySnapshotVersion\":2,\"stateKeys\":[]}"));
+        verifyNoInteractions(keys, characters, sessions);
+    }
+
     @BeforeEach
     void setUp() {
         keys = mock(ThemeStateKeyMapper.class);

@@ -1,0 +1,44 @@
+{
+  "parent": "6fcdf747e17cb5094121f609ae33f7734fda2ae7",
+  "state": "SOURCE_COMPLETE_FINAL_IMPACT_BEFORE_FREEZE",
+  "source_owners_complete": [
+    "B",
+    "C",
+    "E",
+    "F",
+    "H"
+  ],
+  "standard": {
+    "existing_workflow": "ci.yml",
+    "validation_scope": "selected",
+    "selected_jobs": [
+      "backend"
+    ],
+    "mini_shards": [],
+    "why": "F genuinely added7 nontrivial Java streaming/transport unit controls and changed testfixture/child sources; previous15772 evidence cannot execute new7. Use existing backend entry once, no new generic selector/workflow."
+  },
+  "storage": {
+    "existing_workflow": "real-storage-it.yml",
+    "batch": "architecture-day-integrated-changes",
+    "classes": [
+      "CrossDomainFaultIsolationMySqlIT"
+    ],
+    "ordinary_source_cases": 1,
+    "why": "C/F actual transaction-observer/transportOOME failure; unrelated acceptedDeposit12 andGameplay1 unchanged not rerun"
+  },
+  "runtime": [
+    "gameplay-capacity-mixed",
+    "restore-application-startup",
+    "payment-gap-diagnostic"
+  ],
+  "all_source_same_SHA_required": true,
+  "compile_admission_before_parallel_runtime": true,
+  "not_repeat": [
+    "old17e822 storageclasses",
+    "6fcdf DepositAttempt12/GameplayReskin1",
+    "client10767 and HTTP36 unaffected",
+    "migration/layout/dependency/frontend unaffected"
+  ],
+  "not_full_seven_cohort_acceptance": true,
+  "all_complete": false
+}

@@ -292,7 +292,8 @@ public class ApiChapterMerchantNodeController extends BaseController {
             MerchantAccessContext access = merchantAccessService.require(
                     memberId, MerchantPermission.PROJECT_MANAGE);
             return success(nodeNpcService.voiceEnroll(memberId, access.getOwnerMemberId(),
-                    body.getNodeId(), body.getVoiceSample()));
+                    body.getNodeId(), body.getVoiceSample(), body.getVoiceRequestId(), body.getVoicePreviousIntentId(),
+                    Boolean.TRUE.equals(body.getVoiceDuplicateChargeConsent())));
         } catch (ServiceException e) {
             return new AjaxResult(e.getCode(), e.getMessage());
         } catch (IllegalStateException e) {
@@ -309,12 +310,19 @@ public class ApiChapterMerchantNodeController extends BaseController {
         try {
             MerchantAccessContext access = merchantAccessService.require(
                     memberId, MerchantPermission.PROJECT_MANAGE);
-            NpcProfile mine = nodeNpcService.voiceStatus(access.getOwnerMemberId(), body.getNodeId());
+            NpcProfile mine = nodeNpcService.voiceStatus(memberId, access.getOwnerMemberId(), body.getNodeId(), body.getVoiceRequestId());
             // 没配过 NPC 也回 0/空,前端按「未配置」渲染 —— 与门店分身的 status 端点同形状。
             Map<String, Object> data = new LinkedHashMap<>();
             data.put("voiceStatus", mine == null || mine.getVoiceStatus() == null
                     ? NodeNpcService.VOICE_NONE : mine.getVoiceStatus());
             data.put("voiceSample", mine == null ? null : mine.getVoiceSample());
+            data.put("voicePreviousIntentId", mine == null ? null : mine.getVoicePreviousIntentId());
+            data.put("voiceRequestId", mine == null ? null : mine.getVoiceRequestId());
+            data.put("voiceSelected", mine == null ? null : mine.getVoiceSelected());
+            data.put("voiceHistory", nodeNpcService.voiceHistory(memberId, access.getOwnerMemberId(), body.getNodeId()));
+            data.put("voiceIntentId", mine == null ? null : mine.getVoiceIntentId());
+            data.put("voiceIntentState", mine == null ? null : mine.getVoiceIntentState());
+            data.put("voiceReasonCode", mine == null ? null : mine.getVoiceReasonCode());
             return success(data);
         } catch (ServiceException e) {
             return new AjaxResult(e.getCode(), e.getMessage());
@@ -451,6 +459,9 @@ public class ApiChapterMerchantNodeController extends BaseController {
         private String avatar;
         private String greeting;
         private String voiceSample;
+        private String voiceRequestId;
+        private Long voicePreviousIntentId;
+        private Boolean voiceDuplicateChargeConsent;
 
         NpcProfile toDraft() {
             NpcProfile p = new NpcProfile();
@@ -468,6 +479,12 @@ public class ApiChapterMerchantNodeController extends BaseController {
         public void setAvatar(String avatar) { this.avatar = avatar; }
         public String getGreeting() { return greeting; }
         public void setGreeting(String greeting) { this.greeting = greeting; }
+        public String getVoiceRequestId() { return voiceRequestId; }
+        public void setVoiceRequestId(String value) { voiceRequestId = value; }
+        public Long getVoicePreviousIntentId() { return voicePreviousIntentId; }
+        public void setVoicePreviousIntentId(Long value) { voicePreviousIntentId = value; }
+        public Boolean getVoiceDuplicateChargeConsent() { return voiceDuplicateChargeConsent; }
+        public void setVoiceDuplicateChargeConsent(Boolean value) { voiceDuplicateChargeConsent = value; }
         public String getVoiceSample() { return voiceSample; }
         public void setVoiceSample(String voiceSample) { this.voiceSample = voiceSample; }
     }

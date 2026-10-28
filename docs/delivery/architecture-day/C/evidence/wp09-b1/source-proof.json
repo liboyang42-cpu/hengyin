@@ -1,0 +1,57 @@
+{
+  "parent": "26f3764ce0d81594be02c0eeace04aacdd483e58",
+  "checks": {
+    "production_change_confined_to_existing_leadGateError": true,
+    "old_fail_open_source_negative_control_found": true,
+    "hint10_and_ThemeRootFiles_unchanged": true,
+    "mapper_xml_parse": "7 parsed; not MyBatis loading",
+    "canonical_DDL_extraction": "3 exact single matches; not MySQL execution"
+  },
+  "files": [
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java",
+      "sha256": "681a37c3b48b8c7e2003522f10d336faee99fa0370e35a210e248b5afde24c40",
+      "lexical_delimiters": "PASS",
+      "source_test_methods": 0
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ClubLeadGateTest.java",
+      "sha256": "889eff7835074d3eabb804892c867cdba4c9b9012700d6dd736cb085af1b0f89",
+      "lexical_delimiters": "PASS",
+      "source_test_methods": 10
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/CurrentPlayControllerFixtures.java",
+      "sha256": "50ca8ea8e71a9cb241d7484612aecf6bf6889be6d7e86751b157a97b59b7ccab",
+      "lexical_delimiters": "PASS",
+      "source_test_methods": 0
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayCurrentUseBoundaryTest.java",
+      "sha256": "c334b4817ab937587e8d1ab33dd659c1302c0dbc2554c7ee8c68504953f59ad0",
+      "lexical_delimiters": "PASS",
+      "source_test_methods": 6
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PlayLeadAdmissionFailureTest.java",
+      "sha256": "0f853fa7a8607a71bef0ac7ce78384fa824b2c37307421b7427149720cae2dd5",
+      "lexical_delimiters": "PASS",
+      "source_test_methods": 11
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/PlayLeadAdmissionFailureMySqlIT.java",
+      "sha256": "1e6971c058f58ff7896505562cf68eee9f0e3438de74f65100549cef754cc273",
+      "lexical_delimiters": "PASS",
+      "source_test_methods": 2
+    }
+  ],
+  "java_compile": "NOT RUN",
+  "junit": "NOT RUN",
+  "mysql": "NOT RUN",
+  "pending_scope_decision": "preference admission currently follows potentially committing canPlay; no reordering without explicit root approval",
+  "executed_checks": [
+    "git diff --check: exit 0",
+    "Python source/DDL/XML sanity: exit 0; not Java parsing/compile",
+    "Gitleaks 8.24.3 existing config/ignore candidate scan: exit 0, ~319657 bytes, no leaks found"
+  ]
+}

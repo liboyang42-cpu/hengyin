@@ -73,6 +73,42 @@ function parseInviteId(value) {
   return digits && (digits.length < max.length || (digits.length === max.length && digits <= max)) ? digits : '';
 }
 
+// This mirrors the existing server contract axes; nodeId remains the legacy NODE scope.
+function isTopicMerchantSupply(invite) {
+  // Explicitly projected by the same server qualification as /supply-stations; never sent as authority.
+  if (invite && invite.requiresSupplyStation === false) return false;
+  return !!invite && Number(invite.inviteType) === 0 && invite.toType === 'merchant'
+    && invite.fromType !== 'official' && invite.nodeId == null && invite.gameId == null;
+}
+
+function supplyStationView(invite) {
+  if (!isTopicMerchantSupply(invite)) return { supplyStationText: '', supplyStationNote: '' };
+  const id = parseInviteId(invite.supplyStationId);
+  const name = typeof invite.supplyStationName === 'string' ? invite.supplyStationName.trim() : '';
+  return {
+    supplyStationText: id ? (name ? name + ' · #' + id : '据点 #' + id) : '原合同未记录归属',
+    supplyStationNote: !id ? '历史记录不自动补站，不能在接受时换站'
+      : Number(invite.status) === 1 ? '已接受，归属已冻结' : '接受前请确认，接受后归属冻结',
+  };
+}
+
+function supplyStationConfirmation(invite) {
+  if (!isTopicMerchantSupply(invite)) return null;
+  const id = parseInviteId(invite.id), alias = parseInviteId(invite.inviteId);
+  const stationId = parseInviteId(invite.supplyStationId);
+  const topicId = parseInviteId(invite.topicId), merchantMemberId = parseInviteId(invite.toId);
+  if (!stationId) throw new Error('原合同未记录归属，请联系发起方处理，不能在接受时换站');
+  if ((!id && !alias) || (id && alias && id !== alias) || !topicId || !merchantMemberId)
+    throw new Error('邀约归属信息无法确认，请刷新后重试');
+  return Object.freeze({ inviteId: alias || id, supplyStationId: stationId, topicId, merchantMemberId });
+}
+
+function sameSupplyStationConfirmation(invite, confirmation) {
+  const current = supplyStationConfirmation(invite);
+  if (!current) return confirmation == null;
+  return !!confirmation && Object.keys(current).every(key => current[key] === confirmation[key]);
+}
+
 function decorate(arr, slots) {
   return (arr || []).map(function (it, index) {
     const partnerName = (it.partner && it.partner.name) || '';
@@ -85,7 +121,7 @@ function decorate(arr, slots) {
     const conflict = rawId && alias && rawId !== alias;
     const inviteId = conflict ? '' : (alias || rawId);
     const actionId = inviteId && typeof it.id === 'number' && rawId === inviteId ? it.id : inviteId;
-    return Object.assign({}, it, badgeOf(INVITE_BADGE[it.status]), {
+    return Object.assign({}, it, badgeOf(INVITE_BADGE[it.status]), supplyStationView(it), {
       id: actionId,
       inviteId: inviteId,
       identityError: inviteId ? '' : INVITE_ID_ERROR,
@@ -182,5 +218,6 @@ function decorateApplies(rows, box) {
 module.exports = {
   APPLY_STATUS, isApplyList, decorateApplies, badgeOf, INVITE_BADGE,
   TYPE_LABEL, STATUS_LABEL, termsOf, countdownOf, slotOf, contactOf, decorate, parseInviteId, INVITE_ID_ERROR,
+  isTopicMerchantSupply, supplyStationView, supplyStationConfirmation, sameSupplyStationConfirmation,
   POOL_STATE_TEXT, isPoolList, decoratePool,
 };

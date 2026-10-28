@@ -1,0 +1,64 @@
+TAP version 13
+# Subtest: 里程碑:自玩(dataType=2)与活动完成按 topicId 一起计数
+ok 1 - 里程碑:自玩(dataType=2)与活动完成按 topicId 一起计数
+  ---
+  duration_ms: 29.306021
+  type: 'test'
+  ...
+# Subtest: 里程碑:同主题重复条目只计一次
+ok 2 - 里程碑:同主题重复条目只计一次
+  ---
+  duration_ms: 3.20154
+  type: 'test'
+  ...
+# Subtest: F2:同主题活动+自玩两条真实对象都在,里程碑按 topicId 只计一次
+ok 3 - F2:同主题活动+自玩两条真实对象都在,里程碑按 topicId 只计一次
+  ---
+  duration_ms: 4.444401
+  type: 'test'
+  ...
+# Subtest: 里程碑:空列表是「零完成」而不是「没有数据」
+ok 4 - 里程碑:空列表是「零完成」而不是「没有数据」
+  ---
+  duration_ms: 4.323443
+  type: 'test'
+  ...
+# Subtest: 里程碑:回包失败保持 null,不伪装成 0
+ok 5 - 里程碑:回包失败保持 null,不伪装成 0
+  ---
+  duration_ms: 3.395866
+  type: 'test'
+  ...
+# Subtest: 选择器:自玩完成项正常展示且带明确 dataId/dataType/topicId
+ok 6 - 选择器:自玩完成项正常展示且带明确 dataId/dataType/topicId
+  ---
+  duration_ms: 0.422453
+  type: 'test'
+  ...
+# Subtest: 选择器:空列表是成功空态,不是错误态
+ok 7 - 选择器:空列表是成功空态,不是错误态
+  ---
+  duration_ms: 0.384847
+  type: 'test'
+  ...
+# Subtest: 选择器:失败后清空并保留错误态,可重试
+ok 8 - 选择器:失败后清空并保留错误态,可重试
+  ---
+  duration_ms: 0.395634
+  type: 'test'
+  ...
+# Subtest: 选择器:选中自玩完成项走主题路线预览,不因缺 activityId 崩
+ok 9 - 选择器:选中自玩完成项走主题路线预览,不因缺 activityId 崩
+  ---
+  duration_ms: 0.622878
+  type: 'test'
+  ...
+1..9
+# tests 9
+# suites 0
+# pass 9
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 63.469223

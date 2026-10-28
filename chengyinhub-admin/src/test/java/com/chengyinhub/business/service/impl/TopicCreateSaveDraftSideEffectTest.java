@@ -2,11 +2,20 @@ package com.chengyinhub.business.service.impl;
 
 import com.chengyinhub.business.domain.CmsActivity;
 import com.chengyinhub.business.domain.CmsTopic;
+import com.chengyinhub.business.domain.CmsTopicChapter;
+import com.chengyinhub.business.domain.CmsTopicNode;
+import com.chengyinhub.business.domain.dto.ChapterDTO;
+import com.chengyinhub.business.domain.dto.NodeDTO;
 import com.chengyinhub.business.domain.dto.TopicCreateDTO;
 import com.chengyinhub.business.mapper.CmsActivityMapper;
 import com.chengyinhub.business.mapper.CmsTopicMapper;
+import com.chengyinhub.business.mapper.CmsTopicChapterMapper;
+import com.chengyinhub.business.mapper.CmsTopicNodeMapper;
+import com.chengyinhub.business.mapper.CmsMemberTemplateMapper;
 import com.chengyinhub.business.service.IAuditTaskService;
 import com.chengyinhub.business.service.support.SettlementDebtLedger;
+import com.chengyinhub.business.service.support.TopicPublicationTestWiring;
+import com.chengyinhub.business.service.support.TopicStateKeyRefService;
 import com.chengyinhub.common.exception.ServiceException;
 import com.chengyinhub.common.constant.ProductType;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,10 +23,17 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.jdbc.datasource.ConnectionHolder;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -38,6 +54,8 @@ class TopicCreateSaveDraftSideEffectTest {
     private CmsTopicMapper topicMapper;
     private CmsActivityMapper activityMapper;
     private IAuditTaskService auditTaskService;
+    private final List<CmsTopicChapter> writtenChapters = new ArrayList<>();
+    private final List<CmsTopicNode> writtenNodes = new ArrayList<>();
 
     @BeforeEach
     void setUp() {
@@ -57,6 +75,7 @@ class TopicCreateSaveDraftSideEffectTest {
             } catch (Exception ignore) {
             }
         }
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.wireRelocatedCollaborators(svc, publicationField -> org.mockito.Mockito.mock(publicationField.getType()));
         topicMapper = (CmsTopicMapper) ReflectionTestUtils.getField(svc, "cmsTopicMapper");
         activityMapper = (CmsActivityMapper) ReflectionTestUtils.getField(svc, "cmsActivityMapper");
         // CORE OWN-C03-15：自办活动插入后须生成有效身份，否则 fail-closed；夹具按真实插入回填 id。
@@ -77,12 +96,43 @@ class TopicCreateSaveDraftSideEffectTest {
             }).when(topicMapper).updateCmsTopic(any());
             return 1;
         }).when(topicMapper).insertCmsTopic(any());
-        when(topicMapper.publishRouteSnapshot(any(), any(), any())).thenReturn(1);
-        ReflectionTestUtils.setField(svc, "topicStateKeyRefService",
-                new com.chengyinhub.business.service.support.TopicStateKeyRefService(
-                    Mockito.mock(com.chengyinhub.business.mapper.CmsTopicNodeMapper.class),
-                    Mockito.mock(com.chengyinhub.business.mapper.CmsMemberTemplateMapper.class),
-                    Mockito.mock(com.chengyinhub.business.mapper.CmsTopicChapterMapper.class)));
+        ReflectionTestUtils.setField(svc, "themeStateKeyService", new com.chengyinhub.business.service.support.ThemeStateKeyService(
+                Mockito.mock(com.chengyinhub.business.mapper.ThemeStateKeyMapper.class)));
+        wirePublicationInputs();
+        svc = com.chengyinhub.business.service.support.TopicPublicationTestWiring.transactional(svc);
+    }
+
+    private void wirePublicationInputs() {
+        CmsTopicChapterMapper chapters = (CmsTopicChapterMapper) TopicPublicationTestWiring.get(svc, "cmsTopicChapterMapper");
+        CmsTopicNodeMapper nodes = (CmsTopicNodeMapper) TopicPublicationTestWiring.get(svc, "cmsTopicNodeMapper");
+        CmsMemberTemplateMapper templates = (CmsMemberTemplateMapper) TopicPublicationTestWiring.get(svc, "cmsMemberTemplateMapper");
+        TopicPublicationTestWiring.set(svc, "topicStateKeyRefService", new TopicStateKeyRefService(nodes, templates, chapters));
+        AtomicLong chapterIds = new AtomicLong(801L), nodeIds = new AtomicLong(901L);
+        doAnswer(call -> {
+            CmsTopicChapter row = call.getArgument(0); row.setId(chapterIds.getAndIncrement());
+            writtenChapters.add(row); return 1;
+        }).when(chapters).insertCmsTopicChapter(any());
+        doAnswer(call -> {
+            CmsTopicNode row = call.getArgument(0); row.setId(nodeIds.getAndIncrement());
+            writtenNodes.add(row); return 1;
+        }).when(nodes).insertCmsTopicNode(any());
+        when(chapters.selectCmsTopicChapterList(any())).thenAnswer(call -> new ArrayList<>(writtenChapters));
+        when(nodes.selectCmsTopicNodeList(any())).thenAnswer(call -> new ArrayList<>(writtenNodes));
+        when(chapters.selectByTopicForUpdate(700L)).thenAnswer(call -> new ArrayList<>(writtenChapters));
+        when(nodes.selectByTopicForUpdate(700L)).thenAnswer(call -> new ArrayList<>(writtenNodes));
+        doAnswer(call -> {
+            assertTrue(TransactionSynchronizationManager.isActualTransactionActive());
+            assertTrue(TransactionSynchronizationManager.hasResource(publicationTransactions().getDataSource()));
+            var frozen = new com.fasterxml.jackson.databind.ObjectMapper().readTree((String) call.getArgument(1));
+            assertEquals(1, frozen.path("runtimeSnapshotVersion").asInt());
+            assertEquals(writtenNodes.size(), frozen.path("routeStations").size());
+            assertEquals(writtenNodes.get(0).getId().longValue(), frozen.path("routeStations").get(0).path("nodeId").asLong());
+            return 1;
+        }).when(topicMapper).publishRouteSnapshot(any(), any(), any());
+    }
+
+    private DataSourceTransactionManager publicationTransactions() {
+        return (DataSourceTransactionManager) ReflectionTestUtils.getField(svc, "transactionManager");
     }
 
     private TopicCreateDTO dto(Integer saveDraft) {
@@ -91,6 +141,12 @@ class TopicCreateSaveDraftSideEffectTest {
         dto.setProductType(ProductType.ORIENTEERING);
         dto.setPublishMode("pro");
         dto.setChapters(new ArrayList<>());
+        if (!Integer.valueOf(1).equals(saveDraft)) {
+            NodeDTO node = new NodeDTO(); node.setName("原请求地点"); node.setAddress("人民广场"); node.setNodeTime(30);
+            ChapterDTO chapter = new ChapterDTO(); chapter.setName("原请求章节");
+            chapter.setNodes(new ArrayList<>(Collections.singletonList(node)));
+            dto.getChapters().add(chapter);
+        }
         dto.setSaveDraft(saveDraft);
         return dto;
     }
@@ -98,7 +154,7 @@ class TopicCreateSaveDraftSideEffectTest {
     @Test
     void draftCreateSkipsSelfHostShellAndAudit() {
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
-        svc.createTopic(dto(1), 42L, "tester");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).createTopic(dto(1), 42L, "tester");
 
         ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
         verify(topicMapper).insertCmsTopic(cap.capture());
@@ -112,7 +168,7 @@ class TopicCreateSaveDraftSideEffectTest {
     @Test
     void publishedProCreateSubmitsPostReviewAndBuildsPublicShell() {
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
-        svc.createTopic(dto(null), 42L, "tester");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).createTopic(dto(null), 42L, "tester");
 
         verify(activityMapper).insertCmsActivity(any(CmsActivity.class));
         verify(auditTaskService).submit(anyString(), anyLong(), anyLong(), anyString(), anyString());
@@ -125,7 +181,7 @@ class TopicCreateSaveDraftSideEffectTest {
         TopicCreateDTO simple = dto(null);
         simple.setPublishMode("simple");
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
-        svc.createTopic(simple, 42L, "tester");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).createTopic(simple, 42L, "tester");
 
         verify(activityMapper).insertCmsActivity(any(CmsActivity.class));
         verify(auditTaskService, never()).submit(anyString(), anyLong(), anyLong(), anyString(), anyString());
@@ -140,7 +196,7 @@ class TopicCreateSaveDraftSideEffectTest {
     @Test
     void proAndDraftCreateDoNotClaimMachinePassed() {
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
-        svc.createTopic(dto(1), 42L, "tester");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).createTopic(dto(1), 42L, "tester");
         ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
         verify(topicMapper).insertCmsTopic(cap.capture());
         assertTrue(!Integer.valueOf(1).equals(cap.getValue().getCheckStatus()), "草稿不得写 check_status=1");
@@ -158,9 +214,47 @@ class TopicCreateSaveDraftSideEffectTest {
                 .when(ledger).requireNoOverdueDebt(42L);
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
-        ServiceException e = assertThrows(ServiceException.class, () -> svc.createTopic(dto(null), 42L, "tester"));
+        ServiceException e = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).createTopic(dto(null), 42L, "tester"));
 
         assertTrue(e.getMessage().startsWith("SETTLEMENT_DEBT_OVERDUE"), e.getMessage());
         verify(activityMapper, never()).insertCmsActivity(any(CmsActivity.class));
+    }
+
+    @Test
+    void publishedCreateWithoutNodesIsRejectedBeforeSnapshotOrPublicShell() {
+        TopicCreateDTO request = dto(null); request.setPublishMode("simple");
+        request.setChapters(new ArrayList<>());
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
+
+        IllegalArgumentException failure = assertThrows(IllegalArgumentException.class,
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).createTopic(request, 42L, "tester"));
+
+        assertTrue(failure.getMessage().contains("没有可运行节点"), failure.getMessage());
+        verify(topicMapper, never()).publishRouteSnapshot(any(), any(), any());
+        verify(activityMapper, never()).insertCmsActivity(any());
+    }
+
+    @Test
+    void snapshotWriteFailureRollsBackOriginalSpringTransactionBeforePublicShell() throws Exception {
+        AtomicReference<java.sql.Connection> originalResource = new AtomicReference<>();
+        doAnswer(call -> {
+            assertTrue(TransactionSynchronizationManager.isActualTransactionActive());
+            ConnectionHolder holder = (ConnectionHolder) TransactionSynchronizationManager.getResource(publicationTransactions().getDataSource());
+            org.junit.jupiter.api.Assertions.assertNotNull(holder);
+            originalResource.set(holder.getConnection());
+            throw new IllegalStateException("injected snapshot write failure");
+        }).when(topicMapper).publishRouteSnapshot(any(), any(), any());
+        TopicCreateDTO request = dto(null); request.setPublishMode("simple");
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
+
+        IllegalStateException failure = assertThrows(IllegalStateException.class,
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).createTopic(request, 42L, "tester"));
+
+        assertEquals("injected snapshot write failure", failure.getMessage());
+        org.junit.jupiter.api.Assertions.assertNotNull(originalResource.get());
+        verify(originalResource.get()).rollback();
+        verify(originalResource.get(), never()).commit();
+        verify(activityMapper, never()).insertCmsActivity(any());
+        verify(auditTaskService, never()).submit(anyString(), anyLong(), anyLong(), anyString(), anyString());
     }
 }

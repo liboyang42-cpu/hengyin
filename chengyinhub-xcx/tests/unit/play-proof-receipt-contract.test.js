@@ -141,6 +141,18 @@ function createGamePage(nodeState, readback) {
     _session: { activityId: 1 },
   });
   page._readbackNode = () => { calls.push({ readback: true }); return Promise.resolve(readback); };
+  // 宿主页的命令传输由 architecture-day-c-intent 验证；此处只注入商家页依赖的同一合同。
+  page._prev = {
+    _isPlayAccountCurrent: () => true,
+    _routeWritePayload: (_kind, _node, input) => ({ ...input, routeActionId: 'original-intent', expectedRouteVersion: 3, routeSessionId: 99 }),
+    _resolveRouteAction() {}, _handleRouteConflict() {},
+    _sendBasicRouteIntent: (url, input) => new Promise(resolve => appStub.sendRequest({ url, data: input, method: 'POST',
+      success: result => resolve({ ...result, intentTerminal: true }),
+      successStatusAbnormal: (result, code) => resolve({ ...result, code: 'http_error', netFail: code >= 500 || code === 408 }),
+      fail: () => resolve({ netFail: true }) })),
+    _readBasicRouteIntent: () => { calls.push({ readback: true }); return Promise.resolve(readback && readback.gameDone
+      ? { code: 200, intentTerminal: true, data: { firstTime: false } } : { code: 520 }); },
+  };
   return page;
 }
 
@@ -172,7 +184,7 @@ test('★负控：答题响应丢失 ⇒ unknown，锁住不放行重答', async
   assert.equal(writes, 1, 'unknown 未解除前不得再发答案');
 });
 
-test('答题 unknown 回读 gameDone=true ⇒ confirmed 且不编造 xp', async () => {
+test('答题 unknown 读到原命令终态成功 ⇒ confirmed 且不编造 xp', async () => {
   const page = createGamePage({}, { nodeId: 7, gameDone: true });
   appStub.handler = (o) => o.fail();
   await page.submitGame();
@@ -182,13 +194,13 @@ test('答题 unknown 回读 gameDone=true ⇒ confirmed 且不编造 xp', async 
   assert.equal(page.calls.filter((c) => c.readback).length, 1);
 });
 
-test('答题 unknown 回读 gameDone=false ⇒ failed，才放行重答', async () => {
+test('答题 unknown 无原命令终态 ⇒ 保持 unknown，不能凭实体未完成放行重答', async () => {
   const page = createGamePage({}, { nodeId: 7, gameDone: false });
   appStub.handler = (o) => o.fail();
   await page.submitGame();
-  assert.equal(page.data.game.receipt, 'failed');
-  assert.equal(page.data.game.submitting, false);
-  assert.match(page.data.game.errText, /没有提交成功/);
+  assert.equal(page.data.game.receipt, 'unknown');
+  assert.equal(page.data.game.submitting, true);
+  assert.match(page.data.game.errText, /没确认|勿重复/);
 });
 
 test('答错(业务失败)仍走 failed，不冒充 unknown', async () => {
@@ -247,9 +259,9 @@ test('★5xx / 408 是「结果未知」,不是「答错了」', async () => {
     const page = createGamePage({}, { nodeId: 7, gameDone: false });
     appStub.handler = (o) => o.successStatusAbnormal({ msg: '网关超时' }, status);
     await page.submitGame();
-    assert.equal(page.data.game.receipt, 'failed',
+    assert.equal(page.data.game.receipt, 'unknown',
       `HTTP ${status} 必须先进 unknown 再由刷新判定，不能直接判业务失败`);
-    // 回读说没落地才允许 failed；关键是它走了回读这条路
+    // 未查到原命令终态，必须继续 unknown；实体未完成不能证明原命令未执行。
     assert.equal(page.calls.filter((c) => c.readback).length, 1,
       `HTTP ${status} 必须触发权威刷新`);
     assert.doesNotMatch(page.data.game.errText, /再想想/,

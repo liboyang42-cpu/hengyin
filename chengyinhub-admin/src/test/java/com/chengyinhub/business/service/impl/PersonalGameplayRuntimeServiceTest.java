@@ -24,10 +24,12 @@ class PersonalGameplayRuntimeServiceTest {
     private CmsTopic topic;
     private TopicRouteSession session;
     private final Map<String,TopicRouteAction> receipts=new HashMap<>();
+    private final Map<String,Integer> originalVersions=new HashMap<>();
     static String config() {
         return "{\"schemaVersion\":1,\"capacity\":8,\"actionLimit\":8,\"replayEnabled\":true,\"items\":[{\"id\":\"food\",\"kind\":\"ITEM\",\"name\":\"口粮\",\"image\":\"https://static.chengyinhub.com/food.png\",\"stat\":\"HP\",\"delta\":3}],\"gameplayRuntime\":{\"runtimeScope\":\"PLAYER\",\"initialGrants\":[{\"itemId\":\"food\",\"quantity\":1}],\"survival\":{\"zeroHpPolicy\":\"BLOCK_PAID\",\"actionLimitPolicy\":\"BLOCK_OVERFLOW\",\"recoveries\":[{\"recoveryKey\":\"rest\",\"kind\":\"REST\",\"limit\":2,\"hpDelta\":2}]},\"acts\":[{\"actKey\":\"a\",\"questKeys\":[\"north\",\"east\"],\"completionRule\":{\"type\":\"ANY_N\",\"quantity\":1}}],\"quests\":[{\"questKey\":\"north\",\"actKey\":\"a\",\"nodeId\":11,\"locationKey\":\"gate\",\"settlementSlot\":\"north\",\"hpCost\":1,\"actionCost\":1,\"choices\":[{\"choiceKey\":\"food\",\"grants\":[{\"itemId\":\"food\",\"quantity\":1}]}]},{\"questKey\":\"east\",\"actKey\":\"a\",\"nodeId\":12,\"locationKey\":\"gate\",\"settlementSlot\":\"east\"}]}}";
     }
     @BeforeEach void setup() throws Exception {
+        originalVersions.clear();receipts.clear();
         mapper=mock(TopicRouteSessionMapper.class);CmsTopicMapper topics=mock(CmsTopicMapper.class);nodes=mock(CmsTopicNodeMapper.class);templates=mock(CmsMemberTemplateMapper.class);
         CmsRegistrationMapper registrations=mock(CmsRegistrationMapper.class);arrival=mock(IShopDayProofService.class);
         service=new TopicRouteRuntimeServiceImpl(mapper,topics,nodes,templates,mock(PlayerNodeProgressMapper.class),null,registrations,null,arrival,()->1L,()->10,Clock.systemUTC(),RouteReachabilityProvider.UNKNOWN);
@@ -47,8 +49,8 @@ class PersonalGameplayRuntimeServiceTest {
         when(mapper.updateActionResponse(anyLong(),anyString())).thenAnswer(i->{for(TopicRouteAction a:receipts.values())if(a.getId().equals(i.getArgument(0)))a.setResponseJson(i.getArgument(1));return 1;});
         when(mapper.updateStateCas(any())).thenReturn(1);
         service.state(7L,10L,0L);
-        service.recordPlayerArrival(7L,10L,0L,11L,"scan-north",null);
-        service.recordPlayerArrival(7L,10L,0L,12L,"scan-east",null);
+        service.recordPlayerArrival(7L,10L,0L,11L,"scan-north",session.getVersion());
+        service.recordPlayerArrival(7L,10L,0L,12L,"scan-east",session.getVersion());
     }
     @Test void gameplayBridgeKeepsActionCasResponseOrderAndReplayHasNoScoring() {
         OrientRouteSettlement bridge=mock(OrientRouteSettlement.class);
@@ -127,7 +129,7 @@ class PersonalGameplayRuntimeServiceTest {
         assertThrows(IllegalStateException.class,()->service.replayTheme(7L,99L));
         assertThrows(ServiceException.class,()->service.themeView(8L,10L,0L,99L));
     }
-    private Map<String,Object> send(String key,String action,String content,String choice) {return service.gameplayAction(7L,99L,session.getVersion(),key,action,content,choice);}
+    private Map<String,Object> send(String key,String action,String content,String choice) {return service.gameplayAction(7L,99L,originalVersions.computeIfAbsent(key,k->session.getVersion()),key,action,content,choice);}
     @Test void personalFallbackCannotOpenVotingOrBypassSessionOwnership() {
         String before = session.getStateJson(); int count = receipts.size();
         assertEquals("该模式不支持投票", assertThrows(ServiceException.class, () -> service.gameplayAction(7L, 99L, session.getVersion(), "close", "PLAN_FALLBACK", null, null)).getMessage());
@@ -159,7 +161,7 @@ class PersonalGameplayRuntimeServiceTest {
         assertTrue(readbackQuest("north").path("enabled").asBoolean());assertFalse(readbackQuest("north").path("trustedPass").asBoolean());
         ObjectNode state=(ObjectNode)stored();state.with("themeRuntime").with("gameplay").with("arrivals").remove("11");session.setStateJson(state.toString());
         assertEquals("NOT_ARRIVED",readbackQuest("north").path("disabledReason").asText());
-        service.recordPlayerArrival(7L,10L,0L,11L,"reentry-arrival",null);
+        service.recordPlayerArrival(7L,10L,0L,11L,"reentry-arrival",session.getVersion());
         send("reentry-start","QUEST_START","north",null);
         JsonNode pending=readbackQuest("north");assertEquals("PROOF_PENDING",pending.path("disabledReason").asText());assertFalse(pending.path("trustedPass").asBoolean());
         state=(ObjectNode)stored();state.with("variables").put("sys.passed.11",1);session.setStateJson(state.toString());
@@ -219,7 +221,7 @@ class PersonalGameplayRuntimeServiceTest {
         frozen.with("nodeConfigs").set("11",block);frozen.with("nodeAnswers").putObject("11").put("validationMethod",4);
         NodeJourneySnapshot.copyMechanicSegments(block,frozen.with("nodeJourney").putObject("11"));session.setConfigSnapshotJson(frozen.toString());
         ObjectNode state=(ObjectNode)stored();state.with("variables").put("sys.hp",4);session.setStateJson(state.toString());
-        service.recordPlayerArrival(7L,10L,0L,11L,"effects-scan",null,"SCAN");send("basic-effects-start","QUEST_START","north",null);
+        service.recordPlayerArrival(7L,10L,0L,11L,"effects-scan",session.getVersion(),"SCAN");send("basic-effects-start","QUEST_START","north",null);
         assertEquals(4,stored().path("variables").path("sys.hp").asInt());
         send("basic-effects-resolve","QUEST_RESOLVE","north","food");assertEquals(5,stored().path("variables").path("sys.hp").asInt());
         send("basic-effects-resolve","QUEST_RESOLVE","north","food");assertEquals(5,stored().path("variables").path("sys.hp").asInt());
@@ -242,7 +244,7 @@ class PersonalGameplayRuntimeServiceTest {
         assertEquals(0,stored().path("variables").path("sys.actions").asInt());
         send("start-north","QUEST_START","north",null);service.recordNodeResult(7L,10L,0L,11L,service.gameplayInstance(7L,10L,0L,11L),"pass",true,false,0,Collections.emptyList());
         Map<String,Object> result=send("done","QUEST_RESOLVE","north","food");assertEquals("COMPLETED",result.get("status"));assertEquals(2,stored().path("themeRuntime").path("inventory").path("food").asInt());assertEquals(1,stored().path("variables").path("sys.actions").asInt());
-        assertEquals(json.writeValueAsString(result),json.writeValueAsString(service.gameplayAction(7L,99L,0,"done","QUEST_RESOLVE","north","food")));
+        assertEquals(json.writeValueAsString(result),json.writeValueAsString(service.gameplayAction(7L,99L,originalVersions.get("done"),"done","QUEST_RESOLVE","north","food")));
         assertThrows(ServiceException.class,()->send("done","QUEST_RESOLVE","north",null));
     }
     @Test void ownerVersionArrivalAndOldRoutesFailClosedWithoutMaterialChanges() throws Exception {
@@ -256,9 +258,33 @@ class PersonalGameplayRuntimeServiceTest {
         assertThrows(ServiceException.class,()->service.advance(7L,10L,0L,0,"old","CHOICE",new NodeOutcome(11L,"COMPLETED","receipt")));
         assertThrows(ServiceException.class,()->service.roll(7L,10L,0L,11L,"check"));
     }
+    @Test void arrivalRequiresOriginalIdentityAndRejectsChangedExpectedOrKind() {
+        String before=session.getStateJson();int count=receipts.size();
+        assertThrows(IllegalArgumentException.class,()->service.recordPlayerArrival(7L,10L,0L,11L,null,session.getVersion()));
+        assertThrows(IllegalArgumentException.class,()->service.recordPlayerArrival(7L,10L,0L,11L,"missing-version",null));
+        assertEquals(before,session.getStateJson());assertEquals(count,receipts.size());
+        Integer expected=session.getVersion();
+        Map<String,Object> original=service.recordPlayerArrival(7L,10L,0L,11L,"arrival-identity",expected,"SCAN");
+        assertEquals(original,service.recordPlayerArrival(7L,10L,0L,11L,"arrival-identity",expected,"SCAN"));
+        assertThrows(ServiceException.class,()->service.recordPlayerArrival(7L,10L,0L,11L,"arrival-identity",session.getVersion(),"SCAN"));
+        assertThrows(ServiceException.class,()->service.recordPlayerArrival(7L,10L,0L,11L,"arrival-identity",expected,"GPS"));
+    }
+    @Test void gameplayReplayRequiresOriginalExpectedEvenAfterEntityVersionChanges() {
+        Integer expected=session.getVersion();
+        Map<String,Object> first=service.gameplayAction(7L,99L,expected,"stable-version","QUEST_START","north",null);
+        assertEquals(first,service.gameplayAction(7L,99L,expected,"stable-version","QUEST_START","north",null));
+        assertThrows(ServiceException.class,()->service.gameplayAction(7L,99L,session.getVersion(),"stable-version","QUEST_START","north",null));
+    }
+    @Test void oldArrivalNamespaceNeverReleasesAnExecutedIdentity() {
+        when(mapper.selectActionByAction(99L,7L,"arrival:SCAN:historic")).thenReturn(new TopicRouteAction());
+        String before=session.getStateJson();int count=receipts.size();
+        assertThrows(ServiceException.class,()->service.recordPlayerArrival(7L,10L,0L,11L,"historic",session.getVersion(),"SCAN"));
+        assertEquals(before,session.getStateJson());assertEquals(count,receipts.size());
+    }
     @Test void arrivalsAreBoundToThisRunAndReplayReturnsTheOriginalScanReceipt() throws Exception {
-        Map<String,Object> receipt=service.recordPlayerArrival(7L,10L,0L,11L,"second-scan",session.getVersion());
-        assertEquals(json.writeValueAsString(receipt),json.writeValueAsString(service.recordPlayerArrival(7L,10L,0L,11L,"second-scan",0)));
+        Integer expected=session.getVersion();
+        Map<String,Object> receipt=service.recordPlayerArrival(7L,10L,0L,11L,"second-scan",expected);
+        assertEquals(json.writeValueAsString(receipt),json.writeValueAsString(service.recordPlayerArrival(7L,10L,0L,11L,"second-scan",expected)));
         assertThrows(ServiceException.class,()->service.recordPlayerArrival(7L,10L,0L,12L,"second-scan",session.getVersion()));
         ObjectNode fresh=(ObjectNode)stored();fresh.with("themeRuntime").with("gameplay").remove("arrivals");session.setStateJson(fresh.toString());
         assertThrows(ServiceException.class,()->send("old-proof","QUEST_START","north",null));
@@ -338,10 +364,10 @@ class PersonalGameplayRuntimeServiceTest {
         ObjectNode frozen=(ObjectNode)json.readTree(session.getConfigSnapshotJson());frozen.with("nodeConfigs").set(String.valueOf(nodeId),json.createObjectNode().put("schemaVersion",1));frozen.with(NodeJourneySnapshot.NODE_ANSWERS_KEY).with(String.valueOf(nodeId)).put("validationMethod",method);session.setConfigSnapshotJson(frozen.toString());
     }
     @Test void scanIsTheBasicTaskAndItsCurrentStartConsumesTheRealRunReceipt() throws Exception {
-        baseMethod(11L,4);service.recordPlayerArrival(7L,10L,0L,11L,"base-scan",null,"SCAN");send("scan-task","QUEST_START","north",null);
+        baseMethod(11L,4);service.recordPlayerArrival(7L,10L,0L,11L,"base-scan",session.getVersion(),"SCAN");send("scan-task","QUEST_START","north",null);
         assertTrue(stored().path("themeRuntime").path("verifiedNodes").path("11").asLong()>0);assertEquals("gameplay:scan-task",stored().path("themeRuntime").path("gameplay").path("arrivalFacts").path("11").path("consumedBy").asText());
         send("cancel-scan","QUEST_CANCEL","north",null);assertThrows(ServiceException.class,()->send("reuse-scan","QUEST_START","north",null));
-        service.recordPlayerArrival(7L,10L,0L,11L,"fresh-scan",null,"SCAN");send("fresh-start","QUEST_START","north",null);Map<String,Object> result=send("scan-resolve","QUEST_RESOLVE","north","food");assertEquals("COMPLETED",result.get("status"));assertEquals(9,((Number)result.get("hp")).intValue());
+        service.recordPlayerArrival(7L,10L,0L,11L,"fresh-scan",session.getVersion(),"SCAN");send("fresh-start","QUEST_START","north",null);Map<String,Object> result=send("scan-resolve","QUEST_RESOLVE","north","food");assertEquals("COMPLETED",result.get("status"));assertEquals(9,((Number)result.get("hp")).intValue());
     }
     @Test void publishedScanAndObjectiveIgnoreEnabledAddonsFromEditorDefaults() throws Exception {
         for(CmsMemberTemplate template:templates.selectCmsMemberTemplateByIds(Arrays.asList(11L,12L))) {
@@ -414,9 +440,9 @@ class PersonalGameplayRuntimeServiceTest {
     }
     @Test void gpsKindDoesNotReuseScanAndBasicOperationNeedsFreshGpsEachTime() throws Exception {
         operationFacility();baseMethod(12L,5);assertThrows(ServiceException.class,()->send("scan-is-not-gps","OPERATION_START","warm",null));
-        service.recordPlayerArrival(7L,10L,0L,12L,"gps-first",null,"GPS");send("gps-op","OPERATION_START","warm",null);assertTrue(stored().path("themeRuntime").path("gameplay").path("activeOperation").path("verified").asBoolean());
+        service.recordPlayerArrival(7L,10L,0L,12L,"gps-first",session.getVersion(),"GPS");send("gps-op","OPERATION_START","warm",null);assertTrue(stored().path("themeRuntime").path("gameplay").path("activeOperation").path("verified").asBoolean());
         send("gps-use","FACILITY_USE","warm",null);assertThrows(ServiceException.class,()->send("reuse-gps","OPERATION_START","warm",null));
-        service.recordPlayerArrival(7L,10L,0L,12L,"gps-next",null,"GPS");send("gps-new-op","OPERATION_START","warm",null);send("gps-new-use","FACILITY_USE","warm",null);assertEquals(2,stored().path("themeRuntime").path("cooperation").path("facilities").path("warm").path("count").asInt());
+        service.recordPlayerArrival(7L,10L,0L,12L,"gps-next",session.getVersion(),"GPS");send("gps-new-op","OPERATION_START","warm",null);send("gps-new-use","FACILITY_USE","warm",null);assertEquals(2,stored().path("themeRuntime").path("cooperation").path("facilities").path("warm").path("count").asInt());
     }
     @Test void basicScanAndGpsPublicationFreezeTheRealValidationWithoutAddingQa() throws Exception {
         for(CmsMemberTemplate template:templates.selectCmsMemberTemplateByIds(Arrays.asList(11L,12L))){template.setValidationMethod(4);template.setAdvancedConfigJson("{\"schemaVersion\":1}");}
@@ -438,7 +464,7 @@ class PersonalGameplayRuntimeServiceTest {
     @Test void standaloneOperationUsesRealArrivalFreshInstanceAndAtomicNetEffects() throws Exception {
         operationFacility();assertEquals(12,json.valueToTree(service.themeView(7L,10L,0L,99L)).path("tools").path(0).path("operationNodeId").asInt());
         ObjectNode missing=(ObjectNode)stored();missing.with("themeRuntime").with("gameplay").with("arrivals").remove("12");session.setStateJson(missing.toString());
-        assertThrows(ServiceException.class,()->send("missing-arrival","OPERATION_START","warm",null));service.recordPlayerArrival(7L,10L,0L,12L,"operation-scan",null);
+        assertThrows(ServiceException.class,()->send("missing-arrival","OPERATION_START","warm",null));service.recordPlayerArrival(7L,10L,0L,12L,"operation-scan",session.getVersion());
         send("op-start","OPERATION_START","warm",null);String first=service.gameplayInstance(7L,10L,0L,12L);service.requireOpeningAccess(7L,10L,0L,12L);
         assertThrows(ServiceException.class,()->send("early-use","FACILITY_USE","warm",null));assertThrows(ServiceException.class,()->send("task-locked","QUEST_START","north",null));assertThrows(ServiceException.class,()->send("recover-locked","RECOVER","rest",null));
         service.recordNodeResult(7L,10L,0L,12L,first,"operation-pass",true,false,0,Collections.singletonList(new String[]{"sort",null}));
@@ -502,7 +528,7 @@ class PersonalGameplayRuntimeServiceTest {
         for(int method:Arrays.asList(1,3)) {
             ObjectNode frozen=(ObjectNode)json.readTree(session.getConfigSnapshotJson());frozen.with("nodeConfigs").putObject("11");frozen.with(NodeJourneySnapshot.NODE_ANSWERS_KEY).putObject("11").put("validationMethod",method).put("questionAnswer","Ａ B").put("correctAnswer","C");session.setConfigSnapshotJson(frozen.toString());
             assertTrue(service.verifyGuidedRouteAnswer(frozen,11L,json.createObjectNode().put("answer",method==1?"ab":"c")));assertFalse(service.verifyGuidedRouteAnswer(frozen,11L,json.createObjectNode().put("passed",true)));
-            assertThrows(ServiceException.class,()->send("answer-no-origin-"+method,"QUEST_START","north",null));service.recordPlayerArrival(7L,10L,0L,11L,"answer-origin-"+method,null,"ANSWER");
+            assertThrows(ServiceException.class,()->send("answer-no-origin-"+method,"QUEST_START","north",null));service.recordPlayerArrival(7L,10L,0L,11L,"answer-origin-"+method,session.getVersion(),"ANSWER");
             send("answer-start-"+method,"QUEST_START","north",null);assertTrue(stored().path("themeRuntime").path("verifiedNodes").path("11").asLong()>0);send("answer-cancel-"+method,"QUEST_CANCEL","north",null);assertThrows(ServiceException.class,()->send("answer-stale-"+method,"QUEST_START","north",null));
         }
     }
@@ -512,7 +538,7 @@ class PersonalGameplayRuntimeServiceTest {
         game.putArray("facilities").addObject().put("facilityKey","tpl_node_11").put("settlementSlot","tpl_node_11").put("actKey","a").put("scope","OWNER").put("targetScope","OWNER").put("limit",2).put("operationNodeId",11).put("hpCost",1);
         frozen.with("nodeConfigs").putObject("11");frozen.with(NodeJourneySnapshot.NODE_ANSWERS_KEY).putObject("11").put("validationMethod",4);session.setConfigSnapshotJson(frozen.toString());
         assertThrows(ServiceException.class,()->send("early-adapter","OPERATION_START","tpl_node_11",null));send("first-adapter","QUEST_START","north",null);send("first-adapter-done","QUEST_RESOLVE","north","food");assertEquals(1,stored().path("completedNodeIds").size());assertEquals(8,stored().path("variables").path("sys.hp").asInt());
-        assertTrue(service.canPlay(7L,10L,0L,11L));assertThrows(ServiceException.class,()->send("stale-repeat","OPERATION_START","tpl_node_11",null));service.recordPlayerArrival(7L,10L,0L,11L,"fresh-repeat",null);
+        assertTrue(service.canPlay(7L,10L,0L,11L));assertThrows(ServiceException.class,()->send("stale-repeat","OPERATION_START","tpl_node_11",null));service.recordPlayerArrival(7L,10L,0L,11L,"fresh-repeat",session.getVersion());
         send("repeat-adapter","OPERATION_START","tpl_node_11",null);send("repeat-adapter-done","FACILITY_USE","tpl_node_11",null);assertEquals(7,stored().path("variables").path("sys.hp").asInt());assertEquals(1,stored().path("completedNodeIds").size());assertEquals(2,stored().path("themeRuntime").path("cooperation").path("facilities").path("tpl_node_11").path("count").asInt());assertFalse(service.canPlay(7L,10L,0L,11L));
     }
 
@@ -525,8 +551,8 @@ class PersonalGameplayRuntimeServiceTest {
     @Test void cmsPersistenceReadsBackActualNodesAndPersistsCompiledRules() throws Exception {
         CmsMemberTemplate first=templates.selectCmsMemberTemplateByIds(Collections.emptyList()).get(0);first.setValidationMethod(4);first.setAdvancedConfigJson("{\"schemaVersion\":1,\"interactionRules\":{\"hpCost\":2}}");topic.setThemeRuntimeConfigJson(null);
         CmsTopicServiceImpl cms=new CmsTopicServiceImpl();CmsTopicMapper topics=mock(CmsTopicMapper.class);when(topics.selectCmsTopicById(10L)).thenReturn(topic);when(topics.updateCmsTopic(any())).thenAnswer(call->{topic.setThemeRuntimeConfigJson(((CmsTopic)call.getArgument(0)).getThemeRuntimeConfigJson());return 1;});
-        org.springframework.test.util.ReflectionTestUtils.setField(cms,"cmsTopicMapper",topics);org.springframework.test.util.ReflectionTestUtils.setField(cms,"topicRouteRuntimeService",service);
-        org.springframework.test.util.ReflectionTestUtils.invokeMethod(cms,"persistTemplateInteractionRules",10L);JsonNode persisted=json.readTree(topic.getThemeRuntimeConfigJson());assertEquals(11,persisted.path("gameplayRuntime").path("facilities").path(0).path("operationNodeId").asInt());assertEquals("tpl_node_11",persisted.path("gameplayRuntime").path("quests").path(0).path("facilityKey").asText());assertEquals(2,persisted.path("gameplayRuntime").path("facilities").path(0).path("hpCost").asInt());
+        org.springframework.test.util.ReflectionTestUtils.setField(cms,"cmsTopicMapper",topics);com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(cms, "topicRouteRuntimeService",service);
+        org.springframework.test.util.ReflectionTestUtils.invokeMethod(com.chengyinhub.business.service.support.TopicGraphTestWiring.graph(cms),"persistTemplateInteractionRules",10L);JsonNode persisted=json.readTree(topic.getThemeRuntimeConfigJson());assertEquals(11,persisted.path("gameplayRuntime").path("facilities").path(0).path("operationNodeId").asInt());assertEquals("tpl_node_11",persisted.path("gameplayRuntime").path("quests").path(0).path("facilityKey").asText());assertEquals(2,persisted.path("gameplayRuntime").path("facilities").path(0).path("hpCost").asInt());
     }
 
     @Test void templateTradeAndVoteToolsSaveAndFreezeTheActualWorldScopeAndCurrentScene() throws Exception {

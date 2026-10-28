@@ -1,0 +1,99 @@
+{
+  "evidence_kind": "SOURCE_DERIVED_EXPECTED_COUNTS_NOT_XML_EXECUTION_RESULTS",
+  "sources": [
+    {
+      "stage": "base",
+      "source": "4cf548c3e8b05c6d23f3252c7e5d063691ef0eaa",
+      "theme_source_sha256": "6c9d3536cd4c23a7ff85fefa0fad9639d8ae6cfeeacb048ef22452c3ddd900e0",
+      "theme_ordinary_test_declarations": 34,
+      "theme_parameterized_method_declarations": 6,
+      "theme_all_test_method_declarations": 40,
+      "theme_expected_expanded_invocations": 58,
+      "other_three_classes": [
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ShopDayProofServiceTest.java",
+          "ordinary_test_declarations": 5
+        },
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ShopDayGameThenPhotoH2Test.java",
+          "ordinary_test_declarations": 9
+        },
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayerNodeArrivalSharingH2Test.java",
+          "ordinary_test_declarations": 9
+        }
+      ],
+      "four_classes_ordinary_test_declarations": 57,
+      "four_classes_all_test_method_declarations": 63,
+      "four_classes_expected_expanded_invocations": 81,
+      "java_compilation_or_execution_by_G": 0
+    },
+    {
+      "stage": "negative",
+      "source": "acc4bf5ea10bbefabb9d5db52dd17dc800b3a955",
+      "theme_source_sha256": "d319446a05e2f6af25c0af8311e14f5d861cc9b9cd7cc9464d312084b010df30",
+      "theme_ordinary_test_declarations": 36,
+      "theme_parameterized_method_declarations": 6,
+      "theme_all_test_method_declarations": 42,
+      "theme_expected_expanded_invocations": 60,
+      "other_three_classes": [
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ShopDayProofServiceTest.java",
+          "ordinary_test_declarations": 5
+        },
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ShopDayGameThenPhotoH2Test.java",
+          "ordinary_test_declarations": 9
+        },
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayerNodeArrivalSharingH2Test.java",
+          "ordinary_test_declarations": 9
+        }
+      ],
+      "four_classes_ordinary_test_declarations": 59,
+      "four_classes_all_test_method_declarations": 65,
+      "four_classes_expected_expanded_invocations": 83,
+      "java_compilation_or_execution_by_G": 0
+    },
+    {
+      "stage": "positive",
+      "source": "29c9fc90233c01fe6ba4efc93d008e33727bd44c",
+      "theme_source_sha256": "fdf3d6d22746ba2813c34cd50026a642af49f0740c74f71136c7945b97566911",
+      "theme_ordinary_test_declarations": 39,
+      "theme_parameterized_method_declarations": 6,
+      "theme_all_test_method_declarations": 45,
+      "theme_expected_expanded_invocations": 63,
+      "other_three_classes": [
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ShopDayProofServiceTest.java",
+          "ordinary_test_declarations": 9
+        },
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ShopDayGameThenPhotoH2Test.java",
+          "ordinary_test_declarations": 9
+        },
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayerNodeArrivalSharingH2Test.java",
+          "ordinary_test_declarations": 9
+        }
+      ],
+      "four_classes_ordinary_test_declarations": 66,
+      "four_classes_all_test_method_declarations": 72,
+      "four_classes_expected_expanded_invocations": 90,
+      "java_compilation_or_execution_by_G": 0
+    }
+  ],
+  "root_reported_run": {
+    "run_id": 40057912348,
+    "outcome": "PRECHECK_REJECTED_PARAMETERIZED_TEST",
+    "sql_executed": 0,
+    "test_cases_executed": 0,
+    "business_negative_evidence": false,
+    "provenance": "Coordinator message; no raw XML independently read by G"
+  },
+  "root_reported_original_full_class": {
+    "source": "4cf548c3e8b05c6d23f3252c7e5d063691ef0eaa",
+    "actual_cases_reported": 58,
+    "provenance": "Coordinator message; source enumeration independently agrees; no raw XML independently read by G"
+  }
+}

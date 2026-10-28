@@ -1,0 +1,273 @@
+{
+  "task": "F/simple-intent-v2",
+  "test_kind": "real Page/journal/session-store Node sandbox, local wx/app/storage/network doubles",
+  "initial_public_base": "4cf548c3e8b05c6d23f3252c7e5d063691ef0eaa",
+  "commit_parent": "4195f5437ce81bc178237eaafa95b0c782f938c4",
+  "tests_run_before_commit": true,
+  "node": "v24.19.0",
+  "owned_source_sha256": [
+    {
+      "path": "chengyinhub-xcx/pages/publish/simple/index.js",
+      "sha256": "b6e8acefcd032c4fc4a9d42d4802d52afd8b79d87fadda17c8f6308e2e952082"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/publish/simple/index.wxml",
+      "sha256": "20004bcb984fc1c52d77ce8a9826a6857825a0f2c68c4c70f3b512bc473d5110"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/publish/simple/index.json",
+      "sha256": "d971590ad9fa936fc05fa65af69f414c424ce75d51ef6494144cf0448a4dcc17"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/simple-ai-v2-guards.test.js",
+      "sha256": "db139dcd82a3bb6c56f383e197dd3ae35649acec8d76f107b792afa96fd43854"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/simple-ai-request-state.test.js",
+      "sha256": "9cdbc15b622ad541cfa7f5804983c94022c63dbe8359bd8b8307aba7f5e2ee4a"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/simple-ai.test.js",
+      "sha256": "c0b5f82ba7cb5e7b796abd46f59229fc93b01cc50ebbfacb7cf31b4d6070e9c2"
+    }
+  ],
+  "reused_unchanged_source_sha256": [
+    {
+      "path": "chengyinhub-xcx/utils/ai-theme-draft-journal.js",
+      "sha256": "ab6d1273972053a45449005dc5056d3b6bf845deb6c246614ae3d3a5c44d2e98"
+    },
+    {
+      "path": "chengyinhub-xcx/utils/session/session-store.js",
+      "sha256": "64201d58d521dbbedc33254cc816e315808e5bc4b3dc437abd99fe512c68fd72"
+    },
+    {
+      "path": "chengyinhub-xcx/utils/transport/request-client.js",
+      "sha256": "6cd1159fba3195b04b2f00983bb245049637b3cada352cb10f21f04ad7d10e56"
+    },
+    {
+      "path": "chengyinhub-xcx/utils/modal.js",
+      "sha256": "73f7a77dc7a8bf077a12a74b9c1771ece8ef75670724ed5e4010196bbfcc2848"
+    },
+    {
+      "path": "chengyinhub-xcx/app.js",
+      "sha256": "6a0896019cc5e1b3475fbc244605bc2778b590e60e9a0062d753e71cfe6563de"
+    }
+  ],
+  "node_results": [
+    {
+      "command": "node tests/unit/simple-ai-v2-guards.test.js",
+      "cwd": "chengyinhub-xcx",
+      "exit": 0,
+      "counts": {
+        "tests": 59,
+        "pass": 59,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "log": "evidence/simple-ai-v2-guards.txt",
+      "log_sha256": "ee8f41a793d6665fa3d8158305b70a2bdf704de8389d5417f7f14445ac385b98"
+    },
+    {
+      "command": "node tests/unit/simple-ai-request-state.test.js",
+      "cwd": "chengyinhub-xcx",
+      "exit": 0,
+      "counts": {
+        "tests": 6,
+        "pass": 6,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "log": "evidence/simple-ai-request-state.txt",
+      "log_sha256": "f79967625d605d72a90b13ac5184f4750e32eb4addeffd6e58fcf78cb1fd3caf"
+    },
+    {
+      "command": "node tests/unit/simple-ai.test.js",
+      "cwd": "chengyinhub-xcx",
+      "exit": 0,
+      "counts": {
+        "tests": 9,
+        "pass": 9,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "log": "evidence/simple-ai.txt",
+      "log_sha256": "e7199becb35758b83847888356d7c9e40b65950f6cb11a373ae762089af76fa3"
+    },
+    {
+      "command": "node tests/unit/ai-theme-draft-journal.test.js",
+      "cwd": "chengyinhub-xcx",
+      "exit": 0,
+      "counts": {
+        "tests": 17,
+        "pass": 17,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "log": "evidence/ai-theme-draft-journal.txt",
+      "log_sha256": "81e9ad3468c44fa1303a5c9ca1645b3c74f890f9b6a48014b66e9f8687f45bfa"
+    },
+    {
+      "command": "node tests/unit/session-store.test.js",
+      "cwd": "chengyinhub-xcx",
+      "exit": 0,
+      "counts": {
+        "tests": 16,
+        "pass": 16,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "log": "evidence/session-store.txt",
+      "log_sha256": "47f9e93102112bd1770b673df53858af2c5c314bfd50e9cbbcfeb4de91a42e45"
+    },
+    {
+      "command": "node tests/unit/uiux-player-state-adoption-contract.test.js",
+      "cwd": "chengyinhub-xcx",
+      "exit": 0,
+      "counts": {
+        "tests": 26,
+        "pass": 26,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "log": "evidence/uiux-player-state-adoption-contract.txt",
+      "log_sha256": "dfa402fbb5af630cff40269bd5fdc9be66e0f25fe5ec228dd7f68a0263d81142"
+    },
+    {
+      "command": "node tests/unit/malformed-list-response.test.js",
+      "cwd": "chengyinhub-xcx",
+      "exit": 0,
+      "counts": {
+        "tests": 40,
+        "pass": 40,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "log": "evidence/malformed-list-response.txt",
+      "log_sha256": "383a63539b87bf77910f81048f0211f75d5a1d7bd62b7b5a1b86e1d9c61c9ef4"
+    },
+    {
+      "command": "node tests/unit/simple-preset-source-contract.test.js",
+      "cwd": "chengyinhub-xcx",
+      "exit": 0,
+      "counts": {
+        "tests": 2,
+        "pass": 2,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "log": "evidence/simple-preset-source-contract.txt",
+      "log_sha256": "8d32ff83f97f856767958c5aa5965b085dd5b291d29ba37b5e25c2f5b3b3bf6d"
+    }
+  ],
+  "page_cases": 74,
+  "shared_cases": 101,
+  "case_total": 175,
+  "no_skip": true,
+  "syntax_js_and_page_json": "PASS",
+  "shared_checks": {
+    "get_auth_matrix": {
+      "exit": 1,
+      "pass": 28,
+      "fail": 1,
+      "reason": "direct GET actual76 expected75; root must review/add owner recovery entry",
+      "raw_output_file": "evidence/get-auth-matrix.json"
+    },
+    "ui_integrity": {
+      "exit": 1,
+      "violations": 6,
+      "reason": "prepare/execute/recovery absent Controller mappings in this independent base; three linked U1 variable classifications"
+    },
+    "js_scope": {
+      "exit": 0,
+      "production_js": 713,
+      "unresolved": 0,
+      "missing_exports": 0
+    }
+  },
+  "baseline_negative": {
+    "immutable_source": "4cf548c3e8b05c6d23f3252c7e5d063691ef0eaa",
+    "case": "identity storage throws; legacy POST count must be zero",
+    "actual_model_post_count": 1,
+    "expected_model_post_count": 0,
+    "exit": 1,
+    "network": "local request collector only",
+    "output": "evidence/baseline-negative.txt"
+  },
+  "read_only_contract_source": {
+    "H": "235264eb8ad9d95c6d6151dddf300a0b2879a381",
+    "E_final_types": "c65c7ac90ecddeed9c4e1d95eaee4348ee7c2b58",
+    "journal": "4195f5437ce81bc178237eaafa95b0c782f938c4"
+  },
+  "not_run": [
+    "WeChat preview/device/screenshots/upload",
+    "Java compile/JUnit",
+    "MySQL/Redis/SQL",
+    "actual HTTP/provider",
+    "backend CI dispatch",
+    "source/compiled architecture gate or jdeps"
+  ],
+  "evidence_sha256": [
+    {
+      "file": "ai-theme-draft-journal.txt",
+      "sha256": "81e9ad3468c44fa1303a5c9ca1645b3c74f890f9b6a48014b66e9f8687f45bfa"
+    },
+    {
+      "file": "baseline-negative.txt",
+      "sha256": "2cca30267eef7f2da55f81f7b75d00020d78f0f45635ade42a382ae575e90b83"
+    },
+    {
+      "file": "get-auth-matrix.json",
+      "sha256": "06c9194c4d77764ccdd6ba8b7c3008d312ec39da60632d235bd5d448cc307da1"
+    },
+    {
+      "file": "malformed-list-response.txt",
+      "sha256": "383a63539b87bf77910f81048f0211f75d5a1d7bd62b7b5a1b86e1d9c61c9ef4"
+    },
+    {
+      "file": "scope.txt",
+      "sha256": "94e5a96bee17166e579fa6bcedaef4077e951fe8d46a4528249a87a6edea25f0"
+    },
+    {
+      "file": "session-store.txt",
+      "sha256": "47f9e93102112bd1770b673df53858af2c5c314bfd50e9cbbcfeb4de91a42e45"
+    },
+    {
+      "file": "simple-ai-request-state.txt",
+      "sha256": "f79967625d605d72a90b13ac5184f4750e32eb4addeffd6e58fcf78cb1fd3caf"
+    },
+    {
+      "file": "simple-ai-v2-guards.txt",
+      "sha256": "ee8f41a793d6665fa3d8158305b70a2bdf704de8389d5417f7f14445ac385b98"
+    },
+    {
+      "file": "simple-ai.txt",
+      "sha256": "e7199becb35758b83847888356d7c9e40b65950f6cb11a373ae762089af76fa3"
+    },
+    {
+      "file": "simple-preset-source-contract.txt",
+      "sha256": "8d32ff83f97f856767958c5aa5965b085dd5b291d29ba37b5e25c2f5b3b3bf6d"
+    },
+    {
+      "file": "ui-integrity.txt",
+      "sha256": "f424db69bce3f3223f22b1c3307253b337c995d1dfd668bba1c6ce26d8a1e36c"
+    },
+    {
+      "file": "uiux-player-state-adoption-contract.txt",
+      "sha256": "dfa402fbb5af630cff40269bd5fdc9be66e0f25fe5ec228dd7f68a0263d81142"
+    }
+  ],
+  "secret_scan": {
+    "tool": "gitleaks 8.21.2 dir with unchanged repository config + ci/secret-file-gate.py scan_paths",
+    "findings": 0,
+    "exceptions_added": false,
+    "scope": "exclusive six source/test files and this delivery directory; rerun before commit"
+  }
+}

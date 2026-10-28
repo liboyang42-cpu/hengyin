@@ -20,10 +20,10 @@ class ApiRegistrationJoinInfoTest {
         ICmsRegistrationService service = mock(ICmsRegistrationService.class);
         ApiRegistrationController controller = spy(new ApiRegistrationController());
         doReturn(9003L).when(controller).getAppUserId();
-        ReflectionTestUtils.setField(controller, "registrationService", service);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "registrationService", service);
         when(service.selectCmsRegistrationList(any())).thenReturn(Collections.emptyList());
 
-        AjaxResult result = controller.getJoinRegistrationDetail("9008");
+        AjaxResult result = RegistrationQueryTestFixtures.wire(controller).getJoinRegistrationDetail("9008");
 
         assertEquals(200, result.get("code"));
         assertNull(result.get("data"));
@@ -33,6 +33,6 @@ class ApiRegistrationJoinInfoTest {
         assertEquals(2, query.getValue().getRegistrationStatus());
 
         when(service.selectCmsRegistrationList(any())).thenThrow(new IllegalStateException("读取失败"));
-        assertEquals(500, controller.getJoinRegistrationDetail("9008").get("code"));
+        assertEquals(500, RegistrationQueryTestFixtures.wire(controller).getJoinRegistrationDetail("9008").get("code"));
     }
 }

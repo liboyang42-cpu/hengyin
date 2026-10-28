@@ -1,0 +1,296 @@
+{
+  "status": "SOURCE_ONLY_NOT_ACCEPTED",
+  "parent": "0d32d888e29c6d5ef51322b10d7aca736be856ff",
+  "workers": {
+    "A": "48d24f8e0fb14ab555003f9e035b981a6807f884",
+    "C": "c7e0ff743f834345098651abe90ef4f55c2c8923",
+    "D": "31ec329768ecc2b23e09466bf46754d12fe569d6",
+    "F": "f15fcf2161868732a188d9c2892a4c31bba496b9",
+    "root": "A-owned same-transaction consumption read leaf, G consumer and constructor fixtures, D signup fixture; actual Java/DB pending",
+    "known_gate_blocker": "Prior D CommittedNoticeRejectionMapper introduces real new audit table writer; D consolidation in progress"
+  },
+  "checks": "107 registered classes exact source precheck PASS;16 registry/workflow controls PASS; changed XML parse/diff/secret-file gate PASS; earlier current C291 Node PASS. No new Java/DB execution.",
+  "file_sha256": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "sha256": "9886b80c8689104e24d14ec48787bb1cbd8c2f34b671a5e5e1f186be634c459c"
+    },
+    {
+      "path": ".github/workflows/real-storage-it.yml",
+      "sha256": "fdb840519e26f121dd18ae85aea14cb3eb2f3b7e163f103aaf62302fd3b1fde2"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20261024_d_chapter_application_round.sql",
+      "sha256": "800f1cd74678c78e4350a4b38474f87b567bc62456353b463abcecac8958ab01"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20261024_registration_payment_fact.sql",
+      "sha256": "fdc733febedd2a1781bf0976d0ebf2d9b5b411b0d3f5787c72d00c328a5017eb"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiVerifyController.java",
+      "sha256": "708a2d444d4a3481d0994d8d8b538defca2847613ab6f92a3919a675d203ac41"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/verify/CityNodeRedemptionApplication.java",
+      "sha256": "4cae805e6f60ee91ad416666c7c8401d169783656bf0f94d60b4df726c6c12ba"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/FreeExploreNodeSupplyMySqlIT.java",
+      "sha256": "b54caff9b51696a6aad946e75b74438e3906821f89ec106f365e06b0f394fd73"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RegistrationTopicFenceMySqlIT.java",
+      "sha256": "faa912478e8bb0113862d9a0c77efd8093422c4c86e8de53cd5c35945cde6a51"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/Wp04OriginalRefundMySqlIT.java",
+      "sha256": "c52cfd5776b0f91ae1cd2bd6ef5ff276e6a06a4f363a7369eebdcd062e6cc915"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ChapterInviteSlotOnAcceptV2Test.java",
+      "sha256": "92f5d60621e6da0d6a92ad2fdcdded860f5637211b23b2cefba66d6536ba57d9"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/MerchantChapterApplicationServiceImplTest.java",
+      "sha256": "1ef76afdf34e65d178b2226286119e8ed7f647ab2492e93c0c5142b3f20c80c4"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationEquityMybatisIntegrationTest.java",
+      "sha256": "464c17baed587a772206430dfeadb654dddd393d8b3d520359478a8aebe51378"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationFundsMybatisIntegrationTest.java",
+      "sha256": "99b03173ad58a2ff666789abc236f9e2b130edd57bbe9b40770c75ab6a2d0327"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationPaymentAtomicityContractTest.java",
+      "sha256": "c15f78c8c6e396c89352c403b8efd60fbcad6231dc9502d2bc6a9152dca745b0"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterApplicationRoundMySqlIT.java",
+      "sha256": "761efe52199e80388ab01a31b8b859d066653f5530e7180718af24929ba84960"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementOriginalLedgerTest.java",
+      "sha256": "fc90241aa128761e5f832660215cd5194b7d9a52f60c54a45d65b958a3aaa8c8"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/SignupNoticeAfterCommitPersistenceMySqlIT.java",
+      "sha256": "1a0cb6df85d7a4bad1493b26c899e3aa4de97725a5a6be257f37e5727c1d62ea"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/RegistrationPaymentConsumptionReadServiceTest.java",
+      "sha256": "033450640585c1903c7a60a8a55c9fe604e5117db4ee7996790f34ec3220e32f"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiVerifyControllerTest.java",
+      "sha256": "e4c3e76518f415776285c951c0c992118b6627408ac591446561e23a7672cb85"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/MerchantStaffRevocationAcceptanceTest.java",
+      "sha256": "5fec50a727c93870e4efd7787beab664b1ae13c536dce364b56a4752af54512b"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/RoamLocationRetentionMySqlIT.java",
+      "sha256": "da699ca7ecb36bffc8930bb4a8e1853cc0b1420dc19d1375499eb1493004d798"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/service/verify/CityNodeRedemptionApplicationTest.java",
+      "sha256": "c14fcf436d19ae00bf6fd233fa54f7c6d657e3c5db487501c56f0e96021d259d"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/MerchantChapterApplication.java",
+      "sha256": "70fef76dca859f8e07c184966f7a81b84f56b68188f0ec7b08810e11e910568c"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/dto/RegistrationPaymentFactReceipt.java",
+      "sha256": "2040bce2d4c336b7744d3bd4406d5e72ed66df63ff82bc4e45551b93d36069b9"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CmsRegistrationPaymentFactMapper.java",
+      "sha256": "ac3331a1c6c040a8a4f9530436e448726e7cf125ade9da41a0241449208c3bb5"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CoopSettlementOriginalMapper.java",
+      "sha256": "eff92558edb9ad68d801eaf0674c3db3afa9ab2acfdc767876d6d674b9df1b02"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/MerchantChapterApplicationMapper.java",
+      "sha256": "2830e27137b2fa91b8b187b9c15dba5b105b3ded230e89145dd1e019dcdd8a4c"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+      "sha256": "e1b5ecb5d1dcd75937c4123103883d38644528eed8fb1fe27e020d709f597b02"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementOriginalLedger.java",
+      "sha256": "6371226e27f4b8f136ea3d512361d4ab7d8c93460cf495d14b47f8ab60c7b890"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantChapterApplicationServiceImpl.java",
+      "sha256": "877af101613ac5a49db88cd3a66da19de5f89090ac10c6c4b8d5b0635b2256c0"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/ChapterApplicationInviteNotice.java",
+      "sha256": "4cdfe649b13e904ad9017df3afa0226ee69489171291893a520484006d0a62ee"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/RegistrationPaymentConsumptionReadService.java",
+      "sha256": "238bd095e552aaa276d3d369c2c97d1029d76d719545142c77b0010945a9de07"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationPaymentFactMapper.xml",
+      "sha256": "b5aa4b7e26c2c1a7aa3603121996f07ba17efb3336539e25d72741281fdeb555"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementOriginalMapper.xml",
+      "sha256": "e3e622f4e379a813443c1dec266a275a71860631578eb423ce85b1e8eb09f25f"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/MerchantChapterApplicationMapper.xml",
+      "sha256": "2a1fd41075c623eb1ad18df607d5093c02c403b4ece0b45785851e01e056b893"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/merchant/citynode/index.js",
+      "sha256": "e3cdfb38ea3b98d2fa094c446c3bde2c373b0ba2208b544360507a8644fe3ce1"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/citynode-redeem-original-request.test.js",
+      "sha256": "16159312175969894a95103c2b94e77cd7fd52b836d0e30d2f5bca05066815ca"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/citynode-redemption-application-source.test.js",
+      "sha256": "b156b05420152862bffdaad970636f364326c542dbb1e787be6ebc6f3d6a2c75"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/merchant-citynode-access.test.js",
+      "sha256": "4094085ce21bbd8bda5fc0aaca2e42beab7e0583ee3eae44f7232fa15106407d"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/registration-ticket-application-source.test.js",
+      "sha256": "c2c72ae3ee0aadc455c0e173fe71ed959f19958588e002e241ca7cb9e5996157"
+    },
+    {
+      "path": "chengyinhub-xcx/utils/verification-readback.js",
+      "sha256": "b57b3948e6a954bceaca1ad778b1e0e5b4ae754ec81bd522d1d527e274b97a46"
+    },
+    {
+      "path": "ci/architecture/compiled_controls.py",
+      "sha256": "9730d65e19a476726e472d867f2d0a3fe0b79045cd20417614789188e8bbffa7"
+    },
+    {
+      "path": "ci/architecture/owners.json",
+      "sha256": "b6b12e6884487ee8951fb04cae8f917847b0429bb35431436814ed2299c6c32f"
+    },
+    {
+      "path": "ci/architecture/test_collect_jdeps.py",
+      "sha256": "94844b2ec1c64c678c4d577e2a5b5b9dcb52c4ed66faadcb81e5dfa08a21486c"
+    },
+    {
+      "path": "ci/architecture/test_compiled_controls.py",
+      "sha256": "469de553f47dd8512c37be555fef72483ca6fee735bdafb4980e0b5bd021ba3c"
+    },
+    {
+      "path": "ci/migration-dependencies.json",
+      "sha256": "269b0bb737e61f68d49d4b5615763e9ca1f063a6cd468ae4a6cad4f0e11c2276"
+    },
+    {
+      "path": "ci/real-storage-it-registry.json",
+      "sha256": "529a15a5962d048e992737309c1ab946575e22a69c73233402bec50612b63b2d"
+    },
+    {
+      "path": "ci/test_real_storage_it.py",
+      "sha256": "479741397cbabd9f53cb4f95657b1cece9bc644be8a25f8d9acba336cd5a5311"
+    },
+    {
+      "path": "docs/delivery/architecture-day/A/INLINE-PAYMENT-FACT/B-consumed-reader.review.patch",
+      "sha256": "6b70fd9ae7ea86bc4e8a5bb4254b1cab21f8edcb9d147b77f3fb0b3bca4a99b9"
+    },
+    {
+      "path": "docs/delivery/architecture-day/A/INLINE-PAYMENT-FACT/CALL-CHAIN.md",
+      "sha256": "16bfab48a9852d6f7d90f4b096db39459a15e88d92240eee5711e4cf5fc3cd47"
+    },
+    {
+      "path": "docs/delivery/architecture-day/A/INLINE-PAYMENT-FACT/D-signup-fixture.review.patch",
+      "sha256": "1f17e3ba1c214683f5cbb0fc2ba784336d07a8068d794ed481edb2f6fc91ed30"
+    },
+    {
+      "path": "docs/delivery/architecture-day/A/INLINE-PAYMENT-FACT/G-consumed-component.review.patch",
+      "sha256": "85a61fdd599d7f939724d71ad4f31ed05a1ac377a42432de488bc87ab4b2ca1f"
+    },
+    {
+      "path": "docs/delivery/architecture-day/A/INLINE-PAYMENT-FACT/README.md",
+      "sha256": "0b2cdbe51278cf15b031091ead516bb4f70e885117f761db0dd38e73a25c3768"
+    },
+    {
+      "path": "docs/delivery/architecture-day/A/INLINE-PAYMENT-FACT/consumer-patch-bases.json",
+      "sha256": "e9354d50ec9a8263005cd2e582f0c12003988c3640276b36bb0578cae1c0868e"
+    },
+    {
+      "path": "docs/delivery/architecture-day/A/INLINE-PAYMENT-FACT/static-result.json",
+      "sha256": "9e6f900ce2a097449a15f7afa4167c3c5311dffe438755d13475042905629309"
+    },
+    {
+      "path": "docs/delivery/architecture-day/C/seats/citynode-issuance.md",
+      "sha256": "fe18b4452e5b512c30262faa91a27129675f48fc8425f2b57767ed8ccf9bcdfb"
+    },
+    {
+      "path": "docs/delivery/architecture-day/C/seats/citynode-original-receipt.md",
+      "sha256": "b046dddaf3f34ddde5d77ec13841423c6b1a2d583dba7f997025a77c06464497"
+    },
+    {
+      "path": "docs/delivery/architecture-day/C/seats/citynode-receipt-node-results.json",
+      "sha256": "003c1e09efcec7c4de0d1be1b8c92857548e68944ba6d517e8e7fa141e71fe24"
+    },
+    {
+      "path": "docs/delivery/architecture-day/C/seats/citynode-receipt-original-cases.json",
+      "sha256": "d350a57f673e53314f6fd000ce424307c0af0e6c4c5d4d920a722d23d87e258a"
+    },
+    {
+      "path": "docs/delivery/architecture-day/C/seats/citynode-receipt-static-evidence.json",
+      "sha256": "0604c7c0a6d860ba733f8231739eb6ba86766dbc8276fb5874a98e5e8246020e"
+    },
+    {
+      "path": "docs/delivery/architecture-day/D/chapter-application-round/CANDIDATE.sha256",
+      "sha256": "fc69a020cdc24445e40bc6b96b4f5fa6a882a15de1d103cb7c1c820082939aac"
+    },
+    {
+      "path": "docs/delivery/architecture-day/D/chapter-application-round/README.md",
+      "sha256": "006099934147deeaa718d4c194c92c95b6facf6c925a1377297348316986f67b"
+    },
+    {
+      "path": "docs/delivery/architecture-day/F/c-verify-owners/HANDOFF.md",
+      "sha256": "8eacc6c61230f3564998205d8bfad8465ae37dcf584ec7c8243514aaf5427377"
+    },
+    {
+      "path": "docs/delivery/architecture-day/F/c-verify-owners/python-tests.txt",
+      "sha256": "37260a634aadf1e9ecf66e6773b7f9ef4f718396438b22abcdfdcc27e909b74a"
+    },
+    {
+      "path": "docs/delivery/architecture-day/F/c-verify-owners/source-evidence.json",
+      "sha256": "fdad86d36920aa8bb2e673af1877f2a7b476a1c29ce71cdecbc9813faedd9a57"
+    },
+    {
+      "path": "docs/delivery/architecture-day/F/c-verify-owners/trusted-files.sha256",
+      "sha256": "5e342418b4cd1a094ee27e03edc60f58ed8fb98ac2719e1297a5ca69ddcb1a4b"
+    },
+    {
+      "path": "docs/delivery/architecture-day/F/controls-c-verify/HANDOFF.md",
+      "sha256": "5f192994600366047bdcf1d59d1122e1f8088d249428c73afc2fe7787fdb35b9"
+    },
+    {
+      "path": "docs/delivery/architecture-day/F/controls-c-verify/NEXT-BATCH-trusted-ref.review.patch",
+      "sha256": "e22463bd1f99be5fccd0d6bfaa69e2ed0ec18244ca3a54a76bfa09ddbffab2f9"
+    },
+    {
+      "path": "docs/delivery/architecture-day/F/controls-c-verify/python-tests.txt",
+      "sha256": "637ad693971420b70a01476cd5d51065ecc3c7af270c41cfe91899ec8c2db4bd"
+    },
+    {
+      "path": "docs/delivery/architecture-day/F/controls-c-verify/trusted-files.sha256",
+      "sha256": "5e342418b4cd1a094ee27e03edc60f58ed8fb98ac2719e1297a5ca69ddcb1a4b"
+    }
+  ],
+  "secret_scan_note": "Hash manifest uses explicit path/sha256 records; original filename-to-hash notation triggered generic-api-key on access.test.js. No credential suppressed."
+}

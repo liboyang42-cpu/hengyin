@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.dao.TransientDataAccessException;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -35,6 +36,7 @@ import java.util.Map;
  * <p>⚠️ 本服务**不带 @Transactional**,而且调用方要把它包在 try-catch 里。
  * 宾果是主流程之外的一层:它出问题不能让节点完成回滚,否则玩家会卡在这一站
  * 反复重试,而原因是一个跟他这次动作无关的九宫格。
+ * 数据库瞬态错误必须透传：原事务可能已被数据库回滚，不能继续提交完成回执。
  */
 @Service
 public class PlayBingoServiceImpl implements IPlayBingoService {
@@ -207,6 +209,8 @@ public class PlayBingoServiceImpl implements IPlayBingoService {
         try {
             CmsTopic topic = topicMapper.selectCmsTopicById(topicId);
             return topic == null ? null : topic.getCompleteRuleJson();
+        } catch (TransientDataAccessException failure) {
+            throw failure;
         } catch (Exception e) {
             logger.warn("宾果配置读取失败 topic={},按未配置处理", topicId, e);
             return null;
@@ -235,6 +239,8 @@ public class PlayBingoServiceImpl implements IPlayBingoService {
                     logger.error("宾果格子发券失败(券不存在或库存耗尽) member={} coupon={} pos={},需人工补发",
                             memberId, couponId, position);
                 }
+            } catch (TransientDataAccessException failure) {
+                throw failure;
             } catch (Exception e) {
                 logger.error("宾果格子发券异常 member={} coupon={} pos={}", memberId, couponId, position, e);
             }

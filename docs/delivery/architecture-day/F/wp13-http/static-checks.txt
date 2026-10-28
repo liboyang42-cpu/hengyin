@@ -1,0 +1,6 @@
+PASS: 10 Java files lexical delimiters balanced using existing helper; NOT a Java parser/compiler
+PASS: 13 selected legacy/protocol method sources identical to parent, including literals/comments
+PASS: 12 protected shared/business/verifier files byte-identical to parent
+PASS: literal new-entry wiring/own-task cleanup/auth-replay-disable checks; not semantic proof
+STATIC DECLARATIONS ONLY: new common15 + admission7 + existing adapter4 + existing security19 =45; all Java/HTTP NOT_RUN
+PASS: new tests use *Test, no skip/assumption annotations, no production executor/dependency/workflow additions

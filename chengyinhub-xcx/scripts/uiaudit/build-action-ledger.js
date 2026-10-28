@@ -88,10 +88,16 @@ const EXPLICIT_WRITE_APIS = new Set([
 // 精确读例外:路径段命中通用写动词、但后端只读的端点。只按完整路径逐个登记,不放宽 API_WRITE_RE。
 // /api/publish/home(ApiPublishController#home)是发布广场首页聚合(能力 + 额度 + 项目摘要),只查不写;
 // 同前缀的真实发布写口(/api/activity/publish、/api/coupon/publish、/api/template/publish 等)仍判写。
-const EXPLICIT_READ_APIS = new Set(['/api/publish/home'])
+const EXPLICIT_READ_APIS = new Set([
+  '/api/publish/home',
+  // POST 回读原核销事实，不执行核销或发券；只登记这两个完整路径。
+  '/api/verify/seat/receipt',
+  '/api/verify/citynode/receipt',
+])
 const isWriteApi = (api) => !EXPLICIT_READ_APIS.has(api) && (API_WRITE_RE.test(api) || EXPLICIT_WRITE_APIS.has(api))
 const TAP_EVENTS = new Set(['bindtap', 'catchtap', 'bind:tap', 'catch:tap'])
-const AUXILIARY_APIS = new Set(['/api/login/code', '/api/role/info', '/api/analytics/events/batch'])
+// App session/feature bootstrap; exact endpoints only, never a prefix exemption for business requests.
+const AUXILIARY_APIS = new Set(['/api/login/code', '/api/config/features', '/api/role/info', '/api/analytics/events/batch'])
 const SELF_ONLY_WRITE_APIS = new Set([
   '/api/compliance/consents', '/api/user/update', '/api/logout', '/api/user/deregister/apply',
   '/api/user/deregister/cancel', '/api/sms/send', '/api/registration/create',
@@ -1530,12 +1536,12 @@ function moduleFunctionBodies(file) {
 }
 
 /** 模块内递归:helper 调用同模块的其它 helper 时一并带上。 */
-function expandModuleFunction(file, name, seen) {
+function expandModuleFunction(file, name, seen, functionBodies) {
   seen = seen || new Set()
   const key = `${file}#${name}`
   if (seen.has(key)) return ''
   seen.add(key)
-  const bodies = moduleFunctionBodies(file)
+  const bodies = functionBodies || moduleFunctionBodies(file)
   const body = bodies.get(name)
   if (!body) return ''
   const inner = stripJsCommentsKeepStrings(body)
@@ -1543,7 +1549,7 @@ function expandModuleFunction(file, name, seen) {
   const callRe = /(^|[^\w$.])([A-Za-z_$][\w$]*)\s*\(/g
   let m
   while ((m = callRe.exec(inner))) {
-    if (bodies.has(m[2])) parts.push(expandModuleFunction(file, m[2], seen))
+    if (bodies.has(m[2])) parts.push(expandModuleFunction(file, m[2], seen, bodies))
   }
   return parts.join('\n')
 }
@@ -1561,24 +1567,76 @@ function namespaceDependencySource(file, aliases, source, inlineExports) {
       called.add(call[1])
     }
   }
+  return selectedDependencySource(file, full, called, false)
+}
+
+/** Only direct uses of proven named exports narrow the module; callbacks/aliases stay conservative. */
+function namedDependencySource(file, namedImports, source) {
+  const full = fs.readFileSync(file, 'utf8')
+  const code = maskNonCodeSafely(source)
+  const called = new Set()
+  for (const parts of namedImports) {
+    if (parts.length > 2 || parts.some(name => !/^[A-Za-z_$][\w$]*$/.test(name))) return full
+    const local = parts.at(-1)
+    const pattern = new RegExp(`(^|[^\\w$])${local.replace(/[$]/g, '\\$&')}(?![\\w$])`, 'g')
+    for (const reference of code.matchAll(pattern)) {
+      const start = reference.index + reference[1].length
+      if (code[start - 1] === '.' || !/^\s*\(/.test(code.slice(start + local.length))) return full
+      called.add(parts[0])
+    }
+  }
+  return selectedDependencySource(file, full, called, true)
+}
+
+/** Reuse the flat export proof and local function closure for both import forms. */
+function selectedDependencySource(file, full, called, named) {
   if (!called.size) return full
   let ast
   try { ast = parseJavaScript(full) } catch (error) {
     if (error.name === 'SyntaxError') return full
     throw error
   }
-  const bodies = moduleFunctionBodies(file)
+  // Named helpers may be pure expression arrows (registration-seat validators). Their AST
+  // body spans avoid the regex scanner borrowing a later, unrelated function's braces.
+  const bodies = named ? new Map() : moduleFunctionBodies(file)
   const functions = new Set()
+  const imports = new Set()
+  const declarations = []
+  // This actual module has primitive cache state; retain its declarations when following clear/load.
+  // Other modules and executable/unresolved initializers keep the conservative whole-module path.
+  const roleCache = file === path.join(ROOT, 'utils/roleGuard.js')
+  const primitive = node => node && (node.type === 'Literal'
+    || node.type === 'BinaryExpression' && primitive(node.left) && primitive(node.right))
   let exportsObject
   for (const statement of ast.body) {
     if (statement.type === 'FunctionDeclaration' && statement.id) {
-      if (bodies.get(statement.id.name) !== full.slice(statement.body.start, statement.body.end)) return full
+      if (named) {
+        if (statement.params.some(parameter => parameter.type !== 'Identifier')) return full
+        bodies.set(statement.id.name, full.slice(statement.body.start, statement.body.end))
+      } else if (bodies.get(statement.id.name) !== full.slice(statement.body.start, statement.body.end)) return full
       functions.add(statement.id.name)
+      continue
+    }
+    if (named && statement.type === 'VariableDeclaration' && statement.declarations.every(({ id, init }) =>
+      id.type === 'Identifier' && init && ['FunctionExpression', 'ArrowFunctionExpression'].includes(init.type)
+      && init.params.every(parameter => parameter.type === 'Identifier'))) {
+      statement.declarations.forEach(({ id, init }) => {
+        functions.add(id.name)
+        bodies.set(id.name, full.slice(init.body.start, init.body.end))
+      })
       continue
     }
     if (statement.type === 'VariableDeclaration' && statement.declarations.every(({ id, init }) =>
       id.type === 'Identifier' && init && init.type === 'CallExpression' && init.callee.name === 'require'
-      && init.arguments.length === 1 && typeof init.arguments[0].value === 'string')) continue
+      && init.arguments.length === 1 && typeof init.arguments[0].value === 'string')) {
+      statement.declarations.forEach(({ id }) => imports.add(id.name))
+      continue
+    }
+    if (roleCache && statement.type === 'VariableDeclaration' && statement.declarations.every(({ id, init }) =>
+      id.type === 'Identifier' && primitive(init))) {
+      declarations.push(full.slice(statement.start, statement.end))
+      continue
+    }
     const expression = statement.type === 'ExpressionStatement' && statement.expression
     if (expression && expression.type === 'Literal' && expression.value === 'use strict') continue
     if (!exportsObject && expression && expression.type === 'AssignmentExpression' && expression.operator === '='
@@ -1596,8 +1654,11 @@ function namespaceDependencySource(file, aliases, source, inlineExports) {
       || !functions.has(property.value.name))) return full
   const exported = new Set(exportsObject.properties.map(property => property.key.name))
   if ([...called].some(name => !exported.has(name))) return full
-  const selected = [...called].map(name => expandModuleFunction(file, name)).join('\n')
+  const selected = declarations.concat([...called].map(name => expandModuleFunction(file, name, null, bodies))).join('\n')
   const selectedCode = maskNonCodeSafely(selected)
+  // A second imported module is not a proven local closure. Keep the existing conservative envelope.
+  if (named && [...imports].some(name =>
+    new RegExp(`(^|[^\\w$])${name.replace(/[$]/g, '\\$&')}(?![\\w$])`).test(selectedCode))) return full
   // Passing a local helper as a callback/alias is not a proven direct-call closure.
   for (const name of functions) {
     const pattern = new RegExp(`\\b${name.replace(/[$]/g, '\\$&')}\\b`, 'g')
@@ -1637,6 +1698,64 @@ function requireBindings(src, dir) {
   return { named, ns }
 }
 
+// This shared controller exposes an object of methods, not flat module functions. Follow only
+// the component's explicit methods.X.call(this, ...) delegates; never add the entire 16KB flow.
+function deregisterDelegates(jsFile, slices) {
+  if (rel(jsFile) !== 'components/cy/scene-settings-deregister/index.js') return
+  const component = fs.readFileSync(jsFile, 'utf8')
+  if (!/const\s*\{\s*initialData,\s*methods\s*\}\s*=\s*require\(['"]\.\.\/\.\.\/\.\.\/utils\/deregister-flow\.js['"]\)/.test(component))
+    throw new Error('注销组件共享 owner 导入不再符合已证明合同')
+  const file = path.join(ROOT, 'utils/deregister-flow.js'), source = fs.readFileSync(file, 'utf8')
+  const ast = parseJavaScript(source)
+  const declaration = ast.body.flatMap(node => node.type === 'VariableDeclaration' ? node.declarations : [])
+    .find(node => node.id.name === 'methods' && node.init && node.init.type === 'ObjectExpression')
+  const exported = ast.body.some(node => node.type === 'ExpressionStatement'
+    && node.expression.type === 'AssignmentExpression' && source.slice(node.expression.left.start, node.expression.left.end) === 'module.exports'
+    && node.expression.right.type === 'ObjectExpression' && node.expression.right.properties.some(property =>
+      property.key.name === 'methods' && property.value.name === 'methods'))
+  if (!declaration || !exported) throw new Error('注销共享 methods 对象缺少可证明的真实导出')
+  for (const statement of ast.body) {
+    if (statement.type === 'FunctionDeclaration') continue
+    if (statement.type === 'VariableDeclaration' && statement.kind === 'const' && statement.declarations.every(node => {
+      if (node === declaration) return true
+      const value = node.init
+      return value && (value.type === 'CallExpression' && (value.callee.name === 'getApp' && value.arguments.length === 0
+          || value.callee.name === 'require' && value.arguments.length === 1 && value.arguments[0].type === 'Literal'
+            && typeof value.arguments[0].value === 'string')
+        || value.type === 'ArrayExpression' && value.elements.every(item => item.type === 'Literal'))
+    })) continue
+    if (statement.type === 'ExpressionStatement' && statement.expression.type === 'AssignmentExpression'
+        && source.slice(statement.expression.left.start, statement.expression.left.end) === 'module.exports'
+        && statement.expression.right.type === 'ObjectExpression'
+        && statement.expression.right.properties.every(property => !property.computed && property.value.type === 'Identifier')) continue
+    throw new Error('注销共享 owner 存在未登记的顶层副作用')
+  }
+  const methods = new Map()
+  const helpers = new Map(ast.body.filter(node => node.type === 'FunctionDeclaration').map(node =>
+    [node.id.name, source.slice(node.body.start, node.body.end)]))
+  for (const property of declaration.init.properties) {
+    if (property.type !== 'Property' || property.computed || property.value.type !== 'FunctionExpression')
+      throw new Error('注销共享 methods 存在未解析分支')
+    const body = source.slice(property.start, property.end)
+    const local = [...helpers.keys()].filter(name => new RegExp('\\b' + name + '\\s*\\(').test(maskNonCodeSafely(body)))
+    methods.set(property.key.name, [body].concat(local.map(name => expandModuleFunction(file, name, null, helpers))).join('\n'))
+  }
+  for (const [name, body] of slices) {
+    const delegate = body.match(/\breturn\s+methods\.([A-Za-z_$][\w$]*)\.call\(this(?:\s*,[^;]*)?\);/)
+    if (!delegate) continue
+    const wrapper = parseJavaScript('({' + body + '})').body[0].expression.properties[0].value
+    const parsed = wrapper.body.body, call = parsed[0] && parsed[0].argument
+    if (parsed.length !== 1 || parsed[0].type !== 'ReturnStatement' || !call || call.type !== 'CallExpression'
+        || call.callee.type !== 'MemberExpression' || call.callee.computed || call.callee.property.name !== 'call'
+        || call.arguments.length !== wrapper.params.length + 1 || call.arguments[0].type !== 'ThisExpression'
+        || wrapper.params.some((parameter, index) => parameter.type !== 'Identifier'
+          || call.arguments[index + 1].type !== 'Identifier' || call.arguments[index + 1].name !== parameter.name))
+      throw new Error('注销委托入口存在未登记的附加动作: ' + name)
+    if (delegate[1] !== name || !methods.has(name)) throw new Error('注销共享方法委托身份无法证明: ' + name)
+    slices.set(name, methods.get(name))
+  }
+}
+
 function handlerSlices(jsFile) {
   const sources = new Map()
   const entries = extractOwnHandlerEntries(jsFile)
@@ -1645,6 +1764,7 @@ function handlerSlices(jsFile) {
     if (!sources.has(entry.file)) sources.set(entry.file, fs.readFileSync(entry.file, 'utf8'))
     slices.set(entry.name, sources.get(entry.file).slice(entry.start, entry.end))
   })
+  deregisterDelegates(jsFile, slices)
   // [B] 把 require 进来的 helper 按「本地名」和「命名空间.成员」塞进同一张表,
   //   展开时就能跟进去;页面自己的同名方法优先(JS 里本来就是它遮蔽 import)。
   try {
@@ -2086,6 +2206,109 @@ function communityRequestPlan(contracts) {
     requiredRequestOutcomes: outcomes, branches: Object.keys(byBranch).filter((b) => b !== 'forbidden-owner') }
 }
 
+/** Prove the existing Page/Component _request adapter before binding a literal caller URL to its method. */
+function pageRequestContracts(source, jsFile) {
+  const code = maskNonCodeSafely(source)
+  const calls = [...source.matchAll(/\b(?:this|that|self)\._request\s*\(\s*['"](\/api\/[^'"]+)['"]/g)]
+    .filter(call => /^(?:this|that|self)\._request/.test(code.slice(call.index)))
+  if (!calls.length) return []
+  const wrapper = handlerSlices(jsFile).get('_request')
+  const signature = wrapper && wrapper.match(/^\s*_request\s*\(\s*([A-Za-z_$][\w$]*)[^)]*\)\s*\{/)
+  if (!signature) return []
+  const masked = maskNonCodeSafely(wrapper)
+  const sends = [...wrapper.matchAll(/\bapp\.sendRequest\s*\(\s*\{/g)]
+    .filter(send => masked.slice(send.index).startsWith('app.sendRequest'))
+  if (sends.length !== 1) return []
+  const param = signature[1].replace(/[$]/g, '\\$&')
+  const preamble = masked.slice(signature[0].length, sends[0].index)
+  if (new RegExp(`\\b${param}\\s*(?:[+*/-]?=|\\+\\+|--)|\\b(?:const|let|var)\\s+${param}\\b|\\([^)]*\\b${param}\\b[^)]*\\)\\s*=>`).test(preamble)) return []
+  const open = wrapper.indexOf('{', sends[0].index)
+  const close = matchBrace(masked, open)
+  if (close < 0) return []
+  let request
+  try { request = parseJavaScript('(' + wrapper.slice(open, close + 1) + ')').body[0].expression } catch (error) {
+    if (error.name === 'SyntaxError') return []
+    throw error
+  }
+  if (request.type !== 'ObjectExpression' || request.properties.some(property => property.type !== 'Property' || property.computed)) return []
+  const urls = request.properties.filter(property => (property.key.name || property.key.value) === 'url')
+  const methods = request.properties.filter(property => (property.key.name || property.key.value) === 'method')
+  if (urls.length !== 1 || urls[0].value.type !== 'Identifier' || urls[0].value.name !== signature[1]
+      || methods.length !== 1 || methods[0].value.type !== 'Literal'
+      || !['GET', 'POST', 'PUT', 'PATCH', 'DELETE'].includes(methods[0].value.value)) return []
+  return calls.map(call => ({ url: call[1], method: methods[0].value.value, auth: 'authenticated',
+    source: 'local-wrapper', wrapper: '_request' }))
+}
+
+/** One control, mutually exclusive direct Promise-chain outcomes; timed status polling is never enrollment. */
+function voiceConfirmedRequestPlan(relative, handler, contracts) {
+  const prefixes = {
+    'pages/merchant/decor/ai-npc/index.js': '/api/merchant/npc/voice',
+    'pages/topic/components/cy/node-npc-form/index.js': '/api/merchant/chapter-node/npc/voice',
+  }
+  const prefix = prefixes[relative]
+  if (!prefix || handler !== 'confirmNewVoiceRequest') return null
+  const status = prefix + '/status', enroll = prefix + '/enroll', consent = '/api/compliance/consents'
+  const expected = new Set([status, consent, enroll])
+  if (contracts.some(contract => !expected.has(contract.url) && !AUXILIARY_APIS.has(contract.url))
+      || [status, enroll].some(url => !contracts.some(contract => contract.url === url
+        && contract.method === 'POST' && contract.wrapper === '_request'))
+      || !contracts.some(contract => contract.url === consent && contract.method === 'POST')) {
+    throw new Error(`${relative}:${handler}: 未登记或未证明的声音请求流程,禁止隐藏额外请求`)
+  }
+  const read = { urlTemplate: status, method: 'POST', kind: 'read' }
+  const agree = { urlTemplate: consent, method: 'POST', kind: 'write' }
+  const submit = { urlTemplate: enroll, method: 'POST', kind: 'write' }
+  const success = [read, agree, submit, read]
+  const byBranch = {
+    success, 'duplicate-trigger': success,
+    blocked: [], cancelled: [read], 'consent-declined': [read], 'original-no-longer-unknown': [read],
+    'stale-after-read': [read], 'stale-after-consent': [read, agree],
+    error: [read, agree], 'consent-timeout': [read, agree], timeout: success, 'forbidden-owner': success,
+    'enroll-disabled': [read, agree, submit], 'enroll-error': success, 'refresh-error': success,
+    'status-error-confirmed': success, 'status-timeout-confirmed': success,
+    'status-timeout-cancelled': [read], 'status-error-cancelled': [read], 'refresh-timeout': success,
+  }
+  const outcomes = Object.fromEntries(Object.entries(byBranch).map(([branch, sequence]) =>
+    [branch, sequence.map(() => 'success')]))
+  outcomes.error = ['success', 'error']
+  outcomes['consent-timeout'] = ['success', 'timeout']
+  outcomes.timeout = ['success', 'success', 'timeout', 'success']
+  outcomes['forbidden-owner'] = ['success', 'success', 'forbidden-owner', 'success']
+  outcomes['enroll-disabled'] = ['success', 'success', 'error']
+  outcomes['enroll-error'] = ['success', 'success', 'error', 'success']
+  outcomes['refresh-error'] = ['success', 'success', 'success', 'error']
+  outcomes['status-error-confirmed'] = ['error', 'success', 'success', 'success']
+  outcomes['status-timeout-confirmed'] = ['timeout', 'success', 'success', 'success']
+  outcomes['status-timeout-cancelled'] = ['timeout']
+  outcomes['status-error-cancelled'] = ['error']
+  outcomes['refresh-timeout'] = ['success', 'success', 'success', 'timeout']
+  return { writeApis: [consent, enroll], requiredRequests: success, requiredRequestsByBranch: byBranch,
+    requiredRequestOutcomes: outcomes, requiredBranches: Object.keys(byBranch) }
+}
+
+function deregisterRequestPlan(relative, handler, contracts) {
+  if (relative !== 'components/cy/scene-settings-deregister/index.js' || handler !== 'apply') return null
+  const consent = { urlTemplate: '/api/compliance/consents', method: 'POST', kind: 'write' }
+  const apply = { urlTemplate: '/api/user/deregister/apply', method: 'POST', kind: 'write' }
+  const status = { urlTemplate: '/api/user/deregister/status', method: 'GET', kind: 'read' }
+  const expected = [consent, apply, status]
+  for (const command of expected) if (!contracts.some(c => c.url === command.urlTemplate && c.method === command.method))
+    throw new Error('注销原请求链缺少真实接口: ' + command.urlTemplate)
+  if (contracts.some(c => !expected.some(e => e.urlTemplate === c.url) && !AUXILIARY_APIS.has(c.url)))
+    throw new Error('注销申请出现未登记请求，不能隐藏额外写入')
+  const success = [consent, apply]
+  return { writeApis: [consent.urlTemplate, apply.urlTemplate], requiredRequests: success,
+    requiredRequestsByBranch: { success, 'duplicate-trigger': success, blocked: [], 'consent-error': [consent],
+      'verification-error': [consent], 'stale-after-consent': [consent], 'apply-blocked': success,
+      error: [consent, apply, status], timeout: [consent, apply, status], 'status-error': [consent, apply, status] },
+    requiredRequestOutcomes: { success: ['success','success'], 'duplicate-trigger': ['success','success'], blocked: [],
+      'consent-error': ['error'], 'verification-error': ['success'], 'stale-after-consent': ['success'],
+      'apply-blocked': ['success','success'], error: ['success','error','success'],
+      timeout: ['success','timeout','success'], 'status-error': ['success','error','error'] },
+    requiredBranches: ['success','duplicate-trigger','blocked','consent-error','verification-error','stale-after-consent','apply-blocked','error','timeout','status-error'] }
+}
+
 function extractHandlerTargets(source, jsFile, handlerName, attrs, appHelperBodies) {
   const expandedSource = [source].concat(appHelperCalls(source, appHelperBodies).map(([, body]) => body)).join('\n')
   const targets = extractTargets(expandedSource)
@@ -2126,6 +2349,19 @@ function extractHandlerTargets(source, jsFile, handlerName, attrs, appHelperBodi
     }
   }
   const fileSource = fs.readFileSync(jsFile, 'utf8')
+  if (rel(jsFile) === 'components/cy/scene-settings-deregister/index.js') {
+    const code = maskNonCodeSafely(source)
+    for (const call of source.matchAll(/\bsendUiStateRequest\(app,\s*['"](\/api\/[^'"]+)['"],\s*\{/g)) {
+      if (!code.slice(call.index).startsWith('sendUiStateRequest')) continue
+      const open = call.index + call[0].lastIndexOf('{'), close = matchBrace(code, open)
+      const method = source.slice(open, close + 1).match(/^\{\s*method:\s*['"](GET|POST)['"]/)
+      if (close < 0 || !method) throw new Error('注销请求没有明确 HTTP 合同: ' + call[1])
+      targets.apiContracts.push({ url: call[1], method: method[1], auth: 'authenticated', source: 'deregister-ui-state-call' })
+    }
+  }
+  const pageRequests = pageRequestContracts(source, jsFile)
+  targets.apis.push(...pageRequests.map(contract => contract.url))
+  targets.apiContracts.push(...pageRequests)
   const communityAliases = communityAliasesForSource(fileSource, jsFile)
   const communityTargets = communityRequestContracts(expandedSource, communityAliases)
   targets.apis = targets.apis.filter((url) => !communityTargets.commands.has(url))
@@ -2191,7 +2427,9 @@ function extractHandlerTargets(source, jsFile, handlerName, attrs, appHelperBodi
       const dependency = resolveSourceDependency(rel(scanFile), request, ['.js', '/index.js'])
       // 恢复实例的方法调用(this._recovery.query() 等)不出现模块导入名，须先于导入名过滤判定。
       if (dependency && recoveryInstanceTargets(dependency, scanFile, expandedSource, targets)) return
-      if (!inlineExports && !names.some((alias) => new RegExp(`\\b${alias.replace(/[$]/g, '\\$&')}(?:\\.[A-Za-z_$][\\w$]*)?\\s*\\(`).test(expandedSource))) return
+      if (!inlineExports && !names.some((alias) => namedImports
+        ? new RegExp(`(^|[^\\w$])${alias.replace(/[$]/g, '\\$&')}(?![\\w$])`).test(maskNonCodeSafely(expandedSource))
+        : new RegExp(`\\b${alias.replace(/[$]/g, '\\$&')}(?:\\.[A-Za-z_$][\\w$]*)?\\s*\\(`).test(expandedSource))) return
       if (!dependency) return
       if (dependency === 'utils/community-post-api.js') return
       // X5（10-28）：发票拆成 5 页，各页经 subpackageMember/invoice/base.js 混入同一套 read/mutate。
@@ -2208,6 +2446,30 @@ function extractHandlerTargets(source, jsFile, handlerName, attrs, appHelperBodi
           targets.apiContracts.push({ url, method: 'POST', auth: 'authenticated', source: 'invoice-wrapper-call' })
         }
         return
+      }
+      if (dependency === 'utils/deregister-flow.js'
+          && rel(scanFile) === 'components/cy/scene-settings-deregister/index.js'
+          && !/\bmethods\b/.test(maskNonCodeSafely(expandedSource))) {
+        // handlerSlices already proved and expanded the exact method plus its local helper closure.
+        // Re-adding the module here would turn initialData() into all three unrelated write commands.
+        return
+      }
+      if (dependency === 'utils/verification-scan.js' && namedImports && namedImports.length === 1
+          && namedImports[0][0] === 'DYN_TTL_MS') {
+        const dependencySource = fs.readFileSync(path.join(ROOT, dependency), 'utf8')
+        const ast = parseJavaScript(dependencySource)
+        const ttl = ast.body.find(node => node.type === 'VariableDeclaration' && node.kind === 'const'
+          && node.declarations.length === 1 && node.declarations[0].id.name === 'DYN_TTL_MS'
+          && node.declarations[0].init.type === 'Literal' && Number.isFinite(node.declarations[0].init.value))
+        const local = namedImports[0].at(-1).replace(/[$]/g, '\\$&')
+        const callable = new RegExp('\\b' + local + '\\s*\\(').test(maskNonCodeSafely(expandedSource))
+        const pureModule = ast.body.every(node => node.type === 'FunctionDeclaration'
+          || node === ttl
+          || node.type === 'ExpressionStatement' && node.expression.type === 'AssignmentExpression'
+            && dependencySource.slice(node.expression.left.start, node.expression.left.end) === 'module.exports'
+            && node.expression.right.type === 'ObjectExpression'
+            && node.expression.right.properties.every(property => !property.computed && property.value.type === 'Identifier'))
+        if (ttl && pureModule && !callable && /module\.exports\s*=\s*\{\s*resolveVerificationScan,\s*DYN_TTL_MS\s*\}/.test(dependencySource)) return
       }
       if (dependency === 'utils/game-session-client.js') {
         const methods = {
@@ -2282,7 +2544,8 @@ function extractHandlerTargets(source, jsFile, handlerName, attrs, appHelperBodi
         return
       }
       const dependencyFile = path.join(ROOT, dependency)
-      const dependencyTargets = extractTargets(namedImports ? fs.readFileSync(dependencyFile, 'utf8')
+      const dependencyTargets = extractTargets(namedImports
+        ? namedDependencySource(dependencyFile, namedImports, expandedSource)
         : namespaceDependencySource(dependencyFile, names, expandedSource, inlineExports))
       targets.routes.push(...dependencyTargets.routes)
       targets.apis.push(...dependencyTargets.apis)
@@ -2478,6 +2741,10 @@ function buildLedger() {
         const confirmationMode = Object.prototype.hasOwnProperty.call(variant, 'confirmationMode')
           ? variant.confirmationMode
           : modalContractForHandler(variant.handler, slices, interactionModeFor(binding.attrName))
+        const voicePlan = voiceConfirmedRequestPlan(rel(jsFile), variant.handler, targets.apiContracts)
+        if (voicePlan) variant = { ...variant, ...voicePlan }
+        const deregisterPlan = deregisterRequestPlan(rel(jsFile), variant.handler, targets.apiContracts)
+        if (deregisterPlan) variant = { ...variant, ...deregisterPlan }
         const inferredWriteApis = effectClasses.includes('write') ? targets.primaryApis.filter((api) => {
           return targets.apiContracts.some((contract) => contract.url === api && contract.method && contract.method !== 'GET'
             && (contract.adapterBranch || isWriteApi(api) || SELF_ONLY_WRITE_APIS.has(api)))
@@ -3438,6 +3705,7 @@ function main() {
 if (require.main === module) process.exitCode = main()
 
 module.exports = {
+  namespaceDependencySource,
   eventHandlerNames,
   loadFailureEventVisibility,
   inferActionClass,
@@ -3457,6 +3725,8 @@ module.exports = {
   communityRequestContracts,
   communityAliasesForSource,
   communityRequestPlan,
+  voiceConfirmedRequestPlan,
+  deregisterRequestPlan,
   isSelfOnlyWriteApi,
   isWriteApi,
   extractTargets,

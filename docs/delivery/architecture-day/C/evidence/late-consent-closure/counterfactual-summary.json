@@ -1,0 +1,10 @@
+{
+  "originalPublicParent": "09b1c1ad317c0f1449aef0ec378f48665638cb82",
+  "file": "original-page-counterfactual.tap",
+  "exitCode": 1,
+  "tests": 25,
+  "pass": 9,
+  "fail": 16,
+  "skipped": 0,
+  "workingTreeReplaced": false
+}

@@ -1,0 +1,13 @@
+{
+  "run": 40036842511,
+  "source_sha": "66e9e1798bf0b3e1c2b7e6cb2b6ab13a3b3e1329",
+  "class": "com.chengyinhub.business.service.impl.ImActivityTeamRevocationMySqlIT",
+  "tests": 2,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "cleanup": "CLEAN",
+  "xml_sha256": "42f46466d5f9feaafe37dde2e8131271279f8256cd021d664166a8dc6a7c6022",
+  "receipt_sha256": "96dae727676996a2f7fbb1aa5b08452e371544da4f444519977163d17e11910d",
+  "scope": "Real services/mappers and declared cases only; no HTTP/JWT/device/real providers/full settlement or strict in-flight revocation proof."
+}

@@ -43,6 +43,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @EnabledIfEnvironmentVariable(named = "CHENGYIN_FUNDS_MYSQL_IT", matches = "1")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -104,11 +105,13 @@ class TandianriBatch0FundsMybatisIntegrationTest {
                 "DROP TABLE IF EXISTS cms_registration",
                 "DROP TABLE IF EXISTS oms_ticket",
                 "DROP TABLE IF EXISTS cms_activity",
+                "DROP TABLE IF EXISTS cms_topic_node",
                 "DROP TABLE IF EXISTS cms_topic",
+                "CREATE TABLE cms_topic_node (id BIGINT PRIMARY KEY,topic_id BIGINT)",
                 "CREATE TABLE cms_topic (id BIGINT PRIMARY KEY, name VARCHAR(100), product_type INT, del_flag INT, status INT, is_settlement INT, end_date DATETIME, update_by VARCHAR(64), update_time DATETIME)",
                 "CREATE TABLE cms_activity (id BIGINT PRIMARY KEY, topic_id BIGINT, member_id BIGINT, name VARCHAR(100), del_flag INT, status INT, is_settlement INT, end_date DATETIME, start_date DATETIME)",
-                "CREATE TABLE oms_ticket (id BIGINT PRIMARY KEY AUTO_INCREMENT, owner_type BIGINT, owner_id BIGINT, mode INT, del_flag INT, start_time DATETIME, end_time DATETIME)",
-                "CREATE TABLE cms_registration (id BIGINT PRIMARY KEY, owner_type BIGINT, owner_id BIGINT, member_id BIGINT, payable_amount DECIMAL(12,2), payment_status INT, registration_status INT, verification_status INT, purchase_kind INT, verification_time DATETIME, ticket_id BIGINT, refund_deadline DATETIME)",
+                "CREATE TABLE oms_ticket (id BIGINT PRIMARY KEY AUTO_INCREMENT, owner_type BIGINT, owner_id BIGINT, mode INT, sub_type VARCHAR(16), del_flag INT, start_time DATETIME, end_time DATETIME)",
+                "CREATE TABLE cms_registration (id BIGINT PRIMARY KEY, owner_type BIGINT, owner_id BIGINT, member_id BIGINT, payable_amount DECIMAL(12,2), payment_status INT, registration_status INT, verification_status INT, purchase_kind INT, verification_time DATETIME, order_num BIGINT DEFAULT 1, ticket_id BIGINT, refund_deadline DATETIME)",
                 "CREATE TABLE cms_registration_scan (id BIGINT PRIMARY KEY AUTO_INCREMENT, registration_id BIGINT, member_id BIGINT, registration_type INT, status INT DEFAULT 0, create_time DATETIME)",
                 "CREATE TABLE coop_group_member_verify (id BIGINT PRIMARY KEY AUTO_INCREMENT, registration_id BIGINT, topic_id BIGINT, activity_id BIGINT, verify_time DATETIME)",
                 // 2026-10-22 TF1:与生产 DDL(sql/base_schema_20260818.sql、migration_coop_group_activity_settlement_20260722)
@@ -161,6 +164,31 @@ class TandianriBatch0FundsMybatisIntegrationTest {
             }
             assertEquals(new HashSet<>(Arrays.asList(7002L, 7003L)), selectedIds,
                     "ProductType=1 照旧入选；NULL 也必须进入 Java fail-closed 并留下错误日志");
+        }
+    }
+
+    @Test
+    void topicSettlementClaimRejectsEligibilityChangesAfterTheScanAndStillClaimsValidTopicOnce() throws Exception {
+        try (SqlSession session = factory.openSession(true)) {
+            CmsTopicMapper mapper = session.getMapper(CmsTopicMapper.class);
+            assertTrue(mapper.selectTopicsForSettlement().stream().anyMatch(t -> Long.valueOf(7002L).equals(t.getId())));
+            execute("UPDATE cms_topic SET del_flag=2 WHERE id=7002");
+            assertEquals(0, mapper.claimTopicForSettlement(7002L));
+            execute("UPDATE cms_topic SET del_flag=0,status=0 WHERE id=7002");
+            assertEquals(0, mapper.claimTopicForSettlement(7002L));
+            execute("UPDATE cms_topic SET status=1,end_date=NOW() WHERE id=7002");
+            assertEquals(0, mapper.claimTopicForSettlement(7002L));
+            execute("UPDATE cms_topic SET end_date=DATE_SUB(NOW(),INTERVAL 1 DAY),product_type=2 WHERE id=7002");
+            assertEquals(0, mapper.claimTopicForSettlement(7002L));
+            execute("UPDATE cms_topic SET product_type=1 WHERE id=7002",
+                    "INSERT INTO cms_registration(id,owner_type,owner_id,member_id,payable_amount,payment_status,registration_status,verification_status,refund_deadline) "
+                            + "VALUES(7399,1,7002,7499,10.00,2,2,0,DATE_ADD(NOW(),INTERVAL 1 DAY))");
+            assertEquals(0, mapper.claimTopicForSettlement(7002L));
+            assertEquals(0, scalarInt("SELECT is_settlement FROM cms_topic WHERE id=7002"));
+            execute("UPDATE cms_registration SET verification_status=1 WHERE id=7399");
+            assertEquals(1, mapper.claimTopicForSettlement(7002L));
+            assertEquals(0, mapper.claimTopicForSettlement(7002L));
+            assertEquals(1, scalarInt("SELECT is_settlement FROM cms_topic WHERE id=7002"));
         }
     }
 
@@ -282,11 +310,12 @@ class TandianriBatch0FundsMybatisIntegrationTest {
     }
 
     @Test
-    void settlementEvidenceServiceResolvesActiveActivityIdsBeforeLockingOnlyRegistrations() {
+    void settlementEvidenceServiceResolvesActiveActivityIdsBeforeRegistrationAndTicketQuery() {
         CoopSettlementSnapshot snapshot = new CoopSettlementSnapshot();
+        snapshot.setTopicId(TOPIC);
         snapshot.setCommercialContextId(TOPIC);
-        snapshot.setScopeType("TOPIC_EDITION");
-        snapshot.setScopeId(ACTIVITY);
+        snapshot.setScopeType("TOPIC");
+        snapshot.setScopeId(TOPIC);
         snapshot.setOrderId(COOP_ORDER);
         snapshot.setBeneficiaryId(MERCHANT);
         try (SqlSession session = factory.openSession(false)) {
@@ -358,9 +387,10 @@ class TandianriBatch0FundsMybatisIntegrationTest {
 
     private void assertDirectTopicRegistrationRemainsWhenActivityIdsAre(List<Long> activityIds) {
         CoopSettlementSnapshot snapshot = new CoopSettlementSnapshot();
+        snapshot.setTopicId(TOPIC);
         snapshot.setCommercialContextId(TOPIC);
-        snapshot.setScopeType("TOPIC_EDITION");
-        snapshot.setScopeId(ACTIVITY);
+        snapshot.setScopeType("TOPIC");
+        snapshot.setScopeId(TOPIC);
         snapshot.setOrderId(COOP_ORDER);
         snapshot.setBeneficiaryId(MERCHANT);
         try (SqlSession session = factory.openSession(false)) {

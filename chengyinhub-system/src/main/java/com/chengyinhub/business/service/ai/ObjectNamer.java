@@ -74,6 +74,7 @@ public class ObjectNamer {
      * @return 认出来的名与分类(各自可空);{@code null} = 没有结果
      */
     public Naming name(String imageUrl) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         if (!enabled) {
             return null;
         }
@@ -95,6 +96,8 @@ public class ObjectNamer {
         String answer;
         try {
             answer = visionClient.chatVision(SYSTEM_PROMPT, encoded.getDataUrl(), USER_PROMPT);
+        } catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) {
+            throw paused;
         } catch (Exception e) {
             log.error("[认物] 视觉调用失败, exceptionType={}", e.getClass().getSimpleName());
             return null;

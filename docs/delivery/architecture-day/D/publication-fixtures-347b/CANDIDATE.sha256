@@ -1,0 +1,7 @@
+9b977bcf5763b2521e7af56f290b8a2ca902a4fefceae1430ca6d8c68798c75c  chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicDraftPartialSaveGateTest.java
+6734b3b06989ea5983b9c1da7f8ed87427eaa558115c86bd6336a662a15f5247  chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowTransactionTest.java
+8ddc0d6e5c7fb597ebd665184efd9c57cb29a159a81560c616d06a559c3ea4ea  chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java
+e80a731fafe4871cd058d9b85a5159ca837244fb3b9e73e951b75bf413d9384a  chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/TopicPublicationTestWiring.java
+0cde2e5b9d3402e7dd1b140cf30ffd574f290a3be9db6f4c3efe0018ddb23d36  docs/delivery/architecture-day/D/publication-fixtures-347b/README.md
+5b00666ee82746366ac92b32eda0ab1586dcbd9ec7c8720f0f7aadb5458bb58f  docs/delivery/architecture-day/D/publication-fixtures-347b/ORIGINAL-CASES.json
+335e7ca91178e93a7c5f095be76adbe4f0866b090dacc6161fa13c45e0554854  docs/delivery/architecture-day/D/publication-fixtures-347b/transferred-seven-unfinished.review.patch.b64

@@ -1,0 +1,120 @@
+{
+  "kind": "SOURCE_ONLY_NOT_COMPILED",
+  "source": "0d32d888e29c6d5ef51322b10d7aca736be856ff",
+  "technical_direction": {
+    "from": "D_COMPLAINT_CLOSE_REPORTER_NOTICE",
+    "to": "D_COMMITTED_NOTICE_REJECTION_PORT",
+    "field": "rejections",
+    "methods": [
+      "insertIgnore(BusinessAuditEvent)",
+      "selectForUpdate(Long,String)"
+    ]
+  },
+  "records": [
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/ComplaintCloseReporterNotice.java",
+      "sha256": "8c0412b0c7dcaa1ee4cac579e1868885d10fb77ac4eaf3e45ea06409eeda9e3d",
+      "git_blob": "859c66f54120b40b6977804c86de60d8eb5d32bd",
+      "lines": [
+        {
+          "line": 29,
+          "source": "    private final CommittedOfficialNoticeService notices;"
+        },
+        {
+          "line": 30,
+          "source": "    private final CommittedNoticeRejectionMapper rejections;"
+        },
+        {
+          "line": 31,
+          "source": "    private final AlarmService alarm;"
+        },
+        {
+          "line": 32,
+          "source": "    private final ScheduledExecutorService executor;"
+        },
+        {
+          "line": 34,
+          "source": "    public ComplaintCloseReporterNotice(CommittedOfficialNoticeService notices, CommittedNoticeRejectionMapper rejections,"
+        },
+        {
+          "line": 43,
+          "source": "    public Submission submitReporter(Long complaintId, Long recipient, Long operatorId, String title, String body) {"
+        },
+        {
+          "line": 54,
+          "source": "            if (rejections.selectForUpdate(complaintId,key)!=null)"
+        },
+        {
+          "line": 69,
+          "source": "        rejections.insertIgnore(event);"
+        },
+        {
+          "line": 70,
+          "source": "        BusinessAuditEvent stored=rejections.selectForUpdate(complaintId,key);"
+        }
+      ]
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CommittedNoticeRejectionMapper.java",
+      "sha256": "13124fd3fb8188ee508f2ea0323944b4649448bc699ca4e09ef97ca96cd7fdc7",
+      "git_blob": "a2844bef6973e0d88ba4271e9afec3be227c5932",
+      "lines": [
+        {
+          "line": 8,
+          "source": "    int insertIgnore(BusinessAuditEvent event);"
+        },
+        {
+          "line": 9,
+          "source": "    BusinessAuditEvent selectForUpdate(@Param(\"complaintId\") Long complaintId, @Param(\"eventKey\") String eventKey);"
+        }
+      ]
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CommittedNoticeRejectionMapper.xml",
+      "sha256": "65dfd83ed76d928779c764fafe28512a4fa53c5ad84d721e35c1081e93d03717",
+      "git_blob": "7e4ae952ae804153def3377fa21e34fb03d6677f",
+      "lines": [
+        {
+          "line": 12,
+          "source": "    <insert id=\"insertIgnore\" parameterType=\"com.chengyinhub.business.domain.BusinessAuditEvent\">"
+        },
+        {
+          "line": 13,
+          "source": "        insert ignore into business_audit_event"
+        },
+        {
+          "line": 14,
+          "source": "            (domain_type,domain_id,owner_member_id,actor_type,actor_member_id,actor_role_code,"
+        },
+        {
+          "line": 15,
+          "source": "             action,target_type,target_id,before_json,after_json,reason,request_id,create_time)"
+        },
+        {
+          "line": 16,
+          "source": "        values ('PLATFORM',#{domainId},0,#{actorType},#{actorMemberId},#{actorRoleCode},"
+        },
+        {
+          "line": 20,
+          "source": "    <select id=\"selectForUpdate\" resultMap=\"Rejection\" useCache=\"false\" flushCache=\"true\">"
+        },
+        {
+          "line": 21,
+          "source": "        select id,actor_type,actor_member_id,before_json,after_json from business_audit_event"
+        }
+      ]
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopComplaintServiceImpl.java",
+      "sha256": "f7b36dcf4c72b9c94e441a2e6e83d77ce4599744a0f4180964f81030aa1cf01e",
+      "git_blob": "ef109ed93c7d1bb1e87fc37635ce962a02648218",
+      "lines": [
+        {
+          "line": 141,
+          "source": "        complaintCloseReporterNotice.submitReporter(id, c.getReporterMemberId(), handlerId, \"投诉工单已处理\","
+        }
+      ]
+    }
+  ],
+  "business_authority": "NOT_GRANTED"
+}

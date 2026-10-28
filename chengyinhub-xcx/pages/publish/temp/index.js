@@ -518,9 +518,9 @@ Page({
     });
   },
 
-  onHide: function () { this._hidden = true; },
+  onHide: function () { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1; this._hidden = true; },
 
-  onUnload: function () {
+  onUnload: function () { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1;
     this._unloaded = true;
     this._disposed = true;
     this._templateLoadToken = (this._templateLoadToken || 0) + 1;
@@ -3246,7 +3246,7 @@ Page({
   },
 
   publishGame: function () {
-    if (app.ensureLoginFor && !app.ensureLoginFor('publish', () => this.publishGame())) return; // 2026-10-24 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('publish', () => this.publishGame(), { owner: this, target: () => [this._templateId, this._boundDraftId, this.data.from, this.data.operationScope, this.data.isMyScope] })) return; // 2026-10-24 游客写前登录
     if (this.data.from === 'citynode' && !this.data.merchantAccess.canManageProjects) {
       toast('当前岗位没有节点管理权限');
       return;
@@ -3292,7 +3292,7 @@ Page({
       body.feedbackMethodStr = String(body.feedbackMethod);
       delete body.feedbackMethod;
     }
-    // 玩法语义:正交于 validationMethod,只有据点用,普通模板发布链路没有这个字段
+    // 据点提交取本页确认的互动语义；普通模板沿 formData 保留个人详情读回的原字段。
     body.interactionType = this.data.interactionType || '';
     // categoryIds 是本页拼给发布 DTO 的,实体侧取 categoryId / activityCategoryids
     if (body.categoryIds) {
@@ -3315,7 +3315,7 @@ Page({
   },
 
   saveDraft: function () {
-    if (app.ensureLoginFor && !app.ensureLoginFor('publish', () => this.saveDraft())) return; // 2026-10-24 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('publish', () => this.saveDraft(), { owner: this, target: () => [this._templateId, this._boundDraftId, this.data.from, this.data.operationScope, this.data.isMyScope] })) return; // 2026-10-24 游客写前登录
     if (this.data.from === 'fabu') return this.publishGame();
     if (this.data.from === 'citynode') {
       toast('节点玩法请配置完成后直接保存');
@@ -3668,6 +3668,8 @@ Page({
       isSync: 0,
       ruleInstructions: templateData.ruleInstructions || "",
       validationMethod: templateData.validationMethod || 0,
+      // 原据点语义与完成方式独立；采用/本人续编均沿服务器读回值，不按玩法名称推导。
+      interactionType: templateData.interactionType == null ? '' : templateData.interactionType,
       feedbackMethod: feedbackMethod,
       questionName: templateData.questionName || "",
       questionAnswer: templateData.questionAnswer || "",
@@ -3691,7 +3693,7 @@ Page({
       // 存量 photo_review=1 由 migration_play_photo_review_off_20260917.sql 置回。
       photoReview: 0,
       audioUrl: templateData.audioUrl || "",
-      audioDuration: templateData.audioDuration || "",
+      audioDuration: templateData.audioDuration == null ? "" : templateData.audioDuration,
       questionImg: templateData.questionImg || "",
       questionAudio: templateData.questionAudio || "",
       questionOptionMediaJson: templateData.questionOptionMediaJson || "",
@@ -3734,6 +3736,7 @@ Page({
     that._toolSummaries = templateTools.summaries(advancedResult.value);
     that.setData({
       formData: formData,
+      interactionType: formData.interactionType,
       descriptionMaxLength: Math.max(30, formData.description.length),
       defaultCover: gameTemplateCover({ title: formData.title, advancedConfigJson: formData.advancedConfigJson }),
       // 存量模板里规则是一整段文字,按换行拆成步骤 —— 换界面不能让老数据读不出来

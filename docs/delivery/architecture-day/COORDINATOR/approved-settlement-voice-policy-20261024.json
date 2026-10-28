@@ -1,0 +1,146 @@
+{
+  "schema": 1,
+  "authority": "Explicit user answers in this coordinator thread on 2026-10-24",
+  "scope": "Implementation authorization only; no production DDL, deployment, external paid calls or new dependencies",
+  "implementation_base": "8490765f0572dae8ec3468f4e75d0ff6f4760b12",
+  "rules": [
+    {
+      "id": "ORIGINAL_ALLOCATION_REMAINDER",
+      "owner": "G",
+      "decision": "Distribute original allocation penny remainders by largest fractional remainder; ties use stable registration ID order",
+      "invariants": [
+        "Use original frozen amounts and eligible orders, never client amounts",
+        "Allocated components conserve the original line total exactly",
+        "Reordering query results cannot change allocation",
+        "Refunding one order never recalculates another order"
+      ]
+    },
+    {
+      "id": "CUMULATIVE_ORIGINAL_REFUND",
+      "owner": "B",
+      "decision": "Current reversal equals cumulative target for this original component minus already reversed amount; full refund clears remaining original component pennies",
+      "invariants": [
+        "Only original verified successful refunds enter the cumulative basis",
+        "Keep the original component precision and calculation version",
+        "Duplicate and reordered callbacks cannot duplicate adjustment or debt",
+        "Refund SUCCESS CAS, adjustment, economic effect and receipt remain atomic",
+        "Current component deltas sum exactly to this actual successful refund",
+        "No negative delta, no reversal above original component amount, and no retraction of a prior committed reversal"
+      ],
+      "subcent_decision": "Every successful refund conserves its actual amount across original order components; allocate remainder pennies within those components, not other orders"
+    },
+    {
+      "id": "VERIFIED_SEAT_FEE_AND_NEGATIVE_MARGIN",
+      "owner": "G",
+      "decision": "Charge the fixed fulfillment fee once per actually verified seat; negative organizer margin enters durable manual handling without automatic balance or deposit debit",
+      "invariants": [
+        "Unverified seats accrue no fee",
+        "Replaying the same seat fact accrues no additional fee",
+        "Use the original frozen fee and recipient, not current mutable settings",
+        "Manual handling retains original order, close identity, amounts and reason",
+        "Do not clamp negative margin to zero or report successful settlement"
+      ]
+    },
+    {
+      "id": "ASR_SINGLE_NPC_QUOTA",
+      "owner": "D",
+      "decision": "ASR and the same subsequent NPC conversation share the existing quota: reserve before ASR, release only proven NOT_SENT, retain UNKNOWN, no second debit on text handoff; shop gen pool unchanged",
+      "invariants": [
+        "Original actor, node/shop, request ID and audio fingerprint remain bound",
+        "Reservation must commit before external dispatch",
+        "An exception or transient NOT_FOUND does not prove NOT_SENT",
+        "Duplicate, restart and lost ACK do not create another reservation or model call",
+        "Handoff consumes or transfers the original reservation exactly once",
+        "Existing text-admission tombstone and deletion fences remain effective"
+      ],
+      "accounting_caveat": "One user feature quota is separate from provider billing. Show UNKNOWN as pending reservation, never successful delivery; approved release and handoff policies unchanged."
+    },
+    {
+      "id": "VOICE_UNKNOWN_EXPLICIT_NEW_INTENT",
+      "owner": "C",
+      "decision": "When the original voice creation result cannot be confirmed, allow a separate request only after explicit confirmation that duplicate charges may occur; retain the original record and never automatically resend",
+      "invariants": [
+        "The new request has a distinct stable identity",
+        "Keep original UNKNOWN, provider identity and reservation available for authorized recovery",
+        "Refresh, reentry and repeated confirmation do not automatically dispatch again",
+        "Late original results update only the original intent and do not replace a newer selection",
+        "Pending payload and recovery records remain isolated by account"
+      ],
+      "pricing_caveat": "Do not assert every voice creation is paid. Source default is CosyVoice-v2; official CosyVoice creation is free, Qwen creation has different billing; runtime overrides not inspected. Preserve explicit new-intent confirmation with accurate model-specific or neutral wording."
+    },
+    {
+      "id": "UNPAID_DEPOSIT_FROM_ORDER_RECEIVABLE",
+      "owner": "G",
+      "authority": "Direct user question reply call_e39e3991cd20426591608496cdca3733",
+      "decision": "结算时自动抵扣，但必须生成关联原订单的不可变调整凭证",
+      "invariants": [
+        "Automatic setoff is bound to the actual original order/claim/head and original unpaid invite identity",
+        "Original frozen settlement gross and allocation components remain immutable",
+        "Append-only adjustment and deposit collected amount conserve the actual setoff in one local transaction",
+        "Only the same payer positive available receivable funds the setoff; never another party balance or deposit",
+        "Replay/concurrency cannot deduct twice; unresolved payment preserves original reconciliation fence"
+      ],
+      "implementation_state": "IN_PROGRESS_NOT_RUN_NOT_ACCEPTED"
+    },
+    {
+      "id": "PER_ORIGINAL_ORDER_INDEPENDENT_SETTLEMENT_SCOPE",
+      "status": "APPROVED",
+      "authority": "DIRECT_HUMAN_REPLY",
+      "user_quote": "按每张原订单分别结算，但必须先明确各自独立的履约和销售额范围",
+      "owners": {
+        "production": "G",
+        "unit": "B"
+      },
+      "decision": "Settle each original frozen order only against demonstrably independent fulfillment and sales scope; overlapping or unprovable scope cannot be silently selected or counted twice",
+      "invariants": [
+        "Preserve original frozen compensation terms and original-order identities",
+        "No duplicate allocation of the same fulfillment/sale",
+        "No first-wins or live-config fallback",
+        "Preserve prior immutable deposit adjustment/refund/net payout guards",
+        "No partial economic commit on unresolved scope"
+      ]
+    },
+    {
+      "id": "SUPPLY_ORDER_STATION_SCOPE_CONFIRMATION",
+      "status": "APPROVED",
+      "authority": "DIRECT_HUMAN_REPLY",
+      "user_quote": "先一单一个据点，订单间不得重复（推荐）",
+      "decision": "Inviter explicitly selects one real station for a new supported SUPPLY invitation; merchant confirms the same station at acceptance and originalterms freeze it; effective originalorder station scope cannot repeat; no automatic historical attribution",
+      "shared_contract": {
+        "invite_field": "supplyStationId",
+        "invite_column": "coop_invite.supply_station_id",
+        "accept_confirmation": "same supplyStationId, cannot rebind ataccept; existing nodeId is distinct",
+        "terms": "supplyBillingScope {version:REGISTRATION_STATION_V1,stationId,topicId,merchantMemberId}",
+        "proof_entry": "ICoopSettlementClaimService java.util.Optional<Long> recordConfirmedStationFulfillment(Long verificationAuditEventId), MANDATORY sameTX",
+        "proof_optional_empty": "No applicable newlyconfirmed V1 original only; not a successful attribution/settlement receipt",
+        "new_canonical_source_sql": "chengyinhub-admin/sql/migration_20261025_coop_order_station_fulfillment.sql",
+        "DDL_runtime": "NOT_RUN_NOT_PRODUCTION_AUTHORIZATION"
+      },
+      "owners": {
+        "E": "Invite/domain/mapper/service/API creationacceptance producer and direct tests",
+        "A": "RegistrationRedemptionApplication real auditID sameTX caller and direct tests",
+        "G": "Narrow immutable proof entity/mapper/claim reader and direct tests/interface",
+        "D": "Existing MiniProgram invite station selection/display/accept confirmation and direct Node source controls",
+        "root": "Shared contract/canonicalSQL/DAG/registry/integration/CI"
+      },
+      "invariants": [
+        "No SUPPLY→ORGANIZER or historicalSCAN→GROUP reinterpretation",
+        "No nodeId/template/currentstation guessing as originalscope",
+        "Same topic/merchant/legal station/current owner checks and original topic→registration lock order",
+        "Original claims and permanent economic keys unchanged; no duplicate sale/fulfillment/payment",
+        "One originalorder one originalconfirmed station, no overlapping effective same merchant station assignments",
+        "No accepted/historical originalterms backfill or mutation",
+        "No extra fees/dependencies/permissions/production actions"
+      ]
+    }
+  ],
+  "shared_contracts": {
+    "producer": "freezeOriginals(CoopSettlementCashClose, List<CoopSettlementCashContribution>, List<CoopSettlementOriginalComponent>)",
+    "refund": "applySucceededRefund(Long topicId, Long refundId): Optional<CoopSettlementRefundReceipt>",
+    "coordination": "G owns producer, seat-fee consumption and manual negative-margin path; B owns cumulative reversal; shared public signatures remain stable unless root integrates an explicit change"
+  },
+  "validation": "NOT_RUN; implement callers and test source first, then consolidated same-candidate review and regression",
+  "all_complete": false,
+  "public_benchmark": "五项业务规则-公开方案对照-20261024.md",
+  "pending_business_inputs": []
+}

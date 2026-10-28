@@ -11,7 +11,7 @@ global.getApp = () => ({ globalData: {} });
 let def;
 global.Component = value => { def = value; };
 require('../../pages/play/components/playkit-qa/index');
-const observer = def.observers['show, options, mode, multi, passed, finished, judge, lastOptionId, lastOptionIds, feedbackText, feedbackImages'];
+const observer = def.observers['show, options, mode, multi, passed, finished, judge, lastOptionId, lastOptionIds, feedbackText, feedbackImages, sessionId, nodeId'];
 // Shape: AdvancedGameRuntimeServiceImpl.buildPlayKit qa projection (options only id/label).
 // New receipt fields follow the QA-BE contract; zeroview fixtures contain no QA views.
 function view(overrides = {}) {

@@ -1,3 +1,4 @@
+const { seatTarget, seatKey, captureLogin, loginCurrent, seatRecovery } = require('../../../utils/registration-seat.js');
 const modal = require('../../../utils/modal.js');
 const cyLoading = require('../../../utils/loading.js');
 const cyToast = require('../../../utils/toast.js');
@@ -70,7 +71,7 @@ Component({
     detached() {
       this._invalidateParticipationCancellation();
       this._cancelDisposed = true;
-      this._detailDisposed = true; this._detailGeneration = (this._detailGeneration || 0) + 1; if (this._verificationWorkflow) { this._verificationWorkflow.destroy(); this._verificationWorkflow = null; cyLoading.hide(); }
+      this._detailDisposed = true; this._detailGeneration = (this._detailGeneration || 0) + 1; if (this._verificationWorkflow) { this._verificationWorkflow.destroy(); this._verificationWorkflow = null; if (this._verificationLoadingOwners) { this._verificationLoadingOwners.forEach(() => cyLoading.hide()); this._verificationLoadingOwners.clear(); } }
     },
   },
   // ⚠️ 深链壳(subpackageMember/mycanyuinfo)的 id 是页面 onLoad 里 setData 进去的:组件 attached
@@ -103,6 +104,9 @@ Component({
       const id = trimmedString(String(value == null ? '' : value))
       if (!id) return
       if (String(this.data.id) === id) return
+      this._detailGeneration = (this._detailGeneration || 0) + 1;
+      if (this._verificationWorkflow) { this._verificationWorkflow.destroy(); this._verificationWorkflow = null; }
+      if (this._verificationLoadingOwners) { this._verificationLoadingOwners.forEach(() => cyLoading.hide()); this._verificationLoadingOwners.clear(); }
       this._invalidateParticipationCancellation();
       this._cancelRecordPending = true;
       // 后到的 id 要把「缺参」态翻回加载中,否则界面还停在死文字上而请求已经在路上。
@@ -114,16 +118,29 @@ Component({
       const owner = String(app.getUserID && app.getUserID() || '');
       const generation = this._detailGeneration || 0;
       if (this._detailDisposed) return false;
-      key = owner + ':' + key;
+      const target = seatTarget(options);
+      const login = captureLogin(app, wx);
+      key = target ? seatKey(owner, target) : owner + ':' + key;
+      const seatCurrent = () => loginCurrent(app, wx, login) && !that._detailDisposed && generation === (that._detailGeneration || 0);
+      if (target && !seatCurrent()) return false;
       if (!this._verificationWorkflow) this._verificationWorkflow = createVerificationWorkflow({ deadlineMs: 15000, storage: wx, getOwner: () => app.getUserID && app.getUserID() });
-      if (this._verificationWorkflow.isBusy(key)) {
+      if (!target && this._verificationWorkflow.isBusy(key)) {
         cyToast('核销处理中，请勿重复提交');
         return false;
       }
-      cyLoading.show(loadingTitle);
+      const loadingOwner = {};
+      if (!target) {
+        if (!this._verificationLoadingOwners) this._verificationLoadingOwners = new Set();
+        this._verificationLoadingOwners.add(loadingOwner);
+        cyLoading.show(loadingTitle);
+      }
+      const finishLoading = () => {
+        if (that._verificationLoadingOwners && that._verificationLoadingOwners.delete(loadingOwner)) cyLoading.hide();
+      };
       const submitted = this._verificationWorkflow.run(key, function (done) {
         return app.sendRequest(Object.assign({}, options, {
           autoErrorToast: false,
+          hideLoading: !!target || options.hideLoading, silentError: !!target || options.silentError,
           success(r) { done(classifyVerificationOutcome(r, 'success', undefined, options)); },
           fail(res, status) { done(classifyVerificationOutcome(res, 'fail', status, options)); },
           successStatusAbnormal(res, status) {
@@ -131,17 +148,18 @@ Component({
           }
         }));
       }, function (result) {
-        cyLoading.hide();
+        finishLoading();
+        if (target && !seatCurrent()) return;
         if (that._detailDisposed || generation !== (that._detailGeneration || 0)
             || owner !== String(app.getUserID && app.getUserID() || '')) return;
         if (result.status === 'unknown') {
-          callback({ code: 202, msg: '核销结果待确认，请勿重复核销；请先查看核销记录' });
-          offerVerificationReadback(key, that._verificationWorkflow);
+          callback({ code: 202, msg: target ? '原席位结果待确认；再次扫描同一席位只查询结果，请勿改选席位重发' : '核销结果待确认，请勿重复核销；请先查看核销记录' });
+          if (!target) offerVerificationReadback(key, that._verificationWorkflow);
           return;
         }
         callback(result.response);
-      });
-      if (!submitted) cyLoading.hide();
+      }, target ? seatRecovery(app, target, seatCurrent) : undefined);
+      if (!submitted) finishLoading();
       return submitted;
     },
     _leave(url, current) {
@@ -233,8 +251,11 @@ Component({
     // 核验扫码:与 merchant/index、member/index 复用同一套扫码路由(utils/verification-scan),
     // 不在本页重新实现一套核销逻辑
     goScanQR() {
+      const login = captureLogin(app, wx), scanEpoch = this._detailGeneration || 0;
+      const scanCurrent = () => !this._detailDisposed && loginCurrent(app, wx, login) && scanEpoch === (this._detailGeneration || 0);
       wx.scanCode({
         success: (res) => {
+          if (!scanCurrent()) return;
           const scan = resolveVerificationScan(res.result);
           if (scan.kind === 'invalid') {
             cyToast(scan.message);

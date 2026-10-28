@@ -1,0 +1,22 @@
+{
+  "baseline": "e683b5a0ebc44cc217ac75e378c271fd96c80ae0",
+  "scope": "5 authorized production files + 2 exclusive unit files + own delivery directory",
+  "existing_creator_37_test_file_byte_preserved": "PASS",
+  "unchanged_unrelated_methods_and_protected_sources": "PASS",
+  "exact_contract_signatures_identity_and_local_boundary_source_checks": "PASS_SOURCE_ONLY",
+  "java_lexical_delimiters": "PASS_NOT_SYNTAX_OR_TYPE_COMPILATION",
+  "complete_7_file_delta_apply_check_against_base": "PASS_TEMPORARY_INDEX_NO_WORKTREE_CHANGE",
+  "secret_file_gate": "PASS",
+  "changed_new_files_limited_credential_patterns": "PASS_NOT_FULL_ENTROPY_HISTORY_SCAN",
+  "new_test_source_expected_cases": 66,
+  "new_java_units_executed": 0,
+  "java_compile": "NOT_RUN_E_PLAN_REQUIRED",
+  "mysql_redis_http_model": "NOT_RUN",
+  "ci_dispatches": 0,
+  "business_policy_changes": "NONE; existing player/gen disposition policies preserved",
+  "legacy_entry_cutover_and_durable_claim": "ROOT_E_PENDING_COMBINATION_NOT_CLOSED_BY_THIS_COMPONENT",
+  "initial_raw_patch_artifact_diff_check": "FAIL_CONTEXT_BLANK_LINES_TREATED_AS_TRAILING_WHITESPACE",
+  "final_delta_artifact": "production-and-tests.patch.gz; gzip mtime=0; exact decompressed source/test diff",
+  "decompressed_patch_sha256": "3d4532714f55c85a76af56e01cd1c9d06f15253c4878de1ce455544a825007a1",
+  "gzip_roundtrip_and_apply_check": "PASS_TEMPORARY_INDEX_NO_WORKTREE_CHANGE"
+}

@@ -1,0 +1,7 @@
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopDepositRefundMybatisIntegrationTest.java: original case names/assertions retained; ordinary source declarations 29 -> 36
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopDepositRefundAlarmTest.java: original case names/assertions retained; ordinary source declarations 3 -> 3
+XML_PARSE_PASS chengyinhub-system/src/main/resources/mapper/business/CoopInviteMapper.xml
+AFTER_COMPLETION_BYTES_UNCHANGED
+ONLY_REFERENCE_FIRST_SUBMIT_CALL
+NO_LATEST_OR_CURRENT_ATTEMPT_SELECTION
+JAVA_MYSQL_CI_PROVIDER_NOT_RUN

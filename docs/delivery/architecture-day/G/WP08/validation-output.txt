@@ -1,0 +1,12 @@
+{
+  "kind": "STATIC_ONLY",
+  "source_sha256": "a7b0d882e8331fed8ac963caea2ad3933ec2fe59341086f58387b0e4388e7536",
+  "source_files": 5,
+  "protected_files_unchanged": 20,
+  "production_delta": "EXACTLY_TWO_MAP_ENTRIES",
+  "new_seed": "TWO_INSERT_IF_MISSING_PAUSED_ORIGINAL_CRON_NO_DDL",
+  "java": "NOT_RUN",
+  "mysql": "NOT_RUN",
+  "permissions_and_operational_activation": "NOT_VERIFIED"
+}
+SECRET-FILE-GATE PASS: 当前 Git tree 无密钥/证书文件或私钥正文

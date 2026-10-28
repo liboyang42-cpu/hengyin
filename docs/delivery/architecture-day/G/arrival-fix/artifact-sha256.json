@@ -1,0 +1,15 @@
+{
+  "algorithm": "SHA-256",
+  "excludes_self": true,
+  "files": {
+    "docs/delivery/architecture-day/G/arrival-fix/CASES.md": "d0b5edf2b2adb4dbe457dacbd9dcb307e101994a04ce0e7075cdf11f034b9487",
+    "docs/delivery/architecture-day/G/arrival-fix/README.md": "f952ebefb97a668ff87c91677259e7747d4505c31693a9cee2ddbb39ee3671ae",
+    "docs/delivery/architecture-day/G/arrival-fix/source-checks.json": "1a3569019fddc5985abe376ef972311f26a017069c51e9c504d9b7cf2980df08",
+    "docs/delivery/architecture-day/G/arrival-fix/verify_static.py": "681f66d87837a40812833b01f47d1e0a57232cf020ebad3331f0a70ca1bf68d1",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ShopDayProofServiceImpl.java": "b5f2f3f10c0d8c14f5983b48d9daa203d7d661ec6107c902afb7b121a2055b47",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ShopDayProofServiceTest.java": "de7a39ef73423414370a4c15e39fe7c008a1ba89a07e1152db02dd8218b329ef",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ShopDayGameThenPhotoH2Test.java": "f06e50980d233e28d90884ac6df27a8b9e306b9f8ee20ad8c4a7ce31a0c27777",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayerNodeArrivalSharingH2Test.java": "81140dc58e60eafc13b498ad3e9030350b933290918630da5941a44f1dfe6fa4",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/ThemeRuntimeMySqlIT.java": "fdf3d6d22746ba2813c34cd50026a642af49f0740c74f71136c7945b97566911"
+  }
+}

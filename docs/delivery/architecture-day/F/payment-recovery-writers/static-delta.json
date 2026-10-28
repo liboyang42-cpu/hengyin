@@ -1,0 +1,18 @@
+{
+  "source": "9b284f0111b4337e388fc18d797b11c62112cd82",
+  "scope": "static_findings only; NOT trusted CI source verdict",
+  "removed": [
+    {
+      "rule": "NEW_TABLE_WRITER",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/WechatVerifiedPaymentFactMapper.xml#completeRecovery",
+      "detail": "wx_payment_callback_outbox <- chengyinhub-system:com.chengyinhub.business.mapper.WechatVerifiedPaymentFactMapper"
+    },
+    {
+      "rule": "NEW_TABLE_WRITER",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/WechatVerifiedPaymentFactMapper.xml#insertRecovery",
+      "detail": "wx_payment_callback_outbox <- chengyinhub-system:com.chengyinhub.business.mapper.WechatVerifiedPaymentFactMapper"
+    }
+  ],
+  "added": [],
+  "remaining_static_findings": 1
+}

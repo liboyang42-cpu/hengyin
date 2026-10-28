@@ -264,6 +264,7 @@ class PlayKitPresentConfigTest {
     private Map<String, Object> sessionView(String configJson) {
         GameRuntimeSessionMapper sessionMapper = mock(GameRuntimeSessionMapper.class);
         AdvancedGameRuntimeServiceImpl service = new AdvancedGameRuntimeServiceImpl();
+        com.chengyinhub.business.service.impl.AdvancedActionTestFixtures.transactions(service);
         ReflectionTestUtils.setField(service, "sessionMapper", sessionMapper);
         GameRuntimeSession session = new GameRuntimeSession();
         session.setId(51L);

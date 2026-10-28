@@ -57,6 +57,7 @@ import static org.mockito.Mockito.when;
  *  - leaders 为空时不返回 0 而照查 ByMerchant ⇒ merchantWhoNeverScannedGroupCode_getsZero 红
  *  - 团口径误用 ByMerchant 而非 ByVerifiers   ⇒ merchantWhoServedGroup_paidByGroupHeads 红
  *  - 组织槽为空时改走团口径                    ⇒ CoopSettlementPerMerchantTest 5 条红(T1 回归)
+ * WP04：显式计划替身下的五分项组合测试；不证明模拟的 CLUB/团路径已开放现金结算。
  */
 class CoopSettlementGroupBasisTest {
 
@@ -101,6 +102,7 @@ class CoopSettlementGroupBasisTest {
         ReflectionTestUtils.setField(svc, "cmsRegistrationMapper", cmsRegistrationMapper);
         ReflectionTestUtils.setField(svc, "coopOrderMapper", coopOrderMapper);
         ReflectionTestUtils.setField(svc, "coopSettlementMapper", coopSettlementMapper);
+        PreparedCoopPlanFixture.install(svc, cmsRegistrationMapper, coopOrderMapper, coopGroupVerifyMapper, coopSettlementMapper);
         ReflectionTestUtils.setField(svc, "coopGroupVerifyMapper", coopGroupVerifyMapper);
         ReflectionTestUtils.setField(svc, "pricingService", new PricingServiceImpl());
         ReflectionTestUtils.setField(svc, "umsMemberService", mock(IUmsMemberService.class));
@@ -127,6 +129,27 @@ class CoopSettlementGroupBasisTest {
                 .thenReturn(groupBasis(0, "0"));
     }
 
+    @Test
+    void compositionScopeKeepsClubIdentityWithoutEnablingItsCashPath() {
+        PreparedCoopPlanFixture.topic(TOPIC);
+        var claims = (com.chengyinhub.business.service.ICoopSettlementClaimService)
+                ReflectionTestUtils.getField(svc, "coopSettlementClaimService");
+        var plans = coopOrderMapper.selectEffectiveOrdersByTopicId(TOPIC).stream()
+                .map(order -> claims.prepare(order, new java.util.Date())).toList();
+        com.chengyinhub.business.service.support.CoopSettlementContract.requireIndependentOrderScopes(plans);
+        var club = plans.get(0).getSnapshot();
+        assertEquals("CLUB", club.getBeneficiaryRole()); assertEquals(CLUB, club.getBeneficiaryId());
+        assertEquals("ORGANIZER_LEAD", club.getServiceUnit());
+        assertEquals(TOPIC, club.getCommercialContextId());
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class,
+                () -> com.chengyinhub.business.service.support.CoopSettlementContract.requireSupportedCashPath(club));
+        assertEquals(0, plans.get(2).getVerifiedHeads());
+        assertEquals(0, BigDecimal.ZERO.compareTo(plans.get(2).getOriginAmount()));
+        for (var plan : plans) for (var line : plan.getOriginLines())
+            com.chengyinhub.business.service.support.CoopSettlementContract.requireHeaderEquality(plan.getSnapshot(), line);
+        verify(coopSettlementMapper, never()).insertCoopSettlement(any());
+    }
+
     /**
      * ★ 主路径:A 扫过团码(接待了这个团)⇒ 按团的核销数拿钱。
      * 注意 A 自己**一个玩家的票都没扫过**(有领队时那是俱乐部干的)——
@@ -134,7 +157,8 @@ class CoopSettlementGroupBasisTest {
      */
     @Test
     void merchantWhoServedGroup_paidByGroupHeads() {
-        svc.settleCoopTopic(topic(), new BigDecimal("5000"));
+        PreparedCoopPlanFixture.topic(TOPIC);
+        PreparedCoopPlanFixture.settle(svc, topic(), new BigDecimal("5000"));
 
         Map<String, List<CoopSettlement>> lines = capturedLines();
         assertAmount("2000.00", lineOf(lines, "MERCHANT_VERIFY", MERCHANT_A), "A 接待了 100 人的团 → 20×100");
@@ -145,7 +169,8 @@ class CoopSettlementGroupBasisTest {
     /** ★★ 没扫过团码 = 没接待 = 拿 0。「有合作单就自动拿钱」必须不成立(否则钱与接待动作解绑)。 */
     @Test
     void merchantWhoNeverScannedGroupCode_getsZero() {
-        svc.settleCoopTopic(topic(), new BigDecimal("5000"));
+        PreparedCoopPlanFixture.topic(TOPIC);
+        PreparedCoopPlanFixture.settle(svc, topic(), new BigDecimal("5000"));
 
         Map<String, List<CoopSettlement>> lines = capturedLines();
         assertAmount("0.00", lineOf(lines, "MERCHANT_VERIFY", MERCHANT_B),
@@ -160,7 +185,9 @@ class CoopSettlementGroupBasisTest {
                 clubOrder(),
                 merchantOrder(2L, MERCHANT_A, 1, "30", null)));
 
-        svc.settleCoopTopic(topic(), new BigDecimal("5000"));
+        PreparedCoopPlanFixture.topic(TOPIC);
+
+        PreparedCoopPlanFixture.settle(svc, topic(), new BigDecimal("5000"));
 
         Map<String, List<CoopSettlement>> lines = capturedLines();
         assertAmount("1500.00", lineOf(lines, "MERCHANT_VERIFY", MERCHANT_A), "团的 5000×30%");
@@ -169,7 +196,8 @@ class CoopSettlementGroupBasisTest {
     /** 俱乐部自己(LEAD_FEE)照旧全主题口径 —— 它带的是整趟,D22 没动它。 */
     @Test
     void clubLeadFee_unchangedByD22() {
-        svc.settleCoopTopic(topic(), new BigDecimal("5000"));
+        PreparedCoopPlanFixture.topic(TOPIC);
+        PreparedCoopPlanFixture.settle(svc, topic(), new BigDecimal("5000"));
 
         Map<String, List<CoopSettlement>> lines = capturedLines();
         assertAmount("1000.00", lineOf(lines, "LEAD_FEE", LEADER), "俱乐部按全主题 100 人头 × ¥10");
@@ -179,7 +207,8 @@ class CoopSettlementGroupBasisTest {
     /** 结算行快照与金额同口径(对账时「记着团 100 人却拿 0」会对不上)。 */
     @Test
     void groupBasis_snapshotMatchesAmount() {
-        svc.settleCoopTopic(topic(), new BigDecimal("5000"));
+        PreparedCoopPlanFixture.topic(TOPIC);
+        PreparedCoopPlanFixture.settle(svc, topic(), new BigDecimal("5000"));
 
         Map<String, List<CoopSettlement>> lines = capturedLines();
         assertEquals(Integer.valueOf(100), lineOf(lines, "MERCHANT_VERIFY", MERCHANT_A).getVerifiedHeads(),
@@ -191,7 +220,8 @@ class CoopSettlementGroupBasisTest {
     /** 五分项守恒仍然成立(动了基数就必须重验守恒,否则残差被静默吃掉)。 */
     @Test
     void conservationStillHolds() {
-        svc.settleCoopTopic(topic(), new BigDecimal("5000"));
+        PreparedCoopPlanFixture.topic(TOPIC);
+        PreparedCoopPlanFixture.settle(svc, topic(), new BigDecimal("5000"));
 
         Map<String, List<CoopSettlement>> lines = capturedLines();
         BigDecimal sum = lines.get("PLATFORM").get(0).getAmount()

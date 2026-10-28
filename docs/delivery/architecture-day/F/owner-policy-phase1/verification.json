@@ -1,0 +1,85 @@
+{
+  "status": "IMPLEMENTED_REVIEW_CANDIDATE_NOT_CI_ACTIVATED",
+  "parent_sha": "50f3c4d3c67383b8ea2e3e230d7f16f2e73f3eb6",
+  "branch": "codex/architecture-day-f-owner-policy",
+  "code_and_document_scope": [
+    "ci/architecture/gate.py",
+    "ci/architecture/test_gate.py",
+    "ci/architecture/owners.json",
+    "ci/architecture/commands.json",
+    "ci/architecture/README.md",
+    "docs/delivery/architecture-day/F/owner-policy-phase1/"
+  ],
+  "python_version": "3.12.14",
+  "actual_checks": {
+    "pre_fix_failure_reproduced": true,
+    "dedicated_source_CLI_fixture_tests": 21,
+    "total_architecture_selftests": 115,
+    "failures": 0,
+    "errors": 0,
+    "full_regression_seconds": 6.017,
+    "existing_CI_cost_script": "PASS",
+    "A_artifact_hashes_checked": 2,
+    "A_exact_statement_fingerprints_checked_across_three_sources": 13,
+    "A_full_XML_blobs_checked_across_three_sources": 2,
+    "scope_and_frozen_files": "PASS",
+    "secret_file_gate": "PASS scoped 9 files",
+    "gitleaks": "v8.21.2 PASS scoped 9 files, 0 findings",
+    "doc_JSON_links_and_hashes": "PASS",
+    "relative_links": 3,
+    "git_diff_check": "PASS"
+  },
+  "unchanged_parent_files": [
+    {
+      "path": "ci/architecture/baseline.json",
+      "sha256": "1997d73ccf6133b3eb3ceb55eb26357181ec1df02bcd22f519f7cfc30a905bc3",
+      "equal_parent": true
+    },
+    {
+      "path": "ci/architecture/locking-select-baseline.proposal.json",
+      "sha256": "c71bbc7fdbf4996b68f5977ebd344dac150f56128dea4837c69ec3f91b83e52b",
+      "equal_parent": true
+    },
+    {
+      "path": "ci/architecture/collect_jdeps.py",
+      "sha256": "44f1bdb9194429a7bdce0686bc4d0fa5be530175c8841255c998ada5891308bf",
+      "equal_parent": true
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "sha256": "5995bcab2c0927c10b4b01f0adddd7198a88690b43eefcc7d404fe98bb8414c1",
+      "equal_parent": true
+    },
+    {
+      "path": "ci/real_storage_it.py",
+      "sha256": "269813582a0ae72efc2d397cca9376658cadf9bdcd5c635fb1dd95dce1084678",
+      "equal_parent": true
+    }
+  ],
+  "original_four_command_references_unchanged": true,
+  "active_policy_facts": 2,
+  "active_pure_writers": 2,
+  "protected_policy_files": [
+    "gate.py",
+    "baseline.json",
+    "locking-select-baseline.proposal.json",
+    "owners.json",
+    "commands.json"
+  ],
+  "new_baseline_or_allowlist_entries": 0,
+  "workflow_verifier_ref": "UNCHANGED_155; root must review independent trusted revision then repin",
+  "actual_trusted_source_CI": "NOT_RUN",
+  "Java_HTTP_MySQL_Redis_jdeps_models_CI_dispatch": "NOT_RUN_BY_F",
+  "artifact_sha256": {
+    "checks.txt": "e36e69cc1b88416dfb0abd2ddef70ce99d6ddefa456cb39658da42d30cc64e98",
+    "evidence.json": "ed8323148ab2f6fb27d14720fa202b9feaeed2aab4143f212a198f3e231a940a",
+    "REPORT.md": "299a04c8df819dd46c7aeb89ec1df4f27b2ee3e669d519af6f83156b605358dc"
+  },
+  "code_sha256": {
+    "ci/architecture/gate.py": "65c269353a2dc96f48072e06285ea5035875306d3e677cd1e7b807a0bc8e927e",
+    "ci/architecture/test_gate.py": "ab1ed4261ec18dd4297f05555d874b53eebea55f4e18040a6bbe39a522c99c4e",
+    "ci/architecture/owners.json": "74add8f567f34f84e11c7a4c8b47a2eb2b522bb52d8c78d5ddca094660d53d55",
+    "ci/architecture/commands.json": "55f5773dd613d6728985d3daea7e4fca6c3788171c5338d97d5919cf1ab7b0de",
+    "ci/architecture/README.md": "d34e25c4f0e8722fdefba8966759e0807427085a15b17b7dd1e81167947f97f5"
+  }
+}

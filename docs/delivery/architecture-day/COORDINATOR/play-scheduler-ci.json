@@ -1,0 +1,16 @@
+{
+  "core_source": "cce07a2ce1c4c02efec7abe501f1073cafeefb5a",
+  "source_class_counts": {
+    "hint_unlock": 10,
+    "scheduler_session_existing": 3,
+    "scheduler_handoff_new": 3
+  },
+  "harness_selftests": 47,
+  "matrix_max_parallel": 20,
+  "D29_prior_same_source_receipt": "05f4aa69e61752dcafb0bec73ca9ae9b2ff7a7f5/run40038698400 root XML29/29 zero failure/error/skip CLEAN2; not this new source acceptance",
+  "planned_full_ci": "52 related Photo unit +AiCreator new2+D owner11 and all original required CI/MyBatis/Theme/APPLIED/startup/jdeps",
+  "full_ci_dispatched": false,
+  "real_storage_dispatched": false,
+  "pending_source_execution": true,
+  "all_complete": false
+}

@@ -57,7 +57,7 @@ class TopicOfficialCopyBoundaryTest {
     void officialCopyForcesConfiguredPlatformPayeeAndContentSlot() {
         when(productRoleService.isPlatformOwned(41L)).thenReturn(true);
 
-        assertEquals(42L, service.copyOfficialCmsTopic(41L, Collections.<String, Object>singletonMap("copyType", 1)));
+        assertEquals(42L, com.chengyinhub.business.service.support.TopicCopyTestWiring.owner(service).copyOfficialCmsTopic(41L, Collections.<String, Object>singletonMap("copyType", 1)));
 
         org.mockito.ArgumentCaptor<CmsTopic> inserted = org.mockito.ArgumentCaptor.forClass(CmsTopic.class);
         verify(topicMapper).insertCmsTopic(inserted.capture());
@@ -70,7 +70,7 @@ class TopicOfficialCopyBoundaryTest {
         when(productRoleService.isPlatformOwned(41L)).thenReturn(false);
 
         assertThrows(IllegalArgumentException.class,
-                () -> service.copyOfficialCmsTopic(41L, Collections.<String, Object>emptyMap()));
+                () -> com.chengyinhub.business.service.support.TopicCopyTestWiring.owner(service).copyOfficialCmsTopic(41L, Collections.<String, Object>emptyMap()));
 
         verify(topicMapper, never()).insertCmsTopic(any(CmsTopic.class));
     }
@@ -85,7 +85,7 @@ class TopicOfficialCopyBoundaryTest {
         when(productRoleService.isPlatformOwned(41L)).thenReturn(true);
 
         assertThrows(IllegalArgumentException.class,
-                () -> service.copyOfficialCmsTopic(41L, Collections.<String, Object>emptyMap()));
+                () -> com.chengyinhub.business.service.support.TopicCopyTestWiring.owner(service).copyOfficialCmsTopic(41L, Collections.<String, Object>emptyMap()));
 
         verify(topicMapper, never()).insertCmsTopic(any(CmsTopic.class));
     }
@@ -97,7 +97,7 @@ class TopicOfficialCopyBoundaryTest {
         when(productRoleService.activeContentSlot(42L)).thenReturn(null);
 
         assertThrows(IllegalStateException.class,
-                () -> service.copyOfficialCmsTopic(41L, Collections.<String, Object>emptyMap()));
+                () -> com.chengyinhub.business.service.support.TopicCopyTestWiring.owner(service).copyOfficialCmsTopic(41L, Collections.<String, Object>emptyMap()));
 
         verify(topicMapper).insertCmsTopic(any(CmsTopic.class));
     }

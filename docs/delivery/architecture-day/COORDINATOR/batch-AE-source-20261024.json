@@ -1,0 +1,272 @@
+{
+  "schema": 1,
+  "updated_utc": "2026-10-24T08:05:43.546646+00:00",
+  "parent": "65e881857d4eda9cc0abd27cb9ba677f355d8658",
+  "candidates": {
+    "A": {
+      "parent": "06a571b1247620a9bdcea068be0ded973671d17c",
+      "head": "ae1606843cca6ed847d84059640b1bab6e1decdc",
+      "exact": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RegistrationTopicFenceMySqlIT.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationFundsMybatisIntegrationTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RegistrationTopicFenceTest.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationTopicFence.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackMutationService.java",
+        "docs/delivery/architecture-day/A/WP04-TOPIC-FENCE/README.md",
+        "docs/delivery/architecture-day/A/WP04-TOPIC-FENCE/g-terminal-hook.review.patch",
+        "docs/delivery/architecture-day/A/WP04-TOPIC-FENCE/outer-owner.review.patch",
+        "docs/delivery/architecture-day/A/WP04-TOPIC-FENCE/static-result.json",
+        "docs/delivery/architecture-day/A/WP04-TOPIC-FENCE/verify_static.py"
+      ],
+      "composed": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java"
+      ]
+    },
+    "E": {
+      "parent": "cc91b0845e3abd4a2060d54a857c8c179bd22d4f",
+      "head": "8372a9d0a37f62cd7e7d6375b5a537e4e921590a",
+      "exact": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/domain/vo/TopicChapterRouteQualityTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TencentMapClientBudgetTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/MapGeocodeBudgetTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicRouteBudgetTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicRouteGeometryCacheTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicRouteServiceImplTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicRouteSpringWiringTest.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/vo/TopicChapterVO.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ITopicRouteService.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/TencentMapClient.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MapGeocodeServiceImpl.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MapResponseCache.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteServiceImpl.java",
+        "chengyinhub-xcx/pages/square/components/route-map/index.js",
+        "chengyinhub-xcx/pages/square/components/route-map/index.wxml",
+        "chengyinhub-xcx/pages/topic/index/index.js",
+        "chengyinhub-xcx/tests/unit/route-map-quality.test.js",
+        "chengyinhub-xcx/tests/unit/topic-route-preview-truth.test.js",
+        "docs/delivery/architecture-day/E/MAP-BUDGET/README.md",
+        "docs/delivery/architecture-day/E/MAP-QUALITY-CITY/README.md"
+      ],
+      "composed": [
+        "chengyinhub-xcx/utils/topic-route-preview.js"
+      ]
+    }
+  },
+  "compositions": {
+    "A": "B0ff Qualifier and WechatPaymentOperations outbound field retained; A other11 files exact",
+    "E": "fixed new utility text typo only; other20 files exact",
+    "metadata": "registered actual A9 suite and manual workflow choice; strict precheck and original test count contract preserved"
+  },
+  "checks": {
+    "map_Node": "28 PASS0skip",
+    "scope_and_action_Node": "63 PASS0skip; includes existing actual-owner and negative controls",
+    "JS_syntax": "topic preview utility and both changed production consumers PASS",
+    "discovery": "1489 test files,7 sentinels, selftest PASS",
+    "registry": "15 selftests PASS;97 registered classes exact source precheck PASS",
+    "diff_check": "PASS",
+    "secret_scan": "initial source-only diff0; expanded receipt2 generic-api-key hits proven exact SHA-256 file digests; explicit path/algorithm/hex records, no scanner exemptions; expanded233402byte scan0leaks",
+    "Java_JUnit_MySQL_DevTools_provider": "NOT_RUN"
+  },
+  "required_remaining": [
+    "A outer TeamGroup/ClubEventOps topic-first locks before whole-business safety",
+    "B verified fact delta and G original-allocation refund same-transaction integration",
+    "three pending human financial decisions; no presumed approval",
+    "H pending map source/valid-node coverage review",
+    "same-source Java, actual MySQL XML/CLEAN, HTTP identity and business state readback"
+  ],
+  "all_complete": false,
+  "file_digests": [
+    {
+      "path": ".github/workflows/real-storage-it.yml",
+      "algorithm": "SHA-256",
+      "hex": "3d431bcb3ce7131855232ff22b410cea9f629f66496a23d0a98fbecacc8bd29f"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/domain/vo/TopicChapterRouteQualityTest.java",
+      "algorithm": "SHA-256",
+      "hex": "abcd0fbfd50f4a5c2cbf9063f6064ed4db048c92896703dab714ce94de666376"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RegistrationTopicFenceMySqlIT.java",
+      "algorithm": "SHA-256",
+      "hex": "e9b8268a1df88b8dd4e97989a56e4d3b73b680ded6a65fb57a1a1ff51a736eb6"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationFundsMybatisIntegrationTest.java",
+      "algorithm": "SHA-256",
+      "hex": "0084685b23a51fab283105b7b7dba24dff8120039473ee0545e976643b344de1"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TencentMapClientBudgetTest.java",
+      "algorithm": "SHA-256",
+      "hex": "3afd0069fdff842743075d7da86878888a2a7f14924bfb2e4fcc3b5f8dccbf7d"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/MapGeocodeBudgetTest.java",
+      "algorithm": "SHA-256",
+      "hex": "44356d6f4317fe8579d431ee6f66a6ee85e4c94b958177fe4f3625ee94c41dae"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RegistrationTopicFenceTest.java",
+      "algorithm": "SHA-256",
+      "hex": "c6129ae592fda5ffce92afdc6d1615966663640cfd33890fe5f6ec0255e35179"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicRouteBudgetTest.java",
+      "algorithm": "SHA-256",
+      "hex": "118e49f66f67d99e49d5c740cb42b62e77b3d9879b1b16d6246d0de4f8efb91c"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicRouteGeometryCacheTest.java",
+      "algorithm": "SHA-256",
+      "hex": "2cd43b0ca63a9d6222442779a9efa4aedef5775c24e04d6bdc0c386241e42042"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicRouteServiceImplTest.java",
+      "algorithm": "SHA-256",
+      "hex": "060bf92d3e23127c3b2e7acf14b1638bbaad06392214f4089cf20b231eab511b"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicRouteSpringWiringTest.java",
+      "algorithm": "SHA-256",
+      "hex": "3c1806ee6bfd5fc35652708e1980464e20a92e284e45f50ca2eb2a6ba33a0600"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/vo/TopicChapterVO.java",
+      "algorithm": "SHA-256",
+      "hex": "b144de493ced796702f4a751d57873a01891dabc3e3db4929e2e0c51729add78"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ITopicRouteService.java",
+      "algorithm": "SHA-256",
+      "hex": "2ee77764ef929d00e49eb2753eab21473b6664bd6c247a5a569545d51e6fc0ef"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/TencentMapClient.java",
+      "algorithm": "SHA-256",
+      "hex": "05760ef634838da00c5be325017c64ccb4cca0c0f1d5258de733aacf39c34ee5"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+      "algorithm": "SHA-256",
+      "hex": "1f939e4100097c42ef3aab6e74a6cb7714522d79e2c6f9b85f771973bba05e40"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MapGeocodeServiceImpl.java",
+      "algorithm": "SHA-256",
+      "hex": "ef21c03d72cfa6282c201cc62809819ae1bef3baf63cbc11e8bf370b4da97071"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MapResponseCache.java",
+      "algorithm": "SHA-256",
+      "hex": "5666b04f30f7310ac91009729517dcae9380390c83abd00968b257de3b169026"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java",
+      "algorithm": "SHA-256",
+      "hex": "5eb83d4c9beee111adbbeaaac40302c145ade9d4f11399c1a783091f2f9a130c"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationTopicFence.java",
+      "algorithm": "SHA-256",
+      "hex": "56d38fa019b7943a2ff7e91dad25524e276ec482a6ef4625edeec3019898e75a"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteServiceImpl.java",
+      "algorithm": "SHA-256",
+      "hex": "489b95a87a6f8dbea5d37c561f7fcb8f521fac2b841050f20e03ce1d0c945159"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackMutationService.java",
+      "algorithm": "SHA-256",
+      "hex": "a4cf50d3769887a3c62a43a0122b867d0cc0fd5b6e87cb3502546289b5da382b"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/square/components/route-map/index.js",
+      "algorithm": "SHA-256",
+      "hex": "7c88dbb52d6f8378e4d263d16287247ce149850ea5b057325a1e489b67c9bb78"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/square/components/route-map/index.wxml",
+      "algorithm": "SHA-256",
+      "hex": "bdc3b88a07667801b0d0dcf5959f7bacbeedc5bc96a371104f6440afe09250b4"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/topic/index/index.js",
+      "algorithm": "SHA-256",
+      "hex": "eed95dd6262ca7164d8c815c3f8d1386a5826c06b01c6997de3c1cd6205bdf67"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/route-map-quality.test.js",
+      "algorithm": "SHA-256",
+      "hex": "36026744683d1b42c31f3e31ba1070927ab572d5bc8520fa593d0605c975ed26"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/topic-route-preview-truth.test.js",
+      "algorithm": "SHA-256",
+      "hex": "dc68731044b34430d4f8ee515a83503fe73d280882eb329fd0beb3e540bd1ea4"
+    },
+    {
+      "path": "chengyinhub-xcx/utils/topic-route-preview.js",
+      "algorithm": "SHA-256",
+      "hex": "e7d3342776dfb56b5e065774b200ff64b6b1dba4222fdc96a02077b528d1910c"
+    },
+    {
+      "path": "ci/real-storage-it-registry.json",
+      "algorithm": "SHA-256",
+      "hex": "f52eac3edfb011b58aba42b9b829a95e8d4f506c52b3b8397cb27ba9f008419c"
+    },
+    {
+      "path": "ci/test_real_storage_it.py",
+      "algorithm": "SHA-256",
+      "hex": "b56b6d46157feb92d3f45d124ad817b7d6231eaf958edc6ad057410c4ae922b0"
+    },
+    {
+      "path": "docs/delivery/architecture-day/A/WP04-TOPIC-FENCE/README.md",
+      "algorithm": "SHA-256",
+      "hex": "293fbe4470a779d773ebc272d9d3d6f748b5cebd79de45f6053100526950e411"
+    },
+    {
+      "path": "docs/delivery/architecture-day/A/WP04-TOPIC-FENCE/g-terminal-hook.review.patch",
+      "algorithm": "SHA-256",
+      "hex": "e9ae34da2bf6c149bea7547101949a09f1e2bfe63c0d60e91f2c6bebeed11d36"
+    },
+    {
+      "path": "docs/delivery/architecture-day/A/WP04-TOPIC-FENCE/outer-owner.review.patch",
+      "algorithm": "SHA-256",
+      "hex": "334b8728d5a86ec15e28cfb0721bae17f9f3d1c74239021ddae042a0a3aaef35"
+    },
+    {
+      "path": "docs/delivery/architecture-day/A/WP04-TOPIC-FENCE/static-result.json",
+      "algorithm": "SHA-256",
+      "hex": "ccf71d5210c5e80e5eea238f198ab95e4c8b17805e40d068731ba905cbd07678"
+    },
+    {
+      "path": "docs/delivery/architecture-day/A/WP04-TOPIC-FENCE/verify_static.py",
+      "algorithm": "SHA-256",
+      "hex": "dd70da5e21cd77a48d47768c7f76a691aac4011f7df6522d21bc9b1ee301a1bf"
+    },
+    {
+      "path": "docs/delivery/architecture-day/E/MAP-BUDGET/README.md",
+      "algorithm": "SHA-256",
+      "hex": "112a7c7999d2156012ff703ee88c35e0a92f2c00cf2f144002914a85341e8723"
+    },
+    {
+      "path": "docs/delivery/architecture-day/E/MAP-QUALITY-CITY/README.md",
+      "algorithm": "SHA-256",
+      "hex": "06a19781902bc0bf801bb3757aced076c8eaae91ca13a9120395910262c09266"
+    }
+  ],
+  "scan_followup": {
+    "initial_rule": "generic-api-key",
+    "findings": 2,
+    "only_files": [
+      "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TencentMapClientBudgetTest.java",
+      "chengyinhub-system/src/main/java/com/chengyinhub/business/service/TencentMapClient.java"
+    ],
+    "verification": "each value independently recomputed as exact current file SHA-256; no credential",
+    "scanner_policy_changed": false,
+    "public_push_before_resolution": false
+  }
+}

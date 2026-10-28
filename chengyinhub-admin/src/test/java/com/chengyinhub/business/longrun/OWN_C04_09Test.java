@@ -18,7 +18,9 @@ class OWN_C04_09Test {
     private NpcChatWriteService writes(NpcChatRequestMapper requests) {
         PlatformTransactionManager transactions = mock(PlatformTransactionManager.class);
         when(transactions.getTransaction(any())).thenAnswer(inv -> new SimpleTransactionStatus());
-        return new NpcChatWriteService(requests, mock(NpcChatLogMapper.class), transactions);
+        NpcChatWriteService writes=new NpcChatWriteService(requests,mock(NpcChatLogMapper.class),transactions);
+        org.springframework.test.util.ReflectionTestUtils.setField(writes,"asrIntents",mock(com.chengyinhub.business.mapper.NpcAsrIntentMapper.class));
+        return writes;
     }
     private NpcChatRequest request() {
         NpcChatRequest request = new NpcChatRequest();

@@ -46,17 +46,22 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         from theme_state_key
     </sql>
 
-    <select id="selectByTopicIdForUpdate" resultMap="ThemeStateKeyResult">
-        <include refid="selectThemeStateKeyVo"/> where topic_id = #{topicId} order by id for update
-    </select>
-    <select id="selectByTopicIdAndStateKeyForUpdate" resultMap="ThemeStateKeyResult">
-        <include refid="selectThemeStateKeyVo"/> where topic_id = #{topicId} and state_key = #{stateKey} for update
-    </select>
 
     <select id="selectByTopicId" resultMap="ThemeStateKeyResult">
         <include refid="selectThemeStateKeyVo"/>
         where topic_id = #{topicId}
         order by id
+    </select>
+
+    <select id="lockTopicForStateKeyWrite" resultType="java.lang.Long" useCache="false" flushCache="true">
+        select id from cms_topic where id = #{topicId} for update
+    </select>
+
+    <select id="selectByTopicIdForUpdate" resultMap="ThemeStateKeyResult" useCache="false" flushCache="true">
+        <include refid="selectThemeStateKeyVo"/>
+        force index (uk_theme_state_key)
+        where topic_id = #{topicId}
+        order by id for update
     </select>
 
     <insert id="upsertThemeStateKey" parameterType="ThemeStateKey" useGeneratedKeys="true" keyProperty="id">
@@ -86,6 +91,12 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <select id="selectByTopicIdAndStateKey" resultMap="ThemeStateKeyResult">
         <include refid="selectThemeStateKeyVo"/>
         where topic_id = #{topicId} and state_key = #{stateKey}
+    </select>
+
+    <select id="selectByTopicIdAndStateKeyForUpdate" resultMap="ThemeStateKeyResult" useCache="false" flushCache="true">
+        <include refid="selectThemeStateKeyVo"/>
+        where topic_id = #{topicId} and state_key = #{stateKey}
+        for update
     </select>
 
     <!-- 只改定义元数据;state_key / key_type / scope 不在 SET 里,改 label 永不改键名。 -->

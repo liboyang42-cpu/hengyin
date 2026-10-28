@@ -37,13 +37,13 @@ def all_required_clean(directory):
     (门禁新增一套却没人跑 = fail-closed)。别为了让它绿而去删 EXPECTED 里的条目。
     """
     write_report(directory, "CoopListReadOnlyMybatisIntegrationTest", 5)
-    write_report(directory, "RegistrationFundsMybatisIntegrationTest", 98)
+    write_report(directory, "RegistrationFundsMybatisIntegrationTest", 101)
     write_report(directory, "RegistrationEquityMybatisIntegrationTest", 5)
     write_report(directory, "RefundPayoutMybatisIntegrationTest", 30)
     write_report(directory, "ExploreAllianceMvpRealDbIT", 5)
     write_report(directory, "ExploreAllianceRedeemRealDbIT", 4)
     write_report(directory, "ExploreScanReplayRealDbIT", 4)
-    write_report(directory, "TandianriBatch0FundsMybatisIntegrationTest", 16)
+    write_report(directory, "TandianriBatch0FundsMybatisIntegrationTest", 17)
     write_report(directory, "ShopDayOneTicketMySqlIT", 5)
     write_report(directory, "TandianriBatch3FundsMybatisIntegrationTest", 18)
     write_report(directory, "ClubCorporatePayeeMybatisIntegrationTest", 14)
@@ -96,8 +96,8 @@ def all_required_clean(directory):
         ("PlayerRunSessionOrderingMybatisIntegrationTest", 6),
         ("RoamShareSnapshotConcurrencyMySqlIT", 3),
         ("ClubEventTransferCancellationMySqlIT", 3),
-        ("RefundRetryAndRemainderMySqlIT", 20),
-        ("SignupNoticeAfterCommitPersistenceMySqlIT", 5),
+        ("RefundRetryAndRemainderMySqlIT", 10),
+        ("SignupNoticeAfterCommitPersistenceMySqlIT", 18),
         ("TopicLikeDesiredStateMySqlIT", 3),
         ("MonitorMissingJobsMySqlIT", 3),
         ("MemberPasswordWidthMySqlIT", 3),
@@ -276,6 +276,13 @@ class FundsItExpectedCountTest(unittest.TestCase):
         missing = [short for short in funds_it_gate.EXPECTED if short not in gate]
         self.assertEqual([], missing,
                          "这些套件登记了回读却没进 -Dtest 执行清单:%s" % missing)
+        step = _WORKFLOW.read_text(encoding="utf-8").split(
+            "      - name: Run funds MySQL integration gate (fail-closed on missing MySQL)\n", 1)[1].split(
+            "      - name: Stop Oracle MySQL scratch\n", 1)[0]
+        for flag in ("B_PAYMENT_FACT_DDL_APPROVED", "A_REGISTRATION_PAYMENT_FACT_DDL_APPROVED"):
+            self.assertIn("          " + flag + ": '1'", step)
+        self.assertIn("CHENGYIN_TEST_MYSQL_HOST: 127.0.0.1", step)
+        self.assertIn("CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX: _gh${{ github.run_id }}", step)
 
     def test_four_a_migrations_are_covered_by_the_funds_push_trigger(self):
         """★迁移文件名里的 funds 字样是 load-bearing。

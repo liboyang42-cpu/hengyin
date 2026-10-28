@@ -1,0 +1,215 @@
+{
+  "kind": "STATIC_SOURCE_ONLY_NOT_JAVA_OR_DB_VERIFICATION",
+  "base": "4cf548c3e8b05c6d23f3252c7e5d063691ef0eaa",
+  "negative": "acc4bf5ea10bbefabb9d5db52dd17dc800b3a955",
+  "original_total_cases": 57,
+  "candidate_total_cases": 66,
+  "tests": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ShopDayProofServiceTest.java",
+      "original_cases": [
+        "arrivalCreatesPendingProgressWithoutPretendingCompletion",
+        "photoRequiresArrivalAndKeepsProgressPending",
+        "photoBeforeArrivalFailsClosed",
+        "repeatedPhotoReadsBackTheStoredCounterpartInsteadOfReportingFalseFailure",
+        "differentSecondPhotoCannotOverwriteOriginalProof"
+      ],
+      "candidate_cases": [
+        "arrivalCreatesPendingProgressWithoutPretendingCompletion",
+        "photoRequiresArrivalAndKeepsProgressPending",
+        "photoBeforeArrivalFailsClosed",
+        "repeatedPhotoReadsBackTheStoredCounterpartInsteadOfReportingFalseFailure",
+        "differentSecondPhotoCannotOverwriteOriginalProof",
+        "arrivalAndSiblingsKeepTheOneResolvedInstanceWhenLatestChanges",
+        "duplicateReadbackKeepsTheResolvedInstanceAndOriginalProof",
+        "missingTopicFailsBeforeAnyArrivalLookupOrWrite",
+        "anUnresolvedInstanceCannotFallBackToADefaultInsert"
+      ],
+      "added_cases": [
+        "arrivalAndSiblingsKeepTheOneResolvedInstanceWhenLatestChanges",
+        "duplicateReadbackKeepsTheResolvedInstanceAndOriginalProof",
+        "missingTopicFailsBeforeAnyArrivalLookupOrWrite",
+        "anUnresolvedInstanceCannotFallBackToADefaultInsert"
+      ],
+      "all_original_test_bodies_byte_unchanged": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ShopDayGameThenPhotoH2Test.java",
+      "original_cases": [
+        "aPlayerWhoAnsweredTheGameCanStillSubmitTheOnsitePhoto",
+        "aSecondDifferentPhotoIsStillRefusedAfterTheGameWasAnswered",
+        "theSqlLayerAlsoRefusesToOverwriteAnExistingPhoto",
+        "replayingTheSamePhotoIsIdempotent",
+        "aPhotoWithoutArrivalIsStillRefused",
+        "answeringTheGameTwiceOnlyCountsOnceSoXpCannotBeDoubleGranted",
+        "aStoreWithoutAGameKeepsTheOriginalArriveThenPhotoPath",
+        "arrivalItselfStillStartsAtPending",
+        "repeatedArrivalUsesTheRealProgressUniqueKeyIdempotently"
+      ],
+      "candidate_cases": [
+        "aPlayerWhoAnsweredTheGameCanStillSubmitTheOnsitePhoto",
+        "aSecondDifferentPhotoIsStillRefusedAfterTheGameWasAnswered",
+        "theSqlLayerAlsoRefusesToOverwriteAnExistingPhoto",
+        "replayingTheSamePhotoIsIdempotent",
+        "aPhotoWithoutArrivalIsStillRefused",
+        "answeringTheGameTwiceOnlyCountsOnceSoXpCannotBeDoubleGranted",
+        "aStoreWithoutAGameKeepsTheOriginalArriveThenPhotoPath",
+        "arrivalItselfStillStartsAtPending",
+        "repeatedArrivalUsesTheRealProgressUniqueKeyIdempotently"
+      ],
+      "added_cases": [],
+      "all_original_test_bodies_byte_unchanged": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayerNodeArrivalSharingH2Test.java",
+      "original_cases": [
+        "sameChapterSameShop_siblingNodeIsArrivedWithoutScanning",
+        "sharedArrivalIsScopedToMemberAndActivity",
+        "crossChapterSameShopDoesNotShare",
+        "differentShopInSameChapterDoesNotShare",
+        "hostNodesFallBackToAddressPlusThirtyMeters",
+        "mixedMerchantHostPairFallsBackToAddressPlusDistance",
+        "repeatedScanDoesNotDuplicateSharedRows",
+        "withdrawnMerchantNodesNeverInheritHostArrival",
+        "completingGameplayAloneNeverGrantsSiblingArrival"
+      ],
+      "candidate_cases": [
+        "sameChapterSameShop_siblingNodeIsArrivedWithoutScanning",
+        "sharedArrivalIsScopedToMemberAndActivity",
+        "crossChapterSameShopDoesNotShare",
+        "differentShopInSameChapterDoesNotShare",
+        "hostNodesFallBackToAddressPlusThirtyMeters",
+        "mixedMerchantHostPairFallsBackToAddressPlusDistance",
+        "repeatedScanDoesNotDuplicateSharedRows",
+        "withdrawnMerchantNodesNeverInheritHostArrival",
+        "completingGameplayAloneNeverGrantsSiblingArrival"
+      ],
+      "added_cases": [],
+      "all_original_test_bodies_byte_unchanged": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/ThemeRuntimeMySqlIT.java",
+      "original_cases": [
+        "oneTemplateResourceSlotsPublishFreezeAndChargeDifferentThemes",
+        "r5OutcomeOnlyTemplateAdoptsRealTasksWithoutTheRemovedCostTool",
+        "r5ChallengeTwoActualCoinSessionsRestoreOnceWithoutCompletingTheRegularTask",
+        "r5TamperedAuthorHpWriteCannotAcquirePublishedValidationMarker",
+        "r5PersonalZeroViewUsesCurrentMemberAndDoesNotPublishWeRunReadings",
+        "r5PersonalStepsUsesVerifiedBaselineReplaysAndRollsBackFailedRestore",
+        "r5TimeoutCompletedUsesPassPendingAndRetainsFixedProofWhenBalanceFalls",
+        "r5TimedStateSettlesBothSessionsOnceWithoutOpeningAnotherAttempt",
+        "r5TimerDatabaseFailureRollsBackAdvancedCasAndOutcomeFeeTogether",
+        "r5CheckUsesRealFrozenDiceAndRerollPaysOnceWithNoLegacyDamage",
+        "r5TrustedFailureChargesOnceAndPassWaitsForConfirmation",
+        "r5ZeroFailureFreezesFailureCardFromActualFeeTransaction",
+        "r5WaitReadRestoresOnceAndPersistsTheServerDeadline",
+        "scanOnlyTaskUsesTheValidatedRunReceiptWithoutInventingAnObjectiveQuiz",
+        "gpsOnlyTaskUsesTheValidatedRunReceiptAndFrozenStationCoordinates",
+        "textOnlyTaskSettlesFromControlledFrozenAnswerProof",
+        "choiceOnlyTaskSettlesFromControlledFrozenAnswerProof",
+        "personalOperationCommitsOnlyTheCurrentProofWithCostsEffectsAndReceipt",
+        "concurrentPersonalOperationCannotUseTheSameProofTwice",
+        "personalAnyTaskCommitsCostWholePackReceiptAndTerminalTogether",
+        "personalTaskDatabaseFailureRollsBackInventoryStateAndReceipt",
+        "concurrentPersonalRequestsCannotDoubleChargeBusinessSlot",
+        "mobileChapterConfigGrantsUsesAndReloadsWithoutRepeating",
+        "migrationAddsRunToBothUniqueKeys",
+        "lastItemConcurrentUseHasOneWinnerAndNoPartialWrites",
+        "ownReplayIsFreshAndKeepsOldResult",
+        "sameRequestReturnsReceiptAndCannotChangePayload",
+        "automaticBroadcastRetriesMessageWithoutRepeatingInventory",
+        "verifiedNodeCompletionGrantsAndFreezesFinalCard",
+        "negativeItemEndsAtomicallyAndOldResultIsReadOnly",
+        "rescueLimitReusesRecoveryAndDoesNotResetInventoryOrActions",
+        "draftAndPublishedConfigRoundTripKeepExistingRunFrozen",
+        "completedRouteWithInsufficientEndingIsNotSuccessfulCompletion",
+        "legacyRankNeedsCurrentRunClaimAndDoesNotReappearOnReplay"
+      ],
+      "candidate_cases": [
+        "oneTemplateResourceSlotsPublishFreezeAndChargeDifferentThemes",
+        "r5OutcomeOnlyTemplateAdoptsRealTasksWithoutTheRemovedCostTool",
+        "r5ChallengeTwoActualCoinSessionsRestoreOnceWithoutCompletingTheRegularTask",
+        "r5TamperedAuthorHpWriteCannotAcquirePublishedValidationMarker",
+        "r5PersonalZeroViewUsesCurrentMemberAndDoesNotPublishWeRunReadings",
+        "r5PersonalStepsUsesVerifiedBaselineReplaysAndRollsBackFailedRestore",
+        "r5TimeoutCompletedUsesPassPendingAndRetainsFixedProofWhenBalanceFalls",
+        "r5TimedStateSettlesBothSessionsOnceWithoutOpeningAnotherAttempt",
+        "r5TimerDatabaseFailureRollsBackAdvancedCasAndOutcomeFeeTogether",
+        "r5CheckUsesRealFrozenDiceAndRerollPaysOnceWithNoLegacyDamage",
+        "r5TrustedFailureChargesOnceAndPassWaitsForConfirmation",
+        "r5ZeroFailureFreezesFailureCardFromActualFeeTransaction",
+        "r5WaitReadRestoresOnceAndPersistsTheServerDeadline",
+        "scanOnlyTaskUsesTheValidatedRunReceiptWithoutInventingAnObjectiveQuiz",
+        "gpsOnlyTaskUsesTheValidatedRunReceiptAndFrozenStationCoordinates",
+        "textOnlyTaskSettlesFromControlledFrozenAnswerProof",
+        "choiceOnlyTaskSettlesFromControlledFrozenAnswerProof",
+        "personalOperationCommitsOnlyTheCurrentProofWithCostsEffectsAndReceipt",
+        "concurrentPersonalOperationCannotUseTheSameProofTwice",
+        "personalAnyTaskCommitsCostWholePackReceiptAndTerminalTogether",
+        "personalTaskDatabaseFailureRollsBackInventoryStateAndReceipt",
+        "concurrentPersonalRequestsCannotDoubleChargeBusinessSlot",
+        "mobileChapterConfigGrantsUsesAndReloadsWithoutRepeating",
+        "migrationAddsRunToBothUniqueKeys",
+        "lastItemConcurrentUseHasOneWinnerAndNoPartialWrites",
+        "ownReplayIsFreshAndKeepsOldResult",
+        "sameRequestReturnsReceiptAndCannotChangePayload",
+        "automaticBroadcastRetriesMessageWithoutRepeatingInventory",
+        "verifiedNodeCompletionGrantsAndFreezesFinalCard",
+        "negativeItemEndsAtomicallyAndOldResultIsReadOnly",
+        "rescueLimitReusesRecoveryAndDoesNotResetInventoryOrActions",
+        "draftAndPublishedConfigRoundTripKeepExistingRunFrozen",
+        "completedRouteWithInsufficientEndingIsNotSuccessfulCompletion",
+        "legacyRankNeedsCurrentRunClaimAndDoesNotReappearOnReplay",
+        "replayArrivalMustBeReadableFromTheCurrentPlayInstance",
+        "replayArrivalMustNotCollideWithTheOldDefaultArrival",
+        "repeatedArrivalPreservesAllStoredColumnsAndPhotoWithinOneReplay",
+        "replaySiblingArrivalSharesOneInstanceWithoutMovingOldPhotosOrStatuses",
+        "anExistingSameRunSiblingKeepsItsCompletionAndPhoto"
+      ],
+      "added_cases": [
+        "replayArrivalMustBeReadableFromTheCurrentPlayInstance",
+        "replayArrivalMustNotCollideWithTheOldDefaultArrival",
+        "repeatedArrivalPreservesAllStoredColumnsAndPhotoWithinOneReplay",
+        "replaySiblingArrivalSharesOneInstanceWithoutMovingOldPhotosOrStatuses",
+        "anExistingSameRunSiblingKeepsItsCompletionAndPhoto"
+      ],
+      "all_original_test_bodies_byte_unchanged": true
+    }
+  ],
+  "protected_production_method_bodies_byte_unchanged": [
+    "hasArrived",
+    "submitPhoto",
+    "markGameDone",
+    "probe",
+    "samePlace",
+    "parseCoordinate",
+    "isPhotoWritableStatus"
+  ],
+  "files": [
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ShopDayProofServiceImpl.java",
+      "base_sha256": "4faca67b9a759a09d583a62f6c148a7d5abdbb30fd6fbf4079fb70ff21dd9272",
+      "candidate_sha256": "b5f2f3f10c0d8c14f5983b48d9daa203d7d661ec6107c902afb7b121a2055b47"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ShopDayProofServiceTest.java",
+      "base_sha256": "45de8f0106b0c0df09c8c6eeb189237ddff219609cd7eaa37eff255ed4fbcfdf",
+      "candidate_sha256": "de7a39ef73423414370a4c15e39fe7c008a1ba89a07e1152db02dd8218b329ef"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ShopDayGameThenPhotoH2Test.java",
+      "base_sha256": "6f779c5ee28692160fbeeaeab9fba982e2e028e35fc372cad779913b5b18d883",
+      "candidate_sha256": "f06e50980d233e28d90884ac6df27a8b9e306b9f8ee20ad8c4a7ce31a0c27777"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayerNodeArrivalSharingH2Test.java",
+      "base_sha256": "d6b0b1c4196949fb7f775f2682900bfebf043411164326d9b9e2fe7fa1c4a56f",
+      "candidate_sha256": "81140dc58e60eafc13b498ad3e9030350b933290918630da5941a44f1dfe6fa4"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/ThemeRuntimeMySqlIT.java",
+      "base_sha256": "6c9d3536cd4c23a7ff85fefa0fad9639d8ae6cfeeacb048ef22452c3ddd900e0",
+      "candidate_sha256": "fdf3d6d22746ba2813c34cd50026a642af49f0740c74f71136c7945b97566911"
+    }
+  ]
+}

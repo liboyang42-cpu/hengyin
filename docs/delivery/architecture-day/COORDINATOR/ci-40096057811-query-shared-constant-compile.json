@@ -1,0 +1,10 @@
+{
+  "run_id": 40096057811,
+  "source_sha": "978b4284173e6d1c5e1a500b04ec4b69f3bec321",
+  "verdict": "FAIL_MAIN_COMPILE",
+  "scope": "Four funds classes did not reach business bodies",
+  "shared_cause": "ApiMerchantController1564 still referenced moved ApiRegistrationController.HIDE_AFTER_END_DAYS. Full javac output reported one missing symbol.",
+  "fix_sha": "477696c8eb2fa24bd3d7febc896415bf0d1b67c0",
+  "repair": "Public constant remains original7 in actual RegistrationQueryApplication; merchant caller reads that same source of truth. No duplicate literal/new rule.",
+  "followup": "40096453368 main/test compilation passed and all163 selected bodies executed; not all business tests passed"
+}

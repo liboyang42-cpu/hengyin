@@ -27,6 +27,30 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         from club_lead_state where activity_id = #{activityId}
     </select>
 
+    <select id="selectByActivityForUpdate" resultMap="ClubLeadStateResult" useCache="false" flushCache="true">
+        select id, activity_id, leader_member_id, current_chapter_id, broadcast_text, broadcast_at, status, create_time
+        from club_lead_state where activity_id = #{activityId} for update
+    </select>
+
+    <select id="lockClubOwner" resultType="java.lang.Long" useCache="false" flushCache="true">
+        select member_id from club where id = #{clubId} and del_flag = 0 for update
+    </select>
+
+    <update id="unlockChapterCas">
+        update club_lead_state set current_chapter_id = #{targetChapterId}, leader_member_id = #{leaderId}
+        where activity_id = #{activityId} and leader_member_id = #{storedLeaderId} and status = 2
+          and current_chapter_id &lt;=> #{expectedChapterId}
+          and #{leaderId} = coalesce(
+              (select r.target_member_id from club_role_assignment r
+               join cms_activity a on a.club_id = r.club_id
+               where a.id = #{activityId} and r.scope_type = 'EVENT' and r.scope_id = a.id
+                 and r.role_code = 'EVENT_LEAD' and r.status = 'ACTIVE'
+                 and (r.expires_at is null or r.expires_at &gt; current_timestamp(3))
+               order by r.id asc limit 1),
+              (select coalesce(c.member_id, a.member_id) from cms_activity a
+               join club c on c.id = a.club_id where a.id = #{activityId}))
+    </update>
+
     <insert id="insertClubLeadState" parameterType="ClubLeadState" useGeneratedKeys="true" keyProperty="id">
         insert into club_lead_state
         (activity_id, leader_member_id, current_chapter_id, status, create_time)

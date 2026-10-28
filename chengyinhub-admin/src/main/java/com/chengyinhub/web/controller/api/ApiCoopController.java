@@ -52,6 +52,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -173,7 +174,9 @@ public class ApiCoopController extends BaseController {
                         && "SUCCESS".equals(facts.get("trade_state")) && "CNY".equals(facts.get("currency"))
                         && facts.get("total") != null && facts.get("total").matches("[0-9]{1,10}")) {
                     // Gateway verifies original merchant/app/channel; domain keeps amount, transaction binding and CAS.
-                    if (!coopInviteService.markDepositPaid(originalNo, Long.valueOf(facts.get("total")), facts.get("transaction_id"))) {
+                    if (!coopInviteService.markDepositPaid(originalNo, Long.valueOf(facts.get("total")), facts.get("transaction_id"),
+                            new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference(
+                                    Long.parseLong(facts.get("verified_fact_id")),facts.get("verified_fact_hash")))) {
                         return new AjaxResult(409, "支付已成功，本地确认尚未完成，请稍后重试");
                     }
                     invite = coopInviteService.selectCoopInviteById(inviteId);
@@ -381,6 +384,20 @@ public class ApiCoopController extends BaseController {
     private String prepareFirstInvite(CoopInvite body, Long principalMemberId, CmsTopic topic, boolean originalRequest) {
         // node_id 只属于已撤销的历史 type2，新建 type0/type1 一律清掉客户端伪造值。
         body.setNodeId(null);
+        if (body.getInviteType() == 0
+                && Integer.valueOf(com.chengyinhub.common.constant.ProductType.ORIENTEERING).equals(topic.getProductType())) {
+            if (body.getSupplyStationId() == null || body.getSupplyStationId() <= 0)
+                return error("请选择本主题该商家的真实核销据点");
+            try {
+                boolean selected = false;
+                for (CmsRegistrationMerchant station : coopInviteService.listSupplyStations(
+                        topic.getId(), body.getToId(), contractOwnerMemberId))
+                    if (body.getSupplyStationId().equals(station.getId())) selected = true;
+                if (!selected) return error("所选据点不属于本主题受邀商家或已绑定原合作单");
+            } catch (IllegalStateException e) { return error(e.getMessage()); }
+        } else if (body.getSupplyStationId() != null) {
+            return error("该邀约不支持据点计酬确认");
+        }
         // B1-3 条款校验:报酬模式与配套字段一致性(字段可空,向后兼容;传了才校验)
         Integer shareMode = body.getShareMode();
         if (shareMode != null) {
@@ -460,6 +477,35 @@ public class ApiCoopController extends BaseController {
         try {
             return success(coopInviteService.listInviteRequests(principal, before, limit));
         } catch (ServiceException e) { return new AjaxResult(e.getCode(), e.getMessage()); }
+    }
+
+    @GetMapping("/supply-stations")
+    public AjaxResult supplyStations(@org.springframework.web.bind.annotation.RequestParam("topicId") Long topicId,
+                                    @org.springframework.web.bind.annotation.RequestParam("merchantMemberId") Long merchantMemberId) {
+        Long principal;
+        try { principal = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        if (topicId == null || topicId <= 0 || merchantMemberId == null || merchantMemberId <= 0)
+            return error("参数不合规");
+        CmsTopic topic = cmsTopicService.selectCmsTopicById(topicId);
+        if (topic == null) return error("主题不存在");
+        Long creator = principal;
+        if (OwnershipUtils.notOwner(topic.getMemberId(), creator)) {
+            try { creator = merchantAccessService.require(principal, MerchantPermission.PROJECT_MANAGE).getOwnerMemberId(); }
+            catch (ServiceException e) { return new AjaxResult(e.getCode(), e.getMessage()); }
+        }
+        if (OwnershipUtils.notOwner(topic.getMemberId(), creator)) return error("只能为自己发布的主题选择合作据点");
+        try {
+            List<Map<String,Object>> stations = new ArrayList<>();
+            for (CmsRegistrationMerchant station : coopInviteService.listSupplyStations(topicId, merchantMemberId, creator)) {
+                Map<String,Object> row = new HashMap<>();
+                row.put("supplyStationId", station.getId().toString());
+                row.put("stationName", station.getAddressName());
+                stations.add(row);
+            }
+            Map<String,Object> data = new HashMap<>();
+            data.put("requiresSupplyStation", true); data.put("stations", stations);
+            return AjaxResult.success(data);
+        } catch (IllegalStateException e) { return error(e.getMessage()); }
     }
 
     private String textRisk(Long principalMemberId, String content) {
@@ -553,7 +599,7 @@ public class ApiCoopController extends BaseController {
             }
             // 接受:走事务(B1-4 锁槽位 + 容量复核 + 生成合作单 + 顶替其他挂起)
             try {
-                coopInviteService.acceptInviteWithLock(inv.getId(), null);
+                coopInviteService.acceptInviteWithLock(inv.getId(), null, body.getSupplyStationId());
             } catch (IllegalStateException e) {
                 return error(e.getMessage());
             }
@@ -1603,6 +1649,12 @@ public class ApiCoopController extends BaseController {
         Map<Long, CmsTopic> cache = new HashMap<>();
         for (CoopInvite it : all) {
             Long tid = it == null ? null : it.getTopicId();
+            if (it == null) continue;
+            boolean supplyCandidate = Integer.valueOf(0).equals(it.getInviteType())
+                    && CoopInvite.TO_MERCHANT.equals(it.getToType()) && it.getNodeId() == null;
+            // A recorded V1 station proves applicability; missing historical topic/type is not false.
+            it.setRequiresSupplyStation(supplyCandidate
+                    ? (it.getSupplyStationId() == null ? null : Boolean.TRUE) : Boolean.FALSE);
             if (tid == null || tid <= 0) continue;
             if (!cache.containsKey(tid)) {
                 CmsTopic t = null;
@@ -1611,6 +1663,8 @@ public class ApiCoopController extends BaseController {
             }
             CmsTopic topic = cache.get(tid);
             if (topic == null) continue;
+            if (supplyCandidate && topic.getProductType() != null)
+                it.setRequiresSupplyStation(Integer.valueOf(com.chengyinhub.common.constant.ProductType.ORIENTEERING).equals(topic.getProductType()));
             it.setTopicName(topic.getName());
             it.setTopicImgUrl(topic.getImgUrl());
             it.setTopicStartDate(topic.getStartDate());

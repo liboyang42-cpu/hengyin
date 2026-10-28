@@ -59,6 +59,7 @@ function setByPath(target, path, value) {
 }
 
 function loadPage(modulePath) {
+  delete require.cache[require.resolve('../../pages/play/utils/play-route-state.js')]
   delete require.cache[require.resolve(modulePath)]
   require(modulePath)
   const page = Object.assign({}, pageConfig, {
@@ -67,6 +68,15 @@ function loadPage(modulePath) {
   page.setData = (patch, callback) => {
     Object.entries(patch).forEach(([path, value]) => setByPath(page.data, path, value))
     if (callback) callback()
+  }
+  // 此组测试从“动作上下文已预检完成”开始；预检与切号由 architecture-day-c-intent 覆盖。
+  if (modulePath === PLAY_PAGE) {
+    const payload = page._routeWritePayload
+    page._routeWritePayload = function (kind, nodeId, input) {
+      const body = payload.call(this, kind, nodeId, input)
+      if (['answer', 'checkin', 'arrive'].includes(kind) && !body.receiptOnly) body._bindRouteContext({ routeSessionId: 0, expectedRouteVersion: body.expectedRouteVersion == null ? 0 : body.expectedRouteVersion })
+      return body
+    }
   }
   return page
 }
@@ -221,7 +231,7 @@ test('一次性打卡码已用过时展示服务端文案，不塌成对不上�
   const page = loadPage(PLAY_PAGE)
 
   page.checkin(7, 'v1.77.play_checkin.1.2.sig')
-  requests[0].success({ code: 500, msg: '这张码已用过' })
+  requests[0].success({ code: 500, intentTerminal: true, msg: '这张码已用过' })
   await new Promise((resolve) => setImmediate(resolve))
 
   assert.equal(toasts.length, 1)
@@ -415,73 +425,48 @@ test('游玩页各写入口在途和 HTTP 结果未知时都不能重复 POST', 
   }
 })
 
-test('章节放行 HTTP 异常后先读回队伍进度，确认完成前不能再推进一章', async () => {
+test('章节放行 HTTP 异常后只查原命令，队伍进度变化不能释放原身份', async () => {
   const page = loadPage(PLAY_PAGE)
   page.data.activityId = 88
-  page.data.lead = { exists: true, status: 2, isLeader: true, chapterName: '第一章' }
+  page.data.lead = { exists: true, status: 2, isLeader: true, currentChapterId: 10, nextChapterId: 20, chapterName: '第一章' }
   page._startLeadPoll = () => {}
-
-  page.loadTeamProgress()
-  page.leadUnlock()
-  page.leadUnlock()
+  page.loadTeamProgress(); page.leadUnlock(); page.leadUnlock()
   assert.equal(requests.length, 2)
-
-  requests[1].successStatusAbnormal({ code: 500, msg: 'gateway timeout' })
-  await new Promise((resolve) => setImmediate(resolve))
+  const original = requests[1].data.commandId
+  requests[1].successStatusAbnormal({ code: 500, msg: 'gateway timeout' }); await new Promise(resolve => setImmediate(resolve))
   assert.equal(page.data.leadUnlockChecking, true)
-  assert.equal(requests.length, 3)
-  assert.equal(requests[2].method, 'GET')
-
-  requests[0].success({
-    code: 200,
-    data: { exists: true, status: 2, isLeader: true, chapterName: '第一章', members: [] },
-  })
-  await new Promise((resolve) => setImmediate(resolve))
-  assert.equal(page.data.leadUnlockChecking, true)
-
+  requests[0].success({ code: 200, data: { exists: true, status: 2, isLeader: true, currentChapterId: 20, nextChapterId: 30, chapterName: '第二章', members: [] } })
+  await new Promise(resolve => setImmediate(resolve))
   page.leadUnlock()
-  assert.equal(requests.length, 3)
-  requests[2].success({
-    code: 200,
-    data: { exists: true, status: 2, isLeader: true, chapterName: '第二章', members: [] },
-  })
-  await new Promise((resolve) => setImmediate(resolve))
+  assert.equal(requests[2].url, '/api/club/lead/unlock-chapter-receipt')
+  assert.equal(requests[2].data.commandId, original)
+  requests[2].success({ code: 520, msg: '待确认' }); await new Promise(resolve => setImmediate(resolve))
+  page.leadUnlock()
+  assert.equal(requests[3].data.commandId, original)
+  assert.equal(requests.filter(row => row.method === 'POST').length, 1)
+  requests[3].success({ code: 200, data: { commandId: original, expectedChapterId: 10, targetChapterId: 20 } }); await new Promise(resolve => setImmediate(resolve))
   assert.equal(page.data.leadUnlockChecking, false)
-  assert.equal(page.data.lead.chapterName, '第二章')
 })
 
-test('章节放行专用读回完成后忽略更早轮询的过期响应', async () => {
-  const page = loadPage(PLAY_PAGE)
-  page.data.activityId = 88
-  page.data.lead = { exists: true, status: 2, isLeader: true, chapterName: '第一章' }
+test('章节原回执确认后新轮询落地，忽略更早轮询的过期响应', async () => {
+  const page = loadPage(PLAY_PAGE); page.data.activityId = 89
+  page.data.lead = { exists: true, status: 2, isLeader: true, currentChapterId: 10, nextChapterId: 20, chapterName: '第一章' }
   page._startLeadPoll = () => {}
-
-  page.loadTeamProgress()
-  page.leadUnlock()
-  requests[1].successStatusAbnormal({ code: 500, msg: 'gateway timeout' })
-  await new Promise((resolve) => setImmediate(resolve))
-
-  requests[2].success({
-    code: 200,
-    data: { exists: true, status: 2, isLeader: true, chapterName: '第二章', members: [] },
-  })
-  await new Promise((resolve) => setImmediate(resolve))
-  requests[0].success({
-    code: 200,
-    data: { exists: true, status: 2, isLeader: true, chapterName: '第一章', members: [] },
-  })
-  await new Promise((resolve) => setImmediate(resolve))
-
+  page.loadTeamProgress(); page.leadUnlock()
+  requests[1].successStatusAbnormal({ code: 500 }); await new Promise(resolve => setImmediate(resolve)); page.leadUnlock()
+  requests[2].success({ code: 200, data: { commandId: requests[1].data.commandId, expectedChapterId: 10, targetChapterId: 20 } }); await new Promise(resolve => setImmediate(resolve))
+  requests[3].success({ code: 200, data: { exists: true, status: 2, isLeader: true, currentChapterId: 20, nextChapterId: 30, chapterName: '第二章', members: [] } }); await new Promise(resolve => setImmediate(resolve))
+  requests[0].success({ code: 200, data: { exists: true, status: 2, isLeader: true, currentChapterId: 10, nextChapterId: 20, chapterName: '第一章', members: [] } }); await new Promise(resolve => setImmediate(resolve))
   assert.equal(page.data.lead.chapterName, '第二章')
-  assert.equal(page.data.leadUnlockChecking, false)
   page.leadUnlock()
-  assert.equal(requests.length, 4, '确认后只能从第二章开始新的一次放行')
+  assert.equal(requests[4].data.expectedChapterId, 20)
+  assert.equal(requests[4].data.targetChapterId, 30)
 })
 
 test('队伍轮询持续慢于轮询间隔时仍会落地尚未过期的响应', async () => {
   const page = loadPage(PLAY_PAGE)
   page.data.activityId = 88
-  page.data.lead = { exists: true, status: 2, isLeader: true, chapterName: '第一章' }
+  page.data.lead = { exists: true, status: 2, isLeader: true, currentChapterId: 10, nextChapterId: 20, chapterName: '第一章' }
   page._startLeadPoll = () => {}
 
   page.loadTeamProgress()
@@ -563,28 +548,18 @@ test('F-39：首次权威轮询确认带领场时展示广播一次，同值轮�
   assert.deepEqual(messages, ['队长:集合后准备出发'])
 })
 
-test('章节放行专用读回失败后可由重试读回解锁', async () => {
-  const page = loadPage(PLAY_PAGE)
-  page.data.activityId = 88
-  page.data.lead = { exists: true, status: 2, isLeader: true, chapterName: '第一章' }
+test('章节回执读失败仍保留原身份，重试查到终态才能解锁', async () => {
+  const page = loadPage(PLAY_PAGE); page.data.activityId = 90
+  page.data.lead = { exists: true, status: 2, isLeader: true, currentChapterId: 10, nextChapterId: 20, chapterName: '第一章' }
   page._startLeadPoll = () => {}
-
-  page.leadUnlock()
-  requests[0].successStatusAbnormal({ code: 500, msg: 'gateway timeout' })
-  await new Promise((resolve) => setImmediate(resolve))
-  requests[1].fail({ errMsg: 'network fail' })
-  await new Promise((resolve) => setImmediate(resolve))
+  page.leadUnlock(); const original = requests[0].data.commandId
+  requests[0].successStatusAbnormal({ code: 500 }); await new Promise(resolve => setImmediate(resolve)); page.leadUnlock()
+  requests[1].fail(); await new Promise(resolve => setImmediate(resolve))
   assert.equal(page.data.leadUnlockChecking, true)
-
-  page.retryLeadProgress()
-  requests[2].success({
-    code: 200,
-    data: { exists: true, status: 2, isLeader: true, chapterName: '第二章', members: [] },
-  })
-  await new Promise((resolve) => setImmediate(resolve))
-
-  assert.equal(page.data.lead.chapterName, '第二章')
+  page.leadUnlock(); assert.equal(requests[2].data.commandId, original)
+  requests[2].success({ code: 200, data: { commandId: original, expectedChapterId: 10, targetChapterId: 20 } }); await new Promise(resolve => setImmediate(resolve))
   assert.equal(page.data.leadUnlockChecking, false)
+  assert.equal(requests.filter(row => row.method === 'POST').length, 1)
 })
 
 test('不相关节点的成功响应不能清除另一类待确认写锁', async () => {

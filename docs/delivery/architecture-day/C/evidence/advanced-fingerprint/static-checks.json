@@ -1,0 +1,26 @@
+{
+  "executed": [
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exitCode": 0,
+      "output": ""
+    },
+    {
+      "command": [
+        "python3",
+        "ci/secret-file-gate.py"
+      ],
+      "exitCode": 0,
+      "output": "SECRET-FILE-GATE PASS: 当前 Git tree 无密钥/证书文件或私钥正文\n"
+    }
+  ],
+  "xmlParsed": "PlayAttemptLogMapper.xml",
+  "javaExecuted": false,
+  "mySqlExecuted": false,
+  "authoredUnitTests": 11,
+  "authoredMySqlTests": 5
+}

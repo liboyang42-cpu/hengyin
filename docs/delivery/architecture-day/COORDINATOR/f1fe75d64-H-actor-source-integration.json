@@ -1,0 +1,60 @@
+{
+  "owner": "H",
+  "parent": "f1fe75d646f8ae57864ee5603c68e70e7fabc854",
+  "commit": "1248fa5b96abc074538397dc1389a5f5410ba30b",
+  "files": [
+    "ci/capacity_mixed_probe.py",
+    "ci/gameplay_process_recovery_probe.py",
+    "ci/test_capacity_mixed_probe.py",
+    "ci/test_gameplay_process_recovery_probe.py",
+    "docs/delivery/architecture-day/H/gameplay-actors-f1fe/PATCH.sha256",
+    "docs/delivery/architecture-day/H/gameplay-actors-f1fe/POSTIMAGE.sha256",
+    "docs/delivery/architecture-day/H/gameplay-actors-f1fe/PREIMAGE.md",
+    "docs/delivery/architecture-day/H/gameplay-actors-f1fe/README.md",
+    "docs/delivery/architecture-day/H/gameplay-actors-f1fe/owned.review.patch"
+  ],
+  "all9_donor_blobs_exact_at_apply": true,
+  "author_manifest4_exact": true,
+  "postimages_at_apply": {
+    "ci/capacity_mixed_probe.py": "d0c56746c7d1142a8ca6f3a46b815d27a6b27d16d09519534126e21599e180d1",
+    "ci/gameplay_process_recovery_probe.py": "e45fd5178bd0c5fea8fe0b433aa76ff399afe7db5cdec1ae3146c816253500a2",
+    "ci/test_capacity_mixed_probe.py": "24ff09d1eb3fdf75d9c900617a0667afe87b26a5d6f0449bef47afc23308716c",
+    "ci/test_gameplay_process_recovery_probe.py": "98a087fe1f21b215208751a19f1e2c284038c81d12b6a26da73261d8427c772e",
+    "docs/delivery/architecture-day/H/gameplay-actors-f1fe/PATCH.sha256": "56cca15f8e2cd875990bc267de817c3f30ec1340f15bb7c98f6422b29ff0d275",
+    "docs/delivery/architecture-day/H/gameplay-actors-f1fe/POSTIMAGE.sha256": "a1bb4b70532dbde8864915219799cccc945ca220cbbb7f1ea7298469b6103e97",
+    "docs/delivery/architecture-day/H/gameplay-actors-f1fe/PREIMAGE.md": "7747955764ece6c4e253517c079291fce3b8430b67672681d1ca4dfed466255a",
+    "docs/delivery/architecture-day/H/gameplay-actors-f1fe/README.md": "9ee93e4288de1694fa237ae33e9741c473342468e19d2734be8006f2b0e2f4d5",
+    "docs/delivery/architecture-day/H/gameplay-actors-f1fe/owned.review.patch": "3195fcb03bedd3fa56a746a170cc299af19b3e08e7f2f9d9f5e7aed32acfb717"
+  },
+  "full_patch_bytes": 93432,
+  "full_patch_sha256": "dcde3161d6572f3fab2eab2e68a12fa6545b097376d4e93a6bcc7661ba6eab43",
+  "author_code_patch_sha256": "3195fcb03bedd3fa56a746a170cc299af19b3e08e7f2f9d9f5e7aed32acfb717",
+  "transport_normalization": {
+    "literal_context_whitespace_lines": 14,
+    "decoded_sha256": "3195fcb03bedd3fa56a746a170cc299af19b3e08e7f2f9d9f5e7aed32acfb717",
+    "new_path": "docs/delivery/architecture-day/H/gameplay-actors-f1fe/owned.review.patch.base64",
+    "all4code_unchanged": true,
+    "current_readme_sha256": "fae57e6f17e4b58ce915f5bd314b154523de6625bf734fde18efe9ee7fea2cfb"
+  },
+  "applied": true,
+  "focused_review": "ROOT_FOCUSED_SOURCE_REVIEW_COMPLETE_NO_RUNTIME_PROOF",
+  "controls_source_only": {
+    "old": 31,
+    "new": 5,
+    "now": 36
+  },
+  "compile_tests_runtime": "NOT_RUN",
+  "all_complete": false,
+  "review": {
+    "real_child_mapper_login_source_not_mock": true,
+    "actual_generated_ID_original0600_identities_bound_not_hardcoded_IDS": true,
+    "zero_Decimal_balance_zero_int_points_player_normal_unfrozen_verified": true,
+    "all_member_columns_types_row_digest_frozen_and_rechecked": true,
+    "other8financial_plus9economic_tables_empty_required": true,
+    "default9empty_literal_guard_preserved": true,
+    "initial_auth_scope_5tables_DDL_and_credential_columns_match_existing_reader": true,
+    "protected_full_before_after_unchanged_and_failure_saved_before_admission": true,
+    "original31_control_methods_preserved_new5_source_NOT_RUN": true,
+    "no_production_auth_policy_dependency_or_resource_profile_change": true
+  }
+}

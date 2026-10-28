@@ -1,6 +1,6 @@
 name: Gameplay HTTP fixtures (manual)
 
-# Real HTTP36 in three isolated hosted jobs; not persistent migration/provider/device acceptance.
+# Default HTTP36 in three isolated hosted jobs; optional Generic26 is partial diagnostics only.
 on:
   workflow_dispatch:
     inputs:
@@ -8,6 +8,15 @@ on:
         description: Reviewed full40-character public candidate SHA
         required: true
         type: string
+      http_scope:
+        description: Full HTTP36, Generic26 diagnostics, or fixed partial controlled combination
+        required: true
+        type: choice
+        default: all-three
+        options:
+          - all-three
+          - generic-only
+          - controlled-combination
   workflow_call:
     inputs:
       source_sha:
@@ -21,6 +30,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   http:
+    name: ${{ inputs.http_scope == 'controlled-combination' && format('PARTIAL controlled combination ({0})', matrix.test_class) || format('http ({0})', matrix.test_class) }}
     # A reusable call retains the caller's workflow_dispatch event context.
     if: github.repository == 'liboyang42-cpu/hengyin' && github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
@@ -29,9 +39,10 @@ jobs:
       fail-fast: false
       max-parallel: 20
       matrix:
-        test_class: [GenericGameplayHttpE2eIT, FreezeGameHttpE2eIT, FreezeReuseThemeHttpE2eIT]
+        test_class: ${{ fromJSON(inputs.http_scope == 'controlled-combination' && '["CrossDomainCombinedLoadMySqlIT"]' || inputs.http_scope == 'generic-only' && '["GenericGameplayHttpE2eIT"]' || '["GenericGameplayHttpE2eIT", "FreezeGameHttpE2eIT", "FreezeReuseThemeHttpE2eIT"]') }}
     env:
       SOURCE_SHA: ${{ inputs.source_sha }}
+      HTTP_SCOPE: ${{ inputs.http_scope || 'all-three' }}
       CHENGYIN_HTTP_E2E_PROFILE: github-hosted
       CHENGYIN_HTTP_E2E_TESTS: ${{ matrix.test_class }}
       CHENGYIN_MYBATIS_IT_HOST: 127.0.0.1
@@ -41,7 +52,9 @@ jobs:
       TZ: Asia/Shanghai
     steps:
       - name: Validate exact source input
-        run: '[[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]'
+        run: |
+          [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]
+          case "$HTTP_SCOPE" in all-three|generic-only|controlled-combination) ;; *) exit 2 ;; esac
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.source_sha }}
@@ -52,6 +65,9 @@ jobs:
           test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
           git show-ref --verify --quiet refs/heads/master || git branch master origin/master
           python3 -m unittest -v ci/test_http_e2e_entry.py chengyinhub-admin/src/test/tools/test_generic_gameplay_vps_guard.py chengyinhub-admin/src/test/tools/test_generic_gameplay_fresh_schema.py
+          if [ "$HTTP_SCOPE" = controlled-combination ]; then
+            python3 -m unittest -v ci/test_controlled_combination_probe.py ci/test_controlled_combination_entry.py ci/test_combined_http_budget.py
+          fi
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -63,32 +79,82 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends mysql-client redis-server ripgrep
       - name: Resolve candidate test dependencies before offline execution
-        run: mvn -B -q -pl chengyinhub-admin -am test -DskipTests
+        run: |
+          if [ "$HTTP_SCOPE" = controlled-combination ]; then
+            # Original package/get and offline preflight use the execution image/core/settings/cache.
+            python3 -I ci/combined_http_budget.py warm-cache
+          else
+            mvn -B -q -pl chengyinhub-admin -am test -DskipTests
+          fi
       - name: Start pinned private MySQL on loopback
         run: |
+          if [[ "$CHENGYIN_HTTP_E2E_TESTS" == CrossDomainCombinedLoadMySqlIT ]]; then
+            trap 'original=$?; trap - ERR; python3 -I ci/combined_http_budget.py bootstrap-failure "$original" || true; exit "$original"' ERR
+            trap 'trap - ERR; python3 -I ci/combined_http_budget.py bootstrap-failure 130 || true; exit 130' INT
+            trap 'trap - ERR; python3 -I ci/combined_http_budget.py bootstrap-failure 143 || true; exit 143' TERM HUP
+            python3 -I ci/combined_http_budget.py bootstrap-init
+          fi
           password="$(openssl rand -hex 24)"
           echo "::add-mask::$password"
           echo "CHENGYIN_MYBATIS_IT_PASSWORD=$password" >> "$GITHUB_ENV"
           export MYSQL_ROOT_PASSWORD="$password"
           name="cy-http-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${CHENGYIN_HTTP_E2E_TESTS,,}"
           echo "HTTP_MYSQL_CONTAINER=$name" >> "$GITHUB_ENV"
+          if [[ "$CHENGYIN_HTTP_E2E_TESTS" == CrossDomainCombinedLoadMySqlIT ]]; then
+            export HTTP_MYSQL_CONTAINER="$name" CHENGYIN_MYBATIS_IT_PASSWORD="$password"
+            for image in \
+              maven:3.9.11-eclipse-temurin-21@sha256:6fdc855a6ed81d288ca7ca37ac6ff5e9308b612485c0801d70b25a858c83d237 \
+              redis:7.4-alpine@sha256:858f009f9709ce576febc734aa78b8f6d624b82571f9ddb6bda4377c833b3499; do
+              docker image inspect "$image" >/dev/null 2>&1 || docker pull "$image"
+            done
+            network="cy-http-budget-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+            echo "HTTP_BUDGET_NETWORK=$network" >> "$GITHUB_ENV"
+            export HTTP_BUDGET_NETWORK="$network"
+            network_cid="$(docker network create --internal \
+              --label "chengyin.http.run=$GITHUB_RUN_ID" --label "chengyin.http.attempt=$GITHUB_RUN_ATTEMPT" \
+              --label "chengyin.http.source=$SOURCE_SHA" --label "chengyin.http.class=$CHENGYIN_HTTP_E2E_TESTS" "$network")"
+            export HTTP_BUDGET_NETWORK_ID="$network_cid"
+            echo "HTTP_BUDGET_NETWORK_ID=$network_cid" >> "$GITHUB_ENV"
+            mysql_cid="$(docker run -d --name "$name" --network "$network" \
+              --memory=1g --memory-swap=1g --cpus=1 --pids-limit=256 --tmpfs /var/lib/mysql:rw,size=768m \
+              --label "chengyin.http.run=$GITHUB_RUN_ID" --label "chengyin.http.attempt=$GITHUB_RUN_ATTEMPT" \
+              --label "chengyin.http.source=$SOURCE_SHA" --label "chengyin.http.class=$CHENGYIN_HTTP_E2E_TESTS" \
+              -e MYSQL_ROOT_PASSWORD -e MYSQL_ROOT_HOST=% \
+              mysql:8.0.45@sha256:4af1f8815716546f5b12410f7621f37f93db8dd11a184706ef59111930b8c2ff \
+              --default-time-zone=+08:00)"
+            export HTTP_MYSQL_CID="$mysql_cid"
+            echo "HTTP_MYSQL_CID=$mysql_cid" >> "$GITHUB_ENV"
+          else
           docker run -d --name "$name" --label "chengyin.http.run=$GITHUB_RUN_ID" \
             -e MYSQL_ROOT_PASSWORD -e MYSQL_ROOT_HOST=% -p 127.0.0.1:33080:3306 \
             mysql:8.0.45@sha256:4af1f8815716546f5b12410f7621f37f93db8dd11a184706ef59111930b8c2ff \
             --default-time-zone=+08:00
+          fi
           export MYSQL_PWD="$password"
+          if [[ "$CHENGYIN_HTTP_E2E_TESTS" == CrossDomainCombinedLoadMySqlIT ]]; then
+            python3 -I ci/combined_http_budget.py bootstrap-ready
+            trap - ERR INT TERM HUP
+          else
           ready=0
           for attempt in {1..90}; do
             if mysql --no-defaults --protocol=TCP -h127.0.0.1 -P33080 -uroot --execute='SELECT 1' >/dev/null 2>&1; then ready=1; break; fi
             sleep 1
           done
           test "$ready" = 1
+          fi
       - name: Run original class and exact XML plus cleanup readbacks
-        run: bash chengyinhub-admin/src/test/tools/generic-gameplay-http-e2e.sh
+        run: |
+          if [[ "$CHENGYIN_HTTP_E2E_TESTS" == CrossDomainCombinedLoadMySqlIT ]]; then
+            python3 -I ci/combined_http_budget.py run-host-path
+          else
+            bash chengyinhub-admin/src/test/tools/generic-gameplay-http-e2e.sh
+          fi
       - name: Remove only this owned MySQL container
         if: always()
         run: |
-          if [[ -n "${HTTP_MYSQL_CONTAINER:-}" ]] && docker inspect "$HTTP_MYSQL_CONTAINER" >/dev/null 2>&1; then
+          if [[ "$CHENGYIN_HTTP_E2E_TESTS" == CrossDomainCombinedLoadMySqlIT ]]; then
+            python3 -I ci/combined_http_budget.py cleanup-mysql
+          elif [[ -n "${HTTP_MYSQL_CONTAINER:-}" ]] && docker inspect "$HTTP_MYSQL_CONTAINER" >/dev/null 2>&1; then
             test "$(docker inspect -f '{{index .Config.Labels "chengyin.http.run"}}' "$HTTP_MYSQL_CONTAINER")" = "$GITHUB_RUN_ID"
             docker rm -f "$HTTP_MYSQL_CONTAINER"
             if docker inspect "$HTTP_MYSQL_CONTAINER" >/dev/null 2>&1; then exit 1; fi
@@ -108,6 +174,7 @@ jobs:
     timeout-minutes: 10
     env:
       SOURCE_SHA: ${{ inputs.source_sha }}
+      HTTP_SCOPE: ${{ inputs.http_scope || 'all-three' }}
       HTTP_JOBS_RESULT: ${{ needs.http.result }}
     steps:
       - uses: actions/checkout@v4
@@ -118,9 +185,9 @@ jobs:
         with:
           pattern: gameplay-http-*-a${{ github.run_attempt }}
           path: receipts
-      - name: Require all three exact class receipts and independent cleanup
+      - name: Require exact scoped class receipts and independent cleanup
         run: |
-          python3 ci/test_http_e2e_entry.py summarize --receipts receipts --source "$SOURCE_SHA" --output summary.json
+          python3 ci/test_http_e2e_entry.py summarize --receipts receipts --source "$SOURCE_SHA" --scope "$HTTP_SCOPE" --output summary.json
           test "$HTTP_JOBS_RESULT" = success
       - uses: actions/upload-artifact@v4
         if: always()

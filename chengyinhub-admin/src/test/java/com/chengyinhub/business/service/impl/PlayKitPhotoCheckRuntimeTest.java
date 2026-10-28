@@ -10,6 +10,8 @@ import com.chengyinhub.business.mapper.GameRuntimeSessionMapper;
 import com.chengyinhub.business.mapper.PlayAttemptLogMapper;
 import com.chengyinhub.business.mapper.PlayTeamMapper;
 import com.chengyinhub.business.service.ai.LlmClient;
+import com.chengyinhub.business.service.ai.AiGatewayService;
+import com.chengyinhub.business.service.ai.PhotoCheckIntentService;
 import com.chengyinhub.business.service.ai.OpenAiCompatibleLlmClient;
 import com.chengyinhub.business.service.ai.PhotoCheckVisionService;
 import com.chengyinhub.business.service.support.AdvancedGameClock;
@@ -32,10 +34,16 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.clearInvocations;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 /**
@@ -64,6 +72,8 @@ class PlayKitPhotoCheckRuntimeTest {
     private GameRuntimeSession session;
     private AdvancedGameRuntimeServiceImpl service;
     private PhotoCheckVisionService visionService;
+    private AiGatewayService quota;
+    private PhotoCheckIntentService photoIntents;
     private Path profileDir;
     private String originalProfile;
 
@@ -90,6 +100,7 @@ class PlayKitPhotoCheckRuntimeTest {
         PlayTeamMapper teamMapper = mock(PlayTeamMapper.class);
 
         service = new AdvancedGameRuntimeServiceImpl();
+        AdvancedActionTestFixtures.transactions(service);
         ReflectionTestUtils.setField(service, "sessionMapper", sessionMapper);
         ReflectionTestUtils.setField(service, "nodeMapper", nodeMapper);
         ReflectionTestUtils.setField(service, "templateMapper", mock(CmsMemberTemplateMapper.class));
@@ -104,7 +115,10 @@ class PlayKitPhotoCheckRuntimeTest {
         ReflectionTestUtils.setField(service, "clock", (AdvancedGameClock) Date::new);
         ReflectionTestUtils.setField(service, "random", (AdvancedGameRandom) bound -> 0);
 
-        visionService = new PhotoCheckVisionService();
+        visionService = spy(new PhotoCheckVisionService());
+        quota = mock(AiGatewayService.class);
+        when(quota.consumeQuota(MEMBER_ID, "photo_check")).thenReturn("reservation");
+        ReflectionTestUtils.setField(visionService, "aiGatewayService", quota);
         org.springframework.test.util.ReflectionTestUtils.setField(visionService, "consentGuard", org.mockito.Mockito.mock(com.chengyinhub.business.service.ConsentGuard.class));
         com.chengyinhub.business.mapper.AppMediaAssetMapper reviewedImages = mock(com.chengyinhub.business.mapper.AppMediaAssetMapper.class);
         when(reviewedImages.selectByObjectKey("/profile/upload/2026/10/12/0123456789abcdef0123456789abcdef.jpg")).thenReturn(Map.of(
@@ -113,7 +127,8 @@ class PlayKitPhotoCheckRuntimeTest {
         com.chengyinhub.business.service.support.AppMediaReferenceGuard reviewedMedia = new com.chengyinhub.business.service.support.AppMediaReferenceGuard();
         ReflectionTestUtils.setField(reviewedMedia, "mapper", reviewedImages);
         ReflectionTestUtils.setField(visionService, "mediaReferences", reviewedMedia);
-        ReflectionTestUtils.setField(service, "photoCheckVisionService", visionService);
+        photoIntents = AdvancedActionTestFixtures.photos(service, command -> visionService.review(
+                command.memberId(), command.imageReference(), command.requirement()));
 
         CmsTopicNode node = new CmsTopicNode();
         node.setId(NODE_ID);
@@ -255,9 +270,14 @@ class PlayKitPhotoCheckRuntimeTest {
         Map<String, Object> onlyScore = new HashMap<>();
         onlyScore.put("score", "100");
         when(attemptMapper.selectByIdempotencyKey("photo-score-3")).thenReturn(null);
-        assertThrows(IllegalArgumentException.class,
+        clearInvocations(quota, visionService, photoIntents, sessionMapper, attemptMapper);
+        AdvancedActionTestFixtures.assertPhotoNotExecuted(
                 () -> service.act(MEMBER_ID, SESSION_ID, session.getVersion(), "photo-score-3",
-                        "SUBMIT_PHOTO_CHECK", onlyScore));
+                        "SUBMIT_PHOTO_CHECK", onlyScore), "照片地址不能为空且最多 512 字");
+        assertEquals("{}", session.getStateJson());
+        assertEquals(0, session.getVersion());
+        assertEquals(0, session.getScore());
+        assertNoNewPhotoEffects();
     }
 
     // ==================== 通过 / 兜底 / 降级后恢复 ====================
@@ -276,7 +296,16 @@ class PlayKitPhotoCheckRuntimeTest {
         assertEquals(false, kit.get("degraded"));
         assertTrue(String.valueOf(kit.get("lastReason")).contains("窗框"));
 
-        assertThrows(IllegalStateException.class, () -> act("photo-hit-2"), "过了不能再交");
+        verify(quota).consumeQuota(MEMBER_ID, "photo_check");
+        verify(visionService).review(anyLong(), anyString(), anyString());
+        String committedState = session.getStateJson();
+        Integer committedVersion = session.getVersion();
+        clearInvocations(quota, visionService, photoIntents, sessionMapper, attemptMapper);
+        AdvancedActionTestFixtures.assertPhotoNotExecuted(() -> act("photo-hit-2"), "这一张已经过了");
+        assertEquals(committedState, session.getStateJson());
+        assertEquals(committedVersion, session.getVersion());
+        assertEquals(5, session.getScore());
+        assertNoNewPhotoEffects();
     }
 
     /** 拍物成卡(立体藏品卡契约 §2.4):mode / cardTitle / cardStyle 必须投影进 kit。
@@ -410,6 +439,16 @@ class PlayKitPhotoCheckRuntimeTest {
     /** 往 CHECK_CONFIG 的 photoCheck 段里追加取景轮廓字段，其余真值不动。 */
     private static String withFrame(String frameFields) {
         return CHECK_CONFIG.replace("\"minConfidence\":60", frameFields + ",\"minConfidence\":60");
+    }
+
+    private void assertNoNewPhotoEffects() {
+        verifyNoInteractions(quota);
+        verify(visionService, never()).review(anyLong(), anyString(), anyString());
+        verify(photoIntents, never()).prepare(any());
+        verify(photoIntents, never()).executeOnce(anyLong(), anyLong(), anyString());
+        verify(photoIntents, never()).markApplied(anyLong(), anyString(), anyLong());
+        verify(sessionMapper, never()).updateStateCas(any());
+        verify(attemptMapper, never()).insertPlayAttemptLog(any());
     }
 
     private void arm() {

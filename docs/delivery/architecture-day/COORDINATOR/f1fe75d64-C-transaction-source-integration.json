@@ -1,0 +1,37 @@
+{
+  "owner": "C",
+  "parent": "f1fe75d646f8ae57864ee5603c68e70e7fabc854",
+  "commit": "2091be3a5b3ee7892d12a2b8ae1204b76a44b38e",
+  "files": [
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainFaultIsolationMySqlIT.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainStorageFixture.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainTransactionSamplingTest.java",
+    "docs/delivery/architecture-day/C/f1fe75-transaction-sample-freshness/README.md",
+    "docs/delivery/architecture-day/C/f1fe75-transaction-sample-freshness/postimages.sha256"
+  ],
+  "postimages": {
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainFaultIsolationMySqlIT.java": "5be310a9ad2f003ddaca056401830d6aa8afb12759e95fb277791570578547e0",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainStorageFixture.java": "1514b8842294a3874c4d594fc7ba5f114f44f3cddf56c43a57282e5ec7a86257",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainTransactionSamplingTest.java": "e303cc6e1a49695976e478b84e7a525cb4b31b4db064e8aec2c1976e00433f4e",
+    "docs/delivery/architecture-day/C/f1fe75-transaction-sample-freshness/README.md": "9115623efeea253dc901a78a5f1a4ec90ce620a7bcb3498ac882786b3408fbd3",
+    "docs/delivery/architecture-day/C/f1fe75-transaction-sample-freshness/postimages.sha256": "6a6c498804c00577e052df9d75915c641af04cbb31dcac7256f9ef69e7331bc7"
+  },
+  "author_manifest4_exact": true,
+  "all5_donor_blobs_exact": true,
+  "patch_bytes": 33154,
+  "patch_sha256": "9b2e7757ccf73617e5ac1c12e7bd7253e1cd485923c86948a50aa79b2c4921d7",
+  "applied": true,
+  "review_state": "ROOT_FOCUSED_SOURCE_REVIEW_COMPLETE_NO_NEW_RUNTIME_PROOF",
+  "new_ordinary_unit_methods": 10,
+  "java_db_tests_CI": "NOT_RUN",
+  "all_complete": false,
+  "review": {
+    "original_same_schema_all_sessions_zero_assertion_preserved": true,
+    "same_original_1second_calibration_and_150second_case_budget": true,
+    "official_8_0_45_cache_source_read_by_root_and_owner": true,
+    "current_physical_witness_required_not_time_only": true,
+    "mysql_default_db_observer_role_explicit_and_unmodified_probe_row_only": true,
+    "no_production_or_transport_or_CI_changes": true,
+    "new10_unit_only_SOURCE_NOT_RUN": true
+  }
+}

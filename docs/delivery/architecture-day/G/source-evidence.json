@@ -1,0 +1,2106 @@
+{
+  "baseline": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+  "evidence": {
+    "E01": [
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java",
+        "revision": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+        "sha256": "f415873b2a063bd92c154b360f1a952286f9fbf7b210a7908a2b7de120a1ad05",
+        "anchors": [
+          {
+            "anchor": "public int executeTopicSettlement()",
+            "matches": [
+              {
+                "line": 1093,
+                "text": "public int executeTopicSettlement() {"
+              }
+            ]
+          },
+          {
+            "anchor": "tx.execute(status -> settleTopic",
+            "matches": [
+              {
+                "line": 1123,
+                "text": "Boolean settled = tx.execute(status -> settleTopic(topic, topicRule));"
+              }
+            ]
+          },
+          {
+            "anchor": "NON_COOP_TOPIC_CASH_SETTLEMENT_UNPROVEN",
+            "matches": [
+              {
+                "line": 1267,
+                "text": "throw new ServiceException(\"NON_COOP_TOPIC_CASH_SETTLEMENT_UNPROVEN: topicId=\" + topic.getId());"
+              }
+            ]
+          },
+          {
+            "anchor": "FREE_EXPLORE_LEGACY_SETTLEMENT_FORBIDDEN",
+            "matches": [
+              {
+                "line": 1225,
+                "text": "throw new ServiceException(\"FREE_EXPLORE_LEGACY_SETTLEMENT_FORBIDDEN: topicId=\""
+              }
+            ]
+          },
+          {
+            "anchor": "void settleCoopTopic(",
+            "matches": [
+              {
+                "line": 1342,
+                "text": "void settleCoopTopic(CmsTopic topic, BigDecimal totalSales) {"
+              }
+            ]
+          },
+          {
+            "anchor": "coopSettlementClaimService.prepare",
+            "matches": [
+              {
+                "line": 1406,
+                "text": "? null : coopSettlementClaimService.prepare(o, now);"
+              }
+            ]
+          },
+          {
+            "anchor": "private Long resolveOrderPayee",
+            "matches": [
+              {
+                "line": 1661,
+                "text": "private Long resolveOrderPayee(CoopOrder o) {"
+              }
+            ]
+          },
+          {
+            "anchor": "private void assertSettlementConservation",
+            "matches": [
+              {
+                "line": 1673,
+                "text": "private void assertSettlementConservation(CmsTopic topic, BigDecimal totalSales,"
+              }
+            ]
+          },
+          {
+            "anchor": "private CoopSettlement payoutOneDueCoopSettlement",
+            "matches": [
+              {
+                "line": 1746,
+                "text": "private CoopSettlement payoutOneDueCoopSettlement(Long settlementId, Date now) {"
+              }
+            ]
+          },
+          {
+            "anchor": "pointsAwardService.awardPublisherSettlement",
+            "matches": [
+              {
+                "line": 1273,
+                "text": "pointsAwardService.awardPublisherSettlement(topic.getMemberId(), topic.getId());"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "E02": [
+      {
+        "path": "chengyinhub-system/src/main/resources/mapper/business/CmsTopicMapper.xml",
+        "revision": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+        "sha256": "d0b4bbdafb1ca6aa32a8bd6c71d5f1a740f3708d099e95e27e5cccfa363295b0",
+        "anchors": [
+          {
+            "anchor": "<select id=\"selectTopicsForSettlement\"",
+            "matches": [
+              {
+                "line": 1227,
+                "text": "<select id=\"selectTopicsForSettlement\" resultMap=\"CmsTopicResult\">"
+              }
+            ]
+          },
+          {
+            "anchor": "r.refund_deadline",
+            "matches": [
+              {
+                "line": 1241,
+                "text": "AND COALESCE(r.refund_deadline, CASE WHEN t.mode = 2 THEN t.end_time ELSE t.start_time END) > NOW()"
+              }
+            ]
+          },
+          {
+            "anchor": "<update id=\"claimTopicForSettlement\"",
+            "matches": [
+              {
+                "line": 1264,
+                "text": "<update id=\"claimTopicForSettlement\">"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "E03": [
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopInviteServiceImpl.java",
+        "revision": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+        "sha256": "05624ecf9f832e562999f696b9b959392c9437a760686d63164cf2695f611549",
+        "anchors": [
+          {
+            "anchor": "private void freezeOrderContractSnapshot",
+            "matches": [
+              {
+                "line": 1669,
+                "text": "private void freezeOrderContractSnapshot(CoopOrder order, CoopInvite invite) {"
+              }
+            ]
+          },
+          {
+            "anchor": "setRoleSnapshot",
+            "matches": [
+              {
+                "line": 1675,
+                "text": "order.setRoleSnapshot(\"club\".equals(invite.getToType()) ? \"ORGANIZER\" : \"SUPPLY\");"
+              }
+            ]
+          },
+          {
+            "anchor": "setScopeTypeSnapshot",
+            "matches": [
+              {
+                "line": 1676,
+                "text": "order.setScopeTypeSnapshot(invite.getNodeId() == null ? \"TOPIC\" : \"NODE\");"
+              }
+            ]
+          },
+          {
+            "anchor": "setEligiblePurchaseKindsSnapshot",
+            "matches": [
+              {
+                "line": 1678,
+                "text": "order.setEligiblePurchaseKindsSnapshot(\"GUIDED_TICKET\");"
+              }
+            ]
+          },
+          {
+            "anchor": "setFulfillmentEvidenceRuleSnapshot",
+            "matches": [
+              {
+                "line": 1679,
+                "text": "order.setFulfillmentEvidenceRuleSnapshot(\"club\".equals(invite.getToType())"
+              }
+            ]
+          },
+          {
+            "anchor": "terms.put(\"compensationMode\"",
+            "matches": [
+              {
+                "line": 1694,
+                "text": "terms.put(\"compensationMode\", order.getCompensationMode());"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "E04": [
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UnavailableCoopOrderSettlementSnapshotReader.java",
+        "revision": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+        "sha256": "38f896f8ccdde6b5c5c30932427bce96feeb875be155f2ffef1610a3ed2b89ef",
+        "anchors": [
+          {
+            "anchor": "public CoopSettlementSnapshot read(CoopOrder order) { return null; }",
+            "matches": [
+              {
+                "line": 47,
+                "text": "public CoopSettlementSnapshot read(CoopOrder order) { return null; }"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementClaimServiceImpl.java",
+        "revision": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+        "sha256": "6713abf79c78f33c8c9351961c59f04b33f5ae5bb4b098045d8ff8fbf8d61515",
+        "anchors": [
+          {
+            "anchor": "CoopSettlementSnapshot snapshot = snapshotReader.read",
+            "matches": [
+              {
+                "line": 89,
+                "text": "CoopSettlementSnapshot snapshot = snapshotReader.read(order);"
+              }
+            ]
+          },
+          {
+            "anchor": "public void persist",
+            "matches": [
+              {
+                "line": 102,
+                "text": "public void persist(CoopSettlementPlan plan, CoopSettlement head) {"
+              }
+            ]
+          },
+          {
+            "anchor": "public void appendExecutedAdjustment",
+            "matches": [
+              {
+                "line": 54,
+                "text": "public void appendExecutedAdjustment(Long claimId, String eventKey, BigDecimal signedAmount) {"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "E05": [
+      {
+        "path": "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementEvidenceMapper.xml",
+        "revision": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+        "sha256": "2a9a646a6b92f6ddc84de641e19c2f072186c39504606078f79a96c4dae5c842",
+        "anchors": [
+          {
+            "anchor": "<select id=\"selectTopicEvidenceCandidatesForUpdate\"",
+            "matches": [
+              {
+                "line": 42,
+                "text": "<select id=\"selectTopicEvidenceCandidatesForUpdate\" resultType=\"com.chengyinhub.business.domain.dto.CoopSettlementCandidate\">"
+              }
+            ]
+          },
+          {
+            "anchor": "#{snapshot.scopeType} = 'TOPIC_EDITION'",
+            "matches": [
+              {
+                "line": 11,
+                "text": "case when #{snapshot.scopeType} = 'TOPIC_EDITION' then true"
+              },
+              {
+                "line": 49,
+                "text": "case when #{snapshot.scopeType} = 'TOPIC_EDITION' then true"
+              }
+            ]
+          },
+          {
+            "anchor": "sm.activity_id = #{snapshot.scopeId}",
+            "matches": [
+              {
+                "line": 13,
+                "text": "where sm.registration_id = r.id and sm.activity_id = #{snapshot.scopeId})"
+              },
+              {
+                "line": 51,
+                "text": "where sm.registration_id = r.id and sm.activity_id = #{snapshot.scopeId})"
+              }
+            ]
+          },
+          {
+            "anchor": "r.owner_type = 2",
+            "matches": [
+              {
+                "line": 77,
+                "text": "or (r.owner_type = 2 and"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/CoopSettlementContract.java",
+        "revision": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+        "sha256": "2c169d91edbcea2c8c9c4fddf742287d7bd22837f2f68b99964260342019a093",
+        "anchors": [
+          {
+            "anchor": "private static boolean eligible",
+            "matches": [
+              {
+                "line": 112,
+                "text": "private static boolean eligible(CoopSettlementSnapshot snapshot, CoopSettlementCandidate c, Date cutoff) {"
+              }
+            ]
+          },
+          {
+            "anchor": "Long.valueOf(1L).equals(c.getOwnerType())",
+            "matches": [
+              {
+                "line": 113,
+                "text": "if (c == null || c.getRegistrationId() == null || !Long.valueOf(1L).equals(c.getOwnerType())"
+              }
+            ]
+          },
+          {
+            "anchor": "c.isOrganizerScopeCovered()",
+            "matches": [
+              {
+                "line": 123,
+                "text": "if (GUIDED_TICKET.equals(c.getPurchaseKind()) && c.isOrganizerScopeCovered()) {"
+              },
+              {
+                "line": 131,
+                "text": "return GUIDED_TICKET.equals(c.getPurchaseKind()) && c.isOrganizerScopeCovered()"
+              }
+            ]
+          },
+          {
+            "anchor": "private static void validateSnapshot",
+            "matches": [
+              {
+                "line": 137,
+                "text": "private static void validateSnapshot(CoopSettlementSnapshot s, Date cutoff) {"
+              }
+            ]
+          },
+          {
+            "anchor": "private static void allocateLargestRemainder",
+            "matches": [
+              {
+                "line": 82,
+                "text": "private static void allocateLargestRemainder(CoopSettlementSnapshot snapshot,"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "E06": [
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicSettlementEvidenceService.java",
+        "revision": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+        "sha256": "14149c71dce9ed76855f279091f2ee1bf91f9d15d61ec25c57a59fb8b64feff9",
+        "anchors": [
+          {
+            "anchor": "public Summary readTopic",
+            "matches": [
+              {
+                "line": 39,
+                "text": "public Summary readTopic(Long topicId) {"
+              }
+            ]
+          },
+          {
+            "anchor": "public List<CoopSettlementCandidate> lockCandidates",
+            "matches": [
+              {
+                "line": 71,
+                "text": "public List<CoopSettlementCandidate> lockCandidates(CoopSettlementSnapshot snapshot, Date settlementCutoff) {"
+              }
+            ]
+          },
+          {
+            "anchor": "selectTopicEvidenceCandidatesForUpdate",
+            "matches": [
+              {
+                "line": 77,
+                "text": "return evidenceMapper.selectTopicEvidenceCandidatesForUpdate(snapshot,"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml",
+        "revision": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+        "sha256": "2e0c38d4d8426aacf10b8759507992b319c791cc3b1a178d4ff01f0bb1e07c44",
+        "anchors": [
+          {
+            "anchor": "<select id=\"selectTotalSalesByTopicId\"",
+            "matches": [
+              {
+                "line": 669,
+                "text": "<select id=\"selectTotalSalesByTopicId\" parameterType=\"Long\" resultType=\"java.math.BigDecimal\">"
+              }
+            ]
+          },
+          {
+            "anchor": "<select id=\"selectTotalSalesEvidenceByTopicIdIncludingActivityShell\"",
+            "matches": [
+              {
+                "line": 677,
+                "text": "<select id=\"selectTotalSalesEvidenceByTopicIdIncludingActivityShell\" parameterType=\"Long\" resultType=\"java.math.BigDecimal\">"
+              }
+            ]
+          },
+          {
+            "anchor": "<select id=\"selectVerifiedSalesByTopicId\"",
+            "matches": [
+              {
+                "line": 689,
+                "text": "<select id=\"selectVerifiedSalesByTopicId\" parameterType=\"Long\" resultType=\"java.math.BigDecimal\">"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "E07": [
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicSaleFinalizationServiceImpl.java",
+        "revision": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+        "sha256": "ed05edd0260b1b26a86d9b8a9b622a0cbcfc5b121dabf91a49365294bbf4025e",
+        "anchors": [
+          {
+            "anchor": "public Date finalizeForSale",
+            "matches": [
+              {
+                "line": 115,
+                "text": "public Date finalizeForSale(Long topicId) {"
+              }
+            ]
+          },
+          {
+            "anchor": "assertFrozenCommercialFacts(topic",
+            "matches": [
+              {
+                "line": 160,
+                "text": "assertFrozenCommercialFacts(topic, tickets, offers);"
+              }
+            ]
+          },
+          {
+            "anchor": "clubPayeeService.snapshotForSale",
+            "matches": [
+              {
+                "line": 178,
+                "text": "clubPayeeService.snapshotForSale(topicId, executingClub, finalizeNow);"
+              }
+            ]
+          },
+          {
+            "anchor": "compensationService.freezeTermsForSale",
+            "matches": [
+              {
+                "line": 186,
+                "text": "compensationService.freezeTermsForSale(topicId, executingClub, finalizeNow, evidenceDueAt(topic),"
+              }
+            ]
+          },
+          {
+            "anchor": "private void assertFrozenCommercialFacts",
+            "matches": [
+              {
+                "line": 461,
+                "text": "private void assertFrozenCommercialFacts(CmsTopic topic, List<OmsTicket> tickets,"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "E08": [
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SettlementEntryServiceImpl.java",
+        "revision": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+        "sha256": "50ae23cef1bea21d21d93be027a64ba820552e8d3621f6fc0b13283a328aec28",
+        "anchors": [
+          {
+            "anchor": "public int recordOnPayment",
+            "matches": [
+              {
+                "line": 60,
+                "text": "public int recordOnPayment(CmsRegistration registration) {"
+              }
+            ]
+          },
+          {
+            "anchor": "private int recordPaidRegistration",
+            "matches": [
+              {
+                "line": 101,
+                "text": "private int recordPaidRegistration(CmsRegistration registration, Long merchantId, CmsActivity loadedActivity) {"
+              }
+            ]
+          },
+          {
+            "anchor": "PurchaseKind.EXPLORE_PASS",
+            "matches": [
+              {
+                "line": 77,
+                "text": "&& registration.getPurchaseKind() == PurchaseKind.EXPLORE_PASS) {"
+              },
+              {
+                "line": 124,
+                "text": "&& registration.getPurchaseKind() == PurchaseKind.EXPLORE_PASS) {"
+              }
+            ]
+          },
+          {
+            "anchor": "selectEffectiveOrdersByTopicId",
+            "matches": [
+              {
+                "line": 144,
+                "text": "// 判据与 CmsTopicServiceImpl 的分流**用同一个谓词**(selectEffectiveOrdersByTopicId 非空"
+              },
+              {
+                "line": 151,
+                "text": "&& !coopOrderMapper.selectEffectiveOrdersByTopicId(registration.getOwnerId()).isEmpty()) {"
+              }
+            ]
+          },
+          {
+            "anchor": "private int insertSplitDetails",
+            "matches": [
+              {
+                "line": 229,
+                "text": "private int insertSplitDetails(String sourceType, Long sourceId, Long merchantId, Long creatorId,"
+              }
+            ]
+          },
+          {
+            "anchor": "private SettlementClaim claimRegistration",
+            "matches": [
+              {
+                "line": 349,
+                "text": "private SettlementClaim claimRegistration(CmsRegistration registration, String beneficiaryRole,"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "E09": [
+      {
+        "path": "chengyinhub-admin/sql/migration_settlement_claim_20260811.sql",
+        "revision": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+        "sha256": "4b9d487914fb146fb0d1de7625b398ccbd2143c7fa77d5d7ccc0a471b511394a",
+        "anchors": [
+          {
+            "anchor": "CREATE TABLE settlement_claim",
+            "matches": [
+              {
+                "line": 5,
+                "text": "CREATE TABLE settlement_claim ("
+              }
+            ]
+          },
+          {
+            "anchor": "UNIQUE KEY uk_settlement_claim_key",
+            "matches": [
+              {
+                "line": 20,
+                "text": "UNIQUE KEY uk_settlement_claim_key"
+              }
+            ]
+          },
+          {
+            "anchor": "UNIQUE KEY uk_coop_settlement_detail_claim",
+            "matches": [
+              {
+                "line": 35,
+                "text": "UNIQUE KEY uk_coop_settlement_detail_claim (claim_id),"
+              }
+            ]
+          },
+          {
+            "anchor": "UNIQUE KEY uk_coop_adjustment_event",
+            "matches": [
+              {
+                "line": 49,
+                "text": "UNIQUE KEY uk_coop_adjustment_event (claim_id, entry_kind, event_key),"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SettlementClaimServiceImpl.java",
+        "revision": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+        "sha256": "59c9f8fca15e7849f1b1aa1bc8e10d7b29dcf277c5499fabda7a30e84531a3d6",
+        "anchors": [
+          {
+            "anchor": "public SettlementClaim claim",
+            "matches": [
+              {
+                "line": 26,
+                "text": "public SettlementClaim claim(SettlementClaim requested) {"
+              }
+            ]
+          },
+          {
+            "anchor": "current.getSettlementRoute()",
+            "matches": [
+              {
+                "line": 41,
+                "text": "if (sameText(current.getSettlementRoute(), requested.getSettlementRoute())"
+              },
+              {
+                "line": 47,
+                "text": "+ current.getSettlementRoute() + \",sourceContract=\" + current.getSourceContractType()"
+              }
+            ]
+          },
+          {
+            "anchor": "economicClaimKey 已由",
+            "matches": [
+              {
+                "line": 46,
+                "text": "throw new IllegalStateException(LEDGER_CONFLICT + \":economicClaimKey 已由 route=\""
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "E10": [
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SnapshotFulfillmentWindowResolver.java",
+        "revision": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+        "sha256": "bc9ddac3a501d51a5166087293277d58b1822bf3bca962bc57319b02b265c76e",
+        "anchors": [
+          {
+            "anchor": "return snapshot == null ? null : snapshot.getFulfillmentEndExclusive();",
+            "matches": [
+              {
+                "line": 14,
+                "text": "return snapshot == null ? null : snapshot.getFulfillmentEndExclusive();"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/FulfillmentWindowResolver.java",
+        "revision": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+        "sha256": "200e308f35ab9488446bec315d9508591114acc0e4d3830308f5e28cb8fe4af4",
+        "anchors": [
+          {
+            "anchor": "public static Window resolve",
+            "matches": [
+              {
+                "line": 18,
+                "text": "public static Window resolve(CmsTopic topic, OmsTicket ticket) {"
+              }
+            ]
+          },
+          {
+            "anchor": "endDate.plusDays(1)",
+            "matches": [
+              {
+                "line": 37,
+                "text": "Date.from(endDate.plusDays(1).atStartOfDay(SHANGHAI).toInstant()));"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "E11": [
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantPayableServiceImpl.java",
+        "revision": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+        "sha256": "b16aa0d00a9e57ff5713dc10f38b2d415009e893c96358f608a8555d0277ebb6",
+        "anchors": [
+          {
+            "anchor": "\"TOPIC_EDITION\", r.getTopicId(), \"REDEMPTION\"",
+            "matches": [
+              {
+                "line": 114,
+                "text": "\"TOPIC_EDITION\", r.getTopicId(), \"REDEMPTION\", r.getId(),"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "E12": [
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopSettlementContractTest.java",
+        "revision": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+        "sha256": "b5e8c09e21a007ce325296c6ca0aed53bf809b49ddcd385ff1ff51db6268d90a",
+        "anchors": [
+          {
+            "anchor": "void cutoffStatusScopeKindsAndDistinctAreFailClosed",
+            "matches": [
+              {
+                "line": 66,
+                "text": "void cutoffStatusScopeKindsAndDistinctAreFailClosed() {"
+              }
+            ]
+          },
+          {
+            "anchor": "void salesPercentUsesOneHeaderRoundThenLargestRemainderByRegistrationId",
+            "matches": [
+              {
+                "line": 24,
+                "text": "void salesPercentUsesOneHeaderRoundThenLargestRemainderByRegistrationId() {"
+              }
+            ]
+          },
+          {
+            "anchor": "void missingFrozenSnapshotIsManualRepairNotGuessing",
+            "matches": [
+              {
+                "line": 113,
+                "text": "void missingFrozenSnapshotIsManualRepairNotGuessing() {"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopSettlementClaimServiceImplTest.java",
+        "revision": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+        "sha256": "2fc78ed895fb1d9a38f6fa44b68a0fccb5c5742d878bc328c2900e4001447729",
+        "anchors": [
+          {
+            "anchor": "void threeRegistrationsProduceThreeClaimsThreeDetailsAndHeaderOnlyFromDetails",
+            "matches": [
+              {
+                "line": 37,
+                "text": "void threeRegistrationsProduceThreeClaimsThreeDetailsAndHeaderOnlyFromDetails() {"
+              }
+            ]
+          },
+          {
+            "anchor": "void adjustmentAppendsByClaimEventWithoutChangingOriginDetailOrHead",
+            "matches": [
+              {
+                "line": 103,
+                "text": "void adjustmentAppendsByClaimEventWithoutChangingOriginDetailOrHead() {"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "E13": [
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayerNodeProgressServiceImpl.java",
+        "revision": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+        "sha256": "33029a66e2fbc95471c64bd5e98186b738aef031fc359807c9e8e4006a930011",
+        "anchors": [
+          {
+            "anchor": "private void instance",
+            "matches": [
+              {
+                "line": 28,
+                "text": "private void instance(PlayerNodeProgress p) {"
+              }
+            ]
+          },
+          {
+            "anchor": "selectCurrentByOwner",
+            "matches": [
+              {
+                "line": 30,
+                "text": "com.chengyinhub.business.domain.TopicRouteSession current = routeSessions == null ? null : routeSessions.selectCurrentByOwner(p.getActivityId(),p.getTopicId(),p.getMemberId());"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-admin/sql/migration_theme_runtime_20261004.sql",
+        "revision": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+        "sha256": "61794ccd8681bfaac0d07208c7d0f3108780f919ee5aeff17951518f999d9007",
+        "anchors": [
+          {
+            "anchor": "ADD UNIQUE KEY uk_progress",
+            "matches": [
+              {
+                "line": 14,
+                "text": "ADD UNIQUE KEY uk_progress(member_id,topic_id,node_id,activity_id,play_instance_id),"
+              }
+            ]
+          },
+          {
+            "anchor": "play_instance_id",
+            "matches": [
+              {
+                "line": 7,
+                "text": "ADD COLUMN play_instance_id VARCHAR(64) NOT NULL DEFAULT 'default' COMMENT '主题游玩实例',"
+              },
+              {
+                "line": 9,
+                "text": "ADD UNIQUE KEY uk_runtime_owner(activity_id,topic_id,node_id,owner_type,owner_id,play_instance_id);"
+              },
+              {
+                "line": 11,
+                "text": "ADD COLUMN play_instance_id VARCHAR(64) NOT NULL DEFAULT 'default' COMMENT '主题游玩实例',"
+              },
+              {
+                "line": 14,
+                "text": "ADD UNIQUE KEY uk_progress(member_id,topic_id,node_id,activity_id,play_instance_id),"
+              },
+              {
+                "line": 15,
+                "text": "ADD UNIQUE KEY uk_member_activity_node(member_id,activity_id,node_id,play_instance_id);"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-system/src/main/resources/mapper/business/PlayerNodeProgressMapper.xml",
+        "revision": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+        "sha256": "ca10b337c901c6aecc3aef6f08b7ba10ca0392665f8677b4bf875897a77684fc",
+        "anchors": [
+          {
+            "anchor": "and play_instance_id=coalesce",
+            "matches": [
+              {
+                "line": 37,
+                "text": "and play_instance_id=coalesce((select r.play_instance_id from topic_route_session r where r.member_id=player_node_progress.member_id and r.topic_id=player_node_progress.topic_id and r.activity_id=player_node_progress.activity_id order by r.id desc limit 1),'default')"
+              },
+              {
+                "line": 122,
+                "text": "and play_instance_id=coalesce((select r.play_instance_id from topic_route_session r where r.member_id=#{memberId} and r.topic_id=#{topicId} and r.activity_id=#{activityId} order by r.id desc limit 1),'default')"
+              }
+            ]
+          },
+          {
+            "anchor": "<select id=\"selectRouteLeaderboard\"",
+            "matches": [
+              {
+                "line": 221,
+                "text": "<select id=\"selectRouteLeaderboard\" resultType=\"com.chengyinhub.business.domain.vo.LeaderboardItemVO\">"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "E14": [
+      {
+        "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java",
+        "revision": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+        "sha256": "3473bd8775d6c69a29d181598022d16ba913edce37885711655d2150d69dc7eb",
+        "anchors": [
+          {
+            "anchor": "private Map<String, Object> advanceProgress",
+            "matches": [
+              {
+                "line": 2941,
+                "text": "private Map<String, Object> advanceProgress(Long memberId, CmsTopicNode node, Long actId)"
+              },
+              {
+                "line": 2949,
+                "text": "private Map<String, Object> advanceProgress(Long memberId, CmsTopicNode node, Long actId, String picUrl)"
+              },
+              {
+                "line": 2955,
+                "text": "private Map<String, Object> advanceProgress(Long memberId, CmsTopicNode node, Long actId, String picUrl,"
+              },
+              {
+                "line": 2961,
+                "text": "private Map<String, Object> advanceProgress(Long memberId, CmsTopicNode node, Long actId, String picUrl,"
+              },
+              {
+                "line": 2968,
+                "text": "private Map<String, Object> advanceProgress(Long memberId, CmsTopicNode node, Long actId, String picUrl,"
+              },
+              {
+                "line": 2981,
+                "text": "private Map<String, Object> advanceProgress(Long memberId, CmsTopicNode node, Long actId, String picUrl,"
+              }
+            ]
+          },
+          {
+            "anchor": "p.setStatus(1)",
+            "matches": [
+              {
+                "line": 3009,
+                "text": "p.setStatus(1);"
+              }
+            ]
+          },
+          {
+            "anchor": "if (firstTime && (p.getPlayInstanceId()",
+            "matches": [
+              {
+                "line": 3063,
+                "text": "if (firstTime && (p.getPlayInstanceId()==null || \"default\".equals(p.getPlayInstanceId()))) {"
+              }
+            ]
+          },
+          {
+            "anchor": "RewardPolicy.XP_BADGE_ONLY",
+            "matches": [
+              {
+                "line": 1967,
+                "text": "RewardPolicy.XP_BADGE_ONLY, request.getRouteActionId(),"
+              },
+              {
+                "line": 2251,
+                "text": "null, null, RewardPolicy.XP_BADGE_ONLY, routeActionId,"
+              },
+              {
+                "line": 2287,
+                "text": "? RewardPolicy.XP_BADGE_ONLY : RewardPolicy.FULL;"
+              },
+              {
+                "line": 2998,
+                "text": "if (rewardCapped) rewardPolicy = RewardPolicy.XP_BADGE_ONLY;"
+              },
+              {
+                "line": 3091,
+                "text": "if (!shopDay || rewardPolicy == RewardPolicy.XP_BADGE_ONLY) {"
+              },
+              {
+                "line": 3102,
+                "text": "if (shopDay || rewardPolicy == RewardPolicy.XP_BADGE_ONLY) dropResult = null;"
+              },
+              {
+                "line": 3176,
+                "text": "RewardPolicy completionPolicy = topicRewardCapped ? RewardPolicy.XP_BADGE_ONLY : topicRewardPolicy;"
+              },
+              {
+                "line": 3197,
+                "text": "if (rewardCapped) data.put(\"rewardCeiling\", RewardPolicy.XP_BADGE_ONLY.name());"
+              },
+              {
+                "line": 3198,
+                "text": "if (topicRewardCapped) data.put(\"topicRewardCeiling\", RewardPolicy.XP_BADGE_ONLY.name());"
+              }
+            ]
+          },
+          {
+            "anchor": "String serverReceiptId = p.getId()",
+            "matches": [
+              {
+                "line": 3152,
+                "text": "String serverReceiptId = p.getId() == null ? null : \"player-node-progress:\" + p.getId();"
+              }
+            ]
+          },
+          {
+            "anchor": "private boolean isTopicCompletedFor",
+            "matches": [
+              {
+                "line": 2591,
+                "text": "private boolean isTopicCompletedFor(CmsRegistration explore, Long topicId, int total, int done)"
+              }
+            ]
+          },
+          {
+            "anchor": "private boolean isCompletedCompletionFact",
+            "matches": [
+              {
+                "line": 2606,
+                "text": "private boolean isCompletedCompletionFact(com.chengyinhub.business.domain.CmsTopic topic,"
+              }
+            ]
+          },
+          {
+            "anchor": "public AjaxResult myCompleted()",
+            "matches": [
+              {
+                "line": 3241,
+                "text": "public AjaxResult myCompleted()"
+              }
+            ]
+          },
+          {
+            "anchor": "selfPlayNodesByTopic",
+            "matches": [
+              {
+                "line": 3253,
+                "text": "Map<Long, java.util.LinkedHashSet<Long>> selfPlayNodesByTopic = new LinkedHashMap<>();"
+              },
+              {
+                "line": 3263,
+                "text": "selfPlayNodesByTopic.computeIfAbsent(p.getTopicId(), k -> new java.util.LinkedHashSet<>())"
+              },
+              {
+                "line": 3295,
+                "text": "for (Long topicId : selfPlayNodesByTopic.keySet()) {"
+              },
+              {
+                "line": 3346,
+                "text": "for (Map.Entry<Long, java.util.LinkedHashSet<Long>> entry : selfPlayNodesByTopic.entrySet()) {"
+              }
+            ]
+          },
+          {
+            "anchor": "candidates.addAll(exploreByActivity.keySet())",
+            "matches": [
+              {
+                "line": 3280,
+                "text": "candidates.addAll(exploreByActivity.keySet());"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "E15": [
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java",
+        "revision": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+        "sha256": "6271bfbef7ab91deb2cf0de737c6eaeff26a03096b96c5e5cad4ca92e55e9552",
+        "anchors": [
+          {
+            "anchor": "private void recordNodeResult",
+            "matches": [
+              {
+                "line": 3731,
+                "text": "private void recordNodeResult(Long memberId,Long topicId,Long activityId,Long nodeId,String instance,String actionId,Boolean passed,boolean mistake,int outcome,List<String[]> choices,JsonNode decision,String attemptId) {"
+              }
+            ]
+          },
+          {
+            "anchor": "with(\"verifiedNodes\")",
+            "matches": [
+              {
+                "line": 3775,
+                "text": "state.getThemeRuntime().with(\"verifiedNodes\").put(String.valueOf(nodeId),clock.millis());"
+              },
+              {
+                "line": 4320,
+                "text": "state.getThemeRuntime().with(\"verifiedNodes\").put(String.valueOf(nodeId),clock.millis());state.getVariables().put(SYS_PASSED_PREFIX+nodeId,1);game.put(\"activeQuestArrivalReceiptId\",proof.path(\"receiptId\").asText());"
+              },
+              {
+                "line": 4348,
+                "text": "TopicRouteEngine.State probe=state.copy();if(facility.has(\"operationNodeId\"))probe.getThemeRuntime().with(\"verifiedNodes\").put(facility.path(\"operationNodeId\").asText(),true);"
+              },
+              {
+                "line": 4411,
+                "text": "state.getThemeRuntime().with(\"verifiedNodes\").put(facility.path(\"operationNodeId\").asText(),true);state.getThemeRuntime().with(\"operationFacts\").set(\"FACILITY:\"+questKey,active.deepCopy());"
+              },
+              {
+                "line": 4484,
+                "text": "if(\"OPERATION_CANCEL\".equals(operation)) {if(!activeOperation.isObject() || !contentId.equals(activeOperation.path(\"operationKey\").asText()))throw new IllegalStateException(\"该设施操作尚未开始\");state.getThemeRuntime().with(\"gameplay\").remove(\"activeOperation\");state.getThemeRuntime().with(\"operationFacts\").remove(\"FACILITY:\"+contentId);state.getThemeRuntime().with(\"verifiedNodes\").remove(facility.path(\"operationNodeId\").asText());result=JSON.createObjectNode().put(\"cancelledOperation\",contentId);}"
+              },
+              {
+                "line": 4490,
+                "text": "if(!activeOperation.isObject()) {ObjectNode started=state.getThemeRuntime().with(\"gameplay\").putObject(\"activeOperation\");started.put(\"operationKind\",\"FACILITY\").put(\"operationKey\",contentId).put(\"nodeId\",facility.path(\"operationNodeId\").asLong()).put(\"startedActionId\",key).put(\"verified\",false);if(selected!=null)started.put(\"costOption\",selected);started.putArray(\"effects\");started.putObject(\"sources\");state.getThemeRuntime().with(\"verifiedNodes\").remove(facility.path(\"operationNodeId\").asText());state.getThemeRuntime().with(\"operationFacts\").remove(\"FACILITY:\"+contentId);}"
+              },
+              {
+                "line": 4499,
+                "text": "if(facility.has(\"operationNodeId\")) {if(!activeOperation.isObject() || !contentId.equals(activeOperation.path(\"operationKey\").asText()) || activeOperation.path(\"nodeId\").asLong()!=facility.path(\"operationNodeId\").asLong() || !activeOperation.path(\"verified\").asBoolean())throw new IllegalStateException(\"设施操作题组尚未通过当前实例判定\");state.getThemeRuntime().with(\"verifiedNodes\").put(facility.path(\"operationNodeId\").asText(),true);state.getThemeRuntime().with(\"operationFacts\").set(\"FACILITY:\"+contentId,activeOperation.deepCopy());}"
+              },
+              {
+                "line": 4505,
+                "text": "if(facility.has(\"operationNodeId\") && !\"BLOCKED_COST\".equals(result.path(\"status\").asText())) {if(activeOperation.has(\"arrivalReceiptId\"))consumeBasicArrival(state,facility.path(\"operationNodeId\").asLong(),activeOperation.path(\"arrivalReceiptId\").asText(),activeOperation.path(\"startedActionId\").asText());state.getThemeRuntime().with(\"gameplay\").remove(\"activeOperation\");state.getThemeRuntime().with(\"operationFacts\").remove(\"FACILITY:\"+contentId);state.getThemeRuntime().with(\"verifiedNodes\").remove(facility.path(\"operationNodeId\").asText());}"
+              }
+            ]
+          },
+          {
+            "anchor": "\"TASK_FACT\"",
+            "matches": [
+              {
+                "line": 3781,
+                "text": "commitJourneyAction(session,nodeId,event,\"TASK_FACT\",receipt,state);"
+              }
+            ]
+          },
+          {
+            "anchor": "public Map<String,Object> gameplayAction",
+            "matches": [
+              {
+                "line": 4426,
+                "text": "public Map<String,Object> gameplayAction(Long memberId,Long sessionId,Integer version,String actionId,String operation,String contentId,String choiceKey) {"
+              },
+              {
+                "line": 4431,
+                "text": "public Map<String,Object> gameplayAction(Long memberId,Long sessionId,Integer version,String actionId,String operation,String contentId,String choiceKey,JsonNode discardRewards,String previewVersion) {"
+              },
+              {
+                "line": 4436,
+                "text": "public Map<String,Object> gameplayAction(Long memberId,Long sessionId,Integer version,String actionId,String operation,String contentId,String choiceKey,JsonNode discardRewards,String previewVersion,Integer costOption) {"
+              }
+            ]
+          },
+          {
+            "anchor": "action.setOutcomeCode(\"TASK_ARRIVAL\")",
+            "matches": [
+              {
+                "line": 4374,
+                "text": "TopicRouteAction action=new TopicRouteAction();action.setSessionId(session.getId());action.setMemberId(memberId);action.setNodeId(nodeId);action.setActionId(key);action.setReceiptId(key);action.setOutcomeCode(\"TASK_ARRIVAL\");action.setResponseJson(\"{}\");action.setCreateTime(new Date(clock.millis()));"
+              }
+            ]
+          },
+          {
+            "anchor": "private int statusOf",
+            "matches": [
+              {
+                "line": 556,
+                "text": "private int statusOf(TopicRouteEngine.State state) { return \"ENDED\".equals(state.getStatus()) ? TopicRouteSession.STATUS_ENDED : \"COMPLETED\".equals(state.getStatus()) ? TopicRouteSession.STATUS_COMPLETED : TopicRouteSession.STATUS_RUNNING; }"
+              }
+            ]
+          },
+          {
+            "anchor": "public int countCompletedParticipants",
+            "matches": [
+              {
+                "line": 892,
+                "text": "public int countCompletedParticipants(Long topicId) {"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "E16": [
+      {
+        "path": "chengyinhub-system/src/main/resources/mapper/business/TopicRouteSessionMapper.xml",
+        "revision": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+        "sha256": "9e41cb4d3ee4eacb105b2f3057c1647d4ae41153317590c2549fddf1b8152d3a",
+        "anchors": [
+          {
+            "anchor": "<update id=\"updateStateCas\"",
+            "matches": [
+              {
+                "line": 85,
+                "text": "<update id=\"updateStateCas\" parameterType=\"com.chengyinhub.business.domain.TopicRouteSession\">"
+              }
+            ]
+          },
+          {
+            "anchor": "and version=#{version} and status=0",
+            "matches": [
+              {
+                "line": 88,
+                "text": "where id=#{id} and member_id=#{memberId} and version=#{version} and status=0"
+              }
+            ]
+          },
+          {
+            "anchor": "<select id=\"selectActionByReceipt\"",
+            "matches": [
+              {
+                "line": 94,
+                "text": "<select id=\"selectActionByReceipt\" resultMap=\"RouteAction\">"
+              }
+            ]
+          },
+          {
+            "anchor": "<select id=\"selectByOwners\"",
+            "matches": [
+              {
+                "line": 73,
+                "text": "<select id=\"selectByOwners\" resultMap=\"RouteSession\">"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-admin/sql/migration_20260823_topic_route_graph.sql",
+        "revision": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+        "sha256": "a3655b35c4616d60b753c1aa6b78befa964fbc0a6d8b3c0a5d9f88194775e811",
+        "anchors": [
+          {
+            "anchor": "UNIQUE KEY uk_topic_route_owner",
+            "matches": [
+              {
+                "line": 43,
+                "text": "UNIQUE KEY uk_topic_route_owner (activity_id,topic_id,member_id,play_instance_id),"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "E17": [
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java",
+        "revision": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+        "sha256": "e923e5a71d5221040f1d4aa2bda26f230f3471e91d894bcf80367ba2e7301916",
+        "anchors": [
+          {
+            "anchor": "private GamePlayerNodeOutcome outcomeForSubmission",
+            "matches": [
+              {
+                "line": 5034,
+                "text": "private GamePlayerNodeOutcome outcomeForSubmission(GameSession session, GameStationRun station,"
+              },
+              {
+                "line": 5041,
+                "text": "private GamePlayerNodeOutcome outcomeForSubmission(GameSession session, GameStationRun station,"
+              }
+            ]
+          },
+          {
+            "anchor": "\"EVIDENCE_ONLY\".equals(upper(taskConfig",
+            "matches": [
+              {
+                "line": 5051,
+                "text": "if (!\"EVIDENCE_ONLY\".equals(upper(taskConfig.path(\"completionPolicy\").asText()))) {"
+              }
+            ]
+          },
+          {
+            "anchor": "private GamePlayerNodeOutcome ensureOutcome",
+            "matches": [
+              {
+                "line": 5066,
+                "text": "private GamePlayerNodeOutcome ensureOutcome(GameSession session, GameStationRun station, Long teamId,"
+              },
+              {
+                "line": 5074,
+                "text": "private GamePlayerNodeOutcome ensureOutcome(GameSession session, GameStationRun station, Long teamId,"
+              }
+            ]
+          },
+          {
+            "anchor": "if (existing != null) return existing;",
+            "matches": [
+              {
+                "line": 5080,
+                "text": "if (existing != null) return existing;"
+              }
+            ]
+          },
+          {
+            "anchor": "GamePlayerNodeOutcome.FALLBACK_COMPLETED, \"ANSWER_REVEAL\"",
+            "matches": [
+              {
+                "line": 3316,
+                "text": "GamePlayerNodeOutcome.FALLBACK_COMPLETED, \"ANSWER_REVEAL\", null, receiptId, null, null);"
+              }
+            ]
+          },
+          {
+            "anchor": "GamePlayerNodeOutcome.FALLBACK_COMPLETED, \"FALLBACK_PLAN\"",
+            "matches": [
+              {
+                "line": 5124,
+                "text": "GamePlayerNodeOutcome.FALLBACK_COMPLETED, \"FALLBACK_PLAN\", null, receiptId,"
+              }
+            ]
+          },
+          {
+            "anchor": "story.setStatus(\"ENDING_RESOLVED\")",
+            "matches": [
+              {
+                "line": 3266,
+                "text": "story.setStatus(\"ENDING_RESOLVED\");"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "E18": [
+      {
+        "path": "chengyinhub-system/src/main/resources/mapper/business/GameSessionRuntimeMapper.xml",
+        "revision": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+        "sha256": "d0767dd1ce58dc92f5d3bf6e19ee35e4084760a9bbc80ebcb9fc10326b2293ac",
+        "anchors": [
+          {
+            "anchor": "<update id=\"updateStoryStateCas\"",
+            "matches": [
+              {
+                "line": 798,
+                "text": "<update id=\"updateStoryStateCas\" parameterType=\"com.chengyinhub.business.domain.GameStoryState\">"
+              }
+            ]
+          },
+          {
+            "anchor": "status&lt;&gt;'ENDING_RESOLVED'",
+            "matches": [
+              {
+                "line": 802,
+                "text": "and owner_id=#{ownerId} and revision=#{revision} and status&lt;&gt;'ENDING_RESOLVED'"
+              }
+            ]
+          },
+          {
+            "anchor": "insert ignore into game_player_node_outcome",
+            "matches": [
+              {
+                "line": 908,
+                "text": "insert ignore into game_player_node_outcome"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-admin/sql/migration_20260823_game_session_runtime.sql",
+        "revision": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+        "sha256": "ca7e9c57cf3d82cdca79796a120fda6197a68a9fab0b3a241c45a3a83ee68250",
+        "anchors": [
+          {
+            "anchor": "UNIQUE KEY uk_game_story_owner",
+            "matches": [
+              {
+                "line": 108,
+                "text": "UNIQUE KEY uk_game_story_owner (game_session_id, owner_type, owner_id)"
+              }
+            ]
+          },
+          {
+            "anchor": "UNIQUE KEY uk_game_outcome_player_node",
+            "matches": [
+              {
+                "line": 176,
+                "text": "UNIQUE KEY uk_game_outcome_player_node (game_session_id, member_id, node_id),"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "E19": [
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PerkLedgerServiceImpl.java",
+        "revision": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+        "sha256": "1be9f2658b999eb0d9019f5688309a7ec3c4dea5d9b509e588f4868ccae681d6",
+        "anchors": [
+          {
+            "anchor": "entitlementMapper.markRedeemed",
+            "matches": [
+              {
+                "line": 439,
+                "text": "if (entitlementMapper.markRedeemed(registrationId, chapterId) == 0) {"
+              }
+            ]
+          },
+          {
+            "anchor": "entitlementMapper.restoreToPending",
+            "matches": [
+              {
+                "line": 604,
+                "text": "entitlementMapper.restoreToPending(r.getRegistrationId(), r.getChapterId());"
+              }
+            ]
+          },
+          {
+            "anchor": "entitlementMapper.invalidateByRegistration",
+            "matches": [
+              {
+                "line": 290,
+                "text": "int released = entitlementMapper.invalidateByRegistration(registrationId, reason);"
+              }
+            ]
+          },
+          {
+            "anchor": "String idemKey = redeemKey",
+            "matches": [
+              {
+                "line": 400,
+                "text": "String idemKey = redeemKey(registrationId, chapterId, merchantId);"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-system/src/main/resources/mapper/business/RegistrationEntitlementMapper.xml",
+        "revision": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+        "sha256": "25ac8dc50c37bd645f868ee9863571d53f2da2e4ec3f490953d1594ee0b9db81",
+        "anchors": [
+          {
+            "anchor": "<update id=\"markRedeemed\"",
+            "matches": [
+              {
+                "line": 80,
+                "text": "<update id=\"markRedeemed\">"
+              }
+            ]
+          },
+          {
+            "anchor": "<update id=\"invalidateByRegistration\"",
+            "matches": [
+              {
+                "line": 90,
+                "text": "<update id=\"invalidateByRegistration\">"
+              }
+            ]
+          },
+          {
+            "anchor": "<update id=\"restoreToPending\"",
+            "matches": [
+              {
+                "line": 125,
+                "text": "<update id=\"restoreToPending\">"
+              }
+            ]
+          },
+          {
+            "anchor": "and r.payment_status = 2",
+            "matches": [
+              {
+                "line": 132,
+                "text": "and r.payment_status = 2"
+              },
+              {
+                "line": 147,
+                "text": "and r.payment_status = 2 and r.registration_status = 2 and r.member_id &gt; 0"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "E20": [
+      {
+        "path": "chengyinhub-system/src/main/resources/mapper/business/GameSessionRuntimeMapper.xml",
+        "revision": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+        "sha256": "d0767dd1ce58dc92f5d3bf6e19ee35e4084760a9bbc80ebcb9fc10326b2293ac",
+        "anchors": [
+          {
+            "anchor": "as normalCompleters",
+            "matches": [
+              {
+                "line": 661,
+                "text": "from game_player_node_outcome o where o.game_session_id=s.id) end as normalCompleters,"
+              }
+            ]
+          },
+          {
+            "anchor": "as fallbackCompleters",
+            "matches": [
+              {
+                "line": 663,
+                "text": "from game_player_node_outcome o where o.game_session_id=s.id) as fallbackCompleters,"
+              }
+            ]
+          },
+          {
+            "anchor": "as finishedTeams",
+            "matches": [
+              {
+                "line": 681,
+                "text": ") as finishedTeams,"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/LeaderboardRankPolicy.java",
+        "revision": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+        "sha256": "67e84d18b629830f313f26f39df5f492ef96d050a0061febdb5f9da03c0a2552",
+        "anchors": [
+          {
+            "anchor": "public static boolean isRouteRanked",
+            "matches": [
+              {
+                "line": 27,
+                "text": "public static boolean isRouteRanked(CmsTopic topic) {"
+              }
+            ]
+          },
+          {
+            "anchor": "personalGameplayTopic",
+            "matches": [
+              {
+                "line": 29,
+                "text": "return TopicRouteModePolicy.isEffectiveBranchGraph(topic, null) || personalGameplayTopic(topic);"
+              },
+              {
+                "line": 33,
+                "text": "static boolean personalGameplayTopic(CmsTopic topic) {"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicOnsiteMetricsServiceImpl.java",
+        "revision": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+        "sha256": "59c155b7581337c04c984ca668657ab0628f611ad042242c94320694289378fd",
+        "anchors": [
+          {
+            "anchor": "boolean completed = fact.getRedeemedCount() >= required;",
+            "matches": [
+              {
+                "line": 40,
+                "text": "boolean completed = fact.getRedeemedCount() >= required;"
+              }
+            ]
+          },
+          {
+            "anchor": "result.setCompletionRate(rate(result.getCompleted(), result.getArrived()))",
+            "matches": [
+              {
+                "line": 59,
+                "text": "result.setCompletionRate(rate(result.getCompleted(), result.getArrived()));"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "E21": [
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressCompletionTruthTest.java",
+        "revision": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+        "sha256": "072725a92719f94bf483eab0edf742c7fd19017f2d4a6207bb0610fb833ef08d",
+        "anchors": [
+          {
+            "anchor": "void genericPlayerScanRecordsCurrentRunArrivalWithoutLegacyAwards",
+            "matches": [
+              {
+                "line": 353,
+                "text": "void genericPlayerScanRecordsCurrentRunArrivalWithoutLegacyAwards() {"
+              }
+            ]
+          },
+          {
+            "anchor": "void leaderboardProofScanCompletionWritesCompletedProgressRow",
+            "matches": [
+              {
+                "line": 707,
+                "text": "void leaderboardProofScanCompletionWritesCompletedProgressRow() {"
+              }
+            ]
+          },
+          {
+            "anchor": "void leaderboardProofPhotoCompletionWritesCompletedProgressRow",
+            "matches": [
+              {
+                "line": 716,
+                "text": "void leaderboardProofPhotoCompletionWritesCompletedProgressRow() {"
+              }
+            ]
+          },
+          {
+            "anchor": "void leaderboardProofAnswerCompletionWritesCompletedProgressRow",
+            "matches": [
+              {
+                "line": 730,
+                "text": "void leaderboardProofAnswerCompletionWritesCompletedProgressRow() {"
+              }
+            ]
+          },
+          {
+            "anchor": "void leaderboardProofAdvancedGameplayCompletionWritesCompletedProgressRow",
+            "matches": [
+              {
+                "line": 748,
+                "text": "void leaderboardProofAdvancedGameplayCompletionWritesCompletedProgressRow() {"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "E22": [
+      {
+        "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java",
+        "revision": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+        "sha256": "3473bd8775d6c69a29d181598022d16ba913edce37885711655d2150d69dc7eb",
+        "anchors": [
+          {
+            "anchor": "if (explore == null)",
+            "matches": [
+              {
+                "line": 2593,
+                "text": "if (explore == null) {"
+              }
+            ]
+          },
+          {
+            "anchor": "return topicCompletionRulePolicy.isCompleted",
+            "matches": [
+              {
+                "line": 2571,
+                "text": "return topicCompletionRulePolicy.isCompleted("
+              },
+              {
+                "line": 2595,
+                "text": "return topicCompletionRulePolicy.isCompleted("
+              }
+            ]
+          },
+          {
+            "anchor": "if (p.getStatus() == null || p.getStatus() != 1) continue;",
+            "matches": [
+              {
+                "line": 420,
+                "text": "if (p.getStatus() == null || p.getStatus() != 1) continue;"
+              },
+              {
+                "line": 1120,
+                "text": "if (p.getStatus() == null || p.getStatus() != 1) continue;"
+              },
+              {
+                "line": 3258,
+                "text": "if (p.getStatus() == null || p.getStatus() != 1) continue;"
+              }
+            ]
+          },
+          {
+            "anchor": "new java.util.LinkedHashSet<>(doneByActivity.keySet())",
+            "matches": [
+              {
+                "line": 3279,
+                "text": "java.util.Set<Long> candidates = new java.util.LinkedHashSet<>(doneByActivity.keySet());"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "E23": [
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PerkLedgerServiceImpl.java",
+        "revision": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+        "sha256": "1be9f2658b999eb0d9019f5688309a7ec3c4dea5d9b509e588f4868ccae681d6",
+        "anchors": [
+          {
+            "anchor": "public boolean isExploreCompleted",
+            "matches": [
+              {
+                "line": 699,
+                "text": "public boolean isExploreCompleted(Long registrationId, Long topicId) {"
+              }
+            ]
+          },
+          {
+            "anchor": "pureContentExploreService.isPureContent",
+            "matches": [
+              {
+                "line": 223,
+                "text": "if (pureContentExploreService != null && pureContentExploreService.isPureContent(topicId)) return;"
+              },
+              {
+                "line": 700,
+                "text": "if (pureContentExploreService != null && pureContentExploreService.isPureContent(topicId)) {"
+              },
+              {
+                "line": 720,
+                "text": "if (pureContentExploreService != null && pureContentExploreService.isPureContent(topicId)) {"
+              }
+            ]
+          },
+          {
+            "anchor": "CompletionRule rule = completionRule",
+            "matches": [
+              {
+                "line": 703,
+                "text": "CompletionRule rule = completionRule(topicId);"
+              },
+              {
+                "line": 731,
+                "text": "CompletionRule rule = completionRule(topicId);"
+              }
+            ]
+          },
+          {
+            "anchor": "private CompletionRule completionRule",
+            "matches": [
+              {
+                "line": 800,
+                "text": "private CompletionRule completionRule(Long topicId) {"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/PureContentExploreService.java",
+        "revision": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+        "sha256": "84dbe5f1ed50417597bbdbff0c5f03438ad3a99b0c7727b07bcb39e9be5bf972",
+        "anchors": [
+          {
+            "anchor": "public boolean isPureContent",
+            "matches": [
+              {
+                "line": 22,
+                "text": "public boolean isPureContent(Long topicId) {"
+              }
+            ]
+          },
+          {
+            "anchor": "public Set<Long> completedChapters",
+            "matches": [
+              {
+                "line": 63,
+                "text": "public Set<Long> completedChapters(Long registrationId, Long topicId) {"
+              }
+            ]
+          },
+          {
+            "anchor": "Integer.valueOf(2).equals(registration.getPaymentStatus())",
+            "matches": [
+              {
+                "line": 69,
+                "text": "|| !Integer.valueOf(2).equals(registration.getPaymentStatus())"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-system/src/main/resources/mapper/business/RedemptionMapper.xml",
+        "revision": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+        "sha256": "3c25f15cb47fba5bd9a8c465ec93d5b532a10ebed73b76a16f919ed00975e043",
+        "anchors": [
+          {
+            "anchor": "<select id=\"selectActiveCompletionCounts\"",
+            "matches": [
+              {
+                "line": 149,
+                "text": "<select id=\"selectActiveCompletionCounts\" resultType=\"java.util.Map\">"
+              }
+            ]
+          },
+          {
+            "anchor": "group by reg.member_id, r.registration_id",
+            "matches": [
+              {
+                "line": 169,
+                "text": "group by reg.member_id, r.registration_id"
+              },
+              {
+                "line": 189,
+                "text": "group by reg.member_id, r.registration_id"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "E24": [
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicCompletionAwardServiceImpl.java",
+        "revision": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+        "sha256": "32ac9398456da157b4b08407a8179d07db77ac9d3c5621239be7b1e373b6cb1b",
+        "anchors": [
+          {
+            "anchor": "public TopicCompletionAwardVO grantOnce",
+            "matches": [
+              {
+                "line": 41,
+                "text": "public TopicCompletionAwardVO grantOnce(Long memberId, Long topicId, Long pointsSourceId, Date occurredAt) {"
+              },
+              {
+                "line": 48,
+                "text": "public TopicCompletionAwardVO grantOnce(Long memberId, Long topicId, Long pointsSourceId, Date occurredAt,"
+              }
+            ]
+          },
+          {
+            "anchor": "countCompletionClawbackMarkers",
+            "matches": [
+              {
+                "line": 86,
+                "text": "if (!firstCompletion && growthMissionProgressMapper.countCompletionClawbackMarkers(memberId, topicId) > 0) {"
+              }
+            ]
+          },
+          {
+            "anchor": "boolean pointsOpen = firstCompletion",
+            "matches": [
+              {
+                "line": 91,
+                "text": "boolean pointsOpen = firstCompletion || consume(reopened, memberId, topicId, RedemptionRewardClawbackService.MARKER_COMPLETION_POINTS);"
+              }
+            ]
+          },
+          {
+            "anchor": "consume(reopened",
+            "matches": [
+              {
+                "line": 91,
+                "text": "boolean pointsOpen = firstCompletion || consume(reopened, memberId, topicId, RedemptionRewardClawbackService.MARKER_COMPLETION_POINTS);"
+              },
+              {
+                "line": 92,
+                "text": "boolean couponOpen = firstCompletion || consume(reopened, memberId, topicId, RedemptionRewardClawbackService.MARKER_COMPLETION_COUPON);"
+              },
+              {
+                "line": 93,
+                "text": "boolean xpOpen = firstCompletion || consume(reopened, memberId, topicId, RedemptionRewardClawbackService.MARKER_COMPLETION_XP);"
+              }
+            ]
+          },
+          {
+            "anchor": "xpAwardMapper.selectOne",
+            "matches": [
+              {
+                "line": 110,
+                "text": "if (xpOpen && xpAwardMapper.selectOne(memberId, topicId) == null) {   // XP 发放事实判重"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "E25": [
+      {
+        "path": "docs/superpowers/specs/2026-07-12-coop-multi-party-settlement-design.md",
+        "revision": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+        "sha256": "a5eb86ff4cdfec327f18045ebc935b63eae2e87e4906d845d3721a2ea3e29919",
+        "anchors": [
+          {
+            "anchor": "统一 T+7 + 客诉冻结【已定】",
+            "matches": [
+              {
+                "line": 25,
+                "text": "### 3.1 账期:统一 T+7 + 客诉冻结【已定】"
+              }
+            ]
+          },
+          {
+            "anchor": "真实 member_id",
+            "matches": [
+              {
+                "line": 34,
+                "text": "- `payee_type` varchar:`platform` / `initiator` / `club` / `merchant`(便于对账口径,收款人仍落 `merchant_id`=真实 member_id)。"
+              },
+              {
+                "line": 36,
+                "text": "- 结算时 `settleCoopTopic` 由\"每 order 一行\"改为\"每主题生成 N 行分项\",`merchant_id` 一律经 §前置 `resolveOrderPayee` 落成真实 member_id;`PLATFORM` 行只入账不放款(payout 跳过 `payee_type=platform`)。"
+              }
+            ]
+          },
+          {
+            "anchor": "核销人头",
+            "matches": [
+              {
+                "line": 44,
+                "text": "| LEAD_FEE | 承接俱乐部主理人 | 分成 x%×核销销售额 / 固定 ¥F×核销人头 / 引流 0 |"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-admin/sql/migration_settlement_claim_20260811.sql",
+        "revision": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+        "sha256": "4b9d487914fb146fb0d1de7625b398ccbd2143c7fa77d5d7ccc0a471b511394a",
+        "anchors": [
+          {
+            "anchor": "直接 owner id",
+            "matches": [
+              {
+                "line": 8,
+                "text": "commercial_context_id   BIGINT       NOT NULL COMMENT '直接 owner id',"
+              }
+            ]
+          },
+          {
+            "anchor": "UNIQUE KEY uk_settlement_claim_key",
+            "matches": [
+              {
+                "line": 20,
+                "text": "UNIQUE KEY uk_settlement_claim_key"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SettlementEntryServiceImpl.java",
+        "revision": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+        "sha256": "50ae23cef1bea21d21d93be027a64ba820552e8d3621f6fc0b13283a328aec28",
+        "anchors": [
+          {
+            "anchor": "private SettlementClaim claimRegistration",
+            "matches": [
+              {
+                "line": 349,
+                "text": "private SettlementClaim claimRegistration(CmsRegistration registration, String beneficiaryRole,"
+              }
+            ]
+          },
+          {
+            "anchor": "? \"TOPIC_EDITION\" : \"ACTIVITY\"",
+            "matches": [
+              {
+                "line": 352,
+                "text": "? \"TOPIC_EDITION\" : \"ACTIVITY\";"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "E26": [
+      {
+        "path": "docs/theme-runtime/README.md",
+        "revision": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+        "sha256": "674a4837e00a7004884019762394bb93e1de134ab5b82383fe9d334df3a456af",
+        "anchors": [
+          {
+            "anchor": "默认只在成功结束发放",
+            "matches": [
+              {
+                "line": 72,
+                "text": "`when` 是 AND 数组；支持 ITEM_HELD、ITEM_ACQUIRED、NODE_COMPLETED 与原 EQ/NE/GT/GTE/LT/LTE。剧情状态必须注册为 clue/relation/counter，事件不能任意修改 sys 属性。ENDING 发放可筛选 endingId、reasons、success；默认只在成功结束发放。终局发放属于结果结算阶段，不反向更改先前命中的故事结局；终局赠品的穿戴效果会反映在结算指标中。"
+              }
+            ]
+          },
+          {
+            "anchor": "success=false，不计主题通关",
+            "matches": [
+              {
+                "line": 92,
+                "text": "有可用救援次数且生命归零时，state.awaitingRescue=true，允许 RESCUE 或 END；恢复不重置预算、库存或进度。次数耗尽则固定耗尽结果。完成路线而成功条件不足保存 ENDED 与 reason=COMPLETED，success=false，不计主题通关。结果数据冻结后不再次求值或发放。"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java",
+        "revision": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+        "sha256": "e923e5a71d5221040f1d4aa2bda26f230f3471e91d894bcf80367ba2e7301916",
+        "anchors": [
+          {
+            "anchor": "private boolean isRouteSession",
+            "matches": [
+              {
+                "line": 213,
+                "text": "private boolean isRouteSession(GameSession session) {"
+              }
+            ]
+          },
+          {
+            "anchor": "requireFrozenTeam(",
+            "matches": [
+              {
+                "line": 434,
+                "text": "Long revokeTeam = requireFrozenTeam(session, command.getPayload().get(\"teamId\"));"
+              },
+              {
+                "line": 462,
+                "text": "Long exiting = requireFrozenTeam(session, command.getPayload().get(\"teamId\"));"
+              },
+              {
+                "line": 556,
+                "text": "private Long requireFrozenTeam(GameSession session, Object raw) {"
+              },
+              {
+                "line": 619,
+                "text": "Long teamId = requireFrozenTeam(session, command.getPayload().get(\"teamId\"));"
+              },
+              {
+                "line": 645,
+                "text": "Long teamId = requireFrozenTeam(session, command.getPayload().get(\"teamId\"));"
+              },
+              {
+                "line": 692,
+                "text": "Long teamId = requireFrozenTeam(session, command.getPayload().get(\"teamId\"));"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "E27": [
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/CompletedRouteFactReader.java",
+        "revision": "candidate",
+        "sha256": "a64d94bd1cd258980fdb15eecc048012c9af0cc6fd6625eae057ae9d3c484f08",
+        "anchors": [
+          {
+            "anchor": "@Transactional(readOnly = true)",
+            "matches": [
+              {
+                "line": 22,
+                "text": "@Transactional(readOnly = true)"
+              }
+            ]
+          },
+          {
+            "anchor": "public List<TopicRouteSession> findCurrentCompletedRoutes",
+            "matches": [
+              {
+                "line": 23,
+                "text": "public List<TopicRouteSession> findCurrentCompletedRoutes(Long memberId) {"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-system/src/main/resources/mapper/business/CompletedRouteFactMapper.xml",
+        "revision": "candidate",
+        "sha256": "48cacbc75efd3abc2685e45d909da33a683fd3b678b9111bef19885ddde6bf80",
+        "anchors": [
+          {
+            "anchor": "select max(id) as id",
+            "matches": [
+              {
+                "line": 23,
+                "text": "select max(id) as id"
+              }
+            ]
+          },
+          {
+            "anchor": "group by activity_id, topic_id",
+            "matches": [
+              {
+                "line": 26,
+                "text": "group by activity_id, topic_id"
+              }
+            ]
+          },
+          {
+            "anchor": "where r.member_id = #{memberId} and r.status = 1",
+            "matches": [
+              {
+                "line": 28,
+                "text": "where r.member_id = #{memberId} and r.status = 1"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "E28": [
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+        "revision": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+        "sha256": "7cb41e27de48229c10688084fd7450defe590ea07b78673db25a9485a0846cda",
+        "anchors": [
+          {
+            "anchor": "int qty = (count == null || count <= 0) ? 1 : count;",
+            "matches": [
+              {
+                "line": 390,
+                "text": "int qty = (count == null || count <= 0) ? 1 : count;"
+              }
+            ]
+          },
+          {
+            "anchor": "registration.setOrderNum(Long.valueOf(qty))",
+            "matches": [
+              {
+                "line": 527,
+                "text": "registration.setOrderNum(Long.valueOf(qty));"
+              }
+            ]
+          },
+          {
+            "anchor": "PurchaseKind.EXPLORE_PASS && qty > 1",
+            "matches": [
+              {
+                "line": 462,
+                "text": "if (PurchaseKind.derive(ticketId, productType) == PurchaseKind.EXPLORE_PASS && qty > 1) {"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java",
+        "revision": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+        "sha256": "1380e374dbec71f28b4dc9fab5cfded3fb3165b966024dc493b1185171b6e5d9",
+        "anchors": [
+          {
+            "anchor": "@PostMapping(\"/create\")",
+            "matches": [
+              {
+                "line": 193,
+                "text": "@PostMapping(\"/create\")"
+              }
+            ]
+          },
+          {
+            "anchor": "@PostMapping(\"/scan_dynamic_code\")",
+            "matches": [
+              {
+                "line": 1593,
+                "text": "@PostMapping(\"/scan_dynamic_code\")"
+              }
+            ]
+          },
+          {
+            "anchor": "@PostMapping(\"/scan_group_member_ticket\")",
+            "matches": [
+              {
+                "line": 1611,
+                "text": "@PostMapping(\"/scan_group_member_ticket\")"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

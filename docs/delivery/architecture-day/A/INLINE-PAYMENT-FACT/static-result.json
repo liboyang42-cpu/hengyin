@@ -1,0 +1,78 @@
+{
+  "status": "STATIC_ONLY",
+  "parent": "146f956b3ee454e2429ea17d5fdcf8aa17169ca9",
+  "source_counts": {
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RegistrationTopicFenceMySqlIT.java": {
+      "declared_tests": 34,
+      "dynamic": [],
+      "nested": [],
+      "gates": [],
+      "conditions": [],
+      "required_database_bases": []
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationFundsMybatisIntegrationTest.java": {
+      "declared_tests": 96,
+      "dynamic": [],
+      "nested": [],
+      "gates": [
+        [
+          "CHENGYIN_FUNDS_MYSQL_IT",
+          "1"
+        ]
+      ],
+      "conditions": [],
+      "required_database_bases": []
+    }
+  },
+  "preserved_original_IT_bodies": 25,
+  "preserved_original_funds_bodies": 96,
+  "executed_Java_MySQL_CI_DDL": false,
+  "SQL_syntax_controlled_gate_issues": [],
+  "consumer_patches": "Context/apply/XML checks in temporary public-source copies only, NOT applied to owner sources",
+  "G_existing_component_SQL_expanded": "unchanged after mechanical fragments",
+  "G_consumed_component_SQL": "no mutable inbox query",
+  "D_existing_case_bodies": "unchanged in unapplied fixture proposal",
+  "protected_equal_to_parent": [
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPayServiceImpl.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackMutationService.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementClaimServiceImpl.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SettlementEntryServiceImpl.java",
+    "ci/real_storage_it.py",
+    "ci/migration_gates.py",
+    "ci/real-storage-it-registry.json",
+    "pom.xml"
+  ],
+  "sha256": {
+    "chengyinhub-admin/sql/migration_20261024_registration_payment_fact.sql": "fdc733febedd2a1781bf0976d0ebf2d9b5b411b0d3f5787c72d00c328a5017eb",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RegistrationTopicFenceMySqlIT.java": "580c270c1095a5a52e40ba8114b4275a9a8147f515d096b1f8b3ae4e464fec47",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationFundsMybatisIntegrationTest.java": "3f3f5ba089cbbf1bb9592e8acef4e547570214654760e6bad15f0d408298caab",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationPaymentAtomicityContractTest.java": "c15f78c8c6e396c89352c403b8efd60fbcad6231dc9502d2bc6a9152dca745b0",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/dto/RegistrationPaymentFactReceipt.java": "2040bce2d4c336b7744d3bd4406d5e72ed66df63ff82bc4e45551b93d36069b9",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CmsRegistrationPaymentFactMapper.java": "ac3331a1c6c040a8a4f9530436e448726e7cf125ade9da41a0241449208c3bb5",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java": "3013db66cbe3741dbfe9cc652fabd9401132478c228fc6ae15a0b8b893a3352f",
+    "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationPaymentFactMapper.xml": "b5aa4b7e26c2c1a7aa3603121996f07ba17efb3336539e25d72741281fdeb555",
+    "docs/delivery/architecture-day/A/INLINE-PAYMENT-FACT/B-consumed-reader.review.patch": "6b70fd9ae7ea86bc4e8a5bb4254b1cab21f8edcb9d147b77f3fb0b3bca4a99b9",
+    "docs/delivery/architecture-day/A/INLINE-PAYMENT-FACT/G-consumed-component.review.patch": "85a61fdd599d7f939724d71ad4f31ed05a1ac377a42432de488bc87ab4b2ca1f",
+    "docs/delivery/architecture-day/A/INLINE-PAYMENT-FACT/D-signup-fixture.review.patch": "1f17e3ba1c214683f5cbb0fc2ba784336d07a8068d794ed481edb2f6fc91ed30"
+  },
+  "required_controlled_runner_flags": [
+    "B_PAYMENT_FACT_DDL_APPROVED=1",
+    "A_REGISTRATION_PAYMENT_FACT_DDL_APPROVED=1"
+  ],
+  "not_run": [
+    "Java/test compilation",
+    "JUnit",
+    "MySQL FK/trigger/concurrency/rollback/cleanup",
+    "real SDK/provider",
+    "G formula/producer/reversal/recovery"
+  ],
+  "remaining": [
+    "root/owners review and combine B/G/D exact proposals",
+    "root canonical migration/dependency/source registry",
+    "G original plan/rounding/negative margin/closed recovery",
+    "uniform same-head controlled acceptance"
+  ],
+  "patch_asset_format": "Normalized empty context lines; rechecked exact B/G/D preimages, no source semantics changed"
+}

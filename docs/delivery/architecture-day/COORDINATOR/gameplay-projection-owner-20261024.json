@@ -1,0 +1,18 @@
+{
+  "parent": "27a616c64",
+  "moved_source": "TopicRouteRuntimeServiceImpl",
+  "new_owner": "GameplayActionProjection",
+  "method_bodies_exact": {
+    "gameplayChallengeSummary": "1f96dd8d8dcc9955bf46a44949aec3e41356a0c3b7adce92c4fadc975507650f",
+    "gameplayActionSummary": "e05c01f4b2140737ad7c1a34cebd6e287360cfd94527ba446ad0d67985bea711",
+    "facilityActionSummary": "b2a77af836caee578a23f22bf6db59d3cb61aebd533220f390ae3ae862daa4a3",
+    "gameplayCostShortfall": "812d45136acf4742d40d22b591cf628ce55ec2fa139104f36d4b5f826b66603a",
+    "addActionCosts": "964d9ece6cef7f74d783330e0f7e1596863cdac59cadcc336788a4a245d73fe6"
+  },
+  "existing_public_static_facades": "3 retained as delegates, existing callers/tests preserved",
+  "private_helpers": "2 moved with complete closure, no duplicate rules left in runtime",
+  "direct_original_GameSession_edges": "A instructed to use existing GameplaySupportMatrix.addon and new projection; not yet claimed removed",
+  "business_changes": false,
+  "runtime_tests": "Deferred to consolidated batch; existing GameplayActionSummaryTest/PersonalGameplayRuntimeServiceTest are retained, not rerun",
+  "acceptance": false
+}

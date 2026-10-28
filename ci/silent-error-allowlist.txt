@@ -1,4 +1,8 @@
 # U5 silentError 白名单册子 —— ci/silent-error-gate.js 读这个文件。
+chengyinhub-xcx/pages/merchant/citynode/index.js 1  # 2026-10-24 /api/verify/citynode/redeem：业务拒绝、网络/异常回执交原核销workflow，当前页modal明确展示失败或UNKNOWN；写前持久占原账号+据点+玩家，重扫只查原结果；login revision与页面epoch淘汰迟回包，避免全局toast污染新页。
+chengyinhub-xcx/pages/merchant/citynode/index.js 1  # 2026-10-24 /api/verify/citynode/receipt：失败/异常回调done(null)，原workflow保留UNKNOWN并在当前页显示待确认modal，不重发redeem；回执须原目标匹配，账号/登录代次/页面失效时不清待办、不提示新页。
+chengyinhub-xcx/pages/play/index.js 1  # 2026-10-24 领队席位/api/registration/scan_group_member_ticket：显式分类三路回调，当前页diegetic承接拒绝及UNKNOWN；原席位key持久占位，重扫走原receipt回查；session/actor/scan序列/login revision守卫阻止迟回包解锁或污染新场次。
+chengyinhub-xcx/utils/registration-seat.js 1  # 2026-10-24 /api/verify/seat/receipt共享只读恢复：失败/异常回调done(null)交verification-readback保留UNKNOWN，调用页显式提示待确认；只接受原席位匹配且replayed的终态，不自动重发核销；原isCurrent守卫淘汰切号/离页迟回包并保留原待办。
 chengyinhub-xcx/utils/content-report.js 4  # 2026-10-20 举报原因读取和主题/广场模板/个人玩法三处提交：业务拒绝及网络失败均由当前页面显式 toast，结束在途状态；关闭通道 toast 避免双弹与换号后的旧响应提示，followup-a1-content-report-entries 覆盖失败和页面/身份失效。
 chengyinhub-xcx/subpackageA/pages/myproject/index.js 2  # 2026-10-20 审核记录读取失败落弹层 error 并 toast，可重试；申诉业务拒绝/网络失败明确 toast 且释放在途，关闭通道 toast 避免双弹，离页/换号后不提示旧结果，followup-a2-audit-appeal-timeline 覆盖失败恢复。
 chengyinhub-xcx/components/cy/club-direct-ledger/index.js 1  # 计酬账目读取失败由 cy-inline-error 显示取回失败并提供重试；旧请求和切号响应被 epoch 拒绝，关闭全局 toast 避免重复提示。

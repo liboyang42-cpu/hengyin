@@ -1,0 +1,61 @@
+{
+  "owner": "E",
+  "parent": "f1fe75d646f8ae57864ee5603c68e70e7fabc854",
+  "commit": "ebd40a070a00eac1310d1d6af49707ba6a713771",
+  "tree": "6326592d250fd8b5be0e48eda6faf3279db64165",
+  "files": [
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RestoreHttpApplicationChild.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RestoreHttpStartupContractTest.java",
+    "ci/restore_application_http_probe.py",
+    "ci/restore_application_http_runtime.py",
+    "ci/test_restore_application_http_probe.py",
+    "docs/delivery/architecture-day/E/restore-http-startup-f1fe/README.md",
+    "docs/delivery/architecture-day/E/restore-http-startup-f1fe/manifest.json",
+    "docs/delivery/architecture-day/E/restore-http-startup-f1fe/owned.patch"
+  ],
+  "postimages": {
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RestoreHttpApplicationChild.java": "f0e7b3283e2aa71e3fb9595bc1c8de099f1d2fe8309a0932b47d9dc22ec86500",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RestoreHttpStartupContractTest.java": "d0367a8832a971f31308576b46699c08707655c9528aa553bfff24b85372f1cf",
+    "ci/restore_application_http_probe.py": "b69115820e18c703487509477214b44cdf7fe2b0f427389e2ab1d8abce13716b",
+    "ci/restore_application_http_runtime.py": "bd0932b6c5f58bbe6749be80f42b3b223bede93e948c9be874e9a94c7c91b2bd",
+    "ci/test_restore_application_http_probe.py": "7bd72ec3a91f745416db4e90dd8f5ad3b20d4042f1236817c6b275df10245383",
+    "docs/delivery/architecture-day/E/restore-http-startup-f1fe/README.md": "ae1a54fef7d8d75ff7a89bfe8d610a8341f6df020f996449ea739d069ab73503",
+    "docs/delivery/architecture-day/E/restore-http-startup-f1fe/manifest.json": "1690cfb971218706bcee110e1c402b7e9da39b727754698340a0fa3b7ba802bd",
+    "docs/delivery/architecture-day/E/restore-http-startup-f1fe/owned.patch": "72caf2891a2194e70dbc7714226bb59150e328f4b0a877d74e2f83506de772a4"
+  },
+  "author_code_manifest5_exact": true,
+  "full_patch_bytes": 123105,
+  "full_patch_sha256": "c3eb19761e3f29b34803d57002cae87568050dcd90e71c88908a46cb3bc404b6",
+  "author_code_patch_bytes": 55163,
+  "author_code_patch_sha256": "72caf2891a2194e70dbc7714226bb59150e328f4b0a877d74e2f83506de772a4",
+  "applied": true,
+  "focused_review": "ROOT_FOCUSED_SOURCE_REVIEW_COMPLETE_NO_RUNTIME_PROOF",
+  "controls_source_only": {
+    "Python": 8,
+    "Java": 5
+  },
+  "tests_compile_runtime": "NOT_RUN",
+  "historical_exact_child_cause": "UNKNOWN",
+  "all_complete": false,
+  "all8_donor_blobs_exact_at_apply": true,
+  "transport_normalization": {
+    "old_path": "docs/delivery/architecture-day/E/restore-http-startup-f1fe/owned.patch",
+    "new_path": "docs/delivery/architecture-day/E/restore-http-startup-f1fe/owned.patch.base64",
+    "literal_context_whitespace_lines": 11,
+    "decoded_sha256": "72caf2891a2194e70dbc7714226bb59150e328f4b0a877d74e2f83506de772a4",
+    "raw_private": "/private/tmp/hengyin-f1fe-E-original-owned.patch",
+    "code_postimages_unchanged": true,
+    "current_readme_sha256": "279f8173dcbee7af18b4028951618a25144564d910cd2dffca4c3488849105d0",
+    "author_manifest_unchanged": true
+  },
+  "review": {
+    "real_factory_wait_customizer_no_leader_autostart_bypass": true,
+    "real_scheduler_wait_within_original_parent_readiness_limit": true,
+    "pre_ready_launch_source_CID_config_JAR_PIDstart_rechecked": true,
+    "pre_ready_stop_cannot_supply_SQL_quiescence_or_boot": true,
+    "typed_bounded_fixed_identity_stage_status_only_no_cause_rawlog": true,
+    "original_180_1500_20second_limits_137_reject_and_fiveboot_assertions_preserved": true,
+    "new8_python5_java_source_NOT_RUN": true,
+    "no_B_C_H_F_source_overlap": true
+  }
+}

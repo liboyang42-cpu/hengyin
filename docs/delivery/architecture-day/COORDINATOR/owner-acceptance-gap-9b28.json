@@ -1,0 +1,36 @@
+{
+  "source_sha": "9b284f0111b4337e388fc18d797b11c62112cd82",
+  "evidence_type": "OWNER_SOURCE_REPORT_NOT_RUNTIME_ACCEPTANCE",
+  "reports": {
+    "D": {
+      "threadId": "01a16a22-f399-7110-ba27-ef3f7245603b",
+      "cursor": "211782f6-46fa-46f2-aefe-b8488d85ece7:36",
+      "text": "基准：9b284f0111b4337e388fc18d797b11c62112cd82。源码已合入；以下是验收差距，不代表已通过真实端到端验收。 验收点 已实现合同 现成测试源码 仍缺证据 原请求身份 原文本回执优先；ASR永久唯一键为 (user_id, request_id) ，绑定原node/shop、音频SHA256及格式；异输入冲突不覆盖 NpcAsrIntentServiceTest 、 NpcAsrControllerReadbackTest 当前候选真实HTTP重放、跨节点冲突验收 单次外呼、UNKNOWN 仅确认占位提交的赢家可外呼；提交不明、超时、通用异常、保存失败均保留原身份，不自动重识别 NpcAsrIntentServiceTest 、 NpcAsrIntentMySqlIT 当前候选真库执行凭证；真实provider超时、进程kill及调用次数核对 持久转写与冷恢复 转写先独立保存，再资格复核及文本交接；空文本也留终态；GET只读、不外呼 同上及 NpcAsrControllerReadbackTest 真实进程重启后读取、提交后丢ACK恢复 hand-off与文本防重放 交接标记先提交；文本admit消费原身份。文本回执48小时清理后，仍不得重新进入模型；缺原正文明确不可恢复 NpcAsrIntentMySqlIT.originalTextAdmissionIsAtomicAndCannotRestartAfterOriginalReceiptRetention 当前组合真库与真实模型调用次数验收 小程序未知投影 UNKNOWN/读库不明/已交接但缺文本回执→ PROCESSING + REQUEST_OUTCOME_UNKNOWN ；IN_FLIGHT及可继续的RECEIVED→ REQUEST_IN_PROGRESS 。客户端保留pending，转GET回查；不自动POST或换rid NpcAsrProjectionContractTest 、 NpcAsrControllerReadbackTest 、 client-contract.test.cjs 真实小程序设备、网络中断、退出重进及HTTP链路验证 删除与保留围栏 删除与写入共用member围栏；清正文、留身份墓碑，迟到结果不得恢复正文；过期不释放身份 NpcAsrIntentMySqlIT 、 A02NpcDeleteBarrierMySqlIT 、 NpcChatUserDataMyBatisIT 当前候选并发删除、清理任务及真实重启组合验收 识别成本与额度 业务问题未答，尚未闭合 ：识别前是否占用同一次现有对话额度、NOT_SENT释放及UNKNOWN保留规则尚待确认；未擅自接入 尚无获批合同对应的完整测试 用户决策、reservation接线及不重复扣额/误退验收； shop保持现有gen池 当前确认有26条ASR Java测试源码（12服务、6 Controller、7 MySQL、1投影）。历史组件VM协议测试9/9、后端源码契约定点6/6曾实际通过；它们不等于当前候选的Java/MySQL、真机或真实provider验收。本轮未运行回归、未修改生产、未启用任何功能。"
+    },
+    "C": {
+      "threadId": "01a16a22-c697-7637-ae29-cdff6341000b",
+      "cursor": "04667806-5015-4116-b5cc-5f2df01b0163:40",
+      "text": "验收对象：组合候选 9b284f0111b4337e388fc18d797b11c62112cd82。以下不以 LOC 变化作为验收依据。 工作块 实际责任边界 保留的业务行为 现成测试与待补证据 大服务拆分 HTTP 层保留认证 actor、参数与响应适配；玩法应用持有命令事务及查询/入场编排；报名查询、核销、票码签发和据点核销分别归已有应用 owner；runtime、账本及退款仍由原服务负责。 原路径/返回/错误码、owner/scope、稳定动作身份、回执优先、UNKNOWN、锁/CAS、重试事务及奖励顺序；查询不冒充隐式写入场。 已有 RegistrationQueryApplicationTest 、 RegistrationRedemptionApplicationTest 、 PlayHintUnlockMySqlIT 、 AdvancedPhotoOrchestrationTest 及原调用者回归。仍需当前组合源码绑定的编译、相关 Java/MySQL、CLEAN 与 Spring 启动证据；旧候选通过记录不能替代。 BEFORE_START 持久提醒 复用 CommittedOfficialNoticeService 、原表及领取/CAS；显式提醒类型不强制 IM；TeamGroup 保留资格批扫并唤醒原意图，外呼在事务/锁外。 原独立模板、openid/page/五字段、授权和时间窗；冻结票次×收件人、内容及计划时间；UNKNOWN 不自动重发，成功重放不重复计数；广播原指纹、IM 与微信语义保持。 已有 BeforeStartPreparedWxTest 、 BeforeStartNoticeMySqlIT 、 BeforeStartNotifyRetryContractTest ，以及原广播、date5、任务告警回归。仍需当前组合源码的实际 Java/MySQL结果、迁移前后断言读回及 CLEAN；静态检查不等于运行通过。 **证据边界：**baseline-only 比较器只证明冻结基线与指定补丁的关系，不能代表叠加 A 增量后的 root 组合结果。root 独立 patch 重放逐字一致已记录，属于源码组合证据，不替代同源业务回归与真实存储验收。"
+    },
+    "A": {
+      "threadId": "01a16a22-3076-7196-88f5-86d5b2c83036",
+      "cursor": "57d93131-47ef-462a-86af-d1e50fa531e9:41",
+      "text": "A 范围未完成验收（候选 9b284f0 ） 现成测试类 缺少的真实业务证据 分类 提现原身份、扣款及回补（WP02；T01–03；A06） CashWithdrawFundEvidenceMySqlIT 、 CashWithdrawStateMachineTest 同头真库证明合法回补、UNKNOWN 不回补、迟到成功、双审并发及余额写失败整笔回滚；原 intent/hash/渠道身份一致 本批阻断 付款消费与关闭竞争（WP03/04；T04–05） RegistrationTopicFenceMySqlIT 、 RegistrationFundsMybatisIntegrationTest SUCCESS/关闭确定性交错；原 fact→消费关联→业务终态同事务；恢复任务 4→2、回滚保留4；不换号、不重开容量 本批阻断，需 B/G 联合 退款真实终态与原分项冲回（T05–06） RefundNotificationMybatisIntegrationTest 、 RefundRetryAndRemainderMySqlIT 、 RefundVerifiedFactsTest 、 RefundManualPayoutTest 真库证明乱序不覆盖成功、批准不等于到账、新旧 owner 不双扣、冲回与 DONE 原子提交；G 原金额算法不能由 mock 证明 本批阻断；取整、负利润等未决路线不得启用 取消分段与 known-SUCCESS 预检（Q1–3；T13） RegistrationCancellationSdkPhasesTest 、 ClubEventTransferCancellationMySqlIT 、 E01_16Test 、 E01_17Test 最新装配同头执行；真实 MySQL 证明关闭前全批拒绝、最终 phase 回滚、撤权/转让并发、部分关闭后原号恢复；H2/Mock 不替代真库 本批阻断 报名写依据、scope 与拒绝零效果（WP12；T17；A05/A08） RegistrationFundsMybatisIntegrationTest 、 RegistrationTopicFenceMySqlIT 、 ClubEventTransferCancellationMySqlIT 当前候选金额/积分/库存读回；后台写边界及用户/主理人隔离；handler 直调证据不能冒充真实 HTTP 安全链 本批阻断 迁移、停写与回退（WP15；T21；A11/A13） CashWithdrawFundEvidenceMySqlIT 、 RegistrationTopicFenceMySqlIT 允许前态升级、中断/重试、checksum/实际结构读回；旧账保留、停写后原意图可查；JAR/schema/config 同候选证据 放行阻断，受控环境执行 崩溃与灾备恢复（WP14；T13/T20；Q3/Q7/Q10） 上述资金、付款及取消类 实际终止进程、重启后原身份恢复；备份后渠道成功但本地意图缺失的对账；实测恢复时间及人工接管记录 本批正确性验收阻断 历史缺证据资金逐笔调查 CashWithdrawFundEvidenceMySqlIT 可验证调查态保护 历史原单、扣款和渠道凭据逐笔补证及处置记录；不能靠补造事实或清账完成 长期独立调查；“缺证据不动钱、原号可查”仍属当前阻断门槛"
+    },
+    "E": {
+      "threadId": "01a16a23-2723-72e4-813f-03d7f1aa6017",
+      "cursor": "39e95256-af30-44c8-adcb-3ea2bae46c20:30",
+      "text": "以候选 9b284f0111b4337e388fc18d797b11c62112cd82 为准；以下源码已完成，尚不能视为运行验收通过。 范围／源码完成点 现成自动化用例 仍缺运行证明 规则未决／禁用项 CLM／Commerce ：typed Reference、原消费 proof、共同 current/not-CLOSED 守卫；权益、proof、恢复完成同事务 原97个服务场景保留；proof unit 11条、真实 MySQL IT 8条源码 尚无该候选同源编译、JUnit、真实 MySQL 回滚／重放／CLEAN 回执 CLOSED、旧 attempt、历史 PAID+NULL 不自动补绑、重开或退款；恢复票4保留供明确处置 NPC voice ：外呼前持久化原身份／owner／指纹；同请求不重复 enroll；UNKNOWN 保留样本及已知 voiceId，按原号查询；调用者和敏感日志已接线 意图、并发／重放、UNKNOWN、caller、日志回归及3条真实 MySQL IT 源码 尚缺该候选同源执行回执；真实 HTTP 回包丢失、供应商创建后失联、原号查询及供应商账单验收未证明 UNKNOWN 是否允许显式另起及重复费用策略未决，保持关闭 ；不自动重发，不自行调整原 quota／计费／补偿规则 Provider double、静态检查或真库状态测试，均不能替代真实供应商和 HTTP 链路验收。"
+    },
+    "G": {
+      "threadId": "01a16a23-8904-73e8-a024-378a96f0800c",
+      "cursor": "86e604f0-58b4-4db0-ad78-a46ccd5cd127:36",
+      "text": "已按公共 9b284f0111b4337e388fc18d797b11c62112cd82 只读核对，未改源码；当前组合仍待编译及统一真库验收。 模块 已确认规则／源码进度 现成测试源码 验收差距 押金 CoopInviteServiceImpl 验证原支付消费； CoopDepositRefundService 按已存业务号＋paid TX绑定原事实，六参退款，不重选 alias CoopDepositSettlementAttemptMySqlIT 、 CoopDepositRefundMybatisIntegrationTest （36条声明）、告警测试 新组合的关闭／迟到成功／退款恢复、事务与并发链待实跑 席位履约 用户已确认：每个实际核销席位收费一次，未核销不计费。 RegistrationSeatService 已提供锁内逐席位事实 RegistrationSeatMySqlIT 、Service及Endpoint测试 verifiedSeatsForGroup 在本组合生产源码中尚无消费调用；不能称分润计费已接通，也不能按购票数乘费 冻结分润 CmsTopicServiceImpl 、Claim、冻结 Reader／Contract保留原范围、费率、收款人与拒结保护 Wp04CoopSettlementEvidenceMySqlIT 、CashEvidenceExpand、合同及正金额测试 G4d CoopSettlementOriginalProducer 尚未启用 ；跨订单分币尾差、负利润责任待决定，不可宣称原分项 producer 全链完成 退款冲回 已确认按原订单冻结分项冲回、其他订单不重算； CoopSettlementOriginalLedger 已有成功事实→receipt→adjustment→余额／debt路径 Wp04OriginalRefundMySqlIT 、 Wp04ApprovedRefundFenceMySqlIT 、Ledger测试 partial退款累计取整未决；负利润责任未决；完整 producer 接入与同事务回滚／幂等／已出款债务链仍待组合验收 此前独立测试结果仅证明各自原 SHA 与覆盖范围，不代替本组合验收。等待 root 的精确 MySQL 失败再修，不预先猜改。"
+    },
+    "H": {
+      "threadId": "01a16a23-aeb0-70ec-b671-6f778f1fd011",
+      "cursor": "4e91c928-6707-49ca-8346-9b8cfe07c243:48",
+      "text": "范围（当前 9b284f0… ） 源码状态 现成测试 尚缺验收 商城通用写入口 原快照篡改/删除 P1 已补：数据库当前行识别 Commerce，冻结经济身份，批删先锁后判；普通订单与专用 checkout 保留。 OmsOrderCommerceGuardTest 8 项； OmsOrderCommerceGuardMySqlIT 6 项。 本头 Java、真库及 HTTP 权限结果尚未取得；源码完成不等于闭环通过。 媒体预算／未知恢复 原无限领取缺陷已补：扫描、claim、retry、过期恢复共同执行上限 5；UNKNOWN 停止自动重发，保留任务/trace、内容 HOLD及原身份迟到回调能力。 原 Service／Transaction／Mapper 测试；预算 MySQL 8 项。 本头编译、真库并发及回调恢复结果尚未取得；迁移未执行，供应商链未验。 director 切号隔离 原跨账号 pending 缺陷有基线复现；当前源码含 owner、授权、登录代次、页面及 pending 守卫，清理绑定原账号/requestId。 当前 C 隔离测试 5 项；历史 H 真实模块交错 5 项曾通过，基线负控失败保留。 历史 Node 结果不覆盖本头；仍缺本头组合回归及真实登录、HTTP、页面生命周期端到端证据。"
+    }
+  }
+}

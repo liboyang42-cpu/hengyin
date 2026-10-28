@@ -47,7 +47,51 @@ function createRequireLogin(deps) {
   deps = deps || {};
   const getAppRef = deps.getApp || function () { try { return getApp(); } catch (e) { return null; } };
   const show = deps.show || function (opts) { return modal.show(opts); };
+  const getPages = deps.getPages || function () { return typeof getCurrentPages === 'function' ? getCurrentPages() : null; };
   let pending = null;
+
+  function sessionStamp(app) {
+    try {
+      const session = typeof app.getSession === 'function' ? app.getSession() : null;
+      return { owner: String(app.getUserID() || ''), token: app.getAuthorization(),
+        revision: session && typeof session.getRevision === 'function' ? session.getRevision() : null };
+    } catch (e) { return null; }
+  }
+  function sameSession(app, original) {
+    const now = sessionStamp(app);
+    return !!original && !!now && original.owner === now.owner && original.token === now.token
+      && original.revision === now.revision;
+  }
+  function resultFor(app) {
+    const original = sessionStamp(app);
+    return { ok: !!original && hasSession(app), current: () => sameSession(app, original) };
+  }
+  function continuation(options) {
+    options = options || {};
+    try {
+      const pages = getPages(), page = pages && pages[pages.length - 1];
+      const owner = options.owner || page;
+      const epoch = owner && (owner._loginContinuationEpoch || 0);
+      const pageEpoch = page && (page._loginContinuationEpoch || 0);
+      const target = () => {
+        const values = options.target ? options.target() : [];
+        if (!Array.isArray(values) || values.some(value => value != null
+          && !['string', 'number', 'boolean'].includes(typeof value))) throw Error('登录续接目标无法确认');
+        return JSON.stringify(values.map(value => value == null ? '' : String(value)));
+      };
+      const original = target();
+      return () => {
+        try {
+          const currentPages = getPages();
+          return (!pages || !!page && !!currentPages && currentPages[currentPages.length - 1] === page)
+            && (!owner || !(owner._unloaded || owner._destroyed || owner._disposed || owner._attached === false)
+              && (owner._loginContinuationEpoch || 0) === epoch)
+            && (!page || (page._loginContinuationEpoch || 0) === pageEpoch)
+            && target() === original;
+        } catch (e) { return false; }
+      };
+    } catch (e) { return () => false; }
+  }
 
   function ask(content) {
     return new Promise(function (resolve) {
@@ -62,23 +106,35 @@ function createRequireLogin(deps) {
     });
   }
 
-  function requireLogin(options) {
+  function loginResult(options) {
     const app = getAppRef();
-    if (hasSession(app)) return Promise.resolve(true);
-    if (!app || typeof app.firstLogin !== 'function') return Promise.resolve(false);
-    if (pending) return pending;
-    pending = ask(resolveReason(options)).then(function (confirmed) {
-      if (!confirmed) return false;
+    if (hasSession(app)) return Promise.resolve(resultFor(app));
+    if (!app || typeof app.firstLogin !== 'function') return Promise.resolve({ ok: false });
+    if (pending) return pending.promise;
+    const original = sessionStamp(app), attempt = {};
+    pending = attempt;
+    attempt.promise = ask(resolveReason(options)).then(function (confirmed) {
+      if (!confirmed || !sameSession(app, original)) return { ok: false };
       // firstLogin 自带失败 toast(微信登录失败/网络异常),这里不再重复提示。
       return Promise.resolve(app.firstLogin()).then(function (r) {
-        return !!(r && r.ok) && hasSession(app);
-      }, function () { return false; });
-    }).then(function (ok) { pending = null; return ok; }, function () { pending = null; return false; });
-    return pending;
+        if (!r || !r.ok || typeof r.isCurrentSession === 'function' && !r.isCurrentSession()) return { ok: false };
+        return resultFor(app);
+      }, function () { return { ok: false }; });
+    }).then(function (result) { if (pending === attempt) pending = null; return result; },
+      function () { if (pending === attempt) pending = null; return { ok: false }; });
+    return attempt.promise;
+  }
+
+  function requireLogin(options) {
+    return loginResult(options).then(result => !!result.ok && result.current());
   }
 
   function withLogin(options, action) {
-    return requireLogin(options).then(function (ok) {
+    // Capture before either the modal or login Promise; never recapture a replacement page/target/account.
+    const current = continuation(options);
+    if (!current()) return Promise.resolve(false);
+    return loginResult(options).then(function (result) {
+      const ok = !!result.ok && result.current() && current();
       if (ok && typeof action === 'function') action();
       return ok;
     });

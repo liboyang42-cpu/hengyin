@@ -4,11 +4,22 @@ import java.util.Date;
 import java.util.List;
 import org.apache.ibatis.annotations.Param;
 import com.chengyinhub.business.domain.MemberCashWithdraw;
+import com.chengyinhub.business.domain.CashWithdrawFundFact;
 
 /**
  * 微信零钱提现单 Mapper(T5 真实出金)
  */
 public interface MemberCashWithdrawMapper {
+
+    /** Caller holds the original withdrawal row lock. Facts have no update/delete API. */
+    int insertFundFact(CashWithdrawFundFact fact);
+
+    List<CashWithdrawFundFact> selectFundFacts(@Param("id") Long id);
+
+    int bindDebitEvidence(MemberCashWithdraw withdrawal);
+
+    /** SUCCESS can resolve investigations/review, but can never overwrite a committed refund. */
+    int confirmChannelSuccess(MemberCashWithdraw withdrawal);
 
     public int insertMemberCashWithdraw(MemberCashWithdraw w);
 

@@ -1,6 +1,8 @@
 package com.chengyinhub.business.service;
 
 import java.util.Map;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 
 /**
  * 微信订阅消息发送(F8)。
@@ -31,8 +33,22 @@ public interface IWxSubscribeMsgService {
     /** 报名成功提醒(发给某成员) */
     boolean notifySignupSuccess(Long memberId, String topicName);
 
-    /** 出发前提醒(发给某成员)。返回是否真的下发成功 —— 调用方据此决定要不要重试(见 send 的说明)。 */
+    /** 出发前提醒(发给某成员)。false 不证明外部未执行；定时链必须先持久领取并冻结输入。 */
     boolean notifyBeforeStart(Long memberId, String topicName, String whenText);
+
+    /** Prepared BEFORE_START only; no token/provider I/O and no consent bypass. Null means no send was prepared. */
+    PreparedBeforeStart prepareBeforeStart(Long memberId, String topicName, String whenText);
+
+    /** Sends exactly the prepared template/recipient/page/fields; never resolves a later member or config. */
+    boolean sendPreparedBeforeStart(PreparedBeforeStart message);
+
+    record PreparedBeforeStart(Long memberId, String openid, String templateId,
+                               String page, Map<String, String> fields) {
+        public PreparedBeforeStart {
+            fields = fields == null ? null : Collections.unmodifiableMap(new LinkedHashMap<>(fields));
+        }
+    }
+
 
     // —— 合作/定价订阅(F3-2 骨架;字段参数名待与实际模板对齐) ——
 

@@ -88,7 +88,7 @@ class TopicCopyJourneyRulesTest {
         params.put("copyType", 1);
         params.put("memberId", MEMBER);
 
-        service.copyCmsTopic(SOURCE_TOPIC, params);
+        com.chengyinhub.business.service.support.TopicCopyTestWiring.owner(service).copyCmsTopic(SOURCE_TOPIC, params);
 
         CmsTopic copy = capturedCopy();
         assertEquals("{\"schemaVersion\":1,\"capacity\":6,\"replayEnabled\":true}",copy.getThemeRuntimeConfigJson());
@@ -110,7 +110,7 @@ class TopicCopyJourneyRulesTest {
         params.put("copyType", 1);
         params.put("memberId", MEMBER);
 
-        service.copyCmsTopic(SOURCE_TOPIC, params);
+        com.chengyinhub.business.service.support.TopicCopyTestWiring.owner(service).copyCmsTopic(SOURCE_TOPIC, params);
 
         assertNull(capturedCopy().getJourneyRulesJson(), "源主题未配置时副本不得凭空生成规则");
     }
@@ -123,7 +123,7 @@ class TopicCopyJourneyRulesTest {
         platformSlot.setEntityType(RoleEntityType.PLATFORM);
         when(productRoleService.activeContentSlot(NEW_TOPIC)).thenReturn(platformSlot);
 
-        service.copyOfficialCmsTopic(SOURCE_TOPIC, new HashMap<String, Object>());
+        com.chengyinhub.business.service.support.TopicCopyTestWiring.owner(service).copyOfficialCmsTopic(SOURCE_TOPIC, new HashMap<String, Object>());
 
         CmsTopic copy = capturedCopy();
         assertEquals(RULES, copy.getJourneyRulesJson(), "官方复制与模板 /use 共用 copyTopicBasicInfo,必须同样带上");

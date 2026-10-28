@@ -1,3 +1,4 @@
+const { seatTarget, seatKey, captureLogin, loginCurrent, seatRecovery } = require('../../../../utils/registration-seat.js');
 const { readPublisherAccess } = require('../../../utils/coop-publisher-access.js'); const pageMotion = require('../../../../utils/page-motion.js');
 const { returnToCoopOrigin } = require('../../../utils/coop-invite-return.js');
 const modal = require('../../../../utils/modal.js');
@@ -511,7 +512,7 @@ Component({
       this._coopAccessEpoch = (this._coopAccessEpoch || 0) + 1;
       this._following = false;
       this._followEpoch = (this._followEpoch || 0) + 1;
-      if (this._verificationWorkflow) { this._verificationWorkflow.destroy(); this._verificationWorkflow = null; cyLoading.hide(); }
+      if (this._verificationWorkflow) { this._verificationWorkflow.destroy(); this._verificationWorkflow = null; if (this._verificationLoadingOwners) { this._verificationLoadingOwners.forEach(() => cyLoading.hide()); this._verificationLoadingOwners.clear(); } }
     }
   },
 
@@ -652,16 +653,29 @@ Component({
       const owner = String(app.getUserID && app.getUserID() || '');
       const generation = this._verificationGeneration || 0;
       if (this._profileAttached === false) return false;
-      key = owner + ':' + key;
+      const target = seatTarget(options);
+      const login = captureLogin(app, wx);
+      key = target ? seatKey(owner, target) : owner + ':' + key;
+      const seatCurrent = () => loginCurrent(app, wx, login) && that._profileAttached !== false && generation === (that._verificationGeneration || 0);
+      if (target && !seatCurrent()) return false;
       if (!this._verificationWorkflow) this._verificationWorkflow = createVerificationWorkflow({ deadlineMs: 15000, storage: wx, getOwner: () => app.getUserID && app.getUserID() });
-      if (this._verificationWorkflow.isBusy(key)) {
+      if (!target && this._verificationWorkflow.isBusy(key)) {
         cyToast('核销处理中，请勿重复提交');
         return false;
       }
-      cyLoading.show(loadingTitle);
+      const loadingOwner = {};
+      if (!target) {
+        if (!this._verificationLoadingOwners) this._verificationLoadingOwners = new Set();
+        this._verificationLoadingOwners.add(loadingOwner);
+        cyLoading.show(loadingTitle);
+      }
+      const finishLoading = () => {
+        if (that._verificationLoadingOwners && that._verificationLoadingOwners.delete(loadingOwner)) cyLoading.hide();
+      };
       var submitted = this._verificationWorkflow.run(key, function (done) {
         return app.sendRequest(Object.assign({}, options, {
           autoErrorToast: false,
+          hideLoading: !!target || options.hideLoading, silentError: !!target || options.silentError,
           success: function (res) { done(classifyVerificationOutcome(res, 'success', undefined, options)); },
           fail: function (res, status) { done(classifyVerificationOutcome(res, 'fail', status, options)); },
           successStatusAbnormal: function (res, status) {
@@ -669,17 +683,18 @@ Component({
           }
         }));
       }, function (result) {
-        cyLoading.hide();
+        finishLoading();
+        if (target && !seatCurrent()) return;
         if (that._profileAttached === false || generation !== (that._verificationGeneration || 0)
             || owner !== String(app.getUserID && app.getUserID() || '')) return;
         if (result.status === 'unknown') {
-          callback({ code: 202, msg: '核销结果待确认，请勿重复核销；请先查看核销记录' });
-          offerVerificationReadback(key, that._verificationWorkflow);
+          callback({ code: 202, msg: target ? '原席位结果待确认；再次扫描同一席位只查询结果，请勿改选席位重发' : '核销结果待确认，请勿重复核销；请先查看核销记录' });
+          if (!target) offerVerificationReadback(key, that._verificationWorkflow);
           return;
         }
         callback(result.response);
-      });
-      if (!submitted) cyLoading.hide();
+      }, target ? seatRecovery(app, target, seatCurrent) : undefined);
+      if (!submitted) finishLoading();
       return submitted;
     },
   // effectiveIsSelf:宿主 viewer 只是提示,真源是「当前登录 memberId == 目标 userId」。
@@ -1650,8 +1665,11 @@ Component({
 
   goScanQR: function () {
     var that = this;
+    const login = captureLogin(app, wx), scanEpoch = this._verificationGeneration || 0;
+    const scanCurrent = () => loginCurrent(app, wx, login) && scanEpoch === (that._verificationGeneration || 0);
     wx.scanCode({
       success: function (res) {
+        if (!scanCurrent()) return;
         var scan = resolveVerificationScan(res.result);
         if (scan.kind === 'invalid') {
           cyToast(scan.message);

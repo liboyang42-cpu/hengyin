@@ -1,4 +1,6 @@
 import importlib.util
+import copy
+from contextlib import contextmanager
 import hashlib
 import json
 import pathlib
@@ -172,6 +174,213 @@ class MigrationGuardTest(unittest.TestCase):
         self.assertEqual([(old, 'false')], apply_assertion_supersessions([(old,'false')], [], mapping, {old,new})[0])
         self.assertEqual([], apply_assertion_supersessions([(old,'false')], [new], mapping, {old,new})[0])
 
+
+
+
+class NoticeForwardCallerTest(unittest.TestCase):
+    """Caller/transport controls only; migration assertions remain explicit HTTP-fixture skips."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.original_plan = tool.build_plan()
+        cls.manifest = tool.build_manifest(tool.ROOT,
+            target_commit=cls.original_plan['manifest']['targetCommit'],
+            dependency_path=tool.ROOT / 'ci/migration-dependencies.json')
+
+    def fresh_plan(self):
+        return copy.deepcopy(self.original_plan)
+
+    def args(self):
+        return SimpleNamespace(host='127.0.0.1', database='cy_e2e_notice_caller', port=3316, user='root')
+
+    def outputs(self, plan, failed_path=None):
+        result = [SimpleNamespace(stdout=value) for value in ('8.0.45', '', '')]
+        for file in plan['files']:
+            if file['apply']:
+                if file['path'] == failed_path:
+                    result.append(ValueError('controlled fixture apply failure'))
+                    break
+                result.append(SimpleNamespace(stdout='\n'.join(['1'] * len(file['assertions']))))
+        return result
+
+    @contextmanager
+    def transport(self, outputs):
+        with patch.object(tool, 'build_plan', return_value=self.fresh_plan()), \
+                patch.object(tool.shutil, 'which', return_value='/usr/bin/mysql'), \
+                patch.object(tool.subprocess, 'run', side_effect=outputs) as run, \
+                patch('builtins.print') as printed:
+            yield run, printed
+
+    def test_exact_pair_preserves_all_other_files_fingerprints_and_skip_records(self):
+        plan = self.fresh_plan()
+        old_path = tool.NOTICE_FORWARD_FILES[tool.NOTICE_OLD][0]
+        v2_path = tool.NOTICE_FORWARD_FILES[tool.NOTICE_V2][0]
+        baseline = json.loads((tool.ROOT / 'scripts/e2e/base_schema_20260818_migrations.json').read_text())
+        policy = json.loads((tool.ROOT / 'scripts/e2e/schema_replay_policy_20260921.json').read_text())
+        expected = [baseline['baseSchema']['path'], policy['baselineSeed']['path']]
+        expected += [row['path'] for row in self.manifest['migrations']
+                     if row['path'] not in plan['baselineIncluded'] and row['path'] != old_path]
+        self.assertEqual(expected, [file['path'] for file in plan['files']])
+        self.assertIn(v2_path, expected)
+        self.assertNotIn(old_path, plan['baselineIncluded'])
+        self.assertNotIn(old_path, policy['dataOnlyMigrations'])
+        self.assertEqual(len(self.manifest['migrations']), plan['manifest']['migrationCount'])
+        self.assertEqual('PLANNED_UNAPPLIED', plan['noticeForward']['state'])
+        for index, file in enumerate(plan['files']):
+            self.assertEqual(tool.plan_file(tool.ROOT / file['path'], index >= 2,
+                file['path'] in policy['dataOnlyMigrations']), file)
+        self.assertEqual(sum(len(f['apply']) for f in plan['files']), plan['appliedStatements'])
+        self.assertEqual(sum(len(f['skipped']) for f in plan['files']), plan['skippedStatements'])
+
+    def test_partial_pair_manifest_hash_and_order_drift_rejected_before_mysql(self):
+        for key in tool.NOTICE_FORWARD_FILES:
+            for mutation in ('missing', 'hash', 'dependency', 'order'):
+                with self.subTest(migration=key, mutation=mutation):
+                    manifest = copy.deepcopy(self.manifest)
+                    rows = manifest['migrations']
+                    entry = next(row for row in rows if row['migrationId'] == key)
+                    if mutation == 'missing':
+                        rows.remove(entry)
+                    elif mutation == 'hash':
+                        entry['sha256'] = '0' * 64
+                    elif mutation == 'dependency':
+                        entry['dependsOn'] = []
+                    else:
+                        entry['order'] += 1
+                    with patch.object(tool, 'build_manifest', return_value=manifest), \
+                            patch.object(tool, 'mysql_command') as command:
+                        with self.assertRaisesRegex(RuntimeError, 'notice forward'):
+                            tool.build_plan()
+                        command.assert_not_called()
+
+    def test_any_pair_file_byte_drift_rejected_by_shared_contract(self):
+        read_bytes = pathlib.Path.read_bytes
+        for path, _ in tool.NOTICE_FORWARD_FILES.values():
+            with self.subTest(path=path):
+                target = tool.ROOT / path
+                def drift(file):
+                    value = read_bytes(file)
+                    return value + b'\n' if file == target else value
+                with patch.object(pathlib.Path, 'read_bytes', drift), \
+                        patch.object(tool, 'mysql_command') as command:
+                    with self.assertRaisesRegex(RuntimeError, 'notice forward'):
+                        tool.build_plan()
+                    command.assert_not_called()
+
+    def test_execution_plan_drift_cannot_reinsert_old_or_edit_apply_skip_receipts(self):
+        for mutation in ('missing-record', 'old-file', 'apply', 'skip', 'hash', 'count', 'baseline', 'mode', 'completed'):
+            with self.subTest(mutation=mutation):
+                plan = self.fresh_plan()
+                v2_path = tool.NOTICE_FORWARD_FILES[tool.NOTICE_V2][0]
+                v2 = next(file for file in plan['files'] if file['path'] == v2_path)
+                if mutation == 'missing-record':
+                    del plan['noticeForward']
+                elif mutation == 'old-file':
+                    plan['files'].append(tool.plan_file(
+                        tool.ROOT / tool.NOTICE_FORWARD_FILES[tool.NOTICE_OLD][0], True))
+                elif mutation == 'apply':
+                    v2['apply'][0] = 'SELECT 1'
+                elif mutation == 'skip':
+                    v2['skipped'][0]['sql'] = 'SELECT 1'
+                elif mutation == 'hash':
+                    plan['noticeForward']['fingerprints'][tool.NOTICE_V2]['sha256'] = '0' * 64
+                elif mutation == 'count':
+                    plan['skippedStatements'] += 1
+                elif mutation == 'mode':
+                    plan['mode'] = 'SUCCEEDED'
+                elif mutation == 'completed':
+                    plan['completed'] = [tool.NOTICE_FORWARD_FILES[tool.NOTICE_OLD][0]]
+                else:
+                    plan['baselineIncluded'].append(tool.NOTICE_FORWARD_FILES[tool.NOTICE_OLD][0])
+                with patch.object(tool, 'build_plan', return_value=self.fresh_plan()), \
+                        patch.object(tool, 'mysql_command') as command:
+                    with self.assertRaisesRegex(ValueError, 'Notice forward execution plan drift'):
+                        tool.execute(self.args(), plan)
+                    command.assert_not_called()
+
+    def test_successful_transport_completes_only_selected_files_without_claiming_strict_migration(self):
+        plan = self.fresh_plan()
+        original_skips = [copy.deepcopy(file['skipped']) for file in plan['files']]
+        with self.transport(self.outputs(plan)) as (run, printed):
+            tool.execute(self.args(), plan)
+        self.assertEqual('SUCCEEDED', plan['mode'])
+        self.assertEqual([file['path'] for file in plan['files']], plan['completed'])
+        self.assertNotIn(tool.NOTICE_FORWARD_FILES[tool.NOTICE_OLD][0], plan['completed'])
+        self.assertEqual(original_skips, [file['skipped'] for file in plan['files']])
+        self.assertEqual('REPLACED_UNAPPLIED', plan['noticeForward']['state'])
+        records = [str(call) for call in printed.call_args_list if 'REPLACED_UNAPPLIED' in str(call)]
+        self.assertEqual(1, len(records))
+        self.assertIn(tool.NOTICE_OLD, records[0])
+        self.assertIn(tool.NOTICE_V2, records[0])
+        for metadata in plan['noticeForward']['fingerprints'].values():
+            self.assertIn(metadata['sha256'], records[0])
+        payloads = [call.kwargs['input'] for call in run.call_args_list]
+        self.assertTrue(payloads[2].startswith('CREATE DATABASE '))
+        self.assertNotIn('IF NOT EXISTS', payloads[2])
+        self.assertFalse(any('DROP DATABASE' in sql for sql in payloads))
+        expected_sql = []
+        for file in plan['files']:
+            if file['apply']:
+                sqls = file['apply']
+                if file['transaction']:
+                    sqls = ['START TRANSACTION'] + sqls + ['COMMIT']
+                expected_sql.append('DELIMITER $$\n' + '\n'.join(sql + '$$' for sql in sqls) + '\nDELIMITER ;\n')
+        self.assertEqual(expected_sql, payloads[3:])
+
+    def test_existing_schema_refused_without_create_import_or_replacement_receipt(self):
+        plan = self.fresh_plan()
+        with self.transport([SimpleNamespace(stdout='8.0.45'), SimpleNamespace(stdout=self.args().database)]) as (run, printed):
+            with self.assertRaisesRegex(ValueError, 'Existing schema refused'):
+                tool.execute(self.args(), plan)
+        self.assertEqual(2, run.call_count)
+        self.assertEqual('PLANNED_UNAPPLIED', plan['noticeForward']['state'])
+        self.assertEqual([], plan.get('completed', []))
+        self.assertFalse(any('REPLACED_UNAPPLIED' in str(call) for call in printed.call_args_list))
+        self.assertFalse(any('CREATE DATABASE' in call.kwargs['input'] or 'DROP DATABASE' in call.kwargs['input']
+                             for call in run.call_args_list))
+
+    def test_concurrent_create_failure_is_never_adopted_or_marked_completed(self):
+        plan = self.fresh_plan()
+        failure = subprocess.CalledProcessError(1, ['mysql'], stderr='ERROR 1007 (HY000): controlled CREATE race')
+        with self.transport([SimpleNamespace(stdout='8.0.45'), SimpleNamespace(stdout=''), failure]) as (run, printed):
+            with self.assertRaises(subprocess.CalledProcessError) as rejected:
+                tool.execute(self.args(), plan)
+        self.assertIs(failure, rejected.exception)
+        self.assertEqual(3, run.call_count)
+        self.assertEqual('schema-create', plan['currentPhase'])
+        self.assertEqual([], plan.get('completed', []))
+        self.assertEqual('PLANNED_UNAPPLIED', plan['noticeForward']['state'])
+        self.assertNotIn('IF NOT EXISTS', run.call_args.kwargs['input'])
+        self.assertFalse(any('DROP DATABASE' in call.kwargs['input'] for call in run.call_args_list))
+        self.assertFalse(any('REPLACED_UNAPPLIED' in str(call) for call in printed.call_args_list))
+
+    def test_apply_failure_preserves_skips_and_does_not_complete_old_or_failed_file(self):
+        plan = self.fresh_plan()
+        original_skips = [copy.deepcopy(file['skipped']) for file in plan['files']]
+        failed_path = tool.NOTICE_FORWARD_FILES[tool.NOTICE_V2][0]
+        index = next(i for i, file in enumerate(plan['files']) if file['path'] == failed_path)
+        with self.transport(self.outputs(plan, failed_path)):
+            with self.assertRaisesRegex(ValueError, 'controlled fixture apply failure'):
+                tool.execute(self.args(), plan)
+        self.assertEqual([file['path'] for file in plan['files'][:index]], plan['completed'])
+        self.assertNotIn(tool.NOTICE_FORWARD_FILES[tool.NOTICE_OLD][0], plan['completed'])
+        self.assertNotIn(failed_path, plan['completed'])
+        self.assertEqual(failed_path, plan['currentFile'])
+        self.assertEqual(original_skips, [file['skipped'] for file in plan['files']])
+
+    def test_canonical_custody_checks_baseline_and_data_only_bytes(self):
+        policy = json.loads((tool.ROOT / 'scripts/e2e/schema_replay_policy_20260921.json').read_text())
+        baseline = json.loads((tool.ROOT / 'scripts/e2e/base_schema_20260818_migrations.json').read_text())
+        read_bytes = pathlib.Path.read_bytes
+        for path in (baseline['baseSchema']['path'], next(iter(policy['dataOnlyMigrations']))):
+            with self.subTest(path=path):
+                target = tool.ROOT / path
+                def drift(file):
+                    value = read_bytes(file)
+                    return value + b'\n' if file == target else value
+                with patch.object(pathlib.Path, 'read_bytes', drift):
+                    with self.assertRaises((ValueError, RuntimeError)):
+                        tool.build_plan()
 
 if __name__ == '__main__':
     unittest.main()

@@ -49,6 +49,109 @@
         order by c.last_msg_at desc
     </select>
 
+    <resultMap id="ConversationSummaryResult"
+               type="com.chengyinhub.business.mapper.ImConversationMemberMapper$ConversationSummary"
+               extends="ImConversationMemberResult">
+        <id property="id" column="id"/>
+        <result property="counterpartyId" column="counterparty_id"/>
+        <association property="conversation" javaType="com.chengyinhub.business.domain.ImConversation"
+                     notNullColumn="conv_id">
+            <id property="id" column="conv_id"/>
+            <result property="type" column="conv_type"/>
+            <result property="bizKey" column="conv_biz_key"/>
+            <result property="status" column="conv_status"/>
+        </association>
+        <association property="latest" javaType="com.chengyinhub.business.domain.ImMessage"
+                     notNullColumn="latest_id">
+            <id property="id" column="latest_id"/>
+            <result property="conversationId" column="conversation_id"/>
+            <result property="senderId" column="latest_sender_id"/>
+            <result property="msgType" column="latest_msg_type"/>
+            <result property="content" column="latest_content"/>
+            <result property="extraJson" column="latest_extra_json"/>
+            <result property="status" column="latest_status"/>
+            <result property="checkStatus" column="latest_check_status"/>
+            <result property="visibleOrderAt" column="latest_visible_order_at"/>
+            <result property="createTime" column="latest_create_time"/>
+        </association>
+        <association property="counterpartyProfile" javaType="com.chengyinhub.business.domain.UmsMember"
+                     notNullColumn="profile_id">
+            <id property="id" column="profile_id"/>
+            <result property="nickname" column="profile_nickname"/>
+            <result property="name" column="profile_name"/>
+            <result property="avatar" column="profile_avatar"/>
+        </association>
+    </resultMap>
+
+    <!-- 每个成员索引一行。两个相关子查询只选主键，不把会话历史/参与者扇出到应用层。
+         最新消息的条件、可见序与 ImMessageMapper.selectVisiblePage(cursor=null,size=1) 保持一致。
+         群业务权限与路线卡当前权限不在此查询中推断。 -->
+    <select id="selectMyConversationSummaries" resultMap="ConversationSummaryResult">
+        select m.id, m.conversation_id, m.member_id, m.role, m.unread_count, m.last_read_msg_id,
+               m.muted, m.deleted, m.create_time,
+               c.id as conv_id, c.type as conv_type, c.biz_key as conv_biz_key, c.status as conv_status,
+               msg.id as latest_id, msg.sender_id as latest_sender_id, msg.msg_type as latest_msg_type,
+               msg.content as latest_content, msg.extra_json as latest_extra_json,
+               msg.status as latest_status, msg.check_status as latest_check_status,
+               msg.create_time as latest_create_time,
+               date_format(coalesce(msg.visible_at, msg.create_time), '%Y-%m-%d %H:%i:%s.%f') as latest_visible_order_at,
+               other.member_id as counterparty_id, u.id as profile_id, u.nickname as profile_nickname,
+               u.name as profile_name, u.avatar as profile_avatar
+        from im_conversation_member m
+        join im_conversation c on c.id = m.conversation_id
+        left join im_message msg on msg.id = (
+            select id from im_message
+            where conversation_id = c.id and status != 2
+              and (msg_type != 2 or check_status = 1 or sender_id = #{memberId})
+            order by coalesce(visible_at, create_time) desc, id desc limit 1)
+        left join im_conversation_member other on other.id = (
+            select p.id from im_conversation_member p
+            where p.conversation_id = c.id and p.member_id != #{memberId} limit 1)
+            and (c.type is null or c.type not in (2, 3, 4))
+        left join ums_member u on u.id = other.member_id
+        where m.member_id = #{memberId} and m.deleted = 0 and c.status = 0
+        order by c.last_msg_at desc
+    </select>
+
+    <resultMap id="ClubConversationSummaryResult"
+               type="com.chengyinhub.business.mapper.ImConversationMemberMapper$ClubConversationSummary">
+        <id property="id" column="id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="name" column="name"/>
+        <result property="logo" column="logo"/>
+        <result property="memberCount" column="member_count"/>
+        <result property="status" column="status"/>
+        <result property="delFlag" column="del_flag"/>
+        <result property="viewerMember" column="viewer_member"/>
+    </resultMap>
+
+    <!-- ClubMapper.selectClubById: id + del_flag=0；会员 EXISTS 保留原 status=1/del_flag=0。
+         IDs 由 Java 沿原 Long.valueOf(bizKey) 解析，不能用字符串 JOIN 改写 +号/前导零语义。
+         EXISTS 不扇出历史会员；只返回本次摘要涉及的 club。空集合绝不全表加载。 -->
+    <select id="selectClubConversationSummaries" resultMap="ClubConversationSummaryResult" useCache="false" flushCache="true">
+        select c.id,c.member_id,c.name,c.logo,c.member_count,c.status,c.del_flag,
+               exists(select 1 from club_member cm
+                      where cm.club_id=c.id and cm.member_id=#{memberId}
+                        and cm.status=1 and cm.del_flag=0) as viewer_member
+        from club c
+        where c.del_flag=0
+        <choose>
+            <when test="clubIds != null and clubIds.size() > 0">
+                and c.id in <foreach collection="clubIds" item="clubId" open="(" separator="," close=")">#{clubId}</foreach>
+            </when>
+            <otherwise>and 1=0</otherwise>
+        </choose>
+    </select>
+
+    <select id="sumInboxUnread" resultType="java.lang.Long">
+        select coalesce(sum(m.unread_count), 0)
+        from im_conversation_member m
+        join im_conversation c on c.id = m.conversation_id and c.status = 0
+        where m.member_id = #{memberId} and m.deleted = 0
+          and (m.muted is null or m.muted != 1)
+          and (c.type is null or c.type != 4)
+    </select>
+
     <select id="selectByConversation" resultMap="ImConversationMemberResult">
         select id, conversation_id, member_id, role, unread_count, last_read_msg_id, muted, deleted, create_time
         from im_conversation_member

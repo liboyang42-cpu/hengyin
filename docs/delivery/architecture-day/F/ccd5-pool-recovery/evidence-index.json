@@ -1,0 +1,51 @@
+{
+  "source_sha": "ccd55005c75d105f8245b0591e63adcd0dd15280",
+  "source_tree": "45c9c293ea96bf2b907f739a743d58037f22a9bf",
+  "run_id": 40140513624,
+  "run_attempt": 1,
+  "job_id": 121011084232,
+  "run_url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/40140513624",
+  "workflow": ".github/workflows/isolated-pool-recovery.yml",
+  "ref": "codex/architecture-day-final-ccd5-20261024",
+  "status": "completed",
+  "conclusion": "success",
+  "artifact": {
+    "id": 12579050590,
+    "name": "isolated-pool-recovery-1",
+    "size_in_bytes": 11255,
+    "github_reported_digest": "sha256:0c95af72b13821bf0268e56414f0bc3f5b1f75e5112dabc802ec2cdc0835d1aa",
+    "expires_at": "2026-10-31T22:56:24Z"
+  },
+  "evidence_readback": {
+    "job_log": "READ_VIA_GITHUB_CONNECTOR",
+    "zip_bytes": "UNAVAILABLE_HTTP_403",
+    "zip_sha256_local_verification": "NOT_RUN",
+    "pool_recovery_json": "NOT_READ",
+    "entry_application_network_isolation_files": "NOT_READ",
+    "new_packaged_jar_sha256": "UNKNOWN",
+    "frozen_standard_jar_equivalence": "NOT_ESTABLISHED"
+  },
+  "directly_observed_log_values": {
+    "native_druid_wait_ms": 5001,
+    "overflow": {
+      "request": 20,
+      "http": 200,
+      "business_code": 500,
+      "empty_data": false,
+      "elapsed_seconds": 5.061
+    },
+    "socket_destination_observations": 24,
+    "external_destinations_or_dns_attempts": 0,
+    "uploaded_files": 7,
+    "packaging_skip_tests": true,
+    "hosted_pure_python_controls": 4
+  },
+  "acceptance": "JOB_LOG_SUPPORTS_LOCAL_POOL_TIMEOUT_AND_POST_RELEASE_RECOVERY; ORIGINAL_RECEIPT_AND_CLEANUP_READBACK_PENDING",
+  "source_contract_sha256": {
+    ".github/workflows/isolated-pool-recovery.yml": "b271a6ad243e2e9b7ae1c02adafea9c99ae10d9b64e8dc7c00e21da20756548d",
+    "ci/pool_recovery_probe.py": "47e53e92db803aebeb13b22a0a7ade8f670b45dc212c976a323400088ac069d6",
+    "ci/upgrade-startup-smoke.sh": "452bfa8a0e74d453fa8a9d63f82b5a2995789c52c974853c9ccdfd868d51d598",
+    "ci/upgrade_startup_network.py": "807c59cde9aab7acc3135d63b21f0c556211fd99dc681ebcc37a2565d410f762",
+    "ci/upgrade-startup/HealthProbe.java": "2310729303dbce625bcc25935ac6a6e1bf1325ebc11480a309279b1a481002a0"
+  }
+}

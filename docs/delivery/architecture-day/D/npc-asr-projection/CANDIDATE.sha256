@@ -1,0 +1,13 @@
+8ab410893295ade03ab131c2777d2fdaad9736f12abc0b41fa24cacf5e36df90  chengyinhub-admin/src/test/java/com/chengyinhub/business/it/NpcAsrIntentMySqlIT.java
+d4ffa030d396e991898d9b58112d884c8eb359f9599ec0a4eba40b2780d06281  chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/NpcAsrIntentServiceTest.java
+5acf6030f8e55d4ee75abe5bcc2b4577bb47480c5c14efe0e0a75834ae890e61  chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/NpcAsrProjectionContractTest.java
+3e057f453509da7a07df1890fcf7af9168019f464f3a339705ea1164bc6be06d  chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/NpcAsrTestFixture.java
+1e23a265207d0a8d67b15293e6099d0c1c6a893e72dd0dddd80c8122d0210213  chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiAiNpcVoiceChatFormatTest.java
+32a1030aa561e45416f1d8726ad55a9f944b131b629839df565b78d0ad474384  chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/NpcAsrControllerReadbackTest.java
+56fd9698682eeeb820cac5a44cde5c83708d404330744f42e299ccadc9a55c42  chengyinhub-system/src/main/java/com/chengyinhub/business/domain/vo/ai/NpcChatResp.java
+6596c36abdf3d24886d51f56bacdc263d58ba3ce57c72bf34ac47e055fe48d3c  chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcAsrIntentService.java
+9818915d48b700f66bd1c29edae1cdc68d92b411de532fe5ae1024f72d159095  docs/delivery/architecture-day/D/npc-asr-projection/README.md
+a20a4e387f7434bd03a597385d2d144fd762e5555a68a80af237537e4b485b12  docs/delivery/architecture-day/D/npc-asr-projection/client-contract.test.cjs
+caa56d42a26380db9f754ff01b4b0cfe2cdbfbabb75fbe417281c6fb1a2957d6  docs/delivery/architecture-day/D/npc-asr-projection/client-readback.review.patch
+235ac9ab73a2fb87448d89f743b964bbe698969d0dea84fa1bcc3af1734c7cda  docs/delivery/architecture-day/D/npc-asr-projection/contract-cases.json
+5ebba1e4982d05668a0c030a4472d26badd811ce917ba329815bd0c482a79cca  docs/delivery/architecture-day/D/npc-asr-projection/controller-envelope.review.patch

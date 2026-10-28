@@ -72,6 +72,13 @@ class TopicCreativePostVisibilitySyncTest {
                         ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(topicService, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
                         : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         ReflectionTestUtils.setField(topicService, "cmsTopicMapper", cmsTopicMapper);
+        // Online restores now run the real physical-content budget gate; this fixture has no content.
+        var chapters = mock(com.chengyinhub.business.mapper.CmsTopicChapterMapper.class);
+        var nodes = mock(com.chengyinhub.business.mapper.CmsTopicNodeMapper.class);
+        ReflectionTestUtils.setField(topicService, "cmsTopicChapterMapper", chapters);
+        ReflectionTestUtils.setField(topicService, "cmsTopicNodeMapper", nodes);
+        when(chapters.countContentByTopicForUpdate(TOPIC_ID)).thenReturn(0L);
+        when(nodes.countContentByTopicForUpdate(TOPIC_ID)).thenReturn(0L);
         ReflectionTestUtils.setField(topicService, "cmsRegistrationMapper", cmsRegistrationMapper);
         ReflectionTestUtils.setField(topicService, "cmsActivityMapper", mock(CmsActivityMapper.class));
         ReflectionTestUtils.setField(topicService, "umsCreativeSquareService", squareService);
@@ -91,10 +98,10 @@ class TopicCreativePostVisibilitySyncTest {
         when(cmsTopicMapper.casUserStatus(eq(TOPIC_ID), anyInt(), anyInt(), any())).thenReturn(1);
         when(cmsTopicMapper.selectCmsTopicByIdForUpdate(TOPIC_ID)).thenReturn(ownedTopic());
 
-        assertEquals(1, topicService.casUserStatus(TOPIC_ID, 1, 0));
+        assertEquals(1, com.chengyinhub.business.service.support.TopicPublicationTestWiring.wire(topicService).casUserStatus(TOPIC_ID, 1, 0));
         verify(squareService).syncTopicPostVisibility(TOPIC_ID, false);
 
-        assertEquals(1, topicService.casUserStatus(TOPIC_ID, 0, 1));
+        assertEquals(1, com.chengyinhub.business.service.support.TopicPublicationTestWiring.wire(topicService).casUserStatus(TOPIC_ID, 0, 1));
         verify(squareService).syncTopicPostVisibility(TOPIC_ID, true);
     }
 
@@ -102,7 +109,7 @@ class TopicCreativePostVisibilitySyncTest {
     void casLosingRace_changesNothing() {
         when(cmsTopicMapper.casUserStatus(eq(TOPIC_ID), anyInt(), anyInt(), any())).thenReturn(0);
 
-        assertEquals(0, topicService.casUserStatus(TOPIC_ID, 1, 0));
+        assertEquals(0, com.chengyinhub.business.service.support.TopicPublicationTestWiring.wire(topicService).casUserStatus(TOPIC_ID, 1, 0));
 
         verify(squareService, never()).syncTopicPostVisibility(anyLong(), org.mockito.ArgumentMatchers.anyBoolean());
     }
@@ -189,6 +196,7 @@ class TopicCreativePostVisibilitySyncTest {
                 });
         when(auditRecordMapper.insertAuditRecord(any())).thenReturn(1);
         when(cmsTopicMapper.selectCmsTopicById(TOPIC_ID)).thenReturn(ownedTopic());
+        when(cmsTopicMapper.selectCmsTopicByIdForUpdate(TOPIC_ID)).thenReturn(ownedTopic());
         when(cmsTopicMapper.updateCmsTopic(any(CmsTopic.class))).thenReturn(1);
         com.chengyinhub.business.service.support.AppMediaPublicationGuard media =
                 com.chengyinhub.business.service.support.MediaPublicationTestFixtures.template(OWNER_ID);

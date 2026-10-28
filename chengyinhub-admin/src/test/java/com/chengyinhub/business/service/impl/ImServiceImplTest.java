@@ -23,6 +23,8 @@ import com.chengyinhub.business.mapper.CmsTopicMapper;
 import com.chengyinhub.business.mapper.ImBlockMapper;
 import com.chengyinhub.business.mapper.ImConversationMapper;
 import com.chengyinhub.business.mapper.ImConversationMemberMapper;
+import com.chengyinhub.business.mapper.ImConversationMemberMapper.ConversationSummary;
+import com.chengyinhub.business.mapper.ImConversationMemberMapper.ClubConversationSummary;
 import com.chengyinhub.business.mapper.ImMessageMapper;
 import com.chengyinhub.business.mapper.PlayTeamMapper;
 import com.chengyinhub.business.service.IAuditTaskService;
@@ -438,13 +440,14 @@ class ImServiceImplTest {
         group.setStatus(0);
         ImConversationMember stale = member(1L);
         stale.setUnreadCount(3);
-        when(memberMapper.selectMyConversations(1L)).thenReturn(Collections.singletonList(stale));
-        when(conversationMapper.selectImConversationById(100L)).thenReturn(group);
+        when(memberMapper.selectMyConversationSummaries(1L))
+                .thenReturn(Collections.singletonList(summary(stale, group)));
         Club club = new Club();
         club.setId(42L);
         club.setMemberId(9L);
-        when(clubMapper.selectClubById(42L)).thenReturn(club);
-        when(clubMemberMapper.selectByClubAndMember(42L, 1L)).thenReturn(null);
+        ClubConversationSummary projected = new ClubConversationSummary();
+        org.springframework.beans.BeanUtils.copyProperties(club, projected);projected.setViewerMember(false);
+        when(memberMapper.selectClubConversationSummaries(1L, List.of(42L))).thenReturn(List.of(projected));
 
         List<Map<String, Object>> conversations = service.listConversations(1L);
 
@@ -452,62 +455,26 @@ class ImServiceImplTest {
     }
 
     @Test
-    void staleGroupUnreadIsExcludedFromTotal() {
+    void unreadTotalUsesInboxAggregateWithoutLoadingConversationProjection() {
         ImServiceImpl service = service();
-        ImConversationMember staleGroup = member(1L);
-        staleGroup.setUnreadCount(3);
-        ImConversationMember system = member(1L);
-        system.setConversationId(200L);
-        system.setUnreadCount(2);
-        when(memberMapper.selectMyConversations(1L)).thenReturn(Arrays.asList(staleGroup, system));
-        when(conversationMapper.selectImConversationById(100L)).thenReturn(groupConv(100L, "club_42"));
-        ImConversation systemConversation = new ImConversation();
-        systemConversation.setId(200L);
-        systemConversation.setType(ImConversation.TYPE_SYSTEM);
-        when(conversationMapper.selectImConversationById(200L)).thenReturn(systemConversation);
-        Club club = new Club();
-        club.setId(42L);
-        club.setMemberId(9L);
-        when(clubMapper.selectClubById(42L)).thenReturn(club);
-        when(clubMemberMapper.selectByClubAndMember(42L, 1L)).thenReturn(null);
+        when(memberMapper.sumInboxUnread(1L)).thenReturn(2L);
 
-        assertEquals(2, service.unreadTotal(1L), "退会群的脏未读数不得继续进入总红点");
+        assertEquals(2, service.unreadTotal(1L));
+        verify(memberMapper).sumInboxUnread(1L);
+        verify(memberMapper, never()).selectMyConversationSummaries(anyLong());
         verify(memberMapper, never()).sumUnread(anyLong());
+        org.mockito.Mockito.verifyNoInteractions(messageMapper, conversationMapper, clubMapper, clubMemberMapper);
     }
 
     @Test
-    void groupUnreadIsExcludedFromTotalWhileVisibleConversationsStillCount() {
+    void unreadTotalReturnsZeroForEmptyAggregateWithoutBroadSumFallback() {
         ImServiceImpl service = service();
-        // 群会话(type=4)在小程序列表显式隐藏;它带 3 条未读仍能通过 listConversations(成员有效)
-        ImConversationMember group = member(1L);
-        group.setConversationId(100L);
-        group.setUnreadCount(3);
-        ImConversationMember single = member(1L);
-        single.setConversationId(200L);
-        single.setUnreadCount(2);
-        ImConversationMember merchant = member(1L);
-        merchant.setConversationId(300L);
-        merchant.setUnreadCount(4);
-        merchant.setMuted(1); // 静音不计,与既有口径一致
-        when(memberMapper.selectMyConversations(1L)).thenReturn(Arrays.asList(group, single, merchant));
-        when(conversationMapper.selectImConversationById(100L)).thenReturn(groupConv(100L, "club_42"));
-        Club club = new Club();
-        club.setId(42L);
-        club.setMemberId(1L); // 请求人就是群主 ⇒ hasActiveGroupAccess 通过
-        club.setStatus(1L);
-        club.setDelFlag(0);
-        when(clubMapper.selectClubById(42L)).thenReturn(club);
-        ImConversation singleConv = new ImConversation();
-        singleConv.setId(200L);
-        singleConv.setType(ImConversation.TYPE_SINGLE);
-        when(conversationMapper.selectImConversationById(200L)).thenReturn(singleConv);
-        ImConversation merchantConv = new ImConversation();
-        merchantConv.setId(300L);
-        merchantConv.setType(ImConversation.TYPE_MERCHANT);
-        when(conversationMapper.selectImConversationById(300L)).thenReturn(merchantConv);
+        when(memberMapper.sumInboxUnread(1L)).thenReturn(null);
 
-        assertEquals(2, service.unreadTotal(1L),
-                "A-06:被隐藏的群聊未读不得进总红点(用户点进去也清不掉);可见会话未读照常累加");
+        assertEquals(0, service.unreadTotal(1L));
+        verify(memberMapper).sumInboxUnread(1L);
+        verify(memberMapper, never()).sumUnread(anyLong());
+        verify(memberMapper, never()).selectMyConversations(anyLong());
     }
 
     @Test
@@ -668,12 +635,11 @@ class ImServiceImplTest {
         ImConversationMember m = member(1L);
         m.setMuted(1);
         m.setUnreadCount(3);
-        when(memberMapper.selectMyConversations(1L)).thenReturn(Collections.singletonList(m));
-
         ImConversation c = new ImConversation();
         c.setId(100L);
         c.setType(ImConversation.TYPE_SYSTEM);
-        when(conversationMapper.selectImConversationById(100L)).thenReturn(c);
+        when(memberMapper.selectMyConversationSummaries(1L))
+                .thenReturn(Collections.singletonList(summary(m, c)));
 
         java.util.List<java.util.Map<String, Object>> rows = service.listConversations(1L);
 
@@ -850,8 +816,8 @@ class ImServiceImplTest {
     @Test
     void groupConversationExposesRealClubIdentity() {
         ImServiceImpl service = service();
-        when(memberMapper.selectMyConversations(1L)).thenReturn(Collections.singletonList(member(1L)));
-        when(conversationMapper.selectImConversationById(100L)).thenReturn(groupConv(100L, "club_42"));
+        when(memberMapper.selectMyConversationSummaries(1L)).thenReturn(Collections.singletonList(
+                summary(member(1L), groupConv(100L, "club_42"))));
 
         Club club = new Club();
         club.setId(42L);
@@ -861,7 +827,9 @@ class ImServiceImplTest {
         club.setMemberCount(32);
         club.setStatus(1L);
         club.setDelFlag(0);
-        when(clubMapper.selectClubById(42L)).thenReturn(club);
+        ClubConversationSummary projected = new ClubConversationSummary();
+        org.springframework.beans.BeanUtils.copyProperties(club, projected);
+        when(memberMapper.selectClubConversationSummaries(1L, List.of(42L))).thenReturn(List.of(projected));
 
         java.util.List<java.util.Map<String, Object>> rows = service.listConversations(1L);
 
@@ -876,9 +844,9 @@ class ImServiceImplTest {
     @Test
     void groupConversationHiddenWhenClubDeleted() {
         ImServiceImpl service = service();
-        when(memberMapper.selectMyConversations(1L)).thenReturn(Collections.singletonList(member(1L)));
-        when(conversationMapper.selectImConversationById(100L)).thenReturn(groupConv(100L, "club_42"));
-        when(clubMapper.selectClubById(42L)).thenReturn(null); // 俱乐部已删
+        when(memberMapper.selectMyConversationSummaries(1L)).thenReturn(Collections.singletonList(
+                summary(member(1L), groupConv(100L, "club_42"))));
+        when(memberMapper.selectClubConversationSummaries(1L, List.of(42L))).thenReturn(Collections.emptyList()); // 俱乐部已删
 
         java.util.List<java.util.Map<String, Object>> rows = service.listConversations(1L);
 
@@ -888,8 +856,8 @@ class ImServiceImplTest {
     @Test
     void groupConversationHiddenForMalformedBizKey() {
         ImServiceImpl service = service();
-        when(memberMapper.selectMyConversations(1L)).thenReturn(Collections.singletonList(member(1L)));
-        when(conversationMapper.selectImConversationById(100L)).thenReturn(groupConv(100L, "club_abc"));
+        when(memberMapper.selectMyConversationSummaries(1L)).thenReturn(Collections.singletonList(
+                summary(member(1L), groupConv(100L, "club_abc"))));
 
         java.util.List<java.util.Map<String, Object>> rows = service.listConversations(1L);
 
@@ -1082,6 +1050,13 @@ class ImServiceImplTest {
         assertEquals(Boolean.FALSE, result.get("hasMore"));
         assertEquals(71L, result.get("nextCursor"));
         assertEquals(29, ((List<?>) result.get("list")).size());
+    }
+
+    private ConversationSummary summary(ImConversationMember member, ImConversation conversation) {
+        ConversationSummary row = new ConversationSummary();
+        org.springframework.beans.BeanUtils.copyProperties(member, row);
+        row.setConversation(conversation);
+        return row;
     }
 
 }

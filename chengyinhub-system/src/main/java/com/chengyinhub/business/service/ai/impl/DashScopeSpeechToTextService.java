@@ -1,6 +1,8 @@
 package com.chengyinhub.business.service.ai.impl;
 
 import java.util.Base64;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -9,16 +11,22 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import com.chengyinhub.business.service.ai.AiServiceException;
+import com.chengyinhub.business.service.ai.AiHttpAdmission;
+import com.chengyinhub.business.service.ai.AiProviderNotSentException;
 import com.chengyinhub.business.service.ai.SpeechToTextService;
 import com.chengyinhub.common.config.AiVoiceConfig;
 
-import cn.hutool.http.HttpRequest;
-import cn.hutool.http.HttpResponse;
+import com.chengyinhub.common.utils.http.HttpUtils;
 
 /** 阿里云百炼短录音识别 adapter。 */
 @Service
 public class DashScopeSpeechToTextService implements SpeechToTextService
 {
+    /** Same 2 MiB ceiling as the existing NPC multipart entry, before Base64/JSON allocation. */
+    static final int MAX_AUDIO_BYTES = 2 * 1024 * 1024;
+
+    @Autowired
+    private AiHttpAdmission admission;
     private final AiVoiceConfig config;
     private final String endpointOverride;
 
@@ -43,6 +51,7 @@ public class DashScopeSpeechToTextService implements SpeechToTextService
     @Override
     public String transcribe(byte[] audio, String format)
     {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         if (!available())
         {
             throw new AiServiceException("语音识别未开通");
@@ -51,6 +60,10 @@ public class DashScopeSpeechToTextService implements SpeechToTextService
         {
             throw new IllegalArgumentException("audio must not be empty");
         }
+        if (audio.length > MAX_AUDIO_BYTES)
+        {
+            throw new IllegalArgumentException("audio exceeds existing 2 MiB limit");
+        }
         String normalizedFormat = format == null ? "" : format.trim().toLowerCase();
         String mimeType = mimeTypeOf(normalizedFormat);
         if (mimeType == null)
@@ -58,42 +71,38 @@ public class DashScopeSpeechToTextService implements SpeechToTextService
             throw new IllegalArgumentException("unsupported audio format");
         }
 
-        JSONObject audioInput = new JSONObject();
-        audioInput.put("data", "data:" + mimeType + ";base64," + Base64.getEncoder().encodeToString(audio));
-        JSONObject content = new JSONObject();
-        content.put("type", "input_audio");
-        content.put("input_audio", audioInput);
-        JSONArray contents = new JSONArray();
-        contents.add(content);
-        JSONObject message = new JSONObject();
-        message.put("role", "user");
-        message.put("content", contents);
-        JSONArray messages = new JSONArray();
-        messages.add(message);
-        JSONObject input = new JSONObject();
-        input.put("messages", messages);
-        JSONObject parameters = new JSONObject();
-        parameters.put("format", normalizedFormat);
-        JSONObject body = new JSONObject();
-        body.put("model", config.getAsrModel());
-        body.put("input", input);
-        body.put("parameters", parameters);
-
         String raw;
-        try (HttpResponse response = HttpRequest.post(endpoint())
-                .header("Authorization", "Bearer " + config.getApiKey())
-                .header("Content-Type", "application/json")
-                .header("X-DashScope-SSE", "disable")
-                .body(body.toJSONString())
-                .timeout(config.getTimeoutMs())
-                .execute())
+        try
         {
-            raw = response.body();
-            if (!response.isOk())
+            String target = endpoint();
+            long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(Math.min(config.getTimeoutMs(), 10_000));
+            try (HttpUtils.AttemptLease lease = acquireAdmission(target))
             {
-                throw new AiServiceException("语音识别失败,请稍后再试");
+                JSONObject audioInput = new JSONObject();
+                audioInput.put("data", "data:" + mimeType + ";base64," + Base64.getEncoder().encodeToString(audio));
+                JSONObject content = new JSONObject();
+                content.put("type", "input_audio");
+                content.put("input_audio", audioInput);
+                JSONArray contents = new JSONArray();
+                contents.add(content);
+                JSONObject message = new JSONObject();
+                message.put("role", "user");
+                message.put("content", contents);
+                JSONArray messages = new JSONArray();
+                messages.add(message);
+                JSONObject input = new JSONObject();
+                input.put("messages", messages);
+                JSONObject parameters = new JSONObject();
+                parameters.put("format", normalizedFormat);
+                JSONObject body = new JSONObject();
+                body.put("model", config.getAsrModel());
+                body.put("input", input);
+                body.put("parameters", parameters);
+                raw = HttpUtils.sendJsonPost(target, body.toJSONString(), config.getApiKey(), deadline, lease,
+                        Map.of("X-DashScope-SSE", "disable"));
             }
         }
+        catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) { throw paused; }
         catch (AiServiceException e)
         {
             throw e;
@@ -123,6 +132,12 @@ public class DashScopeSpeechToTextService implements SpeechToTextService
         }
         String text = output.getString("text");
         return nonBlank(text) ? text.trim() : null;
+    }
+
+    private HttpUtils.AttemptLease acquireAdmission(String target)
+    {
+        if (admission == null) throw new AiProviderNotSentException();
+        return admission.acquire(target);
     }
 
     String endpoint()

@@ -111,12 +111,25 @@ class CoopInviteOriginalRequestTest {
     }
 
     @Test
+    void originalStationProjectionKeepsExactIdAndRejectsNonStationReceiptTypes() {
+        send(request());
+        CoopInviteRequestReceipt receipt = saved.values().iterator().next();
+        assertEquals("9007199254740993", CoopInviteRequestResult.created(receipt, true,
+                9007199254740993L).getSupplyStationId());
+        assertNull(CoopInviteRequestResult.created(receipt, true).getSupplyStationId());
+        assertThrows(IllegalArgumentException.class, () -> CoopInviteRequestResult.created(receipt, true, 0L));
+        receipt.setInviteType(1);
+        assertThrows(IllegalArgumentException.class, () -> CoopInviteRequestResult.created(receipt, true, 71L));
+    }
+
+    @Test
     void everyEffectiveContractFieldConflictsAndScaleAliasesReplay() {
         send(request());
         List<Consumer<CoopInvite>> changes = List.of(
                 r -> r.setToId(3L), r -> r.setTopicId(11L), r -> r.setMessage("changed"),
                 r -> r.setFixedFee(new BigDecimal("13")), r -> r.setShareMode(0),
-                r -> r.setShareRate(BigDecimal.ONE), r -> r.setGameId(8L), r -> r.setOriginApplyId(9L));
+                r -> r.setShareRate(BigDecimal.ONE), r -> r.setGameId(8L), r -> r.setOriginApplyId(9L),
+                r -> r.setSupplyStationId(71L));
         for (Consumer<CoopInvite> change : changes) {
             CoopInvite changed = request(); change.accept(changed);
             ServiceException failure = assertThrows(ServiceException.class, () -> send(changed));

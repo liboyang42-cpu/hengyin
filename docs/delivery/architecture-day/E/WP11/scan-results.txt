@@ -1,0 +1,17 @@
+$ python3 ci/secret-file-gate.py
+SECRET-FILE-GATE PASS: 当前 Git tree 无密钥/证书文件或私钥正文
+exit_code=0
+
+$ python3 -m unittest ci/test_secret_file_gate.py
+...
+----------------------------------------------------------------------
+Ran 3 tests in 0.002s
+
+OK
+exit_code=0
+
+$ python3 docs/delivery/architecture-day/E/WP11/scan_candidate.py
+PASS candidate path allowlist: 8 source/test files plus WP11 delivery only (14 candidate files)
+PASS limited token/key/credential-literal pattern scan; values never printed
+NOT RUN gitleaks: binary unavailable; pinned download blocked by proxy connection failure
+exit_code=0

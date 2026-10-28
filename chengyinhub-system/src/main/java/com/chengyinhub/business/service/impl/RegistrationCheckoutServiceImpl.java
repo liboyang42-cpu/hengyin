@@ -1,5 +1,6 @@
 package com.chengyinhub.business.service.impl;
 
+import com.chengyinhub.common.config.RestoreDispatchGuard;
 import com.chengyinhub.business.domain.CmsRegistration;
 import com.chengyinhub.business.domain.dto.RegistrationOrderResult;
 import com.chengyinhub.business.domain.dto.RegistrationQuoteResult;
@@ -7,7 +8,7 @@ import com.chengyinhub.business.domain.dto.RegistrationRequest;
 import com.chengyinhub.business.service.ICmsRegistrationService;
 import com.chengyinhub.business.service.IRegistrationCheckoutService;
 import com.chengyinhub.business.service.IRegistrationOrderService;
-import com.chengyinhub.business.service.IWechatPayService;
+import com.chengyinhub.business.service.WechatPaymentOperations;
 import com.chengyinhub.business.service.PaymentPreorderException;
 import com.chengyinhub.business.service.RegistrationCheckoutException;
 import com.chengyinhub.business.service.RegistrationCheckoutResult;
@@ -33,7 +34,8 @@ public class RegistrationCheckoutServiceImpl implements IRegistrationCheckoutSer
     @Autowired
     private IRegistrationOrderService registrationOrderService;
     @Autowired
-    private IWechatPayService wechatPayService;
+    @org.springframework.beans.factory.annotation.Qualifier("wechatPaymentSdkGateway")
+    private WechatPaymentOperations wechatPayService;
 
     @Override
     public RegistrationQuoteResult quote(Long memberId, RegistrationRequest request) {
@@ -53,8 +55,9 @@ public class RegistrationCheckoutServiceImpl implements IRegistrationCheckoutSer
     }
 
     @Override
-    @org.springframework.transaction.annotation.Transactional(propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
+    @org.springframework.transaction.annotation.Transactional(propagation = org.springframework.transaction.annotation.Propagation.NEVER)
     public RegistrationCheckoutResult createOrReplay(Long memberId, RegistrationRequest request) {
+        requireNoActiveTransaction();
         if (request == null) {
             throw new RegistrationCheckoutException(400, "报名参数不能为空");
         }
@@ -68,14 +71,17 @@ public class RegistrationCheckoutServiceImpl implements IRegistrationCheckoutSer
     }
 
     @Override
-    @org.springframework.transaction.annotation.Transactional(propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
+    @org.springframework.transaction.annotation.Transactional(propagation = org.springframework.transaction.annotation.Propagation.NEVER)
     public RegistrationCheckoutResult retryPayment(Long memberId, Long registrationId) {
+        requireNoActiveTransaction();
         return retryPayment(memberId, registrationId, false);
     }
 
     @Override
-    @org.springframework.transaction.annotation.Transactional(propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
+    @org.springframework.transaction.annotation.Transactional(propagation = org.springframework.transaction.annotation.Propagation.NEVER)
     public RegistrationCheckoutResult retryPayment(Long memberId, Long registrationId, boolean appChannel) {
+        RestoreDispatchGuard.requireDispatchAllowed();
+        requireNoActiveTransaction();
         if (!wechatPayService.isReady()) {
             throw new RegistrationCheckoutException(503, "支付服务暂不可用，请稍后再试");
         }
@@ -125,6 +131,8 @@ public class RegistrationCheckoutServiceImpl implements IRegistrationCheckoutSer
      * 两条通道**只有下单这一步不同**,失败处理与状态机完全一致。
      */
     private Map<String, String> createWechatOrder(CmsRegistration registration, boolean appChannel) {
+        RestoreDispatchGuard.requireDispatchAllowed();
+        requireNoActiveTransaction();
         try {
             return appChannel
                     ? wechatPayService.createAppOrder(registration)
@@ -132,9 +140,18 @@ public class RegistrationCheckoutServiceImpl implements IRegistrationCheckoutSer
         } catch (PaymentPreorderException failure) {
             // 本次发送前拒绝也不能证明这个原号之前未被受理；保留 PAYING，交原号查单/关单恢复。
             throw failure;
+        } catch (RestoreDispatchGuard.Blocked paused) {
+            throw paused;
         } catch (RuntimeException unknown) {
             throw PaymentPreorderException.resultUncertain(
                     unknown.getMessage() == null ? "微信预下单结果未知" : unknown.getMessage(), unknown);
+        }
+    }
+
+    /** Never suspend a transaction whose original business locks would remain held across the SDK. */
+    private static void requireNoActiveTransaction() {
+        if (org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()) {
+            throw new RegistrationCheckoutException(409, "报名支付必须在原业务事务提交后发起");
         }
     }
 

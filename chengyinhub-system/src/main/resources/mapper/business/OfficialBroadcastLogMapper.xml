@@ -1,8 +1,89 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.chengyinhub.business.mapper.OfficialBroadcastLogMapper">
+    <resultMap type="OfficialBroadcastLog" id="DeliveryResult">
+        <id property="id" column="id"/>
+        <result property="broadcastId" column="broadcast_id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="role" column="role"/>
+        <result property="channel" column="channel"/>
+        <result property="reached" column="reached"/>
+        <result property="clicked" column="clicked"/>
+        <result property="createTime" column="create_time"/>
+        <result property="deliveryState" column="delivery_state"/>
+        <result property="deliveryTitle" column="delivery_title"/>
+        <result property="deliverySub" column="delivery_sub"/>
+        <result property="failureCode" column="failure_code"/>
+        <result property="messageId" column="message_id"/>
+        <result property="reachedTime" column="reached_time"/>
+    </resultMap>
 
-    <!-- uk_bc_member_channel 冲突时 insert ignore(不重发) -->
+    <!-- Serialize initial audience snapshot and aggregate refresh, without changing shared mapper. -->
+    <select id="lockBroadcast" resultMap="com.chengyinhub.business.mapper.OfficialBroadcastMapper.OfficialBroadcastResult" useCache="false" flushCache="true">
+        select * from official_broadcast where id = #{broadcastId} for update
+    </select>
+    <select id="selectRecoverableBroadcasts" resultMap="com.chengyinhub.business.mapper.OfficialBroadcastMapper.OfficialBroadcastResult">
+        select b.* from official_broadcast b
+        where b.status = 1 and (b.scheduled_time is null or b.scheduled_time &lt;= now())
+        order by b.id
+    </select>
+    <select id="selectByBroadcast" resultMap="DeliveryResult">
+        select * from official_broadcast_log where broadcast_id = #{broadcastId} order by member_id, id
+    </select>
+    <select id="lockDeliveryIntent" resultMap="DeliveryResult" useCache="false" flushCache="true">
+        select * from official_broadcast_log where id = #{id} for update
+    </select>
+    <insert id="insertPending" parameterType="OfficialBroadcastLog" useGeneratedKeys="true" keyProperty="id">
+        insert into official_broadcast_log
+            (broadcast_id, member_id, role, channel, reached, clicked, create_time,
+             delivery_state, delivery_title, delivery_sub)
+        values (#{broadcastId}, #{memberId}, #{role}, #{channel}, 0, 0, now(),
+                'PENDING', #{deliveryTitle}, #{deliverySub})
+    </insert>
+    <update id="transition">
+        update official_broadcast_log
+        set delivery_state = #{state}, failure_code = #{failureCode}, message_id = #{messageId},
+            reached = case when #{state} = 'SUCCESS' then 1 else 0 end,
+            reached_time = case when #{state} = 'SUCCESS' then now() else null end
+        where id = #{id} and delivery_state = #{expected}
+    </update>
+    <select id="countUnsuccessful" resultType="int">
+        select count(1) from official_broadcast_log
+        where broadcast_id = #{broadcastId} and (delivery_state is null or delivery_state != 'SUCCESS')
+    </select>
+    <select id="countInappReached" resultType="int">
+        select count(1) from official_broadcast_log
+        where broadcast_id = #{broadcastId} and channel = 'inapp' and reached = 1
+          and delivery_state in ('SUCCESS', 'INAPP_STORED')
+    </select>
+    <!-- Channel receipts, not distinct members. -->
+    <select id="countReached" resultType="int">
+        select count(1) from official_broadcast_log
+        where broadcast_id = #{broadcastId}
+          and ((reached = 1 and delivery_state in ('SUCCESS', 'INAPP_STORED'))
+               or (channel = 'subscribe' and delivery_state = 'CHANNEL_ACCEPTED'))
+    </select>
+    <select id="countClicked" resultType="int">
+        select count(1) from official_broadcast_log
+        where broadcast_id = #{broadcastId} and channel = 'inapp' and clicked = 1 and reached = 1
+          and delivery_state in ('SUCCESS', 'INAPP_STORED')
+    </select>
+    <select id="channelStats" resultType="java.util.LinkedHashMap">
+        select channel, delivery_state as deliveryState, count(1) as receiptCount
+        from official_broadcast_log where broadcast_id = #{broadcastId}
+        group by channel, delivery_state order by channel, delivery_state
+    </select>
+    <select id="countRecentByMember" resultType="int">
+        select count(1) from official_broadcast_log
+        where member_id = #{memberId} and channel = 'inapp' and reached = 1
+          and delivery_state in ('SUCCESS', 'INAPP_STORED')
+          and coalesce(reached_time, create_time) &gt;= DATE_SUB(NOW(), INTERVAL #{minutes} MINUTE)
+    </select>
+    <update id="markClicked">
+        update official_broadcast_log set clicked = 1
+        where broadcast_id = #{broadcastId} and member_id = #{memberId} and channel = #{channel}
+          and reached = 1 and delivery_state in ('SUCCESS', 'INAPP_STORED')
+    </update>
     <insert id="insertIgnore" parameterType="OfficialBroadcastLog" useGeneratedKeys="true" keyProperty="id">
         insert ignore into official_broadcast_log
             (broadcast_id, member_id, role, channel, reached, clicked, create_time)
@@ -10,25 +91,6 @@
                 <choose><when test="reached != null">#{reached}</when><otherwise>0</otherwise></choose>,
                 0, now())
     </insert>
-
-    <select id="countReached" resultType="int">
-        select count(1) from official_broadcast_log where broadcast_id = #{broadcastId} and channel='inapp' and delivery_state='INAPP_STORED'
-    </select>
-
-    <select id="countClicked" resultType="int">
-        select count(1) from official_broadcast_log where broadcast_id = #{broadcastId} and channel='inapp' and clicked = 1
-    </select>
-
-    <select id="countRecentByMember" resultType="int">
-        select count(1) from official_broadcast_log
-        where member_id = #{memberId} and channel = 'inapp' and reached = 1
-          and create_time &gt;= DATE_SUB(NOW(), INTERVAL #{minutes} MINUTE)
-    </select>
-
-    <update id="markClicked">
-        update official_broadcast_log set clicked = 1
-        where broadcast_id = #{broadcastId} and member_id = #{memberId} and channel = #{channel}
-    </update>
 
     <update id="markReached">
         update official_broadcast_log set reached = 1
@@ -38,5 +100,5 @@
  <select id="deliveryRows" resultType="map">select id,member_id,role,channel,delivery_state,frozen_title,frozen_sub,intent_id,message_id,attempts from official_broadcast_log where broadcast_id=#{broadcastId} order by id</select>
  <select id="lockDelivery" resultType="map">select * from official_broadcast_log where id=#{id} for update</select>
  <insert id="snapshot">insert ignore into official_broadcast_log(broadcast_id,member_id,role,channel,reached,clicked,create_time,delivery_state,frozen_title,frozen_sub) values(#{broadcastId},#{memberId},#{role},#{channel},0,0,now(),#{state},#{title},#{sub})</insert>
- <update id="deliveryState">update official_broadcast_log set delivery_state=#{state},intent_id=#{intent},message_id=#{message},attempts=attempts+#{attempt},update_time=now(3),reached=case when #{state}='INAPP_STORED' then 1 else 0 end where id=#{id}</update>
+ <update id="deliveryState">update official_broadcast_log set delivery_state=#{state},intent_id=#{intent},message_id=#{message},attempts=attempts+#{attempt},update_time=now(3),reached=case when #{state}='INAPP_STORED' then 1 else 0 end,reached_time=case when #{state}='INAPP_STORED' then now() else null end where id=#{id}</update>
 </mapper>

@@ -1,0 +1,36 @@
+{
+  "parent": "ac441634a0226f4786e41f383b9cc8c50880d47a",
+  "files": [
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/ThemeRuntimeMySqlIT.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplayChapterRuntimeServiceTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplayTemplateSlotRuntimeTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PersonalGameplayRuntimeServiceTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/framework/aspectj/DeadlockRetryEntryPointContractTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayCheckinDuplicateCodeTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayCheckinLiveCodeTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayCurrentUseBoundaryTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayDelistedCompletedRetryContractTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayGpsGeofenceValidationTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayHistoryNodesContractTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayHistoryNodesOldEntryContractTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressCompletionTruthTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayRouteConflictHttpContractTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayRouteContractTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySensorResultTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/CurrentPlayControllerFixtures.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/JourneyPublishFreezeTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PlayCommandIntentTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ShopDayExperienceLayerContractTest.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/BasicPlayCommandFixtures.java"
+  ],
+  "javaCompiled": false,
+  "junitExecuted": false,
+  "mysqlExecuted": false,
+  "checks": [
+    "git diff --check",
+    "Python delimiter balance (not Java compile)",
+    "dedicated missing/stale identity assertions retained"
+  ]
+}

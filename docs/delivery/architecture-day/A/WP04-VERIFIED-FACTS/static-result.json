@@ -1,0 +1,92 @@
+{
+  "status": "STATIC_ONLY",
+  "parent": "b681cf0604d2e039c59ee1ca5034a71ec4525801",
+  "B_dependency": "041534c7681e480f80eb8afc911f65bf1ed13eda",
+  "executed_java_mysql_tests": 0,
+  "counts": {
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RegistrationTopicFenceMySqlIT.java": {
+      "declared_tests": 20,
+      "dynamic": [],
+      "nested": [],
+      "gates": [],
+      "conditions": [],
+      "required_database_bases": []
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/VerifiedRegistrationReceiptGuardTest.java": {
+      "declared_tests": 9,
+      "dynamic": [],
+      "nested": [],
+      "gates": [],
+      "conditions": [],
+      "required_database_bases": []
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationFundsMybatisIntegrationTest.java": {
+      "declared_tests": 96,
+      "dynamic": [],
+      "nested": [],
+      "gates": [
+        [
+          "CHENGYIN_FUNDS_MYSQL_IT",
+          "1"
+        ]
+      ],
+      "conditions": [],
+      "required_database_bases": []
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PaymentCallbackFenceEntryTest.java": {
+      "declared_tests": 10,
+      "dynamic": [],
+      "nested": [],
+      "gates": [],
+      "conditions": [],
+      "required_database_bases": []
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationPaymentAtomicityContractTest.java": {
+      "declared_tests": 1,
+      "dynamic": [],
+      "nested": [],
+      "gates": [],
+      "conditions": [],
+      "required_database_bases": []
+    }
+  },
+  "preserved_funds_test_bodies": 95,
+  "unverified_refund_observation_test": "2 concurrent calls and 6 assertions retained; rejection expected",
+  "preserved_topic_fence_test_bodies": 13,
+  "protected_equal_to_parent": [
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPayServiceImpl.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackMutationService.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubEventOpsServiceImpl.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementClaimServiceImpl.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SettlementEntryServiceImpl.java",
+    "ci/real_storage_it.py",
+    "ci/real-storage-it-registry.json",
+    "pom.xml"
+  ],
+  "review_patches": "Context checks only; B reader and G interface are NOT applied",
+  "sha256": {
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RegistrationTopicFenceMySqlIT.java": "4545317c49ce7ec8e30578d8d24be1b6889832840afef3f33fe93bc5d7834c3a",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PaymentCallbackFenceEntryTest.java": "a80110353319bc1f6e3b744ae7ba6eb75ea4c2c05512c6415d47ad799b9da135",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PaymentCallbackInboxStubs.java": "3ee114cc76406f6e2c5eb8c0d194f445873b914eb006a53a3bf837f036d3670b",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationFundsMybatisIntegrationTest.java": "66aa773690e4fb6d8cd60ecc6e474e06c44e7f5fcf620824f23bddcf86fc3316",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationPaymentAtomicityContractTest.java": "c0bb56bc80c6e0e50a6e8fc3e36dcde2058860c839793d4b197779944a22eec8",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/VerifiedRegistrationReceiptGuardTest.java": "178616c9fc8da93421d90dea49c453d614d554d877263adb56a3db31c22e7e30",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java": "1363a28d614f58f319f8db55a7b2cdcaca3f2955951adf5b36ce009fa2e3e154",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java": "f97382dfac953e266e95063cd28a92c58c61b71bb008267dd55ce7e8b941df54"
+  },
+  "not_run": [
+    "Java/test compilation",
+    "JUnit",
+    "MySQL/rollback/concurrency/cleanup",
+    "CI",
+    "SDK verification",
+    "G allocation reversal"
+  ],
+  "remaining": [
+    "B immutable fresh-reader transaction patch",
+    "inline original payment Reference persistence/readback and shared lock contract",
+    "G real typed terminal port",
+    "D-owned notification fixture adaptation"
+  ]
+}

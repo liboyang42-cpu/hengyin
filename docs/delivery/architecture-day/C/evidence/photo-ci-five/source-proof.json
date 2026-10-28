@@ -1,0 +1,48 @@
+{
+  "base": "66e9e1798bf0b3e1c2b7e6cb2b6ab13a3b3e1329",
+  "kind": "Python source-only sanity; NOT Java compile or JUnit execution",
+  "files": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AdvancedActionTestFixtures.java",
+      "sha256": "005c66d77c55b66f58d5c1107da158d9063be4a0636c2327b47c46e79d260c14",
+      "lexical_delimiters": "PASS",
+      "source_test_methods_before": 0,
+      "source_test_methods_after": 0,
+      "removed_names": [],
+      "added_names": []
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AdvancedPhotoOrchestrationTest.java",
+      "sha256": "0253b2ff619cc40ffdea385a3ffc6b4a3d9d66d5acf6b0ad79165cfab8be224e",
+      "lexical_delimiters": "PASS",
+      "source_test_methods_before": 16,
+      "source_test_methods_after": 17,
+      "removed_names": [],
+      "added_names": [
+        "appliedWriteFailureRollsBackLocalReceiptAndGrantButRetainsFirstProviderResult"
+      ]
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ObjectCardMintHookTest.java",
+      "sha256": "698cb673f9ecd495ea4a812ec555ad0a8ee9ef54f4a106e5f18e057c7aaee2ee",
+      "lexical_delimiters": "PASS",
+      "source_test_methods_before": 18,
+      "source_test_methods_after": 18,
+      "removed_names": [
+        "act带事务而收尾不带"
+      ],
+      "added_names": [
+        "照片先提交原意图_模型NEVER_玩法回执与APPLIED同事务_提交后铸卡"
+      ]
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayKitPhotoCheckRuntimeTest.java",
+      "sha256": "88cd17ab6281332e62ca0c84ccb212979f39ca41b1c812acedec55bbf2015219",
+      "lexical_delimiters": "PASS",
+      "source_test_methods_before": 17,
+      "source_test_methods_after": 17,
+      "removed_names": [],
+      "added_names": []
+    }
+  ]
+}

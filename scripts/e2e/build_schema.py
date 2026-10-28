@@ -368,6 +368,71 @@ def migrations_after_baseline(migrations):
             if m["path"] not in included and m["path"] not in data_only]
 
 
+# One reviewed, mutually exclusive pair for a newly created scratch build only.
+# These are not baseline/applied/data-only records and do not alter the production ledger.
+NOTICE_FORWARD_FILES = {
+    "20261024_d_committed_official_notice_wx": (
+        "chengyinhub-admin/sql/migration_20261024_d_committed_official_notice_wx.sql",
+        "132e2d74d13a3729e40266969d6501aa48a37bd8264361eb81b1f8f0e85b88f3"),
+    "20261024_c_before_start_notice_typed": (
+        "chengyinhub-admin/sql/migration_20261024_c_before_start_notice_typed.sql",
+        "615c8c7883a97ca70e1cc14ff4ac965a895db9ccfea91f6f08e269dbf99e889a"),
+    "20261024_g_before_start_notice_metadata_v2": (
+        "chengyinhub-admin/sql/migration_20261024_g_before_start_notice_metadata_v2.sql",
+        "a36889f13d1de308edfcba06409ef153438521268f355881006864ae842bc02c"),
+}
+NOTICE_PRODUCER = "20261024_d_committed_official_notice_wx"
+NOTICE_OLD = "20261024_c_before_start_notice_typed"
+NOTICE_V2 = "20261024_g_before_start_notice_metadata_v2"
+
+
+def notice_forward_plan(migrations, selected):
+    """Validate the exact pending pair before connecting; do not filter or execute it yet."""
+    pair_ids = {NOTICE_OLD, NOTICE_V2}
+    pair_paths = {NOTICE_FORWARD_FILES[key][0] for key in pair_ids}
+    if not any(row.get("migrationId") in pair_ids or row.get("path") in pair_paths
+               for row in migrations + selected):
+        return None
+
+    positions = {}
+    pending_positions = {}
+    for migration_id, (path, expected_sha) in NOTICE_FORWARD_FILES.items():
+        rows = [(index, row) for index, row in enumerate(migrations)
+                if row.get("migrationId") == migration_id or row.get("path") == path]
+        pending = [(index, row) for index, row in enumerate(selected)
+                   if row.get("migrationId") == migration_id or row.get("path") == path]
+        if len(rows) != 1 or len(pending) != 1:
+            raise RuntimeError("notice forward requires one complete pending producer/old/v2: " + migration_id)
+        index, entry = rows[0]
+        pending_index, pending_entry = pending[0]
+        target = REPO / path
+        if (entry.get("migrationId") != migration_id or entry.get("path") != path
+                or entry.get("sha256") != expected_sha or pending_entry != entry
+                or entry.get("order") != index + 1 or entry.get("executionPhase") is not None
+                or target.is_symlink() or not target.is_file()
+                or hashlib.sha256(target.read_bytes()).hexdigest() != expected_sha):
+            raise RuntimeError("notice forward identity/fingerprint/order drift: " + migration_id)
+        expected_deps = (["20261013_b_im_notification_intent"] if migration_id == NOTICE_PRODUCER
+                         else [NOTICE_PRODUCER])
+        if entry.get("dependsOn") != expected_deps:
+            raise RuntimeError("notice forward dependency drift: " + migration_id)
+        positions[migration_id] = index
+        pending_positions[migration_id] = pending_index
+
+    if not (positions[NOTICE_PRODUCER] < positions[NOTICE_OLD] < positions[NOTICE_V2]
+            and pending_positions[NOTICE_PRODUCER] < pending_positions[NOTICE_OLD] < pending_positions[NOTICE_V2]):
+        raise RuntimeError("notice forward producer/old/v2 sequence drift")
+    upstream = [index for index, row in enumerate(migrations)
+                if row.get("migrationId") == "20261013_b_im_notification_intent"]
+    if len(upstream) != 1 or upstream[0] >= positions[NOTICE_PRODUCER]:
+        raise RuntimeError("notice forward producer prerequisite is missing or out of order")
+    return {
+        "fingerprints": {key: {"path": value[0], "sha256": value[1]}
+                         for key, value in NOTICE_FORWARD_FILES.items()},
+        "selected": [row for row in selected if row["migrationId"] != NOTICE_OLD],
+    }
+
+
 def main():
     global POLICY_CUSTODY
     ap = argparse.ArgumentParser()
@@ -391,6 +456,7 @@ def main():
                               dependency_path=REPO / "ci/migration-dependencies.json")
     all_migrations = manifest["migrations"]
     selected = migrations_after_baseline(all_migrations)
+    notice_forward = notice_forward_plan(all_migrations, selected)
     deferred = [m for m in selected if m.get("executionPhase") == "POST_DEPLOY"]
     ordered = [m for m in selected if m.get("executionPhase") != "POST_DEPLOY"]
     if deferred:
@@ -402,9 +468,22 @@ def main():
         cur.execute("SELECT VERSION(), @@version_comment")
         ver = cur.fetchone()
         print("目标实例: %s / %s  @ %s:%d" % (ver[0], ver[1], a.host, a.port))
-        if a.drop:
-            cur.execute("DROP DATABASE IF EXISTS `%s`" % a.schema)
-        cur.execute("CREATE DATABASE IF NOT EXISTS `%s` DEFAULT CHARACTER SET utf8mb4" % a.schema)
+        if notice_forward:
+            # This check precedes every DROP/CREATE/import, including explicit --drop.
+            cur.execute("SELECT COUNT(*) FROM information_schema.schemata WHERE schema_name=%s", (a.schema,))
+            fresh = cur.fetchone()
+            if (not isinstance(fresh, (tuple, list)) or len(fresh) != 1
+                    or type(fresh[0]) is not int or fresh[0] != 0):
+                raise RuntimeError("notice forward requires a nonexistent fresh scratch schema; --drop cannot bypass")
+            # No IF NOT EXISTS: a concurrent creator must fail, never adopt an unknown/typed schema.
+            cur.execute("CREATE DATABASE `%s` DEFAULT CHARACTER SET utf8mb4" % a.schema)
+            ordered = [m for m in notice_forward["selected"] if m.get("executionPhase") != "POST_DEPLOY"]
+            print("REPLACED_UNAPPLIED %s -> %s fingerprints=%s" %
+                  (NOTICE_OLD, NOTICE_V2, json.dumps(notice_forward["fingerprints"], sort_keys=True)))
+        else:
+            if a.drop:
+                cur.execute("DROP DATABASE IF EXISTS `%s`" % a.schema)
+            cur.execute("CREATE DATABASE IF NOT EXISTS `%s` DEFAULT CHARACTER SET utf8mb4" % a.schema)
     finally:
         c.close()
 
@@ -437,9 +516,11 @@ def main():
               (len(all_migrations), len(ordered)))
         pre_migration_problems = len(results)
         for m in ordered:
+            strict_notice = bool(notice_forward) and m["migrationId"] == NOTICE_V2
             ok = run_file(cur, REPO / m["path"], m["migrationId"], results,
-                          keep_going=a.keep_going, schema_only=True, observations=observations)
-            if not ok and not a.keep_going:
+                          keep_going=False if strict_notice else a.keep_going,
+                          schema_only=True, observations=observations)
+            if not ok and (strict_notice or not a.keep_going):
                 break
         cur.execute("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=%s", (a.schema,))
         tables = cur.fetchone()[0]
