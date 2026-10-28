@@ -1,4 +1,4 @@
-<cy-sheet show="{{show}}" title="认领已有门店" fixed="full" bind:close="onClose">
+<cy-sheet show="{{show}}" back-guard="{{false}}" title="认领已有门店" fixed="full" bind:close="onClose">
   <view class="mcs">
     <view wx:if="{{phase === 'loading'}}" class="mcs__note" aria-role="status" aria-live="polite">加载中</view>
 

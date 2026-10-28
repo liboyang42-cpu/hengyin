@@ -53,6 +53,7 @@ const RUN_HOLD_MS = 3000;   // 主键长按结束:与漫游页 END_HOLD_MS 同�
 const { buildMilestone } = require('./utils/play-milestone.js'); // C 分享卡里程碑轴(纯函数,已单测)
 const { fromHttpStatusAbnormal } = require('../../utils/transport/failure-envelope.js');
 const { getScene } = require('../../utils/scene-registry.js');
+const { openScene: openPageScene } = require('../../utils/scene-entry.js');
 const { resolveOpenState } = require('./utils/play-open-state.js');
 const { pushScene, popScene, currentScene, exitDecision } = require('../../utils/scene-stack.js');
 const finishRouteRecommendation = require('./finish-route-recommendation.js');
@@ -382,6 +383,7 @@ const themeRecords = require('../../utils/theme-records.js');
 const themeTrade = require('./utils/theme-trade.js');
 const themePlans = require('./utils/theme-plans.js');
 const playerOps = require('./utils/theme-player-ops.js');
+const { loadStoryFont } = require('./utils/story-font.js');
 const playOverlays = require('./utils/play-hud-overlays.js');
 Page({
   ...journeyCheckRecovery.methods(req),
@@ -592,6 +594,7 @@ Page({
   },
 
   onLoad(options) {
+    loadStoryFont(); // P-60:故事流手写体(未配置 / 失败时 .cy-story-hand 回落系统字体)
     this._playOwner = this._playMember();
     this._playLoginContext = this._capturePlayLoginContext();
     this._playDisposed = false;
@@ -6486,6 +6489,8 @@ Page({
   // ---------- 章节过场 ----------
   openScene(id, params = {}) {
     const next = getScene(id, params);
+    // G-1(2026-10-27):page 档场景(漫游历史 / 优惠券)是页面,不在地图上压 psheet
+    if (next.variant === 'page' && next.route) { openPageScene(id, params); return true; }
     if (exitDecision(this.data.sceneStack, 'close') === 'confirm') {
       this.setData({ sceneConfirm: { show: true, action: 'replace', pending: next } });
       return false;

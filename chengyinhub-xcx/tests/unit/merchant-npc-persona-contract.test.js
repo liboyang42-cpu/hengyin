@@ -76,39 +76,51 @@ function savedPage(over) {
   return env;
 }
 
-test('渲染层:形象页保留性格设定与审核状态，移除说明小字', () => {
+// 2026-10-27 业主 M-28(§6.3 已确认)推翻「性格设定走多行自由输入」:改成 温柔 / 可爱 / 毒舌 三选一 chip,
+// persona 落中文标签、personality 落枚举(gentle/cute/savage,后端 L01)。下面两条随之改判。
+test('渲染层:形象页保留性格设定与审核状态,性格是三选一 chip', () => {
   const wxml = read(WXML_PATH);
   const cell = wxml.match(/<cy-cell[^>]*data-key="persona"[^>]*\/>/);
   assert.ok(cell, '找不到性格设定入口');
   assert.match(cell[0], /title="性格设定"/);
-  assert.match(wxml, /field\.multiline/, '性格设定必须走多行输入，不能塞进单行 input');
-  assert.match(cell[0], /value="\{\{persona \|\| '填写性格设定'\}\}"/);
+  assert.match(cell[0], /value="\{\{persona \|\| '选择性格'\}\}"/);
   assert.doesNotMatch(cell[0], /description=/);
+  // 2026-10-28 m698 业主:按内容高度的 Threads 式菜单,点一下就选上并保存,无标题、无保存键
+  assert.match(wxml, /<cy-sheet inset show="\{\{personaSheet\}\}"/);
+  assert.match(wxml, /<view class="tm" aria-role="radiogroup" aria-label="性格设定">/);
+  assert.match(wxml, /class="tm-row[^"]*"[\s\S]*?wx:for="\{\{personalities\}\}"[\s\S]*?bindtap="pickPersona"[\s\S]*?aria-role="radio"/);
+  assert.doesNotMatch(wxml, /bindtap="savePersona"/);
+  assert.doesNotMatch(read(JS_PATH), /multiline: key === 'persona'/, '性格不再是文本框');
   assert.match(wxml, /auditStatus === 2 && auditReason/, '审核驳回后必须把原因显示给商家');
 });
 
-test('行为层:单独编辑性格设定保存 persona,不动名字和招呼语', async () => {
+test('行为层:单独选性格保存 persona 标签 + personality 枚举,不动名字和招呼语', async () => {
   const env = savedPage({ persona: '' });
   env.page.editField({ currentTarget: { dataset: { key: 'persona' } } });
-  assert.equal(env.page.data.field.key, 'persona');
-  assert.equal(env.page.data.field.label, '性格设定');
-  assert.equal(env.page.data.field.max, 500);
-  assert.equal(env.page.data.field.multiline, true, '人设是多行文本');
+  assert.equal(env.page.data.field, null, '性格不再开文本框');
+  assert.equal(env.page.data.personaSheet, true);
+  assert.deepEqual(env.page.data.personalities.map((p) => p.label), ['温柔', '可爱', '毒舌']);
+  assert.deepEqual(env.page.data.personalities.map((p) => p.key), ['gentle', 'cute', 'savage']);
 
-  env.page.onFieldInput({ detail: { value: '  语气亲切，熟悉咖啡豆产地  ' } });
-  env.page.saveField();
+  env.page.pickPersona({ currentTarget: { dataset: { key: 'bogus' } } });
+  assert.equal(env.page.data.personaPick, '', '枚举外的值不收');
+  env.page.pickPersona({ currentTarget: { dataset: { key: 'savage' } } });
+  env.page.savePersona();
 
   const write = env.requests.find((r) => r.url === '/api/merchant/npc/save');
   assert.ok(write, '保存必须发 /api/merchant/npc/save');
   const payload = JSON.parse(write.data);
-  assert.equal(payload.persona, '语气亲切，熟悉咖啡豆产地', 'persona 必须去掉首尾空白后原样提交');
+  assert.equal(payload.persona, '毒舌', 'persona 落中文标签(旧后端照样生效)');
+  assert.equal(payload.personality, 'savage', 'personality 落枚举(L01 后端)');
   assert.equal(payload.name, '小店长', '改人设不得把名字带丢');
   assert.equal(payload.greeting, '欢迎光临', '改人设不得把招呼语带丢');
   assert.equal(payload.avatar, 'px1:p01', '改人设不得把形象带丢');
 
   write.success({ code: 200 });
   await new Promise((resolve) => setImmediate(resolve));
-  assert.equal(env.page.data.persona, '语气亲切，熟悉咖啡豆产地', '保存成功必须回填本地态');
+  assert.equal(env.page.data.persona, '毒舌', '保存成功必须回填本地态');
+  assert.equal(env.page.data.personality, 'savage');
+  assert.equal(env.page.data.personaSheet, false, '保存成功关弹层');
 });
 
 test('行为层:整页保存与脏态判定都包含 persona', async () => {

@@ -30,7 +30,8 @@
     "cy-loading-mask": "/components/cy/loading-mask/index",
     "cy-modal-host": "/components/cy/modal-host/index",
     "cy-map-address-search": "/components/cy/map-address-search/index",
-    "cy-proto-cam": "/components/cy/proto-cam/index"
+    "cy-proto-cam": "/components/cy/proto-cam/index",
+    "cy-back-guard": "/components/cy/back-guard/index"
   },
   "componentPlaceholder": {
     "cy-scene-play-activity-detail": "view",

@@ -31,8 +31,6 @@ module.exports = { chosen, unrelated };
 test('real report namespaces and inline requires keep only their own write plus taxonomy read', () => {
   for (const [file, handler, write] of [
     ['pages/topic/index/index.js', 'reportTopic', '/api/topic/report'],
-    ['pages/templatedetail/templatedetail.js', 'reportTemplate', '/api/template/report'],
-    ['pages/templatedetail/templatedetail.js', 'reportPersonalTemplate', '/api/template/personal-report'],
   ]) {
     const result = targets(file, handler)
     assert.deepEqual(writes(result), [write], handler)

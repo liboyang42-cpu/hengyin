@@ -15,9 +15,11 @@
 //   - showToast(msg)/hideToast()
 //   - getErrorMessage(res, fallback) / shouldAutoToast(param, body):沿用 app.js 既有纯函数。
 //   - newRequestId():         同意接口 requestId 冲突时换的新号(默认 consent-时间-随机)。
+//   - isPlayerView():         当前是否玩家视角(G-4,生产 = !roleGuard.isMerchantView());缺省 false = 不过滤。
 
 var sanitizeResponseMessage = require('./safe-user-message.js').sanitizeResponseMessage;
 var normalizeClientVersion = require('../client-version.js').normalizeClientVersion;
+var roleViewFilter = require('./role-view-filter.js');
 
 // #472-2(owner 2026-10-23 批准改动本 C00 文件):同意留痕接口回 409 + CONSENT_REQUEST_CONFLICT
 // = 这个 requestId 已属于另一条同意事件(例如协议重新发布后客户端重放了旧号)。这时换一个新号重发
@@ -100,6 +102,10 @@ function createRequestClient(deps) {
   var scheduleRetry = deps.scheduleRetry || function (fn, ms) { setTimeout(fn, ms); };
   var newRequestId = deps.newRequestId || defaultConsentRequestId;
   var defaultTimeoutMs = Math.max(1000, Number(deps.defaultTimeoutMs) || 12000);
+  var isPlayerView = deps.isPlayerView || function () { return false; };
+  function playerView() {
+    try { return !!isPlayerView(); } catch (unavailable) { return false; }
+  }
 
   if (!wxRequest || !getBaseUrl) {
     throw new Error('request-client: 缺少 wxRequest/getBaseUrl 依赖');
@@ -155,6 +161,17 @@ function createRequestClient(deps) {
       typeof param.complete == 'function' && param.complete(failure);
     }
     if (sessionChanged()) { stopForSessionChange(); return control; }
+    // G-4:玩家视角不发商家工作台接口,异步按 403 静默失败。
+    if (!state.attempt && playerView() && roleViewFilter.isMerchantOnlyUrl(param.url)) {
+      Promise.resolve().then(function () {
+        if (state.aborted || state.sessionChanged) return;
+        var blocked = roleViewFilter.blockedBody();
+        if (typeof param.successStatusAbnormal == 'function') param.successStatusAbnormal(blocked, 403);
+        else if (typeof param.fail == 'function') param.fail(blocked, 403);
+        typeof param.complete == 'function' && param.complete(blocked);
+      });
+      return control;
+    }
     var attempt = (state.attempt || 0) + 1;
     state.attempt = attempt;
     // 静默重登窗口内抑制本次 wxRequest 的 complete;complete 改由最终一跳(重试成功)或重登失败分支触发一次。
@@ -171,6 +188,9 @@ function createRequestClient(deps) {
         if (sessionChanged()) { stopForSessionChange(); return; }
         responseObserved = true;
         if (res && res.data && typeof res.data === 'object') sanitizeResponseMessage(res.data, '操作失败');
+        // G-4:玩家视角收到商家身份报错 ⇒ 清文案、打标记、不 toast。
+        var roleViewSuppressed = playerView() && roleViewFilter.isMerchantDenial(res && res.data, res && res.statusCode);
+        if (roleViewSuppressed) roleViewFilter.suppress(res.data);
         // 登录态失效(HTTP 401、RuoYi 业务 code=401 或历史 code=2)→ 静默重登并重试一次(内部 state.retried 防死循环)。
         var bodyCode = res.data && (res.data.code == null ? null : Number(res.data.code));
         if (res.statusCode == 426 || (res.statusCode == 200 && bodyCode == 426)) {
@@ -266,14 +286,14 @@ function createRequestClient(deps) {
             // 用户既看不到结果也无法重试(731 行 isPaying 守卫挡住二次点击)。
             // 回落到 fail 而不是 success:HTTP 非 200 对调用方而言就是「这次没成功」。
             param.fail(res.data, res.statusCode);
-          } else if (!param.silentError) {
+          } else if (!param.silentError && !roleViewSuppressed) {
             // HTTP 异常也必须经过统一错误映射，禁止把后端内部 API 路径透传到用户界面。
             showToast(getErrorMessage(res.data, '请求失败（' + res.statusCode + '）'));
           }
           return;
         }
         var body = res.data || {};
-        if (shouldAutoToast(param, body)) {
+        if (!roleViewSuppressed && shouldAutoToast(param, body)) {
           showToast(getErrorMessage(body, '操作失败'));
         }
         typeof param.success == 'function' && param.success(body);

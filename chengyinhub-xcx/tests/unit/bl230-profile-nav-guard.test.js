@@ -49,7 +49,8 @@ function mountProfile() {
 const SIMPLE = [
   ['goPointsHistory'], ['goSignup'], ['onMoreSetting'], ['goSetting'], ['goEditIntro'], ['goShop'],
   ['goOrder'], ['goProject'], ['goGrowthCenter'], ['goWall'], ['goAlbum'], ['goObjectCards'],
-  ['goComplaint'], ['goEarnings'], ['goMerchantTeam'], ['goClubWorkbench'], ['goCoupon'], ['goClub'],
+  // 2026-10-27 owner 真机走查 P-53:「探索与更多」只留优惠券与邀请好友,goComplaint / goClub / goBecomeTalent 随入口删除
+  ['goEarnings'], ['goMerchantTeam'], ['goClubWorkbench'], ['goCoupon'],
   ['onOrderPreviewTap', { currentTarget: { dataset: { id: 7 } } }],
   ['onProjectPreviewTap', { currentTarget: { dataset: { id: 7 } } }],
   ['onBenefitTap', { currentTarget: { dataset: { route: '/subpackageA/pages/assetcenter/earnings/index', unlocked: true } } }],
@@ -95,22 +96,6 @@ test('jumpDetail / goFeatured / goMerchantReviews 连点只跳 1 次', () => {
   c.goMerchantReviews(); c.goMerchantReviews()
   assert.equal(navs.length, 4)
   assert.match(navs[3].url, /merchantRowId=11$/)
-})
-
-test('goBecomeTalent 两次回包只跳 1 次', async () => {
-  const c = mountProfile()
-  c.goBecomeTalent(); c.goBecomeTalent()
-  const reqs = c.requests.filter((r) => r.url === '/api/club/my')
-  assert.equal(reqs.length, 2)
-  reqs.forEach((r) => r.success({ code: 200, data: { owned: [{ id: 4 }] } }))
-  await new Promise((r) => setImmediate(r))
-  assert.equal(navs.length, 1)
-  assert.equal(navs[0].url, '/pages/club/detail/index?id=4')
-  navs[0].complete()
-  c.goBecomeTalent()
-  c.requests.filter((r) => r.url === '/api/club/my').pop().success({ code: 200, data: { owned: [] } })
-  await new Promise((r) => setImmediate(r))
-  assert.equal(navs.length, 2)
 })
 
 test('页面重新 show 时兜底清锁', () => {

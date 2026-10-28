@@ -539,7 +539,7 @@ public class PlayEncounterServiceImpl implements IPlayEncounterService {
             if (node == null || node.getId() == null) continue;
             putProfiles(profiles, npcProfileService.resolveEnabledList(NpcProfileService.SCOPE_NODE, node.getId()));
             if (node.getMerchantMemberId() != null) {
-                putProfiles(profiles, npcProfileService.resolveEnabledList(SCOPE_MERCHANT, node.getMerchantMemberId()));
+                putProfiles(profiles, npcProfileService.resolveEnabledListForMerchantMember(node.getMerchantMemberId()));
             }
         }
         return profiles;

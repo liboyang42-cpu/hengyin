@@ -65,6 +65,8 @@ function loadPage(options = {}) {
     if (id.endsWith('pixel-portrait.js')) return {}
     if (id.endsWith('transport/upload-client.js')) return upload
     if (id.endsWith('profile-review.js')) return require('../../utils/profile-review.js')
+    // 2026-10-27 M-28/G-7:漫游落点只显示到路名(纯函数,无副作用)
+    if (id.endsWith('address-short.js')) return require('../../pages/merchant/utils/address-short.js')
     throw new Error('unexpected require ' + id)
   }
   vm.runInNewContext(SOURCE, {
@@ -239,6 +241,8 @@ test('录音权限被拒绝时不假装开始', async () => {
   assert.equal(h.recorderStarts.length, 0)
   assert.equal(h.page.data.voiceHolding, false)
   assert.match(h.page.data.voiceError, /录音权限/)
+  // 2026-10-27 M-28:被拒后给「去设置开启麦克风」直达按钮(wx.authorize 不会再弹第二次)
+  assert.equal(h.page.data.voiceNeedSetting, true)
 })
 
 test('等待录音授权时切后台不会晚到启动麦克风', async () => {

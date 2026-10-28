@@ -87,7 +87,7 @@
       {{node.completed ? '挑战已完成' : completing ? '正在确认' : checkinPending ? (reverifyReady ? (reverifyStarted ? '现场核验中' : '开始现场核验') : '结果待确认') : node.needRedeem ? '出示核销码' : challengePhoto ? '继续答题' : '开始挑战'}}
     </cy-btn>
   </view>
-  <cy-option-sheet checkmark="{{true}}" show="{{choiceSheetShow}}" title="{{node.questionName || '选择答案'}}" items="{{choiceSheetItems}}" confirm-text="提交"
+  <cy-option-sheet checkmark="{{true}}" show="{{choiceSheetShow}}" back-guard="{{false}}" title="{{node.questionName || '选择答案'}}" items="{{choiceSheetItems}}" confirm-text="提交"
                    bind:select="onChoiceSheetSelect" bind:cancel="onChoiceSheetCancel" />
   <!-- 物理返回 / iOS 侧滑:0 尺寸 page-container 守卫先关答题半屏(等同点取消),不把整页弹出去。
        选中提交时 choiceSheetShow 已先置 false,onChoiceSheetCancel 的守卫会忽略随后的 afterleave。 -->

@@ -46,9 +46,6 @@
   <cy-agreement-sheet show="{{showAgreementSheet}}" type="service" theme="{{settingsTheme}}" bind:close="closeAgreementSheet" />
   <!-- 隐私与定位:半屏弹窗;微信隐私授权待决策那一路仍留在 pages/privacy 路由页 -->
   <cy-privacy-sheet show="{{showPrivacySheet}}" theme="{{settingsTheme}}" bind:close="closePrivacySheet" />
-  <cy-sheet show="{{showMarketingConsent}}" title="营销消息与优惠券" style="--cy-sheet-heading-size: var(--cy-comp-sheet-title-size);" bind:close="closeMarketingConsent">
-    <cy-marketing-consent show="{{showMarketingConsent}}" />
-  </cy-sheet>
   <cy-sheet show="{{showPostGovernance}}" title="帖子处置与申诉" style="--cy-sheet-heading-size: var(--cy-comp-sheet-title-size);" bind:close="closePostGovernance">
     <cy-post-governance show="{{showPostGovernance}}" />
   </cy-sheet>

@@ -1,41 +1,11 @@
-<!-- UI-17 返修(2026-09-18):卡面只留一张完整的票图，名称和状态放在卡外，整卡点击进入。
-     状态取值仍全部来自既有列表字段,不新增接口、不造字段:
-     registrationStatus 1待支付 / 2已报名 / 3已取消 / 4已过期,verificationStatus 1已核验。
-     点卡分流见 _openTicket:待支付→订单、已取消/过期→提示、待使用→play。
-     wxs 的 label / cta 同时服务可见状态和 aria-label。 -->
-<wxs module="tk">
-function state(item) {
-  if (!item) return 'pending';
-  if (item.verificationStatus == 1) return 'done';
-  if (item.registrationStatus == 3 || item.registrationStatus == 4) return 'void';
-  if (item.registrationStatus == 2) return 'ready';
-  return 'pending';
-}
-function label(item) {
-  var s = state(item);
-  if (s === 'done') return '已核验';
-  if (s === 'void') return item.registrationStatus == 4 ? '已过期' : '已取消';
-  if (s === 'ready') return '待使用';
-  return '待支付';
-}
-function cta(item) {
-  var s = state(item);
-  // 「出示入场码」是谎话——整卡点击进的是 play 页。码要在里面再点一次才出。文案照实写
-  if (s === 'ready') return '开始游戏';
-  /* 2026-09-10 用户定的方向：票夹点进去就是开始玩，票夹去不了订单。
-     订单有订单的页面，而且只有订单页能来票夹，反过来不行。
-     所以这里不再写「查看详情」——它以前指的就是订单页，那条路已经关了。
-     待支付是唯一的例外：它还不是一张票，是一笔没付完的单，得有地方去付。 */
-  if (s === 'pending') return '去支付';
-  return '';
-}
-module.exports = { state: state, label: label, cta: cta };
-</wxs>
+<!-- 2026-10-28 业主:票夹只放能用的票(registrationStatus 2 已报名、未核验),卡上不写状态,
+     也没有「可用 / 已用 / 已过期」切换 —— 没付钱、用过、过期的票不进票夹。
+     点卡翻面出示入场码(/api/verify/dyncode/issue,和 scene-qr-ticket 同一接口);底部「开始游戏」进 play。 -->
 <view class="theme-dark">
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
-<view class="signup flex-col">
+<view class="signup flex-col {{reduced ? 'signup--reduced' : ''}} {{entering ? 'signup--go' : ''}}">
   <!-- UI-17 二次返修(2026-09-18 用户追加):全屏背景 = 当前票主题图(固定层,压在整页下面)。
        卡在导航以下、底部安全区以上的区域里水平垂直居中并整体放大;票名移到卡外、紧贴卡顶之上,
        卡面本身仍然零叠字。 -->
@@ -43,7 +13,7 @@ module.exports = { state: state, label: label, cta: cta };
   <image wx:if="{{wbg[1]}}" src="{{wbg[1]}}" mode="aspectFill" class="ztbg wbg {{wbgOn === 1 ? 'vis' : ''}}" />
   <view class="signup-scrim wmask"></view>
   <cy-nav-bar overlay pill pillDark tint="light" title="" />
-  <view class="wl-nav" style="top: {{navTop - navH}}px; height: {{navH}}px;" aria-role="heading" aria-label="票夹"><text class="wl-nav__b">票夹</text><text class="wl-nav__s" wx:if="{{walletState === 'ready'}}">{{tabCount[0] || 0}} 张可用</text></view>
+  <view class="wl-nav" style="top: {{navTop - navH}}px; height: {{navH}}px;" aria-role="heading" aria-label="票夹"><text class="wl-nav__b">票夹</text></view>
 
   <!-- 2026-07-31:优惠券已独立(subpackageMember/coupon),「票夹/优惠券」那层 tab 已删。
        2026-09-09 用户裁决:「路线 / 场次」这层 tab 也删掉,两种票放一起。
@@ -74,20 +44,35 @@ module.exports = { state: state, label: label, cta: cta };
   <view class="flex-a flex-col main" wx:if="{{walletState === 'ready' && (!focusState || focusState === 'ready')}}" style="padding-top:{{navTop}}px;">
     <!-- v13 票夹:卡片叠放(后面几张往上错开、缩小、变暗),最前一张跟手拖,甩出去下一张上来;点卡进入 -->
     <view class="deck {{deckStill ? 'deck--still' : ''}}" bindtouchstart="onDeckStart" bindtouchmove="onDeckMove" bindtouchend="onDeckEnd" bindtouchcancel="onDeckEnd">
-      <view wx:for="{{ticketList}}" wx:key="wKey" class="wc" style="{{deckPoses[index]}}{{index === currentSwiperTicket ? '' : 'pointer-events: none;'}}" bindtap="goTicket" data-index="{{index}}"
-        aria-role="button" aria-label="{{tk.cta(item) || tk.label(item)}}，{{item.wTitle}}" aria-hidden="{{index !== currentSwiperTicket}}" hover-class="cy-pressed" hover-stay-time="80">
-        <image class="wc__ic" src="./icon_ticket.svg" mode="aspectFit" />
-        <view class="wc__go" style="background: {{item.wColor}};"><image src="./icon_go.svg" mode="aspectFit" /></view>
-        <view class="wc__t"><text class="wc__b">{{item.wTitle}}</text><text class="wc__s">{{item.wSub}}</text></view>
-        <view class="wc__im"><image lazy-load="true" src="{{item.wImg}}" mode="aspectFill" /><view class="wc__cta"><image wx:if="{{tk.cta(item)}}" class="wc__play" src="./icon_play.svg" mode="aspectFit" /><text>{{tk.cta(item) || tk.label(item)}}</text></view></view>
+      <!-- 2026-10-28 业主:点卡片翻到背面出示入场码,再点翻回;进游戏改由底部「开始游戏」。
+           票夹只放能用的票(已付款、未核验、未过期),卡上不写状态。 -->
+      <view wx:for="{{ticketList}}" wx:key="wKey" class="wc" style="{{deckPoses[index]}}{{index === currentSwiperTicket ? '' : 'pointer-events: none;'}}" bindtap="onCardTap" data-index="{{index}}" hover-class="cy-pressed" hover-stay-time="80"
+        aria-role="button" aria-label="{{flipped && index === currentSwiperTicket ? '翻回正面' : '出示入场码'}}，{{item.wTitle}}" aria-hidden="{{index !== currentSwiperTicket}}">
+        <view class="wc__flip {{flipped && index === currentSwiperTicket ? 'wc__flip--back' : ''}}">
+          <view class="wc__face wc__front">
+            <view class="wc__go" style="background: {{item.wColor}};"><image src="./icon_go.svg" mode="aspectFit" /></view>
+            <view class="wc__t"><text class="wc__b">{{item.wTitle}}</text><text class="wc__s">{{item.wSub}}</text></view>
+            <view class="wc__im"><image lazy-load="true" src="{{item.wImg}}" mode="aspectFill" /></view>
+          </view>
+          <view class="wc__face wc__back" wx:if="{{index === currentSwiperTicket}}">
+            <text class="wc__bt">入场码</text>
+            <text class="wc__bn ep1">{{item.wTitle}}</text>
+            <view class="wc__qr">
+              <image wx:if="{{qrState === 'ready'}}" class="wc__qr-img" src="{{qrUrl}}" mode="aspectFit" />
+              <text wx:elif="{{qrState === 'error'}}" class="wc__qr-tip" catchtap="retryQr" aria-role="button" aria-label="重新生成入场码" hover-class="cy-pressed" hover-stay-time="80">重新生成</text>
+              <text wx:else class="wc__qr-tip">生成中…</text>
+            </view>
+            <text class="wc__code" wx:if="{{qrCode}}">Code : {{qrCode}}</text>
+            <text class="wc__exp">{{qrCountdown}}</text>
+          </view>
+        </view>
       </view>
-      <view class="deck-empty" wx:if="{{!ticketList.length}}">{{walletTab === 1 ? '还没有用过的票' : '没有过期的票'}}</view>
     </view>
 
     <!-- 2026-09-04 判定表:「票夹全页没有任何队伍入口」。这一行跟着当前那张票走 ——
          队伍是挂在具体某场/某条路线上的,放在票外面写死一个「我的队伍」会指向别的票。
          没有队伍就整行不出:不摆一个点进去是空的入口。 -->
-    <view class="team-entry" wx:if="{{currentTeam}}" bindtap="goMyTeam"
+    <view class="team-entry" wx:if="{{currentTeam}}" style="top: {{navTop + 4}}px;" bindtap="goMyTeam"
       hover-class="cy-pressed" hover-stay-time="80"
       aria-role="button" aria-label="打开我的队伍{{currentTeam.title ? '：' + currentTeam.title : ''}}">
       <view class="team-entry__main">
@@ -99,8 +84,10 @@ module.exports = { state: state, label: label, cta: cta };
       <cy-icon name="arrow-right" size="24" />
     </view>
   </view>
-  <view class="wl-tab" wx:if="{{walletState === 'ready'}}" aria-role="tablist">
-    <view wx:for="{{['可用', '已用', '已过期']}}" wx:key="*this" class="wl-tab__b {{walletTab === index ? 'on' : ''}}" data-i="{{index}}" bindtap="onWalletTab" aria-role="tab" aria-selected="{{walletTab === index}}" aria-label="{{item}}" hover-class="cy-pressed" hover-stay-time="80">{{item}}{{index === 0 ? ' ' + tabCount[0] : ''}}</view>
+  <view class="wl-start {{entering ? 'wl-start--go' : ''}} {{startLit ? 'wl-start--lit' : ''}}" wx:if="{{walletState === 'ready' && ticketList.length}}" bindtap="goTicket" data-index="{{currentSwiperTicket}}" data-go="1" aria-role="button" aria-label="开始游戏：{{ticketList[currentSwiperTicket].wTitle}}" hover-class="cy-pressed" hover-stay-time="80">
+    <view class="wl-start__fill"></view><view class="wl-start__shine" wx:if="{{!reduced}}"></view>
+    <view class="wl-start__lbl"><image class="wl-start__play" src="./icon_play.svg" mode="aspectFit" /><text>开始游戏</text></view>
   </view>
+  <view class="wl-burst {{entering ? 'wl-burst--go' : ''}}" wx:if="{{walletState === 'ready'}}"></view>
 </view>
 </view>

@@ -28,18 +28,19 @@
   </block>
 
   <scroll-view class="bw-list" scroll-y wx:if="{{viewMode === 'list' && badges.length && !loadFail && !partialFail}}" style="{{pmList === 1 ? '--pm-b:1;' : (pmList === 2 ? '--pm-b-d:.32s;--pm-b-s:1;' : '')}}">
+    <!-- 2026-10-28 业主:一行两个勋章,直接看到勋章长什么样;没解锁的变灰,但还认得出是什么。勋章下面不垫灰色方块。 -->
     <block wx:for="{{badgeGroups}}" wx:for-item="group" wx:key="key">
       <text class="bw-list-h" wx:if="{{group.title}}">{{group.title}}</text>
-      <view class="bw-list-row" wx:for="{{group.items}}" wx:for-item="item" wx:key="_idx" bindtap="onFbTap" data-idx="{{item._idx}}" hover-class="cy-pressed" hover-stay-time="80" style="--pmi:{{item._idx}};">
-        <view class="bw-list-mark {{item.locked ? 'is-locked' : ''}}">
-          <image wx:if="{{item.iconUrl}}" src="{{item.iconUrl}}" mode="aspectFit" />
-          <cy-icon wx:else name="star" size="36" />
+      <view class="bw-grid">
+        <view class="bw-cell" wx:for="{{group.items}}" wx:for-item="item" wx:key="_idx" bindtap="onFbTap" data-idx="{{item._idx}}" hover-class="cy-pressed" hover-stay-time="80" style="--pmi:{{item._idx}};"
+              aria-role="button" aria-label="{{item.name}}，{{item.locked ? '尚未点亮' : '已点亮'}}">
+          <view class="bw-medal {{item.locked ? 'is-locked' : ''}}">
+            <image wx:if="{{item.iconUrl}}" class="bw-medal__img" src="{{item.iconUrl}}" mode="aspectFit" />
+            <image wx:elif="{{pins[item.pinId]}}" class="bw-medal__pin" src="{{pins[item.pinId]}}" mode="aspectFit" aria-hidden="true" />
+          </view>
+          <text class="bw-cell__name ep1">{{item.name}}</text>
+          <text class="bw-cell__meta ep1">{{item.locked ? (item.cond || '尚未点亮') : (item.time || '已点亮')}}</text>
         </view>
-        <view class="bw-list-copy">
-          <text class="bw-list-name ep1">{{item.name}}</text>
-          <text class="bw-list-meta ep1">{{item.locked ? '尚未点亮' : (item.time || '已点亮')}} · {{item.tierZh}}</text>
-        </view>
-        <text class="bw-list-state">{{item.locked ? '查看条件' : '查看'}}</text>
       </view>
     </block>
   </scroll-view>
@@ -60,7 +61,7 @@
         <cover-view class="bw-back-inner"><cover-image class="bw-back-icon" src="/subpackageP3/images/icon_back.png" mode="aspectFit" /></cover-view>
       </cover-view>
     </cover-view>
-    <!-- 信息层与切换控件必须继续使用 cover-view，避免被 WebGL 原生层压住。 -->
+    <!-- 信息层必须继续使用 cover-view，避免被 WebGL 原生层压住。 -->
     <cover-view class="bw-cap">
       <cover-view class="bw-head">
         <cover-view class="bw-page-title"><cover-view class="bw-cap-t">勋章墙</cover-view></cover-view>
@@ -70,10 +71,7 @@
              ⚠️必须留在 bw-cap 这棵 cover-view 里:普通 view 会被 WebGL 原生层压住,
              放在 canvas 之外的游离 cover-view 则根本不渲染(2026-08-25 截图实证)。 -->
         <cover-view class="bw-focus" wx:if="{{focusText}}">{{focusText}}</cover-view>
-        <cover-view class="bw-view-switch">
-          <cover-view class="bw-view-option {{viewMode === 'wall' ? 'is-active' : ''}}" bindtap="setWallMode" hover-class="cy-pressed" hover-stay-time="80">墙</cover-view>
-          <cover-view class="bw-view-option {{viewMode === 'list' ? 'is-active' : ''}}" bindtap="setListMode" hover-class="cy-pressed" hover-stay-time="80">列表</cover-view>
-        </cover-view>
+        <!-- 2026-10-27 owner P-30:去掉「墙 / 列表」切换,只有一页:上面已点亮,下面未解锁 -->
       </cover-view>
     </cover-view>
   </cover-view>
@@ -94,7 +92,7 @@
         <cover-view class="bw-sh-x-visual"><cover-image class="bw-sh-x-icon" src="/subpackageP3/images/icon_close_sm.png" mode="aspectFit" /></cover-view>
       </cover-view>
     </cover-view>
-    <cover-view class="bw-sh-body">
+    <cover-view class="bw-sh-body"><cover-image wx:if="{{!sheet.iconUrl && pins[sheet.pinId] && sheet.locked}}" class="bw-sh-pin" src="{{pins[sheet.pinId]}}" mode="aspectFit" /><cover-image wx:elif="{{!sheet.iconUrl && pins[sheet.pinId]}}" class="bw-sh-pin" src="{{pins[sheet.pinId]}}" mode="aspectFit" bindtap="goBadge3d" aria-role="button" aria-label="旋转查看{{sheet.name}}" hover-class="cy-pressed" hover-stay-time="80" />
       <!-- 类别小胶囊:放在标题下一行(不跟叉挤在标题行);它就是原来「来源」那一格说的事,来源行因此删掉 -->
       <cover-view class="bw-sh-rar" style="color:{{sheet.rarColor}};">{{sheet.rarZh}}</cover-view>
       <cover-view class="bw-sh-desc">{{sheet.desc}}</cover-view>
@@ -103,8 +101,10 @@
         <cover-view class="bw-sm bw-sm--wide" wx:if="{{sheet.cond}}"><cover-view class="bw-sm-k">{{sheet.time === '未点亮' ? '如何点亮' : '获得条件'}}</cover-view><cover-view class="bw-sm-v">{{sheet.cond}}</cover-view></cover-view>
       </cover-view>
       <!-- 双样式:珐琅勋章可进 3D 转台细看;发光勋章墙上本体即是终态 -->
-      <cover-view class="bw-sh-3d" wx:if="{{sheet.style=='enamel'}}" bindtap="goBadge3d" aria-role="button" aria-label="查看 3D 徽章" hover-class="cy-pressed" hover-stay-time="80">查看 3D 徽章<cover-image class="bw-sh-3d-icon" src="/images/icon_right.png" mode="aspectFit" /></cover-view>
+      <cover-view class="bw-sh-3d" wx:if="{{sheet.style=='enamel' || (!sheet.iconUrl && sheet.pinId && !sheet.locked)}}" bindtap="goBadge3d" aria-role="button" aria-label="查看 3D 徽章" hover-class="cy-pressed" hover-stay-time="80">查看 3D 徽章<cover-image class="bw-sh-3d-icon" src="/images/icon_right.png" mode="aspectFit" /></cover-view>
     </cover-view>
   </cover-view>
+  <!-- 2026-10-28 珐琅徽章离屏画布:只用来生成徽记图,不显示 -->
+  <canvas type="2d" id="pinCanvas" class="bw-pin-canvas"></canvas>
 </view>
 </view>

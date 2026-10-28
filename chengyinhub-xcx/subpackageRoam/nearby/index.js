@@ -45,6 +45,15 @@ function hudTop() {
   } catch (e) { return 90; }
 }
 
+// 2026-10-27 owner P-38:返回键按胶囊实测位置画(与胶囊同一行),不再依赖导航条里的状态栏高度
+function capsuleRow() {
+  try {
+    const r = wx.getMenuButtonBoundingClientRect();
+    if (r && r.top && r.height) return { capTop: r.top, capH: r.height };
+  } catch (e) { /* 拿不到胶囊:退回常见值 */ }
+  return { capTop: 48, capH: 32 };
+}
+
 function emptyResult() {
   return { show: false, kind: 'fail', title: '', why: '', primaryText: '', secondaryText: '' };
 }
@@ -109,21 +118,22 @@ Page({
     this._iconFailed = {};
     this._selfIcon = '';
     this._me = null;
-    this.setData({ safeBottom: safeBottom(), hudTop: hudTop(), rangeText: kmText(this._radius), rangeIndex: T.RADII.indexOf(this._radius) });
+    const cap = capsuleRow();
+    this.setData({ safeBottom: safeBottom(), hudTop: hudTop(), rangeText: kmText(this._radius), rangeIndex: T.RADII.indexOf(this._radius), capTop: cap.capTop, capH: cap.capH });
     const that = this; const linkedLat = H.numOrNull(options && options.lat); const linkedLng = H.numOrNull(options && options.lng);
-    if (linkedLat != null && linkedLng != null) { const center = { lat: linkedLat, lng: linkedLng }; this.setData({ center, circles: H.buildRangeCircle(center) }); this.refresh(center); this.loadMyTeams(false); return; }
+    if (linkedLat != null && linkedLng != null) { const center = { lat: linkedLat, lng: linkedLng }; this.setData({ center, circles: [] }); this.refresh(center); this.loadMyTeams(false); return; }
     getCurrentLocation({
       onSuccess(res) {
         lastLocation.save(res);
         const c = { lat: res.latitude, lng: res.longitude };
         that._me = c;
-        that.setData({ center: c, circles: H.buildRangeCircle(c) });
+        that.setData({ center: c, circles: [] });
         that.refresh(c);
       },
       onFail() {
         const fb = lastLocation.resolve();
         const c = { lat: fb.latitude, lng: fb.longitude };
-        that.setData({ center: c, circles: H.buildRangeCircle(c) });
+        that.setData({ center: c, circles: [] });
         cyToast(fb.hint);
         that.refresh(c);
       },
@@ -467,7 +477,7 @@ Page({
         if (av && !this._iconFailed[av]) { try { me = await this._loadImage(cv, av); } catch (e) { if (!current()) return false; this._iconFailed[av] = true; } }
         if (!current()) return false;
         try {
-          M.drawMarker(g, S, { role: 'player', state: 'joined', color: MAP_AVATAR_COLORS.player, initial: '我', self: true }, me);
+          M.drawSelfDot(g, S, MAP_AVATAR_COLORS.player, me); // P-38:「我」画成居中的完整圆点,不再被画布裁边
           const icon = await this._save(cv); if (!current()) return false;
           this._selfIcon = icon; made++;
         } catch (e) { if (!current()) return false; /* 没有自己的点也不影响队伍 */ }
@@ -862,6 +872,15 @@ Page({
       this.setData({ layerSheet: layer, layerItems, mddIn: !!this.data.reducedMotion, mddLeft: 16 + (Number(e.currentTarget.offsetLeft) || 0) });
       setTimeout(() => { if (!this._unloaded && this.data.layerSheet === layer) this.setData({ mddIn: true }); }, 20);
       return;
+    }
+    // 2026-10-27 owner P-38:「全部」= 所有距离 —— 范围直接放到最大档(服务端上限 20 公里),再按全部类型显示
+    if (layer !== 'team') {
+      const maxIdx = T.RADII.length - 1;
+      if (this._radius !== T.RADII[maxIdx]) {
+        this.setData({ layer: 'all', layerSub: '', layerSheet: '' });
+        this.onRangePick({ detail: { index: maxIdx } });
+        return;
+      }
     }
     this.setData({ layer: layer === 'team' ? 'team' : 'all', layerSub: '' }, () => this._syncMarkers());
   },

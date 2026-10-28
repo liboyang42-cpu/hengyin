@@ -255,10 +255,8 @@ test('预览不再在玩法外面另印一遍标题(题目出现两遍)', () => 
   assert.doesNotMatch(wxml, /cg-pv-inline-heading/, '预览外层标题还在:没起名时回落成题目，与玩法自己的题目重复')
 })
 
-test('玩法那一步的预览提交栏跟着暗:不许用浅色主题的 surface 白(那条白带会从玩法卡两侧露出来);到达那几步是浅底不许跟着暗', () => {
+// 2026-10-27 P-40:预览底部提交栏(cg-pv-submit)已按业主要求删除,原「提交栏跟着暗」断言随之退役
+test('预览不再有底部提交栏(P-40)', () => {
   const wxss = read('pages/publish/temp/index.wxss')
-  assert.match(wxss, /\.cg-preview--kit \.cg-pv-submit\s*\{[^}]*background:\s*#0A0A0A/i,
-    '预览态提交栏没有暗底覆盖:--cy-color-bg-surface 在发布分包是白')
-  assert.doesNotMatch(wxss, /\.cg-preview \.cg-pv-submit\s*\{[^}]*#0A0A0A/i,
-    '暗色提交栏套到了整个预览上:到达 / 完成那几步是浅底，会压一条暗块')
+  assert.doesNotMatch(wxss, /\.cg-pv-submit/)
 })

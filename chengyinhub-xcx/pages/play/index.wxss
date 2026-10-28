@@ -1841,6 +1841,9 @@ page { background: var(--cy-color-bg-page); }
 /* 2026-10-22 业主:完成页统计用字形图标(不用圆章) */
 .fst__ic { color: var(--cy-color-play-story-muted); }
 
+/* P-60(2026-10-27):故事流正文与对白用手写体(pages/play/utils/story-font.js 在线加载 CyStoryHand);
+   没配置或加载失败时认不出这个字族,自动落到后面的系统字体 —— 与 app.wxss 默认字族同值。 */
+.cy-story-hand { font-family: 'CyStoryHand', -apple-system, "PingFang SC", "Noto Sans SC", sans-serif; } /* ds-ok 字族名同 story-font.js STORY_FONT_FAMILY */
 /* ===== 2026-10-28 完成页改版(业主定稿 claude.ai/artifact/DF1tPhSNWFrzQhDu8hoUAy):整屏深色,NRC 跑步总结 + Revolut 分组卡 =====
    做法:在 .finsheet 作用域里把它本来就在用的 play-story 色值换成深色,版式只改布局;390 宽稿按 1.923rpx/px 移植。 */
 .finmask{ display:none; }

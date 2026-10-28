@@ -109,6 +109,15 @@ public class NpcProfileService
     }
 
     /**
+     * 节点上记的商家 member_id 对应的门店分身列表。门店分身挂的是 mms_merchant.id(保存端
+     * /api/merchant/npc/save 写的 scope_id),拿 member_id 直接当 scope_id 查永远读不到(M-28)。
+     */
+    public List<NpcProfileVO> resolveEnabledListForMerchantMember(Long merchantMemberId)
+    {
+        return resolveEnabledList(2, merchantNpcIdentityDirectory.availableMerchantIdForMember(merchantMemberId));
+    }
+
+    /**
      * 取某作用域下全部启用 NPC(读闸同 {@link #resolveForNodeOrMerchant}:audit_status=1 AND
      * enabled=1 AND del_flag='0'),按 sort / 默认序。R11-A 叙事段按 id 解析时用它做主题归属核对
      * —— 只看第一个会漏掉同节点/同门店的第二条。

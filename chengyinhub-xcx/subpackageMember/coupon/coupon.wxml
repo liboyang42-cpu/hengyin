@@ -38,14 +38,15 @@
   </view>
   
   <!-- 空状态提示;aaa 标准(标准速查表)——fill 撑满居中+放大 -->
-  <!-- CU-M-142:券的用途在页标题副文案里已经写过一遍,空态再写「可用于主题、节点与到店核销」
-       就是同屏两句同样的话;底部「新建」按钮本来就在屏上,不用再指一次。 -->
-  <cy-empty wx:if="{{loadState === 'ready' && list.length === 0}}" kind="empty" fill size="lg" class="fill-slot" title="还没有优惠券" />
+  <!-- 2026-10-27 业主 M-07(m682「什么都没有」):没有券时要有一句提示 —— 补一行引导(不重复券的用途);
+       发券主按钮不再等列表回来才出现。 -->
+  <cy-empty wx:if="{{loadState === 'ready' && list.length === 0}}" kind="empty" fill size="lg" class="fill-slot" title="还没有优惠券" sub="发一张到店券，把看过的人带进门" />
 </view>
 
-<!-- 用户原话"新建按钮放到下面":原在导航栏右上角的文字入口移到底部固定按钮 -->
-<cy-footer-bar wx:if="{{loadState === 'ready' && !tpShow}}">
-  <cy-btn variant="primary" bindtap="GoAdd">新建</cy-btn>
+<!-- 用户原话"新建按钮放到下面":原在导航栏右上角的文字入口移到底部固定按钮。
+     2026-10-27 业主 M-07:主按钮写明「发布优惠券」,加载中也在位(只在整页失败态让位给重试)。 -->
+<cy-footer-bar wx:if="{{loadState !== 'error' && !tpShow}}">
+  <cy-btn variant="primary" bindtap="GoAdd">发布优惠券</cy-btn>
 </cy-footer-bar>
 
 <cy-sheet show="{{tpShow}}" title="优惠券详情" footer="{{currentCoupon.canStop}}" bind:close="tpClose">

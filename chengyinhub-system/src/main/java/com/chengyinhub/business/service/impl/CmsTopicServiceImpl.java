@@ -198,6 +198,9 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
     @Autowired
     private com.chengyinhub.business.mapper.NpcProfileMapper npcProfileMapper;
 
+    @Autowired
+    private com.chengyinhub.business.service.support.MerchantNpcIdentityDirectory merchantNpcIdentityDirectory;
+
     /** R2-B10 主题数值规则校验器。无状态,直接 new,与 AdvancedGameConfigValidator 的用法一致。 */
     private final com.chengyinhub.business.service.support.JourneyRulesValidator journeyRulesValidator =
             new com.chengyinhub.business.service.support.JourneyRulesValidator();
@@ -3473,8 +3476,11 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
                     NpcProfileService.SCOPE_NODE, node.getId()))) {
                 if (profile.getId() != null) ids.add(profile.getId());
             }
-            if (node.getMerchantMemberId() != null) {
-                for (NpcProfile profile : nullToEmpty(npcProfileMapper.selectEnabledByScope(2, node.getMerchantMemberId()))) {
+            // 门店分身挂 mms_merchant.id,节点上记的是商家 member_id:先换算,不能直接当 scope_id 查(M-28)。
+            Long merchantId = node.getMerchantMemberId() == null ? null
+                    : merchantNpcIdentityDirectory.availableMerchantIdForMember(node.getMerchantMemberId());
+            if (merchantId != null) {
+                for (NpcProfile profile : nullToEmpty(npcProfileMapper.selectEnabledByScope(2, merchantId))) {
                     if (profile.getId() != null) ids.add(profile.getId());
                 }
             }

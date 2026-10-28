@@ -27,6 +27,7 @@ Page({
     navBarHeight: app.globalData.navBarHeight,
     sceneStack: [],
     sceneCurrent: null,
+    merchantView: false,
     txSheet: { show: false },
     txUserInfo: { balance: 0 },
     txBalanceText: '0.00',
@@ -48,6 +49,7 @@ Page({
   onLoad(options) {
     this._hidden = false
     this._unloaded = false
+    if (options && options.theme === 'merchant') this.setData({ merchantView: true })
     if (!options || options.scene !== 'merchant-profit') return
     const params = options.topicId ? { topicId: options.topicId } : {}
     this.openScene({ detail: { id: 'merchant-profit', params } })
@@ -62,6 +64,9 @@ Page({
   openScene(event) {
     const detail = (event && event.detail) || {}
     if (!detail.id) return
+    // G-9:提现记录 / 邀请记录从「更多」菜单打开时,先把菜单收起来(回来时不再叠在页面上)
+    const ae = typeof this.selectComponent === 'function' ? this.selectComponent('#assetEarnings') : null
+    if (ae && ae.data && ae.data.moreShow) ae.closeMore()
     if (detail.id === 'member-withdraw') {
       this.openWithdrawSheet()
       return

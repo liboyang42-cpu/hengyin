@@ -1,3 +1,4 @@
+@import '../../../../style/merchant-light-scope.wxss';
 page { min-height: 100vh; background: var(--cy-bg-page); color: var(--cy-text-title); }
 .er-page.theme-dark {
   /* 页面可能从商家浅色分包返回；旧 alias 在 page 作用域已快照为日间值，必须在深色根重映射。 */
@@ -14,6 +15,7 @@ page { min-height: 100vh; background: var(--cy-bg-page); color: var(--cy-text-ti
   background: var(--cy-color-bg-page);
   color: var(--cy-color-text-primary);
 }
+.er-page.theme-merchant { min-height: 100vh; background: var(--cy-color-bg-page); color: var(--cy-color-text-primary); } /* 商家浅色(10-22:商家永远浅色) */
 .er-shell { box-sizing: border-box; }
 
 /* D19 提现表单：逐行灰底、无横线，说明位于底部 CTA 上方。 */

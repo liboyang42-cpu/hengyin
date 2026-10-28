@@ -699,7 +699,7 @@ test('L06(c):需审核团申请留言必填、60 字内；公开团一键加入'
   assert.match(view, /aria-disabled="true">等待主理人审核<\/view>/)
 })
 
-test('L06(b/d/e):头部两行元信息；商家可加入、活动卡写「商家不能报名」；俱乐部页无邀约浮条', () => {
+test('L06(b/d/e):头部元信息；商家可加入、活动卡给「邀约承接」；俱乐部页无邀约浮条', () => {
   const { page, requests } = loadDetail()
   Object.assign(page.data, { clubId: 36 })
   page.loadDetail()
@@ -712,8 +712,9 @@ test('L06(b/d/e):头部两行元信息；商家可加入、活动卡写「商家
   // 2026-10-22 owner:加入按钮只在「概览」出现,往下滑收起(join-float--hidden)
   assert.match(view, /<block wx:if="\{\{detailLoaded && activeTab === 'overview' && !club\.isJoined && !club\.isOwner[^"]*\}\}">\s*<view class="join-float-space"><\/view>\s*<view class="join-float \{\{joinHidden && !joinFx \? 'join-float--hidden' : ''\}\}">/, '商家不再被挡在加入按钮外')
   assert.doesNotMatch(view, /class="profile-cta"/, '头部不再放加入按钮')
-  assert.match(view, /wx:if="\{\{merchantNoSignup\}\}" class="ev-no-signup">商家不能报名</)
-  assert.match(view, /upcomingTopics[^\n]*\n[^\n]*merchantNoSignup: isMerchantViewer/)
+  // 2026-10-27 M-24·M-34 owner:商家在活动卡上看到的是「邀约承接」(取代「商家不能报名」灰字),仍不给报名。
+  assert.match(view, /wx:if="\{\{merchantUndertake\}\}" class="ev-undertake" catchtap="onMerchantUndertake"[^>]*>邀约承接</)
+  assert.match(view, /upcomingTopics[^\n]*\n[^\n]*merchantUndertake: isMerchantViewer/)
   assert.doesNotMatch(view, /club-coop-floating|cy-coop-invite-sheet|goClubCoop/)
   assert.doesNotMatch(read('pages/club/detail/index.json'), /coop-invite-sheet/)
 })

@@ -188,7 +188,7 @@ test('一路空一路有票:合起来是 ready,有票的那些照常显示', () 
   topicRequest.success({ code: 200, data: { rows: [], total: 0 } })
   activityRequest.success({
     code: 200,
-    data: { rows: [{ id: 22, cmsActivity: { name: '周末场次' } }], total: 1 },
+    data: { rows: [{ id: 22, registrationStatus: 2, cmsActivity: { name: '周末场次' } }], total: 1 },
   })
 
   assert.equal(page._topic.state, 'empty')
@@ -225,7 +225,7 @@ test('一路失败另一路有票仍显示有效票，不被整页错误遮住',
   const { page, sandbox } = loadPage()
   page.onLoad({})
   sandbox.requests.find(request => request.data.owner_type === 1).fail({ errMsg: '请求超时' })
-  sandbox.requests.find(request => request.data.owner_type === 2).success({ code: 200, data: { rows: [{ id: 22, cmsActivity: { name: '正常票' } }], total: 1 } })
+  sandbox.requests.find(request => request.data.owner_type === 2).success({ code: 200, data: { rows: [{ id: 22, registrationStatus: 2, cmsActivity: { name: '正常票' } }], total: 1 } })
   assert.equal(page.data.walletState, 'ready')
   assert.deepEqual(Array.from(page.data.ticketList, item => item.id), [22])
 })
@@ -270,39 +270,27 @@ test('待支付和已取消票不得进 play，报名成功才带齐 id 开玩',
   assert.match(sandbox.navigations[2].url, /^\/pages\/play\/index\?topicId=504&/)
 })
 
-// 1-31 T31:registrationStatus=4(已过期)以前落进 wxs 默认分支,显示「待支付 / 去支付」。
-test('T31:已过期票标签为「已过期」,不给支付按钮', () => {
-  const m = wxml().match(/<wxs module="tk">([\s\S]*?)<\/wxs>/)
-  assert.ok(m, 'tk wxs 模块必须存在')
-  const mod = { exports: {} }
-  new Function('module', m[1])(mod)
-  const tk = mod.exports
-  const expired = { registrationStatus: 4 }
-  assert.equal(tk.label(expired), '已过期')
-  assert.equal(tk.cta(expired), '')
-  assert.notEqual(tk.state(expired), 'pending')
-  assert.equal(tk.label({ registrationStatus: 1 }), '待支付', '待支付不受影响')
-  assert.equal(tk.cta({ registrationStatus: 1 }), '去支付')
-})
-
-test('票夹保持原有状态文案与指定报名单入口', () => {
+test('票夹只放能用的票:待支付 / 已核验 / 已取消 / 已过期不进票夹(2026-10-28 业主)', () => {
   const { page, sandbox } = loadPage()
   const order = { id: 990058, ownerId: 930007, registrationStatus: 2, paymentStatus: 2,
     verificationStatus: 0, firstSuccessfulScanAt: '2026-10-01 18:16:47' }
   page._topic = { list: [], state: 'empty' }
   page._activity = { list: [order, { ...order, id: 990059, firstSuccessfulScanAt: null },
-    { ...order, id: 990060, firstSuccessfulScanAt: 'bad-date' },
-    { ...order, id: 990061, registrationStatus: 3 }], state: 'ready' }
+    { ...order, id: 990060, registrationStatus: 1 }, { ...order, id: 990061, registrationStatus: 3 },
+    { ...order, id: 990062, registrationStatus: 4 }, { ...order, id: 990063, verificationStatus: 1 },
+    { ...order, id: 990064, cmsActivity: { endTime: '2000-01-01 00:00:00' } }], state: 'ready' }
   page.rebuildTicketList()
-  const mod = { exports: {} }
-  new Function('module', wxml().match(/<wxs module="tk">([\s\S]*?)<\/wxs>/)[1])(mod)
-  assert.equal(mod.exports.label(page.data.ticketList[0]), '待使用')
-  assert.equal(mod.exports.cta(page.data.ticketList[0]), '开始游戏')
-  assert.equal(mod.exports.label(page.data.ticketList[1]), '待使用')
-  // v13 底部「可用 / 已用 / 已过期」:已取消的单归在「已过期」那一栏
-  assert.equal(JSON.stringify(page.data.tabCount), '[3,0,1]')
-  const cancelled = page._activity.list[3]
-  assert.equal(mod.exports.label(cancelled), '已取消')
+  assert.deepEqual(Array.from(page.data.ticketList, item => item.id), [990058, 990059])
+  assert.equal(page.data.walletState, 'ready')
+  assert.doesNotMatch(page.data.ticketList[0].wSub, /待使用|待支付|已核验|已过期|已取消/)
   page.goTicket({ currentTarget: { dataset: { index: 0 } } })
   assert.match(sandbox.navigations[0].url, /activityId=930007&registrationId=990058&entry=ticket/)
+})
+
+test('票夹只剩过期 / 已用的票时整页是空态', () => {
+  const { page } = loadPage()
+  page._topic = { list: [{ id: 1, registrationStatus: 4 }], state: 'ready' }
+  page._activity = { list: [{ id: 2, registrationStatus: 2, verificationStatus: 1 }], state: 'ready' }
+  page.rebuildTicketList()
+  assert.equal(page.data.walletState, 'empty')
 })

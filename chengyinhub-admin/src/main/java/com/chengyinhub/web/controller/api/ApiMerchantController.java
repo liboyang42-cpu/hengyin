@@ -832,7 +832,8 @@ public class ApiMerchantController extends BaseController {
         String greeting = body.getGreeting() == null ? null : body.getGreeting().trim();
         // persona 是门店分身的「人设」系统提示词,只有玩家点「和 TA 聊聊」时消费。
         // null = 本次不改;显式空串 = 清空(清空后玩家侧回到「分身还没上线」)。
-        String persona = body.getPersona() == null ? null : body.getPersona().trim();
+        // M-28:性格改为预设(gentle/cute/savage,也认中文标签);旧版自由填写的人设原样保留为 legacy。
+        String persona = com.chengyinhub.business.support.NpcPersonality.normalize(body.getPersona());
         String knowledge = body.getKnowledge() == null ? null : body.getKnowledge().trim();
         if (name == null) return error("请填写形象名字");
         if (name.length() > 32) return error("名字最多 32 个字");
@@ -864,6 +865,12 @@ public class ApiMerchantController extends BaseController {
         save.setGreeting(greeting);
         if (persona != null) save.setPersona(persona);
         if (knowledge != null) save.setKnowledge(knowledge);
+        // M-28 先发后审:文本已同步过内容安全,保存即对玩家生效(玩家读闸只放 audit_status=1);
+        // 上传的形象图随后异步送检,违规由回调打回。唯一例外:被驳回过、且形象图没换的上传图,
+        // 不能靠重新保存绕过机审结论,仍回到待审。
+        boolean keepsRejectedPhoto = mine != null && Integer.valueOf(2).equals(mine.getAuditStatus())
+                && !preset && avatar.equals(mine.getAvatar());
+        save.setAuditStatus(keepsRejectedPhoto ? 0 : 1);
         if (mine == null) {
             save.setScopeType(NPC_SCOPE_MERCHANT);
             save.setScopeId(merchantId);
@@ -871,7 +878,6 @@ public class ApiMerchantController extends BaseController {
             if (save.getPersona() == null) save.setPersona("");
             save.setSort(0);
             save.setEnabled(1);
-            save.setAuditStatus(0);
             if (npcProfileMapper.insertMerchantNpc(save) != 1) return error("形象未保存，请重试");
         } else {
             // 防 IDOR:只按 id 更新等于谁都能改别人的形象。id 从库里查出来,

@@ -60,7 +60,7 @@ page { display: flex; flex-direction: column; min-height: 100vh; }
    (subpackageMember/components/cy/profile 的 .pc-ord-*:400rpx 高、40rpx 圆角、深灰渐变、白字、黑色胶囊),改那边要同步这里。
    卡面内是照片语境,字色固定白、按钮固定黑,不随主题翻转。 */
 .tpl-big {
-  position: relative; display: block; width: 100%; height: 400rpx; box-sizing: border-box; /* ds-ok: 同订单卡高度 */
+  position: relative; display: block; width: 100%; height: 440rpx; box-sizing: border-box; /* ds-ok: 同订单卡高度 */
   overflow: hidden; border-radius: 40rpx; /* ds-ok: 同订单卡大圆角 */
   background: linear-gradient(160deg, #5B6670 0%, #2A2F35 100%); /* ds-ok: 同订单卡无封面时的照片感底色 */
 }

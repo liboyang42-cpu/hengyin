@@ -231,3 +231,26 @@
 .cy-pressed { opacity: .88; }
 
 .ss--has-footer .ss__body { padding-bottom: var(--cy-space-3); }
+
+/* G-1 page 档(2026-10-27 业主:订单详情 / 优惠券 / 邀请好友 / 漫游历史「不能是弹窗」):
+   满屏页面底、无圆角无描边无玻璃,不从底部升起而是淡入 —— 面板不能带 transform,
+   否则里面 position:fixed 的 cy-nav-bar 会相对面板而不是屏幕定位。 */
+.ss--page { align-items: stretch; }
+.ss--page .ss__stack { height: 100%; }
+.ss--page .ss__panel {
+  height: 100%;
+  max-height: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  background: var(--cy-color-bg-page);
+  transform: none;
+  opacity: 0;
+  transition: opacity var(--cy-motion-sheet-out) var(--cy-ease-standard);
+}
+.ss--page.ss--in .ss__panel { transform: none; opacity: 1; transition-duration: var(--cy-motion-sheet-in); }
+.ss--page { --cy-motion-sheet-in: var(--cy-motion-sheet-full-in); --cy-motion-sheet-out: var(--cy-motion-sheet-full-out); }
+.ss--page .ss__body { padding-top: var(--cy-space-2); }
+.ss--page.ss--reduced-motion .ss__panel { transition: none; }

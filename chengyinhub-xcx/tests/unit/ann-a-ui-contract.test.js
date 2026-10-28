@@ -102,8 +102,10 @@ test('A05/A06：广场顶部为横向 banner，发布器展示本人头像与昵
   // 2026-09-02 B2(Figma 379:2437):内容列首行由固定文案「发布帖文」改为本人昵称,
   // 断言随之从字面量改成昵称绑定 + 兜底「城瘾玩家」。
   assert.match(wxml, /class="compose-row"[\s\S]*?avatar \|\| '\/images\/d_profile\.png'[\s\S]*?class="compose-col"[\s\S]*?>\{\{nickname \|\| '城瘾玩家'\}\}</)
-  assert.match(wxml, /class="compose-col"[\s\S]*?class="compose-input/,
-    '正文必须落在内容列里，否则又会通栏、与头像右边缘不齐')
+  // 2026-10-27 P-20 owner:行内 textarea 撤掉,这一行只剩发帖入口(点开全屏发帖弹窗);
+  // 占位文案仍落在内容列里,与头像右边缘对齐。
+  assert.match(wxml, /class="compose-col"[\s\S]*?class="compose-ph"/,
+    '占位必须落在内容列里，否则又会通栏、与头像右边缘不齐')
   assert.match(postCard, /<cy-feed-play-card\b[^>]*bind:detail="emitPlayDetail"[^>]*bind:play="emitPlay"/,
     '发布帖文模板须接入列表/详情共用的可玩卡组件')
   assert.match(wxml, /bind:playdetail="goPlayTopicDetail"[\s\S]{0,80}bind:play="goPlay"/,
@@ -202,7 +204,8 @@ test('A32/A59：玩家头像为完整紫环，操作区只留大票夹，关于�
   assert.match(wxss, /\.pc-avatar\s*\{[^}]*box-sizing:\s*border-box;[^}]*display:\s*block/)
   assert.match(wxml, /class="pc-primary pc-ticket"[^>]*wx:if="\{\{isSelf && !isMerchantView\}\}"/)
   // 2026-09-18 UI-12:公开视角也要「···」更多,条件从 isSelf && isMerchantView 放宽为本人商家/公开两态。
-  assert.match(wxml, /class="pc-more"[^>]*wx:if="\{\{!isSelf \|\| isMerchantView\}\}"/)
+  // 2026-10-27 owner 真机走查 M-16:本人商家视角「核销」右边的「···」删除(功能别处都有),只留公开视角的更多
+  assert.match(wxml, /class="pc-more"[^>]*wx:if="\{\{!isSelf && !viewingOwn\}\}"/)
   assert.doesNotMatch(wxml, /class="pc-xbox-bar"/)
   // 2026-09-23 CU-M-28:这块显示的是会员本人 introduction,编辑进个人资料(goEditIntro),商家视角也不再跳品牌中心
   assert.match(wxml, /class="pc-about-edit"[^>]*wx:if="\{\{isSelf\}\}"[^>]*bindtap="goEditIntro"/)

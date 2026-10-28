@@ -24,7 +24,6 @@ Page({
     // 协议(全屏)/ 隐私与定位(半屏)两个弹窗的开关
     showAgreementSheet: false,
     showPrivacySheet: false,
-    showMarketingConsent: false,
     showPostGovernance: false,
     sceneStack: [],
     sceneCurrent: null,
@@ -186,12 +185,11 @@ Page({
     this.setData({ showPrivacySheet: false });
   },
 
+  // P-55(2026-10-27 业主 p96):营销消息与优惠券「不能是弹窗,要点进去」⇒ 独立页面
   openMarketingConsent() {
-    this.setData({ showMarketingConsent: true });
-  },
-
-  closeMarketingConsent() {
-    this.setData({ showMarketingConsent: false });
+    if (this._navigating) return;
+    this._navigating = true;
+    wx.navigateTo({ url: '/pages/shezhi/marketing/index', complete: () => { this._navigating = false; } });
   },
 
   openPostGovernance() {

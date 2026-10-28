@@ -1,3 +1,5 @@
+@import '../../../../style/merchant-light-scope.wxss';
+
 /* 底色跟 cy-nav-bar 同一枚 token(--cy-comp-nav-bg → --cy-color-bg-page),
    否则顶栏与正文(旧 bg-card 别名比 bg-page 浅一档)在顶栏下缘接出一条色带。 */
 page { background: var(--cy-bg-page); }
@@ -258,3 +260,21 @@ page { background: var(--cy-bg-page); }
   overflow-wrap: anywhere;
 }
 .review-result view + view { margin-top: var(--cy-space-3); }
+
+/* M-01 商家系统通知 → 2026-10-28 业主「参考 iMessage / Gmail,间距再大一点」:
+ * 一条通知一行的列表(左图标 · 标题/时间 · 一行正文),行与行之间一条发丝线,不再是一张张卡。
+ * 文字通知走 .notice;卡片通知仍是同一张 .card(动作按钮只此一份),加 .card--notice 换成同一行样式。 */
+.notice { display: flex; align-items: flex-start; gap: var(--cy-space-4); margin: 0; padding: var(--cy-space-5) var(--cy-page-x); border-bottom: 1rpx solid var(--cy-color-border-subtle); background: transparent; }
+.notice__icon { flex: none; width: 100rpx; height: 100rpx; border-radius: 50%; background: var(--cy-color-status-info-soft); color: var(--cy-info); display: flex; align-items: center; justify-content: center; }
+.notice__body { flex: 1; min-width: 0; padding-top: var(--cy-space-1); }
+.notice__top { display: flex; align-items: baseline; gap: var(--cy-space-2); }
+.notice__title { flex: 1; min-width: 0; font-size: var(--cy-type-card-title); font-weight: 600; color: var(--cy-text-title); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.notice__time { flex: none; font-size: var(--cy-font-caption); color: var(--cy-text-secondary); }
+.notice__text { display: block; margin-top: var(--cy-space-2); font-size: var(--cy-font-body); line-height: var(--cy-leading-normal); color: var(--cy-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.notice__img { margin-top: var(--cy-space-2); }
+.card.card--notice { max-width: none; margin: 0; --cy-comp-card-radius: 0; --cy-comp-card-bg: transparent; border-bottom: 1rpx solid var(--cy-color-border-subtle); }
+.card--notice .card-hd { align-items: flex-start; gap: var(--cy-space-4); padding: var(--cy-space-5) var(--cy-page-x); }
+.card--notice .card-icon { width: 100rpx; height: 100rpx; border-radius: 50%; }
+.card--notice .card-tt { flex: 1; min-width: 0; padding-top: var(--cy-space-1); }
+.card--notice .card-title { font-size: var(--cy-type-card-title); font-weight: 600; }
+.card-time { flex: none; margin-left: var(--cy-space-2); font-size: var(--cy-font-caption); color: var(--cy-text-secondary); }

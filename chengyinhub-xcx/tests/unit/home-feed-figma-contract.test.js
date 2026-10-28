@@ -59,23 +59,19 @@ test('编辑精选紧跟 banner，标题明确运营来源', () => {
   assert.doesNotMatch(wxml, />为你专属推荐主题<\/text>/);
 });
 
-test('feed 卡使用全局白色设计 token，单图与四图尺寸对应 Figma 两个节点', () => {
+// 2026-10-28 p104/p70 业主:推荐卡改成整张封面卡(取代 Figma 单图 / 四宫格两个节点),左上类型、左下标签仍消费独立字段。
+test('feed 卡是整张封面卡，渐暗压字，高度与玩法卡一致', () => {
   const tokens = read('style/tokens.wxss');
   const wxss = read('pages/index/index.wxss');
   assert.match(tokens, /--cy-color-home-feed-surface:\s*#F0F0EE/);
   assert.doesNotMatch(wxss, /--cy-home-/);
-  assert.match(wxss, /\.v2-fcard\s*\{[^}]*background:\s*var\(--cy-color-home-feed-surface\)/s);
-  assert.match(wxss, /\.v2-fgrid\s*\{[^}]*width:\s*316rpx;[^}]*height:\s*300rpx/s);
-  assert.match(wxss, /\.v2-fgrid--1\s*\{[^}]*grid-template-columns:\s*1fr;[^}]*grid-template-rows:\s*1fr/s);
-  assert.match(wxss, /\.v2-fgrid--4\s*\{[^}]*grid-template-columns:\s*1fr 1fr;[^}]*grid-template-rows:\s*1fr 1fr/s);
+  assert.match(wxss, /\.v2-fcover\s*\{[^}]*position:\s*absolute/s);
+  assert.match(wxss, /\.v2-fcard::after\s*\{[^}]*linear-gradient/s);
+  assert.doesNotMatch(wxss, /\.v2-fgrid/);
 });
 
-test('四图卡的更多蒙层位于第 2 张，左上类型与左下标签消费独立字段', () => {
+test('封面卡左上类型与左下标签消费独立字段', () => {
   const wxml = read('pages/index/index.wxml');
-  const moreOverlays = wxml.match(/gi === 1 && item\.moreCount/g) || [];
-  const countBadges = wxml.match(/gi === 3 && item\.feedBadgeCount/g) || [];
-  assert.equal(moreOverlays.length, 2, '主题和活动分支都应在第 2 张显示 +N');
-  assert.equal(countBadges.length, 2, '主题和活动分支都应在第 4 张显示橙色徽标');
   assert.equal((wxml.match(/class="v2-feyebrow ep1"[^>]*>\{\{item\.feedTypeLabel\}\}/g) || []).length, 2);
   assert.equal((wxml.match(/wx:for="\{\{item\.feedTags\}\}"/g) || []).length, 2);
   assert.doesNotMatch(wxml, /v2-feyebrow[^>]*>\{\{item\.sysCategoryList\[0\]/);
@@ -98,15 +94,8 @@ test('保留设计fixture的位图资产，运行首页不再注入设计假数�
   assert.match(mock[1], /index-figma\/reco-hero\.jpg/);
 });
 
-test('负控：把单图模式误改回四宫格时契约必须判红', () => {
+test('负控：封面卡退回四宫格时契约必须判红', () => {
   const wxss = read('pages/index/index.wxss');
-  const mutated = wxss.replace(
-    /(\.v2-fgrid--1\s*\{[^}]*grid-template-columns:)\s*1fr;/,
-    '$1 1fr 1fr;',
-  );
-  assert.notEqual(mutated, wxss, '负控锚点失效');
-  assert.throws(
-    () => assert.match(mutated, /\.v2-fgrid--1\s*\{[^}]*grid-template-columns:\s*1fr;/s),
-    assert.AssertionError,
-  );
+  const mutated = wxss + '\n.v2-fgrid { width: 316rpx; }\n';
+  assert.throws(() => assert.doesNotMatch(mutated, /\.v2-fgrid/), assert.AssertionError);
 });
