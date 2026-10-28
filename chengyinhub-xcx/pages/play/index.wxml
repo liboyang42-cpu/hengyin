@@ -423,7 +423,7 @@
 
 <!-- 开局「开机」:黑场 → 白线横扫 → 暖光 → 淡出,压在第一道开场门上面,只放一次 -->
 <view class="st-boot st-boot--{{bootStage}}" wx:if="{{bootStage}}" aria-hidden="true"><view class="st-boot__warm"></view><view class="st-boot__line"></view></view>
-<cy-chapter-gate wx:if="{{chapterFull && chapterGate.show}}" number="{{chapterGate.number}}" total="{{chapterGate.total}}" title="{{chapterGate.title}}" subtitle="{{chapterGate.subtitle}}" reduced-motion="{{reducedMotion}}" bind:continue="continueChapterGate" />
+<cy-chapter-flip wx:if="{{chapterFull && chapterGate.show}}" mode="gate" faces="{{chapterGate.faces}}" end-info="{{chapterGate.endInfo}}" info="{{chapterGate.info}}" reduced-motion="{{reducedMotion}}" bind:continue="continueChapterGate" />
 
 <!-- ===================== 底部运行栈(Figma 3957:12602 未开始 / 3962:14212 进行中 / 3962:14341 已暂停) =====================
      一张读数卡 + 一条操作栏,三个状态共用同一套骨架,只换卡内内容与按钮组:
@@ -1323,6 +1323,7 @@
 <cy-medal-screen show="{{showFinish && medalScreen.show}}" items="{{medalScreen.items}}" title="{{medalScreen.title}}" sub="{{medalScreen.sub}}"
   stats="{{medalScreen.stats}}" record="{{medalScreen.record}}" back-top="{{chrome.contentTop}}" reduced-motion="{{reducedMotion}}"
   bind:close="closeFinish" bind:primary="saveFinishCard" bind:secondary="onMedalRecords" />
+<cy-chapter-flip wx:if="{{showFinish && finale.show}}" mode="finale" faces="{{finale.faces}}" info="{{finale.info}}" reduced-motion="{{reducedMotion}}" bind:continue="closeFinale" bind:save="saveFinale" />
 
 <!-- 终章结局信(mode2,弧形叙事布局) -->
 <view class="ending" wx:if="{{ending.show}}">

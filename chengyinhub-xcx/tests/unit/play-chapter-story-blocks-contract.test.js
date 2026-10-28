@@ -826,7 +826,7 @@ test('章节剧情复用探店日故事流并连接章节开场', () => {
   assert.match(wxss, /\.chfull\s*\{[^}]*background:#000/,
     '采用现有探店日故事流底色');
   assert.match(storyWxml, /chfull__para st-line/, '正文必须共用探店日显形样式');
-  assert.match(storyWxml, /cy-chapter-gate/, '每章开场使用原型数字过场');
+  assert.match(storyWxml, /cy-chapter-flip[^>]*mode="gate"/, '每章开场使用 2026-10-28 定稿的章节翻转过场');
   assert.match(tokens, /--cy-color-play-story-page:\s*#FFFFFF;/, '浅色 token 留着给 roadmap / session')
   assert.doesNotMatch(storyWxml, /passport|invite code|护照|邀请码/i,
     '只复用 Infinity 结构，不把 Atlys 业务对象带入城瘾')
@@ -1583,4 +1583,34 @@ test('rebuild 出来的下一站带坐标与地址，「导航过去」真的交
 test('下一站是没有坐标的故事玩法时不摆「导航过去」', () => {
   const wxml = read('pages/play/index.wxml')
   assert.match(wxml, /class="story-map__go" wx:if="\{\{nextNode\.lat && nextNode\.lng\}\}" bindtap="openNextStopNav"/)
+})
+
+test('章节翻转:进第二章时带上第一章完成页与三面;通关只在整个主题走完时放', () => {
+  const page = makePage({ id: 52, name: '延伸 · 四个小任务', description: '舟山路一带。\n第二行' }, [
+    { nodeId: 1, chapterId: 51, done: true }, { nodeId: 2, chapterId: 52, done: false },
+  ])
+  page.data.chapterCards = [{ id: 51, title: '提篮桥' }, { id: 52, title: '延伸 · 四个小任务' }]
+  page.showChapterGate()
+  const gate = page.data.chapterGate
+  assert.equal(gate.show, true)
+  assert.equal(gate.number, 2)
+  assert.equal(gate.endInfo.number, '01')
+  assert.equal(gate.info.desc, '舟山路一带。', '说明只取第一句')
+  assert.equal(gate.faces.length, 3)
+
+  let saved = 0
+  page.saveFinishCard = () => { saved++ }
+  page._sessionClock = { elapsedSeconds: () => 4044 }
+  Object.assign(page.data, { allDone: false, topicName: '海上方舟', doneCount: 2, finishScore: 0 })
+  page._openFinale(false)
+  assert.equal(page.data.finale.show, false, '没走完不放通关过场')
+  page.data.allDone = true
+  page._openFinale(true)
+  assert.equal(page.data.finale.show, false, '探店日不放')
+  page._openFinale(false)
+  assert.equal(page.data.finale.show, true)
+  assert.equal(page.data.finale.info.title, '海上方舟')
+  page.saveFinale()
+  assert.equal(page.data.finale.show, false)
+  assert.equal(saved, 1)
 })

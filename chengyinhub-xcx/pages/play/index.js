@@ -51,7 +51,7 @@ const { resolveOpenState } = require('./utils/play-open-state.js');
 const { pushScene, popScene, currentScene, exitDecision } = require('../../utils/scene-stack.js');
 const finishRouteRecommendation = require('./finish-route-recommendation.js');
 const { buildPlayRecap } = require('./recap.js'); const { buildFinishMedals } = require('./utils/finish-medals.js'); // 2026-10-22 完成页勋章堆
-const { summarizePuzzleScores } = require('./utils/play-puzzle-summary.js');
+const { summarizePuzzleScores } = require('./utils/play-puzzle-summary.js'); const chapterFlip = require('./utils/chapter-flip-data.js'); // 2026-10-28 章节翻转过场
 const { normalizeAtmosphere, atmosphereClass, PRESETS: CHAPTER_ATMOSPHERES } = require('../../utils/chapter-atmosphere.js');
 const CHAPTER_ATMOSPHERE_VALUES = CHAPTER_ATMOSPHERES.map((item) => item.value);
 const {
@@ -396,7 +396,7 @@ Page({
     oddFlick: -1,
     storyChat: false,    // 终章反转:读到反转块后整章翻成对话框(正文 = 「我」发出去的消息)        // 越往后越不正常:此刻正闪的那一段(chapterParas 的 i)
     soundOn: true,       // 故事流环境音 / 音效(2026-09-23);本机记住,右上角菜单开关
-    chapterGate: { show: false, number: 1, total: 1, title: '', subtitle: '' },
+    chapterGate: { show: false, number: 1, total: 1, title: '', subtitle: '', faces: [], endInfo: null, info: {} }, finale: { show: false, faces: [], info: {} },
     // 导航态顶部条的第二行。⚠️ 全部是「预计」:没有导航 SDK,只能按直线距离 + 步行速度估。
     navMeta: { km: '0.0', dur: '—', eta: '—' },
     chapter: { idxLabel: '第一章', name: '', description: '', cover: '', mileage: '', timeText: '', atmospherePreset: 'DEFAULT', atmosphereClass: 'atmosphere--default' },
@@ -3819,14 +3819,14 @@ Page({
     this._pendingChapterGateKey = key;
     const sound = this._storySound();
     if (sound) sound.sfx('boot');
-    this.setData({ chapterGate: { show: true, number: chapter.opening ? 0 : (index < 0 ? 1 : index + 1),
-      // 眉标已写「序章 / 第 N 章 / 共 M 章」,副标题再放序数标签就是同一句印两遍(2026-09-22 走查)。
-      total: Math.max(cards.length, 1), title: chapter.name || '', subtitle: '' } });
+    const flip = chapterFlip.buildGateFlip({ cards, chapterId: chapter.id, nodes: this.data.nodes, topicCover: this.data.topicCover, topicName: this.data.topicName, desc: introLine(chapter.description) }); if (chapter.opening) Object.assign(flip, { endInfo: null, info: { kicker: chapter.name === '序章' ? '' : '序章', title: chapter.name || '', desc: introLine(chapter.description), stats: [] } });
+    this.setData({ chapterGate: Object.assign({ show: true, number: chapter.opening ? 0 : (index < 0 ? 1 : index + 1), // 眉标已写「序章 / 第 N 章 / 共 M 章」,副标题再放序数标签就是同一句印两遍(2026-09-22 走查)。
+      total: Math.max(cards.length, 1), title: chapter.name || '', subtitle: '' }, flip) });
     // 2026-09-24 用户:章节门每章都要点一次太打断 —— 停 2.8 秒自己进正文,点一下仍可提前
     clearTimeout(this._gateTimer);
     this._gateTimer = setTimeout(() => {
       if (this.data.chapterGate.show && this._pendingChapterGateKey === key) this.continueChapterGate();
-    }, boot ? 4600 : 2800);
+    }, (boot ? 1800 : 0) + (this.data.chapterGate.endInfo ? 7800 : 4200)); // 过场自己会在播完时发 continue;这里只是兜底
   },
   /** 开局「开机」:黑场里一条白线横向展开再收细,暖光亮起后整层淡出,露出第一道开场门。 */
   _playBoot() {
@@ -7439,7 +7439,7 @@ Page({
       if (!this._isFinishViewCurrent(finishView) || !this.data.showFinish) return;
       this._triggerCelebration(this.data.mode === 2 ? 'free-finish' : 'classic-finish');
       this.paintRouteThumb();   // finish-map 盒内=路线缩略图(全卡仅保存时生成,避免和 HTML 数字行重复)
-      this.buildReview(); this._openMedalScreen(); // B:轨迹回顾层(渐进描线 + 成就气泡 + 用时/距离);v13 整个主题走完时盖上通关勋章页
+      this.buildReview(); this._openMedalScreen(); this._openFinale(isShopDay); // B:轨迹回顾层(渐进描线 + 成就气泡 + 用时/距离);v13 整个主题走完时盖上通关勋章页
     });
     this.loadMilestone(); this.loadStageEnd(); // BL-186 本章结算与里程碑并列读,不挡完成页
     this.loadFinishRouteRecommendation();
@@ -8167,4 +8167,18 @@ Page({
     this.setData({ toolsOut: true });
     setTimeout(() => { if (this.data.toolsOut) this.setData({ sessionToolsOpen: false, toolsOut: false }); }, 140);
   },
+
+  /** 2026-10-28 通关过场:整个主题走完时先放「三棱锥炸开 → 银色城瘾标志」,播完再露出通关勋章页。探店日与试玩不放。 */
+  _openFinale(isShopDay) {
+    if (!this.data.allDone || isShopDay || this.data.isPreview || this.data.isMock) return;
+    const sec = this._sessionClock ? this._sessionClock.elapsedSeconds() : 0;
+    const flip = chapterFlip.buildFinale({
+      cards: this.data.chapterCards, nodes: this.data.nodes, topicCover: this.data.topicCover, topicName: this.data.topicName,
+      doneCount: this.data.doneCount, elapsed: sec > 0 ? formatElapsed(sec) : '', score: this.data.finishScore,
+      puzzle: { score: this.data.finishPuzzleScore, count: this.data.finishPuzzleCount },
+    });
+    this.setData({ finale: Object.assign({ show: true }, flip) });
+  },
+  closeFinale() { this.setData({ 'finale.show': false }); },
+  saveFinale() { this.setData({ 'finale.show': false }, () => this.saveFinishCard()); },
 });
