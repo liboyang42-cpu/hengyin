@@ -78,7 +78,8 @@ const LAYOUT_ANIMATION_CEILING = 11 // 2026-10-22 v13 票夹换成卡堆,旧 swi
 // 2026-10-22 147 → 148:owner「简单必要的动效」—— 帖文卡点亮时心形弹一下(post-card 是隔离样式组件,
 //   全站关键帧进不来,只能本地一条 pc-like-pop)。只在「未赞 → 赞」那一下播,进页已赞的不播。
 // 2026-10-23 148 → 146:起名页 templateadd 整页删除带走 1 条(#565);弹层动效统一,cy-scene-sheet 的 ss-up 换成 transition(_in 开关)、顺带补上退场,再减 1。
-const KEYFRAMES_CEILING = 146
+// 2026-10-28 146 → 145:模板页改为分包货架(业主定稿原型 v21),头牌扫光 tpl-glow-spin 随旧列表退役
+const KEYFRAMES_CEILING = 145
 
 /* 逐条豁免。**不是预算额度** —— 想加一组就得在这里写清楚为什么它不属于本门禁要防的场景,
    由 review 逐条看,而不是把上限往上抬一格了事。抬上限会让棘轮退化成台账:

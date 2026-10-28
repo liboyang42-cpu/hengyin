@@ -4,7 +4,7 @@ const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const os = require('node:os')
 const path = require('node:path')
-const { targetsForHandler } = require('../../scripts/uiaudit/build-action-ledger')
+const { targetsForHandler, isWriteApi } = require('../../scripts/uiaudit/build-action-ledger')
 const ROOT = path.resolve(__dirname, '../..')
 const targets = (file, handler) => targetsForHandler(path.join(ROOT, file), handler)
 const writes = result => result.apiContracts.filter(api => api.method !== 'GET').map(api => api.url).sort()
@@ -149,7 +149,9 @@ test('clear contract matches actual Page success, business refusal, network fail
     ['success', { code: 200 }, true, true, undefined],
     ['error', { code: 500 }, true, false, 1],
     ['timeout', 'fail', true, false, 1],
-    ['clear-local-failed', { code: 200 }, false, false, undefined],
+    // W8 起清空前先落「待作废」标记(prepareShareRevocation):本机清理失败不发 revoke,但标记保留,
+    // 下次分享前先补作废,不会因清理失败把撤销意图一起丢掉。
+    ['clear-local-failed', { code: 200 }, false, false, 1],
   ]) {
     const harness = clearHarness(reply, localOk)
     assert.equal(await harness.run(), result, branch)
@@ -184,4 +186,17 @@ test('actual revoke helper closure and contract reject an additional snapshot wr
       { urlTemplate: '/api/roam/share/snapshot', method: 'POST', kind: 'write' },
     ]), /success/)
   } finally { fs.rmSync(dir, { recursive: true, force: true }) }
+})
+
+ // W8 起抬头保存改走按原请求号幂等的 /api/invoice/titles/save-request(旧 /titles/save 页面不再调用)。
+ test('invoice dispatch keeps each action write and readback without sibling writes', () => {
+  // X5（10-28）：发票拆成 5 页，各页混入 subpackageMember/invoice/base.js 的 read/mutate。
+  for (const [file, handler, expected] of [['invoice-titles', 'loadTitles', []], ['invoice', 'loadRecords', []],
+    ['invoice-title-edit', 'saveTitle', ['/api/invoice/titles/save-request']], ['invoice-apply', 'apply', ['/api/invoice/apply']],
+    ['invoice', 'cancel', ['/api/invoice/cancel']], ['invoice-detail', 'cancel', ['/api/invoice/cancel']],
+    ['invoice-titles', 'remove', ['/api/invoice/titles/delete']]]) {
+    const result = targets('subpackageMember/' + file + '/index.js', handler)
+    assert.deepEqual(result.apis.filter(isWriteApi), expected, file + ' ' + handler)
+    if (handler === 'loadTitles') assert.ok(result.apiContracts.some(api => api.url === '/api/invoice/titles' && api.method === 'POST'))
+  }
 })

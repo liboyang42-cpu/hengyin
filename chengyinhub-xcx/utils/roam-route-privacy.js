@@ -65,14 +65,18 @@ function normalizeSharePrivacy(raw) {
   }
 }
 
-function readSharePrivacy(storage) {
+// 缺省设置与读取失败不同：发布调用者必须能识别后者。
+function readSharePrivacyResult(storage) {
   const api = storage || (typeof wx !== 'undefined' ? wx : null)
-  if (!api || typeof api.getStorageSync !== 'function') return normalizeSharePrivacy(null)
+  if (!api || typeof api.getStorageSync !== 'function') return { ok: false, privacy: normalizeSharePrivacy(null) }
   try {
-    return normalizeSharePrivacy(api.getStorageSync(STORAGE_KEY))
+    return { ok: true, privacy: normalizeSharePrivacy(api.getStorageSync(STORAGE_KEY)) }
   } catch (_) {
-    return normalizeSharePrivacy(null)
+    return { ok: false, privacy: normalizeSharePrivacy(null) }
   }
+}
+function readSharePrivacy(storage) {
+  return readSharePrivacyResult(storage).privacy
 }
 
 /** 返回落盘后的完整设置;写失败时返回合并结果并带 ok:false,调用方要如实告诉用户没存上。 */
@@ -170,6 +174,7 @@ module.exports = {
   normalizeVisibility,
   normalizeSharePrivacy,
   readSharePrivacy,
+  readSharePrivacyResult,
   writeSharePrivacy,
   clipTrackForSharing,
   clipSavedTrackForSharing,

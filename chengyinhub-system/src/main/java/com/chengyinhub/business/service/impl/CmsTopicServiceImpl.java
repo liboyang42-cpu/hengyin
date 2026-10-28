@@ -1862,6 +1862,16 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
     }
 
     @Override
+    public Map<Long, java.util.Date> selectTodoTopicEndDates(java.util.Collection<Long> topicIds) {
+        Map<Long, java.util.Date> dates = new java.util.HashMap<>();
+        if (topicIds == null || topicIds.isEmpty()) return dates;
+        for (CmsTopic topic : cmsTopicMapper.selectTodoTopicEndDates(topicIds)) {
+            dates.put(topic.getId(), topic.getEndDate());
+        }
+        return dates;
+    }
+
+    @Override
     public Integer selectRoamReferralEnabledById(Long id) {
         return cmsTopicMapper.selectRoamReferralEnabledById(id);
     }
@@ -2904,6 +2914,14 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
+    public TopicBundleSubmitResultVO publishDraftWithBinding(Long id, Long expectedOwnerId,
+            Long expectedConfigVersion, String expectedRegistryVersion) {
+        if (expectedOwnerId == null || expectedOwnerId <= 0L) throw new ServiceException("缺少主办身份，请重新登录", 403);
+        return publishDraftInternal(id, expectedOwnerId, true, expectedConfigVersion, expectedRegistryVersion);
+    }
+
+    @Override
     public boolean canResubmitSupplyReview(Long id, Long ownerId) {
         CmsTopic topic = cmsTopicMapper.selectCmsTopicById(id);
         return topic != null && java.util.Objects.equals(ownerId, topic.getMemberId())
@@ -2931,9 +2949,29 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
     }
 
     private TopicBundleSubmitResultVO publishDraftInternal(Long id, Long expectedOwnerId, boolean allowSupplyResubmission) {
+        return publishDraftInternal(id, expectedOwnerId, allowSupplyResubmission, null, null);
+    }
+
+    private TopicBundleSubmitResultVO publishDraftInternal(Long id, Long expectedOwnerId, boolean allowSupplyResubmission,
+            Long expectedConfigVersion, String expectedRegistryVersion) {
         CmsTopic topic = supplyReviewService.lockTopic(id);
         if (expectedOwnerId != null && (topic == null || !expectedOwnerId.equals(topic.getMemberId())))
             throw new ServiceException("主题归属已变化，无权提交", 403);
+        if (topic != null) {
+            long version = topic.getConfigVersion() == null ? 1L : topic.getConfigVersion();
+            if (com.chengyinhub.business.service.support.AuthorAttributeBinding.hasBinding(topic.getJourneyRulesJson())) {
+                com.chengyinhub.business.domain.JourneyRules rules = com.chengyinhub.business.domain.JourneyRules.parse(topic.getJourneyRulesJson());
+                String boundVersion = rules.getAttributeBinding().path("registryVersion").asText();
+                if (expectedConfigVersion == null || expectedConfigVersion != version
+                        || !boundVersion.equals(expectedRegistryVersion)) {
+                    throw com.chengyinhub.business.service.support.AuthorAttributeBinding.conflict(
+                            "ATTRIBUTE_REGISTRY_VERSION_CONFLICT", "发布版本与已确认草稿不一致，请重新读取后确认", 409);
+                }
+            }
+            // 建局按 published_config_version 核对冻结定义，定义须标本次发布将产生的发布版本，而非编辑版本。
+            long publishedVersion = (topic.getPublishedConfigVersion() == null ? 0L : topic.getPublishedConfigVersion()) + 1L;
+            freezeAuthorAttributes(topic, expectedConfigVersion == null ? version : expectedConfigVersion, version, publishedVersion, false);
+        }
         boolean supplyResubmission = allowSupplyResubmission && supplyReviewService.canResubmit(topic);
         if (topic != null) mediaPublicationGuard.requireTopicPublication(id);
         if (cmsTopicMapper.clearDraftIfDraft(id) <= 0 && !supplyResubmission) return null;
@@ -3197,21 +3235,16 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
      * <p>没有任何引用(老主题)时直接返回,连注册表都不查 —— 行为与以前完全一致。
      * 有坏键时把坏键与所在节点一起报出来,不静默放过。
      */
-    private void syncInitialAttributeKeys(CmsTopic topic) {
-        if (StringUtils.isBlank(topic.getJourneyRulesJson())) return;
-        com.chengyinhub.business.domain.JourneyRules rules = com.chengyinhub.business.domain.JourneyRules.parse(topic.getJourneyRulesJson());
-        if (rules.getAttributes().size() == 0) return;
-        if (themeStateKeyService == null) throw new ServiceException("主题属性注册服务不可用");
-        List<ThemeStateKey> keys = new ArrayList<ThemeStateKey>();
-        for (com.fasterxml.jackson.databind.JsonNode attr : rules.getAttributes()) {
-            ThemeStateKey key = new ThemeStateKey();
-            key.setStateKey(attr.path("key").asText());
-            String prefix = key.getStateKey().split("\\.")[0];
-            key.setKeyType("clue".equals(prefix) ? "flag" : prefix);
-            key.setScope("run"); key.setLabel(attr.path("label").asText());
-            key.setInitialValue(attr.path("initial").asInt()); keys.add(key);
-        }
-        themeStateKeyService.register(topic.getId(), keys);
+    private void freezeAuthorAttributes(CmsTopic topic, Long requestVersion, long currentVersion,
+                                        long targetVersion, boolean draft) {
+        String resolved = com.chengyinhub.business.service.support.AuthorAttributeBinding.freeze(
+                themeStateKeyService, topic.getId(), requestVersion, currentVersion, targetVersion,
+                topic.getJourneyRulesJson(), draft);
+        if (java.util.Objects.equals(resolved, topic.getJourneyRulesJson())) return;
+        CmsTopic attributePatch = new CmsTopic(); attributePatch.setId(topic.getId());
+        attributePatch.setJourneyRulesJson(resolved);
+        if (cmsTopicMapper.updateCmsTopic(attributePatch) != 1) throw new IllegalStateException("属性定义保存失败");
+        topic.setJourneyRulesJson(resolved);
     }
 
     /**
@@ -3322,7 +3355,11 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         }
         Set<String> thoughtDoneTags = com.chengyinhub.business.util.StateKeyRefs
                 .declaredThoughtDoneTags(topic.getJourneyRulesJson());
-        autoRegisterOptionTags(topic.getId(), refNodeNames.keySet(), storyKeys, chapterKeys, storyRefs.keySet());
+        // Version-bound authors must confirm registration before publication. A publish-side insert
+        // would advance registryVersion after freeze and invalidate the very binding being submitted.
+        if (!com.chengyinhub.business.service.support.AuthorAttributeBinding.hasBinding(topic.getJourneyRulesJson())) {
+            autoRegisterOptionTags(topic.getId(), refNodeNames.keySet(), storyKeys, chapterKeys, storyRefs.keySet());
+        }
         Set<String> registered = new LinkedHashSet<String>();
         Map<String, String> registeredTypes = new LinkedHashMap<String, String>();
         for (ThemeStateKey row : themeStateKeyService.listByTopic(topic.getId())) {
@@ -4313,7 +4350,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         if (cmsTopicMapper.insertCmsTopic(topic) != 1 || topic.getId() == null || topic.getId() <= 0L) {
             throw new IllegalStateException("主题创建失败，未生成有效主题身份");
         }
-        syncInitialAttributeKeys(topic);
+        freezeAuthorAttributes(topic, dto.getConfigVersion(), 1L, 1L, saveDraft);
         Long topicId = topic.getId();
 
         // 内容槽按已校验的发布身份落：CLUB可承诺自身直付，MEMBER不得替俱乐部或平台承诺。
@@ -4452,6 +4489,12 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             throw new RuntimeException("无权编辑该主题");
         }
         boolean hasOpenBundleReview = false;
+        if (!chapterFlowV2 && (StringUtils.isNotBlank(dto.getJourneyRules()) || StringUtils.isNotBlank(exist.getJourneyRulesJson()))) {
+            exist = cmsTopicMapper.selectCmsTopicByIdForUpdate(topicId);
+            if (exist == null || Integer.valueOf(2).equals(exist.getDelFlag()) || !memberId.equals(exist.getMemberId())) {
+                throw new RuntimeException("主题不存在或无权编辑");
+            }
+        }
         if (chapterFlowV2) {
             supplyReviewService.lockTopic(topicId);
             hasOpenBundleReview = auditTaskService.lockOpenTopicBundleTask(topicId);
@@ -4839,7 +4882,14 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         if (cmsTopicMapper.updateCmsTopic(patch) != 1) {
             throw new IllegalStateException("主题内容保存失败，未重建章节与节点");
         }
-        syncInitialAttributeKeys(patch);
+        if (patch.getJourneyRulesJson() == null) patch.setJourneyRulesJson(exist.getJourneyRulesJson());
+        if (com.chengyinhub.business.service.support.AuthorAttributeBinding.hasBinding(exist.getJourneyRulesJson())
+                && !com.chengyinhub.business.service.support.AuthorAttributeBinding.hasBinding(patch.getJourneyRulesJson())) {
+            throw com.chengyinhub.business.service.support.AuthorAttributeBinding.conflict(
+                    "ATTRIBUTE_DEFINITION_CONFLICT", "旧客户端不能覆盖注册属性引用", 400);
+        }
+        long attributeVersion = exist.getConfigVersion() == null ? 1L : exist.getConfigVersion();
+        freezeAuthorAttributes(patch, dto.getConfigVersion(), attributeVersion, attributeVersion + 1L, draft);
 
         boolean allowBundledDraft = chapterFlowV2
                 && (draft || !isSimplePublishMode(patch.getPublishMode()));

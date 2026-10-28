@@ -4,6 +4,8 @@
 // 纯函数在 utils/map-team.js(卡片五态 / errorCode 分支 / P6 三态)与 utils/roam-hangout*.js(主题点位 canvas),本文件只做接线。
 // ⚠️ 失败只按 errorCode 分支(map-team.resolveTeamError),走 cy-result-sheet 失败半屏,不解析 msg。
 const app = getApp();
+const teamOperation = require('../../utils/roam-team-operation.js');
+const teamRecovery = require('../../utils/roam-team-recovery.js');
 const session = require('../../utils/session/login-reload.js');
 const { MAP_STYLE } = require('../../utils/map-style.js');
 const { getCurrentLocation } = require('../../utils/location/location-manager.js');
@@ -57,7 +59,23 @@ function emptyResult() {
 }
 
 Page({
-  data: {
+  afterTeamCommandTerminal(receipt, command) {
+    this._teamScopeEpoch = (this._teamScopeEpoch || 0) + 1;
+    this.refresh(this.data.center);
+    this.loadMyTeams(false);
+    const cur = this.data.current;
+    if (cur && String(cur.teamId) === command.targetId) {
+      if (cur.viewerStatus === 'LEADER') this.loadApplicants();
+      if (receipt.state === 'REJECTED') this._showFail(T.resolveTeamError(command.action, receipt));
+    }
+  },
+  reloadTeamCommands() { teamRecovery.mount(this, app, wx); },
+  onTeamCommandAction(e) {
+    const ds = e && e.currentTarget && e.currentTarget.dataset || {};
+    teamRecovery.manager(this, app, wx).act(ds.teamId, ds.action);
+  },
+
+  data: { teamCommandRows: [], teamCommandError: '',
     safeBottom: 0,
     hudTop: 90,
     fmSubkey: MAP_STYLE.subkey,
@@ -124,15 +142,27 @@ Page({
 
   /* 买完票回到地图,卡片要从「去买这场的票」变成「申请加入」(P2 底注):回前台重拉一次。 */
   onShow() { this._hidden = false;
+    this.reloadTeamCommands();
+    const writeOwner = teamOperation.identity(app);
+    if (this._teamWriteOwner && this._teamWriteOwner !== writeOwner) {
+      this._teamScopeEpoch = (this._teamScopeEpoch || 0) + 1;
+      this.setData({ busy: false, applicants: [], current: null });
+    }
+    this._teamWriteOwner = writeOwner;
     if (this._nearbyReadOwner && this._nearbyReadOwner !== this._myIdentity()) this._resetNearbyRead(this._myIdentity());
     if (this._shownOnce) this.refresh(this.data.center); this._shownOnce = true; this._navigating = false;
-    if (this._myReadOwner && this._myReadOwner !== this._myIdentity()) this.loadMyTeams(false);
+    if (this._myReadOwner) this.loadMyTeams(false);
     if (this._openMineOnShow) { this._openMineOnShow = false; this.openMyTeams(); }
     const c = this.data.poiCard; if (c && c.official) this._loadSpot(c.id); // 挑战回来:完成状态、评价跟着刷新
   },
-  onHide() { this._hidden = true; },
+  onHide() {
+    this._hidden = true;
+    this._teamScopeEpoch = (this._teamScopeEpoch || 0) + 1;
+    this._myReadSeq = (this._myReadSeq || 0) + 1;
+    teamRecovery.dispose(this);
+  },
 
-  onUnload() { this._unloaded = true; if (this._regionTimer) clearTimeout(this._regionTimer); },
+  onUnload() { this._unloaded = true; teamRecovery.dispose(this); if (this._regionTimer) clearTimeout(this._regionTimer); },
 
   goBack() {
     if (getCurrentPages().length > 1) wx.navigateBack();
@@ -591,28 +621,11 @@ Page({
     else wx.navigateTo({ url: TOPIC_PAGE + '?id=' + encodeURIComponent(cur.topicId), complete: () => { this._navigating = false; } });
   },
 
-  _post(url, body, op, onOk, onFail) {
-    if (this.data.busy) return;
-    const that = this;
-    this.setData({ busy: true });
-    app.sendRequest({
-      url, method: 'POST', hideLoading: true, silentError: true,
-      data: JSON.stringify(body), header: JSON_HEADER,
-      success(res) {
-        that.setData({ busy: false });
-        if (res && res.code == 200) { onOk(res); return; }
-        const r = T.resolveTeamError(op, res);
-        if (onFail) onFail(r);
-        that._showFail(r);
-      },
-      fail(res) { that.setData({ busy: false }); that._showFail(T.resolveTeamError(op, res)); },
-    });
-  },
-
   apply() {
     const cur = this.data.current;
     if (!cur || this.data.busy) return;
     const that = this;
+    const current = teamOperation.capture(this, app, cur.teamId);
     // 申请留言(可选,≤200 字;后端 trimToNull + 内容安全机审):
     // 陌生队伍先自报来意,队长在 P5 审批行按留言决定同不同意。空留言照旧只发 teamId。
     modal.show({
@@ -622,48 +635,39 @@ Page({
       maxlength: 200,
       confirmText: '提交申请',
       success(r) {
-        if (!r.confirm) return;
+        if (!r.confirm || !current() || that._hidden) return;
         const message = String(r.content || '').trim();
-        const body = { teamId: Number(cur.teamId) };
+        const body = { teamId: teamOperation.teamId(cur.teamId) };
         if (message) body.message = message;
-        that._post('/api/team/apply', body, 'apply',
-          // 服务端回执带 applyExpireTime(真实失效时刻 = min(申请+24h, 场次开始)),卡片据此说剩余时间
-          (res) => that._patchCurrent({ viewerStatus: 'PENDING', applyExpireTime: res && res.data && res.data.applyExpireTime }),
-          (err) => that._applyErrorToCard(err));
+        return teamRecovery.manager(that, app, wx).start(body.teamId, 'apply', { message: message || null });
       },
       fail: () => cyToast('操作确认没有打开，请重试'),
     });
   },
 
-  _applyErrorToCard(r) {
-    if (r.dropTeam) { this._dropCurrent(); return; }
-    if (r.patch) this._patchCurrent(r.patch);
-  },
-
-  withdraw(teamId, done) {
-    this._post('/api/team/withdraw', { teamId: Number(teamId) }, 'withdraw',
-      () => {
-        const cur = this.data.current;
-        if (cur && String(cur.teamId) === String(teamId)) this._patchCurrent({ viewerStatus: 'NONE' });
-        if (done) done();
-      },
-      (r) => { if (r.refresh) this.refresh(this.data.center); if (done) done(); });
+  withdraw(teamId) {
+    if (this._hidden || this._unloaded) return;
+    return teamRecovery.manager(this, app, wx).start(teamId, 'withdraw', {});
   },
 
   loadApplicants() {
     const cur = this.data.current;
-    if (!cur) return;
+    if (!cur || !teamOperation.teamId(cur.teamId)) return;
     const that = this;
+    const current = teamOperation.capture(this, app, cur.teamId);
+    const seq = this._applicantSeq = (this._applicantSeq || 0) + 1;
     app.sendRequest({
       url: '/api/team/applications', method: 'POST', hideLoading: true, silentError: true,
-      data: JSON.stringify({ teamId: Number(cur.teamId) }), header: JSON_HEADER,
+      data: JSON.stringify({ teamId: teamOperation.teamId(cur.teamId) }), header: JSON_HEADER,
       success(res) {
+        if (!current() || seq !== that._applicantSeq) return;
         const now = that.data.current;
         if (!now || String(now.teamId) !== String(cur.teamId)) return;   // 已经切到别的队伍,旧列表丢弃
         if (!(res && res.code == 200 && Array.isArray(res.data))) { that._showFail(T.resolveTeamError('applications', res)); return; }
         that.setData({ applicants: T.applicantRows(res.data) });
       },
-      fail(res) { that._showFail(T.resolveTeamError('applications', res)); },
+      fail(res) { if (current() && seq === that._applicantSeq) that._showFail(T.resolveTeamError('applications', res)); },
+      successStatusAbnormal(res) { if (current() && seq === that._applicantSeq) that._showFail(T.resolveTeamError('applications', res)); },
     });
   },
 
@@ -671,19 +675,15 @@ Page({
     const cur = this.data.current;
     const ds = (e && e.currentTarget && e.currentTarget.dataset) || {};
     if (!cur || !ds.id) return;
-    const memberId = Number(ds.id);
+    const memberId = teamOperation.teamId(ds.id);
+    if (!memberId) return;
+    const current = teamOperation.capture(this, app, cur.teamId);
     const approved = ds.ok === true || ds.ok === 'true';
-    const drop = () => this.setData({ applicants: this.data.applicants.filter((a) => Number(a.memberId) !== memberId) });
-    const submit = () => this._post('/api/team/handle', { teamId: Number(cur.teamId), memberId, approved }, 'handle',
-      () => {
-        drop();
-        // 同意会让人数变、满员会让队伍从地图消失 —— 以服务端为准重拉
-        if (approved) this.refresh(this.data.center);
-      },
-      (r) => { if (r.dropApplicant) drop(); if (r.refresh) this.refresh(this.data.center); });
+    const submit = () => current() && !this._hidden && teamRecovery.manager(this, app, wx)
+      .start(cur.teamId, 'handle', { memberId: String(memberId), approved });
     if (approved) { submit(); return; }
     // 拒绝 = 对方再也不能申请这支队伍,走危险确认(team.reject);同意照旧一点即成
-    const who = (this.data.applicants || []).find((a) => Number(a.memberId) === memberId);
+    const who = (this.data.applicants || []).find((a) => String(a.memberId) === String(memberId));
     modal.show({
       dangerKey: 'team.reject',
       dangerParams: { name: (who && who.name) || '这位玩家' },

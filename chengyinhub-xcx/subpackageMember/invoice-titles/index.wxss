@@ -1,0 +1,15 @@
+/* 发票抬头:照抄 pages/address/address.wxss(数值未改);第二行单独成行(原型 10-28:避免挤在名称后面)。 */
+page{ display: flex; flex-direction: column; min-height: 100vh; }
+.davidbox{ overflow: hidden; display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.dz{overflow: hidden; margin: 0 var(--cy-page-x); padding-bottom: var(--cy-comp-footer-h); display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.dz cy-inline-error{ display: block; margin-bottom: var(--cy-space-2); }
+.fill-slot{ display: flex !important; flex-direction: column !important; flex: 1 !important; min-height: 0 !important; }
+.dz_li{ display: flex; align-items: flex-start; gap: var(--cy-space-2); border-bottom: 1rpx solid var(--cy-border-line); margin-top: var(--cy-space-3); padding-bottom: var(--cy-space-2); }
+.dz_li_left{ flex: 1; min-width: 0; padding-top: var(--cy-space-1); }
+.dz_li_left_name{ overflow: hidden; margin-bottom: var(--cy-space-1-5);}
+.dz_li_left_name text{ display: block; font-size: var(--cy-font-body); font-weight: 700; color: var(--cy-text-body);}
+.dz_li_left_name text + text{ margin-top: var(--cy-space-1); font-weight: 400; font-size: var(--cy-font-label); color: var(--cy-color-text-tertiary);}
+.dz_li_right{ width: var(--cy-btn-h); height: var(--cy-btn-h); flex-shrink: 0; display: flex; align-items: center; justify-content: center;}
+.dz_li_right image{ width: 48rpx; height: 48rpx; vertical-align:top;}
+.dz_li_edit{ width: var(--cy-btn-h); height: var(--cy-btn-h); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: var(--cy-font-label); color: var(--cy-text-body); text-decoration: underline;}
+.is-disabled { opacity: .5; }

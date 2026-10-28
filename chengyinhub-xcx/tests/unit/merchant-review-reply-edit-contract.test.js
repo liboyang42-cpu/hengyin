@@ -70,9 +70,10 @@ function loadPage(mutate) {
   vm.runInNewContext(source, {
     Page: (p) => { definition = p; },
     getApp: () => app,
-    wx: { getWindowInfo: () => ({ statusBarHeight: 20 }) },
+    wx: { getWindowInfo: () => ({ statusBarHeight: 20 }), getStorageSync() {}, setStorageSync() {}, removeStorageSync() {} },
     console,
     require(id) {
+      if (id === './reply-recovery') return { createReplyRecovery: options => require('../../pages/merchant/reviews/reply-recovery.js').createReplyRecovery({ ...options, timer: () => 1, cancel() {} }) };
       if (id.includes('/toast')) return Object.assign(() => {}, { success() {} });
       return require(path.resolve(path.dirname(file), id));
     },
@@ -82,6 +83,7 @@ function loadPage(mutate) {
     setData(patch) { Object.assign(this.data, patch); },
     selectComponent: () => fakeConfirm,
   });
+  page.data.mode = 'manage';
   return { page, requests, openedConfirms, fakeConfirm };
 }
 
@@ -144,7 +146,7 @@ test('行为层:修改走 /reply/update 并带 version CAS,创建仍走 /reply',
   const editWrite = env.requests.find((r) => r.url === '/api/merchant/reviews/reply/update');
   assert.ok(editWrite, '改回复必须发 /reply/update');
   const editPayload = JSON.parse(editWrite.data);
-  assert.equal(editPayload.reviewId, 1);
+  assert.equal(editPayload.reviewId, '1');
   assert.equal(editPayload.expectedVersion, 3, '必须带列表拿到的 version 做 CAS');
   assert.ok(editPayload.requestId, '必须带幂等 requestId');
   editWrite.success({ code: 200, data: { reviewId: 1, status: 'VISIBLE', version: 4, replayed: false } });
@@ -159,14 +161,15 @@ test('行为层:修改走 /reply/update 并带 version CAS,创建仍走 /reply',
   assert.ok(createWrite, '第一次回复仍走 /reply');
   assert.equal(JSON.parse(createWrite.data).expectedVersion, 3);
 
-  // 负控:去掉 editing 分支,改回复会错发到创建端点,同一断言必须红
-  assert.throws(() => {
-    const mutated = read(JS_PATH).replace(
-      "requestJson(editing ? '/api/merchant/reviews/reply/update' : '/api/merchant/reviews/reply', payload,",
-      "requestJson('/api/merchant/reviews/reply', payload,");
-    assert.notEqual(mutated, read(JS_PATH), '负控锚点失效');
-    assert.match(mutated, /\/api\/merchant\/reviews\/reply\/update/);
-  }, assert.AssertionError, '去掉编辑分支后必须变红');
+  // 负控运行实际页面：错误动作分派必须被同一端点断言捕获。
+  const broken = loadPage(source => source.replace(
+    "editing ? 'MERCHANT_REVIEW_REPLY_UPDATED' : 'MERCHANT_REVIEW_REPLIED'",
+    "'MERCHANT_REVIEW_REPLIED'"));
+  broken.page.data.items = shapeRows([reviewRow({})]);
+  broken.page.openEditReply({ currentTarget: { dataset: { id: 1 } } });
+  broken.page.submitReply();
+  assert.throws(() => assert.ok(broken.requests.some(r => r.url === '/api/merchant/reviews/reply/update')), assert.AssertionError);
+
 });
 
 test('行为层:删除先弹确认再发 /reply/delete,成功后回读列表', () => {
@@ -197,7 +200,11 @@ test('危险动作登记:删除端点已登记且文案写明不可撤销', () =
   const registry = JSON.parse(read('scripts/danger-action-registry.json'));
   const site = registry.sites.find((s) => s.endpoint === '/api/merchant/reviews/reply/delete');
   assert.ok(site, '删除端点必须登记在 danger-action-registry.json');
-  assert.equal(site.file, JS_PATH);
+  // W8:删除请求移进原请求恢复模块(reply-recovery.js 冻结 requestId 后发),危险确认仍在页面上弹
+  assert.equal(site.file, 'pages/merchant/reviews/reply-recovery.js');
+  assert.match(read(site.file), /url: '\/api\/merchant\/reviews\/reply\/delete'/);
+  assert.equal(site.confirmFile, JS_PATH);
+  assert.match(read(JS_PATH), /dc\.open\('merchant\.review\.reply\.delete'/);
   assert.equal(site.confirmKey, 'merchant.review.reply.delete');
   assert.equal(site.irreversible, true, '旧回复内容无法找回，必须按不可逆登记');
 

@@ -31,7 +31,8 @@ test('BL-41: 页面接线——护照 tab 拉取、失败静默、单场直达�
   const js = read('pages/roam/index.js')
   assert.match(js, /if \(introTab === 'passport'\) \{ this\._loadIntroPassport\(\); this\._loadActiveRoamEvents\(\); \}/)
   assert.match(js, /req\('\/api\/official\/active-for-roam', 'GET', \{\}, \{ silentError: true \}\)/)
-  assert.match(js, /if \(this\._activeRoamToken !== token \|\| !apiOk\(res\)\) return;/)
+  // W8 起晚回包还要核对读作用域(换号/卸载后丢弃),令牌与失败静默两道闸不变
+  assert.match(js, /if \(!current\(\) \|\| this\._unloaded \|\| this\._activeRoamToken !== token \|\| !apiOk\(res\)\) return;/)
   // 2026-10-27 owner P-29:默认不摆「暂未开放」灰卡;有可参与活动时才把官方活动大卡插到最前再套用卡面
   assert.match(js, /this\.setData\(\{ 'passport\.plays': applyEventCard\(plays, card\) \}\);/)
   // 有可参与的漫游官方活动时直达详情;没有可参与活动时不出这张卡(P-29)

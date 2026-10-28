@@ -1,0 +1,37 @@
+<!-- 发票抬头(X5):照抄 pages/address 参与人信息列表 —— 行 = 名称 + 第二行(类型 · 部分税号 · 默认),右侧「编辑」与删除;底栏新增。 -->
+<view class="theme-dark">
+  <cy-toast id="cy-toast" />
+  <cy-loading-mask id="cy-loading" />
+  <cy-modal-host id="cy-modal-host" />
+<view class="davidbox">
+  <cy-nav-bar custom-back bind:back="onBack" />
+  <cy-nav-spacer />
+  <cy-page-title title="发票抬头" safe-top="{{false}}" />
+  <view class="dz">
+    <cy-empty wx:if="{{login}}" fill size="lg" class="fill-slot" kind="no-permission" title="登录后管理发票抬头" cta="微信登录" bind:cta="login" />
+    <cy-empty wx:elif="{{unavailable}}" fill size="lg" class="fill-slot" kind="no-permission" title="发票功能暂未开放" />
+    <block wx:else>
+      <cy-inline-error wx:if="{{titlePending}}" kind="data" title="上次保存结果未确认" sub="确认前请勿修改抬头" action="{{titleRequestId ? '查询结果' : ''}}" bind:action="queryTitleSave" />
+      <cy-skeleton wx:if="{{loading && !loaded}}" type="list" count="3" />
+      <cy-error load-failure wx:elif="{{error && !loaded}}" fill size="lg" class="fill-slot" title="发票抬头加载失败" retry="重试" bind:retry="loadTitles" />
+      <cy-empty wx:elif="{{loaded && !titles.length}}" kind="empty" fill size="lg" class="fill-slot" title="还没有发票抬头" />
+      <view class="dz_li" wx:for="{{titles}}" wx:key="id">
+        <view class="dz_li_left">
+          <view class="dz_li_left_name">
+            <text>{{item.titleName}}</text>
+            <text>{{item.line}}</text>
+          </view>
+        </view>
+        <view class="dz_li_edit {{titlePending ? 'is-disabled' : ''}}" bindtap="edit" data-id="{{item.id}}" aria-role="button" aria-disabled="{{titlePending}}" aria-label="编辑{{item.titleName}}" hover-class="{{titlePending ? 'none' : 'cy-pressed'}}" hover-stay-time="80">编辑</view>
+        <view class="dz_li_right {{deleting === item.id ? 'is-disabled' : ''}}" bindtap="remove" data-id="{{item.id}}" aria-role="button" aria-disabled="{{deleting === item.id}}" aria-label="删除{{item.titleName}}" hover-class="{{deleting === item.id ? 'none' : 'cy-pressed'}}" hover-stay-time="80">
+          <image lazy-load="true" src="/subpackageMember/images/d_close.png" mode="widthFix" />
+        </view>
+      </view>
+    </block>
+  </view>
+</view>
+
+<cy-footer-bar wx:if="{{!login && !unavailable && loaded}}">
+  <cy-btn variant="primary" disabled="{{titlePending || writing}}" bindtap="edit">新增发票抬头</cy-btn>
+</cy-footer-bar>
+</view>

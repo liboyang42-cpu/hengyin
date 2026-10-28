@@ -5,7 +5,9 @@
      头部同其它编辑层：右上「完成」+ ✕；完成写回草稿，✕ 放弃本次改动。 -->
 <cy-sheet show="{{structureEditor.show}}" fixed="full" bind:close="closeStructure" style="--cy-comp-sheet-max-h:calc(100vh - {{chrome.sheetTop + 18}}px);--cy-comp-sheet-role-glass:#f3f4f5">
  <view class="rt-editor">
-  <view class="node-sheet__top"><view class="node-sheet__close" bindtap="closeStructure" aria-role="button" aria-label="关闭{{structureEditor.title}}" hover-class="cy-pressed" hover-stay-time="80">退出</view>
+  <!-- 10-28 原型 A e-quest：到达与引导用 L1 的 cy-sheet-nav「取消 / 到达与引导 / 完成」；其它内容照旧。 -->
+  <cy-sheet-nav wx:if="{{structureEditor.kind === 'quests'}}" title="到达与引导" action="完成" action-disabled="{{structureSaving}}" bind:cancel="closeStructure" bind:action="saveStructure" />
+  <view class="node-sheet__top" wx:else><view class="node-sheet__close" bindtap="closeStructure" aria-role="button" aria-label="关闭{{structureEditor.title}}" hover-class="cy-pressed" hover-stay-time="80">退出</view>
    <view class="node-sheet__done" bindtap="saveStructure" aria-role="button" aria-label="完成{{structureEditor.title}}" hover-class="cy-pressed" hover-stay-time="80">完成</view>
 
   </view>
@@ -51,29 +53,34 @@
    <view class="node-pill rt-add" bindtap="addStructureEnding" aria-role="button" aria-label="添加运行结局" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="24" />添加结局</view>
   </block>
 
+  <!-- 10-28 原型 A e-quest：三组列表，说明都删掉；换个方式的开关就在行里，打开的那一行下面直接是要填的；
+       备用节点点开就地多选。不按节点设分（A5）。 -->
   <block wx:elif="{{structureEditor.kind === 'quests' && structureEditor.quest}}">
-   <view class="rt-title"><text>到达与引导</text></view>
    <cy-inline-error wx:if="{{structureError}}" title="{{structureError}}" />
-   <view class="node-card">
-    <view class="rt-field"><text>到达地点</text><cy-dropdown topic-editor range="{{structureLocations}}" range-key="label" value="{{structureLocationIndex}}" bind:change="onStructureLocation"><view class="rt-select" aria-role="button" aria-label="选择到达地点">{{structureLocationIndex >= 0 ? structureLocations[structureLocationIndex].label : '选择本主题节点'}}<cy-icon name="chevron-right" size="24" /></view></cy-dropdown></view>
-    <text class="story-initial__example">多个任务选同一地点时，共用该地点的到达核验。</text>
-   </view>
-   <view class="node-card">
-    <view class="node-card__row">
-     <view class="node-card__ico"><cy-icon name="mtab-customers" size="32" /></view>
-     <view class="node-card__main"><text class="node-card__title">工作人员引导答题</text><text class="node-card__value">{{structureGuideAllowed ? '用本站玩法原有的题目，工作人员按同样答案核验' : '本站需先绑定含客观题的玩法'}}</text></view>
-     <cy-switch checked="{{!!structureEditor.quest.guideKey}}" disabled="{{!structureGuideAllowed}}" bindchange="onStructureGuide" accessibility-label="工作人员引导答题" />
-    </view>
-   </view>
-   <view class="node-card">
-    <view class="rt-card-head"><text>预先批准的备用节点</text><text class="rt-count">已选 {{structureFallbackCount || 0}} / 20</text></view>
-    <text class="story-initial__example rt-lead">原站无法继续时，工作人员只能改派到这里选中的节点。</text>
-    <view wx:for="{{structureFallbackNodes}}" wx:key="id" class="node-card__row rt-check-row" data-id="{{item.id}}" bindtap="toggleStructureFallback" aria-role="checkbox" aria-checked="{{item.selected}}" hover-class="cy-pressed" hover-stay-time="80">
-     <view class="node-card__main"><text class="node-card__title">{{item.label}}</text></view>
-     <view class="rt-check {{item.selected ? 'is-on' : ''}}" aria-hidden="true"><cy-icon wx:if="{{item.selected}}" name="check" size="24" /></view>
-    </view>
-    <text wx:if="{{!structureFallbackNodes.length}}" class="node-card__value">请先保存其它节点，再选择备用节点</text>
-   </view>
+   <cy-list-group>
+    <cy-dropdown topic-editor range="{{structureLocations}}" range-key="label" value="{{structureLocationIndex}}" bind:change="onStructureLocation">
+     <cy-list-row title="到达地点" value="{{structureLocationIndex >= 0 ? structureLocations[structureLocationIndex].label : '选择本主题节点'}}" chevron />
+    </cy-dropdown>
+    <cy-list-row title="工作人员引导答题" hr tappable="{{false}}"><cy-switch checked="{{!!structureEditor.quest.guideKey}}" disabled="{{!structureGuideAllowed}}" bindchange="onStructureGuide" accessibility-label="工作人员引导答题" /></cy-list-row>
+   </cy-list-group>
+   <cy-list-group header="找不到时换个方式">
+    <block wx:for="{{structureAlts}}" wx:key="type" wx:for-item="alt" wx:for-index="ai">
+     <cy-list-row title="{{alt.label}}" hr="{{ai > 0}}" tappable="{{false}}"><cy-switch checked="{{alt.on}}" data-type="{{alt.type}}" bindchange="onStructureAltToggle" accessibility-label="{{alt.label}}" /></cy-list-row>
+     <block wx:if="{{alt.on}}">
+      <cy-list-row title="{{alt.type === 'QUIZ' ? '题目' : alt.type === 'PHOTO' ? '拍摄内容' : '提示'}}" hr tappable="{{false}}">
+       <input class="rt-row-input" value="{{alt.prompt}}" data-type="{{alt.type}}" data-field="prompt" bindinput="onStructureAltInput" maxlength="500" aria-label="{{alt.label}}{{alt.type === 'QUIZ' ? '题目' : alt.type === 'PHOTO' ? '拍摄内容' : '提示'}}" /></cy-list-row>
+      <cy-list-row wx:if="{{alt.type === 'QUIZ'}}" title="答案" hr tappable="{{false}}">
+       <input class="rt-row-input" value="{{alt.answer}}" data-type="QUIZ" data-field="answer" bindinput="onStructureAltInput" maxlength="100" aria-label="答题答案" /></cy-list-row>
+     </block>
+    </block>
+   </cy-list-group>
+   <cy-list-group gap>
+    <cy-list-row title="备用节点" value="{{structureFallbackSummary}}" fold open="{{structureFallbackOpen}}" bind:press="toggleStructureFallbackOpen" />
+    <block wx:if="{{structureFallbackOpen}}">
+     <cy-list-row wx:for="{{structureFallbackNodes}}" wx:key="id" title="{{item.label}}" hr data-id="{{item.id}}" bind:press="toggleStructureFallback"><cy-icon wx:if="{{item.selected}}" name="check" size="28" /></cy-list-row>
+     <cy-list-row wx:if="{{!structureFallbackNodes.length}}" title="请先保存其它节点" hr tappable="{{false}}" disabled />
+    </block>
+   </cy-list-group>
   </block>
  </view>
 </cy-sheet>

@@ -187,7 +187,8 @@
       "root": "pages/templatedetail",
       "name": "subpackageTemplateDetail",
       "pages": [
-        "templatedetail"
+        "templatedetail",
+        "topic-preview/index"
       ]
     },
     {
@@ -245,6 +246,14 @@
       "root": "subpackageMember",
       "name": "subpackageMember",
       "pages": [
+        "free-explore/index",
+        "character/index",
+        "orient-score/index",
+        "invoice/index",
+        "invoice-detail/index",
+        "invoice-apply/index",
+        "invoice-titles/index",
+        "invoice-title-edit/index",
         "complaint/index",
         "coupon-wallet/index",
         "coupon-qr/index",
@@ -259,6 +268,7 @@
         "points-history/index",
         "report-mine/index",
         "report-detail/index",
+        "appeal-mine/index",
         "signup/index",
         "tixian/tixian",
         "tixianjilu/tixianjilu"
@@ -301,7 +311,8 @@
     "pages/index/index": {
       "network": "wifi",
       "packages": [
-        "subpackageA"
+        "subpackageA",
+        "subpackageTemplateDetail"
       ]
     },
     "pages/square/list/index": {

@@ -24,6 +24,8 @@
              title="营销消息与优惠券" bind:tap="openMarketingConsent" />
     <cy-cell id="settings-post-governance" tint="{{isMerchantView ? 'ink' : 'mono'}}" icon="/pages/shezhi/images/icon_lc_message-square-warning.svg"
              title="帖子处置与申诉" description="" bind:tap="openPostGovernance" />
+    <cy-cell id="settings-appeals" tint="{{isMerchantView ? 'ink' : 'mono'}}" icon="/pages/shezhi/images/icon_privacy.svg" title="我的申诉" bind:tap="goAppeals" />
+    <cy-cell id="settings-invoice" tint="{{isMerchantView ? 'ink' : 'mono'}}" icon="/pages/shezhi/images/icon_agreement.svg" title="发票" bind:tap="goInvoice" />
     <cy-cell id="settings-service-agreement" tint="{{isMerchantView ? 'ink' : 'mono'}}" icon="/pages/shezhi/images/icon_lc_scroll-text.svg" title="用户服务协议" bind:tap="goUserAgreement" />
     <cy-cell id="settings-deregister" tint="{{isMerchantView ? 'ink' : 'mono'}}" icon="/pages/shezhi/images/icon_lc_user-round-x.svg" title="账号注销" bind:tap="goDeregister" />
     <cy-cell id="settings-about" tint="{{isMerchantView ? 'ink' : 'mono'}}" icon="/pages/shezhi/images/icon_lc_info.svg" title="关于" bind:tap="goAbout" />

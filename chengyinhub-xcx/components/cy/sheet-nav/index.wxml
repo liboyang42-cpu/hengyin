@@ -1,0 +1,10 @@
+<view class="sn">
+  <view class="sn__l" bindtap="onLeft" aria-role="button" aria-label="{{back ? '返回' + back : left}}" hover-class="cy-pressed" hover-stay-time="80">
+    <cy-icon wx:if="{{back}}" name="back" size="34" />
+    <text class="sn__lt">{{back || left}}</text>
+  </view>
+  <text class="sn__t">{{title}}</text>
+  <view class="sn__r">
+    <view wx:if="{{action}}" class="sn__a {{actionPlain ? 'sn__a--plain' : ''}} {{actionDisabled ? 'is-disabled' : ''}}" bindtap="onAction" aria-role="button" aria-label="{{action}}" aria-disabled="{{actionDisabled}}" hover-class="{{actionDisabled ? 'none' : 'cy-pressed'}}" hover-stay-time="80">{{action}}</view>
+  </view>
+</view>

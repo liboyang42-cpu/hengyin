@@ -53,6 +53,7 @@
     <view class="cg-load-state__hint">加载中</view>
   </view>
   <view class="cg-load-state" wx:elif="{{loadError}}">
+    <view wx:if="{{loadErrorIsOperation}}" bindtap="inspectAdoptionTemplates" aria-role="button" aria-label="查看我的玩法" hover-class="cy-pressed" hover-stay-time="80">查看我的玩法</view>
     <cy-error load-failure="{{!loadErrorIsOperation && !loadErrorIsAccess}}" title="{{loadErrorIsOperation ? '采用尚未确认' : loadErrorIsAccess ? '当前请求无法读取玩法' : '玩法详情加载失败'}}" sub="{{loadError}}" retry="重新加载" bind:retry="retryGetData" />
   </view>
 
@@ -321,13 +322,16 @@
     <view class="cg-ho-scene" bindtap="placeHotspot"
         aria-role="button" aria-label="在场景图上标出目标位置"
         hover-class="cg-ho-scene--press" hover-stay-time="60">
+    <!-- 画框按原图比例不裁,标点量这个框:玩家台面也按原图比例收框,两边是同一把尺 -->
+    <view class="cg-ho-frame" style="{{hotspotFrame}}">
     <image class="cg-ho-img" wx:if="{{advanced.hiddenObject.imageUrl}}"
-           src="{{advanced.hiddenObject.imageUrl}}" mode="aspectFill" />
+           src="{{advanced.hiddenObject.imageUrl}}" mode="aspectFill" bindload="onHotspotImgLoad" />
     <view class="cg-ho-ph" wx:else>先填上面的场景图地址，再回来节点置</view>
     <view class="cg-ho-pin {{hotspotArming === hi ? 'is-arming' : ''}}"
           wx:for="{{advanced.hiddenObject.hotspots}}" wx:key="id" wx:for-index="hi"
           wx:if="{{item.x >= 0 && item.y >= 0}}"
           style="left:{{item.x * 100 || 0}}%;top:{{item.y * 100 || 0}}%">{{hi + 1}}</view>
+    </view>
     </view>
 
     <view class="cg-adv-repeat" wx:for="{{advanced.hiddenObject.hotspots}}" wx:key="id" wx:for-index="hi">
@@ -770,12 +774,67 @@
        fumbleEffects / failCostTag 这轮不做界面,但保存时必须原样保留。 -->
     <view class="cg-gcfg" wx:if="{{gameSection === 'check'}}">
       <view class="cg-adv-body">
-    <view class="cg-cfg-label">判定什么技能</view>
-    <input class="cg-cfg-input" value="{{advanced.check.skill}}" placeholder="例如 潜行 / 观察" data-section="check" data-field="skill" bindinput="onAdvancedField" />
-    <view class="cg-cfg-label">难度</view>
-    <cy-dropdown portal="{{false}}" range="{{checkTiers}}" range-key="label" value="{{opt.idx(checkTiers, advanced.check.tier)}}" bind:change="pickCheckTier"><view class="cg-pick {{opt.idx(checkTiers, advanced.check.tier) < 0 ? 'empty' : ''}}">{{opt.label(checkTiers, advanced.check.tier)}}<view class="cg-caret"><cy-icon name="back" size="28" /></view></view></cy-dropdown>
-    <view class="cg-cfg-label">过了说一句</view><input class="cg-cfg-input" value="{{advanced.check.successText}}" placeholder="例如 你站稳了" data-section="check" data-field="successText" bindinput="onAdvancedField" />
-    <view class="cg-cfg-label">没过说一句</view><input class="cg-cfg-input" value="{{advanced.check.failText}}" placeholder="例如 你的手在抖" data-section="check" data-field="failText" bindinput="onAdvancedField" />
+      <view class="cg-ios-flat">
+    <!-- 10-28 原型 A e-temp:检定段改成分组列表,就地展开(check-section.js);字段仍是 skill / tier / mods / bargain / successText / failText -->
+    <view class="cg-ios-grp">
+      <block wx:if="{{checkView.skillState === 'off'}}">
+        <view class="cg-ios-row is-static"><text class="cg-ios-t is-l">技能</text><input class="cg-ios-in" value="{{checkView.skillText}}" maxlength="200" data-section="check" data-field="skill" bindinput="onAdvancedField" aria-label="技能" /></view>
+      </block>
+      <view wx:elif="{{checkView.skillState === 'error'}}" class="cg-ios-row" bindtap="retryCheckCtx" aria-role="button" aria-label="加上属性，重新读取" hover-class="cy-pressed" hover-stay-time="80"><view class="cg-ios-m"><text class="cg-ios-t">加上属性</text></view><text class="cg-ios-v">{{checkView.skillValue}}</text></view>
+      <block wx:else>
+        <view class="cg-ios-row" data-open="skill" bindtap="toggleCheckRow" aria-role="button" aria-label="加上属性" aria-expanded="{{checkOpen === 'skill'}}" hover-class="cy-pressed" hover-stay-time="80"><view class="cg-ios-m"><text class="cg-ios-t">加上属性</text></view><text class="cg-ios-v">{{checkView.skillValue}}</text><view class="cg-ios-fold {{checkOpen === 'skill' ? 'is-open' : ''}}"><cy-icon name="chevron-right" size="28" /></view></view>
+        <block wx:if="{{checkOpen === 'skill'}}">
+          <view wx:if="{{checkView.skillState === 'empty'}}" class="cg-ios-row is-add" bindtap="goD20Settings" aria-role="button" aria-label="添加属性" hover-class="cy-pressed" hover-stay-time="80"><view class="cg-ios-add"><cy-icon name="plus" size="24" /></view><view class="cg-ios-m"><text class="cg-ios-t">添加属性</text></view></view>
+          <block wx:else><view class="cg-ios-row" wx:for="{{checkView.skillOptions}}" wx:key="label" data-key="{{item.key}}" bindtap="pickCheckSkill" aria-role="button" aria-label="{{item.label}}" aria-selected="{{item.on}}" hover-class="cy-pressed" hover-stay-time="80"><view class="cg-ios-m"><text class="cg-ios-t">{{item.label}}</text></view><view class="cg-ios-chk {{item.on ? 'is-on' : ''}}"><cy-icon name="check" size="28" /></view></view></block>
+        </block>
+      </block>
+      <view class="cg-ios-row is-static"><text class="cg-ios-t is-l">难度</text><view class="cg-ios-seg"><view wx:for="{{checkTiers}}" wx:key="key" class="{{advanced.check.tier === item.key ? 'is-on' : ''}}" data-index="{{index}}" bindtap="pickCheckTierSeg" aria-role="button" aria-label="{{item.label}}" aria-selected="{{advanced.check.tier === item.key}}" hover-class="cy-pressed" hover-stay-time="80">{{item.label}}</view></view></view>
+    </view>
+    <view wx:if="{{checkView.skillState === 'error'}}" class="cg-ios-ft is-err">没有读取成功，请再试一次。</view>
+
+    <view class="cg-ios-hd">情境加值</view>
+    <view class="cg-ios-grp">
+      <block wx:for="{{checkView.mods}}" wx:key="index" wx:for-item="mod">
+        <view class="cg-ios-row" data-open="{{'mod-' + mod.index}}" bindtap="toggleCheckRow" aria-role="button" aria-label="{{mod.title}}" hover-class="cy-pressed" hover-stay-time="80"><view class="cg-ios-m"><text class="cg-ios-t">{{mod.title}}</text></view><text class="cg-ios-v">{{mod.value}}</text><view class="cg-ios-fold {{checkOpen === 'mod-' + mod.index ? 'is-open' : ''}}"><cy-icon name="chevron-right" size="28" /></view></view>
+        <block wx:if="{{checkOpen === 'mod-' + mod.index}}">
+          <view wx:if="{{mod.threshold !== null}}" class="cg-ios-row is-static"><text class="cg-ios-t is-l">至少</text><view class="cg-ios-stp"><view class="{{mod.threshold <= 0 ? 'is-dis' : ''}}" data-index="{{mod.index}}" data-delta="-1" bindtap="stepModThreshold" aria-role="button" aria-label="减少" hover-class="cy-pressed" hover-stay-time="80"><view class="cg-ios-minus"></view></view><text>{{mod.threshold}}</text><view data-index="{{mod.index}}" data-delta="1" bindtap="stepModThreshold" aria-role="button" aria-label="增加" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" /></view></view></view>
+          <view wx:if="{{checkView.skillState === 'ok'}}" class="cg-ios-row is-static"><view class="cg-ios-seg is-full"><view class="{{mod.byAttr ? '' : 'is-on'}}" data-index="{{mod.index}}" data-mode="fixed" bindtap="pickModMode" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">固定加值</view><view class="{{mod.byAttr ? 'is-on' : ''}}" data-index="{{mod.index}}" data-mode="attr" bindtap="pickModMode" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">加上属性值</view></view></view>
+          <view wx:if="{{!mod.byAttr}}" class="cg-ios-row is-static"><text class="cg-ios-t is-l">加值</text><view class="cg-ios-stp"><view class="{{mod.amount <= 1 ? 'is-dis' : ''}}" data-index="{{mod.index}}" data-delta="-1" data-max="{{mod.max}}" bindtap="stepModAmount" aria-role="button" aria-label="减少" hover-class="cy-pressed" hover-stay-time="80"><view class="cg-ios-minus"></view></view><text>+{{mod.amount}}</text><view class="{{mod.amount >= mod.max ? 'is-dis' : ''}}" data-index="{{mod.index}}" data-delta="1" data-max="{{mod.max}}" bindtap="stepModAmount" aria-role="button" aria-label="增加" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" /></view></view></view>
+          <view wx:else class="cg-ios-row is-static"><view class="cg-ios-seg is-full"><view wx:for="{{checkView.attrs}}" wx:key="key" wx:for-item="attr" class="{{mod.attrKey === attr.key ? 'is-on' : ''}}" data-index="{{mod.index}}" data-key="{{attr.key}}" bindtap="pickModAttr" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">{{attr.label}}</view></view></view>
+          <view class="cg-ios-row is-danger" data-index="{{mod.index}}" bindtap="removeMod" aria-role="button" aria-label="删除这条加值" hover-class="cy-pressed" hover-stay-time="80"><text class="cg-ios-t">删除</text></view>
+        </block>
+      </block>
+      <view class="cg-ios-row is-add {{checkView.modAddOff ? 'is-off' : ''}}" data-mode="mod" bindtap="openCheckSheet" aria-role="button" aria-label="添加加值" aria-disabled="{{checkView.modAddOff}}" hover-class="{{checkView.modAddOff ? '' : 'cy-pressed'}}" hover-stay-time="80"><view class="cg-ios-add"><cy-icon name="plus" size="24" /></view><view class="cg-ios-m"><text class="cg-ios-t">添加加值</text></view></view>
+    </view>
+
+    <block wx:if="{{checkView.bargainShow}}">
+      <view class="cg-ios-hd">魔鬼交易</view>
+      <view class="cg-ios-grp">
+        <view class="cg-ios-row is-static"><view class="cg-ios-m"><text class="cg-ios-t">魔鬼交易</text></view><cy-switch checked="{{checkView.bargainOn}}" bindchange="toggleBargain" accessibility-label="魔鬼交易" /></view>
+        <block wx:if="{{checkView.bargainOn}}">
+          <view class="cg-ios-row is-static"><text class="cg-ios-t is-l">说明</text><input class="cg-ios-in" value="{{checkView.bargainLabel}}" maxlength="30" bindinput="inputBargainLabel" aria-label="说明" /></view>
+          <view class="cg-ios-row is-static"><text class="cg-ios-t is-l">加值</text><view class="cg-ios-seg"><view wx:for="{{bargainBonus}}" wx:key="*this" class="{{checkView.bargainBonus === item ? 'is-on' : ''}}" data-bonus="{{item}}" bindtap="pickBargainBonus" aria-role="button" aria-selected="{{checkView.bargainBonus === item}}" hover-class="cy-pressed" hover-stay-time="80">+{{item}}</view></view></view>
+        </block>
+      </view>
+      <block wx:if="{{checkView.bargainOn}}">
+        <view class="cg-ios-hd">代价</view>
+        <view class="cg-ios-grp">
+          <block wx:for="{{checkView.prices}}" wx:key="index" wx:for-item="price">
+            <view class="cg-ios-row" data-open="{{'price-' + price.index}}" bindtap="toggleCheckRow" aria-role="button" aria-label="{{price.title}}" hover-class="cy-pressed" hover-stay-time="80"><view class="cg-ios-m"><text class="cg-ios-t">{{price.title}}</text></view><view class="cg-ios-fold {{checkOpen === 'price-' + price.index ? 'is-open' : ''}}"><cy-icon name="chevron-right" size="28" /></view></view>
+            <block wx:if="{{checkOpen === 'price-' + price.index}}">
+              <view wx:if="{{price.stepper}}" class="cg-ios-row is-static"><text class="cg-ios-t is-l">数量</text><view class="cg-ios-stp"><view class="{{price.stepper.value <= price.stepper.min ? 'is-dis' : ''}}" data-index="{{price.index}}" data-delta="-1" bindtap="stepPrice" aria-role="button" aria-label="减少" hover-class="cy-pressed" hover-stay-time="80"><view class="cg-ios-minus"></view></view><text>{{price.stepper.value}}</text><view class="{{price.stepper.value >= price.stepper.max ? 'is-dis' : ''}}" data-index="{{price.index}}" data-delta="1" bindtap="stepPrice" aria-role="button" aria-label="增加" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" /></view></view></view>
+              <view class="cg-ios-row is-danger" data-index="{{price.index}}" bindtap="removePrice" aria-role="button" aria-label="删除这条代价" hover-class="cy-pressed" hover-stay-time="80"><text class="cg-ios-t">删除</text></view>
+            </block>
+          </block>
+          <view wx:if="{{checkView.priceAddShow}}" class="cg-ios-row is-add" data-mode="price" bindtap="openCheckSheet" aria-role="button" aria-label="添加代价" hover-class="cy-pressed" hover-stay-time="80"><view class="cg-ios-add"><cy-icon name="plus" size="24" /></view><view class="cg-ios-m"><text class="cg-ios-t">添加代价</text></view></view>
+        </view>
+      </block>
+    </block>
+
+    <view class="cg-ios-hd">过了说一句</view>
+    <view class="cg-ios-grp"><view class="cg-ios-row is-static"><input class="cg-ios-in is-l" value="{{advanced.check.successText}}" maxlength="60" data-section="check" data-field="successText" bindinput="onAdvancedField" aria-label="过了说一句" /></view></view>
+    <view class="cg-ios-hd">没过说一句</view>
+    <view class="cg-ios-grp"><view class="cg-ios-row is-static"><input class="cg-ios-in is-l" value="{{advanced.check.failText}}" maxlength="60" data-section="check" data-field="failText" bindinput="onAdvancedField" aria-label="没过说一句" /></view></view>
     <view class="cg-cfg-label" wx:if="{{advanced.check.successEffects.length}}">判定通过后的效果</view>
     <view class="cg-adv-repeat" wx:for="{{advanced.check.successEffects}}" wx:key="index" wx:for-index="ei" wx:for-item="eff">
     <view class="cg-adv-repeat-head">
@@ -835,13 +894,17 @@
            data-path="check.failEffects" data-index="{{ei}}" data-field="value" bindinput="updateEffectField" />
     </block>
     </view>
-    <view class="cg-adv-section">
-    <view class="cg-rw-line"><view class="cg-rw-meta"><view class="cg-rw-name">幸运</view></view><cy-switch checked="{{luckIndex >= 0}}" bindchange="toggleLuck" /></view>
-    <cy-dropdown portal="{{false}}" wx:if="{{luckIndex >= 0}}" class="cg-adv-reveal" range="{{luckOptions}}" range-key="label" value="{{luckIndex}}" bind:change="onLuckPick"><view class="cg-pick">{{luckOptions[luckIndex].label}}<view class="cg-caret"><cy-icon name="back" size="28" /></view></view></cy-dropdown>
+    <view class="cg-ios-grp cg-ios-gap">
+      <view class="cg-ios-row is-static"><view class="cg-ios-m"><text class="cg-ios-t">幸运</text></view><cy-switch checked="{{luckIndex >= 0}}" bindchange="toggleLuck" accessibility-label="幸运" /></view>
+      <block wx:if="{{luckIndex >= 0}}">
+        <view class="cg-ios-row" data-open="luck" bindtap="toggleCheckRow" aria-role="button" aria-label="幸运加分" aria-expanded="{{checkOpen === 'luck'}}" hover-class="cy-pressed" hover-stay-time="80"><view class="cg-ios-m"><text class="cg-ios-t">幸运加分</text></view><text class="cg-ios-v">{{checkView.luckLabel}}</text><view class="cg-ios-fold {{checkOpen === 'luck' ? 'is-open' : ''}}"><cy-icon name="chevron-right" size="28" /></view></view>
+        <block wx:if="{{checkOpen === 'luck'}}">
+          <view class="cg-ios-row" wx:for="{{luckOptions}}" wx:key="label" data-index="{{index}}" bindtap="onLuckPick" aria-role="button" aria-label="{{item.label}}" aria-selected="{{luckIndex === index}}" hover-class="cy-pressed" hover-stay-time="80"><view class="cg-ios-m"><text class="cg-ios-t">{{item.label}}</text></view><view class="cg-ios-chk {{luckIndex === index ? 'is-on' : ''}}"><cy-icon name="check" size="28" /></view></view>
+        </block>
+      </block>
+      <view class="cg-ios-row is-static"><view class="cg-ios-m"><text class="cg-ios-t">生命值越低越困难</text></view><cy-switch checked="{{hpLadderOn}}" bindchange="toggleHpLadder" accessibility-label="生命值越低越困难" /></view>
     </view>
-    <view class="cg-adv-section">
-    <view class="cg-rw-line"><view class="cg-rw-meta"><view class="cg-rw-name">生命值越低越困难</view></view><cy-switch checked="{{hpLadderOn}}" bindchange="toggleHpLadder" /></view>
-    </view>
+      </view>
       </view>
     </view>
 
@@ -1118,8 +1181,8 @@
             </view>
           </view>
           <view class="cg-r5-row {{fb.disabled ? 'is-off' : ''}}" data-path="{{fb.path}}" data-inline="1" bindtap="openAfterSheet" aria-role="button" aria-label="编辑{{fb.label}}的消耗与效果" aria-disabled="{{fb.disabled}}" hover-class="{{fb.disabled ? '' : 'cy-pressed'}}" hover-stay-time="80">
-            <view class="cg-r5-row__main"><text class="cg-r5-row__title cg-r5-row__title--plain">消耗与效果</text><text class="cg-r5-row__sub">{{fb.reason || fb.extra}}</text></view>
-            <view class="cg-r5-pill" wx:if="{{!fb.disabled}}">编辑<cy-icon name="chevron-right" size="24" /></view>
+            <view class="cg-r5-row__main"><text class="cg-r5-row__title cg-r5-row__title--plain">消耗与效果</text></view>
+            <text class="cg-ios-v">{{fb.reason || (fb.count + ' 项')}}</text><view class="cg-ios-fold" wx:if="{{!fb.disabled}}"><cy-icon name="chevron-right" size="28" /></view>
           </view>
         </view>
       </block>
@@ -1684,10 +1747,37 @@
     <view class="cg-adv-add cg-adv-add--danger" data-key="{{toolSheetKey}}" bindtap="removeR5Tool" aria-role="button" aria-label="移除这条附加规则" hover-class="cy-pressed" hover-stay-time="80">移除这条附加规则</view>
   </view>
 
+  <!-- 10-28 原型 A e-temp-mod:「添加加值 / 添加代价」叠一张半屏,种类一列,点一种就地展开名字,点名字就加上 -->
+  <view class="cg-mask {{cgOut === 'check' ? 'is-out' : ''}}" wx:if="{{checkSheet.show}}" bindtap="cgDismiss" data-close="closeCheckSheet" data-out="check" aria-role="button" aria-label="取消" hover-class="cy-pressed" hover-stay-time="80"></view>
+  <view class="cg-sheet cg-edit-sheet cg-ios-sheet {{cgOut === 'check' ? 'is-out' : ''}}" style="--cy-comp-sheet-max-h:calc(100vh - {{sheetTop}}px);" wx:if="{{checkSheet.show}}">
+    <view class="cg-edit-head"><view class="cg-edit-head__exit" bindtap="cgDismiss" data-close="closeCheckSheet" data-out="check" aria-role="button" aria-label="取消" hover-class="cy-pressed" hover-stay-time="80">取消</view><view class="cg-edit-head__title">{{checkSheet.title}}</view><view class="cg-edit-head__done is-ghost"></view></view>
+      <view class="cg-ios-grp">
+        <block wx:for="{{checkSheet.kinds}}" wx:key="key" wx:for-item="kind">
+          <view class="cg-ios-row" data-key="{{kind.key}}" bindtap="toggleCheckKind" aria-role="button" aria-label="{{kind.label}}" aria-expanded="{{checkSheet.open === kind.key}}" hover-class="cy-pressed" hover-stay-time="80"><view class="cg-ios-m"><text class="cg-ios-t">{{kind.label}}</text></view><view class="cg-ios-fold {{checkSheet.open === kind.key ? 'is-open' : ''}}"><cy-icon name="chevron-right" size="28" /></view></view>
+          <block wx:if="{{checkSheet.open === kind.key}}">
+            <view class="cg-ios-row is-sub" wx:for="{{kind.names}}" wx:key="key" wx:for-item="name" data-kind="{{kind.key}}" data-key="{{name.key}}" bindtap="pickCheckName" aria-role="button" aria-label="{{name.label}}" hover-class="cy-pressed" hover-stay-time="80"><view class="cg-ios-m"><text class="cg-ios-t">{{name.label}}</text></view></view>
+          </block>
+        </block>
+      </view>
+  </view>
+
   <!-- ============ R5 结果之后（回复 / 消耗 / 效果 / 反馈下一段） ============ -->
   <view class="cg-mask cg-mask--top {{cgOut === 'after' ? 'is-out' : ''}}" wx:if="{{afterEditor.show}}" bindtap="cgDismiss" data-close="closeAfterSheet" data-out="after" aria-role="button" aria-label="退出结果之后" hover-class="cy-pressed" hover-stay-time="80"></view>
   <view class="cg-sheet cg-edit-sheet cg-edit-sheet--top {{cgOut === 'after' ? 'is-out' : ''}}" style="--cy-comp-sheet-max-h:calc(100vh - {{sheetTop}}px);" wx:if="{{afterEditor.show}}">
-    <view class="cg-edit-head"><view class="cg-edit-head__exit" bindtap="cgDismiss" data-close="closeAfterSheet" data-out="after" aria-role="button" aria-label="退出结果之后" hover-class="cy-pressed" hover-stay-time="80">退出</view><view class="cg-edit-head__title">{{afterEditor.inline ? '消耗与效果' : opt.label(r5Editor.optionAfterRows, afterEditor.path, 'path')}}</view><view class="cg-edit-head__done" bindtap="saveAfterSheet" aria-role="button" aria-label="完成结果之后" hover-class="cy-pressed" hover-stay-time="80">完成</view></view>
+    <!-- 10-28 原型 A e-after-add:「添加效果」往下开的唯一一层,种类一列,点一种就地展开名字 -->
+    <block wx:if="{{afterAdd.show}}">
+      <view class="cg-edit-head"><view class="cg-edit-head__exit" bindtap="closeAfterAdd" aria-role="button" aria-label="返回消耗与效果" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="back" size="28" />消耗与效果</view><view class="cg-edit-head__title">添加效果</view><view class="cg-edit-head__done is-ghost"></view></view>
+      <view class="cg-ios-grp">
+        <block wx:for="{{afterEffectKinds}}" wx:key="key" wx:for-item="kind">
+          <view class="cg-ios-row" data-key="{{kind.key}}" bindtap="toggleAfterAddKind" aria-role="button" aria-label="{{kind.label}}" aria-expanded="{{afterAdd.open === kind.key}}" hover-class="cy-pressed" hover-stay-time="80"><view class="cg-ios-m"><text class="cg-ios-t">{{kind.label}}</text></view><view class="cg-ios-fold {{afterAdd.open === kind.key ? 'is-open' : ''}}"><cy-icon name="chevron-right" size="28" /></view></view>
+          <block wx:if="{{afterAdd.open === kind.key}}">
+            <view class="cg-ios-row is-sub" wx:for="{{r5Editor.valueSlots}}" wx:key="key" wx:for-item="slot" data-op="{{kind.key}}" data-key="{{slot.key}}" bindtap="pickAfterAddName" aria-role="button" aria-label="{{slot.label}}" hover-class="cy-pressed" hover-stay-time="80"><view class="cg-ios-m"><text class="cg-ios-t">{{slot.label}}</text></view></view>
+          </block>
+        </block>
+      </view>
+    </block>
+    <block wx:else>
+    <view class="cg-edit-head"><view class="cg-edit-head__exit" bindtap="cgDismiss" data-close="closeAfterSheet" data-out="after" aria-role="button" aria-label="取消" hover-class="cy-pressed" hover-stay-time="80">取消</view><view class="cg-edit-head__title">{{afterEditor.inline ? '消耗与效果' : opt.label(r5Editor.optionAfterRows, afterEditor.path, 'path')}}</view><view class="cg-edit-head__done" bindtap="saveAfterSheet" aria-role="button" aria-label="完成结果之后" hover-class="cy-pressed" hover-stay-time="80">完成</view></view>
     <view class="cg-gcfg" wx:if="{{!afterEditor.inline}}">
       <view class="cg-cfg-label">回复一句</view>
       <input class="cg-cfg-input" value="{{afterEditor.draft.reply}}" maxlength="2000" placeholder="例如 你稳住了呼吸" placeholder-class="cg-ph" bindinput="inputAfterReply" />
@@ -1700,30 +1790,43 @@
         <view class="pgrid-cell pgrid-add" wx:if="{{afterEditor.draft.images.length < 3}}" bindtap="uploadAfterImage" aria-role="button" aria-label="添加配图" hover-class="cy-pressed" hover-stay-time="80"><view class="pgrid-add-plus"><cy-icon name="plus" size="32" /></view></view>
       </view>
     </view>
-    <view class="cg-gcfg">
-      <view class="cg-r5-sec">消耗</view>
-      <view class="cg-two cg-r5-line" wx:for="{{afterEditor.draft.costs}}" wx:key="index">
-        <cy-dropdown topic-editor range="{{r5Editor.valueSlots}}" range-key="label" value="{{opt.idx(r5Editor.valueSlots, item.statKey)}}" data-kind="costs" data-index="{{index}}" bind:change="pickAfterRowStat"><view class="cg-pick {{item.statKey ? '' : 'empty'}}">{{item.statKey ? opt.label(r5Editor.valueSlots, item.statKey) : '选择数值'}}<view class="cg-caret"><cy-icon name="back" size="28" /></view></view></cy-dropdown>
-        <view class="cg-r5-amount"><input class="cg-cfg-input" type="number" value="{{item.amount}}" placeholder="数量" data-kind="costs" data-index="{{index}}" data-field="amount" bindinput="inputAfterRow" /><view class="cg-r5-del" data-kind="costs" data-index="{{index}}" bindtap="removeAfterRow" aria-role="button" aria-label="删除这项消耗" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="28" /></view></view>
+    <!-- 10-28 原型 A e-after:消耗 / 效果 句子列表,点一句就地展开;「之后」就地勾选(after-section.js) -->
+    <view class="cg-ios-hd">消耗</view>
+    <view class="cg-ios-grp">
+      <block wx:for="{{afterEditor.draft.costs}}" wx:key="index">
+        <view class="cg-ios-row" data-open="{{'cost-' + index}}" bindtap="toggleAfterRow" aria-role="button" aria-label="{{opt.label(r5Editor.valueSlots, item.statKey)}}" hover-class="cy-pressed" hover-stay-time="80"><view class="cg-ios-m"><text class="cg-ios-t">{{item.statKey ? opt.label(r5Editor.valueSlots, item.statKey) : '请选择'}} −{{item.amount || 0}}</text></view><view class="cg-ios-fold {{afterOpen === 'cost-' + index ? 'is-open' : ''}}"><cy-icon name="chevron-right" size="28" /></view></view>
+        <block wx:if="{{afterOpen === 'cost-' + index}}">
+          <view class="cg-ios-row is-static"><text class="cg-ios-t is-l">数量</text><view class="cg-ios-stp"><view class="{{item.amount <= 1 ? 'is-dis' : ''}}" data-kind="costs" data-index="{{index}}" data-delta="-1" bindtap="stepAfterRow" aria-role="button" aria-label="减少" hover-class="cy-pressed" hover-stay-time="80"><view class="cg-ios-minus"></view></view><text>{{item.amount || 0}}</text><view class="{{item.amount >= 999 ? 'is-dis' : ''}}" data-kind="costs" data-index="{{index}}" data-delta="1" bindtap="stepAfterRow" aria-role="button" aria-label="增加" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" /></view></view></view>
+          <view class="cg-ios-row is-danger" data-kind="costs" data-index="{{index}}" bindtap="removeAfterRowInline" aria-role="button" aria-label="删除这项消耗" hover-class="cy-pressed" hover-stay-time="80"><text class="cg-ios-t">删除</text></view>
+        </block>
+      </block>
+      <view class="cg-ios-row is-add" data-open="costAdd" bindtap="toggleAfterRow" aria-role="button" aria-label="添加消耗" aria-expanded="{{afterOpen === 'costAdd'}}" hover-class="cy-pressed" hover-stay-time="80"><view class="cg-ios-add"><cy-icon name="plus" size="24" /></view><view class="cg-ios-m"><text class="cg-ios-t">添加消耗</text></view></view>
+      <view wx:if="{{afterOpen === 'costAdd'}}" class="cg-ios-pills">
+        <block wx:for="{{r5Editor.valueSlots}}" wx:key="key" wx:for-item="slot"><view wx:if="{{opt.idx(afterEditor.draft.costs, slot.key, 'statKey') < 0}}" class="cg-ios-pill" data-key="{{slot.key}}" bindtap="addAfterCost" aria-role="button" aria-label="{{slot.label}}" hover-class="cy-pressed" hover-stay-time="80">{{slot.label}}</view></block>
+        <input wx:if="{{afterNewValue}}" class="cg-ios-pill-in" focus maxlength="20" confirm-type="done" bindconfirm="confirmAfterNewValue" aria-label="新建数值" />
+        <view wx:else class="cg-ios-pill" bindtap="openAfterNewValue" aria-role="button" aria-label="新建数值" hover-class="cy-pressed" hover-stay-time="80">新建数值</view>
       </view>
-      <view class="cg-adv-add" data-kind="costs" bindtap="addAfterRow" aria-role="button" aria-label="添加消耗" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />消耗</view>
     </view>
-    <view class="cg-gcfg">
-      <view class="cg-r5-sec">效果</view>
-      <view class="cg-r5-effect" wx:for="{{afterEditor.draft.effects}}" wx:key="index">
-        <view class="cg-two">
-          <cy-dropdown topic-editor range="{{r5Editor.valueSlots}}" range-key="label" value="{{opt.idx(r5Editor.valueSlots, item.var)}}" data-kind="effects" data-index="{{index}}" bind:change="pickAfterRowStat"><view class="cg-pick {{item.var ? '' : 'empty'}}">{{item.var ? opt.label(r5Editor.valueSlots, item.var) : '选择数值'}}<view class="cg-caret"><cy-icon name="back" size="28" /></view></view></cy-dropdown>
-          <cy-dropdown topic-editor range="{{afterOpOptions}}" range-key="label" value="{{opt.idx(afterOpOptions, item.op)}}" data-index="{{index}}" bind:change="pickAfterRowOp"><view class="cg-pick">{{opt.label(afterOpOptions, item.op)}}<view class="cg-caret"><cy-icon name="back" size="28" /></view></view></cy-dropdown>
-        </view>
-        <view class="cg-r5-amount"><input class="cg-cfg-input" type="number" value="{{item.value}}" placeholder="数量 1 至 999" data-kind="effects" data-index="{{index}}" data-field="value" bindinput="inputAfterRow" /><view class="cg-r5-del" data-kind="effects" data-index="{{index}}" bindtap="removeAfterRow" aria-role="button" aria-label="删除这个效果" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="28" /></view></view>
-      </view>
-      <view class="cg-adv-add" data-kind="effects" bindtap="addAfterRow" aria-role="button" aria-label="添加效果" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />效果</view>
-      <view class="cg-cfg-label cg-r5-gap">新建需要的数值</view>
-      <input class="cg-cfg-input" placeholder="输入名称后确认，例如 体温" placeholder-class="cg-ph" confirm-type="done" bindconfirm="declareAfterValueSlot" />
-
+    <view class="cg-ios-hd">效果</view>
+    <view class="cg-ios-grp">
+      <block wx:for="{{afterEditor.draft.effects}}" wx:key="index">
+        <view class="cg-ios-row" data-open="{{'eff-' + index}}" bindtap="toggleAfterRow" aria-role="button" aria-label="{{opt.label(r5Editor.valueSlots, item.var)}}" hover-class="cy-pressed" hover-stay-time="80"><view class="cg-ios-m"><text class="cg-ios-t">{{item.var ? opt.label(r5Editor.valueSlots, item.var) : '请选择'}} {{item.op === 'FLOOR' ? '恢复到至少 ' : '+'}}{{item.value || 0}}</text></view><view class="cg-ios-fold {{afterOpen === 'eff-' + index ? 'is-open' : ''}}"><cy-icon name="chevron-right" size="28" /></view></view>
+        <block wx:if="{{afterOpen === 'eff-' + index}}">
+          <view class="cg-ios-row is-static"><view class="cg-ios-seg"><view wx:for="{{afterEffectKinds}}" wx:key="key" wx:for-item="kind" class="{{item.op === kind.key ? 'is-on' : ''}}" data-index="{{index}}" data-op="{{kind.key}}" bindtap="pickAfterEffectOp" aria-role="button" aria-selected="{{item.op === kind.key}}" hover-class="cy-pressed" hover-stay-time="80">{{kind.label}}</view></view></view>
+          <view class="cg-ios-row is-static"><text class="cg-ios-t is-l">数量</text><view class="cg-ios-stp"><view class="{{item.value <= 1 ? 'is-dis' : ''}}" data-kind="effects" data-index="{{index}}" data-delta="-1" bindtap="stepAfterRow" aria-role="button" aria-label="减少" hover-class="cy-pressed" hover-stay-time="80"><view class="cg-ios-minus"></view></view><text>{{item.value || 0}}</text><view class="{{item.value >= 999 ? 'is-dis' : ''}}" data-kind="effects" data-index="{{index}}" data-delta="1" bindtap="stepAfterRow" aria-role="button" aria-label="增加" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" /></view></view></view>
+          <view class="cg-ios-row is-danger" data-kind="effects" data-index="{{index}}" bindtap="removeAfterRowInline" aria-role="button" aria-label="删除这个效果" hover-class="cy-pressed" hover-stay-time="80"><text class="cg-ios-t">删除</text></view>
+        </block>
+      </block>
+      <view class="cg-ios-row is-add {{r5Editor.valueSlots.length ? '' : 'is-off'}}" bindtap="openAfterAdd" aria-role="button" aria-label="添加效果" aria-disabled="{{!r5Editor.valueSlots.length}}" hover-class="cy-pressed" hover-stay-time="80"><view class="cg-ios-add"><cy-icon name="plus" size="24" /></view><view class="cg-ios-m"><text class="cg-ios-t">添加效果</text></view></view>
     </view>
-    <view class="cg-gcfg"><view class="cg-cfg-label">进入下一段</view><cy-dropdown topic-editor columns="{{2}}" range="{{r5Editor.nextStepOptions}}" range-key="label" reason-key="reason" value="{{opt.idx(r5Editor.nextStepOptions, afterEditor.draft.next)}}" disabled="{{!!r5Editor.nextDisabledReason}}" bind:change="pickAfterNextStep"><view class="cg-pick">{{opt.label(r5Editor.nextStepOptions, afterEditor.draft.next)}}<view class="cg-caret"><cy-icon name="back" size="28" /></view></view></cy-dropdown><view wx:if="{{r5Editor.nextDisabledReason}}" class="cg-cfg-hint">{{r5Editor.nextDisabledReason}}</view></view>
+    <view class="cg-ios-grp cg-ios-gap">
+      <view class="cg-ios-row" data-open="next" bindtap="toggleAfterRow" aria-role="button" aria-label="之后" aria-disabled="{{!!r5Editor.nextDisabledReason}}" aria-expanded="{{afterOpen === 'next'}}" hover-class="{{r5Editor.nextDisabledReason ? '' : 'cy-pressed'}}" hover-stay-time="80"><view class="cg-ios-m"><text class="cg-ios-t">之后</text></view><text class="cg-ios-v">{{r5Editor.nextDisabledReason || opt.label(r5Editor.nextStepOptions, afterEditor.draft.next)}}</text><view wx:if="{{!r5Editor.nextDisabledReason}}" class="cg-ios-fold {{afterOpen === 'next' ? 'is-open' : ''}}"><cy-icon name="chevron-right" size="28" /></view></view>
+      <block wx:if="{{afterOpen === 'next'}}">
+        <view class="cg-ios-row {{item.reason ? 'is-off' : ''}}" wx:for="{{r5Editor.nextStepOptions}}" wx:key="key" data-index="{{index}}" bindtap="pickAfterNextRow" aria-role="button" aria-label="{{item.label}}" aria-disabled="{{!!item.reason}}" aria-selected="{{afterEditor.draft.next === item.key}}" hover-class="cy-pressed" hover-stay-time="80"><view class="cg-ios-m"><text class="cg-ios-t">{{item.label}}</text></view><view class="cg-ios-chk {{afterEditor.draft.next === item.key ? 'is-on' : ''}}"><cy-icon name="check" size="28" /></view></view>
+      </block>
+    </view>
     <cy-inline-error class="cg-inline-error" wx:if="{{afterEditor.error}}" title="{{afterEditor.error}}" />
+    </block>
   </view>
 
   <!-- 工具子浮层编辑的是临时副本；关闭或点击遮罩不会改动玩法。 -->
@@ -1856,7 +1959,7 @@
        返回键/侧滑先关最上层浮层再谈退页。表达式覆盖本页全部浮层且无排斥项,
        浮层间切换时保持为真,不产生误触发竞态;backGuardOff 用于返回键消费后重挂。 -->
   <page-container
-    show="{{!backGuardOff && (previewVisible || showAddSheet || pickerSheet.open || categorySheetVisible || gameSheetOpen || toolSheetOpen || gameConfigOpen || scanSheetOpen || toolSheetKey || afterEditor.show)}}"
+    show="{{!backGuardOff && (previewVisible || showAddSheet || pickerSheet.open || categorySheetVisible || gameSheetOpen || toolSheetOpen || gameConfigOpen || scanSheetOpen || toolSheetKey || checkSheet.show || afterEditor.show)}}"
     duration="{{0}}" overlay="{{false}}"
     custom-style="width:0;height:0;background:transparent;pointer-events:none"
     bind:afterleave="onNativeBackGuard" />

@@ -17,7 +17,8 @@ function harness(patch = {}) {
   const page = { data: { ...definition.data, activityId: 100, lead: { exists: true }, ...patch }, setData() {} };
   // Unrelated lifecycle effects are outside this action's test; run the actual hide/unload fence.
   for (const [name, value] of Object.entries(definition)) if (typeof value === 'function') page[name] = () => {};
-  for (const name of ['leadArrive', 'onHide', 'onUnload', '_playMember', '_boundPlayOwner', '_isPlayAccountCurrent']) page[name] = definition[name];
+  // W8:账号守卫同时核对登录上下文(令牌+换代)，捕获函数是守卫的一部分，必须用真实现。
+  for (const name of ['leadArrive', 'onHide', 'onUnload', '_playMember', '_boundPlayOwner', '_capturePlayLoginContext', '_isPlayAccountCurrent']) page[name] = definition[name];
   page._boundPlayOwner(); // 正常进页先绑定账号；不能把新增账号守卫替换成无返回值的noop。
   page.diegetic = text => hints.push(text); let refreshes = 0;
   page.loadTeamProgress = () => { refreshes++; };

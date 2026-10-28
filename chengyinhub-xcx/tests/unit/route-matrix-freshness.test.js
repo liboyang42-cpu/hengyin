@@ -41,8 +41,18 @@ test('route-matrix 生成物必须与当前 app.json 和 scene 扫描逐字一�
   // 2026-10-25 +1 官方地点挑战页 pages/play/poi-challenge ⇒ 144 → 145。
   // 2026-10-27 L02 P-55:+1 营销消息与优惠券独立页 pages/shezhi/marketing/index ⇒ 145 → 146。
   // 2026-10-28 G-9:+1 账户收益 · 分析页 subpackageA/pages/assetcenter/analysis/index ⇒ 146 → 147。
-  assert.equal(current.routes.length, 147)
-  assert.equal(matrix.counts.routes, 147)
+  // 2026-10-26 +3:角色卡、定向计分、本人发票独立页 ⇒ 145 → 148。
+  // W8-12: 已校验W8-09权益页加入现有分包，148 → 149。
+  // 2026-10-28 文档二 L9 集成:登记 L7 我的申诉 + 发票拆出的 4 页，149 → 154。
+  // 145 → 146:2026-10-28 新增 pages/templatedetail/topic-preview(主题模板卡堆预览，业主定稿原型 v21)。
+  // 2026-10-28 L9 再并 master:#652 topic-preview +1 叠加本线 154 ⇒ 155。
+  // 2026-10-28 并 master(#658 后)合流 integrate/devfix-20261027:master 155 叠加本线 marketing / analysis 两页 ⇒ 157(build-route-matrix.js --json 重建)。
+  assert.equal(current.routes.length, 157)
+  assert.equal(matrix.counts.routes, 157)
+  const bundle = matrix.routes.find(route => route.pagePath === 'subpackageMember/free-explore/index')
+  assert.equal(bundle.role, 'player')
+  assert.equal(bundle.needsLogin, true)
+  assert.ok(bundle.dataKeys.includes('registrationId'))
   // 2026-09-02:+2 俱乐部客户列表与客户详情(club/customers、club/customer-detail)
   assert.equal(inventoryMatchesCurrent(matrix), true)
   // 2026-09-04 导演台整页收编:锚点换成新宿主页 topic-detail。这条要证的是

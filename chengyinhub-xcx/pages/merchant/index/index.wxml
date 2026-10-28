@@ -218,6 +218,8 @@
       </view>
     </view>
 
+    <cy-merchant-desk wx:if="{{merchantAccess.active}}" access="{{merchantAccess}}" />
+
     <!-- BL-85 开通前置检查(只读,GET /api/merchant/ops/prerequisites):只列未完成项;
          全部完成或无数据时整块不显示。沿用「我的消息」区块结构,不新造样式。 -->
     <view class="rv-section" wx:if="{{!consoleStatus && prerequisites.length}}">

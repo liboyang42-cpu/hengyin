@@ -262,13 +262,13 @@
             <scroll-view class="pb__hs" scroll-x enhanced show-scrollbar="{{false}}" wx:if="{{poiCard.reviews.length}}"><view class="pb__hs-track">
               <view class="pb__cm" wx:for="{{poiCard.reviews}}" wx:key="id">
                 <view class="pb__cm-h"><text class="pb__cm-n">{{item.name}}</text><text class="pb__cm-time">{{item.time}}</text></view>
-                <text class="pb__cm-s">{{item.stars ? '★ ' + item.stars : ''}}</text>
+                <view class="pb__cm-s" wx:if="{{item.stars}}" aria-label="{{item.stars}} 星"><cy-icon name="star" size="22" /><text>{{item.stars}}</text></view>
                 <text class="pb__cm-t">{{item.text}}</text>
               </view>
             </view></scroll-view>
             <text class="pb__cm-empty" wx:if="{{poiCard.reviewsLoaded && !poiCard.reviews.length}}">还没有评价。完成挑战后来写第一条。</text>
             <view class="pb__mine" wx:if="{{poiCard.game.completed && !poiCard.reviewed}}">
-              <view class="pb__stars"><text wx:for="{{[1,2,3,4,5]}}" wx:key="*this" class="pb__star {{poiCard.myStars >= item ? 'on' : ''}}" data-n="{{item}}" bindtap="onReviewStar" aria-role="button" aria-label="{{item}} 星" hover-class="cy-pressed" hover-stay-time="80">★</text></view>
+              <view class="pb__stars"><view wx:for="{{[1,2,3,4,5]}}" wx:key="*this" class="pb__star {{poiCard.myStars >= item ? 'on' : ''}}" data-n="{{item}}" bindtap="onReviewStar" aria-role="button" aria-label="{{item}} 星" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="star" size="40" /></view></view>
               <textarea class="pb__ta" value="{{poiCard.myText}}" maxlength="200" placeholder="说说这次挑战和这个地方" placeholder-class="pb__ph" bindinput="onReviewInput" auto-height fixed aria-label="写评价" />
               <view class="pb__send {{poiCard.reviewBusy ? 'is-off' : ''}}" bindtap="onReviewSubmit" aria-role="button" aria-label="发布评价" hover-class="cy-pressed" hover-stay-time="80">{{poiCard.reviewBusy ? '发布中…' : '发布评价'}}</view>
             </view>
@@ -308,4 +308,5 @@
   <cy-result-sheet show="{{resultSheet.show}}" kind="{{resultSheet.kind}}" title="{{resultSheet.title}}"
     why="{{resultSheet.why}}" primary-text="{{resultSheet.primaryText}}" secondary-text="{{resultSheet.secondaryText}}"
     bind:primary="onResultPrimary" bind:secondary="onResultClose" bind:close="onResultClose" />
+  <include src="../utils/team-recovery-panel.wxml" />
 </view>

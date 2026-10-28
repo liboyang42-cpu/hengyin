@@ -813,55 +813,32 @@
       <view class="node-sheet__close" bindtap="backToNodeDetail" aria-role="button" aria-label="返回节点" hover-class="cy-pressed" hover-stay-time="80">返回</view>
       <view class="node-sheet__done" bindtap="confirmTemp" aria-role="button" aria-label="完成玩法模板选择" hover-class="cy-pressed" hover-stay-time="80">完成</view>
     </view>
-    <view class="node-sheet__top" wx:else><view class="node-sheet__close" bindtap="cancelPopChapter" aria-role="button" aria-label="关闭节点编辑" hover-class="cy-pressed" hover-stay-time="80">退出</view>
+    <!-- 10-28 原型 A e-node：「取消 / 编辑节点 / 完成」，下面是分组列表。 -->
+    <view class="node-sheet__top" wx:else><view class="node-sheet__close" bindtap="cancelPopChapter" aria-role="button" aria-label="取消节点编辑" hover-class="cy-pressed" hover-stay-time="80">取消</view>
+      <text class="node-sheet__head-title">{{nodesForm._storyGame ? (popChapterNodesAction==0?'新建玩法':'编辑玩法') : (popChapterNodesAction==0?'新建节点':'编辑节点')}}</text>
       <view class="node-sheet__done" bindtap="confrimNode" aria-role="button" aria-label="完成节点编辑" hover-class="cy-pressed" hover-stay-time="80">完成</view>
 
     </view>
 
     <block wx:if="{{nodeSheetView==='detail'}}">
-      <!-- 标题区:编辑标题在上、节点名大标题在下,且大标题本身就是输入框
-           —— 稿子把「节点名称」这个字段提成了标题,不再单独占一张卡。 -->
-      <view class="node-sheet__titlebar">
-        <text class="node-sheet__eyebrow">{{nodesForm._storyGame ? (popChapterNodesAction==0?'新建玩法':'编辑玩法') : (popChapterNodesAction==0?'新建节点':'编辑节点')}}<text class="g-req" aria-hidden="true">*</text></text>
-        <input class="node-sheet__name" value="{{nodesForm.name}}" bindinput="onNodeNameInput" placeholder="{{nodesForm._storyGame ? '给这个玩法起个名字' : '给这个节点起个名字'}}" placeholder-class="node-sheet__name-ph" maxlength="40" />
-      </view>
-
-      <!-- 地点。2026-08-11 用户定:
-           ① 选完点之后标题【直接变成地点名】——「地点」这个字段名只在还没选的时候有意义,
-              选完了再顶着它,真正要看的名字反而降级成副文;
-           ② 不显示经纬度 —— 创作者认的是地名,坐标对不对他也看不出来,
-              「有没有坐标」这件事由下面那句状态文案说,不靠念数字;
-           ③「修改点位」跟着下移到地址那一行,第一行就只剩"这是哪儿"。 -->
-      <view class="node-card" wx:if="{{!nodesForm._storyGame}}">
-        <view class="node-card__row">
-          <view class="node-card__ico"><cy-icon name="pin" size="32" /></view>
-          <view class="node-card__main">
-            <!-- ⚠️ name 兜底不能省:选完 POI 后 name 会被写成 POI 名(见 choosePoiForNode),
-                 但创作者可以把它改空 —— 那时 address 还在,标题就成了一条空白。 -->
-            <text class="node-card__title">{{nodesForm.address ? (nodesForm.name || '未命名地点') : '地点'}}<text class="g-req" aria-hidden="true">*</text></text>
-          </view>
-        </view>
-        <view class="node-card__foot">
-          <text class="node-card__addr" wx:if="{{nodesForm.address}}">{{nodesForm.address}}</text>
-          <view class="node-pill" catchtap="choosePoiForNode" aria-role="button" aria-label="选择或修改节点" hover-class="cy-pressed" hover-stay-time="80"><text>{{nodesForm.address ? '修改节点' : '选择节点'}}</text><cy-icon name="chevron-right" size="24" /></view>
-        </view>
-      </view>
+      <!-- 名称 / 地点一组。地点只显示地名或地址，点整行去选点（2026-08-11 不显示经纬度的裁定照旧）。 -->
+      <cy-list-group>
+        <cy-list-row title="名称" tappable="{{false}}">
+          <input class="node-grp__input" value="{{nodesForm.name}}" bindinput="onNodeNameInput" placeholder="{{nodesForm._storyGame ? '给这个玩法起个名字' : '给这个节点起个名字'}}" placeholder-class="node-sheet__name-ph" maxlength="40" aria-label="名称" />
+        </cy-list-row>
+        <cy-list-row wx:if="{{!nodesForm._storyGame}}" class="node-place-row" title="地点" value="{{nodesForm.address || '选择节点'}}" chevron hr bind:press="choosePoiForNode" />
+      </cy-list-group>
 
       <!-- 配置模板。开关关 = 纯到达打卡:原先只有一个「配置玩法(可稍后补)」按钮,
            "不配"是隐式的,创作者分不清自己是故意没配还是忘了配。
            ⚠️ 开关态不入库(NodeDTO 无该字段),开抽屉时由 templateId 派生(见 showEditNodes),
            所以关掉必须连 templateId 一起清,否则重开又会被派生成"开"。 -->
-      <view class="node-card" wx:if="{{!aiSimple}}">
-        <view class="node-card__row">
-          <view class="node-card__ico"><cy-icon name="play" size="32" /></view>
-          <view class="node-card__main">
-            <text class="node-card__title">配置模板</text>
-          </view>
-          <cy-switch wx:if="{{!nodesForm._storyGame}}" checked="{{nodesForm.showTemplate}}" bind:change="onToggleNodeGame" />
-        </view>
-        <view class="node-card__foot" wx:if="{{nodesForm.showTemplate}}">
-          <view class="node-pill" catchtap="showTemp" aria-role="button" aria-label="选择或修改节点玩法" hover-class="cy-pressed" hover-stay-time="80"><text>{{nodesForm.templateId ? '更换玩法模板' : '选择或创建玩法模板'}}</text><cy-icon name="chevron-right" size="24" /></view>
-        </view>
+      <cy-list-group gap wx:if="{{!aiSimple}}">
+        <cy-list-row wx:if="{{!nodesForm._storyGame}}" title="玩法" tappable="{{false}}">
+          <cy-switch checked="{{nodesForm.showTemplate}}" bind:change="onToggleNodeGame" accessibility-label="玩法" />
+        </cy-list-row>
+        <cy-list-row wx:if="{{nodesForm.showTemplate}}" title="玩法模板" value="{{nodesForm.templateId ? (nodesForm.templateInfo.title || '已选择') : '选择或创建玩法模板'}}" chevron hr="{{!nodesForm._storyGame}}" bind:press="showTemp" />
+        <view class="node-grp-extra">
         <view class="node-shared" wx:if="{{nodesForm.templateId}}">
           <view wx:if="{{nodeSharedSites.length > 1}}">
             <text class="node-card__value">此玩法用于 {{nodeSharedSites.length || 0}} 个节点</text>
@@ -902,52 +879,16 @@
           </view>
           <cy-inline-error class="node-binding__error" wx:if="{{nodePlanEndingError}}" kind="error" title="{{nodePlanEndingError}}" />
         </view>
-      </view>
-
-      <!-- 到达与引导（协调者设计） -->
-      <view class="node-card" data-kind="quests" bindtap="openStructure" aria-role="button" aria-label="设置到达与引导" hover-class="cy-pressed" hover-stay-time="80">
-        <view class="node-card__row">
-          <view class="node-card__ico"><cy-icon name="pin" size="32" /></view>
-          <view class="node-card__main"><text class="node-card__title">到达与引导</text><text class="node-card__value pd-summary-2l">{{nodeStructureSummary}}</text></view>
-          <view class="node-pill">设置<cy-icon name="chevron-right" size="24" /></view>
         </view>
-      </view>
+      </cy-list-group>
 
-      <!-- 路线只在当前节点内出现：创作者对应玩法结果与下一站，故事流顺序仍是默认路径。 -->
-      <view class="node-card node-route-entry" wx:if="{{formData.productType === 1 && popChapterNodesAction==1}}" bindtap="openNodeRouteMapping" data-nodeid="{{editTargetNodeLid}}" aria-role="button" aria-label="编辑下一站对应" hover-class="cy-pressed" hover-stay-time="80">
-        <view class="node-card__row">
-          <view class="node-card__ico"><cy-icon name="route" size="32" /></view>
-          <view class="node-card__main">
-            <text class="node-card__title">下一站</text>
-            <text class="node-card__value">{{routeNodeMappingSummary[editTargetNodeLid] || '按故事流继续'}}</text>
-          </view>
-          <view class="node-pill">编辑 <cy-icon name="chevron-right" size="24" /></view>
-        </view>
-      </view>
-
-      <!-- 文字说明只留给自由探索:城市定向已块化,节点的叙事一律写在故事流的文字块里
-           —— 位置即时序(节点前那块=到达前的悬念,节点后那块=完成后的剧情),
-           挂在节点上的叙事字段就成了同一件事的第二个写处,创作者每次都要想"这句写哪儿"。 -->
-      <view class="node-card" wx:if="{{formData.productType === 2}}">
-        <view class="node-card__row">
-          <view class="node-card__ico"><cy-icon name="edit" size="32" /></view>
-          <view class="node-card__main">
-            <text class="node-card__title">文字说明</text>
-          </view>
-        </view>
-        <textarea class="pending-node-description" value="{{nodesForm.description}}" bindinput="onNodesDescriptionInputChange" placeholder="玩家到这里要观察、寻找或完成什么？" placeholder-class="slopes-story-placeholder" maxlength="500" auto-height fixed="{{true}}" />
-      </view>
-
-      <!-- 照片 -->
-      <view class="node-card">
-        <view class="node-card__row">
-          <view class="node-card__ico"><cy-icon name="image" size="32" /></view>
-          <view class="node-card__main">
-            <text class="node-card__title">照片</text>
-          </view>
-          <text class="node-badge">{{img.list(nodesForm.imgUrl).length}}/9</text>
-        </view>
-        <view class="pgrid">
+      <!-- 到达与引导 / 下一站 / 照片一组（10-28 e-node）。 -->
+      <cy-list-group gap>
+        <cy-list-row title="到达与引导" value="{{nodeStructureSummary}}" chevron data-kind="quests" bind:press="openStructure" />
+        <!-- 路线只在当前节点内出现：创作者对应玩法结果与下一站，故事流顺序仍是默认路径。 -->
+        <cy-list-row class="node-route-entry" wx:if="{{formData.productType === 1 && popChapterNodesAction==1}}" title="下一站" value="{{routeNodeMappingSummary[editTargetNodeLid] || '按故事流继续'}}" chevron hr data-nodeid="{{editTargetNodeLid}}" bind:press="openNodeRouteMapping" />
+        <cy-list-row title="照片" value="{{img.list(nodesForm.imgUrl).length}}/9" fold open="{{nodePhotosOpen}}" hr bind:press="toggleNodePhotos" />
+        <view class="pgrid node-grp-extra" wx:if="{{nodePhotosOpen}}">
           <block wx:for="{{img.list(nodesForm.imgUrl)}}" wx:key="index" wx:for-item="p" wx:for-index="pi">
             <view class="pgrid-cell">
               <image lazy-load="true" class="pgrid-cell-img" src="{{p}}" mode="aspectFill" />
@@ -960,6 +901,19 @@
             <view class="pgrid-add-plus"><cy-icon name="plus" size="40" /></view>
           </view>
         </view>
+      </cy-list-group>
+
+      <!-- 文字说明只留给自由探索:城市定向已块化,节点的叙事一律写在故事流的文字块里
+           —— 位置即时序(节点前那块=到达前的悬念,节点后那块=完成后的剧情),
+           挂在节点上的叙事字段就成了同一件事的第二个写处,创作者每次都要想"这句写哪儿"。 -->
+      <view class="node-card" wx:if="{{formData.productType === 2}}">
+        <view class="node-card__row">
+          <view class="node-card__ico"><cy-icon name="edit" size="32" /></view>
+          <view class="node-card__main">
+            <text class="node-card__title">文字说明</text>
+          </view>
+        </view>
+        <textarea class="pending-node-description" value="{{nodesForm.description}}" bindinput="onNodesDescriptionInputChange" placeholder="玩家到这里要观察、寻找或完成什么？" placeholder-class="slopes-story-placeholder" maxlength="500" auto-height fixed="{{true}}" />
       </view>
 
       <view class="node-card node-card--danger" bindtap="deleteNode" wx:if="{{popChapterNodesAction==1}}" hover-class="cy-pressed" hover-stay-time="80">删除节点</view>
@@ -977,6 +931,7 @@
         <view class="story-game-row__action" data-key="{{item.key}}" data-preview="1" bindtap="onCreateGame" aria-role="button" aria-label="预览{{item.label}}" hover-class="cy-pressed" hover-stay-time="80">预览</view>
         <view wx:if="{{!supportNodeChallenge && !supportNodeSettled || !storySupportReasons[item.key]}}" class="story-game-row__action" data-key="{{item.key}}" bindtap="onCreateGame" aria-role="button" aria-label="配置{{item.label}}" hover-class="cy-pressed" hover-stay-time="80">配置</view>
       </view>
+      <cy-inline-error wx:if="{{templateAdoptionError}}" kind="error" title="{{templateAdoptionError}}" action="查看我的玩法" bind:action="inspectAdoptedTemplates" />
       <view class="temp-seg">
         <text class="temp-seg__tit">公共玩法库</text>
         <text class="temp-seg__sub" wx:if="{{publicTempState === 'loading'}}">加载中…</text>
@@ -1043,31 +998,34 @@
   </view>
   </cy-sheet>
 
-  <!-- 节点下一站：只显示“玩法结果 → 地点”，不把起点、结局或技术规则交给创作者。 -->
+  <!-- 节点下一站（10-28 原型 A e-route）：每种结果一行，点开就地改去往、条件、效果；
+       添加条件 / 效果、换名字开一层（routeMappingLayer），这时头部换成「‹ 下一站」。 -->
   <cy-sheet variant="full" show="{{routeMappingShow}}" back-guard="{{false}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="closeNodeRouteMapping" class="node-sheet-host">
     <view class="route-mapping-sheet node-sheet">
-      <view class="node-sheet__top"><view class="node-sheet__close" bindtap="closeNodeRouteMapping" aria-role="button" aria-label="关闭下一站编辑" hover-class="cy-pressed" hover-stay-time="80">退出</view>
-        <view class="node-sheet__done" bindtap="finishNodeRouteMapping" aria-role="button" aria-label="完成下一站编辑" hover-class="cy-pressed" hover-stay-time="80">完成</view>
-
-      </view>
-      <view class="node-sheet__titlebar route-mapping-sheet__titlebar">
-        <text class="node-sheet__eyebrow">{{routeMappingSourceLabel}}{{routeMappingTemplateLabel && routeMappingTemplateLabel !== routeMappingSourceLabel ? ' · ' + routeMappingTemplateLabel : ''}}</text>
-        <text class="node-sheet__name node-sheet__name--static">下一站</text>
-      </view>
-      <!-- 稿 S36 的这句是防走错门用的:人常把这张当成"改玩法"的地方。 -->
+      <cy-sheet-nav wx:if="{{routeMappingLayer}}" back="下一站" title="{{routeMappingLayer.title}}" bind:back="closeRouteRuleLayer" />
+      <cy-sheet-nav wx:else title="下一站" action="完成" bind:cancel="closeNodeRouteMapping" bind:action="finishNodeRouteMapping" />
+      <text wx:if="{{!routeMappingLayer}}" class="route-mapping-sheet__eyebrow">{{routeMappingTemplateLabel || routeMappingSourceLabel}}</text>
 
       <view class="node-card route-mapping-card">
-        <view class="route-mapping-row" wx:for="{{routeMappingRows}}" wx:key="code" wx:for-item="mapping" wx:for-index="mappingIndex">
-          <text class="route-mapping-row__label">{{mapping.label}}</text>
-          <cy-dropdown topic-editor="{{true}}" class="route-mapping-row__picker" range="{{mapping.targetOptions}}" range-key="label" data-rowindex="{{mappingIndex}}" bind:change="onRouteMappingTargetPick">
-            <view class="route-mapping-row__target"><text>{{mapping.targetLabel}}</text><cy-icon name="arrow-right" size="24" /></view>
-          </cy-dropdown>
-        </view>
-        <view class="route-mapping-row route-mapping-row--fallback">
-          <view>
-            <text class="route-mapping-row__label">其他结果</text>
-            <text class="route-mapping-row__hint">默认结果</text>
+        <block wx:for="{{routeMappingRows}}" wx:key="mappingKey" wx:for-item="mapping" wx:for-index="mappingIndex">
+          <view wx:if="{{!routeMappingLayer}}" class="route-mapping-row" data-key="{{mapping.mappingKey}}" bindtap="toggleRouteMappingRow" aria-role="button" aria-expanded="{{routeMappingOpen === mapping.mappingKey}}" hover-class="cy-pressed" hover-stay-time="80">
+            <text class="route-mapping-row__label">{{mapping.label}}</text>
+            <view class="route-mapping-row__target"><text>{{mapping.targetLabel}}</text><view class="route-mapping-row__chev {{routeMappingOpen === mapping.mappingKey ? 'is-open' : ''}}"><cy-icon name="chevron-right" size="24" /></view></view>
           </view>
+          <view wx:if="{{routeMappingOpen === mapping.mappingKey}}" class="route-mapping-open">
+            <block wx:if="{{!routeMappingLayer}}">
+              <view class="route-mapping-dest">
+                <cy-list-row title="去往" value="{{mapping.targetLabel}}" fold open="{{routeMappingDestOpen}}" bind:press="toggleRouteMappingDest" />
+                <block wx:if="{{routeMappingDestOpen}}">
+                  <cy-list-row wx:for="{{mapping.targetOptions}}" wx:key="id" wx:for-item="option" wx:for-index="optionIndex" title="{{option.label}}" hr data-rowindex="{{mappingIndex}}" data-optionindex="{{optionIndex}}" bind:press="onRouteMappingTargetPick"><cy-icon wx:if="{{option.id === mapping.toNodeId}}" name="check" size="28" /></cy-list-row>
+                </block>
+              </view>
+            </block>
+            <story-rule-editor class="route-mapping-rules" id="route-rules-{{mappingIndex}}" wx:if="{{routeMappingShow}}" identity="{{mapping.formIdentity}}" value="{{mapping.ruleConfig}}" baseline="{{mapping.ruleBaseline}}" nodes="{{routeRuleNodes}}" variables="{{routeRuleVariables}}" names="{{routeRuleNames}}" bind:change="onRouteRulesChange" bind:layer="onRouteRuleLayer" bind:create="onRouteRuleCreate" />
+          </view>
+        </block>
+        <view wx:if="{{!routeMappingLayer}}" class="route-mapping-row route-mapping-row--fallback">
+          <text class="route-mapping-row__label">其他结果</text>
           <text class="route-mapping-row__fallback">{{routeMappingFallbackLabel}}</text>
         </view>
       </view>
@@ -1460,7 +1418,7 @@
       <!-- P0.5 奖励总览(只读:XP 自动分配 / 通关勋章) -->
       <view class="pc-section-tit">奖励总览</view>
       <cy-card class="pc-reward">
-        <view class="pc-reward-row"><text class="pc-reward-k">探索值(XP)</text><text class="pc-reward-v">自动分配 · 按任务难度拆 60%,余额为通关奖励</text></view>
+        <view class="pc-reward-row"><text class="pc-reward-k">探索值</text><text class="pc-reward-v">自动分配</text></view>
         <view class="pc-reward-row"><text class="pc-reward-k">通关勋章</text><text class="pc-reward-v">{{formData.finishMedalName || (formData.name || '主题名') + ' · 通关(默认)'}}</text></view>
       </cy-card>
       <!-- blocking 非空(内容安全/AI 判定为 error)时不给继续发布。
@@ -1692,35 +1650,27 @@
     </view>
   </cy-sheet>
 
-  <include src="./topic-detail-sheet.wxml" />
+  <include src="./topic-detail-sheet.wxml" /><!-- 文档二 L1:可玩时段底部选择卡,和主题详情同在主题根节点下 --><cy-choice-sheet show="{{playWindowSheet.show}}" title="可玩时段" options="{{playWindowOptions}}" value="{{playWindow.mode}}" error="{{playWindowSheet.error}}" bind:change="onPlayWindowPick" bind:close="closePlayWindow"><view wx:if="{{playWindow.mode === 'custom'}}" class="pw-custom"><view class="pw-custom__grp"><cy-dropdown topic-editor range="{{playWindowStarts}}" value="{{playWindowStartIndex}}" data-field="start" bind:change="onPlayWindowTime"><view class="pw-custom__row"><text class="pw-custom__t">开始</text><text class="pw-custom__v">{{playWindow.start}}</text><cy-icon name="chevron-right" size="28" /></view></cy-dropdown><cy-dropdown topic-editor range="{{playWindowEnds}}" value="{{playWindowEndIndex}}" data-field="end" bind:change="onPlayWindowTime"><view class="pw-custom__row pw-custom__row--hr"><text class="pw-custom__t">结束</text><text class="pw-custom__v">{{playWindow.end}}</text><cy-icon name="chevron-right" size="28" /></view></cy-dropdown></view><view class="pw-custom__done" bindtap="closePlayWindow" aria-role="button" aria-label="完成" hover-class="cy-pressed" hover-stay-time="80">完成</view></view></cy-choice-sheet>
 
   <cy-sheet show="{{valueEditor.show}}" back-guard="{{false}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="closeValueEditor" class="node-sheet-host">
     <view class="node-sheet story-initial" wx:if="{{valueEditor.row}}">
       <view class="node-sheet__top"><view class="node-sheet__close" bindtap="closeValueEditor" aria-role="button" aria-label="关闭数值编辑" hover-class="cy-pressed">退出</view><view class="node-sheet__done" bindtap="saveValueEditor" aria-role="button" aria-label="保存数值" hover-class="cy-pressed">完成</view></view>
-      <view class="node-sheet__titlebar"><text class="node-sheet__eyebrow">取值范围</text><text class="node-sheet__name node-sheet__name--static">{{valueEditor.index < 0 ? '添加数值' : '编辑数值'}}</text></view>
+      <view class="node-sheet__titlebar"><text class="node-sheet__name node-sheet__name--static">{{valueEditor.row.label || (valueEditor.index < 0 ? '添加数值' : '编辑数值')}}</text></view>
       <view class="node-card">
-        <view class="rt-field"><text>名称</text><input value="{{valueEditor.row.label}}" maxlength="24" placeholder="输入数值名称" data-field="label" bindinput="onValueField" /></view>
-        <text class="story-initial__example">改名后，已有引用仍会保持关联。</text>
-        <view class="rt-two"><view class="rt-field"><text>下限</text><input type="text" value="{{valueEditor.row.min}}" data-field="min" bindinput="onValueField" /></view><view class="rt-field"><text>上限</text><input type="text" value="{{valueEditor.row.max}}" data-field="max" bindinput="onValueField" /></view></view>
-        <view class="node-card__row"><view class="node-card__main"><text class="node-card__title">玩家可见</text></view><cy-switch checked="{{valueEditor.row.visible}}" data-field="visible" bindchange="onValueField" /></view>
-        <text class="story-initial__example">开局值在第一章的「初始状态」中填写；修改范围后，越界的开局值会标出并阻止发布。</text>
+        <view class="rt-field"><text>名称</text><input value="{{valueEditor.row.label}}" disabled="{{valueEditor.definitionReadOnly}}" maxlength="24" placeholder="名称" data-field="label" bindinput="onValueField" /></view>
+        <view class="node-card__row"><view class="node-card__main"><text class="node-card__title">玩家可见</text></view><cy-switch checked="{{valueEditor.row.visible}}" disabled="{{valueEditor.definitionReadOnly}}" data-field="visible" bindchange="onValueField" /></view>
       </view>
+      <text class="ic-label">范围</text>
       <view class="node-card">
-        <view class="node-card__row"><view class="node-card__main"><text class="node-card__title">关联</text></view><view class="node-pill" wx:if="{{runtimeHpEnabled}}" bindtap="addValueLink" aria-role="button" aria-label="添加数值关联" hover-class="cy-pressed">添加<cy-icon name="plus" size="24" /></view></view>
-        <text class="story-initial__example">仅支持此值下降时扣减已启用的{{runtimeHpLabel}}，不支持其他目标或双向关联。</text>
-        <text class="story-initial__example" wx:if="{{!runtimeHpEnabled}}">请先启用{{runtimeHpLabel}}。</text>
-        <view wx:for="{{valueEditor.links}}" wx:key="id" wx:for-index="li">
-          <view class="node-card__hr"></view>
-          <view class="rt-field"><text>触发方式</text><cy-dropdown topic-editor range="{{valueTriggers}}" value="{{item.trigger === 'PER_POINT' ? 0 : item.trigger === 'PER_EVENT' ? 1 : 2}}" data-index="{{li}}" data-field="trigger" bind:change="onValueLink"><view class="rt-select">{{item.trigger === 'PER_POINT' ? valueTriggers[0] : item.trigger === 'PER_EVENT' ? valueTriggers[1] : valueTriggers[2]}}<cy-icon name="chevron-right" size="24" /></view></cy-dropdown></view>
-          <view class="rt-field"><text>来源</text><cy-dropdown topic-editor range="{{valueReasonLabels}}" value="{{item.allowedReasons[0] === 'TASK_COST' ? 0 : item.allowedReasons[0] === 'TEMPLATE_EFFECT' ? 1 : item.allowedReasons[0] === 'CHAPTER_COST' ? 2 : item.allowedReasons[0] === 'ITEM_USE' ? 3 : 4}}" data-index="{{li}}" data-field="reason" bind:change="onValueLink"><view class="rt-select">{{item.allowedReasons[0] === 'TASK_COST' ? valueReasonLabels[0] : item.allowedReasons[0] === 'TEMPLATE_EFFECT' ? valueReasonLabels[1] : item.allowedReasons[0] === 'CHAPTER_COST' ? valueReasonLabels[2] : item.allowedReasons[0] === 'ITEM_USE' ? valueReasonLabels[3] : valueReasonLabels[4]}}<cy-icon name="chevron-right" size="24" /></view></cy-dropdown></view>
-          <view class="rt-field"><text>次数范围</text><text wx:if="{{item.trigger === 'FIRST_THRESHOLD'}}">本局一次</text><cy-dropdown wx:else topic-editor range="{{valueFrequencies}}" value="{{item.frequency === 'RUN' ? 1 : 0}}" data-index="{{li}}" data-field="frequency" bind:change="onValueLink"><view class="rt-select">{{item.frequency === 'RUN' ? valueFrequencies[1] : valueFrequencies[0]}}<cy-icon name="chevron-right" size="24" /></view></cy-dropdown></view>
-          <view class="rt-field" wx:if="{{item.trigger === 'PER_POINT'}}"><text>每点扣减</text><input type="number" value="{{item.multiplier}}" data-index="{{li}}" data-field="multiplier" bindinput="onValueLink" /></view>
-          <view class="rt-field" wx:else><text>固定扣减</text><input type="number" value="{{item.amount}}" data-index="{{li}}" data-field="amount" bindinput="onValueLink" /></view>
-          <view class="rt-field" wx:if="{{item.trigger === 'FIRST_THRESHOLD'}}"><text>首次阈值</text><input type="text" value="{{item.threshold}}" data-index="{{li}}" data-field="threshold" bindinput="onValueLink" /></view>
-          <view class="node-pill" data-index="{{li}}" bindtap="removeValueLink" aria-role="button" aria-label="移除关联" hover-class="cy-pressed">移除关联</view>
-        </view>
+        <view class="node-card__row"><view class="node-card__main"><text class="node-card__title">最小值</text></view><cy-stepper label="最小值" value="{{valueEditor.row.min}}" min="{{-10000}}" max="{{valueEditor.row.max}}" disabled="{{valueEditor.definitionReadOnly}}" data-field="min" bind:change="onValueField" /></view>
+        <view class="node-card__hr"></view>
+        <view class="node-card__row"><view class="node-card__main"><text class="node-card__title">最大值</text></view><cy-stepper label="最大值" value="{{valueEditor.row.max}}" min="{{valueEditor.row.min}}" max="{{10000}}" disabled="{{valueEditor.definitionReadOnly}}" data-field="max" bind:change="onValueField" /></view>
       </view>
-      <view class="node-card node-card--danger" wx:if="{{valueEditor.index >= 0}}" bindtap="removeValue" aria-role="button" aria-label="删除数值" hover-class="cy-pressed">删除数值</view>
+      <text class="ic-label">关联</text>
+      <view class="node-card">
+        <view class="node-card__row"><view class="node-card__main"><text class="node-card__title">下降时一起扣{{runtimeHpLabel}}</text></view><cy-switch checked="{{valueEditor.links.length > 0}}" bindchange="onValueLinkSwitch" /></view>
+      </view>
+      <view class="node-card node-card--danger" wx:if="{{valueEditor.index >= 0 && !valueEditor.definitionReadOnly}}" bindtap="removeValue" aria-role="button" aria-label="删除数值" hover-class="cy-pressed">删除数值</view>
       <cy-inline-error wx:if="{{valueEditor.error}}" title="{{valueEditor.error}}" />
     </view>
   </cy-sheet>
@@ -1749,7 +1699,7 @@
   </view>
 </cy-sheet>
 
-<cy-sheet show="{{initialStateEditor.show}}" back-guard="{{false}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="closeInitialState" class="node-sheet-host">
+<cy-sheet show="{{initialStateEditor.show}}" stacked="{{carryPicker.show}}" back-guard="{{false}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="closeInitialState" class="node-sheet-host">
   <view class="node-sheet story-initial" wx:if="{{initialStateEditor.rules}}">
     <view class="node-sheet__top"><view class="node-sheet__close" bindtap="closeInitialState" aria-role="button" aria-label="关闭初始状态" hover-class="cy-pressed" hover-stay-time="80">退出</view>
       <view class="node-sheet__done" bindtap="saveInitialState" aria-role="button" aria-label="保存初始状态" hover-class="cy-pressed" hover-stay-time="80">完成</view>
@@ -1759,23 +1709,36 @@
       <text class="node-sheet__eyebrow">主题配置</text>
       <text class="node-sheet__name node-sheet__name--static">初始状态</text>
     </view>
+    <text class="ic-label">开局带着</text>
+    <view class="node-card ic-list">
+      <view class="ic-row" wx:for="{{initialStateEditor.carry}}" wx:key="key">
+        <text class="ic-row__name">{{item.label}}</text><text class="ic-row__kind">{{item.kindText}}</text>
+        <view wx:if="{{editScope !== 'WHITELIST' && !initialStateEditor.rules.attributeBinding}}" class="ic-row__remove" data-key="{{item.key}}" bindtap="removeCarry" aria-role="button" aria-label="移除{{item.label}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="24" /></view>
+      </view>
+      <view wx:if="{{editScope !== 'WHITELIST' && !initialStateEditor.rules.attributeBinding}}" class="ic-row ic-row--add" bindtap="openCarryPicker" aria-role="button" aria-label="添加开局带着的线索或标签" hover-class="cy-pressed" hover-stay-time="80">
+        <view class="ic-row__plus"><cy-icon name="plus" size="24" /></view><text>添加</text>
+      </view>
+    </view>
+    <text class="ic-label">数值</text>
+    <view class="node-card">
+      <attribute-binding-editor wx:if="{{initialStateEditor.show}}" rules="{{formData.journeyRules}}" snapshot="{{attributeRegistrySnapshot}}" topic-id="{{editingTopicId}}" config-version="{{formData.configVersion}}" read-only="{{editScope === 'WHITELIST'}}" bind:confirm="onAttributeBindingConfirm" bind:manage="manageAttributeDefinitions" bind:refresh="loadAttributeRegistry" />
+      <cy-inline-error wx:if="{{attributeRegistryError}}" title="{{attributeRegistryError}}" />
+    </view>
     <view class="node-card" wx:if="{{initialStateEditor.rules.hp.enabled}}">
       <view class="story-initial__row"><text class="node-card__title">{{runtimeHpInitialLabel}}</text><cy-switch checked="{{true}}" disabled="{{editScope === 'WHITELIST'}}" data-field="hp.enabled" bind:change="onInitialStateField" accessibility-label="启用{{runtimeHpInitialLabel}}" /></view>
-      <view class="story-initial__numbers">
-        <cy-field label="开局{{runtimeHpInitialLabel}}" value="{{initialStateEditor.rules.hp.init}}" data-field="hp.init" bind:input="onInitialStateField" readonly="{{editScope === 'WHITELIST'}}" />
-        <cy-field label="上限（主题设置）" value="{{initialStateEditor.rules.hp.max}}" readonly="{{true}}" />
+      <view class="story-initial__row">
+        <text>开局{{runtimeHpInitialLabel}}</text><cy-stepper label="开局{{runtimeHpInitialLabel}}" value="{{initialStateEditor.rules.hp.init}}" min="{{1}}" max="{{initialStateEditor.rules.hp.max}}" disabled="{{editScope === 'WHITELIST'}}" data-field="hp.init" bind:change="onInitialStateField" />
       </view>
     </view>
     <view class="node-card" wx:if="{{initialStateEditor.rules.luck.enabled}}">
       <view class="story-initial__row"><text class="node-card__title">{{runtimeLuckInitialLabel}}</text><cy-switch checked="{{true}}" disabled="{{editScope === 'WHITELIST'}}" data-field="luck.enabled" bind:change="onInitialStateField" accessibility-label="启用{{runtimeLuckInitialLabel}}" /></view>
-      <view class="story-initial__numbers">
-        <cy-field label="开局{{runtimeLuckInitialLabel}}" value="{{initialStateEditor.rules.luck.init}}" data-field="luck.init" bind:input="onInitialStateField" readonly="{{editScope === 'WHITELIST'}}" />
-        <cy-field label="上限（主题设置）" value="{{initialStateEditor.rules.luck.max}}" readonly="{{true}}" />
+      <view class="story-initial__row">
+        <text>开局{{runtimeLuckInitialLabel}}</text><cy-stepper label="开局{{runtimeLuckInitialLabel}}" value="{{initialStateEditor.rules.luck.init}}" min="{{0}}" max="{{initialStateEditor.rules.luck.max}}" disabled="{{editScope === 'WHITELIST'}}" data-field="luck.init" bind:change="onInitialStateField" />
       </view>
     </view>
     <view class="node-card" wx:for="{{initialStateEditor.values}}" wx:key="key">
       <view class="story-initial__row"><text class="node-card__title">{{item.label}}</text><text class="node-card__value">{{item.min}} 至 {{item.max}}</text></view>
-      <view class="story-initial__numbers"><cy-field label="开局{{item.label}}" value="{{item.initial}}" data-index="{{item.index}}" data-field="attribute.initial" bind:input="onInitialStateField" readonly="{{editScope === 'WHITELIST'}}" /></view>
+      <view class="story-initial__row"><text>开局{{item.label}}</text><cy-stepper label="开局{{item.label}}" value="{{item.initial}}" min="{{item.min}}" max="{{item.max}}" data-index="{{item.index}}" data-field="attribute.initial" bind:change="onInitialStateField" disabled="{{editScope === 'WHITELIST' || !!initialStateEditor.rules.attributeBinding}}" /></view>
       <cy-inline-error wx:if="{{item.invalidInitial}}" title="开局值超出当前范围，请修改后完成" />
     </view>
     <view class="story-initial__choices" wx:if="{{editScope !== 'WHITELIST'}}">
@@ -1788,6 +1751,45 @@
       </view>
     </view>
     <cy-inline-error wx:if="{{initialStateEditor.error}}" title="{{initialStateEditor.error}}" />
+  </view>
+</cy-sheet>
+
+<cy-sheet show="{{carryPicker.show}}" back-guard="{{false}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="closeCarryPicker" class="node-sheet-host">
+  <view class="node-sheet story-initial ic-picker" wx:if="{{carryPicker.show}}">
+    <view class="node-sheet__top">
+      <view class="node-sheet__close" bindtap="closeCarryPicker" aria-role="button" aria-label="返回初始状态" hover-class="cy-pressed" hover-stay-time="80">返回</view>
+      <text class="ic-picker__title">添加</text>
+      <view class="node-sheet__done {{carryPicker.count ? '' : 'is-disabled'}}" bindtap="confirmCarryPicker" aria-role="button" aria-label="添加所选" hover-class="cy-pressed" hover-stay-time="80">添加</view>
+    </view>
+    <view class="node-card ic-search"><cy-icon name="search" size="28" /><input value="{{carryPicker.query}}" placeholder="搜索" confirm-type="search" bindinput="onCarryQuery" /></view>
+    <view class="node-card ic-list">
+      <view class="ic-row ic-row--add" bindtap="onCarryCreateOpen" aria-role="button" aria-label="新建" hover-class="cy-pressed" hover-stay-time="80">
+        <view class="ic-row__plus"><cy-icon name="plus" size="24" /></view><text>{{carryPicker.query ? '新建「' + carryPicker.query + '」' : '新建…'}}</text>
+      </view>
+      <block wx:if="{{carryPicker.creating}}">
+        <view class="ic-seg">
+          <view class="ic-seg__opt {{carryPicker.newKind === 'clue' ? 'is-on' : ''}}" data-kind="clue" bindtap="onCarryKind" aria-role="button" aria-label="线索" hover-class="cy-pressed" hover-stay-time="80">线索</view>
+          <view class="ic-seg__opt {{carryPicker.newKind === 'tag' ? 'is-on' : ''}}" data-kind="tag" bindtap="onCarryKind" aria-role="button" aria-label="标签" hover-class="cy-pressed" hover-stay-time="80">标签</view>
+        </view>
+        <view class="ic-row">
+          <text class="ic-row__name">名称</text>
+          <input class="ic-row__input" value="{{carryPicker.newName}}" maxlength="24" bindinput="onCarryNewName" bindconfirm="createCarryKey" />
+          <view class="ic-row__act {{!carryPicker.newName || carryPicker.saving ? 'is-off' : ''}}" bindtap="createCarryKey" aria-role="button" aria-label="新建" hover-class="cy-pressed" hover-stay-time="80">新建</view>
+        </view>
+      </block>
+    </view>
+    <cy-inline-error wx:if="{{carryPicker.error}}" title="{{carryPicker.error}}" />
+    <text wx:if="{{carryPicker.state === 'error'}}" class="ic-note ic-note--error" bindtap="retryCarryPicker" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">没有读取成功，请再试一次。</text>
+    <block wx:for="{{carryPicker.groups}}" wx:key="kind" wx:for-item="group">
+      <text class="ic-label">{{group.label}}</text>
+      <view class="node-card ic-list">
+        <view class="ic-row" wx:for="{{group.rows}}" wx:key="key" data-key="{{item.key}}" bindtap="onCarryToggle" aria-role="checkbox" aria-checked="{{item.on || item.added}}" aria-label="{{item.label}}" hover-class="cy-pressed" hover-stay-time="80">
+          <text class="ic-row__name">{{item.label}}</text>
+          <text wx:if="{{item.added}}" class="ic-row__kind">已添加</text>
+          <view wx:elif="{{item.on}}" class="ic-row__check"><cy-icon name="check" size="28" /></view>
+        </view>
+      </view>
+    </block>
   </view>
 </cy-sheet>
 

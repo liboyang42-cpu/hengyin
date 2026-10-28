@@ -26,6 +26,8 @@ const KIT_TYPES = [
   'profile', 'photocheck', 'note', 'typein',
 ];
 
+const LIGHT_KITS = ['estimate', 'countdown', 'stopwatch', 'dailysign', 'diceroll', 'bingo'];
+
 Component({
   properties: {
     show: { type: Boolean, value: false },
@@ -37,7 +39,24 @@ Component({
        不是把整屏那版缩小。 */
     inline: { type: Boolean, value: false },
   },
+  /* 浅底整屏玩法:状态栏字跟着换黑,收起换回白(2026-10-27 实测:猜数字 / 倒计时屏的时间电量白字压白底看不见)。
+     页面自绘导航,这里只动前景色,和页面 _albumStatusBar 同一套写法。 */
+  observers: {
+    'show, kit, inline'(show, kit, inline) {
+      const light = !!(show && !inline && kit && !kit.terminal && LIGHT_KITS.indexOf(kit.type) >= 0);
+      if (light === !!this._lightBar) return;
+      this._lightBar = light;
+      this._statusBar(light);
+    },
+  },
+  lifetimes: {
+    detached() { if (this._lightBar) { this._lightBar = false; this._statusBar(false); } },
+  },
   methods: {
+    _statusBar(light) {
+      if (typeof wx.setNavigationBarColor !== 'function') return;
+      wx.setNavigationBarColor({ frontColor: light ? '#000000' : '#ffffff', backgroundColor: light ? '#ffffff' : '#000000' });   /* ds-ok 微信 API 只收这两个字面色 */
+    },
     /* 所有子事件收口成一条 kitaction,payload 带上是哪种玩法的哪个动作。
        不逐个往上抛同名事件:页面要挂九组 bind 才接得全,漏一个就是静默失效。 */
     _emit(action, detail) {

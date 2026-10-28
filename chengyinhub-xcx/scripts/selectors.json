@@ -810,7 +810,7 @@
   ]
  },
  "B59": {
-  "selector": ".cml-card",
+  "selector": "tpl-shelf",
   "min": 1,
   "forbid": [
    "cy-empty",

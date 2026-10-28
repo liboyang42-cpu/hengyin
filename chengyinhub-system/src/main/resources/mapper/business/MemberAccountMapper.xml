@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.MemberAccountMapper">
+
+    <resultMap type="com.chengyinhub.business.domain.MyAppealRow" id="MyAppealResult">
+        <result property="kind"           column="kind"            />
+        <result property="id"             column="id"              />
+        <result property="status"         column="status"          />
+        <result property="sessionId"      column="session_id"      />
+        <result property="topicId"        column="topic_id"        />
+        <result property="topicName"      column="topic_name"      />
+        <result property="nodeId"         column="node_id"         />
+        <result property="createTime"     column="create_time"     />
+        <result property="resolutionNote" column="resolution_note" />
+    </resultMap>
+
+    <sql id="myAppeals">
+        select 'appeal' as kind, a.id, a.status, a.session_id, s.topic_id, t.name as topic_name, a.node_id,
+               a.create_time, a.resolution_note
+          from orient_score_appeal a
+          left join topic_route_session s on s.id = a.session_id
+          left join cms_topic t on t.id = s.topic_id
+         where a.member_id = #{memberId}
+           <if test="open != null and open">and a.status = 0</if>
+           <if test="open != null and !open">and a.status != 0</if>
+        union all
+        select 'dispute' as kind, d.id, d.status, d.session_id, s.topic_id, t.name as topic_name, null as node_id,
+               d.create_time, d.resolution_note
+          from orient_result_dispute d
+          left join topic_route_session s on s.id = d.session_id
+          left join cms_topic t on t.id = s.topic_id
+         where d.member_id = #{memberId}
+           <if test="open != null and open">and d.status = 0</if>
+           <if test="open != null and !open">and d.status != 0</if>
+    </sql>
+
+    <select id="selectMyAppeals" resultMap="MyAppealResult">
+        select kind, id, status, session_id, topic_id, topic_name, node_id, create_time, resolution_note
+          from (<include refid="myAppeals"/>) mine
+         order by create_time desc, kind asc, id desc
+         limit #{offset}, #{limit}
+    </select>
+
+    <select id="countMyAppeals" resultType="int">
+        select count(*) from (<include refid="myAppeals"/>) mine
+    </select>
+
+    <select id="countEffectiveBans" resultType="int">
+        select count(*)
+          from club_governance_ban
+         where target_member_id = #{memberId}
+           and status = 'ACTIVE'
+           and ((source_type = 'CLUB' and expires_at is not null and expires_at &gt; #{now})
+             or (source_type = 'PLATFORM' and expires_at is null))
+    </select>
+</mapper>

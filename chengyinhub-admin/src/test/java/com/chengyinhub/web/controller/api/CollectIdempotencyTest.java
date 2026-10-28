@@ -35,11 +35,11 @@ class CollectIdempotencyTest {
     void setUp() {
         collectibleMapper = mock(MemberCollectibleMapper.class);
         controller = new ApiPlayProgressController();
-        ReflectionTestUtils.setField(controller, "memberCollectibleMapper", collectibleMapper);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "memberCollectibleMapper", collectibleMapper);
     }
 
     private void invokeCollect(Long memberId, int type, Long topicId, Long refId, String content) {
-        ReflectionTestUtils.invokeMethod(controller, "collect",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.invokeMethod(controller, "collect",
                 memberId, type, topicId, refId, content);
     }
 

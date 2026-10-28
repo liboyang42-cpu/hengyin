@@ -8490,6 +8490,88 @@
    "errorMsg"
   ]
  },
+ "B76": {
+  "data": {
+   "loading": false,
+   "errorMsg": "",
+   "cards": [
+    {
+     "flipped": "示例flipped",
+     "style": "示例style",
+     "delay": "示例delay",
+     "cover": "/images/route_city_cover.png",
+     "title": "示例title",
+     "front": "示例front",
+     "imgStyle": "示例imgStyle",
+     "steps": "示例steps",
+     "foot": "示例foot",
+     "id": 1
+    }
+   ],
+   "checks": [
+    {
+     "flipped": "示例flipped",
+     "style": "示例style",
+     "delay": "示例delay",
+     "cover": "/images/route_city_cover.png",
+     "title": "示例title",
+     "front": "示例front",
+     "imgStyle": "示例imgStyle",
+     "steps": "示例steps",
+     "foot": "示例foot",
+     "id": 1
+    }
+   ]
+  },
+  "dropped": [],
+  "switchKeys": [
+   "loading",
+   "errorMsg",
+   "cards",
+   "checks"
+  ]
+ },
+ "B77": {
+  "data": {
+   "loading": false,
+   "errorMsg": "",
+   "cards": [
+    {
+     "flipped": "示例flipped",
+     "style": "示例style",
+     "delay": "示例delay",
+     "cover": "/images/route_city_cover.png",
+     "title": "示例title",
+     "front": "示例front",
+     "imgStyle": "示例imgStyle",
+     "steps": "示例steps",
+     "foot": "示例foot",
+     "id": 1
+    }
+   ],
+   "checks": [
+    {
+     "flipped": "示例flipped",
+     "style": "示例style",
+     "delay": "示例delay",
+     "cover": "/images/route_city_cover.png",
+     "title": "示例title",
+     "front": "示例front",
+     "imgStyle": "示例imgStyle",
+     "steps": "示例steps",
+     "foot": "示例foot",
+     "id": 1
+    }
+   ]
+  },
+  "dropped": [],
+  "switchKeys": [
+   "loading",
+   "errorMsg",
+   "cards",
+   "checks"
+  ]
+ },
  "C01": {
   "data": {
    "merchantAccess": {
@@ -12302,6 +12384,70 @@
  "D12": {
   "data": null,
   "target": "#participationDetail",
+  "dropped": [],
+  "switchKeys": []
+ },
+ "D12a": {
+  "data": null,
+  "dropped": [],
+  "switchKeys": []
+ },
+ "D12b": {
+  "data": {
+   "login": true,
+   "unavailable": false
+  },
+  "dropped": [],
+  "switchKeys": []
+ },
+ "D12h": {
+  "data": {
+   "login": true,
+   "unavailable": false
+  },
+  "dropped": [],
+  "switchKeys": []
+ },
+ "D12i": {
+  "data": {
+   "login": true,
+   "unavailable": false
+  },
+  "dropped": [],
+  "switchKeys": []
+ },
+ "D12j": {
+  "data": {
+   "login": true,
+   "unavailable": false
+  },
+  "dropped": [],
+  "switchKeys": []
+ },
+ "D12k": {
+  "data": {
+   "login": true,
+   "unavailable": false
+  },
+  "dropped": [],
+  "switchKeys": []
+ },
+ "D12l": {
+  "data": {
+   "state": "login",
+   "rows": [],
+   "reputation": null
+  },
+  "dropped": [],
+  "switchKeys": []
+ },
+ "D12c": {
+  "data": null,
+  "dropped": [],
+  "switchKeys": []
+ },
+ "D12d": {
+  "data": null,
   "dropped": [],
   "switchKeys": []
  },

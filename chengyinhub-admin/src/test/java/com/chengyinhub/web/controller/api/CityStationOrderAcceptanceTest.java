@@ -7,7 +7,6 @@ import com.chengyinhub.business.service.IPlayerNodeProgressService;
 import com.chengyinhub.business.service.support.NodeAccessPolicy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -85,23 +84,23 @@ class CityStationOrderAcceptanceTest {
         ICmsTopicNodeService nodes = mock(ICmsTopicNodeService.class);
         IPlayerNodeProgressService progress = mock(IPlayerNodeProgressService.class);
         ApiPlayProgressController controller = new ApiPlayProgressController();
-        ReflectionTestUtils.setField(controller, "cmsTopicNodeService", nodes);
-        ReflectionTestUtils.setField(controller, "playerNodeProgressService", progress);
+        PlayNodeAccessTestFixtures.setField(controller, "cmsTopicNodeService", nodes);
+        PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService", progress);
         when(nodes.selectCmsTopicNodeList(any())).thenReturn(Arrays.asList(first, second, third));
 
         PlayerNodeProgress pendingPhoto = new PlayerNodeProgress();
         pendingPhoto.setNodeId(1L);
         pendingPhoto.setStatus(0);
         when(progress.selectPlayerNodeProgressList(any())).thenReturn(List.of(pendingPhoto));
-        Boolean allowed = ReflectionTestUtils.invokeMethod(controller, "isPrevDone", MEMBER, ACT, second);
+        Boolean allowed = com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.invokeMethod(controller, "isPrevDone", MEMBER, ACT, second);
         assertFalse(allowed, "拍照待审不算完成,第二站不能提前通过");
 
         PlayerNodeProgress done = new PlayerNodeProgress();
         done.setNodeId(1L);
         done.setStatus(1);
         when(progress.selectPlayerNodeProgressList(any())).thenReturn(List.of(done));
-        assertTrue(ReflectionTestUtils.<Boolean>invokeMethod(controller, "isPrevDone", MEMBER, ACT, second));
-        assertFalse(ReflectionTestUtils.<Boolean>invokeMethod(controller, "isPrevDone", MEMBER, ACT, third),
+        assertTrue(PlayNodeAccessTestFixtures.<Boolean>invokeMethod(controller, "isPrevDone", MEMBER, ACT, second));
+        assertFalse(PlayNodeAccessTestFixtures.<Boolean>invokeMethod(controller, "isPrevDone", MEMBER, ACT, third),
                 "第三站还要求第二站完成");
     }
 }

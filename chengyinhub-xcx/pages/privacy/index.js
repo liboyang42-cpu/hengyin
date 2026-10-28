@@ -4,6 +4,7 @@ const { VERSIONS } = require('../../utils/compliance/usage-consent.js');
 const app = getApp();
 const presencePrivacy = require('../../utils/roam-presence-privacy.js');
 const bgTracker = require('../../utils/location/bg-tracker.js');
+const { reader, sameReader } = require('../../utils/user-character.js');
 
 Page({
   _mediaBeforeId: '',
@@ -41,13 +42,32 @@ Page({
   },
 
   onShow() {
+    this._roamRevokeHidden = false;
+    if (this._roamRevokeReader && (this._roamRevokeInFlight || this.data.failedAction === 'revoke')
+        && !sameReader(app, this._roamRevokeReader)) {
+      this._roamRevokeEpoch = (this._roamRevokeEpoch || 0) + 1;
+      this._roamRevokeReader = null;
+      this._roamRevokeInFlight = false;
+      this.data.failedAction = '';
+      this.setData({ submitting: false, submitError: '' });
+    } else if (this._roamRevokeInFlight) {
+      this._roamRevokeEpoch = (this._roamRevokeEpoch || 0) + 1;
+      this._roamRevokeInFlight = false;
+      this.data.failedAction = 'revoke';
+      this.setData({ submitting: false, submitError: '本机定位已停，撤回记录待确认，请重试' });
+    }
     this.syncRoamCollection();
     this._homeCityConsentEpoch = (this._homeCityConsentEpoch || 0) + 1;
     this.setData({ homeCityBusy: false, homeCityError: '' });
     this._mediaHidden = false;
     if (!this.data.pendingAuthorization) this.loadOwnMedia();
   },
-  onHide() { this.clearMediaState(); },
+  onHide() { this.invalidateRoamRevoke(); this.clearMediaState(); },
+
+  invalidateRoamRevoke() {
+    this._roamRevokeHidden = true;
+    this._roamRevokeEpoch = (this._roamRevokeEpoch || 0) + 1;
+  },
 
   clearMediaState() {
     this._mediaHidden = true;
@@ -236,6 +256,7 @@ Page({
   // ⇒ 之后所有需要隐私授权的接口静默挂起,无报错无提示。
   // 页内真弹窗没有这个出口,所以不存在这个洞;在迁成真弹窗之前,这里必须兜底。
   onUnload() {
+    this.invalidateRoamRevoke();
     this.clearMediaState();
     if (!app.hasPendingPrivacyAuthorization()) return;
     // 用户用系统返回离开了授权闸 = 没有作出同意。按「不同意」结算,让调用方拿到确定结果,
@@ -381,10 +402,11 @@ Page({
     if (this.data.submitting) return;
     this.data.failedAction = '';
     this.setData({ submitting: true, submitError: '' });
-    const owner = String(app.getUserID ? app.getUserID() || '' : '');
+    const captured = this._roamRevokeReader = reader(app);
+    this._roamRevokeInFlight = true;
     const epoch = this._roamRevokeEpoch = (this._roamRevokeEpoch || 0) + 1;
-    const current = () => epoch === this._roamRevokeEpoch
-      && owner === String(app.getUserID ? app.getUserID() || '' : '');
+    const current = () => !this._roamRevokeHidden && epoch === this._roamRevokeEpoch
+      && sameReader(app, captured);
     // 撤回先作用于本机用途；审计失败仍由 consent-client 保留原账号/requestId 补传。
     bgTracker.revoke('roam');
     this.syncRoamCollection();
@@ -405,7 +427,10 @@ Page({
         submitError: '本机定位已停，撤回记录待确认，请重试',
       });
     }).finally(() => {
-      if (epoch === this._roamRevokeEpoch) this.setData({ submitting: false });
+      if (current()) {
+        this._roamRevokeInFlight = false;
+        this.setData({ submitting: false });
+      }
     });
   },
 

@@ -1,0 +1,94 @@
+{
+  "baseCommit": "2d7c5dfd99339ed24d43a97819c59e850e2fa275",
+  "patchBytes": 19984,
+  "patchSHA256": "59b077ba7a28a0d6cfc81803dbfad542982af436799cf17cd04abf2cf4125537",
+  "gzipBytes": 6421,
+  "gzipSHA256": "f6b72a6e2b9ee5479c0fb719a7daa1f77e5d619decd94ecc165010ff8825151c",
+  "files": [
+    {
+      "path": "chengyinhub-xcx/subpackageMember/free-explore/index.js",
+      "beforeBlob": "194ed1cd23889cd54c529d5f1345c77ed04ab9f1",
+      "beforeBytes": 19828,
+      "beforeSHA256": "03a2ffb3581e5fa407398a1f187f298508a84a24a50988ab80508038ded7ae45",
+      "afterBytes": 19998,
+      "afterSHA256": "ba134298e08dac7df2d1443e674b7c0dac479f3a459e5f78a230e43a5c87192e"
+    },
+    {
+      "path": "chengyinhub-xcx/utils/roam-passport-read.js",
+      "beforeBlob": "39bcff37939794ddeec4af29aa4e41fb2f4bf826",
+      "beforeBytes": 5645,
+      "beforeSHA256": "9f26c470d536a968d578fe469dfa835a9b1e5fa252da4cdf8112ff63bd073368",
+      "afterBytes": 5678,
+      "afterSHA256": "bd05c445896a5823d5b023063b8851bfe34d2823716cbac281815e435d5fadb4"
+    },
+    {
+      "path": "ci/silent-error-allowlist.txt",
+      "beforeBlob": "9716893b6f18091e3b8dbc9415056d39c21be910",
+      "beforeBytes": 46651,
+      "beforeSHA256": "dce99793b8b8bc7e69763c0e0b809e9f34e724d1df18770713c5168751638df7",
+      "afterBytes": 46841,
+      "afterSHA256": "ca1252fb31f6c70c7aaee78b4e37a8e03f5959f479685f5a33caa7c35fc23172"
+    },
+    {
+      "path": "ci/migration-dependencies.json",
+      "beforeBlob": "bf856c1954f17e60b20cd861de744f42501d148c",
+      "beforeBytes": 28746,
+      "beforeSHA256": "ef2f7426977897b2ed244612d7ea2d4d43e48e69bbdf7e537c44d167f1a8f41f",
+      "afterBytes": 29214,
+      "afterSHA256": "115f7d0ef0c4dbec13d1a6ccad22f73ee4f89eede3256ec65c5479bdaa09a279"
+    },
+    {
+      "path": "chengyinhub-xcx/scripts/danger-action-registry.json",
+      "beforeBlob": "abc35b8004e7ac939484de55c39c23d9b4056bc4",
+      "beforeBytes": 18065,
+      "beforeSHA256": "c05309d19eceae438a6a7afd0084e79f7eeb0a6ca58de86ad73a79defcb9d069",
+      "afterBytes": 17062,
+      "afterSHA256": "a46c70aa9bdc6f2e3a7f75a130f92dbac67c9bbe2048deb9fba5b78a3e3f5e41"
+    },
+    {
+      "path": "chengyinhub-ui/tests/unit/refund-platform-takeover-contract.test.js",
+      "beforeBlob": "ea67529204977424bf84b4fd99e90754ef0319af",
+      "beforeBytes": 5828,
+      "beforeSHA256": "ddcd72b6376a9d2310d5c3a5bd4f3cf1ae8eaaf635e4e7046d0347534163d5e1",
+      "afterBytes": 5796,
+      "afterSHA256": "e21de576a03421a1d8493dd4e800db4e7546cf512ed0d8fe7750bc3a229fc9ba"
+    },
+    {
+      "path": "chengyinhub-ui/tests/unit/refund-prototype-key-contract.test.js",
+      "beforeBlob": "42959fbef8e08a8c129d20a5a7c6027d6fe56453",
+      "beforeBytes": 4974,
+      "beforeSHA256": "2c26a695cfe31c3115ce32953d1de49dd4e76b43d4c71ba897809da210a1def5",
+      "afterBytes": 4942,
+      "afterSHA256": "99f5c36d9ba39d4639559185f1f0fcff69da45b634163e18da2ca8eb5c1fa596"
+    },
+    {
+      "path": "chengyinhub-ui/tests/unit/refund-rejected-payout-label-contract.test.js",
+      "beforeBlob": "b24a94768b7ead5c84d6633bb53fef1b269d209a",
+      "beforeBytes": 4255,
+      "beforeSHA256": "551c98441a4bc01823ec6a444715643d58bb6b76d35fbd789005d7daf4f1e653",
+      "afterBytes": 4223,
+      "afterSHA256": "5ddf6ec39fd89ad33771cd662f2e594847b607c8ef481950002ac58efb342c61"
+    },
+    {
+      "path": "chengyinhub-ui/tests/unit/refund-workbench-contract.test.js",
+      "beforeBlob": "b22ffe059a20bebfff46fd0674247b4acc2d3ba9",
+      "beforeBytes": 14773,
+      "beforeSHA256": "28462c754bff888477e49af8a86c721a844d55a37bc4f90eca00e0a10a7ba528",
+      "afterBytes": 14741,
+      "afterSHA256": "2486cd0a5640ef8752b9fb3a00bc458d3e2acf43eb894b5a1e4978f9ff5e925c"
+    }
+  ],
+  "validation": {
+    "directedJs": "75 pass / 0 fail / 0 skip; six files",
+    "silentError": "PASS",
+    "dangerGate": "PASS + negative selftest PASS",
+    "migration": "working-source ledger topology PASS; nine missing declarations added; SQL not executed",
+    "apiGate": "FAIL: pre-existing /api/play/sensor/result missing mapping; C reduced 3 to 1; no gate change",
+    "Java": "NOT_RUN"
+  },
+  "remaining": [
+    "IM fixture imports/identity/storage wiring (4 UI cases)",
+    "audit review payload contract (1 UI case)",
+    "other failures in published diagnostics not covered by this package"
+  ]
+}

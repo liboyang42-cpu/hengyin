@@ -13,6 +13,7 @@ import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import com.chengyinhub.common.core.text.Convert;
 import com.chengyinhub.common.enums.BusinessType;
+import com.chengyinhub.common.exception.ServiceException;
 
 /**
  * 后台站内消息·客服台（与商家/用户沟通 + 拉黑用户）
@@ -44,18 +45,36 @@ public class BusinessImController extends BaseController
     @PreAuthorize("@ss.hasPermi('business:im:send')")
     @Log(title = "客服发送消息", businessType = BusinessType.INSERT)
     @PostMapping("/send")
-    public AjaxResult send(String memberId, String msgType, String content, String extraJson)
+    public AjaxResult send(String memberId, String msgType, String content, String extraJson, String requestId)
     {
         try
         {
             Long mid = Convert.toLong(memberId, 0L);
             Integer mt = Convert.toInt(msgType, 1);
-            Long id = imService.sendFromAdmin(mid, mt, content, extraJson);
-            return success(id);
+            Long id = imService.sendFromAdmin(getUserId(), mid, mt, content, extraJson, requestId);
+            return success((Object) String.valueOf(id));
+        }
+        catch (ServiceException e)
+        {
+            return AjaxResult.error(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         catch (Exception e)
         {
             return error(e.getMessage());
+        }
+    }
+
+    @PreAuthorize("@ss.hasPermi('business:im:send')")
+    @GetMapping("/send/receipt")
+    public AjaxResult sendReceipt(String memberId, String requestId)
+    {
+        try
+        {
+            return success(imService.adminSendReceipt(getUserId(), Convert.toLong(memberId, 0L), requestId));
+        }
+        catch (ServiceException e)
+        {
+            return AjaxResult.error(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
     }
 

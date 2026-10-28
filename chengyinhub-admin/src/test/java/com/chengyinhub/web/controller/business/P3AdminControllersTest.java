@@ -20,6 +20,7 @@ import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -46,7 +47,7 @@ class P3AdminControllersTest {
         IAuditTaskService service = mock(IAuditTaskService.class);
         AuditWorkbenchController controller = new AuditWorkbenchController();
         ReflectionTestUtils.setField(controller, "auditTaskService", service);
-        when(service.selectAuditTaskList(any(AuditTask.class))).thenReturn(Collections.emptyList());
+        when(service.selectWorkbenchQueueWithGuardScope(any(AuditTask.class), eq(Collections.emptyList()))).thenReturn(Collections.emptyList());
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setParameter("pageNum", "1");
         request.setParameter("pageSize", "10");
@@ -55,7 +56,7 @@ class P3AdminControllersTest {
         TableDataInfo result = controller.list(new AuditTask());
 
         assertEquals(0, result.getRows().size());
-        verify(service).selectAuditTaskList(any(AuditTask.class));
+        verify(service).selectWorkbenchQueueWithGuardScope(any(AuditTask.class), eq(Collections.emptyList()));
     }
 
     @Test

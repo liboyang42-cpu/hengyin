@@ -1,0 +1,18 @@
+<view class="binding">
+  <text class="binding__title">启用的注册属性</text>
+  <text class="binding__hint">{{notice}}</text>
+  <checkbox-group wx:if="{{ready}}" bindchange="select">
+    <label wx:for="{{options}}" wx:key="key" class="binding__option"><checkbox value="{{item.key}}" checked="{{item.checked}}" disabled="{{readOnly}}" />{{item.label}}</label>
+  </checkbox-group>
+  <checkbox-group wx:if="{{ready}}" bindchange="accept">
+    <view wx:for="{{conflicts}}" wx:key="key" class="binding__conflict">
+      <text class="binding__title">{{item.label}}的定义差异</text>
+      <view wx:for="{{item.differences}}" wx:key="field" wx:for-item="difference"><text>{{difference.label}}：旧配置 {{difference.previous}}；注册定义 {{difference.registered}}</text></view>
+      <label><checkbox value="{{item.key}}" checked="{{item.accepted}}" disabled="{{readOnly}}" />我确认采用这项注册定义</label>
+    </view>
+  </checkbox-group>
+  <cy-inline-error wx:if="{{error}}" kind="error" title="{{error}}" />
+  <button class="binding__btn" wx:if="{{ready && !readOnly}}" bindtap="confirm">确认启用与定义选择</button>
+  <button class="binding__btn" bindtap="refresh">重新读取注册版本</button>
+  <button class="binding__btn" bindtap="manage">查看或调整注册定义</button>
+</view>

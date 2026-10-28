@@ -158,9 +158,15 @@ Page({
   onShow() {
     merchantTheme.merchantPageShow();
     this._hidden = false;
-    if (this.data.voiceStatus === 1) this.refreshVoice();
+    if (this._voiceClearing) {
+      this._voiceClearing = false;
+      this.setData({ voiceBusy: false });
+      // Reentry only queries state; a missing reset response never triggers another reset.
+      this.refreshVoice(this.voiceClearCurrent());
+    } else if (this.data.voiceStatus === 1) this.refreshVoice();
   },
   onHide() {
+    this._voiceClearEpoch = (this._voiceClearEpoch || 0) + 1;
     this._hidden = true;
     this._voiceStatusVersion = (this._voiceStatusVersion || 0) + 1;
     this._voiceHoldReleased = true;
@@ -173,6 +179,7 @@ Page({
     merchantTheme.merchantPageRestore();
   },
   onUnload() {
+    this._voiceClearEpoch = (this._voiceClearEpoch || 0) + 1;
     this._destroyed = true;
     this._voiceHoldReleased = true;
     clearTimeout(this._voiceTimer);
@@ -735,10 +742,11 @@ Page({
     this.setData({ voiceVisible: false });
     if (this._audio) this._audio.stop();
   },
-  refreshVoice() {
+  refreshVoice(clearCurrent) {
     const memberId = String(app.getUserID() || '');
     const version = this._voiceStatusVersion = (this._voiceStatusVersion || 0) + 1;
-    const current = () => !this._destroyed && !this._hidden && this._voiceStatusVersion === version
+    const current = () => (!clearCurrent || clearCurrent())
+      && !this._destroyed && !this._hidden && this._voiceStatusVersion === version
       && String(app.getUserID() || '') === memberId;
     clearTimeout(this._voiceTimer);
     if (this._destroyed || this._hidden) return;
@@ -758,13 +766,13 @@ Page({
           voiceUnknown: this.data.voiceUnknown && !original,
           voiceFile: confirmed ? null : this.data.voiceFile,
         });
-        if (status === 1) this._voiceTimer = setTimeout(() => { if (current()) this.refreshVoice(); }, 5000);
+        if (status === 1) this._voiceTimer = setTimeout(() => { if (current()) this.refreshVoice(clearCurrent); }, 5000);
       })
       .catch((e) => {
         if (!current()) return;
         this.setData({ voiceError: e.message });
         if (this.data.voiceStatus === 1)
-          this._voiceTimer = setTimeout(() => { if (current()) this.refreshVoice(); }, 5000);
+          this._voiceTimer = setTimeout(() => { if (current()) this.refreshVoice(clearCurrent); }, 5000);
       });
   },
   onVoiceConsentChange(e) {
@@ -928,26 +936,36 @@ Page({
   },
   // BL-43:清除已生成的角色声音(POST /api/merchant/npc/voice/reset),二次确认后回读 voice/status。
   // 「重新录音」只清本地录音,服务端旧音色在新音色生成前仍会被用来合成;这里才是真正停用旧音色。
+  voiceClearCurrent() {
+    const owner = String(app.getUserID() || '');
+    const token = app.getAuthorization ? app.getAuthorization() || '' : '';
+    const epoch = this._voiceClearEpoch = (this._voiceClearEpoch || 0) + 1;
+    return () => !this._destroyed && !this._hidden && epoch === this._voiceClearEpoch
+      && owner === String(app.getUserID() || '')
+      && token === (app.getAuthorization ? app.getAuthorization() || '' : '');
+  },
   clearVoice() {
     if (this.data.voiceBusy || this.data.voiceUnknown || this._voiceClearing) return;
+    const current = this.voiceClearCurrent();
     modal.show({
       title: '清除角色声音？',
       content: '清除后店铺角色不再用这段声音说话，需要重新录音生成才能恢复。',
       confirmText: '清除',
       danger: true,
-      success: (res) => { if (res && res.confirm) this._doClearVoice(); },
+      success: (res) => { if (res && res.confirm && current()) this._doClearVoice(); },
     });
   },
   _doClearVoice() {
-    if (this._voiceClearing) return;
+    if (this._voiceClearing || this._hidden || this._destroyed) return;
+    const current = this.voiceClearCurrent();
     this._voiceClearing = true;
     if (this._audio) this._audio.stop();
     this.setData({ voiceBusy: true, voiceError: '', voicePlaying: false });
     this._request('/api/merchant/npc/voice/reset')
-      .then(() => this.refreshVoice())
+      .then(() => { if (current()) return this.refreshVoice(current); })
       .then(() => {
+        if (!current()) return;
         this._voiceClearing = false;
-        if (this._destroyed) return;
         if (this.data.voiceStatus === 0 && !this.data.voiceError) {
           this.setData({ voiceBusy: false, voiceSample: '' });
           toast('角色声音已清除');
@@ -956,8 +974,9 @@ Page({
         }
       })
       .catch((e) => {
+        if (!current()) return;
         this._voiceClearing = false;
-        if (!this._destroyed) this.setData({ voiceBusy: false, voiceError: e.message });
+        this.setData({ voiceBusy: false, voiceError: e.message });
       });
   },
   resetVoiceRecording() {

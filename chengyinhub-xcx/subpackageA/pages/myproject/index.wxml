@@ -152,7 +152,16 @@
         <text class="mp-ops-label">申诉</text>
         <text class="mp-ops-sub">{{auditSheet.appealText}}</text>
       </view>
-      <view class="mp-ops-row" wx:if="{{auditSheet.canAppeal}}" bindtap="appealAudit" hover-class="cy-pressed" hover-stay-time="80">
+      <view class="mp-ops-row" wx:if="{{auditSheet.appealError}}"><text class="mp-ops-sub">{{auditSheet.appealError}}</text></view>
+      <view class="mp-ops-row" wx:for="{{auditSheet.attachments}}" wx:key="*this">
+        <image src="{{item}}" mode="aspectFit" style="width:160rpx;height:160rpx" />
+        <text wx:if="{{!auditSheet.pending}}" data-index="{{index}}" bindtap="removeAuditAttachment" hover-class="cy-pressed" hover-stay-time="80">移除附件 {{index + 1}}</text>
+      </view>
+      <view class="mp-ops-row" wx:if="{{auditSheet.canAppeal && !auditSheet.pending && auditSheet.attachments.length < 6}}" bindtap="addAuditAttachment" hover-class="cy-pressed" hover-stay-time="80">
+        <text class="mp-ops-label">添加申诉图片</text><text class="mp-ops-sub">最多6张，须本人上传并通过内容安全审核；以平台校验为准</text>
+      </view>
+      <view class="mp-ops-row" wx:if="{{auditSheet.pending}}" bindtap="recoverAuditAppeal" hover-class="cy-pressed" hover-stay-time="80"><text class="mp-ops-label">读取原申诉结果</text></view>
+      <view class="mp-ops-row" wx:if="{{auditSheet.canAppeal && !auditSheet.pending}}" bindtap="appealAudit" hover-class="cy-pressed" hover-stay-time="80">
         <text class="mp-ops-label">申诉</text>
         <text class="mp-ops-sub">每条内容可申诉一次</text>
       </view>

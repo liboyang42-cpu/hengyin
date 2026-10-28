@@ -1,0 +1,100 @@
+<view class="theme-dark bundle-page">
+  <cy-toast id="cy-toast" />
+  <cy-loading-mask id="cy-loading" />
+  <cy-modal-host id="cy-modal-host" />
+  <cy-nav-bar />
+  <view style="height: {{statusBarHeight + navBarHeight}}px;"></view>
+  <cy-page-title title="自由探索权益" safe-top="{{false}}" />
+  <view class="bundle-content">
+    <cy-inline-error wx:if="{{error}}" kind="error" title="{{error}}" />
+    <text wx:if="{{notice}}" class="bundle-note">{{notice}}</text>
+    <cy-btn variant="secondary" loading="{{loading}}" bindtap="reload">刷新权益与预约结果</cy-btn>
+    <cy-card wx:if="{{swapPending}}">
+      <text class="bundle-title">换店结果待确认</text>
+      <text class="bundle-note">原目标 {{swapPending.targetOfferId}}，刷新历史不会重复提交。</text>
+    </cy-card>
+    <block wx:if="{{catalog}}">
+      <text class="bundle-title">{{catalog.topicName}}</text>
+      <text class="bundle-note">{{catalog.saleEnabled ? '购买请返回原商品详情确认票种与价格' : '套票当前尚未开放售卖'}}</text>
+      <cy-card wx:for="{{catalog.items}}" wx:key="chapterId">
+        <text class="bundle-title">{{item.name}} · 每人{{item.unitsText}}</text>
+        <view wx:for="{{item.stores}}" wx:for-item="store" wx:key="offerId">
+          <text class="bundle-note">{{store.merchantName}} · {{store.available ? '当前供给中' : '当前未供给'}}</text>
+        </view>
+      </cy-card>
+    </block>
+    <cy-card wx:if="{{pending}}">
+      <text class="bundle-title">取消结果待确认</text>
+      <text class="bundle-note">原预约 {{pending.reservationId}} · {{pending.useWaiver ? '使用月豁免' : '普通取消'}}</text>
+      <text class="bundle-note">刷新只查询结果，不会再次扣除权益。</text>
+    </cy-card>
+    <block wx:if="{{detail}}">
+      <text class="bundle-title">订单 {{detail.registrationNo}}</text>
+      <text class="bundle-note">支付：{{detail.paymentText}} · 报名：{{detail.registrationText}}</text>
+      <cy-card wx:if="{{detail.refundHold}}">
+        <text class="bundle-title">{{detail.refundHold.text}}</text>
+        <text wx:if="{{detail.refundHold.refundId}}" class="bundle-note">原退款申请 {{detail.refundHold.refundId}}</text>
+        <text class="bundle-note">刷新按原订单回读，不会重新发起退款。</text>
+      </cy-card>
+      <cy-empty wx:if="{{detail.legacy}}" kind="empty" title="此订单暂无套票台账" sub="历史订单请在原参与记录查看，不能据此判断尚未购买或退款成功" />
+      <block wx:else>
+        <cy-card wx:for="{{detail.units}}" wx:key="id">
+          <text class="bundle-title">权益 {{item.id}} · {{item.statusText}}</text>
+          <text class="bundle-note">有效期至 {{item.validTo}}</text>
+          <text class="bundle-note">权益编号 {{item.unitCode}}</text>
+          <cy-btn wx:if="{{(item.status === 'RESERVED' || item.status === 'AVAILABLE') && !pending && !swapPending}}" variant="secondary" data-id="{{item.id}}" bindtap="loadExitOptions">查看商家退出方案</cy-btn>
+        </cy-card>
+        <view wx:if="{{detail.fulfilledMerchants.length}}">
+          <text class="bundle-title">实际履约商家</text>
+          <text class="bundle-note">来自本订单当前生效核销；能查看商家不代表已取得评价资格。</text>
+          <cy-btn wx:for="{{detail.fulfilledMerchants}}" wx:key="merchantId" variant="secondary" data-member-id="{{item.merchantId}}" bindtap="loadReviews">查看商家评价与本单资格</cy-btn>
+        </view>
+        <text class="bundle-title">预约与履约历史</text>
+        <cy-empty wx:if="{{!detail.reservations.length}}" kind="empty" title="暂无预约记录" />
+        <cy-card wx:for="{{detail.reservations}}" wx:key="id">
+          <text class="bundle-title">{{item.startAt}} · {{item.statusText}}</text>
+          <view wx:if="{{item.canCancel && !pending && !swapPending}}" class="bundle-actions">
+            <cy-btn variant="secondary" data-id="{{item.id}}" data-waiver="false" bindtap="cancelReservation">取消预约</cy-btn>
+            <cy-btn variant="secondary" data-id="{{item.id}}" data-waiver="true" bindtap="cancelReservation">使用月豁免取消</cy-btn>
+          </view>
+          <cy-btn wx:if="{{item.merchantId}}" variant="secondary" data-member-id="{{item.merchantId}}" bindtap="loadReviews">查看商家评价与本单资格</cy-btn>
+        </cy-card>
+        <cy-card wx:if="{{reviewPending}}">
+          <text class="bundle-title">评价结果待确认</text>
+          <text class="bundle-note">原内容和请求号已保留；恢复将使用相同请求提交，不更换订单。</text>
+          <cy-btn variant="secondary" loading="{{reviewBusy}}" bindtap="resumeReview">按原请求恢复评价结果</cy-btn>
+        </cy-card>
+        <cy-card wx:if="{{review}}">
+          <text class="bundle-title">商家公开评价</text>
+          <text class="bundle-note">{{review.message}}</text>
+          <view wx:for="{{review.items}}" wx:key="id">
+            <text class="bundle-note">{{item.rating}}星 · {{item.content}}</text>
+            <text wx:if="{{item.merchantReply}}" class="bundle-note">商家回复：{{item.merchantReply}}</text>
+          </view>
+          <text wx:if="{{!review.items.length}}" class="bundle-note">暂无公开评价；不代表未提交或复核通过。</text>
+          <cy-btn wx:if="{{review.hasMore}}" variant="secondary" loading="{{reviewBusy}}" bindtap="moreReviews">加载更多评价</cy-btn>
+          <view wx:if="{{review.canCreate && !reviewPending}}">
+            <text class="bundle-note">评价提交后不可编辑，须经平台复核后公开。</text>
+            <slider min="1" max="5" step="1" value="{{reviewRating}}" show-value bindchange="rateReview" />
+            <textarea value="{{reviewContent}}" maxlength="1000" placeholder="填写本次体验（2～1000字）" bindinput="inputReview" />
+            <cy-btn variant="secondary" loading="{{reviewBusy}}" bindtap="submitReview">提交本单评价</cy-btn>
+          </view>
+        </cy-card>
+        <cy-card wx:if="{{exitOptions}}">
+          <text class="bundle-title">商家退出方案</text>
+          <text wx:if="{{!exitOptions.merchantExited}}" class="bundle-note">当前商家供给仍有效，无需更换。</text>
+          <text wx:elif="{{!exitOptions.targets.length}}" class="bundle-note">当前没有符合原权益有效期的替换方案，未更改您的权益或发起退款。</text>
+          <cy-btn wx:for="{{exitOptions.targets}}" wx:key="offerId" variant="secondary" data-id="{{item.offerId}}" bindtap="consentSwap">同意选择 {{item.merchantName}}</cy-btn>
+        </cy-card>
+        <text class="bundle-title">退出与售后历史</text>
+        <cy-card wx:for="{{detail.exitCases}}" wx:key="id"><text class="bundle-note">{{item.text}}</text></cy-card>
+        <cy-btn variant="secondary" bindtap="loadQuote">查看退款试算</cy-btn>
+        <cy-card wx:if="{{quote}}">
+          <text class="bundle-title">试算金额 {{quote.amount}}</text>
+          <text class="bundle-note">{{quote.reason}}</text>
+          <text class="bundle-note">{{quote.notice}}</text>
+        </cy-card>
+      </block>
+    </block>
+  </view>
+</view>

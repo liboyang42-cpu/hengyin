@@ -91,3 +91,6 @@ page { display: flex; flex-direction: column; min-height: 100vh; }
   border-radius: var(--cy-radius-pill); font-size: var(--cy-type-body); font-weight: 700; text-align: center;
   background: #141414; color: #FFFFFF; /* ds-ok: 同订单卡黑色胶囊按钮 */
 }
+
+.content-pagination { display: flex; flex-direction: column; gap: var(--cy-space-3); padding: var(--cy-space-4) 0; color: var(--cy-color-text-secondary); }
+.content-pagination button { width: 100%; color: var(--cy-color-text-primary); background: var(--cy-color-bg-surface); border: 1rpx solid var(--cy-color-border-strong); border-radius: var(--cy-radius-md); }

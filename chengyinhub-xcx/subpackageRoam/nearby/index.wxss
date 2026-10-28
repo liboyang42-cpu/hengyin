@@ -1,3 +1,4 @@
+@import "../utils/team-recovery-panel.wxss";
 @import "/style/proto-sheet.wxss";
 /* 漫游地图 · 附近的队伍(地图组队 P 方案,Figma txQoyVyKb3aQdFCnc8qmhj 590:1014)。1px = 1.923rpx。
    半屏壳 / 标题 / 副标题沿用 proto-sheet(与漫游同源);本页只补稿上新出现的几件。 */
@@ -201,7 +202,7 @@ page { background: var(--cy-comp-sheet-player-page); }
 .pb__cm { padding: 21rpx 0; border-bottom: 1rpx solid rgba(255,255,255,.08); } /* ds-ok 同 .pb__row 分隔 */
 .pb__cm-h { display: flex; align-items: center; gap: 12rpx; font-size: 23rpx; color: #8E8E93; } /* ds-ok */
 .pb__cm-n { color: #fff; font-weight: 600; } /* ds-ok */
-.pb__cm-s { color: #FF9F0A; } /* ds-ok 同 .pc__rib */
+.pb__cm-s { display: flex; align-items: center; gap: 6rpx; color: #FF9F0A; } /* ds-ok 同 .pc__rib */
 .pb__cm-time { margin-left: auto; }
 .pb__cm-t { display: block; margin-top: 8rpx; font-size: 27rpx; line-height: 1.6; color: rgba(255,255,255,.86); } /* ds-ok */
 .pb__cm-empty { display: block; padding: 23rpx 0; font-size: 25rpx; color: #8E8E93; } /* ds-ok */

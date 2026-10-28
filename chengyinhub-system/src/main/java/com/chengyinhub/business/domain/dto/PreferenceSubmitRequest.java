@@ -23,4 +23,13 @@ public class PreferenceSubmitRequest {
     public void setRouteActionId(String routeActionId) { this.routeActionId = routeActionId; }
     public Integer getExpectedRouteVersion() { return expectedRouteVersion; }
     public void setExpectedRouteVersion(Integer expectedRouteVersion) { this.expectedRouteVersion = expectedRouteVersion; }
+    private Long routeSessionId;
+    private String runtimeInstance;
+    private Integer authorityEpoch;
+    public Long getRouteSessionId() { return routeSessionId; }
+    public void setRouteSessionId(Long value) { routeSessionId = value; }
+    public String getRuntimeInstance() { return runtimeInstance; }
+    public void setRuntimeInstance(String value) { runtimeInstance = value; }
+    public Integer getAuthorityEpoch() { return authorityEpoch; }
+    public void setAuthorityEpoch(Integer value) { authorityEpoch = value; }
 }

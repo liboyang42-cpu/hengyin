@@ -103,3 +103,15 @@ test('从玩法选项里收集可选的「特定选项」:只收挂了贴标签�
   assert.deepEqual(initial.optionTagsOf(chapters), [{ tag: 'tag.boy', label: '新生儿登记 · 男孩还是女孩？ · 男孩' }])
   assert.deepEqual(initial.optionTagsOf([]), [])
 })
+
+test('伏笔节点引用保留精确Long字符串并拒绝隐式转换及溢出', () => {
+  const save = nodeId => JSON.parse(initial.serialize({ ...initial.parse(''),
+    thoughts: [{ key: 'arrival', name: '抵达', doneWhen: [{ op: 'NODE_COMPLETED', nodeId }] }],
+  })).thoughts[0].doneWhen[0].nodeId;
+  assert.equal(save(42), 42);
+  assert.equal(save('9007199254740993'), '9007199254740993');
+  assert.equal(save('9223372036854775807'), '9223372036854775807');
+  for (const value of [true, 1.5, Number.MAX_SAFE_INTEGER + 1, '01', '1e3', '1.5', '-1', '0', '9223372036854775808']) {
+    assert.throws(() => save(value), undefined, String(value));
+  }
+});

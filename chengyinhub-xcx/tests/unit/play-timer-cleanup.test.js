@@ -20,7 +20,9 @@ global.Page = (config) => { pageConfig = config; };
 function loadPlayPage() {
   delete require.cache[require.resolve('../../pages/play/index.js')];
   require('../../pages/play/index.js');
-  return Object.assign({}, pageConfig, { data: JSON.parse(JSON.stringify(pageConfig.data)) });
+  // 真实 Page 实例自带 setData;卸载时会同步收起定向对局与到达守卫面板。
+  return Object.assign({}, pageConfig, { data: JSON.parse(JSON.stringify(pageConfig.data)),
+    setData(patch, cb) { Object.assign(this.data, patch); if (cb) cb(); } });
 }
 
 test('游玩页卸载会清除所有会在销毁后写 UI 的命名 timeout', () => {

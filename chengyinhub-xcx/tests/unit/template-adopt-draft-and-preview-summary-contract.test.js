@@ -17,8 +17,10 @@ const TEMP_PAGE = '../../pages/publish/temp/index.js'
 
 let appStub
 let requests
+let storage
 
 function installGlobals() {
+  storage = {}
   appStub = {
     globalData: { nickname: '商家', statusBarHeight: 20, navBarHeight: 44 },
     getUserRole: () => 'merchant',
@@ -26,16 +28,16 @@ function installGlobals() {
     getUserID: () => 9004,
     getAuthorization: () => 'Bearer test',
     getRequestErrorMessage: (_res, fallback) => fallback,
-    sendRequest: (options) => { requests.push(options); return { abort() {} } },
+    sendRequest: (options) => { requests.push(options); if(options.url==='/api/template/adoption-source') options.success({code:200,data:{originalTemplateId:String(options.data.originalTemplateId),sourceVersion:'a'.repeat(64)}}); return { abort() {} } },
     chooseImage: () => {},
     chooseDocument: () => {},
     tips: () => {},
   }
   global.getApp = () => appStub
   global.wx = {
-    getStorageSync: () => undefined,
-    setStorageSync: () => {},
-    removeStorageSync: () => {},
+    getStorageSync: key => storage[key],
+    setStorageSync: (key,value) => { storage[key]=value },
+    removeStorageSync: key => { delete storage[key] },
     getSystemInfoSync: () => ({ windowWidth: 375, statusBarHeight: 20 }),
     getAccountInfoSync: () => ({ miniProgram: { envVersion: 'release' } }),
     showToast: () => {},
@@ -86,23 +88,25 @@ const LIBRARY_TEMPLATE = {
   status: 1,
 }
 
+function adoptedReceipt(request,draftId){const body=JSON.parse(request.data);return {code:200,data:{requestId:body.requestId,originalTemplateId:body.originalTemplateId,sourceVersion:body.sourceVersion,status:'COMPLETED',draftId:String(draftId)}}}
+
 function adoptLibraryTemplate(id, scope = '') {
   const page = loadPage(TEMP_PAGE)
   page.onLoad({ id: String(id || 16), scope })
-  const request = requests.filter((item) => item.url === '/api/template/info')[0]
-  assert.ok(request, '从货架进来必须走 /api/template/info 回填')
+  const request = requests.filter((item) => item.url === '/api/template/author-info')[0]
+  assert.ok(request, '从货架进来必须走 /api/template/author-info 回填')
   request.success({ code: '200', data: JSON.parse(JSON.stringify(LIBRARY_TEMPLATE)) })
   const adoption = requests.filter(item => item.url === '/api/template/adopt-draft').at(-1)
   assert.equal(adoption.header['Content-Type'], 'application/json', '@RequestBody 请求必须明确使用 JSON')
-  assert.deepEqual(JSON.parse(adoption.data), { originalTemplateId: id || 16,
-    title: LIBRARY_TEMPLATE.title, adoptSourceOnly: true, scope })
+  const intent=JSON.parse(adoption.data);assert.match(intent.requestId,/^adopt_/);
+  assert.deepEqual(intent,{requestId:intent.requestId,originalTemplateId:String(id||16),sourceVersion:'a'.repeat(64),scope})
   assert.equal(page.data.editorLoading, true)
   request.complete()
   assert.equal(page.data.editorLoading, true, '公开详情 complete 不能提前放开编辑')
-  adoption.success({ code: 200, data: 9101 })
-  const own = requests.filter(item => item.url === '/api/template/myinfo').at(-1)
+  adoption.success(adoptedReceipt(adoption,9101))
+  const own = requests.filter(item => item.url === '/api/template/adoption-detail').at(-1)
   assert.equal(own.data.scope, scope, '草稿刷新必须和采用写入使用同一身份')
-  own.success({ code: 200, data: Object.assign({}, LIBRARY_TEMPLATE, { id: 9101, canEdit: true, originalTemplateId: id || 16 }) })
+  own.success({ code: 200, data: Object.assign({}, LIBRARY_TEMPLATE, { id: 9101, canEdit: true, advancedConfigJson:'{}', originalTemplateId: id || 16 }) })
   page.validateForm = () => true
   return page
 }
@@ -207,9 +211,9 @@ test('商家员工采用、回读和再次保存始终带同一商家作用域',
 test('采用后草稿读取被拒绝时阻止空配置保存，也不重新采用', () => {
   const page = loadPage(TEMP_PAGE)
   page.onLoad({ id: '16', scope: 'MERCHANT' })
-  requests.find(item => item.url === '/api/template/info').success({ code: 200, data: LIBRARY_TEMPLATE })
-  requests.find(item => item.url === '/api/template/adopt-draft').success({ code: 200, data: 9101 })
-  const readback = requests.find(item => item.url === '/api/template/myinfo')
+  requests.find(item => item.url === '/api/template/author-info').success({ code: 200, data: LIBRARY_TEMPLATE })
+  requests.find(item => item.url === '/api/template/adopt-draft').success(adoptedReceipt(requests.find(item=>item.url==='/api/template/adopt-draft'),9101))
+  const readback = requests.find(item => item.url === '/api/template/adoption-detail')
   readback.success({ code: 403, msg: '商家身份无效或权限不足' })
   assert.ok(page.data.loadError)
   assert.equal(page.validateForm({}, true), false)
@@ -217,13 +221,13 @@ test('采用后草稿读取被拒绝时阻止空配置保存，也不重新采�
   assert.equal(requests.filter(item => item.url === '/api/template/draft').length, 0)
   page.getData()
   assert.equal(requests.filter(item => item.url === '/api/template/adopt-draft').length, 1)
-  assert.equal(requests.filter(item => item.url === '/api/template/myinfo').at(-1).data.scope, 'MERCHANT')
+  assert.equal(requests.filter(item => item.url === '/api/template/adoption-receipt').at(-1).data.scope, 'MERCHANT')
 })
 
 test('公开预览只读：不能创建草稿或读取非本人答案', () => {
   const page = loadPage(TEMP_PAGE)
   page.onLoad({ id: '16', preview: '1' })
-  requests.find(item => item.url === '/api/template/info').success({ code: 200, data: LIBRARY_TEMPLATE })
+  requests.find(item => item.url === '/api/template/author-info').success({ code: 200, data: LIBRARY_TEMPLATE })
   assert.equal(requests.filter(item => item.url === '/api/template/draft').length, 0)
   assert.equal(requests.filter(item => item.url === '/api/template/adopt-draft').length, 0)
   assert.equal(page.data.isMyScope, false)
@@ -233,7 +237,7 @@ test('采用请求未确认时不能盲重试；加载中不能保存默认空�
   const page = loadPage(TEMP_PAGE)
   page.onLoad({ id: '16' })
   assert.equal(page.validateForm({}, true), false)
-  requests.find(item => item.url === '/api/template/info').success({ code: 200, data: LIBRARY_TEMPLATE })
+  requests.find(item => item.url === '/api/template/author-info').success({ code: 200, data: LIBRARY_TEMPLATE })
   page.getData()
   assert.equal(requests.filter(item => item.url === '/api/template/adopt-draft').length, 1)
   requests.find(item => item.url === '/api/template/adopt-draft').fail({})
@@ -246,10 +250,10 @@ test('采用请求未确认时不能盲重试；加载中不能保存默认空�
 
 test('旧后端不支持采用接口时明确阻断，不回退普通保存或创建空草稿', () => {
   for (const status of [404, 405]) {
-    requests = []
+    requests = []; storage = {}
     const page = loadPage(TEMP_PAGE)
     page.onLoad({ id: '16' })
-    requests.find(item => item.url === '/api/template/info').success({ code: 200, data: LIBRARY_TEMPLATE })
+    requests.find(item => item.url === '/api/template/author-info').success({ code: 200, data: LIBRARY_TEMPLATE })
     requests.find(item => item.url === '/api/template/adopt-draft').fail({}, status)
     assert.match(page.data.loadError, /尚未支持/)
     assert.equal(page.data.editorLoading, false)
@@ -257,14 +261,14 @@ test('旧后端不支持采用接口时明确阻断，不回退普通保存或�
     assert.equal(page._templateId, 16)
     assert.equal(page.data.isMyScope, false)
     assert.equal(requests.filter(item => item.url === '/api/template/draft').length, 0)
-    assert.equal(requests.filter(item => item.url === '/api/template/myinfo').length, 0)
+    assert.equal(requests.filter(item => item.url === '/api/template/author-myinfo').length, 0)
   }
 })
 
 test('采用请求经过真实请求封装仍为 JSON，HTTP 404 正确回到页面阻断态', () => {
   const page = loadPage(TEMP_PAGE)
   page.onLoad({ id: '16' })
-  requests.find(item => item.url === '/api/template/info').success({ code: 200, data: LIBRARY_TEMPLATE })
+  requests.find(item => item.url === '/api/template/author-info').success({ code: 200, data: LIBRARY_TEMPLATE })
   const adoption = requests.find(item => item.url === '/api/template/adopt-draft')
   let sent
   const client = require('../../utils/transport/request-client.js').createRequestClient({
@@ -273,7 +277,7 @@ test('采用请求经过真实请求封装仍为 JSON，HTTP 404 正确回到页
   client.send(adoption)
   assert.equal(sent.url, '/api/template/adopt-draft')
   assert.equal(sent.header['Content-Type'], 'application/json')
-  assert.equal(JSON.parse(sent.data).originalTemplateId, 16)
+  assert.equal(JSON.parse(sent.data).originalTemplateId, '16')
   sent.success({ statusCode: 404, data: { msg: '未提供接口' } })
   assert.match(page.data.loadError, /尚未支持/)
   assert.equal(page.validateForm({}, true), false)
@@ -299,7 +303,7 @@ test('CU-M-68 采用后首存成功即切到本人草稿:再存带新草稿 id',
 test('CU-M-68 本人草稿续编仍带原 id(不能把 R9-04 的续编改回新建)', () => {
   const page = loadPage(TEMP_PAGE)
   page.onLoad({ id: '6029', scope: 'my' })
-  const request = requests.filter((item) => item.url === '/api/template/myinfo')[0]
+  const request = requests.filter((item) => item.url === '/api/template/author-myinfo')[0]
   assert.ok(request, 'scope=my 必须查个人草稿接口')
   request.success({ code: '200', data: Object.assign({}, LIBRARY_TEMPLATE, { id: 6029, canEdit: true }) })
   page.validateForm = () => true
@@ -317,7 +321,7 @@ test('新建首存后先回读本人权限，再次保存更新同一份未完�
   assert.equal(JSON.parse(first.data).id, undefined)
   page.data.formData.title = '继续补充草稿'
   first.success({ code: 200, data: 9202 })
-  const readback = requests.filter(r => r.url === '/api/template/myinfo').at(-1)
+  const readback = requests.filter(r => r.url === '/api/template/author-myinfo').at(-1)
   assert.ok(readback, '首存后必须从服务端确认本人编辑权限')
   assert.equal(readback.data.id, 9202)
   page.saveDraft()
@@ -343,7 +347,7 @@ test('主题内新建玩法首存回读新绑定 ID 后可继续编辑并原位�
   page.data.formData.title = '等待期间继续编辑'
   first.success({ code: 200, data: 9203 })
   assert.equal(page._boundDraftId, 9203)
-  const confirmation = requests.filter(r => r.url === '/api/template/myinfo').at(-1)
+  const confirmation = requests.filter(r => r.url === '/api/template/author-myinfo').at(-1)
   assert.ok(confirmation, '新绑定草稿必须读回本人新 ID 和权限')
   assert.equal(confirmation.data.id, 9203)
   page.onCreationSuccessAction({ detail: { key: 'secondary' } })
@@ -366,7 +370,7 @@ test('新建草稿首存回读没有明确权限时仍拒绝二次写入', () =>
   page.data.formData.title = '新建草稿'
   page.saveDraft()
   requests.filter(r => r.url === '/api/template/draft').at(-1).success({ code: 200, data: 9202 })
-  requests.filter(r => r.url === '/api/template/myinfo').at(-1)
+  requests.filter(r => r.url === '/api/template/author-myinfo').at(-1)
     .success({ code: 200, data: { id: 9202, title: '缺少权限字段' } })
   page.saveDraft()
   assert.equal(requests.filter(r => r.url === '/api/template/draft').length, 1)
@@ -379,21 +383,21 @@ test('新建草稿首存回读缺失或错 ID 时保持锁定，重试不覆盖�
   page.data.formData.title = '新建草稿'
   page.saveDraft()
   requests.filter(r => r.url === '/api/template/draft').at(-1).success({ code: 200, data: 9202 })
-  let readback = requests.filter(r => r.url === '/api/template/myinfo').at(-1)
+  let readback = requests.filter(r => r.url === '/api/template/author-myinfo').at(-1)
   page.data.formData.title = '等待期间新增的内容'
   page.saveDraft()
   assert.equal(page.data.editorLoading, true, '响应丢失期间不得先解锁')
   assert.equal(requests.filter(r => r.url === '/api/template/draft').length, 1)
   readback.fail({ msg: '超时' }); readback.complete()
   page.retryGetData()
-  readback = requests.filter(r => r.url === '/api/template/myinfo').at(-1)
+  readback = requests.filter(r => r.url === '/api/template/author-myinfo').at(-1)
   readback.success({ code: 200, data: { id: 9999, title: '其他草稿', canEdit: true } })
   assert.equal(page._templateCanEdit, false)
   assert.equal(page.data.formData.title, '等待期间新增的内容')
   page.saveDraft()
   assert.equal(requests.filter(r => r.url === '/api/template/draft').length, 1)
   page.retryGetData()
-  readback = requests.filter(r => r.url === '/api/template/myinfo').at(-1)
+  readback = requests.filter(r => r.url === '/api/template/author-myinfo').at(-1)
   readback.success({ code: 200, data: { id: 9202, title: '新建草稿', canEdit: true } })
   assert.equal(page._templateCanEdit, true)
   assert.equal(page.data.formData.title, '等待期间新增的内容')
@@ -405,7 +409,7 @@ test('新建草稿旧代际回读即使 ID 与权限正确也不能解锁', () =
   page.data.formData.title = '新建草稿'
   page.saveDraft()
   requests.filter(r => r.url === '/api/template/draft').at(-1).success({ code: 200, data: 9202 })
-  const oldReadback = requests.filter(r => r.url === '/api/template/myinfo').at(-1)
+  const oldReadback = requests.filter(r => r.url === '/api/template/author-myinfo').at(-1)
   page.getData(true)
   oldReadback.success({ code: 200, data: { id: 9202, title: '旧响应', canEdit: true } })
   oldReadback.complete()
@@ -424,7 +428,7 @@ test('新建草稿首存后的回读在换号或卸载后不能恢复编辑权�
     page.data.formData.title = '新建草稿'
     page.saveDraft()
     requests.filter(r => r.url === '/api/template/draft').at(-1).success({ code: 200, data: 9202 })
-    const readback = requests.filter(r => r.url === '/api/template/myinfo').at(-1)
+    const readback = requests.filter(r => r.url === '/api/template/author-myinfo').at(-1)
     endSession(page)
     const before = JSON.stringify(page.data)
     readback.success({ code: 200, data: { id: 9202, title: '迟到刷新', canEdit: true } })
@@ -460,7 +464,7 @@ test('未完整草稿可从编辑态直接保存，不依赖发布预览校验',
   assert.doesNotMatch(draftButton, /canOpenPreview/);
   const page = loadPage(TEMP_PAGE);
   page.onLoad({ id: '9101', scope: 'my' });
-  requests.find(item => item.url === '/api/template/myinfo').success({ code: 200, data: { id: 9101, title: '未完成草稿', canEdit: true } });
+  requests.find(item => item.url === '/api/template/author-myinfo').success({ code: 200, data: { id: 9101, title: '未完成草稿', canEdit: true } });
   page.refreshPreviewState();
   assert.equal(page.data.canOpenPreview, false);
   page.saveDraft();
@@ -472,18 +476,19 @@ test('未完整草稿可从编辑态直接保存，不依赖发布预览校验',
   assert.equal(body.title, '未完成草稿');
 });
 
-test('采用成功只更新内部scope且四条静默调用精确登记，额外调用仍拒绝', () => {
+test('采用成功只更新内部scope且静默调用精确登记，额外调用仍拒绝', () => {
   const page = loadPage(TEMP_PAGE)
   const patches = []
   const original = page.setData
   page.setData = function(patch, cb) { patches.push(patch); return original.call(this, patch, cb) }
   page.onLoad({ id: '16' })
   patches.length = 0 // 只检查本合同拥有的采用回执，初载保留原初始化
-  requests.find(r => r.url === '/api/template/info').success({code:200,data:LIBRARY_TEMPLATE})
-  requests.find(r => r.url === '/api/template/adopt-draft').success({code:200,data:9101})
+  requests.find(r => r.url === '/api/template/author-info').success({code:200,data:LIBRARY_TEMPLATE})
+  requests.find(r => r.url === '/api/template/adopt-draft').success(adoptedReceipt(requests.find(r=>r.url==='/api/template/adopt-draft'),9101))
+  requests.find(r=>r.url==='/api/template/adoption-detail').success({code:200,data:{...LIBRARY_TEMPLATE,id:9101,canEdit:true,advancedConfigJson:'{}'}})
   assert.equal(page.data.isMyScope, true)
   assert.equal(patches.some(p => Object.hasOwn(p, 'isMyScope')), false)
-  assert.equal(requests.filter(r => r.url === '/api/template/myinfo').length, 1)
+  assert.equal(requests.filter(r => r.url === '/api/template/adoption-detail').length, 1)
   const fs = require('node:fs'), path = require('node:path')
   const file = 'pages/publish/temp/index.js'
   const source = fs.readFileSync(path.resolve(__dirname, '../../', file), 'utf8')
@@ -524,7 +529,7 @@ test('draft late success after account changes cannot replace current editor ide
 });
 test('adoption late success after unloading cannot start new draft read', () => {
   const p=loadPage(TEMP_PAGE);
-  p.onLoad({id:'16'});requests.find(r=>r.url==='/api/template/info').success({code:200,data:LIBRARY_TEMPLATE});
+  p.onLoad({id:'16'});requests.find(r=>r.url==='/api/template/author-info').success({code:200,data:LIBRARY_TEMPLATE});
   const req=requests.find(r=>r.url==='/api/template/adopt-draft');
   p.onUnload();
   const count=requests.length;
@@ -534,7 +539,7 @@ test('adoption late success after unloading cannot start new draft read', () => 
 test('library late response after unloading cannot start adoption write', () => {
   const p=loadPage(TEMP_PAGE);
   p.onLoad({id:'16'});
-  const req=requests.find(r=>r.url==='/api/template/info');
+  const req=requests.find(r=>r.url==='/api/template/author-info');
   p.onUnload();
   const count=requests.length;
   req.success({code:200,data:LIBRARY_TEMPLATE});
@@ -663,7 +668,7 @@ test('返回编辑器时账号已变化，关闭旧编辑页并回正常模板�
 test('本人草稿发布保留会员模板 ID，不能被原草稿标题挡成重名新建', () => {
   const page = loadPage(TEMP_PAGE)
   page.onLoad({ id: '6029', scope: 'my' })
-  requests.find(item => item.url === '/api/template/myinfo').success({
+  requests.find(item => item.url === '/api/template/author-myinfo').success({
     code: 200, data: Object.assign({}, LIBRARY_TEMPLATE, { id: 6029, canEdit: true, originalTemplateId: 16, draftStatus: 0 })
   })
   page.validateForm = () => true
@@ -687,11 +692,11 @@ test('采用公开模板后发布本人草稿 ID，保留商家作用域和库�
 
 test('已发布本人模板编辑仍更新原 ID，新建不接受表单残留 ID', () => {
   for (const editing of [true, false]) {
-    requests = []
+    requests = []; storage = {}
     const page = loadPage(TEMP_PAGE)
     if (editing) {
       page.onLoad({ id: '6030', scope: 'my' })
-      requests.find(item => item.url === '/api/template/myinfo').success({
+      requests.find(item => item.url === '/api/template/author-myinfo').success({
         code: 200, data: Object.assign({}, LIBRARY_TEMPLATE, { id: 6030, canEdit: true, originalTemplateId: 16, draftStatus: 1 })
       })
     } else {
@@ -707,10 +712,10 @@ test('已发布本人模板编辑仍更新原 ID，新建不接受表单残留 I
 
 test('本人模板用于主题仍另存私有绑定草稿；已有绑定草稿才更新绑定 ID', () => {
   for (const boundId of [0, 9201]) {
-    requests = []
+    requests = []; storage = {}
     const page = loadPage(TEMP_PAGE)
     page.onLoad({ id: '6030', scope: 'my', from: 'fabu' })
-    requests.find(item => item.url === '/api/template/myinfo').success({ code: 200, data: { ...LIBRARY_TEMPLATE, id: 6030, canEdit: true } })
+    requests.find(item => item.url === '/api/template/author-myinfo').success({ code: 200, data: { ...LIBRARY_TEMPLATE, id: 6030, canEdit: true } })
     page._boundDraftId = boundId
     page.validateForm = () => true
     page.publishGame()
@@ -725,7 +730,7 @@ test('本人模板用于主题仍另存私有绑定草稿；已有绑定草稿�
 test('据点玩法继续使用专属提交路由，不把本人库 ID 带入节点模板', () => {
   const page = loadPage(TEMP_PAGE)
   page.onLoad({ id: '6030', scope: 'my', from: 'citynode' })
-  requests.find(item => item.url === '/api/template/myinfo').success({ code: 200, data: { ...LIBRARY_TEMPLATE, id: 6030, canEdit: true } })
+  requests.find(item => item.url === '/api/template/author-myinfo').success({ code: 200, data: { ...LIBRARY_TEMPLATE, id: 6030, canEdit: true } })
   page.data.merchantAccess = { canManageProjects: true }
   page.validateForm = () => true
   page.publishGame()
@@ -734,4 +739,39 @@ test('据点玩法继续使用专属提交路由，不把本人库 ID 带入节�
   const body = JSON.parse(request.data)
   assert.equal(body.id, undefined)
   assert.equal(requests.filter(item => item.url === '/api/template/publish').length, 0)
+})
+
+test('采用丢ACK退出重入先查原回执，来源已下架也不重新读取或采用', () => {
+  const first=loadPage(TEMP_PAGE);first.onLoad({id:'16',scope:'MERCHANT'});
+  requests.find(r=>r.url==='/api/template/author-info').success({code:200,data:LIBRARY_TEMPLATE});
+  const write=requests.find(r=>r.url==='/api/template/adopt-draft');const intent=JSON.parse(write.data);write.fail({});first.onUnload();
+  requests=[];const second=loadPage(TEMP_PAGE);second.onLoad({id:'16',scope:'MERCHANT'});
+  assert.equal(requests.filter(r=>r.url==='/api/template/author-info').length,0);
+  const recovery=requests.find(r=>r.url==='/api/template/adoption-receipt');assert.equal(recovery.data.requestId,intent.requestId);
+  recovery.success({code:200,data:{...intent,status:'COMPLETED',draftId:'9007199254740993'}});
+  requests.find(r=>r.url==='/api/template/adoption-detail').success({code:200,data:{...LIBRARY_TEMPLATE,id:'9007199254740993',canEdit:true,advancedConfigJson:'{}',originalTemplateId:'9007199254740995'}});
+  assert.equal(second._templateId,'9007199254740993');assert.equal(second.data.formData.originalTemplateId,'9007199254740995');
+  second.validateForm=()=>true;const body=draftBody(second);assert.equal(body.id,'9007199254740993');assert.equal(body.originalTemplateId,'9007199254740995');
+  assert.equal(requests.find(r=>r.url==='/api/template/draft').header['X-Author-Exact-Ids'],'1');
+  assert.equal(requests.filter(r=>r.url==='/api/template/adopt-draft').length,0);
+})
+
+test('采用重进负查询仅恢复冻结原号原来源版本，不换新号新内容',()=>{
+  const first=loadPage(TEMP_PAGE);first.onLoad({id:'16'});requests.find(r=>r.url==='/api/template/author-info').success({code:200,data:LIBRARY_TEMPLATE});
+  const write=requests.find(r=>r.url==='/api/template/adopt-draft');write.fail({});
+  const payload=write.data;requests=[];const next=loadPage(TEMP_PAGE);next.onLoad({id:'16'});
+  requests.find(r=>r.url==='/api/template/adoption-receipt').success({code:200,data:{requestId:JSON.parse(payload).requestId,status:'UNKNOWN'}});
+  assert.equal(requests.find(r=>r.url==='/api/template/adopt-draft').data,payload);
+  assert.equal(requests.filter(r=>r.url==='/api/template/adoption-source').length,0);
+})
+
+test('采用迟到回执不能跨商家scope、授权或继续编辑的输入回填',()=>{
+  for(const change of ['scope','auth','input','advanced','ruleSteps','album','hidden']){
+    requests=[];storage={};appStub.getAuthorization=()=> 'original';
+    const p=loadPage(TEMP_PAGE);p.onLoad({id:'16'});requests.find(r=>r.url==='/api/template/author-info').success({code:200,data:LIBRARY_TEMPLATE});
+    const write=requests.find(r=>r.url==='/api/template/adopt-draft');
+    if(change==='scope')p.data.operationScope='MERCHANT';if(change==='auth')appStub.getAuthorization=()=> 'changed';if(change==='input')p.data.formData.title='继续写';if(change==='advanced')p.data.advanced={changed:true};if(change==='ruleSteps')p.data.ruleSteps=['继续编辑'];if(change==='album')p._albumEditRevision=99;if(change==='hidden')p.onHide();
+    const before=JSON.stringify(p.data.formData);write.success(adoptedReceipt(write,9101));
+    assert.equal(JSON.stringify(p.data.formData),before);assert.equal(requests.filter(r=>r.url==='/api/template/adoption-detail').length,0);
+  }
 })

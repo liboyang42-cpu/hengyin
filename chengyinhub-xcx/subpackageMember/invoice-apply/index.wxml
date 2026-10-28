@@ -1,0 +1,90 @@
+<wxs src="../../utils/wxs/money.wxs" module="money" />
+<!-- 申请开票(X5):照抄结算页 pages/activity/baoming —— 导航栏小标题、「参与人信息」节标题行 → 发票抬头、
+     .setbox/.setly 订单与费用明细、吸底 .bmbottom、选择参与人信息半屏 → 选择发票抬头(整个发票流程唯一的半屏)。 -->
+<view class="theme-dark">
+  <cy-toast id="cy-toast" />
+  <cy-loading-mask id="cy-loading" />
+  <cy-modal-host id="cy-modal-host" />
+<cy-nav-bar title="申请开票" custom-back bind:back="onBack" />
+<cy-nav-spacer />
+
+<cy-empty class="page-terminal" wx:if="{{login}}" fill size="lg" kind="no-permission" title="登录后申请开票" cta="微信登录" bind:cta="login" />
+<cy-empty class="page-terminal" wx:elif="{{unavailable}}" fill size="lg" kind="no-permission" title="发票功能暂未开放" />
+<cy-skeleton wx:elif="{{!error && (!titlesLoaded || !ordersLoaded)}}" type="card" count="2" />
+<cy-error load-failure wx:elif="{{!titlesLoaded || !ordersLoaded}}" fill size="lg" title="开票信息加载失败" retry="重试" bind:retry="reload" />
+<block wx:else>
+  <view class="set" bindtap="openTitles" hover-class="{{pending ? 'none' : 'cy-pressed'}}" hover-stay-time="80" aria-role="button" aria-label="选择发票抬头">
+    <view class="set_left">发票抬头</view>
+    <view class="set_right"><cy-icon name="arrow-right" size="32" /></view>
+  </view>
+  <view wx:if="{{title}}" class="address-info" bindtap="openTitles" hover-class="{{pending ? 'none' : 'cy-pressed'}}" hover-stay-time="80">
+    <view class="dz_li_left">
+      <view class="dz_li_left_name">
+        <text>{{title.titleName}}</text>
+        <text>{{title.line}}</text>
+      </view>
+    </view>
+  </view>
+  <view wx:else class="inv-gap">
+    <cy-inline-error kind="data" title="还没有发票抬头" action="新增抬头" bind:action="addTitle" />
+  </view>
+
+  <view class="setbox" wx:for="{{groups}}" wx:for-item="group" wx:key="key">
+    <view class="setbox_tit inv-group">
+      <text class="inv-group__name">{{group.blocked ? '暂不可申请' : '开票单位 · ' + group.name}}</text>
+      <text wx:if="{{group.canPickAll}}" class="inv-all" bindtap="pickAll" data-issuer="{{group.issuerId}}" aria-role="button" aria-label="全选本单位" hover-class="cy-pressed" hover-stay-time="80">全选本单位</text>
+    </view>
+    <view class="setly inv-list">
+      <view class="setly_li inv-pick {{item.disabled ? 'is-dis' : ''}}" wx:for="{{group.rows}}" wx:key="orderId" bindtap="pick" data-id="{{item.orderId}}"
+            aria-role="checkbox" aria-checked="{{item.selected}}" aria-disabled="{{item.disabled}}" aria-label="{{item.name}}，{{money.amount(item.amount)}}" hover-class="{{item.disabled ? 'none' : 'cy-pressed'}}" hover-stay-time="80">
+        <view class="setly_li_left inv-pick__left">
+          <icon wx:if="{{item.selected}}" class="bmbottom_box_gx" type="success" size="20" />
+          <icon wx:else class="inv-pick__off" type="circle" size="20" color="var(--cy-color-text-tertiary)" />
+          <view class="inv-pick__name">{{item.name}}</view>
+        </view>
+        <view class="setly_li_right inv-pick__amt"><text>{{money.amount(item.amount)}}</text></view>
+      </view>
+    </view>
+  </view>
+  <cy-empty wx:if="{{!groups.length}}" kind="empty" size="sm" title="暂无可开票订单" />
+
+  <block wx:if="{{groups.length}}">
+    <view class="sec-title">开票金额</view>
+    <view class="setly">
+      <view class="setly_li">
+        <view class="setly_li_left">已选订单</view>
+        <view class="setly_li_right"><text>{{selectedCount || 0}} 笔</text></view>
+      </view>
+      <view class="setly_li setly_li--total">
+        <view class="setly_li_left">总计</view>
+        <view class="setly_li_right"><text>{{money.amount2(total)}}</text></view>
+      </view>
+    </view>
+  </block>
+
+  <view class="bmbottom-spacer" style="--baoming-action-extra: {{submit ? 'calc(var(--cy-btn-h) + var(--cy-space-2))' : '0rpx'}}"></view>
+  <view class="bmbottom" style="--baoming-action-extra: {{submit ? 'calc(var(--cy-btn-h) + var(--cy-space-2))' : '0rpx'}}">
+    <cy-inline-error class="submit-inline-error" wx:if="{{submit === 'unknown'}}" kind="data" title="这次申请结果未确认" sub="确认前请勿重复提交" action="{{requestId ? '查询结果' : ''}}" bind:action="queryResult" />
+    <cy-inline-error class="submit-inline-error" wx:elif="{{submit === 'max'}}" kind="data" title="一次最多合并 50 笔订单" action="重新选择" bind:action="reselect" />
+    <cy-inline-error class="submit-inline-error" wx:elif="{{submit === 'failed'}}" kind="data" title="申请未提交" sub="{{submitSub}}" action="重新选择" bind:action="reselect" />
+    <cy-btn variant="primary" style="width:686rpx;margin:var(--cy-space-4) auto 0;display:block" loading="{{writing}}" disabled="{{!!submit || !title || !selectedCount}}" bindtap="apply">提交申请</cy-btn>
+  </view>
+</block>
+
+<cy-sheet footer show="{{sheet}}" title="选择发票抬头" bind:close="closeTitles">
+  <view class="popup-content">
+    <view wx:for="{{titles}}" wx:key="id" class="address-item {{title && item.id === title.id ? 'active' : ''}}" catchtap="pickTitle" data-id="{{item.id}}"
+          aria-role="radio" aria-checked="{{title && item.id === title.id}}" hover-class="cy-pressed" hover-stay-time="80">
+      <view class="address-item-content">
+        <view class="address-item-header">
+          <text class="address-name">{{item.titleName}}</text>
+          <text class="address-phone">{{item.line}}</text>
+        </view>
+      </view>
+      <view class="address-point {{title && item.id === title.id ? 'is-on' : ''}}" aria-hidden="true" />
+    </view>
+    <cy-empty wx:if="{{!titles.length}}" kind="empty" title="还没有发票抬头" />
+  </view>
+  <cy-btn slot="footer" variant="primary" bindtap="manageTitles">管理发票抬头</cy-btn>
+</cy-sheet>
+</view>

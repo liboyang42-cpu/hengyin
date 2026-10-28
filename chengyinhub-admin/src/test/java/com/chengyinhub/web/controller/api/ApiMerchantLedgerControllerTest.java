@@ -447,7 +447,12 @@ class ApiMerchantLedgerControllerTest {
         when(orderService.selectOmsOrderList(any(OmsOrder.class))).thenReturn(Collections.emptyList());
         when(aftercareMapper.countOwnedRefundList(MERCHANT_ROW_ID, OWNER_MEMBER_ID, "PENDING")).thenReturn(4L);
 
+        com.chengyinhub.business.service.ICmsTopicService todoTopics = mock(com.chengyinhub.business.service.ICmsTopicService.class);
+        com.chengyinhub.business.service.ICmsRegistrationService todoRegistrations = mock(com.chengyinhub.business.service.ICmsRegistrationService.class);
+        ReflectionTestUtils.setField(controller, "cmsTopicService", todoTopics);
+        ReflectionTestUtils.setField(controller, "cmsRegistrationService", todoRegistrations);
         AjaxResult result = controller.todoSummary();
+        org.mockito.Mockito.verifyNoInteractions(todoTopics, todoRegistrations);
 
         assertEquals(200, result.get(AjaxResult.CODE_TAG));
         org.mockito.ArgumentCaptor<CmsRegistrationMerchant> offerCaptor =
@@ -495,7 +500,12 @@ class ApiMerchantLedgerControllerTest {
                 .thenReturn(Collections.emptyList());
         when(orderService.selectOmsOrderList(any(OmsOrder.class))).thenReturn(Collections.emptyList());
 
+        com.chengyinhub.business.service.ICmsTopicService todoTopics = mock(com.chengyinhub.business.service.ICmsTopicService.class);
+        com.chengyinhub.business.service.ICmsRegistrationService todoRegistrations = mock(com.chengyinhub.business.service.ICmsRegistrationService.class);
+        ReflectionTestUtils.setField(controller, "cmsTopicService", todoTopics);
+        ReflectionTestUtils.setField(controller, "cmsRegistrationService", todoRegistrations);
         AjaxResult result = controller.todoSummary();
+        org.mockito.Mockito.verifyNoInteractions(todoTopics, todoRegistrations);
 
         assertEquals(200, result.get(AjaxResult.CODE_TAG));
         org.mockito.ArgumentCaptor<CmsRegistrationMerchant> offerCaptor =

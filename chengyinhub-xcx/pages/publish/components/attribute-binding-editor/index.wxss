@@ -1,0 +1,6 @@
+.binding { color: var(--cy-color-text-primary); font-size: var(--cy-type-body); }
+.binding__title { display:block; font-weight:600; margin:16rpx 0; }
+.binding__hint { display:block; color:var(--cy-color-text-secondary); line-height:1.6; }
+.binding__option { display:flex; align-items:center; min-height:80rpx; }
+.binding__conflict { padding:16rpx 0; border-bottom:1rpx solid var(--cy-color-border-subtle); line-height:1.6; }
+.binding__btn { font-size:var(--cy-type-label); color:var(--cy-color-text-primary); background:transparent; margin:16rpx 0; }

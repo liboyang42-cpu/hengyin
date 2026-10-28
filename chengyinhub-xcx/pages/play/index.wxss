@@ -1,5 +1,6 @@
 @import "./theme-backpack.wxss";
 @import "./theme-player-ops.wxss";
+@import "./play-overlays.wxss";
 @import "/style/proto-icons.wxss";
 @import "/style/proto-sheet.wxss";
 @import "/style/proto-shopstrip.wxss";
@@ -560,7 +561,8 @@ page { background: var(--cy-color-bg-page); }
 .chfull__fsentry.is-auto{ opacity:.6; }
 .chfull__fsentry.is-done .chfull__fsentry-go{ background:rgba(255,255,255,.14); color:#FFFFFF; } /* ds-ok 已完成弱化 */
 .chfull__fsentry.is-done{ opacity:.7; }
-.chfull__continue{ height:88rpx; border-radius:999rpx; /* ds-ok 原型 .btn 46px 高 / 全圆角 */
+.chfull__kit{ --pk-verdict-radius:32rpx; } /* ds-ok 与内嵌安静挑战卡同一档圆角(2026-10-27 实测判定色块是直角) */
+.chfull__continue{ margin-top:var(--cy-space-4); height:88rpx; border-radius:999rpx; /* ds-ok 原型 .btn 46px 高 / 全圆角;上边距:不再紧贴判定色块 */
   display:flex; align-items:center; justify-content:center;
   color:#111111; background:#FFFFFF; font-size:29rpx; font-weight:700; } /* ds-ok 原型 .btn.w 15px/700 */
 
@@ -675,6 +677,9 @@ page { background: var(--cy-color-bg-page); }
 .gp2__ctl{ margin-top:31rpx; display:flex; justify-content:space-between; }
 .gp2__ctl-a,.gp2__ctl-b{ font-size:25rpx; color:#6A7282; text-decoration:underline; } /* ds-ok Figma 实测(用户裁决字面值) */
 .gp2__ctaw{ padding:15rpx 31rpx calc(31rpx + env(safe-area-inset-bottom)); background:#0A0A0A; } /* ds-ok Figma 实测(用户裁决字面值) */
+/* 底栏上沿渐隐:滚动区下一行字被底栏一刀切成半截,看着像被遮住(2026-10-27 实测),渐隐告诉玩家下面还有内容 */
+.gp2__ctaw{ position:relative; }
+.gp2__ctaw::before{ content:''; position:absolute; left:0; right:0; top:-64rpx; height:64rpx; pointer-events:none; background:linear-gradient(180deg, rgba(10,10,10,0), #0A0A0A); } /* ds-ok 与底栏同色 */
 .gp2__cta{ height:108rpx; border-radius:var(--cy-radius-pill); background:#FFFFFF; color:#0A0A0A; /* ds-ok Figma 实测(用户裁决字面值) */
   font-size:32rpx; font-weight:700; display:flex; align-items:center; justify-content:center; } /* ds-ok Figma 实测(用户裁决字面值) */
 
@@ -1693,7 +1698,7 @@ page { background: var(--cy-color-bg-page); }
    原生地图吃掉点击,上面再铺一层透明 radar__hit 接住。顶栏为它留出高度,标题仍按行居中。 */
 .fx-story__radar{ align-self:center; }
 .radar__disc{ position:relative; width:88rpx; height:88rpx; border-radius:50%; overflow:hidden; /* ds-ok 2026-09-24 用户:左上角缩小一点 */
-  background:var(--cy-color-bg-elevated); box-shadow:0 0 0 4rpx rgba(255,255,255,.85), 0 8rpx 32rpx rgba(0,0,0,.5); /* ds-ok 故事流装饰值 */
+  background:#EEEEEC; box-shadow:0 0 0 4rpx rgba(255,255,255,.85), 0 8rpx 32rpx rgba(0,0,0,.5); /* ds-ok 故事流装饰值;底色 = 腾讯底图浅灰,地图没铺出来前不再是一个黑圆(2026-10-27) */
   display:flex; align-items:center; justify-content:center; } /* ds-ok GTA 雷达的白描边 */
 /* 地图本体做成圆的三倍大、居中:可见的仍是正中那一块(比例尺不变),「腾讯地图」角标落在圆外被裁掉 */
 .fx-story__radar-map{ position:absolute; left:-100%; top:-100%; width:300%; height:300%; }
@@ -1839,3 +1844,50 @@ page { background: var(--cy-color-bg-page); }
 /* P-60(2026-10-27):故事流正文与对白用手写体(pages/play/utils/story-font.js 在线加载 CyStoryHand);
    没配置或加载失败时认不出这个字族,自动落到后面的系统字体 —— 与 app.wxss 默认字族同值。 */
 .cy-story-hand { font-family: 'CyStoryHand', -apple-system, "PingFang SC", "Noto Sans SC", sans-serif; } /* ds-ok 字族名同 story-font.js STORY_FONT_FAMILY */
+/* ===== 2026-10-28 完成页改版(业主定稿 claude.ai/artifact/DF1tPhSNWFrzQhDu8hoUAy):整屏深色,NRC 跑步总结 + Revolut 分组卡 =====
+   做法:在 .finsheet 作用域里把它本来就在用的 play-story 色值换成深色,版式只改布局;390 宽稿按 1.923rpx/px 移植。 */
+.finmask{ display:none; }
+.finsheet{ position:fixed; inset:0; height:auto; max-height:none; border-radius:0; padding:0 0 calc(230rpx + env(safe-area-inset-bottom));
+  --cy-color-play-story-page:#000000; --cy-color-play-story-text:#FFFFFF; --cy-color-play-story-muted:rgba(235,235,245,.6); /* ds-ok 定稿深色 */
+  --cy-color-play-story-line:rgba(255,255,255,.08); --cy-color-play-story-surface:#1C1C1E; --cy-color-play-story-accent:#FFFFFF; /* ds-ok 定稿深色 */
+  --cy-color-play-story-accent-soft:rgba(255,255,255,.16); --cy-color-play-story-cta-fg:#000000; --cy-color-play-ink-muted:rgba(235,235,245,.6); /* ds-ok 定稿深色 */
+  --cy-color-play-surface-subtle:#1C1C1E; --cy-comp-sheet-player-surface:#1C1C1E; } /* ds-ok 定稿深色 */
+.finsheet__map{ margin:0; height:635rpx; border-radius:0; }
+.finsheet__map::after{ content:''; position:absolute; inset:0; z-index:2; pointer-events:none; background:linear-gradient(180deg,rgba(0,0,0,.55) 0,rgba(0,0,0,0) 22%,rgba(0,0,0,0) 62%,#000 100%); } /* ds-ok 地图压进黑底 */
+.finsheet__map-error{ z-index:3; }
+.finsheet__head{ position:relative; z-index:3; margin-top:-35rpx; padding:0 38rpx; display:flex; flex-direction:column; align-items:flex-start; gap:12rpx; }
+.finsheet__eyebrow{ font-size:25rpx; color:var(--cy-color-play-story-muted); } /* ds-ok 定稿字号 */
+.finsheet .finsheet__title{ margin:0; text-align:left; font-size:58rpx; line-height:1.15; } /* ds-ok 定稿字号 */
+.finsheet .finsheet__result{ margin:8rpx 0 0; padding:8rpx 19rpx; font-size:23rpx; font-weight:600; background:#2C2C2E; color:#FFFFFF; } /* ds-ok 定稿 */
+.finsheet .finsheet__result.is-win{ background:#FFFFFF; color:#000000; } /* ds-ok 定稿 */
+.finsheet .finsheet__grid{ display:grid; grid-template-columns:repeat(3,1fr); column-gap:15rpx; margin:54rpx 38rpx 0; }
+.finsheet .fst{ align-items:flex-start; gap:4rpx; min-width:0; }
+.finsheet .fst:first-child{ grid-column:1 / -1; margin-bottom:46rpx; }
+.finsheet .fst:first-child .fst__ic{ display:none; }
+.finsheet .fst__v{ font-family:"DIN Alternate","DIN Condensed",-apple-system,sans-serif; font-style:italic; font-weight:800; font-variant-numeric:tabular-nums; }
+.finsheet .fst:first-child .fst__v{ font-size:216rpx; line-height:.86; } /* ds-ok 定稿 NRC 大数字 */
+.finsheet .fst:first-child .fst__l{ font-size:29rpx; margin-top:12rpx; } /* ds-ok 定稿字号 */
+.finsheet .fst--s .fst__v{ font-size:58rpx; line-height:1; } /* ds-ok 定稿字号 */
+.finsheet .fst--s .fst__l{ font-size:25rpx; } /* ds-ok 定稿字号 */
+.finsheet .finsheet__game-ending{ margin:54rpx 38rpx 0; padding:31rpx; border-left:0; border-radius:31rpx; background:#1C1C1E; } /* ds-ok 定稿分组卡 */
+.fsec{ margin:54rpx 38rpx 0; display:flex; flex-direction:column; gap:19rpx; }
+.fsec__h{ font-size:38rpx; font-weight:700; color:#FFFFFF; } /* ds-ok 定稿字号 */
+.fgroup{ border-radius:31rpx; overflow:hidden; background:#1C1C1E; } /* ds-ok 定稿分组卡 */
+.frow{ position:relative; display:flex; align-items:center; gap:27rpx; min-height:54rpx; padding:27rpx 31rpx; }
+.frow + .frow::before, .frow + .finish-milestone::before{ content:''; position:absolute; top:0; left:31rpx; right:0; height:1rpx; background:rgba(255,255,255,.08); } /* ds-ok 分隔线 */
+.frow__t{ flex:1; min-width:0; display:flex; flex-direction:column; gap:4rpx; }
+.frow__b{ font-size:31rpx; font-weight:500; color:#FFFFFF; } /* ds-ok 定稿字号 */
+.frow__s{ font-size:25rpx; color:rgba(235,235,245,.6); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } /* ds-ok 定稿字号 */
+.frow__v{ flex:none; font-size:31rpx; color:rgba(235,235,245,.6); font-variant-numeric:tabular-nums; } /* ds-ok 定稿字号 */
+.fhex{ flex:none; width:77rpx; height:85rpx; display:flex; align-items:center; justify-content:center; clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%); font-size:29rpx; font-weight:800; color:#000000; } /* ds-ok NRC 六边形奖章 */
+.fhex--metal{ background:linear-gradient(160deg,#E5E5EA,#8E8E93); } /* ds-ok NRC 六边形奖章,游玩路径保持中性色 */
+.fhex--ink{ background:linear-gradient(160deg,#FFFFFF,#BDBDC2); } /* ds-ok NRC 六边形奖章 */
+.fgroup .finish-milestone{ position:relative; margin:0; padding:31rpx; border:0; border-radius:0; background:transparent; }
+.finsheet .branchpath, .finsheet .newos, .finsheet .finsheet__records, .finsheet .finish-route-recommendation{ margin:54rpx 38rpx 0; border:0; border-radius:31rpx; background:#1C1C1E; } /* ds-ok 定稿分组卡 */
+.finsheet .finsheet__stamplist{ margin:19rpx 38rpx 0; }
+.finsheet .finish-photos-title{ margin:54rpx 38rpx 19rpx; font-size:38rpx; font-weight:700; color:#FFFFFF; } /* ds-ok 定稿字号 */
+.finsheet .finish-stamps{ padding:0 38rpx; }
+.finsheet .finish-journal-entry{ margin:19rpx 38rpx 0; padding:31rpx; border:0; border-radius:31rpx; background:#1C1C1E; } /* ds-ok 定稿分组卡 */
+.finsheet .finsheet__records + .finish-journal-entry{ margin-top:19rpx; }
+.finsheet .finsheet__retry{ margin:31rpx 38rpx 0; }
+.finsheet .finsheet__cta{ position:fixed; z-index:5; left:38rpx; right:38rpx; bottom:calc(65rpx + env(safe-area-inset-bottom)); margin:0; height:104rpx; background:#FFFFFF; color:#000000; box-shadow:0 0 80rpx 70rpx #000000; } /* ds-ok 白色主按钮,黑色渐隐托底 */
