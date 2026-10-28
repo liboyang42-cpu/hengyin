@@ -320,7 +320,9 @@ test('完成页明确显示通关状态并保留照片邮票', () => {
   // milestone 取不到时仍旧回落到 已通关/本章完成,这里连回落分支一起钉住,
   // 避免有人把回落删掉、让接口一挂完成页就不说自己完成没完成。
   // 2026-10-27:服务端按主题规则(主线 N 站)判了通关时(topicCompleted)同样写「已通关」,不因选做站没走完写成「本章完成」
-  assert.match(playWxml, /class="finsheet__result">\{\{milestone \? milestone\.title : \(allDone \|\| topicCompleted \? '已通关' : '本章完成'\)\}\}/)
+  // 2026-10-28 完成页改版(业主定稿):标签只说本章完成 / 已通关,「你已完成第 N 个主题」进城市探索卡的里程碑标题
+  assert.match(playWxml, /class="finsheet__result \{\{allDone \|\| topicCompleted \? 'is-win' : ''\}\}">\{\{allDone \|\| topicCompleted \? '已通关' : '本章完成'\}\}/)
+  assert.match(playWxml, /class="finish-milestone__head">\s*<text>\{\{milestone\.title\}\}<\/text>/)
   assert.match(playWxml, /class="finish-stamps"[\s\S]*?wx:for="\{\{finishPhotos\}\}"/)
   assert.match(roamWxml, /class="finish-stamps"[\s\S]*?wx:for="\{\{finish\.photos\}\}"/)
 })

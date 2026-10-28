@@ -1,3 +1,4 @@
+// 2026-10-28 完成页改版(业主定稿):play/index.js 的 reviewElapsed / reviewDistance 两条 U4 零消费债务随成绩行真渲染出账,u4Field 126→124,u4Debt digest 按同一算法重算。
 // 2026-10-28 L9 再并 master(#652):取 master 的首页 U1-VARIABLE 1057→1043 换 key、模板页两条 _coverFail U4-DYNAMIC 退役删除(62→60),本线锚点不变;u1Variable / u4Dynamic digest 按同一算法在合并树上重算。
 // 2026-10-28 文档二 L9 集成并 master(#610):play/index.js u4Dynamic 1744→1747、u5Silent 7856→7894,publish/temp/index.js u4Dynamic 1459→1460、1460→1461、1503→1504、2943→2956、3745→3758、3872→3885,仅行号位移(调用行逐字相同),理由与条数不变;u4Dynamic / u5Silent digest 按同一算法重算。
 // 2026-10-28 文档二 L9 集成:L5 在 play/index.js 上方净增行,u4Dynamic 1741→1744(章节正文显形 patch)、u5Silent 7851→7856(已完成里程碑读取)仅行号位移,调用行内容与理由一字未改,条数不变;两条 digest 按同一算法重算。
@@ -278,7 +279,8 @@ module.exports = {
     // 2026-09-19 批复1-a=2:pricing/partner 页按用户裁决复活(B-06 曾整页退役),其两条存量零消费
     //   字段 toType/toId 先随页回账(149→151),随即在同批复落地时还清——index.js 三处读改回显式
     //   this.data.toType/toId,门禁实测不再命中。两条登记出账,棘轮回 149,digest 复算。
-    "u4Field": 126,
+    // 2026-10-28 完成页改版(业主定稿):用时 reviewElapsed / 距离 reviewDistance 进完成页成绩行,两条零消费债务还清,126 → 124。
+    "u4Field": 124,
       // 2026-08-26 圈层主题接回主题货架:新增 circleTheme import,两条 _coverFail 动态 setData
       //   等量下移(269→270 / 281→282,行号取门禁实测)。调用点与强化理由不变,显式改 digest。
     // 2026-08-27 合并 #883:activity/list 三条 U4-DYNAMIC 登记行号 +2(129→131/151→153/231→233,
@@ -441,7 +443,7 @@ module.exports = {
       // 参数留存 URL 但页面不再落 data),两条存量债直接出账,149 键集实算复挖。
       // 2026-09-19 批复1-a=2 还清:partner#toType/toId 两条随页复活短暂回账(151 键)后当场还债出账,
       //   key 集回到退役前那份 149,digest 按当前 key 集合实算。
-"u4Debt": "59f04254321eda0cacb5d216367dc59cf382c1dfc41b2157d2f7f6b1ebb4c670",
+"u4Debt": "5f3dfe36319ecc551cf8579f77fe7f688a01c64a0cb34aad5d1a90f2acc0233e",
       // 2026-08-17 漫游 S1 施工:条数不变(65),只是 pages/roam/index.js 的两处
       //   `...this._calcArch()` 动态 setData 行号从 3263/3305 移到 3261/3303
       //   (删掉 _apiCheckin 与 /api/play/arrive 那段后整段上移)。
@@ -1165,8 +1167,6 @@ module.exports = {
     "chengyinhub-xcx/pages/play/index.js#wrongCount": "存量零消费债务：wrongCount 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30",
     "chengyinhub-xcx/pages/play/index.js#journalDot": "存量零消费债务：journalDot 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30",
     "chengyinhub-xcx/pages/play/index.js#finishBadge": "存量零消费债务：finishBadge 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30",
-    "chengyinhub-xcx/pages/play/index.js#reviewElapsed": "存量零消费债务：reviewElapsed 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30",
-    "chengyinhub-xcx/pages/play/index.js#reviewDistance": "存量零消费债务：reviewDistance 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30",
     "chengyinhub-xcx/pages/play/index.js#reviewEmpty": "存量零消费债务：reviewEmpty 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30",
     "chengyinhub-xcx/pages/privacy/index.js#scrollInto": "存量零消费债务：scrollInto 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30",
     "chengyinhub-xcx/pages/publish/activity/index.js#categoryList": "存量零消费债务：categoryList 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30",
