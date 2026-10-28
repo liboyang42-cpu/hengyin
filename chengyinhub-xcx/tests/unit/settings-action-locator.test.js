@@ -9,7 +9,7 @@ const wxml = fs.readFileSync(path.resolve(__dirname, '../../pages/shezhi/shezhi.
 
 test('设置页每个 cy-cell 动作都有稳定且唯一的 id 定位器', () => {
   const cells = wxml.match(/<cy-cell\b[^>]*\bbind:tap="[^"]+"[^>]*\/>/g) || [];
-  assert.equal(cells.length, 12, '设置菜单动作数量变化时必须同步定位器合同');
+  assert.equal(cells.length, 13, '设置菜单动作数量变化时必须同步定位器合同');
   const ids = cells.map((tag) => {
     const match = /\bid="([^"]+)"/.exec(tag);
     assert.ok(match, `缺少 id: ${tag}`);
@@ -18,6 +18,9 @@ test('设置页每个 cy-cell 动作都有稳定且唯一的 id 定位器', () =
   assert.equal(new Set(ids).size, ids.length, '设置菜单 id 必须逐动作唯一');
   assert.ok(ids.includes('settings-marketing-consent'), '营销同意入口必须有稳定定位器');
   assert.ok(ids.includes('settings-invoice'), 'invoice entry needs a stable locator');
+  assert.ok(ids.includes('settings-appeals'), '我的申诉入口必须有稳定定位器');
+  // X6：我的申诉用 icon_privacy，排在发票前
+  assert.ok(ids.indexOf('settings-appeals') === ids.indexOf('settings-invoice') - 1);
   assert.ok(ids.includes('settings-post-governance'), '帖子处置与申诉入口必须有稳定定位器');
 });
 

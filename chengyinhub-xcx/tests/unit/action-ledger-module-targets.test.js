@@ -192,9 +192,13 @@ test('actual revoke helper closure and contract reject an additional snapshot wr
 
  // W8 起抬头保存改走按原请求号幂等的 /api/invoice/titles/save-request(旧 /titles/save 页面不再调用)。
  test('invoice dispatch keeps each action write and readback without sibling writes', () => {
-  for (const [handler, expected] of [['loadTitles', []], ['loadRecords', []], ['saveTitle', ['/api/invoice/titles/save-request']], ['apply', ['/api/invoice/apply']], ['cancel', ['/api/invoice/cancel']]]) {
-    const result = targets('subpackageMember/invoice/index.js', handler)
-    assert.deepEqual(result.apis.filter(isWriteApi), expected, handler)
+  // X5（10-28）：发票拆成 5 页，各页混入 subpackageMember/invoice/base.js 的 read/mutate。
+  for (const [file, handler, expected] of [['invoice-titles', 'loadTitles', []], ['invoice', 'loadRecords', []],
+    ['invoice-title-edit', 'saveTitle', ['/api/invoice/titles/save-request']], ['invoice-apply', 'apply', ['/api/invoice/apply']],
+    ['invoice', 'cancel', ['/api/invoice/cancel']], ['invoice-detail', 'cancel', ['/api/invoice/cancel']],
+    ['invoice-titles', 'remove', ['/api/invoice/titles/delete']]]) {
+    const result = targets('subpackageMember/' + file + '/index.js', handler)
+    assert.deepEqual(result.apis.filter(isWriteApi), expected, file + ' ' + handler)
     if (handler === 'loadTitles') assert.ok(result.apiContracts.some(api => api.url === '/api/invoice/titles' && api.method === 'POST'))
   }
 })

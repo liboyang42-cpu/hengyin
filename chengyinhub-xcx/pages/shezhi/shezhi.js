@@ -214,6 +214,9 @@ Page({
     this.openScene('settings-deregister');
   },
 
+  goAppeals() {
+    wx.navigateTo({ url: '/subpackageMember/appeal-mine/index' });
+  },
   goInvoice() {
     wx.navigateTo({ url: '/subpackageMember/invoice/index' });
   },
