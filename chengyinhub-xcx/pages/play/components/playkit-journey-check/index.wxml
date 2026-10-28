@@ -55,7 +55,14 @@
         <text class="jc__total-s" wx:if="{{landed}}">{{receipt.dice.length === 2 ? '两颗取 ' + receipt.kept + ' · ' : ''}}达成值 {{receipt.total}} · 难度 {{receipt.dc}}</text>
       </view>
       <view class="jc__verdict pk-in {{receipt.success ? 'jc__verdict--ok' : 'jc__verdict--no'}}" wx:if="{{landed}}">{{marginText || verdictText}}</view>
-      <view class="jc__applied" wx:if="{{landed && receipt.mods.length}}">
+      <!-- 文档二 L5 p-check:检定明细就在这里逐行(骰子 / 属性 / 条件修正 / 交易 / 动量),只画一次 -->
+      <view class="jc__applied" wx:if="{{landed && receipt.breakdownRows.length}}" aria-label="检定明细">
+        <view class="jc__mod is-held" wx:for="{{receipt.breakdownRows}}" wx:key="index">
+          <text class="jc__mod-l">{{item.label}}</text>
+          <text class="jc__mod-v">{{item.value}}</text>
+        </view>
+      </view>
+      <view class="jc__applied" wx:elif="{{landed && receipt.mods.length}}">
         <view class="jc__mod {{item.applied ? 'is-held' : ''}}" wx:for="{{receipt.mods}}" wx:key="index">
           <text class="jc__mod-l">{{item.label || '条件'}}</text>
           <text class="jc__mod-v">{{item.applied ? '生效 ' : '未生效 '}}{{item.value > 0 ? '+' : ''}}{{item.value}}</text>
@@ -76,13 +83,6 @@
       </view>
       <view class="jc__exhaust" wx:if="{{receipt.exhausted}}">力竭了，先找地方休整</view>
     </block>
-    <view class="jc__mods" wx:if="{{receipt && landed && receipt.breakdownRows.length}}" aria-label="检定明细">
-      <view class="jc__mods-k">检定明细</view>
-      <view class="jc__mod" wx:for="{{receipt.breakdownRows}}" wx:key="index">
-        <text class="jc__mod-l">{{item.label}}</text>
-        <text class="jc__mod-v">{{item.value}}</text>
-      </view>
-    </view>
   </view>
 
   <!-- 底部动作:题面「按住摇骰」;结果屏「重掷 + 结算」;结算屏「继续」。失败也推进,没有锁死的态 -->
