@@ -88,9 +88,9 @@ const STORIES = ['城市藏宝猎人', '异常事务局：不存在的坐标', '
 const TOPIC_TAG_GROUPS = [
   { name: '类型', tags: [
     { key: 'explore', name: '城市探索', icon: 'cat-city', test: byNames(FREE_EXPLORE.filter((n) => n !== '高温末日逃生')) },
-    { key: 'story', name: '剧情叙事', icon: 'branch-story', test: byNames(STORIES) },
+    { key: 'story', name: '剧情叙事', icon: 'tag-story', test: byNames(STORIES) },
     { key: 'survival', name: '生存逃脱', icon: 'tag-firstaid', test: byNames(['末日广播：最后一座中继站', '高温末日逃生', '异常事务局：不存在的坐标']) },
-    { key: 'puzzle', name: '解谜推理', icon: 'street-puzzle', test: byNames(['城市藏宝猎人', '异常事务局：不存在的坐标', '时间污染：被删除的今天']) },
+    { key: 'puzzle', name: '解谜推理', icon: 'tag-puzzle', test: byNames(['城市藏宝猎人', '异常事务局：不存在的坐标', '时间污染：被删除的今天']) },
     { key: 'versus', name: '竞技对抗', icon: 'tag-trophy', test: byNames([]) },
     { key: 'life', name: '生活实用', icon: 'cat-life', test: byNames(['生活不掉线']) }
   ] },
@@ -103,7 +103,7 @@ const TOPIC_TAG_GROUPS = [
     { key: 'solo', name: '一个人', icon: 'cat-solo', test: (t) => t.key && t.key !== '生活不掉线' },
     { key: 'date', name: '约会', icon: 'tag-balloon', test: byNames(['上海像一部旧电影', '风味巡游']) },
     { key: 'newcomer', name: '初来上海', icon: 'tag-suitcase', test: byNames(['风味巡游', '城市藏宝猎人', '上海像一部旧电影']) },
-    { key: 'local', name: '本地居民', icon: 'cat-shop', test: byNames(['生活不掉线', '预制人生']) }
+    { key: 'local', name: '本地居民', icon: 'tag-local', test: byNames(['生活不掉线', '预制人生']) }
   ] },
   { name: '时长', tags: [
     { key: 't1h', name: '一小时内', icon: 'tag-clock1', test: (t) => t.seconds > 0 && t.seconds <= 3600 },
@@ -116,46 +116,46 @@ const TOPIC_ROW = ['explore', 'story', 'survival', 'puzzle', 'scifi', 'nostalgia
 
 const GAME_TAG_GROUPS = [
   { name: '用途', tags: [
-    { key: 'promo', name: '营销引流', icon: 'cat-shop', test: byTitles(['今晚的暗号', '老板的秘密题', '收集这枚风味印章', '新品盲测局', '招牌菜限时盲猜', '咖啡风味人格']) },
+    { key: 'promo', name: '营销引流', icon: 'tag-promo', test: byTitles(['今晚的暗号', '老板的秘密题', '收集这枚风味印章', '新品盲测局', '招牌菜限时盲猜', '咖啡风味人格']) },
     { key: 'plugin', name: '插件玩法', icon: 'tag-map', test: byTitles(['拍下这一刻', '集合点亮', '今日角色任务', '城市接力棒', '今日城市签', '午夜电台', '治愈音乐角']) },
-    { key: 'icebreak', name: '社交破冰', icon: 'table-bingo', test: byTitles(['一桌任务宾果', '分支故事接力', '便利店调酒师', '今日搭配任务']) },
-    { key: 'teambuild', name: '团建', icon: 'cat-team', test: byTitles(['小队能量接力', '小队竞速点亮', '一桌任务宾果', '分支故事接力']) }
+    { key: 'icebreak', name: '社交破冰', icon: 'tag-icebreak', test: byTitles(['一桌任务宾果', '分支故事接力', '便利店调酒师', '今日搭配任务']) },
+    { key: 'teambuild', name: '团建', icon: 'tag-teambuild', test: byTitles(['小队能量接力', '小队竞速点亮', '一桌任务宾果', '分支故事接力']) }
   ] },
   { name: '玩法', tags: [
-    { key: 'riddle', name: '解谜', icon: 'street-puzzle', test: byTitles(['街角谜题', '今晚的暗号', '老板的秘密题', '细节观察挑战']) },
-    { key: 'quiz', name: '问答抢答', icon: 'secret-question', test: byTitles(['老板的秘密题', '招牌菜限时盲猜', '咖啡风味人格', '小队能量接力']) },
-    { key: 'blind', name: '盲猜盲测', icon: 'blind-test', test: byTitles(['闭眼味觉师', '新品盲测局', '招牌菜限时盲猜']) },
-    { key: 'photo', name: '拍照打卡', icon: 'city-camera', test: byTitles(['拍下这一刻', '城市取景任务']) },
-    { key: 'relay', name: '接力', icon: 'relay', test: byTitles(['城市接力棒', '分支故事接力', '小队能量接力']) },
-    { key: 'roleplay', name: '角色扮演', icon: 'role-mission', test: byTitles(['今日角色任务', '集合点亮']) },
-    { key: 'collect', name: '收集', icon: 'flavor-stamp', test: byTitles(['收集这枚风味印章', '今日城市签']) },
-    { key: 'silent', name: '无声挑战', icon: 'silent-order', test: byTitles(['沉默点单']) }
+    { key: 'riddle', name: '解谜', icon: 'tag-puzzle', test: byTitles(['街角谜题', '今晚的暗号', '老板的秘密题', '细节观察挑战']) },
+    { key: 'quiz', name: '问答抢答', icon: 'tag-quiz', test: byTitles(['老板的秘密题', '招牌菜限时盲猜', '咖啡风味人格', '小队能量接力']) },
+    { key: 'blind', name: '盲猜盲测', icon: 'tag-blind', test: byTitles(['闭眼味觉师', '新品盲测局', '招牌菜限时盲猜']) },
+    { key: 'photo', name: '拍照打卡', icon: 'tag-photo', test: byTitles(['拍下这一刻', '城市取景任务']) },
+    { key: 'relay', name: '接力', icon: 'tag-relay', test: byTitles(['城市接力棒', '分支故事接力', '小队能量接力']) },
+    { key: 'roleplay', name: '角色扮演', icon: 'tag-roleplay', test: byTitles(['今日角色任务', '集合点亮']) },
+    { key: 'collect', name: '收集', icon: 'tag-collect', test: byTitles(['收集这枚风味印章', '今日城市签']) },
+    { key: 'silent', name: '无声挑战', icon: 'tag-silent', test: byTitles(['沉默点单']) }
   ] },
   { name: '题材', tags: [
     { key: 'sport', name: '运动', icon: 'tag-ball', test: byTitles(['低碳行动', '小队竞速点亮']) },
     { key: 'versus', name: '竞技对抗', icon: 'tag-trophy', test: byTitles(['小队竞速点亮', '小队能量接力', '招牌菜限时盲猜']) },
-    { key: 'taste', name: '味觉', icon: 'blind-taste', test: byTitles(['闭眼味觉师', '便利店调酒师', '咖啡风味人格']) },
-    { key: 'music', name: '音乐', icon: 'music-corner', test: byTitles(['治愈音乐角', '午夜电台']) },
-    { key: 'fashion', name: '时尚', icon: 'style-mission', test: byTitles(['今日搭配任务']) }
+    { key: 'taste', name: '味觉', icon: 'tag-taste', test: byTitles(['闭眼味觉师', '便利店调酒师', '咖啡风味人格']) },
+    { key: 'music', name: '音乐', icon: 'tag-music', test: byTitles(['治愈音乐角', '午夜电台']) },
+    { key: 'fashion', name: '时尚', icon: 'tag-fashion', test: byTitles(['今日搭配任务']) }
   ] },
   { name: '适合的店', tags: [
-    { key: 'cafe', name: '咖啡馆', icon: 'coffee-personality', test: byTitles(['咖啡风味人格', '闭眼味觉师', '治愈音乐角', '新品盲测局']) },
-    { key: 'dining', name: '餐饮', icon: 'signature-dish', test: byTitles(['招牌菜限时盲猜', '一桌任务宾果', '沉默点单']) },
-    { key: 'bar', name: '酒吧', icon: 'diy-drink', test: byTitles(['闭眼味觉师', '午夜电台', '便利店调酒师']) },
+    { key: 'cafe', name: '咖啡馆', icon: 'tag-cafe', test: byTitles(['咖啡风味人格', '闭眼味觉师', '治愈音乐角', '新品盲测局']) },
+    { key: 'dining', name: '餐饮', icon: 'tag-dining', test: byTitles(['招牌菜限时盲猜', '一桌任务宾果', '沉默点单']) },
+    { key: 'bar', name: '酒吧', icon: 'tag-bar', test: byTitles(['闭眼味觉师', '午夜电台', '便利店调酒师']) },
     { key: 'store', name: '便利店', icon: 'tag-vending', test: byTitles(['便利店调酒师', '沉默点单']) },
     { key: 'retail', name: '服饰零售', icon: 'tag-rack', test: byTitles(['今日搭配任务', '新品盲测局']) },
-    { key: 'books', name: '书店唱片店', icon: 'branch-story', test: byTitles(['治愈音乐角']) },
+    { key: 'books', name: '书店唱片店', icon: 'tag-books', test: byTitles(['治愈音乐角']) },
     { key: 'street', name: '街头户外', icon: 'tag-pin', test: byTitles(['街角谜题', '城市取景任务', '低碳行动', '城市接力棒', '小队竞速点亮']) }
   ] },
   { name: '人数', tags: [
     { key: 'p1', name: '单人可玩', icon: 'cat-solo', test: (g) => /单人/.test(g.players || '') },
     { key: 'p2', name: '双人', icon: 'cat-multi', test: (g) => /双人|2-4/.test(g.players || '') },
-    { key: 'p3', name: '小队', icon: 'cat-team', test: (g) => /小队|2-4|同桌/.test(g.players || '') }
+    { key: 'p3', name: '小队', icon: 'tag-p3', test: (g) => /小队|2-4|同桌/.test(g.players || '') }
   ] },
   { name: '时间', tags: [
-    { key: 'quick', name: '5 分钟内', icon: 'cat-quick', test: (g) => Number(g.duration) > 0 && Number(g.duration) <= 5 },
-    { key: 'night', name: '深夜限定', icon: 'midnight-radio', test: byTitles(['午夜电台']) },
-    { key: 'daily', name: '每日一次', icon: 'daily-city-sign', test: byTitles(['今日城市签', '今日搭配任务', '今日角色任务']) }
+    { key: 'quick', name: '5 分钟内', icon: 'tag-quick', test: (g) => Number(g.duration) > 0 && Number(g.duration) <= 5 },
+    { key: 'night', name: '深夜限定', icon: 'tag-night', test: byTitles(['午夜电台']) },
+    { key: 'daily', name: '每日一次', icon: 'tag-daily', test: byTitles(['今日城市签', '今日搭配任务', '今日角色任务']) }
   ] },
   { name: '分区', tags: [
     { key: 'shop', name: '到店互动', icon: 'cat-shop', test: (g) => g._grp === 'shop' },

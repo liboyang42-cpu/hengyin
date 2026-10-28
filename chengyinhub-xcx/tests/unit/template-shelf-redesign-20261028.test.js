@@ -442,3 +442,16 @@ test('玩法标签：营销引流 / 插件玩法 / 解谜 / 运动等按标题�
   assert.deepEqual(pick('p3'), ['一桌任务宾果']);
   assert.deepEqual(pick('quick'), ['今晚的暗号']);
 });
+
+test('每个标签都有自己的 3D 图标:同一 tab 内不重复，也不借玩法卡的图标', () => {
+  const gameSlugs = Object.keys(art.GAMES).map((title) => art.GAMES[title][0]);
+  [art.TOPIC_TAG_GROUPS, art.GAME_TAG_GROUPS].forEach((groups) => {
+    const tags = groups.reduce((all, g) => all.concat(g.tags), []);
+    const icons = tags.map((t) => t.icon);
+    assert.equal(new Set(icons).size, icons.length, '同一 tab 内两个标签用了同一个图标');
+    tags.forEach((t) => {
+      assert.ok(gameSlugs.indexOf(t.icon) < 0, t.name + ' 借用了玩法卡图标 ' + t.icon);
+      assert.ok(fs.existsSync(path.join(ROOT, 'pages/templatedetail/art/props', t.icon + '.png')), t.name + ' 的图标文件不存在');
+    });
+  });
+});
