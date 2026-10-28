@@ -93,6 +93,10 @@ class OfficialBroadcastDeliveryMySqlIT {
                 "raw legacy flags must remain as evidence even when not counted as success");
         assertEquals(1, db.queryForObject("select status from official_broadcast where id=900", Integer.class));
         assertEquals(1, db.queryForObject("select reached_count from official_broadcast where id=900", Integer.class));
+        // Normal business tests use the complete canonical dual-protocol schema.
+        // withLegacySchema deliberately keeps the untouched legacy prefix for migration controls.
+        new ResourceDatabasePopulator(new FileSystemResource(
+                migration.resolveSibling("migration_20261028_official_broadcast_protocol_union.sql").toFile())).execute(source);
         Path sql = root.resolve("chengyinhub-admin/sql");
         new ResourceDatabasePopulator(new FileSystemResource(sql.resolve("migration_im.sql").toFile()),
                 new FileSystemResource(sql.resolve("migration_im_send_idempotency_20260913.sql").toFile()),
@@ -123,6 +127,7 @@ class OfficialBroadcastDeliveryMySqlIT {
     @BeforeEach
     void fixtures() {
         // Only owned fixtures inside the newly created schema; no shared DB resources.
+        db.update("delete from official_broadcast_creation");
         db.update("delete from official_broadcast_log");
         db.update("delete from official_broadcast");
         db.update("delete from im_message");
