@@ -66,6 +66,7 @@ final class CrossDomainStorageFixture implements AutoCloseable {
     ITopicRouteRuntimeService route;
     OfficialBroadcastServiceImpl notifications;
     LettuceConnectionFactory redisFactory;
+    boolean ownsRedisFactory;
     StringRedisTemplate redis;
     RedisTemplate<Object,Object> productionRedis;
     AiQuotaRecoveryService recovery;
@@ -88,6 +89,14 @@ final class CrossDomainStorageFixture implements AutoCloseable {
     private volatile Map<String, Object> lastTransactionSample = Map.of("phase", "NOT_SAMPLED");
 
     void open() throws Exception {
+        open(null); // Standalone storage witness keeps its original explicitly owned Redis client.
+    }
+
+    void open(LettuceConnectionFactory applicationRedis) throws Exception {
+        if (applicationRedis != null) requireSharedRedisFactory(applicationRedis,
+                Integer.parseInt(required("CHENGYIN_AI_REDIS_IT_PORT")),
+                Integer.parseInt(required("CHENGYIN_AI_REDIS_IT_DATABASE")),
+                System.getenv("CHENGYIN_AI_REDIS_IT_PASSWORD"));
         assertEquals("github-hosted", required("RUNNER_ENVIRONMENT"));
         assertEquals("1", required("B_PAYMENT_FACT_DDL_APPROVED"));
         assertTrue(List.of("127.0.0.1", "localhost").contains(required("CHENGYIN_MYBATIS_IT_HOST")));
@@ -147,7 +156,7 @@ final class CrossDomainStorageFixture implements AutoCloseable {
                 .map(name -> new ClassPathResource("mapper/business/" + name + ".xml")).toArray(ClassPathResource[]::new));
         sql = new SqlSessionTemplate(factory.getObject());
         db.update("INSERT INTO ums_member(id,wx_open_id) VALUES(?,'fixture-openid')", MEMBER);
-        installPayments(); installRoute(); installNotifications(); installRedis();
+        installPayments(); installRoute(); installNotifications(); installRedis(applicationRedis);
     }
 
     private void installPayments() {
@@ -510,12 +519,35 @@ final class CrossDomainStorageFixture implements AutoCloseable {
         assertEquals(1, sql.getMapper(OfficialBroadcastMapper.class).insertOfficialBroadcast(row)); return row.getId();
     }
 
-    private void installRedis() {
+    static LettuceConnectionFactory requireSharedRedisFactory(LettuceConnectionFactory applicationRedis,
+                                                              int port, int database, String password) {
+        assertNotNull(applicationRedis);
+        assertTrue(port > 0 && port < 65536); assertEquals(15, database, "Combined HTTP owner uses explicit DB15");
+        assertTrue(applicationRedis.isRunning(), "Borrow only the already-running application Redis owner");
+        assertFalse(applicationRedis.isClusterAware()); assertFalse(applicationRedis.isRedisSentinelAware());
+        assertNull(applicationRedis.getSocketConfiguration());
+        assertEquals("127.0.0.1", applicationRedis.getHostName());
+        assertEquals(port, applicationRedis.getPort()); assertEquals(database, applicationRedis.getDatabase());
+        String actualPassword = applicationRedis.getPassword();
+        assertTrue(Objects.equals(password == null ? "" : password, actualPassword == null ? "" : actualPassword),
+                "Borrowed Redis authentication must match the original fixture");
+        String username = applicationRedis.getStandaloneConfiguration().getUsername();
+        assertTrue(username == null || username.isEmpty(), "Original fixture uses the default Redis authentication identity");
+        return applicationRedis;
+    }
+
+    private void installRedis(LettuceConnectionFactory applicationRedis) {
         int port = Integer.parseInt(required("CHENGYIN_AI_REDIS_IT_PORT")); int database = Integer.parseInt(required("CHENGYIN_AI_REDIS_IT_DATABASE"));
         assertTrue(port > 0 && port < 65536 && database >= 0 && database <= 15);
-        var configuration = new RedisStandaloneConfiguration("127.0.0.1", port); configuration.setDatabase(database);
-        String secret = System.getenv("CHENGYIN_AI_REDIS_IT_PASSWORD"); if (secret != null && !secret.isEmpty()) configuration.setPassword(secret);
-        redisFactory = new LettuceConnectionFactory(configuration); redisFactory.afterPropertiesSet();
+        if (applicationRedis == null) {
+            var configuration = new RedisStandaloneConfiguration("127.0.0.1", port); configuration.setDatabase(database);
+            String secret = System.getenv("CHENGYIN_AI_REDIS_IT_PASSWORD"); if (secret != null && !secret.isEmpty()) configuration.setPassword(secret);
+            redisFactory = new LettuceConnectionFactory(configuration); ownsRedisFactory = true;
+            redisFactory.afterPropertiesSet();
+        } else {
+            redisFactory = applicationRedis; ownsRedisFactory = false;
+            // Validated before any fixture resource was created; never reinitialize it.
+        }
         redis = new StringRedisTemplate(redisFactory); productionRedis = new RedisConfig().redisTemplate(redisFactory);
         recovery = new AiQuotaRecoveryService(sql.getMapper(AiQuotaReservationMapper.class), productionRedis, transactions, mock(NpcAsrIntentMapper.class));
         gateway = new AiNotSentGatewayFixture(MEMBER); set(gateway.gateway, "redisTemplate", productionRedis); set(gateway.gateway, "quotaRecovery", recovery);
@@ -611,7 +643,7 @@ final class CrossDomainStorageFixture implements AutoCloseable {
         failures.addAll(subscriptionFailures);
         try { rememberQuotaKeys(); if (redis != null) for (String key : ownedRedis) { redis.delete(key); assertFalse(Boolean.TRUE.equals(redis.hasKey(key))); } }
         catch (Throwable failure) { failures.add(failure); }
-        try { if (redisFactory != null) redisFactory.destroy(); } catch (Throwable failure) { failures.add(failure); }
+        try { if (ownsRedisFactory && redisFactory != null) redisFactory.destroy(); } catch (Throwable failure) { failures.add(failure); }
         try { if (pool != null) { assertEquals(0, pool.getActiveCount(), "parent business connections must exit before pool close"); pool.close(); } }
         catch (Throwable failure) { failures.add(failure); if (pool != null) pool.close(); }
         try { if (created) { assertTrue(schema.matches("cy_wp14_[a-f0-9]{32}")); admin.execute("DROP DATABASE `" + schema + "`");

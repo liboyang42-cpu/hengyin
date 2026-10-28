@@ -1,0 +1,5 @@
+source	sha256	relevant_contract
+https://repo.maven.apache.org/maven2/org/springframework/boot/spring-boot-dependencies/4.1.1/spring-boot-dependencies-4.1.1.pom	1c929eeccb48f8ee12225e9fec725177170b89575754bd903f184c185db77775	126 Lettuce 7.5.2.RELEASE; 195 Spring Data BOM 2026.0.1
+https://repo.maven.apache.org/maven2/org/springframework/data/spring-data-bom/2026.0.1/spring-data-bom-2026.0.1.pom	4115847b8f35c68d9cbc2fb401b42bf46a37bc433b5c9ef22d2370a3bc3c406e	118-119 Spring Data Redis 4.1.1
+https://raw.githubusercontent.com/spring-projects/spring-data-redis/4.1.1/src/main/java/org/springframework/data/redis/connection/lettuce/LettuceConnectionFactory.java	a4e93f1a7c9efd2ef77d84d88e96e3e2b13f529a2bddd817841cf9dd6b6e7a58	382/402/594/688/773/987 metadata; 992 early start; 1000 destroy; 1441-1442 createBasicClient default resources branch
+https://raw.githubusercontent.com/redis/lettuce/7.5.2.RELEASE/src/main/java/io/lettuce/core/AbstractRedisClient.java	4ca49d5dd0083d382872f89497c04a62d1094bce3df4f32f412f756860854fc0	117-130 null ClientResources means fresh DefaultClientResources and separate lifecycle

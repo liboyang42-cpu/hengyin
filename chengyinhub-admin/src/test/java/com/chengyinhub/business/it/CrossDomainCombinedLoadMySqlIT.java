@@ -101,7 +101,8 @@ class CrossDomainCombinedLoadMySqlIT {
             var appPool = context.getBean("masterDataSource", DruidDataSource.class);
             assertEquals(3, appPool.getMaxActive());
             assertEquals(0, appPool.getInitialSize()); assertEquals(0, appPool.getMinIdle());
-            storage.open(); storage.pool.setMaxActive(3); // narrow the existing fixture's 12 cap, never enlarge it
+            storage.open(context.getBean(org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory.class));
+            storage.pool.setMaxActive(3); // narrow the existing fixture's 12 cap, never enlarge it
             assertEquals(serverUuid, storage.serverUuid); assertNotEquals(coreSchema, storage.schema);
             assertEquals(System.getenv("CHENGYIN_HTTP_E2E_REDIS_PORT"), System.getenv("CHENGYIN_AI_REDIS_IT_PORT"));
             assertEquals("15", System.getenv("CHENGYIN_AI_REDIS_IT_DATABASE"));
