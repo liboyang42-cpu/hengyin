@@ -196,7 +196,7 @@
         </view>
         <view wx:if="{{is_join == 1}}" class="topic-audio" bindtap="openThemeHistory" aria-role="button" aria-label="我的游玩记录" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="clock" size="36" /><text>我的游玩记录</text><cy-icon name="chevron-right" size="28" /></view>
         <!-- 原型 B T-36 开局前准备:作者配了准备项或可玩时段才出现(B1),行形与上一行相同 -->
-        <view wx:if="{{is_join == 1 && prep.show}}" class="topic-audio" bindtap="openPrep" aria-role="button" aria-label="{{prep.rowText}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="{{prep.icon}}" size="36" /><text>{{prep.rowText}}</text><cy-icon name="chevron-right" size="28" /></view>
+        <view wx:if="{{is_join == 1 && prep.show}}" class="topic-audio" bindtap="openPrep" aria-role="button" aria-label="{{prep.rowText}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="{{prep.icon}}" size="36" /><text>{{prep.rowText}}</text><cy-icon wx:if="{{!prep.loading && !prep.error}}" name="chevron-right" size="28" /></view>
         <!-- 主题音频讲解 -->
         <view wx:if="{{info.audioUrl}}" class="topic-audio" bindtap="toggleTopicAudio"
               aria-role="button" aria-label="主题音频讲解，点此{{topicAudioPlaying?'暂停':'播放'}}" hover-class="cy-pressed" hover-stay-time="80">

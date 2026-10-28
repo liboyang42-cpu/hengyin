@@ -509,7 +509,7 @@ Page({
     this._progressLoaded = false;
     this._startKenBurns();
     this._loadTeams(data);
-    this._buildPrep(data);
+    this._loadPrep(data.id);
     this._loadFav(data.id);
     this._loadChars(data);
   },
@@ -699,38 +699,47 @@ Page({
     });
   },
 
-  // 开局前准备(原型 B T-36):准备项 prepItems[] 与可玩时段 playWindow{startMinute,endMinute} 由作者配置(需后端,见 PR);
-  // 都没配就整行不出。未成年夜间等平台规则只在服务端执行(/api/orient/safety/check),被拒时只写一句中性说明。
-  _buildPrep(data, ticks) {
-    const d = data || {};
-    const raw = Array.isArray(d.prepItems) ? d.prepItems : [];
-    const items = raw.map((t) => String((t && t.text) || t || '').trim()).filter(Boolean).slice(0, 6)
+  // 开局前准备(原型 B T-36,契约 §1.3):GET /api/play/setup 给可玩时段(非俱乐部且不是「不限」才有)、openNow 与作者准备项;
+  // 两样都没配就整行不出(B1)。未成年夜间等平台规则只在服务端执行(/api/orient/safety/check),被拒时只写一句中性说明。
+  _loadPrep(topicId) {
+    if (!topicId || !this._loggedIn()) { this._prepSetup = null; this.setData({ prep: { show: false } }); return; }
+    const seq = this._prepSeq = (this._prepSeq || 0) + 1;
+    this.setData({ prep: { show: true, loading: true, rowText: '正在加载…', icon: 'clock' } });
+    const failed = () => { if (!this._unloaded && seq === this._prepSeq) this.setData({ prep: { show: true, error: true, rowText: '开局前准备加载失败 · 轻点重试', icon: 'warning' } }); };
+    app.sendRequest({ url: '/api/play/setup', method: 'GET', hideLoading: true, autoErrorToast: false, data: { topicId },
+      success: (res) => {
+        if (this._unloaded || seq !== this._prepSeq) return;
+        if (!res || String(res.code) !== '200' || !res.data) { failed(); return; }
+        this._prepSetup = res.data; this._buildPrep(res.data);
+      },
+      fail: failed,
+    });
+  },
+  _buildPrep(setup, ticks) {
+    const d = setup || {};
+    const items = (Array.isArray(d.prepItems) ? d.prepItems : []).map((t) => String(t || '').trim()).filter(Boolean).slice(0, 6)
       .map((text, k) => ({ k, text, on: !!(ticks && ticks[k]) }));
-    const w = d.playWindow || null;
-    const mm = (v) => Number.isInteger(v) && v >= 0 && v < 1440;
-    const hasWindow = !!(w && mm(w.startMinute) && mm(w.endMinute) && w.startMinute !== w.endMinute);
-    if (!items.length && !hasWindow) { this.setData({ prep: { show: false } }); return; }
-    const p2 = (n) => (n < 10 ? '0' : '') + n;
-    const hm = (v) => p2(Math.floor(v / 60)) + ':' + p2(v % 60);
-    let windowText = '', closed = false;
-    if (hasWindow) {
-      const range = hm(w.startMinute) + '–' + hm(w.endMinute);
-      windowText = (w.startMinute === 1200 && w.endMinute === 360 ? '夜间 ' : w.startMinute === 360 && w.endMinute === 1200 ? '白天 ' : '') + range;
-      const now = new Date(); const cur = now.getHours() * 60 + now.getMinutes();
-      closed = w.startMinute < w.endMinute ? !(cur >= w.startMinute && cur < w.endMinute) : !(cur >= w.startMinute || cur < w.endMinute);
-    }
+    const w = d.playWindow && d.playWindow.mode && d.playWindow.mode !== 'any' ? d.playWindow : null;
+    if (!items.length && !w) { this.setData({ prep: { show: false } }); return; }
+    const windowText = !w ? '' : w.mode === 'night' ? '夜间 20:00–06:00' : w.mode === 'day' ? '白天 06:00–20:00' : (w.start || '') + '–' + (w.end || '');
+    const closed = !!w && d.openNow === false;
     const left = items.filter((x) => !x.on).length;
     const refused = !!(this.data.prep && this.data.prep.refused);
     const rowText = closed ? '开局前准备 · ' + windowText + ' 开放' : left ? '开局前准备 · 还有 ' + left + ' 项未勾选' : '开局前准备 · 已全部勾选';
     this.setData({ prep: { show: true, items, windowText, closed, ready: !closed && !left, refused, rowText, icon: closed ? 'clock' : left ? 'info' : 'check' } });
   },
   _prepTicks() { const t = {}; ((this.data.prep && this.data.prep.items) || []).forEach((x) => { if (x.on) t[x.k] = true; }); return t; },
-  openPrep() { this._buildPrep(this.data.info, this._prepTicks()); this.setData({ prepShow: true }); },
+  openPrep() {
+    const prep = this.data.prep || {};
+    if (prep.loading) return;
+    if (prep.error) { this._loadPrep((this.data.info && this.data.info.id) || this.data.id); return; }
+    this._buildPrep(this._prepSetup, this._prepTicks()); this.setData({ prepShow: true });
+  },
   closePrep() { this.setData({ prepShow: false }); },
   onPrepTick(e) {
     const k = Number(e.currentTarget.dataset.index); const t = this._prepTicks();
     if (e.detail && e.detail.checked) t[k] = true; else delete t[k];
-    this._buildPrep(this.data.info, t);
+    this._buildPrep(this._prepSetup, t);
   },
   startPrepPlay() {
     const info = this.data.info || {}; const prep = this.data.prep || {};

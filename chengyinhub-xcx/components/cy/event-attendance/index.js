@@ -24,11 +24,11 @@ function gcj02(lat,lng) {
  dLat=(dLat*180.0)/((a*(1-ee))/(magic*sq)*PI);dLng=(dLng*180.0)/(a/sq*Math.cos(rad)*PI);
  return {lat:lat+dLat,lng:lng+dLng};
 }
-// 玩家视图:集合一行(有集合时间就带上)、联系主办一行(主办俱乐部电话 organizer.phone,未带出时用本场公开电话)、签到状态
-function playerView(s) {
- const c=s.config||{},org=s.organizer||{},mine=s.mine||{},now=Number(s.serverNow)||Date.now();
+// 玩家视图:集合一行(有集合时间就带上)、联系主办一行(契约 §4 GET /api/play/contact 的俱乐部电话;没有号码整行不出)、签到状态
+function playerView(s,contact) {
+ const c=s.config||{},org=contact||{},mine=s.mine||{},now=Number(s.serverNow)||Date.now();
  const meet=c.meetingName?(c.meetingAt?md(c.meetingAt)+' · ':'')+c.meetingName+'集合':'';
- const phone=org.phone||c.phone||'',name=String(org.name||'').trim();
+ const phone=org.phone||'',name=String(org.name||'').trim();
  let checkin=null;
  if(s.activeParticipation&&c.checkinOpenAt){
   const done=!!mine.checkedAt,before=now<c.checkinOpenAt,closed=!done&&c.checkinCloseAt&&now>=c.checkinCloseAt;
@@ -63,6 +63,16 @@ Component({
      this.setData({result:receipt});this.reload();}}
    });
    this.reload();
+   if(!this.properties.organizer)this.loadContact();
+  },
+  // 联系主办只读主办俱乐部已有电话;读不到就不出这一行,不回退到值班电话
+  loadContact() {
+   if(!this._current||!this._current())return;
+   const current=this._current,id=exactId(this.properties.eventId);this._contact=null;
+   getApp().sendRequest({url:'/api/play/contact',method:'GET',data:{activityId:id},hideLoading:true,autoErrorToast:false,
+    success:res=>{if(!current())return;this._contact=res&&res.code==200&&res.data&&res.data.phone?res.data:null;
+     if(this.data.snapshot)this.setData({player:playerView(this.data.snapshot,this._contact)});},
+    fail:()=>{if(current())this._contact=null;}});
   },
   reload() {
    if(!this._current||!this._current())return;
@@ -83,7 +93,7 @@ Component({
      if(this._dutyTimer)clearTimeout(this._dutyTimer);
      const boundary=s.dutyState==='NOT_STARTED'?c.dutyStart:s.dutyState==='ON_DUTY'?c.dutyEnd:0;
      if(boundary>s.serverNow)this._dutyTimer=setTimeout(()=>{if(current())this.reload();},Math.min(boundary-s.serverNow+10,2147483647));
-     this.setData({snapshot:view,player:playerView(s),loading:false,error:'',fields:FIELDS.map(([key,label])=>({key,label,value:form[key]==null?'':TIMES.includes(key)?formatted(form[key]):String(form[key])})),publicConfirmed:!!form.publicConfirmed,
+     this.setData({snapshot:view,player:playerView(s,this._contact),loading:false,error:'',fields:FIELDS.map(([key,label])=>({key,label,value:form[key]==null?'':TIMES.includes(key)?formatted(form[key]):String(form[key])})),publicConfirmed:!!form.publicConfirmed,
       code:frozen&&frozen.action==='attendance-verify'?frozen.credentialCode:this.data.code});
     },fail,successStatusAbnormal:fail};
    if(this.properties.organizer)getApp().sendRequest({...request,method:'GET',url:'/api/official/events/'+id+'/attendance/manage'});

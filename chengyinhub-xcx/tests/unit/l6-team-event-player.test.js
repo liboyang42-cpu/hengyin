@@ -58,44 +58,54 @@ function topicPage(request) {
   return load('pages/topic/index/index.js', app);
 }
 
-test('开局前准备:作者没配准备项也没配可玩时段时整行不出', () => {
-  const h = topicPage(() => {});
-  h.page._buildPrep({ id: 1 });
+test('开局前准备:读 /api/play/setup;作者没配准备项、时段为不限时整行不出;读失败给一句可重试', () => {
+  const reqs = []; const h = topicPage(r => reqs.push(r));
+  h.page._loadPrep(9);
+  assert.equal(reqs[0].url, '/api/play/setup'); assert.equal(reqs[0].method, 'GET'); assert.deepEqual(clone(reqs[0].data), { topicId: 9 });
+  assert.equal(h.page.data.prep.rowText, '正在加载…');
+  reqs[0].success({ code: 200, data: { playWindow: null, openNow: true, prepItems: [] } });
   assert.equal(h.page.data.prep.show, false);
+  h.page._loadPrep(9); reqs[1].fail();
+  assert.equal(h.page.data.prep.rowText, '开局前准备加载失败 · 轻点重试');
+  h.page.data.info = { id: 9 }; h.page.openPrep();
+  assert.equal(reqs.length, 3, '出错行轻点重读'); assert.equal(h.page.data.prepShow, false);
 });
 
 test('开局前准备:勾完才能开始;服务端拒绝只写一句中性说明;不出现未成年夜间规则', () => {
   const reqs = []; const h = topicPage(r => reqs.push(r));
-  h.page.data.info = { id: 9, name: '城南旧事', prepItems: ['手机电量充足', '带手电筒'], playWindow: { startMinute: 0, endMinute: 1439 } };
+  h.page.data.info = { id: 9, name: '城南旧事' };
+  h.page._loadPrep(9);
+  reqs[0].success({ code: 200, data: { playWindow: { mode: 'night', start: '20:00', end: '06:00' }, openNow: true, prepItems: ['手机电量充足', '带手电筒'] } });
   h.page.openPrep();
-  assert.equal(h.page.data.prepShow, true); assert.equal(h.page.data.prep.rowText, '开局前准备 · 还有 2 项未勾选'); assert.equal(h.page.data.prep.ready, false);
-  h.page.startPrepPlay(); assert.equal(reqs.length, 0, '没勾完不发预检');
+  assert.equal(h.page.data.prepShow, true); assert.equal(h.page.data.prep.windowText, '夜间 20:00–06:00');
+  assert.equal(h.page.data.prep.rowText, '开局前准备 · 还有 2 项未勾选'); assert.equal(h.page.data.prep.ready, false);
+  h.page.startPrepPlay(); assert.equal(reqs.length, 1, '没勾完不发预检');
   h.page.onPrepTick({ currentTarget: { dataset: { index: 0 } }, detail: { checked: true } });
   h.page.onPrepTick({ currentTarget: { dataset: { index: 1 } }, detail: { checked: true } });
   assert.equal(h.page.data.prep.rowText, '开局前准备 · 已全部勾选'); assert.equal(h.page.data.prep.ready, true);
   h.page.startPrepPlay();
-  assert.equal(reqs[0].url, '/api/orient/safety/check'); assert.deepEqual(JSON.parse(reqs[0].data), { topicId: 9 });
-  reqs[0].success({ code: 200, data: { allowed: false, blockers: [{ message: '未满 18 岁' }] } });
+  assert.equal(reqs[1].url, '/api/orient/safety/check'); assert.deepEqual(JSON.parse(reqs[1].data), { topicId: 9 });
+  reqs[1].success({ code: 200, data: { allowed: false, blockers: [{ message: '未满 18 岁' }] } });
   assert.equal(h.page.data.prep.refused, true); assert.equal(h.navs.length, 0);
   const wxml = read('pages/topic/index/index.wxml');
   assert.ok(wxml.includes('按平台规则，现在不能开始这个主题。'));
   assert.ok(!/未满\s*18|未成年/.test(wxml.split('开局前准备')[1] || ''), '玩家端不印未成年夜间规则');
-  const ok = topicPage(r => r.success({ code: 200, data: { allowed: true } }));
-  ok.page.data.info = { id: 9, name: '城南旧事', prepItems: ['带手电筒'] }; ok.page.openPrep();
-  ok.page.onPrepTick({ currentTarget: { dataset: { index: 0 } }, detail: { checked: true } }); ok.page.startPrepPlay();
+  const okReqs = []; const ok = topicPage(r => { okReqs.push(r); if (r.url === '/api/orient/safety/check') r.success({ code: 200, data: { allowed: true } }); });
+  ok.page.data.info = { id: 9, name: '城南旧事' }; ok.page._loadPrep(9);
+  okReqs[0].success({ code: 200, data: { playWindow: null, openNow: true, prepItems: ['带手电筒'] } });
+  ok.page.openPrep(); ok.page.onPrepTick({ currentTarget: { dataset: { index: 0 } }, detail: { checked: true } }); ok.page.startPrepPlay();
   assert.match(ok.navs.at(-1), /^\/pages\/play\/index\?topicId=9/);
 });
 
-test('可玩时段:夜间时段写「夜间 20:00–06:00」,时段外开始游玩置灰', () => {
-  const h = topicPage(() => {});
-  const realDate = Date;
-  h.page._buildPrep({ id: 1, playWindow: { startMinute: 1200, endMinute: 360 } });
-  assert.equal(h.page.data.prep.windowText, '夜间 20:00–06:00');
-  const hour = new realDate().getHours();
-  const open = hour >= 20 || hour < 6;
-  assert.equal(h.page.data.prep.closed, !open);
-  assert.equal(h.page.data.prep.ready, open);
-  if (!open) assert.equal(h.page.data.prep.rowText, '开局前准备 · 夜间 20:00–06:00 开放');
+test('可玩时段:服务端 openNow=false 时写「当前未开放」,开始游玩置灰;自定义时段原样显示', () => {
+  const reqs = []; const h = topicPage(r => reqs.push(r));
+  h.page._loadPrep(1);
+  reqs[0].success({ code: 200, data: { playWindow: { mode: 'night', start: '20:00', end: '06:00' }, openNow: false, prepItems: [] } });
+  assert.equal(h.page.data.prep.closed, true); assert.equal(h.page.data.prep.ready, false);
+  assert.equal(h.page.data.prep.rowText, '开局前准备 · 夜间 20:00–06:00 开放');
+  h.page._loadPrep(1);
+  reqs[1].success({ code: 200, data: { playWindow: { mode: 'custom', start: '21:30', end: '05:00' }, openNow: true, prepItems: [] } });
+  assert.equal(h.page.data.prep.windowText, '21:30–05:00'); assert.equal(h.page.data.prep.ready, true);
 });
 
 test('活动详情:赛事榜单只在主办开了时出现,公示期内「暂列第 N 名」;安全须知没勾不报名', () => {
