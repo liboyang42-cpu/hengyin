@@ -1,0 +1,15 @@
+6736a86e87fcbe3b6223d7b99e71f2ffd1085d00c1c630870278d375e85fa5d1  docs/delivery/architecture-day/F/runtime-boundaries-dbd1/DIRECT-DEPENDENCIES.txt
+aaf8c4b186c637d9229b0727cd5c73d68f7f52210061d413a746ee1e6f9bad63  docs/delivery/architecture-day/F/runtime-boundaries-dbd1/DIRECTION-PROPOSALS.txt
+5791bab8e5157d324177f7125a029ae4f4d9031031cf82750f64fabedcd3d6d8  docs/delivery/architecture-day/F/runtime-boundaries-dbd1/EXACT-OWNERS.txt
+1f2b785db114804f863146d8caa5b64dce021c8bc405ffa777baf46213882111  docs/delivery/architecture-day/F/runtime-boundaries-dbd1/OBSERVED-SOURCES.sha256
+b0e144c0e9857fb3410f2d38a8ccd5f0449ead1c9c31a617e4ba0e07020636c7  docs/delivery/architecture-day/F/runtime-boundaries-dbd1/PRIMARY-PATHS.txt
+fe483594a9e5cd1e45101c4a675d5349cfda172368dd6f77de93a208e42d48e5  docs/delivery/architecture-day/F/runtime-boundaries-dbd1/README.md
+302c92873a2d44ce5eb59de99d11d448348c3121dba6457a0a39443953f82d91  docs/delivery/architecture-day/F/runtime-boundaries-dbd1/REVIEW-IMAGES.tsv
+48792e376e381490135ac1c07e5d6a7e82b33dda06fb076e8085281eba390c10  docs/delivery/architecture-day/F/runtime-boundaries-dbd1/ROLE-WITNESSES.txt
+889e11764fda3086e09c8a6a5dcfc109246683a6f0b12cda11f48f7723ee89dc  docs/delivery/architecture-day/F/runtime-boundaries-dbd1/policy-and-controls.review.patch.b64
+599d91f5afc32ffd0aa656b24eb7995069be147e38478c90794214d6f4aa6b78  docs/delivery/architecture-day/F/runtime-compile-dbd1/CALL-SITES.txt
+4086a553881c46f0dd2e8d1ff1115c2340a87997574018cedae71a0bc169aef0  docs/delivery/architecture-day/F/runtime-compile-dbd1/OWNED-POSTIMAGES.sha256
+429ac46fdf64a2c4d4c8ad936e4a6fc65016b6e3a0b2ff9cbd192a670d756eb0  docs/delivery/architecture-day/F/runtime-compile-dbd1/README.md
+8175e2057fe150fd681f7f53bf230a61b85ab201dec4ea4f1e230a51858d2ca6  docs/delivery/architecture-day/F/runtime-compile-dbd1/SHARED-IMAGES.tsv
+a0ebd41dc14b1e50eb15f8f11165151f9a7bdfbcac110cb181056c2a57d306e9  docs/delivery/architecture-day/F/runtime-compile-dbd1/SHARED-PATHS.txt
+4519bf37ec513cbb4ac5fbc3dbd9ee1f40e3365419d750a3b4531ab62daf47d2  docs/delivery/architecture-day/F/runtime-compile-dbd1/runtime-shared.review.patch.b64

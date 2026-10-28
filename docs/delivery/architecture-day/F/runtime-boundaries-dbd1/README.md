@@ -1,0 +1,46 @@
+# F：dbd12 新技术边界独立审装提案
+
+这是 SOURCE-only 的 owners.json / test_gate.py 完整 review.patch，未改实际 policy、commands、workflow、工具、基线或可信 pin；不是 candidate 自授权。root 独立审核后才可制作新固定 verifier 并接双 ref。本后续供体继承首片8d6cbf55ea0fa147b0ee308f08939f4ba025f866，首片编译/auth修补不遗漏。
+
+## 来源和取证限制
+
+固定业务源 dbd12e0a0d88e54597c274b56b08f2784c415d0e，原40758024272 / architecture123062585729。root报告 artifact12847900758 为34条 NEW_UNOWNED_BOUNDARY；root给ZIP SHA ad96133cc268111196222fa1570a9d540908d542bbd79d63d80174a8aa90aade。
+
+F连接器拿到artifact下载地址，但下载真实HTTP403，不能独立签该ZIP/hash/JSON。已向root索取原path/type清单。本提案的34条由固定源、原受控roots、原不可变legacy_source的新增路径及明确primary声明逐一回读整理；PRIMARY-PATHS.txt/ROLE-WITNESSES.txt列全，供root与原JSON一对一核对后受信，不拿同为34替代集合相等。额外的 UserInvoiceProcessingController 位于business controller、GuardArrivalEvidenceReader普通接口、TemplateAdoptionWire静态helper、TopicAuthorGate/RefundReconciliationJob组件等不伪装成本次34 primary，未扩大scope或登记它们。
+
+原2181ad835的 owners/commands/gate/collector 与dbd12在Git差分中无变化。提案只追加34个单primary技术职责和21个有实际引用的单向边；所有原字段、原owner、原方向/四个exact binary合同原样保留。两个末端补全类型是 ThemeAttributeMapper 与 ThemeAttributeService，不把DTO/实体拆为owner。
+
+## 每组真实责任和方向
+
+- ApiMemberAccountController → MemberAccountService → MemberAccountMapper；同一API → PlayContactService。分别是当前本人申诉/信誉读取，以及主题/活动组织方联系投影。MemberAccountMapper仅原select/count；不赋予账号/资金写权。
+- ApiMerchantReviewReplyReceiptController → MerchantReviewReplyReceiptService → MerchantReviewReplyReceiptMapper。原IMerchantAccessService校验后只读原已提交reply审计；不调用重发/业务reply写端。
+- ApiOrientTaskReceiptController → 原IOrientTaskService既有公开receipt。该旧服务并非本次新owner，不为了此入口虚构其整域批准。
+- ApiRoamPassportController → RoamPassportReadService → RoamPassportMapper。本人已结算记录page/detail/summary，不取位置、照片或分享正文。
+- ApiTopicAttributeBindingController → AuthorAttributeRegistryReader。原topic当前锁+owner校验+ThemeStateKeyService版本读取；无静态传递纯读证明。
+- ApiTopicAttributeController → ThemeAttributeService、ThemeKeyNamingService；属性Service → naming；两者 → ThemeAttributeMapper。Mapper仅既有is_attribute/attribute_preset字段端口。ThemeAttributeService的adoptLegacy可写，绝不把GET或类名当纯读，状态键实际定义仍沿原ThemeStateKeyService/Mapper。
+- ApiTopicPlaySetupController → TopicPlaySetupService → TopicPlaySetupMapper。原作者save/playerView/requireOpen与现有审查、权限和发布时间规则不变，不扩共享表writer。
+- GuardArrivalEvidenceReaderImpl → 原C_PLAY_BASIC_INTENT公开应用owner。其guard receipt/原请求指纹/原session/scope/currentRead校验沿原代码；仍通过现有PlayArriveGuardLogMapper/GameSessionRuntimeMapper/TopicRouteSessionMapper，未为它另加table权或私有God体。接口GuardArrivalEvidenceReader未被硬拆为新业务owner。
+- CoopInviteRequestReceiptMapper只有原CoopInviteServiceImpl直接consumer。它读/锁原请求，reserve/bind原receipt；仅登记精确技术port，不新加业务命令/表授权。
+- TeamEventCommandService → TeamEventCommandMapper、OfficialEventAttendanceService；Attendance → AttendanceMapper。原team/event公开服务、authority/current scope继续保留；不许下层反调API入口，不将attendance/command职责混成通用支付owner。
+- TemplateAdoptionService → TemplateAdoptionReceiptMapper，仍经原ITemplatePublishService生产draft；reserve/current锁/原request/version指纹不变。
+- UserInvoiceProcessingService → UserInvoiceProcessingMapper；原UserInvoiceRefundReconciliationJob也确切消费该Mapper，作为精确consumer登记，不把该@Component worker冒称34个primary之一。原refund事实/交易/金额/处理人权限保持未知于classgraph，未授予金融写表权。
+- OfficialRoamPoiService原RoamMapper/ICmsMemberTemplateService/IOfficialEventV2Service/GrowthBadgeMapper；OfficialBroadcastDeliveryService原日志、broadcast、IImService、WxSubscribeChannel；AdvancedActionReceiptReader原GameRuntimeSessionMapper/PlayAttemptLogMapper只读receipt；OrientRouteSettlement原MANDATORY/route锁/IOrientScoringService；这些是原真实端口，未按名称展开整包或假造新的domain方向。
+
+EXACT-OWNERS.txt：id|精确primary|禁止反向引用|精确storage消费者（非storage为-）。10个新Mapper只允许源码已有具体consumer；不允许SDK、Controller或合法consumer的任意$内部类自动进入。其余技术owner不新增泛incoming豁免；对原facade/发起controller的禁止反向引用只约束class边，不宣称方法级金额、授权、不可变性、事务或传递纯读已经证明。
+
+DIRECTION-PROPOSALS.txt列21条完整提案。原未受控域不据此宣称owner齐全；编译输入/raw缺失仍UNKNOWN，reflection/XML/动态依赖仍未证明。
+
+## 最小控制 SOURCE
+
+追加MergedMasterBoundaryPolicyTest四方法，不改/删任何原控制：
+
+1. exact34身份/模块、所有旧技术owner和方向逐项保留；除technical追加外整个原owners文档字段与固定dbd12完全相等（business/private/scope/legacy/statement等不变）。
+2. 真实source CLI的34个受控primary正向；新未登记Controller/Service/Mapper同级负向，源检查不冒充compiled检查。
+3. candidate删新owner、加SDK consumer、清backref或自加反向边都仍POLICY_CHANGE；无需新审批JSON。
+4. 复用原technical_dependency_findings，直接规则级已声明方向正向、所有新增owner backref、storage外来及$Late consumer、peer方向负向、缺type输入UNKNOWN。synthetic引用不作为实际JAR/raw/索引证据；原原始raw缺行/伪图/身份校验控制完全保留。
+
+所有四新方法及原控制：NOT_RUN。没有parse/import/test/Java/DB/CI。仅做Git diff/apply-check、摘要和有限源证据读取。不得把本提案签为新source gate/JAR通过，不能套原1b71或dbd12先前unit部分绿色。
+
+## 运输
+
+policy-and-controls.review.patch.b64 解码为27536 bytes，SHA256 b9b190695a9279e8ac5b38dfef0d808dc6e9f664b1327884c2ea78f44db72efd。对固定dbd12临时Git index apply-check已通过。REVIEW-IMAGES.tsv给完整前后像hash，可由固定公共父+完整patch重建两文件；OBSERVED-SOURCES.sha256给34个被观察真实生产后像。仅提案，实际owners/commands/CI均仍原字节。

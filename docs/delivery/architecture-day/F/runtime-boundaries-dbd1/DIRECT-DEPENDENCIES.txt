@@ -1,0 +1,292 @@
+
+chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiMemberAccountController.java
+3:import com.chengyinhub.business.service.support.MemberAccountService;
+4:import com.chengyinhub.business.service.support.PlayContactService;
+5:import com.chengyinhub.common.core.controller.BaseController;
+6:import com.chengyinhub.common.core.domain.AjaxResult;
+7:import com.chengyinhub.common.exception.ServiceException;
+23:    private PlayContactService playContactService;
+26:    private MemberAccountService memberAccountService;
+
+chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiMerchantReviewReplyReceiptController.java
+3:import com.chengyinhub.business.service.support.MerchantReviewReplyReceiptService;
+4:import com.chengyinhub.common.core.controller.BaseController;
+5:import com.chengyinhub.common.core.domain.AjaxResult;
+6:import com.chengyinhub.common.exception.ServiceException;
+13:    @Autowired private MerchantReviewReplyReceiptService service;
+
+chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiOrientTaskReceiptController.java
+3:import com.chengyinhub.business.service.IOrientTaskService;
+4:import com.chengyinhub.business.service.support.OrientRejection;
+5:import com.chengyinhub.common.core.controller.BaseController;
+6:import com.chengyinhub.common.core.domain.AjaxResult;
+16:    @Autowired private IOrientTaskService taskService;
+
+chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamPassportController.java
+3:import com.chengyinhub.business.service.support.RoamPassportReadService;
+4:import com.chengyinhub.common.core.controller.BaseController;
+5:import com.chengyinhub.common.core.domain.AjaxResult;
+6:import com.chengyinhub.common.exception.ServiceException;
+13:    private final RoamPassportReadService service;
+
+chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicAttributeBindingController.java
+3:import com.chengyinhub.business.access.merchant.IMerchantAccessService;
+4:import com.chengyinhub.business.access.merchant.MerchantOperationScope;
+5:import com.chengyinhub.business.access.merchant.MerchantPermission;
+6:import com.chengyinhub.business.service.support.AuthorAttributeRegistryReader;
+7:import com.chengyinhub.common.core.controller.BaseController;
+8:import com.chengyinhub.common.core.domain.AjaxResult;
+17:    private final AuthorAttributeRegistryReader reader;
+18:    private final IMerchantAccessService merchantAccess;
+
+chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicAttributeController.java
+3:import com.chengyinhub.business.domain.CmsTopic;
+4:import com.chengyinhub.business.domain.dto.TopicKeyRequestDTO;
+5:import com.chengyinhub.business.service.IWxContentSecurityService;
+6:import com.chengyinhub.business.service.support.ThemeAttributeService;
+7:import com.chengyinhub.business.service.support.ThemeKeyNamingService;
+8:import com.chengyinhub.business.service.support.TopicAuthorGate;
+9:import com.chengyinhub.business.util.JourneyReviewTexts;
+10:import com.chengyinhub.common.core.controller.BaseController;
+11:import com.chengyinhub.common.core.domain.AjaxResult;
+12:import com.chengyinhub.common.exception.ServiceException;
+39:    private TopicAuthorGate topicAuthorGate;
+42:    private ThemeAttributeService themeAttributeService;
+45:    private ThemeKeyNamingService themeKeyNamingService;
+48:    private IWxContentSecurityService wxContentSecurityService;
+
+chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicPlaySetupController.java
+3:import com.chengyinhub.business.domain.CmsTopic;
+4:import com.chengyinhub.business.domain.dto.TopicPlaySetupDTO;
+5:import com.chengyinhub.business.service.IWxContentSecurityService;
+6:import com.chengyinhub.business.service.support.TopicAuthorGate;
+7:import com.chengyinhub.business.service.support.TopicPlaySetupService;
+8:import com.chengyinhub.business.util.JourneyReviewTexts;
+9:import com.chengyinhub.common.core.controller.BaseController;
+10:import com.chengyinhub.common.core.domain.AjaxResult;
+11:import com.chengyinhub.common.exception.ServiceException;
+32:    private TopicAuthorGate topicAuthorGate;
+35:    private TopicPlaySetupService topicPlaySetupService;
+38:    private IWxContentSecurityService wxContentSecurityService;
+
+chengyinhub-admin/src/main/java/com/chengyinhub/web/service/audit/GuardArrivalEvidenceReaderImpl.java
+3:import com.chengyinhub.business.domain.GameCommandReceipt;
+4:import com.chengyinhub.business.domain.PlayArriveGuardLog;
+5:import com.chengyinhub.business.domain.TopicRouteSession;
+6:import com.chengyinhub.business.mapper.GameSessionRuntimeMapper;
+7:import com.chengyinhub.business.mapper.PlayArriveGuardLogMapper;
+8:import com.chengyinhub.business.mapper.TopicRouteSessionMapper;
+9:import com.chengyinhub.business.service.GuardArrivalEvidenceReader;
+10:import com.chengyinhub.business.service.support.GuardAppealEligibility;
+11:import com.chengyinhub.common.exception.ServiceException;
+25:    private final PlayArriveGuardLogMapper logs;
+26:    private final GameSessionRuntimeMapper commands;
+27:    private final TopicRouteSessionMapper routes;
+28:    private final com.chengyinhub.business.service.IGameSessionRuntimeService shared;
+29:    private final com.chengyinhub.web.service.play.PlayBasicIntentApplication basicIntents;
+
+chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CoopInviteRequestReceiptMapper.java
+3:import com.chengyinhub.business.domain.CoopInviteRequestReceipt;
+
+chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/MemberAccountMapper.java
+3:import com.chengyinhub.business.domain.MyAppealRow;
+
+chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/MerchantReviewReplyReceiptMapper.java
+
+chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/OfficialEventAttendanceMapper.java
+
+chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/RoamPassportMapper.java
+3:import com.chengyinhub.business.domain.RoamSession;
+
+chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/TeamEventCommandMapper.java
+
+chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/TemplateAdoptionReceiptMapper.java
+3:import com.chengyinhub.business.domain.CmsTemplateLibrary;
+
+chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/ThemeAttributeMapper.java
+3:import com.chengyinhub.business.domain.ThemeAttributeMark;
+
+chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/TopicPlaySetupMapper.java
+3:import com.chengyinhub.business.domain.TopicPlaySetup;
+
+chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/UserInvoiceProcessingMapper.java
+3:import com.chengyinhub.business.domain.UserInvoiceApplication;
+
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/OfficialRoamPoiService.java
+5:import com.chengyinhub.business.domain.CmsMemberTemplate;
+6:import com.chengyinhub.business.domain.GrowthBadge;
+7:import com.chengyinhub.business.domain.RoamPoi;
+8:import com.chengyinhub.business.domain.dto.OfficialRoamPoiDraft;
+9:import com.chengyinhub.business.mapper.GrowthBadgeMapper;
+10:import com.chengyinhub.business.mapper.RoamMapper;
+11:import com.chengyinhub.common.exception.ServiceException;
+19:    private final RoamMapper pois;
+20:    private final ICmsMemberTemplateService templates;
+21:    private final IOfficialEventV2Service operators;
+22:    private final GrowthBadgeMapper badges;
+
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OfficialBroadcastDeliveryService.java
+3:import com.chengyinhub.business.domain.*;
+4:import com.chengyinhub.business.mapper.*;
+5:import com.chengyinhub.business.service.IImService;
+6:import com.chengyinhub.business.notify.*;
+16: private final OfficialBroadcastLogMapper logs;
+17: private final OfficialBroadcastMapper broadcasts;
+18: private final IImService im;
+19: private final WxSubscribeChannel subscribe;
+20: private final TransactionTemplate tx;
+22: private UmsMemberMapper members;
+
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OfficialEventAttendanceService.java
+5:import com.chengyinhub.business.domain.OfficialEvent;
+6:import com.chengyinhub.business.domain.OfficialEventParticipation;
+7:import com.chengyinhub.business.domain.dto.TeamEventCommand;
+8:import com.chengyinhub.business.mapper.*;
+9:import com.chengyinhub.common.exception.ServiceException;
+10:import com.chengyinhub.system.service.ISysConfigService;
+19: private final OfficialEventMapper events;
+20: private final OfficialEventV2Mapper participants;
+21: private final OfficialEventAttendanceMapper mapper;
+22: private final OfficialEventV2ServiceImpl authority;
+23: private final ISysConfigService settings;
+
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamEventCommandService.java
+4:import com.chengyinhub.business.domain.dto.TeamEventCommand;
+5:import com.chengyinhub.business.mapper.TeamEventCommandMapper;
+6:import com.chengyinhub.business.service.IPlayTeamService;
+7:import com.chengyinhub.business.service.IOfficialEventService;
+8:import com.chengyinhub.business.domain.PlayTeam;
+9:import com.chengyinhub.business.service.IOfficialEventV2Service;
+10:import com.chengyinhub.common.exception.ServiceException;
+29:    private OfficialEventAttendanceService attendance;
+30:    private final TeamEventCommandMapper mapper;
+31:    private final IPlayTeamService teams;
+32:    private final IOfficialEventV2Service events;
+33:    private final IOfficialEventService signups;
+34:    private final TransactionTemplate transaction;
+
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UserInvoiceProcessingService.java
+3:import com.chengyinhub.business.domain.*;
+4:import com.chengyinhub.business.mapper.UserInvoiceMapper;
+5:import com.chengyinhub.business.mapper.UserInvoiceProcessingMapper;
+6:import com.chengyinhub.business.security.PiiCryptoService;
+7:import com.chengyinhub.business.service.IRefundService;
+8:import com.chengyinhub.business.service.invoice.UserInvoiceException;
+16:    private final UserInvoiceMapper invoices;
+17:    private final UserInvoiceProcessingMapper processing;
+18:    private final IRefundService refunds;
+19:    private final PiiCryptoService crypto;
+
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedActionReceiptReader.java
+3:import com.chengyinhub.business.domain.PlayAttemptLog;
+4:import com.chengyinhub.business.mapper.GameRuntimeSessionMapper;
+5:import com.chengyinhub.business.mapper.PlayAttemptLogMapper;
+6:import com.chengyinhub.common.exception.ServiceException;
+20:    private final GameRuntimeSessionMapper sessions;
+21:    private final PlayAttemptLogMapper attempts;
+22:    private final ObjectMapper json;
+
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AuthorAttributeRegistryReader.java
+3:import com.chengyinhub.business.domain.CmsTopic;
+4:import com.chengyinhub.business.domain.ThemeStateKey;
+5:import com.chengyinhub.business.mapper.CmsTopicMapper;
+6:import com.chengyinhub.common.exception.ServiceException;
+16:    private final CmsTopicMapper topics;
+17:    private final ThemeStateKeyService registry;
+
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/MemberAccountService.java
+3:import com.chengyinhub.business.domain.MyAppealRow;
+4:import com.chengyinhub.business.mapper.MemberAccountMapper;
+5:import com.chengyinhub.common.exception.ServiceException;
+29:    private final MemberAccountMapper mapper;
+
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/MerchantReviewReplyReceiptService.java
+3:import com.chengyinhub.business.access.merchant.IMerchantAccessService;
+4:import com.chengyinhub.business.access.merchant.MerchantPermission;
+5:import com.chengyinhub.business.mapper.MerchantReviewReplyReceiptMapper;
+6:import com.chengyinhub.common.exception.ServiceException;
+14:    @Autowired private IMerchantAccessService accessService;
+15:    @Autowired private MerchantReviewReplyReceiptMapper mapper;
+
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/OrientRouteSettlement.java
+3:import com.chengyinhub.business.domain.CmsTopic;
+4:import com.chengyinhub.business.domain.OrientSessionClock;
+5:import com.chengyinhub.business.domain.TopicRouteSession;
+6:import com.chengyinhub.business.mapper.OrientSessionMapper;
+7:import com.chengyinhub.business.mapper.TopicRouteSessionMapper;
+8:import com.chengyinhub.business.service.IOrientScoringService;
+9:import com.chengyinhub.common.exception.ServiceException;
+18:    private final IOrientScoringService scoring;
+19:    private final TopicRouteSessionMapper routes;
+20:    private final OrientSessionMapper clocks;
+
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/PlayContactService.java
+3:import com.chengyinhub.business.domain.Club;
+4:import com.chengyinhub.business.domain.CmsActivity;
+5:import com.chengyinhub.business.domain.CmsTopic;
+6:import com.chengyinhub.business.domain.CmsTopicNode;
+7:import com.chengyinhub.business.domain.MmsMerchant;
+8:import com.chengyinhub.business.mapper.ClubMapper;
+9:import com.chengyinhub.business.mapper.CmsActivityMapper;
+10:import com.chengyinhub.business.mapper.CmsTopicMapper;
+11:import com.chengyinhub.business.mapper.CmsTopicNodeMapper;
+12:import com.chengyinhub.business.mapper.MmsMerchantMapper;
+30:    private final CmsTopicMapper cmsTopicMapper;
+31:    private final CmsTopicNodeMapper cmsTopicNodeMapper;
+32:    private final CmsActivityMapper cmsActivityMapper;
+33:    private final ClubMapper clubMapper;
+34:    private final MmsMerchantMapper mmsMerchantMapper;
+
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/RoamPassportReadService.java
+4:import com.chengyinhub.business.domain.RoamSession;
+5:import com.chengyinhub.business.mapper.RoamPassportMapper;
+6:import com.chengyinhub.common.exception.ServiceException;
+16:    private final RoamPassportMapper mapper;
+
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/TemplateAdoptionService.java
+3:import com.chengyinhub.business.domain.CmsTemplateLibrary;
+4:import com.chengyinhub.business.domain.dto.CmsTemplatePublishRequest;
+5:import com.chengyinhub.business.domain.dto.TemplateAdoptionCommand;
+6:import com.chengyinhub.business.mapper.TemplateAdoptionReceiptMapper;
+7:import com.chengyinhub.business.service.ITemplatePublishService;
+8:import com.chengyinhub.common.exception.ServiceException;
+23:    private final TemplateAdoptionReceiptMapper mapper;
+24:    private final ITemplatePublishService drafts;
+25:    private final TransactionTemplate tx;
+
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/ThemeAttributeService.java
+3:import com.chengyinhub.business.domain.CmsTopic;
+4:import com.chengyinhub.business.domain.JourneyRules;
+5:import com.chengyinhub.business.domain.ThemeAttributeMark;
+6:import com.chengyinhub.business.domain.ThemeStateKey;
+7:import com.chengyinhub.business.mapper.ThemeAttributeMapper;
+8:import com.chengyinhub.business.mapper.ThemeStateKeyMapper;
+9:import com.chengyinhub.common.constant.HttpStatus;
+10:import com.chengyinhub.common.exception.ServiceException;
+70:    private final ThemeStateKeyMapper themeStateKeyMapper;
+71:    private final ThemeAttributeMapper themeAttributeMapper;
+72:    private final ThemeStateKeyService themeStateKeyService;
+73:    private final ThemeKeyNamingService themeKeyNamingService;
+
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/ThemeKeyNamingService.java
+3:import com.chengyinhub.business.domain.CmsTopic;
+4:import com.chengyinhub.business.domain.ThemeAttributeMark;
+5:import com.chengyinhub.business.domain.ThemeStateKey;
+6:import com.chengyinhub.business.mapper.ThemeAttributeMapper;
+7:import com.chengyinhub.business.mapper.ThemeStateKeyMapper;
+8:import com.chengyinhub.common.constant.HttpStatus;
+9:import com.chengyinhub.common.exception.ServiceException;
+58:    private final ThemeStateKeyMapper themeStateKeyMapper;
+59:    private final ThemeAttributeMapper themeAttributeMapper;
+60:    private final ThemeStateKeyService themeStateKeyService;
+61:    private final TopicStateKeyRefService topicStateKeyRefService;
+
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/TopicPlaySetupService.java
+3:import com.chengyinhub.business.domain.CmsTopic;
+4:import com.chengyinhub.business.domain.TopicPlaySetup;
+5:import com.chengyinhub.business.domain.dto.TopicPlaySetupDTO;
+6:import com.chengyinhub.business.mapper.TopicPlaySetupMapper;
+7:import com.chengyinhub.common.constant.HttpStatus;
+8:import com.chengyinhub.common.exception.ServiceException;
+64:    private final TopicPlaySetupMapper mapper;
+65:    private final Clock clock;
