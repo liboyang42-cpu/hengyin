@@ -241,7 +241,7 @@ class ClubOwnerCancelOwnershipGateTest {
         when(clubMapper.selectClubById(CLUB_ID)).thenReturn(club(CURRENT_OWNER));
 
         IRefundService refundService = mock(IRefundService.class);
-        when(refundService.savePreparedRegistrationRefund(any(RefundApplication.class), org.mockito.ArgumentMatchers.nullable(com.chengyinhub.business.service.support.FreeExploreRefundContext.class), org.mockito.ArgumentMatchers.nullable(Long.class))).thenAnswer(invocation -> {
+        when(refundService.saveRefund(any(RefundApplication.class))).thenAnswer(invocation -> {
             invocation.getArgument(0, RefundApplication.class).setId(999L);
             return 1;
         });

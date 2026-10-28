@@ -24,7 +24,7 @@ class OWN_C02_27Test {
         when(registrations.selectCmsRegistrationById(99L)).thenReturn(registration);
         // master 退款入口按报名行加锁读（lockRefundRegistration）。
         when(registrations.selectCmsRegistrationByIdForUpdate(99L)).thenReturn(registration);
-        RefundServiceImpl service = com.chengyinhub.business.service.support.RefundF3TestSupport.nonBundle(new RefundServiceImpl());
+        RefundServiceImpl service = new RefundServiceImpl();
         ReflectionTestUtils.setField(service, "refundApplicationMapper", refunds);
         ReflectionTestUtils.setField(service, "cmsRegistrationMapper", registrations);
         when(refunds.insertRefundApplication(any(RefundApplication.class))).thenAnswer(invocation -> {

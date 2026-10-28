@@ -18,7 +18,7 @@ class RefundRegistrationIdentityTest {
     private final CmsRegistrationMapper registrations = mock(CmsRegistrationMapper.class);
     private final CmsActivityMapper activities = mock(CmsActivityMapper.class);
     private final CmsTopicMapper topics = mock(CmsTopicMapper.class);
-    private final RefundServiceImpl service = com.chengyinhub.business.service.support.RefundF3TestSupport.nonBundle(new RefundServiceImpl());
+    private final RefundServiceImpl service = new RefundServiceImpl();
 
     private CmsRegistration setup(long ownerType) {
         ReflectionTestUtils.setField(service, "refundApplicationMapper", refunds);

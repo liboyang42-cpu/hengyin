@@ -87,7 +87,7 @@ class RefundNotificationMybatisIntegrationTest {
                 .getMapper(RefundApplicationMapper.class);
         notifications = new NotifyServiceImpl();
         setChannel(this::captureCommittedRefund);
-        RefundServiceImpl target = com.chengyinhub.business.service.support.RefundF3TestSupport.nonBundle(new RefundServiceImpl());
+        RefundServiceImpl target = new RefundServiceImpl();
         org.springframework.test.util.ReflectionTestUtils.setField(target, "firstReviewPointsClawback",
                 org.mockito.Mockito.mock(com.chengyinhub.business.service.impl.FirstReviewPointsClawbackService.class));
         ReflectionTestUtils.setField(target, "refundApplicationMapper", mapper);
@@ -205,7 +205,7 @@ class RefundNotificationMybatisIntegrationTest {
                 mock(CmsActivityMapper.class);
         when(activities.selectCmsActivityById(22L)).thenReturn(activity);
         IRefundService application = mock(IRefundService.class);
-        when(application.savePreparedRegistrationRefund(any(), org.mockito.ArgumentMatchers.nullable(com.chengyinhub.business.service.support.FreeExploreRefundContext.class), org.mockito.ArgumentMatchers.nullable(Long.class))).thenAnswer(call -> {
+        when(application.saveRefund(any())).thenAnswer(call -> {
             ((RefundApplication) call.getArgument(0)).setId(7L);
             return 1;
         });

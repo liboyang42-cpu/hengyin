@@ -186,7 +186,7 @@ class RegistrationFundsMybatisIntegrationTest {
                 mock(IRegistrationOrderCreateGate.class));
         registrationOrderService = orderTarget;
 
-        refundService = com.chengyinhub.business.service.support.RefundF3TestSupport.nonBundle(new RefundServiceImpl());
+        refundService = new RefundServiceImpl();
 
         org.springframework.test.util.ReflectionTestUtils.setField(refundService, "firstReviewPointsClawback",
 
@@ -1407,7 +1407,7 @@ class RegistrationFundsMybatisIntegrationTest {
         when(wechat.isReady()).thenReturn(true);
         when(wechat.queryOrderStatus("T20260724PAY")).thenReturn(wxQuery("SUCCESS"));
         IRefundService refunds = mock(IRefundService.class);
-        when(refunds.savePreparedRegistrationRefund(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.nullable(com.chengyinhub.business.service.support.FreeExploreRefundContext.class), org.mockito.ArgumentMatchers.nullable(Long.class))).thenAnswer(call -> {
+        when(refunds.saveRefund(org.mockito.ArgumentMatchers.any())).thenAnswer(call -> {
             ((com.chengyinhub.business.domain.RefundApplication) call.getArgument(0)).setId(700L);
             return 1;
         });
@@ -1423,7 +1423,7 @@ class RegistrationFundsMybatisIntegrationTest {
 
         assertEquals("WX-TX-11", text("SELECT transaction_id FROM cms_registration WHERE id=11"));
         assertEquals(3, number("SELECT registration_status FROM cms_registration WHERE id=11"));
-        verify(refunds).savePreparedRegistrationRefund(org.mockito.ArgumentMatchers.argThat(app -> Long.valueOf(11L).equals(app.getSourceId())), org.mockito.ArgumentMatchers.nullable(com.chengyinhub.business.service.support.FreeExploreRefundContext.class), org.mockito.ArgumentMatchers.nullable(Long.class));
+        verify(refunds).saveRefund(org.mockito.ArgumentMatchers.argThat(app -> Long.valueOf(11L).equals(app.getSourceId())));
         verify(wechat, never()).closePaymentAttempt(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString());
         assertEquals(1, number("SELECT COUNT(*) FROM cms_activity WHERE id=55 AND cancel_time IS NOT NULL"));
     }
@@ -1456,7 +1456,7 @@ class RegistrationFundsMybatisIntegrationTest {
         // 权益失效原因按枚举 javadoc:「主办方取消活动」本就是 ORGANIZER_CANCEL 的定义之一,
         // 取消路径与对账任务(下一条用例)现在传的是同一个值。
         verify(perkLedgerService).releaseOnRefund(11L, EntitlementInvalidReason.ORGANIZER_CANCEL);
-        verify(refunds, never()).savePreparedRegistrationRefund(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.nullable(com.chengyinhub.business.service.support.FreeExploreRefundContext.class), org.mockito.ArgumentMatchers.nullable(Long.class));
+        verify(refunds, never()).saveRefund(org.mockito.ArgumentMatchers.any());
         assertEquals(1, number("SELECT COUNT(*) FROM cms_activity WHERE id=55 AND cancel_time IS NOT NULL"));
     }
 

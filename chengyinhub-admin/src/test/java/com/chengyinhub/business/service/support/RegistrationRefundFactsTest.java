@@ -23,7 +23,7 @@ class RegistrationRefundFactsTest {
         List<RefundApplication> history = new ArrayList<>(List.of(row));
         RefundApplicationMapper mapper = mock(RefundApplicationMapper.class);
         when(mapper.selectRegistrationHistoryForUpdate(REGISTRATION)).thenReturn(history);
-        RefundServiceImpl service = com.chengyinhub.business.service.support.RefundF3TestSupport.nonBundle(new RefundServiceImpl());
+        RefundServiceImpl service = new RefundServiceImpl();
         ReflectionTestUtils.setField(service, "refundApplicationMapper", mapper);
         RegistrationRefundFacts facts = RegistrationRefundFacts.fromHistory(REGISTRATION,
                 service.selectRegistrationHistoryForUpdate(REGISTRATION));

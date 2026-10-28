@@ -8,7 +8,6 @@ import com.chengyinhub.business.mapper.CmsTopicMapper;
 import com.chengyinhub.business.mapper.OmsTicketMapper;
 import com.chengyinhub.business.service.impl.FirstReviewPointsClawbackService;
 import com.chengyinhub.business.service.impl.TeamGroupServiceImpl;
-import com.chengyinhub.business.service.support.FreeExploreRefundContext;
 import com.chengyinhub.common.constant.EntitlementInvalidReason;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -66,10 +65,7 @@ class FreeSessionCancelReleaseV2Test {
         ReflectionTestUtils.setField(service, "cmsTopicMapper", mock(CmsTopicMapper.class));
         ReflectionTestUtils.setField(service, "perkLedgerService", perkLedgerService);
         ReflectionTestUtils.setField(service, "firstReviewPointsClawback", mock(FirstReviewPointsClawbackService.class));
-        // 退款核心先准备整单退款回执(非F3单:空的报名/待替代意图集合),零现金完成走同一回执。
         refundService = mock(IRefundService.class);
-        when(refundService.prepareRegistrationFullRefund(eq(REG), any(BigDecimal.class))).thenAnswer(call ->
-                new FreeExploreRefundContext(REG, call.getArgument(1), Collections.emptyList(), Collections.emptySet()));
         ReflectionTestUtils.setField(service, "refundService", refundService);
         when(regMapper.claimRegistrationRefunded(eq(REG), anyString(), any(Date.class))).thenReturn(1);
         when(ticketMapper.restoreInventory(TICKET, 2L)).thenReturn(1);

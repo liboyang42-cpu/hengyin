@@ -18,7 +18,7 @@ const refundSource = fs.readFileSync(
 
 function loadRefundWorkbench() {
   const script = refundSource.match(/<script>([\s\S]*?)<\/script>/)[1]
-    .replace(/^import \{[^}]*\} from '@\/api\/business\/refund'$/m, 'const { listRefund, addRefund, reviewRefund } = {};')
+    .replace(/^import \{ listRefund, addRefund, reviewRefund \} from '@\/api\/business\/refund'$/m, 'const { listRefund, addRefund, reviewRefund } = {};')
     .replace(/^import auth from '@\/plugins\/auth'$/m, 'const auth = {};')
     .replace(/^import (ActivityCancelRefundCases|ManualPayoutQueue|Cy\w+) from .+$/gm, 'const $1 = {};')
   return new Function(script.replace(/export\s+default\s*/, 'return '))()

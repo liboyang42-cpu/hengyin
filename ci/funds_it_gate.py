@@ -256,7 +256,9 @@ EXPECTED = {
     # 2026-09-21 CYV-P1-002:主理人转让与活动取消在 MySQL RR/RC 下的锁后权限、
     # 精确 topic/club/activity scope 和并发退款幂等。
     "ClubEventTransferCancellationMySqlIT": 3,
-    "RefundRetryAndRemainderMySqlIT": 20,
+    # 2026-10-28:20 → 9。F3 套票退款冻结/履约恢复 11 条真库用例随 F3 线移到草稿 PR #642(商城暂停);
+    # 保留 4 条资金用例(写入回执丢失回滚 ×2 / 渠道失败后锁内历史 / 伪造退款身份)。
+    "RefundRetryAndRemainderMySqlIT": 9,
     "SignupNoticeAfterCommitPersistenceMySqlIT": 5,
     "TopicLikeDesiredStateMySqlIT": 3,
     "MonitorMissingJobsMySqlIT": 3,

@@ -33,7 +33,7 @@ class RefundOverpayGuardTest {
         CmsRegistrationMapper regMapper = mock(CmsRegistrationMapper.class);
         when(regMapper.selectCmsRegistrationById(reg.getId())).thenReturn(reg);
         when(regMapper.selectCmsRegistrationByIdForUpdate(reg.getId())).thenReturn(reg);
-        RefundServiceImpl service = com.chengyinhub.business.service.support.RefundF3TestSupport.nonBundle(new RefundServiceImpl());
+        RefundServiceImpl service = new RefundServiceImpl();
         ReflectionTestUtils.setField(service, "cmsRegistrationMapper", regMapper);
         ReflectionTestUtils.setField(service, "refundApplicationMapper", appMapper);
         return service;

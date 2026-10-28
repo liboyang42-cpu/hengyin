@@ -78,29 +78,6 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where id = #{id}
     </select>
 
-    <!-- 原退款单就是持久恢复来源；不以payout终态/时间过滤，成功后F3失败仍可重扫。 -->
-    <select id="selectRegistrationRefundRecoveryUpperBound" resultType="java.lang.Long" useCache="false" flushCache="true">
-        select max(id) from refund_application
-        where source_type = 'registration' and status in (1, 2) and del_flag = 0
-    </select>
-
-    <select id="selectRegistrationRefundRecoveryBatch" resultType="java.lang.Long" useCache="false" flushCache="true">
-        select id from refund_application
-        where source_type = 'registration' and status in (1, 2) and del_flag = 0
-          and id &lt;= #{maxId}
-        <if test="excludedIds != null and !excludedIds.isEmpty()">
-          and id not in
-          <foreach collection="excludedIds" item="excludedId" open="(" separator="," close=")">#{excludedId}</foreach>
-        </if>
-        order by fulfillment_sync_queue_at asc, id asc limit #{limit}
-    </select>
-
-    <update id="markRegistrationRefundRecoveryAttempt">
-        update refund_application
-        set fulfillment_sync_queue_at = NOW(6), update_time = update_time
-        where id = #{id} and source_type = 'registration' and status in (1, 2) and del_flag = 0
-    </update>
-
     <select id="selectRegistrationHistoryForUpdate" resultMap="RefundApplicationResult" useCache="false" flushCache="true">
         <include refid="selectRefundApplicationVo"/>
         where source_type = 'registration' and source_id = #{registrationId} and del_flag = 0

@@ -716,7 +716,7 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
                     throw new ServiceException("有订单的钱已结算给主办或承办方，需平台人工处理后再取消主题",
                             HttpStatus.CONFLICT);
                 }
-                // 退款核心先锁全组并准备F3，再在同事务取代未派发旧申请；不能先将旧申请驳回。
+                // 退款核心先锁全组，再在同事务取代未派发旧申请；不能先将旧申请驳回。
                 // 上面已在锁内判过「无已核销」,不该走到转人工分支;真走到了说明快照与锁内事实不一致
                 if (!refundResolvingOrder(orderSnapshot.payer, orderSnapshot.payer.getTicketName(),
                         "主办方取消活动,全额退款", actorMemberId, true)) {
@@ -1280,20 +1280,6 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
             }
         }
         if (refundable.isEmpty()) return true;
-        CmsRegistration source = payer != null ? payer : refundable.get(0);
-        BigDecimal refundCash = payer != null ? payerCash : BigDecimal.ZERO;
-        var context = refundService.prepareRegistrationFullRefund(source.getId(), refundCash);
-        Long replacesRefundId = replacementIntent(context);
-        if (context != null && !context.getRegistrations().isEmpty()) {
-            // 09冻结只允许明确转接原付款报名的单一未派发意图；子票历史不能猜成同一现金意图。
-            for (CmsRegistration row : order) {
-                if (source.getId().equals(row.getId())) continue;
-                List<RefundApplication> history = refundService.selectRegistrationHistoryForUpdate(row.getId());
-                if (history != null && history.stream().anyMatch(a -> Integer.valueOf(0).equals(a.getStatus()))) {
-                    throw new ServiceException("子票有独立待审退款意图，请后台核对后处理", HttpStatus.CONFLICT);
-                }
-            }
-        }
         if (supersedePending) {
             for (CmsRegistration row : refundable) refundService.supersedePendingRegistrationRefunds(row.getId(), reason);
         }
@@ -1327,7 +1313,7 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
             restoreInventory(m);
         }
         if (payer != null) {
-            refundOneAfterInventoryRestored(payer, payerCash, ticketName, reason, context, replacesRefundId); // 原意图一次派发
+            refundOneAfterInventoryRestored(payer, payerCash, ticketName, reason); // 现金:只此一次网关调用
         }
         // 其余(含纯积分单)只做标记/返积分/恢复库存,绝不单独调微信
         for (CmsRegistration m : claimed) {
@@ -1338,7 +1324,6 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
             releasePerks(m);
             firstReviewPointsClawback.onRegistrationRefunded(m);
         }
-        if (payer == null) refundService.completeZeroCashRegistrationRefund(context);
         return true;
     }
 
@@ -1469,8 +1454,6 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
             throw new ServiceException("支付现金快照未确认，请通过后台退款工单核对后处理", HttpStatus.CONFLICT);
         }
         boolean hasCash = cash.compareTo(BigDecimal.ZERO) > 0;
-        var context = refundService.prepareRegistrationFullRefund(r.getId(), cash);
-        Long replacesRefundId = replacementIntent(context);
         if (hasCash) refundService.supersedePendingRegistrationRefunds(r.getId(), reason);
         // 纯积分单没有退款申请唯一键兜底，必须先领取报名退款权；loser 不得碰库存、积分或权益。
         if (!hasCash && cmsRegistrationMapper.claimRegistrationRefunded(
@@ -1488,21 +1471,11 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
         }
         // 外部打款不可回滚，先通过库存上限闸，避免“钱已退、库存校验才失败”。
         restoreInventory(r);
-        refundOneAfterInventoryRestored(r, cash, ticketName, reason, context, replacesRefundId);
-        if (!hasCash) refundService.completeZeroCashRegistrationRefund(context);
+        refundOneAfterInventoryRestored(r, cash, ticketName, reason);
     }
 
     /** 单笔退款在库存已成功回补后的后续流程;cash = 本次要原路退的现金(整单退时已扣掉同单已退部分)。 */
-    private Long replacementIntent(com.chengyinhub.business.service.support.FreeExploreRefundContext context) {
-        if (context == null || context.getRegistrations().isEmpty()) return null;
-        if (context.getReplaceableRefundIds().size() > 1) {
-            throw new ServiceException("有多个待审退款意图，请后台核对原意图后处理", HttpStatus.CONFLICT);
-        }
-        return context.getReplaceableRefundIds().stream().findFirst().orElse(null);
-    }
-
-    private void refundOneAfterInventoryRestored(CmsRegistration r, BigDecimal cash, String ticketName, String reason,
-            com.chengyinhub.business.service.support.FreeExploreRefundContext context, Long replacesRefundId) {
+    private void refundOneAfterInventoryRestored(CmsRegistration r, BigDecimal cash, String ticketName, String reason) {
         boolean hasCash = cash != null && cash.compareTo(BigDecimal.ZERO) > 0;
         if (hasCash) {
             RefundApplication app = new RefundApplication();
@@ -1511,7 +1484,7 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
             app.setRefundAmount(cash);
             app.setReason(reason);
             app.setRefundNo("RF" + r.getId());             // = out_refund_no,退款结果通知回调按此反查
-            refundService.savePreparedRegistrationRefund(app, context, replacesRefundId); // 原ID与F3冻结同事务绑定
+            refundService.saveRefund(app);                 // 校验已支付 + 落退款单(回填 app.id)
             RefundReviewDTO rev = new RefundReviewDTO();
             rev.setId(app.getId());
             rev.setStatus(1);                              // 通过 → 结算冲销 + registration.payment_status=4

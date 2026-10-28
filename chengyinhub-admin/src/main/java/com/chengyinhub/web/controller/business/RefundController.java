@@ -30,27 +30,6 @@ public class RefundController extends BaseController {
     @Autowired
     private com.chengyinhub.business.service.IRefundPayoutService refundPayoutService;
 
-    @Autowired
-    private com.chengyinhub.business.service.impl.RegistrationRefundFulfillmentViewService fulfillmentViewService;
-
-    @Autowired
-    private com.chengyinhub.business.service.impl.RegistrationRefundFulfillmentSyncService fulfillmentSyncService;
-
-    @PreAuthorize("@ss.hasPermi('business:refund:list')")
-    @GetMapping("/{id}/fulfillment")
-    public AjaxResult fulfillment(@org.springframework.web.bind.annotation.PathVariable("id") Long id) {
-        return AjaxResult.success(fulfillmentViewService.view(id));
-    }
-
-    @PreAuthorize("@ss.hasPermi('business:refund:review')")
-    @Log(title = "退款履约核对", businessType = BusinessType.UPDATE)
-    @PostMapping("/{id}/fulfillment/refresh")
-    public AjaxResult refreshFulfillment(@org.springframework.web.bind.annotation.PathVariable("id") Long id) {
-        // 独立事务消费已提交原事实；F3失败不回滚渠道，也不触发退款派发。
-        fulfillmentSyncService.sync(id);
-        return AjaxResult.success(fulfillmentViewService.view(id));
-    }
-
     @PreAuthorize("@ss.hasPermi('business:refund:list')")
     @GetMapping("/list")
     public TableDataInfo list(RefundApplication query) {

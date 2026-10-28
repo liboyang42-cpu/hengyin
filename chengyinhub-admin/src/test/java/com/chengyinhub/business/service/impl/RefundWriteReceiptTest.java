@@ -67,7 +67,7 @@ class RefundWriteReceiptTest {
     }
 
     private RefundServiceImpl service(RefundApplicationMapper mapper) {
-        RefundServiceImpl service = com.chengyinhub.business.service.support.RefundF3TestSupport.nonBundle(new RefundServiceImpl());
+        RefundServiceImpl service = new RefundServiceImpl();
         ReflectionTestUtils.setField(service, "refundApplicationMapper", mapper);
         return service;
     }

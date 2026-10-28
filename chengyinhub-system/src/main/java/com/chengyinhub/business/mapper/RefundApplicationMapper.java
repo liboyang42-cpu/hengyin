@@ -83,15 +83,6 @@ public interface RefundApplicationMapper {
                            @Param("reviewer2Id") Long reviewer2Id,
                            @Param("reviewed2At") Date reviewed2At);
 
-    /** 履约恢复独立于渠道待派发扫描；批准/驳回的原单作为持久重扫事实，不过滤到账或人工终态。 */
-    Long selectRegistrationRefundRecoveryUpperBound();
-
-    List<Long> selectRegistrationRefundRecoveryBatch(@Param("maxId") long maxId, @Param("limit") int limit,
-            @Param("excludedIds") List<Long> excludedIds);
-
-    /** 仅持久化履约恢复尝试次序；显式保留资金update_time，不能洗新派发卡滞事实。 */
-    int markRegistrationRefundRecoveryAttempt(@Param("id") Long id);
-
     List<RefundApplication> selectManualPayoutQueue();
 
     RefundApplication selectByRefundNo(@Param("refundNo") String refundNo);

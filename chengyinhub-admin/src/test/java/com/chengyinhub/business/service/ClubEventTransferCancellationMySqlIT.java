@@ -317,7 +317,7 @@ class ClubEventTransferCancellationMySqlIT {
 
     private void wireServices() {
         IRefundService refundService = mock(IRefundService.class);
-        when(refundService.savePreparedRegistrationRefund(any(RefundApplication.class), org.mockito.ArgumentMatchers.nullable(com.chengyinhub.business.service.support.FreeExploreRefundContext.class), org.mockito.ArgumentMatchers.nullable(Long.class))).thenAnswer(invocation -> {
+        when(refundService.saveRefund(any(RefundApplication.class))).thenAnswer(invocation -> {
             RefundApplication refund = invocation.getArgument(0, RefundApplication.class);
             refund.setId(1700L + refundApplications.incrementAndGet());
             lastRefund.set(refund);

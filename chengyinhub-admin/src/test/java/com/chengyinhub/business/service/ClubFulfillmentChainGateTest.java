@@ -154,9 +154,6 @@ class ClubFulfillmentChainGateTest {
         // 非现金:下单落库即明确为 0(null 是未确认快照,退款链 409);只做标记/返积分,不触微信
         reg.setWechatPaymentAmount(java.math.BigDecimal.ZERO);
         com.chengyinhub.business.service.IRefundService refundService = mock(com.chengyinhub.business.service.IRefundService.class);
-        when(refundService.prepareRegistrationFullRefund(11L, java.math.BigDecimal.ZERO)).thenReturn(
-                new com.chengyinhub.business.service.support.FreeExploreRefundContext(11L, java.math.BigDecimal.ZERO,
-                        Collections.emptyList(), Collections.emptySet()));
         ReflectionTestUtils.setField(service, "refundService", refundService);
         when(registrationMapper.selectCmsRegistrationById(11L)).thenReturn(reg);
         when(registrationMapper.selectCmsRegistrationByIdForUpdate(11L)).thenReturn(reg);

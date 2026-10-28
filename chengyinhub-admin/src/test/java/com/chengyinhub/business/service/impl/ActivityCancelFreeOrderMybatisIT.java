@@ -165,7 +165,7 @@ class ActivityCancelFreeOrderMybatisIT {
         refundPayoutService = mock(IRefundPayoutService.class);
         manualRefundCaseService = mock(IActivityCancelManualRefundCaseService.class);
         umsMemberMapper = mock(UmsMemberMapper.class);
-        when(refundService.savePreparedRegistrationRefund(any(RefundApplication.class), org.mockito.ArgumentMatchers.nullable(com.chengyinhub.business.service.support.FreeExploreRefundContext.class), org.mockito.ArgumentMatchers.nullable(Long.class))).thenAnswer(invocation -> {
+        when(refundService.saveRefund(any(RefundApplication.class))).thenAnswer(invocation -> {
             invocation.getArgument(0, RefundApplication.class).setId(999L);
             return 1;
         });
@@ -353,7 +353,7 @@ class ActivityCancelFreeOrderMybatisIT {
 
         assertEquals(1, result.getRefundedOrders());
         ArgumentCaptor<RefundApplication> captured = ArgumentCaptor.forClass(RefundApplication.class);
-        verify(refundService).savePreparedRegistrationRefund(captured.capture(), org.mockito.ArgumentMatchers.nullable(com.chengyinhub.business.service.support.FreeExploreRefundContext.class), org.mockito.ArgumentMatchers.nullable(Long.class));
+        verify(refundService).saveRefund(captured.capture());
         assertEquals(94L, captured.getValue().getSourceId(), "付费单必须仍按原支付主单建退款单");
         assertEquals(0, new BigDecimal("68.00").compareTo(captured.getValue().getRefundAmount()),
                 "退款金额规则不得因免费单修复而改变");
@@ -371,7 +371,7 @@ class ActivityCancelFreeOrderMybatisIT {
 
     /** 免费/拦下的订单:不得建退款单、不得触发打款、不得登记人工案件。 */
     private void assertNoMoneyMoved() {
-        verify(refundService, never()).savePreparedRegistrationRefund(any(RefundApplication.class), org.mockito.ArgumentMatchers.nullable(com.chengyinhub.business.service.support.FreeExploreRefundContext.class), org.mockito.ArgumentMatchers.nullable(Long.class));
+        verify(refundService, never()).saveRefund(any(RefundApplication.class));
         verifyNoInteractions(refundPayoutService, manualRefundCaseService);
     }
 

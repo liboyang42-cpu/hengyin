@@ -44,7 +44,7 @@ class RefundServiceImplTest {
 
     @Test
     void unknownDepositRefundCannotBeAcknowledgedByRegistrationRefundFallback() {
-        RefundServiceImpl service = com.chengyinhub.business.service.support.RefundF3TestSupport.nonBundle(new RefundServiceImpl());
+        RefundServiceImpl service = new RefundServiceImpl();
         org.springframework.test.util.ReflectionTestUtils.setField(service, "firstReviewPointsClawback",
                 org.mockito.Mockito.mock(com.chengyinhub.business.service.impl.FirstReviewPointsClawbackService.class));
         ReflectionTestUtils.setField(service,"refundApplicationMapper",mock(RefundApplicationMapper.class));
@@ -57,7 +57,7 @@ class RefundServiceImplTest {
 
     @Test
     void refundFactsRejectMalformedCentsBeforeInboxOrTerminalWrite() {
-        RefundServiceImpl service = com.chengyinhub.business.service.support.RefundF3TestSupport.nonBundle(new RefundServiceImpl());
+        RefundServiceImpl service = new RefundServiceImpl();
         RefundApplicationMapper refunds = mock(RefundApplicationMapper.class);
         CmsRegistrationMapper registrations = mock(CmsRegistrationMapper.class);
         com.chengyinhub.business.service.IWxPaymentCallbackInboxService inbox =
@@ -876,7 +876,7 @@ class RefundServiceImplTest {
                                       SettlementDetailMapper settlementDetailMapper,
                                       CmsActivityMapper activityMapper,
                                       CmsTopicMapper topicMapper) {
-        RefundServiceImpl service = com.chengyinhub.business.service.support.RefundF3TestSupport.nonBundle(new RefundServiceImpl());
+        RefundServiceImpl service = new RefundServiceImpl();
         org.springframework.test.util.ReflectionTestUtils.setField(service, "firstReviewPointsClawback",
                 org.mockito.Mockito.mock(com.chengyinhub.business.service.impl.FirstReviewPointsClawbackService.class));
         ReflectionTestUtils.setField(service, "refundApplicationMapper", refundMapper);

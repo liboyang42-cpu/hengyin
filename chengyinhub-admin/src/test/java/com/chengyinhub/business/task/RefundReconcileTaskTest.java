@@ -33,40 +33,6 @@ import static org.mockito.Mockito.when;
 class RefundReconcileTaskTest {
 
     @Test
-    void fulfillmentRecoveryStillRunsWhenPaymentScanFails() {
-        RefundApplicationMapper mapper = mock(RefundApplicationMapper.class);
-        when(mapper.selectStalePayoutScanUpperBound(anyInt())).thenThrow(new IllegalStateException("scan unavailable"));
-        var recovery = mock(com.chengyinhub.business.service.impl.RegistrationRefundFulfillmentRecovery.class);
-        RefundReconcileTask task = fulfillmentTask(mapper, recovery);
-        org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class, task::reconcile);
-        verify(recovery).reconcile();
-    }
-
-    @Test
-    void fulfillmentFailureDoesNotReplayOrModifyChannelFacts() {
-        RefundApplicationMapper mapper = mock(RefundApplicationMapper.class);
-        var recovery = mock(com.chengyinhub.business.service.impl.RegistrationRefundFulfillmentRecovery.class);
-        doThrow(new IllegalStateException("F3 scan unavailable")).when(recovery).reconcile();
-        RefundReconcileTask task = fulfillmentTask(mapper, recovery);
-        org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class, task::reconcile);
-        verify(mapper, never()).updatePayoutResult(anyLong(), anyInt(), anyString());
-        verify(mapper, never()).ensureRefundNo(anyLong(), anyString());
-        verify(recovery).reconcile();
-    }
-
-    private RefundReconcileTask fulfillmentTask(RefundApplicationMapper mapper,
-            com.chengyinhub.business.service.impl.RegistrationRefundFulfillmentRecovery recovery) {
-        RefundReconcileTask task = new RefundReconcileTask();
-        ReflectionTestUtils.setField(task, "coopInviteService", mock(com.chengyinhub.business.service.ICoopInviteService.class));
-        ReflectionTestUtils.setField(task, "refundApplicationMapper", mapper);
-        ReflectionTestUtils.setField(task, "refundPayoutService", mock(IRefundPayoutService.class));
-        ReflectionTestUtils.setField(task, "wechatPayService", mock(IWechatPayService.class));
-        ReflectionTestUtils.setField(task, "alarmService", mock(AlarmService.class));
-        ReflectionTestUtils.setField(task, "refundFulfillmentRecovery", recovery);
-        return task;
-    }
-
-    @Test
     void reconcileRetriesCommittedButUndispatchedRefundAndPollsAcceptedRefund() {
         RefundApplicationMapper mapper = mock(RefundApplicationMapper.class);
         IRefundPayoutService payoutService = mock(IRefundPayoutService.class);
@@ -89,8 +55,6 @@ class RefundReconcileTaskTest {
         when(mapper.countManualPayoutBacklog()).thenReturn(0);
 
         RefundReconcileTask task = new RefundReconcileTask();
-        ReflectionTestUtils.setField(task, "refundFulfillmentRecovery",
-                org.mockito.Mockito.mock(com.chengyinhub.business.service.impl.RegistrationRefundFulfillmentRecovery.class));
         ReflectionTestUtils.setField(task, "coopInviteService", mock(com.chengyinhub.business.service.ICoopInviteService.class));
         ReflectionTestUtils.setField(task, "refundApplicationMapper", mapper);
         ReflectionTestUtils.setField(task, "refundPayoutService", payoutService);
@@ -115,8 +79,6 @@ class RefundReconcileTaskTest {
         when(mapper.countStuckPayoutDispatch(anyInt())).thenReturn(3);
 
         RefundReconcileTask task = new RefundReconcileTask();
-        ReflectionTestUtils.setField(task, "refundFulfillmentRecovery",
-                org.mockito.Mockito.mock(com.chengyinhub.business.service.impl.RegistrationRefundFulfillmentRecovery.class));
         ReflectionTestUtils.setField(task, "coopInviteService", mock(com.chengyinhub.business.service.ICoopInviteService.class));
         ReflectionTestUtils.setField(task, "refundApplicationMapper", mapper);
         ReflectionTestUtils.setField(task, "refundPayoutService", mock(IRefundPayoutService.class));
@@ -154,8 +116,6 @@ class RefundReconcileTaskTest {
         when(mapper.countStuckPayoutDispatch(anyInt())).thenAnswer(invocation -> retried.get() ? 0 : 1);
 
         RefundReconcileTask task = new RefundReconcileTask();
-        ReflectionTestUtils.setField(task, "refundFulfillmentRecovery",
-                org.mockito.Mockito.mock(com.chengyinhub.business.service.impl.RegistrationRefundFulfillmentRecovery.class));
         ReflectionTestUtils.setField(task, "coopInviteService", mock(com.chengyinhub.business.service.ICoopInviteService.class));
         ReflectionTestUtils.setField(task, "refundApplicationMapper", mapper);
         ReflectionTestUtils.setField(task, "refundPayoutService", payoutService);
@@ -180,8 +140,6 @@ class RefundReconcileTaskTest {
         when(mapper.countStuckPayoutDispatch(anyInt())).thenReturn(0);
 
         RefundReconcileTask task = new RefundReconcileTask();
-        ReflectionTestUtils.setField(task, "refundFulfillmentRecovery",
-                org.mockito.Mockito.mock(com.chengyinhub.business.service.impl.RegistrationRefundFulfillmentRecovery.class));
         ReflectionTestUtils.setField(task, "coopInviteService", mock(com.chengyinhub.business.service.ICoopInviteService.class));
         ReflectionTestUtils.setField(task, "refundApplicationMapper", mapper);
         ReflectionTestUtils.setField(task, "refundPayoutService", mock(IRefundPayoutService.class));
@@ -208,8 +166,6 @@ class RefundReconcileTaskTest {
                 .when(alarmService).alarmThrottled(eq("monitor.refund.manual"), eq("退款待人工积压"), anyString());
 
         RefundReconcileTask task = new RefundReconcileTask();
-        ReflectionTestUtils.setField(task, "refundFulfillmentRecovery",
-                org.mockito.Mockito.mock(com.chengyinhub.business.service.impl.RegistrationRefundFulfillmentRecovery.class));
         ReflectionTestUtils.setField(task, "coopInviteService", mock(com.chengyinhub.business.service.ICoopInviteService.class));
         ReflectionTestUtils.setField(task, "refundApplicationMapper", mapper);
         ReflectionTestUtils.setField(task, "refundPayoutService", mock(IRefundPayoutService.class));
@@ -245,8 +201,6 @@ class RefundReconcileTaskTest {
                 .when(alarmService).alarmThrottled(eq("monitor.refund.dispatch_stuck"), eq("退款派发卡滞"), anyString());
 
         RefundReconcileTask task = new RefundReconcileTask();
-        ReflectionTestUtils.setField(task, "refundFulfillmentRecovery",
-                org.mockito.Mockito.mock(com.chengyinhub.business.service.impl.RegistrationRefundFulfillmentRecovery.class));
         ReflectionTestUtils.setField(task, "coopInviteService", mock(com.chengyinhub.business.service.ICoopInviteService.class));
         ReflectionTestUtils.setField(task, "refundApplicationMapper", mapper);
         ReflectionTestUtils.setField(task, "refundPayoutService", mock(IRefundPayoutService.class));
@@ -279,8 +233,6 @@ class RefundReconcileTaskTest {
         when(mapper.selectStalePayoutProcessingAfter(anyInt(), eq(0L), anyLong(), eq(200))).thenReturn(Collections.singletonList(pending));
         doThrow(new IllegalStateException("deposit queue unavailable")).when(deposits).reconcileDepositRefunds();
         RefundReconcileTask task = new RefundReconcileTask();
-        ReflectionTestUtils.setField(task, "refundFulfillmentRecovery",
-                org.mockito.Mockito.mock(com.chengyinhub.business.service.impl.RegistrationRefundFulfillmentRecovery.class));
         ReflectionTestUtils.setField(task,"coopInviteService",deposits);
         ReflectionTestUtils.setField(task,"refundApplicationMapper",mapper);
         ReflectionTestUtils.setField(task,"refundPayoutService",payout);
@@ -308,8 +260,6 @@ class RefundReconcileTaskTest {
                 });
         doThrow(new IllegalStateException("permanent failure")).when(payout).payoutAfterReview(1L);
         RefundReconcileTask task = new RefundReconcileTask();
-        ReflectionTestUtils.setField(task, "refundFulfillmentRecovery",
-                org.mockito.Mockito.mock(com.chengyinhub.business.service.impl.RegistrationRefundFulfillmentRecovery.class));
         ReflectionTestUtils.setField(task, "coopInviteService", mock(com.chengyinhub.business.service.ICoopInviteService.class));
         ReflectionTestUtils.setField(task, "refundApplicationMapper", mapper);
         ReflectionTestUtils.setField(task, "refundPayoutService", payout);
@@ -347,8 +297,6 @@ class RefundReconcileTaskTest {
                 .when(alarmService).alarmThrottled(eq("monitor.refund.dispatch_count_failed"), eq("退款派发卡滞计数失败"), anyString());
 
         RefundReconcileTask task = new RefundReconcileTask();
-        ReflectionTestUtils.setField(task, "refundFulfillmentRecovery",
-                org.mockito.Mockito.mock(com.chengyinhub.business.service.impl.RegistrationRefundFulfillmentRecovery.class));
         ReflectionTestUtils.setField(task, "coopInviteService", mock(com.chengyinhub.business.service.ICoopInviteService.class));
         ReflectionTestUtils.setField(task, "refundApplicationMapper", mapper);
         ReflectionTestUtils.setField(task, "refundPayoutService", mock(IRefundPayoutService.class));
@@ -384,8 +332,6 @@ class RefundReconcileTaskTest {
         when(mapper.sampleStuckPayoutDispatchIds(anyInt())).thenThrow(new IllegalStateException("sample failed"));
 
         RefundReconcileTask task = new RefundReconcileTask();
-        ReflectionTestUtils.setField(task, "refundFulfillmentRecovery",
-                org.mockito.Mockito.mock(com.chengyinhub.business.service.impl.RegistrationRefundFulfillmentRecovery.class));
         ReflectionTestUtils.setField(task, "coopInviteService", mock(com.chengyinhub.business.service.ICoopInviteService.class));
         ReflectionTestUtils.setField(task, "refundApplicationMapper", mapper);
         ReflectionTestUtils.setField(task, "refundPayoutService", mock(IRefundPayoutService.class));

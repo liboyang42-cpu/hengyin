@@ -98,7 +98,7 @@ class ActivityCancelTest {
             }
             return null;
         });
-        when(refundService.savePreparedRegistrationRefund(any(RefundApplication.class), org.mockito.ArgumentMatchers.nullable(com.chengyinhub.business.service.support.FreeExploreRefundContext.class), org.mockito.ArgumentMatchers.nullable(Long.class))).thenAnswer(inv -> {
+        when(refundService.saveRefund(any(RefundApplication.class))).thenAnswer(inv -> {
             inv.getArgument(0, RefundApplication.class).setId(999L);
             return 1;
         });
@@ -133,7 +133,7 @@ class ActivityCancelTest {
     /** 捕获建单参数:退哪一单、退多少,现在体现在退款单上(sourceId ⇒ out_trade_no)。 */
     private RefundApplication capturedRefundApp() {
         ArgumentCaptor<RefundApplication> cap = ArgumentCaptor.forClass(RefundApplication.class);
-        verify(refundService).savePreparedRegistrationRefund(cap.capture(), org.mockito.ArgumentMatchers.nullable(com.chengyinhub.business.service.support.FreeExploreRefundContext.class), org.mockito.ArgumentMatchers.nullable(Long.class));
+        verify(refundService).saveRefund(cap.capture());
         return cap.getValue();
     }
 
@@ -176,7 +176,7 @@ class ActivityCancelTest {
 
         assertEquals(Integer.valueOf(409), conflict.getCode());
         verify(manualRefundCaseService, never()).recordCase(any(ActivityCancelManualRefundCase.class));
-        verify(refundService, never()).savePreparedRegistrationRefund(any(RefundApplication.class), org.mockito.ArgumentMatchers.nullable(com.chengyinhub.business.service.support.FreeExploreRefundContext.class), org.mockito.ArgumentMatchers.nullable(Long.class));
+        verify(refundService, never()).saveRefund(any(RefundApplication.class));
         verify(refundPayoutService, never()).payoutAfterReview(anyLong());
         verify(ticketMapper, never()).restoreInventory(anyLong(), anyLong());
         verify(activityMapper, never()).updateCmsActivity(any(CmsActivity.class));
@@ -481,7 +481,7 @@ class ActivityCancelTest {
         assertEquals(1, n);
         org.mockito.InOrder inOrder = org.mockito.Mockito.inOrder(refundService);
         inOrder.verify(refundService).supersedePendingRegistrationRefunds(org.mockito.ArgumentMatchers.eq(2L), anyString());
-        inOrder.verify(refundService).savePreparedRegistrationRefund(any(RefundApplication.class), org.mockito.ArgumentMatchers.nullable(com.chengyinhub.business.service.support.FreeExploreRefundContext.class), org.mockito.ArgumentMatchers.nullable(Long.class));
+        inOrder.verify(refundService).saveRefund(any(RefundApplication.class));
         verify(refundPayoutService, times(1)).payoutAfterReview(999L);
         assertEquals(0, new BigDecimal("200.00").compareTo(capturedRefundApp().getRefundAmount()));
     }
@@ -687,7 +687,7 @@ class ActivityCancelTest {
             assertEquals(1, result.getRefundedOrders());
             assertEquals(0, result.getManualOrders());
             verify(ticketMapper, times(rows)).restoreInventory(TICKET_ID, 1L);
-            verify(refundService, never()).savePreparedRegistrationRefund(any(RefundApplication.class), org.mockito.ArgumentMatchers.nullable(com.chengyinhub.business.service.support.FreeExploreRefundContext.class), org.mockito.ArgumentMatchers.nullable(Long.class));
+            verify(refundService, never()).saveRefund(any(RefundApplication.class));
             verify(refundPayoutService, never()).payoutAfterReview(anyLong());
             if (rows == 3) verify(members).addPoints(first.getMemberId(), 200);
 
@@ -853,7 +853,7 @@ class ActivityCancelTest {
 
         assertEquals(0, result.getRefundedOrders(), "锁内已核销的单票不得自动退款");
         assertEquals(0, result.getManualOrders(), "单票已全部核销是服务已交付终局，不制造部分核销人工单");
-        verify(refundService, never()).savePreparedRegistrationRefund(any(RefundApplication.class), org.mockito.ArgumentMatchers.nullable(com.chengyinhub.business.service.support.FreeExploreRefundContext.class), org.mockito.ArgumentMatchers.nullable(Long.class));
+        verify(refundService, never()).saveRefund(any(RefundApplication.class));
         verify(ticketMapper, never()).restoreInventory(anyLong(), anyLong());
     }
 

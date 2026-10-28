@@ -142,21 +142,6 @@
             <h3>状态冲突 · 需核查</h3>
             <p>{{ payoutConflict(detailRow) }}。审核结论与打款回读分别保留，请人工核对渠道结果后再处置，不要以单侧覆盖另一侧。</p>
           </section>
-          <section class="refund-detail__reason">
-            <h3>权益冻结与退款核对</h3>
-            <el-button size="mini" :loading="fulfillmentLoading" @click="loadFulfillment(false)">重新读取</el-button>
-            <el-button size="mini" :disabled="fulfillmentLoading" @click="loadFulfillment(true)" v-hasPermi="['business:refund:review']">按原退款核对</el-button>
-            <p v-if="fulfillmentError" role="alert">{{ fulfillmentError }}；原资金结果保留，请稍后按原退款重新读取。</p>
-            <template v-if="fulfillment">
-              <p v-if="fulfillment.scopeUnknown">原订单范围无法确认，需要人工核对。</p>
-              <p v-else-if="!fulfillment.holds.length">尚无权益冻结记录；这不代表退款未发生。</p>
-              <p v-for="hold in fulfillment.holds" :key="hold.registrationId">
-                报名 #{{ hold.registrationId }} · {{ fulfillmentStateLabel(hold.state) }}
-                · 原退款 #{{ hold.refundId || '无现金退款' }} · {{ hold.refundNo || '—' }}
-              </p>
-              <p>核对只更新权益处理结果；罚扣例外需另有授权，人工凭证复核不等于原路到账。</p>
-            </template>
-          </section>
           <div class="payout-note">
             <i class="el-icon-info" /> 审核通过仅代表退款申请获批；微信原路退款成功是渠道回读，人工双人复核只代表凭证流程完成，不代表用户已到账。
           </div>
@@ -188,7 +173,7 @@
 </template>
 
 <script>
-import { listRefund, addRefund, reviewRefund, getRefundFulfillment, refreshRefundFulfillment } from '@/api/business/refund'
+import { listRefund, addRefund, reviewRefund } from '@/api/business/refund'
 import auth from '@/plugins/auth'
 import ActivityCancelRefundCases from './ActivityCancelRefundCases'
 import ManualPayoutQueue from './ManualPayoutQueue'
@@ -287,10 +272,6 @@ export default {
       detailOpen: false,
       reviewOpen: false,
       detailRow: null,
-      fulfillment: null,
-      fulfillmentLoading: false,
-      fulfillmentError: '',
-      fulfillmentRequestId: 0,
       formSubmitting: false,
       reviewSubmitting: false,
       tableColumns: [
@@ -347,22 +328,6 @@ export default {
       ]
     }
   },
-  watch: {
-    detailOpen(value) {
-      if (!value) this.clearFulfillment()
-    },
-    '$store.getters.id'() {
-      this.clearFulfillment()
-      this.detailOpen = false
-      this.detailRow = null
-    },
-    '$store.getters.token'() {
-      this.clearFulfillment()
-      this.detailOpen = false
-      this.detailRow = null
-    }
-  },
-  beforeDestroy() { this.clearFulfillment() },
   created() {
     this.loadRoute(this.$route.query)
   },
@@ -446,54 +411,7 @@ export default {
       if (review === 2) return `审核已驳回，但打款已${label}，需核查`
       return ''
     },
-    clearFulfillment() {
-      this.fulfillmentRequestId++
-      this.fulfillment = null
-      this.fulfillmentLoading = false
-      this.fulfillmentError = ''
-    },
-    async openDetail(row) {
-      this.clearFulfillment()
-      this.detailRow = row
-      this.detailOpen = true
-      await this.loadFulfillment(false)
-    },
-    fulfillmentStateLabel(state) {
-      return ({
-        PREPARED: '退款准备中，权益冻结', BOUND: '已关联原退款，权益冻结',
-        APPROVED: '已批准，等待资金确认', SUCCEEDED: '原路到账，权益退款已完成',
-        ZERO_CASH_COMPLETED: '无现金取消已完成', REJECTED_HELD: '已驳回或被取代，保留冻结待核对',
-        MANUAL_REVIEW_HELD: '人工处理核对中，保留冻结', RECONCILIATION_REQUIRED: '状态不一致，需人工核对'
-      })[state] || '未知权益状态，需人工核对'
-    },
-    async loadFulfillment(refresh) {
-      if (!this.detailRow || !this.detailOpen) return
-      const rawId = this.detailRow.id
-      const id = String(rawId)
-      if ((typeof rawId === 'number' && !Number.isSafeInteger(rawId)) || !/^[1-9]\d*$/.test(id)) {
-        this.fulfillmentError = '退款ID精度无法确认，请重新获取原退款记录'
-        return
-      }
-      const sequence = ++this.fulfillmentRequestId
-      const account = this.$store.getters.id
-      const token = this.$store.getters.token
-      const current = () => sequence === this.fulfillmentRequestId && this.detailOpen && this.detailRow &&
-        String(this.detailRow.id) === id && this.$store.getters.id === account && this.$store.getters.token === token
-      this.fulfillmentLoading = true
-      this.fulfillmentError = ''
-      try {
-        const response = await (refresh ? refreshRefundFulfillment(id) : getRefundFulfillment(id))
-        if (!current()) return
-        if (!response || !response.data || response.data.refundId !== id || !Array.isArray(response.data.holds)) {
-          throw new Error('原退款核对回执不匹配')
-        }
-        this.fulfillment = response.data
-      } catch (error) {
-        if (current()) this.fulfillmentError = error.message || '权益核对结果无法确认'
-      } finally {
-        if (current()) this.fulfillmentLoading = false
-      }
-    },
+    openDetail(row) { this.detailRow = row; this.detailOpen = true },
     goActivityCancelQueue() { this.$router.push({ name: 'financeRefund', query: { queue: 'activity-cancel' } }) },
     goManualQueue() { this.$router.push({ name: 'financeRefund', query: { queue: 'manual' } }) },
     goRefundQueue() { this.$router.push({ name: 'financeRefund' }) },

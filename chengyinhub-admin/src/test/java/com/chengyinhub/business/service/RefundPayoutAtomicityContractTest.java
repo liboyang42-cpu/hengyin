@@ -63,8 +63,6 @@ class RefundPayoutAtomicityContractTest {
         when(mapper.selectStalePayoutProcessingAfter(30, 0L, 3L, 200))
                 .thenReturn(Arrays.asList(pending, dispatching, processing));
         RefundReconcileTask task = new RefundReconcileTask();
-        ReflectionTestUtils.setField(task, "refundFulfillmentRecovery",
-                org.mockito.Mockito.mock(com.chengyinhub.business.service.impl.RegistrationRefundFulfillmentRecovery.class));
         ReflectionTestUtils.setField(task, "coopInviteService", mock(ICoopInviteService.class));
         ReflectionTestUtils.setField(task, "refundApplicationMapper", mapper);
         ReflectionTestUtils.setField(task, "wechatPayService", wechat);

@@ -47,30 +47,9 @@ public class RefundReconcileTask {
     @Autowired
     private com.chengyinhub.business.service.ICoopInviteService coopInviteService;
 
-    @Autowired
-    private com.chengyinhub.business.service.impl.RegistrationRefundFulfillmentRecovery refundFulfillmentRecovery;
-
     private long scanCursor;
 
     public synchronized void reconcile() {
-        RuntimeException paymentFailure = null;
-        try {
-            reconcilePayments();
-        } catch (RuntimeException failure) {
-            paymentFailure = failure;
-        }
-        // 独立事务仅消费已经持久化的原退款事实；渠道扫描失败也不能饿死成功/人工终态的履约恢复。
-        try {
-            refundFulfillmentRecovery.reconcile();
-        } catch (RuntimeException failure) {
-            log.error("退款履约恢复扫描失败，原资金事实保留待下一轮重扫", failure);
-            if (paymentFailure == null) throw failure;
-            paymentFailure.addSuppressed(failure);
-        }
-        if (paymentFailure != null) throw paymentFailure;
-    }
-
-    private void reconcilePayments() {
         // 保证金与报名退款队列隔离；双方仍复用同一已注册调度入口。
         IllegalStateException depositFailure = null;
         try { coopInviteService.reconcileDepositRefunds(); }

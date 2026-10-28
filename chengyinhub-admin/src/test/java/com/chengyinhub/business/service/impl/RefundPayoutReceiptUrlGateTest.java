@@ -47,7 +47,7 @@ class RefundPayoutReceiptUrlGateTest {
     @BeforeEach
     void setUp() {
         refundApplicationMapper = mock(RefundApplicationMapper.class);
-        svc = com.chengyinhub.business.service.support.RefundF3TestSupport.nonBundle(new RefundServiceImpl());
+        svc = new RefundServiceImpl();
         ReflectionTestUtils.setField(svc, "refundApplicationMapper", refundApplicationMapper);
         ReflectionTestUtils.setField(svc, "notifyService", mock(INotifyService.class));
         ReflectionTestUtils.setField(svc, "alarmService", mock(AlarmService.class));

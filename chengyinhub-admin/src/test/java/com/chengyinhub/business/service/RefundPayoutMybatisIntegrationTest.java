@@ -91,7 +91,7 @@ class RefundPayoutMybatisIntegrationTest {
         refundApplicationMapper = template.getMapper(RefundApplicationMapper.class);
         DataSourceTransactionManager tx = new DataSourceTransactionManager(dataSource);
 
-        RefundServiceImpl refundTarget = com.chengyinhub.business.service.support.RefundF3TestSupport.nonBundle(new RefundServiceImpl());
+        RefundServiceImpl refundTarget = new RefundServiceImpl();
         ReflectionTestUtils.setField(refundTarget, "refundApplicationMapper", refundApplicationMapper);
         ProxyFactory refundProxyFactory = new ProxyFactory(refundTarget);
         refundProxyFactory.setInterfaces(IRefundService.class);
@@ -475,8 +475,6 @@ class RefundPayoutMybatisIntegrationTest {
                 .thenThrow(new RuntimeException("微信网络异常"));
         AlarmService alarmService = mock(AlarmService.class);
         RefundReconcileTask task = new RefundReconcileTask();
-        ReflectionTestUtils.setField(task, "refundFulfillmentRecovery",
-                org.mockito.Mockito.mock(com.chengyinhub.business.service.impl.RegistrationRefundFulfillmentRecovery.class));
         // 保证金退款对账是独立队列(RefundReconcileTask#reconcile 首个动作);本用例只钉报名退款的
         // 卡滞计数时序,注入 mock 免去手搭 ICoopInviteService 的依赖。d7593ff37 加了该依赖时漏了本类。
         ReflectionTestUtils.setField(task, "coopInviteService", mock(ICoopInviteService.class));

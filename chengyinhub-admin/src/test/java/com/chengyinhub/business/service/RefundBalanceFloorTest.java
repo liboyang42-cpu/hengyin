@@ -65,7 +65,7 @@ class RefundBalanceFloorTest {
         umsMemberMapper = mock(UmsMemberMapper.class);
         umsMemberBalanceDetailMapper = mock(UmsMemberBalanceDetailMapper.class);
 
-        svc = com.chengyinhub.business.service.support.RefundF3TestSupport.nonBundle(new RefundServiceImpl());
+        svc = new RefundServiceImpl();
 
         org.springframework.test.util.ReflectionTestUtils.setField(svc, "firstReviewPointsClawback",
 

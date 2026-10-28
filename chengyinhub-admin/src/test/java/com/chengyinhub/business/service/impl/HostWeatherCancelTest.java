@@ -117,7 +117,7 @@ class HostWeatherCancelTest {
         });
         when(activityMapper.updateCmsActivity(any(CmsActivity.class))).thenReturn(1);
         when(topicService.casUserStatus(anyLong(), anyInt(), anyInt())).thenReturn(1);
-        when(refundService.savePreparedRegistrationRefund(any(RefundApplication.class), org.mockito.ArgumentMatchers.nullable(com.chengyinhub.business.service.support.FreeExploreRefundContext.class), org.mockito.ArgumentMatchers.nullable(Long.class))).thenAnswer(inv -> {
+        when(refundService.saveRefund(any(RefundApplication.class))).thenAnswer(inv -> {
             inv.getArgument(0, RefundApplication.class).setId(++refundSeq);
             return 1;
         });
@@ -202,7 +202,7 @@ class HostWeatherCancelTest {
 
     private List<Long> refundedRegistrationIds() {
         ArgumentCaptor<RefundApplication> cap = ArgumentCaptor.forClass(RefundApplication.class);
-        verify(refundService, org.mockito.Mockito.atLeast(0)).savePreparedRegistrationRefund(cap.capture(), org.mockito.ArgumentMatchers.nullable(com.chengyinhub.business.service.support.FreeExploreRefundContext.class), org.mockito.ArgumentMatchers.nullable(Long.class));
+        verify(refundService, org.mockito.Mockito.atLeast(0)).saveRefund(cap.capture());
         List<Long> ids = new ArrayList<>();
         for (RefundApplication app : cap.getAllValues()) ids.add(app.getSourceId());
         Collections.sort(ids);
@@ -223,7 +223,7 @@ class HostWeatherCancelTest {
         assertEquals(2, res.getRefundedOrders());
         assertEquals(Arrays.asList(1L, 2L), refundedRegistrationIds());
         ArgumentCaptor<RefundApplication> cap = ArgumentCaptor.forClass(RefundApplication.class);
-        verify(refundService, times(2)).savePreparedRegistrationRefund(cap.capture(), org.mockito.ArgumentMatchers.nullable(com.chengyinhub.business.service.support.FreeExploreRefundContext.class), org.mockito.ArgumentMatchers.nullable(Long.class));
+        verify(refundService, times(2)).saveRefund(cap.capture());
         for (RefundApplication app : cap.getAllValues()) {
             assertEquals(0, new BigDecimal("68.00").compareTo(app.getRefundAmount()), "全额,0 手续费");
         }
@@ -243,7 +243,7 @@ class HostWeatherCancelTest {
                 () -> service.cancelActivityByMerchantHost(ACTIVITY, OWNER, STAFF, "暴雨预警"));
 
         assertEquals(Integer.valueOf(403), denied.getCode());
-        verify(refundService, never()).savePreparedRegistrationRefund(any(RefundApplication.class), org.mockito.ArgumentMatchers.nullable(com.chengyinhub.business.service.support.FreeExploreRefundContext.class), org.mockito.ArgumentMatchers.nullable(Long.class));
+        verify(refundService, never()).saveRefund(any(RefundApplication.class));
         verify(activityMapper, never()).updateCmsActivity(any(CmsActivity.class));
     }
 
@@ -254,7 +254,7 @@ class HostWeatherCancelTest {
 
         assertThrows(ServiceException.class,
                 () -> service.cancelActivityByMerchantHost(ACTIVITY, OWNER, STAFF, "暴雨预警"));
-        verify(refundService, never()).savePreparedRegistrationRefund(any(RefundApplication.class), org.mockito.ArgumentMatchers.nullable(com.chengyinhub.business.service.support.FreeExploreRefundContext.class), org.mockito.ArgumentMatchers.nullable(Long.class));
+        verify(refundService, never()).saveRefund(any(RefundApplication.class));
     }
 
     /**
@@ -278,7 +278,7 @@ class HostWeatherCancelTest {
                     () -> service.countPaidPlayersForMerchantActivityCancel(id, OWNER));
             assertEquals(Integer.valueOf(403), previewDenied.getCode());
         }
-        verify(refundService, never()).savePreparedRegistrationRefund(any(RefundApplication.class), org.mockito.ArgumentMatchers.nullable(com.chengyinhub.business.service.support.FreeExploreRefundContext.class), org.mockito.ArgumentMatchers.nullable(Long.class));
+        verify(refundService, never()).saveRefund(any(RefundApplication.class));
         verify(activityMapper, never()).updateCmsActivity(any(CmsActivity.class));
         verify(activityMapper, never()).selectCmsActivityByIdForUpdate(anyLong());
     }
@@ -291,7 +291,7 @@ class HostWeatherCancelTest {
 
         assertThrows(ServiceException.class,
                 () -> service.cancelActivityByMerchantHost(ACTIVITY, OWNER, STAFF, "再点一次"));
-        verify(refundService, never()).savePreparedRegistrationRefund(any(RefundApplication.class), org.mockito.ArgumentMatchers.nullable(com.chengyinhub.business.service.support.FreeExploreRefundContext.class), org.mockito.ArgumentMatchers.nullable(Long.class));
+        verify(refundService, never()).saveRefund(any(RefundApplication.class));
         verify(payout, never()).payoutAfterReview(anyLong());
     }
 
@@ -309,7 +309,7 @@ class HostWeatherCancelTest {
                 () -> service.cancelActivityByMerchantHost(ACTIVITY, OWNER, STAFF, "暴雨预警"));
 
         assertEquals(Integer.valueOf(409), conflict.getCode());
-        verify(refundService, never()).savePreparedRegistrationRefund(any(RefundApplication.class), org.mockito.ArgumentMatchers.nullable(com.chengyinhub.business.service.support.FreeExploreRefundContext.class), org.mockito.ArgumentMatchers.nullable(Long.class));
+        verify(refundService, never()).saveRefund(any(RefundApplication.class));
         verify(ticketMapper, never()).restoreInventory(anyLong(), anyLong());
         verify(activityMapper, never()).updateCmsActivity(any(CmsActivity.class));
     }
@@ -394,7 +394,7 @@ class HostWeatherCancelTest {
                 () -> service.cancelTopicByHost(TOPIC, OWNER, STAFF, "台风停运"));
 
         assertEquals(Integer.valueOf(409), conflict.getCode());
-        verify(refundService, never()).savePreparedRegistrationRefund(any(RefundApplication.class), org.mockito.ArgumentMatchers.nullable(com.chengyinhub.business.service.support.FreeExploreRefundContext.class), org.mockito.ArgumentMatchers.nullable(Long.class));
+        verify(refundService, never()).saveRefund(any(RefundApplication.class));
         verify(ticketMapper, never()).restoreInventory(anyLong(), anyLong());
     }
 
@@ -407,7 +407,7 @@ class HostWeatherCancelTest {
                 () -> service.cancelTopicByHost(TOPIC, OWNER, STAFF, "台风停运"));
 
         assertEquals(Integer.valueOf(409), conflict.getCode());
-        verify(refundService, never()).savePreparedRegistrationRefund(any(RefundApplication.class), org.mockito.ArgumentMatchers.nullable(com.chengyinhub.business.service.support.FreeExploreRefundContext.class), org.mockito.ArgumentMatchers.nullable(Long.class));
+        verify(refundService, never()).saveRefund(any(RefundApplication.class));
     }
 
     @Test
@@ -421,7 +421,7 @@ class HostWeatherCancelTest {
                 () -> service.cancelTopicByHost(TOPIC, OWNER, STAFF, "台风停运"));
 
         assertEquals(Integer.valueOf(409), conflict.getCode());
-        verify(refundService, never()).savePreparedRegistrationRefund(any(RefundApplication.class), org.mockito.ArgumentMatchers.nullable(com.chengyinhub.business.service.support.FreeExploreRefundContext.class), org.mockito.ArgumentMatchers.nullable(Long.class));
+        verify(refundService, never()).saveRefund(any(RefundApplication.class));
         verify(activityMapper, never()).updateCmsActivity(any(CmsActivity.class));
     }
 
@@ -445,7 +445,7 @@ class HostWeatherCancelTest {
 
         assertEquals(Integer.valueOf(403), denied.getCode());
         verify(topicService, never()).casUserStatus(anyLong(), anyInt(), anyInt());
-        verify(refundService, never()).savePreparedRegistrationRefund(any(RefundApplication.class), org.mockito.ArgumentMatchers.nullable(com.chengyinhub.business.service.support.FreeExploreRefundContext.class), org.mockito.ArgumentMatchers.nullable(Long.class));
+        verify(refundService, never()).saveRefund(any(RefundApplication.class));
     }
 
     @Test
@@ -455,7 +455,7 @@ class HostWeatherCancelTest {
 
         assertThrows(ServiceException.class,
                 () -> service.cancelTopicByHost(TOPIC, OWNER, STAFF, "台风停运"));
-        verify(refundService, never()).savePreparedRegistrationRefund(any(RefundApplication.class), org.mockito.ArgumentMatchers.nullable(com.chengyinhub.business.service.support.FreeExploreRefundContext.class), org.mockito.ArgumentMatchers.nullable(Long.class));
+        verify(refundService, never()).saveRefund(any(RefundApplication.class));
     }
 
     /** 重复点:第一次退完后库里这些单已是 4、场次已取消 ⇒ 第二次零退款单,不会退两遍。 */
@@ -466,7 +466,7 @@ class HostWeatherCancelTest {
         CmsActivity shell = activity(SHELL, TOPIC, OWNER);
         paid(3L, 2L, SHELL, 0);
         service.cancelTopicByHost(TOPIC, OWNER, STAFF, "台风停运");
-        verify(refundService, times(2)).savePreparedRegistrationRefund(any(RefundApplication.class), org.mockito.ArgumentMatchers.nullable(com.chengyinhub.business.service.support.FreeExploreRefundContext.class), org.mockito.ArgumentMatchers.nullable(Long.class));
+        verify(refundService, times(2)).saveRefund(any(RefundApplication.class));
 
         // 第一次提交后的库:停售、单已退、场次已取消
         t.setUserStatus(0);
@@ -476,7 +476,7 @@ class HostWeatherCancelTest {
         ActivityCancelResult again = service.cancelTopicByHost(TOPIC, OWNER, STAFF, "台风停运");
 
         assertEquals(0, again.getRefundedOrders());
-        verify(refundService, times(2)).savePreparedRegistrationRefund(any(RefundApplication.class), org.mockito.ArgumentMatchers.nullable(com.chengyinhub.business.service.support.FreeExploreRefundContext.class), org.mockito.ArgumentMatchers.nullable(Long.class));
+        verify(refundService, times(2)).saveRefund(any(RefundApplication.class));
         verify(topicService, times(1)).casUserStatus(anyLong(), anyInt(), anyInt());
     }
 
@@ -492,7 +492,7 @@ class HostWeatherCancelTest {
                 () -> service.cancelTopicByHost(TOPIC, OWNER, STAFF, "台风停运"));
 
         assertEquals(Integer.valueOf(409), conflict.getCode());
-        verify(refundService, never()).savePreparedRegistrationRefund(any(RefundApplication.class), org.mockito.ArgumentMatchers.nullable(com.chengyinhub.business.service.support.FreeExploreRefundContext.class), org.mockito.ArgumentMatchers.nullable(Long.class));
+        verify(refundService, never()).saveRefund(any(RefundApplication.class));
         verify(ticketMapper, never()).restoreInventory(anyLong(), anyLong());
         verify(activityMapper, never()).updateCmsActivity(any(CmsActivity.class));
     }
@@ -516,7 +516,7 @@ class HostWeatherCancelTest {
                 () -> service.cancelTopicByHost(TOPIC, OWNER, STAFF, "台风停运"));
 
         assertEquals(Integer.valueOf(409), conflict.getCode());
-        verify(refundService, never()).savePreparedRegistrationRefund(any(RefundApplication.class), org.mockito.ArgumentMatchers.nullable(com.chengyinhub.business.service.support.FreeExploreRefundContext.class), org.mockito.ArgumentMatchers.nullable(Long.class));
+        verify(refundService, never()).saveRefund(any(RefundApplication.class));
         verify(manualCases, never()).recordCase(any(ActivityCancelManualRefundCase.class));
     }
 
@@ -577,7 +577,7 @@ class HostWeatherCancelTest {
         ActivityCancelResult res = service.cancelTopicByHost(TOPIC, OWNER, STAFF, "台风停运");
 
         verify(clubOps).cancelActivityForAuthorizedTopicCancellation(STAFF, TOPIC, 5L, 202L, "台风停运");
-        verify(refundService, never()).savePreparedRegistrationRefund(any(RefundApplication.class), org.mockito.ArgumentMatchers.nullable(com.chengyinhub.business.service.support.FreeExploreRefundContext.class), org.mockito.ArgumentMatchers.nullable(Long.class));
+        verify(refundService, never()).saveRefund(any(RefundApplication.class));
         assertEquals(1, res.getRefundedOrders());
     }
 }

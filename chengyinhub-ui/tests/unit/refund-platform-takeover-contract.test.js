@@ -17,7 +17,7 @@ function read(relativePath) {
 function loadRefundWorkbench(dependencies) {
   const source = read('src/views/business/finance/refund/index.vue');
   const script = source.match(/<script>([\s\S]*?)<\/script>/)[1]
-    .replace(/^import \{[^}]*\} from '@\/api\/business\/refund'$/m, 'const { listRefund, addRefund, reviewRefund } = dependencies;')
+    .replace(/^import \{ listRefund, addRefund, reviewRefund \} from '@\/api\/business\/refund'$/m, 'const { listRefund, addRefund, reviewRefund } = dependencies;')
     .replace(/^import auth from '@\/plugins\/auth'$/m, 'const auth = dependencies.auth;')
     .replace(/^import (ActivityCancelRefundCases|ManualPayoutQueue|Cy\w+) from .+$/gm, 'const $1 = {};');
   return new Function('dependencies', script.replace(/export\s+default\s*/, 'return '))(dependencies);

@@ -25,18 +25,6 @@ public interface IRefundService {
 
     int saveRefund(RefundApplication refund);
 
-    /** 内部：首次资金/库存/积分副作用前裁定完整付款组，返回仅限本事务的09上下文。 */
-    com.chengyinhub.business.service.support.FreeExploreRefundContext prepareRegistrationFullRefund(
-            Long sourceRegistrationId, java.math.BigDecimal cash);
-
-    /** 内部：在同一事务复用事前准备并绑定原生成ID；取代时必须提供原待审ID。 */
-    int savePreparedRegistrationRefund(RefundApplication refund,
-            com.chengyinhub.business.service.support.FreeExploreRefundContext context, Long replacesRefundId);
-
-    void completeZeroCashRegistrationRefund(
-            com.chengyinhub.business.service.support.FreeExploreRefundContext context);
-
-
     /** 后台运营建单(RefundController.add):多票订单首单只能退同单还没退、也没核销的部分(FX-04)。 */
     int saveBackOfficeRefund(RefundApplication refund);
 
