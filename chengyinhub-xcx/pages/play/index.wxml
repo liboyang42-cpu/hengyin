@@ -87,7 +87,7 @@
       <view class="radar__disc">
         <free-map class="fx-story__radar-map" wx:if="{{!storyMap && !chapterGate.show && !sessionToolsOpen && !previewEnding.show && !themeBackpackOpen && !album.show && !playKit.show && !(advancedPlay.show && !playKit.kit) && screen !== 'gamePlay'}}"
                   nodes="{{fmNodes}}" player="{{fmPlayer}}" target="{{nextNode}}"
-                  center="{{fmPlayer && fmPlayer.lat ? fmPlayer : (nextNode && nextNode.lat ? nextNode : fmCenter)}}" scale="16"
+                  center="{{fmPlayer && fmPlayer.lat ? fmPlayer : (nextNode && nextNode.lat ? nextNode : fmCenter)}}" scale="16" fit="{{true}}" fit-padding="{{[54, 54, 54, 54]}}"
                   subkey="{{fmSubkey}}" layer-style="{{fmLayerStyle}}" interactive="{{false}}" show-controls="{{false}}" show-photo-callouts="{{false}}"
                   accessibility-label="小地图" reduced-motion="{{reducedMotion}}" compact="{{true}}" />
         <view class="compass__n radar__n" wx:else>N</view>
@@ -122,7 +122,7 @@
        下一站给「导航过去」(微信地图),站内不接管导航。 -->
   <view class="story-map" wx:if="{{storyMap}}">
     <free-map class="story-map__map" wx:if="{{storyMap}}" nodes="{{fmNodes}}" player="{{fmPlayer}}" target="{{nextNode}}"
-              center="{{storyMapCenter}}" scale="16" map-polyline="{{fmPolyline}}"
+              center="{{storyMapCenter}}" scale="16" map-polyline="{{fmPolyline}}" fit="{{true}}" fit-padding="{{[140, 48, 240, 48]}}"
               subkey="{{fmSubkey}}" layer-style="{{fmLayerStyle}}" show-controls="{{false}}" show-photo-callouts="{{false}}"
               reduced-motion="{{reducedMotion}}" />
     <view class="story-map__back" style="top:{{chrome.contentTop}}px" bindtap="closeStoryMap" aria-role="button" aria-label="收起地图，回到故事" hover-class="cy-pressed" hover-stay-time="80">
@@ -133,7 +133,7 @@
         <text class="story-map__k">下一站{{storyDistText ? ' · ' + storyDistText : ''}}</text>
         <text class="story-map__t">{{nextNode.name}}</text>
       </view>
-      <view class="story-map__go" bindtap="openNextStopNav" aria-role="button" aria-label="用微信地图导航到{{nextNode.name}}" hover-class="cy-pressed" hover-stay-time="80">导航过去</view>
+      <view class="story-map__go" wx:if="{{nextNode.lat && nextNode.lng}}" bindtap="openNextStopNav" aria-role="button" aria-label="用微信地图导航到{{nextNode.name}}" hover-class="cy-pressed" hover-stay-time="80">导航过去</view>
     </view>
   </view>
   <!-- 游玩工具:2026-09-22 起从底栏抽屉转移到故事流右上角(用户裁决)。行内容一行未改,只换了容器与定位。 -->
@@ -1237,8 +1237,8 @@
    <view wx:if="{{themeBag.replayAllowed === true}}" bindtap="replayThemeSession" aria-role="button" aria-label="再玩一次" aria-disabled="{{themeReplayBusy}}" hover-class="cy-pressed" hover-stay-time="80">{{themeReplayBusy ? '正在开启新一局' : '再玩一次'}}</view>
    <cy-inline-error wx:if="{{themeRecordsError}}" aria-live="polite" kind="error" title="{{themeRecordsError}}" load-failure="{{themeRecordsReadFailure}}" />
   </view>
-  <view class="finsheet__title">{{allDone ? topicName : chapter.name}}</view>
-  <view class="finsheet__result">{{milestone ? milestone.title : (allDone ? '已通关' : '本章完成')}}</view>
+  <view class="finsheet__title">{{allDone || topicCompleted ? topicName : chapter.name}}</view>
+  <view class="finsheet__result">{{milestone ? milestone.title : (allDone || topicCompleted ? '已通关' : '本章完成')}}</view>
   <view class="finsheet__game-ending" wx:if="{{gameModule.story.ending}}">
     <text class="finsheet__game-ending-k">本局结局</text>
     <text class="finsheet__game-ending-title">{{gameModule.story.ending.title}}</text>
@@ -1266,7 +1266,7 @@
   <view class="finsheet__map">
     <image class="finsheet__map-fallback" wx:if="{{finishSnap}}" src="{{finishSnap}}" mode="aspectFit"></image>
     <free-map class="finsheet__map-native" nodes="{{newLifeOS.show && newLifeOS.mapNodes.length ? newLifeOS.mapNodes : fmNodes}}" player="{{fmPlayer}}"
-              center="{{fmCenter}}" scale="14" map-polyline="{{fmPolyline}}"
+              center="{{fmCenter}}" scale="14" map-polyline="{{fmPolyline}}" fit="{{true}}" fit-padding="{{[64, 36, 36, 36]}}"
               subkey="{{fmSubkey}}" layer-style="{{fmLayerStyle}}"
               show-controls="{{false}}" show-photo-callouts="{{false}}" interactive="{{false}}" />
     <view class="os-map-label" wx:if="{{newLifeOS.show}}">3km 生活圈 · {{newLifeOS.mapAnchors.length}} 个地点</view>

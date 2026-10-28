@@ -265,6 +265,7 @@ Page({
     gameSheetOpen: false,
     // 找东西:当前要在图上标位置的那个目标(-1 = 没在标)
     hotspotArming: -1,
+    hotspotFrame: '',
     // 选择玩法半屏:分类快捷条当前在哪一组、要滚到哪个锚点
     sheetGroup: 0,
     sheetAnchor: '',
@@ -2443,6 +2444,18 @@ Page({
     this.setData({ hotspotArming: this.data.hotspotArming === index ? -1 : index });
   },
 
+  onHotspotImgLoad: function (e) {
+    const d = (e && e.detail) || {};
+    if (!(d.width > 0) || !(d.height > 0)) return;
+    wx.createSelectorQuery().in(this).select('.cg-ho-scene').boundingClientRect((box) => {
+      if (!box || !(box.width > 0) || !(box.height > 0)) return;
+      const s = Math.min(box.width / d.width, box.height / d.height);
+      const w = (d.width * s / box.width) * 100;
+      const h = (d.height * s / box.height) * 100;
+      const pct = (v) => Number(v.toFixed(3));
+      this.setData({ hotspotFrame: 'left:' + pct((100 - w) / 2) + '%;top:' + pct((100 - h) / 2) + '%;width:' + pct(w) + '%;height:' + pct(h) + '%;' });
+    }).exec();
+  },
   placeHotspot: function (e) {
     const index = this.data.hotspotArming;
     if (index < 0) return;
@@ -2451,7 +2464,7 @@ Page({
     const touch = (e.touches && e.touches[0]) || e.detail || {};
     const px = touch.x != null ? touch.x : touch.clientX;
     const py = touch.y != null ? touch.y : touch.clientY;
-    wx.createSelectorQuery().in(this).select('.cg-ho-scene').boundingClientRect((rect) => {
+    wx.createSelectorQuery().in(this).select('.cg-ho-frame').boundingClientRect((rect) => {
       /* 量不到图的位置(还没布局完)就什么都不改 —— 这时候写进去的是一个错坐标,
          比不写更糟:商家看不出错,玩家点哪儿都不中。 */
       if (!rect || !(rect.width > 0) || !(rect.height > 0)) {
