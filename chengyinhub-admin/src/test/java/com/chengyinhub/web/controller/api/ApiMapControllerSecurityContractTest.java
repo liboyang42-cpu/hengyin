@@ -62,4 +62,24 @@ class ApiMapControllerSecurityContractTest {
         assertEquals("MAP_RATE_LIMITED", data.get("reason"));
         verify(geocodeService, times(1)).resolveCity(120.1551D, 30.2741D);
     }
+
+    @Test
+    void placeSearchValidatesInputAndSharesTheProviderRateBudget() {
+        IMapGeocodeService geocodeService = mock(IMapGeocodeService.class);
+        when(geocodeService.searchPlaces("海星市场", 121.37D, 31.10D))
+                .thenReturn(java.util.Collections.singletonList(java.util.Collections.singletonMap("name", "海星市场")));
+        ApiMapController controller = new ApiMapController();
+        ReflectionTestUtils.setField(controller, "mapGeocodeService", geocodeService);
+        ReflectionTestUtils.setField(controller, "reverseGeocodePerMinute", 1);
+
+        assertEquals(500, controller.placeSearch("  ", "121.37", "31.10").get(AjaxResult.CODE_TAG));
+        assertEquals(500, controller.placeSearch("海星市场", "999", "31.10").get(AjaxResult.CODE_TAG));
+        AjaxResult ok = controller.placeSearch(" 海星市场 ", "121.37", "31.10");
+        assertEquals(200, ok.get(AjaxResult.CODE_TAG));
+        assertEquals(1, ((java.util.List<?>) ok.get(AjaxResult.DATA_TAG)).size());
+
+        AjaxResult limited = controller.placeSearch("海星市场", "121.37", "31.10");
+        assertTrue(((java.util.List<?>) limited.get(AjaxResult.DATA_TAG)).isEmpty(), "额度用完返回空列表,不再打供应商");
+        verify(geocodeService, times(1)).searchPlaces("海星市场", 121.37D, 31.10D);
+    }
 }
