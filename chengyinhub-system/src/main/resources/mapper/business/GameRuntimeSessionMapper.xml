@@ -216,14 +216,5 @@
         </choose>
         limit #{limit}
     </select>
-    <select id="selectDefaultMemberSessionsByTopic" resultMap="GameRuntimeSessionResult">
-        select <include refid="columns"/> from game_runtime_session s
-        where s.activity_id=#{activityId} and s.topic_id=#{topicId} and s.play_instance_id='default'
-          and ((s.owner_type=1 and s.owner_id=#{memberId})
-            or (s.owner_type=2 and exists (
-                select 1 from play_team_member m
-                where m.team_id=s.owner_id and m.member_id=#{memberId} and m.status=1)))
-        order by s.id
-    </select>
 
 </mapper>
