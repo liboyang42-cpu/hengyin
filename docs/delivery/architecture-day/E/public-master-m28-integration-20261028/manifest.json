@@ -1,0 +1,50 @@
+{
+  "parent": "d4cc5c59f65dcc0196a88eb556de9a10b663c56d",
+  "governance": "a50f661e157bf56b1c40d3f590c8dcc1dd513003",
+  "mergeBase": "e52eab7e44835ff6440761eebcdd1420a6406384",
+  "verification": "NOT_RUN",
+  "owned": {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java",
+    "masterBlob": "1eee0ff80e496fa32f14186b0f7b637bab894dc5",
+    "governanceBlob": "c94a7c3228f9af71c14d632dc99699a91874ec11",
+    "postBlob": "c94a7c3228f9af71c14d632dc99699a91874ec11",
+    "postSha256": "8666e1f87d8f8912eb2e65e737df7616adf866cf83346289d75f4c48c8e74772",
+    "bytes": 215390,
+    "equalsGovernance": true,
+    "deleted": false
+  },
+  "sharedReview": [
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/TopicPublicationContentGuard.java",
+      "basis": "a50f661e157bf56b1c40d3f590c8dcc1dd513003",
+      "beforeBlob": "4943ce9172572aa591280e1e71c07a389e5c5908",
+      "afterBlob": "e30540b9e0b5a12aabfa74b82a97f0c99927c104",
+      "bytes": 58485,
+      "postSha256": "232e76241a711f50e03b31b941b5a3b3af500a4f75f871e81d71a599cea7ff8f",
+      "testAnnotationCounts": null
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicPublishNarrativeNpcGuardTest.java",
+      "basis": "a50f661e157bf56b1c40d3f590c8dcc1dd513003",
+      "beforeBlob": "c9d8803b53ddedcd6aaafe574aa2957c182ab4db",
+      "afterBlob": "f177f04517b800e0c50fc9f8e629edda453f795f",
+      "bytes": 23399,
+      "postSha256": "028ad6fdffe14be0dd18a5aaa75083cd5b836d1e88bde9a35a6b80cfde7ef3c5",
+      "testAnnotationCounts": {
+        "before": 5,
+        "after": 10
+      }
+    }
+  ],
+  "newTestSourceCases": 5,
+  "patches": {
+    "owned.patch": {
+      "bytes": 268326,
+      "sha256": "e9be12ae461e08dbb32bfe90637361cedc90095e355e81ddcf2ddd64c9972e2d"
+    },
+    "shared-m28.review.patch": {
+      "bytes": 12961,
+      "sha256": "0ce0c41e3b2ee6d1dce7e9b98562d63197bad5ad15901e4e4d9566116c8210a6"
+    }
+  }
+}
