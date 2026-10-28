@@ -1,0 +1,58 @@
+[
+  {
+    "path": "chengyinhub-xcx/tests/unit/mini-static-evidence-d192.test.js",
+    "delivery": "owned",
+    "preimage": "2cdb072c85a2f3767bca5302fadb15dbd0b18b95",
+    "postimage": "7054a7f2ecf1d76001bf851aaabf26a88fe3eb35",
+    "sha256": "e1eb175f12b02ed75cfce37a0badb366d657b95c0b4197e29f6a4c2ff8b7a518"
+  },
+  {
+    "path": "chengyinhub-xcx/tests/unit/verification-original-request.test.js",
+    "delivery": "owned",
+    "preimage": "ce3c0c7341933a4097558c8d13297975674e0227",
+    "postimage": "bce4ed10da156c25c335226e79c2218429108e14",
+    "sha256": "85d6bbfeab9c6aa2736890f7e14acce8e56bd6630f44d7f2085c47627c62f360"
+  },
+  {
+    "path": "chengyinhub-xcx/tests/unit/silent-error-reviewed-recovery.test.js",
+    "delivery": "owned",
+    "preimage": "382f8001b258a2688e0a41aa60fcc25f14fdd937",
+    "postimage": "6d3b1d1c35f43c5c512f9cb144dba06ccba7f9f0",
+    "sha256": "e866e10a860dc6cc2c28cd8e6aa7ae427888f111367ded97cb2b2aa0e473a5d0"
+  },
+  {
+    "path": "chengyinhub-xcx/tests/unit/guest-browse-login-on-write.test.js",
+    "delivery": "owned",
+    "preimage": "aeabf7f0266f04ce069dd2bb24be4214e1e33074",
+    "postimage": "f309bc5090fa5dd86baadd87aacf7dd2c1aff77b",
+    "sha256": "948c15a102a69f42d2819dfcca06364fbeb12534f35d27da20ea7568fb556dba"
+  },
+  {
+    "path": "chengyinhub-xcx/tests/unit/ui-integrity-u1-seat-callers-ee815.test.js",
+    "delivery": "owned",
+    "preimage": "8c5f334424f4d67f67c364c775c4234862d45ead",
+    "postimage": "72c1eaa8054233c32172b57979df7256481350de",
+    "sha256": "d5afedc6ae058677e28f7cc7a2200b78f4790b234c3d9da14757a240f592dac8"
+  },
+  {
+    "path": "chengyinhub-xcx/tests/unit/play-request-recovery.test.js",
+    "delivery": "owned",
+    "preimage": "a8f223ee32c0f9cd9c21d611d8a114617ab5cf93",
+    "postimage": "b73c74b08acaf22625cf27064ab8648c58dc316b",
+    "sha256": "ae57038f61c32c63c4ed2399ffd53c0050093d78ca3ea553fe1d55e116688dab"
+  },
+  {
+    "path": "chengyinhub-xcx/utils/verification-readback.js",
+    "delivery": "production",
+    "preimage": "dca58760395766530449d36cd9ae56ced75badda",
+    "postimage": "dff1f6d5ca815cc9d131d08b68b38490841e01be",
+    "sha256": "6cbcefd1d9fb82ee69407569e5c97548776ddfa572bda36ad7e0bed0440e9c5c"
+  },
+  {
+    "path": "chengyinhub-xcx/tests/lint/ui-integrity-baseline.js",
+    "delivery": "baseline",
+    "preimage": "655007b9abbd143e019abc8ff54f648f846e2b9c",
+    "postimage": "57f1543f08efd22a0211b17e1366fdebb5d5040c",
+    "sha256": "c88cca15086c22b6a10f6d06df2004907844ef31befe42ac8fda3b7615f5e185"
+  }
+]

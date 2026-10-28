@@ -1,0 +1,340 @@
+diff --git a/chengyinhub-xcx/tests/unit/mini-static-evidence-d192.test.js b/chengyinhub-xcx/tests/unit/mini-static-evidence-d192.test.js
+index 2cdb072..7054a7f 100644
+--- a/chengyinhub-xcx/tests/unit/mini-static-evidence-d192.test.js
++++ b/chengyinhub-xcx/tests/unit/mini-static-evidence-d192.test.js
+@@ -24,12 +24,19 @@ test('五处路线动态投影仅提交真实固定展示字段；每项登记
+   }
+ });
+ 
+-test('原席位只读恢复的静默失败逐请求登记，删除本调用理由仍红',()=>{
++test('原席位回查保留完整回调与禁自动toast，退役flag不得借旧理由重新静默',(t)=>{
+   const file=path.join(root,'utils/registration-seat.js'),key='chengyinhub-xcx/utils/registration-seat.js:62';
+   const approved=new Map(Object.entries(baseline.u5Silent));
+   assert.equal(scanU5([file],approved).violations.length,0);
+-  approved.delete(key);assert.ok(scanU5([file],approved).violations.some(row=>row.key===key));
+   const source=fs.readFileSync(file,'utf8');
++  assert.equal(approved.has(key),false);
++  assert.doesNotMatch(source,/silentError:\s*true/);
++  assert.match(source,/autoErrorToast:\s*false/);
++  const injected=source.replace('hideLoading: true, autoErrorToast: false','hideLoading: true, silentError: true, autoErrorToast: false');
++  assert.notEqual(injected,source);
++  const originalRead=fs.readFileSync;
++  t.mock.method(fs,'readFileSync',function(target,...args){return target===file?injected:originalRead.call(this,target,...args);});
++  assert.ok(scanU5([file],approved).violations.some(row=>row.key===key));
+   assert.match(source,/if \(!isCurrent\(\)\) return null/);
+   assert.match(source,/url: '\/api\/verify\/seat\/receipt'/);
+   assert.match(source,/fail: \(\) => done\(null\)/);
+diff --git a/chengyinhub-xcx/tests/unit/verification-original-request.test.js b/chengyinhub-xcx/tests/unit/verification-original-request.test.js
+index ce3c0c7..bce4ed1 100644
+--- a/chengyinhub-xcx/tests/unit/verification-original-request.test.js
++++ b/chengyinhub-xcx/tests/unit/verification-original-request.test.js
+@@ -56,14 +56,29 @@ test('late old callback cannot remove a newer attempt after exact confirmation',
+   h.workflow.run(key, done => { oldDone = done; }, () => assert.fail('stale callback'));
+   const old = h.workflow.pendingRequest(key).requestId;
+   assert.equal(h.workflow.confirmRequest(key, old), true);
+-  h.workflow.run(key, done => done({ status: 'unknown' }), () => {});
++  let replacement;
++  assert.equal(h.workflow.run(key, (done, identity) => { replacement = identity.requestId; done({ status: 'unknown' }); }, () => {}), true);
+   const current = h.workflow.pendingRequest(key).requestId;
++  assert.equal(replacement, current);
+   assert.notEqual(current, old);
+   oldDone({ status: 'success' });
++  oldDone({ status: 'failed' });
+   assert.equal(h.workflow.pendingRequest(key).requestId, current);
+   assert.equal(h.workflow.isBusy(key), true);
+ });
+ 
++test('exact confirmation retires callback before synchronous abort can settle a replacement', () => {
++  const h = fixture(); let oldDone, aborted = 0;
++  h.workflow.run(key, done => { oldDone = done; return { abort() { aborted++; oldDone({ status: 'success' }); } }; },
++    () => assert.fail('confirmed original callback must be retired'));
++  const old = h.workflow.pendingRequest(key).requestId;
++  assert.equal(h.workflow.confirmRequest(key, old), true); assert.equal(aborted, 1);
++  assert.equal(h.workflow.run(key, done => done({ status: 'unknown' }), () => {}), true);
++  const current = h.workflow.pendingRequest(key).requestId;
++  assert.notEqual(current, old); oldDone({ status: 'success' });
++  assert.equal(h.workflow.pendingRequest(key).requestId, current); assert.equal(h.workflow.isBusy(key), true);
++});
++
+ test('storage failure keeps the exact pending record and lock', () => {
+   const h = fixture();
+   h.workflow.run(key, done => done({ status: 'unknown' }), () => {});
+diff --git a/chengyinhub-xcx/tests/unit/silent-error-reviewed-recovery.test.js b/chengyinhub-xcx/tests/unit/silent-error-reviewed-recovery.test.js
+index 382f800..6d3b1d1 100644
+--- a/chengyinhub-xcx/tests/unit/silent-error-reviewed-recovery.test.js
++++ b/chengyinhub-xcx/tests/unit/silent-error-reviewed-recovery.test.js
+@@ -12,9 +12,9 @@ const { captureLogin, loginCurrent, seatKey, seatRecovery } = require('../../uti
+ const root = path.resolve(__dirname, '../../..')
+ const parsed = gate.parseAllowlist(fs.readFileSync(path.join(root, 'ci/silent-error-allowlist.txt'), 'utf8'))
+ const reviewed = [
+-  { file: 'pages/merchant/citynode/index.js', count: 8 },
+-  { file: 'pages/play/index.js', count: 2 },
+-  { file: 'utils/registration-seat.js', count: 1 },
++  { file: 'pages/merchant/citynode/index.js', count: 7 },
++  { file: 'pages/play/index.js', count: 1 },
++  { file: 'utils/registration-seat.js', count: 0 },
+ ]
+ const sources = reviewed.map(item => ({ file: item.file,
+   source: fs.readFileSync(path.join(root, 'chengyinhub-xcx', item.file), 'utf8') }))
+@@ -22,7 +22,7 @@ const mini = shared.filter(entry => reviewed.some(item => entry.file === item.fi
+ const originalEntries = new Map(reviewed.map(item => {
+   const file = 'chengyinhub-xcx/' + item.file
+   return [file, parsed.entries.get(file)]
+-}))
++}).filter(([, entry]) => entry))
+ function rootResult(input) {
+   const actual = new Map(input.map(item => ['chengyinhub-xcx/' + item.file, gate.findSilentErrorSites(item.source)])
+     .filter(([, sites]) => sites.length))
+@@ -35,6 +35,11 @@ test('both U5 readers share exact reviewed counts while frozen baseline stays un
+   assert.equal(parsed.baselineTotal.declared, 72)
+   for (const item of reviewed) {
+     const entry = originalEntries.get('chengyinhub-xcx/' + item.file)
++    if (item.count === 0) {
++      assert.equal(entry, undefined); assert.equal(mini.find(value => value.file === item.file), undefined);
++      assert.equal(gate.findSilentErrorSites(sources.find(value => value.file === item.file).source).length, 0);
++      continue;
++    }
+     assert.equal(entry.allowed, item.count)
+     assert.equal(mini.find(value => value.file === item.file).count, item.count)
+   }
+@@ -45,19 +50,20 @@ test('both U5 readers share exact reviewed counts while frozen baseline stays un
+   }
+   const added = [...originalEntries.values()].flatMap(entry => entry.lines)
+     .filter(line => line.reason.startsWith('2026-10-24 '))
+-  assert.equal(added.length, 4)
++  assert.equal(added.length, 1)
+   assert.ok(added.every(line => line.count === 1 && /UNKNOWN/.test(line.reason)))
+   assert.equal(rejectionCount(rootResult(sources)), 0)
+   const result = findU5Issues(sources, mini)
+   assert.deepEqual(result.issues, [])
+-  assert.equal(result.fileCount, 3)
+-  assert.equal(result.callCount, 11)
++  assert.equal(result.fileCount, 2)
++  assert.equal(result.callCount, 8)
+ })
+ 
+ test('adding/removing any reviewed call or using a sibling path still fails both gates', () => {
+   for (const item of sources) {
+-    for (const source of [item.source + '\napp.sendRequest({silentError:true})',
+-      item.source.replace(/\bsilentError\s*:\s*true\b/, 'silentError:false')]) {
++    const mutations = [item.source + '\napp.sendRequest({silentError:true})'];
++    if (/\bsilentError\s*:\s*true\b/.test(item.source)) mutations.push(item.source.replace(/\bsilentError\s*:\s*true\b/, 'silentError:false'));
++    for (const source of mutations) {
+       assert.notEqual(source, item.source)
+       const changed = sources.map(value => value === item ? { ...item, source } : value)
+       assert.ok(rejectionCount(rootResult(changed)) > 0, item.file)
+@@ -92,7 +98,8 @@ test('shared receipt failure keeps original UNKNOWN without repost and ignores a
+     assert.equal(run(), true)
+     const request = requests.at(-1)
+     assert.equal(request.url, '/api/verify/seat/receipt')
+-    assert.equal(request.silentError, true)
++    assert.equal(request.silentError, undefined)
++    assert.equal(request.autoErrorToast, false)
+     assert.deepEqual(request.data, target)
+     request[kind]({ code: 500, msg: 'controlled unreadable receipt' })
+     assert.equal(results.at(-1), 'unknown')
+diff --git a/chengyinhub-xcx/tests/unit/guest-browse-login-on-write.test.js b/chengyinhub-xcx/tests/unit/guest-browse-login-on-write.test.js
+index aeabf7f..f309bc5 100644
+--- a/chengyinhub-xcx/tests/unit/guest-browse-login-on-write.test.js
++++ b/chengyinhub-xcx/tests/unit/guest-browse-login-on-write.test.js
+@@ -188,12 +188,41 @@ for (const [file, name, reason] of WRITE_ENTRIES) {
+     const head = new RegExp('^ {2,4}' + name + '(?:\\s*:\\s*function\\s*)?\\s*\\(([^)]*)\\)\\s*\\{[ \\t]*\\n([^\\n]*)\\n', 'm');
+     const m = src.match(head);
+     assert.ok(m, file + ' 找不到 ' + name);
+-    assert.match(m[2], new RegExp("if \\(app\\.ensureLoginFor && !app\\.ensureLoginFor\\('" + reason + "', \\(\\) => this\\." + name + '\\('),
+-      name + ' 第一行必须是写前登录闸,登录后恢复的是同一个函数');
+-    assert.match(m[2], /owner: this, target: \(\) => \[/, name + ' 必须声明原页面/组件和稳定业务身份');
++    let admission = m[2];
++    if (file === 'pages/square/components/cy/post-compose/index.js') {
++      assert.equal(admission.trim(), 'if (this._disposed || !this._composeVisible) return;',
++        '只允许这个原纯生命周期拒绝先于登录，不能移到登录后或执行其它效果');
++      const start = m.index + m[0].length;
++      const end = src.indexOf('      const that = this;', start);
++      assert.ok(end > start);
++      admission = src.slice(start, end).trim();
++      assert.match(admission, /^if \(app\.ensureLoginFor/);
++      assert.match(admission, /\}\)\) return;\s*(?:\/\/[^\n]*)?$/);
++    }
++    assert.match(admission, new RegExp("if \\(app\\.ensureLoginFor && !app\\.ensureLoginFor\\('" + reason + "', \\(\\) => this\\." + name + '\\('),
++      name + ' 首个有副作用步骤必须是写前登录闸，恢复同一个函数');
++    assert.match(admission, /owner:\s*this,\s*target:\s*\(\)\s*=>\s*\[/,
++      name + ' 必须声明原页面/组件和稳定业务身份');
+   });
+ }
+ 
++
++test('原发帖组件已离页/隐藏时不登录不dispatch，合法可见入口先登录', () => {
++  const source = read('pages/square/components/cy/post-compose/index.js');
++  const start = source.indexOf('    onPublish() {');
++  const end = source.indexOf('\n    },', start);
++  assert.ok(start >= 0 && end > start);
++  let login = 0;
++  const app = { ensureLoginFor(reason, resume, context) {
++    login++; assert.equal(reason, 'post'); assert.equal(typeof resume, 'function');
++    assert.equal(context.owner, page); return false;
++  } };
++  const page = new Function('app', 'return ({' + source.slice(start, end + 7) + '});')(app);
++  for (const state of [{ _disposed: true, _composeVisible: true }, { _disposed: false, _composeVisible: false }]) {
++    Object.assign(page, state); page.onPublish(); assert.equal(login, 0);
++  }
++  Object.assign(page, { _disposed: false, _composeVisible: true }); page.onPublish(); assert.equal(login, 1);
++});
+ test('C 工具层写入口:举报 run() 与建队 createActivityTeam 也先过闸', () => {
+   assert.match(read('utils/content-report.js'), /app\.ensureLoginFor && !app\.ensureLoginFor\('report', function \(\) \{ run\(page, app, id, submit\); \}, \{ owner: page, target: \(\) => \[id, page\.data && page\.data\.id, page\.data && page\.data\.clubId\] \}\)\) return false;/);
+   assert.match(read('subpackageMember/utils/team-up.js'), /app\.ensureLoginFor && !app\.ensureLoginFor\('team', \(\) => createActivityTeam\(app, activityId, maxMembers, joinMode, callbacks\), callbacks && callbacks\.loginContext\)\) return/);
+@@ -288,13 +317,28 @@ function continuationFixture() {
+   let definition, finishLogin;
+   vm.runInNewContext(read('pages/team/join/index.js'), {
+     Page: page => { definition = page; }, getApp: () => h.app,
+-    require: id => { assert.equal(id, '../../../utils/toast.js'); return () => {}; },
++    require: id => {
++      if (id === '../../../utils/toast.js') return () => {};
++      assert.ok(['../../../utils/user-character.js', '../../../utils/team-event-command.js'].includes(id), id);
++      return require(path.resolve(root, 'pages/team/join', id));
++    },
+     getCurrentPages: () => h.pages, wx: h.wx, setTimeout: () => 0,
+   });
+   const page = Object.assign({}, definition, { route: 'pages/team/join/index', inviteCode: 'original-invite' });
+   page.data = JSON.parse(JSON.stringify(definition.data));
+   page.setData = patch => Object.assign(page.data, patch);
+   h.pages.splice(0, h.pages.length, page);
++  // 复用当前 Page 的公开邀请读取和真实持久 command owner，不再模拟已撤的裸 /team/join。
++  h.wx.getRandomValues = options => options.success({ randomValues: new Uint8Array(16).fill(17).buffer });
++  const request = h.wx.request;
++  h.wx.request = options => {
++    const task = request(options);
++    if (options.url.endsWith('/api/team/info')) options.success({ statusCode: 200,
++      data: { code: 200, data: { team: { id: '31' }, joined: false } } });
++    return task;
++  };
++  page.onLoad({ code: 'original-invite' });
++  assert.equal(page.teamId, '31');
+   h.app._loginGuard = guard.createRequireLogin({ getApp: () => h.app, getPages: () => h.pages,
+     show: options => modals.push(options) });
+   const manager = createSessionManager({ session: h.app.getSession(), wxLogin: () => Promise.resolve({ code: 'controlled-code' }),
+@@ -306,7 +350,8 @@ function continuationFixture() {
+   });
+   return Object.assign(h, { page, modals, finish: () => finishLogin(),
+     confirm: async () => { modals[0].success({ confirm: true }); await settle(); },
+-    writes: () => h.requests.filter(request => request.url.endsWith('/api/team/join')) });
++    writes: () => h.requests.filter(request => request.url.endsWith('/api/team/command')
++      && JSON.parse(request.data).action === 'join') });
+ }
+ 
+ test('H continuation: login in flight then leaving the original Page must not join', async () => {
+@@ -328,6 +373,11 @@ test('H continuation: same live Page and original invite continue exactly once',
+   await h.confirm(); h.finish(); await settle();
+   assert.equal(h.writes().length, 1);
+   assert.equal(JSON.parse(h.writes()[0].data).inviteCode, 'original-invite');
++  assert.equal(JSON.parse(h.writes()[0].data).targetId, '31');
++  const command = JSON.parse(h.writes()[0].data);
++  const pending = [...h.storage.values()].find(row => row && row.command && row.command.requestId === command.requestId);
++  assert.ok(pending); assert.equal(pending.actor, '7');
++  assert.deepEqual(pending.command, command);
+ });
+ 
+ test('H continuation: hide then return and a different instance of the same route cannot revive the old join', async () => {
+@@ -382,7 +432,7 @@ test('H continuation: real login attempt rejects guest-account ABA before the ex
+ 
+ test('H continuation: a fresh explicit click after hiding can use its own live context', async () => {
+   const h = continuationFixture(); h.page.join(); await h.confirm();
+-  h.page.onHide(); h.page.join(); h.finish(); await settle();
++  h.page.onHide(); h.page.onShow(); h.page.join(); h.finish(); await settle();
+   assert.equal(h.writes().length, 1, 'only the new explicit action may continue');
+   assert.equal(JSON.parse(h.writes()[0].data).inviteCode, 'original-invite');
+ });
+diff --git a/chengyinhub-xcx/tests/unit/ui-integrity-u1-seat-callers-ee815.test.js b/chengyinhub-xcx/tests/unit/ui-integrity-u1-seat-callers-ee815.test.js
+index 8c5f334..72c1eaa 100644
+--- a/chengyinhub-xcx/tests/unit/ui-integrity-u1-seat-callers-ee815.test.js
++++ b/chengyinhub-xcx/tests/unit/ui-integrity-u1-seat-callers-ee815.test.js
+@@ -92,8 +92,11 @@ function assertCallers(source, expected, scanKind) {
+     const url = options.get('url');
+     if (url.type === 'Literal') return url.value;
+     if (url.type === 'Identifier' && url.name === 'url') {
++      const scope = nodes(source, n => /^(FunctionExpression|ArrowFunctionExpression|FunctionDeclaration)$/.test(n.type)
++        && n.start <= call.start && n.end >= call.end).sort((a, b) => (a.end - a.start) - (b.end - b.start))[0];
++      assert.ok(scope, '须核对实际调用闭包而不是别的方法同名变量');
+       const declarations = nodes(source, n => n.type === 'VariableDeclarator' && n.id.name === 'url'
+-        && n.init && n.init.type === 'ConditionalExpression');
++        && n.start >= scope.start && n.end <= scope.end && n.init && n.init.type === 'ConditionalExpression');
+       assert.equal(declarations.length, 1);
+       const values = [];
+       let choice = declarations[0].init;
+@@ -120,8 +123,10 @@ function assertCallers(source, expected, scanKind) {
+   assert.match(source, /target \? seatRecovery\(app,\s*target,\s*seatCurrent\) : undefined/);
+ }
+ test('U1只保留原profile请求登记，带队与详情有限路径不保留旧豁免', () => {
+-  for (const [file, line, statement] of [
+-    [PROFILE, 676, 'app.sendRequest(Object.assign({}, options'],
++  const line = read(PROFILE).split('\n').findIndex(row => row.includes('return app.sendRequest(Object.assign({}, options,')) + 1;
++  assert.ok(line > 0);
++  for (const [file, statement] of [
++    [PROFILE, 'app.sendRequest(Object.assign({}, options'],
+   ]) {
+     const key = 'chengyinhub-xcx/' + file + ':' + line;
+     assert.ok(baseline.u1Variable[key], key);
+diff --git a/chengyinhub-xcx/tests/unit/play-request-recovery.test.js b/chengyinhub-xcx/tests/unit/play-request-recovery.test.js
+index a8f223e..b73c74b 100644
+--- a/chengyinhub-xcx/tests/unit/play-request-recovery.test.js
++++ b/chengyinhub-xcx/tests/unit/play-request-recovery.test.js
+@@ -58,7 +58,7 @@ function setByPath(target, path, value) {
+   cursor[parts[parts.length - 1]] = value
+ }
+ 
+-function loadPage(modulePath) {
++function loadPage(modulePath, { prebound = true } = {}) {
+   delete require.cache[require.resolve('../../pages/play/utils/play-route-state.js')]
+   delete require.cache[require.resolve(modulePath)]
+   require(modulePath)
+@@ -70,7 +70,7 @@ function loadPage(modulePath) {
+     if (callback) callback()
+   }
+   // 此组测试从“动作上下文已预检完成”开始；预检与切号由 architecture-day-c-intent 覆盖。
+-  if (modulePath === PLAY_PAGE) {
++  if (modulePath === PLAY_PAGE && prebound) {
+     const payload = page._routeWritePayload
+     page._routeWritePayload = function (kind, nodeId, input) {
+       const body = payload.call(this, kind, nodeId, input)
+@@ -243,7 +243,7 @@ test('一次性打卡码已用过时展示服务端文案，不塌成对不上
+ test('5-3 注入③:/api/play/checkin 返回 500 时玩家看到明确错误', async () => {
+   const toasts = []
+   global.wx.showToast = (value) => { toasts.push(value) }
+-  const page = loadPage(PLAY_PAGE)
++  const page = loadPage(PLAY_PAGE, { prebound: false })
+ 
+   page.checkin(7, 'SHOP-CODE')
+   assert.equal(requests.length, 1)
+@@ -563,7 +563,7 @@ test('章节回执读失败仍保留原身份，重试查到终态才能解锁',
+ })
+ 
+ test('不相关节点的成功响应不能清除另一类待确认写锁', async () => {
+-  const page = loadPage(PLAY_PAGE)
++  const page = loadPage(PLAY_PAGE, { prebound: false })
+   page.data.nodes = [
+     { nodeId: 7, points: 12 },
+     { nodeId: 8, points: 12 },
+@@ -578,18 +578,20 @@ test('不相关节点的成功响应不能清除另一类待确认写锁', async
+   page.buildJournal = () => {}
+ 
+   page.submitGame()
+-  requests[0].successStatusAbnormal({ code: 500, msg: 'gateway timeout' })
++  await bindOriginalRun(0)
++  requests[1].successStatusAbnormal({ code: 500, msg: 'gateway timeout' })
+   await new Promise((resolve) => setImmediate(resolve))
+   assert.equal(page.data.gWriteUnknown, true)
+ 
+   page.arrive(8, 'gps')
+-  await bindOriginalRun(1)
+-  requests[2].success({ code: 200, intentTerminal: true, data: {} })
++  await bindOriginalRun(2)
++  requests[3].success({ code: 200, intentTerminal: true, data: {} })
+   await new Promise((resolve) => setImmediate(resolve))
+   assert.equal(page.data.gWriteUnknown, true)
+ 
+   page.submitGame()
+-  assert.equal(requests.length, 3)
++  assert.equal(requests.length, 4)
++  assert.equal(requests.filter(row => row.method === 'POST').length, 2)
+ })
+ 
+ test('广场发帖 HTTP 异常后不能再次创建无幂等保护的公开帖子', async () => {

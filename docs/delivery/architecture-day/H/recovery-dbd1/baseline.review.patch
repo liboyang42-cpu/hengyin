@@ -1,0 +1,31 @@
+diff --git a/chengyinhub-xcx/tests/lint/ui-integrity-baseline.js b/chengyinhub-xcx/tests/lint/ui-integrity-baseline.js
+index 655007b..57f1543 100644
+--- a/chengyinhub-xcx/tests/lint/ui-integrity-baseline.js
++++ b/chengyinhub-xcx/tests/lint/ui-integrity-baseline.js
+@@ -293,7 +293,7 @@ module.exports = {
+     // 2026-09-19 批复1-a=2:pricing/partner 页按用户裁决复活(B-06 曾整页退役),其两条存量零消费
+     //   字段 toType/toId 先随页回账(149→151),随即在同批复落地时还清——index.js 三处读改回显式
+     //   this.data.toType/toId,门禁实测不再命中。两条登记出账,棘轮回 149,digest 复算。
+-    "u4Field": 121,
++    "u4Field": 114,
+       // 2026-08-26 圈层主题接回主题货架:新增 circleTheme import,两条 _coverFail 动态 setData
+       //   等量下移(269→270 / 281→282,行号取门禁实测)。调用点与强化理由不变,显式改 digest。
+     // 2026-08-27 合并 #883:activity/list 三条 U4-DYNAMIC 登记行号 +2(129→131/151→153/231→233,
+@@ -439,7 +439,7 @@ module.exports = {
+       // 受控路由、理由及 10 条登记保持，digest 仅随行号更新。
+       // 2026-10-11 登录隔离及正常失败状态兼容：App consent wrapper 329→343，同一调用及理由，数量仍11。
+       // 2026-10-14 W5尾项:profile 544→559/870→885、参与详情 176→177 仅行号下移，同一调用及理由，数量仍11。
+-      "u1Variable": "5355079effbb04369592177b1817e01345e1812d7671c95c9d13c3fabe88771f",
++      "u1Variable": "5c64534f654f08234d2c2fe34cadd30d9d6a745af3fee2eb6700fb470fbdb9fa",
+       // 2026-08-25 816 并入:key 集合按上面的逐条核对结果变化,digest 显式更新。
+       "u3Debt": // 2026-09-09 一枚圆钮:roam#onCenterHoldStart / onCenterHoldEnd 两笔零绑定债务已还
+       //   —— 长按 3 秒结束的逻辑接到了主键的 touchstart/touchend 上。99→97,digest 显式更新。
+@@ -460,7 +460,7 @@ module.exports = {
+       // 参数留存 URL 但页面不再落 data),两条存量债直接出账,149 键集实算复挖。
+       // 2026-09-19 批复1-a=2 还清:partner#toType/toId 两条随页复活短暂回账(151 键)后当场还债出账,
+       //   key 集回到退役前那份 149,digest 按当前 key 集合实算。
+-"u4Debt": "d8ea150c9aa89628073507c832b720c6a235cef84a4307982b6461a06f0a7000",
++"u4Debt": "58d96682b3c4b8573643eaa5be0e71fd73ccb3526880da62e8602fff8dbe596a",
+       // 2026-08-17 漫游 S1 施工:条数不变(65),只是 pages/roam/index.js 的两处
+       //   `...this._calcArch()` 动态 setData 行号从 3263/3305 移到 3261/3303
+       //   (删掉 _apiCheckin 与 /api/play/arrive 那段后整段上移)。

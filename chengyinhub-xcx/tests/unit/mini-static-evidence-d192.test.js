@@ -24,12 +24,19 @@ test('五处路线动态投影仅提交真实固定展示字段；每项登记�
   }
 });
 
-test('原席位只读恢复的静默失败逐请求登记，删除本调用理由仍红',()=>{
+test('原席位回查保留完整回调与禁自动toast，退役flag不得借旧理由重新静默',(t)=>{
   const file=path.join(root,'utils/registration-seat.js'),key='chengyinhub-xcx/utils/registration-seat.js:62';
   const approved=new Map(Object.entries(baseline.u5Silent));
   assert.equal(scanU5([file],approved).violations.length,0);
-  approved.delete(key);assert.ok(scanU5([file],approved).violations.some(row=>row.key===key));
   const source=fs.readFileSync(file,'utf8');
+  assert.equal(approved.has(key),false);
+  assert.doesNotMatch(source,/silentError:\s*true/);
+  assert.match(source,/autoErrorToast:\s*false/);
+  const injected=source.replace('hideLoading: true, autoErrorToast: false','hideLoading: true, silentError: true, autoErrorToast: false');
+  assert.notEqual(injected,source);
+  const originalRead=fs.readFileSync;
+  t.mock.method(fs,'readFileSync',function(target,...args){return target===file?injected:originalRead.call(this,target,...args);});
+  assert.ok(scanU5([file],approved).violations.some(row=>row.key===key));
   assert.match(source,/if \(!isCurrent\(\)\) return null/);
   assert.match(source,/url: '\/api\/verify\/seat\/receipt'/);
   assert.match(source,/fail: \(\) => done\(null\)/);

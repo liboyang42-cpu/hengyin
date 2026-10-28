@@ -1,0 +1,29 @@
+diff --git a/chengyinhub-xcx/utils/verification-readback.js b/chengyinhub-xcx/utils/verification-readback.js
+index dca5876..dff1f6d 100644
+--- a/chengyinhub-xcx/utils/verification-readback.js
++++ b/chengyinhub-xcx/utils/verification-readback.js
+@@ -138,7 +138,9 @@ function createVerificationWorkflow(options) {
+   }
+   function launch(key, meta, row, start, callback, recovery) {
+     let entered = false, closed = false;
+-    const flight = { isCurrent: recovery ? recovery.isCurrent : () => true };
++    const flight = { isCurrent: recovery ? recovery.isCurrent : () => true,
++      attemptId: row.attemptId, requestIdentityVersion: row.requestIdentityVersion,
++      retire() { closed = true; } };
+     writing.set(key, flight);
+     const accepted = workflow.run(key, function (done) {
+       entered = true;
+@@ -176,6 +178,13 @@ function createVerificationWorkflow(options) {
+       try {
+         const meta = metadata(key), row = read(meta);
+         if (!row || row.requestIdentityVersion !== 1 || row.attemptId !== requestId || !removeOriginal(meta, row)) return false;
++        const flight = writing.get(key);
++        if (flight && flight.attemptId === row.attemptId
++            && flight.requestIdentityVersion === row.requestIdentityVersion) {
++          // 原号已被权威回执确认。先退休原回调，再停止其 task；abort 的同步回调也不能结算下一次。
++          flight.retire();
++          writing.delete(key);
++        }
+         workflow.reset(key);
+         return true;
+       } catch (error) { return false; }
