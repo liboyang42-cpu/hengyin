@@ -1,4 +1,4 @@
-<view class="attendance">
+<view wx:if="{{organizer}}" class="attendance">
  <text class="title attendance__text">赛事联络与到场签到</text>
  <text class="attendance__text" wx:if="{{loading}}">正在读取</text>
  <cy-inline-error wx:if="{{error}}" kind="data" title="{{error}}" action="重试读取" bind:action="reload" />
@@ -20,16 +20,7 @@
    <input class="attendance__input" value="{{code}}" bindinput="inputCode" placeholder="完整签到码（不是号码布）" disabled="{{recovery.state || recovery.busy}}" />
    <button bindtap="scan" disabled="{{recovery.state || recovery.busy}}">扫描候选码</button><button bindtap="verify" disabled="{{recovery.state || recovery.busy}}">核验到场签到</button>
   </block>
-  <block wx:else>
-   <text class="attendance__text" wx:if="{{snapshot.mine.bib}}">号码布 {{snapshot.mine.bib}}（仅展示编号） · 版本 {{snapshot.mine.version}}</text>
-   <text class="attendance__text" wx:if="{{snapshot.mine.checkedAt}}">签到已记录：{{snapshot.mine.checkedAt}}</text>
-   <image wx:if="{{snapshot.mine.qrImage}}" src="{{snapshot.mine.qrImage}}" mode="aspectFit" class="attendance__qr" aria-label="本人签到二维码" />
-   <text class="attendance__text" wx:if="{{snapshot.mine.credential}}" user-select="true">签到码：{{snapshot.mine.credential}}</text>
-   <button wx:if="{{snapshot.activeParticipation}}" bindtap="claim" disabled="{{recovery.state || recovery.busy}}">领取／读回本人签到码</button>
-   <button wx:if="{{snapshot.mine.credential && !snapshot.mine.checkedAt}}" bindtap="rotate" disabled="{{recovery.state || recovery.busy}}">主动换码</button>
-   <text class="attendance__text">签到只记录到场，不改变计时、成绩、奖励或核销资格。</text>
-  </block>
- </view>
+  </view>
  <text class="attendance__text" wx:if="{{notice}}">{{notice}}</text>
  <view wx:if="{{recovery.state || recovery.busy}}">
   <text class="attendance__text">{{recovery.label}}：{{recovery.message}}</text><text class="attendance__text" user-select="true">请求号 {{recovery.requestId}}</text>
@@ -39,3 +30,49 @@
  </view>
  <view wx:if="{{result.data.bib}}"><text class="attendance__text">原核验结果：号码布 {{result.data.bib}} · {{result.data.state}} · {{result.data.checkedAt}}</text></view>
 </view>
+<!-- 玩家端(原型 B T-38 / T-39):集合与联系 + 到场签到,用宿主页 od-* 行形;不显示号码、岗位、坐标和请求号 -->
+<block wx:else>
+ <view wx:if="{{error}}" class="od-section od-section--divided">
+  <text class="od-heading">集合与联系</text>
+  <cy-inline-error kind="data" title="集合信息加载失败" action="重试" bind:action="reload" />
+ </view>
+ <view wx:elif="{{player.meet || player.host}}" class="od-section od-section--divided">
+  <text class="od-heading">集合与联系</text>
+  <view class="od-task-list">
+   <view wx:if="{{player.meet}}" class="od-task" bindtap="navigate" aria-role="button" aria-label="{{player.meet}}，导航" hover-class="cy-pressed" hover-stay-time="80">
+    <view class="od-task-index"><cy-icon name="pin" size="28" /></view>
+    <view class="od-task-copy"><text class="od-task-title">{{player.meet}}</text></view>
+    <text wx:if="{{player.canNavigate}}" class="od-task-action">导航</text>
+   </view>
+   <view wx:if="{{player.host}}" class="od-task" bindtap="contact" aria-role="button" aria-label="{{player.host}}，拨打" hover-class="cy-pressed" hover-stay-time="80">
+    <view class="od-task-index"><cy-icon name="phone" size="28" /></view>
+    <view class="od-task-copy"><text class="od-task-title">{{player.host}}</text></view>
+    <text class="od-task-action">拨打</text>
+   </view>
+  </view>
+ </view>
+ <view wx:if="{{player.checkin}}" class="od-section od-section--divided">
+  <view class="od-section-head"><text class="od-heading">到场签到</text><text class="od-eligible {{player.checkin.ok ? 'is-ok' : ''}}">{{player.checkin.chip}}</text></view>
+  <view wx:if="{{player.checkin.done}}" class="od-task is-complete">
+   <view class="od-task-index"><cy-icon name="check" size="28" /></view>
+   <view class="od-task-copy"><text class="od-task-title">已签到 · {{player.checkin.doneAt}}</text></view>
+   <text class="od-task-action">已记录</text>
+  </view>
+  <view wx:elif="{{player.checkin.show}}" class="od-task" bindtap="showCode" aria-role="button" aria-label="出示我的签到码" hover-class="cy-pressed" hover-stay-time="80">
+   <view class="od-task-index"><cy-icon name="qr" size="28" /></view>
+   <view class="od-task-copy"><text class="od-task-title">出示我的签到码</text></view>
+   <text class="od-task-action">出示</text>
+  </view>
+  <view wx:if="{{recovery.state === 'UNKNOWN' || recovery.state === 'STORAGE_ERROR'}}" class="od-task" bindtap="queryCommand" aria-role="button" aria-label="签到码结果未确认，刷新" hover-class="cy-pressed" hover-stay-time="80">
+   <view class="od-task-copy"><text class="od-task-title">签到码结果未确认 · 刷新</text></view>
+  </view>
+ </view>
+ <cy-sheet show="{{codeShow}}" title="我的签到码" bind:close="closeCode">
+  <view class="ev-code">
+   <image wx:if="{{snapshot.mine.qrImage}}" src="{{snapshot.mine.qrImage}}" mode="aspectFit" class="ev-code__qr" aria-label="我的签到码" />
+   <text wx:else class="ev-code__state">{{recovery.busy || loading ? '正在加载…' : '加载失败 · 轻点重试'}}</text>
+   <text wx:if="{{snapshot.mine.bib}}" class="ev-code__bib">号码布 {{snapshot.mine.bib}}</text>
+   <text wx:if="{{snapshot.mine.credential && !snapshot.mine.checkedAt}}" class="ev-code__link" bindtap="rotate" aria-role="button" aria-label="更换签到码" hover-class="cy-pressed" hover-stay-time="80">更换签到码</text>
+  </view>
+ </cy-sheet>
+</block>

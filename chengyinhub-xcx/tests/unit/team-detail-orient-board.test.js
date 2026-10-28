@@ -47,6 +47,8 @@ test('real Page consumes exact IDs, server threshold/completion and ordered rank
   assert.equal(h.page.data.board.threshold.required, 2);
   assert.equal(h.page.data.board.tasks[0].teamDone, false, 'completion count cannot override server result');
   assert.deepEqual(clone(h.page.data.board.tasks[0].members.map(m => m.done)), [true, false]);
+  // 原型 B T-32:矩阵按成员成行,每格与 tasks[].members[].done 同一份服务端事实
+  assert.deepEqual(clone(h.page.data.board.rows.map(r => [r.name, r.cells.map(c => c.done)])), [['甲', [true]], ['乙', [false]]]);
   assert.equal(h.requests[2].url, '/api/orient/team/ranking');
   assert.deepEqual(clone(h.requests[2].data), { ownerType: 2, ownerId });
   h.requests[2].success({ code: 200, data: [
@@ -56,7 +58,7 @@ test('real Page consumes exact IDs, server threshold/completion and ordered rank
   assert.deepEqual(clone(h.page.data.boardRanks.map(r => r.rank)), [7, 2]);
   assert.equal(h.page.data.boardRanks[1].teamId, teamId);
   const template = fs.readFileSync(file.replace('.js', '.wxml'), 'utf8');
-  for (const field of ['board.summary.teamDoneCount', 'board.threshold.required', 'task.teamDone', 'member.done', 'item.rank']) assert.ok(template.includes(field));
+  for (const field of ['board.summary.teamDoneCount', 'board.threshold.required', 'task.teamDone', 'cell.done', 'item.rank']) assert.ok(template.includes(field));
   assert.match(template, /bind:action="retryBoard"/);
 });
 
