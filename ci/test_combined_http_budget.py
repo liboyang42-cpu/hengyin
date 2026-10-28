@@ -2272,7 +2272,7 @@ class CombinedBudgetControls(unittest.TestCase):
     def test_private_mxbean_rows_survive_raw_log_append_and_bind_only_exact_accepted_jvms(self):
         with tempfile.TemporaryDirectory() as directory,patch.dict(os.environ,self.env(),clear=True),patch.object(B,'OUT',Path(directory)):
             state={'identity':B.identity(self.env()),'nonce':'nonce','slots':{'app':{'cid':'1'*64,'name':'own-app'}},
-                   'javaProcesses':[{'role':'SUREFIRE','namespacePid':22,'hostPid':100,'startTicks':800,'jvmMemory':{'profile':'SUREFIRE'}},
+                   'javaProcesses':[{'role':'SUREFIRE','namespacePid':22,'hostPid':100,'startTicks':800,'jvmMemory':{'profile':'SUREFIRE_RUNTIME'}},
                                     {'role':'DESCENDANT_JVM','namespacePid':23,'hostPid':101,'startTicks':900,'jvmMemory':{'profile':'SCHEDULER_PROBE'}}]}
             log=B.private_run_log(create=True);self.assertEqual(log.stat().st_mode & 0o777,0o600)
             prefix='CONTROLLED_COMBINATION_MEMORY '+self.env()['SOURCE_SHA']+' 41 2 '
@@ -2301,10 +2301,10 @@ class CombinedBudgetControls(unittest.TestCase):
 
     def test_mxbean_projection_rejects_foreign_malformed_unbounded_and_unowned_log_inputs(self):
         for kind in ('source','run','attempt','role','phase','value','overflow','truncated','extra','pools','buffers',
-                     'oversize','duplicate','permission','symlink','missing','state-identity','no-pid-proof','missing-reading'):
+                     'oversize','duplicate','permission','symlink','missing','state-identity','no-pid-proof','wrong-runtime-profile','missing-reading'):
             with self.subTest(kind=kind),tempfile.TemporaryDirectory() as directory,patch.dict(os.environ,self.env(),clear=True),patch.object(B,'OUT',Path(directory)):
                 state={'identity':B.identity(self.env()),'runLogCaptured':True,'slots':{'app':{'cid':'1'*64}},
-                       'javaProcesses':[{'role':'SUREFIRE','namespacePid':22,'hostPid':100,'startTicks':800,'jvmMemory':{'profile':'SUREFIRE'}}]}
+                       'javaProcesses':[{'role':'SUREFIRE','namespacePid':22,'hostPid':100,'startTicks':800,'jvmMemory':{'profile':'SUREFIRE_RUNTIME'}}]}
                 log=B.private_run_log(create=True)
                 line='CONTROLLED_COMBINATION_MEMORY '+self.env()['SOURCE_SHA']+' 41 2 SUREFIRE HELD 22 100 200 0 12 32 64 0 9 16 -1 0 0\n'
                 if kind=='source':line=line.replace(self.env()['SOURCE_SHA'],'b'*40)
@@ -2322,13 +2322,14 @@ class CombinedBudgetControls(unittest.TestCase):
                 if kind=='duplicate':line+=line
                 if kind=='state-identity':state['identity']['sourceSha']='b'*40
                 if kind=='no-pid-proof':state['javaProcesses']=[]
+                if kind=='wrong-runtime-profile':state['javaProcesses'][0]['jvmMemory']['profile']='SUREFIRE'
                 if kind=='missing-reading':line=line.replace('0 12 32 64','-1 -1 -1 -1')
                 log.write_text(line)
                 if kind=='permission':log.chmod(0o644)
                 if kind=='symlink':log.unlink();target=Path(directory)/'PRIVATE_TARGET';target.write_text(line);log.symlink_to(target)
                 if kind=='missing':log.unlink()
                 observed=B.mxbean_readback(state)
-                if kind in ('no-pid-proof','missing-reading'):
+                if kind in ('no-pid-proof','wrong-runtime-profile','missing-reading'):
                     self.assertEqual(observed['state'],'PARTIAL_OR_UNKNOWN');self.assertEqual(len(observed['records']),1)
                 else:self.assertEqual(observed['state'],'UNKNOWN');self.assertEqual(observed['records'],[])
                 self.assertNotIn('PRIVATE_',json.dumps(observed));self.assertNotIn(directory,json.dumps(observed))
@@ -2339,7 +2340,7 @@ class CombinedBudgetControls(unittest.TestCase):
             out=Path(directory)/'out';out.mkdir()
             state['firstFailure']={'phase':'APP_EXECUTION','reasonCode':'ACTUAL_CGROUP_CHILD_OOM_KILL'}
             original=copy.deepcopy(state['firstFailure']);state['cgroupMemoryEvents']={'oom_kill':'1'}
-            state['javaProcesses'].append({'role':'SUREFIRE','namespacePid':22,'hostPid':100,'startTicks':800,'jvmMemory':{'profile':'SUREFIRE'}})
+            state['javaProcesses'].append({'role':'SUREFIRE','namespacePid':22,'hostPid':100,'startTicks':800,'jvmMemory':{'profile':'SUREFIRE_RUNTIME'}})
             def failed_capture(*args):events.append('RAW_LOG_ATTEMPT');raise OSError('PRIVATE_LOG_VALUE')
             def clean(path,current,role):
                 events.append('CLEANUP_'+role)

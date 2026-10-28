@@ -1984,7 +1984,7 @@ def mxbean_readback(state):
                     if code==0 or min(objects,used,capacity)<0:partial=True
                 candidates=[p for p in state.get('javaProcesses',[]) if p.get('namespacePid')==pid
                         and p.get('role')==('SUREFIRE' if role=='SUREFIRE' else 'DESCENDANT_JVM')
-                        and p.get('jvmMemory',{}).get('profile')==('SUREFIRE' if role=='SUREFIRE' else 'SCHEDULER_PROBE')]
+                        and p.get('jvmMemory',{}).get('profile')==('SUREFIRE_RUNTIME' if role=='SUREFIRE' else 'SCHEDULER_PROBE')]
                 if len(candidates)==1:
                     proof=candidates[0]
                     row.update(binding='ACCEPTED_CGROUP_PROCESS',hostPid=proof['hostPid'],startTicks=proof['startTicks'])
