@@ -138,13 +138,13 @@ page { background: var(--cy-color-bg-page); }
 .bw-grid { display: flex; flex-wrap: wrap; }
 .bw-cell { width: 50%; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; padding: var(--cy-space-2) 0 var(--cy-space-6); }
 .bw-medal { width: 224rpx; height: 224rpx; flex: none; display: flex; align-items: center; justify-content: center; }
-.bw-medal.is-locked { filter: grayscale(1) brightness(.6); }
+.bw-medal.is-locked .bw-medal__img { filter: grayscale(1) brightness(.6); }
+/* 2026-10-28 业主:珐琅徽章(enamel-pin.js 画);未解锁那张本身就是细线稿,不再压灰 */
+.bw-medal__pin { width: 100%; height: 100%; filter: drop-shadow(0 14rpx 22rpx rgba(0,0,0,.5)); } /* ds-ok: 徽章落在页面上的投影 */
+.bw-medal.is-locked .bw-medal__pin { filter: none; }
+.bw-pin-canvas { position: fixed; left: -4000rpx; top: 0; width: 160px; height: 160px; pointer-events: none; }
+.bw-sh-pin { display: block; width: 280rpx; height: 280rpx; margin: 8rpx auto 28rpx; }
 .bw-medal__img { width: 100%; height: 100%; }
-/* 没有图的勋章:金属边 + 珐琅面 + 白色实心图形(2026-10-28 业主:原来的星星小图标太丑) */
-.bw-medal__rim { width: 100%; height: 100%; box-sizing: border-box; padding: 12rpx; border-radius: 50%; background: conic-gradient(from 210deg, #f8f8f8, #9a9a9a, #ffffff, #8a8a8a, #f1f1f1, #a0a0a0, #f8f8f8); box-shadow: 0 20rpx 48rpx rgba(0,0,0,.45); } /* ds-ok: 勋章金属边 */
-.bw-medal__face { width: 100%; height: 100%; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; background: radial-gradient(circle at 32% 28%, #ffd27a, #b86e0c 72%); box-shadow: inset 0 6rpx 12rpx rgba(255,255,255,.35), inset 0 -12rpx 20rpx rgba(0,0,0,.35); } /* ds-ok: 珐琅面 */
-.bw-medal__face--CITY { background: radial-gradient(circle at 32% 28%, #9ec5ff, #2f5fbf 72%); } /* ds-ok */
-.bw-medal__face--ACHIEVEMENT { background: radial-gradient(circle at 32% 28%, #8fe3c2, #0f7a52 72%); } /* ds-ok */
 .bw-cell__name { margin-top: var(--cy-space-3-5); max-width: 100%; color: var(--cy-color-text-primary); font-size: var(--cy-type-card-title); font-weight: 600; text-align: center; }
 .bw-cell__meta { margin-top: var(--cy-space-1); max-width: 100%; color: var(--cy-color-text-tertiary); font-size: var(--cy-type-caption); text-align: center; }
 .bw-empty-state { position: fixed; inset: calc(var(--sbh) + var(--nbh) + 220rpx) 0 0; display: flex !important; flex-direction: column; min-height: 0; }

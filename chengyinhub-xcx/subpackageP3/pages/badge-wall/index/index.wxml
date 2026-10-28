@@ -36,7 +36,7 @@
               aria-role="button" aria-label="{{item.name}}，{{item.locked ? '尚未点亮' : '已点亮'}}">
           <view class="bw-medal {{item.locked ? 'is-locked' : ''}}">
             <image wx:if="{{item.iconUrl}}" class="bw-medal__img" src="{{item.iconUrl}}" mode="aspectFit" />
-            <view wx:else class="bw-medal__rim"><view class="bw-medal__face bw-medal__face--{{item.tierKey}}"><cy-icon name="star-filled" size="52" /></view></view>
+            <image wx:elif="{{pins[item.pinId]}}" class="bw-medal__pin" src="{{pins[item.pinId]}}" mode="aspectFit" aria-hidden="true" />
           </view>
           <text class="bw-cell__name ep1">{{item.name}}</text>
           <text class="bw-cell__meta ep1">{{item.locked ? (item.cond || '尚未点亮') : (item.time || '已点亮')}}</text>
@@ -92,7 +92,7 @@
         <cover-view class="bw-sh-x-visual"><cover-image class="bw-sh-x-icon" src="/subpackageP3/images/icon_close_sm.png" mode="aspectFit" /></cover-view>
       </cover-view>
     </cover-view>
-    <cover-view class="bw-sh-body">
+    <cover-view class="bw-sh-body"><cover-image wx:if="{{!sheet.iconUrl && pins[sheet.pinId]}}" class="bw-sh-pin" src="{{pins[sheet.pinId]}}" mode="aspectFit" />
       <!-- 类别小胶囊:放在标题下一行(不跟叉挤在标题行);它就是原来「来源」那一格说的事,来源行因此删掉 -->
       <cover-view class="bw-sh-rar" style="color:{{sheet.rarColor}};">{{sheet.rarZh}}</cover-view>
       <cover-view class="bw-sh-desc">{{sheet.desc}}</cover-view>
@@ -104,5 +104,7 @@
       <cover-view class="bw-sh-3d" wx:if="{{sheet.style=='enamel'}}" bindtap="goBadge3d" aria-role="button" aria-label="查看 3D 徽章" hover-class="cy-pressed" hover-stay-time="80">查看 3D 徽章<cover-image class="bw-sh-3d-icon" src="/images/icon_right.png" mode="aspectFit" /></cover-view>
     </cover-view>
   </cover-view>
+  <!-- 2026-10-28 珐琅徽章离屏画布:只用来生成徽记图,不显示 -->
+  <canvas type="2d" id="pinCanvas" class="bw-pin-canvas"></canvas>
 </view>
 </view>
