@@ -134,6 +134,8 @@ Page({
     if (!ctx || this._hidden || this._unloaded || this._pageEpoch !== ctx.epoch || this._hops[ctx.lane] !== ctx.hop
         || ctx.lane === 'quota' && ctx.writeEpoch !== this._writeEpoch) return false;
     if (!this._sameSession(ctx)) {
+      // A refreshed write response cannot advance the durable intent or chain another write.
+      if (ctx.lane === 'ai' && (ctx.kind === 'prepare' || ctx.kind === 'execute')) return false;
       const current = this._session(), transport = ctx.transport;
       if (!current || current.owner !== ctx.owner || !transport
           || typeof transport.isAuthenticatedContinuationCurrent !== 'function'
@@ -143,6 +145,19 @@ Page({
         this._sessionAtLoad = Object.assign({}, current);
       ctx.auth = current.auth; ctx.revision = current.revision;
     }
+    return true;
+  },
+  _retireReauthenticatedAiWrite(ctx) {
+    if (!ctx || ctx.lane !== 'ai' || (ctx.kind !== 'prepare' && ctx.kind !== 'execute')
+        || this._hidden || this._unloaded || this._pageEpoch !== ctx.epoch || this._hops[ctx.lane] !== ctx.hop
+        || this._sameSession(ctx)) return false;
+    const current = this._session(), transport = ctx.transport;
+    if (!current || current.owner !== ctx.owner || !transport
+        || typeof transport.isAuthenticatedContinuationCurrent !== 'function'
+        || !transport.isAuthenticatedContinuationCurrent()) return false;
+    // Keep the old session anchor: onShow/the next explicit action must restore by GET first.
+    // Retire only callbacks/loading, never the original key, frozen input, or durable journal.
+    this._invalidateAi(); this._aiView = null;
     return true;
   },
   _rejectAiSessionChange(ctx, response) {
@@ -317,17 +332,22 @@ Page({
   _sendAi(ctx, data, mayExecute) {
     if (!this._current(ctx)) return;
     const receive = (res, status) => {
+      if (this._retireReauthenticatedAiWrite(ctx)) return;
       if (!this._current(ctx) || ctx.responded) return;
       ctx.responded = true;
       const permit = mayExecute && (res && (res.code === 200 || res.code === '200')) && status === 200;
       if (!this._acceptAiView(ctx, res && res.data, permit))
         this.setData({ aiError: '原起草结果还没确认，请稍后查看；不会自动另起一次。' });
     };
-    const complete = () => { if (this._current(ctx)) this.setData({ aiGenerating: false }); };
+    const complete = () => {
+      if (this._retireReauthenticatedAiWrite(ctx)) return;
+      if (this._current(ctx)) this.setData({ aiGenerating: false });
+    };
     const success = res => receive(res, 200);
     const abnormal = (res, status) => receive(res, status || 0);
     const fail = res => {
       if (this._rejectAiSessionChange(ctx, res)) return;
+      if (this._retireReauthenticatedAiWrite(ctx)) return;
       if (!this._current(ctx) || ctx.responded) return;
       if (res && res.data) receive(res, 0);
       else { ctx.responded = true; this.setData({ aiError: '网络暂时不可用，原起草结果还没确认，请查看原结果。' }); }

@@ -164,9 +164,14 @@ test('配额换号往返及卸载后拒绝迟到，complete 不清起草 busy', 
 });
 
 test('在途换号且尚未 onShow，回调也不能写当前账号的 pending key', () => {
-  const h = harness(); h.ready(); const post = h.prepare(); const saved = JSON.stringify(h.values);
-  h.switchOwner('8', 'local-token-B'); succeeded(post); complete(post);
+  const h = harness(); h.ready(); const post = h.prepare();
+  const original = JSON.stringify(h.values[journal.key('7')]);
+  h.switchOwner('8', 'local-token-B');
+  const saved = JSON.stringify(h.values), revision = h.store.getRevision();
+  succeeded(post); complete(post);
   assert.equal(JSON.stringify(h.values), saved); assert.equal(h.page.data.aiPlan, null);
+  assert.equal(JSON.stringify(h.values[journal.key('7')]), original);
+  assert.equal(h.store.getRevision(), revision);
 });
 
 // Real request-client remains responsible for its one authenticated renewal, never a fake success adapter.
@@ -203,6 +208,19 @@ for (const kind of ['提交', '回读', '配额']) {
     reply(raw[1], kind === '配额' ? { code: 200, data: { limited: true, remaining: 2 } }
       : readResult('SUCCEEDED', { resultAvailable: true, result: DRAFT }));
     assert.equal(h.page.data.aiGenerating, false);
+    if (kind === '提交') {
+      assert.equal(h.page.data.aiPlan, null, '重认证写回包不是新代次的只读恢复');
+      assert.equal(h.values[journal.key('7')].requestId, null);
+      assert.equal(raw.length, 2, '原prepare的续登不能链式execute或自动回读');
+      const originalKey = JSON.parse(raw[0].data).prepareKey;
+      h.page.onShow();
+      const recovery = raw.find(request => request.url.endsWith('/request'));
+      assert.ok(recovery); assert.equal(recovery.method, 'GET');
+      assert.deepEqual(recovery.data, { prepareKey: originalKey });
+      reply(recovery, readResult('SUCCEEDED', { resultAvailable: true, result: DRAFT }));
+      assert.equal(h.page.data.aiGenerating, false);
+      assert.equal(raw.filter(request => request.url.endsWith('/execute')).length, 0);
+    }
     if (kind !== '配额') {
       assert.equal(h.page.data.aiPlan.title, '原草稿'); assert.equal(h.page.data.aiDraftPending, false);
       assert.equal(h.values[journal.key('7')].state, 'SUCCEEDED');
@@ -233,11 +251,14 @@ for (const kind of ['提交', '回读', '配额']) {
     if (kind === '配额') h.page.loadAiQuota();
     else if (kind === '回读') h.page.checkAiDraftRequest();
     else h.page.generateAiPlan();
-    const saved = JSON.stringify(h.values);
+    const original = JSON.stringify(h.values[journal.key('7')]);
     h.switchOwner('8', 'local-token-B'); h.switchOwner('7', 'external-token-A');
+    const saved = JSON.stringify(h.values), revision = h.store.getRevision();
     reply(raw[0], readResult('SUCCEEDED', { resultAvailable: true, result: DRAFT }));
     assert.equal(h.page.data.aiPlan, null); assert.equal(h.page.data.aiGenerating, false);
     assert.equal(JSON.stringify(h.values), saved);
+    assert.equal(JSON.stringify(h.values[journal.key('7')]), original);
+    assert.equal(h.store.getRevision(), revision);
     if (kind === '配额') h.page.loadAiQuota(); else h.page.checkAiDraftRequest();
     assert.equal(raw.length, 2, '外部变化不自动重放，用户仍可查询');
     if (kind !== '配额') {
