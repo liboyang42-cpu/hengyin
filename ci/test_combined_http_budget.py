@@ -2357,7 +2357,9 @@ class CombinedBudgetControls(unittest.TestCase):
             self.assertEqual(report['originalExit'],2);self.assertIsNone(report['mavenExit']);self.assertIsNone(report['appExit'])
             self.assertEqual(report['jvmMxBeanReadback']['state'],'PARTIAL_OR_UNKNOWN')
             self.assertEqual(len(report['jvmMxBeanReadback']['records']),1)
-            self.assertEqual(report['cgroupMemoryEvents'],{'oom_kill':'1'});self.assertNotIn('PRIVATE_',json.dumps(report))
+            self.assertEqual(report['cgroupMemoryEvents'],{'oom_kill':'1'})
+            self.assertEqual(report['failures'],[{'phase':'PRIVATE_LOG','type':'OSError'}])
+            self.assertNotIn('PRIVATE_LOG_VALUE',json.dumps(report))
 
 
 if __name__=='__main__':unittest.main()
