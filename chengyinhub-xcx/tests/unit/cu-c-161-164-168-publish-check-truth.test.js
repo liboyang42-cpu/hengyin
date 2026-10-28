@@ -193,9 +193,9 @@ test('CU-C-164 节点抽屉没开着时不碰表单项(返回页可能正停在�
 
 // ============================================================ CU-C-161 文案
 function assertNodeAddressCopy(wxml) {
-  // 10-28 原型 A e-node：地点是分组列表里的一行「地点 · 滨江路 12 号 ›」，整行点去选点；
+  // 10-28 原型 A e-node：地点是分组列表（L1 cy-list-row）里的一行「地点 · 滨江路 12 号 ›」，整行点去选点；
   // 已选显示地址，空态只显示可点的「选择节点」，不显示伪造地址或说明小字。
-  const picker = wxml.match(/<view class="node-grp__row"[^>]*catchtap="choosePoiForNode"[^>]*>[\s\S]*?<text class="node-grp__value">\{\{nodesForm\.address \|\| '([^']*)'\}\}<\/text>/);
+  const picker = wxml.match(/<cy-list-row[^>]*title="地点" value="\{\{nodesForm\.address \|\| '([^']*)'\}\}"[^>]*bind:press="choosePoiForNode"/);
   assert.ok(picker, '已选节点的地址必须显示，空态必须有可点击的节点选择动作');
   assert.match(picker[1], /选择节点/);
   assert.doesNotMatch(picker[1], /自由探索/, '城市定向不能借用自由探索可稍后补文案');

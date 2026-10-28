@@ -133,6 +133,7 @@ chengyinhub-xcx/components/cy/scene-qr-ticket/index.js 1  # 2026-08-25 状态底
 chengyinhub-xcx/pages/square/components/cy/post-compose/index.js 3  # 选活动两路读取落activityError并给重试；发布失败由当前编辑器显式提示，关闭、切号或旧请求错误不能污染新界面
 chengyinhub-xcx/pages/publish/activity/index.js 4  # 2026-08-25 状态底座:失败落页内错误态(cy-error / cy-inline-error / state:error / stale-error),通用 toast 会双弹;2026-09-12 编辑回填 /api/activity/info 同口径 +1
 chengyinhub-xcx/pages/publish/fabu/index.js 1  # 2026-08-25 状态底座:AI 安全预检失败按可用性红线降级放行(不堵发布路),其余为页内错误态承接;两类都不该再弹通用 toast
+chengyinhub-xcx/pages/publish/fabu/theme-runtime-structure.js 1  # 2026-10-28 文档二 L3 到达与引导:换个方式写入失败,非 200 原样落半屏内 structureError(cy-inline-error),网络失败 cyToast 一句,不再叠加统一 toast
 chengyinhub-xcx/pages/publish/temp/index.js 3  # 2026-10-26 03恢复冻结包：权限、提交、模板详情失败落当前表单error；归属变化淘汰旧结果；采用调用移至独立模块，原4减至3
 chengyinhub-xcx/pages/search2/index.js 1  # 2026-08-25 状态底座:失败落页内错误态(cy-error / cy-inline-error / state:error / stale-error),通用 toast 会双弹
 chengyinhub-xcx/pages/shezhi/components/marketing-consent/index.js 2  # 2026-08-25 营销授权:加载/保存失败落组件 error 状态,保留原值与重试入口;通用 toast 会双弹

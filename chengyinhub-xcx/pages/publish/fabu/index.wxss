@@ -4122,20 +4122,12 @@ page { background: var(--cy-btn-solid-bg); }
 .node-shared__site { display: block; margin-top: var(--cy-space-1); }
 .node-shared__action { max-width: 100%; width: fit-content; height: auto; min-height: var(--cy-btn-h); margin-top: var(--cy-space-2); white-space: normal; }
 
-/* 10-28 原型 A e-node / e-quest：分组列表。一组一张白卡，行 = 左名称 / 右值 / ›，行间细线。 */
-.node-sheet__head-title { flex: 1; text-align: center; font-size: var(--cy-font-body); font-weight: 700; color: var(--cy-color-text-primary); }
-.node-grp { padding-top: 0; padding-bottom: 0; }
-.node-grp__row { min-height: var(--cy-btn-h); padding: var(--cy-space-2) 0; box-sizing: border-box; display: flex; align-items: center; gap: var(--cy-space-2); border-top: 2rpx solid var(--cy-color-border-subtle); }
-.node-grp__row:first-child { border-top: 0; }
-.node-grp__label { flex: none; font-size: var(--cy-font-body); color: var(--cy-color-text-primary); }
-.node-grp__value { flex: 1; min-width: 0; text-align: right; font-size: var(--cy-font-body); color: var(--cy-color-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* 10-28 原型 A e-node / e-quest：分组列表用 L1 的 cy-list-group / cy-list-row，这里只补行内输入框和组内的附加内容。 */
 .node-grp__input { flex: 1; min-width: 0; text-align: right; font-size: var(--cy-font-body); color: var(--cy-color-text-primary); }
-.node-grp__chev { flex: none; display: flex; color: var(--cy-color-text-tertiary); transition: transform 0.2s; }
-.node-grp__chev.is-open { transform: rotate(90deg); }
-.node-grp__row--pick { padding-left: var(--cy-space-3); }
-.node-grp__value--left { text-align: left; }
-.node-grp__sub { padding: var(--cy-space-2) 0; border-top: 2rpx solid var(--cy-color-border-subtle); }
-.node-grp__hd { display: block; padding: var(--cy-space-2) var(--cy-space-3-5) var(--cy-space-1); font-size: var(--cy-font-caption); color: var(--cy-color-text-secondary); }
+.node-grp-extra { padding: 0 var(--cy-space-4); background: var(--cy-color-bg-surface); }
+.node-grp-extra:empty { display: none; }
+.pgrid.node-grp-extra { padding-top: var(--cy-space-2); padding-bottom: var(--cy-space-3); }
+.rt-row-input { flex: 1; min-width: 0; text-align: right; font-size: var(--cy-font-body); color: var(--cy-color-text-primary); }
 
 .node-card__addr {
   flex: 1;
@@ -4384,19 +4376,13 @@ page { background: var(--cy-btn-solid-bg); }
   font-size: var(--cy-font-label);
 }
 
-/* 10-28 原型 A e-route：头部「取消 / 下一站 / 完成」，结果行点开就地展开（去往勾选 + 条件 / 效果句子）。 */
-.route-mapping-sheet__title { flex: 1; text-align: center; font-size: var(--cy-font-body); font-weight: 700; color: var(--cy-color-text-primary); }
-.route-mapping-sheet__spacer { min-width: 128rpx; }
-.route-mapping-sheet__back { gap: var(--cy-space-1); }
-.route-mapping-sheet__back-ico { display: flex; transform: rotate(180deg); }
+/* 10-28 原型 A e-route：头部用 L1 的 cy-sheet-nav；结果行点开就地展开（灰底上放去往与条件 / 效果的分组）。 */
 .route-mapping-sheet__eyebrow { display: block; padding: 0 var(--cy-space-4) var(--cy-space-1); font-size: var(--cy-font-caption); color: var(--cy-color-text-secondary); }
 .route-mapping-row .route-mapping-row__target { color: var(--cy-color-text-secondary); font-weight: 400; }
 .route-mapping-row__chev { display: flex; color: var(--cy-color-text-tertiary); transition: transform 0.2s; }
 .route-mapping-row__chev.is-open { transform: rotate(90deg); }
-.route-mapping-open { padding-bottom: var(--cy-space-3); border-bottom: 2rpx solid var(--cy-color-border-subtle); }
-.route-mapping-dest { padding: 0 var(--cy-space-3); border-radius: var(--cy-radius-lg); background: var(--cy-color-bg-surface-subtle); }
-.route-mapping-row--sub .route-mapping-row__label { font-weight: 400; }
-.route-mapping-row--option { padding-left: var(--cy-space-3); }
+.route-mapping-open { margin: 0 calc(var(--cy-space-3-5) * -1); padding: var(--cy-space-2) var(--cy-space-3-5) var(--cy-space-3); background: var(--cy-color-bg-surface-subtle); }
+.route-mapping-dest { border-radius: var(--cy-radius-lg); overflow: hidden; }
 
 
 /* 故事流节点块的实拍缩略图(用户 2026-08-10 定)。没传图时放一个占位图标,

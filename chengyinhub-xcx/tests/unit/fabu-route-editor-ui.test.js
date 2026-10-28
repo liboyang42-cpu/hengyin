@@ -18,14 +18,14 @@ test('分支对应依附节点,不新增主题级路线入口', () => {
   assert.match(wxml, /story-node-block__meta/);
   assert.doesNotMatch(wxml, /story-node-block__route/,
     '故事流块上不再挂下一站摘要 —— 它读不出是什么，已挪到节点弹窗');
-  assert.match(wxml, /node-grp__row node-route-entry/, '节点弹窗里那条入口必须还在');
+  assert.match(wxml, /<cy-list-row class="node-route-entry"[^>]*bind:press="openNodeRouteMapping"/, '节点弹窗里那条入口必须还在');
   assert.match(wxml, /routeNodeMappingSummary\[editTargetNodeLid\]/);
   assert.doesNotMatch(detailWxml, />故事路线</);
   assert.doesNotMatch(wxml, /routeEditorShow/);
 });
 
 test('节点详情只显示一个下一站摘要，结果映射在轻量底部弹层完成', () => {
-  assert.match(wxml, /node-grp__row node-route-entry/);
+  assert.match(wxml, /<cy-list-row class="node-route-entry"/);
   assert.match(wxml, /routeNodeMappingSummary\[editTargetNodeLid\]/);
   assert.match(wxml, /route-mapping-sheet node-sheet/);
   // 10-28 原型 A e-route：结果行上方只一行玩法名（没有时用节点名），头部标题固定「下一站」。
@@ -37,7 +37,7 @@ test('节点详情只显示一个下一站摘要，结果映射在轻量底部�
   assert.doesNotMatch(wxml, /class="node-pill"[^>]*>\{\{mapping\.targetLabel\}\}/);
   assert.match(wxml, /其他结果/);
   assert.match(wxml, /routeMappingFallbackLabel/);
-  assert.match(wxml, /bindtap="finishNodeRouteMapping"/);
+  assert.match(wxml, /bind(?:tap|:action)="finishNodeRouteMapping"/);
 });
 
 test('下一站 UI 沿用黑白灰卡片语言，不暴露技术图配置', () => {

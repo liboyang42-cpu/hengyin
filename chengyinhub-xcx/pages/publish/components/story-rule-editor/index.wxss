@@ -1,29 +1,12 @@
-/* 条件与效果的句子列表：灰底分组里一行一句（同节点编辑的分组列表），分段控件与步进器只在这里用。 */
-.sr { color: var(--cy-color-text-primary); font-size: var(--cy-type-body); }
-.sr-hd { display: block; padding: var(--cy-space-3) 0 var(--cy-space-1); font-size: var(--cy-type-label); color: var(--cy-color-text-secondary); }
-.sr-hd--action { display: flex; align-items: center; justify-content: space-between; }
-.sr-hd__btn { flex: none; font-size: var(--cy-type-label); font-weight: 700; color: var(--cy-color-text-primary); }
-.sr-grp { border-radius: var(--cy-radius-lg); background: var(--cy-color-bg-surface-subtle); padding: 0 var(--cy-space-3); }
-.sr-row { min-height: 96rpx; display: flex; align-items: center; gap: var(--cy-space-2); border-top: 1rpx solid var(--cy-color-border-subtle); box-sizing: border-box; }
-.sr-row:first-child { border-top: 0; }
-.sr-row--seg { padding: var(--cy-space-2) 0; }
-.sr-d1 { padding-left: var(--cy-space-3); } .sr-d2 { padding-left: var(--cy-space-5); } .sr-d3 { padding-left: var(--cy-space-6); }
-.sr-t { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.sr-chev { flex: none; display: flex; color: var(--cy-color-text-tertiary); transition: transform 0.2s; }
-.sr-chev.is-open { transform: rotate(90deg); }
-.sr-seg { flex: 1; display: flex; padding: 4rpx; border-radius: var(--cy-radius-md); background: var(--cy-color-border-subtle); }
-.sr-seg__i { flex: 1; min-width: 0; height: 64rpx; display: flex; align-items: center; justify-content: center; border-radius: var(--cy-radius-sm); font-size: var(--cy-type-label); color: var(--cy-color-text-primary); overflow: hidden; white-space: nowrap; }
-.sr-seg__i.is-on { background: var(--cy-color-bg-surface); font-weight: 700; }
-.sr-num { flex: none; min-width: 48rpx; text-align: right; }
-.sr-step { flex: none; display: flex; border-radius: var(--cy-radius-md); background: var(--cy-color-border-subtle); }
-.sr-step__b { position: relative; width: 88rpx; height: 64rpx; display: flex; align-items: center; justify-content: center; font-size: var(--cy-type-body); font-weight: 700; }
-.sr-del { color: var(--cy-color-status-danger); }
-.sr-add { font-weight: 700; }
-.sr-plus { flex: none; width: 44rpx; height: 44rpx; border-radius: var(--cy-radius-pill); display: flex; align-items: center; justify-content: center; background: var(--cy-color-action-primary-bg); color: var(--cy-color-action-primary-fg); }
-.sr-search { color: var(--cy-color-text-tertiary); }
-.sr-search__in { flex: 1; min-width: 0; color: var(--cy-color-text-primary); }
-.sr-empty { color: var(--cy-color-text-secondary); font-size: var(--cy-type-label); }
-.sr-minus { width: 24rpx; height: 4rpx; border-radius: 2rpx; background: currentColor; }
+/* 条件与效果：行、分组、分段、步进器都来自 L1 的 cy-list-* / cy-segmented / cy-stepper，这里只管缩进、
+   分段所在那一行的留白、红字删除、搜索框和「上移」。 */
+.sr-d1 { padding-left: var(--cy-space-4); } .sr-d2 { padding-left: var(--cy-space-6); } .sr-d3 { padding-left: var(--cy-space-7); }
+.sr-d1, .sr-d2, .sr-d3 { background: var(--cy-color-bg-surface); }
+.sr-seg { padding: var(--cy-space-2) var(--cy-space-4); background: var(--cy-color-bg-surface); }
+.sr-row--del { --cy-color-text-primary: var(--cy-color-status-danger); }
+.sr-search { display: flex; align-items: center; gap: var(--cy-space-2); min-height: 100rpx; padding: 0 var(--cy-space-4); color: var(--cy-color-text-tertiary); background: var(--cy-color-bg-surface); }
+.sr-search__in { flex: 1; min-width: 0; font-size: var(--cy-type-body); color: var(--cy-color-text-primary); }
+.sr-move { position: relative; flex: none; padding: 0 var(--cy-space-2); font-size: var(--cy-type-label); font-weight: 700; color: var(--cy-color-text-primary); }
+.sr-move::after { content: ''; position: absolute; left: 0; right: 0; top: -24rpx; bottom: -24rpx; } /* 热区撑到 88rpx */
 /* 组件样式隔离，全局 .cy-pressed 进不来，本地定义一份（同 cy-sheet）。 */
 .cy-pressed { opacity: .88; }
-.sr-step__b::after { content: ''; position: absolute; left: 0; right: 0; top: -12rpx; bottom: -12rpx; } /* 视觉 64rpx，热区撑到 88rpx */

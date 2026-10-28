@@ -279,7 +279,8 @@ const methods = {
       }
       const row = dirty[index], data = { topicId, taskId: nodeId, alternativeTaskType: row.type, promptText: row.prompt, enabled: row.on };
       if (row.type === 'QUIZ' && row.on) data.answer = row.answer;
-      getApp().sendRequest({ url: '/api/orient/task/alternative', method: 'POST', hideLoading: true, silentError: true, data,
+      getApp().sendRequest({ url: '/api/orient/task/alternative', method: 'POST', hideLoading: true, silentError: true,
+        data: JSON.stringify(data), header: { 'Content-Type': 'application/json' },
         success: res => {
           if (res && String(res.code) === '200') return next(index + 1);
           this.setData({ structureSaving: false, structureError: (res && res.msg) || '没有保存成功，请再试一次。', structureErrorField: 'alternative' });

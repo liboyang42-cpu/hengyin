@@ -106,7 +106,6 @@ const { isRecord, isRecordList } = require('../../../utils/response-shape.js');
 const advancedGameConfig = require('../utils/publish/advanced-game-config.js');
 const topicRouteGraph = require('../utils/publish/topic-route-graph.js');
 const storyRuleForm = require('../utils/publish/story-rule-form.js');
-const storyRuleSentence = require('../utils/publish/story-rule-sentence.js');
 const attributeBinding = require('../utils/publish/attribute-binding.js');
 const nodeGameCatalog = require('../utils/publish/node-game-catalog.js');
 const storyInitialState = require('../utils/publish/story-initial-state.js');
@@ -206,13 +205,13 @@ const CLOUD_AUTOSAVE_MS = 2000;
 // 标题旁状态胶囊:本机、上云中、云端已确认、失败、结果待确认必须分开说,不能把本机写入说成已保存。
 const SAVE_STATE_LABELS = { local: '已存本机', localFailed: '本机未存', saving: '保存中', saved: '已存云端', failed: '云端未存', unknown: '待确认' };
 
-const runtimeEditor = require('./theme-runtime.js');
+const runtimeEditor = require('./theme-runtime.js'); const routeNames = require('./theme-route-names.js'); // 文档二 L3
 const structure = require('./theme-runtime-structure.js'); // structure
 const survivalEditor = require('./theme-runtime-survival.js'); // survival
 const zeroHpEditor = require('./theme-runtime-zero-hp.js'); // R5 HP 归零面板（与 runtimeEditor 内同一组方法，直接展开便于 handler 溯源）
 const ownership = require('./theme-ownership.js');
 Page({
-  ...runtimeEditor.methods,
+  ...runtimeEditor.methods, ...routeNames.methods,
   ...structure.methods, // structure
   ...survivalEditor.methods, // survival
   ...zeroHpEditor.methods, // R5 HP 归零
@@ -225,7 +224,7 @@ Page({
   _nodeBindingDraft: null,
   data: {
     creatorLoginRequired: false,
-    ...runtimeEditor.data,
+    ...runtimeEditor.data, ...routeNames.data,
     ...structure.data, // structure
     ...survivalEditor.data, // survival
     ...ownership.data,
@@ -472,12 +471,6 @@ Page({
     routeMappingRows: [],
     routeMappingFallbackLabel: '继续故事流',
     routeNodeMappingSummary: {},
-    // 10-28 e-route：展开的结果行、去往勾选是否展开、条件 / 效果开的下一层（{ identity, title }）。
-    routeMappingOpen: '',
-    routeMappingDestOpen: false,
-    routeMappingLayer: null,
-    routeRuleNames: {},
-    nodePhotosOpen: false,
 
     audioPreviewPlaying: false,
     // 故事流音频块预听(与章节旁白共用同一个播放器,见 onPreviewStoryAudio)。
@@ -6207,11 +6200,6 @@ Page({
     this._routeRulesScope = this.data.operationScope;
     this._routeMappingSourceNodeId = sourceId;
     this._routeMappingReturnToNodeEditor = returnToNodeEditor;
-    // 条件 / 效果只显示名字：名单来自 d20 设定（属性、进度钟、特质）、线索与物品、主题物品和节点。
-    const ruleNames = storyRuleSentence.buildNames(this.data.formData.journeyRules, this.data.formData.themeRuntimeConfig,
-      nodes, graph.variables || {});
-    const ruleVariables = storyRuleSentence.editorVariables(graph.variables || {}, ruleNames);
-    this._routeExtraVariables = ruleVariables;
     this.setData({
       routeMappingShow: true,
       routeMappingSourceLabel: source.label,
@@ -6219,11 +6207,7 @@ Page({
         || source.templateName || '节点完成结果',
       routeMappingRows: rows,
       routeRuleNodes: nodes.map(node => ({ id: node.id, label: node.label })),
-      routeRuleVariables: ruleVariables,
-      routeRuleNames: ruleNames,
-      routeMappingOpen: '',
-      routeMappingDestOpen: false,
-      routeMappingLayer: null,
+      routeRuleVariables: this._routeRuleState(graph.variables || {}, nodes), // 文档二 L3：名单与展开状态在 theme-route-names.js
       routeMappingFallbackLabel: nextNodeId ? '继续故事流' : '故事流结束',
       popChapterNodes: false,
     });
@@ -6252,45 +6236,18 @@ Page({
     const rowIndex = Number(e.currentTarget.dataset.rowindex);
     const rows = (this.data.routeMappingRows || []).map((row) => Object.assign({}, row));
     const row = rows[rowIndex];
-    const dataset = e.currentTarget.dataset;
-    // 就地勾选传 optionindex；保留 detail.value 以兼容旧的选择器事件。
-    const optionIndex = dataset.optionindex !== undefined ? dataset.optionindex : (e.detail || {}).value;
-    const selected = row && row.targetOptions[Number(optionIndex)];
+    const selected = row && row.targetOptions[Number(e.currentTarget.dataset.optionindex ?? (e.detail || {}).value)]; // 就地勾选传 optionindex
     if (!selected) return;
     row.toNodeId = selected.id;
     row.targetLabel = selected.label;
     this.setData({ routeMappingRows: rows, routeMappingDestOpen: false });
   },
 
-  toggleRouteMappingRow(e) {
-    const key = e.currentTarget.dataset.key;
-    this.setData({ routeMappingOpen: this.data.routeMappingOpen === key ? '' : key, routeMappingDestOpen: false });
-  },
-
-  toggleNodePhotos() { this.setData({ nodePhotosOpen: !this.data.nodePhotosOpen }); },
-
-  toggleRouteMappingDest() { this.setData({ routeMappingDestOpen: !this.data.routeMappingDestOpen }); },
-
-  // 条件 / 效果的组件开、关下一层时通知这里：换头部、藏其它结果行。
-  onRouteRuleLayer(e) {
-    const detail = e.detail || {};
-    this.setData({ routeMappingLayer: detail.open ? { identity: detail.identity, title: detail.title } : null });
-  },
-
-  closeRouteRuleLayer() {
-    const index = (this.data.routeMappingRows || []).findIndex(row => row.mappingKey === this.data.routeMappingOpen);
-    const editor = index >= 0 && this.selectComponent('#route-rules-' + index);
-    if (editor) editor.closeLayer();
-    else this.setData({ routeMappingLayer: null });
-  },
-
   closeNodeRouteMapping() {
     const returnToNodeEditor = this._routeMappingReturnToNodeEditor;
     this._routeMappingReturnToNodeEditor = false;
     this.setData({
-      routeMappingShow: false,
-      routeMappingOpen: '',
-      routeMappingLayer: null,
+      routeMappingShow: false, routeMappingOpen: '', routeMappingLayer: null,
       popChapterNodes: !!returnToNodeEditor,
     });
   },
@@ -6321,14 +6278,7 @@ Page({
     const nextNodeId = this._nextStoryNodeId(sourceId, nodes);
     let graph = this.data.formData.routeMode === 'BRANCH_GRAPH'
       ? topicRouteGraph.normalizeGraph(this._routeGraph).graph
-      : this._sequentialRouteGraph(nodes);
-    // 编辑时可选的属性 / 进度钟若还没在路线图里声明，用到了才补进 variables（初值同 d20 设定）。
-    const extraVariables = this._routeExtraVariables || {};
-    graph.variables = Object.assign({}, graph.variables || {});
-    const usedVariables = JSON.stringify((this.data.routeMappingRows || []).map(row => row.ruleConfig || {}));
-    Object.keys(extraVariables).forEach(key => {
-      if (!(key in graph.variables) && usedVariables.indexOf('"' + key + '"') >= 0) graph.variables[key] = extraVariables[key];
-    });
+      : this._sequentialRouteGraph(nodes); this._declareRouteRuleVariables(graph); // 文档二 L3：用到的属性 / 进度钟补声明
     for (const row of this.data.routeMappingRows || []) {
       if (!row.ruleConfig) continue;
       const errors = storyRuleForm.errors(row.ruleConfig, nodes, graph.variables || {});

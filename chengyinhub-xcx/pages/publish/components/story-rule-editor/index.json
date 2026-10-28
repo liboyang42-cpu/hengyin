@@ -1,1 +1,1 @@
-{"component":true,"usingComponents":{"cy-icon":"/components/cy/icon/index","cy-inline-error":"/components/cy/inline-error/index"}}
+{"component":true,"usingComponents":{"cy-icon":"/components/cy/icon/index","cy-inline-error":"/components/cy/inline-error/index","cy-list-group":"/components/cy/list-group/index","cy-list-row":"/components/cy/list-row/index","cy-segmented":"/components/cy/segmented/index","cy-stepper":"/components/cy/stepper/index"}}

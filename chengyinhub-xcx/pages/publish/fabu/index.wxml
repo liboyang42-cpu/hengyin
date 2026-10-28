@@ -823,32 +823,23 @@
 
     <block wx:if="{{nodeSheetView==='detail'}}">
       <!-- 名称 / 地点一组。地点只显示地名或地址，点整行去选点（2026-08-11 不显示经纬度的裁定照旧）。 -->
-      <view class="node-card node-grp">
-        <view class="node-grp__row">
-          <text class="node-grp__label">名称<text class="g-req" aria-hidden="true">*</text></text>
+      <cy-list-group>
+        <cy-list-row title="名称" tappable="{{false}}">
           <input class="node-grp__input" value="{{nodesForm.name}}" bindinput="onNodeNameInput" placeholder="{{nodesForm._storyGame ? '给这个玩法起个名字' : '给这个节点起个名字'}}" placeholder-class="node-sheet__name-ph" maxlength="40" aria-label="名称" />
-        </view>
-        <view class="node-grp__row" wx:if="{{!nodesForm._storyGame}}" catchtap="choosePoiForNode" aria-role="button" aria-label="选择或修改节点" hover-class="cy-pressed" hover-stay-time="80">
-          <text class="node-grp__label">地点<text class="g-req" aria-hidden="true">*</text></text>
-          <text class="node-grp__value">{{nodesForm.address || '选择节点'}}</text>
-          <view class="node-grp__chev"><cy-icon name="chevron-right" size="24" /></view>
-        </view>
-      </view>
+        </cy-list-row>
+        <cy-list-row wx:if="{{!nodesForm._storyGame}}" class="node-place-row" title="地点" value="{{nodesForm.address || '选择节点'}}" chevron hr bind:press="choosePoiForNode" />
+      </cy-list-group>
 
       <!-- 配置模板。开关关 = 纯到达打卡:原先只有一个「配置玩法(可稍后补)」按钮,
            "不配"是隐式的,创作者分不清自己是故意没配还是忘了配。
            ⚠️ 开关态不入库(NodeDTO 无该字段),开抽屉时由 templateId 派生(见 showEditNodes),
            所以关掉必须连 templateId 一起清,否则重开又会被派生成"开"。 -->
-      <view class="node-card node-grp" wx:if="{{!aiSimple}}">
-        <view class="node-grp__row" wx:if="{{!nodesForm._storyGame}}">
-          <text class="node-grp__label">玩法</text>
+      <cy-list-group gap wx:if="{{!aiSimple}}">
+        <cy-list-row wx:if="{{!nodesForm._storyGame}}" title="玩法" tappable="{{false}}">
           <cy-switch checked="{{nodesForm.showTemplate}}" bind:change="onToggleNodeGame" accessibility-label="玩法" />
-        </view>
-        <view class="node-grp__row" wx:if="{{nodesForm.showTemplate}}" catchtap="showTemp" aria-role="button" aria-label="选择或修改节点玩法" hover-class="cy-pressed" hover-stay-time="80">
-          <text class="node-grp__label">玩法模板</text>
-          <text class="node-grp__value">{{nodesForm.templateId ? (nodesForm.templateInfo.title || '已选择') : '选择或创建玩法模板'}}</text>
-          <view class="node-grp__chev"><cy-icon name="chevron-right" size="24" /></view>
-        </view>
+        </cy-list-row>
+        <cy-list-row wx:if="{{nodesForm.showTemplate}}" title="玩法模板" value="{{nodesForm.templateId ? (nodesForm.templateInfo.title || '已选择') : '选择或创建玩法模板'}}" chevron hr="{{!nodesForm._storyGame}}" bind:press="showTemp" />
+        <view class="node-grp-extra">
         <view class="node-shared" wx:if="{{nodesForm.templateId}}">
           <view wx:if="{{nodeSharedSites.length > 1}}">
             <text class="node-card__value">此玩法用于 {{nodeSharedSites.length || 0}} 个节点</text>
@@ -889,27 +880,16 @@
           </view>
           <cy-inline-error class="node-binding__error" wx:if="{{nodePlanEndingError}}" kind="error" title="{{nodePlanEndingError}}" />
         </view>
-      </view>
+        </view>
+      </cy-list-group>
 
       <!-- 到达与引导 / 下一站 / 照片一组（10-28 e-node）。 -->
-      <view class="node-card node-grp">
-        <view class="node-grp__row" data-kind="quests" bindtap="openStructure" aria-role="button" aria-label="设置到达与引导" hover-class="cy-pressed" hover-stay-time="80">
-          <text class="node-grp__label">到达与引导</text>
-          <text class="node-grp__value">{{nodeStructureSummary}}</text>
-          <view class="node-grp__chev"><cy-icon name="chevron-right" size="24" /></view>
-        </view>
+      <cy-list-group gap>
+        <cy-list-row title="到达与引导" value="{{nodeStructureSummary}}" chevron data-kind="quests" bind:press="openStructure" />
         <!-- 路线只在当前节点内出现：创作者对应玩法结果与下一站，故事流顺序仍是默认路径。 -->
-        <view class="node-grp__row node-route-entry" wx:if="{{formData.productType === 1 && popChapterNodesAction==1}}" bindtap="openNodeRouteMapping" data-nodeid="{{editTargetNodeLid}}" aria-role="button" aria-label="编辑下一站对应" hover-class="cy-pressed" hover-stay-time="80">
-          <text class="node-grp__label">下一站</text>
-          <text class="node-grp__value">{{routeNodeMappingSummary[editTargetNodeLid] || '按故事流继续'}}</text>
-          <view class="node-grp__chev"><cy-icon name="chevron-right" size="24" /></view>
-        </view>
-        <view class="node-grp__row" bindtap="toggleNodePhotos" aria-role="button" aria-expanded="{{nodePhotosOpen}}" aria-label="照片" hover-class="cy-pressed" hover-stay-time="80">
-          <text class="node-grp__label">照片</text>
-          <text class="node-grp__value">{{img.list(nodesForm.imgUrl).length}}/9</text>
-          <view class="node-grp__chev {{nodePhotosOpen ? 'is-open' : ''}}"><cy-icon name="chevron-right" size="24" /></view>
-        </view>
-        <view class="pgrid" wx:if="{{nodePhotosOpen}}">
+        <cy-list-row class="node-route-entry" wx:if="{{formData.productType === 1 && popChapterNodesAction==1}}" title="下一站" value="{{routeNodeMappingSummary[editTargetNodeLid] || '按故事流继续'}}" chevron hr data-nodeid="{{editTargetNodeLid}}" bind:press="openNodeRouteMapping" />
+        <cy-list-row title="照片" value="{{img.list(nodesForm.imgUrl).length}}/9" fold open="{{nodePhotosOpen}}" hr bind:press="toggleNodePhotos" />
+        <view class="pgrid node-grp-extra" wx:if="{{nodePhotosOpen}}">
           <block wx:for="{{img.list(nodesForm.imgUrl)}}" wx:key="index" wx:for-item="p" wx:for-index="pi">
             <view class="pgrid-cell">
               <image lazy-load="true" class="pgrid-cell-img" src="{{p}}" mode="aspectFill" />
@@ -922,7 +902,7 @@
             <view class="pgrid-add-plus"><cy-icon name="plus" size="40" /></view>
           </view>
         </view>
-      </view>
+      </cy-list-group>
 
       <!-- 文字说明只留给自由探索:城市定向已块化,节点的叙事一律写在故事流的文字块里
            —— 位置即时序(节点前那块=到达前的悬念,节点后那块=完成后的剧情),
@@ -1023,15 +1003,8 @@
        添加条件 / 效果、换名字开一层（routeMappingLayer），这时头部换成「‹ 下一站」。 -->
   <cy-sheet variant="full" show="{{routeMappingShow}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="closeNodeRouteMapping" class="node-sheet-host">
     <view class="route-mapping-sheet node-sheet">
-      <view class="node-sheet__top" wx:if="{{routeMappingLayer}}">
-        <view class="node-sheet__close route-mapping-sheet__back" bindtap="closeRouteRuleLayer" aria-role="button" aria-label="返回下一站" hover-class="cy-pressed" hover-stay-time="80"><view class="route-mapping-sheet__back-ico"><cy-icon name="chevron-right" size="28" /></view>下一站</view>
-        <text class="route-mapping-sheet__title">{{routeMappingLayer.title}}</text>
-        <view class="route-mapping-sheet__spacer" />
-      </view>
-      <view class="node-sheet__top" wx:else><view class="node-sheet__close" bindtap="closeNodeRouteMapping" aria-role="button" aria-label="取消下一站编辑" hover-class="cy-pressed" hover-stay-time="80">取消</view>
-        <text class="route-mapping-sheet__title">下一站</text>
-        <view class="node-sheet__done" bindtap="finishNodeRouteMapping" aria-role="button" aria-label="完成下一站编辑" hover-class="cy-pressed" hover-stay-time="80">完成</view>
-      </view>
+      <cy-sheet-nav wx:if="{{routeMappingLayer}}" back="下一站" title="{{routeMappingLayer.title}}" bind:back="closeRouteRuleLayer" />
+      <cy-sheet-nav wx:else title="下一站" action="完成" bind:cancel="closeNodeRouteMapping" bind:action="finishNodeRouteMapping" />
       <text wx:if="{{!routeMappingLayer}}" class="route-mapping-sheet__eyebrow">{{routeMappingTemplateLabel || routeMappingSourceLabel}}</text>
 
       <view class="node-card route-mapping-card">
@@ -1043,19 +1016,13 @@
           <view wx:if="{{routeMappingOpen === mapping.mappingKey}}" class="route-mapping-open">
             <block wx:if="{{!routeMappingLayer}}">
               <view class="route-mapping-dest">
-                <view class="route-mapping-row route-mapping-row--sub" bindtap="toggleRouteMappingDest" aria-role="button" aria-expanded="{{routeMappingDestOpen}}" hover-class="cy-pressed" hover-stay-time="80">
-                  <text class="route-mapping-row__label">去往</text>
-                  <view class="route-mapping-row__target"><text>{{mapping.targetLabel}}</text><view class="route-mapping-row__chev {{routeMappingDestOpen ? 'is-open' : ''}}"><cy-icon name="chevron-right" size="24" /></view></view>
-                </view>
+                <cy-list-row title="去往" value="{{mapping.targetLabel}}" fold open="{{routeMappingDestOpen}}" bind:press="toggleRouteMappingDest" />
                 <block wx:if="{{routeMappingDestOpen}}">
-                  <view wx:for="{{mapping.targetOptions}}" wx:key="id" wx:for-item="option" wx:for-index="optionIndex" class="route-mapping-row route-mapping-row--sub route-mapping-row--option" data-rowindex="{{mappingIndex}}" data-optionindex="{{optionIndex}}" bindtap="onRouteMappingTargetPick" aria-role="radio" aria-checked="{{option.id === mapping.toNodeId}}" hover-class="cy-pressed" hover-stay-time="80">
-                    <text class="route-mapping-row__label">{{option.label}}</text>
-                    <cy-icon wx:if="{{option.id === mapping.toNodeId}}" name="check" size="28" />
-                  </view>
+                  <cy-list-row wx:for="{{mapping.targetOptions}}" wx:key="id" wx:for-item="option" wx:for-index="optionIndex" title="{{option.label}}" hr data-rowindex="{{mappingIndex}}" data-optionindex="{{optionIndex}}" bind:press="onRouteMappingTargetPick"><cy-icon wx:if="{{option.id === mapping.toNodeId}}" name="check" size="28" /></cy-list-row>
                 </block>
               </view>
             </block>
-            <story-rule-editor class="route-mapping-rules" id="route-rules-{{mappingIndex}}" wx:if="{{routeMappingShow}}" identity="{{mapping.formIdentity}}" value="{{mapping.ruleConfig}}" baseline="{{mapping.ruleBaseline}}" nodes="{{routeRuleNodes}}" variables="{{routeRuleVariables}}" names="{{routeRuleNames}}" bind:change="onRouteRulesChange" bind:layer="onRouteRuleLayer" />
+            <story-rule-editor class="route-mapping-rules" id="route-rules-{{mappingIndex}}" wx:if="{{routeMappingShow}}" identity="{{mapping.formIdentity}}" value="{{mapping.ruleConfig}}" baseline="{{mapping.ruleBaseline}}" nodes="{{routeRuleNodes}}" variables="{{routeRuleVariables}}" names="{{routeRuleNames}}" bind:change="onRouteRulesChange" bind:layer="onRouteRuleLayer" bind:create="onRouteRuleCreate" />
           </view>
         </block>
         <view wx:if="{{!routeMappingLayer}}" class="route-mapping-row route-mapping-row--fallback">

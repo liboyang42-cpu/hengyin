@@ -70,11 +70,28 @@ function buildNames(journeyRaw, runtimeRaw, nodes, variables) {
   (nodes || []).forEach(node => add(out.node, String(node.id), text(node.label || node.name)));
   return out;
 }
-// 编辑时可用的变量 = 路线图已声明的 + 名单里的属性 / 进度钟（初值取属性初值，进度钟从 0）。
+// 状态键注册表（GET /api/topic/state-keys）是线索、标签、数值名字的真源：同键以注册表的名字为准；
+// counter 里不是属性、也不是进度钟的，算「数值」。
+function mergeRegistry(names, rows) {
+  const out = JSON.parse(JSON.stringify(names));
+  (Array.isArray(rows) ? rows : []).forEach(row => {
+    if (!record(row)) return;
+    const key = text(row.stateKey), label = text(row.label);
+    const list = /^clue\./.test(key) ? 'clue' : /^tag\./.test(key) ? 'tag'
+      : /^counter\./.test(key) && !out.attr.some(r => r.key === key) && !out.clock.some(r => r.key === key) ? 'value' : '';
+    if (!list || !label) return;
+    const hit = out[list].find(r => r.key === key);
+    if (hit) hit.label = label;
+    else out[list].push(list === 'value' ? { key, label, initial: Number(row.initialValue) || 0 } : { key, label });
+  });
+  return out;
+}
+// 编辑时可用的变量 = 路线图已声明的 + 名单里的属性 / 进度钟 / 注册表数值（初值同设定，进度钟从 0）。
 function editorVariables(variables, names) {
   const out = Object.assign({}, variables || {});
   (names.attr || []).forEach(row => { if (!(row.key in out)) out[row.key] = row.initial || 0; });
   (names.clock || []).forEach(row => { if (!(row.key in out)) out[row.key] = 0; });
+  (names.value || []).forEach(row => { if (/^counter\./.test(row.key) && !(row.key in out)) out[row.key] = row.initial || 0; });
   return out;
 }
 
@@ -170,23 +187,25 @@ function topMode(value) {
 function topListPath(value) { return topMode(value) === 'OR' ? 'conditions.0.conditions' : 'conditions'; }
 
 // ---- 视图行（平铺；一组条件展开后把子句排在它下面，depth 只决定缩进） ----
-const SEG = (options, selected) => options.map((label, index) => ({ key: String(index), label, on: index === selected }));
+// cy-segmented 的入参：options [{ label, value }] + 当前 value。
+const SEG = (labels, selected) => ({ options: labels.map((label, index) => ({ label, value: String(index) })), value: String(selected) });
+const NAME_SEG = (pool, key) => ({ options: pool.map(row => ({ label: row.label, value: row.key })), value: String(key) });
 function leafEditor(leaf, negated, names, kind) {
   const ed = { kind };
   if (NEGATE[kind]) ed.neg = SEG(NEGATE[kind], negated ? 1 : 0);
   if (kind === 'var') {
     const list = varList(names, leaf.var), pool = names[list] || [];
-    if (pool.length > 1 && pool.length <= 4) ed.names = pool.map(row => ({ key: row.key, label: row.label, on: row.key === leaf.var }));
+    if (pool.length > 1 && pool.length <= 4) ed.names = NAME_SEG(pool, leaf.var);
     else if (pool.length > 4) ed.rename = true;
     ed.cmp = SEG(['至少', '至多', '正好'], Math.max(0, COMPARE.indexOf(leaf.op)));
-    ed.amount = Number(leaf.value) || 0;
+    ed.amount = Number(leaf.value) || 0; ed.min = 0; ed.max = list === 'clock' ? Math.max(1, ((pool.find(row => row.key === leaf.var) || {}).max) || 12) : 999;
   } else if (kind === 'visit') {
-    ed.rename = true; ed.cmp = SEG(['至少', '至多', '正好'], Math.max(0, COMPARE.indexOf(leaf.cmp || 'GTE'))); ed.amount = Number(leaf.value) || 0;
+    ed.rename = true; ed.cmp = SEG(['至少', '至多', '正好'], Math.max(0, COMPARE.indexOf(leaf.cmp || 'GTE'))); ed.amount = Number(leaf.value) || 0; ed.min = 0; ed.max = 99;
   } else if (kind === 'check') {
     ed.rename = true; ed.result = SEG(['通过', '未通过'], leaf.result === 'FAIL' ? 1 : 0);
   } else if (kind === 'trait') {
     const pool = names.trait || [];
-    if (pool.length > 1 && pool.length <= 4) ed.names = pool.map(row => ({ key: row.key, label: row.label, on: row.key === leaf.value }));
+    if (pool.length > 1 && pool.length <= 4) ed.names = NAME_SEG(pool, leaf.value);
     else ed.rename = pool.length > 1;
   } else if (kind) ed.rename = true;
   return ed;
@@ -203,7 +222,7 @@ function conditionRows(value, names, open, groups) {
       if (kind === 'group') {
         out.push({ type: 'group', path, leafPath, depth, text: (negated ? '不满足 · ' : '') + conditionSentence(leaf, false, names), open: isOpen });
         if (isOpen) {
-          out.push({ type: 'groupSeg', path: leafPath, depth: depth + 1, seg: SEG(['全部满足', '任一满足'], leaf.op === 'OR' ? 1 : 0) });
+          out.push({ type: 'groupSeg', path: leafPath, depth: depth + 1, seg: { options: [{ label: '全部满足', value: 'AND' }, { label: '任一满足', value: 'OR' }], value: leaf.op === 'OR' ? 'OR' : 'AND' } });
           walk(leafPath + '.conditions', leaf.conditions, depth + 1);
           if (depth < 2) out.push({ type: 'groupAdd', path: leafPath, depth: depth + 1 });
           out.push({ type: 'groupDel', path, depth: depth + 1 });
@@ -231,8 +250,10 @@ function effectRows(value, names, open) {
         editor.op = SEG(['增加', '减少', '设为'], row.op === 'SET' ? 2 : Number(row.value) < 0 ? 1 : 0);
         editor.amount = Math.abs(Number(row.value) || 0);
       }
-      if (kind === 'clock' || kind === 'xp') editor.amount = Number(row.value) || 0;
-      if (kind === 'item') editor.amount = Number(row.quantity) || 1;
+      if (kind === 'var') { editor.min = 0; editor.max = 999; }
+      if (kind === 'clock') { editor.amount = Number(row.value) || 0; editor.min = 1; editor.max = Number(row.max) || 12; }
+      if (kind === 'xp') { editor.amount = Number(row.value) || 0; editor.min = 1; editor.max = 100; }
+      if (kind === 'item') { editor.amount = Number(row.quantity) || 1; editor.min = 1; editor.max = 99; }
       editor.hasAmount = editor.amount !== undefined;
     }
     return { type: 'leaf', path, depth: 0, text: effectSentence(row, names), open: isOpen, editor, unsupported: !kind };
@@ -364,7 +385,7 @@ function namesListFor(value, path, names) {
   return { clue: 'clue', tag: 'tag', equip: 'item', trait: 'trait', visit: 'node', done: 'node', check: 'node' }[kind] || '';
 }
 module.exports = {
-  CONDITION_KINDS, EFFECT_KINDS, buildNames, editorVariables, conditionSentence, effectSentence,
+  CONDITION_KINDS, EFFECT_KINDS, buildNames, mergeRegistry, editorVariables, conditionSentence, effectSentence,
   conditionRows, effectRows, topMode, add, remove, setTopMode, setGroupMode, setNegated, setKey,
   setCompare, setResult, setAmount, setVarOp, move, namesListFor, varList,
 };
