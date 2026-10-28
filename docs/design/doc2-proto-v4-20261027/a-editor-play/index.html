@@ -12182,6 +12182,56 @@ body.clean .scr .need{display:none}
 .proto-hudline[data-cur="d20off"]{min-height:0;height:0}
 .dic .proto-ava{width:24px;height:24px;font-size:var(--cy-type-caption)}
 .ios-sw:not(.is-open) > .ios-del{visibility:hidden}
+/* ===== 10-28 专业配置重做：与 d20 半屏同一套 iOS 分组列表 ===== */
+.pg-temp .node-sheet__close{min-width:45.76px;height:45.76px;margin-left:calc(var(--cy-space-1) * -1);padding:0 var(--cy-space-1);display:flex;align-items:center;justify-content:flex-start;color:var(--cy-color-text-primary);font-size:var(--cy-type-button);font-weight:600;cursor:pointer}
+.pg-temp .node-sheet__done{min-width:66.56px;height:var(--cy-btn-h);padding:0 var(--cy-space-4);box-sizing:border-box;display:flex;align-items:center;justify-content:center;border-radius:var(--cy-radius-pill);background:var(--cy-color-action-primary-bg);color:var(--cy-color-action-primary-fg);font-size:var(--cy-type-button);font-weight:700;cursor:pointer}
+.pg-temp .node-sheet__done.is-disabled,.pg-fabu .node-sheet__done.is-disabled{pointer-events:none}
+.pg-temp .node-sheet__done.is-disabled{background:var(--cy-color-bg-surface-subtle);color:var(--cy-color-text-placeholder)}
+.pg-temp .node-sheet-host{--cy-comp-sheet-role-glass:var(--cy-comp-sheet-role-page)}
+.re-r:empty{display:none}
+/* 步进器：上下限由控件保证，到头那一侧变灰 */
+.ios-num{flex:none;min-width:24px;text-align:right;font-size:var(--cy-type-body);color:var(--cy-color-text-primary);font-variant-numeric:tabular-nums}
+.ios-stp{flex:none;display:inline-flex;align-items:center;border-radius:9px;background:var(--cy-color-bg-surface-subtle);overflow:hidden;margin-left:6px}
+.ios-stp > view{position:relative;width:46px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--cy-color-text-primary)}
+.ios-stp > view + view::before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:1px;background:var(--cy-color-border-strong);opacity:.5}
+.ios-stp > view::after{content:"";position:absolute;width:13px;height:2px;border-radius:1px;background:currentColor}
+.ios-stp > view.is-plus i{position:absolute;width:2px;height:13px;border-radius:1px;background:currentColor}
+.ios-stp > view.is-off{color:var(--cy-color-text-disabled);pointer-events:none}
+/* 右侧紧凑分段控件（难度、加值） */
+.ios-seg.is-r{flex:0 0 auto;min-width:168px}
+.ios-row > .ios-seg{flex:1}
+.ios-row > .ios-t + .ios-seg.is-r{margin-left:auto}
+/* 搜索行 */
+.ios-search{gap:8px;min-height:44px}
+.ios-search cy-icon{color:var(--cy-color-text-tertiary)}
+.ios-gap-s{margin-top:12px}
+/* 行内输入（名称、提示） */
+.ios-row > .ios-t.is-l{flex:none;min-width:64px}
+.ios-ta{flex:1 1 auto;min-height:64px;width:100%;font-size:var(--cy-type-body);line-height:1.45;color:var(--cy-color-text-primary);background:transparent;border:0;resize:none;padding:4px 0;font-family:inherit;box-sizing:border-box}
+/* 状态图标（发布确认） */
+.ios-st{flex:none;position:relative;width:22px;height:22px;border-radius:50%;background:var(--cy-color-status-success)}
+.ios-st::after{content:"";position:absolute;left:7.5px;top:4.5px;width:5px;height:9px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+.ios-st.is-bad{background:var(--cy-color-status-danger)}
+.ios-st.is-bad::after{left:10px;top:5px;width:2px;height:8px;border:0;border-radius:1px;background:#fff;transform:none;box-shadow:0 10px 0 0 #fff}
+.ios-st.is-bad::before{content:none}
+.ios-row.is-bad-row .ios-t{color:var(--cy-color-status-danger)}
+/* 不能修改：只看，不能点 */
+.is-ro .ios-row{pointer-events:none}
+.is-ro .ios-chev,.is-ro .ios-stp,.is-ro .is-add,.is-ro .ios-hd__act,.is-ro .is-danger,.is-ro .ios-search,.is-ro .re-new{display:none !important}
+.is-ro switch,.is-ro .ios-seg{opacity:.45}
+.is-ro .ios-in,.is-ro .ios-ta{pointer-events:none;color:var(--cy-color-text-tertiary)}
+.is-ro .node-sheet__done:not(.ios-keep){visibility:hidden}
+/* 删除不了（被用到）：红色那一行变灰 */
+.ios-row.is-danger.is-dis{pointer-events:none}
+.ios-row.is-danger.is-dis .ios-t{color:var(--cy-color-text-disabled)}
+/* 页面上的分组列表（编辑玩法模板） */
+.tp-ios{padding:0 16px}
+#game-cfg{scroll-margin-top:92px}
+.tp-ios .ios-hd{padding-left:16px}
+/* 发布确认的底部按钮 */
+.ios-cta{padding:22px 0 8px}
+.ios-cta .btn.is-off{opacity:.38;pointer-events:none}
+.ios-row.is-off .ios-ic--add{background:var(--cy-color-text-disabled)}
 </style>
 </head>
 <body>
@@ -12290,7 +12340,7 @@ body.clean .scr .need{display:none}
       <view class="slopes-tab is-on"><cy-icon><view class="cyi cyi--list" style="width:23.92px;height:23.92px"></view></cy-icon><view class="slopes-tab__dot"></view></view>
       <view class="slopes-tab" data-toast="切到地图视图"><cy-icon><view class="cyi cyi--map" style="width:23.92px;height:23.92px"></view></cy-icon><view class="slopes-tab__dot"></view></view>
     </view>
-    <cy-btn class="slopes-tabbar__cta" data-open="pcSheet,pcMask"><view class="btn btn--primary"><text>发布</text><cy-icon><view class="cyi cyi--arrow-right" style="width:14.56px;height:14.56px"></view></cy-icon></view></cy-btn>
+    <cy-btn class="slopes-tabbar__cta" data-open="pcSheet"><view class="btn btn--primary"><text>发布</text><cy-icon><view class="cyi cyi--arrow-right" style="width:14.56px;height:14.56px"></view></cy-icon></view></cy-btn>
   </view>
 </view>
 
@@ -12369,45 +12419,10 @@ body.clean .scr .need{display:none}
     <view class="node-card"><view class="node-card__row"><view class="node-card__ico"><cy-icon><view class="cyi cyi--flag" style="width:16.64px;height:16.64px"></view></cy-icon></view><view class="node-card__main"><text class="node-card__title">通关条件</text></view><cy-switch><switch class="cs"></switch></cy-switch></view></view>
     <view class="node-card"><view class="node-card__row"><view class="node-card__ico"><cy-icon><view class="cyi cyi--tab-feed" style="width:16.64px;height:16.64px"></view></cy-icon></view><view class="node-card__main"><text class="node-card__title">发布到创意广场</text></view><cy-switch><switch class="cs" checked></switch></cy-switch></view></view>
 
-    <!-- 状态键 = 唯一的属性定义处（C-1） -->
+    <!-- 10-28：「状态键」卡 → 一行「线索与物品」，点开叠一张半屏（和 d20 一样） -->
     <topic-state-keys id="skCard">
-    <view class="node-card sk mk-chg" data-mk="状态键：属性只读" data-before="v4 第一版：「计数」表单里多一段「作为角色属性」（范围、显示为、颜色、图标、排序、玩家可见、保留范围、分档文字），每行可「编辑」" data-after="表单回到 master 原样（只填键名、显示名、初始值）。属性仍存在这里，但只读：每行写「属性 · 0–5 · 开局 2」，下面一句「在「d20 与角色设定」里修改」，没有编辑和删除；骰子检定关着时属性行不出现" data-why="C-1 不变：属性仍存进主题的状态键注册表（theme_state_key，键名由系统生成 counter.*），发布时冻结。只是编辑入口挪到「d20 与角色设定」半屏，这里不再有第二个可改的地方。" data-states="ok,d20off,loading,empty,error,noperm" data-st-name="状态键卡（d20 开 / 关）">
-      <text class="node-card__title">状态键</text>
-      <text class="sk__desc">记录线索、计数和关系的变量</text>
-      <text class="sk__desc" data-st="noperm">主题已锁定，仅可查看</text>
-      <view class="sk__state" data-st="loading"><view class="cy-skel-line" style="height:14px;width:70%;border-radius:7px;background:var(--cy-color-bg-surface-subtle)"></view><view style="height:14px;width:45%;border-radius:7px;background:var(--cy-color-bg-surface-subtle);margin-top:8px"></view></view>
-      <view data-st="error"><cy-error><view class="cy-error"><view class="cy-error-title" style="font-size:15px;font-weight:600">状态键加载失败</view><view class="node-pill" style="margin-top:8px" data-toast="重试">重试</view></view></cy-error></view>
-      <text class="sk__empty" data-st="empty">还没有注册状态键</text>
-      <view data-st="ok noperm" class="mk-chg" data-mk="属性行去掉小字" data-before="每行下面「属性 · 0–5 · 开局 2」；列表下面一句「以上 4 项属性在「d20 与角色设定」中修改」" data-after="每行左边名称、右边范围「0–5 ›」，点一行叠开「d20 与角色设定」；下面那句删掉" data-why="业主 10-28：去掉次级说明，让版式自己说明。">
-      <view class="sk-row mk-new" data-mk="属性行只读" data-why="来自「d20 与角色设定」。不显示键名，不给编辑 / 删除；点这一行叠开那张半屏。" data-open="d20Sheet">
-        <view class="sk-row__main">
-          <text class="sk-row__key">观察</text></view><text class="sk-row__v">0–5</text><cy-icon class="sk-row__chev"><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon>
-        
-      </view>
-      <view class="sk-row" data-open="d20Sheet"><view class="sk-row__main"><text class="sk-row__key">胆量</text></view><text class="sk-row__v">0–10</text><cy-icon class="sk-row__chev"><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view>
-      <view class="sk-row" data-open="d20Sheet"><view class="sk-row__main"><text class="sk-row__key">体魄</text></view><text class="sk-row__v">0–8</text><cy-icon class="sk-row__chev"><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view>
-      <view class="sk-row" data-open="d20Sheet"><view class="sk-row__main"><text class="sk-row__key">灵感</text></view><text class="sk-row__v">0–5</text><cy-icon class="sk-row__chev"><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view>
-      </view>
-      <view data-st="ok noperm d20off">
-      <view class="sk-row">
-        <view class="sk-row__main"><text class="sk-row__key">clue.ledger_half</text><text class="sk-row__sub">线索 · 半张货单</text></view>
-        <view class="sk-row__del" data-st="ok d20off">删除</view>
-      </view>
-      </view>
-      <view data-st="ok empty d20off">
-      <view class="node-pill sk__add" data-act="newAttr" id="skAddBtn"><cy-icon><view class="cyi cyi--plus" style="width:12.48px;height:12.48px"></view></cy-icon><text>新增状态键</text></view>
-      <view class="rv sk-form" id="skForm">
-        <view class="sk-form__types mk-chg" id="skTypes" data-mk="去掉类型说明" data-before="类型下面一行「记录一条线索」（master 是「有/没有(是否拿到某条线索)」）" data-after="只留四个类型" data-why="业主 10-28：去掉次级说明，让版式自己说明。">
-          <view class="sk-form__type is-on">线索</view>
-          <view class="sk-form__type">计数</view>
-          <view class="sk-form__type">关系</view>
-          <view class="sk-form__type">标签</view>
-        </view>
-        <view class="sk-form__name"><text class="sk-form__prefix">clue.</text><input class="sk-form__input" value="pocket_watch" id="skName"/></view>
-        <input class="sk-form__input sk-form__input--box" value="巡夜人的怀表" />
-        <view class="sk-form__actions"><view class="node-pill" data-act="cancelAttr"><text>取消</text></view><view class="node-pill node-pill--solid" data-act="saveAttr"><text>保存</text></view></view>
-      </view>
-      </view>
+    <view class="node-card" id="keysCard">
+      <view class="node-card__row mk-chg" data-mk="状态键 → 线索与物品（一行）" data-before="「状态键」卡：一句「记录线索、计数和关系的变量」；属性只读行（观察 0–5 …）；键名行「clue.ledger_half / 线索 · 半张货单 · 删除」；「新增状态键」药丸，展开后选 线索 / 计数 / 关系 / 标签，再在「clue.」前缀后手打英文键名" data-after="一行「线索与物品 · 7 项 ›」，点开叠一张半屏：线索、物品、标签三组列表，只有中文名字。键名由系统生成，不显示、不输入。属性和进度钟不在这里，只在「d20 与角色设定」里" data-why="业主 10-28 下午：专业配置的界面还不对；clue.ledger_half 这类东西不该出现，作者配置的东西要简单、不带英文。照 d20 半屏的做法重做。 底下仍是状态键注册表：线索 = clue.*（flag），标签 = tag.*；物品是主题物品（itemId）。计数（counter.*）就是属性和进度钟；关系（relation.*）这一版不给界面。" data-open="keysSheet"><view class="node-card__ico"><cy-icon><view class="cyi cyi--list" style="width:16.64px;height:16.64px"></view></cy-icon></view><view class="node-card__main"><text class="node-card__title">线索与物品</text></view><view class="node-pill"><text id="keysSum">7 项</text><cy-icon><view class="cyi cyi--chevron-right" style="width:12.48px;height:12.48px"></view></cy-icon></view></view>
     </view>
     </topic-state-keys>
 
@@ -12634,89 +12649,140 @@ body.clean .scr .need{display:none}
 </view>
 </cy-sheet>
 
-<!-- ============ 编辑数值（valueEditor）— 已写码：定义只读，只留关联 ============ -->
-<cy-sheet class="node-sheet-host ps" id="veSheet" style="--cy-comp-sheet-max-h:calc(844px - 88px)">
-<view class="sh sh--bottom sh--lv-full">
-  <view class="sh__mask" data-close="veSheet"></view>
-  <view class="sh__panel">
-  <view class="sh__grip"><view class="sh__handle"></view></view>
-  <scroll-view class="sh__body">
-    <view class="node-sheet story-initial">
-      <view class="node-sheet__top"><view class="node-sheet__close" data-close="veSheet">退出</view><view class="node-sheet__done" data-close="veSheet">完成</view></view>
-      <view class="node-sheet__titlebar"><text class="node-sheet__eyebrow">取值范围</text><text class="node-sheet__name node-sheet__name--static">编辑数值</text></view>
-      <view class="node-card mk-wip" data-mk="定义只读（cy26）" data-why="feature/cy26-w8-closeout：valueEditor.definitionReadOnly 时名称/上下限/可见禁用、删除隐藏，提示改到状态键。与 C-1 一致，原型保留。" data-prob="名称输入 maxlength 从 24 改成 128；提示用了新类 .rt-hint（fabu wxss 里没有定义，实际渲染成默认字号）。">
-        <view class="rt-field"><text>名称</text><input value="观察" disabled/></view>
-        <view class="rt-two"><view class="rt-field"><text>下限</text><input value="0" disabled/></view><view class="rt-field"><text>上限</text><input value="5" disabled/></view></view>
-        <view class="node-card__row"><view class="node-card__main"><text class="node-card__title">玩家可见</text></view><cy-switch><switch class="cs" checked disabled></switch></cy-switch></view>
-        <view class="rt-hint">定义在主题配置的状态键中管理；这里可以编辑数值关联。</view>
+<!-- ============ 10-28 线索与物品（原「状态键」卡）：叠在主题详情上的第二张半屏，和 d20 同一套 ============ -->
+<cy-sheet class="node-sheet-host ps" id="keysSheet" style="--cy-comp-sheet-max-h:calc(844px - 88px)">
+<view class="sh sh--full sh--lv-full">
+  <view class="sh__mask" data-close="keysSheet"></view>
+  <view class="sh__panel ios-host" id="keysHost">
+  <view class="ios-lv ios-root" id="keysL1">
+    <view class="ios-nav"><view class="node-sheet__close" data-close="keysSheet">取消</view><text class="ios-nav__t">线索与物品</text><view class="ios-nav__r"><view class="node-sheet__done ios-keep" data-close="keysSheet" data-toast="已保存">完成</view></view></view>
+    <scroll-view class="ios-body">
+    <view class="mk-new" data-mk="线索与物品 · 三组列表" data-why="业主 10-28 下午：专业配置的界面还不对；clue.ledger_half 这类东西不该出现，作者配置的东西要简单、不带英文。照 d20 半屏的做法重做。 每组：点一行改名字，左滑删除，「编辑」拖动排序（= sortOrder），最后一行添加。被条件、效果或初始状态用到的那一项删不掉（后端 DELETE /api/topic/state-keys 被引用时拒绝），左滑「删除」弹窗说明用在哪里。" id="keysList" data-states="ok,swipe,editing,empty,error,noperm" data-st-name="线索与物品" data-cur="ok">
+      <view class="ios-hd"><text>线索</text><text class="ios-hd__act" data-st="ok swipe editing" data-act="editList" data-list="keys_clue">编辑</text></view>
+      <view class="ios-grp ios-list" id="keys_clue">
+        <view class="ios-sw" data-st="ok swipe editing error noperm" ><view class="ios-del" data-modal="不能删除「半张货单」|「旧码头仓库」的下一站和初始状态用到了它，先在那里移除。|-|好">删除</view><view class="ios-row" data-act="keyEdit" data-k="clue" data-n="半张货单" data-used="「旧码头仓库」的下一站和初始状态"><view class="ios-minus" data-act="swOpen" aria-label="删除"></view><view class="ios-m"><text class="ios-t">半张货单</text></view><view class="ios-chev"><cy-icon><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view><view class="ios-grip" aria-label="拖动排序"></view></view></view>
+        <view class="ios-sw" data-st="ok swipe editing error noperm" ><view class="ios-del" data-modal="删除「巡夜人的怀表」？|用到它的条件和效果需要重新选择。|取消|删除" data-ok-act="rowDel">删除</view><view class="ios-row" data-act="keyEdit" data-k="clue" data-n="巡夜人的怀表"><view class="ios-minus" data-act="swOpen" aria-label="删除"></view><view class="ios-m"><text class="ios-t">巡夜人的怀表</text></view><view class="ios-chev"><cy-icon><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view><view class="ios-grip" aria-label="拖动排序"></view></view></view>
+        <view class="ios-sw" data-st="ok swipe editing error noperm" ><view class="ios-del" data-modal="删除「另半张货单」？|用到它的条件和效果需要重新选择。|取消|删除" data-ok-act="rowDel">删除</view><view class="ios-row" data-act="keyEdit" data-k="clue" data-n="另半张货单"><view class="ios-minus" data-act="swOpen" aria-label="删除"></view><view class="ios-m"><text class="ios-t">另半张货单</text></view><view class="ios-chev"><cy-icon><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view><view class="ios-grip" aria-label="拖动排序"></view></view></view>
+        <view class="ios-row is-add" data-st="ok swipe empty" data-act="keyAdd" data-k="clue"><view class="ios-ic ios-ic--add"><cy-icon><view class="cyi cyi--plus" style="width:12.48px;height:12.48px"></view></cy-icon></view><view class="ios-m"><text class="ios-t">添加线索</text></view></view>
       </view>
-      <view class="node-card">
-        <view class="node-card__row"><view class="node-card__main"><text class="node-card__title">关联</text></view><view class="node-pill">添加<cy-icon><view class="cyi cyi--plus" style="width:12.48px;height:12.48px"></view></cy-icon></view></view>
-        <text class="story-initial__example">仅支持此值下降时扣减已启用的生命值，不支持其他目标或双向关联。</text>
+      <view class="ios-hd"><text>物品</text><text class="ios-hd__act" data-st="ok swipe editing" data-act="editList" data-list="keys_item">编辑</text></view>
+      <view class="ios-grp ios-list" id="keys_item">
+        <view class="ios-sw" data-st="ok swipe editing error noperm" ><view class="ios-del" data-modal="不能删除「旧手电」|初始状态和「撬开侧门」的情境加值用到了它，先在那里移除。|-|好">删除</view><view class="ios-row" data-act="keyEdit" data-k="item" data-n="旧手电" data-used="初始状态和「撬开侧门」的情境加值"><view class="ios-minus" data-act="swOpen" aria-label="删除"></view><view class="ios-m"><text class="ios-t">旧手电</text></view><view class="ios-chev"><cy-icon><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view><view class="ios-grip" aria-label="拖动排序"></view></view></view>
+        <view class="ios-sw" data-st="ok swipe editing error noperm" ><view class="ios-del" data-modal="删除「撬棍」？|用到它的条件和效果需要重新选择。|取消|删除" data-ok-act="rowDel">删除</view><view class="ios-row" data-act="keyEdit" data-k="item" data-n="撬棍"><view class="ios-minus" data-act="swOpen" aria-label="删除"></view><view class="ios-m"><text class="ios-t">撬棍</text></view><view class="ios-chev"><cy-icon><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view><view class="ios-grip" aria-label="拖动排序"></view></view></view>
+        <view class="ios-row is-add" data-st="ok swipe empty" data-act="keyAdd" data-k="item"><view class="ios-ic ios-ic--add"><cy-icon><view class="cyi cyi--plus" style="width:12.48px;height:12.48px"></view></cy-icon></view><view class="ios-m"><text class="ios-t">添加物品</text></view></view>
       </view>
+      <view class="ios-hd"><text>标签</text><text class="ios-hd__act" data-st="ok swipe editing" data-act="editList" data-list="keys_tag">编辑</text></view>
+      <view class="ios-grp ios-list" id="keys_tag">
+        <view class="ios-sw" data-st="ok swipe editing error noperm" ><view class="ios-del" data-modal="不能删除「新来的」|初始状态用到了它，先在那里移除。|-|好">删除</view><view class="ios-row" data-act="keyEdit" data-k="tag" data-n="新来的" data-used="初始状态"><view class="ios-minus" data-act="swOpen" aria-label="删除"></view><view class="ios-m"><text class="ios-t">新来的</text></view><view class="ios-chev"><cy-icon><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view><view class="ios-grip" aria-label="拖动排序"></view></view></view>
+        <view class="ios-sw" data-st="ok swipe editing error noperm" ><view class="ios-del" data-modal="删除「见过巡夜人」？|用到它的条件和效果需要重新选择。|取消|删除" data-ok-act="rowDel">删除</view><view class="ios-row" data-act="keyEdit" data-k="tag" data-n="见过巡夜人"><view class="ios-minus" data-act="swOpen" aria-label="删除"></view><view class="ios-m"><text class="ios-t">见过巡夜人</text></view><view class="ios-chev"><cy-icon><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view><view class="ios-grip" aria-label="拖动排序"></view></view></view>
+        <view class="ios-row is-add" data-st="ok swipe empty" data-act="keyAdd" data-k="tag"><view class="ios-ic ios-ic--add"><cy-icon><view class="cyi cyi--plus" style="width:12.48px;height:12.48px"></view></cy-icon></view><view class="ios-m"><text class="ios-t">添加标签</text></view></view>
+      </view>
+      <view class="ios-ft is-err" data-st="error">没有读取成功，请再试一次。</view>
+      <view class="ios-ft" data-st="noperm">这个主题现在不能修改。</view>
     </view>
-  </scroll-view>
+    </scroll-view>
+  </view>
+
+  <!-- 下一层：添加 / 修改一项 -->
+  <view class="ios-lv ios-sub" id="keysLItem">
+    <view class="ios-nav"><view class="node-sheet__close ios-back" data-act="lvBack" aria-label="返回线索与物品"><cy-icon><view class="cyi cyi--back" style="width:20.8px;height:20.8px"></view></cy-icon><text>线索与物品</text></view><text class="ios-nav__t" id="keyTitle">添加线索</text><view class="ios-nav__r"><view class="node-sheet__done is-disabled" id="keyDone" data-act="keySave">添加</view></view></view>
+    <scroll-view class="ios-body">
+    <view class="mk-new" data-mk="添加 / 修改一项" data-why="添加：先选是线索、物品还是标签（分段控件），再写名字；名字写好之前右上「添加」是灰的，同组里重名就在下面写一句。修改：只改名字（键名不变，后端 PUT 不许改键名），底部红色删除。被用到时（右栏「被用到」）列出用在哪里，删除那一行变灰。「用在哪里」要一个只读查询：需后端（现在只有删除被拒时才返回引用位置，而且是带键名的一句话）。" id="keyForm" data-states="add,edit,invalid,locked,noperm" data-st-name="线索与物品 · 一项" data-cur="add">
+      <view data-st="add invalid"><view class="ios-grp"><view class="ios-row is-static"><view class="ios-seg" id="keyType"><view class="is-on" data-act="keyType" data-k="clue">线索</view><view data-act="keyType" data-k="item">物品</view><view data-act="keyType" data-k="tag">标签</view></view></view></view></view>
+      <view class="ios-hd">名称</view>
+      <view class="ios-grp"><view class="ios-row is-static" id="keyNameRow"><input class="ios-in ios-in--l" id="keyName" value="" maxlength="12"/></view></view>
+      <view class="ios-ft is-err" id="keyErr"></view>
+      <view data-st="locked">
+        <view class="ios-hd">用在<text class="need">需后端</text></view>
+        <view class="ios-grp" id="keyUsed"></view>
+      </view>
+      <view data-st="edit locked"><view class="ios-grp ios-gap"><view class="ios-row is-danger" id="keyDel" data-modal="删除这一项？|用到它的条件和效果需要重新选择。|取消|删除" data-ok-act="keyDel"><text class="ios-t">删除线索</text></view></view></view>
+    </view>
+    </scroll-view>
+  </view>
   </view>
 </view>
 </cy-sheet>
 
-<!-- ============ 初始状态（initialStateEditor · 10-28：开局标签 + master 原有的生命值 / 幸运卡）============ -->
+<!-- ============ 编辑数值（valueEditor）· 10-28：iOS 分组列表，生命值 / 幸运值 / 行动次数 这类内置数值 ============ -->
+<cy-sheet class="node-sheet-host ps" id="veSheet" style="--cy-comp-sheet-max-h:calc(844px - 88px)">
+<view class="sh sh--full sh--lv-full">
+  <view class="sh__mask" data-close="veSheet"></view>
+  <view class="sh__panel ios-host" id="veHost">
+  <view class="ios-lv ios-root" id="veL1">
+    <view class="ios-nav mk-chg" data-mk="iOS 导航栏" data-before="master：左「退出」、右「完成」，下面小字「取值范围」+ 大标题「编辑数值」" data-after="一行导航栏：左「取消」、中间是这个数值的名字、右「完成」" data-why="和 d20 半屏一样。"><view class="node-sheet__close" data-close="veSheet">取消</view><text class="ios-nav__t">幸运值</text><view class="ios-nav__r"><view class="node-sheet__done ios-keep" data-close="veSheet" data-toast="已保存">完成</view></view></view>
+    <scroll-view class="ios-body">
+    <view class="mk-chg" data-mk="编辑数值 · 分组列表" data-before="cy26 已写码版：名称 / 下限 / 上限三个灰色输入框、灰色「玩家可见」开关、一句「定义在主题配置的状态键中管理；这里可以编辑数值关联。」；「关联 · 添加 +」和一句「仅支持此值下降时扣减已启用的生命值，不支持其他目标或双向关联。」" data-after="名称、玩家可见一组；范围两行步进器（最小值最大到最大值减 1，最大值最小到最小值加 1，控件自己挡住）；关联只剩一个开关「下降时一起扣生命值」。两句说明删掉" data-why="业主 10-28 下午：专业配置的界面还不对；clue.ledger_half 这类东西不该出现，作者配置的东西要简单、不带英文。照 d20 半屏的做法重做。 这一屏只管生命值、幸运值、行动次数这类内置数值（master 的 valueEditor 本来就能改）；属性只在「d20 与角色设定」里改，不再从这里只读地出现，所以 cy26 的只读和「状态键」字样都不需要了。" id="veForm" data-states="ok,error,noperm" data-st-name="编辑数值" data-cur="ok">
+      <view class="ios-grp"><view class="ios-row is-static"><text class="ios-t is-l">名称</text><input class="ios-in" value="幸运值" maxlength="24"/></view><view class="ios-row is-static" ><view class="ios-m"><text class="ios-t">玩家可见</text></view><cy-switch><switch class="cs" checked></switch></cy-switch></view></view>
+      <view class="ios-hd">范围</view>
+      <view class="ios-grp"><view class="ios-row is-static" ><view class="ios-m"><text class="ios-t">最小值</text></view><text class="ios-num">0</text><view class="ios-stp" data-min="0" data-max="2" id="veMin" data-hi="veMax"><view data-act="stp" data-d="-1" aria-label="减少" class="is-off"></view><view data-act="stp" data-d="1" aria-label="增加" class="is-plus"><i></i></view></view></view><view class="ios-row is-static" ><view class="ios-m"><text class="ios-t">最大值</text></view><text class="ios-num">3</text><view class="ios-stp" data-min="1" data-max="99" id="veMax" data-lo="veMin"><view data-act="stp" data-d="-1" aria-label="减少" class=""></view><view data-act="stp" data-d="1" aria-label="增加" class="is-plus"><i></i></view></view></view></view>
+      <view class="ios-hd">关联</view>
+      <view class="ios-grp"><view class="ios-row is-static" ><view class="ios-m"><text class="ios-t">下降时一起扣生命值</text></view><cy-switch><switch class="cs"></switch></cy-switch></view></view>
+      <view class="ios-ft is-err" data-st="error">没有保存成功，请再试一次。</view>
+      <view class="ios-ft" data-st="noperm">这个主题现在不能修改。</view>
+    </view>
+    </scroll-view>
+  </view>
+  </view>
+</view>
+</cy-sheet>
+
+<!-- ============ 初始状态（initialStateEditor · 10-28 下午：开局带着 + 数值，都是分组列表）============ -->
 <cy-sheet class="node-sheet-host ps" id="initSheet" style="--cy-comp-sheet-max-h:calc(844px - 88px)">
 <view class="sh sh--full sh--lv-full">
   <view class="sh__mask" data-close="initSheet"></view>
   <view class="sh__panel ios-host" id="initHost">
   <view class="ios-lv ios-root" id="initL1">
-    <view class="ios-nav mk-chg" data-mk="iOS 导航栏" data-before="master：左「退出」、右「完成」，下面小字「主题配置」+ 大标题「初始状态」" data-after="一行导航栏：左「取消」、中间「初始状态」、右「完成」" data-why="业主 10-28：每张半屏都照 iOS 导航来做。按钮样式仍是 master 的 node-sheet__close / node-sheet__done。"><view class="node-sheet__close" data-close="initSheet">取消</view><text class="ios-nav__t">初始状态</text><view class="ios-nav__r"><view class="node-sheet__done" data-close="initSheet" data-toast="已保存">完成</view></view></view>
+    <view class="ios-nav mk-chg" data-mk="iOS 导航栏" data-before="master：左「退出」、右「完成」，下面小字「主题配置」+ 大标题「初始状态」" data-after="一行导航栏：左「取消」、中间「初始状态」、右「完成」" data-why="业主 10-28：每张半屏都照 iOS 导航来做。按钮样式仍是 master 的 node-sheet__close / node-sheet__done。"><view class="node-sheet__close" data-close="initSheet">取消</view><text class="ios-nav__t">初始状态</text><view class="ios-nav__r"><view class="node-sheet__done ios-keep" data-close="initSheet" data-toast="已保存">完成</view></view></view>
     <scroll-view class="ios-body">
-      <view class="mk-chg" id="initTags" data-mk="开局带着（标签）" data-before="已写码版（cy26）：attribute-binding-editor——「启用的注册属性」勾选、逐项「定义差异」、「我确认采用这项注册定义」、「确认启用与定义选择 / 重新读取注册版本 / 查看或调整注册定义」三颗按钮，选项显示 counter.* 键名；master 还有每个属性一张「开局值」卡" data-after="只剩一组标签：玩家开局时带着的线索、物品、标签，每个可以点 × 移除；最后一个「添加」进下一层，从主题已有的状态键里挑，或输入一个新标签。属性的开局值不在这里（在「d20 与角色设定」里）" data-why="业主 10-28：初始状态本质上就是加标签、看标签。后端已有：journeyRules.attributes 里 key 为 clue.* / tag.*、initial = 1 的行，开局时写进 state.tags（JourneyInitialState.initialize）。开局放进背包的物品：master 有没有字段我没找到，需后端核对。" data-states="ok,empty,error,noperm" data-st-name="开局带着" data-cur="ok">
+      <view class="mk-chg" data-mk="开局带着（列表）" data-before="10-28 上午版：一排药丸，每个药丸前面小字「线索 / 物品 / 标签」、右边 ×，最后一个「添加」药丸（更早 cy26：attribute-binding-editor，注册属性勾选、定义差异、三颗按钮、counter.* 键名）" data-after="一组列表：左边名字、右边是线索 / 物品 / 标签，左滑删除；最后一行「添加」进下一层挑（搜索、新建）。属性的开局值不在这里（在「d20 与角色设定」里）" data-why="业主 10-28 下午：专业配置的界面还不对；clue.ledger_half 这类东西不该出现，作者配置的东西要简单、不带英文。照 d20 半屏的做法重做。 后端已有：journeyRules.attributes 里 clue.* / tag.* 且 initial = 1 的行，开局写进 state.tags（JourneyInitialState.initialize）。开局放进背包的物品：需后端核对字段。" id="initTags" data-states="ok,swipe,empty,error,noperm" data-st-name="开局带着" data-cur="ok">
         <view class="ios-hd">开局带着</view>
-        <view class="ios-grp mk-chg" data-mk="去掉脚注" data-before="标签下面「玩家开局时就带着这些。」；空时「玩家开局时什么都不带。」" data-after="删掉；空时只剩「添加」。出错、不能修改各一句保留" data-why="业主 10-28：去掉次级说明，让版式自己说明。"><view class="ios-chips" id="initChips">
-          <view class="ios-chip" data-st="ok noperm error"><text class="ios-chip__k">线索</text><text>半张货单</text><view class="ios-chip__x" data-act="chipDel" aria-label="移除半张货单"><cy-icon><view class="cyi cyi--close-sm" style="width:12.48px;height:12.48px"></view></cy-icon></view></view>
-          <view class="ios-chip" data-st="ok noperm error"><text class="ios-chip__k">物品</text><text>旧手电</text><view class="ios-chip__x" data-act="chipDel" aria-label="移除旧手电"><cy-icon><view class="cyi cyi--close-sm" style="width:12.48px;height:12.48px"></view></cy-icon></view></view>
-          <view class="ios-chip" data-st="ok noperm error"><text class="ios-chip__k">标签</text><text>新来的</text><view class="ios-chip__x" data-act="chipDel" aria-label="移除新来的"><cy-icon><view class="cyi cyi--close-sm" style="width:12.48px;height:12.48px"></view></cy-icon></view></view>
-          <view class="ios-chip ios-chip--add" id="initAdd" data-st="ok empty error" data-act="lv" data-lv="initLAdd"><cy-icon><view class="cyi cyi--plus" style="width:12.48px;height:12.48px"></view></cy-icon><text>添加</text></view>
-        </view></view>
+        <view class="ios-grp ios-list" id="initList">
+          <view class="ios-sw" data-st="ok swipe error noperm" ><view class="ios-del" data-act="rowDel">删除</view><view class="ios-row is-static" ><view class="ios-minus" data-act="swOpen" aria-label="删除"></view><view class="ios-m"><text class="ios-t">半张货单</text></view><text class="ios-v">线索</text></view></view>
+          <view class="ios-sw" data-st="ok swipe error noperm" ><view class="ios-del" data-act="rowDel">删除</view><view class="ios-row is-static" ><view class="ios-minus" data-act="swOpen" aria-label="删除"></view><view class="ios-m"><text class="ios-t">旧手电</text></view><text class="ios-v">物品</text></view></view>
+          <view class="ios-sw" data-st="ok swipe error noperm" ><view class="ios-del" data-act="rowDel">删除</view><view class="ios-row is-static" ><view class="ios-minus" data-act="swOpen" aria-label="删除"></view><view class="ios-m"><text class="ios-t">新来的</text></view><text class="ios-v">标签</text></view></view>
+          <view class="ios-row is-add" data-st="ok swipe empty error" data-act="initAddGo"><view class="ios-ic ios-ic--add"><cy-icon><view class="cyi cyi--plus" style="width:12.48px;height:12.48px"></view></cy-icon></view><view class="ios-m"><text class="ios-t">添加</text></view></view>
+        </view>
         <view class="ios-ft is-err" data-st="error">没有保存成功，请再试一次。</view>
         <view class="ios-ft" data-st="noperm">这个主题现在不能修改。</view>
       </view>
-      <!-- master 原样（topic fabu/index.wxml initialStateEditor 的生命值 / 幸运卡，一字不改） -->
-      <view class="node-sheet story-initial proto-master">
-        <view class="node-card">
-          <view class="story-initial__row"><text class="node-card__title">生命值</text><cy-switch><switch class="cs" checked></switch></cy-switch></view>
-          <view class="story-initial__numbers"><cy-field><view class="fld"><text class="fld__label" style="font-size:13px;color:var(--cy-color-text-secondary)">开局生命值</text><input value="10"/></view></cy-field><cy-field><view class="fld"><text class="fld__label" style="font-size:13px;color:var(--cy-color-text-secondary)">上限（主题设置）</text><input value="10" disabled/></view></cy-field></view>
-        </view>
-        <view class="node-card">
-          <view class="story-initial__row"><text class="node-card__title">幸运值</text><cy-switch><switch class="cs" checked></switch></cy-switch></view>
-          <view class="story-initial__numbers"><cy-field><view class="fld"><text class="fld__label" style="font-size:13px;color:var(--cy-color-text-secondary)">开局幸运值</text><input value="3"/></view></cy-field><cy-field><view class="fld"><text class="fld__label" style="font-size:13px;color:var(--cy-color-text-secondary)">上限（主题设置）</text><input value="3" disabled/></view></cy-field></view>
+      <view class="mk-chg" data-mk="生命值 · 幸运值（分组列表）" data-before="master：两张卡，每张一个开关 + 两个输入框「开局生命值 10」「上限（主题设置）10（灰）」" data-after="一组列表：开关一行；开着时下一行「开局生命值」步进器，最大到上限，最小 0。上限只在主题详情里改，这里不再重复显示" data-why="业主 10-28：配置界面照 d20 半屏；上下限由控件保证，不写在界面上。" id="initNums">
+        <view class="ios-hd">数值</view>
+        <view class="ios-grp">
+          <view class="ios-row is-static" ><view class="ios-m"><text class="ios-t">生命值</text></view><cy-switch><switch class="cs" checked data-reveal="initHp"></switch></cy-switch></view>
+          <view class="rv is-open" id="initHp"><view class="ios-row is-static" ><view class="ios-m"><text class="ios-t">开局生命值</text></view><text class="ios-num">10</text><view class="ios-stp" data-min="0" data-max="10"><view data-act="stp" data-d="-1" aria-label="减少" class=""></view><view data-act="stp" data-d="1" aria-label="增加" class="is-plus is-off"><i></i></view></view></view></view>
+          <view class="ios-row is-static" ><view class="ios-m"><text class="ios-t">幸运值</text></view><cy-switch><switch class="cs" checked data-reveal="initLuck"></switch></cy-switch></view>
+          <view class="rv is-open" id="initLuck"><view class="ios-row is-static" ><view class="ios-m"><text class="ios-t">开局幸运值</text></view><text class="ios-num">3</text><view class="ios-stp" data-min="0" data-max="3"><view data-act="stp" data-d="-1" aria-label="减少" class=""></view><view data-act="stp" data-d="1" aria-label="增加" class="is-plus is-off"><i></i></view></view></view></view>
         </view>
       </view>
     </scroll-view>
   </view>
 
-  <!-- 下一层：添加 -->
+  <!-- 下一层：添加（搜索 · 新建 · 多选） -->
   <view class="ios-lv ios-sub" id="initLAdd">
-    <view class="ios-nav"><view class="node-sheet__close ios-back" data-act="lvBack" aria-label="返回初始状态"><cy-icon><view class="cyi cyi--back" style="width:20.8px;height:20.8px"></view></cy-icon><text>初始状态</text></view><text class="ios-nav__t">添加</text><view class="ios-nav__r"><view class="node-sheet__done is-disabled" id="tagDone" data-act="tagSave">添加</view></view></view>
+    <view class="ios-nav"><view class="node-sheet__close ios-back" data-act="lvBack" aria-label="返回初始状态"><cy-icon><view class="cyi cyi--back" style="width:20.8px;height:20.8px"></view></cy-icon><text>初始状态</text></view><text class="ios-nav__t">添加</text><view class="ios-nav__r"><view class="node-sheet__done is-disabled" id="initDone" data-act="initSave">添加</view></view></view>
     <scroll-view class="ios-body">
-    <view class="mk-new" id="tagPicker" data-mk="添加：从状态键里挑，或输入新标签" data-why="列出主题已有的线索、物品、标签（状态键注册表），已在开局里的显示「已添加」。输入的名字没有对上已有项时，第一行变成「新建标签」。选了之后右上「添加」才可点。新标签同时写进状态键注册表（tag.*，键名系统生成）。">
-      <view class="ios-grp mk-chg" data-mk="去掉脚注" data-before="列表最下面「新建的标签也会出现在主题的状态键里。」" data-after="（删除）" data-why="业主 10-28：去掉次级说明，让版式自己说明。"><view class="ios-row is-static"><cy-icon><view class="cyi cyi--search" style="width:16.64px;height:16.64px;color:var(--cy-color-text-tertiary)"></view></cy-icon><input class="ios-in ios-in--l" id="tagIn" placeholder="搜索，或输入新标签" maxlength="12"/></view></view>
-      <view class="rv" id="tagNew"><view class="ios-grp ios-gap"><view class="ios-row" data-act="tagPick" id="tagNewRow"><view class="ios-ic ios-ic--add"><cy-icon><view class="cyi cyi--plus" style="width:12.48px;height:12.48px"></view></cy-icon></view><view class="ios-m"><text class="ios-t" id="tagNewT">新建标签</text></view><view class="ios-chk"><cy-icon><view class="cyi cyi--check" style="width:16.64px;height:16.64px"></view></cy-icon></view></view></view></view>
-      <view id="tagOpts">
-        <view class="ios-hd">线索</view>
-        <view class="ios-grp">
-          <view class="ios-row is-fixed" data-k="线索"><view class="ios-m"><text class="ios-t">半张货单</text></view><text class="ios-v">已添加</text></view>
-          <view class="ios-row" data-act="tagPick" data-k="线索"><view class="ios-m"><text class="ios-t">巡夜人的怀表</text></view><view class="ios-chk"><cy-icon><view class="cyi cyi--check" style="width:16.64px;height:16.64px"></view></cy-icon></view></view>
-        </view>
-        <view class="ios-hd">物品</view>
-        <view class="ios-grp">
-          <view class="ios-row is-fixed" data-k="物品"><view class="ios-m"><text class="ios-t">旧手电</text></view><text class="ios-v">已添加</text></view>
-          <view class="ios-row" data-act="tagPick" data-k="物品"><view class="ios-m"><text class="ios-t">撬棍</text></view><view class="ios-chk"><cy-icon><view class="cyi cyi--check" style="width:16.64px;height:16.64px"></view></cy-icon></view></view>
-        </view>
-        <view class="ios-hd">标签</view>
-        <view class="ios-grp">
-          <view class="ios-row is-fixed" data-k="标签"><view class="ios-m"><text class="ios-t">新来的</text></view><text class="ios-v">已添加</text></view>
-          <view class="ios-row" data-act="tagPick" data-k="标签"><view class="ios-m"><text class="ios-t">见过巡夜人</text></view><view class="ios-chk"><cy-icon><view class="cyi cyi--check" style="width:16.64px;height:16.64px"></view></cy-icon></view></view>
-        </view>
+    <view class="mk-new" data-mk="添加：搜索 · 新建 · 多选" data-why="列出主题「线索与物品」里已有的线索、物品、标签，已在开局里的显示「已添加」。第一行「新建…」（输入了名字就是「新建「…」」）进下一层选种类。选了之后右上「添加」才可点。新建的项同时进「线索与物品」（键名系统生成）。" id="initPicker" data-states="ok,search,empty" data-st-name="添加（下一层）" data-cur="ok">
+      <view class="ios-grp"><view class="ios-row is-static ios-search"><cy-icon><view class="cyi cyi--search" style="width:16.64px;height:16.64px"></view></cy-icon><input class="ios-in ios-in--l" placeholder="搜索" id="initQ" maxlength="12"/></view></view>
+      <view class="ios-grp ios-gap-s"><view class="ios-row" id="initNewRow" data-act="initNewGo"><view class="ios-ic ios-ic--add"><cy-icon><view class="cyi cyi--plus" style="width:12.48px;height:12.48px"></view></cy-icon></view><view class="ios-m"><text class="ios-t" id="initNewT">新建…</text></view></view></view>
+      <view id="initOpts" data-st="ok search">
+        <view class="ios-hd" data-g="clue">线索</view><view class="ios-grp" data-g="clue"><view class="ios-row is-fixed" data-k="线索"><view class="ios-m"><text class="ios-t">半张货单</text></view><text class="ios-v">已添加</text></view><view class="ios-row" data-act="initPick" data-k="线索"><view class="ios-m"><text class="ios-t">巡夜人的怀表</text></view><view class="ios-chk"><cy-icon><view class="cyi cyi--check" style="width:16.64px;height:16.64px"></view></cy-icon></view></view><view class="ios-row" data-act="initPick" data-k="线索"><view class="ios-m"><text class="ios-t">另半张货单</text></view><view class="ios-chk"><cy-icon><view class="cyi cyi--check" style="width:16.64px;height:16.64px"></view></cy-icon></view></view></view>
+        <view class="ios-hd" data-g="item">物品</view><view class="ios-grp" data-g="item"><view class="ios-row is-fixed" data-k="物品"><view class="ios-m"><text class="ios-t">旧手电</text></view><text class="ios-v">已添加</text></view><view class="ios-row" data-act="initPick" data-k="物品"><view class="ios-m"><text class="ios-t">撬棍</text></view><view class="ios-chk"><cy-icon><view class="cyi cyi--check" style="width:16.64px;height:16.64px"></view></cy-icon></view></view></view>
+        <view class="ios-hd" data-g="tag">标签</view><view class="ios-grp" data-g="tag"><view class="ios-row is-fixed" data-k="标签"><view class="ios-m"><text class="ios-t">新来的</text></view><text class="ios-v">已添加</text></view><view class="ios-row" data-act="initPick" data-k="标签"><view class="ios-m"><text class="ios-t">见过巡夜人</text></view><view class="ios-chk"><cy-icon><view class="cyi cyi--check" style="width:16.64px;height:16.64px"></view></cy-icon></view></view></view>
       </view>
+    </view>
+    </scroll-view>
+  </view>
+
+  <!-- 再下一层：新建 -->
+  <view class="ios-lv ios-sub" id="initLNew">
+    <view class="ios-nav"><view class="node-sheet__close ios-back" data-act="lvBack" aria-label="返回添加"><cy-icon><view class="cyi cyi--back" style="width:20.8px;height:20.8px"></view></cy-icon><text>添加</text></view><text class="ios-nav__t">新建</text><view class="ios-nav__r"><view class="node-sheet__done is-disabled" id="initNewDone" data-act="initNewSave">添加</view></view></view>
+    <scroll-view class="ios-body">
+    <view class="mk-new" data-mk="新建一项" data-why="先选种类（分段控件），再写名字；写好之前「添加」是灰的；重名在下面写一句。添加后回到上一层，新的一项已勾上。">
+      <view class="ios-grp"><view class="ios-row is-static"><view class="ios-seg " id="initNewType"><view class="is-on" data-act="initNewType">线索</view><view data-act="initNewType">物品</view><view data-act="initNewType">标签</view></view></view></view>
+      <view class="ios-hd">名称</view>
+      <view class="ios-grp"><view class="ios-row is-static"><input class="ios-in ios-in--l" id="initNewName" maxlength="12"/></view></view>
+      <view class="ios-ft is-err" id="initNewErr"></view>
     </view>
     </scroll-view>
   </view>
@@ -12724,175 +12790,146 @@ body.clean .scr .need{display:none}
 </view>
 </cy-sheet>
 
-<!-- ============ 节点编辑（popChapterNodes）============ -->
+<!-- ============ 节点编辑（popChapterNodes · 10-28 下午：iOS 分组列表）============ -->
 <cy-sheet class="node-sheet-host ps" id="nodeSheet" style="--cy-comp-sheet-max-h:calc(844px - 88px)">
 <view class="sh sh--full sh--lv-full">
   <view class="sh__mask" data-close="nodeSheet"></view>
-  <view class="sh__panel">
-  <scroll-view class="sh__body">
-  <view class="pop-chapter node-sheet">
-    <view class="node-sheet__top"><view class="node-sheet__close" data-close="nodeSheet">退出</view><view class="node-sheet__done" data-close="nodeSheet">完成</view></view>
-    <view class="node-sheet__titlebar"><text class="node-sheet__eyebrow">编辑节点<text class="g-req">*</text></text><input class="node-sheet__name" value="旧码头仓库"/></view>
-    <view class="node-card">
-      <view class="node-card__row"><view class="node-card__ico"><cy-icon><view class="cyi cyi--pin" style="width:16.64px;height:16.64px"></view></cy-icon></view><view class="node-card__main"><text class="node-card__title">旧码头仓库<text class="g-req">*</text></text></view></view>
-      <view class="node-card__foot"><text class="node-card__addr">滨江路 12 号</text><view class="node-pill"><text>修改节点</text><cy-icon><view class="cyi cyi--chevron-right" style="width:12.48px;height:12.48px"></view></cy-icon></view></view>
+  <view class="sh__panel ios-host" id="nodeHost">
+  <view class="ios-lv ios-root" id="nodeL1">
+    <view class="ios-nav mk-chg" data-mk="iOS 导航栏" data-before="master：左「退出」、右「完成」，下面小字「编辑节点 *」+ 大标题输入框「旧码头仓库」" data-after="一行导航栏：左「取消」、中间「编辑节点」、右「完成」；名称挪进第一组" data-why="和 d20 半屏一样。"><view class="node-sheet__close" data-close="nodeSheet">取消</view><text class="ios-nav__t">编辑节点</text><view class="ios-nav__r"><view class="node-sheet__done ios-keep" data-close="nodeSheet" data-toast="已保存">完成</view></view></view>
+    <scroll-view class="ios-body">
+    <view class="mk-chg" data-mk="节点编辑 · 分组列表" data-before="master：五张卡——地点卡（标题 + 地址 +「修改节点 ›」药丸）、「配置模板」开关 +「更换玩法模板 ›」药丸、「到达与引导」+ 摘要 +「设置 ›」药丸、「下一站」+ 摘要 +「编辑 ›」药丸、「照片 1/9」；粉色「删除节点」" data-after="分组列表，左边名称、右边当前值、最后是 ›：名称 / 地点；玩法开关 / 玩法模板；到达与引导 / 下一站 / 照片；红色「删除节点」。到达与引导、下一站点开后叠一张半屏（本屏缩小变暗）" data-why="业主 10-28 下午：专业配置的界面还不对；clue.ledger_half 这类东西不该出现，作者配置的东西要简单、不带英文。照 d20 半屏的做法重做。" id="nodeForm" data-states="ok,noperm" data-st-name="节点编辑" data-cur="ok">
+      <view class="ios-grp"><view class="ios-row is-static"><text class="ios-t is-l">名称</text><input class="ios-in" value="旧码头仓库" maxlength="20"/></view><view class="ios-row" data-toast="打开地图选点"><view class="ios-m"><text class="ios-t">地点</text></view><text class="ios-v">滨江路 12 号</text><view class="ios-chev"><cy-icon><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view></view></view>
+      <view class="ios-grp ios-gap"><view class="ios-row is-static" ><view class="ios-m"><text class="ios-t">玩法</text></view><cy-switch><switch class="cs" checked data-reveal="nodeTpl"></switch></cy-switch></view><view class="rv is-open" id="nodeTpl"><view class="ios-row" data-go="e-temp"><view class="ios-m"><text class="ios-t">玩法模板</text></view><text class="ios-v">撬开侧门</text><view class="ios-chev"><cy-icon><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view></view></view></view>
+      <view class="ios-grp ios-gap"><view class="ios-row" data-open="questSheet"><view class="ios-m"><text class="ios-t">到达与引导</text></view><text class="ios-v">可扫码或答题</text><view class="ios-chev"><cy-icon><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view></view><view class="ios-row" data-open="routeSheet"><view class="ios-m"><text class="ios-t">下一站</text></view><text class="ios-v" id="nodeRouteV">2 条去向</text><view class="ios-chev"><cy-icon><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view></view><view class="ios-row" data-toast="打开照片"><view class="ios-m"><text class="ios-t">照片</text></view><text class="ios-v">1/9</text><view class="ios-chev"><cy-icon><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view></view></view>
+      <view data-st="ok"><view class="ios-grp ios-gap"><view class="ios-row is-danger"  data-modal="删除这个节点？|节点里的玩法、到达方式和下一站会一起删除。|取消|删除" data-ok-toast="已删除"><text class="ios-t">删除节点</text></view></view></view>
+      <view class="ios-ft" data-st="noperm">这个主题现在不能修改。</view>
     </view>
-    <view class="node-card">
-      <view class="node-card__row"><view class="node-card__ico"><cy-icon><view class="cyi cyi--play" style="width:16.64px;height:16.64px"></view></cy-icon></view><view class="node-card__main"><text class="node-card__title">配置模板</text></view><cy-switch><switch class="cs" checked></switch></cy-switch></view>
-      <view class="node-card__foot"><view class="node-pill" data-go="e-temp"><text>更换玩法模板</text><cy-icon><view class="cyi cyi--chevron-right" style="width:12.48px;height:12.48px"></view></cy-icon></view></view>
-    </view>
-    <view class="node-card" data-open="questSheet">
-      <view class="node-card__row"><view class="node-card__ico"><cy-icon><view class="cyi cyi--pin" style="width:16.64px;height:16.64px"></view></cy-icon></view><view class="node-card__main"><text class="node-card__title">到达与引导</text><text class="node-card__value pd-summary-2l mk-chg" data-mk="摘要多一句" data-before="到达地点 · 工作人员引导 · 备用节点" data-after="到达地点 · 可扫码或答题">到达地点 · 可扫码或答题</text></view><view class="node-pill">设置<cy-icon><view class="cyi cyi--chevron-right" style="width:12.48px;height:12.48px"></view></cy-icon></view></view>
-    </view>
-    <view class="node-card node-route-entry" data-open="routeSheet">
-      <view class="node-card__row"><view class="node-card__ico"><cy-icon><view class="cyi cyi--route" style="width:16.64px;height:16.64px"></view></cy-icon></view><view class="node-card__main"><text class="node-card__title">下一站</text><text class="node-card__value">撬开了 → 仓库二层；其他结果 → 按故事流继续</text></view><view class="node-pill">编辑 <cy-icon><view class="cyi cyi--chevron-right" style="width:12.48px;height:12.48px"></view></cy-icon></view></view>
-    </view>
-    <view class="node-card"><view class="node-card__row"><view class="node-card__ico"><cy-icon><view class="cyi cyi--image" style="width:16.64px;height:16.64px"></view></cy-icon></view><view class="node-card__main"><text class="node-card__title">照片</text></view><text class="node-badge">1/9</text></view></view>
-    <view class="node-card node-card--danger">删除节点</view>
+    </scroll-view>
   </view>
-  </scroll-view>
   </view>
 </view>
 </cy-sheet>
 
-<!-- ============ 到达与引导（runtime-structure-editor quests）============ -->
-<cy-sheet class="ps" id="questSheet" style="--cy-comp-sheet-max-h:calc(844px - 106px);--cy-comp-sheet-role-glass:#f3f4f5">
-<view class="sh sh--bottom sh--fixed sh--fixed-full sh--lv-full">
+<!-- ============ 到达与引导（runtime-structure-editor · 10-28 下午：叠放半屏 + 分组列表）============ -->
+<cy-sheet class="node-sheet-host ps" id="questSheet" style="--cy-comp-sheet-max-h:calc(844px - 88px)">
+<view class="sh sh--full sh--lv-full">
   <view class="sh__mask" data-close="questSheet"></view>
-  <view class="sh__panel">
-  <view class="sh__grip"><view class="sh__handle"></view></view>
-  <scroll-view class="sh__body">
-  <view class="rt-editor">
-    <view class="node-sheet__top"><view class="node-sheet__close" data-close="questSheet">退出</view><view class="node-sheet__done" data-close="questSheet">完成</view></view>
-    <view class="rt-title"><text>到达与引导</text></view>
-    <view class="node-card">
-      <view class="rt-field"><text>到达地点</text><view class="rt-select">旧码头仓库<cy-icon><view class="cyi cyi--chevron-right" style="width:12.48px;height:12.48px"></view></cy-icon></view></view>
-      <text class="story-initial__example">多个任务选同一地点时，共用该地点的到达核验。</text>
-    </view>
-    <view class="node-card">
-      <view class="node-card__row"><view class="node-card__ico"><cy-icon><view class="cyi cyi--mtab-customers" style="width:16.64px;height:16.64px"></view></cy-icon></view><view class="node-card__main"><text class="node-card__title">工作人员引导答题</text><text class="node-card__value">用本站玩法原有的题目，工作人员按同样答案核验</text></view><cy-switch><switch class="cs"></switch></cy-switch></view>
-    </view>
-    <!-- 新增：定向任务 -->
-    <view class="node-card mk-new" id="altCard" data-mk="找不到时换个方式（城市定向）" data-why="POST /api/orient/task/alternative {topicId, taskId, alternativeTaskType SCAN|PHOTO|QUIZ, promptText, answer, enabled}。每种一行开关，打开才展开填写。A5：不按节点设分，10-27 版的「本站分值」一行删掉。" data-states="ok,error,off" data-st-name="替代方式">
-      <view data-st="ok error">
-      <view class="rt-card-head mk-chg" data-mk="去掉说明" data-before="标题下一句「定位不可用时，玩家可以用下面打开的方式完成这个节点。」；三行「扫现场的码 · 扫码后完成」「回答现场题 · 答对后完成」「拍一张照片 · 审核通过后完成」" data-after="三行只剩名词：扫码 / 答题 / 拍照，各带开关" data-why="业主 10-28：去掉次级说明，让版式自己说明。"><text>找不到时换个方式</text></view>
-      <view class="node-card__row"><view class="node-card__main"><text class="node-card__title">扫码</text></view><cy-switch><switch class="cs" checked data-reveal="altScan"></switch></cy-switch></view>
-      <view class="rv is-open" id="altScan"><view class="rt-field"><text>提示</text><input value="码贴在仓库侧门的铁牌上" maxlength="200"/></view></view>
-      <view class="node-card__hr"></view>
-      <view class="node-card__row"><view class="node-card__main"><text class="node-card__title">答题</text></view><cy-switch><switch class="cs" checked data-reveal="altQuiz"></switch></cy-switch></view>
-      <view class="rv is-open" id="altQuiz"><view class="rt-field"><text>题目</text><input value="仓库门牌上写的年份是？"/></view><view class="rt-field"><text>答案</text><input value="1937"/></view></view>
-      <view class="node-card__hr"></view>
-      <view class="node-card__row"><view class="node-card__main"><text class="node-card__title">拍照</text></view><cy-switch><switch class="cs" data-reveal="altPhoto"></switch></cy-switch></view>
-      <view class="rv" id="altPhoto"><view class="rt-field"><text>拍摄内容</text><input value="拍下仓库的大门和门牌"/></view></view>
-      <cy-inline-error data-st="error"><view class="inline-error inline-error--error"><view class="inline-error__icon"><cy-icon><view class="cyi cyi--warning" style="width:18.72px;height:18.72px"></view></cy-icon></view><view class="inline-error__copy"><view class="inline-error__title">没有保存成功，请再试一次。</view></view></view></cy-inline-error>
+  <view class="sh__panel ios-host" id="questHost">
+  <view class="ios-lv ios-root" id="questL1">
+    <view class="ios-nav"><view class="node-sheet__close" data-close="questSheet">取消</view><text class="ios-nav__t">到达与引导</text><view class="ios-nav__r"><view class="node-sheet__done ios-keep" data-close="questSheet" data-toast="已保存">完成</view></view></view>
+    <scroll-view class="ios-body">
+    <view class="mk-chg" data-mk="到达与引导 · 分组列表" data-before="底部弹出的另一种半屏（灰色把手、「退出 / 完成」、大标题）；「到达地点」字段 + 像下拉框的「旧码头仓库 ›」+ 一句「多个任务选同一地点时，共用该地点的到达核验。」；「工作人员引导答题」开关下面一句说明；「找不到时换个方式」三行开关，打开后直接在卡里展开输入框；「预先批准的备用节点 · 已选 1 / 20」+ 一句说明 + 勾选" data-after="和节点编辑同一种叠放半屏。三组列表：到达地点 ›（勾选）· 工作人员引导答题（开关）；找不到时换个方式：扫码 / 答题 / 拍照，右边「打开 / 关闭 ›」，点进去是开关和要填的那一两项；备用节点 › 多选。说明都删掉，上限 20 由勾选列表挡住" data-why="业主 10-28 下午：专业配置的界面还不对；clue.ledger_half 这类东西不该出现，作者配置的东西要简单、不带英文。照 d20 半屏的做法重做。 替代方式 = POST /api/orient/task/alternative {topicId, taskId, alternativeTaskType SCAN|PHOTO|QUIZ, promptText, answer, enabled}；A5：不按节点设分。" id="questForm" data-states="ok,error,off,noperm" data-st-name="到达与引导" data-cur="ok">
+      <view class="ios-grp"><view class="ios-row" data-act="lv" data-lv="questLPlace"><view class="ios-m"><text class="ios-t">到达地点</text></view><text class="ios-v" id="questPlaceV">旧码头仓库</text><view class="ios-chev"><cy-icon><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view></view><view class="ios-row is-static" ><view class="ios-m"><text class="ios-t">工作人员引导答题</text></view><cy-switch><switch class="cs"></switch></cy-switch></view></view>
+      <view data-st="ok error noperm">
+        <view class="ios-hd">找不到时换个方式</view>
+        <view class="ios-grp"><view class="ios-row" data-act="lv" data-lv="questLScan"><view class="ios-m"><text class="ios-t">扫码</text></view><text class="ios-v" id="altScanV">打开</text><view class="ios-chev"><cy-icon><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view></view><view class="ios-row" data-act="lv" data-lv="questLQuiz"><view class="ios-m"><text class="ios-t">答题</text></view><text class="ios-v" id="altQuizV">打开</text><view class="ios-chev"><cy-icon><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view></view><view class="ios-row" data-act="lv" data-lv="questLPhoto"><view class="ios-m"><text class="ios-t">拍照</text></view><text class="ios-v" id="altPhotoV">关闭</text><view class="ios-chev"><cy-icon><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view></view></view>
       </view>
+      <view class="ios-grp ios-gap"><view class="ios-row" data-act="lv" data-lv="questLBackup"><view class="ios-m"><text class="ios-t">备用节点</text></view><text class="ios-v" id="questBackupV">海关钟楼</text><view class="ios-chev"><cy-icon><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view></view></view>
+      <view class="ios-ft is-err" data-st="error">没有保存成功，请再试一次。</view>
+      <view class="ios-ft" data-st="noperm">这个主题现在不能修改。</view>
     </view>
-    <view class="node-card">
-      <view class="rt-card-head"><text>预先批准的备用节点</text><text class="rt-count">已选 1 / 20</text></view>
-      <text class="story-initial__example rt-lead">原站无法继续时，工作人员只能改派到这里选中的节点。</text>
-      <view class="node-card__row rt-check-row"><view class="node-card__main"><text class="node-card__title">海关钟楼</text></view><view class="rt-check is-on"><cy-icon><view class="cyi cyi--check" style="width:12.48px;height:12.48px"></view></cy-icon></view></view>
-      <view class="node-card__row rt-check-row"><view class="node-card__main"><text class="node-card__title">鱼市口</text></view><view class="rt-check"></view></view>
-    </view>
+    </scroll-view>
   </view>
-  </scroll-view>
+  <view class="ios-lv ios-sub" id="questLScan">
+    <view class="ios-nav"><view class="node-sheet__close ios-back" data-act="lvBack" aria-label="返回到达与引导"><cy-icon><view class="cyi cyi--back" style="width:20.8px;height:20.8px"></view></cy-icon><text>到达与引导</text></view><text class="ios-nav__t">扫码</text><view class="ios-nav__r"></view></view>
+    <scroll-view class="ios-body">
+      <view class="mk-new" data-mk="扫码（下一层）" data-why="开关 + 提示。关掉时提示一组收起。"><view class="ios-grp"><view class="ios-row is-static" ><view class="ios-m"><text class="ios-t">扫码</text></view><cy-switch><switch class="cs" checked data-reveal="altScanBody" data-act="altToggle" data-v="altScanV"></switch></cy-switch></view></view><view class="rv is-open" id="altScanBody"><view class="ios-hd">提示</view><view class="ios-grp"><view class="ios-row is-static"><textarea class="ios-ta" maxlength="200">码贴在仓库侧门的铁牌上</textarea></view></view></view></view>
+    </scroll-view>
+  </view>
+  <view class="ios-lv ios-sub" id="questLQuiz">
+    <view class="ios-nav"><view class="node-sheet__close ios-back" data-act="lvBack" aria-label="返回到达与引导"><cy-icon><view class="cyi cyi--back" style="width:20.8px;height:20.8px"></view></cy-icon><text>到达与引导</text></view><text class="ios-nav__t">答题</text><view class="ios-nav__r"></view></view>
+    <scroll-view class="ios-body">
+      <view class="mk-new" data-mk="答题（下一层）" data-why="开关 + 题目 + 答案。"><view class="ios-grp"><view class="ios-row is-static" ><view class="ios-m"><text class="ios-t">答题</text></view><cy-switch><switch class="cs" checked data-reveal="altQuizBody" data-act="altToggle" data-v="altQuizV"></switch></cy-switch></view></view><view class="rv is-open" id="altQuizBody"><view class="ios-hd">题目</view><view class="ios-grp"><view class="ios-row is-static"><textarea class="ios-ta" maxlength="200">仓库门牌上写的年份是？</textarea></view></view><view class="ios-hd">答案</view><view class="ios-grp"><view class="ios-row is-static"><input class="ios-in ios-in--l" value="1937" maxlength="40"/></view></view></view></view>
+    </scroll-view>
+  </view>
+  <view class="ios-lv ios-sub" id="questLPhoto">
+    <view class="ios-nav"><view class="node-sheet__close ios-back" data-act="lvBack" aria-label="返回到达与引导"><cy-icon><view class="cyi cyi--back" style="width:20.8px;height:20.8px"></view></cy-icon><text>到达与引导</text></view><text class="ios-nav__t">拍照</text><view class="ios-nav__r"></view></view>
+    <scroll-view class="ios-body">
+      <view class="mk-new" data-mk="拍照（下一层）" data-why="开关 + 拍摄内容。照片由工作人员审核（游玩页：审核中 / 未通过）。"><view class="ios-grp"><view class="ios-row is-static" ><view class="ios-m"><text class="ios-t">拍照</text></view><cy-switch><switch class="cs" data-reveal="altPhotoBody" data-act="altToggle" data-v="altPhotoV"></switch></cy-switch></view></view><view class="rv" id="altPhotoBody"><view class="ios-hd">拍摄内容</view><view class="ios-grp"><view class="ios-row is-static"><textarea class="ios-ta" maxlength="200">拍下仓库的大门和门牌</textarea></view></view></view></view>
+    </scroll-view>
+  </view>
+  <view class="ios-lv ios-sub" id="questLPlace">
+    <view class="ios-nav"><view class="node-sheet__close ios-back" data-act="lvBack" aria-label="返回到达与引导"><cy-icon><view class="cyi cyi--back" style="width:20.8px;height:20.8px"></view></cy-icon><text>到达与引导</text></view><text class="ios-nav__t">到达地点</text><view class="ios-nav__r"></view></view>
+    <scroll-view class="ios-body">
+      <view class="mk-new" data-mk="到达地点 · 勾选" data-why="单选，点一项立即生效，左上返回。多个节点可以选同一地点，共用到达核验（不再写在界面上）。"><view class="ios-grp"><view class="ios-row is-static ios-search"><cy-icon><view class="cyi cyi--search" style="width:16.64px;height:16.64px"></view></cy-icon><input class="ios-in ios-in--l" placeholder="搜索地点" class="ios-in ios-in--l re-filter" maxlength="12"/></view></view><view class="ios-grp ios-gap-s re-filter-list"><view class="ios-row is-on" data-act="questPlace"><view class="ios-m"><text class="ios-t">旧码头仓库</text></view><view class="ios-chk"><cy-icon><view class="cyi cyi--check" style="width:16.64px;height:16.64px"></view></cy-icon></view></view><view class="ios-row" data-act="questPlace"><view class="ios-m"><text class="ios-t">海关钟楼</text></view><view class="ios-chk"><cy-icon><view class="cyi cyi--check" style="width:16.64px;height:16.64px"></view></cy-icon></view></view><view class="ios-row" data-act="questPlace"><view class="ios-m"><text class="ios-t">鱼市口</text></view><view class="ios-chk"><cy-icon><view class="cyi cyi--check" style="width:16.64px;height:16.64px"></view></cy-icon></view></view><view class="ios-row" data-act="questPlace"><view class="ios-m"><text class="ios-t">仓库二层</text></view><view class="ios-chk"><cy-icon><view class="cyi cyi--check" style="width:16.64px;height:16.64px"></view></cy-icon></view></view></view></view>
+    </scroll-view>
+  </view>
+  <view class="ios-lv ios-sub" id="questLBackup">
+    <view class="ios-nav"><view class="node-sheet__close ios-back" data-act="lvBack" aria-label="返回到达与引导"><cy-icon><view class="cyi cyi--back" style="width:20.8px;height:20.8px"></view></cy-icon><text>到达与引导</text></view><text class="ios-nav__t">备用节点</text><view class="ios-nav__r"></view></view>
+    <scroll-view class="ios-body">
+      <view class="mk-new" data-mk="备用节点 · 多选" data-why="原站无法继续时，工作人员只能改派到这里勾上的节点。最多 20 个：勾满后其余行变灰。"><view class="ios-grp"><view class="ios-row is-on" data-act="questBackup"><view class="ios-m"><text class="ios-t">海关钟楼</text></view><view class="ios-chk"><cy-icon><view class="cyi cyi--check" style="width:16.64px;height:16.64px"></view></cy-icon></view></view><view class="ios-row" data-act="questBackup"><view class="ios-m"><text class="ios-t">鱼市口</text></view><view class="ios-chk"><cy-icon><view class="cyi cyi--check" style="width:16.64px;height:16.64px"></view></cy-icon></view></view><view class="ios-row" data-act="questBackup"><view class="ios-m"><text class="ios-t">仓库二层</text></view><view class="ios-chk"><cy-icon><view class="cyi cyi--check" style="width:16.64px;height:16.64px"></view></cy-icon></view></view></view></view>
+    </scroll-view>
+  </view>
   </view>
 </view>
 </cy-sheet>
 
-<!-- ============ 下一站（routeMappingShow）— 已写码：story-rule-editor ============ -->
+<!-- ============ 下一站（routeMappingShow · 10-28 下午：条件与效果写成句子，选，不填）============ -->
 <cy-sheet class="node-sheet-host ps" id="routeSheet" style="--cy-comp-sheet-max-h:calc(844px - 88px)">
 <view class="sh sh--full sh--lv-full">
   <view class="sh__mask" data-close="routeSheet"></view>
-  <view class="sh__panel">
-  <scroll-view class="sh__body">
-  <view class="route-mapping-sheet node-sheet">
-    <view class="node-sheet__top"><view class="node-sheet__close" data-close="routeSheet">退出</view><view class="node-sheet__done" data-close="routeSheet">完成</view></view>
-    <view class="node-sheet__titlebar route-mapping-sheet__titlebar"><text class="node-sheet__eyebrow">旧码头仓库 · 撬开侧门</text><text class="node-sheet__name node-sheet__name--static">下一站</text></view>
-    <view class="node-card route-mapping-card" id="ruleHost" data-states="ok,wip" data-st-name="条件与效果（建议版 / 已写码版）" data-cur="ok">
-      <view class="route-mapping-row" style="flex-wrap:wrap">
-        <text class="route-mapping-row__label">撬开了</text>
-        <view class="route-mapping-row__picker" data-dd="仓库二层|海关钟楼|按故事流继续"><view class="route-mapping-row__target"><text class="dd-v">仓库二层</text><cy-icon><view class="cyi cyi--arrow-right" style="width:12.48px;height:12.48px"></view></cy-icon></view></view>
-        <!-- 建议版：同一行下面一条「条件与效果」，展开后用 fabu 现有 rt-field / cy-dropdown -->
-        <view data-st="ok" class="mk-chg" style="flex:0 0 100%;min-width:0" data-mk="条件与效果（建议版）" data-before="已写码版：原生 button「条件与效果 · 1 条条件 · 1 条效果」+ picker「▾」字符 + 原始键名 counter.x" data-after="同一位置一行「条件与效果 · 观察至少 3 · 推进「巡夜人警觉」1 格」，展开后每条 = 一个下拉（大白话类型）+ 下拉选对象，全部用 fabu 的 rt-field / rt-select / node-pill；A8：没有「身份是」" data-why="F5 词表：条件 全部满足/任一满足/不满足(AND/OR/NOT)、到过几次(VISIT_COUNT)、带着状态(HAS_CONDITION)、装备着(ITEM_EQUIPPED)、某站检定结果(CHECK_RESULT)；效果 给物品(ADD_ITEM)、给徽章(GRANT_BADGE)、加/去掉状态(ADD/REMOVE_CONDITION)、装备/卸下(EQUIP/UNEQUIP)、给探索值(GRANT_XP)、推进进度钟(TICK_CLOCK)。">
-          <view class="node-card__row" style="padding:6px 0" data-toggle="ruleBody"><view class="node-card__main"><text class="node-card__title" style="font-size:14px">条件与效果</text><text class="node-card__value">观察至少 3 · 推进「巡夜人警觉」1 格</text></view><view class="node-pill">展开<cy-icon><view class="cyi cyi--chevron-right" style="width:12.48px;height:12.48px"></view></cy-icon></view></view>
-          <view class="rv is-open" id="ruleBody">
-            <view class="rt-field"><text>满足条件</text><view class="rt-select" data-dd="全部满足|任一满足|都不满足"><text class="dd-v">全部满足</text><cy-icon><view class="cyi cyi--chevron-right" style="width:12.48px;height:12.48px"></view></cy-icon></view></view>
-            <view class="rt-two"><view class="rt-field"><view class="rt-select" data-dd="数值比较|到过某个节点几次|带着某个状态|装备着某件物品|节点检定结果|天气或时段|带着某个物品|完成过某个节点"><text class="dd-v">数值比较</text><cy-icon><view class="cyi cyi--chevron-right" style="width:12.48px;height:12.48px"></view></cy-icon></view></view><view class="rt-field"><view class="rt-select" data-dd="观察|胆量|体魄|巡夜人警觉"><text class="dd-v">观察</text><cy-icon><view class="cyi cyi--chevron-right" style="width:12.48px;height:12.48px"></view></cy-icon></view></view></view>
-            <view class="rt-two"><view class="rt-field"><view class="rt-select" data-dd="至少|至多|等于|不等于|大于|小于"><text class="dd-v">至少</text><cy-icon><view class="cyi cyi--chevron-right" style="width:12.48px;height:12.48px"></view></cy-icon></view></view><view class="rt-field rt-quantity"><input value="3"/></view></view>
-            <view class="rt-two"><view class="rt-field"><view class="rt-select" data-dd="数值比较|到过某个节点几次|带着某个状态|装备着某件物品|节点检定结果|天气或时段"><text class="dd-v">节点检定结果</text><cy-icon><view class="cyi cyi--chevron-right" style="width:12.48px;height:12.48px"></view></cy-icon></view></view><view class="rt-field"><view class="rt-select" data-dd="旧码头仓库 · 通过|旧码头仓库 · 未通过"><text class="dd-v">旧码头仓库 · 通过</text><cy-icon><view class="cyi cyi--chevron-right" style="width:12.48px;height:12.48px"></view></cy-icon></view></view></view>
-            <view class="node-pill rt-add" data-toast="已添加条件"><cy-icon><view class="cyi cyi--plus" style="width:12.48px;height:12.48px"></view></cy-icon>添加条件</view>
-            <view class="rt-card-head rt-cond__head" style="margin-top:10px"><text>然后</text></view>
-            <view class="rt-two"><view class="rt-field"><view class="rt-select" data-dd="推进进度钟|给物品|给徽章|给探索值|加上状态|去掉状态|装备物品|卸下物品|改数值|加数值"><text class="dd-v">推进进度钟</text><cy-icon><view class="cyi cyi--chevron-right" style="width:12.48px;height:12.48px"></view></cy-icon></view></view><view class="rt-field"><view class="rt-select" data-dd="巡夜人警觉|拼出货单"><text class="dd-v">巡夜人警觉</text><cy-icon><view class="cyi cyi--chevron-right" style="width:12.48px;height:12.48px"></view></cy-icon></view></view></view>
-            <view class="rt-field"><text>格数</text><input value="1"/></view>
-            <view class="node-pill rt-add" data-toast="已添加效果"><cy-icon><view class="cyi cyi--plus" style="width:12.48px;height:12.48px"></view></cy-icon>添加效果</view>
-          </view>
-        </view>
-        <!-- 已写码版：story-rule-editor 原样 -->
-        <view data-st="wip" class="route-mapping-rules mk-wip" style="flex:0 0 100%;min-width:0" data-mk="story-rule-editor（cy26）" data-why="feature/cy26-w8-closeout 新组件，每个下一站行一份。" data-prob="① 「▾」文字当图标；② 原生 button / picker / input，间距硬编码 rpx；③ 显示原始键名（counter.alarm）、「不支持的规则：OP」；④ 「角色代码（逗号分隔）」「状态代码」「物品代码」要作者手打代码；⑤ 「撤销未完成的规则修改」常驻。">
-          <story-rule-editor>
-          <view class="rules">
-            <button class="rules__toggle">条件与效果 · 1 条条件 · 1 条效果</button>
-            <view>
-              <text class="rules__hint">条件全部满足时可走此分支；效果按配置顺序执行。未完成的输入会保存在本机，完成时再校验。</text>
-              <view class="rules__row rules__depth-0"><text class="rules__hint">条件</text><view class="rules__select">至少 ▾</view>
-                <view class="rules__field"><text>数值键</text><view class="rules__select">counter.observe ▾</view></view>
-                <view class="rules__field"><text>数值</text><input value="3"/></view>
-                <button>删除此条件</button></view>
-              <view class="rules__row rules__depth-0"><text class="rules__hint">效果</text><view class="rules__select">推进进度钟 ▾</view>
-                <view class="rules__field"><text>数值键</text><view class="rules__select">counter.alarm ▾</view></view>
-                <view class="rules__field"><text>推进格数</text><input value="1"/></view>
-                <view class="rules__field"><text>总格数（2–12）</text><input value="6"/></view>
-                <button>删除此效果</button></view>
-              <button>撤销未完成的规则修改</button>
-              <view class="rules__actions"><button>添加条件</button><button>添加效果</button></view>
-            </view>
-          </view>
-          </story-rule-editor>
-        </view>
-      </view>
-      <view class="route-mapping-row">
-        <text class="route-mapping-row__label">没撬开</text>
-        <view class="route-mapping-row__picker" data-dd="仓库二层|海关钟楼|按故事流继续"><view class="route-mapping-row__target"><text class="dd-v">海关钟楼</text><cy-icon><view class="cyi cyi--arrow-right" style="width:12.48px;height:12.48px"></view></cy-icon></view></view>
-      </view>
-      <view class="route-mapping-row route-mapping-row--fallback">
-        <view><text class="route-mapping-row__label">其他结果</text><text class="route-mapping-row__hint">默认结果</text></view>
-        <text class="route-mapping-row__fallback">按故事流继续</text>
-      </view>
+  <view class="sh__panel ios-host" id="routeHost" data-p="rt">
+  <view class="ios-lv ios-root" id="routeL1">
+    <view class="ios-nav"><view class="node-sheet__close" data-close="routeSheet">取消</view><text class="ios-nav__t">下一站</text><view class="ios-nav__r"><view class="node-sheet__done ios-keep" data-close="routeSheet" data-toast="已保存">完成</view></view></view>
+    <scroll-view class="ios-body">
+    <view class="mk-chg" data-mk="下一站 · 每种结果一行" data-before="master：每行「撬开了」+ 一颗带箭头的药丸下拉「仓库二层 →」；cy26 已写码版在下面接 story-rule-editor：原生按钮「条件与效果 · 1 条条件 · 1 条效果」、「至少 ▾」「counter.observe ▾」「counter.alarm ▾」、「角色代码（逗号分隔）」「状态代码」「物品代码」输入框、常驻「撤销未完成的规则修改」" data-after="一组列表：撬开了 · 仓库二层 ›、没撬开 · 海关钟楼 ›、其他结果 · 按故事流继续。点一行进下一层：去往（勾选）、条件、效果（都是句子，一步一步选）" data-why="业主 10-28 下午：专业配置的界面还不对；clue.ledger_half 这类东西不该出现，作者配置的东西要简单、不带英文。照 d20 半屏的做法重做。 数据结构不变：每个结果一份 story-rule-editor 的 {when[], effects[]}，键名、op 都由选择生成。A8：条件里没有「身份是」（ROLE_IN）。" id="routeList" data-states="ok,noperm" data-st-name="下一站" data-cur="ok">
+      <view class="ios-hd">撬开侧门</view>
+      <view class="ios-grp"><view class="ios-row" data-act="reOut" data-out="ok"><view class="ios-m"><text class="ios-t">撬开了</text></view><text class="ios-v" id="outV_ok">仓库二层</text><view class="ios-chev"><cy-icon><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view></view><view class="ios-row" data-act="reOut" data-out="no"><view class="ios-m"><text class="ios-t">没撬开</text></view><text class="ios-v" id="outV_no">海关钟楼</text><view class="ios-chev"><cy-icon><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view></view><view class="ios-row is-static" ><view class="ios-m"><text class="ios-t">其他结果</text></view><text class="ios-v">按故事流继续</text></view></view>
+      <view class="ios-ft" data-st="noperm">这个主题现在不能修改。</view>
     </view>
+    </scroll-view>
   </view>
-  </scroll-view>
+
+  <!-- 下一层：一种结果 -->
+  <view class="ios-lv ios-sub" id="routeLOut">
+    <view class="ios-nav"><view class="node-sheet__close ios-back" data-act="lvBack" aria-label="返回下一站"><cy-icon><view class="cyi cyi--back" style="width:20.8px;height:20.8px"></view></cy-icon><text>下一站</text></view><text class="ios-nav__t" id="outTitle">撬开了</text><view class="ios-nav__r"></view></view>
+    <scroll-view class="ios-body">
+    <view class="mk-new" data-mk="去往 · 条件 · 效果（句子）" data-why="照 Apple「家庭」自动化：每条条件、效果是一句话，「已获得线索 · 半张货单」「进度钟 · 巡夜人警觉 +1」。添加时一步一步选：种类 → 名字（搜索；线索、物品、标签可以新建）→ 数量（步进器，上下限由控件挡住）。条件有两条以上时出现「全部满足 / 任一满足」（AND / OR）；「一组条件」进下一层（嵌套，后端最多 3 层、每组 10 条）。效果按顺序执行，「编辑」拖动排序。左滑删除，点一行修改。" id="routeOut" data-states="ok,empty,error,noperm" data-st-name="一种结果（下一层）" data-cur="ok">
+      <view class="ios-grp"><view class="ios-row" data-act="lv" data-lv="routeLDest"><view class="ios-m"><text class="ios-t">去往</text></view><text class="ios-v" id="outDest">仓库二层</text><view class="ios-chev"><cy-icon><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view></view></view>
+      <view class="ios-hd">条件</view>
+      <view class="ios-grp ios-list" id="rtCond" data-out="1"><view class="ios-row is-static re-seg"><view class="ios-seg " ><view class="is-on" data-act="reAny">全部满足</view><view data-act="reAny">任一满足</view></view></view><view class="ios-row is-add" data-act="reAdd" data-mode="cond" data-list="rtCond"><view class="ios-ic ios-ic--add"><cy-icon><view class="cyi cyi--plus" style="width:12.48px;height:12.48px"></view></cy-icon></view><view class="ios-m"><text class="ios-t">添加条件</text></view></view></view>
+      <view class="ios-hd"><text>效果</text><text class="ios-hd__act" data-act="editList" data-list="rtEff">编辑</text></view>
+      <view class="ios-grp ios-list" id="rtEff" data-out="1"><view class="ios-row is-add" data-act="reAdd" data-mode="eff" data-list="rtEff"><view class="ios-ic ios-ic--add"><cy-icon><view class="cyi cyi--plus" style="width:12.48px;height:12.48px"></view></cy-icon></view><view class="ios-m"><text class="ios-t">添加效果</text></view></view></view>
+      <view class="ios-ft is-err" data-st="error">没有保存成功，请再试一次。</view>
+      <view class="ios-ft" data-st="noperm">这个主题现在不能修改。</view>
+    </view>
+    </scroll-view>
+  </view>
+
+  <!-- 再下一层：去往 -->
+  <view class="ios-lv ios-sub" id="routeLDest">
+    <view class="ios-nav"><view class="node-sheet__close ios-back" data-act="lvBack" aria-label="返回撬开了"><cy-icon><view class="cyi cyi--back" style="width:20.8px;height:20.8px"></view></cy-icon><text>撬开了</text></view><text class="ios-nav__t" id="destTitle">去往</text><view class="ios-nav__r"></view></view>
+    <scroll-view class="ios-body">
+      <view class="mk-new" data-mk="去往 · 勾选" data-why="单选，点一项立即生效。最后一项「按故事流继续」= 不指定节点。"><view class="ios-grp" id="destList"><view class="ios-row is-on" data-act="reDest"><view class="ios-m"><text class="ios-t">仓库二层</text></view><view class="ios-chk"><cy-icon><view class="cyi cyi--check" style="width:16.64px;height:16.64px"></view></cy-icon></view></view><view class="ios-row" data-act="reDest"><view class="ios-m"><text class="ios-t">海关钟楼</text></view><view class="ios-chk"><cy-icon><view class="cyi cyi--check" style="width:16.64px;height:16.64px"></view></cy-icon></view></view><view class="ios-row" data-act="reDest"><view class="ios-m"><text class="ios-t">鱼市口</text></view><view class="ios-chk"><cy-icon><view class="cyi cyi--check" style="width:16.64px;height:16.64px"></view></cy-icon></view></view><view class="ios-row" data-act="reDest"><view class="ios-m"><text class="ios-t">按故事流继续</text></view><view class="ios-chk"><cy-icon><view class="cyi cyi--check" style="width:16.64px;height:16.64px"></view></cy-icon></view></view></view></view>
+    </scroll-view>
+  </view>
   </view>
 </view>
 </cy-sheet>
 
-<!-- ============ 发布确认（publishCheck）============ -->
-<view class="pc-mask ps" id="pcMask" data-close="pcSheet,pcMask"></view>
-<view class="pop-model pop-publish-check ps" id="pcSheet">
-  <view class="pop-top flex-cb"><view class="pc-lead"></view><view class="tit">发布确认</view><view class="pc-lead"></view></view>
-  <view class="pop-cont pc-cont">
-    <view class="pc-lede">发布后平台审核</view>
-    <view class="pc-section-tit">本次发布</view>
-    <cy-card class="pc-summary"><view class="cy-card">
-      <view class="pc-summary__line">城市定向 · 2 章 · 5 个节点</view>
-      <view class="pc-summary__line">票务：单人票 ¥68</view>
-      <view class="pc-summary__line mk-chg" data-mk="冻结说明 → 一行摘要" data-before="（本原型新增的一行）4 项属性和 d20 规则随本次发布生效，进行中的玩家不受影响" data-after="d20 检定 · 4 项属性（和上面「票务：单人票 ¥68」同一种摘要行）" data-why="联动第 3 步：发布时把状态键注册表里的角色属性（范围、开局值，以及按类型预设的显示方式）和 d20 规则冻结进开局快照；已经开局的玩家继续用开局时那一版。后端现在只冻结 key+label（JourneyInitialState.freezeKeys），范围和显示字段需后端补。">d20 检定 · 4 项属性<text class="need">需后端</text></view>
-      <view class="pc-summary__visibility">发布后在创意广场公开</view>
-    </view></cy-card>
-    <view class="pc-section-tit">自动检查</view>
-    <cy-card class="pc-passed"><view class="cy-card">
-      <view class="pc-passed__head"><view class="pc-passed__mark"><cy-icon><view class="cyi cyi--check" style="width:14.56px;height:14.56px"></view></cy-icon></view><text class="pc-passed__title">自动检查已通过 · 3 项</text></view>
-      <view class="pc-passed__item"><text class="pc-dot pc-dot-ok"></text><text class="pc-label">章节与节点完整</text></view>
-      <view class="pc-passed__item"><text class="pc-dot pc-dot-ok"></text><text class="pc-label">内容安全</text></view>
-      <view class="pc-passed__item mk-new" data-mk="新检查项" data-why="GET /api/topic/publish-check（ApiTopicStateKeyController:243）已有：检定绑定的属性必须在注册表里。"><text class="pc-dot pc-dot-ok"></text><text class="pc-label">检定用到的属性均已添加</text></view>
-    </view></cy-card>
-    <view class="pc-section-tit">奖励总览</view>
-    <cy-card class="pc-reward"><view class="cy-card">
-      <view class="pc-reward-row"><text class="pc-reward-k">探索值(XP)</text><text class="pc-reward-v">自动分配 · 按任务难度拆 60%,余额为通关奖励</text></view>
-      <view class="pc-reward-row"><text class="pc-reward-k">通关勋章</text><text class="pc-reward-v">雾港夜行 · 通关(默认)</text></view>
-    </view></cy-card>
-    <cy-btn data-close="pcSheet,pcMask" data-toast="已提交审核"><view class="btn btn--primary btn--block">确认发布</view></cy-btn>
+<!-- ============ 发布确认（publishCheck · 10-28 下午：和其他半屏一样的分组列表）============ -->
+<cy-sheet class="node-sheet-host ps" id="pcSheet" style="--cy-comp-sheet-max-h:calc(844px - 88px)">
+<view class="sh sh--full sh--lv-full">
+  <view class="sh__mask" data-close="pcSheet"></view>
+  <view class="sh__panel ios-host" id="pcHost">
+  <view class="ios-lv ios-root" id="pcL1">
+    <view class="ios-nav mk-chg" data-mk="iOS 导航栏" data-before="master：居中的弹窗，顶部只有标题「发布确认」，下面一行小字「发布后平台审核」" data-after="和其他半屏一样：左「取消」、中间「发布确认」。「发布后平台审核」删掉（次级说明）" data-why="业主 10-28：每张半屏照 iOS 结构。"><view class="node-sheet__close" data-close="pcSheet">取消</view><text class="ios-nav__t">发布确认</text><view class="ios-nav__r"><view class="node-sheet__done ios-keep mk-chg" id="pcGo" data-close="pcSheet" data-toast="已提交审核" data-mk="确认发布 → 右上「发布」" data-before="底部一颗通栏黑色按钮「确认发布」" data-after="导航栏右上「发布」，和其他半屏的「完成 / 添加」同一个位置；没过检查时是灰的" data-why="业主 10-28：iOS 半屏的主要动作在右上，填好之前是灰的。">发布</view></view></view>
+    <scroll-view class="ios-body">
+    <view class="mk-chg" data-mk="发布确认 · 分组列表" data-before="master：三张卡——「本次发布」三行小字、「自动检查已通过 · 3 项」+ 绿点、「奖励总览」两行（「探索值(XP) · 自动分配 · 按任务难度拆 60%,余额为通关奖励」）；本原型加过一行「d20 检定 · 4 项属性」和一项检查" data-after="三组列表，左名称右值：本次发布（城市定向 · 2 章 · 5 个节点 / 票务 / d20 检定 / 线索与物品 / 创意广场）；自动检查（绿色勾，没过的一项红色、点进去改）；奖励（探索值 · 自动分配 / 通关勋章）。「探索值(XP)」里的英文和后面那句说明删掉" data-why="业主 10-28 下午：专业配置的界面还不对；clue.ledger_half 这类东西不该出现，作者配置的东西要简单、不带英文。照 d20 半屏的做法重做。 冻结：发布时把属性（范围、开局值、按类型的显示方式）、d20 规则、线索与物品冻结进开局快照；后端现在只冻结 key + label（JourneyInitialState.freezeKeys），范围和显示字段需后端。自动检查来自 GET /api/topic/publish-check（结构化问题列表）；问题的 message 是后端原话、可能带键名，界面不显示，只按 nodeId 显示节点名：需后端给每个问题一个作者可读的位置和种类。" id="pcForm" data-states="ok,fail" data-st-name="发布确认" data-cur="ok">
+      <view class="ios-hd">本次发布</view>
+      <view class="ios-grp"><view class="ios-row is-static" ><view class="ios-m"><text class="ios-t">城市定向</text></view><text class="ios-v">2 章 · 5 个节点</text></view><view class="ios-row is-static" ><view class="ios-m"><text class="ios-t">票务</text></view><text class="ios-v">单人票 ¥68</text></view><view class="ios-row is-static" ><view class="ios-m"><text class="ios-t">d20 检定<text class="need">需后端</text></text></view><text class="ios-v">4 项属性</text></view><view class="ios-row is-static" ><view class="ios-m"><text class="ios-t">线索与物品</text></view><text class="ios-v">7 项</text></view><view class="ios-row is-static" ><view class="ios-m"><text class="ios-t">创意广场</text></view><text class="ios-v">发布后公开</text></view></view>
+      <view class="ios-hd">自动检查</view>
+      <view class="ios-grp"><view class="ios-row is-static" ><view class="ios-st"></view><view class="ios-m"><text class="ios-t">章节与节点完整</text></view></view><view class="ios-row is-static" ><view class="ios-st"></view><view class="ios-m"><text class="ios-t">内容安全</text></view></view><view class="ios-row is-static" ><view class="ios-st"></view><view class="ios-m"><text class="ios-t">检定用到的属性都在</text></view></view><view data-st="ok"><view class="ios-row is-static" ><view class="ios-st"></view><view class="ios-m"><text class="ios-t">条件和效果用到的都在<text class="need">需后端</text></text></view></view></view><view data-st="fail"><view class="ios-row is-bad-row" data-act="pcFix"><view class="ios-st is-bad"></view><view class="ios-m"><text class="ios-t">旧码头仓库 · 下一站</text></view><view class="ios-chev"><cy-icon><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view></view></view></view>
+      <view class="ios-hd">奖励</view>
+      <view class="ios-grp"><view class="ios-row is-static" ><view class="ios-m"><text class="ios-t">探索值</text></view><text class="ios-v">自动分配</text></view><view class="ios-row is-static" ><view class="ios-m"><text class="ios-t">通关勋章</text></view><text class="ios-v">雾港夜行 · 通关</text></view></view>
+      
+    </view>
+    </scroll-view>
+  </view>
   </view>
 </view>
+</cy-sheet>
 </view>
 </section>
 
@@ -12919,80 +12956,40 @@ body.clean .scr .need{display:none}
     </view></cy-card>
     <view class="cg-inline-cfg" id="game-cfg">
     <view class="cg-sec"><text class="cg-sec__t">玩法设置</text></view>
-    <view class="cg-gcfg">
-      <view class="cg-adv-body">
-        <view class="cg-cfg-label">判定什么技能</view>
-        <view class="mk-chg" id="skillPick" data-mk="技能 → 选属性（10-28 去掉小字）" data-before="一个自由输入框「例如 潜行 / 观察」，写什么都只当文字显示" data-after="下拉：列出「d20 与角色设定」里的属性（观察 / 胆量 / 体魄 / 灵感）+ 最后一项「不加属性值」；主题关着 d20 检定时不出现下拉。10-28：下拉下面的小字都删掉（「检定时加上玩家的观察值（0–5）」「d20 检定关闭时，这里只填名称」）；没有属性时下面只有一个动作「添加属性」（原来是「在「d20 与角色设定」中添加属性」）；出错时「轻点重试」→「重试」" data-why="check.skill：值是 counter.* 时引擎把属性值加进达成值（GameplayCheckEngine:15,132），否则只当文字。下拉保证只能选注册过的属性（C-1）。" data-states="ok,empty,error,off" data-st-name="技能下拉">
-          <view data-st="ok"><view class="cg-pick" data-dd="观察|胆量|体魄|灵感|不加属性值"><text class="dd-v">观察</text><view class="cg-caret"><cy-icon><view class="cyi cyi--back" style="width:14.56px;height:14.56px"></view></cy-icon></view></view>
-</view>
-          <view data-st="empty"><view class="cg-pick empty">还没有属性<view class="cg-caret"><cy-icon><view class="cyi cyi--back" style="width:14.56px;height:14.56px"></view></cy-icon></view></view><view class="cg-cfg-act" data-go="e-d20">添加属性</view></view>
-          <view data-st="off"><input class="cg-cfg-input" value="撬锁"/></view>
-          <view data-st="error"><view class="cg-pick empty">属性没有读取成功<view class="cg-caret"><cy-icon><view class="cyi cyi--back" style="width:14.56px;height:14.56px"></view></cy-icon></view></view><view class="cg-cfg-act" data-toast="正在重新读取">重试</view></view>
+    <view class="tp-ios">
+      <view class="mk-chg" data-mk="技能 → 加上属性（一行 → 勾选列表）" data-before="10-28 上午版：下拉框「观察 ⌄」（cg-pick）；没有属性时灰色下拉「还没有属性」+「添加属性」；出错「属性没有读取成功」+「重试」；d20 检定关时一个自由输入框" data-after="一行「加上属性 · 观察 ›」，点开叠一张半屏，勾选列表：观察 / 胆量 / 体魄 / 灵感 / 不加属性。没有属性：右边「无」，点开只有「添加属性」一行（去「d20 与角色设定」）。出错：右边「重试」。d20 检定关：这一行变成「技能 · 撬锁」输入" data-why="业主 10-28 下午：专业配置的界面还不对；clue.ledger_half 这类东西不该出现，作者配置的东西要简单、不带英文。照 d20 半屏的做法重做。 check.skill：选了属性就写它的 counter.* 键（GameplayCheckEngine 把属性值加进达成值），作者看不到键名。" id="skillPick" data-states="ok,empty,error,off" data-st-name="加上属性" data-cur="ok">
+        <view class="ios-grp">
+          <view data-st="ok"><view class="ios-row" data-act="tpSkill"><view class="ios-m"><text class="ios-t">加上属性</text></view><text class="ios-v" id="skillV">观察</text><view class="ios-chev"><cy-icon><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view></view></view>
+          <view data-st="empty"><view class="ios-row" data-act="tpSkill" data-empty="1"><view class="ios-m"><text class="ios-t">加上属性</text></view><text class="ios-v">无</text><view class="ios-chev"><cy-icon><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view></view></view>
+          <view data-st="error"><view class="ios-row is-static"><view class="ios-m"><text class="ios-t">加上属性</text></view><view class="ios-txtbtn" data-toast="正在重新读取">重试</view></view></view>
+          <view data-st="off"><view class="ios-row is-static"><text class="ios-t is-l">技能</text><input class="ios-in" value="撬锁" maxlength="10"/></view></view>
+          <view class="ios-row is-static mk-chg" data-mk="难度 → 分段控件" data-before="下拉框「中等 ⌄」" data-after="一行分段控件：简单 / 中等 / 困难" data-why="只给三档（easy / medium / hard），数字线由主题「规则难度」写进 journeyRules.tiers。"><text class="ios-t is-l">难度</text><view class="ios-seg is-r" ><view data-act="seg">简单</view><view class="is-on" data-act="seg">中等</view><view data-act="seg">困难</view></view></view>
         </view>
-        <view class="cg-cfg-label">难度</view>
-        <view class="cg-pick mk-chg" data-dd="简单|中等|困难" data-mk="去掉难度说明" data-before="下拉下面一行「每档的难度由「规则难度」决定」" data-after="（删除）" data-why="业主 10-28：去掉次级说明。只给三档（easy/medium/hard），数字线由主题「规则难度」写进 journeyRules.tiers（标准 = 10/13/16），作者在这里不写数字。"><text class="dd-v">中等</text><view class="cg-caret"><cy-icon><view class="cyi cyi--back" style="width:14.56px;height:14.56px"></view></cy-icon></view></view>
-
-        <!-- 新增：情境加值 mods[] -->
-        <view class="cg-adv-section mk-new" id="modsSec" data-mk="情境加值（mods）" data-why="check.mods[{when, value | var(counter.*), label}]；when 必填，用同一套条件词表。合计受主题 modCap 封顶（由「规则难度」给：轻松 8 / 标准 6 / 硬核 4）。master 编辑器不暴露 mods，保存时原样保留——这里第一次给界面。">
-          <view class="cg-rw-line"><view class="cg-rw-meta"><view class="cg-rw-name">情境加值</view></view><cy-switch><switch class="cs" checked data-reveal="modsBody"></switch></cy-switch></view>
-          <view class="rv is-open cg-adv-reveal" id="modsBody">
-            <view class="cg-adv-repeat">
-              <view class="cg-adv-repeat-head"><text>加值 1</text><view class="cg-adv-del"><cy-icon><view class="cyi cyi--close-sm" style="width:14.56px;height:14.56px"></view></cy-icon></view></view>
-              <input class="cg-cfg-input" value="带着旧手电"/>
-              <view class="cg-two"><view class="cg-pick" data-dd="装备着某件物品|带着某个状态|节点检定结果|天气或时段|数值比较"><text class="dd-v">装备着某件物品</text><view class="cg-caret"><cy-icon><view class="cyi cyi--back" style="width:14.56px;height:14.56px"></view></cy-icon></view></view><view class="cg-pick" data-dd="旧手电|撬棍|怀表"><text class="dd-v">旧手电</text><view class="cg-caret"><cy-icon><view class="cyi cyi--back" style="width:14.56px;height:14.56px"></view></cy-icon></view></view></view>
-              <view class="cg-two"><view class="cg-pick" data-dd="加固定值|加属性值"><text class="dd-v">加固定值</text><view class="cg-caret"><cy-icon><view class="cyi cyi--back" style="width:14.56px;height:14.56px"></view></cy-icon></view></view><input class="cg-cfg-input" type="number" min="0" max="6" value="2"/></view>
-            </view>
-            <view class="cg-adv-repeat">
-              <view class="cg-adv-repeat-head"><text>加值 2</text><view class="cg-adv-del"><cy-icon><view class="cyi cyi--close-sm" style="width:14.56px;height:14.56px"></view></cy-icon></view></view>
-              <input class="cg-cfg-input" value="夜里更看得清"/>
-              <view class="cg-two"><view class="cg-pick" data-dd="装备着某件物品|带着某个状态|节点检定结果|天气或时段"><text class="dd-v">带着某个状态</text><view class="cg-caret"><cy-icon><view class="cyi cyi--back" style="width:14.56px;height:14.56px"></view></cy-icon></view></view><view class="cg-pick" data-dd="夜行者|手背擦伤"><text class="dd-v">夜行者</text><view class="cg-caret"><cy-icon><view class="cyi cyi--back" style="width:14.56px;height:14.56px"></view></cy-icon></view></view></view>
-              <view class="cg-two"><view class="cg-pick" data-dd="加固定值|加属性值"><text class="dd-v">加属性值</text><view class="cg-caret"><cy-icon><view class="cyi cyi--back" style="width:14.56px;height:14.56px"></view></cy-icon></view></view><view class="cg-pick" data-dd="观察|胆量|体魄"><text class="dd-v">胆量</text><view class="cg-caret"><cy-icon><view class="cyi cyi--back" style="width:14.56px;height:14.56px"></view></cy-icon></view></view></view>
-            </view>
-            <view class="cg-adv-add mk-chg" data-toast="已添加情境加值" data-mk="去掉封顶说明" data-before="最下面一行「情境加值合计最多 +6」" data-after="删掉。封顶由系统保证：加值输入框最大到上限（规则难度：轻松 8 / 标准 6 / 硬核 4），合计到顶时「添加加值」变灰" data-why="业主 10-28：作者不用照着做的规则不写出来，用上限和禁用来表达。"><cy-icon><view class="cyi cyi--plus" style="width:14.56px;height:14.56px"></view></cy-icon>添加加值</view>
-          </view>
+      </view>
+      <view class="mk-chg" data-mk="情境加值 · 句子列表" data-before="开关 + 每条一块：名称输入框「带着旧手电」、两个下拉「装备着某件物品 ⌄」「旧手电 ⌄」、下拉「加固定值 ⌄」+ 数字输入框、右上 ×；最下面「+ 添加加值」" data-after="列表：每行一句「带着物品 · 旧手电」，右边「+2」或「+胆量」；左滑删除，点一行修改；「添加加值」叠一张半屏，依次选 条件种类 → 名字 → 加多少（固定加值的步进器最大到剩下的上限）；合计到上限（规则难度：轻松 8 / 标准 6 / 硬核 4）时「添加加值」变灰。开关删掉：没有加值就是关" data-why="业主 10-28 下午：专业配置的界面还不对；clue.ledger_half 这类东西不该出现，作者配置的东西要简单、不带英文。照 d20 半屏的做法重做。 check.mods[{{when, value | var, label}}]：when 用同一套条件；label = 第三步里的「名称」：默认由句子生成（「带着旧手电」），可以改（「夜里更看得清」），游玩页检定明细显示它。" id="modsSec" data-states="ok,full,empty" data-st-name="情境加值" data-cur="ok">
+        <view class="ios-hd">情境加值</view>
+        <view class="ios-grp ios-list" id="modList"><view class="ios-row is-add" data-act="reAdd" data-mode="mod" data-list="modList" id="modAdd"><view class="ios-ic ios-ic--add"><cy-icon><view class="cyi cyi--plus" style="width:12.48px;height:12.48px"></view></cy-icon></view><view class="ios-m"><text class="ios-t">添加加值</text></view></view></view>
+      </view>
+      <view class="mk-chg" data-mk="魔鬼交易 · 分组列表" data-before="开关 + 「交易说明」输入框 + 「加值」下拉「+2 ⌄」+ 「代价」两个下拉 + 一个写「2」的输入框" data-after="开关一行；开着时：说明（输入）、加值（分段控件 +1 / +2 / +3）；代价是句子列表「进度钟 · 巡夜人警觉 +2」，最多 4 条（满了「添加代价」不出现）" data-why="业主 10-28 下午：专业配置的界面还不对；clue.ledger_half 这类东西不该出现，作者配置的东西要简单、不带英文。照 d20 半屏的做法重做。 check.bargain{{label, bonus 1–3, effects 1–4}}，代价只能是 SET / INC / ADD_TAG / ADD_CONDITION / TICK_CLOCK（AdvancedGameConfigValidator），所以「添加代价」只列 进度钟 / 属性 / 获得线索 / 加上标签 / 加上特质。主题「d20 与角色设定」里魔鬼交易关着时整段不出现。" id="bargainSec" data-states="ok,off" data-st-name="魔鬼交易段" data-cur="ok">
+        <view data-st="ok">
+          <view class="ios-hd">魔鬼交易</view>
+          <view class="ios-grp"><view class="ios-row is-static" ><view class="ios-m"><text class="ios-t">魔鬼交易</text></view><cy-switch><switch class="cs" checked data-reveal="bargainBody"></switch></cy-switch></view><view class="rv is-open" id="bargainBody"><view class="ios-row is-static"><text class="ios-t is-l">说明</text><input class="ios-in" value="让巡夜人听见你，换一次更稳的手" maxlength="30"/></view><view class="ios-row is-static"><text class="ios-t is-l">加值</text><view class="ios-seg is-r" ><view data-act="seg">+1</view><view class="is-on" data-act="seg">+2</view><view data-act="seg">+3</view></view></view></view></view>
+          <view class="rv is-open" id="bargainPrice"><view class="ios-hd">代价</view><view class="ios-grp ios-list" id="priceList"><view class="ios-row is-add" data-act="reAdd" data-mode="price" data-list="priceList"><view class="ios-ic ios-ic--add"><cy-icon><view class="cyi cyi--plus" style="width:12.48px;height:12.48px"></view></cy-icon></view><view class="ios-m"><text class="ios-t">添加代价</text></view></view></view></view>
         </view>
-
-        <!-- 新增：魔鬼交易（主题 RPG 规则开了才出现） -->
-        <view class="cg-adv-section mk-new" id="bargainSec" data-mk="魔鬼交易（本检定）" data-why="check.bargain{label, bonus 1–3, effects 1–4 条，只能 改数值/加数值/挂标记/加状态/推进进度钟}。主题「d20 与角色设定」里「魔鬼交易」关着时整段不出现。" data-states="ok,off" data-st-name="魔鬼交易段">
-          <view data-st="ok">
-          <view class="cg-rw-line"><view class="cg-rw-meta"><view class="cg-rw-name">魔鬼交易</view></view><cy-switch><switch class="cs" checked data-reveal="bargainBody"></switch></cy-switch></view>
-          <view class="rv is-open cg-adv-reveal" id="bargainBody">
-            <view class="cg-cfg-label">交易说明</view><input class="cg-cfg-input" value="让巡夜人听见你，换一次更稳的手"/>
-            <view class="cg-cfg-label">加值</view><view class="cg-pick" data-dd="+1|+2|+3"><text class="dd-v">+2</text><view class="cg-caret"><cy-icon><view class="cyi cyi--back" style="width:14.56px;height:14.56px"></view></cy-icon></view></view>
-            <view class="cg-cfg-label">代价</view>
-            <view class="cg-two"><view class="cg-pick" data-dd="推进进度钟|加上状态|加数值|改数值|挂标记"><text class="dd-v">推进进度钟</text><view class="cg-caret"><cy-icon><view class="cyi cyi--back" style="width:14.56px;height:14.56px"></view></cy-icon></view></view><view class="cg-pick" data-dd="巡夜人警觉|拼出货单"><text class="dd-v">巡夜人警觉</text><view class="cg-caret"><cy-icon><view class="cyi cyi--back" style="width:14.56px;height:14.56px"></view></cy-icon></view></view></view>
-            <input class="cg-cfg-input" value="2" placeholder="格数"/>
-          </view>
-          </view>
-        </view>
-
-        <view class="cg-cfg-label">过了说一句</view><input class="cg-cfg-input" value="门轴一声闷响，你站稳了"/>
-        <view class="cg-cfg-label">没过说一句</view><input class="cg-cfg-input" value="撬棍滑了，手背擦出一道口子"/>
-        <view class="cg-adv-section">
-          <view class="cg-rw-line"><view class="cg-rw-meta"><view class="cg-rw-name">幸运</view></view><cy-switch><switch class="cs" checked></switch></cy-switch></view>
-          <view class="cg-pick cg-adv-reveal">幸运高获得多1分<view class="cg-caret"><cy-icon><view class="cyi cyi--back" style="width:14.56px;height:14.56px"></view></cy-icon></view></view>
-        </view>
-        <view class="cg-adv-section">
-          <view class="cg-rw-line"><view class="cg-rw-meta"><view class="cg-rw-name">生命值越低越困难</view></view><cy-switch><switch class="cs"></switch></cy-switch></view>
-        </view>
+      </view>
+      <view class="mk-chg" data-mk="过了 / 没过 · 幸运 · 生命值（分组列表）" data-before="cg-cfg-label 小标题 + 输入框；「幸运」开关 + 下拉框「幸运高获得多1分 ⌄」；「生命值越低越困难」开关" data-after="同一种分组列表；幸运的规则是一行，点开勾选（三项，master 原文）" data-why="业主 10-28：不要下拉框的样子。">
+        <view class="ios-hd">过了说一句</view>
+        <view class="ios-grp"><view class="ios-row is-static"><input class="ios-in ios-in--l" value="门轴一声闷响，你站稳了" maxlength="60"/></view></view>
+        <view class="ios-hd">没过说一句</view>
+        <view class="ios-grp"><view class="ios-row is-static"><input class="ios-in ios-in--l" value="撬棍滑了，手背擦出一道口子" maxlength="60"/></view></view>
+        <view class="ios-grp ios-gap"><view class="ios-row is-static" ><view class="ios-m"><text class="ios-t">幸运</text></view><cy-switch><switch class="cs" checked data-reveal="luckRow"></switch></cy-switch></view><view class="rv is-open" id="luckRow"><view class="ios-row" data-act="tpLuck"><view class="ios-m"><text class="ios-t" id="luckV">幸运高获得多1分</text></view><view class="ios-chev"><cy-icon><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view></view></view><view class="ios-row is-static" ><view class="ios-m"><text class="ios-t">生命值越低越困难</text></view><cy-switch><switch class="cs"></switch></cy-switch></view></view>
       </view>
     </view>
     <view class="cg-sec"><text class="cg-sec__t">结果反馈</text></view>
-    <view class="cg-gcfg">
-      <view class="cg-rw-line cg-line"><view class="cg-rw-name">成功</view><cy-switch><switch class="cs" checked></switch></cy-switch></view>
-      <view class="cg-fb-body">
-        <textarea class="cg-cfg-textarea" style="min-height:44px">门轴一声闷响，你站稳了</textarea>
-        <view class="cg-r5-row" data-open="afterSheet,afterMask">
-          <view class="cg-r5-row__main"><text class="cg-r5-row__title cg-r5-row__title--plain">消耗与效果</text><text class="cg-r5-row__sub">给物品「半张货单」· 推进「拼出货单」1 格</text></view>
-          <view class="cg-r5-pill">编辑<cy-icon><view class="cyi cyi--chevron-right" style="width:12.48px;height:12.48px"></view></cy-icon></view>
-        </view>
-      </view>
-      <view class="cg-rw-line cg-line"><view class="cg-rw-name">失败</view><cy-switch><switch class="cs" checked></switch></cy-switch></view>
-      <view class="cg-fb-body">
-        <view class="cg-r5-row" data-open="afterSheet,afterMask">
-          <view class="cg-r5-row__main"><text class="cg-r5-row__title cg-r5-row__title--plain">消耗与效果</text><text class="cg-r5-row__sub">加上状态「手背擦伤」</text></view>
-          <view class="cg-r5-pill">编辑<cy-icon><view class="cyi cyi--chevron-right" style="width:12.48px;height:12.48px"></view></cy-icon></view>
-        </view>
+    <view class="tp-ios">
+      <view class="mk-chg" data-mk="结果反馈 · 分组列表" data-before="master：「成功」开关、文本框、一块「消耗与效果 / 给物品「半张货单」· 推进「拼出货单」1 格 / 编辑 ›」；「失败」同样" data-after="每种结果一组：开关、文本、「消耗与效果 · 2 项 ›」（点开叠一张半屏）" data-why="业主 10-28：长摘要不写在行里，右边只放数量。">
+        <view class="ios-grp"><view class="ios-row is-static" ><view class="ios-m"><text class="ios-t">成功</text></view><cy-switch><switch class="cs" checked></switch></cy-switch></view><view class="ios-row is-static"><textarea class="ios-ta" maxlength="200">门轴一声闷响，你站稳了</textarea></view><view class="ios-row" data-open="afterSheet"><view class="ios-m"><text class="ios-t">消耗与效果</text></view><text class="ios-v" id="afterSumOk">2 项</text><view class="ios-chev"><cy-icon><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view></view></view>
+        <view class="ios-grp ios-gap-s"><view class="ios-row is-static" ><view class="ios-m"><text class="ios-t">失败</text></view><cy-switch><switch class="cs" checked></switch></cy-switch></view><view class="ios-row" data-open="afterSheet"><view class="ios-m"><text class="ios-t">消耗与效果</text></view><text class="ios-v">1 项</text><view class="ios-chev"><cy-icon><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view></view></view>
       </view>
     </view>
     </view>
@@ -13002,35 +12999,46 @@ body.clean .scr .need{display:none}
     <cy-btn data-toast="打开玩家视角预览"><view class="btn btn--secondary">查看预览</view></cy-btn>
     <cy-btn data-toast="已保存并绑定到节点"><view class="btn btn--primary">保存并绑定</view></cy-btn>
   </view>
-  <!-- 消耗与效果（afterEditor）-->
-  <view class="cg-mask cg-mask--top ps" id="afterMask" data-close="afterSheet,afterMask"></view>
-  <view class="cg-sheet cg-edit-sheet cg-edit-sheet--top ps" id="afterSheet" style="--cy-comp-sheet-max-h:calc(844px - 88px)">
-    <view class="cg-edit-head"><view class="cg-edit-head__exit" data-close="afterSheet,afterMask">退出</view><view class="cg-edit-head__title">消耗与效果</view><view class="cg-edit-head__done" data-close="afterSheet,afterMask">完成</view></view>
-    <view class="cg-gcfg">
-      <view class="cg-r5-sec">消耗</view>
-      <view class="cg-adv-add"><cy-icon><view class="cyi cyi--plus" style="width:14.56px;height:14.56px"></view></cy-icon>消耗</view>
+  <!-- 消耗与效果（afterEditor · 10-28 下午：叠放半屏 + 句子列表）-->
+<cy-sheet class="node-sheet-host ps" id="afterSheet" style="--cy-comp-sheet-max-h:calc(844px - 88px)">
+<view class="sh sh--full sh--lv-full">
+  <view class="sh__mask" data-close="afterSheet"></view>
+  <view class="sh__panel ios-host" id="afterHost" data-p="af">
+  <view class="ios-lv ios-root" id="afterL1">
+    <view class="ios-nav mk-chg" data-mk="iOS 导航栏" data-before="「退出 · 消耗与效果 · 完成」（cg-edit-head，从顶部落下的另一种弹层）" data-after="和其他半屏一样：左「取消」、中间标题、右「完成」，从底部叠上来，玩法模板页缩小变暗" data-why="业主 10-28：每张半屏照 iOS 结构。"><view class="node-sheet__close" data-close="afterSheet">取消</view><text class="ios-nav__t">消耗与效果</text><view class="ios-nav__r"><view class="node-sheet__done ios-keep" data-close="afterSheet" data-toast="已保存">完成</view></view></view>
+    <scroll-view class="ios-body">
+    <view class="mk-chg" data-mk="消耗 · 效果 · 条件（句子）" data-before="每条一行：两个下拉框 + 数字输入框 + ×；「+ 消耗」「+ 效果」；「新建需要的数值」输入框；「只在满足条件时生效」开关 + 两个下拉 + 输入框；「进入下一段」下拉" data-after="三组句子列表：消耗「幸运值 −1」、效果「给物品 · 半张货单」「进度钟 · 拼出货单 +1」、条件（空 = 总是生效；两条以上出现 全部满足 / 任一满足）。每组最后一行添加：种类 → 名字（可搜索、新建）→ 数量。左滑删除，点一行修改。「之后 · 按顺序进入下一段 ›」勾选" data-why="业主 10-28 下午：专业配置的界面还不对；clue.ledger_half 这类东西不该出现，作者配置的东西要简单、不带英文。照 d20 半屏的做法重做。 消耗 = costs[{{statKey, amount 1–999}}]（数值可在选名字那一层新建，替代 master 的「新建需要的数值」输入框）；效果 = INC / FLOOR / SET 与 F5 效果词表（ADD_ITEM、GRANT_BADGE、GRANT_XP、ADD_CONDITION / REMOVE_CONDITION、EQUIP / UNEQUIP、TICK_CLOCK、ADD_TAG）。结果行上的条件 when：需后端核对。" id="afterForm" data-states="ok,empty,error,noperm" data-st-name="消耗与效果" data-cur="ok">
+      <view class="ios-hd">消耗</view>
+      <view class="ios-grp ios-list" id="afCost"><view class="ios-row is-add" data-act="reAdd" data-mode="cost" data-list="afCost"><view class="ios-ic ios-ic--add"><cy-icon><view class="cyi cyi--plus" style="width:12.48px;height:12.48px"></view></cy-icon></view><view class="ios-m"><text class="ios-t">添加消耗</text></view></view></view>
+      <view class="ios-hd"><text>效果</text><text class="ios-hd__act" data-act="editList" data-list="afEff">编辑</text></view>
+      <view class="ios-grp ios-list" id="afEff"><view class="ios-row is-add" data-act="reAdd" data-mode="eff" data-list="afEff"><view class="ios-ic ios-ic--add"><cy-icon><view class="cyi cyi--plus" style="width:12.48px;height:12.48px"></view></cy-icon></view><view class="ios-m"><text class="ios-t">添加效果</text></view></view></view>
+      <view class="ios-hd">条件<text class="need">需后端</text></view>
+      <view class="ios-grp ios-list" id="afCond"><view class="ios-row is-static re-seg"><view class="ios-seg " ><view class="is-on" data-act="seg">全部满足</view><view data-act="seg">任一满足</view></view></view><view class="ios-row is-add" data-act="reAdd" data-mode="cond" data-list="afCond"><view class="ios-ic ios-ic--add"><cy-icon><view class="cyi cyi--plus" style="width:12.48px;height:12.48px"></view></cy-icon></view><view class="ios-m"><text class="ios-t">添加条件</text></view></view></view>
+      <view class="ios-grp ios-gap"><view class="ios-row" data-act="lv" data-lv="afterLNext"><view class="ios-m"><text class="ios-t">之后</text></view><text class="ios-v" id="afNextV">按顺序进入下一段</text><view class="ios-chev"><cy-icon><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view></view></view>
+      <view class="ios-ft is-err" data-st="error">没有保存成功，请再试一次。</view>
+      <view class="ios-ft" data-st="noperm">这个主题现在不能修改。</view>
     </view>
-    <view class="cg-gcfg mk-chg" data-mk="效果类型变多" data-before="效果只能选「需要的数值」+「增加 / 恢复到至少」" data-after="第一格先选做什么：加数值 · 恢复到至少 · 给物品 · 给徽章 · 给探索值 · 加上状态 · 去掉状态 · 装备物品 · 卸下物品 · 推进进度钟；后面的格子跟着变" data-why="F5 效果词表，后端已有：INC/FLOOR、ADD_ITEM{itemId,quantity}、GRANT_BADGE{value}、GRANT_XP{value}、ADD_CONDITION/REMOVE_CONDITION{value}、EQUIP{itemId,slot}/UNEQUIP{itemId}、TICK_CLOCK{var,value,max}。">
-      <view class="cg-r5-sec">效果</view>
-      <view class="cg-r5-effect">
-        <view class="cg-two"><view class="cg-pick" data-dd="加数值|恢复到至少|给物品|给徽章|给探索值|加上状态|去掉状态|装备物品|卸下物品|推进进度钟"><text class="dd-v">给物品</text><view class="cg-caret"><cy-icon><view class="cyi cyi--back" style="width:14.56px;height:14.56px"></view></cy-icon></view></view><view class="cg-pick" data-dd="半张货单|旧手电|撬棍"><text class="dd-v">半张货单</text><view class="cg-caret"><cy-icon><view class="cyi cyi--back" style="width:14.56px;height:14.56px"></view></cy-icon></view></view></view>
-        <view class="cg-r5-amount"><input class="cg-cfg-input" value="1"/><view class="cg-r5-del"><cy-icon><view class="cyi cyi--close-sm" style="width:14.56px;height:14.56px"></view></cy-icon></view></view>
-      </view>
-      <view class="cg-r5-effect">
-        <view class="cg-two"><view class="cg-pick" data-dd="加数值|恢复到至少|给物品|给徽章|给探索值|加上状态|去掉状态|装备物品|卸下物品|推进进度钟"><text class="dd-v">推进进度钟</text><view class="cg-caret"><cy-icon><view class="cyi cyi--back" style="width:14.56px;height:14.56px"></view></cy-icon></view></view><view class="cg-pick" data-dd="巡夜人警觉|拼出货单"><text class="dd-v">拼出货单</text><view class="cg-caret"><cy-icon><view class="cyi cyi--back" style="width:14.56px;height:14.56px"></view></cy-icon></view></view></view>
-        <view class="cg-r5-amount"><input class="cg-cfg-input" value="1"/><view class="cg-r5-del"><cy-icon><view class="cyi cyi--close-sm" style="width:14.56px;height:14.56px"></view></cy-icon></view></view>
-      </view>
-      <view class="cg-adv-add"><cy-icon><view class="cyi cyi--plus" style="width:14.56px;height:14.56px"></view></cy-icon>效果</view>
-    </view>
-    <view class="cg-gcfg mk-new" data-mk="只在满足条件时生效" data-why="F5 条件词表用在效果上：AND/OR/NOT、VISIT_COUNT、HAS_CONDITION、ITEM_EQUIPPED、CHECK_RESULT（A8：没有 ROLE_IN）。默认没有条件，打开才出现。">
-      <view class="cg-rw-line"><view class="cg-rw-meta"><view class="cg-rw-name">只在满足条件时生效</view></view><cy-switch><switch class="cs" data-reveal="afterCond"></switch></cy-switch></view>
-      <view class="rv cg-adv-reveal" id="afterCond">
-        <view class="cg-two"><view class="cg-pick" data-dd="到过某个节点几次|带着某个状态|装备着某件物品|节点检定结果"><text class="dd-v">到过某个节点几次</text><view class="cg-caret"><cy-icon><view class="cyi cyi--back" style="width:14.56px;height:14.56px"></view></cy-icon></view></view><view class="cg-pick" data-dd="旧码头仓库|海关钟楼"><text class="dd-v">旧码头仓库</text><view class="cg-caret"><cy-icon><view class="cyi cyi--back" style="width:14.56px;height:14.56px"></view></cy-icon></view></view></view>
-        <view class="cg-two"><view class="cg-pick" data-dd="至少|至多|等于"><text class="dd-v">至少</text><view class="cg-caret"><cy-icon><view class="cyi cyi--back" style="width:14.56px;height:14.56px"></view></cy-icon></view></view><input class="cg-cfg-input" value="2"/></view>
-      </view>
-    </view>
-    <view class="cg-gcfg"><view class="cg-cfg-label">进入下一段</view><view class="cg-pick">按顺序进入下一段<view class="cg-caret"><cy-icon><view class="cyi cyi--back" style="width:14.56px;height:14.56px"></view></cy-icon></view></view></view>
+    </scroll-view>
   </view>
+  <view class="ios-lv ios-sub" id="afterLNext">
+    <view class="ios-nav"><view class="node-sheet__close ios-back" data-act="lvBack" aria-label="返回消耗与效果"><cy-icon><view class="cyi cyi--back" style="width:20.8px;height:20.8px"></view></cy-icon><text>消耗与效果</text></view><text class="ios-nav__t">之后</text><view class="ios-nav__r"></view></view>
+    <scroll-view class="ios-body"><view class="mk-new" data-mk="之后 · 勾选" data-why="进入下一段（next），单选，点一项立即生效。"><view class="ios-grp"><view class="ios-row is-on" data-act="afNext"><view class="ios-m"><text class="ios-t">按顺序进入下一段</text></view><view class="ios-chk"><cy-icon><view class="cyi cyi--check" style="width:16.64px;height:16.64px"></view></cy-icon></view></view><view class="ios-row" data-act="afNext"><view class="ios-m"><text class="ios-t">结束这一站</text></view><view class="ios-chk"><cy-icon><view class="cyi cyi--check" style="width:16.64px;height:16.64px"></view></cy-icon></view></view></view></view></scroll-view>
+  </view>
+  </view>
+</view>
+</cy-sheet>
+<!-- 玩法模板页上的选择半屏（加上属性 / 添加加值 / 添加代价 / 幸运） -->
+<cy-sheet class="node-sheet-host ps" id="tpSheet" style="--cy-comp-sheet-max-h:calc(844px - 88px)">
+<view class="sh sh--full sh--lv-full">
+  <view class="sh__mask" data-close="tpSheet"></view>
+  <view class="sh__panel ios-host" id="tpHost" data-p="tp">
+  <view class="ios-lv ios-root" id="tpRoot">
+    <view class="ios-nav"><view class="node-sheet__close" data-close="tpSheet">取消</view><text class="ios-nav__t"></text><view class="ios-nav__r"><view class="node-sheet__done re-r"></view></view></view>
+    <scroll-view class="ios-body re-b"></scroll-view>
+  </view>
+  </view>
+</view>
+</cy-sheet>
 </view>
 </view>
 </section>
@@ -13492,17 +13500,19 @@ body.clean .scr .need{display:none}
 <p class="lead">以「观察」为例（10-28 修订）。只有主题开着「d20 检定」时才有这条链；关着时链上每一处都不出现属性。点任一步跳到对应屏。字段名取自 origin/master 的后端契约；标 <span class="need">需后端</span> 的是后端现在还做不到的一步。</p>
 <div class="lk-flow">
   <div class="lk-step" data-goto="e-d20-add"><div class="k">① 编辑器 · d20 与角色设定</div><div class="t">添加属性</div><div class="f">类型「观察」→ 名称 观察 · 0–5 · 开局 2；规则难度「标准」（E1：10/13/16）；三个开关 → journeyRules.checkEnabled / natAuto / rpg.bargain / rpg.momentum；档名 <span class="need">需后端</span></div></div>
-  <div class="lk-step" data-goto="e-keys"><div class="k">② 状态键注册表（C-1）</div><div class="t">唯一存处，只读列出</div><div class="f">theme_state_key：stateKey=counter.observe（系统生成）, label, minValue 0, maxValue 5, initialValue 2, sortOrder 1；显示方式等按类型写入；「是属性」字段（A2）<span class="need">需后端</span></div></div>
+  <div class="lk-step" data-goto="e-d20"><div class="k">② 存进注册表（C-1，作者看不到）</div><div class="t">唯一存处，只在 d20 里改</div><div class="f">theme_state_key：stateKey=counter.observe（系统生成，界面上从不出现）, label 观察, minValue 0, maxValue 5, initialValue 2, sortOrder 1；显示方式等按类型写入；「是属性」字段（A2）<span class="need">需后端</span>。10-28 下午起「线索与物品」只列线索 / 物品 / 标签，不再列属性</div></div>
   <div class="lk-step" data-goto="e-publish"><div class="k">③ 发布 · 冻结</div><div class="t">发布即生效</div><div class="f">publish-check 校验检定用到的属性都在注册表；开局 freezeJourney 写快照。现在快照只有 [{key,label}]，范围和显示方式 <span class="need">需后端</span></div></div>
   <div class="lk-step" data-goto="p-story"><div class="k">④ 游玩 · 状态栏两行</div><div class="t">第二行：前 3 项属性</div><div class="f">第一行 master 原样（生命值 · 背包）；第二行 GET /api/play/character → attributes 按 sortOrder 取前 3（观察 ★★★☆☆ · 胆量小条 · 体魄 4），点开角色卡</div></div>
-  <div class="lk-step" data-goto="p-check"><div class="k">⑤ 检定</div><div class="t">骰子 + 属性 + 修正</div><div class="f">check.skill=counter.observe（<a data-goto="e-temp">玩法模板 · 检定</a> 下拉选）→ PlayCheckReceipt.breakdown{die, skill, situational, bargain, momentum, total, dc}</div></div>
+  <div class="lk-step" data-goto="p-check"><div class="k">⑤ 检定</div><div class="t">骰子 + 属性 + 修正</div><div class="f">check.skill=counter.observe（<a data-goto="e-temp-pick">玩法模板 · 加上属性</a> 勾选「观察」）；mods 的名称「带着旧手电」「夜里更看得清」（<a data-goto="e-temp-mod-amt">添加加值 · 名称</a>）→ PlayCheckReceipt.breakdown{die, skill, situational, bargain, momentum, total, dc}，明细逐行显示这些名称</div></div>
   <div class="lk-step" data-goto="p-finish"><div class="k">⑥ 章节结算</div><div class="t">RPG 小结 + 本局成绩入口</div><div class="f">GET /api/play/journey/stage-end；属性前后值来自角色卡；clocks / momentum / aspects 来自 rpg 视图；一行「本局成绩 · 第 2 名 ›」打开全屏成绩</div></div>
   <div class="lk-step" data-goto="p-char"><div class="k">⑦ 角色卡（全屏）</div><div class="t">盖在游玩页上</div><div class="f">GET /api/play/character：同一组冻结值；属性大数字 + 雷达、特质、进度（章节 / 线索 / 动量 / 进度钟）</div></div>
   <div class="lk-step" data-goto="p-score"><div class="k">⑧ 本局成绩（全屏）</div><div class="t">名次 · 得分 · 用时</div><div class="f">scoring/session/{id}.totalCenti、byDimension；/api/growth/leaderboard；异议 POST /api/orient/scoring/dispute</div></div>
 </div>
 <div class="lk-flow" style="margin-top:14px">
   <div class="lk-step" data-goto="e-time"><div class="k">开局条件</div><div class="t">可玩时段 · 开局前准备</div><div class="f">主题详情的下一层；原型 B 主题详情照同一份数据显示 <span class="need">需后端</span>；未成年夜间规则仍由 /api/orient/safety/check 执行，编辑器不写</div></div>
-  <div class="lk-step" data-goto="e-init"><div class="k">初始状态</div><div class="t">开局带着的标签</div><div class="f">journeyRules.attributes 里 clue.* / tag.* 且 initial=1 → 开局写进 state.tags（已有）；开局物品 <span class="need">需后端</span>核对</div></div>
+  <div class="lk-step" data-goto="e-keys"><div class="k">线索与物品</div><div class="t">作者只写名字</div><div class="f">线索 → clue.*、标签 → tag.*（theme_state_key，键名系统生成）；物品 → 主题物品 itemId（合并列出 <span class="need">需后端</span>）；被用到的删不掉（DELETE 被引用时拒绝），「用在」只读查询 <span class="need">需后端</span></div></div>
+  <div class="lk-step" data-goto="e-init"><div class="k">初始状态</div><div class="t">开局带着</div><div class="f">从「线索与物品」里挑：journeyRules.attributes 里 clue.* / tag.* 且 initial=1 → 开局写进 state.tags（已有）→ 背包线索；开局物品 <span class="need">需后端</span>核对</div></div>
+  <div class="lk-step" data-goto="e-route-out"><div class="k">条件与效果</div><div class="t">一句话 = 一条规则</div><div class="f">「已获得线索 · 半张货单」→ HAS_TAG clue.*；「进度钟 · 巡夜人警觉 +1」→ TICK_CLOCK → <a data-goto="p-finish">章节小结</a>「巡夜人警觉 4/6」；「加上特质 · 受了伤」→ ADD_CONDITION → 角色卡特质。全部满足 / 任一满足 → AND / OR</div></div>
   <div class="lk-step" data-goto="p-node"><div class="k">定向任务</div><div class="t">到达 / 替代方式</div><div class="f">alternative/submit → outcome；COMPLETED 写分账 task:node:{id}（每个节点一次）</div></div>
   <div class="lk-step" data-goto="p-tools"><div class="k">「…」菜单</div><div class="t">我的角色 · 用时 · 得分</div><div class="f">session.elapsedMs / serverNow；scoring.totalCenti；三行分别打开角色卡、本局成绩</div></div>
 </div>
@@ -13516,7 +13526,9 @@ body.clean .scr .need{display:none}
   <tr><td><code>sortOrder</code></td><td><a data-goto="e-d20">属性列表 · 编辑 · 拖动排序</a></td><td>theme_state_key</td><td><a data-goto="p-story">状态栏第二行前 3 项</a></td><td>顺序</td></tr>
   <tr><td><code>displayType / color / icon / visible / persistScope</code></td><td>按属性类型预设（A3）</td><td>theme_state_key（冻结 <span class="need">需后端</span>）</td><td>状态栏、背包、角色卡</td><td>★★★☆☆ / 小条 / 数字</td></tr>
   <tr><td><code>rpg.clocks / rpg.aspects</code></td><td><a data-goto="e-d20-more">更多规则</a> → <a data-goto="e-d20-clock">进度钟</a> / <a data-goto="e-d20-trait">特质</a></td><td>journeyRules.rpg（特质「开局自带」<span class="need">需后端</span>）</td><td>章节小结、角色卡</td><td>巡夜人警觉 3/6 · 夜行者</td></tr>
+  <tr><td><code>clue.* / tag.*</code> · itemId</td><td><a data-goto="e-keys">线索与物品</a>（只写名字）</td><td>theme_state_key（label）；物品在主题物品表 <span class="need">需后端</span>合并</td><td>条件、效果、初始状态的勾选列表</td><td>背包线索、物品</td></tr>
   <tr><td><code>attributes[clue.* / tag.*].initial</code></td><td><a data-goto="e-init">初始状态 · 开局带着</a></td><td>journeyRules.attributes</td><td>开局 state.tags</td><td>背包线索、分支条件</td></tr>
+  <tr><td><code>when[] / effects[]</code></td><td><a data-goto="e-route-out">下一站 · 条件与效果</a>、<a data-goto="e-after">消耗与效果</a>（句子，选出来的）</td><td>story-rule-editor / 结果行</td><td>TopicRouteEngine</td><td>走哪条路、背包、进度钟、特质</td></tr>
   <tr><td><code>check.skill / mods / bargain</code></td><td><a data-goto="e-temp">玩法模板 · 检定</a></td><td>节点玩法配置（随模板版本）</td><td><a data-goto="p-check">检定</a></td><td>明细逐行</td></tr>
   <tr><td>可玩时段 · 开局前准备</td><td><a data-goto="e-time">可玩时段</a> · <a data-goto="e-prep">开局前准备</a></td><td><span class="need">需后端</span></td><td>原型 B 主题详情</td><td>「只在夜间 20:00–06:00 开放」</td></tr>
   <tr><td><code>alternativeTaskType / promptText / answer</code></td><td><a data-goto="e-quest">到达与引导</a></td><td>orient task alternative</td><td><a data-goto="p-node">节点详情</a></td><td>扫码 · 答题 · 拍照</td></tr>
@@ -13532,7 +13544,7 @@ body.clean .scr .need{display:none}
 var META = {
   first: 'e-detail',
   groups: [
-    { name: '编辑器 · 浅色（pages/publish）', items: ['e-fabu', 'e-detail', 'e-time', 'e-prep', 'e-d20', 'e-d20-preset', 'e-d20-add', 'e-d20-more', 'e-d20-clock', 'e-d20-trait', 'e-keys', 'e-init', 'e-init-add', 'e-value', 'e-node', 'e-quest', 'e-route', 'e-temp', 'e-after', 'e-publish'] },
+    { name: '编辑器 · 浅色（pages/publish）', items: ['e-fabu', 'e-detail', 'e-time', 'e-prep', 'e-d20', 'e-d20-preset', 'e-d20-add', 'e-d20-more', 'e-d20-clock', 'e-d20-trait', 'e-keys', 'e-keys-item', 'e-init', 'e-init-add', 'e-init-new', 'e-value', 'e-node', 'e-quest', 'e-quest-alt', 'e-quest-place', 'e-quest-backup', 'e-route', 'e-route-out', 'e-route-dest', 'e-route-kind', 'e-route-obj', 'e-route-amt', 'e-route-new', 'e-route-group', 'e-temp', 'e-temp-pick', 'e-temp-mod', 'e-temp-mod-amt', 'e-after', 'e-after-kind', 'e-after-cost', 'e-publish'] },
     { name: '游玩页 · 深色（pages/play）', items: ['p-story', 'p-tools', 'p-char', 'p-score', 'p-bag', 'p-check', 'p-node', 'p-finish', 'p-album'] }
   ],
   screens: {
@@ -13569,39 +13581,81 @@ var META = {
       files: ['同一张 cy-sheet'], intro: '类型和格数用分段控件，名称填好前右上「添加」是灰的。左上「‹ 更多规则」。也可以从「更多规则」点特质进「添加特质」（多选预设）或某个特质（开局自带开关）。' },
     'e-d20-trait': { sec: 'fabu', scope: '#d20LTraits', init: ['tdSheet', 'd20Sheet'], lv: ['d20LMore', 'd20LTraits'], t: 'd20 · 添加特质（第三层）', host: '更多规则的下一层', theme: 'light', badges: 'n',
       files: ['同一张 cy-sheet'], intro: '预设特质多选（A7）。已加入的显示「已添加」。点「更多规则」里已有的特质，进入它自己的一层：「开局自带」开关、说明、红色「移除特质」。' },
-    'e-keys': { sec: 'fabu', scope: '#skCard', init: ['tdSheet'], focus: 'skCard', t: '状态键 · 属性只读', host: 'components/topic-state-keys', theme: 'light', badges: 'n,c',
-      files: ['chengyinhub-xcx/pages/publish/components/topic-state-keys/index.wxml'],
-      intro: 'C-1 不变：属性存在状态键注册表，发布时冻结；编辑只在「d20 与角色设定」。这里属性行只读，点一下叠开那张半屏。',
-      api: ['<code>theme_state_key</code>：stateKey（系统生成 counter.*）, keyType, label, initialValue, minValue, maxValue, displayType / color / icon / visible / persistScope（按类型预设）, sortOrder', 'POST / PUT / DELETE <code>/api/topic/state-keys</code>；GET <code>/api/topic/publish-check</code>'] },
+    'e-keys': { sec: 'fabu', scope: '#keysL1', init: ['tdSheet', 'keysSheet'], t: '线索与物品（原「状态键」）', host: '新 cy-sheet，叠在主题详情上', theme: 'light', badges: 'c',
+      files: ['chengyinhub-xcx/pages/publish/components/topic-state-keys/index.wxml（整块换掉）', 'chengyinhub-xcx/pages/publish/fabu/topic-detail-sheet.wxml（入口一行）'],
+      intro: '10-28 下午：主题详情里的「状态键」卡换成一行「线索与物品 · 7 项 ›」，点开叠一张半屏（主题详情缩小变暗）。三组列表：线索 / 物品 / 标签。只有中文名字，键名不显示、不输入。属性、进度钟只在「d20 与角色设定」。右栏切「左滑 / 编辑中 / 空 / 出错 / 不能修改」。左滑「半张货单」「旧手电」「新来的」：它们被用到，弹窗说用在哪里，删不掉。',
+      notes: ['名字只有一个：「线索与物品」= 原「状态键」注册表里作者能见到的部分。', '计数（counter.*）在作者那边只以「属性」「进度钟」出现（d20 与角色设定）；关系（relation.*）这一版不给界面，已有的照存。'],
+      api: ['<code>theme_state_key</code>：线索 = <code>clue.*</code>（keyType flag），标签 = <code>tag.*</code>（keyType tag）；stateKey 系统生成，label = 作者写的名字，sortOrder = 拖动顺序', '物品 = 主题物品 <code>itemId</code>（ADD_ITEM / ITEM_HELD 用的那个），不在 theme_state_key 里：和线索、标签放在一张表里列出 <span class="need">需后端</span>（或前端合并两个来源）', 'POST / PUT / DELETE <code>/api/topic/state-keys</code>；PUT 不许改键名（STATE_KEY_RENAME_FORBIDDEN），所以改名只改 label', '被引用时 DELETE 拒绝，返回「状态键 X 已被引用,不能删除。引用位置:…」——原话带键名，界面不显示，左滑删除改成弹窗「不能删除「半张货单」」'] },
+    'e-keys-item': { sec: 'fabu', scope: '#keysLItem', init: ['tdSheet', 'keysSheet'], lv: ['keysLItem'], run: 'keyItemInit', t: '线索与物品 · 一项（下一层）', host: '线索与物品的下一层', theme: 'light', badges: 'n',
+      files: ['同一张 cy-sheet'],
+      intro: '添加：分段控件选 线索 / 物品 / 标签，写名字，右上「添加」写好之前是灰的；同组重名写一句。修改：只改名字，底部红色删除。右栏切「添加 / 修改 / 填错了 / 被用到 / 不能修改」。被用到时列出用在哪里，删除那一行是灰的。',
+      api: ['「用在」：只读查询引用位置 <span class="need">需后端</span>（现在只有删除被拒时才返回，且是一句带键名的话）'] },
     'e-init': { sec: 'fabu', scope: '#initL1', init: ['initSheet'], t: '初始状态', host: 'fabu/index.wxml initialStateEditor', theme: 'light', badges: 'c',
       files: ['chengyinhub-xcx/pages/publish/fabu/index.wxml（initialStateEditor）', 'origin/feature/cy26-w8-closeout: attribute-binding-editor（删除）'],
-      intro: '10-28：只剩「开局带着」一组标签（线索 / 物品 / 标签），每个可以移除，「添加」进下一层挑。cy26 的 attribute-binding-editor（注册属性勾选、定义差异、三颗按钮）整块删掉；属性开局值不在这里。下面的生命值、幸运值两张卡是 master 原样，没改。',
-      api: ['已有：<code>journeyRules.attributes[{key: clue.*|tag.*, initial: 1}]</code> → 开局写进 <code>state.tags</code>（JourneyInitialState.initialize）', '开局物品：<span class="need">需后端</span>核对'] },
-    'e-init-add': { sec: 'fabu', scope: '#initLAdd', init: ['initSheet'], lv: ['initLAdd'], t: '初始状态 · 添加（下一层）', host: '初始状态的下一层', theme: 'light', badges: 'n',
-      files: ['同一张 cy-sheet'], intro: '按线索 / 物品 / 标签分组列出主题已有的状态键，多选。顶部输入框可以搜，也可以输入新名字（第一行变成「新建标签」）。选了之后右上「添加」才可点。' },
-    'e-value': { sec: 'fabu', scope: '#veSheet', init: ['veSheet'], t: '编辑数值（已写码）', host: 'fabu/index.wxml valueEditor', theme: 'light', badges: 'w',
-      files: ['origin/feature/cy26-w8-closeout: chengyinhub-xcx/pages/publish/fabu/index.wxml'],
-      intro: 'cy26 已把这里改成「定义只读、只留关联」，与 C-1 一致，保留。' },
-    'e-node': { sec: 'fabu', scope: '#nodeSheet', init: ['nodeSheet'], t: '节点编辑', host: 'fabu/index.wxml popChapterNodes', theme: 'light', badges: 'c',
-      files: ['chengyinhub-xcx/pages/publish/fabu/index.wxml'], intro: '只改「到达与引导」那一行的摘要。点进去会叠开下一张半屏（同样的卡片叠放）。' },
-    'e-quest': { sec: 'fabu', scope: '#questSheet', init: ['nodeSheet', 'questSheet'], stack: ['e-node'], t: '到达与引导 · 替代方式', host: 'fabu/runtime-structure-editor.wxml', theme: 'light', badges: 'n',
+      intro: '10-28 下午：两组列表。「开局带着」：左名字、右种类（线索 / 物品 / 标签），左滑删除，「添加」进下一层。「数值」：生命值、幸运值各一个开关，开着时下一行是开局值步进器，最大到上限（上限在主题详情里改）。右栏切「左滑 / 空 / 出错 / 不能修改」。',
+      api: ['已有：<code>journeyRules.attributes[{key: clue.*|tag.*, initial: 1}]</code> → 开局写进 <code>state.tags</code>（JourneyInitialState.initialize）', '开局物品：<span class="need">需后端</span>核对字段', '开局生命值 / 幸运值：master initialStateEditor 原字段'] },
+    'e-init-add': { sec: 'fabu', scope: '#initLAdd', init: ['initSheet'], lv: ['initLAdd'], run: 'initAddInit', t: '初始状态 · 添加（下一层）', host: '初始状态的下一层', theme: 'light', badges: 'n',
+      files: ['同一张 cy-sheet'], intro: '搜索框 + 第一行「新建…」+ 按线索 / 物品 / 标签分组的多选列表；已在开局里的显示「已添加」。选了之后右上「添加」才可点。右栏切「搜索没找到」：第一行变成「新建「怀表盒」」；「主题还没有」：只剩新建。' },
+    'e-init-new': { sec: 'fabu', scope: '#initLNew', init: ['initSheet'], lv: ['initLAdd', 'initLNew'], run: 'initNewInit', t: '初始状态 · 新建（第三层）', host: '添加的下一层', theme: 'light', badges: 'n',
+      files: ['同一张 cy-sheet'], intro: '分段控件选种类，写名字；写好之前「添加」是灰的，重名写一句。添加后回到上一层，新的一项已勾上，同时进「线索与物品」。' },
+    'e-value': { sec: 'fabu', scope: '#veL1', init: ['veSheet'], t: '编辑数值', host: 'fabu/index.wxml valueEditor', theme: 'light', badges: 'c',
+      files: ['chengyinhub-xcx/pages/publish/fabu/index.wxml（valueEditor）', 'origin/feature/cy26-w8-closeout（只读版，不再采用）'],
+      intro: '10-28 下午：生命值 / 幸运值 / 行动次数这类内置数值的编辑页。名称、玩家可见；范围两行步进器，最小值、最大值互相挡住；关联只剩一个开关。属性不从这里改。右栏切「出错 / 不能修改」。',
+      api: ['master valueEditor 原字段（name / min / max / visible / 关联：下降时扣生命值）'] },
+    'e-node': { sec: 'fabu', scope: '#nodeL1', init: ['nodeSheet'], t: '节点编辑', host: 'fabu/index.wxml popChapterNodes', theme: 'light', badges: 'c',
+      files: ['chengyinhub-xcx/pages/publish/fabu/index.wxml'], intro: '10-28 下午：五张卡换成分组列表（左名称、右当前值、›）。「到达与引导」「下一站」点开叠一张半屏，本屏缩小变暗；「玩法模板」进编辑玩法模板页。右栏切「不能修改」。' },
+    'e-quest': { sec: 'fabu', scope: '#questL1', init: ['nodeSheet', 'questSheet'], stack: ['e-node'], t: '到达与引导', host: 'fabu/runtime-structure-editor.wxml', theme: 'light', badges: 'c',
       files: ['chengyinhub-xcx/pages/publish/fabu/runtime-structure-editor.wxml'],
-      intro: '每个节点的替代方式（扫码 / 答题 / 拍照）放进已有的「到达与引导」。A5：不按节点设分，「本站分值」一行删掉。',
-      notes: ['自由探索主题：「找不到时换个方式」整张卡不出现（右栏切「关闭」）。'],
-      api: ['POST <code>/api/orient/task/alternative</code> {topicId, taskId, alternativeTaskType SCAN|PHOTO|QUIZ, promptText, answer, enabled}'] },
-    'e-route': { sec: 'fabu', scope: '#routeSheet', init: ['nodeSheet', 'routeSheet'], stack: ['e-node'], t: '下一站 · 条件与效果', host: 'fabu/index.wxml routeMappingShow', theme: 'light', badges: 'c,w',
-      files: ['chengyinhub-xcx/pages/publish/fabu/index.wxml', 'origin/feature/cy26-w8-closeout: pages/publish/components/story-rule-editor'],
-      intro: '建议版（橙框）保留 story-rule-editor 的位置和数据结构，只换成本页现有控件和大白话。A8：条件里没有「身份是」。右栏切换两版。',
-      api: ['条件：AND / OR / NOT、VISIT_COUNT、HAS_CONDITION、ITEM_EQUIPPED、CHECK_RESULT、ENV_IN、EQ / GTE…', '效果：ADD_ITEM、GRANT_BADGE、GRANT_XP、ADD_CONDITION / REMOVE_CONDITION、EQUIP / UNEQUIP、TICK_CLOCK、SET / INC / FLOOR'] },
-    'e-temp': { sec: 'temp', stack: ['e-node'], focus: 'game-cfg', t: '玩法模板 · 检定', host: 'pages/publish/temp/index', theme: 'light', badges: 'n,c,f',
+      intro: '叠在节点编辑上。到达地点（勾选）、工作人员引导答题（开关）；找不到时换个方式：扫码 / 答题 / 拍照，右边「打开 / 关闭 ›」，点进去是开关和要填的内容；备用节点（多选）。右栏切「出错 / 自由探索（换个方式整组不出现）/ 不能修改」。',
+      api: ['POST <code>/api/orient/task/alternative</code> {topicId, taskId, alternativeTaskType SCAN|PHOTO|QUIZ, promptText, answer, enabled}', 'A5：不按节点设分'] },
+    'e-quest-alt': { sec: 'fabu', scope: '#questLQuiz', init: ['nodeSheet', 'questSheet'], lv: ['questLQuiz'], stack: ['e-node'], t: '到达与引导 · 答题（下一层）', host: '到达与引导的下一层', theme: 'light', badges: 'n',
+      files: ['同一张 cy-sheet'], intro: '开关 + 题目 + 答案。扫码（提示）、拍照（拍摄内容）同样一层，从上一层点进去看。关掉开关时下面一组收起，上一层右边变「关闭」。' },
+    'e-quest-place': { sec: 'fabu', scope: '#questLPlace', init: ['nodeSheet', 'questSheet'], lv: ['questLPlace'], stack: ['e-node'], t: '到达与引导 · 到达地点（下一层）', host: '到达与引导的下一层', theme: 'light', badges: 'n',
+      files: ['同一张 cy-sheet'], intro: '搜索 + 单选勾选列表，点一项立即生效，左上返回。' },
+    'e-quest-backup': { sec: 'fabu', scope: '#questLBackup', init: ['nodeSheet', 'questSheet'], lv: ['questLBackup'], stack: ['e-node'], t: '到达与引导 · 备用节点（下一层）', host: '到达与引导的下一层', theme: 'light', badges: 'n',
+      files: ['同一张 cy-sheet'], intro: '多选勾选列表（最多 20 个）。上一层右边：一个时写名字，多个时写「2 个」。' },
+    'e-route': { sec: 'fabu', scope: '#routeL1', init: ['nodeSheet', 'routeSheet'], stack: ['e-node'], t: '下一站', host: 'fabu/index.wxml routeMappingShow', theme: 'light', badges: 'c',
+      files: ['chengyinhub-xcx/pages/publish/fabu/index.wxml', 'origin/feature/cy26-w8-closeout: pages/publish/components/story-rule-editor（整块换掉）'],
+      intro: '10-28 下午：叠在节点编辑上。每种检定结果一行：撬开了 · 仓库二层 ›、没撬开 · 海关钟楼 ›、其他结果 · 按故事流继续。点一行进下一层改去往、条件、效果。cy26 的已写码版（counter.alarm、「▾」、原生按钮、代码输入框）不再保留切换。',
+      api: ['每个结果一份 story-rule-editor：<code>{target, when[], effects[]}</code>，键名和 op 都由选择生成', 'A8：条件里没有 ROLE_IN（身份是）'] },
+    'e-route-out': { sec: 'fabu', scope: '#routeLOut', init: ['nodeSheet', 'routeSheet'], lv: ['routeLOut'], run: 'routeOutInit', stack: ['e-node'], t: '下一站 · 条件与效果（下一层）', host: '下一站的下一层', theme: 'light', badges: 'n',
+      files: ['同一张 cy-sheet'],
+      intro: '去往（勾选）；条件：每条一句「属性 · 观察 至少 3」「已获得线索 · 半张货单」，两条以上出现「全部满足 / 任一满足」；效果：「进度钟 · 巡夜人警觉 +1」，「编辑」拖动排序。左滑删除，点一行修改，「添加条件 / 添加效果」一步一步选。右栏切「空 / 出错 / 不能修改」。',
+      api: ['条件（句子 → op）：已获得线索 → HAS_TAG clue.*；带着物品 → ITEM_HELD{itemId, quantity}；装备着物品 → ITEM_EQUIPPED；有标签 → HAS_TAG tag.*；有特质 → HAS_CONDITION；属性 / 进度钟 → GTE·LTE·EQ{var counter.*}；数值 → GTE…{var sys.hp|sys.luck}；到过节点 → VISIT_COUNT；完成过节点 → NODE_COMPLETED；检定结果 → CHECK_RESULT PASS|FAIL；天气或时段 → ENV_IN；否定（未获得 / 没带 / 没有…）→ NOT；全部满足 / 任一满足 / 一组条件 → AND / OR', '效果：获得线索 / 加上标签 → ADD_TAG；给物品 → ADD_ITEM{itemId, quantity 1–99}；装备 / 卸下物品 → EQUIP / UNEQUIP；加上 / 去掉特质 → ADD_CONDITION / REMOVE_CONDITION；进度钟 → TICK_CLOCK{var, value, max}；属性 / 数值 增加·减少 → INC，设为 → SET，恢复到 → FLOOR；给徽章 → GRANT_BADGE；给探索值 → GRANT_XP 1–100', '校验报错（StoryVocabulary / AdvancedGameConfigValidator 的原话，如「op 不支持:…」「nodeId 必须是正整数」）带英文，界面不显示：选的方式本身就不会产生这些错；保存失败只显示「没有保存成功，请再试一次。」'] },
+    'e-route-dest': { sec: 'fabu', scope: '#routeLDest', init: ['nodeSheet', 'routeSheet'], lv: ['routeLOut', 'routeLDest'], run: 'routeOutInit', stack: ['e-node'], t: '下一站 · 去往（第三层）', host: '一种结果的下一层', theme: 'light', badges: 'n',
+      files: ['同一张 cy-sheet'], intro: '单选，点一项立即生效。原来的带箭头药丸下拉删掉。' },
+    'e-route-kind': { sec: 'fabu', scope: '#rtKind', init: ['nodeSheet', 'routeSheet'], run: 'shotRouteKind', stack: ['e-node'], t: '添加条件 · 第一步 选种类', host: '条件与效果的下一层', theme: 'light', badges: 'n',
+      files: ['同一张 cy-sheet'], intro: '勾选列表，只有大白话种类。添加效果是同样一层（种类换成效果的）。' },
+    'e-route-obj': { sec: 'fabu', scope: '#rtObj', init: ['nodeSheet', 'routeSheet'], run: 'shotRouteObj', stack: ['e-node'], t: '添加条件 · 第二步 选名字', host: '选种类的下一层', theme: 'light', badges: 'n',
+      files: ['同一张 cy-sheet'], intro: '有肯定 / 否定的种类上面是分段控件（已获得 / 未获得）；搜索；「新建线索…」在第一行；勾一项后右上「添加」可点。需要数量的种类（属性、进度钟、到过节点…）点一项进第三步。' },
+    'e-route-amt': { sec: 'fabu', scope: '#rtAmt', init: ['nodeSheet', 'routeSheet'], run: 'shotRouteAmt', stack: ['e-node'], t: '条件 · 第三步 数量（修改）', host: '选名字的下一层', theme: 'light', badges: 'n',
+      files: ['同一张 cy-sheet'], intro: '点已有的「属性 · 观察 至少 3」进来：属性 › 可以换；至少 / 至多 / 正好；数值步进器（观察 0–5，到头那一侧变灰）；底部红色「删除条件」。' },
+    'e-route-new': { sec: 'fabu', scope: '#rtNew', init: ['nodeSheet', 'routeSheet'], run: 'shotRouteNew', stack: ['e-node'], t: '选名字 · 新建线索', host: '选名字的下一层', theme: 'light', badges: 'n',
+      files: ['同一张 cy-sheet'], intro: '搜索没找到时第一行是「新建「…」」，点进来名字已经填好。写好之前「添加」是灰的，重名写一句。添加后回到上一层，新的一项已勾上。' },
+    'e-route-group': { sec: 'fabu', scope: '#rtGrp', init: ['nodeSheet', 'routeSheet'], run: 'shotRouteGroup', stack: ['e-node'], t: '条件 · 一组条件（下钻）', host: '条件与效果的下一层', theme: 'light', badges: 'n',
+      files: ['同一张 cy-sheet'], intro: '只有需要「(A 且 B) 或 C」时才用：一组自己的 全部满足 / 任一满足 + 列表，组里不能再套组。上一层那一行写「一组条件 · 任一满足 2 条」。' },
+    'e-temp': { sec: 'temp', stack: ['e-node'], focus: 'game-cfg', t: '玩法模板 · 检定', host: 'pages/publish/temp/index', theme: 'light', badges: 'c,f',
       files: ['chengyinhub-xcx/pages/publish/temp/index.wxml（gameSection = check）'],
-      intro: '技能改成选属性（check.skill = counter.*）；新增情境加值（mods）；新增本检定的魔鬼交易（check.bargain）。难度仍只有三档。',
-      notes: ['主题「d20 与角色设定」里魔鬼交易关着时，「魔鬼交易」整段不出现（右栏切「关闭」）。', '情境加值合计封顶（轻松 8 / 标准 6 / 硬核 4）不写在界面上：加值输入框最大到上限，合计到顶时「添加加值」变灰。', 'd20 检定关闭时「判定什么技能」是输入框，只填名称。'],
-      api: ['<code>check</code>{tier easy|medium|hard, skill, mods[{when, value|var, label}], bargain{label, bonus 1–3, effects[1–4]}, successEffects, failEffects}'] },
-    'e-after': { sec: 'temp', scope: '#afterSheet', init: ['afterSheet', 'afterMask'], stack: ['e-node', 'e-temp'], t: '消耗与效果', host: 'temp/index.wxml afterEditor', theme: 'light', badges: 'n,c',
-      files: ['chengyinhub-xcx/pages/publish/temp/index.wxml'], intro: '效果第一格先选「做什么」；可选「只在满足条件时生效」。' },
-    'e-publish': { sec: 'fabu', scope: '#pcSheet', init: ['pcSheet', 'pcMask'], t: '发布确认 · 冻结', host: 'fabu/index.wxml publishCheck', theme: 'light', badges: 'n',
-      files: ['chengyinhub-xcx/pages/publish/fabu/index.wxml'], intro: '发布即冻结：摘要卡加一行，自动检查加一项。' },
+      intro: '10-28 下午：页面外壳、导航栏、底栏照 master；检定段换成分组列表。加上属性（一行 → 勾选）· 难度（分段控件）；情境加值（句子 + 右边加值）；魔鬼交易（开关、说明、加值分段、代价句子）；过了 / 没过说一句；幸运（一行 → 勾选）；结果反馈每种一组。右栏切 加上属性「无属性 / 出错 / d20 检定关」、情境加值「到上限 / 空」、魔鬼交易「关闭」。',
+      notes: ['主题「d20 与角色设定」里魔鬼交易关着时，「魔鬼交易」整段不出现。', '情境加值合计封顶（轻松 8 / 标准 6 / 硬核 4）不写在界面上：固定加值的步进器最大到剩下的上限，到顶时「添加加值」变灰。', 'd20 检定关闭时「加上属性」那一行变成「技能」输入，只填名称。', '幸运的三个选项是 master 原文（advanced-game-config.js LUCK_OPTIONS），没改字。'],
+      api: ['<code>check</code>{tier easy|medium|hard, skill（counter.* 或文字）, mods[{when, value|var, label}], bargain{label, bonus 1–3, effects 1–4（SET / INC / ADD_TAG / ADD_CONDITION / TICK_CLOCK）}, successEffects, failEffects}', 'mods.label = 第三步「名称」，默认由句子生成，可改；游玩页检定明细显示它（带着旧手电 / 夜里更看得清）'] },
+    'e-temp-pick': { sec: 'temp', scope: '#tpRoot', stack: ['e-node', 'e-temp'], run: 'shotTempPick', t: '玩法模板 · 加上属性（勾选半屏）', host: '玩法模板页上的半屏', theme: 'light', badges: 'n',
+      files: ['新 cy-sheet'], intro: '勾选列表：观察 / 胆量 / 体魄 / 灵感 / 不加属性，点一项立即生效，右上「完成」。没有属性时只有一行「添加属性」，去「d20 与角色设定」。幸运的三项也是这种半屏。' },
+    'e-temp-mod': { sec: 'temp', scope: '#tpRoot', stack: ['e-node', 'e-temp'], run: 'shotTempMod', t: '玩法模板 · 添加加值', host: '玩法模板页上的半屏', theme: 'light', badges: 'n',
+      files: ['新 cy-sheet'], intro: '和「添加条件」同一套：种类 → 名字 → 加多少（固定加值步进器 / 加上属性值勾选）。「添加代价」同样，只列 进度钟 / 属性 / 获得线索 / 加上标签 / 加上特质。' },
+    'e-temp-mod-amt': { sec: 'temp', scope: '#tpAmt', stack: ['e-node', 'e-temp'], run: 'shotTempModAmt', t: '添加加值 · 加多少', host: '添加加值的第三层', theme: 'light', badges: 'n',
+      files: ['同一张 cy-sheet'], intro: '条件「带着物品 · 撬棍」的数量 + 加值：固定加值步进器最大到剩下的上限（标准 6 − 已有 2 = 4）；切「加上属性值」变成属性勾选。' },
+    'e-after': { sec: 'temp', scope: '#afterL1', init: ['afterSheet'], stack: ['e-node', 'e-temp'], t: '消耗与效果', host: 'temp/index.wxml afterEditor', theme: 'light', badges: 'c',
+      files: ['chengyinhub-xcx/pages/publish/temp/index.wxml（afterEditor）'],
+      intro: '10-28 下午：叠在玩法模板页上的半屏。消耗「幸运值 −1」、效果「给物品 · 半张货单」「进度钟 · 拼出货单 +1」、条件（空 = 总是生效）、之后（勾选）。每组最后一行添加，种类 → 名字 → 数量。右栏切「空 / 出错 / 不能修改」。',
+      api: ['costs[{statKey, amount}]、effects（同「下一站」效果词表，另加 INC / FLOOR / SET）、next', '结果行上的条件 when：<span class="need">需后端</span>核对'] },
+    'e-after-kind': { sec: 'temp', scope: '#afKind', init: ['afterSheet'], stack: ['e-node', 'e-temp'], run: 'shotAfterKind', t: '消耗与效果 · 添加效果', host: '消耗与效果的下一层', theme: 'light', badges: 'n',
+      files: ['同一张 cy-sheet'], intro: '效果种类的勾选列表；后面两步同「下一站」。' },
+    'e-after-cost': { sec: 'temp', scope: '#afObj', init: ['afterSheet'], stack: ['e-node', 'e-temp'], run: 'shotAfterCost', t: '消耗与效果 · 添加消耗', host: '消耗与效果的下一层', theme: 'light', badges: 'n',
+      files: ['同一张 cy-sheet'], intro: '消耗直接选数值（生命值 / 幸运值 / 行动次数），「新建数值…」替代 master 的「新建需要的数值」输入框；点一项进数量（步进器，最大到这个数值的上限）。' },
+    'e-publish': { sec: 'fabu', scope: '#pcL1', init: ['pcSheet'], t: '发布确认', host: 'fabu/index.wxml publishCheck', theme: 'light', badges: 'c',
+      files: ['chengyinhub-xcx/pages/publish/fabu/index.wxml'], intro: '10-28 下午：和其他半屏一样的分组列表。本次发布 / 自动检查 / 奖励，底部「确认发布」。右栏切「没过检查」：没过的一项红色，点进去直接到那个节点的下一站，「确认发布」变灰。',
+      api: ['GET <code>/api/topic/publish-check</code>（结构化问题列表）：问题 message 是后端原话、可能带键名，界面不显示；按 nodeId 显示节点名 + 位置，需要后端给作者可读的位置与种类 <span class="need">需后端</span>', '冻结：开局快照现在只有 [{key,label}]（JourneyInitialState.freezeKeys），属性范围、显示方式、线索与物品 <span class="need">需后端</span>'] },
 
     'p-story': { sec: 'play', scope: '.fx-story__hd,.chfull__stage', t: '故事流 · 状态栏两行', host: 'pages/play/index（chfull）', theme: 'dark', badges: 'c,f',
       files: ['chengyinhub-xcx/pages/play/index.wxml（.chfull / .theme-story-hud）'],
@@ -13638,10 +13692,6 @@ var META = {
   }
 };
 window.ACT = {
-  openAttrForm: function(){ var f = document.getElementById('skForm'); if (f) f.classList.add('is-open'); var b = document.getElementById('skAddBtn'); if (b) b.style.display = 'none'; },
-  newAttr: function(){ ACT.openAttrForm(); },
-  cancelAttr: function(){ var f = document.getElementById('skForm'); f.classList.remove('is-open'); document.getElementById('skAddBtn').style.display = ''; window.__proto.layoutMarks(); },
-  saveAttr: function(){ ACT.cancelAttr(); window.__proto.toast('已添加'); },
   /* ---- 10-28：iOS 分层导航 / 列表 ---- */
   lv: function(el){ window.__proto.navPush(el.dataset.lv); },
   lvBack: function(el){ window.__proto.navPop(el.closest('.ios-host')); },
@@ -13650,7 +13700,7 @@ window.ACT = {
   editList: function(el){ var g = document.getElementById(el.dataset.list); var on = g.classList.toggle('is-editing'); el.textContent = on ? '完成' : '编辑'; ACT.closeSwipes(); window.__proto.layoutMarks(); },
   closeSwipes: function(except){ Array.prototype.forEach.call(document.querySelectorAll('.ios-sw.is-open'), function(s){ if (s !== except) s.classList.remove('is-open'); }); },
   swOpen: function(el){ var sw = el.closest('.ios-sw'); ACT.closeSwipes(sw); sw.classList.toggle('is-open'); },
-  rowDel: function(el){ var sw = el.closest('.ios-sw'); if (!sw) return; var list = sw.parentNode; sw.remove(); ACT.syncSum(); ACT.syncPrep(); if (list.id === 'clockList' || list.id === 'traitList') ACT.syncMore(); window.__proto.toast('已删除'); window.__proto.layoutMarks(); },
+  rowDel: function(el){ var sw = el.closest('.ios-sw'); if (!sw) return; var list = sw.parentNode; sw.remove(); ACT.syncSum(); ACT.syncPrep(); if (list.id === 'clockList' || list.id === 'traitList') ACT.syncMore(); ACT.afterDel(list); window.__proto.toast('已删除'); window.__proto.layoutMarks(); },
   /* ---- d20 与角色设定 ---- */
   d20Toggle: function(sw){ window.__proto.setState(document.getElementById('d20Entry'), sw.hasAttribute('checked') ? 'on' : 'off'); },
   'st:d20Entry': function(st){ var sw = document.getElementById('d20Switch'); if (!sw) return; if (st === 'off') sw.removeAttribute('checked'); else sw.setAttribute('checked', ''); },
@@ -13750,17 +13800,121 @@ window.ACT = {
   prepAdd: function(el){ var t = el.querySelector('.ios-t').textContent; if (ACT.prepPut(t)) { el.remove(); window.__proto.toast('已添加'); } },
   prepAddTyped: function(){ var i = ACT.$('prepIn'), t = i.value.trim(); if (!t) return; if (ACT.prepPut(t)) { i.value = ''; ACT.$('prepAddBtn').classList.add('is-off'); window.__proto.toast('已添加'); } },
   'st:prepList': function(st){ var g = ACT.$('prepGrp'), b = ACT.$('prepEditBtn'); g.classList.toggle('is-editing', st === 'editing'); b.textContent = st === 'editing' ? '完成' : '编辑'; b.style.visibility = st === 'empty' ? 'hidden' : ''; ACT.closeSwipes(); if (st === 'swipe') g.querySelector('.ios-sw').classList.add('is-open'); setTimeout(ACT.syncPrep, 0); },
-  /* ---- 初始状态 ---- */
-  chipDel: function(el){ var c = el.closest('.ios-chip'); var nm = c.children[1].textContent; c.remove(); Array.prototype.forEach.call(document.querySelectorAll('#tagOpts .ios-row.is-fixed'), function(r){ if (r.querySelector('.ios-t').textContent === nm) { r.classList.remove('is-fixed'); r.dataset.act = 'tagPick'; var v = r.querySelector('.ios-v'); if (v) v.outerHTML = '<view class="ios-chk">' + ICON('check', 32) + '</view>'; } }); window.__proto.toast('已移除'); window.__proto.layoutMarks(); },
-  tagPick: function(el){ el.classList.toggle('is-on'); ACT.$('tagDone').classList.toggle('is-disabled', !document.querySelector('#initLAdd .ios-row.is-on:not(.is-fixed)')); },
-  tagInput: function(){ var v = ACT.$('tagIn').value.trim(), hit = false; Array.prototype.forEach.call(document.querySelectorAll('#tagOpts .ios-row'), function(r){ var t = r.querySelector('.ios-t').textContent; var show = !v || t.indexOf(v) >= 0; if (t === v) hit = true; r.style.display = show ? '' : 'none'; });
-    Array.prototype.forEach.call(document.querySelectorAll('#tagOpts .ios-grp'), function(g){ var any = Array.prototype.some.call(g.children, function(r){ return r.style.display !== 'none'; }); g.style.display = any ? '' : 'none'; g.previousElementSibling.style.display = any ? '' : 'none'; });
-    var nw = ACT.$('tagNew'); nw.classList.toggle('is-open', !!v && !hit); ACT.$('tagNewT').textContent = '新建标签「' + v + '」'; if (!v) ACT.$('tagNewRow').classList.remove('is-on'); ACT.tagPick({ classList: { toggle: function(){} } }); },
-  tagSave: function(){ if (ACT.$('tagDone').classList.contains('is-disabled')) return; var add = ACT.$('initAdd'), n = 0;
-    Array.prototype.forEach.call(document.querySelectorAll('#initLAdd .ios-row.is-on:not(.is-fixed)'), function(r){ var isNew = r.id === 'tagNewRow'; var nm = isNew ? ACT.$('tagIn').value.trim() : r.querySelector('.ios-t').textContent; var k = isNew ? '标签' : r.dataset.k;
-      add.insertAdjacentHTML('beforebegin', '<view class="ios-chip"><text class="ios-chip__k">' + k + '</text><text>' + nm + '</text><view class="ios-chip__x" data-act="chipDel" aria-label="移除' + nm + '">' + ICON('close-sm', 24) + '</view></view>');
-      r.classList.remove('is-on'); if (!isNew) { r.classList.add('is-fixed'); r.removeAttribute('data-act'); var c = r.querySelector('.ios-chk'); if (c) c.outerHTML = '<text class="ios-v">已添加</text>'; } n++; });
-    ACT.$('tagIn').value = ''; ACT.tagInput(); ACT.$('tagDone').classList.add('is-disabled'); window.__proto.navPop(ACT.$('initHost')); window.__proto.toast('已添加 ' + n + ' 项'); },
+  /* ---- 10-28 下午：专业配置重做（选，不填；条件与效果写成句子） ---- */
+  stp: function(el){ var box = el.parentNode, num = box.previousElementSibling, lo = +box.dataset.min, hi = +box.dataset.max, st = +(box.dataset.step || 1);
+    var v = Math.min(hi, Math.max(lo, (+num.textContent) + (+el.dataset.d) * st)); num.textContent = v; ACT.stpSync(box);
+    if (box.dataset.hi) { var b = ACT.$(box.dataset.hi); b.dataset.min = v + 1; ACT.stpSync(b); }
+    if (box.dataset.lo) { var a = ACT.$(box.dataset.lo); a.dataset.max = v - 1; ACT.stpSync(a); }
+    if (box.dataset.k && RE.ctx) { RE.ctx.r.a[box.dataset.k] = v; } },
+  stpSync: function(box){ var v = +box.previousElementSibling.textContent; box.children[0].classList.toggle('is-off', v <= +box.dataset.min); box.children[1].classList.toggle('is-off', v >= +box.dataset.max); },
+  ro: function(id, on){ var l = ACT.$(id); if (l) l.classList.toggle('is-ro', !!on); },
+  afterDel: function(list){ if (!list) return; if (/^keys_/.test(list.id)) ACT.syncKeys(); if (list.id === 'initList') window.__proto.layoutMarks(); },
+  /* 线索与物品 */
+  KT: { clue: '线索', item: '物品', tag: '标签' },
+  syncKeys: function(){ var n = document.querySelectorAll('#keysList .ios-sw:not(.hidden-st)').length; ACT.$('keysSum').textContent = n ? n + ' 项' : '没有'; },
+  'st:keysList': function(st){ ['clue', 'item', 'tag'].forEach(function(k){ ACT.$('keys_' + k).classList.toggle('is-editing', st === 'editing' && k === 'clue'); });
+    Array.prototype.forEach.call(document.querySelectorAll('#keysList .ios-hd__act'), function(b, i){ b.textContent = st === 'editing' && i === 0 ? '完成' : '编辑'; });
+    ACT.closeSwipes(); if (st === 'swipe') document.querySelector('#keys_clue .ios-sw').classList.add('is-open'); ACT.ro('keysL1', st === 'noperm'); setTimeout(ACT.syncKeys, 0); },
+  keyAdd: function(el){ if (el.closest('.is-editing')) return; ACT.keyForm('add', el.dataset.k); window.__proto.navPush('keysLItem'); },
+  keyEdit: function(el){ if (el.closest('.is-editing')) return; var sw = el.closest('.ios-sw'); if (sw.classList.contains('is-open')) { sw.classList.remove('is-open'); return; }
+    ACT.__key = el; var ro = ACT.$('keysList').dataset.cur === 'noperm'; ACT.keyForm(ro ? 'noperm' : el.dataset.used ? 'locked' : 'edit', el.dataset.k, el.dataset.n, el.dataset.used); window.__proto.navPush('keysLItem'); },
+  keyForm: function(mode, k, n, used){ var f = ACT.$('keyForm'); f.__busy = 1; window.__proto.setState(f, mode); f.__busy = 0; ACT.__kt = k; ACT.__kmode = mode;
+    Array.prototype.forEach.call(ACT.$('keyType').children, function(c){ c.classList.toggle('is-on', c.dataset.k === k); });
+    var t = ACT.KT[k]; ACT.$('keyTitle').textContent = mode === 'add' || mode === 'invalid' ? '添加' + t : n; ACT.$('keyName').value = n || ''; ACT.$('keyDel').querySelector('.ios-t').textContent = '删除' + t;
+    var d = ACT.$('keyDone'); d.textContent = mode === 'add' || mode === 'invalid' ? '添加' : '完成'; d.classList.toggle('is-disabled', mode === 'add');
+    var del = ACT.$('keyDel'); del.classList.toggle('is-dis', mode === 'locked');
+    var u = ACT.$('keyUsed'); u.innerHTML = (used || '').replace(/和/g, '、').split('、').filter(Boolean).map(function(x){ return '<view class="ios-row is-static"><view class="ios-m"><text class="ios-t">' + x.replace(/[「」]/g, '').replace(/的/, ' · ') + '</text></view></view>'; }).join('');
+    ACT.$('keyErr').textContent = ''; ACT.$('keyNameRow').classList.remove('is-bad'); ACT.$('keyName').disabled = mode === 'noperm'; ACT.ro('keysLItem', mode === 'noperm');
+    if (mode === 'invalid') { ACT.$('keyName').value = '半张货单'; ACT.keyCheck(); } },
+  keyType: function(el){ ACT.seg(el); ACT.__kt = el.dataset.k; ACT.$('keyTitle').textContent = '添加' + ACT.KT[el.dataset.k]; ACT.keyCheck(); },
+  keyCheck: function(){ var v = ACT.$('keyName').value.trim(), k = ACT.__kt, dup = false, adding = ACT.__kmode === 'add' || ACT.__kmode === 'invalid';
+    Array.prototype.forEach.call(document.querySelectorAll('#keys_' + k + ' .ios-row[data-n]'), function(r){ if (r.dataset.n === v && (adding || r !== ACT.__key)) dup = true; });
+    ACT.$('keyErr').textContent = dup ? '已有同名的' + ACT.KT[k] + '。' : ''; ACT.$('keyNameRow').classList.toggle('is-bad', dup); ACT.$('keyDone').classList.toggle('is-disabled', !v || dup); return v && !dup; },
+  keySave: function(){ if (!ACT.keyCheck()) return; var v = ACT.$('keyName').value.trim(), k = ACT.__kt;
+    if (ACT.__kmode === 'add' || ACT.__kmode === 'invalid') { var list = ACT.$('keys_' + k), tpl = document.querySelector('#keysList .ios-sw'), sw = tpl.cloneNode(true); sw.classList.remove('is-open', 'hidden-st'); var r = sw.querySelector('.ios-row'); r.dataset.k = k; r.dataset.n = v; delete r.dataset.used; r.querySelector('.ios-t').textContent = v; var d = sw.querySelector('.ios-del'); d.dataset.modal = '删除「' + v + '」？|用到它的条件和效果需要重新选择。|取消|删除'; d.dataset.okAct = 'rowDel'; list.insertBefore(sw, list.querySelector('.is-add')); RE.D[k].push(v); }
+    else if (ACT.__key) { ACT.__key.dataset.n = v; ACT.__key.querySelector('.ios-t').textContent = v; }
+    ACT.syncKeys(); window.__proto.navPop(ACT.$('keysHost')); window.__proto.toast(ACT.__kmode === 'edit' || ACT.__kmode === 'locked' ? '已保存' : '已添加'); },
+  keyDel: function(){ if (ACT.__key) ACT.__key.closest('.ios-sw').remove(); ACT.syncKeys(); window.__proto.navPop(ACT.$('keysHost')); window.__proto.toast('已删除'); },
+  'st:keyForm': function(st){ var r = document.querySelector('#keys_clue .ios-row[data-used]'); if (st === 'add' || st === 'invalid') ACT.keyForm(st, 'clue'); else { ACT.__key = r; ACT.keyForm(st, 'clue', r.dataset.n, st === 'locked' ? r.dataset.used : ''); } },
+  /* 初始状态 */
+  'st:initTags': function(st){ ACT.closeSwipes(); if (st === 'swipe') document.querySelector('#initList .ios-sw').classList.add('is-open'); ACT.ro('initL1', st === 'noperm'); },
+  initAddGo: function(){ ACT.$('initQ').value = ''; ACT.initSearch(); window.__proto.navPush('initLAdd'); },
+  initPick: function(el){ el.classList.toggle('is-on'); ACT.$('initDone').classList.toggle('is-disabled', !document.querySelector('#initOpts .ios-row.is-on')); },
+  initSearch: function(){ var q = ACT.$('initQ').value.trim(), hit = false;
+    Array.prototype.forEach.call(document.querySelectorAll('#initOpts .ios-row'), function(r){ var t = r.querySelector('.ios-t').textContent; if (t === q) hit = true; r.style.display = !q || t.indexOf(q) >= 0 ? '' : 'none'; });
+    Array.prototype.forEach.call(document.querySelectorAll('#initOpts .ios-grp'), function(g){ var any = Array.prototype.some.call(g.children, function(r){ return r.style.display !== 'none'; }); g.style.display = any ? '' : 'none'; g.previousElementSibling.style.display = any ? '' : 'none'; });
+    ACT.$('initNewT').textContent = q ? '新建「' + q + '」' : '新建…'; ACT.$('initNewRow').parentNode.style.display = hit ? 'none' : ''; },
+  'st:initPicker': function(st){ var q = ACT.$('initQ'); q.value = st === 'search' ? '怀表盒' : ''; ACT.initSearch(); if (st === 'empty') { ACT.$('initOpts').style.display = 'none'; } else ACT.$('initOpts').style.display = ''; },
+  initNewGo: function(){ var q = ACT.$('initQ').value.trim(); ACT.$('initNewName').value = q; ACT.initNewCheck(); window.__proto.navPush('initLNew'); },
+  initNewCheck: function(){ var v = ACT.$('initNewName').value.trim(), t = ACT.$('initNewType').querySelector('.is-on').textContent, dup = false;
+    Array.prototype.forEach.call(document.querySelectorAll('#initOpts .ios-row'), function(r){ if (r.dataset.k === t && r.querySelector('.ios-t').textContent === v) dup = true; });
+    ACT.$('initNewErr').textContent = dup ? '已有同名的' + t + '。' : ''; ACT.$('initNewDone').classList.toggle('is-disabled', !v || dup); return v && !dup; },
+  initNewSave: function(){ if (!ACT.initNewCheck()) return; var v = ACT.$('initNewName').value.trim(), t = ACT.$('initNewType').querySelector('.is-on').textContent, g = { '线索': 'clue', '物品': 'item', '标签': 'tag' }[t];
+    var grp = document.querySelector('#initOpts .ios-grp[data-g="' + g + '"]'); grp.insertAdjacentHTML('beforeend', '<view class="ios-row is-on" data-act="initPick" data-k="' + t + '"><view class="ios-m"><text class="ios-t">' + v + '</text></view>' + RE.CHK + '</view>');
+    RE.D[g].push(v); ACT.$('initQ').value = ''; ACT.initSearch(); ACT.$('initDone').classList.remove('is-disabled'); window.__proto.navPop(ACT.$('initHost')); window.__proto.toast('已新建'); },
+  initSave: function(){ if (ACT.$('initDone').classList.contains('is-disabled')) return; var list = ACT.$('initList'), tpl = list.querySelector('.ios-sw'), n = 0;
+    Array.prototype.forEach.call(document.querySelectorAll('#initOpts .ios-row.is-on'), function(r){ var sw = tpl.cloneNode(true); sw.classList.remove('is-open', 'hidden-st'); sw.removeAttribute('data-st'); sw.querySelector('.ios-t').textContent = r.querySelector('.ios-t').textContent; sw.querySelector('.ios-v').textContent = r.dataset.k; list.insertBefore(sw, list.querySelector('.is-add'));
+      r.classList.remove('is-on'); r.classList.add('is-fixed'); r.removeAttribute('data-act'); var c = r.querySelector('.ios-chk'); c.outerHTML = '<text class="ios-v">已添加</text>'; n++; });
+    ACT.$('initDone').classList.add('is-disabled'); window.__proto.navPop(ACT.$('initHost')); window.__proto.toast('已添加 ' + n + ' 项'); },
+  /* 编辑数值 · 节点 · 到达与引导 */
+  'st:veForm': function(st){ ACT.ro('veL1', st === 'noperm'); },
+  'st:nodeForm': function(st){ ACT.ro('nodeL1', st === 'noperm'); },
+  'st:questForm': function(st){ ACT.ro('questL1', st === 'noperm'); },
+  altToggle: function(sw){ ACT.$(sw.dataset.v).textContent = sw.hasAttribute('checked') ? '打开' : '关闭'; },
+  questPlace: function(el){ ACT.pickRow(el); ACT.$('questPlaceV').textContent = el.querySelector('.ios-t').textContent; },
+  questBackup: function(el){ el.classList.toggle('is-on'); var on = Array.prototype.filter.call(el.parentNode.children, function(r){ return r.classList.contains('is-on'); }).map(function(r){ return r.querySelector('.ios-t').textContent; });
+    ACT.$('questBackupV').textContent = on.length === 0 ? '无' : on.length === 1 ? on[0] : on.length + ' 个'; },
+  /* 下一站 */
+  reOut: function(el){ RE.openOut(el.dataset.out); window.__proto.navPush('routeLOut'); },
+  reDest: function(el){ ACT.pickRow(el); var v = el.querySelector('.ios-t').textContent; RE.OUT[RE.cur].dest = v; ACT.$('outDest').textContent = v; ACT.$('outV_' + RE.cur).textContent = v; },
+  reAny: function(el){ ACT.seg(el); RE.saveOut(); },
+  'st:routeList': function(st){ ACT.ro('routeL1', st === 'noperm'); },
+  'st:routeOut': function(st){ var o = RE.OUT[RE.cur]; if (st === 'empty') { RE.fill('rtCond', []); RE.fill('rtEff', []); } else { RE.fill('rtCond', o.cond); RE.fill('rtEff', o.eff); } ACT.ro('routeLOut', st === 'noperm'); },
+  /* 玩法模板 */
+  tpSkill: function(el){ var empty = !!el.dataset.empty, cur = empty ? '' : ACT.$('skillV').textContent;
+    var opts = empty ? [] : RE.names('attr').concat(['不加属性']);
+    RE.tpList('加上属性', opts, cur, function(v){ ACT.$('skillV').textContent = v === '不加属性' ? '不加' : v; }, empty ? '<view class="ios-grp">' + RE.add('添加属性', 'data-go="e-d20"') + '</view>' : ''); },
+  tpLuck: function(){ RE.tpList('幸运', ['幸运高获得多1分', '幸运低少一分', '幸运高多1分，幸运低少1分'], ACT.$('luckV').textContent, function(v){ ACT.$('luckV').textContent = v; }); },
+  'st:modsSec': function(st){ RE.fill('modList', st === 'empty' ? [] : st === 'full' ? RE.SEED.mod.concat([{ m: 'mod', k: 'clock', o: '巡夜人警觉', a: { cmp: 'GTE', v: 4, bt: 'n', bv: 4 } }]) : RE.SEED.mod); },
+  'st:afterForm': function(st){ var e = st === 'empty'; RE.fill('afCost', e ? [] : RE.SEED.cost); RE.fill('afEff', e ? [] : RE.SEED.eff); RE.fill('afCond', []); ACT.ro('afterL1', st === 'noperm'); },
+  afNext: function(el){ ACT.pickRow(el); ACT.$('afNextV').textContent = el.querySelector('.ios-t').textContent; },
+  /* 发布确认 */
+  'st:pcForm': function(st){ ACT.$('pcGo').classList.toggle('is-disabled', st === 'fail'); },
+  pcFix: function(){ window.__proto.reset('e-route-out'); },
+  /* ---- 引擎动作 ---- */
+  reAdd: function(el){ if (el.classList.contains('is-off') || el.closest('.is-editing')) return; RE.start(el, null); },
+  reEdit: function(el){ if (el.closest('.is-editing')) return; var sw = el.closest('.ios-sw'); if (sw.classList.contains('is-open')) { sw.classList.remove('is-open'); return; } RE.start(null, sw); },
+  reKind: function(el){ var c = RE.ctx; c.r.k = el.dataset.k; c.r.o = ''; c.r.a = {}; if (c.r.k === 'group') { RE.newGroup(); return; } if (RE.def(c.r.m, c.r.k).src) RE.showObj(); else RE.showAmt(); },
+  reObj: function(el){ var c = RE.ctx; c.r.o = el.dataset.o; if (RE.needAmt()) { RE.defaults(); if (RE.inStack('Amt')) { RE.showAmt(c.row ? 'edit' : 'add', true); window.__proto.navPop(c.host); } else RE.showAmt(); return; }
+    ACT.pickRow(el); RE.right('Obj', false); },
+  reNeg: function(el){ ACT.seg(el); RE.ctx.r.a.neg = el.dataset.i === '1'; if (RE.ctx.r.o) RE.right('Obj', false); },
+  reSeg: function(el){ ACT.seg(el); var a = RE.ctx.r.a; a[el.dataset.f] = el.dataset.v; if (el.dataset.re) { RE.defaults(true); RE.showAmt(RE.ctx.row ? 'edit' : 'add', true); } },
+  reBa: function(el){ ACT.pickRow(el); RE.ctx.r.a.ba = el.dataset.o; },
+  reObjBack: function(){ if (RE.inStack('Obj')) window.__proto.navPop(RE.ctx.host); else RE.showObj('pick'); },
+  reSave: function(el){ if (el.classList.contains('is-disabled')) return; RE.save(); },
+  reDel: function(){ RE.del(); },
+  reSwDel: function(el){ var sw = el.closest('.ios-sw'), list = sw.parentNode; sw.remove(); RE.sync(list); window.__proto.toast('已删除'); },
+  reNewGo: function(){ RE.showNew(); },
+  reNewSave: function(el){ if (el.classList.contains('is-disabled')) return; RE.newSave(); },
+  reGrpDel: function(){ var g = RE.grp; if (!g) return; var list = g.row.parentNode; g.row.remove(); RE.sync(list); RE.grp = null; window.__proto.navPop(g.host); window.__proto.toast('已删除'); },
+  initNewType: function(el){ ACT.seg(el); ACT.initNewCheck(); },
+  filter: function(inp){ var q = inp.value.trim(), list = inp.closest('.ios-body').querySelector('.re-filter-list'); Array.prototype.forEach.call(list.children, function(r){ r.style.display = !q || r.querySelector('.ios-t').textContent.indexOf(q) >= 0 ? '' : 'none'; }); },
+  /* 截图 / 右栏直达用：恢复样例数据，再走一遍真实的点击路径 */
+  reseed: function(){ RE.OUT = JSON.parse(RE.OUT0); RE.fill('modList', RE.SEED.mod); RE.fill('priceList', RE.SEED.price); RE.fill('afCost', RE.SEED.cost); RE.fill('afEff', RE.SEED.eff); RE.fill('afCond', []); RE.openOut('ok'); },
+  keyItemInit: function(){ ACT.keyForm('add', 'clue'); },
+  initAddInit: function(){ ACT.$('initQ').value = ''; ACT.initSearch(); },
+  initNewInit: function(){ ACT.$('initNewName').value = ''; ACT.initNewCheck(); },
+  routeOutInit: function(){ ACT.reseed(); },
+  shotRouteKind: function(){ ACT.reseed(); window.__proto.navPush('routeLOut', true); RE.start(document.querySelector('#rtCond > .is-add'), null); },
+  shotRouteObj: function(){ ACT.shotRouteKind(); ACT.reKind(document.querySelector('#rtKind [data-k="clue"]')); },
+  shotRouteAmt: function(){ ACT.reseed(); window.__proto.navPush('routeLOut', true); RE.start(null, document.querySelector('#rtCond > .ios-sw')); },
+  shotRouteNew: function(){ ACT.shotRouteObj(); var q = document.querySelector('#rtObj .re-q'); q.value = '撕开的信封'; RE.search(q); RE.showNew(); },
+  shotRouteGroup: function(){ ACT.shotRouteKind(); ACT.reKind(document.querySelector('#rtKind [data-k="group"]')); },
+  shotTempPick: function(){ ACT.tpSkill(document.querySelector('#skillPick [data-act="tpSkill"]')); },
+  shotTempMod: function(){ ACT.reseed(); RE.start(ACT.$('modAdd'), null); },
+  shotTempModAmt: function(){ ACT.shotTempMod(); ACT.reKind(document.querySelector('#tpRoot [data-k="item"]')); ACT.reObj(document.querySelector('#tpObj [data-o="撬棍"]')); },
+  shotAfterKind: function(){ ACT.reseed(); RE.start(document.querySelector('#afEff > .is-add'), null); },
+  shotAfterCost: function(){ ACT.reseed(); RE.start(document.querySelector('#afCost > .is-add'), null); },
   /* ---- 游玩页 ---- */
   arriveOk: function(){ window.__proto.setState(document.getElementById('arrive'), 'done'); window.__proto.toast('已记录到达'); },
   altOpen: function(){ window.__proto.setState(document.getElementById('arrive'), 'alt'); },
@@ -13781,7 +13935,251 @@ window.ACT = {
   ovClose: function(el){ window.__proto.closeOv(el.dataset.ov); },
   'st:hud': function(st){ var r = ACT.$('charRow'); if (r) window.__proto.setState(r, st === 'd20off' ? 'd20off' : 'ok'); }
 };
-
+/* ===== 10-28 下午：条件与效果引擎 ——「选，不填」。作者只看到中文名字；键名、op 由选择生成（见右栏「接口 / 字段」） ===== */
+var RE = window.RE = (function(){
+  var CHEV = '<view class="ios-chev"><cy-icon><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view>';
+  var CHK = '<view class="ios-chk"><cy-icon><view class="cyi cyi--check" style="width:16.64px;height:16.64px"></view></cy-icon></view>';
+  var PLUS = '<view class="ios-ic ios-ic--add"><cy-icon><view class="cyi cyi--plus" style="width:12.48px;height:12.48px"></view></cy-icon></view>';
+  var SEARCH = '<cy-icon><view class="cyi cyi--search" style="width:16.64px;height:16.64px"></view></cy-icon>';
+  var BACK = '<cy-icon><view class="cyi cyi--back" style="width:20.8px;height:20.8px"></view></cy-icon>';
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function $(id){ return document.getElementById(id); }
+  var R = {
+    CHEV: CHEV, CHK: CHK,
+    /* 名字来源：线索 / 物品 / 标签 / 数值 可以在这里新建；属性、进度钟、特质只在「d20 与角色设定」里建 */
+    D: {
+      clue: ['半张货单', '巡夜人的怀表', '另半张货单'],
+      item: ['旧手电', '撬棍'],
+      tag: ['新来的', '见过巡夜人'],
+      trait: ['夜行者', '受了伤'],
+      attr: { '观察': [0, 5], '胆量': [0, 10], '体魄': [0, 8], '灵感': [0, 5] },
+      clock: { '巡夜人警觉': 6, '拼出货单': 4 },
+      stat: { '生命值': 10, '幸运值': 3 },
+      value: { '生命值': 10, '幸运值': 3, '行动次数': 5 },
+      node: ['旧码头仓库', '仓库二层', '海关钟楼', '鱼市口'],
+      env: { '天气': ['晴天', '下雨', '起雾'], '时段': ['白天', '夜里'] },
+      badge: ['雾港夜行者', '码头老手']
+    },
+    NEW: { clue: '线索', item: '物品', tag: '标签', value: '数值' },
+    SRC: { clue: '线索', item: '物品', tag: '标签', trait: '特质', attr: '属性', clock: '进度钟', stat: '数值', value: '数值', node: '节点', env: '天气或时段', badge: '徽章' },
+    /* 种类：k, 句子开头, 名字来源, 数量类型, [肯定, 否定]（否定 = NOT 包一层） */
+    K: {
+      cond: [
+        { k: 'clue', t: '已获得线索', src: 'clue', neg: ['已获得', '未获得'], nt: '未获得线索' },
+        { k: 'item', t: '带着物品', src: 'item', amt: 'qty', neg: ['带着', '没带'], nt: '没带物品' },
+        { k: 'equip', t: '装备着物品', src: 'item', neg: ['装备着', '没装备'], nt: '没装备物品' },
+        { k: 'tag', t: '有标签', src: 'tag', neg: ['有', '没有'], nt: '没有标签' },
+        { k: 'trait', t: '有特质', src: 'trait', neg: ['有', '没有'], nt: '没有特质' },
+        { k: 'attr', t: '属性', src: 'attr', amt: 'cmp' },
+        { k: 'clock', t: '进度钟', src: 'clock', amt: 'cmp' },
+        { k: 'stat', t: '数值', src: 'stat', amt: 'cmp' },
+        { k: 'visit', t: '到过节点', src: 'node', amt: 'times' },
+        { k: 'done', t: '完成过节点', src: 'node', neg: ['完成过', '没完成'], nt: '没完成节点' },
+        { k: 'check', t: '检定结果', src: 'node', amt: 'pass' },
+        { k: 'env', t: '天气或时段', src: 'env' },
+        { k: 'group', t: '一组条件' }
+      ],
+      eff: [
+        { k: 'clue', t: '获得线索', src: 'clue' },
+        { k: 'item', t: '给物品', src: 'item', amt: 'qty' },
+        { k: 'equip', t: '装备物品', src: 'item' },
+        { k: 'unequip', t: '卸下物品', src: 'item' },
+        { k: 'tag', t: '加上标签', src: 'tag' },
+        { k: 'traitAdd', t: '加上特质', src: 'trait' },
+        { k: 'traitDel', t: '去掉特质', src: 'trait' },
+        { k: 'clock', t: '进度钟', src: 'clock', amt: 'tick' },
+        { k: 'attr', t: '属性', src: 'attr', amt: 'delta' },
+        { k: 'stat', t: '数值', src: 'value', amt: 'delta' },
+        { k: 'badge', t: '给徽章', src: 'badge' },
+        { k: 'xp', t: '给探索值', amt: 'xp' }
+      ]
+    },
+    CMP: { GTE: '至少', LTE: '至多', EQ: '正好' },
+    CAP: 6,
+    ctx: null, grp: null, cur: 'ok',
+    OUT: {
+      ok: { t: '撬开了', dest: '仓库二层', cond: [{ m: 'cond', k: 'attr', o: '观察', a: { cmp: 'GTE', v: 3 } }, { m: 'cond', k: 'clue', o: '半张货单', a: {} }], eff: [{ m: 'eff', k: 'clock', o: '巡夜人警觉', a: { v: 1 } }], any: false },
+      no: { t: '没撬开', dest: '海关钟楼', cond: [], eff: [{ m: 'eff', k: 'traitAdd', o: '受了伤', a: {} }], any: false }
+    },
+    SEED: {
+      mod: [{ m: 'mod', k: 'item', o: '旧手电', a: { v: 1, bt: 'n', bv: 2, lb: '带着旧手电' } }, { m: 'mod', k: 'trait', o: '夜行者', a: { bt: 'attr', ba: '胆量', lb: '夜里更看得清' } }],
+      price: [{ m: 'price', k: 'clock', o: '巡夜人警觉', a: { v: 2 } }],
+      cost: [{ m: 'cost', k: 'cost', o: '幸运值', a: { v: 1 } }],
+      eff: [{ m: 'eff', k: 'item', o: '半张货单', a: { v: 1 } }, { m: 'eff', k: 'clock', o: '拼出货单', a: { v: 1 } }]
+    }
+  };
+  R.names = function(src){ var d = R.D[src]; if (!d) return []; if (Array.isArray(d)) return d.slice(); if (src === 'env') return [].concat.apply([], Object.keys(d).map(function(k){ return d[k]; })); return Object.keys(d); };
+  R.def = function(m, k){ if (m === 'cost') return { k: 'cost', t: '消耗', src: 'value', amt: 'cost' }; var L = (m === 'cond' || m === 'mod') ? R.K.cond : R.K.eff; for (var i = 0; i < L.length; i++) if (L[i].k === k) return L[i]; return {}; };
+  R.kinds = function(mode, inGroup){
+    if (mode === 'cond') return R.K.cond.filter(function(d){ return !(inGroup && d.k === 'group'); });
+    if (mode === 'mod') return R.K.cond.filter(function(d){ return ['clue', 'item', 'equip', 'tag', 'trait', 'attr', 'clock', 'stat', 'env'].indexOf(d.k) >= 0; });
+    if (mode === 'price') return R.K.eff.filter(function(d){ return ['clock', 'attr', 'clue', 'tag', 'traitAdd'].indexOf(d.k) >= 0; });
+    return R.K.eff; };
+  /* 一句话 */
+  R.say = function(r){ var a = r.a || {}, d = R.def(r.m, r.k);
+    if (r.m === 'cost') return r.o + ' −' + a.v;
+    if (r.k === 'group') return '一组条件 · ' + (a.any ? '任一满足 ' : '全部满足 ') + (r.c || []).length + ' 条';
+    var s = (a.neg && d.nt ? d.nt : d.t) + (r.o ? ' · ' + r.o : '');
+    switch (d.amt) {
+      case 'cmp': s += ' ' + R.CMP[a.cmp || 'GTE'] + ' ' + a.v; break;
+      case 'times': s += ' ' + R.CMP[a.cmp || 'GTE'] + ' ' + a.v + ' 次'; break;
+      case 'qty': if (a.v > 1) s += ' ×' + a.v; break;
+      case 'pass': s += a.fail ? ' 没通过' : ' 通过'; break;
+      case 'tick': s += ' +' + a.v; break;
+      case 'delta': s += a.op === 'dec' ? ' −' + a.v : a.op === 'set' ? ' 设为 ' + a.v : a.op === 'floor' ? ' 恢复到 ' + a.v : ' +' + a.v; break;
+      case 'xp': s = d.t + ' · ' + a.v; break;
+    }
+    return s; };
+  /* 加值的名称（游玩页检定明细里显示）：默认由句子生成，可以改 */
+  R.label = function(r){ var d = R.def(r.m, r.k); return ({ item: '带着', equip: '装备着', clue: '有', tag: '', trait: '' }[r.k] || '') + (r.o || d.t); };
+  R.bonus = function(r){ var a = r.a || {}; return a.bt === 'attr' ? '+' + a.ba : '+' + a.bv; };
+  R.rowHtml = function(r){ var v = r.m === 'mod' ? '<text class="ios-v">' + R.bonus(r) + '</text>' : '';
+    return '<view class="ios-sw" data-re="' + esc(JSON.stringify(r)) + '"><view class="ios-del" data-act="reSwDel">删除</view><view class="ios-row" data-act="reEdit"><view class="ios-minus" data-act="swOpen" aria-label="删除"></view><view class="ios-m"><text class="ios-t">' + esc(R.say(r)) + '</text></view>' + v + CHEV + '<view class="ios-grip" aria-label="拖动排序"></view></view></view>'; };
+  R.add = function(t, attrs){ return '<view class="ios-row is-add" ' + (attrs || '') + '>' + PLUS + '<view class="ios-m"><text class="ios-t">' + t + '</text></view></view>'; };
+  R.rows = function(list){ return Array.prototype.map.call(list.querySelectorAll(':scope > .ios-sw'), function(sw){ return JSON.parse(sw.dataset.re); }); };
+  R.fill = function(id, rows){ var list = $(id); if (!list) return; Array.prototype.forEach.call(list.querySelectorAll(':scope > .ios-sw'), function(x){ x.remove(); }); var add = list.querySelector(':scope > .is-add'); (rows || []).forEach(function(r){ add.insertAdjacentHTML('beforebegin', R.rowHtml(JSON.parse(JSON.stringify(r)))); }); R.sync(list, true); };
+  /* 列表变了：分段控件只在两条以上时出现；加值封顶；代价最多 4 条；下一站写回 */
+  R.sync = function(list, quiet){ var n = list.querySelectorAll(':scope > .ios-sw').length, seg = list.querySelector(':scope > .re-seg'), add = list.querySelector(':scope > .is-add');
+    if (seg) seg.style.display = n >= 2 ? '' : 'none';
+    if (list.id === 'modList') { var sum = R.rows(list).reduce(function(t, r){ return t + (r.a.bt === 'n' ? +r.a.bv : 0); }, 0); add.classList.toggle('is-off', sum >= R.CAP); }
+    if (list.id === 'priceList') add.style.display = n >= 4 ? 'none' : '';
+    if (/GrpList$/.test(list.id)) R.grpSync();
+    if (list.dataset.out && !quiet) R.saveOut();
+    if (list.id === 'afEff' || list.id === 'afCost') { var k = list.closest('.ios-host').querySelectorAll('#afCost > .ios-sw, #afEff > .ios-sw').length; var v = $('afterSumOk'); if (v) v.textContent = k ? k + ' 项' : '无'; }
+    if (window.__proto) window.__proto.layoutMarks(); };
+  /* 下一站：一种结果 */
+  R.openOut = function(k){ R.cur = k; var o = R.OUT[k]; $('outTitle').textContent = o.t; $('destTitle').textContent = '去往'; $('outDest').textContent = o.dest;
+    var dl = $('routeLDest'); dl.querySelector('.ios-back text').textContent = o.t;
+    Array.prototype.forEach.call($('destList').children, function(r){ r.classList.toggle('is-on', r.querySelector('.ios-t').textContent === o.dest); });
+    var seg = $('rtCond').querySelector('.re-seg .ios-seg'); Array.prototype.forEach.call(seg.children, function(c, i){ c.classList.toggle('is-on', (i === 1) === !!o.any); });
+    var h = $('routeOut'); if (h.dataset.cur === 'empty') { R.fill('rtCond', []); R.fill('rtEff', []); } else { R.fill('rtCond', o.cond); R.fill('rtEff', o.eff); } };
+  R.saveOut = function(){ var o = R.OUT[R.cur]; o.cond = R.rows($('rtCond')); o.eff = R.rows($('rtEff')); o.any = $('rtCond').querySelector('.re-seg .is-on').textContent === '任一满足'; };
+  /* ---- 分层：每个宿主自带 种类 / 名字 / 数量 / 新建 / 一组条件 五层 ---- */
+  R.mount = function(hostId){ var host = $(hostId), p = host.dataset.p;
+    ['Kind', 'Obj', 'Amt', 'New', 'Grp'].forEach(function(s){ host.insertAdjacentHTML('beforeend', '<view class="ios-lv ios-sub" id="' + p + s + '"><view class="ios-nav"><view class="node-sheet__close ios-back" data-act="lvBack">' + BACK + '<text></text></view><text class="ios-nav__t"></text><view class="ios-nav__r"><view class="node-sheet__done re-r"></view></view></view><scroll-view class="ios-body re-b"></scroll-view></view>'); }); };
+  R.id = function(which){ var c = R.ctx; return (c.tp && which === c.rootWhich) ? 'tpRoot' : c.p + which; };
+  R.inStack = function(which){ var c = R.ctx, id = R.id(which); if (id === 'tpRoot') return true; return (c.host.__stack || []).indexOf(id) >= 0; };
+  R.topTitle = function(){ var c = R.ctx, st = c.host.__stack || [], top = st.length ? $(st[st.length - 1]) : c.host.querySelector('.ios-root'); return top.querySelector('.ios-nav__t').textContent; };
+  R.paint = function(which, o, inPlace){ var c = R.ctx, id = R.id(which), lv = $(id);
+    if (id !== 'tpRoot' && !inPlace) lv.querySelector('.ios-back text').textContent = R.topTitle();
+    lv.querySelector('.ios-nav__t').textContent = o.t;
+    var r = lv.querySelector('.re-r'); r.textContent = o.r || ''; r.classList.toggle('is-disabled', !!o.rOff); r.dataset.act = o.rAct || '';
+    lv.querySelector('.re-b').innerHTML = o.body; lv.querySelector('.re-b').scrollTop = 0; };
+  R.go = function(which){ var c = R.ctx; if (c.tp && which === c.rootWhich) return; window.__proto.navPush(R.id(which)); };
+  R.right = function(which, off){ var r = $(R.id(which)).querySelector('.re-r'); r.classList.toggle('is-disabled', !!off); };
+  R.needAmt = function(){ var c = R.ctx; return !!R.def(c.r.m, c.r.k).amt || c.r.m === 'mod'; };
+  /* 开始：从「添加…」行或已有的一行 */
+  R.start = function(addEl, sw){ var el = addEl || sw, host = el.closest('.ios-host'), lv = el.closest('.ios-lv'), tp = !host, list = addEl ? $(addEl.dataset.list) : sw.parentNode;
+    var r = sw ? JSON.parse(sw.dataset.re) : { m: addEl.dataset.mode, a: {} };
+    R.ctx = { host: tp ? $('tpHost') : host, p: tp ? 'tp' : host.dataset.p, tp: tp, list: list, mode: r.m, from: tp ? 'page' : lv.id, row: sw || null, r: r, inGroup: /GrpList$/.test(list.id) };
+    if (tp) { R.tpReset(); R.ctx.rootWhich = sw ? (R.needAmt() ? 'Amt' : 'Obj') : r.m === 'cost' ? 'Obj' : 'Kind'; }
+    if (sw) { if (r.k === 'group') { R.openGroup(sw); return; } if (R.needAmt()) R.showAmt('edit'); else R.showObj('edit'); }
+    else if (r.m === 'cost') { r.k = 'cost'; R.showObj(); }
+    else R.showKind();
+    if (tp) window.__proto.openEl('tpSheet'); };
+  R.tpReset = function(){ var h = $('tpHost'); (h.__stack || []).forEach(function(id){ var l = $(id); if (l) l.classList.remove('is-on', 'ios-out', 'ios-in', 'is-under'); }); h.__stack = []; h.querySelector('.ios-root').classList.remove('is-under'); };
+  R.showKind = function(){ var c = R.ctx, title = { cond: '添加条件', eff: '添加效果', mod: '添加加值', price: '添加代价' }[c.mode];
+    var body = '<view class="mk-new" data-mk="第一步：选种类" data-why="勾选列表，只有大白话种类；对应关系见右栏「接口 / 字段」。点一项进下一层选名字。"><view class="ios-grp">' + R.kinds(c.mode, c.inGroup).map(function(d){ return '<view class="ios-row" data-act="reKind" data-k="' + d.k + '"><view class="ios-m"><text class="ios-t">' + d.t + '</text></view>' + CHEV + '</view>'; }).join('') + '</view></view>';
+    R.paint('Kind', { t: title, body: body }); R.go('Kind'); };
+  R.showObj = function(mode){ var c = R.ctx, d = R.def(c.r.m, c.r.k), src = d.src, names = R.names(src), amt = R.needAmt(), canNew = !!R.NEW[src], h = '';
+    if (d.neg) h += '<view class="ios-grp"><view class="ios-row is-static"><view class="ios-seg">' + d.neg.map(function(s, i){ return '<view class="' + ((!!c.r.a.neg) === (i === 1) ? 'is-on' : '') + '" data-act="reNeg" data-i="' + i + '">' + s + '</view>'; }).join('') + '</view></view></view>';
+    if (canNew || names.length > 5) h += '<view class="ios-grp' + (d.neg ? ' ios-gap-s' : '') + '"><view class="ios-row is-static ios-search">' + SEARCH + '<input class="ios-in ios-in--l re-q" placeholder="搜索" maxlength="12"/></view></view>';
+    var opt = function(n){ return '<view class="ios-row' + (n === c.r.o && !amt ? ' is-on' : '') + '" data-act="reObj" data-o="' + esc(n) + '"><view class="ios-m"><text class="ios-t">' + esc(n) + '</text></view>' + (amt ? CHEV : CHK) + '</view>'; };
+    h += '<view class="re-opts">';
+    if (canNew) h += '<view class="ios-grp ios-gap-s re-newg"><view class="ios-row re-new" data-act="reNewGo">' + PLUS + '<view class="ios-m"><text class="ios-t">新建' + R.NEW[src] + '…</text></view></view></view>';
+    if (src === 'env') Object.keys(R.D.env).forEach(function(g){ h += '<view class="ios-hd">' + g + '</view><view class="ios-grp">' + R.D.env[g].map(opt).join('') + '</view>'; });
+    else if (names.length) h += '<view class="ios-grp ' + (canNew || d.neg ? 'ios-gap-s' : '') + '">' + names.map(opt).join('') + '</view>';
+    h += '</view>';
+    if (mode === 'edit' && !amt) h += '<view class="ios-grp ios-gap"><view class="ios-row is-danger" data-act="reDel"><text class="ios-t">删除' + (c.r.m === 'cond' ? '条件' : '这一项') + '</text></view></view>';
+    var wrap = '<view class="mk-new" data-mk="第二步：选名字" data-why="勾选列表 + 搜索。线索、物品、标签、数值可以「新建…」（键名系统生成）；属性、进度钟、特质只在「d20 与角色设定」里建。有肯定 / 否定之分的种类，上面是分段控件（否定 = NOT）。">' + h + '</view>';
+    R.paint('Obj', { t: d.t, r: amt ? '' : (mode === 'edit' ? '完成' : '添加'), rOff: !c.r.o, rAct: 'reSave', body: wrap }, mode === 'repaint');
+    if (mode !== 'repaint') R.go('Obj'); };
+  R.search = function(inp){ var q = inp.value.trim(), lv = inp.closest('.ios-lv'), hit = false;
+    Array.prototype.forEach.call(lv.querySelectorAll('.re-opts .ios-row[data-o]'), function(r){ var t = r.dataset.o; if (t === q) hit = true; r.style.display = !q || t.indexOf(q) >= 0 ? '' : 'none'; });
+    Array.prototype.forEach.call(lv.querySelectorAll('.re-opts .ios-grp:not(.re-newg)'), function(g){ var any = Array.prototype.some.call(g.children, function(r){ return r.style.display !== 'none'; }); g.style.display = any ? '' : 'none'; var hd = g.previousElementSibling; if (hd && hd.classList.contains('ios-hd')) hd.style.display = any ? '' : 'none'; });
+    var nw = lv.querySelector('.re-new'); if (nw) { var src = R.def(R.ctx.r.m, R.ctx.r.k).src; nw.querySelector('.ios-t').textContent = q ? '新建「' + q + '」' : '新建' + R.NEW[src] + '…'; nw.parentNode.style.display = hit ? 'none' : ''; } };
+  /* 默认数量 */
+  R.lim = function(){ var c = R.ctx, r = c.r, d = R.def(r.m, r.k), o = r.o, a = r.a;
+    switch (d.amt) {
+      case 'cmp': if (d.src === 'attr') return R.D.attr[o].slice(); if (d.src === 'clock') return [0, R.D.clock[o]]; return [0, R.D.stat[o]];
+      case 'times': return [1, 99];
+      case 'qty': return [1, 99];
+      case 'tick': return [1, R.D.clock[o]];
+      case 'delta': var g = d.src === 'attr' ? R.D.attr[o] : [0, R.D.value[o]]; return (a.op === 'set' || a.op === 'floor') ? [g[0], g[1]] : [1, g[1] - g[0]];
+      case 'xp': return [5, 100];
+      case 'cost': return [1, R.D.value[o]];
+    } return null; };
+  R.defaults = function(keep){ var a = R.ctx.r.a, d = R.def(R.ctx.r.m, R.ctx.r.k), L = R.lim();
+    if (d.amt === 'cmp' || d.amt === 'times') a.cmp = a.cmp || 'GTE';
+    if (d.amt === 'delta') a.op = a.op || 'inc';
+    if (L) { var dv = d.amt === 'xp' ? 10 : d.amt === 'cmp' ? Math.min(L[1], Math.max(L[0], 3)) : L[0]; a.v = (a.v == null || !keep && a.v == null) ? dv : Math.min(L[1], Math.max(L[0], a.v)); }
+    if (R.ctx.r.m === 'mod') { a.bt = a.bt || 'n'; var room = R.room(); a.bv = Math.min(room, Math.max(1, a.bv || 1)); a.ba = a.ba || '胆量'; } };
+  R.room = function(){ var c = R.ctx, used = 0; Array.prototype.forEach.call(c.list.querySelectorAll(':scope > .ios-sw'), function(sw){ if (sw === c.row) return; var r = JSON.parse(sw.dataset.re); if (r.a.bt === 'n') used += +r.a.bv; }); return Math.max(1, R.CAP - used); };
+  function seg(opts, f, cur, re){ return '<view class="ios-grp"><view class="ios-row is-static"><view class="ios-seg">' + opts.map(function(o){ return '<view class="' + (o[0] === cur ? 'is-on' : '') + '" data-act="reSeg" data-f="' + f + '" data-v="' + o[0] + '"' + (re ? ' data-re="1"' : '') + '>' + o[1] + '</view>'; }).join('') + '</view></view></view>'; }
+  function stp(label, v, lo, hi, k, step){ return '<view class="ios-row is-static"><view class="ios-m"><text class="ios-t">' + label + '</text></view><text class="ios-num">' + v + '</text><view class="ios-stp" data-min="' + lo + '" data-max="' + hi + '" data-k="' + k + '"' + (step ? ' data-step="' + step + '"' : '') + '><view data-act="stp" data-d="-1" aria-label="减少" class="' + (v <= lo ? 'is-off' : '') + '"></view><view data-act="stp" data-d="1" aria-label="增加" class="is-plus' + (v >= hi ? ' is-off' : '') + '"><i></i></view></view></view>'; }
+  R.showAmt = function(mode, inPlace){ var c = R.ctx, r = c.r, d = R.def(r.m, r.k), a = r.a, h = '';
+    if (!inPlace || a.v == null) R.defaults(true);
+    var L = R.lim();
+    if (d.src) h += '<view class="ios-grp"><view class="ios-row" data-act="reObjBack"><view class="ios-m"><text class="ios-t">' + R.SRC[d.src] + '</text></view><text class="ios-v">' + esc(r.o) + '</text>' + CHEV + '</view></view>';
+    var g = d.src ? ' ios-gap-s' : '';
+    if (d.amt === 'cmp' || d.amt === 'times') h += '<view class="' + g + '">' + seg([['GTE', '至少'], ['LTE', '至多'], ['EQ', '正好']], 'cmp', a.cmp) + '</view><view class="ios-grp ios-gap-s">' + stp(d.amt === 'times' ? '次数' : '数值', a.v, L[0], L[1], 'v') + '</view>';
+    if (d.amt === 'qty') h += '<view class="ios-grp' + g + '">' + stp('数量', a.v, L[0], L[1], 'v') + '</view>';
+    if (d.amt === 'tick') h += '<view class="ios-grp' + g + '">' + stp('推进几格', a.v, L[0], L[1], 'v') + '</view>';
+    if (d.amt === 'xp') h += '<view class="ios-grp' + g + '">' + stp('探索值', a.v, L[0], L[1], 'v', 5) + '</view>';
+    if (d.amt === 'cost') h += '<view class="ios-grp' + g + '">' + stp('消耗', a.v, L[0], L[1], 'v') + '</view>';
+    if (d.amt === 'pass') h += '<view class="' + g + '">' + seg([['', '通过'], ['1', '没通过']], 'fail', a.fail ? '1' : '') + '</view>';
+    if (d.amt === 'delta') h += '<view class="' + g + '">' + seg([['inc', '增加'], ['dec', '减少'], ['set', '设为'], ['floor', '恢复到']], 'op', a.op, true) + '</view><view class="ios-grp ios-gap-s">' + stp('数值', a.v, L[0], L[1], 'v') + '</view>';
+    if (r.m === 'mod') { if (a.lb == null) a.lb = R.label(r); h += '<view class="ios-hd">名称</view><view class="ios-grp"><view class="ios-row is-static"><input class="ios-in ios-in--l re-lb" value="' + esc(a.lb) + '" maxlength="12"/></view></view><view class="ios-hd">加值</view>' + seg([['n', '固定加值'], ['attr', '加上属性值']], 'bt', a.bt, true);
+      if (a.bt === 'attr') h += '<view class="ios-grp ios-gap-s">' + R.names('attr').map(function(n){ return '<view class="ios-row' + (n === a.ba ? ' is-on' : '') + '" data-act="reBa" data-o="' + n + '"><view class="ios-m"><text class="ios-t">' + n + '</text></view>' + CHK + '</view>'; }).join('') + '</view>';
+      else h += '<view class="ios-grp ios-gap-s">' + stp('加值', a.bv, 1, R.room(), 'bv') + '</view>'; }
+    if (mode === 'edit') h += '<view class="ios-grp ios-gap"><view class="ios-row is-danger" data-act="reDel"><text class="ios-t">删除' + (r.m === 'cond' ? '条件' : r.m === 'mod' ? '加值' : r.m === 'price' ? '代价' : r.m === 'cost' ? '消耗' : '效果') + '</text></view></view>';
+    var wrap = '<view class="mk-new" data-mk="第三步：数量" data-why="步进器，上下限由控件挡住（属性按它的范围、进度钟按格数、次数 1–99、物品 1–99、探索值 5–100、加值最多到剩下的上限）。至少 / 至多 / 正好 = GTE / LTE / EQ。">' + h + '</view>';
+    R.paint('Amt', { t: r.o || d.t, r: mode === 'edit' ? '完成' : '添加', rAct: 'reSave', body: wrap }, inPlace);
+    if (!inPlace) R.go('Amt'); };
+  /* 保存 / 删除 / 回到起点 */
+  R.save = function(){ var c = R.ctx, html = R.rowHtml(c.r);
+    if (c.row) { c.row.insertAdjacentHTML('afterend', html); c.row.remove(); } else c.list.querySelector(':scope > .is-add').insertAdjacentHTML('beforebegin', html);
+    R.sync(c.list); R.finish(c.row ? '已保存' : '已添加'); };
+  R.del = function(){ var c = R.ctx; if (c.row) c.row.remove(); R.sync(c.list); R.finish('已删除'); };
+  R.finish = function(msg){ var c = R.ctx; if (c.tp) { window.__proto.closeEl('tpSheet'); } else R.popTo(c.host, c.from); window.__proto.toast(msg); };
+  R.popTo = function(host, id){ var st = host.__stack || [], n = st.indexOf(id), keep = n >= 0 ? n + 1 : 0;
+    while (st.length > keep + 1) { var x = $(st.pop()); x.classList.remove('is-on', 'is-under', 'ios-in', 'ios-out'); }
+    if (st.length > keep) window.__proto.navPop(host); };
+  R.swapTop = function(which){ var c = R.ctx, st = c.host.__stack; var old = $(st.pop()); old.classList.remove('is-on', 'is-under', 'ios-in'); window.__proto.navPush(R.id(which)); };
+  /* 新建（线索 / 物品 / 标签 / 数值） */
+  R.showNew = function(){ var c = R.ctx, src = R.def(c.r.m, c.r.k).src, t = R.NEW[src], q = $(R.id('Obj')).querySelector('.re-q'); q = q ? q.value.trim() : '';
+    var body = '<view class="mk-new" data-mk="新建" data-why="只写名字；写好之前「添加」是灰的，重名写一句。键名系统生成（线索 clue.*、标签 tag.*、数值 counter.*、物品 itemId）。"><view class="ios-hd">名称</view><view class="ios-grp"><view class="ios-row is-static re-namerow"><input class="ios-in ios-in--l re-name" value="' + esc(q) + '" maxlength="12"/></view></view><view class="ios-ft is-err re-err"></view></view>';
+    R.paint('New', { t: '新建' + t, r: '添加', rOff: true, rAct: 'reNewSave', body: body }); R.go('New'); R.newCheck(); };
+  R.newCheck = function(){ var c = R.ctx, src = R.def(c.r.m, c.r.k).src, lv = $(R.id('New')), v = lv.querySelector('.re-name').value.trim(), dup = R.names(src).indexOf(v) >= 0;
+    lv.querySelector('.re-err').textContent = dup ? '已有同名的' + R.NEW[src] + '。' : ''; lv.querySelector('.re-namerow').classList.toggle('is-bad', dup); R.right('New', !v || dup); return v && !dup; };
+  R.newSave = function(){ if (!R.newCheck()) return; var c = R.ctx, src = R.def(c.r.m, c.r.k).src, v = $(R.id('New')).querySelector('.re-name').value.trim();
+    if (Array.isArray(R.D[src])) R.D[src].push(v); else R.D[src][v] = 10;
+    c.r.o = v; R.showObj('repaint');
+    if (R.needAmt()) { var st = c.host.__stack, old = $(st.pop()); old.classList.remove('is-on', 'is-under', 'ios-in'); R.showAmt(c.row ? 'edit' : 'add'); }
+    else { var ob = $(R.id('Obj')); Array.prototype.forEach.call(ob.querySelectorAll('.re-opts .ios-row[data-o]'), function(x){ x.classList.toggle('is-on', x.dataset.o === v); }); R.right('Obj', false); window.__proto.navPop(c.host); }
+    window.__proto.toast('已新建'); };
+  /* 一组条件（嵌套，只一层下钻） */
+  R.newGroup = function(){ var c = R.ctx; c.r = { m: 'cond', k: 'group', a: { any: false }, c: [] }; c.list.querySelector(':scope > .is-add').insertAdjacentHTML('beforebegin', R.rowHtml(c.r)); var row = c.list.querySelector(':scope > .is-add').previousElementSibling; R.sync(c.list);
+    R.grp = { row: row, host: c.host, p: c.p }; var st = c.host.__stack, old = $(st.pop()); old.classList.remove('is-on', 'is-under', 'ios-in'); R.paintGroup(); window.__proto.navPush(R.id('Grp')); };
+  R.openGroup = function(sw){ var c = R.ctx; R.grp = { row: sw, host: c.host, p: c.p }; R.paintGroup(); R.go('Grp'); };
+  R.paintGroup = function(){ var g = R.grp, r = JSON.parse(g.row.dataset.re), lid = g.p + 'GrpList';
+    var body = '<view class="mk-new" data-mk="一组条件（下钻）" data-why="AND / OR 嵌套：这一组自己的 全部满足 / 任一满足，组里不能再套组（后端最多 3 层，这里只给一层，够用）。"><view class="ios-grp"><view class="ios-row is-static"><view class="ios-seg"><view class="' + (r.a.any ? '' : 'is-on') + '" data-act="reGrpAny">全部满足</view><view class="' + (r.a.any ? 'is-on' : '') + '" data-act="reGrpAny">任一满足</view></view></view></view><view class="ios-hd">条件</view><view class="ios-grp ios-list" id="' + lid + '">' + R.add('添加条件', 'data-act="reAdd" data-mode="cond" data-list="' + lid + '"') + '</view><view class="ios-grp ios-gap"><view class="ios-row is-danger" data-act="reGrpDel"><text class="ios-t">删除这组条件</text></view></view></view>';
+    var ctx = R.ctx; R.ctx = { host: g.host, p: g.p }; R.paint('Grp', { t: '一组条件', body: body }); R.ctx = ctx;
+    var list = $(lid); (r.c || []).forEach(function(x){ list.querySelector(':scope > .is-add').insertAdjacentHTML('beforebegin', R.rowHtml(x)); }); };
+  R.grpSync = function(){ var g = R.grp; if (!g) return; var lid = g.p + 'GrpList', list = $(lid), r = JSON.parse(g.row.dataset.re); r.c = R.rows(list); var lv = $(g.p + 'Grp'); r.a.any = lv.querySelector('.ios-seg .is-on').textContent === '任一满足';
+    g.row.dataset.re = JSON.stringify(r); g.row.querySelector('.ios-t').textContent = R.say(r); var parent = g.row.parentNode; if (parent.dataset.out) R.saveOut(); };
+  /* 玩法模板页：单选勾选半屏 */
+  R.tpList = function(title, opts, cur, onPick, extra){ R.ctx = { host: $('tpHost'), p: 'tp', tp: true, opened: true, rootWhich: 'List', r: { a: {} } }; R.tpReset();
+    var body = '<view class="mk-new" data-mk="' + title + ' · 勾选" data-why="点一项立即生效，右上「完成」关掉。"><view class="ios-grp">' + opts.map(function(o){ return '<view class="ios-row' + (o === cur || (cur === '不加' && o === '不加属性') ? ' is-on' : '') + '" data-act="tpPick"><view class="ios-m"><text class="ios-t">' + o + '</text></view>' + CHK + '</view>'; }).join('') + '</view>' + (extra || '') + '</view>';
+    R.paint('List', { t: title, r: opts.length ? '完成' : '', rAct: 'tpDone', body: body }); R.__pick = onPick; window.__proto.openEl('tpSheet'); };
+  return R;
+})();
+ACT.tpPick = function(el){ ACT.pickRow(el); if (RE.__pick) RE.__pick(el.querySelector('.ios-t').textContent); };
+ACT.tpDone = function(){ window.__proto.closeEl('tpSheet'); window.__proto.toast('已保存'); };
+ACT.reGrpAny = function(el){ ACT.seg(el); RE.grpSync(); };
+['routeHost', 'afterHost', 'tpHost'].forEach(RE.mount);
+RE.fill('modList', RE.SEED.mod); RE.fill('priceList', RE.SEED.price); RE.fill('afCost', RE.SEED.cost); RE.fill('afEff', RE.SEED.eff); RE.fill('afCond', []); RE.openOut('ok');
+RE.OUT0 = JSON.stringify(RE.OUT);
 </script>
 <script>
 (function(){
@@ -13791,7 +14189,7 @@ var $$ = function(s, r){ return Array.prototype.slice.call((r || document).query
 var vp = $('#vp'), phone = $('#phone'), fit = $('#fit'), stage = $('#stage');
 var stack = [];
 var MK = { 'mk-new': ['n', '新增'], 'mk-chg': ['c', '改动'], 'mk-wip': ['w', '已写码·待确认'], 'mk-fix': ['f', '在途修复'] };
-var ST_LABEL = { pre: '题面', result: '过线', fail: '差一点', settled: '结算', hidden: '隐藏属性', accepted: '已接受', alt: '换个方式', quiz: '答题', guard: '守卫拦下', done: '已完成', wip: '已写码版（原样）', fresh: '新主题', legacy: '旧主题', ok: '正常', loading: '加载中', empty: '空', error: '出错', noperm: '不能修改', guest: '游客', pending: '审核中', rejected: '已驳回', unknown: '结果未知', blocked: '被拦', off: '关闭', on: '开着', add: '添加', edit: '修改', invalid: '填错了', solo: '个人 / 无俱乐部', custom: '自定义时段', club: '俱乐部带队（不显示）', full: '已满 6 项', swipe: '左滑', editing: '编辑中', live: '进行中', final: '已结束', d20off: 'd20 检定关' };
+var ST_LABEL = { pre: '题面', result: '过线', fail: '差一点', settled: '结算', hidden: '隐藏属性', accepted: '已接受', alt: '换个方式', quiz: '答题', guard: '守卫拦下', done: '已完成', wip: '已写码版（原样）', fresh: '新主题', legacy: '旧主题', ok: '正常', loading: '加载中', empty: '空', error: '出错', noperm: '不能修改', guest: '游客', pending: '审核中', rejected: '已驳回', unknown: '结果未知', blocked: '被拦', off: '关闭', on: '开着', add: '添加', edit: '修改', invalid: '填错了', solo: '个人 / 无俱乐部', custom: '自定义时段', club: '俱乐部带队（不显示）', full: '已满 6 项', swipe: '左滑', editing: '编辑中', live: '进行中', final: '已结束', d20off: 'd20 检定关', locked: '被用到', fail: '没过检查', search: '搜索没找到' };
 function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
 
 /* ---------- 缩放 ---------- */
@@ -14012,7 +14410,7 @@ if (start === 'linkage') { reset(META.first); showLk(true); } else reset(META.sc
 $$('[data-states]').forEach(function(el){ el.dataset.cur0 = el.dataset.cur || el.dataset.states.split(',')[0]; setState(el, el.dataset.cur0); });
 window.addEventListener('load', layoutMarks);
 window.__proto = { push: push, back: back, reset: reset, openEl: openEl, closeEl: closeEl, toast: toast, layoutMarks: layoutMarks, setState: setState, navPush: navPush, navPop: navPop, runOv: runOv, closeOv: closeOv };
-vp.addEventListener('input', function(e){ var id = e.target.id; if (e.target.closest('#attrPicker')) ACT.attrCheck(true); if (id === 'prepIn') $('#prepAddBtn').classList.toggle('is-off', !e.target.value.trim()); if (id === 'tagIn') ACT.tagInput(); if (id === 'clockName') $('#clockDone').classList.toggle('is-disabled', !e.target.value.trim()); });
+vp.addEventListener('input', function(e){ var id = e.target.id; if (e.target.closest('#attrPicker')) ACT.attrCheck(true); if (id === 'prepIn') $('#prepAddBtn').classList.toggle('is-off', !e.target.value.trim()); if (id === 'keyName') ACT.keyCheck(); if (id === 'initQ') ACT.initSearch(); if (id === 'initNewName') ACT.initNewCheck(); var cl = e.target.classList; if (cl.contains('re-q')) RE.search(e.target); if (cl.contains('re-lb') && RE.ctx) RE.ctx.r.a.lb = e.target.value.trim(); if (cl.contains('re-name')) RE.newCheck(); if (cl.contains('re-filter')) ACT.filter(e.target); if (id === 'clockName') $('#clockDone').classList.toggle('is-disabled', !e.target.value.trim()); });
 vp.addEventListener('keydown', function(e){ if (e.key === 'Enter' && e.target.id === 'prepIn') ACT.prepAddTyped(); });
 /* 左滑删除、编辑模式拖动排序、全屏层下拉关闭（鼠标 / 触摸都用 pointer 事件） */
 var drag = null;
