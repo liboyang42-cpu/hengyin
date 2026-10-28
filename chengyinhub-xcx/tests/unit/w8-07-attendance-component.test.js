@@ -12,9 +12,29 @@ function mount(organizer=false,store={}){
  def.lifetimes.attached.call(c);
  return {c,requests,modals,calls,store,hide:()=>def.pageLifetimes.hide.call(c),show:()=>def.pageLifetimes.show.call(c),switch:()=>{owner='8';},receipt(r,state,data){r.success({code:200,data:{requestId:JSON.parse(r.data).requestId,state,data}});},read(){requests.at(-1).success({code:200,data:{config:{phone:'123456',role:'值班',dutyStart:1,dutyEnd:2,checkinOpenAt:1,checkinCloseAt:2},configVersion:'1',serverNow:3,dutyState:'ENDED',activeParticipation:true,mine:{},receiving:false}});}};
 }
-test('public contact shows expired shift and dialing never claims acceptance or sends coordinates',()=>{
- const h=mount();h.read();assert.equal(h.c.data.snapshot.dutyLabel,'值班已结束');h.c.contact({currentTarget:{dataset:{}}});
- assert.equal(h.calls[0].phoneNumber,'123456');assert.match(h.c.data.notice,/无法判断/);assert.equal(h.requests.length,1);assert.equal(h.calls[0].latitude,undefined);
+test('public contact asks before dialing, never shows the number or sends coordinates',()=>{
+ const h=mount();h.read();assert.equal(h.c.data.snapshot.dutyLabel,'值班已结束');assert.equal(h.c.data.player.host,'联系主办');
+ h.c.contact({currentTarget:{dataset:{}}});assert.equal(h.calls.length,0,'原型 B B9:先确认再拨');
+ assert.equal(h.modals[0].content,'拨打「主办」的电话？');h.modals[0].success({confirm:true});
+ assert.equal(h.calls[0].phoneNumber,'123456');assert.equal(h.requests.length,1);assert.equal(h.calls[0].latitude,undefined);
+ const wxml=fs.readFileSync(file.replace('.js','.wxml'),'utf8').split('<!-- 玩家端')[1];
+ for(const banned of ['config.phone','backupPhone','WGS84','requestId','110','120','紧急'])assert.ok(!wxml.includes(banned),banned+' must not reach the player view');
+});
+test('player view: meeting row, organizer name, check-in chips and unlimited code rotation',async()=>{
+ const h=mount();h.requests.at(-1).success({code:200,data:{config:{phone:'1',meetingName:'东门广场',meetingAt:Date.parse('2026-10-25T18:00:00+08:00'),latitude:31,longitude:121,checkinOpenAt:Date.parse('2026-10-25T18:30:00+08:00'),checkinCloseAt:Date.parse('2026-10-25T19:20:00+08:00')},
+  organizer:{name:'城南徒步俱乐部',phone:'2'},configVersion:'1',serverNow:Date.parse('2026-10-25T18:00:00+08:00'),dutyState:'ON_DUTY',activeParticipation:true,mine:{},receiving:true}});
+ assert.equal(h.c.data.player.meet,'10月25日 18:00 · 东门广场集合');assert.equal(h.c.data.player.host,'联系主办 · 城南徒步俱乐部');assert.equal(h.c.data.player.phone,'2');
+ assert.equal(h.c.data.player.checkin.chip,'18:30 开放');assert.equal(h.c.data.player.checkin.show,true);
+ h.c.showCode();assert.equal(h.c.data.codeShow,true);await tick();const claim=h.requests.at(-1);assert.equal(JSON.parse(claim.data).action,'attendance-claim');
+ h.receipt(claim,'APPLIED',{bib:'27',state:'ISSUED'});assert.equal(h.c.data.recovery.state,'','领取结果读回即归档');
+ for(let i=0;i<2;i++){h.c.rotate();const m=h.modals.at(-1);assert.equal(m.title,'更换签到码？');assert.equal(m.content,'旧码会失效，签到记录保留。');m.success({confirm:true});await tick();
+  const r=h.requests.at(-1);assert.equal(JSON.parse(r.data).action,'attendance-rotate');h.receipt(r,'APPLIED',{});}
+ const done=mount();done.requests.at(-1).success({code:200,data:{config:{checkinOpenAt:1,checkinCloseAt:2},serverNow:3,activeParticipation:true,mine:{checkedAt:'2026-10-25 18:42:00'}}});
+ assert.equal(done.c.data.player.checkin.chip,'已签到');assert.equal(done.c.data.player.checkin.doneAt,'18:42');
+ const late=mount();late.requests.at(-1).success({code:200,data:{config:{checkinOpenAt:1,checkinCloseAt:2},serverNow:3,activeParticipation:true,mine:{}}});
+ assert.equal(late.c.data.player.checkin.chip,'已截止');assert.equal(late.c.data.player.checkin.show,false);
+ const guest=mount();guest.requests.at(-1).success({code:200,data:{config:{checkinOpenAt:1,checkinCloseAt:2},serverNow:3,activeParticipation:false,mine:{}}});
+ assert.equal(guest.c.data.player.checkin,null,'未报名整段不出');assert.equal(guest.c.data.player.host,'');
 });
 test('claim UNKNOWN survives cold start; original frozen command retry then result readback',async()=>{
  const h=mount();h.read();h.c.claim();h.modals[0].success({confirm:true});await tick();const req=h.requests.at(-1),original=req.data;req.fail();

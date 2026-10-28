@@ -38,6 +38,8 @@ const MATRIX = [
   // Team board reads retain authenticated access; detail additionally enforces active team membership.
   ['pages/team/detail/index.js', "url: '/api/orient/team/detail'", 'required', 'member', 'active-team-member'],
   ['pages/team/detail/index.js', "url: '/api/orient/team/ranking'", 'required', 'member', 'global-authenticated-read'],
+  // 2026-10-28 L6 本场招募:我的队伍按场次读公开队伍(OrientTeamBoardServiceImpl.lobby requireLogin,只列公开招募中的队伍)。
+  ['subpackageRoam/my-teams/index.js', "url: '/api/orient/team/lobby'", 'required', 'member', 'global-authenticated-read'],
   ['subpackageMember/orient-score/index.js', "url: '/api/play/orient/session/current'", 'required', 'member', 'self-account'],
   ['subpackageMember/orient-score/index.js', "url: BASE + '/session/'", 'required', 'member', 'self-account'],
   ['subpackageMember/orient-score/index.js', "url: BASE + '/receipt'", 'required', 'member', 'self-account'],
@@ -381,7 +383,8 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // Existing team detail adds two authenticated board reads, 87 → 89.
   // 2026-10-27 W8 收口:赛事联络/签到两处、注册属性绑定一处、公共玩法采用六处、原申诉结果一处、定向计分排名一处、
   //   漫游护照读取一处，共 12 处直接 GET(权限档见 MATRIX 同日注释)，89 → 101。
-  assert.equal(directCount, 101, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // 2026-10-28 L6:我的队伍「本场招募」GET /api/orient/team/lobby 一处(已入 MATRIX),101 → 102。
+  assert.equal(directCount, 102, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
   // 2026-10-09 U04 只读主题请求增加6处，22 → 28。
   // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):漫游 BL-41 可参与官方活动 req 包装 GET +1(已入 MATRIX),28 → 29。
   // 2026-10-22 L21 BL-186:pages/play 本章结算 GET /api/play/journey/stage-end(与 /ending 同档),29 → 30。

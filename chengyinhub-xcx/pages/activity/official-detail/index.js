@@ -153,6 +153,8 @@ Page({
     organizerEntry: false,
     commandRecovery: null,
     privacyGateShow: false,
+    policyChecked: false,
+    signupBlocked: false,
   },
 
   // 赛事签到组件的扫码(wx.scanCode)需要隐私授权：页内弹窗承接，不让 app.js 回退整页跳隐私页。
@@ -446,6 +448,18 @@ Page({
     e._progressText = v2 ? (done + '/' + missions.length) : String(e.myProgress || 0);
     e._eligibleText = v2 ? (participationInvalid(e) ? '参与资格已失效' : e.eligible ? '已满足资格' : '完成全部任务后获得资格') : '';
     e._showStoryDetail = !!(e.story && e.subtitle);
+    // 赛事榜单(原型 B T-30 / B8,需后端 e.leaderboard):主办没开时整段不出;公示期内写「暂列第 N 名」
+    const lb = e.leaderboard;
+    if (lb && lb.enabled === true) {
+      const clock = (sec) => { const n = Math.max(0, Math.floor(Number(sec) || 0)); const p2 = (v) => (v < 10 ? '0' : '') + v; return Math.floor(n / 3600) + ':' + p2(Math.floor(n / 60) % 60) + ':' + p2(n % 60); };
+      const rows = (Array.isArray(lb.rows) ? lb.rows : []).filter((r) => r && Number.isSafeInteger(Number(r.rank)) && Number(r.rank) > 0).map((r, i) => ({
+        _key: i, rank: Number(r.rank), name: r.name || '城瘾玩家',
+        value: (Number(r.doneCount) || 0) + ' / ' + (Number(r.totalCount) || 0) + (r.elapsedSeconds != null ? ' · ' + clock(r.elapsedSeconds) : '') }));
+      const my = Number(lb.myRank);
+      e._board = { rows, chip: Number.isSafeInteger(my) && my > 0 ? (lb.final === true ? '第 ' + my + ' 名' : '暂列第 ' + my + ' 名') : '' };
+    } else e._board = null;
+    // 安全须知(原型 B T-35,需后端 e.safetyNotice{title,version}):报名前单独勾选,不默认勾
+    e._policyTitle = e.safetyNotice && e.safetyNotice.title ? String(e.safetyNotice.title) : '';
     if (v2) e.missions = missions;
     return e;
   },
@@ -537,6 +551,8 @@ Page({
     this._recovery = createRecovery({ app, platform: wx, domain: 'SIGNUP', targetId: this.data.id,
       changed: value => this.setData({ commandRecovery: value }),
       terminal: result => {
+        // 服务端按平台规则拒绝报名时,只在安全须知段写一句中性说明
+        if (result.state === 'REJECTED' && (result.errorCode || (result.data && result.data.errorCode)) === 'ORIENT_SAFETY_BLOCKED') this.setData({ signupBlocked: true });
         if (result.state === 'APPLIED') {
           motion.haptic({ type: 'light', reducedMotion: readReducedMotion() });
           toast.success('报名成功');
@@ -549,9 +565,12 @@ Page({
   cancelCommand() { this._recovery.cancel(); },
   acknowledgeCommand() { this._recovery.acknowledge(); },
 
+  onPolicyChange(ev) { this.setData({ policyChecked: !!(ev && ev.detail && ev.detail.checked) }); },
+
   doSignup() {
     if (app.ensureLoginFor && !app.ensureLoginFor('signup', () => this.doSignup())) return;
     if (participationInvalid(this.data.e)) { toast('参与资格已失效'); return; }
+    if (this.data.e && this.data.e._policyTitle && !this.data.policyChecked) { toast('请先勾选安全须知'); return; }
     if (!exactId(this.data.id) || this._disposed || this._hidden) return;
     if (this._ctaBusy) return;
     if (!this._recovery || !sameReader(app, this._recoveryReader)) this._openRecovery();

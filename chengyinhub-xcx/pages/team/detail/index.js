@@ -22,7 +22,6 @@ Page({
     boardMessage: '',
     boardRanks: [],
     rankingState: '',
-    rankingMessage: '',
     team: null,
     members: [],
     joined: false,
@@ -80,12 +79,12 @@ Page({
   _resetReads() {
     this._readEpoch = (this._readEpoch || 0) + 1;
     this._teamLoading = false;
-    this.setData({ board: null, boardState: '', boardMessage: '', boardRanks: [], rankingState: '', rankingMessage: '' });
+    this.setData({ board: null, boardState: '', boardMessage: '', boardRanks: [], rankingState: '' });
   },
   _clearMembership() {
     const team = this.data.team ? Object.assign({}, this.data.team, { inviteCode: '' }) : null;
     this.setData({ team, members: [], joined: false, leader: false, joinModeSaving: false,
-      board: null, boardRanks: [], rankingState: '', rankingMessage: '' });
+      board: null, boardRanks: [], rankingState: '' });
   },
   _writeCurrent(context) {
     if (this._hidden || this._disposed || context.teamId !== this.teamId) return false;
@@ -295,14 +294,17 @@ Page({
             done: m.doneTaskIds.some(id => exactId(id) === exactId(t.taskId)) })) }));
         this.setData({ boardState: 'ready', boardMessage: '',
           board: { threshold: { required: d.threshold.required, activeCount: d.threshold.activeCount, ratio: d.threshold.ratio },
-            summary: { teamDoneCount: d.summary.teamDoneCount, totalTasks: d.summary.totalTasks }, tasks } });
+            summary: { teamDoneCount: d.summary.teamDoneCount, totalTasks: d.summary.totalTasks }, tasks,
+            // 矩阵按成员成行:每格就是上面 tasks[].members[].done 的同一份服务端事实
+            rows: d.members.map((m, mi) => ({ memberId: exactId(m.memberId), name: m.name || '城瘾玩家',
+              cells: tasks.map(t => ({ taskId: t.taskId, done: t.members[mi].done })) })) } });
         this._loadRanking(context, ownerType, ownerId);
       },
       fail: (res, status) => { if (finish()) reject(res, status); }
     });
   },
   _loadRanking(context, ownerType, ownerId) {
-    this.setData({ rankingState: 'loading', rankingMessage: '', boardRanks: [] });
+    this.setData({ rankingState: 'loading', boardRanks: [] });
     let settled = false;
     const finish = () => {
       if (settled || !this._readCurrent(context)) return false;
@@ -313,9 +315,9 @@ Page({
       const [state, message] = this._boardFailure(res, status);
       if (state === 'not-member' || state === 'login') this._clearMembership();
       if (state === 'error') {
-        this.setData({ rankingState: state, rankingMessage: message, boardRanks: [] });
+        this.setData({ rankingState: state, boardRanks: [] });
       } else {
-        this.setData({ rankingState: state, rankingMessage: message, boardRanks: [],
+        this.setData({ rankingState: state, boardRanks: [],
           board: null, boardState: state, boardMessage: message });
       }
     };

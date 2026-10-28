@@ -1,2 +1,9 @@
 .attendance { display:flex; flex-direction:column; gap:var(--cy-space-3); padding:var(--cy-space-4); color:var(--cy-comp-sheet-player-text); background:var(--cy-comp-sheet-player-bg); }
 .attendance__text { display:block; overflow-wrap:anywhere; } .title { font-weight:600; } .attendance__input { min-height:80rpx; border-bottom:1rpx solid currentColor; } .attendance__qr { width:600rpx; height:600rpx; }
+/* 玩家端签到码半屏(原型 B T-39) */
+.ev-code { display:flex; flex-direction:column; align-items:center; gap:var(--cy-space-3); padding:var(--cy-space-2) var(--cy-space-4) var(--cy-space-5); }
+.ev-code__qr { width:420rpx; height:420rpx; }
+.ev-code__state { padding:var(--cy-space-6) 0; color:var(--cy-color-text-tertiary); font-size:var(--cy-type-label); }
+.ev-code__bib { font-size:var(--cy-type-body); font-weight:700; color:var(--cy-color-text-primary); }
+.ev-code__link { min-height:72rpx; display:flex; align-items:center; color:var(--cy-color-text-secondary); font-size:var(--cy-type-label); text-decoration:underline; }
+.cy-pressed { opacity:.82; }
