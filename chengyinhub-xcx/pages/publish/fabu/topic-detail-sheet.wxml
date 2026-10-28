@@ -5,7 +5,7 @@
      .node-card / .node-pill,不再造第二套。
      ⚠️ 不传 title:cy-sheet 的 .sh__head 是「左标题 + 右 ×」且被无障碍契约逐字锁死;
      不传 title 时那段整段不渲染,头完全在这里画。 -->
-<cy-sheet variant="full" show="{{topicDetailShow && !runtimeRewardOpen}}" stacked="{{runtimeEditor.show || survivalEditor.show || structureEditor.show}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="closeTopicDetail" class="node-sheet-host">
+<cy-sheet variant="full" show="{{topicDetailShow && !runtimeRewardOpen}}" stacked="{{runtimeEditor.show || survivalEditor.show || structureEditor.show || keysSheetOpen}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="closeTopicDetail" class="node-sheet-host">
   <view class="pd-topic-detail node-sheet">
     <!-- 2026-09-24 CU-C-156:✕ 收到右上角(全仓统一),「完成」紧贴其左 ——
          原来 ✕ 在左上,和相邻弹层的右上 ✕ 反向,找关闭要换方向。
@@ -218,10 +218,11 @@
     </view>
 
 
-    <!-- 主题状态键(仅编辑已有主题时可管理;草稿还没有 topicId,后端无处挂) -->
+    <!-- 线索与物品(仅编辑已有主题时可管理;草稿还没有 topicId,后端无处挂) -->
     <topic-state-keys wx:if="{{editingTopicId}}" topic-id="{{editingTopicId}}" scope="{{operationScope}}"
-                      read-only="{{editScope === 'WHITELIST'}}" />
-    <view class="node-card" wx:else><text class="node-card__title">状态键</text><text style="font-size:24rpx;color:#6b7280">保存为主题后，才能在这里注册和管理状态键。</text></view>
+                      read-only="{{editScope === 'WHITELIST'}}" items="{{keysItems}}"
+                      bind:itemchange="onKeysItemChange" bind:sheetchange="onKeysSheet" />
+    <view class="node-card" wx:else><text class="node-card__title">线索与物品</text><text style="font-size:24rpx;color:#6b7280">保存为主题后，才能在这里添加线索与物品。</text></view>
 
     <!-- 「清空本地草稿」原先挂在创作页那条常驻提示条上,提示条 2026-08-11 下线后
          入口挪到这里 —— 它是"把这份草稿丢掉重来"的破坏性动作,本来也不该常驻在

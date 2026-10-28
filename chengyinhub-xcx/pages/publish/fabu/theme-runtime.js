@@ -98,6 +98,7 @@ const methods = {
       }
     }
     this.setData({ 'formData.themeRuntimeConfig': JSON.stringify(c) });
+    if (this._syncKeysItems) this._syncKeysItems(c);
     if (this._refreshStructureSummary) this._refreshStructureSummary(); // structure
     if (this._refreshThemeOwnership) this._refreshThemeOwnership();
   },

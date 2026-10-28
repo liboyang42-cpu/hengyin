@@ -1,47 +1,59 @@
 <view class="node-card sk">
-  <text class="node-card__title">状态键</text>
-  <text class="sk__desc">记录线索、计数和关系的变量</text>
-  <text class="sk__desc" wx:if="{{readOnly}}">主题已锁定，仅可查看</text>
-
-  <view class="sk__state" wx:if="{{state === 'loading'}}"><cy-skeleton type="feed-card" count="1" /></view>
-  <cy-error wx:elif="{{state === 'error'}}" title="状态键加载失败" retry="重试" bind:retry="load" />
-  <text class="sk__empty" wx:elif="{{state === 'empty'}}">还没有注册状态键</text>
-  <view class="sk-row" wx:for="{{keys}}" wx:key="stateKey">
-    <view class="sk-row__main">
-      <text class="sk-row__key">{{item.stateKey}}</text>
-      <text class="sk-row__sub">{{item.typeText}}{{item.label ? ' · ' + item.label : ''}}{{item.initialText ? ' · ' + item.initialText : ''}}</text>
-    </view>
-    <view wx:if="{{!readOnly}}" class="sk-row__del" data-key="{{item.stateKey}}" bindtap="onAskDelete" aria-role="button"
-          aria-label="删除状态键 {{item.stateKey}}" hover-class="cy-pressed" hover-stay-time="80">{{deleting === item.stateKey ? '删除中' : '删除'}}</view>
+  <view class="node-card__row" bindtap="onOpen" aria-role="button" aria-label="线索与物品，{{total}} 项" hover-class="cy-pressed" hover-stay-time="80">
+    <view class="node-card__main"><text class="node-card__title">线索与物品</text></view>
+    <view class="node-pill"><text>{{state === 'loading' ? '…' : total + ' 项'}}</text><cy-icon name="chevron-right" size="24" /></view>
   </view>
-
-  <text class="sk__notice" wx:if="{{notice}}">{{notice}}</text>
-  <cy-inline-error wx:if="{{deleteError}}" title="{{deleteError}}" />
-
-  <block wx:if="{{!readOnly}}">
-    <view wx:if="{{!adding}}" class="node-pill sk__add" bindtap="onAddOpen" aria-role="button" aria-label="新增状态键" hover-class="cy-pressed" hover-stay-time="80">
-      <cy-icon name="plus" size="24" /><text>新增状态键</text>
-    </view>
-    <view wx:else class="sk-form">
-      <view class="sk-form__types">
-        <view wx:for="{{prefixes}}" wx:key="prefix" data-index="{{index}}" bindtap="onPrefix"
-              class="sk-form__type {{prefixIndex === index ? 'is-on' : ''}}" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="{{item.label}}，{{item.hint}}">{{item.label}}</view>
-      </view>
-      <text class="sk__desc">{{prefixes[prefixIndex].hint}}</text>
-      <view class="sk-form__name">
-        <text class="sk-form__prefix">{{prefixes[prefixIndex].prefix}}.</text>
-        <input class="sk-form__input" value="{{suffix}}" maxlength="48" placeholder="小写字母/数字/下划线，如 ledger_page"
-               data-field="suffix" bindinput="onInput" />
-      </view>
-      <input class="sk-form__input sk-form__input--box" value="{{label}}" maxlength="30" placeholder="显示名（选填，玩家可见）" data-field="label" bindinput="onInput" />
-      <input wx:if="{{prefixes[prefixIndex].keyType === 'counter'}}" class="sk-form__input sk-form__input--box" type="number" value="{{initialValue}}"
-             placeholder="初始值（选填，默认 0）" data-field="initialValue" bindinput="onInput" />
-      <cy-inline-error wx:if="{{formError}}" title="{{formError}}" />
-      <view class="sk-form__actions">
-        <view class="node-pill" bindtap="onAddCancel" aria-role="button" aria-label="取消新增" hover-class="cy-pressed" hover-stay-time="80"><text>取消</text></view>
-        <view class="node-pill node-pill--solid" bindtap="onSave" aria-role="button" aria-label="保存状态键" hover-class="cy-pressed" hover-stay-time="80"><text>{{saving ? '保存中…' : '保存'}}</text></view>
-      </view>
-    </view>
-  </block>
-  <cy-danger-confirm id="sk-dc" bind:confirm="onConfirmDelete" />
 </view>
+
+<cy-sheet show="{{open}}" bind:close="onClose" class="node-sheet-host">
+  <view class="node-sheet sk-sheet">
+    <view class="node-sheet__top">
+      <view class="node-sheet__close" bindtap="onClose" aria-role="button" aria-label="取消" hover-class="cy-pressed" hover-stay-time="80">取消</view>
+      <text class="sk-sheet__title">线索与物品</text>
+      <view class="node-sheet__done {{saving ? 'is-disabled' : ''}}" bindtap="onDone" aria-role="button" aria-label="完成" hover-class="cy-pressed" hover-stay-time="80">完成</view>
+    </view>
+
+    <view class="sk__state" wx:if="{{state === 'loading'}}"><cy-skeleton type="feed-card" count="1" /></view>
+
+    <block wx:for="{{groups}}" wx:key="kind" wx:for-item="group">
+      <block wx:if="{{state !== 'loading'}}">
+        <text class="sk-group__label">{{group.label}}</text>
+        <view class="node-card sk-group">
+          <block wx:for="{{group.rows}}" wx:key="id">
+            <view class="sk-row" data-id="{{item.id}}" bindtap="onToggle" aria-role="button" aria-label="{{item.name}}" hover-class="cy-pressed" hover-stay-time="80">
+              <text class="sk-row__name">{{item.name}}</text>
+              <cy-icon wx:if="{{!readOnly}}" class="sk-row__chev {{expanded === item.id ? 'is-open' : ''}}" name="chevron-right" size="24" />
+            </view>
+            <block wx:if="{{expanded === item.id}}">
+              <view class="sk-row sk-row--field">
+                <text class="sk-row__name">名称</text>
+                <input class="sk-row__input" value="{{editName}}" maxlength="30" confirm-type="done" bindinput="onEditName" bindconfirm="onRename" bindblur="onRename" />
+              </view>
+              <block wx:if="{{item.usedIn.length}}">
+                <text class="sk-row__head">用在</text>
+                <view class="sk-row" wx:for="{{item.usedIn}}" wx:key="*this" wx:for-item="place"><text class="sk-row__name">{{place}}</text></view>
+              </block>
+              <view class="sk-row sk-row__del {{item.usedIn.length ? 'is-off' : ''}}" data-key="{{item.id}}" bindtap="onAskDelete" aria-role="button"
+                    aria-label="删除{{item.name}}" hover-class="cy-pressed" hover-stay-time="80">{{deleting === item.id ? '删除中' : '删除'}}</view>
+            </block>
+          </block>
+          <block wx:if="{{!readOnly}}">
+            <view wx:if="{{adding === group.kind}}" class="sk-row sk-row--field">
+              <input class="sk-row__input sk-row__input--add {{formError ? 'is-invalid' : ''}}" value="{{addName}}" maxlength="30" focus="{{true}}" placeholder="名称" confirm-type="done" bindinput="onAddInput" bindconfirm="onSave" />
+              <view class="sk-row__act {{!addName || formError || saving ? 'is-off' : ''}}" bindtap="onSave" aria-role="button" aria-label="添加" hover-class="cy-pressed" hover-stay-time="80">添加</view>
+            </view>
+            <view wx:else class="sk-row sk-row--add" data-kind="{{group.kind}}" bindtap="onAddOpen" aria-role="button" aria-label="添加{{group.label}}" hover-class="cy-pressed" hover-stay-time="80">
+              <view class="sk-row__plus"><cy-icon name="plus" size="24" /></view><text>添加{{group.label}}</text>
+            </view>
+          </block>
+        </view>
+        <text class="sk__note sk__note--error" wx:if="{{formError && errorKind === group.kind}}">{{formError}}</text>
+      </block>
+    </block>
+
+    <text class="sk__note sk__note--error" wx:if="{{state === 'error'}}" bindtap="load" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">没有读取成功，请再试一次。</text>
+    <text class="sk__note" wx:elif="{{readOnly}}">这个主题现在不能修改。</text>
+    <cy-inline-error wx:if="{{deleteError}}" title="{{deleteError}}" />
+  </view>
+</cy-sheet>
+<cy-danger-confirm id="sk-dc" bind:confirm="onConfirmDelete" />

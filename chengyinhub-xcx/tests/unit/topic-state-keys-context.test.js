@@ -60,8 +60,8 @@ function mount({ transport = false } = {}) {
   const reply = (request, name = 'old') => request.success({ code: 200, data: [
     { stateKey: 'counter.' + name, keyType: 'counter', label: name, initialValue: 1 },
   ] })
-  const save = name => { const suffix = name.replace(/^counter\./, '')
-    Object.assign(host.data, { prefixIndex: 1, suffix, label: suffix, initialValue: '1' }); host.onSave(); return requests.at(-1) }
+  const save = name => { const label = name.replace(/^counter\./, '')
+    Object.assign(host.data, { adding: 'tag', addName: label }); host.onSave(); return requests.at(-1) }
   const remove = key => { host.onAskDelete({ currentTarget: { dataset: { key } } });
     const params = dialog.filter(row => row[0] === 'open').at(-1)?.[2] || { key }
     host.onConfirmDelete({ detail: { params } }); return requests.at(-1) }
