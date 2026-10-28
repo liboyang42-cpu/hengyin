@@ -1,17 +1,19 @@
 {
   "note": "正向断言恒真(“弱锚点”)棘轮。条数**只许减不许增**;新增必须显式改本文件并写 reason —— 不加这条,弱锚点就是下一个「未判定」无限逃生口。判据见 tests/unit/selector-anchor-strength-contract.test.js:恒真 = 该 selector 命中的元素**全部**无条件渲染。",
   "generatedAt": "2026-08-24",
-  "count": 6,
+  "count": 7,
   "weakIds": [
     "A10",
     "A12",
     "B15",
     "B57",
+    "B59",
     "C52",
     "D15"
   ],
   "reasons": {
-    "D15": "subpackageMember/couponInfo/couponInfo.wxml **零 wx:if**,是一张恒渲染的静态表单;可选项在 cy-sheet 内(prop 控制)。替代验证:表单填写与提交由 E29 的行为链覆盖。"
+    "D15": "subpackageMember/couponInfo/couponInfo.wxml **零 wx:if**,是一张恒渲染的静态表单;可选项在 cy-sheet 内(prop 控制)。替代验证:表单填写与提交由 E29 的行为链覆盖。",
+    "B59": "pages/template/index 的货架 2026-10-28 整块移进分包异步组件 tpl-shelf(业主定稿原型 v21),内容卡都在组件里，页面级选择器穿不进去;页面上只剩恒渲染的 tpl-shelf 宿主。替代验证:货架加载、空态、失败态、标签与跳转由 tests/unit/template-shelf-redesign-20261028.test.js 的行为用例覆盖。"
   },
   "outOfScope": {
     "note": "batch1(impact-map skip 档)之外的行,本轮未改锚 —— 它们所在的页正被候选分支 tandianri-r9-ticket-sync-opus5-0817 重写,现在改锚点会和它撞车。合并后随「必须重拍 25 页」那一轮一起改。**这不是豁免,是排期。**",

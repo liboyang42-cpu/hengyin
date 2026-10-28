@@ -639,7 +639,9 @@ test('商家项目写链路显式携带 MERCHANT scope，个人发布入口不�
   const marketing = read('pages/merchant/marketing/index.js');
   const editor = read('pages/publish/fabu/index.js');
   const projects = read('subpackageA/pages/myproject/index.js');
-  const shelf = read('pages/template/index.js');
+  // 2026-10-28:模板货架移进分包组件，整包复制挪到主题预览页;作用域一路透传
+  const shelf = read('pages/template/index.wxml');
+  const topicPreview = read('pages/templatedetail/topic-preview/index.js');
   const projectHome = read('pages/topic/merchantinfo/merchantinfo.js');
 
   assert.doesNotMatch(workbench, /pages\/publish\/fabu\/index\?scope=MERCHANT/,
@@ -652,7 +654,8 @@ test('商家项目写链路显式携带 MERCHANT scope，个人发布入口不�
   assert.match(projects, /operationScope/);
   assert.match(projects, /scope:\s*this\.data\.operationScope/);
   assert.match(projectHome, /scope:\s*that\.data\.operationScope/);
-  assert.match(shelf, /scope:\s*this\.data\.operationScope/);
+  assert.match(shelf, /<tpl-shelf [^>]*scope="\{\{ operationScope \}\}"/);
+  assert.match(topicPreview, /data: \{ id: this\._id, scope: this\._scope \}/);
 
   const genericPublishRoutes = read('components/tabBar/index.js');
   assert.match(genericPublishRoutes, /pagePath:\s*"\/pages\/template\/index"/,

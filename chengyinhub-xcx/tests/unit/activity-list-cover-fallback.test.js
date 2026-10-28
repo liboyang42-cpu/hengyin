@@ -59,7 +59,7 @@ test('负控:兜底层丢掉 absolute 铺满时必须判红(高度会塌成 0)',
 
 test('文案与既有范式同源:模板页仍是「封面暂不可用」', () => {
   // 若哪天有人改了模板页的措辞,这条会提醒两处一起改,别让两页各说各话
-  assert.match(read('pages/template/index.wxml'), /封面暂不可用/)
+  assert.match(read('pages/templatedetail/shelf/index.wxml'), /封面暂不可用/)  // 2026-10-28 货架移进分包组件
 })
 
 // ── 生产者侧 ──────────────────────────────────────────────

@@ -1,7 +1,7 @@
 const { applyHeroRecede } = require('./utils/scroll-motion.js');
 const app = getApp();
 const analytics = require('../../utils/analytics.js');
-const templateDetailUtil = require('./utils/templateDetail.js');
+const templateDetailUtil = require('./utils/templateDetail.js'); const shelfArt = require('./shelf/art.js');
 const policy = require('../../utils/identity/identity-policy.js');
 const merchantTheme = require('../../utils/merchant-theme.js');
 const { isRecord } = require('../../utils/response-shape.js');
@@ -257,7 +257,7 @@ Page({
     var publisher = resolvePublisherDisplay(normalized.info, target.scope || this.data.scope);
     target.info = normalized.info;
     target.gallery = normalized.gallery;
-    target.coverUrl = normalized.coverUrl;
+    target.coverUrl = detailCover(normalized);
     target.publisherText = publisher.text;
     target.isOfficialPublisher = publisher.official;
     target.capRows = buildCapRows(normalized.info, normalized.categoryText);
@@ -282,7 +282,7 @@ Page({
     this.setData({
       info: normalized.info, primaryLabel: this.data.scope !== 'my' ? '开始应用' : (normalized.info.canEdit === true ? '继续编辑' : '去模板广场选用'),
       gallery: normalized.gallery,
-      coverUrl: normalized.coverUrl,
+      coverUrl: detailCover(normalized),
       publisherText: publisher.text,
       isOfficialPublisher: publisher.official,
       capRows: capRows,
@@ -563,4 +563,10 @@ function reportKindOf(info, scope, me) {
   if (Number(info.status) !== 1 || Number(info.publishStatus) !== 1) return '';
   if (scope === 'my') return Number(info.draftStatus) === 1 ? 'personalTemplate' : '';
   return 'template';
+}
+
+// 货架上的 25 个玩法封面随分包打包(2026-10-28):线上 imgUrl 全空，打开详情也要有图。
+function detailCover(normalized) {
+  const a = shelfArt.gameArt(normalized.info && normalized.info.title);
+  return a ? a.cover : normalized.coverUrl;
 }
