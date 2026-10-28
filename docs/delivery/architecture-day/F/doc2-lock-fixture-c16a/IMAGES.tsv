@@ -1,0 +1,3 @@
+path	before_sha256	after_sha256
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/Doc2KeyRegistryFakes.java	e0e5af4653619e96d25cf78032c9fb5538babc886fea3a7d7b596e6cd667391e	1aa1104ea877b1bc66a5205896ef693efd741177f4c060ca1398597553b66eab
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/Doc2KeyRegistryFakesTest.java	ABSENT	8d0664ede99f57d60f8a7503e3327a02b69881bad70c8fbdb727cf74ba98af89
