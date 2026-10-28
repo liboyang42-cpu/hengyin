@@ -1839,3 +1839,51 @@ page { background: var(--cy-color-bg-page); }
 
 /* 2026-10-22 业主:完成页统计用字形图标(不用圆章) */
 .fst__ic { color: var(--cy-color-play-story-muted); }
+
+/* ===== 2026-10-28 完成页改版(业主定稿 claude.ai/artifact/DF1tPhSNWFrzQhDu8hoUAy):整屏深色,NRC 跑步总结 + Revolut 分组卡 =====
+   做法:在 .finsheet 作用域里把它本来就在用的 play-story 色值换成深色,版式只改布局;390 宽稿按 1.923rpx/px 移植。 */
+.finmask{ display:none; }
+.finsheet{ position:fixed; inset:0; height:auto; max-height:none; border-radius:0; padding:0 0 calc(230rpx + env(safe-area-inset-bottom));
+  --cy-color-play-story-page:#000000; --cy-color-play-story-text:#FFFFFF; --cy-color-play-story-muted:rgba(235,235,245,.6); /* ds-ok 定稿深色 */
+  --cy-color-play-story-line:rgba(255,255,255,.08); --cy-color-play-story-surface:#1C1C1E; --cy-color-play-story-accent:#FFFFFF; /* ds-ok 定稿深色 */
+  --cy-color-play-story-accent-soft:rgba(255,255,255,.16); --cy-color-play-story-cta-fg:#000000; --cy-color-play-ink-muted:rgba(235,235,245,.6); /* ds-ok 定稿深色 */
+  --cy-color-play-surface-subtle:#1C1C1E; --cy-comp-sheet-player-surface:#1C1C1E; } /* ds-ok 定稿深色 */
+.finsheet__map{ margin:0; height:635rpx; border-radius:0; }
+.finsheet__map::after{ content:''; position:absolute; inset:0; z-index:2; pointer-events:none; background:linear-gradient(180deg,rgba(0,0,0,.55) 0,rgba(0,0,0,0) 22%,rgba(0,0,0,0) 62%,#000 100%); } /* ds-ok 地图压进黑底 */
+.finsheet__map-error{ z-index:3; }
+.finsheet__head{ position:relative; z-index:3; margin-top:-35rpx; padding:0 38rpx; display:flex; flex-direction:column; align-items:flex-start; gap:12rpx; }
+.finsheet__eyebrow{ font-size:25rpx; color:var(--cy-color-play-story-muted); } /* ds-ok 定稿字号 */
+.finsheet .finsheet__title{ margin:0; text-align:left; font-size:58rpx; line-height:1.15; } /* ds-ok 定稿字号 */
+.finsheet .finsheet__result{ margin:8rpx 0 0; padding:8rpx 19rpx; font-size:23rpx; font-weight:600; background:#2C2C2E; color:#FFFFFF; } /* ds-ok 定稿 */
+.finsheet .finsheet__result.is-win{ background:#FFFFFF; color:#000000; } /* ds-ok 定稿 */
+.finsheet .finsheet__grid{ display:grid; grid-template-columns:repeat(3,1fr); column-gap:15rpx; margin:54rpx 38rpx 0; }
+.finsheet .fst{ align-items:flex-start; gap:4rpx; min-width:0; }
+.finsheet .fst:first-child{ grid-column:1 / -1; margin-bottom:46rpx; }
+.finsheet .fst:first-child .fst__ic{ display:none; }
+.finsheet .fst__v{ font-family:"DIN Alternate","DIN Condensed",-apple-system,sans-serif; font-style:italic; font-weight:800; font-variant-numeric:tabular-nums; }
+.finsheet .fst:first-child .fst__v{ font-size:216rpx; line-height:.86; } /* ds-ok 定稿 NRC 大数字 */
+.finsheet .fst:first-child .fst__l{ font-size:29rpx; margin-top:12rpx; } /* ds-ok 定稿字号 */
+.finsheet .fst--s .fst__v{ font-size:58rpx; line-height:1; } /* ds-ok 定稿字号 */
+.finsheet .fst--s .fst__l{ font-size:25rpx; } /* ds-ok 定稿字号 */
+.finsheet .finsheet__game-ending{ margin:54rpx 38rpx 0; padding:31rpx; border-left:0; border-radius:31rpx; background:#1C1C1E; } /* ds-ok 定稿分组卡 */
+.fsec{ margin:54rpx 38rpx 0; display:flex; flex-direction:column; gap:19rpx; }
+.fsec__h{ font-size:38rpx; font-weight:700; color:#FFFFFF; } /* ds-ok 定稿字号 */
+.fgroup{ border-radius:31rpx; overflow:hidden; background:#1C1C1E; } /* ds-ok 定稿分组卡 */
+.frow{ position:relative; display:flex; align-items:center; gap:27rpx; min-height:54rpx; padding:27rpx 31rpx; }
+.frow + .frow::before, .frow + .finish-milestone::before{ content:''; position:absolute; top:0; left:31rpx; right:0; height:1rpx; background:rgba(255,255,255,.08); } /* ds-ok 分隔线 */
+.frow__t{ flex:1; min-width:0; display:flex; flex-direction:column; gap:4rpx; }
+.frow__b{ font-size:31rpx; font-weight:500; color:#FFFFFF; } /* ds-ok 定稿字号 */
+.frow__s{ font-size:25rpx; color:rgba(235,235,245,.6); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } /* ds-ok 定稿字号 */
+.frow__v{ flex:none; font-size:31rpx; color:rgba(235,235,245,.6); font-variant-numeric:tabular-nums; } /* ds-ok 定稿字号 */
+.fhex{ flex:none; width:77rpx; height:85rpx; display:flex; align-items:center; justify-content:center; clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%); font-size:29rpx; font-weight:800; color:#000000; } /* ds-ok NRC 六边形奖章 */
+.fhex--metal{ background:linear-gradient(160deg,#E5E5EA,#8E8E93); } /* ds-ok NRC 六边形奖章,游玩路径保持中性色 */
+.fhex--ink{ background:linear-gradient(160deg,#FFFFFF,#BDBDC2); } /* ds-ok NRC 六边形奖章 */
+.fgroup .finish-milestone{ position:relative; margin:0; padding:31rpx; border:0; border-radius:0; background:transparent; }
+.finsheet .branchpath, .finsheet .newos, .finsheet .finsheet__records, .finsheet .finish-route-recommendation{ margin:54rpx 38rpx 0; border:0; border-radius:31rpx; background:#1C1C1E; } /* ds-ok 定稿分组卡 */
+.finsheet .finsheet__stamplist{ margin:19rpx 38rpx 0; }
+.finsheet .finish-photos-title{ margin:54rpx 38rpx 19rpx; font-size:38rpx; font-weight:700; color:#FFFFFF; } /* ds-ok 定稿字号 */
+.finsheet .finish-stamps{ padding:0 38rpx; }
+.finsheet .finish-journal-entry{ margin:19rpx 38rpx 0; padding:31rpx; border:0; border-radius:31rpx; background:#1C1C1E; } /* ds-ok 定稿分组卡 */
+.finsheet .finsheet__records + .finish-journal-entry{ margin-top:19rpx; }
+.finsheet .finsheet__retry{ margin:31rpx 38rpx 0; }
+.finsheet .finsheet__cta{ position:fixed; z-index:5; left:38rpx; right:38rpx; bottom:calc(65rpx + env(safe-area-inset-bottom)); margin:0; height:104rpx; background:#FFFFFF; color:#000000; box-shadow:0 0 80rpx 70rpx #000000; } /* ds-ok 白色主按钮,黑色渐隐托底 */

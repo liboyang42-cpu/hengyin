@@ -495,7 +495,7 @@ Page({
     nightHint: false,
     // 通关
     showFinish: false, celebrationEvent: '', finishScore: 0, finishPuzzleScore: 0, finishPuzzleCount: 0, finishPuzzleBest: 0,
-    finishMedals: 0, finishMedalList: [], medalScreen: { show: false, items: [], title: '', sub: '', stats: [], record: null }, finishSnap: '', finishSnapError: false, finishPhotos: [], canReplayJournal: false,
+    finishMedals: 0, finishMedalList: [], finishAchievements: [], finishDateLabel: '', medalScreen: { show: false, items: [], title: '', sub: '', stats: [], record: null }, finishSnap: '', finishSnapError: false, finishPhotos: [], canReplayJournal: false,
     branchPath: [],
     finishRouteRecommendation: null,
     voucher: { show: false },
@@ -7427,7 +7427,7 @@ Page({
       finishPuzzleScore: puzzleSummary.score,
       finishPuzzleCount: puzzleSummary.count,
       finishPuzzleBest: Number(this._puzzlePersonalBest) || 0,
-      finishStamps,
+      finishStamps, finishDateLabel: finishDateLabel(new Date()),
       finishSnap: '', finishSnapError: false,
       finishPhotos: recap.photos,
       canReplayJournal: recap.canReplayJournal,
@@ -7653,7 +7653,7 @@ Page({
       fmNodes,
       reviewElapsed: sec > 0 ? formatElapsed(sec) : '',
       reviewDistance: this._reviewDistanceKm(ordered),
-      reviewEmpty: ordered.length === 0,
+      reviewEmpty: ordered.length === 0, finishAchievements: achievementRows(all, ordered),
     });
     this._startReviewDraw(ordered);
   },
@@ -8182,3 +8182,15 @@ Page({
   closeFinale() { this.setData({ 'finale.show': false }); },
   saveFinale() { this.setData({ 'finale.show': false }, () => this.saveFinishCard()); },
 });
+
+/** 完成页眉标:「10月28日 周二」 */
+function finishDateLabel(d) { return (d.getMonth() + 1) + '月' + d.getDate() + '日 周' + '日一二三四五六'[d.getDay()]; }
+/** 完成页「成就」行:_reviewAchievements 的「标题 · 值」拆开,值放右侧,站名做副行(首达的值本身就是站名) */
+function achievementRows(tags, ordered) {
+  const glyph = { 徽章: '徽', 到店券: '券', 最快一段: '速', 首达: '首' };
+  return ordered.filter((n) => tags[n.nodeId]).map((n) => {
+    const [title, value] = String(tags[n.nodeId]).split(' · ');
+    const first = title === '首达';
+    return { key: String(n.nodeId), title, value: first ? '' : (value || ''), sub: first ? (value || '') : (n.name || ''), glyph: glyph[title] || title.slice(0, 1), kind: first ? 'ink' : 'metal' };
+  });
+}

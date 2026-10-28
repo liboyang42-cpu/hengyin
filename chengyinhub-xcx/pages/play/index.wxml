@@ -1190,15 +1190,28 @@
 <!-- ===================== 章节结算(半屏,用户裁决:非全屏,底部=继续) ===================== -->
 <view class="finmask" catchtouchmove="noop" wx:if="{{showFinish}}" bindtap="closeFinish" aria-role="button" aria-label="关闭完成面板" hover-class="cy-pressed" hover-stay-time="80"></view>
 <view class="finsheet" wx:if="{{showFinish}}">
-  <view class="finsheet__grab"></view>
-  <view wx:if="{{themeBag.result && themeBag.scope !== 'TEAM'}}" class="finsheet__records">
-   <view bindtap="openThemeResultCard" aria-role="button" aria-label="查看本局结果" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="chevron-right" size="28" />查看本局结果</view>
-   <view bindtap="openThemeHistory" aria-role="button" aria-label="我的游玩记录" hover-class="cy-pressed" hover-stay-time="80">我的游玩记录</view>
-   <view wx:if="{{themeBag.replayAllowed === true}}" bindtap="replayThemeSession" aria-role="button" aria-label="再玩一次" aria-disabled="{{themeReplayBusy}}" hover-class="cy-pressed" hover-stay-time="80">{{themeReplayBusy ? '正在开启新一局' : '再玩一次'}}</view>
-   <cy-inline-error wx:if="{{themeRecordsError}}" aria-live="polite" kind="error" title="{{themeRecordsError}}" load-failure="{{themeRecordsReadFailure}}" />
+  <!-- 2026-10-28 业主定稿(claude.ai/artifact/DF1tPhSNWFrzQhDu8hoUAy):整屏深色,NRC 跑步总结顺序 —— 地图 → 标题 → 大数字 → 成绩行 → 分组卡 → 一颗按钮 -->
+  <view class="finsheet__map">
+    <image class="finsheet__map-fallback" wx:if="{{finishSnap}}" src="{{finishSnap}}" mode="aspectFit"></image>
+    <free-map class="finsheet__map-native" nodes="{{newLifeOS.show && newLifeOS.mapNodes.length ? newLifeOS.mapNodes : fmNodes}}" player="{{fmPlayer}}"
+              center="{{fmCenter}}" scale="14" map-polyline="{{fmPolyline}}" fit="{{true}}" fit-padding="{{[64, 36, 36, 36]}}"
+              subkey="{{fmSubkey}}" layer-style="{{fmLayerStyle}}"
+              show-controls="{{false}}" show-photo-callouts="{{false}}" interactive="{{false}}" />
+    <view class="os-map-label" wx:if="{{newLifeOS.show}}">3km 生活圈 · {{newLifeOS.mapAnchors.length}} 个地点</view>
+    <view class="finsheet__map-error" wx:if="{{finishSnapError}}" bindtap="retryRouteThumb" hover-class="cy-pressed" hover-stay-time="80">路线预览暂未生成 · 重试</view>
   </view>
-  <view class="finsheet__title">{{allDone || topicCompleted ? topicName : chapter.name}}</view>
-  <view class="finsheet__result">{{milestone ? milestone.title : (allDone || topicCompleted ? '已通关' : '本章完成')}}</view>
+  <view class="finsheet__head">
+    <view class="finsheet__eyebrow" wx:if="{{finishDateLabel}}">{{finishDateLabel}}{{!(allDone || topicCompleted) && topicName ? ' · ' + topicName : ''}}</view>
+    <view class="finsheet__title">{{allDone || topicCompleted ? topicName : chapter.name}}</view>
+    <view class="finsheet__result {{allDone || topicCompleted ? 'is-win' : ''}}">{{allDone || topicCompleted ? '已通关' : '本章完成'}}</view>
+  </view>
+  <!-- mode2:探索值/徽章数是经典定向的读数(且 total×12 写死),探店日只报真事实 —— 核销与集章 -->
+  <view class="finsheet__grid" wx:if="{{mode!=2}}">
+    <view class="fst"><cy-icon class="fst__ic" name="pin-solid" size="36" /><text class="fst__v">{{doneCount}}</text><text class="fst__l">点亮坐标</text></view>
+    <view class="fst fst--s" wx:if="{{reviewElapsed}}"><text class="fst__v">{{reviewElapsed}}</text><text class="fst__l">用时</text></view>
+    <view class="fst fst--s" wx:if="{{reviewDistance}}"><text class="fst__v">{{reviewDistance}} km</text><text class="fst__l">距离</text></view>
+    <view class="fst fst--s" wx:if="{{finishPuzzleCount}}"><text class="fst__v">{{finishPuzzleScore}}</text><text class="fst__l">解谜分</text><text class="fst__sub" wx:if="{{finishPuzzleBest > 0}}">个人最佳 {{finishPuzzleBest}}</text></view>
+  </view>
   <view class="finsheet__game-ending" wx:if="{{gameModule.story.ending}}">
     <text class="finsheet__game-ending-k">本局结局</text>
     <text class="finsheet__game-ending-title">{{gameModule.story.ending.title}}</text>
@@ -1209,34 +1222,35 @@
     <text class="finsheet__game-ending-copy" wx:for="{{stageEnd.changed}}" wx:key="index">{{item}}</text>
     <text class="finsheet__game-ending-title" wx:if="{{stageEnd.open}}">{{stageEnd.open}}</text>
   </view>
-  <cy-finish-medals items="{{finishMedalList}}" reduced-motion="{{reducedMotion}}" /><!-- 2026-10-22 业主:多枚勋章叠放、可切换 -->
-  <view class="finish-milestone" wx:if="{{milestone}}">
-    <view class="finish-milestone__head">
-      <text>城市探索里程碑</text>
-      <text wx:if="{{milestone.next}}">距 {{milestone.next.value}} 个还差 {{milestone.next.remaining}} 个</text>
-      <text wx:else>已到达当前最高里程碑</text>
-    </view>
-    <view class="finish-milestone__rail">
-      <view class="finish-milestone__progress" style="width:{{milestone.progress}}%"></view>
-      <view class="finish-milestone__tier finish-milestone__tier--{{item.state}}" wx:for="{{milestone.tiers}}" wx:key="value">
-        <view class="finish-milestone__dot"></view><text>{{item.value}}</text>
+  <view class="fsec" wx:if="{{finishAchievements.length || finishMedalList.length}}">
+    <view class="fsec__h">成就</view>
+    <cy-finish-medals items="{{finishMedalList}}" reduced-motion="{{reducedMotion}}" /><!-- 2026-10-22 业主:多枚勋章叠放、可切换 -->
+    <view class="fgroup" wx:if="{{finishAchievements.length}}">
+      <view class="frow" wx:for="{{finishAchievements}}" wx:key="key">
+        <view class="fhex fhex--{{item.kind}}">{{item.glyph}}</view>
+        <view class="frow__t"><text class="frow__b">{{item.title}}</text><text class="frow__s" wx:if="{{item.sub}}">{{item.sub}}</text></view>
+        <text class="frow__v" wx:if="{{item.value}}">{{item.value}}</text>
       </view>
     </view>
   </view>
-  <view class="finsheet__map">
-    <image class="finsheet__map-fallback" wx:if="{{finishSnap}}" src="{{finishSnap}}" mode="aspectFit"></image>
-    <free-map class="finsheet__map-native" nodes="{{newLifeOS.show && newLifeOS.mapNodes.length ? newLifeOS.mapNodes : fmNodes}}" player="{{fmPlayer}}"
-              center="{{fmCenter}}" scale="14" map-polyline="{{fmPolyline}}" fit="{{true}}" fit-padding="{{[64, 36, 36, 36]}}"
-              subkey="{{fmSubkey}}" layer-style="{{fmLayerStyle}}"
-              show-controls="{{false}}" show-photo-callouts="{{false}}" interactive="{{false}}" />
-    <view class="os-map-label" wx:if="{{newLifeOS.show}}">3km 生活圈 · {{newLifeOS.mapAnchors.length}} 个地点</view>
-    <view class="finsheet__map-error" wx:if="{{finishSnapError}}" bindtap="retryRouteThumb" hover-class="cy-pressed" hover-stay-time="80">路线预览暂未生成 · 重试</view>
-  </view>
-  <!-- mode2:探索值/徽章数是经典定向的读数(且 total×12 写死),探店日只报真事实 —— 核销与集章 -->
-  <view class="finsheet__grid" wx:if="{{mode!=2}}">
-    <view class="fst"><cy-icon class="fst__ic" name="pin-solid" size="36" /><text class="fst__v">{{doneCount}}</text><text class="fst__l">点亮坐标</text></view>
-    <view class="fst"><cy-icon class="fst__ic" name="star" size="36" /><text class="fst__v">{{finishPuzzleScore}}</text><text class="fst__l">本次解谜分{{finishPuzzleCount ? ' · ' + finishPuzzleCount + '题' : ''}}</text><text class="fst__sub" wx:if="{{finishPuzzleBest > 0}}">个人最佳 {{finishPuzzleBest}}</text></view>
-    <view class="fst"><cy-icon class="fst__ic" name="route" size="36" /><text class="fst__v">{{finishScore}}</text><text class="fst__l">探索值</text></view>
+  <view class="fsec" wx:if="{{milestone || (mode != 2 && finishScore > 0)}}">
+    <view class="fsec__h">城市探索</view>
+    <view class="fgroup">
+      <view class="frow" wx:if="{{mode != 2 && finishScore > 0}}"><view class="frow__t"><text class="frow__b">探索值</text></view><text class="frow__v">+{{finishScore}}</text></view>
+      <view class="finish-milestone" wx:if="{{milestone}}">
+      <view class="finish-milestone__head">
+        <text>{{milestone.title}}</text>
+        <text wx:if="{{milestone.next}}">距 {{milestone.next.value}} 个还差 {{milestone.next.remaining}} 个</text>
+        <text wx:else>已到达当前最高里程碑</text>
+      </view>
+      <view class="finish-milestone__rail">
+        <view class="finish-milestone__progress" style="width:{{milestone.progress}}%"></view>
+        <view class="finish-milestone__tier finish-milestone__tier--{{item.state}}" wx:for="{{milestone.tiers}}" wx:key="value">
+          <view class="finish-milestone__dot"></view><text>{{item.value}}</text>
+        </view>
+      </view>
+      </view>
+    </view>
   </view>
   <view class="finsheet__grid" wx:if="{{mode==2}}">
     <view class="fst"><cy-icon class="fst__ic" name="check" size="36" /><text class="fst__v">{{doneCount}}/{{total}}</text><text class="fst__l">玩法完成</text></view>
@@ -1296,6 +1310,12 @@
       <view class="finish-stamp__mark"><cy-icon name="check" size="24" /></view>
     </view>
   </scroll-view>
+  <view wx:if="{{themeBag.result && themeBag.scope !== 'TEAM'}}" class="finsheet__records">
+   <view bindtap="openThemeResultCard" aria-role="button" aria-label="查看本局结果" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="chevron-right" size="28" />查看本局结果</view>
+   <view bindtap="openThemeHistory" aria-role="button" aria-label="我的游玩记录" hover-class="cy-pressed" hover-stay-time="80">我的游玩记录</view>
+   <view wx:if="{{themeBag.replayAllowed === true}}" bindtap="replayThemeSession" aria-role="button" aria-label="再玩一次" aria-disabled="{{themeReplayBusy}}" hover-class="cy-pressed" hover-stay-time="80">{{themeReplayBusy ? '正在开启新一局' : '再玩一次'}}</view>
+   <cy-inline-error wx:if="{{themeRecordsError}}" aria-live="polite" kind="error" title="{{themeRecordsError}}" load-failure="{{themeRecordsReadFailure}}" />
+  </view>
   <view class="finish-journal-entry" wx:if="{{canReplayJournal}}" bindtap="openFinishJournal" aria-role="button" aria-label="回看本次旅程手记" hover-class="cy-pressed" hover-stay-time="80">
     <view>
       <text class="finish-journal-entry__title">回看旅程手记</text>
