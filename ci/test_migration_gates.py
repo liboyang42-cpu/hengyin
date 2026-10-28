@@ -1208,7 +1208,8 @@ class SharedLedgerExecutionOrder(unittest.TestCase):
         stop = "if not ok and (strict_notice or not a.keep_going):"
         keep = "keep_going=False if strict_notice else a.keep_going,"
         loop = ('        for m in ordered:\n'
-                '            strict_notice = bool(notice_forward) and m["migrationId"] == NOTICE_V2\n'
+                '            strict_notice = ((bool(notice_forward) and m["migrationId"] == NOTICE_V2)\n'
+                '                             or (bool(broadcast_forward) and m["migrationId"] == BROADCAST_UNION))\n'
                 '            ok = run_file(cur, REPO / m["path"], m["migrationId"], results,\n'
                 '                          keep_going=False if strict_notice else a.keep_going,\n'
                 '                          schema_only=True, observations=observations)\n'
@@ -1275,14 +1276,14 @@ class SharedLedgerExecutionOrder(unittest.TestCase):
         self._assert_schema_mutations_rejected(source, [
             ("skip selector", 'notice_forward = notice_forward_plan(all_migrations, selected)', 'notice_forward = None'),
             ("swap selector inputs", 'notice_forward_plan(all_migrations, selected)', 'notice_forward_plan(selected, all_migrations)'),
-            ("drop bypass", '        if notice_forward:\n', '        if notice_forward and not a.drop:\n'),
+            ("drop bypass", '        if notice_forward or broadcast_forward:\n', '        if (notice_forward or broadcast_forward) and not a.drop:\n'),
             ("invert fresh readback", 'fresh[0] != 0', 'fresh[0] < 0'),
             ("allow noninteger readback", 'type(fresh[0]) is not int', 'False'),
             ("probe foreign schema", 'schema_name=%s", (a.schema,)', 'schema_name=%s", ("foreign",)'),
             ("adopt concurrent schema", '"CREATE DATABASE `%s` DEFAULT CHARACTER SET utf8mb4"', '"CREATE DATABASE IF NOT EXISTS `%s` DEFAULT CHARACTER SET utf8mb4"'),
-            ("delete existing before probe", '        if notice_forward:\n', '        if notice_forward:\n            cur.execute("DROP DATABASE IF EXISTS `%s`" % a.schema)\n'),
-            ("drop exact replacement selection", 'ordered = [m for m in notice_forward["selected"] if m.get("executionPhase") != "POST_DEPLOY"]', 'ordered = [m for m in selected if m.get("executionPhase") != "POST_DEPLOY"]'),
-            ("reverse replacement selection", 'ordered = [m for m in notice_forward["selected"] if m.get("executionPhase") != "POST_DEPLOY"]', 'ordered = list(reversed(notice_forward["selected"]))'),
+            ("delete existing before probe", '        if notice_forward or broadcast_forward:\n', '        if notice_forward or broadcast_forward:\n            cur.execute("DROP DATABASE IF EXISTS `%s`" % a.schema)\n'),
+            ("drop exact replacement selection", 'selected = notice_forward["selected"] if notice_forward else selected', 'selected = selected'),
+            ("reverse replacement selection", 'selected = notice_forward["selected"] if notice_forward else selected', 'selected = list(reversed(notice_forward["selected"])) if notice_forward else selected'),
             ("hide replacement receipt", 'REPLACED_UNAPPLIED %s -> %s fingerprints=%s', 'APPLIED %s -> %s fingerprints=%s'),
             ("delete initial ordered", '    ordered = [m for m in selected if m.get("executionPhase") != "POST_DEPLOY"]\n', ''),
             ("add initial skip", 'ordered = [m for m in selected if m.get("executionPhase") != "POST_DEPLOY"]', 'ordered = [m for m in selected if m.get("executionPhase") != "POST_DEPLOY" and m["migrationId"] != "other"]'),
@@ -1293,15 +1294,71 @@ class SharedLedgerExecutionOrder(unittest.TestCase):
             ("additional connection", '    c = connect(a, a.schema)', '    c = connect(a, a.schema)\n    c = connect(a, "foreign")'),
             ("modify selected item", '    notice_forward = notice_forward_plan(all_migrations, selected)', '    selected[0] = {}\n    notice_forward = notice_forward_plan(all_migrations, selected)'),
             ("modify replacement result", '    if deferred:\n', '    notice_forward["selected"] = selected\n    if deferred:\n'),
-            ("disable strict v2", 'strict_notice = bool(notice_forward) and m["migrationId"] == NOTICE_V2', 'strict_notice = False'),
-            ("strict wrong migration", 'strict_notice = bool(notice_forward) and m["migrationId"] == NOTICE_V2', 'strict_notice = bool(notice_forward) and m["migrationId"] == NOTICE_OLD'),
+            ("disable strict v2", 'bool(notice_forward) and m["migrationId"] == NOTICE_V2', 'False'),
+            ("strict wrong migration", 'bool(notice_forward) and m["migrationId"] == NOTICE_V2', 'bool(notice_forward) and m["migrationId"] == NOTICE_OLD'),
             ("v2 keep-going", 'keep_going=False if strict_notice else a.keep_going,', 'keep_going=a.keep_going,'),
             ("v2 ignores failure", 'if not ok and (strict_notice or not a.keep_going):', 'if not ok and not a.keep_going:'),
             ("wrong label", 'REPO / m["path"], m["migrationId"]', 'REPO / m["path"], "other"'),
             ("wrong schema_only", 'schema_only=True, observations=observations)', 'schema_only=False, observations=observations)'),
-            ("added loop skip", '            strict_notice = bool(notice_forward)', '            if m["migrationId"] == "other":\n                continue\n            strict_notice = bool(notice_forward)'),
+            ("added loop skip", '            strict_notice = ((bool(notice_forward)', '            if m["migrationId"] == "other":\n                continue\n            strict_notice = ((bool(notice_forward)'),
             ("extra run_file", '        for m in ordered:', '        run_file(cur, REPO / "other.sql", "other", results, keep_going=True)\n        for m in ordered:'),
             ("extra nonledger loop", '        for m in ordered:', '        for row in selected:\n            print(row)\n        for m in ordered:'),
+        ])
+
+
+    def test_broadcast_forward_identity_dependency_and_replacement_mutations_are_rejected(self):
+        source = self._schema_source()
+        start = source.index('BROADCAST_D = ')
+        end = source.index('\ndef main():', start)
+        block = source[start:end]
+        controls = [
+            ("drop pending pair count", 'if len(rows) != 1 or len(pending) != 1:', 'if False:'),
+            ("ignore pending identity", 'or pending_entry != entry', 'or False'),
+            ("ignore manifest fingerprint", 'entry.get("sha256") != expected_sha', 'False'),
+            ("ignore file fingerprint", 'hashlib.sha256(target.read_bytes()).hexdigest() != expected_sha', 'False'),
+            ("allow symlink", 'target.is_symlink() or not target.is_file()', 'not target.is_file()'),
+            ("ignore declared order", 'entry.get("order") != index + 1', 'False'),
+            ("allow postdeploy", 'entry.get("executionPhase") is not None', 'False'),
+            ("drop dependency check", 'entry.get("dependsOn") != deps', 'False'),
+            ("invent dependency", '[BROADCAST_D, BROADCAST_OLD] if key == BROADCAST_UNION', '["another_parent"] if key == BROADCAST_UNION'),
+            ("drop upstream guard", 'len(upstream) != 1 or upstream[0] >= positions[BROADCAST_D]', 'False'),
+            ("reverse pair order", 'positions[BROADCAST_D] < positions[BROADCAST_OLD] < positions[BROADCAST_UNION]', 'positions[BROADCAST_D] < positions[BROADCAST_UNION] < positions[BROADCAST_OLD]'),
+            ("reverse pending order", 'pending_positions[BROADCAST_D] < pending_positions[BROADCAST_OLD] < pending_positions[BROADCAST_UNION]', 'pending_positions[BROADCAST_D] < pending_positions[BROADCAST_UNION] < pending_positions[BROADCAST_OLD]'),
+            ("fake D identity", 'BROADCAST_D = "20261023_d_official_broadcast_delivery"', 'BROADCAST_D = "other"'),
+            ("fake old identity", 'BROADCAST_OLD = "20261026_official_broadcast_delivery"', 'BROADCAST_OLD = "other"'),
+            ("fake union identity", 'BROADCAST_UNION = "20261028_official_broadcast_protocol_union"', 'BROADCAST_UNION = "other"'),
+            ("fake path", '"chengyinhub-admin/sql/migration_20261028_official_broadcast_protocol_union.sql",', '"chengyinhub-admin/sql/other.sql",'),
+            ("fake approved digest", '44dc1ee52ab1591f0e893f26aaed8b6b1af4948ab53f98307c41a30c637b8b8b', '0' * 64),
+            ("replace union instead of old", '"selected": [row for row in selected if row["migrationId"] != BROADCAST_OLD]', '"selected": [row for row in selected if row["migrationId"] != BROADCAST_UNION]'),
+            ("silently retain both", '"selected": [row for row in selected if row["migrationId"] != BROADCAST_OLD]', '"selected": selected'),
+        ]
+        mutations = []
+        for name, needle, replacement in controls:
+            self.assertIn(needle, block, "broadcast control must target its actual selector only")
+            mutations.append(("broadcast " + name, block, block.replace(needle, replacement)))
+        self._assert_schema_mutations_rejected(source, mutations)
+
+    def test_broadcast_forward_fresh_preparation_and_strict_execution_mutations_are_rejected(self):
+        source = self._schema_source()
+        self._assert_schema_mutations_rejected(source, [
+            ("skip broadcast selector", 'broadcast_forward = broadcast_forward_plan(all_migrations, selected)', 'broadcast_forward = None'),
+            ("swap broadcast inputs", 'broadcast_forward_plan(all_migrations, selected)', 'broadcast_forward_plan(selected, all_migrations)'),
+            ("omit broadcast absence gate", 'if notice_forward or broadcast_forward:', 'if notice_forward:'),
+            ("require both before fresh gate", 'if notice_forward or broadcast_forward:', 'if notice_forward and broadcast_forward:'),
+            ("drop broadcast replacement", 'selected = broadcast_forward["selected"] if broadcast_forward else selected', 'selected = selected'),
+            ("reverse broadcast replacement", 'selected = broadcast_forward["selected"] if broadcast_forward else selected', 'selected = list(reversed(broadcast_forward["selected"])) if broadcast_forward else selected'),
+            ("additional selected rebind", '    if deferred:\n', '    selected = selected\n    if deferred:\n'),
+            ("additional ordered rebind", '        for m in ordered:', '        ordered = ordered\n        for m in ordered:'),
+            ("extra migration filter", 'selected = broadcast_forward["selected"] if broadcast_forward else selected', 'selected = [m for m in broadcast_forward["selected"] if m["migrationId"] != "other"] if broadcast_forward else selected'),
+            ("rebind broadcast selector", '    broadcast_forward = broadcast_forward_plan(all_migrations, selected)', '    broadcast_forward_plan = lambda *args: {}\n    broadcast_forward = broadcast_forward_plan(all_migrations, selected)'),
+            ("mutate broadcast identities", '    broadcast_forward = broadcast_forward_plan(all_migrations, selected)', '    BROADCAST_FORWARD_FILES[BROADCAST_OLD] = ("fake.sql", "0" * 64)\n    broadcast_forward = broadcast_forward_plan(all_migrations, selected)'),
+            ("mutate broadcast selection", '    if deferred:\n', '    broadcast_forward["selected"] = selected\n    if deferred:\n'),
+            ("disable union strictness", 'bool(broadcast_forward) and m["migrationId"] == BROADCAST_UNION', 'False'),
+            ("strict old instead of union", 'bool(broadcast_forward) and m["migrationId"] == BROADCAST_UNION', 'bool(broadcast_forward) and m["migrationId"] == BROADCAST_OLD'),
+            ("omit broadcast replacement receipt", '(broadcast_forward, BROADCAST_OLD, BROADCAST_UNION)', '(None, BROADCAST_OLD, BROADCAST_UNION)'),
+            ("invent third replacement", '(broadcast_forward, BROADCAST_OLD, BROADCAST_UNION)):', '(broadcast_forward, BROADCAST_OLD, BROADCAST_UNION), (broadcast_forward, "other", "new")):'),
+            ("wrong receipt identity", '(broadcast_forward, BROADCAST_OLD, BROADCAST_UNION)', '(broadcast_forward, BROADCAST_UNION, BROADCAST_OLD)'),
+            ("mark replacement applied", 'REPLACED_UNAPPLIED %s -> %s fingerprints=%s', 'APPLIED %s -> %s fingerprints=%s'),
         ])
 
     def test_schema_contract_accepts_only_nonsemantic_layout_changes(self):
@@ -1312,6 +1369,13 @@ class SharedLedgerExecutionOrder(unittest.TestCase):
                                 '        all_migrations, selected\n    )')
         self.assertNotEqual(source, layout)
         self.assertEqual([], check_schema_manifest_order_source(layout))
+        broadcast_layout = source.replace(
+            '    broadcast_forward = broadcast_forward_plan(all_migrations, selected)',
+            '    # formatting the second fixed selector also preserves its contract\n'
+            '    broadcast_forward = broadcast_forward_plan(\n'
+            '        all_migrations, selected\n    )')
+        self.assertNotEqual(source, broadcast_layout)
+        self.assertEqual([], check_schema_manifest_order_source(broadcast_layout))
 
 class 依赖顺序门禁_选批口径(unittest.TestCase):
     """★ 这一组钉的是【批怎么选】,不是【选出来之后怎么判】。

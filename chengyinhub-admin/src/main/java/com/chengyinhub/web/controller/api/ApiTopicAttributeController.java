@@ -133,7 +133,7 @@ public class ApiTopicAttributeController extends BaseController {
         try {
             return success(action.apply(topic));
         } catch (ServiceException e) {
-            return ApiTopicPlaySetupController.coded(e);
+            return codedServiceException(e);
         }
     }
 
@@ -158,7 +158,7 @@ public class ApiTopicAttributeController extends BaseController {
             Object data = action.apply(topic);
             return data == null ? success("删除成功") : success(data);
         } catch (ServiceException e) {
-            return ApiTopicPlaySetupController.coded(e);
+            return codedServiceException(e);
         }
     }
 

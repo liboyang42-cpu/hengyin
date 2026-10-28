@@ -735,7 +735,7 @@ def _schema_contract_dump(node):
 
 
 def check_schema_manifest_order_source(source):
-    """Exact ledger pipeline + the one approved fresh-only notice forward plan."""
+    """Exact ledger pipeline + the two approved fresh-only forward compositions."""
     import hashlib
 
     try:
@@ -750,7 +750,7 @@ def check_schema_manifest_order_source(source):
         return ["schema runner must import the shared build_manifest and define main"]
     main = mains[0]
     problems = []
-    # Source-contract fingerprints of the already approved 6fcd runner, not a second
+    # Original notice source fingerprints remain pinned; broadcast uses an exact AST literal below, not a second
     # migration/file allowlist. Parse only: never import or execute the runner under review.
     # Pin the selector's identity/dependency checks and its loopback/scratch guard too;
     # a valid call site cannot lend proof to a fake replacement or a foreign database.
@@ -785,11 +785,81 @@ def check_schema_manifest_order_source(source):
         if hashlib.sha256(shape.encode()).hexdigest() != digest:
             problems.append("schema runner must preserve notice forward contract: " + name)
 
+
+    # Exact SOURCE contract for the root-approved b1d9 broadcast selector. Compare
+    # ASTs without importing/executing the runner; formatting/comments may differ.
+    # Keeping the full literal avoids computing new project AST hashes during SOURCE-only delivery.
+    broadcast_contract_source = r'''BROADCAST_D = "20261023_d_official_broadcast_delivery"
+BROADCAST_OLD = "20261026_official_broadcast_delivery"
+BROADCAST_UNION = "20261028_official_broadcast_protocol_union"
+BROADCAST_FORWARD_FILES = {
+    BROADCAST_D: ("chengyinhub-admin/sql/migration_20261023_d_official_broadcast_delivery.sql",
+                  "c822ad772727ed4ae0328998f7a99be1ece5d6c881f6259fc63de3ebb0822ba1"),
+    BROADCAST_OLD: ("chengyinhub-admin/sql/migration_20261026_official_broadcast_delivery.sql",
+                    "ca5538fae79b01ac4690065da6cde4ac3b7922dce5c0d09a04a5ff58bca1076f"),
+    BROADCAST_UNION: ("chengyinhub-admin/sql/migration_20261028_official_broadcast_protocol_union.sql",
+                      "44dc1ee52ab1591f0e893f26aaed8b6b1af4948ab53f98307c41a30c637b8b8b"),
+}
+
+
+def broadcast_forward_plan(migrations, selected):
+    ids = {BROADCAST_OLD, BROADCAST_UNION}
+    paths = {BROADCAST_FORWARD_FILES[key][0] for key in ids}
+    if not any(row.get("migrationId") in ids or row.get("path") in paths
+               for row in migrations + selected):
+        return None
+    positions, pending_positions = {}, {}
+    for key, (path, expected_sha) in BROADCAST_FORWARD_FILES.items():
+        rows = [(i, row) for i, row in enumerate(migrations)
+                if row.get("migrationId") == key or row.get("path") == path]
+        pending = [(i, row) for i, row in enumerate(selected)
+                   if row.get("migrationId") == key or row.get("path") == path]
+        if len(rows) != 1 or len(pending) != 1:
+            raise RuntimeError("broadcast forward requires complete pending D/old/union: " + key)
+        index, entry = rows[0]
+        pending_index, pending_entry = pending[0]
+        target = REPO / path
+        deps = [BROADCAST_D, BROADCAST_OLD] if key == BROADCAST_UNION else ["official_broadcast"]
+        if (entry.get("migrationId") != key or entry.get("path") != path
+                or entry.get("sha256") != expected_sha or pending_entry != entry
+                or entry.get("order") != index + 1 or entry.get("executionPhase") is not None
+                or entry.get("dependsOn") != deps
+                or target.is_symlink() or not target.is_file()
+                or hashlib.sha256(target.read_bytes()).hexdigest() != expected_sha):
+            raise RuntimeError("broadcast forward identity/fingerprint/dependency/order drift: " + key)
+        positions[key], pending_positions[key] = index, pending_index
+    upstream = [i for i, row in enumerate(migrations) if row.get("migrationId") == "official_broadcast"]
+    if (len(upstream) != 1 or upstream[0] >= positions[BROADCAST_D]
+            or not positions[BROADCAST_D] < positions[BROADCAST_OLD] < positions[BROADCAST_UNION]
+            or not pending_positions[BROADCAST_D] < pending_positions[BROADCAST_OLD] < pending_positions[BROADCAST_UNION]):
+        raise RuntimeError("broadcast forward prerequisite/sequence drift")
+    return {
+        "fingerprints": {key: {"path": value[0], "sha256": value[1]}
+                         for key, value in BROADCAST_FORWARD_FILES.items()},
+        "selected": [row for row in selected if row["migrationId"] != BROADCAST_OLD],
+    }
+'''
+    broadcast_contracts = {
+        node.name if isinstance(node, ast.FunctionDef) else node.targets[0].id: node
+        for node in ast.parse(broadcast_contract_source).body
+    }
+    for name, wanted in broadcast_contracts.items():
+        definitions = [node for node in tree.body
+                       if (isinstance(node, ast.FunctionDef) and node.name == name)
+                       or (isinstance(node, ast.Assign) and len(node.targets) == 1
+                           and isinstance(node.targets[0], ast.Name) and node.targets[0].id == name)]
+        if len(definitions) != 1 or ast.dump(definitions[0]) != ast.dump(wanted):
+            problems.append("schema runner must preserve broadcast forward contract: " + name)
+    contract_names = set(contracts) | set(broadcast_contracts)
+
     expected = [
         'manifest = build_manifest(REPO, target_commit=head, dependency_path=REPO / "ci/migration-dependencies.json")',
         'all_migrations = manifest["migrations"]',
         'selected = migrations_after_baseline(all_migrations)',
         'notice_forward = notice_forward_plan(all_migrations, selected)',
+        'selected = notice_forward["selected"] if notice_forward else selected',
+        'broadcast_forward = broadcast_forward_plan(all_migrations, selected)',
+        'selected = broadcast_forward["selected"] if broadcast_forward else selected',
         'deferred = [m for m in selected if m.get("executionPhase") == "POST_DEPLOY"]',
         'ordered = [m for m in selected if m.get("executionPhase") != "POST_DEPLOY"]',
     ]
@@ -800,12 +870,13 @@ def check_schema_manifest_order_source(source):
         writes = [node for node in ast.walk(main) if isinstance(node, ast.Name)
                   and isinstance(node.ctx, (ast.Store, ast.Del)) and node.id == target]
         matches = [i for i, node in enumerate(main.body) if ast.dump(node) == ast.dump(wanted)]
-        if len(matches) != 1 or len(writes) != (2 if target == "ordered" else 1):
+        if len(matches) != 1 or len(writes) != (3 if target == "selected" else 1):
             problems.append("schema runner must preserve ledger selection: " + target)
         else:
             indices.append(matches[0])
 
-    # This whole direct try/finally is the sole legal second assignment to ordered.
+    # This whole direct try/finally is the sole legal preparation/reporting block.
+    # The two exact selected rebindings above are the only approved replacement filters.
     # The exact absence check, CREATE without IF NOT EXISTS, reporting and close all
     # precede imports/run_file. Existing or concurrently created schemas cannot be adopted.
     expected_prepare = ast.parse("""\
@@ -814,7 +885,7 @@ try:
     cur.execute("SELECT VERSION(), @@version_comment")
     ver = cur.fetchone()
     print("目标实例: %s / %s  @ %s:%d" % (ver[0], ver[1], a.host, a.port))
-    if notice_forward:
+    if notice_forward or broadcast_forward:
         # This check precedes every DROP/CREATE/import, including explicit --drop.
         cur.execute("SELECT COUNT(*) FROM information_schema.schemata WHERE schema_name=%s", (a.schema,))
         fresh = cur.fetchone()
@@ -823,9 +894,11 @@ try:
             raise RuntimeError("notice forward requires a nonexistent fresh scratch schema; --drop cannot bypass")
         # No IF NOT EXISTS: a concurrent creator must fail, never adopt an unknown/typed schema.
         cur.execute("CREATE DATABASE `%s` DEFAULT CHARACTER SET utf8mb4" % a.schema)
-        ordered = [m for m in notice_forward["selected"] if m.get("executionPhase") != "POST_DEPLOY"]
-        print("REPLACED_UNAPPLIED %s -> %s fingerprints=%s" %
-              (NOTICE_OLD, NOTICE_V2, json.dumps(notice_forward["fingerprints"], sort_keys=True)))
+        for forward, old, new in ((notice_forward, NOTICE_OLD, NOTICE_V2),
+                                  (broadcast_forward, BROADCAST_OLD, BROADCAST_UNION)):
+            if forward:
+                print("REPLACED_UNAPPLIED %s -> %s fingerprints=%s" %
+                      (old, new, json.dumps(forward["fingerprints"], sort_keys=True)))
     else:
         if a.drop:
             cur.execute("DROP DATABASE IF EXISTS `%s`" % a.schema)
@@ -848,7 +921,8 @@ finally:
 
     expected_loop = ast.parse(
         'for m in ordered:\n'
-        '    strict_notice = bool(notice_forward) and m["migrationId"] == NOTICE_V2\n'
+        '    strict_notice = ((bool(notice_forward) and m["migrationId"] == NOTICE_V2)\n'
+        '                     or (bool(broadcast_forward) and m["migrationId"] == BROADCAST_UNION))\n'
         '    ok = run_file(cur, REPO / m["path"], m["migrationId"], results, '
         'keep_going=False if strict_notice else a.keep_going, schema_only=True, observations=observations)\n'
         '    if not ok and (strict_notice or not a.keep_going):\n'
@@ -882,23 +956,21 @@ finally:
                    and isinstance(node.func, ast.Name) and node.func.id == "connect"]
     if sorted(map(ast.dump, connections)) != sorted(map(ast.dump, [expected_connect.value, expected_reconnect.value])):
         problems.append("schema runner must preserve its exact scratch connections")
-    # The other three loops only report failures/observations. An extra loop may not
+    # The other four loops only report the two fixed replacements, failures/observations. An extra loop may not
     # replay another selection even if it does not mention `ordered`.
-    if len([node for node in ast.walk(main) if isinstance(node, (ast.For, ast.AsyncFor, ast.While))]) != 4:
+    if len([node for node in ast.walk(main) if isinstance(node, (ast.For, ast.AsyncFor, ast.While))]) != 5:
         problems.append("schema runner must not add execution loops")
-    flow = {"manifest", "all_migrations", "selected", "ordered", "notice_forward", "deferred"}
-    protected = flow | set(contracts) | {"build_manifest", "migrations_after_baseline", "run_file"}
+    flow = {"manifest", "all_migrations", "selected", "ordered", "notice_forward", "broadcast_forward", "deferred"}
+    protected = flow | contract_names | {"build_manifest", "migrations_after_baseline", "run_file"}
     for node in ast.walk(tree):
         if isinstance(node, ast.Name) and isinstance(node.ctx, (ast.Store, ast.Del)) and node.id in protected:
-            # Only the six direct ledger assignments, the approved fresh assignment
-            # and original top-level constants are legal writes to these identities.
+            # Only the nine exact direct ledger assignments and the pinned top-level
+            # constants are legal writes; no extra selected/ordered rebind is admitted.
             parents = [parent for parent in ast.walk(tree) if isinstance(parent, ast.Assign)
                        and len(parent.targets) == 1 and parent.targets[0] is node]
             allowed = any(parent in main.body and any(ast.dump(parent) == ast.dump(ast.parse(text).body[0])
                                                      for text in expected) for parent in parents)
-            allowed = allowed or any(parent in tree.body and node.id in contracts for parent in parents)
-            allowed = allowed or (node.id == "ordered" and len(preparations) == 1
-                                   and node in list(ast.walk(main.body[preparations[0]])))
+            allowed = allowed or any(parent in tree.body and node.id in contract_names for parent in parents)
             if not allowed:
                 problems.append("schema runner must not rebind ledger/notice contracts: " + node.id)
         if isinstance(node, (ast.Import, ast.ImportFrom)):

@@ -72,7 +72,7 @@ public class ApiTopicPlaySetupController extends BaseController {
             }
             return success(topicPlaySetupService.save(topic, dto));
         } catch (ServiceException e) {
-            return coded(e);
+            return codedServiceException(e);
         }
     }
 
@@ -88,20 +88,6 @@ public class ApiTopicPlaySetupController extends BaseController {
             return error("主题不存在");
         }
         return success(topicPlaySetupService.playerView(topic));
-    }
-
-    static AjaxResult coded(ServiceException e) {
-        if (e.getCode() == null) {
-            return AjaxResult.error(e.getMessage());
-        }
-        AjaxResult result = new AjaxResult(e.getCode(), e.getMessage());
-        if (e.getDetailMessage() != null) {
-            result.put("errorCode", e.getDetailMessage());
-        }
-        if (e.getData() != null) {
-            result.put(AjaxResult.DATA_TAG, e.getData());
-        }
-        return result;
     }
 
     private Long memberId() {
