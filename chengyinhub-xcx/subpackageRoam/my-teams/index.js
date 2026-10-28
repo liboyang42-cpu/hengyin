@@ -1,6 +1,8 @@
 // 我的队伍(2026-10-14 漫游原型)。读的接口与地图 P6 同源:
 //   已加入 /api/team/my(leaderMemberId = 我 → 带队)、申请中/被拒 /api/team/my-applications、附近招募 /api/team/nearby。
 // 写操作只有「撤回申请」,通过地图同一原请求回执协议恢复;进队伍 → 既有队伍详情页。
+// 原型 B T-31:从主题详情组队卡带 ownerType/ownerId 进来时,第二格叫「本场招募」,读 /api/orient/team/lobby(不要定位),
+//   满员队伍不列出(B3);已在队里的显示「已加入」,其余「申请加入」走与地图同一条 apply 原请求协议。
 const T = require('../utils/map-team.js');
 const modal = require('../../utils/modal');
 const cyToast = require('../../utils/toast.js');
@@ -32,9 +34,19 @@ Page({
     teamRecovery.manager(this, app, wx).act(ds.teamId, ds.action);
   },
 
-  data: { teamCommandRows: [], teamCommandError: '', reducedMotion: false, privacyGateShow: false, tab: 'mine', loading: true, mineError: false, groups: [], stats: [], openRows: [], openLoading: false, openLoaded: false, openError: '' },
+  data: { lobby: null, teamCommandRows: [], teamCommandError: '', reducedMotion: false, privacyGateShow: false, tab: 'mine', loading: true, mineError: false, groups: [], stats: [], openRows: [], openLoading: false, openLoaded: false, openError: '' },
 
-  onLoad(options) { this._seq = 0; this.setData({ reducedMotion: readReducedMotion() }); if (options && options.tab === 'open') this.setData({ tab: 'open' }); },
+  onLoad(options) {
+    this._seq = 0; this.setData({ reducedMotion: readReducedMotion() });
+    const o = options || {};
+    const ownerId = teamOperation.teamId(o.ownerId);
+    if (ownerId && ['1', '2'].includes(String(o.ownerType))) {
+      let scope = '';
+      try { scope = decodeURIComponent(o.scope || ''); } catch (e) { scope = String(o.scope || ''); }
+      this.setData({ lobby: { ownerType: Number(o.ownerType), ownerId, scope } });
+    }
+    if (o.tab === 'open') this.setData({ tab: 'open' });
+  },
   onShow() {
     this._hidden = false; this.reloadTeamCommands();
     const owner = teamOperation.identity(app);
@@ -101,11 +113,13 @@ Page({
     // 没有任何队伍时,「我的」下面直接接附近招募,不让页面停在空态
     if (!groups.length || this.data.tab === 'open') this.loadOpen();
   },
+  _joinedIds() { const r = this._rows || {}; const ids = {}; (r.lead || []).concat(r.ok || []).forEach((x) => { ids[String(x.teamId)] = true; }); return ids; },
 
   switchTab(e) { const tab = e.currentTarget.dataset.tab; if (tab === this.data.tab) return; this.setData({ tab }); if (tab === 'open' && !this.data.openLoaded) this.loadOpen(); },
 
   loadOpen() {
     if (this.data.openLoading) return;
+    if (this.data.lobby) { this.loadLobby(); return; }
     const that = this;
     const current = teamOperation.capture(this, app);
     this.setData({ openLoading: true, openError: '' });
@@ -128,6 +142,39 @@ Page({
       fail() { if (!current()) return; that.setData({ openLoading: false, openError: '需要定位才能看附近的队伍' }); } });
   },
 
+  loadLobby() {
+    const that = this; const lobby = this.data.lobby;
+    const current = teamOperation.capture(this, app);
+    this.setData({ openLoading: true, openError: '' });
+    const failed = () => { if (current()) that.setData({ openLoading: false, openError: '加载失败' }); };
+    app.sendRequest({ url: '/api/orient/team/lobby', method: 'GET', hideLoading: true, autoErrorToast: false, data: { ownerType: lobby.ownerType, ownerId: lobby.ownerId },
+      success(res) {
+        if (!current()) return;
+        if (!(res && res.code == 200 && Array.isArray(res.data))) { failed(); return; }
+        const mine = that._joinedIds();
+        const rows = res.data.filter((t) => t && teamOperation.teamId(t.teamId)
+            && !(Number(t.maxMembers) > 0 && Number(t.joinedCount) >= Number(t.maxMembers)))
+          .map((t) => {
+            const joined = !!mine[String(t.teamId)];
+            return { key: 'l' + t.teamId, teamId: String(t.teamId), name: nameOf(t), avatars: avatarsOf([t.leaderAvatar], t.joinedCount), members: members(t),
+              sub: '队长 ' + (t.leaderName || '玩家'), badge: joined ? '已加入' : '可申请', tone: joined ? 'ok' : 'plain', joined, go: joined ? '进入队伍' : '申请加入' };
+          });
+        that.setData({ openLoading: false, openLoaded: true, openRows: rows });
+      }, fail: failed, successStatusAbnormal: failed });
+  },
+  openLobbyTeam(e) {
+    const row = this.data.openRows[Number(e.currentTarget.dataset.index)];
+    if (!row || this._busy) return;
+    if (row.joined) { wx.navigateTo({ url: TEAM_PAGE + '?teamId=' + encodeURIComponent(row.teamId) }); return; }
+    const that = this;
+    const teamId = teamOperation.teamId(row.teamId);
+    if (!teamId) { cyToast('队伍标识无效，请刷新'); return; }
+    const current = teamOperation.capture(this, app);
+    modal.show({ title: '申请加入这支队伍？', content: '队长同意后会通知你。', confirmText: '申请', cancelText: '取消', success(r) {
+      if (!r.confirm || !current() || that._busy || that._hidden) return;
+      return teamRecovery.manager(that, app, wx).start(teamId, 'apply', { message: null });
+    } });
+  },
   _row(e) { const ds = e.currentTarget.dataset; const g = (this._rows || {})[ds.group] || []; return g[Number(ds.index)]; },
   openRow(e) { const row = this._row(e); if (!row) return; if (row.tone === 'bad') { this.openMap(); return; } wx.navigateTo({ url: TEAM_PAGE + '?teamId=' + encodeURIComponent(row.teamId) }); },
   onRowAction(e) {

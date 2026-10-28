@@ -15,7 +15,7 @@
   </view>
   <view class="mt-seg">
     <view class="mt-seg__i {{tab === 'mine' ? 'is-on' : ''}}" data-tab="mine" bindtap="switchTab" aria-role="tab" aria-selected="{{tab === 'mine'}}" aria-label="我的" hover-class="cy-pressed" hover-stay-time="80">我的</view>
-    <view class="mt-seg__i {{tab === 'open' ? 'is-on' : ''}}" data-tab="open" bindtap="switchTab" aria-role="tab" aria-selected="{{tab === 'open'}}" aria-label="附近招募" hover-class="cy-pressed" hover-stay-time="80">附近招募{{openRows.length ? ' · ' + openRows.length : ''}}</view>
+    <view class="mt-seg__i {{tab === 'open' ? 'is-on' : ''}}" data-tab="open" bindtap="switchTab" aria-role="tab" aria-selected="{{tab === 'open'}}" aria-label="{{lobby ? '本场招募' : '附近招募'}}" hover-class="cy-pressed" hover-stay-time="80">{{lobby ? '本场招募' : '附近招募'}}{{openRows.length ? ' · ' + openRows.length : ''}}</view>
   </view>
 
   <block wx:if="{{tab === 'mine'}}">
@@ -46,7 +46,22 @@
     </view>
   </block>
 
-  <block wx:if="{{tab === 'open' || (!loading && !groups.length && !mineError)}}">
+  <!-- 本场招募(原型 B T-31):带场次进来时读本场队伍,满员不列出 -->
+  <block wx:if="{{lobby && (tab === 'open' || (!loading && !groups.length && !mineError))}}">
+    <view class="mt-sec" wx:if="{{lobby.scope}}">{{lobby.scope}}</view>
+    <view class="mt-state" wx:if="{{openLoading}}">正在加载…</view>
+    <view class="mt-err" wx:elif="{{openError}}" bindtap="loadOpen" aria-role="button" aria-label="加载失败，轻点重试" hover-class="cy-pressed" hover-stay-time="80">加载失败 · 轻点重试</view>
+    <view class="mt-card cy-rise-in" style="animation-delay: {{index * 60}}ms" wx:for="{{openRows}}" wx:key="key" data-index="{{index}}" bindtap="openLobbyTeam" aria-role="button" aria-label="{{item.name}}，{{item.badge}}" hover-class="cy-pressed" hover-stay-time="80">
+      <view class="mt-card__top">
+        <view class="mt-av mt-av--{{item.avatars.length}}"><image wx:for="{{item.avatars}}" wx:for-item="face" wx:key="k" class="mt-av__i" src="{{face.src}}" mode="aspectFill" /></view>
+        <view class="mt-card__body"><text class="mt-card__n">{{item.name}}</text><text class="mt-card__m">{{item.sub}}</text></view>
+        <text class="mt-badge mt-badge--{{item.tone}}">{{item.badge}}</text>
+      </view>
+      <view class="mt-card__foot"><text>{{item.members}}</text><text class="mt-card__go">{{item.go}}</text></view>
+    </view>
+    <view class="mt-state" wx:if="{{!openLoading && !openError && openLoaded && !openRows.length}}">本场暂无招募中的队伍</view>
+  </block>
+  <block wx:elif="{{tab === 'open' || (!loading && !groups.length && !mineError)}}">
     <view class="mt-sec" wx:if="{{tab === 'mine'}}">附近在招募</view>
     <view class="mt-state" wx:if="{{openLoading}}">正在找附近的队伍…</view>
     <view class="mt-err" wx:elif="{{openError}}" bindtap="loadOpen" aria-role="button" aria-label="{{openError}}，点按重试" hover-class="cy-pressed" hover-stay-time="80">{{openError}} · 点按重试</view>

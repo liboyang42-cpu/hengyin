@@ -235,7 +235,7 @@ function buildTeams(rows, topicId) {
     if (!faces.length && text(r.leaderAvatar)) faces.push(text(r.leaderAvatar));
     const when = toDate(r.startDate);
     const sub = [when ? (when.getMonth() + 1) + '/' + when.getDate() + ' ' + pad2(when.getHours()) + ':' + pad2(when.getMinutes()) : '', text(r.addressName)].filter(Boolean).join(' · ');
-    return { teamId: r.teamId, title: text(r.title) || text(r.activityName) || '主题队伍', sub, count: cap ? joined + '/' + cap : String(joined), missing, faces };
+    return { teamId: r.teamId, activityId: r.activityId || null, when: when ? (when.getMonth() + 1) + '月' + when.getDate() + '日 ' + pad2(when.getHours()) + ':' + pad2(when.getMinutes()) : '', title: text(r.title) || text(r.activityName) || '主题队伍', sub, count: cap ? joined + '/' + cap : String(joined), missing, faces };
   });
   return { rows: out, need };
 }

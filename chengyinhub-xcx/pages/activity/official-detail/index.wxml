@@ -86,6 +86,9 @@
         </view>
       </view>
 
+      <!-- 集合与联系 / 到场签到(原型 B T-38 / T-39):放在页面内容里,不挂在根节点之外 -->
+      <cy-event-attendance event-id="{{id}}" organizer="{{false}}" />
+
       <view wx:if="{{e._activityCards.length}}" class="od-section od-section--divided">
         <text class="od-heading">活动介绍</text>
         <scroll-view scroll-x class="od-card-scroll" enhanced show-scrollbar="{{false}}">
@@ -136,6 +139,18 @@
         <text wx:else class="od-note">暂无任务</text>
       </view>
 
+      <view wx:if="{{e._board}}" class="od-section od-section--divided">
+        <view class="od-section-head"><text class="od-heading">赛事榜单</text><text wx:if="{{e._board.chip}}" class="od-eligible">{{e._board.chip}}</text></view>
+        <view wx:if="{{e._board.rows.length}}" class="od-task-list">
+          <view wx:for="{{e._board.rows}}" wx:key="_key" class="od-task" aria-role="text" aria-label="第 {{item.rank || 0}} 名，{{item.name}}，{{item.value}}">
+            <view class="od-task-index"><text>{{item.rank}}</text></view>
+            <view class="od-task-copy"><text class="od-task-title">{{item.name}}</text></view>
+            <text class="od-task-action">{{item.value}}</text>
+          </view>
+        </view>
+        <text wx:else class="od-note">暂无成绩</text>
+      </view>
+
       <view class="od-section od-section--divided">
         <text class="od-heading">活动奖励</text>
         <!-- F22:只展示后端 rewardJson 里真实配置的奖励;没有配置就如实说明,不摆默认承诺。 -->
@@ -170,6 +185,12 @@
         </view>
       </view>
 
+      <view wx:if="{{(e._policyTitle && !e.signed) || signupBlocked}}" class="od-section od-section--divided">
+        <text class="od-heading">安全须知</text>
+        <cy-consent-check wx:if="{{e._policyTitle && !e.signed}}" checked="{{policyChecked}}" text="我已阅读并同意《{{e._policyTitle}}》" bind:change="onPolicyChange" />
+        <text wx:if="{{signupBlocked}}" class="od-note">按平台规则，你暂时不能报名这一场。</text>
+      </view>
+
       <!-- CL6-SLOT official-coorganizers:联合主办展示挂载位(主办 + 全部协办方)。
            待 CL6 分支 claude/cl6-official-coorganizers-20261015 合入、且公开详情读接口返回 parties 后,
            在此挂 <cy-official-coorganizers mode="section" parties="{{parties}}" />(index.json 同步登记)。
@@ -201,4 +222,3 @@
   </view>
 </view>
 
-<cy-event-attendance event-id="{{id}}" organizer="{{false}}" />
