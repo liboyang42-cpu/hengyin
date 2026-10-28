@@ -28,6 +28,8 @@ final class CombinedCoreHttpWorkload implements AutoCloseable {
     final List<Map<String,Object>> additionalReadWindows = new ArrayList<>();
     final CountDownLatch entered = new CountDownLatch(1);
     final java.util.concurrent.atomic.AtomicInteger verifiedResponses = new java.util.concurrent.atomic.AtomicInteger();
+    private Map<String,String> firstFacts;
+    private Map<String,Map<String,Object>> firstStates;
 
     CombinedCoreHttpWorkload(JdbcTemplate db, JsonNode identities, int port) {
         assertTrue(port > 0 && port <= 65535);
@@ -36,22 +38,39 @@ final class CombinedCoreHttpWorkload implements AutoCloseable {
         assertNotEquals(identities.path("a").path("memberId").asLong(), identities.path("b").path("memberId").asLong());
     }
 
+    /** Original first-wave SQL and held witness, before starting the HTTP-entry wait budget. */
+    void prepareFirstWave(Runnable heldWitness) throws Exception {
+        assertNull(firstFacts, "Do not replace an original prepared wave");
+        assertTrue(waves.isEmpty()); assertEquals(1L, entered.getCount());
+        List<String> keys = new ArrayList<>();
+        for (int i = 0; i < 24; i++) keys.add(String.format(Locale.ROOT, "CAPACITY_%02d", i));
+        Map<String,String> before = new HashMap<>();
+        Map<String,Map<String,Object>> states = new HashMap<>();
+        captureBefore(keys, before, states);
+        heldWitness.run();
+        firstFacts = before; firstStates = states; // Publish only a complete original preparation.
+    }
+
     void run(Runnable heldWitness) throws Exception {
+        assertNotNull(firstFacts, "Prepare the original SQL facts and held witness before HTTP submission");
+        assertNotNull(firstStates);
+        Map<String,String> preparedFacts = firstFacts;
+        Map<String,Map<String,Object>> preparedStates = firstStates;
+        firstFacts = null; firstStates = null; // Consume once; a failed run cannot silently replay.
         for (int wave = 0; wave < CONCURRENCY.length; wave++) {
             int concurrency = CONCURRENCY[wave];
             List<String> keys = new ArrayList<>();
             for (int i = 0; i < 24; i++) keys.add(String.format(Locale.ROOT, "CAPACITY_%02d", wave * 24 + i));
             Map<String, String> before = new HashMap<>();
             Map<String, Map<String,Object>> states = new HashMap<>();
-            for (String key : keys) {
-                JsonNode request = identities.path(key);
-                assertTrue(request.path("commandId").asText().matches("[A-Za-z0-9:_-]{1,80}"));
-                assertEquals(request.path("expectedChapterId").asLong(), chapter(request));
-                assertEquals(0, receipts(request).size()); before.put(key, fact(request));
-                states.put(key, new LinkedHashMap<>(db.queryForMap("SELECT * FROM club_lead_state WHERE activity_id=?",
-                        request.path("activityId").asLong())));
+            if (wave == 0) {
+                assertEquals(new HashSet<>(keys), preparedFacts.keySet());
+                assertEquals(new HashSet<>(keys), preparedStates.keySet());
+                before.putAll(preparedFacts); states.putAll(preparedStates);
+            } else {
+                captureBefore(keys, before, states);
+                heldWitness.run();
             }
-            heldWitness.run();
             Map<String,Object> row = new LinkedHashMap<>();
             row.put("concurrency", concurrency); row.put("newIntents", 24);
             waves.add(row);
@@ -71,6 +90,28 @@ final class CombinedCoreHttpWorkload implements AutoCloseable {
             }
             heldWitness.run(); row.put("factsVerified", true);
         }
+    }
+
+    private void captureBefore(List<String> keys, Map<String,String> before,
+                               Map<String,Map<String,Object>> states) throws IOException {
+        for (String key : keys) {
+            JsonNode request = identities.path(key);
+            assertTrue(request.path("commandId").asText().matches("[A-Za-z0-9:_-]{1,80}"));
+            assertEquals(request.path("expectedChapterId").asLong(), chapter(request));
+            assertEquals(0, receipts(request).size()); before.put(key, fact(request));
+            states.put(key, new LinkedHashMap<>(db.queryForMap("SELECT * FROM club_lead_state WHERE activity_id=?",
+                    request.path("activityId").asLong())));
+        }
+    }
+
+    static AssertionError entryFailure(Future<?> request) throws InterruptedException {
+        AssertionError missing = new AssertionError("Original core HTTP request did not enter its fixed window");
+        if (request.isDone()) {
+            try { request.get(); }
+            catch (ExecutionException failed) { missing.initCause(failed.getCause() == null ? failed : failed.getCause()); }
+            catch (CancellationException cancelled) { missing.initCause(cancelled); }
+        }
+        return missing; // No extra wait, cancellation, retry, response stub or public diagnostic schema.
     }
 
     void readOnlyWindow(String phase, Runnable heldWitness) throws Exception {
@@ -200,14 +241,14 @@ final class CombinedCoreHttpWorkload implements AutoCloseable {
         assertEquals(request.path("commandId").asText(), terminal.path("data").path("commandId").asText());
     }
     private String fact(JsonNode request) throws IOException {
-        return sha(JSON.writeValueAsBytes(Map.of("state", db.queryForList("SELECT * FROM club_lead_state WHERE activity_id=?",
+        return sha(CrossDomainCombinedLoadMySqlIT.completeFactGroups(Map.of("state", db.queryForList("SELECT * FROM club_lead_state WHERE activity_id=?",
                 request.path("activityId").asLong()), "receipt", receipts(request))));
     }
     private String allGame() throws IOException {
-        Map<String,Object> rows = new TreeMap<>();
+        Map<String,List<Map<String,Object>>> rows = new TreeMap<>();
         for (String table : List.of("club_lead_state", "game_command_receipt", "business_audit_event"))
             rows.put(table, db.queryForList("SELECT * FROM `" + table + "` ORDER BY id"));
-        return sha(JSON.writeValueAsBytes(rows));
+        return sha(CrossDomainCombinedLoadMySqlIT.completeFactGroups(rows));
     }
     static String sha(byte[] bytes) {
         try { return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes)); }

@@ -206,6 +206,47 @@ class CombinedContextConfigurationTest {
             assertFalse(Files.exists(pending ? file : pendingFile), "Refusal must not create the other file");
             verifyNoInteractions(jdbc, context);
         }
+
+        // Fixed SQL-preparation/entry boundary only; no servlet, provider or command success double.
+        JdbcTemplate firstQueries = mock(JdbcTemplate.class);
+        String stateSql = "SELECT * FROM club_lead_state WHERE activity_id=?";
+        String receiptSql = "SELECT * FROM game_command_receipt WHERE activity_id=? AND actor_member_id=? AND request_id=?";
+        Map<String,Object> initialState = new LinkedHashMap<>();
+        initialState.put("current_chapter_id", 7L); initialState.put("broadcast_text", null);
+        initialState.put("create_time", java.time.LocalDateTime.of(2026, 10, 26, 1, 2, 3, 123456789));
+        when(firstQueries.queryForObject(anyString(), eq(Long.class), anyLong())).thenReturn(7L);
+        when(firstQueries.queryForList(eq(stateSql), anyLong())).thenReturn(List.of(initialState));
+        when(firstQueries.queryForList(eq(receiptSql), anyLong(), eq(1L), anyString())).thenReturn(List.of());
+        when(firstQueries.queryForMap(eq(stateSql), anyLong())).thenReturn(initialState);
+        var inputs = new com.fasterxml.jackson.databind.ObjectMapper().createObjectNode();
+        inputs.putObject("a").put("memberId", 1L); inputs.putObject("b").put("memberId", 2L);
+        for (int i = 0; i < 24; i++) inputs.putObject(String.format(Locale.ROOT, "CAPACITY_%02d", i))
+                .put("activityId", 100L + i).put("commandId", "core-control-" + i)
+                .put("expectedChapterId", 7L).put("targetChapterId", 8L);
+        var witnessed = new java.util.concurrent.atomic.AtomicInteger();
+        try (var core = new CombinedCoreHttpWorkload(firstQueries, inputs, 1)) {
+            assertThrows(AssertionError.class, () -> core.run(witnessed::incrementAndGet));
+            assertEquals(0, witnessed.get()); verifyNoInteractions(firstQueries);
+            core.prepareFirstWave(witnessed::incrementAndGet);
+            assertEquals(1, witnessed.get());
+            assertEquals(1L, core.entered.getCount(), "SQL preparation/witness must not claim HTTP entry");
+            assertEquals(0, core.verifiedResponses.get()); assertTrue(core.waves.isEmpty());
+            assertEquals(7L, initialState.get("current_chapter_id")); assertNull(initialState.get("broadcast_text"));
+            assertEquals(3, initialState.size(), "Read preparation must not mutate complete JDBC facts");
+            assertThrows(AssertionError.class, () -> core.prepareFirstWave(witnessed::incrementAndGet));
+            assertEquals(1, witnessed.get(), "An original preparation cannot be replaced");
+            for (int i = 0; i < 24; i++) {
+                String key = String.format(Locale.ROOT, "CAPACITY_%02d", i);
+                long activity = inputs.path(key).path("activityId").asLong();
+                String receiptKey = "lead:" + CombinedCoreHttpWorkload.sha(
+                        inputs.path(key).path("commandId").asText().getBytes(StandardCharsets.UTF_8)).substring(0, 48);
+                verify(firstQueries).queryForObject("SELECT current_chapter_id FROM club_lead_state WHERE activity_id=?", Long.class, activity);
+                verify(firstQueries).queryForList(stateSql, activity);
+                verify(firstQueries, times(2)).queryForList(receiptSql, activity, 1L, receiptKey);
+                verify(firstQueries).queryForMap(stateSql, activity);
+            }
+            verifyNoMoreInteractions(firstQueries); // Exact original 24 x five read statements, no updates.
+        }
     }
 
     @Test
@@ -287,6 +328,37 @@ class CombinedContextConfigurationTest {
         assertNotEquals(orderedRows, digest.get(), "SQL ORDER BY remains part of the observation");
         verify(source, atLeastOnce()).queryForList(eq(query), eq(parameters));
         verifyNoMoreInteractions(source);
+
+        JdbcTemplate coreSource = mock(JdbcTemplate.class);
+        Map<String,Object> coreRow = new LinkedHashMap<>(row);
+        List<Map<String,Object>> coreRows = new ArrayList<>(); coreRows.add(coreRow);
+        doReturn(coreRows).when(coreSource).queryForList(anyString(), any(Object[].class));
+        doReturn(coreRows).when(coreSource).queryForList(anyString());
+        var inputs = new com.fasterxml.jackson.databind.ObjectMapper().createObjectNode();
+        inputs.putObject("a").put("memberId", 1L); inputs.putObject("b").put("memberId", 2L);
+        var request = inputs.putObject("CAPACITY_00").put("activityId", 100L).put("commandId", "core-control");
+        assertDoesNotThrow(() -> {
+            try (var core = new CombinedCoreHttpWorkload(coreSource, inputs, 1)) {
+                String coreFact = ReflectionTestUtils.invokeMethod(core, "fact", request);
+                String allFacts = ReflectionTestUtils.invokeMethod(core, "allGame");
+                assertNotNull(coreFact); assertNotNull(allFacts);
+                assertTrue(coreFact.matches("[0-9a-f]{64}")); assertTrue(allFacts.matches("[0-9a-f]{64}"));
+                for (var change : changes.entrySet()) {
+                    Object before = coreRow.put(change.getKey(), change.getValue());
+                    assertNotEquals(coreFact, ReflectionTestUtils.invokeMethod(core, "fact", request), change.getKey());
+                    assertNotEquals(allFacts, ReflectionTestUtils.invokeMethod(core, "allGame"), change.getKey());
+                    coreRow.put(change.getKey(), before);
+                    assertEquals(coreFact, ReflectionTestUtils.invokeMethod(core, "fact", request));
+                    assertEquals(allFacts, ReflectionTestUtils.invokeMethod(core, "allGame"));
+                }
+                coreRows.add(Map.of("id", 1L));
+                String orderedCore = ReflectionTestUtils.invokeMethod(core, "fact", request);
+                assertNotEquals(coreFact, orderedCore);
+                Collections.reverse(coreRows);
+                assertNotEquals(orderedCore, ReflectionTestUtils.invokeMethod(core, "fact", request));
+                assertEquals(1L, core.entered.getCount()); assertEquals(0, core.verifiedResponses.get());
+            }
+        });
     }
 
     @Test
@@ -318,6 +390,16 @@ class CombinedContextConfigurationTest {
                 "unsupported".equals(reference.getFieldName())), "Original failing field path is retained privately");
         verify(unsupportedRow).queryForList(eq(query), eq(parameters));
         verifyNoMoreInteractions(unsupportedRow);
+
+        assertThrows(InvalidDefinitionException.class, () -> CrossDomainCombinedLoadMySqlIT.completeFactGroups(
+                Map.of("state", List.of(Map.of("unsupported", new Object())))));
+        var completedCore = java.util.concurrent.CompletableFuture.failedFuture(queryFailure);
+        var entry = assertDoesNotThrow(() -> CombinedCoreHttpWorkload.entryFailure(completedCore));
+        assertEquals("Original core HTTP request did not enter its fixed window", entry.getMessage());
+        assertSame(queryFailure, entry.getCause()); assertSame(driverFailure, entry.getCause().getCause());
+        var unfinishedCore = new java.util.concurrent.CompletableFuture<Void>();
+        var noEntry = assertDoesNotThrow(() -> CombinedCoreHttpWorkload.entryFailure(unfinishedCore));
+        assertNull(noEntry.getCause()); assertFalse(unfinishedCore.isDone(), "No extra wait/cancel/retry at entry failure");
     }
 
     @Test
