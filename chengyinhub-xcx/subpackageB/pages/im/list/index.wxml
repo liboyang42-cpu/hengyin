@@ -35,13 +35,26 @@
               data-id="{{item.inviteId}}" data-box="{{activeTab === 'in' ? 'received' : 'sent'}}" bindtap="openInvite"
               aria-role="button" aria-label="协作邀请：{{item.partnerName || item.topicText}}，{{item.statusText}}"
               hover-class="cy-pressed" hover-stay-time="80">
+          <!-- 2026-10-28 业主 m681:照 Figma 393:429 / 393:442 —— 状态 · 来自谁,封面 + 档期 / 主题名 / 地点,条款一行,待确认的直接给两颗按钮(进详情处理) -->
           <view class="invite-card__top">
-            <view class="invite-card__icon" aria-hidden="true"><cy-icon name="connect" size="36" /></view>
             <text class="invite-status is-{{item.badgeTone}}">{{item.statusText}}</text>
+            <text class="invite-card__from">{{activeTab === 'in' ? '来自' : '发给'}} {{item.partnerName}}</text>
           </view>
-          <text class="invite-card__name">{{item.partnerName || item.topicText}}</text>
-          <text class="invite-card__sub">{{activeTab === 'in' ? '邀请你合作' : '你发出的邀请'}}{{item.topicText ? ' · ' + item.topicText : ''}}</text>
-          <text class="invite-card__time">{{item.timeText}}</text>
+          <view class="invite-card__main">
+            <image wx:if="{{item.topicImgUrl}}" class="invite-card__cover" src="{{item.topicImgUrl}}" mode="aspectFill" lazy-load />
+            <view wx:else class="invite-card__cover invite-card__cover--none" aria-hidden="true"><cy-icon name="connect" size="44" /></view>
+            <view class="invite-card__info">
+              <text class="invite-card__date" wx:if="{{item.dateText}}">{{item.dateText}} 起</text>
+              <text class="invite-card__name">{{item.topicText || item.partnerName}}</text>
+              <text class="invite-card__sub" wx:if="{{item.topicAddressName}}">{{item.topicAddressName}}</text>
+            </view>
+          </view>
+          <text class="invite-card__terms" wx:if="{{item.termsText}}">{{item.termsText}}</text>
+          <view class="invite-card__acts" wx:if="{{activeTab === 'in' && item.status === 0}}">
+            <view class="invite-card__btn" aria-role="button" aria-label="拒绝" hover-class="cy-pressed" hover-stay-time="80">拒绝</view>
+            <view class="invite-card__btn invite-card__btn--primary" aria-role="button" aria-label="接受合作" hover-class="cy-pressed" hover-stay-time="80">接受合作</view>
+          </view>
+          <text wx:else class="invite-card__time">{{item.timeText}}</text>
         </view>
       </view>
     </scroll-view>
@@ -80,6 +93,7 @@
 
   <!-- 列表 -->
   <scroll-view class="body" wx:else scroll-y enhanced show-scrollbar="{{false}}" style="{{pmList === 1 ? '--pm-l:1;' : (pmList === 2 ? '--pm-l-d:.32s;--pm-l-s:1;' : '')}}">
+    <text wx:if="{{isMerchantView && viewList.length && (activeTab === 'in' ? invitesIn.length : invitesOut.length)}}" class="invite-strip__title">消息</text>
     <view class="conv-wrap {{item._open ? 'is-open' : ''}}" wx:for="{{viewList}}" wx:key="conversationId">
       <!-- 左滑露出的操作 -->
       <view class="conv-actions" style="opacity: {{item.offset ? 1 : 0}};">

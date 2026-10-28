@@ -532,3 +532,4 @@
   font-weight: 600;
 }
 .ts-btn--ghost { flex: 0 0 38%; background: var(--cy-bg-page); color: var(--cy-text-title); }
+

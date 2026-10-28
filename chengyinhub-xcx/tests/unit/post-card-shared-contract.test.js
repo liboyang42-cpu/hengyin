@@ -24,9 +24,10 @@ function assertSharedPostCard(overrides = {}) {
   // 2026-09-02 Figma 297:1827:首列宽改由 --pc-avatar 出(Image / Text 44pt=88rpx,
   // Roam / Template 挂 .post-card--compact 降到 40pt),不再是写死的 --cy-space-8。
   // 真正的不变式是「首列宽 == 头像宽」,所以两处必须读同一个变量,不许各写一份字面值。
-  // 2026-10-27 P-21 owner(真机走查 p112):还原 #508 之前的帖文卡(头像一列 + 内容一列的两栏网格),
-  // 撤回 2026-10-22 新稿 211:271 的整宽重排;断言回到「首列宽 == 头像宽」的原不变式。
-  assert.match(componentWxss, /\.post-card\s*\{[^}]*grid-template-columns:\s*var\(--pc-avatar\)\s+minmax\(0,\s*1fr\)/s)
+  // 2026-10-22 新稿(俱乐部页重做 211:271/326/354):不再是两栏网格,头像只占头部行首,
+  // 头部给它让出 --pc-avatar + 10pt;内容整宽。不变式改为「头部让位 == 头像宽 + 间距」,同读一个变量。
+  assert.doesNotMatch(componentWxss, /grid-template-columns:\s*var\(--pc-avatar\)/, '内容不能再缩进到头像右侧')
+  assert.match(componentWxss, /\.post-card__head\s*\{[^}]*padding-left:\s*calc\(var\(--pc-avatar\)\s*\+\s*var\(--cy-space-2-5\)\)/s)
   assert.match(componentWxss, /\.post-card__avatar\s*\{[^}]*width:\s*var\(--pc-avatar\)[^}]*height:\s*var\(--pc-avatar\)/s)
   assert.match(componentWxss, /\.post-card--compact\s*\{\s*--pc-avatar:\s*var\(--cy-space-7\)/)
   // 骨架跟真卡片走(用户拍板):头像与首列间距差一格,加载完成时整栏会横向弹一下。
@@ -42,9 +43,8 @@ function assertSharedPostCard(overrides = {}) {
   assert.match(componentWxml, /aria-label="转发帖文"[\s\S]*src="\/images\/icon_share\.png"/)
   assert.doesNotMatch(componentWxml, /repostCount|name="share"/)
   assert.match(read('pages/talent/list/index.wxml'), /interactive-club/)
-  // 达人页会随商家视角切浅色，转发位图需要据此翻色。
-  // 2026-10-27 M-24 owner:俱乐部详情也随商家视角切浅色(玩家仍暗色),原「固定暗色不传 light」随之改为同口径。
-  assert.match(read('pages/club/detail/index.wxml'), /<cy-post-card[^>]*light="\{\{isMerchantViewer\}\}"/)
+  // 2026-10-27 M-24:俱乐部详情玩家深色、商家浅色 ⇒ 帖文卡 light 只跟商家视角走;达人页同理随商家视角切浅色。
+  assert.match(read('pages/club/detail/index.wxml'), /<cy-post-card[^>]*light="\{\{isMerchantViewer\}\}"/, '俱乐部详情只在商家视角开浅色卡片')
   assert.match(read('pages/talent/list/index.wxml'), /light="\{\{isMerchantViewer\}\}"/)
   assert.match(read('pages/talent/list/index.js'), /club\/detail\/index\?id=' \+ clubId \+ '&postId=' \+ postId/)
 }

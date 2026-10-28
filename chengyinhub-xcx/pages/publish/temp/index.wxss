@@ -586,43 +586,38 @@ page {
 .cg-pv-scroll { flex: 1; min-height: 0; box-sizing: border-box; }
 .cg-pv-pager {
   position: relative; z-index: 3;
-  display: flex; align-items: center; justify-content: center; gap: var(--cy-space-3);
-  padding: var(--cy-space-3);
-  background: rgba(0,0,0,.7);
-  backdrop-filter: blur(16rpx);
+  display: flex; align-items: center; gap: var(--cy-space-2);
+  padding: var(--cy-space-2) var(--cy-legacy-36) 0;
 }
-.cg-pv-dots { display: flex; gap: var(--cy-space-1-5); }
-.cg-pv-dot { width: var(--cy-legacy-14); height: var(--cy-legacy-14); border-radius: 8rpx; background: rgba(255,255,255,.35); transition: width var(--cy-motion-standard) var(--cy-ease-out), background var(--cy-motion-fast) var(--cy-ease-out); } /* ds-ok */
-.cg-pv-dot.on { width: 40rpx; background: #fff; }
+.cg-pv-seg { flex: 1; height: 8rpx; border-radius: 4rpx; background: rgba(127,127,127,.28); transition: background var(--cy-motion-fast) var(--cy-ease-out); } /* ds-ok: 2026-10-28 分段进度条 */
+.cg-pv-seg.on { background: var(--cy-color-text-primary); }
 
 .cg-pv-body { padding: var(--cy-space-2) var(--cy-legacy-36) 0; }
-.cg-pv-step { font-size: var(--cy-font-label); color: #8fa6d8; text-align: center; padding-bottom: var(--cy-space-3); } /* ds-ok */
+.cg-pv-step { font-size: var(--cy-font-label); color: var(--cy-color-text-tertiary); padding: var(--cy-space-3) var(--cy-legacy-36) var(--cy-space-4); }
 .cg-pv-panel { animation: cg-pv-panel-in var(--cy-motion-slow) var(--cy-ease-out) both; }
 
 /* 到达 */
 .cg-pv-cover {
-  width: 100%; height: 376rpx; border-radius: 40rpx; overflow: hidden;
-  position: relative; background: #33405f;
-  box-shadow: 0 16rpx 60rpx rgba(0,0,0,.3);
+  width: 100%; height: 440rpx; border-radius: var(--cy-radius-2xl); overflow: hidden;
+  position: relative; background: #141414; /* ds-ok */
+  box-shadow: 0 16rpx 60rpx rgba(0,0,0,.18); /* ds-ok: 到达封面浮起投影,深浅两色页同值 */
 }
 .cg-pv-cover-img { width: 100%; height: 100%; }
 /* 没配封面图:不再用一块压暗纱托一张不存在的图(灰块压标题),标题直接落在卡面上、贴底 */
 .cg-pv-cover--noimg { height: auto; min-height: 240rpx; display: flex; align-items: flex-end; } /* ds-ok: 无图封面的最小高 */
-.cg-pv-cover--noimg .cg-pv-cover-mask { position: static; flex: 1; background: none; }
-.cg-pv-cover-mask {
-  position: absolute; left: 0; right: 0; bottom: 0; padding: var(--cy-space-4);
-  /* 2026-09-02 去墨蓝:原 rgba(10,18,38,.85) 是 #0A1226 的墨蓝纱。封面压字的纱本就有 DS 档
-     (--cy-comp-cover-scrim,底 .82 起手、55% 处 .28、到顶透明),直接读它,别再自调一条。
-     ⚠️ 本页是创建域,真正生效的是下面那条 .theme-topic-editor 覆写;改这条是为了组件在
-     别的域渲染时不落回墨蓝。 */
-  background: var(--cy-comp-cover-scrim);
-}
 .cg-pv-badge {
   display: inline-block;
-  background: var(--cy-brand); color: #fff; /* ds-ok: 紫底白字徽章,#fff 是恒定前景色不随主题翻转 */
+  background: #111; color: #fff; /* ds-ok: 紫底白字徽章,#fff 是恒定前景色不随主题翻转 */
   font-size: var(--cy-font-caption); font-weight: 600; padding: var(--cy-space-1) var(--cy-legacy-18); border-radius: var(--cy-radius-sm); margin-bottom: 16rpx;
 }
-.cg-pv-cover-tit { font-size: var(--cy-font-page-title); font-weight: 800; color: #fff; } /* ds-ok: hero 图遮罩上恒白字,预览态深色场景既有色 */
+.cg-pv-cover-tit { margin-top: var(--cy-space-3); font-size: var(--cy-font-page-title); font-weight: 800; color: var(--cy-color-text-primary); }
+.cg-pv-intro { padding: var(--cy-space-6) var(--cy-space-2) 0; }
+.cg-pv-intro .cg-pv-meta-v { margin-top: var(--cy-space-2); font-weight: 400; color: var(--cy-color-text-tertiary); }
+.cg-pv-intro .cg-pv-desc { margin-top: var(--cy-space-5); line-height: 1.75; color: var(--cy-color-text-secondary); }
+.cg-pv-nav { flex: none; display: flex; align-items: center; justify-content: space-between; padding: var(--cy-space-3) var(--cy-legacy-36) calc(var(--cy-space-4) + env(safe-area-inset-bottom)); }
+.cg-pv-navbtn { width: 112rpx; height: 112rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--cy-color-bg-surface); color: var(--cy-color-text-primary); box-shadow: 0 4rpx 20rpx rgba(0,0,0,.08); } /* ds-ok */
+.cg-pv-navbtn.is-off { opacity: .35; }
+.cg-pv-navn { font-size: var(--cy-font-label); color: var(--cy-color-text-tertiary); }
 .cg-pv-card {
   margin-top: var(--cy-space-4);
   --cy-comp-card-bg: rgba(255,255,255,.58); /* ds-ok: 深色玩法预览舞台上的既有玻璃卡,非页面主题卡 */
@@ -1024,11 +1019,7 @@ page {
   box-shadow: none;
 }
 
-.theme-topic-editor .cg-pv-cover-mask {
-  background: var(--cy-color-overlay);
-}
-.theme-topic-editor .cg-pv-cover--noimg .cg-pv-cover-mask { background: none; }
-/* 有封面图时标题压在暗纱上:必须反白,跟随上面那条 text-primary 会变成黑字压灰纱 */
+.theme-topic-editor /* 有封面图时标题压在暗纱上:必须反白,跟随上面那条 text-primary 会变成黑字压灰纱 */
 .theme-topic-editor .cg-pv-cover--img .cg-pv-cover-tit { color: var(--cy-color-text-inverse); }
 
 .theme-topic-editor .cg-pv-step,

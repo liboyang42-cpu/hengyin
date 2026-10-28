@@ -31,6 +31,16 @@ function makeRequestId() {
 const AI_PENDING_CODES = ['AI_DRAFT_IN_PROGRESS', 'AI_DRAFT_OUTCOME_UNKNOWN', 'AI_DRAFT_STATE_UNAVAILABLE'];
 
 const MAX_AI_PLAN_NODES = 3;
+// p86 兴趣气泡:位置按稿错落摆放(x 为百分比、y 为 rpx),选中的标签拼进发给 AI 的描述
+const INTERESTS = [
+  { key: 'coffee', label: '咖啡', icon: 'category-food', x: 14, y: 90, size: 150 },
+  { key: 'food', label: '美食', icon: 'discover-shop', x: 36, y: 10, size: 132 },
+  { key: 'photo', label: '拍照', icon: 'camera', x: 58, y: 110, size: 140 },
+  { key: 'story', label: '老建筑', icon: 'poi-landmark', x: 78, y: 20, size: 128 },
+  { key: 'night', label: '夜游', icon: 'star', x: 18, y: 280, size: 128 },
+  { key: 'walk', label: '散步', icon: 'walk', x: 44, y: 250, size: 140 },
+  { key: 'park', label: '公园', icon: 'poi-park', x: 70, y: 280, size: 132 },
+];
 
 Page({
   data: {
@@ -51,6 +61,11 @@ Page({
     aiDraftPending: false,
     aiRemaining: 0, reducedMotion: false,
     aiPrompts: ['老城建筑与咖啡', '周末亲子探险', '雨天室内漫游'],
+    aiTweaks: ['再加一站', '换成晚上', '缩短到 1 小时'],
+    interests: INTERESTS.map(function (it) { return Object.assign({ on: false }, it); }),
+    interestText: '',
+    interestCount: 0,
+    planOpen: false,
     // 模式:2 自由 / 1 定向
     mode: 2,
     operationScope: '',
@@ -112,6 +127,20 @@ Page({
   },
   onAiIdeaInput(e) { this.setData({ aiIdea: e.detail.value, aiError: '' }); },
   useAiPrompt(e) { this.setData({ aiIdea: e.currentTarget.dataset.text || '', aiError: '' }); },
+  toggleInterest(e) {
+    const key = e.currentTarget.dataset.key;
+    const interests = this.data.interests.map(function (it) { return it.key === key ? Object.assign({}, it, { on: !it.on }) : it; });
+    const picked = interests.filter(function (it) { return it.on; }).map(function (it) { return it.label; });
+    this.setData({ interests, interestText: picked.join(' · '), interestCount: picked.length, aiError: '' });
+  },
+  openDraft() { this.setData({ planOpen: true }); },
+  /** 发给 AI 的一句话 = 输入框 + 选中的兴趣;两样都空时为空串 */
+  _composeIdea() {
+    const typed = (this.data.aiIdea || '').trim();
+    const picked = this.data.interests.filter(function (it) { return it.on; }).map(function (it) { return it.label; });
+    if (!picked.length) return typed;
+    return (typed ? typed + '，' : '') + '喜欢' + picked.join('、');
+  },
   // P-43:失败卡上的重试 —— 结果未确认时只回读那一次(同发送键),否则用保留的描述再生成一次
   retryAiPlan() {
     if (this._aiPending) this.checkAiDraftRequest();
@@ -122,11 +151,11 @@ Page({
     if (this.data.aiGenerating) return;
     const pending = this._aiPending;
     // 结果未确认:先回读那一次。只有服务端已明说「结果无法确认」且用户改了灵感,才算放弃它另起一次。
-    if (pending && !(pending.unknown && (this.data.aiIdea || '').trim() !== pending.idea)) {
+    if (pending && !(pending.unknown && this._composeIdea() !== pending.idea)) {
       this.checkAiDraftRequest();
       return;
     }
-    const idea = (this.data.aiIdea || '').trim();
+    const idea = this._composeIdea();
     if (!idea) { this.setData({ aiError: '先说说你想做什么路线。' }); return; }
     // 配额已用完就不要再发一趟注定被后端拒掉的请求 —— 页面顶部明明写着「还可生成 0 次」,
     // 输入框和发送钮却照常可用(2026-08-19 B51 实拍)。后端那道闸保留,这里只是不让用户白跑。
@@ -238,6 +267,7 @@ Page({
       return;
     }
     this.setData({
+      planOpen: false,
       aiPlan: { title: draft.title, subtitle: draft.subtitle || '', storyline: draft.storyline || '' },
       aiPlanNodes: nodes.map((node, index) => ({
         name: node.merchantName || node.roleText || node.task || ('节点 ' + (index + 1)),

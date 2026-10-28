@@ -91,7 +91,7 @@
            夜间 CTA(星白底)。组件层归 style/(禁区)改不了,故本页两个按钮维持自造件,只把「···」换 cy-icon。 -->
       <!-- 2026-07-31:原"开始探索"旁的"游玩"三卡分组(继续/自由漫游/漫游足迹)与主按钮功能重复,
            已删除;主按钮直接进漫游,旁边新增"票夹"入口承接原"从票夹开始"诉求。 -->
-      <view class="pc-actions">
+      <view class="pc-actions" wx:if="{{isSelf || !viewingOwn}}">
         <!-- UI-12:公开视角(他人看)主按钮 = 关注,不再区分被看者是玩家还是商家;
              本人视角保持原样(商家本人=核销)。 -->
         <view class="pc-primary {{!isSelf ? 'pc-primary--follow' : ''}} {{!isSelf && userInfo.isFollow == 1 ? 'pc-primary--followed' : ''}} {{followSubmitting ? 'pc-primary--pending' : ''}} {{followReceipt ? 'pc-primary--settled' : ''}}"
@@ -108,18 +108,18 @@
           <view class="pc-ticket-icon"><cy-icon name="coupon" size="32" /></view>
           <text>票夹</text>
         </view>
-        <view class="pc-primary pc-ticket" wx:if="{{!isSelf && !subjectIsMerchant}}" bindtap="onStartChat" hover-class="pc-btn-press" aria-role="button" aria-label="发消息">
+        <view class="pc-primary pc-ticket" wx:if="{{!isSelf && !viewingOwn && !subjectIsMerchant}}" bindtap="onStartChat" hover-class="pc-btn-press" aria-role="button" aria-label="发消息">
           <cy-icon name="tab-feed" size="32" />
           <text>发消息</text>
         </view>
         <!-- BL-69:商家在架据点的收藏入口,照「发消息」同款按钮;无在架节点不展示 -->
-        <view class="pc-primary pc-ticket" wx:if="{{!isSelf && subjectIsMerchant && merchantNode}}" bindtap="toggleMerchantNodeFavorite" hover-class="{{merchantNodeBusy ? 'none' : 'pc-btn-press'}}" aria-role="button" aria-label="{{merchantNodeBusy ? '正在更新节点收藏' : (merchantNode.favorited ? '取消收藏节点' : '收藏节点')}}" aria-pressed="{{merchantNode.favorited}}" aria-busy="{{merchantNodeBusy}}" aria-disabled="{{merchantNodeBusy}}">
+        <view class="pc-primary pc-ticket" wx:if="{{!isSelf && !viewingOwn && subjectIsMerchant && merchantNode}}" bindtap="toggleMerchantNodeFavorite" hover-class="{{merchantNodeBusy ? 'none' : 'pc-btn-press'}}" aria-role="button" aria-label="{{merchantNodeBusy ? '正在更新节点收藏' : (merchantNode.favorited ? '取消收藏节点' : '收藏节点')}}" aria-pressed="{{merchantNode.favorited}}" aria-busy="{{merchantNodeBusy}}" aria-disabled="{{merchantNodeBusy}}">
           <cy-icon name="{{merchantNode.favorited ? 'star-filled' : 'star'}}" size="32" />
           <text>{{merchantNodeBusy ? '处理中…' : (merchantNode.favorited ? '已收藏节点' : '收藏节点')}}</text>
         </view>
         <!-- UI-12:公开视角也要有「···」更多(分享主页/屏蔽)。
              M-16(2026-10-27):本人商家视角「核销」右边的「···」删除 —— 店铺资料/分享/设置在别处都有,重复。 -->
-        <view class="pc-more" wx:if="{{!isSelf}}" bindtap="openMoreMenu" hover-class="pc-btn-press" aria-role="button" aria-label="打开更多操作"><cy-icon name="more" size="32" /></view>
+        <view class="pc-more" wx:if="{{!isSelf && !viewingOwn}}" bindtap="openMoreMenu" hover-class="pc-btn-press" aria-role="button" aria-label="打开更多操作"><cy-icon name="more" size="32" /></view>
       </view>
 
       <!-- ⓪ 门店 AI 形象(npc_profile 里 scope 2「门店分身」,后台配):像素分身静态出场,不接对话。

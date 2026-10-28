@@ -1,38 +1,37 @@
 <!-- 城瘾 · 创建城市路线(简易版)—— 地图为主角版 -->
 <!-- 模式语义:mode=2 自由(绿)/ mode=1 定向(蓝) -->
-<view class="simple-ai theme-topic-editor">
+<view class="simple-ai theme-topic-editor {{reducedMotion ? 'simple-ai--reduced' : ''}}">
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
-  <cy-nav-bar />
-  <!-- 页头由下方自带的「快速配置 · 路线共创」承担,不再叠一层 cy-page-title;这里只做导航让位 -->
+  <!-- 2026-10-28 业主 p86(参考 X alexyango / ianneo_ai):浅色渐变底 + 兴趣气泡 + 灵感 chip + 圆形发送键;
+       出稿后是一张草稿卡,点「打开草稿」再展开原来的逐站确认。额度只在用完时用下方提示说明。 -->
+  <view class="simple-ai__glow" aria-hidden="true"><view class="simple-ai__blob simple-ai__blob--a"></view><view class="simple-ai__blob simple-ai__blob--b"></view><view class="simple-ai__blob simple-ai__blob--c"></view></view>
+  <cy-nav-bar title="快速配置" />
   <view class="simple-ai__nav-spacer" style="height: {{statusBarHeight + navBarHeight}}px;"></view>
-  <view class="simple-ai__nav">
-    <view class="simple-ai__nav-copy">
-      <text class="simple-ai__nav-title">快速配置</text>
-    </view>
-    <view class="simple-ai__quota-pill" wx:if="{{aiQuotaLoaded}}">
-      <view class="simple-ai__quota-icon"><cy-icon name="clock" size="28" /></view>
-      <text>还可生成 {{aiRemaining != null ? aiRemaining + ' 次' : '—'}}</text>
-    </view>
-  </view>
 
   <cy-empty wx:if="{{creatorLoginRequired}}" title="登录后配置路线" cta="去登录" bind:cta="onCreatorLogin" />
   <block wx:else>
   <scroll-view class="simple-ai__scroll" scroll-y="true">
     <view class="simple-ai__body">
-      <view class="simple-ai__hero">
+      <view class="simple-ai__hero" wx:if="{{!aiPlan || planOpen}}">
         <text class="simple-ai__kicker">{{mode === 2 ? '自由探索 · 章节承接路线' : '城市定向 · 集合式路线'}}</text>
         <text class="simple-ai__title">{{aiPlan ? '这条路线，已经有了轮廓。' : '嗨，想做一条什么样的路线？'}}</text>
       </view>
 
       <block wx:if="{{!aiPlan}}">
-        <view class="simple-ai__prompt-label">可以从这些灵感开始</view>
-        <view class="simple-ai__chips">
-          <view class="simple-ai__chip" wx:for="{{aiPrompts}}" wx:key="*this" bindtap="useAiPrompt" data-text="{{item}}" aria-role="button" aria-label="使用灵感：{{item}}" hover-class="cy-pressed" hover-stay-time="80">
-            <text>{{item}}</text>
-            <view class="simple-ai__chip-arrow"><cy-icon name="arrow-right" size="22" /></view>
+        <view class="simple-ai__prompt-label">你喜欢什么</view>
+        <view class="simple-ai__bubbles">
+          <view class="simple-ai__bubble {{item.on ? 'is-on' : ''}}" wx:for="{{interests}}" wx:key="key"
+                style="left: {{item.x || 0}}%; top: {{item.y || 0}}rpx; --b: {{item.size || 132}}rpx; animation-delay: {{index * 60}}ms;"
+                data-key="{{item.key}}" bindtap="toggleInterest" aria-role="checkbox" aria-checked="{{item.on}}" aria-label="{{item.label}}"
+                hover-class="cy-pressed" hover-stay-time="80">
+            <cy-icon name="{{item.icon}}" size="{{item.on ? 44 : 40}}" />
           </view>
+        </view>
+        <view class="simple-ai__picked" wx:if="{{interestText}}">
+          <text class="simple-ai__picked-t">{{interestText}}</text>
+          <text class="simple-ai__picked-n">选了 {{interestCount || 0}} 个</text>
         </view>
       </block>
 
@@ -49,7 +48,26 @@
       <cy-inline-error wx:elif="{{!aiPlan && aiQuotaLoaded && aiRemaining <= 0}}" kind="data"
                        title="今日额度已用完" sub="可改用手动创建" />
 
-      <block wx:if="{{aiPlan}}">
+      <block wx:if="{{aiPlan && !planOpen}}">
+        <view class="simple-ai__summary" wx:if="{{interestText || aiIdea}}">{{interestText ? interestText + (aiIdea ? ' · ' + aiIdea : '') : aiIdea}}</view>
+        <view class="simple-ai__draft">
+          <image class="simple-ai__draft-img" src="{{mode === 2 ? '/images/route_free_cover.png' : '/images/route_city_cover.png'}}" mode="aspectFill" />
+          <view class="simple-ai__draft-shade"></view>
+          <view class="simple-ai__draft-over">
+            <text class="simple-ai__draft-t">{{aiPlan.title}}</text>
+            <text class="simple-ai__draft-m">{{aiPlanNodes.length}} 站</text>
+            <view class="simple-ai__draft-btn" bindtap="openDraft" aria-role="button" aria-label="打开草稿" hover-class="cy-pressed" hover-stay-time="80">打开草稿</view>
+          </view>
+        </view>
+        <view class="simple-ai__stops">
+          <view class="simple-ai__stop" wx:for="{{aiPlanNodes}}" wx:key="index" wx:for-item="node">
+            <view class="simple-ai__stop-n">{{index + 1}}</view>
+            <text class="simple-ai__stop-t">{{node.name}}</text>
+          </view>
+        </view>
+      </block>
+
+      <block wx:if="{{aiPlan && planOpen}}">
         <view class="simple-ai__section-heading">
           <text>AI 为你整理的初稿</text>
           <text class="simple-ai__section-state">可编辑</text>
@@ -89,17 +107,19 @@
   </scroll-view>
 
   <view class="simple-ai__composer-wrap">
-    <view class="simple-ai__composer-handle"></view>
-    <view class="simple-ai__composer">
-      <view class="simple-ai__composer-spark"><cy-icon name="star" size="28" /></view>
-      <text class="req" aria-hidden="true">*</text>
-      <textarea class="simple-ai__input" value="{{aiIdea}}" bindinput="onAiIdeaInput" maxlength="300" auto-height="{{true}}" placeholder="描述你想做的路线" placeholder-class="simple-ai__placeholder" fixed="{{true}}" aria-label="路线灵感" />
-      <!-- W10b #22:上一次起草结果未确认时,这颗键只回读那一次(查看结果),不另起一次,也不受额度置灰影响。 -->
-      <view class="simple-ai__send {{aiGenerating ? 'is-loading' : ''}} {{(!aiDraftPending && aiQuotaLoaded && aiRemaining <= 0) ? 'is-exhausted' : ''}}" bindtap="generateAiPlan" aria-role="button" aria-label="{{aiDraftPending ? '查看上一次起草结果' : '生成主题草稿'}}" aria-disabled="{{aiGenerating || (!aiDraftPending && aiQuotaLoaded && aiRemaining <= 0)}}" hover-class="{{aiGenerating || (!aiDraftPending && aiQuotaLoaded && aiRemaining <= 0) ? 'none' : 'cy-pressed'}}" hover-stay-time="80">
-        <text wx:if="{{aiGenerating}}">{{aiDraftPending ? '查询中…' : '生成中…'}}</text>
-        <text wx:elif="{{aiDraftPending}}">查看结果</text>
-        <text wx:else>生成</text>
+    <scroll-view class="simple-ai__chips" scroll-x enhanced show-scrollbar="{{false}}" wx:if="{{!planOpen}}">
+      <view class="simple-ai__chips-track">
+        <view class="simple-ai__chip" wx:for="{{aiPlan ? aiTweaks : aiPrompts}}" wx:key="*this" bindtap="useAiPrompt" data-text="{{item}}" aria-role="button" aria-label="使用灵感：{{item}}" hover-class="cy-pressed" hover-stay-time="80">{{item}}</view>
       </view>
+    </scroll-view>
+    <view class="simple-ai__composer">
+      <textarea class="simple-ai__input" value="{{aiIdea}}" bindinput="onAiIdeaInput" maxlength="300" auto-height="{{true}}" placeholder="说说你想要的路线…" placeholder-class="simple-ai__placeholder" fixed="{{true}}" aria-label="路线灵感" />
+    </view>
+    <!-- W10b #22:上一次起草结果未确认时,这颗键只回读那一次(查看结果),不另起一次,也不受额度置灰影响。 -->
+    <view class="simple-ai__send {{aiGenerating ? 'is-loading' : ''}} {{(!aiDraftPending && aiQuotaLoaded && aiRemaining <= 0) ? 'is-exhausted' : ''}}" bindtap="generateAiPlan" aria-role="button" aria-label="{{aiDraftPending ? '查看上一次起草结果' : '生成主题草稿'}}" aria-disabled="{{aiGenerating || (!aiDraftPending && aiQuotaLoaded && aiRemaining <= 0)}}" hover-class="{{aiGenerating || (!aiDraftPending && aiQuotaLoaded && aiRemaining <= 0) ? 'none' : 'cy-pressed'}}" hover-stay-time="80">
+      <text wx:if="{{aiGenerating}}" class="simple-ai__send-t">…</text>
+      <text wx:elif="{{aiDraftPending}}" class="simple-ai__send-t">查看</text>
+      <view wx:else class="simple-ai__send-ic"><cy-icon name="arrow-right" size="40" /></view>
     </view>
   </view>
   </block>

@@ -57,7 +57,8 @@ function assertBadgeWallContract(files) {
   assert.match(files.badgeWxml, /wx:for="\{\{badgeGroups\}\}"/)
   assert.match(files.badgeWxml, /class="bw-list-h"/)
   assert.match(files.badgeWxml, /<scroll-view[^>]*class="bw-list"[^>]*scroll-y/)
-  assert.match(files.badgeWxml, /class="bw-list-row"[^>]*wx:for="\{\{group\.items\}\}"/)
+  // 2026-10-28 p75:每组两列勋章(金属边 + 珐琅面),行列表撤掉
+  assert.match(files.badgeWxml, /class="bw-cell"[^>]*wx:for="\{\{group\.items\}\}"/)
   assert.match(files.badgeWxml, /<cy-empty[^>]*class="bw-empty-state"[^>]*fill[^>]*size="lg"[^>]*title="还没有点亮勋章"/)
   assert.match(files.badgeWxml, /\{\{unlockedCount\}\}[\s\S]*\{\{badges\.length\}\}/)
   assert.match(files.badgeJs, /viewMode:\s*'list'/)

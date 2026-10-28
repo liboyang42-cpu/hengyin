@@ -25,7 +25,8 @@ test('业主点名的四个场景是 page 档(P-51 / P-58 / P-59 / P-37)', () =>
 test('page 档:没有遮罩和把手,普通导航栏 + 大标题,导航返回与物理返回同一出口', () => {
   const wxml = read('components/cy/scene-sheet/index.wxml')
   assert.match(wxml, /<view wx:if="\{\{variant !== 'page'\}\}" class="ss__mask"/)
-  assert.match(wxml, /<block wx:if="\{\{variant === 'page'\}\}">\s*<cy-nav-bar plain custom-back bind:back="onPageBack" \/>\s*<cy-page-title title="\{\{title\}\}" \/>/)
+  // 2026-10-28 p92:bare 档(订单详情 Figma 578:2298)= 封面头铺到顶,overlay 导航、无页标题;其余 page 档不变
+  assert.match(wxml, /<block wx:if="\{\{variant === 'page'\}\}">\s*<cy-nav-bar wx:if="\{\{bare\}\}" overlay tint="light" custom-back bind:back="onPageBack" \/>\s*<cy-nav-bar wx:else plain custom-back bind:back="onPageBack" \/>\s*<cy-page-title wx:if="\{\{!bare\}\}" title="\{\{title\}\}" \/>/)
   assert.match(wxml, /<view class="ss__head" wx:else>/)
   const wxss = read('components/cy/scene-sheet/index.wxss')
   assert.match(wxss, /\.ss--page \.ss__panel \{[^}]*height: 100%;[^}]*border-radius: 0;[^}]*transform: none;/)

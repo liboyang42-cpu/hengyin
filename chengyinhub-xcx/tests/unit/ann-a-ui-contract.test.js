@@ -205,7 +205,7 @@ test('A32/A59：玩家头像为完整紫环，操作区只留大票夹，关于�
   assert.match(wxml, /class="pc-primary pc-ticket"[^>]*wx:if="\{\{isSelf && !isMerchantView\}\}"/)
   // 2026-09-18 UI-12:公开视角也要「···」更多,条件从 isSelf && isMerchantView 放宽为本人商家/公开两态。
   // 2026-10-27 owner 真机走查 M-16:本人商家视角「核销」右边的「···」删除(功能别处都有),只留公开视角的更多
-  assert.match(wxml, /class="pc-more"[^>]*wx:if="\{\{!isSelf\}\}"/)
+  assert.match(wxml, /class="pc-more"[^>]*wx:if="\{\{!isSelf && !viewingOwn\}\}"/)
   assert.doesNotMatch(wxml, /class="pc-xbox-bar"/)
   // 2026-09-23 CU-M-28:这块显示的是会员本人 introduction,编辑进个人资料(goEditIntro),商家视角也不再跳品牌中心
   assert.match(wxml, /class="pc-about-edit"[^>]*wx:if="\{\{isSelf\}\}"[^>]*bindtap="goEditIntro"/)

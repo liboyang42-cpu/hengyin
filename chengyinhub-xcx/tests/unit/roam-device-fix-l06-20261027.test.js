@@ -36,14 +36,15 @@ test('P-32 迷雾开关:默认开着,写失败返回 null', () => {
   assert.doesNotMatch(read('utils/play-state-contract.js'), /(text|readerLabel): '[^']*暂未开放/)
 })
 
-test('P-33 搜索面板最多 5 条、每条可导航,底是半透明毛玻璃', () => {
+// 2026-10-28 p115 业主:「正常也应该是之前的样式 白色的 底部对齐的 只是应该显示数据」⇒ 面板回到原来的白底
+test('P-33 搜索面板最多 5 条、每条可导航,底是原来的白色', () => {
   const js = read('components/cy/map-address-search/index.js')
   const wxss = read('components/cy/map-address-search/index.wxss')
   assert.match(js, /const MAX_RESULTS = 5;/)
   assert.match(js, /wx\.openLocation\(/)
   assert.match(read('components/cy/map-address-search/index.wxml'), /catchtap="onNavigate"/)
-  assert.match(wxss, /\.addrlist\{[\s\S]{0,200}?background:rgba\(28,28,30,\.62\)/)
-  assert.match(wxss, /backdrop-filter:blur/)
+  assert.match(wxss, /\.addrlist\{[\s\S]{0,200}?background:#FFFFFF/)
+  assert.doesNotMatch(wxss, /background:rgba\(28,28,30,\.62\)/)
 })
 
 test('P-35 结算页 × 只回漫游首页,不再走 backToSquare', () => {

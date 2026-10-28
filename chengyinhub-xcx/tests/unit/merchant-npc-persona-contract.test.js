@@ -85,8 +85,11 @@ test('渲染层:形象页保留性格设定与审核状态,性格是三选一 ch
   assert.match(cell[0], /title="性格设定"/);
   assert.match(cell[0], /value="\{\{persona \|\| '选择性格'\}\}"/);
   assert.doesNotMatch(cell[0], /description=/);
-  assert.match(wxml, /<cy-sheet[^>]*show="\{\{personaSheet\}\}"[^>]*title="性格设定"/);
-  assert.match(wxml, /class="npc-persona__chip[^"]*"[\s\S]*?wx:for="\{\{personalities\}\}"[\s\S]*?bindtap="pickPersona"[\s\S]*?aria-role="radio"/);
+  // 2026-10-28 m698 业主:按内容高度的 Threads 式菜单,点一下就选上并保存,无标题、无保存键
+  assert.match(wxml, /<cy-sheet inset show="\{\{personaSheet\}\}"/);
+  assert.match(wxml, /<view class="tm" aria-role="radiogroup" aria-label="性格设定">/);
+  assert.match(wxml, /class="tm-row[^"]*"[\s\S]*?wx:for="\{\{personalities\}\}"[\s\S]*?bindtap="pickPersona"[\s\S]*?aria-role="radio"/);
+  assert.doesNotMatch(wxml, /bindtap="savePersona"/);
   assert.doesNotMatch(read(JS_PATH), /multiline: key === 'persona'/, '性格不再是文本框');
   assert.match(wxml, /auditStatus === 2 && auditReason/, '审核驳回后必须把原因显示给商家');
 });

@@ -481,7 +481,7 @@
 /* v3(2026-10-22 owner 参考图「tayo.」卡):整卡封面铺满 + 浅色外框,下半段黑色渐变,白字与黑色胶囊按钮叠在渐变上。
    卡面内是照片语境,字色固定白、按钮固定黑,不随主题翻转;外框与无封面底色仍走 token。 */
 .pc-ord-card {
-  position: relative; display: inline-block; flex-shrink: 0; width: 400rpx; height: 400rpx; box-sizing: border-box; /* ds-ok: P-48(2026-10-27)压窄 500→400:去掉票数与按钮后只剩标题 + 主题信息;高度与搜索页模板大卡(.tpl-big)同值,不单改 */
+  position: relative; display: inline-block; flex-shrink: 0; width: 500rpx; height: 440rpx; box-sizing: border-box; /* ds-ok: 2026-10-28 业主「卡片太窄、稍微高一点」:宽度回到 500,高 400→440;卡面渐变不动 */
   vertical-align: top; white-space: normal; overflow: hidden;
   border-radius: 40rpx; /* ds-ok: 参考图大圆角;owner 第二轮:不要白色外框 */
   background: linear-gradient(160deg, #5B6670 0%, #2A2F35 100%); /* ds-ok: 无封面时的照片感底色 */

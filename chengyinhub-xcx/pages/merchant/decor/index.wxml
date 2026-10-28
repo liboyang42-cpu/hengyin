@@ -104,7 +104,7 @@
         </view>
         <view class="dc-card">
           <cy-cell wx:if="{{merchantAccess.canWriteProfile}}" arrow-icon="chevron-right" title="门店信息" value="名称 · 地址 · 营业时间" required="{{false}}" bind:tap="goSection" data-view="basic" />
-          <cy-cell wx:if="{{merchantAccess.canWriteProfile}}" arrow-icon="chevron-right" title="品牌介绍" value="故事 · 特色 · 一句话介绍" required="{{false}}" bind:tap="goSection" data-view="brand" />
+          <cy-cell wx:if="{{merchantAccess.canWriteProfile}}" arrow-icon="chevron-right" title="品牌介绍" value="故事 · 特色" required="{{false}}" bind:tap="goSection" data-view="brand" />
           <cy-cell arrow-icon="chevron-right" title="门店相册" value="{{gallery.length || 0}} 张照片" required="{{false}}" bind:tap="goGallery" hairline="{{false}}" />
         </view>
         <view class="dc-card">
@@ -534,9 +534,7 @@
       />
       <!-- M-08(2026-10-27):没有图时不再留一大块空白 —— 占位与预览同尺寸(Logo 为居中圆),点它直接选图 -->
       <view wx:else class="dc-image-preview dc-placeholder {{imageEditor.key === 'logo' ? 'dc-image-preview--logo' : ''}}" bindtap="chooseEditImage" aria-role="button" aria-label="选择图片" hover-class="cy-pressed"><cy-icon name="camera" size="44" /><text>选择一张图片</text></view>
-      <text class="dc-muted">
-        {{imageEditor.key === 'logo' ? '正方形图片，在主页显示为圆形' : '选择图片后可移动或缩放，按 5:3 裁剪'}}
-      </text>
+      <!-- 2026-10-28 业主 m686:不写 5:3 那句;Logo 那句同样是多余说明,一并去掉 -->
       <cy-inline-error kind="error" wx:if="{{saveError}}" title="暂未完成" sub="{{saveError}}" />
       <!-- 横排一行:从相册选择在左、使用确认在右(2026-09-18 用户定) -->
       <view class="dc-sheet-actions">

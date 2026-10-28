@@ -41,7 +41,7 @@
       </view>
 
       <!-- M-21:窗口切换只在有逐日数据时出;方块图每次都画(无数据时全浅色格,见 _buildHero) -->
-      <view class="seg" aria-role="tablist" wx:if="{{hero && hero.hasTrend}}">
+      <view class="seg" aria-role="tablist" wx:if="{{hero}}">
         <view class="seg-thumb" style="transform: translateX({{(winIdx || 0) * 100}}%);"></view>
         <view class="seg-btn {{win === 7 ? 'seg-btn--on' : ''}}" data-win="7" bindtap="onWinTap" hover-class="cy-pressed" hover-stay-time="80" aria-role="tab" aria-selected="{{win === 7}}">近7天</view>
         <view class="seg-btn {{win === 30 ? 'seg-btn--on' : ''}}" data-win="30" bindtap="onWinTap" hover-class="cy-pressed" hover-stay-time="80" aria-role="tab" aria-selected="{{win === 30}}">近30天</view>
@@ -196,6 +196,9 @@
         </view>
       </scroll-view>
     </block>
+
+    <!-- 2026-10-28 m689:俱乐部合作(Figma 350:557),组件自读合作池 -->
+    <cy-club-pool-cards class="mi-in" style="transition-delay: 360ms;" />
 
     <!-- 推荐联动的商家 -->
     <block wx:if="{{recPartners.length}}">

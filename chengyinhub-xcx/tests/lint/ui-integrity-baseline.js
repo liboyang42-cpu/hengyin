@@ -1,3 +1,4 @@
+// 2026-10-28 v8 改后图落代码:signup /api/team/my 同一调用点仅行号 334→398(票夹翻面与开始游戏在上方加代码,行及上下各一行逐字相同,理由不变);u5Silent 新增漫游附近活动兜底两条(42→44);u5Silent digest 按同一算法重算。
 // 2026-10-27 最小改动返修:主理人申请页恢复开场形变(P-24 只修时序),U4-DYNAMIC club/apply onInput / toggleBool 两条锚点仅行号位移 221→233 / 232→244(同一行 this.setData({ [f]: ... }),理由不变),u4Dynamic digest 按同一算法重算。
 // 2026-10-27 L11 集成(L01–L09 合入 integrate/devfix-20261027):roam/play 等多路同改文件的既有锚点按「行及上下各一行」与登记来源分支逐字比对后换 key,同一调用点的多路重复登记去重(roam 31 条、play 2 条、nearby 1 条等);L05 出账的 post-compose 两条、L05/L07 还清的零消费债务保持出账。条数与各路理由不变:u1Variable 10、u4Field 120、u4Dynamic 62、u5Silent 42;四份 digest 按同一算法重算。
 // 2026-10-27 L02 弹层页面化与返回键先关弹层:roam/index.js 顶部加 scene-entry 引用 + openScene 加 page 档分流(+3 行)、play/index.js 同改(+3 行),既有 35 个锚点(roam 31、play 4)仅行号位移,按 difflib 相等块逐条映射换 key(新旧行内容逐字相同);条数与理由不变,u4Dynamic / u5Silent digest 按同一算法重算。
@@ -314,7 +315,8 @@ module.exports = {
     // 2026-10-27 L05 P-20:post-compose 两条选活动读取(registration/list、activity/list)门禁现判为同请求内静态证明已处理(失败汇总进 activityError 由选活动层呈现),逐项登记随之出账,43 → 41。
     // 2026-10-27 L06 漫游真机修复 P-29:护照勋章方卡读最新点亮勋章图一条静默读取逐项登记,43 → 44。
     // 2026-10-27 L11 集成:L05 出账 2 条 + L06 登记 1 条,43 → 42。
-    "u5Silent": 42,
+    // 2026-10-28 p74:漫游附近活动两级兜底读取逐项登记 2 条,42 → 44(未超冻结上限 44)。
+    "u5Silent": 44,
     "keyDigest": {
       // 2026-09-24 卡包底图:play/index.js data 里加 topicCover 一行,u5Silent 那条已完成里程碑读取 5444→5445,
       //   新旧行内容一致、理由一字未改,u5Silent digest 按同算法显式重算(旧值复算吻合)。
@@ -1030,7 +1032,7 @@ module.exports = {
 // 2026-10-17 合并 master 进漫游上线分支:roam/index.js 14 条、nearby/index.js 2 条既有调用仅行号位移(按 master 源码逐行回读定位);漫游两栏改版删掉 /api/registration/list 静默读取(749),U5 29→28。digest 按同一算法显式重算。
 // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):锚点位移 + 举报半屏/AI 对话组件下沉会员分包换路径 + 本线 9 处新增登记,digest 按同一算法重算。
 // 2026-10-27 devfix L07(play 7694→7696 仅行号位移):逐条以 master 原行与新行逐字比对一致,理由一字未改,digest 按门禁同算法重算。
-"136d4ec863d2624f541b197043935d3b61e7292a4ab0337079ff117ae1e29b8d"
+"12a212acd35c6ecf73567c97273aebd2900984516f58e7f9820140f8713df49a"
 
     }
   },
@@ -1381,6 +1383,9 @@ module.exports = {
   // 2026-09-08 二次合 master(#1047/#1048)后再次实测:play/index.js 的 my-completed 调用点
   //   落在 4945(master 侧记 4277、本分支侧记 4968,两侧对合并树都不对)。理由一字未改,digest 重算。
   "u5Silent": {
+    // 2026-10-28 p74 业主「附近活动总是有的」:漫游起始页附近为空时的两级兜底读取逐项登记。
+    "chengyinhub-xcx/pages/roam/index.js:5928": "漫游起始页「附近活动」3 公里为空时的 20 公里兜底读取(同 /api/roam/entry/nearby、同权限档):主读取已成功落定(空也是真结果),这一条只往底部卡片带补同城活动,读不到就接着读其他城市公开主题;不改地图点位、不承载写入;只写回同一次进页序号与同一身份;owner=漫游,复核=2026-10-28",
+    "chengyinhub-xcx/pages/roam/index.js:5937": "漫游起始页「附近活动」同城也为空时读其他城市公开主题(/api/topic/list 公开列表):只填底部卡片带,读不到时卡片带保持主读取给出的空态卡;不改地图点位、不承载写入;只写回同一次进页序号与同一身份;owner=漫游,复核=2026-10-28",
     // 2026-10-25 官方地点卡片:展开详情两条背景读取逐项登记。
     "chengyinhub-xcx/subpackageRoam/nearby/index.js:1003": "官方地点卡展开时补读节点(相册 / 玩法 / 完成状态 / 评分):卡片已先用地图点位数据渲染名称、地址、介绍和封面,读不到只是少相册与玩法块,开始挑战前挑战页会重新读同一节点并在失败时给错误页和重试;只写回仍开着的同一张卡;owner=上海据点,复核=2026-10-25",
     "chengyinhub-xcx/subpackageRoam/nearby/index.js:1024": "官方地点卡评价列表背景读取:失败时不显示评价区空态文案(reviewsLoaded=false),卡片其余内容与按钮照常,重新点开卡片会重读;不承载提交;只写回仍开着的同一张卡;owner=上海据点,复核=2026-10-25",
@@ -1422,7 +1427,7 @@ module.exports = {
     // 2026-09-17 广播实现收尾:同文件删掉只写不读的 cast.preview 死状态(净 -1 行),
     //   锚点按门禁实测 1179→1178;调用点上下逐字一致,理由一字未改,条数仍 23。
     "chengyinhub-xcx/pages/topic/merchantapply/index.js:227": "/api/merchant/info 只用来给报名表单补「你的门店」那张卡(稿 133:310):三行都是给主办方看的补充信息,不是提交字段,拉不到就整块不渲染,报名照常填照常交。全局 toast 在这里会被当成「我表单填错了」;owner=小程序,复核=2026-09-30",
-    "chengyinhub-xcx/subpackageMember/signup/index.js:334": "/api/team/my 只用来给票下面那一行「我的队伍 ›」找落点:拉不到就整行不出,票夹本身照常可用。弹全局 toast 会让人以为票没加载出来;owner=小程序,复核=2026-09-30",
+    "chengyinhub-xcx/subpackageMember/signup/index.js:398": "/api/team/my 只用来给票下面那一行「我的队伍 ›」找落点:拉不到就整行不出,票夹本身照常可用。弹全局 toast 会让人以为票没加载出来;owner=小程序,复核=2026-09-30",
     "chengyinhub-xcx/components/cy/scene-member-invite-history/index.js:63": "邀请历史使用本地 request wrapper 将网络/异常状态归一成空响应，列表据此展示无记录而不弹全局错误；owner=小程序，复核=2026-09-15",
     "chengyinhub-xcx/utils/analytics.js:233": "埋点投递是纯副作用且不应打扰玩家，fail 只回报 onDone(false)；必须显式登记，禁止因非空回调自动安全；owner=小程序，复核=2026-09-15",
     "chengyinhub-xcx/utils/ui-state-request.js:10": "共用请求封装,静默由调用方接管:各页在 fail 分支写页内错误态与重试,禁止 request-client 再弹一次；owner=小程序，复核=2026-09-30",

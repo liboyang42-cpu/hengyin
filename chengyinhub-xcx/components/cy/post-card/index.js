@@ -30,14 +30,14 @@ Component({
     light: { type: Boolean, value: false },
     accessibilityLabel: { type: String, value: '查看帖文' },
   },
-  data: { textExpanded: false, textLong: false, likePop: false, reducedMotion: false },
+  data: { textExpanded: false, textLong: false, galleryIdx: 0, likePop: false, reducedMotion: false },
   lifetimes: {
     // 减少动态效果:根节点挂 post-card--reduced,点亮弹跳等位移动画整段不播
     attached() { const reducedMotion = readReducedMotion(); if (reducedMotion) this.setData({ reducedMotion }); },
     detached() { clearTimeout(this._likePopTimer); },
   },
   observers: {
-    'post.id': function () { this.setData({ textExpanded: false }); },
+    'post.id': function () { this.setData({ textExpanded: false, galleryIdx: 0 }); },
     // 收起态夹 2 行:超过约 40 字,或换行把正文分成 3 段以上(短句多段的公告/规则),都要给「展开」。
     'post.contents': function (contents) {
       const text = typeof contents === 'string' ? contents : '';
@@ -46,6 +46,17 @@ Component({
   },
   methods: {
     toggleText() { this.setData({ textExpanded: !this.data.textExpanded }); },
+    // 图廊页码(稿 211:326):每张 600rpx + 间距 20rpx,按滚动距离算当前第几张;只在张数变化时 setData,横滑不刷屏。
+    onGalleryScroll(e) {
+      if (!this._slotPx) {
+        let w = 375;
+        try { w = (wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync()).windowWidth || 375; } catch (err) { /* 取不到按 375 */ }
+        this._slotPx = 620 * w / 750;
+      }
+      const total = ((this.data.post || {}).picList || []).length;
+      const idx = Math.max(0, Math.min(total - 1, Math.round(((e && e.detail && e.detail.scrollLeft) || 0) / this._slotPx)));
+      if (idx !== this.data.galleryIdx) this.setData({ galleryIdx: idx });
+    },
     eventDetail() {
       const post = this.data.post || {};
       return { index: this.data.index, postId: post.id, memberId: post.memberId, clubId: post.clubId };

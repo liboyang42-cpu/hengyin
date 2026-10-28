@@ -1357,31 +1357,27 @@
     <!-- 2026-09-18 UI-22:翻页条 + 步骤标签固定在滚动区之上(不再 sticky 在滚动流里),
          步骤标签紧贴翻页点,滚到哪一步都和下面的内容对得上,也不会被滚过去的卡片压住。 -->
     <view class="cg-pv-head" wx:if="{{ !(pvStepKey === 'challenge' && pvKit) }}">
+      <!-- 2026-10-28 业主「整页太挤」:顶部改成分段进度条 + 一行「到达节点 1 / 5」 -->
       <view class="cg-pv-pager">
-        <view class="cg-pv-dots">
-          <view class="cg-pv-dot {{ pvStep === idx ? 'on' : '' }}" wx:for="{{ pvSteps }}" wx:key="*this" wx:for-index="idx"></view>
-        </view>
+        <view class="cg-pv-seg {{ pvStep >= idx ? 'on' : '' }}" wx:for="{{ pvSteps }}" wx:key="*this" wx:for-index="idx"></view>
       </view>
-      <view class="cg-pv-step">玩家视角 · {{ pvStepLabel }}({{ pvStep + 1 }}/{{ pvSteps.length }})</view>
+      <view class="cg-pv-step">{{ pvStepLabel }} {{ pvStep + 1 }} / {{ pvSteps.length }}</view>
     </view>
     <scroll-view scroll-y class="cg-pv-scroll" wx:if="{{ !(pvStepKey === 'challenge' && pvKit) }}" bindtouchstart="onPvTouchStart" bindtouchend="onPvTouchEnd">
       <view class="cg-pv-body">
 
         <!-- 1. 到达点位 -->
         <view class="cg-pv-panel" wx:if="{{ pvStepKey === 'arrival' }}">
-          <view class="cg-pv-cover {{ formData.imgUrl || defaultCover ? 'cg-pv-cover--img' : 'cg-pv-cover--noimg' }}">
-            <image wx:if="{{ formData.imgUrl || defaultCover }}" src="{{ formData.imgUrl || defaultCover }}" mode="aspectFill" class="cg-pv-cover-img" />
-            <view class="cg-pv-cover-mask">
-              <view class="cg-pv-badge">你已抵达</view>
-              <view class="cg-pv-cover-tit">{{ formData.title }}</view>
-            </view>
+          <!-- 2026-10-28 业主「整页太挤」:图、标题、难度、说明分开放,不再叠在一张卡里 -->
+          <view class="cg-pv-cover" wx:if="{{ formData.imgUrl || defaultCover }}">
+            <image src="{{ formData.imgUrl || defaultCover }}" mode="aspectFill" class="cg-pv-cover-img" />
           </view>
-          <cy-card class="cg-pv-card">
-            <view class="cg-pv-desc">{{ formData.description }}</view>
-            <view class="cg-pv-meta">
-              <view class="cg-pv-meta-li"><view class="cg-pv-meta-k">难度</view><view class="cg-pv-meta-v">{{ difficultyLabel || '未设置' }}</view></view>
-            </view>
-          </cy-card>
+          <view class="cg-pv-intro">
+            <view class="cg-pv-badge">你已抵达</view>
+            <view class="cg-pv-cover-tit">{{ formData.title }}</view>
+            <view class="cg-pv-meta-v">{{ difficultyLabel || '未设置难度' }}</view>
+            <view class="cg-pv-desc" wx:if="{{ formData.description }}">{{ formData.description }}</view>
+          </view>
         </view>
 
         <!-- 2. 剧情时间流(沉浸式,多节点) -->
@@ -1464,6 +1460,12 @@
       </view>
       <view class="cg-scroll-pad"></view>
     </scroll-view>
+    <!-- 2026-10-28 业主:底部要有左右按钮(左右滑动照旧能翻) -->
+    <view class="cg-pv-nav" wx:if="{{ !(pvStepKey === 'challenge' && pvKit) }}">
+      <view class="cg-pv-navbtn {{ pvStep <= 0 ? 'is-off' : '' }}" bindtap="pvPrev" aria-role="button" aria-label="上一步" aria-disabled="{{ pvStep <= 0 }}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="back" size="40" /></view>
+      <text class="cg-pv-navn">{{ pvStep + 1 }} / {{ pvSteps.length }}</text>
+      <view class="cg-pv-navbtn {{ pvStep >= pvSteps.length - 1 ? 'is-off' : '' }}" bindtap="pvNext" aria-role="button" aria-label="下一步" aria-disabled="{{ pvStep >= pvSteps.length - 1 }}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="chevron-right" size="40" /></view>
+    </view>
   </view>
 
   <!-- ============ 添加模块 sheet ============ -->

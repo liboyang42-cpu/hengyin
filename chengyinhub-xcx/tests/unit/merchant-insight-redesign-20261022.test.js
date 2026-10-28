@@ -99,7 +99,8 @@ test('旧缓存没有 trends:退回 30 天归因三数,不出窗口切换,格子
   assert.equal(h.cols, 15);
   assert.ok(h.cells.every((cell) => cell.lv === 0), '无数据时全部最浅一档');
   assert.match(h.axisFrom, /^\d{2}-\d{2}$/, '轴起点与后端 daily.date 同格式');
-  assert.match(PAGE_WXML, /<view class="seg"[^>]*wx:if="\{\{hero && hero\.hasTrend\}\}">/);
+  // 2026-10-28 m689 业主「还原之前 HTML 的设计」:7/30/90 切换每次都在(旧后端没有 trends 时点了不变)
+  assert.match(PAGE_WXML, /<view class="seg" aria-role="tablist" wx:if="\{\{hero\}\}">/);
   assert.match(PAGE_WXML, /<block wx:if="\{\{hero && hero\.cells\.length\}\}">\s*<view class="heat[ "]/);
 });
 

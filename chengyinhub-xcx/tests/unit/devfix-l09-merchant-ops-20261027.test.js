@@ -121,13 +121,16 @@ test('M-21:无逐日数据也铺满全浅色方块;比率无数据写 0%;页头�
 });
 
 // ---------- M-04 ----------
-test('M-04:客户管理半屏 = 操作列表(图标 + 标题 + 说明),按权限出行', () => {
+// 2026-10-28 m679/m694 业主:底部菜单统一成 Threads 式(style/threads-menu.wxss)—— 文字左、图标右、不写说明
+test('M-04:客户管理半屏 = Threads 式分组菜单(文字 + 右侧图标),按权限出行', () => {
   const wxml = read('pages/merchant/customer/index.wxml');
-  const sheet = wxml.slice(wxml.indexOf('title="客户管理"'), wxml.indexOf('</cy-sheet>', wxml.indexOf('title="客户管理"')));
-  const rows = sheet.match(/<view wx:if="\{\{can\w+\}\}" class="cu-op"/g) || [];
+  const start = wxml.indexOf('<cy-sheet inset show="{{toolsOpen}}"');
+  const sheet = wxml.slice(start, wxml.indexOf('</cy-sheet>', start));
+  const rows = sheet.match(/<view wx:if="\{\{can\w+\}\}" class="tm-row"/g) || [];
   assert.equal(rows.length, 3);
-  assert.equal((sheet.match(/class="cu-op-ico"><cy-icon name="[a-z-]+"/g) || []).length, 3);
-  assert.equal((sheet.match(/class="cu-op-desc"/g) || []).length, 3);
+  assert.equal((sheet.match(/<text class="tm-label">[\s\S]*?<\/text><cy-icon class="tm-ico" name="[a-z-]+"/g) || []).length, 3);
+  assert.doesNotMatch(sheet, /cu-op-desc|title="客户管理"/);
+  assert.match(read('pages/merchant/customer/index.wxss'), /@import '\.\.\/\.\.\/\.\.\/style\/threads-menu\.wxss';/);
 });
 
 // ---------- M-07 ----------
@@ -138,16 +141,16 @@ test('M-07:商家优惠券页主按钮「发布优惠券」加载中即在位,�
 });
 
 // ---------- M-26 ----------
-test('M-26:我的项目长按面板 = 操作列表,编辑在首、删除在尾并标红;草稿主题可编辑', () => {
+test('M-26:我的项目长按面板 = Threads 式菜单,编辑在首、删除单独一组标红;草稿主题可编辑', () => {
   const wxml = read('subpackageA/pages/myproject/index.wxml');
   const start = wxml.indexOf('<cy-sheet show="{{opsSheet.show}}"');
   const sheet = wxml.slice(start, wxml.indexOf('</cy-sheet>', start));
   const keys = [...sheet.matchAll(/data-k="(\w+)"/g)].map((m) => m[1]);
   assert.equal(keys[0], 'edit');
   assert.equal(keys[keys.length - 1], 'delete');
-  assert.match(sheet, /mp-ops-row--danger" wx:if="\{\{opsSheet\.canDelete\}\}"[^>]*data-k="delete"/);
-  assert.equal((sheet.match(/class="mp-ops-ico"/g) || []).length, keys.length, '每行都有图标');
-  assert.match(read('subpackageA/pages/myproject/index.wxss'), /\.mp-ops-row--danger \.mp-ops-ico\s*\{[^}]*color:\s*var\(--cy-danger\)/);
+  assert.match(sheet, /<view class="tm-group" wx:if="\{\{opsSheet\.canDelete\}\}">\s*<view class="tm-row tm-row--danger"[^>]*data-k="delete"/);
+  assert.equal((sheet.match(/<cy-icon class="tm-ico"/g) || []).length, keys.length, '每行都有图标');
+  assert.match(read('style/threads-menu.wxss'), /\.tm-row--danger, \.tm-row--danger \.tm-ico \{ color: var\(--cy-color-status-danger\); \}/);
   const js = read('subpackageA/pages/myproject/index.js');
   assert.match(js, /const editableTopic = p\.bizType === 'topic' && \(p\.state === 'draft' \|\| p\.state === 'rejected' \|\| p\.state === 'offline'\);/);
   assert.match(js, /if \(k === 'edit' && p\.biz === 'topic'\) return this\.editTopic\(p\.id\);/);

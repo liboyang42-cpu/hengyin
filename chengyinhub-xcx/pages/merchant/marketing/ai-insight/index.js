@@ -702,4 +702,5 @@ Page({
 
   goCoopCenter() { wx.navigateTo({ url: COOP_CENTER_ROUTE }); },
 
+
 });

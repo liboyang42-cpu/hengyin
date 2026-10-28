@@ -168,21 +168,21 @@
       <cy-btn bindtap="saveField" loading="{{saving}}">保存</cy-btn>
     </view>
   </cy-sheet>
-  <!-- M-28:性格三选一(温柔 / 可爱 / 毒舌,§6.3 已确认),不再自由输入 -->
-  <cy-sheet inset show="{{personaSheet}}" title="性格设定" bind:close="closePersona"
+  <!-- M-28:性格三选一(温柔 / 可爱 / 毒舌,§6.3 已确认),不再自由输入。
+       2026-10-28 业主 m698:按内容高度的底部菜单(Threads 式),点一下就选上并保存,不要保存按钮。 -->
+  <cy-sheet inset show="{{personaSheet}}" bind:close="closePersona"
     mask-closable="{{!saving}}" closable="{{!saving}}">
-    <view class="dc-sheet-content">
-      <view class="npc-persona" aria-role="radiogroup" aria-label="性格设定">
-        <view class="npc-persona__chip {{personaPick === item.key ? 'npc-persona__chip--on' : ''}}"
+    <view class="tm" aria-role="radiogroup" aria-label="性格设定">
+      <view class="tm-group">
+        <view class="tm-row {{personality === item.key ? 'tm-row--on' : ''}}"
           wx:for="{{personalities}}" wx:key="key" data-key="{{item.key}}" bindtap="pickPersona"
-          aria-role="radio" aria-checked="{{personaPick === item.key}}" aria-label="{{item.label}}，{{item.desc}}"
+          aria-role="radio" aria-checked="{{personaPick === item.key}}" aria-label="{{item.label}}"
           hover-class="cy-pressed" hover-stay-time="80">
-          <text class="npc-persona__label">{{item.label}}</text>
-          <text class="npc-persona__desc">{{personality === item.key ? '当前性格' : item.desc}}</text>
+          <text class="tm-label">{{item.label}}</text>
+          <cy-icon wx:if="{{personaPick === item.key}}" class="tm-ico" name="{{saving ? 'clock' : 'check'}}" size="40" />
         </view>
       </view>
       <cy-inline-error kind="error" wx:if="{{saveError}}" title="暂未完成" sub="{{saveError}}" />
-      <cy-btn bindtap="savePersona" loading="{{saving}}" disabled="{{!personaPick}}">保存</cy-btn>
     </view>
   </cy-sheet>
   <cy-sheet inset show="{{discardVisible}}" title="还没有保存" bind:close="keepEditing">

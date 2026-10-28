@@ -197,27 +197,15 @@
 
         <view class="v2-feed" wx:if="{{activeTab === '0'}}" style="{{pmFeed === 1 ? '--pm-f:1;' : (pmFeed === 2 ? '--pm-f-d:.32s;--pm-f-s:1;' : '')}}">
           <view class="v2-fitem" wx:for="{{bottomTopicList}}" wx:key="id">
+            <!-- 2026-10-28 业主:主题必须有图,卡片整张用封面,名字一行压在底部渐变上 -->
             <view class="v2-fcard" bindtap="goTopic" data-index="{{index}}" data-id="{{item.id}}" hover-class="cy-pressed" hover-stay-time="80">
+              <image class="v2-fcover" src="{{item.cover || '/images/route_city_cover.png'}}" mode="aspectFill" lazy-load="true" />
               <view class="v2-fcard-l">
                 <view class="v2-feyebrow ep1" wx:if="{{item.feedTypeLabel}}">{{item.feedTypeLabel}}</view>
-                <view class="v2-ftitle ep2">{{item.name}}</view>
+                <view class="v2-ftitle ep1">{{item.name}}</view>
                 <view class="v2-ftags flex-ac">
                   <text class="v2-ftag" wx:for="{{item.feedTags}}" wx:key="index">{{item}}</text>
                 </view>
-              </view>
-              <view class="v2-fgrid v2-fgrid--{{item.feedGridMode || '1'}}">
-                <!-- P-04:没有封面时用 owner 给的两层空态插画占位(#602),不再留一块空灰底 -->
-                <view class="v2-fcell v2-fcell--empty" wx:if="{{!item.feedImages.length}}" aria-hidden="true">
-                  <image class="v2-fempty-bg" src="/images/empty_state_bg.svg" mode="aspectFit" />
-                  <image class="v2-fempty-figure" src="/images/empty_state_figure.svg" mode="aspectFit" />
-                </view>
-                <block wx:for="{{item.feedImages}}" wx:for-item="im" wx:for-index="gi" wx:key="gi">
-                  <view class="v2-fcell">
-                    <image src="{{im}}" mode="aspectFill" lazy-load="true" />
-                    <view class="v2-fmore" wx:if="{{gi === 1 && item.moreCount}}">+{{item.moreCount}}</view>
-                    <view class="v2-fcount" wx:if="{{gi === 3 && item.feedBadgeCount}}">{{item.feedBadgeCount}}</view>
-                  </view>
-                </block>
               </view>
             </view>
             <view class="v2-status" bindtap="goTopic" data-index="{{index}}" data-id="{{item.id}}" hover-class="cy-pressed" hover-stay-time="80">
@@ -246,26 +234,13 @@
         <view class="v2-feed" wx:if="{{activeTab === '1'}}" style="{{pmFeed === 1 ? '--pm-f:1;' : (pmFeed === 2 ? '--pm-f-d:.32s;--pm-f-s:1;' : '')}}">
           <view class="v2-fitem" wx:for="{{bottomActivityList}}" wx:key="id">
             <view class="v2-fcard" bindtap="goActivity" data-index="{{index}}" data-id="{{item.id}}" hover-class="cy-pressed" hover-stay-time="80">
+              <image class="v2-fcover" src="{{item.cover || '/images/route_city_cover.png'}}" mode="aspectFill" lazy-load="true" />
               <view class="v2-fcard-l">
                 <view class="v2-feyebrow ep1" wx:if="{{item.feedTypeLabel}}">{{item.feedTypeLabel}}</view>
-                <view class="v2-ftitle ep2">{{item.name}}</view>
+                <view class="v2-ftitle ep1">{{item.name}}</view>
                 <view class="v2-ftags flex-ac">
                   <text class="v2-ftag" wx:for="{{item.feedTags}}" wx:key="index">{{item}}</text>
                 </view>
-              </view>
-              <view class="v2-fgrid v2-fgrid--{{item.feedGridMode || '1'}}">
-                <!-- P-04:没有封面时用 owner 给的两层空态插画占位(#602),不再留一块空灰底 -->
-                <view class="v2-fcell v2-fcell--empty" wx:if="{{!item.feedImages.length}}" aria-hidden="true">
-                  <image class="v2-fempty-bg" src="/images/empty_state_bg.svg" mode="aspectFit" />
-                  <image class="v2-fempty-figure" src="/images/empty_state_figure.svg" mode="aspectFit" />
-                </view>
-                <block wx:for="{{item.feedImages}}" wx:for-item="im" wx:for-index="gi" wx:key="gi">
-                  <view class="v2-fcell">
-                    <image src="{{im}}" mode="aspectFill" lazy-load="true" />
-                    <view class="v2-fmore" wx:if="{{gi === 1 && item.moreCount}}">+{{item.moreCount}}</view>
-                    <view class="v2-fcount" wx:if="{{gi === 3 && item.feedBadgeCount}}">{{item.feedBadgeCount}}</view>
-                  </view>
-                </block>
               </view>
             </view>
             <view class="v2-status" bindtap="goActivity" data-index="{{index}}" data-id="{{item.id}}" hover-class="cy-pressed" hover-stay-time="80">
@@ -275,7 +250,7 @@
               </view>
               <view class="v2-status-row flex-b">
                 <text class="v2-status-k">时间</text>
-                <text class="v2-status-v">{{item.formattedDateTime}}</text>
+                <text class="v2-status-v">{{item.formattedDateTime || '长期开放'}}</text>
               </view>
               <view class="v2-status-row flex-b last">
                 <text class="v2-status-k">地点</text>

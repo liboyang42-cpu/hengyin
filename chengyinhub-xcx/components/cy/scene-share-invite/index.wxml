@@ -1,4 +1,4 @@
-<view class="siv siv--{{theme}}">
+<view class="siv siv--{{theme}} {{reducedMotion ? 'siv--reduced' : ''}}">
   <view wx:if="{{qrState === 'loading' || qrState === 'ready'}}" aria-role="button" aria-label="{{playerCode ? '预览我的个人小程序码' : '邀请二维码'}}" class="siv__qr-frame"
     hover-class="{{playerCode && qrState === 'ready' ? 'cy-pressed' : 'none'}}" hover-stay-time="80" bindtap="previewQr">
     <cy-progress-status wx:if="{{qrState === 'loading'}}" class="siv__qr-status"
@@ -6,6 +6,9 @@
     <image wx:if="{{qrSrc}}" class="siv__qr {{qrState === 'ready' ? 'siv__qr--ready' : ''}}"
       src="{{qrSrc}}" data-src="{{qrSrc}}" mode="aspectFit" show-menu-by-longpress="{{playerCode}}"
       bindload="onQrLoad" binderror="onQrError" aria-role="img" aria-label="{{playerCode ? '我的个人小程序码，点击预览，长按可保存' : '邀请二维码'}}" />
+    <!-- 2026-10-28 业主(参考 spottedinprod):码出现时颜色从中间一圈圈往外扩,再退成黑色;中间是黑色的城瘾 logo -->
+    <view wx:if="{{qrSrc}}" class="siv__ripple {{qrState === 'ready' ? 'siv__ripple--done' : ''}}" aria-hidden="true"></view>
+    <view wx:if="{{qrSrc}}" class="siv__logo {{qrState === 'ready' ? 'siv__logo--ready' : ''}}" aria-hidden="true"><image class="siv__logo-img" src="/images/cy_logo_mark.png" mode="aspectFit" /></view>
   </view>
   <view wx:elif="{{qrState === 'code-error'}}" class="siv__qr-state">
     <cy-error title="个人码加载失败" sub="{{qrErrorText}}"

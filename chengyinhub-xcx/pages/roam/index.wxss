@@ -819,12 +819,12 @@ page{ background:var(--cy-color-bg-page); }
 .intro-passport{ flex:1; min-height:0; display:flex; flex-direction:column; overflow:hidden; }
 .pp-stats{ flex:none; display:flex; padding:8rpx 46rpx 23rpx; }
 .pp-stat{ flex:1; display:flex; flex-direction:column; align-items:flex-start; gap:4rpx; }
-.pp-stat__v{ font-size:42rpx; font-weight:700; line-height:1; color:var(--cy-color-text-primary); } /* ds-ok 漫游首页定稿值(用户裁决不改) */
+.pp-stat__v{ font-size:58rpx; font-weight:800; font-style:italic; letter-spacing:-2rpx; line-height:1; color:var(--cy-color-text-primary); font-variant-numeric:tabular-nums; } /* ds-ok 2026-10-28 业主:NRC 粗斜体数字 */
 .pp-stat__k{ font-size:21rpx; color:var(--cy-color-text-tertiary); } /* ds-ok 漫游首页定稿值(用户裁决不改) */
 .pp-row{ flex:none; height:408rpx; width:100%; white-space:nowrap; padding-left:31rpx; box-sizing:border-box; }
 .pp-tile{ display:inline-flex; flex-direction:column; width:308rpx; margin-right:19rpx; vertical-align:top; }
 .pp-tile:last-child{ margin-right:31rpx; }
-.pp-tile__box{ position:relative; width:308rpx; height:308rpx; overflow:hidden; border-radius:27rpx; background:var(--cy-color-action-primary-bg); color:var(--cy-color-action-primary-fg); display:flex; align-items:center; justify-content:center; } /* ds-ok 漫游首页定稿值(用户裁决不改) */
+.pp-tile__box{ position:relative; width:308rpx; height:308rpx; overflow:hidden; border-radius:27rpx; background:#F6F5F2; color:var(--cy-color-action-primary-fg); display:flex; align-items:center; justify-content:center; } /* ds-ok 漫游首页定稿值(用户裁决不改) */
 .pp-tile__t{ margin-top:15rpx; font-size:27rpx; font-weight:700; color:var(--cy-color-text-primary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } /* ds-ok 漫游首页定稿值(用户裁决不改) */
 .pp-tile__s{ margin-top:4rpx; font-size:23rpx; color:var(--cy-color-text-tertiary); } /* ds-ok 漫游首页定稿值(用户裁决不改) */
 .pp-trips{ flex:1; min-height:0; width:100%; white-space:nowrap; padding:38rpx 0 31rpx 31rpx; box-sizing:border-box; }
@@ -864,9 +864,7 @@ cy-proto-cam{ position:fixed; left:0; right:0; top:0; bottom:0; z-index:58; poin
 /* 2026-10-14 漫游护照:新上线方卡的 NEW 标、官方活动「暂未开放」 */
 /* 2026-10-27 owner P-29:「暂未开放」灰卡与 NEW 角标已撤;方卡图铺满,无图时放业主空态插画(与 cy-empty 同一套两层) */
 .pp-tile__img{ position:absolute; inset:0; width:100%; height:100%; }
-.pp-tile__empty{ position:absolute; inset:0; }
-.pp-tile__empty-bg{ position:absolute; left:8%; top:8%; width:84%; height:84%; }
-.pp-tile__empty-figure{ position:absolute; left:28%; top:20%; width:44%; height:60%; }
+.pp-tile__art{ width:180rpx; height:180rpx; }
 /* BL-01 点位筛选(.psheet 内容) */
 .poi-filter{ display:flex; flex-direction:column; gap:var(--cy-space-3); margin-top:var(--cy-space-3); }
 .poi-filter__label{ font-size:var(--cy-type-caption); color:var(--cy-color-text-secondary); }
@@ -899,7 +897,9 @@ cy-proto-cam{ position:fixed; left:0; right:0; top:0; bottom:0; z-index:58; poin
 .intro-dot { width: 12rpx; height: 12rpx; background: #48484A; } /* ds-ok */
 .intro-dot.is-on { width: 35rpx; background: #fff; } /* ds-ok */
 .entry-peek__head { font-size: 33rpx; padding-bottom: 19rpx; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
-.entry-card { width: 481rpx; height: 235rpx; border-radius: 27rpx; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
+.entry-card { width: 540rpx; height: 330rpx; border-radius: 27rpx; } /* ds-ok: 2026-10-28 业主「活动卡要高一点」 */
+.entry-peek { height: 460rpx; } /* ds-ok: 跟着卡片加高 */
+.entry-peek__cards { height: 330rpx; }
 .entry-card__shade { background: linear-gradient(180deg, rgba(0,0,0,0) 30%, rgba(0,0,0,.8)); } /* ds-ok */
 .entry-card__copy { left: 23rpx; right: 23rpx; bottom: 19rpx; }
 .entry-card__tag { align-self: flex-start; margin-bottom: 8rpx; padding: 4rpx 13rpx; border-radius: 12rpx; font-size: 21rpx; font-weight: 700; color: #000; } /* ds-ok */

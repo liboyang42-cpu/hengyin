@@ -40,8 +40,9 @@ test('route-matrix 生成物必须与当前 app.json 和 scene 扫描逐字一�
   // 2026-10-23 起名页 templateadd 退役删除 ⇒ 145 → 144。
   // 2026-10-25 +1 官方地点挑战页 pages/play/poi-challenge ⇒ 144 → 145。
   // 2026-10-27 L02 P-55:+1 营销消息与优惠券独立页 pages/shezhi/marketing/index ⇒ 145 → 146。
-  assert.equal(current.routes.length, 146)
-  assert.equal(matrix.counts.routes, 146)
+  // 2026-10-28 G-9:+1 账户收益 · 分析页 subpackageA/pages/assetcenter/analysis/index ⇒ 146 → 147。
+  assert.equal(current.routes.length, 147)
+  assert.equal(matrix.counts.routes, 147)
   // 2026-09-02:+2 俱乐部客户列表与客户详情(club/customers、club/customer-detail)
   assert.equal(inventoryMatchesCurrent(matrix), true)
   // 2026-09-04 导演台整页收编:锚点换成新宿主页 topic-detail。这条要证的是

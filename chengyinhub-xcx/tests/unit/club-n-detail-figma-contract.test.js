@@ -40,12 +40,11 @@ function assertContract(overrides = {}) {
   // 元信息是「图标 + 文字」chip,不是一行 · 拼接的纯文本
   assert.match(rule(wxss, '.profile-meta'), /display:\s*flex/)
   assert.match(rule(wxss, '.profile-meta-chip'), /display:\s*flex/)
-  // 2026-10-27 P-15/P-17 owner(真机走查 p108):元信息合成一行「类型 · N 名成员 · 入会方式」,
-  // 「退出」在同一行最右侧。取代 2026-10-22「固定两行两枚 chip」的旧断言。
-  assert.equal((wxml.match(/class="profile-meta-chip"/g) || []).length, 1, '元信息合成一枚 chip')
-  assert.equal((wxml.match(/class="profile-meta-ico"/g) || []).length, 1, 'chip 必须带图标')
-  assert.match(rule(wxss, '.profile-meta'), /flex-direction:\s*row/, '元信息一行')
-  assert.match(wxml, /\{\{club\.metaLine\}\} · \{\{club\.joinPolicyText\}\}加入/, '入会方式并进同一行')
+  // 拍板 2026-10-22:元信息固定两行 ——「类型 · N 名成员」/ 入会方式,各带原 chip 图标。
+  // 2026-10-27 P-17 曾合成一行;2026-10-28 业主(p108)「间距调错了,退回去」⇒ 回到两行,「退出」留在入会方式那行最右。
+  assert.equal((wxml.match(/class="profile-meta-chip"/g) || []).length, 2, '元信息两行两枚 chip')
+  assert.equal((wxml.match(/class="profile-meta-ico"/g) || []).length, 2, '每枚 chip 必须带图标')
+  assert.match(rule(wxss, '.profile-meta'), /flex-direction:\s*column/, '两行固定换行,不随宽度乱折')
   assert.match(wxml, /class="profile-quit"[^>]*bindtap="onQuit"[^>]*>退出</, '「退出」在元信息行内')
   assert.match(rule(wxss, '.profile-quit'), /margin-left:\s*auto/, '「退出」靠最右')
 
@@ -136,7 +135,7 @@ function assertContract(overrides = {}) {
 
   // —— 发帖入口 285:395:头像 + 昵称 / 提示语 / 工具栏三图标 ——
   assert.match(wxml, /class="post-composer-who"[\s\S]{0,200}class="post-composer-ph"[\s\S]{0,200}class="post-composer-tools"/)
-  assert.equal((wxml.match(/class="post-composer-ico"/g) || []).length, 3, '工具栏三枚图标')
+  assert.equal((wxml.match(/class="post-composer-ico[ "]/g) || []).length, 3, '工具栏三枚图标')
 }
 
 test('俱乐部详情 N 系列按 Figma 落地:Shell 尺寸、概览三段、活动分段与活动卡', () => {

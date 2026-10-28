@@ -339,7 +339,10 @@ Page({
   },
   pickPersona(e) {
     const key = e.currentTarget.dataset.key;
-    if (!this.data.saving && personalityOf(key)) this.setData({ personaPick: key });
+    if (this.data.saving || !personalityOf(key)) return;
+    if (key === this.data.personality && this.data.hasProfile) { this.setData({ personaPick: key, personaSheet: false }); return; }
+    this.setData({ personaPick: key });
+    this.savePersona();
   },
   // 选定即保存:与其它字段弹层同一条持久化路径(首次建档走 save,已有档案走 persistProfile)
   savePersona() {

@@ -153,7 +153,7 @@ test('B66 列表夹具带 family 分组，断言打在勋章行上', () => {
   assert.ok(data.badges.every((badge) => badge.family && badge.name && !String(badge.name).includes('示例')))
   assert.ok(data.badgeGroups.length >= 1)
   assert.ok(data.badgeGroups.every((group) => group.items && group.items.length))
-  assert.equal(SELECTORS().B66.selector, '.bw-list-row')
+  assert.equal(SELECTORS().B66.selector, '.bw-cell')
 })
 
 test('第2批错误态夹具不再把出错了写进可见文案', () => {

@@ -276,16 +276,10 @@
       </view>
     </view>
 
-    <!-- P-42:⋯ 弹层删掉后,举报(UGC 合规入口)照主题详情 10-20 的做法放到页面末尾,不再叠在主动作旁 -->
-    <view class="xb-report" wx:if="{{ reportKind === 'template' }}" bindtap="reportTemplate" aria-role="button" aria-label="举报这个玩法" hover-class="cy-pressed" hover-stay-time="80">举报这个玩法</view>
-    <view class="xb-report" wx:elif="{{ reportKind === 'personalTemplate' }}" bindtap="reportPersonalTemplate" aria-role="button" aria-label="举报这个玩法" hover-class="cy-pressed" hover-stay-time="80">举报这个玩法</view>
+    <!-- P-42(2026-10-28 业主确认「删」):页面末尾那行举报一并删掉 -->
 
     <view class="xb-scroll-pad"></view>
   </scroll-view>
-
-  <!-- FOLLOWUP-A-1:举报原因弹层,与动态详情同一组件 / 同一文案 -->
-  <cy-option-sheet show="{{reportReasonShow}}" title="选择举报原因" items="{{reportReasonItems}}"
-    confirm-text="提交举报" bind:select="onReportReasonSelect" bind:cancel="onReportReasonCancel" />
 
   <!-- 节点预览:chrome 交给 cy-sheet(标题 + 右上角 ✕)。
        原来面板自己摆一行「取消 / 节点交互预览 / 关闭」,与全站统一的右上 ✕ 是两套关闭手势;

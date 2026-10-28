@@ -317,7 +317,7 @@ const RAW = [
   ['B65a', 'B65a-citystamp-cam.png', '/subpackageRoam/citystamp/index', 'player', 'normal', null, undefined, { selector: '.cam__shutter', min: 1 }, 'real-device', 'P2', '需真机相机', '取景框:关闭左上、全屏左下、快门居中、翻转右下'],
   ['B65b', 'B65b-citystamp-write.png', '/subpackageRoam/citystamp/index', 'player', 'normal', { step: 'write', photo: '/images/roam-pushpin.png', note: '巷口那家豆浆七点才开', place: '莘城公园 · 老门柱' }, undefined, { selector: '.sgpb__img', min: 1 }, 'setData', 'P0', '', '★留言条压在信箱上,配文计数 x/30;空着也能投'],
   ['B65c', 'B65c-citystamp-print.png', '/subpackageRoam/citystamp/index', 'player', 'normal', { step: 'print', got: true, torn: true, revealed: false, gotPic: '/images/roam-pushpin.png', gotCaption: '雨天走后门，屋檐能躲雨', serial: 'NO. 0012', place: '莘城公园 · 老门柱', bars: [{ w: 2, g: 1 }, { w: 1, g: 2 }, { w: 3, g: 1 }] }, undefined, { selector: '.sgslip', min: 1 }, 'setData', 'P0', '', '★撕口锯齿在纸的上边、槽里留纸头;刮层盖着 TA 那句'],
-  ['B66', 'B66-badge-wall-webgl-real.png', '/subpackageP3/pages/badge-wall/index/index', 'player', 'normal', { loaded: true, loadFail: false, partialFail: false, glFail: false, viewMode: 'list', badges: [{ code: 'FIRST_STEP', family: 'identity', name: '开始在场', unlocked: true }], badgeGroups: [{ key: 'identity', title: '', items: [{ code: 'FIRST_STEP', family: 'identity', name: '开始在场', unlocked: true }] }] }, undefined, { selector: '.bw-list-row', min: 1 }, 'real-data', 'P0', '', '开发者工具使用可读列表，按 family 分组并显示真实勋章行'],
+  ['B66', 'B66-badge-wall-webgl-real.png', '/subpackageP3/pages/badge-wall/index/index', 'player', 'normal', { loaded: true, loadFail: false, partialFail: false, glFail: false, viewMode: 'list', badges: [{ code: 'FIRST_STEP', family: 'identity', name: '开始在场', unlocked: true }], badgeGroups: [{ key: 'identity', title: '', items: [{ code: 'FIRST_STEP', family: 'identity', name: '开始在场', unlocked: true }] }] }, undefined, { selector: '.bw-cell', min: 1 }, 'real-data', 'P0', '', '开发者工具使用可读列表，按 family 分组并显示真实勋章格'],
   ['B67', 'B67-badge-wall-empty.png', '/subpackageP3/pages/badge-wall/index/index', 'player', 'empty', { badges: [] }, undefined, { selector: 'cover-view', min: 1 }, 'setData', 'P1', '', '⚠️ 字段名按页面实况:activeTopTab/activeClubTab/nearbyClubs。早先写成 activeTab/clubs,两态都落到空态、md5 相同'],
   ['B68', 'B68-growth-normal.png', '/subpackageP3/pages/growthcenter/index/index', 'player', 'normal', { overviewState: 'ready', overviewLoaded: true, overviewError: '', overview: { levelText: 'Lv.6 城市探索者', stats: [{ key: 'explore', label: '探索值', value: '1,280', unit: '' }, { key: 'badge', label: '徽章', value: '6', unit: '枚' }, { key: 'topics', label: '完成路线', value: '3', unit: '条' }, { key: 'distance', label: '探索距离', value: '42.6', unit: 'km' }] }, badges: [{ code: 'FIRST_STEP', name: '初探', initial: '初', unlockText: '2026-08-18' }], badgeCountText: '1', badgeLoadError: false, showBadges: true, showBadgeEmpty: false }, undefined, { selector: '.gc-metric-row, .gc-badge-row', min: 5 }, 'setData', 'P0', '', '四项足迹与已获得徽章同屏可读；刷新或错误出口不覆盖成功快照'],
   ['B69', 'B69-growth-split.png', '/subpackageP3/pages/growthcenter/index/index', 'player', 'normal', { loading: false, mode: 'roam' }, undefined, TITLE, 'setData', 'P1', 'BLOCKED：成长概览 API 未返回 productType，且漫游只有本机记录；无法如实拆分漫游、城市定向、自由探索三种模式', '需后端补齐按 productType 聚合的响应合同后再设计模式分栏；不得用本机漫游记录与服务端总量拼接伪数据'],
@@ -453,6 +453,7 @@ const RAW = [
   ['D31', 'D31-income-fail.png', '/subpackageA/pages/assetcenter/income-detail/income-detail', 'player', 'error', { loading: false, loadErr: true, list: [] }, undefined, ERR, 'setData', 'P1', '', '收益错误态由深链壳内正文组件负责', '#incomeDetail'],
   ['D32', 'D32-income-capsule.png', '/subpackageA/pages/assetcenter/income-detail/income-detail', 'player', 'empty', { loading: false, loadErr: false, activeFilter: 'create', hasMore: false, list: [] }, undefined, { selector: '.id-tabs, .id-state-fill', min: 2 }, 'setData', 'P0', '', '创作收益胶囊选中后的筛选空态；与全部收益空态 D30 可区分', '#incomeDetail'],
   ['D33', 'D33-earnings-normal.png', '/subpackageA/pages/assetcenter/earnings/index', 'player', 'normal', { state: 'ready', balance: '128.00' }, undefined, { selector: '.ae-hero, .ae-section', min: 2 }, 'setData', 'P0', '', '★拆四类入口；正文在 #assetEarnings，断言使用 ae-* 新 DOM', '#assetEarnings'],
+  ['D33A', 'D33A-earnings-analysis-normal.png', '/subpackageA/pages/assetcenter/analysis/index', 'player', 'normal', { state: 'ready', mode: 'income', current: { label: '10月', totalText: '89.70' }, series: [{ key: '2026-10', label: '10月', totalText: '89.70', height: 100, current: true }], sources: [{ key: 'topic', label: '主题售卖', totalText: '89.70', percent: 100 }] }, undefined, { selector: '.an-card', min: 2 }, 'setData', 'P1', '', '2026-10-28 G-9 账户收益 · 分析页:柱图 + 收入来源'],
   ['D34', 'D34-im-list-content.png', '/subpackageB/pages/im/list/index', 'player', 'normal', { loading: false, loaded: true, error: false, activeTab: 'dm', list: [{ conversationId: 9, type: 1, unread: 1, muted: 0, previewText: '明晚一起？', timeText: '19:20', offset: 0, counterparty: { nickname: '周行', avatar: '/images/d_profile.png' } }] }, undefined, TABS2, 'setData', 'P0', '', '★补页面标题（现在连标题都没有）；合并成一个页面'],
   ['D35', 'D35-im-list-system.png', '/subpackageB/pages/im/list/index', 'player', 'normal', { loading: false, loaded: true, error: false, activeTab: 'sys', list: [{ conversationId: 2, type: 2, unread: 0, muted: 0, previewText: '报名已确认', timeText: '昨天', offset: 0, counterparty: { nickname: '系统通知', avatar: '' } }], reportNotices: [] }, undefined, TABS2, 'setData', 'P1', '', '—'],
   ['D36', 'D36-im-chat-real.png', '/subpackageB/pages/im/chat/index?conversationId=9', 'player', 'normal', null, undefined, { selector: '.msg-bubble', min: 1 }, 'real-data', 'P0', '', '★34/35/35b 全是缺参或骨架；删顶部头像；整体上移'],
@@ -651,10 +652,10 @@ const countBy = (pred) => SHOTS.filter(pred).length;
 // 2026-10-25 新增官方地点挑战缺参真实态 F200；不新增 blocked 或已验 fixture。
 // 2026-10-27 L02 P-55 新增营销消息与优惠券独立页 F201(P1 real-data actionable):total 340→341、P1 199→200、actionable 316→317(P1 192→193)、F 94→95、real-data 38→39。
 const STATS = {
-  "total": 341,
+  "total": 342,
   "byPriority": {
     "P0": 131,
-    "P1": 200,
+    "P1": 201,
     "P2": 10
   },
   "blockedByPriority": {
@@ -664,21 +665,21 @@ const STATS = {
   },
   "actionable": {
     "P0": 122,
-    "P1": 193,
+    "P1": 194,
     "P2": 2,
-    "total": 317
+    "total": 318
   },
   "blocked": 24,
   "domains": {
     "A": 53,
     "B": 69,
     "C": 56,
-    "D": 42,
+    "D": 43,
     "E": 26,
     "F": 95
   },
   "control": {
-    "setData": 179,
+    "setData": 180,
     "identity+setData": 116,
     "real-data": 39,
     "real-device": 7

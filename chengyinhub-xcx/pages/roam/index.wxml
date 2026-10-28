@@ -157,8 +157,8 @@
                     title="{{entryReadAccess === 'login' ? '登录后查看附近活动与队伍' : '当前账号无法查看'}}"
                     primary="{{entryReadAccess === 'login' ? '去登录' : ''}}" bind:primary="loginForEntryRead" />
     <cy-error wx:elif="{{entryLoadError}}" load-failure="{{true}}" />
-    <scroll-view wx:elif="{{entryCards.length}}" class="entry-peek__cards" scroll-x enhanced show-scrollbar="{{false}}"><view class="entry-peek__track">
-      <view class="entry-card" wx:for="{{entryCards}}" wx:key="key" data-kind="{{item.kind}}" data-id="{{item.id}}"
+    <scroll-view wx:elif="{{entryCards.length || entryFarCards.length}}" class="entry-peek__cards" scroll-x enhanced show-scrollbar="{{false}}"><view class="entry-peek__track">
+      <view class="entry-card" wx:for="{{entryCards.length ? entryCards : entryFarCards}}" wx:key="key" data-kind="{{item.kind}}" data-id="{{item.id}}"
             bindtap="onEntryCardTap" aria-role="button" aria-label="打开活动 {{item.title}}" hover-class="cy-pressed" hover-stay-time="80">
         <image wx:if="{{item.cover}}" class="entry-card__cover" src="{{item.cover}}" mode="aspectFill" />
         <view wx:else class="entry-card__cover entry-card__cover--empty"><cy-icon name="image" size="48" /></view>
@@ -183,10 +183,7 @@
         <!-- 2026-10-27 owner P-29:方卡还原 10-15 之前的结构(图优先,图标小号兜底);档案三卡用真实图片,没有就是空态插画 -->
         <view class="pp-tile__box">
           <image wx:if="{{item.img}}" class="pp-tile__img" src="{{item.img}}" mode="aspectFill" />
-          <view wx:elif="{{item.empty}}" class="pp-tile__empty" aria-hidden="true">
-            <image class="pp-tile__empty-bg" src="/images/empty_state_bg.svg" mode="aspectFit" />
-            <image class="pp-tile__empty-figure" src="/images/empty_state_figure.svg" mode="aspectFit" />
-          </view>
+          <image wx:elif="{{item.art}}" class="pp-tile__art" src="{{item.art}}" mode="aspectFit" aria-hidden="true" />
           <cy-icon wx:else name="{{item.icon}}" size="48" />
         </view>
         <text class="pp-tile__t">{{item.title}}</text>
@@ -273,7 +270,7 @@
      容器 pointer-events:none,只有子层可点,不会吃掉地图手势。 -->
 <!-- 顶部输入地址(§6.1):白框是唯一入口,铺在每一张地图上,四个模式共用同一件。
      只在地图屏出现;开场/结算那两屏没有地图,搜地址无处可去。 -->
-<cy-map-address-search wx:if="{{screen=='map'}}" top="{{searchTop}}" places="{{searchPlaces}}"
+<cy-map-address-search wx:if="{{screen=='map'}}" top="{{searchTop}}" places="{{searchPlaces}}" lat="{{center.lat}}" lng="{{center.lng}}"
                        placeholder="输入地址" bind:pick="onSearchPick" />
 
 <view class="roam-topstack" style="top:{{promptTop}}px">

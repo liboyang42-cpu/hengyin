@@ -51,10 +51,11 @@ function assertContract(overrides = {}) {
   const opsStart = projectWxml.indexOf('<cy-sheet show="{{opsSheet.show}}"')
   assert.notEqual(opsStart, -1, '长按操作面板必须存在')
   const opsSheet = projectWxml.slice(opsStart, projectWxml.indexOf('</cy-sheet>', opsStart))
-  const sheetRows = [...opsSheet.matchAll(/<view\b[^>]*class="mp-ops-row(?:\s[^"\n]*)?"[^>]*>/g)].map((m) => m[0])
+  // 2026-10-28 m694:Threads 式分组菜单(style/threads-menu.wxss),行高 112rpx ≥ 44px
+  const sheetRows = [...opsSheet.matchAll(/<view\b[^>]*class="tm-row(?:\s[^"\n]*)?"[^>]*>/g)].map((m) => m[0])
   assert.equal(sheetRows.length, 7, '操作面板应有候选池 / 编辑 / 上下架 / 取消 / 审核记录 / 另存为模板 / 删除')
   for (const row of sheetRows) assert.match(row, /bindtap="onOpsPick"/)
-  assert.match(rule(projectWxss, '.mp-ops-row'), /min-height:\s*var\(--cy-btn-h\)/)
+  assert.match(read('style/threads-menu.wxss'), /\.tm-row \{ min-height: 112rpx;/)
 }
 
 test('商家卡与我的项目管理动作具有 44px 热区和按钮语义', () => {

@@ -84,7 +84,8 @@ test('客户页「管理」半屏按 canReadMarketing 显示「触达记录」�
   const wxml = fs.readFileSync(path.join(root, 'pages/merchant/customer/index.wxml'), 'utf8');
   const js = fs.readFileSync(path.join(root, 'pages/merchant/customer/index.js'), 'utf8');
   // 2026-10-27 M-04:「管理」半屏改为操作列表行(cu-op),门控与去向不变
-  assert.match(wxml, /wx:if="\{\{canCampaigns\}\}" class="cu-op" bindtap="goCampaigns"/);
+  // 2026-10-28 m679:Threads 式菜单行(tm-row),门控与去向不变
+  assert.match(wxml, /wx:if="\{\{canCampaigns\}\}" class="tm-row" bindtap="goCampaigns"/);
   assert.match(js, /canCampaigns: access\.canReadMarketing/);
   assert.match(js, /goCampaigns\(\) \{\s*if \(!this\.data\.canCampaigns \|\| this\._navigating\) return;[^\n]*\s*this\._navigating = true;\s*this\.setData\(\{ toolsOpen: false \}\);\s*wx\.navigateTo\(\{ url: '\/pages\/merchant\/crm-campaigns\/index', complete: \(\) => \{ this\._navigating = false; \} \}\)/);
 });

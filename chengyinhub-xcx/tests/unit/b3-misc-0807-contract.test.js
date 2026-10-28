@@ -54,11 +54,14 @@ test('A05: 完赛分享使用单张图片成绩卡，模板/路线分享继续�
   // 稿上轨迹图 188pt 高、20pt 圆角;整卡不再有 820rpx 这个全幅封面高度。
   assert.match(completionWxss, /\.completion-share-card__cover\s*\{[^}]*height:\s*376rpx[^}]*border-radius:\s*var\(--cy-radius-xl\)/s)
   assert.doesNotMatch(completionWxss, /height:\s*820rpx/)
-  // MedalPill 的重点:金/银/铜各绑各的 token。三档同色 = 这个 pill 等于没做,所以逐档钉死。
-  // 2026-10-27 P-21 owner:帖文卡还原 #508 之前的版本,奖牌回到 star 图标 + medal token(撤回 211:271 的 svg 原图)。
-  assert.match(completionWxss, /\.completion-share-card__medal--gold\s*\{[^}]*color:\s*var\(--cy-color-medal-gold\)/s)
-  assert.match(completionWxss, /\.completion-share-card__medal--silver\s*\{[^}]*color:\s*var\(--cy-color-medal-silver\)/s)
-  assert.match(completionWxss, /\.completion-share-card__medal--bronze\s*\{[^}]*color:\s*var\(--cy-color-medal-bronze\)/s)
+  // MedalPill 的重点:金/银/铜三档各是各的颜色。三档同色 = 这个 pill 等于没做,所以逐档钉死。
+  // 2026-10-22 新稿 211:271:三枚奖牌改用稿上原图(medal-gold/silver/bronze.svg),逐档检查文件在、颜色互不相同。
+  const fills = ['gold', 'silver', 'bronze'].map((tier) => {
+    assert.match(completionWxml, new RegExp('wx:if="\\{\\{medal' + tier[0].toUpperCase() + tier.slice(1) + ' > 0\\}\\}" src="\\./medal-' + tier + '\\.svg"'))
+    const svg = fs.readFileSync(path.join(__dirname, '../../components/cy/completion-share-card/medal-' + tier + '.svg'), 'utf8')
+    return (svg.match(/fill="(#[0-9A-Fa-f]{6})"/) || [])[1]
+  })
+  assert.equal(new Set(fills.filter(Boolean)).size, 3, '金/银/铜三枚奖牌颜色必须互不相同')
   assert.equal(helper.isCompletedShare({ dataType: 1, completed: true, sportName: '夜游' }), true)
   assert.equal(helper.isCompletedShare({ dataType: 3 }), true)
   assert.equal(helper.isCompletedShare({ dataType: 2, completed: true, sportName: '夜游' }), false)

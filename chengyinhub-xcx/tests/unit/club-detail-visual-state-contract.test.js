@@ -25,7 +25,9 @@ test('俱乐部主页用真实资源与 DS 图标，不把字符伪装成按钮�
   // 2026-10-27 P-20:页内发帖框(删图 / 撤引用的 close-sm)撤掉,发帖改走 cy-post-compose;
   // 「关闭用真实图标」这条约束随之落到组件上。
   assert.match(visibleMarkup(read('pages/square/components/cy/post-compose/index.wxml')), /<cy-icon\b[^>]*name="close-sm"/)
-  assert.match(view, /<cy-icon\b[^>]*name="image"/)
+  // 2026-10-28 p110:发帖行三枚图标照 Figma 285:395 —— 描边方框(自绘)、实心定位、旗子
+  assert.match(view, /class="post-composer-ico post-composer-sq"/)
+  assert.match(view, /<cy-icon\b[^>]*name="pin-solid"/)
   assert.ok((view.match(/<cy-icon\b[^>]*name="arrow-right"/g) || []).length >= 10)
 })
 

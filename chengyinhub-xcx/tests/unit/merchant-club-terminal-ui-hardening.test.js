@@ -70,7 +70,7 @@ test('客户导出与合规触达使用权限门控的等层工具且避开原�
   const wxss = read('pages/merchant/customer/index.wxss');
 
   assert.match(wxml,
-    /<view[^>]+wx:if="\{\{canExport\}\}"[^>]+class="cu-op"[^>]+bindtap="createExport"[^>]+aria-role="button"/,
+    /<view[^>]+wx:if="\{\{canExport\}\}"[^>]+class="tm-row"[^>]+bindtap="createExport"[^>]+aria-role="button"/,
     '导出必须只在授权态渲染并保留按钮语义');
   assert.doesNotMatch(wxml, /<button[^>]+bindtap="createExport"/,
     '授权工具不得再受原生 button 白底覆盖');
@@ -78,15 +78,13 @@ test('客户导出与合规触达使用权限门控的等层工具且避开原�
   // 每行 图标 + 标题 + 说明。原判据里仍成立的部分保留:同层动作不分黑底主操作档、
   // 行走卡面正文色、说明单行不折行。负控 = 换回网格工具块,下面必红。
   assert.doesNotMatch(wxml, /class="cu-tool\b/, '客户管理不再是浮在空白里的文字工具块');
+  // 2026-10-28 m679/m694 业主:Threads 式分组菜单 —— 文字在左、图标在右,不再写说明行
   for (const handler of ['toggleSelectMode', 'createExport', 'goCampaigns']) {
-    assert.match(wxml, new RegExp(`class="cu-op"[^>]+bindtap="${handler}"[\\s\\S]*?class="cu-op-ico"[\\s\\S]*?class="cu-op-title"[\\s\\S]*?class="cu-op-desc"`),
-      `${handler}:操作行必须是 图标 + 标题 + 说明`);
+    assert.match(wxml, new RegExp(`class="tm-row"[^>]+bindtap="${handler}"[\\s\\S]*?<text class="tm-label">[\\s\\S]*?<cy-icon class="tm-ico"`),
+      `${handler}:操作行必须是 文字 + 右侧图标`);
   }
-  const rowRule = wxss.match(/\.cu-op\s*\{[^}]*\}/);
-  assert.ok(rowRule, '缺少 .cu-op 行规则');
-  assert.match(rowRule[0], /display:\s*flex/);
-  assert.match(wxss, /\.cu-op-title\s*\{[^}]*color:\s*var\(--cy-text-title\)/, '动作标题用标题色，不像未启用');
-  assert.match(wxss, /\.cu-op-desc\s*\{[^}]*white-space:\s*nowrap;[^}]*text-overflow:\s*ellipsis/, '说明单行省略(G-7)');
+  assert.doesNotMatch(wxml, /class="cu-op-desc"/, '不写说明行');
+  assert.match(read('style/threads-menu.wxss'), /\.tm-row \{[^}]*display: flex;[^}]*justify-content: space-between/);
 });
 
 test('客户页与横向分段把导航内距计入自身宽高，不能撑出整页滚动条', () => {

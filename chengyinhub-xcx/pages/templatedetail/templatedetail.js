@@ -232,7 +232,7 @@ Page({
 
   onHide() { merchantTheme.merchantPageRestore(); },
   onUnload() {
-    this._disposed = true; this._unloaded = true; if (this._reportReasonSelection) require('../../utils/community-report-sheet.js').cancel(this);
+    this._disposed = true; this._unloaded = true;
     this._editorContext = null;
     merchantTheme.merchantPageRestore();
   },
@@ -331,7 +331,6 @@ Page({
     that._detailRequestToken = token;
     if (that._detailContext && that._detailContext !== context) {
       that.applyDetailPayload({});
-      that.setData({ reportKind: '' });
       that.closePop();
     }
     that._detailContext = context;
@@ -350,7 +349,6 @@ Page({
         if (!that.isDetailRequestCurrent(token, context)) return;
         if (res && res.code == '200' && isRecord(res.data)) {
           that.applyDetailPayload(res.data);
-          that.setData({ reportKind: reportKindOf(res.data, that.data.scope, typeof app.getUserID === 'function' ? app.getUserID() : '') });
         } else {
           that.setData({
             loadError: true,
@@ -433,18 +431,6 @@ Page({
     mediaPreview.open(urls, urls[0]);
   },
 
-  // FOLLOWUP-A-1:举报玩法,流程与动态详情 reportSquare 同一套(utils/content-report.js)。
-  // 广场记录与个人玩法各走各的举报接口,两个入口分开绑定。
-  reportTemplate() {
-    if (this.data.reportKind !== 'template') return;
-    require('../../utils/content-report.js').reportTemplate(this, app, this.data.id);
-  },
-  reportPersonalTemplate() {
-    if (this.data.reportKind !== 'personalTemplate') return;
-    require('../../utils/content-report.js').reportPersonalTemplate(this, app, this.data.id);
-  },
-  onReportReasonSelect(e) { require('../../utils/community-report-sheet.js').select(this, e); },
-  onReportReasonCancel() { require('../../utils/community-report-sheet.js').cancel(this); },
 
   closePop() {
     this.setData({
@@ -527,14 +513,3 @@ Page({
     };
   }
 });
-
-// FOLLOWUP-A-1:公开可见、且不是本人的玩法才给举报;谓词与后端 /api/template/report、/personal-report 一致。
-// library = 广场记录(已审核 + 已上架);my = 个人玩法(非草稿 + 已审核 + 已上架)。返回 '' 即不出入口。
-function reportKindOf(info, scope, me) {
-  info = info || {};
-  if (!(Number(info.id) > 0) || Number(info.delFlag || 0) !== 0) return '';
-  if (me && String(info.memberId || '') === String(me)) return '';
-  if (Number(info.status) !== 1 || Number(info.publishStatus) !== 1) return '';
-  if (scope === 'my') return Number(info.draftStatus) === 1 ? 'personalTemplate' : '';
-  return 'template';
-}
