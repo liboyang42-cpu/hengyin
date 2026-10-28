@@ -11,6 +11,7 @@
   left: 0; right: 0; top: 0; bottom: 0;
   z-index: 9;
   overflow: hidden;
+  border-radius: var(--pk-verdict-radius, 0); /* ds-ok 整屏为 0;故事流内嵌时由外层给圆角,不再是一块直角绿砖 */
   display: flex;
   align-items: center;
   justify-content: center;

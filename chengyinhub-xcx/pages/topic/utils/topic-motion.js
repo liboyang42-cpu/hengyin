@@ -8,7 +8,7 @@ function text(value) {
 }
 
 function csv(value) {
-  return text(value).split(',').map((s) => s.trim()).filter(Boolean);
+  return text(value).split(/[,;]/).map((s) => s.trim()).filter(Boolean);
 }
 
 /* 封面轮换图:多图 imgArr 优先,没有就用单张封面;最多 9 张 */

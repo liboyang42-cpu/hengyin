@@ -1298,6 +1298,7 @@ page {
   background: var(--cy-color-bg-surface-subtle);
   border: 1rpx solid var(--cy-color-border-subtle);
 }
+.cg-ho-frame { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
 .cg-ho-img { width: 100%; height: 100%; }
 .cg-ho-ph {
   position: absolute; left: 0; right: 0; top: 0; bottom: 0;
