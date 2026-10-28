@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 5137,
+  "controlCount": 5152,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -2219,6 +2219,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
         "pages/topic/merchantinfo/merchantinfo",
@@ -51851,7 +51852,11 @@
           "route": "pages/template/index",
           "segments": [
             {
-              "selector": "cy-error.fill-slot",
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
               "index": 0
             },
             {
@@ -51868,7 +51873,11 @@
           "route": "pages/template/index",
           "segments": [
             {
-              "selector": "cy-error.fill-slot",
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
               "index": 0
             },
             {
@@ -51885,7 +51894,11 @@
           "route": "pages/template/index",
           "segments": [
             {
-              "selector": "cy-error.fill-slot",
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
               "index": 0
             },
             {
@@ -51902,8 +51915,96 @@
           "route": "pages/template/index",
           "segments": [
             {
-              "selector": "cy-error.fill-slot",
+              "selector": "tpl-shelf",
               "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -52139,6 +52240,90 @@
           "segments": [
             {
               "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
               "index": 0
             },
             {
@@ -84769,6 +84954,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
         "pages/topic/merchantinfo/merchantinfo",
@@ -94579,8 +94765,33 @@
           "route": "pages/template/index",
           "segments": [
             {
-              "selector": "cy-error.fill-slot",
+              "selector": "tpl-shelf",
               "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-consent-check",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -94618,6 +94829,27 @@
           "segments": [
             {
               "selector": "cy-error.fill-slot",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-consent-check",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
               "index": 0
             },
             {
@@ -101113,6 +101345,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
         "pages/topic/merchantinfo/merchantinfo",
@@ -102616,6 +102849,19 @@
         },
         {
           "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -103576,6 +103822,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
         "pages/topic/merchantinfo/merchantinfo",
@@ -105079,6 +105326,19 @@
         },
         {
           "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -106038,6 +106298,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
         "pages/topic/merchantinfo/merchantinfo",
@@ -107541,6 +107802,19 @@
         },
         {
           "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -108500,6 +108774,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
         "pages/topic/merchantinfo/merchantinfo",
@@ -110003,6 +110278,19 @@
         },
         {
           "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -110962,6 +111250,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
         "pages/topic/merchantinfo/merchantinfo",
@@ -112465,6 +112754,19 @@
         },
         {
           "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -113424,6 +113726,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
         "pages/topic/merchantinfo/merchantinfo",
@@ -114927,6 +115230,19 @@
         },
         {
           "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -145606,8 +145922,25 @@
           "route": "pages/template/index",
           "segments": [
             {
-              "selector": "cy-empty.fill-slot",
+              "selector": "tpl-shelf",
               "index": 0
+            },
+            {
+              "selector": "cy-empty.sh-state",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-empty.sh-state",
+              "index": 1
             }
           ]
         },
@@ -152293,8 +152626,25 @@
           "route": "pages/template/index",
           "segments": [
             {
-              "selector": "cy-error.fill-slot",
+              "selector": "tpl-shelf",
               "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 1
             }
           ]
         },
@@ -159239,8 +159589,25 @@
           "route": "pages/template/index",
           "segments": [
             {
-              "selector": "cy-error.fill-slot",
+              "selector": "tpl-shelf",
               "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 1
             }
           ]
         },
@@ -166185,8 +166552,25 @@
           "route": "pages/template/index",
           "segments": [
             {
-              "selector": "cy-error.fill-slot",
+              "selector": "tpl-shelf",
               "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 1
             }
           ]
         },
@@ -174290,6 +174674,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
         "pages/topic/merchantinfo/merchantinfo",
@@ -177423,16 +177808,20 @@
           ]
         },
         {
-          "route": "pages/template/index",
+          "route": "pages/templatedetail/templatedetail",
           "segments": [
             {
-              "selector": "cy-inline-error",
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-inline-error.mh__error",
               "index": 0
             }
           ]
         },
         {
-          "route": "pages/templatedetail/templatedetail",
+          "route": "pages/templatedetail/topic-preview/index",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -181385,6 +181774,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
         "pages/topic/merchantinfo/merchantinfo",
@@ -182256,6 +182646,15 @@
         },
         {
           "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -182864,6 +183263,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
         "pages/topic/merchantinfo/merchantinfo",
@@ -183735,6 +184135,15 @@
         },
         {
           "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -184343,6 +184752,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
         "pages/topic/merchantinfo/merchantinfo",
@@ -185214,6 +185624,15 @@
         },
         {
           "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -185821,6 +186240,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
         "pages/topic/merchantinfo/merchantinfo",
@@ -186692,6 +187112,15 @@
         },
         {
           "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -187299,6 +187728,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
         "pages/topic/merchantinfo/merchantinfo",
@@ -188170,6 +188600,15 @@
         },
         {
           "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -188777,6 +189216,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
         "pages/topic/merchantinfo/merchantinfo",
@@ -189656,6 +190096,15 @@
           ]
         },
         {
+          "route": "pages/templatedetail/topic-preview/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "pages/topic/index/index",
           "segments": [
             {
@@ -190255,6 +190704,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
         "pages/topic/merchantinfo/merchantinfo",
@@ -196697,6 +197147,66 @@
         },
         {
           "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -200247,6 +200757,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
         "pages/topic/merchantinfo/merchantinfo",
@@ -206689,6 +207200,66 @@
         },
         {
           "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -210239,6 +210810,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
         "pages/topic/merchantinfo/merchantinfo",
@@ -216681,6 +217253,66 @@
         },
         {
           "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -220231,6 +220863,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
         "pages/topic/merchantinfo/merchantinfo",
@@ -226673,6 +227306,66 @@
         },
         {
           "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -230223,6 +230916,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
         "pages/topic/merchantinfo/merchantinfo",
@@ -236665,6 +237359,66 @@
         },
         {
           "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -240215,6 +240969,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
         "pages/topic/merchantinfo/merchantinfo",
@@ -246669,6 +247424,66 @@
           ]
         },
         {
+          "route": "pages/templatedetail/topic-preview/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "pages/topic/index/index",
           "segments": [
             {
@@ -250196,6 +251011,7 @@
         "pages/team/detail/index",
         "pages/team/join/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantinfo/merchantinfo",
         "pages/topic/pricing/index",
@@ -251012,6 +251828,15 @@
           ]
         },
         {
+          "route": "pages/templatedetail/topic-preview/index",
+          "segments": [
+            {
+              "selector": "cy-nav-bar",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "pages/topic/index/index",
           "segments": [
             {
@@ -251774,6 +252599,7 @@
         "pages/team/detail/index",
         "pages/team/join/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantinfo/merchantinfo",
         "pages/topic/pricing/index",
@@ -252927,6 +253753,19 @@
         },
         {
           "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "cy-nav-bar",
+              "index": 0
+            },
+            {
+              "selector": "cy-offline-banner",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
           "segments": [
             {
               "selector": "cy-nav-bar",
@@ -265204,6 +266043,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
         "pages/topic/merchantinfo/merchantinfo",
@@ -272936,8 +273776,29 @@
           "route": "pages/template/index",
           "segments": [
             {
-              "selector": "cy-error.fill-slot",
+              "selector": "tpl-shelf",
               "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -272967,6 +273828,23 @@
           "segments": [
             {
               "selector": "cy-error.fill-slot",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
               "index": 0
             },
             {
@@ -278175,6 +279053,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
         "pages/topic/merchantinfo/merchantinfo",
@@ -285907,8 +286786,29 @@
           "route": "pages/template/index",
           "segments": [
             {
-              "selector": "cy-error.fill-slot",
+              "selector": "tpl-shelf",
               "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -285938,6 +286838,23 @@
           "segments": [
             {
               "selector": "cy-error.fill-slot",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
               "index": 0
             },
             {
@@ -291146,6 +292063,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
         "pages/topic/merchantinfo/merchantinfo",
@@ -298878,8 +299796,29 @@
           "route": "pages/template/index",
           "segments": [
             {
-              "selector": "cy-error.fill-slot",
+              "selector": "tpl-shelf",
               "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -298909,6 +299848,23 @@
           "segments": [
             {
               "selector": "cy-error.fill-slot",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
               "index": 0
             },
             {
@@ -304117,6 +305073,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
         "pages/topic/merchantinfo/merchantinfo",
@@ -311849,8 +312806,29 @@
           "route": "pages/template/index",
           "segments": [
             {
-              "selector": "cy-error.fill-slot",
+              "selector": "tpl-shelf",
               "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -311880,6 +312858,23 @@
           "segments": [
             {
               "selector": "cy-error.fill-slot",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
               "index": 0
             },
             {
@@ -317088,6 +318083,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
         "pages/topic/merchantinfo/merchantinfo",
@@ -324820,8 +325816,29 @@
           "route": "pages/template/index",
           "segments": [
             {
-              "selector": "cy-error.fill-slot",
+              "selector": "tpl-shelf",
               "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -324851,6 +325868,23 @@
           "segments": [
             {
               "selector": "cy-error.fill-slot",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
               "index": 0
             },
             {
@@ -384178,6 +385212,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
         "pages/topic/merchantinfo/merchantinfo",
@@ -407379,7 +408414,11 @@
           "route": "pages/template/index",
           "segments": [
             {
-              "selector": "cy-error.fill-slot",
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
               "index": 0
             },
             {
@@ -407396,8 +408435,54 @@
           "route": "pages/template/index",
           "segments": [
             {
-              "selector": "cy-error.fill-slot",
+              "selector": "tpl-shelf",
               "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -407544,6 +408629,48 @@
             {
               "selector": "cy-sheet",
               "index": 3
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
             }
           ]
         },
@@ -421754,6 +422881,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
         "pages/topic/merchantinfo/merchantinfo",
@@ -444955,7 +446083,11 @@
           "route": "pages/template/index",
           "segments": [
             {
-              "selector": "cy-error.fill-slot",
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
               "index": 0
             },
             {
@@ -444972,8 +446104,54 @@
           "route": "pages/template/index",
           "segments": [
             {
-              "selector": "cy-error.fill-slot",
+              "selector": "tpl-shelf",
               "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -445120,6 +446298,48 @@
             {
               "selector": "cy-sheet",
               "index": 3
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
             }
           ]
         },
@@ -459329,6 +460549,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
         "pages/topic/merchantinfo/merchantinfo",
@@ -482530,7 +483751,11 @@
           "route": "pages/template/index",
           "segments": [
             {
-              "selector": "cy-error.fill-slot",
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
               "index": 0
             },
             {
@@ -482547,8 +483772,54 @@
           "route": "pages/template/index",
           "segments": [
             {
-              "selector": "cy-error.fill-slot",
+              "selector": "tpl-shelf",
               "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -482695,6 +483966,48 @@
             {
               "selector": "cy-sheet",
               "index": 3
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
             }
           ]
         },
@@ -496904,6 +498217,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
         "pages/topic/merchantinfo/merchantinfo",
@@ -520105,7 +521419,11 @@
           "route": "pages/template/index",
           "segments": [
             {
-              "selector": "cy-error.fill-slot",
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
               "index": 0
             },
             {
@@ -520122,8 +521440,54 @@
           "route": "pages/template/index",
           "segments": [
             {
-              "selector": "cy-error.fill-slot",
+              "selector": "tpl-shelf",
               "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -520270,6 +521634,48 @@
             {
               "selector": "cy-sheet",
               "index": 3
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
             }
           ]
         },
@@ -534479,6 +535885,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
         "pages/topic/merchantinfo/merchantinfo",
@@ -557680,7 +559087,11 @@
           "route": "pages/template/index",
           "segments": [
             {
-              "selector": "cy-error.fill-slot",
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
               "index": 0
             },
             {
@@ -557697,8 +559108,54 @@
           "route": "pages/template/index",
           "segments": [
             {
-              "selector": "cy-error.fill-slot",
+              "selector": "tpl-shelf",
               "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -557845,6 +559302,48 @@
             {
               "selector": "cy-sheet",
               "index": 3
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
             }
           ]
         },
@@ -572054,6 +573553,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
         "pages/topic/merchantinfo/merchantinfo",
@@ -595255,7 +596755,11 @@
           "route": "pages/template/index",
           "segments": [
             {
-              "selector": "cy-error.fill-slot",
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
               "index": 0
             },
             {
@@ -595272,8 +596776,54 @@
           "route": "pages/template/index",
           "segments": [
             {
-              "selector": "cy-error.fill-slot",
+              "selector": "tpl-shelf",
               "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -595420,6 +596970,48 @@
             {
               "selector": "cy-sheet",
               "index": 3
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
             }
           ]
         },
@@ -609630,6 +611222,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
         "pages/topic/merchantinfo/merchantinfo",
@@ -632831,7 +634424,11 @@
           "route": "pages/template/index",
           "segments": [
             {
-              "selector": "cy-error.fill-slot",
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
               "index": 0
             },
             {
@@ -632848,8 +634445,54 @@
           "route": "pages/template/index",
           "segments": [
             {
-              "selector": "cy-error.fill-slot",
+              "selector": "tpl-shelf",
               "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -632996,6 +634639,48 @@
             {
               "selector": "cy-sheet",
               "index": 3
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
             }
           ]
         },
@@ -647206,6 +648891,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
         "pages/topic/merchantinfo/merchantinfo",
@@ -670407,7 +672093,11 @@
           "route": "pages/template/index",
           "segments": [
             {
-              "selector": "cy-error.fill-slot",
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
               "index": 0
             },
             {
@@ -670424,8 +672114,54 @@
           "route": "pages/template/index",
           "segments": [
             {
-              "selector": "cy-error.fill-slot",
+              "selector": "tpl-shelf",
               "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -670572,6 +672308,48 @@
             {
               "selector": "cy-sheet",
               "index": 3
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
             }
           ]
         },
@@ -684782,6 +686560,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
         "pages/topic/merchantinfo/merchantinfo",
@@ -707983,7 +709762,11 @@
           "route": "pages/template/index",
           "segments": [
             {
-              "selector": "cy-error.fill-slot",
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
               "index": 0
             },
             {
@@ -708000,8 +709783,54 @@
           "route": "pages/template/index",
           "segments": [
             {
-              "selector": "cy-error.fill-slot",
+              "selector": "tpl-shelf",
               "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -708148,6 +709977,48 @@
             {
               "selector": "cy-sheet",
               "index": 3
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
             }
           ]
         },
@@ -722358,6 +724229,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
         "pages/topic/merchantinfo/merchantinfo",
@@ -745559,7 +747431,11 @@
           "route": "pages/template/index",
           "segments": [
             {
-              "selector": "cy-error.fill-slot",
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
               "index": 0
             },
             {
@@ -745576,8 +747452,54 @@
           "route": "pages/template/index",
           "segments": [
             {
-              "selector": "cy-error.fill-slot",
+              "selector": "tpl-shelf",
               "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -745724,6 +747646,48 @@
             {
               "selector": "cy-sheet",
               "index": 3
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
             }
           ]
         },
@@ -759934,6 +761898,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
         "pages/topic/merchantinfo/merchantinfo",
@@ -783135,7 +785100,11 @@
           "route": "pages/template/index",
           "segments": [
             {
-              "selector": "cy-error.fill-slot",
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
               "index": 0
             },
             {
@@ -783152,8 +785121,54 @@
           "route": "pages/template/index",
           "segments": [
             {
-              "selector": "cy-error.fill-slot",
+              "selector": "tpl-shelf",
               "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-error.sh-state",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -783300,6 +785315,48 @@
             {
               "selector": "cy-sheet",
               "index": 3
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
             }
           ]
         },
@@ -802338,7 +804395,11 @@
           "route": "pages/template/index",
           "segments": [
             {
-              "selector": "cy-tabs.tpl-l1",
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-tabs.sh-tabs",
               "index": 0
             }
           ]
@@ -802928,7 +804989,11 @@
           "route": "pages/template/index",
           "segments": [
             {
-              "selector": "cy-tabs.tpl-l1",
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-tabs.sh-tabs",
               "index": 0
             }
           ]
@@ -803518,7 +805583,11 @@
           "route": "pages/template/index",
           "segments": [
             {
-              "selector": "cy-tabs.tpl-l1",
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-tabs.sh-tabs",
               "index": 0
             }
           ]
@@ -804108,7 +806177,11 @@
           "route": "pages/template/index",
           "segments": [
             {
-              "selector": "cy-tabs.tpl-l1",
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-tabs.sh-tabs",
               "index": 0
             }
           ]
@@ -804396,6 +806469,600 @@
         "event": "bindtap",
         "handler": "onTab",
         "line": 54,
+        "selectorHint": ".cy-tabs__item",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "{{item.label}}",
+        "ariaRole": "tab",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "tap",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "components/cy/tabs/index.js:56"
+      }
+    },
+    {
+      "id": "components/cy/tabs/index.wxml:66:bindtap:onTab:4",
+      "route": "component:components/cy/tabs/index",
+      "hostRoutes": [
+        "pages/activity/list/index",
+        "pages/club/detail/index",
+        "pages/club/event-ops/index",
+        "pages/club/topic-story/index",
+        "pages/coop/list/index",
+        "pages/index/index",
+        "pages/member/index/index",
+        "pages/merchant/aftercare/index",
+        "pages/merchant/coop-center/index",
+        "pages/merchant/ledger/index",
+        "pages/merchant/relation/index",
+        "pages/merchant/verify-records/index",
+        "pages/mylike/mylike",
+        "pages/play/index",
+        "pages/play/merchant/index",
+        "pages/roam/index",
+        "pages/search2/result/index",
+        "pages/talent/list/index",
+        "pages/template/index",
+        "pages/templatedetail/templatedetail",
+        "pages/topic/merchantinfo/merchantinfo",
+        "pages/topic/pricing/index",
+        "pages/userinfo/userinfo",
+        "subpackageA/pages/assetcenter/earnings/index",
+        "subpackageA/pages/assetcenter/income-detail/income-detail",
+        "subpackageA/pages/myproject/index",
+        "subpackageB/pages/im/list/index",
+        "subpackageMember/coupon-wallet/index",
+        "subpackageMember/mycanyu/mycanyu",
+        "subpackageMember/order/order",
+        "subpackageMember/points-history/index",
+        "subpackageMember/report-mine/index",
+        "subpackageP3/pages/growthcenter/leaderboard/index",
+        "subpackageP3/pages/object-cards/index/index",
+        "subpackageRoam/poi-detail/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/activity/list/index",
+          "segments": [
+            {
+              "selector": "cy-tabs",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/detail/index",
+          "segments": [
+            {
+              "selector": "cy-tabs.club-view-tabs",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/detail/index",
+          "segments": [
+            {
+              "selector": "cy-tabs.event-view-tabs",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/event-ops/index",
+          "segments": [
+            {
+              "selector": "cy-tabs.roster-filter",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-story/index",
+          "segments": [
+            {
+              "selector": "cy-tabs.story-tabs",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/list/index",
+          "segments": [
+            {
+              "selector": "cy-tabs.coop-tabs",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/index/index",
+          "segments": [
+            {
+              "selector": "cy-tabs",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/member/index/index",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "cy-tabs.pc-tabs",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/aftercare/index",
+          "segments": [
+            {
+              "selector": "cy-tabs.acl-filter",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/aftercare/index",
+          "segments": [
+            {
+              "selector": "cy-tabs.acl-filter",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/coop-center/index",
+          "segments": [
+            {
+              "selector": "cy-tabs.cc-tabs",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/ledger/index",
+          "segments": [
+            {
+              "selector": "cy-tabs.ledger-filter",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/relation/index",
+          "segments": [
+            {
+              "selector": "cy-tabs.rel-tabs",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-tabs.vrl-filter",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/verify-records/index",
+          "segments": [
+            {
+              "selector": "cy-tabs.vrl-filter",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/mylike/mylike",
+          "segments": [
+            {
+              "selector": "cy-tabs.favorite-tabs",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-tabs",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/merchant/index",
+          "segments": [
+            {
+              "selector": "cy-safety-rating-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-tabs",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/roam/index",
+          "segments": [
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-tabs",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/roam/index",
+          "segments": [
+            {
+              "selector": "cy-tabs",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/search2/result/index",
+          "segments": [
+            {
+              "selector": "cy-tabs.result-tabs",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/talent/list/index",
+          "segments": [
+            {
+              "selector": "cy-tabs.top-tabs",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-tabs.sh-tabs",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "cy-tabs",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "cy-tabs.browse-tabs",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/pricing/index",
+          "segments": [
+            {
+              "selector": "cy-tabs.pg-tabs",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/userinfo/userinfo",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "cy-tabs.pc-tabs",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageA/pages/assetcenter/earnings/index",
+          "segments": [
+            {
+              "selector": "cy-scene-asset-income-detail",
+              "index": 0
+            },
+            {
+              "selector": "cy-tabs.id-tabs",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageA/pages/assetcenter/income-detail/income-detail",
+          "segments": [
+            {
+              "selector": "#incomeDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-tabs.id-tabs",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageA/pages/myproject/index",
+          "segments": [
+            {
+              "selector": "cy-tabs",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageB/pages/im/list/index",
+          "segments": [
+            {
+              "selector": "cy-tabs.tabs-row",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-asset-income-detail",
+              "index": 0
+            },
+            {
+              "selector": "cy-tabs.id-tabs",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-member-order-history",
+              "index": 0
+            },
+            {
+              "selector": "cy-tabs",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-tabs",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/mycanyu/mycanyu",
+          "segments": [
+            {
+              "selector": "cy-tabs",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/order/order",
+          "segments": [
+            {
+              "selector": "#orderHistory",
+              "index": 0
+            },
+            {
+              "selector": "cy-tabs",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/points-history/index",
+          "segments": [
+            {
+              "selector": "cy-tabs",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/report-mine/index",
+          "segments": [
+            {
+              "selector": "cy-tabs",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageP3/pages/growthcenter/leaderboard/index",
+          "segments": [
+            {
+              "selector": "cy-tabs.gc-tabs",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageP3/pages/growthcenter/leaderboard/index",
+          "segments": [
+            {
+              "selector": "cy-tabs",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageP3/pages/growthcenter/leaderboard/index",
+          "segments": [
+            {
+              "selector": "cy-tabs",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageP3/pages/object-cards/index/index",
+          "segments": [
+            {
+              "selector": "cy-tabs.oc-chips",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "#roamDeepLink",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-asset-income-detail",
+              "index": 0
+            },
+            {
+              "selector": "cy-tabs.id-tabs",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "#roamDeepLink",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-member-order-history",
+              "index": 0
+            },
+            {
+              "selector": "cy-tabs",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "#roamDeepLink",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-roam-stamp-album",
+              "index": 0
+            },
+            {
+              "selector": "cy-tabs",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "components/cy/tabs/index.wxml",
+        "js": "components/cy/tabs/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "onTab",
+        "line": 66,
         "selectorHint": ".cy-tabs__item",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -805565,6 +808232,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
         "pages/topic/merchantinfo/merchantinfo",
@@ -806445,6 +809113,15 @@
         },
         {
           "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "#cy-toast",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-preview/index",
           "segments": [
             {
               "selector": "#cy-toast",
@@ -1175520,496 +1178197,6 @@
       }
     },
     {
-      "id": "pages/template/index.wxml:104:bindtap:jumpDetail:10",
-      "route": "pages/template/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/template/index.wxml",
-        "js": "pages/template/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "jumpDetail",
-        "line": 104,
-        "selectorHint": ".cml-card",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "read",
-      "interactionMode": "tap",
-      "baseActionClass": "read",
-      "effectClasses": [
-        "read",
-        "navigation"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/privacy/index",
-          "pages/publish/fabu/index?",
-          "pages/templatedetail/templatedetail?id="
-        ],
-        "apis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info",
-          "/api/template/topic-template/use"
-        ],
-        "primaryApis": [
-          "/api/config/features",
-          "/api/template/topic-template/use"
-        ],
-        "auxiliaryApis": [
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/config/features",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/template/topic-template/use",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": []
-      },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/template/index.js:620"
-      }
-    },
-    {
-      "id": "pages/template/index.wxml:107:binderror:onCoverError:11",
-      "route": "pages/template/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/template/index.wxml",
-        "js": "pages/template/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "image",
-        "event": "binderror",
-        "handler": "onCoverError",
-        "line": 107,
-        "selectorHint": ".cml-pic",
-        "visibleCondition": "{{ item.imgUrl && !item._coverFail }}",
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/template/index.js:268"
-      }
-    },
-    {
-      "id": "pages/template/index.wxml:128:bindtap:jumpDetail:12",
-      "route": "pages/template/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/template/index.wxml",
-        "js": "pages/template/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "jumpDetail",
-        "line": 128,
-        "selectorHint": ".cml-card",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "read",
-      "interactionMode": "tap",
-      "baseActionClass": "read",
-      "effectClasses": [
-        "read",
-        "navigation"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/privacy/index",
-          "pages/publish/fabu/index?",
-          "pages/templatedetail/templatedetail?id="
-        ],
-        "apis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info",
-          "/api/template/topic-template/use"
-        ],
-        "primaryApis": [
-          "/api/config/features",
-          "/api/template/topic-template/use"
-        ],
-        "auxiliaryApis": [
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/config/features",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/template/topic-template/use",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": []
-      },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/template/index.js:620"
-      }
-    },
-    {
-      "id": "pages/template/index.wxml:131:binderror:onCoverError:13",
-      "route": "pages/template/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/template/index.wxml",
-        "js": "pages/template/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "image",
-        "event": "binderror",
-        "handler": "onCoverError",
-        "line": 131,
-        "selectorHint": ".cml-pic",
-        "visibleCondition": "{{ item.imgUrl && !item._coverFail }}",
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/template/index.js:268"
-      }
-    },
-    {
-      "id": "pages/template/index.wxml:153:bindtap:openPublishSheet:14",
-      "route": "pages/template/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/template/index.wxml",
-        "js": "pages/template/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "openPublishSheet",
-        "line": 153,
-        "selectorHint": "#publish-fab",
-        "visibleCondition": "{{isMerchant && (!operationScope || canManageMerchantProjects)}}",
-        "disabledCondition": null,
-        "ariaLabel": "发布",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/template/index.js:323"
-      }
-    },
-    {
-      "id": "pages/template/index.wxml:156:bind:close:closePublishSheet:15",
-      "route": "pages/template/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/template/index.wxml",
-        "js": "pages/template/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-publish-sheet",
-        "event": "bind:close",
-        "handler": "closePublishSheet",
-        "line": 156,
-        "selectorHint": "#template-publish-menu",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/template/index.js:330"
-      }
-    },
-    {
       "id": "pages/template/index.wxml:16:bindtap:goInbox:0",
       "route": "pages/template/index",
       "hostRoutes": [],
@@ -1176076,11 +1178263,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/template/index.js:304"
+        "staticSource": "pages/template/index.js:160"
       }
     },
     {
-      "id": "pages/template/index.wxml:27:bind:change:switchTab:1",
+      "id": "pages/template/index.wxml:29:bind:search:goSearch:1",
       "route": "pages/template/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1176100,11 +1178287,11 @@
       "requestMode": "ordered",
       "confirmationMode": null,
       "control": {
-        "tag": "cy-tabs",
-        "event": "bind:change",
-        "handler": "switchTab",
-        "line": 27,
-        "selectorHint": ".tpl-l1",
+        "tag": "tpl-shelf",
+        "event": "bind:search",
+        "handler": "goSearch",
+        "line": 29,
+        "selectorHint": "tpl-shelf[bind:search]",
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
@@ -1176118,125 +1178305,8 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "read",
-      "interactionMode": "event-contract",
-      "baseActionClass": "read",
-      "effectClasses": [
-        "read",
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/privacy/index"
-        ],
-        "apis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info",
-          "/api/template/list",
-          "/api/template/topic-template/list"
-        ],
-        "primaryApis": [
-          "/api/config/features",
-          "/api/template/list",
-          "/api/template/topic-template/list"
-        ],
-        "auxiliaryApis": [
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/config/features",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/template/list",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/template/topic-template/list",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": []
-      },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/template/index.js:492"
-      }
-    },
-    {
-      "id": "pages/template/index.wxml:28:bindtap:goSearch:2",
-      "route": "pages/template/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/template/index.wxml",
-        "js": "pages/template/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "goSearch",
-        "line": 28,
-        "selectorHint": ".tpl-search",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "搜索模板主题与玩法",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
       "actionClass": "navigation",
-      "interactionMode": "tap",
+      "interactionMode": "event-contract",
       "baseActionClass": "navigation",
       "effectClasses": [
         "navigation"
@@ -1176263,11 +1178333,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/template/index.js:303"
+        "staticSource": "pages/template/index.js:159"
       }
     },
     {
-      "id": "pages/template/index.wxml:46:bindtap:switchCat:3",
+      "id": "pages/template/index.wxml:29:bind:toast:onShelfToast:2",
       "route": "pages/template/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1176287,82 +1178357,83 @@
       "requestMode": "ordered",
       "confirmationMode": null,
       "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "switchCat",
-        "line": 46,
-        "selectorHint": ".tpl-chip",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "推荐",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/template/index.js:515"
-      }
-    },
-    {
-      "id": "pages/template/index.wxml:49:bindtap:switchCat:4",
-      "route": "pages/template/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/template/index.wxml",
-        "js": "pages/template/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "switchCat",
-        "line": 49,
-        "selectorHint": ".tpl-chip",
+        "tag": "tpl-shelf",
+        "event": "bind:toast",
+        "handler": "onShelfToast",
+        "line": 29,
+        "selectorHint": "tpl-shelf[bind:toast]",
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
-        "ariaLabelExpression": "{{ item.categoryName }}",
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "event-contract",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/template/index.js:161"
+      }
+    },
+    {
+      "id": "pages/template/index.wxml:36:bindtap:openPublishSheet:3",
+      "route": "pages/template/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/template/index.wxml",
+        "js": "pages/template/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "openPublishSheet",
+        "line": 36,
+        "selectorHint": "#publish-fab",
+        "visibleCondition": "{{isMerchant && (!operationScope || canManageMerchantProjects)}}",
+        "disabledCondition": null,
+        "ariaLabel": "发布",
+        "ariaLabelExpression": null,
         "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
@@ -1176397,11 +1178468,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/template/index.js:515"
+        "staticSource": "pages/template/index.js:164"
       }
     },
     {
-      "id": "pages/template/index.wxml:57:bindtap:clearTemplateSearch:5",
+      "id": "pages/template/index.wxml:39:bind:close:closePublishSheet:4",
       "route": "pages/template/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1176421,16 +1178492,1070 @@
       "requestMode": "ordered",
       "confirmationMode": null,
       "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "clearTemplateSearch",
-        "line": 57,
-        "selectorHint": ".tpl-on-search__clear",
+        "tag": "cy-publish-sheet",
+        "event": "bind:close",
+        "handler": "closePublishSheet",
+        "line": 39,
+        "selectorHint": "#template-publish-menu",
         "visibleCondition": null,
         "disabledCondition": null,
-        "ariaLabel": "清除搜索关键词",
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/template/index.js:171"
+      }
+    },
+    {
+      "id": "pages/templatedetail/shelf/index.wxml:103:bindtap:openGame:15",
+      "route": "component:pages/templatedetail/shelf/index",
+      "hostRoutes": [
+        "pages/template/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/templatedetail/shelf/index.wxml",
+        "js": "pages/templatedetail/shelf/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "openGame",
+        "line": 103,
+        "selectorHint": ".ap",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "{{ item.title }}",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/templatedetail/templatedetail?id="
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/templatedetail/shelf/index.js:327"
+      }
+    },
+    {
+      "id": "pages/templatedetail/shelf/index.wxml:124:bindtap:pickTag:16",
+      "route": "component:pages/templatedetail/shelf/index",
+      "hostRoutes": [
+        "pages/template/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/templatedetail/shelf/index.wxml",
+        "js": "pages/templatedetail/shelf/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "pickTag",
+        "line": 124,
+        "selectorHint": ".tg",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "全部",
         "ariaLabelExpression": null,
         "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/templatedetail/art/"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/templatedetail/shelf/index.js:285"
+      }
+    },
+    {
+      "id": "pages/templatedetail/shelf/index.wxml:125:bindtap:pickTag:17",
+      "route": "component:pages/templatedetail/shelf/index",
+      "hostRoutes": [
+        "pages/template/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/templatedetail/shelf/index.wxml",
+        "js": "pages/templatedetail/shelf/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "pickTag",
+        "line": 125,
+        "selectorHint": ".tg",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "{{ item.name }}",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/templatedetail/art/"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/templatedetail/shelf/index.js:285"
+      }
+    },
+    {
+      "id": "pages/templatedetail/shelf/index.wxml:138:bindtap:openGame:18",
+      "route": "component:pages/templatedetail/shelf/index",
+      "hostRoutes": [
+        "pages/template/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/templatedetail/shelf/index.wxml",
+        "js": "pages/templatedetail/shelf/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "openGame",
+        "line": 138,
+        "selectorHint": ".r16",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "{{ item.title }}",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/templatedetail/templatedetail?id="
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/templatedetail/shelf/index.js:327"
+      }
+    },
+    {
+      "id": "pages/templatedetail/shelf/index.wxml:151:bindtap:openGame:19",
+      "route": "component:pages/templatedetail/shelf/index",
+      "hostRoutes": [
+        "pages/template/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/templatedetail/shelf/index.wxml",
+        "js": "pages/templatedetail/shelf/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "openGame",
+        "line": 151,
+        "selectorHint": ".gg__it",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "{{ item.title }}",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/templatedetail/templatedetail?id="
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/templatedetail/shelf/index.js:327"
+      }
+    },
+    {
+      "id": "pages/templatedetail/shelf/index.wxml:21:bindscroll:onRailScroll:3",
+      "route": "component:pages/templatedetail/shelf/index",
+      "hostRoutes": [
+        "pages/template/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/templatedetail/shelf/index.wxml",
+        "js": "pages/templatedetail/shelf/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "scroll-view",
+        "event": "bindscroll",
+        "handler": "onRailScroll",
+        "line": 21,
+        "selectorHint": ".sh-rail",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/templatedetail/shelf/index.js:291"
+      }
+    },
+    {
+      "id": "pages/templatedetail/shelf/index.wxml:23:bindtap:openTopic:4",
+      "route": "component:pages/templatedetail/shelf/index",
+      "hostRoutes": [
+        "pages/template/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/templatedetail/shelf/index.wxml",
+        "js": "pages/templatedetail/shelf/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "openTopic",
+        "line": 23,
+        "selectorHint": ".lc",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "{{ item.name }}",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/templatedetail/topic-preview/index?"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/templatedetail/shelf/index.js:317"
+      }
+    },
+    {
+      "id": "pages/templatedetail/shelf/index.wxml:24:binderror:onCoverError:5",
+      "route": "component:pages/templatedetail/shelf/index",
+      "hostRoutes": [
+        "pages/template/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/templatedetail/shelf/index.wxml",
+        "js": "pages/templatedetail/shelf/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "image",
+        "event": "binderror",
+        "handler": "onCoverError",
+        "line": 24,
+        "selectorHint": ".lc__img",
+        "visibleCondition": "{{ item.cover }}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/templatedetail/art/"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/templatedetail/shelf/index.js:307"
+      }
+    },
+    {
+      "id": "pages/templatedetail/shelf/index.wxml:40:bindtap:pickTag:6",
+      "route": "component:pages/templatedetail/shelf/index",
+      "hostRoutes": [
+        "pages/template/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/templatedetail/shelf/index.wxml",
+        "js": "pages/templatedetail/shelf/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "pickTag",
+        "line": 40,
+        "selectorHint": ".tg",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "全部",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/templatedetail/art/"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/templatedetail/shelf/index.js:285"
+      }
+    },
+    {
+      "id": "pages/templatedetail/shelf/index.wxml:41:bindtap:pickTag:7",
+      "route": "component:pages/templatedetail/shelf/index",
+      "hostRoutes": [
+        "pages/template/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/templatedetail/shelf/index.wxml",
+        "js": "pages/templatedetail/shelf/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "pickTag",
+        "line": 41,
+        "selectorHint": ".tg",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "{{ item.name }}",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/templatedetail/art/"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/templatedetail/shelf/index.js:285"
+      }
+    },
+    {
+      "id": "pages/templatedetail/shelf/index.wxml:55:bindtap:openTopic:8",
+      "route": "component:pages/templatedetail/shelf/index",
+      "hostRoutes": [
+        "pages/template/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/templatedetail/shelf/index.wxml",
+        "js": "pages/templatedetail/shelf/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "openTopic",
+        "line": 55,
+        "selectorHint": ".r5",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "{{ item.name }}",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/templatedetail/topic-preview/index?"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/templatedetail/shelf/index.js:317"
+      }
+    },
+    {
+      "id": "pages/templatedetail/shelf/index.wxml:56:binderror:onCoverError:9",
+      "route": "component:pages/templatedetail/shelf/index",
+      "hostRoutes": [
+        "pages/template/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/templatedetail/shelf/index.wxml",
+        "js": "pages/templatedetail/shelf/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "image",
+        "event": "binderror",
+        "handler": "onCoverError",
+        "line": 56,
+        "selectorHint": ".r5__pic",
+        "visibleCondition": "{{ item.cover }}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/templatedetail/art/"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/templatedetail/shelf/index.js:307"
+      }
+    },
+    {
+      "id": "pages/templatedetail/shelf/index.wxml:6:bind:change:switchTab:0",
+      "route": "component:pages/templatedetail/shelf/index",
+      "hostRoutes": [
+        "pages/template/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/templatedetail/shelf/index.wxml",
+        "js": "pages/templatedetail/shelf/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-tabs",
+        "event": "bind:change",
+        "handler": "switchTab",
+        "line": 6,
+        "selectorHint": ".sh-tabs",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
         "ariaRoleExpression": null,
         "ariaDisabled": null,
         "ariaDisabledExpression": null,
@@ -1176440,7 +1179565,7 @@
         "ariaCheckedExpression": null
       },
       "actionClass": "read",
-      "interactionMode": "tap",
+      "interactionMode": "event-contract",
       "baseActionClass": "read",
       "effectClasses": [
         "read",
@@ -1176451,7 +1179576,8 @@
       "successCapabilities": [],
       "targets": {
         "routes": [
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "pages/templatedetail/art/"
         ],
         "apis": [
           "/api/config/features",
@@ -1176514,18 +1179640,30 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/template/index.js:318"
+        "staticSource": "pages/templatedetail/shelf/index.js:276"
       }
     },
     {
-      "id": "pages/template/index.wxml:76:bindtap:jumpDetail:7",
-      "route": "pages/template/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
+      "id": "pages/templatedetail/shelf/index.wxml:67:bindtap:openTopic:10",
+      "route": "component:pages/templatedetail/shelf/index",
+      "hostRoutes": [
+        "pages/template/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
       "entry": {
-        "wxml": "pages/template/index.wxml",
-        "js": "pages/template/index.js"
+        "wxml": "pages/templatedetail/shelf/index.wxml",
+        "js": "pages/templatedetail/shelf/index.js"
       },
       "variant": null,
       "requiredRequests": null,
@@ -1176540,14 +1179678,14 @@
       "control": {
         "tag": "view",
         "event": "bindtap",
-        "handler": "jumpDetail",
-        "line": 76,
-        "selectorHint": ".feat-glow__face",
+        "handler": "openTopic",
+        "line": 67,
+        "selectorHint": ".mc",
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
+        "ariaLabelExpression": "{{ item.name }}",
+        "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
         "ariaDisabledExpression": null,
@@ -1176556,11 +1179694,10 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "read",
+      "actionClass": "navigation",
       "interactionMode": "tap",
-      "baseActionClass": "read",
+      "baseActionClass": "navigation",
       "effectClasses": [
-        "read",
         "navigation"
       ],
       "accessBoundary": null,
@@ -1176568,75 +1179705,47 @@
       "successCapabilities": [],
       "targets": {
         "routes": [
-          "pages/privacy/index",
-          "pages/publish/fabu/index?",
-          "pages/templatedetail/templatedetail?id="
+          "pages/templatedetail/topic-preview/index?"
         ],
-        "apis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info",
-          "/api/template/topic-template/use"
-        ],
-        "primaryApis": [
-          "/api/config/features",
-          "/api/template/topic-template/use"
-        ],
-        "auxiliaryApis": [
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/config/features",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/template/topic-template/use",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
+        "error"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/template/index.js:620"
+        "staticSource": "pages/templatedetail/shelf/index.js:317"
       }
     },
     {
-      "id": "pages/template/index.wxml:78:binderror:onDetailCoverError:8",
-      "route": "pages/template/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
+      "id": "pages/templatedetail/shelf/index.wxml:68:binderror:onCoverError:11",
+      "route": "component:pages/templatedetail/shelf/index",
+      "hostRoutes": [
+        "pages/template/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
       "entry": {
-        "wxml": "pages/template/index.wxml",
-        "js": "pages/template/index.js"
+        "wxml": "pages/templatedetail/shelf/index.wxml",
+        "js": "pages/templatedetail/shelf/index.js"
       },
       "variant": null,
       "requiredRequests": null,
@@ -1176651,10 +1179760,10 @@
       "control": {
         "tag": "image",
         "event": "binderror",
-        "handler": "onDetailCoverError",
-        "line": 78,
-        "selectorHint": ".feat-bgimg",
-        "visibleCondition": "{{ banner.imgUrl && !banner._coverFail }}",
+        "handler": "onCoverError",
+        "line": 68,
+        "selectorHint": ".mc__pic",
+        "visibleCondition": "{{ item.cover }}",
         "disabledCondition": null,
         "ariaLabel": null,
         "ariaLabelExpression": null,
@@ -1176677,7 +1179786,9 @@
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
-        "routes": [],
+        "routes": [
+          "pages/templatedetail/art/"
+        ],
         "apis": [],
         "primaryApis": [],
         "auxiliaryApis": [],
@@ -1176692,18 +1179803,30 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/template/index.js:287"
+        "staticSource": "pages/templatedetail/shelf/index.js:307"
       }
     },
     {
-      "id": "pages/template/index.wxml:95:bind:action:retryUseTt:9",
-      "route": "pages/template/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
+      "id": "pages/templatedetail/shelf/index.wxml:7:bindtap:goSearch:1",
+      "route": "component:pages/templatedetail/shelf/index",
+      "hostRoutes": [
+        "pages/template/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
       "entry": {
-        "wxml": "pages/template/index.wxml",
-        "js": "pages/template/index.js"
+        "wxml": "pages/templatedetail/shelf/index.wxml",
+        "js": "pages/templatedetail/shelf/index.js"
       },
       "variant": null,
       "requiredRequests": null,
@@ -1176716,12 +1179839,174 @@
       "requestMode": "ordered",
       "confirmationMode": null,
       "control": {
-        "tag": "cy-inline-error",
-        "event": "bind:action",
-        "handler": "retryUseTt",
-        "line": 95,
-        "selectorHint": "cy-inline-error[bind:action]",
-        "visibleCondition": "{{ttUseError}}",
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "goSearch",
+        "line": 7,
+        "selectorHint": ".sh-search",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "搜索主题与玩法模板",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/templatedetail/shelf/index.js:315"
+      }
+    },
+    {
+      "id": "pages/templatedetail/shelf/index.wxml:81:bindtap:openTopic:12",
+      "route": "component:pages/templatedetail/shelf/index",
+      "hostRoutes": [
+        "pages/template/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/templatedetail/shelf/index.wxml",
+        "js": "pages/templatedetail/shelf/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "openTopic",
+        "line": 81,
+        "selectorHint": ".tci",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "{{ item.name }}",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/templatedetail/topic-preview/index?"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/templatedetail/shelf/index.js:317"
+      }
+    },
+    {
+      "id": "pages/templatedetail/shelf/index.wxml:82:binderror:onCoverError:13",
+      "route": "component:pages/templatedetail/shelf/index",
+      "hostRoutes": [
+        "pages/template/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/templatedetail/shelf/index.wxml",
+        "js": "pages/templatedetail/shelf/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "image",
+        "event": "binderror",
+        "handler": "onCoverError",
+        "line": 82,
+        "selectorHint": ".tci__pic",
+        "visibleCondition": "{{ item.cover }}",
         "disabledCondition": null,
         "ariaLabel": null,
         "ariaLabelExpression": null,
@@ -1176734,12 +1180019,10 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "read",
+      "actionClass": "state",
       "interactionMode": "event-contract",
-      "baseActionClass": "read",
+      "baseActionClass": "state",
       "effectClasses": [
-        "read",
-        "navigation",
         "state"
       ],
       "accessBoundary": null,
@@ -1176747,63 +1180030,23 @@
       "successCapabilities": [],
       "targets": {
         "routes": [
-          "pages/privacy/index",
-          "subpackageA/pages/myproject/index"
+          "pages/templatedetail/art/"
         ],
-        "apis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info",
-          "/api/template/topic-template/use"
-        ],
-        "primaryApis": [
-          "/api/config/features",
-          "/api/template/topic-template/use"
-        ],
-        "auxiliaryApis": [
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/config/features",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/template/topic-template/use",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
+        "success"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/template/index.js:804"
+        "staticSource": "pages/templatedetail/shelf/index.js:307"
       }
     },
     {
@@ -1178704,6 +1181947,495 @@
       "evidence": {
         "status": "pending",
         "staticSource": "pages/templatedetail/templatedetail.js:400"
+      }
+    },
+    {
+      "id": "pages/templatedetail/topic-preview/index.wxml:10:bindtap:load:0",
+      "route": "pages/templatedetail/topic-preview/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/templatedetail/topic-preview/index.wxml",
+        "js": "pages/templatedetail/topic-preview/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "load",
+        "line": 10,
+        "selectorHint": ".tp-state__btn",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "重试",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "tap",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index",
+          "pages/templatedetail/art/"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info",
+          "/api/template/topic-template/info"
+        ],
+        "primaryApis": [
+          "/api/config/features",
+          "/api/template/topic-template/info"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/template/topic-template/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/templatedetail/topic-preview/index.js:89"
+      }
+    },
+    {
+      "id": "pages/templatedetail/topic-preview/index.wxml:14:bindtouchend:onTouchEnd:2",
+      "route": "pages/templatedetail/topic-preview/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/templatedetail/topic-preview/index.wxml",
+        "js": "pages/templatedetail/topic-preview/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtouchend",
+        "handler": "onTouchEnd",
+        "line": 14,
+        "selectorHint": ".stk",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/templatedetail/topic-preview/index.js:183"
+      }
+    },
+    {
+      "id": "pages/templatedetail/topic-preview/index.wxml:14:bindtouchstart:onTouchStart:1",
+      "route": "pages/templatedetail/topic-preview/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/templatedetail/topic-preview/index.wxml",
+        "js": "pages/templatedetail/topic-preview/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtouchstart",
+        "handler": "onTouchStart",
+        "line": 14,
+        "selectorHint": ".stk",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "event-contract",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/templatedetail/topic-preview/index.js:177"
+      }
+    },
+    {
+      "id": "pages/templatedetail/topic-preview/index.wxml:15:bindtap:tapCard:3",
+      "route": "pages/templatedetail/topic-preview/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/templatedetail/topic-preview/index.wxml",
+        "js": "pages/templatedetail/topic-preview/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "tapCard",
+        "line": 15,
+        "selectorHint": ".kc",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "{{ item.cover ? name : item.title }}{{ item.front ? '，点按翻面' : '' }}",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/templatedetail/topic-preview/index.js:193"
+      }
+    },
+    {
+      "id": "pages/templatedetail/topic-preview/index.wxml:20:binderror:onCoverError:4",
+      "route": "pages/templatedetail/topic-preview/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/templatedetail/topic-preview/index.wxml",
+        "js": "pages/templatedetail/topic-preview/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "image",
+        "event": "binderror",
+        "handler": "onCoverError",
+        "line": 20,
+        "selectorHint": ".fc__img",
+        "visibleCondition": "{{ cover }}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/templatedetail/topic-preview/index.js:166"
+      }
+    },
+    {
+      "id": "pages/templatedetail/topic-preview/index.wxml:47:bindtap:useTemplate:5",
+      "route": "pages/templatedetail/topic-preview/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/templatedetail/topic-preview/index.wxml",
+        "js": "pages/templatedetail/topic-preview/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "useTemplate",
+        "line": 47,
+        "selectorHint": ".tp-cta__btn",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "用这个模板",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "tap",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index",
+          "pages/publish/fabu/index?"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info",
+          "/api/template/topic-template/use"
+        ],
+        "primaryApis": [
+          "/api/config/features",
+          "/api/template/topic-template/use"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/template/topic-template/use",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/templatedetail/topic-preview/index.js:202"
       }
     },
     {

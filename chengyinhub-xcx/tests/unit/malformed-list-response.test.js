@@ -249,37 +249,8 @@ test('俱乐部动态流包含空元素时进入错误态', () => {
   assert.equal(feed.vm.data.feedState, 'error');
 });
 
-test('节点玩法分类非数组时安全收敛为空列表', () => {
-  const h = harness('pages/template/index.js', 'page');
-  h.vm.getHome();
-  assert.doesNotThrow(() => h.requests[0].success({ code: '200', data: { categoryList: {} } }));
-  assert.deepEqual(h.vm.data.home.categoryList, []);
-});
-
-test('节点玩法首页、分类和主题模板货架都拒绝空元素', () => {
-  // 2026-08-26:分类切换改成纯前端重排(不再发请求),玩法列表走 /api/template/list。
-  // 「拒绝空元素」这条不变量原样保留,只是挂到新的三个入口上。
-  const home = harness('pages/template/index.js', 'page');
-  home.vm.getHome();
-  assert.doesNotThrow(() => home.requests[0].success({
-    code: '200', data: { categoryList: [null], bannerList: [null] },
-  }));
-  assert.deepEqual(home.vm.data.home.categoryList, [], '分类里混进 null 应整条收敛为空');
-
-  const game = harness('pages/template/index.js', 'page');
-  // 2026-08-27:失败半边按当前 tab 闸 —— 错误上屏只在游戏 tab 下发生,测试站到该 tab 上验
-  game.vm.data.tab = 'game';
-  game.vm.getGameRows();
-  assert.doesNotThrow(() => game.requests[0].success({
-    code: '200', data: { rows: [null] },
-  }));
-  assert.equal(game.vm.data.errorMsg, '玩法模板加载失败');
-
-  const shelf = harness('pages/template/index.js', 'page');
-  shelf.vm.getTopicTemplates();
-  assert.doesNotThrow(() => shelf.requests[0].success({ code: '200', data: [null] }));
-  assert.deepEqual(shelf.vm._topicRows, []);
-});
+// 2026-10-28:模板页货架移进 pages/templatedetail/shelf,不再读 homeData 分类。货架「拒绝空元素」
+// 的用例(主题与玩法两路)在 template-shelf-redesign-20261028.test.js。
 
 test('参与详情 200 空载荷进入加载错误而不解引用崩溃', () => {
   const h = harness('subpackageMember/components/scene-member-participation-detail/index.js', 'component');

@@ -599,7 +599,8 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮
   // 2026-10-23 合 master:起名页 templateadd 退役 −1(#565)+ 撤销条「撤销」+1,tap 2173 → 2173(重建实测)。
   // 2026-10-24 官方据点照片与评价：重建实测 local tap +4；不添加业务验收证据。
   // 2026-10-27 真机走查 L04:首页删「为什么看到」(P-02)与继续探索卡 / 继续漫游条两颗(P-08)等 tap,重建实测 2183 → 2179。
-  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 2179)  /* 2026-10-25 地图底部横滑卡片(点卡 = 点列表行)+1,重建实测 2182 → 2183。 */  /* 2026-10-25 官方地点卡:相册图、小红书行、评分星、发布评价、取景卡等新增 tap,重建实测 2177 → 2182。 */  /* 2026-10-07 动态绑定补齐4条tap。2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
+  // 2026-10-28 模板页货架改版(业主定稿原型 v21):旧列表卡 / 品类 / 搜索清除等撤下，货架组件、卡堆预览与 cy-tabs 图标分支新增，重建实测 2179 → 2188。
+  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 2188)  /* 2026-10-25 地图底部横滑卡片(点卡 = 点列表行)+1,重建实测 2182 → 2183。 */  /* 2026-10-25 官方地点卡:相册图、小红书行、评分星、发布评价、取景卡等新增 tap,重建实测 2177 → 2182。 */  /* 2026-10-07 动态绑定补齐4条tap。2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
      onFrameShutter / onFrameCancel),其中 uploadPhotoFrame 与 onFrameShutter 是
      actionClass=external(real-device-required)、不进 local 分母 ⇒ 进账的是
      onFrameCancel(玩家端「退出取景」)+ clearPhotoFrame(商家端删图),1787 → 1789(重建实测)。 */
@@ -836,7 +837,8 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮
   // 2026-10-23 合 master:起名页 templateadd 退役 −3(#565)+ 删草稿 / 移出成员两处去掉确认回调 −3,event-contract 2543 → 2537(重建实测)。
   // 2026-10-24 据点评价重试等组件事件重建实测净增 1。
   // 2026-10-25 官方地点:地图取景卡 shot/close、隐私 gate、挑战页 playkit-qa / cy-medal-screen 组件事件,重建实测 2538 → 2555。
-  assert.equal(local.filter((item) => item.interactionMode === 'event-contract').length, 2555)  /* 2026-10-15 PR10 复查:七处登录引导 cta/primary、口碑缺参返回 cta、modal-host 多行 bindinput 全是事件合同,+9(重建实测)。 */  /* F-L5C-06 帖文详情社区未开放空态新增返回 CTA,事件合同 +1(与 E2 合并后实测)。 */  /* F-W1-12 口碑管理登录失效可见态新增「重新登录」事件合同 +1。 */  /* 2026-10-06 profile 订单/项目错误态新增两个 cy-error 重试事件后按最终树重建。 */  /* 2026-09-20 门店分身对话输入与关闭事件接线后按最终树重建。 */  /* 2026-09-20 合批收口:工作区实名接线批 + 底栏 v8 把组件事件/disabledtap 接进台账,本地合同净增 20 条 ⇒ 2107→2127 按最终树重建实测 */  /* 2026-09-19 收口批+开表接线落 master(经 #1115/#1117):41d21a41e 玩法开表三控件进合同,2104→2107 按最终树重建实测 */  // 2026-09-12 rebase #1068/#1070 后重建：接力签 1963；审核收口后 1963→1968。
+  // 2026-10-28 模板页货架改版:tpl-shelf 的 search/toast、cy-tabs change、cy-error retry 等组件事件，重建实测 2555 → 2561。
+  assert.equal(local.filter((item) => item.interactionMode === 'event-contract').length, 2561)  /* 2026-10-15 PR10 复查:七处登录引导 cta/primary、口碑缺参返回 cta、modal-host 多行 bindinput 全是事件合同,+9(重建实测)。 */  /* F-L5C-06 帖文详情社区未开放空态新增返回 CTA,事件合同 +1(与 E2 合并后实测)。 */  /* F-W1-12 口碑管理登录失效可见态新增「重新登录」事件合同 +1。 */  /* 2026-10-06 profile 订单/项目错误态新增两个 cy-error 重试事件后按最终树重建。 */  /* 2026-09-20 门店分身对话输入与关闭事件接线后按最终树重建。 */  /* 2026-09-20 合批收口:工作区实名接线批 + 底栏 v8 把组件事件/disabledtap 接进台账,本地合同净增 20 条 ⇒ 2107→2127 按最终树重建实测 */  /* 2026-09-19 收口批+开表接线落 master(经 #1115/#1117):41d21a41e 玩法开表三控件进合同,2104→2107 按最终树重建实测 */  // 2026-09-12 rebase #1068/#1070 后重建：接力签 1963；审核收口后 1963→1968。
   // 商家承接接入 cy-date-range-sheet 后新增 confirm / cancel 两条事件合同，1662 → 1664。
   // 合作页将会话失效与无权限拆为两个 cy-empty CTA，新增 goLogin / goWorkbench 两条事件合同，1664 → 1666。
   //   带一个 bind:cta 首发引导(+1),净 -2;同批新增两条 cy-state-shell 的 bind:primary
@@ -1673,7 +1675,8 @@ test('合并后可达动作 variant 全部进入台账且 handler 真源可定�
   // 2026-10-25 地点卡「网上怎么说」引述行(点按复制原文链接)+1,重建实测 5139 → 5140。
   // 2026-10-25 地图底部横滑卡片 +1,重建实测 5140 → 5141。
   // 2026-10-27 真机走查 L04:首页删「为什么看到」(P-02)、「继续上次漫游」挂载与「继续探索」卡(P-08),重建实测 5141 → 5137。
-  assert.equal(ledger.controlCount, 5137)
+  // 2026-10-28 模板页货架改版:pages/template 15 → 5,shelf 组件 +18,topic-preview +6,cy-tabs icon 分支 +1,重建实测 5137 → 5152。
+  assert.equal(ledger.controlCount, 5152)
   // 搜索主题与其它结果拆成互斥点击 +1，合计 3268 → 3271（取动作账本重建实测）。
   // 合作页新增会话失效/无权限两个独立 cy-empty CTA，3271 → 3273。
   // 2026-09-02 俱乐部客户系统落地，3273 → 3295。

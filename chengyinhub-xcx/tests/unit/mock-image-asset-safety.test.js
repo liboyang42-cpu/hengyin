@@ -71,7 +71,7 @@ function assertPublishCoverPolicy(home) {
 
 test('发布广场开发预览只用仓库留有母版的已登记线上封面', () => {
   assertPublishCoverPolicy(mockData.getHomeData());
-  const page = fs.readFileSync(path.join(ROOT, 'pages/template/index.js'), 'utf8');
+  const page = fs.readFileSync(path.join(ROOT, 'pages/templatedetail/shelf/index.js'), 'utf8');  // 2026-10-28 货架移进分包组件
   assert.match(page, /coverErrorSrc:\s*'\/images\/no_data\.svg'/);
   assert.doesNotMatch(page, /home-route-city-placeholder\.jpg/, '路线图不能被当成主题封面保底');
 });

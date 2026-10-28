@@ -1,0 +1,10 @@
+{
+  "usingComponents": {
+    "cy-nav-bar": "/components/cy/nav-bar/index",
+    "cy-toast": "/components/cy/toast/index",
+    "cy-modal-host": "/components/cy/modal-host/index"
+  },
+  "navigationStyle": "custom",
+  "navigationBarTextStyle": "white",
+  "backgroundColor": "#000000"
+}

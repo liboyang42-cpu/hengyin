@@ -4,7 +4,6 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const vm = require('node:vm');
 
 const ROOT = path.resolve(__dirname, '../..');
 const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8');
@@ -88,80 +87,29 @@ test('P-07:列表底部留出底栏真实高度，价格行不压底栏', () => 
   assert.match(rule(homeWxss(), '.v3-scroll-pad'), /height:\s*calc\(var\(--cy-tabbar-h\) \+ var\(--cy-space-6\)\)/);
 });
 
+// 2026-10-28:模板 tab 的货架移进 pages/templatedetail/shelf(业主定稿原型 v21)。P-10 / P-11 的不变量在新位置重钉，
+// 行为级用例见 template-shelf-redesign-20261028.test.js。
 test('P-10:模板空态用 #602 Figma 插画(kind="empty"),没有「刷新试试」按钮', () => {
-  const wxml = read('pages/template/index.wxml');
-  const empty = (wxml.match(/<cy-empty[^>]*title="\{\{ emptyTitle \}\}"[^>]*\/>/) || [])[0];
-  assert.ok(empty, '缺少模板空态');
-  assert.match(empty, /kind="empty"/);
-  assert.doesNotMatch(empty, /\bcta=|icon=/);
-  assert.doesNotMatch(wxml + read('pages/template/index.js'), /刷新试试/);
-});
-
-function loadTemplatePage() {
-  let definition;
-  const requests = [];
-  const app = {
-    globalData: { statusBarHeight: 20, navBarHeight: 44, menuButtonInfo: {} },
-    getRequestErrorMessage: (res, fallback) => (res && res.msg) || fallback,
-    sendRequest(options) { requests.push(options); },
-  };
-  vm.runInNewContext(read('pages/template/index.js'), {
-    module: { exports: {} },
-    console,
-    getApp: () => app,
-    Page(value) { definition = value; },
-    setTimeout: () => 1,
-    clearTimeout() {},
-    require(request) {
-      if (request === '../../utils/motion-preference.js') return { readReducedMotion: () => false };
-      if (request === '../../utils/modal.js') return { show() {} };
-      if (request === '../../utils/page-motion.js') return { enter() {} };
-      if (request === '../../utils/toast.js') return () => {};
-      if (request === '../../utils/font-scale.js') return { readPageStyle: () => '' };
-      if (request === '../../utils/identity/identity-policy.js') return { isMerchantView: () => false };
-      if (request === '../../utils/merchant-theme.js') return { merchantPageRestore() {}, merchantPageShow() {} };
-      if (request === '../../utils/merchant-access-policy.js') return {};
-      if (request === '../../utils/template-display.js') return { formatDurationMinutes: () => '', gameTemplateCover: (item) => item.imgUrl || '' };
-      if (request === '../../utils/response-shape.js') return { isRecord: (v) => !!v && typeof v === 'object', isRecordList: Array.isArray };
-      if (request === '../../utils/analytics.js') return { track() {} };
-      throw new Error(`unexpected require: ${request}`);
-    },
-    wx: {},
-  }, { filename: 'pages/template/index.js' });
-  const page = Object.assign({}, definition);
-  page.data = Object.assign(JSON.parse(JSON.stringify(definition.data)), { tab: 'game' });
-  page.setData = function (patch) { Object.assign(this.data, patch); };
-  return { page, requests };
-}
-
-test('P-11:游戏 tab 只列单节点地点玩法，主题自带的分段游戏与剧情包 / IP 包不进来', () => {
-  const { page, requests } = loadTemplatePage();
-  page.getGameRows();
-  const req = requests.find((r) => r.url === '/api/template/list');
-  assert.ok(req, '游戏 tab 要请求 /api/template/list');
-  assert.equal(req.data.pack_type, 0, '服务端先按 pack_type=0 过滤');
-  req.success({
-    code: '200',
-    data: {
-      rows: [
-        { id: 1, title: '今晚的暗号', packType: 0 },
-        { id: 2, title: '城市接力棒' },
-        { id: 3, title: 'G0｜30秒生活掉线测试', packType: 0 },
-        { id: 4, title: 'G7｜60秒共同落款' },
-        { id: 5, title: '整套剧情包', packType: 1 },
-        { id: 6, title: '店铺 IP 包', packType: '2' },
-      ],
-    },
+  const wxml = read('pages/templatedetail/shelf/index.wxml');
+  const empties = wxml.match(/<cy-empty[^>]*\/>/g) || [];
+  assert.equal(empties.length, 2, '主题 / 玩法两个空态');
+  empties.forEach((empty) => {
+    assert.match(empty, /kind="empty"/);
+    assert.doesNotMatch(empty, /\bcta=|icon=/);
   });
-  const shown = [page.data.banner].concat(page.data.topList, page.data.tailList)
-    .filter((item) => item && item.id).map((item) => item.id);
-  assert.deepEqual(shown.sort(), [1, 2]);
+  assert.doesNotMatch(wxml + read('pages/templatedetail/shelf/index.js') + read('pages/template/index.wxml'), /刷新试试/);
 });
 
-test('P-11:主题 tab 的「配置」直进专业编辑器 publish/fabu', () => {
-  const js = read('pages/template/index.js');
-  assert.match(js, /if \(item\._kind === 'topic'\) \{ this\.goTopicConfig\(e\); return; \}/);
-  assert.match(js, /wx\.navigateTo\(\{ url: '\/pages\/publish\/fabu\/index\?' \+ qs\.join\('&'\) \}\)/);
+test('P-11:玩法 tab 只列单节点地点玩法，主题自带的分段游戏与剧情包 / IP 包不进来', () => {
+  const js = read('pages/templatedetail/shelf/index.js');
+  assert.match(js, /pack_type: 0/, '服务端先按 pack_type=0 过滤');
+  assert.match(js, /if \(packType !== 0 \|\| THEME_SEGMENT_TITLE\.test\(title\) \|\| !art\.GAMES\[title\]\) return;/, '客户端同口径再兜一次');
+  assert.match(js, /const THEME_SEGMENT_TITLE = \/\^G\\d\+｜\//);
+});
+
+test('P-11:主题点开预览，「用这个模板」直进专业编辑器 publish/fabu', () => {
+  assert.match(read('pages/templatedetail/shelf/index.js'), /url: '\/pages\/templatedetail\/topic-preview\/index\?' \+ qs\.join\('&'\)/);
+  assert.match(read('pages/templatedetail/topic-preview/index.js'), /wx\.navigateTo\(\{ url: '\/pages\/publish\/fabu\/index\?' \+ qs\.join\('&'\) \}\)/);
 });
 
 function assertBackdrop(wxml, wxss, js) {
@@ -185,8 +133,7 @@ test('P-12 负控:遮罩过渡改回瞬时会判红', () => {
   assert.throws(() => assertBackdrop(read('components/cy/publish-sheet/index.wxml'), broken, read('components/cy/publish-sheet/index.js')), /200ms/);
 });
 
-test('M-02:搜索框与「主题 / 游戏」tab 同盒底对齐，不再被底部外边距抬高', () => {
-  const r = rule(read('pages/template/index.wxss'), '.tpl-search');
-  assert.match(r, /align-self:\s*flex-end/);
-  assert.doesNotMatch(r, /margin-bottom/);
+test('M-02:搜索框与「主题 / 玩法」图标 tab 同一行(业主定稿原型 v21 .swl)', () => {
+  assert.match(read('pages/templatedetail/shelf/index.wxml'), /<view class="sh-top">\s*<cy-tabs class="sh-tabs" variant="icon"[^>]*\/>\s*<view class="sh-search"/);
+  assert.match(rule(read('pages/templatedetail/shelf/index.wxss'), '.sh-top'), /align-items:\s*center/);
 });

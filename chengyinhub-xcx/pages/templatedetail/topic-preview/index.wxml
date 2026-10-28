@@ -1,0 +1,50 @@
+<view class="tp {{ reducedMotion ? 'cy-motion-reduced' : '' }}" style="--glow: {{ glow }};">
+  <cy-toast id="cy-toast" />
+  <cy-modal-host id="cy-modal-host" />
+  <view class="tp-glow" aria-hidden="true"></view>
+  <cy-nav-bar overlay tint="dark" />
+
+  <view wx:if="{{ loading }}" class="tp-state"><view class="tp-skel"></view></view>
+  <view wx:elif="{{ errorMsg }}" class="tp-state">
+    <text class="tp-state__t">{{ errorMsg }}</text>
+    <view class="tp-state__btn" bindtap="load" aria-role="button" aria-label="重试" hover-class="cy-pressed" hover-stay-time="80">重试</view>
+  </view>
+  <block wx:else>
+    <!-- 扇形卡堆：左右滑切换，点最前面那张翻面 -->
+    <view class="stk {{ entered ? '' : 'stk--pre' }}" style="margin-top: {{ navTop }}px;" bindtouchstart="onTouchStart" bindtouchend="onTouchEnd">
+      <view class="kc {{ item.flipped ? 'kc--fl' : '' }}" wx:for="{{ cards }}" wx:key="index" data-index="{{ index }}" bindtap="tapCard" hover-class="cy-pressed" hover-stay-time="80"
+        style="{{ item.style }} {{ settled ? '' : 'transition-delay: ' + item.delay + 's;' }}"
+        aria-role="button" aria-label="{{ item.cover ? name : item.title }}{{ item.front ? '，点按翻面' : '' }}">
+        <view class="kin">
+          <view class="fc">
+            <image wx:if="{{ cover }}" class="fc__img" src="{{ cover }}" mode="aspectFill" style="{{ item.imgStyle }}" binderror="onCoverError" />
+            <view wx:else class="fc__err" aria-role="img" aria-label="{{ name }} 的封面未能加载"><image class="fc__err-ic" src="/images/no_data.svg" mode="aspectFit" /><text>封面暂不可用</text></view>
+          </view>
+          <view class="bk">
+            <text class="bk__t">{{ item.title }}</text>
+            <view class="bk__ol">
+              <view class="bk__li" wx:for="{{ item.steps }}" wx:for-item="step" wx:for-index="si" wx:key="si">
+                <text class="bk__no">{{ step === '…' ? '' : si + 1 }}</text><text class="bk__tx">{{ step }}</text>
+              </view>
+            </view>
+            <view class="bk__ft" wx:if="{{ item.foot }}"><image class="bk__clock" src="/pages/templatedetail/art/tab/clock.svg" mode="aspectFit" />{{ item.foot }}</view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="tp-info {{ cards[sel] && flip ? 'tp-info--dim' : '' }}">
+      <text class="tp-title cy-rise-in" style="animation-delay: .45s;">{{ name }}</text>
+      <view class="tp-ck">
+        <view class="tp-ck__li cy-rise-in" wx:for="{{ checks }}" wx:key="index" style="animation-delay: {{ 0.6 + index * 0.12 }}s;">
+          <image class="tp-ck__ic" src="/pages/templatedetail/art/tab/check.svg" mode="aspectFit" /><text>{{ item }}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="tp-cta">
+      <view class="tp-cta__glow" aria-hidden="true"></view>
+      <view class="tp-cta__btn cy-rise-in" style="animation-delay: 1.05s;" bindtap="useTemplate" aria-role="button" aria-label="用这个模板" hover-class="cy-pressed" hover-stay-time="80">用这个模板</view>
+    </view>
+  </block>
+</view>
