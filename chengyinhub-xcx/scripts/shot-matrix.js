@@ -453,6 +453,7 @@ const RAW = [
   ['D31', 'D31-income-fail.png', '/subpackageA/pages/assetcenter/income-detail/income-detail', 'player', 'error', { loading: false, loadErr: true, list: [] }, undefined, ERR, 'setData', 'P1', '', '收益错误态由深链壳内正文组件负责', '#incomeDetail'],
   ['D32', 'D32-income-capsule.png', '/subpackageA/pages/assetcenter/income-detail/income-detail', 'player', 'empty', { loading: false, loadErr: false, activeFilter: 'create', hasMore: false, list: [] }, undefined, { selector: '.id-tabs, .id-state-fill', min: 2 }, 'setData', 'P0', '', '创作收益胶囊选中后的筛选空态；与全部收益空态 D30 可区分', '#incomeDetail'],
   ['D33', 'D33-earnings-normal.png', '/subpackageA/pages/assetcenter/earnings/index', 'player', 'normal', { state: 'ready', balance: '128.00' }, undefined, { selector: '.ae-hero, .ae-section', min: 2 }, 'setData', 'P0', '', '★拆四类入口；正文在 #assetEarnings，断言使用 ae-* 新 DOM', '#assetEarnings'],
+  ['D33A', 'D33A-earnings-analysis-normal.png', '/subpackageA/pages/assetcenter/analysis/index', 'player', 'normal', { state: 'ready', mode: 'income', current: { label: '10月', totalText: '89.70' }, series: [{ key: '2026-10', label: '10月', totalText: '89.70', height: 100, current: true }], sources: [{ key: 'topic', label: '主题售卖', totalText: '89.70', percent: 100 }] }, undefined, { selector: '.an-card', min: 2 }, 'setData', 'P1', '', '2026-10-28 G-9 账户收益 · 分析页:柱图 + 收入来源'],
   ['D34', 'D34-im-list-content.png', '/subpackageB/pages/im/list/index', 'player', 'normal', { loading: false, loaded: true, error: false, activeTab: 'dm', list: [{ conversationId: 9, type: 1, unread: 1, muted: 0, previewText: '明晚一起？', timeText: '19:20', offset: 0, counterparty: { nickname: '周行', avatar: '/images/d_profile.png' } }] }, undefined, TABS2, 'setData', 'P0', '', '★补页面标题（现在连标题都没有）；合并成一个页面'],
   ['D35', 'D35-im-list-system.png', '/subpackageB/pages/im/list/index', 'player', 'normal', { loading: false, loaded: true, error: false, activeTab: 'sys', list: [{ conversationId: 2, type: 2, unread: 0, muted: 0, previewText: '报名已确认', timeText: '昨天', offset: 0, counterparty: { nickname: '系统通知', avatar: '' } }], reportNotices: [] }, undefined, TABS2, 'setData', 'P1', '', '—'],
   ['D36', 'D36-im-chat-real.png', '/subpackageB/pages/im/chat/index?conversationId=9', 'player', 'normal', null, undefined, { selector: '.msg-bubble', min: 1 }, 'real-data', 'P0', '', '★34/35/35b 全是缺参或骨架；删顶部头像；整体上移'],
@@ -651,10 +652,10 @@ const countBy = (pred) => SHOTS.filter(pred).length;
 // 2026-10-25 新增官方地点挑战缺参真实态 F200；不新增 blocked 或已验 fixture。
 // 2026-10-27 L02 P-55 新增营销消息与优惠券独立页 F201(P1 real-data actionable):total 340→341、P1 199→200、actionable 316→317(P1 192→193)、F 94→95、real-data 38→39。
 const STATS = {
-  "total": 341,
+  "total": 342,
   "byPriority": {
     "P0": 131,
-    "P1": 200,
+    "P1": 201,
     "P2": 10
   },
   "blockedByPriority": {
@@ -664,21 +665,21 @@ const STATS = {
   },
   "actionable": {
     "P0": 122,
-    "P1": 193,
+    "P1": 194,
     "P2": 2,
-    "total": 317
+    "total": 318
   },
   "blocked": 24,
   "domains": {
     "A": 53,
     "B": 69,
     "C": 56,
-    "D": 42,
+    "D": 43,
     "E": 26,
     "F": 95
   },
   "control": {
-    "setData": 179,
+    "setData": 180,
     "identity+setData": 116,
     "real-data": 39,
     "real-device": 7

@@ -23,7 +23,7 @@
         <view class="simple-ai__prompt-label">你喜欢什么</view>
         <view class="simple-ai__bubbles">
           <view class="simple-ai__bubble {{item.on ? 'is-on' : ''}}" wx:for="{{interests}}" wx:key="key"
-                style="left: {{item.x}}%; top: {{item.y}}rpx; --b: {{item.size}}rpx; animation-delay: {{index * 60}}ms;"
+                style="left: {{item.x || 0}}%; top: {{item.y || 0}}rpx; --b: {{item.size || 132}}rpx; animation-delay: {{index * 60}}ms;"
                 data-key="{{item.key}}" bindtap="toggleInterest" aria-role="checkbox" aria-checked="{{item.on}}" aria-label="{{item.label}}"
                 hover-class="cy-pressed" hover-stay-time="80">
             <cy-icon name="{{item.icon}}" size="{{item.on ? 44 : 40}}" />
@@ -31,7 +31,7 @@
         </view>
         <view class="simple-ai__picked" wx:if="{{interestText}}">
           <text class="simple-ai__picked-t">{{interestText}}</text>
-          <text class="simple-ai__picked-n">选了 {{interestCount}} 个</text>
+          <text class="simple-ai__picked-n">选了 {{interestCount || 0}} 个</text>
         </view>
       </block>
 

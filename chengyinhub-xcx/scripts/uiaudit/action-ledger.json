@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 5129,
+  "controlCount": 5127,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -52314,32 +52314,6 @@
             },
             {
               "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/templatedetail/templatedetail",
-          "segments": [
-            {
-              "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/templatedetail/templatedetail",
-          "segments": [
-            {
-              "selector": "cy-option-sheet",
               "index": 0
             },
             {
@@ -290904,7 +290878,6 @@
         "pages/square/detail/index",
         "pages/square/list/index",
         "pages/team/detail/index",
-        "pages/templatedetail/templatedetail",
         "pages/topic/index/index",
         "pages/topic/merchantinfo/merchantinfo",
         "pages/userinfo/userinfo",
@@ -291050,15 +291023,6 @@
               "selector": "team-report-sheet",
               "index": 0
             },
-            {
-              "selector": "cy-option-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/templatedetail/templatedetail",
-          "segments": [
             {
               "selector": "cy-option-sheet",
               "index": 0
@@ -291338,7 +291302,6 @@
         "pages/square/detail/index",
         "pages/square/list/index",
         "pages/team/detail/index",
-        "pages/templatedetail/templatedetail",
         "pages/topic/index/index",
         "pages/topic/merchantinfo/merchantinfo",
         "pages/userinfo/userinfo",
@@ -291484,15 +291447,6 @@
               "selector": "team-report-sheet",
               "index": 0
             },
-            {
-              "selector": "cy-option-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/templatedetail/templatedetail",
-          "segments": [
             {
               "selector": "cy-option-sheet",
               "index": 0
@@ -291772,7 +291726,6 @@
         "pages/square/detail/index",
         "pages/square/list/index",
         "pages/team/detail/index",
-        "pages/templatedetail/templatedetail",
         "pages/topic/index/index",
         "pages/topic/merchantinfo/merchantinfo",
         "pages/userinfo/userinfo",
@@ -291918,15 +291871,6 @@
               "selector": "team-report-sheet",
               "index": 0
             },
-            {
-              "selector": "cy-option-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/templatedetail/templatedetail",
-          "segments": [
             {
               "selector": "cy-option-sheet",
               "index": 0
@@ -292206,7 +292150,6 @@
         "pages/square/detail/index",
         "pages/square/list/index",
         "pages/team/detail/index",
-        "pages/templatedetail/templatedetail",
         "pages/topic/index/index",
         "pages/topic/merchantinfo/merchantinfo",
         "pages/userinfo/userinfo",
@@ -292352,15 +292295,6 @@
               "selector": "team-report-sheet",
               "index": 0
             },
-            {
-              "selector": "cy-option-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/templatedetail/templatedetail",
-          "segments": [
             {
               "selector": "cy-option-sheet",
               "index": 0
@@ -458828,32 +458762,6 @@
           "route": "pages/templatedetail/templatedetail",
           "segments": [
             {
-              "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/templatedetail/templatedetail",
-          "segments": [
-            {
-              "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/templatedetail/templatedetail",
-          "segments": [
-            {
               "selector": "cy-sheet",
               "index": 0
             }
@@ -496627,32 +496535,6 @@
             {
               "selector": "cy-sheet",
               "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/templatedetail/templatedetail",
-          "segments": [
-            {
-              "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/templatedetail/templatedetail",
-          "segments": [
-            {
-              "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
             }
           ]
         },
@@ -534439,32 +534321,6 @@
           "route": "pages/templatedetail/templatedetail",
           "segments": [
             {
-              "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/templatedetail/templatedetail",
-          "segments": [
-            {
-              "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/templatedetail/templatedetail",
-          "segments": [
-            {
               "selector": "cy-sheet",
               "index": 0
             }
@@ -572237,32 +572093,6 @@
             {
               "selector": "cy-sheet",
               "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/templatedetail/templatedetail",
-          "segments": [
-            {
-              "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/templatedetail/templatedetail",
-          "segments": [
-            {
-              "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
             }
           ]
         },
@@ -610049,32 +609879,6 @@
           "route": "pages/templatedetail/templatedetail",
           "segments": [
             {
-              "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/templatedetail/templatedetail",
-          "segments": [
-            {
-              "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/templatedetail/templatedetail",
-          "segments": [
-            {
               "selector": "cy-sheet",
               "index": 0
             }
@@ -647847,32 +647651,6 @@
             {
               "selector": "cy-sheet",
               "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/templatedetail/templatedetail",
-          "segments": [
-            {
-              "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/templatedetail/templatedetail",
-          "segments": [
-            {
-              "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
             }
           ]
         },
@@ -685660,32 +685438,6 @@
           "route": "pages/templatedetail/templatedetail",
           "segments": [
             {
-              "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/templatedetail/templatedetail",
-          "segments": [
-            {
-              "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/templatedetail/templatedetail",
-          "segments": [
-            {
               "selector": "cy-sheet",
               "index": 0
             }
@@ -723459,32 +723211,6 @@
             {
               "selector": "cy-sheet",
               "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/templatedetail/templatedetail",
-          "segments": [
-            {
-              "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/templatedetail/templatedetail",
-          "segments": [
-            {
-              "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
             }
           ]
         },
@@ -761272,32 +760998,6 @@
           "route": "pages/templatedetail/templatedetail",
           "segments": [
             {
-              "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/templatedetail/templatedetail",
-          "segments": [
-            {
-              "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/templatedetail/templatedetail",
-          "segments": [
-            {
               "selector": "cy-sheet",
               "index": 0
             }
@@ -799071,32 +798771,6 @@
             {
               "selector": "cy-sheet",
               "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/templatedetail/templatedetail",
-          "segments": [
-            {
-              "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/templatedetail/templatedetail",
-          "segments": [
-            {
-              "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
             }
           ]
         },
@@ -836884,32 +836558,6 @@
           "route": "pages/templatedetail/templatedetail",
           "segments": [
             {
-              "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/templatedetail/templatedetail",
-          "segments": [
-            {
-              "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/templatedetail/templatedetail",
-          "segments": [
-            {
               "selector": "cy-sheet",
               "index": 0
             }
@@ -874683,32 +874331,6 @@
             {
               "selector": "cy-sheet",
               "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/templatedetail/templatedetail",
-          "segments": [
-            {
-              "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/templatedetail/templatedetail",
-          "segments": [
-            {
-              "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
             }
           ]
         },
@@ -1262978,7 +1262600,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/templatedetail.js:403"
+        "staticSource": "pages/templatedetail/templatedetail.js:401"
       }
     },
     {
@@ -1263049,7 +1262671,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/templatedetail.js:379"
+        "staticSource": "pages/templatedetail/templatedetail.js:377"
       }
     },
     {
@@ -1263116,7 +1262738,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/templatedetail.js:417"
+        "staticSource": "pages/templatedetail/templatedetail.js:415"
       }
     },
     {
@@ -1263183,147 +1262805,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/templatedetail.js:408"
+        "staticSource": "pages/templatedetail/templatedetail.js:406"
       }
     },
     {
-      "id": "pages/templatedetail/templatedetail.wxml:286:bind:cancel:onReportReasonCancel:10",
-      "route": "pages/templatedetail/templatedetail",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/templatedetail/templatedetail.wxml",
-        "js": "pages/templatedetail/templatedetail.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-option-sheet",
-        "event": "bind:cancel",
-        "handler": "onReportReasonCancel",
-        "line": 286,
-        "selectorHint": "cy-option-sheet[bind:cancel]",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "other",
-      "interactionMode": "event-contract",
-      "baseActionClass": "other",
-      "effectClasses": [
-        "other"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/templatedetail/templatedetail.js:447"
-      }
-    },
-    {
-      "id": "pages/templatedetail/templatedetail.wxml:286:bind:select:onReportReasonSelect:9",
-      "route": "pages/templatedetail/templatedetail",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/templatedetail/templatedetail.wxml",
-        "js": "pages/templatedetail/templatedetail.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-option-sheet",
-        "event": "bind:select",
-        "handler": "onReportReasonSelect",
-        "line": 286,
-        "selectorHint": "cy-option-sheet[bind:select]",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "other",
-      "interactionMode": "event-contract",
-      "baseActionClass": "other",
-      "effectClasses": [
-        "other"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/templatedetail/templatedetail.js:446"
-      }
-    },
-    {
-      "id": "pages/templatedetail/templatedetail.wxml:291:bind:close:closePop:11",
+      "id": "pages/templatedetail/templatedetail.wxml:287:bind:close:closePop:9",
       "route": "pages/templatedetail/templatedetail",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1263346,7 +1262832,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closePop",
-        "line": 291,
+        "line": 287,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1263386,11 +1262872,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/templatedetail.js:449"
+        "staticSource": "pages/templatedetail/templatedetail.js:435"
       }
     },
     {
-      "id": "pages/templatedetail/templatedetail.wxml:300:bindinput:onInputAnswer:12",
+      "id": "pages/templatedetail/templatedetail.wxml:296:bindinput:onInputAnswer:10",
       "route": "pages/templatedetail/templatedetail",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1263413,7 +1262899,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onInputAnswer",
-        "line": 300,
+        "line": 296,
         "selectorHint": "input[bindinput]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1263453,11 +1262939,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/templatedetail.js:477"
+        "staticSource": "pages/templatedetail/templatedetail.js:463"
       }
     },
     {
-      "id": "pages/templatedetail/templatedetail.wxml:303:bind:disabledtap:onPreviewDisabledTap:14",
+      "id": "pages/templatedetail/templatedetail.wxml:299:bind:disabledtap:onPreviewDisabledTap:12",
       "route": "pages/templatedetail/templatedetail",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1263480,7 +1262966,7 @@
         "tag": "cy-btn",
         "event": "bind:disabledtap",
         "handler": "onPreviewDisabledTap",
-        "line": 303,
+        "line": 299,
         "selectorHint": "cy-btn[bind:disabledtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!canSubmitPreview}}",
@@ -1263521,11 +1263007,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/templatedetail.js:490"
+        "staticSource": "pages/templatedetail/templatedetail.js:476"
       }
     },
     {
-      "id": "pages/templatedetail/templatedetail.wxml:303:bindtap:completePreview:13",
+      "id": "pages/templatedetail/templatedetail.wxml:299:bindtap:completePreview:11",
       "route": "pages/templatedetail/templatedetail",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1263548,7 +1263034,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "completePreview",
-        "line": 303,
+        "line": 299,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!canSubmitPreview}}",
@@ -1263588,11 +1263074,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/templatedetail.js:484"
+        "staticSource": "pages/templatedetail/templatedetail.js:470"
       }
     },
     {
-      "id": "pages/templatedetail/templatedetail.wxml:311:bindtap:onSelectOption:15",
+      "id": "pages/templatedetail/templatedetail.wxml:307:bindtap:onSelectOption:13",
       "route": "pages/templatedetail/templatedetail",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1263615,7 +1263101,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onSelectOption",
-        "line": 311,
+        "line": 307,
         "selectorHint": ".david_tk_sr_tgb_li",
         "visibleCondition": "{{ info.questionA }}",
         "disabledCondition": null,
@@ -1263655,11 +1263141,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/templatedetail.js:469"
+        "staticSource": "pages/templatedetail/templatedetail.js:455"
       }
     },
     {
-      "id": "pages/templatedetail/templatedetail.wxml:313:bindtap:onSelectOption:16",
+      "id": "pages/templatedetail/templatedetail.wxml:309:bindtap:onSelectOption:14",
       "route": "pages/templatedetail/templatedetail",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1263682,7 +1263168,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onSelectOption",
-        "line": 313,
+        "line": 309,
         "selectorHint": ".david_tk_sr_tgb_li",
         "visibleCondition": "{{ info.questionB }}",
         "disabledCondition": null,
@@ -1263722,11 +1263208,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/templatedetail.js:469"
+        "staticSource": "pages/templatedetail/templatedetail.js:455"
       }
     },
     {
-      "id": "pages/templatedetail/templatedetail.wxml:315:bindtap:onSelectOption:17",
+      "id": "pages/templatedetail/templatedetail.wxml:311:bindtap:onSelectOption:15",
       "route": "pages/templatedetail/templatedetail",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1263749,7 +1263235,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onSelectOption",
-        "line": 315,
+        "line": 311,
         "selectorHint": ".david_tk_sr_tgb_li",
         "visibleCondition": "{{ info.questionC }}",
         "disabledCondition": null,
@@ -1263789,11 +1263275,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/templatedetail.js:469"
+        "staticSource": "pages/templatedetail/templatedetail.js:455"
       }
     },
     {
-      "id": "pages/templatedetail/templatedetail.wxml:317:bindtap:onSelectOption:18",
+      "id": "pages/templatedetail/templatedetail.wxml:313:bindtap:onSelectOption:16",
       "route": "pages/templatedetail/templatedetail",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1263816,7 +1263302,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onSelectOption",
-        "line": 317,
+        "line": 313,
         "selectorHint": ".david_tk_sr_tgb_li",
         "visibleCondition": "{{ info.questionD }}",
         "disabledCondition": null,
@@ -1263856,11 +1263342,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/templatedetail.js:469"
+        "staticSource": "pages/templatedetail/templatedetail.js:455"
       }
     },
     {
-      "id": "pages/templatedetail/templatedetail.wxml:319:bind:disabledtap:onPreviewDisabledTap:20",
+      "id": "pages/templatedetail/templatedetail.wxml:315:bind:disabledtap:onPreviewDisabledTap:18",
       "route": "pages/templatedetail/templatedetail",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1263883,7 +1263369,7 @@
         "tag": "cy-btn",
         "event": "bind:disabledtap",
         "handler": "onPreviewDisabledTap",
-        "line": 319,
+        "line": 315,
         "selectorHint": "cy-btn[bind:disabledtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!canSubmitPreview}}",
@@ -1263924,11 +1263410,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/templatedetail.js:490"
+        "staticSource": "pages/templatedetail/templatedetail.js:476"
       }
     },
     {
-      "id": "pages/templatedetail/templatedetail.wxml:319:bindtap:completePreview:19",
+      "id": "pages/templatedetail/templatedetail.wxml:315:bindtap:completePreview:17",
       "route": "pages/templatedetail/templatedetail",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1263951,7 +1263437,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "completePreview",
-        "line": 319,
+        "line": 315,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!canSubmitPreview}}",
@@ -1263991,7 +1263477,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/templatedetail.js:484"
+        "staticSource": "pages/templatedetail/templatedetail.js:470"
       }
     },
     {
@@ -1264081,7 +1263567,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/templatedetail.js:494"
+        "staticSource": "pages/templatedetail/templatedetail.js:480"
       }
     },
     {
@@ -1264148,7 +1263634,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/templatedetail.js:392"
+        "staticSource": "pages/templatedetail/templatedetail.js:390"
       }
     },
     {
@@ -1264225,7 +1263711,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/templatedetail.js:422"
+        "staticSource": "pages/templatedetail/templatedetail.js:420"
       }
     },
     {
@@ -1264292,7 +1263778,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/templatedetail.js:399"
+        "staticSource": "pages/templatedetail/templatedetail.js:397"
       }
     },
     {

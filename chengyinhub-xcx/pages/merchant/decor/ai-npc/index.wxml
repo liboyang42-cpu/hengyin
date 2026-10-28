@@ -174,7 +174,7 @@
     mask-closable="{{!saving}}" closable="{{!saving}}">
     <view class="tm" aria-role="radiogroup" aria-label="性格设定">
       <view class="tm-group">
-        <view class="tm-row {{personaPick === item.key ? 'tm-row--on' : ''}}"
+        <view class="tm-row {{personality === item.key ? 'tm-row--on' : ''}}"
           wx:for="{{personalities}}" wx:key="key" data-key="{{item.key}}" bindtap="pickPersona"
           aria-role="radio" aria-checked="{{personaPick === item.key}}" aria-label="{{item.label}}"
           hover-class="cy-pressed" hover-stay-time="80">

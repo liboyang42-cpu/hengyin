@@ -16,8 +16,8 @@
       <text class="an-card__k">{{current.label}}{{mode === 'income' ? '收入' : '提现'}}</text>
       <text class="an-card__v">{{money.amount(current.totalText)}}</text>
       <view class="an-bars">
-        <view class="an-bar {{item.current ? 'is-cur' : ''}}" wx:for="{{series}}" wx:key="key" aria-label="{{item.label}} {{item.totalText}} 元">
-          <view class="an-bar__track"><view class="an-bar__fill" style="height:{{item.height > 0 ? item.height : 3}}%;"></view></view>
+        <view class="an-bar {{item.current ? 'is-cur' : ''}}" wx:for="{{series}}" wx:key="key" aria-label="{{item.label}} {{item.totalText || 0}} 元">
+          <view class="an-bar__track"><view class="an-bar__fill" style="height:{{item.height || 3}}%;"></view></view>
           <text class="an-bar__m">{{item.label}}</text>
         </view>
       </view>
@@ -26,7 +26,7 @@
       <text class="an-sec">收入来源</text>
       <view class="an-src" wx:for="{{sources}}" wx:key="key">
         <view class="an-src__row"><text>{{item.label}}</text><text class="an-src__v">{{money.amount(item.totalText)}}</text></view>
-        <view class="an-src__track"><view class="an-src__fill" style="width:{{item.percent}}%;"></view></view>
+        <view class="an-src__track"><view class="an-src__fill" style="width:{{item.percent || 0}}%;"></view></view>
       </view>
       <text class="an-none" wx:if="{{!sources.length}}">这个月还没有收入</text>
     </view>

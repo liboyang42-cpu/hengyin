@@ -24,7 +24,7 @@
     </view>
     <view wx:if="{{loading && loaded}}" class="mp-refreshing" aria-role="status" aria-live="polite">正在同步最新项目…</view>
 
-    <!-- 2026-10-28 业主 m693:我的项目里不放发布活动的按钮 -->
+    <!-- 2026-10-28 业主 m693:列表上方不放发布活动的按钮(没有活动时空态里仍可发起) -->
     <!-- 上下架 / 删除按稿撤出卡面后,长按是它们唯一的入口 —— 藏起来的入口要写出来,
          否则一条已下架的路线就再也回不到上架。列表里一张卡都不可操作时不出这行。 -->
     <view class="mp-longtip" wx:if="{{projectState === 'ready' && list.length > 0 && hasRowOps}}">长按卡片管理</view>
@@ -65,7 +65,7 @@
 
     <view class="mp-state" wx:if="{{projectState === 'ready' && list.length === 0}}">
       <cy-empty kind="empty" title="{{emptyTit}}" sub="{{emptySub}}"
-        cta="{{typeTab === 'topic' ? '去发布' : ''}}"
+        cta="{{typeTab === 'topic' ? '去发布' : (typeTab === 'activity' && canPublishActivity ? '发布单场活动' : '')}}"
         bind:cta="onEmptyCta" fill size="lg" />
     </view>
 
