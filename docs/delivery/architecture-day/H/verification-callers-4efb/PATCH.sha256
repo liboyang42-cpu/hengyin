@@ -1,0 +1,9 @@
+bc7deef2dd574785ea1636c3a1996cff8eb88fb69601c2b635a6b7c72e9e2183  complete.review.patch
+97ebfaa987a89223b227c65380f044fc1a2c266117f3ef989583eaf02a3a2077  owned.review.patch
+bbc35e08ca23e4f75e958d02713839b7ba01eae4714cad4070d5f9242f030477  shared-caller.review.patch
+e90d847c946d16fc58f9d682d32282dd6e4ef700c272d557c7b49b8f2db18cb3  test-contract.review.patch
+bytes:
+20532 complete.review.patch
+11422 owned.review.patch
+3723 shared-caller.review.patch
+5387 test-contract.review.patch

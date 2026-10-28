@@ -1,0 +1,177 @@
+diff --git a/chengyinhub-xcx/utils/registration-seat.js b/chengyinhub-xcx/utils/registration-seat.js
+index 485d4d4..0bc3783 100644
+--- a/chengyinhub-xcx/utils/registration-seat.js
++++ b/chengyinhub-xcx/utils/registration-seat.js
+@@ -59,7 +59,7 @@ function seatRecovery(app, target, isCurrent) {
+   return { target, isCurrent, readReceipt(original, done) {
+     if (!isCurrent()) return null;
+     return app.sendRequest({ url: '/api/verify/seat/receipt', method: 'POST', data: Object.assign({}, original),
+-      hideLoading: true, silentError: true, autoErrorToast: false,
++      hideLoading: true, autoErrorToast: false,
+       success: response => done(response), fail: () => done(null), successStatusAbnormal: () => done(null) });
+   } };
+ }
+diff --git a/chengyinhub-xcx/tests/unit/verification-finite-transport-feedback-4efb.test.js b/chengyinhub-xcx/tests/unit/verification-finite-transport-feedback-4efb.test.js
+new file mode 100644
+index 0000000..175b0c6
+--- /dev/null
++++ b/chengyinhub-xcx/tests/unit/verification-finite-transport-feedback-4efb.test.js
+@@ -0,0 +1,158 @@
++'use strict';
++// SOURCE controls: real caller methods, request-client and original persistent workflows.
++// No live transport; root runs these with the final composed source.
++const test = require('node:test');
++const assert = require('node:assert/strict');
++const fs = require('node:fs');
++const path = require('node:path');
++const seats = require('../../utils/registration-seat.js');
++const verification = require('../../utils/merchant-verification.js');
++const { createRequestClient } = require('../../utils/transport/request-client.js');
++const { resolveVerificationScan } = require('../../utils/verification-scan.js');
++const cityOutcome = require('../../pages/merchant/utils/citynode-redeem-outcome.js');
++const ROOT = path.resolve(__dirname, '../..');
++const PLAY = 'pages/play/index.js';
++const DETAIL = 'subpackageMember/components/scene-member-participation-detail/index.js';
++const CITY = 'pages/merchant/citynode/index.js';
++function method(file, name) {
++  const source = fs.readFileSync(path.join(ROOT, file), 'utf8');
++  const match = source.match(new RegExp('^( +)' + name + '(?:\\(|: function)', 'm'));
++  assert.ok(match, file + ':' + name);
++  const start = match.index + match[1].length;
++  const end = source.indexOf('\n' + match[1] + '},', start);
++  assert.ok(end > start, file + ':' + name);
++  return source.slice(start, end + match[1].length + 2);
++}
++const policy = new Function('return ({' + method('app.js', 'shouldAutoToastRequestError') + '});')().shouldAutoToastRequestError;
++function environment() {
++  const requests = [], options = [], globalToasts = [], rows = new Map();
++  let revision = 0;
++  const wx = { scans: [], scanCode(value) { this.scans.push(value); },
++    getStorageSync: key => rows.get(key),
++    setStorageSync: (key, value) => rows.set(key, JSON.parse(JSON.stringify(value))),
++    removeStorageSync: key => rows.delete(key) };
++  const app = { getUserID: () => 11, getSession: () => ({ getRevision: () => revision }),
++    getAuthorization: () => 'synthetic-verification-session' };
++  const client = createRequestClient({
++    wxRequest(value) { requests.push(value); return { abort() {} }; },
++    getBaseUrl: () => 'https://example.invalid',
++    getAuthorization: app.getAuthorization, getUserID: app.getUserID,
++    reLogin: done => done(false),
++    showToast: text => globalToasts.push(text), hideToast() {},
++    shouldAutoToast: policy,
++  });
++  app.sendRequest = value => { options.push(value); return client.send(value); };
++  return { app, wx, requests, options, globalToasts, rows, nextRevision() { revision++; } };
++}
++function workflow(options) {
++  return verification.createVerificationWorkflow({ ...options, setTimer: () => 1, clearTimer() {} });
++}
++function lead() {
++  const h = environment(), messages = [];
++  const names = ['leadVerifyMemberTicket', '_leadOperationContext', '_isLeadOperationContextCurrent', '_canUseLeadTools'];
++  const page = new Function('app', 'wx', 'seatTarget', 'seatKey', 'seatRecovery', 'captureLogin', 'loginCurrent',
++    'createVerificationWorkflow', 'classifyVerificationOutcome', 'resolveLeadMemberTicket', 'motion', 'cyLoading', 'req',
++    'return ({' + names.map(name => method(PLAY, name)).join(',') + '});')(
++    h.app, h.wx, seats.seatTarget, seats.seatKey, seats.seatRecovery, seats.captureLogin, seats.loginCurrent,
++    workflow, verification.classifyVerificationOutcome, require('../../pages/play/utils/lead-ticket-scan.js').resolveLeadMemberTicket,
++    { haptic() {} }, { show() { assert.fail('seat cannot use global loading'); }, hide() {} },
++    () => assert.fail('seat must keep its durable workflow'));
++  Object.assign(page, { data: { activityId: 9, lead: { exists: true, isLeader: true } }, _playOwner: '11',
++    _boundPlayOwner: () => '11', _sessionKey: () => 'activity:9', _isPlayAccountCurrent: () => true,
++    diegetic: message => messages.push(message) });
++  return { ...h, page, messages, scan() {
++    page.leadVerifyMemberTicket();
++    h.wx.scans.at(-1).success({ result: 'v1.71.topic_seat_2.1999999999999.7.signature' });
++  } };
++}
++const replies = [
++  ['network', request => request.fail({ errMsg: 'timeout' }), true],
++  ['HTTP 503', request => request.success({ statusCode: 503, data: { code: 503 } }), true],
++  ['HTTP 408', request => request.success({ statusCode: 408, data: { code: 408 } }), true],
++  ['business error', request => request.success({ statusCode: 200, data: { code: 500, msg: 'fixture generic failure' } }), true],
++  ['malformed success', request => request.success({ statusCode: 200, data: { code: 200, data: {} } }), true],
++  ['HTTP 403', request => request.success({ statusCode: 403, data: { code: 403 } }), false],
++  ['relogin rejected', request => request.success({ statusCode: 401, data: { code: 401 } }), false],
++];
++for (const [label, reply, unknown] of replies) test('lead real transport: ' + label + ' has one workflow message and no global toast', () => {
++  const h = lead(); h.scan();
++  assert.equal(h.options[0].url, '/api/registration/scan_group_member_ticket');
++  assert.deepEqual(h.options[0].data, { code: 'v1.71.topic_seat_2.1999999999999.7.signature', activityId: 9 });
++  assert.equal(h.options[0].autoErrorToast, false);
++  assert.equal(h.options[0].silentError, undefined);
++  reply(h.requests[0]);
++  assert.equal(h.messages.length, 1); assert.deepEqual(h.globalToasts, []);
++  assert.equal(h.requests.length, 1);
++  if (unknown) {
++    assert.match(h.messages[0], /原席位结果待确认/);
++    const original = JSON.stringify([...h.rows]);
++    h.scan();
++    assert.equal(h.options[1].url, '/api/verify/seat/receipt');
++    assert.equal(h.options[1].autoErrorToast, false);
++    assert.equal(h.options[1].silentError, undefined);
++    h.requests[1].fail({ errMsg: 'receipt timeout' });
++    assert.equal(h.messages.length, 2); assert.match(h.messages[1], /待确认/);
++    assert.equal(JSON.stringify([...h.rows]), original);
++    assert.equal(h.options.filter(value => value.url.endsWith('/scan_group_member_ticket')).length, 1);
++    assert.deepEqual(h.globalToasts, []);
++  } else assert.equal(h.rows.size, 0, 'known request rejection retains original classification');
++});
++test('receipt failure after account revision change preserves original pending without feedback to new page', () => {
++  const h = lead(); h.scan(); h.requests[0].fail({ errMsg: 'timeout' }); h.scan();
++  const original = JSON.stringify([...h.rows]), messages = h.messages.slice();
++  h.nextRevision(); h.requests[1].fail({ errMsg: 'late timeout' });
++  assert.deepEqual(h.messages, messages); assert.equal(JSON.stringify([...h.rows]), original);
++  assert.deepEqual(h.globalToasts, []);
++});
++test('city receipt uses real caller and transport: timeout remains UNKNOWN without second redeem or duplicate toast', () => {
++  const h = environment(), modals = [], pageToasts = [];
++  const page = new Function('app', 'wx', 'captureLogin', 'loginCurrent', 'cityNodeTarget', 'toast',
++    'createVerificationWorkflow', 'classifyCityNodeRedeem', 'modal', 'motion', 'readReducedMotion',
++    'return ({' + method(CITY, 'submitCityNodeRedeem') + '});')(
++    h.app, h.wx, seats.captureLogin, seats.loginCurrent, cityOutcome.cityNodeTarget, message => pageToasts.push(message),
++    workflow, cityOutcome.classifyCityNodeRedeem, { show: value => modals.push(value) }, { haptic() {} }, () => false);
++  const code = 'v1.12.citynode_34.9999999999999.5.sig';
++  page.submitCityNodeRedeem(code); h.requests[0].fail({ errMsg: 'timeout' });
++  const original = JSON.stringify([...h.rows]);
++  page.submitCityNodeRedeem(code);
++  assert.equal(h.options[1].url, '/api/verify/citynode/receipt');
++  assert.equal(h.options[1].silentError, undefined); assert.equal(h.options[1].autoErrorToast, false);
++  assert.deepEqual(h.options[1].data, { code });
++  h.requests[1].fail({ errMsg: 'receipt timeout' });
++  assert.equal(modals.length, 2); assert.ok(modals.every(value => value.title === '核销结果待确认'));
++  assert.equal(JSON.stringify([...h.rows]), original);
++  assert.equal(h.options.filter(value => value.url.endsWith('/citynode/redeem')).length, 1);
++  assert.deepEqual(pageToasts, []); assert.deepEqual(h.globalToasts, []);
++});
++const scans = [
++  'v1.71.group_v2_9_11.1999999999999.7.signature',
++  'v1.71.activity_seat_2.1999999999999.7.signature',
++  'cq1.71.1999999999.signature',
++  JSON.stringify({ type: 'activity', code: 'original-ticket' }),
++];
++for (const raw of scans) test('detail finite routing preserves exact original resolver contract: ' + resolveVerificationScan(raw).kind, () => {
++  const h = environment(), submitted = [], messages = [];
++  const page = new Function('app', 'wx', 'captureLogin', 'loginCurrent', 'resolveVerificationScan', 'cyToast',
++    'return ({' + method(DETAIL, 'goScanQR') + '});')(
++    h.app, h.wx, seats.captureLogin, seats.loginCurrent, resolveVerificationScan, message => messages.push(message));
++  page._submitVerification = (...args) => submitted.push(args);
++  page.goScanQR(); h.wx.scans[0].success({ result: raw });
++  const original = resolveVerificationScan(raw);
++  assert.equal(submitted.length, 1); assert.equal(submitted[0][0], original.url + ':' + original.code);
++  assert.equal(submitted[0][1], original.loadingTitle);
++  assert.deepEqual(submitted[0][2], { url: original.url, data: original.data, method: 'POST' });
++  assert.deepEqual(messages, []);
++});
++test('detail refuses an unknown resolver URL instead of falling through to coupon; late login cannot submit', () => {
++  const h = environment(), submitted = [], messages = [];
++  const page = new Function('app', 'wx', 'captureLogin', 'loginCurrent', 'resolveVerificationScan', 'cyToast',
++    'return ({' + method(DETAIL, 'goScanQR') + '});')(
++    h.app, h.wx, seats.captureLogin, seats.loginCurrent,
++    () => ({ kind: 'coupon', url: '/api/unapproved/write', code: 'original', data: { code: 'original' } }),
++    message => messages.push(message));
++  page._submitVerification = (...args) => submitted.push(args);
++  page.goScanQR(); h.wx.scans[0].success({ result: 'fixture' });
++  assert.deepEqual(submitted, []); assert.deepEqual(messages, ['二维码格式错误']);
++  page.goScanQR(); h.nextRevision(); h.wx.scans[1].success({ result: 'fixture' });
++  assert.deepEqual(submitted, []); assert.equal(messages.length, 1);
++});

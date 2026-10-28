@@ -1,0 +1,72 @@
+diff --git a/chengyinhub-xcx/tests/unit/ui-integrity-u1-seat-callers-ee815.test.js b/chengyinhub-xcx/tests/unit/ui-integrity-u1-seat-callers-ee815.test.js
+index 77435bd..35fa122 100644
+--- a/chengyinhub-xcx/tests/unit/ui-integrity-u1-seat-callers-ee815.test.js
++++ b/chengyinhub-xcx/tests/unit/ui-integrity-u1-seat-callers-ee815.test.js
+@@ -59,7 +59,16 @@ function assertLead(source) {
+   assert.equal(request.get('url').value, '/api/registration/scan_group_member_ticket');
+   assert.equal(request.get('method').value, 'POST');
+   assert.match(body, /data:\s*\{\s*code:\s*ticket\.code,\s*activityId:\s*context\.activityId\s*\}/);
+-  assertFeedbackOnly('function check() ' + body, 'request');
++  const sends = nodes('function check() ' + body, n => n.type === 'CallExpression' && named(n.callee, 'sendRequest'));
++  assert.equal(sends.length, 1);
++  const sent = props(sends[0].arguments[0]);
++  assert.equal(sends[0].arguments[0].properties.length, sent.size, '重复键不能覆盖原路径或回调');
++  assert.equal(sent.get('url').value, '/api/registration/scan_group_member_ticket');
++  assert.equal(sent.get('method').value, 'POST');
++  assert.equal(body.includes('data: request.data,'), true);
++  for (const key of ['success', 'fail', 'successStatusAbnormal']) assert.ok(sent.has(key));
++  assert.equal(sent.get('autoErrorToast').value, false);
++  assert.equal(sent.has('silentError'), false);
+   assert.match(body, /loginCurrent\(app,\s*wx,\s*seatLogin\)/);
+   assert.match(body, /seatRecovery\(app,\s*target,\s*seatCurrent\)/);
+   assert.match(body, /_leadVerificationWorkflow\.run\(key/);
+@@ -82,6 +91,25 @@ function assertCallers(source, expected, scanKind) {
+     assert.equal(options.get('method').value, 'POST');
+     const url = options.get('url');
+     if (url.type === 'Literal') return url.value;
++    if (url.type === 'Identifier' && url.name === 'url') {
++      const declarations = nodes(source, n => n.type === 'VariableDeclarator' && n.id.name === 'url'
++        && n.init && n.init.type === 'ConditionalExpression');
++      assert.equal(declarations.length, 1);
++      const values = [];
++      let choice = declarations[0].init;
++      while (choice.type === 'ConditionalExpression') {
++        assert.equal(choice.test.type, 'BinaryExpression'); assert.equal(choice.test.operator, '===');
++        assert.equal(source.slice(choice.test.left.start, choice.test.left.end), 'scan.url');
++        assert.equal(choice.test.right.type, 'Literal'); assert.equal(choice.consequent.type, 'Literal');
++        assert.equal(choice.test.right.value, choice.consequent.value);
++        values.push(choice.consequent.value); choice = choice.alternate;
++      }
++      assert.equal(choice.type, 'Literal'); values.push(choice.value);
++      assert.deepEqual(values.sort(), routes);
++      assert.match(source, /if \(!\[[\s\S]*?\]\.includes\(scan\.url\)\) \{\s*cyToast\('二维码格式错误'\);\s*return;\s*\}/);
++      assert.equal(source.slice(options.get('data').start, options.get('data').end), 'scan.data');
++      return 'finite-scan';
++    }
+     assert.equal(source.slice(url.start, url.end), 'scan.url');
+     assert.equal(source.slice(options.get('data').start, options.get('data').end), 'scan.data');
+     return 'scan.url';
+@@ -109,8 +137,8 @@ test('带队复制的原命令固定席位路径且feedback不能改身份；改
+   assertLead(source);
+   assert.throws(() => assertLead(source.replace("const request = { url: '/api/registration/scan_group_member_ticket'",
+     "const request = { url: '/api/registration/scan_qr_code'")));
+-  assert.throws(() => assertLead(source.replace('hideLoading: true, silentError: true, autoErrorToast: false,\n            success: r =>',
+-    "url: '/api/registration/scan_qr_code', hideLoading: true, silentError: true, autoErrorToast: false,\n            success: r =>")));
++  assert.throws(() => assertLead(source.replace('hideLoading: true, autoErrorToast: false,\n            success: r =>',
++    "url: '/api/registration/scan_qr_code', hideLoading: true, autoErrorToast: false,\n            success: r =>")));
+ });
+ test('共享扫码仅四个固定端点，外部URL和未知类型不成为请求；新增端点必须红', () => {
+   function assertRoutes(source) {
+@@ -136,9 +164,10 @@ test('个人页三caller及参与详情唯一caller闭包固定，破坏guard/
+   const profile = read(PROFILE), detail = read(DETAIL);
+   const profileExpected = ['scan.url', '/api/registration/scan_qr_code_chapter', '/api/registration/scan_qr_code_station'];
+   assertCallers(profile, profileExpected, 'var');
+-  assertCallers(detail, ['scan.url'], 'const');
++  assertCallers(detail, ['finite-scan'], 'const');
+   assert.throws(() => assertCallers(profile.replace('url: scan.url,', 'url: supplied.url,'), profileExpected, 'var'));
+-  assert.throws(() => assertCallers(detail.replace("if (scan.kind === 'invalid')", "if (false)"), ['scan.url'], 'const'));
++  assert.throws(() => assertCallers(detail.replace("if (scan.kind === 'invalid')", "if (false)"), ['finite-scan'], 'const'));
++  assert.throws(() => assertCallers(detail.replace("const url = scan.url", "const url = supplied.url"), ['finite-scan'], 'const'));
+   assert.throws(() => assertCallers(profile.replace('autoErrorToast: false,\n          hideLoading:',
+     "url: '/api/arbitrary', autoErrorToast: false,\n          hideLoading:"), profileExpected, 'var'));
+ });

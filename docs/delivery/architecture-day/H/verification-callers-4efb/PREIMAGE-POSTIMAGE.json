@@ -1,0 +1,44 @@
+[
+  {
+    "path": "chengyinhub-xcx/pages/play/index.js",
+    "preimage": "42b5c886a98572b98570283020e5e063d552d8ac",
+    "postimage": "19802c142c3c2baea9cc89bbda2060fcdd892fde",
+    "sha256": "8f1bfebe487e955017035be95b9a65ffea3a959c41d957e6d05da226a6221e3d",
+    "delivery": "shared-caller.review.patch"
+  },
+  {
+    "path": "chengyinhub-xcx/subpackageMember/components/scene-member-participation-detail/index.js",
+    "preimage": "e1fe91faf00b9d8897594a0caff5f6651f988775",
+    "postimage": "21c14fb001a63bdc73c818bd3b94ba37ded3c6ff",
+    "sha256": "c5f404b3dd9ea461ecf4acacd582f279c491e9cf4b09ac033aa8f601d6801698",
+    "delivery": "shared-caller.review.patch"
+  },
+  {
+    "path": "chengyinhub-xcx/pages/merchant/citynode/index.js",
+    "preimage": "84a44bf1f650d123c089155795c78176d9beba00",
+    "postimage": "3cf3713f50de1510797f833cbd5873bf0216e65a",
+    "sha256": "470e08a3f48c764e46ee3d9bfcf98c224e33e9a5c4619a968722c08e2c1fa918",
+    "delivery": "shared-caller.review.patch"
+  },
+  {
+    "path": "chengyinhub-xcx/utils/registration-seat.js",
+    "preimage": "485d4d457eed7426745e9d00cd6fec7ec14de1f6",
+    "postimage": "0bc37831e1fede05031300a5534fbc295252f844",
+    "sha256": "e11c006dccc6af2a190f07710ffe2ce03cf9eca983dfc1b6047ab03e9f4fcd74",
+    "delivery": "owned"
+  },
+  {
+    "path": "chengyinhub-xcx/tests/unit/verification-finite-transport-feedback-4efb.test.js",
+    "preimage": null,
+    "postimage": "175b0c641b962f12aa0d2352d983d8a02b9c8083",
+    "sha256": "5749ccae5d1c88bba203f92135ff79107066169705d02289b76642a74c88a36e",
+    "delivery": "owned"
+  },
+  {
+    "path": "chengyinhub-xcx/tests/unit/ui-integrity-u1-seat-callers-ee815.test.js",
+    "preimage": "77435bd353369e2ca5249912de2e32dc68e707a2",
+    "postimage": "35fa122c2fd43a7c7a9e245dd5f1620bb76ae1fb",
+    "sha256": "9249fb738472daa3c786054726b701fe64f7a52a0ad4699fc1944e19baa4ff5a",
+    "delivery": "test-contract.review.patch"
+  }
+]
