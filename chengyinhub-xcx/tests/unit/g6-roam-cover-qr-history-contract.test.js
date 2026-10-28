@@ -152,6 +152,6 @@ test('CU-M-55 正在进行中的漫游:历史空态改口,不再称「还没有�
   assert.equal(broken.instance.data.inProgress, false, '形状不对的记录不算进行中(validRecovery 同一判据)')
 
   const wxml = read('components/cy/scene-roam-history/index.wxml')
-  assert.match(wxml, /wx:if="\{\{!list\.length && inProgress\}\}"[\s\S]*?正在漫游中[\s\S]*?回到地图/)
-  assert.match(wxml, /wx:elif="\{\{!list\.length\}\}"[\s\S]*?出发第一次漫游/)
+  assert.match(wxml, /wx:if="\{\{!remoteLoading && !remoteError && !list\.length && inProgress\}\}"[\s\S]*?正在漫游中[\s\S]*?回到地图/)
+  assert.match(wxml, /wx:elif="\{\{!remoteLoading && !remoteError && !list\.length\}\}"[\s\S]*?出发第一次漫游/)
 })

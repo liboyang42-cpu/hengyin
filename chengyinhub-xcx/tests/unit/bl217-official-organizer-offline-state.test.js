@@ -8,7 +8,7 @@ const path = require('node:path');
 const test = require('node:test');
 
 const ROOT = path.resolve(__dirname, '../..');
-const rules = require('../../pages/activity/official-organizer/organizer-rules.js');
+const { platform, receipt, tick } = require('./helpers/team-event-platform');
 const { attachDangerConfirm } = require('./helpers/danger-confirm-stub');
 
 function read(rel) { return fs.readFileSync(path.join(ROOT, rel), 'utf8'); }
@@ -16,7 +16,7 @@ function read(rel) { return fs.readFileSync(path.join(ROOT, rel), 'utf8'); }
 function installWx(extra) {
   const calls = { navigateTo: [], toasts: [] };
   const base = {
-    getStorageSync: () => '',
+    ...platform(),
     stopPullDownRefresh: () => {},
     navigateTo: (o) => calls.navigateTo.push(o.url),
     navigateBack: () => {},
@@ -64,6 +64,7 @@ function makeApp() {
   const requests = [];
   return {
     requests,
+    getUserID: () => '71', getAuthorization: () => 'token-a',
     sendRequest: (req) => { requests.push(req); return { abort() {} }; },
     getRequestErrorMessage: (res, fallback) => (res && res.msg) || fallback,
   };
@@ -141,7 +142,7 @@ test('有快照时下拉刷新两路断网:保留已显示的活动名和状态,
   assert.ok(calls.toasts.includes('网络没连上，显示上次读到的状态'));
 });
 
-test('受理后回读两路断网:落「状态未刷新 / 回读最新状态失败」,不报不一致', () => {
+test('原请求已执行后业务刷新断网:保留回执与旧快照，不把读取失败改成命令失败', async () => {
   const app = makeApp();
   const { page } = openPage(app);
   const dc = wireConfirms(page);
@@ -149,12 +150,16 @@ test('受理后回读两路断网:落「状态未刷新 / 回读最新状态失�
   page.onFieldInput({ currentTarget: { dataset: { form: 'resume', key: 'reason' } }, detail: { value: '已处理' } });
   page.onAction({ currentTarget: { dataset: { action: 'resume' } } });
   dc.resume.confirm();
-  app.requests[app.requests.length - 1].success(ok());
+  await tick();
+  const command = app.requests.find(r => r.url === '/api/official/command');
+  assert.ok(command);
+  command.success(receipt(command, 'APPLIED'));
   finishOffline(app);
   assert.equal(dc.resume.doneCalls.length, 0);
-  assert.equal(page.data.result.tone, 'unknown');
-  assert.match(page.data.result.title, /已受理，但状态未刷新/);
-  assert.match(page.data.result.sub, /状态刷新失败/);
+  assert.equal(page.data.result.tone, 'success');
+  assert.equal(page.data.commandRecovery.state, 'APPLIED');
+  assert.equal(page.data.refreshing, false);
+  assert.match(page.data.result.sub, /原请求号/);
   assert.equal(page.data.view.title, '外滩夜行', '快照不被空状态冲掉');
 });
 

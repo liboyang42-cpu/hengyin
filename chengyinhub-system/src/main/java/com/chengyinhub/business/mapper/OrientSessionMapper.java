@@ -5,9 +5,12 @@ import com.chengyinhub.business.domain.OrientSessionRow;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.Date;
+import java.util.List;
 
 /** Doc2 F1a 定向会话:phase 列与 orient_session_clock 的唯一读写入口,所有语句都带 member_id 归属。 */
 public interface OrientSessionMapper {
+    List<OrientSessionRow> selectOwnedSessions(@Param("memberId") Long memberId, @Param("topicId") Long topicId,
+                                              @Param("activityId") Long activityId);
     OrientSessionRow selectSession(@Param("id") Long id, @Param("memberId") Long memberId);
     OrientSessionRow selectSessionForUpdate(@Param("id") Long id, @Param("memberId") Long memberId);
     /** 仅进行中且尚未进入终态的局可改 phase。 */

@@ -4,11 +4,21 @@ function isEnabled(features) {
   return !!features && features.finishNearbyRoute === true
 }
 
+function numericOrNaN(value) {
+  if (typeof value !== 'number' && (typeof value !== 'string' || value.trim() === '')) return NaN
+  return Number(value)
+}
+
+function validCoordinates(latitude, longitude) {
+  const lat = numericOrNaN(latitude), lng = numericOrNaN(longitude)
+  return Number.isFinite(lat) && Math.abs(lat) <= 90 && Number.isFinite(lng) && Math.abs(lng) <= 180
+}
+
 function resolveOrigin(location, nodes) {
-  if (location && Number.isFinite(Number(location.latitude)) && Number.isFinite(Number(location.longitude))) {
+  if (location && validCoordinates(location.latitude, location.longitude)) {
     return { latitude: Number(location.latitude), longitude: Number(location.longitude) }
   }
-  const completed = (nodes || []).filter((node) => node && node.done && node.lat && node.lng)
+  const completed = (nodes || []).filter((node) => node && node.done && validCoordinates(node.lat, node.lng))
     .sort((a, b) => (b.doneAt || 0) - (a.doneAt || 0))
   const last = completed[0]
   return last ? { latitude: Number(last.lat), longitude: Number(last.lng) } : null
@@ -19,9 +29,9 @@ function pickCandidate(rows, currentActivityId, currentTopicId) {
     && (!currentActivityId || String(item.id) !== String(currentActivityId))
     && (!currentTopicId || String(item.topicId || '') !== String(currentTopicId)))
   if (!candidate) return null
-  const distance = Number(candidate.distance)
+  const distance = numericOrNaN(candidate.distance)
   const meta = [
-    Number.isFinite(distance) ? distanceText(distance) : '',
+    Number.isFinite(distance) && distance >= 0 ? distanceText(distance) : '',
     candidate.addressName || candidate.address || ''
   ].filter(Boolean).join(' · ')
   const amount = candidate.minAmout

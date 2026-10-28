@@ -24,6 +24,10 @@ public interface MerchantDeskMapper {
 
     int insertReceipt(Map<String, Object> receipt);
 
+    Long selectReceiptSkuProductId(@Param("merchantId") Long merchantId, @Param("skuId") Long skuId);
+
+    Long selectReceiptEvidenceReviewId(@Param("ownerMemberId") Long ownerMemberId, @Param("evidenceId") Long evidenceId);
+
     // ---- 门店 ----
     Map<String, Object> selectStore(@Param("merchantId") Long merchantId);
 
@@ -64,6 +68,10 @@ public interface MerchantDeskMapper {
     List<Map<String, Object>> selectCapacitySlots(@Param("merchantId") Long merchantId, @Param("skuId") Long skuId,
                                                   @Param("from") Date from, @Param("to") Date to);
 
+    List<Map<String, Object>> selectCapacitySlotPage(@Param("merchantId") Long merchantId, @Param("skuId") Long skuId,
+            @Param("from") Date from, @Param("to") Date to, @Param("afterStart") Date afterStart,
+            @Param("afterSlotId") Long afterSlotId);
+
     // ---- 今日到店 ----
     List<Map<String, Object>> selectRedeemedBetween(@Param("ownerMemberId") Long ownerMemberId,
                                                     @Param("from") Date from, @Param("to") Date to);
@@ -90,4 +98,7 @@ public interface MerchantDeskMapper {
     Map<String, Object> selectPayableClaimCoverage(@Param("ownerMemberId") Long ownerMemberId);
 
     List<Map<String, Object>> selectFrozenBatches(@Param("ownerMemberId") Long ownerMemberId);
+
+    List<Map<String, Object>> selectFrozenBatchPage(@Param("ownerMemberId") Long ownerMemberId,
+            @Param("afterPeriodYm") String afterPeriodYm, @Param("afterBatchId") Long afterBatchId);
 }

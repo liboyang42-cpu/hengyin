@@ -221,3 +221,100 @@ test('退出只保留严格账号同意台账，不保留全局选择、重试�
   }), true)
   assert.deepEqual(removed, nonStringKeys)
 })
+
+test('POI UNKNOWN identity survives account cleanup without preserving photo payload or credentials', () => {
+  const key = 'cy_roam_poi_checkin_pending:v1:9223372036854775807:9007199254740993'
+  const record = { v: 1, ownerId: '9223372036854775807', poiId: '9007199254740993', attemptId: 'original', uncertain: true }
+  const invalid = ['cy_roam_poi_checkin_pending:v1:0:21', 'cy_roam_poi_checkin_pending:v1:07:21',
+    'cy_roam_poi_checkin_pending:v1:7:9223372036854775808', key + ':extra']
+  const storage = memoryStorage({ [key]: record, [key + ':photo']: { url: 'temporary-photo' }, authorization: 'fixture',
+    ...Object.fromEntries(invalid.map(k => [k, {}])) })
+  assert.equal(clearStoragePreservingPlayerRoamMemory(storage), true)
+  assert.deepEqual(storage.snapshot(), { [key]: record })
+})
+
+
+test('share revoke UNKNOWN marker survives cleanup scoped to an exact owner', () => {
+  const key = 'roam_share_revoke_pending:9223372036854775807'
+  const storage = memoryStorage({ [key]: 1, 'roam_share_revoke_pending:0': 1,
+    'roam_share_revoke_pending:9223372036854775808': 1, 'roam_share_revoke_pending:7:photo': 'private' })
+  assert.equal(clearStoragePreservingPlayerRoamMemory(storage), true)
+  assert.deepEqual(storage.snapshot(), { [key]: 1 })
+})
+
+test('public TEAM command slot survives cleanup for exact owner/target only', () => {
+  const key = 'cy-team-event-command-v1:7:TEAM:9223372036854775807'
+  const pending = { version: 1, actor: '7', domain: 'TEAM', targetId: '9223372036854775807', command: { requestId: 'a'.repeat(32), targetId: '9223372036854775807', action: 'apply' } }
+  const storage = memoryStorage({ [key]: pending, 'cy-team-event-command-v1:0:TEAM:7': {},
+    'cy-team-event-command-v1:7:TEAM:9223372036854775808': {}, authorization: 'fixture' })
+  assert.equal(clearStoragePreservingPlayerRoamMemory(storage), true)
+  assert.deepEqual(storage.snapshot(), { [key]: pending })
+})
+
+test('TEAM/EVENT/SIGNUP and invitation scope UNKNOWN survive cleanup and reopen only for the original actor', async () => {
+  const { createRecovery } = require('../../utils/team-event-command.js')
+  const storage = memoryStorage({ authorization: 'fixture', 'roam_memory_v1:7:sessions': [] })
+  let entropy = 0
+  storage.getRandomValues = o => o.success({ randomValues: new Uint8Array(16).fill(++entropy).buffer })
+  const cases = [{ domain: 'TEAM', action: 'apply' }, { domain: 'EVENT', action: 'pause' },
+    { domain: 'SIGNUP', action: 'signup' }, { domain: 'TEAM', action: 'join', scopeKey: 'invite:fixture/甲' }]
+  const commands = []
+  for (const spec of cases) {
+    const app = { getUserID: () => '7', getAuthorization: () => 'fixture', sendRequest(o) { commands.push(JSON.parse(o.data)); o.fail() } }
+    const recovery = createRecovery({ app, platform: storage, targetId: '9223372036854775807', ...spec, changed() {}, terminal() {} })
+    await recovery.start(spec.action, { message: 'frozen' }); recovery.dispose()
+  }
+  const retained = storage.snapshot()
+  delete retained.authorization
+  assert.equal(clearStoragePreservingPlayerRoamMemory(storage), true)
+  assert.deepEqual(storage.snapshot(), retained)
+  for (const [i, spec] of cases.entries()) {
+    for (const actor of ['8', '7']) {
+      let view
+      const sent = []
+      const recovery = createRecovery({ app: { getUserID: () => actor, getAuthorization: () => 'fixture',
+        sendRequest(o) { sent.push(JSON.parse(o.data)); o.fail() } }, platform: storage,
+        targetId: spec.scopeKey ? '' : '9223372036854775807', ...spec, changed(v) { view = v }, terminal() {} })
+      assert.equal(recovery.pending(), actor === '7')
+      recovery.retry()
+      assert.deepEqual(sent, actor === '7' ? [commands[i]] : [])
+      assert.equal(view.requestId, actor === '7' ? commands[i].requestId : '')
+      recovery.dispose()
+    }
+  }
+})
+
+test('unreadable or identity-inconsistent command slot blocks cleanup before any deletion', () => {
+  const key = 'cy-team-event-command-v1:7:EVENT:19'
+  const good = { version: 1, actor: '7', domain: 'EVENT', targetId: '19',
+    command: { requestId: 'b'.repeat(32), targetId: '19', action: 'pause' } }
+  const bad = [null, { ...good, actor: '8' }, { ...good, domain: 'SIGNUP' }, { ...good, targetId: '20' },
+    { ...good, command: { ...good.command, targetId: '20' } }, { ...good, version: 2 },
+    { ...good, command: { ...good.command, requestId: 'bad' } },
+    { ...good, result: { requestId: 'c'.repeat(32), state: 'APPLIED' } }]
+  for (const record of bad) {
+    const storage = memoryStorage({ authorization: 'fixture', [key]: record })
+    const before = storage.snapshot()
+    assert.equal(clearStoragePreservingPlayerRoamMemory(storage), false)
+    assert.deepEqual(storage.snapshot(), before)
+  }
+  for (const failure of ['throw', 'missing']) {
+    const storage = memoryStorage({ authorization: 'fixture', [key]: good })
+    const before = storage.snapshot()
+    storage.getStorageSync = failure === 'throw' ? () => { throw Error('read unavailable') } : undefined
+    assert.equal(clearStoragePreservingPlayerRoamMemory(storage), false)
+    assert.deepEqual(storage.snapshot(), before)
+  }
+})
+
+test('scope encoding and terminal receipt identity are checked without rewriting or clearing records', () => {
+  const good = { version: 1, actor: '7', domain: 'TEAM', targetId: '19',
+    command: { requestId: 'd'.repeat(32), targetId: '19', action: 'join' },
+    result: { requestId: 'd'.repeat(32), state: 'APPLIED' } }
+  for (const suffix of ['scope:invite%3Afixture', 'scope:bad%ZZ', 'scope:invite%3afixture']) {
+    const key = 'cy-team-event-command-v1:7:TEAM:' + suffix
+    const storage = memoryStorage({ [key]: good })
+    assert.equal(clearStoragePreservingPlayerRoamMemory(storage), suffix === 'scope:invite%3Afixture')
+    assert.deepEqual(storage.snapshot(), { [key]: good })
+  }
+})

@@ -27,7 +27,8 @@ Page({
     motionReduced: false,
     rendererMounted: true,
     rarity: 0,
-    style: 'enamel',   // glow=二维发光大卡 / enamel=3D珐琅转台(发布者选择,双样式统一路由)
+    style: 'enamel',   // glow=二维发光大卡 / enamel=3D珐琅转台(发布者选择,双样式统一路由) / pin=勋章墙的珐琅勋章(2026-10-28)
+    glyph: '',
   },
   onUnload() {
     this._renderDisposed = true;
@@ -65,12 +66,13 @@ Page({
     this._xrLoaded = false;
     this.setData({
       actionTop,
-      style: (q && q.style) === 'glow' ? 'glow' : 'enamel',
+      style: (q && q.style) === 'glow' ? 'glow' : ((q && q.style) === 'pin' ? 'pin' : 'enamel'),
+      glyph: /^[A-Za-z]{1,24}$/.test((q && q.glyph) || '') ? q.glyph : 'DEFAULT',
       rarity: Math.min(4, Math.max(0, Number(q && q.rarity) || 0)),   // 波点五色轨:0普通…4神话
       name: decodeQueryValue(q && q.name, '徽章'),
       sub: decodeQueryValue(q && q.sub, ''),
       src,
-      fallbackSrc: src,
+      fallbackSrc: (q && q.style) === 'pin' ? '' : src,   // pin 现场画,加载那一下不先闪一张无关的示例图
       unsupported: false,
       renderState: 'loading',
       rendererMounted: true,
@@ -107,7 +109,7 @@ Page({
       unsupported: true,
       renderState: 'fallback',
       motionReduced: false,
-      fallbackSrc: reason === 'asset' ? DEFAULT_BADGE_ASSET : this.data.fallbackSrc,
+      fallbackSrc: reason === 'asset' || !this.data.fallbackSrc ? DEFAULT_BADGE_ASSET : this.data.fallbackSrc,
     });
   },
   onFallbackError() {
@@ -211,7 +213,7 @@ Page({
       if (!this._renderCurrent(epoch) || this.data.renderState !== 'loading' || this.data.unsupported) return;
       if (this.data.style === 'glow') { this.onUnsupported({ detail: { reason: 'renderer' } }); return; }
       if (!this._xrLoaded && !this.data.unsupported) this.onUnsupported({ detail: { reason: this._xrOk ? 'asset' : 'renderer' } });
-    }, 3000);
+    }, this.data.style === 'pin' ? 6000 : 3000);   // pin 要先在手机上逐张画四面,给足时间
   },
   onHide() {
     this._renderHidden = true;

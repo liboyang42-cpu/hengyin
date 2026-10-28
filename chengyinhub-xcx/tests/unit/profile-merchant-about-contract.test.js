@@ -408,14 +408,16 @@ test('§3.6 商家公开身份接管身份头,不残留个人昵称/玩家角色
 
   const wxml = read(PROFILE_WXML)
   const js = read(PROFILE_JS)
-  assert.match(wxml, /class="pc-gamer-name">\{\{subjectIsMerchant \? \(subjectMerchant\.name/,
+  // 2026-10-27 owner 真机走查 G-5:名称/头像收口到 utils/identity-sync.js 的 resolveSelfIdentity(单一来源),
+  // 商家被看者与本人商家视角共用;原「三元写在模板/观察器里」的字面量断言改为钉这一处真源。
+  assert.match(wxml, /class="pc-gamer-name">\{\{_displayName\}\}/,
     '品牌名必须接管昵称位')
-  // 头像位真源在 js 的 _avatarSrc:商家走 logo,没有就落店名首字(lettermark);
-  // 玩家走 avatar,没有才用默认头像那张图。
-  assert.match(js, /_avatarSrc: isMerchant \? \(m\.logo \|\| ''\)/,
-    'logo 必须接管商家的头像位')
-  assert.match(js, /_avatarInitial: isMerchant \? \(name \? name\.charAt\(0\) : '店'\)/,
-    '商家没 logo 时落店名首字，不借玩家默认头像那张人脸')
+  assert.match(js, /identitySync\.resolveSelfIdentity\(d\.subjectIsMerchant \|\| selfAsMerchant,\s*d\.subjectIsMerchant \? d\.subjectMerchant : selfMerchant, d\.userInfo\)/,
+    '商家被看者走商家身份')
+  const identity = read('utils/identity-sync.js')
+  // 头像位:商家走 logo,没有就落店名首字(lettermark);玩家走 avatar,没有才用默认头像那张图。
+  assert.match(identity, /avatar: String\(m\.logo \|\| ''\)\.trim\(\), initial: name \? name\.charAt\(0\) : '店'/,
+    'logo 必须接管商家的头像位；没 logo 时落店名首字，不借玩家默认头像那张人脸')
   assert.match(wxml, /wx:else class="pc-avatar pc-avatar--initial"/,
     'lettermark 档必须真的渲染出来')
   assert.doesNotMatch(wxml, /subjectMerchant\.logo[^}]*d_profile/,
@@ -665,7 +667,8 @@ test('H1 商家分支撤销 type2「发起合作」，玩家关注/发消息原�
   // 自己看自己永远不渲染。复用同一条 coop/invite type=0 链路,不复活 type2。
   assert.doesNotMatch(js + wxml, /type=2/,
     '商家主页不得再出现或跳转到 type2 新建入口')
-  assert.match(wxml, /isMerchantView && !isSelf && canInviteCoop\}\}" class="pc-coop-bar"/,
+  // 2026-10-27 owner 真机走查 M-19:预览自己的公开主页同样不出(viewingOwn),「看自己不渲染」由它兜住
+  assert.match(wxml, /isMerchantView && !isSelf && !viewingOwn && canInviteCoop\}\}" class="pc-coop-bar"/,
     '发起合作:非商家访客照旧；商家观看者仅带主题上下文时渲染；看自己不渲染')
   assert.match(wxml, /invite-type="\{\{0\}\}"/, '主页弹窗使用商家邀约类型')
 
@@ -676,13 +679,17 @@ test('H1 商家分支撤销 type2「发起合作」，玩家关注/发消息原�
   const follow = wxml.match(/<view class="pc-primary \{\{!isSelf[^>]*bindtap="onPrimaryCta"/)
   assert.ok(follow, '关注钮必须存在')
   // 2026-09-18 UI-12 用户定:公开视角主按钮统一「关注」,商家被看者也渲染;本人玩家视角仍不出。
-  assert.match(follow[0], /!isSelf \|\| \(isSelf && isMerchantView\)/, '关注钮公开视角统一渲染(含商家被看者)')
+  // 2026-10-27 owner 真机走查 M-19:自己看自己的公开主页(预览)不出「关注」⇒ 公开分支多一个 !viewingOwn
+  assert.match(follow[0], /\(!isSelf && !viewingOwn\) \|\| \(isSelf && isMerchantView\)/, '关注钮公开视角统一渲染(含商家被看者)')
   const chat = wxml.match(/<view class="pc-primary pc-ticket" wx:if="\{\{!isSelf[^>]*bindtap="onStartChat"/)
   assert.ok(chat, '发消息钮必须存在')
-  assert.match(chat[0], /!isSelf && !subjectIsMerchant/, '发消息钮在商家被看者上不渲染')
+  assert.match(chat[0], /!isSelf && !viewingOwn && !subjectIsMerchant/, '发消息钮在商家被看者上不渲染')
 
-  // 不复活「可承接章节 / 邀请承接」,主页不再碰 chapter-application
-  assert.doesNotMatch(js + wxml, /chapter-application|inviteChapter|邀请承接/)
+  // 不复活「可承接章节 / 邀请承接」,主页不再碰 chapter-application 的写入/邀请端点。
+  // 2026-10-27 owner 真机走查 M-25:本人商家视角「我的项目」要显示自己作为承接方的进度,
+  // 只读 /api/merchant/chapter-application/mine 这一条(不在公开视角、不发起任何承接),其余照旧禁止。
+  assert.doesNotMatch(js + wxml, /chapter-application(?!\/mine')|inviteChapter|邀请承接/)
+  assert.equal((js.match(/chapter-application\/mine'/g) || []).length, 1, '只读的承接进度只有一处')
 })
 
 test('2026-09-28:商家主页直接邀约，有主题时传给弹窗，无主题时在弹窗选择', () => {

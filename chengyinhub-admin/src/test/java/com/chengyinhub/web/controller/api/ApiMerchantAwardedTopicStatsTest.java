@@ -7,7 +7,6 @@ import com.chengyinhub.business.access.merchant.MerchantRoleCode;
 import com.chengyinhub.business.domain.CmsRegistration;
 import com.chengyinhub.business.domain.CmsRegistrationMerchant;
 import com.chengyinhub.business.domain.CmsRegistrationScan;
-import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.service.ICmsActivityService;
 import com.chengyinhub.business.service.ICmsRegistrationMerchantService;
 import com.chengyinhub.business.service.ICmsRegistrationScanService;
@@ -80,10 +79,13 @@ class ApiMerchantAwardedTopicStatsTest {
                 .thenAnswer(invocation -> topicCounts);
         lastRegistrationService = registrationService;
         // scan 的项目归属靠它解析:一律指回本商家中标的那个主题
-        CmsRegistration scanOwner = new CmsRegistration();
+        com.chengyinhub.business.domain.vo.MerchantTodoRegistrationVO scanOwner = new com.chengyinhub.business.domain.vo.MerchantTodoRegistrationVO();
+        scanOwner.setId(72L);
         scanOwner.setOwnerType(1L);
         scanOwner.setOwnerId(TOPIC_ID);
-        when(registrationService.selectCmsRegistrationById(any())).thenReturn(scanOwner);
+        scanOwner.setEndDate(topicEndDate);
+        when(registrationService.selectTodoRegistrationOwners(any()))
+                .thenReturn(Collections.singletonMap(72L, scanOwner));
         ICmsActivityService activityService = mock(ICmsActivityService.class);
         when(activityService.selectCmsActivityList(any())).thenReturn(Collections.emptyList());
 
@@ -99,11 +101,8 @@ class ApiMerchantAwardedTopicStatsTest {
         ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrationService);
         ReflectionTestUtils.setField(controller, "cmsActivityService", activityService);
 
-        CmsTopic wonTopic = new CmsTopic();
-        wonTopic.setId(TOPIC_ID);
-        wonTopic.setEndDate(topicEndDate);
         ICmsTopicService topicService = mock(ICmsTopicService.class);
-        when(topicService.selectCmsTopicById(any())).thenReturn(wonTopic);
+        when(topicService.selectTodoTopicEndDates(any())).thenReturn(Collections.singletonMap(TOPIC_ID, topicEndDate));
         ReflectionTestUtils.setField(controller, "cmsTopicService", topicService);
 
         ICmsRegistrationScanService scanService = mock(ICmsRegistrationScanService.class);

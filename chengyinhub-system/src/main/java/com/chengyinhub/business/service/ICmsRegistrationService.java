@@ -30,6 +30,9 @@ public interface ICmsRegistrationService
      */
     public CmsRegistration selectCmsRegistrationById(Long id);
 
+    /** 待办扫码的报名归属及项目结束时间；只读传入ID，空集合不查询。 */
+    Map<Long, com.chengyinhub.business.domain.vo.MerchantTodoRegistrationVO> selectTodoRegistrationOwners(java.util.Collection<Long> registrationIds);
+
     /**
      * 查询活动/主题报名列表
      * 

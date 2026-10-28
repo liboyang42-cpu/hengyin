@@ -22,6 +22,8 @@ public interface CmsTopicMapper
      */
     public CmsTopic selectCmsTopicById(Long id);
 
+    List<CmsTopic> selectTodoTopicEndDates(@Param("topicIds") java.util.Collection<Long> topicIds);
+
     /** 5-4 后台逐期开关窄读；避免把新列扩散进全部主题查询。 */
     Integer selectRoamReferralEnabledById(Long id);
 

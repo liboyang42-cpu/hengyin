@@ -43,8 +43,8 @@ function assertSharedPostCard(overrides = {}) {
   assert.match(componentWxml, /aria-label="转发帖文"[\s\S]*src="\/images\/icon_share\.png"/)
   assert.doesNotMatch(componentWxml, /repostCount|name="share"/)
   assert.match(read('pages/talent/list/index.wxml'), /interactive-club/)
-  // 俱乐部详情固定暗色，不传 light；达人页会随商家视角切浅色，转发位图需要据此翻色。
-  assert.doesNotMatch(read('pages/club/detail/index.wxml'), /light="/, '俱乐部详情固定暗色，不应误开浅色卡片')
+  // 2026-10-27 M-24:俱乐部详情玩家深色、商家浅色 ⇒ 帖文卡 light 只跟商家视角走;达人页同理随商家视角切浅色。
+  assert.match(read('pages/club/detail/index.wxml'), /<cy-post-card[^>]*light="\{\{isMerchantViewer\}\}"/, '俱乐部详情只在商家视角开浅色卡片')
   assert.match(read('pages/talent/list/index.wxml'), /light="\{\{isMerchantViewer\}\}"/)
   assert.match(read('pages/talent/list/index.js'), /club\/detail\/index\?id=' \+ clubId \+ '&postId=' \+ postId/)
 }

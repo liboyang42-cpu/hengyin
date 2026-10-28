@@ -1,4 +1,6 @@
 <wxs src="../../../utils/wxs/money.wxs" module="money" />
+<!-- 2026-10-28 G-9 业主「参考 Revolut」:余额是主角,下面四个圆形动作(提现 / 明细 / 分析 / 更多),
+     再下面是本月收入明细和我的资产(cy-earnings-overview 自读);间距和上下留白放大。商家同页浅色。 -->
 <view class="ae">
   <cy-skeleton wx:if="{{state === 'loading'}}" type="amount" count="{{1}}" />
   <view wx:elif="{{state === 'error' || state === 'login' || state === 'permission'}}" class="ae-fill cy-fade-in" aria-role="alert">
@@ -7,19 +9,29 @@
   <block wx:else>
     <view class="ae-hero">
       <view class="ae-card">
-        <text class="ae-card__label">账户收益</text>
+        <text class="ae-card__label">账户收益（元）</text>
         <text class="ae-card__amount">{{money.amount(balanceDisplay || balance)}}</text>
       </view>
-      <cy-funds-stages />
       <view class="ae-actions">
-        <view class="ae-action" bindtap="openIncomeDetail" aria-role="button" aria-label="查看账户收益明细" hover-class="cy-pressed" hover-stay-time="80">明细</view>
-        <view class="ae-action" bindtap="openWithdraw" aria-role="button" aria-label="联系平台客服处理提现" hover-class="cy-pressed" hover-stay-time="80">提现</view>
-        <view class="ae-action" bindtap="openWithdrawHistory" aria-role="button" aria-label="打开提现记录弹窗" hover-class="cy-pressed" hover-stay-time="80">提现记录</view>
+        <view class="ae-action" bindtap="openWithdraw" aria-role="button" aria-label="联系平台客服处理提现" hover-class="cy-pressed" hover-stay-time="80"><view class="ae-action__ic ae-action__ic--primary"><cy-icon name="arrow-right" size="40" /></view><text>提现</text></view>
+        <view class="ae-action" bindtap="openIncomeDetail" aria-role="button" aria-label="查看账户收益明细" hover-class="cy-pressed" hover-stay-time="80"><view class="ae-action__ic"><cy-icon name="list" size="40" /></view><text>明细</text></view>
+        <view class="ae-action" bindtap="openAnalysis" aria-role="button" aria-label="收益分析" hover-class="cy-pressed" hover-stay-time="80"><view class="ae-action__ic"><cy-icon name="sort" size="40" /></view><text>分析</text></view>
+        <view class="ae-action" bindtap="openMore" aria-role="button" aria-label="更多：提现记录、邀请记录" hover-class="cy-pressed" hover-stay-time="80"><view class="ae-action__ic"><cy-icon name="more" size="40" /></view><text>更多</text></view>
       </view>
     </view>
-    <view class="ae-section">
-      <cy-cell title="邀请记录" bind:tap="openInvite" />
-    </view>
     <cy-empty class="ae-fill" wx:if="{{balance === '0.00'}}" fill="{{true}}" size="lg" kind="empty" title="还没有收益" cta="去发布路线" bind:cta="goPublish" />
+    <view class="ae-section" wx:else>
+      <cy-earnings-overview bind:detail="openIncomeDetail" />
+    </view>
   </block>
+  <!-- 「更多」:Threads 式菜单(m694 统一格式),行直接绑原入口;打开场景时宿主页把菜单收起 -->
+  <cy-sheet inset show="{{moreShow}}" bind:close="closeMore">
+    <view class="tm">
+      <view class="tm-group">
+        <view class="tm-row" wx:if="{{theme === 'merchant'}}" bindtap="openSettlement" aria-role="button" aria-label="结算明细" hover-class="cy-pressed" hover-stay-time="80"><text class="tm-label">结算明细</text><cy-icon class="tm-ico" name="finance" size="40" /></view>
+        <view class="tm-row" bindtap="openWithdrawHistory" aria-role="button" aria-label="打开提现记录弹窗" hover-class="cy-pressed" hover-stay-time="80"><text class="tm-label">提现记录</text><cy-icon class="tm-ico" name="clock" size="40" /></view>
+        <view class="tm-row" bindtap="openInvite" aria-role="button" aria-label="邀请记录" hover-class="cy-pressed" hover-stay-time="80"><text class="tm-label">邀请记录</text><cy-icon class="tm-ico" name="gift" size="40" /></view>
+      </view>
+    </view>
+  </cy-sheet>
 </view>

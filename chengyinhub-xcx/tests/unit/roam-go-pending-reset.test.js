@@ -5,6 +5,8 @@
 const { test } = require('node:test')
 const assert = require('node:assert/strict')
 
+// W8 起 onShow 会异步回读服务端护照统计(_loadIntroPassport),其回调仍读 getApp();
+// 每个用例在恢复全局桩之前先 await settle(),让这次回读在本用例的桩下收尾。
 const PAGE_MODULE = '../../pages/roam/index.js'
 const settle = () => new Promise(resolve => setImmediate(resolve))
 
@@ -29,7 +31,7 @@ function loadRoamPage() {
   return page
 }
 
-test('onShow 清掉 goStart 的在途标记,让已死锁的常驻实例自愈', () => {
+test('onShow 清掉 goStart 的在途标记,让已死锁的常驻实例自愈', async () => {
   const page = loadRoamPage()
   const prevGetApp = global.getApp
   global.getApp = () => ({ globalData: {} })
@@ -37,12 +39,13 @@ test('onShow 清掉 goStart 的在途标记,让已死锁的常驻实例自愈', 
     page._roamStartPending = true      // 模拟上一次 goStart 卡在途中(弹窗被吞/网络挂起)
     page.onShow()
     assert.equal(page._roamStartPending, false, 'onShow 后必须归零，否则 GO 永久静默')
+    await settle()
   } finally {
     global.getApp = prevGetApp
   }
 })
 
-test('onShow 一并归零「开完就拍」的意图,别在下次出发时莫名弹相机', () => {
+test('onShow 一并归零「开完就拍」的意图,别在下次出发时莫名弹相机', async () => {
   const page = loadRoamPage()
   const prevGetApp = global.getApp
   global.getApp = () => ({ globalData: {} })
@@ -50,6 +53,7 @@ test('onShow 一并归零「开完就拍」的意图,别在下次出发时莫名
     page._shootAfterStart = true     // 上一次是点相机进来的,卡住了
     page.onShow()
     assert.equal(page._shootAfterStart, false, '陈旧的拍照意图必须清掉')
+    await settle()
   } finally {
     global.getApp = prevGetApp
   }
@@ -83,6 +87,7 @@ test('onShow 作废在途流程:旧 chain 的回调弃权,不会开出第二个�
     locOpts.success({ latitude: 31.23, longitude: 121.47 })  // 旧 chain 的回调这才回来
     assert.equal(openedSessions, 0, '已作废的 chain 不该再开第二个会话')
     assert.equal(consentCalls, 1, '旧定位回包不能自动追加AGREE;仅确认前的已保存记录')
+    await settle()
   } finally {
     global.getApp = prevGetApp
     global.wx = prevWx

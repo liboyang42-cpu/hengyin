@@ -154,89 +154,13 @@ test('R10-03 util:改 payload 换新键并保留前次未知痕迹;账号隔离�
 })
 
 // ---------------------------------------------------------------- 广场列表
+// 2026-10-27 P-20 owner:广场行内发布框撤掉,新建帖统一走 cy-post-compose(下方「发布组件」用例覆盖意图键);
+// 原「广场列表:首次发布 / 丢回包重试 / 改内容换键 / 切账号 / 软删换键」五条随页内发布流水一并撤走。
 
 function mountSquareList(options = {}) {
   return mount(SQUARE_LIST, 'page', options)
 }
 
-function fillListForm(instance, content) {
-  instance.data.valCont = content
-  instance.data.picList = []
-  instance.data.fileList = []
-  instance.data.address = ''
-  instance.data.longitude = ''
-  instance.data.latitude = ''
-  instance.data.selectedActivity = null
-}
-
-test('广场列表:首次发布携带稳定意图键并持久化', () => {
-  const { instance, requests, wx } = mountSquareList()
-  fillListForm(instance, '列表正文')
-
-  instance.submitFormData()
-
-  const request = last(requests, '/api/creativesquare/action')
-  assert.ok(request, '必须发起发布请求')
-  assert.match(request.data.request_id, INTENT_RE)
-  assert.ok(intentStoreFor(wx, 'member-A', 'square:list'), '首写前必须已持久化意图键')
-})
-
-test('广场列表:丢回包后重试复用同一意图键;成功后相同正文才算新帖', () => {
-  const { instance, requests, wx } = mountSquareList()
-  fillListForm(instance, '列表正文')
-  instance.submitFormData()
-  const first = last(requests, '/api/creativesquare/action')
-  const firstKey = first.data.request_id
-
-  first.fail({ errMsg: 'request:fail timeout' })
-  first.complete()
-  instance.retrySubmit()
-  const retry = last(requests, '/api/creativesquare/action')
-  assert.equal(retry.data.request_id, firstKey, '重试必须复用同一意图键，不得再发一条')
-  assert.equal(intentStoreFor(wx, 'member-A', 'square:list').key, firstKey, '持久化意图键必须仍是同一个')
-
-  retry.success({ code: '200', data: { id: 77, lifecycle: 'PUBLISHED' } })
-  retry.complete()
-  assert.equal(intentStoreFor(wx, 'member-A', 'square:list'), null, '成功后清除意图')
-
-  fillListForm(instance, '列表正文')
-  instance.submitFormData()
-  const fresh = last(requests, '/api/creativesquare/action')
-  assert.notEqual(fresh.data.request_id, firstKey, '用户主动再发相同正文=新帖子')
-})
-
-test('广场列表:未知结果后改内容必须换新意图键', () => {
-  const { instance, requests, wx } = mountSquareList()
-  fillListForm(instance, '初稿')
-  instance.submitFormData()
-  const first = last(requests, '/api/creativesquare/action')
-  const firstKey = first.data.request_id
-  first.fail({ errMsg: 'request:fail timeout' })
-  first.complete()
-
-  fillListForm(instance, '改过的稿')
-  instance.submitFormData()
-  const changed = last(requests, '/api/creativesquare/action')
-  assert.notEqual(changed.data.request_id, firstKey, '内容变化必须是新意图')
-  assert.ok(intentStoreFor(wx, 'member-A', 'square:list:previous'), '前次未知留下痕迹')
-})
-
-test('广场列表:切账号后不复用上一账号的意图键', () => {
-  const h = mountSquareList()
-  fillListForm(h.instance, '同一段正文')
-  h.instance.submitFormData()
-  const firstRequest = last(h.requests, '/api/creativesquare/action')
-  const firstKey = firstRequest.data.request_id
-  firstRequest.fail({ errMsg: 'request:fail timeout' })
-  firstRequest.complete()
-
-  h.member.value = 'member-B'
-  fillListForm(h.instance, '同一段正文')
-  h.instance.submitFormData()
-  const secondKey = last(h.requests, '/api/creativesquare/action').data.request_id
-
-  assert.notEqual(secondKey, firstKey, '意图键按账号隔离')
-})
 
 // ---------------------------------------------------------------- post-compose
 
@@ -365,23 +289,6 @@ test('R10-03 util:软删终态 discard 丢键,下一次同 payload 换新键', (
   assert.notEqual(next.key, first.key, '重新发布必须换新键，不能被软删行占键')
 })
 
-test('广场列表:服务端软删终态回执必须丢键并换新键重发', () => {
-  const h = mountSquareList()
-  fillListForm(h.instance, '已删帖正文')
-  h.instance.submitFormData()
-  const first = last(h.requests, '/api/creativesquare/action')
-  const firstKey = first.data.request_id
-
-  first.success({ code: 500, msg: '该发布已删除，请重新发布', intentDiscarded: true })
-  first.complete()
-  assert.equal(intentStoreFor(h.wx, 'member-A', 'square:list'), null, '软删终态必须丢弃意图键')
-
-  fillListForm(h.instance, '已删帖正文')
-  h.instance.submitFormData()
-  const next = last(h.requests, '/api/creativesquare/action')
-  assert.notEqual(next.data.request_id, firstKey, '重新发布必须换新键')
-})
-
 test('发布组件:服务端软删终态回执丢键并换新键重发', () => {
   const h = mountCompose()
   h.instance.onPublish()
@@ -399,13 +306,15 @@ test('发布组件:服务端软删终态回执丢键并换新键重发', () => {
 
 // ---------------------------------------------------------------- 负控
 
-test('负控:列表发布去掉意图键时必须判红', () => {
-  const source = read(SQUARE_LIST)
-  const mutated = source.replace('    data.request_id = intent.key;\n', '')
+test('负控:发布组件去掉意图键时必须判红', () => {
+  const source = read(POST_COMPOSE)
+  const mutated = source.replace('        payload.request_id = intent.key;\n', '')
   assert.notEqual(mutated, source, '负控锚点失效:未找到 request_id 写入')
-  const h = mountSquareList({ source: mutated })
-  fillListForm(h.instance, '列表正文')
-  h.instance.submitFormData()
+  const h = mount(POST_COMPOSE, 'component', { source: mutated })
+  h.definition.lifetimes.attached.call(h.instance)
+  h.definition.observers.show.call(h.instance, true)
+  h.instance.setData({ content: '组件正文', picList: [], address: '', selectedActivity: null })
+  h.instance.onPublish()
   const request = last(h.requests, '/api/creativesquare/action')
   assert.equal(request.data.request_id, undefined, '去掉写入后不得携带意图键')
 })

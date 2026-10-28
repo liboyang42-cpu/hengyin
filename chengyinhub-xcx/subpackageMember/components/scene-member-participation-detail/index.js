@@ -4,6 +4,7 @@ const cyToast = require('../../../utils/toast.js');
 const { toTimestamp, chinaDayStart } = require('../../../utils/datetime');
 const { resolveVerificationScan } = require('../../../utils/verification-scan');
 const { resolveVerificationResult, classifyVerificationOutcome, createVerificationWorkflow } = require('../../../utils/merchant-verification.js');
+const character = require('../../../utils/user-character.js');
 const app = getApp();
 const merchantTheme = require('../../../utils/merchant-theme.js');
 const { offerVerificationReadback } = require('../../../utils/verification-readback.js');
@@ -35,6 +36,9 @@ Component({
       id: 0,
       info: {},
       displayInfo: {},
+      bundleRegistrationId: '',
+      resultTopicId: '',
+      resultEntryError: '',
       // R1-C04:本页此前没有加载/失败态,接口失败只弹 toast,页面照样把空值渲染成完整骨架。
       // loadState: loading | missing-param | error | ready —— 四态互斥由 WXML 承接。
       loadState: 'loading',
@@ -80,9 +84,16 @@ Component({
   },
   pageLifetimes: {
     show() {
+      this._detailHidden = false;
       this._syncCancellationAccount();
       if (this._skipInitialShow) { this._skipInitialShow = false; return; }
       if (this.data.id) this.getData(this.data.id);
+    },
+    hide() {
+      this._detailHidden = true;
+      this._detailRequestEpoch = (this._detailRequestEpoch || 0) + 1;
+      this._resultReader = null;
+      this.setData({ resultTopicId: '', bundleRegistrationId: '', resultEntryError: '' });
     },
   },
   methods: {
@@ -133,10 +144,52 @@ Component({
       if (!submitted) cyLoading.hide();
       return submitted;
     },
-    _leave(url) {
+    _leave(url, current) {
       this.triggerEvent('close')
-      wx.navigateTo({ url })
+      if (!current || current()) wx.navigateTo({ url })
     },
+    _resultEntry() {
+      const reader = this._resultReader;
+      const info = this.data.info || {};
+      if (this._detailDisposed || this._detailHidden || this.data.loadState !== 'ready'
+          || !reader || !reader.id || !reader.token || reader.token === app.DEV_TOKEN
+          || !character.sameReader(app, reader) || character.exactId(info.memberId) !== reader.id) return null;
+      const topicId = character.registrationTopic(info, this.data.id);
+      if (!topicId) return null;
+      return { topicId, activityId: Number(info.ownerType) === 1 ? '0' : character.exactId(info.cmsActivity.id) };
+    },
+    _openResult(kind) {
+      if (this._detailDisposed || this._detailHidden || this._resultLeaving) return;
+      const entry = this._resultEntry();
+      if (!entry) {
+        this.setData({ resultTopicId: '', resultEntryError: '无法确认当前账号的报名与主题关联，请重新加载参与详情；若仍不可用请联系客服。' });
+        return;
+      }
+      const reader = this._resultReader;
+      this._resultLeaving = true;
+      const url = kind === 'character'
+        ? '/subpackageMember/character/index?topicId=' + encodeURIComponent(entry.topicId)
+        : '/subpackageMember/orient-score/index?topicId=' + encodeURIComponent(entry.topicId) + '&activityId=' + encodeURIComponent(entry.activityId);
+      this._leave(url, () => character.sameReader(app, reader));
+    },
+    _bundleEntry() {
+      if (!this._resultEntry()) return '';
+      const info = this.data.info || {};
+      if (Number(info.ownerType) !== 1 || !info.cmsTopic
+          || !(Number(info.purchaseKind) === 3 || Number(info.cmsTopic.productType) === 2)) return '';
+      return character.exactId(info.id);
+    },
+    goBundle() {
+      if (this._detailDisposed || this._detailHidden || this._resultLeaving) return;
+      const registrationId = this._bundleEntry();
+      if (!registrationId) { this.setData({ bundleRegistrationId: '' }); return; }
+      const reader = this._resultReader;
+      this._resultLeaving = true;
+      this._leave('/subpackageMember/free-explore/index?registrationId=' + encodeURIComponent(registrationId),
+        () => character.sameReader(app, reader));
+    },
+    goCharacter() { this._openResult('character'); },
+    goScore() { this._openResult('score'); },
     goPlay() {
       const info = this.data.info || {};
       const registrationId = info.id || this.data.id;
@@ -217,10 +270,16 @@ Component({
       if (that._detailDisposed) return;
       const generation = that._detailGeneration;
       const member = app.getUserID && app.getUserID();
+      const reader = character.reader(app);
+      this._resultReader = null;
+      this._resultLeaving = false;
+      this.setData({ resultTopicId: '', bundleRegistrationId: '', resultEntryError: '' });
       const id = that.data.id;
       const requestEpoch = (this._detailRequestEpoch || 0) + 1;
       this._detailRequestEpoch = requestEpoch;
-      const isCurrent = () => !that._detailDisposed && generation === that._detailGeneration
+      let settled = false;
+      const isCurrent = () => !settled && !that._detailDisposed && !that._detailHidden
+        && character.sameReader(app, reader) && generation === that._detailGeneration
         && requestEpoch === that._detailRequestEpoch
         && member === (app.getUserID && app.getUserID()) && String(id) === String(that.data.id);
       app.sendRequest({
@@ -231,6 +290,7 @@ Component({
         method: "POST",
         success: function (res) {
           if (!isCurrent()) return;
+          settled = true;
           if (res.code == "200" && res.data && typeof res.data === 'object' && !Array.isArray(res.data)) {
             const info = res.data;
             that._cancelRecordPending = false;
@@ -244,6 +304,10 @@ Component({
               loadState: 'ready',
               loadErrorText: ''
             });
+            that._resultReader = reader;
+            const entry = that._resultEntry();
+            that.setData({ bundleRegistrationId: that._bundleEntry(), resultTopicId: entry ? entry.topicId : '',
+              resultEntryError: entry || !character.hasTopicRelation(info) ? '' : '无法确认当前账号的报名与主题关联，请重新加载参与详情；若仍不可用请联系客服。' });
           } else {
             const fallback = res && res.code == "200" ? '参与详情数据暂不可用' : '获取参与详情失败，请重试';
             const msg = app.getRequestErrorMessage
@@ -254,6 +318,7 @@ Component({
         },
         fail: function (res) {
           if (!isCurrent()) return;
+          settled = true;
           const fallback = '网络异常，请重试';
           const msg = app.getRequestErrorMessage
             ? app.getRequestErrorMessage(res, fallback)

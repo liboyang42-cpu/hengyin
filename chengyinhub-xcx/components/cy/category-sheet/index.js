@@ -8,6 +8,8 @@ const app = getApp();
 
 Component({
   properties: {
+    // G-2:透传给内层弹层的返回守卫开关;宿主页已有自己的 page-container 覆盖它时传 false
+    backGuard: { type: Boolean, value: true },
     show: { type: Boolean, value: false },
     type: { type: Number, value: 0 },   // 对应 biaoqian 的 type:1=行业类型/2=活动分类/4=玩法类别 等
     num: { type: Number, value: 0 },    // 最多可选数量,0=不限

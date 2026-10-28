@@ -1,4 +1,11 @@
 <view class="review-page theme-merchant" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
+  <view wx:if="{{mode === 'manage' && replyPending}}" aria-role="alert">
+    <text>回复结果待确认：{{replyRequestId}}</text>
+    <cy-inline-error wx:if="{{replyError}}" kind="error" title="{{replyError}}" />
+    <button bindtap="recoverReply" disabled="{{replySubmitting}}">读取原回复请求</button>
+    <button wx:if="{{replyRequestId}}" bindtap="copyReplyRequestId">复制原请求号</button>
+    <cy-cell title="联系平台客服" description="可提供原请求号供核对；当前结果仍待确认" open-type="contact" hairline="{{false}}" />
+  </view>
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
@@ -182,7 +189,7 @@
             <text class="form-required" aria-hidden="true">*</text>
             <input class="review-reply-input" value="{{replyContent}}" maxlength="500"
                    placeholder="修改公开回复…" placeholder-class="review-placeholder"
-                   focus="{{replyReviewId === item.id}}" bindinput="inputReply" />
+                   focus="{{replyReviewId === item.id}}" disabled="{{replyPending || replySubmitting}}" bindinput="inputReply" />
           </view>
           <view class="review-reply-cancel" bindtap="cancelEditReply"
                 aria-role="button" hover-class="{{replySubmitting ? 'none' : 'cy-pressed'}}" hover-stay-time="80">取消</view>
@@ -210,7 +217,7 @@
             <text class="form-required" aria-hidden="true">*</text>
             <input class="review-reply-input" value="{{replyContent}}" maxlength="500"
                    placeholder="写下公开回复…" placeholder-class="review-placeholder"
-                   focus="{{replyReviewId === item.id}}" bindinput="inputReply" />
+                   focus="{{replyReviewId === item.id}}" disabled="{{replyPending || replySubmitting}}" bindinput="inputReply" />
           </view>
           <view wx:else class="review-reply-input-shell" data-id="{{item.id}}" bindtap="openReply"
                 aria-role="button" hover-class="cy-pressed" hover-stay-time="80">
@@ -223,7 +230,7 @@
           </view>
         </view>
         <cy-inline-error wx:if="{{replyReviewId === item.id && replyError}}" class="review-error" kind="data"
-                         title="回复未提交" sub="{{replyError}}" />
+                         title="{{replyPending ? '回复待确认' : '回复提示'}}" sub="{{replyError}}" />
 
         <view class="review-actions">
           <view wx:if="{{item.canReport}}" class="review-action" data-id="{{item.id}}"

@@ -203,6 +203,8 @@ class TopicUpdateByOwnerTest {
         // The two free-to-commercial tests below explicitly retain DRAFT to test that boundary.
         if (!Integer.valueOf(1).equals(isDraft) && Integer.valueOf(0).equals(t.getLifecycle())) t.setLifecycle(1);
         when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(t);
+        // 带 journeyRules 的保存会先锁主题行再冻结属性定义；真 mapper 锁读返回同一行。
+        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(t);
         when(topicMapper.selectTopicIsDraft(TOPIC)).thenReturn(isDraft);
         org.mockito.Mockito.doAnswer(invocation -> {
             CmsTopic patch = invocation.getArgument(0);

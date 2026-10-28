@@ -174,6 +174,11 @@ public class CoopInvite extends BaseEntity {
     /** 操作主体作用域；仅接收 API 请求，不落 coop_invite。 */
     private String scope;
 
+    /** 原请求键，仅接收 API 请求，不落 coop_invite。 */
+    private transient String requestId;
+    public String getRequestId() { return requestId; }
+    public void setRequestId(String requestId) { this.requestId = requestId; }
+
     /** del_flag */
     private Integer delFlag;
 

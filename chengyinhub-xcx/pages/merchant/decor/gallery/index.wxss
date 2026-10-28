@@ -32,3 +32,10 @@
 .dg-item { position:relative; }
 .dg-delete { position:absolute; top:0; right:0; min-width:44px; min-height:44px; justify-content:center; color:var(--cy-color-status-danger); background:transparent; }
 .dg-grid { margin-top:var(--cy-space-3); row-gap:var(--cy-space-3); }
+
+/* 2026-10-28 业主 m699:一排三张方图;删除是右上角的小圆按钮(深色半透,热区仍 44px);添加格只放一个 +。 */
+.dg-grid { grid-template-columns: repeat(3, 1fr); gap: var(--cy-space-2); row-gap: var(--cy-space-2); padding: 0 var(--cy-page-x); }
+.dg-image, .dg-add { height: auto; aspect-ratio: 1; border-radius: var(--cy-radius-lg); }
+.dg-delete { top: 0; right: 0; min-width: 44px; min-height: 44px; display: flex; align-items: flex-start; justify-content: flex-end; padding: var(--cy-space-2); box-sizing: border-box; background: transparent; }
+.dg-delete-dot { width: 44rpx; height: 44rpx; border-radius: var(--cy-radius-pill); display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.45); color: #fff; } /* ds-ok: 压在照片上的删除圆钮,深浅主题同值 */
+.dg-add-mark { margin: 0; color: var(--cy-color-text-secondary); }

@@ -70,27 +70,21 @@ test('客户导出与合规触达使用权限门控的等层工具且避开原�
   const wxss = read('pages/merchant/customer/index.wxss');
 
   assert.match(wxml,
-    /<view[^>]+wx:if="\{\{canExport\}\}"[^>]+class="cu-tool"[^>]+bindtap="createExport"[^>]+aria-role="button"/,
+    /<view[^>]+wx:if="\{\{canExport\}\}"[^>]+class="tm-row"[^>]+bindtap="createExport"[^>]+aria-role="button"/,
     '导出必须只在授权态渲染并保留按钮语义');
   assert.doesNotMatch(wxml, /<button[^>]+bindtap="createExport"/,
     '授权工具不得再受原生 button 白底覆盖');
-  // CU-M-101 / CU-M-121(2026-09-25 走查):这一组四个是同层工具,原来两枚透明灰字
-  // + 两枚黑底、还能 flex-wrap 错落 ⇒ 灰字像未启用、黑底抢了页面唯一主操作。
-  // 契约随之改判:窄屏不得裁掉任何一个(原意不变),但实现换成等宽两列网格、
-  // 四枚共用同一档表面。负控 = 换回 flex-wrap + justify-content:flex-end,下面必红。
-  assert.doesNotMatch(wxml, /class="cu-tool cu-tool--primary"/,
-    '四个同层工具不得再分出黑底主操作档');
-  const toolbarRule = wxss.match(/\.cu-toolbar\s*\{[^}]*\}/);
-  assert.ok(toolbarRule, '缺少 .cu-toolbar 布局规则');
-  assert.match(toolbarRule[0], /display:\s*grid/, '工具组必须是规则网格，不是会错落的一行');
-  assert.match(toolbarRule[0], /grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/,
-    '窄屏两列等宽，四个工具都要可达且对齐');
-  assert.doesNotMatch(toolbarRule[0], /justify-content:\s*flex-end/,
-    '工具组不得靠右散落');
-  assert.match(wxss, /\.cu-tool[^\{]*\{[^}]*background:\s*var\(--cy-bg-card\)/,
-    '四枚工具共用同一档卡面，浅灰透明底那两枚不再像未启用');
-  assert.match(wxss, /\.cu-tool[^\{]*\{[^}]*color:\s*var\(--cy-text-body\)/,
-    '工具文字必须用正文档');
+  // 2026-10-27 业主 M-04 推翻 CU-M-101/121 的「两列等宽工具网格」:客户管理半屏改成标准操作列表,
+  // 每行 图标 + 标题 + 说明。原判据里仍成立的部分保留:同层动作不分黑底主操作档、
+  // 行走卡面正文色、说明单行不折行。负控 = 换回网格工具块,下面必红。
+  assert.doesNotMatch(wxml, /class="cu-tool\b/, '客户管理不再是浮在空白里的文字工具块');
+  // 2026-10-28 m679/m694 业主:Threads 式分组菜单 —— 文字在左、图标在右,不再写说明行
+  for (const handler of ['toggleSelectMode', 'createExport', 'goCampaigns']) {
+    assert.match(wxml, new RegExp(`class="tm-row"[^>]+bindtap="${handler}"[\\s\\S]*?<text class="tm-label">[\\s\\S]*?<cy-icon class="tm-ico"`),
+      `${handler}:操作行必须是 文字 + 右侧图标`);
+  }
+  assert.doesNotMatch(wxml, /class="cu-op-desc"/, '不写说明行');
+  assert.match(read('style/threads-menu.wxss'), /\.tm-row \{[^}]*display: flex;[^}]*justify-content: space-between/);
 });
 
 test('客户页与横向分段把导航内距计入自身宽高，不能撑出整页滚动条', () => {

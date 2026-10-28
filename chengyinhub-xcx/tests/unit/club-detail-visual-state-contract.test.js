@@ -22,8 +22,12 @@ test('俱乐部主页用真实资源与 DS 图标，不把字符伪装成按钮�
   assert.match(view, /<view\b[^>]*wx:else[^>]*class="cover-fallback"[^>]*aria-role="img"[^>]*aria-label="\{\{club\.name\}\} 使用默认封面"/)
   assert.match(view, /<image\b[^>]*class="cover-fallback-art"[^>]*src="\/pages\/club\/images\/club_cover_default\.png"[^>]*mode="aspectFill"/,
     '缺封面必须落到真实的默认封面图片资产上，不能又退回字符/图标凑数')
-  assert.match(view, /<cy-icon\b[^>]*name="close-sm"/)
-  assert.match(view, /<cy-icon\b[^>]*name="image"/)
+  // 2026-10-27 P-20:页内发帖框(删图 / 撤引用的 close-sm)撤掉,发帖改走 cy-post-compose;
+  // 「关闭用真实图标」这条约束随之落到组件上。
+  assert.match(visibleMarkup(read('pages/square/components/cy/post-compose/index.wxml')), /<cy-icon\b[^>]*name="close-sm"/)
+  // 2026-10-28 p110:发帖行三枚图标照 Figma 285:395 —— 描边方框(自绘)、实心定位、旗子
+  assert.match(view, /class="post-composer-ico post-composer-sq"/)
+  assert.match(view, /<cy-icon\b[^>]*name="pin-solid"/)
   assert.ok((view.match(/<cy-icon\b[^>]*name="arrow-right"/g) || []).length >= 10)
 })
 
@@ -55,5 +59,7 @@ test('俱乐部管理入口统一暴露按钮语义和最小命中区', () => {
   const style = read('pages/club/detail/index.wxss')
   assert.match(style, /\.cover-fallback\s*\{[^}]*background:\s*var\(--cy-bg-card-2\)[^}]*display:\s*flex[^}]*align-items:\s*center[^}]*justify-content:\s*center/s)
   assert.match(style, /\.manage-chevron\s*\{[^}]*flex-shrink:\s*0/s)
-  assert.match(style, /\.post-addimg\s*\{[^}]*display:\s*flex[^}]*align-items:\s*center[^}]*justify-content:\s*center/s)
+  // 2026-10-27 P-20:加图按钮随页内发帖框撤掉;发帖组件的工具钮 ::after 撑到 88rpx 热区
+  assert.doesNotMatch(style, /\.post-addimg\s*\{/)
+  assert.match(read('pages/square/components/cy/post-compose/index.wxss'), /\.cmp-tool::after\s*\{[^}]*width:\s*88rpx[^}]*height:\s*88rpx/s)
 })

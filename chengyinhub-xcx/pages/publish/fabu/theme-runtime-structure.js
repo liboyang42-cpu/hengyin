@@ -1,6 +1,14 @@
 const support = require('../utils/publish/gameplay-support-matrix.js');
 const modal = require('../../../utils/modal.js');
+const cyToast = require('../../../utils/toast.js');
 const copy = value => JSON.parse(JSON.stringify(value));
+// 找不到时换个方式（10-28 e-quest）：扫码 / 答题 / 拍照，存 POST /api/orient/task/alternative。
+// 后端只存答案摘要、没有作者读回接口，所以本次会话里填过的才回显（需后端，见 PR）。
+const ALTS = [{ type: 'SCAN', label: '扫码' }, { type: 'QUIZ', label: '答题' }, { type: 'PHOTO', label: '拍照' }];
+const ALT_WORD = { SCAN: '扫码', QUIZ: '答题', PHOTO: '拍照' };
+function altRows(draft) {
+  return ALTS.map(row => Object.assign({ type: row.type, label: row.label, on: false, prompt: '', answer: '' }, (draft || {})[row.type]));
+}
 const MODES = [
   { key: 'PLAYER', icon: 'tab-me', runtimeScope: 'PLAYER', label: '个人独立进行', summary: '每人独立完成任务、支付资源；不使用工作人员开幕或跨队交易、表决。' },
   { key: 'TEAM_INDEPENDENT', icon: 'tab-club', runtimeScope: 'TEAM', worldMode: 'TEAM_INDEPENDENT', label: '队伍独立进行', summary: '同队共用任务进度和资源，各队分别完成；工作人员可开幕、核验到达和引导答题。' },
@@ -141,7 +149,7 @@ function copyReferences(runtime, reselect) {
     delete game.templateTools;
   }
 }
-const data = { structureEditor: { show: false, kind: '', title: '' }, structureDraft: null, structureError: '', structureErrorField: '', structureModeOptions: [], structureLocations: [], structureFallbackNodes: [], structureGuideAllowed: false, structureLocationIndex: -1, chapterHostUnlock: false, chapterHostUnlockDisabledReason: '', structureSummary: { modeLabel: '未选择', endingsText: '未配置', endingsError: '' }, nodeStructureSummary: '未配置', structureEndings: [], structureReferenceNotice: '', structureFallbackCount: 0 };
+const data = { structureEditor: { show: false, kind: '', title: '' }, structureDraft: null, structureError: '', structureErrorField: '', structureModeOptions: [], structureLocations: [], structureFallbackNodes: [], structureGuideAllowed: false, structureLocationIndex: -1, chapterHostUnlock: false, chapterHostUnlockDisabledReason: '', structureSummary: { modeLabel: '未选择', endingsText: '未配置', endingsError: '' }, nodeStructureSummary: '未配置', structureEndings: [], structureReferenceNotice: '', structureFallbackCount: 0, structureAlts: altRows(), structureFallbackOpen: false, structureFallbackSummary: '', structureSaving: false };
 const methods = {
   _refreshStructureSummary() {
     const config = support.parse(this.data.formData.themeRuntimeConfig), game = config.gameplayRuntime || {};
@@ -157,7 +165,10 @@ const methods = {
       endingsError: issue?.field === 'endings' ? issue.error : '' },
       chapterHostUnlock: act?.hostUnlock === true,
       chapterHostUnlockDisabledReason: !act ? '请先在主题详情里选进行方式并保存' : game.runtimeScope === 'PLAYER' ? '个人独立进行不使用工作人员开幕' : '',
-      nodeStructureSummary: current ? '到达：' + (place?.label || '需重选') + ' · 引导' + (current.guideKey ? '开' : '关') + ' · 备用 ' + (current.approvedFallbackNodeIds || []).length : '未配置',
+      nodeStructureSummary: !current ? '未配置' : (() => {
+        const alts = altRows((this._altDrafts || {})[current.nodeId]).filter(row => row.on).map(row => ALT_WORD[row.type]);
+        return alts.length ? '可' + alts.join('或') : (place?.label || '需重选');
+      })(),
       structureModeOptions: modeOptions(config, this.data.formData.chapters, this.data.supportMatrix, this._templateDetailsById),
     });
   },
@@ -202,13 +213,17 @@ const methods = {
     const advanced = support.config(info);
     const allowed = this.data.supportMatrix && support.mains(this.data.supportMatrix, advanced).some(row => ['qaText', 'qaPick', 'sort', 'match', 'classify'].includes(row.key));
     const locationRows = locations(config, this.data.formData.chapters), quest = editor.quest || {};
+    const fallbackNodes = nodes(this.data.formData.chapters).filter(node => Number(node.id) > 0 && Number(node.id) !== editor.nodeId)
+      .map(node => ({ id: Number(node.id), label: node.name || '节点 ' + node.id, selected: (quest.approvedFallbackNodeIds || []).includes(Number(node.id)) }));
     this.setData({ structureEditor: editor, structureDraft: config, structureError: error, structureErrorField: error ? kind : '',
       structureModeOptions: modeOptions(config, this.data.formData.chapters, this.data.supportMatrix, this._templateDetailsById),
       structureLocations: locationRows, structureLocationIndex: locationRows.findIndex(row => row.value === quest.locationKey),
       structureGuideAllowed: !!allowed, structureFallbackCount: (quest.approvedFallbackNodeIds || []).length,
-      structureFallbackNodes: nodes(this.data.formData.chapters).filter(node => Number(node.id) > 0 && Number(node.id) !== editor.nodeId)
-        .map(node => ({ id: Number(node.id), label: node.name || '节点 ' + node.id, selected: (quest.approvedFallbackNodeIds || []).includes(Number(node.id)) })),
+      structureFallbackNodes: fallbackNodes, structureFallbackOpen: false,
+      structureFallbackSummary: fallbackNodes.filter(node => node.selected).map(node => node.label).join('、'),
+      structureAlts: altRows((this._altDrafts || {})[editor.nodeId]), structureSaving: false,
     });
+    this._altDirty = {};
     this._refreshStructureEndings();
   },
   closeStructure() { this.setData({ 'structureEditor.show': false }); },
@@ -232,7 +247,47 @@ const methods = {
     if (!row || !this.data.structureEditor.quest) return;
     row.selected = !row.selected;
     if (rows.filter(node => node.selected).length > 20) return this.setData({ structureError: '最多选择 20 个备用节点', structureErrorField: 'fallback' });
-    this.setData({ structureFallbackNodes: rows, structureFallbackCount: rows.filter(node => node.selected).length, 'structureEditor.quest.approvedFallbackNodeIds': rows.filter(node => node.selected).map(node => node.id), structureError: '' });
+    this.setData({ structureFallbackNodes: rows, structureFallbackCount: rows.filter(node => node.selected).length, 'structureEditor.quest.approvedFallbackNodeIds': rows.filter(node => node.selected).map(node => node.id), structureError: '',
+      structureFallbackSummary: rows.filter(node => node.selected).map(node => node.label).join('、') });
+  },
+  toggleStructureFallbackOpen() { this.setData({ structureFallbackOpen: !this.data.structureFallbackOpen }); },
+  onStructureAltToggle(e) {
+    const type = e.currentTarget.dataset.type, rows = copy(this.data.structureAlts), row = rows.find(item => item.type === type);
+    if (!row) return;
+    row.on = !!e.detail.value; this._altDirty = Object.assign({}, this._altDirty, { [type]: true });
+    this.setData({ structureAlts: rows, structureError: '' });
+  },
+  onStructureAltInput(e) {
+    const ds = e.currentTarget.dataset, rows = copy(this.data.structureAlts), row = rows.find(item => item.type === ds.type);
+    if (!row || !['prompt', 'answer'].includes(ds.field)) return;
+    row[ds.field] = e.detail.value; this._altDirty = Object.assign({}, this._altDirty, { [ds.type]: true });
+    this.setData({ structureAlts: rows });
+  },
+  // 只发本次改过的方式；一条失败就停在这张半屏，原样显示后端那句话。
+  _saveStructureAlts(nodeId, done) {
+    const dirty = this.data.structureAlts.filter(row => (this._altDirty || {})[row.type]);
+    const topicId = this.data.editingTopicId;
+    if (!dirty.length) return done();
+    if (!topicId) return this.setData({ structureError: '请先保存主题草稿，再设置换个方式', structureErrorField: 'alternative' });
+    const missing = dirty.find(row => row.on && (row.type === 'QUIZ' ? !row.prompt.trim() || !row.answer.trim() : row.type === 'PHOTO' && !row.prompt.trim()));
+    if (missing) return this.setData({ structureError: missing.type === 'QUIZ' ? '请填写题目和答案' : '请填写拍摄内容', structureErrorField: 'alternative' });
+    this.setData({ structureSaving: true });
+    const next = index => {
+      if (index >= dirty.length) {
+        this._altDrafts = Object.assign({}, this._altDrafts, { [nodeId]: Object.fromEntries(this.data.structureAlts.map(row => [row.type, row])) });
+        this._altDirty = {}; this.setData({ structureSaving: false }); return done();
+      }
+      const row = dirty[index], data = { topicId, taskId: nodeId, alternativeTaskType: row.type, promptText: row.prompt, enabled: row.on };
+      if (row.type === 'QUIZ' && row.on) data.answer = row.answer;
+      getApp().sendRequest({ url: '/api/orient/task/alternative', method: 'POST', hideLoading: true, silentError: true,
+        data: JSON.stringify(data), header: { 'Content-Type': 'application/json' },
+        success: res => {
+          if (res && String(res.code) === '200') return next(index + 1);
+          this.setData({ structureSaving: false, structureError: (res && res.msg) || '没有保存成功，请再试一次。', structureErrorField: 'alternative' });
+        },
+        fail: () => { this.setData({ structureSaving: false }); cyToast('没有保存成功，请再试一次。'); } });
+    };
+    next(0);
   },
   addStructureEnding() {
     const config = copy(this.data.structureDraft), rows = config.endings || (config.endings = []);
@@ -265,7 +320,10 @@ const methods = {
     if (!config.schemaVersion) Object.assign(config, { schemaVersion: 1, capacity: 0 });
     const issue = validate(config, this.data.formData.chapters);
     if (issue) return this.setData({ structureError: issue.error, structureErrorField: issue.field });
-    this._saveRuntime(config); this.setData({ 'structureEditor.show': false, structureError: '' }); this._syncRuntimeStats();
+    if (this.data.structureSaving) return;
+    const finish = () => { this._saveRuntime(config); this.setData({ 'structureEditor.show': false, structureError: '' }); this._syncRuntimeStats(); };
+    if (editor.kind === 'quests') return this._saveStructureAlts(editor.nodeId, finish);
+    finish();
   },
   _syncStructureChapters(chapters) {
     const raw = this.data.formData.themeRuntimeConfig, game = support.parse(raw).gameplayRuntime;

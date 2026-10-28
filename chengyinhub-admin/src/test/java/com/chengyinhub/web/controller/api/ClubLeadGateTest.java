@@ -7,7 +7,6 @@ import com.chengyinhub.business.mapper.ClubLeadMapper;
 import com.chengyinhub.business.service.ICmsTopicChapterService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -30,12 +29,12 @@ class ClubLeadGateTest {
         controller = new ApiPlayProgressController();
         clubLeadMapper = mock(ClubLeadMapper.class);
         chapterService = mock(ICmsTopicChapterService.class);
-        ReflectionTestUtils.setField(controller, "clubLeadMapper", clubLeadMapper);
-        ReflectionTestUtils.setField(controller, "cmsTopicChapterService", chapterService);
+        PlayNodeAccessTestFixtures.setField(controller, "clubLeadMapper", clubLeadMapper);
+        PlayNodeAccessTestFixtures.setField(controller, "cmsTopicChapterService", chapterService);
     }
 
     private String gate(Long actId, CmsTopicNode node) {
-        return ReflectionTestUtils.invokeMethod(controller, "leadGateError", actId, node);
+        return com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.invokeMethod(controller, "leadGateError", actId, node);
     }
 
     private ClubLeadState state(int status, Long currentChapterId) {
@@ -95,7 +94,7 @@ class ClubLeadGateTest {
     void routeRuntimeOverridesStaleLegacyGatheringAndChapterState() {
         com.chengyinhub.business.service.IGameSessionRuntimeService runtime = mock(
                 com.chengyinhub.business.service.IGameSessionRuntimeService.class);
-        ReflectionTestUtils.setField(controller, "gameSessionRuntimeService", runtime);
+        PlayNodeAccessTestFixtures.setField(controller, "gameSessionRuntimeService", runtime);
         when(clubLeadMapper.selectByActivity(100L)).thenReturn(state(1, 20L));
         when(runtime.routeSessionStatus(100L)).thenReturn("RUNNING");
         assertNull(gate(100L, node(30L)), "普通路线开局后不受旧集合和章节状态阻断");

@@ -76,9 +76,12 @@ test('BL-80 GET /api/official/broadcast/{id}/stats:白名单+发布者本人,返
   assert.match(body, /officialBroadcastService\.getById\(id, me\)/)
   assert.match(body, /bc\.getSenderAccount\(\)\.equals\(me\)/, 'V1 通知只给发布者本人')
   assert.match(body, /officialEventV2Service\.broadcastStatsForOperator\(id, me\)/)
-  const stats = methodBody(readRepo(SYS + 'service/impl/OfficialBroadcastServiceImpl.java'), 'public java.util.Map<String, Object> reachStats(Long broadcastId, Long actorMemberId)', 500)
-  assert.match(stats, /m\.put\("reached", /)
-  assert.match(stats, /m\.put\("clicked", /)
+  // W8 起触达统计迁入 OfficialBroadcastDeliveryService.summary：reachStats 先按发布者归属取单条，再委托 summary。
+  const stats = methodBody(readRepo(SYS + 'service/impl/OfficialBroadcastServiceImpl.java'), 'public java.util.Map<String, Object> reachStats(Long broadcastId, Long actorMemberId)', 200)
+  assert.match(stats, /getById\(broadcastId, actorMemberId\);\s*return delivery\.summary\(broadcastId\);/)
+  const summary = methodBody(readRepo(SYS + 'service/impl/OfficialBroadcastDeliveryService.java'), 'public Map<String,Object> summary(Long id)', 900)
+  assert.match(summary, /out\.put\("reached",\s*counts\.get\("INAPP_STORED"\)\)/)
+  assert.match(summary, /out\.put\("clicked",\s*logs\.countClicked\(id\)\)/)
   // 入口挂在「我发布的」列表,其通知来源仍是 my-published.broadcasts
   assert.match(src, /data\.put\("broadcasts", officialBroadcastService\.listBySender\(memberId, memberId\)\)/)
 })

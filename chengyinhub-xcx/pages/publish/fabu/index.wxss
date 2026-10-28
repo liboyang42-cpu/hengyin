@@ -1018,6 +1018,7 @@ page { background: var(--cy-btn-solid-bg); }
   height: 100%;
   display: block;
 }
+.slopes-icon-cv { position: absolute; width: 54px; height: 54px; left: -9999px; top: -9999px; } /* ds-ok 离屏画布,同 cy-free-map .iconcv */
 
 /* 状态栏保护层:.slopes-map-wrap 是 fixed top:0,地图瓦片直接铺到系统状态栏底下;
    状态栏前景是白字,压在浅色瓦片上就看不见。这里在状态栏区域盖一层由深到透明的 scrim。
@@ -2653,12 +2654,6 @@ page { background: var(--cy-btn-solid-bg); }
    --cy-comp-card-pad 叠加成双层内边距。 */
 /* 卡间距 24rpx → 32rpx(用户 2026-09-05:「主题详情下面卡片上下间距也松一点」)。
    下面的 .pd-modecards 用同一个值,两处必须一起改,不然卡列的节奏会一段紧一段松。 */
-/* 旧草稿归属待确认横幅:内容流里,不浮在章节卡/地图之上(L09) */
-.pd-legacy-banner {
-  display: block;
-  margin: 0 var(--cy-page-x) var(--cy-space-4);
-}
-
 .pd-entry-card {
   --cy-comp-card-pad: var(--cy-space-3) var(--cy-space-3-5);
   margin: 0 var(--cy-page-x) var(--cy-space-4);
@@ -4122,6 +4117,13 @@ page { background: var(--cy-btn-solid-bg); }
 .node-shared__site { display: block; margin-top: var(--cy-space-1); }
 .node-shared__action { max-width: 100%; width: fit-content; height: auto; min-height: var(--cy-btn-h); margin-top: var(--cy-space-2); white-space: normal; }
 
+/* 10-28 原型 A e-node / e-quest：分组列表用 L1 的 cy-list-group / cy-list-row，这里只补行内输入框和组内的附加内容。 */
+.node-grp__input { flex: 1; min-width: 0; text-align: right; font-size: var(--cy-font-body); color: var(--cy-color-text-primary); }
+.node-grp-extra { padding: 0 var(--cy-space-4); background: var(--cy-color-bg-surface); }
+.node-grp-extra:empty { display: none; }
+.pgrid.node-grp-extra { padding-top: var(--cy-space-2); padding-bottom: var(--cy-space-3); }
+.rt-row-input { flex: 1; min-width: 0; text-align: right; font-size: var(--cy-font-body); color: var(--cy-color-text-primary); }
+
 .node-card__addr {
   flex: 1;
   min-width: 0;
@@ -4310,6 +4312,7 @@ page { background: var(--cy-btn-solid-bg); }
 .route-mapping-card { padding: 0 var(--cy-space-3-5); }
 
 .route-mapping-row {
+  flex-wrap: wrap;
   min-height: var(--cy-btn-h);
   display: flex;
   align-items: center;
@@ -4319,6 +4322,8 @@ page { background: var(--cy-btn-solid-bg); }
 }
 
 .route-mapping-row:last-child { border-bottom: 0; }
+
+.route-mapping-rules { flex: 0 0 100%; min-width: 0; }
 
 .route-mapping-row__label {
   display: block;
@@ -4365,6 +4370,14 @@ page { background: var(--cy-btn-solid-bg); }
   color: var(--cy-color-text-secondary);
   font-size: var(--cy-font-label);
 }
+
+/* 10-28 原型 A e-route：头部用 L1 的 cy-sheet-nav；结果行点开就地展开（灰底上放去往与条件 / 效果的分组）。 */
+.route-mapping-sheet__eyebrow { display: block; padding: 0 var(--cy-space-4) var(--cy-space-1); font-size: var(--cy-font-caption); color: var(--cy-color-text-secondary); }
+.route-mapping-row .route-mapping-row__target { color: var(--cy-color-text-secondary); font-weight: 400; }
+.route-mapping-row__chev { display: flex; color: var(--cy-color-text-tertiary); transition: transform 0.2s; }
+.route-mapping-row__chev.is-open { transform: rotate(90deg); }
+.route-mapping-open { margin: 0 calc(var(--cy-space-3-5) * -1); padding: var(--cy-space-2) var(--cy-space-3-5) var(--cy-space-3); background: var(--cy-color-bg-surface-subtle); }
+.route-mapping-dest { border-radius: var(--cy-radius-lg); overflow: hidden; }
 
 
 /* 故事流节点块的实拍缩略图(用户 2026-08-10 定)。没传图时放一个占位图标,
@@ -4801,6 +4814,7 @@ page { background: var(--cy-btn-solid-bg); }
 .chapter-setting-row { margin-top: var(--cy-space-3); }
 
 @import "./game-rules.wxss"; /* 玩法规则编辑层（协调者设计） */
+@import "./initial-carry.wxss"; /* 初始状态 · 开局带着 */
 
 /* 章节弹窗里的规则分区(2026-10-12,版式照 Figma J3 5221:19016):
    粗体小标题 + 同行灰字说明;控件是整宽灰药丸(高 = 按钮高,圆角药丸)。 */
@@ -4859,3 +4873,12 @@ page { background: var(--cy-btn-solid-bg); }
 }
 .pd-save-state--saved { background: var(--cy-topic-save-saved-bg); color: var(--cy-topic-save-saved-text); }
 .pd-save-state--unsaved { background: var(--cy-topic-save-unsaved-bg); color: var(--cy-topic-save-unsaved-text); }
+
+/* 文档二 L1:可玩时段选「自定义」时,底部选择卡里展开开始 / 结束 +「完成」 */
+.pw-custom { margin-top: var(--cy-space-3); }
+.pw-custom__grp { border-radius: var(--cy-radius-lg); overflow: hidden; background: var(--cy-color-bg-page); }
+.pw-custom__row { position: relative; display: flex; align-items: center; gap: 20rpx; min-height: 100rpx; padding: 0 var(--cy-space-4); color: var(--cy-color-text-tertiary); }
+.pw-custom__row--hr::before { content: ""; position: absolute; left: var(--cy-space-4); right: 0; top: 0; height: 1px; background: var(--cy-color-border-subtle); }
+.pw-custom__t { flex: 1; font-size: var(--cy-type-body); color: var(--cy-color-text-primary); }
+.pw-custom__v { font-size: var(--cy-type-body); font-variant-numeric: tabular-nums; }
+.pw-custom__done { margin-top: var(--cy-space-3); height: 100rpx; border-radius: var(--cy-radius-lg); display: flex; align-items: center; justify-content: center; font-size: var(--cy-type-button); font-weight: 700; background: var(--cy-color-action-primary-bg); color: var(--cy-color-action-primary-fg); }

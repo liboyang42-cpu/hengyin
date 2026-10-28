@@ -3,7 +3,7 @@ const modal = require('../../../utils/modal.js');
 const mediaPreview = require('../../../utils/media-preview.js');
 const clubPinnedNotice = require('../utils/club-pinned-notice.js');
 const { isClubLeader } = require('../../../utils/roleGuard.js');
-const { isPoolList, decoratePool } = require('../../../utils/coop-invite-view.js');
+const { isPoolList, decoratePool, parseInviteId } = require('../../../utils/coop-invite-view.js');
 const cyToast = require('../../../utils/toast.js');
 const motion = require('../../../utils/motion.js');
 const { readReducedMotion } = require('../../../utils/motion-preference.js');
@@ -26,7 +26,6 @@ const ticketSource = require('../../../utils/ticket-source.js');
 // CU-C-38:主题分享卡的标题/封面口径与主题详情页共用一份实现
 const { buildTopicShare, resolveTopicCover } = require('../../../utils/topic-share.js');
 const { isRecord, bizFailureMessage } = require('../../../utils/response-shape.js');
-const { buildMonthCalendar, calendarNotice, shapeCalendarSessions, shiftMonth } = require('../utils/club-event-calendar.js');
 const { editionEmptyCopy, shapeEditionEmptyReason } = require('../utils/edition-empty-reason.js');
 // 帖文卡的 variant 判定与广场共用一份,别在这儿复制
 const { isCompletedShare, hasFeedPlayCover } = require('../../../utils/feed-play-card.js');
@@ -200,12 +199,6 @@ function shapeEventAccesses(raw) {
   }
   return { rows, byActivity, byTopic };
 }
-function localDateText(date) {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return y + '-' + m + '-' + d;
-}
 
 function isSuccess(res) { return !!res && (res.code === '200' || res.code === 200); }
 
@@ -292,14 +285,14 @@ function eventTimeText(raw) {
   return dateText + ', ' + pad(parts.hours) + ':' + pad(parts.minutes);
 }
 
-// 状态色沿用稿:招募中/审核中 = warning、进行中 = success、已结束 = tertiary。
+// 2026-10-27 P-14 owner:标签只写时间 +「已开始 / 未开始」(拼成 decorateTopicCard 的 tagText)。
+// 色沿用稿:未开始 = warning、已开始 = success、已结束 = tertiary(已结束不在活动 tab 出现)。
 // ⚠️ 只用本页真拿得到的字段判:ended(后端 endDate 比出来的)+ startDate。
-// 审核中 / 未通过 两态 /api/club/topics 目前不回,不臆造。
 function topicStatusOf(t) {
   if (t.ended) return { statusText: '已结束', statusTone: 'muted' };
   const start = t.startDate ? toTimestamp(String(t.startDate)) : 0;
-  if (start && start <= Date.now()) return { statusText: '进行中', statusTone: 'live' };
-  return { statusText: '招募中', statusTone: 'open' };
+  if (start && start <= Date.now()) return { statusText: '已开始', statusTone: 'live' };
+  return { statusText: '未开始', statusTone: 'open' };
 }
 
 // 稿 N2 20:52 的三列数字块。这三个数 /api/club/topics 一直都在回
@@ -312,8 +305,12 @@ function topicStatOf(value, unit) {
 }
 
 function decorateTopicCard(t) {
-  return Object.assign({}, t, topicStatusOf(t), {
-    timeText: eventTimeText(t.startDate),
+  const status = topicStatusOf(t);
+  const timeText = eventTimeText(t.startDate) || t.dateText || '';
+  return Object.assign({}, t, status, {
+    timeText: timeText,
+    // P-14:封面上的标签 = 开始时间 + 已开始/未开始
+    tagText: timeText ? timeText + ' · ' + status.statusText : status.statusText,
     // productType 是现行真源，旧数据缺字段时才兼容 mode。
     categoryText: Number(t.productType == null ? t.mode : t.productType) === 2 ? '自由探索' : '城市定向',
     signupText: topicStatOf(t.signupCount),
@@ -344,11 +341,11 @@ function leaderboardEmptyTitle(sortBy) {
   return '本周还没有人产生贡献';
 }
 
+// 2026-10-27 P-14 owner:已结束的活动不在俱乐部活动列表里显示。
 function splitTopics(list) {
   const rows = Array.isArray(list) ? list : [];
   return {
     upcomingTopics: rows.filter((t) => !t.ended),
-    endedTopics: rows.filter((t) => t.ended),
   };
 }
 
@@ -449,13 +446,6 @@ function normalizeClubPost(p, clubOwnerId) {
   });
 }
 
-// 发帖引用被服务端拒绝时的机器错误码 → 用户文案;未知码回落到服务端 msg。
-const POST_REF_ERROR_TEXT = {
-  CLUB_POST_REF_UNAVAILABLE: '引用的记录暂不可用，已取消引用',
-  CLUB_POST_REF_NOT_JOINED: '只能带上你自己参加过的记录，已取消引用',
-  CLUB_POST_REF_INVALID: '引用信息有误，已取消引用',
-};
-
 function enrichClub(club) {
   if (!club) return club;
   // 服务端文本过滤会把 x<y 存成 x&lt;y;这几项都按纯文本展示,在这里解码一次。
@@ -528,21 +518,6 @@ Page({
     manageTopics: [],
     topicsLoaded: false,
     topicState: 'loading',
-    eventViewTabs: [
-      { key: 'list', label: '列表' },
-      { key: 'calendar', label: '月历' },
-    ],
-    eventWeekdays: ['一', '二', '三', '四', '五', '六', '日'],
-    eventView: 'list',
-    eventCalendarMonth: localDateText(new Date()).slice(0, 7),
-    eventCalendarTitle: '',
-    eventCalendarCells: [],
-    eventCalendarHasEvents: false,
-    // W10a #19:月历数据源。sessions = 本月真实场次(/api/club/calendar/sessions);
-    // 拿到之前/失败时退回已加载主题,并由 eventCalendarNotice 如实声明「月历仅展示已加载主题」。
-    eventCalendarSource: 'topics',
-    eventCalendarSessionState: 'idle',
-    eventCalendarNotice: '月历仅展示已加载主题',
     shareEditions: [],
     shareEditionState: 'idle',
     // W10a #26:期次为空时的服务端原因(不从空数组猜)。
@@ -562,18 +537,14 @@ Page({
     posts: [],
     pinnedNotices: [],
     postsLoaded: false,
-    postText: '',
-    // 发帖区默认收起,点一下才展开(2026-08-26)
+    // 2026-10-27 P-20:发帖走全站统一的全屏发帖弹窗(cy-post-compose 俱乐部模式),这里只管开关
     composerOpen: false,
-    postImages: [],
-    postAsAnnouncement: false,
     // 稿 N1b:帖子可以带上一次游玩记录,卡片形态由引用类型派生
     postRef: null,
     postRefPickerShow: false,
     postRefState: 'idle',       // idle | loading | ready | error
     postRefErrorText: '',
     postRefOptions: [],
-    posting: false,
     postEditShow: false,
     postEditId: null,
     postEditText: '',
@@ -597,7 +568,6 @@ Page({
     leaderboardEmptyTitle: '本周还没有人产生贡献',
     memberStrip: [],
     upcomingTopics: [],
-    endedTopics: [],
     rankTabs: [
       { key: 'composite', label: '综合' },
       { key: 'mileage', label: '里程' },
@@ -752,7 +722,7 @@ Page({
   onLoad(opt) {
     this._scanDisposed = false; this._scanGeneration = (this._scanGeneration || 0) + 1;
     this._operationScope = opt && opt.scope === 'MERCHANT' ? 'MERCHANT' : '';
-    // 纯内部态:wxml 渲染的是派生结果(manageTopics / upcomingTopics / endedTopics /
+    // 纯内部态:wxml 渲染的是派生结果(manageTopics / upcomingTopics /
     // leaderboardSortLabel),从不直接渲染这两个。放 data 里每次 setData 都白白做一次
     // 逻辑层→视图层传输,传过去没人用 —— U4 判的正是这个。
     this._topics = [];
@@ -1624,15 +1594,34 @@ Page({
       data: jsonBody({ id: this.data.clubId, sortBy }), header: jsonHeader(),
       success(res) {
         if (res.code != '200') {
+          that._leaderboardRows = null;
           that.setData({ leaderboard: [], leaderboardLoaded: true, leaderboardError: (res && res.msg) || '榜单没能加载出来' });
           return;
         }
-        const list = res.data || [];
-        that.setData({ leaderboard: foldLeaderboard(list.map((it) => that.decorateRank(it, sortBy)), that.data.myMemberId), leaderboardLoaded: true, leaderboardError: '', leaderboardEmptyTitle: leaderboardEmptyTitle(sortBy) });
+        that._leaderboardRows = Array.isArray(res.data) ? res.data : [];
+        that._leaderboardSortBy = sortBy;
+        that.setData({ leaderboard: that.composeLeaderboard(), leaderboardLoaded: true, leaderboardError: '', leaderboardEmptyTitle: leaderboardEmptyTitle(sortBy) });
       },
       // E-09(2026-09-16):失败渲染成「还没有人通关」= 把不知道说成没有。留错误态+重试。
-      fail() { that.setData({ leaderboardLoaded: true, leaderboardError: '网络异常，榜单加载失败' }); },
+      fail() { that._leaderboardRows = null; that.setData({ leaderboardLoaded: true, leaderboardError: '网络异常，榜单加载失败' }); },
     });
+  },
+
+  // 2026-10-27 P-18 owner:贡献榜要有列表 —— 后端每个榜只列成绩>0 的成员(CU-C-72),
+  // 其余已加载的成员补在榜尾、贡献记 0;成员名单晚到时(loadMembers 回来)再合一次。
+  composeLeaderboard() {
+    const sortBy = this._leaderboardSortBy || this._leaderboardSort || 'composite';
+    const rows = Array.isArray(this._leaderboardRows) ? this._leaderboardRows : null;
+    if (!rows) return [];
+    const seen = {};
+    rows.forEach(function (r) { if (r && r.memberId != null) seen[String(r.memberId)] = true; });
+    const zeros = (Array.isArray(this.data.members) ? this.data.members : [])
+      .filter(function (m) { return m && m.memberId != null && !seen[String(m.memberId)]; })
+      .map(function (m) {
+        return { memberId: m.memberId, nickname: m.nickname, avatar: m.avatar, score: 0, mileage: 0, durationMin: 0, clearCount: 0, zeroFill: true };
+      });
+    const decorated = rows.concat(zeros).map((it) => this.decorateRank(it, sortBy));
+    return foldLeaderboard(decorated, this.data.myMemberId);
   },
 
   // 榜单文案。主数值跟着当前 tab 走 —— 切到里程榜还在显示综合分,用户会以为排序坏了。
@@ -1647,10 +1636,12 @@ Page({
       : '—';
     const mileageText = fx(item.mileage) + ' km';
     let primaryText;
+    // P-18:补位成员没有任何成绩,用时也写 0,不写「—」(0.3:没有就是 0)。
+    const shownDuration = item.zeroFill ? '0分' : durationText;
     if (sortBy === 'mileage') primaryText = mileageText;
-    else if (sortBy === 'duration') primaryText = durationText;
+    else if (sortBy === 'duration') primaryText = shownDuration;
     else primaryText = fx(item.score) + ' 分';
-    return Object.assign({}, item, { durationText, mileageText, primaryText });
+    return Object.assign({}, item, { durationText: shownDuration, mileageText, primaryText });
   },
 
   // 稿把三档排序从 chip tabs 收成榜头右侧一个「综合 ▾」。三选一用系统 actionSheet:
@@ -1788,68 +1779,12 @@ Page({
     this._requestedPostId = '';
     wx.pageScrollTo({ selector: '#club-post-' + postId, duration: 250, offsetTop: 24 });
   },
-  closeComposer() { this.setData({ composerOpen: false }); },
+  closeComposer() { this.setData({ composerOpen: false, postRefPickerShow: false }); },
 
-  onPostText(e) { this.setData({ postText: e.detail.value }); },
-
-  onToggleAnnouncement() {
-    if (!this.data.canModerateContent) return;
-    this.setData({ postAsAnnouncement: !this.data.postAsAnnouncement });
-  },
-
-  onPickPostImage() {
-    const that = this;
-    const left = 9 - this.data.postImages.length;
-    if (left <= 0) { cyToast('最多9张'); return; }
-    app.chooseImage(function (urls) {
-      if (urls && urls.length) that.setData({ postImages: that.data.postImages.concat(urls).slice(0, 9) });
-    }, left);
-  },
-
-  onRemovePostImage(e) {
-    const i = e.currentTarget.dataset.index;
-    const arr = this.data.postImages.slice();
-    arr.splice(i, 1);
-    this.setData({ postImages: arr });
-  },
-
-  onPostSubmit() {
-    if (app.ensureLoginFor && !app.ensureLoginFor('post', () => this.onPostSubmit())) return; // 2026-10-24 游客写前登录
-    const text = (this.data.postText || '').trim();
-    const imgs = this.data.postImages;
-    if (!text && !imgs.length) { cyToast('说点什么，或加张图'); return; }
-    if (this.data.posting) return;
-    const ref = this.data.postRef;
-    this.setData({ posting: true });
-    const that = this;
-    app.sendRequest({
-      url: '/api/club/post/create', method: 'POST',
-      data: JSON.stringify({
-        clubId: this.data.clubId,
-        content: text,
-        images: imgs.join(','),
-        type: this.data.postAsAnnouncement ? 2 : 0,
-        // 没选就一个字段都不带 —— 半个引用(只有类型没有 ID)会被服务端挡下,
-        // 但更该在这里就不产生
-        refType: ref ? ref.refType : null,
-        refId: ref ? ref.refId : null,
-      }),
-      header: { 'Content-Type': 'application/json', 'Authorization': app.getAuthorization() },
-      success(res) {
-        that.setData({ posting: false });
-        if (res.code == '200') {
-          that.setData({ postText: '', postImages: [], postAsAnnouncement: false, postRef: null });
-          that.loadPosts();
-        }
-        else if (res && POST_REF_ERROR_TEXT[res.errorCode]) {
-          // 正文与图片保留,只撤掉这条引用,用户可以直接再发
-          that.setData({ postRef: null });
-          cyToast(POST_REF_ERROR_TEXT[res.errorCode]);
-        }
-        else cyToast((res && res.msg) || '发布失败');
-      },
-      fail() { that.setData({ posting: false }); cyToast('网络异常，请重试'); },
-    });
+  // 全屏发帖弹窗发布成功:引用一并清掉,回读帖子流(正文/图片/草稿由组件自己清)
+  onComposePublished() {
+    this.setData({ postRef: null });
+    this.loadPosts();
   },
 
   /* ——— 「带上一次游玩记录」———
@@ -2184,9 +2119,7 @@ Page({
         topicsLoaded: true,
         topicState: 'ready',
         upcomingTopics: split.upcomingTopics,
-        endedTopics: split.endedTopics,
       });
-      that.refreshEventCalendar();
       that.applySentInviteFilter();
       cb && cb();
       return;
@@ -2196,7 +2129,7 @@ Page({
       success(res) {
         if (!isSuccess(res) || !Array.isArray(res.data)) {
           that._topics = [];
-      that.setData({ manageTopics: [], topicsLoaded: true, topicState: 'error', upcomingTopics: [], endedTopics: [] });
+      that.setData({ manageTopics: [], topicsLoaded: true, topicState: 'error', upcomingTopics: [] });
           that.applySentInviteFilter();
           that.updateOwnerStage();
           return;
@@ -2220,14 +2153,12 @@ Page({
           topicsLoaded: true,
           topicState: 'ready',
           upcomingTopics: split.upcomingTopics,
-          endedTopics: split.endedTopics,
         });
-        that.refreshEventCalendar();
         that.applySentInviteFilter();
       },
       fail() {
         that._topics = [];
-      that.setData({ manageTopics: [], topicsLoaded: true, topicState: 'error', upcomingTopics: [], endedTopics: [] });
+      that.setData({ manageTopics: [], topicsLoaded: true, topicState: 'error', upcomingTopics: [] });
         that.applySentInviteFilter();
         that.updateOwnerStage();
       },
@@ -2252,84 +2183,6 @@ Page({
     this.setData({ manageTopics: this.scopedManageTopics(this._topics) });
   },
 
-  onEventViewChange(e) {
-    const view = (e.detail && e.detail.key) || (e.currentTarget && e.currentTarget.dataset.view);
-    if (view !== 'list' && view !== 'calendar') return;
-    this.setData({ eventView: view });
-    if (view === 'calendar') {
-      this.refreshEventCalendar();
-      this.loadCalendarSessions();
-    }
-  },
-
-  onShiftEventMonth(e) {
-    const delta = Number(e.currentTarget && e.currentTarget.dataset.delta);
-    if (!Number.isInteger(delta) || !delta) return;
-    this.setData({ eventCalendarMonth: shiftMonth(this.data.eventCalendarMonth, delta) });
-    this.refreshEventCalendar();
-    this.loadCalendarSessions();
-  },
-
-  // W10a #19:按月读真实场次。切月即重读;响应必须回显本次 clubId + month 才采用。
-  loadCalendarSessions() {
-    const clubId = this.data.clubId;
-    const month = this.data.eventCalendarMonth;
-    const seq = this._calendarSessionSeq = (this._calendarSessionSeq || 0) + 1;
-    // 演示俱乐部没有后端场次:停在「仅已加载主题」,不发请求。
-    if (!clubId || isDemoClubId(clubId)) {
-      this._calendarSessions = null;
-      this.setData({ eventCalendarSessionState: 'idle' });
-      this.refreshEventCalendar();
-      return;
-    }
-    if (this._calendarSessions && this._calendarSessions.monthKey !== month) this._calendarSessions = null;
-    this.setData({ eventCalendarSessionState: 'loading' });
-    this.refreshEventCalendar();
-    const that = this;
-    app.sendRequest({
-      hideLoading: true,
-      silentError: true,
-      url: '/api/club/calendar/sessions',
-      method: 'POST',
-      data: jsonBody({ clubId: clubId, month: month }),
-      header: jsonHeader(),
-      success(res) {
-        if (seq !== that._calendarSessionSeq || String(clubId) !== String(that.data.clubId)
-            || month !== that.data.eventCalendarMonth) return;
-        const shaped = isSuccess(res) ? shapeCalendarSessions(res.data, clubId, month) : null;
-        that._calendarSessions = shaped;
-        that.setData({ eventCalendarSessionState: shaped ? 'ready' : 'error' });
-        that.refreshEventCalendar();
-      },
-      fail() {
-        if (seq !== that._calendarSessionSeq || String(clubId) !== String(that.data.clubId)
-            || month !== that.data.eventCalendarMonth) return;
-        that._calendarSessions = null;
-        that.setData({ eventCalendarSessionState: 'error' });
-        that.refreshEventCalendar();
-      },
-    });
-  },
-
-  refreshEventCalendar() {
-    const month = this.data.eventCalendarMonth;
-    const sessions = this._calendarSessions && this._calendarSessions.monthKey === month
-      ? this._calendarSessions : null;
-    const state = sessions ? 'ready' : (this.data.eventCalendarSessionState === 'ready'
-      ? 'idle' : this.data.eventCalendarSessionState);
-    const calendar = buildMonthCalendar(month, sessions ? sessions.events : this._topics);
-    const hasEvents = calendar.cells.some(function (cell) {
-      return cell.inMonth && cell.events.length > 0;
-    });
-    this.setData({
-      eventCalendarTitle: calendar.title,
-      eventCalendarCells: calendar.cells,
-      eventCalendarHasEvents: hasEvents,
-      eventCalendarSource: sessions ? 'sessions' : 'topics',
-      eventCalendarNotice: calendarNotice(state, sessions),
-    });
-  },
-
   loadMembers() {
     const that = this;
     const clubId = this.data.clubId;
@@ -2348,6 +2201,7 @@ Page({
           return;
         }
         that.setData({ members: res.data, membersState: 'ready', memberStrip: buildMemberStrip(res.data, that.data.club && that.data.club.memberCount) });
+        if (that._leaderboardRows) that.setData({ leaderboard: that.composeLeaderboard() });
       },
       fail() {
         if (!isCurrent()) return;
@@ -2604,7 +2458,7 @@ Page({
       ? { key: 'posts', icon: 'comment', title: '看大家的动态', sub: '在「帖子」看主理人和成员发的内容，可以点亮、评论' }
       : { key: 'posts', icon: 'comment', title: '发帖和大家聊', sub: '在「帖子」发动态、带上你的漫游成绩，大家都能点亮和评论' });
     if (this.data.isMerchantViewer) {
-      items.push({ key: 'events', icon: 'calendar', title: '看看俱乐部的局', sub: '可以浏览俱乐部活动；商家身份不能报名' });
+      items.push({ key: 'events', icon: 'calendar', title: '看看俱乐部的局', sub: '可以浏览俱乐部活动，在活动卡上邀约承接；商家身份不能报名' });
     } else {
       const perks = [];
       if (Number(c.prioritySignupEnabled) === 1) perks.push('成员优先报名');
@@ -2712,6 +2566,34 @@ Page({
         + '&mode=report&targetType=CLUB&targetId=' + clubId
         + (clubName ? '&targetName=' + encodeURIComponent(clubName) : ''),
       complete: () => { this._navigating = false; } });
+  },
+
+  // 2026-10-27 P-14 owner:「举报活动」不再是卡上的橙色文字链,收进卡片的「更多」。
+  onEventMore(e) {
+    const ds = (e && e.currentTarget && e.currentTarget.dataset) || {};
+    const topicId = positiveId(ds.id);
+    if (!topicId) return;
+    const that = this;
+    this.openChoiceSheet(ds.name || '活动', '', [{ key: 'report', label: '举报活动' }], function (item) {
+      if (item && item.key === 'report') that.reportTopicActivity({ currentTarget: { dataset: { id: topicId } } });
+    });
+  },
+
+  // 2026-10-27 M-24·M-34 owner:商家可以入团、看活动,活动卡上的动作是「邀约承接」而不是报名 ——
+  // 进现成的「商家 → 俱乐部」合作邀约(type=1),本俱乐部预选为对象;关联主题仍由商家选自己的
+  // (coop/invite 的 topicId 是邀约方自己的主题,不能把俱乐部的主题塞进去)。
+  onMerchantUndertake(e) {
+    if (!this.data.isMerchantViewer) return;
+    const club = this.data.club || {};
+    const clubId = positiveId(club.id || this.data.clubId);
+    if (!clubId) return;
+    if (this._navigating) return; this._navigating = true;
+    wx.navigateTo({
+      url: '/pages/coop/invite/index?type=1&toId=' + clubId
+        + '&toName=' + encodeURIComponent(club.name || '该俱乐部')
+        + (this._operationScope === 'MERCHANT' ? '&scope=MERCHANT' : ''),
+      complete: () => { this._navigating = false; },
+    });
   },
 
   reportTopicActivity(e) {
@@ -3158,38 +3040,57 @@ Page({
   },
 
   // 动态点赞/取消
-  // BL-197:接口是切换式,同一条在返回前的重复点击忽略(否则先赞后取消);失败如实提示,成功只回读不乐观改数
-  // PRIVATE-GROUP-club-like-unknown:断网时结果未知——锁不放,按 post/list 的严格布尔 isLiked 回读,
-  // 与发起时的目标意图比对后才允许下一次切换;未知期间再点只回读不切换。锁/意图按 owner+俱乐部隔离。
-  // 后端 post/like 只是切换、没有目标状态幂等,迟到落库仍可能与回读交错——这是后端依赖,前端不假设。
+  // 本页发送 liked 目标态，后端幂等；UNKNOWN 不自动重发，只定点读取当前快照。
+  // 快照不是原写请求的最终回执，不能据 false 断言原请求从未执行。
+  _postLikeContext() {
+    if (this._sceneGuardDestroyed) return null;
+    const owner = parseInviteId(app.getUserID && app.getUserID());
+    const clubId = parseInviteId(this.data.clubId);
+    if (!owner || !clubId) return null;
+    let scope = this._postLikeScope;
+    if (!scope || scope.owner !== owner || scope.clubId !== clubId || scope.detailSeq !== this._detailRequestSeq) {
+      scope = this._postLikeScope = { owner, clubId, detailSeq: this._detailRequestSeq };
+    }
+    return scope;
+  },
   onLikePost(e) {
     if (app.ensureLoginFor && !app.ensureLoginFor('like', () => this.onLikePost(e))) return; // 2026-10-24 游客写前登录
-    const id = (e.detail && e.detail.postId) || e.currentTarget.dataset.id;
-    if (!id) return;
-    const owner = String(app.getUserID && app.getUserID() || '');
-    const clubId = String(this.data.clubId);
-    const key = owner + '|' + clubId + '|' + String(id);
+    const rawId = (e.detail && e.detail.postId) || e.currentTarget.dataset.id;
+    const id = parseInviteId(rawId);
+    const scope = this._postLikeContext();
+    if (!id || !scope) return;
+    const { owner, clubId } = scope;
+    const key = owner + '|' + clubId + '|' + id;
     const liking = this._likingPosts || (this._likingPosts = {});
     const pending = liking[key];
     if (pending) {
+      if (pending.scope !== scope) {
+        pending.scope = scope;
+        pending.unknown = true;
+        pending.reading = false;
+      }
       if (pending.unknown && !pending.reading) this.readbackPostLike(key);
       return;
     }
-    const post = (this.data.posts || []).find(function (p) { return String(p.id) === String(id); });
-    const entry = { postId: id, owner: owner, clubId: clubId, target: !(post && (post.isLiked === true || Number(post.isLiked) === 1)), unknown: false, reading: false };
+    const post = (this.data.posts || []).find(function (p) { return parseInviteId(p.id) === id; });
+    const entry = { postId: id, owner, clubId, scope, target: !(post && (post.isLiked === true || Number(post.isLiked) === 1)), unknown: false, reading: false, settled: false };
     liking[key] = entry;
     const that = this;
+    const stillMine = () => that._likingPosts === liking && liking[key] === entry
+      && entry.scope === scope && that._postLikeContext() === scope;
     app.sendRequest({
       // P1-023:带目标态,服务端按目标态幂等,重试不会把已生效的赞翻回去
-      url: '/api/club/post/like', method: 'POST', data: jsonBody({ postId: id, liked: entry.target }), header: jsonHeader(),
+      url: '/api/club/post/like', method: 'POST', data: jsonBody({ postId: typeof rawId === 'number' ? rawId : id, liked: entry.target }), header: jsonHeader(),
       success(res) {
-        if (liking[key] !== entry) return;
+        if (!stillMine() || entry.settled) return;
+        entry.settled = true;
         delete liking[key];
         if (res && res.code == '200') that.loadPosts();
         else cyToast(bizFailureMessage(res, '点赞没成功'));
       },
       fail() {
-        if (liking[key] !== entry) return;
+        if (!stillMine() || entry.settled) return;
+        entry.settled = true;
         entry.unknown = true;
         cyToast('点赞结果未确认，正在确认');
         that.readbackPostLike(key);
@@ -3197,38 +3098,45 @@ Page({
     });
   },
 
-  // 回读只认 post/list 的严格布尔 isLiked:与目标一致=已生效,相反=未生效,可再点;
-  // 回读失败/找不到该帖/非布尔(未登录时后端不标)都保持未知锁,下次点击再回读。
+  // 不查首页/扫描分页；必须核对原 owner+club+post 与严格 boolean。
+  // 不存在、拒权、畸形或传输失败均保留 UNKNOWN，下次点击仍只查询。
   readbackPostLike(key) {
     const liking = this._likingPosts || {};
     const entry = liking[key];
     if (!entry || !entry.unknown || entry.reading) return;
-    entry.reading = true;
+    const scope = this._postLikeContext();
+    if (!scope || entry.scope !== scope || entry.owner !== scope.owner || entry.clubId !== scope.clubId) return;
+    const read = {};
+    entry.reading = read;
     const that = this;
     const stillMine = function () {
-      return liking[key] === entry && entry.clubId === String(that.data.clubId)
-        && entry.owner === String(app.getUserID && app.getUserID() || '');
+      return that._likingPosts === liking && liking[key] === entry && entry.reading === read && entry.scope === scope
+        && that._postLikeContext() === scope;
+    };
+    const unresolved = function () {
+      if (!stillMine()) return;
+      entry.reading = false;
+      cyToast('点赞结果未确认，请稍后再点确认');
     };
     app.sendRequest({
-      hideLoading: true, url: '/api/club/post/list', method: 'POST', data: jsonBody({ id: entry.clubId, clubId: entry.clubId }), header: jsonHeader(),
+      hideLoading: true, url: '/api/club/post/like-state', method: 'POST', data: jsonBody({ id: entry.postId, clubId: entry.clubId }), header: jsonHeader(),
       success(res) {
-        entry.reading = false;
         if (!stillMine()) return;
-        const rows = res && res.code == '200' && Array.isArray(res.data) ? res.data : null;
-        const row = rows && rows.find(function (p) { return p && String(p.id) === String(entry.postId); });
-        if (!row || typeof row.isLiked !== 'boolean') { cyToast('点赞结果未确认，请稍后再点确认'); return; }
+        const row = res && res.code == '200' && res.data;
+        if (!row || typeof row !== 'object' || Array.isArray(row)
+            || parseInviteId(row.id) !== entry.postId || parseInviteId(row.clubId) !== entry.clubId
+            || typeof row.isLiked !== 'boolean'
+            || (row.likeCount !== null && !Number.isInteger(row.likeCount))) { unresolved(); return; }
         delete liking[key];
         const posts = (that.data.posts || []).map(function (p) {
-          if (String(p.id) !== String(entry.postId)) return p;
+          if (parseInviteId(p.id) !== entry.postId) return p;
           return Object.assign({}, p, { isLiked: row.isLiked }, row.likeCount !== undefined ? { likeCount: row.likeCount } : {});
         });
         that.setData({ posts: posts });
-        cyToast(row.isLiked === entry.target ? (entry.target ? '已点赞' : '已取消点赞') : '点赞没成功，可以再试一次');
+        cyToast(row.isLiked ? '当前已点赞' : '当前未点赞，可再次操作');
       },
-      fail() {
-        entry.reading = false;
-        if (stillMine()) cyToast('点赞结果未确认，请稍后再点确认');
-      },
+      fail: unresolved,
+      successStatusAbnormal: unresolved,
     });
   },
 

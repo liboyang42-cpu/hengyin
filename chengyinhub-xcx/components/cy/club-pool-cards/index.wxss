@@ -1,0 +1,19 @@
+/* 2026-10-28 m689 俱乐部合作卡(Figma 350:557):上封面、下白底信息,卡间距放大。
+   颜色沿用店铺参谋页的近黑强调与浅灰空格(页面 --mi-* 变量能穿过 isolated 继承下来,缺省给同值) */
+:host { display: block; }
+.cp-head { display: flex; align-items: center; justify-content: space-between; margin: var(--cy-space-6) var(--cy-page-x) var(--cy-space-3); }
+.cp-title { font-size: var(--cy-type-section-title); font-weight: 700; color: var(--cy-text-title); }
+.cp-link { min-height: 88rpx; display: flex; align-items: center; gap: 4rpx; font-size: var(--cy-font-label); color: var(--cy-text-secondary); }
+.cp-retry { margin: 0 var(--cy-page-x) var(--cy-space-5); min-height: 88rpx; padding: var(--cy-space-4); box-sizing: border-box; border-radius: var(--cy-radius-xl); background: var(--cy-bg-card); text-align: center; font-size: var(--cy-font-label); color: var(--cy-text-secondary); }
+.cp-card { margin: 0 var(--cy-page-x) var(--cy-space-5); border-radius: var(--cy-radius-xl); overflow: hidden; background: var(--cy-bg-card); }
+.cp-cover { position: relative; height: 300rpx; background: var(--mi-off, #EDEDF2); } /* ds-ok: 与页面 --mi-off 同值的兜底 */
+.cp-img { width: 100%; height: 100%; display: block; }
+.cp-tag { position: absolute; left: var(--cy-space-3); top: var(--cy-space-3); padding: 6rpx 18rpx; border-radius: var(--cy-radius-pill); background: var(--cy-color-status-success-soft); color: var(--cy-color-status-success); font-size: var(--cy-font-caption); font-weight: 600; }
+.cp-body { padding: var(--cy-space-4) var(--cy-space-4) var(--cy-space-5); }
+.cp-name { display: block; font-size: var(--cy-type-card-title); font-weight: 700; color: var(--cy-text-title); }
+.cp-host { display: block; margin-top: var(--cy-space-1); font-size: var(--cy-font-label); color: var(--cy-text-secondary); }
+.cp-foot { display: flex; align-items: center; justify-content: space-between; margin-top: var(--cy-space-3); }
+.cp-dl { font-size: var(--cy-font-label); color: var(--cy-text-body); }
+.cp-cta { padding: 16rpx var(--cy-space-4); border-radius: var(--cy-radius-pill); background: var(--mi-ink, #1C1C1E); color: var(--mi-on-ink, #FFFFFF); font-size: var(--cy-font-caption); font-weight: 600; } /* ds-ok: 与页面「看看」同色的兜底 */
+/* isolated 组件内全局 .cy-pressed 进不来,本地一份(只减淡不位移) */
+.cy-pressed { opacity: .88; }

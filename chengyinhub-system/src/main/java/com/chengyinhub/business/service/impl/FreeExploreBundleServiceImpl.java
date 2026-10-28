@@ -469,8 +469,48 @@ public class FreeExploreBundleServiceImpl implements IFreeExploreBundleService {
     }
 
     @Override
+    public Map<String, Object> cancellationQuote(Long memberId, Long reservationId, boolean useWaiver) {
+        requireLedger();
+        ExploreBundleReservation reservation = reservationId == null ? null : bundleMapper.selectReservationById(reservationId);
+        if (reservation == null || !Objects.equals(memberId, reservation.getHolderMemberId()) || memberId == null) {
+            throw new FreeExploreBundleException("BUNDLE_NOT_FOUND", "预约不存在");
+        }
+        requireOwnRegistration(memberId, reservation.getRegistrationId());
+        Date now = clock.get();
+        Map<String, Object> quote = new LinkedHashMap<>();
+        quote.put("reservationId", exactId(reservation.getId()));
+        quote.put("registrationId", exactId(reservation.getRegistrationId()));
+        quote.put("holderMemberId", exactId(reservation.getHolderMemberId()));
+        quote.put("version", reservation.getVersion());
+        quote.put("status", reservation.getStatus());
+        quote.put("asOf", now.getTime());
+        quote.put("useWaiver", useWaiver);
+        quote.put("outcome", cancellationOutcome(reservation.getStartAt(), now, useWaiver));
+        quote.put("expectedOutcome", cancellationConfirmation(reservation.getStartAt(), now, useWaiver));
+        quote.put("canCancel", switches.reservationActive() && "BOOKED".equals(reservation.getStatus()));
+        // Quote is not a waiver reservation: the unique monthly row is acquired only in the write transaction.
+        quote.put("waiverMonth", FreeExploreBundlePolicy.waiverMonth(now));
+        return quote;
+    }
+
+    private static String cancellationOutcome(Date startAt, Date now, boolean useWaiver) {
+        return FreeExploreBundlePolicy.freeCancel(startAt, now) ? "CANCELLED" : useWaiver ? "WAIVED" : "LATE_CANCELLED";
+    }
+
+    private static String cancellationConfirmation(Date startAt, Date now, boolean useWaiver) {
+        String outcome = cancellationOutcome(startAt, now, useWaiver);
+        return "WAIVED".equals(outcome) ? outcome + ":" + FreeExploreBundlePolicy.waiverMonth(now) : outcome;
+    }
+
+    @Override
     @Transactional(rollbackFor = Exception.class)
     public ExploreBundleReservation cancelReservation(Long memberId, Long reservationId, boolean useWaiver) {
+        return cancelReservation(memberId, reservationId, useWaiver, null);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ExploreBundleReservation cancelReservation(Long memberId, Long reservationId, boolean useWaiver, String expectedOutcome) {
         requireReservation();
         ExploreBundleReservation reservation = reservationId == null ? null
                 : bundleMapper.selectReservationByIdForUpdate(reservationId);
@@ -480,6 +520,9 @@ public class FreeExploreBundleServiceImpl implements IFreeExploreBundleService {
         if (!"BOOKED".equals(reservation.getStatus())) return reservation;   // 已终态:幂等回读
         ExploreBundleUnit unit = requireReservedUnit(reservation);
         Date now = clock.get();
+        if (expectedOutcome != null && !expectedOutcome.equals(cancellationConfirmation(reservation.getStartAt(), now, useWaiver))) {
+            throw new FreeExploreBundleException("BUNDLE_CANCEL_QUOTE_CHANGED", "取消条件已变化，请重新试算并确认");
+        }
         String reservationTo;
         String unitTo;
         if (FreeExploreBundlePolicy.freeCancel(reservation.getStartAt(), now)) {
@@ -593,6 +636,49 @@ public class FreeExploreBundleServiceImpl implements IFreeExploreBundleService {
             throw new FreeExploreBundleException("BUNDLE_CONCURRENT", "权益状态已变化,请刷新后重试");
         }
         return exitCase;
+    }
+
+    @Override
+    public Map<String, Object> merchantExitOptions(Long memberId, Long registrationId, Long unitId) {
+        requireLedger();
+        CmsRegistration registration = requireOwnRegistration(memberId, registrationId);
+        ExploreBundleOrder order = requireOwnOrder(memberId, registrationId);
+        ExploreBundleUnit unit = bundleMapper.selectUnitsByRegistration(registrationId).stream()
+                .filter(row -> Objects.equals(unitId, row.getId()) && Objects.equals(memberId, row.getHolderMemberId()))
+                .findFirst().orElseThrow(() -> new FreeExploreBundleException("BUNDLE_NOT_FOUND", "套票单位不存在"));
+        boolean exited = false;
+        if ("RESERVED".equals(unit.getStatus()) && unit.getReservationId() != null) {
+            ExploreBundleReservation booking = bundleMapper.selectReservationById(unit.getReservationId());
+            exited = booking != null && "BOOKED".equals(booking.getStatus())
+                    && Objects.equals(unit.getId(), booking.getUnitId())
+                    && !isLive(offerMapper.selectById(booking.getOfferId()));
+        } else if ("AVAILABLE".equals(unit.getStatus())) {
+            exited = !hasLiveOfferForChapter(unit);
+        }
+        List<Map<String, Object>> targets = new ArrayList<>();
+        boolean actionable = exited && withinValidity(unit, clock.get()) && switches.reservationActive()
+                && Integer.valueOf(2).equals(registration.getPaymentStatus())
+                && Integer.valueOf(2).equals(registration.getRegistrationStatus());
+        if (actionable) {
+            List<MerchantChapterOffer> offers = offerMapper.selectByTopic(order.getTopicId());
+            for (MerchantChapterOffer offer : offers == null ? Collections.<MerchantChapterOffer>emptyList() : offers) {
+                if (!Objects.equals(unit.getChapterId(), offer.getChapterId()) || !isLive(offer)
+                        || offer.getValidEnd() != null && offer.getValidEnd().before(unit.getValidTo())) continue;
+                Map<String, Object> target = new LinkedHashMap<>();
+                target.put("offerId", exactId(offer.getId()));
+                target.put("merchantName", offer.getMerchantName());
+                target.put("validEnd", offer.getValidEnd());
+                targets.add(target);
+            }
+        }
+        Map<String, Object> options = new LinkedHashMap<>();
+        options.put("registrationId", exactId(registrationId));
+        options.put("unitId", exactId(unitId));
+        options.put("holderMemberId", exactId(memberId));
+        options.put("merchantExited", exited);
+        options.put("targets", targets);
+        options.put("refundSubmissionAvailable", false); // No new fund/after-sales route is authorized by this read API.
+        return options;
     }
 
     // ================================================================ 内部
@@ -726,6 +812,10 @@ public class FreeExploreBundleServiceImpl implements IFreeExploreBundleService {
         policy.put("partialRefundMinRatio", FreeExploreBundlePolicy.PARTIAL_REFUND_MIN_RATIO);
         policy.put("monthlyVoluntaryWaivers", 1);
         return policy;
+    }
+
+    private static String exactId(Long value) {
+        return value == null ? null : value.toString();
     }
 
     private static String plain(BigDecimal value) {

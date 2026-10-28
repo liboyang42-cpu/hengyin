@@ -235,6 +235,18 @@
   border-radius: var(--cy-radius-md);
   background: var(--cy-color-bg-surface-subtle);
 }
+/* 俱乐部模式(P-20):公告开关行,搬自原俱乐部页内嵌输入框的 .post-kind-toggle */
+.cmp-announce {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 88rpx;
+  margin-top: var(--cy-space-3);
+  font-size: var(--cy-type-label);
+  color: var(--cy-color-text-secondary);
+}
+.cmp-announce-state { color: var(--cy-color-text-primary); font-weight: 600; }
+.cmp-announce--on .cmp-announce-state { color: var(--cy-color-status-warning); }
 .cmp-chip {
   display: flex;
   align-items: center;

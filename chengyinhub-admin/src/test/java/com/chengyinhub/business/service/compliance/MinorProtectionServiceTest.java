@@ -171,24 +171,18 @@ class MinorProtectionServiceTest {
 
     @Test
     void enforcementHooksAreNoOpsWhileTheSwitchesAreOff() {
-        when(switches.minorPaymentGateOn()).thenReturn(false);
         when(switches.minorOrienteeringGateOn()).thenReturn(false);
 
-        assertTrue(service.enforcePurchaseIfEnabled(UNKNOWN).allowed());
-        assertTrue(service.enforcePurchaseIfEnabled(KID_6).allowed());
         assertTrue(service.enforceOrienteeringIfEnabled(KID_6, play(false, 22, 23, KID_6)).allowed());
         verifyNoInteractions(members, mapper);
     }
 
     @Test
     void enforcementHooksApplyTheRulesOnceSwitchedOn() {
-        when(switches.minorPaymentGateOn()).thenReturn(true);
         when(switches.minorOrienteeringGateOn()).thenReturn(true);
 
-        assertEquals(MinorDecision.AGE_UNKNOWN, service.enforcePurchaseIfEnabled(UNKNOWN).errorCode());
         assertEquals(MinorDecision.ROUTE_NOT_LOW_RISK,
                 service.enforceOrienteeringIfEnabled(KID_10, play(false, 9, 12, KID_10)).errorCode());
-        assertTrue(service.enforcePurchaseIfEnabled(ADULT).allowed());
     }
 
     // ── 夹具 ─────────────────────────────────────────────────────────

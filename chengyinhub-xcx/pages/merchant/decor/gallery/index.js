@@ -275,7 +275,7 @@ Page({
         if (res.code === '200' || res.code === 200) {
           settle(() => {
             that.setData({ saving: false, dirty: false, saveErrorKind: '', saveError: '', saveReceipt: '门店相册已保存' });
-            toast.success('相册已保存');
+            toast.success('已保存');
             that._successTimer = setTimeout(function () {
               if (isCurrent() && !that._hidden) that.onNavBack();
             }, 400);

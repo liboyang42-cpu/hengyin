@@ -144,7 +144,8 @@ class ApiMerchantNpcSaveTest {
         assertEquals("px1:p07", saved.getAvatar());
         assertEquals("小店长", saved.getName());
         assertEquals(Integer.valueOf(1), saved.getEnabled());
-        assertEquals(Integer.valueOf(0), saved.getAuditStatus(), "商家自助新建必须进入待审");
+        // M-28 先发后审:文本已同步过内容安全,保存即对玩家生效(玩家读闸只放 audit_status=1)。
+        assertEquals(Integer.valueOf(1), saved.getAuditStatus(), "过了同步机审的保存必须立刻生效");
         // persona 是 NOT NULL 列;商家没填就落空串,不编假人设
         assertEquals("", saved.getPersona());
     }
@@ -191,6 +192,41 @@ class ApiMerchantNpcSaveTest {
         controller.npcSave(clearBody);
         verify(npcProfileMapper, times(2)).updateMerchantSelfNpc(cap.capture());
         assertEquals("", cap.getValue().getPersona());
+    }
+
+    @Test
+    void personalityPresetLabelIsStoredAsTheCodeTheChatReaderUses() {
+        when(npcProfileMapper.selectMerchantNpcList(MERCHANT_ID, null)).thenReturn(new ArrayList<NpcProfile>());
+        NpcProfile body = body("小店长", "px1:p01", "欢迎");
+        body.setPersona("毒舌");
+
+        assertEquals(200, controller.npcSave(body).get(AjaxResult.CODE_TAG));
+
+        ArgumentCaptor<NpcProfile> cap = ArgumentCaptor.forClass(NpcProfile.class);
+        verify(npcProfileMapper).insertMerchantNpc(cap.capture());
+        assertEquals("savage", cap.getValue().getPersona());
+    }
+
+    @Test
+    void updateGoesLiveButRejectedUnchangedPhotoCannotBypassMachineReview() {
+        NpcProfile mine = new NpcProfile();
+        mine.setId(42L);
+        mine.setScopeId(MERCHANT_ID);
+        mine.setAuditStatus(2);
+        mine.setAvatar("/profile/2026/bad.png");
+        when(npcProfileMapper.selectMerchantNpcList(MERCHANT_ID, null))
+                .thenReturn(new ArrayList<>(Arrays.asList(mine)));
+        ArgumentCaptor<NpcProfile> cap = ArgumentCaptor.forClass(NpcProfile.class);
+
+        controller.npcSave(body("小店长", "/profile/2026/bad.png", null));
+        verify(npcProfileMapper).updateMerchantSelfNpc(cap.capture());
+        assertEquals(Integer.valueOf(0), cap.getValue().getAuditStatus(), "被机审打回的同一张图重新保存仍回到待审");
+
+        controller.npcSave(body("小店长", "/profile/2026/new.png", null));
+        controller.npcSave(body("小店长", "px1:p01", null));
+        verify(npcProfileMapper, times(3)).updateMerchantSelfNpc(cap.capture());
+        assertEquals(Integer.valueOf(1), cap.getAllValues().get(cap.getAllValues().size() - 2).getAuditStatus());
+        assertEquals(Integer.valueOf(1), cap.getValue().getAuditStatus());
     }
 
     @Test

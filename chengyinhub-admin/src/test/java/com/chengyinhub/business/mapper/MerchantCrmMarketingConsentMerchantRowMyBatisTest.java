@@ -51,6 +51,7 @@ class MerchantCrmMarketingConsentMerchantRowMyBatisTest {
             assertEquals(1, rows.size());
             assertEquals(Long.valueOf(77L), rows.get(0).getMerchantRowId());
             assertEquals(Long.valueOf(900L), rows.get(0).getMerchantOwnerMemberId());
+            assertEquals("/profile/upload/a-logo.png", rows.get(0).getMerchantLogo(), "营销消息页分组头读商家行上的 Logo");
             assertEquals(Boolean.FALSE, rows.get(0).getInAppOptedIn());
             assertEquals(Boolean.FALSE, rows.get(0).getCouponOptedIn());
             assertNull(mapper.selectEligibleMerchant(41L, 78L));
@@ -74,7 +75,7 @@ class MerchantCrmMarketingConsentMerchantRowMyBatisTest {
         try (Statement statement = session.getConnection().createStatement()) {
             statement.execute("drop all objects");
             statement.execute("create table mms_merchant(id bigint primary key, member_id bigint not null, "
-                    + "name varchar(100), status int not null, account_status int not null, del_flag int not null)");
+                    + "name varchar(100), status int not null, account_status int not null, del_flag int not null, logo varchar(500))");
             statement.execute("create table cms_registration(id bigint primary key, member_id bigint not null, "
                     + "payment_status int not null, owner_type int not null, owner_id bigint not null)");
             statement.execute("create table cms_topic(id bigint primary key, member_id bigint not null, "
@@ -93,7 +94,7 @@ class MerchantCrmMarketingConsentMerchantRowMyBatisTest {
     private void seed(SqlSession session) throws Exception {
         try (Statement statement = session.getConnection().createStatement()) {
             statement.execute("insert into mms_merchant values "
-                    + "(77,900,'A店',1,1,0),(78,900,'B店',1,1,0)");
+                    + "(77,900,'A店',1,1,0,'/profile/upload/a-logo.png'),(78,900,'B店',1,1,0,null)");
             statement.execute("insert into cms_registration values (301,41,2,2,31)");
             statement.execute("insert into cms_activity values (31,null,900,0)");
         }

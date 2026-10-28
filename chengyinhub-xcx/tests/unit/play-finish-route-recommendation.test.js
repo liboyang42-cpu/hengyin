@@ -84,6 +84,42 @@ test('附近候选排除当前活动与同主题路线，并保留服务端距�
   assert.equal(candidate.priceText, '¥39.9 起')
 })
 
+test('推荐起点拒绝缺失、非法及越界坐标，保留零值、数值字符串与完成时间顺序', () => {
+  const { resolveOrigin } = require('../../pages/play/finish-route-recommendation.js')
+  for (const value of [null, undefined, '', ' ', true, false, NaN, Infinity, 'bad']) {
+    for (const [latitude, longitude] of [[value, 0], [0, value]]) {
+      assert.equal(resolveOrigin({ latitude, longitude }, []), null)
+      assert.equal(resolveOrigin(null, [{ done: true, lat: latitude, lng: longitude }]), null)
+    }
+  }
+  for (const [latitude, longitude] of [[90.1, 0], [-90.1, 0], [0, 180.1], [0, -180.1]]) {
+    assert.equal(resolveOrigin({ latitude, longitude }, []), null)
+    assert.equal(resolveOrigin(null, [{ done: true, lat: latitude, lng: longitude }]), null)
+  }
+  assert.deepEqual(resolveOrigin({ latitude: 0, longitude: '0' }, []), { latitude: 0, longitude: 0 })
+  assert.deepEqual(resolveOrigin({ latitude: '-90', longitude: '180' }, []), { latitude: -90, longitude: 180 })
+  assert.deepEqual(resolveOrigin(null, [
+    { done: true, lat: 31, lng: 121, doneAt: 1 },
+    { done: true, lat: '0', lng: 0, doneAt: 2 },
+    { done: true, lat: 91, lng: 0, doneAt: 3 },
+  ]), { latitude: 0, longitude: 0 })
+})
+
+test('缺失或非法距离沿用无距离降级，不改变候选顺序；合法零距离保留', () => {
+  const { pickCandidate } = require('../../pages/play/finish-route-recommendation.js')
+  for (const distance of [null, undefined, '', ' ', true, false, NaN, Infinity, -1, 'bad']) {
+    const candidate = pickCandidate([
+      { id: 21, distance, addressName: '原地址' },
+      { id: 22, distance: 0 },
+    ], '', '')
+    assert.equal(candidate.id, 21)
+    assert.equal(candidate.meta, '原地址')
+  }
+  for (const distance of [0, '0']) {
+    assert.equal(pickCandidate([{ id: 21, distance }], '', '').meta, '0 米')
+  }
+})
+
 test('当前会话缺少可排除 ID 时仍可选择真实附近候选', () => {
   const { pickCandidate } = require('../../pages/play/finish-route-recommendation.js')
   const candidate = pickCandidate([{ id: 21, name: '附近可购路线' }], '', '')

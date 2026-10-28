@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.UserInvoiceProcessingMapper">
+    <!-- Durable facts remain in the source tables; failed candidates are retried on the next scan pass. -->
+    <select id="refundPauseCandidates" resultType="long" useCache="false" flushCache="true">
+      select distinct r.id from user_invoice_processing p
+      join user_invoice_application a on a.id=p.application_id
+      join user_invoice_application_order o on o.application_id=a.id and o.active_key=1 and o.order_source='registration'
+      join cms_registration r on r.id=o.order_id
+      where r.id &gt; #{after} and a.status in ('SUBMITTED','CLAIMED','PROCESSING','ISSUE_UNKNOWN','ISSUED')
+        and not (a.status='ISSUED' and p.reconciliation_status='TAX_REVIEW_REQUIRED')
+        and (r.payment_status is null or r.payment_status&lt;&gt;2 or r.registration_status is null or r.registration_status&lt;&gt;2
+          or exists (select 1 from cms_registration child where r.parent_order_no is not null and r.parent_order_no!=''
+            and child.parent_order_no=r.parent_order_no and (child.payment_status is null or child.payment_status&lt;&gt;2
+              or child.registration_status is null or child.registration_status&lt;&gt;2))
+          or exists (select 1 from refund_application ra where ra.source_type='registration' and ra.del_flag=0
+            and (ra.status is null or ra.status&lt;&gt;2)
+            and (ra.source_id=r.id or exists (select 1 from cms_registration sibling
+              where r.parent_order_no is not null and r.parent_order_no!=''
+                and sibling.parent_order_no=r.parent_order_no and sibling.id=ra.source_id))))
+      order by r.id limit 50
+    </select>
+    <insert id="reserveIssuedReference">
+      insert into user_invoice_issued_reference(issuer_id,invoice_no,application_id) values(#{issuer},#{invoiceNo},#{id})
+    </insert>
+    <sql id="scopeJoins">
+      join user_invoice_issuer i on i.id=p.issuer_id and i.enabled=1
+      join user_invoice_scope s on s.issuer_id=i.id and s.user_id=#{actor} and s.enabled=1
+      join sys_user u on u.user_id=s.user_id and u.status='0' and u.del_flag='0'
+      join user_invoice_scope q on q.issuer_id=i.id and q.user_id=i.reconciliation_user_id
+        and q.enabled=1 and q.can_reconcile=1
+      join sys_user qu on qu.user_id=q.user_id and qu.status='0' and qu.del_flag='0'
+    </sql>
+    <sql id="configuredHandler">
+      exists (select 1 from user_invoice_scope h join sys_user hu on hu.user_id=h.user_id
+        and hu.status='0' and hu.del_flag='0'
+        where h.issuer_id=i.id and h.enabled=1 and h.can_handle=1)
+    </sql>
+    <select id="listScoped" resultType="long">
+      select p.application_id from user_invoice_processing p <include refid="scopeJoins"/>
+      where (s.can_handle=1 or (s.can_reconcile=1 and s.user_id=i.reconciliation_user_id))
+        and <include refid="configuredHandler"/>
+        <if test="before != null">and p.application_id &lt; #{before}</if>
+      order by p.application_id desc limit 50
+    </select>
+    <select id="scopeRead" resultType="map" useCache="false" flushCache="true">
+      select p.*, s.can_handle, s.can_reconcile, i.reconciliation_user_id, i.issuer_name
+      from user_invoice_processing p <include refid="scopeJoins"/>
+      where p.application_id=#{id} and <include refid="configuredHandler"/>
+        and (s.can_handle=1 or (s.can_reconcile=1 and s.user_id=i.reconciliation_user_id))
+    </select>
+    <select id="scope" resultType="map" useCache="false" flushCache="true">
+      select p.*, s.can_handle, s.can_reconcile, i.reconciliation_user_id, i.issuer_name
+      from user_invoice_processing p <include refid="scopeJoins"/>
+      where p.application_id=#{id} and <include refid="configuredHandler"/>
+        and (s.can_handle=1 or (s.can_reconcile=1 and s.user_id=i.reconciliation_user_id))
+      for share
+    </select>
+    <select id="lockProcessing" resultType="map" useCache="false" flushCache="true">
+      select * from user_invoice_processing where application_id=#{id} for update
+    </select>
+    <select id="lockApplication" resultMap="com.chengyinhub.business.mapper.UserInvoiceMapper.ApplicationResult" useCache="false" flushCache="true">
+      select * from user_invoice_application where id=#{id} for update
+    </select>
+    <update id="transition">
+      update user_invoice_application set status=#{to}, update_time=now(),
+        invoice_no=coalesce(#{invoiceNo},invoice_no), reject_reason=coalesce(#{reason},reject_reason),
+        issued_at=case when #{to}='ISSUED' then now() else issued_at end
+      where id=#{id} and status=#{from}
+    </update>
+    <update id="advance">
+      update user_invoice_processing set version=version+1, handler_id=#{handler}, operation_id=#{operation},
+        reconciliation_status=#{reconciliation}, evidence_ref=#{evidence}
+      where application_id=#{id} and version=#{version}
+    </update>
+    <select id="receipt" resultType="map" useCache="false" flushCache="true">
+      select action,fingerprint,result_status,result_version,evidence_ref from user_invoice_processing_audit
+      where application_id=#{id} and actor_id=#{actor} and request_id=#{request} for share
+    </select>
+    <insert id="audit">
+      insert into user_invoice_processing_audit(application_id,actor_id,request_id,fingerprint,action,
+        result_status,result_version,evidence_ref)
+      values(#{id},#{actor},#{request},#{fingerprint},#{action},#{status},#{version},#{evidence})
+    </insert>
+    <select id="affectedApplications" resultType="long">
+      select distinct application_id from user_invoice_application_order
+      where active_key=1 and order_source='registration' and order_id in
+      <foreach collection="registrationIds" item="r" open="(" close=")" separator=",">#{r}</foreach>
+      order by application_id
+    </select>
+</mapper>

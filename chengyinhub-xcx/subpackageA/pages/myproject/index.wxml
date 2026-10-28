@@ -24,10 +24,7 @@
     </view>
     <view wx:if="{{loading && loaded}}" class="mp-refreshing" aria-role="status" aria-live="polite">正在同步最新项目…</view>
 
-    <view class="mp-create-row" wx:if="{{projectState === 'ready' && typeTab === 'activity' && canPublishActivity && list.length > 0}}"
-          bindtap="goCreateActivity" aria-role="button" aria-label="发布单场活动" hover-class="cy-pressed" hover-stay-time="80">
-      <cy-icon name="plus" size="28" /><text>发布单场活动</text>
-    </view>
+    <!-- 2026-10-28 业主 m693:列表上方不放发布活动的按钮(没有活动时空态里仍可发起) -->
     <!-- 上下架 / 删除按稿撤出卡面后,长按是它们唯一的入口 —— 藏起来的入口要写出来,
          否则一条已下架的路线就再也回不到上架。列表里一张卡都不可操作时不出这行。 -->
     <view class="mp-longtip" wx:if="{{projectState === 'ready' && list.length > 0 && hasRowOps}}">长按卡片管理</view>
@@ -43,40 +40,25 @@
            卡内顺序也按稿改:tag 行在最上面(整行,状态 tag 靠右),再是「封面 | 档期/标题」,
            最后是底行统计。稿里标题下面那行地址后端没有下发,按稿自己的规矩缺就不出。 -->
       <view class="mp-card" wx:for="{{list}}" wx:key="id" data-item="{{item}}" bindtap="onCardTap" bindlongpress="onCardLong" hover-class="cy-pressed" hover-stay-time="80">
-        <view class="mp-tags">
-          <text class="mp-type">{{item._roleText}}</text>
-          <text class="mp-type">{{item.projectTypeText}}</text>
-          <view class="mp-tags-gap"></view>
-          <cy-badge type="status" variant="{{item._stateVariant}}" label="{{item.stateText}}" />
-        </view>
+        <!-- 2026-10-28 业主 m693:左封面,右边 档期 + 状态 / 标题 / 地址 / 报名·浏览;身份、类型小标签撤掉 -->
         <view class="mp-main">
           <image lazy-load="true" class="mp-cover" src="{{item.cover || '/images/route_free_cover.png'}}" mode="aspectFill" />
           <view class="mp-body">
-            <view class="mp-when" wx:if="{{item._whenText}}">{{item._whenText}}</view>
+            <view class="mp-when-row">
+              <text class="mp-when">{{item._whenText}}</text>
+              <cy-badge type="status" variant="{{item._stateVariant}}" label="{{item.stateText}}" />
+            </view>
             <view class="mp-tit-row">
               <view class="mp-dot" wx:if="{{item._dot}}"></view>
               <view class="mp-tit">{{item.title}}</view>
             </view>
-            <!-- 稿 260:277 标题下那行地址。后端 cms_topic.address_name / cms_activity.address_name
-                 一直有,只是 /api/project/my 以前没往外送;缺就整行不出。 -->
             <view class="mp-addr" wx:if="{{item._address}}">{{item._address}}</view>
+            <view class="mp-stats">
+              <text class="mp-stat" wx:if="{{item._showPendingVerify}}">{{item._pendingVerifyText}}</text>
+              <text class="mp-stat" wx:elif="{{item._showAccept}}">{{item.acceptStatusText}}</text>
+              <text class="mp-stat" wx:else>{{item.signupCount || 0}} 报名 · {{item.viewCount || 0}} 浏览</text>
+            </view>
           </view>
-        </view>
-        <!-- 稿 260:277 底行按角色给不同内容:承办方看「等主理人审核 / 待核销」,
-             主办方看「N 报名 · N 浏览」。末尾都缀身份(商家 / 俱乐部 / 个人)。
-             ⚠️ 稿上「待核销 2」的数字后端没有下发(/api/project/my 无该字段),
-                所以承办方这行只给 acceptStatusText,不编一个数出来。 -->
-        <view class="mp-stats">
-          <!-- 稿 260:277 底行按角色分:承办看「待核销 N / 等主理人审核」,主办看「N 报名 · N 浏览」 -->
-          <text class="mp-stat" wx:if="{{item._showPendingVerify}}">{{item._pendingVerifyText}}</text>
-          <text class="mp-stat" wx:elif="{{item._showAccept}}">{{item.acceptStatusText}}</text>
-          <block wx:else>
-            <text class="mp-stat">{{item.signupCount || 0}} 报名</text>
-            <text class="mp-stat">{{item.viewCount || 0}} 浏览</text>
-          </block>
-          <text class="mp-owner" wx:if="{{item.ownerType==='club'}}">俱乐部</text>
-          <text class="mp-owner" wx:elif="{{item.ownerType==='merchant'}}">商家</text>
-          <text class="mp-owner" wx:else>个人</text>
         </view>
       </view>
     </view>
@@ -129,37 +111,21 @@
 
 </view>
 
-<!-- 长按卡片打开的操作面板:装稿里不许放在卡面上的那两个列表管理动作。
-     行是按这张卡的 _canToggle / _canDelete 现算的,不可用的动作整行不出,不置灰。 -->
-<cy-sheet show="{{opsSheet.show}}" title="{{opsSheet.title}}" bind:close="closeOpsSheet">
-  <view class="mp-ops-sheet">
-    <view class="mp-ops-row" wx:if="{{opsSheet.canViewApplies}}" bindtap="onOpsPick" data-k="received" hover-class="cy-pressed" hover-stay-time="80">
-      <text class="mp-ops-label">收到的申请</text>
-      
+<!-- 长按卡片打开的操作面板:装稿里不许放在卡面上的那几个列表管理动作。
+     2026-10-28 业主 m694:统一成 Threads 式分组菜单(style/threads-menu.wxss)—— 文字左、图标右,不写说明;
+     删除单独一组标红。行是按这张卡的 _canEdit / _canToggle / _canDelete… 现算的,不可用的动作整行不出。 -->
+<cy-sheet show="{{opsSheet.show}}" inset bind:close="closeOpsSheet">
+  <view class="tm">
+    <view class="tm-group" wx:if="{{opsSheet.canEdit || opsSheet.canViewApplies || opsSheet.canToggle || opsSheet.canCancel || opsSheet.canAudit || opsSheet.canSaveAsTemplate}}">
+      <view class="tm-row" wx:if="{{opsSheet.canEdit}}" bindtap="onOpsPick" data-k="edit" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="编辑"><text class="tm-label">编辑</text><cy-icon class="tm-ico" name="edit" size="40" /></view>
+      <view class="tm-row" wx:if="{{opsSheet.canViewApplies}}" bindtap="onOpsPick" data-k="received" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="收到的申请"><text class="tm-label">收到的申请</text><cy-icon class="tm-ico" name="list" size="40" /></view>
+      <view class="tm-row" wx:if="{{opsSheet.canToggle}}" bindtap="onOpsPick" data-k="toggle" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="{{opsSheet.toggleLabel}}"><text class="tm-label">{{opsSheet.toggleLabel}}</text><cy-icon class="tm-ico" name="flag" size="40" /></view>
+      <view class="tm-row" wx:if="{{opsSheet.canCancel}}" bindtap="onOpsPick" data-k="cancel" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="{{opsSheet.biz === 'topic' ? '取消主题并退款' : '取消活动'}}"><text class="tm-label">{{opsSheet.biz === 'topic' ? '取消主题并退款' : '取消活动'}}</text><cy-icon class="tm-ico" name="close" size="40" /></view>
+      <view class="tm-row" wx:if="{{opsSheet.canAudit}}" bindtap="onOpsPick" data-k="audit" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="审核记录"><text class="tm-label">审核记录</text><cy-icon class="tm-ico" name="info" size="40" /></view>
+      <view class="tm-row" wx:if="{{opsSheet.canSaveAsTemplate}}" bindtap="onOpsPick" data-k="saveAsTemplate" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="另存为模板"><text class="tm-label">另存为模板</text><cy-icon class="tm-ico" name="draft" size="40" /></view>
     </view>
-    <view class="mp-ops-row" wx:if="{{opsSheet.canEdit}}" bindtap="onOpsPick" data-k="edit" hover-class="cy-pressed" hover-stay-time="80">
-      <text class="mp-ops-label">编辑</text>
-      
-    </view>
-    <view class="mp-ops-row" wx:if="{{opsSheet.canToggle}}" bindtap="onOpsPick" data-k="toggle" hover-class="cy-pressed" hover-stay-time="80">
-      <text class="mp-ops-label">{{opsSheet.toggleLabel}}</text>
-      
-    </view>
-    <view class="mp-ops-row" wx:if="{{opsSheet.canCancel}}" bindtap="onOpsPick" data-k="cancel" hover-class="cy-pressed" hover-stay-time="80">
-      <text class="mp-ops-label">{{opsSheet.biz === 'topic' ? '取消主题并退款' : '取消活动'}}</text>
-      
-    </view>
-    <view class="mp-ops-row" wx:if="{{opsSheet.canAudit}}" bindtap="onOpsPick" data-k="audit" hover-class="cy-pressed" hover-stay-time="80">
-      <text class="mp-ops-label">审核记录</text>
-      
-    </view>
-    <view class="mp-ops-row" wx:if="{{opsSheet.canSaveAsTemplate}}" bindtap="onOpsPick" data-k="saveAsTemplate" hover-class="cy-pressed" hover-stay-time="80">
-      <text class="mp-ops-label">另存为模板</text>
-      
-    </view>
-    <view class="mp-ops-row mp-ops-row--danger" wx:if="{{opsSheet.canDelete}}" bindtap="onOpsPick" data-k="delete" hover-class="cy-pressed" hover-stay-time="80">
-      <text class="mp-ops-label">删除</text>
-      <text class="mp-ops-sub">删除后无法恢复</text>
+    <view class="tm-group" wx:if="{{opsSheet.canDelete}}">
+      <view class="tm-row tm-row--danger" bindtap="onOpsPick" data-k="delete" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="删除"><text class="tm-label">删除</text><cy-icon class="tm-ico" name="trash" size="40" /></view>
     </view>
   </view>
 </cy-sheet>
@@ -186,7 +152,16 @@
         <text class="mp-ops-label">申诉</text>
         <text class="mp-ops-sub">{{auditSheet.appealText}}</text>
       </view>
-      <view class="mp-ops-row" wx:if="{{auditSheet.canAppeal}}" bindtap="appealAudit" hover-class="cy-pressed" hover-stay-time="80">
+      <view class="mp-ops-row" wx:if="{{auditSheet.appealError}}"><text class="mp-ops-sub">{{auditSheet.appealError}}</text></view>
+      <view class="mp-ops-row" wx:for="{{auditSheet.attachments}}" wx:key="*this">
+        <image src="{{item}}" mode="aspectFit" style="width:160rpx;height:160rpx" />
+        <text wx:if="{{!auditSheet.pending}}" data-index="{{index}}" bindtap="removeAuditAttachment" hover-class="cy-pressed" hover-stay-time="80">移除附件 {{index + 1}}</text>
+      </view>
+      <view class="mp-ops-row" wx:if="{{auditSheet.canAppeal && !auditSheet.pending && auditSheet.attachments.length < 6}}" bindtap="addAuditAttachment" hover-class="cy-pressed" hover-stay-time="80">
+        <text class="mp-ops-label">添加申诉图片</text><text class="mp-ops-sub">最多6张，须本人上传并通过内容安全审核；以平台校验为准</text>
+      </view>
+      <view class="mp-ops-row" wx:if="{{auditSheet.pending}}" bindtap="recoverAuditAppeal" hover-class="cy-pressed" hover-stay-time="80"><text class="mp-ops-label">读取原申诉结果</text></view>
+      <view class="mp-ops-row" wx:if="{{auditSheet.canAppeal && !auditSheet.pending}}" bindtap="appealAudit" hover-class="cy-pressed" hover-stay-time="80">
         <text class="mp-ops-label">申诉</text>
         <text class="mp-ops-sub">每条内容可申诉一次</text>
       </view>

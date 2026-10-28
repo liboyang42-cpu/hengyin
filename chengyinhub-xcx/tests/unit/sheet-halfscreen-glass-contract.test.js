@@ -20,6 +20,8 @@ const FULL_VARIANT_WHITELIST = new Set([
   'pages/publish/fabu/index.wxml', // 长表单或详情，使用导航下方完整阅读区
   'pages/publish/fabu/survival-editor.wxml', // 恢复、配给、设施前置与结果卡多步长表单；临时界面待协调者重设计
   'pages/publish/fabu/topic-detail-sheet.wxml', // 长表单或详情，使用导航下方完整阅读区
+  'pages/publish/components/d20-settings/index.wxml', // 文档二 L1:叠在主题详情上的「d20 与角色设定」,和主题详情同高才能做 iOS 卡片叠放
+  'pages/publish/components/start-prep/index.wxml', // 文档二 L1:主题详情的下一层「开局前准备」,同上
   'pages/searchmap/index.wxml', // 长表单或详情，使用导航下方完整阅读区
   'pages/talent/list/index.wxml', // 长表单或详情，使用导航下方完整阅读区
   'pages/templatedetail/templatedetail.wxml', // 长表单或详情，使用导航下方完整阅读区

@@ -4,6 +4,7 @@ const path = require('node:path')
 const test = require('node:test')
 const vm = require('node:vm')
 const { maskNonCode } = require('../../scripts/lib/xcx-scan')
+const { exactId } = require('../../utils/user-character.js')
 
 const ROOT = path.resolve(__dirname, '../..')
 
@@ -157,6 +158,8 @@ function runTeamJoinExit(routes, transform = (source) => source) {
   const source = transform(read('pages/team/join/index.js'))
   const body = methodBody(source, 'goDetail')
   const page = vm.runInNewContext(`({goDetail() ${body}})`, {
+    // goDetail 入口先用页面真实 import 的 exactId 校验 teamId，沙箱必须注入同一实现。
+    exactId,
     getCurrentPages: () => routes.map((route) => ({ route })),
     wx: {
       navigateBack(options = {}) { events.push({ api: 'navigateBack', options }) },

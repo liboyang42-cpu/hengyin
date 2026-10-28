@@ -11,6 +11,10 @@ import com.chengyinhub.business.domain.OfficialBroadcastLog;
  */
 public interface OfficialBroadcastLogMapper
 {
+    java.util.List<java.util.Map<String,Object>> deliveryRows(@Param("broadcastId") Long broadcastId);
+    java.util.Map<String,Object> lockDelivery(@Param("id") Long id);
+    int snapshot(@Param("broadcastId") Long broadcastId,@Param("memberId") Long memberId,@Param("role") String role,@Param("channel") String channel,@Param("title") String title,@Param("sub") String sub,@Param("state") String state);
+    int deliveryState(@Param("id") Long id,@Param("state") String state,@Param("intent") Long intent,@Param("message") Long message,@Param("attempt") int attempt);
     /** insert ignore:同一(broadcast,member,channel)已存在则返回 0(不重发)。 */
     int insertIgnore(OfficialBroadcastLog log);
 

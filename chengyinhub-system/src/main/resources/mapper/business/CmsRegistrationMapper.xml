@@ -160,6 +160,30 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         group by owner_id, verification_status
     </select>
 
+    <resultMap id="MerchantTodoRegistrationResult" type="com.chengyinhub.business.domain.vo.MerchantTodoRegistrationVO" autoMapping="false">
+        <id property="id" column="id"/>
+        <result property="ownerType" column="owner_type"/>
+        <result property="ownerId" column="owner_id"/>
+        <result property="endDate" column="end_date"/>
+    </resultMap>
+
+    <!-- 保留 ownerEndDate 的空项目/未知ownerType语义，不加载报名PII、不加新过滤。 -->
+    <select id="selectTodoRegistrationOwners" resultMap="MerchantTodoRegistrationResult">
+        select r.id, r.owner_type, r.owner_id,
+               case when r.owner_type = 1 then t.end_date
+                    when r.owner_type = 2 then a.end_date else null end as end_date
+        from cms_registration r
+        left join cms_topic t on r.owner_type = 1 and t.id = r.owner_id
+        left join cms_activity a on r.owner_type = 2 and a.id = r.owner_id
+        <choose>
+            <when test="registrationIds != null and registrationIds.size() > 0">
+                where r.id in
+                <foreach collection="registrationIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+            </when>
+            <otherwise>where 1 = 0</otherwise>
+        </choose>
+    </select>
+
     <select id="selectCmsRegistrationById" parameterType="Long" resultMap="CmsRegistrationResult">
         <include refid="selectCmsRegistrationVo"/>
         where id = #{id}

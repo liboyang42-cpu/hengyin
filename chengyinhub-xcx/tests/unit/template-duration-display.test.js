@@ -16,15 +16,14 @@ test('模板时长展示只补一次分钟单位', () => {
   assert.equal(formatDurationMinutes('35 分钟'), '35分钟');
 });
 
-test('发布广场当前三处模板摘要复用归一化时长', () => {
-  // 2026-08-26:列表卡的时长并进 _metaText(两个实体的 meta 组成不同,拆成两个装饰器),
-  // 计数断言主语因此消失。真正的闸是下面两条「不许绕过归一化」+ 这条「装饰器必须调归一化」。
-  const JS = fs.readFileSync(path.join(__dirname, '../../pages/template/index.js'), 'utf8');
-  assert.match(JS, /decorateTopic\(list\)[\s\S]*?formatDurationMinutes\(item\.totalTime\)/,
-    '主题摘要必须走归一化时长');
-  assert.match(JS, /decorateGame\(list\)[\s\S]*?formatDurationMinutes\(item\.duration\)/,
-    '玩法摘要必须走归一化时长');
-  assert.ok((WXML.match(/_durationText|_metaText/g) || []).length >= 3, '头牌与两组模板摘要都要用归一化后的时长字段');
-  assert.doesNotMatch(WXML, /item\.duration\s*}}/, '不许绕过归一化直接渲染 item.duration');
-  assert.doesNotMatch(WXML, /templateInfo\.duration\s*}}/, '不许绕过归一化直接渲染 templateInfo.duration');
+test('模板货架时长：主题 totalTime 是秒，按秒换算；玩法卡不直接渲染原始 duration', () => {
+  // 2026-10-28:模板页货架移进 pages/templatedetail/shelf。旧页把主题的秒数交给
+  // formatDurationMinutes,上架后会显示「14400分钟」—— 新货架与预览统一按秒换算(fmtSec)。
+  const shelf = fs.readFileSync(path.join(__dirname, '../../pages/templatedetail/shelf/index.js'), 'utf8');
+  const preview = fs.readFileSync(path.join(__dirname, '../../pages/templatedetail/topic-preview/index.js'), 'utf8');
+  assert.match(shelf, /const dur = fmtSec\(item\.totalTime\);/, '主题摘要按秒换算');
+  assert.match(preview, /fmtSec\(info\.totalTime\)/, '预览按秒换算');
+  const wxml = fs.readFileSync(path.join(__dirname, '../../pages/templatedetail/shelf/index.wxml'), 'utf8');
+  assert.doesNotMatch(wxml, /item\.duration\s*}}/, '不许绕过归一化直接渲染 item.duration');
+  assert.doesNotMatch(WXML, /item\.duration\s*}}/, '模板页外壳也不渲染原始时长');
 });

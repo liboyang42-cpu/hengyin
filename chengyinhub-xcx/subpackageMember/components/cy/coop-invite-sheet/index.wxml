@@ -23,10 +23,17 @@
       <text wx:elif="{{chaptersLoading}}" class="invite__hint">加载中</text>
       <text wx:elif="{{!error}}" class="invite__hint">{{selectedId ? '该主题暂无章节' : '请先选择上方主题'}}</text>
     </block>
+    <view wx:if="{{inviteType === 1}}">
+      <view wx:if="{{selectedId}}" class="invite__hint" bindtap="queryOriginalInvite" aria-role="button" aria-label="查询原邀请请求" hover-class="cy-pressed" hover-stay-time="80">查询原请求</view>
+      <view class="invite__hint" bindtap="discoverOriginalInvites" aria-role="button" aria-label="查找当前账号原邀请请求" hover-class="cy-pressed" hover-stay-time="80">{{receiptLoading ? '查询中…' : '查找原邀请请求（含其他设备）'}}</view>
+      <cy-empty wx:if="{{receiptError}}" kind="error" title="原请求仍待确认" sub="{{receiptError}}" />
+      <view wx:for="{{receiptRows}}" wx:key="requestId" class="invite__hint">请求 {{item.requestId}} · {{item.state === 'CREATED' ? ('已创建邀请 #' + item.inviteId + ' · 主题 #' + item.topicId + ' · 对象 #' + item.toId) : item.state === 'NOT_FOUND' ? '未查到该请求，可沿用原请求号再次发送' : '已受理，当前账号无法查看结果'}}</view>
+      <view wx:if="{{receiptHasMore}}" class="invite__hint" bindtap="moreOriginalInvites" aria-role="button" aria-label="加载更多原邀请请求" hover-class="cy-pressed" hover-stay-time="80">加载更多原请求</view>
+    </view>
     <textarea class="invite__message" value="{{message}}" bindinput="onMessage" placeholder="写下想对对方说的话" maxlength="100" disabled="{{submitting}}" />
     <view wx:if="{{error}}" class="invite__error" aria-role="alert">{{error}}<text wx:if="{{!chapters.length}}" bindtap="retry" aria-role="button" aria-label="重试加载邀约主题和章节" hover-class="cy-pressed" hover-stay-time="80"> 重试</text></view>
 
   </view>
-  <cy-btn slot="footer" class="invite__send" variant="primary" loading="{{submitting}}" disabled="{{!selectedChapterId || chaptersLoading}}" bindtap="send" accessibility-label="发送邀约">{{submitting ? '发送中…' : '发送邀约'}}</cy-btn>
+  <cy-btn slot="footer" class="invite__send" variant="primary" loading="{{submitting}}" disabled="{{!selectedChapterId || chaptersLoading || unknown}}" bindtap="send" accessibility-label="发送邀约">{{submitting ? '发送中…' : '发送邀约'}}</cy-btn>
 </cy-sheet>
 </view>

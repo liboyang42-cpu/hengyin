@@ -73,7 +73,9 @@ test('上限在主题编辑，首章上限只读且字段事件不能改 HP、�
   const rules = initial.parse(p.data.formData.journeyRules);
   assert.deepEqual([rules.hp.init, rules.hp.max, rules.luck.max, rules.attributes[0].initial, rules.attributes[0].max], [9, 10, 4, 7, 11]);
   const wxml = read('index.wxml');
-  for (const stat of ['hp', 'luck']) assert.match(wxml, new RegExp('<cy-field[^>]*value="{{initialStateEditor.rules.' + stat + '.max}}"[^>]*readonly="{{true}}"'));
+  // 2026-10-28 原型 e-init:上限只在主题详情里改,初始状态不再重复显示
+  assert.doesNotMatch(wxml, /value="\{\{initialStateEditor\.rules\.(?:hp|luck)\.max\}\}"/);
+  for (const stat of ['hp', 'luck']) assert.match(wxml, new RegExp('<cy-stepper[^>]*max="{{initialStateEditor.rules.' + stat + '.max}}"[^>]*data-field="' + stat + '.init"'), '开局值步进器以上限为界');
   assert.doesNotMatch(wxml, /data-field="(?:hp\.max|luck\.max|attribute\.(?:min|max))"/);
   assert.match(read('topic-detail-sheet.wxml'), /bindinput="onRuntimeStatMax"/);
 });

@@ -24,6 +24,12 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         verdict, reason_code, detail, created_at
     </sql>
 
+    <select id="selectByIdAndMemberId" resultMap="PlayArriveGuardLogResult">
+        select <include refid="guardColumns"/>
+        from play_arrive_guard_log
+        where id = #{id} and member_id = #{memberId}
+    </select>
+
     <insert id="insertGuardLog" parameterType="com.chengyinhub.business.domain.PlayArriveGuardLog"
             useGeneratedKeys="true" keyProperty="id">
         insert into play_arrive_guard_log

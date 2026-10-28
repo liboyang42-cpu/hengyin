@@ -519,6 +519,8 @@ public class ApiRoamController extends BaseController {
         data.put("tiles", tileList);
         data.put("tileRetentionAt", tileRetentionAt);
         data.put("nextAfterId", nextAfterId);
+        // Keep the legacy numeric field; new clients must not round BIGINT cursors in JSON.
+        data.put("nextAfterIdExact", Long.toString(nextAfterId));
         data.put("hasMore", hasMore);
         return success(data);
     }

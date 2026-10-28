@@ -97,7 +97,7 @@ class AuditAppealAttachmentTest {
             ((AuditTask) inv.getArgument(0)).setId(APPEAL_TASK);
             return 1;
         });
-        when(appeals.insertAuditAppeal(any(AuditAppeal.class))).thenReturn(1);
+        when(appeals.insertAuditAppeal(any(AuditAppeal.class))).thenAnswer(inv -> { ((AuditAppeal) inv.getArgument(0)).setId(88L); return 1; });
         when(records.insertAuditRecord(any(AuditRecord.class))).thenReturn(1);
     }
 
@@ -186,6 +186,79 @@ class AuditAppealAttachmentTest {
         service.submitAppeal(AuditTask.BIZ_ACTIVITY, BIZ_ID, AUTHOR, "理由", null);
 
         verify(appeals).insertAuditAppeal(any(AuditAppeal.class));
+    }
+
+    private AuditAppeal bindStoredSubmission(String evidence, java.util.List<String> attachments, String requestId) {
+        AuditAppeal appeal = service.submitAppeal(AuditTask.BIZ_ACTIVITY, BIZ_ID, AUTHOR, "理由", evidence, attachments, requestId);
+        ArgumentCaptor<AuditRecord> record = ArgumentCaptor.forClass(AuditRecord.class);
+        verify(records).insertAuditRecord(record.capture());
+        when(records.selectAuditRecordList(any())).thenReturn(Collections.singletonList(record.getValue()));
+        when(appeals.selectByBizMember(AuditTask.BIZ_ACTIVITY, BIZ_ID, AUTHOR)).thenReturn(appeal);
+        return appeal;
+    }
+
+    @Test
+    void originalRequestReplaysAfterRestorationWithoutRevalidatingAttachments() {
+        approvedAsset(31L, "media-asset:31", AUTHOR);
+        AuditAppeal appeal = bindStoredSubmission("[1,{\"note\":\"原数组\"}]", Collections.singletonList("media-asset:31"), "original-key");
+        appeal.setState("ACCEPTED");
+        CmsActivityMapper activities = (CmsActivityMapper) ReflectionTestUtils.getField(service, "cmsActivityMapper");
+        activities.selectCmsActivityById(BIZ_ID).setStatus(1L);
+        org.mockito.Mockito.clearInvocations(activities);
+        ReflectionTestUtils.setField(service, "appealAttachmentsEnabled", false);
+        org.mockito.Mockito.clearInvocations(tasks, records, guard);
+        assertEquals(appeal, service.submitAppeal(AuditTask.BIZ_ACTIVITY, BIZ_ID, AUTHOR, " 理由 ",
+                "[1, {\"note\":\"原数组\"}]", Arrays.asList(" media-asset:31 ", "media-asset:31"), "original-key"));
+        verify(tasks, never()).insertAuditTask(any()); verify(records, never()).insertAuditRecord(any());
+        verify(guard, never()).requireAttachment(anyLong(), anyString(), anyBoolean());
+        verify(activities, never()).selectCmsActivityById(anyLong());
+        Map<String, Object> receipt = service.appealReceipt(AuditTask.BIZ_ACTIVITY, BIZ_ID, AUTHOR, "original-key");
+        assertEquals("FOUND", receipt.get("state")); assertEquals("ACCEPTED", receipt.get("appealState"));
+        assertEquals("88", receipt.get("appealId"));
+        assertEquals("NOT_FOUND", service.appealReceipt(AuditTask.BIZ_ACTIVITY, BIZ_ID, OTHER, "original-key").get("state"));
+        assertEquals("NOT_FOUND", service.appealReceipt(AuditTask.BIZ_ACTIVITY, BIZ_ID + 1, AUTHOR, "original-key").get("state"));
+    }
+
+    @Test
+    void changedReasonEvidenceAttachmentsOrKeyCannotReplay() {
+        bindStoredSubmission("{\"a\":1,\"b\":2}", Collections.emptyList(), "original-key");
+        assertThrows(ServiceException.class, () -> service.submitAppeal(AuditTask.BIZ_ACTIVITY, BIZ_ID, AUTHOR,
+                "其他理由", "{\"a\":1,\"b\":2}", Collections.emptyList(), "original-key"));
+        assertThrows(ServiceException.class, () -> service.submitAppeal(AuditTask.BIZ_ACTIVITY, BIZ_ID, AUTHOR,
+                "理由", "{\"a\":2,\"b\":2}", Collections.emptyList(), "original-key"));
+        assertThrows(ServiceException.class, () -> service.submitAppeal(AuditTask.BIZ_ACTIVITY, BIZ_ID, AUTHOR,
+                "理由", "{\"a\":1,\"b\":2}", Collections.singletonList("media-asset:31"), "original-key"));
+        assertThrows(ServiceException.class, () -> service.submitAppeal(AuditTask.BIZ_ACTIVITY, BIZ_ID, AUTHOR,
+                "理由", "{\"a\":1,\"b\":2}", Collections.emptyList(), "other-key"));
+        assertEquals("FOUND", service.appealReceipt(AuditTask.BIZ_ACTIVITY, BIZ_ID, AUTHOR, "original-key").get("state"));
+        // JSON object key ordering is not a changed intent; arrays retain their order.
+        assertEquals(88L, service.submitAppeal(AuditTask.BIZ_ACTIVITY, BIZ_ID, AUTHOR, "理由",
+                "{\"b\":2,\"a\":1}", Collections.emptyList(), "original-key").getId());
+    }
+
+    @Test
+    void clientNamedRequestIdRemainsEvidenceAndLegacyNeverAcquiresBinding() throws Exception {
+        String evidence = "{\"requestId\":\"spoof\",\"appealIntent\":{\"requestId\":\"spoof\"},\"attachments\":[\"client-only\"]}";
+        AuditAppeal appeal = service.submitAppeal(AuditTask.BIZ_ACTIVITY, BIZ_ID, AUTHOR, "理由", evidence);
+        assertEquals(evidence, appeal.getEvidenceJson());
+        ArgumentCaptor<AuditRecord> record = ArgumentCaptor.forClass(AuditRecord.class); verify(records).insertAuditRecord(record.capture());
+        assertTrue(!new com.fasterxml.jackson.databind.ObjectMapper().readTree(record.getValue().getSnapshotJson()).has("appealIntent"));
+        when(records.selectAuditRecordList(any())).thenReturn(Collections.singletonList(record.getValue()));
+        when(appeals.selectByBizMember(AuditTask.BIZ_ACTIVITY, BIZ_ID, AUTHOR)).thenReturn(appeal);
+        assertEquals("NOT_FOUND", service.appealReceipt(AuditTask.BIZ_ACTIVITY, BIZ_ID, AUTHOR, "spoof").get("state"));
+        assertThrows(ServiceException.class, () -> service.submitAppeal(AuditTask.BIZ_ACTIVITY, BIZ_ID, AUTHOR,
+                "理由", evidence, Collections.emptyList(), "spoof"));
+        assertThrows(ServiceException.class, () -> service.submitAppeal(AuditTask.BIZ_ACTIVITY, BIZ_ID, AUTHOR, "理由", evidence));
+    }
+
+    @Test
+    void requestBindingDoesNotChangeArrayEvidenceOrMergedAttachmentShape() {
+        approvedAsset(31L, "media-asset:31", AUTHOR);
+        AuditAppeal appeal = bindStoredSubmission("[{\"requestId\":\"client\"}]", Collections.singletonList("media-asset:31"), "server-key");
+        assertEquals("{\"evidence\":[{\"requestId\":\"client\"}],\"attachments\":[\"media-asset:31\"]}", appeal.getEvidenceJson());
+        assertEquals("NOT_FOUND", service.appealReceipt(AuditTask.BIZ_ACTIVITY, BIZ_ID, AUTHOR, "client").get("state"));
+        assertThrows(ServiceException.class, () -> service.submitAppeal(AuditTask.BIZ_ACTIVITY, BIZ_ID, AUTHOR,
+                "理由", null, Collections.emptyList(), " "));
     }
 
     private void approvedAsset(long id, String reference, long owner) {

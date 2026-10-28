@@ -55,9 +55,16 @@ test('队长申请列表行说真实剩余时间', () => {
 const PAGE = '../../subpackageRoam/nearby/index.js';
 let config; let requests;
 global.getApp = () => ({
-  getUserID: () => 7, globalData: { authorization: 'fixture-token' }, getImgUrl: (u) => u || '', sendRequest: (opts) => { requests.push(opts) },
+  getUserID: () => 7, getAuthorization: () => 'fixture-token', globalData: { authorization: 'fixture-token' }, getImgUrl: (u) => u || '', sendRequest: (opts) => { requests.push(opts) },
 });
+// 2026-10-26 W8:申请改走持久化队伍命令(utils/team-event-command.js → POST /api/team/command,
+// 先落本机再发、回执只说 APPLIED/REJECTED);卡片状态以终态后的 nearby 回读为准。stub 补本机存储与随机源。
+let values; let random;
 global.wx = {
+  getStorageInfoSync: () => ({ keys: Object.keys(values) }),
+  getStorageSync: (k) => values[k], setStorageSync: (k, v) => { values[k] = JSON.parse(JSON.stringify(v)); },
+  removeStorageSync: (k) => { delete values[k]; },
+  getRandomValues: (o) => o.success({ randomValues: new Uint8Array(16).fill(++random).buffer }),
   getWindowInfo: () => ({ screenHeight: 844, safeArea: { bottom: 810 } }),
   getMenuButtonBoundingClientRect: () => ({ bottom: 88 }),
   getLocation: () => {}, navigateTo: () => {}, showToast: () => {},
@@ -75,7 +82,7 @@ function setByPath(target, raw, value) {
   cur[parts[parts.length - 1]] = value;
 }
 function loadPage() {
-  requests = [];
+  requests = []; values = {}; random = 0;
   delete require.cache[require.resolve(PAGE)];
   require(PAGE);
   const page = Object.assign({}, config, { data: JSON.parse(JSON.stringify(config.data)) });
@@ -87,7 +94,7 @@ function loadPage() {
   return page;
 }
 
-test('页面接线:申请成功把手里的 applyExpireTime 回填进卡片,foot 立刻说真实剩余时间', () => {
+test('页面接线:申请成功把手里的 applyExpireTime 回填进卡片,foot 立刻说真实剩余时间', async () => {
   const page = loadPage();
   const row = Object.assign({}, base, {
     teamId: 7, activityId: 11, topicId: 3, productType: 1, distance: 600,
@@ -98,9 +105,17 @@ test('页面接线:申请成功把手里的 applyExpireTime 回填进卡片,foot
   requests.filter((r) => r.url === '/api/team/nearby').pop().success({ code: 200, data: [row] });
   page.onMarkerTap({ detail: { markerId: 74 } }); page.onPoiFront(); // v13:点位卡 → 队伍半屏
   page.onCardPrimary();
-  const req = requests.filter((r) => r.url === '/api/team/apply').pop();
-  assert.ok(req, '必须请求 POST /api/team/apply');
-  req.success({ code: 200, msg: '已申请，等待队长同意', data: { applyExpireTime: Date.now() + 2 * 3600 * 1000 + 5000 } });
+  for (let i = 0; i < 6; i += 1) await Promise.resolve(); // 原请求号生成 + 落本机后才发
+  const req = requests.filter((r) => r.url === '/api/team/command' && JSON.parse(r.data).action === 'apply').pop();
+  assert.ok(req, '必须请求 POST /api/team/command(action=apply)');
+  const readsBefore = requests.filter((r) => r.url === '/api/team/nearby').length;
+  req.success({ code: 200, data: { requestId: JSON.parse(req.data).requestId, state: 'APPLIED' } });
+  // 终态后页面必须重读 nearby;服务端回读带本人申请的真实失效时刻(min(申请+24h, 场次开始))
+  const reread = requests.filter((r) => r.url === '/api/team/nearby');
+  assert.ok(reread.length > readsBefore, '申请终态后必须回读附近队伍');
+  reread.pop().success({ code: 200, data: [Object.assign({}, row, {
+    viewerStatus: 'PENDING', applyExpireTime: Date.now() + 2 * 3600 * 1000 + 5000,
+  })] });
   assert.doesNotMatch(page.data.current.card.foot, /24\s*小时/);
   assert.match(page.data.current.card.foot, /2 小时后自动失效/);
 });

@@ -1,6 +1,8 @@
 /** Canonical community transport; legacy-shaped view models are local presentation only. */
 const { decodeDisplayText } = require('./display-text.js');
 const reportIntent = require('./publish/publish-intent.js');
+const { exactId } = require('./user-character.js');
+const commentRecovery = require('./community-comment-recovery.js');
 const BASE = '/api/v1/community';
 const LIFECYCLE_LABELS = { DRAFT: '草稿', CHECKING: '审核中', LIMITED: '展示受限', HIDDEN: '已隐藏', REMOVED: '已移除' };
 function requestId() { return 'mini-community-' + Date.now() + '-' + Math.random().toString(36).slice(2); }
@@ -45,13 +47,19 @@ function normalizeComment(row) {
 }
 function createClient(app, wxApi) {
   const posts = Object.create(null), comments = Object.create(null), pages = Object.create(null), uploads = Object.create(null), commands = Object.create(null);
-  let owner = null, reporting = false;
+  let owner = null, credential = '', ownerEpoch = 0, mutationRevision = 0, reporting = null;
+  const currentCredential = () => typeof app.getAuthorization === 'function' ? app.getAuthorization() || '' : '';
   function resetForOwner() {
     const current = String(typeof app.getUserID === 'function' ? app.getUserID() || '' : '');
-    if (owner !== current) { [posts, comments, pages, uploads, commands].forEach(store => Object.keys(store).forEach(key => delete store[key])); owner = current; }
+    if (owner !== current || credential !== currentCredential()) {
+      [posts, comments, pages, uploads, commands].forEach(store => Object.keys(store).forEach(key => delete store[key]));
+      owner = current; credential = currentCredential(); ownerEpoch += 1; reporting = null;
+    }
   }
   function markFeedChanged(path, method) {
-    if (method === 'GET' || !/^\/(posts(?:\/|$)|comments\/)/.test(path) || !app.globalData) return;
+    if (method === 'GET' || !/^\/(posts(?:\/|$)|comments\/)/.test(path)) return;
+    mutationRevision += 1;
+    if (!app.globalData) return;
     app.globalData.squareListDirty = true;
     app.globalData.squareListDirtyVersion = (app.globalData.squareListDirtyVersion || 0) + 1;
   }
@@ -65,12 +73,13 @@ function createClient(app, wxApi) {
     return new Promise((resolve, reject) => {
       if (task.aborted || !task.isCurrent()) return reject({ code: 499, msg: '操作已取消' });
       if (String(app.getUserID() || '') !== task.owner) return reject({ code: 409, msg: '登录身份已变化，请重试' });
-      task.cancel = () => reject({ code: 499, msg: '操作已取消' });
+      let settled = false;
+      task.cancel = () => { settled = true; reject({ code: 499, msg: '操作已取消' }); };
       const request = { url: BASE + path, method, data: data || {}, hideLoading: true, silentError: true,
         header: { 'content-type': 'application/json' },
-        success: res => { if (task.aborted || !task.isCurrent()) return reject({ code: 499, msg: '操作已取消' }); if (String(app.getUserID() || '') !== task.owner) return reject({ code: 409, msg: '登录身份已变化，请重试' }); if (Number(res && res.code) === 200) { markFeedChanged(path, method); resolve(res.data); } else reject(res || { code: 500, msg: '社区请求失败' }); },
-        successStatusAbnormal: (res, status) => reject(Object.assign({}, res, { code: status, transportFailure: true })),
-        fail: res => reject(Object.assign({}, res, { transportFailure: true })) };
+        success: res => { if (settled) return; settled = true; if (task.aborted || !task.isCurrent()) return reject({ code: 499, msg: '操作已取消' }); if (String(app.getUserID() || '') !== task.owner) return reject({ code: 409, msg: '登录身份已变化，请重试' }); if (Number(res && res.code) === 200) { markFeedChanged(path, method); resolve(res.data); } else reject(res || { code: 500, msg: '社区请求失败' }); },
+        successStatusAbnormal: (res, status) => { if (settled) return; settled = true; reject(Object.assign({}, res, { code: status, transportFailure: true })); },
+        fail: res => { if (settled) return; settled = true; reject(Object.assign({}, res, { transportFailure: true })); } };
       if (ownReportLookup === true) request.url = '/api/community-trust/reports/mine';
       task.current = app.sendRequest(request);
     });
@@ -84,7 +93,9 @@ function createClient(app, wxApi) {
     });
   }
   function pipeline(options, operation) {
-    const task = { owner, isCurrent: typeof options.current === 'function' ? options.current : () => true, aborted: false, current: null, abort() { this.aborted = true; if (this.cancel) this.cancel(); if (this.current && this.current.abort) this.current.abort(); } };
+    const epoch = ownerEpoch, auth = credential;
+    const task = { owner, isCurrent: () => epoch === ownerEpoch && auth === currentCredential()
+      && (typeof options.current !== 'function' || options.current()), aborted: false, current: null, abort() { this.aborted = true; if (this.cancel) this.cancel(); if (this.current && this.current.abort) this.current.abort(); } };
     Promise.resolve().then(() => operation(task)).then(data => {
       if (!task.aborted && task.isCurrent() && String(app.getUserID() || '') === task.owner && options.success) options.success(Object.assign({ code: 200, data }, task.recoveredPrevious ? { recoveredPrevious: true } : {}));
     }).catch(error => {
@@ -106,7 +117,7 @@ function createClient(app, wxApi) {
   }
   async function report(options, task) {
     if (reporting) throw { code: 409, msg: '举报正在处理中' };
-    reporting = true;
+    reporting = task;
     try {
       const data = options.data || {}, targetType = options.url === '/api/comment/report' ? 'COMMENT' : 'CONTENT';
       const scope = 'square:report:' + targetType + ':' + data.id;
@@ -198,25 +209,31 @@ function createClient(app, wxApi) {
         throw error;
       }
     } finally {
-      reporting = false;
+      if (reporting === task) reporting = null;
     }
   }
   function send(options) {
     resetForOwner();
+    if (typeof options.current === 'function' && !options.current()) return { abort() {} };
     const original = options, data = options.data || {}, url = options.url;
     if (!/^\/api\/(creativesquare|comment)\//.test(url)) return app.sendRequest(options);
     if (url === '/api/creativesquare/action') return pipeline(options, task => publish(data, task, options));
     if (url === '/api/creativesquare/report' || url === '/api/comment/report') return pipeline(options, task => report(options, task));
-    const requestOwner = owner;
-    let commandKey;
+    const requestOwner = owner, requestCredential = credential, requestOwnerEpoch = ownerEpoch, readRevision = mutationRevision;
+    let aborted = false, settled = false, completed = false;
+    const viewCurrent = () => !aborted && (typeof options.current !== 'function' || options.current());
+    const identityCurrent = () => String(app.getUserID() || '') === requestOwner
+      && currentCredential() === requestCredential && ownerEpoch === requestOwnerEpoch;
+    let commandKey, commentRecord;
     const stableCommand = (key, proposed) => { commandKey = key; if (!commands[key]) commands[key] = proposed || requestId(); return commands[key]; };
-    let path, method = 'GET', body = {}, map = x => x, pageKey, page;
+    let path, method = 'GET', body = {}, map = x => x, pageKey, page, pageState;
     const id = data.id || data.owner_id;
     if (url === '/api/creativesquare/list' || url === '/api/comment/list') {
       page = Number(data.pageNum || 1);
       pageKey = url + ':' + (data.favorite_only ? 'BOOKMARKS' : data.is_my ? 'OWN' : data.user_id || data.owner_id || 'LATEST');
       if (page === 1) pages[pageKey] = { generation: requestId(), cursors: { 1: null } };
       const state = pages[pageKey];
+      pageState = state;
       if (!state || !Object.prototype.hasOwnProperty.call(state.cursors, page)) return reject(options, '分页游标已失效，请刷新');
       path = url === '/api/comment/list' ? '/posts/' + id + '/comments' : data.favorite_only ? '/me/bookmarks' : data.is_my ? '/me/posts' : '/feeds/LATEST';
       body = { limit: data.pageSize };
@@ -245,9 +262,23 @@ function createClient(app, wxApi) {
     } else if (url === '/api/creativesquare/delete') {
       if (!posts[id]) return reject(options, '请刷新帖文后再操作');
       path = '/posts/' + id; method = 'DELETE'; body = { expectedVersion: posts[id].version, requestId: stableCommand('delete:' + id + ':' + posts[id].version, data.request_id) };
+      map = result => {
+        delete posts[id];
+        Object.keys(comments).forEach(key => { if (String(value(comments[key], 'postId', 'post_id')) === String(id)) delete comments[key]; });
+        return result;
+      };
     } else if (url === '/api/comment/add') {
       path = '/posts/' + data.owner_id + '/comments'; method = 'POST';
-      body = { body: data.contents, parentId: Number(data.reply_id) || null, clientRequestId: stableCommand('comment:' + data.owner_id + ':' + (data.reply_id || 0) + ':' + data.contents, data.request_id) };
+      const hasParent = data.reply_id != null && data.reply_id !== '' && data.reply_id !== 0 && data.reply_id !== '0';
+      const parent = hasParent ? exactId(data.reply_id) : '';
+      if (hasParent && !parent) return reject(options, '回复目标无效，请重新选择');
+      const parentId = parent ? Number.isSafeInteger(Number(parent)) ? Number(parent) : parent : null;
+      try {
+        commentRecord = commentRecovery.prepare(wxApi, requestOwner, data.owner_id,
+          { body: String(data.contents || '').trim(), parentId, clientRequestId: data.request_id || requestId() });
+        body = { ...commentRecord.row.wire };
+      } catch (error) { return reject(options, error.msg, error.code, error.pendingComment); }
+      map = result => { commentRecovery.finish(wxApi, requestOwner, data.owner_id, commentRecord, 200); return result; };
     } else if (url === '/api/comment/like') {
       const row = comments[id]; if (!row) return reject(options, '请刷新评论后再操作');
       const enabled = Number(row.isLiked) !== 1;
@@ -258,26 +289,72 @@ function createClient(app, wxApi) {
       path = '/posts/' + value(row, 'postId', 'post_id') + '/comments/' + id; method = 'DELETE';
       body = { expectedVersion: row.version, requestId: stableCommand('delete-comment:' + id + ':' + row.version, data.request_id) };
     } else return reject(options, '此社区功能暂未开放');
-    return app.sendRequest(Object.assign({}, options, { url: BASE + path, method: method, data: body,
+    const transport = app.sendRequest(Object.assign({}, options, { url: BASE + path, method: method, data: body,
       header: Object.assign({}, options.header, { 'content-type': 'application/json' }),
       success: res => {
-        if (String(app.getUserID() || '') !== requestOwner) res = { code: 409, msg: '登录身份已变化，请重试' };
-        if (commandKey && res && (Number(res.code) === 200 || (Number(res.code) >= 400 && Number(res.code) < 500))) delete commands[commandKey];
+        if (settled || !viewCurrent()) return;
+        settled = true;
+        if (!identityCurrent()) {
+          if (original.success) original.success({ code: 409, msg: '登录身份已变化，请重试' });
+          return;
+        }
+        if (method === 'GET' && readRevision !== mutationRevision) {
+          if (original.success) original.success({ code: 409, msg: '社区内容已变化，请刷新' });
+          return;
+        }
+        if (pageState && pages[pageKey] !== pageState) {
+          if (original.success) original.success({ code: 409, msg: '分页游标已失效，请刷新' });
+          return;
+        }
+        if (commentRecord && Number(res && res.code) !== 200) {
+          try { commentRecovery.finish(wxApi, requestOwner, data.owner_id, commentRecord, res && res.code); }
+          catch (error) { res = { code: error.code || 507, msg: error.msg }; }
+        }
+        if (commandKey && commands[commandKey] === (body.requestId || body.clientRequestId) && res && (Number(res.code) === 200 || (Number(res.code) >= 400 && Number(res.code) < 500))) delete commands[commandKey];
         if (res && Number(res.code) === 200) {
           markFeedChanged(path, method);
           try { res = Object.assign({}, res, { data: map(res.data) }); }
           catch (error) { res = { code: 500, msg: error.message }; }
         }
         if (original.success) original.success(res);
+      },
+      fail: (res, status) => {
+        if (settled || !viewCurrent()) return;
+        settled = true;
+        if (!identityCurrent()) {
+          if (original.success) original.success({ code: 409, msg: '登录身份已变化，请重试' });
+        } else {
+          if (commentRecord) { try { commentRecovery.finish(wxApi, requestOwner, data.owner_id, commentRecord, null); } catch (error) { res = Object.assign({}, res, { msg: error.msg, storageFailure: true }); } }
+          if (original.fail) original.fail(res, status);
+        }
+      },
+      successStatusAbnormal: (res, status) => {
+        if (settled || !viewCurrent()) return;
+        settled = true;
+        if (!identityCurrent()) {
+          if (original.success) original.success({ code: 409, msg: '登录身份已变化，请重试' });
+        } else if (original.successStatusAbnormal) original.successStatusAbnormal(res, status);
+        else if (original.fail) original.fail(res, status);
+      },
+      complete: res => {
+        if (completed || !viewCurrent()) return;
+        completed = true;
+        if (original.complete) original.complete(identityCurrent() ? res : { code: 409, msg: '登录身份已变化，请重试' });
       }
     }));
+    return { abort() { aborted = true; if (transport && transport.abort) transport.abort(); } };
   }
-  function reject(options, msg) {
-    const res = { code: 409, msg: msg };
+  function reject(options, msg, code = 409, pendingComment) {
+    const res = { code, msg, ...(pendingComment ? { pendingComment } : {}) };
     if (options.success) options.success(res); if (options.complete) options.complete(res);
     return { abort() {} };
   }
-  return { request: send, normalizePost, normalizeComment, captureUpload };
+  return { request: send, normalizePost, normalizeComment, captureUpload,
+    pendingComment(postId) {
+      resetForOwner();
+      const row = commentRecovery.pending(wxApi, owner, postId);
+      return row && row.status !== 'rejected' ? { ...row.wire } : null;
+    } };
 }
 function mediaRows(rows) {
   return rows.map(m => ({ id: m.id,

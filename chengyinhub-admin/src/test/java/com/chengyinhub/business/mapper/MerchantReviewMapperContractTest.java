@@ -20,6 +20,17 @@ class MerchantReviewMapperContractTest {
     private static final String NS = "com.chengyinhub.business.mapper.MerchantReviewMapper.";
 
     @Test
+    void exactOrderEligibilityIsReadOnlyAndRetainsAllExistingGuards() throws Exception {
+        Map<String, Object> params = new HashMap<>();
+        params.put("authorMemberId", 101L); params.put("merchantRowId", 7L); params.put("registrationId", 303L);
+        String exact = sql(parse(), "selectEligibilityForRegistration", params);
+        assertTrue(exact.contains("r.id = ?") && exact.contains("r.member_id = ?"), exact);
+        assertTrue(exact.contains("rd.status = 'active'") && exact.contains("mm.member_id = rd.merchant_id"), exact);
+        assertTrue(exact.contains("sibling.id <> mm.id") && exact.contains("used.registration_id = r.id"), exact);
+        assertFalse(exact.contains("for update") || exact.contains("lock in share mode"), exact);
+    }
+
+    @Test
     void eligibilityRequiresCurrentAuthorAndActiveSameMerchantRedemption() throws Exception {
         Configuration configuration = parse();
         Map<String, Object> params = new HashMap<>();

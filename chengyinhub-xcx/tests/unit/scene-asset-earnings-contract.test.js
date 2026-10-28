@@ -37,6 +37,9 @@ function loadComponent(source) {
         can: (cap) => { sandbox.__guardCaps.push(cap); return cap === 'withdrawable' && sandbox.__withdrawable },
       }
       if (p.includes('session/login-reload')) return require(path.join(ROOT, 'utils/session/login-reload.js'))
+      // 2026-10-28 G-9:本月收入 / 我的资产的纯聚合模块,给真件
+      if (p.includes('earnings-view')) return require(path.join(ROOT, 'utils/earnings-view.js'))
+      if (p.includes('funds-stages/view-model')) return require(path.join(ROOT, 'components/cy/funds-stages/view-model.js'))
       if (vm.isUiModule(p)) return vm.loadUiModule(p, vm.createContext({ wx: sandbox.wx }))
       // countUp 接线(2026-08-21):motion 是纯 node 兼容模块,直接给真件;
       // 减动效偏好固定 true → 单帧直落,金额断言保持同步可判
@@ -217,25 +220,28 @@ test('三态在 wxml 里互斥,error 分支不含任何金额绑定', () => {
   assert.doesNotMatch(errorBlock, /money\.amount|\{\{balance\}\}|¥/, 'error 态不得出现任何金额')
 })
 
-test('D33 金额卡只承载金额，三项主动作与辅助入口分层放在卡外', () => {
+// 2026-10-28 G-9 业主改版(取代 D33 的白卡 + 三颗灰按钮):Revolut 式 —— 余额居中大字,
+// 下面四个圆形动作 提现 / 明细 / 分析 / 更多(提现记录、邀请记录收进「更多」),再下面是本月收入与我的资产。
+test('G-9 余额只承载金额，四个动作在余额下方，次级入口收进「更多」', () => {
   const wxml = read('index.wxml')
   const card = wxml.slice(wxml.indexOf('<view class="ae-card">'), wxml.indexOf('<view class="ae-actions">'))
   assert.match(card, /ae-card__label[\s\S]*ae-card__amount/)
-  assert.doesNotMatch(card, /cy-cell|ae-action/, '入口链不得留在金额卡内')
-  const actions = wxml.slice(wxml.indexOf('<view class="ae-actions">'), wxml.indexOf('<view class="ae-section">'))
-  for (const t of ['明细', '提现', '提现记录']) assert.match(actions, new RegExp(`ae-action[^>]*[\\s\\S]*?>${t}<`))
-  const section = wxml.slice(wxml.indexOf('<view class="ae-section">'))
-  assert.match(section, /cy-cell[^>]*bind:tap="openInvite"/, '邀请记录必须保留卡外入口')
-  assert.doesNotMatch(section, /bind:tap="openCoopFinance"/, '俱乐部分润已归并到收益明细 tab')
+  assert.doesNotMatch(card, /cy-cell|ae-action/, '入口不得留在余额区内')
+  const actions = wxml.slice(wxml.indexOf('<view class="ae-actions">'), wxml.indexOf('<cy-empty'))
+  for (const t of ['提现', '明细', '分析', '更多']) assert.match(actions, new RegExp(`ae-action[^>]*[\\s\\S]*?<text>${t}</text>`))
+  const more = wxml.slice(wxml.indexOf('<cy-sheet inset show="{{moreShow}}"'))
+  assert.match(more, /class="tm-row" bindtap="openWithdrawHistory"/, '提现记录必须保留入口')
+  assert.match(more, /class="tm-row" bindtap="openInvite"/, '邀请记录必须保留入口')
+  assert.match(wxml, /<cy-earnings-overview bind:detail="openIncomeDetail" \/>/)
 })
 
-test('D33 白色金额卡与灰色动作区保持两级，动作热区走统一按钮高度', () => {
+test('G-9 动作是圆形图标 + 文字，热区走统一按钮高度', () => {
   const wxss = read('index.wxss')
   const card = wxss.slice(wxss.indexOf('.ae-card {'), wxss.indexOf('.ae-card__label'))
   const action = wxss.slice(wxss.indexOf('.ae-action {'), wxss.indexOf('.ae-section'))
-  assert.match(card, /background:\s*var\(--cy-btn-solid-bg\)/)
   assert.match(card, /border:\s*0/)
   assert.match(action, /min-height:\s*var\(--cy-btn-h\)/)
+  assert.match(action, /border-radius:\s*50%/)
   assert.match(action, /background:\s*var\(--cy-color-action-secondary-bg\)/)
 })
 

@@ -42,7 +42,12 @@ class PuzzlePlayServiceImplTest
         attemptLogMapper = mock(PlayAttemptLogMapper.class);
         progressMapper = mock(PlayerNodeProgressMapper.class);
         memberMapper = mock(UmsMemberMapper.class);
-        service = new PuzzlePlayServiceImpl(templateService, attemptLogMapper, progressMapper, memberMapper);
+        service = new PuzzlePlayServiceImpl(templateService, attemptLogMapper, progressMapper, memberMapper,
+                mock(com.chengyinhub.business.service.ICmsTopicNodeService.class),
+                mock(com.chengyinhub.business.service.support.PlayNodeAccessService.class),
+                mock(com.chengyinhub.business.service.ICmsPointsSettingService.class),
+                mock(com.chengyinhub.business.service.IUmsMemberService.class),
+                mock(com.chengyinhub.business.service.IUmsMemberPointsDetailService.class));
         node = new CmsTopicNode();
         node.setId(30L);
         node.setTemplateId(40L);

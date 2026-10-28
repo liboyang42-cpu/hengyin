@@ -147,7 +147,7 @@ const WRITE_ENTRIES = [
   ['pages/topic/index/index.js', 'reportTopic', 'report'],
   ['pages/club/detail/index.js', 'onJoin', 'club'],
   ['pages/talent/list/index.js', 'onClubJoin', 'club'],
-  ['pages/club/detail/index.js', 'onPostSubmit', 'post'],
+  // 2026-10-27 P-20:俱乐部发帖改走 cy-post-compose(下面 onPublish 那一条),页内 onPostSubmit 已撤
   ['pages/club/detail/index.js', 'onCommentSubmit', 'post'],
   ['pages/club/detail/index.js', 'onLikePost', 'like'],
   ['pages/club/detail/index.js', 'onReportPost', 'report'],
@@ -159,7 +159,7 @@ const WRITE_ENTRIES = [
   ['pages/square/list/index.js', 'favoriteClick', 'like'],
   ['pages/square/list/index.js', 'followClick', 'like'],
   ['pages/square/list/index.js', 'reportSquare', 'report'],
-  ['pages/square/list/index.js', 'submitFormData', 'post'],
+  // 2026-10-27 P-20:广场行内发布框(submitFormData)撤掉,新建帖同走 cy-post-compose 的 onPublish(下方已列)
   ['pages/square/detail/index.js', 'addComment', 'post'],
   ['pages/square/detail/index.js', 'addReplyComment', 'post'],
   ['pages/square/detail/index.js', 'followClick', 'like'],
@@ -172,8 +172,7 @@ const WRITE_ENTRIES = [
   ['pages/square/detail/index.js', 'reportComment', 'report'],
   ['pages/square/components/cy/post-compose/index.js', 'onPublish', 'post'],
   ['pages/team/join/index.js', 'join', 'team'],
-  ['pages/template/index.js', 'goTopicConfig', 'publish'],
-  ['pages/template/index.js', 'useTt', 'publish'],
+  ['pages/templatedetail/topic-preview/index.js', 'useTemplate', 'publish'],
   ['pages/publish/fabu/index.js', 'submitForm', 'publish'],
   ['pages/publish/fabu/index.js', 'confirmPublishCheck', 'publish'],
   ['pages/publish/activity/index.js', 'submitForm', 'publish'],

@@ -593,4 +593,90 @@ class ApiCoopControllerInviteAuthzTest {
                 org.mockito.ArgumentMatchers.eq(clubId), any(), any(), any(), any());
         verify(imService).startSingle(clubOwner, ME);
     }
+    private com.chengyinhub.business.domain.dto.CoopInviteRequestResult receiptResult(CoopInvite body, boolean replayed) {
+        com.chengyinhub.business.domain.CoopInviteRequestReceipt row = new com.chengyinhub.business.domain.CoopInviteRequestReceipt();
+        row.setRequestId(body.getRequestId()); row.setInviteId(9007199254740993L);
+        row.setInviteType(body.getInviteType()); row.setTopicId(body.getTopicId());
+        row.setToType(body.getToType()); row.setToId(body.getToId()); row.setScope("");
+        return com.chengyinhub.business.domain.dto.CoopInviteRequestResult.created(row, replayed);
+    }
+
+    @Test
+    void originalRequestOnlyFirstCreationRunsContentChecksAndNotification() {
+        givenTopicPublishedBy(ME);
+        CoopInvite first = invite(0); first.setRequestId("vr_original");
+        CoopInvite replay = invite(0); replay.setRequestId("vr_original"); replay.setGameId(55L);
+        when(coopInviteService.createOrReplayInvite(org.mockito.ArgumentMatchers.eq(ME), any(), any()))
+                .thenAnswer(call -> {
+                    CoopInvite input = call.getArgument(1);
+                    if (input == first) ((Runnable) call.getArgument(2)).run();
+                    input.setId(9007199254740993L);
+                    return receiptResult(input, input != first);
+                });
+        assertEquals(200, c.invite(first).get("code"));
+        assertEquals(200, c.invite(replay).get("code"));
+        verify(notifyService, org.mockito.Mockito.times(1)).notifyCoopInvited(org.mockito.ArgumentMatchers.eq(INVITEE), any(), any());
+        verify(coopInviteService, never()).insertCoopInvite(any());
+        verify(coopInviteService, never()).selectCoopInviteList(any());
+        verify(coopInviteService, never()).selectCoopInviteListReadOnly(any());
+    }
+
+    @Test
+    void originalRequestFirstCreateStillAppliesContentSecurityAndConflictStays409() {
+        givenTopicPublishedBy(ME);
+        CoopInvite request = invite(0); request.setRequestId("vr_original"); request.setMessage("unsafe");
+        when(coopInviteService.createOrReplayInvite(org.mockito.ArgumentMatchers.eq(ME), any(), any()))
+                .thenAnswer(call -> { ((Runnable) call.getArgument(2)).run(); return receiptResult(request, false); });
+        com.chengyinhub.business.service.IWxContentSecurityService security =
+                (com.chengyinhub.business.service.IWxContentSecurityService) ReflectionTestUtils.getField(c, "wxContentSecurityService");
+        when(security.checkText(org.mockito.ArgumentMatchers.eq("unsafe"), org.mockito.ArgumentMatchers.isNull()))
+                .thenReturn("内容审核暂时不可用");
+        assertEquals(500, c.invite(request).get("code"));
+        verify(security).checkText(org.mockito.ArgumentMatchers.eq("unsafe"), org.mockito.ArgumentMatchers.isNull());
+        verify(coopInviteService, never()).createOrReplayInvite(any(), any(), any());
+        verifyNoInviteNotification();
+        when(security.checkText(org.mockito.ArgumentMatchers.eq("unsafe"), org.mockito.ArgumentMatchers.isNull())).thenReturn(null);
+        when(coopInviteService.createOrReplayInvite(org.mockito.ArgumentMatchers.eq(ME), any(), any()))
+                .thenThrow(new com.chengyinhub.common.exception.ServiceException("COOP_REQUEST_CONFLICT", 409));
+        assertEquals(409, c.invite(request).get("code"));
+        verifyNoInviteNotification();
+    }
+
+    @Test
+    void originalRequestContentSecurityRunsBeforeReceiptTransactionNotInsideCallback() {
+        givenTopicPublishedBy(ME);
+        CoopInvite request = invite(0); request.setRequestId("vr_original"); request.setMessage("hello");
+        com.chengyinhub.business.service.IWxContentSecurityService security =
+                (com.chengyinhub.business.service.IWxContentSecurityService) ReflectionTestUtils.getField(c, "wxContentSecurityService");
+        when(coopInviteService.createOrReplayInvite(org.mockito.ArgumentMatchers.eq(ME), any(), any()))
+                .thenAnswer(call -> {
+                    // 进入原请求事务时内容安全已完成;回调(回执插入之后)不得再发起网络审核。
+                    verify(security, org.mockito.Mockito.times(1)).checkText(org.mockito.ArgumentMatchers.eq("hello"), org.mockito.ArgumentMatchers.isNull());
+                    ((Runnable) call.getArgument(2)).run();
+                    verify(security, org.mockito.Mockito.times(1)).checkText(org.mockito.ArgumentMatchers.eq("hello"), org.mockito.ArgumentMatchers.isNull());
+                    return receiptResult(request, false);
+                });
+        assertEquals(200, c.invite(request).get("code"));
+        org.mockito.InOrder order = org.mockito.Mockito.inOrder(security, coopInviteService);
+        order.verify(security).checkText(org.mockito.ArgumentMatchers.eq("hello"), org.mockito.ArgumentMatchers.isNull());
+        order.verify(coopInviteService).createOrReplayInvite(org.mockito.ArgumentMatchers.eq(ME), any(), any());
+    }
+
+    private void verifyNoInviteNotification() {
+        verify(notifyService, never()).notifyCoopInvited(any(), any(), any());
+    }
+
+    @Test
+    void originalRequestGetAndEnumerationAreDelegatedWithOriginalPrincipalAndNoNotification() {
+        when(coopInviteService.findInviteRequest(ME, "vr_original")).thenReturn(
+                com.chengyinhub.business.domain.dto.CoopInviteRequestResult.state("NOT_FOUND", "vr_original"));
+        when(coopInviteService.listInviteRequests(ME, 9L, 20)).thenReturn(Collections.emptyMap());
+        assertEquals(200, c.inviteRequest("vr_original").get("code"));
+        assertEquals(200, c.inviteRequests(9L, 20).get("code"));
+        verify(coopInviteService).findInviteRequest(ME, "vr_original");
+        verify(coopInviteService).listInviteRequests(ME, 9L, 20);
+        verifyNoInviteNotification();
+        verify(coopInviteService, never()).insertCoopInvite(any());
+    }
+
 }

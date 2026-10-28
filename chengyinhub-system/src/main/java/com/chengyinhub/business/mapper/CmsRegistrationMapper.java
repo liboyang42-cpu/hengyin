@@ -17,6 +17,9 @@ public interface CmsRegistrationMapper
     /** 按现有报名筛选条件计数，不读取个人隐私。 */
     int countCmsRegistrationList(CmsRegistration registration);
 
+    List<com.chengyinhub.business.domain.vo.MerchantTodoRegistrationVO> selectTodoRegistrationOwners(
+            @Param("registrationIds") java.util.Collection<Long> registrationIds);
+
     /** 主题票与活动壳复制票按稳定售卖字段投影后的已支付人数。 */
     List<Map<String, Object>> selectPaidCountsByTopicTicketIncludingActivityShell(Long topicId);
 

@@ -1,5 +1,6 @@
 const toast = require('../../../utils/toast.js');
 const app = getApp();
+const { createReplyRecovery } = require('./reply-recovery');
 const merchantTheme = require('../../../utils/merchant-theme.js');
 const { ensureSession } = require('../utils/session/ensure-session.js');
 const mediaPreview = require('../../../utils/media-preview.js');
@@ -12,7 +13,7 @@ const {
   MANAGE_REVIEW_FILTERS,
   normalizeManageFilter,
   parseReviewRouteOptions,
-  positiveId,
+  decimalId: positiveId,
   shapePage,
 } = require('./view-model.js');
 
@@ -56,6 +57,8 @@ Page({
     replyContent: '',
     replySubmitting: false,
     replyError: '',
+    replyPending: false,
+    replyRequestId: '',
     reportReviewId: null,
     reportReason: '',
     reportSubmitting: false,
@@ -129,6 +132,8 @@ Page({
   onShow() {
     this._hidden = false;
     merchantTheme.merchantPageShow();
+    this.syncReplyRecovery();
+    if (this._replyRecovery) this._replyRecovery.resume();
     if (this._resumeReviewRead || (this._reviewOwner !== undefined && this._reviewOwner !== String(app.getUserID() || ''))) {
       this._resumeReviewRead = false;
       this.retry();
@@ -136,6 +141,7 @@ Page({
   },
   onHide() {
     this._hidden = true;
+    if (this._replyRecovery) this._replyRecovery.suspend();
     this._resumeReviewRead = this.data.pageState === 'loading' || this.data.loadingMore;
     this._reviewEntryEpoch = (this._reviewEntryEpoch || 0) + 1;
     this._reviewReadEpoch = (this._reviewReadEpoch || 0) + 1;
@@ -143,6 +149,7 @@ Page({
   },
   onUnload() {
     this._unloaded = true;
+    if (this._replyRecovery) this._replyRecovery.suspend();
     this._reviewEntryEpoch = (this._reviewEntryEpoch || 0) + 1;
     this._reviewReadEpoch = (this._reviewReadEpoch || 0) + 1;
     merchantTheme.merchantPageRestore();
@@ -171,6 +178,41 @@ Page({
     this.loadReviews(false);
   },
 
+  syncReplyRecovery() {
+    if (this.data.mode !== 'manage') return;
+    const identity = String(app.getUserID() || '') + ':' + (typeof app.getAuthorization === 'function' ? app.getAuthorization() : '');
+    if (this._replyUiIdentity !== undefined && this._replyUiIdentity !== identity) {
+      this._replyRequestId = ''; this._replyFingerprint = ''; this._deleteReplyId = null;
+      this.setData({ replyReviewId: null, replyEditing: false, replyContent: '', replyError: '' });
+    }
+    this._replyUiIdentity = identity;
+    if (!this._replyRecovery) this._replyRecovery = createReplyRecovery({ app, storage: wx,
+      changed: state => {
+        this.setData({ replyPending: state.pending, replySubmitting: state.busy,
+          replyRequestId: state.requestId, replyError: state.message });
+        if (!state.busy && state.message !== '原回复已确认，正在回读评价') {
+          const dc = this.selectComponent && this.selectComponent('#dc-reply-delete');
+          if (dc) dc.close();
+        }
+      },
+      applied: action => {
+        if (action === 'MERCHANT_REVIEW_REPLY_DELETED') {
+          const dc = this.selectComponent && this.selectComponent('#dc-reply-delete');
+          if (dc) dc.done();
+        }
+        this._replyRequestId = ''; this._replyFingerprint = '';
+        this.setData({ replyReviewId: null, replyEditing: false, replyContent: '' }); this.retry();
+      } });
+    this._replyRecovery.sync();
+  },
+  copyReplyRequestId() {
+    this.syncReplyRecovery();
+    const requestId = this.data.replyRequestId;
+    if (this.data.mode !== 'manage' || !this.data.replyPending || !requestId) return;
+    wx.setClipboardData({ data: requestId });
+  },
+  recoverReply() { this.syncReplyRecovery(); if (this._replyRecovery) this._replyRecovery.recover(); },
+
   loadReviews(append, keepShell) {
     if (this._hidden || this._unloaded) return;
     if (append && (this.data.loadingMore || !this.data.hasMore)) return;
@@ -185,6 +227,7 @@ Page({
         reportReviewId: null, reportReason: '', reportError: '', content: '', images: [], rating: 0, canSubmit: false });
     }
     this._reviewOwner = owner;
+    this.syncReplyRecovery();
     if (mode === 'manage' && !owner) { this.enterManage(false); return; }
     const readEpoch = this._reviewReadEpoch = (this._reviewReadEpoch || 0) + 1;
     const isCurrent = () => !this._hidden && !this._unloaded && readEpoch === this._reviewReadEpoch
@@ -401,7 +444,9 @@ Page({
   },
 
   openReply(event) {
-    if (this.data.replySubmitting || this.data.reportSubmitting) return;
+    if (this.data.mode !== 'manage') return;
+    this.syncReplyRecovery();
+    if (this.data.replyPending || this.data.replySubmitting || this.data.reportSubmitting) return;
     const id = positiveId(event.currentTarget.dataset.id);
     if (!id) return;
     this._replyRequestId = '';
@@ -410,7 +455,9 @@ Page({
   },
 
   openEditReply(event) {
-    if (this.data.replySubmitting || this.data.reportSubmitting) return;
+    if (this.data.mode !== 'manage') return;
+    this.syncReplyRecovery();
+    if (this.data.replyPending || this.data.replySubmitting || this.data.reportSubmitting) return;
     const id = positiveId(event.currentTarget.dataset.id);
     const review = id ? findReview(this.data.items, id) : null;
     if (!review || !review.canEditReply || !review.merchantReply) return;
@@ -426,13 +473,17 @@ Page({
   },
 
   cancelEditReply() {
-    if (this.data.replySubmitting) return;
+    if (this.data.mode !== 'manage') return;
+    this.syncReplyRecovery();
+    if (this.data.replyPending || this.data.replySubmitting) return;
     this.setData({ replyReviewId: null, replyEditing: false, replyContent: '', replyError: '' });
   },
 
   /** 删除是不可逆动作:先过 cy-danger-confirm 三段式确认,再发请求。 */
   askDeleteReply(event) {
-    if (this.data.replySubmitting || this.data.reportSubmitting) return;
+    if (this.data.mode !== 'manage') return;
+    this.syncReplyRecovery();
+    if (this.data.replyPending || this.data.replySubmitting || this.data.reportSubmitting) return;
     const id = positiveId(event.currentTarget.dataset.id);
     const review = id ? findReview(this.data.items, id) : null;
     if (!review || !review.canEditReply) return;
@@ -443,6 +494,9 @@ Page({
   },
 
   onConfirmDeleteReply() {
+    if (this.data.mode !== 'manage') return;
+    this.syncReplyRecovery();
+    if (this.data.replyPending || this.data.replySubmitting) return;
     const dc = this.selectComponent && this.selectComponent('#dc-reply-delete');
     const review = findReview(this.data.items, positiveId(this._deleteReplyId));
     if (!review || !review.canEditReply) {
@@ -450,7 +504,7 @@ Page({
       return;
     }
     if (dc) dc.busyOn();
-    const base = { reviewId: review.id, expectedVersion: review.version };
+    const base = { reviewId: positiveId(review.id), expectedVersion: review.version };
     const currentFingerprint = fingerprint(base);
     if (!this._deleteRequestId || this._deleteFingerprint !== currentFingerprint) {
       this._sequence = (this._sequence || 0) + 1;
@@ -458,19 +512,8 @@ Page({
       this._deleteFingerprint = currentFingerprint;
     }
     const payload = Object.assign({}, base, { requestId: this._deleteRequestId });
-    requestJson('/api/merchant/reviews/reply/delete', payload, (res) => {
-      if (!isSuccessObject(res)) {
-        if (dc) dc.failed(app.getRequestErrorMessage(res, '删除回复失败'));
-        return;
-      }
-      this._deleteRequestId = '';
-      this._deleteFingerprint = '';
-      this._deleteReplyId = null;
-      if (dc) dc.done();
-      this.retry();
-    }, () => {
-      if (dc) dc.failed('网络异常，请重试');
-    });
+    this.syncReplyRecovery();
+    this._replyRecovery.submit('MERCHANT_REVIEW_REPLY_DELETED', payload);
   },
 
   tapReplySend(event) {
@@ -484,11 +527,16 @@ Page({
   },
 
   inputReply(event) {
+    if (this.data.mode !== 'manage') return;
+    this.syncReplyRecovery();
+    if (this.data.replyPending || this.data.replySubmitting) return;
     this.setData({ replyContent: String((event && event.detail && event.detail.value) || ''), replyError: '' });
   },
 
   submitReply() {
-    if (this.data.replySubmitting) return;
+    if (this.data.mode !== 'manage') return;
+    this.syncReplyRecovery();
+    if (this.data.replyPending || this.data.replySubmitting) return;
     const editing = this.data.replyEditing === true;
     const review = findReview(this.data.items, this.data.replyReviewId);
     const content = String(this.data.replyContent || '').trim();
@@ -497,7 +545,7 @@ Page({
       this.setData({ replyError: '回复内容需填写 1 到 500 字' });
       return;
     }
-    const base = { reviewId: review.id, content, expectedVersion: review.version };
+    const base = { reviewId: positiveId(review.id), content, expectedVersion: review.version };
     const currentFingerprint = fingerprint(base);
     if (!this._replyRequestId || this._replyFingerprint !== currentFingerprint) {
       this._sequence = (this._sequence || 0) + 1;
@@ -505,18 +553,8 @@ Page({
       this._replyFingerprint = currentFingerprint;
     }
     const payload = Object.assign({}, base, { requestId: this._replyRequestId });
-    this.setData({ replySubmitting: true, replyError: '' });
-    requestJson(editing ? '/api/merchant/reviews/reply/update' : '/api/merchant/reviews/reply', payload, (res) => {
-      if (!isSuccessObject(res)) {
-        this.setData({ replySubmitting: false, replyError: app.getRequestErrorMessage(res, editing ? '修改回复失败' : '回复失败') });
-        return;
-      }
-      this._replyRequestId = '';
-      this._replyFingerprint = '';
-      this.setData({ replySubmitting: false, replyReviewId: null, replyEditing: false, replyContent: '', replyError: '' });
-      toast.success(editing ? '公开回复已更新' : '公开回复已发布');
-      this.retry();
-    }, () => this.setData({ replySubmitting: false, replyError: '网络异常；本次回复可安全重试' }));
+    this.syncReplyRecovery();
+    this._replyRecovery.submit(editing ? 'MERCHANT_REVIEW_REPLY_UPDATED' : 'MERCHANT_REVIEW_REPLIED', payload);
   },
 
   openReport(event) {
@@ -545,7 +583,7 @@ Page({
       this.setData({ reportError: '举报原因需填写 2 到 500 字' });
       return;
     }
-    const base = { reviewId: review.id, expectedVersion: review.version, reason };
+    const base = { reviewId: positiveId(review.id), expectedVersion: review.version, reason };
     const currentFingerprint = fingerprint(base);
     if (!this._reportRequestId || this._reportFingerprint !== currentFingerprint) {
       this._sequence = (this._sequence || 0) + 1;
@@ -586,7 +624,8 @@ function requestJson(url, data, success, fail) {
 }
 
 function findReview(items, id) {
-  return (items || []).find((item) => item.id === id) || null;
+  const target = positiveId(id);
+  return target ? (items || []).find((item) => positiveId(item.id) === target) || null : null;
 }
 
 function isAuthenticationFailure(res, status) {

@@ -29,7 +29,8 @@ test('优惠券详情是可关闭的语义对话框，遮罩和关闭按钮都�
   const wxml = readView()
   assert.match(wxml, /<cy-sheet[^>]*show="\{\{tpShow\}\}"[^>]*title="优惠券详情"[^>]*bind:close="tpClose"/)
   assert.match(wxml, /currentCoupon.name/)
-  assert.match(wxml, /loadState === 'ready' && !tpShow/)
+  // 2026-10-27 M-07:底部发券按钮加载中也在位(loadState !== 'error'),详情弹层打开时仍让位
+  assert.match(wxml, /loadState !== 'error' && !tpShow/)
 
 })
 

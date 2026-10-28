@@ -1,0 +1,41 @@
+/* 我的发票:页壳照抄 subpackageMember/order/order.wxss,卡片照抄 scene-member-order-history/index.wxss(数值未改)。 */
+.order-page{ min-height: 100vh; display: flex; flex-direction: column; }
+.order-shell{ flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 0 var(--cy-page-x) var(--cy-comp-footer-h); box-sizing: border-box; }
+.moh { width: 100%; flex: 1; min-height: 0; box-sizing: border-box; display: flex; flex-direction: column; }
+.order-tabs-wrap { flex: none; padding: 0 0 var(--cy-space-3); }
+.inv-recovery { margin-bottom: var(--cy-space-3); }
+.moh-body { flex: 1; min-height: 0; display: flex; flex-direction: column; padding-bottom: calc(var(--cy-space-4) + env(safe-area-inset-bottom)); }
+.orderbox_li{overflow: hidden; border-radius: var(--cy-radius-lg); background: var(--cy-bg-card); padding: var(--cy-space-3) var(--cy-space-3); margin: 0 0 var(--cy-space-5); box-shadow: var(--cy-shadow-card); border: 2rpx solid var(--cy-border-card);}
+.orderbox_li_top{ margin: 0 0 var(--cy-space-3) 0; overflow: hidden;height: var(--cy-space-7); line-height: 80rpx; font-size: var(--cy-font-label); border-bottom: 2rpx solid var(--cy-border-card); padding-top: var(--cy-legacy-10);}
+.orderbox_li_top_left{float: left; color: var(--cy-text-secondary); font-weight: 500;}
+.orderbox_li_top_right{ float: right; font-size: var(--cy-font-label);}
+.orderbox_li_top_right .moh-state{display: block; height: 48rpx; line-height: 48rpx; border-radius: var(--cy-radius-md); padding: 0 16rpx; font-weight: bold; margin-top: 16rpx;}
+.orderbox_li_con{overflow: hidden; margin: 0 0 var(--cy-space-4) 0; display: flex; justify-content: space-between; gap: var(--cy-space-3);}
+.orderbox_li_con_info{overflow: hidden; flex: 1; display: flex; flex-direction: column; justify-content: center;}
+.order-mode-line{display:flex; align-items:center; gap:var(--cy-legacy-10); min-width:0;}
+.order-mode-tag{flex:none; height:34rpx; line-height:34rpx; padding:0 var(--cy-space-1-5); border-radius: var(--cy-radius-pill); background:var(--cy-bg-subtle); color:var(--cy-info); font-size:var(--cy-font-caption); font-weight:800;}
+.order-mode-tag.green{background:var(--cy-bg-subtle); color:var(--cy-success);}
+.moh-no{ color: var(--cy-text-secondary); font-size: var(--cy-font-label); }
+.orderbox_li_con_info_time{ font-size: var(--cy-font-label); color: var(--cy-text-body); margin-top: var(--cy-space-2);}
+.orderbox_li_con_info_time .moh-ico{ width: 24rpx; height: 24rpx; vertical-align: top;margin: var(--cy-legacy-4) var(--cy-legacy-6) 0 0;}
+.orderbox_li_con_info_name{ font-size: var(--cy-font-title); color: var(--cy-text-title); font-weight: bold; margin-top: var(--cy-space-1-5);}
+.orderbox_li_con_info_txt{font-size: var(--cy-font-label); color: var(--cy-text-body); margin-top: var(--cy-space-1-5);}
+.orderbox_li_con_info_txt .moh-ico{ width: 24rpx; height: 24rpx; vertical-align: top; margin: var(--cy-legacy-4) var(--cy-legacy-6) 0 0;}
+.orderbox_li_bot{ margin: 0; overflow: hidden; border-top: 2rpx solid var(--cy-border-card); padding: var(--cy-space-3) 0; display: flex; align-items: center; justify-content: space-between;}
+.orderbox_li_bot_left{ color: var(--cy-text-body); font-size: var(--cy-font-label); display: flex; align-items: baseline; }
+.orderbox_li_bot_left .moh-amount{color: var(--cy-price); font-weight: bold;font-size: var(--cy-font-display);}
+.orderbox_li_bot_right{ font-size: var(--cy-font-body); display: flex; align-items: center;}
+.orderbut1{ width: 148rpx; height:88rpx; display:flex; align-items:center; justify-content:center; margin-left: 16rpx;}
+.orderbut2{width: 160rpx; height:88rpx; display:flex; align-items:center; justify-content:center; margin-left: 16rpx; padding: 16rpx 0; box-sizing: border-box; color: var(--cy-btn-solid-fg); border-radius: var(--cy-radius-lg); background: var(--cy-btn-solid-bg); background-clip: content-box;}
+.orderbut__visual{ width: 100%; height: 56rpx; line-height: 56rpx; text-align: center; border-radius: var(--cy-radius-lg); font-weight: 500; box-sizing: border-box;}
+.orderbut1 .orderbut__visual{ color: var(--cy-text-body); border: 2rpx solid var(--cy-border-line);}
+.orderbut2 .orderbut__visual{ color: var(--cy-btn-solid-fg); background: var(--cy-btn-solid-bg);}
+.orderbut-play{background:var(--cy-btn-solid-bg); color:var(--cy-btn-solid-fg); box-shadow:none;}
+.orderbut-play .orderbut__visual{background:var(--cy-btn-solid-bg); color:var(--cy-btn-solid-fg);}
+/* 状态色沿用订单卡的同档映射:开具中=未开始 / 退款核对中=退款中 / 已开具=已完成 / 已驳回=已退款 / 已撤回=不可退 */
+.moh-state.inv-state-ing{color: var(--cy-info); background: var(--cy-bg-page);}
+.moh-state.inv-state-paused{color: var(--cy-gold); background: var(--cy-bg-page);}
+.moh-state.inv-state-issued{color: var(--cy-text-body); background: var(--cy-bg-page);}
+.moh-state.inv-state-rejected{color: var(--cy-success); background: var(--cy-bg-page);}
+.moh-state.inv-state-cancelled{color: var(--cy-text-secondary); background: var(--cy-bg-page);}
+.orderbox_li--press { opacity: 0.82; }

@@ -170,6 +170,27 @@ function badgePill(g, P, text, bg, fg) {
  *   event    → 同 .fthumb,描边取限时活动粉
  * self=true 画「自己」:外圈淡青光环。
  */
+/** 2026-10-27 owner P-38:「我」的定位点。原来借用玩家头像点位(盒子偏左上、光晕 0.78 盒宽),
+ *  光晕越出画布被裁成半截。这里整枚居中:光晕 0.48S、头像圈 0.3S、白描边,四边都留在画布内。 */
+/* 2026-10-28 业主:「我」不要圆圈 —— 画成头像定位针:白底圆 + 下方尖角,头像在圆里;
+   圆和尖都留在画布内(上一版外圈光晕贴边被裁)。尖角落在画布底边上方 6%,marker 的 anchor 对准尖角。 */
+function drawSelfDot(g, S, color, img) {
+  const c = S / 2; const R = S * 0.34; const cy = S * 0.4; const border = Math.max(3, Math.round(S * 0.045));
+  g.clearRect(0, 0, S, S);
+  g.beginPath(); g.moveTo(c - R * 0.42, cy + R * 0.86); g.lineTo(c, S * 0.94); g.lineTo(c + R * 0.42, cy + R * 0.86); g.closePath();
+  g.fillStyle = C.cream; g.fill();
+  g.beginPath(); g.arc(c, cy, R, 0, Math.PI * 2); g.fillStyle = C.cream; g.fill();
+  const r = R - border;
+  g.save(); g.beginPath(); g.arc(c, cy, r, 0, Math.PI * 2); g.clip();
+  if (img) { const n = Math.max(1, Math.min(img.width, img.height)); g.drawImage(img, (img.width - n) / 2, (img.height - n) / 2, n, n, c - r, cy - r, r * 2, r * 2); }
+  else {
+    g.fillStyle = color; g.fillRect(c - r, cy - r, r * 2, r * 2);
+    g.fillStyle = C.cream; g.font = 'bold ' + Math.round(r * 0.9) + 'px sans-serif';
+    g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('我', c, cy + 1);
+  }
+  g.restore();
+}
+
 function drawMarker(g, S, spec, img) {
   const s = spec || {}; const P = protoScale(S);
   g.clearRect(0, 0, S, S);
@@ -245,4 +266,4 @@ function drawFarDot(g, S, color) {
   g.lineWidth = Math.max(2, S * 0.08); g.strokeStyle = 'rgba(0,0,0,0.6)'; g.stroke();
 }
 
-module.exports = { NEAR_M, ICON_MAX, whenParts, countdownBadge, markerSpec, iconKey, drawMarker, drawFarDot };
+module.exports = { drawSelfDot, NEAR_M, ICON_MAX, whenParts, countdownBadge, markerSpec, iconKey, drawMarker, drawFarDot };

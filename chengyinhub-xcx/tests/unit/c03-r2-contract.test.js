@@ -209,7 +209,8 @@ test('④ agreement 标题仍随 ?type= 变化(不许为了消告警写死)', ()
 
 test('④ roleBadge 的 role 不得收到 null(未登录时 userInfo.role 为空)', () => {
   const wxml = read('pages/member/index/index.wxml')
-  assert.match(wxml, /<roleBadge role="\{\{userInfo\.role \|\| ''\}\}"/, 'C03 调用方补空串保底(不动 components/roleBadge)')
+  // 2026-10-27 owner 真机走查 P-50:玩家视角不出 BIZ 徽章 ⇒ 外面多包一层视角判断,null 仍兜成空串
+  assert.match(wxml, /<roleBadge role="\{\{!isMerchantView && userInfo\.role === 'merchant' \? '' : \(userInfo\.role \|\| ''\)\}\}"/, 'C03 调用方补空串保底(不动 components/roleBadge)')
 })
 
 // R5 已用 cy-footer-bar 替换自造底栏；仍核对页面占位与组件实际盒高同源。
