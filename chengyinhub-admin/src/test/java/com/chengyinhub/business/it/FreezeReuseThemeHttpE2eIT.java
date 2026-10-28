@@ -114,10 +114,11 @@ class FreezeReuseThemeHttpE2eIT {
         }
         topicId = success(post("/api/topic/v2/create", topic, author)).path("topicId").asLong(); assertTrue(topicId > 0);
         ObjectNode registration = json.createObjectNode().put("topicId", topicId);
-        registration.putArray("keys").addObject().put("stateKey", STAMINA).put("keyType", "counter").put("scope", "run").put("label", "体力").put("initialValue", 20);
+        registration.putArray("keys").addObject().put("stateKey", STAMINA).put("keyType", "counter").put("scope", "run").put("label", "体力").put("initialValue", 20).put("minValue", 0).put("maxValue", 30);
         success(post("/api/topic/state-keys", registration, author));
         JsonNode read = success(form("/api/topic/edit-detail", topicId, author));
         topic.put("id", topicId).put("configVersion", read.path("topic").path("configVersion").asInt());
+        String registryVersion = GenericGameplayHttpE2eIT.confirmAttributeBinding(topic, success(get("/api/topic/attribute-binding?topicId=" + topicId, author)));
         ObjectNode bindings = json.createObjectNode();
         for (int c = 0; c < layout.size(); c++) {
             ObjectNode chapter = (ObjectNode) chapters.get(c); chapter.put("id", read.path("chapters").get(c).path("id").asLong());
@@ -161,7 +162,7 @@ class FreezeReuseThemeHttpE2eIT {
         JsonNode saved = json.readTree(reopened.path("themeRuntimeConfig").asText());
         assertEquals(nodes.get("rest").longValue(), saved.path("chapters").get(0).path("extraNodes").get(0).path("nodeId").asLong());
         assertEquals(actKey(saved, nodes.get("a3f")), saved.path("gameplayRuntime").path("survival").path("rations").get(0).path("actKey").asText());
-        success(form("/api/topic/publish-draft", topicId, author));
+        success(publishBound(topicId, registryVersion, author));
         JsonNode frozen = persistedTopic(topicId, "published");
         JsonNode published = frozen.path("published"), game = published.path("gameplayRuntime");
         assertEquals(3, game.path("acts").size()); assertEquals(8, game.path("quests").size());
@@ -524,6 +525,14 @@ class FreezeReuseThemeHttpE2eIT {
         org.springframework.util.LinkedMultiValueMap<String, String> body = new org.springframework.util.LinkedMultiValueMap<>(); body.add("id", String.valueOf(id));
         ResponseEntity<JsonNode> response = http.exchange(path, HttpMethod.POST, new HttpEntity<>(body, headers), JsonNode.class);
         record("POST", path, json.createObjectNode().put("id", id), response); return response.getBody();
+    }
+    private JsonNode publishBound(long id, String registryVersion, HttpHeaders original) {
+        HttpHeaders headers = new HttpHeaders(); headers.putAll(original); headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        long configVersion = database.queryForObject("SELECT config_version FROM cms_topic WHERE id=?", Long.class, id);
+        org.springframework.util.LinkedMultiValueMap<String, String> body = new org.springframework.util.LinkedMultiValueMap<>();
+        body.add("id", String.valueOf(id)); body.add("configVersion", String.valueOf(configVersion)); body.add("registryVersion", registryVersion);
+        ResponseEntity<JsonNode> response = http.exchange("/api/topic/publish-draft", HttpMethod.POST, new HttpEntity<>(body, headers), JsonNode.class);
+        record("POST", "/api/topic/publish-draft", json.createObjectNode().put("id", id).put("configVersion", configVersion).put("registryVersion", registryVersion), response); return response.getBody();
     }
     private JsonNode success(JsonNode response) { return GenericGameplayHttpE2eIT.appliedResponseData(response); }
     private void rejected(JsonNode response) { GenericGameplayHttpE2eIT.rejectedGameCommand(response); }
