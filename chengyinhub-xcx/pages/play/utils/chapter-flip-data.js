@@ -68,7 +68,7 @@ function buildFinale({ cards, nodes, topicCover, topicName, doneCount, elapsed, 
   const stats = [
     doneCount ? { v: String(doneCount), k: '坐标' } : null,
     elapsed ? { v: elapsed, k: '用时' } : null,
-    score ? { v: Number(score).toLocaleString('en-US'), k: '探索值' } : (puzzle && puzzle.count ? { v: String(puzzle.score), k: '解谜分' } : null),
+    score ? { v: String(Math.round(Number(score))).replace(/\B(?=(\d{3})+(?!\d))/g, ','), k: '探索值' } : (puzzle && puzzle.count ? { v: String(puzzle.score), k: '解谜分' } : null),
   ].filter(Boolean);
   return { faces: [a, b, goldFace(topicCover || (b && b.cover), topicName)], info: { kicker: '全部完成', title: topicName || '主题通关', desc: '', stats } };  // 拿不到主题名时与通关勋章页同口径
 }
