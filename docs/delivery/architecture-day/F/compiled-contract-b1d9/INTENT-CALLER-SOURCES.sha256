@@ -1,0 +1,4 @@
+8b8a59b60c0f8616e9caeccbfe836a98e5bf146c20ac699dd461fe406ba7c89b  chengyinhub-admin/src/main/java/com/chengyinhub/web/service/play/PlayPhotoCommandApplication.java
+221d0ec2dd48022c5f061a838fdb119724ac77a32f96136289b340be1ed9191e  chengyinhub-admin/src/main/java/com/chengyinhub/web/service/play/PlayPreferenceApplication.java
+d8e9123e48698f71462189205d0506a771c221f4eb4d667d9d051decb598f684  chengyinhub-admin/src/main/java/com/chengyinhub/web/service/play/PlayPuzzleCommandApplication.java
+6dc7cb9a4611eb80983fe34a5926e3c797448a647d23b5b5f828f13dcc3e294b  chengyinhub-admin/src/main/java/com/chengyinhub/web/service/play/PlayBasicIntentApplication.java
