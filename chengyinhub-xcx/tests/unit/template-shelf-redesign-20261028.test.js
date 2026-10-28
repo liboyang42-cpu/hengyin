@@ -186,9 +186,9 @@ test('主题标签只换标签下方(分类页带描述),精选大卡、tab 名�
   ]));
   const feat = JSON.stringify(vm.data.featTopics);
   const glow = vm.data.glow;
-  vm.pickTag({ currentTarget: { dataset: { key: 'indoor' } } });
-  assert.equal(vm.data.tf, 'indoor');
-  assert.deepEqual(vm.data.topicCat.items.map((t) => t.name), ['高温末日逃生', '生活不掉线']);
+  vm.pickTag({ currentTarget: { dataset: { key: 'survival' } } });
+  assert.equal(vm.data.tf, 'survival');
+  assert.deepEqual(vm.data.topicCat.items.map((t) => t.name), ['高温末日逃生']);
   assert.equal(JSON.stringify(vm.data.featTopics), feat);
   assert.equal(vm.data.glow, glow);
   assert.ok(vm.data.topicTags.every((t) => t.key !== 'scifi'), '没有内容的标签不出现');
@@ -277,7 +277,7 @@ test('包内图齐全：25 个玩法封面与道具、全部主题封面、标�
   const files = [];
   Object.keys(art.GAMES).forEach((t) => { const a = art.gameArt(t); files.push(a.cover, a.prop); });
   Object.keys(art.THEMES).forEach((n) => files.push(art.topicArt(n).cover));
-  art.TOPIC_TAGS.concat(art.GAME_TAGS).forEach((t) => files.push(art.propSrc('cat-' + t.key)));
+  art.TOPIC_TAGS.concat(art.GAME_TAGS).forEach((t) => files.push(art.propSrc(t.icon)));
   files.push('/images/tpl-tab-topic.svg', '/images/tpl-tab-game.svg');
   files.forEach((f) => assert.ok(fs.existsSync(path.join(ROOT, f)), f + ' 不存在'));
   let bytes = 0;
@@ -403,6 +403,41 @@ test('业主暂缓的主题(野生邻居观察局)接口回来也不上货架', 
   const { vm, requests } = mountShelf();
   await respond(requests.find((r) => r.url === '/api/template/topic-template/list'), ok([topic(1, '野生邻居观察局'), topic(2, '风味巡游')]));
   assert.deepEqual(vm._topics.map((t) => t.name), ['风味巡游']);
-  const tagged = art.TOPIC_TAGS.some((t) => (t.members || []).includes('野生邻居观察局'));
+  const tagged = art.TOPIC_TAGS.some((t) => t.test({ key: '野生邻居观察局', seconds: 0 }) && t.key !== 'solo');
   assert.equal(tagged, false);
+});
+
+test('标签按多个维度分组(没有「场景」维度);横滑行只放常用几个，其余进「全部分类」', async () => {
+  assert.deepEqual(art.TOPIC_TAG_GROUPS.map((g) => g.name), ['类型', '风格', '适合谁', '时长', '区域']);
+  assert.deepEqual(art.GAME_TAG_GROUPS.map((g) => g.name), ['用途', '玩法', '题材', '适合的店', '人数', '时间', '分区']);
+  assert.ok(!art.TOPIC_TAGS.some((t) => /雨天|滨江|公园|美食探店|拍照出片/.test(t.name)), '业主去掉了场景维度');
+  const { vm, requests } = mountShelf();
+  await respond(requests.find((r) => r.url === '/api/template/topic-template/list'), ok([
+    topic(1, '风味巡游', { totalTime: 14400 }), topic(2, '高温末日逃生', { totalTime: 21600 }), topic(3, '异常事务局：不存在的坐标', { productType: 1 })
+  ]));
+  assert.ok(vm.data.topicTags.length <= art.TOPIC_ROW.length + 1);
+  assert.ok(!vm.data.topicTagGroups.some((g) => g.tags.some((t) => t.key === 'versus')), '没有内容的「竞技对抗」不出现');
+  vm.openAllTags();
+  assert.equal(vm.data.allTagsShow, true);
+  vm.pickTag({ currentTarget: { dataset: { key: 'area-浦东' } } });
+  assert.equal(vm.data.allTagsShow, false, '在半屏里选完就收起');
+  assert.equal(vm.data.topicTags[0].key, 'area-浦东', '选中的标签不在常用行里时临时放到最前');
+  assert.deepEqual(vm.data.topicCat.items.map((t) => t.name), ['高温末日逃生']);
+  const wxml = read('pages/templatedetail/shelf/index.wxml');
+  assert.equal((wxml.match(/class="tg tg--more" bindtap="openAllTags"/g) || []).length, 2, '两个 tab 的标签行末尾都有「全部分类」');
+  assert.match(wxml, /<cy-sheet show="\{\{ allTagsShow \}\}" title="全部分类"/);
+});
+
+test('玩法标签：营销引流 / 插件玩法 / 解谜 / 运动等按标题归类，人数与时长按字段现算', async () => {
+  const { vm, requests } = mountShelf();
+  const rows = [gameRow(38, '今晚的暗号', { players: '单人/双人/不限', duration: 5 }), gameRow(94, '低碳行动', { players: '单人/不限', duration: 30 }),
+    gameRow(81, '一桌任务宾果', { players: '2-4人同桌', duration: 8 })];
+  await respond(requests.find((r) => r.url === '/api/template/list'), ok({ rows, total: 3 }));
+  vm.setData({ tab: 'game' });
+  const pick = (key) => { vm.pickTag({ currentTarget: { dataset: { key } } }); return vm.data.gameCat ? vm.data.gameCat.items.map((g) => g.title) : []; };
+  assert.deepEqual(pick('promo'), ['今晚的暗号']);
+  assert.deepEqual(pick('riddle'), ['今晚的暗号']);
+  assert.deepEqual(pick('sport'), ['低碳行动']);
+  assert.deepEqual(pick('p3'), ['一桌任务宾果']);
+  assert.deepEqual(pick('quick'), ['今晚的暗号']);
 });

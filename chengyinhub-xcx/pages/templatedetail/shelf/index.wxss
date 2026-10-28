@@ -155,3 +155,12 @@
 .cv-err { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8rpx; color: var(--sh-fg3); background: var(--sh-card); }
 .cv-err__ic { width: 96rpx; height: 72rpx; }
 .cv-err__t { font-size: var(--cy-font-caption); }
+
+/* 「全部分类」入口与半屏：组标题 + 自动换行的同款标签 */
+.tg--more { color: var(--sh-fg2); }
+.at { padding: 8rpx 0 24rpx; }
+.at__grp { padding-top: 20rpx; }
+.at__hd { display: block; font-size: var(--cy-font-caption); font-weight: 600; color: var(--cy-text-secondary); padding-bottom: 16rpx; }
+.at__tags { display: flex; flex-wrap: wrap; gap: 16rpx 12rpx; }
+.at .tg { color: var(--cy-text-title); background: var(--cy-bg-card-2); }
+.at .tg--on { background: var(--cy-text-title); color: var(--cy-bg-page); }

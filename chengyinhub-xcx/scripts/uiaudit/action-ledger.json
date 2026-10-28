@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 5152,
+  "controlCount": 5156,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -408495,6 +408495,32 @@
           ]
         },
         {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "pages/templatedetail/templatedetail",
           "segments": [
             {
@@ -446160,6 +446186,32 @@
             {
               "selector": "cy-sheet",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
             }
           ]
         },
@@ -483832,6 +483884,32 @@
           ]
         },
         {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "pages/templatedetail/templatedetail",
           "segments": [
             {
@@ -521496,6 +521574,32 @@
             {
               "selector": "cy-sheet",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
             }
           ]
         },
@@ -559168,6 +559272,32 @@
           ]
         },
         {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "pages/templatedetail/templatedetail",
           "segments": [
             {
@@ -596832,6 +596962,32 @@
             {
               "selector": "cy-sheet",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
             }
           ]
         },
@@ -634505,6 +634661,32 @@
           ]
         },
         {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "pages/templatedetail/templatedetail",
           "segments": [
             {
@@ -672170,6 +672352,32 @@
             {
               "selector": "cy-sheet",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
             }
           ]
         },
@@ -709843,6 +710051,32 @@
           ]
         },
         {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "pages/templatedetail/templatedetail",
           "segments": [
             {
@@ -747512,6 +747746,32 @@
           ]
         },
         {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "pages/templatedetail/templatedetail",
           "segments": [
             {
@@ -785177,6 +785437,32 @@
             {
               "selector": "cy-sheet",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
             }
           ]
         },
@@ -1178539,7 +1178825,7 @@
       }
     },
     {
-      "id": "pages/templatedetail/shelf/index.wxml:103:bindtap:openGame:15",
+      "id": "pages/templatedetail/shelf/index.wxml:104:bindtap:openGame:16",
       "route": "component:pages/templatedetail/shelf/index",
       "hostRoutes": [
         "pages/template/index"
@@ -1178574,7 +1178860,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openGame",
-        "line": 103,
+        "line": 104,
         "selectorHint": ".ap",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1178617,88 +1178903,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/shelf/index.js:327"
-      }
-    },
-    {
-      "id": "pages/templatedetail/shelf/index.wxml:124:bindtap:pickTag:16",
-      "route": "component:pages/templatedetail/shelf/index",
-      "hostRoutes": [
-        "pages/template/index"
-      ],
-      "hostComponentPaths": [
-        {
-          "route": "pages/template/index",
-          "segments": [
-            {
-              "selector": "tpl-shelf",
-              "index": 0
-            }
-          ]
-        }
-      ],
-      "role": "inherited",
-      "entry": {
-        "wxml": "pages/templatedetail/shelf/index.wxml",
-        "js": "pages/templatedetail/shelf/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "pickTag",
-        "line": 124,
-        "selectorHint": ".tg",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "全部",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/templatedetail/art/"
-        ],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/templatedetail/shelf/index.js:285"
+        "staticSource": "pages/templatedetail/shelf/index.js:344"
       }
     },
     {
@@ -1178741,6 +1178946,87 @@
         "selectorHint": ".tg",
         "visibleCondition": null,
         "disabledCondition": null,
+        "ariaLabel": "全部",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/templatedetail/art/"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/templatedetail/shelf/index.js:298"
+      }
+    },
+    {
+      "id": "pages/templatedetail/shelf/index.wxml:126:bindtap:pickTag:18",
+      "route": "component:pages/templatedetail/shelf/index",
+      "hostRoutes": [
+        "pages/template/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/templatedetail/shelf/index.wxml",
+        "js": "pages/templatedetail/shelf/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "pickTag",
+        "line": 126,
+        "selectorHint": ".tg",
+        "visibleCondition": null,
+        "disabledCondition": null,
         "ariaLabel": null,
         "ariaLabelExpression": "{{ item.name }}",
         "ariaRole": "button",
@@ -1178779,11 +1179065,90 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/shelf/index.js:285"
+        "staticSource": "pages/templatedetail/shelf/index.js:298"
       }
     },
     {
-      "id": "pages/templatedetail/shelf/index.wxml:138:bindtap:openGame:18",
+      "id": "pages/templatedetail/shelf/index.wxml:130:bindtap:openAllTags:19",
+      "route": "component:pages/templatedetail/shelf/index",
+      "hostRoutes": [
+        "pages/template/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/templatedetail/shelf/index.wxml",
+        "js": "pages/templatedetail/shelf/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "openAllTags",
+        "line": 130,
+        "selectorHint": ".tg",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "全部分类",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/templatedetail/shelf/index.js:305"
+      }
+    },
+    {
+      "id": "pages/templatedetail/shelf/index.wxml:140:bindtap:openGame:20",
       "route": "component:pages/templatedetail/shelf/index",
       "hostRoutes": [
         "pages/template/index"
@@ -1178818,7 +1179183,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openGame",
-        "line": 138,
+        "line": 140,
         "selectorHint": ".r16",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1178861,11 +1179226,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/shelf/index.js:327"
+        "staticSource": "pages/templatedetail/shelf/index.js:344"
       }
     },
     {
-      "id": "pages/templatedetail/shelf/index.wxml:151:bindtap:openGame:19",
+      "id": "pages/templatedetail/shelf/index.wxml:153:bindtap:openGame:21",
       "route": "component:pages/templatedetail/shelf/index",
       "hostRoutes": [
         "pages/template/index"
@@ -1178900,7 +1179265,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openGame",
-        "line": 151,
+        "line": 153,
         "selectorHint": ".gg__it",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1178943,7 +1179308,167 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/shelf/index.js:327"
+        "staticSource": "pages/templatedetail/shelf/index.js:344"
+      }
+    },
+    {
+      "id": "pages/templatedetail/shelf/index.wxml:166:bind:close:closeAllTags:22",
+      "route": "component:pages/templatedetail/shelf/index",
+      "hostRoutes": [
+        "pages/template/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/templatedetail/shelf/index.wxml",
+        "js": "pages/templatedetail/shelf/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-sheet",
+        "event": "bind:close",
+        "handler": "closeAllTags",
+        "line": 166,
+        "selectorHint": "cy-sheet[bind:close]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/templatedetail/shelf/index.js:306"
+      }
+    },
+    {
+      "id": "pages/templatedetail/shelf/index.wxml:171:bindtap:pickTag:23",
+      "route": "component:pages/templatedetail/shelf/index",
+      "hostRoutes": [
+        "pages/template/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/templatedetail/shelf/index.wxml",
+        "js": "pages/templatedetail/shelf/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "pickTag",
+        "line": 171,
+        "selectorHint": ".tg",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "{{ item.name }}",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/templatedetail/art/"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/templatedetail/shelf/index.js:298"
       }
     },
     {
@@ -1179022,7 +1179547,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/shelf/index.js:291"
+        "staticSource": "pages/templatedetail/shelf/index.js:308"
       }
     },
     {
@@ -1179104,7 +1179629,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/shelf/index.js:317"
+        "staticSource": "pages/templatedetail/shelf/index.js:334"
       }
     },
     {
@@ -1179185,7 +1179710,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/shelf/index.js:307"
+        "staticSource": "pages/templatedetail/shelf/index.js:324"
       }
     },
     {
@@ -1179266,7 +1179791,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/shelf/index.js:285"
+        "staticSource": "pages/templatedetail/shelf/index.js:298"
       }
     },
     {
@@ -1179347,11 +1179872,90 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/shelf/index.js:285"
+        "staticSource": "pages/templatedetail/shelf/index.js:298"
       }
     },
     {
-      "id": "pages/templatedetail/shelf/index.wxml:55:bindtap:openTopic:8",
+      "id": "pages/templatedetail/shelf/index.wxml:45:bindtap:openAllTags:8",
+      "route": "component:pages/templatedetail/shelf/index",
+      "hostRoutes": [
+        "pages/template/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/template/index",
+          "segments": [
+            {
+              "selector": "tpl-shelf",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/templatedetail/shelf/index.wxml",
+        "js": "pages/templatedetail/shelf/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "openAllTags",
+        "line": 45,
+        "selectorHint": ".tg",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "全部分类",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/templatedetail/shelf/index.js:305"
+      }
+    },
+    {
+      "id": "pages/templatedetail/shelf/index.wxml:56:bindtap:openTopic:9",
       "route": "component:pages/templatedetail/shelf/index",
       "hostRoutes": [
         "pages/template/index"
@@ -1179386,7 +1179990,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openTopic",
-        "line": 55,
+        "line": 56,
         "selectorHint": ".r5",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1179429,11 +1180033,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/shelf/index.js:317"
+        "staticSource": "pages/templatedetail/shelf/index.js:334"
       }
     },
     {
-      "id": "pages/templatedetail/shelf/index.wxml:56:binderror:onCoverError:9",
+      "id": "pages/templatedetail/shelf/index.wxml:57:binderror:onCoverError:10",
       "route": "component:pages/templatedetail/shelf/index",
       "hostRoutes": [
         "pages/template/index"
@@ -1179468,7 +1180072,7 @@
         "tag": "image",
         "event": "binderror",
         "handler": "onCoverError",
-        "line": 56,
+        "line": 57,
         "selectorHint": ".r5__pic",
         "visibleCondition": "{{ item.cover }}",
         "disabledCondition": null,
@@ -1179510,7 +1180114,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/shelf/index.js:307"
+        "staticSource": "pages/templatedetail/shelf/index.js:324"
       }
     },
     {
@@ -1179640,11 +1180244,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/shelf/index.js:276"
+        "staticSource": "pages/templatedetail/shelf/index.js:289"
       }
     },
     {
-      "id": "pages/templatedetail/shelf/index.wxml:67:bindtap:openTopic:10",
+      "id": "pages/templatedetail/shelf/index.wxml:68:bindtap:openTopic:11",
       "route": "component:pages/templatedetail/shelf/index",
       "hostRoutes": [
         "pages/template/index"
@@ -1179679,7 +1180283,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openTopic",
-        "line": 67,
+        "line": 68,
         "selectorHint": ".mc",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1179722,11 +1180326,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/shelf/index.js:317"
+        "staticSource": "pages/templatedetail/shelf/index.js:334"
       }
     },
     {
-      "id": "pages/templatedetail/shelf/index.wxml:68:binderror:onCoverError:11",
+      "id": "pages/templatedetail/shelf/index.wxml:69:binderror:onCoverError:12",
       "route": "component:pages/templatedetail/shelf/index",
       "hostRoutes": [
         "pages/template/index"
@@ -1179761,7 +1180365,7 @@
         "tag": "image",
         "event": "binderror",
         "handler": "onCoverError",
-        "line": 68,
+        "line": 69,
         "selectorHint": ".mc__pic",
         "visibleCondition": "{{ item.cover }}",
         "disabledCondition": null,
@@ -1179803,7 +1180407,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/shelf/index.js:307"
+        "staticSource": "pages/templatedetail/shelf/index.js:324"
       }
     },
     {
@@ -1179883,11 +1180487,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/shelf/index.js:315"
+        "staticSource": "pages/templatedetail/shelf/index.js:332"
       }
     },
     {
-      "id": "pages/templatedetail/shelf/index.wxml:81:bindtap:openTopic:12",
+      "id": "pages/templatedetail/shelf/index.wxml:82:bindtap:openTopic:13",
       "route": "component:pages/templatedetail/shelf/index",
       "hostRoutes": [
         "pages/template/index"
@@ -1179922,7 +1180526,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openTopic",
-        "line": 81,
+        "line": 82,
         "selectorHint": ".tci",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1179965,11 +1180569,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/shelf/index.js:317"
+        "staticSource": "pages/templatedetail/shelf/index.js:334"
       }
     },
     {
-      "id": "pages/templatedetail/shelf/index.wxml:82:binderror:onCoverError:13",
+      "id": "pages/templatedetail/shelf/index.wxml:83:binderror:onCoverError:14",
       "route": "component:pages/templatedetail/shelf/index",
       "hostRoutes": [
         "pages/template/index"
@@ -1180004,7 +1180608,7 @@
         "tag": "image",
         "event": "binderror",
         "handler": "onCoverError",
-        "line": 82,
+        "line": 83,
         "selectorHint": ".tci__pic",
         "visibleCondition": "{{ item.cover }}",
         "disabledCondition": null,
@@ -1180046,7 +1180650,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/shelf/index.js:307"
+        "staticSource": "pages/templatedetail/shelf/index.js:324"
       }
     },
     {

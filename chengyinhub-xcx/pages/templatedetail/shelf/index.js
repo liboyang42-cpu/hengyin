@@ -114,12 +114,15 @@ Component({
     // 主题
     featTopics: [],
     topicTags: [],
+    topicTagGroups: [],
+    allTagsShow: false,
     tf: 'all',
     topicShelves: [],
     topicCat: null,
     // 玩法
     featGames: [],
     gameTags: [],
+    gameTagGroups: [],
     gf: 'all',
     gameShelves: [],
     gameCat: null
@@ -210,42 +213,51 @@ Component({
       else this.loadGames();
     },
 
+    // ===== 标签：横滑行只放常用几个(选中的不在其中就临时插到最前),其余进「全部分类」按组列出 =====
+    tagSet(groups, rowKeys, items, selected) {
+      const view = (tag) => ({ key: tag.key, name: tag.name, prop: art.propSrc(tag.icon) });
+      const live = groups
+        .map((g) => ({ name: g.name, tags: g.tags.filter((tag) => items.some(tag.test)).map(view) }))
+        .filter((g) => g.tags.length);
+      const all = live.reduce((list, g) => list.concat(g.tags), []);
+      const row = rowKeys.map((k) => all.find((t) => t.key === k)).filter(Boolean);
+      const picked = all.find((t) => t.key === selected);
+      if (picked && row.indexOf(picked) < 0) row.unshift(picked);
+      return { row: row, groups: live };
+    },
+
     // ===== 主题 =====
     topicsByNames(names) {
       return names.map((n) => this._topics.find((t) => t.key === n)).filter(Boolean);
-    },
-
-    topicTagItems(tag) {
-      if (!tag.members) return this._topics.filter((t) => t.seconds && t.seconds <= 7200).sort((a, b) => a.seconds - b.seconds);
-      return this.topicsByNames(tag.members);
     },
 
     buildTopics() {
       const all = this._topics;
       const feat = this.topicsByNames(art.FEATURED_TOPICS);
       all.forEach((t) => { if (feat.indexOf(t) < 0) feat.push(t); });
-      const tags = art.TOPIC_TAGS
-        .filter((tag) => this.topicTagItems(tag).length)
-        .map((tag) => ({ key: tag.key, name: tag.name, prop: art.propSrc('cat-' + tag.key) }));
       const shelves = [];
       if (all.length) shelves.push({ title: '全部主题', rows: true, cols: columns(all, 3) });
       art.TOPIC_SHELVES.forEach((s) => {
-        const items = s[1] ? this.topicsByNames(s[1]) : this.topicTagItems({ members: null });
+        const items = all.filter(s[1]);
         if (items.length) shelves.push({ title: s[0], rows: false, items: items });
       });
       const featTopics = feat.slice(0, 6);
       const featIndex = Math.min(this.data.featIndex, Math.max(featTopics.length - 1, 0));
-      this.setData({ featTopics, topicTags: tags, topicShelves: shelves, featIndex });
+      this.setData({ featTopics, topicShelves: shelves, featIndex });
       this.applyTopicCat(this.data.tf);
       this.applyGlow();
     },
 
     applyTopicCat(key) {
       const tag = art.TOPIC_TAGS.find((t) => t.key === key);
-      if (!tag) { this.setData({ tf: 'all', topicCat: null }); return; }
+      const items = tag ? this._topics.filter(tag.test) : [];
+      const tf = tag && items.length ? key : 'all';
+      const set = this.tagSet(art.TOPIC_TAG_GROUPS, art.TOPIC_ROW, this._topics, tf);
       this.setData({
-        tf: key,
-        topicCat: { name: tag.name, prop: art.propSrc('cat-' + key), items: this.topicTagItems(tag) }
+        tf: tf,
+        topicTags: set.row,
+        topicTagGroups: set.groups,
+        topicCat: tf === 'all' ? null : { name: tag.name, prop: art.propSrc(tag.icon), items: items }
       });
     },
 
@@ -253,22 +265,23 @@ Component({
     buildGames() {
       const all = this._games;
       const feat = art.FEATURED_GAMES.map((f) => all.find((g) => g.title === f[0])).filter(Boolean);
-      const tags = art.GAME_TAGS
-        .filter((tag) => all.some(tag.test))
-        .map((tag) => ({ key: tag.key, name: tag.name, prop: art.propSrc('cat-' + tag.key) }));
       const shelves = art.GROUPS
         .map((grp) => ({ title: grp.name, cols: columns(all.filter((g) => g._grp === grp.key), 3) }))
         .filter((s) => s.cols.length);
-      this.setData({ featGames: feat, gameTags: tags, gameShelves: shelves });
+      this.setData({ featGames: feat, gameShelves: shelves });
       this.applyGameCat(this.data.gf);
     },
 
     applyGameCat(key) {
       const tag = art.GAME_TAGS.find((t) => t.key === key);
-      if (!tag) { this.setData({ gf: 'all', gameCat: null }); return; }
+      const items = tag ? this._games.filter(tag.test) : [];
+      const gf = tag && items.length ? key : 'all';
+      const set = this.tagSet(art.GAME_TAG_GROUPS, art.GAME_ROW, this._games, gf);
       this.setData({
-        gf: key,
-        gameCat: { name: tag.name, prop: art.propSrc('cat-' + key), items: this._games.filter(tag.test) }
+        gf: gf,
+        gameTags: set.row,
+        gameTagGroups: set.groups,
+        gameCat: gf === 'all' ? null : { name: tag.name, prop: art.propSrc(tag.icon), items: items }
       });
     },
 
@@ -286,7 +299,11 @@ Component({
       const key = e.currentTarget.dataset.key || 'all';
       if (this.data.tab === 'topic') this.applyTopicCat(key);
       else this.applyGameCat(key);
+      if (this.data.allTagsShow) this.setData({ allTagsShow: false });
     },
+
+    openAllTags() { this.setData({ allTagsShow: true }); },
+    closeAllTags() { this.setData({ allTagsShow: false }); },
 
     onRailScroll(e) {
       const rpx = (e.detail.scrollLeft || 0) * 750 / (this._winWidth || (this._winWidth = (wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync()).windowWidth || 375));

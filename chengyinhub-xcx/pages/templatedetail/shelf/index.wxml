@@ -42,6 +42,7 @@
             aria-role="button" aria-label="{{ item.name }}" hover-class="cy-pressed" hover-stay-time="80">
             <image class="tg__ic" src="{{ item.prop }}" mode="aspectFit" />{{ item.name }}
           </view>
+          <view class="tg tg--more" bindtap="openAllTags" aria-role="button" aria-label="全部分类" hover-class="cy-pressed" hover-stay-time="80">全部分类</view>
         </view>
       </scroll-view>
 
@@ -126,6 +127,7 @@
             aria-role="button" aria-label="{{ item.name }}" hover-class="cy-pressed" hover-stay-time="80">
             <image class="tg__ic" src="{{ item.prop }}" mode="aspectFit" />{{ item.name }}
           </view>
+          <view class="tg tg--more" bindtap="openAllTags" aria-role="button" aria-label="全部分类" hover-class="cy-pressed" hover-stay-time="80">全部分类</view>
         </view>
       </scroll-view>
 
@@ -160,4 +162,18 @@
       </view>
     </block>
   </block>
+  <!-- 「全部分类」:按组列出当前 tab 的全部标签;点一个 = 横滑行里点它(只换标签下方内容)-->
+  <cy-sheet show="{{ allTagsShow }}" title="全部分类" closable maskClosable bind:close="closeAllTags">
+    <view class="at">
+      <view class="at__grp" wx:for="{{ tab === 'topic' ? topicTagGroups : gameTagGroups }}" wx:for-item="grp" wx:key="name">
+        <text class="at__hd">{{ grp.name }}</text>
+        <view class="at__tags">
+          <view class="tg at__tg {{ (tab === 'topic' ? tf : gf) === item.key ? 'tg--on' : '' }}" wx:for="{{ grp.tags }}" wx:key="key" data-key="{{ item.key }}" bindtap="pickTag"
+            aria-role="button" aria-label="{{ item.name }}" hover-class="cy-pressed" hover-stay-time="80">
+            <image class="tg__ic" src="{{ item.prop }}" mode="aspectFit" />{{ item.name }}
+          </view>
+        </view>
+      </view>
+    </view>
+  </cy-sheet>
 </view>
