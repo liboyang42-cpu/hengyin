@@ -102,6 +102,51 @@ class CombinedContextConfigurationTest {
             assertFalse(pool.isInited(), "Assembly control must not open a database connection");
             assertEquals(0, pool.getActiveCount()); assertEquals(0, pool.getPoolingCount());
         }
+
+        // Resource assembly doubles only: no Redis connection/client/event-loop is started here.
+        var shared = mock(org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory.class);
+        var redisConfiguration = new org.springframework.data.redis.connection.RedisStandaloneConfiguration("127.0.0.1", 31415);
+        redisConfiguration.setDatabase(15);
+        when(shared.getStandaloneConfiguration()).thenReturn(redisConfiguration);
+        when(shared.isRunning()).thenReturn(true); when(shared.getHostName()).thenReturn("127.0.0.1");
+        when(shared.getPort()).thenReturn(31415); when(shared.getDatabase()).thenReturn(15);
+        assertSame(shared, CrossDomainStorageFixture.requireSharedRedisFactory(shared, 31415, 15, null));
+        assertSame(shared, CrossDomainStorageFixture.requireSharedRedisFactory(shared, 31415, 15, ""));
+        when(shared.getPassword()).thenReturn("controlled-auth-canary");
+        assertSame(shared, CrossDomainStorageFixture.requireSharedRedisFactory(shared, 31415, 15, "controlled-auth-canary"));
+        var wrongAuthentication = assertThrows(AssertionError.class,
+                () -> CrossDomainStorageFixture.requireSharedRedisFactory(shared, 31415, 15, "foreign-auth-canary"));
+        assertFalse(wrongAuthentication.getMessage().contains("controlled-auth-canary"));
+        assertFalse(wrongAuthentication.getMessage().contains("foreign-auth-canary"));
+        when(shared.getPassword()).thenReturn(null);
+        assertThrows(AssertionError.class, () -> CrossDomainStorageFixture.requireSharedRedisFactory(null, 31415, 15, null));
+        assertThrows(AssertionError.class, () -> CrossDomainStorageFixture.requireSharedRedisFactory(shared, 31416, 15, null));
+        assertThrows(AssertionError.class, () -> CrossDomainStorageFixture.requireSharedRedisFactory(shared, 31415, 0, null));
+        when(shared.getHostName()).thenReturn("localhost");
+        assertThrows(AssertionError.class, () -> CrossDomainStorageFixture.requireSharedRedisFactory(shared, 31415, 15, null));
+        when(shared.getHostName()).thenReturn("127.0.0.1"); when(shared.getDatabase()).thenReturn(0);
+        assertThrows(AssertionError.class, () -> CrossDomainStorageFixture.requireSharedRedisFactory(shared, 31415, 15, null));
+        when(shared.getDatabase()).thenReturn(15); when(shared.isRunning()).thenReturn(false);
+        assertThrows(AssertionError.class, () -> CrossDomainStorageFixture.requireSharedRedisFactory(shared, 31415, 15, null));
+        when(shared.isRunning()).thenReturn(true); when(shared.isClusterAware()).thenReturn(true);
+        assertThrows(AssertionError.class, () -> CrossDomainStorageFixture.requireSharedRedisFactory(shared, 31415, 15, null));
+        when(shared.isClusterAware()).thenReturn(false); when(shared.isRedisSentinelAware()).thenReturn(true);
+        assertThrows(AssertionError.class, () -> CrossDomainStorageFixture.requireSharedRedisFactory(shared, 31415, 15, null));
+        when(shared.isRedisSentinelAware()).thenReturn(false);
+        when(shared.getSocketConfiguration()).thenReturn(new org.springframework.data.redis.connection.RedisSocketConfiguration("/tmp/controlled-redis.sock"));
+        assertThrows(AssertionError.class, () -> CrossDomainStorageFixture.requireSharedRedisFactory(shared, 31415, 15, null));
+        when(shared.getSocketConfiguration()).thenReturn(null);
+        redisConfiguration.setUsername("foreign-acl-identity");
+        assertThrows(AssertionError.class, () -> CrossDomainStorageFixture.requireSharedRedisFactory(shared, 31415, 15, null));
+        clearInvocations(shared);
+        var borrowedFixture = new CrossDomainStorageFixture(); borrowedFixture.redisFactory = shared;
+        assertDoesNotThrow(borrowedFixture::close);
+        verifyNoInteractions(shared); // Borrowed application owner is never restarted/stopped/destroyed.
+        var owned = mock(org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory.class);
+        var standaloneFixture = new CrossDomainStorageFixture(); standaloneFixture.redisFactory = owned;
+        standaloneFixture.ownsRedisFactory = true;
+        assertDoesNotThrow(standaloneFixture::close);
+        verify(owned).destroy(); verifyNoMoreInteractions(owned);
     }
 
     @Test
