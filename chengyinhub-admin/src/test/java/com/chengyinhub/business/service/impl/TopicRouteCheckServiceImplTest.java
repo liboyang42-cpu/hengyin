@@ -137,6 +137,96 @@ class TopicRouteCheckServiceImplTest {
     }
 
     @Test
+    void scoringBridgeLocksBeforeActionAndRunsOnlyAfterWinningCas() {
+        var bridge = mock(com.chengyinhub.business.service.support.OrientRouteSettlement.class);
+        ReflectionTestUtils.setField(runtime, "orientRouteSettlement", bridge);
+        when(bridge.active(any())).thenReturn(true);
+        when(bridge.lock(session)).thenReturn(session);
+        diceQueue.add(12);
+        runtime.roll(MEMBER, TOPIC, null, NODE, CHECK_ID);
+        var order = org.mockito.Mockito.inOrder(bridge, routeMapper);
+        order.verify(bridge).lock(session);
+        order.verify(routeMapper).insertAction(any());
+        order.verify(routeMapper).updateStateCas(session);
+        order.verify(bridge).complete(org.mockito.ArgumentMatchers.eq(session), any());
+        order.verify(routeMapper).updateActionResponse(anyLong(), anyString());
+        org.mockito.Mockito.clearInvocations(bridge);
+        runtime.roll(MEMBER, TOPIC, null, NODE, CHECK_ID);
+        org.mockito.Mockito.verifyNoInteractions(bridge);
+    }
+
+    @Test
+    void journeyCommitBridgeRunsAfterCasAndResponseFailurePropagates() {
+        var bridge = mock(com.chengyinhub.business.service.support.OrientRouteSettlement.class);
+        ReflectionTestUtils.setField(runtime, "orientRouteSettlement", bridge);
+        when(bridge.active(any())).thenReturn(true); when(bridge.lock(session)).thenReturn(session);
+        var state = ReflectionTestUtils.invokeMethod(runtime, "readEngineState", session.getStateJson());
+        when(routeMapper.updateActionResponse(anyLong(), anyString())).thenReturn(0);
+        assertThrows(IllegalStateException.class, () -> ReflectionTestUtils.invokeMethod(runtime,
+                "commitJourneyAction", session, NODE, "journey:bridge", "CHOICE", new LinkedHashMap<String,Object>(), state));
+        var order = org.mockito.Mockito.inOrder(bridge, routeMapper);
+        order.verify(bridge).lock(session);
+        order.verify(routeMapper).insertAction(any());
+        order.verify(routeMapper).updateStateCas(session);
+        order.verify(bridge).complete(org.mockito.ArgumentMatchers.eq(session), any());
+        order.verify(routeMapper).updateActionResponse(anyLong(), anyString());
+    }
+
+    @Test
+    void losingCheckCasNeverReachesScoringBridge() {
+        var bridge = mock(com.chengyinhub.business.service.support.OrientRouteSettlement.class);
+        ReflectionTestUtils.setField(runtime, "orientRouteSettlement", bridge);
+        when(bridge.active(any())).thenReturn(true); when(bridge.lock(session)).thenReturn(session);
+        when(routeMapper.updateStateCas(any())).thenReturn(0);
+        diceQueue.add(12);
+        assertThrows(ServiceException.class, () -> runtime.roll(MEMBER, TOPIC, null, NODE, CHECK_ID));
+        org.mockito.Mockito.verify(bridge, org.mockito.Mockito.never()).complete(any(), any());
+        org.mockito.Mockito.verify(routeMapper, org.mockito.Mockito.never()).updateActionResponse(anyLong(), anyString());
+    }
+
+    @Test
+    void scoringFailurePropagatesBeforeOriginalCheckResponseIsFinalized() {
+        var bridge = mock(com.chengyinhub.business.service.support.OrientRouteSettlement.class);
+        ReflectionTestUtils.setField(runtime, "orientRouteSettlement", bridge);
+        when(bridge.active(any())).thenReturn(true); when(bridge.lock(session)).thenReturn(session);
+        org.mockito.Mockito.doThrow(new IllegalStateException("settlement unavailable")).when(bridge).complete(any(), any());
+        diceQueue.add(12);
+        assertThrows(IllegalStateException.class, () -> runtime.roll(MEMBER, TOPIC, null, NODE, CHECK_ID));
+        org.mockito.Mockito.verify(routeMapper, org.mockito.Mockito.never()).updateActionResponse(anyLong(), anyString());
+        // Real transaction rollback is separately covered by the MySQL fixture; mocks do not prove rollback.
+    }
+
+    @Test
+    void originalReceiptRemainsReadableAfterRunEndsWithoutAnyMutation() {
+        diceQueue.add(12);
+        runtime.roll(MEMBER, TOPIC, null, NODE, CHECK_ID);
+        when(routeMapper.selectAccessibleById(SESSION, MEMBER)).thenReturn(session);
+        session.setStatus(TopicRouteSession.STATUS_COMPLETED);
+        String unchanged = session.getStateJson();
+        int count = actions.size();
+        org.mockito.Mockito.clearInvocations(routeMapper);
+        PlayCheckReceipt result = runtime.checkReceipt(MEMBER, SESSION, NODE, CHECK_ID, "roll");
+        assertEquals(String.valueOf(SESSION), result.getSessionId());
+        assertEquals(String.valueOf(NODE), result.getNodeId());
+        assertEquals("check:1:ask_arong:roll", result.getActionId());
+        assertEquals(unchanged, session.getStateJson()); assertEquals(count, actions.size());
+        org.mockito.Mockito.verify(routeMapper).selectAccessibleById(SESSION, MEMBER);
+        org.mockito.Mockito.verify(routeMapper).selectActionByAction(SESSION, MEMBER, result.getActionId());
+        org.mockito.Mockito.verifyNoMoreInteractions(routeMapper);
+        assertThrows(ServiceException.class, () -> runtime.checkReceipt(8L, SESSION, NODE, CHECK_ID, "roll"));
+        assertThrows(ServiceException.class, () -> runtime.checkReceipt(MEMBER, SESSION, NODE, CHECK_ID, "settle"));
+    }
+
+    @Test
+    void explicitOriginalSessionCannotWriteIntoAnotherTopicOrActivity() {
+        when(routeMapper.selectAccessibleById(SESSION, MEMBER)).thenReturn(session);
+        assertThrows(IllegalArgumentException.class, () -> runtime.roll(MEMBER, TOPIC + 1, null, NODE, CHECK_ID, SESSION));
+        assertThrows(IllegalArgumentException.class, () -> runtime.roll(MEMBER, TOPIC, 88L, NODE, CHECK_ID, SESSION));
+        assertTrue(actions.isEmpty());
+        org.mockito.Mockito.verify(routeMapper, org.mockito.Mockito.never()).updateStateCas(any());
+    }
+
+    @Test
     void outcomeWritesOnlyTheValidatedActivitySessionAndReplayDoesNotRepeat() throws Exception {
         TopicRouteSession first = newSession();
         first.setId(801L); first.setActivityId(11L);

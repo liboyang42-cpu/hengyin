@@ -19,6 +19,15 @@ public class PlayCheckReceipt {
     public static final String NAT_CRIT = "CRIT";
     public static final String NAT_FUMBLE = "FUMBLE";
 
+    private String sessionId;
+    private String nodeId;
+    private String actionId;
+    public String getSessionId() { return sessionId; }
+    public void setSessionId(String value) { sessionId = value; }
+    public String getNodeId() { return nodeId; }
+    public void setNodeId(String value) { nodeId = value; }
+    public String getActionId() { return actionId; }
+    public void setActionId(String value) { actionId = value; }
     private String checkId;
     private String tier;
     private Integer dc;

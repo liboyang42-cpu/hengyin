@@ -340,7 +340,9 @@ public class UmsMemberCartServiceImpl implements IUmsMemberCartService
             order.setOrderNote(remark);
             order.setDelFlag(0);
             order.setPaymentTime(new java.util.Date());
-            omsOrderService.insertOmsOrder(order);
+            if (omsOrderService.insertOmsOrder(order) != 1 || order.getId() == null || order.getId() <= 0) {
+                throw new ServiceException("订单创建失败");
+            }
             if (firstOrderId == null) {
                 firstOrderId = order.getId();
             }
@@ -356,7 +358,9 @@ public class UmsMemberCartServiceImpl implements IUmsMemberCartService
                 item.setQuantity(cart.getQuantity());
                 item.setCreateBy(username);
                 item.setSpData(cart.getSkuName());
-                omsOrderItemService.insertOmsOrderItem(item);
+                if (omsOrderItemService.insertOmsOrderItem(item) != 1) {
+                    throw new ServiceException("订单明细保存失败");
+                }
                 if (pmsSkuService.deductStockForProduct(cart.getSkuId(), cart.getProductId(), cart.getQuantity()) == 0) {
                     throw new ServiceException("[" + cart.getProductName() + "]商品库存不足,请重试");
                 }

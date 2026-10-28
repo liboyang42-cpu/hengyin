@@ -57,15 +57,18 @@ function loadPage() {
   const requests = [];
   const toasts = [];
   let pageConfig = null;
+  let memberId = 1;
   const previous = {
     getApp: global.getApp, Page: global.Page, wx: global.wx, getCurrentPages: global.getCurrentPages,
   };
-  global.getApp = () => ({
+  const app = {
     globalData: { statusBarHeight: 20, navBarHeight: 44 },
     sendRequest: (options) => { requests.push(options); },
     tips: (message) => { toasts.push(message); },
     getAuthorization: () => 'token',
-  });
+    getUserID: () => memberId,
+  };
+  global.getApp = () => app;
   global.Page = (config) => { pageConfig = config; };
   global.getCurrentPages = () => [{}];
   global.wx = {
@@ -86,7 +89,20 @@ function loadPage() {
   vm.data = JSON.parse(JSON.stringify(pageConfig.data));
   // 导演台投影走 adapter 发真请求,这里只验集合时间这一格,把它桩掉。
   vm.loadProjection = function () { this._projectionLoads = (this._projectionLoads || 0) + 1; };
-  return { vm, requests, toasts };
+  return { vm, requests, toasts, setMember(id) { memberId = id; },
+    transport() {
+      const calls = []; let auth = 'old-token';
+      const { createRequestClient } = require('../../utils/transport/request-client.js');
+      const client = createRequestClient({
+        wxRequest(o) { calls.push(o); return { abort() {} }; },
+        getBaseUrl: () => 'https://example.invalid', getUserID: () => memberId,
+        getAuthorization: () => auth,
+        reLogin(done) { auth = 'renewed-token'; done(true, { isCurrentSession: () => true }); },
+      });
+      app.sendRequest = o => client.send(o);
+      return { calls, setAuth(value) { auth = value; } };
+    },
+  };
 }
 
 function openDirector(raw) {
@@ -184,6 +200,7 @@ test('结果未知:5xx / 传输层失败不当成「没改成」,失败半屏 + 
   refused.vm.confirmOpsTime();
   refused.requests[before].successStatusAbnormal({ msg: '没有权限' }, 403);
   assert.equal(refused.vm.data.resultSheet.why, '没有权限');
+  assert.equal(refused.vm.data.resultSheet.title, '集合时间没改成');
   assert.equal(refused.requests.length, before + 1, '4xx 是明确拒绝，不需要刷新');
 
   const offline = openDirector();
@@ -193,6 +210,7 @@ test('结果未知:5xx / 传输层失败不当成「没改成」,失败半屏 + 
   offline.requests[before].fail({ errMsg: 'request:fail timeout' });
   assert.equal(offline.vm.data.resultSheet.kind, 'fail');
   assert.match(offline.vm.data.resultSheet.why, /网络异常/);
+  assert.equal(offline.vm.data.resultSheet.title, '集合时间结果待确认');
   assert.equal(offline.requests[before + 1].url, '/api/topic/info-to-user', '传输层失败同样刷新');
 });
 
@@ -254,4 +272,141 @@ test('负控:旧闸/错误路径/去掉领队闸时,上面的断言必须判红'
   const unlocked = java.replace(SOLD_LOCK, 'if (false) {');
   assert.notEqual(unlocked, java, '变异没生效:已售锁形状已漂移，这个负控在空转');
   assert.throws(() => assert.match(unlocked, SOLD_LOCK), assert.AssertionError);
+});
+
+
+test('回执:只展示服务端事实，缺失或矛盾字段不补通知结论', () => {
+  for (const [receipt, text] of [
+    [{ organizerNotified: false, noticeReceipt: 'LOGGED_ONLY' }, '已保存并留痕，未推送通知发起人'],
+    [{ organizerNotified: true, noticeReceipt: 'SENT' }, '保存已完成；通知状态未确认'],
+    [undefined, '保存已完成；通知状态未确认'],
+    [{ organizerNotified: 'true', noticeReceipt: 'SENT' }, '保存已完成；通知状态未确认'],
+    [{ organizerNotified: true, noticeReceipt: 'LOGGED_ONLY' }, '保存已完成；通知状态未确认'],
+  ]) {
+    const { vm, requests, toasts } = openDirector();
+    vm.openOpsTimeSheet(); vm.confirmOpsTime(); vm.confirmOpsTime();
+    assert.equal(requests.filter(r => r.url === '/api/club/lead/edit-ops').length, 1);
+    const write = requests.at(-1);
+    write.success({ code: 200, data: receipt });
+    assert.equal(vm.data.resultSheet.sub, text);
+    assert.equal(requests.at(-1).url, '/api/topic/info-to-user');
+    const count = requests.length;
+    write.fail(); // 重复回调不能再发回读或覆盖成功
+    assert.equal(requests.length, count);
+    assert.equal(vm.data.resultSheet.kind, 'success');
+    assert.deepEqual(toasts, []);
+  }
+});
+
+test('已售拒绝:只有明确错误码锁本场时间并回读，不阻止备注合同', () => {
+  const { vm, requests } = openDirector();
+  vm.openOpsTimeSheet(); vm.confirmOpsTime();
+  requests.at(-1).success({ code: 500, errorCode: 'CLUB_OPS_SOLD_LOCKED', msg: '已售；备注仍可改' });
+  assert.equal(vm.data.opsTimeLocked, true);
+  assert.equal(requests.at(-1).url, '/api/topic/info-to-user');
+  requests.at(-1).success({ code: 200, data: RAW });
+  vm.openOpsTimeSheet(); vm.confirmOpsTime();
+  assert.equal(vm.data.opsTimeSheetVisible, false);
+  assert.equal(requests.filter(r => r.url === '/api/club/lead/edit-ops').length, 1);
+  assert.match(fs.readFileSync(WXML, 'utf8'), /已售锁定（备注仍可改）/);
+  const ordinary = openDirector();
+  ordinary.vm.openOpsTimeSheet(); ordinary.vm.confirmOpsTime();
+  ordinary.requests.at(-1).success({ code: 500, msg: '没有权限' });
+  assert.equal(ordinary.vm.data.opsTimeLocked, false);
+  ordinary.vm.openOpsTimeSheet();
+  assert.equal(ordinary.vm.data.opsTimeSheetVisible, true);
+});
+
+test('旧保存与回读:切号、换项目、换场次、销毁后不覆盖当前页面', () => {
+  const changes = [h => h.setMember(2), h => { h.vm._topicId = 99; },
+    h => { h.vm._clubId = 10; }, h => { h.vm._directorActivityId = 703; }, h => h.vm.onUnload()];
+  for (const change of changes) {
+    for (const callback of ['success', 'fail', 'successStatusAbnormal']) {
+      const h = openDirector();
+      h.vm.openOpsTimeSheet(); h.vm.confirmOpsTime();
+      const write = h.requests.at(-1);
+      change(h);
+      if (!h.vm._opsDisposed) h.vm.onShow();
+      assert.equal(h.vm.data.opsTimeSubmitting, false);
+      assert.equal(h.vm.data.opsTimeSheetVisible, false);
+      const snapshot = JSON.stringify(h.vm.data), count = h.requests.length;
+      write[callback]({ code: 200, data: { organizerNotified: false, noticeReceipt: 'LOGGED_ONLY' } }, 502);
+      assert.equal(JSON.stringify(h.vm.data), snapshot);
+      assert.equal(h.requests.length, count);
+    }
+    const h = openDirector();
+    h.vm.openOpsTimeSheet(); h.vm.confirmOpsTime();
+    h.requests.at(-1).success({ code: 200 });
+    const read = h.requests.at(-1);
+    change(h);
+    const snapshot = JSON.stringify(h.vm.data);
+    read.success({ code: 200, data: { ...RAW, name: '旧回读' } });
+    read.fail();
+    assert.equal(JSON.stringify(h.vm.data), snapshot);
+  }
+});
+
+
+test('真实transport:同账号401静默续登继续完成，不绑定旧token', () => {
+  const h = openDirector(); const t = h.transport();
+  h.vm.openOpsTimeSheet(); h.vm.confirmOpsTime();
+  t.calls[0].success({ statusCode: 401, data: { code: 401 } });
+  assert.equal(t.calls.length, 2);
+  assert.equal(t.calls[1].header.Authorization, 'renewed-token');
+  assert.equal(h.vm.data.opsTimeSubmitting, true);
+  t.calls[1].success({ statusCode: 200, data: { code: 200, data: { organizerNotified: false, noticeReceipt: 'LOGGED_ONLY' } } });
+  assert.equal(h.vm.data.opsTimeSubmitting, false);
+  assert.match(h.vm.data.resultSheet.sub, /未推送/);
+  assert.match(t.calls.at(-1).url, /info-to-user$/);
+});
+
+test('真实transport:外部会话变更清旧busy，sheet可恢复关闭', () => {
+  for (const changeOwner of [true, false]) {
+    const h = openDirector(); const t = h.transport();
+    h.vm.openOpsTimeSheet(); h.vm.confirmOpsTime();
+    if (changeOwner) h.setMember(2); else t.setAuth('external-token');
+    t.calls[0].success({ statusCode: 200, data: { code: 200 } });
+    assert.equal(h.vm.data.opsTimeSubmitting, false);
+    assert.equal(h.vm.data.opsTimeSheetVisible, false);
+    assert.equal(t.calls.length, 1);
+    h.vm.openOpsTimeSheet(); h.vm.closeOpsTimeSheet();
+    assert.equal(h.vm.data.opsTimeSheetVisible, false);
+  }
+});
+
+test('onShow A→B→A和项目切换:旧operation永不复活，也不能清新busy', () => {
+  for (const change of [h => h.setMember(2), h => { h.vm._topicId = 99; },
+    h => { h.vm._clubId = 10; }, h => { h.vm._directorActivityId = 703; }]) {
+    const h = openDirector();
+    h.vm.openOpsTimeSheet(); h.vm.confirmOpsTime();
+    const old = h.requests.at(-1);
+    change(h); h.vm.onShow();
+    assert.equal(h.vm.data.opsTimeSubmitting, false);
+    assert.equal(h.vm.data.opsTimeSheetVisible, false);
+    h.setMember(1); h.vm._topicId = 88; h.vm._clubId = 9; h.vm._directorActivityId = 702;
+    h.vm.onShow(); h.vm.openOpsTimeSheet(); h.vm.confirmOpsTime();
+    const fresh = h.requests.at(-1), count = h.requests.length;
+    old.fail({ reason: 'sessionChanged' }); old.success({ code: 200 });
+    assert.equal(h.vm.data.opsTimeSubmitting, true);
+    assert.equal(h.requests.length, count);
+    fresh.fail({ errMsg: 'timeout' });
+    assert.equal(h.vm.data.resultSheet.title, '集合时间结果待确认');
+  }
+});
+
+test('新会话详情先发出后，旧写的sessionChanged收尾不作废它', () => {
+  const h = openDirector();
+  h.vm.onShow();
+  const t = h.transport();
+  h.vm.openOpsTimeSheet(); h.vm.confirmOpsTime();
+  const oldWrite = t.calls[0];
+  t.setAuth('external-token');
+  h.vm.onShow();
+  const freshRead = t.calls.find(call => /info-to-user$/.test(call.url)), seq = h.vm._detailSeq;
+  assert.match(freshRead.url, /info-to-user$/);
+  oldWrite.success({ statusCode: 200, data: { code: 200 } });
+  assert.equal(h.vm.data.opsTimeSubmitting, false);
+  assert.equal(h.vm._detailSeq, seq, '旧写只释放自己的状态，不取消新会话读取');
+  freshRead.success({ statusCode: 200, data: { code: 200, data: { ...RAW, name: '新会话详情' } } });
+  assert.equal(h.vm.data.topic.name, '新会话详情');
 });

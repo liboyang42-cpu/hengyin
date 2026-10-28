@@ -1460,6 +1460,8 @@ public class ApiMerchantController extends BaseController {
         // 全部项目一次分组计数(不再逐项目拉全行 .size()),查询次数与项目数无关。
         Map<Long, long[]> topicCounts = wonTopicIds.isEmpty() ? Collections.<Long, long[]>emptyMap()
                 : cmsRegistrationService.countPaidVerificationByOwners(1L, wonTopicIds);
+        Map<Long, Date> topicEndDates = wonTopicIds.isEmpty() ? Collections.emptyMap()
+                : cmsTopicService.selectTodoTopicEndDates(wonTopicIds);
         for (Long topicId : wonTopicIds) {
             long[] tc = topicCounts == null ? null : topicCounts.get(topicId);
             // verifiedCount 是累计成绩不是待办 ⇒ 已结束的项目也照算,别让历史核销数凭空消失。
@@ -1468,8 +1470,7 @@ public class ApiMerchantController extends BaseController {
             // 待办类(pendingVerify / 项目卡)才按结束时间过滤:结束满一周的主题不再进待办,
             // 口径同玩家侧 ApiRegistrationController.filterEndedOverWeek。不加这层的后果实测过:
             // 2026-02 的一条扫码记录能在半年后仍挂在工作台上,点进去却是「已结束」。
-            com.chengyinhub.business.domain.CmsTopic wonTopic = cmsTopicService.selectCmsTopicById(topicId);
-            if (wonTopic != null && endedOverWeek(wonTopic.getEndDate(), todoNow)) continue;
+            if (endedOverWeek(topicEndDates.get(topicId), todoNow)) continue;
 
             int topicPendingVerify = tc == null ? 0 : (int) tc[0];
             pendingVerify += topicPendingVerify;
@@ -1505,11 +1506,17 @@ public class ApiMerchantController extends BaseController {
         //   按卡片过滤会连自己发布的主题一起漏掉 —— 那类项目从来不进 byProject
         //   (byProject 只收中标承接的主题 + 自己发布的活动),会变成静默漏报。
         //   落不到卡片上的仍只进全局数,保持原语义。
+        LinkedHashSet<Long> scanRegistrationIds = new LinkedHashSet<>();
         for (CmsRegistrationScan s : pendingScans) {
-            CmsRegistration scanReg = s.getRegistrationId() == null ? null
-                    : cmsRegistrationService.selectCmsRegistrationById(s.getRegistrationId());
+            if (s.getRegistrationId() != null) scanRegistrationIds.add(s.getRegistrationId());
+        }
+        Map<Long, com.chengyinhub.business.domain.vo.MerchantTodoRegistrationVO> scanOwners = scanRegistrationIds.isEmpty()
+                ? Collections.emptyMap() : cmsRegistrationService.selectTodoRegistrationOwners(scanRegistrationIds);
+        // 仅批量读取去重；同一报名的多条扫码仍逐条计数。
+        for (CmsRegistrationScan s : pendingScans) {
+            com.chengyinhub.business.domain.vo.MerchantTodoRegistrationVO scanReg = scanOwners.get(s.getRegistrationId());
             if (scanReg == null || scanReg.getOwnerType() == null || scanReg.getOwnerId() == null) continue;
-            if (endedOverWeek(ownerEndDate(scanReg), todoNow)) continue;
+            if (endedOverWeek(scanReg.getEndDate(), todoNow)) continue;
             pendingScanConfirm++;
             Map<String, Object> row = byProject.get(projectKey(scanReg.getOwnerType(), scanReg.getOwnerId()));
             if (row != null) row.put("pendingScanConfirm", ((Integer) row.get("pendingScanConfirm")) + 1);

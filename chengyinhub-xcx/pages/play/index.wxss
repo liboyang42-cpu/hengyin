@@ -1,5 +1,6 @@
 @import "./theme-backpack.wxss";
 @import "./theme-player-ops.wxss";
+@import "./play-overlays.wxss";
 @import "/style/proto-icons.wxss";
 @import "/style/proto-sheet.wxss";
 @import "/style/proto-shopstrip.wxss";

@@ -16,13 +16,23 @@ function loadEmptyState() {
 }
 
 function loadImWorkbench(listImConversations) {
+  const intentSource = read('src/utils/im-admin-send-intent.js').replace(/export function /g, 'function ');
+  const intent = new Function(intentSource + '\nreturn { adminSendIntent, clearAdminSendIntent };')();
+  const values = new Map();
+  const browser = { sessionStorage: {
+    getItem: key => values.get(key) || null,
+    setItem: (key, value) => values.set(key, value),
+    removeItem: key => values.delete(key)
+  }, crypto: { randomUUID: require('node:crypto').randomUUID } };
   const source = read('src/views/business/im/index.vue');
   const script = source.match(/<script>([\s\S]*?)<\/script>/)[1]
+    .replace(/^import \{ adminSendIntent, clearAdminSendIntent \} from .+$/m, 'const { adminSendIntent, clearAdminSendIntent } = intent;')
+    .replace(/^import \{ getToken \} from .+$/m, 'const getToken = () => "fixture-session";')
     .replace(/^import \{[^}]+\} from '@\/api\/business\/im'$/m, 'const { listImConversations } = dependencies;')
     .replace(/^import CyEmptyState.+$/m, 'const CyEmptyState = {};')
     .replace(/^import CyPageHeader.+$/m, 'const CyPageHeader = {};')
     .replace(/^import CyResourceState.+$/m, 'const CyResourceState = {};');
-  return new Function('dependencies', script.replace(/export\s+default\s*/, 'return '))({ listImConversations });
+  return new Function('intent', 'window', 'dependencies', script.replace(/export\s+default\s*/, 'return '))(intent, browser, { listImConversations });
 }
 
 test('CyEmptyState 只呈现页面已判断的空态，并在页面启用时回传下一步动作', () => {
@@ -68,6 +78,8 @@ test('客服会话请求成功、失败和重入时均保留正确的页面状�
   const pending = [];
   const workbench = loadImWorkbench(() => new Promise((resolve, reject) => pending.push({ resolve, reject })));
   const vm = workbench.data();
+  vm.$store = { state: { user: { id: 7 } } };
+  for (const [name, method] of Object.entries(workbench.methods)) vm[name] = method.bind(vm);
   vm.parseTime = () => '2026-07-22 02:10';
 
   const firstRequest = workbench.methods.loadConvs.call(vm);
@@ -84,6 +96,8 @@ test('客服会话请求成功、失败和重入时均保留正确的页面状�
 
   const failedWorkbench = loadImWorkbench(() => Promise.reject(new Error('network')));
   const failedVm = failedWorkbench.data();
+  failedVm.$store = { state: { user: { id: 7 } } };
+  for (const [name, method] of Object.entries(failedWorkbench.methods)) failedVm[name] = method.bind(failedVm);
   await failedWorkbench.methods.loadConvs.call(failedVm);
   assert.equal(failedVm.convsLoading, false);
   assert.equal(failedVm.convsLoaded, false);

@@ -1,4 +1,17 @@
 <view class="team-page theme-dark" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
+  <view wx:if="{{commandRecovery.state || commandRecovery.busy}}" class="team-card" aria-role="status">
+    <text>{{commandRecovery.label}}</text>
+    <text>{{commandRecovery.message}}</text>
+    <text wx:if="{{commandRecovery.requestId}}">原请求号：{{commandRecovery.requestId}}</text>
+    <block wx:if="{{commandRecovery.state === 'UNKNOWN'}}">
+      <cy-btn disabled="{{commandRecovery.busy}}" bindtap="queryCommand">查询原请求</cy-btn>
+      <cy-btn disabled="{{commandRecovery.busy}}" bindtap="retryCommand">按原输入重试</cy-btn>
+      <cy-btn disabled="{{commandRecovery.busy}}" bindtap="cancelCommand">终止尚未执行的请求</cy-btn>
+      <text>终止只针对未执行的原请求；已经提交的业务不会撤销。</text>
+    </block>
+    <cy-btn wx:if="{{commandRecovery.state === 'APPLIED' || commandRecovery.state === 'REJECTED' || commandRecovery.state === 'CANCELLED'}}"
+      bindtap="acknowledgeCommand">确认结果</cy-btn>
+  </view>
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />

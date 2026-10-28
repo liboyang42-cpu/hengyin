@@ -4,3 +4,17 @@ button.team-action { margin: 0; padding: 0; line-height: normal; }
 button.team-action::after { border: 0; }
 .team-actions + .team-card { margin-top: var(--cy-space-4); } /* 邀请队友与「公开招募」卡之间留白 */
 .team-report { text-align: center; text-decoration: underline; padding: var(--cy-space-3) 0; }
+
+/* 队伍进度矩阵(原型 B T-32):成员 × 节点,节点多时横滑 */
+.tm-sum { min-height: 0; padding-bottom: var(--cy-space-1); border-bottom: 0; }
+.tm-matrix { width: 100%; margin-top: var(--cy-space-2); white-space: nowrap; }
+.tm-mx { display: inline-block; min-width: 100%; }
+.tm-mx-row { display: flex; align-items: center; min-height: 70rpx; border-top: 1rpx solid var(--cy-border-line); color: var(--cy-text-secondary); font-size: var(--cy-font-caption); }
+.tm-mx-head { border-top: 0; }
+.tm-mx-name { flex: none; width: 124rpx; padding-right: var(--cy-space-2); box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--cy-text-title); }
+.tm-mx-cell { flex: 1 0 92rpx; width: 92rpx; display: flex; justify-content: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; }
+.tm-mx-foot .tm-mx-cell.ok { color: var(--cy-brand); }
+.tm-dot { width: 20rpx; height: 20rpx; border-radius: 50%; border: 2rpx solid var(--cy-border-line); box-sizing: border-box; }
+.tm-dot.on { background: var(--cy-text-title); border-color: var(--cy-text-title); }
+.tm-rank { flex: none; width: 46rpx; font-weight: 800; color: var(--cy-text-secondary); }
+.tm-val { flex: none; color: var(--cy-text-secondary); font-size: var(--cy-font-caption); }

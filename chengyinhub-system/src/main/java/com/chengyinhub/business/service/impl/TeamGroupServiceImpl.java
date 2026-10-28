@@ -716,14 +716,10 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
                     throw new ServiceException("有订单的钱已结算给主办或承办方，需平台人工处理后再取消主题",
                             HttpStatus.CONFLICT);
                 }
-                // F-L4-02:整单全额退款取代同单各票尚待审核的退款申请(CAS 置驳回、未打款)。必须在
-                // refundResolvingOrder 之前:整单退计算剩余现金时遇到待审单会 409,连带整场取消回滚。
-                for (CmsRegistration row : orderSnapshot.paidRows) {
-                    refundService.supersedePendingRegistrationRefunds(row.getId(), "主办方取消活动,全额退款");
-                }
+                // 退款核心先锁全组，再在同事务取代未派发旧申请；不能先将旧申请驳回。
                 // 上面已在锁内判过「无已核销」,不该走到转人工分支;真走到了说明快照与锁内事实不一致
                 if (!refundResolvingOrder(orderSnapshot.payer, orderSnapshot.payer.getTicketName(),
-                        "主办方取消活动,全额退款", actorMemberId)) {
+                        "主办方取消活动,全额退款", actorMemberId, true)) {
                     throw new ServiceException("订单核销状态已变化,请刷新后重试", HttpStatus.CONFLICT);
                 }
                 refundedOrders++;
@@ -1192,8 +1188,13 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
      * 单票是当前生产唯一活着的路径(前端只发 ticketId 单数),此路径行为与改造前完全一致。
      */
     private boolean refundResolvingOrder(CmsRegistration r, String ticketName, String reason, Long actorMemberId) {
+        return refundResolvingOrder(r, ticketName, reason, actorMemberId, false);
+    }
+
+    private boolean refundResolvingOrder(CmsRegistration r, String ticketName, String reason, Long actorMemberId,
+                                         boolean supersedePending) {
         if (StringUtils.isNotEmpty(r.getParentOrderNo())) {
-            return refundWholeOrder(r, ticketName, reason, actorMemberId);
+            return refundWholeOrder(r, ticketName, reason, actorMemberId, supersedePending);
         }
         refundOne(r, ticketName, reason);
         return true;
@@ -1215,6 +1216,11 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
      * 微信约束(§3.2):单笔订单退款 1 次/分钟频控 + 单笔最多 50 次部分退 —— 每票各调必被拒。
      */
     private boolean refundWholeOrder(CmsRegistration anyMember, String ticketName, String reason, Long actorMemberId) {
+        return refundWholeOrder(anyMember, ticketName, reason, actorMemberId, false);
+    }
+
+    private boolean refundWholeOrder(CmsRegistration anyMember, String ticketName, String reason, Long actorMemberId,
+                                     boolean supersedePending) {
         // 查询按 parent_order_no 过滤,anyMember 自己必在结果里 ⇒ 不会为空,无需兜底分支。
         List<CmsRegistration> order = cmsRegistrationMapper.selectByParentOrderNoForUpdate(anyMember.getParentOrderNo(), Long.valueOf(2L).equals(anyMember.getOwnerType()) ? anyMember.getOwnerId() : null);
         OrderRefundCash.assertOrderScope(order, anyMember);
@@ -1252,19 +1258,30 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
         CmsRegistration payer = null;
         for (CmsRegistration m : refundable) {
             BigDecimal p = m.getPayableAmount();
-            if (p != null && p.compareTo(BigDecimal.ZERO) > 0) {
+            if (p == null || p.signum() < 0) {
+                throw new ServiceException("父订单支付快照未确认，请通过后台退款工单核对后处理", HttpStatus.CONFLICT);
+            }
+            if (p.compareTo(BigDecimal.ZERO) > 0) {
+                if (payer != null) {
+                    throw new ServiceException("父订单现金支付主体不唯一，请通过后台退款工单核对后处理", HttpStatus.CONFLICT);
+                }
                 payer = m;
-                break;
             }
         }
         // FX-01:首单承载整单汇总额。同单已有票被别的路径退过时,它的钱已经出去了 ——
         // 首单再按汇总额退 = 那张票退两遍。只退「汇总额 − 同单其余票已批准的退款额」。
         BigDecimal payerCash = null;
         if (payer != null) {
-            payerCash = OrderRefundCash.remaining(order, payer, refundService);
+            payerCash = supersedePending
+                    ? OrderRefundCash.remainingForSystemSupersession(order, payer, refundService)
+                    : OrderRefundCash.remaining(order, payer, refundService);
             if (payerCash.signum() <= 0) {
                 payer = null; // 整单现金已退完:首单也只领退款权/回库存/返积分,不再调微信
             }
+        }
+        if (refundable.isEmpty()) return true;
+        if (supersedePending) {
+            for (CmsRegistration row : refundable) refundService.supersedePendingRegistrationRefunds(row.getId(), reason);
         }
         // 非现金条目先领取报名退款权，避免纯积分整单并发时重复回库存/返积分。
         // 现金 payer 仍由固定退款号/registration 幂等键的退款申请链领取，失败时本事务整体回滚。
@@ -1419,8 +1436,25 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
 
     /** 单笔报名退款:结算冲销+标记已退,现金微信原路退(受理失败进§6.1人工兜底队列);积分返还;恢复库存;退款提醒 */
     private void refundOne(CmsRegistration r, String ticketName, String reason) {
+        CmsRegistration observed = r;
+        r = cmsRegistrationMapper.selectCmsRegistrationByIdForUpdate(observed.getId());
+        if (r == null || !java.util.Objects.equals(observed.getMemberId(), r.getMemberId())
+                || !java.util.Objects.equals(observed.getOwnerType(), r.getOwnerType())
+                || !java.util.Objects.equals(observed.getOwnerId(), r.getOwnerId())
+                || !java.util.Objects.equals(observed.getParentOrderNo(), r.getParentOrderNo())) {
+            throw new ServiceException("原报名归属已变化，请刷新后重试", HttpStatus.CONFLICT);
+        }
+        if (!Integer.valueOf(2).equals(r.getPaymentStatus()) || Integer.valueOf(1).equals(r.getVerificationStatus())) {
+            throw new ServiceException("报名支付或核销状态已变化，请按原退款结果核对", HttpStatus.CONFLICT);
+        }
         BigDecimal cash = r.getWechatPaymentAmount();
-        boolean hasCash = cash != null && cash.compareTo(BigDecimal.ZERO) > 0;
+        // 未知现金不是纯积分单；必须在取消资格、回库存和返积分之前拒绝不确定快照。
+        // 核对沿已有后台退款工单，不推定 payableAmount 就是渠道实际收款，不新开出金路径。
+        if (cash == null || cash.signum() < 0) {
+            throw new ServiceException("支付现金快照未确认，请通过后台退款工单核对后处理", HttpStatus.CONFLICT);
+        }
+        boolean hasCash = cash.compareTo(BigDecimal.ZERO) > 0;
+        if (hasCash) refundService.supersedePendingRegistrationRefunds(r.getId(), reason);
         // 纯积分单没有退款申请唯一键兜底，必须先领取报名退款权；loser 不得碰库存、积分或权益。
         if (!hasCash && cmsRegistrationMapper.claimRegistrationRefunded(
                 r.getId(), "auto-refund", new Date()) == 0) {
@@ -1437,15 +1471,13 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
         }
         // 外部打款不可回滚，先通过库存上限闸，避免“钱已退、库存校验才失败”。
         restoreInventory(r);
-        refundOneAfterInventoryRestored(r, r.getWechatPaymentAmount(), ticketName, reason);
+        refundOneAfterInventoryRestored(r, cash, ticketName, reason);
     }
 
     /** 单笔退款在库存已成功回补后的后续流程;cash = 本次要原路退的现金(整单退时已扣掉同单已退部分)。 */
     private void refundOneAfterInventoryRestored(CmsRegistration r, BigDecimal cash, String ticketName, String reason) {
         boolean hasCash = cash != null && cash.compareTo(BigDecimal.ZERO) > 0;
         if (hasCash) {
-            // F-L4-02：待审核申请会让新退款单被拒并回滚整场取消；全额退款取代它（未打款，CAS 置驳回）。
-            refundService.supersedePendingRegistrationRefunds(r.getId(), reason);
             RefundApplication app = new RefundApplication();
             app.setSourceType("registration");
             app.setSourceId(r.getId());
@@ -1506,15 +1538,22 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
     }
 
     private void returnPoints(CmsRegistration r) {
-        boolean used = r.getPointUsed() != null && r.getPointUsed() > 0;
+        boolean used = r.getPointUsed() != null && r.getPointUsed() != 0;
         if (!used) {
             return;
+        }
+        final int points;
+        try {
+            points = Math.toIntExact(r.getPointUsed());
+            if (points < 0) throw new ArithmeticException("negative points");
+        } catch (ArithmeticException invalidPoints) {
+            throw new IllegalStateException("报名积分快照超出支持范围，请人工核对", invalidPoints);
         }
         // 先 CAS 积分回补 marker，winner 才能加积分；同一事务失败会连 marker 一起回滚。
         if (cmsRegistrationMapper.claimPointsReturn(r.getId(), "auto-refund", new Date()) == 0) {
             return;
         }
-        if (umsMemberMapper.addPoints(r.getMemberId(), r.getPointUsed().intValue()) != 1) {
+        if (umsMemberMapper.addPoints(r.getMemberId(), points) != 1) {
             throw new IllegalStateException("报名积分返还失败");
         }
     }

@@ -60,6 +60,7 @@ class ClubFulfillmentChainGateTest {
         reg.setOwnerId(50L);
         reg.setPaymentStatus(0);       // 故意未支付:让它卡在下游,证明授权闸已经放行
         when(registrationMapper.selectCmsRegistrationById(1L)).thenReturn(reg);
+        when(registrationMapper.selectCmsRegistrationByIdForUpdate(1L)).thenReturn(reg);
 
         CmsActivity session = new CmsActivity();
         session.setId(50L);
@@ -104,6 +105,7 @@ class ClubFulfillmentChainGateTest {
         reg.setOwnerType(2L);
         reg.setOwnerId(51L);
         when(registrationMapper.selectCmsRegistrationById(2L)).thenReturn(reg);
+        when(registrationMapper.selectCmsRegistrationByIdForUpdate(2L)).thenReturn(reg);
         CmsActivity session = new CmsActivity();
         session.setId(51L);
         session.setTopicId(71L);
@@ -149,8 +151,12 @@ class ClubFulfillmentChainGateTest {
         reg.setTicketId(null);
         reg.setParentOrderNo(null);
         reg.setPointUsed(null);
-        reg.setWechatPaymentAmount(null);   // 非现金:只做标记/返积分,不触微信
+        // 非现金:下单落库即明确为 0(null 是未确认快照,退款链 409);只做标记/返积分,不触微信
+        reg.setWechatPaymentAmount(java.math.BigDecimal.ZERO);
+        com.chengyinhub.business.service.IRefundService refundService = mock(com.chengyinhub.business.service.IRefundService.class);
+        ReflectionTestUtils.setField(service, "refundService", refundService);
         when(registrationMapper.selectCmsRegistrationById(11L)).thenReturn(reg);
+        when(registrationMapper.selectCmsRegistrationByIdForUpdate(11L)).thenReturn(reg);
         when(registrationMapper.claimRegistrationRefunded(anyLong(), anyString(), any())).thenReturn(1);
 
         CmsActivity session = new CmsActivity();
@@ -190,6 +196,7 @@ class ClubFulfillmentChainGateTest {
         reg.setPaymentStatus(2);
         reg.setVerificationStatus(1);       // 已核销
         when(registrationMapper.selectCmsRegistrationById(12L)).thenReturn(reg);
+        when(registrationMapper.selectCmsRegistrationByIdForUpdate(12L)).thenReturn(reg);
 
         CmsActivity session = new CmsActivity();
         session.setId(50L);

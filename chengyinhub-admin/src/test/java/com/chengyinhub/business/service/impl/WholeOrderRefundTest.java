@@ -144,6 +144,7 @@ class WholeOrderRefundTest {
         List<CmsRegistration> order = multiTicketOrder();
         CmsRegistration sub = order.get(1);
         when(regMapper.selectCmsRegistrationById(2L)).thenReturn(sub);
+        when(regMapper.selectCmsRegistrationByIdForUpdate(2L)).thenReturn(sub);
         when(regMapper.selectByParentOrderNoForUpdate(eq(PARENT), org.mockito.ArgumentMatchers.nullable(Long.class))).thenReturn(order);
         // saveRefund 回填 app.id(真实实现如此,reviewRefund 依赖它)
         when(refundService.saveRefund(any(RefundApplication.class))).thenAnswer(inv -> {
@@ -171,6 +172,7 @@ class WholeOrderRefundTest {
         TeamGroupServiceImpl service = newService();
         List<CmsRegistration> order = multiTicketOrder();
         when(regMapper.selectCmsRegistrationById(2L)).thenReturn(order.get(1));
+        when(regMapper.selectCmsRegistrationByIdForUpdate(2L)).thenReturn(order.get(1));
         when(regMapper.selectByParentOrderNoForUpdate(eq(PARENT), org.mockito.ArgumentMatchers.nullable(Long.class))).thenReturn(order);
         when(refundService.saveRefund(any(RefundApplication.class))).thenAnswer(inv -> {
             inv.getArgument(0, RefundApplication.class).setId(999L);
@@ -206,6 +208,7 @@ class WholeOrderRefundTest {
         CmsRegistration solo = reg(6L, "R006", "0.00", "0.00");
         solo.setPointUsed(100L);
         when(regMapper.selectCmsRegistrationById(6L)).thenReturn(solo);
+        when(regMapper.selectCmsRegistrationByIdForUpdate(6L)).thenReturn(solo);
 
         service.cancelPaidRegistration(6L, MEMBER_ID);
 
@@ -238,6 +241,7 @@ class WholeOrderRefundTest {
         topic.setClubId(31L);
         when(topicMapper.selectCmsTopicById(9L)).thenReturn(topic);
         when(regMapper.selectCmsRegistrationById(2L)).thenReturn(order.get(1));
+        when(regMapper.selectCmsRegistrationByIdForUpdate(2L)).thenReturn(order.get(1));
         when(regMapper.selectByParentOrderNoForUpdate(eq(PARENT), org.mockito.ArgumentMatchers.nullable(Long.class))).thenReturn(order);
         when(regMapper.selectByParentOrderNoForUpdate(PARENT, 9L)).thenReturn(order);
 
@@ -280,6 +284,7 @@ class WholeOrderRefundTest {
         topic.setMemberId(500L);
         when(topicMapper.selectCmsTopicById(9L)).thenReturn(topic);
         when(regMapper.selectCmsRegistrationById(2L)).thenReturn(order.get(1));
+        when(regMapper.selectCmsRegistrationByIdForUpdate(2L)).thenReturn(order.get(1));
         when(regMapper.selectByParentOrderNoForUpdate(eq(PARENT), org.mockito.ArgumentMatchers.nullable(Long.class))).thenReturn(order);
         when(regMapper.selectByParentOrderNoForUpdate(PARENT, 9L)).thenReturn(order);
         when(cases.findTopicCase(9L, PARENT)).thenReturn(
@@ -314,6 +319,7 @@ class WholeOrderRefundTest {
         subAlreadyRefundedBy(2L, "100.00");
         CmsRegistration first = order.get(0);
         when(regMapper.selectCmsRegistrationById(1L)).thenReturn(first);
+        when(regMapper.selectCmsRegistrationByIdForUpdate(1L)).thenReturn(first);
         when(regMapper.selectByParentOrderNoForUpdate(eq(PARENT), org.mockito.ArgumentMatchers.nullable(Long.class))).thenReturn(order);
         when(refundService.saveRefund(any(RefundApplication.class))).thenAnswer(inv -> {
             inv.getArgument(0, RefundApplication.class).setId(997L);
@@ -339,6 +345,7 @@ class WholeOrderRefundTest {
         order.get(1).setPaymentStatus(4);
         subAlreadyRefundedBy(2L, "200.00");
         when(regMapper.selectCmsRegistrationById(1L)).thenReturn(order.get(0));
+        when(regMapper.selectCmsRegistrationByIdForUpdate(1L)).thenReturn(order.get(0));
         when(regMapper.selectByParentOrderNoForUpdate(eq(PARENT), org.mockito.ArgumentMatchers.nullable(Long.class))).thenReturn(order);
 
         service.cancelPaidRegistration(1L, MEMBER_ID);
@@ -356,6 +363,7 @@ class WholeOrderRefundTest {
         List<CmsRegistration> order = multiTicketOrder();
         order.get(1).setPaymentStatus(4);            // 没有 stub 退款单
         when(regMapper.selectCmsRegistrationById(1L)).thenReturn(order.get(0));
+        when(regMapper.selectCmsRegistrationByIdForUpdate(1L)).thenReturn(order.get(0));
         when(regMapper.selectByParentOrderNoForUpdate(eq(PARENT), org.mockito.ArgumentMatchers.nullable(Long.class))).thenReturn(order);
 
         ServiceException e = assertThrows(ServiceException.class,
@@ -376,6 +384,7 @@ class WholeOrderRefundTest {
         pending.setRefundAmount(new BigDecimal("100.00"));
         when(refundService.selectRegistrationHistoryForUpdate(2L)).thenReturn(Arrays.asList(pending));
         when(regMapper.selectCmsRegistrationById(1L)).thenReturn(order.get(0));
+        when(regMapper.selectCmsRegistrationByIdForUpdate(1L)).thenReturn(order.get(0));
         when(regMapper.selectByParentOrderNoForUpdate(eq(PARENT), org.mockito.ArgumentMatchers.nullable(Long.class))).thenReturn(order);
 
         ServiceException e = assertThrows(ServiceException.class,
@@ -396,6 +405,7 @@ class WholeOrderRefundTest {
         final Set<Long> claimed = java.util.concurrent.ConcurrentHashMap.newKeySet();
         final Set<String> refundNos = java.util.concurrent.ConcurrentHashMap.newKeySet();
         when(regMapper.selectCmsRegistrationById(anyLong())).thenAnswer(inv -> byId.get(inv.getArgument(0, Long.class)));
+        when(regMapper.selectCmsRegistrationByIdForUpdate(anyLong())).thenAnswer(inv -> byId.get(inv.getArgument(0, Long.class)));
         when(regMapper.selectCmsRegistrationByIdForUpdate(anyLong()))
                 .thenAnswer(inv -> byId.get(inv.getArgument(0, Long.class)));
         when(regMapper.selectByParentOrderNoForUpdate(eq(PARENT), org.mockito.ArgumentMatchers.nullable(Long.class))).thenReturn(order);
@@ -486,6 +496,7 @@ class WholeOrderRefundTest {
         }
         order.get(0).setVerificationStatus(1);
         when(regMapper.selectCmsRegistrationById(2L)).thenReturn(order.get(1));
+        when(regMapper.selectCmsRegistrationByIdForUpdate(2L)).thenReturn(order.get(1));
         when(regMapper.selectByParentOrderNoForUpdate(eq(PARENT), org.mockito.ArgumentMatchers.nullable(Long.class))).thenReturn(order);
         when(regMapper.selectByParentOrderNoForUpdate(PARENT, 77L)).thenReturn(order);
         return order;
@@ -555,6 +566,7 @@ class WholeOrderRefundTest {
         staleClicked.setOwnerType(2L);
         staleClicked.setOwnerId(77L);
         when(regMapper.selectCmsRegistrationById(2L)).thenReturn(staleClicked);
+        when(regMapper.selectCmsRegistrationByIdForUpdate(2L)).thenReturn(staleClicked);
         order.get(1).setVerificationStatus(1);
 
         RuntimeException e = assertThrows(RuntimeException.class, () -> service.cancelPaidRegistration(2L, MEMBER_ID));
@@ -574,7 +586,8 @@ class WholeOrderRefundTest {
         when(regMapper.claimRegistrationRefunded(eq(6L), anyString(), any(Date.class))).thenReturn(0);
         CmsRegistration verifiedNow = reg(6L, "R006", "0.00", "0.00");
         verifiedNow.setVerificationStatus(1);
-        when(regMapper.selectCmsRegistrationByIdForUpdate(6L)).thenReturn(verifiedNow);
+        // 入口锁内读仍未核销；claim 输给并发核销后的复读才看到已核销。
+        when(regMapper.selectCmsRegistrationByIdForUpdate(6L)).thenReturn(solo, verifiedNow);
 
         RuntimeException e = org.junit.jupiter.api.Assertions.assertThrows(RuntimeException.class,
                 () -> service.cancelPaidRegistration(6L, MEMBER_ID));
@@ -594,6 +607,7 @@ class WholeOrderRefundTest {
         TeamGroupServiceImpl service = newService();
         List<CmsRegistration> order = multiTicketOrder();   // 预读快照:两张都未核销
         when(regMapper.selectCmsRegistrationById(1L)).thenReturn(order.get(0));
+        when(regMapper.selectCmsRegistrationByIdForUpdate(1L)).thenReturn(order.get(0));
         when(regMapper.selectByParentOrderNoForUpdate(eq(PARENT), org.mockito.ArgumentMatchers.nullable(Long.class))).thenReturn(order);
         // 并发核销在预读之后、claim 之前提交:claim 的 verification_status=0 条件落空
         when(regMapper.claimRegistrationRefunded(eq(2L), anyString(), any(Date.class))).thenReturn(0);
@@ -621,6 +635,7 @@ class WholeOrderRefundTest {
         TeamGroupServiceImpl service = newService();
         List<CmsRegistration> order = multiTicketOrder();
         when(regMapper.selectCmsRegistrationById(1L)).thenReturn(order.get(0));
+        when(regMapper.selectCmsRegistrationByIdForUpdate(1L)).thenReturn(order.get(0));
         when(regMapper.selectByParentOrderNoForUpdate(eq(PARENT), org.mockito.ArgumentMatchers.nullable(Long.class))).thenReturn(order);
         when(regMapper.claimRegistrationRefunded(eq(2L), anyString(), any(Date.class))).thenReturn(0);
         CmsRegistration subNow = reg(2L, "R002", "0.00", "100.00");
@@ -641,6 +656,7 @@ class WholeOrderRefundTest {
         TeamGroupServiceImpl service = newService();
         CmsRegistration solo = reg(5L, "R005", "68.00", "68.00");   // parentOrderNo 不设 = null
         when(regMapper.selectCmsRegistrationById(5L)).thenReturn(solo);
+        when(regMapper.selectCmsRegistrationByIdForUpdate(5L)).thenReturn(solo);
         when(refundService.saveRefund(any(RefundApplication.class))).thenAnswer(inv -> {
             inv.getArgument(0, RefundApplication.class).setId(998L);
             return 1;
@@ -661,6 +677,7 @@ class WholeOrderRefundTest {
         TeamGroupServiceImpl service = newService();
         CmsRegistration solo = reg(6L, "R006", "68.00", "68.00");
         when(regMapper.selectCmsRegistrationById(6L)).thenReturn(solo);
+        when(regMapper.selectCmsRegistrationByIdForUpdate(6L)).thenReturn(solo);
         when(ticketMapper.restoreInventory(eq(TICKET_ID), any(Long.class))).thenReturn(0);
 
         ServiceException ex = assertThrows(ServiceException.class,

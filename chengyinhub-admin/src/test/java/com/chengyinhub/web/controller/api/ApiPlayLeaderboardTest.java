@@ -49,11 +49,11 @@ class ApiPlayLeaderboardTest {
         controller = spy(new ApiPlayProgressController());
         doReturn(ME).when(controller).getAppUserId();
         progressService = mock(IPlayerNodeProgressService.class);
-        ReflectionTestUtils.setField(controller, "playerNodeProgressService", progressService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService", progressService);
         activityService = mock(ICmsActivityService.class);
         registrationService = mock(ICmsRegistrationService.class);
-        ReflectionTestUtils.setField(controller, "cmsActivityService", activityService);
-        ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrationService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsActivityService", activityService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsRegistrationService", registrationService);
 
         CmsActivity activity = new CmsActivity();
         activity.setId(ACT);
@@ -172,7 +172,7 @@ class ApiPlayLeaderboardTest {
         topic.setId(300L);
         topic.setPublishedRouteGraphJson(graphJson);
         when(topics.selectCmsTopicById(300L)).thenReturn(topic);
-        ReflectionTestUtils.setField(controller, "cmsTopicService", topics);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicService", topics);
     }
 
     private static LeaderboardItemVO ended(Long memberId, long elapsed, long score) {
@@ -248,7 +248,7 @@ class ApiPlayLeaderboardTest {
     void hiddenRouteLeaderboardDoesNotReturnPlayerRankings() {
         com.chengyinhub.business.service.IGameSessionRuntimeService runtime = mock(
                 com.chengyinhub.business.service.IGameSessionRuntimeService.class);
-        ReflectionTestUtils.setField(controller, "gameSessionRuntimeService", runtime);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "gameSessionRuntimeService", runtime);
         when(runtime.isRouteLeaderboardHidden(ACT)).thenReturn(true);
         AjaxResult result = controller.leaderboard(String.valueOf(ACT), null);
         assertEquals(500, result.get(AjaxResult.CODE_TAG));

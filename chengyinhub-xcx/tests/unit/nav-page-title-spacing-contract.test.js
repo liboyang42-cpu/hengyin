@@ -52,6 +52,8 @@ const NAV_WITHOUT_L1_TITLE = new Set([
   'pages/merchant/marketing/index.wxml',
   'pages/merchant/relation/index.wxml',
   'pages/activity/baoming/baoming.wxml',
+  // 2026-10-28 X5：申请开票照抄结算页，标题同在 cy-nav-bar 居中。
+  'subpackageMember/invoice-apply/index.wxml',
   'pages/activity/list/index.wxml',
   // Figma 2233:11353：官方活动详情由全幅封面承担内容标题，导航只保留覆盖式返回按钮。
   'pages/activity/official-detail/index.wxml',
@@ -477,7 +479,7 @@ function assertSelfDrawnTitleSpacing(rel, cssOverride) {
 //   (editorPage 1 创作 / 2 票务,靠底部 sheet 切屏),全页没有 cy-nav-bar ——
 //   返回是页面级浮钮 .slopes-back,离开的是整个编辑器。所以「nav → canonical spacer → 标题」
 //   这一段结构在这里不成立,它走 assertEditorStepTitleSpacing(见下面那张名单)。
-test('全仓 82 个 cy-page-title 页面：共享标题统一提供上 space-5 / 下 space-2', () => {
+test('全仓 85 个 cy-page-title 页面：共享标题统一提供上 space-5 / 下 space-2', () => {
   assertSharedTitleSpacing()
   const files = pageTitleFiles()
   /* 2026-09-08 +1:pages/coop/invite-detail(02d 协作详情)。自定义导航 + 实底顶栏无标题,
@@ -492,7 +494,10 @@ test('全仓 82 个 cy-page-title 页面：共享标题统一提供上 space-5 /
   // 两线新增页面不重叠：本线83 + 官方线路列表/详情2 = 85。
   // 2026-10-20 用户要求删掉「我的纠错 / 纠错进度」两页、消息页改收件箱/发件箱(合并 master 584470ad 后按重建实测) ⇒ 83。
   // 2026-10-23 起名页 templateadd 退役删除(业主第四轮去掉起名一步,页面已无入口) ⇒ 83 → 82。
-  assert.equal(files.length, 82, 'cy-page-title 页面清单漂移时必须重新做间距归类')
+  // 2026-10-26 +2:角色卡、本人发票复用共享页标题，定向计分使用原生导航。
+  // 2026-10-27 +1:自由探索权益页(subpackageMember/free-explore) cy-nav-bar + 共享 cy-page-title 标准二级页 ⇒ 84 → 85。
+  // 2026-10-28 +4:原型 C 的我的申诉(照抄我的举报)与发票详情、发票抬头、抬头编辑(X5 拆页),均为 cy-nav-bar + 共享 cy-page-title 标准二级页 ⇒ 85 → 89。
+  assert.equal(files.length, 89, 'cy-page-title 页面清单漂移时必须重新做间距归类')
 // 2026-09-02:+2 俱乐部客户列表与客户详情，复用 shared page-title 间距，64→66。
 //   客户详情的头像绝对定位在标题行上，不进入标题流，不影响上 space-5 / 下 space-2。
   files.forEach((rel) => {

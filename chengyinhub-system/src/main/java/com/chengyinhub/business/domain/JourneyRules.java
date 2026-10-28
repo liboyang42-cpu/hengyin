@@ -20,6 +20,15 @@ public class JourneyRules {
     private int schemaVersion = SCHEMA_VERSION;
     private boolean checkEnabled;
     private boolean stateEnabled;
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    private com.fasterxml.jackson.databind.node.ObjectNode attributeBinding;
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    private com.fasterxml.jackson.databind.node.ObjectNode attributeDefinition;
+    public com.fasterxml.jackson.databind.node.ObjectNode getAttributeBinding() { return attributeBinding; }
+    public void setAttributeBinding(com.fasterxml.jackson.databind.node.ObjectNode value) { attributeBinding = value; }
+    public com.fasterxml.jackson.databind.node.ObjectNode getAttributeDefinition() { return attributeDefinition; }
+    public void setAttributeDefinition(com.fasterxml.jackson.databind.node.ObjectNode value) { attributeDefinition = value; }
+
     private com.fasterxml.jackson.databind.node.ArrayNode attributes = MAPPER.createArrayNode();
     private com.fasterxml.jackson.databind.node.ArrayNode statLinks = MAPPER.createArrayNode();
 
@@ -60,6 +69,13 @@ public class JourneyRules {
      * 显式 false = 关闭,自然骰只按 total 与 dc 比,也不再产生 CRIT / FUMBLE。
      */
     private boolean natAuto = true;
+
+    /** 文档二 E1 规则难度档 easy / standard / hard;null = 老主题没选过(规范化不输出)。 */
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    private String difficulty;
+
+    public String getDifficulty() { return difficulty; }
+    public void setDifficulty(String difficulty) { this.difficulty = difficulty; }
 
     /**
      * F6 RPG P1 灰度块(环境键 / 进度钟 / 魔鬼交易 / 动量 / 特质),形状见 {@code JourneyRpg}。

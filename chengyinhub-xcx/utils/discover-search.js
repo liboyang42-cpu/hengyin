@@ -8,6 +8,7 @@ const { formatDurationMinutes } = require('./template-display.js');
 // 商家的落点是统一主页,主体 ID 是 memberId 而不是列表行 id ——「前缀 + id」这种形状拼不出来,
 // 所以它给 pathOf 而不是 path。其余三类的 path 前缀一字未改。
 const TYPE_META = {
+  post: { label: '帖文', path: '/pages/square/detail/index?id=' },
   topic: { label: '主题', path: '/pages/topic/index/index?id=' },
   activity: { label: '活动', sceneId: 'play-activity-detail' },
   club: { label: '俱乐部', path: '/pages/club/detail/index?id=' },
@@ -59,6 +60,7 @@ function decorateItem(type, item) {
   if (!meta || !item || item.id == null) return null;
 
   const detail = {
+    post: '公开帖文',
     topic: item.addressName || item.description || '城市主题',
     activity: item.topicId ? '关联主题节点' : (item.addressName || item.address || '活动地点待公布'),
     club: item.city || item.description || '城市俱乐部',
@@ -68,6 +70,7 @@ function decorateItem(type, item) {
     gameTemplate: [item.players, formatDurationMinutes(item.duration)].filter(Boolean).join(' · ') || item.description || '玩法模板',
   }[type];
   const image = {
+    post: firstImage(item.imgUrl),
     topic: firstImage(item.imgArr || item.imgUrl),
     activity: firstImage(item.imgArr || item.imgUrl),
     club: item.cover || item.logo || '',
@@ -80,6 +83,7 @@ function decorateItem(type, item) {
     id: item.id,
     key: type + ':' + item.id,
     type: type,
+    cityCode: item.cityCode == null ? null : String(item.cityCode),
     typeLabel: meta.label,
     title: item.name || item.title || meta.label,
     detail: detail,
@@ -198,11 +202,38 @@ function buildRequests(keyword, categoryId, filters) {
   ];
 }
 
+// Only the result-page caller opts into unified search. Other callers retain existing endpoints.
+function unifiedCompatible(keyword, categoryId, filters) {
+  const f = filters || {};
+  return !!String(keyword || '').trim() && !categoryId && !f.startDate && !f.endDate
+    && !(numericOrNull(f.minPrice) > 0)
+    && !(numericOrNull(f.maxPrice) != null && numericOrNull(f.maxPrice) < 1000);
+}
+
+function unifiedPage(data, allowedTypes) {
+  if (!data || !Array.isArray(data.rows) || !(typeof data.total === 'number' || typeof data.total === 'string' && /^[0-9]+$/.test(data.total)) || !Number.isSafeInteger(Number(data.total)) || Number(data.total) < 0) return null;
+  const items = [];
+  for (const row of data.rows) {
+    if (!row || !allowedTypes.includes(row.type)
+      || !(typeof row.id === 'string' && /^[1-9][0-9]*$/.test(row.id)
+        || typeof row.id === 'number' && Number.isSafeInteger(row.id) && row.id > 0)) return null;
+    items.push(decorateItem(row.type, row));
+  }
+  return { items, total: Number(data.total), count: data.rows.length };
+}
+
+function mergeResults(previous, incoming) {
+  const rows = new Map(previous.map(item => [item.key, item]));
+  incoming.forEach(item => rows.set(item.key, item));
+  return Array.from(rows.values());
+}
+
 function mapPointKind(activity) {
   return activity && activity.topicId ? 'topic' : 'activity';
 }
 
 module.exports = {
+  unifiedCompatible, unifiedPage, mergeResults,
   TYPE_META: TYPE_META,
   firstImage: firstImage,
   rowsOf: rowsOf,

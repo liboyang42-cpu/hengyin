@@ -51,8 +51,31 @@ public interface IWxSubscribeMsgService {
     /** 订单结算到账 → 通知商家 */
     boolean notifyCoopSettle(Long merchantId, String amount, String whenText, String desc, String orderNo);
 
-    /** 官方活动/公告通知(发给某成员)。复用【新活动招募】模板;可配 tplOfficialEvent 专用模板。 */
+    /** 官方活动/公告通知，仅使用 tplOfficialEvent 专用模板；缺配置不回退招募模板。 */
     boolean notifyOfficialBroadcast(Long memberId, String title, String sub);
+
+    /** Typed official-only send; old boolean callers retain their existing contract. */
+    OfficialBroadcastResult notifyOfficialBroadcastResult(Long memberId, String title, String sub);
+
+    /** Official-only outcome. Contains no recipient, credential, payload or provider diagnostic text. */
+    record OfficialBroadcastResult(State state, Reason reason, Integer errcode) {
+        public enum State { NOT_SUBMITTED, REJECTED, ACCEPTED, UNKNOWN }
+        public enum Reason {
+            TEMPLATE_MISSING, IDENTITY_MISSING, TOKEN_MISSING, LOCAL_PREPARATION_FAILED,
+            PROVIDER_ACCEPTED, PROVIDER_REJECTED, RESPONSE_UNCONFIRMED, TRANSPORT_UNCONFIRMED
+        }
+        public OfficialBroadcastResult {
+            if (state == null || reason == null) throw new IllegalArgumentException("missing outcome");
+            boolean valid = switch (state) {
+                case ACCEPTED -> reason == Reason.PROVIDER_ACCEPTED && Integer.valueOf(0).equals(errcode);
+                case REJECTED -> reason == Reason.PROVIDER_REJECTED && errcode != null && errcode != 0;
+                case UNKNOWN -> errcode == null && (reason == Reason.RESPONSE_UNCONFIRMED || reason == Reason.TRANSPORT_UNCONFIRMED);
+                case NOT_SUBMITTED -> errcode == null && (reason == Reason.TEMPLATE_MISSING || reason == Reason.IDENTITY_MISSING
+                        || reason == Reason.TOKEN_MISSING || reason == Reason.LOCAL_PREPARATION_FAILED);
+            };
+            if (!valid) throw new IllegalArgumentException("inconsistent outcome");
+        }
+    }
 
     /** 漫游完成 24–72h 召回；返回微信是否明确受理，未配模板/未授权均为 false。 */
     boolean notifyRoamRecall(Long memberId, int distanceM, int poisFound);

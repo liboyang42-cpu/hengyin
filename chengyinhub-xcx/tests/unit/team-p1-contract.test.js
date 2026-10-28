@@ -3,10 +3,12 @@
 const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const path = require('node:path')
+const { createRequire } = require('node:module')
 const test = require('node:test')
 const vm = require('../helpers/ui-sandbox-vm.js') // node:vm + 沙箱里装真 utils/toast.js·loading.js
 
 const ROOT = path.resolve(__dirname, '../..')
+const { platform } = require('./helpers/team-event-platform')
 const read = (relative) => fs.readFileSync(path.join(ROOT, relative), 'utf8')
 
 const TEAM_COMPLIANCE_FILES = [
@@ -72,9 +74,21 @@ function assertTeamCompliance(sources) {
   assert.doesNotMatch(sanitized['subpackageMember/utils/team-up.js'], /share/i, '共享建队 helper 不能引入强制分享门槛')
 }
 
+// 页面合法 require 了纯函数 utils/user-character.js 与 utils/team-event-command.js(只读入参,不碰 wx):
+// 按页面目录解析,只放行这两个真模块,其余仍 unexpected require。
+const PURE_MODULES = new Set([path.join(ROOT, 'utils/user-character.js'), path.join(ROOT, 'utils/team-event-command.js')])
+function teamPageRequire(relative) {
+  return (request) => {
+    const resolved = path.resolve(ROOT, path.dirname(relative), request)
+    if (PURE_MODULES.has(resolved)) return require(resolved)
+    throw new Error('unexpected require: ' + request)
+  }
+}
+
 function loadDetailPage(source) {
   let definition
   vm.runInNewContext(source || read('pages/team/detail/index.js'), {
+    require: createRequire(path.join(ROOT, 'pages/team/detail/index.js')),
     getApp: () => ({
       globalData: { statusBarHeight: 20, navBarHeight: 44 },
       getUserID: () => 88,
@@ -84,6 +98,7 @@ function loadDetailPage(source) {
     wx: { showModal() {}, showToast() {}, navigateTo() {}, redirectTo() {}, stopPullDownRefresh() {} },
     setTimeout,
     console,
+    require: teamPageRequire('pages/team/detail/index.js'),
   }, { filename: 'pages/team/detail/index.js' })
   return definition
 }
@@ -96,15 +111,17 @@ function loadTeamPage(relative) {
   const redirects = []
   const pullStops = []
   vm.runInNewContext(read(relative), {
+    require: createRequire(path.join(ROOT, relative)),
     getApp: () => ({
       globalData: { statusBarHeight: 20, navBarHeight: 44 },
       sendRequest(request) { requests.push(request) },
       getRequestErrorMessage: (res, fallback) => (res && res.msg) || fallback,
       // PR10 F-W1-12:本文件的读失败用例都是「已登录账号」;无会话的登录引导见 pr10-review-ui-fixes。
-      getUserID: () => '1001',
+      getUserID: () => '1001', getAuthorization: () => 'test-token',
     }),
     Page(value) { definition = value },
     wx: {
+      ...platform(),
       showModal() {},
       showToast(options) { toasts.push(options) },
       navigateBack(options) { backs.push(options || {}) },
@@ -114,6 +131,7 @@ function loadTeamPage(relative) {
     },
     setTimeout,
     console,
+    require: teamPageRequire(relative),
   }, { filename: relative })
   const page = Object.assign({}, definition)
   page.data = JSON.parse(JSON.stringify(definition.data))
@@ -354,7 +372,7 @@ test('队伍详情缺参可返回；刷新失败保留最后一次确认的队�
   assert.equal(stale.page.data.team.title, '夜行小队')
 })
 
-test('邀请缺参只返回来源页；加入失败在按钮附近留下重试状态', () => {
+test('邀请缺参只返回来源页；加入失败保留原请求恢复状态', async () => {
   const missing = loadTeamPage('pages/team/join/index.js')
   missing.page.onLoad({})
   assert.equal(missing.page.data.errorKind, 'missing-param')
@@ -364,17 +382,19 @@ test('邀请缺参只返回来源页；加入失败在按钮附近留下重试�
   assert.equal(missing.requests.length, 0)
 
   const join = loadTeamPage('pages/team/join/index.js')
-  join.page.inviteCode = 'safe-code'
-  join.page.data.team = { id: 31, status: 0 }
-  join.page.load()
+  join.page.onLoad({ code: 'safe-code' })
   join.page.load()
   assert.equal(join.requests.length, 1, '邀请重试同步连点不能发出并发请求')
+  join.requests[0].success({ code: 200, data: { team: { id: 31, status: 0 } } })
   join.requests.length = 0
-  join.page.join()
+  await join.page.join()
   assert.equal(join.page.data.joining, true)
   join.requests[0].fail()
   assert.equal(join.page.data.joining, false)
-  assert.equal(join.page.data.joinError, '网络没连上，请检查后重试')
+  assert.equal(join.page.data.commandRecovery.state, 'UNKNOWN')
+  const original = join.requests[0].data
+  join.page.retryCommand()
+  assert.equal(join.requests[1].data, original)
 })
 
 test('负控:退回纯文字 loading 或移除加入局部错误时，状态契约必须判红', () => {

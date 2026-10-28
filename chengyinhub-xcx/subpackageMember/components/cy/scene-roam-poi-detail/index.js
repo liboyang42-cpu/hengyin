@@ -4,6 +4,7 @@ const modal = require('../../../../utils/modal.js'); const pageMotion = require(
 const toast = require('../../../../utils/toast.js');
 const app = getApp()
 const { isRecord, isRecordList, bizFailureMessage } = require('../../../../utils/response-shape.js')
+const { exactSessionId } = require('../../../../utils/roam-recovery.js')
 
 const { validationMethodLabel } = require('../../../../utils/validation-method-labels.js')
 const mediaPreview = require('../../../../utils/media-preview.js')
@@ -14,9 +15,11 @@ function nonEmptyString(value) {
 }
 
 function positiveId(value) {
-  if (typeof value !== 'number' && (typeof value !== 'string' || !/^[1-9]\d*$/.test(value))) return null
-  const id = Number(value)
-  return Number.isSafeInteger(id) && id > 0 ? id : null
+  if (typeof value !== 'number' && typeof value !== 'string') return null
+  const id = exactSessionId(value)
+  if (!id) return null
+  // Keep v1 pending records compatible while preserving Long strings exactly.
+  return Number.isSafeInteger(Number(id)) ? Number(id) : id
 }
 
 let attemptSequence = 0
@@ -37,6 +40,8 @@ function readPending(context) {
 function clearPending(context, record) {
   const current = readPending(context)
   if (!current || current.attemptId !== record.attemptId) return false
+  wx.removeStorageSync(context.key + ':photo')
+  if (wx.getStorageSync(context.key + ':photo')) throw new Error('photo cache not removed')
   wx.removeStorageSync(context.key)
   if (readPending(context)) throw new Error('pending not removed')
   return true
@@ -66,6 +71,10 @@ Component({
     featured: null,
     hasLocation: false,
     checkinPending: false,
+    reverifyChecking: false,
+    reverifyReady: false,
+    reverifyStarted: false,
+    pendingStatusText: '',
     completing: false,
     favoriteBusy: false,
     favoriteError: '',
@@ -79,19 +88,61 @@ Component({
     attached() { this._load() },
     detached() {
       this._closed = true
+      this._abortPoiPhoto()
       this._interactionToken = (this._interactionToken || 0) + 1
       this._loadToken = (this._loadToken || 0) + 1
       this._completionToken = (this._completionToken || 0) + 1
       this._favoriteToken = (this._favoriteToken || 0) + 1
     },
   },
-  pageLifetimes: { show() { if (!this._closed && (this._loadedOwner !== ownerId() || this.data.checkinPending)) this._load() } },
+  pageLifetimes: { show() {
+    if (this._closed) return
+    const photo = this._poiPhoto
+    // 原生相机/裁剪返回时上传可能尚未结束；成功回调也可能先于 show 续开答题或定位。
+    if (this._loadedOwner === ownerId() && this.data.checkinPending && this._reverification && photo
+        && photo.ownerId === ownerId() && photo.poiId === positiveId(this.data.poiId) && photo.loadToken === this._loadToken
+        && photo.operation && !photo.operation.isAborted() && (!photo.operation.isFinished() || photo.delivered)) return
+    if (this._loadedOwner !== ownerId() || this.data.checkinPending) this._load()
+  } },
   methods: {
+    _abortPoiPhoto() {
+      const photo = this._poiPhoto
+      this._poiPhoto = null
+      if (photo && photo.operation) photo.operation.abort()
+    },
     _pendingNotice(storageError) {
+      this._abortPoiPhoto()
       this._pendingCompletion = null
-      this.setData({ completing: false, checkinPending: true })
-      this._setInteractionRecovery('unknown', '打卡结果待确认', '上次请求结果尚未确认，请查询当前状态；暂不重复提交。', 'query', '查询当前状态')
+      this._reverification = null
+      if (!storageError) {
+        try {
+          const context = pendingContext(this.data.poiId)
+          const stored = context && readPending(context)
+          if (stored && !stored.uncertain) {
+            // 只记未知状态，不保存坐标/答案/照片/扫码内容；迟到的拒绝不得清旧未知。
+            wx.setStorageSync(context.key, { v: 1, ownerId: stored.ownerId, poiId: stored.poiId, attemptId: stored.attemptId, uncertain: true })
+            if (!readPending(context).uncertain) throw new Error('unknown state not saved')
+          }
+        } catch (_) { storageError = true }
+      }
+      this.setData({ completing: false, checkinPending: true, reverifyChecking: false, reverifyReady: false, reverifyStarted: false, challengePhoto: '', choiceSheetShow: false })
+      this._setInteractionRecovery('unknown', '打卡结果待确认', '可查询当前结果，或重新到现场按当前任务核验；旧记录保留到确认完成。', 'query', '查询当前状态')
       if (storageError) this.setData({ interactionTitle: '打卡记录暂时无法读取或保存', interactionText: '本地存储异常，暂不提交打卡。请恢复存储后查询当前状态。' })
+    },
+    reverifyOnSite() {
+      if (this._closed || this.data.reverifyChecking || this.data.reverifyReady || this.data.completing) return
+      this._load(true)
+    },
+    _currentReverification() {
+      const current = this._reverification
+      if (!current || this._closed || current.ownerId !== ownerId() || current.poiId !== positiveId(this.data.poiId)
+          || current.loadToken !== this._loadToken) return null
+      try {
+        const stored = readPending(current)
+        if (stored && stored.attemptId === current.attemptId) return current
+        this._load()
+      } catch (_) { this._pendingNotice(true) }
+      return null
     },
     onChoiceSheetSelect(e) {
       if (!this.data.choiceSheetShow || this._choiceSheetToken !== this._interactionToken || this._closed) return
@@ -107,8 +158,11 @@ Component({
       this._handleInteractionFailure('choice', { errMsg: 'showActionSheet:fail cancel' }, 'start')
     },
 
-    _load() {
+    _load(reverify) {
+      reverify = reverify === true
+      this._abortPoiPhoto()
       this._closed = false
+      this._reverification = null
       this._interactionToken = (this._interactionToken || 0) + 1
       const token = (this._loadToken || 0) + 1
       this._loadToken = token
@@ -126,6 +180,7 @@ Component({
         photoIndex: 0, photoCredit: '', creditOpen: false,
         challengePhoto: '', reviews: [], reviewsError: false, reviewText: '', reviewRating: 0, reviewSubmitting: false,
         checkinPending: false,
+        reverifyChecking: false, reverifyReady: false, reverifyStarted: false, pendingStatusText: '',
         errorText: '',
         merchant: null,
         merchantError: '',
@@ -153,6 +208,7 @@ Component({
       resetState('loading')
       this.setData({ checkinPending: !!pending || storageError })
       if (pending || storageError) this._pendingNotice(storageError)
+      this.setData({ reverifyChecking: reverify && !!pending && !storageError })
       app.sendRequest({
         hideLoading: true,
         silentError: true,
@@ -160,7 +216,8 @@ Component({
         method: 'GET',
         // SecurityConfig 未匿名放行 city/nodes，使用 request-client 默认认证。
         success: (nodeRes) => {
-          if (token !== this._loadToken || this._closed || loadedOwner !== ownerId()) return
+          if (token !== this._loadToken || this._closed || loadedOwner !== ownerId() || poiId !== this.data.poiId) return
+          this.setData({ reverifyChecking: false })
           const rawNode = nodeRes && (nodeRes.code === '200' || nodeRes.code === 200) && isRecord(nodeRes.data) ? nodeRes.data : null
           const nodeId = rawNode && positiveId(rawNode.poiId == null ? rawNode.id : rawNode.poiId)
           if (!nodeId || nodeId !== positiveId(poiId) || (rawNode.id != null && positiveId(rawNode.id) !== nodeId)) {
@@ -183,6 +240,22 @@ Component({
                 toast(node.needRedeem ? '已确认当前待核销' : '已确认当前已完成')
               }
             } catch (_) { this._pendingNotice(true) }
+          } else if (pending) {
+            this.setData({ pendingStatusText: node.completed === false && node.needRedeem === false
+              ? '当前尚未显示完成或待核销，不能据此判断上次请求未执行。'
+              : '当前结果还无法确认，请继续查询。' })
+            if (reverify && node.completed === false && node.needRedeem === false && node.canInteract) {
+              try {
+                const stored = readPending(context)
+                if (stored && stored.attemptId === pending.attemptId) {
+                  // 新核验只用本次照片和输入；旧照片缓存不能代替当前任务凭证。
+                  wx.removeStorageSync(context.key + ':photo')
+                  if (wx.getStorageSync(context.key + ':photo')) throw new Error('photo cache not removed')
+                  this._reverification = { ...context, attemptId: pending.attemptId, loadToken: token }
+                  this.setData({ reverifyReady: true, challengePhoto: '', choiceSheetItems: [] })
+                }
+              } catch (_) { this._pendingNotice(true) }
+            }
           }
           if (!node.merchantId) {
             let images = []
@@ -191,7 +264,7 @@ Component({
               tags: String(node.tags || '').split(/[,，、]/).filter(Boolean) })
           }
           try {
-            const saved = context && wx.getStorageSync(context.key + ':photo')
+            const saved = !pending && !storageError && context && wx.getStorageSync(context.key + ':photo')
             if (saved && saved.templateId === node.templateId && typeof saved.url === 'string')
               this.setData({ challengePhoto: saved.url })
           } catch (_) {}
@@ -199,13 +272,13 @@ Component({
           this.loadReviews()
           this.loadPhotoCredit(node)
         },
-        fail: () => { if (!this._closed && token === this._loadToken && loadedOwner === ownerId()) this.setData({ state: 'error', errorText: '网络异常，请重试' }) },
+        fail: () => { if (!this._closed && token === this._loadToken && loadedOwner === ownerId()) this.setData({ state: 'error', reverifyChecking: false, errorText: '网络异常，请重试' }) },
         successStatusAbnormal: (res) => { if (!this._closed && token === this._loadToken && loadedOwner === ownerId()) this._nodeLoadFailed(res) },
       })
     },
     _nodeLoadFailed(res) {
       // 200 但数据形状不对时 msg 是「操作成功」,不能当失败原因(2026-09-17 拍板)。
-      this.setData({ state: res && (res.code === 410 || res.code === '410') ? 'unavailable' : 'error', errorText: bizFailureMessage(res, '这次没有读到节点信息，请稍后重试。') })
+      this.setData({ state: res && (res.code === 410 || res.code === '410') ? 'unavailable' : 'error', reverifyChecking: false, errorText: bizFailureMessage(res, '这次没有读到节点信息，请稍后重试。') })
     },
     _loadMerchant(id, loadToken) {
       const token = loadToken == null ? (this._loadToken || 0) + 1 : loadToken
@@ -336,6 +409,7 @@ Component({
     },
     _handleInteractionFailure(kind, error, retry) {
       if (this._isInteractionCancel(error)) {
+        if (this.data.checkinPending) { this._pendingNotice(false); return }
         this._clearInteractionRecovery()
         return
       }
@@ -353,11 +427,11 @@ Component({
         this.completeNode(pending.answer, pending.photoUrl, pending.code)
         return
       }
-      this.startInteract()
+      this.startInteract(true)
     },
     recoverInteraction() {
       if (this._closed) return
-      if (this.data.checkinPending) { this._load(); return }
+      if (this.data.checkinPending && !this._reverification) { this._load(); return }
       const token = this._interactionToken
       const state = this.data.interactionState
       const retry = this._interactionRetry
@@ -376,13 +450,18 @@ Component({
       this._clearInteractionRecovery()
       this._retryInteraction(retry)
     },
-    startInteract() {
-      if (this.data.checkinPending) return
+    startInteract(resume) {
+      const reverify = this.data.checkinPending ? this._currentReverification() : null
+      if (!reverify) {
+        if (this.data.checkinPending) return
+      }
+      if (reverify && this.data.reverifyStarted && resume !== true) return
       if (this._loadedOwner !== ownerId()) { this._load(); return }
       const node = this.data.node
       if (this._closed || !node || node.completed || this.data.completing) return
       const token = (this._interactionToken || 0) + 1
       this._interactionToken = token
+      if (reverify) this.setData({ reverifyStarted: true })
       this._clearInteractionRecovery()
       if (node.needRedeem === true) {
         this.triggerEvent('open', { id: 'qr-citynode', params: { poiId: this.data.poiId, name: node.name || '节点' } })
@@ -401,7 +480,11 @@ Component({
         return
       }
       if (node.validationMethod === 1) {
-        modal.show({ title: '完成互动', editable: true, placeholderText: '输入答案 / 暗号', success: (result) => { if (token === this._interactionToken && !this._closed && result.confirm) this.completeNode(result.content || '') } })
+        modal.show({ title: '完成互动', editable: true, placeholderText: '输入答案 / 暗号', success: (result) => {
+          if (token !== this._interactionToken || this._closed) return
+          if (result.confirm) this.completeNode(result.content || '', this.data.challengePhoto || '')
+          else if (reverify) this._pendingNotice(false)
+        } })
         return
       }
       if (node.validationMethod === 3) {
@@ -422,8 +505,13 @@ Component({
         return
       }
       if (node.validationMethod === 2) {
-        app.chooseImage((urls) => {
-          if (token === this._interactionToken && !this._closed && urls && urls.length) this.completeNode('', urls[0])
+        const photo = { ownerId: ownerId(), poiId: positiveId(this.data.poiId), loadToken: this._loadToken, delivered: false }
+        this._poiPhoto = photo
+        photo.operation = app.chooseImage((urls) => {
+          if (token !== this._interactionToken || this._closed) return
+          photo.delivered = !!(urls && urls.length)
+          if (urls && urls.length) this.completeNode('', urls[0])
+          else if (reverify) this._pendingNotice(false)
         }, 1)
         return
       }
@@ -433,14 +521,14 @@ Component({
           scanType: ['qrCode'],
           success: (result) => {
             if (token !== this._interactionToken || this._closed) return
-            if (!result.result) { toast('没识别到码'); return }
-            this.completeNode('', '', result.result)
+            if (!result.result) { if (reverify) this._pendingNotice(false); toast('没识别到码'); return }
+            this.completeNode('', this.data.challengePhoto || '', result.result)
           },
           fail: (error) => { if (token === this._interactionToken && !this._closed) this._handleInteractionFailure('scan', error, 'start') },
         })
         return
       }
-      this.completeNode('')
+      this.completeNode('', this.data.challengePhoto || '')
     },
     takeChallengePhoto(token) {
       const node = this.data.node, actor = ownerId()
@@ -452,14 +540,18 @@ Component({
           this._setInteractionRecovery('retry', '还没到达地点', '先导航到地点附近，再拍摄任务照片。', 'start', '重新检查位置')
           return
         }
-        app.chooseImage(urls => {
-          if (!current() || !urls || !urls[0]) return
+        const photo = { ownerId: actor, poiId: positiveId(this.data.poiId), loadToken: this._loadToken, delivered: false }
+        this._poiPhoto = photo
+        photo.operation = app.chooseImage(urls => {
+          if (!current()) return
+          if (!urls || !urls[0]) { if (this.data.checkinPending) this._pendingNotice(false); return }
+          photo.delivered = true
           const context = pendingContext(this.data.poiId)
           if (!context) return
-          try { wx.setStorageSync(context.key + ':photo', { templateId: node.templateId, url: urls[0] }) }
+          try { if (!this.data.checkinPending) wx.setStorageSync(context.key + ':photo', { templateId: node.templateId, url: urls[0] }) }
           catch (_) { toast('照片进度保存失败，请重试'); return }
           this.setData({ challengePhoto: urls[0] })
-          this.startInteract()
+          this.startInteract(true)
         }, 1, { cameraOnly: true, skipCrop: true })
       }, fail: error => {
         if (current()) this._handleInteractionFailure('location', error, 'start')
@@ -494,7 +586,7 @@ Component({
         success: res => {
           if (this._closed || poiId !== this.data.poiId || token !== this._loadToken || actor !== ownerId()) return
           const rows = res && res.code == 200 && res.data && res.data.rows
-          this.setData({ reviews: Array.isArray(rows) ? rows.map(row => ({ ...row, mine: String(row.memberId) === actor })) : [], reviewsError: !Array.isArray(rows) })
+          this.setData({ reviews: Array.isArray(rows) ? rows.map(row => ({ ...row, mine: actor !== null && positiveId(row.memberId) === actor })) : [], reviewsError: !Array.isArray(rows) })
         },
         fail: () => { if (!this._closed && token === this._loadToken && actor === ownerId()) this.setData({ reviewsError: true }) },
         successStatusAbnormal: () => { if (!this._closed && token === this._loadToken && actor === ownerId()) this.setData({ reviewsError: true }) },
@@ -541,7 +633,11 @@ Component({
     },
     completeNode(answer, photoUrl, code) {
       if (this._closed || this.data.completing || !this.data.poiId || !this.data.node || this.data.node.completed === true) return
-      if (this.data.checkinPending) return
+      const reverify = this.data.checkinPending ? this._currentReverification() : null
+      if (!reverify) {
+        if (this.data.checkinPending) return
+      }
+      if (this.data.node.needRedeem === true) return
       if (this._loadedOwner !== ownerId()) { this._load(); return }
       if (this.data.node.status !== 1) return this.startInteract()
       const context = pendingContext(this.data.poiId)
@@ -559,9 +655,12 @@ Component({
         success: (location) => {
           if (!isCurrent() || locationSettled) return
           locationSettled = true
-          const record = { v: 1, ownerId: context.ownerId, poiId: context.poiId, attemptId: Date.now() + ':' + (++attemptSequence) + ':' + Math.random() }
+          const record = reverify
+            ? { v: 1, ownerId: context.ownerId, poiId: context.poiId, attemptId: reverify.attemptId, uncertain: true }
+            : { v: 1, ownerId: context.ownerId, poiId: context.poiId, attemptId: Date.now() + ':' + (++attemptSequence) + ':' + Math.random() }
           try {
-            if (readPending(context)) { this._pendingNotice(false); return }
+            const existing = readPending(context)
+            if (reverify ? !existing || existing.attemptId !== record.attemptId : !!existing) { this._load(); return }
             wx.setStorageSync(context.key, record)
             const saved = readPending(context)
             if (!saved || saved.attemptId !== record.attemptId) throw new Error('pending not saved')
@@ -580,18 +679,37 @@ Component({
               // Only these controller messages prove rejection before insertRewardLogIgnore.
               const rejected = res && (res.code === 500 || res.code === '500') && PREWRITE_REJECTIONS.has(res.msg)
               if (!ok && !rejected) { unknown(); return }
+              // 新调用被拒只说明本次没写入，不能否定上次未知请求。
+              let unknownBefore = !!reverify
+              try { const stored = readPending(context); unknownBefore = unknownBefore || !!(stored && stored.uncertain) }
+              catch (_) { if (isCurrent()) this._pendingNotice(true); return }
+              if (rejected && unknownBefore) {
+                if (isCurrent()) {
+                  this._pendingNotice(false)
+                  this.setData({ pendingStatusText: '本次核验未通过：' + res.msg + '。上次结果仍待确认。' })
+                }
+                return
+              }
               let cleared
               try { cleared = clearPending(context, record) } catch (_) { if (isCurrent()) this._pendingNotice(true); return }
-              if (!isCurrent() || !cleared) return
+              if (!isCurrent() || !cleared) {
+                // 迟到的正向确认可以结束同一旧标记，但不能让新流程继续提交或重复弹奖励。
+                if (cleared && ok && !this._closed && context.ownerId === ownerId() && poiId === this.data.poiId
+                    && this._reverification && this._reverification.attemptId === record.attemptId) this._load()
+                return
+              }
+              this._reverification = null
+              this._interactionToken = (this._interactionToken || 0) + 1
               this.setData({ completing: false, checkinPending: false })
               if (rejected) { this._setInteractionRecovery('retry', '打卡没有完成', res.msg, 'start', '重新作答'); return }
               const result = res.data
-              try { wx.removeStorageSync(context.key + ':photo') } catch (_) {}
-              this.setData({ challengePhoto: '' })
+              this.setData({ challengePhoto: '', choiceSheetShow: false, reverifyReady: false, reverifyStarted: false, pendingStatusText: '' })
               this._clearInteractionRecovery()
               this.setData({ 'node.completed': !result.needRedeem, 'node.needRedeem': result.needRedeem })
-              this.triggerEvent('completed', { poiId, alreadyClaimed: result.alreadyClaimed === true, needRedeem: result.needRedeem })
-              if (result.needRedeem) this.triggerEvent('open', { id: 'qr-citynode', params: { poiId, name: this.data.node.name || '节点' } })
+              const recovered = !!reverify || unknownBefore
+              this.triggerEvent('completed', { poiId, alreadyClaimed: result.alreadyClaimed === true, needRedeem: result.needRedeem, ...(recovered ? { recovered: true } : {}) })
+              if (recovered) toast(result.needRedeem ? '已确认当前待核销' : '已确认当前已完成')
+              else if (result.needRedeem) this.triggerEvent('open', { id: 'qr-citynode', params: { poiId, name: this.data.node.name || '节点' } })
               else toast(result.alreadyClaimed ? '你已完成过' : '打卡成功', { icon: result.alreadyClaimed ? 'none' : 'success' })
             },
             fail: () => { if (isCurrent()) this._pendingNotice(false) },

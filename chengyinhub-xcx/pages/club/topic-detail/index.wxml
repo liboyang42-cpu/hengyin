@@ -196,7 +196,7 @@
         <text class="ctd-opstime__label">集合时间</text>
         <text class="ctd-opstime__value">{{opsTimeText}}</text>
       </view>
-      <view class="ctd-opstime__edit" bindtap="openOpsTimeSheet" aria-role="button" aria-label="修改集合时间" hover-class="cy-pressed" hover-stay-time="80">修改</view>
+      <view class="ctd-opstime__edit" bindtap="openOpsTimeSheet" aria-role="button" aria-label="{{opsTimeLocked ? '已有报名，时间地点不可改；备注仍可改' : '修改集合时间'}}" aria-disabled="{{opsTimeLocked}}" hover-class="{{opsTimeLocked ? 'none' : 'cy-pressed'}}" hover-stay-time="80">{{opsTimeLocked ? '已售锁定（备注仍可改）' : '修改'}}</view>
     </view>
 
     <view class="ctd-generic-ops" wx:if="{{directorActive && loadState === 'ready' && genericOpsKnown && genericOpsActions.length}}">

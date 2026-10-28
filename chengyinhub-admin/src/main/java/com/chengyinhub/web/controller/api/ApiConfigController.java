@@ -51,7 +51,8 @@ public class ApiConfigController extends BaseController {
             "drops",              // 服务端 RewardDropServiceImpl 读
             "roamDemoPois",       // 小程序 utils/roam-demo-gate.js 读(开发版演示种子门)
             "finishNearbyRoute",  // 小程序 play/index.js 读
-            "clubMembership"      // 两端都读(ClubMembershipFeatureGate + club 页)
+            "clubMembership",     // 两端都读(ClubMembershipFeatureGate + club 页)
+            "merchantDeskProducts" // 两端都读(MerchantDeskSwitch 写入口 + 商家工作台商品与履约段),D2 默认关
     };
 
     @Operation(summary = "M10 灰度功能开关:返回各特性 on/off")

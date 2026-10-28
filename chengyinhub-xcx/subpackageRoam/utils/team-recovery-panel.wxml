@@ -1,0 +1,22 @@
+<scroll-view class="team-command-panel" scroll-y wx:if="{{teamCommandError || teamCommandRows.length}}" aria-label="待确认的队伍操作">
+  <view class="team-command-card" wx:if="{{teamCommandError}}">
+    <cy-inline-error kind="data" title="{{teamCommandError}}" action="重新读取" bind:action="reloadTeamCommands" />
+  </view>
+  <view class="team-command-card" wx:for="{{teamCommandRows}}" wx:key="targetId">
+    <text class="team-command-title">{{item.label}} · 队伍 {{item.targetId}}</text>
+    <text wx:if="{{item.detail}}">{{item.detail}}</text>
+    <text>{{item.message}}</text>
+    <text wx:if="{{item.requestId}}" user-select>请求号 {{item.requestId}}</text>
+    <view class="team-command-actions">
+      <block wx:if="{{item.state === 'UNKNOWN'}}">
+        <button disabled="{{item.busy}}" data-team-id="{{item.targetId}}" data-action="query" bindtap="onTeamCommandAction">查询结果</button>
+        <button disabled="{{item.busy}}" data-team-id="{{item.targetId}}" data-action="retry" bindtap="onTeamCommandAction">原请求重试</button>
+        <button disabled="{{item.busy}}" data-team-id="{{item.targetId}}" data-action="cancel" bindtap="onTeamCommandAction">终止未执行请求</button>
+      </block>
+      <button wx:if="{{item.terminal}}" disabled="{{item.busy}}" data-team-id="{{item.targetId}}" data-action="acknowledge" bindtap="onTeamCommandAction">确认并归档结果</button>
+      <button wx:if="{{item.state === 'STORAGE_ERROR'}}" disabled="{{item.busy}}" bindtap="reloadTeamCommands">重新读取记录</button>
+    </view>
+    <text wx:if="{{item.state === 'UNKNOWN'}}">终止不会撤销已经生效的申请或审批。</text>
+    <text wx:if="{{item.terminal}}">这是原请求的结果，当前队伍状态以重新读取的列表为准。</text>
+  </view>
+</scroll-view>

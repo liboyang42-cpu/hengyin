@@ -70,6 +70,47 @@ class ApiCartControllerSettlementTest {
     private UmsMemberCartMapper cartMapper = mock(UmsMemberCartMapper.class);
     private UmsMemberCartServiceImpl cartSvc = new UmsMemberCartServiceImpl();
 
+    @org.junit.jupiter.api.BeforeEach
+    void successfulPersistenceReturnsItsActualWriteReceipt() {
+        when(orderSvc.insertOmsOrder(any())).thenAnswer(call -> {
+            com.chengyinhub.business.domain.OmsOrder order = call.getArgument(0);
+            order.setId(700L);
+            return 1;
+        });
+        when(itemSvc.insertOmsOrderItem(any())).thenReturn(1);
+    }
+
+    @Test
+    void zeroOrderWriteStopsBeforeItemsStockAndCartConsumption() {
+        commonStubs(1L, 1000L);
+        doReturn(0).when(orderSvc).insertOmsOrder(any());
+        controller();
+        assertThrows(ServiceException.class, () -> cartSvc.settleCart(MEMBER, "u", "5", "", "1"));
+        verify(itemSvc, never()).insertOmsOrderItem(any());
+        verify(skuSvc, never()).deductStockForProduct(anyLong(), anyLong(), anyLong());
+        verify(cartMapper, never()).deleteUmsMemberCartByIdAndMemberId(anyLong(), anyLong());
+    }
+
+    @Test
+    void missingGeneratedOrderIdCannotBecomeASuccessfulReceipt() {
+        commonStubs(1L, 1000L);
+        org.mockito.Mockito.doAnswer(call -> 1).when(orderSvc).insertOmsOrder(any());
+        controller();
+        assertThrows(ServiceException.class, () -> cartSvc.settleCart(MEMBER, "u", "5", "", "1"));
+        verify(itemSvc, never()).insertOmsOrderItem(any());
+        verify(skuSvc, never()).deductStockForProduct(anyLong(), anyLong(), anyLong());
+    }
+
+    @Test
+    void zeroItemWriteStopsBeforeStockAndCartConsumption() {
+        commonStubs(1L, 1000L);
+        doReturn(0).when(itemSvc).insertOmsOrderItem(any());
+        controller();
+        assertThrows(ServiceException.class, () -> cartSvc.settleCart(MEMBER, "u", "5", "", "1"));
+        verify(skuSvc, never()).deductStockForProduct(anyLong(), anyLong(), anyLong());
+        verify(cartMapper, never()).deleteUmsMemberCartByIdAndMemberId(anyLong(), anyLong());
+    }
+
     private ApiCartController controller() {
         ApiCartController c = spy(new ApiCartController());
         LoginUser lu = mock(LoginUser.class);

@@ -1,0 +1,19 @@
+<!-- 开局前准备:叠在主题详情上(主题详情缩小变暗),左上「‹ 主题详情」回去。 -->
+<cy-sheet variant="full" show="{{show}}" bind:close="onBack" class="prep-host">
+  <view class="prep">
+    <cy-sheet-nav back="主题详情" title="开局前准备" action="{{items.length && !readOnly ? (editing ? '完成' : '编辑') : ''}}" action-plain bind:back="onBack" bind:action="toggleEdit" />
+    <cy-list-group header="准备项">
+      <cy-swipe-row wx:for="{{items}}" wx:key="*this" index="{{index}}" count="{{items.length}}" hr="{{index > 0}}" open="{{swipe === index}}" editing="{{editing}}" disabled="{{readOnly}}" label="{{item}}" bind:swipe="onSwipe" bind:delete="onDelete" bind:move="onMove">
+        <cy-list-row title="{{item}}" tappable="{{false}}" />
+      </cy-swipe-row>
+      <view wx:if="{{!readOnly && !editing && items.length < max}}" class="prep__add {{items.length ? 'prep__add--hr' : ''}}">
+        <view class="prep__plus"><cy-icon name="plus" size="24" /></view>
+        <input class="prep__in" value="{{text}}" maxlength="20" placeholder="添加准备项" bindinput="onInput" bindconfirm="onAdd" aria-label="添加准备项" />
+        <view class="prep__go {{text ? '' : 'is-off'}}" bindtap="onAdd" aria-role="button" aria-label="添加" aria-disabled="{{!text}}" hover-class="cy-pressed" hover-stay-time="80">添加</view>
+      </view>
+    </cy-list-group>
+    <cy-list-group wx:if="{{!readOnly && !editing && items.length < max && suggestions.length}}" header="建议">
+      <cy-list-row wx:for="{{suggestions}}" wx:key="*this" hr="{{index > 0}}" add title="{{item}}" data-text="{{item}}" bind:press="onSuggest" />
+    </cy-list-group>
+  </view>
+</cy-sheet>

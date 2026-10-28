@@ -1,0 +1,15 @@
+/* 新增 / 编辑发票抬头:照抄 pages/addressinfo/addressinfo.wxss(数值未改);
+   标签 4 个字 + 必填星,比参与人表单(2–3 字,120rpx)宽一档到 168rpx(原型 ④)。 */
+.davidbox{ overflow: hidden;}
+.add{overflow: hidden; margin: 0 var(--cy-page-x); padding-top: var(--cy-space-4); padding-bottom: var(--cy-comp-footer-h); border-top: 1rpx solid var(--cy-border-line);}
+.add_li{ overflow: hidden;border-bottom: 1rpx solid var(--cy-border-line); margin-top: var(--cy-space-4);}
+.add_li_left{ width: 168rpx; float: left; font-size: var(--cy-font-body);height: 100rpx; line-height: 100rpx;} /* ds-ok: 4 字标签 + 必填星,参与人表单 120rpx 宽一档 */
+.add_li_right{ font-size: var(--cy-font-body); margin-left: 168rpx; height: 100rpx; display: flex; align-items: center;} /* ds-ok: 与上一行 .add_li_left 的 168rpx 配对 */
+.add_li_right input{ flex: 1; height: 100rpx; color: var(--cy-text-body);}
+.address-save-state { margin: 0 var(--cy-page-x) var(--cy-space-4); }
+.fld-ph { color: var(--cy-color-text-placeholder); }
+.req { color: var(--cy-color-status-danger); margin-left: var(--cy-space-1); }
+/* 新增:抬头类型两档选择(无现成同款控件,保持最小) */
+.inv-seg { display: flex; gap: var(--cy-space-2); }
+.inv-seg__item { min-height: var(--cy-btn-h-sm); padding: 0 var(--cy-space-4); display: flex; align-items: center; border-radius: var(--cy-radius-pill); background: var(--cy-color-bg-surface-subtle); color: var(--cy-color-text-secondary); font-size: var(--cy-type-label); }
+.inv-seg__item.is-on { background: var(--cy-color-action-primary-bg); color: var(--cy-color-action-primary-fg); }

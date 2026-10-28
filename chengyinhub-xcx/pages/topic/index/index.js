@@ -119,6 +119,7 @@ Page({
     docked: false, dockCtaStyle: '', dockFavStyle: '',
     merchantCards: [], storyCards: [], storyMeta: '', openChapter: -1, storyDocked: false,
     teams: { rows: [], need: 0 },
+    prep: { show: false }, prepShow: false, prepBusy: false,
     progress: { total: 0, done: 0, labels: [] },
     selfPlayValidText: '可玩至购买后 90 天', selfPlayCheckoutShow: false, checkout: { cover: '', validText: '', placeText: '', priceText: '', free: false, profileName: '', profilePhone: '' },
     reveal: { show: false, cover: '', name: '', kindText: '', untilText: '', daysText: '', line: '' },
@@ -508,6 +509,7 @@ Page({
     this._progressLoaded = false;
     this._startKenBurns();
     this._loadTeams(data);
+    this._loadPrep(data.id);
     this._loadFav(data.id);
     this._loadChars(data);
   },
@@ -695,6 +697,84 @@ Page({
       },
       fail: () => {},
     });
+  },
+
+  // 开局前准备(原型 B T-36,契约 §1.3):GET /api/play/setup 给可玩时段(非俱乐部且不是「不限」才有)、openNow 与作者准备项;
+  // 两样都没配就整行不出(B1)。未成年夜间等平台规则只在服务端执行(/api/orient/safety/check),被拒时只写一句中性说明。
+  _loadPrep(topicId) {
+    if (!topicId || !this._loggedIn()) { this._prepSetup = null; this.setData({ prep: { show: false } }); return; }
+    const seq = this._prepSeq = (this._prepSeq || 0) + 1;
+    this.setData({ prep: { show: true, loading: true, rowText: '正在加载…', icon: 'clock' } });
+    const failed = () => { if (!this._unloaded && seq === this._prepSeq) this.setData({ prep: { show: true, error: true, rowText: '开局前准备加载失败 · 轻点重试', icon: 'warning' } }); };
+    app.sendRequest({ url: '/api/play/setup', method: 'GET', hideLoading: true, autoErrorToast: false, data: { topicId },
+      success: (res) => {
+        if (this._unloaded || seq !== this._prepSeq) return;
+        if (!res || String(res.code) !== '200' || !res.data) { failed(); return; }
+        this._prepSetup = res.data; this._buildPrep(res.data);
+      },
+      fail: failed,
+    });
+  },
+  _buildPrep(setup, ticks) {
+    const d = setup || {};
+    const items = (Array.isArray(d.prepItems) ? d.prepItems : []).map((t) => String(t || '').trim()).filter(Boolean).slice(0, 6)
+      .map((text, k) => ({ k, text, on: !!(ticks && ticks[k]) }));
+    const w = d.playWindow && d.playWindow.mode && d.playWindow.mode !== 'any' ? d.playWindow : null;
+    if (!items.length && !w) { this.setData({ prep: { show: false } }); return; }
+    const windowText = !w ? '' : w.mode === 'night' ? '夜间 20:00–06:00' : w.mode === 'day' ? '白天 06:00–20:00' : (w.start || '') + '–' + (w.end || '');
+    const closed = !!w && d.openNow === false;
+    const left = items.filter((x) => !x.on).length;
+    const refused = !!(this.data.prep && this.data.prep.refused);
+    const rowText = closed ? '开局前准备 · ' + windowText + ' 开放' : left ? '开局前准备 · 还有 ' + left + ' 项未勾选' : '开局前准备 · 已全部勾选';
+    this.setData({ prep: { show: true, items, windowText, closed, ready: !closed && !left, refused, rowText, icon: closed ? 'clock' : left ? 'info' : 'check' } });
+  },
+  _prepTicks() { const t = {}; ((this.data.prep && this.data.prep.items) || []).forEach((x) => { if (x.on) t[x.k] = true; }); return t; },
+  openPrep() {
+    const prep = this.data.prep || {};
+    if (prep.loading) return;
+    if (prep.error) { this._loadPrep((this.data.info && this.data.info.id) || this.data.id); return; }
+    this._buildPrep(this._prepSetup, this._prepTicks()); this.setData({ prepShow: true });
+  },
+  closePrep() { this.setData({ prepShow: false }); },
+  onPrepTick(e) {
+    const k = Number(e.currentTarget.dataset.index); const t = this._prepTicks();
+    if (e.detail && e.detail.checked) t[k] = true; else delete t[k];
+    this._buildPrep(this._prepSetup, t);
+  },
+  startPrepPlay() {
+    const info = this.data.info || {}; const prep = this.data.prep || {};
+    if (!prep.ready || prep.refused || this.data.prepBusy || !info.id) return;
+    this.setData({ prepBusy: true });
+    const done = () => { if (!this._unloaded) this.setData({ prepBusy: false }); };
+    const go = () => {
+      this.setData({ prepShow: false });
+      const name = info.name ? '&topicName=' + encodeURIComponent(info.name) : '';
+      wx.navigateTo({ url: '/pages/play/index?topicId=' + info.id + name });
+    };
+    // 预检开关关闭 / 非定向主题时不拦,开局时服务端仍会再判一次
+    const skip = (res) => !!(res && ['ORIENT_DISABLED', 'ORIENT_NOT_ORIENTEERING'].includes(res.errorCode));
+    app.sendRequest({ url: '/api/orient/safety/check', method: 'POST', hideLoading: true, autoErrorToast: false,
+      data: JSON.stringify({ topicId: info.id }), header: { 'Content-Type': 'application/json' },
+      success: (res) => {
+        done();
+        if (this._unloaded) return;
+        if (skip(res)) { go(); return; }
+        if (!res || String(res.code) !== '200' || !res.data) { toast('网络异常，请重试'); return; }
+        if (res.data.allowed !== true) { this.setData({ 'prep.refused': true }); return; }
+        go();
+      },
+      fail: (res) => { done(); if (this._unloaded) return; if (skip(res)) go(); else toast('网络异常，请重试'); },
+    });
+  },
+
+  // 组队卡 → 我的队伍「本场招募」(/api/orient/team/lobby):有场次的队伍按场次读,否则按主题读
+  openTeamLobby() {
+    const info = this.data.info || {};
+    if (Number(this.data.is_join) !== 1 || Number(info.productType) !== 1 || !info.id) return;
+    const row = (this.data.teams.rows || []).find((r) => r && r.activityId) || null;
+    const scope = [info.name, row && row.when ? row.when + ' 场' : ''].filter(Boolean).join(' · ');
+    wx.navigateTo({ url: '/subpackageRoam/my-teams/index?tab=open&ownerType=' + (row ? 2 : 1)
+      + '&ownerId=' + encodeURIComponent(row ? row.activityId : info.id) + '&scope=' + encodeURIComponent(scope) });
   },
 
   onMerchantOpen(e) {

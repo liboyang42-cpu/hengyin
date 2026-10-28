@@ -13,6 +13,14 @@ import java.util.List;
  */
 public interface ThemeStateKeyMapper {
 
+    /** 全部属性写侧统一先锁主题，再锁注册版本；调用者必须持有事务。 */
+    Long lockTopic(@Param("topicId") Long topicId);
+    int ensureRegistryVersion(@Param("topicId") Long topicId);
+    Long lockRegistryVersion(@Param("topicId") Long topicId);
+    int advanceRegistryVersion(@Param("topicId") Long topicId);
+    List<ThemeStateKey> selectByTopicIdForUpdate(@Param("topicId") Long topicId);
+    ThemeStateKey selectByTopicIdAndStateKeyForUpdate(@Param("topicId") Long topicId, @Param("stateKey") String stateKey);
+
     /** 某主题已注册的全部状态键;没注册过返回空列表。 */
     List<ThemeStateKey> selectByTopicId(@Param("topicId") Long topicId);
 

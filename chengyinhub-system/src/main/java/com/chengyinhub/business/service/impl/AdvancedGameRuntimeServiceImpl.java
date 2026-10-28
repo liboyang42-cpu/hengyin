@@ -4547,4 +4547,49 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             this.existing = existing;
         }
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public JsonNode queryDefaultNodeContents(Long memberId, Long activityId, Long topicId) {
+        if (memberId == null || memberId <= 0 || topicId == null || topicId <= 0) return null;
+        long actId = activityId == null ? 0L : activityId;
+        List<GameRuntimeSession> rows = sessionMapper.selectDefaultMemberSessionsByTopic(actId, topicId, memberId);
+        ObjectNode result = objectMapper.createObjectNode();
+        if (rows == null) return result;
+        Map<Long,GameRuntimeSession> selected = new LinkedHashMap<>();
+        for (GameRuntimeSession row : rows) {
+            if (row == null || !Long.valueOf(actId).equals(row.getActivityId()) || !topicId.equals(row.getTopicId())
+                    || !"default".equals(row.getPlayInstanceId()) || row.getNodeId() == null || row.getNodeId() <= 0
+                    || row.getOwnerType() == null
+                    || row.getOwnerType() != GameRuntimeSession.OWNER_PLAYER && row.getOwnerType() != GameRuntimeSession.OWNER_TEAM
+                    || row.getOwnerType() == GameRuntimeSession.OWNER_PLAYER && !memberId.equals(row.getOwnerId()))
+                throw new IllegalStateException("原小游戏内容归属不可用");
+            GameRuntimeSession previous=selected.get(row.getNodeId());
+            // Original selector preference: own player row, otherwise latest accessible team row.
+            if (previous == null || previous.getOwnerType() != GameRuntimeSession.OWNER_PLAYER)
+                selected.put(row.getNodeId(),row);
+        }
+        for (GameRuntimeSession row : selected.values()) {
+            String key=String.valueOf(row.getNodeId());
+            ObjectNode source=objectMapper.createObjectNode();
+            JsonNode answer=objectState(row.getStateJson()).get("originalNodeContent");
+            if (answer != null) {
+                if (!com.chengyinhub.business.service.support.NodeJourneySnapshot.hasContent(answer)
+                        || answer.path("nodePresentation").path("id").asLong() != row.getNodeId()
+                        || answer.path("nodePresentation").path("topicId").asLong() != topicId
+                        // 非模板节点冻结 templateId=null；longValue(NullNode) 会读成 0L,不能用来比身份。
+                        || !Objects.equals(answer.hasNonNull("templateId") ? Long.valueOf(answer.get("templateId").longValue()) : null,
+                                row.getTemplateId()))
+                    throw new IllegalStateException("原小游戏内容身份不可用");
+                source.putObject("nodeAnswers").set(key,answer.deepCopy());
+            } else {
+                // A legacy game has no historical metadata; never backfill it from a later publication.
+                source.put("legacyNodeContent",true);
+            }
+            source.putObject("nodeConfigs").set(key,readJson(row.getConfigSnapshotJson(),"原小游戏配置不可用").deepCopy());
+            result.set(key,source);
+        }
+        return result;
+    }
+
 }

@@ -4,6 +4,20 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.chengyinhub.business.mapper.ThemeStateKeyMapper">
 
+    <select id="lockTopic" resultType="java.lang.Long">
+        select id from cms_topic where id = #{topicId} for update
+    </select>
+    <insert id="ensureRegistryVersion">
+        insert into theme_attribute_registry_version(topic_id, registry_version) values(#{topicId}, 1)
+        on duplicate key update topic_id = values(topic_id)
+    </insert>
+    <select id="lockRegistryVersion" resultType="java.lang.Long">
+        select registry_version from theme_attribute_registry_version where topic_id = #{topicId} for update
+    </select>
+    <update id="advanceRegistryVersion">
+        update theme_attribute_registry_version set registry_version = registry_version + 1 where topic_id = #{topicId}
+    </update>
+
     <resultMap type="ThemeStateKey" id="ThemeStateKeyResult">
         <result property="id"           column="id"            />
         <result property="topicId"      column="topic_id"      />
@@ -31,6 +45,13 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
                create_time, update_time
         from theme_state_key
     </sql>
+
+    <select id="selectByTopicIdForUpdate" resultMap="ThemeStateKeyResult">
+        <include refid="selectThemeStateKeyVo"/> where topic_id = #{topicId} order by id for update
+    </select>
+    <select id="selectByTopicIdAndStateKeyForUpdate" resultMap="ThemeStateKeyResult">
+        <include refid="selectThemeStateKeyVo"/> where topic_id = #{topicId} and state_key = #{stateKey} for update
+    </select>
 
     <select id="selectByTopicId" resultMap="ThemeStateKeyResult">
         <include refid="selectThemeStateKeyVo"/>

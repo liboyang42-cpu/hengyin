@@ -61,6 +61,17 @@
   </view>
 </cy-card>
 
+<cy-card wx:if="{{bundleRegistrationId}}" interactive hover-class="cy-pressed" hover-stay-time="80" accessibility-label="查看本人自由探索权益" bindtap="goBundle">
+  <view>自由探索权益</view>
+</cy-card>
+<cy-card wx:if="{{resultTopicId}}" interactive hover-class="cy-pressed" hover-stay-time="80" accessibility-label="查看本人角色卡" bindtap="goCharacter">
+  <view>我的角色卡</view>
+</cy-card>
+<cy-card wx:if="{{resultTopicId}}" interactive hover-class="cy-pressed" hover-stay-time="80" accessibility-label="查看本次定向成绩" bindtap="goScore">
+  <view>定向成绩</view>
+</cy-card>
+<cy-error wx:if="{{resultEntryError}}" title="角色卡与成绩入口暂不可用" sub="{{resultEntryError}}" retry="重新加载" bind:retry="onErrorAction" />
+
 <view class="cyinfo2k" wx:if="{{displayInfo.showOrderStats}}">
   <view class="cyinfo2k_box">
     <view class="cyinfo2k_box_name">待核销</view>

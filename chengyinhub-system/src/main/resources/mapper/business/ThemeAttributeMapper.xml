@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.ThemeAttributeMapper">
+
+    <resultMap type="com.chengyinhub.business.domain.ThemeAttributeMark" id="AttributeMarkResult">
+        <result property="stateKey" column="state_key"        />
+        <result property="preset"   column="attribute_preset" />
+    </resultMap>
+
+    <select id="selectAttributeMarks" resultMap="AttributeMarkResult">
+        select state_key, attribute_preset
+        from theme_state_key
+        where topic_id = #{topicId} and is_attribute = 1
+        order by id
+    </select>
+
+    <update id="markAttribute">
+        update theme_state_key
+        set is_attribute = 1, attribute_preset = #{preset}
+        where topic_id = #{topicId} and state_key = #{stateKey}
+    </update>
+</mapper>

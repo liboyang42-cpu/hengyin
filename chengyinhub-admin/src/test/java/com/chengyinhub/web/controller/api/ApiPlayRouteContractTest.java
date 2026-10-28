@@ -24,13 +24,20 @@ class ApiPlayRouteContractTest {
                 Arrays.stream(state.getParameters()).map(parameter -> parameter.getAnnotation(RequestParam.class).name())
                         .toArray(String[]::new));
 
-        post("checkin", new Class<?>[]{String.class, String.class, String.class, String.class, Integer.class, Long.class});
-        post("answer", new Class<?>[]{String.class, String.class, String.class, String.class, String.class, Integer.class});
-        post("revealPuzzle", new Class<?>[]{String.class, String.class, String.class, String.class, Integer.class});
+        // 完成写入口在 CAS(routeActionId/expectedRouteVersion)之后还要带原运行时身份
+        // (routeSessionId/runtimeInstance/authorityEpoch);不带身份的旧重载一律拒绝。
+        post("checkin", new Class<?>[]{String.class, String.class, String.class, String.class, Integer.class, Long.class,
+                String.class, Long.class, String.class, Integer.class});
+        post("answer", new Class<?>[]{String.class, String.class, String.class, String.class, String.class, Integer.class,
+                Long.class, String.class, Integer.class});
+        post("revealPuzzle", new Class<?>[]{String.class, String.class, String.class, String.class, Integer.class,
+                Long.class, String.class, Integer.class});
         post("sensorResult", new Class<?>[]{SensorResultRequest.class});
         post("submitPreference", new Class<?>[]{Long.class, PreferenceSubmitRequest.class});
-        post("arrive", new Class<?>[]{String.class, String.class, String.class, String.class, String.class, String.class, Integer.class, String.class});
-        post("photo", new Class<?>[]{String.class, String.class, String.class, String.class, String.class, Integer.class});
+        post("arrive", new Class<?>[]{String.class, String.class, String.class, String.class, String.class, String.class, Integer.class, String.class,
+                Long.class, String.class, Integer.class});
+        post("photo", new Class<?>[]{String.class, String.class, String.class, String.class, String.class, Integer.class,
+                Long.class, String.class, Integer.class});
 
         assertClientCannotChooseRoute(PreferenceSubmitRequest.class);
         assertClientCannotChooseRoute(SensorResultRequest.class);

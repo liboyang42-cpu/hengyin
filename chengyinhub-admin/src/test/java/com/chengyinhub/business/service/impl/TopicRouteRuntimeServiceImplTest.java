@@ -139,6 +139,23 @@ class TopicRouteRuntimeServiceImplTest {
     }
 
     @Test
+    void publishedNestedAttributeDefinitionIsCopiedForNewRunWithoutReadingDraftMetadata() throws Exception {
+        CmsTopic topic = topicMapper.selectCmsTopicById(10L);
+        topic.setJourneyRulesJson(GenericRouteRuntimeServiceTest.rules());
+        com.fasterxml.jackson.databind.node.ObjectNode published = (com.fasterxml.jackson.databind.node.ObjectNode)
+                json.readTree(runtime.freezePublication(topic, topic.getRouteGraphJson()));
+        JsonNode definition = json.readTree("{\"schemaVersion\":1,\"configVersion\":\"3\",\"registryVersion\":\"9007199254740993\",\"attributes\":[]}");
+        ((com.fasterxml.jackson.databind.node.ObjectNode) published.path("journeyRules")).set("attributeDefinition", definition);
+        topic.setPublishedConfigVersion(3L);
+        topic.setPublishedRouteGraphJson(published.toString());
+        topic.setJourneyRulesJson(null);
+        JsonNode frozen = json.readTree(runtime.freezePublishedJourney(topic));
+        assertEquals(definition, frozen.path("attributeDefinition"));
+        assertEquals(definition, frozen.path("journeyRules").path("attributeDefinition"));
+        assertFalse(json.readTree(topic.getPublishedRouteGraphJson()).has("attributeDefinition"));
+    }
+
+    @Test
     void fullPublishedSnapshotKeepsRulesAttributesAndNamesWhenDraftChanges() throws Exception {
         CmsTopic topic = topicMapper.selectCmsTopicById(10L);
         topic.setJourneyRulesJson(GenericRouteRuntimeServiceTest.rules());
@@ -2181,4 +2198,44 @@ class TopicRouteRuntimeServiceImplTest {
                 cmsTopicChapterMapper);
         return policy;
     }
+
+    @Test void contentReadKeepsLegacyRunPartialAndNeverReadsNewPublication() {
+        TopicRouteSession original = new TopicRouteSession();
+        original.setId(71L); original.setMemberId(7L); original.setTopicId(10L);
+        original.setActivityId(20L); original.setConfigSnapshotJson("{}");
+        when(routeMapper.selectCurrentByOwner(20L, 10L, 7L)).thenReturn(original);
+        clearInvocations(topicMapper, routeMapper);
+        JsonNode result = runtime.queryNodeContentSnapshot(7L, 10L, 20L, 1L);
+        assertEquals(71L, result.path("contentRouteSessionId").asLong());
+        assertFalse(result.has("nodeAnswers"));
+        verify(topicMapper, never()).selectCmsTopicById(anyLong());
+        verify(routeMapper, never()).updateStateCas(any());
+    }
+
+    @Test void contentReadUsesSharedOriginalBeforePersonalOrPublication() {
+        com.chengyinhub.business.service.IGameSessionRuntimeService shared =
+                mock(com.chengyinhub.business.service.IGameSessionRuntimeService.class);
+        ReflectionTestUtils.setField(runtime, "gameSessionRuntimeService", shared);
+        ObjectNode snapshot = json.createObjectNode().put("gameSessionId", 91L).put("authorityEpoch", 3);
+        when(shared.querySharedRouteSnapshot(7L, 10L, 20L, 1L)).thenReturn(snapshot);
+        clearInvocations(routeMapper, topicMapper);
+        assertEquals(snapshot, runtime.queryNodeContentSnapshot(7L, 10L, 20L, 1L));
+        verify(routeMapper, never()).selectCurrentByOwner(anyLong(), anyLong(), anyLong());
+        verify(topicMapper, never()).selectCmsTopicById(anyLong());
+    }
+
+    @Test void contentPreviewWithoutRunRetainsOriginalAdvancedGames() {
+        when(routeMapper.selectCurrentByOwner(20L, 10L, 7L)).thenReturn(null);
+        when(routeMapper.selectByOwner(20L, 10L, 7L, "default")).thenReturn(null);
+        com.chengyinhub.business.service.IAdvancedGameRuntimeService games =
+                mock(com.chengyinhub.business.service.IAdvancedGameRuntimeService.class);
+        ReflectionTestUtils.setField(runtime, "advancedGameRuntimeService", games);
+        ObjectNode original = json.createObjectNode();
+        original.putObject("1").put("legacyNodeContent", true);
+        when(games.queryDefaultNodeContents(7L, 20L, 10L)).thenReturn(original);
+        JsonNode result = runtime.queryNodeContentSnapshot(7L, 10L, 20L, 1L);
+        assertEquals(original, result.path("originalNodeGames"));
+        verify(routeMapper, never()).updateStateCas(any());
+    }
+
 }

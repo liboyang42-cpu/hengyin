@@ -72,7 +72,7 @@ public class MerchantDeskServiceImpl implements IMerchantDeskService {
         Map<String, Object> view = new LinkedHashMap<>();
         view.put("requestId", key);
         if (row == null) {
-            // 查不到 = 没落地(写与回执同事务),用同一个 requestId 重试是安全的
+            // 当前查询未见回执不证明原写未提交（原事务可能仍在运行）；消费者必须保留 UNKNOWN 与原请求号。
             view.put("state", "NOT_FOUND");
             return view;
         }
@@ -81,6 +81,13 @@ public class MerchantDeskServiceImpl implements IMerchantDeskService {
         view.put("targetType", row.get("targetType"));
         view.put("targetId", row.get("targetId"));
         view.put("createdAt", row.get("createdAt"));
+        Long targetId = toLong(row.get("targetId"));
+        if (targetId != null && ACTION_SKU_SAVE.equals(row.get("action")) && "pms_sku".equals(row.get("targetType"))) {
+            view.put("productId", mapper.selectReceiptSkuProductId(access.getMerchantId(), targetId));
+        } else if (targetId != null && ACTION_REVIEW_EVIDENCE.equals(row.get("action"))
+                && "verification_review_evidence".equals(row.get("targetType"))) {
+            view.put("reviewId", mapper.selectReceiptEvidenceReviewId(access.getOwnerMemberId(), targetId));
+        }
         return view;
     }
 
@@ -390,6 +397,49 @@ public class MerchantDeskServiceImpl implements IMerchantDeskService {
         return mapper.selectCapacitySlots(access.getMerchantId(), skuId, startOf(from), startOf(from.plusDays(span)));
     }
 
+    @Override
+    public Map<String, Object> capacitySlotPage(MerchantAccessContext access, Long skuId, String fromDate,
+                                                Integer days, Long afterStartAt, Long afterSlotId) {
+        if (skuId == null || skuId <= 0) throw badRequest("缺少有效规格");
+        LocalDate from;
+        try {
+            from = fromDate == null || fromDate.trim().isEmpty() ? LocalDate.now(ZONE) : LocalDate.parse(fromDate.trim());
+        } catch (DateTimeParseException e) {
+            throw badRequest("日期格式应为 yyyy-MM-dd");
+        }
+        int span = days == null ? 14 : days;
+        if (span < 1 || span > 14) throw badRequest("查询范围需为1至14天");
+        Date start = startOf(from), end = startOf(from.plusDays(span));
+        if ((afterStartAt == null) != (afterSlotId == null) || afterSlotId != null && (afterSlotId <= 0
+                || afterStartAt < start.getTime() || afterStartAt >= end.getTime())) {
+            throw badRequest("时段游标无效，请重新读取");
+        }
+        List<Map<String, Object>> rows = mapper.selectCapacitySlotPage(access.getMerchantId(), skuId, start, end,
+                afterStartAt == null ? null : new Date(afterStartAt), afterSlotId);
+        boolean hasMore = rows.size() > 100;
+        List<Map<String, Object>> page = new ArrayList<>(rows.subList(0, Math.min(rows.size(), 100)));
+        Map<String, Object> view = new LinkedHashMap<>();
+        view.put("skuId", skuId);
+        view.put("fromDate", from.toString());
+        view.put("days", span);
+        view.put("rows", page);
+        view.put("hasMore", hasMore);
+        Map<String, Object> next = null;
+        if (hasMore) {
+            Map<String, Object> last = page.get(page.size() - 1);
+            Object rawStart = last.get("slotStart");
+            long millis;
+            if (rawStart instanceof Date date) millis = date.getTime();
+            else if (rawStart instanceof java.time.LocalDateTime date) millis = date.atZone(ZONE).toInstant().toEpochMilli();
+            else throw new IllegalStateException("时段开始时间类型无效");
+            next = new LinkedHashMap<>();
+            next.put("afterStartAt", millis);
+            next.put("afterSlotId", last.get("slotId"));
+        }
+        view.put("next", next);
+        return view;
+    }
+
     // ================= 今日到店 =================
 
     @Override
@@ -526,6 +576,35 @@ public class MerchantDeskServiceImpl implements IMerchantDeskService {
             row.put("effect", "冻结期间暂停对账确认与打款，金额不变");
         }
         return rows;
+    }
+
+    @Override
+    public Map<String, Object> frozenBatchPage(MerchantAccessContext access, String afterPeriodYm, Long afterBatchId) {
+        if ((afterPeriodYm == null) != (afterBatchId == null)
+                || afterPeriodYm != null && (!afterPeriodYm.matches("[0-9]{4}-(0[1-9]|1[0-2])") || afterBatchId <= 0)) {
+            throw badRequest("冻结批次游标无效，请刷新后重试");
+        }
+        List<Map<String, Object>> rows = mapper.selectFrozenBatchPage(access.getOwnerMemberId(), afterPeriodYm, afterBatchId);
+        boolean hasMore = rows.size() > 24;
+        List<Map<String, Object>> page = new ArrayList<>();
+        for (Map<String, Object> source : rows.subList(0, Math.min(rows.size(), 24))) {
+            Map<String, Object> row = new LinkedHashMap<>(source);
+            row.put("holdState", "FROZEN");
+            row.put("effect", "冻结期间暂停对账确认与打款，金额不变");
+            page.add(row);
+        }
+        Map<String, Object> next = null;
+        if (hasMore) {
+            Map<String, Object> last = page.get(page.size() - 1);
+            next = new LinkedHashMap<>();
+            next.put("afterPeriodYm", last.get("periodYm"));
+            next.put("afterBatchId", last.get("batchId"));
+        }
+        Map<String, Object> view = new LinkedHashMap<>();
+        view.put("rows", page);
+        view.put("hasMore", hasMore);
+        view.put("next", next);
+        return view;
     }
 
     // ================= 幂等 =================

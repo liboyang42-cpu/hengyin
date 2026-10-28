@@ -12,6 +12,20 @@
   <block wx:else>
   <view class="send-receipt" wx:if="{{sendReceipt}}" aria-role="status" aria-live="polite">{{sendReceipt}}</view>
 
+  <view class="send-receipt" wx:if="{{unknownTargets.length}}" aria-role="status" aria-live="polite">
+    <text>以下邀请结果待确认，请勿重复发送。记录未出现也不能证明未发送；无法确认时请联系平台处理。</text>
+    <view wx:for="{{unknownTargets}}" wx:key="toId"><text>{{item.name}}</text><view class="inline-retry" data-toid="{{item.toId}}" bindtap="queryOriginalInvite" aria-role="button" aria-label="查询该邀请原请求" hover-class="cy-pressed" hover-stay-time="80">查询原请求</view></view>
+    <view class="inline-retry" bindtap="checkUnknownInvites" aria-role="button" aria-label="查看已发出邀请" hover-class="cy-pressed" hover-stay-time="80">查看已发出邀请</view>
+  </view>
+
+  <view class="send-receipt">
+    <view class="inline-retry" bindtap="discoverOriginalInvites" aria-role="button" aria-label="查找当前账号原邀请请求" hover-class="cy-pressed" hover-stay-time="80">{{receiptLoading ? '查询中…' : '查找原邀请请求（含其他设备）'}}</view>
+    <view wx:for="{{selected}}" wx:key="toId" class="inline-retry" data-toid="{{item.toId}}" bindtap="queryOriginalInvite" aria-role="button" aria-label="查询所选对象的原邀请请求" hover-class="cy-pressed" hover-stay-time="80">查询 {{item.name}} 的本机原请求</view>
+    <cy-empty wx:if="{{receiptError}}" kind="error" title="原请求仍待确认" sub="{{receiptError}}" />
+    <view wx:for="{{receiptRows}}" wx:key="requestId"><text>请求 {{item.requestId}} · {{item.state === 'CREATED' ? ('已创建邀请 #' + item.inviteId + ' · 主题 #' + item.topicId + ' · 对象 #' + item.toId) : '结果仍待确认，请勿重复发送'}}</text></view>
+    <view wx:if="{{receiptHasMore}}" class="inline-retry" bindtap="moreOriginalInvites" aria-role="button" aria-label="加载更多原邀请请求" hover-class="cy-pressed" hover-stay-time="80">加载更多原请求</view>
+  </view>
+
   <view class="card">
     <view class="card-tit">① 关联主题<text class="form-required" aria-hidden="true">*</text></view>
     <view class="inline-state" wx:if="{{topicsRefreshing}}" aria-role="status" aria-live="polite">正在刷新主题…</view>

@@ -47,7 +47,8 @@ function assertExitIsLeftmost(sources) {
       for (const at of done) assert.ok(close[0] < at, `${file}:退出又排到完成右边了`);
       const exitEl = header.slice(close[0], header.indexOf('</view>', close[0]));
       assert.doesNotMatch(exitEl, /cy-icon/, `${file}:退出被换回 ✕ 图标了`);
-      assert.match(exitEl, />(退出|返回)$/, `${file}:左侧必须是文字「退出」(下钻层可为「返回」)`);
+      // 文档二 L1(2026-10-28 业主):半屏第一层照 iOS 左上「取消」,主题详情先改
+      assert.match(exitEl, />(退出|取消|返回)$/, `${file}:左侧必须是文字「退出」或「取消」(下钻层可为「返回」)`);
     }
   }
 }

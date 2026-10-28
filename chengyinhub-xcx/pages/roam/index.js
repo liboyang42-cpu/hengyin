@@ -310,7 +310,8 @@ Page({
     introTab: 'start',            // start=开始漫游 | passport=漫游护照
     introTabs: [{ key: 'start', label: '开始漫游' }, { key: 'passport', label: '漫游护照' }],
     avatar: '',
-    // 护照 tab 的读数全部来自本机 roam_sessions,拿不到就是空态,不摆假卡
+    // 护照统计读取本人服务端完成事实；本机照片保持本机补充。
+    passportError: false,
     passport: { tiles: [], trips: [] }, ppOpen: { show: false, on: false, icon: '', title: '', value: '', style: '' }, // ppOpen:护照方卡放大层
     introCardIdx: 0,
     introCards: [
@@ -409,6 +410,7 @@ Page({
     recoveryAvailable: false,
     roamSessionReady: false,
     locErr: false,
+    locationForegroundOnly: false,
     gpsWeak: '',
     nearestM: 0,
     poiErr: false,
@@ -717,35 +719,39 @@ Page({
     this.setData({ introTab });
     if (introTab === 'passport') { this._loadIntroPassport(); this._loadActiveRoamEvents(); }
   },
-  /** 护照 tab 读数:全部来自本机 roam_sessions,拿不到就是 0,不摆假数。
-   *  分两层(2026-08-08 定稿)——
-   *    上排方卡 = 我的档案,按「回看频率 × 情感价值」排:记录 > 集邮 > 勋章 > 数据
-   *    下排大卡 = 去玩什么,只留需要「被看见才会点」的:官方活动 / 发现店铺
-   *  ⚠️ 大卡是稀缺位(398rpx 高),收藏类是常驻入口,别往下排塞 —— 没封面图的大卡就是一块黑。 */
-  _loadIntroPassport() {
-    const sessions = roamMemory(this).readSessions();
-    let shops = 0;
-    let stamps = 0;
-    let km = 0;
-    const days = new Set();
-    sessions.forEach((s) => {
-      shops += Number(s.shops) || 0;
-      stamps += Array.isArray(s.photos) ? s.photos.length : 0;
-      km += parseFloat(s.distance) || 0;
-      if (s.date) days.add(s.date);
-    });
+  /** 服务端已完成事实作为护照统计；本机照片仅作本机补充，不上传。 */
+  async _loadIntroPassport() {
+    if (this._passportReader) this._passportReader.dispose();
+    const { createReader } = require('../../utils/roam-passport-read.js');
+    const reader = this._passportReader = createReader(getApp(), wx);
+    const scope = this._roamReadScope(), startGeneration = this._roamStartGen;
+    const current = () => reader.current() && scope() && !this._unloaded && !this._hidden
+      && startGeneration === this._roamStartGen && reader === this._passportReader;
+    this.setData({ passportLoading: true, passportError: false, passport: { stats: [], tiles: [], plays: [] } });
+    let stamps = null;
+    try { stamps = reader.local().reduce((n, row) => n + (Array.isArray(row.photos) ? row.photos.length : 0), 0); } catch (_) { /* Keep server read independent of local storage. */ }
+    let summary;
+    try { summary = await reader.summary(); }
+    catch (_) {
+      if (!current()) return;
+      this._activeRoamToken = null; this._activeRoamEventId = '';
+      this.setData({ passportLoading: false, passportError: true, passport: { stats: [], tiles: [], plays: [] } });
+      return;
+    }
+    if (!current()) return;
+    const value = n => n == null ? '—' : n;
     this.setData({
+      passportLoading: false, passportError: false,
       passport: {
-        // 读数直接上 tab 顶部:真内容就这四个,不值一层弹窗(原「漫游数据」卡已取消)
         stats: [
-          { k: '漫游', v: sessions.length },
-          { k: '探店', v: shops },
-          { k: '活跃日', v: days.size },
-          { k: '公里', v: km.toFixed(1) },
+          { k: '漫游', v: summary.trips },
+          { k: '探店', v: value(summary.shops) },
+          { k: '活跃日', v: value(summary.days) },
+          { k: '公里', v: summary.distanceM == null ? '—' : (summary.distanceM / 1000).toFixed(1) },
         ],
         tiles: [
-          { key: 'history', icon: 'route', title: '漫游记录', value: sessions.length + ' 次旅程' },
-          { key: 'stamp', icon: 'image', title: '集邮册', value: stamps + ' 张邮票' },
+          { key: 'history', icon: 'route', title: '漫游记录', value: summary.trips + ' 次已完成旅程' },
+          { key: 'stamp', icon: 'image', title: '集邮册', value: stamps == null ? '本机邮票暂不可读' : stamps + ' 张本机邮票' },
           { key: 'badge', icon: 'star', title: '勋章墙', value: '我的徽章' },
           // 2026-10-14 随漫游上线的两项(读数在各自页面现读,方卡不摆数字)
           { key: 'goals', icon: 'flag', title: '探索目标', value: '给自己定个小目标', isNew: true },
@@ -758,7 +764,9 @@ Page({
         ],
       },
     });
+    this._loadActiveRoamEvents();
   },
+  retryPassport() { return this._loadIntroPassport(); },
   onPassportTileTap(e) {
     const key = e.currentTarget.dataset.key; if (!e.ppExpanded && this._ppExpand(key)) return; // 2026-10-22:先放大成大卡再执行原动作
     if (key === 'history') this.openRoamHistory();
@@ -772,11 +780,13 @@ Page({
   },
   // BL-41:护照「官方活动」大卡读可参与的漫游官方活动;失败静默,卡片保持原文案。
   _loadActiveRoamEvents() {
+    if (this.data.passportError) return;
+    const current = this._roamReadScope();
     const token = {};
     this._activeRoamToken = token;
     this._activeRoamEventId = '';
     req('/api/official/active-for-roam', 'GET', {}, { silentError: true }).then((res) => {
-      if (this._activeRoamToken !== token || !apiOk(res)) return;
+      if (!current() || this._unloaded || this._activeRoamToken !== token || !apiOk(res)) return;
       const card = activeRoamEventCard(res.data);
       const passport = this.data.passport || {};
       if (!card || !Array.isArray(passport.plays)) return;
@@ -805,8 +815,6 @@ Page({
   },
   openNearbyMap() { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageRoam/nearby/index', complete: () => { this._navigating = false; } }); },
   openMyTeams() { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageRoam/my-teams/index', complete: () => { this._navigating = false; } }); },
-  /** 护照 tab 的三格读数 + 旅程卡:唯一数据源是本机 roam_sessions(与 passport/history 两页同源)。
-   *  storage 读不出来 = 真的没有记录 ⇒ trips 空、三格全 0,由 wxml 出空态文案;不编数字。 */
   /* 设置页的权限状态:位置权限(scope.userLocation)与后台持续定位(scope.userLocationBackground)
      都从系统里读,不猜、不写死。拿不到就保持原值(宁可显示旧值,也不翻成「关」骗人)。 */
   _syncRoamPermission() {
@@ -3786,25 +3794,27 @@ Page({
     });
   },
   _startReal(consentAlreadyRecorded) {
-    if (this._realOn || this._realStarting) return;
+    if (this._unloaded || this._realOn || this._realStarting) return;
     const that = this;
     const epoch = this._realStartEpoch = (this._realStartEpoch || 0) + 1;
     const locationRevision = bgTracker.revision('roam');
     const owner = String(getApp().getUserID() || '');
-    const live = () => epoch === that._realStartEpoch && locationRevision === bgTracker.revision('roam') && owner === String(getApp().getUserID() || '');
+    const live = () => !that._unloaded && epoch === that._realStartEpoch && locationRevision === bgTracker.revision('roam') && owner === String(getApp().getUserID() || '');
     this._realStarting = true;
+    this.setData({ locationForegroundOnly: false });
     this._observeLocationRevocation();
     const abandon = () => {
       if (!live()) return;
       that._realStarting = false;
+      that.setData({ locationForegroundOnly: false });
       if (that._realRevokeOff) { that._realRevokeOff(); that._realRevokeOff = null; }
     };
-    const onOk = () => {
+    const onOk = (usingBackground) => {
       if (!live()) return;
       that._realStarting = false; that._realAnchor = null;
       that._realOn = true;
       wx.onLocationChange(that._onRealLoc = (loc) => { if (live() && that._realOn) that._realTick(loc); });
-      that.setData({ locErr: false });
+      that.setData({ locErr: false, locationForegroundOnly: usingBackground === false });
       that._syncGoal();
       wx.setKeepScreenOn && wx.setKeepScreenOn({ keepScreenOn: true });
       // 不再弹「真实定位已开启」:计时与定位点已说明,toast 会压住暂停键。
@@ -3847,6 +3857,7 @@ Page({
     bgTracker.release('roam');
     this._realStartEpoch = (this._realStartEpoch || 0) + 1;
     this._realStarting = false;
+    this.setData({ locationForegroundOnly: false });
     if (this._realRevokeOff) { this._realRevokeOff(); this._realRevokeOff = null; }
     const onLocationChange = this._onRealLoc;
     this._realOn = false;
@@ -4570,24 +4581,33 @@ Page({
   /* 拿到一张原图之后的去处:裁剪 → 落盘 → 进探店照片或本次足迹。
      取景卡与(历史上的)原生选图器共用这一段,所以单独抽出来。 */
   _acceptPhoto(raw) {
+    const scope = this._roamReadScope();
+    const sessionId = this._roamSid, sessionKey = this._clientSessionKey;
+    const visit = this.data.visit;
+    const address = this.data.currentAddress || '漫游打卡';
+    const current = () => scope() && !this._unloaded && sessionId === this._roamSid
+      && sessionKey === this._clientSessionKey && visit === this.data.visit;
     // 打卡照走自由比例裁剪(与全站上传同一套裁剪页);取消 = 放弃这张,不静默存原图
-    getApp().cropAll([raw], 'free').then((out) => {
+    return Promise.resolve().then(() => {
+      if (current()) return getApp().cropAll([raw], 'free');
+    }).then((out) => {
+      if (!current()) return;
       const path = out && out[0];
       if (!path) return;
-      persistPhoto(wx, path).then((photo) => {
-        if (!photo.path) return;
-        if (this.data.visit.active) {
+      return persistPhoto(wx, path).then((photo) => {
+        if (!current() || !photo.path) return;
+        if (visit.active) {
           const candidates = (this.data.visit.photos || []).concat(photo);
           const photos = retainRecentPhotos(candidates);
           const dropped = droppedSavedPhotos(candidates);
           releaseSavedPhotos(wx, dropped);
           this.setData({ 'visit.photos': photos });
         } else {
-          this._appendSessionPhoto(photo, this.data.currentAddress || '漫游打卡');
+          this._appendSessionPhoto(photo, address);
         }
         cyToast(photo.persisted ? (this.data.visit.active ? '探店照片已保存' : '照片已保存') : '照片仅本次可用');
       });
-    });
+    }).catch(() => { if (current()) cyToast('照片未保存，请重试'); });
   },
 
   endRoamSession() {
@@ -5373,7 +5393,8 @@ Page({
       if (existing >= 0) s[existing] = session; else s.unshift(session);
       if (!memory.writeSessions(s.slice(0, 50))) return this._recoveryFailure('足迹存档保存失败，本次记录保留待重试');
       releaseSavedPhotos(wx, evicted);
-      memory.writeReveals(memory.readReveals().concat(this._reveals).slice(-2000));
+      if (!memory.writeReveals(memory.readReveals().concat(this._reveals).slice(-2000)))
+        return this._recoveryFailure('足迹轨迹保存失败，本次记录保留待重试');
       this._revealsSaved = true; // onUnload 不再重复追加
       return true;
     } catch (e) { return this._recoveryFailure('足迹存档保存失败，本次记录保留待重试'); }
@@ -5629,6 +5650,10 @@ Page({
   clearRoamLocal() { this.setData({ clearAsk: true }); },
   cancelClearRoamLocal() { this.setData({ clearAsk: false }); },
   confirmClearRoamLocal() {
+    if (!require('../../utils/roam-share-snapshot.js').prepareShareRevocation(getApp(), wx)) {
+      cyToast('未能保存分享撤销记录，请重试');
+      return Promise.resolve(false);
+    }
     const ok = roamMemory(this).clearLocal();
     this.setData({ clearAsk: false });
     if (!ok) { cyToast('清不干净，存储读写被拒了'); return Promise.resolve(false); }

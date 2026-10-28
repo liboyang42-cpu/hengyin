@@ -14,10 +14,8 @@ import org.springframework.stereotype.Component;
 public class ComplianceFeatureSwitches {
     /** 用户发票：抬头管理 / 可开票订单 / 申请 / 撤回接口。 */
     public static final String USER_INVOICE = "feature.flag.userInvoice";
-    /** 未成年模式总闸：监护授权接口 + 下面两个执行挂点的前提。 */
+    /** 未成年模式总闸：监护授权接口 + 下面城市定向执行挂点的前提。 */
     public static final String MINOR_MODE = "feature.flag.minorMode";
-    /** 结算挂点：报名建单 / 发起支付前按年龄段校验（需 MINOR_MODE 同时打开）。 */
-    public static final String MINOR_PAYMENT_GATE = "feature.flag.minorPaymentGate";
     /** 城市定向挂点：参与前按年龄段 / 宵禁 / 同队监护人校验（需 MINOR_MODE 同时打开）。 */
     public static final String MINOR_ORIENTEERING_GATE = "feature.flag.minorOrienteeringGate";
 
@@ -33,10 +31,6 @@ public class ComplianceFeatureSwitches {
 
     public boolean minorModeOn() {
         return on(MINOR_MODE);
-    }
-
-    public boolean minorPaymentGateOn() {
-        return minorModeOn() && on(MINOR_PAYMENT_GATE);
     }
 
     public boolean minorOrienteeringGateOn() {

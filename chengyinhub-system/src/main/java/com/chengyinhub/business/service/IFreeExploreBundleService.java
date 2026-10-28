@@ -56,7 +56,14 @@ public interface IFreeExploreBundleService {
     ExploreBundleReservation reserve(Long memberId, Long registrationId, Long unitId, Long offerId,
                                      Date startAt, String idempotencyKey);
 
+    Map<String, Object> cancellationQuote(Long memberId, Long reservationId, boolean useWaiver);
+
     ExploreBundleReservation cancelReservation(Long memberId, Long reservationId, boolean useWaiver);
+
+    /** Optional quoted outcome: crossing the free-cancel boundary must be reconfirmed. */
+    ExploreBundleReservation cancelReservation(Long memberId, Long reservationId, boolean useWaiver, String expectedOutcome);
+
+    Map<String, Object> merchantExitOptions(Long memberId, Long registrationId, Long unitId);
 
     ExploreBundleReservation markNoShow(Long merchantOwnerMemberId, Long reservationId);
 

@@ -149,7 +149,12 @@ class ApiMerchantOperatorReadScopeTest {
         ReflectionTestUtils.setField(controller, "merchantAftercareMapper", aftercare);
         ReflectionTestUtils.setField(controller, "playPredictService", mock(IPlayPredictService.class));
 
+        com.chengyinhub.business.service.ICmsTopicService todoTopics = mock(com.chengyinhub.business.service.ICmsTopicService.class);
+        com.chengyinhub.business.service.ICmsRegistrationService todoRegistrations = mock(com.chengyinhub.business.service.ICmsRegistrationService.class);
+        ReflectionTestUtils.setField(controller, "cmsTopicService", todoTopics);
+        ReflectionTestUtils.setField(controller, "cmsRegistrationService", todoRegistrations);
         AjaxResult todo = controller.todoSummary();
+        org.mockito.Mockito.verifyNoInteractions(todoTopics, todoRegistrations);
         AjaxResult events = controller.events();
 
         assertEquals(HttpStatus.SUCCESS, todo.get(AjaxResult.CODE_TAG));

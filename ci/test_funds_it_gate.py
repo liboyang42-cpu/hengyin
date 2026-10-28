@@ -37,7 +37,7 @@ def all_required_clean(directory):
     (门禁新增一套却没人跑 = fail-closed)。别为了让它绿而去删 EXPECTED 里的条目。
     """
     write_report(directory, "CoopListReadOnlyMybatisIntegrationTest", 5)
-    write_report(directory, "RegistrationFundsMybatisIntegrationTest", 93)
+    write_report(directory, "RegistrationFundsMybatisIntegrationTest", 98)
     write_report(directory, "RegistrationEquityMybatisIntegrationTest", 5)
     write_report(directory, "RefundPayoutMybatisIntegrationTest", 30)
     write_report(directory, "ExploreAllianceMvpRealDbIT", 5)
@@ -96,7 +96,7 @@ def all_required_clean(directory):
         ("PlayerRunSessionOrderingMybatisIntegrationTest", 6),
         ("RoamShareSnapshotConcurrencyMySqlIT", 3),
         ("ClubEventTransferCancellationMySqlIT", 3),
-        ("RefundRetryAndRemainderMySqlIT", 5),
+        ("RefundRetryAndRemainderMySqlIT", 20),
         ("SignupNoticeAfterCommitPersistenceMySqlIT", 5),
         ("TopicLikeDesiredStateMySqlIT", 3),
         ("MonitorMissingJobsMySqlIT", 3),
