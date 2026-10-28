@@ -4,7 +4,6 @@ import com.chengyinhub.business.domain.CmsRegistration;
 import com.chengyinhub.business.domain.dto.RegistrationOrderResult;
 import com.chengyinhub.business.domain.dto.RegistrationRequest;
 import com.chengyinhub.business.service.impl.RegistrationCheckoutServiceImpl;
-import com.chengyinhub.business.service.minor.MinorDecision;
 import com.chengyinhub.business.task.OrderCloseTask;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -33,7 +32,6 @@ class RegistrationCheckoutTransactionBoundaryTest {
     private ICmsRegistrationService registrations;
     private IRegistrationOrderService orders;
     private WechatPaymentOperations gateway;
-    private IMinorProtectionService minor;
     private RegistrationCheckoutServiceImpl target;
     private IRegistrationCheckoutService checkout;
     private RecordingTransactions transactions;
@@ -42,12 +40,11 @@ class RegistrationCheckoutTransactionBoundaryTest {
     @BeforeEach void fixture() {
         events = new ArrayList<>(); transactions = new RecordingTransactions(events);
         registrations = mock(ICmsRegistrationService.class); orders = mock(IRegistrationOrderService.class);
-        gateway = mock(WechatPaymentOperations.class); minor = mock(IMinorProtectionService.class);
+        gateway = mock(WechatPaymentOperations.class);
         target = new RegistrationCheckoutServiceImpl();
         ReflectionTestUtils.setField(target, "registrationService", registrations);
         ReflectionTestUtils.setField(target, "registrationOrderService", orders);
         ReflectionTestUtils.setField(target, "wechatPayService", gateway);
-        ReflectionTestUtils.setField(target, "minorProtectionService", minor);
         ProxyFactory proxy = new ProxyFactory(target);
         proxy.addAdvice(new TransactionInterceptor(transactions, new AnnotationTransactionAttributeSource()));
         checkout = (IRegistrationCheckoutService) proxy.getProxy();
@@ -56,21 +53,21 @@ class RegistrationCheckoutTransactionBoundaryTest {
     @Test void createCannotSuspendAnOuterTransactionBeforeMinorOrderOrSdk() {
         inCallerTransaction(() -> assertThrows(IllegalTransactionStateException.class,
                 () -> checkout.createOrReplay(member, new RegistrationRequest())));
-        verifyNoInteractions(minor, orders, registrations, gateway);
+        verifyNoInteractions(orders, registrations, gateway);
         assertEquals(0, transactions.suspensions);
     }
 
     @Test void jsapiRetryCannotSuspendAnOuterTransactionBeforeAnyBusinessCall() {
         inCallerTransaction(() -> assertThrows(IllegalTransactionStateException.class,
                 () -> checkout.retryPayment(member, registrationId)));
-        verifyNoInteractions(minor, orders, registrations, gateway);
+        verifyNoInteractions(orders, registrations, gateway);
         assertEquals(0, transactions.suspensions);
     }
 
     @Test void appRetryCannotSuspendAnOuterTransactionBeforeAnyBusinessCall() {
         inCallerTransaction(() -> assertThrows(IllegalTransactionStateException.class,
                 () -> checkout.retryPayment(member, registrationId, true)));
-        verifyNoInteractions(minor, orders, registrations, gateway);
+        verifyNoInteractions(orders, registrations, gateway);
         assertEquals(0, transactions.suspensions);
     }
 
@@ -80,12 +77,12 @@ class RegistrationCheckoutTransactionBoundaryTest {
                     () -> target.retryPayment(member, registrationId));
             assertEquals(409, failure.getCode());
         });
-        verifyNoInteractions(minor, orders, registrations, gateway);
+        verifyNoInteractions(orders, registrations, gateway);
         assertEquals(0, transactions.suspensions);
     }
 
     @Test void ordinaryJsapiRetryCommitsTheOriginalClaimBeforeSdk() {
-        allowAndClaim();
+        readyAndClaim();
         when(gateway.createOrder(any())).thenAnswer(call -> sdk(call.getArgument(0), "JSAPI"));
 
         RegistrationCheckoutResult result = checkout.retryPayment(member, registrationId);
@@ -98,7 +95,7 @@ class RegistrationCheckoutTransactionBoundaryTest {
     }
 
     @Test void ordinaryAppRetryCommitsTheSameOriginalClaimBeforeSdk() {
-        allowAndClaim();
+        readyAndClaim();
         when(gateway.createAppOrder(any())).thenAnswer(call -> sdk(call.getArgument(0), "APP"));
 
         RegistrationCheckoutResult result = checkout.retryPayment(member, registrationId, true);
@@ -111,7 +108,7 @@ class RegistrationCheckoutTransactionBoundaryTest {
     }
 
     @Test void ordinaryCreationCommitsOrderAndClaimBeforeSdkWithoutChangingIdentity() {
-        allowAndClaim();
+        readyAndClaim();
         RegistrationRequest request = new RegistrationRequest();
         when(orders.createOrReplay(member, request)).thenAnswer(call -> new TransactionTemplate(transactions).execute(tx -> {
             assertTrue(TransactionSynchronizationManager.isActualTransactionActive());
@@ -138,9 +135,8 @@ class RegistrationCheckoutTransactionBoundaryTest {
         verifyNoInteractions(provider);
     }
 
-    private void allowAndClaim() {
+    private void readyAndClaim() {
         when(gateway.isReady()).thenReturn(true);
-        when(minor.enforcePurchaseIfEnabled(member)).thenReturn(MinorDecision.allow(null));
         when(registrations.beginPaymentAttempt(registrationId, member)).thenAnswer(call ->
                 new TransactionTemplate(transactions).execute(tx -> {
                     assertTrue(TransactionSynchronizationManager.isActualTransactionActive());
