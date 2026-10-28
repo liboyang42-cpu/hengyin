@@ -34,7 +34,14 @@ function mountTemplatePage() {
 const lastRequest = (h, url) => h.requests.filter(r => r.url === url).at(-1);
 function loadTopics(h, rows) { lastRequest(h, TOPIC_URL).success({ code: 200, data: rows }); }
 function switchTab(h, key) { h.page.switchTab({ detail: { key } }); }
-function topicBlock(source) { return source.slice(source.indexOf("tab === 'topic'"), source.indexOf("tab === 'game'")); }
+function tabBlocks(source) {
+  // Master renders topic with wx:if and game with the adjacent wx:else.
+  // Bound the regions at the actual outer block transition; a missing marker must fail.
+  const match = source.match(/<block wx:if="\{\{ tab === 'topic' \}\}">([\s\S]*?)<\/block>\s*<!-- =+ 玩法 =+ -->\s*<block wx:else>([\s\S]*?)<\/block>\s*<!-- 「全部分类」/);
+  assert.ok(match, '必须找到互斥的主题/玩法真实外层分支，不能把整页当成某一 tab');
+  return { topic: match[1], game: match[2] };
+}
+function topicBlock(source) { return tabBlocks(source).topic; }
 
 test('主题 tab 成功后切游戏 tab 请求失败:错误态必须可见,主题内容不得冒充游戏列表', () => {
   const h = mountTemplatePage(); loadTopics(h, TWO_TOPICS); switchTab(h, 'game');
@@ -43,7 +50,8 @@ test('主题 tab 成功后切游戏 tab 请求失败:错误态必须可见,主�
   assert.match(h.page.data.gameError, /网络断开/);
   assert.deepEqual(h.page.data.featGames, []); assert.deepEqual(h.page._games, []);
   const wxml = fs.readFileSync(WXML, 'utf8');
-  assert.match(wxml, /tab === 'game'/); assert.match(wxml, /gameError && !gameLoaded/);
+  assert.match(tabBlocks(wxml).game, /gameError && !gameLoaded/);
+  assert.doesNotMatch(tabBlocks(wxml).game, /topicError|featTopics/, '玩法失败分支不能呈现主题缓存');
   assert.equal(h.page.data.tab, 'game');
 });
 

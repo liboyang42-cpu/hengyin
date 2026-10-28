@@ -792,7 +792,16 @@ Page({
           if (Number(value.voiceStatus) === 1) this._voiceTimer = setTimeout(() => { if (current()) this.refreshVoice(clearCurrent); }, 5000);
           return;
         }
-        if (this._voiceObserve(context, pending.active, value) && value.voiceIntentState === 'PENDING')
+        const selected = this._voiceObserve(context, pending.active, value);
+        // Reset changes the selected profile, not the original READY enrollment fact.
+        // Only this still-current clear reader may project its authoritative empty profile.
+        if (clearCurrent && !selected && value.voiceSelected === false && value.voiceStatus === 0
+            && value.voiceIntentState === 'READY' && value.voiceReasonCode === 'VOICE_PROFILE_CHANGED'
+            && voiceJournal.load(wx, context.member, 'merchant').active === pending.active) {
+          this._voiceDisplayContext = context;
+          this.setData({ voiceStatus: 0, voiceSample: '', voiceUnknown: false });
+        }
+        if (selected && value.voiceIntentState === 'PENDING')
           this._voiceTimer = setTimeout(() => { if (current()) this.refreshVoice(clearCurrent); }, 5000);
       }).catch((e) => {
         if (!current()) return;

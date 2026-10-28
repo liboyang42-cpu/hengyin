@@ -16,12 +16,17 @@ let sent = [];
 let storage = {};
 let toasts = [];
 let actorId = 42;
+let sessionRevision = 0;
+let authorization = 'fixture-actor-A';
+const session = { getRevision: () => sessionRevision };
 
 global.getApp = () => ({
   globalData: { statusBarHeight: 20, navBarHeight: 44 },
   sendRequest: (p) => { sent.push(p); },
   chooseImage: () => {},
   getUserID: () => actorId,
+  getSession: () => session,
+  getAuthorization: () => authorization,
   getNickname: () => '测试创作者',
   getAvatar: () => '',
   getUserInfo: () => null,
@@ -45,6 +50,8 @@ global.Page = (cfg) => { pageConfig = cfg; };
 
 beforeEach(() => {
   actorId = 42;
+  sessionRevision = 0;
+  authorization = 'fixture-actor-A';
   sent = [];
   storage = {};
   toasts = [];
@@ -71,6 +78,27 @@ function makePage() {
 
 const tap = (item, source) => ({ currentTarget: { dataset: { item, source } } });
 const libraryRow = { id: 7, title: '公共猜谜', imgUrl: 'https://x/p.png', advancedConfigJson: '' };
+
+function confirmAdoptionSource(begin) {
+  const source = sent.slice(begin).find(r => r.url === '/api/template/adoption-source');
+  assert.ok(source, '必须先确认当前公共来源版本');
+  source.success({ code: 200, data: {
+    originalTemplateId: source.data.originalTemplateId, sourceVersion: 'a'.repeat(64),
+  } });
+  const adopt = sent.slice(begin).find(r => r.url === '/api/template/adopt-draft');
+  assert.ok(adopt, '来源确认后才提交原采用命令');
+  const command = JSON.parse(adopt.data);
+  assert.equal(command.originalTemplateId, source.data.originalTemplateId);
+  assert.equal(command.sourceVersion, 'a'.repeat(64));
+  assert.ok(command.requestId);
+  return { adopt, command };
+}
+
+function completedAdoption(command, draftId) {
+  return { code: 200, data: { requestId: command.requestId,
+    originalTemplateId: command.originalTemplateId, sourceVersion: command.sourceVersion,
+    status: 'COMPLETED', draftId } };
+}
 
 test('终局表决采用与重进：无资源槽也保存结局章映射，模式副本提示重新选择', () => {
   const p = makePage(); p._templateSupportReason = () => '';
@@ -149,7 +177,7 @@ test('会员内容另存保留服务端原interactionType，不按validationMeth
   const { p, source } = sharedPage();
   source.interactionType = 'city_story_card';
   p.onCopyBoundTemplate();
-  sent.find(r => r.url === '/api/template/myinfo').success({ code: 200, data: source });
+  sent.find(r => r.url === '/api/template/author-myinfo').success({ code: 200, data: source });
   const payload = JSON.parse(sent.find(r => r.url === '/api/template/draft').data);
   assert.equal(payload.interactionType, source.interactionType);
   assert.equal(payload.advancedConfigJson, source.advancedConfigJson);
@@ -449,20 +477,38 @@ test('公共库回包绑定账号、经营scope和页面代次，旧读取不能
 test('采用已确认但个人详情未回读时重复确认不创建第二份草稿', () => {
   const p = makePage(); p.data.nodesForm = { _localId: 'original', name: '', templateId: 0 };
   p.selectTemp(tap(libraryRow, 'public')); p.confirmTemp();
-  sent.find(r => r.url === '/api/template/adopt-draft').success({ code: 200, data: 9001 });
+  const { adopt, command } = confirmAdoptionSource(0);
+  const receipt = completedAdoption(command, '9001');
+  adopt.success(receipt);
+  const firstDetail = sent.find(r => r.url === '/api/template/adoption-detail');
+  assert.equal(firstDetail.data.requestId, command.requestId);
+  assert.equal(p.data.nodesForm.templateId, 0, '详情未确认时保留原绑定');
   p.confirmTemp();
   assert.equal(sent.filter(r => r.url === '/api/template/adopt-draft').length, 1);
-  sent.find(r => r.url === '/api/template/myinfo').success({ code: 200,
+  assert.equal(sent.filter(r => r.url === '/api/template/adoption-detail').length, 1);
+  firstDetail.fail({});
+  p.confirmTemp();
+  const recovery = sent.find(r => r.url === '/api/template/adoption-receipt');
+  assert.equal(recovery.data.requestId, command.requestId, '失败后只查询原采用身份');
+  recovery.success(receipt);
+  const detail = sent.filter(r => r.url === '/api/template/adoption-detail').at(-1);
+  assert.equal(detail.data.requestId, command.requestId);
+  detail.success({ code: 200,
     data: { id: 9001, title: '原内容采用稿', advancedConfigJson: '{}' } });
   assert.equal(p.data.nodesForm.templateId, 9001);
+  assert.equal(sent.filter(r => r.url === '/api/template/adopt-draft').length, 1);
+  assert.equal(sent.filter(r => r.url === '/api/template/adoption-source').length, 1);
 });
 
 test('公共采用写回迟到时换节点不触发个人详情或把新节点绑定成旧内容', () => {
   const p = makePage(); p.data.nodesForm = { _localId: 'original', name: '', templateId: 0 };
   p.selectTemp(tap(libraryRow, 'public')); p.confirmTemp();
+  const { adopt, command } = confirmAdoptionSource(0);
   p.data.nodesForm = { _localId: 'next', name: '新节点', templateId: 66 };
-  sent.find(r => r.url === '/api/template/adopt-draft').success({ code: 200, data: 9001 });
+  adopt.success(completedAdoption(command, '9001'));
   assert.equal(sent.some(r => r.url === '/api/template/myinfo'), false);
+  assert.equal(sent.some(r => r.url === '/api/template/author-myinfo'), false);
+  assert.equal(sent.some(r => r.url === '/api/template/adoption-detail'), false);
   assert.equal(p.data.nodesForm.templateId, 66);
   assert.equal(sent.filter(r => r.url === '/api/template/adopt-draft').length, 1);
 });
@@ -476,15 +522,18 @@ test('个人采用详情回读绑定原节点、账号、主题、scope及页面
     p => { p._loginContinuationEpoch = (p._loginContinuationEpoch || 0) + 1; },
     p => { p._unloaded = true; },
   ]) {
-    actorId = 42; const begin = sent.length;
+    actorId = 42; storage = {}; const begin = sent.length;
     const p = makePage(); p.data.nodesForm = { _localId: 'original', templateId: 0, name: '' };
     p.selectTemp(tap(libraryRow, 'public')); p.confirmTemp();
-    sent.slice(begin).find(r => r.url === '/api/template/adopt-draft').success({ code: 200, data: 9001 });
-    const detail = sent.slice(begin).find(r => r.url === '/api/template/myinfo');
-    assert.equal(detail.data.id, 9001);
+    const { adopt, command } = confirmAdoptionSource(begin);
+    adopt.success(completedAdoption(command, '9001'));
+    const detail = sent.slice(begin).find(r => r.url === '/api/template/adoption-detail');
+    assert.equal(detail.data.requestId, command.requestId);
+    assert.equal(storage['author:template-adoption:v1:42::7'].draftId, '9001');
     mutate(p); const expected = p.data.nodesForm.templateId;
     detail.success({ code: 200, data: { id: 9001, title: '旧内容', advancedConfigJson: '{}' } });
     assert.equal(p.data.nodesForm.templateId, expected);
+    assert.equal(storage['author:template-adoption:v1:42::7'].draftId, '9001', '迟到详情不清理原已确认采用身份');
     assert.equal(sent.slice(begin).filter(r => r.url === '/api/template/adopt-draft').length, 1);
   }
 });
@@ -497,7 +546,7 @@ test('我的模板补读也受原节点和账号围栏，不仅比较选中模�
     actorId = 42; const begin = sent.length;
     const p = makePage(); p.data.nodesForm = { _localId: 'original', templateId: 0, name: '' };
     p.selectTemp(tap({ id: 31, title: '我的模板' }, 'mine')); p.confirmTemp();
-    const detail = sent.slice(begin).find(r => r.url === '/api/template/myinfo');
+    const detail = sent.slice(begin).find(r => r.url === '/api/template/author-myinfo');
     mutate(p); const expected = p.data.nodesForm.templateId;
     detail.success({ code: 200, data: { id: 31, title: '旧内容', advancedConfigJson: '{}' } });
     assert.equal(p.data.nodesForm.templateId, expected);
@@ -514,7 +563,7 @@ test('换节点后可重读同一个个人模板，旧回包不清掉新读的si
   assert.notEqual(fresh, old, '同ID但不同节点不是同一次读取');
   old.success({ code: 200, data: { id: 31, title: '旧节点回读', advancedConfigJson: '{}' } });
   assert.equal(p.data.nodesForm.templateId, 0);
-  assert.equal(p._loadingSelectedTemplate, 31);
+  assert.equal(p._loadingSelectedTemplate, '31', 'singleflight保留精确的十进制原ID');
   fresh.success({ code: 200, data: { id: 31, title: '新节点回读', advancedConfigJson: '{}' } });
   assert.equal(p.data.nodesForm.templateId, 31);
   assert.equal(p.data.nodesForm.templateInfo.title, '新节点回读');
@@ -531,12 +580,100 @@ test('同一节点新建现成玩法的EventChannel可跨编辑器导航返回�
       wx.navigateTo = options => { opened = options; };
       p.onCreateGame({ currentTarget: { dataset: {} } });
       assert.ok(opened.url.startsWith('/pages/publish/temp/index?from=fabu'));
-      p._loginContinuationEpoch = (p._loginContinuationEpoch || 0) + 1; // 正常打开子编辑器会hide
+      p.onHide(); // 使用真实生命周期，子编辑器会在父页仍隐藏时发回事件
       if (changed) p.data.nodesForm = { _localId: 'other', templateId: 66, name: '' };
       opened.events.templateCreated({ id: 9091, title: '既有编辑器新内容', advancedConfigJson: '{}' });
+      assert.equal(p.data.nodesForm.templateId, changed ? 66 : 9091);
+      p.onShow();
       assert.equal(p.data.nodesForm.templateId, changed ? 66 : 9091);
       opened.complete();
       assert.equal(p._navigating, false);
     }
+  } finally { wx.navigateTo = navigate; }
+});
+
+test('公共采用与原绑定编辑全程保留超过安全整数的来源和会员草稿字符串ID', () => {
+  const sourceId = '9007199254740993', draftId = '9007199254740995';
+  const p = makePage(); p.data.nodesForm = { _localId: 'original', templateId: 0, name: '' };
+  p.selectTemp(tap({ ...libraryRow, id: sourceId }, 'public')); p.confirmTemp();
+  const { adopt, command } = confirmAdoptionSource(0);
+  assert.equal(command.originalTemplateId, sourceId);
+  adopt.success(completedAdoption(command, draftId));
+  const detail = sent.find(r => r.url === '/api/template/adoption-detail');
+  assert.equal(detail.data.requestId, command.requestId);
+  detail.success({ code: 200, data: { id: draftId, title: '原内容', advancedConfigJson: '{}' } });
+  assert.equal(p.data.nodesForm.templateId, draftId);
+  assert.equal(p.data.nodesForm.templateInfo.id, draftId);
+  assert.equal(storage['author:template-adoption:v1:42::' + sourceId], undefined);
+  let opened;
+  const navigate = wx.navigateTo;
+  try {
+    wx.navigateTo = options => { opened = options; };
+    p.onEditBoundTemplate();
+    assert.ok(opened.url.includes('&id=' + draftId + '&scope=my'));
+    assert.equal(p._editingBoundTemplateId, draftId);
+    p.data.popChapterNodes = true;
+    p.onHide(); p.onShow();
+    const originalRead = sent.filter(r => r.url === '/api/template/author-myinfo').at(-1);
+    assert.equal(originalRead.data.id, draftId);
+    originalRead.success({ code: 200, data: { id: draftId, title: '原稿修改', advancedConfigJson: '{}' } });
+    assert.equal(p.data.nodesForm.templateId, draftId, '返回编辑只刷新同一个会员原稿');
+    assert.equal(p.data.nodesForm.templateInfo.title, '原稿修改');
+    assert.equal(sent.filter(r => r.url === '/api/template/adopt-draft').length, 1);
+    assert.equal(sent.some(r => r.url === '/api/template/draft'), false);
+  } finally { wx.navigateTo = navigate; }
+});
+
+test('编辑器导航回传仍拒绝账号ABA、会话变更和原节点主题scope代次失配', () => {
+  const navigate = wx.navigateTo;
+  try {
+    for (const mutate of [
+      () => { actorId = 43; },
+      () => { actorId = 43; sessionRevision++; actorId = 42; sessionRevision++; },
+      () => { authorization = 'fixture-actor-B'; },
+      p => { p.data.nodesForm = { _localId: 'other', templateId: 66 }; },
+      p => { p.data.nodesForm._localId = 'other'; },
+      p => { p.data.editingTopicId = 'other-topic'; },
+      p => { p.data.operationScope = 'MERCHANT'; },
+      p => { p.data.draftUuid = 'other-draft'; },
+      p => { p._editLoadToken = (p._editLoadToken || 0) + 1; },
+      p => { p._nodeTemplateLoadToken = (p._nodeTemplateLoadToken || 0) + 1; },
+      p => { p.onUnload(); },
+      p => { p.onShow(); p.onHide(); },
+    ]) {
+      actorId = 42; authorization = 'fixture-actor-A';
+      const begin = sent.length;
+      const p = makePage(); p.data.nodesForm = { _localId: 'original', templateId: 0, name: '' };
+      p._nodeSupportContext = () => ({});
+      let opened;
+      wx.navigateTo = options => { opened = options; };
+      p.onCreateGame({ currentTarget: { dataset: {} } }); p.onHide();
+      mutate(p); const expected = p.data.nodesForm.templateId;
+      opened.events.templateCreated({ id: '9007199254740993', title: '迟到内容', advancedConfigJson: '{}' });
+      assert.equal(p.data.nodesForm.templateId, expected);
+      assert.equal(p.data.nodesForm.templateInfo, undefined);
+      assert.equal(sent.length, begin, '被拒回传不补读、不采用、不写新草稿');
+      opened.complete(); assert.equal(p._navigating, false);
+    }
+  } finally { wx.navigateTo = navigate; }
+});
+
+test('编辑器EventChannel保留精确高位ID并拒绝已丢精度的数值身份', () => {
+  const navigate = wx.navigateTo;
+  try {
+    const p = makePage(); p.data.nodesForm = { _localId: 'original', templateId: 0, name: '' };
+    p._nodeSupportContext = () => ({});
+    let opened;
+    wx.navigateTo = options => { opened = options; };
+    p.onCreateGame({ currentTarget: { dataset: {} } }); p.onHide();
+    opened.events.templateCreated({ id: 9007199254740992, title: '不精确ID', advancedConfigJson: '{}' });
+    assert.equal(p.data.nodesForm.templateId, 0);
+    const originalId = '9007199254740993';
+    opened.events.templateCreated({ id: originalId, title: '精确原稿', advancedConfigJson: '{}' });
+    assert.equal(p.data.nodesForm.templateId, originalId);
+    assert.equal(p.data.nodesForm.templateInfo.id, originalId);
+    p.onShow(); assert.equal(p.data.nodesForm.templateId, originalId);
+    assert.equal(sent.length, 0, 'EventChannel原稿绑定不重新采用或另存');
+    opened.complete();
   } finally { wx.navigateTo = navigate; }
 });

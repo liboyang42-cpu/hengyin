@@ -8284,12 +8284,24 @@ Page({
    * 结果不确定(超时/断网)时不自动重发,避免重复建草稿;请作者去「我的玩法」查回。
    */
   // 复用原节点对象/身份与选择代次；编辑器导航可正常返回，换节点/主题/账号不能接旧结果。
-  _nodeTemplateTargetCurrent() {
+  _nodeTemplateTargetCurrent(editorReturn = false) {
     const node = this.data.nodesForm, key = templateBinding.nodeKey(node);
     const owner = memberId(app), scope = this.data.operationScope, topicId = this.data.editingTopicId;
-    const token = this._nodeTemplateLoadToken, epoch = this._loginContinuationEpoch;
-    return () => !this._hidden && !this._unloaded && epoch === this._loginContinuationEpoch
+    const token = this._nodeTemplateLoadToken, epoch = this._loginContinuationEpoch || 0;
+    const draftUuid = this.data.draftUuid, editToken = this._editLoadToken;
+    const authorization = typeof app.getAuthorization === 'function' ? app.getAuthorization() : '';
+    const session = typeof app.getSession === 'function' ? app.getSession() : null;
+    const revision = session && typeof session.getRevision === 'function' ? session.getRevision() : null;
+    // A child editor emits before navigateBack, while its opener is hidden. Only that explicitly
+    // captured navigation may cross one hide; ordinary author reads still require the original epoch.
+    return () => !this._unloaded && (editorReturn || !this._hidden)
+      && ((this._loginContinuationEpoch || 0) === epoch
+        || editorReturn && (this._loginContinuationEpoch || 0) === epoch + 1)
       && owner === memberId(app) && scope === this.data.operationScope
+      && authorization === (typeof app.getAuthorization === 'function' ? app.getAuthorization() : '')
+      && session === (typeof app.getSession === 'function' ? app.getSession() : null)
+      && (revision === null || session.getRevision() === revision)
+      && draftUuid === this.data.draftUuid && editToken === this._editLoadToken
       && topicId === this.data.editingTopicId && token === this._nodeTemplateLoadToken
       && node === this.data.nodesForm && key === templateBinding.nodeKey(this.data.nodesForm);
   },
@@ -8771,11 +8783,13 @@ Page({
     const ctx = this._nodeSupportContext();
     const reason = game && supportMatrix.choice(this.data.supportMatrix, game.key, {}, ctx);
     if (reason && !dataset.preview) { cyToast(reason); return; }
+    if (this._navigating) return;
+    this._nodeTemplateLoadToken = (this._nodeTemplateLoadToken || 0) + 1;
     const that = this;
-    const targetCurrent = this._nodeTemplateTargetCurrent();
+    const targetCurrent = this._nodeTemplateTargetCurrent(true);
     const themeName = this.data.formData.name;
     const nodeName = this.data.nodesForm.name || ('节点' + (this.data.editTargetNodeLid || ''));
-    if (this._navigating) return; this._navigating = true; wx.navigateTo({ // 跳转中不响应连点,免得叠两层玩法编辑页
+    this._navigating = true; wx.navigateTo({ // 跳转中不响应连点,免得叠两层玩法编辑页
       url: '/pages/publish/temp/index?from=fabu&themeName=' + encodeURIComponent(themeName || '')
         + '&nodeName=' + encodeURIComponent(nodeName || '') + checkContext.query(this.data.formData.journeyRules)
         + (this.data.supportMatrix ? '&supportContext=' + encodeURIComponent(JSON.stringify(ctx)) : '')
@@ -8783,7 +8797,7 @@ Page({
         + (this.data.operationScope ? '&scope=MERCHANT' : ''),
       events: {
         templateCreated(tpl) {
-          if (!targetCurrent() || !tpl || !tpl.id) return;
+          if (!targetCurrent() || !tpl || !templateAdoption.id(tpl.id)) return;
           if (that._insertAlbumTemplate(tpl)) return;
           const templateInfo = Object.assign({}, tpl, {
             title: tpl.title || '',

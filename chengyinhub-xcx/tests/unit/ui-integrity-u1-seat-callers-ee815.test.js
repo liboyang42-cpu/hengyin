@@ -92,8 +92,11 @@ function assertCallers(source, expected, scanKind) {
     const url = options.get('url');
     if (url.type === 'Literal') return url.value;
     if (url.type === 'Identifier' && url.name === 'url') {
+      const scope = nodes(source, n => /^(FunctionExpression|ArrowFunctionExpression|FunctionDeclaration)$/.test(n.type)
+        && n.start <= call.start && n.end >= call.end).sort((a, b) => (a.end - a.start) - (b.end - b.start))[0];
+      assert.ok(scope, '须核对实际调用闭包而不是别的方法同名变量');
       const declarations = nodes(source, n => n.type === 'VariableDeclarator' && n.id.name === 'url'
-        && n.init && n.init.type === 'ConditionalExpression');
+        && n.start >= scope.start && n.end <= scope.end && n.init && n.init.type === 'ConditionalExpression');
       assert.equal(declarations.length, 1);
       const values = [];
       let choice = declarations[0].init;
@@ -120,8 +123,10 @@ function assertCallers(source, expected, scanKind) {
   assert.match(source, /target \? seatRecovery\(app,\s*target,\s*seatCurrent\) : undefined/);
 }
 test('U1只保留原profile请求登记，带队与详情有限路径不保留旧豁免', () => {
-  for (const [file, line, statement] of [
-    [PROFILE, 676, 'app.sendRequest(Object.assign({}, options'],
+  const line = read(PROFILE).split('\n').findIndex(row => row.includes('return app.sendRequest(Object.assign({}, options,')) + 1;
+  assert.ok(line > 0);
+  for (const [file, statement] of [
+    [PROFILE, 'app.sendRequest(Object.assign({}, options'],
   ]) {
     const key = 'chengyinhub-xcx/' + file + ':' + line;
     assert.ok(baseline.u1Variable[key], key);

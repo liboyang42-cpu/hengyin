@@ -257,6 +257,4 @@ public interface ITopicRouteRuntimeService {
                 + String.valueOf(activityId == null ? 0L : activityId);
     }
 
-    com.fasterxml.jackson.databind.JsonNode queryNodeContentSnapshot(Long memberId, Long topicId, Long activityId, Long nodeId);
-
 }

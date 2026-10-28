@@ -188,12 +188,41 @@ for (const [file, name, reason] of WRITE_ENTRIES) {
     const head = new RegExp('^ {2,4}' + name + '(?:\\s*:\\s*function\\s*)?\\s*\\(([^)]*)\\)\\s*\\{[ \\t]*\\n([^\\n]*)\\n', 'm');
     const m = src.match(head);
     assert.ok(m, file + ' 找不到 ' + name);
-    assert.match(m[2], new RegExp("if \\(app\\.ensureLoginFor && !app\\.ensureLoginFor\\('" + reason + "', \\(\\) => this\\." + name + '\\('),
-      name + ' 第一行必须是写前登录闸,登录后恢复的是同一个函数');
-    assert.match(m[2], /owner: this, target: \(\) => \[/, name + ' 必须声明原页面/组件和稳定业务身份');
+    let admission = m[2];
+    if (file === 'pages/square/components/cy/post-compose/index.js') {
+      assert.equal(admission.trim(), 'if (this._disposed || !this._composeVisible) return;',
+        '只允许这个原纯生命周期拒绝先于登录，不能移到登录后或执行其它效果');
+      const start = m.index + m[0].length;
+      const end = src.indexOf('      const that = this;', start);
+      assert.ok(end > start);
+      admission = src.slice(start, end).trim();
+      assert.match(admission, /^if \(app\.ensureLoginFor/);
+      assert.match(admission, /\}\)\) return;\s*(?:\/\/[^\n]*)?$/);
+    }
+    assert.match(admission, new RegExp("if \\(app\\.ensureLoginFor && !app\\.ensureLoginFor\\('" + reason + "', \\(\\) => this\\." + name + '\\('),
+      name + ' 首个有副作用步骤必须是写前登录闸，恢复同一个函数');
+    assert.match(admission, /owner:\s*this,\s*target:\s*\(\)\s*=>\s*\[/,
+      name + ' 必须声明原页面/组件和稳定业务身份');
   });
 }
 
+
+test('原发帖组件已离页/隐藏时不登录不dispatch，合法可见入口先登录', () => {
+  const source = read('pages/square/components/cy/post-compose/index.js');
+  const start = source.indexOf('    onPublish() {');
+  const end = source.indexOf('\n    },', start);
+  assert.ok(start >= 0 && end > start);
+  let login = 0;
+  const app = { ensureLoginFor(reason, resume, context) {
+    login++; assert.equal(reason, 'post'); assert.equal(typeof resume, 'function');
+    assert.equal(context.owner, page); return false;
+  } };
+  const page = new Function('app', 'return ({' + source.slice(start, end + 7) + '});')(app);
+  for (const state of [{ _disposed: true, _composeVisible: true }, { _disposed: false, _composeVisible: false }]) {
+    Object.assign(page, state); page.onPublish(); assert.equal(login, 0);
+  }
+  Object.assign(page, { _disposed: false, _composeVisible: true }); page.onPublish(); assert.equal(login, 1);
+});
 test('C 工具层写入口:举报 run() 与建队 createActivityTeam 也先过闸', () => {
   assert.match(read('utils/content-report.js'), /app\.ensureLoginFor && !app\.ensureLoginFor\('report', function \(\) \{ run\(page, app, id, submit\); \}, \{ owner: page, target: \(\) => \[id, page\.data && page\.data\.id, page\.data && page\.data\.clubId\] \}\)\) return false;/);
   assert.match(read('subpackageMember/utils/team-up.js'), /app\.ensureLoginFor && !app\.ensureLoginFor\('team', \(\) => createActivityTeam\(app, activityId, maxMembers, joinMode, callbacks\), callbacks && callbacks\.loginContext\)\) return/);
@@ -288,13 +317,28 @@ function continuationFixture() {
   let definition, finishLogin;
   vm.runInNewContext(read('pages/team/join/index.js'), {
     Page: page => { definition = page; }, getApp: () => h.app,
-    require: id => { assert.equal(id, '../../../utils/toast.js'); return () => {}; },
+    require: id => {
+      if (id === '../../../utils/toast.js') return () => {};
+      assert.ok(['../../../utils/user-character.js', '../../../utils/team-event-command.js'].includes(id), id);
+      return require(path.resolve(root, 'pages/team/join', id));
+    },
     getCurrentPages: () => h.pages, wx: h.wx, setTimeout: () => 0,
   });
   const page = Object.assign({}, definition, { route: 'pages/team/join/index', inviteCode: 'original-invite' });
   page.data = JSON.parse(JSON.stringify(definition.data));
   page.setData = patch => Object.assign(page.data, patch);
   h.pages.splice(0, h.pages.length, page);
+  // 复用当前 Page 的公开邀请读取和真实持久 command owner，不再模拟已撤的裸 /team/join。
+  h.wx.getRandomValues = options => options.success({ randomValues: new Uint8Array(16).fill(17).buffer });
+  const request = h.wx.request;
+  h.wx.request = options => {
+    const task = request(options);
+    if (options.url.endsWith('/api/team/info')) options.success({ statusCode: 200,
+      data: { code: 200, data: { team: { id: '31' }, joined: false } } });
+    return task;
+  };
+  page.onLoad({ code: 'original-invite' });
+  assert.equal(page.teamId, '31');
   h.app._loginGuard = guard.createRequireLogin({ getApp: () => h.app, getPages: () => h.pages,
     show: options => modals.push(options) });
   const manager = createSessionManager({ session: h.app.getSession(), wxLogin: () => Promise.resolve({ code: 'controlled-code' }),
@@ -306,7 +350,8 @@ function continuationFixture() {
   });
   return Object.assign(h, { page, modals, finish: () => finishLogin(),
     confirm: async () => { modals[0].success({ confirm: true }); await settle(); },
-    writes: () => h.requests.filter(request => request.url.endsWith('/api/team/join')) });
+    writes: () => h.requests.filter(request => request.url.endsWith('/api/team/command')
+      && JSON.parse(request.data).action === 'join') });
 }
 
 test('H continuation: login in flight then leaving the original Page must not join', async () => {
@@ -328,6 +373,11 @@ test('H continuation: same live Page and original invite continue exactly once',
   await h.confirm(); h.finish(); await settle();
   assert.equal(h.writes().length, 1);
   assert.equal(JSON.parse(h.writes()[0].data).inviteCode, 'original-invite');
+  assert.equal(JSON.parse(h.writes()[0].data).targetId, '31');
+  const command = JSON.parse(h.writes()[0].data);
+  const pending = [...h.storage.values()].find(row => row && row.command && row.command.requestId === command.requestId);
+  assert.ok(pending); assert.equal(pending.actor, '7');
+  assert.deepEqual(pending.command, command);
 });
 
 test('H continuation: hide then return and a different instance of the same route cannot revive the old join', async () => {
@@ -382,7 +432,7 @@ test('H continuation: real login attempt rejects guest-account ABA before the ex
 
 test('H continuation: a fresh explicit click after hiding can use its own live context', async () => {
   const h = continuationFixture(); h.page.join(); await h.confirm();
-  h.page.onHide(); h.page.join(); h.finish(); await settle();
+  h.page.onHide(); h.page.onShow(); h.page.join(); h.finish(); await settle();
   assert.equal(h.writes().length, 1, 'only the new explicit action may continue');
   assert.equal(JSON.parse(h.writes()[0].data).inviteCode, 'original-invite');
 });

@@ -58,7 +58,7 @@ function setByPath(target, path, value) {
   cursor[parts[parts.length - 1]] = value
 }
 
-function loadPage(modulePath) {
+function loadPage(modulePath, { prebound = true } = {}) {
   delete require.cache[require.resolve('../../pages/play/utils/play-route-state.js')]
   delete require.cache[require.resolve(modulePath)]
   require(modulePath)
@@ -70,7 +70,7 @@ function loadPage(modulePath) {
     if (callback) callback()
   }
   // 此组测试从“动作上下文已预检完成”开始；预检与切号由 architecture-day-c-intent 覆盖。
-  if (modulePath === PLAY_PAGE) {
+  if (modulePath === PLAY_PAGE && prebound) {
     const payload = page._routeWritePayload
     page._routeWritePayload = function (kind, nodeId, input) {
       const body = payload.call(this, kind, nodeId, input)
@@ -243,7 +243,7 @@ test('一次性打卡码已用过时展示服务端文案，不塌成对不上�
 test('5-3 注入③:/api/play/checkin 返回 500 时玩家看到明确错误', async () => {
   const toasts = []
   global.wx.showToast = (value) => { toasts.push(value) }
-  const page = loadPage(PLAY_PAGE)
+  const page = loadPage(PLAY_PAGE, { prebound: false })
 
   page.checkin(7, 'SHOP-CODE')
   assert.equal(requests.length, 1)
@@ -563,7 +563,7 @@ test('章节回执读失败仍保留原身份，重试查到终态才能解锁',
 })
 
 test('不相关节点的成功响应不能清除另一类待确认写锁', async () => {
-  const page = loadPage(PLAY_PAGE)
+  const page = loadPage(PLAY_PAGE, { prebound: false })
   page.data.nodes = [
     { nodeId: 7, points: 12 },
     { nodeId: 8, points: 12 },
@@ -578,18 +578,20 @@ test('不相关节点的成功响应不能清除另一类待确认写锁', async
   page.buildJournal = () => {}
 
   page.submitGame()
-  requests[0].successStatusAbnormal({ code: 500, msg: 'gateway timeout' })
+  await bindOriginalRun(0)
+  requests[1].successStatusAbnormal({ code: 500, msg: 'gateway timeout' })
   await new Promise((resolve) => setImmediate(resolve))
   assert.equal(page.data.gWriteUnknown, true)
 
   page.arrive(8, 'gps')
-  await bindOriginalRun(1)
-  requests[2].success({ code: 200, intentTerminal: true, data: {} })
+  await bindOriginalRun(2)
+  requests[3].success({ code: 200, intentTerminal: true, data: {} })
   await new Promise((resolve) => setImmediate(resolve))
   assert.equal(page.data.gWriteUnknown, true)
 
   page.submitGame()
-  assert.equal(requests.length, 3)
+  assert.equal(requests.length, 4)
+  assert.equal(requests.filter(row => row.method === 'POST').length, 2)
 })
 
 test('广场发帖 HTTP 异常后不能再次创建无幂等保护的公开帖子', async () => {

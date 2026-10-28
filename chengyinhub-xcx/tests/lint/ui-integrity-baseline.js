@@ -293,7 +293,7 @@ module.exports = {
     // 2026-09-19 批复1-a=2:pricing/partner 页按用户裁决复活(B-06 曾整页退役),其两条存量零消费
     //   字段 toType/toId 先随页回账(149→151),随即在同批复落地时还清——index.js 三处读改回显式
     //   this.data.toType/toId,门禁实测不再命中。两条登记出账,棘轮回 149,digest 复算。
-    "u4Field": 121,
+    "u4Field": 114,
       // 2026-08-26 圈层主题接回主题货架:新增 circleTheme import,两条 _coverFail 动态 setData
       //   等量下移(269→270 / 281→282,行号取门禁实测)。调用点与强化理由不变,显式改 digest。
     // 2026-08-27 合并 #883:activity/list 三条 U4-DYNAMIC 登记行号 +2(129→131/151→153/231→233,
@@ -439,7 +439,7 @@ module.exports = {
       // 受控路由、理由及 10 条登记保持，digest 仅随行号更新。
       // 2026-10-11 登录隔离及正常失败状态兼容：App consent wrapper 329→343，同一调用及理由，数量仍11。
       // 2026-10-14 W5尾项:profile 544→559/870→885、参与详情 176→177 仅行号下移，同一调用及理由，数量仍11。
-      "u1Variable": "5355079effbb04369592177b1817e01345e1812d7671c95c9d13c3fabe88771f",
+      "u1Variable": "5c64534f654f08234d2c2fe34cadd30d9d6a745af3fee2eb6700fb470fbdb9fa",
       // 2026-08-25 816 并入:key 集合按上面的逐条核对结果变化,digest 显式更新。
       "u3Debt": // 2026-09-09 一枚圆钮:roam#onCenterHoldStart / onCenterHoldEnd 两笔零绑定债务已还
       //   —— 长按 3 秒结束的逻辑接到了主键的 touchstart/touchend 上。99→97,digest 显式更新。
@@ -460,7 +460,7 @@ module.exports = {
       // 参数留存 URL 但页面不再落 data),两条存量债直接出账,149 键集实算复挖。
       // 2026-09-19 批复1-a=2 还清:partner#toType/toId 两条随页复活短暂回账(151 键)后当场还债出账,
       //   key 集回到退役前那份 149,digest 按当前 key 集合实算。
-"u4Debt": "d8ea150c9aa89628073507c832b720c6a235cef84a4307982b6461a06f0a7000",
+"u4Debt": "58d96682b3c4b8573643eaa5be0e71fd73ccb3526880da62e8602fff8dbe596a",
       // 2026-08-17 漫游 S1 施工:条数不变(65),只是 pages/roam/index.js 的两处
       //   `...this._calcArch()` 动态 setData 行号从 3263/3305 移到 3261/3303
       //   (删掉 _apiCheckin 与 /api/play/arrive 那段后整段上移)。
@@ -858,7 +858,7 @@ module.exports = {
 // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):45 个既有锚点仅行号位移换 key + 本线 6 处新增登记,digest 按门禁同一算法(sha256 of sorted keys joined by \n)重算。
 // 2026-10-20 合并 master(#327 等)进 #293:两侧重锚逐条按合并后源码同一行文本定位一致(fabu 12 条、merchantinfo 2 条、scene-club-edit 1 条),square/list 196/1259 随 #325 点赞修复后移一行;digest 按门禁同一算法重算。
 // 2026-10-27 devfix L07(21 处动态 setData 仅行号位移):逐条以 master 原行与新行逐字比对一致,理由一字未改,digest 按门禁同算法重算。
-"b7817af1dcbe17a2b895e1ea54768e0a680188a80fc84911de383c635b7a60c5",
+"e9de83c472f08323c0c64741a50ee72c14ad248e4c2db2af1936662410105064",
 // 2026-10-28 模板页货架改版(#652)合 master(#610):本线删 template/index 两条 + master play 1621→1624 重锚，合并树 60 条，digest 按同一算法重算。
 // 2026-10-20 R5 尾段(#327,owner 批准 12 条重锚):fabu 729→731、898→900、2524→2530、3570→3588、3951→3969、4957→4990、5215→5248、5866→5899、5876→5909、5929→5962、6270→6303、7936→8060,逐行比对 master 原行一字未改,理由与条数 58 不变;digest 按同一算法显式重算。
       // 2026-08-20 开卡包四拍动效:u5Silent 条数不变(12),只是 play/index.js 的调用点
@@ -1343,7 +1343,7 @@ module.exports = {
     "chengyinhub-xcx/pages/publish/fabu/index.js:6370": "summaryPatch 只由本方法逐项追加 chapterStates/chapterActionLabels/creationAnchor/starterAction/pendingMaterialStates/topicDetailSummary 六个固定派生字段，用于避免无变化 setData，不接收外部键；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/pages/publish/fabu/index.js:6380": "patch 最多只含经本页校验袋计算出的 canPublish 一个固定字段，用于值变化时才写入；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/pages/publish/fabu/index.js:6433": "校验定位 patch 只可能含 secCollapsed.ticket、showTicketEditor、editingTicket 三个固定键；错误 key 仅决定是否进入 ticket 分支和定位下标，不参与字段名拼接；owner=小程序，复核=2026-09-30",
-    "chengyinhub-xcx/pages/publish/fabu/index.js:9054": "地图重绘 patch 固定含 mapMarkers/mapPolyline/mapInclude/hasRoute，未选节点时只追加 mapCenter；节点数据只作为值参与计算。X05 后 patch 由 utils/publish/route-map-view.js 的纯函数算好交回，键集合由该模块单测钉住（publish-route-map-view.test.js）；owner=小程序，复核=2026-09-30",
+    "chengyinhub-xcx/pages/publish/fabu/index.js:9068": "地图重绘 patch 固定含 mapMarkers/mapPolyline/mapInclude/hasRoute，未选节点时只追加 mapCenter；节点数据只作为值参与计算。X05 后 patch 由 utils/publish/route-map-view.js 的纯函数算好交回，键集合由该模块单测钉住（publish-route-map-view.test.js）；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/pages/publish/temp/index.js:1476": "listName 的当前调用点只枚举 difficultyOptions 固定列表名（R5已移除人数/时长选择器），接口结果先验证为记录数组后才写标签数组，不允许请求数据决定字段名；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/pages/publish/temp/index.js:1477": "listName + Data 与上一条共享同一有限调用集，当前只落 difficultyOptionsData 固定字段（R5已移除人数/时长选择器）；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/pages/publish/temp/index.js:1520": "_setFormState 是本页私有写入入口，全部调用点传本文件构造的字段 patch（高级玩法动态路径也来自 WXML 固定 section/field），函数只克隆该 patch 并追加固定 submitError，不展开后端对象键；owner=小程序，复核=2026-09-30",

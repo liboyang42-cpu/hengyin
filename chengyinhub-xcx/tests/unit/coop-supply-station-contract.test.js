@@ -4,21 +4,27 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('../helpers/ui-sandbox-vm.js');
+const { afterEach } = require('node:test');
 const view = require('../../utils/coop-invite-view.js');
 const ROOT = path.resolve(__dirname, '../..');
 const CREATE = 'pages/coop/invite/index.js';
 const DETAIL = 'pages/coop/invite-detail/index.js';
 const LIST = 'pages/coop/list/index.js';
 const plain = value => JSON.parse(JSON.stringify(value));
+const fixtures = [];
+afterEach(() => { for (const page of fixtures.splice(0)) if (page.onUnload) page.onUnload(); });
 
-function pageFixture(file) {
+function pageFixture(file, fixtureOptions = {}) {
   let definition;
-  const requests = [], modals = [], tips = [];
+  const requests = [], modals = [], tips = [], storage = fixtureOptions.storage || new Map();
   const app = { globalData: { statusBarHeight: 20, navBarHeight: 44 }, _owner: '7',
     getUserID() { return this._owner; }, getUserRole() { return 'merchant'; }, getUserType() { return 2; },
+    getAuthorization() { return 'Bearer station-fixture'; },
     sendRequest(options) { requests.push(options); },
   };
-  const wx = { getStorageSync() { return ''; }, showToast(options) { tips.push(options.title); },
+  const wx = { getStorageSync(key) { return storage.has(key) ? plain(storage.get(key)) : ''; },
+    setStorageSync(key, value) { storage.set(key, plain(value)); }, removeStorageSync(key) { storage.delete(key); },
+    showToast(options) { tips.push(options.title); },
     showModal(options) { modals.push(options); }, stopPullDownRefresh() {},
     setNavigationBarColor() {}, showLoading() {}, hideLoading() {}, };
   const emptyPorts = new Set(['merchant-theme.js', 'identity-policy.js', 'checkout-workflow.js',
@@ -27,6 +33,8 @@ function pageFixture(file) {
     getCurrentPages: () => [], setTimeout() { return 1; }, clearTimeout() {},
     require(id) {
       if (id.includes('coop-invite-view')) return view;
+      if (id.includes('verification-readback')) return require('../../utils/verification-readback.js');
+      if (id.includes('coop-invite-request')) return require('../../utils/coop-invite-request.js');
       if (id.includes('response-shape')) return require('../../utils/response-shape.js');
       if (id.includes('datetime')) return require('../../utils/datetime.js');
       if (id.includes('subscribe')) return { request: () => Promise.resolve({ status: 'accepted' }) };
@@ -36,16 +44,17 @@ function pageFixture(file) {
   };
   vm.runInNewContext(fs.readFileSync(path.join(ROOT, file), 'utf8'), sandbox, { filename: file });
   const page = Object.assign({}, definition); page.data = plain(definition.data);
+  fixtures.push(page);
   page.setData = function (patch) { for (const [key, value] of Object.entries(patch)) {
     const parts = key.split('.'); let current = this.data;
     for (const part of parts.slice(0, -1)) current = current[part];
     current[parts[parts.length - 1]] = value;
   } };
-  return { page, app, requests, modals, tips, writes: () => requests.filter(r => r.url === '/api/coop/invite' || r.url === '/api/coop/handle') };
+  return { page, app, requests, modals, tips, storage, writes: () => requests.filter(r => r.url === '/api/coop/invite' || r.url === '/api/coop/handle') };
 }
 const byUrl = (f, url) => f.requests.filter(r => r.url === url);
-function creation(productType = 1) {
-  const f = pageFixture(CREATE);
+function creation(productType = 1, fixtureOptions = {}) {
+  const f = pageFixture(CREATE, fixtureOptions);
   f.page.onLoad({ type: '0', topicId: '9', toId: '11', toName: '原商家' });
   const metadata = byUrl(f, '/api/topic/list')[0];
   assert.ok(metadata); metadata.success({ code: 200, data: { rows: [{ id: '9', name: '原主题', productType }], total: 1 } });
@@ -75,6 +84,7 @@ test('creation binds the scoped GET and requires an explicit choice; sends the a
   choose(f); f.page.sendInvite(); assert.equal(f.page.data.inviteModal.show, true);
   f.page.confirmInvite(); f.page.confirmInvite(); assert.equal(f.writes().length, 1);
   const command = JSON.parse(f.writes()[0].data);
+  assert.match(command.requestId, /^[A-Za-z0-9_-]{1,64}$/);
   assert.equal(command.supplyStationId, '102'); assert.equal(command.topicId, '9'); assert.equal(command.toId, '11');
   assert.equal(command.shareMode, 0); assert.equal(command.inviteType, 0);
   for (const field of ['nodeId', 'expectedVersion', 'termsHash', 'intentId']) assert.equal(Object.hasOwn(command, field), false);
@@ -95,13 +105,26 @@ test('a changed local target or station invalidates the confirmation instead of 
 });
 test('an in-flight or unknown creation retains its original station across hide/show and never retries', () => {
   const f = creation(); stations(f, options); choose(f); f.page.sendInvite(); f.page.confirmInvite();
-  const original = f.writes()[0]; f.page.onHide(); f.page.onShow();
+  const original = f.writes()[0], command = JSON.parse(original.data);
+  assert.equal(f.page.data.selected[0].supplyStationId, '102');
+  assert.equal(f.page.data.submitting, true, '原活跃请求仍保持单飞 busy');
+  f.page.onHide(); f.page.onShow();
   f.page.retrySupplyStations(); f.page.retrySupplyTopic(); choose(f, 0);
-  original.fail({ errMsg: 'request:fail timeout' }); original.complete();
+  original.fail({ errMsg: 'request:fail timeout' });
+  if (original.complete) original.complete();
   f.page.sendInvite(); f.page.confirmInvite();
-  assert.equal(f.writes().length, 1); assert.equal(f.page.data.selected[0].supplyStationId, '102');
-  assert.equal(JSON.parse(original.data).supplyStationId, '102'); assert.equal(f.page.data.submitting, true);
+  assert.equal(f.writes().length, 1);
+  const key = require('../../utils/coop-invite-request.js').writeKey('7', command);
+  assert.equal(f.page._inviteWorkflow().pendingRequest(key).requestId, command.requestId);
+  assert.equal(f.page.data.unknownTargets[0].payload.supplyStationId, '102');
+  assert.equal(f.page.data.unknownTargets[0].key, key);
+  assert.equal(JSON.parse(original.data).supplyStationId, '102');
+  assert.equal(f.page.data.submitting, false, '旧内存 busy 已退休，原持久待办仍占位，不能重发');
   assert.match(f.page.data.sendResult, /结果待确认/);
+  const reentered = creation(1, { storage: f.storage }); stations(reentered, options); choose(reentered);
+  reentered.page.sendInvite(); reentered.page.confirmInvite();
+  assert.equal(reentered.writes().length, 0, '原请求跨实例仍占位，不靠旧内存 busy 假装防重');
+  assert.equal(reentered.page._inviteWorkflow().pendingRequest(key).requestId, command.requestId);
 });
 test('late station reads cannot attach to a different topic, account, selection or page lifetime', () => {
   for (const change of [f => { f.page.data.topicId = '10'; }, f => { f.app._owner = '8'; },

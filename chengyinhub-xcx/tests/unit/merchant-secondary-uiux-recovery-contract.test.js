@@ -6,6 +6,23 @@ const fs = require('node:fs')
 const path = require('node:path')
 
 const ROOT = path.resolve(__dirname, '../..')
+function mountShelf() {
+  const calls = [], previous = { getApp: global.getApp, Component: global.Component }
+  let definition
+  const app = { getUserID: () => '7', getRequestErrorMessage: (res, fallback) => res && res.msg || fallback,
+    sendRequest: request => { calls.push(request) } }
+  global.getApp = () => app
+  global.Component = value => { definition = value }
+  const file = path.join(ROOT, 'pages/templatedetail/shelf/index.js')
+  try { delete require.cache[require.resolve(file)]; require(file) }
+  finally { global.getApp = previous.getApp; global.Component = previous.Component }
+  const shelf = Object.assign({}, definition.methods, { data: JSON.parse(JSON.stringify(definition.data)) })
+  for (const [key, prop] of Object.entries(definition.properties)) shelf.data[key] = prop.value
+  shelf.setData = patch => Object.assign(shelf.data, patch)
+  shelf.triggerEvent = () => {}
+  definition.lifetimes.attached.call(shelf)
+  return { shelf, definition, calls, latest: url => calls.filter(r => r.url === url).at(-1) }
+}
 let pageConfig
 let requests
 let navigations
@@ -127,9 +144,23 @@ test('我的项目刷新失败保留最后一次成功列表并显示局部恢�
 // 2026-10-28:模板页货架移进 pages/templatedetail/shelf(业主定稿原型 v21),原来挂在
 // pages/template 上的五条在新位置重钉;行为级用例见 template-shelf-redesign-20261028.test.js。
 test('模板货架刷新失败保留旧货架，错误只在从没加载成功时整块显示', () => {
-  const js = read('pages/templatedetail/shelf/index.js')
-  assert.match(js, /\} else if \(!this\.data\.topicLoaded\) \{\s*this\.setData\(\{ topicError:/)
-  assert.match(js, /if \(seq !== this\._gameSeq \|\| this\.data\.gameLoaded\) return;\s*this\.setData\(\{ gameError:/)
+  const h = mountShelf()
+  h.latest('/api/template/topic-template/list').success({ code: 200, data: [{ id: 1, name: '原主题' }] })
+  h.latest('/api/template/list').success({ code: 200, data: { rows: [{ id: 21, title: '今晚的暗号', packType: 0 }], total: 1 } })
+  const topics = h.shelf._topics, games = h.shelf._games
+  h.shelf.loadTopics(); h.shelf.loadGames()
+  h.latest('/api/template/topic-template/list').fail({ msg: '主题刷新失败' })
+  h.latest('/api/template/list').fail({ msg: '玩法刷新失败' })
+  assert.equal(h.shelf.data.topicLoaded, true); assert.equal(h.shelf.data.gameLoaded, true)
+  assert.equal(h.shelf._topics, topics); assert.equal(h.shelf._games, games)
+  assert.equal(h.shelf.data.topicError, ''); assert.equal(h.shelf.data.gameError, '')
+  const first = mountShelf()
+  first.latest('/api/template/topic-template/list').fail({ msg: '初次主题失败' })
+  first.latest('/api/template/list').fail({ msg: '初次玩法失败' })
+  assert.equal(first.shelf.data.topicLoaded, false); assert.equal(first.shelf.data.gameLoaded, false)
+  assert.equal(first.shelf.data.topicError, '初次主题失败'); assert.equal(first.shelf.data.gameError, '初次玩法失败')
+  assert.match(read('pages/templatedetail/shelf/index.wxml'), /topicError && !topicLoaded/)
+  assert.match(read('pages/templatedetail/shelf/index.wxml'), /gameError && !gameLoaded/)
   assert.doesNotMatch(read('pages/templatedetail/shelf/index.wxml'), /<cy-inline-error\b/)
 })
 
@@ -141,8 +172,22 @@ test('标签切换不发请求，因此不存在标签与货架错位的窗口',
 })
 
 test('模板货架回到页面时静默刷新两个 tab', () => {
-  const js = read('pages/templatedetail/shelf/index.js')
-  assert.match(js, /pageLifetimes: \{[\s\S]*?show\(\) \{\s*if \(this\.data\.topicLoaded\) this\.loadTopics\(\);\s*if \(this\.data\.gameLoaded\) this\.loadGames\(\);/)
+  for (const loaded of [false, true]) {
+    const h = mountShelf(), oldTopic = h.latest('/api/template/topic-template/list'), oldGame = h.latest('/api/template/list')
+    if (loaded) {
+      oldTopic.success({ code: 200, data: [{ id: 1, name: '原主题' }] })
+      oldGame.success({ code: 200, data: { rows: [{ id: 21, title: '今晚的暗号', packType: 0 }], total: 1 } })
+    }
+    h.definition.pageLifetimes.hide.call(h.shelf)
+    const before = h.calls.length
+    h.definition.pageLifetimes.show.call(h.shelf)
+    assert.deepEqual(h.calls.slice(before).map(r => r.url), ['/api/template/topic-template/list', '/api/template/list'])
+    const snapshot = JSON.stringify(h.shelf.data)
+    oldTopic.fail({ msg: '旧主题失败' }); oldGame.fail({ msg: '旧玩法失败' })
+    assert.equal(JSON.stringify(h.shelf.data), snapshot, '离页前回包不能改新刷新状态或缓存')
+    assert.notEqual(h.latest('/api/template/topic-template/list'), oldTopic)
+    assert.notEqual(h.latest('/api/template/list'), oldGame)
+  }
 })
 
 test('模板货架不用首字、字符星星或 CSS 渐变冒充图形资产，缺图给明确失败态', () => {

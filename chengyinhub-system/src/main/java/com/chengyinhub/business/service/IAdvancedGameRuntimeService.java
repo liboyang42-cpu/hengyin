@@ -51,6 +51,4 @@ public interface IAdvancedGameRuntimeService {
         return false;
     }
 
-    com.fasterxml.jackson.databind.JsonNode queryDefaultNodeContents(Long memberId, Long activityId, Long topicId);
-
 }

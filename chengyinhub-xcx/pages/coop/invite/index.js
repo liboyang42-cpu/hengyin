@@ -484,10 +484,13 @@ Page({
   },
 
   onTopicChange(e) {
-    if (this._submitting) return;
+    if (this._unloaded || this._hidden || this._dataIdentity !== identityKey()) return;
     const idx = Number(e.detail.value);
     const t = this.data.myTopics[idx];
     if (!t) return;
+    if (parseInviteId(t.id) === parseInviteId(this.data.topicId)) return;
+    // Changing the visible topic retires this page's old callbacks, not the
+    // durable original request. Returning to the topic cannot adopt its old epoch.
     this._stopInviteWrites();
     this.setData({ unknownTargets: [], topicIndex: idx, topicId: t.id, topicName: t.name, topicPick: t.short || t.name, topicClosed: !!t.closed });
     this.loadSupplyTopic(t.productType);

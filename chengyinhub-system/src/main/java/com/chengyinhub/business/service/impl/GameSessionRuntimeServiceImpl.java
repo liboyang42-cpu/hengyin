@@ -1379,6 +1379,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
     }
 
     @Override
+    @Transactional(readOnly = true)
     public com.chengyinhub.business.domain.route.TopicRouteState querySharedRouteState(Long memberId, Long topicId, Long activityId) {
         if (activityId == null || activityId <= 0) return null;
         GameSession session = runtimeMapper.selectSessionByActivity(activityId);
@@ -4910,109 +4911,6 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
 
     @Override
     @Transactional(readOnly = true)
-    public com.chengyinhub.business.domain.route.TopicRouteState querySharedRouteState(Long memberId, Long topicId, Long activityId) {
-        if (activityId == null || activityId <= 0) return null;
-        GameSession session = runtimeMapper.selectSessionByActivity(activityId);
-        if (!isSharedRoute(session)) return null;
-        if (!Objects.equals(topicId, session.getTopicId())) throw error("GAME_FORBIDDEN_SCOPE", "活动与主题不匹配");
-        CmsActivity activity = requireActivity(activityId, true);
-        PlayerScope player = requirePlayer(GameActorContext.player(memberId), activity);
-        if (persistedRunControl(session) == null) throw error("GAME_CONFIG_INVALID", "本局共享运行控制账不可用");
-        TopicRouteEngine.State state = routeOwnerState(requireRouteOwner(session, player.teamId));
-        return projectSharedRouteState(session, sessionConfig(session), state);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public JsonNode querySharedRouteSnapshot(Long memberId, Long topicId, Long activityId, Long nodeId) {
-        if (activityId == null || activityId <= 0) return null;
-        GameSession session = runtimeMapper.selectSessionByActivity(activityId);
-        if (!isSharedRoute(session)) return null;
-        if (!Objects.equals(topicId, session.getTopicId())) throw error("GAME_FORBIDDEN_SCOPE", "活动与主题不匹配");
-        CmsActivity activity = requireActivity(activityId, true);
-        PlayerScope player = requirePlayer(GameActorContext.player(memberId), activity);
-        ObjectNode control = persistedRunControl(session);
-        if (control == null) throw error("GAME_CONFIG_INVALID", "本局共享运行控制账不可用");
-        int epoch = control.path("authorityEpoch").asInt(1);
-        TopicRouteEngine.State state = routeOwnerState(requireRouteOwner(session, player.teamId));
-        ObjectNode original = (ObjectNode) sessionConfig(session).deepCopy();
-        NodeJourneySnapshot.requireContentSnapshot(original);
-        ObjectNode snapshot = original.deepCopy();
-        snapshot.put("gameSessionId", session.getId()).put("teamId", player.teamId).put("authorityEpoch", epoch);
-        snapshot.set("contentTags", objectMapper.valueToTree(state.getTags()));
-        JsonNode operation = state.getThemeRuntime().path("activeOperation");
-        java.util.Set<Long> targets = new java.util.LinkedHashSet<>();
-        if (nodeId != null) {
-            if (nodeId <= 0) throw error("GAME_BAD_REQUEST", "节点身份不可用");
-            targets.add(nodeId);
-        } else {
-            // One request captures RUN, TEAM and the original content once, not one run per node.
-            for (JsonNode quest : routeGameplay(session).path("quests"))
-                targets.add(control.path("bindings").path(quest.path("locationKey").asText())
-                        .path("nodeId").asLong(quest.path("nodeId").asLong()));
-            if (operation.isObject()) targets.add(operation.path("nodeId").asLong());
-        }
-        for (Long target : targets) {
-            if (activeChallenge(session, state, target)) continue;
-            Long source = null;
-            if (operation.isObject() && operation.path("nodeId").asLong() == target) {
-                if (operation.has("epoch") && operation.path("epoch").asInt() != epoch)
-                    throw error("GAME_STATE_CONFLICT", "原操作权威版本已变更");
-                source = operation.path("sourceNodeId").asLong();
-            } else {
-                String active = state.getThemeRuntime().path("gameplay").path("activeQuest").asText("");
-                java.util.Set<Long> candidates = new java.util.LinkedHashSet<>();
-                for (JsonNode quest : routeGameplay(session).path("quests")) {
-                    long actual = control.path("bindings").path(quest.path("locationKey").asText())
-                            .path("nodeId").asLong(quest.path("nodeId").asLong());
-                    if (actual != target) continue;
-                    candidates.add(quest.path("nodeId").asLong());
-                    if (quest.path("questKey").asText().equals(active)) source = quest.path("nodeId").asLong();
-                }
-                if (source == null && candidates.size() == 1) source = candidates.iterator().next();
-                if (source == null && candidates.size() > 1) {
-                    if (nodeId != null) throw error("GAME_ROUTE_LOCKED", "本站内容需要原任务身份");
-                    // Whole-page read omits an ambiguous physical binding; it cannot choose a future source.
-                    for (String field : Arrays.asList("nodeConfigs", "nodeAnswers", "nodeJourney"))
-                        snapshot.with(field).remove(String.valueOf(target));
-                    continue;
-                }
-            }
-            if (source != null && !Objects.equals(source, target)) {
-                if (source <= 0 || runtimeMapper.selectStation(session.getId(), target) == null)
-                    throw error("GAME_FORBIDDEN_SCOPE", "内容映射不属于本场站点");
-                for (String field : Arrays.asList("nodeConfigs", "nodeAnswers", "nodeJourney")) {
-                    JsonNode block = original.path(field).get(String.valueOf(source));
-                    if (block == null) snapshot.with(field).remove(String.valueOf(target));
-                    else snapshot.with(field).set(String.valueOf(target), block.deepCopy());
-                }
-            }
-            JsonNode content = snapshot.path("nodeAnswers").get(String.valueOf(target));
-            if (NodeJourneySnapshot.hasContent(content)
-                    && (content.path("nodePresentation").path("topicId").asLong() != topicId
-                    || content.path("nodePresentation").path("id").asLong() != (source == null ? target : source)))
-                throw error("GAME_CONFIG_INVALID", "本局内容归属不可用");
-        }
-        return snapshot;
-    }
-
-    private com.chengyinhub.business.domain.route.TopicRouteState projectSharedRouteState(GameSession session,
-            JsonNode snapshot, TopicRouteEngine.State state) {
-        com.chengyinhub.business.domain.route.TopicRouteState view = new com.chengyinhub.business.domain.route.TopicRouteState();
-        view.setSessionId(session.getId()); view.setVersion(session.getRevision());
-        view.setRouteMode(snapshot.path("routeMode").asText("LINEAR")); view.setStatus(state.getStatus());
-        view.setCurrentNodeId(state.getCurrentNodeId()); view.setRecommendedNodeId(state.getRecommendedNodeId());
-        view.setNodeStates(state.getNodeStates()); view.setAttributes(JourneyInitialState.playerView(routeRules(session), state));
-        return view;
-    }
-
-    private ObjectNode persistedRunControl(GameSession session) {
-        GameStoryState owner = runOwner(session);
-        return owner == null ? null : readObject(owner.getVariablesJson());
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public boolean isOriginalSharedRouteEligible(Long memberId, Long topicId, Long activityId, Long nodeId,
                                                  Long sessionId, String runtimeInstance, Integer authorityEpoch) {
         return originalSharedRouteEligible(false, memberId, topicId, activityId, nodeId, sessionId, runtimeInstance, authorityEpoch);
@@ -5053,7 +4951,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         if (session == null || !Objects.equals(sessionId, session.getId()) || !Objects.equals(activityId, session.getActivityId())
                 || !Objects.equals(topicId, session.getTopicId()) || !isSharedRoute(session)
                 || !GameSession.RUNNING.equals(session.getStatus())) return false;
-        ObjectNode run = persistedRunControl(session);
+        ObjectNode run = sharedRunControl().persistedRunControl(session);
         if (run == null) throw error("GAME_CONFIG_INVALID", "本局共享运行控制账不可用");
         if (epoch != run.path("authorityEpoch").asInt(1) || !"RUNNING".equals(run.path("operationStatus").asText())
                 || !"ONLINE".equals(run.path("authorityMode").asText())) return false;

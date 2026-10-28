@@ -591,7 +591,10 @@ function assertPreferenceGetContract(s) {
     'resolvePreferencePlayCtx(memberId, nodeId, activityId, topicId, null)',
     'if (pctx.error != null) return pctx.error;',
     'preferencePlayService.load(', 'memberId, pctx.playCtx.topicId, nodeId, pctx.template');
-  const resolver = javaMethod(s.preference, 'public PreferencePlayCtx resolvePreferencePlayCtx(');
+  const resolverEntry = javaMethod(s.preference, 'public PreferencePlayCtx resolvePreferencePlayCtx(');
+  assert.match(resolverEntry, /return resolvePreferencePlayCtx\(memberId, nodeId, activityId, topicId, routeActionId, null\);/);
+  // The public GET overload delegates to the same guarded resolver used by original-run submission.
+  const resolver = javaMethod(s.preference, 'private PreferencePlayCtx resolvePreferencePlayCtx(');
   inOrder(resolver, 'playNodeContext.resolveCtx(memberId, activityId, topicId, out.node)',
     'if (out.playCtx.error != null) { out.error = out.playCtx.error; return out; }',
     'playNodeContext.leadGateError(out.playCtx.actId, out.node)',
@@ -599,6 +602,7 @@ function assertPreferenceGetContract(s) {
     'playNodeContext.unlockGateError(memberId, out.playCtx.actId, out.node)',
     'playNodeContext.routeAccessError(memberId, out.playCtx.actId, out.playCtx.topicId, out.node, routeActionId)',
     'if (unlockErr != null) { out.error = error(unlockErr); return out; }');
+  assert.match(resolver, /playNodeContext\.frozenAnswer\(memberId, out\.playCtx\.topicId, out\.playCtx\.actId, out\.node\.getId\(\), originalRun\)/);
   const context = javaMethod(s.context, 'public PlayCtx resolveCtx(Long memberId, String activityId, String topicId, CmsTopicNode node)');
   assert.match(context, /playNodeAccessService\.resolveContext\(memberId, activityId, topicId, nodeScope\(node\)\)/);
   const access = javaMethod(s.access, 'public Context resolveContext(Long actor, String activityId, String topicId, NodeScope node)');
@@ -691,6 +695,9 @@ test('玩法 GET 真实身份和实际 owner 守卫被改动时合同必须判�
     [assertPreferenceGetContract, 'controller', 'playPreferenceApplication.preference(currentMemberId(),', 'playPreferenceApplication.preference(999L,'],
     [assertPreferenceGetContract, 'controller', 'playPreferenceApplication.newLifeOperatingSystem(currentMemberId(),', 'playPreferenceApplication.newLifeOperatingSystem(999L,'],
     [assertPreferenceGetContract, 'preference', 'if (out.playCtx.error != null) { out.error = out.playCtx.error; return out; }', ''],
+    [assertPreferenceGetContract, 'preference', 'return resolvePreferencePlayCtx(memberId, nodeId, activityId, topicId, routeActionId, null);', 'return null;'],
+    [assertPreferenceGetContract, 'preference', 'return resolvePreferencePlayCtx(memberId, nodeId, activityId, topicId, routeActionId, null);', 'return resolvePreferencePlayCtx(999L, nodeId, activityId, topicId, routeActionId, null);'],
+    [assertPreferenceGetContract, 'preference', 'out.node.getId(), originalRun)', 'out.node.getId(), null)'],
     [assertPreferenceGetContract, 'preference', 'playNodeContext.unlockGateError(memberId, out.playCtx.actId, out.node)', 'null'],
     [assertPreferenceGetContract, 'access', 'memberId,2L,actId,registrationId,new Date()', '999L,2L,actId,registrationId,new Date()'],
     [assertPreferenceGetContract, 'registration', 'if(!currentOwner(current,memberId,ownerType,ownerId)) continue;', ''],

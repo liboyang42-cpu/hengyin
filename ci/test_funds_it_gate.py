@@ -38,7 +38,7 @@ def all_required_clean(directory):
     """
     write_report(directory, "CoopListReadOnlyMybatisIntegrationTest", 5)
     write_report(directory, "RegistrationFundsMybatisIntegrationTest", 101)
-    write_report(directory, "RegistrationEquityMybatisIntegrationTest", 5)
+    write_report(directory, "RegistrationEquityMybatisIntegrationTest", 6)
     write_report(directory, "RefundPayoutMybatisIntegrationTest", 30)
     write_report(directory, "ExploreAllianceMvpRealDbIT", 5)
     write_report(directory, "ExploreAllianceRedeemRealDbIT", 4)
@@ -63,7 +63,7 @@ def all_required_clean(directory):
     write_report(directory, "WxContentCallbackFencingMySqlIT", 3)
     # 2026-09-16 晚:暗测试 23 套(197 条)首跑判绿后入闸;计数与 EXPECTED/SOURCE_FILES 同源。
     for short, tests in (
-        ("CoopDepositRefundMybatisIntegrationTest", 27),
+        ("CoopDepositRefundMybatisIntegrationTest", 36),
         ("GrowthMissionProofMybatisIntegrationTest", 25),
         ("MerchantIdentityMybatisIntegrationTest", 21),
         ("MerchantProfilePersistenceMybatisIntegrationTest", 9),
@@ -175,7 +175,7 @@ class FundsItGateTest(unittest.TestCase):
     def test_red_when_a_suite_is_skipped(self):
         # 负控①:环境变量缺失 → @EnabledIf 把整套标 skipped,构建仍绿,门禁必须变红。
         write_report(self.dir, "RegistrationFundsMybatisIntegrationTest", 59, skipped=59)
-        write_report(self.dir, "RegistrationEquityMybatisIntegrationTest", 5)
+        write_report(self.dir, "RegistrationEquityMybatisIntegrationTest", 6)
         write_report(self.dir, "RefundPayoutMybatisIntegrationTest", 30)
         problems = funds_it_gate.enforce(self.dir)
         self.assertTrue(any("skipped" in p for p in problems), problems)
@@ -183,7 +183,7 @@ class FundsItGateTest(unittest.TestCase):
     def test_red_when_a_suite_is_absent(self):
         # 负控②:某套压根没被选中执行(没有报告)→ 缺席也是 fail-closed。
         write_report(self.dir, "RegistrationFundsMybatisIntegrationTest", 59)
-        write_report(self.dir, "RegistrationEquityMybatisIntegrationTest", 5)
+        write_report(self.dir, "RegistrationEquityMybatisIntegrationTest", 6)
         problems = funds_it_gate.enforce(self.dir)
         self.assertTrue(any("RefundPayoutMybatisIntegrationTest" in p and "无 surefire 报告" in p
                             for p in problems), problems)
@@ -198,14 +198,14 @@ class FundsItGateTest(unittest.TestCase):
     def test_red_when_fewer_tests_ran(self):
         # 负控④:被 -Dtest 过滤或部分方法跳过导致少跑 → 用例数不足也 fail-closed。
         write_report(self.dir, "RegistrationFundsMybatisIntegrationTest", 40)
-        write_report(self.dir, "RegistrationEquityMybatisIntegrationTest", 5)
+        write_report(self.dir, "RegistrationEquityMybatisIntegrationTest", 6)
         write_report(self.dir, "RefundPayoutMybatisIntegrationTest", 30)
         problems = funds_it_gate.enforce(self.dir)
         self.assertTrue(any("实跑用例" in p for p in problems), problems)
 
     def test_red_when_failures_present(self):
         all_required_clean(self.dir)
-        write_report(self.dir, "RegistrationEquityMybatisIntegrationTest", 5, failures=1)
+        write_report(self.dir, "RegistrationEquityMybatisIntegrationTest", 6, failures=1)
         problems = funds_it_gate.enforce(self.dir)
         self.assertTrue(any("failures" in p for p in problems), problems)
 

@@ -12,9 +12,9 @@ const { captureLogin, loginCurrent, seatKey, seatRecovery } = require('../../uti
 const root = path.resolve(__dirname, '../../..')
 const parsed = gate.parseAllowlist(fs.readFileSync(path.join(root, 'ci/silent-error-allowlist.txt'), 'utf8'))
 const reviewed = [
-  { file: 'pages/merchant/citynode/index.js', count: 8 },
-  { file: 'pages/play/index.js', count: 2 },
-  { file: 'utils/registration-seat.js', count: 1 },
+  { file: 'pages/merchant/citynode/index.js', count: 7 },
+  { file: 'pages/play/index.js', count: 1 },
+  { file: 'utils/registration-seat.js', count: 0 },
 ]
 const sources = reviewed.map(item => ({ file: item.file,
   source: fs.readFileSync(path.join(root, 'chengyinhub-xcx', item.file), 'utf8') }))
@@ -22,7 +22,7 @@ const mini = shared.filter(entry => reviewed.some(item => entry.file === item.fi
 const originalEntries = new Map(reviewed.map(item => {
   const file = 'chengyinhub-xcx/' + item.file
   return [file, parsed.entries.get(file)]
-}))
+}).filter(([, entry]) => entry))
 function rootResult(input) {
   const actual = new Map(input.map(item => ['chengyinhub-xcx/' + item.file, gate.findSilentErrorSites(item.source)])
     .filter(([, sites]) => sites.length))
@@ -35,6 +35,11 @@ test('both U5 readers share exact reviewed counts while frozen baseline stays un
   assert.equal(parsed.baselineTotal.declared, 72)
   for (const item of reviewed) {
     const entry = originalEntries.get('chengyinhub-xcx/' + item.file)
+    if (item.count === 0) {
+      assert.equal(entry, undefined); assert.equal(mini.find(value => value.file === item.file), undefined);
+      assert.equal(gate.findSilentErrorSites(sources.find(value => value.file === item.file).source).length, 0);
+      continue;
+    }
     assert.equal(entry.allowed, item.count)
     assert.equal(mini.find(value => value.file === item.file).count, item.count)
   }
@@ -45,19 +50,20 @@ test('both U5 readers share exact reviewed counts while frozen baseline stays un
   }
   const added = [...originalEntries.values()].flatMap(entry => entry.lines)
     .filter(line => line.reason.startsWith('2026-10-24 '))
-  assert.equal(added.length, 4)
+  assert.equal(added.length, 1)
   assert.ok(added.every(line => line.count === 1 && /UNKNOWN/.test(line.reason)))
   assert.equal(rejectionCount(rootResult(sources)), 0)
   const result = findU5Issues(sources, mini)
   assert.deepEqual(result.issues, [])
-  assert.equal(result.fileCount, 3)
-  assert.equal(result.callCount, 11)
+  assert.equal(result.fileCount, 2)
+  assert.equal(result.callCount, 8)
 })
 
 test('adding/removing any reviewed call or using a sibling path still fails both gates', () => {
   for (const item of sources) {
-    for (const source of [item.source + '\napp.sendRequest({silentError:true})',
-      item.source.replace(/\bsilentError\s*:\s*true\b/, 'silentError:false')]) {
+    const mutations = [item.source + '\napp.sendRequest({silentError:true})'];
+    if (/\bsilentError\s*:\s*true\b/.test(item.source)) mutations.push(item.source.replace(/\bsilentError\s*:\s*true\b/, 'silentError:false'));
+    for (const source of mutations) {
       assert.notEqual(source, item.source)
       const changed = sources.map(value => value === item ? { ...item, source } : value)
       assert.ok(rejectionCount(rootResult(changed)) > 0, item.file)
@@ -92,7 +98,8 @@ test('shared receipt failure keeps original UNKNOWN without repost and ignores a
     assert.equal(run(), true)
     const request = requests.at(-1)
     assert.equal(request.url, '/api/verify/seat/receipt')
-    assert.equal(request.silentError, true)
+    assert.equal(request.silentError, undefined)
+    assert.equal(request.autoErrorToast, false)
     assert.deepEqual(request.data, target)
     request[kind]({ code: 500, msg: 'controlled unreadable receipt' })
     assert.equal(results.at(-1), 'unknown')

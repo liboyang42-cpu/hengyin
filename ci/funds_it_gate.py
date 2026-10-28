@@ -128,7 +128,8 @@ EXPECTED = {
     # 2026-09-17 release-0917 集成:fix-club-0917 拍板6 停用 verify_answer,删掉 5 条答题验票真库 IT
     #   (concurrentAnswerVerification… / wrongAnswer… / merchantAnswerIsDerived… / activityRegistrationDerives… / templateAnswerIsRejected…),
     #   但未同步本处 → 源码 @Test 实为 5。10 → 5。
-    "RegistrationEquityMybatisIntegrationTest": 5,
+    # 合并保留原回执丢响应后恢复用例，共 6 条。
+    "RegistrationEquityMybatisIntegrationTest": 6,
     "RefundPayoutMybatisIntegrationTest": 30,
     # 2026-08-14 并入:③ 自由探索联盟局的两套真库 IT(5/4 条 @Test)。
     # 它们此前从未在任何 CI 里执行过(类名 *IT + 无 surefire/failsafe 配置 ⇒ 默认 include 不收),
@@ -203,7 +204,8 @@ EXPECTED = {
     # Merchant/Coop 三套硬编码 3317,已统一为标准变量 + MysqlIntegrationTestConfig;
     # C 组 18 套原用标准变量但三处均未登记。每套首跑证据与红绿分类见
     # ~/Documents/城瘾/小程序/修复交接材料/worktree收口_0915/暗测试真跑_报告.md。
-    "CoopDepositRefundMybatisIntegrationTest": 27,
+    # 合并保留原支付事实/退款恢复两组用例，共 36 条。
+    "CoopDepositRefundMybatisIntegrationTest": 36,
     "GrowthMissionProofMybatisIntegrationTest": 25,
     "MerchantIdentityMybatisIntegrationTest": 21,
     # 2026-09-24 CU-M-78 +1 条(解除招牌主推显式清空 featured_id,真 XML + 真库回读),8 → 9。

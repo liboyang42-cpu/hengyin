@@ -391,13 +391,47 @@ if (require.main === module) {
     const { createRequestClient } = require('../../utils/transport/request-client.js');
     const client = createRequestClient({ getUserID: h.app.getUserID, getAuthorization: h.app.getAuthorization,
       getBaseUrl: () => '', wxRequest: req => { wire.push(req); return { abort() {} }; },
-      reLogin: done => { h.store.setAuthorization('local-token-refreshed'); done(true, { isCurrentSession: () => true }); } });
+      reLogin: done => {
+        h.store.setAuthorization('local-token-refreshed');
+        const revision = h.store.getRevision();
+        done(true, { isCurrentSession: () => h.store.getRevision() === revision
+          && h.app.getUserID() === '7' && h.app.getAuthorization() === 'local-token-refreshed' });
+      } });
     h.app.sendRequest = req => client.send(req); h.page.generateAiPlan();
     wire[0].success({ statusCode: 401, data: { code: 401 } });
     assert.equal(wire.length, 2); assert.equal(wire[1].header.Authorization, 'local-token-refreshed'); assert.equal(wire[1].data, wire[0].data);
+    const original = JSON.stringify(h.values[journal.key('7')]);
     wire[1].success({ statusCode: 200, data: { code: 200, data: view() } }); wire[1].complete({});
     assert.equal(h.values[journal.key('7')].requestId, null); assert.equal(wire.length, 2);
-    h.page.onShow(); assert.ok(wire.some(r => r.method === 'GET' && r.url.endsWith('/request')));
+    assert.equal(JSON.stringify(h.values[journal.key('7')]), original);
+    assert.equal(h.page.data.aiGenerating, false);
+    h.page.onShow(); const recovered = wire.find(r => r.method === 'GET' && r.url.endsWith('/request'));
+    assert.ok(recovered); assert.deepEqual(recovered.data, { prepareKey: JSON.parse(wire[0].data).prepareKey });
+    recovered.success({ statusCode: 200, data: { code: 200, data: view() } }); recovered.complete({});
+    assert.equal(h.values[journal.key('7')].requestId, RID);
+    assert.equal(wire.filter(r => r.url.endsWith('/execute')).length, 0, '原GET不发模型命令');
+    const restored = JSON.stringify(h.values[journal.key('7')]);
+    wire[1].success({ statusCode: 200, data: { code: 200, data: view() } }); wire[1].complete({});
+    assert.equal(JSON.stringify(h.values[journal.key('7')]), restored);
+    assert.equal(wire.filter(r => r.url.endsWith('/execute')).length, 0);
+    h.page.continueAiDraft();
+    const execute = wire.filter(r => r.url.endsWith('/execute'));
+    assert.equal(execute.length, 1); assert.deepEqual(JSON.parse(execute[0].data), { requestId: RID });
+    execute[0].success({ statusCode: 401, data: { code: 401 } }); execute[0].complete({});
+    const retried = wire.filter(r => r.url.endsWith('/execute'));
+    assert.equal(retried.length, 2); assert.equal(retried[1].data, retried[0].data);
+    const executing = JSON.stringify(h.values[journal.key('7')]);
+    retried[1].success({ statusCode: 200, data: { code: 200,
+      data: view('SUCCEEDED', { resultAvailable: true, result: DRAFT }) } }); retried[1].complete({});
+    assert.equal(JSON.stringify(h.values[journal.key('7')]), executing, 'execute续登回包也必须先只读恢复');
+    assert.equal(h.page.data.aiPlan, null); assert.equal(h.page.data.aiGenerating, false);
+    h.page.onShow(); const terminal = wire.filter(r => r.method === 'GET' && r.url.endsWith('/request')).at(-1);
+    assert.deepEqual(terminal.data, { requestId: RID });
+    terminal.success({ statusCode: 200, data: { code: 200,
+      data: view('SUCCEEDED', { resultAvailable: true, result: DRAFT }) } }); terminal.complete({});
+    assert.equal(h.page.data.aiPlan.title, DRAFT.draft.title);
+    assert.equal(h.values[journal.key('7')].state, 'SUCCEEDED');
+    assert.equal(wire.filter(r => r.url.endsWith('/execute')).length, 2, '恢复只读，不再发execute');
   });
 
   test('UNKNOWN confirmation uses the real modal; cancel writes nothing and sends nothing', () => {

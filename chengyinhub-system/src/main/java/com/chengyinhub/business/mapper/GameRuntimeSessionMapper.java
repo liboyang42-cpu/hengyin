@@ -30,6 +30,9 @@ public interface GameRuntimeSessionMapper {
 
     GameRuntimeSession selectAccessibleById(@Param("id") Long id, @Param("memberId") Long memberId);
 
+    /** Current locking read with the same player/active-team scope as the existing XML statement. */
+    GameRuntimeSession selectAccessibleByIdForUpdate(@Param("id") Long id, @Param("memberId") Long memberId);
+
     GameRuntimeSession selectPlayerByOwner(@Param("activityId") Long activityId,
                                            @Param("topicId") Long topicId,
                                            @Param("nodeId") Long nodeId,
