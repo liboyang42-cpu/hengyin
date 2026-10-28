@@ -113,6 +113,8 @@ const loadPage = (rel, options = {}) => {
     if (request === '../utils/community-report-sheet.js') return require(path.join(ROOT, 'pages/square/utils/community-report-sheet.js'))
     // 性能批4 分页路径追加助手:纯函数无副作用,用真模块不用桩(同上 response-shape 先例)
     if (request.endsWith('list-append.js')) return require(path.join(ROOT, 'utils/list-append.js'))
+    // W8 评论写作用域核对账号(reader/sameReader):纯函数,用真模块不用桩
+    if (request === '../../../utils/user-character.js') return require(path.join(ROOT, 'utils/user-character.js'))
     if (request === '../utils/topic-template-remix.js') return { remixTopicTemplate: () => Promise.resolve(false) }
     if (request === '../../../utils/ui-state-request.js') {
       return {

@@ -1,0 +1,3262 @@
+{
+  "tree": "d9e5aac6b628f0aa947f297f56fa1bfe33b1812f",
+  "targets": [
+    {
+      "className": "com.chengyinhub.business.domain.vo.MerchantReviewIdSerializationTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/domain/vo/MerchantReviewIdSerializationTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "10",
+        "prior-changed-test"
+      ],
+      "sha256": "7f8dd55ad16290c4aa760b9c76e7b801f237a28a785adcc726640ab1e01b180a",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.domain.vo.PlayerObjectCardVOTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/domain/vo/PlayerObjectCardVOTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "9c4c815624682c32b493ba16197b02fa0753fd079ff12bff9a870f823a62f194",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.it.AuthorAttributeBindingMyBatisIT",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/AuthorAttributeBindingMyBatisIT.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "03",
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "27442892cd0e45250d4bc7ff8c0d33f5fcd412b0532fe949df8a2a9c1a8d0730",
+      "storage": true,
+      "environment": "NETWORK_MYSQL_SEPARATE",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.it.ContentSearchCityMyBatisIT",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/ContentSearchCityMyBatisIT.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "08",
+        "prior-changed-test"
+      ],
+      "sha256": "826512740f21cf2217e4b173027baeafede5aaad1fa45adbc7ba86d106a8efa8",
+      "storage": true,
+      "environment": "NETWORK_MYSQL_SEPARATE",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.it.PlayHintUnlockMySqlIT",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/PlayHintUnlockMySqlIT.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "9f023b4b9bc7eb7f57b8e1573a6a413c81d6126dce9e7bf1a72d24ba9b6b7fdb",
+      "storage": true,
+      "environment": "NETWORK_MYSQL_SEPARATE",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.it.PlayLeadAdmissionFailureMySqlIT",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/PlayLeadAdmissionFailureMySqlIT.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "748a203465f6361a7f6fb81cb77696ac038f48de4b8391a47f60bb33350e5bea",
+      "storage": true,
+      "environment": "NETWORK_MYSQL_SEPARATE",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.it.TemplateAdoptionReceiptMyBatisIT",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/TemplateAdoptionReceiptMyBatisIT.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "03",
+        "prior-changed-test"
+      ],
+      "sha256": "3edc391e04aaa20b5f9a8bd052299631335065d91f776661c906d3ae384e4d16",
+      "storage": true,
+      "environment": "NETWORK_MYSQL_SEPARATE",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.it.TemplateAdoptionRoundTripMySqlIT",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/TemplateAdoptionRoundTripMySqlIT.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "03"
+      ],
+      "sha256": "e17dcb4642cb41c22dbdda07db1d042c2f037002b80025d8eebc3966506a3372",
+      "storage": true,
+      "environment": "NETWORK_MYSQL_SEPARATE",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.it.ThemeCharacterMapperMyBatisIT",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/ThemeCharacterMapperMyBatisIT.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "08",
+        "prior-changed-test"
+      ],
+      "sha256": "fc4f2ff2f9b06654c6c675f4e26ed53888351167cda3bad41b51bb94f30d55a8",
+      "storage": true,
+      "environment": "NETWORK_MYSQL_SEPARATE",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.mapper.ImModerationUnreadMySqlIT",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/ImModerationUnreadMySqlIT.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "02",
+        "prior-changed-test"
+      ],
+      "sha256": "4c8255d71431fb219b9b2b8b28ce3686a40d8103e12337d87bdbd8e956006fb2",
+      "storage": true,
+      "environment": "NETWORK_MYSQL_SEPARATE",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.mapper.MerchantDeskMapperSqlTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/MerchantDeskMapperSqlTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "10",
+        "prior-changed-test"
+      ],
+      "sha256": "0ef7bbbdd809adf9fb658f9d85c16746786b737640995ca6502581739b5f5493",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.mapper.MerchantReviewManageFilterMyBatisTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/MerchantReviewManageFilterMyBatisTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "10"
+      ],
+      "sha256": "78cd4584bf869180790174a397ccc60b28d3890ed5738b6be1174345d4530993",
+      "storage": false,
+      "environment": "OFFLINE_H2",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.mapper.MerchantReviewMapperContractTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/MerchantReviewMapperContractTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "10",
+        "09",
+        "prior-changed-test"
+      ],
+      "sha256": "fa6982e10e5f15c8bd8fa9fffdbbea07bf69aecf1cd87b3743214e49d593fb3d",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.mapper.MerchantReviewMerchantRowMyBatisTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/MerchantReviewMerchantRowMyBatisTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "10",
+        "09",
+        "prior-changed-test"
+      ],
+      "sha256": "620e0a3fe5d758d55e552ce5589ee6a9ba3096f7a14f300414e38a4dad1f4812",
+      "storage": false,
+      "environment": "OFFLINE_H2",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.mapper.MerchantReviewReplyReceiptMapperSqlTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/MerchantReviewReplyReceiptMapperSqlTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "10",
+        "prior-changed-test"
+      ],
+      "sha256": "6ae3c4f7f419de4d20d456c232393392654aa7f14c20d7b9832632d16cc50483",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.mapper.OrientScoringMyBatisTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/OrientScoringMyBatisTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "d6c23a50ad64b96647fef56fb4b925d89f447089c7e6349158503beeb6998b86",
+      "storage": false,
+      "environment": "OFFLINE_H2",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.mapper.OrientSessionCurrentMyBatisTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/OrientSessionCurrentMyBatisTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "4e1cfe6f7540fca1eccf67da0fbe74cbe40908b9c7cb4700f51e129997efa8ea",
+      "storage": false,
+      "environment": "OFFLINE_H2",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.mapper.PlayTeamMapperSqlTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/PlayTeamMapperSqlTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "ef5d71a54a93e59fce10605b85fcbc583a616efa17b5aa34cf49b5a6fdadb8f9",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.mapper.PlayerLeaderboardScopeMyBatisTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/PlayerLeaderboardScopeMyBatisTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "754647142e9a4bbb4b77e24cf64f58fa456951f9a9365dbb3f7bf80fc597f4e9",
+      "storage": false,
+      "environment": "OFFLINE_H2",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.mapper.PlayerObjectCardSchemaContractTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/PlayerObjectCardSchemaContractTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "3254ec5ea01a880c86e714bdd838d5559a1989ab33c839306f350c100ed023ff",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.mapper.PlayerRouteLeaderboardMyBatisTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/PlayerRouteLeaderboardMyBatisTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "600435c27132204fd502819c5b685e72751fd87f06941cceb49aac36b8c7111c",
+      "storage": false,
+      "environment": "OFFLINE_H2",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.mapper.PlayerRunSessionOrderingMybatisIntegrationTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/PlayerRunSessionOrderingMybatisIntegrationTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "2a64548d9824061d335073b8e4c0a9068b21a7980fdb4e7e85435671c410163d",
+      "storage": true,
+      "environment": "NETWORK_MYSQL_SEPARATE",
+      "conditionalAnnotations": [
+        "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+      ]
+    },
+    {
+      "className": "com.chengyinhub.business.mapper.PlayerTopicTagMapperSqlTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/PlayerTopicTagMapperSqlTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "17fcbe309da22faf903150a3c0d1f867830ca51e57a09a6c79f75d4ce78946b4",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.mapper.PlayerWithdrawalCooldownMapperSqlTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/PlayerWithdrawalCooldownMapperSqlTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "a7c1b5b38342601b1b740017a688b643c3afc51e1b1f7618a285b1d06e55da58",
+      "storage": false,
+      "environment": "OFFLINE_H2",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.mapper.PuzzleAttemptLogMigrationTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/PuzzleAttemptLogMigrationTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "d9ac49614dcd3867da519cc1d9c11106d2937ff8fbc144bdde6e895b33966587",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.mapper.PuzzlePersonalBestMapperTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/PuzzlePersonalBestMapperTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "e53b04268034556f3eb2bd2302e5cc21f7cce15e7aa52630e72d6ec6aa85256f",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.AuditItemProblemMySqlIT",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/AuditItemProblemMySqlIT.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "prior-changed-test"
+      ],
+      "sha256": "baaa6af8ef86e7b91fc9bba46dab86d8f307c94fe02a9a48e551b6cc8113ad10",
+      "storage": true,
+      "environment": "NETWORK_MYSQL_SEPARATE",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.AuditItemProblemTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/AuditItemProblemTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "prior-changed-test"
+      ],
+      "sha256": "dcd22b13efd8596354a8bd57dd1900b08cbfe9072f64bd3b95bdbb246a8e4cd5",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.AuthorPublishBindingTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/AuthorPublishBindingTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "03",
+        "prior-changed-test"
+      ],
+      "sha256": "9755c3a50bc262f469abb91a13130bc1c56de3290dbc1dbe8aeb95e173b8a4c2",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.CartSettlementWriteReceiptMySqlIT",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CartSettlementWriteReceiptMySqlIT.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "prior-changed-test"
+      ],
+      "sha256": "1d94f996245be837a966f732f0f8fcfbb5856da169d3ef8a0a03ef36e21e6845",
+      "storage": true,
+      "environment": "NETWORK_MYSQL_SEPARATE",
+      "conditionalAnnotations": [
+        "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+      ]
+    },
+    {
+      "className": "com.chengyinhub.business.service.ClubEventTransferCancellationMySqlIT",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubEventTransferCancellationMySqlIT.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "01-changed-fixture"
+      ],
+      "sha256": "3350c7bcac7b222569fc4792000f6d665ec8914cee8523c3f4d72c25814396a6",
+      "storage": true,
+      "environment": "NETWORK_MYSQL_SEPARATE",
+      "conditionalAnnotations": [
+        "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+      ]
+    },
+    {
+      "className": "com.chengyinhub.business.service.ClubFulfillmentChainGateTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubFulfillmentChainGateTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "01-changed-fixture"
+      ],
+      "sha256": "867196630595497dd9ec8c3c1c64795246ebe5494e24fa41d11997717f249d33",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.ClubOwnerCancelOwnershipGateTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubOwnerCancelOwnershipGateTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "01-changed-fixture"
+      ],
+      "sha256": "19fb8d10ec59d34460dc5bb668bfcc11439ee1069eefafba62abf735886a498c",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.ContentSearchServiceTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ContentSearchServiceTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "08"
+      ],
+      "sha256": "b72283e51eb74ba6076cfea196eeb50a1c080305d9c23ea48815b3da605a0794",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.ExploreReleaseWiringTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ExploreReleaseWiringTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "01-changed-fixture"
+      ],
+      "sha256": "e76af40a4824db2d020c6acf3278f07c5f62a314d017c04b24b1247f92b62164",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.FreeSessionCancelReleaseV2Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/FreeSessionCancelReleaseV2Test.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "01-changed-fixture"
+      ],
+      "sha256": "395e23fe1ab3e0e61e3f314848903e4caf20e2567de12139e9a7c0a2a95310e9",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.FundIdempotencyConcurrencyTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/FundIdempotencyConcurrencyTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "01-changed-fixture"
+      ],
+      "sha256": "b907242027fdcf40f5ccf7a88870258288ee7fc6d37945b6854e123f58126463",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.MerchantDeskServiceImplTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/MerchantDeskServiceImplTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "10",
+        "prior-changed-test"
+      ],
+      "sha256": "c7449ed57cc7295471f259c28e96b04dcd3d5cc5a5a235f0c4f0352ca36aa861",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.MerchantReviewExactOrderHttpTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/MerchantReviewExactOrderHttpTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "09",
+        "prior-changed-test"
+      ],
+      "sha256": "e4fb4309b593e057d9f5efd7f37358934370f640a7f9239097474d40ab364a61",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.MerchantReviewReplyReceiptServiceTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/MerchantReviewReplyReceiptServiceTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "10",
+        "prior-changed-test"
+      ],
+      "sha256": "8a22552d3ee45d03530d7341ebe77aa1562ed4c430f50157e7cbd4e32ec769d4",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.MerchantReviewServiceImplTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/MerchantReviewServiceImplTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "10",
+        "09",
+        "prior-changed-test"
+      ],
+      "sha256": "19b605e78f28cdcc01fa4ad585991bfc6c721958cb64a11f96a29e3797017411",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.OfficialBroadcastDeliveryMySqlIT",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/OfficialBroadcastDeliveryMySqlIT.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "07"
+      ],
+      "sha256": "6f1705d995a7a73ca09c2412e466a074be868580f372298857bbf3b9cfee3c3a",
+      "storage": true,
+      "environment": "NETWORK_MYSQL_SEPARATE",
+      "conditionalAnnotations": [
+        "@EnabledIfEnvironmentVariable(named=\"CHENGYIN_FUNDS_MYSQL_IT\",matches=\"1\")"
+      ]
+    },
+    {
+      "className": "com.chengyinhub.business.service.OfficialEventAttendanceMySqlIT",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/OfficialEventAttendanceMySqlIT.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "prior-changed-test"
+      ],
+      "sha256": "a51e832f14bc1add74253e68eb2983191d0d2e11c5a4aeb1406a09279127b9b6",
+      "storage": true,
+      "environment": "NETWORK_MYSQL_SEPARATE",
+      "conditionalAnnotations": [
+        "@EnabledIfEnvironmentVariable(named=\"CHENGYIN_FUNDS_MYSQL_IT\",matches=\"1\")"
+      ]
+    },
+    {
+      "className": "com.chengyinhub.business.service.OrientScoringArithmeticTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/OrientScoringArithmeticTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "c5b05c7f1610249d55b9120ef42da737bb6f63648109e9f19301ef49ca0ec294",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.PlayKitPresentConfigTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayKitPresentConfigTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "e2a56fb01deb1290ad27ac02a175bb70bb4ef6caae0a6599cda787e6565a6282",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.PlayTeamMybatisIntegrationTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayTeamMybatisIntegrationTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "4c3bad20ae3df24847222b8322724c18f6b423a93e7398abac98bb7cf30b592f",
+      "storage": true,
+      "environment": "NETWORK_MYSQL_SEPARATE",
+      "conditionalAnnotations": [
+        "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+      ]
+    },
+    {
+      "className": "com.chengyinhub.business.service.PlayTeamNearbyMybatisIntegrationTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayTeamNearbyMybatisIntegrationTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "d4d16b33d1a5689d8aed0dd8df8530a2fffef5d4ae790f9958d31db996087d65",
+      "storage": true,
+      "environment": "NETWORK_MYSQL_SEPARATE",
+      "conditionalAnnotations": [
+        "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+      ]
+    },
+    {
+      "className": "com.chengyinhub.business.service.PlayerNodeArrivalSharingH2Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayerNodeArrivalSharingH2Test.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "d6b0b1c4196949fb7f775f2682900bfebf043411164326d9b9e2fe7fa1c4a56f",
+      "storage": false,
+      "environment": "OFFLINE_H2",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.PlayerProgressionServiceImplTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayerProgressionServiceImplTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "d240d0487db5cffe7367a9909879c5b6ce325647b12c03b6a4313d83ff42ea46",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.PlayerRoleAssignTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayerRoleAssignTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "b66cafc097f24adab12dbb736251d53fa236443657fc668eb5a787a40b906745",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.PlayerTopicTagConsumerTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayerTopicTagConsumerTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "a758b9c67b80d95265e7dc573a74977a88f59d1bc3bdeffda3c07067a1479f6e",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.PlayerWithdrawalCooldownMybatisIntegrationTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayerWithdrawalCooldownMybatisIntegrationTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "49a0971f0dfd59a048482e0ee01141f24a4f755dd0a9db31dc101f48250f0d9c",
+      "storage": true,
+      "environment": "NETWORK_MYSQL_SEPARATE",
+      "conditionalAnnotations": [
+        "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+      ]
+    },
+    {
+      "className": "com.chengyinhub.business.service.PlayerWithdrawalCooldownServiceTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayerWithdrawalCooldownServiceTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "3474784a6c0776637544f110c8c880f32cebd2d77addfb5c44b85b054b8bd840",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.PreferenceResultEvaluatorTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PreferenceResultEvaluatorTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "2d11cff114a2cf0933dd56c6719db0848fd1896731da8cd435691c4a650cac53",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.RefundBalanceFloorTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundBalanceFloorTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "01-changed-fixture"
+      ],
+      "sha256": "5dccc4efb75bf2a124c58ef21472a7621e5efdcc2a34530e99c72c7370803d7d",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.RefundDeadlineGateTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundDeadlineGateTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "01-changed-fixture"
+      ],
+      "sha256": "bb25d66c0ea64855fa635f4bd6927547a8a2d6aaf201723410ad293d662b9061",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.RefundMultiPartyClawbackTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundMultiPartyClawbackTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "01-changed-fixture"
+      ],
+      "sha256": "0c6d569ee5ff3f091896ab9ecd9c5f9dad98c5d76efdea072999c68a1d9f292c",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.RefundNotificationMybatisIntegrationTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundNotificationMybatisIntegrationTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "01-changed-fixture"
+      ],
+      "sha256": "c377a5b493d03087ca56507d74844990430ec8b45dd4b12cfc6d60b3872ddb5d",
+      "storage": true,
+      "environment": "NETWORK_MYSQL_SEPARATE",
+      "conditionalAnnotations": [
+        "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+      ]
+    },
+    {
+      "className": "com.chengyinhub.business.service.RefundPartialClawbackTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundPartialClawbackTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "01-changed-fixture"
+      ],
+      "sha256": "a77ad90e3867c58f03bf9b6df0f19010281ab63139522d2bf690da8ec2ed7069",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.RefundPayoutAtomicityContractTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundPayoutAtomicityContractTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "01-changed-fixture"
+      ],
+      "sha256": "0d94dd42bb6eee11fb107e3ed88cd26477cdc9b2f760cdeb5e2e9bad235640f4",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.RefundPayoutMybatisIntegrationTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundPayoutMybatisIntegrationTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "01-changed-fixture"
+      ],
+      "sha256": "fb53675d94c9d87a29def53389264fae6964e45740dfe25c1676feeedbedc354",
+      "storage": true,
+      "environment": "NETWORK_MYSQL_SEPARATE",
+      "conditionalAnnotations": [
+        "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+      ]
+    },
+    {
+      "className": "com.chengyinhub.business.service.RefundSingleSidedDebitGuardTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundSingleSidedDebitGuardTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "01-changed-fixture"
+      ],
+      "sha256": "850c7aab23a157c52d87f7b5e310aa407bc9ac12a4463bd16aaa18d79853398f",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.RefundSingleSidedDebitTopicGuardTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundSingleSidedDebitTopicGuardTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "01-changed-fixture"
+      ],
+      "sha256": "9ee66f70500ca11c169ba9eaf44ec1f009b885b8673c28c72802fc8813a8c71b",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.RegistrationFundsMybatisIntegrationTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationFundsMybatisIntegrationTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "prior-changed-test",
+        "01-changed-fixture"
+      ],
+      "sha256": "135333bc2bd4e0d24432bb01b7f5a3ce0ea8b9ec764d8e2e5ec507fce092a534",
+      "storage": true,
+      "environment": "NETWORK_MYSQL_SEPARATE",
+      "conditionalAnnotations": [
+        "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+      ]
+    },
+    {
+      "className": "com.chengyinhub.business.service.TeamEventCommandMySqlIT",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TeamEventCommandMySqlIT.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "prior-changed-test"
+      ],
+      "sha256": "bdad1f77f22aee563c49a99068303f42921b143340a66d6780226e5b6a4e7e3c",
+      "storage": true,
+      "environment": "NETWORK_MYSQL_SEPARATE",
+      "conditionalAnnotations": [
+        "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+      ]
+    },
+    {
+      "className": "com.chengyinhub.business.service.ThemeStateKeyServiceTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ThemeStateKeyServiceTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "08",
+        "prior-changed-test"
+      ],
+      "sha256": "7582dcfcd1618f9384932a15f6ca933e74f39caacf49db15f3ac777f5911abc1",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.TopicRoutePublishedSnapshotContractTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicRoutePublishedSnapshotContractTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "46a09619a11f0cdd5e3183f641e42ec3f7de03cab737f9ed9b41c5c5172b7472",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.UserInvoiceLifecycleMySqlIT",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/UserInvoiceLifecycleMySqlIT.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "11",
+        "prior-changed-test"
+      ],
+      "sha256": "3f2f6011c5262ab88be3a1b535bc70aa02fe20ec1e556c8487bf9a5bc82610ec",
+      "storage": true,
+      "environment": "NETWORK_MYSQL_SEPARATE",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.compliance.UserInvoiceServiceTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/compliance/UserInvoiceServiceTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "11",
+        "prior-changed-test"
+      ],
+      "sha256": "dd4e90f98052dc332ad18aed1c09be22386a2a3b0326267e8ceed7fe1f5284b5",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.ActivityCancelFreeOrderMybatisIT",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ActivityCancelFreeOrderMybatisIT.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "01-changed-fixture"
+      ],
+      "sha256": "3f8f62e78c2fe736eb9cfd05fd15c0b925c78e8666631383be2904f9feda732b",
+      "storage": true,
+      "environment": "NETWORK_MYSQL_SEPARATE",
+      "conditionalAnnotations": [
+        "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+      ]
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.ActivityCancelTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ActivityCancelTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "01-changed-fixture"
+      ],
+      "sha256": "12e82c405279e7f15538a70700ef7a6a594d1f89cb8b69de950803cc796df2c3",
+      "storage": false,
+      "environment": "OFFLINE_H2",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImplTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AdvancedGameRuntimeServiceImplTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "92717a33a936194df2971696a29ae9d7a242fb94507c1971bd612aa9e70984f5",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.AuditAppealAttachmentTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AuditAppealAttachmentTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "prior-changed-test"
+      ],
+      "sha256": "948dddcc2e528001e0242919aa9fd224f2b1a86a0ff705759154ebf85f324df7",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.AuditAppealRequestMySqlIT",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AuditAppealRequestMySqlIT.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "prior-changed-test"
+      ],
+      "sha256": "0f5c082db9e30628bb568d80cf70923de6e7b84286f379ee9c3577aae6d3021b",
+      "storage": true,
+      "environment": "NETWORK_MYSQL_SEPARATE",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.ChapterFlowWriteServiceTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "prior-changed-test"
+      ],
+      "sha256": "7b153a79daaecf068e1b4d079cd82b9a0c4bdbbbfe454449ce13be33479b7309",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.FreeExploreBundleLedgerMySqlIT",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/FreeExploreBundleLedgerMySqlIT.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "09",
+        "prior-changed-test"
+      ],
+      "sha256": "1612bb1b8e0db54076563a052421c0646ca58df9f70082caa69fead078a3af06",
+      "storage": true,
+      "environment": "NETWORK_MYSQL_SEPARATE",
+      "conditionalAnnotations": [
+        "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+      ]
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.FreeExploreBundleRefundContractTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/FreeExploreBundleRefundContractTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "09",
+        "prior-changed-test"
+      ],
+      "sha256": "f7791f4f9dae59a765a8a78f5eac6ba442ff66cd3775659553c03b8eb3541797",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.FreeExploreBundleServiceTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/FreeExploreBundleServiceTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "09",
+        "prior-changed-test"
+      ],
+      "sha256": "c6bf475114d909668829dae2fffc62c2c9786800b3304b094aa1d227ebe0bdc6",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.FreeExploreBundleWireTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/FreeExploreBundleWireTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "09",
+        "prior-changed-test"
+      ],
+      "sha256": "73b70b7587054cd9f87079533791d89abca0c8920b6bd42118d5633ca9f118bf",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.FreeOrderCancelAcceptanceTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/FreeOrderCancelAcceptanceTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "01-changed-fixture"
+      ],
+      "sha256": "39c2d00aebe4c9b8a98b54aea5f3d2f9afe5f00f33f6de00483c11b2616795e8",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.GuardAppealReferenceTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GuardAppealReferenceTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "06"
+      ],
+      "sha256": "742c00e835a4d3f5eba2ea15c1a8b0e3355f2d34bb37c2f8b2b64b25fb4c5edf",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.GuardAppealReviewRecoveryTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GuardAppealReviewRecoveryTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "06"
+      ],
+      "sha256": "30f528f0ade2bde3dde7e0062c72d137f1b725952f3546e3b008825bdb4b1be7",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.GuardWorkbenchScopeMySqlIT",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GuardWorkbenchScopeMySqlIT.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "06"
+      ],
+      "sha256": "5e8198ecb1bf342ab31af64e0d931ce3db970318b589d75de8e25cab800dc633",
+      "storage": true,
+      "environment": "NETWORK_MYSQL_SEPARATE",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.HostWeatherCancelTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/HostWeatherCancelTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "01-changed-fixture"
+      ],
+      "sha256": "83bd00ef75373ee07fdabe3254d196bd66533cd0e3cd3ef39e53bd9f242e3f35",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.ImAdminSendIdempotencyMySqlIT",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ImAdminSendIdempotencyMySqlIT.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "02",
+        "prior-changed-test"
+      ],
+      "sha256": "29bc869ebc08ed36be0baa95f8e90c55a93a11622567c3b2bcff750614e17b6d",
+      "storage": true,
+      "environment": "NETWORK_MYSQL_SEPARATE",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.ImAdminSendIdempotencyTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ImAdminSendIdempotencyTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "02",
+        "prior-changed-test"
+      ],
+      "sha256": "e01e5b78e8ef247174919c5f48cd8bc4a08e9ed962422ffa9f1cfb28594dd30b",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.OWN_C02_27Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OWN_C02_27Test.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "prior-changed-test",
+        "01-changed-fixture"
+      ],
+      "sha256": "09e2e47946e4b791306edad642a953b613ded87363832dc9e0f2348816245bd0",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.OfficialBroadcastDeliveryTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OfficialBroadcastDeliveryTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "07"
+      ],
+      "sha256": "2b24159de3b8cc06d3c3b0b2e37da69ad595357fcc94d889b65b7f036e23b876",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.OfficialEventAttendanceServiceTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OfficialEventAttendanceServiceTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "prior-changed-test"
+      ],
+      "sha256": "708d2223c9a17ebb0e0127f70cec306288b1dc4fe84d906d5af7b63cbfa62446",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.OfficialEventContractTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OfficialEventContractTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "07"
+      ],
+      "sha256": "15849ca2014d98cf859ca46d1ffb2b573008d1670f889e3ba4fba517a73ca1ae",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.OfficialEventSignupRejectionTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OfficialEventSignupRejectionTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "prior-changed-test"
+      ],
+      "sha256": "5f1f93f17250721d4491851b8d5567af954614d337098e900992249288761041",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.OrientScoringFlowMySqlIT",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OrientScoringFlowMySqlIT.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "f9d3e8d899495c410ef43184e5bb24f889388714319f5fd484b564dcfe359e83",
+      "storage": true,
+      "environment": "NETWORK_MYSQL_SEPARATE",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.OrientScoringServiceImplTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OrientScoringServiceImplTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "0a13c8399330578398cf3d04c80bacbc01b38c21d60239a68de721429c6bf414",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.OrientSessionCurrentTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OrientSessionCurrentTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "6887a5d587042936d5a85039f38d8daf539d30198dc4701c4d89f4de867a1f46",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.OrientSessionServiceImplTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OrientSessionServiceImplTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "a34bd85111c915401607f3364fb718c75ba692e786137927effc8197a05b6cc1",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.OrientTaskServiceImplTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OrientTaskServiceImplTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "2da203ce0864a779a9cd8006573b1d1a4b4fbb0fc9cf58676043275b27a57b76",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.OrientTeamBoardServiceImplTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OrientTeamBoardServiceImplTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "6b5e2d3562fdff30d587fb7fbceae04601d348147cc9d84089fa1a0415fe1eb8",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.OriginalSharedGuardEligibilityTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OriginalSharedGuardEligibilityTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "06"
+      ],
+      "sha256": "43efb17ed30fb7c32f3e4d78074ca3f1b91e710ad26ad6266052811ce81b18bb",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.PartialChapterAftercareTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PartialChapterAftercareTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "01-changed-fixture"
+      ],
+      "sha256": "2177a99409d1588e128cc3bc92deb5e2033afcae286a0408e70f946605e0c79b",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.PersonalGameplayRuntimeServiceTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PersonalGameplayRuntimeServiceTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "prior-changed-test"
+      ],
+      "sha256": "1cccb9659587bc65d7bc4a5ba59966d8b8aa190a41b1bc556f51112419598438",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.PlayBingoArrivalFactTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayBingoArrivalFactTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "d732cbde29e3df8c46848ef57de5e6d400d3ba484d7aeb1cf554712148825d7d",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.PlayCheckinCodeOwnershipAcceptanceTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayCheckinCodeOwnershipAcceptanceTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "217a18539042ed07e9c4e743f829b2aef68cd0fcce6ee973cc2ba56b24b2b321",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.PlayCheckinCodeServiceImplTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayCheckinCodeServiceImplTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "9c4dd4a4f8b4d9eedf61daa1e4fb5199da28c031b9b7ddbb673a660b5edb6e97",
+      "storage": false,
+      "environment": "OFFLINE_H2",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.PlayJourneyReadServiceImplTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayJourneyReadServiceImplTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "7925c48d50f8fc81ed54863dcd787b42cbdeb003929e4fbda544f2d2258e210d",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.PlayJourneyStoryServiceImplTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayJourneyStoryServiceImplTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "7d277c7a51df0b46653d28d7e3fbfbcc7f5fa1e3c0e79509af5c4640b4c07341",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.PlayKitBingoRuntimeTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayKitBingoRuntimeTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "ba7d679254328f5add1c5689c00318d6757d31270a868b2bcef483c8920879cf",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.PlayKitNoteRuntimeTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayKitNoteRuntimeTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "6d8a3efef310c4cca048003161df7f0efc09275948836f35f8458ffa41c89a6d",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.PlayKitPhotoCheckRuntimeTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayKitPhotoCheckRuntimeTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "1db6f6a155dcb9f32a61caacbf8b3880f6d3005cc53b8cb69b8c569df9d66c1e",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.PlayKitProfileRuntimeTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayKitProfileRuntimeTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "59053f07887e53ad851cc2e27368c926359945d3d038f07ae0dbf2a637e07682",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.PlayKitRuntimeBranchRandomPredictTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayKitRuntimeBranchRandomPredictTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "c5a2b9df61cda957c83af6668afede974102995d5d47aa7e2ffa3e172a127532",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.PlayKitTypeInRuntimeTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayKitTypeInRuntimeTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "991185fe879116c144bc9aeab1ef770f2c7c2b05e464029aa6e363a16e214b2a",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.PlayKitV51RuntimeTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayKitV51RuntimeTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "99b817228c3d1e69e6d283f6d52a3757cb2fdb75260537b92e4d164c9dd05723",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.PlayScanEntryServiceImplTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayScanEntryServiceImplTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "46d17c97a26be730ab8b8b30fbde1aa16e0d70079fa2d18e6ca46ecb203834f4",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.PlayTeamServiceImplTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayTeamServiceImplTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "f910bb87ade9ed9c083dac0d45ef91412e6efb08408b148c8b08b2fa082c6c1b",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.PlayerWxacodeServiceImplTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayerWxacodeServiceImplTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "3f1593f412c9be96034a1c192226458cfc1f9fa9f695ca2def54bbd4aa881a8b",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.PlaykitActionPayloadContractTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlaykitActionPayloadContractTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "6dca8167103c7780b42d133f5a5420e026aeedc68f84b89677bb52ea62a2b9a2",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.PuzzlePlayServiceImplTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PuzzlePlayServiceImplTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "5dcf9dc3ea2a503422ff7cd53567cc9c7330d2f297e205dfb611f1e9e7d24eb7",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.PuzzleRevealArrivalFactTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PuzzleRevealArrivalFactTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "f99b2d3a0b548184fcbc4d04b135549df5ceac20f44fa3cf2a11b1fafbc457c6",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.RefundF3PreparationTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundF3PreparationTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "01",
+        "01-changed-fixture"
+      ],
+      "sha256": "218f980df406a444a18aeb751777bbe137ba0edaad765eb2a50b5f2c821773bc",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.RefundFulfillmentViewTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundFulfillmentViewTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "01",
+        "01-changed-fixture"
+      ],
+      "sha256": "088b1705179dd56ad9802857a86bb022dd79d8a10d2cc45e2ecd8830a7234566",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.RefundManualPayoutTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundManualPayoutTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "01-changed-fixture"
+      ],
+      "sha256": "3f43783056a61e6c8bbc791ac14fbfc46bd809bd0a92a674e0e8e8e5b5330a0f",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.RefundOverpayGuardTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundOverpayGuardTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "prior-changed-test",
+        "01-changed-fixture"
+      ],
+      "sha256": "b40341f8291fbcd3c26865b42adc876a0ab5bfd3e7d08d7d0d0215e3db5a2f2c",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.RefundPayoutReceiptUrlGateTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundPayoutReceiptUrlGateTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "01-changed-fixture"
+      ],
+      "sha256": "367478c051ec948010aceac29977240c03f0db876b1e29e5a83b3f1c49f4f3d4",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.RefundRegistrationIdentityTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundRegistrationIdentityTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "prior-changed-test",
+        "01-changed-fixture"
+      ],
+      "sha256": "8a6074e742d4e6dc903e8f34ceded041b2789e35e09ba9a1b2ac92ae27c540bb",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.RefundRetryAndRemainderMySqlIT",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundRetryAndRemainderMySqlIT.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "01",
+        "prior-changed-test",
+        "01-changed-fixture"
+      ],
+      "sha256": "1004bfb7bd4d8646549e27fe64e88d13f32a3a0f7043bffa289b360a9b9469c6",
+      "storage": true,
+      "environment": "NETWORK_MYSQL_SEPARATE",
+      "conditionalAnnotations": [
+        "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+      ]
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.RefundServiceImplTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundServiceImplTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "prior-changed-test",
+        "01-changed-fixture"
+      ],
+      "sha256": "ac118271d6ed09de9ff9d75c994ee7cdacebd11ea5b4d96fb68d7dc7de1e6fed",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.RefundVerifiedFactsTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundVerifiedFactsTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "01-changed-fixture"
+      ],
+      "sha256": "5a4da9c9ebb784d87a72328843af7e3fd59bdb59569f27d008afc5b221778afc",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.RefundWriteReceiptTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundWriteReceiptTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "prior-changed-test",
+        "01-changed-fixture"
+      ],
+      "sha256": "d1cf362a6e73ea3e422ca83a604c737d44d8402154e15fd8833e97b0963206af",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.RegistrationPointPrecisionTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RegistrationPointPrecisionTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "prior-changed-test",
+        "01-changed-fixture"
+      ],
+      "sha256": "b7650515d4812a624799ef9e9870c00702229cdb515bbc7e37595fd13edc64f8",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.RegistrationRefundFulfillmentRecoveryTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RegistrationRefundFulfillmentRecoveryTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "01",
+        "01-changed-fixture"
+      ],
+      "sha256": "74790633081959b974195ed8822772ac8ecbfab772380d2fccd1fc5d9e4606db",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.TeamGroupF3PreparationTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TeamGroupF3PreparationTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "01",
+        "01-changed-fixture"
+      ],
+      "sha256": "c71d0f1966864fda4f30707e056b4ca0c0db49e7e748e0c940f310c9d59429c7",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.ThemeActionIdempotencyAcceptanceTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ThemeActionIdempotencyAcceptanceTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "b03400999803b4f1ce78c9e16526f2bb560e39b7395995704dcf6cbf1cbf7583",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.TopicRouteCheckServiceImplTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicRouteCheckServiceImplTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "9726ad7822931315e5161f6f9e06fcc4080b2862689471b377d8bf49726f25a8",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.TopicRouteRpgP1ServiceImplTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicRouteRpgP1ServiceImplTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "4117341930d25e42d13951e78ada50485d76f84c9b019b83d1b128f4572dee3c",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImplTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImplTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "3393575df989c05237b8d81ad0afcb452936964dfd7e13da36421785c173da76",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.TopicRouteServiceImplTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicRouteServiceImplTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "cb6daf96df5abd6ef35ee04c6d1e7971f00ef11860389202c4b3b71633127a5a",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.UserInvoiceProcessingServiceTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/UserInvoiceProcessingServiceTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "11",
+        "prior-changed-test"
+      ],
+      "sha256": "f0788a49311c1e7641dd9bf0638b1dc024871d9c25ad5338ac318971131320d5",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.UserInvoiceProcessingWireTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/UserInvoiceProcessingWireTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "11",
+        "prior-changed-test"
+      ],
+      "sha256": "b96840853881bc946483099850e3bd031526e8bb6eec8a9b275f57156d431d41",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.UserInvoiceRefundReconciliationJobTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/UserInvoiceRefundReconciliationJobTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "11",
+        "prior-changed-test"
+      ],
+      "sha256": "08a07a9b83c9c0b5ff75a0b40de685c9792f183fdb1a6544b2964277fd949146",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.UserInvoiceWireContractTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/UserInvoiceWireContractTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "11",
+        "prior-changed-test"
+      ],
+      "sha256": "55ec1bc3ad8bf7c5d5bf522f3d287fa8b77036d7cc37c00c84b29219419daed1",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.WholeOrderRefundTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WholeOrderRefundTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "01-changed-fixture"
+      ],
+      "sha256": "4fa947b5a9e9607d7b3719028f501c555cc877d797189b7d63341026db10f1e0",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.impl.WxSubscribeMsgSendErrcodeTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WxSubscribeMsgSendErrcodeTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "07"
+      ],
+      "sha256": "4fedcd71d5362d462053ff701d0517b09b61079974955ba091de44852ecbece9",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.support.AdvancedActionReceiptReaderTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/AdvancedActionReceiptReaderTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "prior-changed-test"
+      ],
+      "sha256": "3cf477c6ee2c9ffd41e704d1b081784ca6c917729968affe58be727c9de043bb",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.support.AuthorAttributeBindingTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/AuthorAttributeBindingTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "03",
+        "prior-changed-test"
+      ],
+      "sha256": "1309451bab1b8ef8ab13f812f853fd4757601ce343d25d62679aeb6f1d20811b",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.support.AuthorAttributeRegistryReaderTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/AuthorAttributeRegistryReaderTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "03",
+        "prior-changed-test"
+      ],
+      "sha256": "7f4e66b43b6ce89f9246b0673b3815a5f245a38c13f47d295367bad36a6e9468",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.support.CheckReceiptProjectionTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/CheckReceiptProjectionTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "0daf5819f1ff7e3c6c62c2d952caeb96a79d3321202373965d072fa8e9ce7d4c",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.support.FrozenAttributeDefinitionsTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/FrozenAttributeDefinitionsTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "7a9e616176d7cde0f8b0c4e58af0f79a0a72b7b064a2c5e3e77d061e27e75a04",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.support.GuardAppealEligibilityTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/GuardAppealEligibilityTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "06"
+      ],
+      "sha256": "991bb2639f38de234df7f97a94f4aaef6d414c855a175c11e4ea37e9f71799f8",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.support.JourneyRulesValidatorTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/JourneyRulesValidatorTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "03",
+        "prior-changed-test"
+      ],
+      "sha256": "33153cdf5ef46623917d67a04ac78352fa58b5b3a4ee7e1182b7e2b2eeb62a4c",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.support.MerchantDeskCodePolicyTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/MerchantDeskCodePolicyTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "10"
+      ],
+      "sha256": "9483dee2ed075b5f8ce9d06d383c977f201124b14581873fe32d2f2efe52feea",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.support.OrientRouteSettlementMySqlIT",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/OrientRouteSettlementMySqlIT.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "ce60cb0a355e12ee1784a21e63c991ed389f5decfbd1e06176e2da0b13bf8bca",
+      "storage": true,
+      "environment": "NETWORK_MYSQL_SEPARATE",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.support.OrientRouteSettlementTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/OrientRouteSettlementTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "afde718db106303671cfef129f12044eefe7f85013ac48ec04a7f4ca2bf0cb87",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.support.OrientSafetyPolicyTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/OrientSafetyPolicyTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "bb4bc6a0ab9241735137da40553aed5d04b1b610b6886b6d37b04cbc1ae7146c",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.support.OrientTeamProgressCalculatorTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/OrientTeamProgressCalculatorTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "32f58d6ed75b8cf2a034e5bc6a5194c2df22271cd2a8f7fe2ab6dd71897bc22a",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.support.PlayKitPrefabConfigContractTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/PlayKitPrefabConfigContractTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "06e891c1288cf30f7a1836d84dd7e615560f38613b80d0c9a676a09651b1137f",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.support.PlayKitV51ConfigContractTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/PlayKitV51ConfigContractTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "a91637652b46aea74101e90649c821a50ac6504426fdd133d3fed1ee6777f054",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.support.RefundF3TestSupport",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/RefundF3TestSupport.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "01-changed-fixture"
+      ],
+      "sha256": "1e8aa582d3dd442f78d1799f72e137658edd9e8d6fd2c464ffc4a24f923db809",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.support.RegistrationCancellationCashReadTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/RegistrationCancellationCashReadTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "prior-changed-test"
+      ],
+      "sha256": "0890d82731a0b5c17731ea53a356c27b828247017f3023a33a59f7e2139c3575",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.support.RegistrationRefundFactsTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/RegistrationRefundFactsTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "prior-changed-test",
+        "01-changed-fixture"
+      ],
+      "sha256": "fb6ac149450e41a78d46649a05a76a0507e390482a036f3b23687ad6ae699d7d",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.support.TemplateAdoptionServiceTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/TemplateAdoptionServiceTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "03",
+        "prior-changed-test"
+      ],
+      "sha256": "67d06979537f6db54a7d42b6cfadd381f63bae65d5cd296a7f95e2cbcd637370",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.support.ThemeCharacterServiceTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/ThemeCharacterServiceTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "08",
+        "prior-changed-test"
+      ],
+      "sha256": "548d99aed41631228e22795613ce4b3992f48685575d88f7316a7726b5bad6b3",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.support.ThemeRuntimeChapterRequirementsTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/ThemeRuntimeChapterRequirementsTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "fbb50b11e2f501d5800f6381347ecba7b495f90e686f1e9d8a9864dec6ab8c50",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.support.ThemeRuntimeContentPackTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/ThemeRuntimeContentPackTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "dbab08e9bbca3cf44471f6e8bb77fd199fb6f8774e883c2c5d4bff06ac3185ac",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.support.ThemeRuntimeEngineTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/ThemeRuntimeEngineTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "71f20c3ff5ce8f8b5f5c2e268ab5e422ad8ee42960353f316f3e4f8de4f50df9",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.support.ThemeRuntimeNumericExtensionTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/ThemeRuntimeNumericExtensionTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "e4facff2f9f2b417fbed21a16487dbad46ba92e98c63173a55a0e72733feb3e6",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.support.ThemeRuntimeSettlementTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/ThemeRuntimeSettlementTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "3075682349bf5434b9247445da529d6ed94dc83c6e048096a5d115a3311fd683",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.support.ThemeRuntimeSlotReferencesTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/ThemeRuntimeSlotReferencesTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "48b65bcd76d2f4dbebba19d553a154e22c02cb2d9792ec5db8ad3d44d6be269f",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.support.TopicRouteCandidatePolicyTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/TopicRouteCandidatePolicyTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "35fcc97997712caeafe9e355a4437e7d3bde61a1cc0312708bd7e1b752024228",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.support.TopicRouteConfigValidatorTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/TopicRouteConfigValidatorTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "b87fa7d9cbaf1c3d5ba97534c3a31e56d9cc21496714a2127c18a9644a7feae7",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.support.TopicRouteEngineGoldenTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/TopicRouteEngineGoldenTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "648243fbc57c52e608b1d6d1dbe5a11528542b4a7adbef3455e3eecd7de9b55b",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.support.TopicRouteEngineTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/TopicRouteEngineTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "07613c5f183ae59efae8276b8b57901bdf5c07826fc2833d6670cb6d1dcabe5f",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.support.TopicRouteEngineVocabularyTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/TopicRouteEngineVocabularyTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "a96377a05e844998e5774d8f4747eceefd8929b4c141b81bebd7e799fb4d2c81",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.support.TopicRouteModePolicyTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/TopicRouteModePolicyTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "c059463207d29b3fb3c134ff1927c37d373695be8ee4276496b6e853bbc9e685",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.support.TopicRoutePoliciesTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/TopicRoutePoliciesTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "818e1ac1445fbd651d4a94ceab7f3998d5943e48698315fc9ed562b11ebd42ab",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.support.TopicRoutePublishGateTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/TopicRoutePublishGateTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "03d68d6dc512a76c7838584c4803bb8bfc1e663af2df2194c1d142de374c6e9b",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.service.support.TopicRouteSimulatorTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/TopicRouteSimulatorTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "e3c24e1dea78e4348c78b8935f1c3a7a6cfcd3f1c899c44e48168b9617c03b2f",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.task.RefundReconcileTaskTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/task/RefundReconcileTaskTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "01",
+        "01-changed-fixture"
+      ],
+      "sha256": "cba8c34f93c8ce9f959a61479f02b486df5427415c6ae41ceab6d12d5f5139ec",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.util.PlayNarrativeSupportTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/util/PlayNarrativeSupportTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "aa4e4daa4432d82807d528804ed714538e1cbc3351b130fcf830682c14622405",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.util.PlayProgressVarsSourceTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/util/PlayProgressVarsSourceTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "30840c66ef0ceafe8b2f714612e971689a62f891b759e4e59b01d40c3bebe634",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.business.util.PuzzleScorePolicyTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/util/PuzzleScorePolicyTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "5b121801d542d8d68192e66a391e7991438adc761f783d21bb03380f80b029a7",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.framework.aspectj.DeadlockRetryEntryPointContractTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/framework/aspectj/DeadlockRetryEntryPointContractTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "prior-changed-test"
+      ],
+      "sha256": "74063bc0962f86ea3593734930f41ace99f5040bdebe824bd0a57ba64d07eba8",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.ApiAdvancedPlayControllerTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiAdvancedPlayControllerTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "prior-changed-test"
+      ],
+      "sha256": "a1b1cc861ce29f52feef39225e188da008cbf83a1b75be06b119a249d44de6ab",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.ApiAuditControllerOwnershipTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiAuditControllerOwnershipTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "prior-changed-test"
+      ],
+      "sha256": "d269ea7fd8a916e0e7b34cb72ec583512b6dd94a44d4004e87f31e94842ed859",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.ApiCartControllerSettlementTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiCartControllerSettlementTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "prior-changed-test"
+      ],
+      "sha256": "9b3eb72fd114bfd54594700a689d3dad81eef88a146129fb4242c7de07d4e8e6",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.ApiContentSearchControllerTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiContentSearchControllerTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "08",
+        "prior-changed-test"
+      ],
+      "sha256": "11e5ad91e6dc5b27537cb0b60678604ff69c8d71725f4cb65611305ec5015050",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.ApiMerchantDeskControllerTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiMerchantDeskControllerTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "10",
+        "prior-changed-test"
+      ],
+      "sha256": "879f627fa318c3211fc881be881c1e137b03964717ba9fec46ce62b70504f333",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.ApiPlayBranchNodeVisibilityTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayBranchNodeVisibilityTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "aeb434dafe26bf25a33b24d61eb71aa76f81ebdc60d033567e8b6ec73249fd2a",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.ApiPlayCharacterControllerTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayCharacterControllerTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "08",
+        "prior-changed-test"
+      ],
+      "sha256": "64dab02b78a56007c0f8ab376eefb5dfac5e309da4d43aee4bc9c40acd7bfee9",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.ApiPlayCheckControllerTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayCheckControllerTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "2302f81a43e4d4bc16b6d253e8113bf0c080aaf1dd7803fade153ff3f73fddb1",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.ApiPlayCheckinDuplicateCodeTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayCheckinDuplicateCodeTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "7e921b06eaf6be4ce70c8fcef09c3dfeb95b961acb5c97eac71d7e809aab1dcb",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.ApiPlayCheckinLiveCodeTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayCheckinLiveCodeTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "4267862bb709ab54186a6cc6eab9d1002870d9c78ea90c62688cf9e181d0fbd8",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.ApiPlayCompletedRouteSourcesTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayCompletedRouteSourcesTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "716c6f3d847162564e4c36c7d75a51df3348fb586952b71d388d352e78f231dc",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.ApiPlayCurrentUseBoundaryTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayCurrentUseBoundaryTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "3b9c54fccd14ac712c1f35a727d0ca2d6167b5f103baf92b8e06b7654898e3ce",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.ApiPlayDelistedCompletedRetryContractTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayDelistedCompletedRetryContractTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "4f6eb71e9da8a8e72c1be17cca9c0383dcb550222ebfd4c3e430c7565d74c648",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.ApiPlayEncounterControllerTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayEncounterControllerTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "51235abcb73cc3f9b2087c3b43dba3db7919d9f2b2c40c52a5e067bbbf3cd68d",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.ApiPlayEncounterRoleViewTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayEncounterRoleViewTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "6df18d1ea6b5330263eb005c3d50ea12dd013abfa0d10511a17ed16431747048",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.ApiPlayEndingCompanionFactTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayEndingCompanionFactTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "6c93ea9f47cb2511734758cfd0867306e8600eb616e15bc7562af477c736a966",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.ApiPlayGpsGeofenceValidationTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayGpsGeofenceValidationTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "435084bceb3364ddb6a727456b31d30e1f62578437b002f385a24c207534fc3a",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.ApiPlayHintUnlockTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayHintUnlockTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "2c3c049cba62f5768afcc6f7ab821528c916965cfaf4f09f392a63ce5b0c38db",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.ApiPlayHistoryFulfillmentAccessTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayHistoryFulfillmentAccessTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "facfb2fa393dbde472011dc9d0e94143697c74071fdfeaad1907ff5d11abe686",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.ApiPlayHistoryNodesContractTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayHistoryNodesContractTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "f45f8fdef1a637fc8203727ced6b815eb655574e247edc6abfc5ba2ae81e9631",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.ApiPlayHistoryNodesOldEntryContractTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayHistoryNodesOldEntryContractTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "d7c9f838897de9bb525a57b4dd27a82f856bdb5d9cec3d5d08ab45e79b4e11a3",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.ApiPlayJourneyControllerTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayJourneyControllerTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "05a4e3eba387327054a8c975f44e32317691044940363b27e1bc6cee5eb87e57",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.ApiPlayJourneyReadControllerTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayJourneyReadControllerTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "b07ca0b13e204bc375345339131fa95eed5a0568a3746a38ba9cf17f163f17ef",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.ApiPlayLeadSpectatorGateTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayLeadSpectatorGateTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "ded08a71a1a5a102efe00835f57a8d73b34c9c2338beff6afc1a6d2346b1f3ec",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.ApiPlayLeaderboardTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayLeaderboardTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "9370e97781a022ca49d9a7350e9ea9077f80452056c0433a30acaee030e71341",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.ApiPlayMyCompletedSelfPlayContractTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayMyCompletedSelfPlayContractTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "d01b168b58bce468abf1be0ea3b5a5ed3c793b4e81a20cda18ab02d53ef4422d",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.ApiPlayNodeNpcPreferenceTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayNodeNpcPreferenceTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "44200213c9cc6c0b6190042a4583f2cc4b924eb350efe87c8f67b403729e48c5",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.ApiPlayOpeningActionTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayOpeningActionTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "e4de94189813d3eb0ed0c37ad2cc2c06aed5528f489ea09d3547a2bee223dd38",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.ApiPlayOpeningTransactionTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayOpeningTransactionTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "2cecaf4c99f2556f83699885331ee392deb91bb5da7d5caa80916be0bc26b993",
+      "storage": false,
+      "environment": "OFFLINE_H2",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.ApiPlayPhotoRetryAndFailureContractTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayPhotoRetryAndFailureContractTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "b53b6aced8fa808bf4c379a7f348a43b90200b17389bdf86236048370b17f38f",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.ApiPlayProgressCompletionTruthTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressCompletionTruthTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "7adab5086ed09896a546070251f95dfa5fd1bff047794618bd138b540f6d18e4",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.ApiPlayProgressCouponGrantFailureTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressCouponGrantFailureTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "3831d769616854569753aa991a10bc0a17a96c4bf327e6e0adc3d8e0c04405c5",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.ApiPlayProgressIdempotencyTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressIdempotencyTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "f5e23c2d82ba7d86e98cb21b12d5e7f428538bfc3d0fb5eabf2bef3768e6d36f",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.ApiPlayPuzzleHintTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayPuzzleHintTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "f4e3c8330e377f9a055a25394e71964bc382d27e0fc6384780c1994dfc843629",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.ApiPlayRouteConflictHttpContractTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayRouteConflictHttpContractTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "9b3c98aa07c8c56ef36af6b233d4fb7331092c3444270a9361c67ed7a9e7dec1",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.ApiPlayRouteContractTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayRouteContractTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "8804582a1942f0f8348d311ccf216e32117c639fdd79422eaa3962d786e83896",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.ApiPlayRpgP1ControllerTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayRpgP1ControllerTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "bdd4b39512b9e3081f0c7c0781170c719c8ff80cc0a2becee5c331840acf5ac7",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.ApiPlayRunSessionControllerTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayRunSessionControllerTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "6b5a9e648c1410d90c1294b2cc282afbfcb0adb1cb3a403f2a673c56386349a5",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.ApiPlaySelfPlayPassGateTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySelfPlayPassGateTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "3c3fdd24c117f9156eb0a74c8f2620a0c9cbbdacdd2b54b1d83a369f5e386be6",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.ApiPlaySensorResultTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySensorResultTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "b9695663219d129145bc84e61d6dbff62b4d444654cc5fa969aa5bdd89c7970d",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.ApiPlayThoughtSyncTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayThoughtSyncTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "b66e89ec414b0a9f4b8923c08a1ac4d0d5a669f06457aba7c5db65f8c8ad1667",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.ApiPlayUnlockGateTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayUnlockGateTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "29873fede07f77f28495b446c63c85a2b7825f39a4f12a474bedf27175ff280c",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.ApiPlayVitalsOnTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayVitalsOnTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "6859539dff8e263042be0b327c720ac15944de032dca1988343169d8367a23ef",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.ApiTemplateMerchantOperatorScopeTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiTemplateMerchantOperatorScopeTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "03",
+        "prior-changed-test"
+      ],
+      "sha256": "86e315eced714d9dff202740765c47f8b6d4a78d6d25c6f11ffdd5c6a3f5cced",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.ApiTopicAttributeBindingControllerTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiTopicAttributeBindingControllerTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "03",
+        "prior-changed-test"
+      ],
+      "sha256": "64a1ddacf74cc5e49a46d4c962ba3e3b13ea0570028f5047086412b97b6e9f4f",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.ArchitectureDayGCompletionFallbackTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ArchitectureDayGCompletionFallbackTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "1a00199a85aa3d0e11c8856e607c53f87301a9a173492de81f03f2d3b03ee055",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.CityStationOrderAcceptanceTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/CityStationOrderAcceptanceTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "prior-changed-test"
+      ],
+      "sha256": "4227dfca4c3253e998040e2e2076745b41f3cb60380799522c10e0693a6a50d8",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.ClubLeadGateTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ClubLeadGateTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "prior-changed-test"
+      ],
+      "sha256": "9489220462a387f86d4cd148c9cb674dc542ed6bb646918839863c9e999ed04b",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.CollectIdempotencyTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/CollectIdempotencyTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "prior-changed-test"
+      ],
+      "sha256": "cd66c87d83feb5cb85d5253f94f4dffbdcbce117b3d262e604e5f01532c900cd",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.FreeOrderCancelEntryGateAcceptanceTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/FreeOrderCancelEntryGateAcceptanceTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "prior-changed-test"
+      ],
+      "sha256": "d35d4b1427175eea5c9bc471b3e414ed5c1b71d2e968198e689a76311cf23ed4",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.JourneyPublishFreezeTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/JourneyPublishFreezeTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "prior-changed-test"
+      ],
+      "sha256": "68b91041b01785f44b1bcf607f89864ab44117a004a490ff0e22fc75fd7e9b09",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.LogAttemptFailureTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/LogAttemptFailureTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "prior-changed-test"
+      ],
+      "sha256": "445f6b48cc4bd38aa8d6532ba212b28aa8bfeb173dbb9a6204c201a9b1310299",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.NodeMedalClaimTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/NodeMedalClaimTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "prior-changed-test"
+      ],
+      "sha256": "7c421fd2583ef8094863e44352eb80f5dc86c39cd298835c58c589d7e4e25ba2",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.O08PrivateLocationReadPathTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/O08PrivateLocationReadPathTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "prior-changed-test"
+      ],
+      "sha256": "50329d5034e39f2d3bfb028220aa24740983943c434eb458f8d474cf5ce8fc54",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.OrientPlayerWireTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/OrientPlayerWireTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "8cbf9b5a32edbe91f54862c7913175d6f926a2d9db3dfba0e1b250d690b01703",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.OrientScoringRecoveryPermissionTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/OrientScoringRecoveryPermissionTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "0a79322d24d22146bd52ea1d538302bee130398bbd68db2da56cb3978ed07988",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.OrientScoringSyncControllerTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/OrientScoringSyncControllerTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "5330c462536fa9fe6204f3ac13a988346160efa01cf9cf3d8c0605c8c295177f",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.PhotoOwnerBindingContractTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PhotoOwnerBindingContractTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "prior-changed-test"
+      ],
+      "sha256": "0bcb7acc89cc097f8c2913fa26895cb7c19828d92d73c2ce8af4045360018f30",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.PhotoReviewRewardContractTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PhotoReviewRewardContractTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "prior-changed-test"
+      ],
+      "sha256": "206aff93f5df6c0a02857ea4f389bfa549ecb3952d623953edb0842d92767879",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.PlayCommandIntentTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PlayCommandIntentTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "2b61da8f2a090eb30e819a4fbf9401d4d5146e01b98ce8182d9a0ffac5daed98",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.PlayLeadAdmissionFailureTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PlayLeadAdmissionFailureTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "834d577578483a56f1e4a279315a9cfeadea416c1506b8d994eae4c3396346bb",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.PlayProgressVarsTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PlayProgressVarsTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "cfdacb46e886c913f5f98e99f79d9a83d4e0e1ec6030d7008329e7d82fc09e1d",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.PlayResolveModeTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PlayResolveModeTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "7500f19cc4e5c6fc90bb50ff750d4433b205268cf79ff617eb2e6a8150e3a1cf",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.PlaySelfPlayCompletionTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PlaySelfPlayCompletionTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "2d0114bb95fdb917368914402a860b848a7619b1a44be94ce65e0add980a7851",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/RoamPassportReadMySqlIT.java",
+      "className": "com.chengyinhub.web.controller.api.RoamPassportReadMySqlIT",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "05"
+      ],
+      "sha256": "2869613d495ddd94837a7d586509de959080249109be9374cfe844fc1b875f52",
+      "storage": true,
+      "environment": "NETWORK_MYSQL_SEPARATE",
+      "conditionalAnnotations": [
+        "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+      ]
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/RoamPassportReadTest.java",
+      "className": "com.chengyinhub.web.controller.api.RoamPassportReadTest",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "05"
+      ],
+      "sha256": "81693b1d99fdd5ddd27108fbab1a945353e9c57e16369ec660a5dbab0390203a",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.RoamTileMemoryPageTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/RoamTileMemoryPageTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "prior-changed-test"
+      ],
+      "sha256": "8b88b14bbf7793ff4e221b4cb79fd243ad23e0efda8afc83c4547780803a5677",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.ShopDayExperienceLayerContractTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ShopDayExperienceLayerContractTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "prior-changed-test"
+      ],
+      "sha256": "1109cfac05df691dc49fecf7294f1b8d6bb48093f2869ea77742abcddb1db1eb",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.api.TopicRouteFrozenSessionReadSideTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/TopicRouteFrozenSessionReadSideTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "78656322b8b0e67ae86320546ecebb7a593d89dcc7a5bf5fa3c7bff4c8eda0ef",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.business.BusinessImReceiptContractTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/business/BusinessImReceiptContractTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "02",
+        "prior-changed-test"
+      ],
+      "sha256": "90e7308fc95a829c6558dfa6d57a08ff67da59d2d4978dd61b8ee9df12883724",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.business.GuardAppealReadScopeTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/business/GuardAppealReadScopeTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "06"
+      ],
+      "sha256": "aeabb2a792297bf024e4b2449b916dbcc24d3f14ec2b751832860f90d0bb65cd",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.controller.business.PlayerWithdrawalCooldownControllerTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/business/PlayerWithdrawalCooldownControllerTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04"
+      ],
+      "sha256": "1112bba6eaeb21cadf4559bcaebe23598037481b6322084c22e907c3a224bff5",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.service.PreferencePlayServiceTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/service/PreferencePlayServiceTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "6e84f8b634aa838ab3983df5620d4126c4b7e34b9019d04088fd4f04e9a5b7e2",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.service.TopicRouteCompletionCoordinatorTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/service/TopicRouteCompletionCoordinatorTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "e25f8eaa15fbcf2aaa68039ac6a2e9d70255baec5115e3fe12700ccebdb0a1c3",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.service.audit.GuardArrivalEvidenceReaderTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/service/audit/GuardArrivalEvidenceReaderTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "06"
+      ],
+      "sha256": "eae231ecf4b3932d4544274b4bb77848b5fcb1c48dce3bfaed7633ec6d35d9cf",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.service.play.PlayFrozenContentProjectionTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/service/play/PlayFrozenContentProjectionTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "b7a6e5dd0f7b4565053ac375dea6af4c8318ce50a1ee8bc7ed358fe6635ba081",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.service.play.PlayOriginalRunTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/service/play/PlayOriginalRunTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "49911cc51cb730561a35cf2d385bf5ba8c451f97130c442d423caa412a95cdfb",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    },
+    {
+      "className": "com.chengyinhub.web.service.play.PlayOriginalSessionIntentTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/service/play/PlayOriginalSessionIntentTest.java",
+      "module": "chengyinhub-admin",
+      "owners": [
+        "04",
+        "prior-changed-test"
+      ],
+      "sha256": "12bf5241e15c75a0f7454b7fb345a498289978f50b992b16ced430b47a15e01b",
+      "storage": false,
+      "environment": "OFFLINE_UNIT",
+      "conditionalAnnotations": []
+    }
+  ]
+}

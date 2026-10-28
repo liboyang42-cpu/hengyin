@@ -1,3 +1,4 @@
+const templateIdOf = require('./template-adoption.js').id;
 'use strict';
 
 const HASH = [0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19];
@@ -76,10 +77,10 @@ function sharedSites(chapters, templateId, current) {
   const sites = [];
   const currentKey = nodeKey(current);
   (chapters || []).forEach(chapter => (chapter.nodes || []).forEach(node => {
-    if (Number(node.templateId) !== Number(templateId)) return;
+    if (templateIdOf(node.templateId) !== templateIdOf(templateId)) return;
     sites.push({ key: nodeKey(node), label: (chapter.name ? chapter.name + ' · ' : '') + (node.name || '未命名节点') });
   }));
-  if (current && Number(current.templateId) === Number(templateId)
+  if (current && templateIdOf(current.templateId) === templateIdOf(templateId)
     && !sites.some(site => currentKey && site.key === currentKey))
     sites.push({ key: currentKey, label: current.name || '当前节点' });
   return sites;
@@ -122,7 +123,7 @@ function optionsFor(kind, journeyRaw, runtimeRaw, template, slotKey) {
 }
 
 function reconcile(slots, templateId, old, oldSlots, journeyRaw, runtimeRaw, template) {
-  const next = { templateId: Number(templateId), values: {}, items: {}, slotDigest: slotDigest(slots) };
+  const next = { templateId: typeof templateId === 'number' && templateIdOf(templateId) ? templateId : templateIdOf(templateId), values: {}, items: {}, slotDigest: slotDigest(slots) };
   const previous = Object.fromEntries((oldSlots || []).map(slot => [slot.key, slot]));
   const used = { VALUE: new Set(), ITEM: new Set() };
   slots.forEach(slot => {
@@ -161,7 +162,7 @@ function rows(slots, binding, journeyRaw, runtimeRaw, template) {
 function issues(chapters, runtimeRaw, details, journeyRaw, requested) {
   const runtime = parse(runtimeRaw), bindings = runtime.templateBindings || {}, result = [];
   (chapters || []).forEach(chapter => (chapter.nodes || []).forEach(node => {
-    if (!Number(node.templateId)) return;
+    if (!templateIdOf(node.templateId)) return;
     const template = (details || {})[node.templateId] || node.templateInfo;
     const key = nodeKey(node);
     if (!template || !Object.prototype.hasOwnProperty.call(template, 'advancedConfigJson')) {
@@ -183,7 +184,7 @@ function issues(chapters, runtimeRaw, details, journeyRaw, requested) {
       used[slot.kind].add(target);
       return false;
     });
-    if (missing || binding.templateId !== Number(node.templateId) || binding.slotDigest !== slotDigest(slots))
+    if (missing || templateIdOf(binding.templateId) !== templateIdOf(node.templateId) || binding.slotDigest !== slotDigest(slots))
       result.push({ key, label: (node.name || '未命名节点') + '：资源未绑定' });
   }));
   return result;

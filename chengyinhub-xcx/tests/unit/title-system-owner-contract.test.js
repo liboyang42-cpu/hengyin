@@ -26,6 +26,17 @@ const WEBGL_EXCEPTION = 'subpackageP3/pages/badge-wall/index/index'
 
 // 完整路由盘点：总数断言只能防止数量漂移，逐路由集合才能防止两个页面互换后仍然假绿。
 const EXPECTED_NAV_ROUTES = [
+  // 2026-10-26 角色卡与本人发票使用共享导航及页标题；定向计分保留原生导航。
+  'subpackageMember/character/index',
+  'subpackageMember/invoice/index',
+  // 2026-10-28 文档二 L7:我的申诉与发票拆出的四页,同为 custom 导航 + cy-nav-bar(申请开票用导航栏标题,不挂 cy-page-title)
+  'subpackageMember/appeal-mine/index',
+  'subpackageMember/invoice-detail/index',
+  'subpackageMember/invoice-apply/index',
+  'subpackageMember/invoice-titles/index',
+  'subpackageMember/invoice-title-edit/index',
+  // 2026-10-26 自由探索权益页同为 custom 导航 + cy-nav-bar + cy-page-title 标准二级页(W8 同批注册,原登记漏记)
+  'subpackageMember/free-explore/index',
   // 2026-10-19 Claude 小程序线移植到 master(用户批准):本线 6 个新二级页,均为 cy-nav-bar + cy-page-title 标准二级页
   'pages/merchant/crm-campaigns/index',
   'subpackageMember/points-history/index',
@@ -106,6 +117,16 @@ const EXPECTED_NAV_ROUTES = [
 ]
 
 const EXPECTED_PAGE_TITLE_ROUTES = [
+  // 2026-10-26 角色卡与本人发票使用共享导航及页标题；定向计分保留原生导航。
+  'subpackageMember/character/index',
+  'subpackageMember/invoice/index',
+  // 2026-10-28 文档二 L7:我的申诉、发票详情、发票抬头、抬头编辑挂 cy-page-title(申请开票用导航栏标题)
+  'subpackageMember/appeal-mine/index',
+  'subpackageMember/invoice-detail/index',
+  'subpackageMember/invoice-titles/index',
+  'subpackageMember/invoice-title-edit/index',
+  // 2026-10-26 自由探索权益页同为 custom 导航 + cy-nav-bar + cy-page-title 标准二级页(W8 同批注册,原登记漏记)
+  'subpackageMember/free-explore/index',
   // 2026-10-19 Claude 小程序线移植到 master(用户批准):本线 6 个新二级页使用共享 cy-page-title 大标题
   'pages/merchant/crm-campaigns/index',
   'subpackageMember/points-history/index',
@@ -288,9 +309,12 @@ function assertTitleInventory(readSource = read) {
   // 2026-10-23 起名页 templateadd 退役删除(custom 导航页) ⇒ 145 → 144。
   // 2026-10-25 +1:官方地点挑战(pages/play/poi-challenge):整屏玩法页,拍照 / 答题用 cy-playkit-qa 自带的退出键,
   //   勋章用 cy-medal-screen,与 citystamp / stamp-camera 同形态,不挂 cy-nav-bar / cy-page-title ⇒ 144 → 145。
+  // 2026-10-26 +4 注册页，其中角色卡/发票/自由探索权益 +3 custom，定向计分使用原生导航 ⇒ 145 → 149;custom 145 → 148。
+  // 2026-10-28 文档二 L9 集成 +5:我的申诉、发票详情 / 申请开票 / 发票抬头 / 抬头编辑,均为 custom 导航 + cy-nav-bar ⇒ 149 → 154;custom 148 → 153。
   // 2026-10-28 +1:主题模板卡堆预览 topic-preview(custom 导航 + overlay cy-nav-bar,不挂 cy-page-title)⇒ 145 → 146。
-  assert.equal(rows.length, 146, '注册页面盘点数量发生漂移,需重新核对标题规范')
-  assert.equal(rows.filter((row) => row.custom).length, 146)
+  // 2026-10-28 L9 再并 master:#652 topic-preview(custom)+1 叠加本线 ⇒ 154 → 155;custom 153 → 154。
+  assert.equal(rows.length, 155, '注册页面盘点数量发生漂移,需重新核对标题规范')
+  assert.equal(rows.filter((row) => row.custom).length, 154)
   // 2026-09-02:+2 俱乐部客户列表与客户详情(club/customers、club/customer-detail),
   //   均为 custom 导航 + cy-nav-bar + cy-page-title 的普通二级页 = 133；custom 导航 129 + 2 = 131。
   const knownRoutes = new Set(routes)

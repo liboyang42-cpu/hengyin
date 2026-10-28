@@ -114,7 +114,7 @@
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/ClubController.java": "91dd8dfa824dba5a2d373ae6ea09104e9879c3f55735648e0ac538c284e82b6c",
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/ClubGovernancePlatformController.java": "dd6e76dc0c573006c639cff3149555a32c7585f970de4fa1a4049060bd0994ed",
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CashWithdrawAdminController.java": "8c2953bf9e1f429215d1c97cb4b4add01c78143ee4ed02e80adeb041c619f141",
-    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/BusinessOfficialEventController.java": "0f074d4e72bee13fbbdd161a376ed7edd56dd86b9f43a10d01f96c50188c436d",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/BusinessOfficialEventController.java": "91a170fba841945c7295c67621c80a30c6ab2f2d5e30add637aaae7887706183",
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/RoamPoiAdminController.java": "f95cb53929a9881e517d00def2709de67775a74a28230bba49bf1f3fda66a375",
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/VerifyEvidenceController.java": "736303363af0589d98b5c84a1708a23bfd6785fd0c86845b88f982008e470c0f",
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/ClubRunController.java": "f40553d6f39eb21772a7471b0b709deb67c2f00caba061747cf1228ae5f53028",
@@ -135,7 +135,7 @@
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/RecommendationController.java": "074e57ab66df7c9ab00e564a92eda2cf6246a1a0dd1a90baccf11718baf53bc6",
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/MerchantPayableBatchController.java": "38a276a82ab4ce9e3c608146984c9a2c99520ed57590cda0f98a83d3a9dbac74",
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CoopComplaintController.java": "73801ec1958327b9531dd0a1b62811d35343651bb6abb8381009ccfa4e7aa9dd",
-    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/BusinessImController.java": "4795af1eb0938c467fe90dcc464c60be2f295c62d20cbf4eb7aaa59768e31fc0",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/BusinessImController.java": "884685f1435654e7aefa16269d0b3f40330194c5d0679eeb458027ec1f85e69d",
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsPresetThemeStyleController.java": "34c944a0ab7d4860192ac010edb7cdc8130f9de6db6f791af154ea8d1fa20f73",
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsPresetRouteController.java": "43745994f7be42c3e46876ff43d9c6b0b75f10a9b365ada47a57aa13b022b8ab",
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/system/SysUserController.java": "39e9fea5232699cfc8ea4123fd395c4f85ece6430c2e00e124f864a8a3ee9817",
@@ -822,6 +822,16 @@
       "permission": "business:memberbalancedetail:list",
       "controller": "UmsMemberBalanceDetailController.java",
       "canonicalSource": "chengyinhub-ui/src/router/index.js"
+    },
+    {
+      "name": "用户发票处理",
+      "parentPath": "funds-aftercare",
+      "order": 110,
+      "path": "userInvoice",
+      "component": "business/userInvoice/index",
+      "permission": "business:userInvoice:list",
+      "source": "chengyinhub-admin/sql/migration_20261026_user_invoice_menu.sql",
+      "controller": "UserInvoiceProcessingController.java"
     }
   ],
   "functionRows": [
@@ -2994,6 +3004,21 @@
         "permission": "tool:swagger:list",
         "source": "sql/ry_20250522.sql",
         "controller": null
+      }
+    },
+    {
+      "component": "business/userInvoice",
+      "vue": "chengyinhub-ui/src/views/business/userInvoice/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "用户发票处理",
+        "parentPath": "funds-aftercare",
+        "order": 110,
+        "path": "userInvoice",
+        "component": "business/userInvoice/index",
+        "permission": "business:userInvoice:list",
+        "source": "chengyinhub-admin/sql/migration_20261026_user_invoice_menu.sql",
+        "controller": "UserInvoiceProcessingController.java"
       }
     }
   ]

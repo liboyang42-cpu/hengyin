@@ -33,7 +33,8 @@ function persistPhoto(wxApi, tempFilePath) {
       resolve({ path: tempFilePath || '', persisted: false })
       return
     }
-    wxApi.saveFile({
+    const fallback = () => resolve({ path: tempFilePath, persisted: false })
+    try { wxApi.saveFile({
       tempFilePath,
       success(res) {
         const savedFilePath = res && res.savedFilePath
@@ -41,16 +42,20 @@ function persistPhoto(wxApi, tempFilePath) {
           ? { path: savedFilePath, persisted: true }
           : { path: tempFilePath, persisted: false })
       },
-      fail() {
-        resolve({ path: tempFilePath, persisted: false })
-      },
-    })
+      fail: fallback,
+    }) } catch (_) { fallback() }
   })
 }
 
 function evictedSavedPhotos(existingSessions, incomingSession, limit) {
   const max = limit || MAX_SAVED_SESSIONS
-  const sessions = [incomingSession].concat(existingSessions || [])
+  // Archive retries replace the same timestamp in place; they do not consume a new slot.
+  // Match the page's persisted order before deciding which file references are evicted.
+  const sessions = (existingSessions || []).slice()
+  const existing = incomingSession && incomingSession.ts != null
+    ? sessions.findIndex((session) => session && session.ts === incomingSession.ts) : -1
+  if (existing >= 0) sessions[existing] = incomingSession
+  else sessions.unshift(incomingSession)
   const kept = new Set()
   sessions.slice(0, max).forEach((session) => {
     retainRecentPhotos(session && session.photos).forEach((photo) => {

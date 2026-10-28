@@ -47,6 +47,12 @@ public class ViewCommentServiceImpl implements IViewCommentService
     }
 
     @Override
+    public List<ViewComment> selectVisibleReplyCountsByParents(Long ownerType, Long ownerId, List<Long> parentIds)
+    {
+        return viewCommentMapper.selectVisibleReplyCountsByParents(ownerType, ownerId, parentIds);
+    }
+
+    @Override
     public Map<Integer, Integer> summarizeRatingDistribution(List<ViewComment> comments)
     {
         Map<Integer, Integer> distribution = new LinkedHashMap<>();

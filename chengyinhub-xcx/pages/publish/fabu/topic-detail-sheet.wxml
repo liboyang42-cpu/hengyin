@@ -5,13 +5,13 @@
      .node-card / .node-pill,不再造第二套。
      ⚠️ 不传 title:cy-sheet 的 .sh__head 是「左标题 + 右 ×」且被无障碍契约逐字锁死;
      不传 title 时那段整段不渲染,头完全在这里画。 -->
-<cy-sheet variant="full" show="{{topicDetailShow && !runtimeRewardOpen}}" stacked="{{runtimeEditor.show || survivalEditor.show || structureEditor.show}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="closeTopicDetail" class="node-sheet-host">
+<cy-sheet variant="full" show="{{topicDetailShow && !runtimeRewardOpen}}" stacked="{{runtimeEditor.show || survivalEditor.show || structureEditor.show || d20Sheet.show || prepSheet.show || keysSheetOpen}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="closeTopicDetail" class="node-sheet-host">
   <view class="pd-topic-detail node-sheet">
     <!-- 2026-09-24 CU-C-156:✕ 收到右上角(全仓统一),「完成」紧贴其左 ——
          原来 ✕ 在左上,和相邻弹层的右上 ✕ 反向,找关闭要换方向。
          标题只留主题名一处:「编辑主题」那颗小字和下面放大的主题名是两个标题,
          而主题名不在这一层改(命名由前一步的命名页负责),所以撤的是小字那行。 -->
-    <view class="node-sheet__top"><view class="node-sheet__close" bindtap="closeTopicDetail" aria-role="button" aria-label="关闭编辑主题" hover-class="cy-pressed" hover-stay-time="80">退出</view>
+    <view class="node-sheet__top"><view class="node-sheet__close" bindtap="closeTopicDetail" aria-role="button" aria-label="关闭编辑主题" hover-class="cy-pressed" hover-stay-time="80">取消</view>
       <view class="node-sheet__done" bindtap="closeTopicDetail" aria-role="button" aria-label="完成主题详情编辑" hover-class="cy-pressed" hover-stay-time="80">完成</view>
 
     </view>
@@ -37,6 +37,7 @@
         <view class="node-card__main">
           <text class="node-card__title">竖版封面<text class="g-req">*</text></text>
         </view>
+        <view wx:if="{{formData.imgUrl}}" class="node-pill" catchtap="removeBanner" aria-role="button" aria-label="删除竖版封面" hover-class="cy-pressed"><text>删除</text></view>
         <view class="node-pill node-pill--solid" catchtap="uploadBanner" aria-role="button" aria-label="{{formData.imgUrl ? '更换竖版封面' : '上传竖版封面'}}" hover-class="cy-pressed" hover-stay-time="80">
           <text wx:if="{{formData.imgUrl}}">已上传</text>
           <block wx:else><cy-icon name="plus" size="24" /><text>上传 3:4</text></block>
@@ -159,6 +160,21 @@
         <cy-switch checked="{{themeReplayEnabled}}" bindchange="toggleThemeReplay" accessibility-label="允许再玩一次" />
       </view>
       <cy-inline-error class="node-binding__error pd-rules__error" wx:if="{{themeReplayError}}" kind="error" title="{{themeReplayError}}" />
+      <!-- 文档二 L1(10-27 业主):d20、RPG 规则、角色属性合成一个入口。开关关着时下面那一行不出现。 -->
+      <view class="node-card__hr"></view>
+      <view class="node-card__row">
+        <view class="node-card__ico"><cy-icon name="star-filled" size="32" /></view>
+        <view class="node-card__main"><text class="node-card__title">d20 检定</text></view>
+        <cy-switch checked="{{d20Enabled}}" disabled="{{editScope === 'WHITELIST'}}" bindchange="onD20Toggle" accessibility-label="d20 检定" />
+      </view>
+      <block wx:if="{{d20Enabled}}">
+        <view class="node-card__hr"></view>
+        <view class="node-card__row" bindtap="openD20Sheet" aria-role="button" aria-label="d20 与角色设定 {{d20Summary}}" hover-class="cy-pressed" hover-stay-time="80">
+          <view class="node-card__ico"><cy-icon name="tab-club" size="32" /></view>
+          <view class="node-card__main"><text class="node-card__title">d20 与角色设定</text></view>
+          <view class="node-pill"><text>{{d20Summary}}</text><cy-icon name="chevron-right" size="24" /></view>
+        </view>
+      </block>
       <!-- 旧版配置只读提示（R3）：主题设置不再编辑恢复/设施/运行结局；已有的旧配置照常运行 -->
       <block wx:if="{{legacyRuntimeSummary.hasLegacy}}">
         <view class="node-card__hr"></view>
@@ -168,6 +184,9 @@
         </view>
       </block>
     </view>
+    <!-- 文档二 L1:可玩时段(俱乐部带队的主题整行不出现)、开局前准备,各一行,右边是当前值 -->
+    <view class="node-card" wx:if="{{clubIndex < 0}}" bindtap="openPlayWindow" aria-role="button" aria-label="可玩时段 {{playWindowLabel}}" hover-class="cy-pressed" hover-stay-time="80"><view class="node-card__row"><view class="node-card__ico"><cy-icon name="clock" size="32" /></view><view class="node-card__main"><text class="node-card__title">可玩时段</text></view><view class="node-pill"><text>{{playWindowLabel}}</text><cy-icon name="chevron-right" size="24" /></view></view></view>
+    <view class="node-card" bindtap="openPrepSheet" aria-role="button" aria-label="开局前准备 {{prepItems.length ? prepItems.length + ' 项' : '未设置'}}" hover-class="cy-pressed" hover-stay-time="80"><view class="node-card__row"><view class="node-card__ico"><cy-icon name="check" size="32" /></view><view class="node-card__main"><text class="node-card__title">开局前准备</text></view><view class="node-pill"><text>{{prepItems.length ? prepItems.length + ' 项' : '未设置'}}</text><cy-icon name="chevron-right" size="24" /></view></view></view>
     <view class="node-card" id="fieldCompleteReward" bindtap="openThemeRewards" hover-class="cy-pressed" hover-stay-time="80"><view class="node-card__row"><view class="node-card__ico"><cy-icon name="gift" size="32" /></view><view class="node-card__main"><text class="node-card__title">主题通关奖励</text></view><view class="node-pill">配置<cy-icon name="chevron-right" size="24" /></view></view></view>
     <!-- 主题级 N/M：自由探索继续认商家权益核销，不能被节点数量覆盖。 -->
     <view class="node-card" id="fieldCompletionRule">
@@ -217,10 +236,11 @@
     </view>
 
 
-    <!-- 主题状态键(仅编辑已有主题时可管理;草稿还没有 topicId,后端无处挂) -->
+    <!-- 线索与物品(仅编辑已有主题时可管理;草稿还没有 topicId,后端无处挂) -->
     <topic-state-keys wx:if="{{editingTopicId}}" topic-id="{{editingTopicId}}" scope="{{operationScope}}"
-                      read-only="{{editScope === 'WHITELIST'}}" />
-    <view class="node-card" wx:else><text class="node-card__title">状态键</text><text style="font-size:24rpx;color:#6b7280">保存为主题后，才能在这里注册和管理状态键。</text></view>
+                      read-only="{{editScope === 'WHITELIST'}}" items="{{keysItems}}"
+                      bind:itemchange="onKeysItemChange" bind:sheetchange="onKeysSheet" />
+    <view class="node-card" wx:else><text class="node-card__title">线索与物品</text><text style="font-size:24rpx;color:#6b7280">保存为主题后，才能在这里添加线索与物品。</text></view>
 
     <!-- 「清空本地草稿」原先挂在创作页那条常驻提示条上,提示条 2026-08-11 下线后
          入口挪到这里 —— 它是"把这份草稿丢掉重来"的破坏性动作,本来也不该常驻在
@@ -228,3 +248,7 @@
     <view class="node-card node-card--danger" bindtap="clearLocalDraft" aria-role="button" aria-label="清空本地草稿" hover-class="cy-pressed" hover-stay-time="80">清空本地草稿</view>
   </view>
 </cy-sheet>
+
+<!-- 文档二 L1:叠在主题详情上的两张半屏(可玩时段底部选择卡在 index.wxml 的 include 同一行) -->
+<d20-settings show="{{d20Sheet.show}}" rules="{{formData.journeyRules}}" read-only="{{editScope === 'WHITELIST'}}" bind:close="closeD20Sheet" bind:save="onD20Save" />
+<start-prep show="{{prepSheet.show}}" items="{{prepItems}}" read-only="{{editScope === 'WHITELIST'}}" bind:close="closePrepSheet" bind:change="onPrepChange" />

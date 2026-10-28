@@ -1,0 +1,135 @@
+<template name="read-status">
+  <view wx:if="{{states[field] === 'LOADING'}}">正在读取…</view>
+  <cy-inline-error wx:if="{{states[field] === 'ERROR'}}" kind="data" title="{{errors[field]}}" action="重试读取" data-field="{{field}}" bind:action="retryRead" />
+  <view wx:if="{{states[field] === 'EMPTY'}}">当前没有记录</view>
+</template>
+<view class="theme-merchant desk">
+  <view class="title">商品与履约</view>
+  <cy-inline-error wx:if="{{error}}" kind="error" title="{{error}}" />
+  <view wx:if="{{notice}}">{{notice}}</view>
+  <view wx:if="{{pending}}">原请求：{{requestId}}<button class="desk__btn" bindtap="recover" disabled="{{busy}}">读取原请求结果</button></view>
+  <view wx:if="{{lastReceipt}}">已确认原请求 {{lastReceipt.requestId}} · {{lastReceipt.action}} · 目标 {{lastReceipt.targetId}}</view>
+  <template is="read-status" data="{{field:'lastReceipt',states:readStates,errors:readErrors}}"/>
+  <view class="title">门店与核销范围</view>
+  <button class="desk__btn" wx:if="{{access.canReadBasic}}" bindtap="loadStores">读取门店与营业时段</button>
+  <template is="read-status" data="{{field:'stores',states:readStates,errors:readErrors}}"/>
+  <view wx:for="{{stores}}" wx:key="storeId"><view>{{item.name}} · {{item.address}}</view><view>营业时段：{{item.businessHours.raw || '未设置'}} · 营业状态 {{item.businessStatus}}</view><view wx:if="{{item.businessHours.parsed}}">{{item.businessHours.open}} 至 {{item.businessHours.overnight ? '次日' : '当日'}} {{item.businessHours.close}}</view><view wx:else>营业时段未能解析，请在门店设置中核对原文。</view></view>
+  <button class="desk__btn" wx:if="{{access.canWriteProfile}}" data-page="decor" bindtap="openExisting">门店位置与营业设置</button>
+  <button class="desk__btn" wx:if="{{access.canReadMarketing}}" data-page="supply" bindtap="openExisting">查看供货与合作</button>
+  <button class="desk__btn" wx:if="{{access.canReadMarketing}}" data-page="reviews" bindtap="openExisting">评价与回复</button>
+  <button class="desk__btn" wx:if="{{access.canReadFinance}}" data-page="ledger" bindtap="openExisting">打开经营账本</button>
+  <button class="desk__btn" wx:if="{{access.canReadBasic}}" bindtap="loadAnchor">读取核销锚点</button>
+  <template is="read-status" data="{{field:'anchor',states:readStates,errors:readErrors}}"/>
+  <view wx:if="{{anchor}}">{{anchor.configured ? '已配置锚点' : '未配置锚点'}} · {{anchor.radiusM === 0 ? '0' : (anchor.radiusM || '未知')}}米 · 已配置WiFi {{anchor.wifiCount || 0}}个</view>
+  <view wx:if="{{anchor && !anchor.enforced}}">当前工作台锚点为配置/自检数据，实际核销尚未据此拦截。</view>
+  <button class="desk__btn" wx:if="{{anchor && access.canWriteProfile}}" bindtap="editAnchor" disabled="{{pending || busy}}">维护锚点范围</button>
+  <view wx:if="{{anchorDraft}}">
+    <view>锚点：{{anchorDraft.anchorLat}}，{{anchorDraft.anchorLng}}（新锚点采用当前门店位置；调整门店位置请先进入门店设置）</view>
+    <button class="desk__btn" bindtap="useStoreAnchor" disabled="{{pending || busy}}">使用当前门店位置</button>
+    <text>核销半径（30至500米）</text><input class="desk__field" value="{{anchorDraft.radiusM}}" data-field="radiusM" bindinput="anchorInput" type="number" disabled="{{pending || busy}}"/>
+    <text>完整WiFi BSSID列表（最多8个，用空格分隔）</text><textarea class="desk__field" value="{{wifiText}}" data-field="wifiText" bindinput="anchorInput" disabled="{{pending || busy}}"/>
+    <view>原WiFi仅保存摘要，无法回填；本次保存将整体替换，留空会清除。</view><cy-switch checked="{{wifiConfirmed}}" data-field="wifiConfirmed" bind:change="anchorInput" disabled="{{pending || busy}}" accessibility-label="我已确认完整WiFi配置"/><text>我已确认完整WiFi配置</text>
+    <button class="desk__btn" bindtap="saveAnchor" disabled="{{pending || busy || !wifiConfirmed}}">保存锚点并回读</button>
+  </view>
+  <view class="title" wx:if="{{access.canVerify}}">玩家凭证候选</view>
+  <view wx:if="{{access.canVerify}}">
+    <button class="desk__btn" bindtap="scanCandidate" disabled="{{redeemState}}">扫描玩家凭证</button>
+    <input class="desk__field" value="{{codeText}}" maxlength="512" data-field="codeText" bindinput="codeInput" disabled="{{redeemState}}" placeholder="手动输入玩家凭证"/><button class="desk__btn" bindtap="manualCandidate" disabled="{{redeemState}}">解析手输候选</button>
+    <textarea class="desk__field" value="{{ocrText}}" maxlength="2000" data-field="ocrText" bindinput="codeInput" disabled="{{redeemState}}" placeholder="粘贴已识别的文字，提取候选码"/><button class="desk__btn" bindtap="extractCandidates" disabled="{{redeemState}}">提取文字候选</button>
+    <template is="read-status" data="{{field:'candidates',states:readStates,errors:readErrors}}"/>
+    <button class="desk__btn" wx:for="{{candidates}}" wx:key="index" data-index="{{item.index}}" bindtap="chooseCandidate" disabled="{{redeemState}}">候选{{index + 1}}：{{item.masked}}</button>
+    <template is="read-status" data="{{field:'candidate',states:readStates,errors:readErrors}}"/>
+    <view wx:if="{{candidate && !candidate.accepted}}">{{candidate.message}}</view>
+    <view wx:if="{{candidate.accepted}}">
+      <view>已识别为候选，尚未核销。请核对玩家凭证。</view>
+      <radio-group wx:if="{{candidate.fields.length}}" bindchange="candidateType"><label><radio value="activity" checked="{{candidate.values.type === 'activity'}}" disabled="{{redeemState}}"/>活动票</label><label><radio value="topic" checked="{{candidate.values.type === 'topic'}}" disabled="{{redeemState}}"/>主题票</label></radio-group>
+      <button class="desk__btn" wx:if="{{redemptionReady}}" bindtap="confirmCandidate" disabled="{{redeemState}}">确认并交由在线核销</button>
+      <view wx:else>在线提交入口尚未接通，请保留候选，不代表已核销。</view>
+    </view>
+    <view wx:if="{{redeemState}}">{{redeemState === 'HANDED_OFF' ? '已交在线入口处理，请勿重复提交' : notice}}</view>
+    <button class="desk__btn" wx:if="{{redeemState === 'APPLIED' || redeemState === 'REJECTED'}}" bindtap="nextCandidate">处理下一张凭证</button>
+  </view>
+  <block wx:if="{{productsOn}}">
+  <button class="desk__btn" wx:if="{{access.canManageProjects}}" bindtap="loadProducts">读取商品</button>
+  <button class="desk__btn" wx:if="{{access.canManageProjects}}" bindtap="newProduct" disabled="{{pending || busy}}">新建商品</button>
+  <template is="read-status" data="{{field:'products',states:readStates,errors:readErrors}}"/>
+  <view wx:for="{{products}}" wx:key="productId"><button class="desk__btn" data-id="{{item.productId}}" bindtap="selectProduct" disabled="{{pending || busy}}">{{item.productName}} · 库存 {{item.stock}}</button></view>
+  <view wx:if="{{product}}">
+    <text>商品名称</text><input class="desk__field" value="{{product.productName}}" data-field="productName" bindinput="productInput" maxlength="60" disabled="{{pending || busy}}"/>
+    <text>商品售价</text><input class="desk__field" value="{{product.price}}" data-field="price" bindinput="productInput" type="number" disabled="{{pending || busy}}"/>
+    <text>库存</text><input class="desk__field" value="{{product.stock}}" data-field="stock" bindinput="productInput" type="number" disabled="{{pending || busy}}"/>
+    <text>单位</text><input class="desk__field" value="{{product.unit}}" data-field="unit" bindinput="productInput" maxlength="16" disabled="{{pending || busy}}"/>
+    <button class="desk__btn" bindtap="saveProduct" disabled="{{pending || busy}}">保存商品并回读</button>
+  </view>
+  <template is="read-status" data="{{field:'detail',states:readStates,errors:readErrors}}"/>
+  <view wx:if="{{detail}}">
+    <button class="desk__btn" wx:if="{{detail.editable}}" bindtap="editProduct" disabled="{{pending || busy}}">修改商品</button>
+    <button class="desk__btn" wx:else bindtap="requestDelist" disabled="{{pending || busy}}">下架商品</button>
+    <view wx:if="{{delistConfirm}}">确认下架 {{detail.productName}}？<button class="desk__btn" bindtap="confirmDelist" disabled="{{pending || busy}}">确认下架</button><button class="desk__btn" bindtap="cancelDelist">取消</button></view>
+    <view class="title">{{detail.productName}}</view><view>商品状态：{{detail.publishStatus}} · {{detail.editable ? '可维护规格' : '上架中不可修改'}}</view>
+    <view wx:for="{{detail.skus}}" wx:key="skuId">
+      <view>{{item.skuName}} · 售价 {{item.price}} · 库存 {{item.stock}}</view>
+      <button class="desk__btn" data-id="{{item.skuId}}" bindtap="loadSlots">读取未来14天时段</button>
+      <button class="desk__btn" wx:if="{{detail.editable}}" data-id="{{item.skuId}}" bindtap="editSku" disabled="{{pending || busy}}">修改规格</button>
+    </view>
+    <button class="desk__btn" wx:if="{{detail.editable}}" bindtap="newSku" disabled="{{pending || busy}}">新增规格</button>
+  </view>
+  <view wx:if="{{sku}}">
+    <text>规格名称</text><input class="desk__field" value="{{sku.skuName}}" data-field="skuName" bindinput="skuInput" disabled="{{pending || busy}}" maxlength="60"/>
+    <text>规格售价</text><input class="desk__field" value="{{sku.price}}" data-field="price" bindinput="skuInput" disabled="{{pending || busy}}" type="digit"/>
+    <text>库存</text><input class="desk__field" value="{{sku.stock}}" data-field="stock" bindinput="skuInput" disabled="{{pending || busy}}" type="number"/>
+    <text>允许预约</text><cy-switch checked="{{sku.bookable}}" data-field="bookable" bind:change="skuInput" disabled="{{pending || busy}}" accessibility-label="允许预约"/>
+    <text>每时段分钟数</text><input class="desk__field" value="{{sku.slotMinutes}}" data-field="slotMinutes" bindinput="skuInput" disabled="{{pending || busy}}" type="number"/>
+    <text>每时段容量</text><input class="desk__field" value="{{sku.capacityPerSlot}}" data-field="capacityPerSlot" bindinput="skuInput" disabled="{{pending || busy}}" type="number"/>
+    <button class="desk__btn" bindtap="saveSku" disabled="{{pending || busy}}" loading="{{busy}}">保存并回读</button>
+  </view>
+  <template is="read-status" data="{{field:'slots',states:readStates,errors:readErrors}}"/>
+  <view wx:for="{{slots}}" wx:key="slotId">{{item.slotStart}} — {{item.slotEnd}} · 已预约 {{item.capacityReserved}} / 容量 {{item.capacityTotal}} · 状态 {{item.status}}</view>
+  <view wx:if="{{slotSkuId}}">{{slotFromDate}}起14天实时容量；跨页期间可能变化，可重新读取核对。</view>
+  <button class="desk__btn" wx:if="{{slotMore}}" bindtap="nextSlots" disabled="{{readStates.slots === 'LOADING'}}">继续读取时段</button>
+  </block>
+  <view wx:if="{{access.canVerify}}">
+    <view class="title">自由探索预约记录</view>
+    <cy-date-field mode="date" value="{{reservationDate}}" title="起始日期" bind:change="reservationDateInput"><view>起始日期：{{reservationDate || '今天（北京时间）'}}</view></cy-date-field>
+    <button class="desk__btn" bindtap="loadReservations">读取起始日期后14天预约</button>
+    <template is="read-status" data="{{field:'reservations',states:readStates,errors:readErrors}}"/>
+    <view wx:for="{{reservations}}" wx:key="id">{{item.startAt}} · 预约 {{item.id}} · 报名 {{item.registrationId}} · 章节 {{item.chapterId}} · 供货 {{item.offerId}} · {{item.status}}</view>
+    <view>记录来自自由探索预约；不据此推算商品SKU时段占用。</view>
+  </view>
+  <button class="desk__btn" wx:if="{{access.canReadVerifyRecords}}" bindtap="loadArrivals">读取今日核销统计</button>
+  <template is="read-status" data="{{field:'arrivals',states:readStates,errors:readErrors}}"/>
+  <view wx:if="{{arrivals}}">{{arrivals.date}} · 已返回核销 {{arrivals.redeemedCount === 0 ? '0' : (arrivals.redeemedCount || '未知')}} 条（最多200条）；此处不是预约到店名单。</view>
+  <view wx:for="{{arrivals.openByChapter}}" wx:key="offerId">章节供货 {{item.offerId}} · {{item.chapterName}} · 未核销权益 {{item.openEntitlements}}（章节统计，不是预约人数）</view>
+  <view wx:for="{{arrivals.redeemed}}" wx:key="redemptionId">{{item.chapterName}} · {{item.redeemedAt}} · {{item.redemptionId}}</view>
+  <button class="desk__btn" wx:if="{{access.canReadFinance}}" bindtap="loadFinance">读取对账与冻结批次</button>
+  <template is="read-status" data="{{field:'finance',states:readStates,errors:readErrors}}"/>
+  <view wx:if="{{finance}}">以下为结算主张与应付口径，不代表实付到账。</view>
+  <view wx:for="{{finance.bases}}" wx:key="route"><button class="desk__btn" data-route="{{item.route}}" bindtap="loadClaims">{{item.route}} · 主张 {{item.claimCount === 0 ? '0' : (item.claimCount || '未知')}} 条</button>
+    <view wx:for="{{item.byStatus}}" wx:for-item="statusCount" wx:for-index="statusName" wx:key="statusName">{{statusName}}：{{statusCount === 0 ? '0' : (statusCount || '未知')}}条</view>
+    <view wx:if="{{item.route === 'CHAPTER_OFFER'}}">有主张应付净额 {{item.payableNetWithClaim}}；无主张应付净额 {{item.payableNetWithoutClaim}}（{{item.payableRowsWithoutClaim === 0 ? '0' : (item.payableRowsWithoutClaim || '未知')}}条）</view>
+  </view>
+  <view wx:for="{{finance.outsideFourBases}}" wx:key="route"><button class="desk__btn" data-route="{{item.route}}" bindtap="loadClaims">四口径外：{{item.route}} · {{item.claimCount === 0 ? '0' : (item.claimCount || '未知')}}条</button><view wx:for="{{item.byStatus}}" wx:for-item="statusCount" wx:for-index="statusName" wx:key="statusName">{{statusName}}：{{statusCount === 0 ? '0' : (statusCount || '未知')}}条</view></view>
+  <template is="read-status" data="{{field:'claims',states:readStates,errors:readErrors}}"/>
+  <view wx:if="{{route}}">当前口径 {{route}}；翻页期间保留上次确认页，失败可重试。实时列表变化可能影响跨页结果。</view>
+  <view wx:for="{{claims}}" wx:key="claimId"><view>{{item.claimId}} · {{item.route}} · {{item.status}}</view>
+    <view>业务来源 {{item.contextType || '未提供'}} / {{item.contextId || '未提供'}}</view>
+    <view>履约来源 {{item.fulfillmentType || '未提供'}} / {{item.fulfillmentId || '未提供'}} · 服务单位 {{item.serviceUnit || '未提供'}}</view>
+    <view>合同来源 {{item.sourceContractType || '未提供'}} / {{item.sourceContractId || '未提供'}} · {{item.createTime || '时间未提供'}}</view>
+  </view>
+  <view wx:if="{{route}}"><button class="desk__btn" bindtap="previousClaims" disabled="{{claimPage <= 1 || readStates.claims === 'LOADING'}}">上一页</button><text>第{{claimPage}}页</text><button class="desk__btn" bindtap="nextClaims" disabled="{{claims.length < 20 || readStates.claims === 'LOADING'}}">下一页</button></view>
+  <template is="read-status" data="{{field:'frozen',states:readStates,errors:readErrors}}"/>
+  <view wx:for="{{frozen}}" wx:key="batchId">冻结批次 {{item.batchId}} · {{item.periodYm}} · 批次金额 {{item.amountTotal}} · {{item.frozenReason || '冻结原因未提供'}}</view>
+  <button class="desk__btn" wx:if="{{frozenMore}}" bindtap="nextFrozen" disabled="{{readStates.frozen === 'LOADING'}}">加载更早冻结批次</button>
+  <view wx:if="{{readStates.frozen === 'READY' || readStates.frozen === 'EMPTY'}}">{{frozenMore ? '还有更早记录' : '当前冻结批次已读至末页'}}；实时冻结状态可能变化，重新读取对账可刷新。</view>
+  <button class="desk__btn" wx:if="{{access.canReadVerifyRecords}}" bindtap="loadReviews">读取核销复核单</button>
+  <template is="read-status" data="{{field:'reviews',states:readStates,errors:readErrors}}"/>
+  <button class="desk__btn" wx:for="{{reviews}}" wx:key="reviewId" data-id="{{item.reviewId}}" bindtap="selectReview">{{item.reviewId}} · {{item.verdict}}</button>
+  <template is="read-status" data="{{field:'review',states:readStates,errors:readErrors}}"/>
+  <view wx:if="{{review}}"><view>原结论：{{review.verdict}}</view>
+    <view wx:for="{{review.evidence}}" wx:key="evidenceId">{{item.createdAt}} · {{item.note}}</view>
+    <view wx:if="{{review.canSubmitEvidence && access.canVerify}}"><textarea class="desk__field" value="{{note}}" bindinput="noteInput" maxlength="500" disabled="{{pending || busy}}" placeholder="补充说明（不改变原结论）"/><button class="desk__btn" bindtap="saveEvidence" disabled="{{pending || busy}}">补充说明并回读</button></view>
+  </view>
+  <button class="desk__btn" wx:if="{{access.canReadBasic}}" bindtap="loadMetrics">查看指标口径</button>
+  <template is="read-status" data="{{field:'metrics',states:readStates,errors:readErrors}}"/>
+  <view wx:for="{{metrics}}" wx:key="path"><view>{{item.name}}（{{item.unit}}）</view><view>{{item.definition}}</view></view>
+</view>

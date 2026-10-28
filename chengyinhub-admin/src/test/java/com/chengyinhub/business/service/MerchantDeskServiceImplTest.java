@@ -320,4 +320,92 @@ class MerchantDeskServiceImplTest {
         payload.put("albumPics", Collections.emptyList());
         return payload;
     }
+    @Test
+    void receiptRecoversSkuParentWithinCurrentMerchantScope() {
+        when(mapper.selectReceipt(OWNER, "original-sku-request"))
+                .thenReturn(Map.of("action", "SKU_SAVE", "targetType", "pms_sku", "targetId", 9007199254740993L));
+        when(mapper.selectReceiptSkuProductId(MERCHANT_ID, 9007199254740993L)).thenReturn(9007199254740995L);
+        Map<String, Object> result = service.receipt(access, "original-sku-request");
+        assertEquals("APPLIED", result.get("state"));
+        assertEquals(9007199254740995L, result.get("productId"));
+        verify(mapper).selectReceiptSkuProductId(MERCHANT_ID, 9007199254740993L);
+    }
+
+    @Test
+    void receiptRecoversEvidenceReviewAndKeepsAppliedWhenParentNoLongerVisible() {
+        when(mapper.selectReceipt(OWNER, "original-evidence-request"))
+                .thenReturn(Map.of("action", "REVIEW_EVIDENCE", "targetType", "verification_review_evidence", "targetId", 91L));
+        when(mapper.selectReceiptEvidenceReviewId(OWNER, 91L)).thenReturn(81L);
+        assertEquals(81L, service.receipt(access, "original-evidence-request").get("reviewId"));
+        when(mapper.selectReceiptEvidenceReviewId(OWNER, 91L)).thenReturn(null);
+        Map<String, Object> result = service.receipt(access, "original-evidence-request");
+        assertEquals("APPLIED", result.get("state"));
+        assertEquals(null, result.get("reviewId"));
+    }
+
+    @Test
+    void absentReceiptDoesNotLocateAnotherResource() {
+        assertEquals("NOT_FOUND", service.receipt(access, "missing-request").get("state"));
+        verify(mapper, never()).selectReceiptSkuProductId(anyLong(), anyLong());
+        verify(mapper, never()).selectReceiptEvidenceReviewId(anyLong(), anyLong());
+    }
+
+    @Test
+    void capacityPagesUseMerchantScopeAndOneExtraRowWithoutTruncatingFourteenDays() {
+        long start = java.time.Instant.parse("2026-10-25T16:00:00Z").toEpochMilli();
+        List<Map<String, Object>> rows = new java.util.ArrayList<>();
+        for (int i = 0; i < 101; i++) {
+            rows.add(Map.of("slotId", 9007199254740993L + i, "skuId", 8L,
+                    "slotStart", new java.util.Date(start + i * 60000L)));
+        }
+        when(mapper.selectCapacitySlotPage(eq(MERCHANT_ID), eq(8L), any(), any(), any(), any())).thenReturn(rows);
+        Map<String, Object> result = service.capacitySlotPage(access, 8L, "2026-10-26", 14, null, null);
+        assertEquals(100, ((List<?>) result.get("rows")).size());
+        assertEquals(true, result.get("hasMore"));
+        Map<?, ?> next = (Map<?, ?>) result.get("next");
+        assertEquals(9007199254741092L, next.get("afterSlotId"));
+        assertEquals(start + 99 * 60000L, next.get("afterStartAt"));
+        service.capacitySlotPage(access, 8L, "2026-10-26", 14,
+                (Long) next.get("afterStartAt"), (Long) next.get("afterSlotId"));
+        verify(mapper).selectCapacitySlotPage(MERCHANT_ID, 8L, new java.util.Date(start),
+                new java.util.Date(start + 14 * 86400000L), new java.util.Date(start + 99 * 60000L), 9007199254741092L);
+    }
+
+    @Test
+    void capacityPagesRejectInvalidRangeAndIncompleteOrOutsideCursorBeforeQuery() {
+        long start = java.time.Instant.parse("2026-10-25T16:00:00Z").toEpochMilli();
+        assertThrows(RuntimeException.class, () -> service.capacitySlotPage(access, 8L, "2026-10-26", 15, null, null));
+        assertThrows(RuntimeException.class, () -> service.capacitySlotPage(access, 8L, "2026-10-26", 14, start, null));
+        assertThrows(RuntimeException.class, () -> service.capacitySlotPage(access, 8L, "2026-10-26", 14, null, 1L));
+        assertThrows(RuntimeException.class, () -> service.capacitySlotPage(access, 8L, "2026-10-26", 14, start - 1, 1L));
+        assertThrows(RuntimeException.class, () -> service.capacitySlotPage(access, 8L, "2026-10-26", 14, start + 14 * 86400000L, 1L));
+        verify(mapper, never()).selectCapacitySlotPage(any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void frozenHistoryUsesOwnerScopeAndSentinelWithoutMutatingFinancialRows() {
+        List<Map<String, Object>> rows = new java.util.ArrayList<>();
+        for (int i = 0; i < 25; i++) rows.add(Map.of("batchId", 9007199254741099L - i,
+                "periodYm", "2026-10", "amountTotal", new BigDecimal("12.34")));
+        when(mapper.selectFrozenBatchPage(OWNER, null, null)).thenReturn(rows);
+        Map<String, Object> result = service.frozenBatchPage(access, null, null);
+        assertEquals(24, ((List<?>) result.get("rows")).size());
+        assertEquals(true, result.get("hasMore"));
+        assertEquals(Map.of("afterPeriodYm", "2026-10", "afterBatchId", 9007199254741076L), result.get("next"));
+        assertEquals(null, rows.get(0).get("holdState"));
+        when(mapper.selectFrozenBatchPage(OWNER, "2026-10", 9007199254741076L)).thenReturn(Collections.emptyList());
+        Map<String, Object> end = service.frozenBatchPage(access, "2026-10", 9007199254741076L);
+        assertEquals(false, end.get("hasMore")); assertEquals(null, end.get("next"));
+        verify(mapper).selectFrozenBatchPage(OWNER, "2026-10", 9007199254741076L);
+    }
+
+    @Test
+    void frozenHistoryRejectsIncompleteAndInvalidCursorsBeforeQuery() {
+        assertThrows(RuntimeException.class, () -> service.frozenBatchPage(access, "2026-10", null));
+        assertThrows(RuntimeException.class, () -> service.frozenBatchPage(access, null, 1L));
+        assertThrows(RuntimeException.class, () -> service.frozenBatchPage(access, "2026-13", 1L));
+        assertThrows(RuntimeException.class, () -> service.frozenBatchPage(access, "2026-10", 0L));
+        verify(mapper, never()).selectFrozenBatchPage(any(), any(), any());
+    }
+
 }

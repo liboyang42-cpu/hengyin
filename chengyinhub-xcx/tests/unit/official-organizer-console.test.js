@@ -2,13 +2,14 @@
 
 // CL4 / N3:官方活动 V2 主办控制台。
 // 断言的是「服务端说了算」这条主线:publish-check 不放行就不出任何控件;命令先确认再提交;
-// 成功只在回读一致时宣称生效;断网/5xx 落「结果未确认」而不是假成功或假失败。
+// 成功只由同请求号持久回执确认，业务状态另行刷新;断网/5xx 落「结果未确认」而不是假成功或假失败。
 
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
 
+const { platform, receipt, tick } = require('./helpers/team-event-platform');
 const ROOT = path.resolve(__dirname, '../..');
 const rules = require('../../pages/activity/official-organizer/organizer-rules.js');
 const { getDangerAction } = require('../../utils/danger-actions.js');
@@ -18,8 +19,7 @@ function read(rel) { return fs.readFileSync(path.join(ROOT, rel), 'utf8'); }
 
 function installWx(extra) {
   const calls = { navigateTo: [], toasts: [] };
-  const base = {
-    getStorageSync: () => '',
+  const base = { ...platform(),
     stopPullDownRefresh: () => {},
     navigateTo: (o) => calls.navigateTo.push(o.url),
     navigateBack: () => {},
@@ -67,6 +67,7 @@ function makeApp() {
   const requests = [];
   return {
     requests,
+    getUserID: () => '71', getAuthorization: () => 'token-a',
     sendRequest: (req) => { requests.push(req); return { abort() {} }; },
     getRequestErrorMessage: (res, fallback) => (res && res.msg) || fallback,
   };
@@ -203,113 +204,74 @@ test('排期:发布检查有阻塞项时不弹确认、不发请求', () => {
   assert.equal(app.requests.length, before);
 });
 
-test('暂停:先确认再提交;200 后回读到 PAUSED 才宣称生效', () => {
-  const app = makeApp();
-  const { page } = openPage(app);
-  const dc = wireConfirms(page);
+test('暂停:先确认再提交；成功必须有原号APPLIED，随后独立刷新状态', async () => {
+  const app = makeApp(); const { page } = openPage(app); const dc = wireConfirms(page);
   finishLoad(app, { check: PASS, detail: ok(LIVE) });
-  // 缺字段:不弹确认
   page.onAction({ currentTarget: { dataset: { action: 'pause' } } });
-  assert.equal(dc.pause.opens.length, 0);
-  assert.equal(page.data.formError.action, 'pause');
-  for (const key of rules.PAUSE_FIELDS) {
-    page.onPickPreset({ currentTarget: { dataset: { key, value: rules.PAUSE_PRESETS[key][0] } } });
-  }
+  assert.equal(dc.pause.opens.length, 0); assert.equal(page.data.formError.action, 'pause');
+  for (const key of rules.PAUSE_FIELDS) page.onPickPreset({ currentTarget: { dataset: { key, value: rules.PAUSE_PRESETS[key][0] } } });
   page.onFieldInput({ currentTarget: { dataset: { form: 'pause', key: 'reason' } }, detail: { value: '暴雨预警' } });
-  page.onPickPreset({ currentTarget: { dataset: { key: 'reason', value: '不在预设里的值' } } });
   const before = app.requests.length;
   page.onAction({ currentTarget: { dataset: { action: 'pause' } } });
-  assert.equal(dc.pause.opens.length, 1, '必须先弹确认');
-  assert.equal(dc.pause.opens[0].action.title, '暂停「外滩夜行」?');
-  assert.equal(app.requests.length, before, '确认前不发请求');
-  dc.pause.confirm();
-  const req = app.requests[app.requests.length - 1];
-  assert.equal(req.url, '/api/official/v2/events/7/pause');
-  assert.equal(req.method, 'POST');
-  assert.deepEqual(req.data, {
-    reason: rules.PAUSE_PRESETS.reason[0] + '：暴雨预警',
-    impactScope: rules.PAUSE_PRESETS.impactScope[0],
-    alternativePlan: rules.PAUSE_PRESETS.alternativePlan[0],
-    notificationPlan: rules.PAUSE_PRESETS.notificationPlan[0],
-  });
-  assert.equal(dc.pause.busyCount, 1);
-  req.success(ok());
-  assert.equal(dc.pause.doneCalls.length, 0, '刷新前不给成功回执');
-  finishLoad(app, { check: PASS, detail: ok(Object.assign({}, LIVE, { controlState: 'PAUSED', pausedReason: 'reason 内容' })) });
-  assert.equal(dc.pause.doneCalls.length, 1);
-  assert.equal(page.data.result.tone, 'success');
+  assert.equal(dc.pause.opens.length, 1); assert.equal(app.requests.length, before);
+  dc.pause.confirm(); await tick(); const req = app.requests.at(-1);
+  assert.equal(req.url, '/api/official/command'); assert.equal(req.method, 'POST');
+  const body = JSON.parse(req.data);
+  assert.equal(body.targetId, '7'); assert.equal(body.action, 'pause'); assert.match(body.requestId, /^[a-f0-9]{32}$/);
+  assert.equal(body.reason, rules.PAUSE_PRESETS.reason[0] + '：暴雨预警');
+  for (const field of ['impactScope', 'alternativePlan', 'notificationPlan']) assert.equal(body[field], rules.PAUSE_PRESETS[field][0]);
+  req.success(receipt(req, 'APPLIED'));
+  assert.equal(page.data.commandRecovery.state, 'APPLIED'); assert.equal(page.data.result.tone, 'success');
+  finishLoad(app, { check: PASS, detail: ok({ ...LIVE, controlState: 'PAUSED' }) });
   assert.equal(page.data.view.paused, true);
-  assert.deepEqual(page.data.forms.pause.reason, { preset: '', extra: '' }, '确认生效后清空表单');
+  assert.equal(page.data.forms.pause.reason.extra, body.reason, '原输入在确认回执前保持可见');
+  page.acknowledgeCommand(); assert.equal(page.data.commandRecovery.state, '');
 });
 
-test('回读与预期不符:不宣称成功,提示刷新核对', () => {
-  const app = makeApp();
-  const { page } = openPage(app);
-  const dc = wireConfirms(page);
-  finishLoad(app, { check: PASS, detail: ok(Object.assign({}, LIVE, { controlState: 'PAUSED' })) });
+test('普通状态相符也不能确认丢失的原请求；UNKNOWN保留冻结输入', async () => {
+  const app = makeApp(); const { page } = openPage(app); const dc = wireConfirms(page);
+  finishLoad(app, { check: PASS, detail: ok({ ...LIVE, controlState: 'PAUSED' }) });
   page.onFieldInput({ currentTarget: { dataset: { form: 'resume', key: 'reason' } }, detail: { value: '已处理' } });
-  page.onAction({ currentTarget: { dataset: { action: 'resume' } } });
-  dc.resume.confirm();
-  app.requests[app.requests.length - 1].success(ok());
-  finishLoad(app, { check: PASS, detail: ok(Object.assign({}, LIVE, { controlState: 'PAUSED' })) });
-  assert.equal(dc.resume.doneCalls.length, 0);
-  assert.equal(dc.resume.closed, 1);
-  assert.equal(page.data.result.tone, 'unknown');
-  assert.match(page.data.result.title, /状态未刷新/);
+  page.onAction({ currentTarget: { dataset: { action: 'resume' } } }); dc.resume.confirm(); await tick();
+  const req = app.requests.at(-1); req.fail({});
+  page.load(); finishLoad(app, { check: PASS, detail: ok({ ...LIVE, controlState: 'NORMAL' }) });
+  assert.equal(page.data.commandRecovery.state, 'UNKNOWN'); assert.equal(page.data.result, null);
+  page.queryCommand(); const query = app.requests.at(-1); assert.ok(query.url.endsWith('/command/query'));
+  query.success(receipt(query, 'UNKNOWN')); assert.equal(page.data.commandRecovery.state, 'UNKNOWN');
+  page.onFieldInput({ currentTarget: { dataset: { form: 'resume', key: 'reason' } }, detail: { value: 'new' } });
+  assert.equal(page.data.forms.resume.reason, '已处理');
+  page.retryCommand(); assert.equal(app.requests.at(-1).data, req.data);
 });
 
-test('业务拒绝:服务端原话留在确认框可重试,不刷新、不假成功', () => {
-  const app = makeApp();
-  const { page } = openPage(app);
-  const dc = wireConfirms(page);
-  finishLoad(app, { check: PASS, detail: ok(Object.assign({}, LIVE, { controlState: 'PAUSED' })) });
+test('持久REJECTED回执不假成功；保留原输入直到确认结果', async () => {
+  const app = makeApp(); const { page } = openPage(app); const dc = wireConfirms(page);
+  finishLoad(app, { check: PASS, detail: ok({ ...LIVE, controlState: 'PAUSED' }) });
   page.onFieldInput({ currentTarget: { dataset: { form: 'resume', key: 'reason' } }, detail: { value: '已处理' } });
-  page.onAction({ currentTarget: { dataset: { action: 'resume' } } });
-  dc.resume.confirm();
-  const req = app.requests[app.requests.length - 1];
-  assert.equal(req.url, '/api/official/v2/events/7/resume');
-  assert.deepEqual(req.data, { reason: '已处理' });
-  const count = app.requests.length;
-  req.success({ code: 500, msg: '恢复前检查未通过：缺少有效主办方' });
-  assert.deepEqual(dc.resume.failedCalls, ['恢复前检查未通过：缺少有效主办方']);
-  assert.equal(page.data.result.tone, 'error');
-  assert.equal(page.data.busyAction, '');
-  assert.equal(app.requests.length, count, '明确失败不触发刷新');
-  assert.equal(page.data.forms.resume.reason, '已处理', '失败保留输入');
+  page.onAction({ currentTarget: { dataset: { action: 'resume' } } }); dc.resume.confirm(); await tick();
+  const req = app.requests.at(-1); assert.equal(JSON.parse(req.data).reason, '已处理');
+  req.success(receipt(req, 'REJECTED'));
+  assert.equal(page.data.result.tone, 'error'); assert.equal(page.data.commandRecovery.state, 'REJECTED');
+  assert.equal(page.data.forms.resume.reason, '已处理');
+  const before = app.requests.length; page.retryCommand(); assert.equal(app.requests.length, before);
 });
 
-test('断网/5xx:落「结果未确认」并先回读,不当成失败也不当成成功', () => {
-  const app = makeApp();
-  const { page } = openPage(app);
-  const dc = wireConfirms(page);
-  finishLoad(app, { check: PASS, detail: ok(Object.assign({}, LIVE, { status: 0 })) });
-  page.onAction({ currentTarget: { dataset: { action: 'schedule' } } });
-  dc.schedule.confirm();
-  const req = app.requests[app.requests.length - 1];
-  assert.equal(req.url, '/api/official/v2/events/7/schedule');
-  req.successStatusAbnormal({}, 502);
-  assert.equal(dc.schedule.failedCalls.length, 0);
-  // 回读发现其实已排期 → 以服务端为准确认生效
-  finishLoad(app, { check: PASS, detail: ok(Object.assign({}, LIVE, { status: 1 })) });
-  assert.equal(dc.schedule.doneCalls.length, 1);
-  assert.equal(page.data.result.tone, 'success');
-
-  // 另一次:断网且回读也失败 → 结果未确认
-  for (const key of rules.PAUSE_FIELDS) {
-    page.onFieldInput({ currentTarget: { dataset: { form: 'pause', key } }, detail: { value: key[0] } });
+test('断网/5xx不换号；终止入口使用原输入，CANCELLED才释放', async () => {
+  for (const failure of ['network', 'http']) {
+    const app = makeApp(); const { page } = openPage(app); const dc = wireConfirms(page);
+    finishLoad(app, { check: PASS, detail: ok({ ...LIVE, status: 0 }) });
+    page.onAction({ currentTarget: { dataset: { action: 'schedule' } } }); dc.schedule.confirm(); await tick();
+    const req = app.requests.at(-1); assert.equal(JSON.parse(req.data).action, 'schedule');
+    if (failure === 'http') req.successStatusAbnormal({}, 502); else req.fail({});
+    assert.equal(page.data.commandRecovery.state, 'UNKNOWN'); assert.equal(page.data.result, null);
+    page.cancelCommand(); const cancel = app.requests.at(-1);
+    assert.ok(cancel.url.endsWith('/command/cancel')); assert.equal(cancel.data, req.data);
+    cancel.success(receipt(cancel, 'CANCELLED')); assert.equal(page.data.commandRecovery.state, 'CANCELLED');
+    assert.notEqual(page.data.result.tone, 'success');
+    page.acknowledgeCommand(); assert.equal(page.data.commandRecovery.state, '');
   }
-  page.onAction({ currentTarget: { dataset: { action: 'pause' } } });
-  dc.pause.confirm();
-  app.requests[app.requests.length - 1].fail({});
-  const check = app.requests[app.requests.length - 1];
-  assert.match(check.url, /publish-check$/);
-  check.fail({});
-  assert.equal(page.data.result.tone, 'unknown');
-  assert.match(page.data.result.title, /结果未确认/);
-  assert.equal(page.data.forms.pause.reason.extra, 'r', '结果未知时保留输入');
 });
 
-test('4xx 是明确失败,不走未知分支', () => {
+test('旧HTTP分类器保留兼容；新命令只认持久回执', () => {
   assert.equal(rules.isUnknownOutcome(403), false);
   assert.equal(rules.isUnknownOutcome(500), true);
   assert.equal(rules.isUnknownOutcome(408), true);

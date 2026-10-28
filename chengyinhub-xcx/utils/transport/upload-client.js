@@ -148,7 +148,7 @@ function createUploadClient(deps) {
           var assetId = String(data.assetId || '');
           if (data.reviewState && data.reviewState !== 'APPROVED') {
             if (/^[1-9][0-9]{0,18}$/.test(assetId)) pendingMedia[member + '|' + filePath] = assetId;
-            settle(index, { status: 'review_pending', assetId: assetId,
+            settle(index, { status: 'review_pending', assetId: assetId, rejected: data.reviewState === 'REJECTED',
               msg: data.reviewState === 'REJECTED' ? (data.reviewReason || '媒体审核未通过，可重新提交审核') : '文件已提交审核，通过后请重试此文件' });
             return;
           }

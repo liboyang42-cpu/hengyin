@@ -1,0 +1,70 @@
+<view class="theme-dark character-page">
+  <cy-toast id="cy-toast" />
+  <cy-loading-mask id="cy-loading" />
+  <cy-modal-host id="cy-modal-host" />
+  <cy-nav-bar custom-back bind:back="backToParticipation" />
+  <view style="height: {{statusBarHeight + navBarHeight}}px;"></view>
+  <cy-page-title title="我的角色卡" safe-top="{{false}}" />
+  <view class="character-content">
+    <block wx:if="{{state === 'ready' || state === 'template'}}">
+      <cy-card>
+        <view class="character-heading">
+          <text class="character-title">{{card.created ? '本人角色卡' : '角色模板'}}</text>
+          <cy-tag variant="mono">{{card.running ? '本局进行中' : (card.created ? '已建立' : '尚未建卡')}}</cy-tag>
+        </view>
+        <text class="character-note">{{card.definitionNote}}</text>
+      </cy-card>
+      <view wx:if="{{!card.attributes.length && !card.rpg}}" class="character-section">
+        <cy-empty kind="empty" title="{{card.created ? '暂无可展示属性' : '模板暂无可展示属性'}}" sub="该主题尚未配置可见属性" />
+      </view>
+      <view wx:for="{{card.attributes}}" wx:key="stateKey" class="character-section">
+        <cy-card>
+          <view class="character-heading">
+            <view class="character-attribute-title">
+              <cy-icon wx:if="{{item.icon}}" name="{{item.icon}}" size="32" style="{{item.color ? 'color: ' + item.color + ';' : ''}}" />
+              <text class="character-title">{{item.label}}</text>
+            </view>
+            <text class="character-value">{{item.value}}</text>
+          </view>
+          <view wx:if="{{item.displayType === 'bar'}}" class="character-meter" aria-label="{{item.label + ' ' + item.value + '，范围 ' + item.min + ' 到 ' + item.max}}">
+            <view class="character-meter-fill" style="width: {{item.percent || 0}}%; {{item.color ? 'background-color: ' + item.color + ';' : ''}}"></view>
+          </view>
+          <view wx:if="{{item.stars.length}}" class="character-stars" aria-label="{{item.label + ' ' + item.value + ' / ' + item.max}}">
+            <cy-icon wx:for="{{item.stars}}" wx:for-item="star" wx:key="index" name="star" size="32" class="{{star.filled ? 'character-star-filled' : 'character-star-empty'}}" style="{{star.filled && item.color ? 'color: ' + item.color + ';' : ''}}" />
+          </view>
+          <view class="character-meta">
+            <text>{{item.scopeText}}</text>
+            <text>范围 {{item.min}}–{{item.max}}</text>
+          </view>
+          <text wx:if="{{item.levelLabel}}" class="character-note">{{item.levelLabel}}</text>
+        </cy-card>
+      </view>
+      <view wx:if="{{card.rpg}}" class="character-section">
+        <cy-card>
+          <view wx:if="{{card.rpg.momentum}}" class="character-heading">
+            <text class="character-title">动量</text>
+            <text class="character-value">{{card.rpg.momentum.value}} / {{card.rpg.momentum.max}}</text>
+          </view>
+          <view wx:for="{{card.rpg.clocks}}" wx:key="key" class="character-section">
+            <view class="character-heading"><text>{{item.label}}</text><text>{{item.value}} / {{item.max}}</text></view>
+            <view class="character-meter"><view class="character-meter-fill" style="width: {{item.percent || 0}}%;"></view></view>
+          </view>
+          <view wx:for="{{card.rpg.facets}}" wx:key="key" class="character-section">
+            <view class="character-heading"><text class="character-title">{{item.label}}</text><cy-tag variant="mono">侧面</cy-tag></view>
+            <text wx:if="{{item.desc}}" class="character-note">{{item.desc}}</text>
+          </view>
+          <view wx:for="{{card.rpg.aspects}}" wx:key="key" class="character-section">
+            <view class="character-heading"><text class="character-title">{{item.label}}</text><cy-tag variant="mono">本局特质</cy-tag></view>
+            <text wx:if="{{item.desc}}" class="character-note">{{item.desc}}</text>
+          </view>
+        </cy-card>
+      </view>
+      <view class="character-section"><cy-btn variant="secondary" bindtap="loadCharacter">刷新角色卡</cy-btn></view>
+    </block>
+    <block wx:else>
+      <cy-empty kind="{{status.kind}}" title="{{status.title}}" sub="{{status.sub}}" />
+      <cy-btn wx:if="{{status.action}}" variant="secondary" bindtap="onStateAction">{{status.action}}</cy-btn>
+    </block>
+  </view>
+</view>
+<cy-privacy-gate show="{{privacyGateShow}}" bind:settled="onPrivacyGateSettled" />

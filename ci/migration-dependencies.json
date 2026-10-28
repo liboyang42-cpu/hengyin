@@ -1,6 +1,20 @@
 {
   "schemaVersion": 1,
   "dependencies": {
+    "20261026_official_broadcast_delivery": ["official_broadcast"],
+    "20261028_topic_play_setup": [],
+    "20261028_d20_attribute_registry": ["theme_state_key_20260916", "20261022_theme_state_key_attribute_def", "topic_journey_rules_20260916"],
+    "20261026_official_event_attendance": [],
+    "20261026_team_event_command_receipt": [],
+    "20261026_theme_attribute_registry_version": [],
+    "20261027_template_adoption_receipt": [],
+    "doc2_f3_refund_hold_20261026": [],
+    "orient_score_recovery_20261026": [],
+    "orient_score_sync_receipt_20261026": [],
+    "w8_refund_fulfillment_recovery_20261026": ["p3_phase_c_web_rules_refund"],
+    "20261027_user_invoice_processing_backfill": ["20261026_user_invoice_processing", "20261022_f7_user_invoice"],
+    "20261027_orient_scoring_menu_grants": ["20261012_missing_business_menu", "topic_source_menu_20260722", "web_admin_roles_20260719"],
+    "20261025_coop_invite_request_receipt": [],
     "20261028_remove_wildlife_theme": ["seed_official_solo_story_topics_20260823", "publish_solo_story_topics_20260827"],
     "20261028_template_shelf_list_free_explore": ["seed_shanghai_solo_topics_20260822", "seed_topic_template_shelf_20260726"],
     "20261025_official_poi_quotes": ["20261024_official_roam_challenges"],
@@ -842,6 +856,9 @@
     "20261022_theme_state_key_attribute_def": ["theme_state_key_20260916"],
     "20261022_theme_character": ["theme_state_key_20260916", "20261022_theme_state_key_attribute_def"],
     "20261022_f7_user_invoice": [],
+    "20261026_user_invoice_processing": ["20261022_f7_user_invoice"],
+    "20261026_user_invoice_title_receipt": ["20261022_f7_user_invoice"],
+    "20261026_user_invoice_menu": ["20261012_missing_business_menu", "20261026_user_invoice_processing", "20261026_user_invoice_title_receipt"],
     "20261022_f7_minor_guardian": []
   }
 }

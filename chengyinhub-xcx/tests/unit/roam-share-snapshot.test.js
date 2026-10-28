@@ -218,5 +218,50 @@ test('拍板17 足迹正文组件收到快照就直接渲染(不读本机),并�
   assert.equal(instance.data.session.distanceText, '3.2')
   assert.ok(instance.data.routeSegs.length > 0, '朋友能看到路线轨迹')
   const wxml = require('node:fs').readFileSync(require('node:path').join(__dirname, '../../components/cy/scene-roam-session/index.wxml'), 'utf8')
-  assert.match(wxml, /class="ss-ctaw" wx:if="\{\{!snapshot\}\}"/, '别人的足迹不给「分享足迹卡」按钮')
+  // W8 起服务端记录(无本机补充)也不给分享;快照这一道闸仍是首个合取条件
+  assert.match(wxml, /class="ss-ctaw" wx:if="\{\{!snapshot && \(!session\.serverFact \|\| session\.localSupplement\)\}\}"/, '别人的足迹不给「分享足迹卡」按钮')
+})
+
+
+test('分享 POI 脏坐标不转成零且合法零坐标保留', () => {
+  const invalid = [null, undefined, '', ' ', true, [], {}, 'bad', Infinity, 181]
+  for (const lng of invalid) {
+    const row = snapshot.buildSharePayload({ pois: [{ lat: 31, lng }] }, {}).pois[0]
+    assert.equal(Object.hasOwn(row, 'lng'), false, String(lng))
+    assert.equal(Object.hasOwn(row, 'lat'), false)
+  }
+  const rows = snapshot.buildSharePayload({ pois: [{ lat: 91, lng: 10 }, { lat: '0', lng: 0 }] }, {}).pois
+  assert.equal(Object.hasOwn(rows[0], 'lat'), false)
+  assert.equal(rows[1].lat, 0)
+  assert.equal(rows[1].lng, 0)
+})
+
+test('分享隐私读取失败不按默认公开发布，恢复读取后沿原设置重试', async () => {
+  const storage = memoryStorage({ roam_share_privacy: { visibility: 'private' } })
+  const read = storage.getStorageSync
+  storage.getStorageSync = key => { if (key === 'roam_share_privacy') throw new Error('read failed'); return read(key) }
+  const app = fakeApp(() => ({ code: 200, data: { token: TOKEN } }))
+  assert.deepEqual(await snapshot.publishShareSnapshot(app, storage, SESSION), { token: '', reason: 'failed' })
+  assert.equal(app.sent.length, 0)
+  storage.getStorageSync = read
+  assert.equal((await snapshot.publishShareSnapshot(app, storage, SESSION)).reason, 'private')
+  assert.equal(app.sent.length, 0)
+})
+
+
+test('撤销标记写入及清除都要求读回，失败保留重试入口', async () => {
+  const storage = memoryStorage()
+  const app = fakeApp(() => ({ code: 200 }))
+  const write = storage.setStorageSync
+  storage.setStorageSync = () => {}
+  assert.equal(await snapshot.revokeShareSnapshots(app, storage), false)
+  assert.equal(app.sent.length, 0)
+  storage.setStorageSync = write
+  const remove = storage.removeStorageSync
+  storage.removeStorageSync = () => {}
+  assert.equal(await snapshot.revokeShareSnapshots(app, storage), false)
+  assert.equal(storage.data[snapshot.revokePendingKey(app)], 1)
+  storage.removeStorageSync = remove
+  assert.equal(await snapshot.revokeShareSnapshots(app, storage), true)
+  assert.equal(storage.data[snapshot.revokePendingKey(app)], undefined)
 })

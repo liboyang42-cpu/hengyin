@@ -1,0 +1,26 @@
+/* 发票详情:照抄 subpackageMember/components/cy/scene-member-order-detail/index.wxss 正文部分(数值未改)。 */
+page { background: var(--cy-color-bg-page); }
+.detail { min-height: 100vh; width: 100%; padding-bottom: calc(48rpx + env(safe-area-inset-bottom)); box-sizing: border-box; display: flex; flex-direction: column; }
+.body { position: relative; padding: 0 var(--cy-page-x); flex: 1; display: flex; flex-direction: column; }
+.secondary-actions { display: flex; flex-wrap: wrap; gap: 16rpx; margin: var(--cy-space-4) 0 24rpx; }
+.sec-btn { flex: 1 1 100%; min-width: 200rpx; height: var(--cy-btn-h-sm); line-height: var(--cy-btn-h-sm); text-align: center; font-size: var(--cy-font-label); font-weight: 600; border-radius: var(--cy-radius-md); box-sizing: border-box; padding: 0; margin: 0; }
+.sec-btn--disabled { opacity: var(--cy-opacity-disabled); }
+.sec-danger { color: var(--cy-danger); background: transparent; border: 2rpx solid var(--cy-danger); }
+.sec-solid { color: var(--cy-btn-solid-fg); background: var(--cy-btn-solid-bg); }
+.sec-contact::after { border: none; }
+.sec-title { margin: var(--cy-space-5) 0 var(--cy-space-3); font-size: 34rpx; font-weight: 600; color: var(--cy-color-text-primary); } /* ds-ok:同订单详情 .sec-title 稿 17px */
+.ocard { padding: 0 var(--cy-space-4); border-radius: var(--cy-radius-xl); background: var(--cy-color-bg-surface); }
+.orow { display: flex; align-items: flex-start; gap: var(--cy-space-3); min-height: 40rpx; padding: 28rpx 0; border-bottom: 1rpx solid var(--cy-color-border-subtle); }
+.orow:last-child { border-bottom: none; }
+.orow-k { flex: none; font-size: var(--cy-font-caption); font-weight: 500; color: var(--cy-color-text-tertiary); }
+.orow-v { flex: 1; min-width: 0; text-align: right; font-size: var(--cy-font-label); font-weight: 500; color: var(--cy-color-text-primary); word-break: break-all; }
+.orow--total .orow-k { font-weight: 600; color: var(--cy-color-text-primary); font-size: var(--cy-font-label); }
+.orow--total .orow-v { font-size: 34rpx; font-weight: 600; } /* ds-ok:同订单详情合计行 稿 17px */
+.state-notice { padding: var(--cy-space-3-5) var(--cy-space-4); margin-top: var(--cy-space-4); }
+.state-notice__head { display: flex; align-items: center; gap: var(--cy-space-3); }
+.state-notice__k { flex: 1; min-width: 0; font-size: var(--cy-font-body); font-weight: 600; color: var(--cy-color-text-primary); }
+.state-notice__tag { flex: none; font-size: var(--cy-font-caption); font-weight: 600; color: var(--cy-color-text-tertiary); }
+.state-notice__tag--warning { color: var(--cy-color-status-warning); }
+.state-notice__tag--success { color: var(--cy-color-status-success); }
+.state-notice__tag--info    { color: var(--cy-color-status-info); }
+.state-notice__s { display: block; margin-top: var(--cy-space-2); font-size: var(--cy-font-caption); color: var(--cy-color-text-tertiary); line-height: var(--cy-leading-normal); }

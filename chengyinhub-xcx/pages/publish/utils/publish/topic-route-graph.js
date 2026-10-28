@@ -1,9 +1,11 @@
 'use strict';
 
+const vocabulary = require('./story-vocabulary.js');
+
 const ROUTE_MODES = Object.freeze({ LINEAR: 'LINEAR', BRANCH_GRAPH: 'BRANCH_GRAPH' });
 const TRIGGER_TYPES = Object.freeze(['CHOICE', 'PREFERENCE_RESULT', 'ADVANCED_RESULT']);
-const CONDITION_OPERATORS = Object.freeze(['EQ', 'NE', 'GT', 'GTE', 'LT', 'LTE', 'HAS_TAG', 'NODE_COMPLETED']);
-const EFFECT_OPERATORS = Object.freeze(['SET', 'INC', 'ADD_TAG']);
+const CONDITION_OPERATORS = Object.freeze(['EQ', 'NE', 'GT', 'GTE', 'LT', 'LTE', 'HAS_TAG', 'NODE_COMPLETED', ...vocabulary.conditions]);
+const EFFECT_OPERATORS = Object.freeze(['SET', 'INC', 'ADD_TAG', ...vocabulary.effects]);
 const PURCHASE_KINDS = Object.freeze([1, 2, 3]);
 const ROLE_CODES = Object.freeze(['NAVIGATOR', 'OBSERVER', 'RECORDER', 'NEGOTIATOR', 'DECODER']);
 
@@ -105,6 +107,7 @@ function normalizeEdge(edge, index) {
 function normalizeCondition(condition) {
   const raw = condition && typeof condition === 'object' ? condition : {};
   const op = stringId(raw.op || raw.operator || raw.type).toUpperCase();
+  if (vocabulary.conditions.includes(op)) return Object.assign(clone(raw), { op });
   if (op === 'NODE_COMPLETED') {
     const reference = stringId(raw.nodeId || raw.nodeKey || raw.value);
     return raw.nodeKey && !raw.nodeId ? { op, nodeKey: reference } : { op, nodeId: reference };
@@ -116,6 +119,7 @@ function normalizeCondition(condition) {
 function normalizeEffect(effect) {
   const raw = effect && typeof effect === 'object' ? effect : {};
   const op = stringId(raw.op || raw.type).toUpperCase();
+  if (vocabulary.effects.includes(op)) return Object.assign(clone(raw), { op });
   if (op === 'ADD_TAG') return { op, value: stringId(raw.value || raw.tag) };
   return { op, var: stringId(raw.var || raw.name), value: raw.value };
 }
@@ -163,12 +167,11 @@ function serializeWithNodeKeys(input) {
     edge.toNodeKey = edge.toNodeId;
     delete edge.fromNodeId;
     delete edge.toNodeId;
-    edge.conditions = edge.conditions.map((condition) => {
-      if (condition.op !== 'NODE_COMPLETED') return condition;
-      const next = Object.assign({}, condition, { nodeKey: condition.nodeKey || condition.nodeId });
+    edge.conditions = edge.conditions.map((condition) => vocabulary.mapNodes(condition, condition => {
+      const next = Object.assign({}, condition, { nodeKey: stringId(condition.nodeKey || condition.nodeId) });
       delete next.nodeId;
       return next;
-    });
+    }));
   });
   payload.fallbacks.forEach((fallback) => {
     fallback.fromNodeKey = fallback.fromNodeId;
@@ -222,8 +225,12 @@ function validate(input, nodes, context) {
     }
     if (!(edge.weight > 0)) errors.push(routeError('INVALID_WEIGHT', '权重必须大于 0', { edgeId: edge.id, field: 'weight' }));
     if (!Number.isInteger(edge.maxVisits) || edge.maxVisits < 0) errors.push(routeError('INVALID_MAX_VISITS', 'maxVisits 必须是非负整数', { edgeId: edge.id, field: 'maxVisits' }));
-    edge.conditions.forEach((condition, index) => {
-      const field = 'conditions[' + index + ']';
+    const checkCondition = (condition, field, depth = 0) => {
+      const error = (at, message, code = 'INVALID_CONDITION', nodeId = '') => errors.push(routeError(code, message, { edgeId: edge.id, field: at, nodeId }));
+      if (condition && vocabulary.conditions.includes(condition.op)) {
+        vocabulary.validateCondition(condition, field, depth, nodeIds, error, checkCondition);
+        return;
+      }
       if (!CONDITION_OPERATORS.includes(condition && condition.op)) {
         errors.push(routeError('INVALID_CONDITION', '不支持的条件运算符', { edgeId: edge.id, field: field + '.op' }));
       } else if (condition.op === 'NODE_COMPLETED' && !nodeIds.has(stringId(condition.nodeId))) {
@@ -246,8 +253,14 @@ function validate(input, nodes, context) {
           }));
         }
       }
-    });
+    };
+    edge.conditions.forEach((condition, index) => checkCondition(condition, 'conditions[' + index + ']'));
     edge.effects.forEach((effect, index) => {
+      if (effect && vocabulary.effects.includes(effect.op)) {
+        vocabulary.validateEffect(effect, 'effects[' + index + ']', graph.variables, (field, message) =>
+          errors.push(routeError('INVALID_EFFECT', message, { edgeId: edge.id, field })));
+        return;
+      }
       if (!EFFECT_OPERATORS.includes(effect && effect.op)) {
         errors.push(routeError('INVALID_EFFECT', '不支持的路线效果', { edgeId: edge.id, field: 'effects[' + index + '].op' }));
       } else if (effect.op !== 'ADD_TAG' && !effect.var) {
@@ -459,7 +472,9 @@ function matchesTrigger(edge, outcome) {
   return edge.trigger.type === input.type && edge.trigger.outcomeCode === stringId(input.outcomeCode);
 }
 
-function conditionValue(condition, state) {
+function conditionValue(condition, state, depth = 0) {
+  if (!condition || !CONDITION_OPERATORS.includes(condition.op)) throw Error('不支持的条件运算符');
+  if (vocabulary.conditions.includes(condition.op)) return vocabulary.conditionValue(condition, state, conditionValue, depth);
   if (condition.op === 'HAS_TAG') return (state.tags || []).includes(condition.value);
   if (condition.op === 'NODE_COMPLETED') return (state.completedNodeIds || []).map(stringId).includes(stringId(condition.nodeId));
   const actual = (state.variables || {})[condition.var];
@@ -474,6 +489,8 @@ function conditionValue(condition, state) {
 
 function applyEffects(effects, state) {
   (effects || []).forEach((effect) => {
+    if (vocabulary.effects.includes(effect.op)) { vocabulary.applyEffect(effect, state); return; }
+    if (!EFFECT_OPERATORS.includes(effect.op)) throw Error('不支持的路线效果：' + effect.op);
     if (effect.op === 'ADD_TAG') {
       if (!state.tags.includes(effect.value)) state.tags.push(effect.value);
     } else if (effect.op === 'SET') state.variables[effect.var] = effect.value;
@@ -550,14 +567,13 @@ function cloneSubgraph(input, selectedNodeIds, keyFactory) {
       fromNodeId: nodeIdMap[edge.fromNodeId],
       toNodeId: nodeIdMap[edge.toNodeId],
     });
-    copied.conditions = copied.conditions.map((condition) => {
-      if (condition.op !== 'NODE_COMPLETED') return condition;
+    copied.conditions = copied.conditions.map((condition) => vocabulary.mapNodes(condition, condition => {
       const oldId = stringId(condition.nodeKey || condition.nodeId);
       const mapped = nodeIdMap[oldId] || '';
       return condition.nodeKey
         ? Object.assign({}, condition, { nodeKey: mapped })
         : Object.assign({}, condition, { nodeId: mapped });
-    });
+    }));
     return copied;
   });
   const fallbacks = graph.fallbacks.filter((fallback) => selected.has(fallback.fromNodeId) && selected.has(fallback.toNodeId)).map((fallback) => ({
@@ -601,7 +617,9 @@ function simulate(input, nodes, options) {
   const nodeMap = new Map((nodes || []).map((node) => [nodeId(node), node]));
   const maxSteps = Math.max(10, Number(settings.maxSteps) || Math.max((nodes || []).length * 10, 50));
   for (let run = 0; run < runs; run += 1) {
-    const state = { currentNodeId: graph.startNodeId, variables: clone(graph.variables), tags: [], completedNodeIds: [], visits: {} };
+    const state = Object.assign({ variables: clone(graph.variables), tags: [], completedNodeIds: [], visits: {},
+      visitedNodeIds: [graph.startNodeId], decisionLog: [], themeRuntime: { inventory: {}, pending: {}, sources: {} }
+    }, clone(settings.initialState || {}), { currentNodeId: graph.startNodeId });
     const seenNodes = new Set();
     let length = 0;
     let distance = 0;
@@ -629,6 +647,8 @@ function simulate(input, nodes, options) {
       const legDistance = distanceMeters(nodeMap.get(state.currentNodeId), nodeMap.get(decision.toNodeId));
       if (legDistance == null) distanceKnown = false;
       else distance += legDistance;
+      state.decisionLog.push({ fromNodeId: state.currentNodeId, toNodeId: decision.toNodeId });
+      state.visitedNodeIds.push(decision.toNodeId);
       state.completedNodeIds.push(state.currentNodeId);
       state.currentNodeId = decision.toNodeId;
       length += 1;

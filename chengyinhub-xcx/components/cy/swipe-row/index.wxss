@@ -1,0 +1,66 @@
+.sw { position: relative; overflow: hidden; background: var(--cy-color-bg-surface); }
+.sw--hr::before {
+  content: "";
+  position: absolute;
+  left: var(--cy-space-4);
+  right: 0;
+  top: 0;
+  height: 1px;
+  z-index: 3;
+  background: var(--cy-color-border-subtle);
+}
+.sw__del {
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 100rpx;
+  width: 156rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--cy-color-action-danger-bg);
+  color: var(--cy-color-action-danger-fg);
+  font-size: var(--cy-type-body);
+  font-weight: 600;
+  visibility: hidden;
+}
+.sw.is-open .sw__del { visibility: visible; }
+.sw__row {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  background: var(--cy-color-bg-surface);
+  transition: transform var(--cy-motion-standard) var(--cy-ease-standard);
+}
+.sw__row.is-swiping { transition: none; }
+.sw.is-open .sw__row { transform: translateX(-156rpx); }
+.sw__main { flex: 1 1 auto; min-width: 0; }
+/* 红色减号:可见的圆 44rpx,热区 88rpx */
+.sw__minus {
+  flex: none;
+  position: relative;
+  width: 88rpx;
+  height: 88rpx;
+  margin-left: var(--cy-space-2);
+}
+.sw__minus::before { content: ""; position: absolute; left: 22rpx; top: 22rpx; width: 44rpx; height: 44rpx; border-radius: 50%; background: var(--cy-color-action-danger-bg); }
+.sw__minus::after { content: ""; position: absolute; left: 34rpx; width: 20rpx; top: 42rpx; height: 4rpx; border-radius: var(--cy-radius-pill); background: var(--cy-color-action-danger-fg); }
+/* 三条线:88rpx 热区,线本身 36×24 */
+.sw__grip {
+  flex: none;
+  width: 36rpx;
+  height: 24rpx;
+  padding: 32rpx var(--cy-space-4) 32rpx 26rpx;
+  color: var(--cy-color-text-tertiary);
+  background:
+    linear-gradient(currentColor, currentColor) 0 0 / 100% 4rpx no-repeat,
+    linear-gradient(currentColor, currentColor) 0 10rpx / 100% 4rpx no-repeat,
+    linear-gradient(currentColor, currentColor) 0 20rpx / 100% 4rpx no-repeat;
+  background-origin: content-box;
+  background-clip: content-box;
+}
+.sw.is-drag { z-index: 5; box-shadow: 0 16rpx 48rpx rgba(0, 0, 0, .16); } /* ds-ok 拖动排序时被拎起的那一行,tokens 里没有对应档 */
+
+/* 组件样式隔离,全局 .cy-pressed 进不来,本地补一份(同 cy-card) */
+.cy-pressed { opacity: .88; }

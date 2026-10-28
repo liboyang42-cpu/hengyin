@@ -29,10 +29,12 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Clock;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -62,6 +64,11 @@ public class OrientSessionServiceImpl implements IOrientSessionService {
     private final CmsTopicNodeMapper nodeMapper;
     private final OrientTaskEvidenceVerifier verifier;
     private final Clock clock;
+
+    @Autowired
+    @org.springframework.context.annotation.Lazy
+    private com.chengyinhub.business.service.IOrientScoringService orientScoringService;
+
 
     @Autowired
     public OrientSessionServiceImpl(OrientSessionFeatureGate gate, OrientSessionMapper orientMapper,
@@ -233,7 +240,28 @@ public class OrientSessionServiceImpl implements IOrientSessionService {
         result.put("completedAt", doneAt.getTime());
         result.put("elapsedMs", Math.max(0L, doneAt.getTime() - sessionClock.getStartedAt().getTime()));
         result.put("phase", phase.name());
+        if (orientScoringService != null && orientScoringService.isActiveFor(topicMapper.selectCmsTopicById(row.getTopicId()))) {
+            orientScoringService.syncSession(memberId, sessionId, "lifecycle:task:" + sessionId + ":" + taskId);
+        }
         record(row, memberId, key, taskId, RECEIPT_TASK_PREFIX + taskId, "ORIENT_TASK", fingerprint, result);
+        return result;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<String, Object> current(Long memberId, Long topicId, Long activityId) {
+        requireEnabled();
+        if (!positive(memberId) || !positive(topicId) || (activityId != null && activityId < 0)) {
+            throw badRequest("参数有误");
+        }
+        requireOrienteeringTopic(topicId);
+        List<Map<String, Object>> sessions = new ArrayList<>();
+        for (OrientSessionRow row : orientMapper.selectOwnedSessions(memberId, topicId, activityId)) {
+            OrientSessionClock sessionClock = orientMapper.selectClock(row.getId(), memberId);
+            sessions.add(view(row, OrientPhase.derive(row.getStatus(), row.getPhase(), sessionClock != null), sessionClock));
+        }
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("sessions", sessions);
         return result;
     }
 
@@ -301,6 +329,7 @@ public class OrientSessionServiceImpl implements IOrientSessionService {
         view.put("sessionId", row.getId());
         view.put("topicId", row.getTopicId());
         view.put("activityId", row.getActivityId());
+        view.put("playInstanceId", row.getPlayInstanceId());
         view.put("phase", phase.name());
         view.put("status", row.getStatus());
         view.put("configVersion", row.getConfigVersion());

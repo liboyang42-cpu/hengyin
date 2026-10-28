@@ -20,6 +20,8 @@ import java.util.function.Consumer;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -254,5 +256,89 @@ class WxSubscribeMsgSendErrcodeTest {
     void missingRoamRecallTemplateSkipsWechatAndWarnsOnce() {
         assertMissingTemplateSkippedOnce("tplRoamRecall", "tplRoamRecall", "roam_recall",
                 service -> service.notifyRoamRecall(RECIPIENT_MEMBER_ID, 1200, 4));
+    }
+    @org.junit.jupiter.api.Test
+    void officialTypedCodesPreserveOnlyExplicitNumericProviderOutcomes() {
+        var accepted = WxSubscribeMsgServiceImpl.officialBroadcastResponse("{\"errcode\":0,\"errmsg\":\"private fixture\"}");
+        org.junit.jupiter.api.Assertions.assertEquals("ACCEPTED", accepted.state().name());
+        org.junit.jupiter.api.Assertions.assertEquals(Integer.valueOf(0), accepted.errcode());
+        for (int code : new int[]{40003, 43101, -1}) {
+            var rejected = WxSubscribeMsgServiceImpl.officialBroadcastResponse("{\"errcode\":" + code + "}");
+            org.junit.jupiter.api.Assertions.assertEquals("REJECTED", rejected.state().name());
+            org.junit.jupiter.api.Assertions.assertEquals(Integer.valueOf(code), rejected.errcode());
+        }
+        org.junit.jupiter.api.Assertions.assertFalse(accepted.toString().contains("private fixture"));
+    }
+
+    @org.junit.jupiter.api.Test
+    void officialMalformedResponsesStayUnknownWithoutDiagnosticPayload() {
+        for (String raw : new String[]{"", " ", "null", "[]", "broken private fixture", "{}",
+                "{\"errcode\":null}", "{\"errcode\":\"0\"}", "{\"errcode\":false}",
+                "{\"errcode\":0.0}", "{\"errcode\":2147483648}", "{\"errcode\":{}}"}) {
+            var result = WxSubscribeMsgServiceImpl.officialBroadcastResponse(raw);
+            org.junit.jupiter.api.Assertions.assertEquals("UNKNOWN", result.state().name(), raw);
+            org.junit.jupiter.api.Assertions.assertNull(result.errcode());
+            org.junit.jupiter.api.Assertions.assertFalse(result.toString().contains("private fixture"));
+        }
+    }
+
+    @org.junit.jupiter.api.Test
+    void officialTypedPreflightDoesNotPostOrBorrowRecruitTemplate() {
+        var missing = businessServiceReturning("{\"errcode\":0}", "tplRecruit", "recruit-only");
+        org.junit.jupiter.api.Assertions.assertEquals("TEMPLATE_MISSING", missing.notifyOfficialBroadcastResult(RECIPIENT_MEMBER_ID,"title","sub").reason().name());
+        var service = businessServiceReturning("{\"errcode\":0}", "tplOfficialEvent", SENSITIVE_TEMPLATE);
+        org.junit.jupiter.api.Assertions.assertEquals("IDENTITY_MISSING", service.notifyOfficialBroadcastResult(null,"title","sub").reason().name());
+        when(wxSec.getAccessToken()).thenReturn("");
+        org.junit.jupiter.api.Assertions.assertEquals("TOKEN_MISSING", service.notifyOfficialBroadcastResult(RECIPIENT_MEMBER_ID,"title","sub").reason().name());
+    }
+
+    @org.junit.jupiter.api.Test
+    void officialTypedUsesExistingPostSeamAndExactTemplateFields() {
+        final java.util.List<String> bodies = new java.util.ArrayList<>();
+        var service = new WxSubscribeMsgServiceImpl() {
+            @Override String post(String url,String body) { bodies.add(body);return "{\"errcode\":43101,\"errmsg\":\"private fixture\"}"; }
+        };
+        var members=mock(IUmsMemberService.class);var member=new UmsMember();member.setWxOpenId(RECIPIENT_OPENID);
+        when(members.selectUmsMemberById(RECIPIENT_MEMBER_ID)).thenReturn(member);
+        var tokens=mock(IWxContentSecurityService.class);when(tokens.getAccessToken()).thenReturn("token-fixture");
+        ReflectionTestUtils.setField(service,"umsMemberService",members);ReflectionTestUtils.setField(service,"wxSec",tokens);
+        ReflectionTestUtils.setField(service,"tplOfficialEvent",SENSITIVE_TEMPLATE);ReflectionTestUtils.setField(service,"defaultPage","pages/index/index");
+        var result=service.notifyOfficialBroadcastResult(RECIPIENT_MEMBER_ID,"title","sub");
+        org.junit.jupiter.api.Assertions.assertEquals("REJECTED",result.state().name());
+        org.junit.jupiter.api.Assertions.assertEquals(Integer.valueOf(43101),result.errcode());
+        var body=com.alibaba.fastjson2.JSON.parseObject(bodies.get(0));
+        org.junit.jupiter.api.Assertions.assertEquals(SENSITIVE_TEMPLATE,body.getString("template_id"));
+        org.junit.jupiter.api.Assertions.assertEquals("pages/index/index",body.getString("page"));
+        org.junit.jupiter.api.Assertions.assertEquals(java.util.Set.of("thing1","time2","thing3"),body.getJSONObject("data").keySet());
+        org.junit.jupiter.api.Assertions.assertFalse(result.toString().contains(RECIPIENT_OPENID));
+        org.junit.jupiter.api.Assertions.assertFalse(result.toString().contains("private fixture"));
+    }
+
+    @org.junit.jupiter.api.Test
+    void officialChannelUsesTypedOnlyAndPreservesOtherBooleanEvents() {
+        var wx=mock(com.chengyinhub.business.service.IWxSubscribeMsgService.class);
+        var channel=new com.chengyinhub.business.notify.WxSubscribeChannel();ReflectionTestUtils.setField(channel,"wx",wx);
+        when(wx.notifyOfficialBroadcastResult(anyLong(),anyString(),anyString())).thenThrow(new RuntimeException("private fixture"));
+        org.junit.jupiter.api.Assertions.assertEquals("UNKNOWN",channel.sendOfficialBroadcast(7L,"t","s").state().name());
+        verify(wx,never()).notifyOfficialBroadcast(anyLong(),anyString(),anyString());
+        when(wx.notifyRefund(7L,"t","1")).thenReturn(false);
+        org.junit.jupiter.api.Assertions.assertFalse(channel.send(com.chengyinhub.business.notify.NotifyMessage.of(com.chengyinhub.business.notify.NotifyEvent.REFUND,7L).with("topicName","t").with("amount","1")));
+        verify(wx).notifyRefund(7L,"t","1");
+    }
+    @Test
+    void typedTransportExceptionIsUnknownButPreparationExceptionIsNotSubmitted() {
+        var service = new WxSubscribeMsgServiceImpl() {
+            @Override String post(String url,String body) { throw new RuntimeException("private network fixture"); }
+        };
+        var members=mock(IUmsMemberService.class);var member=new UmsMember();member.setWxOpenId(RECIPIENT_OPENID);
+        when(members.selectUmsMemberById(RECIPIENT_MEMBER_ID)).thenReturn(member);
+        var tokens=mock(IWxContentSecurityService.class);when(tokens.getAccessToken()).thenReturn("fixture");
+        ReflectionTestUtils.setField(service,"umsMemberService",members);ReflectionTestUtils.setField(service,"wxSec",tokens);
+        ReflectionTestUtils.setField(service,"tplOfficialEvent",SENSITIVE_TEMPLATE);ReflectionTestUtils.setField(service,"defaultPage","pages/index/index");
+        var result=service.notifyOfficialBroadcastResult(RECIPIENT_MEMBER_ID,"t","s");
+        assertEquals("UNKNOWN",result.state().name());assertFalse(result.toString().contains("private"));
+        when(tokens.getAccessToken()).thenThrow(new RuntimeException("private preflight fixture"));
+        result=service.notifyOfficialBroadcastResult(RECIPIENT_MEMBER_ID,"t","s");
+        assertEquals("NOT_SUBMITTED",result.state().name());assertFalse(result.toString().contains("private"));
     }
 }

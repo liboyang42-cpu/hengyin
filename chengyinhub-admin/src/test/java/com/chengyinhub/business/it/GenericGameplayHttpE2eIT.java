@@ -560,9 +560,10 @@ class GenericGameplayHttpE2eIT {
         topic.put("journeyRules","{\"schemaVersion\":1,\"stateEnabled\":true,\"checkEnabled\":false,\"hp\":{\"enabled\":true,\"init\":6,\"max\":12},\"attributes\":[{\"key\":\"counter.focus\",\"label\":\"专注\",\"initial\":2,\"min\":0,\"max\":12}]}");
         success(post("/api/topic/v2/update",topic,headers));
         ObjectNode registration=json.createObjectNode().put("topicId",topicId);
-        registration.putArray("keys").addObject().put("stateKey","counter.focus").put("keyType","counter").put("scope","run").put("label","专注").put("initialValue",2);
+        registration.putArray("keys").addObject().put("stateKey","counter.focus").put("keyType","counter").put("scope","run").put("label","专注").put("initialValue",2).put("minValue",0).put("maxValue",12);
         success(post("/api/topic/state-keys",registration,headers));
         refreshChapterIds(topic,topicId);
+        String registryVersion=confirmAttributeBinding(topic,success(get("/api/topic/attribute-binding?topicId="+topicId,headers)));
         ((ObjectNode)topic.path("chapters").path(0)).withArray("nodes").addObject()
                 .put("clientNodeKey","restore").put("name","补充站").put("templateId",templateId).put("nodeTime",0).put("nodeMoney",0).put("latitude","31.2304").put("longitude","121.4737").put("address","本地测试位置");
         ((ObjectNode)topic.path("chapters").path(0)).withArray("blocks").addObject().put("type","node").put("nodeIndex",0);
@@ -597,7 +598,7 @@ class GenericGameplayHttpE2eIT {
         assertTrue(stale.path("msg").asText().contains("声明已变化"),stale.toString());
         assertEquals(before,database.queryForObject("SELECT theme_runtime_config_json FROM cms_topic WHERE id=?",String.class,topicId));
         assertEquals(chapterIds,database.queryForList("SELECT id FROM cms_topic_chapter WHERE topic_id=? ORDER BY id",Long.class,topicId));
-        success(form("/api/topic/publish-draft",topicId,headers));persisted=persistedTopic(topicId,"published");
+        success(publishBound(topicId,registryVersion,headers));persisted=persistedTopic(topicId,"published");
         assertEquals("counter.focus",persisted.path("snapshot").path("nodeConfigs").path(String.valueOf(nodeId)).path("effects").path(0).path("var").asText());
         assertEquals("counter.focus",persisted.path("snapshot").path("nodeJourney").path(String.valueOf(nodeId)).path("effects").path(0).path("var").asText());
         assertFalse(persisted.path("snapshot").toString().contains("resourceSlots"));assertFalse(persisted.path("snapshot").toString().contains("templateBindings"));
@@ -655,6 +656,11 @@ class GenericGameplayHttpE2eIT {
         ObjectNode reg=json.createObjectNode().put("topicId",topicId);
         reg.putArray("keys").addObject().put("stateKey","counter.str").put("keyType","counter").put("scope","run").put("label","力量").put("initialValue",3);
         success(post("/api/topic/state-keys",reg,author));
+        // #625 模板角色卡只展示 journeyRules 启用的注册键：作者按注册版本确认启用 counter.str 后存草稿。
+        ObjectNode draft=topicRequest("F2属性卡");draft.put("id",topicId);refreshChapterIds(draft,topicId);
+        draft.put("journeyRules","{\"schemaVersion\":1,\"stateEnabled\":true,\"attributes\":[{\"key\":\"counter.str\",\"label\":\"力量\",\"initial\":3,\"min\":0,\"max\":100}]}");
+        confirmAttributeBinding(draft,success(get("/api/topic/attribute-binding?topicId="+topicId,author)));
+        success(post("/api/topic/v2/update",draft,author));
 
         ResponseEntity<JsonNode> anonymous=http.getForEntity("/api/play/character?topicId="+topicId,JsonNode.class);
         record("GET","/api/play/character?topicId="+topicId,null,anonymous);
@@ -740,9 +746,10 @@ class GenericGameplayHttpE2eIT {
         ObjectNode topic=topicRequest("LC "+phone);if("TEAM".equals(scope))topic.put("teamMode",1).put("teamMaxMembers",4);s.topicId=success(post("/api/topic/v2/create",topic,s.headers)).path("topicId").asLong();topic.put("id",s.topicId);refreshChapterIds(topic,s.topicId);
         topic.put("journeyRules","{\"schemaVersion\":1,\"stateEnabled\":true,\"checkEnabled\":true,\"hp\":{\"enabled\":true,\"init\":6,\"max\":12},\"luck\":{\"enabled\":true,\"init\":2,\"max\":3},\"recovery\":{\"stageRestHpFloor\":0,\"stageRestLuckFloor\":0,\"stationEndIfHurt\":0}}");
         ObjectNode rules=(ObjectNode)json.readTree(topic.path("journeyRules").asText());
-        if(!valueKey.startsWith("sys.")){rules.putArray("attributes").addObject().put("key",valueKey).put("label","能量").put("initial",6).put("min",0).put("max",12);ObjectNode registration=json.createObjectNode().put("topicId",s.topicId);registration.putArray("keys").addObject().put("stateKey",valueKey).put("keyType","counter").put("scope","run").put("label","能量").put("initialValue",6);success(post("/api/topic/state-keys",registration,s.headers));}
+        if(!valueKey.startsWith("sys.")){rules.putArray("attributes").addObject().put("key",valueKey).put("label","能量").put("initial",6).put("min",0).put("max",12);ObjectNode registration=json.createObjectNode().put("topicId",s.topicId);registration.putArray("keys").addObject().put("stateKey",valueKey).put("keyType","counter").put("scope","run").put("label","能量").put("initialValue",6).put("minValue",0).put("maxValue",12);success(post("/api/topic/state-keys",registration,s.headers));}
 
         topic.put("journeyRules",rules.toString());
+        String registryVersion=valueKey.startsWith("sys.")?null:confirmAttributeBinding(topic,success(get("/api/topic/attribute-binding?topicId="+s.topicId,s.headers)));
         ObjectNode chapter=(ObjectNode)topic.path("chapters").path(0);
         for(int i=0;i<2;i++){chapter.withArray("nodes").addObject().put("clientNodeKey","lc"+i).put("name","站点"+i).put("templateId",s.templateId).put("nodeTime",0).put("nodeMoney",0).put("latitude","31.2304").put("longitude","121.4737").put("address","本地位置");chapter.withArray("blocks").addObject().put("type","node").put("nodeIndex",i);}
         ObjectNode theme=json.createObjectNode().put("schemaVersion",1).put("capacity",6);
@@ -755,7 +762,7 @@ class GenericGameplayHttpE2eIT {
         for(int i=0;i<2;i++){ObjectNode b=theme.with("templateBindings").putObject("client:lc"+i).put("templateId",s.templateId).put("slotDigest",GameplayTemplateRules.slotDigest(config.path("interactionRules").path("resourceSlots")));b.putObject("values").put("vital",valueKey);ObjectNode items=b.putObject("items");if(stock)items.put("stock","paper");}
         topic.put("themeRuntimeConfig",theme.toString());success(post("/api/topic/v2/update",topic,s.headers));success(form("/api/topic/edit-detail",s.topicId,s.headers));
         s.nodeId=database.queryForObject("SELECT id FROM cms_topic_node WHERE topic_id=? ORDER BY id LIMIT 1",Long.class,s.topicId);
-        s.publication=form("/api/topic/publish-draft",s.topicId,s.headers);
+        s.publication=registryVersion==null?form("/api/topic/publish-draft",s.topicId,s.headers):publishBound(s.topicId,registryVersion,s.headers);
         if(participation==0){rejected(s.publication);return s;}
         success(s.publication);JsonNode frozen=persistedTopic(s.topicId,"r5-frozen");if(config.has("outcomeRules"))assertEquals(valueKey,frozen.path("snapshot").path("nodeConfigs").path(String.valueOf(s.nodeId)).path("outcomeRules").path("pass").path("costs").path(0).path("statKey").asText());
         if(publishOnly)return s;
@@ -857,6 +864,23 @@ class GenericGameplayHttpE2eIT {
         org.springframework.http.HttpHeaders headers=new org.springframework.http.HttpHeaders();headers.putAll(original);headers.setContentType(org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED);
         org.springframework.util.LinkedMultiValueMap<String,String> body=new org.springframework.util.LinkedMultiValueMap<>();fields.fields().forEachRemaining(e->body.add(e.getKey(),e.getValue().asText()));
         ResponseEntity<JsonNode> response=http.exchange(path,org.springframework.http.HttpMethod.POST,new org.springframework.http.HttpEntity<>(body,headers),JsonNode.class);record("POST",path,fields,response);return response.getBody();
+    }
+    /**
+     * #625 起属性定义唯一来源是注册表：带 attributes 却无 attributeBinding 的旧规则发布即 409。
+     * 与小程序 attribute-binding.confirm 同一流程：按读回的注册版本确认 attributes 启用的键，
+     * 投影须与注册定义一致（夹具注册时已写同一 label/初值/范围）。返回注册版本供发布绑定。
+     */
+    static String confirmAttributeBinding(ObjectNode topic,JsonNode registry) throws java.io.IOException {
+        ObjectNode rules=(ObjectNode)new com.fasterxml.jackson.databind.ObjectMapper().readTree(topic.path("journeyRules").asText());
+        String registryVersion=registry.path("registryVersion").asText();
+        ArrayNode enabled=rules.putObject("attributeBinding").put("schemaVersion",1).put("registryVersion",registryVersion).putArray("enabledKeys");
+        for(JsonNode attribute:rules.path("attributes")){((ObjectNode)attribute).put("visible",true);enabled.add(attribute.path("key").asText());}
+        topic.put("journeyRules",rules.toString()).put("configVersion",registry.path("configVersion").asLong());
+        return registryVersion;
+    }
+    private JsonNode publishBound(long topicId,String registryVersion,org.springframework.http.HttpHeaders headers) {
+        long configVersion=database.queryForObject("SELECT config_version FROM cms_topic WHERE id=?",Long.class,topicId);
+        return formFields("/api/topic/publish-draft",json.createObjectNode().put("id",topicId).put("configVersion",configVersion).put("registryVersion",registryVersion),headers);
     }
     private JsonNode theme(Lifecycle s){return success(get("/api/play/theme/state?topicId="+s.topicId,s.headers));}
     private JsonNode advanced(Lifecycle s){return success(get("/api/play/advanced/state?sessionId="+s.advancedId,s.headers));}

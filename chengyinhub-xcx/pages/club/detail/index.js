@@ -3,7 +3,7 @@ const modal = require('../../../utils/modal.js');
 const mediaPreview = require('../../../utils/media-preview.js');
 const clubPinnedNotice = require('../utils/club-pinned-notice.js');
 const { isClubLeader } = require('../../../utils/roleGuard.js');
-const { isPoolList, decoratePool } = require('../../../utils/coop-invite-view.js');
+const { isPoolList, decoratePool, parseInviteId } = require('../../../utils/coop-invite-view.js');
 const cyToast = require('../../../utils/toast.js');
 const motion = require('../../../utils/motion.js');
 const { readReducedMotion } = require('../../../utils/motion-preference.js');
@@ -3158,38 +3158,57 @@ Page({
   },
 
   // 动态点赞/取消
-  // BL-197:接口是切换式,同一条在返回前的重复点击忽略(否则先赞后取消);失败如实提示,成功只回读不乐观改数
-  // PRIVATE-GROUP-club-like-unknown:断网时结果未知——锁不放,按 post/list 的严格布尔 isLiked 回读,
-  // 与发起时的目标意图比对后才允许下一次切换;未知期间再点只回读不切换。锁/意图按 owner+俱乐部隔离。
-  // 后端 post/like 只是切换、没有目标状态幂等,迟到落库仍可能与回读交错——这是后端依赖,前端不假设。
+  // 本页发送 liked 目标态，后端幂等；UNKNOWN 不自动重发，只定点读取当前快照。
+  // 快照不是原写请求的最终回执，不能据 false 断言原请求从未执行。
+  _postLikeContext() {
+    if (this._sceneGuardDestroyed) return null;
+    const owner = parseInviteId(app.getUserID && app.getUserID());
+    const clubId = parseInviteId(this.data.clubId);
+    if (!owner || !clubId) return null;
+    let scope = this._postLikeScope;
+    if (!scope || scope.owner !== owner || scope.clubId !== clubId || scope.detailSeq !== this._detailRequestSeq) {
+      scope = this._postLikeScope = { owner, clubId, detailSeq: this._detailRequestSeq };
+    }
+    return scope;
+  },
   onLikePost(e) {
     if (app.ensureLoginFor && !app.ensureLoginFor('like', () => this.onLikePost(e))) return; // 2026-10-24 游客写前登录
-    const id = (e.detail && e.detail.postId) || e.currentTarget.dataset.id;
-    if (!id) return;
-    const owner = String(app.getUserID && app.getUserID() || '');
-    const clubId = String(this.data.clubId);
-    const key = owner + '|' + clubId + '|' + String(id);
+    const rawId = (e.detail && e.detail.postId) || e.currentTarget.dataset.id;
+    const id = parseInviteId(rawId);
+    const scope = this._postLikeContext();
+    if (!id || !scope) return;
+    const { owner, clubId } = scope;
+    const key = owner + '|' + clubId + '|' + id;
     const liking = this._likingPosts || (this._likingPosts = {});
     const pending = liking[key];
     if (pending) {
+      if (pending.scope !== scope) {
+        pending.scope = scope;
+        pending.unknown = true;
+        pending.reading = false;
+      }
       if (pending.unknown && !pending.reading) this.readbackPostLike(key);
       return;
     }
-    const post = (this.data.posts || []).find(function (p) { return String(p.id) === String(id); });
-    const entry = { postId: id, owner: owner, clubId: clubId, target: !(post && (post.isLiked === true || Number(post.isLiked) === 1)), unknown: false, reading: false };
+    const post = (this.data.posts || []).find(function (p) { return parseInviteId(p.id) === id; });
+    const entry = { postId: id, owner, clubId, scope, target: !(post && (post.isLiked === true || Number(post.isLiked) === 1)), unknown: false, reading: false, settled: false };
     liking[key] = entry;
     const that = this;
+    const stillMine = () => that._likingPosts === liking && liking[key] === entry
+      && entry.scope === scope && that._postLikeContext() === scope;
     app.sendRequest({
       // P1-023:带目标态,服务端按目标态幂等,重试不会把已生效的赞翻回去
-      url: '/api/club/post/like', method: 'POST', data: jsonBody({ postId: id, liked: entry.target }), header: jsonHeader(),
+      url: '/api/club/post/like', method: 'POST', data: jsonBody({ postId: typeof rawId === 'number' ? rawId : id, liked: entry.target }), header: jsonHeader(),
       success(res) {
-        if (liking[key] !== entry) return;
+        if (!stillMine() || entry.settled) return;
+        entry.settled = true;
         delete liking[key];
         if (res && res.code == '200') that.loadPosts();
         else cyToast(bizFailureMessage(res, '点赞没成功'));
       },
       fail() {
-        if (liking[key] !== entry) return;
+        if (!stillMine() || entry.settled) return;
+        entry.settled = true;
         entry.unknown = true;
         cyToast('点赞结果未确认，正在确认');
         that.readbackPostLike(key);
@@ -3197,38 +3216,45 @@ Page({
     });
   },
 
-  // 回读只认 post/list 的严格布尔 isLiked:与目标一致=已生效,相反=未生效,可再点;
-  // 回读失败/找不到该帖/非布尔(未登录时后端不标)都保持未知锁,下次点击再回读。
+  // 不查首页/扫描分页；必须核对原 owner+club+post 与严格 boolean。
+  // 不存在、拒权、畸形或传输失败均保留 UNKNOWN，下次点击仍只查询。
   readbackPostLike(key) {
     const liking = this._likingPosts || {};
     const entry = liking[key];
     if (!entry || !entry.unknown || entry.reading) return;
-    entry.reading = true;
+    const scope = this._postLikeContext();
+    if (!scope || entry.scope !== scope || entry.owner !== scope.owner || entry.clubId !== scope.clubId) return;
+    const read = {};
+    entry.reading = read;
     const that = this;
     const stillMine = function () {
-      return liking[key] === entry && entry.clubId === String(that.data.clubId)
-        && entry.owner === String(app.getUserID && app.getUserID() || '');
+      return that._likingPosts === liking && liking[key] === entry && entry.reading === read && entry.scope === scope
+        && that._postLikeContext() === scope;
+    };
+    const unresolved = function () {
+      if (!stillMine()) return;
+      entry.reading = false;
+      cyToast('点赞结果未确认，请稍后再点确认');
     };
     app.sendRequest({
-      hideLoading: true, url: '/api/club/post/list', method: 'POST', data: jsonBody({ id: entry.clubId, clubId: entry.clubId }), header: jsonHeader(),
+      hideLoading: true, url: '/api/club/post/like-state', method: 'POST', data: jsonBody({ id: entry.postId, clubId: entry.clubId }), header: jsonHeader(),
       success(res) {
-        entry.reading = false;
         if (!stillMine()) return;
-        const rows = res && res.code == '200' && Array.isArray(res.data) ? res.data : null;
-        const row = rows && rows.find(function (p) { return p && String(p.id) === String(entry.postId); });
-        if (!row || typeof row.isLiked !== 'boolean') { cyToast('点赞结果未确认，请稍后再点确认'); return; }
+        const row = res && res.code == '200' && res.data;
+        if (!row || typeof row !== 'object' || Array.isArray(row)
+            || parseInviteId(row.id) !== entry.postId || parseInviteId(row.clubId) !== entry.clubId
+            || typeof row.isLiked !== 'boolean'
+            || (row.likeCount !== null && !Number.isInteger(row.likeCount))) { unresolved(); return; }
         delete liking[key];
         const posts = (that.data.posts || []).map(function (p) {
-          if (String(p.id) !== String(entry.postId)) return p;
+          if (parseInviteId(p.id) !== entry.postId) return p;
           return Object.assign({}, p, { isLiked: row.isLiked }, row.likeCount !== undefined ? { likeCount: row.likeCount } : {});
         });
         that.setData({ posts: posts });
-        cyToast(row.isLiked === entry.target ? (entry.target ? '已点赞' : '已取消点赞') : '点赞没成功，可以再试一次');
+        cyToast(row.isLiked ? '当前已点赞' : '当前未点赞，可再次操作');
       },
-      fail() {
-        entry.reading = false;
-        if (stillMine()) cyToast('点赞结果未确认，请稍后再点确认');
-      },
+      fail: unresolved,
+      successStatusAbnormal: unresolved,
     });
   },
 

@@ -39,9 +39,17 @@ test('route-matrix 生成物必须与当前 app.json 和 scene 扫描逐字一�
   // 2026-10-20 用户要求删掉「我的纠错 / 纠错进度」两页、消息页改收件箱/发件箱(合并 master 584470ad 后按重建实测) ⇒ 145。
   // 2026-10-23 起名页 templateadd 退役删除 ⇒ 145 → 144。
   // 2026-10-25 +1 官方地点挑战页 pages/play/poi-challenge ⇒ 144 → 145。
+  // 2026-10-26 +3:角色卡、定向计分、本人发票独立页 ⇒ 145 → 148。
+  // W8-12: 已校验W8-09权益页加入现有分包，148 → 149。
+  // 2026-10-28 文档二 L9 集成:登记 L7 我的申诉 + 发票拆出的 4 页，149 → 154。
   // 145 → 146:2026-10-28 新增 pages/templatedetail/topic-preview(主题模板卡堆预览，业主定稿原型 v21)。
-  assert.equal(current.routes.length, 146)
-  assert.equal(matrix.counts.routes, 146)
+  // 2026-10-28 L9 再并 master:#652 topic-preview +1 叠加本线 154 ⇒ 155。
+  assert.equal(current.routes.length, 155)
+  assert.equal(matrix.counts.routes, 155)
+  const bundle = matrix.routes.find(route => route.pagePath === 'subpackageMember/free-explore/index')
+  assert.equal(bundle.role, 'player')
+  assert.equal(bundle.needsLogin, true)
+  assert.ok(bundle.dataKeys.includes('registrationId'))
   // 2026-09-02:+2 俱乐部客户列表与客户详情(club/customers、club/customer-detail)
   assert.equal(inventoryMatchesCurrent(matrix), true)
   // 2026-09-04 导演台整页收编:锚点换成新宿主页 topic-detail。这条要证的是

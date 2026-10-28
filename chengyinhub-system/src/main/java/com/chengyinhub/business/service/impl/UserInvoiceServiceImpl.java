@@ -3,9 +3,12 @@ package com.chengyinhub.business.service.impl;
 import com.chengyinhub.business.domain.UserInvoiceApplication;
 import com.chengyinhub.business.domain.UserInvoiceOrderLine;
 import com.chengyinhub.business.domain.UserInvoiceTitle;
+import com.chengyinhub.business.domain.CmsRegistration;
+import com.chengyinhub.business.domain.RefundApplication;
 import com.chengyinhub.business.mapper.UserInvoiceMapper;
 import com.chengyinhub.business.security.PiiCryptoService;
 import com.chengyinhub.business.service.IUserInvoiceService;
+import com.chengyinhub.business.service.IRefundService;
 import com.chengyinhub.business.service.invoice.InvoiceIssuer;
 import com.chengyinhub.business.service.invoice.UserInvoiceException;
 import org.springframework.dao.DuplicateKeyException;
@@ -47,11 +50,13 @@ public class UserInvoiceServiceImpl implements IUserInvoiceService {
     private final UserInvoiceMapper mapper;
     private final PiiCryptoService cryptoService;
     private final InvoiceIssuer issuer;
+    private final IRefundService refundService;
 
-    public UserInvoiceServiceImpl(UserInvoiceMapper mapper, PiiCryptoService cryptoService, InvoiceIssuer issuer) {
+    public UserInvoiceServiceImpl(UserInvoiceMapper mapper, PiiCryptoService cryptoService, InvoiceIssuer issuer, IRefundService refundService) {
         this.mapper = mapper;
         this.cryptoService = cryptoService;
         this.issuer = issuer;
+        this.refundService = refundService;
     }
 
     @Override
@@ -96,6 +101,59 @@ public class UserInvoiceServiceImpl implements IUserInvoiceService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Map<String, Object> saveTitleWithRequest(Long memberId, String requestId, UserInvoiceTitle input) {
+        requireMember(memberId);
+        requireRequestId(requestId);
+        if (input == null) throw new UserInvoiceException(UserInvoiceException.ARGUMENT_INVALID, "抬头信息不能为空");
+        UserInvoiceTitle normalized = normalizeTitle(input);
+        requireCrypto();
+        // Length framing prevents field-boundary collisions; HMAC prevents offline tax-number guessing.
+        String payload = "invoice-title-save:v1:" + framed(String.valueOf(memberId))
+                + framed(input.getId() == null ? "" : input.getId().toString())
+                + framed(normalized.getTitleType()) + framed(normalized.getTitleName())
+                + framed(normalized.getTaxNo()) + framed(Integer.valueOf(1).equals(input.getIsDefault()) ? "1" : "0");
+        String fingerprint = cryptoService.blindIndex(payload);
+        mapper.reserveTitleReceipt(memberId, requestId, fingerprint);
+        Map<String, Object> receipt = mapper.lockTitleReceipt(memberId, requestId);
+        if (receipt == null || !fingerprint.equals(receipt.get("fingerprint"))) {
+            throw new UserInvoiceException(UserInvoiceException.REQUEST_REUSED, "请求标识已用于另一份抬头输入");
+        }
+        if (receipt.get("titleId") != null) return titleReceiptView(receipt);
+        // Self-call participates in this outer transaction, including default-title updates.
+        Map<String, Object> saved = saveTitle(memberId, input);
+        Long titleId = Long.valueOf(saved.get("id").toString());
+        if (mapper.finishTitleReceipt(memberId, requestId, titleId) != 1) {
+            throw new UserInvoiceException(UserInvoiceException.STATE_CONFLICT, "抬头保存回执无法确认");
+        }
+        return Map.of("requestId", requestId, "titleId", titleId.toString(), "status", "SAVED");
+    }
+
+    @Override
+    public Map<String, Object> titleSaveReceipt(Long memberId, String requestId) {
+        requireMember(memberId);
+        requireRequestId(requestId);
+        Map<String, Object> receipt = mapper.selectTitleReceipt(memberId, requestId);
+        if (receipt == null) throw new UserInvoiceException(UserInvoiceException.NOT_FOUND, "暂未查到原保存回执");
+        return titleReceiptView(receipt);
+    }
+
+    private static void requireRequestId(String requestId) {
+        if (requestId == null || !REQUEST_ID.matcher(requestId).matches()) {
+            throw new UserInvoiceException(UserInvoiceException.ARGUMENT_INVALID, "请求标识不合法");
+        }
+    }
+
+    private static String framed(String value) {
+        return value == null ? "-1:" : value.length() + ":" + value;
+    }
+
+    private static Map<String, Object> titleReceiptView(Map<String, Object> receipt) {
+        if (receipt.get("titleId") == null) throw new UserInvoiceException(UserInvoiceException.REQUEST_IN_PROGRESS, "原保存结果待确认");
+        return Map.of("requestId", receipt.get("requestId"), "titleId", receipt.get("titleId").toString(), "status", "SAVED");
+    }
+
+    @Override
     public void deleteTitle(Long memberId, Long titleId) {
         requireMember(memberId);
         if (titleId == null || mapper.deleteTitle(memberId, titleId) != 1) {
@@ -106,7 +164,21 @@ public class UserInvoiceServiceImpl implements IUserInvoiceService {
     @Override
     public List<UserInvoiceOrderLine> listInvoiceableOrders(Long memberId) {
         requireMember(memberId);
-        return mapper.selectInvoiceableRegistrations(memberId, null, INVOICEABLE_LIST_LIMIT);
+        List<UserInvoiceOrderLine> rows = mapper.selectInvoiceableRegistrations(memberId, null, INVOICEABLE_LIST_LIMIT);
+        if (!rows.isEmpty()) {
+            Map<String,Map<String,Object>> byOrder = new java.util.HashMap<>();
+            for (Map<String,Object> preview : mapper.selectInvoiceIssuerPreviews(rows.stream().map(UserInvoiceOrderLine::getOrderId).toList())) {
+                byOrder.put(String.valueOf(preview.get("order_id")), preview);
+            }
+            for (UserInvoiceOrderLine row : rows) {
+                Map<String,Object> preview=byOrder.get(row.getOrderId().toString());
+                if (preview!=null) {
+                    row.setIssuerId(Long.valueOf(preview.get("issuer_id").toString()));
+                    row.setIssuerName(String.valueOf(preview.get("issuer_name")));
+                }
+            }
+        }
+        return rows;
     }
 
     @Override
@@ -119,12 +191,13 @@ public class UserInvoiceServiceImpl implements IUserInvoiceService {
         List<Long> ids = distinctOrderIds(orderIds);
 
         UserInvoiceApplication replay = mapper.selectApplicationByRequest(memberId, requestId);
-        if (replay != null) return replayView(replay, ids);
+        if (replay != null) return replayView(replay, titleId, ids);
 
         requireCrypto();
         UserInvoiceTitle title = mapper.selectTitle(memberId, titleId);
         if (title == null) throw new UserInvoiceException(UserInvoiceException.TITLE_NOT_FOUND, "抬头不存在");
 
+        lockAndCheckRegistrationRefunds(memberId, ids);
         List<UserInvoiceOrderLine> orders = mapper.selectInvoiceableRegistrationsForUpdate(memberId, ids);
         if (orders.size() != ids.size()) {
             List<Long> occupied = mapper.selectOccupiedOrderIds(memberId, UserInvoiceOrderLine.SOURCE_REGISTRATION, ids);
@@ -134,6 +207,13 @@ public class UserInvoiceServiceImpl implements IUserInvoiceService {
             throw new UserInvoiceException(UserInvoiceException.ORDER_NOT_ELIGIBLE, "所选订单不可开票（未支付、已退款或不属于本人）");
         }
 
+        List<Long> issuerIds = mapper.resolveInvoiceIssuers(ids);
+        if (issuerIds == null || issuerIds.size() != ids.size()) {
+            throw new UserInvoiceException(UserInvoiceException.ORDER_NOT_ELIGIBLE, "开票主体、处理人或核对负责人未配置");
+        }
+        if (new HashSet<>(issuerIds).size() != 1) {
+            throw new UserInvoiceException(UserInvoiceException.ORDER_NOT_ELIGIBLE, "不同开票主体的订单须分开申请");
+        }
         Date now = new Date();
         BigDecimal total = BigDecimal.ZERO;
         for (UserInvoiceOrderLine order : orders) total = total.add(order.getAmount());
@@ -153,6 +233,7 @@ public class UserInvoiceServiceImpl implements IUserInvoiceService {
         app.setCreateTime(now);
         try {
             mapper.insertApplication(app);
+            if (mapper.insertProcessing(app.getId(), issuerIds.get(0)) != 1) throw new IllegalStateException("Invoice issuer snapshot was not inserted");
         } catch (DuplicateKeyException e) {
             // 同一 requestId 的并发请求：另一条已在落库，客户端用同一 requestId 重试即得重放结果。
             throw new UserInvoiceException(UserInvoiceException.REQUEST_IN_PROGRESS, "申请正在处理，请稍后刷新");
@@ -178,9 +259,57 @@ public class UserInvoiceServiceImpl implements IUserInvoiceService {
         issuer.submit(new InvoiceIssuer.Request(app.getApplicationNo(), app.getTitleType(),
                 app.getTitleName(), app.getTaxNo(), total));
         app.setOrders(orders);
-        Map<String, Object> view = applicationView(app);
+        Map<String, Object> view = memberApplicationView(app);
         view.put("replayed", false);
         return view;
+    }
+
+    private void lockAndCheckRegistrationRefunds(Long memberId, List<Long> ids) {
+        List<CmsRegistration> seeds = mapper.selectInvoiceRegistrationSeeds(memberId, ids);
+        if (seeds == null || seeds.size() != ids.size()) throw ineligibleOrder();
+        // Same lock order as refunds: all registrations of a parent in ascending ID,
+        // followed by current refund-history reads. A child is never a cash carrier.
+        java.util.TreeMap<Long, CmsRegistration> locked = new java.util.TreeMap<>();
+        for (CmsRegistration seed : seeds.stream().sorted(java.util.Comparator.comparing(CmsRegistration::getId)).toList()) {
+            boolean parent = seed.getParentOrderNo() != null && !seed.getParentOrderNo().isEmpty();
+            List<CmsRegistration> rows;
+            if (parent) rows = mapper.lockInvoiceParentOrder(seed.getParentOrderNo());
+            else {
+                CmsRegistration row = mapper.lockInvoiceRegistration(seed.getId());
+                rows = row == null ? List.of() : List.of(row);
+            }
+            if (rows == null || rows.isEmpty() || !seed.getId().equals(rows.get(0).getId())) throw ineligibleOrder();
+            for (CmsRegistration row : rows) {
+                if (!memberId.equals(row.getMemberId())
+                        || !java.util.Objects.equals(seed.getParentOrderNo(), row.getParentOrderNo())
+                        || !java.util.Objects.equals(seed.getOwnerType(), row.getOwnerType())
+                        || !java.util.Objects.equals(seed.getOwnerId(), row.getOwnerId())
+                        || !Integer.valueOf(2).equals(row.getPaymentStatus())
+                        || !Integer.valueOf(2).equals(row.getRegistrationStatus())) throw ineligibleOrder();
+                if (parent && (row.getOwnerType() == null || row.getOwnerId() == null || row.getPayableAmount() == null
+                        || (row.getId().equals(seed.getId()) ? row.getPayableAmount().signum() <= 0 : row.getPayableAmount().signum() != 0))) {
+                    throw ineligibleOrder();
+                }
+                locked.put(row.getId(), row);
+            }
+        }
+        for (Long registrationId : locked.keySet()) {
+            List<RefundApplication> history = refundService.selectRegistrationHistoryForUpdate(registrationId);
+            if (history == null) throw ineligibleOrder();
+            for (RefundApplication refund : history) {
+                // Approval remains blocking even if payout failed or is still processing.
+                if (refund == null || !Integer.valueOf(2).equals(refund.getStatus())) {
+                    throw ineligibleOrder();
+                }
+            }
+        }
+        if (!mapper.selectActiveInvoiceOrderIdsForUpdate(new ArrayList<>(locked.keySet())).isEmpty()) {
+            throw new UserInvoiceException(UserInvoiceException.ORDER_ALREADY_INVOICED, "原订单已有发票申请占用");
+        }
+    }
+
+    private static UserInvoiceException ineligibleOrder() {
+        return new UserInvoiceException(UserInvoiceException.ORDER_NOT_ELIGIBLE, "原订单现金或退款状态无法确认，暂不可开票");
     }
 
     @Override
@@ -188,6 +317,7 @@ public class UserInvoiceServiceImpl implements IUserInvoiceService {
         requireMember(memberId);
         List<Map<String, Object>> out = new ArrayList<>();
         for (UserInvoiceApplication app : mapper.selectApplicationsByMember(memberId)) out.add(applicationView(app));
+        enrichMemberReconciliation(memberId, out);
         return out;
     }
 
@@ -196,7 +326,19 @@ public class UserInvoiceServiceImpl implements IUserInvoiceService {
         requireMember(memberId);
         UserInvoiceApplication app = ownedApplication(memberId, applicationId);
         app.setOrders(mapper.selectOrderLines(app.getId()));
-        return applicationView(app);
+        return memberApplicationView(app);
+    }
+
+    @Override
+    public Map<String, Object> applicationByRequest(Long memberId, String requestId) {
+        requireMember(memberId);
+        if (requestId == null || !REQUEST_ID.matcher(requestId).matches()) {
+            throw new UserInvoiceException(UserInvoiceException.ARGUMENT_INVALID, "请求标识不合法");
+        }
+        UserInvoiceApplication app = mapper.selectApplicationByRequest(memberId, requestId);
+        if (app == null) throw new UserInvoiceException(UserInvoiceException.NOT_FOUND, "暂未查到原申请");
+        app.setOrders(mapper.selectOrderLines(app.getId()));
+        return memberApplicationView(app);
     }
 
     @Override
@@ -214,37 +356,25 @@ public class UserInvoiceServiceImpl implements IUserInvoiceService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public UserInvoiceApplication markIssued(Long applicationId, String invoiceNo) {
-        String no = trim(invoiceNo);
-        if (applicationId == null || no == null || no.length() > 64) {
-            throw new UserInvoiceException(UserInvoiceException.ARGUMENT_INVALID, "发票号码不合法");
-        }
-        if (mapper.markIssued(applicationId, no, new Date()) != 1) throw stateConflictOrMissing(applicationId);
-        return mapper.selectApplicationById(applicationId);
+        throw new UserInvoiceException(UserInvoiceException.STATE_CONFLICT, "请使用受主体授权的发票处理入口");
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public UserInvoiceApplication markRejected(Long applicationId, String reason) {
-        String text = trim(reason);
-        if (applicationId == null || text == null || text.length() > 200) {
-            throw new UserInvoiceException(UserInvoiceException.ARGUMENT_INVALID, "驳回原因不合法");
-        }
-        if (mapper.markRejected(applicationId, text, new Date()) != 1) throw stateConflictOrMissing(applicationId);
-        mapper.releaseOrderLines(applicationId);
-        return mapper.selectApplicationById(applicationId);
+        throw new UserInvoiceException(UserInvoiceException.STATE_CONFLICT, "请使用受主体授权的发票处理入口");
     }
 
     // ── 内部 ─────────────────────────────────────────────────────────
 
-    private Map<String, Object> replayView(UserInvoiceApplication replay, List<Long> ids) {
+    private Map<String, Object> replayView(UserInvoiceApplication replay, Long titleId, List<Long> ids) {
         List<UserInvoiceOrderLine> lines = mapper.selectOrderLines(replay.getId());
         Set<Long> recorded = new HashSet<>();
         for (UserInvoiceOrderLine line : lines) recorded.add(line.getOrderId());
-        if (!recorded.equals(new HashSet<>(ids))) {
-            throw new UserInvoiceException(UserInvoiceException.REQUEST_REUSED, "请求标识已用于另一组订单");
+        if (!java.util.Objects.equals(titleId, replay.getTitleId()) || !recorded.equals(new HashSet<>(ids))) {
+            throw new UserInvoiceException(UserInvoiceException.REQUEST_REUSED, "请求标识已用于另一抬头或订单组合");
         }
         replay.setOrders(lines);
-        Map<String, Object> view = applicationView(replay);
+        Map<String, Object> view = memberApplicationView(replay);
         view.put("replayed", true);
         return view;
     }
@@ -305,7 +435,7 @@ public class UserInvoiceServiceImpl implements IUserInvoiceService {
 
     static Map<String, Object> titleView(UserInvoiceTitle title) {
         Map<String, Object> view = new LinkedHashMap<>();
-        view.put("id", title.getId());
+        view.put("id", title.getId() == null ? null : title.getId().toString());
         view.put("titleType", title.getTitleType());
         view.put("titleName", title.getTitleName());
         view.put("taxNoMasked", maskTaxNo(title.getTaxNo()));
@@ -313,9 +443,35 @@ public class UserInvoiceServiceImpl implements IUserInvoiceService {
         return view;
     }
 
+    private Map<String, Object> memberApplicationView(UserInvoiceApplication app) {
+        Map<String, Object> view = applicationView(app);
+        enrichMemberReconciliation(app.getMemberId(), List.of(view));
+        return view;
+    }
+
+    private void enrichMemberReconciliation(Long memberId, List<Map<String, Object>> views) {
+        if (views.isEmpty()) return;
+        List<Long> ids = new ArrayList<>();
+        Map<String, Map<String, Object>> byId = new LinkedHashMap<>();
+        for (Map<String, Object> view : views) {
+            String id = String.valueOf(view.get("id"));
+            ids.add(Long.valueOf(id));
+            byId.put(id, view);
+        }
+        List<Map<String, Object>> rows = mapper.selectMemberReconciliation(memberId, ids);
+        if (rows == null) return;
+        for (Map<String, Object> row : rows) {
+            Map<String, Object> view = byId.get(String.valueOf(row.get("applicationId")));
+            Object status = row.get("reconciliationStatus");
+            if (view != null && ("REQUIRED".equals(status) || "NO_ISSUE_CONFIRMED".equals(status)
+                    || "TAX_REVIEW_REQUIRED".equals(status))) view.put("reconciliationStatus", status);
+        }
+    }
+
     static Map<String, Object> applicationView(UserInvoiceApplication app) {
         Map<String, Object> view = new LinkedHashMap<>();
-        view.put("id", app.getId());
+        view.put("id", app.getId() == null ? null : app.getId().toString());
+        view.put("requestId", app.getRequestId());
         view.put("applicationNo", app.getApplicationNo());
         view.put("status", app.getStatus());
         view.put("titleType", app.getTitleType());
@@ -332,7 +488,7 @@ public class UserInvoiceServiceImpl implements IUserInvoiceService {
         for (UserInvoiceOrderLine line : app.getOrders()) {
             Map<String, Object> o = new LinkedHashMap<>();
             o.put("orderSource", line.getOrderSource() == null ? UserInvoiceOrderLine.SOURCE_REGISTRATION : line.getOrderSource());
-            o.put("orderId", line.getOrderId());
+            o.put("orderId", line.getOrderId() == null ? null : line.getOrderId().toString());
             o.put("amount", line.getAmount());
             o.put("orderTitle", line.getOrderTitle());
             o.put("ticketName", line.getTicketName());

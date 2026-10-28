@@ -34,6 +34,22 @@ class ApiAuditControllerOwnershipTest {
         verify(service, never()).detail(TASK_ID, VIEWER_ID, false);
     }
 
+    @Test
+    void newRequestIdIsPassedToRealOverloadAndReceiptUsesLoggedInActor() {
+        IAuditTaskService service = mock(IAuditTaskService.class);
+        ApiAuditController controller = new TestableController(VIEWER_ID);
+        ReflectionTestUtils.setField(controller, "auditTaskService", service);
+        com.chengyinhub.business.domain.dto.AuditAppealDTO request = new com.chengyinhub.business.domain.dto.AuditAppealDTO();
+        request.setBizType("ACTIVITY"); request.setBizId(90L); request.setReason("理由"); request.setRequestId("original");
+        com.chengyinhub.business.domain.AuditAppeal appeal = new com.chengyinhub.business.domain.AuditAppeal();
+        appeal.setId(Long.MAX_VALUE); appeal.setTaskId(Long.MAX_VALUE - 1); appeal.setState("SUBMITTED");
+        when(service.submitAppeal("ACTIVITY", 90L, VIEWER_ID, "理由", null, null, "original")).thenReturn(appeal);
+        assertEquals("9223372036854775807", controller.appeal(request).get("appealId"));
+        verify(service, never()).submitAppeal("ACTIVITY", 90L, VIEWER_ID, "理由", null, null);
+        controller.appealReceipt("ACTIVITY", 90L, "original");
+        verify(service).appealReceipt("ACTIVITY", 90L, VIEWER_ID, "original");
+    }
+
     private static class TestableController extends ApiAuditController {
         private final Long memberId;
         private TestableController(Long memberId) { this.memberId = memberId; }

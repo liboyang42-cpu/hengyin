@@ -1,3 +1,4 @@
+const templateAdoption = require('../utils/publish/template-adoption.js');
 const { applyTheme } = require('../../../utils/theme.js');
 const { memberId, failureStatus, retryLogin, waitForInitialSession, recoverReadSession } = require('../../../utils/session/login-reload.js');
 const modal = require('../../../utils/modal.js');
@@ -29,7 +30,7 @@ const nodeGameCatalog = require('../utils/publish/node-game-catalog.js');
 const nodeOutcomeContract = require('../utils/publish/node-outcome-contract.js');
 const supportMatrix = require('../utils/publish/gameplay-support-matrix.js');
 const templateTools = require('../utils/publish/template-tools.js');
-const r5Editor = require('./r5-editor.js');
+const r5Editor = require('./r5-editor.js'); const checkSection = require('./check-section.js'); const afterSection = require('./after-section.js');
 const publishIssueTarget = require('../utils/publish/publish-issue-target.js');
 const templateAuthorFields = require('../utils/publish/template-author-fields.js');
 const merchantAccessPolicy = require('../../../utils/merchant-access-policy.js');
@@ -62,8 +63,8 @@ function currentEditor(page) {
 }
 
 function positiveId(value) {
-  const id = typeof value === 'number' ? value : Number(String(value || '').trim());
-  return Number.isSafeInteger(id) && id > 0 ? id : null;
+  const text = templateAdoption.id(value);
+  return !text ? null : Number.isSafeInteger(Number(text)) ? Number(text) : text;
 }
 
 function isTemplateDetailPayload(value) {
@@ -180,7 +181,7 @@ function noPreviewTip(section) {
 }
 
 Page({
-  ...r5Editor.methods,
+  ...r5Editor.methods, ...checkSection.methods, ...afterSection.methods,
   MODULE_DEFS: MODULE_DEFS,
 
   _supportMatrix: null,
@@ -189,7 +190,7 @@ Page({
   data: {
     creatorLoginRequired: false,
     qaAnswerModes: QA_ANSWER_MODES, qaTriesOptions: QA_TRIES, qaRevealOptions: QA_REVEAL, qaFbImgMax: QA_FB_IMG_MAX,
-    ...r5Editor.data,
+    ...r5Editor.data, ...checkSection.data, ...afterSection.data,
     operationScope: '',
     isMyScope: false, // R9-04:回填走个人草稿接口(/api/template/myinfo)
     merchantAccess: merchantAccessPolicy.inactiveAccess(),
@@ -1137,7 +1138,7 @@ Page({
       luckIndex: cfg.luckIndex(mods),
       relaxOptions: choices.map((c) => ({ key: c.key, label: c.pick })),
       relaxIndex: own ? choices.findIndex((c) => JSON.stringify(c.relax) === JSON.stringify(own.relax)) : -1,
-    });
+    }, () => this._refreshCheckView(a));
   },
   _writeMods: function (mods) {
     const adv = JSON.parse(JSON.stringify(this.data.advanced));
@@ -1150,8 +1151,8 @@ Page({
   toggleLuck: function (e) {
     this._writeMods(advancedGameConfig.applyLuck((this.data.advanced.check || {}).mods, e.detail.value ? 0 : -1));
   },
-  onLuckPick: function (e) {
-    this._writeMods(advancedGameConfig.applyLuck((this.data.advanced.check || {}).mods, Number(e.detail.value)));
+  onLuckPick: function (e) { // 10-28:幸运加分就地勾选,点一行 = data-index 那一档,选完收起
+    this._writeMods(advancedGameConfig.applyLuck((this.data.advanced.check || {}).mods, Number(e.currentTarget.dataset.index))); this.setData({ checkOpen: '' });
   },
   // 放宽只有一个触发条件(血量低),多配几条也只有第一条生效 —— 所以是单选,不是列表。
   _writeRelax: function (index) {
@@ -1353,7 +1354,7 @@ Page({
     this._loadSupportMatrix();
     this._focusTool = safeDecode(options.focusTool);
     this._focusPlan = safeDecode(options.focusPlan);
-    this._focusMessage = safeDecode(options.focusMessage);
+    this._focusMessage = safeDecode(options.focusMessage); this._initCheckCtx(options);
     var that = this;
     const windowInfo = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync();
     this.setData({ sheetTop: resolveMenuChrome(windowInfo, app.globalData.menuButtonInfo).sheetTop });
@@ -2874,8 +2875,8 @@ Page({
     }
     if (this.data.pickerSheet && this.data.pickerSheet.open) {
       this.closePickerSheet();
-    } else if (this.data.afterEditor.show) {
-      this.closeAfterSheet();
+    } else if (this.data.checkSheet.show) { this.closeCheckSheet();
+    } else if (this.data.afterEditor.show) { this.closeAfterSheet();
     } else if (this.data.toolSheetKey) {
       this.closeR5ToolSheet();
     } else if (this.data.scanSheetOpen) {
@@ -2894,7 +2895,7 @@ Page({
       this.closePreview();
     }
     const stillGuarded = (this.data.pickerSheet && this.data.pickerSheet.open)
-      || this.data.afterEditor.show || this.data.toolSheetKey || this.data.scanSheetOpen || this.data.gameConfigOpen
+      || this.data.checkSheet.show || this.data.afterEditor.show || this.data.toolSheetKey || this.data.scanSheetOpen || this.data.gameConfigOpen
       || this.data.toolSheetOpen || this.data.gameSheetOpen || this.data.categorySheetVisible || this.data.showAddSheet || this.data.previewVisible;
     if (stillGuarded) {
       this.setData({ backGuardOff: true });
@@ -3372,6 +3373,7 @@ Page({
       method: "POST",
       header: {
         'Content-Type': 'application/json',
+        'X-Author-Exact-Ids': '1',
         'Authorization': app.getAuthorization()
       },
       success: function (res) {
@@ -3524,11 +3526,21 @@ Page({
   getData: function (preserveForm) {
     const current = currentEditor(this);
     if (!current()) return;
-    if (this._adoptingTemplate || this._adoptionUnconfirmed) return;
+    if (this._adoptingTemplate) return;
     var that = this;
     const requestToken = (this._templateLoadToken || 0) + 1;
     this._templateLoadToken = requestToken; this._templateCanEdit = false;
     const isMyScope = this.data.isMyScope === true, requestedTemplateId = positiveId(this._templateId);
+    if (!isMyScope && !this.data.previewMode) {
+      try {
+        if (templateAdoption.read(wx,editorMemberId(),this.data.operationScope||'',templateAdoption.id(this._templateId))) {
+          this.setData({editorLoading:true});
+          this._resumeSourceAdoption(); return; // A completed receipt must survive source removal.
+        }
+      } catch (error) {
+        this.setData({editorLoading:false,loadErrorIsOperation:true,loadError:error.message});return;
+      }
+    }
     this.setData({ editorLoading: true, loadErrorIsOperation: false, loadErrorIsAccess: false, loadError: '' });
     const recover = (res, status) => !that._disposed && requestToken === that._templateLoadToken && recoverReadSession(that, app, res,
       function (anonymous) { this._templateLoadToken++; this._loadedAuthorFields = null; this._editorMemberId = editorMemberId(); this.destroyPreviewAudio();
@@ -3537,7 +3549,7 @@ Page({
     app.sendRequest({
       hideLoading: true,
       silentError: true,
-      url: isMyScope ? '/api/template/myinfo' : '/api/template/info',
+      url: isMyScope ? '/api/template/author-myinfo' : '/api/template/author-info',
       data: { id: that._templateId, scope: isMyScope ? that.data.operationScope : '' },
       method: "POST",
       success: function (res) {
@@ -3546,38 +3558,8 @@ Page({
         if (res && res.code == "200" && validRecord) {
           if (that._applyTemplateEditPermission(res.data, isMyScope, preserveForm)) return;
           if (!isMyScope && !that.data.previewMode) {
-            that._adoptingTemplate = true;
-            // 旧请求 complete 不能把创建/回读途中显示为已加载。
             that._templateLoadToken++;
-            app.sendRequest({
-              url: '/api/template/adopt-draft', method: 'POST', hideLoading: true, silentError: true,
-              header: { 'Content-Type': 'application/json' },
-              data: JSON.stringify({ originalTemplateId: that._templateId, title: res.data.title,
-                adoptSourceOnly: true, scope: that.data.operationScope }),
-              success(adopted) {
-                if (!current()) return;
-                that._adoptingTemplate = false;
-                const draftId = adopted && adopted.code == '200' && positiveId(adopted.data);
-                if (draftId) {
-                  that._templateId = draftId;
-                  that.data.isMyScope = true;
-                  that.getData();
-                } else {
-                  if (adopted && adopted.code == '200') that._adoptionUnconfirmed = true;
-                  that.setData({ editorLoading: false, loadErrorIsOperation: true, loadError: safeUserMessage(adopted, '采用结果未确认，请到我的玩法确认') });
-                }
-              },
-              fail(_res, status) {
-                if (!current()) return;
-                that._adoptingTemplate = false;
-                if (status == 404 || status == 405) {
-                  that.setData({ editorLoading: false, loadErrorIsOperation: true, loadError: '当前服务尚未支持采用旧模板，请更新服务后再试' });
-                  return;
-                }
-                that._adoptionUnconfirmed = true;
-                that.setData({ editorLoading: false, loadErrorIsOperation: true, loadError: '采用结果未确认，请先到我的玩法确认，避免重复创建' });
-              }
-            });
+            that._resumeSourceAdoption();
             return;
           }
           if (isRecordList(res.data.sysCategoryList) && res.data.sysCategoryList.length > 0) {
@@ -3616,6 +3598,29 @@ Page({
     });
   },
 
+  inspectAdoptionTemplates() {
+    if (!currentEditor(this)()) return;
+    wx.reLaunch({url:'/subpackageMember/mytemplate/mytemplate'+(this.data.operationScope==='MERCHANT'?'?scope=MERCHANT':'')});
+  },
+  _resumeSourceAdoption() {
+    if (this._adoptingTemplate) return;
+    const scope=this.data.operationScope||'', sourceId=this._templateId;
+    const original=JSON.stringify([editorMemberId(),scope,sourceId,this.data.formData,this.data.advanced,this.data.ruleSteps,this._albumEditRevision,
+      typeof app.getAuthorization==='function'?app.getAuthorization():'']);
+    const current=()=>!this._disposed&&!this._hidden&&original===JSON.stringify([editorMemberId(),this.data.operationScope||'',this._templateId,this.data.formData,this.data.advanced,this.data.ruleSteps,this._albumEditRevision,
+      typeof app.getAuthorization==='function'?app.getAuthorization():'']);
+    templateAdoption.resume({app,storage:wx,owner:editorMemberId(),scope,sourceId,current,
+      target:{editor:'temp',sourceId:String(sourceId)},
+      onBusy:busy=>{this._adoptingTemplate=busy;},
+      onError:message=>{this._adoptionUnconfirmed=true;this.setData({editorLoading:false,loadErrorIsOperation:true,loadError:message});},
+      onReady:detail=>{
+        if(detail.canEdit!==true){this.setData({editorLoading:false,loadError:'采用草稿归属未确认'});return false;}
+        this._adoptionUnconfirmed=false;this._templateId=positiveId(detail.id);this.data.isMyScope=true;this._templateCanEdit=true;
+        this.fillFormWithTemplateData(detail);this.data.dirty=false;this.setData({editorLoading:false,loadError:''});return true;
+      }
+    });
+  },
+
   _showTemplateLoadError(res, fallback, statusCode) {
     const status = failureStatus(res, statusCode);
     this.setData({ editorLoading: false, creatorLoginRequired: status === 401,
@@ -3624,7 +3629,7 @@ Page({
 
   retryGetData: function () {
     if (this._adoptionUnconfirmed) {
-      wx.reLaunch({ url: '/subpackageMember/mytemplate/mytemplate' + (this.data.operationScope === 'MERCHANT' ? '?scope=MERCHANT' : '') });
+      this._resumeSourceAdoption();
       return;
     }
     if (positiveId(this._templateId)) this.getData(this._confirmingNewDraft === true);
@@ -3650,7 +3655,7 @@ Page({
       // 引用别人的模板 = 记下来源 id;编辑自己的模板(scope=my)= 沿用它原有的来源 ——
       // 以前一律写成自己的 id,原地保存后这条就成了「引用了 id 同号的库模板」,
       // 从「我的故事玩法草稿」里消失、还被当成采用来的模板走另一套校验(2026-09-24 走查实证 147/149/154)
-      originalTemplateId: this.data.isMyScope === true ? (Number(templateData.originalTemplateId) || 0) : (templateData.id || 0),
+      originalTemplateId: this.data.isMyScope === true ? (positiveId(templateData.originalTemplateId) || 0) : (templateData.id || 0),
       categoryId: templateData.categoryId || 1,
       title: templateData.title ? `${templateData.title}` : "",
       description: templateData.description || "",

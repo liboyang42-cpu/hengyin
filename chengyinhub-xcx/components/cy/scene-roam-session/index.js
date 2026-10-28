@@ -4,6 +4,7 @@ const { currentPlayerRoamMemory } = require('../../../utils/roam-player-memory.j
 const { readNonNegative } = require('../../../utils/roam-history-metrics.js')
 const reducedMotionBehavior = require('../../../behaviors/reduced-motion.js')
 const { buildReplaySchedule, buildRouteGeometry, replayFrame } = require('./route-replay.js')
+const { createReader } = require('../../../utils/roam-passport-read.js')
 const WEEK = ['日', '一', '二', '三', '四', '五', '六']
 
 function nonNegativeNumber(value) {
@@ -55,6 +56,7 @@ Component({
   behaviors: [reducedMotionBehavior],
   properties: {
     ts: { type: String, value: '' },
+    sessionId: { type: String, value: '' },
     // 第二轮拍板 17:朋友分享来的足迹快照(已由分享者裁剪)。给了它就不读本机存储,也不再出分享按钮。
     snapshot: { type: Object, value: null },
   },
@@ -69,19 +71,35 @@ Component({
   },
   observers: {
     ts() { this._load() },
+    sessionId() { this._load() },
     snapshot() { this._load() },
   },
   lifetimes: {
     attached() { this._load() },
-    detached() { this._clearReplayTimer() },
+    detached() { this._clearReplayTimer(); if (this._recordReader) this._recordReader.dispose() },
+  },
+  pageLifetimes: {
+    hide() { if (this._recordReader) this._recordReader.dispose(); this._clearReplayTimer() },
+    show() { this._load() },
   },
   methods: {
     _load() {
       this._clearReplayTimer()
       this.setData({ state: 'loading' })
+      if (this._recordReader) this._recordReader.dispose()
       if (this.data.snapshot) {
         this._render(this.data.snapshot)
         return
+      }
+      const serverId = this.data.sessionId || (String(this.data.ts).startsWith('server:') ? String(this.data.ts).slice(7) : '');
+      if (serverId) {
+        const reader = this._recordReader = createReader(getApp(), wx)
+        this.setData({ session: { pois: [] } })
+        return reader.record(serverId).then(row => {
+          if (reader.current() && reader === this._recordReader) this._render(row)
+        }).catch(error => {
+          if (reader.current() && reader === this._recordReader) this.setData({ state: error.notFound ? 'empty' : 'error', session: { pois: [] } })
+        })
       }
       let stored
       try {
@@ -125,7 +143,7 @@ Component({
     },
     _normalize(raw) {
       const timestamp = Number(raw.ts)
-      const date = new Date(Number.isFinite(timestamp) ? timestamp : NaN)
+      const date = new Date(Number.isFinite(timestamp) && timestamp > 0 ? timestamp : NaN)
       const validDate = !Number.isNaN(date.getTime())
       // distance 兼容老记录的 "0.2" 字符串(见 utils/roam-history-metrics.js);
       // 0 仍是 0。UI-04(2026-09-18):读不出来的统计位显示 0,不再显示横杠
@@ -134,14 +152,16 @@ Component({
       const shops = nonNegativeInteger(raw.shops)
       const explorePct = nonNegativeNumber(raw.explorePct)
       const formattedDuration = this._formatDuration(raw.durSec)
+      // 服务端已完成事实(serverFact)的 null 是服务端也不知道:显示「—」不伪造 0;本机旧记录仍按 UI-04 显示 0。
+      const unknownCount = raw.serverFact ? '—' : '0'
       return {
         ...raw,
         dateFull: validDate ? `${date.getMonth() + 1}月${date.getDate()}日 周${WEEK[date.getDay()]}` : '日期不可用',
         time: typeof raw.time === 'string' && raw.time.trim() ? raw.time.trim() : (formattedDuration || '—'),
         distance,
-        distanceText: distance === null ? '0' : String(distance),
+        distanceText: distance === null ? unknownCount : String(distance),
         shops,
-        shopsText: shops === null ? '0' : String(shops),
+        shopsText: shops === null ? unknownCount : String(shops),
         explorePct: explorePct !== null && explorePct <= 100 ? explorePct : null,
         explorePctText: explorePct !== null && explorePct <= 100 ? String(explorePct) : '0',
         pois: (Array.isArray(raw.pois) ? raw.pois : [])
@@ -194,6 +214,6 @@ Component({
     },
     back() { this.triggerEvent('back') },
     close() { this.triggerEvent('close') },
-    share() { this.triggerEvent('share', { session: this.data.session }) },
+    share() { if (!this.data.session.serverFact || this.data.session.localSupplement) this.triggerEvent('share', { session: this.data.session }) },
   },
 })

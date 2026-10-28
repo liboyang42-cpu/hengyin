@@ -94,33 +94,33 @@ class ApiPlayProgressIdempotencyTest {
         when(auditMapper.insertBusinessAuditEvent(any())).thenReturn(1);
 
         controller = new ApiPlayProgressController();
-        ReflectionTestUtils.setField(controller, "businessAuditEventMapper", auditMapper);
-        ReflectionTestUtils.setField(controller, "playerNodeProgressService", progressService);
-        ReflectionTestUtils.setField(controller, "cmsTopicNodeService", nodeService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "businessAuditEventMapper", auditMapper);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService", progressService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicNodeService", nodeService);
         // 承接方现场层:没有中标商家时返回空对象,取值全部回落主办方模板 ——
         // 用真实现而不是 mock,免得「回落」这条路径在测试里被 mock 假装成功。
-        ReflectionTestUtils.setField(controller, "nodeMerchantOverrideService",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "nodeMerchantOverrideService",
                 new com.chengyinhub.business.service.impl.NodeMerchantOverrideServiceImpl(
                         org.mockito.Mockito.mock(com.chengyinhub.business.service.ICmsRegistrationMerchantService.class)));
-        ReflectionTestUtils.setField(controller, "cmsTopicService", cmsTopicService);
-        ReflectionTestUtils.setField(controller, "perkLedgerService", perkLedgerService);
-        ReflectionTestUtils.setField(controller, "cmsRegistrationService", cmsRegistrationService);
-        ReflectionTestUtils.setField(controller, "shopDayProofService", shopDayProofService);
-        ReflectionTestUtils.setField(controller, "omsTicketService", mock(IOmsTicketService.class));
-        ReflectionTestUtils.setField(controller, "pointsAwardService", pointsAwardService);
-        ReflectionTestUtils.setField(controller, "playerProgressionService", playerProgressionService);
-        ReflectionTestUtils.setField(controller, "growthService", growthService);
-        ReflectionTestUtils.setField(controller, "xpBudgetService", xpBudgetService);
-        ReflectionTestUtils.setField(controller, "rewardDropService", rewardDropService);
-        ReflectionTestUtils.setField(controller, "playerBadgeMapper", badgeMapper);
-        ReflectionTestUtils.setField(controller, "playAttemptLogMapper",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicService", cmsTopicService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "perkLedgerService", perkLedgerService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsRegistrationService", cmsRegistrationService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "shopDayProofService", shopDayProofService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "omsTicketService", mock(IOmsTicketService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "pointsAwardService", pointsAwardService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerProgressionService", playerProgressionService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "growthService", growthService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "xpBudgetService", xpBudgetService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "rewardDropService", rewardDropService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerBadgeMapper", badgeMapper);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playAttemptLogMapper",
                 mock(com.chengyinhub.business.mapper.PlayAttemptLogMapper.class));
-        ReflectionTestUtils.setField(controller, "memberCollectibleMapper", memberCollectibleMapper);
-        ReflectionTestUtils.setField(controller, "smsCouponHistoryService", smsCouponHistoryService);
-        ReflectionTestUtils.setField(controller, "topicCompletionCouponRewardService",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "memberCollectibleMapper", memberCollectibleMapper);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "smsCouponHistoryService", smsCouponHistoryService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "topicCompletionCouponRewardService",
                 topicCompletionCouponRewardService);
-        ReflectionTestUtils.setField(controller, "cmsMemberTemplateService", cmsMemberTemplateService);
-        ReflectionTestUtils.setField(controller, "officialEventV2Service", officialEventV2Service);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsMemberTemplateService", cmsMemberTemplateService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "officialEventV2Service", officialEventV2Service);
         com.chengyinhub.business.service.impl.TopicCompletionAwardServiceImpl completionAwards =
                 new com.chengyinhub.business.service.impl.TopicCompletionAwardServiceImpl();
         ReflectionTestUtils.setField(completionAwards, "topicService", cmsTopicService);
@@ -137,8 +137,8 @@ class ApiPlayProgressIdempotencyTest {
                 mock(com.chengyinhub.business.mapper.GrowthMissionProgressMapper.class));
         ReflectionTestUtils.setField(completionAwards, "xpAwardMapper",
                 mock(com.chengyinhub.business.mapper.TopicCompletionXpAwardMapper.class));
-        ReflectionTestUtils.setField(controller, "topicCompletionAwardService", completionAwards);
-        ReflectionTestUtils.setField(controller, "topicRouteCompletionCoordinator", routeCompletionCoordinator);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "topicCompletionAwardService", completionAwards);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "topicRouteCompletionCoordinator", routeCompletionCoordinator);
 
         when(nodeService.selectCmsTopicNodeList(any())).thenReturn(
                 Collections.singletonList(nodeEntity()));
@@ -215,15 +215,13 @@ class ApiPlayProgressIdempotencyTest {
 
     @SuppressWarnings("unchecked")
     private Map<String, Object> invokeAdvance(Long memberId, CmsTopicNode node, Long actId, String picUrl) {
-        return (Map<String, Object>) ReflectionTestUtils.invokeMethod(
-                controller, "advanceProgress", memberId, node, actId, picUrl);
+        return (Map<String, Object>) com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.invokeMethod(controller, "advanceProgress", memberId, node, actId, picUrl);
     }
 
     @SuppressWarnings("unchecked")
     private Map<String, Object> invokePuzzleAdvance(Long memberId, CmsTopicNode node, Long actId,
             int puzzleScore, String completionMode) {
-        return (Map<String, Object>) ReflectionTestUtils.invokeMethod(
-                controller, "advanceProgress", memberId, node, actId, null, puzzleScore, completionMode);
+        return (Map<String, Object>) com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.invokeMethod(controller, "advanceProgress", memberId, node, actId, null, puzzleScore, completionMode);
     }
 
     // ==================== B5 体验层：mode1 经典定向不受影响（批 2-3 负控）====================
@@ -364,7 +362,7 @@ class ApiPlayProgressIdempotencyTest {
         com.chengyinhub.business.service.IAdvancedGameRuntimeService advanced =
                 mock(com.chengyinhub.business.service.IAdvancedGameRuntimeService.class);
         when(advanced.rewardCappedToXpBadge(MEMBER, ACTIVITY, TOPIC, NODE)).thenReturn(true);
-        ReflectionTestUtils.setField(controller, "advancedGameRuntimeService", advanced);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "advancedGameRuntimeService", advanced);
 
         Map<String, Object> result = invokeAdvance(MEMBER, gameNodeWithCouponAndFragment(), ACTIVITY, null);
 
@@ -384,7 +382,7 @@ class ApiPlayProgressIdempotencyTest {
         com.chengyinhub.business.service.IAdvancedGameRuntimeService advanced =
                 mock(com.chengyinhub.business.service.IAdvancedGameRuntimeService.class);
         when(advanced.rewardCappedToXpBadge(MEMBER, ACTIVITY, TOPIC, NODE)).thenReturn(false);
-        ReflectionTestUtils.setField(controller, "advancedGameRuntimeService", advanced);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "advancedGameRuntimeService", advanced);
 
         Map<String, Object> result = invokeAdvance(MEMBER, gameNodeWithCouponAndFragment(), ACTIVITY, null);
 
@@ -425,14 +423,14 @@ class ApiPlayProgressIdempotencyTest {
                 mock(com.chengyinhub.business.mapper.TopicCompletionXpAwardMapper.class);
         when(xpAwards.insert(eq(MEMBER), eq(TOPIC), eq(30), any())).thenReturn(1);
         when(xpAwards.linkEarnedExp(MEMBER, TOPIC, 77L)).thenReturn(1);
-        ReflectionTestUtils.setField(ReflectionTestUtils.getField(controller, "topicCompletionAwardService"),
+        ReflectionTestUtils.setField(com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.getField(controller, "topicCompletionAwardService"),
                 "xpAwardMapper", xpAwards);
         com.chengyinhub.business.service.IAdvancedGameRuntimeService advanced =
                 mock(com.chengyinhub.business.service.IAdvancedGameRuntimeService.class);
         when(advanced.rewardCappedToXpBadge(MEMBER, ACTIVITY, TOPIC, NODE)).thenReturn(currentCapped);
         when(advanced.rewardCappedToXpBadge(MEMBER, ACTIVITY, TOPIC, EARLIER_NODE)).thenReturn(earlierCapped);
         when(advanced.anyNodeRewardCappedToXpBadge(anyLong(), anyLong(), anyLong(), any())).thenCallRealMethod();
-        ReflectionTestUtils.setField(controller, "advancedGameRuntimeService", advanced);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "advancedGameRuntimeService", advanced);
         return advanced;
     }
 
@@ -508,7 +506,7 @@ class ApiPlayProgressIdempotencyTest {
                 mock(com.chengyinhub.business.service.IAdvancedGameRuntimeService.class);
         when(advanced.rewardCappedToXpBadge(anyLong(), anyLong(), anyLong(), anyLong())).thenReturn(true);
         when(advanced.anyNodeRewardCappedToXpBadge(anyLong(), anyLong(), anyLong(), any())).thenReturn(true);
-        ReflectionTestUtils.setField(controller, "advancedGameRuntimeService", advanced);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "advancedGameRuntimeService", advanced);
 
         Map<String, Object> result = invokeAdvance(MEMBER, node(), ACTIVITY, null);
 
@@ -555,8 +553,9 @@ class ApiPlayProgressIdempotencyTest {
         assertEquals(true, result.get("firstTime"));
         verify(pointsAwardService).award(eq(MEMBER), eq(12L), eq(NODE), eq("节点打卡"));
         verify(playerProgressionService).onNodeDone(eq(MEMBER));
-        verify(routeCompletionCoordinator).advance(eq(MEMBER), eq(TOPIC), eq(ACTIVITY), eq(NODE),
-                isNull(), isNull(), isNull(), isNull(), isNull());
+        // 完成落地走 advanceOriginal(原局 sessionId 为空 = 非原局路径,与 advance 等价)
+        verify(routeCompletionCoordinator).advanceOriginal(eq(MEMBER), eq(TOPIC), eq(ACTIVITY), eq(NODE),
+                isNull(), isNull(), isNull(), isNull(), isNull(), isNull());
     }
 
     @Test
@@ -835,11 +834,11 @@ class ApiPlayProgressIdempotencyTest {
 
     @Test
     void shopDayCrowdedThresholdFallsBackToFourAndUsesTwoServiceRounds() {
-        assertEquals(4, ApiPlayProgressController.shopDayCrowdedThreshold(null));
-        assertEquals(4, ApiPlayProgressController.shopDayCrowdedThreshold(2));
-        assertEquals(6, ApiPlayProgressController.shopDayCrowdedThreshold(3));
-        assertEquals(8d, ApiPlayProgressController.shopDayServiceCapacityPerHour(4, 30));
-        assertEquals(23d, ApiPlayProgressController.shopDayExpectedWaitMinutes(3, 8d));
-        assertNull(ApiPlayProgressController.shopDayServiceCapacityPerHour(4, 0));
+        assertEquals(4, com.chengyinhub.web.service.play.PlayNodeQueryApplication.shopDayCrowdedThreshold(null));
+        assertEquals(4, com.chengyinhub.web.service.play.PlayNodeQueryApplication.shopDayCrowdedThreshold(2));
+        assertEquals(6, com.chengyinhub.web.service.play.PlayNodeQueryApplication.shopDayCrowdedThreshold(3));
+        assertEquals(8d, com.chengyinhub.web.service.play.PlayNodeQueryApplication.shopDayServiceCapacityPerHour(4, 30));
+        assertEquals(23d, com.chengyinhub.web.service.play.PlayNodeQueryApplication.shopDayExpectedWaitMinutes(3, 8d));
+        assertNull(com.chengyinhub.web.service.play.PlayNodeQueryApplication.shopDayServiceCapacityPerHour(4, 0));
     }
 }

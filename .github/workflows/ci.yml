@@ -67,6 +67,9 @@ jobs:
               - 'pom.xml'
               # Backend tests 直接执行的门禁脚本也必须触发本 job。
               - 'ci/backend-test.sh'
+              - 'ci/o14_backfill_rollback.py'
+              - 'ci/test_o14_backfill_rollback.py'
+              - 'ci/test_o14_backfill_rollback_mysql_integration.py'
               - 'ci/test_wechat_registration_ci_contract.py'
               - 'ci/upgrade-startup-smoke.sh'
               - 'ci/upgrade-startup/**'
@@ -469,6 +472,16 @@ jobs:
           CHENGYIN_TEST_MYSQL_PORT: ${{ env.IT_PORT }}
           CHENGYIN_TEST_MYSQL_USER: root
           CHENGYIN_TEST_MYSQL_PASSWORD: root
+      - name: Verify O14 rollback unit and isolated MySQL contracts
+        run: |
+          python3 -m unittest ci.test_o14_backfill_rollback -v
+          python3 -m unittest ci.test_o14_backfill_rollback_mysql_integration -v
+        env:
+          CHENGYIN_MYSQL_IT: '1'
+          CHENGYIN_MYSQL_IT_HOST: 127.0.0.1
+          CHENGYIN_MYSQL_IT_PORT: ${{ env.IT_PORT }}
+          CHENGYIN_MYSQL_IT_USER: root
+          CHENGYIN_MYSQL_IT_PASSWORD: root
       - name: Check deploy env contract
         run: bash ci/test_deploy_env_contract.sh
       - name: Check deploy jar permission contract

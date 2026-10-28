@@ -38,6 +38,8 @@ function loadPrivacyPage(source = fs.readFileSync(PAGE, 'utf8')) {
     if (p === '../../utils/roam-presence-privacy.js') return require('../../utils/roam-presence-privacy.js')
     if (p === '../../utils/location/bg-tracker.js') return require('../../utils/location/bg-tracker.js')
     if (p === '../../utils/compliance/usage-consent.js') return require('../../utils/compliance/usage-consent.js')
+    // 漫游撤回同意按登录身份隔离：纯函数模块，不读 wx/getApp。
+    if (p === '../../utils/user-character.js') return require('../../utils/user-character.js')
     throw new Error('unexpected require: ' + p)
   }
   const fn = new Function('Page', 'getApp', 'wx', 'console', 'require', source)
