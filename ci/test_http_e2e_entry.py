@@ -358,13 +358,13 @@ def cli():
                                                     frame = filename + ':' + str(int(line))
                                                     if frame not in frames:
                                                         frames.append(frame)
-                                                    if len(frames) == 2:
+                                                    if len(frames) == 8:
                                                         break
                                             if frames:
                                                 case_frames.setdefault(known_cases[method], frames)
                                                 if 'sourceFrame' not in failure:
                                                     failure['sourceFrame'] = frames[0]
-                                                    if len(frames) == 2:
+                                                    if len(frames) >= 2:
                                                         failure['callerFrame'] = frames[1]
                                                 break
                                 failure['caseSourceFrames'] = dict(sorted(case_frames.items()))
@@ -757,7 +757,8 @@ class FailureDiagnosticTest(unittest.TestCase):
             self.assertNotEqual(0, run.returncode)
             safe = json.loads((public / 'xml-failure.json').read_text())
             self.assertEqual({known_method: ['GenericGameplayHttpE2eIT.java:123', 'GenericGameplayHttpE2eIT.java:124'],
-                              parameter: ['GenericGameplayHttpE2eIT.java:125', 'GenericGameplayHttpE2eIT.java:126']},
+                              parameter: ['GenericGameplayHttpE2eIT.java:125', 'GenericGameplayHttpE2eIT.java:126',
+                                          'GenericGameplayHttpE2eIT.java:127']},
                              safe['caseSourceFrames'])
             self.assertEqual('GenericGameplayHttpE2eIT.java:123', safe['sourceFrame'])
             self.assertEqual('GenericGameplayHttpE2eIT.java:124', safe['callerFrame'])
