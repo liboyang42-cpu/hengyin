@@ -4,7 +4,7 @@
   <cy-empty wx:elif="{{state === 'permission'}}" kind="no-permission" title="当前身份不能查看这些优惠券" cta="重试" bind:cta="retry" />
   <cy-skeleton wx:elif="{{state === 'loading'}}" type="card" count="3" />
   <cy-error load-failure class="cy-fade-in" wx:elif="{{state === 'error'}}" fill title="优惠券暂时没能打开" sub="{{errorMsg}}" retry="重试" bind:retry="retry" />
-  <cy-empty class="cy-fade-in" wx:elif="{{state === 'empty' || !items.length}}" fill size="lg" title="{{tab === 0 ? '这里还没有优惠券' : '当前筛选暂无优惠券'}}" />
+  <cy-empty class="cy-fade-in" wx:elif="{{state === 'empty' || !items.length}}" kind="empty" fill size="lg" title="{{tab === 0 ? '这里还没有优惠券' : '当前筛选暂无优惠券'}}" />
   <view wx:else class="wallet-list cy-fade-in" style="{{pmList === 1 ? '--pm-c:1;' : (pmList === 2 ? '--pm-c-d:.32s;--pm-c-s:1;' : '')}}">
     <view wx:for="{{items}}" wx:key="id" class="wallet-card {{item._isUsable ? 'wallet-card--usable' : ''}}" bindtap="openCode" data-item="{{item}}" aria-role="{{item._canView ? 'button' : 'group'}}" aria-label="{{item._canView ? (item._isUsable ? '出示' : '查看') : ''}}{{item._name}}，{{item._statusText}}" hover-class="{{item._canView ? 'cy-pressed' : 'none'}}" hover-stay-time="80" style="--pmi:{{index}};">
       <view class="wallet-card__head"><text class="wallet-card__name">{{item._name}}</text><cy-badge type="status" variant="{{item._statusVariant}}" label="{{item._statusText}}" /></view>

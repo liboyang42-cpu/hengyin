@@ -80,9 +80,10 @@
       </view>
     </view></scroll-view>
   </view>
-  <!-- 范围保留文字胶囊;我的队伍改图标 + 人数角标。卡片条在时整体抬到卡片条上方 -->
-  <view class="mt-corners" wx:if="{{!sheet && viewMode === 'map'}}" style="bottom:calc({{safeBottom + 16}}px + 410rpx);">
-    <view class="mt-corner" bindtap="openRange" aria-role="button" aria-label="{{rangeText}}" hover-class="cy-pressed" hover-stay-time="80">{{rangeText}}</view>
+  <!-- 范围、我的队伍都是图标;卡片条在时整体抬到卡片条上方 -->
+  <view class="mt-corners" wx:if="{{!sheet && viewMode === 'map'}}" style="bottom:calc({{safeBottom + 16}}px + 380rpx);">
+    <!-- 2026-10-28 业主:「范围 1 公里」也变成图标按钮(读屏仍报当前范围) -->
+    <view class="mt-corner mt-corner--icon" bindtap="openRange" aria-role="button" aria-label="范围：{{rangeText}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="gps" size="40" /></view>
     <view class="mt-corner mt-corner--icon" bindtap="openMyTeamsPage" aria-role="button" aria-label="{{myTeamsN ? '我的队伍 · ' + myTeamsN : '我的队伍'}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="mtab-customers" size="40" /><text class="mt-corner__n" wx:if="{{myTeamsN}}">{{myTeamsN}}</text></view>
   </view>
 

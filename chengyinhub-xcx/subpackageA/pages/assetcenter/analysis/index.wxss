@@ -1,0 +1,24 @@
+@import '../../../../style/merchant-light-scope.wxss';
+
+page { min-height: 100vh; background: var(--cy-color-bg-page); }
+.an { min-height: 100vh; box-sizing: border-box; padding-bottom: calc(var(--cy-space-8) + env(safe-area-inset-bottom)); background: var(--cy-color-bg-page); color: var(--cy-color-text-primary); }
+.an-seg { display: flex; gap: var(--cy-space-2); padding: 0 var(--cy-page-x) var(--cy-space-5); }
+.an-seg__b { height: 64rpx; line-height: 64rpx; padding: 0 var(--cy-space-5); border-radius: var(--cy-radius-pill); font-size: var(--cy-type-label); background: var(--cy-color-action-secondary-bg); color: var(--cy-color-text-secondary); }
+.an-seg__b.on { background: var(--cy-color-action-primary-bg); color: var(--cy-color-action-primary-fg); font-weight: 600; }
+.an-card { margin: 0 var(--cy-page-x) var(--cy-space-5); padding: var(--cy-space-5) var(--cy-space-4); border-radius: var(--cy-radius-xl); background: var(--cy-color-bg-surface); }
+.an-card__k { display: block; font-size: var(--cy-type-label); color: var(--cy-color-text-tertiary); }
+.an-card__v { display: block; margin-top: var(--cy-space-1); font-size: 64rpx; font-weight: 700; font-variant-numeric: tabular-nums; } /* ds-ok: 分析主数字 */
+.an-bars { display: flex; align-items: flex-end; gap: var(--cy-space-3); margin-top: var(--cy-space-6); }
+.an-bar { flex: 1; display: flex; flex-direction: column; align-items: center; gap: var(--cy-space-2); }
+.an-bar__track { width: 52rpx; height: 240rpx; display: flex; align-items: flex-end; }
+.an-bar__fill { width: 100%; border-radius: 12rpx; background: var(--cy-color-action-secondary-bg); }
+.an-bar.is-cur .an-bar__fill { background: var(--cy-color-text-primary); }
+.an-bar__m { font-size: var(--cy-type-caption); color: var(--cy-color-text-tertiary); }
+.an-bar.is-cur .an-bar__m { color: var(--cy-color-text-primary); font-weight: 600; }
+.an-sec { display: block; margin-bottom: var(--cy-space-2); font-size: var(--cy-type-card-title); font-weight: 700; }
+.an-src { padding: var(--cy-space-4) 0; }
+.an-src__row { display: flex; justify-content: space-between; font-size: var(--cy-type-body); }
+.an-src__v { font-weight: 600; font-variant-numeric: tabular-nums; }
+.an-src__track { height: 12rpx; margin-top: var(--cy-space-2); border-radius: 6rpx; background: var(--cy-color-action-secondary-bg); overflow: hidden; }
+.an-src__fill { height: 100%; border-radius: 6rpx; background: var(--cy-color-status-success); }
+.an-none { display: block; padding: var(--cy-space-6) 0 var(--cy-space-2); text-align: center; font-size: var(--cy-type-label); color: var(--cy-color-text-tertiary); }

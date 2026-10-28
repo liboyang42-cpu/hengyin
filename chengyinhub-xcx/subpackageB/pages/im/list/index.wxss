@@ -72,9 +72,10 @@ page { background: var(--cy-bg-page); }
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .badge {
-  flex-shrink: 0; margin-left: var(--cy-legacy-14); min-width: 34rpx; height: 34rpx; padding: 0 var(--cy-legacy-10);
+  flex-shrink: 0; margin-left: var(--cy-legacy-14); min-width: 40rpx; height: 40rpx; padding: 0 var(--cy-legacy-10);
   box-sizing: border-box; border-radius: 999rpx; background: var(--cy-danger);
-  color: var(--cy-text-inverse); font-size: var(--cy-font-caption); font-weight: 700;
+  /* 2026-10-28 业主「参考 iMessage」:红底白字、数字居中(深色主题下 text-inverse 是黑字) */
+  color: #fff; font-size: var(--cy-font-caption); font-weight: 600; line-height: 1; text-align: center; font-variant-numeric: tabular-nums; /* ds-ok: 红底角标固定白字 */
   display: flex; align-items: center; justify-content: center;
 }
 
@@ -149,19 +150,23 @@ page { background: var(--cy-bg-page); }
 .conv-wrap:nth-child(n+9) { transition-delay: calc(var(--pm-l-s, 0) * 240ms), calc(var(--pm-l-s, 0) * 240ms), 0s, 0s; }
 
 /* M-06 协作邀请卡片带(商家视角):横滑、卡片同宽同高,标题与页边距对齐,右侧自然出血。 */
-.invite-strip { padding: var(--cy-space-3) 0 var(--cy-space-2); }
-.invite-strip__title { display: block; padding: 0 var(--cy-page-x) var(--cy-space-2); font-size: var(--cy-font-label); font-weight: 700; color: var(--cy-text-secondary); }
+/* 2026-10-28 m681:Figma 393:429/442 卡片,浅色,标题加大 */
+.invite-strip { padding: var(--cy-space-4) 0 var(--cy-space-6); }
+.invite-strip__title { display: block; padding: 0 var(--cy-page-x) var(--cy-space-3); font-size: var(--cy-type-section-title); font-weight: 700; color: var(--cy-text-title); }
 .invite-strip__scroll { width: 100%; white-space: nowrap; }
-.invite-strip__track { display: inline-flex; gap: var(--cy-space-2-5); padding: 0 var(--cy-page-x); }
-.invite-card {
-  flex: none; width: 440rpx; height: 232rpx; box-sizing: border-box;
-  display: flex; flex-direction: column; padding: var(--cy-space-3);
-  border-radius: var(--cy-radius-md); background: var(--cy-bg-card);
-  border: 1rpx solid var(--cy-border-card);
-  white-space: normal;
-}
-.invite-card__top { display: flex; align-items: center; justify-content: space-between; }
-.invite-card__icon { width: 64rpx; height: 64rpx; border-radius: 50%; background: var(--cy-bg-card-2); color: var(--cy-info); display: flex; align-items: center; justify-content: center; }
-.invite-card__name { display: block; margin-top: var(--cy-space-2); font-size: var(--cy-font-body); font-weight: 700; color: var(--cy-text-title); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.invite-card__sub { display: block; margin-top: var(--cy-space-1); font-size: var(--cy-font-label); color: var(--cy-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.invite-card__time { display: block; margin-top: auto; font-size: var(--cy-font-caption); color: var(--cy-text-secondary); }
+.invite-strip__track { display: inline-flex; gap: var(--cy-space-3); padding: 0 var(--cy-page-x); }
+.invite-card { width: 620rpx; flex: none; box-sizing: border-box; display: flex; flex-direction: column; padding: var(--cy-space-4); border-radius: var(--cy-radius-xl); background: var(--cy-bg-card); white-space: normal; }
+.invite-card__top { display: flex; align-items: center; justify-content: space-between; gap: var(--cy-space-2); }
+.invite-card__from { min-width: 0; font-size: var(--cy-font-caption); color: var(--cy-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.invite-card__main { display: flex; gap: var(--cy-space-3); margin-top: var(--cy-space-4); }
+.invite-card__cover { width: 168rpx; height: 128rpx; flex: none; border-radius: var(--cy-radius-md); background: var(--cy-bg-card-2); }
+.invite-card__cover--none { display: flex; align-items: center; justify-content: center; color: var(--cy-text-secondary); }
+.invite-card__info { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+.invite-card__date { font-size: var(--cy-font-caption); color: var(--cy-text-secondary); }
+.invite-card__name { display: block; margin-top: var(--cy-space-1); font-size: var(--cy-type-card-title); font-weight: 700; color: var(--cy-text-title); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.invite-card__sub { display: block; margin-top: var(--cy-space-1); font-size: var(--cy-font-caption); color: var(--cy-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.invite-card__terms { display: block; margin-top: var(--cy-space-4); font-size: var(--cy-font-label); color: var(--cy-text-body); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.invite-card__acts { display: flex; justify-content: flex-end; gap: var(--cy-space-2); margin-top: var(--cy-space-4); }
+.invite-card__btn { height: 72rpx; line-height: 72rpx; padding: 0 var(--cy-space-5); border-radius: var(--cy-radius-pill); background: var(--cy-bg-card-2); color: var(--cy-text-title); font-size: var(--cy-font-label); font-weight: 600; }
+.invite-card__btn--primary { background: var(--cy-btn-solid-bg); color: var(--cy-btn-solid-fg); }
+.invite-card__time { display: block; margin-top: var(--cy-space-4); font-size: var(--cy-font-caption); color: var(--cy-text-secondary); }

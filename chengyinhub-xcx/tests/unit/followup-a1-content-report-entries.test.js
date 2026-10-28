@@ -126,9 +126,8 @@ test('FOLLOWUP-A-1 模板广场:别人公开的广场玩法 → 页面末尾出�
   const h = harness('pages/templatedetail/templatedetail.js');
   loadTemplate(h, 'library', { memberId: 22, status: 1, publishStatus: 1, delFlag: 0 });
   assert.equal(h.page.data.reportKind, 'template');
-  const wxml = read('pages/templatedetail/templatedetail.wxml');
-  assert.match(wxml, /<view class="xb-report" wx:if="\{\{ reportKind === 'template' \}\}" bindtap="reportTemplate"/);
-  assert.match(wxml, /<view class="xb-report" wx:elif="\{\{ reportKind === 'personalTemplate' \}\}" bindtap="reportPersonalTemplate"/);
+  // 2026-10-28 P-42:业主确认页面末尾的「举报这个玩法」也删掉
+  assert.doesNotMatch(read('pages/templatedetail/templatedetail.wxml'), /xb-report/);
   const submit = await runReport(h, () => h.page.reportTemplate(), r => r.success({ code: 200, msg: '举报已提交，内容将进入审核' }));
   assert.equal(submit.url, '/api/template/report');
   assert.deepEqual(submit.data, { id: '5', reason: '违法违规' });
@@ -167,9 +166,8 @@ test('FOLLOWUP-A-1 玩法详情:本人的 / 未公开的玩法不出举报,处�
     assert.equal(h.requests.length, 0);
   }
   const wxml = read('pages/templatedetail/templatedetail.wxml');
-  // 2026-10-27 P-42:⋯ 弹层已删,举报是页面末尾的一行(xb-report)
-  assert.match(wxml, /<view class="xb-report" wx:if="\{\{ reportKind === 'template' \}\}" bindtap="reportTemplate"[^>]*>举报这个玩法<\/view>/);
-  assert.match(wxml, /<view class="xb-report" wx:elif="\{\{ reportKind === 'personalTemplate' \}\}" bindtap="reportPersonalTemplate"[^>]*>举报这个玩法<\/view>/);
+  // 2026-10-28 P-42:页面末尾那行举报也已删
+  assert.doesNotMatch(wxml, /举报这个玩法/);
   assert.match(wxml, /<cy-option-sheet show="\{\{reportReasonShow\}\}" title="选择举报原因" items="\{\{reportReasonItems\}\}"/);
   assert.ok(JSON.parse(read('pages/templatedetail/templatedetail.json')).usingComponents['cy-option-sheet']);
 });

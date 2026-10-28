@@ -1,4 +1,5 @@
 @import '../../../style/merchant-light.wxss';
+@import '../../../style/threads-menu.wxss';
 
 .cu-page {
   min-height: 100vh;
@@ -316,34 +317,3 @@
 .cu-row:nth-child(8) { transition-delay: calc(var(--pm-l-s, 0) * 210ms), calc(var(--pm-l-s, 0) * 210ms), 0s, 0s; }
 .cu-row:nth-child(n+9) { transition-delay: calc(var(--pm-l-s, 0) * 240ms), calc(var(--pm-l-s, 0) * 240ms), 0s, 0s; }
 
-/* 2026-10-27 业主 M-04:客户管理操作列表 —— 图标 + 标题 + 说明,一行一项 */
-.cu-ops { padding-bottom: var(--cy-space-2); }
-.cu-op {
-  min-height: 112rpx; /* ds-ok: 双行操作行,≥88rpx 触控区 */
-  display: flex;
-  align-items: center;
-  gap: var(--cy-space-3);
-  padding: var(--cy-space-2) 0;
-  border-bottom: 1rpx solid var(--cy-border-card);
-}
-.cu-op:last-child { border-bottom: 0; }
-.cu-op-ico {
-  width: 72rpx;
-  height: 72rpx;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: var(--cy-bg-card-2);
-  color: var(--cy-text-title);
-}
-.cu-op-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--cy-space-1); }
-.cu-op-title { font-size: var(--cy-font-body); font-weight: 600; color: var(--cy-text-title); }
-.cu-op-desc {
-  font-size: var(--cy-font-caption);
-  color: var(--cy-text-secondary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}

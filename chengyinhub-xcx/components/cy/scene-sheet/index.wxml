@@ -4,8 +4,9 @@
   <view class="ss__panel" style="--cy-comp-sheet-max-h:calc(100vh - {{panelTopPx}}px);" catchtap="noop">
     <!-- G-1 page 档:没有遮罩和把手,普通导航栏 + 大标题;左上返回与物理返回同一出口 -->
     <block wx:if="{{variant === 'page'}}">
-      <cy-nav-bar plain custom-back bind:back="onPageBack" />
-      <cy-page-title title="{{title}}" />
+      <cy-nav-bar wx:if="{{bare}}" overlay tint="light" custom-back bind:back="onPageBack" />
+      <cy-nav-bar wx:else plain custom-back bind:back="onPageBack" />
+      <cy-page-title wx:if="{{!bare}}" title="{{title}}" />
     </block>
     <view class="ss__head" wx:else>
       <view class="ss__back" wx:if="{{canBack}}" bindtap="onBack" data-testid="scene-sheet-back" aria-role="button" aria-label="返回上一步" hover-class="cy-pressed" hover-stay-time="80"><view class="ss__control"><cy-icon name="back" size="32" /></view></view>

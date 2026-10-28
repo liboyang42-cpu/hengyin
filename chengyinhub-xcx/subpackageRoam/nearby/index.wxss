@@ -242,9 +242,9 @@ page { background: var(--cy-comp-sheet-player-page); }
 .mt-strip { position: absolute; left: 0; right: 0; bottom: 0; z-index: 18; pointer-events: none; }
 .mt-strip__head, .mt-strip__cards { pointer-events: auto; }
 .mt-strip__head { display: inline-flex; margin: 0 0 15rpx 31rpx; height: 54rpx; padding: 0 23rpx; align-items: center; border-radius: 27rpx; background: rgba(28,28,30,.88); box-shadow: 0 8rpx 24rpx rgba(0,0,0,.25); font-size: 25rpx; font-weight: 600; color: #fff; } /* ds-ok 同 .mt-chip 底色 */
-.mt-strip__cards { width: 100%; height: 330rpx; white-space: nowrap; }
+.mt-strip__cards { width: 100%; height: 290rpx; white-space: nowrap; } /* 2026-10-28 业主:卡片加宽,铺在最底部 */
 .mt-strip__track { display: inline-flex; gap: 23rpx; padding: 0 31rpx; }
-.mt-card { position: relative; display: inline-flex; flex: none; width: 481rpx; height: 300rpx; overflow: hidden; border-radius: 27rpx; background: #2C2C2E; vertical-align: top; box-shadow: 0 12rpx 31rpx rgba(0,0,0,.3); } /* ds-ok 同 .entry-card,加高;压在地图上加投影 */
+.mt-card { position: relative; display: inline-flex; flex: none; width: 620rpx; height: 260rpx; overflow: hidden; border-radius: 27rpx; background: #2C2C2E; vertical-align: top; box-shadow: 0 12rpx 31rpx rgba(0,0,0,.3); } /* ds-ok 同 .entry-card,加高;压在地图上加投影 */
 .mt-card__cover { position: absolute; top: 0; right: 0; bottom: 0; left: 0; width: 100%; height: 100%; }
 .mt-card__cover--team { background: linear-gradient(135deg, #0d2a4d, #123b6b); } /* ds-ok 队伍蓝 */
 .mt-card__cover--place, .mt-card__cover--shop { background: #2C2C2E; } /* ds-ok */

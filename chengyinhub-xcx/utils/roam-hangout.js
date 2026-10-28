@@ -71,7 +71,7 @@ function buildSelfMarker(center, icon) {
   if (!center || !icon) return [];
   const lat = numOrNull(center.lat); const lng = numOrNull(center.lng);
   if (lat == null || lng == null) return [];
-  return [{ id: SELF_MARKER_ID, latitude: lat, longitude: lng, width: 58, height: 58, anchor: { x: 0.5, y: 0.5 }, zIndex: 20, iconPath: icon }];
+  return [{ id: SELF_MARKER_ID, latitude: lat, longitude: lng, width: 64, height: 64, anchor: { x: 0.5, y: 0.94 }, zIndex: 20, iconPath: icon }]; // 2026-10-28 头像定位针:尖角对准自己的位置
 }
 
 /** 300 m 头像圈(LOD 半径可视化,Figma S01 的虚线圈;微信 circle 不支持虚线,用淡青细线) */

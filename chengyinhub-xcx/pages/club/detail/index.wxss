@@ -20,6 +20,8 @@ page { background: var(--cy-bg-page); }
   --club-glass: var(--cy-color-border-subtle);
 }
 .theme-merchant .cover-wrap { background: var(--cy-color-bg-surface-subtle); }
+/* 2026-10-28 m692:浅色版灰块再浅一档 */
+.theme-merchant .ov-fact { background: var(--cy-color-bg-surface-subtle); }
 .club-nav-spacer { width: 100%; }
 
 /* —— 封面 Hero —— */
@@ -168,14 +170,15 @@ page { background: var(--cy-bg-page); }
 /* Figma 93:22 Meta:三枚「图标 19 + 文字 15」chip,gap 20。
    2026-08-26 曾把它压成一行 · 拼接的纯文本并撤掉图标,282:x 那版稿又把图标行留着 —— 以稿为准复原。 */
 .profile-meta {
-  /* 2026-10-27 P-17 owner:合成一行「类型 · N 名成员 · 入会方式」,「退出」靠最右(P-15)。 */
+  /* 拍板 2026-10-22:固定两行(「类型 · N 名成员」/ 入会方式);2026-10-28 业主:间距退回这一版 */
   margin-top: var(--cy-space-2-5);
   display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: var(--cy-space-3);
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--cy-space-1-5);
 }
-.profile-meta-chip { display: flex; align-items: center; gap: var(--cy-space-1-5); min-width: 0; flex: 1; }
+.profile-meta-chip { display: flex; align-items: center; gap: var(--cy-space-1-5); min-width: 0; max-width: 100%; }
+.profile-meta-row { align-self: stretch; display: flex; align-items: center; gap: var(--cy-space-3); }
 .profile-quit {
   flex: none;
   margin-left: auto;
@@ -720,8 +723,8 @@ page { background: var(--cy-bg-page); }
 .ov-lb-row {
   display: flex;
   align-items: center;
-  gap: var(--cy-space-2-5);
-  padding: var(--cy-space-2-5) var(--cy-space-3);
+  gap: var(--cy-space-3);
+  padding: var(--cy-space-4) var(--cy-space-3); /* 2026-10-28 业主:贡献榜每行加高 */
 }
 .ov-lb-row.is-me { background: var(--cy-color-action-secondary-bg); }
 .ov-lb-rank {
@@ -1042,7 +1045,8 @@ page { background: var(--cy-bg-page); }
 }
 .post-composer-ph { font-size: var(--cy-type-card-title); color: var(--cy-color-text-secondary); }
 .post-composer-tools { display: flex; align-items: center; gap: var(--cy-space-5); padding-top: var(--cy-space-3); }
-.post-composer-ico { flex: none; color: var(--cy-color-text-secondary); }
+.post-composer-ico { flex: none; color: var(--cy-color-text-primary); }
+.post-composer-sq { width: 40rpx; height: 40rpx; box-sizing: border-box; border: 3rpx solid var(--cy-color-text-secondary); border-radius: 8rpx; }
 
 /* —— 概览 tab(Figma N3 23:2 / N5 24:216 / N6 24:355)——
    页边 16 · 区块间距 16。简介直接铺开:全局规约「标题下不要小标题」,

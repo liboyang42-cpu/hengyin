@@ -67,7 +67,7 @@ const SCENES = {
   'member-invite-history': { route: '/subpackageMember/myinvite/myinvite', title: '邀请记录', theme: 'player', variant: 'half' },
   'member-order-history': { route: '/subpackageMember/order/order', title: '我的订单', theme: 'player', variant: 'half' },
   // 2026-10-27 P-51(业主 p92):订单详情「不能是弹窗,之前做好过」⇒ page 档(与 orderinfo 深链页同一组件)
-  'member-order-detail': { route: '/subpackageMember/orderinfo/orderinfo', title: '订单详情', theme: 'player', variant: 'page' },
+  'member-order-detail': { route: '/subpackageMember/orderinfo/orderinfo', title: '订单详情', theme: 'player', variant: 'page', bare: true }, // 2026-10-28 Figma D07:头图顶到最上,返回键浮在图上,不出大标题
 
   // S01-S13 设置三级/四级
   'settings-how-to-play': { route: '/subpackageA/pages/infomation/infomation', title: '城瘾玩法', theme: 'player', variant: 'half' },

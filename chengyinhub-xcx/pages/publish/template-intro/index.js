@@ -1,4 +1,4 @@
-const { applyTheme } = require('../../../utils/theme.js');
+const { applyTheme } = require('../../../utils/theme.js'); const { templateArt } = require('../../../utils/template-art.js');
 // 创建节点玩法 · 第0页(价值主张)
 //
 // 位置:publish-sheet 卡2 →【本页】→ temp(编辑器)
@@ -116,7 +116,7 @@ Page({
         id: it.id,
         key: it.id == null ? `example-${i}` : `example-${it.id}`,
         title: it.title || it.name || '',
-        imgUrl: it.imgUrl || '',
+        imgUrl: it.imgUrl || templateArt(it) || '', // 2026-10-28 业主「圆圈里本来有图片」:没传封面用模板页同一套具象图
         catName: cat.categoryName || '节点玩法',
       };
     });

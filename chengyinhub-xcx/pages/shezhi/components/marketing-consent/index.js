@@ -91,6 +91,7 @@ function shapeMerchant(value) {
     merchantRowId: positiveSafeId(row.merchantRowId),
     merchantOwnerMemberId: positiveSafeId(row.merchantOwnerMemberId),
     merchantName: String(row.merchantName || '商家'),
+    merchantLogo: row.merchantLogo && typeof app.getImgUrl === 'function' ? app.getImgUrl(String(row.merchantLogo)) : String(row.merchantLogo || ''),
     inAppOptedIn: row.inAppOptedIn === true,
     couponOptedIn: row.couponOptedIn === true,
   };

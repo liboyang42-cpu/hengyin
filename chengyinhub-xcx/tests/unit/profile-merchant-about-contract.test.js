@@ -683,7 +683,7 @@ test('H1 商家分支撤销 type2「发起合作」，玩家关注/发消息原�
   assert.match(follow[0], /\(!isSelf && !viewingOwn\) \|\| \(isSelf && isMerchantView\)/, '关注钮公开视角统一渲染(含商家被看者)')
   const chat = wxml.match(/<view class="pc-primary pc-ticket" wx:if="\{\{!isSelf[^>]*bindtap="onStartChat"/)
   assert.ok(chat, '发消息钮必须存在')
-  assert.match(chat[0], /!isSelf && !subjectIsMerchant/, '发消息钮在商家被看者上不渲染')
+  assert.match(chat[0], /!isSelf && !viewingOwn && !subjectIsMerchant/, '发消息钮在商家被看者上不渲染')
 
   // 不复活「可承接章节 / 邀请承接」,主页不再碰 chapter-application 的写入/邀请端点。
   // 2026-10-27 owner 真机走查 M-25:本人商家视角「我的项目」要显示自己作为承接方的进度,

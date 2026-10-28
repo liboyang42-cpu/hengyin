@@ -1431,7 +1431,7 @@ Page({
   },
 
   goFinance() {
-    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/merchant/ledger/index?view=settlement', complete: () => { this._navigating = false; } });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageA/pages/assetcenter/earnings/index?theme=merchant', complete: () => { this._navigating = false; } }); // 2026-10-28 M-32:先进账户收益(浅色),结算明细在「更多」里
   },
 
   goBrandManage() {

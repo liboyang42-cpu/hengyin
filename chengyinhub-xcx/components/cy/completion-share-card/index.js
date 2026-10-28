@@ -30,6 +30,11 @@ Component({
     commentNick: { type: String, value: '' },
     commentText: { type: String, value: '' },
     commentCount: { type: Number, value: 0 },
+
+    // 2026-10-22 新稿(俱乐部页重做 211:271):Kudos / CommentPreview 排在点亮·评论·分享那一行【下面】。
+    // 那一行由 cy-post-card 出,所以 post-card 传 tail=false,自己在动作行之后画这两块;
+    // 其它直接使用本组件的地方保持默认 true,不受影响。
+    tail: { type: Boolean, value: true },
   },
 
   methods: {

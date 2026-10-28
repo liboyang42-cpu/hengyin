@@ -222,6 +222,7 @@ test('completion-share-card 的每个属性,两个消费页都必须真的传(�
   const EXEMPT = {
     'pages/square/detail/index.wxml': {
       postIndex: '详情页只有一条帖文,没有列表索引;它只用于回传 detail 事件的 index',
+      tail: '详情页没有帖文卡的动作行,点赞头像组与评论预览照旧由子组件画,用默认 true',
     },
     'components/cy/post-card/index.wxml': {
       time: '稿上 Roam 正文没有时间 —— 时间归帖文卡头部；详情页没有那个头部，所以只有它传',

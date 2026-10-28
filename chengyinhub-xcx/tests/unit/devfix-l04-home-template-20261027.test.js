@@ -58,17 +58,14 @@ test('P-03:「主题 / 活动」tab 与第一张卡之间留 24rpx', () => {
   assert.match(read('style/tokens.wxss'), /--cy-space-3:\s*24rpx/);
 });
 
-test('P-04:主题卡没有封面时用 #602 两层空态插画占位，单图 / 无图时标题区放宽', () => {
+// 2026-10-28 p104/p70 业主:主题都必须有封面 ⇒ 推荐卡改成整张封面卡(高同 cy-feed-play-card),
+// 取代 P-04 的「无封面插画占位 + 左文右宫格」。封面缺失只剩兜底图,卡下不再露白。
+test('P-04:推荐卡整张铺封面，缺封面用兜底图，不再出宫格与占位插画', () => {
   const wxml = homeWxml();
-  const holders = wxml.match(/<view class="v2-fcell v2-fcell--empty" wx:if="\{\{!item\.feedImages\.length\}\}"[\s\S]*?<\/view>/g) || [];
-  assert.equal(holders.length, 2, '主题和活动两个分支都要有无封面占位');
-  holders.forEach((h) => {
-    assert.match(h, /src="\/images\/empty_state_bg\.svg"/);
-    assert.match(h, /src="\/images\/empty_state_figure\.svg"/);
-  });
-  assert.match(rule(homeWxss(), '.v2-fgrid.v2-fgrid--1'), /width:\s*240rpx/);
-  // 四图宫格仍是 Figma 316rpx
-  assert.match(rule(homeWxss(), '.v2-fgrid'), /width:\s*316rpx/);
+  const covers = wxml.match(/<image class="v2-fcover" src="\{\{item\.cover \|\| '\/images\/route_city_cover\.png'\}\}"/g) || [];
+  assert.equal(covers.length, 2, '主题和活动两个分支都铺封面');
+  assert.doesNotMatch(wxml, /v2-fgrid|v2-fcell/);
+  assert.match(rule(homeWxss(), '.v2-fcover'), /width:\s*100%[\s\S]*height:\s*100%/);
 });
 
 test('P-05:主题没有固定时间显示「长期开放」', () => {

@@ -65,6 +65,8 @@ const EXPECTED_NAV_ROUTES = [
   'subpackageA/pages/myproject/index', 'subpackageA/pages/infomation/infomation',
   'subpackageA/pages/infomationdetail/infomationdetail',
   'subpackageA/pages/assetcenter/income-detail/income-detail', 'subpackageA/pages/assetcenter/earnings/index',
+  // 2026-10-28 G-9:账户收益 · 分析页
+  'subpackageA/pages/assetcenter/analysis/index',
   'subpackageP3/pages/growthcenter/index/index',
   'subpackageP3/pages/growthcenter/leaderboard/index',
   'subpackageP3/pages/stamp-album/index/index', 'subpackageB/pages/im/list/index',
@@ -142,6 +144,8 @@ const EXPECTED_PAGE_TITLE_ROUTES = [
   'pages/activity/official-organizer/index',
   'subpackageA/pages/infomation/infomation', 'subpackageA/pages/infomationdetail/infomationdetail',
   'subpackageA/pages/assetcenter/income-detail/income-detail', 'subpackageA/pages/assetcenter/earnings/index',
+  // 2026-10-28 G-9:账户收益 · 分析页
+  'subpackageA/pages/assetcenter/analysis/index',
   'subpackageP3/pages/growthcenter/index/index',
   'subpackageP3/pages/growthcenter/leaderboard/index', 'subpackageP3/pages/stamp-album/index/index',
   'pages/publish/activity/index',
@@ -290,8 +294,9 @@ function assertTitleInventory(readSource = read) {
   // 2026-10-25 +1:官方地点挑战(pages/play/poi-challenge):整屏玩法页,拍照 / 答题用 cy-playkit-qa 自带的退出键,
   //   勋章用 cy-medal-screen,与 citystamp / stamp-camera 同形态,不挂 cy-nav-bar / cy-page-title ⇒ 144 → 145。
   // 2026-10-27 L02 P-55 +1:营销消息与优惠券独立页(custom 导航 + cy-nav-bar plain + cy-page-title 普通二级页)⇒ 145 → 146;custom 同步 146。
-  assert.equal(rows.length, 146, '注册页面盘点数量发生漂移,需重新核对标题规范')
-  assert.equal(rows.filter((row) => row.custom).length, 146)
+  // 2026-10-28 G-9 +1:账户收益 · 分析页(custom 导航 + cy-nav-bar + cy-page-title 普通二级页)⇒ 146 → 147;custom 同步 147。
+  assert.equal(rows.length, 147, '注册页面盘点数量发生漂移,需重新核对标题规范')
+  assert.equal(rows.filter((row) => row.custom).length, 147)
   // 2026-09-02:+2 俱乐部客户列表与客户详情(club/customers、club/customer-detail),
   //   均为 custom 导航 + cy-nav-bar + cy-page-title 的普通二级页 = 133；custom 导航 129 + 2 = 131。
   const knownRoutes = new Set(routes)

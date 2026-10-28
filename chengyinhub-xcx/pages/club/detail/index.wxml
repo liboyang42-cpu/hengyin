@@ -45,7 +45,7 @@
            第一行「类型 · N 名成员」,第二行入会方式(公开加入 / 需审核加入)。图标样式沿用原 chip。 -->
       <view class="profile-id">
         <view class="profile-logo-wrap">
-          <image class="profile-logo" src="{{club.logo || '/images/d_logo.png'}}" mode="aspectFit" lazy-load="true" />
+          <image class="profile-logo" src="{{club.logo || '/images/d_logo.png'}}" mode="aspectFill" lazy-load="true" />
         </view>
         <view class="profile-id-main">
           <view class="profile-name">{{club.name}}</view>
@@ -63,14 +63,21 @@
         <!-- 拍板 2026-10-22:商家也可以加入俱乐部(不能报名俱乐部活动),入会按钮不再对商家隐藏。
              2026-10-22 owner:俱乐部对所有人开放浏览,「加入俱乐部」改成底部悬浮按钮(见页尾 .join-float),头部不再放。 -->
       </view>
-      <!-- 2026-10-27 P-15/P-17 owner:元信息合成一行「兴趣社群 · 2 名成员 · 公开加入」,「退出」放在这一行最右侧。 -->
+      <!-- 2026-10-28 业主:头部间距退回原来的两行(「类型 · N 名成员」/ 入会方式),
+           只把「退出」放到入会方式那一行的最右边(P-15)。 -->
       <view class="profile-meta">
         <view class="profile-meta-chip">
           <cy-icon class="profile-meta-ico" name="tab-club" size="38" />
-          <text class="profile-meta-text">{{club.metaLine}} · {{club.joinPolicyText}}加入</text>
+          <text class="profile-meta-text">{{club.metaLine}}</text>
         </view>
-        <!-- 「退出」全仓只有这一个入口,删了成员就没路退。 -->
-        <text class="profile-quit" wx:if="{{club.isJoined && !club.isOwner}}" bindtap="onQuit" aria-role="button" aria-label="退出俱乐部" hover-class="cy-pressed" hover-stay-time="80">退出</text>
+        <view class="profile-meta-row">
+          <view class="profile-meta-chip">
+            <cy-icon class="profile-meta-ico" name="{{club.joinPolicy == 1 ? 'lock' : 'check'}}" size="38" />
+            <text class="profile-meta-text">{{club.joinPolicyText}}加入</text>
+          </view>
+          <!-- 「退出」全仓只有这一个入口,删了成员就没路退。 -->
+          <text class="profile-quit" wx:if="{{club.isJoined && !club.isOwner}}" bindtap="onQuit" aria-role="button" aria-label="退出俱乐部" hover-class="cy-pressed" hover-stay-time="80">退出</text>
+        </view>
       </view>
       <text wx:if="{{!club.isJoined && !club.isOwner && club.myJoinStatus === 2 && club.myJoinReviewReason}}" class="join-review-reason">申请未通过：{{club.myJoinReviewReason}}</text>
       <!-- 2026-09-09 按稿删「进入群聊」:稿 N1b 47:2 / N3 20:137 的头部到 meta 行就结束。
@@ -97,8 +104,9 @@
           <text class="post-composer-who">{{myNickname || '城瘾玩家'}}</text>
           <text class="post-composer-ph">有什么新鲜好玩的分享吗？</text>
           <view class="post-composer-tools">
-            <cy-icon class="post-composer-ico" name="image" size="44" />
-            <cy-icon class="post-composer-ico" name="pin" size="44" />
+            <!-- 2026-10-28 业主:三个图标照 Figma 285:395 —— 线框方块、实心定位、旗子 -->
+            <view class="post-composer-ico post-composer-sq" aria-hidden="true"></view>
+            <cy-icon class="post-composer-ico" name="pin-solid" size="44" />
             <cy-icon class="post-composer-ico" name="flag" size="44" />
           </view>
         </view>

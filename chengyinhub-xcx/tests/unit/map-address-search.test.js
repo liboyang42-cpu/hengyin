@@ -85,7 +85,8 @@ test('结果行照原型:针 + 标题 + 副标题,空态写「这附近没有搜
   assert.match(wxml, /class="addrrow__pin" style="color:\{\{item\.pinColor\}\}"/);
   assert.match(wxml, /class="addrrow__t">\{\{item\.name\}\}/);
   assert.match(wxml, /class="addrrow__s">\{\{item\.sub\}\}/);
-  assert.match(wxml, /class="addrlist__none">这附近没有搜到/);
+  // 2026-10-28 p115:关键词搜索在路上时先写「正在搜索…」,落定没结果才写「这附近没有搜到」
+  assert.match(wxml, /class="addrlist__none">\{\{searching \? '正在搜索…' : '这附近没有搜到'\}\}/);
   // 几何照原型换算:白条 44px=85rpx / 圆角 12px=23rpx;列表圆角 14px=27rpx / 最高 420px=808rpx
   assert.match(wxss, /\.searchbar\{[\s\S]{0,400}?height:85rpx/);
   assert.match(wxss, /\.searchbar\{[\s\S]{0,400}?border-radius:23rpx/);

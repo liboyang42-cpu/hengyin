@@ -1,7 +1,7 @@
 'use strict'
 
 const mediaPreview = require('../../../utils/media-preview.js')
-const { readPlayerCode } = require('../../../utils/player-code.js')
+const { readPlayerCode } = require('../../../utils/player-code.js'); const { readReducedMotion } = require('../../../utils/motion-preference.js')
 
 // G-6(2026-10-27 业主 p102「二维码没有」):码图迟迟不回 / 回来是空白图时,不再留一块空灰框,改出「重新生成」。
 const QR_LOAD_TIMEOUT_MS = 10000
@@ -18,6 +18,7 @@ Component({
   },
 
   data: {
+    reducedMotion: false,
     qrSrc: '',
     qrState: 'empty',
     qrErrorText: '',
@@ -31,6 +32,7 @@ Component({
 
   lifetimes: {
     attached() {
+      this.setData({ reducedMotion: readReducedMotion() })
       this.syncQr()
     },
     detached() {

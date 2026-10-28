@@ -99,34 +99,24 @@
   </scroll-view>
 
 
-  <!-- 2026-10-27 业主 M-04:「客户管理」改成标准操作列表 —— 每行 图标 + 标题 + 一句说明,
-       不再是三颗浮在空白里的文字按钮。行按岗位权限出,没有权限的动作整行不出。 -->
-  <cy-sheet inset show="{{toolsOpen}}" title="客户管理" bind:close="closeTools">
-    <view class="cu-ops">
-      <view wx:if="{{canSegment}}" class="cu-op" bindtap="toggleSelectMode" aria-role="button"
-            aria-label="{{selecting ? '取消批量' : '批量标签'}}" hover-class="cy-pressed" hover-stay-time="80">
-        <view class="cu-op-ico"><cy-icon name="flag" size="40" /></view>
-        <view class="cu-op-body">
-          <text class="cu-op-title">{{selecting ? '取消批量' : '批量标签'}}</text>
-          <text class="cu-op-desc">{{selecting ? '退出多选，不改动客户标签' : '多选客户，一次打上同一个标签'}}</text>
+  <!-- 2026-10-27 业主 M-04 → 2026-10-28 m679:Threads 式分组菜单(style/threads-menu.wxss),文字左、图标右,不写说明。
+       行按岗位权限出,没有权限的动作整行不出。 -->
+  <cy-sheet inset show="{{toolsOpen}}" bind:close="closeTools">
+    <view class="tm">
+      <view class="tm-group">
+        <view wx:if="{{canSegment}}" class="tm-row" bindtap="toggleSelectMode" aria-role="button"
+              aria-label="{{selecting ? '取消批量' : '批量标签'}}" hover-class="cy-pressed" hover-stay-time="80">
+          <text class="tm-label">{{selecting ? '取消批量' : '批量标签'}}</text><cy-icon class="tm-ico" name="flag" size="40" />
         </view>
-      </view>
-      <view wx:if="{{canExport}}" class="cu-op" bindtap="createExport" aria-role="button"
-            aria-label="导出脱敏客户资料" aria-disabled="{{exportState === 'PENDING' || exportState === 'RUNNING'}}"
-            hover-class="{{exportState === 'PENDING' || exportState === 'RUNNING' ? 'none' : 'cy-pressed'}}" hover-stay-time="80">
-        <view class="cu-op-ico"><cy-icon name="download" size="40" /></view>
-        <view class="cu-op-body">
-          <text class="cu-op-title">{{exportState === 'PENDING' || exportState === 'RUNNING' ? '导出中…' : '导出'}}</text>
-          <text class="cu-op-desc">按当前筛选生成脱敏 Excel</text>
+        <view wx:if="{{canExport}}" class="tm-row" bindtap="createExport" aria-role="button"
+              aria-label="导出脱敏客户资料" aria-disabled="{{exportState === 'PENDING' || exportState === 'RUNNING'}}"
+              hover-class="{{exportState === 'PENDING' || exportState === 'RUNNING' ? 'none' : 'cy-pressed'}}" hover-stay-time="80">
+          <text class="tm-label">{{exportState === 'PENDING' || exportState === 'RUNNING' ? '导出中…' : '导出'}}</text><cy-icon class="tm-ico" name="download" size="40" />
         </view>
-      </view>
-      <!-- BL-100:触达任务记录(只读,MARKETING_READ)。 -->
-      <view wx:if="{{canCampaigns}}" class="cu-op" bindtap="goCampaigns" aria-role="button"
-            aria-label="查看触达记录" hover-class="cy-pressed" hover-stay-time="80">
-        <view class="cu-op-ico"><cy-icon name="clock" size="40" /></view>
-        <view class="cu-op-body">
-          <text class="cu-op-title">触达记录</text>
-          <text class="cu-op-desc">查看发过的群发与送达情况</text>
+        <!-- BL-100:触达任务记录(只读,MARKETING_READ)。 -->
+        <view wx:if="{{canCampaigns}}" class="tm-row" bindtap="goCampaigns" aria-role="button"
+              aria-label="查看触达记录" hover-class="cy-pressed" hover-stay-time="80">
+          <text class="tm-label">触达记录</text><cy-icon class="tm-ico" name="clock" size="40" />
         </view>
       </view>
     </view>

@@ -1,4 +1,5 @@
 @import '../../../style/merchant-light.wxss';
+@import '../../../style/threads-menu.wxss';
 
 .mp-page { min-height: 100vh; background: var(--cy-bg-page); padding-bottom:var(--cy-space-4); }
 
@@ -23,12 +24,14 @@
 .mp-state-option--on { background: var(--cy-bg-card-2); font-weight: 600; }
 
 .mp-list { padding:8rpx var(--cy-page-x) 0; }
-.mp-card { display: flex; flex-direction: column; background: var(--cy-bg-card); border: 1rpx solid var(--cy-border-card); border-radius: var(--cy-radius-lg); padding:var(--cy-space-3); margin-top:var(--cy-space-3); }
+.mp-card { display: flex; flex-direction: column; background: var(--cy-bg-card); border: 0; border-radius: var(--cy-radius-xl); padding:var(--cy-space-4) var(--cy-space-4); margin-top:var(--cy-space-3); }
+.mp-when-row { display: flex; align-items: center; justify-content: space-between; gap: var(--cy-space-2); }
 .mp-main { display: flex; align-items: center; }
-.mp-cover { width: 168rpx; height: 168rpx; border-radius: var(--cy-radius-md); background: var(--cy-bg-card-2); flex-shrink: 0; }
+.mp-cover { width: 176rpx; height: 176rpx; border-radius: var(--cy-radius-md); background: var(--cy-bg-card-2); flex-shrink: 0; }
 .mp-body { flex: 1; margin-left:var(--cy-space-3); overflow: hidden; }
 .mp-tit-row { display: flex; align-items: center; gap:var(--cy-space-1-5); }
 .mp-dot { width: var(--cy-legacy-14); height: var(--cy-legacy-14); border-radius: var(--cy-radius-pill); background: var(--cy-danger); flex-shrink: 0; }
+.mp-tit-row { margin-top: var(--cy-space-1); }
 .mp-tit { font-size: var(--cy-font-subtitle); color: var(--cy-text-title); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mp-tags { margin-top:var(--cy-space-2); display: flex; align-items: center; gap: var(--cy-space-1-5); }
 .mp-type { font-size: var(--cy-font-caption); color: var(--cy-text-body); background: var(--cy-bg-subtle); padding:var(--cy-legacy-4) 16rpx; border-radius: var(--cy-radius-pill); }
@@ -37,7 +40,7 @@
 .mp-accept { font-size: var(--cy-font-caption); color: var(--cy-text-secondary); background: var(--cy-bg-subtle); padding:var(--cy-legacy-4) 16rpx; border-radius: var(--cy-radius-pill); }
 .mp-accept.on { color: var(--cy-success); background: var(--cy-color-status-success-soft); }
 .mp-stats { margin-top:var(--cy-space-2); display: flex; }
-.mp-stat { font-size: var(--cy-font-caption); color: var(--cy-text-secondary); margin-right:24rpx; }
+.mp-stat { font-size: var(--cy-font-label); color: var(--cy-text-body); }
 .mp-ops { display: flex; flex-direction: row; justify-content: flex-end; align-items: center; gap:var(--cy-space-1-5); margin-top:16rpx; padding-top:16rpx; border-top: 1rpx solid var(--cy-border-card); }
 .mp-tags-gap { flex: 1; }
 /* 稿 260:277:标题下面的地址,次要灰字,单行截断 */
@@ -69,7 +72,6 @@
 
 /* 稿 260:277:标题上方那行档期「8月23日 19:20—21:00」 */
 .mp-when {
-  margin-bottom: var(--cy-space-1);
   font-size: var(--cy-font-caption);
   color: var(--cy-text-tertiary);
 }
@@ -87,9 +89,4 @@
 .mp-card:nth-child(n+9) { transition-delay: calc(var(--pm-l-s, 0) * 240ms), calc(var(--pm-l-s, 0) * 240ms), 0s, 0s; }
 
 /* 2026-10-27 业主 M-26:长按操作面板 = 操作列表(图标 + 标题 + 说明),删除行整行红色 */
-.mp-ops-row--act { flex-direction: row; align-items: center; gap: var(--cy-space-3); }
-.mp-ops-ico { width: 72rpx; height: 72rpx; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: var(--cy-bg-card-2); color: var(--cy-text-title); }
-.mp-ops-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--cy-space-1); }
-.mp-ops-row--act .mp-ops-sub { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.mp-ops-row--danger .mp-ops-ico { background: var(--cy-danger-soft); color: var(--cy-danger); }
 .mp-ops-row--danger .mp-ops-sub { color: var(--cy-danger); }

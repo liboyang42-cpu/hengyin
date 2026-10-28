@@ -25,6 +25,8 @@ Component(withNativeBackGuard({
     show: { type: Boolean, value: false },
     // full(T3) | half(T1) | page(G-1:无遮罩无把手,导航栏 + 大标题,返回 = 原生返回)
     variant: { type: String, value: 'full' },
+    // page 档专用:页面自己有头图(订单详情 Figma D07)⇒ 导航栏悬浮在图上、不出大标题
+    bare: { type: Boolean, value: false },
     theme: { type: String, value: 'player' }, // player | merchant
     title: { type: String, value: '' },
     canBack: { type: Boolean, value: false },

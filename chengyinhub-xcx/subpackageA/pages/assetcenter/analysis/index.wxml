@@ -1,0 +1,34 @@
+<wxs src="../../../../utils/wxs/money.wxs" module="money" />
+<!-- 账户收益 · 分析(2026-10-28 业主:提现、明细之外还要一个分析页,整体参考 Revolut)。
+     读数全部来自余额流水 /api/user/balance/list,只做按月 / 按来源的聚合。 -->
+<view class="an {{merchantView ? 'theme-merchant' : 'theme-dark'}}">
+  <cy-nav-bar custom-back bind:back="goBack" />
+  <view style="height:{{statusBarHeight + navBarHeight}}px;"></view>
+  <cy-page-title title="分析" safe-top="{{false}}" />
+  <view class="an-seg">
+    <view class="an-seg__b {{mode === 'income' ? 'on' : ''}}" data-mode="income" bindtap="switchMode" aria-role="tab" aria-selected="{{mode === 'income'}}" aria-label="收入" hover-class="cy-pressed" hover-stay-time="80">收入</view>
+    <view class="an-seg__b {{mode === 'withdraw' ? 'on' : ''}}" data-mode="withdraw" bindtap="switchMode" aria-role="tab" aria-selected="{{mode === 'withdraw'}}" aria-label="提现" hover-class="cy-pressed" hover-stay-time="80">提现</view>
+  </view>
+  <cy-skeleton wx:if="{{state === 'loading'}}" type="list" count="3" />
+  <cy-error wx:elif="{{state === 'error'}}" load-failure size="lg" title="分析数据加载失败" retry="重试" bind:retry="load" />
+  <block wx:else>
+    <view class="an-card">
+      <text class="an-card__k">{{current.label}}{{mode === 'income' ? '收入' : '提现'}}</text>
+      <text class="an-card__v">{{money.amount(current.totalText)}}</text>
+      <view class="an-bars">
+        <view class="an-bar {{item.current ? 'is-cur' : ''}}" wx:for="{{series}}" wx:key="key" aria-label="{{item.label}} {{item.totalText}} 元">
+          <view class="an-bar__track"><view class="an-bar__fill" style="height:{{item.height > 0 ? item.height : 3}}%;"></view></view>
+          <text class="an-bar__m">{{item.label}}</text>
+        </view>
+      </view>
+    </view>
+    <view class="an-card" wx:if="{{mode === 'income'}}">
+      <text class="an-sec">收入来源</text>
+      <view class="an-src" wx:for="{{sources}}" wx:key="key">
+        <view class="an-src__row"><text>{{item.label}}</text><text class="an-src__v">{{money.amount(item.totalText)}}</text></view>
+        <view class="an-src__track"><view class="an-src__fill" style="width:{{item.percent}}%;"></view></view>
+      </view>
+      <text class="an-none" wx:if="{{!sources.length}}">这个月还没有收入</text>
+    </view>
+  </block>
+</view>

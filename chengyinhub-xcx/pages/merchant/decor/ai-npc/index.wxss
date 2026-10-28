@@ -1,5 +1,6 @@
 @import '../../../../style/merchant-light.wxss';
 @import '../design.wxss';
+@import '../../../../style/threads-menu.wxss';
 .npc-hero {
   display: flex;
   align-items: center;
@@ -226,8 +227,3 @@
 .npc-intro__title { font-size: var(--cy-type-body); font-weight: 700; color: var(--cy-color-text-primary); }
 .npc-intro__text { font-size: var(--cy-type-label); line-height: 1.6; color: var(--cy-color-text-secondary); }
 .npc-intro__ok { align-self: flex-end; min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: flex-end; font-size: var(--cy-type-label); font-weight: 600; color: var(--cy-color-text-primary); }
-.npc-persona { display: flex; gap: 15rpx; margin-bottom: 31rpx; } /* ds-ok: 沿用 .dc-tags 间距 */
-.npc-persona__chip { flex: 1; min-width: 0; min-height: 44px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6rpx; padding: 23rpx 12rpx; border-radius: 31rpx; background: var(--cy-color-bg-surface-subtle); color: var(--cy-color-text-primary); } /* ds-ok: 圆角/内距同 .dc-tag 口径 */
-.npc-persona__chip--on { background: var(--cy-color-action-primary-bg); color: var(--cy-color-action-primary-fg); }
-.npc-persona__label { font-size: var(--cy-type-body); font-weight: 700; }
-.npc-persona__desc { font-size: var(--cy-type-caption); opacity: 0.72; text-align: center; }

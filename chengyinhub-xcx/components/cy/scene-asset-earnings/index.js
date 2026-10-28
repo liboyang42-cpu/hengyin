@@ -37,6 +37,8 @@ Component({
     balance: '',
     /* 金额滚动展示值:countUp 只写这里,balance 保持真值(空态判断/全部提现都读真值) */
     balanceDisplay: '',
+    // 2026-10-28 G-9 Revolut 版:提现 / 明细 / 分析 / 更多;本月收入与我的资产由 cy-earnings-overview 自读
+    moreShow: false,
   },
   lifetimes: {
     attached() { this._detached = false; this._hidden = false; this.load(false) },
@@ -148,6 +150,10 @@ Component({
         if (this._acceptRead(token)) this.setData({ balanceDisplay: v.toFixed(2) })
       }, { decimals: 2, onDone: () => { if (this._acceptRead(token)) this._stopCountUp = null } })
     },
+    openAnalysis() { if (!this._hasCurrentBalance()) return; wx.navigateTo({ url: '/subpackageA/pages/assetcenter/analysis/index' + (this.data.theme === 'merchant' ? '?theme=merchant' : '') }) },
+    openMore() { if (this._hasCurrentBalance()) this.setData({ moreShow: true }) },
+    closeMore() { this.setData({ moreShow: false }) },
+    openSettlement() { if (!this._hasCurrentBalance()) return; this.setData({ moreShow: false }); wx.navigateTo({ url: '/pages/merchant/ledger/index?view=settlement' }) },
     _readFailureState(res, statusCode) {
       const code = Number(statusCode || res && (res.code || res.statusCode))
       return code === 401 ? 'login' : code === 403 ? 'permission' : 'error'

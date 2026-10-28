@@ -1,6 +1,8 @@
 <!-- Figma 297:1827 · variant 由 post 字段派生,页面不判:
      isCompletionShare → Roam(头像 40 / 块间距 14) · hasPlayCover → Template(头像 40)
-     picList 有图 → Image(头像 44) · 都没有 → Text(头像 44) -->
+     picList 有图 → Image(头像 44) · 都没有 → Text(头像 44)
+     2026-10-22 新稿(俱乐部页重做 211:271 / 211:326 / 211:354):头像只在头部那一行,正文、图、模板封面、
+     动作行都占满整宽(不再缩进到头像右侧);Roam 的点赞头像组与评论预览排在动作行之后。 -->
 <view class="post-card {{reducedMotion ? 'post-card--reduced' : ''}} {{light ? 'post-card--light' : ''}} {{post.isCompletionShare || post.hasPlayCover ? 'post-card--compact' : ''}} {{post.isCompletionShare ? 'post-card--roam' : ''}}" bindtap="emitDetail" aria-role="button" aria-label="{{accessibilityLabel}}" hover-class="cy-pressed" hover-stay-time="80">
   <view class="post-card__avatar">
       <image class="post-card__avatar-img" wx:if="{{interactiveUser}}" lazy-load="true" catchtap="emitUser" aria-role="button" aria-label="打开用户主页"
@@ -64,6 +66,7 @@
       kudos-text="{{post.kudosText}}"
       comment-nick="{{post.commentNick}}"
       comment-text="{{post.commentText}}"
+      tail="{{false}}"
       post-index="{{index}}"
       bind:detail="emitPlayDetail"
     />
@@ -87,7 +90,7 @@
 
     <view class="post-card__gallery"
           wx:if="{{!post.isCompletionShare && ((post.picList && post.picList.length > 0) || (!post.hasPlayCover && (post.routePreviewImg || post.sportCover)))}}">
-      <scroll-view class="post-card__media" scroll-x="true" enhanced="true" show-scrollbar="{{false}}">
+      <scroll-view class="post-card__media" scroll-x="true" enhanced="true" show-scrollbar="{{false}}" bindscroll="onGalleryScroll">
         <view class="post-card__media-row">
         <image wx:if="{{!post.sportName && (post.routePreviewImg || post.sportCover)}}" class="post-card__media-map"
                src="{{post.routePreviewImg || post.sportCover}}" mode="aspectFill" lazy-load="true" catchtap="emitDetail"
@@ -98,9 +101,8 @@
         </block>
         </view>
       </scroll-view>
-      <!-- 稿上是「第几张 / 共几张」的页码 pill。当前只报总数:横滑位置要 bindscroll 记状态,
-           那得动 index.js(本轮不在改动面内)。总数已经承担了「不止一张、可以滑」这层提示。 -->
-      <view class="post-card__count" wx:if="{{post.picList.length > 1}}" aria-hidden="true">{{post.picList.length || 0}} 张</view>
+      <!-- 稿(211:326):「第几张 / 共几张」页码 pill,压在第一张图的右上角;横滑时跟着当前张数走 -->
+      <view class="post-card__count" wx:if="{{post.picList.length > 1}}" aria-hidden="true">{{galleryIdx + 1}}/{{post.picList.length}}</view>
     </view>
 
     <view class="post-card__actions">
@@ -128,6 +130,25 @@
         <image class="post-card__share-icon" src="/images/icon_share.png" mode="aspectFit" />
       </button>
     </view>
+    <!-- Roam(211:271):动作行之后是点赞头像组 + 评论预览 -->
+    <block wx:if="{{post.isCompletionShare}}">
+      <view class="post-card__kudos" wx:if="{{post.kudosAvatars.length > 0 || post.kudosText}}">
+        <view class="post-card__kudos-avatars" wx:if="{{post.kudosAvatars.length > 0}}">
+          <block wx:for="{{post.kudosAvatars}}" wx:for-index="kudosIndex" wx:key="kudosIndex">
+            <image class="post-card__kudos-avatar" wx:if="{{kudosIndex < 3}}" src="{{item}}" mode="aspectFill" lazy-load="true" />
+          </block>
+        </view>
+        <text class="post-card__kudos-text" wx:if="{{post.kudosText}}">{{post.kudosText}}</text>
+      </view>
+      <view class="post-card__comment-preview" wx:if="{{post.commentText || post.commentCount > 0}}" catchtap="emitComment"
+            aria-role="button" aria-label="查看全部评论" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true">
+        <view class="post-card__comment-line" wx:if="{{post.commentText}}">
+          <text class="post-card__comment-nick" wx:if="{{post.commentNick}}">{{post.commentNick}}</text>
+          <text class="post-card__comment-text">{{post.commentText}}</text>
+        </view>
+        <text class="post-card__comment-more" wx:if="{{post.commentCount > 0}}">查看全部 {{post.commentCount || 0}} 条评论</text>
+      </view>
+    </block>
     <slot name="moderation" />
   </view>
 </view>

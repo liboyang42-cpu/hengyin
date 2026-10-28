@@ -15,9 +15,9 @@
   <text wx:if="{{refreshing}}" class="profile-refreshing" aria-role="status">正在确认个人资料…</text>
 </view>
 <view class="shzltop">
-  <view class="shzltop_tu" bindtap="uploadPic" aria-role="button" aria-label="上传图片" hover-class="cy-pressed" hover-stay-time="80">
+  <view class="shzltop_tu" bindtap="uploadPic" aria-role="button" aria-label="修改头像" hover-class="cy-pressed" hover-stay-time="80">
       <cy-avatar src="{{userInfo.avatar || '/images/d_profile.png'}}" size="170" />
-      <image lazy-load="true" class="dbj" src="/pages/gerenziliao/images/d_bianji2.png" mode="widthFix" />
+      <view class="dbj pen-badge" aria-hidden="true"><cy-icon name="edit" size="24" /></view>
   </view>
   <text wx:if="{{avatarReviewText}}" class="profile-avatar-review" aria-role="status">{{avatarReviewText}}</text>
 </view>
@@ -28,7 +28,7 @@
       <view class="shzlbox_li_left_txt {{userInfo.name ? '' : 'is-empty'}}">{{userInfo.name || '未填写'}}</view>
     </view>
     <view class="shzlbox_li_right" bindtap="openPop4" aria-role="button" aria-label="编辑昵称" hover-class="cy-pressed" hover-stay-time="80">
-      <image lazy-load="true" src="/pages/gerenziliao/images/d_bianji2.png" mode="widthFix" />
+      <view class="pen-badge" aria-hidden="true"><cy-icon name="edit" size="24" /></view>
     </view>
   </view>
   <view class="shzlbox_li">
@@ -38,7 +38,7 @@
     </view>
     <!-- P-56(2026-10-27):已绑定也给修改图标,点开走微信手机号授权换绑(同一 getPhoneNumber → /api/getwxbindphone) -->
     <button class="shzlbox_li_right shzlbox_bind" open-type="getPhoneNumber" bindgetphonenumber="getPhoneNumber" aria-label="{{userInfo.phone ? '更换手机号' : '绑定手机号'}}" hover-class="cy-pressed" hover-stay-time="80">
-      <image lazy-load="true" src="/pages/gerenziliao/images/d_bianji2.png" mode="widthFix" />
+      <view class="pen-badge" aria-hidden="true"><cy-icon name="edit" size="24" /></view>
     </button>
   </view>
   <view class="shzlbox_li">
@@ -47,7 +47,7 @@
 
       <view class="shzlbox_li_left_txt {{userInfo.introduction ? '' : 'is-empty'}}">{{userInfo.introduction || '未填写'}}</view>
     </view>
-    <view class="shzlbox_li_right" bindtap="openPop" aria-role="button" aria-label="编辑城市签名" hover-class="cy-pressed" hover-stay-time="80"><image lazy-load="true" src="/pages/gerenziliao/images/d_bianji2.png" mode="widthFix" /></view>
+    <view class="shzlbox_li_right" bindtap="openPop" aria-role="button" aria-label="编辑城市签名" hover-class="cy-pressed" hover-stay-time="80"><view class="pen-badge" aria-hidden="true"><cy-icon name="edit" size="24" /></view></view>
   </view>
   <view class="shzlbox_li">
     <view class="shzlbox_li_left">
@@ -60,7 +60,7 @@
       <view class="shzlbox_li_left_txt is-empty" wx:else>未填写</view>
       <!--<view class="shzlbox_li_left_txt lan">{{userInfo.caseIntroducton}}</view>-->
     </view>
-    <view class="shzlbox_li_right" bindtap="openPop2" aria-role="button" aria-label="编辑探索作品" hover-class="cy-pressed" hover-stay-time="80"><image lazy-load="true" src="/pages/gerenziliao/images/d_bianji2.png" mode="widthFix" /></view>
+    <view class="shzlbox_li_right" bindtap="openPop2" aria-role="button" aria-label="编辑探索作品" hover-class="cy-pressed" hover-stay-time="80"><view class="pen-badge" aria-hidden="true"><cy-icon name="edit" size="24" /></view></view>
   </view>
   <view class="shzlbox_li">
     <view class="shzlbox_li_left">
@@ -73,7 +73,7 @@
       <view class="shzlbox_li_left_txt is-empty" wx:else>未填写</view>
       <!--<view class="shzlbox_li_left_txt lan">{{userInfo.website}}</view>-->
     </view>
-    <view class="shzlbox_li_right" bindtap="openPop3" aria-role="button" aria-label="编辑联系二维码" hover-class="cy-pressed" hover-stay-time="80"><image lazy-load="true" src="/pages/gerenziliao/images/d_bianji2.png" mode="widthFix" /></view>
+    <view class="shzlbox_li_right" bindtap="openPop3" aria-role="button" aria-label="编辑联系二维码" hover-class="cy-pressed" hover-stay-time="80"><view class="pen-badge" aria-hidden="true"><cy-icon name="edit" size="24" /></view></view>
   </view>
   <view class="shzlbox_li">
     <view class="shzlbox_li_left">
@@ -88,7 +88,7 @@
       <view class="shzlbox_li_left_txt is-empty" wx:else>未填写</view>
     </view>
     <view class="shzlbox_li_right" bindtap="navigateToCategorySelect" aria-role="button" aria-label="编辑路线偏好" hover-class="cy-pressed" hover-stay-time="80">
-      <image lazy-load="true" src="/pages/gerenziliao/images/d_bianji2.png" mode="widthFix" />
+      <view class="pen-badge" aria-hidden="true"><cy-icon name="edit" size="24" /></view>
     </view>
   </view>
 </view>

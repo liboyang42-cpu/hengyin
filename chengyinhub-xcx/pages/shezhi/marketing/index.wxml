@@ -2,9 +2,10 @@
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
+  <!-- 2026-10-28 业主:和设置页同一套(导航栏 + 大标题),去掉标题下的说明小字 -->
   <cy-nav-bar plain custom-back bind:back="onBack" />
   <view style="height:{{statusBarHeight + navBarHeight}}px;"></view>
-  <cy-page-title title="营销消息与优惠券" subtitle="默认关闭，随时可退订" safe-top="{{false}}" />
+  <cy-page-title title="营销消息与优惠券" safe-top="{{false}}" />
   <!-- 按商家分组,每组两行开关;行样式沿用设置页 cy-cell 的行高与字号 -->
   <cy-marketing-consent show="{{ready}}" layout="page" />
 </view>

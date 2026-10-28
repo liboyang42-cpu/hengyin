@@ -18,10 +18,11 @@ test('P-47 / M-14:设置钮玩家深色下为白色;我的订单 / 我的资产�
   assert.match(projects, /bindtap="goEarnings"[^>]*aria-label="查看资产详情"><cy-icon name="arrow-right"/)
 })
 
-test('P-48:订单卡不写票数、不放按钮,只显示主题信息;卡片压窄', () => {
+// 2026-10-28 p91 业主「卡片太窄了又,稍微高一点」:400×400 → 500×440,渐变不动
+test('P-48:订单卡不写票数、不放按钮,只显示主题信息;卡片 500×440', () => {
   assert.doesNotMatch(WXML, /item\.ticketText|item\.actionText|pc-ord-btn/)
   assert.match(WXML, /\{\{item\.kindText \|\| item\.timeText\}\}/)
-  assert.match(WXSS, /\.pc-ord-card \{\n\s*position: relative; display: inline-block; flex-shrink: 0; width: 400rpx; height: 400rpx;/)
+  assert.match(WXSS, /\.pc-ord-card \{\n\s*position: relative; display: inline-block; flex-shrink: 0; width: 500rpx; height: 440rpx;/)
 })
 
 test('P-49:余额没有就是 0,不再显示「—」', () => {
@@ -43,7 +44,7 @@ test('P-53:探索与更多只留我的优惠券 + 邀请好友,同当前权益�
 })
 
 test('M-16 / M-19:本人商家视角去掉核销旁的「···」;自己看自己的主页不出关注与发起合作', () => {
-  assert.match(WXML, /<view class="pc-more" wx:if="\{\{!isSelf\}\}"/)
+  assert.match(WXML, /<view class="pc-more" wx:if="\{\{!isSelf && !viewingOwn\}\}"/)
   assert.match(WXML, /wx:if="\{\{\(!isSelf && !viewingOwn\) \|\| \(isSelf && isMerchantView\)\}\}" bindtap="onPrimaryCta"/)
   assert.match(WXML, /wx:if="\{\{isMerchantView && !isSelf && !viewingOwn && canInviteCoop\}\}" class="pc-coop-bar"/)
   assert.match(JS, /viewingOwn: !!String\(app\.getUserID\(\) \|\| ''\) && String\(app\.getUserID\(\) \|\| ''\) === userId/)

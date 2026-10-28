@@ -103,19 +103,19 @@ Page({
     const cap = capsuleRow();
     this.setData({ safeBottom: safeBottom(), hudTop: hudTop(), rangeText: kmText(this._radius), rangeIndex: T.RADII.indexOf(this._radius), capTop: cap.capTop, capH: cap.capH });
     const that = this; const linkedLat = H.numOrNull(options && options.lat); const linkedLng = H.numOrNull(options && options.lng);
-    if (linkedLat != null && linkedLng != null) { const center = { lat: linkedLat, lng: linkedLng }; this.setData({ center, circles: H.buildRangeCircle(center) }); this.refresh(center); this.loadMyTeams(false); return; }
+    if (linkedLat != null && linkedLng != null) { const center = { lat: linkedLat, lng: linkedLng }; this.setData({ center, circles: [] }); this.refresh(center); this.loadMyTeams(false); return; }
     getCurrentLocation({
       onSuccess(res) {
         lastLocation.save(res);
         const c = { lat: res.latitude, lng: res.longitude };
         that._me = c;
-        that.setData({ center: c, circles: H.buildRangeCircle(c) });
+        that.setData({ center: c, circles: [] });
         that.refresh(c);
       },
       onFail() {
         const fb = lastLocation.resolve();
         const c = { lat: fb.latitude, lng: fb.longitude };
-        that.setData({ center: c, circles: H.buildRangeCircle(c) });
+        that.setData({ center: c, circles: [] });
         cyToast(fb.hint);
         that.refresh(c);
       },

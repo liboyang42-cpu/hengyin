@@ -33,7 +33,7 @@ test('A32：玩家我的页只保留一个横向票夹按钮，项目不再画�
   assert.match(wxml, /class="pc-primary pc-ticket"[^>]*wx:if="\{\{isSelf && !isMerchantView\}\}"[^>]*bindtap="goSignup"/)
   // 2026-09-18 UI-12:公开视角也要「···」更多(条件放宽,自绘入口不复制)。
   // 2026-10-27 owner 真机走查 M-16:本人商家视角「核销」右边的「···」删除(功能别处都有),只留公开视角的更多
-  assert.match(wxml, /class="pc-more"[^>]*wx:if="\{\{!isSelf\}\}"/)
+  assert.match(wxml, /class="pc-more"[^>]*wx:if="\{\{!isSelf && !viewingOwn\}\}"/)
   assert.doesNotMatch(wxml, /class="pc-xbox-bar"/)
   assert.match(js, /goSignup:\s*function \(\)\s*\{\s*if \(this\._navigating\) return; this\._navigating = true; wx\.navigateTo\(\{\s*url:\s*'\/subpackageMember\/signup\/index'/) // BL-230 跳转中保护
 })
