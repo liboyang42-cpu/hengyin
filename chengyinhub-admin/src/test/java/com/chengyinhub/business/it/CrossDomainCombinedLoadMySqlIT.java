@@ -157,8 +157,11 @@ class CrossDomainCombinedLoadMySqlIT {
                     samples.add(sample("HELD", appPool, storage.pool, storage.admin, coreSchema, storage.schema));
                 };
                 // Start the real HTTP writes while ALL three original provider boundaries remain held.
+                core.prepareFirstWave(stillHeld);
                 Future<?> coreRequests = foreground.submit(() -> { try { core.run(stillHeld); } catch (Exception e) { throw new CompletionException(e); } });
-                assertTrue(core.entered.await(2, TimeUnit.SECONDS));
+                boolean coreEntered = core.entered.await(2, TimeUnit.SECONDS);
+                if (!coreEntered) throw CombinedCoreHttpWorkload.entryFailure(coreRequests);
+                assertTrue(coreEntered);
                 assertEquals("SUCCESS", foreground.submit(() -> storage.callbacks.payment(storage.paymentPayload()).result()).get(5, TimeUnit.SECONDS));
                 storage.assertPaymentReadback();
                 String paid = economicDigest(storage);
@@ -391,27 +394,36 @@ class CrossDomainCombinedLoadMySqlIT {
     }
     private static String digest(JdbcTemplate source, String query, Object... args) {
         try {
-            List<Map<String,Object>> facts = new ArrayList<>();
-            for (Map<String,Object> row : source.queryForList(query, args)) {
-                Map<String,Object> complete = new TreeMap<>();
-                for (var column : row.entrySet()) {
-                    Object value = column.getValue();
-                    // Jackson's legacy Date serializer keeps only milliseconds. Preserve SQL
-                    // Timestamp nanos, and all Date/Time milliseconds, without timezone formatting.
-                    if (value instanceof java.sql.Timestamp timestamp)
-                        value = List.of("java.sql.Timestamp", timestamp.toInstant().getEpochSecond(), timestamp.getNanos());
-                    else if (value instanceof java.sql.Date date)
-                        value = List.of("java.sql.Date", date.getTime());
-                    else if (value instanceof java.sql.Time time)
-                        value = List.of("java.sql.Time", time.getTime());
-                    complete.put(column.getKey(), value);
-                }
-                facts.add(complete); // Keep the original SQL row order, every column and every null.
-            }
-            return CombinedCoreHttpWorkload.sha(FACT_JSON.writeValueAsBytes(facts));
+            return CombinedCoreHttpWorkload.sha(FACT_JSON.writeValueAsBytes(completeFactRows(source.queryForList(query, args))));
         } catch (Exception failure) {
             throw new IllegalStateException("CONTROLLED_FACT_OBSERVATION_FAILED", failure);
         }
+    }
+    /** The original SQL-row representation, shared by the core workload's complete fact groups. */
+    private static List<Map<String,Object>> completeFactRows(List<Map<String,Object>> rows) {
+        List<Map<String,Object>> facts = new ArrayList<>();
+        for (Map<String,Object> row : rows) {
+            Map<String,Object> complete = new TreeMap<>();
+            for (var column : row.entrySet()) {
+                Object value = column.getValue();
+                // Jackson's legacy Date serializer keeps only milliseconds. Preserve SQL
+                // Timestamp nanos, and all Date/Time milliseconds, without timezone formatting.
+                if (value instanceof java.sql.Timestamp timestamp)
+                    value = List.of("java.sql.Timestamp", timestamp.toInstant().getEpochSecond(), timestamp.getNanos());
+                else if (value instanceof java.sql.Date date)
+                    value = List.of("java.sql.Date", date.getTime());
+                else if (value instanceof java.sql.Time time)
+                    value = List.of("java.sql.Time", time.getTime());
+                complete.put(column.getKey(), value);
+            }
+            facts.add(complete); // Keep the original SQL row order, every column and every null.
+        }
+        return facts;
+    }
+    static byte[] completeFactGroups(Map<String,List<Map<String,Object>>> groups) throws IOException {
+        Map<String,Object> facts = new TreeMap<>();
+        groups.forEach((name, rows) -> facts.put(name, completeFactRows(rows)));
+        return FACT_JSON.writeValueAsBytes(facts);
     }
     private static String resourceFile(String name) {
         try { return Files.readString(Path.of("/sys/fs/cgroup", name)).trim(); }
