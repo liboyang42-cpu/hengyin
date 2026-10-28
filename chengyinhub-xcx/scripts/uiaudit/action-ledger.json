@@ -1242794,7 +1242794,7 @@
       }
     },
     {
-      "id": "pages/shezhi/about/index.wxml:63:bind:close:closeAgreement:5",
+      "id": "pages/shezhi/about/index.wxml:68:bind:close:closeAgreement:5",
       "route": "pages/shezhi/about/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1242817,7 +1242817,7 @@
         "tag": "cy-agreement-sheet",
         "event": "bind:close",
         "handler": "closeAgreement",
-        "line": 63,
+        "line": 68,
         "selectorHint": "cy-agreement-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
