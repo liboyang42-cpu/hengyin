@@ -12009,8 +12009,12 @@ body.clean .scr .need{display:none}
 .ios-next{margin-top:12px;min-height:46px;display:flex;align-items:center;justify-content:center;border-radius:var(--cy-radius-lg);background:var(--cy-color-bg-surface);font-size:var(--cy-type-body);font-weight:600;color:var(--cy-color-text-primary);cursor:pointer}
 /* 左滑删除 + 编辑模式（排序） */
 .ios-sw{overflow:hidden;background:var(--cy-color-bg-surface)}
-.ios-sw > .ios-row{z-index:1;transition:transform .25s cubic-bezier(.2,.8,.2,1);touch-action:pan-y}
-.ios-sw.is-open > .ios-row{transform:translateX(-78px)}
+.ios-sw > .ios-row{z-index:1;transition:margin-right .25s cubic-bezier(.2,.8,.2,1);touch-action:pan-y}
+.ios-sw.is-open > .ios-row{margin-right:78px}
+.ios-sw.is-open > .ios-row .ios-t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ios-num-sw .ios-un,.ios-num-sw.is-unused .ios-num,.ios-num-sw.is-unused .ios-stp,.ios-num-sw.is-unused > .ios-del{display:none}
+.ios-num-sw.is-unused .ios-un{display:block}
+.ios-num-sw.is-unused > .ios-row{cursor:pointer}
 .ios-del{position:absolute;right:0;top:0;bottom:0;width:78px;background:var(--cy-color-status-danger);display:flex;align-items:center;justify-content:center;color:#fff;font-size:var(--cy-type-body);font-weight:600;cursor:pointer}
 .ios-minus{display:none;flex:none;width:22px;height:22px;border-radius:50%;background:var(--cy-color-status-danger);position:relative;cursor:pointer}
 .ios-minus::after{content:"";position:absolute;left:6px;right:6px;top:10px;height:2px;border-radius:1px;background:#fff}
@@ -12746,13 +12750,11 @@ body.clean .scr .need{display:none}
         <view class="ios-ft is-err" data-st="error">没有保存成功，请再试一次。</view>
         <view class="ios-ft" data-st="noperm">这个主题现在不能修改。</view>
       </view>
-      <view class="mk-chg" data-mk="生命值 · 幸运值（分组列表）" data-before="master：两张卡，每张一个开关 + 两个输入框「开局生命值 10」「上限（主题设置）10（灰）」" data-after="一组列表：开关一行；开着时下一行「开局生命值」步进器，最大到上限，最小 0。上限只在主题详情里改，这里不再重复显示" data-why="业主 10-28：配置界面照 d20 半屏；上下限由控件保证，不写在界面上。" id="initNums">
+      <view class="mk-chg" data-mk="生命值 · 幸运值（分组列表）" data-before="master：两张卡，每张一个开关 + 两个输入框「开局生命值 10」「上限（主题设置）10（灰）」" data-after="一组列表，每个数值一行：左名字、右开局值步进器（最大到上限，最小 0）。不用某个数值：左滑「不使用」，这一行右边变成「不使用」，点一下恢复。上限只在主题详情里改，这里不再重复显示" data-why="业主 10-28：配置界面照 d20 半屏；上下限由控件保证，不写在界面上。" id="initNums">
         <view class="ios-hd">数值</view>
         <view class="ios-grp">
-          <view class="ios-row is-static" ><view class="ios-m"><text class="ios-t">生命值</text></view><cy-switch><switch class="cs" checked data-reveal="initHp"></switch></cy-switch></view>
-          <view class="rv is-open" id="initHp"><view class="ios-row is-static" ><view class="ios-m"><text class="ios-t">开局生命值</text></view><text class="ios-num">10</text><view class="ios-stp" data-min="0" data-max="10"><view data-act="stp" data-d="-1" aria-label="减少" class=""></view><view data-act="stp" data-d="1" aria-label="增加" class="is-plus is-off"><i></i></view></view></view></view>
-          <view class="ios-row is-static" ><view class="ios-m"><text class="ios-t">幸运值</text></view><cy-switch><switch class="cs" checked data-reveal="initLuck"></switch></cy-switch></view>
-          <view class="rv is-open" id="initLuck"><view class="ios-row is-static" ><view class="ios-m"><text class="ios-t">开局幸运值</text></view><text class="ios-num">3</text><view class="ios-stp" data-min="0" data-max="3"><view data-act="stp" data-d="-1" aria-label="减少" class=""></view><view data-act="stp" data-d="1" aria-label="增加" class="is-plus is-off"><i></i></view></view></view></view>
+          <view class="ios-sw ios-num-sw"><view class="ios-del" data-act="numOff">不使用</view><view class="ios-row is-static" data-act="numOn"><view class="ios-m"><text class="ios-t">生命值</text></view><text class="ios-v ios-un">不使用</text><text class="ios-num">10</text><view class="ios-stp" data-min="0" data-max="10"><view data-act="stp" data-d="-1" aria-label="减少" class=""></view><view data-act="stp" data-d="1" aria-label="增加" class="is-plus is-off"><i></i></view></view></view></view>
+          <view class="ios-sw ios-num-sw"><view class="ios-del" data-act="numOff">不使用</view><view class="ios-row is-static" data-act="numOn"><view class="ios-m"><text class="ios-t">幸运值</text></view><text class="ios-v ios-un">不使用</text><text class="ios-num">3</text><view class="ios-stp" data-min="0" data-max="3"><view data-act="stp" data-d="-1" aria-label="减少" class=""></view><view data-act="stp" data-d="1" aria-label="增加" class="is-plus is-off"><i></i></view></view></view></view>
         </view>
       </view>
     </scroll-view>
@@ -12957,16 +12959,17 @@ body.clean .scr .need{display:none}
     <view class="cg-inline-cfg" id="game-cfg">
     <view class="cg-sec"><text class="cg-sec__t">玩法设置</text></view>
     <view class="tp-ios">
-      <view class="mk-chg" data-mk="技能 → 加上属性（一行 → 勾选列表）" data-before="10-28 上午版：下拉框「观察 ⌄」（cg-pick）；没有属性时灰色下拉「还没有属性」+「添加属性」；出错「属性没有读取成功」+「重试」；d20 检定关时一个自由输入框" data-after="一行「加上属性 · 观察 ›」，点开叠一张半屏，勾选列表：观察 / 胆量 / 体魄 / 灵感 / 不加属性。没有属性：右边「无」，点开只有「添加属性」一行（去「d20 与角色设定」）。出错：右边「重试」。d20 检定关：这一行变成「技能 · 撬锁」输入" data-why="业主 10-28 下午：专业配置的界面还不对；clue.ledger_half 这类东西不该出现，作者配置的东西要简单、不带英文。照 d20 半屏的做法重做。 check.skill：选了属性就写它的 counter.* 键（GameplayCheckEngine 把属性值加进达成值），作者看不到键名。" id="skillPick" data-states="ok,empty,error,off" data-st-name="加上属性" data-cur="ok">
+      <view class="mk-chg" data-mk="技能 → 加上属性（一行 → 勾选列表）" data-before="10-28 上午版：下拉框「观察 ⌄」（cg-pick）；没有属性时灰色下拉「还没有属性」+「添加属性」；出错「属性没有读取成功」+「重试」；d20 检定关时一个自由输入框" data-after="一行「加上属性 · 观察 ›」，点开叠一张半屏，勾选列表：观察 / 胆量 / 体魄 / 灵感 / 不加属性。没有属性：右边「无」，点开只有「添加属性」一行（去「d20 与角色设定」）。出错：右边「—」，组下一句红字「没有读取成功，请再试一次。」，点这一行重新读取。d20 检定关：这一行变成「技能 · 撬锁」输入" data-why="业主 10-28 下午：专业配置的界面还不对；clue.ledger_half 这类东西不该出现，作者配置的东西要简单、不带英文。照 d20 半屏的做法重做。 check.skill：选了属性就写它的 counter.* 键（GameplayCheckEngine 把属性值加进达成值），作者看不到键名。" id="skillPick" data-states="ok,empty,error,off" data-st-name="加上属性" data-cur="ok">
         <view class="ios-grp">
           <view data-st="ok"><view class="ios-row" data-act="tpSkill"><view class="ios-m"><text class="ios-t">加上属性</text></view><text class="ios-v" id="skillV">观察</text><view class="ios-chev"><cy-icon><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view></view></view>
           <view data-st="empty"><view class="ios-row" data-act="tpSkill" data-empty="1"><view class="ios-m"><text class="ios-t">加上属性</text></view><text class="ios-v">无</text><view class="ios-chev"><cy-icon><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view></view></view>
-          <view data-st="error"><view class="ios-row is-static"><view class="ios-m"><text class="ios-t">加上属性</text></view><view class="ios-txtbtn" data-toast="正在重新读取">重试</view></view></view>
+          <view data-st="error"><view class="ios-row" data-toast="正在重新读取"><view class="ios-m"><text class="ios-t">加上属性</text></view><text class="ios-v">—</text></view></view>
           <view data-st="off"><view class="ios-row is-static"><text class="ios-t is-l">技能</text><input class="ios-in" value="撬锁" maxlength="10"/></view></view>
           <view class="ios-row is-static mk-chg" data-mk="难度 → 分段控件" data-before="下拉框「中等 ⌄」" data-after="一行分段控件：简单 / 中等 / 困难" data-why="只给三档（easy / medium / hard），数字线由主题「规则难度」写进 journeyRules.tiers。"><text class="ios-t is-l">难度</text><view class="ios-seg is-r" ><view data-act="seg">简单</view><view class="is-on" data-act="seg">中等</view><view data-act="seg">困难</view></view></view>
         </view>
+        <view class="ios-ft is-err" data-st="error">没有读取成功，请再试一次。</view>
       </view>
-      <view class="mk-chg" data-mk="情境加值 · 句子列表" data-before="开关 + 每条一块：名称输入框「带着旧手电」、两个下拉「装备着某件物品 ⌄」「旧手电 ⌄」、下拉「加固定值 ⌄」+ 数字输入框、右上 ×；最下面「+ 添加加值」" data-after="列表：每行一句「带着物品 · 旧手电」，右边「+2」或「+胆量」；左滑删除，点一行修改；「添加加值」叠一张半屏，依次选 条件种类 → 名字 → 加多少（固定加值的步进器最大到剩下的上限）；合计到上限（规则难度：轻松 8 / 标准 6 / 硬核 4）时「添加加值」变灰。开关删掉：没有加值就是关" data-why="业主 10-28 下午：专业配置的界面还不对；clue.ledger_half 这类东西不该出现，作者配置的东西要简单、不带英文。照 d20 半屏的做法重做。 check.mods[{{when, value | var, label}}]：when 用同一套条件；label = 第三步里的「名称」：默认由句子生成（「带着旧手电」），可以改（「夜里更看得清」），游玩页检定明细显示它。" id="modsSec" data-states="ok,full,empty" data-st-name="情境加值" data-cur="ok">
+      <view class="mk-chg" data-mk="情境加值 · 句子列表" data-before="开关 + 每条一块：名称输入框「带着旧手电」、两个下拉「装备着某件物品 ⌄」「旧手电 ⌄」、下拉「加固定值 ⌄」+ 数字输入框、右上 ×；最下面「+ 添加加值」" data-after="列表：每行一句「带着物品 · 旧手电」，右边「+2」或「+胆量」；左滑删除，点一行修改；「添加加值」叠一张半屏，依次选 条件种类 → 名字 → 加多少（固定加值的步进器最大到剩下的上限）；合计到上限（规则难度：轻松 8 / 标准 6 / 硬核 4）时「添加加值」变灰。开关删掉：没有加值就是关" data-why="业主 10-28 下午：专业配置的界面还不对；clue.ledger_half 这类东西不该出现，作者配置的东西要简单、不带英文。照 d20 半屏的做法重做。 check.mods[{{when, value | var, label}}]：when 用同一套条件；label 由种类 + 对象生成（「带着旧手电」），作者不填，游玩页检定明细显示它。" id="modsSec" data-states="ok,full,empty" data-st-name="情境加值" data-cur="ok">
         <view class="ios-hd">情境加值</view>
         <view class="ios-grp ios-list" id="modList"><view class="ios-row is-add" data-act="reAdd" data-mode="mod" data-list="modList" id="modAdd"><view class="ios-ic ios-ic--add"><cy-icon><view class="cyi cyi--plus" style="width:12.48px;height:12.48px"></view></cy-icon></view><view class="ios-m"><text class="ios-t">添加加值</text></view></view></view>
       </view>
@@ -12977,12 +12980,12 @@ body.clean .scr .need{display:none}
           <view class="rv is-open" id="bargainPrice"><view class="ios-hd">代价</view><view class="ios-grp ios-list" id="priceList"><view class="ios-row is-add" data-act="reAdd" data-mode="price" data-list="priceList"><view class="ios-ic ios-ic--add"><cy-icon><view class="cyi cyi--plus" style="width:12.48px;height:12.48px"></view></cy-icon></view><view class="ios-m"><text class="ios-t">添加代价</text></view></view></view></view>
         </view>
       </view>
-      <view class="mk-chg" data-mk="过了 / 没过 · 幸运 · 生命值（分组列表）" data-before="cg-cfg-label 小标题 + 输入框；「幸运」开关 + 下拉框「幸运高获得多1分 ⌄」；「生命值越低越困难」开关" data-after="同一种分组列表；幸运的规则是一行，点开勾选（三项，master 原文）" data-why="业主 10-28：不要下拉框的样子。">
+      <view class="mk-chg" data-mk="过了 / 没过 · 幸运 · 生命值（分组列表）" data-before="cg-cfg-label 小标题 + 输入框；「幸运」开关 + 下拉框「幸运高获得多1分 ⌄」；「生命值越低越困难」开关" data-after="同一种分组列表；幸运的规则是一行「幸运加分 · 幸运高多 1 分 ›」，点开勾选（三项，意思照 master，数字两边加空格）" data-why="业主 10-28：不要下拉框的样子。">
         <view class="ios-hd">过了说一句</view>
         <view class="ios-grp"><view class="ios-row is-static"><input class="ios-in ios-in--l" value="门轴一声闷响，你站稳了" maxlength="60"/></view></view>
         <view class="ios-hd">没过说一句</view>
         <view class="ios-grp"><view class="ios-row is-static"><input class="ios-in ios-in--l" value="撬棍滑了，手背擦出一道口子" maxlength="60"/></view></view>
-        <view class="ios-grp ios-gap"><view class="ios-row is-static" ><view class="ios-m"><text class="ios-t">幸运</text></view><cy-switch><switch class="cs" checked data-reveal="luckRow"></switch></cy-switch></view><view class="rv is-open" id="luckRow"><view class="ios-row" data-act="tpLuck"><view class="ios-m"><text class="ios-t" id="luckV">幸运高获得多1分</text></view><view class="ios-chev"><cy-icon><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view></view></view><view class="ios-row is-static" ><view class="ios-m"><text class="ios-t">生命值越低越困难</text></view><cy-switch><switch class="cs"></switch></cy-switch></view></view>
+        <view class="ios-grp ios-gap"><view class="ios-row is-static" ><view class="ios-m"><text class="ios-t">幸运</text></view><cy-switch><switch class="cs" checked data-reveal="luckRow"></switch></cy-switch></view><view class="rv is-open" id="luckRow"><view class="ios-row" data-act="tpLuck"><view class="ios-m"><text class="ios-t">幸运加分</text></view><text class="ios-v" id="luckV">幸运高多 1 分</text><view class="ios-chev"><cy-icon><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view></view></view><view class="ios-row is-static" ><view class="ios-m"><text class="ios-t">生命值越低越困难</text></view><cy-switch><switch class="cs"></switch></cy-switch></view></view>
       </view>
     </view>
     <view class="cg-sec"><text class="cg-sec__t">结果反馈</text></view>
@@ -13503,7 +13506,7 @@ body.clean .scr .need{display:none}
   <div class="lk-step" data-goto="e-d20"><div class="k">② 存进注册表（C-1，作者看不到）</div><div class="t">唯一存处，只在 d20 里改</div><div class="f">theme_state_key：stateKey=counter.observe（系统生成，界面上从不出现）, label 观察, minValue 0, maxValue 5, initialValue 2, sortOrder 1；显示方式等按类型写入；「是属性」字段（A2）<span class="need">需后端</span>。10-28 下午起「线索与物品」只列线索 / 物品 / 标签，不再列属性</div></div>
   <div class="lk-step" data-goto="e-publish"><div class="k">③ 发布 · 冻结</div><div class="t">发布即生效</div><div class="f">publish-check 校验检定用到的属性都在注册表；开局 freezeJourney 写快照。现在快照只有 [{key,label}]，范围和显示方式 <span class="need">需后端</span></div></div>
   <div class="lk-step" data-goto="p-story"><div class="k">④ 游玩 · 状态栏两行</div><div class="t">第二行：前 3 项属性</div><div class="f">第一行 master 原样（生命值 · 背包）；第二行 GET /api/play/character → attributes 按 sortOrder 取前 3（观察 ★★★☆☆ · 胆量小条 · 体魄 4），点开角色卡</div></div>
-  <div class="lk-step" data-goto="p-check"><div class="k">⑤ 检定</div><div class="t">骰子 + 属性 + 修正</div><div class="f">check.skill=counter.observe（<a data-goto="e-temp-pick">玩法模板 · 加上属性</a> 勾选「观察」）；mods 的名称「带着旧手电」「夜里更看得清」（<a data-goto="e-temp-mod-amt">添加加值 · 名称</a>）→ PlayCheckReceipt.breakdown{die, skill, situational, bargain, momentum, total, dc}，明细逐行显示这些名称</div></div>
+  <div class="lk-step" data-goto="p-check"><div class="k">⑤ 检定</div><div class="t">骰子 + 属性 + 修正</div><div class="f">check.skill=counter.observe（<a data-goto="e-temp-pick">玩法模板 · 加上属性</a> 勾选「观察」）；mods 的名称「带着旧手电」（由种类 + 对象生成，<a data-goto="e-temp-mod-amt">添加加值</a> 里不填）→ PlayCheckReceipt.breakdown{die, skill, situational, bargain, momentum, total, dc}，明细逐行显示这些名称</div></div>
   <div class="lk-step" data-goto="p-finish"><div class="k">⑥ 章节结算</div><div class="t">RPG 小结 + 本局成绩入口</div><div class="f">GET /api/play/journey/stage-end；属性前后值来自角色卡；clocks / momentum / aspects 来自 rpg 视图；一行「本局成绩 · 第 2 名 ›」打开全屏成绩</div></div>
   <div class="lk-step" data-goto="p-char"><div class="k">⑦ 角色卡（全屏）</div><div class="t">盖在游玩页上</div><div class="f">GET /api/play/character：同一组冻结值；属性大数字 + 雷达、特质、进度（章节 / 线索 / 动量 / 进度钟）</div></div>
   <div class="lk-step" data-goto="p-score"><div class="k">⑧ 本局成绩（全屏）</div><div class="t">名次 · 得分 · 用时</div><div class="f">scoring/session/{id}.totalCenti、byDimension；/api/growth/leaderboard；异议 POST /api/orient/scoring/dispute</div></div>
@@ -13592,7 +13595,7 @@ var META = {
       api: ['「用在」：只读查询引用位置 <span class="need">需后端</span>（现在只有删除被拒时才返回，且是一句带键名的话）'] },
     'e-init': { sec: 'fabu', scope: '#initL1', init: ['initSheet'], t: '初始状态', host: 'fabu/index.wxml initialStateEditor', theme: 'light', badges: 'c',
       files: ['chengyinhub-xcx/pages/publish/fabu/index.wxml（initialStateEditor）', 'origin/feature/cy26-w8-closeout: attribute-binding-editor（删除）'],
-      intro: '10-28 下午：两组列表。「开局带着」：左名字、右种类（线索 / 物品 / 标签），左滑删除，「添加」进下一层。「数值」：生命值、幸运值各一个开关，开着时下一行是开局值步进器，最大到上限（上限在主题详情里改）。右栏切「左滑 / 空 / 出错 / 不能修改」。',
+      intro: '10-28 下午：两组列表。「开局带着」：左名字、右种类（线索 / 物品 / 标签），左滑删除，「添加」进下一层。「数值」：生命值、幸运值各一行，左名字、右开局值步进器，最大到上限（上限在主题详情里改）；左滑「不使用」，点那一行恢复。右栏切「左滑 / 空 / 出错 / 不能修改」。',
       api: ['已有：<code>journeyRules.attributes[{key: clue.*|tag.*, initial: 1}]</code> → 开局写进 <code>state.tags</code>（JourneyInitialState.initialize）', '开局物品：<span class="need">需后端</span>核对字段', '开局生命值 / 幸运值：master initialStateEditor 原字段'] },
     'e-init-add': { sec: 'fabu', scope: '#initLAdd', init: ['initSheet'], lv: ['initLAdd'], run: 'initAddInit', t: '初始状态 · 添加（下一层）', host: '初始状态的下一层', theme: 'light', badges: 'n',
       files: ['同一张 cy-sheet'], intro: '搜索框 + 第一行「新建…」+ 按线索 / 物品 / 标签分组的多选列表；已在开局里的显示「已添加」。选了之后右上「添加」才可点。右栏切「搜索没找到」：第一行变成「新建「怀表盒」」；「主题还没有」：只剩新建。' },
@@ -13637,14 +13640,14 @@ var META = {
     'e-temp': { sec: 'temp', stack: ['e-node'], focus: 'game-cfg', t: '玩法模板 · 检定', host: 'pages/publish/temp/index', theme: 'light', badges: 'c,f',
       files: ['chengyinhub-xcx/pages/publish/temp/index.wxml（gameSection = check）'],
       intro: '10-28 下午：页面外壳、导航栏、底栏照 master；检定段换成分组列表。加上属性（一行 → 勾选）· 难度（分段控件）；情境加值（句子 + 右边加值）；魔鬼交易（开关、说明、加值分段、代价句子）；过了 / 没过说一句；幸运（一行 → 勾选）；结果反馈每种一组。右栏切 加上属性「无属性 / 出错 / d20 检定关」、情境加值「到上限 / 空」、魔鬼交易「关闭」。',
-      notes: ['主题「d20 与角色设定」里魔鬼交易关着时，「魔鬼交易」整段不出现。', '情境加值合计封顶（轻松 8 / 标准 6 / 硬核 4）不写在界面上：固定加值的步进器最大到剩下的上限，到顶时「添加加值」变灰。', 'd20 检定关闭时「加上属性」那一行变成「技能」输入，只填名称。', '幸运的三个选项是 master 原文（advanced-game-config.js LUCK_OPTIONS），没改字。'],
-      api: ['<code>check</code>{tier easy|medium|hard, skill（counter.* 或文字）, mods[{when, value|var, label}], bargain{label, bonus 1–3, effects 1–4（SET / INC / ADD_TAG / ADD_CONDITION / TICK_CLOCK）}, successEffects, failEffects}', 'mods.label = 第三步「名称」，默认由句子生成，可改；游玩页检定明细显示它（带着旧手电 / 夜里更看得清）'] },
+      notes: ['主题「d20 与角色设定」里魔鬼交易关着时，「魔鬼交易」整段不出现。', '情境加值合计封顶（轻松 8 / 标准 6 / 硬核 4）不写在界面上：固定加值的步进器最大到剩下的上限，到顶时「添加加值」变灰。', 'd20 检定关闭时「加上属性」那一行变成「技能」输入，只填名称。', '幸运加分的三个选项意思照 master（advanced-game-config.js LUCK_OPTIONS），只把「获得多1分」「少一分」统一成「多 1 分」「少 1 分」。'],
+      api: ['<code>check</code>{tier easy|medium|hard, skill（counter.* 或文字）, mods[{when, value|var, label}], bargain{label, bonus 1–3, effects 1–4（SET / INC / ADD_TAG / ADD_CONDITION / TICK_CLOCK）}, successEffects, failEffects}', 'mods.label 由种类 + 对象生成（带着旧手电），作者不填；游玩页检定明细显示它'] },
     'e-temp-pick': { sec: 'temp', scope: '#tpRoot', stack: ['e-node', 'e-temp'], run: 'shotTempPick', t: '玩法模板 · 加上属性（勾选半屏）', host: '玩法模板页上的半屏', theme: 'light', badges: 'n',
       files: ['新 cy-sheet'], intro: '勾选列表：观察 / 胆量 / 体魄 / 灵感 / 不加属性，点一项立即生效，右上「完成」。没有属性时只有一行「添加属性」，去「d20 与角色设定」。幸运的三项也是这种半屏。' },
     'e-temp-mod': { sec: 'temp', scope: '#tpRoot', stack: ['e-node', 'e-temp'], run: 'shotTempMod', t: '玩法模板 · 添加加值', host: '玩法模板页上的半屏', theme: 'light', badges: 'n',
       files: ['新 cy-sheet'], intro: '和「添加条件」同一套：种类 → 名字 → 加多少（固定加值步进器 / 加上属性值勾选）。「添加代价」同样，只列 进度钟 / 属性 / 获得线索 / 加上标签 / 加上特质。' },
     'e-temp-mod-amt': { sec: 'temp', scope: '#tpAmt', stack: ['e-node', 'e-temp'], run: 'shotTempModAmt', t: '添加加值 · 加多少', host: '添加加值的第三层', theme: 'light', badges: 'n',
-      files: ['同一张 cy-sheet'], intro: '条件「带着物品 · 撬棍」的数量 + 加值：固定加值步进器最大到剩下的上限（标准 6 − 已有 2 = 4）；切「加上属性值」变成属性勾选。' },
+      files: ['同一张 cy-sheet'], intro: '条件「带着物品 · 撬棍」的数量 + 加值：固定加值步进器最大到剩下的上限（标准 6 − 已有 2 = 4）；切「加上属性值」变成属性勾选。没有「名称」一栏：名称由种类 + 对象生成（带着撬棍）。' },
     'e-after': { sec: 'temp', scope: '#afterL1', init: ['afterSheet'], stack: ['e-node', 'e-temp'], t: '消耗与效果', host: 'temp/index.wxml afterEditor', theme: 'light', badges: 'c',
       files: ['chengyinhub-xcx/pages/publish/temp/index.wxml（afterEditor）'],
       intro: '10-28 下午：叠在玩法模板页上的半屏。消耗「幸运值 −1」、效果「给物品 · 半张货单」「进度钟 · 拼出货单 +1」、条件（空 = 总是生效）、之后（勾选）。每组最后一行添加，种类 → 名字 → 数量。右栏切「空 / 出错 / 不能修改」。',
@@ -13701,6 +13704,8 @@ window.ACT = {
   closeSwipes: function(except){ Array.prototype.forEach.call(document.querySelectorAll('.ios-sw.is-open'), function(s){ if (s !== except) s.classList.remove('is-open'); }); },
   swOpen: function(el){ var sw = el.closest('.ios-sw'); ACT.closeSwipes(sw); sw.classList.toggle('is-open'); },
   rowDel: function(el){ var sw = el.closest('.ios-sw'); if (!sw) return; var list = sw.parentNode; sw.remove(); ACT.syncSum(); ACT.syncPrep(); if (list.id === 'clockList' || list.id === 'traitList') ACT.syncMore(); ACT.afterDel(list); window.__proto.toast('已删除'); window.__proto.layoutMarks(); },
+  numOff: function(el){ var sw = el.closest('.ios-sw'); sw.classList.remove('is-open'); sw.classList.add('is-unused'); window.__proto.layoutMarks(); },
+  numOn: function(el){ var sw = el.closest('.ios-sw'); if (!sw.classList.contains('is-unused')) return; sw.classList.remove('is-unused'); window.__proto.layoutMarks(); },
   /* ---- d20 与角色设定 ---- */
   d20Toggle: function(sw){ window.__proto.setState(document.getElementById('d20Entry'), sw.hasAttribute('checked') ? 'on' : 'off'); },
   'st:d20Entry': function(st){ var sw = document.getElementById('d20Switch'); if (!sw) return; if (st === 'off') sw.removeAttribute('checked'); else sw.setAttribute('checked', ''); },
@@ -13874,7 +13879,7 @@ window.ACT = {
   tpSkill: function(el){ var empty = !!el.dataset.empty, cur = empty ? '' : ACT.$('skillV').textContent;
     var opts = empty ? [] : RE.names('attr').concat(['不加属性']);
     RE.tpList('加上属性', opts, cur, function(v){ ACT.$('skillV').textContent = v === '不加属性' ? '不加' : v; }, empty ? '<view class="ios-grp">' + RE.add('添加属性', 'data-go="e-d20"') + '</view>' : ''); },
-  tpLuck: function(){ RE.tpList('幸运', ['幸运高获得多1分', '幸运低少一分', '幸运高多1分，幸运低少1分'], ACT.$('luckV').textContent, function(v){ ACT.$('luckV').textContent = v; }); },
+  tpLuck: function(){ RE.tpList('幸运加分', ['幸运高多 1 分', '幸运低少 1 分', '幸运高多 1 分，幸运低少 1 分'], ACT.$('luckV').textContent, function(v){ ACT.$('luckV').textContent = v; }); },
   'st:modsSec': function(st){ RE.fill('modList', st === 'empty' ? [] : st === 'full' ? RE.SEED.mod.concat([{ m: 'mod', k: 'clock', o: '巡夜人警觉', a: { cmp: 'GTE', v: 4, bt: 'n', bv: 4 } }]) : RE.SEED.mod); },
   'st:afterForm': function(st){ var e = st === 'empty'; RE.fill('afCost', e ? [] : RE.SEED.cost); RE.fill('afEff', e ? [] : RE.SEED.eff); RE.fill('afCond', []); ACT.ro('afterL1', st === 'noperm'); },
   afNext: function(el){ ACT.pickRow(el); ACT.$('afNextV').textContent = el.querySelector('.ios-t').textContent; },
@@ -14030,7 +14035,7 @@ var RE = window.RE = (function(){
       case 'xp': s = d.t + ' · ' + a.v; break;
     }
     return s; };
-  /* 加值的名称（游玩页检定明细里显示）：默认由句子生成，可以改 */
+  /* 加值的名称（游玩页检定明细里显示）：由种类 + 对象生成，作者不填 */
   R.label = function(r){ var d = R.def(r.m, r.k); return ({ item: '带着', equip: '装备着', clue: '有', tag: '', trait: '' }[r.k] || '') + (r.o || d.t); };
   R.bonus = function(r){ var a = r.a || {}; return a.bt === 'attr' ? '+' + a.ba : '+' + a.bv; };
   R.rowHtml = function(r){ var v = r.m === 'mod' ? '<text class="ios-v">' + R.bonus(r) + '</text>' : '';
@@ -14129,7 +14134,7 @@ var RE = window.RE = (function(){
     if (d.amt === 'cost') h += '<view class="ios-grp' + g + '">' + stp('消耗', a.v, L[0], L[1], 'v') + '</view>';
     if (d.amt === 'pass') h += '<view class="' + g + '">' + seg([['', '通过'], ['1', '没通过']], 'fail', a.fail ? '1' : '') + '</view>';
     if (d.amt === 'delta') h += '<view class="' + g + '">' + seg([['inc', '增加'], ['dec', '减少'], ['set', '设为'], ['floor', '恢复到']], 'op', a.op, true) + '</view><view class="ios-grp ios-gap-s">' + stp('数值', a.v, L[0], L[1], 'v') + '</view>';
-    if (r.m === 'mod') { if (a.lb == null) a.lb = R.label(r); h += '<view class="ios-hd">名称</view><view class="ios-grp"><view class="ios-row is-static"><input class="ios-in ios-in--l re-lb" value="' + esc(a.lb) + '" maxlength="12"/></view></view><view class="ios-hd">加值</view>' + seg([['n', '固定加值'], ['attr', '加上属性值']], 'bt', a.bt, true);
+    if (r.m === 'mod') { a.lb = R.label(r); h += '<view class="ios-hd">加值</view>' + seg([['n', '固定加值'], ['attr', '加上属性值']], 'bt', a.bt, true);
       if (a.bt === 'attr') h += '<view class="ios-grp ios-gap-s">' + R.names('attr').map(function(n){ return '<view class="ios-row' + (n === a.ba ? ' is-on' : '') + '" data-act="reBa" data-o="' + n + '"><view class="ios-m"><text class="ios-t">' + n + '</text></view>' + CHK + '</view>'; }).join('') + '</view>';
       else h += '<view class="ios-grp ios-gap-s">' + stp('加值', a.bv, 1, R.room(), 'bv') + '</view>'; }
     if (mode === 'edit') h += '<view class="ios-grp ios-gap"><view class="ios-row is-danger" data-act="reDel"><text class="ios-t">删除' + (r.m === 'cond' ? '条件' : r.m === 'mod' ? '加值' : r.m === 'price' ? '代价' : r.m === 'cost' ? '消耗' : '效果') + '</text></view></view>';
