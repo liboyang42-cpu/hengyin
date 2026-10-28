@@ -131,12 +131,6 @@ public class MinorProtectionServiceImpl implements IMinorProtectionService {
     }
 
     @Override
-    public MinorDecision enforcePurchaseIfEnabled(Long payerMemberId) {
-        if (!switches.minorPaymentGateOn()) return MinorDecision.allow(null);
-        return checkPurchase(payerMemberId);
-    }
-
-    @Override
     public MinorDecision enforceOrienteeringIfEnabled(Long memberId, OrienteeringParticipation participation) {
         if (!switches.minorOrienteeringGateOn()) return MinorDecision.allow(null);
         return checkOrienteering(memberId, participation);
