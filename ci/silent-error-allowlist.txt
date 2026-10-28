@@ -239,7 +239,8 @@ chengyinhub-xcx/subpackageMember/components/cy/merchant-correction-sheet/index.j
 chengyinhub-xcx/subpackageRoam/official-routes/index.js 1  # 2026-10-19 移植基线 366b846f:官方路线列表失败落页面 state=error(cy-error 带重试),不再叠加统一 toast
 chengyinhub-xcx/subpackageRoam/official-route/index.js 1  # 2026-10-19 移植基线 366b846f:路线详情失败落 state=error/notfound 的页内可见态,error 带重试
 chengyinhub-xcx/subpackageMember/components/cy/team-report-sheet/index.js 1  # 2026-10-19 移植基线 f33f1180:举报失败落结果半屏 fail 态(含后端原因与重试),不再叠加统一 toast
-chengyinhub-xcx/pages/publish/components/topic-state-keys/index.js 3  # 2026-10-19 移植基线 49ee4a4d:状态键读取落 cy-error 重试;注册失败落表单 formError;删除失败落危险确认的 error 态,均为可见反馈
+chengyinhub-xcx/pages/publish/components/topic-state-keys/index.js 4  # 2026-10-28 文档二 L2 线索与物品:读取失败落半屏内「没有读取成功，请再试一次。」可点重试;添加/改名失败落该组下方一句 formError;删除失败落危险确认的 error 态,被引用时落弹窗说用在哪里,均为可见反馈
+chengyinhub-xcx/pages/publish/fabu/theme-initial-carry.js 1  # 2026-10-28 文档二 L2 初始状态「开局带着」就地新建:失败落添加层里一句「没有保存成功，请再试一次。」,关闭自动 toast 避免双弹;换层后旧回包被 _carrySeq 丢弃
 chengyinhub-xcx/pages/shezhi/components/post-governance/index.js 2  # 2026-10-22 W9 帖子处置(F0521):处置列表读取失败落组件 cy-inline-error 带重试;申诉提交失败落组件 notice,结果不明先回读 me/enforcements 核对,不本地假设成功;通用 toast 会双弹
 chengyinhub-xcx/utils/predict-entry.js 1  # 2026-10-23 PR #508 业主第四轮:消息页「竞猜待答」入口只在有待答时出现。身份已先确认是可结算竞猜的商家,待答列表读失败时照样显示入口(fail-open),不让 48 小时期限的提醒悄悄消失;失败已有可见兜底(入口仍在、点进 predict 页有整页错误态),每次进消息页都弹通道 toast 是噪音
 chengyinhub-xcx/subpackageRoam/nearby/index.js 3  # 2026-10-25 官方地点卡展开:节点补读与评价列表是背景读取,卡片已先用地图数据渲染,读不到只少相册/玩法块或评价区(挑战页会重读同一节点并给错误页与重试);发布评价失败由 done() 自己 toast 后端原因,不再叠通用 toast。

@@ -1,21 +1,24 @@
-.sk { display: flex; flex-direction: column; gap: 16rpx; }
-.sk__desc { font-size: var(--cy-type-label); color: var(--cy-color-text-secondary); line-height: 1.5; }
-.sk__empty { font-size: var(--cy-type-body); color: var(--cy-color-text-secondary); padding: 8rpx 0; }
-.sk__notice { font-size: var(--cy-type-label); color: var(--cy-color-text-secondary); }
+.sk { display: flex; flex-direction: column; }
 .sk__state { padding: 8rpx 0; }
-.sk-row { display: flex; align-items: center; gap: 16rpx; padding: 12rpx 0; border-top: 1rpx solid var(--cy-color-border-subtle); }
-.sk-row__main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4rpx; }
-.sk-row__key { font-size: var(--cy-type-body); word-break: break-all; }
-.sk-row__sub { font-size: var(--cy-type-label); color: var(--cy-color-text-secondary); }
-.sk-row__del { flex: none; padding: 16rpx; font-size: var(--cy-type-body); color: var(--cy-color-status-danger); }
-.sk__add { align-self: flex-start; }
-.sk-form { display: flex; flex-direction: column; gap: 16rpx; }
-.sk-form__types { display: flex; gap: 12rpx; flex-wrap: wrap; }
-.sk-form__type { padding: 12rpx 28rpx; border-radius: var(--cy-radius-pill); font-size: var(--cy-type-body); border: 1rpx solid var(--cy-color-border-subtle); }
-.sk-form__type.is-on { background: var(--cy-color-action-primary-bg); color: var(--cy-color-action-primary-fg); border-color: var(--cy-color-action-primary-bg); }
-.sk-form__name { display: flex; align-items: center; gap: 8rpx; border-bottom: 1rpx solid var(--cy-color-border-subtle); }
-.sk-form__prefix { flex: none; font-size: var(--cy-type-body); color: var(--cy-color-text-secondary); }
-.sk-form__input { flex: 1; min-height: 72rpx; font-size: var(--cy-type-body); }
-.sk-form__input--box { border-bottom: 1rpx solid var(--cy-color-border-subtle); }
-.sk-form__actions { display: flex; gap: 16rpx; justify-content: flex-end; }
+.sk__note { display: block; padding: 0 32rpx 24rpx; font-size: var(--cy-type-label); color: var(--cy-color-text-secondary); }
+.sk__note--error { color: var(--cy-color-status-danger); }
+.sk-sheet .node-sheet__top { position: relative; }
+.sk-sheet__title { position: absolute; left: 50%; transform: translateX(-50%); font-size: var(--cy-type-button); font-weight: 700; color: var(--cy-color-text-primary); }
+.sk-group__label { display: block; padding: 8rpx 32rpx 12rpx; font-size: var(--cy-type-label); color: var(--cy-color-text-secondary); }
+.sk-group { padding-top: 0; padding-bottom: 0; }
+.sk-row { display: flex; align-items: center; gap: 16rpx; min-height: 100rpx; border-top: 1rpx solid var(--cy-color-border-subtle); }
+.sk-group .sk-row:first-child { border-top: 0; }
+.sk-row__name { flex: 1; min-width: 0; font-size: var(--cy-type-body); color: var(--cy-color-text-primary); }
+.sk-row__chev { flex: none; color: var(--cy-color-text-tertiary); transition: transform var(--cy-motion-expand, 200ms) ease; }
+.sk-row__chev.is-open { transform: rotate(90deg); }
+.sk-row__input { flex: 1; min-width: 0; min-height: 88rpx; text-align: right; font-size: var(--cy-type-body); color: var(--cy-color-text-primary); }
+.sk-row__input--add { text-align: left; }
+.sk-row__input.is-invalid { color: var(--cy-color-status-danger); }
+.sk-row__head { display: block; padding-top: 16rpx; border-top: 1rpx solid var(--cy-color-border-subtle); font-size: var(--cy-type-label); color: var(--cy-color-text-secondary); }
+.sk-row__del { font-size: var(--cy-type-body); color: var(--cy-color-status-danger); }
+.sk-row__del.is-off, .sk-row__act.is-off { color: var(--cy-color-text-tertiary); }
+.sk-row__act { flex: none; padding: 16rpx 0 16rpx 16rpx; font-size: var(--cy-type-button); font-weight: 700; color: var(--cy-color-text-primary); }
+.sk-row--add { gap: 24rpx; font-size: var(--cy-type-body); font-weight: 600; color: var(--cy-color-text-primary); }
+.sk-row__plus { width: 44rpx; height: 44rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--cy-color-action-primary-bg); color: var(--cy-color-action-primary-fg); }
 .cy-pressed { opacity: .88; }
+@media (prefers-reduced-motion: reduce) { .sk-row__chev { transition: none; } }

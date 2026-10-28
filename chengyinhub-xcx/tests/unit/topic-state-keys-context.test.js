@@ -60,8 +60,8 @@ function mount({ transport = false } = {}) {
   const reply = (request, name = 'old') => request.success({ code: 200, data: [
     { stateKey: 'counter.' + name, keyType: 'counter', label: name, initialValue: 1 },
   ] })
-  const save = name => { const suffix = name.replace(/^counter\./, '')
-    Object.assign(host.data, { prefixIndex: 1, suffix, label: suffix, initialValue: '1' }); host.onSave(); return requests.at(-1) }
+  const save = name => { const label = name.replace(/^counter\./, '')
+    Object.assign(host.data, { adding: 'tag', addName: label }); host.onSave(); return requests.at(-1) }
   const remove = key => { host.onAskDelete({ currentTarget: { dataset: { key } } });
     const params = dialog.filter(row => row[0] === 'open').at(-1)?.[2] || { key }
     host.onConfirmDelete({ detail: { params } }); return requests.at(-1) }
@@ -83,7 +83,7 @@ test('reads: reverse completion accepts only the newest request', () => {
   h.host.load(); const latest = h.requests.at(-1)
   h.reply(latest, 'new'); const before = snapshot(h)
   h.reply(first); assert.equal(snapshot(h), before)
-  assert.equal(h.host.data.keys[0].stateKey, 'counter.new')
+  assert.equal(h.host._keys[0].stateKey, 'counter.new')
 })
 
 for (const [name, context] of Object.entries({ topic: { topicId: '2' }, scope: { scope: 'MERCHANT' },
@@ -92,14 +92,14 @@ for (const [name, context] of Object.entries({ topic: { topicId: '2' }, scope: {
     const h = mount(), old = h.requests.at(-1)
     h.reply(old); h.host.load(); const pending = h.requests.at(-1)
     h.change(context)
-    assert.equal(h.host.data.keys.length, 0, 'previous context rows must clear')
+    assert.equal(h.host._keys.length, 0, 'previous context rows must clear')
     const before = snapshot(h)
     h.reply(pending); pending.fail(); pending.successStatusAbnormal()
     assert.equal(snapshot(h), before, 'old read must not alter the new context')
     if (context.topicId !== '') {
       const current = h.requests.at(-1)
       assert.notEqual(current, pending, 'scope/readOnly changes must reload')
-      h.reply(current, 'new'); assert.equal(h.host.data.keys[0].stateKey, 'counter.new')
+      h.reply(current, 'new'); assert.equal(h.host._keys[0].stateKey, 'counter.new')
     }
   })
 }
@@ -133,7 +133,6 @@ for (const operation of ['save', 'remove']) {
         else {
           assert.equal(h.host.data.saving, false)
           assert.equal(h.host.data.deleting, '')
-          assert.equal(h.host.data.notice, '')
           assert.equal(h.requests.length, count + 1, 'renewed session recovers without page show')
           assert.equal(h.requests.at(-1).method, 'GET')
         }
@@ -183,7 +182,7 @@ test('account change invalidates reads before foreground reload', () => {
   h.reply(old); old.fail(); old.successStatusAbnormal()
   assert.equal(snapshot(h), before)
   h.show(); h.reply(h.requests.at(-1), 'new')
-  assert.equal(h.host.data.keys[0].stateKey, 'counter.new')
+  assert.equal(h.host._keys[0].stateKey, 'counter.new')
 })
 
 test('reattach and A→B→A changes do not revive old reads', () => {
@@ -193,7 +192,7 @@ test('reattach and A→B→A changes do not revive old reads', () => {
   const pending = h.requests.at(-1)
   h.detach(); h.attach()
   before = snapshot(h); h.reply(pending); assert.equal(snapshot(h), before)
-  h.reply(h.requests.at(-1), 'new'); assert.equal(h.host.data.keys[0].stateKey, 'counter.new')
+  h.reply(h.requests.at(-1), 'new'); assert.equal(h.host._keys[0].stateKey, 'counter.new')
 })
 
 test('duplicate write callbacks cannot clear a subsequent operation in the same context', () => {
@@ -260,7 +259,6 @@ for (const operation of ['read', 'save', 'remove']) {
         data: { code: outcome === 'success' ? 200 : 500, data: [] } })
       assert.equal(h.host.data.saving, false)
       assert.equal(h.host.data.deleting, '')
-      assert.equal(h.host.data.notice, '', 'old success is not a success in the renewed context')
       assert.equal(h.dc.data.busy, false)
       assert.equal(h.dc.data.stage, '', 'old dialog closes rather than reporting old success/failure')
       assert.equal(h.dialog.some(row => ['done', 'failed'].includes(row[0])), false)
@@ -272,7 +270,7 @@ for (const operation of ['read', 'save', 'remove']) {
         { stateKey: 'counter.fresh', keyType: 'counter', initialValue: 1 },
       ] } })
       assert.equal(h.host.data.state, 'ready')
-      assert.equal(h.host.data.keys[0].stateKey, 'counter.fresh')
+      assert.equal(h.host._keys[0].stateKey, 'counter.fresh')
       const before = snapshot(h)
       retry.fail({ errMsg: 'duplicate late callback' })
       assert.equal(snapshot(h), before, 'settled old retry cannot clear the recovered context')

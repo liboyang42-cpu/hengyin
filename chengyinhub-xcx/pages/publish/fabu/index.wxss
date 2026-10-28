@@ -4804,6 +4804,7 @@ page { background: var(--cy-btn-solid-bg); }
 .chapter-setting-row { margin-top: var(--cy-space-3); }
 
 @import "./game-rules.wxss"; /* 玩法规则编辑层（协调者设计） */
+@import "./initial-carry.wxss"; /* 初始状态 · 开局带着 */
 
 /* 章节弹窗里的规则分区(2026-10-12,版式照 Figma J3 5221:19016):
    粗体小标题 + 同行灰字说明;控件是整宽灰药丸(高 = 按钮高,圆角药丸)。 */
