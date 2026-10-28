@@ -52,3 +52,6 @@
 .sn__a.is-disabled { background: var(--cy-color-bg-surface-subtle); color: var(--cy-color-text-placeholder); }
 .sn__a--plain { min-width: 0; height: 88rpx; padding: 0 4rpx; background: transparent; color: var(--cy-color-text-primary); font-weight: 600; }
 .sn__a--plain.is-disabled { background: transparent; color: var(--cy-color-text-disabled); }
+
+/* 组件样式隔离,全局 .cy-pressed 进不来,本地补一份(同 cy-card) */
+.cy-pressed { opacity: .88; }

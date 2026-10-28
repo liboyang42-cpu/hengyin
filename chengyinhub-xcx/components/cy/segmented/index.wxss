@@ -1,5 +1,8 @@
 :host { display: block; flex: 1 1 auto; min-width: 0; }
-.seg { display: flex; gap: 4rpx; padding: 4rpx; border-radius: 20rpx; background: var(--cy-color-bg-surface-subtle); }
-.seg__i { flex: 1; padding: 14rpx 8rpx; border-radius: 16rpx; text-align: center; white-space: nowrap; font-size: var(--cy-type-label); color: var(--cy-color-text-primary); transition: background-color var(--cy-motion-fast) var(--cy-ease-standard); }
-.seg__i.is-on { background: var(--cy-color-bg-surface); font-weight: 600; box-shadow: 0 2rpx 6rpx rgba(0, 0, 0, .14); }
+.seg { display: flex; gap: 4rpx; padding: 4rpx; border-radius: var(--cy-radius-sm); background: var(--cy-color-bg-surface-subtle); }
+.seg__i { flex: 1; padding: 14rpx 8rpx; border-radius: var(--cy-radius-sm); text-align: center; white-space: nowrap; font-size: var(--cy-type-label); color: var(--cy-color-text-primary); transition: background-color var(--cy-motion-fast) var(--cy-ease-standard); }
+.seg__i.is-on { background: var(--cy-color-bg-surface); font-weight: 600; box-shadow: 0 2rpx 6rpx rgba(0, 0, 0, .14); } /* ds-ok iOS 分段滑块的浮起投影,tokens 里没有对应档 */
 .seg.is-disabled .seg__i { color: var(--cy-color-text-disabled); }
+
+/* 组件样式隔离,全局 .cy-pressed 进不来,本地补一份(同 cy-card) */
+.cy-pressed { opacity: .88; }

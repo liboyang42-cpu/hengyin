@@ -46,5 +46,8 @@
 .lr__st { flex: none; position: relative; width: 44rpx; height: 44rpx; border-radius: 50%; background: var(--cy-color-status-success); }
 .lr__st::after { content: ""; position: absolute; left: 15rpx; top: 9rpx; width: 10rpx; height: 18rpx; border: solid var(--cy-color-action-danger-fg); border-width: 0 4rpx 4rpx 0; transform: rotate(45deg); }
 .lr__st--bad { background: var(--cy-color-status-danger); }
-.lr__st--bad::after { left: 20rpx; top: 10rpx; width: 4rpx; height: 16rpx; border: 0; border-radius: 2rpx; background: var(--cy-color-action-danger-fg); transform: none; box-shadow: 0 20rpx 0 0 var(--cy-color-action-danger-fg); }
+.lr__st--bad::after { left: 20rpx; top: 10rpx; width: 4rpx; height: 16rpx; border: 0; border-radius: var(--cy-radius-pill); background: var(--cy-color-action-danger-fg); transform: none; box-shadow: 0 20rpx 0 0 var(--cy-color-action-danger-fg); }
 .lr--bad .lr__t { color: var(--cy-color-status-danger); }
+
+/* 组件样式隔离,全局 .cy-pressed 进不来,本地补一份(同 cy-card) */
+.cy-pressed { opacity: .88; }

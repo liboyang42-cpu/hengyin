@@ -1,0 +1,11 @@
+{
+  "component": true,
+  "usingComponents": {
+    "cy-sheet": "/components/cy/sheet/index",
+    "cy-icon": "/components/cy/icon/index",
+    "cy-sheet-nav": "/components/cy/sheet-nav/index",
+    "cy-list-group": "/components/cy/list-group/index",
+    "cy-list-row": "/components/cy/list-row/index",
+    "cy-swipe-row": "/components/cy/swipe-row/index"
+  }
+}

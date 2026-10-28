@@ -45,7 +45,7 @@
   margin-left: var(--cy-space-2);
 }
 .sw__minus::before { content: ""; position: absolute; left: 22rpx; top: 22rpx; width: 44rpx; height: 44rpx; border-radius: 50%; background: var(--cy-color-action-danger-bg); }
-.sw__minus::after { content: ""; position: absolute; left: 34rpx; width: 20rpx; top: 42rpx; height: 4rpx; border-radius: 2rpx; background: var(--cy-color-action-danger-fg); }
+.sw__minus::after { content: ""; position: absolute; left: 34rpx; width: 20rpx; top: 42rpx; height: 4rpx; border-radius: var(--cy-radius-pill); background: var(--cy-color-action-danger-fg); }
 /* 三条线:88rpx 热区,线本身 36×24 */
 .sw__grip {
   flex: none;
@@ -60,4 +60,7 @@
   background-origin: content-box;
   background-clip: content-box;
 }
-.sw.is-drag { z-index: 5; box-shadow: 0 16rpx 48rpx rgba(0, 0, 0, .16); }
+.sw.is-drag { z-index: 5; box-shadow: 0 16rpx 48rpx rgba(0, 0, 0, .16); } /* ds-ok 拖动排序时被拎起的那一行,tokens 里没有对应档 */
+
+/* 组件样式隔离,全局 .cy-pressed 进不来,本地补一份(同 cy-card) */
+.cy-pressed { opacity: .88; }

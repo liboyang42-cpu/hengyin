@@ -11,3 +11,6 @@
 .lg__act { font-size: var(--cy-type-body); font-weight: 600; color: var(--cy-color-text-primary); }
 .lg--gap { margin-top: 44rpx; }
 .lg__box { background: var(--cy-color-bg-surface); border-radius: var(--cy-radius-lg); overflow: hidden; }
+
+/* 组件样式隔离,全局 .cy-pressed 进不来,本地补一份(同 cy-card) */
+.cy-pressed { opacity: .88; }

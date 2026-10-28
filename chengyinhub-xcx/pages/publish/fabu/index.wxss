@@ -4862,3 +4862,12 @@ page { background: var(--cy-btn-solid-bg); }
 }
 .pd-save-state--saved { background: var(--cy-topic-save-saved-bg); color: var(--cy-topic-save-saved-text); }
 .pd-save-state--unsaved { background: var(--cy-topic-save-unsaved-bg); color: var(--cy-topic-save-unsaved-text); }
+
+/* 文档二 L1:可玩时段选「自定义」时,底部选择卡里展开开始 / 结束 +「完成」 */
+.pw-custom { margin-top: var(--cy-space-3); }
+.pw-custom__grp { border-radius: var(--cy-radius-lg); overflow: hidden; background: var(--cy-color-bg-page); }
+.pw-custom__row { position: relative; display: flex; align-items: center; gap: 20rpx; min-height: 100rpx; padding: 0 var(--cy-space-4); color: var(--cy-color-text-tertiary); }
+.pw-custom__row--hr::before { content: ""; position: absolute; left: var(--cy-space-4); right: 0; top: 0; height: 1px; background: var(--cy-color-border-subtle); }
+.pw-custom__t { flex: 1; font-size: var(--cy-type-body); color: var(--cy-color-text-primary); }
+.pw-custom__v { font-size: var(--cy-type-body); font-variant-numeric: tabular-nums; }
+.pw-custom__done { margin-top: var(--cy-space-3); height: 100rpx; border-radius: var(--cy-radius-lg); display: flex; align-items: center; justify-content: center; font-size: var(--cy-type-button); font-weight: 700; background: var(--cy-color-action-primary-bg); color: var(--cy-color-action-primary-fg); }

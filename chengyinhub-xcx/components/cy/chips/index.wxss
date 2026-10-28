@@ -33,3 +33,6 @@
 .ch__go { flex: none; padding: 0 var(--cy-space-4); min-height: 64rpx; display: flex; align-items: center; font-size: var(--cy-type-button); font-weight: 600; color: var(--cy-color-text-primary); }
 .ch__go.is-off { color: var(--cy-color-text-disabled); }
 .ch__err { display: block; padding: 14rpx var(--cy-space-4) 0; font-size: var(--cy-type-caption); color: var(--cy-color-status-danger); }
+
+/* 组件样式隔离,全局 .cy-pressed 进不来,本地补一份(同 cy-card) */
+.cy-pressed { opacity: .88; }

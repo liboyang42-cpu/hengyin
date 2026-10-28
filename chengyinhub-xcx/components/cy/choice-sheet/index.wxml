@@ -2,7 +2,7 @@
   <view class="cs">
     <text wx:if="{{title}}" class="cs__t">{{title}}</text>
     <view class="cs__os" aria-role="radiogroup" aria-label="{{title}}">
-      <view wx:for="{{options}}" wx:key="value" class="cs__o {{item.value === value ? 'is-on' : ''}}" data-index="{{index}}" bindtap="onPick" aria-role="radio" aria-checked="{{item.value === value}}" aria-label="{{item.label}}{{item.sub ? ' ' + item.sub : ''}}">
+      <view wx:for="{{options}}" wx:key="value" class="cs__o {{item.value === value ? 'is-on' : ''}}" data-index="{{index}}" bindtap="onPick" aria-role="radio" aria-checked="{{item.value === value}}" aria-label="{{item.label}}{{item.sub ? ' ' + item.sub : ''}}" hover-class="cy-pressed" hover-stay-time="80">
         <view wx:if="{{item.glyph}}" class="cs__ic cs__ic--{{item.glyph}}"></view>
         <text class="cs__n">{{item.label}}</text>
         <text wx:if="{{item.sub}}" class="cs__v">{{item.sub}}</text>
