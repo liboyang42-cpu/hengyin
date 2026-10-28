@@ -92,6 +92,7 @@ EXPLICIT_AUXILIARY_SQL = {
     # 发布迁移包的只读预检：与 chengyinhub-admin/sql/_precheck_* 同档 —— 全是 SELECT，runner 不执行、不进台账；
     # 由 ci/release_migration_rehearsal.py 逐句校验只含 SELECT 并在一次性 MySQL 上回读。
     "docs/delivery/release-closeout-20261022/release-migration-precheck.sql": "AUXILIARY_NOT_EXECUTED",
+    "docs/delivery/release-closeout-20261028/release-migration-precheck.sql": "AUXILIARY_NOT_EXECUTED",
 }
 IGNORED_DIRS = {".git", "node_modules", "target"}
 MIGRATION_ID = re.compile(r"^[a-z0-9][a-z0-9_]*$")

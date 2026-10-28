@@ -84,15 +84,17 @@ class ReleaseMigrationPackTest(unittest.TestCase):
         self.assertEqual(generated, "\n" + rehearsal.render_pack_inventory(PACK))
 
     def test_single_apply_policy_refuses_unsafe_skips(self):
-        welcome = next(m for m in PACK["migrations"] if m["migrationId"] == "club_welcome_note_20261022")
-        self.assertEqual("PRECHECK_SKIP_APPLIED", rehearsal.rerun_action(welcome, "APPLIED"))
-        for status in (None, "NEEDED", "PARTIAL", "CONFLICT", "BLOCKED_PREREQ", "DATA_PREVIEW"):
-            with self.subTest(status=status), self.assertRaises(ValueError):
-                rehearsal.rerun_action(welcome, status)
-        with self.assertRaises(ValueError):
-            rehearsal.rerun_action({**welcome, "rerunPolicy": "EXECUTE"}, "APPLIED")
+        declared = {m["migrationId"] for m in PACK["migrations"] if m.get("rerunPolicy") == "PRECHECK_SKIP_APPLIED"}
+        self.assertEqual(rehearsal.SINGLE_APPLY, declared)
+        for single in (m for m in PACK["migrations"] if m["migrationId"] in rehearsal.SINGLE_APPLY):
+            self.assertEqual("PRECHECK_SKIP_APPLIED", rehearsal.rerun_action(single, "APPLIED"))
+            for status in (None, "NEEDED", "PARTIAL", "CONFLICT", "BLOCKED_PREREQ", "DATA_PREVIEW"):
+                with self.subTest(migration=single["migrationId"], status=status), self.assertRaises(ValueError):
+                    rehearsal.rerun_action(single, status)
+            with self.assertRaises(ValueError):
+                rehearsal.rerun_action({**single, "rerunPolicy": "EXECUTE"}, "APPLIED")
         for item in PACK["migrations"]:
-            if item["migrationId"] != welcome["migrationId"]:
+            if item["migrationId"] not in rehearsal.SINGLE_APPLY:
                 self.assertEqual("EXECUTE", rehearsal.rerun_action(item, None))
                 with self.assertRaises(ValueError):
                     rehearsal.rerun_action({**item, "rerunPolicy": "PRECHECK_SKIP_APPLIED"}, "APPLIED")
