@@ -70,6 +70,13 @@ public class JourneyRules {
      */
     private boolean natAuto = true;
 
+    /** 文档二 E1 规则难度档 easy / standard / hard;null = 老主题没选过(规范化不输出)。 */
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    private String difficulty;
+
+    public String getDifficulty() { return difficulty; }
+    public void setDifficulty(String difficulty) { this.difficulty = difficulty; }
+
     /**
      * F6 RPG P1 灰度块(环境键 / 进度钟 / 魔鬼交易 / 动量 / 特质),形状见 {@code JourneyRpg}。
      * 没配 = null = 全部关闭;序列化时 null 不输出,老主题冻结快照一字不变。

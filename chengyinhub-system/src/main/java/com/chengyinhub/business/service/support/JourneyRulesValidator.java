@@ -111,6 +111,13 @@ public class JourneyRulesValidator {
         int easyDc = tierDc(easyNode, "easy", DEFAULT_DC_EASY);
         int mediumDc = tierDc(mediumNode, "medium", DEFAULT_DC_MEDIUM);
         int hardDc = tierDc(hardNode, "hard", DEFAULT_DC_HARD);
+        // 文档二 E1:作者只挑一档,难度线、情境加值上限与动量按档覆盖;没配 difficulty 的老主题一字不变。
+        JourneyDifficulty difficulty = JourneyDifficulty.parse(root.get("difficulty"));
+        if (difficulty != null) {
+            easyDc = difficulty.easyDc;
+            mediumDc = difficulty.mediumDc;
+            hardDc = difficulty.hardDc;
+        }
         if (!(easyDc < mediumDc && mediumDc < hardDc)) {
             throw new IllegalArgumentException("三档难度的 dc 必须 easy < medium < hard");
         }
@@ -136,10 +143,12 @@ public class JourneyRulesValidator {
         requireRange("fumbleExtraDamage", fumbleExtraDamage, 0, 3);
         int modCap = intField(root, "modCap", DEFAULT_MOD_CAP);
         requireRange("modCap", modCap, 0, 10);
+        if (difficulty != null) modCap = difficulty.modCap;
 
         ObjectNode out = objectMapper.createObjectNode();
         out.put("schemaVersion", SCHEMA_VERSION);
         out.put("checkEnabled", checkEnabled);
+        if (difficulty != null) out.put("difficulty", difficulty.value);
         if (root.has("stateEnabled")) out.put("stateEnabled", boolField(root, "stateEnabled", false));
         if (root.has("attributes")) out.set("attributes", root.has("attributeBinding")
                 ? AuthorAttributeBinding.projection(root.get("attributes")) : JourneyInitialState.normalize(root.get("attributes")));
@@ -175,7 +184,10 @@ public class JourneyRulesValidator {
         // F6 RPG P1:同 natAuto,只在作者显式配置时输出;缺省老主题规范化结果一字不变。
         com.fasterxml.jackson.databind.node.ObjectNode rpg = JourneyRpg.normalize(root.get("rpg"), checkEnabled,
                 root.has("stateEnabled") && boolField(root, "stateEnabled", false));
-        if (rpg != null) out.set("rpg", rpg);
+        if (rpg != null) {
+            if (difficulty != null) difficulty.applyMomentum(rpg);
+            out.set("rpg", rpg);
+        }
         if (root.has("statLinks")) {
             try {
                 com.chengyinhub.business.domain.JourneyRules rules = objectMapper.treeToValue(out,

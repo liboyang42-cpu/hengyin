@@ -197,6 +197,10 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     @Autowired(required = false)
     private com.chengyinhub.business.service.support.ThemeCharacterService themeCharacterService;
 
+    /** 文档二 L8 可玩时段:只在新建自由探索局时执行;手工 new 的单测不注入 = 不限时段(与老行为一致)。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.support.TopicPlaySetupService topicPlaySetupService;
+
     /** F6 T06 环境键;缺省(单测 / 未装配)= 不写环境快照,ENV_IN 一律按 unknown 判。 */
     @Autowired(required = false)
     private com.chengyinhub.business.service.support.rpg.TopicEnvironmentService topicEnvironmentService;
@@ -1246,6 +1250,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     private TopicRouteSession ensureBranchSession(Scope scope) {
         TopicRouteSession existing = currentSession(scope.memberId, scope.topic.getId(), scope.activityId);
         if (existing != null) return existing;
+        if (topicPlaySetupService != null) topicPlaySetupService.requireOpen(scope.topic, scope.activityId);
         com.chengyinhub.business.service.support.CurrentPlayRegistration.require(activityMapper,registrationMapper,
                 scope.memberId,scope.activityId>0 ? 2L : 1L,scope.activityId>0 ? scope.activityId : scope.topic.getId(),null,new Date());
         if (scope.topic.getPublishedRouteGraphJson() == null
@@ -2180,6 +2185,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         List<CmsTopicNode> liveNodes = probe.liveNodes;
         TopicRouteSession existing = currentSession(scope.memberId, scope.topic.getId(), scope.activityId);
         if (existing != null) return existing;
+        if (topicPlaySetupService != null) topicPlaySetupService.requireOpen(scope.topic, scope.activityId);
         com.chengyinhub.business.service.support.CurrentPlayRegistration.require(activityMapper,registrationMapper,
                 scope.memberId,scope.activityId>0 ? 2L : 1L,scope.activityId>0 ? scope.activityId : scope.topic.getId(),null,new Date());
         if (scope.topic.getPublishedConfigVersion() == null || scope.topic.getPublishedConfigVersion() <= 0L) {

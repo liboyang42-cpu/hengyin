@@ -2,6 +2,8 @@
   "schemaVersion": 1,
   "dependencies": {
     "20261026_official_broadcast_delivery": ["official_broadcast"],
+    "20261028_topic_play_setup": [],
+    "20261028_d20_attribute_registry": ["theme_state_key_20260916", "20261022_theme_state_key_attribute_def", "topic_journey_rules_20260916"],
     "20261026_official_event_attendance": [],
     "20261026_team_event_command_receipt": [],
     "20261026_theme_attribute_registry_version": [],
