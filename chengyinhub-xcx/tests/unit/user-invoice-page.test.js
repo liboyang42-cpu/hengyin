@@ -93,7 +93,8 @@ test('five pages drive all real JSON endpoints: titles, save, delete, eligible, 
   assert.match(saveRequestId, /^vr_/);
   assert.deepEqual(edit.latest('titles/save-request').body, { id: TITLE, titleType: 'COMPANY', titleName: '发票测试单位', taxNo: '913100001234567890', isDefault: true, requestId: saveRequestId });
   edit.respond('titles/save-request', { requestId: saveRequestId, titleId: TITLE, status: 'SAVED' });
-  assert.equal(edit.navigations.length, 0, 'single-page stack stays put');
+  // 2026-10-28 L9 集成:根栈安全审计要求无上一页时有出口,单页栈保存后回发票抬头。
+  assert.deepEqual(edit.navigations.map(row => [row.kind, row.url]), [['redirect', '/subpackageMember/invoice-titles/index']], 'single-page stack lands on titles');
   assert.equal(JSON.stringify([...values]).includes('913100001234567890'), false);
   edit.requests.forEach(row => paths.add(row.path));
 

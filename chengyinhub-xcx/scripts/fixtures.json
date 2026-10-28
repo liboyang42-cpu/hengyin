@@ -12318,6 +12318,47 @@
   "dropped": [],
   "switchKeys": []
  },
+ "D12h": {
+  "data": {
+   "login": true,
+   "unavailable": false
+  },
+  "dropped": [],
+  "switchKeys": []
+ },
+ "D12i": {
+  "data": {
+   "login": true,
+   "unavailable": false
+  },
+  "dropped": [],
+  "switchKeys": []
+ },
+ "D12j": {
+  "data": {
+   "login": true,
+   "unavailable": false
+  },
+  "dropped": [],
+  "switchKeys": []
+ },
+ "D12k": {
+  "data": {
+   "login": true,
+   "unavailable": false
+  },
+  "dropped": [],
+  "switchKeys": []
+ },
+ "D12l": {
+  "data": {
+   "state": "login",
+   "rows": [],
+   "reputation": null
+  },
+  "dropped": [],
+  "switchKeys": []
+ },
  "D12c": {
   "data": null,
   "dropped": [],
