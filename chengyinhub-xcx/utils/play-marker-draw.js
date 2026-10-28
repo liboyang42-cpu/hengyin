@@ -132,17 +132,17 @@ function drawNumberedMarker(ctx, size, stateKey, num) {
   const mid = size / 2
   const r = 36
   ctx.clearRect(0, 0, size, size)
-  let fill = '#FFFFFF'
+  let fill = '#FFFFFF'   /* ds-ok canvas 拿不到 var()，与同文件 marker 同值 */
   let ink = '#111111'
-  if (state === 'completed' || state === 'redeem-pending') { fill = '#111111'; ink = '#FFFFFF' }
-  else if (state === 'restricted' || state === 'paused') { fill = '#4A4A4A'; ink = '#FFFFFF' }
+  if (state === 'completed' || state === 'redeem-pending') { fill = '#111111'; ink = '#FFFFFF' }   /* ds-ok */
+  else if (state === 'restricted' || state === 'paused') { fill = '#4A4A4A'; ink = '#FFFFFF' }   /* ds-ok */
   if (state === 'candidate') {
     circle(ctx, size, r, fill)
     if (ctx.setLineDash) ctx.setLineDash([10, 8])
     circle(ctx, size, r, null, '#555555', 6)
     if (ctx.setLineDash) ctx.setLineDash([])
   } else {
-    circle(ctx, size, r, fill, fill === '#FFFFFF' ? '#111111' : '#FFFFFF', fill === '#FFFFFF' ? 7 : 5)
+    circle(ctx, size, r, fill, fill === '#FFFFFF' ? '#111111' : '#FFFFFF', fill === '#FFFFFF' ? 7 : 5)   /* ds-ok */
   }
   const label = String(num)
   ctx.fillStyle = ink
@@ -155,10 +155,10 @@ function drawNumberedMarker(ctx, size, stateKey, num) {
     const by = mid + 32
     ctx.beginPath()
     ctx.arc(bx, by, 17, 0, Math.PI * 2)
-    ctx.fillStyle = '#FFFFFF'
+    ctx.fillStyle = '#FFFFFF'   /* ds-ok */
     ctx.fill()
-    ctx.strokeStyle = '#111111'
-    ctx.fillStyle = '#111111'
+    ctx.strokeStyle = '#111111'   /* ds-ok */
+    ctx.fillStyle = '#111111'   /* ds-ok */
     if (state === 'restricted') {
       ctx.lineWidth = 3
       ctx.beginPath()
