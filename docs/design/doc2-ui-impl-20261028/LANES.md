@@ -2,6 +2,15 @@
 
 Read AGENTS.md and chengyinhub-xcx/AGENTS.md first and follow them: Chinese commit messages with a feat:/fix: prefix; owner/scope checks on every write API; new schema only as new sql/migration_*.sql; never edit or delete existing migrations; no secrets; no mock/test domains; no error suppression; never run ci/xcx-check.sh.
 
+## RULE 0 — OWNER, 2026-10-28 09:00Z (overrides everything below)
+"Do not alter the pages we have already created. We are only looking for minor adjustments, small additions, and slight optimizations—not a complete redesign. Please build upon our existing work."
+- Start from the existing wxml/wxss/js of each page and component on the base branch. Change only the elements the prototype marks as 新增/改动, and make each change the smallest diff that reaches the prototype's result.
+- Do not rewrite, re-layout, restyle or rename existing pages, components, classes, tokens or files. Do not create parallel "v2" components that replace working ones. Do not swap existing controls for new ones unless the prototype marks that exact element as 改动.
+- Reuse existing components (cy-sheet, cy-switch, node-card, node-pill, cy-btn, cy-modal, existing list/row styles). Add a new component only for a genuinely new element with no existing counterpart, and keep it small.
+- Where a lane prompt says "replace" (e.g. topic-state-keys, story-rule-editor), read it as "edit in place". Keep the component, its file, its data flow and save path. Change only what shows raw keys/English or what the prototype marks, inside the same component.
+- Keep the diff small and reviewable. In the PR body, list every existing file you touched with a one-line reason.
+- If a prototype detail would need a large rewrite, implement the nearest small change and list the gap in the PR body instead.
+
 ## Goal
 The owner approved interactive HTML prototypes. Implement them so the running mini program matches the HTML exactly — layout, copy, states, motion — excluding the review marks and side panels. Read index.html AND README.md of each prototype, including the 联动 panel and every '需后端' note:
 - A editor + play: branch docs/doc2-proto-v4-a-20261027 @ b4a751ae, docs/design/doc2-proto-v4-20261027/a-editor-play/ (+ shots/ PNGs)
