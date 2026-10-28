@@ -1401,7 +1401,7 @@
       "note": "B public-master compatibility delta 5a8800de source: original53 ordinary methods retained plus4 original-intent provenance/visibility/conflict cases =57 declarations. Original approval assertion retained and registered explicitly. Source inventory only, Java/MySQL/CI NOT_RUN; prior53 execution evidence is not transferred. A 6fcd pre-SDK no-send repair retains all57 and adds7 declarations=64; Java/MySQL execution NOT_RUN, no oldgreen transfer."
     },
     "com.chengyinhub.business.service.impl.OfficialBroadcastDeliveryMySqlIT": {
-      "tests": 10,
+      "tests": 12,
       "storage": [
         "mysql"
       ],

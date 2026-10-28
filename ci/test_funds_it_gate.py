@@ -279,7 +279,8 @@ class FundsItExpectedCountTest(unittest.TestCase):
         step = _WORKFLOW.read_text(encoding="utf-8").split(
             "      - name: Run funds MySQL integration gate (fail-closed on missing MySQL)\n", 1)[1].split(
             "      - name: Stop Oracle MySQL scratch\n", 1)[0]
-        for flag in ("B_PAYMENT_FACT_DDL_APPROVED", "A_REGISTRATION_PAYMENT_FACT_DDL_APPROVED"):
+        for flag in ("B_PAYMENT_FACT_DDL_APPROVED", "B_PAYMENT_INTENT_DDL_APPROVED",
+                     "A_REGISTRATION_PAYMENT_FACT_DDL_APPROVED"):
             self.assertIn("          " + flag + ": '1'", step)
         self.assertIn("CHENGYIN_TEST_MYSQL_HOST: 127.0.0.1", step)
         self.assertIn("CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX: _gh${{ github.run_id }}", step)

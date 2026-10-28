@@ -433,6 +433,59 @@ def notice_forward_plan(migrations, selected):
     }
 
 
+# Broadcast union is another exact, pending-only composition, not a new migration engine.
+# Retain BOTH original SQL bodies/checksums; only an absent scratch schema may use this plan.
+BROADCAST_D = "20261023_d_official_broadcast_delivery"
+BROADCAST_OLD = "20261026_official_broadcast_delivery"
+BROADCAST_UNION = "20261028_official_broadcast_protocol_union"
+BROADCAST_FORWARD_FILES = {
+    BROADCAST_D: ("chengyinhub-admin/sql/migration_20261023_d_official_broadcast_delivery.sql",
+                  "c822ad772727ed4ae0328998f7a99be1ece5d6c881f6259fc63de3ebb0822ba1"),
+    BROADCAST_OLD: ("chengyinhub-admin/sql/migration_20261026_official_broadcast_delivery.sql",
+                    "ca5538fae79b01ac4690065da6cde4ac3b7922dce5c0d09a04a5ff58bca1076f"),
+    BROADCAST_UNION: ("chengyinhub-admin/sql/migration_20261028_official_broadcast_protocol_union.sql",
+                      "44dc1ee52ab1591f0e893f26aaed8b6b1af4948ab53f98307c41a30c637b8b8b"),
+}
+
+
+def broadcast_forward_plan(migrations, selected):
+    ids = {BROADCAST_OLD, BROADCAST_UNION}
+    paths = {BROADCAST_FORWARD_FILES[key][0] for key in ids}
+    if not any(row.get("migrationId") in ids or row.get("path") in paths
+               for row in migrations + selected):
+        return None
+    positions, pending_positions = {}, {}
+    for key, (path, expected_sha) in BROADCAST_FORWARD_FILES.items():
+        rows = [(i, row) for i, row in enumerate(migrations)
+                if row.get("migrationId") == key or row.get("path") == path]
+        pending = [(i, row) for i, row in enumerate(selected)
+                   if row.get("migrationId") == key or row.get("path") == path]
+        if len(rows) != 1 or len(pending) != 1:
+            raise RuntimeError("broadcast forward requires complete pending D/old/union: " + key)
+        index, entry = rows[0]
+        pending_index, pending_entry = pending[0]
+        target = REPO / path
+        deps = [BROADCAST_D, BROADCAST_OLD] if key == BROADCAST_UNION else ["official_broadcast"]
+        if (entry.get("migrationId") != key or entry.get("path") != path
+                or entry.get("sha256") != expected_sha or pending_entry != entry
+                or entry.get("order") != index + 1 or entry.get("executionPhase") is not None
+                or entry.get("dependsOn") != deps
+                or target.is_symlink() or not target.is_file()
+                or hashlib.sha256(target.read_bytes()).hexdigest() != expected_sha):
+            raise RuntimeError("broadcast forward identity/fingerprint/dependency/order drift: " + key)
+        positions[key], pending_positions[key] = index, pending_index
+    upstream = [i for i, row in enumerate(migrations) if row.get("migrationId") == "official_broadcast"]
+    if (len(upstream) != 1 or upstream[0] >= positions[BROADCAST_D]
+            or not positions[BROADCAST_D] < positions[BROADCAST_OLD] < positions[BROADCAST_UNION]
+            or not pending_positions[BROADCAST_D] < pending_positions[BROADCAST_OLD] < pending_positions[BROADCAST_UNION]):
+        raise RuntimeError("broadcast forward prerequisite/sequence drift")
+    return {
+        "fingerprints": {key: {"path": value[0], "sha256": value[1]}
+                         for key, value in BROADCAST_FORWARD_FILES.items()},
+        "selected": [row for row in selected if row["migrationId"] != BROADCAST_OLD],
+    }
+
+
 def main():
     global POLICY_CUSTODY
     ap = argparse.ArgumentParser()
@@ -457,6 +510,9 @@ def main():
     all_migrations = manifest["migrations"]
     selected = migrations_after_baseline(all_migrations)
     notice_forward = notice_forward_plan(all_migrations, selected)
+    selected = notice_forward["selected"] if notice_forward else selected
+    broadcast_forward = broadcast_forward_plan(all_migrations, selected)
+    selected = broadcast_forward["selected"] if broadcast_forward else selected
     deferred = [m for m in selected if m.get("executionPhase") == "POST_DEPLOY"]
     ordered = [m for m in selected if m.get("executionPhase") != "POST_DEPLOY"]
     if deferred:
@@ -468,7 +524,7 @@ def main():
         cur.execute("SELECT VERSION(), @@version_comment")
         ver = cur.fetchone()
         print("目标实例: %s / %s  @ %s:%d" % (ver[0], ver[1], a.host, a.port))
-        if notice_forward:
+        if notice_forward or broadcast_forward:
             # This check precedes every DROP/CREATE/import, including explicit --drop.
             cur.execute("SELECT COUNT(*) FROM information_schema.schemata WHERE schema_name=%s", (a.schema,))
             fresh = cur.fetchone()
@@ -477,9 +533,11 @@ def main():
                 raise RuntimeError("notice forward requires a nonexistent fresh scratch schema; --drop cannot bypass")
             # No IF NOT EXISTS: a concurrent creator must fail, never adopt an unknown/typed schema.
             cur.execute("CREATE DATABASE `%s` DEFAULT CHARACTER SET utf8mb4" % a.schema)
-            ordered = [m for m in notice_forward["selected"] if m.get("executionPhase") != "POST_DEPLOY"]
-            print("REPLACED_UNAPPLIED %s -> %s fingerprints=%s" %
-                  (NOTICE_OLD, NOTICE_V2, json.dumps(notice_forward["fingerprints"], sort_keys=True)))
+            for forward, old, new in ((notice_forward, NOTICE_OLD, NOTICE_V2),
+                                      (broadcast_forward, BROADCAST_OLD, BROADCAST_UNION)):
+                if forward:
+                    print("REPLACED_UNAPPLIED %s -> %s fingerprints=%s" %
+                          (old, new, json.dumps(forward["fingerprints"], sort_keys=True)))
         else:
             if a.drop:
                 cur.execute("DROP DATABASE IF EXISTS `%s`" % a.schema)
@@ -516,7 +574,8 @@ def main():
               (len(all_migrations), len(ordered)))
         pre_migration_problems = len(results)
         for m in ordered:
-            strict_notice = bool(notice_forward) and m["migrationId"] == NOTICE_V2
+            strict_notice = ((bool(notice_forward) and m["migrationId"] == NOTICE_V2)
+                             or (bool(broadcast_forward) and m["migrationId"] == BROADCAST_UNION))
             ok = run_file(cur, REPO / m["path"], m["migrationId"], results,
                           keep_going=False if strict_notice else a.keep_going,
                           schema_only=True, observations=observations)

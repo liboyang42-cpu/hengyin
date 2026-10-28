@@ -219,7 +219,7 @@ class NoticeForwardCallerTest(unittest.TestCase):
         policy = json.loads((tool.ROOT / 'scripts/e2e/schema_replay_policy_20260921.json').read_text())
         expected = [baseline['baseSchema']['path'], policy['baselineSeed']['path']]
         expected += [row['path'] for row in self.manifest['migrations']
-                     if row['path'] not in plan['baselineIncluded'] and row['path'] != old_path]
+                     if row['path'] not in plan['baselineIncluded'] and row['path'] not in {old_path, tool.BROADCAST_FORWARD_FILES[tool.BROADCAST_OLD][0]}]
         self.assertEqual(expected, [file['path'] for file in plan['files']])
         self.assertIn(v2_path, expected)
         self.assertNotIn(old_path, plan['baselineIncluded'])
@@ -308,7 +308,12 @@ class NoticeForwardCallerTest(unittest.TestCase):
         self.assertNotIn(tool.NOTICE_FORWARD_FILES[tool.NOTICE_OLD][0], plan['completed'])
         self.assertEqual(original_skips, [file['skipped'] for file in plan['files']])
         self.assertEqual('REPLACED_UNAPPLIED', plan['noticeForward']['state'])
-        records = [str(call) for call in printed.call_args_list if 'REPLACED_UNAPPLIED' in str(call)]
+        records = [str(call) for call in printed.call_args_list
+                   if 'REPLACED_UNAPPLIED' in str(call) and tool.NOTICE_OLD in str(call)]
+        broadcast_records = [str(call) for call in printed.call_args_list
+                             if 'REPLACED_UNAPPLIED' in str(call) and tool.BROADCAST_OLD in str(call)]
+        self.assertEqual(1, len(broadcast_records))
+        self.assertIn(tool.BROADCAST_UNION, broadcast_records[0])
         self.assertEqual(1, len(records))
         self.assertIn(tool.NOTICE_OLD, records[0])
         self.assertIn(tool.NOTICE_V2, records[0])
@@ -381,6 +386,115 @@ class NoticeForwardCallerTest(unittest.TestCase):
                 with patch.object(pathlib.Path, 'read_bytes', drift):
                     with self.assertRaises((ValueError, RuntimeError)):
                         tool.build_plan()
+
+
+class BroadcastForwardCallerTest(unittest.TestCase):
+    """SOURCE controls: exact broadcast composition, not MySQL or production migration evidence."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.plan = tool.build_plan()
+        cls.manifest = tool.build_manifest(tool.ROOT, target_commit=cls.plan['manifest']['targetCommit'],
+            dependency_path=tool.ROOT / 'ci/migration-dependencies.json')
+
+    def test_union_keeps_both_originals_and_all_runtime_fields_without_rewriting_evidence(self):
+        plan = copy.deepcopy(self.plan)
+        d_path = tool.BROADCAST_FORWARD_FILES[tool.BROADCAST_D][0]
+        old_path = tool.BROADCAST_FORWARD_FILES[tool.BROADCAST_OLD][0]
+        union_path = tool.BROADCAST_FORWARD_FILES[tool.BROADCAST_UNION][0]
+        paths = [file['path'] for file in plan['files']]
+        self.assertIn(d_path, paths)
+        self.assertNotIn(old_path, paths)
+        self.assertIn(union_path, paths)
+        self.assertLess(paths.index(d_path), paths.index(union_path))
+        for key, (path, digest) in tool.BROADCAST_FORWARD_FILES.items():
+            self.assertEqual(digest, hashlib.sha256((tool.ROOT / path).read_bytes()).hexdigest())
+            self.assertNotIn(path, plan['baselineIncluded'])
+            self.assertEqual(1, sum(row['migrationId'] == key for row in self.manifest['migrations']))
+        union = next(file for file in plan['files'] if file['path'] == union_path)
+        sql = '\n'.join(union['apply'])
+        self.assertIn("MODIFY COLUMN delivery_state VARCHAR(32) NOT NULL DEFAULT 'UNKNOWN'", sql)
+        self.assertNotIn('ADD COLUMN message_id', sql)
+        for field in ('frozen_title', 'frozen_sub', 'intent_id', 'attempts', 'update_time',
+                      'audience_frozen', 'client_request_id', 'request_owner', 'request_hash'):
+            self.assertIn('ADD COLUMN ' + field, sql)
+        self.assertIn('CREATE TABLE official_broadcast_creation', sql)
+        self.assertFalse(any(re.match(r'(?i)\s*(UPDATE|DELETE|REPLACE)\b', statement)
+                             for statement in union['apply']))
+        self.assertEqual('PLANNED_UNAPPLIED', plan['broadcastForward']['state'])
+
+    def test_partial_drift_or_reordered_pair_cannot_be_selected(self):
+        original = self.manifest['migrations']
+        pending = tool.migrations_after_baseline(original)
+        for key in tool.BROADCAST_FORWARD_FILES:
+            for field, value in (('sha256', '0' * 64), ('dependsOn', []), ('order', -1)):
+                with self.subTest(key=key, field=field):
+                    rows = copy.deepcopy(original)
+                    next(row for row in rows if row['migrationId'] == key)[field] = value
+                    with self.assertRaisesRegex(RuntimeError, 'broadcast forward'):
+                        tool.broadcast_forward_plan(rows, pending)
+            with self.assertRaisesRegex(RuntimeError, 'broadcast forward'):
+                tool.broadcast_forward_plan(original, [row for row in pending if row['migrationId'] != key])
+        rows = copy.deepcopy(original)
+        a, b = [next(i for i, row in enumerate(rows) if row['migrationId'] == key)
+                for key in (tool.BROADCAST_D, tool.BROADCAST_OLD)]
+        rows[a], rows[b] = rows[b], rows[a]
+        with self.assertRaisesRegex(RuntimeError, 'broadcast forward'):
+            tool.broadcast_forward_plan(rows, pending)
+
+    def test_execution_cannot_inject_old_sql_or_omit_replacement_custody(self):
+        for mutation in ('old', 'missing', 'hash', 'apply'):
+            with self.subTest(mutation=mutation):
+                plan = copy.deepcopy(self.plan)
+                if mutation == 'old':
+                    plan['files'].append(tool.plan_file(tool.ROOT / tool.BROADCAST_FORWARD_FILES[tool.BROADCAST_OLD][0], True))
+                elif mutation == 'missing':
+                    del plan['broadcastForward']
+                elif mutation == 'hash':
+                    plan['broadcastForward']['fingerprints'][tool.BROADCAST_OLD]['sha256'] = '0' * 64
+                else:
+                    next(file for file in plan['files'] if file['path'] ==
+                         tool.BROADCAST_FORWARD_FILES[tool.BROADCAST_UNION][0])['apply'][0] = 'SELECT 1'
+                with patch.object(tool, 'build_plan', return_value=copy.deepcopy(self.plan)), \
+                        patch.object(tool, 'mysql_command') as command:
+                    with self.assertRaisesRegex(ValueError, 'execution plan drift'):
+                        tool.execute(SimpleNamespace(), plan)
+                    command.assert_not_called()
+
+    def test_existing_schema_has_no_replacement_receipt_or_mutation(self):
+        plan = copy.deepcopy(self.plan)
+        args = SimpleNamespace(host='127.0.0.1', database='cy_e2e_broadcast_union', port=3316, user='root')
+        outputs = [SimpleNamespace(stdout='8.0.45'), SimpleNamespace(stdout=args.database)]
+        with patch.object(tool, 'build_plan', return_value=copy.deepcopy(self.plan)), \
+                patch.object(tool.shutil, 'which', return_value='/usr/bin/mysql'), \
+                patch.object(tool.subprocess, 'run', side_effect=outputs) as run, patch('builtins.print') as emitted:
+            with self.assertRaisesRegex(ValueError, 'Existing schema refused'):
+                tool.execute(args, plan)
+        self.assertEqual(2, run.call_count)
+        self.assertEqual('PLANNED_UNAPPLIED', plan['broadcastForward']['state'])
+        self.assertFalse(any('REPLACED_UNAPPLIED' in str(call) for call in emitted.call_args_list))
+        self.assertFalse(any('CREATE DATABASE' in call.kwargs['input'] for call in run.call_args_list))
+
+    def test_union_failure_stops_without_completing_original_or_following_files(self):
+        plan = copy.deepcopy(self.plan)
+        args = SimpleNamespace(host='127.0.0.1', database='cy_e2e_broadcast_union', port=3316, user='root')
+        union_path = tool.BROADCAST_FORWARD_FILES[tool.BROADCAST_UNION][0]
+        index = next(i for i, file in enumerate(plan['files']) if file['path'] == union_path)
+        outputs = [SimpleNamespace(stdout=value) for value in ('8.0.45', '', '')]
+        for file in plan['files']:
+            if file['path'] == union_path:
+                outputs.append(subprocess.CalledProcessError(1, ['mysql'], stderr='ERROR 1060 (42S21): fixture'))
+                break
+            if file['apply']:
+                outputs.append(SimpleNamespace(stdout='\n'.join(['1'] * len(file['assertions']))))
+        with patch.object(tool, 'build_plan', return_value=copy.deepcopy(self.plan)), \
+                patch.object(tool.shutil, 'which', return_value='/usr/bin/mysql'), \
+                patch.object(tool.subprocess, 'run', side_effect=outputs), patch('builtins.print'):
+            with self.assertRaises(subprocess.CalledProcessError):
+                tool.execute(args, plan)
+        self.assertEqual([file['path'] for file in plan['files'][:index]], plan['completed'])
+        self.assertEqual(union_path, plan['currentFile'])
+        self.assertNotIn(tool.BROADCAST_FORWARD_FILES[tool.BROADCAST_OLD][0], plan['completed'])
 
 if __name__ == '__main__':
     unittest.main()

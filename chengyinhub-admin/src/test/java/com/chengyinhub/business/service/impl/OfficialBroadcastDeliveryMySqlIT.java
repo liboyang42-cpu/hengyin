@@ -414,4 +414,81 @@ class OfficialBroadcastDeliveryMySqlIT {
         });
     }
 
+
+    @Test
+    void unchangedHistoricalPairExposesDuplicateColumnInsteadOfSwallowingIt() {
+        withLegacySchema((legacy, source) -> {
+            new ResourceDatabasePopulator(new FileSystemResource(migration.toFile())).execute(source);
+            RuntimeException failure = assertThrows(RuntimeException.class,
+                    () -> new ResourceDatabasePopulator(new FileSystemResource(
+                            migration.resolveSibling("migration_20261026_official_broadcast_delivery.sql").toFile())).execute(source));
+            boolean duplicateColumn = false;
+            for (Throwable cause = failure; cause != null; cause = cause.getCause()) {
+                if (cause instanceof java.sql.SQLException sql && sql.getErrorCode() == 1060) duplicateColumn = true;
+            }
+            assertTrue(duplicateColumn, "the retained original pair really conflicts; do not ignore SQL 1060");
+            // The first master ALTER already committed: this is a partial prefix, never an automatic resume.
+            assertEquals(1, legacy.queryForObject("select count(*) from information_schema.columns where table_schema=database() and table_name='official_broadcast' and column_name='audience_frozen'", Integer.class));
+            RuntimeException rejected = assertThrows(RuntimeException.class,
+                    () -> new ResourceDatabasePopulator(new FileSystemResource(
+                            migration.resolveSibling("migration_20261028_official_broadcast_protocol_union.sql").toFile())).execute(source));
+            assertTrue(rejected.getMessage().contains("tmp_broadcast_union_guard"));
+            assertEquals(0, legacy.queryForObject("select count(*) from information_schema.columns where table_schema=database() and table_name='official_broadcast_log' and column_name='frozen_title'", Integer.class));
+        });
+    }
+
+    @Test
+    void composedPrefixRetainsEveryLegacyFactAndBothRealMapperProtocols() {
+        withLegacySchema((legacy, source) -> {
+            legacy.update("insert into official_broadcast(id,title,audience,channels,status,reached_count) values(900,'legacy','player','inapp,subscribe',2,99)");
+            legacy.update("insert into official_broadcast_log(broadcast_id,member_id,channel,reached,clicked,create_time) values(900,10,'inapp',1,1,'2026-01-01 01:02:03'),(900,10,'subscribe',1,0,'2026-01-01 01:02:03')");
+            new ResourceDatabasePopulator(new FileSystemResource(migration.toFile())).execute(source);
+            java.util.List<java.util.Map<String, Object>> before = legacy.queryForList("select * from official_broadcast_log order by id");
+            String originalColumns = "id,broadcast_id,member_id,role,channel,reached,clicked,create_time,delivery_state,delivery_title,delivery_sub,failure_code,message_id,reached_time";
+            new ResourceDatabasePopulator(new FileSystemResource(
+                    migration.resolveSibling("migration_20261028_official_broadcast_protocol_union.sql").toFile())).execute(source);
+            assertEquals(before, legacy.queryForList("select " + originalColumns + " from official_broadcast_log order by id"));
+            assertEquals(0, legacy.queryForObject("select count(*) from official_broadcast_log where reached_time is not null or message_id is not null or intent_id is not null or update_time is not null or frozen_title is not null", Integer.class));
+            assertEquals("UNKNOWN", legacy.queryForObject("select delivery_state from official_broadcast_log where channel='subscribe'", String.class));
+            assertEquals("LEGACY_UNVERIFIED", legacy.queryForObject("select failure_code from official_broadcast_log where channel='subscribe'", String.class));
+            assertEquals(0, legacy.queryForObject("select audience_frozen from official_broadcast where id=900", Integer.class));
+            assertEquals(32, legacy.queryForObject("select character_maximum_length from information_schema.columns where table_schema=database() and table_name='official_broadcast_log' and column_name='delivery_state'", Integer.class));
+            try {
+                SqlSessionFactoryBean factory = new SqlSessionFactoryBean();
+                factory.setDataSource(source);
+                factory.setTypeAliasesPackage("com.chengyinhub.business.domain");
+                factory.setMapperLocations(new ClassPathResource("mapper/business/OfficialBroadcastMapper.xml"),
+                        new ClassPathResource("mapper/business/OfficialBroadcastLogMapper.xml"));
+                SqlSessionTemplate sessions = new SqlSessionTemplate(factory.getObject());
+                OfficialBroadcastLogMapper combined = sessions.getMapper(OfficialBroadcastLogMapper.class);
+                OfficialBroadcastLog pending = new OfficialBroadcastLog();
+                pending.setBroadcastId(900L); pending.setMemberId(20L); pending.setRole("player");
+                pending.setChannel("inapp"); pending.setDeliveryTitle("D frozen"); pending.setDeliverySub("D body");
+                assertEquals(1, combined.insertPending(pending));
+                assertEquals("D frozen", combined.lockDeliveryIntent(pending.getId()).getDeliveryTitle());
+                assertEquals(1, combined.transition(pending.getId(), "PENDING", "SUCCESS", null, 321L));
+                assertEquals(1, combined.snapshot(900L, 21L, "player", "subscribe", "M frozen", "M body", "READY"));
+                Long master = legacy.queryForObject("select id from official_broadcast_log where member_id=21", Long.class);
+                assertEquals("M frozen", combined.lockDelivery(master).get("frozen_title"));
+                assertEquals(1, combined.deliveryState(master, "REJECTED_2147483647", null, null, 1));
+                assertEquals("REJECTED_2147483647", combined.lockDelivery(master).get("delivery_state"));
+                assertEquals(1, combined.snapshot(900L, 22L, "player", "inapp", "stored", "body", "READY"));
+                Long stored = legacy.queryForObject("select id from official_broadcast_log where member_id=22", Long.class);
+                assertEquals(1, combined.deliveryState(stored, "INAPP_STORED", 444L, 322L, 1));
+                assertEquals(3, combined.countInappReached(900L));
+                assertEquals(3, combined.countReached(900L), "legacy subscribe reached bit is still not channel acceptance");
+                assertEquals(0, combined.snapshot(900L, 21L, "player", "subscribe", "changed", "changed", "READY"));
+                assertEquals("REJECTED_2147483647", combined.lockDelivery(master).get("delivery_state"));
+                OfficialBroadcastMapper owners = sessions.getMapper(OfficialBroadcastMapper.class);
+                String request = "abcdefabcdefabcdefabcdefabcdefab";
+                owners.reserveCreation("ADMIN:17", request);
+                assertEquals("PENDING", owners.readCreation("ADMIN:17", request).get("state"));
+                owners.finishCreation("ADMIN:17", request, "APPLIED", 900L);
+                assertEquals("APPLIED", owners.readCreation("ADMIN:17", request).get("state"));
+            } catch (Exception failure) {
+                throw new AssertionError("real composed mapper setup failed", failure);
+            }
+        });
+    }
+
 }

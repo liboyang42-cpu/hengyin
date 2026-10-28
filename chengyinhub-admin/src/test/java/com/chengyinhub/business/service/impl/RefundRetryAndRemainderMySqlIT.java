@@ -278,6 +278,9 @@ class RefundRetryAndRemainderMySqlIT {
 
     @Test
     void forgedRefundIdentityIsPersistedAsOriginalBuyerAndScopeThroughPayoutReadback() {
+        // Keep the real activity/order scope, but explicitly exercise an absent server merchant fact.
+        assertEquals(1, db.update("update cms_activity set member_id=NULL where id=20"));
+        assertNull(db.queryForObject("select member_id from cms_activity where id=20", Long.class));
         paid(99L, null, "68.00");
         RefundApplication request = request("20.00");
         request.setMemberId(72L);

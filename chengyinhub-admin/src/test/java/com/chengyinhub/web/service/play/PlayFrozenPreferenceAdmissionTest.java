@@ -75,7 +75,41 @@ class PlayFrozenPreferenceAdmissionTest {
     @Test void originalCurrentDelistingStillPreventsANewPreferenceMutation() {
         when(access.isDelistedNode(any())).thenReturn(true);
         PreferenceSubmitRequest request = new PreferenceSubmitRequest(); request.setTopicId("21");
+        request.setRouteActionId("preference-original"); request.setExpectedRouteVersion(2); request.setRouteSessionId(91L);
+        PlayBasicIntentApplication intents = new PlayBasicIntentApplication();
+        var receipts = mock(com.chengyinhub.business.mapper.GameSessionRuntimeMapper.class);
+        var sessions = mock(com.chengyinhub.business.mapper.TopicRouteSessionMapper.class);
+        var registrations = mock(com.chengyinhub.business.service.ICmsRegistrationService.class);
+        var registration = new com.chengyinhub.business.domain.CmsRegistration();
+        registration.setMemberId(7L); registration.setOwnerType(1L); registration.setOwnerId(21L);
+        registration.setRegistrationStatus(2);
+        when(registrations.selectCmsRegistrationList(any())).thenReturn(java.util.List.of(registration));
+        var original = new com.chengyinhub.business.domain.TopicRouteSession();
+        original.setId(91L); original.setMemberId(7L); original.setActivityId(0L); original.setTopicId(21L);
+        original.setVersion(2); original.setStatus(com.chengyinhub.business.domain.TopicRouteSession.STATUS_RUNNING);
+        original.setPlayInstanceId("original-preference-run");
+        ObjectNode snapshot = new ObjectMapper().createObjectNode();
+        snapshot.putObject("nodeAnswers").set("11", routes.nodeAnswers(7L, 21L, 0L, 11L));
+        original.setConfigSnapshotJson(snapshot.toString());
+        when(sessions.selectAccessibleByIdForUpdate(91L, 7L)).thenReturn(original);
+        when(sessions.selectCurrentByOwner(0L, 21L, 7L)).thenReturn(original);
+        when(receipts.insertReceiptClaim(any())).thenReturn(1);
+        when(receipts.completeReceipt(any())).thenReturn(1);
+        ReflectionTestUtils.setField(intents, "cmsTopicNodeService", nodes);
+        ReflectionTestUtils.setField(intents, "cmsRegistrationService", registrations);
+        ReflectionTestUtils.setField(intents, "playCommandReceiptMapper", receipts);
+        ReflectionTestUtils.setField(intents, "playCommandRouteMapper", sessions);
+        ReflectionTestUtils.setField(application, "playBasicIntentApplication", intents);
         assertEquals(500, application.submitPreference(7L, 11L, request).get("code"));
-        verifyNoInteractions(preference);
+        verifyNoInteractions(preference, templates);
+        verify(access).isDelistedNode(any());
+        verify(sessions).selectAccessibleByIdForUpdate(91L, 7L);
+        ArgumentCaptor<com.chengyinhub.business.domain.GameCommandReceipt> terminal =
+                ArgumentCaptor.forClass(com.chengyinhub.business.domain.GameCommandReceipt.class);
+        verify(receipts).completeReceipt(terminal.capture());
+        assertEquals("FAILED", terminal.getValue().getOutcome());
+        assertTrue(terminal.getValue().getResultJson().contains("该站已下架"));
+        assertEquals("PLAYER", terminal.getValue().getActorPerspective());
+        assertEquals(intents.basicRequestId("preference-original"), terminal.getValue().getRequestId());
     }
 }

@@ -169,6 +169,9 @@ public class ThemeCharacterService {
     public void seedRun(Long memberId, Long topicId, JourneyRules rules, TopicRouteEngine.State state,
                         String newSnapshotJson) {
         if (memberId == null || memberId <= 0L || topicId == null || topicId <= 0L || state == null) return;
+        // A marked author-declaration snapshot must pass the same reader used by cards.
+        // Validate before the DEC02 partial/legacy no-carry return; never repair it from live rows.
+        JourneyInitialState.frozenDefinitions(newSnapshotJson);
         ThemeAttributeDefinition.Snapshot next = ThemeAttributeDefinition.read(newSnapshotJson);
         if (next == null || !next.complete) return;
         // 只重置已经由当前运行规则初始化的变量，不自动启用注册表里的其他键。

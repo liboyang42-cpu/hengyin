@@ -371,16 +371,19 @@ class RestoreDispatchConsumersTest {
         PlayerWxacodeServiceImpl service = new PlayerWxacodeServiceImpl(gateway, storage);
         ReflectionTestUtils.setField(service, "redisCache", redis);
         ReflectionTestUtils.setField(service, "signingSecret", "synthetic-source-test-secret");
-        when(redis.getCacheObject("wx:player-code:v1:7")).thenReturn("original-url");
+        when(redis.getCacheObject("wx:player-code:v2:7")).thenReturn("original-object-key");
+        when(storage.url("original-object-key")).thenReturn("original-url");
         try (var flag = restored()) {
             assertEquals("original-url", service.getOrCreate(7L));
             blocked(() -> service.getOrCreate(8L));
             blocked(() -> service.getOrCreateScene("original-scene"));
         }
-        verifyNoInteractions(gateway, storage);
-        verify(redis).getCacheObject("wx:player-code:v1:7");
-        verify(redis).getCacheObject("wx:player-code:v1:8");
-        verify(redis).getCacheObject("wx:door-code:v1:original-scene");
+        verifyNoInteractions(gateway);
+        verify(storage).url("original-object-key");
+        verifyNoMoreInteractions(storage);
+        verify(redis).getCacheObject("wx:player-code:v2:7");
+        verify(redis).getCacheObject("wx:player-code:v2:8");
+        verify(redis).getCacheObject("wx:door-code:v2:original-scene");
         verifyNoMoreInteractions(redis);
     }
 

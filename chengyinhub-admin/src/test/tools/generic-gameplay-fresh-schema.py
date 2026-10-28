@@ -22,7 +22,8 @@ from ci.sql_splitter import split_statements, executable_statement, unterminated
 from ci.run_migration import statement_assertion
 from ci.migration_ledger import build_manifest
 from scripts.e2e.build_schema import (scratch_schema_sql, migrations_after_baseline, notice_forward_plan,
-                                      NOTICE_OLD, NOTICE_V2, NOTICE_FORWARD_FILES)
+                                      NOTICE_OLD, NOTICE_V2, NOTICE_FORWARD_FILES,
+                                      broadcast_forward_plan, BROADCAST_OLD, BROADCAST_UNION, BROADCAST_FORWARD_FILES)
 
 
 def plan_file(path, migration=False, data_only=False):
@@ -85,6 +86,8 @@ def build_plan():
     pending = [m for m in ordered if m['path'] not in included]
     notice_forward = notice_forward_plan(ordered, pending)
     selected = notice_forward['selected'] if notice_forward else pending
+    broadcast_forward = broadcast_forward_plan(ordered, selected)
+    selected = broadcast_forward['selected'] if broadcast_forward else selected
     files = [plan_file(ROOT / record['path']) for record in [baseline['baseSchema'], policy['baselineSeed']]]
     # The frozen baseline already contains all 11 Quartz tables and their foreign keys.
     for m in selected:
@@ -98,6 +101,10 @@ def build_plan():
         result['noticeForward'] = {'state': 'PLANNED_UNAPPLIED',
                                   'oldMigrationId': NOTICE_OLD, 'replacementMigrationId': NOTICE_V2,
                                   'fingerprints': notice_forward['fingerprints']}
+    if broadcast_forward:
+        result['broadcastForward'] = {'state': 'PLANNED_UNAPPLIED',
+                                     'oldMigrationId': BROADCAST_OLD, 'replacementMigrationId': BROADCAST_UNION,
+                                     'fingerprints': broadcast_forward['fingerprints']}
     return result
 
 
@@ -142,15 +149,20 @@ def safe_failure_diagnostic(error, plan):
 
 def execute(args, plan):
     notice_forward = plan.get('noticeForward')
+    broadcast_forward = plan.get('broadcastForward')
     notice_paths = {NOTICE_FORWARD_FILES[key][0] for key in (NOTICE_OLD, NOTICE_V2)}
-    if notice_forward is not None or any(file.get('path') in notice_paths for file in plan['files']):
+    broadcast_paths = {value[0] for value in BROADCAST_FORWARD_FILES.values()}
+    if (notice_forward is not None or broadcast_forward is not None
+            or any(file.get('path') in notice_paths | broadcast_paths for file in plan['files'])):
         # Rebuild through the same canonical contract before any MySQL call. A stale
         # hash, injected old file, edited skip/apply payload or partial pair is not executable.
         expected = build_plan()
         if plan.get('mode') != 'DRY_RUN' or 'completed' in plan:
             raise ValueError('Notice forward execution plan drift: state')
-        for key in ('noticeForward', 'manifest', 'baselineIncluded', 'ordering',
+        for key in ('noticeForward', 'broadcastForward', 'manifest', 'baselineIncluded', 'ordering',
                     'files', 'appliedStatements', 'skippedStatements'):
+            if key == 'broadcastForward' and key not in expected and key not in plan:
+                continue
             if key not in plan or plan[key] != expected.get(key):
                 raise ValueError('Notice forward execution plan drift: ' + key)
     command = mysql_command(args)
@@ -175,6 +187,10 @@ def execute(args, plan):
         notice_forward['state'] = 'REPLACED_UNAPPLIED'
         print('REPLACED_UNAPPLIED %s -> %s fingerprints=%s' %
               (NOTICE_OLD, NOTICE_V2, json.dumps(notice_forward['fingerprints'], sort_keys=True)))
+    if broadcast_forward is not None:
+        broadcast_forward['state'] = 'REPLACED_UNAPPLIED'
+        print('REPLACED_UNAPPLIED %s -> %s fingerprints=%s' %
+              (BROADCAST_OLD, BROADCAST_UNION, json.dumps(broadcast_forward['fingerprints'], sort_keys=True)))
     for file in plan['files']:
         plan['currentPhase'] = 'schema-apply'
         plan['currentFile'] = file['path']

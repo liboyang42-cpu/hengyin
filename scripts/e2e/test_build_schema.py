@@ -932,14 +932,19 @@ class NoticeFreshForwardSelectionTest(unittest.TestCase):
                 mock.patch("builtins.print") as emitted:
             self.assertEqual(1, build_schema.main())
         ordered = [row for row in self.selected if row.get("executionPhase") != "POST_DEPLOY"
-                   and row["migrationId"] != build_schema.NOTICE_OLD]
+                   and row["migrationId"] not in (build_schema.NOTICE_OLD, build_schema.BROADCAST_OLD)]
         ids = [row["migrationId"] for row in ordered]
         self.assertEqual(["baseline", "baseline-seed"] + ids[:ids.index(build_schema.NOTICE_V2) + 1],
                          [call.args[2] for call in run.call_args_list])
         self.assertFalse(run.call_args_list[-1].kwargs["keep_going"])
         self.assertFalse(any("ALTER TABLE" in call.args[0] for call in cursor.execute.call_args_list))
         self.assertFalse(any(call.args[0].startswith("DROP") for call in admin.cursor.return_value.execute.call_args_list))
-        records = [str(call) for call in emitted.call_args_list if "REPLACED_UNAPPLIED" in str(call)]
+        records = [str(call) for call in emitted.call_args_list
+                   if "REPLACED_UNAPPLIED" in str(call) and build_schema.NOTICE_OLD in str(call)]
+        broadcast_records = [str(call) for call in emitted.call_args_list
+                             if "REPLACED_UNAPPLIED" in str(call) and build_schema.BROADCAST_OLD in str(call)]
+        self.assertEqual(1, len(broadcast_records))
+        self.assertIn(build_schema.BROADCAST_UNION, broadcast_records[0])
         self.assertEqual(1, len(records))
         for _, digest in build_schema.NOTICE_FORWARD_FILES.values():
             self.assertIn(digest, records[0])

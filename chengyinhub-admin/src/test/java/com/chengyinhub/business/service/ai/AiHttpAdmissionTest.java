@@ -1,5 +1,6 @@
 package com.chengyinhub.business.service.ai;
 
+import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.chengyinhub.common.config.AiModelConfig;
 import com.chengyinhub.common.config.AiVoiceConfig;
@@ -128,16 +129,46 @@ class AiHttpAdmissionTest
             verifyNoInteractions(notToSerialize);
         }
         JSONObject poison = mock(JSONObject.class);
-        when(poison.toJSONString()).thenThrow(new IllegalStateException("synthetic-poison-never-export"));
-        AiProviderNotSentException failure = assertThrows(AiProviderNotSentException.class,
-                () -> ReflectionTestUtils.invokeMethod(client, "post", poison));
-        assertFalse(failure.getMessage().contains("poison"));
-        assertNull(failure.getCause());
-        assertEquals(0, calls.get());
-        verify(poison).toJSONString();
+        // The legacy body fallback now calls the byte codec, not JSONObject.toJSONString().
+        try (var codec = mockStatic(JSON.class, CALLS_REAL_METHODS))
+        {
+            codec.when(() -> JSON.toJSONBytes(poison))
+                    .thenThrow(new IllegalStateException("synthetic-poison-never-export"));
+            AiProviderNotSentException failure = assertThrows(AiProviderNotSentException.class,
+                    () -> ReflectionTestUtils.invokeMethod(client, "post", poison));
+            assertFalse(failure.getMessage().contains("poison"));
+            assertNull(failure.getCause());
+            assertEquals(0, calls.get());
+            codec.verify(() -> JSON.toJSONBytes(poison));
+        }
         try (HttpUtils.AttemptLease one = gate.acquire(base); HttpUtils.AttemptLease two = gate.acquire(base))
         {
             assertNotNull(two, "serialization failure must release the unsent lease");
+        }
+
+        String image = "data:image/jpeg;base64," + "A".repeat(8193);
+        JSONObject vision = JSON.parseObject("{\"model\":\"model\",\"messages\":[{\"role\":\"user\",\"content\":[{\"type\":\"image_url\",\"image_url\":{\"url\":\"\"}},{\"type\":\"text\",\"text\":\"u\"}]}]}");
+        JSONObject imageField = vision.getJSONArray("messages").getJSONObject(0)
+                .getJSONArray("content").getJSONObject(0).getJSONObject("image_url");
+        imageField.put("url", image);
+        try (var codec = mockStatic(JSON.class, CALLS_REAL_METHODS))
+        {
+            // Default codec: segmented metadata; non-default features/writer: original byte fallback.
+            // Both fail locally before any HttpUtils handoff; the original image must survive finally.
+            codec.when(() -> JSON.toJSONBytes(vision))
+                    .thenThrow(new IllegalStateException("synthetic-vision-poison-never-export"));
+            AiProviderNotSentException failure = assertThrows(AiProviderNotSentException.class,
+                    () -> ReflectionTestUtils.invokeMethod(client, "post", vision, image, null, "u"));
+            assertFalse(failure.getMessage().contains("poison"));
+            assertNull(failure.getCause());
+            assertEquals(0, failure.getSuppressed().length);
+            assertEquals(0, calls.get());
+            assertSame(image, imageField.get("url"), "segmented failure must restore the original image");
+            codec.verify(() -> JSON.toJSONBytes(vision));
+        }
+        try (HttpUtils.AttemptLease one = gate.acquire(base); HttpUtils.AttemptLease two = gate.acquire(base))
+        {
+            assertNotNull(two, "vision serialization failure must release the original unsent admission");
         }
     }
 

@@ -500,9 +500,9 @@ class RegistryContractTest(unittest.TestCase):
                     "port-core-funds": 27, "port-ai-quota": 24,
                     "port-f3-growth": 12, "port-f3-evidence": 4,
                     "funnel-max-date": 4, "port-prelaunch-69": 36,
-                    "p0-acceptance-ac1": 13, "architecture-day-batch1": 77,
-                    "architecture-day-wave2": 85, "architecture-day-photo": 15,
-                    "architecture-day-broadcast-migration": 10, "architecture-day-settlement": 7,
+                    "p0-acceptance-ac1": 13, "architecture-day-batch1": 79,
+                    "architecture-day-wave2": 87, "architecture-day-photo": 15,
+                    "architecture-day-broadcast-migration": 12, "architecture-day-settlement": 7,
                     "architecture-day-state-recovery": 51,
                     "architecture-day-runtime-governance": 37,
                     "architecture-day-registration-write": 120,
@@ -538,7 +538,7 @@ class RegistryContractTest(unittest.TestCase):
                     "architecture-day-before-start-notice": 12,
                     "architecture-day-commerce-generic-guard": 6,
                     "architecture-day-refund-lifecycle": 72,
-                    "architecture-day-integrated-changes": 922, "payment-intent-correctness": 30}
+                    "architecture-day-integrated-changes": 924, "payment-intent-correctness": 30}
         reg = registry()
         totals = {name: sum(reg["classes"][fqcn]["tests"] for fqcn in batch["classes"])
                   for name, batch in reg["batches"].items()}
