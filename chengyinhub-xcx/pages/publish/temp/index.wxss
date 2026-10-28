@@ -1709,7 +1709,7 @@ page {
 .cg-ios-stp { margin-left: auto; display: flex; align-items: center; gap: var(--cy-space-2); font-size: var(--cy-font-body); color: var(--cy-color-text-primary); }
 .cg-ios-stp > view { min-width: 88rpx; min-height: 64rpx; padding: 0 var(--cy-space-2); box-sizing: border-box; display: flex; align-items: center; justify-content: center; border-radius: var(--cy-radius-sm); background: var(--cy-color-bg-surface-subtle); font-size: var(--cy-font-body); }
 .cg-ios-stp > view.is-dis { pointer-events: none; color: var(--cy-color-text-disabled); }
-.cg-ios-minus { width: 24rpx; height: 4rpx; border-radius: 2rpx; background: currentColor; }
+.cg-ios-minus { width: 24rpx; height: 4rpx; border-radius: var(--cy-radius-pill); background: currentColor; }
 .cg-ios-pills { display: flex; flex-wrap: wrap; gap: var(--cy-space-2); padding: var(--cy-space-2) var(--cy-space-4) var(--cy-space-3); background: var(--cy-color-bg-surface); }
 .cg-ios-pill { min-height: 64rpx; padding: 0 var(--cy-space-3); display: flex; align-items: center; border-radius: var(--cy-radius-pill); background: var(--cy-color-bg-surface-subtle); font-size: var(--cy-font-label); color: var(--cy-color-text-primary); }
 .cg-ios-pill-in { flex: 1 1 240rpx; min-height: 64rpx; padding: 0 var(--cy-space-3); border-radius: var(--cy-radius-pill); background: var(--cy-color-bg-surface-subtle); font-size: var(--cy-font-label); }

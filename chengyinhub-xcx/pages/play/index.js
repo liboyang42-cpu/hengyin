@@ -604,7 +604,7 @@ Page({
     });
     this.rpx = 750 / sys.windowWidth;                 // px → rpx 系数
     this.screenW = sys.windowWidth * this.rpx;        // = 750
-    this.screenH = sys.windowHeight * this.rpx;
+    this.screenH = sys.windowHeight * this.rpx; this._entryLayer = options.layer === 'scoring' ? String(options.sessionId || '*') : ''; // 我的申诉点一行:落到本局成绩全屏层
     // M2 自玩:onLoad 收 topicId||activityId(自玩会话走 topicId,场次会话走 activityId)
     this.setData({
       activityId: options.activityId || '',
@@ -4152,7 +4152,7 @@ Page({
         that._restoreRunSession(d, routeState, nodes);
         that.loadTeamProgress();   // P1 带领场探测(club 场次才 exists,内部自管轮询)
         that._loadPlayerGameModule();
-        that.loadHudCharacter(); that.loadSessionStats();   // 文档二 L5:状态栏第二行 / 「…」用时与得分
+        that.loadHudCharacter(); that.loadSessionStats();   // 文档二 L5:状态栏第二行 / 「…」用时与得分 if (that._entryLayer && ['*', String(that._orientSessionId())].includes(that._entryLayer)) that.openScoreOverlay(); that._entryLayer = '';
       });
     }).catch(() => {
       if (!isCurrent()) return;
@@ -6537,7 +6537,7 @@ Page({
   onScanArriveFromTools() { this.setData({ sessionToolsOpen: false }, () => this.onScanArrive()); },
   onRunToggleFromTools() { this.setData({ sessionToolsOpen: false }, () => this.onRunToggle()); },
   openStackOrChaptersFromTools() { this.setData({ sessionToolsOpen: false }, () => this.openStackOrChapters()); },
-  toggleSessionTools() { if (this.data.sessionToolsOpen) this._toolsClose(); else { this.setData({ sessionToolsOpen: true, toolsOut: false }); this.loadSessionStats(); } },
+  toggleSessionTools() { if (this.data.sessionToolsOpen) this._toolsClose(); else { this.setData({ sessionToolsOpen: true, toolsOut: false }); this.loadSessionStats(); this.loadPlayContact(); } },
   closeSessionTools() { this._toolsClose(); },
   /* 定位驱动的两行(自动记录足迹 / 到点提醒)在这一页翻不动:它们跟着系统定位权限走。
    * 没开就去要权限,已经开着就说清楚它由谁决定 —— 不留一枚按下去毫无反应的开关。 */

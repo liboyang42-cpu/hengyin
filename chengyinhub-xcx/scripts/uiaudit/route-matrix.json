@@ -3,7 +3,7 @@
   "generatedFrom": "app.json + scene-* 组件扫描",
   "previousBatch": null,
   "counts": {
-    "routes": 149,
+    "routes": 154,
     "scenes": 27,
     "added": 0,
     "removed": 0
@@ -142,6 +142,7 @@
       "needsLogin": true,
       "needsData": true,
       "dataKeys": [
+        "sessionId",
         "activityId",
         "topicId",
         "registrationId",
@@ -1485,7 +1486,55 @@
       "pkg": "subpackageMember",
       "tabBar": false,
       "role": "player",
-      "needsLogin": true,
+      "needsLogin": false,
+      "needsData": true,
+      "dataKeys": [
+        "id"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageMember/invoice-detail/index",
+      "pkg": "subpackageMember",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": false,
+      "needsData": true,
+      "dataKeys": [
+        "id"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageMember/invoice-apply/index",
+      "pkg": "subpackageMember",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": false,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageMember/invoice-titles/index",
+      "pkg": "subpackageMember",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": false,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageMember/invoice-title-edit/index",
+      "pkg": "subpackageMember",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": false,
       "needsData": true,
       "dataKeys": [
         "id"
@@ -1652,6 +1701,17 @@
       "dataKeys": [
         "reportId"
       ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageMember/appeal-mine/index",
+      "pkg": "subpackageMember",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
       "hasJs": true,
       "hasWxml": true
     },
@@ -1908,7 +1968,7 @@
       "component": "scene-member-order-detail",
       "dir": "subpackageMember/components/cy/scene-member-order-detail",
       "twin": {
-        "route": "subpackageMember/report-detail/index",
+        "route": "subpackageMember/invoice-detail/index",
         "score": 12
       }
     },
@@ -1924,7 +1984,7 @@
       "component": "scene-member-participation-detail",
       "dir": "subpackageMember/components/scene-member-participation-detail",
       "twin": {
-        "route": "subpackageMember/report-detail/index",
+        "route": "subpackageMember/invoice-detail/index",
         "score": 12
       }
     },

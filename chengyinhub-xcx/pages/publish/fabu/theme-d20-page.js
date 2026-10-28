@@ -6,6 +6,7 @@
 const themeD20 = require('./theme-d20.js');
 const storyInitialState = require('../utils/publish/story-initial-state.js');
 const cyToast = require('../../../utils/toast.js');
+const { isBizOk } = require('../../../utils/response-shape.js');
 
 const SAVE_FAILED = '没有保存成功，请再试一次。';
 
@@ -24,6 +25,19 @@ const data = {
   playWindowStartIndex: 4,
   playWindowEndIndex: 2,
 };
+
+// 可玩时段 / 开局前准备的真源是 L8 的 cms_topic_play_setup(契约 §1.1 / §1.2),journeyRules 根上那两项只当本页草稿。
+// 结束时间下拉里的「次日 02:00」与服务端 HH:mm 互转。
+function toServerWindow(w) {
+  if (!w || w.mode !== 'custom') return { mode: (w && w.mode) || 'any' };
+  return { mode: 'custom', start: w.start, end: String(w.end || '').replace(/^次日\s*/, '') };
+}
+
+function fromServerWindow(w) {
+  if (!w || w.mode !== 'custom') return { mode: (w && w.mode) || 'any' };
+  const end = themeD20.WINDOW_ENDS.find(x => x.replace(/^次日\s*/, '') === w.end) || w.end;
+  return { mode: 'custom', start: w.start, end };
+}
 
 function failure(error) {
   return (error && error.message) || SAVE_FAILED;
@@ -59,6 +73,35 @@ const methods = {
       cyToast(failure(error));
     }
   },
+  _loadPlaySetup() {
+    const topicId = this.data.editingTopicId;
+    if (!topicId) return;
+    const seq = this._playSetupSeq = (this._playSetupSeq || 0) + 1;
+    getApp().sendRequest({
+      url: '/api/topic/play-setup', method: 'GET', hideLoading: true, autoErrorToast: false,
+      data: { topicId, scope: this.data.operationScope },
+      success: res => {
+        if (seq !== this._playSetupSeq || !isBizOk(res) || !res.data) return;
+        try {
+          const rules = themeD20.setPlayWindow(this.data.formData.journeyRules, fromServerWindow(res.data.playWindow));
+          this._writeD20Rules(themeD20.setPrep(JSON.stringify(rules), res.data.prepItems || []));
+        } catch (_) { /* 服务端已规范化;本地草稿写不进去时保持原样,行上照旧显示草稿值 */ }
+      },
+    });
+  },
+  // 整体覆盖(契约 §1.2);新主题还没保存草稿时没有 topicId,只留在本页草稿里。
+  _savePlaySetup(onFail) {
+    const topicId = this.data.editingTopicId;
+    if (!topicId) return;
+    getApp().sendRequest({
+      url: '/api/topic/play-setup', method: 'PUT', hideLoading: true, autoErrorToast: false,
+      data: JSON.stringify({ topicId: Number(topicId), scope: this.data.operationScope || null,
+        playWindow: toServerWindow(this.data.playWindow), prepItems: this.data.prepItems }),
+      header: { 'Content-Type': 'application/json' },
+      success: res => { if (!isBizOk(res)) onFail(res && Number(res.code) === 400 && res.msg ? res.msg : SAVE_FAILED); },
+      fail: () => onFail(SAVE_FAILED),
+    });
+  },
   openD20Sheet() { this.setData({ 'd20Sheet.show': true }); },
   closeD20Sheet() { this.setData({ 'd20Sheet.show': false }); },
   onD20Save(e) {
@@ -72,6 +115,7 @@ const methods = {
   onPrepChange(e) {
     try {
       this._writeD20Rules(themeD20.setPrep(this.data.formData.journeyRules, e.detail.items));
+      this._savePlaySetup(msg => cyToast(msg));
     } catch (error) { cyToast(failure(error)); }
   },
   openPlayWindow() { this.setData({ 'playWindowSheet.show': true, 'playWindowSheet.error': '' }); },
@@ -80,6 +124,7 @@ const methods = {
     try {
       this._writeD20Rules(themeD20.setPlayWindow(this.data.formData.journeyRules, w));
       this.setData({ 'playWindowSheet.error': '' });
+      this._savePlaySetup(msg => this.setData({ 'playWindowSheet.error': msg }));
     } catch (_) { this.setData({ 'playWindowSheet.error': SAVE_FAILED }); }
   },
   onPlayWindowPick(e) {

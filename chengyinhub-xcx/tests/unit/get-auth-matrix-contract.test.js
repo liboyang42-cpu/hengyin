@@ -162,6 +162,7 @@ const MATRIX = [
   ['pages/publish/components/topic-state-keys/index.js', "url: '/api/topic/state-keys', method: 'GET'", 'required', 'publisher', 'self-publisher'],
   // 文档二 L3：下一站条件与效果读同一个注册表补名字（主题本人或商家代管 scope）。
   ['pages/publish/fabu/theme-route-names.js', "url: '/api/topic/state-keys', method: 'GET'", 'required', 'publisher', 'self-publisher'],
+  ['pages/publish/fabu/theme-d20-page.js', "url: '/api/topic/play-setup', method: 'GET'", 'required', 'publisher', 'self-publisher'],
   ['subpackageRoam/official-routes/index.js', "url: '/api/preset/route/list'", 'required', 'member', 'global-authenticated-read'],
   ['subpackageRoam/official-route/index.js', "url: '/api/preset/route/info'", 'required', 'member', 'global-authenticated-read'],
   ['pages/roam/index.js', "req('/api/ai/npc/profile'", 'required', 'member', 'global-authenticated-read'],
@@ -206,7 +207,7 @@ const MATRIX = [
   ['subpackageMember/report-mine/index.js', "url: '/api/community-trust/reports/mine'", 'required', 'member', 'self-account'],
   ['subpackageMember/report-mine/index.js', "url: '/api/community-trust/reports/taxonomy'", 'required', 'member', 'global-authenticated-read'],
   // 2026-10-28 原型 C 我的申诉：本人跨局申诉列表 + 本人账号信誉（两条均为「需后端」新接口，按本人过滤）。
-  ['subpackageMember/appeal-mine/index.js', "url: '/api/orient/scoring/appeals/mine'", 'required', 'member', 'self-account'],
+  ['subpackageMember/appeal-mine/index.js', "url: '/api/orient/scoring/mine'", 'required', 'member', 'self-account'],
   ['subpackageMember/appeal-mine/index.js', "url: '/api/member/reputation'", 'required', 'member', 'self-account'],
 
   // 2026-10-22 W10b #27:NPC 对话原请求只读回读,ApiAiNpcController.chatRequest 只按登录态 + 原会话 + requestId 读本人记录。
@@ -254,6 +255,7 @@ const MATRIX = [
   ['pages/play/utils/play-hud-overlays.js', "req('/api/play/character'", 'required', 'member', 'self-account'],
   ['pages/play/utils/play-hud-overlays.js', "req(base, 'GET'", 'required', 'member', 'self-account'],
   ['pages/play/utils/play-hud-overlays.js', "req(base + '/leaderboard'", 'required', 'member', 'self-account'],
+  ['pages/play/utils/play-hud-overlays.js', "req('/api/play/contact'", 'required', 'member', 'self-account'],
 ];
 
 const VALID_SCOPES = new Set([
@@ -400,13 +402,15 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-10-28 L6:我的队伍「本场招募」GET /api/orient/team/lobby 一处(已入 MATRIX),102 → 103。
   // 2026-10-28 L6:主题详情 /api/play/setup、签到组件 /api/play/contact 各一处(已入 MATRIX),103 → 105。
   // 2026-10-28 原型 C 我的申诉：本人申诉列表、本人账号信誉两处认证 GET(已入 MATRIX)，105 → 107。
-  assert.equal(directCount, 107, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // 2026-10-28 L9 集成:主题详情可玩时段 / 开局前准备读 L8 GET /api/topic/play-setup(创作者,同 state-keys 档),107 → 108。
+  assert.equal(directCount, 108, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
   // 2026-10-09 U04 只读主题请求增加6处，22 → 28。
   // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):漫游 BL-41 可参与官方活动 req 包装 GET +1(已入 MATRIX),28 → 29。
   // 2026-10-22 L21 BL-186:pages/play 本章结算 GET /api/play/journey/stage-end(与 /ending 同档),29 → 30。
   // 2026-10-27 W8 收口:pages/play 基础动作原结果两处、动作上下文一处、定向计分排名一处、其回退排行榜一处，30 → 35。
   // 2026-10-28 文档二 L5:pages/play 角色卡一处、本局计分与本场排名两处(权限档见 MATRIX 同日注释)，35 → 38。
-  assert.equal(wrapperCount, 38, 'req 包装 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // 2026-10-28 L9 集成:游玩菜单联系主办 / 商家改读 L8 GET /api/play/contact(已入 MATRIX),38 → 39。
+  assert.equal(wrapperCount, 39, 'req 包装 GET 数量变化时必须逐条复核权限并更新矩阵');
   assert.equal(ownMediaWrapperCount, 5, '作者媒体实际GET调用点变化需显式复核');
   assert.equal(MATRIX.length, directCount + wrapperCount + ownMediaWrapperCount);
 

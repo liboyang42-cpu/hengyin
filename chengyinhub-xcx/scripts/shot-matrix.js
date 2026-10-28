@@ -429,6 +429,11 @@ const RAW = [
   ['D12', 'D12-mycanyuinfo-missing.png', '/subpackageMember/mycanyuinfo/mycanyuinfo', 'player', 'missing-param', null, undefined, EMPTY, 'real-data', 'P1', '', '参与详情缺参态由深链壳内正文组件负责', '#participationDetail'],
   ['D12a', 'D12a-character-missing.png', '/subpackageMember/character/index', 'player', 'missing-param', null, undefined, EMPTY, 'real-data', 'P0', '', '角色卡缺主题参数态；仅登记待截图场景，不代表已拍摄'],
   ['D12b', 'D12b-invoice-login.png', '/subpackageMember/invoice/index', 'player', 'login', { login: true, unavailable: false }, undefined, EMPTY, 'setData', 'P0', '', '本人发票登录入口；仅登记待截图场景，不代表已拍摄'],
+  ['D12h', 'D12h-invoice-detail-login.png', '/subpackageMember/invoice-detail/index?id=1', 'player', 'login', { login: true, unavailable: false }, undefined, EMPTY, 'setData', 'P0', '', '文档二 L7 发票详情登录入口；仅登记待截图场景，不代表已拍摄'],
+  ['D12i', 'D12i-invoice-apply-login.png', '/subpackageMember/invoice-apply/index', 'player', 'login', { login: true, unavailable: false }, undefined, EMPTY, 'setData', 'P0', '', '文档二 L7 申请开票登录入口；仅登记待截图场景，不代表已拍摄'],
+  ['D12j', 'D12j-invoice-titles-login.png', '/subpackageMember/invoice-titles/index', 'player', 'login', { login: true, unavailable: false }, undefined, EMPTY, 'setData', 'P0', '', '文档二 L7 发票抬头登录入口；仅登记待截图场景，不代表已拍摄'],
+  ['D12k', 'D12k-invoice-title-edit-login.png', '/subpackageMember/invoice-title-edit/index', 'player', 'login', { login: true, unavailable: false }, undefined, EMPTY, 'setData', 'P0', '', '文档二 L7 抬头编辑登录入口；仅登记待截图场景，不代表已拍摄'],
+  ['D12l', 'D12l-appeal-mine-login.png', '/subpackageMember/appeal-mine/index', 'player', 'login', { state: 'login', rows: [], reputation: null }, undefined, { selector: 'cy-state-shell', min: 1 }, 'setData', 'P0', '', '文档二 L7 我的申诉登录入口；仅登记待截图场景，不代表已拍摄'],
   ['D12c', 'D12c-orient-score-missing.png', '/subpackageMember/orient-score/index', 'player', 'missing-param', null, undefined, EMPTY, 'real-data', 'P0', '', '计分页缺会话参数态；登记待截图场景，未宣称设备验证'],
   ['D12d', 'D12d-free-explore-missing.png', '/subpackageMember/free-explore/index', 'player', 'missing-param', null, undefined, INLINE_ERR, 'real-data', 'P0', '', '自由探索权益缺订单与商品编号态(页内 cy-inline-error)；仅登记待截图场景，不代表已拍摄'],
   ['D13', 'D13-coupon-content.png', '/subpackageMember/coupon/coupon', 'merchant', 'normal', { loading: false, loadError: false, list: [{ id: 1, name: '到店立减 10 元', description: '每单可用一张,不与其他优惠叠加', remainCount: 120 }] }, undefined, TITLE, 'identity+setData', 'P0', '', '新建按钮放到下面'],
@@ -654,9 +659,9 @@ const countBy = (pred) => SHOTS.filter(pred).length;
 // 2026-10-25 新增官方地点挑战缺参真实态 F200；不新增 blocked 或已验 fixture。
 // 2026-10-27 新增自由探索权益缺参真实态 D12d(P0 real-data)：total 343→344、P0 134→135、actionable 319→320(P0 125→126)、D 45→46、real-data 40→41；不新增 blocked 或已验 fixture。
 const STATS = {
-  "total": 344,
+  "total": 349,
   "byPriority": {
-    "P0": 135,
+    "P0": 140,
     "P1": 199,
     "P2": 10
   },
@@ -666,22 +671,22 @@ const STATS = {
     "P2": 8
   },
   "actionable": {
-    "P0": 126,
+    "P0": 131,
     "P1": 192,
     "P2": 2,
-    "total": 320
+    "total": 325
   },
   "blocked": 24,
   "domains": {
     "A": 53,
     "B": 69,
     "C": 56,
-    "D": 46,
+    "D": 51,
     "E": 26,
     "F": 94
   },
   "control": {
-    "setData": 180,
+    "setData": 185,
     "identity+setData": 116,
     "real-data": 41,
     "real-device": 7

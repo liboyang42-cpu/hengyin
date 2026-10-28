@@ -5000,7 +5000,7 @@ Page({
   // ⚠️ 以后要补回「发布前看成品」,走**本地草稿预览**(主题详情页加 preview 入参 + 一条
   // 本地数据源分支),不要再把按钮接回 ?id= —— 那条路读的永远是服务端那一版。
 
-  openTopicDetail() { this._syncRuntimeStats(); this._syncD20Rows(); this._syncKeysItems(); this.setData({ topicDetailShow: true }); },
+  openTopicDetail() { this._syncRuntimeStats(); this._syncD20Rows(); this._loadPlaySetup(); this._syncKeysItems(); this.setData({ topicDetailShow: true }); },
   closeTopicDetail() { this.setData({ topicDetailShow: false }); },
 
   // 列表 ↔ 地图 视图切换(左下角药丸)。

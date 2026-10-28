@@ -49,8 +49,8 @@ Page({
       that._sync()
     }
     app.sendRequest({
-      url: '/api/orient/scoring/appeals/mine', method: 'GET', hideLoading: true, autoErrorToast: false,
-      success(res) { settle(isBizOk(res) ? res.data : null) },
+      url: '/api/orient/scoring/mine', method: 'GET', data: { pageSize: 50 }, hideLoading: true, autoErrorToast: false,
+      success(res) { settle(isBizOk(res) && res.data ? res.data.rows : null) },
       fail() { settle(null) },
       successStatusAbnormal() { settle(null) },
     })

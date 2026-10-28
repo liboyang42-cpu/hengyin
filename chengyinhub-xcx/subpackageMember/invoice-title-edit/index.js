@@ -76,6 +76,7 @@ Page({
     this._titleRetry = null;
     this.setData({ titlePending: false, titleRequestId: '', writing: false, draft: draft(), canSubmit: false });
     if (getCurrentPages().length > 1) wx.navigateBack({ delta: 1 });
+    else wx.redirectTo({ url: '/subpackageMember/invoice-titles/index' });
   },
   confirmTitleSave(row) {
     if (!this.data.titlePending || row.requestId !== this.data.titleRequestId) throw Error('原保存结果已变化');

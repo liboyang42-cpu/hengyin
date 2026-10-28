@@ -41,8 +41,9 @@ test('route-matrix 生成物必须与当前 app.json 和 scene 扫描逐字一�
   // 2026-10-25 +1 官方地点挑战页 pages/play/poi-challenge ⇒ 144 → 145。
   // 2026-10-26 +3:角色卡、定向计分、本人发票独立页 ⇒ 145 → 148。
   // W8-12: 已校验W8-09权益页加入现有分包，148 → 149。
-  assert.equal(current.routes.length, 149)
-  assert.equal(matrix.counts.routes, 149)
+  // 2026-10-28 文档二 L9 集成:登记 L7 我的申诉 + 发票拆出的 4 页，149 → 154。
+  assert.equal(current.routes.length, 154)
+  assert.equal(matrix.counts.routes, 154)
   const bundle = matrix.routes.find(route => route.pagePath === 'subpackageMember/free-explore/index')
   assert.equal(bundle.role, 'player')
   assert.equal(bundle.needsLogin, true)

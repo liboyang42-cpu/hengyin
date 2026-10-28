@@ -40,7 +40,7 @@ Page({
   edit(e) {
     if (!this.ready() || this.data.writing || this.data.titlePending) return;
     const id = invoice.exactId(e && e.currentTarget.dataset.id);
-    go('edit', id ? 'id=' + id : '');
+    if (id) go('edit', 'id=' + id); else wx.navigateTo({ url: '/subpackageMember/invoice-title-edit/index' });
   },
   remove(e) {
     if (!this.ready() || this.data.writing) return;

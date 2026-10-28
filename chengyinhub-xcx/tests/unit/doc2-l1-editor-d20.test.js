@@ -191,7 +191,7 @@ test('主题详情:取消 / 完成、d20 开关在玩法规则卡里、可玩时
   assert.match(wxml, /bindchange="onD20Toggle"/);
   assert.match(wxml, /wx:if="\{\{d20Enabled\}\}"/);
   assert.match(wxml, /wx:if="\{\{clubIndex < 0\}\}" bindtap="openPlayWindow"/);
-  assert.match(wxml, /stacked="\{\{[^"]*d20Sheet\.show \|\| prepSheet\.show\}\}"/);
+  assert.match(wxml, /stacked="\{\{[^"]*d20Sheet\.show \|\| prepSheet\.show[^"]*\}\}"/);
   const pc = read('pages/publish/fabu/index.wxml');
   assert.doesNotMatch(pc, /探索值\(XP\)/);
   for (const f of ['pages/publish/components/d20-settings/index.wxml', 'pages/publish/components/start-prep/index.wxml']) {

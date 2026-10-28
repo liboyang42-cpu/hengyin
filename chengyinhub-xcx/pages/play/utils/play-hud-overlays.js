@@ -222,6 +222,18 @@ function methods(req, keyFactory) {
         return view;
       }).catch(() => { if (current()) this.setData({ sessStats: { state: 'error' } }); return null; });
     },
+    /** 联系主办 / 联系商家(L8 契约 §4 GET /api/play/contact):菜单打开时按当前站读一次;data=null 时整行不出。 */
+    loadPlayContact() {
+      if (!this._overlayLive() || this.data.isPreview || this.data.isMock) return Promise.resolve(null);
+      const nodeId = (this._routeState || {}).currentNodeId;
+      const params = this.data.activityId ? { activityId: this.data.activityId } : Object.assign({ topicId: this.data.topicId }, nodeId ? { nodeId } : {});
+      const seq = this._contactSeq = (this._contactSeq || 0) + 1;
+      return req('/api/play/contact', 'GET', params, undefined, true).then(res => {
+        if (seq !== this._contactSeq || !this._overlayLive()) return null;
+        if (res && Number(res.code) === 200) this.setData({ playContact: contact(res.data) });
+        return null;
+      }).catch(() => null);
+    },
     openScoreOverlay() {
       if (!this._overlayLive() || !this._orientSessionId()) return;
       if (this.data.sessionToolsOpen) this.toggleSessionTools();
@@ -270,8 +282,8 @@ function methods(req, keyFactory) {
               this.setData({ 'scoreOv.view.canDispute': false, 'scoreOv.view.disputed': true });
               return;
             }
-            cyToast((res && res.msg) || '提交结果未确认，请稍后在「我的申诉」查看');
-          }).catch(() => { if (this._overlayLive()) cyToast('提交结果未确认，请稍后在「我的申诉」查看'); });
+            cyToast((res && res.msg) || '结果未确认，稍后在我的申诉查看');
+          }).catch(() => { if (this._overlayLive()) cyToast('结果未确认，稍后在我的申诉查看'); });
         } });
     },
     callPlayContact() {
