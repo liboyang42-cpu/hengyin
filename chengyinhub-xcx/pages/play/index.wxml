@@ -2,12 +2,15 @@
   <cy-toast id="cy-toast" />
   <include src="theme-backpack.wxml" />
   <include src="theme-player-ops.wxml" />
+  <include src="play-overlays.wxml" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
 <wxs src="../../utils/wxs/img.wxs" module="img" />
 <!-- HUD 槽位契约:同槽同一时刻只允许一个浮层,优先级写在 hud-slots.wxs,别再手工调 top 避让 -->
 <wxs src="../../utils/wxs/hud-slots.wxs" module="hud" />
 <wxs src="./utils/wxs/ring.wxs" module="ring" />
+<!-- 文档二 L5 p-bag:背包属性行按类型画星级 / 小条(theme-backpack.wxml 用;include 不带 wxs,声明放宿主) -->
+<wxs module="tbAttr">function stars(v, max) { var a = []; for (var i = 0; i < max && i < 10; i++) a.push(i < v); return a; } function pct(v, max) { return max > 0 ? Math.max(0, Math.min(100, Math.round(v * 100 / max))) : 0; } module.exports = { stars: stars, pct: pct };</wxs>
 <wxs src="../../utils/wxs/list-key.wxs" module="lk" />
 
 <cy-advanced-game id="advancedGame" hide-panel="{{(!!playKit.kit && (chapterFull || playKit.show)) || (journeyCheck.r5 && journeyCheck.show)}}" show="{{advancedPlay.show}}" node="{{advancedPlay.node}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)"
@@ -93,7 +96,22 @@
       <text class="compass__dist" wx:if="{{storyDistText}}">{{storyDistText}}</text>
     </view>
     <view class="fx-story__t theme-chapter-nav {{isPreview ? 'theme-chapter-nav--preview' : ''}}" style="top:{{chrome.actionTop}}px">{{chapter.name}}</view>
+    <view class="hud2">
     <view class="theme-story-hud"><view class="theme-hp" wx:if="{{themeBag.hpEnabled}}"><view class="theme-heart"><cy-icon name="heart-filled" size="36" /></view><text>{{themeBag.names.hp}} {{themeBag.hp}}<text class="theme-max">/{{themeBag.hpMax}}</text></text></view><view class="theme-challenge-entry" wx:if="{{themeBag.awaitingChallenge || zeroHpView}}" bindtap="openThemeGameplay" aria-role="button" aria-label="{{themeBag.names.hp}}已归零，打开恢复状态" hover-class="cy-pressed" hover-stay-time="80">{{zeroHpView.title || '归零挑战'}}</view><view class="theme-bag-entry" wx:if="{{themeBag.inventoryEnabled}}" bindtap="openThemeBackpack" aria-role="button" aria-label="打开背包" hover-class="cy-pressed" hover-stay-time="80"><view class="theme-bag-icon"></view><text>{{themeBag.used}}/{{themeBag.capacity}}</text></view></view>
+    <!-- 文档二 L5 A4:第二行 —— 头像 + 前 3 项属性(主题开着 d20 才有);点开全屏角色卡 -->
+    <view class="hud2-line" wx:if="{{hudChar}}" bindtap="onHudCharTap" aria-role="button" aria-label="{{hudChar.state === 'error' ? '属性暂时没有读到，轻点重试' : '我的角色'}}" hover-class="cy-pressed" hover-stay-time="80">
+      <block wx:if="{{hudChar.state === 'ok'}}">
+        <view class="hud2-ava">{{hudChar.ava}}</view>
+        <view class="hud2-stat" wx:for="{{hudChar.attrs}}" wx:key="stateKey">
+          <text>{{item.label}}{{item.displayType === 'number' || (item.displayType === 'stars' && !item.stars.length) ? ' ' + item.value : ''}}</text>
+          <view class="hud2-stars" wx:if="{{item.stars.length}}"><cy-icon wx:for="{{item.stars}}" wx:for-item="star" wx:key="index" class="{{star.filled ? '' : 'off'}}" name="star-filled" size="18" /></view>
+          <view class="hud2-bar" wx:if="{{item.displayType === 'bar'}}"><view class="hud2-bar__f" style="width:{{item.percent}}%"></view></view>
+        </view>
+      </block>
+      <text wx:elif="{{hudChar.state === 'loading'}}" class="theme-max">正在读取属性</text>
+      <text wx:else class="theme-max">属性暂时没有读到</text>
+    </view>
+    </view>
     <!-- 右上角两颗:声音(只有作者配了整章旁白才出现)+ 游玩工具菜单 -->
     <view class="fx-story__acts">
       <view class="fx-story__act" wx:if="{{chapter.audioUrl}}" bindtap="toggleStoryAudio" aria-role="button" aria-label="{{audioNodeId === 'chapter' && audioPlaying ? '关掉旁白' : '播放旁白'}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="play" size="30" /></view>
@@ -121,25 +139,10 @@
   <!-- 游玩工具:2026-09-22 起从底栏抽屉转移到故事流右上角(用户裁决)。行内容一行未改,只换了容器与定位。 -->
   <view class="tools-mask {{toolsOut ? 'is-out' : ''}}" catchtouchmove="noop" wx:if="{{sessionToolsOpen}}" bindtap="toggleSessionTools" aria-role="button" aria-label="收起游玩工具" hover-class="cy-pressed" hover-stay-time="80"></view>
     <scroll-view class="tools tools--corner {{toolsOut ? 'is-out' : ''}}" wx:if="{{sessionToolsOpen}}" scroll-y enhanced show-scrollbar="{{false}}">
+<!-- 文档二 L5 B6/B7/B9:联系主办 / 联系商家,菜单第一行;只给拨打,号码不上屏;没有号码整行不出 -->
+        <view class="drow" wx:if="{{playContact}}" bindtap="callPlayContact" aria-role="button" aria-label="{{playContact.label}}" hover-class="cy-pressed" hover-stay-time="80"><view class="dic"><cy-icon name="phone" size="36" /></view><view class="dcopy"><text class="dt">{{playContact.label}}</text></view><view class="darr"></view></view>
 <view wx:if="{{themeBag.inventoryEnabled && themeBag.scope !== 'TEAM'}}" class="drow" bindtap="openThemeHistory" aria-role="button" aria-label="我的游玩记录" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="clock" size="36" /><text>我的游玩记录</text></view>
         <include src="theme-player-ops-entry.wxml" />
-        <include src="orient-lifecycle.wxml" />
-        <view class="drow drow--static" wx:if="{{arrivalGuard}}" aria-role="text" aria-label="到达核验结果">
-          <view class="dcopy"><text class="dt">{{arrivalGuard.message}}</text><text class="ds">{{arrivalGuard.reason}}</text><text class="ds" wx:if="{{arrivalGuard.guardLogId}}">记录号 {{arrivalGuard.guardLogId}}</text><text class="ds">{{arrivalGuard.next}}</text></view>
-        </view>
-        <view wx:if="{{guardAppealView}}" aria-label="原局守卫申诉">
-          <view class="drow drow--static"><view class="dcopy">
-            <text class="dt">原局守卫申诉</text>
-            <text class="ds">记录号 {{guardAppealView.reference.guardLogId}}</text>
-            <text class="ds">{{guardAppealView.message || '请读取原局申诉资格'}}</text>
-            <text class="ds" wx:if="{{guardAppealView.command}}">原请求号 {{guardAppealView.command.requestId}}</text>
-            <text class="ds" wx:if="{{guardAppealView.reason}}">申诉理由：{{guardAppealView.reason}}</text>
-            <text class="ds" wx:if="{{guardAppealView.state === 'UNKNOWN'}}">结果尚未确认，保留原号与理由，仅查询原请求。</text>
-          </view></view>
-          <view class="drow" bindtap="readGuardAppeal" aria-role="button" aria-label="查询原局守卫申诉" hover-class="cy-pressed"><text>{{guardAppealView.command ? '查询原请求结果' : '读取原局申诉资格'}}</text></view>
-          <view class="drow" wx:if="{{!guardAppealView.command && guardAppealView.eligibility.canSubmit}}" bindtap="submitGuardAppeal" aria-role="button" aria-label="提交原局守卫申诉" hover-class="cy-pressed"><text>填写理由并提交申诉</text></view>
-          <view class="drow" wx:if="{{guardAppealView.state === 'FOUND' && guardAppealView.result.canReverify}}" bindtap="reverifyGuardArrival" aria-role="button" aria-label="原局重新现场核验" hover-class="cy-pressed"><view class="dcopy"><text class="dt">原局重新现场核验</text><text class="ds">重新获取现场定位，仍执行原守卫条件，不直接放行或补发奖励。</text></view></view>
-        </view>
         <view class="drow" wx:if="{{themeBag.sessionId && (themeBag.actionRows.length || themeBag.awaitingChallenge || zeroHpView || themeBag.pendingRows.length)}}" bindtap="openThemeGameplay" aria-role="button" aria-label="打开背包与任务" hover-class="cy-pressed" hover-stay-time="80"><view class="dcopy"><text class="dt">背包与任务</text><text class="ds" wx:if="{{zeroHpView}}">{{zeroHpView.message || zeroHpView.title}}</text><text class="ds" wx:elif="{{themeBag.awaitingChallenge}}">{{themeBag.names.hp}}已归零 · 完成挑战可{{themeBag.challengeRestoreText}}{{themeBag.challengeProgressText ? ' · ' + themeBag.challengeProgressLabel + ' ' + themeBag.challengeProgressText : ''}}</text><text class="ds" wx:elif="{{themeBag.pendingRows.length}}">有待领取物品</text><text class="ds" wx:else>{{themeBag.names.hp}} {{themeBag.hp}} · {{themeBag.names.luck}} {{themeBag.luck}} · {{themeBag.names.action}} {{themeBag.actions}}</text></view><view class="darr"></view></view>
         <!-- 伏笔(2026-09-22 用户裁决「玩家侧收进右上角菜单」):只列已经埋下的那些。
              没埋下的服务端根本不下发 —— 提前露出名字就是剧透。进度靠到站同步步数推进。
@@ -160,6 +163,17 @@
             <text class="ds">章节 {{chapterCount}} · 已完成 {{doneCount}} · 还有游戏 {{remainingGameCount}}</text>
           </view>
         </view>
+        <!-- 文档二 L5 X3:我的角色(d20 才有)、本局用时、当前得分(都打开全屏本局成绩);同行者榜(B T-30) -->
+        <view class="drow" wx:if="{{hudChar && hudChar.state === 'ok'}}" bindtap="openCharOverlay" aria-role="button" aria-label="我的角色" hover-class="cy-pressed" hover-stay-time="80"><view class="dic"><view class="hud2-ava">{{hudChar.ava}}</view></view><view class="dcopy"><text class="dt">我的角色</text></view><view class="darr"></view></view>
+        <block wx:if="{{sessStats}}">
+          <block wx:if="{{sessStats.state === 'ok'}}">
+            <view class="drow" wx:if="{{sessStats.elapsed}}" bindtap="openScoreOverlay" aria-role="button" aria-label="本局用时 {{sessStats.elapsed}}" hover-class="cy-pressed" hover-stay-time="80"><view class="dic"><cy-icon name="clock" size="36" /></view><view class="dcopy"><text class="dt">本局用时</text></view><text class="dv">{{sessStats.elapsed}}</text><view class="darr"></view></view>
+            <view class="drow" bindtap="openScoreOverlay" aria-role="button" aria-label="当前得分 {{sessStats.score}}" hover-class="cy-pressed" hover-stay-time="80"><view class="dic pic pic--settle"></view><view class="dcopy"><text class="dt">当前得分</text></view><text class="dv">{{sessStats.score}}</text><view class="darr"></view></view>
+          </block>
+          <view class="drow drow--static" wx:elif="{{sessStats.state === 'loading'}}" aria-role="text" aria-label="正在读取本局用时与得分"><view class="dic pic pic--route"></view><view class="dcopy"><text class="dt">本局用时 · 当前得分</text></view><text class="dv">…</text></view>
+          <view class="drow" wx:else bindtap="loadSessionStats" aria-role="button" aria-label="暂时没有读到，轻点重试" hover-class="cy-pressed" hover-stay-time="80"><view class="dic pic pic--route"></view><view class="dcopy"><text class="dt">暂时没有读到</text></view><text class="dv">重试</text></view>
+        </block>
+        <view class="drow" wx:if="{{mode!=2 && !isPreview && !isMock}}" bindtap="openBoardFromTools" aria-role="button" aria-label="同行者榜" hover-class="cy-pressed" hover-stay-time="80"><view class="dic pic pic--team"></view><view class="dcopy"><text class="dt">同行者榜</text></view><text class="dv" wx:if="{{sessStats.rank}}">第 {{sessStats.rank}} 名</text><view class="darr"></view></view>
         <!-- 扫码到达:原来在底栏,底栏转移后这里是它唯一的入口(对账发现漏了才补上)。 -->
         <view class="drow" wx:if="{{mode!=2}}" bindtap="onScanArriveFromTools" aria-role="button" aria-label="扫码到达" hover-class="cy-pressed" hover-stay-time="80">
           <view class="dic pic pic--scan"></view>
@@ -986,8 +1000,17 @@
     </block>
     <!-- 无模板 → 读文字,到达即完成 -->
     <block wx:else>
-      <cy-btn variant="primary" style="margin-top:var(--cy-space-3-5)" bindtap="onSheetGoTap">{{mode==2 ? '去这家' : (gpsOk ? '我已到达此站' : '开启定位')}}</cy-btn>
-      <view class="sheet-note" wx:if="{{mode!=2}}">{{gpsHint}}<text class="sheet-note-action" wx:if="{{!gpsOk}}" bindtap="onScanArrive" hover-class="cy-pressed" hover-stay-time="80"> · 可扫码到达</text></view>
+      <cy-btn wx:if="{{mode!=2 && guardAppealView && guardAppealView.reference.nodeId == sheet.node.nodeId && guardAppealView.state === 'FOUND' && guardAppealView.result.canReverify}}" variant="primary" style="margin-top:var(--cy-space-3-5)" bindtap="reverifyGuardArrival">我已到达此站</cy-btn>
+      <cy-btn wx:else variant="primary" style="margin-top:var(--cy-space-3-5)" bindtap="onSheetGoTap">{{mode==2 ? '去这家' : (gpsOk ? '我已到达此站' : '开启定位')}}</cy-btn>
+      <!-- 文档二 L5 B T-34 / X8:到站被拦 —— 同一行一句话 + 一个动作 -->
+      <block wx:if="{{mode!=2 && guardAppealView && guardAppealView.reference.nodeId == sheet.node.nodeId && guardAppealView.command}}">
+        <view class="sheet-note" wx:if="{{guardAppealView.state === 'FOUND' && guardAppealView.result.canReverify}}">申诉已通过，请在本节点重新确认到达</view>
+        <view class="sheet-note" wx:elif="{{guardAppealView.state === 'FOUND'}}">已申诉</view>
+        <view class="sheet-note" wx:else>申诉提交结果未确认<text class="sheet-note-action" bindtap="readGuardAppeal" hover-class="cy-pressed" hover-stay-time="80"> · 刷新</text></view>
+      </block>
+      <view class="sheet-note" wx:elif="{{mode!=2 && arrivalGuard && arrivalGuard.nodeId == sheet.node.nodeId && arrivalGuard.appealable}}">本次到达未记录<text class="sheet-note-action" bindtap="appealArrivalFromSheet" hover-class="cy-pressed" hover-stay-time="80"> · 申诉</text></view>
+      <view class="sheet-note" wx:elif="{{mode!=2 && arrivalGuard && arrivalGuard.nodeId == sheet.node.nodeId}}">{{arrivalGuard.message}}<text class="sheet-note-action" bindtap="onScanArrive" hover-class="cy-pressed" hover-stay-time="80"> · 可扫码到达</text></view>
+      <view class="sheet-note" wx:elif="{{mode!=2}}">{{gpsHint}}<text class="sheet-note-action" wx:if="{{!gpsOk}}" bindtap="onScanArrive" hover-class="cy-pressed" hover-stay-time="80"> · 可扫码到达</text></view>
       <!-- 自由探索:核销由商家扫玩家的码完成,所以这里说的是「到店后怎么办」,不是「怎么打卡」 -->
       <view class="sheet-note" wx:else>到店后出示核销码给商家扫<text class="sheet-note-action" wx:if="{{!gpsOk}}" bindtap="onScanArrive" hover-class="cy-pressed" hover-stay-time="80"> · 可扫码到达</text></view>
     </block>
@@ -1259,6 +1282,11 @@
     <view class="fst"><cy-icon class="fst__ic" name="check" size="36" /><text class="fst__v">{{doneCount}}/{{total}}</text><text class="fst__l">玩法完成</text></view>
     <view class="fst"><cy-icon class="fst__ic" name="walk" size="36" /><text class="fst__v">{{finishStamps.length}}</text><text class="fst__l">本期足迹</text></view>
   </view>
+  <!-- 文档二 L5 A p-finish:RPG 小结(主题开着 d20 才有),同一 .finsheet__grid 三格 -->
+  <view class="finsheet__grid" wx:if="{{!allDone && hudChar && hudChar.state === 'ok' && hudRpg.length}}">
+    <view class="fst" wx:for="{{hudRpg}}" wx:key="key"><cy-icon class="fst__ic" name="{{item.icon}}" size="36" /><text class="fst__v">{{item.value}}</text><text class="fst__l">{{item.label}}</text></view>
+  </view>
+  <view class="finsheet__retry" wx:if="{{!allDone && hudChar && hudChar.state === 'error'}}">本章小结暂时没有读到。<text class="finsheet__retry-act" bindtap="loadHudCharacter" hover-class="cy-pressed" hover-stay-time="80">重试</text></view>
   <!-- 站末分支图(契约 §3.3):只画「你走过的路」,别人的比例不做。没有走向记录时整块不渲染。 -->
   <view class="branchpath" wx:if="{{branchPath.length}}">
     <view class="branchpath__k">你走过的路</view>
@@ -1318,6 +1346,12 @@
       <text class="finish-journal-entry__title">回看旅程手记</text>
       
     </view>
+    <cy-icon name="arrow-right" size="28" />
+  </view>
+  <!-- 文档二 L5 A p-finish:章节结算打开全屏本局成绩;名次在右边,公示期内写「暂列」(B8) -->
+  <view class="finish-journal-entry" wx:if="{{!allDone && mode == 1 && sessStats && sessStats.state === 'ok'}}" bindtap="openScoreOverlay" aria-role="button" aria-label="本局成绩" hover-class="cy-pressed" hover-stay-time="80">
+    <view><text class="finish-journal-entry__title">本局成绩</text></view>
+    <text class="fje-v" wx:if="{{sessStats.rank}}">{{sessStats.provisional ? '暂列' : ''}}第 {{sessStats.rank}} 名</text>
     <cy-icon name="arrow-right" size="28" />
   </view>
   <view class="finsheet__retry" wx:if="{{endingError}}">城市故事暂未加载，不影响本次足迹。<text class="finsheet__retry-act" bindtap="retryEnding" hover-class="cy-pressed" hover-stay-time="80">重新加载</text></view>

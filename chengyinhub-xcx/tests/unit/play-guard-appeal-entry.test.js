@@ -42,11 +42,27 @@ test('Page rejects ended/cross-run and ignores account-switched location callbac
   e.locations[0].success({ latitude: 31, longitude: 121, accuracy: 12 });
   assert.equal(e.arrivals.length, 0);
 });
-test('verified template exposes query, qualified submit and accepted original-run reverify handlers', () => {
+test('verified template exposes query, qualified submit and accepted original-run reverify handlers on the node sheet', () => {
   const e = load();
   const xml = fs.readFileSync(require.resolve('../../pages/play/index.wxml'), 'utf8');
-  for (const method of ['readGuardAppeal', 'submitGuardAppeal', 'reverifyGuardArrival']) {
+  // 文档二 L5(原型 B T-34 / X8):申诉入口从「…」菜单的守卫面板挪到站点卡那一行 sheet-note
+  for (const method of ['readGuardAppeal', 'appealArrivalFromSheet', 'reverifyGuardArrival']) {
     assert.equal(typeof e.page[method], 'function'); assert.ok(xml.includes('bindtap="' + method + '"'));
   }
   assert.ok(xml.includes("guardAppealView.state === 'FOUND' && guardAppealView.result.canReverify"));
+});
+test('sheet appeal asks for a 1-500 char reason in the native input modal and submits through the guarded flow', async () => {
+  const e = load();
+  const submitted = [];
+  e.view.eligibility = { canSubmit: true };
+  e.page._ensureGuardAppeal = () => ({ read: async () => {}, view: () => e.view, submit: async reason => submitted.push(reason) });
+  await e.page.appealArrivalFromSheet();
+  const prompt = e.prompts[0];
+  assert.equal(prompt.title, '申诉这次到达');
+  assert.equal(prompt.editable, true);
+  assert.equal(prompt.maxlength, 500);
+  assert.equal(prompt.validate(''), '请填写申诉理由');
+  assert.equal(prompt.validate('x'.repeat(501)), '最多 500 字');
+  await prompt.success({ confirm: true, content: '定位跳了一下' });
+  assert.deepEqual(submitted, ['定位跳了一下']);
 });
