@@ -140,11 +140,22 @@ Component({
     },
     _fit(mk) {
       if (!this.data.fit) return;
-      const pts = mk.filter((m) => m.id !== ARROW_MARKER_ID).map((m) => ({ latitude: m.latitude, longitude: m.longitude }));
+      const nodes = mk.filter((m) => m.id !== ARROW_MARKER_ID && m.id !== PLAYER_MARKER_ID);
+      const me = mk.find((m) => m.id === PLAYER_MARKER_ID);
+      // 「我」离所有站都超过 5km 就不框进来:否则视野会缩到整个城市甚至全国(开发者工具模拟定位实测 12956km)。
+      const near = me && nodes.some((m) => _sqDist(me.latitude, me.longitude, m.latitude, m.longitude) < 0.0025);
+      const pts = nodes.concat(near || !nodes.length ? (me ? [me] : []) : []).map((m) => ({ latitude: m.latitude, longitude: m.longitude }));
       if (!pts.length) return;
+      this._fitPts = pts;
       const key = JSON.stringify(pts);
       if (key === this._fitKey) return;
       this._fitKey = key;
+      this._applyFit();
+    },
+    // 原生 map 还没铺出来时 includePoints 会被吞掉:bindupdated 渲染完再补一次(完成卡地图实测没框住)。
+    _applyFit() {
+      const pts = this._fitPts;
+      if (!pts || !pts.length) return;
       try {
         const ctx = wx.createMapContext('fmap', this);
         if (pts.length === 1) this.setData({ center: { lat: pts[0].latitude, lng: pts[0].longitude } });
@@ -235,7 +246,10 @@ Component({
       if (id === PLAYER_MARKER_ID || id === ARROW_MARKER_ID) return; // 保留 id 钉(玩家/方向箭头)不响应,防撞上真实 nodeId
       this.triggerEvent('pintap', { nodeId: id });
     },
-    onUpdated(e) { this.triggerEvent('updated', e.detail); },
+    onUpdated(e) {
+      if (this.data.fit && this._fitKey && !this._fitRendered) { this._fitRendered = true; this._applyFit(); }
+      this.triggerEvent('updated', e.detail);
+    },
     onRegionChange(e) {
       this.triggerEvent('regionchange', Object.assign({}, e.detail || {}, {
         phase: (e.detail && e.detail.type) || e.type,

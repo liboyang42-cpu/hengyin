@@ -172975,7 +172975,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/free-map/index.js:229"
+        "staticSource": "components/cy/free-map/index.js:240"
       }
     },
     {
@@ -173085,11 +173085,11 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "other",
+      "actionClass": "state",
       "interactionMode": "event-contract",
-      "baseActionClass": "other",
+      "baseActionClass": "state",
       "effectClasses": [
-        "other"
+        "state"
       ],
       "accessBoundary": null,
       "externalCapabilities": [],
@@ -173102,16 +173102,15 @@
         "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
-        "success",
-        "error"
+        "success"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/free-map/index.js:238"
+        "staticSource": "components/cy/free-map/index.js:249"
       }
     },
     {
@@ -173247,7 +173246,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/free-map/index.js:245"
+        "staticSource": "components/cy/free-map/index.js:259"
       }
     },
     {
@@ -173383,7 +173382,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/free-map/index.js:239"
+        "staticSource": "components/cy/free-map/index.js:253"
       }
     },
     {
@@ -173654,7 +173653,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/free-map/index.js:247"
+        "staticSource": "components/cy/free-map/index.js:261"
       }
     },
     {
@@ -173789,7 +173788,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/free-map/index.js:251"
+        "staticSource": "components/cy/free-map/index.js:265"
       }
     },
     {
@@ -173924,7 +173923,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/free-map/index.js:252"
+        "staticSource": "components/cy/free-map/index.js:266"
       }
     },
     {
