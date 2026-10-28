@@ -1,21 +1,66 @@
-<view class="rules">
-  <button class="rules__toggle" bindtap="toggle" aria-expanded="{{expanded}}">条件与效果 · {{summary}}</button>
-  <view wx:if="{{expanded}}">
-    <text class="rules__hint">条件全部满足时可走此分支；效果按配置顺序执行。未完成的输入会保存在本机，完成时再校验。</text>
-    <view wx:for="{{rows}}" wx:key="path" wx:for-item="row" class="rules__row rules__depth-{{row.depth}}">
-      <text class="rules__hint">{{row.kind === 'condition' ? '条件' : '效果'}}</text>
-      <cy-dropdown topic-editor="{{true}}" range="{{row.types}}" value="{{row.typeIndex}}" range-key="label" data-path="{{row.path}}" bindchange="op"><view class="rules__select">{{row.label}} ▾</view></cy-dropdown>
-      <view wx:for="{{row.fields}}" wx:key="key" wx:for-item="field" class="rules__field">
-        <text>{{field.label}}</text>
-        <cy-dropdown topic-editor="{{true}}" wx:if="{{field.kind === 'pick'}}" range="{{field.options}}" value="{{field.selectedIndex}}" range-key="label" data-path="{{row.path}}" data-key="{{field.key}}" bindchange="pick"><view class="rules__select">{{field.display}} ▾</view></cy-dropdown>
-        <text wx:if="{{field.kind === 'pick' && !field.options.length}}" class="rules__hint">暂无可选项，请先完成对应节点或数值配置。</text>
-        <input class="rules__input" wx:if="{{field.kind !== 'pick'}}" value="{{field.value}}" type="text" maxlength="512" data-path="{{row.path}}" data-key="{{field.key}}" bindinput="input" aria-label="{{field.label}}" placeholder="请输入" />
-      </view>
-      <button class="rules__btn" wx:if="{{row.canAdd}}" data-path="{{row.path}}" bindtap="child">添加子条件</button>
-      <button class="rules__btn" data-path="{{row.path}}" bindtap="remove" aria-label="删除{{row.label}}">删除此{{row.kind === 'condition' ? '条件' : '效果'}}</button>
+<!-- 条件与效果：句子列表（10-28 原型 A e-route）。点一句就地展开；添加 / 换名字开一层。 -->
+<view class="sr" wx:if="{{!layer}}">
+  <text class="sr-hd">条件</text>
+  <view class="sr-grp">
+    <view wx:if="{{showTopSeg}}" class="sr-row sr-row--seg">
+      <view class="sr-seg" aria-role="radiogroup"><view wx:for="{{topSeg}}" wx:key="key" class="sr-seg__i {{item.on ? 'is-on' : ''}}" data-key="{{item.key}}" bindtap="onTopMode" aria-role="radio" aria-checked="{{item.on}}" hover-class="cy-pressed" hover-stay-time="80">{{item.label}}</view></view>
     </view>
-    <button class="rules__btn" bindtap="reset">撤销未完成的规则修改</button>
-    <cy-inline-error wx:if="{{error}}" kind="error" title="{{error}}" />
-    <view class="rules__actions"><button class="rules__btn" data-kind="condition" bindtap="add">添加条件</button><button class="rules__btn" data-kind="effect" bindtap="add">添加效果</button></view>
+    <block wx:for="{{conditionRows}}" wx:key="path" wx:for-item="row">
+      <view wx:if="{{row.type === 'leaf' || row.type === 'group'}}" class="sr-row sr-d{{row.depth}}" data-path="{{row.path}}" data-type="{{row.type}}" bindtap="toggleRow" aria-role="button" aria-expanded="{{row.open}}" hover-class="cy-pressed" hover-stay-time="80">
+        <text class="sr-t">{{row.text}}</text><view class="sr-chev {{row.open ? 'is-open' : ''}}"><cy-icon name="chevron-right" size="24" /></view>
+      </view>
+      <view wx:elif="{{row.type === 'groupSeg'}}" class="sr-row sr-row--seg sr-d{{row.depth}}">
+        <view class="sr-seg"><view wx:for="{{row.seg}}" wx:key="key" wx:for-item="seg" class="sr-seg__i {{seg.on ? 'is-on' : ''}}" data-path="{{row.path}}" data-key="{{seg.key === '1' ? 'OR' : 'AND'}}" bindtap="onGroupMode" aria-role="radio" aria-checked="{{seg.on}}" hover-class="cy-pressed" hover-stay-time="80">{{seg.label}}</view></view>
+      </view>
+      <view wx:elif="{{row.type === 'groupAdd'}}" class="sr-row sr-add sr-d{{row.depth}}" data-target="{{row.path}}" bindtap="openAdd" aria-role="button" hover-class="cy-pressed" hover-stay-time="80"><view class="sr-plus"><cy-icon name="plus" size="24" /></view><text>添加条件</text></view>
+      <view wx:elif="{{row.type === 'groupDel'}}" class="sr-row sr-del sr-d{{row.depth}}" data-path="{{row.path}}" bindtap="onRemove" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">删除这组条件</view>
+      <block wx:if="{{row.type === 'leaf' && row.open && row.editor}}">
+        <view wx:if="{{row.editor.neg}}" class="sr-row sr-row--seg sr-d{{row.depth}}"><view class="sr-seg"><view wx:for="{{row.editor.neg}}" wx:key="key" wx:for-item="seg" class="sr-seg__i {{seg.on ? 'is-on' : ''}}" data-path="{{row.path}}" data-key="{{seg.key}}" bindtap="onNegate" aria-role="radio" aria-checked="{{seg.on}}" hover-class="cy-pressed" hover-stay-time="80">{{seg.label}}</view></view></view>
+        <view wx:if="{{row.editor.names}}" class="sr-row sr-row--seg sr-d{{row.depth}}"><view class="sr-seg"><view wx:for="{{row.editor.names}}" wx:key="key" wx:for-item="seg" class="sr-seg__i {{seg.on ? 'is-on' : ''}}" data-path="{{row.leafPath}}" data-key="{{seg.key}}" bindtap="onPickName" aria-role="radio" aria-checked="{{seg.on}}" hover-class="cy-pressed" hover-stay-time="80">{{seg.label}}</view></view></view>
+        <view wx:if="{{row.editor.rename}}" class="sr-row sr-d{{row.depth}}" data-path="{{row.leafPath}}" bindtap="openRename" aria-role="button" hover-class="cy-pressed" hover-stay-time="80"><text class="sr-t">换一个名字</text><view class="sr-chev"><cy-icon name="chevron-right" size="24" /></view></view>
+        <view wx:if="{{row.editor.result}}" class="sr-row sr-row--seg sr-d{{row.depth}}"><view class="sr-seg"><view wx:for="{{row.editor.result}}" wx:key="key" wx:for-item="seg" class="sr-seg__i {{seg.on ? 'is-on' : ''}}" data-path="{{row.leafPath}}" data-key="{{seg.key}}" bindtap="onResult" aria-role="radio" aria-checked="{{seg.on}}" hover-class="cy-pressed" hover-stay-time="80">{{seg.label}}</view></view></view>
+        <view wx:if="{{row.editor.cmp}}" class="sr-row sr-row--seg sr-d{{row.depth}}"><view class="sr-seg"><view wx:for="{{row.editor.cmp}}" wx:key="key" wx:for-item="seg" class="sr-seg__i {{seg.on ? 'is-on' : ''}}" data-path="{{row.leafPath}}" data-key="{{seg.key}}" bindtap="onCompare" aria-role="radio" aria-checked="{{seg.on}}" hover-class="cy-pressed" hover-stay-time="80">{{seg.label}}</view></view></view>
+        <view wx:if="{{row.editor.cmp}}" class="sr-row sr-d{{row.depth}}"><text class="sr-t">{{row.editor.kind === 'visit' ? '次数' : '数值'}}</text><text class="sr-num">{{row.editor.amount}}</text>
+          <view class="sr-step"><view class="sr-step__b" data-path="{{row.leafPath}}" data-amount="{{row.editor.amount}}" data-step="-1" bindtap="onStep" aria-role="button" aria-label="减少" hover-class="cy-pressed" hover-stay-time="80"><view class="sr-minus" /></view><view class="sr-step__b" data-path="{{row.leafPath}}" data-amount="{{row.editor.amount}}" data-step="1" bindtap="onStep" aria-role="button" aria-label="增加" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" /></view></view></view>
+        <view class="sr-row sr-del sr-d{{row.depth}}" data-path="{{row.path}}" bindtap="onRemove" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">删除</view>
+      </block>
+    </block>
+    <view wx:if="{{!readOnly}}" class="sr-row sr-add" data-target="conditions" bindtap="openAdd" aria-role="button" hover-class="cy-pressed" hover-stay-time="80"><view class="sr-plus"><cy-icon name="plus" size="24" /></view><text>添加条件</text></view>
+  </view>
+
+  <view class="sr-hd sr-hd--action"><text>效果</text><text wx:if="{{effectRows.length > 1 && !readOnly}}" class="sr-hd__btn" bindtap="toggleSort" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">{{sorting ? '完成' : '编辑'}}</text></view>
+  <view class="sr-grp">
+    <block wx:for="{{effectRows}}" wx:key="path" wx:for-item="row" wx:for-index="ei">
+      <view class="sr-row" data-path="{{row.path}}" data-type="leaf" bindtap="toggleRow" aria-role="button" aria-expanded="{{row.open}}" hover-class="cy-pressed" hover-stay-time="80">
+        <text class="sr-t">{{row.text}}</text>
+        <text wx:if="{{sorting && ei > 0}}" class="sr-hd__btn" data-path="{{row.path}}" catchtap="onMoveUp" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">上移</text>
+        <view wx:elif="{{!sorting}}" class="sr-chev {{row.open ? 'is-open' : ''}}"><cy-icon name="chevron-right" size="24" /></view>
+      </view>
+      <block wx:if="{{row.open && row.editor && !sorting}}">
+        <view wx:if="{{row.editor.op}}" class="sr-row sr-row--seg"><view class="sr-seg"><view wx:for="{{row.editor.op}}" wx:key="key" wx:for-item="seg" class="sr-seg__i {{seg.on ? 'is-on' : ''}}" data-path="{{row.path}}" data-key="{{seg.key}}" bindtap="onVarOp" aria-role="radio" aria-checked="{{seg.on}}" hover-class="cy-pressed" hover-stay-time="80">{{seg.label}}</view></view></view>
+        <view wx:if="{{row.editor.rename}}" class="sr-row" data-path="{{row.path}}" bindtap="openRename" aria-role="button" hover-class="cy-pressed" hover-stay-time="80"><text class="sr-t">换一个名字</text><view class="sr-chev"><cy-icon name="chevron-right" size="24" /></view></view>
+        <view wx:if="{{row.editor.hasAmount}}" class="sr-row"><text class="sr-t">{{row.editor.kind === 'item' ? '数量' : row.editor.kind === 'clock' ? '格数' : '数值'}}</text><text class="sr-num">{{row.editor.amount}}</text>
+          <view class="sr-step"><view class="sr-step__b" data-path="{{row.path}}" data-amount="{{row.editor.amount}}" data-step="-1" bindtap="onStep" aria-role="button" aria-label="减少" hover-class="cy-pressed" hover-stay-time="80"><view class="sr-minus" /></view><view class="sr-step__b" data-path="{{row.path}}" data-amount="{{row.editor.amount}}" data-step="1" bindtap="onStep" aria-role="button" aria-label="增加" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" /></view></view></view>
+        <view class="sr-row sr-del" data-path="{{row.path}}" bindtap="onRemove" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">删除</view>
+      </block>
+    </block>
+    <view wx:if="{{!readOnly}}" class="sr-row sr-add" data-target="effects" bindtap="openAdd" aria-role="button" hover-class="cy-pressed" hover-stay-time="80"><view class="sr-plus"><cy-icon name="plus" size="24" /></view><text>添加效果</text></view>
+  </view>
+  <cy-inline-error wx:if="{{error}}" kind="error" title="{{error}}" />
+</view>
+
+<!-- 下一层：种类一列，点一种就地展开名字（可搜索）；换名字时直接是名字。 -->
+<view class="sr sr-layer" wx:else>
+  <view class="sr-grp">
+    <block wx:for="{{layerRows}}" wx:key="kind" wx:for-item="kind">
+      <view wx:if="{{kind.label}}" class="sr-row" data-kind="{{kind.kind}}" bindtap="onLayerKind" aria-role="button" aria-expanded="{{kind.open}}" hover-class="cy-pressed" hover-stay-time="80">
+        <text class="sr-t">{{kind.label}}</text><view wx:if="{{kind.hasNames}}" class="sr-chev {{kind.open ? 'is-open' : ''}}"><cy-icon name="chevron-right" size="24" /></view>
+      </view>
+      <block wx:if="{{kind.open}}">
+        <view class="sr-row sr-d1 sr-search"><cy-icon name="search" size="28" /><input class="sr-search__in" value="{{query}}" bindinput="onLayerQuery" placeholder="搜索" confirm-type="search" /></view>
+        <view wx:for="{{kind.names}}" wx:key="key" wx:for-item="name" class="sr-row sr-d1" data-key="{{name.key}}" bindtap="onLayerName" aria-role="button" hover-class="cy-pressed" hover-stay-time="80"><text class="sr-t">{{name.label}}</text></view>
+        <view wx:if="{{!kind.names.length}}" class="sr-row sr-d1"><text class="sr-empty">{{query ? '没有找到' : '还没有可选的名字'}}</text></view>
+      </block>
+    </block>
   </view>
 </view>

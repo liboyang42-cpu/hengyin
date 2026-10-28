@@ -1,1 +1,1 @@
-{"component":true,"usingComponents":{"cy-dropdown":"/components/cy/dropdown/index","cy-inline-error":"/components/cy/inline-error/index"}}
+{"component":true,"usingComponents":{"cy-icon":"/components/cy/icon/index","cy-inline-error":"/components/cy/inline-error/index"}}

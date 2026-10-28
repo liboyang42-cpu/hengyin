@@ -193,10 +193,10 @@ test('CU-C-164 节点抽屉没开着时不碰表单项(返回页可能正停在�
 
 // ============================================================ CU-C-161 文案
 function assertNodeAddressCopy(wxml) {
-  const address = wxml.match(/<text class="node-card__addr" wx:if="\{\{nodesForm\.address\}\}">\{\{nodesForm\.address\}\}<\/text>/);
-  assert.ok(address, '已选节点的地址必须显示，空态不显示伪造地址');
-  const picker = wxml.match(/<view class="node-pill"[^>]*catchtap="choosePoiForNode"[^>]*><text>\{\{nodesForm\.address \? '修改节点' : '([^']*)'\}\}<\/text>/);
-  assert.ok(picker, '空态必须有可点击的节点选择动作');
+  // 10-28 原型 A e-node：地点是分组列表里的一行「地点 · 滨江路 12 号 ›」，整行点去选点；
+  // 已选显示地址，空态只显示可点的「选择节点」，不显示伪造地址或说明小字。
+  const picker = wxml.match(/<view class="node-grp__row"[^>]*catchtap="choosePoiForNode"[^>]*>[\s\S]*?<text class="node-grp__value">\{\{nodesForm\.address \|\| '([^']*)'\}\}<\/text>/);
+  assert.ok(picker, '已选节点的地址必须显示，空态必须有可点击的节点选择动作');
   assert.match(picker[1], /选择节点/);
   assert.doesNotMatch(picker[1], /自由探索/, '城市定向不能借用自由探索可稍后补文案');
   return wxml;
@@ -267,8 +267,8 @@ test('negative control:摘掉 onShow 里的重派生,返回后开关又停在假
 
 test('negative control:节点地点文案退回共用一行,CU-C-161 检查器必须判红', () => {
   const broken = mutate(read(FABU_WXML),
-    "{{nodesForm.address ? '修改节点' : '选择节点'}}",
-    "{{nodesForm.address ? '修改节点' : '自由探索可稍后补'}}",
+    "{{nodesForm.address || '选择节点'}}",
+    "{{nodesForm.address || '自由探索可稍后补'}}",
     '节点地点空态');
   assert.throws(() => assertNodeAddressCopy(broken), assert.AssertionError);
 });

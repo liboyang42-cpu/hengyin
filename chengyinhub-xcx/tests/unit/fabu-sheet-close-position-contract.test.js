@@ -45,9 +45,16 @@ function assertExitIsLeftmost(sources) {
       const close = positions(header, '<view class="node-sheet__close"');
       assert.equal(close.length, 1, `${file}: 每个头部应有一颗退出按钮`);
       for (const at of done) assert.ok(close[0] < at, `${file}:退出又排到完成右边了`);
+      // 2026-10-28 原型 A(e-node / e-quest / e-route):节点编辑一族的半屏头部是「取消 / 标题 / 完成」,
+      // 从半屏再开的一层是「‹ 上一层名」(返回箭头 + 上一层的名字)。✕ 仍然不能代替文字。
+      const backLayer = /node-sheet__close route-mapping-sheet__back/.test(header);
+      if (backLayer) {
+        assert.match(header, /<cy-icon name="chevron-right"[^>]*\/><\/view>[^<]+<\/view>/, `${file}:下钻层左侧必须是返回箭头 + 上一层名字`);
+        continue;
+      }
       const exitEl = header.slice(close[0], header.indexOf('</view>', close[0]));
       assert.doesNotMatch(exitEl, /cy-icon/, `${file}:退出被换回 ✕ 图标了`);
-      assert.match(exitEl, />(退出|返回)$/, `${file}:左侧必须是文字「退出」(下钻层可为「返回」)`);
+      assert.match(exitEl, />(退出|返回|取消|\{\{structureEditor\.kind === 'quests' \? '取消' : '退出'\}\})$/, `${file}:左侧必须是文字「退出」(下钻层可为「返回」，节点编辑一族为「取消」)`);
     }
   }
 }

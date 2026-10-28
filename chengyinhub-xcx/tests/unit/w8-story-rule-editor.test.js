@@ -1,73 +1,129 @@
+// 10-28 原型 A e-route：story-rule-editor 就地改成句子列表。数据仍是 { conditions, effects }，键名照存；
+// 界面只出现名字（'属性 · 观察 至少 3'、'已获得线索 · 半张货单'、'进度钟 · 巡夜人警觉 +1'）。
 const {test}=require('node:test');const assert=require('node:assert/strict');
+const fs=require('node:fs');const path=require('node:path');
 const form=require('../../pages/publish/utils/publish/story-rule-form');
-const nodes=[{id:'9007199254740993',label:'起点'},{id:'node_b',label:'终点'}],variables={'counter.time':0};
+const sentence=require('../../pages/publish/utils/publish/story-rule-sentence');
+const nodes=[{id:'9007199254740993',label:'旧码头仓库'},{id:'node_b',label:'仓库二层'}];
+const journey={stateEnabled:true,attributes:[{key:'counter.observe',name:'观察',initial:2},{key:'counter.nerve',name:'胆量'},{key:'clue.ledger_half',name:'半张货单'},{key:'tag.night',name:'夜行'}],
+  rpg:{clocks:[{var:'counter.alarm',label:'巡夜人警觉',segments:6}],aspects:[{key:'hurt',label:'受了伤'}]}};
+const runtime={items:[{id:'ilamp',name:'马灯'}]};
+const names=sentence.buildNames(journey,runtime,nodes,{'sys.luck':3});
+const variables=sentence.editorVariables({'sys.luck':3},names);
 function component(value={conditions:[],effects:[]}) {
  let config;global.Component=c=>config=c;delete require.cache[require.resolve('../../pages/publish/components/story-rule-editor/index')];require('../../pages/publish/components/story-rule-editor/index');
- const events=[];const c={...config.methods,data:{...structuredClone(config.data),value,nodes,variables,identity:'edge:x'},setData(p){Object.assign(this.data,p)},triggerEvent(name,event){events.push(event)}};
- config.lifetimes.attached.call(c);return {c,events,detach:()=>config.lifetimes.detached.call(c)};
+ const events=[],layers=[];
+ const c={...config.methods,data:{...structuredClone(config.data),value,nodes,variables,names,identity:'edge:x',readOnly:false},
+  setData(p,cb){Object.assign(this.data,p);if(cb)cb();},triggerEvent(name,event){(name==='layer'?layers:events).push(event)}};
+ config.lifetimes.attached.call(c);return {c,events,layers,detach:()=>config.lifetimes.detached.call(c)};
 }
-const event=(path,key,value)=>({currentTarget:{dataset:{path,key}},detail:{value}});
-const cases=[
- ['condition','VISIT_COUNT',{nodeId:'9007199254740993',cmp:'GTE',value:'2'}],
- ['condition','ROLE_IN',{values:'NAVIGATOR,OBSERVER'}],['condition','HAS_CONDITION',{value:'inspired'}],
- ['condition','ITEM_EQUIPPED',{itemId:'lamp'}],['condition','CHECK_RESULT',{nodeId:'node_b',result:'PASS'}],
- ['effect','ADD_ITEM',{itemId:'lamp',quantity:'2'}],['effect','GRANT_BADGE',{value:'explorer'}],
- ['effect','GRANT_XP',{value:'4',id:'visit'}],['effect','ADD_CONDITION',{value:'inspired'}],
- ['effect','REMOVE_CONDITION',{value:'tired'}],['effect','EQUIP',{itemId:'lamp',slot:'hand'}],
- ['effect','UNEQUIP',{itemId:'lamp'}],['effect','TICK_CLOCK',{var:'counter.time',value:'1',max:'4'}]
-];
-for(const [kind,op,fields] of cases) test('真实Component编辑 '+op+' 的实际参数并回读',()=>{
- const {c,events}=component();c.add({currentTarget:{dataset:{kind}}});const path=kind==='condition'?'conditions.0':'effects.0';
- c.op(event(path,null,c.data.rows[0].types.findIndex(t=>t.value===op)));
- for(const [key,value] of Object.entries(fields)) {
-  const field=c.data.rows[0].fields.find(f=>f.key===key);
-  if(field.kind==='pick')c.pick(event(path,key,field.options.findIndex(o=>o.value===value)));else c.input(event(path,key,value));
- }
- assert.deepEqual(form.errors(events.at(-1).value,nodes,variables),[]);
- const reopened=component(events.at(-1).value).c;
- assert.deepEqual(reopened._draft,c._draft);
- if(op==='VISIT_COUNT')assert.equal(reopened._draft.conditions[0].nodeId,'9007199254740993');
-});
-test('组合树添加/修改/删除保持正确位置，未知规则拒绝，非法数值不变成0',()=>{
- const {c,events}=component();c.add({currentTarget:{dataset:{kind:'condition'}}});
- c.op(event('conditions.0',null,0));c.child({currentTarget:{dataset:{path:'conditions.0'}}});
- c.input(event('conditions.0.conditions.0','value','ready'));
- assert.equal(c._draft.conditions[0].conditions[0].value,'ready');
- c.op(event('conditions.0',null,1));
- assert.equal(c._draft.conditions[0].conditions[0].value,'ready','AND改OR不能丢子条件');
- c.remove({currentTarget:{dataset:{path:'conditions.0.conditions.0'}}});assert.ok(form.errors(c._draft,nodes,variables).length);
- const bad=component({conditions:[{op:'FUTURE_OP'}],effects:[{op:'GRANT_XP',value:2}]});
- assert.ok(bad.c.data.error);bad.c.input(event('effects.0','value',''));assert.equal(bad.c._draft.effects[0].value,'');assert.ok(bad.c.data.error);
- const count=events.length;c._active=false;c.input(event('conditions.0','value','late'));assert.equal(events.length,count);
-});
-test('NOT树三层限制、空可选参数去除、选项越界不修改与原对象隔离',()=>{
- const source={conditions:[{op:'NOT',condition:{op:'NOT',condition:{op:'NOT',condition:{op:'HAS_CONDITION',value:'ready'}}}}],effects:[{op:'GRANT_XP',value:1,id:'once'}]};
- const {c}=component(source);assert.equal(c.data.error,'');
- assert.throws(()=>form.change(c._draft,{type:'op',path:'conditions.0.condition.condition.condition',value:'AND'},nodes,variables),/3层/);
- c.input(event('effects.0','id',''));assert.equal(c._draft.effects[0].id,undefined);assert.equal(source.effects[0].id,'once');
- const before=structuredClone(c._draft);c.op(event('effects.0',null,999));assert.deepEqual(c._draft,before);
+const tap=dataset=>({currentTarget:{dataset}});
+const LATIN=/[A-Za-z_]{2,}/;
+function visibleText(c) {
+ return [...c.data.conditionRows,...c.data.effectRows].map(r=>r.text).concat((c.data.layerRows||[]).flatMap(r=>[r.label,...(r.names||[]).map(n=>n.label)])).join(' ');
+}
+function add(h,target,kind,key) {
+ h.c.openAdd(tap({target}));h.c.onLayerKind(tap({kind}));if(key!==undefined)h.c.onLayerName(tap({key}));
+}
+
+test('名单只收有名字的项，属性 / 进度钟补进可用变量（初值同设定）',()=>{
+ assert.deepEqual(names.attr.map(r=>r.label),['观察','胆量']);assert.deepEqual(names.clock.map(r=>r.label),['巡夜人警觉']);
+ assert.deepEqual(names.clue.map(r=>r.key),['clue.ledger_half']);assert.deepEqual(names.value.map(r=>r.label),['幸运值']);
+ assert.equal(variables['counter.observe'],2);assert.equal(variables['counter.alarm'],0);
 });
 
-test('选择器反映当前值，撤销只回到本次打开前已完成配置，移除未知op后可继续编辑',()=>{
- const h=component({conditions:[{op:'FUTURE_OP'}],effects:[]});h.c.data.baseline={conditions:[{op:'ROLE_IN',values:['OBSERVER']}],effects:[]};
- h.c.remove({currentTarget:{dataset:{path:'conditions.0'}}});assert.equal(h.c.data.error,'');
- h.c.reset();assert.equal(h.events.at(-1).discard,true);assert.deepEqual(h.c._draft,h.c.data.baseline);
- const row=h.c.data.rows[0];assert.equal(row.types[row.typeIndex].value,'ROLE_IN');
- h.detach();const count=h.events.length;h.c.reset();assert.equal(h.events.length,count);
-});
-test('原生模板接上类型、参数、嵌套、删除和撤销事件，无JSON输入替代',()=>{
- const fs=require('node:fs');const path=require('node:path');const view=fs.readFileSync(path.join(__dirname,'../../pages/publish/components/story-rule-editor/index.wxml'),'utf8');
- for(const name of ['toggle','op','pick','input','child','remove','add','reset'])assert.match(view,new RegExp('bind(?:tap|change|input)="'+name+'"'));
- assert.match(view,/value="\{\{row.typeIndex\}\}"/);assert.match(view,/value="\{\{field.selectedIndex\}\}"/);assert.doesNotMatch(view,/textarea|JSON/);
+test('原型三句：属性 · 观察 至少 3 / 已获得线索 · 半张货单 / 进度钟 · 巡夜人警觉 +1，存的仍是键',()=>{
+ const h=component();
+ add(h,'conditions','attr','counter.observe');
+ const path=h.c.data.conditionRows[0].path;
+ h.c.onStep(tap({path,amount:1,step:1}));h.c.onStep(tap({path,amount:2,step:1}));
+ add(h,'conditions','clue','clue.ledger_half');
+ add(h,'effects','clock','counter.alarm');
+ assert.deepEqual(h.c.data.conditionRows.map(r=>r.text),['属性 · 观察 至少 3','已获得线索 · 半张货单']);
+ assert.deepEqual(h.c.data.effectRows.map(r=>r.text),['进度钟 · 巡夜人警觉 +1']);
+ const saved=h.events.at(-1).value;
+ assert.deepEqual(saved.conditions,[{op:'GTE',var:'counter.observe',value:3},{op:'HAS_TAG',value:'clue.ledger_half'}]);
+ assert.deepEqual(saved.effects,[{op:'TICK_CLOCK',var:'counter.alarm',value:1,max:6}]);
+ assert.deepEqual(form.errors(saved,nodes,variables),[]);
+ assert.doesNotMatch(visibleText(h.c),LATIN,'界面不能出现键名或英文');
+ assert.equal(h.layers.at(-1).open,false,'选好名字后回到下一站');
 });
 
-test('原生操作构建NOT→OR组合并配置检定条件，序列化后仍可编辑',()=>{
- const {c}=component();c.add({currentTarget:{dataset:{kind:'condition'}}});
- const choose=(path,op)=>{const row=c.data.rows.find(r=>r.path===path);c.op(event(path,null,row.types.findIndex(t=>t.value===op)))};
- choose('conditions.0','NOT');c.child({currentTarget:{dataset:{path:'conditions.0'}}});
- choose('conditions.0.condition','OR');c.child({currentTarget:{dataset:{path:'conditions.0.condition'}}});
- const path='conditions.0.condition.conditions.0';choose(path,'CHECK_RESULT');
- c.pick(event(path,'nodeId',1));c.pick(event(path,'result',1));
- assert.equal(c.data.error,'');const again=component(JSON.parse(JSON.stringify(c._draft))).c;
- assert.deepEqual(again._draft.conditions,[{op:'NOT',condition:{op:'OR',conditions:[{op:'CHECK_RESULT',nodeId:'node_b',result:'FAIL'}]}}]);
+test('全部满足 / 任一满足：任一满足 = 一条 OR，切回不丢句子',()=>{
+ const h=component({conditions:[{op:'HAS_TAG',value:'clue.ledger_half'},{op:'HAS_TAG',value:'tag.night'}],effects:[]});
+ assert.equal(h.c.data.showTopSeg,true);
+ h.c.onTopMode(tap({key:'OR'}));
+ assert.deepEqual(h.events.at(-1).value.conditions,[{op:'OR',conditions:[{op:'HAS_TAG',value:'clue.ledger_half'},{op:'HAS_TAG',value:'tag.night'}]}]);
+ assert.deepEqual(h.c.data.conditionRows.map(r=>r.text),['已获得线索 · 半张货单','有标签 · 夜行']);
+ h.c.onTopMode(tap({key:'AND'}));assert.equal(h.events.at(-1).value.conditions.length,2);
+});
+
+test('点一句就地展开：否定、换名字分段、至少 / 至多 / 正好、删除',()=>{
+ const h=component({conditions:[{op:'HAS_TAG',value:'clue.ledger_half'},{op:'GTE',var:'counter.observe',value:3}],effects:[]});
+ h.c.toggleRow(tap({path:'conditions.0',type:'leaf'}));
+ assert.deepEqual(h.c.data.conditionRows[0].editor.neg.map(s=>s.label),['已获得','未获得']);
+ h.c.onNegate(tap({path:'conditions.0',key:'1'}));
+ assert.deepEqual(h.events.at(-1).value.conditions[0],{op:'NOT',condition:{op:'HAS_TAG',value:'clue.ledger_half'}});
+ assert.equal(h.c.data.conditionRows[0].text,'未获得线索 · 半张货单');
+ h.c.toggleRow(tap({path:'conditions.1',type:'leaf'}));
+ const ed=h.c.data.conditionRows[1].editor;
+ assert.deepEqual(ed.names.map(n=>n.label),['观察','胆量']);assert.deepEqual(ed.cmp.map(s=>s.label),['至少','至多','正好']);
+ h.c.onPickName(tap({path:'conditions.1',key:'counter.nerve'}));h.c.onCompare(tap({path:'conditions.1',key:'2'}));
+ assert.equal(h.c.data.conditionRows[1].text,'属性 · 胆量 正好 3');
+ h.c.onRemove(tap({path:'conditions.0'}));
+ assert.deepEqual(h.events.at(-1).value.conditions,[{op:'EQ',var:'counter.nerve',value:3}]);
+});
+
+// 只剩一组「任一满足」时与顶层任一满足是同一份数据（一条 OR），所以这里先放一句别的。
+test('一组条件：钻进去改全部 / 任一、组里加句子、删除这组',()=>{
+ const h=component({conditions:[{op:'HAS_TAG',value:'clue.ledger_half'}],effects:[]});add(h,'conditions','group');
+ assert.equal(h.c.data.conditionRows[1].text,'一组条件 · 全部满足 0 条');
+ const seg=h.c.data.conditionRows.find(r=>r.type==='groupSeg');assert.ok(seg,'新加的一组直接展开');
+ h.c.onGroupMode(tap({path:seg.path,key:'OR'}));
+ add(h,seg.path,'trait','hurt');
+ assert.deepEqual(h.events.at(-1).value.conditions,[{op:'HAS_TAG',value:'clue.ledger_half'},{op:'OR',conditions:[{op:'HAS_CONDITION',value:'hurt'}]}]);
+ assert.ok(h.c.data.conditionRows.some(r=>r.text==='有特质 · 受了伤'&&r.depth===1));
+ h.c.openAdd(tap({target:seg.path}));assert.ok(!h.c.data.layerRows.some(r=>r.kind==='group'),'组里不再套一组');h.c.closeLayer();
+ h.c.onRemove(tap({path:h.c.data.conditionRows.find(r=>r.type==='groupDel').path}));
+ assert.deepEqual(h.events.at(-1).value.conditions,[{op:'HAS_TAG',value:'clue.ledger_half'}]);
+});
+
+test('添加那一层：种类一列，点一种就地展开可搜索的名字；换名字直接是名单',()=>{
+ const h=component({conditions:[],effects:[{op:'ADD_ITEM',itemId:'ilamp',quantity:1}]});
+ h.c.openAdd(tap({target:'conditions'}));
+ assert.equal(h.layers.at(-1).title,'添加条件');
+ assert.deepEqual(h.c.data.layerRows.slice(0,3).map(r=>r.label),['已获得线索','装备着物品','有标签']);
+ h.c.onLayerKind(tap({kind:'visit'}));h.c.onLayerQuery({detail:{value:'二层'}});
+ assert.deepEqual(h.c.data.layerRows.find(r=>r.open).names.map(n=>n.label),['仓库二层']);
+ h.c.onLayerName(tap({key:'node_b'}));
+ assert.equal(h.c.data.conditionRows[0].text,'到过节点 · 仓库二层 至少 1 次');
+ h.c.toggleRow(tap({path:'effects.0',type:'leaf'}));h.c.onStep(tap({path:'effects.0',amount:1,step:1}));
+ assert.equal(h.c.data.effectRows[0].text,'给物品 · 马灯 ×2');
+ assert.deepEqual(form.errors(h.events.at(-1).value,nodes,variables),[]);
+});
+
+test('效果编辑排序、数值增加 / 减少 / 设为；旧的身份条件不显示代码',()=>{
+ const h=component({conditions:[{op:'ROLE_IN',values:['NAVIGATOR']}],effects:[{op:'GRANT_XP',value:2},{op:'INC',var:'sys.luck',value:1}]});
+ assert.equal(h.c.data.conditionRows[0].text,'不再支持的条件');
+ h.c.toggleSort();h.c.onMoveUp(tap({path:'effects.1'}));
+ assert.deepEqual(h.events.at(-1).value.effects.map(e=>e.op),['INC','GRANT_XP']);
+ h.c.toggleSort();h.c.toggleRow(tap({path:'effects.0',type:'leaf'}));h.c.onVarOp(tap({path:'effects.0',key:'1'}));
+ assert.equal(h.c.data.effectRows[0].text,'数值 · 幸运值 −1');
+ h.c.onVarOp(tap({path:'effects.0',key:'2'}));assert.deepEqual(h.events.at(-1).value.effects[0],{op:'SET',var:'sys.luck',value:1});
+ assert.doesNotMatch(visibleText(h.c),LATIN);
+});
+
+test('只读与卸载后不再写；回读同一份数据得到同样的句子',()=>{
+ const h=component({conditions:[{op:'CHECK_RESULT',nodeId:'9007199254740993',result:'FAIL'}],effects:[]});
+ assert.equal(h.c.data.conditionRows[0].text,'检定结果 · 旧码头仓库 未通过');
+ h.detach();const count=h.events.length;h.c.onRemove(tap({path:'conditions.0'}));assert.equal(h.events.length,count);
+ const again=component(structuredClone(h.c._draft));assert.equal(again.c.data.conditionRows[0].text,'检定结果 · 旧码头仓库 未通过');
+});
+
+test('模板：句子行、分段、步进器、添加层都接上 handler；不再有原生按钮、▾、代码输入框与撤销按钮',()=>{
+ const view=fs.readFileSync(path.join(__dirname,'../../pages/publish/components/story-rule-editor/index.wxml'),'utf8');
+ for(const name of ['toggleRow','onTopMode','onGroupMode','onNegate','onPickName','onCompare','onResult','onVarOp','onStep','onRemove','openAdd','openRename','onLayerKind','onLayerName','toggleSort','onMoveUp'])
+  assert.match(view,new RegExp('(bind|catch)(tap|input)="'+name+'"'));
+ assert.match(view,/bindinput="onLayerQuery"/);
+ assert.doesNotMatch(view,/<button|▾|代码|撤销未完成|cy-dropdown|textarea|JSON/);
 });

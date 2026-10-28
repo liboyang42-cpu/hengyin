@@ -106,6 +106,7 @@ const { isRecord, isRecordList } = require('../../../utils/response-shape.js');
 const advancedGameConfig = require('../utils/publish/advanced-game-config.js');
 const topicRouteGraph = require('../utils/publish/topic-route-graph.js');
 const storyRuleForm = require('../utils/publish/story-rule-form.js');
+const storyRuleSentence = require('../utils/publish/story-rule-sentence.js');
 const attributeBinding = require('../utils/publish/attribute-binding.js');
 const nodeGameCatalog = require('../utils/publish/node-game-catalog.js');
 const storyInitialState = require('../utils/publish/story-initial-state.js');
@@ -471,6 +472,12 @@ Page({
     routeMappingRows: [],
     routeMappingFallbackLabel: '继续故事流',
     routeNodeMappingSummary: {},
+    // 10-28 e-route：展开的结果行、去往勾选是否展开、条件 / 效果开的下一层（{ identity, title }）。
+    routeMappingOpen: '',
+    routeMappingDestOpen: false,
+    routeMappingLayer: null,
+    routeRuleNames: {},
+    nodePhotosOpen: false,
 
     audioPreviewPlaying: false,
     // 故事流音频块预听(与章节旁白共用同一个播放器,见 onPreviewStoryAudio)。
@@ -6200,6 +6207,11 @@ Page({
     this._routeRulesScope = this.data.operationScope;
     this._routeMappingSourceNodeId = sourceId;
     this._routeMappingReturnToNodeEditor = returnToNodeEditor;
+    // 条件 / 效果只显示名字：名单来自 d20 设定（属性、进度钟、特质）、线索与物品、主题物品和节点。
+    const ruleNames = storyRuleSentence.buildNames(this.data.formData.journeyRules, this.data.formData.themeRuntimeConfig,
+      nodes, graph.variables || {});
+    const ruleVariables = storyRuleSentence.editorVariables(graph.variables || {}, ruleNames);
+    this._routeExtraVariables = ruleVariables;
     this.setData({
       routeMappingShow: true,
       routeMappingSourceLabel: source.label,
@@ -6207,7 +6219,11 @@ Page({
         || source.templateName || '节点完成结果',
       routeMappingRows: rows,
       routeRuleNodes: nodes.map(node => ({ id: node.id, label: node.label })),
-      routeRuleVariables: graph.variables || {},
+      routeRuleVariables: ruleVariables,
+      routeRuleNames: ruleNames,
+      routeMappingOpen: '',
+      routeMappingDestOpen: false,
+      routeMappingLayer: null,
       routeMappingFallbackLabel: nextNodeId ? '继续故事流' : '故事流结束',
       popChapterNodes: false,
     });
@@ -6236,11 +6252,36 @@ Page({
     const rowIndex = Number(e.currentTarget.dataset.rowindex);
     const rows = (this.data.routeMappingRows || []).map((row) => Object.assign({}, row));
     const row = rows[rowIndex];
-    const selected = row && row.targetOptions[Number(e.detail.value)];
+    const dataset = e.currentTarget.dataset;
+    // 就地勾选传 optionindex；保留 detail.value 以兼容旧的选择器事件。
+    const optionIndex = dataset.optionindex !== undefined ? dataset.optionindex : (e.detail || {}).value;
+    const selected = row && row.targetOptions[Number(optionIndex)];
     if (!selected) return;
     row.toNodeId = selected.id;
     row.targetLabel = selected.label;
-    this.setData({ routeMappingRows: rows });
+    this.setData({ routeMappingRows: rows, routeMappingDestOpen: false });
+  },
+
+  toggleRouteMappingRow(e) {
+    const key = e.currentTarget.dataset.key;
+    this.setData({ routeMappingOpen: this.data.routeMappingOpen === key ? '' : key, routeMappingDestOpen: false });
+  },
+
+  toggleNodePhotos() { this.setData({ nodePhotosOpen: !this.data.nodePhotosOpen }); },
+
+  toggleRouteMappingDest() { this.setData({ routeMappingDestOpen: !this.data.routeMappingDestOpen }); },
+
+  // 条件 / 效果的组件开、关下一层时通知这里：换头部、藏其它结果行。
+  onRouteRuleLayer(e) {
+    const detail = e.detail || {};
+    this.setData({ routeMappingLayer: detail.open ? { identity: detail.identity, title: detail.title } : null });
+  },
+
+  closeRouteRuleLayer() {
+    const index = (this.data.routeMappingRows || []).findIndex(row => row.mappingKey === this.data.routeMappingOpen);
+    const editor = index >= 0 && this.selectComponent('#route-rules-' + index);
+    if (editor) editor.closeLayer();
+    else this.setData({ routeMappingLayer: null });
   },
 
   closeNodeRouteMapping() {
@@ -6248,6 +6289,8 @@ Page({
     this._routeMappingReturnToNodeEditor = false;
     this.setData({
       routeMappingShow: false,
+      routeMappingOpen: '',
+      routeMappingLayer: null,
       popChapterNodes: !!returnToNodeEditor,
     });
   },
@@ -6279,10 +6322,17 @@ Page({
     let graph = this.data.formData.routeMode === 'BRANCH_GRAPH'
       ? topicRouteGraph.normalizeGraph(this._routeGraph).graph
       : this._sequentialRouteGraph(nodes);
+    // 编辑时可选的属性 / 进度钟若还没在路线图里声明，用到了才补进 variables（初值同 d20 设定）。
+    const extraVariables = this._routeExtraVariables || {};
+    graph.variables = Object.assign({}, graph.variables || {});
+    const usedVariables = JSON.stringify((this.data.routeMappingRows || []).map(row => row.ruleConfig || {}));
+    Object.keys(extraVariables).forEach(key => {
+      if (!(key in graph.variables) && usedVariables.indexOf('"' + key + '"') >= 0) graph.variables[key] = extraVariables[key];
+    });
     for (const row of this.data.routeMappingRows || []) {
       if (!row.ruleConfig) continue;
       const errors = storyRuleForm.errors(row.ruleConfig, nodes, graph.variables || {});
-      if (errors.length) { cyToast(row.label + '：' + errors[0].message); return; }
+      if (errors.length) { cyToast(row.label + '：有一句还没选完'); return; }
       if (!row.toNodeId && !nextNodeId && (row.ruleConfig.conditions.length || row.ruleConfig.effects.length)) {
         cyToast(row.label + '：请先选择下一站，再保存条件与效果'); return;
       }
