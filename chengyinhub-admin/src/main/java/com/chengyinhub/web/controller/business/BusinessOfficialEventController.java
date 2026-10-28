@@ -240,13 +240,11 @@ public class BusinessOfficialEventController extends BaseController {
                 Long officialMemberId = resolveV2OfficialMember();
                 if (officialMemberId == null) return error(V2_OPERATOR_UNAUTHORIZED);
                 saved = officialEventV2Service.publishBroadcastForOperator(bc, officialMemberId);
-                return AjaxResult.success("通知已登记，请读取逐渠道结果",
-                        saved.getId());
+                return AjaxResult.success("通知已提交", saved.getId());
             }
         }
         saved = officialBroadcastService.publish(bc, null);
-        return AjaxResult.success("通知已登记，请读取逐渠道结果",
-                saved.getId());
+        return AjaxResult.success("通知已提交", saved.getId());
     }
 
     @PreAuthorize("@ss.hasPermi('business:officialevent:notify')")
