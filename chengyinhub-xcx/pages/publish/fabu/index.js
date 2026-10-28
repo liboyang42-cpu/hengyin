@@ -211,6 +211,7 @@ const survivalEditor = require('./theme-runtime-survival.js'); // survival
 const zeroHpEditor = require('./theme-runtime-zero-hp.js'); // R5 HP 归零面板（与 runtimeEditor 内同一组方法，直接展开便于 handler 溯源）
 const ownership = require('./theme-ownership.js');
 const keysItems = require('./theme-keys-items.js'); // 线索与物品 · 物品一组
+const initialCarry = require('./theme-initial-carry.js'); // 初始状态 · 开局带着
 Page({
   ...runtimeEditor.methods,
   ...structure.methods, // structure
@@ -218,6 +219,7 @@ Page({
   ...zeroHpEditor.methods, // R5 HP 归零
   ...ownership.methods,
   ...keysItems.methods,
+  ...initialCarry.methods,
   _routeGraph: topicRouteGraph.emptyGraph(),
   _routeMappingSourceNodeId: '',
   _routeMappingReturnToNodeEditor: false,
@@ -231,6 +233,7 @@ Page({
     ...survivalEditor.data, // survival
     ...ownership.data,
     ...keysItems.data,
+    ...initialCarry.data,
     // 氛围块的选择器:cy-dropdown 吃 {value,label} 数组(全仓禁原生 picker),块上回显要 key→中文的映射。
     moodOptions: CHAPTER_ATMOSPHERES,
     storyWhenOptions: [], storyWhenLabelOf: {},
@@ -1303,6 +1306,8 @@ Page({
       this.closeChapterPreview();
     } else if (this.data.valueEditor && this.data.valueEditor.show) {
       this.closeValueEditor();
+    } else if (this.data.carryPicker && this.data.carryPicker.show) {
+      this.closeCarryPicker();
     } else if (this.data.initialStateEditor && this.data.initialStateEditor.show) {
       this.closeInitialState();
     } else if (this.data.routeMappingShow) {
@@ -7221,7 +7226,8 @@ Page({
       const editing = Object.assign({}, this.data.initialStateEditor.rules, { attributeBinding: rules.attributeBinding });
       editing.attributes = rules.attributes; delete editing.attributeDefinition; delete editing.attributeSnapshot;
       this.setData({ 'formData.journeyRules': confirmed.rules,
-        'initialStateEditor.rules': editing, 'initialStateEditor.values': customInitialValues(editing.attributes), 'initialStateEditor.error': '' });
+        'initialStateEditor.rules': editing, 'initialStateEditor.values': customInitialValues(editing.attributes),
+        'initialStateEditor.carry': initialCarry.carryRows(editing.attributes), 'initialStateEditor.error': '' });
       this._onDraftEdited(this._persistDraftEnvelope());
     } catch (error) { this.setData({ 'initialStateEditor.error': error.message }); }
   },
@@ -7232,7 +7238,7 @@ Page({
       this._syncRuntimeStats();
       const rules = storyInitialState.parse(this.data.formData.journeyRules);
       const values = customInitialValues(rules.attributes);
-      this.setData({ initialStateEditor: { show: true, rules, values, error: '' } });
+      this.setData({ initialStateEditor: { show: true, rules, values, carry: initialCarry.carryRows(rules.attributes), error: '' } });
       this.loadAttributeRegistry();
     } catch (error) { cyToast(error.message); }
   },

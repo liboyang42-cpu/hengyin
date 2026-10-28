@@ -2,7 +2,7 @@
   <text class="binding__title">启用的注册属性</text>
   <text class="binding__hint">{{notice}}</text>
   <checkbox-group wx:if="{{ready}}" bindchange="select">
-    <label wx:for="{{options}}" wx:key="key" class="binding__option"><checkbox value="{{item.key}}" checked="{{item.checked}}" disabled="{{readOnly}}" />{{item.label}} · {{item.key}}</label>
+    <label wx:for="{{options}}" wx:key="key" class="binding__option"><checkbox value="{{item.key}}" checked="{{item.checked}}" disabled="{{readOnly}}" />{{item.label}}</label>
   </checkbox-group>
   <checkbox-group wx:if="{{ready}}" bindchange="accept">
     <view wx:for="{{conflicts}}" wx:key="key" class="binding__conflict">

@@ -44,12 +44,12 @@ function nameError(kind, name, taken) {
   const k = KINDS[kind] || (kind === 'item' ? { label: '物品' } : null)
   if (!k) return '请再试一次。'
   if (!name) return ''
-  if (name.length > 30) return '名字最多 30 个字。'
+  if (name.length > 24) return '名字最多 24 个字。'
   if ((taken || []).includes(name)) return `已有同名的${k.label}。`
   return ''
 }
 
-/** 系统生成的键名:前缀 + k + 时间与随机数(base36),满足 KEY_NAME 且不与已有键冲突。 */
+/** 系统生成的键名:前缀 + k + 时间戳(base36),满足 KEY_NAME 且不与已有键冲突。 */
 function newKey(kind, name, existing, seed) {
   const k = KINDS[kind]
   if (!k) return null

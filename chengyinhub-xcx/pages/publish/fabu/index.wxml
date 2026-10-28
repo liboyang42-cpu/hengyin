@@ -1706,31 +1706,20 @@
   <cy-sheet show="{{valueEditor.show}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="closeValueEditor" class="node-sheet-host">
     <view class="node-sheet story-initial" wx:if="{{valueEditor.row}}">
       <view class="node-sheet__top"><view class="node-sheet__close" bindtap="closeValueEditor" aria-role="button" aria-label="关闭数值编辑" hover-class="cy-pressed">退出</view><view class="node-sheet__done" bindtap="saveValueEditor" aria-role="button" aria-label="保存数值" hover-class="cy-pressed">完成</view></view>
-      <view class="node-sheet__titlebar"><text class="node-sheet__eyebrow">取值范围</text><text class="node-sheet__name node-sheet__name--static">{{valueEditor.index < 0 ? '添加数值' : '编辑数值'}}</text></view>
+      <view class="node-sheet__titlebar"><text class="node-sheet__name node-sheet__name--static">{{valueEditor.row.label || (valueEditor.index < 0 ? '添加数值' : '编辑数值')}}</text></view>
       <view class="node-card">
-        <view class="rt-field"><text>名称</text><input value="{{valueEditor.row.label}}" disabled="{{valueEditor.definitionReadOnly}}" maxlength="128" placeholder="输入数值名称" data-field="label" bindinput="onValueField" /></view>
-        <text class="story-initial__example">改名后，已有引用仍会保持关联。</text>
-        <view class="rt-two"><view class="rt-field"><text>下限</text><input type="text" value="{{valueEditor.row.min}}" disabled="{{valueEditor.definitionReadOnly}}" data-field="min" bindinput="onValueField" /></view><view class="rt-field"><text>上限</text><input type="text" value="{{valueEditor.row.max}}" disabled="{{valueEditor.definitionReadOnly}}" data-field="max" bindinput="onValueField" /></view></view>
+        <view class="rt-field"><text>名称</text><input value="{{valueEditor.row.label}}" disabled="{{valueEditor.definitionReadOnly}}" maxlength="24" placeholder="名称" data-field="label" bindinput="onValueField" /></view>
         <view class="node-card__row"><view class="node-card__main"><text class="node-card__title">玩家可见</text></view><cy-switch checked="{{valueEditor.row.visible}}" disabled="{{valueEditor.definitionReadOnly}}" data-field="visible" bindchange="onValueField" /></view>
-        <text class="story-initial__example">开局值在第一章的「初始状态」中填写；修改范围后，越界的开局值会标出并阻止发布。</text>
       </view>
+      <text class="ic-label">范围</text>
       <view class="node-card">
-        <view class="node-card__row"><view class="node-card__main"><text class="node-card__title">关联</text></view><view class="node-pill" wx:if="{{runtimeHpEnabled}}" bindtap="addValueLink" aria-role="button" aria-label="添加数值关联" hover-class="cy-pressed">添加<cy-icon name="plus" size="24" /></view></view>
-        <text class="story-initial__example">仅支持此值下降时扣减已启用的{{runtimeHpLabel}}，不支持其他目标或双向关联。</text>
-        <text class="story-initial__example" wx:if="{{!runtimeHpEnabled}}">请先启用{{runtimeHpLabel}}。</text>
-        <view wx:for="{{valueEditor.links}}" wx:key="id" wx:for-index="li">
-          <view class="node-card__hr"></view>
-          <view class="rt-field"><text>触发方式</text><cy-dropdown topic-editor range="{{valueTriggers}}" value="{{item.trigger === 'PER_POINT' ? 0 : item.trigger === 'PER_EVENT' ? 1 : 2}}" data-index="{{li}}" data-field="trigger" bind:change="onValueLink"><view class="rt-select">{{item.trigger === 'PER_POINT' ? valueTriggers[0] : item.trigger === 'PER_EVENT' ? valueTriggers[1] : valueTriggers[2]}}<cy-icon name="chevron-right" size="24" /></view></cy-dropdown></view>
-          <view class="rt-field"><text>来源</text><cy-dropdown topic-editor range="{{valueReasonLabels}}" value="{{item.allowedReasons[0] === 'TASK_COST' ? 0 : item.allowedReasons[0] === 'TEMPLATE_EFFECT' ? 1 : item.allowedReasons[0] === 'CHAPTER_COST' ? 2 : item.allowedReasons[0] === 'ITEM_USE' ? 3 : 4}}" data-index="{{li}}" data-field="reason" bind:change="onValueLink"><view class="rt-select">{{item.allowedReasons[0] === 'TASK_COST' ? valueReasonLabels[0] : item.allowedReasons[0] === 'TEMPLATE_EFFECT' ? valueReasonLabels[1] : item.allowedReasons[0] === 'CHAPTER_COST' ? valueReasonLabels[2] : item.allowedReasons[0] === 'ITEM_USE' ? valueReasonLabels[3] : valueReasonLabels[4]}}<cy-icon name="chevron-right" size="24" /></view></cy-dropdown></view>
-          <view class="rt-field"><text>次数范围</text><text wx:if="{{item.trigger === 'FIRST_THRESHOLD'}}">本局一次</text><cy-dropdown wx:else topic-editor range="{{valueFrequencies}}" value="{{item.frequency === 'RUN' ? 1 : 0}}" data-index="{{li}}" data-field="frequency" bind:change="onValueLink"><view class="rt-select">{{item.frequency === 'RUN' ? valueFrequencies[1] : valueFrequencies[0]}}<cy-icon name="chevron-right" size="24" /></view></cy-dropdown></view>
-          <view class="rt-field" wx:if="{{item.trigger === 'PER_POINT'}}"><text>每点扣减</text><input type="number" value="{{item.multiplier}}" data-index="{{li}}" data-field="multiplier" bindinput="onValueLink" /></view>
-          <view class="rt-field" wx:else><text>固定扣减</text><input type="number" value="{{item.amount}}" data-index="{{li}}" data-field="amount" bindinput="onValueLink" /></view>
-          <view class="rt-field" wx:if="{{item.trigger === 'FIRST_THRESHOLD'}}"><text>首次阈值</text><input type="text" value="{{item.threshold}}" data-index="{{li}}" data-field="threshold" bindinput="onValueLink" /></view>
-          <view class="node-pill" data-index="{{li}}" bindtap="removeValueLink" aria-role="button" aria-label="移除关联" hover-class="cy-pressed">移除关联</view>
-        </view>
+        <view class="rt-two"><view class="rt-field"><text>最小值</text><input type="text" value="{{valueEditor.row.min}}" disabled="{{valueEditor.definitionReadOnly}}" data-field="min" bindinput="onValueField" /></view><view class="rt-field"><text>最大值</text><input type="text" value="{{valueEditor.row.max}}" disabled="{{valueEditor.definitionReadOnly}}" data-field="max" bindinput="onValueField" /></view></view>
+      </view>
+      <text class="ic-label">关联</text>
+      <view class="node-card">
+        <view class="node-card__row"><view class="node-card__main"><text class="node-card__title">下降时一起扣{{runtimeHpLabel}}</text></view><cy-switch checked="{{valueEditor.links.length > 0}}" bindchange="onValueLinkSwitch" /></view>
       </view>
       <view class="node-card node-card--danger" wx:if="{{valueEditor.index >= 0 && !valueEditor.definitionReadOnly}}" bindtap="removeValue" aria-role="button" aria-label="删除数值" hover-class="cy-pressed">删除数值</view>
-      <view wx:if="{{valueEditor.definitionReadOnly}}" class="rt-hint">定义在主题配置的状态键中管理；这里可以编辑数值关联。</view>
       <cy-inline-error wx:if="{{valueEditor.error}}" title="{{valueEditor.error}}" />
     </view>
   </cy-sheet>
@@ -1759,7 +1748,7 @@
   </view>
 </cy-sheet>
 
-<cy-sheet show="{{initialStateEditor.show}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="closeInitialState" class="node-sheet-host">
+<cy-sheet show="{{initialStateEditor.show}}" stacked="{{carryPicker.show}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="closeInitialState" class="node-sheet-host">
   <view class="node-sheet story-initial" wx:if="{{initialStateEditor.rules}}">
     <view class="node-sheet__top"><view class="node-sheet__close" bindtap="closeInitialState" aria-role="button" aria-label="关闭初始状态" hover-class="cy-pressed" hover-stay-time="80">退出</view>
       <view class="node-sheet__done" bindtap="saveInitialState" aria-role="button" aria-label="保存初始状态" hover-class="cy-pressed" hover-stay-time="80">完成</view>
@@ -1769,6 +1758,17 @@
       <text class="node-sheet__eyebrow">主题配置</text>
       <text class="node-sheet__name node-sheet__name--static">初始状态</text>
     </view>
+    <text class="ic-label">开局带着</text>
+    <view class="node-card ic-list">
+      <view class="ic-row" wx:for="{{initialStateEditor.carry}}" wx:key="key">
+        <text class="ic-row__name">{{item.label}}</text><text class="ic-row__kind">{{item.kindText}}</text>
+        <view wx:if="{{editScope !== 'WHITELIST' && !initialStateEditor.rules.attributeBinding}}" class="ic-row__remove" data-key="{{item.key}}" bindtap="removeCarry" aria-role="button" aria-label="移除{{item.label}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="24" /></view>
+      </view>
+      <view wx:if="{{editScope !== 'WHITELIST' && !initialStateEditor.rules.attributeBinding}}" class="ic-row ic-row--add" bindtap="openCarryPicker" aria-role="button" aria-label="添加开局带着的线索或标签" hover-class="cy-pressed" hover-stay-time="80">
+        <view class="ic-row__plus"><cy-icon name="plus" size="24" /></view><text>添加</text>
+      </view>
+    </view>
+    <text class="ic-label">数值</text>
     <view class="node-card">
       <attribute-binding-editor wx:if="{{initialStateEditor.show}}" rules="{{formData.journeyRules}}" snapshot="{{attributeRegistrySnapshot}}" topic-id="{{editingTopicId}}" config-version="{{formData.configVersion}}" read-only="{{editScope === 'WHITELIST'}}" bind:confirm="onAttributeBindingConfirm" bind:manage="manageAttributeDefinitions" bind:refresh="loadAttributeRegistry" />
       <cy-inline-error wx:if="{{attributeRegistryError}}" title="{{attributeRegistryError}}" />
@@ -1777,14 +1777,12 @@
       <view class="story-initial__row"><text class="node-card__title">{{runtimeHpInitialLabel}}</text><cy-switch checked="{{true}}" disabled="{{editScope === 'WHITELIST'}}" data-field="hp.enabled" bind:change="onInitialStateField" accessibility-label="启用{{runtimeHpInitialLabel}}" /></view>
       <view class="story-initial__numbers">
         <cy-field label="开局{{runtimeHpInitialLabel}}" value="{{initialStateEditor.rules.hp.init}}" data-field="hp.init" bind:input="onInitialStateField" readonly="{{editScope === 'WHITELIST'}}" />
-        <cy-field label="上限（主题设置）" value="{{initialStateEditor.rules.hp.max}}" readonly="{{true}}" />
       </view>
     </view>
     <view class="node-card" wx:if="{{initialStateEditor.rules.luck.enabled}}">
       <view class="story-initial__row"><text class="node-card__title">{{runtimeLuckInitialLabel}}</text><cy-switch checked="{{true}}" disabled="{{editScope === 'WHITELIST'}}" data-field="luck.enabled" bind:change="onInitialStateField" accessibility-label="启用{{runtimeLuckInitialLabel}}" /></view>
       <view class="story-initial__numbers">
         <cy-field label="开局{{runtimeLuckInitialLabel}}" value="{{initialStateEditor.rules.luck.init}}" data-field="luck.init" bind:input="onInitialStateField" readonly="{{editScope === 'WHITELIST'}}" />
-        <cy-field label="上限（主题设置）" value="{{initialStateEditor.rules.luck.max}}" readonly="{{true}}" />
       </view>
     </view>
     <view class="node-card" wx:for="{{initialStateEditor.values}}" wx:key="key">
@@ -1802,6 +1800,45 @@
       </view>
     </view>
     <cy-inline-error wx:if="{{initialStateEditor.error}}" title="{{initialStateEditor.error}}" />
+  </view>
+</cy-sheet>
+
+<cy-sheet show="{{carryPicker.show}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="closeCarryPicker" class="node-sheet-host">
+  <view class="node-sheet story-initial ic-picker" wx:if="{{carryPicker.show}}">
+    <view class="node-sheet__top">
+      <view class="node-sheet__close" bindtap="closeCarryPicker" aria-role="button" aria-label="返回初始状态" hover-class="cy-pressed" hover-stay-time="80">返回</view>
+      <text class="ic-picker__title">添加</text>
+      <view class="node-sheet__done {{carryPicker.count ? '' : 'is-disabled'}}" bindtap="confirmCarryPicker" aria-role="button" aria-label="添加所选" hover-class="cy-pressed" hover-stay-time="80">添加</view>
+    </view>
+    <view class="node-card ic-search"><cy-icon name="search" size="28" /><input value="{{carryPicker.query}}" placeholder="搜索" confirm-type="search" bindinput="onCarryQuery" /></view>
+    <view class="node-card ic-list">
+      <view class="ic-row ic-row--add" bindtap="onCarryCreateOpen" aria-role="button" aria-label="新建" hover-class="cy-pressed" hover-stay-time="80">
+        <view class="ic-row__plus"><cy-icon name="plus" size="24" /></view><text>{{carryPicker.query ? '新建「' + carryPicker.query + '」' : '新建…'}}</text>
+      </view>
+      <block wx:if="{{carryPicker.creating}}">
+        <view class="ic-seg">
+          <view class="ic-seg__opt {{carryPicker.newKind === 'clue' ? 'is-on' : ''}}" data-kind="clue" bindtap="onCarryKind" aria-role="button" aria-label="线索" hover-class="cy-pressed" hover-stay-time="80">线索</view>
+          <view class="ic-seg__opt {{carryPicker.newKind === 'tag' ? 'is-on' : ''}}" data-kind="tag" bindtap="onCarryKind" aria-role="button" aria-label="标签" hover-class="cy-pressed" hover-stay-time="80">标签</view>
+        </view>
+        <view class="ic-row">
+          <text class="ic-row__name">名称</text>
+          <input class="ic-row__input" value="{{carryPicker.newName}}" maxlength="24" bindinput="onCarryNewName" bindconfirm="createCarryKey" />
+          <view class="ic-row__act {{!carryPicker.newName || carryPicker.saving ? 'is-off' : ''}}" bindtap="createCarryKey" aria-role="button" aria-label="新建" hover-class="cy-pressed" hover-stay-time="80">新建</view>
+        </view>
+      </block>
+    </view>
+    <text class="ic-note ic-note--error" wx:if="{{carryPicker.error}}">{{carryPicker.error}}</text>
+    <text wx:if="{{carryPicker.state === 'error'}}" class="ic-note ic-note--error" bindtap="retryCarryPicker" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">没有读取成功，请再试一次。</text>
+    <block wx:for="{{carryPicker.groups}}" wx:key="kind" wx:for-item="group">
+      <text class="ic-label">{{group.label}}</text>
+      <view class="node-card ic-list">
+        <view class="ic-row" wx:for="{{group.rows}}" wx:key="key" data-key="{{item.key}}" bindtap="onCarryToggle" aria-role="checkbox" aria-checked="{{item.on || item.added}}" aria-label="{{item.label}}" hover-class="cy-pressed" hover-stay-time="80">
+          <text class="ic-row__name">{{item.label}}</text>
+          <text wx:if="{{item.added}}" class="ic-row__kind">已添加</text>
+          <view wx:elif="{{item.on}}" class="ic-row__check"><cy-icon name="check" size="28" /></view>
+        </view>
+      </view>
+    </block>
   </view>
 </cy-sheet>
 

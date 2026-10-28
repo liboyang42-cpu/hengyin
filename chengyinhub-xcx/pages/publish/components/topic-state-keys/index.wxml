@@ -8,7 +8,7 @@
 <cy-sheet show="{{open}}" bind:close="onClose" class="node-sheet-host">
   <view class="node-sheet sk-sheet">
     <view class="node-sheet__top">
-      <view class="node-sheet__close" bindtap="onClose" aria-role="button" aria-label="取消" hover-class="cy-pressed" hover-stay-time="80">取消</view>
+      <view class="node-sheet__close" bindtap="onClose" aria-role="button" aria-label="退出" hover-class="cy-pressed" hover-stay-time="80">退出</view>
       <text class="sk-sheet__title">线索与物品</text>
       <view class="node-sheet__done {{saving ? 'is-disabled' : ''}}" bindtap="onDone" aria-role="button" aria-label="完成" hover-class="cy-pressed" hover-stay-time="80">完成</view>
     </view>
@@ -27,7 +27,7 @@
             <block wx:if="{{expanded === item.id}}">
               <view class="sk-row sk-row--field">
                 <text class="sk-row__name">名称</text>
-                <input class="sk-row__input" value="{{editName}}" maxlength="30" confirm-type="done" bindinput="onEditName" bindconfirm="onRename" bindblur="onRename" />
+                <input class="sk-row__input" value="{{editName}}" maxlength="24" confirm-type="done" bindinput="onEditName" bindconfirm="onRename" bindblur="onRename" />
               </view>
               <block wx:if="{{item.usedIn.length}}">
                 <text class="sk-row__head">用在</text>
@@ -39,7 +39,7 @@
           </block>
           <block wx:if="{{!readOnly}}">
             <view wx:if="{{adding === group.kind}}" class="sk-row sk-row--field">
-              <input class="sk-row__input sk-row__input--add {{formError ? 'is-invalid' : ''}}" value="{{addName}}" maxlength="30" focus="{{true}}" placeholder="名称" confirm-type="done" bindinput="onAddInput" bindconfirm="onSave" />
+              <input class="sk-row__input sk-row__input--add {{formError ? 'is-invalid' : ''}}" value="{{addName}}" maxlength="24" focus="{{true}}" placeholder="名称" confirm-type="done" bindinput="onAddInput" bindconfirm="onSave" />
               <view class="sk-row__act {{!addName || formError || saving ? 'is-off' : ''}}" bindtap="onSave" aria-role="button" aria-label="添加" hover-class="cy-pressed" hover-stay-time="80">添加</view>
             </view>
             <view wx:else class="sk-row sk-row--add" data-kind="{{group.kind}}" bindtap="onAddOpen" aria-role="button" aria-label="添加{{group.label}}" hover-class="cy-pressed" hover-stay-time="80">

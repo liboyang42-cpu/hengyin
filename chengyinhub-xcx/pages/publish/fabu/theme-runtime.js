@@ -559,6 +559,14 @@ const methods = {
     const links = editor.links.concat({ id: 'link_' + suffix, sourceKey: editor.row.key, targetKey: 'sys.hp', trigger: 'PER_POINT', allowedReasons: ['TASK_COST'], frequency: 'EVENT', multiplier: 1 });
     this.setData({ 'valueEditor.links': links });
   },
+  /** 关联只剩一个开关:打开 = 下降时按点扣生命值(默认一条);关掉 = 去掉这个数值的全部关联。 */
+  onValueLinkSwitch(e) {
+    if (e.detail.value) {
+      if (!this.data.valueEditor.links.length) this.addValueLink();
+      if (!this.data.valueEditor.links.length) this.setData({ 'valueEditor.links': [] }); // 没开成:开关弹回
+    }
+    else this.setData({ 'valueEditor.links': [], 'valueEditor.error': '' });
+  },
   removeValueLink(e) {
     const links = copy(this.data.valueEditor.links);
     links.splice(Number(e.currentTarget.dataset.index), 1);

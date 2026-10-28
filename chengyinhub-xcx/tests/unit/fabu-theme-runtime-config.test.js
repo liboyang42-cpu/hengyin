@@ -299,7 +299,9 @@ test('章节默认完成规则不写入主题配置，值域页面不显示内�
   assert.match(wxml, /bind:change="onStoryNodeRole"/);
   assert.doesNotMatch(wxml, /addChapterExtraNode|onRuntimeChapterCost/);
   assert.doesNotMatch(wxml, /标识 \{\{valueEditor\.row\.key\}\}/);
-  assert.match(wxml, /仅支持此值下降时扣减已启用的\{\{runtimeHpLabel\}\}/);
+  // 2026-10-28 原型 e-value:关联只剩一个开关,不再写说明
+  assert.match(wxml, /下降时一起扣\{\{runtimeHpLabel\}\}<\/text><\/view><cy-switch checked="\{\{valueEditor\.links\.length > 0\}\}" bindchange="onValueLinkSwitch"/);
+  assert.doesNotMatch(wxml, /仅支持此值下降时|定义在主题配置的状态键中管理/);
 });
 
 test('任选数量计入未保存节点，已有规则的章节恢复全部完成写显式 ALL', () => {
