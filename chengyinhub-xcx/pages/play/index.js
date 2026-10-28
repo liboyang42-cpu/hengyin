@@ -135,11 +135,9 @@ const PLAY_STORY_CARD = Object.freeze({
 // S9 暗色底图配置已抽到 utils/map-style.js(roam 页共用同一份,避免只改一页导致半暗半亮)。
 // 接入文档见 components/cy/free-map/DARK_MAP.md。
 const { MAP_STYLE: MAP_DARK } = require('../../utils/map-style.js');
-const storyAudio = require('./utils/story-audio.js');
 const storyScene = require('./utils/story-scene.js');
 const lifeArchive = require('./utils/life-archive.js');
 const storyResume = require('./utils/story-resume.js');
-const STORY_SOUND_KEY = 'cy_story_sound_off';
 /* 内心声音(原型 VOICES 表原值);第 3 档异常时两个声音改名(越往后越像机器)。 */
 const STORY_VOICE_COLORS = { 规矩: '#B9A7FF', 窗外: '#5CD6C8', 心: '#FF9F80', 精密: '#7EB6FF', 咔哒: '#FF6B6B' };   /* ds-ok 原型 VOICES */
 const STORY_VOICE_ALT = { 规矩: '进程', 窗外: '传感器' };
@@ -464,7 +462,6 @@ Page({
     storyMapCenter: null,
     oddFlick: -1,
     storyChat: false,    // 终章反转:读到反转块后整章翻成对话框(正文 = 「我」发出去的消息)        // 越往后越不正常:此刻正闪的那一段(chapterParas 的 i)
-    soundOn: true,       // 故事流环境音 / 音效(2026-09-23);本机记住,右上角菜单开关
     chapterGate: { show: false, number: 1, total: 1, title: '', subtitle: '', faces: [], endInfo: null, info: {} }, finale: { show: false, faces: [], info: {} },
     // 导航态顶部条的第二行。⚠️ 全部是「预计」:没有导航 SDK,只能按直线距离 + 步行速度估。
     navMeta: { km: '0.0', dur: '—', eta: '—' },
@@ -981,7 +978,6 @@ Page({
     this._themeEpoch = (this._themeEpoch || 0) + 1;
     if (this._gateTimer) clearTimeout(this._gateTimer);
     (this._fxTimers || []).forEach(clearTimeout);
-    if (this._sound) { this._sound.dispose(); this._sound = null; }
     this._stopTracking();
     this._watching = false;
     this.destroyAudio();
@@ -1023,7 +1019,6 @@ Page({
     this._runRestoreEpoch = (this._runRestoreEpoch || 0) + 1;
     this._themeHidden = true; this._stopThemePoll();
     this._stopZeroHpTimer();
-    if (this._sound) { this._sound.dispose(); this._sound = null; }   // 回来时按当前氛围重起
     this._stopStoryDust();
     if (this._chMeasureTimer) clearTimeout(this._chMeasureTimer);
     if (this._settleTimer) clearTimeout(this._settleTimer);
@@ -1710,7 +1705,7 @@ Page({
             const it = list[i];
             if (!it || it.bottom <= box.top || it.top >= box.bottom) continue;
             that._saveReadingPos(lines[i]);
-            that._syncStoryBed(lines[i]);
+            that._syncStoryScene();
             break;
           }
         }
@@ -1718,8 +1713,6 @@ Page({
         if (chapterFull && !that.data.storyChat && lines.some((ln, i) => ln.kind === 'reveal' && list[i]
           && list[i].top < box.bottom - 40 && list[i].bottom > box.top + 80)) {
           that.setData({ storyChat: true }, () => that.measureChapter());
-          const s = that._storySound();
-          if (s) s.sfx('page');
           if (!that.data.reducedMotion) wx.vibrateShort({ type: 'light' });
         }
         // 同一批补显形的行要**逐条错开** 50ms:一起亮就是整块淡入,不是样机那种一行一行浮起来
@@ -3551,33 +3544,9 @@ Page({
     pending.then(() => { if (this._thoughtSyncPending === pending) this._thoughtSyncPending = null; });
     return pending;
   },
-  /* 故事流声音(2026-09-23 用户裁决「优化顺序第 2 项」):照原型 WebAudio 合成,不用素材。
-     环境音跟章节氛围 / 氛围块走,读到梦块换梦的和弦;开场门、进梦、玩法完成各有一声。 */
-  _storySound() {
-    if (!this._sound) {
-      this._sound = storyAudio.create({ createContext: () => (wx.createWebAudioContext ? wx.createWebAudioContext() : null) });
-      let off = false;
-      try { off = !!wx.getStorageSync(STORY_SOUND_KEY); } catch (e) { off = false; }
-      if (off) { this._sound.setOn(false); if (this.data.soundOn) this.setData({ soundOn: false }); }
-    }
-    return this._sound;
-  },
-  /** 视口最上面那一行决定环境音:跟当前氛围(相册是通用的多照片块,不再按「梦」另起和弦与场景)。 */
-  _syncStoryBed(line) {
-    const chapterNow = this.data.chapter || {};
-    // 背景场景与环境音同一张表:换景 = 换声(优化顺序第 3 项)
-    this._sceneTarget = storyScene.sceneFor(this.data.storyMoodClass || chapterNow.atmosphereClass || chapterNow.atmospherePreset, false);
-    const s = this._storySound();
-    if (!s) return;
+  _syncStoryScene() {
     const chapter = this.data.chapter || {};
-    s.bed(storyAudio.bedForMood(this.data.storyMoodClass || chapter.atmosphereClass || chapter.atmospherePreset));
-  },
-  toggleStorySound() {
-    const soundOn = !this.data.soundOn;
-    try { wx.setStorageSync(STORY_SOUND_KEY, soundOn ? '' : '1'); } catch (e) { /* 存不下就只管这一次 */ }
-    this.setData({ soundOn });
-    const s = this._storySound();
-    if (s) s.setOn(soundOn);
+    this._sceneTarget = storyScene.sceneFor(this.data.storyMoodClass || chapter.atmosphereClass || chapter.atmospherePreset, false);
   },
   /* 罗盘 = 地图切换(2026-09-23 用户裁决,推翻 #1140 的「地图不要了」只针对故事流这一层):
      点开一张真实小地图(这一站 / 下一站 / 我),再点收回故事流。没有带坐标的地点就别开空地图,照旧回卡包。 */
@@ -3768,8 +3737,6 @@ Page({
   startStoryIntro() {
     if (!this.data.storyIntro.show || this.data.storyIntro.out) return;
     storyResume.patch(this._runSessionScope(), { intro: true });
-    const s = this._storySound();
-    if (s) s.sfx('page');
     const go = () => { this.setData({ 'storyIntro.show': false }); this.openChapterFull(); };
     if (this.data.reducedMotion) { go(); return; }
     this.setData({ 'storyIntro.out': true });
@@ -3809,7 +3776,6 @@ Page({
     wx.setNavigationBarColor({ frontColor: light ? '#000000' : '#ffffff', backgroundColor: light ? '#ffffff' : '#000000' });   /* ds-ok 微信 API 只收这两个字面色 */
   },
   closeChapterFull() {
-    if (this._sound) this._sound.bed('void');
     // 收起就停章节音频:它属于这一屏,留在后台继续念会跟节点语音导览抢同一个播放器。
     // 整章旁白('chapter')和故事流音频块('ch<i>')都属于这一屏,收起时一并停。
     this.closeAlbum();
@@ -3957,8 +3923,6 @@ Page({
     const cards = (this.data.chapterCards || []).filter(card => !card.opening);
     const index = cards.findIndex(card => String(card.id) === String(chapter.id));
     this._pendingChapterGateKey = key;
-    const sound = this._storySound();
-    if (sound) sound.sfx('boot');
     const flip = chapterFlip.buildGateFlip({ cards, chapterId: chapter.id, nodes: this.data.nodes, topicCover: this.data.topicCover, topicName: this.data.topicName, desc: introLine(chapter.description) }); if (chapter.opening) Object.assign(flip, { endInfo: null, info: { kicker: chapter.name === '序章' ? '' : '序章', title: chapter.name || '', desc: introLine(chapter.description), stats: [] } });
     this.setData({ chapterGate: Object.assign({ show: true, number: chapter.opening ? 0 : (index < 0 ? 1 : index + 1), // 眉标已写「序章 / 第 N 章 / 共 M 章」,副标题再放序数标签就是同一句印两遍(2026-09-22 走查)。
       total: Math.max(cards.length, 1), title: chapter.name || '', subtitle: '' }, flip) });
@@ -6314,7 +6278,6 @@ Page({
       this.diegetic(message);
       return data.sharedRuntime ? Promise.resolve(this._loadPlayerGameModule()).then(() => this._readGenericProof(nodeId)) : this._readGenericProof(nodeId);
     }
-    if (this._sound) this._sound.sfx('ok');
     const effectContext = this._captureCompletionEffects();
     const effectsCurrent = () => this._isCompletionEffectCurrent(effectContext);
     const storyOpen = this.data.chapterFull && this._isStoryGame(
@@ -6810,8 +6773,6 @@ Page({
     this._storyVoices = Object.assign({}, this._storyVoices, { [key]: kacchaLines(hits) });
     const prev = this._kit();
     if (!fresh || !prev || prev.type !== 'profile' || prev.done) return;
-    const s = this._storySound();
-    if (s) s.sfx('kaccha');
     if (!this.data.reducedMotion) wx.vibrateShort({ type: 'heavy' });
     cyToast('——咔哒。');
   },

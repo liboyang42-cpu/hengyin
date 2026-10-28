@@ -79,10 +79,8 @@ function assertAtmosphereConsumers(playSource, playWxml) {
   const puzzleTag = (playWxml || read('pages/play/index.wxml')).match(/<view\b[^>]*class="gp2 gp2--sheet[^>]*>/)
   assert.ok(puzzleTag, '旧谜题层必须保留实际容器')
   const puzzleClass = puzzleTag[0].match(/class="([^"]*)"/)[1]
-  const beds = []
-  page._storySound = () => ({ bed: (value) => beds.push(value) })
-  const expectedBeds = { NIGHT: 'hush', ARCHIVE: 'afternoon', NEON: 'grown', WHITE: 'office' }
-  for (const [selected, expectedBed] of Object.entries(expectedBeds)) {
+  const expectedScenes = { NIGHT: 'hush', ARCHIVE: 'afternoon', NEON: 'grown', WHITE: 'office' }
+  for (const [selected, expectedScene] of Object.entries(expectedScenes)) {
     editor.onChapterAtmosphereSelect({ currentTarget: { dataset: { value: selected } } })
     const preset = editor.data.chapterForm.atmospherePreset
     assert.equal(preset, normalizeAtmosphere(selected), '编辑器要写归一后的预设')
@@ -90,17 +88,16 @@ function assertAtmosphereConsumers(playSource, playWxml) {
     page.data.nodes = []
     page.openChapterFull()
     assert.equal(page.data.chapterFull, true)
-    assert.equal(page._sceneTarget, expectedBed, '新故事层开章场景必须读作者预设')
-    page._syncStoryBed()
-    assert.equal(beds.at(-1), expectedBed, '真环境音调用必须消费同一预设')
-    assert.equal(page._sceneTarget, expectedBed, '故事换景和环境音必须同源')
+    assert.equal(page._sceneTarget, expectedScene, '新故事层开章场景必须读作者预设')
+    page._syncStoryScene()
+    assert.equal(page._sceneTarget, expectedScene, '滚动后的换景仍消费同一预设')
     const actualClass = puzzleClass.replace(/\{\{([^}]+)\}\}/g,
       (_, expression) => new Function('chapter', 'return (' + expression + ')')(page.data.chapter))
     assert.ok(actualClass.split(/\s+/).includes(atmosphereClass(preset)), '旧谜题层必须实际绑定同一章节氛围')
   }
 }
 
-test('编辑器预设经真章节投影，被新故事换景/环境音和旧谜题层消费', () => {
+test('编辑器预设经真章节投影，被新故事换景和旧谜题层消费', () => {
   const choice = read('pages/publish/fabu/index.wxml').match(/<view\b[^>]*class="chapter-atmosphere__item[^>]*>/)
   assert.ok(choice, '必须存在真实章节氛围选项')
   assert.match(choice[0], /chapterForm\.atmospherePreset/)

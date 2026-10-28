@@ -78,7 +78,7 @@ function makePage(code = source) {
     if (callback) callback()
   }
   page._saveReadingPos = line => page.__reading.push(line)
-  page._syncStoryBed = () => {}
+  page._syncStoryScene = () => {}
   page._autoInline = nodeId => page.__inline.push(nodeId)
   return page
 }
@@ -227,7 +227,6 @@ test('显形测量仍保留自动玩法、阅读位置与终章反转链', () =>
   page.data.chapterParas[0].kind = 'reveal'
   let remeasured = 0
   page.measureChapter = () => { remeasured++ }
-  page._storySound = () => ({ sfx() {} })
   page._settleStory()
   assert.deepEqual(page.__inline, [7])
   assert.equal(page.__reading[0], page.data.chapterParas[0])
