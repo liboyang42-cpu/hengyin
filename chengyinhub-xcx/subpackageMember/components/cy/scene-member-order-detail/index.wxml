@@ -177,6 +177,29 @@
     </view>
     </block>
 
+    <!-- 10-28 原型 C 新增「发票」段:开票状态一行 + 去处一行;退款核对中 / 暂不可申请只留状态行。 -->
+    <block wx:if="{{invoiceRow.show}}">
+    <view class="sec-title">发票</view>
+    <view class="ocard">
+      <view class="orow">
+        <text class="orow-k">开票状态</text>
+        <text class="orow-v">{{invoiceRow.state === 'can' ? '未申请' : invoiceRow.state === 'ing' ? '开具中' : invoiceRow.state === 'issued' ? '已开具' : invoiceRow.state === 'paused' ? '退款核对中' : '暂不可申请'}}</text>
+      </view>
+      <view class="orow" wx:if="{{invoiceRow.state === 'issued' && invoiceRow.invoiceNo}}">
+        <text class="orow-k">发票号</text>
+        <text class="orow-v">{{invoiceRow.invoiceNo}}</text>
+      </view>
+      <view class="orow" wx:if="{{invoiceRow.state === 'can'}}" bindtap="goInvoiceApply" aria-role="button" aria-label="申请开票" hover-class="cy-pressed" hover-stay-time="80">
+        <text class="orow-k">申请开票</text>
+        <text class="orow-v orow-v--link">去申请</text>
+      </view>
+      <view class="orow" wx:if="{{invoiceRow.state === 'ing' || invoiceRow.state === 'issued'}}" bindtap="goInvoiceDetail" aria-role="button" aria-label="查看发票申请" hover-class="cy-pressed" hover-stay-time="80">
+        <text class="orow-k">发票申请</text>
+        <text class="orow-v orow-v--link">查看申请</text>
+      </view>
+    </view>
+    </block>
+
     <block wx:if="{{info.realName || info.phone || info.participateDate}}">
     <view class="sec-title">报名人信息</view>
     <view class="ocard">

@@ -4,7 +4,9 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const ROOT = path.resolve(__dirname, '../..');
-const PAGE = path.join(ROOT, 'subpackageMember/invoice/index.js');
+// X5：抬头保存从 W8 单页移到「新增 / 编辑抬头」页；原请求号与完整税号只留内存的规则不变。
+const PAGE = path.join(ROOT, 'subpackageMember/invoice-title-edit/index.js');
+const LIST = path.join(ROOT, 'subpackageMember/invoice-titles/index.js');
 const TITLE = '9007199254740993', ORDER = '9223372036854775807', APP = '9007199254740995';
 const json = value => JSON.parse(JSON.stringify(value));
 const tap = (id, extra = {}) => ({ currentTarget: { dataset: { id, ...extra } } });
@@ -14,7 +16,7 @@ const application = (requestId, extra = {}) => ({ id: APP, requestId, applicatio
   titleName: '发票测试单位', taxNoMasked: '91******1234', totalAmount: '12.34', orderCount: 1, orders: [order()], ...extra });
 
 // Load the actual Page and its actual workflow, storage and view helpers in one runtime.
-function mount(values = new Map(), initialOwner = '7') {
+function mount(values = new Map(), initialOwner = '7', file = PAGE) {
   let definition, owner = initialOwner, authorization = owner ? 'session-' + owner : '', timerId = 0;
   const requests = [], dialogs = [], navigations = [], timers = new Map(), cache = new Map();
   const app = {
@@ -31,7 +33,7 @@ function mount(values = new Map(), initialOwner = '7') {
     getStorageSync: key => values.has(key) ? json(values.get(key)) : '',
     setStorageSync: (key, value) => values.set(key, json(value)),
     removeStorageSync: key => values.delete(key),
-    showModal: options => dialogs.push(options), navigateBack: options => navigations.push(options), switchTab: options => navigations.push(options),
+    showModal: options => dialogs.push(options), showToast: () => {}, navigateBack: options => navigations.push(options), switchTab: options => navigations.push(options),
   };
   let page;
   const context = vm.createContext({ getApp: () => app, wx, Page: value => { definition = value; },
@@ -45,7 +47,7 @@ function mount(values = new Map(), initialOwner = '7') {
     wrapper(mod, mod.exports, name => load(path.resolve(path.dirname(file), name)));
     return mod.exports;
   }
-  load(PAGE);
+  load(file);
   page = Object.assign({}, definition, { data: json(definition.data), setData(patch) { Object.assign(this.data, patch); } });
   function latest(route) { const row = requests.filter(r => r.path === route).at(-1); assert.ok(row, route + ' was requested'); return row; }
   function respond(route, data, extra = {}) {
@@ -58,15 +60,14 @@ function mount(values = new Map(), initialOwner = '7') {
     confirm() { assert.ok(dialogs.length); dialogs.at(-1).success({ confirm: true }); },
     deadline() { assert.ok(timers.size); [...timers.values()].forEach(callback => callback()); },
     count(route) { return requests.filter(row => row.path === route).length; },
-    boot() { page.onLoad({}); page.onShow(); },
-    seed() { respond('titles', [title()]); respond('orders/eligible', [order()]); respond('list', []); },
-    select() { page.pickTitle(tap(TITLE)); page.pickOrder(tap(ORDER)); },
+    boot() { page.onLoad({ id: TITLE }); page.onShow(); },
+    seed() { respond('titles', [title()]); },
   };
   return h;
 }
 
 function begin(h) {
-  h.boot(); h.seed(); h.page.editTitle(tap(TITLE));
+  h.boot(); h.seed();
   h.page.input({ ...tap('', { field: 'taxNo' }), detail: { value: '913100001234567890' } });
   h.page.saveTitle(); return h.latest('titles/save-request');
 }
@@ -95,9 +96,11 @@ test('title receipt restores only original identity after remount and never trus
   assert.equal(JSON.stringify([...h.values]).includes(first.body.taxNo), false);
   assert.equal(JSON.stringify([...h.values]).includes(first.body.titleName), false);
   const next = mount(h.values); next.boot(); next.seed();
+  assert.equal(next.page.data.titlePending, true);
+  next.page.queryTitleSave();
   assert.deepEqual(next.latest('titles/request').body, { requestId });
-  assert.equal(next.page.data.titleRetryable, false);
   next.latest('titles/request').success({ code: 500, errorCode: 'INVOICE_NOT_FOUND' });
+  assert.equal(next.count('titles/save-request'), 0, 'no original input left in memory, so nothing is resent');
   next.page.retryTitleSave(); next.page.saveTitle(); assert.equal(next.count('titles/save-request'), 0);
   assert.equal(next.page.data.titlePending, true);
   next.page.queryTitleSave(); next.respond('titles/request', receipt('wrong-request'));
@@ -116,8 +119,8 @@ test('same-request retry deadline, conflict and stale account callbacks cannot c
   assert.equal(h.page.data.titlePending, true);
   h.page.retryTitleSave(); const old = h.latest('titles/save-request'); h.owner('8');
   old.success({ code: 200, data: receipt(first.body.requestId) });
-  assert.equal(h.page.data.selectedTitle, ''); assert.equal(h.page._titleIntent, null);
-  h.page.onHide(); h.owner('7'); h.page.onShow();
+  assert.equal(h.page.data.formReady, false); assert.equal(h.page._titleIntent, null);
+  h.page.onHide(); h.owner('7'); h.page.onShow(); h.seed();
   assert.equal(h.page.data.titlePending, true);
   assert.equal(h.page.data.titleRequestId, first.body.requestId);
 });
@@ -126,7 +129,8 @@ test('initial save accepts only its original receipt and never treats another ti
   const h = mount(); const first = begin(h);
   first.success({ code: 200, data: receipt('wrong-request') });
   assert.equal(h.page.data.titlePending, true);
-  h.page.loadTitles(); h.respond('titles', [title()]);
+  const list = mount(h.values, '7', LIST); list.boot(); list.respond('titles', [title()]);
+  assert.equal(list.page.data.titlePending, true);
   assert.equal(h.page.data.titlePending, true);
   h.page.queryTitleSave(); h.respond('titles/request', receipt(first.body.requestId));
   assert.equal(h.page.data.titlePending, false);

@@ -34,9 +34,6 @@ public interface IMinorProtectionService {
     /** 城市定向参与校验：低风险线路 / 白天 / 同队监护人 / 16-17 单独参与授权。 */
     MinorDecision checkOrienteering(Long memberId, OrienteeringParticipation participation);
 
-    /** feature.flag.minorMode + feature.flag.minorPaymentGate 都开才校验，否则放行。 */
-    MinorDecision enforcePurchaseIfEnabled(Long payerMemberId);
-
     /** feature.flag.minorMode + feature.flag.minorOrienteeringGate 都开才校验，否则放行。 */
     MinorDecision enforceOrienteeringIfEnabled(Long memberId, OrienteeringParticipation participation);
 }

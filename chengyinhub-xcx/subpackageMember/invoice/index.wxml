@@ -1,132 +1,57 @@
 <wxs src="../../utils/wxs/money.wxs" module="money" />
-<view class="theme-dark invoice-page">
+<!-- 我的发票(X5):照抄「我的订单」页 + scene-member-order-history 订单卡;底栏照抄 cy-footer-bar 双键。 -->
+<view class="theme-dark">
+  <cy-toast id="cy-toast" />
+  <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
-  <cy-nav-bar custom-back bind:back="onBack" />
-  <cy-page-title title="我的发票" subtitle="管理发票抬头，查看申请进展" />
-  <view class="invoice-content">
-    <cy-empty wx:if="{{unavailable}}" kind="no-permission" title="发票功能暂未开放" sub="开放后可在这里申请并查看发票。" />
-    <cy-empty wx:elif="{{login}}" kind="no-permission" title="登录后查看本人发票" cta="登录" bind:cta="login" />
-    <block wx:else>
-      <view class="invoice-tabs">
-        <cy-btn variant="{{tab === 'apply' ? 'primary' : 'ghost'}}" size="sm" data-tab="apply" bindtap="tab">申请发票</cy-btn>
-        <cy-btn variant="{{tab === 'records' ? 'primary' : 'ghost'}}" size="sm" data-tab="records" bindtap="tab">申请记录</cy-btn>
-        <cy-btn variant="{{tab === 'titles' ? 'primary' : 'ghost'}}" size="sm" data-tab="titles" bindtap="tab">抬头管理</cy-btn>
+<view class="order-page">
+<cy-nav-bar custom-back bind:back="onBack" />
+<cy-page-title title="我的发票" />
+<view class="order-shell">
+  <cy-empty wx:if="{{login}}" fill size="lg" class="cy-fill-state" kind="no-permission" title="登录后查看发票" cta="微信登录" bind:cta="login" />
+  <cy-empty wx:elif="{{unavailable}}" fill size="lg" class="cy-fill-state" kind="no-permission" title="发票功能暂未开放" />
+  <view class="moh" wx:else>
+    <view class="order-tabs-wrap" wx:if="{{records.length}}">
+      <cy-tabs tabs="{{tabs}}" active="{{tab}}" variant="chip" sticky bind:change="onTab" />
+    </view>
+    <view class="inv-recovery" wx:if="{{pending && recovery === 'unknown'}}">
+      <cy-inline-error kind="data" title="上次的开票申请结果未确认" sub="确认前请勿重复提交" action="{{recovering || !requestId ? '' : '查询结果'}}" bind:action="queryOriginal" />
+    </view>
+    <view class="inv-recovery" wx:elif="{{pending && recovery === 'notfound'}}">
+      <cy-inline-error kind="data" title="暂未查到这次申请" sub="请稍后再查，或联系客服" action="{{recovering || !requestId ? '' : '再查一次'}}" bind:action="queryOriginal" />
+    </view>
+    <view class="moh-body">
+      <cy-skeleton wx:if="{{loading && !loaded}}" type="list" count="3" />
+      <cy-error load-failure wx:elif="{{error && !loaded}}" fill size="lg" title="发票记录加载失败" retry="重试" bind:retry="loadRecords" />
+      <cy-empty wx:elif="{{loaded && !records.length}}" fill size="lg" class="cy-fill-state" kind="empty" title="还没有发票申请" />
+      <cy-empty wx:elif="{{loaded && !rows.length}}" fill size="lg" class="cy-fill-state" kind="empty" title="当前筛选暂无发票申请" />
+      <view class="orderbox_li" wx:for="{{rows}}" wx:key="id" bindtap="go" data-page="detail" data-id="{{item.id}}" hover-class="orderbox_li--press" hover-stay-time="80" aria-role="button" aria-label="发票申请，{{item.playerStatus}}，{{item.titleName}}">
+        <view class="orderbox_li_top">
+          <view class="orderbox_li_top_left">发票申请</view>
+          <view class="orderbox_li_top_right"><text class="moh-state inv-state-{{item.statusKey}}">{{item.playerStatus}}</text></view>
+        </view>
+        <view class="orderbox_li_con">
+          <view class="orderbox_li_con_info">
+            <view class="order-mode-line" wx:if="{{item.titleType}}">
+              <text class="order-mode-tag {{item.titleType === 'PERSONAL' ? 'green' : ''}}">{{item.titleType === 'COMPANY' ? '单位' : '个人'}}</text>
+              <text class="moh-no">{{item.taxNoMasked || '个人抬头'}}</text>
+            </view>
+            <view class="orderbox_li_con_info_name ep1">{{item.titleName}}</view>
+            <view class="orderbox_li_con_info_time" wx:if="{{item.createText}}"><image lazy-load="true" class="moh-ico" src="/subpackageMember/images/d_orderIcon.png" mode="widthFix" />申请于 {{item.createText}}</view>
+            <view class="orderbox_li_con_info_txt ep1"><image lazy-load="true" class="moh-ico" src="/subpackageMember/images/d_orderIcon2.png" mode="widthFix" />{{item.issuerName ? item.issuerName + ' · ' : ''}}{{item.orderCount || '—'}} 笔订单</view>
+          </view>
+        </view>
+        <view class="orderbox_li_bot">
+          <view class="orderbox_li_bot_left">开票金额：<text class="moh-amount">{{money.amount(item.totalAmount)}}</text></view>
+          <view class="orderbox_li_bot_right">
+            <view class="orderbut1" wx:if="{{item.status === 'SUBMITTED'}}" catchtap="cancel" data-id="{{item.id}}" aria-role="button" aria-label="撤回申请" aria-disabled="{{writing}}" hover-class="{{writing ? 'none' : 'cy-pressed'}}" hover-stay-time="80" hover-stop-propagation="true"><view class="orderbut__visual">撤回申请</view></view>
+            <view class="orderbut2 orderbut-play" catchtap="go" data-page="detail" data-id="{{item.id}}" aria-role="button" aria-label="查看详情" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true"><view class="orderbut__visual">查看详情</view></view>
+          </view>
+        </view>
       </view>
-      <cy-inline-error wx:if="{{error}}" kind="error" title="请核对当前状态" sub="{{error}}" />
-      <text wx:if="{{notice}}" class="invoice-note" aria-live="polite">{{notice}}</text>
-      <view wx:if="{{titlePending}}" class="invoice-card">
-        <text class="invoice-title">原抬头保存结果待确认</text>
-        <text class="invoice-note" selectable>原请求号：{{titleRequestId || '旧版待确认记录'}}</text>
-        <text class="invoice-note">未查到结果不代表未保存。离页后不保留完整税号，只查询原保存结果；旧版未发送请求号的记录仍需平台核对。</text>
-        <cy-btn variant="secondary" disabled="{{writing || !titleRequestId}}" bindtap="queryTitleSave">查询原保存结果</cy-btn>
-        <cy-btn wx:if="{{titleRetryable}}" variant="secondary" loading="{{writing}}" disabled="{{writing}}" bindtap="retryTitleSave">使用原输入重试保存</cy-btn>
-      </view>
-      <view wx:if="{{pending}}" class="invoice-card">
-        <text class="invoice-title">原申请结果待确认</text>
-        <text class="invoice-note">订单和抬头已冻结。请核对原申请，勿退出后重新提交。</text>
-        <text class="invoice-note" wx:if="{{requestId}}" selectable>原请求号：{{requestId}}</text>
-        <text class="invoice-note" wx:if="{{frozenTitleId}}" selectable>原抬头编号：{{frozenTitleId}}</text>
-        <text wx:for="{{frozenOrderIds}}" wx:key="*this" class="invoice-note" selectable>原订单：{{item}}</text>
-        <cy-btn variant="secondary" loading="{{recovering}}" disabled="{{writing}}" bindtap="queryOriginal">查询本人原申请</cy-btn>
-      </view>
-
-      <block wx:if="{{editing}}">
-        <view class="invoice-card">
-          <text class="invoice-title">{{draft.id ? '修改抬头' : '新增抬头'}}</text>
-          <view class="invoice-actions">
-            <cy-btn size="sm" variant="{{draft.titleType === 'PERSONAL' ? 'primary' : 'ghost'}}" disabled="{{writing || titlePending}}" data-type="PERSONAL" bindtap="titleType">个人</cy-btn>
-            <cy-btn size="sm" variant="{{draft.titleType === 'COMPANY' ? 'primary' : 'ghost'}}" disabled="{{writing || titlePending}}" data-type="COMPANY" bindtap="titleType">单位</cy-btn>
-          </view>
-          <label class="invoice-label">抬头名称
-            <input class="invoice-input" value="{{draft.titleName}}" placeholder="填写发票抬头名称" aria-label="发票抬头名称" maxlength="100" disabled="{{writing || titlePending}}" data-field="titleName" bindinput="input" />
-          </label>
-          <label wx:if="{{draft.titleType === 'COMPANY'}}" class="invoice-label">完整纳税人识别号
-            <input class="invoice-input" value="{{draft.taxNo}}" placeholder="修改单位抬头也需重新填写完整税号" aria-label="完整纳税人识别号" maxlength="20" disabled="{{writing || titlePending}}" data-field="taxNo" bindinput="input" />
-          </label>
-          <text class="invoice-note">税号仅用于本次保存，不在本机持久保存；列表只显示掩码。</text>
-          <label class="invoice-check">设为默认抬头<switch checked="{{draft.isDefault}}" disabled="{{writing || titlePending}}" bindchange="defaultTitle" aria-label="设为默认抬头" /></label>
-          <view class="invoice-actions">
-            <cy-btn variant="primary" loading="{{writing}}" disabled="{{titlePending}}" bindtap="saveTitle">保存抬头</cy-btn>
-            <cy-btn variant="ghost" disabled="{{writing}}" bindtap="closeEditor">取消编辑</cy-btn>
-          </view>
-        </view>
-      </block>
-
-      <block wx:elif="{{detail}}">
-        <view class="invoice-card">
-          <text class="invoice-title">{{detail.statusText}}</text>
-          <text class="invoice-note" selectable>申请编号：{{detail.applicationNo}}</text>
-          <text class="invoice-value">{{detail.titleName}}</text>
-          <text class="invoice-note" wx:if="{{detail.taxNoMasked}}">税号：{{detail.taxNoMasked}}</text>
-          <text class="invoice-value">合计 {{money.amount(detail.totalAmount)}} · {{detail.orderCount || 0}} 笔订单</text>
-          <text class="invoice-note" wx:if="{{detail.invoiceNo}}" selectable>发票号：{{detail.invoiceNo}}</text>
-          <text class="invoice-note" wx:if="{{detail.rejectReason}}">驳回原因：{{detail.rejectReason}}</text>
-          <text class="invoice-note" wx:if="{{detail.reconciliationText}}">{{detail.reconciliationText}}</text>
-          <text class="invoice-note" wx:if="{{detail.issuedAt}}">开具时间：{{detail.issuedAt}}</text>
-          <view class="invoice-line" wx:for="{{detail.orders}}" wx:key="orderId">
-            <text class="invoice-value">{{item.orderTitle}} {{item.ticketName}}</text>
-            <text class="invoice-note" selectable>订单 {{item.orderId}} · {{money.amount(item.amount)}}</text>
-          </view>
-          <text class="invoice-note" wx:if="{{cancelPending}}">撤回结果待确认，请刷新详情核对，勿重复撤回。</text>
-          <view class="invoice-actions">
-            <cy-btn variant="secondary" disabled="{{writing}}" bindtap="refreshDetail">刷新详情</cy-btn>
-            <cy-btn wx:if="{{detail.status === 'SUBMITTED'}}" variant="danger" loading="{{writing}}" disabled="{{cancelPending}}" bindtap="cancel">撤回申请</cy-btn>
-            <cy-btn wx:if="{{detail.status === 'REJECTED'}}" variant="secondary" disabled="{{writing || pending || titlePending || cancelPending}}" bindtap="prepareReapplication">核对抬头并重新申请</cy-btn>
-            <cy-btn variant="ghost" disabled="{{writing}}" bindtap="closeDetail">返回记录</cy-btn>
-          </view>
-        </view>
-      </block>
-
-      <block wx:elif="{{tab === 'apply'}}">
-        <cy-skeleton wx:if="{{loading}}" type="form-section" count="2" loading-label="正在读取可开票信息" />
-        <block wx:else>
-          <text class="invoice-title">选择发票抬头</text>
-          <cy-empty wx:if="{{!titles.length}}" title="暂无发票抬头" sub="请先在抬头管理中新增。" />
-          <view wx:for="{{titles}}" wx:key="id" class="invoice-card invoice-choice {{selectedTitle === item.id ? 'invoice-choice--selected' : ''}}" data-id="{{item.id}}" bindtap="pickTitle" hover-class="{{pending || writing ? 'none' : 'invoice-choice--pressed'}}" aria-role="radio" aria-checked="{{selectedTitle === item.id}}" aria-disabled="{{pending || writing}}" aria-label="{{item.titleName}}">
-            <text class="invoice-value">{{selectedTitle === item.id ? '已选 · ' : ''}}{{item.titleName}}{{item.isDefault ? ' · 默认' : ''}}</text>
-            <text class="invoice-note" wx:if="{{item.taxNoMasked}}">{{item.taxNoMasked}}</text>
-          </view>
-          <text class="invoice-title">选择订单 · 已选 {{selectedCount || 0}} 笔</text>
-          <text class="invoice-note">仅显示本人已支付、未退款、未开票订单，一次最多50笔。金额以提交后的申请详情为准。</text>
-          <cy-empty wx:if="{{!orders.length}}" title="暂无可开票订单" />
-          <view wx:for="{{orders}}" wx:key="orderId" class="invoice-card invoice-choice {{item.selected ? 'invoice-choice--selected' : ''}}" data-id="{{item.orderId}}" bindtap="pickOrder" hover-class="{{pending || writing ? 'none' : 'invoice-choice--pressed'}}" aria-role="checkbox" aria-checked="{{item.selected}}" aria-disabled="{{pending || writing}}" aria-label="{{item.orderTitle}}，{{money.amount(item.amount)}}">
-            <text class="invoice-value">{{item.selected ? '已选 · ' : ''}}{{item.orderTitle}} {{item.ticketName}}</text>
-            <text class="invoice-value">开票主体：{{item.issuerName}}</text>
-            <text class="invoice-note">{{money.amount(item.amount)}} · {{item.paymentTime}}</text>
-            <text class="invoice-note" selectable>订单 {{item.orderId}}</text>
-          </view>
-          <cy-btn variant="primary" loading="{{writing}}" disabled="{{pending || !selectedTitle || !selectedCount}}" bindtap="apply">提交发票申请</cy-btn>
-          <cy-btn variant="ghost" disabled="{{writing}}" bindtap="reload">刷新可开票信息</cy-btn>
-        </block>
-      </block>
-
-      <block wx:elif="{{tab === 'titles'}}">
-        <text class="invoice-note" wx:if="{{titlePending}}">上次保存结果待确认，暂不能再次新建或修改。请查询原保存结果。</text>
-        <view class="invoice-actions">
-          <cy-btn variant="primary" disabled="{{writing || titlePending}}" bindtap="editTitle">新增抬头</cy-btn>
-          <cy-btn variant="ghost" disabled="{{writing}}" bindtap="loadTitles">刷新抬头</cy-btn>
-        </view>
-        <cy-empty wx:if="{{!titles.length && !loading}}" title="暂无发票抬头" />
-        <view wx:for="{{titles}}" wx:key="id" class="invoice-card">
-          <text class="invoice-value">{{item.titleName}}{{item.isDefault ? ' · 默认' : ''}}</text>
-          <text class="invoice-note">{{item.titleType === 'COMPANY' ? '单位' : '个人'}} {{item.taxNoMasked}}</text>
-          <view class="invoice-actions">
-            <cy-btn variant="secondary" size="sm" disabled="{{writing || titlePending}}" data-id="{{item.id}}" bindtap="editTitle">修改</cy-btn>
-            <cy-btn variant="danger" size="sm" disabled="{{writing}}" data-id="{{item.id}}" bindtap="deleteTitle">删除</cy-btn>
-          </view>
-        </view>
-      </block>
-
-      <block wx:elif="{{tab === 'records'}}">
-        <cy-btn variant="ghost" loading="{{recovering}}" disabled="{{writing}}" bindtap="loadRecords">刷新申请记录</cy-btn>
-        <cy-empty wx:if="{{!records.length && !recovering}}" title="暂无发票申请" sub="待确认申请暂未出现时，请继续核对原请求。" />
-        <view wx:for="{{records}}" wx:key="id" class="invoice-card">
-          <text class="invoice-title">{{item.statusText}} · {{money.amount(item.totalAmount)}}</text>
-          <text class="invoice-value">{{item.titleName}}</text>
-          <text class="invoice-note">{{item.applicationNo}}</text>
-          <cy-btn variant="secondary" size="sm" data-id="{{item.id}}" bindtap="openDetail">查看详情</cy-btn>
-        </view>
-      </block>
-    </block>
+    </view>
   </view>
+</view>
+<cy-footer-bar wx:if="{{!login && !unavailable && loaded}}" secondary="管理抬头" primary="申请开票" bind:secondarytap="goTitles" bind:primarytap="goApply" />
+</view>
 </view>

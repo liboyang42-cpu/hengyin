@@ -21,21 +21,17 @@ class ComplianceFeatureSwitchesTest {
 
         assertFalse(switches.userInvoiceOn());
         assertFalse(switches.minorModeOn());
-        assertFalse(switches.minorPaymentGateOn());
         assertFalse(switches.minorOrienteeringGateOn());
     }
 
     @Test
     void enforcementGatesNeedTheMinorModeMasterSwitchToo() {
         ISysConfigService config = mock(ISysConfigService.class);
-        when(config.selectConfigByKey(ComplianceFeatureSwitches.MINOR_PAYMENT_GATE)).thenReturn("true");
         when(config.selectConfigByKey(ComplianceFeatureSwitches.MINOR_ORIENTEERING_GATE)).thenReturn("true");
         ComplianceFeatureSwitches switches = new ComplianceFeatureSwitches(config);
-        assertFalse(switches.minorPaymentGateOn());
         assertFalse(switches.minorOrienteeringGateOn());
 
         when(config.selectConfigByKey(ComplianceFeatureSwitches.MINOR_MODE)).thenReturn("1");
-        assertTrue(switches.minorPaymentGateOn());
         assertTrue(switches.minorOrienteeringGateOn());
     }
 

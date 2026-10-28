@@ -1,0 +1,54 @@
+<!-- 新增 / 编辑发票抬头(X5):照抄 pages/addressinfo 表单 —— .add_li 左标签右输入、底部 address-save-state 原位提示、cy-footer-bar 单键。 -->
+<view class="theme-dark">
+  <cy-toast id="cy-toast" />
+  <cy-loading-mask id="cy-loading" />
+  <cy-modal-host id="cy-modal-host" />
+<view class="davidbox">
+  <cy-nav-bar custom-back bind:back="onBack" />
+  <cy-page-title title="发票抬头" subtitle="" />
+  <cy-empty wx:if="{{login}}" fill size="lg" kind="no-permission" title="登录后管理发票抬头" cta="微信登录" bind:cta="login" />
+  <cy-empty wx:elif="{{unavailable}}" fill size="lg" kind="no-permission" title="发票功能暂未开放" />
+  <cy-skeleton wx:elif="{{!formReady && !error}}" type="form-section" count="{{2}}" />
+  <cy-error load-failure wx:elif="{{!formReady}}" fill size="lg" title="发票抬头加载失败" retry="重试" bind:retry="reloadTitle" />
+  <view class="add" wx:else>
+    <view class="add_li">
+      <view class="add_li_left">抬头类型<text class="req" aria-hidden="true">*</text></view>
+      <view class="add_li_right">
+        <view class="inv-seg">
+          <view class="inv-seg__item {{draft.titleType === 'COMPANY' ? 'is-on' : ''}}" data-type="COMPANY" bindtap="titleType" aria-role="radio" aria-checked="{{draft.titleType === 'COMPANY'}}" aria-label="单位" hover-class="cy-pressed" hover-stay-time="80">单位</view>
+          <view class="inv-seg__item {{draft.titleType === 'PERSONAL' ? 'is-on' : ''}}" data-type="PERSONAL" bindtap="titleType" aria-role="radio" aria-checked="{{draft.titleType === 'PERSONAL'}}" aria-label="个人" hover-class="cy-pressed" hover-stay-time="80">个人</view>
+        </view>
+      </view>
+    </view>
+    <view class="add_li">
+      <view class="add_li_left">抬头名称<text class="req" aria-hidden="true">*</text></view>
+      <view class="add_li_right">
+        <input type="text" placeholder="输入抬头名称" placeholder-class="fld-ph" maxlength="100" disabled="{{titlePending || writing}}"
+               value="{{draft.titleName}}" bindinput="input" data-field="titleName" />
+      </view>
+    </view>
+    <view class="add_li" wx:if="{{draft.titleType === 'COMPANY'}}">
+      <view class="add_li_left">税号<text class="req" aria-hidden="true">*</text></view>
+      <view class="add_li_right">
+        <input type="text" placeholder="{{draft.id ? '重新填写完整税号' : '输入税号'}}" placeholder-class="fld-ph" maxlength="20" disabled="{{titlePending || writing}}"
+               value="{{draft.taxNo}}" bindinput="input" data-field="taxNo" />
+      </view>
+    </view>
+    <view class="add_li">
+      <view class="add_li_left">设为默认</view>
+      <view class="add_li_right">
+        <cy-switch checked="{{draft.isDefault}}" disabled="{{titlePending || writing}}" bindchange="defaultTitle" />
+      </view>
+    </view>
+  </view>
+</view>
+
+<view class="address-save-state" wx:if="{{formReady && !login && !unavailable}}">
+  <cy-inline-error wx:if="{{titlePending}}" kind="data" title="保存结果未确认" sub="确认前请勿重复保存" action="{{titleRequestId && !writing ? '查询结果' : ''}}" bind:action="queryTitleSave" />
+  <cy-inline-error wx:elif="{{saveError}}" kind="error" title="发票抬头未保存" sub="{{saveError}}" action="重试" bind:action="saveTitle" />
+</view>
+
+<cy-footer-bar wx:if="{{formReady && !login && !unavailable}}">
+  <cy-btn variant="primary" loading="{{writing}}" disabled="{{!canSubmit || titlePending}}" bindtap="saveTitle">保存</cy-btn>
+</cy-footer-bar>
+</view>

@@ -42,6 +42,7 @@ function application(value, summary = false) {
   return { id: exactId(value.id), requestId: value.requestId, applicationNo: value.applicationNo,
     reconciliationStatus, reconciliationText: RECONCILIATION[reconciliationStatus] || '',
     status: value.status, statusText: STATUS[value.status], titleName: String(value.titleName || ''),
+    titleType: ['PERSONAL', 'COMPANY'].includes(value.titleType) ? value.titleType : '', issuerName: String(value.issuerName || ''),
     taxNoMasked: masked(value.taxNoMasked), totalAmount: String(value.totalAmount), orderCount: value.orderCount,
     invoiceNo: String(value.invoiceNo || ''), rejectReason: String(value.rejectReason || ''),
     createTime: String(value.createTime || ''), issuedAt: String(value.issuedAt || ''), orders };
