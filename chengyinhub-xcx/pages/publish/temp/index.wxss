@@ -1672,3 +1672,47 @@ page {
   --cy-comp-btn-secondary-bg: #FFFFFF;                /* ds-ok 保存草稿:白胶囊浮在灰页面上 */
 }
 .cg-bottombar > cy-btn { border-radius: var(--cy-comp-btn-radius); box-shadow: 0 12rpx 32rpx rgba(17, 18, 20, .12); } /* ds-ok 浮起来的投影 */
+
+/* ===== 10-28 原型 A e-temp / e-after:分组列表 + 就地展开(检定段、添加加值半屏、消耗与效果半屏) =====
+   L1 的半屏基础样式(feature/cy27-l1-editor-d20)落地后并过去,这里不再单留一份。 */
+/* 检定段沿用 cg-gcfg > cg-adv-body 外壳(段形状契约),里面这一层盖住白卡,分组列表直接落在页面底色上 */
+.cg-ios-flat { margin: calc(-1 * var(--cy-space-4)); padding-bottom: var(--cy-space-1); background: var(--cy-color-bg-page); }
+.cg-ios-grp { background: var(--cy-color-bg-surface); border-radius: var(--cy-radius-lg); overflow: hidden; }
+.cg-ios-grp + .cg-ios-grp, .cg-ios-gap { margin-top: var(--cy-space-3); }
+.cg-ios-hd { display: flex; align-items: flex-end; justify-content: space-between; padding: 44rpx var(--cy-space-4) 14rpx; font-size: var(--cy-font-label); color: var(--cy-color-text-tertiary); } /* ds-ok 原型 .ios-hd 22px 7px */
+.cg-ios-hd__act { font-size: var(--cy-font-body); font-weight: 600; color: var(--cy-color-text-primary); }
+.cg-ios-ft { padding: 14rpx var(--cy-space-4) 0; font-size: var(--cy-font-label); color: var(--cy-color-text-tertiary); } /* ds-ok 原型 .ios-ft 7px */
+.cg-ios-ft.is-err { color: var(--cy-color-status-danger); }
+.cg-ios-row { position: relative; display: flex; align-items: center; gap: 20rpx; min-height: 100rpx; padding: var(--cy-space-2) var(--cy-space-4); box-sizing: border-box; background: var(--cy-color-bg-surface); } /* ds-ok 原型 .ios-row 50px */
+.cg-ios-row + .cg-ios-row::before { content: ""; position: absolute; left: var(--cy-space-4); right: 0; top: 0; height: 1rpx; background: var(--cy-color-border-subtle); }
+.cg-ios-row.is-sub { padding-left: 56rpx; }
+.cg-ios-row.is-add .cg-ios-t { font-weight: 600; }
+.cg-ios-row.is-off { pointer-events: none; }
+.cg-ios-row.is-off .cg-ios-t { color: var(--cy-color-text-disabled); }
+.cg-ios-row.is-off .cg-ios-add { background: var(--cy-color-text-disabled); }
+.cg-ios-row.is-danger { justify-content: center; }
+.cg-ios-row.is-danger .cg-ios-t { color: var(--cy-color-status-danger); }
+.cg-ios-m { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
+.cg-ios-t { font-size: var(--cy-font-body); color: var(--cy-color-text-primary); }
+.cg-ios-t.is-l { flex: none; min-width: 128rpx; }
+.cg-ios-v { flex: none; max-width: 60%; font-size: var(--cy-font-body); color: var(--cy-color-text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cg-ios-in { flex: 1 1 auto; min-width: 0; text-align: right; font-size: var(--cy-font-body); color: var(--cy-color-text-primary); }
+.cg-ios-in.is-l { text-align: left; }
+.cg-ios-fold { flex: none; display: flex; color: var(--cy-color-text-tertiary); transition: transform var(--cy-motion-expand) var(--cy-ease-standard); }
+.cg-ios-fold.is-open { transform: rotate(90deg); }
+.cg-ios-chk { flex: none; display: flex; color: var(--cy-color-text-primary); visibility: hidden; }
+.cg-ios-chk.is-on { visibility: visible; }
+.cg-ios-add { flex: none; width: 44rpx; height: 44rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--cy-color-action-primary-bg); color: var(--cy-color-action-primary-fg); } /* ds-ok 原型 .ios-ic--add 22px,行本身是命中区 */
+.cg-ios-seg { flex: 1 1 auto; display: flex; padding: 4rpx; border-radius: var(--cy-radius-sm); background: var(--cy-color-bg-surface-subtle); }
+.cg-ios-seg > view { flex: 1; min-height: 64rpx; padding: 0 var(--cy-space-1); display: flex; align-items: center; justify-content: center; border-radius: var(--cy-radius-sm); font-size: var(--cy-font-label); color: var(--cy-color-text-primary); white-space: nowrap; }
+.cg-ios-seg > view.is-on { background: var(--cy-color-bg-surface); font-weight: 600; box-shadow: var(--cy-shadow-card); }
+.cg-ios-stp { margin-left: auto; display: flex; align-items: center; gap: var(--cy-space-2); font-size: var(--cy-font-body); color: var(--cy-color-text-primary); }
+.cg-ios-stp > view { min-width: 88rpx; min-height: 64rpx; padding: 0 var(--cy-space-2); box-sizing: border-box; display: flex; align-items: center; justify-content: center; border-radius: var(--cy-radius-sm); background: var(--cy-color-bg-surface-subtle); font-size: var(--cy-font-body); }
+.cg-ios-stp > view.is-dis { pointer-events: none; color: var(--cy-color-text-disabled); }
+.cg-ios-minus { width: 24rpx; height: 4rpx; border-radius: 2rpx; background: currentColor; }
+.cg-ios-pills { display: flex; flex-wrap: wrap; gap: var(--cy-space-2); padding: var(--cy-space-2) var(--cy-space-4) var(--cy-space-3); background: var(--cy-color-bg-surface); }
+.cg-ios-pill { min-height: 64rpx; padding: 0 var(--cy-space-3); display: flex; align-items: center; border-radius: var(--cy-radius-pill); background: var(--cy-color-bg-surface-subtle); font-size: var(--cy-font-label); color: var(--cy-color-text-primary); }
+.cg-ios-pill-in { flex: 1 1 240rpx; min-height: 64rpx; padding: 0 var(--cy-space-3); border-radius: var(--cy-radius-pill); background: var(--cy-color-bg-surface-subtle); font-size: var(--cy-font-label); }
+.cg-ios-sheet { background: var(--cy-color-bg-page); }
+.cg-ios-sheet .cg-edit-head { background: var(--cy-color-bg-page); }
+.cg-edit-head__done.is-ghost { background: transparent; }
