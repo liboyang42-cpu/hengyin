@@ -149,9 +149,12 @@ function startStateRows(routeState, vitalsOn) {
 
 /** 开场页那一句副标:主题简介的第一句(40 字内),没有就不放 */
 function introLine(desc) {
-  const text = String(desc || '').replace(/\s+/g, ' ').trim();
+  // 只取第一行:换行是作者分的段,压成空格会把下一行的半句拼进来,
+  // 40 字一刀切在「｜」上,看着像没删干净的光标(2026-10-27 南京路开场页实测)。
+  const first = String(desc || '').split(/\n/).map((x) => x.trim()).find(Boolean) || '';
+  const text = first.replace(/\s+/g, ' ');
   const m = text.match(/^[^。！？!?]{1,40}[。！？!?]?/);
-  return m ? m[0] : '';
+  return m ? m[0].replace(/[\s｜|·、，,：:；;—-]+$/, '') : '';
 }
 
 function kacchaLines(hits) {
@@ -435,7 +438,7 @@ Page({
     // 爆炸的粒子/光条是数据驱动的(WXML 不能生成元素),开包那一刻才建,收场即清空。
     blastRays: [], blastShards: [], measuring: false,
     tileH: 0,                     // 瓦片行高:按剩余高度等分,4 家竖版大卡 / 6 家近方卡
-    nodes: [], total: 0, merchantCount: 0, doneCount: 0, allDone: false,
+    nodes: [], total: 0, merchantCount: 0, doneCount: 0, allDone: false, topicCompleted: false,
     remainingGameCount: 0,
     fmNodes: [], fmPolyline: [], fmPlayer: null, fmCenter: { lat: 31.2304, lng: 121.4737 },
     fmSubkey: MAP_DARK.subkey, fmLayerStyle: MAP_DARK.layerStyle, // S9 暗色底图预留,见上方 MAP_DARK 注释
@@ -3574,6 +3577,13 @@ Page({
       // 无块流的存量章节:沿用旧口径(描述 + 已完成节点的手记),行为逐字不变
       push(this.data.chapter.description);
       nodes.forEach((n) => { if (n.done && n.story) push(n.story); });
+      /* 没有块流就没有「节点在哪一块」可对:正开着的内嵌玩法只能接在末尾。下面那条兜底要求
+         _playKitNodeId 为空,而开站必然记下它 ⇒ 无块流章节的内嵌玩法以前一律不铺,
+         玩家只看见手记和「继续探索」,玩法永远打不开(2026-10-27 生产实测:南京路附录盲盒)。 */
+      if (inlineKit && this._playKitNodeId) {
+        items.push({ kind: 'kit', nodeId: this._playKitNodeId, mood: curMood }); kitPlaced = true;
+        pushVoices(this._playKitNodeId);
+      }
     }
     // 没有未完成节点(线性走完 / 没有节点块)时,内嵌玩法接在故事流末尾
     if (inlineKit && !kitPlaced && !this._playKitNodeId) items.push({ kind: 'kit', mood: curMood });
@@ -3713,7 +3723,7 @@ Page({
     const context = this._beginRouteWriteContext('_openingWrite');
     const chapter = this.data.chapter;
     const current = () => this._isRouteWriteContextCurrent(context)
-      && this.data.chapter === chapter && (this._routeState || {}).opening
+      && String((this.data.chapter || {}).id) === String((chapter || {}).id) && (this._routeState || {}).opening
       && String(this._routeState.opening.chapterId) === String(opening.chapterId);
     const payload = Object.assign({}, this._sessionParams(), { topicId: this.data.topicId, chapterId: opening.chapterId });
     this._openingSubmitting = true;
@@ -4172,7 +4182,7 @@ Page({
         ? '' : (c.idxLabel || ('第 ' + (i + 1) + ' 章')),
       title: displayChapterName(c.name, i, '第 ' + (i + 1) + ' 章'),
       sub: c.description || '',
-      cover: c.imgArr ? String(c.imgArr).split(',')[0] : (c.cover || ''),
+      cover: c.imgArr ? String(c.imgArr).split(/[,;]/)[0] : (c.cover || ''),
       mileage: c.totalMileage ? (c.totalMileage + 'km') : '',
       timeText: c.totalTime ? Math.round(c.totalTime / 60) + ' 分钟' : '',
       description: c.description || '',
@@ -4206,7 +4216,7 @@ Page({
       // 不再原样上屏(也不落回主题名把章节标题变成主题名),统一显示「第 N 章」。
       name: displayChapterName(c.name, 0, d.topicName || '城市探索'),
       description: c.description || '跟着脚步走完这几处坐标，把散落的线索串成一段属于你的城市故事。',
-      cover: this._coverOf(c.imgArr ? String(c.imgArr).split(',')[0] : (c.cover || ''), nodes),
+      cover: this._coverOf(c.imgArr ? String(c.imgArr).split(/[,;]/)[0] : (c.cover || ''), nodes),
       mileage: c.totalMileage ? (c.totalMileage + 'km') : '',
       timeText: c.totalTime ? Math.round(c.totalTime / 60) + ' 分钟' : '',
       atmospherePreset: normalizeAtmosphere(c.atmospherePreset),
@@ -4255,7 +4265,13 @@ Page({
     const first = visibleNodes.find((n) => n.lat && n.lng) || nodes.find((n) => n.lat && n.lng) || {};
     const target = activeTargetId != null && this._nodeById(activeTargetId);
     const targetState = getPlayMapState(activeTargetId != null ? 'target' : 'candidate');
+    /* computeNext 给的是精简卡片(没有坐标),「导航过去」要坐标:从整节点补上。
+       以前 openNextStopNav 拿不到 lat/lng 一律静默 return —— 按钮一直在,点了什么都不发生(2026-10-27 生产实测)。 */
+    const nextFull = rawNextNode && this._nodeById(rawNextNode.nodeId);
     const nextNode = rawNextNode && Object.assign({}, rawNextNode, {
+      lat: nextFull ? nextFull.lat : rawNextNode.lat,
+      lng: nextFull ? nextFull.lng : rawNextNode.lng,
+      address: (nextFull && nextFull.address) || rawNextNode.address || '',
       mapStateLabel: targetState.cardLabel,
       mapA11yLabel: targetState.readerLabel,
     });
@@ -4569,7 +4585,11 @@ Page({
             // 仅"到点即完成(vm0)/GPS到达(vm5)"节点自动到达;答题/拍照/选项/扫码(1/2/3/4)须玩家手动完成,
             // 否则后端 arrive 闸会拒绝并在每次定位回调刷 toast。
             // 精度 > 80m 后端必拒(定位精度不足),不发,免得每次定位回调都弹一次拒绝
-            if (d <= 50 && !node.done && (node.vm === 0 || node.vm === 5) && playAccuracy.canAutoArrive(loc.accuracy)) that.arrive(node.nodeId, 'gps');
+            /* 8/9/10 是「玩法过了再到达收尾」(与 onAdvancedReady 同一白名单):玩法已通过就和 0/5 一样靠近即点亮,
+               否则做完玩法人就站在门口,卡片写着「靠近后会自动点亮」却永远不亮(2026-10-27 生产实测)。 */
+            const arrivesHere = node.vm === 0 || node.vm === 5
+              || ([8, 9, 10].includes(node.vm) && that._advancedReadyNodeId === node.nodeId);
+            if (d <= 50 && !node.done && arrivesHere && playAccuracy.canAutoArrive(loc.accuracy)) that.arrive(node.nodeId, 'gps');
           }
         };
         wx.onLocationChange(that._playLocationHandler);
@@ -5391,9 +5411,16 @@ Page({
       this.setData({ playKit: { show: false, kit: null } });
     }
     if (node.hasAdvanced && this._advancedReadyNodeId !== node.nodeId) {
+      /* 详情卡「开始任务」进来也认「首个会话视图已做完 → 直接接着走」,与故事里打开同一口径:
+         退出前做完没点继续、重进时以前会把第一个玩法空白重开(估数显示未答、找东西 0/3),
+         再点交就是「这一题已经答过了 / 已经全部找到了」的死循环(2026-10-27 生产实测)。 */
+      if (!node.done) this._freshStoryGame = String(node.nodeId);
       this.setData({ 'sheet.show': false, chapterGameAnchor: '', advancedPlay: { show: true, node } });
       return;
     }
+    /* 玩法已通过、本站靠到达收尾(vm 0/5/8/9/10,与 onAdvancedReady 同一白名单):详情卡的「开始任务」
+       走到达,不进老任务页 —— 老任务页只写了 vm 1/2/3/4/6,这几个进去只剩标题与录音、零按钮。 */
+    if (node.hasAdvanced && [0, 5, 8, 9, 10].includes(Number(node.vm))) { this.onSheetGoTap(); return; }
     const chips = [];
     if (node.duration) chips.push({ ic: '⏱', v: node.duration });
     if (node.difficulty) chips.push({ ic: '◇', v: node.difficulty });
@@ -5447,7 +5474,7 @@ Page({
     this._advancedReadyIntent = context;
     const scopeCurrent = () => this._isPlayAccountCurrent() && this._advancedReadyIntent === context
       && context.owner === this._playOwner && context.epoch === this._playLoadEpoch
-      && context.sessionKey === this._sessionKey() && this.data.chapter === context.chapter;
+      && context.sessionKey === this._sessionKey() && String((this.data.chapter || {}).id) === String((context.chapter || {}).id);
     const current = () => scopeCurrent() && this.data.advancedPlay === active
       && active.show && active.node === node && this._advancedGameComponent() === context.component;
     // 玩法作答可能更新路线变量和版本，收尾写入前先读取新的权威版本。
@@ -6144,6 +6171,9 @@ Page({
         if (frText) this.setData({ frag: { show: true, text: frText, step: '我的第 ' + done.length + ' 步 · ' + (node.name || '') } });
       }
       const completed = data && data.completed;
+      /* 服务端这次判了通关(主题规则可以是「主线 N 站」,选做站没走完也算):通关卡按「通关」讲,
+         别因为本地还有没走的选做站就把标题写成章节名、把里程碑少算这一个(2026-10-27 生产实测)。 */
+      if (completed && !this.data.topicCompleted) this.setData({ topicCompleted: true });
       // 后端本次新得成长徽章(FIRST_STEP/STREAK/TOPIC_CLEAR…),与节点模板勋章不同源,逐一轻提示
       const newBadges = (data && data.newBadges) || [];
       if (newBadges.length) {
@@ -6442,7 +6472,7 @@ Page({
     // scopeCurrent 不要求本回调仍是最新视图:同一会话的重复视图不应吞掉已排好的故事衔接。
     const scopeCurrent = () => this._isPlayAccountCurrent()
       && context.owner === this._playOwner && context.epoch === this._playLoadEpoch
-      && context.sessionKey === this._sessionKey() && this.data.chapter === context.chapter
+      && context.sessionKey === this._sessionKey() && String((this.data.chapter || {}).id) === String((context.chapter || {}).id)
       && this.data.advancedPlay === active && active.show && this._advancedGameComponent() === component;
     const current = () => this._advancedSessionContext === context && scopeCurrent();
     if (this._applyR5AdvancedView(view)) return;
@@ -6486,7 +6516,10 @@ Page({
     }
     const inline = kit.present === 'inline' && this.data.chapterFull;
     const ready = canContinue(view);
-    const advanceStory = this.data.chapterFull && this._storyOpenNode && ready && !this.data.playKit.readyForBase;
+    /* 分支走到结局时不自动接着走:结局那段话就是这一站的全部回报,0.9 秒就被翻走等于没看到
+       (2026-10-27 生产实测:南京路结案三选一,选完直接跳进附录章节卡)。玩家读完点下面的「继续」。 */
+    const advanceStory = this.data.chapterFull && this._storyOpenNode && ready && !this.data.playKit.readyForBase
+      && kit.type !== 'branch';
     // 填了一半的草稿按「账号 + 局 + 站」存本地(建档 / 留言组件自取);试玩不存
     if (kit.type === 'profile') this._profileNodeId = String(active.node.nodeId);
     if ((kit.type === 'profile' || kit.type === 'note') && !this.data.isPreview && !this.data.isMock) kit.draftKey = storyResume.draftKey(this._runSessionScope(), active.node.nodeId);
@@ -7606,7 +7639,12 @@ Page({
 
   buildReview() {
     const ordered = this._reviewOrderedNodes();
-    const tags = this._reviewAchievements(ordered);
+    const all = this._reviewAchievements(ordered);
+    // 完成卡小地图上只留一条成就气泡(2026-10-27 用户:站点挨得近,三条气泡互相盖、被裁掉)。
+    // 优先级与 _reviewAchievements 一致:徽章 > 券 > 最快一段 > 首达。
+    const rank = (t) => ['徽章', '到店券', '最快一段', '首达'].findIndex((p) => t.indexOf(p) === 0);
+    const topId = Object.keys(all).sort((a, b) => rank(all[a]) - rank(all[b]))[0];
+    const tags = topId != null ? { [topId]: all[topId] } : {};
     // 成就气泡挂到既有 fmNodes 上(节点 pin 全部保留),没有成就的节点 reviewLabel 为空 = 原样显示序号
     const fmNodes = (this.data.fmNodes || []).map((n) => Object.assign({}, n, { reviewLabel: tags[n.nodeId] || '' }));
     const sec = this._sessionClock ? this._sessionClock.elapsedSeconds() : 0;
@@ -7703,6 +7741,8 @@ Page({
           const id = it && it.topicId;
           if (id != null && id !== '') ids[String(id)] = true;
         });
+        // 完成事实列表按路线局状态算,线性局要所有站(含选做)都走完才落「完成」;这一局刚由服务端判过通关,算上它
+        if (this.data.topicCompleted && this.data.topicId) ids[String(this.data.topicId)] = true;
         this.setData({ milestone: buildMilestone(Object.keys(ids).length) });
       },
     });

@@ -38,8 +38,13 @@ Component({
   observers: {
     rewardCeiling(value) { this.setData({ rewardNote: rewardNote(value) }); },
     'show, seconds': function (show, seconds) {
+      if (!show) { this._abort(); this._configSignature = ''; return; }
+      // 开表后服务端回流会把同值属性再赋一遍:配置没变就不重置台面(与 typein 的 _roundSignature 同口径)
+      const signature = String(seconds);
+      if (signature === this._configSignature && !this._closed) return;
+      this._configSignature = signature;
       this._abort();
-      if (show) this._closed = false;
+      this._closed = false;
     },
   },
   lifetimes: { detached() { this._detached = true; this._abort(); } },
