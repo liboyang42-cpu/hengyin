@@ -210,11 +210,17 @@ class ThemeStateKeyServiceTest {
                 new com.chengyinhub.business.domain.JourneyRules()));
         assertEquals("ATTRIBUTE_REGISTRY_VERSION_CONFLICT", conflict.getDetailMessage());
         verify(mapper, never()).selectByTopicIdForUpdate(anyLong());
+        verify(mapper, never()).selectByTopicId(anyLong());
+        verify(mapper, never()).selectByTopicIdAndStateKeyForUpdate(anyLong(), anyString());
+        verify(mapper, never()).upsertThemeStateKey(any(ThemeStateKey.class));
+        verify(mapper, never()).updateDefinition(any(ThemeStateKey.class));
+        verify(mapper, never()).deleteByTopicIdAndStateKey(anyLong(), anyString());
         verify(mapper, never()).advanceRegistryVersion(anyLong());
         org.mockito.InOrder locks = inOrder(mapper);
-        locks.verify(mapper).lockTopic(7L);
+        locks.verify(mapper).lockTopicForStateKeyWrite(7L);
         locks.verify(mapper).ensureRegistryVersion(7L);
         locks.verify(mapper).lockRegistryVersion(7L);
+        locks.verifyNoMoreInteractions();
     }
 
     private static ThemeStateKey key(String stateKey, String type, String scope) {
