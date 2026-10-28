@@ -35,7 +35,6 @@ import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.DelegatingDataSource;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.support.TransactionTemplate;
 
 /** Test-only child JVM. Real coordinator/MySQL/Druid; no application, provider or production schema. */
@@ -61,7 +60,7 @@ public final class SchedulerFenceProcessProbe {
         if (password == null || !url.startsWith("jdbc:mysql://127.0.0.1:")) throw new IllegalArgumentException("Loopback fixture only");
         DefaultListableBeanFactory beans = new DefaultListableBeanFactory();
         beans.registerSingleton("wp14Task", new ProbeTask()); beans.registerAlias("wp14Task", "wp14Alias");
-        ReflectionTestUtils.setField(SpringUtils.class, "beanFactory", beans);
+        new SpringUtils().postProcessBeanFactory(beans);
         String target = alias + ".run(" + ("wp14Task".equals(alias) ? "'" + original + "'" : "\"" + original + "\"") + ")";
         String canonical = CanonicalJobTarget.canonical(target);
         DruidDataSource source = new DruidDataSource();
@@ -78,7 +77,10 @@ public final class SchedulerFenceProcessProbe {
         ExecutorService workers = Executors.newFixedThreadPool(2);
         MySqlSchedulerCoordinator coordinator = new MySqlSchedulerCoordinator(locks, timer);
         // As in the shipped handoff IT, commands drive leadership/clock deterministically; SQL remains real.
-        ReflectionTestUtils.setField(coordinator, "running", true);
+        var running = MySqlSchedulerCoordinator.class.getDeclaredField("running");
+        running.setAccessible(true); running.setBoolean(coordinator, true);
+        var activatedAt = MySqlSchedulerCoordinator.class.getDeclaredField("activatedAt");
+        activatedAt.setAccessible(true);
         Map<String, CountDownLatch> gates = new ConcurrentHashMap<>();
         JdbcTemplate db = new JdbcTemplate(source);
         event("READY " + ProcessHandle.current().pid() + " "
@@ -90,7 +92,7 @@ public final class SchedulerFenceProcessProbe {
                 if ("LEAD".equals(fields[0])) {
                     coordinator.maintainLeadership();
                     // Only the admission case uses fire=2; this fixture does not measure clock skew/misfire policy.
-                    if (coordinator.isLeader()) ReflectionTestUtils.setField(coordinator, "activatedAt", 0L);
+                    if (coordinator.isLeader()) activatedAt.setLong(coordinator, 0L);
                     event("LEADER " + coordinator.isLeader());
                 } else if ("ARM_TASK_LOSS".equals(fields[0])) {
                     locks.ownershipReads.set(0); locks.armed.set(true); event("ARMED");

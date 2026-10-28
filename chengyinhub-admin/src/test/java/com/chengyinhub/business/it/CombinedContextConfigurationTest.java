@@ -147,6 +147,18 @@ class CombinedContextConfigurationTest {
         standaloneFixture.ownsRedisFactory = true;
         assertDoesNotThrow(standaloneFixture::close);
         verify(owned).destroy(); verifyNoMoreInteractions(owned);
+
+        DataSource metadataOnly = mock(DataSource.class);
+        var sessions = assertDoesNotThrow(() -> CrossDomainStorageFixture.fixtureSqlFactory(metadataOnly).getObject());
+        assertNotNull(sessions);
+        assertEquals(java.util.Set.of("OmsOrderMapper", "MerchantSubscriptionMapper", "OfficialBroadcastMapper", "OfficialBroadcastLogMapper",
+                "UmsMemberMapper", "ImConversationMapper", "ImConversationMemberMapper", "ImMessageMapper", "TopicRouteSessionMapper",
+                "CmsTopicMapper", "CmsRegistrationMapper", "AiQuotaReservationMapper", "PhotoCheckIntentMapper"),
+                sessions.getConfiguration().getMapperRegistry().getMappers().stream().map(Class::getSimpleName)
+                        .collect(java.util.stream.Collectors.toSet()));
+        assertEquals(10L, sessions.getConfiguration().getTypeAliasRegistry().getTypeAliases().values().stream()
+                .filter(type -> type.getName().startsWith("com.chengyinhub.business.domain.")).distinct().count());
+        verifyNoInteractions(metadataOnly); // Parse every original XML without opening SQL or scanning unrelated domains.
     }
 
     @Test
@@ -160,6 +172,14 @@ class CombinedContextConfigurationTest {
                 " CrossDomainCombinedLoadMySqlIT","CrossDomainCombinedLoadMySqlIT -Xmx1024m",
                 "crossdomaincombinedloadmysqlit"})
             assertEquals(List.of(java,"-cp",cp,main),CrossDomainSchedulerStage.childArguments(scope));
+
+        var coordinatorType = com.chengyinhub.quartz.service.MySqlSchedulerCoordinator.class;
+        assertEquals(boolean.class, assertDoesNotThrow(() -> coordinatorType.getDeclaredField("running")).getType());
+        assertEquals(long.class, assertDoesNotThrow(() -> coordinatorType.getDeclaredField("activatedAt")).getType());
+        var realBeanFactoryEntry = assertDoesNotThrow(() -> com.chengyinhub.common.utils.spring.SpringUtils.class
+                .getMethod("postProcessBeanFactory", org.springframework.beans.factory.config.ConfigurableListableBeanFactory.class));
+        assertEquals(void.class, realBeanFactoryEntry.getReturnType());
+        assertTrue(java.lang.reflect.Modifier.isPublic(realBeanFactoryEntry.getModifiers()));
     }
 
     @Test
@@ -568,6 +588,32 @@ class CombinedContextConfigurationTest {
                 List.of(memoryCall, unfinished, unfinished, unfinished), List.of()));
         assertSame(originalMemoryFailure, memoryEntry.getCause(), "An Error must never become a fabricated result/retry");
         assertFalse(unfinished.isDone());
+
+        // Source-reference ownership only; no server, physical handler or business success is simulated here.
+        var stage = new CrossDomainTransportStage();
+        try {
+            String image = ReflectionTestUtils.invokeMethod(CrossDomainTransportStage.class, "newFaultImage");
+            assertNotNull(image); assertTrue(image.startsWith("data:image/jpeg;base64,"));
+            assertEquals("data:image/jpeg;base64,".length() + 16 * 1024 * 1024, image.length());
+            assertEquals('A', image.charAt("data:image/jpeg;base64,".length()));
+            assertEquals('A', image.charAt(image.length() - 1));
+            ReflectionTestUtils.setField(stage, "faultImage", image);
+            stage.fault = true;
+            assertSame(image, stage.image());
+            var done = List.of(completedWithoutResult, completedWithoutResult, completedWithoutResult, completedWithoutResult);
+            assertThrows(AssertionError.class, () -> stage.retireImageSource(done));
+            for (int i = 0; i < 4; i++) stage.aiEntered.countDown();
+            assertThrows(AssertionError.class,
+                    () -> stage.retireImageSource(List.of(completedWithoutResult, unfinished, completedWithoutResult, completedWithoutResult)));
+            assertSame(image, ReflectionTestUtils.getField(stage, "faultImage"));
+            stage.retireImageSource(done);
+            assertNull(ReflectionTestUtils.getField(stage, "faultImage"));
+            assertTrue(stage.fault); assertEquals(1L, stage.releaseAi.getCount()); assertEquals(4L, stage.aiServerExited.getCount());
+            stage.retireImageSource(done); // Idempotent while the same four physical handlers must remain held.
+        } finally {
+            stage.callers.shutdownNow(); stage.providers.shutdownNow();
+            assertTrue(stage.callers.isTerminated()); assertTrue(stage.providers.isTerminated());
+        }
 
         // Finite encoding controls, not a heap measurement or a substitute for four real provider handlers.
         for (String encoded : List.of("", "data:image/jpeg;base64," + "A".repeat(8193), "中文\u0000\"\\",
