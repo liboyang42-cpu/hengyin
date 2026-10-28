@@ -23,7 +23,7 @@ from ci.run_migration import statement_assertion
 from ci.migration_ledger import build_manifest
 from scripts.e2e.build_schema import (scratch_schema_sql, migrations_after_baseline, notice_forward_plan,
                                       NOTICE_OLD, NOTICE_V2, NOTICE_FORWARD_FILES,
-                                      broadcast_forward_plan, BROADCAST_OLD, BROADCAST_UNION, BROADCAST_FORWARD_FILES)
+                                      broadcast_forward_plan, BROADCAST_D, BROADCAST_OLD, BROADCAST_UNION, BROADCAST_FORWARD_FILES)
 
 
 def plan_file(path, migration=False, data_only=False):

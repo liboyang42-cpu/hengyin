@@ -103,11 +103,11 @@ class RegistryContractTest(unittest.TestCase):
         reg = registry()
         expected = {
             'com.chengyinhub.business.service.RefundPayoutMybatisIntegrationTest': 30,
-            'com.chengyinhub.business.service.impl.RefundRetryAndRemainderMySqlIT': 6,
+            'com.chengyinhub.business.service.impl.RefundRetryAndRemainderMySqlIT': 10,
             'com.chengyinhub.business.service.CoopDepositRefundMybatisIntegrationTest': 36,
         }
         self.assertEqual(list(expected), reg['batches']['architecture-day-refund-lifecycle']['classes'])
-        self.assertEqual(72, sum(expected.values()))
+        self.assertEqual(76, sum(expected.values()))
         self.assertEqual([], workflow_problems(WORKFLOW.read_text(), reg))
         for fqcn, count in expected.items():
             with self.subTest(fqcn=fqcn):
@@ -490,7 +490,7 @@ class RegistryContractTest(unittest.TestCase):
         # 23 条真库 + OWN_C01_51 外层 4 条普通；AI 15+7；E04-07 5+5（原回执41/43新增回归）；E02-22 9 + E02-25 2 + 三夹具 3；B05 3；F3 12（含死锁重试负控）。
         # 类条数全局唯一，按 master 侧登记：冲回 3→4、券生命周期 12→16、分享快照并发 2→3（extra-storage 71→76）。
         # 漏斗最大年份修复 4（含 TIMESTAMPADD 负控，master）。
-        # port-prelaunch-69(W8)：退款通知 9 + 退款重试余量 5 + 漫游定位留存 21。
+        # port-prelaunch-69(W8)：退款通知 9 + 退款重试余量 10 + 漫游定位留存 21。
         # p0-acceptance-ac1(AC1)：核销 5 + 跨账号 3 + 城市跑 2 + 自由探索供给闸 2 + 注销 1。
         # port-*：同批 master 侧移植，类与条数同原批；port-core-funds 27；port-ai-quota 22；port-f3-growth 12；port-f3-evidence 4。
         expected = {"core-funds": 27, "ai-quota": 24, "e04-07-coupon": 10, "community-e02": 14,
@@ -499,13 +499,13 @@ class RegistryContractTest(unittest.TestCase):
                     "port-extra-storage": 133,
                     "port-core-funds": 27, "port-ai-quota": 24,
                     "port-f3-growth": 12, "port-f3-evidence": 4,
-                    "funnel-max-date": 4, "port-prelaunch-69": 36,
+                    "funnel-max-date": 4, "port-prelaunch-69": 40,
                     "p0-acceptance-ac1": 13, "architecture-day-batch1": 79,
                     "architecture-day-wave2": 87, "architecture-day-photo": 15,
                     "architecture-day-broadcast-migration": 12, "architecture-day-settlement": 7,
                     "architecture-day-state-recovery": 51,
                     "architecture-day-runtime-governance": 37,
-                    "architecture-day-registration-write": 120,
+                    "architecture-day-registration-write": 125,
                     "architecture-day-im-revocation": 2,
                     "architecture-day-w19-owner-notice": 29,
                     "architecture-day-play-scheduler": 16,
@@ -531,14 +531,14 @@ class RegistryContractTest(unittest.TestCase):
                     "architecture-day-topic-cash-fence": 5,
                     "architecture-day-scheduler-two-process": 3,
                     "architecture-day-cash-recovery": 10,
-                    "architecture-day-funds-closure": 274,
+                    "architecture-day-funds-closure": 279,
                     "architecture-day-npc-voice-asr": 14,
                     "architecture-day-clm-commerce-proof": 8,
                     "architecture-day-media-retry-budget": 8,
                     "architecture-day-before-start-notice": 12,
                     "architecture-day-commerce-generic-guard": 6,
-                    "architecture-day-refund-lifecycle": 72,
-                    "architecture-day-integrated-changes": 924, "payment-intent-correctness": 30}
+                    "architecture-day-refund-lifecycle": 76,
+                    "architecture-day-integrated-changes": 933, "payment-intent-correctness": 30}
         reg = registry()
         totals = {name: sum(reg["classes"][fqcn]["tests"] for fqcn in batch["classes"])
                   for name, batch in reg["batches"].items()}
@@ -571,7 +571,7 @@ class RegistryContractTest(unittest.TestCase):
     def test_registration_and_revocation_batches_require_current_counts_and_real_gates(self):
         reg = registry()
         expected = {
-            "com.chengyinhub.business.service.RegistrationFundsMybatisIntegrationTest": (96, {"CHENGYIN_FUNDS_MYSQL_IT": "1"}),
+            "com.chengyinhub.business.service.RegistrationFundsMybatisIntegrationTest": (101, {"CHENGYIN_FUNDS_MYSQL_IT": "1"}),
             "com.chengyinhub.business.it.MerchantRegistrationCancellationMySqlIT": (15, {}),
             "com.chengyinhub.business.it.RegistrationStationFulfillmentMySqlIT": (9, {}),
         }
