@@ -148,15 +148,22 @@ final class CrossDomainStorageFixture implements AutoCloseable {
         db = new JdbcTemplate(pool); db.setQueryTimeout(3);
         assertEquals(schema, db.queryForObject("SELECT DATABASE()", String.class));
         transactions = new DataSourceTransactionManager(pool); tx = new TransactionTemplate(transactions);
-        var factory = new SqlSessionFactoryBean(); factory.setDataSource(pool);
-        factory.setTypeAliasesPackage("com.chengyinhub.business.domain");
+        var factory = fixtureSqlFactory(pool);
+        sql = new SqlSessionTemplate(factory.getObject());
+        db.update("INSERT INTO ums_member(id,wx_open_id) VALUES(?,'fixture-openid')", MEMBER);
+        installPayments(); installRoute(); installNotifications(); installRedis(applicationRedis);
+    }
+
+    /** All original thirteen XML mappers; register only the short aliases they actually declare. */
+    static SqlSessionFactoryBean fixtureSqlFactory(javax.sql.DataSource source) {
+        var factory = new SqlSessionFactoryBean(); factory.setDataSource(source);
+        factory.setTypeAliases(OmsOrder.class, MerchantSubscription.class, OfficialBroadcast.class, OfficialBroadcastLog.class,
+                UmsMember.class, ImConversation.class, ImConversationMember.class, ImMessage.class, CmsTopic.class, CmsRegistration.class);
         factory.setMapperLocations(Arrays.stream(new String[]{"OmsOrderMapper", "MerchantSubscriptionMapper", "OfficialBroadcastMapper", "OfficialBroadcastLogMapper",
                 "UmsMemberMapper", "ImConversationMapper", "ImConversationMemberMapper", "ImMessageMapper", "TopicRouteSessionMapper",
                 "CmsTopicMapper", "CmsRegistrationMapper", "AiQuotaReservationMapper", "PhotoCheckIntentMapper"})
                 .map(name -> new ClassPathResource("mapper/business/" + name + ".xml")).toArray(ClassPathResource[]::new));
-        sql = new SqlSessionTemplate(factory.getObject());
-        db.update("INSERT INTO ums_member(id,wx_open_id) VALUES(?,'fixture-openid')", MEMBER);
-        installPayments(); installRoute(); installNotifications(); installRedis(applicationRedis);
+        return factory;
     }
 
     private void installPayments() {

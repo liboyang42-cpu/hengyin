@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /** Fixed, owned fault gates around real clients; no substitute admission, quota or transport executor. */
 final class CrossDomainTransportStage implements AutoCloseable {
     static final String SMALL_IMAGE = "data:image/jpeg;base64,AA==";
-    static final String LARGE_IMAGE = "data:image/jpeg;base64," + "A".repeat(16 * 1024 * 1024);
+    private volatile String faultImage;
     // Keep the original 16 MiB physical-write witness, with bounded metadata headroom.
     static final int REQUEST_LIMIT = 17 * 1024 * 1024;
     private static final JsonFactory REQUEST_JSON = JsonFactory.builder().streamReadConstraints(
@@ -159,7 +159,23 @@ final class CrossDomainTransportStage implements AutoCloseable {
     OpenAiCompatibleLlmClient client(int origin) {
         return new OpenAiCompatibleLlmClient("t19-controlled", origins.get(origin), "fixture-token", "fixture-model", true, 2000, admission);
     }
-    String image() { return fault ? LARGE_IMAGE : SMALL_IMAGE; }
+    private static String newFaultImage() { return "data:image/jpeg;base64," + "A".repeat(16 * 1024 * 1024); }
+    String image() {
+        if (!fault) return SMALL_IMAGE;
+        String source = faultImage;
+        // A later explicit busy/admission control still gets exactly the original image value,
+        // without repinning it for the remainder of the JVM. No command/provider is dispatched here.
+        return source == null ? newFaultImage() : source;
+    }
+
+    void retireImageSource(List<? extends Future<PhotoCheckIntentView>> originals) {
+        assertEquals(4, originals.size()); assertTrue(originals.stream().allMatch(Future::isDone));
+        assertTrue(fault); assertEquals(0L, aiEntered.getCount());
+        assertEquals(4L, aiServerExited.getCount()); assertEquals(1L, releaseAi.getCount());
+        // The original four transport-owned UTF-8 entities remain held. Only the encoder's
+        // now-unused source String loses this fixture reference; no lease/handler/body is released.
+        faultImage = null;
+    }
 
     /** Preserve completed caller failures at the original entry barrier; never wait/retry another call. */
     static AssertionError aiEntryFailure(List<? extends Future<PhotoCheckIntentView>> pending,
@@ -189,6 +205,7 @@ final class CrossDomainTransportStage implements AutoCloseable {
     }
 
     void beginFault() throws Exception {
+        faultImage = newFaultImage();
         fault = true;
         // Reuse AiHttpAdmissionTest's real worker-exit counterexample: saturate only owned cleanup work.
         // Small POSTs often leave their workers immediately on abort; they cannot prove lifetime retention.
@@ -237,7 +254,7 @@ final class CrossDomainTransportStage implements AutoCloseable {
         for (Future<?> future : ownedCleanup) future.get(8, TimeUnit.SECONDS);
         awaitIdle();
         assertTrue(aiServerExited.await(8, TimeUnit.SECONDS), "owned local provider handlers must exit too");
-        fault = false;
+        fault = false; faultImage = null;
         assertEquals("杭州市", cities.resolveCity(120D, 30D), "original failed coordinate is retried only by explicit new read after exit");
         assertEquals("杭州市", cities.resolveCity(120D, 30D)); assertEquals(5, mapRequests.get(), "only actual success was cached");
         try (var a = admission.acquire(origins.get(0)); var b = admission.acquire(origins.get(0));
@@ -295,6 +312,7 @@ final class CrossDomainTransportStage implements AutoCloseable {
         servers.forEach(server -> server.stop(0)); callers.shutdownNow(); providers.shutdownNow();
         try { assertTrue(callers.awaitTermination(10, TimeUnit.SECONDS)); assertTrue(providers.awaitTermination(10, TimeUnit.SECONDS)); }
         catch (Throwable failure) { failures.add(failure); }
+        if (callers.isTerminated() && providers.isTerminated()) faultImage = null;
         failures.addAll(providerFailures);
         if (!failures.isEmpty()) { Exception error = new Exception("owned transport cleanup failed"); failures.forEach(error::addSuppressed); throw error; }
     }

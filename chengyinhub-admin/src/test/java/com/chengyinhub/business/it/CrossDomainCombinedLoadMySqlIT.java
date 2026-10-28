@@ -155,6 +155,7 @@ class CrossDomainCombinedLoadMySqlIT {
                     assertEquals(1, transport.releaseAi.getCount()); assertEquals(1, storage.releasePoison.getCount());
                     assertEquals(4, transport.mapActive.get()); assertEquals(4, transport.aiServerExited.getCount());
                     transport.assertHeldAfterAiCallerTimeouts();
+                    transport.retireImageSource(pending);
                     samples.add(sample("HELD", appPool, storage.pool, storage.admin, coreSchema, storage.schema));
                 };
                 // Start the real HTTP writes while ALL three original provider boundaries remain held.
