@@ -1,0 +1,7 @@
+<view class="stp {{disabled ? 'is-disabled' : ''}}">
+  <text class="stp__n">{{value}}</text>
+  <view class="stp__b">
+    <view class="stp__k {{disabled || value <= min ? 'is-off' : ''}}" data-d="-1" bindtap="onStep" aria-role="button" aria-label="{{label}}减一" aria-disabled="{{disabled || value <= min}}"></view>
+    <view class="stp__k stp__k--plus {{disabled || value >= max ? 'is-off' : ''}}" data-d="1" bindtap="onStep" aria-role="button" aria-label="{{label}}加一" aria-disabled="{{disabled || value >= max}}"><view class="stp__i"></view></view>
+  </view>
+</view>

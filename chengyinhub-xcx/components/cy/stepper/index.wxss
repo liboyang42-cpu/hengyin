@@ -1,0 +1,10 @@
+.stp { display: inline-flex; align-items: center; }
+.stp__n { min-width: 48rpx; text-align: right; font-size: var(--cy-type-body); color: var(--cy-color-text-primary); font-variant-numeric: tabular-nums; }
+.stp__b { position: relative; display: inline-flex; align-items: center; margin: -12rpx 0 -12rpx var(--cy-space-3); }
+/* 可见的灰底只有 64rpx 高,按键本身撑满 88rpx 热区 */
+.stp__b::before { content: ""; position: absolute; left: 0; right: 0; top: 12rpx; bottom: 12rpx; border-radius: 18rpx; background: var(--cy-color-bg-surface-subtle); }
+.stp__k { position: relative; width: 92rpx; height: 88rpx; display: flex; align-items: center; justify-content: center; color: var(--cy-color-text-primary); }
+.stp__k::after { content: ""; position: absolute; width: 26rpx; height: 4rpx; border-radius: 2rpx; background: currentColor; }
+.stp__k + .stp__k::before { content: ""; position: absolute; left: 0; top: 28rpx; bottom: 28rpx; width: 1px; background: var(--cy-color-border-strong); opacity: .5; }
+.stp__i { position: absolute; width: 4rpx; height: 26rpx; border-radius: 2rpx; background: currentColor; }
+.stp__k.is-off { color: var(--cy-color-text-disabled); }

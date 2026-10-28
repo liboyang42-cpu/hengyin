@@ -1,0 +1,13 @@
+<view class="ch" wx:if="{{items.length || add}}">
+  <view wx:for="{{items}}" wx:key="label" class="ch__c" data-index="{{index}}" bindtap="onPick" aria-role="button" aria-label="添加{{item.label}}" hover-class="cy-pressed" hover-stay-time="80">
+    <cy-icon wx:if="{{plus}}" name="plus" size="24" />
+    <view wx:elif="{{item.dot}}" class="ch__dot" style="background: var(--cy-color-{{item.dot}})"></view>
+    <text>{{item.label}}</text>
+  </view>
+  <view wx:if="{{add && !naming}}" class="ch__c ch__c--add" bindtap="onAddTap" aria-role="button" aria-label="{{add}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" /><text>{{add}}</text></view>
+  <view wx:if="{{naming}}" class="ch__field {{dup ? 'is-bad' : ''}}">
+    <input class="ch__in" focus="{{true}}" value="{{text}}" maxlength="{{maxlength}}" placeholder="{{placeholder}}" bindinput="onInput" bindblur="onBlur" bindconfirm="onConfirm" confirm-type="done" />
+    <view class="ch__go {{!text || dup ? 'is-off' : ''}}" bindtap="onConfirm" aria-role="button" aria-label="添加" aria-disabled="{{!text || dup}}">添加</view>
+  </view>
+</view>
+<text wx:if="{{naming && dup && duplicateText}}" class="ch__err">{{duplicateText}}</text>
