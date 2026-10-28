@@ -1,4 +1,4 @@
-const templateAdoption = require('../utils/publish/template-adoption.js');
+const templateAdoption = require('../utils/publish/template-adoption.js'); const checkContext = require('../utils/publish/check-context.js');
 const { readReducedMotion } = require('../../../utils/motion-preference.js');
 const modal = require('../../../utils/modal.js');
 const cyLoading = require('../../../utils/loading.js');
@@ -8556,7 +8556,7 @@ Page({
       + '&focusMessage=' + encodeURIComponent(focus.message || '') : '';
     wx.navigateTo({ url: '/pages/publish/temp/index?from=fabu&id=' + id
       + (this.data.operationScope === 'MERCHANT' ? '&scope=MERCHANT&templateScope=my' : '&scope=my')
-      + '&runtimeEndings=' + encodeURIComponent(JSON.stringify((this._runtimeConfig().endings || []).map(row => ({ id: row.id, title: row.title }))))
+      + '&runtimeEndings=' + encodeURIComponent(JSON.stringify((this._runtimeConfig().endings || []).map(row => ({ id: row.id, title: row.title })))) + checkContext.query(this.data.formData.journeyRules)
       + (this.data.supportMatrix ? '&supportContext=' + encodeURIComponent(JSON.stringify(this._nodeSupportContext())) : '') + focusQuery });
   },
   onCopyBoundTemplate() {
@@ -8824,7 +8824,7 @@ Page({
     const nodeName = this.data.nodesForm.name || ('节点' + (this.data.editTargetNodeLid || ''));
     if (this._navigating) return; this._navigating = true; wx.navigateTo({ // 跳转中不响应连点,免得叠两层玩法编辑页
       url: '/pages/publish/temp/index?from=fabu&themeName=' + encodeURIComponent(themeName || '')
-        + '&nodeName=' + encodeURIComponent(nodeName || '')
+        + '&nodeName=' + encodeURIComponent(nodeName || '') + checkContext.query(this.data.formData.journeyRules)
         + (this.data.supportMatrix ? '&supportContext=' + encodeURIComponent(JSON.stringify(ctx)) : '')
         + (game ? '&game=' + encodeURIComponent(game.key) + (dataset.preview ? '&sample=1' : '') : '')
         + (this.data.operationScope ? '&scope=MERCHANT' : ''),

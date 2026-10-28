@@ -30,7 +30,7 @@ const nodeGameCatalog = require('../utils/publish/node-game-catalog.js');
 const nodeOutcomeContract = require('../utils/publish/node-outcome-contract.js');
 const supportMatrix = require('../utils/publish/gameplay-support-matrix.js');
 const templateTools = require('../utils/publish/template-tools.js');
-const r5Editor = require('./r5-editor.js');
+const r5Editor = require('./r5-editor.js'); const checkSection = require('./check-section.js'); const afterSection = require('./after-section.js');
 const publishIssueTarget = require('../utils/publish/publish-issue-target.js');
 const templateAuthorFields = require('../utils/publish/template-author-fields.js');
 const merchantAccessPolicy = require('../../../utils/merchant-access-policy.js');
@@ -181,7 +181,7 @@ function noPreviewTip(section) {
 }
 
 Page({
-  ...r5Editor.methods,
+  ...r5Editor.methods, ...checkSection.methods, ...afterSection.methods,
   MODULE_DEFS: MODULE_DEFS,
 
   _supportMatrix: null,
@@ -190,7 +190,7 @@ Page({
   data: {
     creatorLoginRequired: false,
     qaAnswerModes: QA_ANSWER_MODES, qaTriesOptions: QA_TRIES, qaRevealOptions: QA_REVEAL, qaFbImgMax: QA_FB_IMG_MAX,
-    ...r5Editor.data,
+    ...r5Editor.data, ...checkSection.data, ...afterSection.data,
     operationScope: '',
     isMyScope: false, // R9-04:回填走个人草稿接口(/api/template/myinfo)
     merchantAccess: merchantAccessPolicy.inactiveAccess(),
@@ -1137,7 +1137,7 @@ Page({
       luckIndex: cfg.luckIndex(mods),
       relaxOptions: choices.map((c) => ({ key: c.key, label: c.pick })),
       relaxIndex: own ? choices.findIndex((c) => JSON.stringify(c.relax) === JSON.stringify(own.relax)) : -1,
-    });
+    }, () => this._refreshCheckView(a));
   },
   _writeMods: function (mods) {
     const adv = JSON.parse(JSON.stringify(this.data.advanced));
@@ -1150,8 +1150,8 @@ Page({
   toggleLuck: function (e) {
     this._writeMods(advancedGameConfig.applyLuck((this.data.advanced.check || {}).mods, e.detail.value ? 0 : -1));
   },
-  onLuckPick: function (e) {
-    this._writeMods(advancedGameConfig.applyLuck((this.data.advanced.check || {}).mods, Number(e.detail.value)));
+  onLuckPick: function (e) { // 10-28:幸运加分就地勾选,点一行 = data-index 那一档,选完收起
+    this._writeMods(advancedGameConfig.applyLuck((this.data.advanced.check || {}).mods, Number(e.currentTarget.dataset.index))); this.setData({ checkOpen: '' });
   },
   // 放宽只有一个触发条件(血量低),多配几条也只有第一条生效 —— 所以是单选,不是列表。
   _writeRelax: function (index) {
@@ -1353,7 +1353,7 @@ Page({
     this._loadSupportMatrix();
     this._focusTool = safeDecode(options.focusTool);
     this._focusPlan = safeDecode(options.focusPlan);
-    this._focusMessage = safeDecode(options.focusMessage);
+    this._focusMessage = safeDecode(options.focusMessage); this._initCheckCtx(options);
     var that = this;
     const windowInfo = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync();
     this.setData({ sheetTop: resolveMenuChrome(windowInfo, app.globalData.menuButtonInfo).sheetTop });
@@ -2862,8 +2862,8 @@ Page({
     }
     if (this.data.pickerSheet && this.data.pickerSheet.open) {
       this.closePickerSheet();
-    } else if (this.data.afterEditor.show) {
-      this.closeAfterSheet();
+    } else if (this.data.checkSheet.show) { this.closeCheckSheet();
+    } else if (this.data.afterEditor.show) { this.closeAfterSheet();
     } else if (this.data.toolSheetKey) {
       this.closeR5ToolSheet();
     } else if (this.data.scanSheetOpen) {
@@ -2882,7 +2882,7 @@ Page({
       this.closePreview();
     }
     const stillGuarded = (this.data.pickerSheet && this.data.pickerSheet.open)
-      || this.data.afterEditor.show || this.data.toolSheetKey || this.data.scanSheetOpen || this.data.gameConfigOpen
+      || this.data.checkSheet.show || this.data.afterEditor.show || this.data.toolSheetKey || this.data.scanSheetOpen || this.data.gameConfigOpen
       || this.data.toolSheetOpen || this.data.gameSheetOpen || this.data.categorySheetVisible || this.data.showAddSheet || this.data.previewVisible;
     if (stillGuarded) {
       this.setData({ backGuardOff: true });

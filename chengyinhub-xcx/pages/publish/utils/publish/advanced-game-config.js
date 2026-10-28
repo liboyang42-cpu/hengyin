@@ -155,11 +155,12 @@ const MOD_PRESETS = [
   { key: 'luckLow', label: '幸运低少一分', value: -1, when: { var: 'sys.luck', op: 'LTE', value: 0 } },
 ];
 
-/** 「幸运」开关打开后的三档:两条预设单开或同开。-1 = 开关关着。 */
+/** 「幸运」开关打开后的三档:两条预设单开或同开。-1 = 开关关着。
+    label 只给人看(2026-10-28 统一成「多 1 分」);存盘认的是 MOD_PRESETS 的 label,不能跟着改。 */
 const LUCK_OPTIONS = [
-  { label: '幸运高获得多1分', keys: ['luckHigh'] },
-  { label: '幸运低少一分', keys: ['luckLow'] },
-  { label: '幸运高多1分，幸运低少1分', keys: ['luckHigh', 'luckLow'] },
+  { label: '幸运高多 1 分', keys: ['luckHigh'] },
+  { label: '幸运低少 1 分', keys: ['luckLow'] },
+  { label: '幸运高多 1 分，幸运低少 1 分', keys: ['luckHigh', 'luckLow'] },
 ];
 
 function luckIndex(mods) {
@@ -680,11 +681,12 @@ function text(value) { return String(value == null ? '' : value).trim(); }
 function normalizeMods(mods) {
   return (Array.isArray(mods) ? mods : []).map((item) => {
     const when = item && item.when && typeof item.when === 'object' ? item.when : {};
-    const row = { when: when, value: Number(item && item.value) || 0 };
+    // F2 T03:加上属性值的一条带 var(counter.*)不带 value,与静态 value 二选一(服务端 validateMods)
+    const row = text(item && item.var) ? { when: when, var: text(item.var) } : { when: when, value: Number(item && item.value) || 0 };
     const label = text(item && item.label);
     if (label) row.label = label;
     return row;
-  }).filter((row) => text(row.when.var) || text(row.when.tag) || row.value !== 0);
+  }).filter((row) => row.var || text(row.when.var) || text(row.when.tag) || row.value !== 0);
 }
 
 /** 条件修正的校验(文案对齐服务端 validateMods)。 */
@@ -697,7 +699,7 @@ function modsError(mods) {
     if (!row.when || typeof row.when !== 'object' || !Object.keys(row.when).length) {
       return 'check 的 mods 必须带 when 条件';
     }
-    if (!Number.isInteger(Number(row.value))) return 'check 的 mods 必须带整数 value';
+    if (!text(row.var) && !Number.isInteger(Number(row.value))) return 'check 的 mods 必须带整数 value';
     if (text(row.label).length > MAX_MOD_LABEL) {
       return 'check 的 mods 的 label 不能超过 ' + MAX_MOD_LABEL + ' 字';
     }
@@ -1977,6 +1979,8 @@ function validateNormalized(model, opts) {
     const checkEffectError = effectError(journeyCheck.successEffects, '检定通过效果', model)
       || effectError(journeyCheck.failEffects, '检定失败效果', model);
     if (checkEffectError) return checkEffectError;
+    const bargainIssue = require('./check-context.js').bargainError(journeyCheck.bargain);
+    if (bargainIssue) return bargainIssue;
   }
 
   const album = model.album || {};
