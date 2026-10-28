@@ -11951,7 +11951,7 @@ body.clean .scr .need{display:none}
 .scr cy-sheet.is-front .sh--full .sh__panel{height:calc(var(--cy-comp-sheet-max-h) - 12px);max-height:calc(var(--cy-comp-sheet-max-h) - 12px)}
 .scr cy-sheet .sh--closing .sh__panel{animation:sh-down .22s var(--cy-ease-standard) forwards}
 /* 半屏内分层导航 */
-.ios-host{position:relative}
+.ios-host{position:relative}.tsm{position:absolute;inset:0;z-index:30;background:rgba(0,0,0,.28);opacity:0;pointer-events:none;transition:opacity .28s ease}.tsm.is-on{opacity:1;pointer-events:auto}.tsh{position:absolute;left:0;right:0;bottom:0;z-index:31;padding:8px 16px calc(var(--sab,34px) + 4px);border-radius:28px 28px 0 0;background:var(--cy-color-bg-surface,#fff);box-shadow:0 -4px 30px rgba(0,0,0,.14);transform:translateY(calc(100% + 16px));transition:transform .36s cubic-bezier(.2,.8,.2,1)}.tsh.is-on{transform:none}.ios-host.no-anim .tsh,.ios-host.no-anim .tsm{transition:none}.tsh__grab{width:36px;height:5px;border-radius:3px;background:var(--cy-color-border-strong,rgba(0,0,0,.18));margin:0 auto 12px}.tsh__t{display:block;text-align:center;font-size:calc(15.6px * var(--cy-type-scale,1));font-weight:700;color:var(--cy-color-text-primary);margin-bottom:14px}.tsh__os{display:flex;flex-direction:column;gap:8px}.tsh__o{display:flex;align-items:center;gap:12px;min-height:54px;padding:0 18px;border-radius:16px;background:var(--cy-color-bg-page,#f4f4f6);color:var(--cy-color-text-primary);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform var(--cy-motion-expand,.24s) var(--cy-ease-spring,ease),background-color var(--cy-motion-fast,.15s) ease,color var(--cy-motion-fast,.15s) ease}.tsh__o:active{transform:scale(.97)}.tsh__o.is-on{background:var(--cy-color-action-primary-bg);color:var(--cy-color-action-primary-fg)}.tsh__ic{flex:none;width:22px;height:22px}.tsh__n{flex:1;font-size:calc(16.12px * var(--cy-type-scale,1));font-weight:600}.tsh__v{font-size:calc(13.52px * var(--cy-type-scale,1));opacity:.62;font-variant-numeric:tabular-nums}.tsh__cu{margin-top:12px}.tsh__cu .ios-grp{margin:0}.tsh__done{margin-top:12px;height:50px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-weight:700;background:var(--cy-color-action-primary-bg);color:var(--cy-color-action-primary-fg);cursor:pointer}.tsh__err{margin-top:10px;text-align:center;font-size:calc(13px * var(--cy-type-scale,1));color:var(--cy-color-status-danger)}
 .ios-host.no-anim .ios-lv{transition:none !important;animation:none !important}
 .ios-lv{display:flex;flex-direction:column;min-height:0;flex:1 1 auto;transition:transform .34s cubic-bezier(.2,.8,.2,1), opacity .34s ease}
 .ios-lv.ios-sub{position:absolute;inset:0;z-index:2;display:none;padding:0 var(--cy-page-x) calc(var(--sab,34px) + 8px);background:var(--cy-comp-sheet-bg);box-shadow:-10px 0 24px rgba(0,0,0,.06)}
@@ -12485,8 +12485,8 @@ body.clean .scr .need{display:none}
 
     <!-- F6：RPG 规则，默认关（10-27 起并入「d20 与角色设定」，这张卡删除） -->
     <!-- 10-27 业主：「定向安全」换成「可玩时段」+「开局前准备」 -->
-    <view class="node-card mk-chg" id="timeCard" data-mk="可玩时段（一行 → 下一层）" data-before="10-27 版：卡里四个选项药丸 + 一句说明 + 自定义时的两个下拉，最后一行「平台规则：未满 18 岁的玩家不能在夜间（20:00–06:00）开局。这一条不能修改。」" data-after="一行「可玩时段 · 只在夜间 ›」，点进去是同一张半屏里的下一层（勾选列表）。平台规则那一行删掉，规则本身仍由服务端执行" data-why="业主 10-28 第 1、3 条。俱乐部带队（E2：主题有俱乐部，CmsTopic.clubId）时整张卡不出现。时段字段需后端。" data-states="solo,club" data-st-name="可玩时段（个人 / 俱乐部带队）" data-cur="solo">
-      <view data-st="solo" class="node-card__row" data-act="lv" data-lv="tdTime"><view class="node-card__ico"><cy-icon><view class="cyi cyi--clock" style="width:16.64px;height:16.64px"></view></cy-icon></view><view class="node-card__main"><text class="node-card__title">可玩时段<text class="need">需后端</text></text></view><view class="node-pill"><text id="timeSum">只在夜间</text><cy-icon><view class="cyi cyi--chevron-right" style="width:12.48px;height:12.48px"></view></cy-icon></view></view>
+    <view class="node-card mk-chg" id="timeCard" data-mk="可玩时段（一行 → 底部选择）" data-before="10-27 版：卡里四个选项药丸 + 一句说明 + 自定义时的两个下拉，最后一行「平台规则：未满 18 岁的玩家不能在夜间（20:00–06:00）开局。这一条不能修改。」" data-after="一行「可玩时段 · 只在夜间 ›」，点一下从底部升起一张小选择卡（照 Threads），点选项立即生效并收起。平台规则那一行删掉，规则本身仍由服务端执行" data-why="业主 10-28 第 1、3 条。俱乐部带队（E2：主题有俱乐部，CmsTopic.clubId）时整张卡不出现。时段字段需后端。" data-states="solo,club" data-st-name="可玩时段（个人 / 俱乐部带队）" data-cur="solo">
+      <view data-st="solo" class="node-card__row" data-act="timeOpen"><view class="node-card__ico"><cy-icon><view class="cyi cyi--clock" style="width:16.64px;height:16.64px"></view></cy-icon></view><view class="node-card__main"><text class="node-card__title">可玩时段<text class="need">需后端</text></text></view><view class="node-pill"><text id="timeSum">只在夜间</text><cy-icon><view class="cyi cyi--chevron-right" style="width:12.48px;height:12.48px"></view></cy-icon></view></view>
     </view>
 
     <view class="node-card mk-chg" id="prepCard" data-mk="开局前准备（一行 → 下一层）" data-before="10-27 版：卡里直接列出准备项（每行一个删除钮）+ 建议药丸 + 输入框" data-after="一行「开局前准备 · 2 项 ›」，点进去是下一层的 iOS 列表（左滑删除、编辑排序、建议一点就加）" data-why="业主 10-28 第 3 条：每张半屏照 iOS 结构；长列表放到下一层，主题详情保持短。">
@@ -12508,26 +12508,21 @@ body.clean .scr .need{display:none}
   </scroll-view>
 
   <!-- 10-28：主题详情的下一层（同一张半屏里推进，iOS 导航） -->
-  <view class="ios-lv ios-sub" id="tdTime">
-    <view class="ios-nav"><view class="node-sheet__close ios-back" data-act="lvBack" aria-label="返回主题详情"><cy-icon><view class="cyi cyi--back" style="width:20.8px;height:20.8px"></view></cy-icon><text>主题详情</text></view><text class="ios-nav__t">可玩时段</text><view class="ios-nav__r"></view></view>
-    <scroll-view class="ios-body">
-    <view class="mk-new" id="timeList" data-mk="可玩时段 · 勾选列表" data-why="业主 10-28：选择类做成「一行 → 下一层勾选列表」。点一项立即生效（iOS 设置的做法），左上返回。时段按 E3：白天 06:00–20:00，夜间 20:00–06:00。平台的未成年夜间规则仍由服务端执行（/api/orient/safety/check），编辑器里不写。只许在某时段开局：后端没有字段，需后端。" data-states="ok,custom,error" data-st-name="可玩时段（下一层）" data-cur="ok">
-      <view class="ios-grp mk-chg" id="winGrp" data-mk="去掉脚注" data-before="列表下面「其余时间，玩家不能开局。」" data-after="（删除）" data-why="业主 10-28：去掉次级说明，让版式自己说明。">
-        <view class="ios-row" data-act="pickWin" data-win="any"><view class="ios-m"><text class="ios-t">不限</text></view><view class="ios-chk"><cy-icon><view class="cyi cyi--check" style="width:16.64px;height:16.64px"></view></cy-icon></view></view>
-        <view class="ios-row" data-act="pickWin" data-win="day"><view class="ios-m"><text class="ios-t">只在白天</text></view><text class="ios-v">06:00–20:00</text><view class="ios-chk"><cy-icon><view class="cyi cyi--check" style="width:16.64px;height:16.64px"></view></cy-icon></view></view>
-        <view class="ios-row is-on" data-act="pickWin" data-win="night"><view class="ios-m"><text class="ios-t">只在夜间</text></view><text class="ios-v">20:00–06:00</text><view class="ios-chk"><cy-icon><view class="cyi cyi--check" style="width:16.64px;height:16.64px"></view></cy-icon></view></view>
-        <view class="ios-row" data-act="pickWin" data-win="custom"><view class="ios-m"><text class="ios-t">自定义</text></view><view class="ios-chk"><cy-icon><view class="cyi cyi--check" style="width:16.64px;height:16.64px"></view></cy-icon></view></view>
-      </view>
-      <view data-st="custom">
-        <view class="ios-hd">自定义时段</view>
+  <view class="tsm" id="tdTimeMask" data-act="timeClose"></view>
+  <view class="tsh" id="tdTime" role="dialog" aria-label="可玩时段">
+    <view class="tsh__grab"></view>
+    <text class="tsh__t">可玩时段</text>
+    <view class="mk-new" id="timeList" data-mk="可玩时段 · 底部选择" data-before="主题详情里的下一层，iOS 勾选列表（选中那行后面一个勾）" data-after="底部升起一张小选择卡（照 Threads）：四个大选项，选中的那个填满强调色（与难度卡同一套），没有勾；点一下立即生效并收起。选「自定义」时卡里展开开始 / 结束和「完成」" data-why="业主 10-28 晚：可玩时段要用底部弹出的选择，不要勾选样式，参考 Threads。时段按 E3：白天 06:00–20:00，夜间 20:00–06:00。平台的未成年夜间规则仍由服务端执行，编辑器里不写。只许在某时段开局：后端没有字段，需后端。" data-states="ok,custom,error" data-st-name="可玩时段（底部选择）" data-cur="ok">
+      <view class="tsh__os" id="winGrp"><view class="tsh__o" data-act="pickWin" data-win="any"><svg class="tsh__ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 15.5a3.5 3.5 0 1 1 0-7c2.5 0 3.5 2 5.5 3.5s3 3.5 5.5 3.5a3.5 3.5 0 1 0 0-7c-2.5 0-3.5 2-5.5 3.5S9 15.5 6.5 15.5z"/></svg><text class="tsh__n">不限</text></view><view class="tsh__o" data-act="pickWin" data-win="day"><svg class="tsh__ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4L6 18M18 6l1.4-1.4"/></svg><text class="tsh__n">只在白天</text><text class="tsh__v">06:00–20:00</text></view><view class="tsh__o is-on" data-act="pickWin" data-win="night"><svg class="tsh__ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg><text class="tsh__n">只在夜间</text><text class="tsh__v">20:00–06:00</text></view><view class="tsh__o" data-act="pickWin" data-win="custom"><svg class="tsh__ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><text class="tsh__n">自定义</text></view></view>
+      <view data-st="custom" class="tsh__cu">
         <view class="ios-grp">
           <view class="ios-row" data-dd="06:00|08:00|10:00|14:00|18:00|19:00"><view class="ios-m"><text class="ios-t">开始</text></view><text class="ios-v dd-v">18:00</text><view class="ios-chev"><cy-icon><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view></view>
           <view class="ios-row" data-dd="20:00|21:00|22:00|23:00|次日 02:00"><view class="ios-m"><text class="ios-t">结束</text></view><text class="ios-v dd-v">22:00</text><view class="ios-chev"><cy-icon><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view></view>
         </view>
+        <view class="tsh__done" data-act="timeClose">完成</view>
       </view>
-      <view class="ios-ft is-err" data-st="error">没有保存成功，请再试一次。</view>
+      <view class="tsh__err" data-st="error">没有保存成功，请再试一次。</view>
     </view>
-    </scroll-view>
   </view>
 
   <view class="ios-lv ios-sub" id="tdPrep">
@@ -13462,9 +13457,9 @@ var META = {
       files: ['chengyinhub-xcx/pages/publish/fabu/topic-detail-sheet.wxml', 'chengyinhub-xcx/pages/publish/components/topic-state-keys/index.wxml'],
       intro: '10-28：左上「退出」改「取消」。「可玩时段」「开局前准备」各变成一行（右边是当前值），点进去是同一张半屏里的下一层，左上「‹ 主题详情」返回。点「d20 与角色设定」会叠一张新半屏：主题详情缩小变暗，顶边露在上面（iOS 卡片叠放），关掉后回来。平台夜间规则那一行删掉。',
       notes: ['卡片仍是 master 的 .node-card / .node-pill / cy-switch，只改结构。', '10-28 去掉次级说明：d20 开关下面的小字删掉；「d20 与角色设定」的当前值挪到右边。', '俱乐部带队的主题（E2）：「可玩时段」整行不出现。手机里不再画「（这张卡不出现）」，右栏切「俱乐部带队」看。'] },
-    'e-time': { sec: 'fabu', scope: '#tdTime', init: ['tdSheet'], lv: ['tdTime'], t: '可玩时段（下一层）', host: '主题详情的下一层', theme: 'light', badges: 'n',
+    'e-time': { sec: 'fabu', scope: '#tdTime', init: ['tdSheet'], run: 'timeOpen', t: '可玩时段（底部选择）', host: '主题详情的下一层', theme: 'light', badges: 'n',
       files: ['chengyinhub-xcx/pages/publish/fabu/topic-detail-sheet.wxml（卡片语言）'],
-      intro: '勾选列表，点一项立即生效。选「自定义」时下面多一组开始 / 结束。俱乐部带队的主题（E2：主题有俱乐部）整行不出现，回到上一层用右栏切换。',
+      intro: '10-28 晚：点「可玩时段」从底部升起一张小选择卡（照 Threads），四个大选项，选中的填满强调色、没有勾；点一项立即生效并收起，点暗处也收起。选「自定义」时卡里展开开始 / 结束和「完成」。俱乐部带队的主题（E2：主题有俱乐部）整行不出现，回到上一层用右栏切换。',
       api: ['已有：<code>OrientSafetyRule.nightStartMinute / nightEndMinute</code>（只用来判「夜里」，缺省 20:00–06:00）、<code>/api/orient/safety/check</code>（未成年夜间规则，服务端照旧执行）', '「只许在某时段开局」：<span class="need">需后端</span>'] },
     'e-prep': { sec: 'fabu', scope: '#tdPrep', init: ['tdSheet'], lv: ['tdPrep'], t: '开局前准备（下一层）', host: '主题详情的下一层', theme: 'light', badges: 'n',
       files: ['chengyinhub-xcx/pages/publish/fabu/topic-detail-sheet.wxml（卡片语言）'],
@@ -13665,8 +13660,10 @@ window.ACT = {
   d20Init: function(){ ['d20Preset', 'd20Attrs', 'clockCard', 'traitCard'].forEach(function(id){ var h = ACT.$(id); ACT['st:' + id](h.dataset.cur); }); },
   /* ---- 可玩时段 / 开局前准备 ---- */
   WIN: { any: '不限', day: '只在白天', night: '只在夜间', custom: '自定义' },
-  pickWin: function(el){ ACT.pickRow(el); ACT.$('timeSum').textContent = ACT.WIN[el.dataset.win]; var h = ACT.$('timeList'); h.__busy = 1; window.__proto.setState(h, el.dataset.win === 'custom' ? 'custom' : 'ok'); h.__busy = 0; },
-  'st:timeList': function(st){ if (st === 'custom') ACT.pickWin(document.querySelector('#winGrp [data-win="custom"]')); else if (st === 'ok') ACT.pickWin(document.querySelector('#winGrp [data-win="night"]')); },
+  timeOpen: function(){ ACT.$('tdTimeMask').classList.add('is-on'); ACT.$('tdTime').classList.add('is-on'); window.__proto.layoutMarks(); },
+  timeClose: function(){ ACT.$('tdTimeMask').classList.remove('is-on'); ACT.$('tdTime').classList.remove('is-on'); setTimeout(window.__proto.layoutMarks, 380); },
+  pickWin: function(el, keep){ Array.prototype.forEach.call(el.parentNode.children, function(c){ c.classList.toggle('is-on', c === el); }); ACT.$('timeSum').textContent = ACT.WIN[el.dataset.win]; var h = ACT.$('timeList'), cu = el.dataset.win === 'custom'; h.__busy = 1; window.__proto.setState(h, cu ? 'custom' : 'ok'); h.__busy = 0; if (!cu && keep !== 1) setTimeout(ACT.timeClose, 220); },
+  'st:timeList': function(st){ ACT.timeOpen(); if (st === 'custom') ACT.pickWin(document.querySelector('#winGrp [data-win="custom"]'), 1); else if (st === 'ok') ACT.pickWin(document.querySelector('#winGrp [data-win="night"]'), 1); },
   syncPrep: function(){ var g = ACT.$('prepGrp'); if (!g) return; var n = Array.prototype.filter.call(g.querySelectorAll('.ios-sw'), function(s){ return !s.classList.contains('hidden-st'); }).length; ACT.$('prepSum').textContent = n ? n + ' 项' : '未设置'; },
   prepPut: function(txt){ var g = ACT.$('prepGrp'); var n = Array.prototype.filter.call(g.querySelectorAll('.ios-sw'), function(s){ return !s.classList.contains('hidden-st'); }).length; if (n >= 6) { window.__proto.toast('最多 6 项'); return false; }
     var tpl = g.querySelector('.ios-sw'); var sw = tpl.cloneNode(true); sw.classList.remove('is-open', 'hidden-st'); sw.removeAttribute('data-st'); sw.querySelector('.ios-t').textContent = txt; g.insertBefore(sw, ACT.$('prepAddRow')); ACT.syncPrep(); window.__proto.layoutMarks(); return true; },
@@ -14092,7 +14089,7 @@ function cur(){ return stack[stack.length - 1]; }
 function scr(id){ var m = META.screens[id]; return document.getElementById('s-' + ((m && m.sec) || id)); }
 function inScope(id, sel){ var m = META.screens[id] || {}, s = scr(id); if (!s) return []; var roots = m.scope ? $$(m.scope, s) : [s]; var out = []; roots.forEach(function(r){ if (r.matches(sel)) out.push(r); $$(sel, r).forEach(function(x){ if (out.indexOf(x) < 0) out.push(x); }); }); return out; }
 function applyInit(id){ window.__resetting = 1; try { _applyInit(id); } finally { window.__resetting = 0; } }
-function _applyInit(id){ var m = META.screens[id] || {}, s = scr(id); if (!s) return; $$('.ps.is-open', s).forEach(function(x){ x.classList.remove('is-open'); }); $$('.ios-host', s).forEach(function(h){ navReset(h); }); $$('.is-editing', s).forEach(function(x){ x.classList.remove('is-editing'); }); $$('.ios-sw.is-open', s).forEach(function(x){ x.classList.remove('is-open'); }); restack(); $$('[data-states]', s).forEach(function(x){ if (x.dataset.cur0 && x.dataset.cur !== x.dataset.cur0) setState(x, x.dataset.cur0); }); (m.init || []).forEach(function(x){ openEl(x); }); (m.states || []).forEach(function(p){ var el = document.getElementById(p[0]); if (el) setState(el, p[1]); }); (m.lv || []).forEach(function(l){ navPush(l, true); }); if (m.run && ACT[m.run]) ACT[m.run](); if (m.focus) setTimeout(function(){ var f = document.getElementById(m.focus); if (f) { f.scrollIntoView({ block: 'start' }); layoutMarks(); } }, 60); }
+function _applyInit(id){ var m = META.screens[id] || {}, s = scr(id); if (!s) return; $$('.ps.is-open', s).forEach(function(x){ x.classList.remove('is-open'); }); $$('.ios-host', s).forEach(function(h){ navReset(h); }); $$('.tsh.is-on,.tsm.is-on', s).forEach(function(x){ x.classList.remove('is-on'); }); $$('.is-editing', s).forEach(function(x){ x.classList.remove('is-editing'); }); $$('.ios-sw.is-open', s).forEach(function(x){ x.classList.remove('is-open'); }); restack(); $$('[data-states]', s).forEach(function(x){ if (x.dataset.cur0 && x.dataset.cur !== x.dataset.cur0) setState(x, x.dataset.cur0); }); (m.init || []).forEach(function(x){ openEl(x); }); (m.states || []).forEach(function(p){ var el = document.getElementById(p[0]); if (el) setState(el, p[1]); }); (m.lv || []).forEach(function(l){ navPush(l, true); }); if (m.run && ACT[m.run]) ACT[m.run](); if (m.focus) setTimeout(function(){ var f = document.getElementById(m.focus); if (f) { f.scrollIntoView({ block: 'start' }); layoutMarks(); } }, 60); }
 function show(id, anim){
   $$('.scr.on').forEach(function(s){ s.classList.remove('on', 'push-in', 'pop-in'); });
   var s = scr(id); if (!s) return;
