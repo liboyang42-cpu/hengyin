@@ -1,0 +1,494 @@
+diff --git a/chengyinhub-admin/sql/migration_20261028_official_broadcast_protocol_union.sql b/chengyinhub-admin/sql/migration_20261028_official_broadcast_protocol_union.sql
+new file mode 100644
+index 0000000..c7c315f
+--- /dev/null
++++ b/chengyinhub-admin/sql/migration_20261028_official_broadcast_protocol_union.sql
+@@ -0,0 +1,46 @@
++-- Candidate: compose the two retained broadcast protocols; do not execute without integrator approval.
++-- Requires the exact 20261023_d_official_broadcast_delivery prefix, stopped publishers/workers,
++-- and REPLACED_UNAPPLIED custody for 20261026_official_broadcast_delivery.
++-- Never run on a master-only, partially applied, or already composed installation.
++CREATE TEMPORARY TABLE tmp_broadcast_union_guard (id INT NOT NULL PRIMARY KEY) ENGINE=InnoDB;
++INSERT INTO tmp_broadcast_union_guard (id) VALUES (1);
++INSERT INTO tmp_broadcast_union_guard (id) SELECT 1 WHERE
++    (SELECT COUNT(*) FROM information_schema.columns
++     WHERE table_schema = DATABASE() AND table_name = 'official_broadcast_log'
++       AND ((column_name = 'delivery_state' AND data_type = 'varchar'
++             AND character_maximum_length = 16 AND is_nullable = 'NO' AND BINARY column_default = BINARY 'UNKNOWN')
++         OR (column_name IN ('delivery_title', 'delivery_sub') AND data_type = 'text' AND is_nullable = 'YES')
++         OR (column_name = 'failure_code' AND data_type = 'varchar' AND character_maximum_length = 64 AND is_nullable = 'YES')
++         OR (column_name = 'message_id' AND data_type = 'bigint' AND is_nullable = 'YES')
++         OR (column_name = 'reached_time' AND data_type = 'datetime' AND is_nullable = 'YES'))) <> 6
++ OR EXISTS (SELECT 1 FROM information_schema.columns
++            WHERE table_schema = DATABASE()
++              AND ((table_name = 'official_broadcast_log'
++                    AND column_name IN ('frozen_title', 'frozen_sub', 'intent_id', 'attempts', 'update_time'))
++                OR (table_name = 'official_broadcast'
++                    AND column_name IN ('audience_frozen', 'client_request_id', 'request_owner', 'request_hash'))))
++ OR EXISTS (SELECT 1 FROM information_schema.tables
++            WHERE table_schema = DATABASE() AND table_name = 'official_broadcast_creation');
++
++-- Only widen the existing state slot; never rewrite either protocol's rows or timestamps.
++ALTER TABLE official_broadcast_log
++ MODIFY COLUMN delivery_state VARCHAR(32) NOT NULL DEFAULT 'UNKNOWN',
++ ADD COLUMN frozen_title VARCHAR(128) NULL,
++ ADD COLUMN frozen_sub TEXT NULL,
++ ADD COLUMN intent_id BIGINT NULL,
++ ADD COLUMN attempts INT NOT NULL DEFAULT 0,
++ ADD COLUMN update_time DATETIME(3) NULL;
++ALTER TABLE official_broadcast ADD COLUMN audience_frozen TINYINT NOT NULL DEFAULT 0;
++ALTER TABLE official_broadcast
++ ADD COLUMN client_request_id VARCHAR(32) CHARACTER SET ascii COLLATE ascii_bin NULL,
++ ADD COLUMN request_owner VARCHAR(64) NULL,
++ ADD COLUMN request_hash VARCHAR(64) NULL,
++ ADD UNIQUE KEY uk_broadcast_request(request_owner,client_request_id);
++CREATE TABLE official_broadcast_creation (
++ request_owner VARCHAR(64) NOT NULL, request_id VARCHAR(32) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
++ state VARCHAR(16) NOT NULL, broadcast_id BIGINT NULL,
++ PRIMARY KEY(request_owner,request_id)
++) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
++DROP TEMPORARY TABLE tmp_broadcast_union_guard;
++-- DDL is not atomic. On any failure retain all receipts, keep workers stopped and inspect the exact prefix.
++-- No retry, lease, audience backfill, success promotion, reached_time guess or history deletion is performed.
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OfficialBroadcastDeliveryMySqlIT.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OfficialBroadcastDeliveryMySqlIT.java
+index f0aa38b..b72aeea 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OfficialBroadcastDeliveryMySqlIT.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OfficialBroadcastDeliveryMySqlIT.java
+@@ -414,4 +414,81 @@ class OfficialBroadcastDeliveryMySqlIT {
+         });
+     }
+ 
++
++    @Test
++    void unchangedHistoricalPairExposesDuplicateColumnInsteadOfSwallowingIt() {
++        withLegacySchema((legacy, source) -> {
++            new ResourceDatabasePopulator(new FileSystemResource(migration.toFile())).execute(source);
++            RuntimeException failure = assertThrows(RuntimeException.class,
++                    () -> new ResourceDatabasePopulator(new FileSystemResource(
++                            migration.resolveSibling("migration_20261026_official_broadcast_delivery.sql").toFile())).execute(source));
++            boolean duplicateColumn = false;
++            for (Throwable cause = failure; cause != null; cause = cause.getCause()) {
++                if (cause instanceof java.sql.SQLException sql && sql.getErrorCode() == 1060) duplicateColumn = true;
++            }
++            assertTrue(duplicateColumn, "the retained original pair really conflicts; do not ignore SQL 1060");
++            // The first master ALTER already committed: this is a partial prefix, never an automatic resume.
++            assertEquals(1, legacy.queryForObject("select count(*) from information_schema.columns where table_schema=database() and table_name='official_broadcast' and column_name='audience_frozen'", Integer.class));
++            RuntimeException rejected = assertThrows(RuntimeException.class,
++                    () -> new ResourceDatabasePopulator(new FileSystemResource(
++                            migration.resolveSibling("migration_20261028_official_broadcast_protocol_union.sql").toFile())).execute(source));
++            assertTrue(rejected.getMessage().contains("tmp_broadcast_union_guard"));
++            assertEquals(0, legacy.queryForObject("select count(*) from information_schema.columns where table_schema=database() and table_name='official_broadcast_log' and column_name='frozen_title'", Integer.class));
++        });
++    }
++
++    @Test
++    void composedPrefixRetainsEveryLegacyFactAndBothRealMapperProtocols() {
++        withLegacySchema((legacy, source) -> {
++            legacy.update("insert into official_broadcast(id,title,audience,channels,status,reached_count) values(900,'legacy','player','inapp,subscribe',2,99)");
++            legacy.update("insert into official_broadcast_log(broadcast_id,member_id,channel,reached,clicked,create_time) values(900,10,'inapp',1,1,'2026-01-01 01:02:03'),(900,10,'subscribe',1,0,'2026-01-01 01:02:03')");
++            new ResourceDatabasePopulator(new FileSystemResource(migration.toFile())).execute(source);
++            java.util.List<java.util.Map<String, Object>> before = legacy.queryForList("select * from official_broadcast_log order by id");
++            String originalColumns = "id,broadcast_id,member_id,role,channel,reached,clicked,create_time,delivery_state,delivery_title,delivery_sub,failure_code,message_id,reached_time";
++            new ResourceDatabasePopulator(new FileSystemResource(
++                    migration.resolveSibling("migration_20261028_official_broadcast_protocol_union.sql").toFile())).execute(source);
++            assertEquals(before, legacy.queryForList("select " + originalColumns + " from official_broadcast_log order by id"));
++            assertEquals(0, legacy.queryForObject("select count(*) from official_broadcast_log where reached_time is not null or message_id is not null or intent_id is not null or update_time is not null or frozen_title is not null", Integer.class));
++            assertEquals("UNKNOWN", legacy.queryForObject("select delivery_state from official_broadcast_log where channel='subscribe'", String.class));
++            assertEquals("LEGACY_UNVERIFIED", legacy.queryForObject("select failure_code from official_broadcast_log where channel='subscribe'", String.class));
++            assertEquals(0, legacy.queryForObject("select audience_frozen from official_broadcast where id=900", Integer.class));
++            assertEquals(32, legacy.queryForObject("select character_maximum_length from information_schema.columns where table_schema=database() and table_name='official_broadcast_log' and column_name='delivery_state'", Integer.class));
++            try {
++                SqlSessionFactoryBean factory = new SqlSessionFactoryBean();
++                factory.setDataSource(source);
++                factory.setTypeAliasesPackage("com.chengyinhub.business.domain");
++                factory.setMapperLocations(new ClassPathResource("mapper/business/OfficialBroadcastMapper.xml"),
++                        new ClassPathResource("mapper/business/OfficialBroadcastLogMapper.xml"));
++                SqlSessionTemplate sessions = new SqlSessionTemplate(factory.getObject());
++                OfficialBroadcastLogMapper combined = sessions.getMapper(OfficialBroadcastLogMapper.class);
++                OfficialBroadcastLog pending = new OfficialBroadcastLog();
++                pending.setBroadcastId(900L); pending.setMemberId(20L); pending.setRole("player");
++                pending.setChannel("inapp"); pending.setDeliveryTitle("D frozen"); pending.setDeliverySub("D body");
++                assertEquals(1, combined.insertPending(pending));
++                assertEquals("D frozen", combined.lockDeliveryIntent(pending.getId()).getDeliveryTitle());
++                assertEquals(1, combined.transition(pending.getId(), "PENDING", "SUCCESS", null, 321L));
++                assertEquals(1, combined.snapshot(900L, 21L, "player", "subscribe", "M frozen", "M body", "READY"));
++                Long master = legacy.queryForObject("select id from official_broadcast_log where member_id=21", Long.class);
++                assertEquals("M frozen", combined.lockDelivery(master).get("frozen_title"));
++                assertEquals(1, combined.deliveryState(master, "REJECTED_2147483647", null, null, 1));
++                assertEquals("REJECTED_2147483647", combined.lockDelivery(master).get("delivery_state"));
++                assertEquals(1, combined.snapshot(900L, 22L, "player", "inapp", "stored", "body", "READY"));
++                Long stored = legacy.queryForObject("select id from official_broadcast_log where member_id=22", Long.class);
++                assertEquals(1, combined.deliveryState(stored, "INAPP_STORED", 444L, 322L, 1));
++                assertEquals(3, combined.countInappReached(900L));
++                assertEquals(3, combined.countReached(900L), "legacy subscribe reached bit is still not channel acceptance");
++                assertEquals(0, combined.snapshot(900L, 21L, "player", "subscribe", "changed", "changed", "READY"));
++                assertEquals("REJECTED_2147483647", combined.lockDelivery(master).get("delivery_state"));
++                OfficialBroadcastMapper owners = sessions.getMapper(OfficialBroadcastMapper.class);
++                String request = "abcdefabcdefabcdefabcdefabcdefab";
++                owners.reserveCreation("ADMIN:17", request);
++                assertEquals("PENDING", owners.readCreation("ADMIN:17", request).get("state"));
++                owners.finishCreation("ADMIN:17", request, "APPLIED", 900L);
++                assertEquals("APPLIED", owners.readCreation("ADMIN:17", request).get("state"));
++            } catch (Exception failure) {
++                throw new AssertionError("real composed mapper setup failed", failure);
++            }
++        });
++    }
++
+ }
+diff --git a/chengyinhub-admin/src/test/tools/generic-gameplay-fresh-schema.py b/chengyinhub-admin/src/test/tools/generic-gameplay-fresh-schema.py
+index 0499df3..3629d57 100644
+--- a/chengyinhub-admin/src/test/tools/generic-gameplay-fresh-schema.py
++++ b/chengyinhub-admin/src/test/tools/generic-gameplay-fresh-schema.py
+@@ -22,7 +22,8 @@ from ci.sql_splitter import split_statements, executable_statement, unterminated
+ from ci.run_migration import statement_assertion
+ from ci.migration_ledger import build_manifest
+ from scripts.e2e.build_schema import (scratch_schema_sql, migrations_after_baseline, notice_forward_plan,
+-                                      NOTICE_OLD, NOTICE_V2, NOTICE_FORWARD_FILES)
++                                      NOTICE_OLD, NOTICE_V2, NOTICE_FORWARD_FILES,
++                                      broadcast_forward_plan, BROADCAST_OLD, BROADCAST_UNION, BROADCAST_FORWARD_FILES)
+ 
+ 
+ def plan_file(path, migration=False, data_only=False):
+@@ -85,6 +86,8 @@ def build_plan():
+     pending = [m for m in ordered if m['path'] not in included]
+     notice_forward = notice_forward_plan(ordered, pending)
+     selected = notice_forward['selected'] if notice_forward else pending
++    broadcast_forward = broadcast_forward_plan(ordered, selected)
++    selected = broadcast_forward['selected'] if broadcast_forward else selected
+     files = [plan_file(ROOT / record['path']) for record in [baseline['baseSchema'], policy['baselineSeed']]]
+     # The frozen baseline already contains all 11 Quartz tables and their foreign keys.
+     for m in selected:
+@@ -98,6 +101,10 @@ def build_plan():
+         result['noticeForward'] = {'state': 'PLANNED_UNAPPLIED',
+                                   'oldMigrationId': NOTICE_OLD, 'replacementMigrationId': NOTICE_V2,
+                                   'fingerprints': notice_forward['fingerprints']}
++    if broadcast_forward:
++        result['broadcastForward'] = {'state': 'PLANNED_UNAPPLIED',
++                                     'oldMigrationId': BROADCAST_OLD, 'replacementMigrationId': BROADCAST_UNION,
++                                     'fingerprints': broadcast_forward['fingerprints']}
+     return result
+ 
+ 
+@@ -142,15 +149,20 @@ def safe_failure_diagnostic(error, plan):
+ 
+ def execute(args, plan):
+     notice_forward = plan.get('noticeForward')
++    broadcast_forward = plan.get('broadcastForward')
+     notice_paths = {NOTICE_FORWARD_FILES[key][0] for key in (NOTICE_OLD, NOTICE_V2)}
+-    if notice_forward is not None or any(file.get('path') in notice_paths for file in plan['files']):
++    broadcast_paths = {value[0] for value in BROADCAST_FORWARD_FILES.values()}
++    if (notice_forward is not None or broadcast_forward is not None
++            or any(file.get('path') in notice_paths | broadcast_paths for file in plan['files'])):
+         # Rebuild through the same canonical contract before any MySQL call. A stale
+         # hash, injected old file, edited skip/apply payload or partial pair is not executable.
+         expected = build_plan()
+         if plan.get('mode') != 'DRY_RUN' or 'completed' in plan:
+             raise ValueError('Notice forward execution plan drift: state')
+-        for key in ('noticeForward', 'manifest', 'baselineIncluded', 'ordering',
++        for key in ('noticeForward', 'broadcastForward', 'manifest', 'baselineIncluded', 'ordering',
+                     'files', 'appliedStatements', 'skippedStatements'):
++            if key == 'broadcastForward' and key not in expected and key not in plan:
++                continue
+             if key not in plan or plan[key] != expected.get(key):
+                 raise ValueError('Notice forward execution plan drift: ' + key)
+     command = mysql_command(args)
+@@ -175,6 +187,10 @@ def execute(args, plan):
+         notice_forward['state'] = 'REPLACED_UNAPPLIED'
+         print('REPLACED_UNAPPLIED %s -> %s fingerprints=%s' %
+               (NOTICE_OLD, NOTICE_V2, json.dumps(notice_forward['fingerprints'], sort_keys=True)))
++    if broadcast_forward is not None:
++        broadcast_forward['state'] = 'REPLACED_UNAPPLIED'
++        print('REPLACED_UNAPPLIED %s -> %s fingerprints=%s' %
++              (BROADCAST_OLD, BROADCAST_UNION, json.dumps(broadcast_forward['fingerprints'], sort_keys=True)))
+     for file in plan['files']:
+         plan['currentPhase'] = 'schema-apply'
+         plan['currentFile'] = file['path']
+diff --git a/chengyinhub-admin/src/test/tools/test_generic_gameplay_fresh_schema.py b/chengyinhub-admin/src/test/tools/test_generic_gameplay_fresh_schema.py
+index 959b11c..a353415 100644
+--- a/chengyinhub-admin/src/test/tools/test_generic_gameplay_fresh_schema.py
++++ b/chengyinhub-admin/src/test/tools/test_generic_gameplay_fresh_schema.py
+@@ -219,7 +219,7 @@ class NoticeForwardCallerTest(unittest.TestCase):
+         policy = json.loads((tool.ROOT / 'scripts/e2e/schema_replay_policy_20260921.json').read_text())
+         expected = [baseline['baseSchema']['path'], policy['baselineSeed']['path']]
+         expected += [row['path'] for row in self.manifest['migrations']
+-                     if row['path'] not in plan['baselineIncluded'] and row['path'] != old_path]
++                     if row['path'] not in plan['baselineIncluded'] and row['path'] not in {old_path, tool.BROADCAST_FORWARD_FILES[tool.BROADCAST_OLD][0]}]
+         self.assertEqual(expected, [file['path'] for file in plan['files']])
+         self.assertIn(v2_path, expected)
+         self.assertNotIn(old_path, plan['baselineIncluded'])
+@@ -308,7 +308,12 @@ class NoticeForwardCallerTest(unittest.TestCase):
+         self.assertNotIn(tool.NOTICE_FORWARD_FILES[tool.NOTICE_OLD][0], plan['completed'])
+         self.assertEqual(original_skips, [file['skipped'] for file in plan['files']])
+         self.assertEqual('REPLACED_UNAPPLIED', plan['noticeForward']['state'])
+-        records = [str(call) for call in printed.call_args_list if 'REPLACED_UNAPPLIED' in str(call)]
++        records = [str(call) for call in printed.call_args_list
++                   if 'REPLACED_UNAPPLIED' in str(call) and tool.NOTICE_OLD in str(call)]
++        broadcast_records = [str(call) for call in printed.call_args_list
++                             if 'REPLACED_UNAPPLIED' in str(call) and tool.BROADCAST_OLD in str(call)]
++        self.assertEqual(1, len(broadcast_records))
++        self.assertIn(tool.BROADCAST_UNION, broadcast_records[0])
+         self.assertEqual(1, len(records))
+         self.assertIn(tool.NOTICE_OLD, records[0])
+         self.assertIn(tool.NOTICE_V2, records[0])
+@@ -382,5 +387,114 @@ class NoticeForwardCallerTest(unittest.TestCase):
+                     with self.assertRaises((ValueError, RuntimeError)):
+                         tool.build_plan()
+ 
++
++class BroadcastForwardCallerTest(unittest.TestCase):
++    """SOURCE controls: exact broadcast composition, not MySQL or production migration evidence."""
++
++    @classmethod
++    def setUpClass(cls):
++        cls.plan = tool.build_plan()
++        cls.manifest = tool.build_manifest(tool.ROOT, target_commit=cls.plan['manifest']['targetCommit'],
++            dependency_path=tool.ROOT / 'ci/migration-dependencies.json')
++
++    def test_union_keeps_both_originals_and_all_runtime_fields_without_rewriting_evidence(self):
++        plan = copy.deepcopy(self.plan)
++        d_path = tool.BROADCAST_FORWARD_FILES[tool.BROADCAST_D][0]
++        old_path = tool.BROADCAST_FORWARD_FILES[tool.BROADCAST_OLD][0]
++        union_path = tool.BROADCAST_FORWARD_FILES[tool.BROADCAST_UNION][0]
++        paths = [file['path'] for file in plan['files']]
++        self.assertIn(d_path, paths)
++        self.assertNotIn(old_path, paths)
++        self.assertIn(union_path, paths)
++        self.assertLess(paths.index(d_path), paths.index(union_path))
++        for key, (path, digest) in tool.BROADCAST_FORWARD_FILES.items():
++            self.assertEqual(digest, hashlib.sha256((tool.ROOT / path).read_bytes()).hexdigest())
++            self.assertNotIn(path, plan['baselineIncluded'])
++            self.assertEqual(1, sum(row['migrationId'] == key for row in self.manifest['migrations']))
++        union = next(file for file in plan['files'] if file['path'] == union_path)
++        sql = '\n'.join(union['apply'])
++        self.assertIn("MODIFY COLUMN delivery_state VARCHAR(32) NOT NULL DEFAULT 'UNKNOWN'", sql)
++        self.assertNotIn('ADD COLUMN message_id', sql)
++        for field in ('frozen_title', 'frozen_sub', 'intent_id', 'attempts', 'update_time',
++                      'audience_frozen', 'client_request_id', 'request_owner', 'request_hash'):
++            self.assertIn('ADD COLUMN ' + field, sql)
++        self.assertIn('CREATE TABLE official_broadcast_creation', sql)
++        self.assertFalse(any(re.match(r'(?i)\s*(UPDATE|DELETE|REPLACE)\b', statement)
++                             for statement in union['apply']))
++        self.assertEqual('PLANNED_UNAPPLIED', plan['broadcastForward']['state'])
++
++    def test_partial_drift_or_reordered_pair_cannot_be_selected(self):
++        original = self.manifest['migrations']
++        pending = tool.migrations_after_baseline(original)
++        for key in tool.BROADCAST_FORWARD_FILES:
++            for field, value in (('sha256', '0' * 64), ('dependsOn', []), ('order', -1)):
++                with self.subTest(key=key, field=field):
++                    rows = copy.deepcopy(original)
++                    next(row for row in rows if row['migrationId'] == key)[field] = value
++                    with self.assertRaisesRegex(RuntimeError, 'broadcast forward'):
++                        tool.broadcast_forward_plan(rows, pending)
++            with self.assertRaisesRegex(RuntimeError, 'broadcast forward'):
++                tool.broadcast_forward_plan(original, [row for row in pending if row['migrationId'] != key])
++        rows = copy.deepcopy(original)
++        a, b = [next(i for i, row in enumerate(rows) if row['migrationId'] == key)
++                for key in (tool.BROADCAST_D, tool.BROADCAST_OLD)]
++        rows[a], rows[b] = rows[b], rows[a]
++        with self.assertRaisesRegex(RuntimeError, 'broadcast forward'):
++            tool.broadcast_forward_plan(rows, pending)
++
++    def test_execution_cannot_inject_old_sql_or_omit_replacement_custody(self):
++        for mutation in ('old', 'missing', 'hash', 'apply'):
++            with self.subTest(mutation=mutation):
++                plan = copy.deepcopy(self.plan)
++                if mutation == 'old':
++                    plan['files'].append(tool.plan_file(tool.ROOT / tool.BROADCAST_FORWARD_FILES[tool.BROADCAST_OLD][0], True))
++                elif mutation == 'missing':
++                    del plan['broadcastForward']
++                elif mutation == 'hash':
++                    plan['broadcastForward']['fingerprints'][tool.BROADCAST_OLD]['sha256'] = '0' * 64
++                else:
++                    next(file for file in plan['files'] if file['path'] ==
++                         tool.BROADCAST_FORWARD_FILES[tool.BROADCAST_UNION][0])['apply'][0] = 'SELECT 1'
++                with patch.object(tool, 'build_plan', return_value=copy.deepcopy(self.plan)), \
++                        patch.object(tool, 'mysql_command') as command:
++                    with self.assertRaisesRegex(ValueError, 'execution plan drift'):
++                        tool.execute(SimpleNamespace(), plan)
++                    command.assert_not_called()
++
++    def test_existing_schema_has_no_replacement_receipt_or_mutation(self):
++        plan = copy.deepcopy(self.plan)
++        args = SimpleNamespace(host='127.0.0.1', database='cy_e2e_broadcast_union', port=3316, user='root')
++        outputs = [SimpleNamespace(stdout='8.0.45'), SimpleNamespace(stdout=args.database)]
++        with patch.object(tool, 'build_plan', return_value=copy.deepcopy(self.plan)), \
++                patch.object(tool.shutil, 'which', return_value='/usr/bin/mysql'), \
++                patch.object(tool.subprocess, 'run', side_effect=outputs) as run, patch('builtins.print') as emitted:
++            with self.assertRaisesRegex(ValueError, 'Existing schema refused'):
++                tool.execute(args, plan)
++        self.assertEqual(2, run.call_count)
++        self.assertEqual('PLANNED_UNAPPLIED', plan['broadcastForward']['state'])
++        self.assertFalse(any('REPLACED_UNAPPLIED' in str(call) for call in emitted.call_args_list))
++        self.assertFalse(any('CREATE DATABASE' in call.kwargs['input'] for call in run.call_args_list))
++
++    def test_union_failure_stops_without_completing_original_or_following_files(self):
++        plan = copy.deepcopy(self.plan)
++        args = SimpleNamespace(host='127.0.0.1', database='cy_e2e_broadcast_union', port=3316, user='root')
++        union_path = tool.BROADCAST_FORWARD_FILES[tool.BROADCAST_UNION][0]
++        index = next(i for i, file in enumerate(plan['files']) if file['path'] == union_path)
++        outputs = [SimpleNamespace(stdout=value) for value in ('8.0.45', '', '')]
++        for file in plan['files']:
++            if file['path'] == union_path:
++                outputs.append(subprocess.CalledProcessError(1, ['mysql'], stderr='ERROR 1060 (42S21): fixture'))
++                break
++            if file['apply']:
++                outputs.append(SimpleNamespace(stdout='\n'.join(['1'] * len(file['assertions']))))
++        with patch.object(tool, 'build_plan', return_value=copy.deepcopy(self.plan)), \
++                patch.object(tool.shutil, 'which', return_value='/usr/bin/mysql'), \
++                patch.object(tool.subprocess, 'run', side_effect=outputs), patch('builtins.print'):
++            with self.assertRaises(subprocess.CalledProcessError):
++                tool.execute(args, plan)
++        self.assertEqual([file['path'] for file in plan['files'][:index]], plan['completed'])
++        self.assertEqual(union_path, plan['currentFile'])
++        self.assertNotIn(tool.BROADCAST_FORWARD_FILES[tool.BROADCAST_OLD][0], plan['completed'])
++
+ if __name__ == '__main__':
+     unittest.main()
+diff --git a/ci/migration-dependencies.json b/ci/migration-dependencies.json
+index 5e2b60b..e2d8e47 100644
+--- a/ci/migration-dependencies.json
++++ b/ci/migration-dependencies.json
+@@ -29,6 +29,7 @@
+     "20261023_g_cash_evidence_expand": ["coop_settlement", "coop_settlement_line", "settlement_claim_20260811", "fee_snapshot_20260716", "p3_phase_c_web_rules_refund"],
+     "20261027_merchant_brand_images_to_gallery": ["merchant_decor_20260708"],
+     "20261026_official_broadcast_delivery": ["official_broadcast"],
++    "20261028_official_broadcast_protocol_union": ["20261023_d_official_broadcast_delivery", "20261026_official_broadcast_delivery"],
+     "20261028_topic_play_setup": [],
+     "20261028_d20_attribute_registry": ["theme_state_key_20260916", "20261022_theme_state_key_attribute_def", "topic_journey_rules_20260916"],
+     "20261026_official_event_attendance": [],
+diff --git a/scripts/e2e/build_schema.py b/scripts/e2e/build_schema.py
+index d1d66c1..f5ba9d5 100644
+--- a/scripts/e2e/build_schema.py
++++ b/scripts/e2e/build_schema.py
+@@ -433,6 +433,59 @@ def notice_forward_plan(migrations, selected):
+     }
+ 
+ 
++# Broadcast union is another exact, pending-only composition, not a new migration engine.
++# Retain BOTH original SQL bodies/checksums; only an absent scratch schema may use this plan.
++BROADCAST_D = "20261023_d_official_broadcast_delivery"
++BROADCAST_OLD = "20261026_official_broadcast_delivery"
++BROADCAST_UNION = "20261028_official_broadcast_protocol_union"
++BROADCAST_FORWARD_FILES = {
++    BROADCAST_D: ("chengyinhub-admin/sql/migration_20261023_d_official_broadcast_delivery.sql",
++                  "c822ad772727ed4ae0328998f7a99be1ece5d6c881f6259fc63de3ebb0822ba1"),
++    BROADCAST_OLD: ("chengyinhub-admin/sql/migration_20261026_official_broadcast_delivery.sql",
++                    "ca5538fae79b01ac4690065da6cde4ac3b7922dce5c0d09a04a5ff58bca1076f"),
++    BROADCAST_UNION: ("chengyinhub-admin/sql/migration_20261028_official_broadcast_protocol_union.sql",
++                      "44dc1ee52ab1591f0e893f26aaed8b6b1af4948ab53f98307c41a30c637b8b8b"),
++}
++
++
++def broadcast_forward_plan(migrations, selected):
++    ids = {BROADCAST_OLD, BROADCAST_UNION}
++    paths = {BROADCAST_FORWARD_FILES[key][0] for key in ids}
++    if not any(row.get("migrationId") in ids or row.get("path") in paths
++               for row in migrations + selected):
++        return None
++    positions, pending_positions = {}, {}
++    for key, (path, expected_sha) in BROADCAST_FORWARD_FILES.items():
++        rows = [(i, row) for i, row in enumerate(migrations)
++                if row.get("migrationId") == key or row.get("path") == path]
++        pending = [(i, row) for i, row in enumerate(selected)
++                   if row.get("migrationId") == key or row.get("path") == path]
++        if len(rows) != 1 or len(pending) != 1:
++            raise RuntimeError("broadcast forward requires complete pending D/old/union: " + key)
++        index, entry = rows[0]
++        pending_index, pending_entry = pending[0]
++        target = REPO / path
++        deps = [BROADCAST_D, BROADCAST_OLD] if key == BROADCAST_UNION else ["official_broadcast"]
++        if (entry.get("migrationId") != key or entry.get("path") != path
++                or entry.get("sha256") != expected_sha or pending_entry != entry
++                or entry.get("order") != index + 1 or entry.get("executionPhase") is not None
++                or entry.get("dependsOn") != deps
++                or target.is_symlink() or not target.is_file()
++                or hashlib.sha256(target.read_bytes()).hexdigest() != expected_sha):
++            raise RuntimeError("broadcast forward identity/fingerprint/dependency/order drift: " + key)
++        positions[key], pending_positions[key] = index, pending_index
++    upstream = [i for i, row in enumerate(migrations) if row.get("migrationId") == "official_broadcast"]
++    if (len(upstream) != 1 or upstream[0] >= positions[BROADCAST_D]
++            or not positions[BROADCAST_D] < positions[BROADCAST_OLD] < positions[BROADCAST_UNION]
++            or not pending_positions[BROADCAST_D] < pending_positions[BROADCAST_OLD] < pending_positions[BROADCAST_UNION]):
++        raise RuntimeError("broadcast forward prerequisite/sequence drift")
++    return {
++        "fingerprints": {key: {"path": value[0], "sha256": value[1]}
++                         for key, value in BROADCAST_FORWARD_FILES.items()},
++        "selected": [row for row in selected if row["migrationId"] != BROADCAST_OLD],
++    }
++
++
+ def main():
+     global POLICY_CUSTODY
+     ap = argparse.ArgumentParser()
+@@ -457,6 +510,9 @@ def main():
+     all_migrations = manifest["migrations"]
+     selected = migrations_after_baseline(all_migrations)
+     notice_forward = notice_forward_plan(all_migrations, selected)
++    selected = notice_forward["selected"] if notice_forward else selected
++    broadcast_forward = broadcast_forward_plan(all_migrations, selected)
++    selected = broadcast_forward["selected"] if broadcast_forward else selected
+     deferred = [m for m in selected if m.get("executionPhase") == "POST_DEPLOY"]
+     ordered = [m for m in selected if m.get("executionPhase") != "POST_DEPLOY"]
+     if deferred:
+@@ -468,7 +524,7 @@ def main():
+         cur.execute("SELECT VERSION(), @@version_comment")
+         ver = cur.fetchone()
+         print("目标实例: %s / %s  @ %s:%d" % (ver[0], ver[1], a.host, a.port))
+-        if notice_forward:
++        if notice_forward or broadcast_forward:
+             # This check precedes every DROP/CREATE/import, including explicit --drop.
+             cur.execute("SELECT COUNT(*) FROM information_schema.schemata WHERE schema_name=%s", (a.schema,))
+             fresh = cur.fetchone()
+@@ -477,9 +533,11 @@ def main():
+                 raise RuntimeError("notice forward requires a nonexistent fresh scratch schema; --drop cannot bypass")
+             # No IF NOT EXISTS: a concurrent creator must fail, never adopt an unknown/typed schema.
+             cur.execute("CREATE DATABASE `%s` DEFAULT CHARACTER SET utf8mb4" % a.schema)
+-            ordered = [m for m in notice_forward["selected"] if m.get("executionPhase") != "POST_DEPLOY"]
+-            print("REPLACED_UNAPPLIED %s -> %s fingerprints=%s" %
+-                  (NOTICE_OLD, NOTICE_V2, json.dumps(notice_forward["fingerprints"], sort_keys=True)))
++            for forward, old, new in ((notice_forward, NOTICE_OLD, NOTICE_V2),
++                                      (broadcast_forward, BROADCAST_OLD, BROADCAST_UNION)):
++                if forward:
++                    print("REPLACED_UNAPPLIED %s -> %s fingerprints=%s" %
++                          (old, new, json.dumps(forward["fingerprints"], sort_keys=True)))
+         else:
+             if a.drop:
+                 cur.execute("DROP DATABASE IF EXISTS `%s`" % a.schema)
+@@ -516,7 +574,8 @@ def main():
+               (len(all_migrations), len(ordered)))
+         pre_migration_problems = len(results)
+         for m in ordered:
+-            strict_notice = bool(notice_forward) and m["migrationId"] == NOTICE_V2
++            strict_notice = ((bool(notice_forward) and m["migrationId"] == NOTICE_V2)
++                             or (bool(broadcast_forward) and m["migrationId"] == BROADCAST_UNION))
+             ok = run_file(cur, REPO / m["path"], m["migrationId"], results,
+                           keep_going=False if strict_notice else a.keep_going,
+                           schema_only=True, observations=observations)
+diff --git a/scripts/e2e/test_build_schema.py b/scripts/e2e/test_build_schema.py
+index 2740556..caf0e0a 100644
+--- a/scripts/e2e/test_build_schema.py
++++ b/scripts/e2e/test_build_schema.py
+@@ -932,14 +932,19 @@ class NoticeFreshForwardSelectionTest(unittest.TestCase):
+                 mock.patch("builtins.print") as emitted:
+             self.assertEqual(1, build_schema.main())
+         ordered = [row for row in self.selected if row.get("executionPhase") != "POST_DEPLOY"
+-                   and row["migrationId"] != build_schema.NOTICE_OLD]
++                   and row["migrationId"] not in (build_schema.NOTICE_OLD, build_schema.BROADCAST_OLD)]
+         ids = [row["migrationId"] for row in ordered]
+         self.assertEqual(["baseline", "baseline-seed"] + ids[:ids.index(build_schema.NOTICE_V2) + 1],
+                          [call.args[2] for call in run.call_args_list])
+         self.assertFalse(run.call_args_list[-1].kwargs["keep_going"])
+         self.assertFalse(any("ALTER TABLE" in call.args[0] for call in cursor.execute.call_args_list))
+         self.assertFalse(any(call.args[0].startswith("DROP") for call in admin.cursor.return_value.execute.call_args_list))
+-        records = [str(call) for call in emitted.call_args_list if "REPLACED_UNAPPLIED" in str(call)]
++        records = [str(call) for call in emitted.call_args_list
++                   if "REPLACED_UNAPPLIED" in str(call) and build_schema.NOTICE_OLD in str(call)]
++        broadcast_records = [str(call) for call in emitted.call_args_list
++                             if "REPLACED_UNAPPLIED" in str(call) and build_schema.BROADCAST_OLD in str(call)]
++        self.assertEqual(1, len(broadcast_records))
++        self.assertIn(build_schema.BROADCAST_UNION, broadcast_records[0])
+         self.assertEqual(1, len(records))
+         for _, digest in build_schema.NOTICE_FORWARD_FILES.values():
+             self.assertIn(digest, records[0])
