@@ -36,6 +36,8 @@ public interface OrientMapper {
     OrientTaskAttempt selectAttemptByIdempotencyKey(@Param("memberId") Long memberId,
                                                    @Param("idempotencyKey") String idempotencyKey);
 
+    OrientTaskAttempt selectAttemptById(@Param("id") Long id);
+
     OrientTaskAttempt selectAttemptByIdForUpdate(Long id);
 
     int insertAttempt(OrientTaskAttempt attempt);

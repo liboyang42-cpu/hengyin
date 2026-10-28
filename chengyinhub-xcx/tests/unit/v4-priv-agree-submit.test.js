@@ -32,6 +32,9 @@ function harness() {
   const session = createSessionStore({ target: app.globalData, wx });
   app.getSession = () => session; app.isDevEnv = () => false; app.loadFeatureFlags = () => {};
   app.firstLogin = async () => { h.logins += 1; session.setUserID('9'); session.setAuthorization('fixture-token'); return { ok: true }; };
+  // 2026-10-24 owner 拍板「游客可浏览，写入时弹窗登录」:单独同意隐私不再建号。本文件验的「同意 → 登录 → 留痕」
+  // 链路现在发生在写前登录里(游客点了「微信登录」、登录在途时隐私闸弹出),夹具据此标记登录在途。
+  app.getSessionManager = () => ({ isLoggingIn: () => true });
   app.sendRequest = o => { h.requests.push(o); };
   app.initPrivacyAuthorization();
   global.getApp = () => app; global.wx = wx;

@@ -40,4 +40,6 @@
     <!-- 底部固定 CTA(命名 slot,处理安全区;full 类必须有,bottom 可选) -->
     <view class="sh__footer" wx:if="{{footer}}"><slot name="footer"></slot></view>
   </view>
+  <!-- G-2 物理返回 / 侧滑守卫(utils/native-back-guard.js):0 尺寸、无遮罩,只有最上层弹层挂 -->
+  <page-container show="{{_backGuard}}" duration="{{0}}" overlay="{{false}}" custom-style="width:0;height:0;background:transparent;pointer-events:none" bind:afterleave="_onBackGuardLeave" />
 </view>

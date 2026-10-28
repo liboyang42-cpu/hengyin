@@ -48,6 +48,12 @@ function slashDay(value) {
   return parts ? parts.month + '/' + parts.day : '';
 }
 
+// 逐日格起点标签,与后端 trends.daily[].date 同格式(MM-dd,中国时间)
+function dayLabelDaysAgo(days) {
+  const parts = chinaParts(Date.now() - days * 86400000);
+  return parts ? String(parts.month).padStart(2, '0') + '-' + String(parts.day).padStart(2, '0') : '';
+}
+
 function isAccessDenied(res) {
   const code = res && (res.code !== undefined ? res.code : res.statusCode);
   return String(code) === '401' || String(code) === '403';
@@ -66,7 +72,7 @@ Page({
     // aiError 已撤(2026-10-23,见 load 成功分支注释)
     generatedAt: '',
     profile: null,        // 后端实时读的店铺视图(storeName/logo + 承接档案字段),不走缓存
-    storeName: '',        // 页头问候「Hi，店名」;头像直接读 profile.logo
+    storeName: '',        // 页头问候「Hi，店名」
     factState: 'unknown', // unknown=字段缺失 | empty=服务端明确全零 | ready=有真实事实
     valueCard: null,      // 首屏归因价值卡:城瘾为你带来 N 位玩家/M 次打卡/K 单核销 + 核销进度 + 环比
     metricCards: [],      // 核销率 / 复购率两张小卡:比率 + 说明行 + 分段胶囊进度条
@@ -291,11 +297,11 @@ Page({
     });
   },
 
-  // owner 2026-10-23 D4(P1-094,取代 2026-09-19「没有值就写 0」):比率分母为 0 时服务端回 null,
-  // 数字位显示「—」,不拿 0% 冒充「没有样本」。计数位(_countText)仍写 0。
+  // 2026-10-27 业主 M-21(0.3 冲突裁决,取代 10-23 D4 的「比率位写—」):数字不要用「-」代替,没有就是 0。
+  // 比率分母为 0 / 缺失时写 0%;「样本太少」由 facts.lowSample 提示与卡上的 scope 行说实话。
   _pct(v) {
     const value = numberOrNull(v);
-    return value === null ? '—' : Math.round(value * 100) + '%';
+    return value === null ? '0%' : Math.round(value * 100) + '%';
   },
 
   _countText(v) {
@@ -417,8 +423,15 @@ Page({
     }
     const windowText = w ? '近' + win + '天' : ((facts && facts.window) || '近30天');
     const nonce = (this._heatNonce = (this._heatNonce || 0) + 1);
+    // 2026-10-27 业主 M-21:方块图每次打开都要画。没有逐日数据(旧后端/旧缓存没下发 trends)时
+    // 也铺满 30 格,全部最浅一档 —— 不再整块不出。窗口切换仍只在有 trends 时出现。
     let cells = [];
     let cols = 15;
+    if (!w) {
+      for (let i = 0; i < 30; i++) {
+        cells.push({ k: nonce + '-' + i, lv: 0, delay: (i % cols) * 22 + Math.floor(i / cols) * 40, label: '' });
+      }
+    }
     if (w) {
       const values = w.daily.map(function (d) { return numberOrNull(d && d[def.key]) || 0; });
       const max = Math.max.apply(null, values.concat([0]));
@@ -446,7 +459,7 @@ Page({
       prevText: prev === null ? '' : '上期 ' + prev + def.short,
       cells,
       cols,
-      axisFrom: w && w.daily[0] ? w.daily[0].date : '',
+      axisFrom: w && w.daily[0] ? w.daily[0].date : (w ? '' : dayLabelDaysAgo(29)),
       trio: TREND_METRICS.map(function (m) {
         return { key: m.key, label: m.label, num: String(numberOrNull(src[m.key]) || 0), on: m.key === def.key };
       }),
@@ -688,5 +701,6 @@ Page({
   },
 
   goCoopCenter() { wx.navigateTo({ url: COOP_CENTER_ROUTE }); },
+
 
 });

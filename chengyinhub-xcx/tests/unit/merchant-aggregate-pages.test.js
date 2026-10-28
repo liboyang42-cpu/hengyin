@@ -463,8 +463,8 @@ test('我的项目:俱乐部主理人在活动页签有「发布单场活动」�
     other.page.applyView();
     assert.equal(other.page.data.emptySub, '', '不能发的人不给「可以在这里发布」的空头提示');
     const wxml = require('node:fs').readFileSync(path.join(__dirname, '../../subpackageA/pages/myproject/index.wxml'), 'utf8');
-    assert.match(wxml, /typeTab === 'activity' && canPublishActivity && list\.length > 0[\s\S]*?bindtap="goCreateActivity"/,
-      '有活动时也要有常驻入口，不能只藏在空态里');
+    // 2026-10-28 m693 业主:列表上方不放「发布活动」常驻行;没有活动时空态按钮仍在
+    assert.doesNotMatch(wxml, /bindtap="goCreateActivity"/);
   } finally {
     if (real) require.cache[guardPath] = real; else delete require.cache[guardPath];
   }

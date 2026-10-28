@@ -29,6 +29,16 @@
   animation: none;
 }
 
+/* G-10(2026-10-27):商家视角骨架永远浅色。组件 isolated 读不到 .theme-merchant,就地镜像 tokens 商家值。 */
+.sk.sk--light {
+  --cy-color-skeleton-base: #ECEFF3; /* ds-ok: 镜像 .theme-merchant */
+  --cy-color-skeleton-highlight: #F6F8FA; /* ds-ok: 镜像 .theme-merchant */
+  --cy-color-bg-surface: #FFFFFF; /* ds-ok: 镜像 .theme-merchant */
+  --cy-color-bg-elevated: #FFFFFF; /* ds-ok: 镜像 .theme-merchant */
+  --cy-color-border-strong: #DBDBDB; /* ds-ok: 镜像 .theme-merchant */
+  --cy-border-card: #E8E8E8; /* ds-ok: 镜像 .theme-merchant */
+}
+
 /* —— 通用行/块 —— */
 .sk-line { height: var(--cy-space-3-5); margin-top: var(--cy-space-2); }
 .sk-line:first-child { margin-top: 0; }

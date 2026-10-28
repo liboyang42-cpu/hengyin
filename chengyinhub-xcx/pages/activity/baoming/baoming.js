@@ -50,10 +50,19 @@ function parseOfferDeadline(value) {
 // (scene-play-activity-detail/index.wxml:82)并用它拦过入口(:288)。但深链直入本页
 // 会绕过那道拦,用户填完整张表才被拒。这里用同一把尺子,在加载时就闸住。
 // 缺 endTime 视为「未设截止」不放行拦截 —— 与票种库存未知不判售罄同一条兜底方向。
-function ticketSignupClosed(ticket) {
+function ticketSignupClosed(ticket, now) {
   if (!ticket || !ticket.endTime) return false;
   const end = parseOfferDeadline(ticket.endTime);
-  return !!end && Date.now() > end.getTime();
+  return !!end && (now == null ? Date.now() : now) > end.getTime();
+}
+
+// U-168:置灰与建单闸(RegistrationOrderCreateGateImpl)用同一把钟。/api/activity/info 带回
+// serverNow(epoch ms)时记下「服务器 - 手机」的偏移,之后场次/票种/候补窗口的判断都按
+// Date.now() + 偏移;缺 serverNow 或值不可用才退回手机时钟(偏移 0)。
+function serverClockOffset(serverNow, receivedAt) {
+  if (serverNow === null || serverNow === undefined || serverNow === '') return 0;
+  const server = Number(serverNow);
+  return Number.isFinite(server) && server > 0 ? server - receivedAt : 0;
 }
 
 function formatOfferDeadline(value) {
@@ -265,6 +274,11 @@ Page({
   /**
    * 生命周期函数--监听页面加载
    */
+  /** U-168:置灰判断用的「现在」—— 按服务器时刻校准过的手机时钟。 */
+  clockNow() {
+    return Date.now() + (this._serverClockOffset || 0);
+  },
+
   onLoad(options) {
     const that = this;
     this._skipInitialShow = true;
@@ -664,6 +678,7 @@ Page({
       method: "POST",
       success: function (res) {
         if (!isCurrent()) return;
+        const receivedAt = Date.now();
         // 只有「非数组对象 + 带非空 id」才算真拿到场次:后端偶发返回 {} / [] 时
         // 旧逻辑会判成功,页面就摆出 ¥0 空活动卡和可点付款按钮。
         const d = res && res.data;
@@ -692,6 +707,8 @@ Page({
         if (res && res.code == "200" && hasActivity && hasValidTickets) {
           finish();
           const activityInfo = res.data;
+          that._serverClockOffset = serverClockOffset(activityInfo.serverNow, receivedAt);
+          const now = that.clockNow();
           let ticketList = [];
           let selectedTicket = null;
 
@@ -712,7 +729,7 @@ Page({
             const requestedTicket = that.data.ticketId
               ? ticketList.find(item => item.id == that.data.ticketId)
               : null;
-            const sellableTickets = ticketList.filter(item => !ticketWindowPassed(item));
+            const sellableTickets = ticketList.filter(item => !ticketWindowPassed(item, now));
             selectedTicket = requestedTicket || sellableTickets[0] || ticketList[0];
           }
 
@@ -735,7 +752,7 @@ Page({
             waitlistExpiresText: '',
             totalAmount: totalAmount,
             signupState: selectedTicket
-              ? ((ticketSignupClosed(selectedTicket) || ticketWindowPassed(selectedTicket)) ? 'closed' : 'available')
+              ? ((ticketSignupClosed(selectedTicket, now) || ticketWindowPassed(selectedTicket, now)) ? 'closed' : 'available')
               : 'unavailable',
             pageState: 'ready',
             everLoaded: true,
@@ -775,7 +792,8 @@ Page({
     // CU-C-32:换票弹层不出过期/已开始的场次(原来列全量,选回去就又是一张不能报的票)。
     // 选项按场次开始时间升序,同日多场靠带上时间区分。
     // 选项与索引必须来自同一份数组 —— onTicketSheetSelect 按下标回读,这里存下来给它用。
-    const sellable = sortBySessionStart(list.filter((ticket) => !ticketWindowPassed(ticket)));
+    const now = this.clockNow();
+    const sellable = sortBySessionStart(list.filter((ticket) => !ticketWindowPassed(ticket, now)));
     if (sellable.length < 2) return;
     const selected = this.data.selectedTicket;
     const currentIndex = Math.max(0, sellable.findIndex((ticket) => selected && ticket.id == selected.id));
@@ -886,7 +904,7 @@ Page({
         const eligibility = normalized.eligibility;
         const joinAllowed = normalized.joinAllowed;
         const activeOffer = state === 'OFFERED' && entry && entry.id && entry.offerToken
-          && offerDeadlineIsFuture(entry.offerExpiresAt);
+          && offerDeadlineIsFuture(entry.offerExpiresAt, that.clockNow());
         if (state === 'OFFERED' && !activeOffer) state = 'EXPIRED';
         const offerId = activeOffer ? entry.id : null;
         const offerToken = activeOffer ? entry.offerToken : '';
@@ -924,7 +942,7 @@ Page({
     this._waitlistOfferTimer = null;
     const deadline = parseOfferDeadline(this._waitlistOfferExpiresAt);
     if (!deadline || this.data.waitlistState !== 'OFFERED') return;
-    const delay = deadline.getTime() - Date.now();
+    const delay = deadline.getTime() - this.clockNow();
     if (delay <= 0) {
       this.expireWaitlistOfferInView();
       return;
@@ -954,6 +972,7 @@ Page({
   },
 
   joinWaitlist() {
+    if (app.ensureLoginFor && !app.ensureLoginFor('signup', () => this.joinWaitlist())) return; // 2026-10-24 游客写前登录
     const that = this;
     const ticket = that.data.selectedTicket;
     if (that.data.waitlistLoading || !ticket || !ticket.id) return;
@@ -1260,13 +1279,14 @@ Page({
 
   refreshPaymentState() {
     const data = this.data;
+    const now = this.clockNow();
     const activeOffer = data.waitlistState === 'OFFERED' && !!data.waitlistOfferId
-      && !!data.waitlistOfferToken && offerDeadlineIsFuture(this._waitlistOfferExpiresAt);
+      && !!data.waitlistOfferToken && offerDeadlineIsFuture(this._waitlistOfferExpiresAt, now);
     const waitlistAllowsCheckout = !data.ticketSoldOut || activeOffer;
     // 票种过了报名截止,常规这条路当场关掉(原来能一路填到建单才被动拒)。候补名额除外:
     // 它的售止口径是 signupDeadline ?? startTime,不是票的 endTime,拿着未过期凭证的人不该误伤。
     // CU-C-32:履约窗(场次)已过与「报名已截止」同归这条闸 —— 两者都意味着这一场不能报。
-    const signupClosed = (ticketSignupClosed(data.selectedTicket) || ticketWindowPassed(data.selectedTicket))
+    const signupClosed = (ticketSignupClosed(data.selectedTicket, now) || ticketWindowPassed(data.selectedTicket, now))
       && !activeOffer;
     const canPay = data.pageState === 'ready' && !!data.selectedTicket && !signupClosed
       && data.hostShareChecked && !!data.selectedAddress
@@ -1426,6 +1446,7 @@ Page({
    * 处理付款
    */
   handlePayment() {
+    if (app.ensureLoginFor && !app.ensureLoginFor('checkout', () => this.handlePayment())) return; // 2026-10-24 游客写前登录
     const that = this;
 
     // 详情未就绪时禁止下单:此时票种/金额都不可信,CTA 之外再兜一道
@@ -1447,7 +1468,7 @@ Page({
     }
 
     if (that.data.waitlistState === 'OFFERED'
-      && !offerDeadlineIsFuture(that._waitlistOfferExpiresAt)) {
+      && !offerDeadlineIsFuture(that._waitlistOfferExpiresAt, that.clockNow())) {
       that.expireWaitlistOfferInView();
       app.tips('候补名额已过期，正在刷新');
       that.loadWaitlistStatus();
@@ -1497,8 +1518,8 @@ Page({
     // 候补凭证未过期的人另算(售止口径不是票的 endTime),所以放在候补分支之后。
     const claimingOffer = that.data.waitlistState === 'OFFERED'
       && !!that.data.waitlistOfferId && !!that.data.waitlistOfferToken
-      && offerDeadlineIsFuture(that._waitlistOfferExpiresAt);
-    if (ticketSignupClosed(that.data.selectedTicket) && !claimingOffer) {
+      && offerDeadlineIsFuture(that._waitlistOfferExpiresAt, that.clockNow());
+    if (ticketSignupClosed(that.data.selectedTicket, that.clockNow()) && !claimingOffer) {
       app.tips('该票种报名已截止');
       return;
     }

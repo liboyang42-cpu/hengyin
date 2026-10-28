@@ -21,3 +21,6 @@
   padding: 0;
   box-shadow: none;   /* flat 是「嵌套时消隐容器」,高光/投影一并撤掉 */
 }
+
+/* Isolated cards must define the forwarded press class locally. */
+.cy-pressed { opacity: .88; }

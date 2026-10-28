@@ -14,11 +14,11 @@ const { SCENES } = require(path.join(ROOT, 'utils/scene-registry.js'))
 //   · roam-history —— `subpackageRoam` 由用户本人维护,已明令「漫游/探索护照做好了,不要再改 UI」。
 //     本条契约不去规定别人地盘的形态。用户自己收口时再加回来。
 //   · merchant-profit / member-participation-* —— 见文件末尾的「待裁决」说明。
+//   · game-coupon-wallet / member-order-detail —— 2026-10-27 业主真机走查 P-58 / P-51(G-1)明确
+//     「不能是弹窗,之前做好过正常页面」,改成 page 档,移出本表;page 档由 scene-page-variant.test.js 锁定。
 const HALF_SCENE_IDS = [
   'points-tasks',
-  'game-coupon-wallet',
   'member-order-history',
-  'member-order-detail',
   'settings-likes',
   'settings-how-to-play',
   'settings-how-to-play-detail',
@@ -62,7 +62,7 @@ test('negative control: 任一目标场景退回 full 都必须判红', () => {
 test('negative control: half 场景重新带 canBack 必须判红', () => {
   const regressed = {
     ...SCENES,
-    'member-order-detail': { ...SCENES['member-order-detail'], canBack: true },
+    'member-order-history': { ...SCENES['member-order-history'], canBack: true },
   }
   assert.throws(() => assertHalfSceneContract(regressed), assert.AssertionError)
 })

@@ -16,9 +16,10 @@ test('BL-188 feedTags 列表按下标作 key', () => {
   }
 })
 
+// 2026-10-28 p104/p70:首页推荐卡改成整张封面卡,四宫格 feedImages 撤掉;再加回来时仍按 gi 作 key
 test('BL-188 feedImages 列表按 gi 下标作 key', () => {
   const blocks = wxml.match(/<block[^>]*wx:for="\{\{item\.feedImages\}\}"[^>]*>/g) || []
-  assert.equal(blocks.length, 2)
+  assert.doesNotMatch(wxml, /wx:for="\{\{item\.feedImages\}\}"[^>]*wx:key="\*this"/)
   for (const block of blocks) {
     assert.doesNotMatch(block, /wx:key="\*this"/)
     assert.match(block, /wx:for-index="gi"/)

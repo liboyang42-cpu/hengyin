@@ -22,7 +22,7 @@
     size="lg"
     fill
     wx:elif="{{loadState === 'error'}}"
-    icon="/images/no_data.svg"
+    icon="empty-state"
     title="权益加载失败"
     sub="{{loadError}}"
     retry="重试"
@@ -218,7 +218,7 @@
       </cy-btn>
     </view>
   </scroll-view>
-<cy-sheet inset show="{{discardVisible}}" title="还没有保存" bind:close="keepForm"><view class="dc-sheet-content"><view class="dc-sheet-actions"><cy-btn variant="secondary" bindtap="discardForm">放弃修改</cy-btn><cy-btn bindtap="keepForm">继续编辑</cy-btn></view></view></cy-sheet>
+<cy-sheet inset show="{{discardVisible}}" back-guard="{{false}}" title="还没有保存" bind:close="keepForm"><view class="dc-sheet-content"><view class="dc-sheet-actions"><cy-btn variant="secondary" bindtap="discardForm">放弃修改</cy-btn><cy-btn bindtap="keepForm">继续编辑</cy-btn></view></view></cy-sheet>
   <!-- BL-17 物理返回守卫(照 decor 主页):编辑表单或放弃确认开着时,返回键/侧滑先关最上层,不直接退页。 -->
   <page-container
     show="{{!backGuardOff && (formVisible || discardVisible)}}"

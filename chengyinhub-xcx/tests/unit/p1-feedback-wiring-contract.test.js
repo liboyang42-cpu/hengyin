@@ -185,7 +185,7 @@ test('动态评论列表的关注图标必须真正绑定动作并回读服务�
     '评论头像上的 + 按钮不能只有图标，必须绑定当前行并有可读名称')
   assert.match(js, /commentFollowClick\(e\)[\s\S]*e\.currentTarget\.dataset\.index[\s\S]*follow_member_id:\s*item\.memberId/,
     '关注请求必须使用当前评论行的 memberId')
-  assert.match(js, /commentFollowClick\(e\)[\s\S]*community\.request\(\{\s*url:\s*'\/api\/comment\/list'[\s\S]*isRecordList\(readback\.data\.rows\)[\s\S]*authoritative\.isFollowTheUser[\s\S]*this\.setData\(\{\s*list\s*\},[\s\S]*toast\('关注成功'\)/, // 2026-09-06 轻提示收口:toast('…') 取代 wx.showToast({ title })
+  assert.match(js, /commentFollowClick\(e\)[\s\S]*community\.request\(\{\s*current:\s*this\._captureCommunityContext\(\),\s*url:\s*'\/api\/comment\/list'[\s\S]*isRecordList\(readback\.data\.rows\)[\s\S]*authoritative\.isFollowTheUser[\s\S]*this\.setData\(\{\s*list\s*\},[\s\S]*toast\('关注成功'\)/, // 2026-09-06 轻提示收口:toast('…') 取代 wx.showToast({ title })
     '只有刷新当前评论行的服务端权威终态后才能回写并报成功')
   assert.match(js, /已提交，但状态确认失败，请刷新/,
     '刷新失败不能静默或伪报成功')

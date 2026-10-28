@@ -177,4 +177,53 @@ class AppMediaReferenceGuardTest {
         verifyNoInteractions(mapper,assets);
     }
 
+
+    // ===== G-3 先发后审:本站系统图白名单 + JSON 相册 =====
+
+    @Test void unregisteredLocalSystemImageIsPublishableAndResolvedFromStorageKey() {
+        String key = "/profile/upload/2024/05/01/banner_20240501120000A001.png";
+        when(assets.systemImageUrl(key)).thenReturn("https://public/profile/upload/2024/05/01/banner_20240501120000A001.png");
+        for (String reference : new String[]{key, "https://www.chengyinhub.com/prod-api" + key}) {
+            assertEquals(key, guard.requireAttachment(11L, reference, true));
+            assertEquals("https://public/profile/upload/2024/05/01/banner_20240501120000A001.png",
+                    guard.visibleUrl(reference, null));
+        }
+        // 系统图仍不是当前用户自己的上传,不能拿去克隆/第三方处理。
+        assertThrows(ServiceException.class, () -> guard.processingUrl(key, 11L, "IMAGE"));
+    }
+
+    @Test void unregisteredBucketImageKeepsOwnHostWithoutSignatureAndForeignHostStaysRejected() {
+        String key = "upload/0123456789abcdef0123456789abcdef.jpg";
+        String own = "https://bucket.oss.example/" + key;
+        try (org.mockito.MockedStatic<com.chengyinhub.common.utils.file.FileOssUploadUtils> oss =
+                     mockStatic(com.chengyinhub.common.utils.file.FileOssUploadUtils.class)) {
+            oss.when(() -> com.chengyinhub.common.utils.file.FileOssUploadUtils.isChengyinPhotoAddress(own + "?Signature=old"))
+                    .thenReturn(true);
+            oss.when(() -> com.chengyinhub.common.utils.file.FileOssUploadUtils.isChengyinPhotoAddress(own)).thenReturn(true);
+            when(assets.systemImageUrl(key)).thenReturn("https://bucket.oss.example/fresh-signature");
+            assertEquals(own, guard.requireAttachment(11L, own + "?Signature=old", true));
+            assertEquals("https://bucket.oss.example/fresh-signature", guard.visibleUrl(own, null));
+            String foreign = "https://foreign.invalid/" + key;
+            assertThrows(ServiceException.class, () -> guard.requireAttachment(11L, foreign, true));
+            assertEquals("", guard.visibleUrl(foreign, null));
+        }
+    }
+
+    @Test void heldAudioStillCannotBePublishedAndAnonymousWriterGainsNothing() {
+        state("HOLD");
+        assertThrows(ServiceException.class, () -> guard.requireAttachment(11L, "media-asset:7", true));
+        assertThrows(ServiceException.class,
+                () -> guard.requireAttachment(null, "/profile/upload/2024/05/01/a.png", false));
+    }
+
+    @Test void jsonGalleryIsCheckedPerImageAndKeepsArrayShape() {
+        state("APPROVED");
+        String local = "/profile/upload/2024/05/01/a.png";
+        assertEquals("[\"media-asset:7\",\"" + local + "\"]",
+                guard.requireAttachments(11L, "[\"media-asset:7\",\" \",\"" + local + "\"]", true));
+        assertThrows(ServiceException.class,
+                () -> guard.requireAttachments(11L, "[\"https://foreign.invalid/raw.jpg\"]", true));
+        assertThrows(ServiceException.class, () -> guard.requireAttachments(11L, "[{\"url\":1}]", true));
+        assertThrows(ServiceException.class, () -> guard.requireAttachments(11L, "[\"media-asset:7\"", true));
+    }
 }

@@ -79,7 +79,13 @@ function conditions(list, name) {
       if (!STATE_TAG.test(tag)) throw new Error('伏笔「' + name + '」的选项条件要引用 tag. 开头的标签:' + tag);
       return { op: op, value: tag };
     }
-    if (op === 'NODE_COMPLETED' && Number(c.nodeId) > 0) return { op: op, nodeId: Number(c.nodeId) };
+    if (op === 'NODE_COMPLETED') {
+      const id = c.nodeId;
+      const exactNumber = typeof id === 'number' && Number.isSafeInteger(id) && id > 0;
+      const exactString = typeof id === 'string' && /^[1-9][0-9]{0,18}$/.test(id)
+        && (id.length < 19 || id <= '9223372036854775807');
+      if (exactNumber || exactString) return { op: op, nodeId: id };
+    }
     throw new Error('伏笔「' + name + '」的条件只能是选项标签或到过某站');
   });
 }

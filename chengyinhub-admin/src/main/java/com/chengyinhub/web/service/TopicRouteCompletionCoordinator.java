@@ -24,10 +24,18 @@ public class TopicRouteCompletionCoordinator {
     public TopicRouteState advance(Long memberId, Long topicId, Long activityId, Long nodeId,
                                    String routeActionId, Integer expectedVersion, String serverReceiptId,
                                    String advancedOutcomeCode, String trustedOutcomeCode) {
+        return advanceOriginal(memberId, topicId, activityId, nodeId, null, routeActionId,
+                expectedVersion, serverReceiptId, advancedOutcomeCode, trustedOutcomeCode);
+    }
+
+    @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
+    public TopicRouteState advanceOriginal(Long memberId, Long topicId, Long activityId, Long nodeId,
+            Long originalSessionId, String routeActionId, Integer expectedVersion, String serverReceiptId,
+            String advancedOutcomeCode, String trustedOutcomeCode) {
         try {
-            TopicRouteState state = routeRuntime.state(memberId, topicId, activityId);
+            TopicRouteState state = originalSessionId == null ? routeRuntime.state(memberId, topicId, activityId) : null;
             // 老线性主题没有局,照旧只回读状态;线性旅程局(sessionId 非空)与分支一样推进本局状态。
-            if (!TopicRouteState.BRANCH_GRAPH.equals(state.getRouteMode())
+            if (state != null && !TopicRouteState.BRANCH_GRAPH.equals(state.getRouteMode())
                     && state.getSessionId() == null) return state;
             if (StringUtils.isBlank(routeActionId) || expectedVersion == null) {
                 throw new IllegalArgumentException("路线完成请求缺少 routeActionId 或 expectedRouteVersion");
@@ -39,8 +47,11 @@ public class TopicRouteCompletionCoordinator {
                     : StringUtils.isNotBlank(trustedOutcomeCode) ? trustedOutcomeCode : "COMPLETED";
             String triggerType = StringUtils.isNotBlank(advancedOutcomeCode) ? "ADVANCED_RESULT"
                     : StringUtils.isNotBlank(trustedOutcomeCode) ? "PREFERENCE_RESULT" : "CHOICE";
-            return routeRuntime.advance(memberId, topicId, activityId, expectedVersion, routeActionId,
-                    triggerType, new NodeOutcome(nodeId, outcomeCode, serverReceiptId));
+            NodeOutcome outcome = new NodeOutcome(nodeId, outcomeCode, serverReceiptId);
+            return originalSessionId == null
+                    ? routeRuntime.advance(memberId, topicId, activityId, expectedVersion, routeActionId, triggerType, outcome)
+                    : routeRuntime.advanceOriginal(memberId, topicId, activityId, originalSessionId,
+                            expectedVersion, routeActionId, triggerType, outcome);
         } catch (IllegalArgumentException | IllegalStateException e) {
             throw new ServiceException(e.getMessage());
         }

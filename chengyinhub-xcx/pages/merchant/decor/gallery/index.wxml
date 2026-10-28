@@ -12,7 +12,7 @@
   <cy-empty size="lg" fill wx:elif="{{loadState === 'permission'}}" kind="no-permission"
     title="当前账号不能编辑门店相册" sub="请切换到已审核的商家账号" cta="返回" bind:cta="onNavBack" />
   <cy-error load-failure class="dg-retry cy-fade-in" size="lg" fill wx:elif="{{loadState === 'error'}}"
-    icon="/images/no_data.svg" title="{{loadErrorKind === 'network' ? '网络没连上' : '相册加载失败'}}" sub="{{loadError}}" retry="重试" bind:retry="retryLoad" auto-back />
+    icon="empty-state" title="{{loadErrorKind === 'network' ? '网络没连上' : '相册加载失败'}}" sub="{{loadError}}" retry="重试" bind:retry="retryLoad" auto-back />
   <cy-empty size="lg" fill wx:elif="{{loadState === 'empty'}}" kind="empty"
     title="暂时无法上传门店相册" sub="完成商家入驻后可用" cta="去商家入驻" bind:cta="goApply" />
 
@@ -22,10 +22,10 @@
     <view class="dg-grid">
       <view class="dg-item" wx:for="{{gallery}}" wx:key="index">
         <image class="dg-image" src="{{item}}" mode="aspectFill" aria-hidden="true" />
-        <view class="dg-delete" data-index="{{index}}" catchtap="removeGallery" aria-role="button" aria-disabled="{{saving || refreshing}}" aria-label="删除第{{index + 1 || 1}}张图片" hover-class="{{saving || refreshing ? 'none' : 'cy-pressed'}}" hover-stay-time="80"><cy-icon name="close" size="38" /></view>
+        <view class="dg-delete" data-index="{{index}}" catchtap="removeGallery" aria-role="button" aria-disabled="{{saving || refreshing}}" aria-label="删除第{{index + 1 || 1}}张图片" hover-class="{{saving || refreshing ? 'none' : 'cy-pressed'}}" hover-stay-time="80"><view class="dg-delete-dot"><cy-icon name="close" size="24" /></view></view>
       </view>
       <view class="dg-add" wx:if="{{gallery.length < 9}}" bindtap="addGallery" aria-role="button" aria-disabled="{{saving || refreshing}}" aria-label="添加相册图片" hover-class="{{saving || refreshing ? 'none' : 'cy-pressed'}}" hover-stay-time="80">
-        <view class="dg-add-mark"><cy-icon name="plus" size="40" /></view><text>添加图片</text>
+        <view class="dg-add-mark"><cy-icon name="plus" size="48" /></view>
       </view>
     </view>
     <view class="dg-pad"></view>

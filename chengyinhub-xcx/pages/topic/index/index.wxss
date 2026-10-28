@@ -2169,3 +2169,13 @@ button::after {
 .topic .tab-pre .story-cc { opacity: 0; transform: translateY(77rpx) rotateX(-25deg) scale(.96); transition: none; }
 
 .bsheet__x::after { content: ""; position: absolute; left: 50%; top: 50%; width: 88rpx; height: 88rpx; transform: translate(-50%, -50%); } /* 透明热区撑到 44px,视觉尺寸按原型不变 */
+
+/* 开局前准备半屏(原型 B T-36):可玩时段一行 + 作者准备项勾选行 + 开始游玩 */
+.prep { padding: 0 var(--cy-space-4) var(--cy-space-4); }
+.prep-li { display: flex; justify-content: space-between; gap: var(--cy-space-3); padding: var(--cy-space-3-5) 0; border-bottom: 1rpx solid var(--cy-color-border-subtle); font-size: var(--cy-type-body); color: var(--cy-color-text-secondary); }
+.prep-li__v { font-weight: 600; color: var(--cy-color-text-primary); text-align: right; }
+.prep-li.is-bad .prep-li__v { color: var(--cy-color-status-warning); }
+.prep-check { padding: var(--cy-space-3) 0; border-bottom: 1rpx solid var(--cy-color-border-subtle); }
+.prep-cta { margin-top: var(--cy-space-4); }
+.prep-note { display: block; padding-top: var(--cy-space-3); font-size: var(--cy-type-label); line-height: 1.6; color: var(--cy-color-text-tertiary); }
+.topic-teams__ft--go { display: flex; align-items: center; gap: var(--cy-space-1); }

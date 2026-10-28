@@ -1,3 +1,4 @@
+const templateAdoption = require('../utils/publish/template-adoption.js'); const checkContext = require('../utils/publish/check-context.js');
 const { readReducedMotion } = require('../../../utils/motion-preference.js');
 const modal = require('../../../utils/modal.js');
 const cyLoading = require('../../../utils/loading.js');
@@ -104,6 +105,8 @@ const MOOD_LABEL_OF = CHAPTER_ATMOSPHERES.reduce(function (map, item) {
 const { isRecord, isRecordList } = require('../../../utils/response-shape.js');
 const advancedGameConfig = require('../utils/publish/advanced-game-config.js');
 const topicRouteGraph = require('../utils/publish/topic-route-graph.js');
+const storyRuleForm = require('../utils/publish/story-rule-form.js');
+const attributeBinding = require('../utils/publish/attribute-binding.js');
 const nodeGameCatalog = require('../utils/publish/node-game-catalog.js');
 const storyInitialState = require('../utils/publish/story-initial-state.js');
 const customInitialValues = attributes => (attributes || []).map((row, index) => Object.assign({ index }, row))
@@ -114,6 +117,8 @@ const publishIssueTarget = require('../utils/publish/publish-issue-target.js');
 const templateAuthorFields = require('../utils/publish/template-author-fields.js');
 const storyEnding = require('../utils/publish/story-ending');
 const routeMapView = require('../utils/publish/route-map-view.js');
+const { drawPlayStateMarker } = require('../../../utils/play-marker-draw.js');
+const { MAP_STYLE } = require('../../../utils/map-style.js');
 const publishValidationBag = require('../utils/publish/publish-validation-bag.js');
 const publisherIdentity = require('../../../utils/publisher-identity.js');
 const nodeOutcomeContract = require('../utils/publish/node-outcome-contract.js');
@@ -202,17 +207,17 @@ const CLOUD_AUTOSAVE_MS = 2000;
 // 标题旁状态胶囊:本机、上云中、云端已确认、失败、结果待确认必须分开说,不能把本机写入说成已保存。
 const SAVE_STATE_LABELS = { local: '已存本机', localFailed: '本机未存', saving: '保存中', saved: '已存云端', failed: '云端未存', unknown: '待确认' };
 
-const runtimeEditor = require('./theme-runtime.js');
+const runtimeEditor = require('./theme-runtime.js'); const routeNames = require('./theme-route-names.js'); // 文档二 L3
 const structure = require('./theme-runtime-structure.js'); // structure
 const survivalEditor = require('./theme-runtime-survival.js'); // survival
 const zeroHpEditor = require('./theme-runtime-zero-hp.js'); // R5 HP 归零面板（与 runtimeEditor 内同一组方法，直接展开便于 handler 溯源）
-const ownership = require('./theme-ownership.js');
+const ownership = require('./theme-ownership.js'); const d20Page = require('./theme-d20-page.js'); const keysItems = require('./theme-keys-items.js'); const initialCarry = require('./theme-initial-carry.js'); // 文档二 L1;L2 线索与物品 · 物品一组;初始状态 · 开局带着
 Page({
-  ...runtimeEditor.methods,
+  ...runtimeEditor.methods, ...routeNames.methods,
   ...structure.methods, // structure
   ...survivalEditor.methods, // survival
   ...zeroHpEditor.methods, // R5 HP 归零
-  ...ownership.methods,
+  ...ownership.methods, ...d20Page.methods, ...keysItems.methods, ...initialCarry.methods,
   _routeGraph: topicRouteGraph.emptyGraph(),
   _routeMappingSourceNodeId: '',
   _routeMappingReturnToNodeEditor: false,
@@ -221,10 +226,10 @@ Page({
   _nodeBindingDraft: null,
   data: {
     creatorLoginRequired: false,
-    ...runtimeEditor.data,
+    ...runtimeEditor.data, ...routeNames.data,
     ...structure.data, // structure
     ...survivalEditor.data, // survival
-    ...ownership.data,
+    ...ownership.data, ...d20Page.data, ...keysItems.data, ...initialCarry.data,
     // 氛围块的选择器:cy-dropdown 吃 {value,label} 数组(全仓禁原生 picker),块上回显要 key→中文的映射。
     moodOptions: CHAPTER_ATMOSPHERES,
     storyWhenOptions: [], storyWhenLabelOf: {},
@@ -300,7 +305,6 @@ Page({
     identityRequired: true,
     identityReady: false,
     // 旧草稿没记录商家/个人入口、用户还没确认归属:页内横幅 + 发布确认里的「需要先处理」都看它
-    legacyScopePending: false,
     identityRealName: '',
     identityIdCard: '',
     identityConsented: false,
@@ -392,6 +396,8 @@ Page({
     nodeBindingRows: [], nodeBindingError: '', nodeBindingErrorKey: '',
     nodeSharedSites: [], nodeCopyBusy: false, nodeCopyUncertain: false, nodeCopyError: '',
     initialStateEditor: { show: false, rules: null, error: '' },
+    attributeRegistrySnapshot: null,
+    attributeRegistryError: '',
     initialStateOptions: storyInitialState.OPTIONS,
     supportNodeChallenge: false, supportNodeSettled: false,
     supportMatrix: null, supportMatrixLoading: false, supportMatrixLoadError: '', nodeSupportReason: '', storySupportReasons: {},
@@ -539,6 +545,9 @@ Page({
     mapInclude: [MAP_DEFAULT_CENTER], // include-points 自动适配视野;空数组会让腾讯 SDK fitBounds 崩,兜底中心点
     mapCenter: MAP_DEFAULT_CENTER,
     mapScale: 12,
+    // P-45 / G-12:编辑器地图与玩家地图同一套个性化样式(utils/map-style.js;key 未配置时是官方默认底图)
+    mapSubkey: MAP_STYLE.subkey,
+    mapLayerStyle: MAP_STYLE.layerStyle,
     hasRoute: false,       // 是否已有有效坐标节点(空态判断)
     selectedNodeLid: '',   // 列表↔地图双向高亮选中的节点 _localId
     rowHpx: 0,             // 节点卡片行高(px),movable-view y 用 px,onLoad 由 rpx 折算
@@ -649,7 +658,8 @@ Page({
     return JSON.stringify([this.data.formData, this.data.pendingMaterials,
       this.data.selectedCategoryIds, this.data.selectedCategoryNames,
       this.data.startDateTime, this.data.endDateTime, this.data.completionRuleMode,
-      this.data.completionRequiredCount, this.data.bingoRows, this.data.publishToCreative, this.data.aiSimple]);
+      this.data.completionRequiredCount, this.data.bingoRows, this.data.publishToCreative, this.data.aiSimple,
+      this._routeRuleDrafts || {}]);
   },
 
   _showUnstoredPublishedChanges(rejected) {
@@ -758,7 +768,8 @@ Page({
     const owner = String(app.getUserID() || '');
     return !this._cloudAutosaveEnabled || this._hidden || this._unloaded || !this._draftAutosaveReady
       || this._draftStorageUnavailable || this._draftScopeUnconfirmed || this._cloudAutosavePaused
-      || !!this._publishAttempt || this.data.creatorLoginRequired || !owner
+      || Object.keys(this._routeRuleDrafts || {}).length > 0
+      || !!this._publishAttempt || !!this._serverDraftAttempt || this.data.creatorLoginRequired || !owner
       || String(this.data.draftMemberId || owner) !== owner
       || !!(this.data.editingTopicId && (!this.data.editLoaded || !this.data.editIsDraft))
       || !String((this.data.formData || {}).name || '').trim();
@@ -807,9 +818,11 @@ Page({
         draftUuid: identity.draftUuid,
         baseRevision: this.data.baseRevision,
         publishAttempt: this._publishAttempt,
+        serverDraftAttempt: this._serverDraftAttempt,
         formData: this.data.formData,
         pendingMaterials: this.data.pendingMaterials,
         editorMeta: {
+          routeRuleDrafts: this._routeRuleDrafts || {},
           selectedCategoryIds: this.data.selectedCategoryIds || [],
           selectedCategoryNames: this.data.selectedCategoryNames || [],
           startDateTime: this.data.startDateTime,
@@ -834,15 +847,21 @@ Page({
 
   _applyDraftEnvelope(envelope) {
     if (!envelope) return;
+    this._invalidateCoverUpload('imgUrl');
+    this._invalidateCoverUpload('imgArr');
     this._publishAttempt = envelope.publishAttempt || null;
+    this._serverDraftAttempt = envelope.serverDraftAttempt || null;
     this._localDraftRestored = true;
     const formData = this._withEndingChapters(envelope.formData || Object.assign({}, this.data.formData, {
       chapters: envelope.chapters || [],
     }));
     const pendingMaterials = envelope.pendingMaterials || [];
     const meta = envelope.editorMeta || {};
+    this._routeRuleDrafts = Object.assign(Object.create(null), meta.routeRuleDrafts || {});
+    this._routeGraph = topicRouteGraph.normalizeTopicRoute(formData).graph;
     const patch = Object.assign({
       formData,
+      imgArrList: this._parseImgArr(formData.imgArr),
       pendingMaterials,
     }, thoughtPatchOf(formData.journeyRules));
     if (Array.isArray(meta.selectedCategoryIds)) patch.selectedCategoryIds = meta.selectedCategoryIds;
@@ -860,7 +879,24 @@ Page({
     cyToast(pendingMaterials.length
         ? ('已恢复上次未编排完的 ' + pendingMaterials.length + ' 个素材')
         : '已恢复上次本地草稿');
-    this.setData(patch, () => {
+    const restored = Object.assign({}, this.data, patch);
+    this.setData({
+      formData: restored.formData,
+      imgArrList: restored.imgArrList,
+      pendingMaterials: restored.pendingMaterials,
+      thoughtOptions: restored.thoughtOptions,
+      thoughtNameOf: restored.thoughtNameOf,
+      selectedCategoryIds: restored.selectedCategoryIds,
+      selectedCategoryNames: restored.selectedCategoryNames,
+      selectedCategoryNamesStr: restored.selectedCategoryNamesStr,
+      startDateTime: restored.startDateTime,
+      endDateTime: restored.endDateTime,
+      completionRuleMode: restored.completionRuleMode,
+      completionRequiredCount: restored.completionRequiredCount,
+      bingoRows: restored.bingoRows,
+      publishToCreative: restored.publishToCreative,
+      aiSimple: restored.aiSimple,
+    }, () => {
       this._ensureLocalIds();
       this._materializeCityStoryChapters();
       this.updateAllStatistics();
@@ -902,7 +938,6 @@ Page({
       return false;
     }
     if (restored.status !== 'ready') return false;
-    if (restored.scopeUnknown) { this._confirmLegacyDraftScope(restored.envelope); return false; }
     const restoredForm = restored.envelope.formData || {};
     const modeMismatch = !options.draftUuid && options.mode != null
       && Number(restoredForm.productType) !== (Number(options.mode) === 2 ? 2 : 1);
@@ -914,6 +949,7 @@ Page({
       return false;
     }
     this._applyDraftEnvelope(restored.envelope);
+    if (restored.scopeUnknown) this._persistDraftEnvelope(); // P-44:旧草稿静默归到当前入口,立即补记入口
     return true;
   },
 
@@ -951,9 +987,11 @@ Page({
       this._markDraftStorageUnavailable();
       return;
     }
-    if (result.scopeUnknown) { this._confirmLegacyDraftScope(result.envelope); return; }
     if (result.envelope && result.envelope.publishAttempt) {
       this._publishAttempt = result.envelope.publishAttempt;
+    }
+    if (result.envelope && result.envelope.serverDraftAttempt) {
+      this._serverDraftAttempt = result.envelope.serverDraftAttempt;
     }
     const finish = () => { if (isCurrent()) this._draftAutosaveReady = true; };
     // Equal (including second-resolution) revisions do not settle a lost write response.
@@ -962,10 +1000,21 @@ Page({
       && result.envelope.publishAttempt.status === 'UNKNOWN'
       && !!this.data.editingTopicId
       && String(result.envelope.publishAttempt.topicId || '') === String(this.data.editingTopicId);
+    // 服务端草稿的未知发布/保存有原号回读核对，不能借冲突选择删除；普通更新没有回读核对，
+    // 仍由下方弹窗让作者明确采用已保存版本后解锁。
+    const serverDraftUnknown = unknownExistingWrite && result.envelope.publishAttempt.kind === 'SERVER_DRAFT';
+    if (serverDraftUnknown || this._serverDraftAttempt) {
+      // 使用旧云端版本不是原写入已失败的证据，不能借冲突选择删除未知请求。
+      this._applyDraftEnvelope(result.envelope);
+      finish();
+      this._setSaveState('unknown');
+      return;
+    }
     // 换上本机恢复稿之前记下云端版本的内容,用来判断恢复稿是否真的需要再上云
     this._cloudLoadedKey = this._cloudDraftKey();
     if (result.status === 'ready' && !unknownExistingWrite) {
       this._applyDraftEnvelope(result.envelope);
+      if (result.scopeUnknown) this._persistDraftEnvelope(); // P-44:旧草稿静默归到当前入口,立即补记入口
       finish();
       return;
     }
@@ -996,70 +1045,9 @@ Page({
     finish();
   },
 
-  // 2026-10-22 业主裁决(L09):原来每次进页都弹「确认旧草稿的发布入口」,并把提示塞进底部固定的
-  // 「这次还没有保存」错误卡 —— 盖住章节卡与地图、还和 toast 叠在一起。现在:
-  // ① 提示改成内容流里的横幅(legacyScopePending),不再借用 submitError;
-  // ② 选过「暂不恢复」就按草稿记下来,下次进来不再自动弹窗,横幅上的「确认归属」随时可再打开。
-  _confirmLegacyDraftScope(envelope) {
-    this._draftScopeUnconfirmed = true;
-    this._legacyScopeEnvelope = envelope;
-    this.setData({ legacyScopePending: true });
-    if (this._legacyScopeDeferred()) return;
-    this._promptLegacyDraftScope();
-  },
-
-  _legacyScopeChoiceKey() {
-    const identity = this._draftIdentity();
-    const memberId = String(app.getUserID() || '');
-    if (!identity || !memberId) return '';
-    const draft = identity.topicId ? ('t' + identity.topicId) : ('d' + identity.draftUuid);
-    return 'cy_legacy_scope_later:' + memberId + ':' + (this.data.operationScope || '') + ':' + draft;
-  },
-
-  _legacyScopeDeferred() {
-    const key = this._legacyScopeChoiceKey();
-    try { return !!(key && wx.getStorageSync(key)); } catch (error) { return false; }
-  },
-
-  _rememberLegacyScopeChoice(deferred) {
-    const key = this._legacyScopeChoiceKey();
-    if (!key) return;
-    try {
-      if (deferred) wx.setStorageSync(key, 1);
-      else wx.removeStorageSync(key);
-    } catch (error) {}
-  },
-
-  // 横幅「确认归属」/ 发布确认「需要先处理」那一条:重新打开同一个确认弹窗
-  reopenLegacyDraftScope() {
-    if (!this._draftScopeUnconfirmed || !this._legacyScopeEnvelope) return;
-    if (this.data.publishCheck && this.data.publishCheck.show) this.closePublishCheck();
-    this._promptLegacyDraftScope();
-  },
-
-  _promptLegacyDraftScope() {
-    const envelope = this._legacyScopeEnvelope;
-    const owner = String(app.getUserID() || '');
-    const scope = this.data.operationScope;
-    modal.show({
-      title: '确认旧草稿的发布入口',
-      content: '这份旧草稿没有记录商家或个人入口。确认属于当前入口后才恢复；上次结果未知的发布仍会保留并先确认。',
-      confirmText: '属于此入口', cancelText: '暂不恢复',
-      success: (res) => {
-        if (this._unloaded || owner !== String(app.getUserID() || '')
-            || scope !== this.data.operationScope || !this._draftScopeUnconfirmed) return;
-        if (!res.confirm) { this._rememberLegacyScopeChoice(true); return; }
-        this._draftScopeUnconfirmed = false;
-        this._legacyScopeEnvelope = null;
-        this._rememberLegacyScopeChoice(false);
-        this.setData({ legacyScopePending: false });
-        this._applyDraftEnvelope(envelope);
-        const stored = this._persistDraftEnvelope();
-        this._draftAutosaveReady = true;
-        this._markRestoredDraft(stored);
-      }
-    });
-  },
+  // 2026-10-27 P-44(业主):没有记录入口的旧草稿默认归到当前入口、静默恢复 ——
+  // 「确认旧草稿的发布入口」弹窗、「旧草稿还没恢复」横幅和发布确认里的归属阻断项都已删除。
+  // 恢复后立刻按当前入口重存一次(_persistDraftEnvelope 写 operationScope),下次进来就是已知入口。
 
   _markDraftStorageUnavailable() {
     this._draftStorageUnavailable = true;
@@ -1256,7 +1244,7 @@ Page({
     } else if (this.data.valueEditor && this.data.valueEditor.show) {
       this.closeValueEditor();
     } else if (this.data.initialStateEditor && this.data.initialStateEditor.show) {
-      this.closeInitialState();
+      if (this.data.carryPicker && this.data.carryPicker.show) this.closeCarryPicker(); else this.closeInitialState(); // 开局带着 · 添加层先关
     } else if (this.data.routeMappingShow) {
       this.closeNodeRouteMapping();
     } else if (this.data.popChapterNodes) {
@@ -2561,6 +2549,7 @@ Page({
     this._routeGraph = topicRouteGraph.emptyGraph();
     this._routeMappingSourceNodeId = '';
     this._routeMappingReturnToNodeEditor = false;
+    this._routeRuleDrafts = {};
     this._installDraftAutosave();
     this._draftAutosaveReady = false;
     const editingTopicId = options.id ? String(options.id) : '';
@@ -2673,7 +2662,7 @@ Page({
       function (anonymous) { this._editLoadToken++; this.setData({ 'formData.chapters': [], 'formData.tickets': [], 'formData.name': '', 'formData.description': '', editLoading: false, editLoadError: anonymous ? '请登录后读取主题' : '请重新读取主题', creatorLoginRequired: anonymous, editLoadIsAccess: false }); },
       () => that.loadEditingTopic(id), status);
     app.sendRequest({
-      url: '/api/topic/edit-detail',
+      url: '/api/topic/author-edit-detail',
       method: 'POST',
       hideLoading: true,
       silentError: true,
@@ -2758,6 +2747,7 @@ Page({
     const completionRule = advancedGameConfig.parseTopicCompletion(topic.completeRuleJson || '');
     const bingo = advancedGameConfig.parseTopicBingo(topic.completeRuleJson || '');
     const topicRoute = topicRouteGraph.normalizeTopicRoute(topic);
+    this._loadedAttributeRules = detail.journeyRules || topic.journeyRulesJson || '';
     const thoughtPatch = thoughtPatchOf(detail.journeyRules || topic.journeyRulesJson);
     this._routeGraph = topicRoute.graph;
 
@@ -2825,10 +2815,13 @@ Page({
     this.refreshRouteGraph();
     this._syncMerchantPoolEligibility();   // 回填之后复核:存量主题可能是无资格者开的池
     this._finishEditingDraftBootstrap(detail);
+    try {
+      if (attributeBinding.parse(this._loadedAttributeRules).attributeBinding) this.loadAttributeRegistry();
+    } catch (invalid) { this.setData({ attributeRegistryError: invalid.message }); }
     const boundIds = new Set();
     (this.data.formData.chapters || []).forEach(chapter => (chapter.nodes || []).forEach(node => {
-      if (Number(node.templateId) && !(node.templateInfo && Object.prototype.hasOwnProperty.call(node.templateInfo, 'advancedConfigJson')))
-        boundIds.add(Number(node.templateId));
+      if (templateAdoption.id(node.templateId) && !(node.templateInfo && Object.prototype.hasOwnProperty.call(node.templateInfo, 'advancedConfigJson')))
+        boundIds.add(templateAdoption.id(node.templateId));
     }));
     boundIds.forEach(id => this._loadNodeTemplateDetail({ templateId: id }));
     return true;
@@ -3094,6 +3087,21 @@ Page({
   // 页面销毁:让在途发布回调失效,避免 setData / redirect after unload
   onHide() {
     this._hidden = true;
+    this._precheckToken = (this._precheckToken || 0) + 1;
+    // 保存/发布意图已在发请求前落盘。隐藏后只允许下一次显式核对，旧回包不结算新页面。
+    if (this._serverDraftSaver) {
+      this._serverDraftSaver.destroy();
+      this._serverDraftSaver = null;
+    }
+    if (this._publishWorkflow) {
+      this._publishWorkflow.destroy();
+      this._publishWorkflow = null;
+    }
+    if (this.data.draftSaving || this.data.submitting) {
+      cyLoading.hide();
+      this.setData({ draftSaving: false, submitting: false,
+        themeSaveState: 'unknown', themeSaveLabel: SAVE_STATE_LABELS.unknown });
+    }
     // 每次编辑已先落本机;离开前不承诺一定存上云,只取消过时调度,回来(onShow)再接力
     this._cancelCloudDraftAutosave();
   },
@@ -4239,7 +4247,7 @@ Page({
       nodesForm.templateInfo = this._templateDetailsById[node.templateId];
     // 玩法开关不入库,由 templateId 派生:绑过模板就是"开"。
     // 不派生的话,已配玩法的节点重开抽屉会显示成"关",看着像配置丢了。
-    nodesForm.showTemplate = !!Number(node.templateId)
+    nodesForm.showTemplate = !!templateAdoption.id(node.templateId)
     this.setData({
       nodesForm: nodesForm,
       popChapterNodes: true,
@@ -4276,7 +4284,7 @@ Page({
       return;
     }
     this.setEditorState('editNode');
-    const nodesForm = Object.assign({}, node, { showTemplate: !!Number(node.templateId) });
+    const nodesForm = Object.assign({}, node, { showTemplate: !!templateAdoption.id(node.templateId) });
     if (this._templateDetailsById && this._templateDetailsById[node.templateId])
       nodesForm.templateInfo = this._templateDetailsById[node.templateId];
     this.setData({
@@ -4623,7 +4631,7 @@ Page({
     }
     const gameplayIssue = proEditorPolicy.storyGameIssue(node);
     if (gameplayIssue) { cyToast(gameplayIssue); return; }
-    if (Number(node.templateId) && !(node.templateInfo
+    if (templateAdoption.id(node.templateId) && !(node.templateInfo
       && Object.prototype.hasOwnProperty.call(node.templateInfo, 'advancedConfigJson'))) {
       cyToast('玩法详情未加载，请稍后再完成节点');
       return;
@@ -4935,7 +4943,7 @@ Page({
   // ⚠️ 以后要补回「发布前看成品」,走**本地草稿预览**(主题详情页加 preview 入参 + 一条
   // 本地数据源分支),不要再把按钮接回 ?id= —— 那条路读的永远是服务端那一版。
 
-  openTopicDetail() { this._syncRuntimeStats(); this.setData({ topicDetailShow: true }); },
+  openTopicDetail() { this._syncRuntimeStats(); this._syncD20Rows(); this._loadPlaySetup(); this._syncKeysItems(); this.setData({ topicDetailShow: true }); },
   closeTopicDetail() { this.setData({ topicDetailShow: false }); },
 
   // 列表 ↔ 地图 视图切换(左下角药丸)。
@@ -5120,13 +5128,33 @@ Page({
   // 主消费面是 topic 详情首屏 .slide1(height:100vh 全屏 hero),3:4 竖图在竖屏下最贴合。
   // ⚠️ imgUrl 是跨实体复用的字段名:template 首页的 .feat-media / .cml-pic 消费的是
   //    CmsTemplateLibrary(玩法模板,publish/temp 裁 16:9),与本字段无关,改比例时别顺手动它们。
+  _coverUploadGuard(field) {
+    const tokens = this._coverUploadTokens || (this._coverUploadTokens = {});
+    const token = (tokens[field] || 0) + 1; tokens[field] = token;
+    const context = () => JSON.stringify([String(app.getUserID() || ''), this.data.operationScope,
+      this.data.draftUuid, this.data.editingTopicId, this._editLoadToken,
+      typeof app.getAuthorization === 'function' ? app.getAuthorization() : undefined]);
+    const original = context();
+    let settled = false;
+    return () => {
+      if (settled || this._unloaded || this._hidden || tokens[field] !== token || context() !== original) return false;
+      settled = true; return true;
+    };
+  },
+  _invalidateCoverUpload(field) {
+    const tokens = this._coverUploadTokens || (this._coverUploadTokens = {});
+    tokens[field] = (tokens[field] || 0) + 1;
+  },
   uploadBanner() {
-    let that = this;
-    app.chooseImage(function (res) {
-      that.setData({
-        'formData.imgUrl': res[0]
-      }, () => that.refreshPrimaryActionState());
+    const current = this._coverUploadGuard('imgUrl');
+    app.chooseImage((res) => {
+      if (!current() || !Array.isArray(res) || typeof res[0] !== 'string' || !res[0].trim()) return;
+      this.setData({ 'formData.imgUrl': res[0] }, () => this.refreshPrimaryActionState());
     }, 1, { crop: true, cropScale: '3:4' });
+  },
+  removeBanner() {
+    this._invalidateCoverUpload('imgUrl');
+    this.setData({ 'formData.imgUrl': '' }, () => this.refreshPrimaryActionState());
   },
 
   // ===== 章节音频(2026-09-04 拍板:一章最多一段,挂在章节上而不是故事流的块里)=====
@@ -5296,18 +5324,21 @@ Page({
 
   // 上传横版封面(step3「横版封面」画廊):多张 16:9,消费面是 topic/index 顶部轮播
   uploadImgArr() {
-    let that = this;
     const remain = IMG_ARR_MAX - this.data.imgArrList.length;
     if (remain <= 0) { cyToast('最多' + IMG_ARR_MAX + '张'); return; }
-    app.chooseImage(function (res) {
-      if (res && res.length) {
-        that._setImgArr(that.data.imgArrList.concat(res));
+    const current = this._coverUploadGuard('imgArr');
+    app.chooseImage((res) => {
+      if (current() && Array.isArray(res)) {
+        this._setImgArr(this.data.imgArrList.concat(res.filter(url => typeof url === 'string' && url.trim())));
       }
     }, remain, { crop: true, cropScale: '16:9' });
   },
 
   removeImgArr(e) {
-    const i = e.currentTarget.dataset.i;
+    const raw = e && e.currentTarget && e.currentTarget.dataset.i;
+    const i = Number(raw);
+    if (raw == null || raw === '' || !Number.isInteger(i) || i < 0 || i >= this.data.imgArrList.length) return;
+    this._invalidateCoverUpload('imgArr');
     const arr = this.data.imgArrList.slice();
     arr.splice(i, 1);
     this._setImgArr(arr);
@@ -6077,23 +6108,39 @@ Page({
     const targetOptions = [{ id: '', label: '继续故事流' }].concat(nodes
       .filter((node) => node.id !== sourceId)
       .map((node) => ({ id: node.id, label: node.label })));
-    const rows = (source.outcomes || []).map((outcome) => {
-      const edge = (graph.edges || []).find((item) => item.fromNodeId === sourceId
+    const rows = (source.outcomes || []).reduce((all, outcome) => {
+      const matches = (graph.edges || []).filter((item) => item.fromNodeId === sourceId
         && item.trigger.type === outcome.triggerType
         && item.trigger.outcomeCode === outcome.code);
-      // 具体玩法结果一旦已有 edge，就显示真实地点；只有未建立 edge 的结果才显示
-      // “继续故事流”。否则目标恰好等于相邻节点时会被伪装成未配置，重进后看不出对应。
-      const selectedId = edge ? edge.toNodeId : '';
-      const selected = targetOptions.find((item) => item.id === selectedId) || targetOptions[0];
-      return {
-        code: outcome.code,
-        triggerType: outcome.triggerType,
-        label: outcome.label,
-        toNodeId: selected.id,
-        targetLabel: selected.label,
-        targetOptions,
-      };
+      (matches.length ? matches : [null]).forEach((edge, branchIndex) => {
+        // 具体玩法结果一旦已有 edge，就显示真实地点；只有未建立 edge 的结果才显示
+        // “继续故事流”。否则目标恰好等于相邻节点时会被伪装成未配置，重进后看不出对应。
+        const selectedId = edge ? edge.toNodeId : '';
+        const selected = targetOptions.find((item) => item.id === selectedId) || targetOptions[0];
+        all.push({
+          mappingKey: edge ? 'edge:' + edge.id : 'outcome:' + outcome.triggerType + ':' + outcome.code,
+          edgeId: edge ? edge.id : '',
+          ruleConfig: JSON.parse(JSON.stringify({ conditions: edge ? edge.conditions : [], effects: edge ? edge.effects : [] })),
+          code: outcome.code,
+          triggerType: outcome.triggerType,
+          label: outcome.label + (matches.length > 1 ? ' · 分支 ' + (branchIndex + 1) : ''),
+          toNodeId: selected.id,
+          targetLabel: selected.label,
+          targetOptions,
+        });
+      });
+      return all;
+    }, []);
+    this._routeRuleDrafts = Object.assign(Object.create(null), this._routeRuleDrafts || {});
+    const pendingRules = this._routeRuleDrafts[sourceId] || {};
+    this._routeRuleEpoch = (this._routeRuleEpoch || 0) + 1;
+    rows.forEach(row => {
+      row.formIdentity = sourceId + ':' + this._routeRuleEpoch + ':' + row.mappingKey;
+      row.ruleBaseline = JSON.parse(JSON.stringify(row.ruleConfig));
+      if (pendingRules[row.mappingKey]) row.ruleConfig = JSON.parse(JSON.stringify(pendingRules[row.mappingKey]));
     });
+    this._routeRulesOwner = String(app.getUserID() || '');
+    this._routeRulesScope = this.data.operationScope;
     this._routeMappingSourceNodeId = sourceId;
     this._routeMappingReturnToNodeEditor = returnToNodeEditor;
     this.setData({
@@ -6102,27 +6149,48 @@ Page({
       routeMappingTemplateLabel: (source.templateInfo && source.templateInfo.title)
         || source.templateName || '节点完成结果',
       routeMappingRows: rows,
+      routeRuleNodes: nodes.map(node => ({ id: node.id, label: node.label })),
+      routeRuleVariables: this._routeRuleState(graph.variables || {}, nodes), // 文档二 L3：名单与展开状态在 theme-route-names.js
       routeMappingFallbackLabel: nextNodeId ? '继续故事流' : '故事流结束',
       popChapterNodes: false,
     });
+  },
+
+  onRouteRulesChange(e) {
+    if (!this.data.routeMappingShow || this._unloaded || this._hidden
+        || this._routeRulesOwner !== String(app.getUserID() || '')
+        || this._routeRulesScope !== this.data.operationScope) return;
+    const detail = e.detail || {};
+    const rows = (this.data.routeMappingRows || []).map(row => Object.assign({}, row));
+    const row = rows.find(row => row.formIdentity === detail.identity);
+    if (!row || !detail.value || !Array.isArray(detail.value.conditions) || !Array.isArray(detail.value.effects)) return;
+    row.ruleConfig = JSON.parse(JSON.stringify(detail.value));
+    this._routeRuleDrafts = Object.assign(Object.create(null), this._routeRuleDrafts || {});
+    const draft = this._routeRuleDrafts[this._routeMappingSourceNodeId] = this._routeRuleDrafts[this._routeMappingSourceNodeId] || {};
+    if (detail.discard) {
+      delete draft[row.mappingKey];
+      if (!Object.keys(draft).length) delete this._routeRuleDrafts[this._routeMappingSourceNodeId];
+    } else draft[row.mappingKey] = row.ruleConfig;
+    this.setData({ routeMappingRows: rows });
+    this._setSaveState(this._persistDraftEnvelope() ? 'local' : 'localFailed');
   },
 
   onRouteMappingTargetPick(e) {
     const rowIndex = Number(e.currentTarget.dataset.rowindex);
     const rows = (this.data.routeMappingRows || []).map((row) => Object.assign({}, row));
     const row = rows[rowIndex];
-    const selected = row && row.targetOptions[Number(e.detail.value)];
+    const selected = row && row.targetOptions[Number(e.currentTarget.dataset.optionindex ?? (e.detail || {}).value)]; // 就地勾选传 optionindex
     if (!selected) return;
     row.toNodeId = selected.id;
     row.targetLabel = selected.label;
-    this.setData({ routeMappingRows: rows });
+    this.setData({ routeMappingRows: rows, routeMappingDestOpen: false });
   },
 
   closeNodeRouteMapping() {
     const returnToNodeEditor = this._routeMappingReturnToNodeEditor;
     this._routeMappingReturnToNodeEditor = false;
     this.setData({
-      routeMappingShow: false,
+      routeMappingShow: false, routeMappingOpen: '', routeMappingLayer: null,
       popChapterNodes: !!returnToNodeEditor,
     });
   },
@@ -6143,6 +6211,9 @@ Page({
   },
 
   finishNodeRouteMapping() {
+    if (this._routeRulesOwner !== undefined && (this._unloaded || this._hidden
+        || this._routeRulesOwner !== String(app.getUserID() || '')
+        || this._routeRulesScope !== this.data.operationScope)) return;
     const sourceId = this._routeMappingSourceNodeId;
     const nodes = this._routeNodes();
     const source = nodes.find((node) => node.id === sourceId);
@@ -6150,14 +6221,22 @@ Page({
     const nextNodeId = this._nextStoryNodeId(sourceId, nodes);
     let graph = this.data.formData.routeMode === 'BRANCH_GRAPH'
       ? topicRouteGraph.normalizeGraph(this._routeGraph).graph
-      : this._sequentialRouteGraph(nodes);
+      : this._sequentialRouteGraph(nodes); this._declareRouteRuleVariables(graph); // 文档二 L3：用到的属性 / 进度钟补声明
+    for (const row of this.data.routeMappingRows || []) {
+      if (!row.ruleConfig) continue;
+      const errors = storyRuleForm.errors(row.ruleConfig, nodes, graph.variables || {});
+      if (errors.length) { cyToast(row.label + '：有一句还没选完'); return; }
+      if (!row.toNodeId && !nextNodeId && (row.ruleConfig.conditions.length || row.ruleConfig.effects.length)) {
+        cyToast(row.label + '：请先选择下一站，再保存条件与效果'); return;
+      }
+    }
     const preservedTerminalIds = new Set((graph.terminalNodeIds || []).map(String));
     const previous = graph.edges || [];
     graph.edges = previous.filter((edge) => edge.fromNodeId !== sourceId);
     (this.data.routeMappingRows || []).forEach((row, index) => {
       const targetId = row.toNodeId || nextNodeId;
       if (!targetId) return;
-      const existing = previous.find((edge) => edge.fromNodeId === sourceId
+      const existing = previous.find((edge) => (!row.edgeId || edge.id === row.edgeId) && edge.fromNodeId === sourceId
         && edge.trigger.type === row.triggerType
         && edge.trigger.outcomeCode === row.code);
       const mappedEdge = Object.assign({
@@ -6168,7 +6247,7 @@ Page({
         fromNodeId: sourceId,
         trigger: { type: row.triggerType, outcomeCode: row.code },
         toNodeId: targetId,
-      });
+      }, row.ruleConfig ? JSON.parse(JSON.stringify(row.ruleConfig)) : {});
       if (existing && String(existing.id || '').indexOf('route_') === 0
           && row.toNodeId && targetId !== nextNodeId) {
         mappedEdge.id = 'mapping_' + sourceId + '_' + row.code;
@@ -6197,8 +6276,10 @@ Page({
       .map((node) => node.id);
 
     this._routeGraph = graph;
+    if (this._routeRuleDrafts) delete this._routeRuleDrafts[sourceId];
     this.setData({ 'formData.routeMode': 'BRANCH_GRAPH' }, () => {
       this.refreshRouteGraph();
+      this._onDraftEdited(this._persistDraftEnvelope());
       this.closeNodeRouteMapping();
     });
   },
@@ -6493,7 +6574,7 @@ Page({
     return [
       `「${formData.name || '未命名主题'}」将按${modeLabel}发布，共 ${chapters.length} 个章节、${nodeCount} 个节点。`,
       `${completionLabel}；当前配置 ${ticketCount} 种票单${unfinished > 0 ? `，另有 ${unfinished} 种没填完` : ''}。`
-    ];
+    ].concat(d20Page.publishSummaryLine(formData.journeyRules) || []);
   },
 
   // 组装安全预检请求体(AiSafetyPrecheckReq):路线级文案 + 摊平后的全部节点
@@ -6617,9 +6698,9 @@ Page({
 
   // 发布弹层「继续发布」:仅在无 blocking 时出现,置一次性放行标记后重走 submitForm
   confirmPublishCheck() {
+    if (app.ensureLoginFor && !app.ensureLoginFor('publish', () => this.confirmPublishCheck())) return; // 2026-10-24 游客写前登录
     if (this._identityRegistering) return;
     this.syncIdentityReady();
-    if (this.data.legacyScopePending) return; // 旧草稿归属没确认:发出去也会被 sendData 静默拦下
     if (this.data.publishCheck.blocking.length || !this.data.identityReady) return;
     if (!this.data.identityRequired || this.data.identityRegistered) { this._publishAfterIdentity(); return; }
     // 先落实名、再落主题:后端两道闸就是这个顺序(/api/publisher/identity 先于 /api/topic/create
@@ -6659,10 +6740,6 @@ Page({
 
   // 发布弹层的「确认发布」被置灰时点它 —— 报第一条真缺项,不打空炮。
   onPublishCheckDisabledTap() {
-    if (this.data.legacyScopePending) {
-      cyToast('请先确认这份草稿的发布入口');
-      return;
-    }
     if (!this.data.identityReady) {
       const check = publisherIdentity.checkIdentityForm(this.identityForm());
       cyToast(check.ok ? '发布者实名还没登记' : check.message);
@@ -7018,12 +7095,80 @@ Page({
     this.setData({ 'chapterForm.ending': ending, chapterEndingPickIndex: index });
   },
 
+  // 同一主题锁内读取注册版本与完整定义；读取不会自动确认差异或写回规则。
+  _readAttributeRegistrySnapshot(context, done) {
+    app.sendRequest({
+      url: '/api/topic/attribute-binding', hideLoading: true,
+      method: 'GET', data: { topicId: context.topicId, scope: context.scope },
+      success: res => {
+        if (res && Number(res.code) === 200 && res.data
+            && String(res.data.configVersion) === context.configVersion) {
+          done({ ok: true, snapshot: res.data, supportsAtomicBinding: true });
+        } else done({ ok: false, msg: res && Number(res.code) === 200
+          ? '主题配置版本已变化，请重新读取主题后确认' : res && res.msg || '注册定义读取失败' });
+      },
+      fail: () => done({ ok: false, msg: '注册定义读取失败，请重试' })
+    });
+  },
+  loadAttributeRegistry() {
+    const context = { topicId: String(this.data.editingTopicId || ''), scope: this.data.operationScope,
+      memberId: String(app.getUserID() || ''), configVersion: String(this.data.formData.configVersion || ''),
+      authorization: typeof app.getAuthorization === 'function' ? app.getAuthorization() : undefined };
+    this._attributeRegistryContext = context;
+    this._attributeRegistryWriteReady = false;
+    this.setData({ attributeRegistrySnapshot: null, attributeRegistryError: '' });
+    if (!context.topicId || !context.memberId) {
+      this.setData({ attributeRegistryError: '请先保存主题草稿，再读取注册属性' }); return;
+    }
+    let settled = false;
+    const done = result => {
+      if (settled || !this._attributeRegistryCurrent(context)) return;
+      settled = true;
+      try {
+        if (!result || !result.ok) throw Error(result && result.msg || '注册定义读取失败，请重试');
+        const snapshot = attributeBinding.snapshot(result.snapshot, context.topicId);
+        this._attributeRegistryWriteReady = result.supportsAtomicBinding === true;
+        this.setData({ attributeRegistrySnapshot: snapshot, attributeRegistryError: '' });
+      } catch (error) { this.setData({ attributeRegistryError: error.message }); }
+    };
+    try { this._readAttributeRegistrySnapshot(context, done); } catch (error) { done({ ok: false, msg: '注册定义读取失败，请重试' }); }
+  },
+  _attributeRegistryCurrent(context) {
+    return context && context === this._attributeRegistryContext && !this._hidden && !this._unloaded
+      && context.topicId === String(this.data.editingTopicId || '') && context.scope === this.data.operationScope
+      && context.memberId === String(app.getUserID() || '')
+      && context.configVersion === String(this.data.formData.configVersion || '')
+      && context.authorization === (typeof app.getAuthorization === 'function' ? app.getAuthorization() : undefined);
+  },
+  onAttributeBindingConfirm(e) {
+    if (this.data.editScope === 'WHITELIST' || !this.data.initialStateEditor.show
+        || !this._attributeRegistryCurrent(this._attributeRegistryContext)) return;
+    try {
+      const detail = e.detail || {};
+      const raw = this.data.formData.journeyRules || '';
+      const session = attributeBinding.session(raw, this.data.attributeRegistrySnapshot,
+        { topicId: this.data.editingTopicId, configVersion: this.data.formData.configVersion });
+      if (detail.fingerprint !== session.fingerprint || detail.sourceRules !== raw
+          || detail.configVersion !== session.context.configVersion
+          || detail.registryVersion !== session.registry.registryVersion) throw Error('配置或注册版本已变化，请重新查看并确认差异');
+      const confirmed = attributeBinding.confirm(session, detail.enabledKeys, detail.acceptedKeys);
+      const rules = JSON.parse(confirmed.rules);
+      const editing = Object.assign({}, this.data.initialStateEditor.rules, { attributeBinding: rules.attributeBinding });
+      editing.attributes = rules.attributes; delete editing.attributeDefinition; delete editing.attributeSnapshot;
+      this.setData({ 'formData.journeyRules': confirmed.rules,
+        'initialStateEditor.rules': editing, 'initialStateEditor.values': customInitialValues(editing.attributes), 'initialStateEditor.carry': this._carryRowsOf(editing.attributes), 'initialStateEditor.error': '' });
+      this._onDraftEdited(this._persistDraftEnvelope());
+    } catch (error) { this.setData({ 'initialStateEditor.error': error.message }); }
+  },
+  manageAttributeDefinitions() { this.closeInitialState(); this.openTopicDetail(); },
+
   openInitialState() {
     try {
       this._syncRuntimeStats();
       const rules = storyInitialState.parse(this.data.formData.journeyRules);
       const values = customInitialValues(rules.attributes);
-      this.setData({ initialStateEditor: { show: true, rules, values, error: '' } });
+      this.setData({ initialStateEditor: { show: true, rules, values, carry: this._carryRowsOf(rules.attributes), error: '' } });
+      this.loadAttributeRegistry();
     } catch (error) { cyToast(error.message); }
   },
   closeInitialState() { this.setData({ 'initialStateEditor.show': false }); },
@@ -7033,6 +7178,7 @@ Page({
     if (field === 'attribute.initial') {
       const index = Number(e.currentTarget.dataset.index);
       const rules = this.data.initialStateEditor.rules;
+      if (rules.attributeBinding) { this.setData({ 'initialStateEditor.error': '初值由注册定义管理，请到主题配置调整' }); return; }
       if (!rules.attributes || !rules.attributes[index] || !/^counter\./.test(rules.attributes[index].key || '')) return;
       const attributes = rules.attributes.slice();
       attributes[index] = Object.assign({}, attributes[index], { initial: e.detail.value });
@@ -7062,13 +7208,25 @@ Page({
     if (this.data.editScope === 'WHITELIST') { this.closeInitialState(); return; }
     try {
       const rules = this.data.initialStateEditor.rules;
-      const raw = storyInitialState.serializeChanges(this.data.formData.journeyRules, Object.assign({}, rules, { stateEnabled: rules.hp.enabled || rules.luck.enabled || (Array.isArray(rules.attributes) && rules.attributes.length > 0) }), this._runtimeConfig());
+      const enabled = rules.attributeBinding ? attributeBinding.binding(rules.attributeBinding).enabledKeys.length > 0
+        : Array.isArray(rules.attributes) && rules.attributes.length > 0;
+      let raw;
+      if (rules.attributeBinding) {
+        const local = Object.assign({}, rules, { stateEnabled: rules.hp.enabled || rules.luck.enabled || enabled });
+        delete local.attributes; delete local.statLinks;
+        const normalized = JSON.parse(storyInitialState.serialize(local, this._runtimeConfig()));
+        if (rules.statLinks) normalized.statLinks = rules.statLinks;
+        normalized.attributes = rules.attributes;
+        raw = attributeBinding.requestRules(JSON.stringify(normalized), this._loadedAttributeRules || '', this.data.attributeRegistrySnapshot);
+      } else raw = storyInitialState.serializeChanges(this.data.formData.journeyRules,
+        Object.assign({}, rules, { stateEnabled: rules.hp.enabled || rules.luck.enabled || enabled }), this._runtimeConfig());
       this.setData({ 'formData.journeyRules': raw, 'initialStateEditor.show': false });
     } catch (error) { this.setData({ 'initialStateEditor.error': error.message }); }
   },
 
   // 提交表单
   submitForm() {
+    if (app.ensureLoginFor && !app.ensureLoginFor('publish', () => this.submitForm())) return; // 2026-10-24 游客写前登录
     // 一次性消费放行标记:必须在任何 early return 之前取走并清掉,
     // 否则「确认发布 → 下面某条校验拦下」会把 true 留到下一次点击,让那一版内容静默绕过预检。
     const precheckAcked = this._precheckAcked;
@@ -7155,10 +7313,20 @@ Page({
   // options.draft:存草稿不过「章节与到达关系」闸 —— 删改站点后那道闸本身就要求先存草稿拿到新编号再重设,
   // 拦住存草稿会成死结;发布仍过这道闸,后端校验照旧。
   _buildSubmitPayload(options) {
+    if (Object.keys(this._routeRuleDrafts || {}).length) {
+      if (!(options && options.quiet)) cyToast('有条件与效果未完成，请先补全');
+      return null;
+    }
     const draft = !!(options && options.draft);
     const productType = Number(this.data.formData.productType) === 2 ? 2 : 1;
-    let chapters;
+    let chapters, journeyRules;
     try {
+      const currentRules = this.data.formData.journeyRules || '';
+      if (this.data.editScope !== 'WHITELIST' && attributeBinding.parse(currentRules).attributeBinding && !this._attributeRegistryWriteReady) {
+        throw new Error('请在顶部设置的初始状态中重新读取并确认属性；当前内容已保留在本机');
+      }
+      journeyRules = this.data.editScope === 'WHITELIST' ? currentRules
+        : attributeBinding.requestRules(currentRules, this._loadedAttributeRules || '', this.data.attributeRegistrySnapshot);
       chapters = this._buildSubmitChapters(productType);
     } catch (error) {
       // 组装章节 payload 抛错(节点引用失效等)时点「确认发布」原来是静默无反应 —— 兜住给提示。
@@ -7230,7 +7398,7 @@ Page({
           productType === 1 ? this.data.completionRuleMode : 'ALL',
           this.data.completionRequiredCount),
         { enabled: this.data.bingoRows.some(row => !!(row.label.trim() || row.feedbackText || row.couponId)), cells: this._bingoCellsByPosition() }),
-      journeyRules: this.data.formData.journeyRules || null,
+      journeyRules: journeyRules || null,
       themeRuntimeConfig: this._runtimePayload(),
       // 结局都在章节上(结局章):剧情里的结局清单交给服务端按章重建
       journeyStory: storyEnding.withoutEndingList(this.data.formData.journeyStory) || null,
@@ -7329,7 +7497,7 @@ Page({
                   || confirmedPublication(res.data, id));
                 cb(confirmed ? { ok: true, data: res.data } : { ok: false, networkError: true });
               }
-              else if (res && /^4\d\d$/.test(String(res.code))) cb({ ok: false, msg: res.msg });
+              else if (res && /^4\d\d$/.test(String(res.code))) cb({ ok: false, msg: res.msg, errorCode: res.errorCode || res.data && res.data.errorCode });
               else cb({ ok: false, networkError: true });
             },
             fail: () => { if (isCurrent()) cb({ ok: false, networkError: true }); }
@@ -7477,30 +7645,37 @@ Page({
   getServerDraftSaver() {
     const owner = String(this.data.draftMemberId || app.getUserID() || '');
     const scope = this.data.operationScope;
-    const current = () => !this._unloaded && owner === String(app.getUserID() || '')
+    const authorization = typeof app.getAuthorization === 'function' ? app.getAuthorization() : undefined;
+    const current = () => !this._unloaded && !this._hidden && owner === String(app.getUserID() || '')
+      && authorization === (typeof app.getAuthorization === 'function' ? app.getAuthorization() : undefined)
       && scope === this.data.operationScope;
     const context = JSON.stringify([owner, scope, this._draftIdentity(), this.data.draftUuid,
-      this.data.baseRevision, this._editLoadToken]);
+      this.data.baseRevision, this._editLoadToken, authorization]);
     if (this._serverDraftSaver && this._serverDraftContext !== context) {
       this._serverDraftSaver.destroy();
       this._serverDraftSaver = null;
     }
     if (!this._serverDraftSaver) {
       this._serverDraftContext = context;
+      let publicationVersions = {};
       const reply = (cb, check) => ({
         success: (res) => {
-          if (res.code == '200' && (!check || check(res.data))) cb({ ok: true, data: res.data });
-          else cb({ ok: false, msg: res.code == '200' ? '云端保存的主题内容不完整' : res.msg });
+          if (res && res.code == '200' && (!check || check(res.data))) cb({ ok: true, data: res.data });
+          else if (res && /^4\d\d$/.test(String(res.code)) && Number(res.code) !== 408) cb({ ok: false, msg: res.msg, errorCode: res.errorCode || res.data && res.data.errorCode });
+          else cb({ ok: false, networkError: true, msg: res && res.msg });
         },
-        fail: () => cb({ ok: false, networkError: true })
+        fail: (res, status) => cb(/^4\d\d$/.test(String(status)) && Number(status) !== 408
+          ? { ok: false, msg: res && res.msg, errorCode: res && (res.errorCode || res.data && res.data.errorCode) } : { ok: false, networkError: true })
       });
       this._serverDraftSaver = createServerDraftSaver({ publishCheck: (topicId, cb) => this._topicPublishCheck(topicId, cb), // BL-185
         isCurrent: current,
+        pendingPublication: () => this._publishAttempt,
         pendingPublish: () => this._publishAttempt && this._publishAttempt.kind === 'SERVER_DRAFT'
           ? this._publishAttempt.topicId : 0,
         beforePublish: (topicId) => {
           if (!current()) return false;
-          this._publishAttempt = { status: 'UNKNOWN', kind: 'SERVER_DRAFT', topicId: String(topicId) };
+          this._serverDraftAttempt = null; // 保存内容与版本已经正向回读。
+          this._publishAttempt = Object.assign({ status: 'UNKNOWN', kind: 'SERVER_DRAFT', topicId: String(topicId) }, publicationVersions);
           return this._persistDraftEnvelope();
         },
         save: (payload, cb) => {
@@ -7508,7 +7683,7 @@ Page({
           const handlers = reply(cb);
           // 首次建草稿带稳定意图键(按本机草稿,不随内容变):丢回包后的重试由服务端认出已建的那份,不再新建
           const body = editingId ? Object.assign({}, payload, { id: editingId })
-            : Object.assign({}, payload, { requestId: this._draftCreateIntentKey() });
+            : Object.assign({}, payload, { requestId: payload.requestId || this._draftCreateIntentKey() });
           sendUiStateRequest(app, this._topicEndpoint(payload, editingId), {
             data: JSON.stringify(body),
             method: 'POST',
@@ -7518,8 +7693,22 @@ Page({
           });
         },
         readback: (topicId, cb) => {
-          const handlers = reply(cb, isEditingTopicPayload);
-          sendUiStateRequest(app, '/api/topic/edit-detail', {
+          const handlers = reply((result) => {
+            publicationVersions = {};
+            if (result.ok) {
+              try {
+                const topic = result.data.topic;
+                if (topic.configVersion != null) publicationVersions.configVersion = attributeBinding.version(topic.configVersion);
+                const rules = attributeBinding.parse(result.data.journeyRules || topic.journeyRulesJson);
+                if (rules.attributeBinding) {
+                  publicationVersions = { configVersion: attributeBinding.version(topic.configVersion),
+                    registryVersion: attributeBinding.binding(rules.attributeBinding).registryVersion };
+                }
+              } catch (invalid) { cb({ ok: false, msg: invalid.message }); return; }
+            }
+            cb(result);
+          }, isEditingTopicPayload);
+          app.sendRequest({ url: '/api/topic/author-edit-detail', hideLoading: true,
             method: 'POST',
             data: { id: topicId, scope: this.data.operationScope },
             success: handlers.success,
@@ -7530,7 +7719,7 @@ Page({
           const handlers = reply(cb);
           sendUiStateRequest(app, '/api/topic/publish-draft', {
             method: 'POST',
-            data: { id: topicId, scope: this.data.operationScope },
+            data: Object.assign({ id: topicId, scope: this.data.operationScope }, publicationVersions),
             success: handlers.success,
             fail: handlers.fail
           });
@@ -7555,6 +7744,11 @@ Page({
     if (this.data.submitting || this._serverDraftBusy()) return;
     // 已发布的主题不走草稿(编辑窗口与下架规则不变);回填没到位也不存,免得拿空表单覆盖
     if (this.data.editingTopicId && (!this.data.editLoaded || !this.data.editIsDraft)) return;
+    // 原保存的恢复只使用冻结输入；后来未填完的标题/配置不能阻止查询。
+    if (this._serverDraftAttempt && !automatic) {
+      this._runServerDraft(null, false, false);
+      return;
+    }
     if (!String(this.data.formData.name || '').trim()) {
       if (!automatic) cyToast('先给主题起个名字，再保存草稿');
       return;
@@ -7580,6 +7774,23 @@ Page({
     if (this._draftStorageUnavailable || this._draftScopeUnconfirmed) return;
     if (this._unloaded || !app.getUserID() || (this.data.draftMemberId
         && String(this.data.draftMemberId) !== String(app.getUserID()))) return;
+    const recoveringSave = !!this._serverDraftAttempt;
+    if (recoveringSave) {
+      if (!isRecord(this._serverDraftAttempt.payload)) {
+        this._onServerDraftFailed({ stage: 'save', unknown: true, msg: '原保存输入无法读取，已保留待确认记录' },
+          publish, this.data.draftMemberId || app.getUserID(), automatic);
+        return;
+      }
+      apiData = JSON.parse(JSON.stringify(this._serverDraftAttempt.payload));
+      publish = false; // 先确认原保存；后续发布需用已确认版本另行发起。
+    } else if (!this._publishAttempt) {
+      const frozen = JSON.parse(JSON.stringify(apiData));
+      try { if (!this.data.editingTopicId) frozen.requestId = this._draftCreateIntentKey(); }
+      catch (error) { this._markDraftStorageUnavailable(); return; }
+      this._serverDraftAttempt = { status: 'UNKNOWN', topicId: String(this.data.editingTopicId || ''), payload: frozen };
+      if (!this._persistDraftEnvelope()) { this._serverDraftAttempt = null; return; }
+      apiData = frozen;
+    }
     const previous = this._draftIdentity();
     const memberId = this.data.draftMemberId || app.getUserID();
     const scope = this.data.operationScope;
@@ -7593,7 +7804,9 @@ Page({
       && scope === this.data.operationScope && draftUuid === this.data.draftUuid
       && baseRevision === this.data.baseRevision && editLoadToken === this._editLoadToken
       && activeTopicId === String(this.data.editingTopicId || '');
-    const submittedKey = JSON.stringify(apiData);
+    const authoredPayload = Object.assign({}, apiData);
+    delete authoredPayload.requestId;
+    const submittedKey = JSON.stringify(authoredPayload);
     const saver = this.getServerDraftSaver();
     this._cancelCloudDraftAutosave();
     this._cloudAutosaveQueued = false; // 这次请求已带上排队中的修改;之后的编辑会重新排队
@@ -7602,10 +7815,14 @@ Page({
     if (!automatic) cyLoading.show(publish ? '正在保存并发布' : '正在保存草稿');
     const handlers = {
       isCurrent: current,
+      recoverSave: recoveringSave,
+      recoveryTopicId: recoveringSave && this._serverDraftAttempt.topicId,
       // 只用于保存草稿:回读确认时本机内容已和提交的不一样,就不换上回读版本
-      hasChanges: publish ? undefined : () => this._cloudDraftKey() !== submittedKey,
+      hasChanges: publish ? undefined : () => this._cloudDraftKey() !== submittedKey
+        || Object.keys(this._routeRuleDrafts || {}).length > 0,
       onSaved: (topicId) => {
         activeTopicId = String(topicId);
+        if (this._serverDraftAttempt) this._serverDraftAttempt.topicId = activeTopicId;
         if (String(this.data.editingTopicId) === activeTopicId) return;
         const intent = publishIntent.pending(wx, this._draftCreateIntentScope(), memberId);
         if (intent) publishIntent.settle(wx, this._draftCreateIntentScope(), memberId, intent.key, 'success');
@@ -7614,6 +7831,7 @@ Page({
         this._persistDraftEnvelope();
       },
       onSuccess: (result) => {
+        this._serverDraftAttempt = null;
         if (!automatic) cyLoading.hide();
         // 发布,或上次发布结果不确定、这次查到其实已发布:都按已发布收口
         if (publish || result.published) {
@@ -7640,11 +7858,20 @@ Page({
       },
       onFail: (res) => {
         if (!automatic) cyLoading.hide();
+        if (res && (res.localChanges || res.stage === 'publish' && res.detail
+            || res.stage === 'save' && !res.unknown && !res.networkError)) {
+          this._serverDraftAttempt = null;
+          this._persistDraftEnvelope();
+        } else if (this._serverDraftAttempt && res && res.stage === 'readback') {
+          res = Object.assign({}, res, { unknown: true });
+        }
         if (res && res.localChanges) {
           this._onServerDraftSuperseded(res, previous, automatic);
           return;
         }
-        this._onServerDraftFailed(res || {}, publish, memberId, automatic);
+        this._onServerDraftFailed(Object.assign({}, res, {
+          localChanges: draftRevision !== this._draftContentRevision()
+        }), publish, memberId, automatic);
       }
     };
     const started = publish ? saver.saveAndPublish(apiData, handlers) : saver.save(apiData, handlers);
@@ -7673,23 +7900,38 @@ Page({
   },
 
   _onServerDraftFailed(res, publish, memberId, automatic) {
+    if (res.errorCode && /^(ATTRIBUTE_|STATE_KEY_)/.test(res.errorCode)) {
+      this._attributeRegistryWriteReady = false;
+      this.setData({ attributeRegistrySnapshot: null,
+        attributeRegistryError: res.msg || '属性定义已变化，请重新读取并确认差异' });
+    }
     const creating = !this.data.editingTopicId;
     const reason = res.unknown
       ? (res.stage === 'publish'
         ? '网络中断，暂时确认不了是否已发布；稍后重试会先查询真实状态'
-        : creating ? '网络中断，暂时确认不了是否已保存；再点「保存草稿」会找回同一份草稿，不会重复创建'
-          : '网络中断，暂时确认不了是否已保存；重试会更新同一份草稿')
+        : creating ? '网络中断，暂时确认不了是否已保存；已保留原请求和内容，请勿另建草稿'
+          : (res.msg ? res.msg + '；' : '') + '暂时确认不了原保存结果；重试只核对原主题，当前修改仍在本机')
       : res.networkError ? '网络暂时不可用，当前内容仍在本机，请重试'
         : (res.msg || '保存失败，当前内容已保留，请重试');
     // 存进去了、只是发布这一步没成:先换上回读到的版本(拿到真实编号),本机恢复稿此时才可以清
     if (res.stage === 'publish' && res.detail && res.unknown === false) {
       this._publishAttempt = null;
-      this._adoptServerDraft = { previous: null, memberId };
-      this._draftAutosaveReady = false;
-      this.applyEditingTopic(res.detail);
+      if (res.localChanges) {
+        // 发布被拒不撤销之前已成功的保存；只接上版本，不能换掉在途新编辑。
+        const topic = res.detail.topic || {};
+        this.setData({
+          'formData.configVersion': topicRouteGraph.normalizeTopicRoute(topic).configVersion || this.data.formData.configVersion,
+          baseRevision: topic.updateTime || topic.createTime || this.data.baseRevision
+        });
+        this._persistDraftEnvelope();
+      } else {
+        this._adoptServerDraft = { previous: null, memberId };
+        this._draftAutosaveReady = false;
+        this.applyEditingTopic(res.detail);
+      }
     }
     // 发布阶段失败但草稿已确认存入(上面换上了回读版本)才算已存云端;结果不明确时标待确认
-    const savedToCloud = res.stage === 'publish' && res.detail && res.unknown === false;
+    const savedToCloud = res.stage === 'publish' && res.detail && res.unknown === false && !res.localChanges;
     const saveState = savedToCloud ? 'saved'
       : (res.unknown || res.stage === 'readback' && res.networkError) ? 'unknown' : 'failed';
     if (savedToCloud) this._cloudSavedKey = this._cloudDraftKey();
@@ -7714,10 +7956,12 @@ Page({
     }
     const sheet = res.stage === 'publish'
       ? (res.unknown
-        ? { title: '发布结果待确认', sub: '草稿已保存，可重试', meta: '' }
-        : { title: '草稿已保存，但还没有发布', sub: '草稿已保存，可重试', meta: '' })
+        ? { title: '发布结果待确认', sub: '重试只查询原主题的发布结果', meta: '本机内容已保留' }
+        : res.localChanges
+          ? { title: '本次发布未成功', sub: '提交后的修改仍在本机，请保存后重试', meta: '草稿仍在本机' }
+          : { title: '草稿已保存，但还没有发布', sub: '草稿已保存，可重试', meta: '' })
       : res.stage === 'readback'
-        ? { title: '草稿已存到云端，但确认时发现与本机不一致', sub: '请再点一次「保存草稿」', meta: '草稿仍在本机' }
+        ? { title: '保存结果待确认', sub: '原保存输入和当前修改均已保留，请再次核对', meta: '草稿仍在本机' }
         : res.unknown
           ? { title: '保存结果待确认', sub: '草稿已存本机，可重试', meta: '草稿仍在本机' }
           : publish
@@ -8041,55 +8285,149 @@ Page({
    */
   _adoptPublicTemplate(libraryTemplate) {
     if (this._adoptingPublicTemplate) return;
+    const owner = String(app.getUserID() || '');
+    const scope = this.data.operationScope || '';
+    const sourceId = templateAdoption.id(libraryTemplate.id);
+    const error = message => { this.setData({ templateAdoptionError: message }); cyToast(message); };
+    if (!owner || !sourceId) { error('模板编号无法精确处理，尚未发起采用'); return; }
+    const context = () => JSON.stringify([String(app.getUserID() || ''), this.data.operationScope || '',
+      typeof app.getAuthorization === 'function' ? app.getAuthorization() : '',
+      this.data.draftUuid, this.data.editingTopicId, this._editLoadToken,
+      this.data.nodesForm, this.data.selectedTempSource, this.data.selectedTempId]);
+    const originalContext = context();
+    const current = () => !this._hidden && !this._unloaded && context() === originalContext;
+    let record;
+    try { record = templateAdoption.read(wx, owner, scope, sourceId); }
+    catch (invalid) { error(invalid.message); return; }
+    if (record) {
+      if (record.requestId) { this._recoverTemplateAdoption(record, current); return; }
+      if (record.draftId) { this._readAdoptedTemplate(record, current); return; }
+      error('旧采用结果待确认，原请求没有可查询的编号；请查看我的玩法，勿重复创建'); return;
+    }
     this._adoptingPublicTemplate = true;
-    const that = this;
-    app.sendRequest({
-      url: '/api/template/adopt-draft', method: 'POST', silentError: true,
-      header: { 'Content-Type': 'application/json' },
-      data: JSON.stringify({ originalTemplateId: libraryTemplate.id, title: libraryTemplate.title,
-        adoptSourceOnly: true, scope: this.data.operationScope ? 'MERCHANT' : '' }),
-      success(res) {
-        that._adoptingPublicTemplate = false;
-        const draftId = res && res.code == '200' ? Number(res.data) : 0;
-        if (draftId > 0) {
-          that.getStoryDraftList();
-          app.sendRequest({ url: '/api/template/myinfo', method: 'POST', hideLoading: true, silentError: true,
-            data: { id: draftId, scope: that.data.operationScope },
-            success(detail) {
-              if (detail && detail.code == '200' && isRecord(detail.data) && Number(detail.data.id) === draftId) {
-                if (that.data.selectedTempSource !== 'public'
-                  || Number(that.data.selectedTempId) !== Number(libraryTemplate.id)) return;
-                const reason = that._templateSupportReason(detail.data);
-                if (reason) { cyToast('已存为草稿；' + reason); return; }
-                if (that._bindNodeTemplate(detail.data)) cyToast('已存为我的玩法草稿并绑定');
-              } else cyToast('玩法已采用，请到我的玩法选择草稿');
-            },
-            fail() { cyToast('玩法已采用，请到我的玩法选择草稿'); },
-          });
-          return;
+    app.sendRequest({ url: '/api/template/adoption-source', method: 'GET',
+      data: { originalTemplateId: sourceId, scope },
+      success: res => {
+        this._adoptingPublicTemplate = false;
+        if (!current()) return;
+        const source = res && res.code == 200 && res.data;
+        if (!source || source.originalTemplateId !== sourceId || !/^[a-f0-9]{64}$/.test(source.sourceVersion || '')) {
+          error('来源版本未确认，尚未发起采用'); return;
         }
-        cyToast(res && res.code == '200' ? '采用结果未确认，请到我的玩法确认' : app.getRequestErrorMessage(res, '采用公共玩法失败'));
+        const requestId = 'adopt_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+        record = { schemaVersion: 1, status: 'UNKNOWN', owner, scope, requestId,
+          target: { draftUuid: this.data.draftUuid, topicId: this.data.editingTopicId,
+            node: JSON.parse(JSON.stringify(this.data.nodesForm || {})) },
+          sourceVersion: source.sourceVersion,
+          payload: { originalTemplateId: sourceId, requestId, sourceVersion: source.sourceVersion, scope } };
+        try { templateAdoption.write(wx, record); }
+        catch (_) { error('本地恢复记录保存失败，尚未发起采用'); return; }
+        this._submitTemplateAdoption(record, current);
       },
-      fail(_res, status) {
-        that._adoptingPublicTemplate = false;
-        cyToast(status == 404 || status == 405 ? '当前服务尚未支持采用公共玩法，请更新服务后再试'
-          : '采用结果未确认，请先到我的玩法确认，避免重复创建');
+      fail: () => { this._adoptingPublicTemplate = false; if (current()) error('来源版本读取失败，尚未发起采用'); }
+    });
+  },
+  _submitTemplateAdoption(record, current) {
+    if (this._adoptingPublicTemplate || !current()) return;
+    this._adoptingPublicTemplate = true;
+    this.setData({ templateAdoptionError: '' });
+    app.sendRequest({ url: '/api/template/adopt-draft', method: 'POST',
+      header: { 'Content-Type': 'application/json' }, data: JSON.stringify(record.payload),
+      success: res => {
+        this._adoptingPublicTemplate = false;
+        if (current()) this._acceptTemplateAdoptionReceipt(record, res, current);
+      },
+      fail: () => {
+        this._adoptingPublicTemplate = false;
+        if (current()) this.setData({ templateAdoptionError: '采用结果待确认；再次选择此玩法将查询原请求，不会另建请求' });
       }
     });
   },
+  _recoverTemplateAdoption(record, current) {
+    if (this._adoptingPublicTemplate || !current()) return;
+    this._adoptingPublicTemplate = true;
+    app.sendRequest({ url: '/api/template/adoption-receipt', method: 'GET',
+      data: { requestId: record.requestId, scope: record.scope },
+      success: res => {
+        this._adoptingPublicTemplate = false;
+        if (!current()) return;
+        const facts = res && res.code == 200 && res.data;
+        if (facts && facts.requestId === record.requestId && ['UNKNOWN', 'PENDING'].includes(facts.status)) {
+          // Explicit retry resumes the SAME durable command. A negative query never creates a new intent.
+          this._submitTemplateAdoption(record, current); return;
+        }
+        this._acceptTemplateAdoptionReceipt(record, res, current);
+      },
+      fail: () => { this._adoptingPublicTemplate = false; if (current()) this.setData({ templateAdoptionError: '原请求查询失败，恢复记录保留' }); }
+    });
+  },
+  _acceptTemplateAdoptionReceipt(record, res, current) {
+    const facts = res && res.code == 200 && res.data;
+    if (!facts || facts.requestId !== record.requestId || facts.sourceVersion !== record.sourceVersion
+        || facts.originalTemplateId !== String(record.payload.originalTemplateId)) {
+      this.setData({ templateAdoptionError: '原请求结果未确认，原稿及恢复记录保留' }); return;
+    }
+    if (facts.status === 'REJECTED') {
+      try { templateAdoption.clear(wx, record); } catch (_) { /* Re-read the same rejection. */ }
+      this.setData({ templateAdoptionError: '原采用已拒绝：' + (facts.reason === 'SOURCE_VERSION_CONFLICT' ? '来源已改变或下架' : '来源内容、玩法能力或资产资格未通过校验') + '。再次选择会重新确认来源版本' }); return;
+    }
+    const draftId = templateAdoption.id(facts.draftId);
+    if (facts.status !== 'COMPLETED' || !draftId) {
+      this.setData({ templateAdoptionError: '采用尚未确认完成，恢复记录保留' }); return;
+    }
+    record.draftId = draftId;
+    try { templateAdoption.write(wx, record); }
+    catch (_) { this.setData({ templateAdoptionError: '结果未能保存，请保留页面后按原请求重查' }); return; }
+    this._readAdoptedTemplate(record, current);
+  },
+  _readAdoptedTemplate(record, current) {
+    if (this._adoptingPublicTemplate) return;
+    this._adoptingPublicTemplate = true;
+    const failed = message => this.setData({ templateAdoptionError: message });
+    const handlers = { hideLoading: true,
+      success: detail => {
+        this._adoptingPublicTemplate = false;
+        if (!current()) return;
+        if (!detail || detail.code != '200' || !isRecord(detail.data)
+            || templateAdoption.id(detail.data.id) !== record.draftId
+            || !Object.prototype.hasOwnProperty.call(detail.data, 'advancedConfigJson')) {
+          failed('草稿详情未确认，原稿未改变；再次选择此公共玩法只回读原草稿'); return;
+        }
+        const reason = this._templateSupportReason(detail.data);
+        if (reason) { failed('已存为草稿；' + reason); return; }
+        if (this._bindNodeTemplate(detail.data)) {
+          try { templateAdoption.clear(wx, record); } catch (_) { /* Retrying reads the same known draft. */ }
+          this.setData({ templateAdoptionError: '' });
+          cyToast('已存为我的玩法草稿并绑定');
+        }
+      },
+      fail: () => {
+        this._adoptingPublicTemplate = false;
+        if (current()) failed('草稿详情读取失败，原稿未改变；再次选择此公共玩法只回读原草稿');
+      }
+    };
+    if (record.requestId) app.sendRequest({ ...handlers, url: '/api/template/adoption-detail', method: 'GET',
+      data: { requestId: record.requestId, scope: record.scope } });
+    else app.sendRequest({ ...handlers, url: '/api/template/author-myinfo', method: 'POST',
+      data: { id: record.draftId, scope: record.scope } });
+  },
+  inspectAdoptedTemplates() {
+    this.getStoryDraftList();
+    this.setData({ nodeSheetView: 'games' });
+  },
   _bindNodeTemplate(selectedTemplate) {
     if (!Object.prototype.hasOwnProperty.call(selectedTemplate, 'advancedConfigJson')) {
-      if (this._loadingSelectedTemplate === Number(selectedTemplate.id)) return;
-      this._loadingSelectedTemplate = Number(selectedTemplate.id);
+      if (this._loadingSelectedTemplate === templateAdoption.id(selectedTemplate.id)) return;
+      this._loadingSelectedTemplate = templateAdoption.id(selectedTemplate.id);
       const token = (this._nodeTemplateLoadToken || 0) + 1;
       this._nodeTemplateLoadToken = token;
       const that = this;
-      app.sendRequest({ url: '/api/template/myinfo', method: 'POST', hideLoading: true, silentError: true,
+      app.sendRequest({ url: '/api/template/author-myinfo', method: 'POST', hideLoading: true, silentError: true,
         data: { id: selectedTemplate.id, scope: this.data.operationScope },
         success(res) {
           if (token !== that._nodeTemplateLoadToken) return;
           that._loadingSelectedTemplate = 0;
-          if (res && res.code == '200' && isRecord(res.data) && Number(res.data.id) === Number(selectedTemplate.id))
+          if (res && res.code == '200' && isRecord(res.data) && templateAdoption.id(res.data.id) === templateAdoption.id(selectedTemplate.id))
             that._bindNodeTemplate(res.data);
           else cyToast('玩法详情未加载，请重新选择');
         },
@@ -8148,7 +8486,7 @@ Page({
     this._openNodePlanEndings(node.templateInfo || {}, old);
   },
   onEditBoundTemplate(focus) {
-    const id = Number(this.data.nodesForm.templateId);
+    const id = templateAdoption.id(this.data.nodesForm.templateId);
     if (!id) return;
     this._editingBoundTemplateId = id;
     const focusQuery = focus && focus.tool ? '&focusTool=' + encodeURIComponent(focus.tool)
@@ -8156,30 +8494,30 @@ Page({
       + '&focusMessage=' + encodeURIComponent(focus.message || '') : '';
     wx.navigateTo({ url: '/pages/publish/temp/index?from=fabu&id=' + id
       + (this.data.operationScope === 'MERCHANT' ? '&scope=MERCHANT&templateScope=my' : '&scope=my')
-      + '&runtimeEndings=' + encodeURIComponent(JSON.stringify((this._runtimeConfig().endings || []).map(row => ({ id: row.id, title: row.title }))))
+      + '&runtimeEndings=' + encodeURIComponent(JSON.stringify((this._runtimeConfig().endings || []).map(row => ({ id: row.id, title: row.title })))) + checkContext.query(this.data.formData.journeyRules)
       + (this.data.supportMatrix ? '&supportContext=' + encodeURIComponent(JSON.stringify(this._nodeSupportContext())) : '') + focusQuery });
   },
   onCopyBoundTemplate() {
     const node = this.data.nodesForm;
-    const sourceId = Number(node && node.templateId);
+    const sourceId = templateAdoption.id(node && node.templateId);
     if (this._copyingBoundTemplate || this.data.nodeCopyUncertain || !sourceId
       || (this.data.nodeSharedSites || []).length < 2) return;
     this._copyingBoundTemplate = true;
     this.setData({ nodeCopyBusy: true, nodeCopyError: '' });
     const nodeKey = templateBinding.nodeKey(node);
     const that = this;
-    app.sendRequest({ url: '/api/template/myinfo', method: 'POST', hideLoading: true, silentError: true,
+    app.sendRequest({ url: '/api/template/author-myinfo', method: 'POST', hideLoading: true, silentError: true,
       data: { id: sourceId, scope: this.data.operationScope },
       success(detail) {
         const source = detail && detail.code == '200' && isRecord(detail.data)
-          && Number(detail.data.id) === sourceId && typeof detail.data.title === 'string'
+          && templateAdoption.id(detail.data.id) === sourceId && typeof detail.data.title === 'string'
           && Object.prototype.hasOwnProperty.call(detail.data, 'advancedConfigJson') ? detail.data : null;
         if (!source) {
           that._copyingBoundTemplate = false;
           that.setData({ nodeCopyBusy: false, nodeCopyError: '玩法详情未加载，请重试' });
           return;
         }
-        if (that.data.nodesForm !== node || Number(that.data.nodesForm.templateId) !== sourceId) {
+        if (that.data.nodesForm !== node || templateAdoption.id(that.data.nodesForm.templateId) !== sourceId) {
           that._copyingBoundTemplate = false;
           that.setData({ nodeCopyBusy: false });
           return;
@@ -8202,7 +8540,7 @@ Page({
                 nodeCopyUncertain: !!(saved && saved.code == '200') });
               return;
             }
-            if (that.data.nodesForm !== node || Number(that.data.nodesForm.templateId) !== sourceId
+            if (that.data.nodesForm !== node || templateAdoption.id(that.data.nodesForm.templateId) !== sourceId
               || templateBinding.nodeKey(that.data.nodesForm) !== nodeKey) {
               that.setData({ nodeCopyBusy: false, nodeCopyUncertain: true,
                 nodeCopyError: '副本已保存，请到我的玩法确认后重新绑定' });
@@ -8250,7 +8588,7 @@ Page({
     const hasPlanEndings = Object.keys(this._nodeBindingDraft?.planEndings || {}).length > 0;
     if (!this._nodeBindingSlots.length && !hasPlanEndings && !(runtime.templateBindings && runtime.templateBindings[key])) return;
     const bindings = Object.assign({}, runtime.templateBindings || {});
-    if ((this._nodeBindingSlots.length || hasPlanEndings) && this._nodeBindingDraft && Number(node.templateId))
+    if ((this._nodeBindingSlots.length || hasPlanEndings) && this._nodeBindingDraft && templateAdoption.id(node.templateId))
       bindings[key] = this._nodeBindingDraft;
     else delete bindings[key];
     if (Object.keys(bindings).length) runtime.templateBindings = bindings;
@@ -8324,17 +8662,17 @@ Page({
     return binding;
   },
   _loadNodeTemplateDetail(node) {
-    const id = Number(node.templateId);
+    const id = templateAdoption.id(node.templateId);
     if (!id) return;
     this._templateDetailRequested = Object.assign({}, this._templateDetailRequested, { [id]: true });
     const that = this;
-    app.sendRequest({ url: '/api/template/myinfo', method: 'POST', hideLoading: true, silentError: true,
+    app.sendRequest({ url: '/api/template/author-myinfo', method: 'POST', hideLoading: true, silentError: true,
       data: { id, scope: this.data.operationScope },
       success(res) {
-        if (!(res && res.code == '200' && isRecord(res.data) && Number(res.data.id) === id)) return;
+        if (!(res && res.code == '200' && isRecord(res.data) && templateAdoption.id(res.data.id) === id)) return;
         that._templateDetailsById = Object.assign({}, that._templateDetailsById, { [id]: res.data });
         const open = that.data.nodesForm;
-        if (open && Number(open.templateId) === id && (!node.id && !node._localId
+        if (open && templateAdoption.id(open.templateId) === id && (!node.id && !node._localId
           || templateBinding.nodeKey(open) === templateBinding.nodeKey(node))) {
           that.setData({ 'nodesForm.templateInfo': res.data });
           that._openNodeBinding(Object.assign({}, open, { templateInfo: res.data }));
@@ -8342,7 +8680,7 @@ Page({
         if (that.data.supportMatrix) that._syncRuntimeStats();
         that.refreshPrimaryActionState();
       },
-      fail() { if (Number(that.data.nodesForm.templateId) === id) that.setData({ nodeBindingError: '玩法详情未加载，请重新打开节点' }); },
+      fail() { if (templateAdoption.id(that.data.nodesForm.templateId) === id) that.setData({ nodeBindingError: '玩法详情未加载，请重新打开节点' }); },
     });
   },
   /**
@@ -8358,7 +8696,7 @@ Page({
       this.setData({ 'nodesForm.showTemplate': true });
       // 2026-10-12 用户定(推翻 2026-08-20 那条「直接进模板编辑器」):开「配置模板」打开本弹层里的
       // 玩法库视图 —— 底部横滑卡片选已保存的模板(公共库 / 我的草稿 / 我的模板),要新建再从那里进编辑器。
-      if (!Number(this.data.nodesForm.templateId)) this.showTemp();
+      if (!templateAdoption.id(this.data.nodesForm.templateId)) this.showTemp();
       return;
     }
     this._nodeBindingSlots = [];
@@ -8424,7 +8762,7 @@ Page({
     const nodeName = this.data.nodesForm.name || ('节点' + (this.data.editTargetNodeLid || ''));
     if (this._navigating) return; this._navigating = true; wx.navigateTo({ // 跳转中不响应连点,免得叠两层玩法编辑页
       url: '/pages/publish/temp/index?from=fabu&themeName=' + encodeURIComponent(themeName || '')
-        + '&nodeName=' + encodeURIComponent(nodeName || '')
+        + '&nodeName=' + encodeURIComponent(nodeName || '') + checkContext.query(this.data.formData.journeyRules)
         + (this.data.supportMatrix ? '&supportContext=' + encodeURIComponent(JSON.stringify(ctx)) : '')
         + (game ? '&game=' + encodeURIComponent(game.key) + (dataset.preview ? '&sample=1' : '') : '')
         + (this.data.operationScope ? '&scope=MERCHANT' : ''),
@@ -8455,7 +8793,7 @@ Page({
     app.sendRequest({
       hideLoading: true,
       silentError: true,
-      url: '/api/template/homeData',
+      url: '/api/template/adoption-home',
       method: 'POST',
       data: {},
       success: function (res) {
@@ -8651,8 +8989,38 @@ Page({
   // 路线地图视图 = 纯函数,见 utils/publish/route-map-view.js。
   // 这里只做三件页面才能做的事:取 data 切片、存 markerMap 反查表、setData。
   // 配色/简化阈值/折线规则那 178 行搬去模块后有了单测覆盖 —— 埋在页面里时一行都没有。
+  // P-45:离屏画玩家地图同款圆点图钉(utils/play-marker-draw.js),只画一次;画完重绘一遍地图。
+  // 画失败就留空,route-map-view 回落旧图钉,不影响编辑。
+  _ensureRouteIcons() {
+    if (this._routeIcons || this._routeIconsPending || !wx.canvasToTempFilePath || !this.createSelectorQuery) return;
+    this._routeIconsPending = true;
+    const done = (icons) => {
+      this._routeIconsPending = false;
+      this._routeIcons = icons;
+      if (!this._unloaded && icons.actionable) this.buildRouteMap();
+    };
+    this.createSelectorQuery().select('#routeIconCv').fields({ node: true }).exec((res) => {
+      const cv = res && res[0] && res[0].node;
+      // 地图层还没渲染出来(画布跟着地图 wx:if):不记结果,下次重绘地图再试
+      if (!cv) { this._routeIconsPending = false; return; }
+      const S = 108; cv.width = S; cv.height = S;
+      const g = cv.getContext('2d'), icons = {};
+      const keys = ['actionable', 'candidate', 'target'];
+      const next = (i) => {
+        if (i >= keys.length) { done(icons); return; }
+        drawPlayStateMarker(g, S, keys[i]);
+        wx.canvasToTempFilePath({ canvas: cv, fileType: 'png',
+          success: (r) => { icons[keys[i]] = r.tempFilePath; next(i + 1); },
+          fail: () => done({}) });
+      };
+      next(0);
+    });
+  },
+
   buildRouteMap() {
+    this._ensureRouteIcons();
     const view = routeMapView.buildRouteMapView({
+      icons: this._routeIcons,
       chapters: (this.data.formData && this.data.formData.chapters) || [],
       selectedNodeLid: this.data.selectedNodeLid,
       pendingMaterials: this.data.pendingMaterials,
@@ -8680,20 +9048,28 @@ Page({
   },
 
   // BL-185:存好并回读确认后、publish-draft 之前,对已存的这一版跑一次只读试检查。
-  // error 不发布;只有 warn 时提示,用户点「继续发布」才发。试检查本身拿不到结果不拦 ——
-  // publish-draft 服务端照样会拦,这里只是把问题提前一次说全。
+  // error 不发布；warning 等作者确认，HTTP complete不代表作者已选择。
   _topicPublishCheck(topicId, cb) {
     let settled = false;
-    const done = (result) => { if (!settled) { settled = true; cb(result); } };
+    let awaitingDecision = false;
+    const owner = String(app.getUserID() || '');
+    const scope = this.data.operationScope;
+    const epoch = this._precheckToken || 0;
+    const current = () => !this._hidden && !this._unloaded && epoch === (this._precheckToken || 0)
+      && owner === String(app.getUserID() || '') && scope === this.data.operationScope;
+    const done = (result) => { if (!settled && current()) { settled = true; cb(result); } };
+    const unavailable = () => done({ ok: false, msg: '发布检查暂未完成，草稿已保存，请重试' });
     app.sendRequest({
       url: '/api/topic/publish-check',
       method: 'GET',
       hideLoading: true,
-      silentError: true,
       data: { topicId, scope: this.data.operationScope },
       success: (res) => {
-        const issues = (res && res.code == '200' && Array.isArray(res.data) ? res.data : [])
-          .filter((issue) => issue && issue.message);
+        if (!current() || settled || awaitingDecision) return;
+        if (!res || res.code != '200' || !Array.isArray(res.data)
+            || res.data.some(issue => !issue || typeof issue.message !== 'string' || !issue.message
+              || !['error', 'warn'].includes(issue.level))) { unavailable(); return; }
+        const issues = res.data;
         const errors = issues.filter((issue) => issue.level === 'error');
         const warns = issues.filter((issue) => issue.level !== 'error');
         if (errors.length) {
@@ -8701,6 +9077,7 @@ Page({
           return;
         }
         if (!warns.length) { done({ ok: true }); return; }
+        awaitingDecision = true;
         cyLoading.hide();
         modal.show({
           title: '发布前提示',
@@ -8708,14 +9085,15 @@ Page({
           confirmText: '继续发布',
           cancelText: '再改改',
           success: (r) => {
+            if (!current() || settled) return;
             if (r && r.confirm) cyLoading.show('正在保存并发布');
             done(r && r.confirm ? { ok: true } : { ok: false, msg: '已暂停发布，草稿已保存' });
           },
           fail: () => done({ ok: false, msg: '已暂停发布，草稿已保存' })
         });
       },
-      fail: () => done({ ok: true }),
-      complete: () => done({ ok: true })
+      fail: unavailable,
+      complete: () => { if (!awaitingDecision) unavailable(); }
     });
   },
 });

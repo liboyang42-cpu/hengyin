@@ -13,6 +13,8 @@ const motion = require('../../utils/motion.js');
 const config = require('../../utils/config.js');
 const { pickLocation } = require('../../utils/location/location-manager.js');
 const analytics = require('../../utils/analytics.js');
+// U-171 分享回执的渠道码(埋点只放码,不放中文渠道名以外的任何内容)
+const ROAM_SHARE_CHANNEL_CODE = { '广场': 'square', '保存': 'album', '朋友圈': 'moments', '小红书': 'xhs' };
 const { activityShareFromEvent } = require('../../utils/activity-share.js');
 const { buildPlayHeader, buildPlayHud, createSessionClock } = require('../../utils/play-ui-contract.js');
 const {
@@ -24,6 +26,7 @@ const {
 } = require('../../utils/play-state-contract.js');
 const { drawPlayStateMarker } = require('../../utils/play-marker-draw.js');
 const { readReducedMotion, writeReducedMotion } = require('../../utils/motion-preference.js');
+const { readFogOff, writeFogOff } = require('../../utils/roam-fog-preference.js');
 const countUp = require('../../utils/count-up.js');
 const { selectDemoRoamPois } = require('../../utils/roam-demo-gate.js');
 const {
@@ -78,6 +81,7 @@ const { currentScene, exitDecision, popScene, pushScene } = require('../../utils
 // 个性化地图(暗色底图)与 play 页共用一份配置,见 utils/map-style.js
 const { MAP_STYLE } = require('../../utils/map-style.js');
 const { getScene } = require('../../utils/scene-registry.js');
+const { openScene: openPageScene } = require('../../utils/scene-entry.js');
 const { getNodeLevelStyle, buildNodeLevelMarkerStyle } = require('./node-level-style.js'); const entryMap = require('../../utils/roam-entry-map.js');
 // 后台定位开关(与 play 页共用,引用计数收口)。★必须在模块顶层:#750 曾把这行插进 req() 函数体,
 // bgTracker 变成 req 的局部变量,_startReal 一调就 ReferenceError —— 漫游实时定位整条静默死掉。
@@ -252,6 +256,7 @@ function httpFail(res) { return !!res && res.httpFail === true; }
 // 官方活动虽可匿名访问，但登录态会返回报名进度，不能强制降为匿名请求。
 const { createRoamNpcCoordinator } = require('../../utils/roam-npc-coordinator.js');
 const { activeRoamEventCard, applyEventCard } = require('../../utils/roam-official-active.js');
+const { latestTrackThumb, latestStampImage, latestBadgeImage } = require('../../utils/roam-passport-tiles.js');
 const { persistPhoto, retainRecentPhotos, archivedSessionPhotos, droppedSavedPhotos, evictedSavedPhotos, releaseSavedPhotos } = require('../../utils/roam-session-photos.js');
 
 const NPC_JSON_HEADER = { header: { 'content-type': 'application/json' } };
@@ -296,7 +301,7 @@ Page({
     privacyGateShow: false,
     // BL-01 漫游点位筛选(范围 + 只看未到过),值在 utils/roam-poi-filter.js。
     poiFilter: { radiusM: 3000, unvisitedOnly: false }, poiFilterTabs: roamPoiFilter.radiusTabs(),
-    screen: 'entry-map', entryMarkers: [], entryCards: [], entryActivity: null, entryTeam: null, entrySheet: '', entrySheetView: 'main', entrySheetIn: false, entryLayers: { activities: true, teams: true, posts: true }, entryLoadError: false, entryReadAccess: '',
+    screen: 'entry-map', entryMarkers: [], entryCards: [], entryFarCards: [], entryActivity: null, entryTeam: null, entrySheet: '', entrySheetView: 'main', entrySheetIn: false, entryLayers: { activities: true, teams: true, posts: true }, entryLoadError: false, entryReadAccess: '',
     introError: '',
     // 个性化地图透传给本页三个 <free-map>(起始预览 / 主漫游图 / 结算图),三处必须同源,
     // 否则同一次漫游里会出现一亮一暗。值在 utils/map-style.js。
@@ -308,9 +313,11 @@ Page({
     introTab: 'start',            // start=开始漫游 | passport=漫游护照
     introTabs: [{ key: 'start', label: '开始漫游' }, { key: 'passport', label: '漫游护照' }],
     avatar: '',
-    // 护照 tab 的读数全部来自本机 roam_sessions,拿不到就是空态,不摆假卡
+    // 护照统计读取本人服务端完成事实；本机照片保持本机补充。
+    passportError: false,
     passport: { tiles: [], trips: [] }, ppOpen: { show: false, on: false, icon: '', title: '', value: '', style: '' }, // ppOpen:护照方卡放大层
     introCardIdx: 0,
+    fogOff: false, noFogPolys: [], // P-32:迷雾开关(本机偏好);关时 map-polygons 换成空数组
     introCards: [
       { key: 'start', icon: 'route', title: '开始漫游', sub: '走到哪，雾散到哪' },
       { key: 'map', nav: '/subpackageRoam/nearby/index', icon: 'map', title: '打开地图', sub: '寻找组队' },
@@ -404,9 +411,10 @@ Page({
     syncOffline: false, syncOfflineText: ROAM_SYNC_OFFLINE_TEXT,
     recoveryCanContinue: false,
     recoveryError: '',
-    recoveryAvailable: false,
+    // 2026-10-27 owner P-27:「已恢复上次漫游」行已删,recoveryAvailable 无人渲染,随之去掉(死字段门禁 U4)
     roamSessionReady: false,
     locErr: false,
+    locationForegroundOnly: false,
     gpsWeak: '',
     nearestM: 0,
     poiErr: false,
@@ -449,6 +457,8 @@ Page({
   },
   openScene(id, params = {}) {
     const next = getScene(id, params);
+    // G-1(2026-10-27):page 档场景(漫游历史 / 优惠券)是页面,不在地图上压 psheet
+    if (next.variant === 'page' && next.route) { openPageScene(id, params); return true; }
     if (exitDecision(this.data.sceneStack, 'close') === 'confirm') {
       this.setData({ sceneConfirm: { show: true, action: 'replace', pending: next } });
       return false;
@@ -715,48 +725,69 @@ Page({
     this.setData({ introTab });
     if (introTab === 'passport') { this._loadIntroPassport(); this._loadActiveRoamEvents(); }
   },
-  /** 护照 tab 读数:全部来自本机 roam_sessions,拿不到就是 0,不摆假数。
-   *  分两层(2026-08-08 定稿)——
-   *    上排方卡 = 我的档案,按「回看频率 × 情感价值」排:记录 > 集邮 > 勋章 > 数据
-   *    下排大卡 = 去玩什么,只留需要「被看见才会点」的:官方活动 / 发现店铺
-   *  ⚠️ 大卡是稀缺位(398rpx 高),收藏类是常驻入口,别往下排塞 —— 没封面图的大卡就是一块黑。 */
-  _loadIntroPassport() {
-    const sessions = roamMemory(this).readSessions();
-    let shops = 0;
-    let stamps = 0;
-    let km = 0;
-    const days = new Set();
-    sessions.forEach((s) => {
-      shops += Number(s.shops) || 0;
-      stamps += Array.isArray(s.photos) ? s.photos.length : 0;
-      km += parseFloat(s.distance) || 0;
-      if (s.date) days.add(s.date);
-    });
+  /** 服务端已完成事实作为护照统计；本机照片仅作本机补充，不上传。 */
+  async _loadIntroPassport() {
+    if (this._passportReader) this._passportReader.dispose();
+    const { createReader } = require('../../utils/roam-passport-read.js');
+    const reader = this._passportReader = createReader(getApp(), wx);
+    const scope = this._roamReadScope(), startGeneration = this._roamStartGen;
+    const current = () => reader.current() && scope() && !this._unloaded && !this._hidden
+      && startGeneration === this._roamStartGen && reader === this._passportReader;
+    this.setData({ passportLoading: true, passportError: false, passport: { stats: [], tiles: [], plays: [] } });
+    let stamps = null, localRows = [];
+    try { localRows = reader.local(); stamps = localRows.reduce((n, row) => n + (Array.isArray(row.photos) ? row.photos.length : 0), 0); } catch (_) { /* Keep server read independent of local storage. */ }
+    let summary;
+    try { summary = await reader.summary(); }
+    catch (_) {
+      if (!current()) return;
+      this._activeRoamToken = null; this._activeRoamEventId = '';
+      this.setData({ passportLoading: false, passportError: true, passport: { stats: [], tiles: [], plays: [] } });
+      return;
+    }
+    if (!current()) return;
+    const value = n => n == null ? '—' : n;
     this.setData({
+      passportLoading: false, passportError: false,
       passport: {
-        // 读数直接上 tab 顶部:真内容就这四个,不值一层弹窗(原「漫游数据」卡已取消)
         stats: [
-          { k: '漫游', v: sessions.length },
-          { k: '探店', v: shops },
-          { k: '活跃日', v: days.size },
-          { k: '公里', v: km.toFixed(1) },
+          { k: '漫游', v: summary.trips },
+          { k: '探店', v: value(summary.shops) },
+          { k: '活跃日', v: value(summary.days) },
+          { k: '公里', v: summary.distanceM == null ? '—' : (summary.distanceM / 1000).toFixed(1) },
         ],
+        // 2026-10-27 owner P-29:三张档案卡用真实图片(最近轨迹 / 最新邮票 / 最新点亮勋章);拿不到用各自的插画图标(2026-10-28 业主:原图标太丑)
         tiles: [
-          { key: 'history', icon: 'route', title: '漫游记录', value: sessions.length + ' 次旅程' },
-          { key: 'stamp', icon: 'image', title: '集邮册', value: stamps + ' 张邮票' },
-          { key: 'badge', icon: 'star', title: '勋章墙', value: '我的徽章' },
+          { key: 'history', icon: 'route', title: '漫游记录', value: summary.trips + ' 次已完成旅程', img: latestTrackThumb(localRows), art: '/images/roam/tile-route.svg' },
+          { key: 'stamp', icon: 'image', title: '集邮册', value: stamps == null ? '本机邮票暂不可读' : stamps + ' 张本机邮票', img: latestStampImage(localRows), art: '/images/roam/tile-stamp.svg' },
+          { key: 'badge', icon: 'star', title: '勋章墙', value: '我的徽章', img: '', art: '/images/roam/tile-medal.svg' },
           // 2026-10-14 随漫游上线的两项(读数在各自页面现读,方卡不摆数字)
-          { key: 'goals', icon: 'flag', title: '探索目标', value: '给自己定个小目标', isNew: true },
-          { key: 'capsule', icon: 'clock', title: '时光胶囊', value: '写给以后的自己', isNew: true },
+          { key: 'goals', icon: 'flag', title: '探索目标', value: '给自己定个小目标' },
+          { key: 'capsule', icon: 'clock', title: '时光胶囊', value: '写给以后的自己' },
         ],
+        // 2026-10-28 业主:「官方活动就是漫游」—— 大卡常驻(不再是「暂未开放」灰卡),有可参与的活动时换上它的封面(_loadActiveRoamEvents)
         plays: [
-          // 官方活动暂未开放(用户裁决):卡片留位、点按只提示,不进列表
-          { key: 'event', icon: 'calendar', title: '官方活动', sub: '限时任务与奖励', cover: '', closed: true },
-          { key: 'discover', icon: 'discover-shop', title: '发现附近店铺', sub: '现在能去哪', cover: '' },
+          { key: 'event', icon: 'calendar', title: '官方活动', sub: '限时任务与奖励', cover: '' }, { key: 'discover', icon: 'discover-shop', title: '发现附近店铺', sub: '现在能去哪', cover: '' },
         ],
       },
     });
+    this._loadActiveRoamEvents();
+    if (typeof getApp().sendRequest === 'function') this._loadPassportBadge();
   },
+  // P-29:勋章墙方卡取最新点亮的那枚勋章图;失败静默,方卡保持空态插画
+  _loadPassportBadge() {
+    const token = {};
+    this._passportBadgeToken = token;
+    req('/api/medal/wall', 'POST', {}, { silentError: true }).then((res) => {
+      if (this._passportBadgeToken !== token || !apiOk(res) || !res.data) return;
+      const app = getApp();
+      const raw = latestBadgeImage(res.data.medals);
+      const img = raw && typeof app.getImgUrl === 'function' ? app.getImgUrl(raw) : raw;
+      const tiles = (this.data.passport && this.data.passport.tiles) || [];
+      const idx = tiles.findIndex((t) => t.key === 'badge');
+      if (img && idx >= 0) this.setData({ ['passport.tiles[' + idx + '].img']: img });
+    });
+  },
+  retryPassport() { return this._loadIntroPassport(); },
   onPassportTileTap(e) {
     const key = e.currentTarget.dataset.key; if (!e.ppExpanded && this._ppExpand(key)) return; // 2026-10-22:先放大成大卡再执行原动作
     if (key === 'history') this.openRoamHistory();
@@ -770,22 +801,27 @@ Page({
   },
   // BL-41:护照「官方活动」大卡读可参与的漫游官方活动;失败静默,卡片保持原文案。
   _loadActiveRoamEvents() {
+    if (this.data.passportError) return;
+    const current = this._roamReadScope();
     const token = {};
     this._activeRoamToken = token;
     this._activeRoamEventId = '';
     req('/api/official/active-for-roam', 'GET', {}, { silentError: true }).then((res) => {
-      if (this._activeRoamToken !== token || !apiOk(res)) return;
+      if (!current() || this._unloaded || this._activeRoamToken !== token || !apiOk(res)) return;
       const card = activeRoamEventCard(res.data);
       const passport = this.data.passport || {};
       if (!card || !Array.isArray(passport.plays)) return;
       this._activeRoamEventId = card.eventId;
-      this.setData({ 'passport.plays': applyEventCard(passport.plays, card) });
+      // P-29:没有可参与活动时不摆灰卡;有活动才把官方活动大卡插到最前
+      const plays = passport.plays.some((p) => p && p.key === 'event') ? passport.plays
+        : [{ key: 'event', icon: 'calendar', title: '官方活动', sub: '限时任务与奖励', cover: '' }].concat(passport.plays);
+      this.setData({ 'passport.plays': applyEventCard(plays, card) });
     });
   },
   onPassportPlayTap(e) {
     const key = e.currentTarget.dataset.key;
     if (key === 'event' && this._activeRoamEventId) { if (this._eventNavigating) return; this._eventNavigating = true; wx.navigateTo({ url: '/pages/activity/official-detail/index?id=' + this._activeRoamEventId, complete: () => { this._eventNavigating = false; } }); return; } // 跳转中不响应连点,免得叠两层活动详情
-    if (key === 'event') return;   // 官方活动暂未开放:卡上已标状态,点按不进列表
+    if (key === 'event') { this.openRoamTasks(); return; }   // 没有单场可直达时进官方活动任务列表
     // 发现附近店铺:漫游开始前 _pois 为空、横滑条只在 map 态渲染,原 goDiscover 在这里只会弹「没有合作商家」→ 改去地图
     this.openNearbyMap();
   },
@@ -803,8 +839,6 @@ Page({
   },
   openNearbyMap() { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageRoam/nearby/index', complete: () => { this._navigating = false; } }); },
   openMyTeams() { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageRoam/my-teams/index', complete: () => { this._navigating = false; } }); },
-  /** 护照 tab 的三格读数 + 旅程卡:唯一数据源是本机 roam_sessions(与 passport/history 两页同源)。
-   *  storage 读不出来 = 真的没有记录 ⇒ trips 空、三格全 0,由 wxml 出空态文案;不编数字。 */
   /* 设置页的权限状态:位置权限(scope.userLocation)与后台持续定位(scope.userLocationBackground)
      都从系统里读,不猜、不写死。拿不到就保持原值(宁可显示旧值,也不翻成「关」骗人)。 */
   _syncRoamPermission() {
@@ -839,6 +873,12 @@ Page({
     }
     this.setData({ reducedMotion });
     cyToast(reducedMotion ? '已减少动态效果' : '已恢复动态效果');
+  },
+  // 2026-10-27 owner P-32:设置里关掉迷雾 —— 只停画雾层,足迹/点亮照常记;地点搜索本来就不受迷雾影响
+  toggleFogOff() {
+    const fogOff = writeFogOff(null, !this.data.fogOff); if (fogOff === null) { cyToast('设置未保存，请重试'); return; }
+    this.setData({ fogOff });
+    cyToast(fogOff ? '已关闭迷雾' : '已开启迷雾');
   },
   _triggerCelebration(moment) {
     if (!moment) return;
@@ -883,6 +923,7 @@ Page({
       chrome,
       isDevtools: this._isDevtools(),
       reducedMotion: readReducedMotion(),
+      fogOff: readFogOff(),
     });
     // BL-23:入口地图首屏不再固定落在默认城市坐标 —— 有上次成功定位就从那里开始
     const lastPoint = lastLocation.load();
@@ -1521,7 +1562,7 @@ Page({
     this._roamRecoveryAbandoned = true; this._shopMedalFromServer = false;
     this._recoveryNeedsLookup = this._revealBootstrapUnknown = this._recoveryReadFailed = false;
     this._finishRequested = false; this._revealInFlight = false;
-    this.setData({ recoveryError: '', recoveryAvailable: false, recoveryCanContinue: false, revealWriteUnknown: false });
+    this.setData({ recoveryError: '', recoveryCanContinue: false, revealWriteUnknown: false });
   },
 
   _resetRoamRecoverySession() {
@@ -1570,7 +1611,7 @@ Page({
       medal: { show: false }, discoverReward: { show: false, poi: {} },
       visit: { active: false, checkinOk: false, poi: {}, photos: [] },
       archSegs: [], archPois: [], archEnd: {}, 'share.squarePostUnknown': this._squarePostUnknown,
-      recoveryError: '', recoveryAvailable: false,
+      recoveryError: '',
       recoveryCanContinue: false, revealWriteUnknown: false, roamSessionReady: false });
   },
 
@@ -1580,7 +1621,7 @@ Page({
   },
 
   _recoveryFailure(message) {
-    this.setData({ recoveryError: message, recoveryAvailable: true });
+    this.setData({ recoveryError: message });
     if (this.data.screen === 'arrive') this.setData({ 'finish.settleErr': 'recovery' });
     return false;
   },
@@ -1646,7 +1687,7 @@ Page({
     }
     this._eventId = r.eventId || 0; this._eventMissionCode = r.missionCode || '';
     this._recoveryNeedsLookup = true;
-    this.setData({ recoveryAvailable: true, roamSessionReady: false });
+    this.setData({ roamSessionReady: false });
     if (r.finishRequested) this.setData({ screen: 'arrive', finish: r.finish || {} });
     this.recoverRoam();
     return true;
@@ -2010,7 +2051,7 @@ Page({
     const shopMedal = result.shopMedal && delivered(result.shopMedal.code) ? result.shopMedal : null;
     this.setData({ screen: 'arrive', 'finish.xpAwarded': result.totalXp, 'finish.medal': medal,
       'finish.shopMedal': shopMedal, 'finish.routeStory': result.routeStory || '',
-      'finish.resultIncomplete': !complete, 'finish.settleErr': '', recoveryError: '', recoveryAvailable: false });
+      'finish.resultIncomplete': !complete, 'finish.settleErr': '', recoveryError: '' });
     this._shopMedalFromServer = !!shopMedal;
     const memory = roamMemory(this);
     const archiveState = memory.readSessionState();
@@ -2318,9 +2359,9 @@ Page({
 
   /* 顶部输入地址的候选(§6.1)。喂的是这张图上真有的点位:
    *   挂着主题的 = 按玩法给绿 / 蓝针;没挂主题的 = 灰针 + 副标题「没有局」。
-   * ⚠️ 雾里的点不进候选 —— 搜出一个自己还没走到、地图上看不见的地方,等于把雾直接绕过去。 */
+   * 2026-10-27 owner P-32:搜地点不受迷雾影响 —— 雾里的点也进候选,开着迷雾也能搜、能导航(取代原「雾里的点不进候选」)。 */
   _searchPlaces() {
-    return (this._pois || []).filter((p) => p.state !== 'fog' && p.lat && p.lng).map((p) => ({
+    return (this._pois || []).filter((p) => p.lat && p.lng).map((p) => ({
       id: String(p.id),
       name: p.name || '未命名地点',
       address: p.desc || '',
@@ -2705,16 +2746,22 @@ Page({
     if (this._roamStartPending) return;
     // 未登录不开漫游:没有会话时 /api/roam/* 全被后端 401 挡下 —— 据点层永远「没加载出来」、
     // 每次揭雾上报弹一次「请先登录」、结算永远失败,而页面自己没有任何出路。
-    // 先补一次登录(单航班,与首登共享在途锁);仍没会话就把门闩放掉,给一句人话让人再点。
+    // 2026-10-24 owner 拍板「游客可浏览，写入时弹窗登录」:开漫游会写足迹进度,游客先弹「登录后继续」
+    // (app.requireLogin,单航班 firstLogin),登录成功恢复本次开局;点「暂不登录」页面原样不动。
+    // 仍没会话就把门闩放掉,给一句人话让人再点。
     // ⚠️ 只在能拿到会话 API 时才判:getApp 抛 / getUserID 不存在(测试沙箱、极早期初始化)
     //    一律放行走原流程 —— 门闩语义不能因为判登录这层新闸被改变。
     let loginApp = null;
     try { loginApp = getApp(); } catch (e) { loginApp = null; }
     if (loginApp && typeof loginApp.getUserID === 'function' && !loginApp.getUserID()) {
       this._roamStartPending = true;
-      Promise.resolve(loginApp.firstLogin ? loginApp.firstLogin() : null).then(() => {
+      const asked = typeof loginApp.requireLogin === 'function'
+        ? loginApp.requireLogin({ reason: 'roam' })
+        : Promise.resolve(loginApp.firstLogin ? loginApp.firstLogin() : null);
+      Promise.resolve(asked).then((ok) => {
         this._roamStartPending = false;
         if (typeof loginApp.getUserID === 'function' && loginApp.getUserID()) { this.goStart(); return; }
+        if (ok === false) return; // 用户选「暂不登录」:不报错,留在游客浏览态
         this.setData({ introError: '登录失败，请重试', locErr: false });
       });
       return;
@@ -3778,25 +3825,27 @@ Page({
     });
   },
   _startReal(consentAlreadyRecorded) {
-    if (this._realOn || this._realStarting) return;
+    if (this._unloaded || this._realOn || this._realStarting) return;
     const that = this;
     const epoch = this._realStartEpoch = (this._realStartEpoch || 0) + 1;
     const locationRevision = bgTracker.revision('roam');
     const owner = String(getApp().getUserID() || '');
-    const live = () => epoch === that._realStartEpoch && locationRevision === bgTracker.revision('roam') && owner === String(getApp().getUserID() || '');
+    const live = () => !that._unloaded && epoch === that._realStartEpoch && locationRevision === bgTracker.revision('roam') && owner === String(getApp().getUserID() || '');
     this._realStarting = true;
+    this.setData({ locationForegroundOnly: false });
     this._observeLocationRevocation();
     const abandon = () => {
       if (!live()) return;
       that._realStarting = false;
+      that.setData({ locationForegroundOnly: false });
       if (that._realRevokeOff) { that._realRevokeOff(); that._realRevokeOff = null; }
     };
-    const onOk = () => {
+    const onOk = (usingBackground) => {
       if (!live()) return;
       that._realStarting = false; that._realAnchor = null;
       that._realOn = true;
       wx.onLocationChange(that._onRealLoc = (loc) => { if (live() && that._realOn) that._realTick(loc); });
-      that.setData({ locErr: false });
+      that.setData({ locErr: false, locationForegroundOnly: usingBackground === false });
       that._syncGoal();
       wx.setKeepScreenOn && wx.setKeepScreenOn({ keepScreenOn: true });
       // 不再弹「真实定位已开启」:计时与定位点已说明,toast 会压住暂停键。
@@ -3839,6 +3888,7 @@ Page({
     bgTracker.release('roam');
     this._realStartEpoch = (this._realStartEpoch || 0) + 1;
     this._realStarting = false;
+    this.setData({ locationForegroundOnly: false });
     if (this._realRevokeOff) { this._realRevokeOff(); this._realRevokeOff = null; }
     const onLocationChange = this._onRealLoc;
     this._realOn = false;
@@ -4562,24 +4612,33 @@ Page({
   /* 拿到一张原图之后的去处:裁剪 → 落盘 → 进探店照片或本次足迹。
      取景卡与(历史上的)原生选图器共用这一段,所以单独抽出来。 */
   _acceptPhoto(raw) {
+    const scope = this._roamReadScope();
+    const sessionId = this._roamSid, sessionKey = this._clientSessionKey;
+    const visit = this.data.visit;
+    const address = this.data.currentAddress || '漫游打卡';
+    const current = () => scope() && !this._unloaded && sessionId === this._roamSid
+      && sessionKey === this._clientSessionKey && visit === this.data.visit;
     // 打卡照走自由比例裁剪(与全站上传同一套裁剪页);取消 = 放弃这张,不静默存原图
-    getApp().cropAll([raw], 'free').then((out) => {
+    return Promise.resolve().then(() => {
+      if (current()) return getApp().cropAll([raw], 'free');
+    }).then((out) => {
+      if (!current()) return;
       const path = out && out[0];
       if (!path) return;
-      persistPhoto(wx, path).then((photo) => {
-        if (!photo.path) return;
-        if (this.data.visit.active) {
+      return persistPhoto(wx, path).then((photo) => {
+        if (!current() || !photo.path) return;
+        if (visit.active) {
           const candidates = (this.data.visit.photos || []).concat(photo);
           const photos = retainRecentPhotos(candidates);
           const dropped = droppedSavedPhotos(candidates);
           releaseSavedPhotos(wx, dropped);
           this.setData({ 'visit.photos': photos });
         } else {
-          this._appendSessionPhoto(photo, this.data.currentAddress || '漫游打卡');
+          this._appendSessionPhoto(photo, address);
         }
         cyToast(photo.persisted ? (this.data.visit.active ? '探店照片已保存' : '照片已保存') : '照片仅本次可用');
       });
-    });
+    }).catch(() => { if (current()) cyToast('照片未保存，请重试'); });
   },
 
   endRoamSession() {
@@ -4970,13 +5029,24 @@ Page({
       cyToast('当前可见范围不发布到' + (ch === '保存' ? '相册' : ch));
       return Promise.resolve({ ok: false, channel: ch, saved: false, posted: false, blocked: true });
     }
-    analytics.track('roam_share_channel', { bizType: 'roam', bizId: Number(this._activeShareSessionId()) || 0, properties: { channel: ch } });
-    if (ch === '广场') return this._shareToSquare();
+    const shareBizId = Number(this._activeShareSessionId()) || 0;
+    analytics.track('roam_share_channel', { bizType: 'roam', bizId: shareBizId, properties: { channel: ch } });
+    // U-171 分享回执:选了渠道之后的成败也要落埋点;properties 只放渠道码/结果码,不放文案与帖子内容。
+    const receipt = (r) => {
+      const res = r || {};
+      const channel = ROAM_SHARE_CHANNEL_CODE[ch] || 'other';
+      if (res.ok) analytics.track('roam_share_complete', { bizType: 'roam', bizId: shareBizId, properties: { channel } });
+      else analytics.track('roam_share_fail', { bizType: 'roam', bizId: shareBizId,
+        properties: { channel, reason: res.cancelled ? 'cancelled' : (res.blocked ? 'blocked' : 'failed') } });
+      return r;
+    };
+    if (ch === '广场') return this._shareToSquare().then(receipt);
     if (ch === '保存') {
       return this._exportAndSave('生成卡片', () => this._drawShareCard(this.data.share.idx), this._shareScope())
-        .then((r) => ({ ok: r.saved, channel: ch, saved: r.saved, posted: false, cancelled: r.outcome === ALBUM_SAVE.CANCELLED }));
+        .then((r) => ({ ok: r.saved, channel: ch, saved: r.saved, posted: false, cancelled: r.outcome === ALBUM_SAVE.CANCELLED }))
+        .then(receipt);
     }
-    return this._shareToAlbumGuide(ch);
+    return this._shareToAlbumGuide(ch).then(receipt);
   },
 
   /**
@@ -5354,7 +5424,8 @@ Page({
       if (existing >= 0) s[existing] = session; else s.unshift(session);
       if (!memory.writeSessions(s.slice(0, 50))) return this._recoveryFailure('足迹存档保存失败，本次记录保留待重试');
       releaseSavedPhotos(wx, evicted);
-      memory.writeReveals(memory.readReveals().concat(this._reveals).slice(-2000));
+      if (!memory.writeReveals(memory.readReveals().concat(this._reveals).slice(-2000)))
+        return this._recoveryFailure('足迹轨迹保存失败，本次记录保留待重试');
       this._revealsSaved = true; // onUnload 不再重复追加
       return true;
     } catch (e) { return this._recoveryFailure('足迹存档保存失败，本次记录保留待重试'); }
@@ -5467,6 +5538,13 @@ Page({
     this.setData({ paused, endHoldPct: 0 }, () => this._syncPlayHud());
   },
 
+  // 2026-10-27 owner P-35:结算页右上角 × 只关掉结算页,回到漫游首页;不再走 backToSquare(单页栈时会 redirect 到无 tab 栏的动态页)
+  closeSettle() {
+    if (this.data.screen !== 'arrive') return;
+    this.setData({ screen: 'entry-map', introTab: 'start', sceneStack: [], sceneCurrent: null });
+    this._loadIntroPassport();
+    if (typeof getApp().sendRequest === 'function') this._loadEntryMap(this.data.center);
+  },
   backToSquare() {
     if (getCurrentPages().length > 1) wx.navigateBack();
     else if (typeof getApp().canUseCommunity === 'function' && getApp().canUseCommunity(false)) wx.redirectTo({ url: '/pages/square/list/index' });
@@ -5610,6 +5688,10 @@ Page({
   clearRoamLocal() { this.setData({ clearAsk: true }); },
   cancelClearRoamLocal() { this.setData({ clearAsk: false }); },
   confirmClearRoamLocal() {
+    if (!require('../../utils/roam-share-snapshot.js').prepareShareRevocation(getApp(), wx)) {
+      cyToast('未能保存分享撤销记录，请重试');
+      return Promise.resolve(false);
+    }
     const ok = roamMemory(this).clearLocal();
     this.setData({ clearAsk: false });
     if (!ok) { cyToast('清不干净，存储读写被拒了'); return Promise.resolve(false); }
@@ -5725,7 +5807,7 @@ Page({
     const app = getApp();
     const getImgUrl = typeof app.getImgUrl === 'function' ? app.getImgUrl.bind(app) : (url) => url;
     const view = entryMap.build(this._entryItems, this._entryTeams, this.data.entryLayers, getImgUrl);
-    this.setData({ entryMarkers: view.markers, entryCards: view.cards, searchPlaces: view.searchPlaces, introTeamsLive: this._entryTeams.length ? '附近 ' + this._entryTeams.length + ' 支队伍在组队' : '附近正在组队' });
+    this.setData({ entryMarkers: view.markers, entryCards: view.cards, searchPlaces: view.searchPlaces, introTeamsLive: this._entryTeams.length ? '附近 ' + this._entryTeams.length + ' 支队伍在组队' : '附近正在组队' }); if (!view.cards.length && this._entryErrors && !this._entryErrors.activities) this._loadEntryFallback(); else if (view.cards.length) this.setData({ entryFarCards: [] }); // 2026-10-28 附近为空走兜底
   },
   _showEntrySheet(entrySheet, entryActivity) {
     this.setData({ entrySheet, entryActivity: entryActivity || null, entryTeam: null, entrySheetView: 'main', entrySheetIn: false }, () => {
@@ -5745,7 +5827,7 @@ Page({
     this.setData({ entryLayers }, () => this._syncEntryMap());
   },
   openEntryActivityList() { wx.navigateTo({ url: '/pages/activity/list/index' }); },
-  onEntryCardTap(e) { this.openEntryActivity(e.currentTarget.dataset.kind, e.currentTarget.dataset.id); },
+  onEntryCardTap(e) { const d = e.currentTarget.dataset; if (d.kind === 'far-topic') { wx.navigateTo({ url: '/pages/topic/index/index?id=' + d.id }); return; } this.openEntryActivity(d.kind, d.id); },
   openEntryActivity(kind, id) {
     const row = (this._entryItems || []).find((item) => item && item.kind === kind && String(item.id) === String(id));
     if (!row) return;
@@ -5860,5 +5942,29 @@ Page({
       if (!this._unloaded && !this.data.topicIn) this.setData({ topicView: null });
     }, 250);
   },
-
+  /* 2026-10-28 业主:「附近活动」总是有的 —— 3 公里内没有就放同城(20 公里,接口上限)的,
+     同城也没有就放其他城市的公开主题。只进底部卡片带,不往地图上打点(离得远的点放在附近地图上是误导)。 */
+  _loadEntryFallback() {
+    const seq = this._entrySeq, c = this.data.center || FALLBACK, owner = this._entryIdentity();
+    if (this._entryFallbackSeq === seq) return;
+    this._entryFallbackSeq = seq;
+    const app = getApp(), img = typeof app.getImgUrl === 'function' ? app.getImgUrl.bind(app) : (url) => url;
+    const stale = () => this._unloaded || seq !== this._entrySeq || owner !== this._entryIdentity();
+    req('/api/roam/entry/nearby', 'GET', { lat: c.lat, lng: c.lng, radius: 20000 }, { silentError: true }).then((res) => {
+      if (stale()) return;
+      const data = apiOk(res) && res.data;
+      const rows = data && isRecordList(data.items) ? data.items.filter((row) => row && row.kind !== 'hangout') : [];
+      if (rows.length) {
+        this._entryItems = (this._entryItems || []).concat(rows.filter((row) => !(this._entryItems || []).some((it) => it.kind === row.kind && String(it.id) === String(row.id))));
+        this.setData({ entryFarCards: rows.slice(0, 8).map((row) => entryMap.activityView(row, this._entryTeams, img)) });
+        return;
+      }
+      req('/api/topic/list', 'POST', { pageNum: 1, pageSize: 8, sort_type: 1 }, { silentError: true, auth: false }).then((r2) => {
+        if (stale()) return;
+        const list = apiOk(r2) && r2.data && isRecordList(r2.data.rows) ? r2.data.rows : [];
+        this.setData({ entryFarCards: list.map((t) => ({ key: 'far-topic-' + t.id, id: t.id, kind: 'far-topic', title: String(t.name || '未命名主题'),
+          cover: img(String(t.imgArr || t.imgUrl || '').split(/[,;]/)[0].trim()), tag: Number(t.productType) === 2 ? '自由探索' : '城市定向', meta: String(t.city || t.addressName || '') })) });
+      });
+    });
+  }
 });

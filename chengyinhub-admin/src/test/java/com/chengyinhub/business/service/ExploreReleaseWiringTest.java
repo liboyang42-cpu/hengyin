@@ -116,6 +116,7 @@ class ExploreReleaseWiringTest {
     void redeemedRejectionTakesPrecedenceOverPaidAndNeverReleasesInventory() {
         CmsRegistration row = unpaid(); row.setPaymentStatus(2); row.setVerificationStatus(1);
         when(registrationMapper.selectCmsRegistrationById(REG)).thenReturn(row);
+        when(registrationMapper.selectCmsRegistrationByIdForUpdate(REG)).thenReturn(row);
         RuntimeException error = assertThrows(RuntimeException.class, () -> service.cancelRegistration(REG, MEMBER, "张三"));
         org.junit.jupiter.api.Assertions.assertEquals("已核销的报名不能取消", error.getMessage());
         verify(registrationMapper, never()).cancelUnpaidIfActive(anyLong(), anyLong(), anyString());
@@ -127,6 +128,7 @@ class ExploreReleaseWiringTest {
         for (java.math.BigDecimal amount : new java.math.BigDecimal[] {java.math.BigDecimal.ZERO, java.math.BigDecimal.TEN}) {
             CmsRegistration row = unpaid(); row.setPaymentStatus(2); row.setPayableAmount(amount);
             when(registrationMapper.selectCmsRegistrationById(REG)).thenReturn(row);
+            when(registrationMapper.selectCmsRegistrationByIdForUpdate(REG)).thenReturn(row);
             RuntimeException error = assertThrows(RuntimeException.class, () -> service.cancelRegistration(REG, MEMBER, "张三"));
             org.junit.jupiter.api.Assertions.assertEquals("已完成支付，请从订单详情申请取消报名，是否可取消以订单规则为准", error.getMessage());
         }

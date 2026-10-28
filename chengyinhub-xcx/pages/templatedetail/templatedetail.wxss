@@ -202,9 +202,11 @@ page {
 }
 .xb-cta-btn { flex: 1; min-width: 0; }
 
-.xb-more {
+.xb-share {
   width: 104rpx;
   height: 104rpx;
+  margin: 0;
+  padding: 0;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.1);
   color: var(--xb-text);
@@ -212,6 +214,18 @@ page {
   align-items: center;
   justify-content: center;
   flex: none;
+  line-height: 1;
+}
+.xb-share::after { border: 0; }
+
+/* P-42:举报放在页面末尾,一行弱化文字 */
+.xb-report {
+  min-height: var(--cy-btn-h);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--cy-font-label);
+  color: var(--xb-muted);
 }
 
 /* 关键信息块(Xbox ESRB 块)。⚠️ 不要卡片承托:参考图里这块是**裸在模糊封面底上**、
@@ -680,35 +694,6 @@ page {
   font-size: var(--cy-font-label);
   color: var(--xb-muted);
   line-height: 40rpx;
-}
-
-/* 能力列表 */
-.xb-sheet-item {
-  width: 100%;
-  box-sizing: border-box;
-  padding: var(--cy-space-4);
-  font-size: var(--cy-font-body);
-  font-weight: 600;
-  color: var(--xb-text);
-  text-align: center;
-  border-bottom: 1rpx solid var(--xb-line);
-  border-radius: 0;
-  background: transparent;
-  line-height: var(--cy-leading-normal);
-}
-
-button.xb-sheet-item { width: 100%; margin: 0; }
-button.xb-sheet-item::after { border: 0; }
-
-.xb-sheet-cancel {
-  color: var(--xb-muted);
-  border-bottom: none;
-  margin-top: var(--cy-space-1);
-}
-
-.xb-sheet-item--press {
-  background: var(--cy-color-bg-raised);
-  color: var(--cy-color-text-secondary);
 }
 
 /* 节点预览弹窗 */

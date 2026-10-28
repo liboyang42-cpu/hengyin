@@ -8,16 +8,16 @@ const path = require('node:path');
 const ROOT = path.join(__dirname, '../..');
 const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8');
 
-function pageIconMap() {
-  const src = read('pages/template/index.js');
-  const block = src.match(/const INTERACTION_ICON_BY_TITLE = (\{[\s\S]*?\n\});/);
-  assert.ok(block, '模板页图标表还在');
-  return new Function('return ' + block[1])();
-}
-
-test('搜索用的玩法图标表与模板页逐条一致', () => {
+// 2026-10-28:模板页货架改用分包内的 Polyfork 道具图(pages/templatedetail/shelf/art.js),
+// 主包模板页不再有 INTERACTION_ICON_BY_TITLE。搜索结果所在分包取不到那批图，继续用这张 SVG 表;
+// 这里守住它自身成立：每个图标文件都真实存在、且都对应货架上保留的玩法。
+test('搜索用的玩法图标表：文件都存在，标题都是货架保留的玩法', () => {
   const { INTERACTION_ICON_BY_TITLE } = require('../../utils/template-art.js');
-  assert.deepEqual(INTERACTION_ICON_BY_TITLE, pageIconMap());
+  const shelfArt = require('../../pages/templatedetail/shelf/art.js');
+  Object.entries(INTERACTION_ICON_BY_TITLE).forEach(([title, icon]) => {
+    assert.ok(fs.existsSync(path.join(ROOT, icon)), icon + ' 不存在');
+    if (!/^G\d+｜/.test(title)) assert.ok(shelfArt.GAMES[title], title + ' 不在货架保留清单里');
+  });
 });
 
 test('模板结果按模板页行样式画:具象图标优先,meta 为人数 · 时长', () => {
@@ -44,7 +44,8 @@ test('模板结果按模板页行样式画:具象图标优先,meta 为人数 · 
   };
   [['.tpl-big', '.pc-ord-card', 'height'], ['.tpl-big', '.pc-ord-card', 'border-radius'], ['.tpl-big', '.pc-ord-card', 'background'],
     ['.tpl-big__shade', '.pc-ord-shade', 'background'], ['.tpl-big__shade', '.pc-ord-shade', 'height'],
-    ['.tpl-big__title', '.pc-ord-title', 'font-size'], ['.tpl-big__btn', '.pc-ord-btn', 'background']].forEach(([mine, theirs, prop]) => {
+    // 2026-10-27 owner 真机走查 P-48:「我的订单」卡去掉了「出示核销码/查看」按钮(.pc-ord-btn 已删),按钮一项不再比对
+    ['.tpl-big__title', '.pc-ord-title', 'font-size']].forEach(([mine, theirs, prop]) => {
     assert.equal(decl(wxss, mine, prop), decl(order, theirs, prop), `${mine} ${prop} 与订单卡一致`);
   });
 });

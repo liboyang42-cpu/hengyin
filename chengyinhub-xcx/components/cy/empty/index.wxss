@@ -33,6 +33,31 @@
   margin-bottom: var(--cy-space-3);
 }
 
+/* 空态两层插画(2026-10-24 owner,Figma ku2oaN9ag1XUMC9lKNnrcr node 2807:12251)。
+ * 画框 260.16×250:背景 x=0.08 y=0 260×249.85,人物 x=55.08 y=35 150.375×180。
+ * 盒子锁 260.16:250 比例(高 = 宽 × 250 / 260.16),两层按画框百分比绝对定位,
+ * 每层框比 = 各自 SVG 比 ⇒ aspectFit 不留边也不变形。不加底色/透明度,插画自带颜色。 */
+.cy-empty-art {
+  position: relative;
+  width: 360rpx;
+  height: 345.94rpx;
+  margin-bottom: var(--cy-space-3);
+}
+.cy-empty-art__bg {
+  position: absolute;
+  left: 0.03%;
+  top: 0;
+  width: 99.94%;
+  height: 99.94%;
+}
+.cy-empty-art__figure {
+  position: absolute;
+  left: 21.17%;
+  top: 14%;
+  width: 57.80%;
+  height: 72%;
+}
+
 /* 语义终态复用 cy-icon 线性图标。颜色在浅/暗主题的实际背景上均满足非文本 3:1；
    不加低对比描边或半透明底，避免 token 名正确但合成后边界不可见。 */
 .cy-empty-glyph {
@@ -77,6 +102,11 @@
 .cy-empty--lg .cy-empty-ic {
   width: 240rpx;
 }
+/* lg = 设计稿 260px 宽 → 520rpx */
+.cy-empty--lg .cy-empty-art {
+  width: 520rpx;
+  height: 499.69rpx;
+}
 .cy-empty--lg .cy-empty-glyph {
   width: 240rpx;
   height: 180rpx;
@@ -116,6 +146,10 @@
 }
 .cy-empty--sm .cy-empty-sub {
   margin-top: var(--cy-space-1);
+}
+.cy-empty--sm .cy-empty-art {
+  width: 240rpx;
+  height: 230.63rpx;
 }
 
 .cy-empty--reduced-motion .cy-empty-spinner { animation: none; }

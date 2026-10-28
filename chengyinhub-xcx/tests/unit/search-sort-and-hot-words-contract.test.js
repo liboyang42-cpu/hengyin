@@ -19,12 +19,12 @@ const { SEARCH_HOT_WORDS } = require('../../pages/search2/utils/hot-words.js')
 const INDEX_MODULE = path.join(ROOT, 'pages/search2/index.js')
 const RESULT_MODULE = path.join(ROOT, 'pages/search2/result/index.js')
 
-function loadPage(modulePath, wxOverrides) {
+function loadPage(modulePath, wxOverrides, userId = '9') {
   let definition
   const requests = []
   const navigations = []
   global.getApp = () => ({
-    getUserID: () => '9',
+    getUserID: () => userId,
     getRequestErrorMessage: (response, fallback) => (response && response.msg) || fallback,
     sendRequest: (options) => requests.push(options),
   })
@@ -87,18 +87,28 @@ test('CU-M-66 排序选择必须进结果页 URL,「最热」从 UI 撤掉', () 
 })
 
 test('CU-M-66 结果页收下 sortType 但不把它映射成 sort_type(「最近」即默认序)', () => {
+  // W8 起登录用户纯关键词搜索的主题/活动走 /api/search/unified(无排序参数,服务端默认序);
+  // 游客与带类别/日期/价格筛选时仍走 /api/activity/list。两条路都不许把「最近」映射成 sort_type。
   const { page, requests } = loadPage(RESULT_MODULE)
   page.onLoad({ keyword: encodeURIComponent('外滩'), sortType: '1' })
   assert.equal(page._filters.sortType, '1')
 
-  const activity = requests.find((item) => item.url === '/api/activity/list')
-  assert.ok(activity, '结果页必须发起活动搜索')
-  assert.equal(activity.data.sort_type, undefined, 'sort_type=1 是「附近」,不是「最近」')
+  const unified = requests.find((item) => item.url === '/api/search/unified')
+  assert.ok(unified, '登录用户的结果页必须发起内容搜索')
+  assert.equal(requests.some((item) => item.url === '/api/activity/list'), false, '统一搜索已覆盖活动,不重复查')
+  assert.equal(unified.data.sort_type, undefined, 'sort_type=1 是「附近」,不是「最近」')
+  assert.equal(unified.data.sortType, undefined)
   const club = requests.find((item) => item.url === '/api/club/list')
   assert.equal(JSON.parse(club.data).sortType, undefined, '没有排序参数的一路不许装样子')
 
+  const guest = loadPage(RESULT_MODULE, null, '')
+  guest.page.onLoad({ keyword: encodeURIComponent('外滩'), sortType: '1' })
+  const activity = guest.requests.find((item) => item.url === '/api/activity/list')
+  assert.ok(activity, '游客结果页必须发起活动搜索')
+  assert.equal(activity.data.sort_type, undefined, 'sort_type=1 是「附近」,不是「最近」')
+
   // 没带排序(历史链接/直接进入)时不传,走服务端默认
-  const plain = loadPage(RESULT_MODULE)
+  const plain = loadPage(RESULT_MODULE, null, '')
   plain.page.onLoad({ keyword: encodeURIComponent('外滩') })
   assert.equal(plain.page._filters.sortType, '')
   assert.equal(plain.requests.find((item) => item.url === '/api/activity/list').data.sort_type, undefined)

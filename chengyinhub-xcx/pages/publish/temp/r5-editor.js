@@ -77,6 +77,7 @@ function feedbackRows(config, rows) {
     return { path: item.path, key: FB_KEYS[item.path], label: item.path === 'outcomeRules.pass' ? (isOnce ? '完成反馈' : '成功反馈') : '失败反馈',
       has: !!(row.reply || images.length || costs || effects || row.nextStepId), reply: row.reply || '', images,
       extra: [costs ? '消耗 ' + costs + ' 项' : '', effects ? '效果 ' + effects + ' 项' : ''].filter(Boolean).join(' · ') || '无',
+      count: costs + effects,
       disabled: item.disabled, reason: item.reason };
   });
 }
@@ -197,7 +198,7 @@ const methods = {
     this._setFormState({ advanced: config, 'formData.validationMethod': option.value });
   },
   openAfterSheet(e) { const path = e.currentTarget.dataset.path; const row = this.data.r5Editor.afterRows.find(row => row.path === path); if (!row || row.disabled) return; this._r5AfterNextPicked = false; this._takeR5Snapshot('after'); this.setData({ afterEditor: { show: true, inline: !!e.currentTarget.dataset.inline, path, draft: Object.assign(after.empty(), clone(row.draft)), error: '' } }); },
-  closeAfterSheet() { this._restoreR5Snapshot('after'); this._r5AfterNextPicked = false; this.setData({ afterEditor: { show: false, inline: false, path: '', draft: after.empty(), error: '' } }); },
+  closeAfterSheet() { this._restoreR5Snapshot('after'); this._r5AfterNextPicked = false; this.setData({ afterEditor: { show: false, inline: false, path: '', draft: after.empty(), error: '' }, afterOpen: '', afterNewValue: false, afterAdd: { show: false, open: '' } }); },
   uploadAfterImage() { const images = this.data.afterEditor.draft.images || []; const remain = after.IMAGE_MAX - images.length; if (remain <= 0) return; getApp().chooseImage(res => { if (res && res.length) this.setData({ 'afterEditor.draft.images': images.concat(res).slice(0, after.IMAGE_MAX) }); }, remain); },
   removeAfterImage(e) { const index = Number(e.currentTarget.dataset.index); this.setData({ 'afterEditor.draft.images': (this.data.afterEditor.draft.images || []).filter((url, i) => i !== index) }); },
 

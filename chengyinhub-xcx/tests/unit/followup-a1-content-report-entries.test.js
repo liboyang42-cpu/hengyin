@@ -113,68 +113,21 @@ test('FOLLOWUP-A-1 主题:后端拒绝 / 网络失败都如实 toast', async () 
 });
 
 // ---------------------------------------------------------------- 玩法详情(模板广场 / 个人玩法)
-function loadTemplate(h, scope, info) {
-  h.page.onLoad({ id: '5', scope });
-  const req = h.requests.find(r => /\/api\/template\/(my)?info$/.test(r.url));
-  req.success({ code: 200, data: Object.assign({ id: 5, title: '铜牌年份' }, info) });
-  req.complete();
-  h.requests.length = 0;
-}
 
-test('FOLLOWUP-A-1 模板广场:别人公开的广场玩法 → 更多里出「举报」,提交 /api/template/report', async () => {
-  const h = harness('pages/templatedetail/templatedetail.js');
-  loadTemplate(h, 'library', { memberId: 22, status: 1, publishStatus: 1, delFlag: 0 });
-  assert.equal(h.page.data.reportKind, 'template');
-  h.page.openMore();
-  const submit = await runReport(h, () => h.page.reportTemplate(), r => r.success({ code: 200, msg: '举报已提交，内容将进入审核' }));
-  assert.equal(h.page.data.moreShow, false, '先收起更多菜单');
-  assert.equal(submit.url, '/api/template/report');
-  assert.deepEqual(submit.data, { id: '5', reason: '违法违规' });
-  assert.deepEqual(h.toasts, ['举报已提交，内容将进入审核']);
-});
-
-test('FOLLOWUP-A-1 个人玩法:别人已公开的个人玩法 → 提交 /api/template/personal-report;失败如实 toast', async () => {
-  const h = harness('pages/templatedetail/templatedetail.js');
-  loadTemplate(h, 'my', { memberId: 22, draftStatus: 1, status: 1, publishStatus: 1, delFlag: 0 });
-  assert.equal(h.page.data.reportKind, 'personalTemplate');
-  h.page.reportTemplate();
-  assert.equal(h.modals.length, 0, '广场入口不接个人玩法');
-  const submit = await runReport(h, () => h.page.reportPersonalTemplate(), r => r.success({ code: 500, msg: '模版不存在' }));
-  assert.equal(submit.url, '/api/template/personal-report');
-  assert.deepEqual(submit.data, { id: '5', reason: '违法违规' });
-  assert.deepEqual(h.toasts, ['模版不存在']);
-});
-
-test('FOLLOWUP-A-1 玩法详情:本人的 / 未公开的玩法不出举报,处理器不发请求', () => {
-  const cases = [
-    ['library', { memberId: 11, status: 1, publishStatus: 1, delFlag: 0 }],
-    ['library', { memberId: 22, status: 1, publishStatus: 0, delFlag: 0 }],
-    ['library', { memberId: 22, status: 0, publishStatus: 1, delFlag: 0 }],
-    ['my', { memberId: 11, draftStatus: 1, status: 1, publishStatus: 1, delFlag: 0 }],
-    ['my', { memberId: 22, draftStatus: 0, status: 1, publishStatus: 1, delFlag: 0 }],
-    ['my', { memberId: 22, draftStatus: 1, status: 2, publishStatus: 1, delFlag: 0 }],
-    ['my', { memberId: 22, draftStatus: 1, status: 1, publishStatus: 0, delFlag: 0 }],
-  ];
-  for (const [scope, info] of cases) {
-    const h = harness('pages/templatedetail/templatedetail.js');
-    loadTemplate(h, scope, info);
-    assert.equal(h.page.data.reportKind, '', scope + JSON.stringify(info));
-    h.page.reportTemplate();
-    h.page.reportPersonalTemplate();
-    assert.equal(h.modals.length, 0);
-    assert.equal(h.requests.length, 0);
-  }
-  const wxml = read('pages/templatedetail/templatedetail.wxml');
-  assert.match(wxml, /<view class="xb-sheet-item" wx:if="\{\{ reportKind === 'template' \}\}" bindtap="reportTemplate"[^>]*>举报<\/view>/);
-  assert.match(wxml, /<view class="xb-sheet-item" wx:elif="\{\{ reportKind === 'personalTemplate' \}\}" bindtap="reportPersonalTemplate"[^>]*>举报<\/view>/);
-  assert.match(wxml, /<cy-option-sheet show="\{\{reportReasonShow\}\}" title="选择举报原因" items="\{\{reportReasonItems\}\}"/);
-  assert.ok(JSON.parse(read('pages/templatedetail/templatedetail.json')).usingComponents['cy-option-sheet']);
+// 2026-10-28 P-42 业主(v8 review 页明确「删掉玩法详情页最底下的『举报这个玩法』」):
+// 玩法详情页不再有举报入口,原因弹层与两个提交处理器一并撤掉;主题详情 / 动态详情的举报不受影响(上面几条)。
+test('FOLLOWUP-A-1 玩法详情:P-42 后不再提供举报入口、原因弹层与提交处理器', () => {
+  const wxml = read('pages/templatedetail/templatedetail.wxml').replace(/<!--[\s\S]*?-->/g, '');
+  const js = read('pages/templatedetail/templatedetail.js');
+  assert.doesNotMatch(wxml, /举报|reportReasonShow|xb-report/);
+  assert.doesNotMatch(js, /reportTemplate|reportPersonalTemplate|reportKind|\/api\/template\/(?:personal-)?report/);
+  assert.equal(JSON.parse(read('pages/templatedetail/templatedetail.json')).usingComponents['cy-option-sheet'], undefined);
 });
 
 test('FOLLOWUP-A-1 平台举报原因拉不到 → 如实 toast,不提交', () => {
-  const h = harness('pages/templatedetail/templatedetail.js');
-  loadTemplate(h, 'library', { memberId: 22, status: 1, publishStatus: 1, delFlag: 0 });
-  h.page.reportTemplate();
+  const h = harness('pages/topic/index/index.js');
+  loadTopic(h, topicInfo());
+  h.page.reportTopic();
   h.modals[0].success({ confirm: true });
   h.last().success({ code: 503, msg: 'down' });
   assert.deepEqual(h.toasts, ['举报原因暂不可用']);

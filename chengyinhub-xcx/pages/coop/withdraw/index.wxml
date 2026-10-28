@@ -8,7 +8,7 @@
   <cy-page-title title="提现方式已调整" subtitle="" safe-top="{{false}}" flush="{{true}}" />
   <!-- 这不是错误态,而是「提现方式已调整」的中性告知；使用 polite status 语义，
        唯一动作仍在页脚的「联系平台客服提现」。 -->
-  <cy-empty class="fill-slot" kind="empty" size="lg" fill icon="/images/no_data.svg"
+  <cy-empty class="fill-slot" kind="empty" size="lg" fill
     title="联系平台客服提现" sub="添加客服微信，线下处理" />
   <view class="foot">
     <view class="submit" bindtap="goBankWithdraw" aria-role="button" aria-label="联系平台客服提现" hover-class="cy-pressed" hover-stay-time="80">联系平台客服提现</view>

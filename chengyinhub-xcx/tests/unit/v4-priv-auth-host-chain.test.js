@@ -34,6 +34,9 @@ function harness() {
   const session = createSessionStore({ target: app.globalData, wx });
   app.getSession = () => session; app.isDevEnv = () => false; app.loadFeatureFlags = () => {};
   app.firstLogin = async () => { h.logins += 1; session.setUserID('9'); session.setAuthorization('fixture-token'); return { ok: true }; };
+  // 2026-10-24 owner 拍板「游客可浏览，写入时弹窗登录」:单独同意隐私不再建号;这里的待决调用方来自
+  // 写前登录(游客点了「微信登录」、登录在途),夹具据此标记登录在途,同意后照旧补传留痕。
+  app.getSessionManager = () => ({ isLoggingIn: () => true });
   app.sendRequest = o => { h.requests.push(o); };
   app.initPrivacyAuthorization();
   global.getApp = () => app; global.wx = wx;

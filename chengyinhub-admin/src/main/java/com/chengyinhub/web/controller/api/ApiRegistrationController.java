@@ -544,6 +544,7 @@ public class ApiRegistrationController extends BaseController {
             registration.setRefundApplication(latestRegistrationRefund(registration.getId(), memberId));
             // 订单详情展示 enrich:脱敏手机号 / 支付方式文案 / 退款截止文案 / 权益章节名
             com.chengyinhub.business.util.RegistrationDetailDisplay.enrich(registration, topicChapterService);
+            registration.setServerNow(System.currentTimeMillis());
             return AjaxResult.success(registration);
         } catch (Exception e) {
             return AjaxResult.error(e.getMessage());
@@ -843,8 +844,18 @@ public class ApiRegistrationController extends BaseController {
         // 本接口就是「我的订单」账本,客户端七态 Tab 里的「已完成 / 已退款 / 不可退款」天生指结束过的单;
         // 按 owner.end_date 隐藏结束超 7 天的单,会让这些 Tab 恒空 —— 真实商家号(有已支付订单)打开看到整屏空列表。
         // 7 天视觉收纳只为「我参与中」(myJoined,进行中 Tab)保留,那条链路独立调用该 helper。
+        stampServerNow(list);
         TableDataInfo data = getDataTable(list);
         return AjaxResult.success(data);
+    }
+
+    /** U-033:订单状态标签(未开始/进行中/已完成)按服务端时刻判,手机时钟只作缺字段时的兜底。 */
+    private static void stampServerNow(List<CmsRegistration> rows) {
+        if (rows == null) return;
+        long now = System.currentTimeMillis();
+        for (CmsRegistration row : rows) {
+            if (row != null) row.setServerNow(now);
+        }
     }
 
     /** 存量主题未写 product_type 时，与游玩页一致地按第一张票的 mode 回落。 */
@@ -1090,6 +1101,7 @@ public class ApiRegistrationController extends BaseController {
 
         all = filterEndedOverWeek(all, new Date());
         all.sort((a, b) -> b.getCreateTime().compareTo(a.getCreateTime()));
+        stampServerNow(all);
         return AjaxResult.success(all);
     }
 

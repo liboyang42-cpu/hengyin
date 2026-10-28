@@ -227,10 +227,33 @@ class PublicReadEndpointsSecurityChainTest {
                 .andExpect(status().isUnauthorized());
     }
 
+    @Test
+    void guestBrowseReadsAreAnonymousButTheirWriteAndPersonalSiblingsAreNot() throws Exception {
+        // owner 2026-10-24「游客可浏览，写入时弹窗登录」:四条公开读走 @Anonymous(同 GuestBrowseProbeController),
+        // 真实控制器上的注解范围由 GuestBrowseAnonymousReadTest 逐方法钉住。
+        for (String route : new String[]{"/api/topic/info-to-user", "/api/club/detail", "/api/club/list",
+                "/api/creativesquare/info"}) {
+            mockMvc.perform(post(route)).andExpect(status().isOk()).andExpect(jsonPath("$.code").value(200));
+        }
+        // 负控:写兄弟与本人数据接口照旧 401;放行不能顺着前缀吃进去。
+        for (String route : new String[]{"/api/club/join", "/api/club/quit", "/api/club/home", "/api/club/members",
+                "/api/club/post/create", "/api/club/post/like", "/api/topic/like", "/api/topic/info-to-merchant",
+                "/api/creativesquare/like", "/api/creativesquare/action", "/api/comment/add",
+                "/api/registration/create", "/api/club/detail/extra", "/api/topic/info-to-user/extra"}) {
+            mockMvc.perform(post(route)).andExpect(status().isUnauthorized())
+                    .andExpect(jsonPath("$.code").value(401));
+        }
+    }
+
     @Configuration
     @EnableWebMvc
     @EnableWebSecurity
     static class TestConfiguration {
+
+        @Bean
+        GuestBrowseProbeController guestBrowseProbeController() {
+            return new GuestBrowseProbeController();
+        }
 
         @Bean
         RedisCache redisCache() {
@@ -316,6 +339,32 @@ class PublicReadEndpointsSecurityChainTest {
         ApiMerchantReviewController apiMerchantReviewController() {
             return new ApiMerchantReviewController();
         }
+    }
+
+    /** 游客浏览四条公开读 + 它们的写/本人兄弟:注解形态与真实控制器一致(方法级 @Anonymous)。 */
+    @RestController
+    static class GuestBrowseProbeController {
+        @com.chengyinhub.common.annotation.Anonymous
+        @PostMapping("/api/topic/info-to-user")
+        AjaxResult topicInfo() { return AjaxResult.success(); }
+
+        @com.chengyinhub.common.annotation.Anonymous
+        @PostMapping("/api/club/detail")
+        AjaxResult clubDetail() { return AjaxResult.success(); }
+
+        @com.chengyinhub.common.annotation.Anonymous
+        @PostMapping("/api/club/list")
+        AjaxResult clubList() { return AjaxResult.success(); }
+
+        @com.chengyinhub.common.annotation.Anonymous
+        @PostMapping("/api/creativesquare/info")
+        AjaxResult squareInfo() { return AjaxResult.success(); }
+
+        @PostMapping({"/api/club/join", "/api/club/quit", "/api/club/home", "/api/club/members",
+                "/api/club/post/create", "/api/club/post/like", "/api/topic/like", "/api/topic/info-to-merchant",
+                "/api/creativesquare/like", "/api/creativesquare/action", "/api/comment/add",
+                "/api/registration/create", "/api/club/detail/extra", "/api/topic/info-to-user/extra"})
+        AjaxResult siblings() { return AjaxResult.success(); }
     }
 
     /** 只探针路由放行与否,不跑真实业务逻辑。 */

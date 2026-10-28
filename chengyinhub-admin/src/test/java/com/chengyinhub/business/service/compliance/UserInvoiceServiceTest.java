@@ -35,6 +35,7 @@ class UserInvoiceServiceTest {
     private PiiCryptoService crypto;
     private InvoiceIssuer issuer;
     private UserInvoiceServiceImpl service;
+    private com.chengyinhub.business.service.IRefundService refunds;
 
     @BeforeEach
     void setUp() {
@@ -42,7 +43,18 @@ class UserInvoiceServiceTest {
         crypto = mock(PiiCryptoService.class);
         when(crypto.isEnabled()).thenReturn(true);
         issuer = spy(new ManualInvoiceIssuer());
-        service = new UserInvoiceServiceImpl(mapper, crypto, issuer);
+        refunds = mock(com.chengyinhub.business.service.IRefundService.class);
+        when(refunds.selectRegistrationHistoryForUpdate(anyLong())).thenReturn(List.of());
+        when(mapper.selectInvoiceRegistrationSeeds(anyLong(), anyList())).thenAnswer(call -> {
+            List<Long> ids = call.getArgument(1);
+            return ids.stream().map(UserInvoiceServiceTest::registration).toList();
+        });
+        when(mapper.lockInvoiceRegistration(anyLong())).thenAnswer(call -> registration(call.getArgument(0)));
+        when(mapper.resolveInvoiceIssuers(anyList())).thenAnswer(call -> {
+            List<Long> ids=call.getArgument(0); return ids.stream().map(id -> 101L).toList();
+        });
+        when(mapper.insertProcessing(any(),any())).thenReturn(1);
+        service = new UserInvoiceServiceImpl(mapper, crypto, issuer, refunds);
     }
 
     // ── 抬头 ─────────────────────────────────────────────────────────
@@ -151,7 +163,7 @@ class UserInvoiceServiceTest {
         Map<String, Object> view = service.apply(ME, "req-1", 31L, List.of(1L, 2L));
 
         assertEquals(true, view.get("replayed"));
-        assertEquals(500L, view.get("id"));
+        assertEquals("500", view.get("id"));
         verify(mapper, never()).insertApplication(any());
         verify(mapper, never()).insertOrderLines(anyList());
         verify(issuer, never()).submit(any());
@@ -163,6 +175,7 @@ class UserInvoiceServiceTest {
         when(mapper.selectOrderLines(500L)).thenReturn(List.of(order(1L, "10.50")));
 
         assertCode(UserInvoiceException.REQUEST_REUSED, () -> service.apply(ME, "req-1", 31L, List.of(1L, 3L)));
+        assertCode(UserInvoiceException.REQUEST_REUSED, () -> service.apply(ME, "req-1", 32L, List.of(1L)));
         verify(mapper, never()).insertApplication(any());
     }
 
@@ -237,14 +250,24 @@ class UserInvoiceServiceTest {
     }
 
     @Test
-    void manualRejectReleasesOrdersButManualIssueKeepsThem() {
-        when(mapper.markRejected(eq(500L), eq("抬头有误"), any())).thenReturn(1);
-        service.markRejected(500L, "抬头有误");
-        verify(mapper).releaseOrderLines(500L);
+    void unscopedLegacyFinancialWritesAreRejectedWithoutMutation() {
+        assertCode(UserInvoiceException.STATE_CONFLICT, () -> service.markRejected(500L, "抬头有误"));
+        assertCode(UserInvoiceException.STATE_CONFLICT, () -> service.markIssued(501L, "24310000000012345678"));
+        verify(mapper, never()).markRejected(anyLong(), anyString(), any());
+        verify(mapper, never()).markIssued(anyLong(), anyString(), any());
+        verify(mapper, never()).releaseOrderLines(anyLong());
+    }
 
-        when(mapper.markIssued(eq(501L), eq("24310000000012345678"), any())).thenReturn(1);
-        service.markIssued(501L, "24310000000012345678");
-        verify(mapper, never()).releaseOrderLines(501L);
+    @Test
+    void crossIssuerAndMissingConfigurationCannotCreateApplications() {
+        stubTitle();
+        when(mapper.selectInvoiceableRegistrationsForUpdate(ME, List.of(1L,2L)))
+            .thenReturn(List.of(order(1L,"10.00"),order(2L,"20.00")));
+        when(mapper.resolveInvoiceIssuers(List.of(1L,2L))).thenReturn(List.of(101L,102L));
+        assertCode(UserInvoiceException.ORDER_NOT_ELIGIBLE, () -> service.apply(ME,"two-issuers",31L,List.of(1L,2L)));
+        when(mapper.resolveInvoiceIssuers(List.of(1L,2L))).thenReturn(List.of(101L));
+        assertCode(UserInvoiceException.ORDER_NOT_ELIGIBLE, () -> service.apply(ME,"no-config",31L,List.of(1L,2L)));
+        verify(mapper,never()).insertApplication(any());
     }
 
     @Test
@@ -256,6 +279,69 @@ class UserInvoiceServiceTest {
     }
 
     // ── 夹具 ─────────────────────────────────────────────────────────
+
+    @Test
+    void originalRequestReadIsOwnerScopedCompleteAndNeverUsesRecentListOrWrites() {
+        UserInvoiceApplication existing = application(500L);
+        existing.setRequestId("older-request");
+        when(mapper.selectApplicationByRequest(ME, "older-request")).thenReturn(existing);
+        when(mapper.selectOrderLines(500L)).thenReturn(List.of(order(Long.MAX_VALUE, "12.34")));
+        Map<String, Object> result = service.applicationByRequest(ME, "older-request");
+        assertEquals("500", result.get("id"));
+        assertEquals("older-request", result.get("requestId"));
+        assertEquals("91******XX3K", result.get("taxNoMasked"));
+        assertFalse(result.containsValue(TAX));
+        assertEquals(Long.toString(Long.MAX_VALUE), ((Map<?, ?>) ((List<?>) result.get("orders")).get(0)).get("orderId"));
+        assertCode(UserInvoiceException.NOT_FOUND, () -> service.applicationByRequest(ME + 1, "older-request"));
+        verify(mapper).selectApplicationByRequest(ME + 1, "older-request");
+        verify(mapper, never()).selectApplicationsByMember(anyLong());
+        verify(mapper, never()).insertApplication(any());
+        verify(issuer, never()).submit(any());
+    }
+
+    @Test
+    void originalRequestReadRejectsInvalidKeysAndDoesNotInterpretAbsenceAsFailure() {
+        for (String request : new String[] { null, "", "bad request", "x".repeat(65) }) {
+            assertCode(UserInvoiceException.ARGUMENT_INVALID, () -> service.applicationByRequest(ME, request));
+        }
+        verifyNoInteractions(mapper);
+        assertCode(UserInvoiceException.NOT_FOUND, () -> service.applicationByRequest(ME, "not-yet-visible"));
+        verify(mapper, never()).releaseOrderLines(anyLong());
+    }
+
+    @Test
+    void titleSaveReceiptIsOwnerBoundAndNeverExposesPayloadFingerprintOrPii() {
+        // MyBatis yields null for another member's absent receipt row; Mockito's default would be an empty map.
+        when(mapper.selectTitleReceipt(anyLong(), anyString())).thenReturn(null);
+        when(mapper.selectTitleReceipt(ME, "title-request")).thenReturn(Map.of(
+                "requestId", "title-request", "titleId", Long.MAX_VALUE, "fingerprint", "PRIVATE_FINGERPRINT"));
+        assertEquals(Map.of("requestId", "title-request", "titleId", Long.toString(Long.MAX_VALUE), "status", "SAVED"),
+                service.titleSaveReceipt(ME, "title-request"));
+        assertCode(UserInvoiceException.NOT_FOUND, () -> service.titleSaveReceipt(ME + 1, "title-request"));
+        assertCode(UserInvoiceException.ARGUMENT_INVALID, () -> service.titleSaveReceipt(ME, "invalid request"));
+        verify(mapper, never()).selectTitlesByMember(anyLong());
+        verify(mapper, never()).insertTitle(any());
+    }
+
+    @Test
+    void refundHistoryIsCurrentReadAfterRegistrationLockAndApprovedPayoutFailureCannotInvoice() {
+        stubTitle();
+        var refund = new com.chengyinhub.business.domain.RefundApplication();
+        refund.setStatus(1); refund.setPayoutStatus(2);
+        when(refunds.selectRegistrationHistoryForUpdate(1L)).thenReturn(List.of(refund));
+        assertCode(UserInvoiceException.ORDER_NOT_ELIGIBLE, () -> service.apply(ME, "refund-current", 31L, List.of(1L)));
+        var order = inOrder(mapper, refunds);
+        order.verify(mapper).selectInvoiceRegistrationSeeds(ME, List.of(1L));
+        order.verify(mapper).lockInvoiceRegistration(1L);
+        order.verify(refunds).selectRegistrationHistoryForUpdate(1L);
+        verify(mapper, never()).insertApplication(any());
+    }
+
+    private static com.chengyinhub.business.domain.CmsRegistration registration(Long id) {
+        var row = new com.chengyinhub.business.domain.CmsRegistration();
+        row.setId(id); row.setMemberId(ME); row.setOwnerType(1L); row.setOwnerId(101L);
+        row.setPaymentStatus(2); row.setRegistrationStatus(2); return row;
+    }
 
     private void stubTitle() {
         UserInvoiceTitle t = title("COMPANY", "某公司", TAX);
@@ -283,7 +369,7 @@ class UserInvoiceServiceTest {
 
     private static UserInvoiceApplication application(long id) {
         UserInvoiceApplication app = new UserInvoiceApplication();
-        app.setId(id);
+        app.setId(id); app.setTitleId(31L);
         app.setMemberId(ME);
         app.setStatus("SUBMITTED");
         app.setTitleType("COMPANY");

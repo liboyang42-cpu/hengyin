@@ -87,6 +87,8 @@ public class ActivityInfoVO {
     private Boolean timeLocationLocked = Boolean.FALSE;
     /** 拍板 2026-09-16 #10:场次归属商家已打烊时为 true;下单入口据此提示「商家暂停营业」。 */
     private Boolean merchantClosed = Boolean.FALSE;
+    /** U-168:本次读的服务端时刻(epoch ms,瞬态);报名页据此算时钟偏移来置灰,不入库。 */
+    private Long serverNow;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -162,4 +164,6 @@ public class ActivityInfoVO {
     public void setTimeLocationLocked(Boolean timeLocationLocked) { this.timeLocationLocked = timeLocationLocked; }
     public Boolean getMerchantClosed() { return merchantClosed; }
     public void setMerchantClosed(Boolean merchantClosed) { this.merchantClosed = merchantClosed; }
+    public Long getServerNow() { return serverNow; }
+    public void setServerNow(Long serverNow) { this.serverNow = serverNow; }
 }

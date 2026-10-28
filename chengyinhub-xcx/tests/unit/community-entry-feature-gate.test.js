@@ -38,18 +38,20 @@ test('profile requested posts resumes after real flag read but not after user ch
   other.page.onTabChange({detail:{key:'about'}});other.flags(true,true);other.refreshes[0]();await flush();
   assert.equal(other.page.data.activeTab,'about');assert.equal(other.requests.length,0);
 });
-test('square closed deep link clears old feed and preserves unpublished draft without any feed request', async () => {
-  const h=mount('list');Object.assign(h.page.data,{valCont:'未发草稿',composeShow:true});
-  h.page._syncCommunityAccess();h.refreshes[0]();await flush();h.page.getList();h.page.submitFormData();
-  assert.equal(h.page.data.list.length,0);assert.equal(h.page.data.valCont,'未发草稿');assert.equal(h.page.data.composeShow,false);
+// 2026-10-27 P-20 owner:广场行内发布框撤掉,发帖统一走全屏发帖弹窗(草稿由组件存本机);
+// 页面侧的闸改成「关闭的账号点发帖入口不拉起弹窗」,原 valCont/submitFormData 断言随之换成 openCompose。
+test('square closed deep link clears old feed and refuses to open the composer without any feed request', async () => {
+  const h=mount('list');Object.assign(h.page.data,{composeShow:true});
+  h.page._syncCommunityAccess();h.refreshes[0]();await flush();h.page.getList();h.page.openCompose();
+  assert.equal(h.page.data.list.length,0);assert.equal(h.page.data.composeShow,false);
   assert.equal(h.requests.length,0);assert.deepEqual(h.toasts,['当前账号未开放广场发布']);
 });
-test('square read-only account can fetch feed but cannot edit or submit retained draft', async () => {
-  const h=mount('list');h.flags(true,false);Object.assign(h.page.data,{valCont:'原草稿',composeShow:true});
+test('square read-only account can fetch feed but cannot edit or open the composer', async () => {
+  const h=mount('list');h.flags(true,false);Object.assign(h.page.data,{composeShow:true});
   h.page._syncCommunityAccess();h.refreshes[0]();await flush();
   assert.equal(h.page.data.communityPostRead,true);assert.equal(h.page.data.communityPostWrite,false);assert.equal(h.page.data.composeShow,false);
   assert.equal(h.requests[0].url,'/api/creativesquare/list');const count=h.requests.length;
-  h.page._actionIndex=0;h.page.editCurrentSquarePost();h.page.submitFormData();assert.equal(h.requests.length,count);assert.equal(h.page.data.valCont,'原草稿');
+  h.page._actionIndex=0;h.page.editCurrentSquarePost();h.page.openCompose();assert.equal(h.requests.length,count);assert.equal(h.page.data.composeShow,false);
 });
 test('late feature completion cannot apply old account visibility to square or profile', async () => {
   for(const kind of ['list','profile']) {

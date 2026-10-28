@@ -4,6 +4,10 @@
   <view wx:elif="{{_glyph}}" class="cy-empty-glyph" aria-hidden="true">
     <cy-icon name="{{_glyph}}" size="{{size === 'lg' ? 64 : 48}}" />
   </view>
+  <view wx:elif="{{_art}}" class="cy-empty-art" aria-hidden="true">
+    <image class="cy-empty-art__bg" src="/images/empty_state_bg.svg" mode="aspectFit" />
+    <image class="cy-empty-art__figure" src="/images/empty_state_figure.svg" mode="aspectFit" />
+  </view>
   <image wx:elif="{{_icon}}" class="cy-empty-ic" src="{{_icon}}" mode="widthFix" aria-hidden="true" />
   <view class="cy-empty-title">{{_title}}</view>
   <view wx:if="{{_sub}}" class="cy-empty-sub">{{_sub}}</view>

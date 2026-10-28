@@ -46,6 +46,7 @@
       @selection-change="handleSelectionChange"
     >
       <template #toolbar-actions>
+        <el-button type="primary" plain icon="el-icon-s-check" size="mini" @click="claimAuditOpen = true" v-hasPermi="['business:merchant:edit']">商家认领待审队列</el-button>
         <el-button
           type="danger"
           plain
@@ -83,6 +84,8 @@
       </template>
     </cy-data-table>
 
+
+    <merchant-claim-audit-dialog :visible.sync="claimAuditOpen" @changed="getList" />
 
     <!-- 添加或修改商家入住申请对话框 -->
     <el-dialog :title="title" :visible.sync="open" width="500px" append-to-body :close-on-click-modal="false">
@@ -164,16 +167,18 @@ import CyDataTable from '@/components/CyDataTable'
 import CyFilterBar from '@/components/CyFilterBar'
 import CyMediaPreview from '@/components/CyMediaPreview'
 import CyPageHeader from '@/components/CyPageHeader'
+import MerchantClaimAuditDialog from './components/MerchantClaimAuditDialog.vue'
 
 const createQueryParams = () => ({ pageNum: 1, pageSize: 10, memberId: null, name: null, status: null })
 
 export default {
   name: "Merchant",
-  components: { CyDataTable, CyFilterBar, CyMediaPreview, CyPageHeader },
+  components: { CyDataTable, CyFilterBar, CyMediaPreview, CyPageHeader, MerchantClaimAuditDialog },
   dicts: ['sys_normal_disable',  'sys_show_hide','sys_merchant_status','sys_user_status'],
   data() {
     return {
       loading: false,
+      claimAuditOpen: false,
       ids: [],
       multiple: true,
       total: 0,

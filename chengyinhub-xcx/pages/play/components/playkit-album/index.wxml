@@ -5,9 +5,11 @@
   <text class="album__count" wx:if="{{images.length}}">{{cur + 1}} / {{images.length}}</text>
   <text class="album__line" wx:if="{{completionEnabled && done}}" aria-live="polite">照片已提交，相册仅供查看，不能再更换</text>
   <view class="album__line" wx:if="{{completionEnabled && !done}}">
-    <text wx:if="{{uploadFailure === 'retry'}}" aria-live="polite">网络或服务暂时异常，照片还没提交；可以重试上传同一张</text>
+    <text wx:if="{{uploadFailure === 'review_pending'}}" aria-live="polite">照片审核中</text>
+    <text wx:elif="{{uploadFailure === 'rejected'}}" aria-live="polite">照片未通过审核</text>
+    <text wx:elif="{{uploadFailure === 'retry'}}" aria-live="polite">网络或服务暂时异常，照片还没提交；可以重试上传同一张</text>
     <text wx:elif="{{uploadFailure === 'reselect'}}" aria-live="polite">这张照片没能上传，请重新选择照片</text>
-    <view bindtap="onCta" aria-role="button" aria-label="{{uploadFailure === 'retry' ? '重试上传这张照片' : uploaded ? '重新提交照片' : '拍照或选择照片'}}" style="transform: none" hover-class="album__back--press">{{uploadFailure === 'retry' ? '重试上传这张照片' : uploaded ? '重新提交照片' : uploadFailure === 'reselect' ? '重新选择照片' : '拍照或选择照片完成相册'}}</view>
+    <view bindtap="onCta" aria-role="button" aria-label="{{uploadFailure === 'review_pending' ? '查看/重试审核，批准后提交相册' : uploadFailure === 'retry' ? '重试上传这张照片' : uploaded ? '重新提交照片' : uploadFailure === 'rejected' ? '重新选择照片' : '拍照或选择照片'}}" style="transform: none" hover-class="album__back--press">{{uploadFailure === 'review_pending' ? '查看/重试审核' : uploadFailure === 'retry' ? '重试上传这张照片' : uploaded ? '重新提交照片' : uploadFailure === 'reselect' || uploadFailure === 'rejected' ? '重新选择照片' : '拍照或选择照片完成相册'}}</view>
     <view wx:if="{{uploaded || uploadFailure === 'retry'}}" bindtap="choosePhoto" aria-role="button" aria-label="重新选择照片" style="transform: none" hover-class="album__back--press">重新选择照片</view>
   </view>
   <view class="album__back" bindtap="close" aria-role="button" aria-label="收起相册" hover-class="album__back--press" hover-stay-time="80">收起相册</view>

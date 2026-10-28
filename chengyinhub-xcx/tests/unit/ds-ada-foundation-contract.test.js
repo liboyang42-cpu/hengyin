@@ -391,7 +391,12 @@ test('cy-empty 状态族:空 / 错 / 无权限 / 未开始具备不同视觉身�
   const glyphSource = read('components/cy/icon/icons.wxss')
   kinds.forEach((k) => {
     const state = table[k]
-    if (state.icon) assert.ok(exists(state.icon.replace(/^\//, '')), `kind=${k} 引用的插画必须真实存在`)
+    // 2026-10-24 owner(Figma ku2oaN9ag1XUMC9lKNnrcr node 2807:12251):empty 由 no_data.svg 换成两层插画,
+    // icon 记号 'empty-state' 由组件渲染成 bg + figure 两张图,两张都必须真实存在。
+    if (state.icon === 'empty-state') {
+      ;['images/empty_state_bg.svg', 'images/empty_state_figure.svg'].forEach((rel) =>
+        assert.ok(exists(rel), `kind=${k} 两层插画缺 ${rel}`))
+    } else if (state.icon) assert.ok(exists(state.icon.replace(/^\//, '')), `kind=${k} 引用的插画必须真实存在`)
     if (state.glyph) assert.match(glyphSource, new RegExp(`\\.cyi--${state.glyph}\\s*\\{`), `kind=${k} 的线性图标必须已注册`)
   })
 })

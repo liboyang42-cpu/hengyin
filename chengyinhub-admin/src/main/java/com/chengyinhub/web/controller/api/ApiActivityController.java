@@ -1383,6 +1383,8 @@ public class ApiActivityController extends BaseController {
                 cmsActivity.setViewCount(0L);
             }
 
+            // U-168:报名页按服务器时刻置灰场次/票种/候补窗口,与建单闸同一把钟;只读、不入库。
+            activityInfoVO.setServerNow(System.currentTimeMillis());
             return success(activityInfoVO);
         } else {
             if (member_id != null && member_id > 0) {

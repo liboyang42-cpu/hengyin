@@ -15,9 +15,9 @@
   <view class="tablist favorite-list">
     <block wx:if="{{activeFavoriteTab === 'posts'}}">
       <cy-empty fill class="cy-fill-state" size="lg" wx:if="{{errorMsg && loginRequired && postList.length === 0}}" kind="no-permission" title="登录后查看收藏" cta="登录" bind:cta="loginFavorites" />
-      <cy-error load-failure fill class="cy-fill-state" size="lg" wx:elif="{{errorMsg && postList.length === 0}}" icon="/images/no_data.svg" title="收藏加载失败" sub="{{errorMsg}}" bind:retry="refreshData" auto-back />
+      <cy-error load-failure fill class="cy-fill-state" size="lg" wx:elif="{{errorMsg && postList.length === 0}}" icon="empty-state" title="收藏加载失败" sub="{{errorMsg}}" bind:retry="refreshData" auto-back />
       <cy-skeleton wx:elif="{{loading && postList.length === 0}}" type="post-card" count="3" />
-      <cy-empty fill class="cy-fill-state" size="lg" wx:elif="{{postList.length === 0}}" icon="/images/no_data.svg" title="暂无收藏的帖文" />
+      <cy-empty fill class="cy-fill-state" size="lg" wx:elif="{{postList.length === 0}}" kind="empty" title="暂无收藏的帖文" />
       <block wx:else>
         <view class="favorite-refreshing" wx:if="{{refreshing}}" aria-role="status" aria-live="polite"></view>
         <cy-post-card wx:for="{{postList}}" wx:key="id" post="{{item}}" index="{{index}}" light="{{isMerchantView}}"
@@ -30,9 +30,9 @@
     <block wx:else>
       <!-- PR10 F-W1-12:未登录(无会话 / 401)给登录引导,不与加载失败一起留白 -->
       <cy-empty fill class="cy-fill-state" size="lg" wx:if="{{errorMsg && loginRequired && ztList1.length === 0}}" kind="no-permission" title="登录后查看收藏" cta="登录" bind:cta="loginFavorites" />
-      <cy-error load-failure fill class="cy-fill-state" size="lg" wx:elif="{{errorMsg && ztList1.length === 0}}" icon="/images/no_data.svg" title="收藏加载失败" sub="{{errorMsg}}" bind:retry="refreshData" auto-back />
+      <cy-error load-failure fill class="cy-fill-state" size="lg" wx:elif="{{errorMsg && ztList1.length === 0}}" icon="empty-state" title="收藏加载失败" sub="{{errorMsg}}" bind:retry="refreshData" auto-back />
       <cy-skeleton wx:elif="{{loading && ztList1.length === 0}}" type="card" count="3" />
-      <cy-empty fill class="cy-fill-state" size="lg" wx:elif="{{ztList1.length === 0}}" icon="/images/no_data.svg" title="暂无收藏的主题" />
+      <cy-empty fill class="cy-fill-state" size="lg" wx:elif="{{ztList1.length === 0}}" kind="empty" title="暂无收藏的主题" />
       <block wx:else>
       <view class="favorite-refreshing" wx:if="{{refreshing}}" aria-role="status" aria-live="polite"></view>
       <view class="favorite-card" wx:for="{{ztList1}}" wx:key="id">

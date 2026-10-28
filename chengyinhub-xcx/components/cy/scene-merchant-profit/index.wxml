@@ -43,6 +43,6 @@
   </block>
 
   <view wx:else class="err-wrap" aria-role="alert">
-    <cy-error load-failure="{{!authRequired && !accessDenied}}" size="lg" style="flex:1;min-height:0;" icon="/images/no_data.svg" fill title="{{authRequired ? '登录后查看主办分润' : accessDenied ? '当前账号无法查看分润' : '分润数据加载失败'}}" retry="{{authRequired ? '登录' : '重试'}}" bind:retry="onRetry" />
+    <cy-error load-failure="{{!authRequired && !accessDenied}}" size="lg" style="flex:1;min-height:0;" icon="empty-state" fill title="{{authRequired ? '登录后查看主办分润' : accessDenied ? '当前账号无法查看分润' : '分润数据加载失败'}}" retry="{{authRequired ? '登录' : '重试'}}" bind:retry="onRetry" />
   </view>
 </view>

@@ -134,6 +134,36 @@
         limit 1
     </select>
 
+    <!-- Read-only exact order hint; the create path independently locks and revalidates. -->
+    <select id="selectEligibilityForRegistration" resultMap="EligibilityResult">
+        select mm.id as merchant_row_id, mm.member_id as merchant_owner_member_id,
+               r.id as registration_id, rd.id as redemption_id
+        from cms_registration r
+        join redemption rd
+          on rd.registration_id = r.id
+         and rd.status = 'ACTIVE'
+        join mms_merchant mm
+          on mm.id = #{merchantRowId}
+         and mm.member_id = rd.merchant_id
+         and mm.status = 1 and mm.account_status = 1 and mm.del_flag = 0
+        where r.member_id = #{authorMemberId}
+          and r.id = #{registrationId}
+          and not exists (
+            select 1
+            from mms_merchant sibling
+            where sibling.member_id = mm.member_id
+              and sibling.status = 1 and sibling.account_status = 1 and sibling.del_flag = 0
+              and sibling.id &lt;&gt; mm.id
+          )
+          and not exists (
+            select 1 from merchant_review used
+             where used.registration_id = r.id
+               and used.merchant_owner_member_id = mm.member_id
+          )
+        order by rd.create_time desc, rd.id desc
+        limit 1
+    </select>
+
     <select id="selectByAuthorRequestForUpdate" resultMap="MerchantReviewResult">
         select <include refid="reviewColumns"/>
         from merchant_review mr

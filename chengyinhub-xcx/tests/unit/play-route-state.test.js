@@ -21,7 +21,7 @@ const nodes = [
 function branchState() {
   return normalizeRouteState({
     routeMode: 'BRANCH_GRAPH',
-    sessionId: 'route-session-1',
+    sessionId: '9007199254740993',
     status: 'ACTIVE',
     currentNodeId: 30,
     recommendedNodeId: 30,
@@ -103,9 +103,10 @@ test('完成动作超时重试复用 routeActionId，并且上下文无法携带
   assert.deepEqual(first, {
     routeActionId: 'route-action-1',
     expectedRouteVersion: 7,
+    routeSessionId: '9007199254740993',
   })
   assert.deepEqual(retry, first)
-  assert.deepEqual(Object.keys(first).sort(), ['expectedRouteVersion', 'routeActionId'])
+  assert.deepEqual(Object.keys(first).sort(), ['expectedRouteVersion', 'routeActionId', 'routeSessionId'])
   assert.equal('targetNodeId' in first, false)
   assert.equal('outcomeCode' in first, false)
 
@@ -140,4 +141,19 @@ test('畸形念头项直接丢掉,不让它把菜单渲染成空白行', () => {
 
 test('没有念头时给空数组,页面不用到处判 null', () => {
   assert.deepEqual(normalizeRouteState({ routeMode: 'LINEAR' }).thoughts, [])
+})
+
+// Never turn an already-rounded numeric run ID into an apparently exact identity.
+test('unsafe numeric route session identities are rejected, exact strings retained', () => {
+  assert.equal(normalizeRouteState({ sessionId: 9007199254740992 }).sessionId, '');
+  assert.equal(normalizeRouteState({ sessionId: '9007199254740993' }).sessionId, '9007199254740993');
+});
+
+test('同号动作冻结原局与版本，刷新不改原指纹', () => {
+  const store = createRouteActionStore(() => 'fixed-action')
+  const first = store.context('photo', 30, {sessionId:'9007199254740993',version:7})
+  const retry = store.context('photo', 30, {sessionId:'9007199254740995',version:8})
+  assert.deepEqual(retry, first)
+  retry.expectedRouteVersion = 99
+  assert.equal(store.context('photo',30,{}).expectedRouteVersion,7)
 })

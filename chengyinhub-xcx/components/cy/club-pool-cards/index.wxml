@@ -1,0 +1,24 @@
+<block wx:if="{{cards.length || poolError}}">
+  <view class="cp-head">
+    <text class="cp-title">俱乐部合作</text>
+    <view class="cp-link" bindtap="openAll" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="查看全部俱乐部合作">
+      <text>查看全部</text><cy-icon name="arrow-right" size="24" />
+    </view>
+  </view>
+  <view class="cp-retry" wx:if="{{poolError}}" bindtap="load" aria-role="button" aria-label="重新加载俱乐部合作" hover-class="cy-pressed" hover-stay-time="80">俱乐部合作暂时没读到，点这里重试</view>
+  <view class="cp-card" wx:for="{{cards}}" wx:key="topicId" bindtap="openCard" data-topic-id="{{item.topicId}}"
+        hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="查看俱乐部合作 {{item.name}}">
+    <view class="cp-cover">
+      <image wx:if="{{item.cover}}" class="cp-img" src="{{item.cover}}" mode="aspectFill" lazy-load />
+      <text class="cp-tag">开放承接</text>
+    </view>
+    <view class="cp-body">
+      <text class="cp-name">{{item.name}}</text>
+      <text class="cp-host" wx:if="{{item.host}}">{{item.host}}</text>
+      <view class="cp-foot">
+        <text class="cp-dl" wx:if="{{item.deadline}}">截止  {{item.deadline}}</text>
+        <view class="cp-cta">看看</view>
+      </view>
+    </view>
+  </view>
+</block>

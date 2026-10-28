@@ -75,6 +75,7 @@ class FreeOrderCancelAcceptanceTest {
 
         regMapper = mock(CmsRegistrationMapper.class);
         when(regMapper.selectCmsRegistrationById(REG_ID)).thenReturn(registration);
+        when(regMapper.selectCmsRegistrationByIdForUpdate(REG_ID)).thenReturn(registration);
         ticketMapper = mock(OmsTicketMapper.class);
         when(ticketMapper.restoreInventory(eq(TICKET), anyLong())).thenReturn(1);
         memberMapper = mock(UmsMemberMapper.class);
@@ -133,7 +134,8 @@ class FreeOrderCancelAcceptanceTest {
         current.setPaymentStatus(4);
         current.setRegistrationStatus(3);
         current.setVerificationStatus(0);
-        when(regMapper.selectCmsRegistrationByIdForUpdate(REG_ID)).thenReturn(current);
+        // 两次入口锁内读都还是同一已支付快照;只有 claim loser 的复读看到已退款。
+        when(regMapper.selectCmsRegistrationByIdForUpdate(REG_ID)).thenReturn(registration, registration, current);
 
         service.cancelPaidRegistration(REG_ID, MEMBER);
         service.cancelPaidRegistration(REG_ID, MEMBER);

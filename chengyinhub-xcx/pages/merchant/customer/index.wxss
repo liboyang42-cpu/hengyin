@@ -1,4 +1,5 @@
 @import '../../../style/merchant-light.wxss';
+@import '../../../style/threads-menu.wxss';
 
 .cu-page {
   min-height: 100vh;
@@ -7,10 +8,6 @@
   background: var(--cy-bg-page);
   display: flex;
   flex-direction: column;
-}
-
-.cu-head {
-  padding: 0 0;
 }
 
 /* Figma 23:195：导航只负责返回；页面标题与真实客户总数独立成 Hero。 */
@@ -34,16 +31,7 @@
   padding: 0 24rpx; /* ds-ok: Figma 搜索框 x=12 */
 }
 
-/* CU-M-101 / CU-M-121:原来是 flex-wrap + justify-content:flex-end,四个同层工具
-   在窄屏换行后错落(「更多筛选」居中、「批量标签」偏左、两枚黑底靠右)。
-   改成等宽两列规则网格:永远成组、对齐,不必横向滚动也能全部可达。 */
-.cu-toolbar {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--cy-space-2);
-  margin-top: var(--cy-space-2);
-}
-.cu-tool, .cu-inline-button {
+.cu-inline-button {
   min-height: 64rpx;
   margin: 0;
   padding: 0 var(--cy-space-3);
@@ -56,12 +44,7 @@
   font-size: var(--cy-font-caption);
   line-height: 1;
 }
-.cu-tool {
-  flex: 0 0 auto;
-  box-sizing: border-box;
-  width: 100%;
-}
-.cu-tool::after, .cu-inline-button::after { border: 0; }
+.cu-inline-button::after { border: 0; }
 .cu-inline-button--primary { background: var(--cy-btn-solid-bg); color: var(--cy-btn-solid-fg); }
 .cu-batch, .cu-export {
   margin-top: var(--cy-space-2);
@@ -333,3 +316,4 @@
 .cu-row:nth-child(7) { transition-delay: calc(var(--pm-l-s, 0) * 180ms), calc(var(--pm-l-s, 0) * 180ms), 0s, 0s; }
 .cu-row:nth-child(8) { transition-delay: calc(var(--pm-l-s, 0) * 210ms), calc(var(--pm-l-s, 0) * 210ms), 0s, 0s; }
 .cu-row:nth-child(n+9) { transition-delay: calc(var(--pm-l-s, 0) * 240ms), calc(var(--pm-l-s, 0) * 240ms), 0s, 0s; }
+

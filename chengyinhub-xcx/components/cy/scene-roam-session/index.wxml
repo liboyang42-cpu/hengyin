@@ -23,7 +23,7 @@
         <view class="route-replay__segment" wx:for="{{replaySegs}}" wx:key="i" style="left:{{item.x}}rpx;top:{{item.y}}rpx;width:{{item.len}}rpx;transform:rotate({{item.deg}}deg)"></view>
         <view class="route-replay__poi route-replay__poi--{{item.tone}}" wx:for="{{routePoiDots}}" wx:key="i" style="left:{{item.x}}rpx;top:{{item.y}}rpx"></view>
       </view>
-      <view class="route-replay__empty" wx:else>这次没有记录到连续轨迹</view>
+      <view class="route-replay__empty" wx:else>{{session.serverFact ? '这台设备没有本次路线；仅显示平台记录的完成统计' : '这次没有记录到连续轨迹'}}</view>
     </view>
     <view class="route-replay__progress" wx:if="{{routeSegs.length}}">
       <view class="route-replay__track"><view class="route-replay__fill" style="width:{{replayProgress || 0}}%"></view></view>
@@ -64,7 +64,7 @@
   </view>
   <view class="rw__empty" wx:else>这次没有点亮新地点</view>
 
-  <view class="ss-ctaw" wx:if="{{!snapshot}}">
+  <view class="ss-ctaw" wx:if="{{!snapshot && (!session.serverFact || session.localSupplement)}}">
     <view class="ss-cta" bindtap="share" aria-role="button" aria-label="分享足迹卡" hover-class="cy-pressed" hover-stay-time="80">分享足迹卡</view>
   </view>
   <view class="ss-tail"></view>

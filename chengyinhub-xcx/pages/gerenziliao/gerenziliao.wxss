@@ -24,7 +24,9 @@ page { background: var(--cy-bg-page); }
 .shzltop{ overflow: hidden; margin: 0 var(--cy-page-x);}
 .shzltop_tu{width: 170rpx; height: 170rpx; margin: 0 auto; position: relative;}
 .shzltop_tu image{width: 170rpx; height: 170rpx; vertical-align: top; border-radius: 50%; overflow: hidden;}
-.shzltop_tu image.dbj{width: 40rpx; height: 40rpx; vertical-align:top; position: absolute;right: 0; bottom: 0; border: 2rpx solid var(--cy-border-card);border-radius: 50%;}
+.shzltop_tu .dbj{ position: absolute; right: 0; bottom: 0; }
+/* 2026-10-28 业主:每支修改笔下面都是灰色圆底;头像上那支点了就是换头像 */
+.pen-badge{ width: 48rpx; height: 48rpx; border-radius: 50%; background: #48484C; color: #fff; display: flex; align-items: center; justify-content: center; } /* ds-ok: 深色页上的灰底笔 */
 .shzltop_txt{overflow: hidden; text-align: center; font-size: var(--cy-font-label); font-weight: 700;color: var(--cy-text-secondary); margin-top: var(--cy-space-4);}
 .shzltop_tip{overflow: hidden; text-align: center; font-size: var(--cy-font-caption); color: var(--cy-text-secondary); margin-top: 8rpx;}
 /* 用户原话「直接写到背景上」:去掉卡面与圆角,资料行直接落在页面底色上(margin 保留)。 */
@@ -81,7 +83,7 @@ button.shzlbox_bind{
 }
 /* 命中区 40 → 88rpx(DS §3.8 / WCAG 2.2 SC 2.5.8),图标视觉仍 40rpx */
 .shzlbox_li_right{ width: var(--cy-btn-h); height: var(--cy-btn-h); flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
-.shzlbox_li_right image{ width: 40rpx; height: 40rpx; vertical-align: top;}
+
 
 /* 底栏避让占位:保存栏已收编 cy-footer-bar,故直接用它的官方高度 token。
    R5 变更缘由:原来是自造的 .bmbottom(position:fixed 但**无 z-index**),

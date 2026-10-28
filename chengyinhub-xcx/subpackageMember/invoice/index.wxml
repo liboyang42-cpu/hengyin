@@ -1,0 +1,57 @@
+<wxs src="../../utils/wxs/money.wxs" module="money" />
+<!-- 我的发票(X5):照抄「我的订单」页 + scene-member-order-history 订单卡;底栏照抄 cy-footer-bar 双键。 -->
+<view class="theme-dark">
+  <cy-toast id="cy-toast" />
+  <cy-loading-mask id="cy-loading" />
+  <cy-modal-host id="cy-modal-host" />
+<view class="order-page">
+<cy-nav-bar custom-back bind:back="onBack" />
+<cy-page-title title="我的发票" />
+<view class="order-shell">
+  <cy-empty wx:if="{{login}}" fill size="lg" class="cy-fill-state" kind="no-permission" title="登录后查看发票" cta="微信登录" bind:cta="login" />
+  <cy-empty wx:elif="{{unavailable}}" fill size="lg" class="cy-fill-state" kind="no-permission" title="发票功能暂未开放" />
+  <view class="moh" wx:else>
+    <view class="order-tabs-wrap" wx:if="{{records.length}}">
+      <cy-tabs tabs="{{tabs}}" active="{{tab}}" variant="chip" sticky bind:change="onTab" />
+    </view>
+    <view class="inv-recovery" wx:if="{{pending && recovery === 'unknown'}}">
+      <cy-inline-error kind="data" title="上次的开票申请结果未确认" sub="确认前请勿重复提交" action="{{recovering || !requestId ? '' : '查询结果'}}" bind:action="queryOriginal" />
+    </view>
+    <view class="inv-recovery" wx:elif="{{pending && recovery === 'notfound'}}">
+      <cy-inline-error kind="data" title="暂未查到这次申请" sub="请稍后再查，或联系客服" action="{{recovering || !requestId ? '' : '再查一次'}}" bind:action="queryOriginal" />
+    </view>
+    <view class="moh-body">
+      <cy-skeleton wx:if="{{loading && !loaded}}" type="list" count="3" />
+      <cy-error load-failure wx:elif="{{error && !loaded}}" fill size="lg" title="发票记录加载失败" retry="重试" bind:retry="loadRecords" />
+      <cy-empty wx:elif="{{loaded && !records.length}}" fill size="lg" class="cy-fill-state" kind="empty" title="还没有发票申请" />
+      <cy-empty wx:elif="{{loaded && !rows.length}}" fill size="lg" class="cy-fill-state" kind="empty" title="当前筛选暂无发票申请" />
+      <view class="orderbox_li" wx:for="{{rows}}" wx:key="id" bindtap="go" data-page="detail" data-id="{{item.id}}" hover-class="orderbox_li--press" hover-stay-time="80" aria-role="button" aria-label="发票申请，{{item.playerStatus}}，{{item.titleName}}">
+        <view class="orderbox_li_top">
+          <view class="orderbox_li_top_left">发票申请</view>
+          <view class="orderbox_li_top_right"><text class="moh-state inv-state-{{item.statusKey}}">{{item.playerStatus}}</text></view>
+        </view>
+        <view class="orderbox_li_con">
+          <view class="orderbox_li_con_info">
+            <view class="order-mode-line" wx:if="{{item.titleType}}">
+              <text class="order-mode-tag {{item.titleType === 'PERSONAL' ? 'green' : ''}}">{{item.titleType === 'COMPANY' ? '单位' : '个人'}}</text>
+              <text class="moh-no">{{item.taxNoMasked || '个人抬头'}}</text>
+            </view>
+            <view class="orderbox_li_con_info_name ep1">{{item.titleName}}</view>
+            <view class="orderbox_li_con_info_time" wx:if="{{item.createText}}"><image lazy-load="true" class="moh-ico" src="/subpackageMember/images/d_orderIcon.png" mode="widthFix" />申请于 {{item.createText}}</view>
+            <view class="orderbox_li_con_info_txt ep1"><image lazy-load="true" class="moh-ico" src="/subpackageMember/images/d_orderIcon2.png" mode="widthFix" />{{item.issuerName ? item.issuerName + ' · ' : ''}}{{item.orderCount || '—'}} 笔订单</view>
+          </view>
+        </view>
+        <view class="orderbox_li_bot">
+          <view class="orderbox_li_bot_left">开票金额：<text class="moh-amount">{{money.amount(item.totalAmount)}}</text></view>
+          <view class="orderbox_li_bot_right">
+            <view class="orderbut1" wx:if="{{item.status === 'SUBMITTED'}}" catchtap="cancel" data-id="{{item.id}}" aria-role="button" aria-label="撤回申请" aria-disabled="{{writing}}" hover-class="{{writing ? 'none' : 'cy-pressed'}}" hover-stay-time="80" hover-stop-propagation="true"><view class="orderbut__visual">撤回申请</view></view>
+            <view class="orderbut2 orderbut-play" catchtap="go" data-page="detail" data-id="{{item.id}}" aria-role="button" aria-label="查看详情" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true"><view class="orderbut__visual">查看详情</view></view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>
+<cy-footer-bar wx:if="{{!login && !unavailable && loaded}}" secondary="管理抬头" primary="申请开票" bind:secondarytap="goTitles" bind:primarytap="goApply" />
+</view>
+</view>

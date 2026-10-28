@@ -120,6 +120,7 @@
     WHERE id = #{id} AND scope_type = 2 AND del_flag = '0'
   </update>
 
+  <!-- M-28 先发后审:商家自助保存由调用方给出 audit_status(过了同步文本机审即 1,玩家立刻可见)。 -->
   <update id="updateMerchantSelfNpc" parameterType="com.chengyinhub.business.domain.NpcProfile">
     UPDATE npc_profile
     <set>
@@ -128,7 +129,8 @@
       <if test="persona != null">persona = #{persona},</if>
       <if test="greeting != null">greeting = #{greeting},</if>
       <if test="knowledge != null">knowledge = #{knowledge},</if>
-      audit_status = 0,
+      audit_status = #{auditStatus},
+      audit_reason = NULL,
       update_time = NOW()
     </set>
     WHERE id = #{id} AND scope_id = #{scopeId} AND scope_type = 2 AND del_flag = '0'

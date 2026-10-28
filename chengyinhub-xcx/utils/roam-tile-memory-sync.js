@@ -1,5 +1,7 @@
 'use strict'
 
+const { tileCursor, compareCursors } = require('./roam-tile-cursor.js')
+
 async function syncRoamTileMemory(options) {
   const config = options || {}
   const memory = config.memory
@@ -21,16 +23,17 @@ async function syncRoamTileMemory(options) {
   assertCurrent()
   const initial = memory.readTiles()
   let tiles = { ...((initial && initial.tiles) || {}) }
-  let cursor = Number(initial && initial.serverCursor) || 0
+  let cursor = tileCursor(initial && initial.serverCursor)
+  if (cursor === null) throw new Error('迷雾记忆本地游标无效')
 
   while (true) {
     const page = await fetchPage(cursor, pageSize)
     assertCurrent()
-    if (!page || typeof page !== 'object' || !Array.isArray(page.tiles)) {
+    if (!page || typeof page !== 'object' || !Array.isArray(page.tiles) || typeof page.hasMore !== 'boolean') {
       throw new Error('迷雾记忆分页响应无效')
     }
-    const next = Number(page.nextAfterId)
-    if (!Number.isSafeInteger(next) || next < cursor) throw new Error('迷雾记忆游标无效')
+    const next = tileCursor(Object.prototype.hasOwnProperty.call(page, 'nextAfterIdExact') ? page.nextAfterIdExact : page.nextAfterId)
+    if (next === null || compareCursors(next, cursor) < 0) throw new Error('迷雾记忆游标无效')
     const latest = memory.readTiles()
     const pending = readPendingTiles()
     tiles = {
@@ -42,8 +45,10 @@ async function syncRoamTileMemory(options) {
       const key = String(tile == null ? '' : tile).trim()
       if (key) tiles[key] = 1
     })
-    if (page.hasMore === true && next <= cursor) throw new Error('迷雾记忆游标没有推进')
-    cursor = Math.max(next, Number(latest && latest.serverCursor) || 0)
+    if (page.hasMore && compareCursors(next, cursor) <= 0) throw new Error('迷雾记忆游标没有推进')
+    const latestCursor = tileCursor(latest && latest.serverCursor)
+    if (latestCursor === null) throw new Error('迷雾记忆本地游标无效')
+    cursor = compareCursors(next, latestCursor) >= 0 ? next : latestCursor
     if (!memory.writeTiles(tiles, cursor, page.tileRetentionAt)) throw new Error('迷雾记忆本地持久化失败')
     onPage(page.tiles.slice(), { tiles, serverCursor: cursor })
     if (page.hasMore !== true) return { tiles, serverCursor: cursor }

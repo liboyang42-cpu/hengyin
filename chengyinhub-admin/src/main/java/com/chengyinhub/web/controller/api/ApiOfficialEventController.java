@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.business.domain.dto.TeamEventCommand;
+import com.chengyinhub.business.service.impl.TeamEventCommandService;
 import java.util.List;
 import java.util.Map;
 
@@ -53,6 +55,54 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "官方活动")
 @RequestMapping("/api/official")
 public class ApiOfficialEventController extends BaseController {
+
+    @Autowired
+    private com.chengyinhub.business.service.impl.OfficialEventAttendanceService attendance;
+
+    @GetMapping("/events/{id}/attendance")
+    public AjaxResult attendance(@PathVariable Long id) { return success(attendance.read(id,uid(),false)); }
+
+    @GetMapping("/events/{id}/attendance/manage")
+    public AjaxResult attendanceManage(@PathVariable Long id) {
+        if (!canPublish(uid())) return error("无官方发布权限");
+        return success(attendance.read(id,uid(),true));
+    }
+
+    @Autowired
+    private TeamEventCommandService commandReceipts;
+
+    @PostMapping("/command")
+    public AjaxResult command(@RequestBody TeamEventCommand input) {
+        Long actor = uid();
+        if (!canPublish(actor)) return error("无官方发布权限");
+        return AjaxResult.success(commandReceipts.execute(actor, "EVENT", input));
+    }
+
+    @PostMapping("/command/query")
+    public AjaxResult commandQuery(@RequestBody TeamEventCommand input) {
+        return AjaxResult.success(commandReceipts.query(uid(), "EVENT", input == null ? null : input.getRequestId()));
+    }
+
+    @PostMapping("/command/cancel")
+    public AjaxResult commandCancel(@RequestBody TeamEventCommand input) {
+        return AjaxResult.success(commandReceipts.cancel(uid(), "EVENT", input));
+    }
+
+    // Same player authorization as the legacy signup route, never the organizer whitelist.
+    @PostMapping("/signup-command")
+    public AjaxResult signupCommand(@RequestBody TeamEventCommand input) {
+        return AjaxResult.success(commandReceipts.execute(uid(), "SIGNUP", input));
+    }
+
+    @PostMapping("/signup-command/query")
+    public AjaxResult signupCommandQuery(@RequestBody TeamEventCommand input) {
+        return AjaxResult.success(commandReceipts.query(uid(), "SIGNUP", input == null ? null : input.getRequestId()));
+    }
+
+    @PostMapping("/signup-command/cancel")
+    public AjaxResult signupCommandCancel(@RequestBody TeamEventCommand input) {
+        return AjaxResult.success(commandReceipts.cancel(uid(), "SIGNUP", input));
+    }
 
     @Autowired
     private IOfficialEventService officialEventService;
@@ -338,12 +388,24 @@ public class ApiOfficialEventController extends BaseController {
         return err == null ? success("活动已恢复") : error(err);
     }
 
+    @PostMapping("/broadcast-request/cancel")
+    public AjaxResult cancelBroadcastCreation(@RequestBody java.util.Map<String,String> input){
+        if(!canPublish(uid()))return error("无官方发布权限");return success(officialBroadcastService.cancelCreation("MEMBER:"+uid(),input.get("requestId")));
+    }
+
+    @GetMapping("/broadcast-request")
+    public AjaxResult broadcastRequest(@RequestParam String requestId){
+        if(!canPublish(uid()))return error("无官方发布权限");
+        return success(officialBroadcastService.creationReceipt("MEMBER:"+uid(),requestId));
+    }
+
     @Operation(summary = "发官方通知/公告(白名单):勾选玩家/俱乐部/商家,一起或分开发")
     @PostMapping("/broadcast")
     public AjaxResult broadcast(@RequestBody OfficialBroadcast bc) {
         Long memberId = uid();
         if (!canPublish(memberId)) return error("无官方发布权限");
         if (bc == null) return error("通知不能为空");
+        bc.setRequestOwner("MEMBER:"+memberId);
         OfficialEvent event = null;
         if (bc.getEventId() != null) {
             event = officialEventService.adminGet(bc.getEventId());
@@ -361,6 +423,12 @@ public class ApiOfficialEventController extends BaseController {
         bc.setSenderAccount(memberId);
         OfficialBroadcast saved = officialBroadcastService.publish(bc, memberId);
         return AjaxResult.success("通知已提交", saved.getId());
+    }
+
+    @PostMapping("/broadcast/{id}/recover")
+    public AjaxResult recoverBroadcast(@PathVariable Long id) {
+        Long actor=uid();if(!canPublish(actor))return error("无官方发布权限");
+        return success(officialBroadcastService.recover(id,actor));
     }
 
     @Operation(summary = "通知触达/点击复盘")

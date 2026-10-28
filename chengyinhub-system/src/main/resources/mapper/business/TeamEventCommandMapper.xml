@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.TeamEventCommandMapper">
+  <sql id="columns">request_id, domain, target_id, action, fingerprint, state, result_json</sql>
+  <insert id="reserve">
+    insert ignore into team_event_command_receipt
+      (actor_id, request_id, domain, target_id, action, fingerprint, state)
+    values (#{actor}, #{key}, #{domain}, #{target}, #{action}, #{fingerprint}, 'PENDING')
+  </insert>
+  <select id="read" resultType="map">
+    select <include refid="columns"/> from team_event_command_receipt
+    where actor_id=#{actor} and request_id=#{key}
+  </select>
+  <select id="lock" resultType="map">
+    select <include refid="columns"/> from team_event_command_receipt
+    where actor_id=#{actor} and request_id=#{key} for update
+  </select>
+  <update id="finish">
+    update team_event_command_receipt set state=#{state}, result_json=#{result}, update_time=current_timestamp
+    where actor_id=#{actor} and request_id=#{key} and state='PENDING'
+  </update>
+</mapper>

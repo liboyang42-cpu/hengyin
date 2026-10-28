@@ -35,6 +35,7 @@ MYBATIS_ITS=(
   PublicMemberFriendCountMySqlIT
   CommunityActivityReferenceMySqlIT
   CommunityMediaEditMySqlIT
+  LegacyReplyCountMySqlIT
   AppMediaAssetMySqlIT
   # 2026-08-19:类间隔离契约本身也点名跑 —— 它有三条负控(共用必撞 / 真查 information_schema /
   # ★A 的遗留数据不许喂饱 B 的 fail-closed 前置)。不点名 = 没人看着隔离,那这批又会慢慢滑回共用。
@@ -42,6 +43,8 @@ MYBATIS_ITS=(
   ClubLeaderboardContributionMyBatisIT
   ComplaintPickerOwnerType3RealDbIT
   CoopMapperMyBatisIT
+  CoopInviteOriginalRequestMySqlIT
+  ClubPostLikeAuthorizationMySqlIT
   MemberPrivacyMyBatisIT
   MerchantGeoSortMyBatisIT
   NpcChatRetentionMyBatisIT
@@ -88,6 +91,7 @@ MYBATIS_ITS=(
   # 2026-09-15 R9-41 假绿修复后登记:待审/驳回/下线的 *在线* 投放(status=1)只有
   # RoamMapper.xml 的 cityNodeContentApproved 能挡,删闸即红。不点名 = CI 永远跑不到这条边界。
   CityNodePendingVisibilityMySqlIT
+  CityNodeCompletionIdempotencyMySqlIT
   # MySQL leader session, failover fence, strict Druid wall and transactional duplicate definitions.
   SchedulerSessionLockMySqlIT
   # 2026-10-22 发布验收 P1 俱乐部:入会通过/驳回、封禁/解封、举报工单在真库上的归属与幂等(真服务+真 mapper)。
@@ -121,6 +125,8 @@ MYBATIS_ITS=(
   MerchantReferralBountyDeadlockRetryMySqlIT
   # 2026-10-22 F2 RPG P0:属性定义老注册 upsert 保留扩展列、改 label 不改键名;角色卡台账只随更新的来源前移。
   ThemeCharacterMapperMyBatisIT
+  # 2026-10-28 文档二 L8:属性标记迁移(老自定义整数值登记为属性)可重跑、开局设置整行覆盖、我的申诉并表与有效封禁。
+  Doc2L8MapperMyBatisIT
   # 2026-10-22 DOC2 F3 Phase 1:套票账本迁移可重跑 + 形状负控、Phase 1 不动 settlement_claim(7 列唯一键原样)、
   #   A/B 同买一套票余额互不影响、快照冻结、同单位唯一在约、月度豁免唯一 —— 真 DDL + 真 mapper 才验得动。
   FreeExploreBundleLedgerMySqlIT

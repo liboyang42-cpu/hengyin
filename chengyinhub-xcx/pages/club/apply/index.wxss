@@ -162,3 +162,7 @@ page { background: var(--cy-bg-page); }
 .ca-alert { display: block; padding: 0 var(--cy-page-x); margin-bottom: var(--cy-space-4); }
 
 /* 单独同意行挂在最后一个必填字段下面:字段自带 padding-top,行本身要留出与字段的间距 */
+
+/* 2026-10-27 P-24(真机 p98):形变条从 CTA 飞上来时从标题后面经过,不再压在字上。
+ * .morph 是 fixed z-index 20(style/wizard-intro.wxss),标题叠在它上面一层。 */
+.step-head { position: relative; z-index: 21; }

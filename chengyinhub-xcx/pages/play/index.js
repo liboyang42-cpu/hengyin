@@ -19,6 +19,13 @@ const { resolveLeadMemberTicket } = require('./utils/lead-ticket-scan.js');
 const { routeColorForKey, ROUTE_BORDER_COLOR } = require('../../utils/play-visual-tokens.js');
 const { getPlayMapState, getPlayRouteNodeState } = require('../../utils/play-state-contract.js');
 const gameSessionClient = require('../../utils/game-session-client.js');
+const orientLifecycle = require('./utils/orient-lifecycle.js');
+const arrivalGuardView = require('./utils/arrival-guard-view.js');
+const guardAppeal = require('./utils/guard-appeal.js');
+const playBoardView = require('./utils/play-board-view.js');
+const { id: precisePlayId } = require('../../utils/orient-score-view.js');
+const journeyCheckRecovery = require('./utils/journey-check-recovery.js');
+const { reportBlocksParseFailure } = require('./utils/chapter-blocks-health.js');   // P1-021 块流回落埋点
 const audioSession = require('./utils/audio-session.js');       // 音频打断/恢复 + 长音频不熄屏
 const { createPoller } = require('./utils/poller.js');           // 带领场进度:退避轮询
 const playAccuracy = require('./utils/play-accuracy.js');       // 到达定位精度阈值(80m)与提示
@@ -46,11 +53,12 @@ const RUN_HOLD_MS = 3000;   // 主键长按结束:与漫游页 END_HOLD_MS 同�
 const { buildMilestone } = require('./utils/play-milestone.js'); // C 分享卡里程碑轴(纯函数,已单测)
 const { fromHttpStatusAbnormal } = require('../../utils/transport/failure-envelope.js');
 const { getScene } = require('../../utils/scene-registry.js');
+const { openScene: openPageScene } = require('../../utils/scene-entry.js');
 const { resolveOpenState } = require('./utils/play-open-state.js');
 const { pushScene, popScene, currentScene, exitDecision } = require('../../utils/scene-stack.js');
 const finishRouteRecommendation = require('./finish-route-recommendation.js');
 const { buildPlayRecap } = require('./recap.js'); const { buildFinishMedals } = require('./utils/finish-medals.js'); // 2026-10-22 完成页勋章堆
-const { summarizePuzzleScores } = require('./utils/play-puzzle-summary.js');
+const { summarizePuzzleScores } = require('./utils/play-puzzle-summary.js'); const chapterFlip = require('./utils/chapter-flip-data.js'); // 2026-10-28 章节翻转过场
 const { normalizeAtmosphere, atmosphereClass, PRESETS: CHAPTER_ATMOSPHERES } = require('../../utils/chapter-atmosphere.js');
 const CHAPTER_ATMOSPHERE_VALUES = CHAPTER_ATMOSPHERES.map((item) => item.value);
 const {
@@ -60,6 +68,7 @@ const {
   orderedJourneyNodes,
   buildVisibleRoutePath,
   createRouteActionStore,
+  scopedRouteActionStore,
   isRouteConflict,
 } = require('./utils/play-route-state.js');
 // 顶部浮层的纵向起点:必须由微信胶囊的真实位置算出。原来 .play-header-wrap 写死 top:104rpx,
@@ -148,9 +157,12 @@ function startStateRows(routeState, vitalsOn) {
 
 /** 开场页那一句副标:主题简介的第一句(40 字内),没有就不放 */
 function introLine(desc) {
-  const text = String(desc || '').replace(/\s+/g, ' ').trim();
+  // 只取第一行:换行是作者分的段,压成空格会把下一行的半句拼进来,
+  // 40 字一刀切在「｜」上,看着像没删干净的光标(2026-10-27 南京路开场页实测)。
+  const first = String(desc || '').split(/\n/).map((x) => x.trim()).find(Boolean) || '';
+  const text = first.replace(/\s+/g, ' ');
   const m = text.match(/^[^。！？!?]{1,40}[。！？!?]?/);
-  return m ? m[0] : '';
+  return m ? m[0].replace(/[\s｜|·、，,：:；;—-]+$/, '') : '';
 }
 
 function kacchaLines(hits) {
@@ -206,18 +218,58 @@ function uuid4() {
 }
 
 function req(url, method, data, header, silentError) {
+  const basic = method === 'POST' && (['/api/play/answer', '/api/play/checkin', '/api/play/arrive', '/api/play/photo', '/api/play/puzzle/reveal', '/api/play/sensor-result'].includes(url) || /^\/api\/play\/preference\/[1-9][0-9]*\/submit$/.test(url));
+  if (basic && data && typeof data._intentCurrent === 'function' && !data._intentCurrent()) return Promise.resolve({ obsolete: true });
+  if (basic && data && data._intentOwner != null && data._intentOwner !== String((app.getUserID && app.getUserID()) || '')) return Promise.resolve({ obsolete: true });
+  if (basic && data && data.receiptOnly) {
+    return req('/api/play/action-receipt', 'GET', { activityId: data.activityId, topicId: data.topicId, nodeId: data.nodeId, routeActionId: data.routeActionId }, undefined, true).then(response => {
+      return response.intentTerminal ? response : Object.assign({}, response, { code: 520, intentUnknown: true, httpFail: true });
+    });
+  }
+  if (basic && data && data.routeSessionId == null) {
+    const owner = data._intentOwner;
+    return req('/api/play/action-context', 'GET', { activityId: data.activityId, topicId: data.topicId, nodeId: data.nodeId }, undefined, true).then(response => {
+      if (typeof data._intentCurrent === 'function' && !data._intentCurrent()) return { obsolete: true };
+      if (owner != null && owner !== String((app.getUserID && app.getUserID()) || '')) return { obsolete: true };
+      if (!(response.code == 200 || response.code == '200') || !response.data) return response;
+      const context = response.data;
+      if (data._expectedSessionId && String(context.routeSessionId) !== data._expectedSessionId) return { code: 409, intentNotExecuted: true, msg: '原游玩局已变化，请确认后重新操作' };
+      const fields = Object.assign({}, context, { expectedRouteVersion: data.expectedRouteVersion == null ? context.expectedRouteVersion : data.expectedRouteVersion });
+      if (typeof data._bindRouteContext !== 'function') return { code: 520, httpFail: true, msg: '原命令身份未保存，请重新进入确认结果' };
+      try { data._bindRouteContext(fields); } catch (error) { return { code: 520, httpFail: true, msg: error.message }; }
+      if (url === '/api/play/answer') return req('/api/play/answer', 'POST', data, header, silentError);
+      if (url === '/api/play/checkin') return req('/api/play/checkin', 'POST', data, header, silentError);
+      if (url === '/api/play/arrive') return req('/api/play/arrive', 'POST', data, header, silentError);
+      if (url === '/api/play/photo') return req('/api/play/photo', 'POST', data, header, silentError);
+      if (url === '/api/play/puzzle/reveal') return req('/api/play/puzzle/reveal', 'POST', data, header, silentError);
+      if (url === '/api/play/sensor-result') return req('/api/play/sensor-result', 'POST', data, header, silentError);
+      return req('/api/play/preference/' + data.nodeId + '/submit', 'POST', data, header, silentError);
+    });
+  }
+  if (basic && data && data._intentOwner != null && data._intentOwner !== String((app.getUserID && app.getUserID()) || '')) return Promise.resolve({ obsolete: true });
   return new Promise((resolve) => {
+    const settle = response => {
+      if (basic && !response.intentTerminal && !response.intentNotExecuted && !response.obsolete) {
+        response = Object.assign({}, response, { code: 520, httpFail: true, intentUnknown: true,
+          msg: response.msg || '结果还没确认，请稍后再查看' });
+      }
+      if (basic && data && typeof data._markIntentUnknown === 'function'
+          && (response.netFail || response.httpFail || Number(response.code) === 520)) {
+        try { data._markIntentUnknown(); } catch (error) { response.msg = error.message + '；原结果仍待确认'; }
+      }
+      resolve(response);
+    };
     app.sendRequest({
       url, method, data, header, hideLoading: true, silentError: !!silentError,
-      success: (res) => resolve(res || {}),
+      success: (res) => settle(basic && res && Number(res.code) === 520 ? Object.assign({}, res, { httpFail: true, intentUnknown: true }) : res || {}),
       // request-client 对 HTTP 非 200 只调 successStatusAbnormal；必须结束 Promise，
       // 否则首屏加载与节点提交的恢复逻辑会永久等待。
       // HTTP 已返回并不等于请求没送达；尤其 POST 可能已经执行，不能开放盲重试。
       // 强制覆盖 body.code，避免网关错误体里的 200/402 被误当成业务成功/购票态。
-      successStatusAbnormal: (res) => resolve(fromHttpStatusAbnormal(res)),
+      successStatusAbnormal: (res) => settle(fromHttpStatusAbnormal(res)),
       // netFail 让调用方能区分「请求没送到」与「服务端说不行」—— 二者都走 code!=200,
       // 光看 code 分不出来(submitGame 曾因此把断网当成答错)。
-      fail: () => resolve({ code: 'fail', netFail: true, msg: '网络异常，请重试' })
+      fail: () => settle({ code: 'fail', netFail: true, msg: '网络异常，请重试' })
     });
   });
 }
@@ -331,7 +383,25 @@ const themeRecords = require('../../utils/theme-records.js');
 const themeTrade = require('./utils/theme-trade.js');
 const themePlans = require('./utils/theme-plans.js');
 const playerOps = require('./utils/theme-player-ops.js');
+const { loadStoryFont } = require('./utils/story-font.js');
+const playOverlays = require('./utils/play-hud-overlays.js');
 Page({
+  ...journeyCheckRecovery.methods(req),
+  ...orientLifecycle.methods((url, method, data) => {
+    const header = { 'content-type': 'application/x-www-form-urlencoded' };
+    switch (url) {
+      case '/api/play/orient/session/current': return req('/api/play/orient/session/current', method, data, header, true);
+      case '/api/play/orient/session/prepare': return req('/api/play/orient/session/prepare', method, data, header, true);
+      case '/api/play/orient/session/start': return req('/api/play/orient/session/start', method, data, header, true);
+      case '/api/play/orient/session/abandon': return req('/api/play/orient/session/abandon', method, data, header, true);
+      case '/api/play/orient/session/receipt': return req('/api/play/orient/session/receipt', method, data, header, true);
+    }
+    const task = /^\/api\/play\/orient\/session\/task\/([1-9][0-9]*)\/result$/.exec(url);
+    if (task) return req('/api/play/orient/session/task/' + task[1] + '/result', method, data, header, true);
+    const score = /^\/api\/orient\/scoring\/session\/([1-9][0-9]*)$/.exec(url);
+    if (score) return req('/api/orient/scoring/session/' + score[1], method, data, header, true);
+    throw new Error('Unknown orient lifecycle endpoint');
+  }),
   ...r5PlayerRuntime.methods(), closeR5Verdict() { this.setData({ 'r5Verdict.show': false }); },  // 结果反馈判定屏「继续」(状态见 r5-player-runtime)
   ...themeBackpack.methods(req),
   ...themeRecords.methods(req, true),
@@ -339,14 +409,19 @@ Page({
   ...themeTrade.methods(req),
   ...themePlans.methods(req),
   ...playerOps.methods(req),
+  ...playOverlays.methods(req, uuid4),
   _routeState: normalizeRouteState(null),
 
   data: {
+    ...orientLifecycle.data,
+    arrivalGuard: null,
+    guardAppealView: null,
     communityPostWrite: false,
     ...r5PlayerRuntime.data,
     ...themeBackpack.data,
     ...themeRecords.data,
     ...playerOps.data,
+    ...playOverlays.data,
     tagSheetShow: false,
     tagSheetItems: [],
     privacyGateShow: false,
@@ -392,7 +467,7 @@ Page({
     oddFlick: -1,
     storyChat: false,    // 终章反转:读到反转块后整章翻成对话框(正文 = 「我」发出去的消息)        // 越往后越不正常:此刻正闪的那一段(chapterParas 的 i)
     soundOn: true,       // 故事流环境音 / 音效(2026-09-23);本机记住,右上角菜单开关
-    chapterGate: { show: false, number: 1, total: 1, title: '', subtitle: '' },
+    chapterGate: { show: false, number: 1, total: 1, title: '', subtitle: '', faces: [], endInfo: null, info: {} }, finale: { show: false, faces: [], info: {} },
     // 导航态顶部条的第二行。⚠️ 全部是「预计」:没有导航 SDK,只能按直线距离 + 步行速度估。
     navMeta: { km: '0.0', dur: '—', eta: '—' },
     chapter: { idxLabel: '第一章', name: '', description: '', cover: '', mileage: '', timeText: '', atmospherePreset: 'DEFAULT', atmosphereClass: 'atmosphere--default' },
@@ -434,7 +509,7 @@ Page({
     // 爆炸的粒子/光条是数据驱动的(WXML 不能生成元素),开包那一刻才建,收场即清空。
     blastRays: [], blastShards: [], measuring: false,
     tileH: 0,                     // 瓦片行高:按剩余高度等分,4 家竖版大卡 / 6 家近方卡
-    nodes: [], total: 0, merchantCount: 0, doneCount: 0, allDone: false,
+    nodes: [], total: 0, merchantCount: 0, doneCount: 0, allDone: false, topicCompleted: false,
     remainingGameCount: 0,
     fmNodes: [], fmPolyline: [], fmPlayer: null, fmCenter: { lat: 31.2304, lng: 121.4737 },
     fmSubkey: MAP_DARK.subkey, fmLayerStyle: MAP_DARK.layerStyle, // S9 暗色底图预留,见上方 MAP_DARK 注释
@@ -491,7 +566,7 @@ Page({
     nightHint: false,
     // 通关
     showFinish: false, celebrationEvent: '', finishScore: 0, finishPuzzleScore: 0, finishPuzzleCount: 0, finishPuzzleBest: 0,
-    finishMedals: 0, finishMedalList: [], medalScreen: { show: false, items: [], title: '', sub: '', stats: [], record: null }, finishSnap: '', finishSnapError: false, finishPhotos: [], canReplayJournal: false,
+    finishMedals: 0, finishMedalList: [], finishAchievements: [], finishDateLabel: '', medalScreen: { show: false, items: [], title: '', sub: '', stats: [], record: null }, finishSnap: '', finishSnapError: false, finishPhotos: [], canReplayJournal: false,
     branchPath: [],
     finishRouteRecommendation: null,
     voucher: { show: false },
@@ -519,7 +594,9 @@ Page({
   },
 
   onLoad(options) {
+    loadStoryFont(); // P-60:故事流手写体(未配置 / 失败时 .cy-story-hand 回落系统字体)
     this._playOwner = this._playMember();
+    this._playLoginContext = this._capturePlayLoginContext();
     this._playDisposed = false;
     options = options || {};
     this._entryTopicName = options.topicName ? decodeURIComponent(options.topicName) : '';
@@ -533,7 +610,7 @@ Page({
     });
     this.rpx = 750 / sys.windowWidth;                 // px → rpx 系数
     this.screenW = sys.windowWidth * this.rpx;        // = 750
-    this.screenH = sys.windowHeight * this.rpx;
+    this.screenH = sys.windowHeight * this.rpx; this._entryLayer = options.layer === 'scoring' ? String(options.sessionId || '*') : ''; // 我的申诉点一行:落到本局成绩全屏层
     // M2 自玩:onLoad 收 topicId||activityId(自玩会话走 topicId,场次会话走 activityId)
     this.setData({
       activityId: options.activityId || '',
@@ -614,6 +691,12 @@ Page({
     });
   },
   _playMember() { return String((app.getUserID && app.getUserID()) || ''); },
+  _capturePlayLoginContext() {
+    let issuedAt = '';
+    try { issuedAt = wx.getStorageSync('authorization_issued_at') || ''; } catch (_) {}
+    return { authorization: app.getAuthorization ? app.getAuthorization() : undefined,
+      generation: String(app._featureFlagsEpoch || 0) + ':' + String(issuedAt) };
+  },
   /** 高级玩法组件句柄;页面未挂 selectComponent(预渲染/桩)时按「无组件」处理。 */
   _advancedGameComponent() {
     return typeof this.selectComponent === 'function' ? this.selectComponent('#advancedGame') : null;
@@ -621,11 +704,14 @@ Page({
   /** 本页归属账号:首次使用时绑定(onLoad 已绑;直接调用方法的场景在捕获上下文前补绑)。 */
   _boundPlayOwner() {
     if (this._playOwner === undefined) this._playOwner = this._playMember();
+    if (!this._playLoginContext) this._playLoginContext = this._capturePlayLoginContext();
     return this._playOwner;
   },
   /** 页面未卸载(_playDisposed 为唯一卸载标记)且仍是进页时的账号。 */
   _isPlayAccountCurrent() {
-    return !this._playDisposed && this._boundPlayOwner() === this._playMember();
+    const owner = this._boundPlayOwner(), current = this._capturePlayLoginContext();
+    return !this._playDisposed && owner === this._playMember()
+      && this._playLoginContext.authorization === current.authorization && this._playLoginContext.generation === current.generation;
   },
   onShow() {
     // 只看账号是否已切换(卸载态由各回调自己的 _isPlayAccountCurrent 挡)
@@ -634,6 +720,7 @@ Page({
       wx.reLaunch({ url: '/pages/index/index' });
       return;
     }
+    this.restoreGuardAppeal();
     this._syncCommunityEntry();
     this._themeHidden = false; this._startThemePoll();
     this._startZeroHpTimer();
@@ -652,9 +739,30 @@ Page({
     const p = params || this._sessionParams();
     return p.activityId ? 'a:' + String(p.activityId) : 't:' + String(p.topicId == null ? '' : p.topicId);
   },
+  _ensureRouteActionStore() {
+    const owner = this._boundPlayOwner();
+    const scope = [owner, this._sessionKey(), String((this._routeState || {}).sessionId || '')];
+    const scopeKey = JSON.stringify(scope);
+    if (this._routeActionsScope !== scopeKey) {
+      this._routeActionsScope = scopeKey;
+      // 非登录预渲染没有持久账号身份；真实写仍由服务端拒绝。
+      this._routeActions = owner ? scopedRouteActionStore(scope, wx) : createRouteActionStore();
+    }
+    return this._routeActions;
+  },
   _routeWritePayload(kind, nodeId, payload) {
-    if (!this._routeActions) this._routeActions = createRouteActionStore();
-    return Object.assign({}, this._sessionParams(), payload || {}, this._routeActions.context(kind, nodeId, this._routeState));
+    const owner = this._boundPlayOwner();
+    this._ensureRouteActionStore();
+    const basic = ['answer', 'arrive', 'checkin', 'photo', 'puzzleReveal', 'sensor', 'preference'].includes(kind);
+    if (!basic && !this._otherRouteActions) this._otherRouteActions = createRouteActionStore();
+    const store = basic ? this._routeActions : this._otherRouteActions;
+    const body = store.payload(kind, nodeId, this._routeState, Object.assign({}, this._sessionParams(), { nodeId }, payload || {}));
+    const sessionKey = this._sessionKey(), runtime = String((this._routeState || {}).sessionId || '');
+    Object.defineProperty(body, '_intentOwner', { value: owner });
+    Object.defineProperty(body, '_intentCurrent', { value: () => this._isPlayAccountCurrent()
+      && sessionKey === this._sessionKey() && runtime === String((this._routeState || {}).sessionId || '') });
+    Object.defineProperty(body, '_expectedSessionId', { value: String((this._routeState || {}).sessionId || '') });
+    return body;
   },
   _withThoughtSync(write, isCurrent) {
     const current = () => typeof isCurrent !== 'function' || isCurrent();
@@ -677,7 +785,25 @@ Page({
     });
   },
   _resolveRouteAction(kind, nodeId) {
-    if (this._routeActions) this._routeActions.resolve(kind, nodeId);
+    const basic = ['answer', 'arrive', 'checkin', 'photo', 'puzzleReveal', 'sensor', 'preference'].includes(kind);
+    const store = basic ? this._routeActions : this._otherRouteActions;
+    if (store) store.resolve(kind, nodeId);
+  },
+  _sendBasicRouteIntent(url, payload) {
+    if (!this._isPlayAccountCurrent()) return Promise.resolve({ obsolete: true });
+    if (url === '/api/play/answer') return req('/api/play/answer', 'POST', payload);
+    if (url === '/api/play/checkin') return req('/api/play/checkin', 'POST', payload);
+    if (url === '/api/play/arrive') return req('/api/play/arrive', 'POST', payload);
+    if (url === '/api/play/photo') return req('/api/play/photo', 'POST', payload);
+    if (url === '/api/play/puzzle/reveal') return req('/api/play/puzzle/reveal', 'POST', payload);
+    if (url === '/api/play/sensor-result') return req('/api/play/sensor-result', 'POST', payload);
+    if (/^\/api\/play\/preference\/[1-9][0-9]*\/submit$/.test(url)) return req('/api/play/preference/' + payload.nodeId + '/submit', 'POST', payload, { 'content-type': 'application/json' });
+    return Promise.resolve({ code: 500, msg: '无法确认本次操作，请重新进入' });
+  },
+  _readBasicRouteIntent(kind, nodeId) {
+    if (!this._isPlayAccountCurrent()) return Promise.resolve({ obsolete: true });
+    const body = this._routeWritePayload(kind, nodeId, { nodeId });
+    return req('/api/play/action-receipt', 'GET', { activityId: body.activityId, topicId: body.topicId, nodeId: body.nodeId, routeActionId: body.routeActionId }, undefined, true);
   },
   _routeNoticeForState(routeState) {
     const state = normalizeRouteState(routeState);
@@ -845,6 +971,8 @@ Page({
   },
 
   onUnload() {
+    this.suspendOrientLifecycle();
+    this.setData({ arrivalGuard: null });
     this._playDisposed = true;
     this._leadArrivalEpoch = (this._leadArrivalEpoch || 0) + 1; this._leadArriving = false;
     this._themeRecordsDisposed = true;
@@ -890,6 +1018,8 @@ Page({
   // 2026-08-20 并 master:开卡包的三个 timeout 与定位无关,该清照清;
   //    只把 master 那侧的 _watching=false / offLocationChange / stopLocationUpdate 三句拿掉。
   onHide() {
+    this.suspendOrientLifecycle();
+    this.setData({ arrivalGuard: null });
     this._leadArrivalEpoch = (this._leadArrivalEpoch || 0) + 1; this._leadArriving = false;
     this._playLoadEpoch = (this._playLoadEpoch || 0) + 1;
     this._playReloadOnShow = true;
@@ -3224,13 +3354,30 @@ Page({
     const sequence = this._boardReadSequence = (this._boardReadSequence || 0) + 1;
     const current = () => this._isPlayAccountCurrent() && owner === this._playOwner
       && sequence === this._boardReadSequence && this.data.board.show
-      && sessionKey === this._sessionKey();
+      && sessionKey === this._sessionKey()
+      && originalSessionId === precisePlayId((this._routeState || {}).sessionId);
     this.setData({ board: { show: true, loading: true, list: [], me: null, error: '' } });
-    req('/api/play/leaderboard', 'GET', params).then((res) => {
+    const originalSessionId = precisePlayId((this._routeState || {}).sessionId);
+    const orientBoard = this.data.mode === 1 && !!originalSessionId;
+    let usingOrientBoard = orientBoard;
+    const loadBoard = orientBoard
+      ? req('/api/orient/scoring/session/' + originalSessionId + '/leaderboard', 'GET', {}, undefined, true).then(res => {
+        // Only an explicit feature/applicability refusal allows the legacy board. Network/permission failures do not.
+        if (current() && ['ORIENT_SCORING_DISABLED', 'ORIENT_SCORING_NOT_APPLICABLE'].includes(res.errorCode || res.err)) {
+          usingOrientBoard = false;
+          return req('/api/play/leaderboard', 'GET', params);
+        }
+        return res;
+      }) : req('/api/play/leaderboard', 'GET', params);
+    loadBoard.then((res) => {
       if (!current()) return;
       if (res.code == 200 || res.code == '200') {
         const d = res.data || {};
-        this.setData({ board: { show: true, loading: false, list: d.list || [], me: d.me || null, error: '' } });
+        const view = playBoardView.project(d);
+        if (!view || usingOrientBoard && (!['SCORE', 'ROUTE'].includes(d.mode) || precisePlayId(d.sessionId) !== originalSessionId)) {
+          this.setData({ 'board.loading': false, 'board.error': '榜单结果不完整，请重新读取本局榜单' }); return;
+        }
+        this.setData({ board: { show: true, loading: false, ...view, error: '' } });
       } else {
         // 失败 ≠ 空:不落 error 的话,WXML 会拿空 list 显示「还没人上榜」——把网络失败说成事实。
         this.setData({ 'board.loading': false, 'board.error': (res && res.msg) || '榜单加载失败' });
@@ -3573,6 +3720,13 @@ Page({
       // 无块流的存量章节:沿用旧口径(描述 + 已完成节点的手记),行为逐字不变
       push(this.data.chapter.description);
       nodes.forEach((n) => { if (n.done && n.story) push(n.story); });
+      /* 没有块流就没有「节点在哪一块」可对:正开着的内嵌玩法只能接在末尾。下面那条兜底要求
+         _playKitNodeId 为空,而开站必然记下它 ⇒ 无块流章节的内嵌玩法以前一律不铺,
+         玩家只看见手记和「继续探索」,玩法永远打不开(2026-10-27 生产实测:南京路附录盲盒)。 */
+      if (inlineKit && this._playKitNodeId) {
+        items.push({ kind: 'kit', nodeId: this._playKitNodeId, mood: curMood }); kitPlaced = true;
+        pushVoices(this._playKitNodeId);
+      }
     }
     // 没有未完成节点(线性走完 / 没有节点块)时,内嵌玩法接在故事流末尾
     if (inlineKit && !kitPlaced && !this._playKitNodeId) items.push({ kind: 'kit', mood: curMood });
@@ -3712,7 +3866,7 @@ Page({
     const context = this._beginRouteWriteContext('_openingWrite');
     const chapter = this.data.chapter;
     const current = () => this._isRouteWriteContextCurrent(context)
-      && this.data.chapter === chapter && (this._routeState || {}).opening
+      && String((this.data.chapter || {}).id) === String((chapter || {}).id) && (this._routeState || {}).opening
       && String(this._routeState.opening.chapterId) === String(opening.chapterId);
     const payload = Object.assign({}, this._sessionParams(), { topicId: this.data.topicId, chapterId: opening.chapterId });
     this._openingSubmitting = true;
@@ -3808,14 +3962,14 @@ Page({
     this._pendingChapterGateKey = key;
     const sound = this._storySound();
     if (sound) sound.sfx('boot');
-    this.setData({ chapterGate: { show: true, number: chapter.opening ? 0 : (index < 0 ? 1 : index + 1),
-      // 眉标已写「序章 / 第 N 章 / 共 M 章」,副标题再放序数标签就是同一句印两遍(2026-09-22 走查)。
-      total: Math.max(cards.length, 1), title: chapter.name || '', subtitle: '' } });
+    const flip = chapterFlip.buildGateFlip({ cards, chapterId: chapter.id, nodes: this.data.nodes, topicCover: this.data.topicCover, topicName: this.data.topicName, desc: introLine(chapter.description) }); if (chapter.opening) Object.assign(flip, { endInfo: null, info: { kicker: chapter.name === '序章' ? '' : '序章', title: chapter.name || '', desc: introLine(chapter.description), stats: [] } });
+    this.setData({ chapterGate: Object.assign({ show: true, number: chapter.opening ? 0 : (index < 0 ? 1 : index + 1), // 眉标已写「序章 / 第 N 章 / 共 M 章」,副标题再放序数标签就是同一句印两遍(2026-09-22 走查)。
+      total: Math.max(cards.length, 1), title: chapter.name || '', subtitle: '' }, flip) });
     // 2026-09-24 用户:章节门每章都要点一次太打断 —— 停 2.8 秒自己进正文,点一下仍可提前
     clearTimeout(this._gateTimer);
     this._gateTimer = setTimeout(() => {
       if (this.data.chapterGate.show && this._pendingChapterGateKey === key) this.continueChapterGate();
-    }, boot ? 4600 : 2800);
+    }, (boot ? 1800 : 0) + (this.data.chapterGate.endInfo ? 7800 : 4200)); // 过场自己会在播完时发 continue;这里只是兜底
   },
   /** 开局「开机」:黑场里一条白线横向展开再收细,暖光亮起后整层淡出,露出第一道开场门。 */
   _playBoot() {
@@ -3973,7 +4127,7 @@ Page({
       // 作者配得再对,一取这个名字就被顶掉,看到的仍是写死在 JS 里的那份。
       that.setData({
         loading: false, emptyTip: '', emptyKind: '', topicId: d.topicId || '', topicName, topicDesc: d.topicDesc || '', topicCover: d.topicCover || '',
-        mode, serverMode: mode,
+        mode, serverMode: mode, playContact: playOverlays.contact(d.contact),
         modeLabel: mode == 2 ? '自由探索' : '城市定向',
         routeNotice: that._routeNoticeForState(routeState),
         journeyAttributes: routeState.attributes,
@@ -4011,6 +4165,7 @@ Page({
         that._restoreRunSession(d, routeState, nodes);
         that.loadTeamProgress();   // P1 带领场探测(club 场次才 exists,内部自管轮询)
         that._loadPlayerGameModule();
+        that.loadHudCharacter(); that.loadSessionStats();   // 文档二 L5:状态栏第二行 / 「…」用时与得分 if (that._entryLayer && ['*', String(that._orientSessionId())].includes(that._entryLayer)) that.openScoreOverlay(); that._entryLayer = '';
       });
     }).catch(() => {
       if (!isCurrent()) return;
@@ -4158,6 +4313,9 @@ Page({
         description: chapter.description, blocks: chapter.blocks,
         atmospherePreset: chapter.atmospherePreset, atmosphereClass: chapter.atmosphereClass }];
     }
+    this._blocksParseSeen = this._blocksParseSeen || {};
+    list.forEach((c) => reportBlocksParseFailure(analytics, this._blocksParseSeen,
+      c && (c.chapterId != null ? c.chapterId : c.id), c && c.blocks));
     return list.map((c, i) => ({
       key: 'c' + i,
       opening: c.opening === true,
@@ -4168,7 +4326,7 @@ Page({
         ? '' : (c.idxLabel || ('第 ' + (i + 1) + ' 章')),
       title: displayChapterName(c.name, i, '第 ' + (i + 1) + ' 章'),
       sub: c.description || '',
-      cover: c.imgArr ? String(c.imgArr).split(',')[0] : (c.cover || ''),
+      cover: c.imgArr ? String(c.imgArr).split(/[,;]/)[0] : (c.cover || ''),
       mileage: c.totalMileage ? (c.totalMileage + 'km') : '',
       timeText: c.totalTime ? Math.round(c.totalTime / 60) + ' 分钟' : '',
       description: c.description || '',
@@ -4189,6 +4347,8 @@ Page({
 
   buildChapter(d, nodes) {
     const c = (d.chapters && d.chapters[0]) || {};
+    this._blocksParseSeen = this._blocksParseSeen || {};
+    reportBlocksParseFailure(analytics, this._blocksParseSeen, c.id || c.chapterId, c.blocks);
     const placeholderName = isChapterPlaceholderName(c.name);
     return {
       id: c.id || c.chapterId || '',
@@ -4200,7 +4360,7 @@ Page({
       // 不再原样上屏(也不落回主题名把章节标题变成主题名),统一显示「第 N 章」。
       name: displayChapterName(c.name, 0, d.topicName || '城市探索'),
       description: c.description || '跟着脚步走完这几处坐标，把散落的线索串成一段属于你的城市故事。',
-      cover: this._coverOf(c.imgArr ? String(c.imgArr).split(',')[0] : (c.cover || ''), nodes),
+      cover: this._coverOf(c.imgArr ? String(c.imgArr).split(/[,;]/)[0] : (c.cover || ''), nodes),
       mileage: c.totalMileage ? (c.totalMileage + 'km') : '',
       timeText: c.totalTime ? Math.round(c.totalTime / 60) + ' 分钟' : '',
       atmospherePreset: normalizeAtmosphere(c.atmospherePreset),
@@ -4249,7 +4409,13 @@ Page({
     const first = visibleNodes.find((n) => n.lat && n.lng) || nodes.find((n) => n.lat && n.lng) || {};
     const target = activeTargetId != null && this._nodeById(activeTargetId);
     const targetState = getPlayMapState(activeTargetId != null ? 'target' : 'candidate');
+    /* computeNext 给的是精简卡片(没有坐标),「导航过去」要坐标:从整节点补上。
+       以前 openNextStopNav 拿不到 lat/lng 一律静默 return —— 按钮一直在,点了什么都不发生(2026-10-27 生产实测)。 */
+    const nextFull = rawNextNode && this._nodeById(rawNextNode.nodeId);
     const nextNode = rawNextNode && Object.assign({}, rawNextNode, {
+      lat: nextFull ? nextFull.lat : rawNextNode.lat,
+      lng: nextFull ? nextFull.lng : rawNextNode.lng,
+      address: (nextFull && nextFull.address) || rawNextNode.address || '',
       mapStateLabel: targetState.cardLabel,
       mapA11yLabel: targetState.readerLabel,
     });
@@ -4563,7 +4729,11 @@ Page({
             // 仅"到点即完成(vm0)/GPS到达(vm5)"节点自动到达;答题/拍照/选项/扫码(1/2/3/4)须玩家手动完成,
             // 否则后端 arrive 闸会拒绝并在每次定位回调刷 toast。
             // 精度 > 80m 后端必拒(定位精度不足),不发,免得每次定位回调都弹一次拒绝
-            if (d <= 50 && !node.done && (node.vm === 0 || node.vm === 5) && playAccuracy.canAutoArrive(loc.accuracy)) that.arrive(node.nodeId, 'gps');
+            /* 8/9/10 是「玩法过了再到达收尾」(与 onAdvancedReady 同一白名单):玩法已通过就和 0/5 一样靠近即点亮,
+               否则做完玩法人就站在门口,卡片写着「靠近后会自动点亮」却永远不亮(2026-10-27 生产实测)。 */
+            const arrivesHere = node.vm === 0 || node.vm === 5
+              || ([8, 9, 10].includes(node.vm) && that._advancedReadyNodeId === node.nodeId);
+            if (d <= 50 && !node.done && arrivesHere && playAccuracy.canAutoArrive(loc.accuracy)) that.arrive(node.nodeId, 'gps');
           }
         };
         wx.onLocationChange(that._playLocationHandler);
@@ -5175,7 +5345,7 @@ Page({
   },
   _beginRouteWriteContext(channel) {
     // 先建好路线动作存储:否则首写时 _routeWritePayload 才懒建,刚捕获的 routeActions 立刻失配。
-    if (!this._routeActions) this._routeActions = createRouteActionStore();
+    this._ensureRouteActionStore();
     const context = { channel, owner: this._boundPlayOwner(), sessionKey: this._sessionKey(),
       routeSessionId: String((this._routeState || {}).sessionId || ''), routeActions: this._routeActions };
     this[channel + 'Intent'] = context;
@@ -5193,6 +5363,72 @@ Page({
     this[context.channel + 'InFlight'] = false;
   },
 
+  _ensureGuardAppeal() {
+    const owner = this._boundPlayOwner(), session = this._sessionKey();
+    const scope = owner + ':' + session;
+    if (!this._guardAppeal || this._guardAppealScope !== scope) {
+      this._guardAppealScope = scope;
+      this._guardAppeal = guardAppeal.create({ storage: wx, owner, session,
+        current: () => this._isPlayAccountCurrent() && this._sessionKey() === session && this._guardAppealScope === scope,
+        // 守卫申诉只用三条固定接口；按字面量分派，U1 可逐条核对后端映射。
+        send: (url, method, body) => {
+          const header = { 'content-type': 'application/json' };
+          switch (url) {
+            case '/api/audit/guard/reference': return req('/api/audit/guard/reference', method, body, header, true);
+            case '/api/audit/guard/appeal/receipt': return req('/api/audit/guard/appeal/receipt', method, body, header, true);
+            case '/api/audit/guard/appeal': return req('/api/audit/guard/appeal', method, body, header, true);
+          }
+          throw new Error('Unknown guard appeal endpoint');
+        },
+        changed: view => this.setData({ guardAppealView: view }), keyFactory: uuid4 });
+    }
+    return this._guardAppeal;
+  },
+  restoreGuardAppeal() {
+    if (!this._isPlayAccountCurrent() || this.data.isPreview || this.data.isMock || !(this.data.activityId || this.data.topicId)) return;
+    try {
+      const flow = this._ensureGuardAppeal(); this.setData({ guardAppealView: flow.view() });
+      if (flow.view()) return flow.read();
+    } catch (error) { this.diegetic(error.message); }
+  },
+  readGuardAppeal() { return this.restoreGuardAppeal(); },
+  async submitGuardAppeal() {
+    if (!this._isPlayAccountCurrent()) return;
+    const flow = this._ensureGuardAppeal(); await flow.read();
+    const view = flow.view();
+    if (!this._isPlayAccountCurrent() || !view || view.command || !view.eligibility || !view.eligibility.canSubmit) return;
+    const session = this._sessionKey();
+    cyModal.show({ title: '原局守卫申诉', editable: true, multiline: true, maxlength: 500, placeholderText: '请填写申诉理由（最多500字）',
+      content: '成立后仍需重新现场核验，不直接放行或补发奖励。',
+      success: async result => {
+        if (!result.confirm || !this._isPlayAccountCurrent() || session !== this._sessionKey()) return;
+        try { await flow.submit(result.content); } catch (error) { if (this._isPlayAccountCurrent()) this.diegetic(error.message); }
+      } });
+  },
+  async reverifyGuardArrival() {
+    if (!this._isPlayAccountCurrent() || this._themeHidden) return;
+    const flow = this._ensureGuardAppeal(); await flow.read();
+    if (!this._isPlayAccountCurrent() || this._themeHidden) return;
+    const view = flow.view(), session = this._sessionKey();
+    const run = String((this._routeState || {}).sessionId || '');
+    if (!view || !view.result || !view.result.canReverify || run !== view.reference.routeSessionId) {
+      this.diegetic('原局当前不可重新核验，可继续查询申诉结果'); return;
+    }
+    const live = () => this._isPlayAccountCurrent() && !this._themeHidden && this._sessionKey() === session
+      && String((this._routeState || {}).sessionId || '') === run;
+    cyModal.show({ title: '重新现场核验', content: '仅本次获取当前位置；仍执行原现场条件和速度距离守卫，不补发奖励。',
+      success: result => {
+        if (!result.confirm || !live()) return;
+        wx.getLocation({ type: 'gcj02', isHighAccuracy: true,
+          success: loc => {
+            if (!live()) return;
+            if (!Number.isFinite(loc.latitude) || !Number.isFinite(loc.longitude)) { this.diegetic('定位无效，未提交'); return; }
+            this._loc = { latitude: loc.latitude, longitude: loc.longitude, accuracy: loc.accuracy };
+            this.arrive(view.reference.nodeId, 'guard-reverify');
+          }, fail: () => { if (live()) this.diegetic('未取得现场定位，未提交'); } });
+      } });
+  },
+
   arrive(nodeId, via) {
     if (!this._isPlayAccountCurrent()) return;
     if (this.data.isPreview || this.data.isMock) { this.onComplete(nodeId, {}); return; }
@@ -5200,17 +5436,21 @@ Page({
     const that = this;
     const loc = this._loc || {};
     const context = this._beginRouteWriteContext('_arrivalWrite');
+    let arrivalRequestId = null;
     const isCurrent = () => this._isRouteWriteContextCurrent(context);
     // 完成请求在伏笔/步数同步之后才生成,带上同步后的路线版本。
     this._withThoughtSync(() => {
       if (!isCurrent()) return Promise.resolve({ obsolete: true });
-      return req('/api/play/arrive', 'POST', this._routeWritePayload('arrive', nodeId, { nodeId, longitude: loc.longitude, latitude: loc.latitude, accuracy: playAccuracy.accuracyOf(loc) }));
+      const payload = this._routeWritePayload('arrive', nodeId, { nodeId, longitude: loc.longitude, latitude: loc.latitude, accuracy: playAccuracy.accuracyOf(loc) });
+      arrivalRequestId = payload.routeActionId;
+      return req('/api/play/arrive', 'POST', payload);
     }, isCurrent)
       .then((r) => {
         const current = isCurrent(); that._finishRouteWriteContext(context);
         if (!current || (r && r.obsolete)) return;
         if (r.code == 200 || r.code == '200') {
           that._resolveRouteAction('arrive', nodeId);
+          that.setData({ arrivalGuard: null });
           if (that.data.mode === 2) { that.onShopDayArrived(nodeId, r.data); return; }
           that.onComplete(nodeId, r.data);
         }
@@ -5219,6 +5459,11 @@ Page({
         else if (r.netFail) that.recordArrivalNetworkFailure('打卡请求没有送达', { type: 'arrive', nodeId, via });
         else {
           that._resolveRouteAction('arrive', nodeId);
+          const guard = arrivalGuardView.project(r, nodeId, arrivalRequestId);
+          that.setData({ arrivalGuard: guard });
+          if (guard && guard.appealable && guard.appealBizType === 'play_arrive_guard') {
+            try { that._ensureGuardAppeal().reference(guard); } catch (error) { that.diegetic(error.message); }
+          }
           if (playAccuracy.isLowAccuracyMsg(r.msg)) that.setData({ gpsLowAcc: true, gpsHint: playAccuracy.LOW_ACCURACY_HINT });
           that.diegetic(r.msg || '还没到这一站附近');
           if (that._hasGenericProofFlow()) return that._readGenericProof(nodeId);
@@ -5321,13 +5566,13 @@ Page({
   recordGameHttpUnknown(message, nodeId) {
     this._gameWriteUnknown = true;
     this._gameWriteUnknownMessage = (message ? message + '；' : '') + '提交结果待确认，请重新进入后查看，暂请勿重复提交';
-    this._lastGameAttempt = null;
+    // UNKNOWN 保留原局、动作和输入，供原号恢复使用；写入口继续冻结。
     this.setData({ gWrong: false, gNetErr: this._gameWriteUnknownMessage, gNetRetryable: false, gWriteUnknown: true });
     if (this._hasGenericProofFlow()) return this._readGenericProof(nodeId || this.data.game.nodeId, '', 'game');
   },
   clearGameNetworkError() {
-    this._lastGameAttempt = null;
     const unknown = !!this._gameWriteUnknown;
+    if (!unknown) this._lastGameAttempt = null;
     if (this.data.gNetErr || this.data.gNetRetryable || this.data.gWriteUnknown !== unknown) {
       this.setData({
         gNetErr: unknown ? this._gameWriteUnknownMessage : '',
@@ -5337,14 +5582,14 @@ Page({
       });
     }
   },
-  /** 显式重试沿用原请求体(同一 routeActionId 幂等),只把路线版本换成同步后的当前值;首发请求体本就在同步后生成。 */
+  /** 同号恢复保持完整原请求体，包括原版本；冲突后的新意图必须重新确认。 */
   _retriedRouteWriteBody(payload, retried) {
-    return retried ? Object.assign({}, payload, { expectedRouteVersion: normalizeRouteState(this._routeState).version }) : payload;
+    return payload;
   },
   _legacyGameWritePayload(type, kind, nodeId, extra, retryAttempt) {
     // 显式重试在同步等待期间就会结束;调用方须在发起时捕获重试意图并传进来。
     const retry = retryAttempt === undefined ? this._retryGameAttempt : retryAttempt;
-    if (retry && retry.type === type && retry.payload) return Object.assign({}, retry.payload);
+    if (retry && retry.type === type && retry.payload) return retry.payload;
     return this._routeWritePayload(kind, nodeId, extra);
   },
   retryGameSubmission() {
@@ -5385,9 +5630,16 @@ Page({
       this.setData({ playKit: { show: false, kit: null } });
     }
     if (node.hasAdvanced && this._advancedReadyNodeId !== node.nodeId) {
+      /* 详情卡「开始任务」进来也认「首个会话视图已做完 → 直接接着走」,与故事里打开同一口径:
+         退出前做完没点继续、重进时以前会把第一个玩法空白重开(估数显示未答、找东西 0/3),
+         再点交就是「这一题已经答过了 / 已经全部找到了」的死循环(2026-10-27 生产实测)。 */
+      if (!node.done) this._freshStoryGame = String(node.nodeId);
       this.setData({ 'sheet.show': false, chapterGameAnchor: '', advancedPlay: { show: true, node } });
       return;
     }
+    /* 玩法已通过、本站靠到达收尾(vm 0/5/8/9/10,与 onAdvancedReady 同一白名单):详情卡的「开始任务」
+       走到达,不进老任务页 —— 老任务页只写了 vm 1/2/3/4/6,这几个进去只剩标题与录音、零按钮。 */
+    if (node.hasAdvanced && [0, 5, 8, 9, 10].includes(Number(node.vm))) { this.onSheetGoTap(); return; }
     const chips = [];
     if (node.duration) chips.push({ ic: '⏱', v: node.duration });
     if (node.difficulty) chips.push({ ic: '◇', v: node.difficulty });
@@ -5441,7 +5693,7 @@ Page({
     this._advancedReadyIntent = context;
     const scopeCurrent = () => this._isPlayAccountCurrent() && this._advancedReadyIntent === context
       && context.owner === this._playOwner && context.epoch === this._playLoadEpoch
-      && context.sessionKey === this._sessionKey() && this.data.chapter === context.chapter;
+      && context.sessionKey === this._sessionKey() && String((this.data.chapter || {}).id) === String((context.chapter || {}).id);
     const current = () => scopeCurrent() && this.data.advancedPlay === active
       && active.show && active.node === node && this._advancedGameComponent() === context.component;
     // 玩法作答可能更新路线变量和版本，收尾写入前先读取新的权威版本。
@@ -6138,6 +6390,9 @@ Page({
         if (frText) this.setData({ frag: { show: true, text: frText, step: '我的第 ' + done.length + ' 步 · ' + (node.name || '') } });
       }
       const completed = data && data.completed;
+      /* 服务端这次判了通关(主题规则可以是「主线 N 站」,选做站没走完也算):通关卡按「通关」讲,
+         别因为本地还有没走的选做站就把标题写成章节名、把里程碑少算这一个(2026-10-27 生产实测)。 */
+      if (completed && !this.data.topicCompleted) this.setData({ topicCompleted: true });
       // 后端本次新得成长徽章(FIRST_STEP/STREAK/TOPIC_CLEAR…),与节点模板勋章不同源,逐一轻提示
       const newBadges = (data && data.newBadges) || [];
       if (newBadges.length) {
@@ -6234,6 +6489,8 @@ Page({
   // ---------- 章节过场 ----------
   openScene(id, params = {}) {
     const next = getScene(id, params);
+    // G-1(2026-10-27):page 档场景(漫游历史 / 优惠券)是页面,不在地图上压 psheet
+    if (next.variant === 'page' && next.route) { openPageScene(id, params); return true; }
     if (exitDecision(this.data.sceneStack, 'close') === 'confirm') {
       this.setData({ sceneConfirm: { show: true, action: 'replace', pending: next } });
       return false;
@@ -6315,7 +6572,7 @@ Page({
   onScanArriveFromTools() { this.setData({ sessionToolsOpen: false }, () => this.onScanArrive()); },
   onRunToggleFromTools() { this.setData({ sessionToolsOpen: false }, () => this.onRunToggle()); },
   openStackOrChaptersFromTools() { this.setData({ sessionToolsOpen: false }, () => this.openStackOrChapters()); },
-  toggleSessionTools() { if (this.data.sessionToolsOpen) this._toolsClose(); else this.setData({ sessionToolsOpen: true, toolsOut: false }); },
+  toggleSessionTools() { if (this.data.sessionToolsOpen) this._toolsClose(); else { this.setData({ sessionToolsOpen: true, toolsOut: false }); this.loadSessionStats(); this.loadPlayContact(); } },
   closeSessionTools() { this._toolsClose(); },
   /* 定位驱动的两行(自动记录足迹 / 到点提醒)在这一页翻不动:它们跟着系统定位权限走。
    * 没开就去要权限,已经开着就说清楚它由谁决定 —— 不留一枚按下去毫无反应的开关。 */
@@ -6436,7 +6693,7 @@ Page({
     // scopeCurrent 不要求本回调仍是最新视图:同一会话的重复视图不应吞掉已排好的故事衔接。
     const scopeCurrent = () => this._isPlayAccountCurrent()
       && context.owner === this._playOwner && context.epoch === this._playLoadEpoch
-      && context.sessionKey === this._sessionKey() && this.data.chapter === context.chapter
+      && context.sessionKey === this._sessionKey() && String((this.data.chapter || {}).id) === String((context.chapter || {}).id)
       && this.data.advancedPlay === active && active.show && this._advancedGameComponent() === component;
     const current = () => this._advancedSessionContext === context && scopeCurrent();
     if (this._applyR5AdvancedView(view)) return;
@@ -6480,7 +6737,10 @@ Page({
     }
     const inline = kit.present === 'inline' && this.data.chapterFull;
     const ready = canContinue(view);
-    const advanceStory = this.data.chapterFull && this._storyOpenNode && ready && !this.data.playKit.readyForBase;
+    /* 分支走到结局时不自动接着走:结局那段话就是这一站的全部回报,0.9 秒就被翻走等于没看到
+       (2026-10-27 生产实测:南京路结案三选一,选完直接跳进附录章节卡)。玩家读完点下面的「继续」。 */
+    const advanceStory = this.data.chapterFull && this._storyOpenNode && ready && !this.data.playKit.readyForBase
+      && kit.type !== 'branch';
     // 填了一半的草稿按「账号 + 局 + 站」存本地(建档 / 留言组件自取);试玩不存
     if (kit.type === 'profile') this._profileNodeId = String(active.node.nodeId);
     if ((kit.type === 'profile' || kit.type === 'note') && !this.data.isPreview && !this.data.isMock) kit.draftKey = storyResume.draftKey(this._runSessionScope(), active.node.nodeId);
@@ -6981,6 +7241,7 @@ Page({
       const kit = pickJourneyCheck(r.data);
       if (!kit) return;
       this.setData({ journeyCheck: Object.assign({ show: true, nodeId: node.nodeId, receipt: null }, kit) });
+      this._restoreJourneyCheck();
       if (kit.present === 'inline' && !kit.blocked) {
         this.setData({ 'sheet.show': false });
         this.openChapterFull();
@@ -6988,78 +7249,22 @@ Page({
     }).catch(() => {});
   },
 
-  _releaseJourneyCheckIntent(intent) {
-    const pending = this._checkPendingByKey;
-    if (intent && pending && pending[intent.key] === intent) delete pending[intent.key];
-  },
-
   _isJourneyCheckIntentCurrent(intent) {
     const kit = this.data.journeyCheck || {};
     return !!intent && this._isPlayAccountCurrent() && this._checkWriteIntent === intent
       && intent.loadEpoch === this._playLoadEpoch && kit.show
-      && intent.payload.topicId === this.data.topicId
-      && intent.payload.activityId === (this.data.activityId || 0)
+      && String(intent.payload.topicId) === String(this.data.topicId)
+      && String(intent.payload.activityId) === String(this.data.activityId || 0)
       && String(intent.payload.nodeId) === String(kit.nodeId)
-      && intent.payload.checkId === kit.checkId;
-  },
-
-  /** 上局已结算过时只回读原检定；旧回包不得写入新检定。 */
-  _recoverSettledCheck(payload, intent) {
-    if (!this._isJourneyCheckIntentCurrent(intent)) return;
-    req('/api/play/check/settle', 'POST', payload).then((r) => {
-      this._releaseJourneyCheckIntent(intent);
-      if (!this._isJourneyCheckIntentCurrent(intent)) return;
-      this._checkActing = false;
-      this._checkWriteIntent = null;
-      if ((r.code == 200 || r.code == '200') && r.data) {
-        this.setData({ 'journeyCheck.receipt': checkReceiptView(r.data) });
-        return;
-      }
-      cyToast('这次检定已经结算过了');
-    });
+      && intent.payload.checkId === kit.checkId
+      && String(intent.payload.sessionId) === String((this._routeState || {}).sessionId);
   },
 
   onJourneyCheckAction(e) {
     if (!this._isPlayAccountCurrent()) return;
     const action = (e.detail && e.detail.action) || '';
-    const kit = this.data.journeyCheck;
-    if (kit.r5) return this._r5CheckAction(action);
-    if (!kit.show || !kit.checkId || !['roll', 'reroll', 'settle'].includes(action)
-        || (this._checkActing && this._isJourneyCheckIntentCurrent(this._checkWriteIntent))) return;
-    const payload = { topicId: this.data.topicId, activityId: this.data.activityId || 0, nodeId: kit.nodeId, checkId: kit.checkId };
-    const key = JSON.stringify([this._boundPlayOwner(), payload.topicId, payload.activityId, payload.nodeId, payload.checkId]);
-    const pending = this._checkPendingByKey = this._checkPendingByKey || Object.create(null);
-    if (pending[key]) return;
-    const intent = this._checkWriteIntent = { payload, key, loadEpoch: this._playLoadEpoch };
-    pending[key] = intent;
-    this._checkActing = true;
-    // 保留三条字面URL和原操作；本地意图只用于回包归属，不是新的服务端请求身份。
-    if (action === 'roll') {
-      req('/api/play/check/roll', 'POST', payload).then((r) => this._afterCheck('roll', r, payload, intent));
-      return;
-    }
-    if (action === 'reroll') {
-      req('/api/play/check/reroll', 'POST', payload).then((r) => this._afterCheck('reroll', r, payload, intent));
-      return;
-    }
-    req('/api/play/check/settle', 'POST', payload).then((r) => this._afterCheck('settle', r, payload, intent));
-  },
-
-  /** 检定回包只能收尾发起它的意图；原幂等settle回读继续沿同一意图。 */
-  _afterCheck(action, r, payload, intent) {
-    if (!this._isJourneyCheckIntentCurrent(intent)) { this._releaseJourneyCheckIntent(intent); return; }
-    const res = r || {};
-    const ok = res.code == 200 || res.code == '200';
-    if (action === 'roll' && !ok && /已结算/.test(res.msg || '')) {
-      this._recoverSettledCheck(payload, intent);
-      return;
-    }
-    this._releaseJourneyCheckIntent(intent);
-    this._checkActing = false;
-    this._checkWriteIntent = null;
-    const FAIL = { roll: '掷骰没成功，再试一次', reroll: '重掷没成功，再试一次', settle: '结算没成功，再试一次' };
-    if (ok && res.data) { this.setData({ 'journeyCheck.receipt': checkReceiptView(res.data) }); return; }
-    cyToast(res.msg || FAIL[action] || '操作没成功，再试一次');
+    if (this.data.journeyCheck.r5) return this._r5CheckAction(action);
+    return this._legacyCheckAction(action);
   },
 
   /** 检定屏退出。结算前后都能关 —— 失败也推进是产品口径,这里不设任何通关闸。 */
@@ -7388,7 +7593,7 @@ Page({
       finishPuzzleScore: puzzleSummary.score,
       finishPuzzleCount: puzzleSummary.count,
       finishPuzzleBest: Number(this._puzzlePersonalBest) || 0,
-      finishStamps,
+      finishStamps, finishDateLabel: finishDateLabel(new Date()),
       finishSnap: '', finishSnapError: false,
       finishPhotos: recap.photos,
       canReplayJournal: recap.canReplayJournal,
@@ -7400,9 +7605,10 @@ Page({
       if (!this._isFinishViewCurrent(finishView) || !this.data.showFinish) return;
       this._triggerCelebration(this.data.mode === 2 ? 'free-finish' : 'classic-finish');
       this.paintRouteThumb();   // finish-map 盒内=路线缩略图(全卡仅保存时生成,避免和 HTML 数字行重复)
-      this.buildReview(); this._openMedalScreen(); // B:轨迹回顾层(渐进描线 + 成就气泡 + 用时/距离);v13 整个主题走完时盖上通关勋章页
+      this.buildReview(); this._openMedalScreen(); this._openFinale(isShopDay); // B:轨迹回顾层(渐进描线 + 成就气泡 + 用时/距离);v13 整个主题走完时盖上通关勋章页
     });
     this.loadMilestone(); this.loadStageEnd(); // BL-186 本章结算与里程碑并列读,不挡完成页
+    if (!this.data.allDone) { this.loadSessionStats(); this.loadHudCharacter(); } // 文档二 L5:章节结算的本局成绩名次与 RPG 小结
     this.loadFinishRouteRecommendation();
   },
   closeFinish() {
@@ -7600,7 +7806,12 @@ Page({
 
   buildReview() {
     const ordered = this._reviewOrderedNodes();
-    const tags = this._reviewAchievements(ordered);
+    const all = this._reviewAchievements(ordered);
+    // 完成卡小地图上只留一条成就气泡(2026-10-27 用户:站点挨得近,三条气泡互相盖、被裁掉)。
+    // 优先级与 _reviewAchievements 一致:徽章 > 券 > 最快一段 > 首达。
+    const rank = (t) => ['徽章', '到店券', '最快一段', '首达'].findIndex((p) => t.indexOf(p) === 0);
+    const topId = Object.keys(all).sort((a, b) => rank(all[a]) - rank(all[b]))[0];
+    const tags = topId != null ? { [topId]: all[topId] } : {};
     // 成就气泡挂到既有 fmNodes 上(节点 pin 全部保留),没有成就的节点 reviewLabel 为空 = 原样显示序号
     const fmNodes = (this.data.fmNodes || []).map((n) => Object.assign({}, n, { reviewLabel: tags[n.nodeId] || '' }));
     const sec = this._sessionClock ? this._sessionClock.elapsedSeconds() : 0;
@@ -7609,7 +7820,7 @@ Page({
       fmNodes,
       reviewElapsed: sec > 0 ? formatElapsed(sec) : '',
       reviewDistance: this._reviewDistanceKm(ordered),
-      reviewEmpty: ordered.length === 0,
+      reviewEmpty: ordered.length === 0, finishAchievements: achievementRows(all, ordered),
     });
     this._startReviewDraw(ordered);
   },
@@ -7697,6 +7908,8 @@ Page({
           const id = it && it.topicId;
           if (id != null && id !== '') ids[String(id)] = true;
         });
+        // 完成事实列表按路线局状态算,线性局要所有站(含选做)都走完才落「完成」;这一局刚由服务端判过通关,算上它
+        if (this.data.topicCompleted && this.data.topicId) ids[String(this.data.topicId)] = true;
         this.setData({ milestone: buildMilestone(Object.keys(ids).length) });
       },
     });
@@ -8121,4 +8334,30 @@ Page({
     this.setData({ toolsOut: true });
     setTimeout(() => { if (this.data.toolsOut) this.setData({ sessionToolsOpen: false, toolsOut: false }); }, 140);
   },
+
+  /** 2026-10-28 通关过场:整个主题走完时先放「三棱锥炸开 → 银色城瘾标志」,播完再露出通关勋章页。探店日与试玩不放。 */
+  _openFinale(isShopDay) {
+    if (!this.data.allDone || isShopDay || this.data.isPreview || this.data.isMock) return;
+    const sec = this._sessionClock ? this._sessionClock.elapsedSeconds() : 0;
+    const flip = chapterFlip.buildFinale({
+      cards: this.data.chapterCards, nodes: this.data.nodes, topicCover: this.data.topicCover, topicName: this.data.topicName,
+      doneCount: this.data.doneCount, elapsed: sec > 0 ? formatElapsed(sec) : '', score: this.data.finishScore,
+      puzzle: { score: this.data.finishPuzzleScore, count: this.data.finishPuzzleCount },
+    });
+    this.setData({ finale: Object.assign({ show: true }, flip) });
+  },
+  closeFinale() { this.setData({ 'finale.show': false }); },
+  saveFinale() { this.setData({ 'finale.show': false }, () => this.saveFinishCard()); },
 });
+
+/** 完成页眉标:「10月28日 周二」 */
+function finishDateLabel(d) { return (d.getMonth() + 1) + '月' + d.getDate() + '日 周' + '日一二三四五六'[d.getDay()]; }
+/** 完成页「成就」行:_reviewAchievements 的「标题 · 值」拆开,值放右侧,站名做副行(首达的值本身就是站名) */
+function achievementRows(tags, ordered) {
+  const glyph = { 徽章: '徽', 到店券: '券', 最快一段: '速', 首达: '首' };
+  return ordered.filter((n) => tags[n.nodeId]).map((n) => {
+    const [title, value] = String(tags[n.nodeId]).split(' · ');
+    const first = title === '首达';
+    return { key: String(n.nodeId), title, value: first ? '' : (value || ''), sub: first ? (value || '') : (n.name || ''), glyph: glyph[title] || title.slice(0, 1), kind: first ? 'ink' : 'metal' };
+  });
+}

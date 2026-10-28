@@ -79,6 +79,7 @@ class ClubPostWriteLifecycleTest {
         postClub.setId(CLUB_ID);
         postClub.setMemberId(MEMBER_ID);
         when(clubService.selectClubById(CLUB_ID)).thenReturn(postClub);
+        when(clubService.selectClubByIdForUpdate(CLUB_ID)).thenReturn(postClub);
         securityService = mock(IWxContentSecurityService.class);
         when(securityService.checkText(any(), any())).thenReturn(null);
         ReflectionTestUtils.setField(controller, "wxContentSecurityService", securityService);
@@ -173,7 +174,6 @@ class ClubPostWriteLifecycleTest {
     @Test
     void postDeletedWhileLikeWaitsForLockRejectsAllWrites() {
         when(postService.selectClubPostById(POST_ID)).thenReturn(post());
-        when(clubService.selectClubByIdForUpdate(CLUB_ID)).thenReturn(new Club());
         ClubPost deleted = post();
         deleted.setDelFlag(2);
         when(postService.selectClubPostByIdForUpdate(POST_ID)).thenReturn(deleted);
@@ -212,7 +212,6 @@ class ClubPostWriteLifecycleTest {
     void activePostStillAcceptsLikeAfterLockedRead() {
         when(postService.selectClubPostById(POST_ID)).thenReturn(post());
         when(postService.selectClubPostByIdForUpdate(POST_ID)).thenReturn(post());
-        when(clubService.selectClubByIdForUpdate(CLUB_ID)).thenReturn(new Club());
         ClubPostLike body = new ClubPostLike();
         body.setPostId(POST_ID);
 
@@ -228,7 +227,6 @@ class ClubPostWriteLifecycleTest {
     void likeWithTargetStateIsIdempotentOnRetry() {
         when(postService.selectClubPostById(POST_ID)).thenReturn(post());
         when(postService.selectClubPostByIdForUpdate(POST_ID)).thenReturn(post());
-        when(clubService.selectClubByIdForUpdate(CLUB_ID)).thenReturn(new Club());
         when(likeService.selectByPostAndMember(POST_ID, MEMBER_ID)).thenReturn(new ClubPostLike());
         ClubPostLike retry = new ClubPostLike();
         retry.setPostId(POST_ID);
@@ -258,7 +256,6 @@ class ClubPostWriteLifecycleTest {
     void likeWithTargetStateWritesOnlyWhenStateDiffers() {
         when(postService.selectClubPostById(POST_ID)).thenReturn(post());
         when(postService.selectClubPostByIdForUpdate(POST_ID)).thenReturn(post());
-        when(clubService.selectClubByIdForUpdate(CLUB_ID)).thenReturn(new Club());
         when(likeService.selectByPostAndMember(POST_ID, MEMBER_ID)).thenReturn(new ClubPostLike());
         ClubPostLike body = new ClubPostLike();
         body.setPostId(POST_ID);

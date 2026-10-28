@@ -161,7 +161,11 @@ class RefundServiceImplTest {
         activity.setMemberId(3L);
         when(registrationMapper.selectCmsRegistrationById(99L)).thenReturn(registration);
         when(activityMapper.selectCmsActivityById(20L)).thenReturn(activity);
-        when(refundMapper.insertRefundApplication(any(RefundApplication.class))).thenReturn(1);
+        when(refundMapper.insertRefundApplication(any(RefundApplication.class))).thenAnswer(invocation -> {
+            RefundApplication inserted = invocation.getArgument(0);
+            inserted.setId(1001L);
+            return 1;
+        });
 
         int rows = service.saveRefund(refund);
 
@@ -186,7 +190,11 @@ class RefundServiceImplTest {
         RefundServiceImpl service = service(refunds, registrations, mock(SettlementDetailMapper.class));
         CmsRegistration paid = paidRegistration99();
         when(registrations.selectCmsRegistrationById(99L)).thenReturn(paid);
-        when(refunds.insertRefundApplication(any())).thenReturn(1);
+        when(refunds.insertRefundApplication(any())).thenAnswer(invocation -> {
+            RefundApplication inserted = invocation.getArgument(0);
+            inserted.setId(1001L);
+            return 1;
+        });
         RefundApplication rejected = refund(10L, 99L, 2L);
         rejected.setStatus(2);
         when(refunds.selectRegistrationHistoryForUpdate(99L)).thenReturn(java.util.Collections.singletonList(rejected));
@@ -206,11 +214,15 @@ class RefundServiceImplTest {
         excessive.setRefundAmount(new BigDecimal("48.01"));
         assertThrows(IllegalArgumentException.class, () -> service.saveRefund(excessive));
         rejected.setStatus(0);
-        assertThrows(IllegalStateException.class, () -> service.saveRefund(remainder));
+        RefundApplication pendingConflict = refund(null, 99L, 2L);
+        pendingConflict.setRefundAmount(new BigDecimal("48.00"));
+        assertThrows(IllegalStateException.class, () -> service.saveRefund(pendingConflict));
         rejected.setStatus(2);
         paid.setPaymentStatus(2);
         paid.setPayableAmount(null); paid.setTotalAmount(null); paid.setOriginalAmount(null);
-        assertTrue(assertThrows(IllegalStateException.class, () -> service.saveRefund(retry)).getMessage().contains("实付快照缺失"));
+        RefundApplication missingCash = refund(null, 99L, 2L);
+        missingCash.setRefundAmount(new BigDecimal("20.00"));
+        assertTrue(assertThrows(IllegalStateException.class, () -> service.saveRefund(missingCash)).getMessage().contains("实付快照缺失"));
     }
 
     @Test
@@ -319,6 +331,7 @@ class RefundServiceImplTest {
         RefundApplicationMapper refundMapper = mock(RefundApplicationMapper.class);
         RefundServiceImpl service = service(refundMapper, mock(CmsRegistrationMapper.class), mock(SettlementDetailMapper.class));
         RefundApplication pending = refund(10L, 99L, 2L); pending.setStatus(0);
+        pending.setPayoutStatus(RefundApplication.PAYOUT_DISPATCH_PENDING);
         RefundApplication approved = refund(11L, 99L, 2L); approved.setStatus(1);
         RefundApplication rejected = refund(12L, 99L, 2L); rejected.setStatus(2);
         when(refundMapper.selectRegistrationHistoryForUpdate(99L))
@@ -497,7 +510,11 @@ class RefundServiceImplTest {
         CmsRegistrationMapper registrationMapper = mock(CmsRegistrationMapper.class);
         RefundServiceImpl service = service(refundMapper, registrationMapper, mock(SettlementDetailMapper.class));
         stubOrder(registrationMapper, refundMapper, ticket(3L, 2, 0, "0"), java.util.Collections.emptyList());
-        when(refundMapper.insertRefundApplication(any(RefundApplication.class))).thenReturn(1);
+        when(refundMapper.insertRefundApplication(any(RefundApplication.class))).thenAnswer(invocation -> {
+            RefundApplication inserted = invocation.getArgument(0);
+            inserted.setId(1001L);
+            return 1;
+        });
 
         // 从单 2 已退 100:首单按汇总额 300 再退 = 那 100 退两遍
         assertThrows(com.chengyinhub.common.exception.ServiceException.class,
@@ -586,6 +603,7 @@ class RefundServiceImplTest {
             if (!refundNos.add(a.getRefundNo())) {
                 throw new org.springframework.dao.DuplicateKeyException("uk_refund_no");
             }
+            a.setId(1001L);
             return 1;
         });
 
@@ -712,7 +730,11 @@ class RefundServiceImplTest {
         refund.setSourceType("backoffice");
         refund.setSourceId(42L);
         refund.setRefundAmount(new BigDecimal("10.00"));
-        when(refundMapper.insertRefundApplication(any(RefundApplication.class))).thenReturn(1);
+        when(refundMapper.insertRefundApplication(any(RefundApplication.class))).thenAnswer(invocation -> {
+            RefundApplication inserted = invocation.getArgument(0);
+            inserted.setId(1001L);
+            return 1;
+        });
 
         service.saveRefund(refund);
 
@@ -735,7 +757,11 @@ class RefundServiceImplTest {
         CmsRegistrationMapper registrationMapper = mock(CmsRegistrationMapper.class);
         SettlementDetailMapper settlementDetailMapper = mock(SettlementDetailMapper.class);
         RefundServiceImpl service = service(refundMapper, registrationMapper, settlementDetailMapper);
-        when(refundMapper.insertRefundApplication(any(RefundApplication.class))).thenReturn(1);
+        when(refundMapper.insertRefundApplication(any(RefundApplication.class))).thenAnswer(invocation -> {
+            RefundApplication inserted = invocation.getArgument(0);
+            inserted.setId(1001L);
+            return 1;
+        });
 
         RefundApplication first = new RefundApplication();
         first.setSourceType("backoffice");
@@ -911,7 +937,11 @@ class RefundServiceImplTest {
         CmsRegistrationMapper registrationMapper = mock(CmsRegistrationMapper.class);
         RefundServiceImpl service = service(refundMapper, registrationMapper, mock(SettlementDetailMapper.class));
         when(registrationMapper.selectCmsRegistrationById(99L)).thenReturn(paidRegistration99());
-        when(refundMapper.insertRefundApplication(any(RefundApplication.class))).thenReturn(1);
+        when(refundMapper.insertRefundApplication(any(RefundApplication.class))).thenAnswer(invocation -> {
+            RefundApplication inserted = invocation.getArgument(0);
+            inserted.setId(1001L);
+            return 1;
+        });
         RefundApplication forged = refund(null, 99L, 2L);
         forged.setRefundAmount(new BigDecimal("50.00"));
         forged.setStatus(1);                                            // 自批

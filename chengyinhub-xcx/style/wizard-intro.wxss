@@ -55,7 +55,9 @@
   transition: opacity 220ms cubic-bezier(.65, 0, .35, 1); }
 .morph__fill { position: absolute; left: 0; right: 0; top: 0; bottom: 0;
   background: var(--cy-color-text-primary); transform-origin: left center;
-  transition: transform 400ms cubic-bezier(.65, 0, .35, 1); }
+  /* 2026-10-27 P-24(真机 p98):白色段一开始就快速缩到当前步长度(快→慢,220ms),
+   * 不跟着位移慢慢缩 —— 那样看着就是「先一条长线、最后突然变短」。 */
+  transition: transform 220ms cubic-bezier(.2, .8, .2, 1); }
 
 /* 形变期间真进度条先隐身,由形变条顶上;结束瞬间交还 */
 .prog--ghost { opacity: 0; }

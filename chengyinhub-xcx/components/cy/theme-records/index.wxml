@@ -1,3 +1,4 @@
+<wxs src="../../../utils/wxs/list-key.wxs" module="lk" />
 <cy-sheet show="{{historyOpen && !cardSession}}" title="" closable="{{false}}" handle="{{true}}" footer="{{false}}" bind:close="closeHistory" style="--cy-comp-sheet-role-glass:var(--cy-comp-sheet-player-page);--cy-comp-sheet-role-text:var(--cy-comp-sheet-player-text)">
  <view class="tr-sheet">
   <view class="tr-close" bindtap="closeHistory" aria-role="button" aria-label="关闭游玩记录" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="36" /></view>
@@ -28,7 +29,7 @@
   <block wx:for="{{card.items}}" wx:key="name"><view class="tr-group tr-detail"><text class="tr-label">{{item.name}}</text><text class="tr-value">×{{item.quantity}}</text></view></block>
   <block wx:for="{{card.medals}}" wx:key="name"><view class="tr-group tr-detail"><text class="tr-label">{{item.name}}</text><text class="tr-value">×{{item.quantity}}</text></view></block>
   <view class="tr-group tr-copy tr-story" wx:for="{{card.epilogues}}" wx:key="name"><text class="tr-name">{{item.name}}</text><text class="tr-summary">{{item.line}}</text></view>
-  <view class="tr-group tr-story" wx:for="{{card.exhibits}}" wx:key="*this"><text class="tr-summary">{{item}}</text></view>
+  <view class="tr-group tr-story" wx:for="{{lk.rows(card.exhibits)}}" wx:key="key"><text class="tr-summary">{{item.text}}</text></view>
   <view class="tr-group tr-story" wx:if="{{card.unlocks}}"><text class="tr-name">已发现的结局</text><text class="tr-sub" wx:for="{{card.unlocks.known}}" wx:key="id">{{item.title}}</text></view>
   <text class="tr-sub" wx:if="{{card.nextScene.name}}">下次场景：{{card.nextScene.name}}</text>
   <text class="tr-sub tr-empty" wx:if="{{busy}}" aria-live="polite">正在加载本局结果</text>

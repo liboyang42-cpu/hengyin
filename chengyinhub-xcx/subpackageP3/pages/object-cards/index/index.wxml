@@ -18,7 +18,7 @@
       <!-- 失败 / 首屏加载 / 真空态互斥:失败时空态不得替它背书。
            整页失败沿用产品裁决(零按钮说清原因 → 自动返回),所以不挂 retry;切分类失败只提示并退回原分类。 -->
   <cy-empty class="oc-state" fill="{{true}}" wx:if="{{readAccess}}" title="{{readAccess === 'login' ? '登录后查看自己的册子' : '当前账号无法查看'}}" sub="{{readAccess === 'login' ? '' : '请返回重新进入'}}" cta="{{readAccess === 'login' ? '去登录' : ''}}" bind:cta="loginToRead" />
-      <cy-error load-failure class="oc-state" fill="{{true}}" size="lg" icon="/images/no_data.svg"
+      <cy-error load-failure class="oc-state" fill="{{true}}" size="lg" icon="empty-state"
                 wx:elif="{{error}}" title="藏品册无法打开" auto-back />
       <cy-skeleton class="oc-state" wx:elif="{{loading && !cards.length}}" type="card" count="{{2}}" />
       <cy-empty class="oc-state" wx:elif="{{loaded && !cards.length}}" fill="{{true}}" size="lg"

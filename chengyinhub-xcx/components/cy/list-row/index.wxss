@@ -1,0 +1,53 @@
+.lr {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  min-height: 100rpx;
+  padding: var(--cy-space-2) var(--cy-space-4);
+  box-sizing: border-box;
+  background: var(--cy-color-bg-surface);
+}
+.lr--hr::before {
+  content: "";
+  position: absolute;
+  left: var(--cy-space-4);
+  right: 0;
+  top: 0;
+  height: 1px;
+  background: var(--cy-color-border-subtle);
+}
+.lr__m { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 4rpx; }
+.lr__t { font-size: var(--cy-type-body); line-height: 1.35; color: var(--cy-color-text-primary); }
+.lr__v { flex: none; font-size: var(--cy-type-body); color: var(--cy-color-text-tertiary); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.lr__vb { color: var(--cy-color-text-primary); font-weight: 600; }
+.lr__chev { flex: none; display: flex; margin-right: -8rpx; color: var(--cy-color-text-tertiary); transition: transform var(--cy-motion-expand) var(--cy-ease-standard); }
+.lr__chev.is-open { transform: rotate(90deg); }
+.lr__dot { flex: none; width: 20rpx; height: 20rpx; margin: 0 4rpx; border-radius: 50%; }
+.lr--danger { justify-content: center; }
+.lr--danger .lr__m { align-items: center; }
+.lr--danger .lr__t { color: var(--cy-color-status-danger); }
+.lr--add .lr__t { font-weight: 600; }
+.lr__plus {
+  flex: none;
+  width: 44rpx;
+  height: 44rpx;
+  margin: 0 8rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--cy-color-action-primary-bg);
+  color: var(--cy-color-action-primary-fg);
+}
+.lr.is-disabled .lr__t { color: var(--cy-color-text-disabled); }
+.lr.is-disabled .lr__plus { background: var(--cy-color-text-disabled); }
+/* 自动检查:绿勾 / 红叹号,纯 CSS 画,不用图 */
+.lr__st { flex: none; position: relative; width: 44rpx; height: 44rpx; border-radius: 50%; background: var(--cy-color-status-success); }
+.lr__st::after { content: ""; position: absolute; left: 15rpx; top: 9rpx; width: 10rpx; height: 18rpx; border: solid var(--cy-color-action-danger-fg); border-width: 0 4rpx 4rpx 0; transform: rotate(45deg); }
+.lr__st--bad { background: var(--cy-color-status-danger); }
+.lr__st--bad::after { left: 20rpx; top: 10rpx; width: 4rpx; height: 16rpx; border: 0; border-radius: var(--cy-radius-pill); background: var(--cy-color-action-danger-fg); transform: none; box-shadow: 0 20rpx 0 0 var(--cy-color-action-danger-fg); }
+.lr--bad .lr__t { color: var(--cy-color-status-danger); }
+
+/* 组件样式隔离,全局 .cy-pressed 进不来,本地补一份(同 cy-card) */
+.cy-pressed { opacity: .88; }

@@ -117,18 +117,15 @@ const DANGER_ACTIONS = {
   },
 
   // ===== 小队 =====
-  // ===== 主题状态键 =====
+  // ===== 线索与物品(主题状态键 / 主题物品) =====
   'topic.stateKey.delete': {
     irreversible: true,
-    title: '删除状态键「{name}」?',
-    content: '只有没被节点或剧情配置引用的键才能删除;被引用时后台会拒绝并告诉你引用位置。',
-    consequences: [
-      { icon: 'list', text: '键的显示名和初始值会一起删除,之后需要重新注册' },
-      { icon: 'warning', text: '此操作不可撤销,删除后无法恢复这个状态键的配置' },
-    ],
-    confirmText: '删除状态键',
+    title: '删除「{name}」？',
+    content: '',
+    consequences: [],
+    confirmText: '删除',
     alt: null,
-    done: { title: '状态键已删除', text: '' },
+    done: { title: '已删除', text: '' },
   },
   // ===== AI 对话 =====
   'ai.npc.chatData.delete': {

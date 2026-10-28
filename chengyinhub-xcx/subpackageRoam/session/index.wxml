@@ -13,7 +13,7 @@
       <cy-empty wx:elif="{{sharedState === 'gone'}}" fill size="lg" kind="missing-param" title="这条足迹已不再公开" sub="分享已失效" cta="去漫游看看" bind:cta="goRoam" />
       <cy-scene-roam-session wx:else snapshot="{{snapshot}}" bind:back="goBack" bind:close="goBack" />
     </block>
-    <cy-scene-roam-session wx:else id="roamSession" ts="{{ts}}" bind:back="goBack" bind:close="goBack" bind:share="share" />
+    <cy-scene-roam-session wx:else id="roamSession" ts="{{ts}}" session-id="{{sessionId}}" bind:back="goBack" bind:close="goBack" bind:share="share" />
   </view>
 </view>
 

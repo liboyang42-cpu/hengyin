@@ -380,6 +380,13 @@ class OrientSessionServiceImplTest {
             return r != null && r.getMemberId().equals(memberId) ? r : null;
         }
 
+        @Override public List<OrientSessionRow> selectOwnedSessions(Long memberId, Long topicId, Long activityId) {
+            calls++;
+            return rows.values().stream().filter(r -> r.getMemberId().equals(memberId)
+                    && r.getTopicId().equals(topicId)
+                    && (activityId == null || activityId.equals(r.getActivityId()))).toList();
+        }
+
         @Override public OrientSessionRow selectSession(Long id, Long memberId) { return owned(id, memberId); }
         @Override public OrientSessionRow selectSessionForUpdate(Long id, Long memberId) { return owned(id, memberId); }
 

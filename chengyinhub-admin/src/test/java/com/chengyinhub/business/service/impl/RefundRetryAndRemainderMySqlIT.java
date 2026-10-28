@@ -43,6 +43,8 @@ class RefundRetryAndRemainderMySqlIT {
     private JdbcTemplate db;
     private boolean schemaCreated;
     private IRefundService service;
+    private RefundServiceImpl refundTarget;
+    private DataSourceTransactionManager transactions;
     private IRefundPayoutService payouts;
     private RefundApplicationMapper refunds;
     private IWechatPayService wechat;
@@ -80,6 +82,7 @@ class RefundRetryAndRemainderMySqlIT {
         refunds = sql.getMapper(RefundApplicationMapper.class);
         settlements = mock(SettlementDetailMapper.class);
         RefundServiceImpl target = new RefundServiceImpl();
+        refundTarget = target;
         ReflectionTestUtils.setField(target, "refundApplicationMapper", refunds);
         ReflectionTestUtils.setField(target, "cmsRegistrationMapper", sql.getMapper(CmsRegistrationMapper.class));
         ReflectionTestUtils.setField(target, "settlementDetailMapper", settlements);
@@ -95,7 +98,8 @@ class RefundRetryAndRemainderMySqlIT {
         ReflectionTestUtils.setField(target, "wxPaymentCallbackInboxService", inbox);
         ProxyFactory proxy = new ProxyFactory(target);
         proxy.setInterfaces(IRefundService.class);
-        proxy.addAdvice(new TransactionInterceptor(new DataSourceTransactionManager(dataSource), new AnnotationTransactionAttributeSource()));
+        transactions = new DataSourceTransactionManager(dataSource);
+        proxy.addAdvice(new TransactionInterceptor(transactions, new AnnotationTransactionAttributeSource()));
         service = (IRefundService) proxy.getProxy();
         wechat = mock(IWechatPayService.class);
         RefundPayoutServiceImpl payout = new RefundPayoutServiceImpl();
@@ -122,6 +126,138 @@ class RefundRetryAndRemainderMySqlIT {
             admin.execute("drop database if exists " + mysql.databaseName());
             assertEquals(0, admin.queryForObject("select count(*) from information_schema.schemata where schema_name=?", Integer.class, mysql.databaseName()));
         }
+    }
+
+    @Test
+    void zeroInsertReceiptRollsBackRealRefundRowAndOuterTransaction() {
+        assertLostInsertReceiptRollsBack(false);
+    }
+
+    @Test
+    void missingGeneratedKeyRollsBackRealRefundRowAndOuterTransaction() {
+        assertLostInsertReceiptRollsBack(true);
+    }
+
+    /** Delegate the INSERT to real MyBatis/MySQL, then lose only its caller-visible receipt. */
+    private void assertLostInsertReceiptRollsBack(boolean loseKey) {
+        paid(99L, null, "68.00");
+        RefundApplicationMapper lostReceipt = (RefundApplicationMapper) java.lang.reflect.Proxy.newProxyInstance(
+                RefundApplicationMapper.class.getClassLoader(), new Class<?>[] {RefundApplicationMapper.class},
+                (proxy, method, args) -> {
+                    Object result;
+                    try {
+                        result = method.invoke(refunds, args);
+                    } catch (java.lang.reflect.InvocationTargetException failure) {
+                        throw failure.getCause();
+                    }
+                    if ("insertRefundApplication".equals(method.getName())) {
+                        assertEquals(1, result);
+                        RefundApplication inserted = (RefundApplication) args[0];
+                        assertNotNull(inserted.getId(), "real useGeneratedKeys must execute before fault injection");
+                        assertTrue(inserted.getId() > 0);
+                        assertEquals(1, db.queryForObject("select count(*) from refund_application", Integer.class));
+                        if (loseKey) inserted.setId(null);
+                        else return 0;
+                    }
+                    return result;
+                });
+        ReflectionTestUtils.setField(refundTarget, "refundApplicationMapper", lostReceipt);
+        java.util.concurrent.atomic.AtomicBoolean downstreamReached = new java.util.concurrent.atomic.AtomicBoolean();
+        try {
+            IllegalStateException failure = assertThrows(IllegalStateException.class,
+                    () -> new org.springframework.transaction.support.TransactionTemplate(transactions).execute(status -> {
+                        // A preceding cancellation write must roll back together with the actual refund INSERT.
+                        assertEquals(1, db.update("update cms_registration set registration_status=3 where id=99"));
+                        RefundApplication request = request("20.00");
+                        service.saveBackOfficeRefund(request);
+                        downstreamReached.set(true);
+                        service.reviewRefund(review(request.getId(), 1), 7L);
+                        return null;
+                    }));
+            assertTrue(failure.getMessage().contains("写入回执异常"));
+        } finally {
+            ReflectionTestUtils.setField(refundTarget, "refundApplicationMapper", refunds);
+        }
+        assertFalse(downstreamReached.get(), "approval and dispatch must not follow an invalid receipt");
+        assertEquals(0, db.queryForObject("select count(*) from refund_application", Integer.class));
+        assertEquals(2, db.queryForObject("select registration_status from cms_registration where id=99", Integer.class));
+        assertEquals(2, db.queryForObject("select payment_status from cms_registration where id=99", Integer.class));
+        verify(settlements, never()).voidPendingBySource(anyString(), anyLong());
+        verify(wechat, never()).submitRefund(anyString(), anyString(), any(), any(), any());
+        // Retrying only after the failed transaction rolled back creates one valid original intent.
+        RefundApplication retry = save("20.00");
+        assertTrue(retry.getId() > 0);
+        assertEquals("RF99", retry.getRefundNo());
+        assertEquals("registration:99", retry.getIdempotencyKey());
+        assertEquals(1, db.queryForObject("select count(*) from refund_application", Integer.class));
+        assertEquals(0, refunds.selectRefundApplicationById(retry.getId()).getStatus());
+        assertEquals(RefundApplication.PAYOUT_DISPATCH_PENDING,
+                refunds.selectRefundApplicationById(retry.getId()).getPayoutStatus());
+    }
+
+    @Test
+    void lockedHistoryKeepsApprovedRefundFactAfterProviderFailureWithoutChangingFunds() {
+        paid(99L, null, "68.00");
+        RefundApplication request = save("20.00");
+        assertTrue(lockedFacts(99L).hasPendingOrApproved());
+        assertEquals(0, lockedFacts(99L).refunds().get(0).reviewStatus());
+        assertEquals(1, service.reviewRefund(review(request.getId(), 1), 7L));
+        when(wechat.submitRefund(anyString(), anyString(), any(), any(), any()))
+                .thenReturn(RefundRequestResult.DEFINITIVE_FAILED);
+        payouts.payoutAfterReview(request.getId());
+        for (int repeat = 0; repeat < 2; repeat++) {
+            var facts = lockedFacts(99L);
+            assertTrue(facts.hasPendingOrApproved());
+            assertFalse(facts.unknownHistory());
+            assertEquals(1, facts.refunds().get(0).reviewStatus());
+            assertEquals(RefundApplication.PAYOUT_PENDING_MANUAL, facts.refunds().get(0).payoutStatus());
+            assertEquals(new BigDecimal("20.00"), facts.refunds().get(0).refundAmount());
+        }
+        assertEquals(1, db.queryForObject("select count(*) from refund_application", Integer.class));
+        assertEquals(4, db.queryForObject("select payment_status from cms_registration where id=99", Integer.class));
+        verify(wechat, times(1)).submitRefund(eq("REG99"), eq(request.getRefundNo()),
+                eq(new BigDecimal("20.00")), eq(new BigDecimal("68.00")), any());
+    }
+
+    private com.chengyinhub.business.service.support.RegistrationRefundFacts lockedFacts(Long registrationId) {
+        return new org.springframework.transaction.support.TransactionTemplate(
+                new DataSourceTransactionManager(db.getDataSource())).execute(status -> {
+            assertEquals(registrationId, db.queryForObject(
+                    "select id from cms_registration where id=? for update", Long.class, registrationId));
+            return com.chengyinhub.business.service.support.RegistrationRefundFacts.fromHistory(
+                    registrationId, service.selectRegistrationHistoryForUpdate(registrationId));
+        });
+    }
+
+    @Test
+    void forgedRefundIdentityIsPersistedAsOriginalBuyerAndScopeThroughPayoutReadback() {
+        paid(99L, null, "68.00");
+        RefundApplication request = request("20.00");
+        request.setMemberId(72L);
+        request.setOwnerType(3L);
+        request.setOwnerId(9007199254740993L);
+        request.setMerchantId(999L);
+        assertEquals(1, service.saveBackOfficeRefund(request));
+        RefundApplication persisted = refunds.selectRefundApplicationById(request.getId());
+        assertEquals(9L, persisted.getMemberId());
+        assertEquals(2L, persisted.getOwnerType());
+        assertEquals(20L, persisted.getOwnerId());
+        assertNull(persisted.getMerchantId(), "missing authoritative merchant is not caller-provided merchant");
+        RefundApplication buyer = new RefundApplication();
+        buyer.setSourceType("registration");
+        buyer.setSourceId(99L);
+        buyer.setMemberId(9L);
+        assertEquals(1, service.selectRefundList(buyer).size());
+        buyer.setMemberId(72L);
+        assertTrue(service.selectRefundList(buyer).isEmpty());
+        assertEquals(1, service.reviewRefund(review(request.getId(), 1), 7L));
+        payouts.payoutAfterReview(request.getId());
+        verify(wechat).submitRefund(eq("REG99"), eq(request.getRefundNo()),
+                eq(new BigDecimal("20.00")), eq(new BigDecimal("68.00")), any());
+        assertTrue(service.handleRefundNotify(facts(request)));
+        assertEquals(RefundApplication.PAYOUT_SUCCESS,
+                refunds.selectRefundApplicationById(request.getId()).getPayoutStatus());
+        assertEquals(9L, refunds.selectRefundApplicationById(request.getId()).getMemberId());
     }
 
     @Test

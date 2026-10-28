@@ -95,9 +95,10 @@ test('publish/simple 的返回入口只有 cy-nav-bar 一个', () => {
 
 test('negative control: publish/simple 自带圆形返回钮回潮必须判红', () => {
   const source = read('pages/publish/simple/index.wxml')
+  // 2026-10-28 p86:自绘页头撤掉,锚点换成页身第一块 hero
   const mutated = source.replace(
-    '    <view class="simple-ai__nav-copy">',
-    '    <view class="simple-ai__back" bindtap="onAiBack" aria-label="返回">‹</view>\n    <view class="simple-ai__nav-copy">',
+    '      <view class="simple-ai__hero"',
+    '      <view class="simple-ai__back" bindtap="onAiBack" aria-label="返回">‹</view>\n      <view class="simple-ai__hero"',
   )
   assert.notEqual(mutated, source, '变异锚点失效(源码已改动?)')
   assert.throws(() => assertSingleBackAffordance(mutated, 'publish simple'), assert.AssertionError)

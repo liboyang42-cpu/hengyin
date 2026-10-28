@@ -1,3 +1,4 @@
+<wxs src="../../../../utils/wxs/list-key.wxs" module="lk" />
 <view class="ds" wx:if="{{show}}">
   <!-- 这一屏是「纸的世界」:浅灰底、拉丝银打印机、白色热敏小票。刻意不跟深色主题走(见 wxss 头注)。 -->
   <view class="ds__bg" aria-hidden="true"></view>
@@ -58,7 +59,7 @@
                  ⚠️ 内容始终在 DOM 里只是被盖住;开了「减少动态效果」整层不挂(见 cy-scratch 文件头)。 -->
             <cy-scratch class="ds__scratch" cover-color="#C9CDD3" label="留给你的一句" revealed="{{revealed}}" bind:reveal="onReveal">
               <view class="ds__poem">
-                <view class="ds__poem-line" wx:for="{{lines}}" wx:key="*this">{{item}}</view>
+                <view class="ds__poem-line" wx:for="{{lk.rows(lines)}}" wx:key="key">{{item.text}}</view>
               </view>
             </cy-scratch>
             <!-- 撕下来之前刮不动:纸还连在机器上。这层把触摸转交给拖拽,不是挡板 -->

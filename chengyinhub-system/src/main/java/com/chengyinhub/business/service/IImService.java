@@ -107,6 +107,14 @@ public interface IImService
     /** 客服(官方)向某用户/商家发送消息(客服会话 type=3, 发送者=系统0)，返回消息id */
     Long sendFromAdmin(Long toMemberId, Integer msgType, String content, String extraJson);
 
+    /** 管理员身份来自认证上下文；同请求号仅产生一条消息及一次未读增量。 */
+    Long sendFromAdmin(Long adminId, Long toMemberId, Integer msgType, String content,
+            String extraJson, String requestId);
+
+    /** 查询该管理员原请求的持久结果；未找到不代表发送未发生。 */
+    Map<String, Object> adminSendReceipt(Long adminId, Long toMemberId, String requestId);
+
+
     /** 后台:列出所有客服会话(含对方信息 + 最后一条) */
     List<Map<String, Object>> adminListConversations();
 

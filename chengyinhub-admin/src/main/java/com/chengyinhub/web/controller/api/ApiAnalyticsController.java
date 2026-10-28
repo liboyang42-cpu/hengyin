@@ -95,6 +95,12 @@ public class ApiAnalyticsController extends BaseController {
             "roam_exploreday_reco_shown",
             "roam_exploreday_reco_click",
             "roam_share_channel",
+            // U-171 分享回执 / P1-021 章节块流回落:properties 只放渠道码、原因码。
+            "roam_share_complete",
+            "roam_share_fail",
+            "square_share_complete",
+            "square_share_fail",
+            "chapter_blocks_parse_failed",
             // 无形陪伴 V1：仅表面展示/关闭，properties 不得带话术、地点或轨迹。
             "roam_route_story_shown",
             "roam_poi_meaning_shown",

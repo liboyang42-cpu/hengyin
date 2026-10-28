@@ -6,7 +6,9 @@ const MAX_DEPTH = 2
 // 2026-09-02 合并掉 peek:它与 half 的下限相同、只有上限差 12vh,渲染结果常常一模一样。
 // 这里原本只放行 peek,其余一律归一成 full —— registry 里三个 variant:'half' 的场景因此从来没半屏过,
 // 且不报错、无测试覆盖。未知值(含旧的 'peek')仍 fail-closed 到 full。
-const VARIANTS = new Set(['half', 'full'])
+// 2026-10-27 G-1:再加 page 档 —— 业主点名「本该是页面」的场景(订单详情 / 优惠券 / 邀请好友 / 漫游历史)
+// 无遮罩无把手,导航栏 + 大标题,返回走原生返回。
+const VARIANTS = new Set(['half', 'full', 'page'])
 
 function normalizeScene(scene) {
   if (!scene || !scene.id) throw new Error('scene requires an id')

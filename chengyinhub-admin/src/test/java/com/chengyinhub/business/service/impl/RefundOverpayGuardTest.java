@@ -102,7 +102,11 @@ class RefundOverpayGuardTest {
     @Test
     void normalPaidRegistrationAllowsExactRefund() {
         RefundApplicationMapper appMapper = mock(RefundApplicationMapper.class);
-        when(appMapper.insertRefundApplication(any())).thenReturn(1);
+        when(appMapper.insertRefundApplication(any())).thenAnswer(invocation -> {
+            RefundApplication inserted = invocation.getArgument(0);
+            inserted.setId(1001L);
+            return 1;
+        });
         CmsRegistration first = subOrder();
         first.setPayableAmount(new BigDecimal("200.00"));
         RefundServiceImpl service = newService(first, appMapper);
@@ -131,7 +135,11 @@ class RefundOverpayGuardTest {
     @Test
     void clientPaidAmountAboveServerPaidIsOverwritten() {
         RefundApplicationMapper appMapper = mock(RefundApplicationMapper.class);
-        when(appMapper.insertRefundApplication(any())).thenReturn(1);
+        when(appMapper.insertRefundApplication(any())).thenAnswer(invocation -> {
+            RefundApplication inserted = invocation.getArgument(0);
+            inserted.setId(1001L);
+            return 1;
+        });
         CmsRegistration single = subOrder();
         single.setPayableAmount(new BigDecimal("50.00"));
         RefundServiceImpl service = newService(single, appMapper);

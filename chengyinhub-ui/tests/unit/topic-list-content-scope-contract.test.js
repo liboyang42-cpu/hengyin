@@ -15,6 +15,7 @@ const topicApi = fs.readFileSync(
 function loadComponent() {
   const script = page.match(/<script>([\s\S]*?)<\/script>/)[1]
   const body = script
+    .replace(/^import (\w+) from ['"][^'"]+\.vue['"]$/gm, 'const $1 = {}')
     .replace(/^import .*$/gm, '')
     .replace(/export default/, 'return ')
   return new Function(body)()

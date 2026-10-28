@@ -31,6 +31,16 @@ function makeRequestId() {
 const AI_PENDING_CODES = ['AI_DRAFT_IN_PROGRESS', 'AI_DRAFT_OUTCOME_UNKNOWN', 'AI_DRAFT_STATE_UNAVAILABLE'];
 
 const MAX_AI_PLAN_NODES = 3;
+// p86 兴趣气泡:位置按稿错落摆放(x 为百分比、y 为 rpx),选中的标签拼进发给 AI 的描述
+const INTERESTS = [
+  { key: 'coffee', label: '咖啡', icon: 'category-food', x: 14, y: 90, size: 150 },
+  { key: 'food', label: '美食', icon: 'discover-shop', x: 36, y: 10, size: 132 },
+  { key: 'photo', label: '拍照', icon: 'camera', x: 58, y: 110, size: 140 },
+  { key: 'story', label: '老建筑', icon: 'poi-landmark', x: 78, y: 20, size: 128 },
+  { key: 'night', label: '夜游', icon: 'star', x: 18, y: 280, size: 128 },
+  { key: 'walk', label: '散步', icon: 'walk', x: 44, y: 250, size: 140 },
+  { key: 'park', label: '公园', icon: 'poi-park', x: 70, y: 280, size: 132 },
+];
 
 Page({
   data: {
@@ -51,6 +61,11 @@ Page({
     aiDraftPending: false,
     aiRemaining: 0, reducedMotion: false,
     aiPrompts: ['老城建筑与咖啡', '周末亲子探险', '雨天室内漫游'],
+    aiTweaks: ['再加一站', '换成晚上', '缩短到 1 小时'],
+    interests: INTERESTS.map(function (it) { return Object.assign({ on: false }, it); }),
+    interestText: '',
+    interestCount: 0,
+    planOpen: false,
     // 模式:2 自由 / 1 定向
     mode: 2,
     operationScope: '',
@@ -62,12 +77,18 @@ Page({
   _resumeCreatorLoad() { if (this._creatorOwnerChanged()) return; this.onLoad(this._creatorEntryOptions || {}); },
   _creatorOwnerChanged() {
     if (!this._creatorOwner || this._creatorOwner === memberId(app)) return false;
+    this._invalidateAiRequests();
     this.setData({ creatorLoginRequired: true });
     wx.switchTab({ url: '/pages/template/index' });
     return true;
   },
 
   onLoad(options) {
+    this._unloaded = false;
+    this._invalidateAiRequests();
+    this._aiPending = null;
+    this._aiPendingKey = '';
+    this.setData({ aiDraftPending: false });
     this._creatorEntryOptions = options || {};
     if (!memberId(app)) {
       this.setData({ creatorLoginRequired: true });
@@ -92,36 +113,95 @@ Page({
   },
 
   onShow() { this._creatorOwnerChanged(); },
-  onUnload() { this._unloaded = true; },
+  onUnload() { this._unloaded = true; this._invalidateAiRequests(); },
 
   // ===== 简单 AI 对话 =====
+  _invalidateAiRequests() {
+    this._aiEpoch = (this._aiEpoch || 0) + 1;
+    this._aiRequest = null;
+    this._aiQuotaRequest = null;
+    if (!this._unloaded) this.setData({ aiGenerating: false });
+  },
+  _beginAiRequest(quota) {
+    const slot = quota ? '_aiQuotaRequest' : '_aiRequest';
+    const request = { slot, owner: memberId(app), epoch: this._aiEpoch,
+      key: quota ? '' : this._aiPendingKey, handled: false };
+    this[slot] = request;
+    // 旧额度回包不能覆盖新一次起草/回读之后的额度。
+    if (!quota) this._aiQuotaRequest = null;
+    return request;
+  },
+  _isAiRequestCurrent(request) {
+    return !this._unloaded && this[request.slot] === request && request.epoch === this._aiEpoch;
+  },
+  _acceptAiResponse(request, response) {
+    if (!this._isAiRequestCurrent(request) || request.handled) return false;
+    // 成功回调的认证由 transport 校验；其自有续登允许 token 更新，不能在这里比较旧 token。
+    if (request.owner !== memberId(app) || (response && response.reason === 'sessionChanged')) {
+      this._invalidateAiRequests();
+      return false;
+    }
+    request.handled = true;
+    return true;
+  },
+  _finishAiRequest(request) {
+    if (!this._isAiRequestCurrent(request)) return;
+    if (request.owner !== memberId(app)) { this._invalidateAiRequests(); return; }
+    this[request.slot] = null;
+    if (request.slot === '_aiRequest') this.setData({ aiGenerating: false });
+  },
   loadAiQuota() {
+    if (this._unloaded || this._creatorOwnerChanged()) return;
     if (!memberId(app)) { this.setData({ creatorLoginRequired: true }); return; }
+    const request = this._beginAiRequest(true);
     app.sendRequest({
       url: '/api/ai/theme/draft/quota',
       method: 'POST',
       hideLoading: true,
-      header: { 'Content-Type': 'application/json', 'Authorization': app.getAuthorization() },
+      header: { 'Content-Type': 'application/json' },
       success: (res) => {
+        if (!this._acceptAiResponse(request, res)) return;
         const data = res && res.data;
         if ((res.code === 200 || res.code === '200') && data && data.limited) {
           this.setData({ aiQuotaLoaded: true, aiRemaining: Number(data.remaining) || 0 });
         }
-      }
+      },
+      fail: (res) => { this._acceptAiResponse(request, res); },
+      complete: () => this._finishAiRequest(request)
     });
   },
   onAiIdeaInput(e) { this.setData({ aiIdea: e.detail.value, aiError: '' }); },
   useAiPrompt(e) { this.setData({ aiIdea: e.currentTarget.dataset.text || '', aiError: '' }); },
+  toggleInterest(e) {
+    const key = e.currentTarget.dataset.key;
+    const interests = this.data.interests.map(function (it) { return it.key === key ? Object.assign({}, it, { on: !it.on }) : it; });
+    const picked = interests.filter(function (it) { return it.on; }).map(function (it) { return it.label; });
+    this.setData({ interests, interestText: picked.join(' · '), interestCount: picked.length, aiError: '' });
+  },
+  openDraft() { this.setData({ planOpen: true }); },
+  /** 发给 AI 的一句话 = 输入框 + 选中的兴趣;两样都空时为空串 */
+  _composeIdea() {
+    const typed = (this.data.aiIdea || '').trim();
+    const picked = this.data.interests.filter(function (it) { return it.on; }).map(function (it) { return it.label; });
+    if (!picked.length) return typed;
+    return (typed ? typed + '，' : '') + '喜欢' + picked.join('、');
+  },
+  // P-43:失败卡上的重试 —— 结果未确认时只回读那一次(同发送键),否则用保留的描述再生成一次
+  retryAiPlan() {
+    if (this._aiPending) this.checkAiDraftRequest();
+    else this.generateAiPlan();
+  },
   generateAiPlan() {
+    if (this._unloaded || this._creatorOwnerChanged()) return;
     if (!memberId(app)) { this.setData({ creatorLoginRequired: true }); return; }
     if (this.data.aiGenerating) return;
     const pending = this._aiPending;
     // 结果未确认:先回读那一次。只有服务端已明说「结果无法确认」且用户改了灵感,才算放弃它另起一次。
-    if (pending && !(pending.unknown && (this.data.aiIdea || '').trim() !== pending.idea)) {
+    if (pending && !(pending.unknown && this._composeIdea() !== pending.idea)) {
       this.checkAiDraftRequest();
       return;
     }
-    const idea = (this.data.aiIdea || '').trim();
+    const idea = this._composeIdea();
     if (!idea) { this.setData({ aiError: '先说说你想做什么路线。' }); return; }
     // 配额已用完就不要再发一趟注定被后端拒掉的请求 —— 页面顶部明明写着「还可生成 0 次」,
     // 输入框和发送钮却照常可用(2026-08-19 B51 实拍)。后端那道闸保留,这里只是不让用户白跑。
@@ -130,36 +210,41 @@ Page({
       return;
     }
     const requestId = makeRequestId();
-    this._setAiPending({ requestId, idea, mode: this.data.mode });
+    this._setAiPending({ requestId, idea, mode: this.data.mode }, aiRequestStorageKey());
+    const request = this._beginAiRequest(false);
     this.setData({ aiGenerating: true, aiError: '' });
     app.sendRequest({
       url: '/api/ai/theme/draft',
       method: 'POST',
       hideLoading: true,
       data: JSON.stringify({ idea, productType: this.data.mode, requestId }),
-      header: { 'Content-Type': 'application/json', 'Authorization': app.getAuthorization() },
+      header: { 'Content-Type': 'application/json' },
       success: (res) => {
+        if (!this._acceptAiResponse(request, res)) return;
         if (res && AI_PENDING_CODES.indexOf(res.errorCode) >= 0) {
-          this._markAiPendingUnknown(res.errorCode === 'AI_DRAFT_OUTCOME_UNKNOWN');
+          this._markAiPendingUnknown(res.errorCode === 'AI_DRAFT_OUTCOME_UNKNOWN', request.key);
           this.setData({ aiError: res.msg || '上一次起草的结果还没确认，稍后点「查看结果」。' });
           return;
         }
         // 服务端已给出明确结论(成功或失败):这个 requestId 收尾,下一次是新的一次起草。
-        this._setAiPending(null);
+        this._setAiPending(null, request.key);
         this._applyAiDraft(res, !!(res && res.replayed));
       },
-      fail: () => {
+      fail: (res) => {
+        if (!this._acceptAiResponse(request, res)) return;
         // 请求可能已经到了服务端:结果未知,锁住重试,只能回读这一次。
-        this._markAiPendingUnknown(false);
+        this._markAiPendingUnknown(false, request.key);
         this.setData({ aiError: '网络暂时不可用，上一次起草的结果还没确认，稍后点「查看结果」。' });
       },
-      complete: () => this.setData({ aiGenerating: false })
+      complete: () => this._finishAiRequest(request)
     });
   },
   /** 只读回读上一次起草(GET /api/ai/theme/draft/request):不调模型、不动额度。 */
   checkAiDraftRequest() {
+    if (this._unloaded || this._creatorOwnerChanged()) return;
     const pending = this._aiPending;
     if (!pending || this.data.aiGenerating) return;
+    const request = this._beginAiRequest(false);
     this.setData({ aiGenerating: true, aiError: '' });
     app.sendRequest({
       url: '/api/ai/theme/draft/request',
@@ -167,23 +252,19 @@ Page({
       hideLoading: true,
       autoErrorToast: false,
       data: { requestId: pending.requestId },
-      header: { 'Authorization': app.getAuthorization() },
       success: (res) => {
-        if (this._aiPending !== pending) return;
+        if (!this._acceptAiResponse(request, res)) return;
         const st = res && (res.code === 200 || res.code === '200') && res.data;
         const state = st && st.requestId === pending.requestId ? st.state : '';
         if (state === 'SUCCEEDED') {
-          this._setAiPending(null);
+          this._setAiPending(null, request.key);
           this._applyAiDraft({ code: 200, data: st.result }, true);
         } else if (state === 'FAILED') {
-          this._setAiPending(null);
+          this._setAiPending(null, request.key);
           this.setData({ aiError: st.message || 'AI 起草没有成功，可以再试一次。' });
-        } else if (state === 'NOT_FOUND') {
-          // 服务端没有这次起草:它没送达,放心重新生成。
-          this._setAiPending(null);
-          this.setData({ aiError: '上一次起草没有送达，可以重新生成。' });
-        } else if (state === 'UNKNOWN') {
-          this._markAiPendingUnknown(true);
+        } else if (state === 'NOT_FOUND' || state === 'UNKNOWN') {
+          // NOT_FOUND 也可能是超过24小时保留期，不能证明原请求未送达。
+          this._markAiPendingUnknown(true, request.key);
           this.setData({ aiError: '上一次起草的结果暂时无法确认。稍后再查看；改一下灵感再点「生成」会作为新的一次起草，可能再用一次额度。' });
         } else if (state === 'PROCESSING') {
           this.setData({ aiError: '上一次起草还在进行中，稍后点「查看结果」。' });
@@ -191,23 +272,25 @@ Page({
           this.setData({ aiError: '暂时查不到上一次起草的结果，稍后再试。' });
         }
       },
-      fail: () => this.setData({ aiError: '网络暂时不可用，稍后点「查看结果」。' }),
-      complete: () => this.setData({ aiGenerating: false })
+      fail: (res) => {
+        if (this._acceptAiResponse(request, res)) this.setData({ aiError: '网络暂时不可用，稍后点「查看结果」。' });
+      },
+      complete: () => this._finishAiRequest(request)
     });
   },
-  _setAiPending(pending) {
+  _setAiPending(pending, key) {
     this._aiPending = pending;
+    this._aiPendingKey = key;
     this.setData({ aiDraftPending: !!pending });
-    const key = aiRequestStorageKey();
     if (!key) return;
     try {
       if (pending) wx.setStorageSync(key, pending);
       else wx.removeStorageSync(key);
     } catch (e) { /* 只是跨重开的便利;读写失败时本页内存里的锁照样生效 */ }
   },
-  _markAiPendingUnknown(confirmedUnknown) {
+  _markAiPendingUnknown(confirmedUnknown, key) {
     if (!this._aiPending) return;
-    this._setAiPending(Object.assign({}, this._aiPending, { unknown: !!confirmedUnknown || !!this._aiPending.unknown }));
+    this._setAiPending(Object.assign({}, this._aiPending, { unknown: !!confirmedUnknown || !!this._aiPending.unknown }), key);
   },
   _restoreAiPending() {
     const key = aiRequestStorageKey();
@@ -215,6 +298,7 @@ Page({
     try { pending = key ? wx.getStorageSync(key) : null; } catch (e) { pending = null; }
     if (!pending || typeof pending.requestId !== 'string' || !pending.requestId) return;
     this._aiPending = pending;
+    this._aiPendingKey = key;
     this.setData({ aiDraftPending: true, aiIdea: pending.idea || this.data.aiIdea });
     this.checkAiDraftRequest();
   },
@@ -233,6 +317,7 @@ Page({
       return;
     }
     this.setData({
+      planOpen: false,
       aiPlan: { title: draft.title, subtitle: draft.subtitle || '', storyline: draft.storyline || '' },
       aiPlanNodes: nodes.map((node, index) => ({
         name: node.merchantName || node.roleText || node.task || ('节点 ' + (index + 1)),

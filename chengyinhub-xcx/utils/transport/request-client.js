@@ -15,9 +15,11 @@
 //   - showToast(msg)/hideToast()
 //   - getErrorMessage(res, fallback) / shouldAutoToast(param, body):沿用 app.js 既有纯函数。
 //   - newRequestId():         同意接口 requestId 冲突时换的新号(默认 consent-时间-随机)。
+//   - isPlayerView():         当前是否玩家视角(G-4,生产 = !roleGuard.isMerchantView());缺省 false = 不过滤。
 
 var sanitizeResponseMessage = require('./safe-user-message.js').sanitizeResponseMessage;
 var normalizeClientVersion = require('../client-version.js').normalizeClientVersion;
+var roleViewFilter = require('./role-view-filter.js');
 
 // #472-2(owner 2026-10-23 批准改动本 C00 文件):同意留痕接口回 409 + CONSENT_REQUEST_CONFLICT
 // = 这个 requestId 已属于另一条同意事件(例如协议重新发布后客户端重放了旧号)。这时换一个新号重发
@@ -52,6 +54,37 @@ function withFreshConsentRequestId(param, newRequestId) {
   return Object.assign({}, param, { data: asString ? JSON.stringify(next) : next });
 }
 
+// owner 2026-10-24(本 C00 文件为该任务获授权改动,见 PR CY-HANDOFF):「游客可浏览,写入时弹窗登录」。
+// 游客(发起时无会员、无 token)的请求被 401 拦下时**不再静默 wx.login 建号**:
+//   - 写请求 → deps.promptLogin(param)(同一个「登录后继续」弹窗);登录成功用新身份重发恰好一次,取消/失败照常 fail。
+//   - 读请求 → 不弹窗、不建号、不 toast,按 401 交给调用方的 fail(页面显示游客态/未登录态)。
+// 写/读判定:param.write 显式优先;GET 一律读;PUT/PATCH/DELETE 一律写;POST 看路径末段的动词
+// (含 list/info/detail 等读名词即读,含 create/join/like/report 等写动词即写,其余按读处理 —— 宁可少弹也不在浏览时弹)。
+var READ_TOKENS = ['list', 'info', 'detail', 'details', 'home', 'data', 'page', 'search', 'query', 'count',
+  'summary', 'stats', 'feed', 'feeds', 'latest', 'status', 'config', 'features', 'capabilities', 'taxonomy',
+  'nearby', 'leaderboard', 'members', 'history', 'records', 'preview', 'check', 'mine', 'my', 'get', 'view'];
+var WRITE_TOKENS = ['add', 'create', 'save', 'update', 'edit', 'delete', 'remove', 'join', 'apply', 'quit',
+  'signup', 'enroll', 'pay', 'checkout', 'order', 'submit', 'publish', 'like', 'unlike', 'favorite', 'bookmark',
+  'follow', 'unfollow', 'action', 'report', 'comment', 'reply', 'use', 'start', 'finish', 'arrive', 'checkin',
+  'reveal', 'discover', 'visit', 'claim', 'redeem', 'invite', 'accept', 'reject', 'respond', 'cancel',
+  'withdraw', 'transfer', 'register', 'set', 'toggle', 'send', 'draft', 'vote', 'rate', 'posts', 'comments',
+  'replies', 'reports', 'team', 'teams', 'remix', 'copy', 'appeal'];
+
+function pathTokens(url) {
+  var path = String(url || '').split('?')[0].replace(/\/+$/, '');
+  var last = path.slice(path.lastIndexOf('/') + 1);
+  return last.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase().split(/[-_.]+/).filter(Boolean);
+}
+
+function isWriteRequest(param, method) {
+  if (param && typeof param.write === 'boolean') return param.write;
+  if (method === 'GET') return false;
+  if (method !== 'POST') return true;
+  var tokens = pathTokens(param && param.url);
+  if (tokens.some(function (t) { return READ_TOKENS.indexOf(t) >= 0; })) return false;
+  return tokens.some(function (t) { return WRITE_TOKENS.indexOf(t) >= 0; });
+}
+
 function createRequestClient(deps) {
   deps = deps || {};
   var wxRequest = deps.wxRequest;
@@ -61,6 +94,7 @@ function createRequestClient(deps) {
   var upgradePrompted = false;
   var getUserID = deps.getUserID || function () { return ''; };
   var reLogin = deps.reLogin || function (cb) { cb(false); };
+  var promptLogin = deps.promptLogin || function () { return Promise.resolve(false); };
   var showToast = deps.showToast || function () {};
   var hideToast = deps.hideToast || function () {};
   var getErrorMessage = deps.getErrorMessage || function (res, fb) { return fb; };
@@ -68,6 +102,10 @@ function createRequestClient(deps) {
   var scheduleRetry = deps.scheduleRetry || function (fn, ms) { setTimeout(fn, ms); };
   var newRequestId = deps.newRequestId || defaultConsentRequestId;
   var defaultTimeoutMs = Math.max(1000, Number(deps.defaultTimeoutMs) || 12000);
+  var isPlayerView = deps.isPlayerView || function () { return false; };
+  function playerView() {
+    try { return !!isPlayerView(); } catch (unavailable) { return false; }
+  }
 
   if (!wxRequest || !getBaseUrl) {
     throw new Error('request-client: 缺少 wxRequest/getBaseUrl 依赖');
@@ -123,6 +161,17 @@ function createRequestClient(deps) {
       typeof param.complete == 'function' && param.complete(failure);
     }
     if (sessionChanged()) { stopForSessionChange(); return control; }
+    // G-4:玩家视角不发商家工作台接口,异步按 403 静默失败。
+    if (!state.attempt && playerView() && roleViewFilter.isMerchantOnlyUrl(param.url)) {
+      Promise.resolve().then(function () {
+        if (state.aborted || state.sessionChanged) return;
+        var blocked = roleViewFilter.blockedBody();
+        if (typeof param.successStatusAbnormal == 'function') param.successStatusAbnormal(blocked, 403);
+        else if (typeof param.fail == 'function') param.fail(blocked, 403);
+        typeof param.complete == 'function' && param.complete(blocked);
+      });
+      return control;
+    }
     var attempt = (state.attempt || 0) + 1;
     state.attempt = attempt;
     // 静默重登窗口内抑制本次 wxRequest 的 complete;complete 改由最终一跳(重试成功)或重登失败分支触发一次。
@@ -139,6 +188,9 @@ function createRequestClient(deps) {
         if (sessionChanged()) { stopForSessionChange(); return; }
         responseObserved = true;
         if (res && res.data && typeof res.data === 'object') sanitizeResponseMessage(res.data, '操作失败');
+        // G-4:玩家视角收到商家身份报错 ⇒ 清文案、打标记、不 toast。
+        var roleViewSuppressed = playerView() && roleViewFilter.isMerchantDenial(res && res.data, res && res.statusCode);
+        if (roleViewSuppressed) roleViewFilter.suppress(res.data);
         // 登录态失效(HTTP 401、RuoYi 业务 code=401 或历史 code=2)→ 静默重登并重试一次(内部 state.retried 防死循环)。
         var bodyCode = res.data && (res.data.code == null ? null : Number(res.data.code));
         if (res.statusCode == 426 || (res.statusCode == 200 && bodyCode == 426)) {
@@ -156,6 +208,27 @@ function createRequestClient(deps) {
           state.retried = true;
           suppressComplete = true; // 本次被重试/重登失败接管,complete 不在此处双触发
           if (ownerChanged()) { stopForSessionChange(); return; }
+          // 游客:不静默建号。写 → 弹登录窗,登录成功用新身份重发一次;读 → 安静地按 401 失败。
+          if (!state.owner && !state.authorization && !getUserID() && !getAuthorization()) {
+            var failAsGuest = function () {
+              hideToast();
+              if (typeof param.fail == 'function') param.fail(res.data, res && res.statusCode == 401 ? 401 : bodyCode);
+              typeof param.complete == 'function' && param.complete(res && res.data ? res.data : res);
+            };
+            if (!isWriteRequest(param, method)) { failAsGuest(); return; }
+            Promise.resolve().then(function () { return promptLogin(param); }).then(function (ok) {
+              if (state.aborted || state.sessionChanged) return;
+              var owner = String(getUserID() || '');
+              if (ok && owner && getAuthorization()) {
+                state.owner = owner;
+                state.authorization = getAuthorization();
+                send(param, customSiteUrl, state);
+                return;
+              }
+              failAsGuest();
+            }, function () { if (!state.aborted && !state.sessionChanged) failAsGuest(); });
+            return;
+          }
           reLogin(function (ok, result) {
             if (state.aborted || state.sessionChanged) return;
             // 只有自己完成的首登可把匿名请求绑定到新身份，外部换号不能冒充首登。
@@ -213,14 +286,14 @@ function createRequestClient(deps) {
             // 用户既看不到结果也无法重试(731 行 isPaying 守卫挡住二次点击)。
             // 回落到 fail 而不是 success:HTTP 非 200 对调用方而言就是「这次没成功」。
             param.fail(res.data, res.statusCode);
-          } else if (!param.silentError) {
+          } else if (!param.silentError && !roleViewSuppressed) {
             // HTTP 异常也必须经过统一错误映射，禁止把后端内部 API 路径透传到用户界面。
             showToast(getErrorMessage(res.data, '请求失败（' + res.statusCode + '）'));
           }
           return;
         }
         var body = res.data || {};
-        if (shouldAutoToast(param, body)) {
+        if (!roleViewSuppressed && shouldAutoToast(param, body)) {
           showToast(getErrorMessage(body, '操作失败'));
         }
         typeof param.success == 'function' && param.success(body);
@@ -271,4 +344,4 @@ function createRequestClient(deps) {
   return { send: send };
 }
 
-module.exports = { createRequestClient: createRequestClient };
+module.exports = { createRequestClient: createRequestClient, isWriteRequest: isWriteRequest };

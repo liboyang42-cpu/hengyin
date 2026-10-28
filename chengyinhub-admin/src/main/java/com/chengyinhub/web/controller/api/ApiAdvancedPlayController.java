@@ -4,6 +4,7 @@ import com.chengyinhub.common.annotation.RateLimiter;
 import com.chengyinhub.common.enums.LimitType;
 
 import com.chengyinhub.business.service.IAdvancedGameRuntimeService;
+import com.chengyinhub.business.service.support.CheckReceiptProjection;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import com.chengyinhub.common.core.text.Convert;
@@ -34,9 +35,9 @@ public class ApiAdvancedPlayController extends BaseController {
     @PostMapping("/start")
     public AjaxResult start(@RequestBody Map<String, Object> body) {
         try {
-            return success(runtimeService.start(getAppUserId(),
+            return success(CheckReceiptProjection.response(runtimeService.start(getAppUserId(),
                     longOrZero(body.get("activityId")), longOrZero(body.get("topicId")),
-                    longOrZero(body.get("nodeId")), nullableLong(body.get("teamId"))));
+                    longOrZero(body.get("nodeId")), nullableLong(body.get("teamId")))));
         } catch (RuntimeException e) {
             return error(e.getMessage());
         }
@@ -55,20 +56,28 @@ public class ApiAdvancedPlayController extends BaseController {
                     Convert.toStr(body.get("idempotencyKey"), ""),
                     Convert.toStr(body.get("action"), ""), payload);
             // act 是 @Transactional,它一返回就已提交、已还连接;铸卡(最多等 4 秒)放在这之后,不占库连接。
-            return success(runtimeService.finishPendingCardMint(judged));
+            return success(CheckReceiptProjection.response(runtimeService.finishPendingCardMint(judged)));
         } catch (ServiceException e) {
             // 冲突回执(fresh view + encounter)在 ServiceException.data 里,交给全局处理器按 code 下发。
-            throw e;
+            throw e.setData(CheckReceiptProjection.response(e.getData()));
         } catch (RuntimeException e) {
             return error(e.getMessage());
         }
+    }
+
+    @Autowired
+    private com.chengyinhub.business.service.support.AdvancedActionReceiptReader receipts;
+
+    @GetMapping("/receipt")
+    public AjaxResult receipt(Long sessionId, String idempotencyKey) {
+        return success(receipts.read(getAppUserId(), sessionId, idempotencyKey));
     }
 
     @Operation(summary = "读取高级玩法权威状态")
     @GetMapping("/state")
     public AjaxResult state(String sessionId) {
         try {
-            return success(runtimeService.state(getAppUserId(), Convert.toLong(sessionId, 0L)));
+            return success(CheckReceiptProjection.response(runtimeService.state(getAppUserId(), Convert.toLong(sessionId, 0L))));
         } catch (RuntimeException e) {
             return error(e.getMessage());
         }

@@ -376,9 +376,11 @@ test('abort 在异步重登期间阻止重试，避免离开页面后又发出�
   const calls = [];
   let reLoginCb;
   const task = { abort: () => {} };
+  // 2026-10-24:静默重登只服务已登录会员的过期续期(游客 401 改走写前登录弹窗),夹具带上会员身份。
   const client = createRequestClient({
     wxRequest: (opts) => { calls.push(opts); return task; },
     getBaseUrl: () => 'https://base',
+    getUserID: () => '7', getAuthorization: () => 'TOK',
     reLogin: (cb) => { reLoginCb = cb; },
   });
 
@@ -577,10 +579,14 @@ test('取消发生在换号后的登录窗口，旧请求没有回调或重发',
   f.setSession('9', 'B'); control.abort(); f.finishLogin(true);
   assert.equal(f.calls.length, 1); assert.deepEqual(f.events, []);
 });
-test('尚未登录的请求不能把外部换号误当成自己首登', () => {
-  const f = ownerRequestFixture(); f.setSession('', ''); f.client.send(f.param);
+// 2026-10-24 owner 拍板「游客可浏览，写入时弹窗登录」:游客 401 不再走静默 reLogin(那会在浏览时建号)。
+// 原用例「外部换号不能冒充首登」的防线改由写请求的登录弹窗承担,见下方 guest 用例。
+test('尚未登录的请求不能把外部换号误当成自己首登', async () => {
+  const f = ownerRequestFixture(); f.setSession('', '');
+  f.client.send(Object.assign({}, f.param, { fail: () => f.events.push('fail') }));
   f.calls[0].success(ownerAuthResponses[0]); f.calls[0].complete({});
-  f.setSession('9', 'B'); f.finishLogin(true);
+  f.setSession('9', 'B'); await Promise.resolve(); await Promise.resolve();
+  assert.equal(f.loginCalls(), 0, '游客 401 不得静默登录建号');
   assert.equal(f.calls.length, 1); assert.deepEqual(f.events, ['fail', 'complete']);
 });
 
@@ -692,4 +698,75 @@ test('#472-2 负控:别的 409、别的接口、没带 requestId 都不换号重
     assert.equal(delivered, 1, JSON.stringify(c));
     assert.equal(generated, 0, '不重发就不生成新号:' + JSON.stringify(c));
   }
+});
+
+// ---- 2026-10-24 owner 拍板「游客可浏览，写入时弹窗登录」 ----
+function guestFixture(promptResult) {
+  let owner = '', auth = '';
+  const calls = [], events = [], prompts = [], toasts = [];
+  let logins = 0;
+  const client = createRequestClient({
+    wxRequest: options => { calls.push(options); return { abort() {} }; },
+    getBaseUrl: () => 'https://fixture',
+    getUserID: () => owner, getAuthorization: () => auth,
+    reLogin: cb => { logins++; cb(true); },
+    promptLogin: param => { prompts.push(param.url); return Promise.resolve(promptResult(() => { owner = '7'; auth = 'NEW'; })); },
+    showToast: m => toasts.push(m),
+  });
+  return { client, calls, events, prompts, toasts, logins: () => logins,
+    param: (url, method) => ({ url, method: method || 'POST', success: () => events.push('success'),
+      fail: (body, status) => events.push('fail:' + status), complete: () => events.push('complete') }) };
+}
+const flush = async () => { for (let i = 0; i < 6; i++) await Promise.resolve(); };
+
+test('游客读请求 401:不弹窗、不静默登录、不 toast，按 401 交给 fail', async () => {
+  const f = guestFixture(() => true);
+  f.client.send(f.param('/api/club/detail'));
+  f.calls[0].success({ statusCode: 401, data: { code: 401 } }); f.calls[0].complete({});
+  await flush();
+  assert.deepEqual(f.prompts, []); assert.equal(f.logins(), 0); assert.deepEqual(f.toasts, []);
+  assert.deepEqual(f.events, ['fail:401', 'complete']); assert.equal(f.calls.length, 1);
+});
+
+test('游客写请求 401:弹登录窗，登录成功后用新会话重发恰好一次', async () => {
+  const f = guestFixture(login => { login(); return true; });
+  f.client.send(f.param('/api/club/join'));
+  f.calls[0].success({ statusCode: 200, data: { code: 401 } }); f.calls[0].complete({});
+  await flush();
+  assert.deepEqual(f.prompts, ['/api/club/join']); assert.equal(f.logins(), 0);
+  assert.equal(f.calls.length, 2); assert.equal(f.calls[1].header.Authorization, 'NEW');
+  f.calls[1].success({ statusCode: 200, data: { code: 200 } }); f.calls[1].complete({});
+  assert.deepEqual(f.events, ['success', 'complete']);
+});
+
+test('游客写请求 401:点「暂不登录」不重发，按 401 失败一次', async () => {
+  const f = guestFixture(() => false);
+  f.client.send(f.param('/api/creativesquare/like'));
+  f.calls[0].success({ statusCode: 401, data: {} }); f.calls[0].complete({});
+  await flush();
+  assert.equal(f.calls.length, 1); assert.deepEqual(f.events, ['fail:401', 'complete']);
+});
+
+test('游客写请求在登录弹窗期间被 abort:登录成功也不重发旧请求', async () => {
+  const f = guestFixture(login => { login(); return true; });
+  const control = f.client.send(f.param('/api/registration/create'));
+  f.calls[0].success({ statusCode: 401, data: {} }); control.abort();
+  await flush();
+  assert.equal(f.calls.length, 1); assert.deepEqual(f.events, []);
+});
+
+test('写/读判定:GET 恒读，PUT/PATCH/DELETE 恒写，POST 按路径动词，param.write 显式优先', () => {
+  const { isWriteRequest } = require('../../utils/transport/request-client.js');
+  assert.equal(isWriteRequest({ url: '/api/club/join' }, 'GET'), false);
+  assert.equal(isWriteRequest({ url: '/api/v1/community/posts/1' }, 'DELETE'), true);
+  for (const url of ['/api/club/join', '/api/club/apply', '/api/club/post/create', '/api/comment/add',
+    '/api/creativesquare/like', '/api/user/follow/action', '/api/registration/create', '/api/registration/pay',
+    '/api/topic/like', '/api/team/create', '/api/roam/start', '/api/official/events/1/signup', '/api/club/post/report']) {
+    assert.equal(isWriteRequest({ url }, 'POST'), true, url);
+  }
+  for (const url of ['/api/club/detail', '/api/topic/info-to-user', '/api/topic/like_list', '/api/template/homeData',
+    '/api/registration/my-joined', '/api/club/post/comment/list', '/api/creativesquare/info']) {
+    assert.equal(isWriteRequest({ url }, 'POST'), false, url);
+  }
+  assert.equal(isWriteRequest({ url: '/api/club/detail', write: true }, 'POST'), true);
 });

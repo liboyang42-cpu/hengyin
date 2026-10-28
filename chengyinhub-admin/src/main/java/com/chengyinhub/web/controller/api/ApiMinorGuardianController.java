@@ -53,7 +53,6 @@ public class ApiMinorGuardianController extends BaseController {
             Map<String, Object> data = new LinkedHashMap<>();
             data.put("ageBand", band.name());
             data.put("guardianRequired", band != AgeBand.ADULT);
-            data.put("paymentGateOn", switches.minorPaymentGateOn());
             data.put("orienteeringGateOn", switches.minorOrienteeringGateOn());
             return data;
         });

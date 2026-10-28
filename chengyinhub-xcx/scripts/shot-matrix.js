@@ -2,19 +2,19 @@
  * Wave2 截图矩阵（机器可读），供总控在 verify worktree 串行采集。
  *
  * ── 机器统计（唯一真值，由本文件末尾 STATS 断言锁死）──────────────────
- *   total 339
- *   按 priority 计全部行：P0 133 / P1 198 / P2 10
+ *   total 344
+ *   按 priority 计全部行：P0 135 / P1 199 / P2 10
  *   其中 blocked 24（不采集）：P0 9 / P1 7 / P2 8
- *   ⇒ actionable（本轮真要拍）：P0 124 / P1 191 / P2 2 = 317
- *   按域：A 53 / B 70 / C 56 / D 42 / E 27 / F 93
- *   按 control：setData 179 / identity+setData 117 / real-data 38 / real-device 7
+ *   ⇒ actionable（本轮真要拍）：P0 126 / P1 192 / P2 2 = 320
+ *   按域：A 53 / B 69 / C 56 / D 46 / E 26 / F 94
+ *   按 control：setData 180 / identity+setData 116 / real-data 41 / real-device 7
  *     (2026-08-05：A10 由 real-data 改 setData —— 它和 A12 的差别是 picList 空/非空,
  *      不显式注入两张必然拍成同一张)
  *   fixtureVerified 16（只保留当前页面仍全量消费其矩阵键、且在本次源版本
  *   修改前已有动态回读的状态；B71/B72/B73 要等本轮重拍后再晋级）
  *
- *   ⚠️ 两套 P0 数字都对，别再混用：`p0()` 返回 **actionable 124**（已滤掉
- *   blocked），裸按 priority 字段统计是 **133**。报告与 JSON 顶部写的是同一组。
+ *   ⚠️ 两套 P0 数字都对，别再混用：`p0()` 返回 **actionable 126**（已滤掉
+ *   blocked），裸按 priority 字段统计是 **135**。报告与 JSON 顶部写的是同一组。
  *   早期报告里的「P0 96 / P1 87 / P2 50 / 233 项」是逐行判定之前的估算，已作废。
  * ────────────────────────────────────────────────────────────────
  *
@@ -317,7 +317,7 @@ const RAW = [
   ['B65a', 'B65a-citystamp-cam.png', '/subpackageRoam/citystamp/index', 'player', 'normal', null, undefined, { selector: '.cam__shutter', min: 1 }, 'real-device', 'P2', '需真机相机', '取景框:关闭左上、全屏左下、快门居中、翻转右下'],
   ['B65b', 'B65b-citystamp-write.png', '/subpackageRoam/citystamp/index', 'player', 'normal', { step: 'write', photo: '/images/roam-pushpin.png', note: '巷口那家豆浆七点才开', place: '莘城公园 · 老门柱' }, undefined, { selector: '.sgpb__img', min: 1 }, 'setData', 'P0', '', '★留言条压在信箱上,配文计数 x/30;空着也能投'],
   ['B65c', 'B65c-citystamp-print.png', '/subpackageRoam/citystamp/index', 'player', 'normal', { step: 'print', got: true, torn: true, revealed: false, gotPic: '/images/roam-pushpin.png', gotCaption: '雨天走后门，屋檐能躲雨', serial: 'NO. 0012', place: '莘城公园 · 老门柱', bars: [{ w: 2, g: 1 }, { w: 1, g: 2 }, { w: 3, g: 1 }] }, undefined, { selector: '.sgslip', min: 1 }, 'setData', 'P0', '', '★撕口锯齿在纸的上边、槽里留纸头;刮层盖着 TA 那句'],
-  ['B66', 'B66-badge-wall-webgl-real.png', '/subpackageP3/pages/badge-wall/index/index', 'player', 'normal', { loaded: true, loadFail: false, partialFail: false, glFail: false, viewMode: 'list', badges: [{ code: 'FIRST_STEP', family: 'identity', name: '开始在场', unlocked: true }], badgeGroups: [{ key: 'identity', title: '', items: [{ code: 'FIRST_STEP', family: 'identity', name: '开始在场', unlocked: true }] }] }, undefined, { selector: '.bw-list-row', min: 1 }, 'real-data', 'P0', '', '开发者工具使用可读列表，按 family 分组并显示真实勋章行'],
+  ['B66', 'B66-badge-wall-webgl-real.png', '/subpackageP3/pages/badge-wall/index/index', 'player', 'normal', { loaded: true, loadFail: false, partialFail: false, glFail: false, viewMode: 'list', badges: [{ code: 'FIRST_STEP', family: 'identity', name: '开始在场', unlocked: true }], badgeGroups: [{ key: 'identity', title: '', items: [{ code: 'FIRST_STEP', family: 'identity', name: '开始在场', unlocked: true }] }] }, undefined, { selector: '.bw-cell', min: 1 }, 'real-data', 'P0', '', '开发者工具使用可读列表，按 family 分组并显示真实勋章格'],
   ['B67', 'B67-badge-wall-empty.png', '/subpackageP3/pages/badge-wall/index/index', 'player', 'empty', { badges: [] }, undefined, { selector: 'cover-view', min: 1 }, 'setData', 'P1', '', '⚠️ 字段名按页面实况:activeTopTab/activeClubTab/nearbyClubs。早先写成 activeTab/clubs,两态都落到空态、md5 相同'],
   ['B68', 'B68-growth-normal.png', '/subpackageP3/pages/growthcenter/index/index', 'player', 'normal', { overviewState: 'ready', overviewLoaded: true, overviewError: '', overview: { levelText: 'Lv.6 城市探索者', stats: [{ key: 'explore', label: '探索值', value: '1,280', unit: '' }, { key: 'badge', label: '徽章', value: '6', unit: '枚' }, { key: 'topics', label: '完成路线', value: '3', unit: '条' }, { key: 'distance', label: '探索距离', value: '42.6', unit: 'km' }] }, badges: [{ code: 'FIRST_STEP', name: '初探', initial: '初', unlockText: '2026-08-18' }], badgeCountText: '1', badgeLoadError: false, showBadges: true, showBadgeEmpty: false }, undefined, { selector: '.gc-metric-row, .gc-badge-row', min: 5 }, 'setData', 'P0', '', '四项足迹与已获得徽章同屏可读；刷新或错误出口不覆盖成功快照'],
   ['B69', 'B69-growth-split.png', '/subpackageP3/pages/growthcenter/index/index', 'player', 'normal', { loading: false, mode: 'roam' }, undefined, TITLE, 'setData', 'P1', 'BLOCKED：成长概览 API 未返回 productType，且漫游只有本机记录；无法如实拆分漫游、城市定向、自由探索三种模式', '需后端补齐按 productType 聚合的响应合同后再设计模式分栏；不得用本机漫游记录与服务端总量拼接伪数据'],
@@ -327,6 +327,8 @@ const RAW = [
   ['B73', 'B73-leaderboard-growth.png', '/subpackageP3/pages/growthcenter/leaderboard/index', 'player', 'normal', leaderboardFixture('exp', 'total'), undefined, { selector: '.gc-pod-name', min: 3 }, 'setData', 'P1', '', '成长榜使用 metric=exp 与 EXP 单位，不再注入页面已删除的 rankType'],
   ['B74', 'B74-leaderboard-empty.png', '/subpackageP3/pages/growthcenter/leaderboard/index', 'player', 'empty', { list: [] }, undefined, EMPTY, 'setData', 'P1', '', '⚠️ 字段名按页面实况:activeTopTab/activeClubTab/nearbyClubs。早先写成 activeTab/clubs,两态都落到空态、md5 相同'],
   ['B75', 'B75-leaderboard-error.png', '/subpackageP3/pages/growthcenter/leaderboard/index', 'player', 'error', { loading: false, errorMsg: '排行榜没有加载出来', metric: 'point', period: 'total', unit: '积分', top3: [], rest: [], me: null }, undefined, { selector: '.gc-error-board', min: 1 }, 'setData', 'P1', '', 'HTTP/业务失败(含 404)走 cy-error 可重试错误态，不再映射暂未开放'],
+  ['B76', 'B76-topic-preview-normal.png', '/pages/templatedetail/topic-preview/index?id=1', 'player', 'normal', null, undefined, { selector: '.stk', min: 1 }, 'real-data', 'P1', '', '主题卡堆预览(玩家深色):扇形卡堆 + ✓ 清单 + 「用这个模板」'],
+  ['B77', 'B77-topic-preview-merchant.png', '/pages/templatedetail/topic-preview/index?id=1&scope=MERCHANT&readonly=1', 'merchant', 'normal', null, undefined, { selector: '.tp--light', min: 1 }, 'real-data', 'P1', '', '主题卡堆预览商家侧浅色版(只换颜色)'],
 
   // ---------- D-C 商家、俱乐部与合作（55） ----------
   ['C01', 'C01-merchant-home-normal.png', '/pages/merchant/index/index', 'merchant', 'normal', { merchantAccess: MERCHANT_OWNER_ACCESS, displayName: '外滩夜行补给站', merchantInfo: { id: 1, name: '外滩夜行补给站', logo: IMG }, dashboardLoading: false, dashboardError: '', dashboardData: { revenue: '128.00' }, joinLoading: false, hostLoading: false, todoLoading: false, gameEntryLoading: false, joinTotal: 0, hostProjectTotal: 1, projectCards: [{ key: 'host:9', role: 'host', roleLabel: '主办', id: 9, ownerId: 9, bizType: 'topic', title: '外滩夜行路线', statusLabel: '招募中', catLabel: '城市路线', thumb: IMG, meta: '8月23日 · 上海', todoCount: 2, todoChips: [{ key: 'verify', label: '待核销', count: 2, tone: 'warn' }], msgCount: 1 }], notifications: [{ id: 1, label: '待确认承接', content: '外滩夜行路线', time: '刚刚' }] }, undefined, TITLE, 'identity+setData', 'P0', '', '首屏显示已确认收入、项目与消息，未知值不冒充 ¥0'],
@@ -427,6 +429,15 @@ const RAW = [
   ['D10', 'D10-mycanyu-fail.png', '/subpackageMember/mycanyu/mycanyu', 'player', 'error', { loading: false, loadError: true }, undefined, ERR, 'setData', 'P1', '', 'Tab 横向均分、下移居中'],
   ['D11', 'D11-mycanyuinfo-content.png', '/subpackageMember/mycanyuinfo/mycanyuinfo?id=1', 'player', 'normal', { id: 1, loadState: 'ready', info: { status: 1, nodeName: '外滩观景平台', totalOrderNum: 8, verifiedNum: 3, templateId: 11, templateName: '城市线索' }, displayInfo: { topicName: '外滩夜行', formatDateRange: '08.09 - 08.10', statusText: '进行中', statusVariant: 'active', modeText: '经典定向', modeVariant: 'info', activityDesc: '沿江完成城市线索' } }, undefined, { selector: '.cyinfotop, .cyinfo2k, .cyinfozt', min: 1 }, 'setData', 'P0', '', '参与详情正文由 participation-detail scene 承载', '#participationDetail'],
   ['D12', 'D12-mycanyuinfo-missing.png', '/subpackageMember/mycanyuinfo/mycanyuinfo', 'player', 'missing-param', null, undefined, EMPTY, 'real-data', 'P1', '', '参与详情缺参态由深链壳内正文组件负责', '#participationDetail'],
+  ['D12a', 'D12a-character-missing.png', '/subpackageMember/character/index', 'player', 'missing-param', null, undefined, EMPTY, 'real-data', 'P0', '', '角色卡缺主题参数态；仅登记待截图场景，不代表已拍摄'],
+  ['D12b', 'D12b-invoice-login.png', '/subpackageMember/invoice/index', 'player', 'login', { login: true, unavailable: false }, undefined, EMPTY, 'setData', 'P0', '', '本人发票登录入口；仅登记待截图场景，不代表已拍摄'],
+  ['D12h', 'D12h-invoice-detail-login.png', '/subpackageMember/invoice-detail/index?id=1', 'player', 'login', { login: true, unavailable: false }, undefined, EMPTY, 'setData', 'P0', '', '文档二 L7 发票详情登录入口；仅登记待截图场景，不代表已拍摄'],
+  ['D12i', 'D12i-invoice-apply-login.png', '/subpackageMember/invoice-apply/index', 'player', 'login', { login: true, unavailable: false }, undefined, EMPTY, 'setData', 'P0', '', '文档二 L7 申请开票登录入口；仅登记待截图场景，不代表已拍摄'],
+  ['D12j', 'D12j-invoice-titles-login.png', '/subpackageMember/invoice-titles/index', 'player', 'login', { login: true, unavailable: false }, undefined, EMPTY, 'setData', 'P0', '', '文档二 L7 发票抬头登录入口；仅登记待截图场景，不代表已拍摄'],
+  ['D12k', 'D12k-invoice-title-edit-login.png', '/subpackageMember/invoice-title-edit/index', 'player', 'login', { login: true, unavailable: false }, undefined, EMPTY, 'setData', 'P0', '', '文档二 L7 抬头编辑登录入口；仅登记待截图场景，不代表已拍摄'],
+  ['D12l', 'D12l-appeal-mine-login.png', '/subpackageMember/appeal-mine/index', 'player', 'login', { state: 'login', rows: [], reputation: null }, undefined, { selector: 'cy-state-shell', min: 1 }, 'setData', 'P0', '', '文档二 L7 我的申诉登录入口；仅登记待截图场景，不代表已拍摄'],
+  ['D12c', 'D12c-orient-score-missing.png', '/subpackageMember/orient-score/index', 'player', 'missing-param', null, undefined, EMPTY, 'real-data', 'P0', '', '计分页缺会话参数态；登记待截图场景，未宣称设备验证'],
+  ['D12d', 'D12d-free-explore-missing.png', '/subpackageMember/free-explore/index', 'player', 'missing-param', null, undefined, INLINE_ERR, 'real-data', 'P0', '', '自由探索权益缺订单与商品编号态(页内 cy-inline-error)；仅登记待截图场景，不代表已拍摄'],
   ['D13', 'D13-coupon-content.png', '/subpackageMember/coupon/coupon', 'merchant', 'normal', { loading: false, loadError: false, list: [{ id: 1, name: '到店立减 10 元', description: '每单可用一张,不与其他优惠叠加', remainCount: 120 }] }, undefined, TITLE, 'identity+setData', 'P0', '', '新建按钮放到下面'],
   ['D14', 'D14-coupon-empty.png', '/subpackageMember/coupon/coupon', 'merchant', 'empty', { loadState: 'ready', errorMsg: '', list: [] }, undefined, EMPTY, 'identity+setData', 'P1', '', '优惠券列表已就绪且为空，使用真实 loadState 门展示居中空态与新建入口'],
   ['D15', 'D15-couponinfo.png', '/subpackageMember/couponInfo/couponInfo?id=1', 'player', 'normal', null, undefined, TITLE, 'real-data', 'P0', '', '—'],
@@ -453,6 +464,7 @@ const RAW = [
   ['D31', 'D31-income-fail.png', '/subpackageA/pages/assetcenter/income-detail/income-detail', 'player', 'error', { loading: false, loadErr: true, list: [] }, undefined, ERR, 'setData', 'P1', '', '收益错误态由深链壳内正文组件负责', '#incomeDetail'],
   ['D32', 'D32-income-capsule.png', '/subpackageA/pages/assetcenter/income-detail/income-detail', 'player', 'empty', { loading: false, loadErr: false, activeFilter: 'create', hasMore: false, list: [] }, undefined, { selector: '.id-tabs, .id-state-fill', min: 2 }, 'setData', 'P0', '', '创作收益胶囊选中后的筛选空态；与全部收益空态 D30 可区分', '#incomeDetail'],
   ['D33', 'D33-earnings-normal.png', '/subpackageA/pages/assetcenter/earnings/index', 'player', 'normal', { state: 'ready', balance: '128.00' }, undefined, { selector: '.ae-hero, .ae-section', min: 2 }, 'setData', 'P0', '', '★拆四类入口；正文在 #assetEarnings，断言使用 ae-* 新 DOM', '#assetEarnings'],
+  ['D33A', 'D33A-earnings-analysis-normal.png', '/subpackageA/pages/assetcenter/analysis/index', 'player', 'normal', { state: 'ready', mode: 'income', current: { label: '10月', totalText: '89.70' }, series: [{ key: '2026-10', label: '10月', totalText: '89.70', height: 100, current: true }], sources: [{ key: 'topic', label: '主题售卖', totalText: '89.70', percent: 100 }] }, undefined, { selector: '.an-card', min: 2 }, 'setData', 'P1', '', '2026-10-28 G-9 账户收益 · 分析页:柱图 + 收入来源'],
   ['D34', 'D34-im-list-content.png', '/subpackageB/pages/im/list/index', 'player', 'normal', { loading: false, loaded: true, error: false, activeTab: 'dm', list: [{ conversationId: 9, type: 1, unread: 1, muted: 0, previewText: '明晚一起？', timeText: '19:20', offset: 0, counterparty: { nickname: '周行', avatar: '/images/d_profile.png' } }] }, undefined, TABS2, 'setData', 'P0', '', '★补页面标题（现在连标题都没有）；合并成一个页面'],
   ['D35', 'D35-im-list-system.png', '/subpackageB/pages/im/list/index', 'player', 'normal', { loading: false, loaded: true, error: false, activeTab: 'sys', list: [{ conversationId: 2, type: 2, unread: 0, muted: 0, previewText: '报名已确认', timeText: '昨天', offset: 0, counterparty: { nickname: '系统通知', avatar: '' } }], reportNotices: [] }, undefined, TABS2, 'setData', 'P1', '', '—'],
   ['D36', 'D36-im-chat-real.png', '/subpackageB/pages/im/chat/index?conversationId=9', 'player', 'normal', null, undefined, { selector: '.msg-bubble', min: 1 }, 'real-data', 'P0', '', '★34/35/35b 全是缺参或骨架；删顶部头像；整体上移'],
@@ -512,6 +524,7 @@ const RAW = [
   ['F08', 'F08-merchant-customer-empty.png', '/pages/merchant/customer/index', 'merchant', 'empty', { loading: false, loadingMore: false, rows: [], hasMore: false, emptyTitle: '还没有到店客户', emptySub: '完成第一次核销后,客户会出现在这里' }, undefined, { selector: '.cu-page', min: 1 }, 'identity+setData', 'P0', '', '商家客户名单空态。normal 态前置:至少一次已核销的到店记录'],
   ['F09', 'F09-addressinfo-create.png', '/pages/addressinfo/addressinfo', 'player', 'normal', null, undefined, { selector: '.davidbox', min: 1 }, 'setData', 'P0', '', '参与人信息新建态(不带 id)。编辑态前置:一条已存在的参与人信息 id'],
   ['F10', 'F10-shezhi-about.png', '/pages/shezhi/about/index', 'player', 'normal', null, undefined, { selector: '.about-page', min: 1 }, 'real-data', 'P1', '', '关于页。⚠️ 本页有 isMerchantView 分支,商家侧观感另算一张,本行只覆盖玩家侧'],
+  ['F201', 'F201-shezhi-marketing.png', '/pages/shezhi/marketing/index', 'player', 'normal', null, undefined, { selector: '.mk-page', min: 1 }, 'real-data', 'P1', '', '营销消息与优惠券独立页(P-55,2026-10-27 从设置弹层改成页面)。⚠️ 本页有 isMerchantView 分支,本行只覆盖玩家侧'],
   ['F11', 'F11-coupon-wallet-shell.png', '/subpackageMember/coupon-wallet/index', 'player', 'normal', { state: 'ready', tab: 0, all: COUPON_WALLET_ITEMS, items: COUPON_WALLET_ITEMS, errorMsg: '' }, undefined, { selector: '.wallet-card', min: 1 }, 'setData', 'P1', '', '优惠券包薄壳的正文 ready 态；fixture 经 deep-link shadow path 注入真实 scene-game-coupon-wallet 字段，禁止把网络错误页冒充 normal', [{ selector: 'cy-scene-deep-link', index: 0 }, { selector: 'cy-scene-game-coupon-wallet', index: 0 }]],
   ['F59', 'F59-roam-nearby-list.png', '/subpackageRoam/nearby/index', 'player', 'normal', { loaded: true, hangoutCount: 2, sheet: 'list', items: [{ key: 'h5', kind: 'hangout', id: 5, label: '打 UNO 找搭子', pic: '', sub: '人民广场 · 09-06 20:00', meta: '3 人' }, { key: 'h6', kind: 'hangout', id: 6, label: '周日晨跑 5 公里', pic: '', sub: '世纪公园', meta: '12 人' }, { key: 'a9', kind: 'activity', id: 9, label: '周末飞盘局', pic: '', sub: '活动 · 徐汇滨江', meta: '1.2km' }] }, undefined, { selector: '.nb-row', min: 3 }, 'setData', 'P1', '', '漫游·附近的局(2026-09-05 新页):列表抽屉常态,两条局 + 一条只读活动叠加。地图本体不注 marker(真机 <map> 截不到 marker),卡片/建局态待真数据后补拍'],
   ['F12', 'F12-roam-poi-detail-missing.png', '/subpackageRoam/poi-detail/index', 'player', 'missing-param', null, undefined, { selector: '.pd-shell', min: 1 }, 'real-data', 'P1', '', '据点详情薄壳,把 poiId 透传给 cy-scene-roam-poi-detail。缺 poiId ⇒ 拍缺参态。normal 态前置:一个真实 poiId'],
@@ -609,6 +622,7 @@ const RAW = [
   ['F58', 'F58-club-settlement-ready.png', '/pages/club/settlement/index?clubId=42', 'club', 'permission', { state: 'ready', errorText: '', withdrawing: false, summary: { settledAmountText: '¥12,480.00', topics: [{ id: 7, name: '外滩建筑线索', status: 'settled', amountText: '¥6,240.00', arrivedText: '已到账 8月28日', paidText: '实付 ¥7,800.00' }, { id: 8, name: '苏州河夜航', status: 'pending', amountText: '¥6,240.00', arrivedText: '结算中', paidText: '实付 ¥7,800.00' }], pendingAdjustment: null } }, undefined, { selector: '.settle-amount, .settle-row', min: 2 }, 'identity+setData', 'P1', '', '金额一律用服务端格式化好的字符串,前端不做四则运算;pendingAdjustment 为 null 时整块不出 —— 不能编一个「¥0 无调整」'],
   ['F29', 'F29-merchant-team-empty.png', '/pages/merchant/team/index', 'merchant', 'empty', { accessState: 'ready', access: { active: true, roleName: '店主', canManageOperators: true, merchant: { id: 1, name: '河畔咖啡', logo: IMG } }, teamState: 'ready', operators: [], pendingInvites: [], hasIncomingInvite: false }, undefined, { selector: '.tm-page', min: 1 }, 'identity+setData', 'P1', '', '经营团队无员工空态；保留按岗位邀请的下一步入口。'],
   ['F81', 'F81-merchant-predict-ready.png', '/pages/merchant/predict/index', 'merchant', 'normal', { pageState: 'ready', items: [{ rid: '8:2026-09-11', nodeId: 8, playDay: '09-11', nodeName: '河畔咖啡', question: '明天哪款会卖得最好?', options: [{ key: 'A', label: '冰美式' }, { key: 'B', label: '燕麦拿铁' }], betCount: 12, betText: '12 个人押了这一轮', optionText: '2 个选项', daysLeft: 1, deadlineText: '还剩 1 天' }] }, undefined, { selector: '.pdm-card', min: 1 }, 'identity+setData', 'P1', '', '竞猜待答:有期限的一轮、押注人数与选项同屏。超过时限不给答案,这一轮由平台作废。'],
+  ['F200', 'F200-poi-challenge-missing.png', '/pages/play/poi-challenge/index', 'player', 'missing-param', null, undefined, { selector: '.pc-page__state', min: 1 }, 'real-data', 'P1', '', '官方地点挑战缺 poiId 时显示真实错误和返回入口；完整拍照、答题、勋章另走真实账号 E2E，不以缺参态代替通关验收。'],
 ];
 /* eslint-enable max-len */
 
@@ -646,11 +660,17 @@ const countBy = (pred) => SHOTS.filter(pred).length;
 // 2026-10-20 与新主干两条官方线路按唯一ID并集，blocked/已验证不增加，计数由实列复算。
 // 2026-10-20 用户要求删掉「我的纠错 / 纠错进度」两页:D93/D94 两条 P1 setData 行退场,total 341、P1 198、actionable 317(P1 191)、D 42、setData 179。
 // 2026-10-23 起名页 templateadd 退役删除:B46(P0 real-data)/E21(P0 identity+setData)两行退场,total 341→339、P0 133→131、actionable 317→315(P0 124→122)、B 70→69、E 27→26、identity+setData 117→116、real-data 38→37。
+// 2026-10-25 新增官方地点挑战缺参真实态 F200；不新增 blocked 或已验 fixture。
+// 2026-10-27 L02 P-55 新增营销消息与优惠券独立页 F201(P1 real-data actionable):total 340→341、P1 199→200、actionable 316→317(P1 192→193)、F 94→95、real-data 38→39。
+// 2026-10-27 新增自由探索权益缺参真实态 D12d(P0 real-data)：total 343→344、P0 134→135、actionable 319→320(P0 125→126)、D 45→46、real-data 40→41；不新增 blocked 或已验 fixture。
+// 2026-10-28 模板页货架改版新增主题卡堆预览页:B76 玩家深色 / B77 商家浅色两条 P1 real-data,total 340→342、P1 199→201、actionable 316→318(P1 192→194)、B 69→71、real-data 38→40。
+// 2026-10-28 L9 再并 master(#652 B76/B77)叠加本线 D12h–D12l:total 351、P1 201、actionable 327(P1 194)、B 71、real-data 43。
+// 2026-10-28 并 master(#658 后)合流 integrate/devfix-20261027:本线 F201(营销消息页)与 D33A(账户收益分析页)两行叠加 master,自检实测 total 353、P1 203、actionable 329(P1 196)、D 52、setData 186、real-data 44。
 const STATS = {
-  "total": 339,
+  "total": 353,
   "byPriority": {
-    "P0": 131,
-    "P1": 198,
+    "P0": 140,
+    "P1": 203,
     "P2": 10
   },
   "blockedByPriority": {
@@ -659,24 +679,24 @@ const STATS = {
     "P2": 8
   },
   "actionable": {
-    "P0": 122,
-    "P1": 191,
+    "P0": 131,
+    "P1": 196,
     "P2": 2,
-    "total": 315
+    "total": 329
   },
   "blocked": 24,
   "domains": {
     "A": 53,
-    "B": 69,
+    "B": 71,
     "C": 56,
-    "D": 42,
+    "D": 52,
     "E": 26,
-    "F": 93
+    "F": 95
   },
   "control": {
-    "setData": 179,
+    "setData": 186,
     "identity+setData": 116,
-    "real-data": 37,
+    "real-data": 44,
     "real-device": 7
   },
   "fixtureVerified": 16

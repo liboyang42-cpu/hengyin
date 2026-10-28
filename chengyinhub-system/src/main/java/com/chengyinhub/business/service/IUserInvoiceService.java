@@ -17,6 +17,11 @@ public interface IUserInvoiceService {
     /** id 为空新建，否则只改本人的那一条。返回掩码视图。 */
     Map<String, Object> saveTitle(Long memberId, UserInvoiceTitle input);
 
+    /** 新客户端保存命令：同号同规范化载荷重放；结果回执不携带名称或税号。 */
+    Map<String, Object> saveTitleWithRequest(Long memberId, String requestId, UserInvoiceTitle input);
+
+    Map<String, Object> titleSaveReceipt(Long memberId, String requestId);
+
     void deleteTitle(Long memberId, Long titleId);
 
     List<UserInvoiceOrderLine> listInvoiceableOrders(Long memberId);
@@ -28,11 +33,14 @@ public interface IUserInvoiceService {
 
     Map<String, Object> applicationDetail(Long memberId, Long applicationId);
 
+    /** 本人原请求精确回读，不受最近申请列表条数限制；未查到不代表未写入。 */
+    Map<String, Object> applicationByRequest(Long memberId, String requestId);
+
     Map<String, Object> cancel(Long memberId, Long applicationId);
 
-    /** 人工开具完成后回填发票号（财务后台用，本 PR 不开放接口）。 */
+    /** 旧无 scope 写口仅为二进制兼容保留，始终拒绝；改用 UserInvoiceProcessingService。 */
     UserInvoiceApplication markIssued(Long applicationId, String invoiceNo);
 
-    /** 人工驳回并释放订单占用（财务后台用，本 PR 不开放接口）。 */
+    /** 旧无 scope 写口始终拒绝；不得绕过处理人/主体/回执合同。 */
     UserInvoiceApplication markRejected(Long applicationId, String reason);
 }

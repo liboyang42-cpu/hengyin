@@ -369,3 +369,16 @@
   -webkit-mask: radial-gradient(circle at 100% 0, transparent calc(var(--cy-tabs-attached-notch, var(--cy-radius-lg)) - 1rpx), #000 var(--cy-tabs-attached-notch, var(--cy-radius-lg))); /* ds-ok: mask 里的 #000 不是颜色,是 alpha 通道(不透明=保留形状);真正的颜色由上面的 background 走 token */
   mask: radial-gradient(circle at 100% 0, transparent calc(var(--cy-tabs-attached-notch, var(--cy-radius-lg)) - 1rpx), #000 var(--cy-tabs-attached-notch, var(--cy-radius-lg))); /* ds-ok: mask 里的 #000 不是颜色,是 alpha 通道(不透明=保留形状);真正的颜色由上面的 background 走 token */
 }
+
+/* icon:立体图标 tab(模板页主题 / 玩法,2026-10-28 业主定稿原型 v21 .swl)。
+   未选中半透明、图标略缩;选中回弹到原尺寸(transition 带过冲，不用 keyframes),底部 48rpx 短条。 */
+.cy-tabs--icon { height: auto; border-bottom: none; gap: 32rpx; }
+.cy-tabs--icon .cy-tabs__item { flex-direction: column; gap: 4rpx; padding: 0 0 16rpx; color: var(--cy-text-title); opacity: .5; transition: opacity .25s; }
+.cy-tabs--icon .cy-tabs__item--on { opacity: 1; }
+.cy-tabs--icon .cy-tabs__icon { width: 80rpx; height: 80rpx; display: block; transform: scale(.9); transition: transform .45s cubic-bezier(.3, 1.6, .5, 1); }
+.cy-tabs--icon .cy-tabs__item--on .cy-tabs__icon { transform: none; }
+.cy-tabs--icon .cy-tabs__label { font-size: var(--cy-font-caption); font-weight: 600; white-space: nowrap; }
+.cy-tabs--icon .cy-tabs__item .cy-tabs__label::after { display: none; }
+.cy-tabs--icon .cy-tabs__item::after { content: ""; position: absolute; left: 50%; bottom: 0; width: 48rpx; margin-left: -24rpx; height: 5rpx; border-radius: 4rpx; background: var(--cy-text-title); transform: scaleX(0); transition: transform .3s; } /* ds-ok 原型 .swl 选中短条 2.5px */
+.cy-tabs--icon .cy-tabs__item--on::after { transform: scaleX(1); }
+.cy-tabs--icon.cy-tabs--reduced-motion .cy-tabs__icon { transition: none; }

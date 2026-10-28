@@ -45,7 +45,8 @@ Page({
        ⚠️ 不要为了「合并」去动后端:两类票的字段和落点本来就不同,合到一个接口只会把
           差异塞进 if,还丢掉各自的分页。 */
     ticketList: [],
-    currentSwiperTicket: 0, deckPoses: [], deckStill: false, wbg: ['', ''], wbgOn: 0, walletTab: 0, tabCount: [0, 0, 0], navH: appGlobal.navBarHeight || 44, // v13 卡堆 / 两层模糊背景 / 可用·已用·已过期
+    currentSwiperTicket: 0, deckPoses: [], deckStill: false, wbg: ['', ''], wbgOn: 0, navH: appGlobal.navBarHeight || 44, // v13 卡堆 / 两层模糊背景
+    flipped: false, qrState: 'idle', qrUrl: '', qrCode: '', qrCountdown: '', entering: false, startLit: false, reduced: false, // 2026-10-28 翻面入场码 + 开始游戏
     walletState: 'loading', // loading | ready | error | login | empty —— 由两条支线的状态合成
     walletErrorMsg: '',
     focusState: '',
@@ -84,6 +85,7 @@ Page({
     // 两条支线的原料。data 里没有它们,所以在这里立好,别让后面的 concat 撞上 undefined
     that._topic = { list: [], state: 'loading', err: '' };
     that._activity = { list: [], state: 'loading', err: '' };
+    that.setData({ reduced: reducedMotionOn() });
 
     that.getActivityList()
     that.getTopicList()
@@ -93,6 +95,7 @@ Page({
   },
 
   onShow() {
+    this._lightStart();
     // onLoad 已发首批请求；只有隐藏后返回才重读服务端票状态。
     const ownerChanged = this._walletOwner !== walletOwner();
     if ((!this._refreshOnShow && !ownerChanged) || this._unloaded) return;
@@ -126,11 +129,21 @@ Page({
   onHide() {
     this._refreshOnShow = true;
     this._invalidateWalletRequests();
+    this._clearQrTimer(); this._qrFor = ''; if (this._goTimer) clearTimeout(this._goTimer); if (this._litTimer && typeof clearTimeout === 'function') clearTimeout(this._litTimer);
+    if (this.data.flipped || this.data.entering) this.setData({ flipped: false, entering: false, qrState: 'idle' });
+  },
+
+  // 「开始游戏」每次进页扫一道光:先归位再在下一拍点亮,transition 走一次;减动效不扫
+  _lightStart() {
+    if (this.data.reduced || typeof setTimeout !== 'function') return;
+    if (this.data.startLit) this.setData({ startLit: false });
+    this._litTimer = setTimeout(() => { if (!this._unloaded) this.setData({ startLit: true }); }, 700);
   },
 
   onUnload() {
     this._unloaded = true;
     this._invalidateWalletRequests();
+    this._clearQrTimer(); if (this._goTimer) clearTimeout(this._goTimer); if (this._litTimer && typeof clearTimeout === 'function') clearTimeout(this._litTimer);
   },
 
   // 首屏未命中时使用已有本人报名详情接口，不轮询内存或依赖分页 total。
@@ -273,16 +286,14 @@ Page({
       if (seen.has(id)) return false;
       seen.add(id); return true;
     }).map(walletCard);
-    // v13 底部「可用 / 已用 / 已过期」:可用 = 待使用 + 待支付,已用 = 已核验,已过期 = 过期或取消
-    const tabCount = [0, 0, 0];
-    all.forEach((item) => { tabCount[item.wTab] += 1; });
-    const list = all.filter((item) => item.wTab === this.data.walletTab);
+    // 2026-10-28 业主:票夹只放能用的票 —— 待支付、已核验、已取消、已过期都不进票夹
+    const list = all.filter(usableTicket);
     const ts = (this._topic || {}).state;
     const as = (this._activity || {}).state;
     let state;
     if (ts === 'loading' && as === 'loading') state = 'loading';
     else if (ts === 'error' && as === 'error') state = 'error';
-    else if (all.length > 0) state = 'ready';
+    else if (list.length > 0) state = 'ready';
     else if (ts === 'loading' || as === 'loading') state = 'loading';
     else if (ts === 'error' || as === 'error') state = 'error';
     else state = 'empty';
@@ -296,7 +307,7 @@ Page({
       ticketList: list,
       currentSwiperTicket: currentIndex,
       // (原 topicBg 字段已退役,见 data 注释)
-      walletState: state, tabCount,
+      walletState: state,
       walletErrorMsg: (this._topic || {}).err || (this._activity || {}).err || '',
     });
     if (!this._entering && (state !== 'ready' || this._entered)) this._deckLay(); this._bgTo(cur.wImg); // 入场 / 新卡落入动画进行中不重排,否则第二路列表回来会把动画打断
@@ -306,11 +317,64 @@ Page({
   /* 点开一张票。两种票的落点不同,由 kind 分流 —— 这就是合并列表之后
      唯一还需要区分两类票的地方。 */
   goTicket(e) {
-    const index = e.currentTarget.dataset.index;
-    const item = (this.data.ticketList || [])[index];
-    if (!item) return;
-    this._openTicket(item, item.kind === 'activity' ? 'activity' : 'topic');
+    const ds = e.currentTarget.dataset;
+    const item = (this.data.ticketList || [])[ds.index];
+    if (!item || this.data.entering) return;
+    const kind = item.kind === 'activity' ? 'activity' : 'topic';
+    // 2026-10-28「开始游戏」(data-go):按钮填满 → 票卡往前冲出 → 黑色铺满,再进游戏;减动效直接进
+    if (!ds.go || this.data.reduced || typeof setTimeout !== 'function') { this._openTicket(item, kind); return; }
+    this.setData({ flipped: false, entering: true });
+    this._goTimer = setTimeout(() => {
+      if (this._unloaded) return;
+      this._openTicket(item, kind);
+      this._goTimer = setTimeout(() => { if (!this._unloaded) this.setData({ entering: false }); }, 400);
+    }, 900);
   },
+
+  /* 2026-10-28 业主:点卡片 = 翻到背面看入场码,再点翻回。拖动换卡时不算点(onDeckEnd 先清掉 _moved)。 */
+  onCardTap(e) {
+    if (this._moved || this._throwing || this.data.entering) return;
+    const index = Number(e.currentTarget.dataset.index);
+    if (index !== this.data.currentSwiperTicket) return;
+    const flipped = !this.data.flipped;
+    this.setData({ flipped });
+    const item = (this.data.ticketList || [])[index];
+    if (flipped && item && String(item.id) !== this._qrFor) this._loadQr(item);
+  },
+  retryQr() {
+    const item = (this.data.ticketList || [])[this.data.currentSwiperTicket];
+    if (item) this._loadQr(item);
+  },
+  _loadQr(item) {
+    const registrationId = exactRegistrationId(item.id);
+    const token = this._qrToken = (this._qrToken || 0) + 1;
+    this._clearQrTimer();
+    this._qrFor = '';
+    if (!registrationId) { this.setData({ qrState: 'error', qrUrl: '', qrCode: '', qrCountdown: '' }); return; }
+    this.setData({ qrState: 'loading', qrUrl: '', qrCode: '', qrCountdown: '' });
+    app.sendRequest({
+      url: '/api/verify/dyncode/issue', method: 'POST', data: { registrationId }, hideLoading: true, silentError: true,
+      success: (res) => {
+        if (this._unloaded || token !== this._qrToken) return;
+        const payload = res && (res.code === 200 || res.code === '200') && res.data;
+        const raw = payload && payload.expiresAt;
+        const expiresAt = typeof raw === 'number' && Number.isFinite(raw) ? (raw < 100000000000 ? raw * 1000 : raw) : 0;
+        if (!payload || !payload.qrcodeUrl || !(expiresAt > Date.now())) { this.setData({ qrState: 'error' }); return; }
+        this._qrFor = registrationId; this._qrExpiresAt = expiresAt;
+        this.setData({ qrState: 'ready', qrUrl: payload.qrcodeUrl, qrCode: payload.code || '' });
+        this._qrTick(); this._qrTimer = setInterval(() => this._qrTick(), 1000);
+      },
+      fail: () => { if (!this._unloaded && token === this._qrToken) this.setData({ qrState: 'error' }); },
+      successStatusAbnormal: () => { if (!this._unloaded && token === this._qrToken) this.setData({ qrState: 'error' }); },
+    });
+  },
+  _qrTick() {
+    const left = Math.max(0, (this._qrExpiresAt || 0) - Date.now());
+    if (!left) { this._clearQrTimer(); this._qrFor = ''; this.setData({ qrState: 'error', qrUrl: '', qrCode: '', qrCountdown: '' }); return; }
+    const s = Math.ceil(left / 1000);
+    this.setData({ qrCountdown: '有效期剩余 ' + Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0') });
+  },
+  _clearQrTimer() { if (this._qrTimer) { clearInterval(this._qrTimer); this._qrTimer = null; } },
 
   /* 重试。哪条支线错了就重拉哪条;两条都错就都拉。 */
   retryWallet() {
@@ -529,13 +593,6 @@ Page({
     const on = 1 - this.data.wbgOn;
     this.setData({ ['wbg[' + on + ']']: src, wbgOn: on });
   },
-  onWalletTab(e) {
-    const i = Number(e.currentTarget.dataset.i) || 0;
-    if (i === this.data.walletTab) return;
-    this.setData({ walletTab: i, currentSwiperTicket: 0 });
-    this.rebuildTicketList();
-    this._playEnter(false);
-  },
 
   /* 进页 / 新卡到账:其余卡从下面依次升上来;新到的那张从右上方斜着落到最前 */
   _playEnter(arrive) {
@@ -567,6 +624,7 @@ Page({
     const t = e.touches && e.touches[0];
     if (!t || this._throwing || (this.data.ticketList || []).length === 0) return;
     this._drag = { x: t.clientX, y: t.clientY, lx: t.clientX, ly: t.clientY, t: Date.now(), vx: 0, vy: 0, dx: 0, dy: 0, at: 0 };
+    this._moved = false;
     this.setData({ deckStill: true });
   },
   onDeckMove(e) {
@@ -595,13 +653,15 @@ Page({
     this.setData({ deckStill: false });
     const list = this.data.ticketList || [], n = list.length;
     const dist = Math.hypot(d.dx, d.dy), sp = Math.hypot(d.vx, d.vy);
+    this._moved = dist >= 8;
     if (dist < 8 || n < 2 || !(dist > 90 || sp > 0.6)) return this._deckLay();
     const fx = d.dx + d.vx * 80, fy = d.dy + d.vy * 80, L = Math.hypot(fx, fy) || 1;
     const out = 'transform: translate(' + (fx / L * 620) + 'px,' + (fy / L * 620) + 'px) rotate(' + (fx / L * 20) + 'deg); opacity: 0; z-index: 40; transition: transform .5s cubic-bezier(.2,.7,.3,1), opacity .3s .18s;';
     const thrown = this.data.currentSwiperTicket;
     const next = (thrown + 1) % n;
     this._throwing = true;
-    this.setData({ currentSwiperTicket: next });
+    this._clearQrTimer(); this._qrFor = '';
+    this.setData({ currentSwiperTicket: next, flipped: false, qrState: 'idle', qrUrl: '', qrCode: '', qrCountdown: '' });
     this._deckLay();
     this.setData({ ['deckPoses[' + thrown + ']']: out });
     this._bgTo(list[next] && list[next].wImg);
@@ -628,15 +688,15 @@ function reducedMotionOn() {
 const DECK_POSE = [{ y: 0, s: 1, b: 1, o: 1 }, { y: -26, s: 0.93, b: 0.5, o: 1 }, { y: -48, s: 0.86, b: 0.32, o: 1 }, { y: -62, s: 0.8, b: 0.2, o: 1 }, { y: -62, s: 0.8, b: 0.2, o: 0 }];
 /* 卡面文字:类型 · 剩几天(有到期日才写),状态不是待使用时写状态;tab 归类 */
 function walletCard(item) {
-  const done = item.verificationStatus == 1, gone = item.registrationStatus == 3 || item.registrationStatus == 4;
-  const ready = !done && !gone && item.registrationStatus == 2;
-  let state = done ? '已核验' : gone ? (item.registrationStatus == 4 ? '已过期' : '已取消') : ready ? '' : '待支付';
-  if (ready) {
-    const until = item.wUntil ? new Date(String(item.wUntil).replace(/-/g, '/')) : null;
-    const days = until && !isNaN(until.getTime()) ? Math.ceil((until.getTime() - Date.now()) / 86400000) : null;
-    state = days !== null && days >= 0 ? '剩 ' + days + ' 天' : '待使用';
-  }
-  return Object.assign(item, { wSub: item.wType + ' · ' + state, wTab: done ? 1 : gone ? 2 : 0 });
+  const until = item.wUntil ? new Date(String(item.wUntil).replace(/-/g, '/')) : null;
+  const days = until && !isNaN(until.getTime()) ? Math.ceil((until.getTime() - Date.now()) / 86400000) : null;
+  return Object.assign(item, { wSub: days !== null && days >= 0 ? item.wType + ' · 剩 ' + days + ' 天' : item.wType });
+}
+/* 能用的票:已报名(已付款 / 免费)、没核验、没取消没过期,到期日也还没过 */
+function usableTicket(item) {
+  if (Number(item.registrationStatus) !== 2 || item.verificationStatus == 1) return false;
+  const until = item.wUntil ? new Date(String(item.wUntil).replace(/-/g, '/')) : null;
+  return !(until && !isNaN(until.getTime()) && until.getTime() < Date.now());
 }
 
 /* 入场动画最长时长(最后一张起步 + 过渡 + 余量)后放开重排 */

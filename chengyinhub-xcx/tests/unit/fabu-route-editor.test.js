@@ -773,3 +773,81 @@ test('发布载荷携带主题路线字段，并用显式 NodeKey 绑定首次�
   assert.equal(body.chapters[0].nodes[0].clientNodeKey, 'node_a')
   assert.equal(body.chapters[0].nodes[0]._localId, undefined)
 })
+
+test('W8：同一玩法结果的多条条件分支打开再保存不合并丢失，修改仅影响所选分支', () => {
+  const page = makePage()
+  page.data.formData.chapters = withPreferenceTemplate()
+  page.data.formData.routeMode = 'BRANCH_GRAPH'
+  page._routeGraph = {
+    schemaVersion: 1, startNodeId: 'node_a', terminalNodeIds: ['node_b', 'node_c'], variables: {}, fallbacks: [],
+    edges: [
+      { id: 'history_yes', fromNodeId: 'node_a', toNodeId: 'node_b', trigger: { type: 'PREFERENCE_RESULT', outcomeCode: 'HISTORY' },
+        conditions: [{ op: 'HAS_CONDITION', value: 'inspired' }], effects: [{ op: 'GRANT_XP', value: 2 }], priority: 2, weight: 1 },
+      { id: 'history_no', fromNodeId: 'node_a', toNodeId: 'node_c', trigger: { type: 'PREFERENCE_RESULT', outcomeCode: 'HISTORY' },
+        conditions: [{ op: 'NOT', condition: { op: 'HAS_CONDITION', value: 'inspired' } }], effects: [], priority: 1, weight: 1 },
+    ],
+  }
+  const before = structuredClone(page._routeGraph.edges)
+  page.openNodeRouteMapping({ currentTarget: { dataset: { nodeid: 'node_a' } } })
+  const branches = page.data.routeMappingRows.filter(row => row.code === 'HISTORY')
+  assert.equal(branches.length, 2)
+  assert.equal(new Set(page.data.routeMappingRows.map(row => row.mappingKey)).size, page.data.routeMappingRows.length)
+  const index = page.data.routeMappingRows.findIndex(row => row.edgeId === 'history_no')
+  page.onRouteMappingTargetPick({ currentTarget: { dataset: { rowindex: index } }, detail: { value: 1 } })
+  page.finishNodeRouteMapping()
+  for (const original of before) {
+    const after = page._routeGraph.edges.find(edge => edge.id === original.id)
+    assert.ok(after)
+    assert.deepEqual(after.conditions, original.conditions)
+    assert.deepEqual(after.effects, original.effects)
+    assert.equal(after.priority, original.priority)
+    assert.equal(after.toNodeId, 'node_b')
+  }
+});
+
+test('W8：规则参数随本机信封恢复，完成后进入路线JSON，再开编辑器读回一致', () => {
+  const page=makePage(); page.data.formData.chapters=withPreferenceTemplate();
+  page.openNodeRouteMapping({currentTarget:{dataset:{nodeid:'node_a'}}});
+  const row=page.data.routeMappingRows[0];
+  const rules={conditions:[{op:'ROLE_IN',values:['NAVIGATOR']}],effects:[{op:'GRANT_XP',value:7,id:'read'}]};
+  page.onRouteRulesChange({detail:{identity:row.formIdentity,value:rules}});
+  const saved=Object.values(storage).find(v=>v && v.editorMeta && v.editorMeta.routeRuleDrafts);
+  assert.deepEqual(saved.editorMeta.routeRuleDrafts.node_a[row.mappingKey],rules);
+  const resumed=makePage();resumed._applyDraftEnvelope(saved);
+  resumed.openNodeRouteMapping({currentTarget:{dataset:{nodeid:'node_a'}}});
+  assert.deepEqual(resumed.data.routeMappingRows[0].ruleConfig,rules);
+  resumed.finishNodeRouteMapping();
+  const json=JSON.parse(resumed.data.formData.routeGraphJson);
+  assert.deepEqual(json.edges.find(e=>e.trigger.outcomeCode===row.code).conditions,rules.conditions);
+  assert.deepEqual(json.edges.find(e=>e.trigger.outcomeCode===row.code).effects,rules.effects);
+  const committed=Object.values(storage).find(v=>v && v.formData && v.formData.routeMode==='BRANCH_GRAPH');
+  const next=makePage();next._applyDraftEnvelope(committed);
+  next.openNodeRouteMapping({currentTarget:{dataset:{nodeid:'node_a'}}});
+  assert.deepEqual(next.data.routeMappingRows.find(r=>r.code===row.code).ruleConfig,rules);
+});
+
+test('W8：非法规则阻止完成但保留本机输入，关闭/切号后的旧事件不能改写', () => {
+  const page=makePage();page.data.formData.chapters=withPreferenceTemplate();
+  page.openNodeRouteMapping({currentTarget:{dataset:{nodeid:'node_a'}}});
+  const key=page.data.routeMappingRows[0].formIdentity;
+  page.onRouteRulesChange({detail:{identity:key,value:{conditions:[],effects:[{op:'GRANT_XP',value:''}]}}});
+  const before=JSON.stringify(page._routeGraph);page.finishNodeRouteMapping();
+  assert.equal(page.data.routeMappingShow,true);assert.equal(JSON.stringify(page._routeGraph),before);
+  page.closeNodeRouteMapping();const stored=JSON.stringify(storage);
+  page.onRouteRulesChange({detail:{identity:key,value:{conditions:[],effects:[]}}});assert.equal(JSON.stringify(storage),stored);
+  page.openNodeRouteMapping({currentTarget:{dataset:{nodeid:'node_a'}}});page._routeRulesOwner='another';
+  page.onRouteRulesChange({detail:{identity:key,value:{conditions:[],effects:[]}}});assert.equal(JSON.stringify(storage),stored);
+});
+
+test('W8：同名结果旧组件事件不能污染新打开节点，显式撤销解除未完成配置',()=>{
+ const page=makePage();page.data.formData.chapters=withPreferenceTemplate();
+ page.openNodeRouteMapping({currentTarget:{dataset:{nodeid:'node_a'}}});const old=page.data.routeMappingRows[0].formIdentity;
+ page.closeNodeRouteMapping();page.openNodeRouteMapping({currentTarget:{dataset:{nodeid:'node_a'}}});
+ page.onRouteRulesChange({detail:{identity:old,value:{conditions:[],effects:[{op:'GRANT_XP',value:4}]}}});
+ assert.equal(Object.keys(page._routeRuleDrafts || {}).length,0);
+ const identity=page.data.routeMappingRows[0].formIdentity;
+ page.onRouteRulesChange({detail:{identity,value:{conditions:[],effects:[{op:'GRANT_XP',value:''}]}}});
+ assert.equal(page._buildSubmitPayload({draft:true,quiet:true}),null);
+ page.onRouteRulesChange({detail:{identity,value:{conditions:[],effects:[]},discard:true}});
+ assert.equal(Object.keys(page._routeRuleDrafts).length,0);
+});

@@ -1,0 +1,10 @@
+// P1-084:会重复的动态字符串数组(作者写的规则行、服务端下发的提示/签文/对白)不能用 wx:key="*this" ——
+// 两行同文时 key 撞车,列表增删会错位复用节点。这里把每项包成 { key, text },key 取下标,唯一且稳定。
+// 用法:wx:for="{{lk.rows(list)}}" wx:key="key",条目里读 {{item.text}}。静态装饰列表(星级/刻度)不必走这里。
+function rows(list) {
+  var out = [];
+  if (!list || !list.length) return out;
+  for (var i = 0; i < list.length; i++) out.push({ key: 'k' + i, text: list[i] });
+  return out;
+}
+module.exports = { rows: rows };

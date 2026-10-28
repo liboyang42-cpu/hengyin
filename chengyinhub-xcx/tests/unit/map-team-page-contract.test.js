@@ -26,7 +26,7 @@ test('顶部条「附近的队伍 · N 支在招募」+ 底部只剩「范围」
   assert.ok(wrap, '角控件要包在 mt-corners 里')
   assert.match(wrap[0], /wx:if="\{\{!sheet( && viewMode === 'map')?\}\}"/, '开任何半屏时角控件收起(v13:列表模式也收起)')
   assert.match(WXML, /\{\{rangeText\}\}/)
-  assert.match(WXML, /\{\{myTeamsText\}\}/)
+  assert.match(WXML, /aria-label="\{\{myTeamsN \? '我的队伍/)
   assert.doesNotMatch(WXML, /openTools|openStampCamera|pgrabhit/, '旧抽屉/拍照入口不再留在地图上')
 })
 
@@ -55,14 +55,22 @@ let config
 let requests
 let navigations
 // 申请留言弹层(stub 无 cy-modal-host 时 modal.js 回落 wx.showModal):默认确认并带一句留言。
+let values, random
+const tick = async () => { for (let i = 0; i < 6; i++) await Promise.resolve() }
+const receipt = (req, state, extra = {}) => req.success({ code: 200, data: { requestId: JSON.parse(req.data).requestId, state, ...extra } })
 let modalAnswer = { confirm: true, content: '一起走完全程' }
 global.getApp = () => ({
   getUserID: () => 7,
+  getAuthorization: () => 'fixture-session',
   globalData: {},
   getImgUrl: (u) => u || '',
   sendRequest: (opts) => { requests.push(opts) },
 })
 global.wx = {
+  getStorageInfoSync: () => ({ keys: Object.keys(values) }),
+  getStorageSync: k => values[k], setStorageSync: (k,v) => { values[k] = JSON.parse(JSON.stringify(v)) },
+  removeStorageSync: k => { delete values[k] },
+  getRandomValues: o => o.success({ randomValues: new Uint8Array(16).fill(++random).buffer }),
   getWindowInfo: () => ({ screenHeight: 844, safeArea: { bottom: 810 } }),
   getMenuButtonBoundingClientRect: () => ({ bottom: 88 }),
   getLocation: () => {},
@@ -81,7 +89,7 @@ function setByPath(target, raw, value) {
 }
 
 function load() {
-  requests = []; navigations = []
+  requests = []; navigations = []; values = {}; random = 0
   modalAnswer = { confirm: true, content: '一起走完全程' }
   delete require.cache[require.resolve(PAGE)]
   require(PAGE)
@@ -135,33 +143,41 @@ test('viewerHasTicket=false → 「去买这场的票」跳活动详情购票', 
   assert.deepEqual(navigations, ['/pages/activity/detail/index?id=11'])
 })
 
-test('有票 → 申请加入 → 成功变 PENDING,只剩撤回', () => {
+test('有票 → 申请加入 → 成功变 PENDING,只剩撤回', async () => {
   const page = load()
   feedTeams(page, [team({ viewerHasTicket: true })])
   tapTeam(page, 7)
   page.onCardPrimary()
-  const req = requests.filter((r) => r.url === '/api/team/apply').pop()
+  await tick()
+  const req = requests.filter((r) => r.url === '/api/team/command' && JSON.parse(r.data).action === 'apply').pop()
   assert.ok(req)
   const body = JSON.parse(req.data)
-  assert.equal(body.teamId, 7)
+  assert.equal(body.targetId, '7')
   assert.equal(body.message, '一起走完全程', '申请留言随申请一起发(拍板第19条)')
-  assert.equal(req.silentError, true)
-  req.success({ code: 200, msg: '已申请，等待队长同意', data: {} })
+  assert.equal(req.autoErrorToast, false)
+  receipt(req, 'APPLIED')
+  assert.equal(page.data.current.card.mode, 'apply', '回执不是当前成员状态')
+  feedTeams(page, [team({ viewerHasTicket: true, viewerStatus: 'PENDING' })])
+  page.onTeamCommandAction({ currentTarget: { dataset: { teamId: '7', action: 'acknowledge' } } })
   assert.equal(page.data.current.card.mode, 'pending')
   assert.equal(page.data.current.card.primary, null)
   page.onCardSecondary()
-  const w = requests.filter((r) => r.url === '/api/team/withdraw').pop()
+  await tick()
+  const w = requests.filter((r) => r.url === '/api/team/command' && JSON.parse(r.data).action === 'withdraw').pop()
   assert.ok(w)
-  w.success({ code: 200 })
+  receipt(w, 'APPLIED')
+  feedTeams(page, [team({ viewerHasTicket: true, viewerStatus: 'NONE' })])
   assert.equal(page.data.current.card.mode, 'apply')
 })
 
-test('errorCode=TICKET_REQUIRED → 卡片回到买票态 + 失败半屏(去买票/先不买)', () => {
+test('errorCode=TICKET_REQUIRED → 卡片回到买票态 + 失败半屏(去买票/先不买)', async () => {
   const page = load()
   feedTeams(page, [team({ viewerHasTicket: true })])
   tapTeam(page, 7)
   page.onCardPrimary()
-  requests.filter((r) => r.url === '/api/team/apply').pop().success({ code: 500, errorCode: 'TICKET_REQUIRED', msg: '请先购票' })
+  await tick()
+  receipt(requests.filter((r) => r.url === '/api/team/command' && JSON.parse(r.data).action === 'apply').pop(), 'REJECTED', { errorCode: 'TICKET_REQUIRED', message: '请先购票' })
+  feedTeams(page, [team({ viewerHasTicket: false })])
   assert.equal(page.data.current.card.mode, 'buy')
   assert.equal(page.data.resultSheet.show, true)
   assert.equal(page.data.resultSheet.kind, 'fail')
@@ -170,14 +186,16 @@ test('errorCode=TICKET_REQUIRED → 卡片回到买票态 + 失败半屏(去买�
   assert.deepEqual(navigations, ['/pages/activity/detail/index?id=11'])
 })
 
-test('errorCode=TEAM_FULL → 关卡 + 从地图移除 + 失败半屏;没有 errorCode 只报失败不改状态', (t) => {
+test('errorCode=TEAM_FULL → 回读移除满员队伍;非回执错误保留UNKNOWN不猜结果', async (t) => {
   // 2026-10-23 弹层动效:关闭先落下 250ms(--cy-motion-sheet-out)再卸载,用假定时器走完退场
   t.mock.timers.enable({ apis: ['setTimeout'] })
   const page = load()
   feedTeams(page, [team({ viewerHasTicket: true })])
   tapTeam(page, 7)
   page.onCardPrimary()
-  requests.filter((r) => r.url === '/api/team/apply').pop().success({ code: 500, errorCode: 'TEAM_FULL', msg: '已满' })
+  await tick()
+  receipt(requests.filter((r) => r.url === '/api/team/command' && JSON.parse(r.data).action === 'apply').pop(), 'REJECTED', { errorCode: 'TEAM_FULL', message: '已满' })
+  feedTeams(page, [])
   t.mock.timers.tick(250); assert.equal(page.data.sheet, '')
   assert.equal(page.data.markers.filter((m) => m.id === 74).length, 0)
   assert.equal(page.data.resultSheet.kind, 'fail')
@@ -186,9 +204,10 @@ test('errorCode=TEAM_FULL → 关卡 + 从地图移除 + 失败半屏;没有 err
   feedTeams(p2, [team({ viewerHasTicket: true })])
   tapTeam(p2, 7)
   p2.onCardPrimary()
-  requests.filter((r) => r.url === '/api/team/apply').pop().success({ code: 500, msg: 'TEAM_FULL 已满' })
+  await tick()
+  requests.filter((r) => r.url === '/api/team/command' && JSON.parse(r.data).action === 'apply').pop().success({ code: 500, msg: 'TEAM_FULL 已满' })
   assert.equal(p2.data.current.card.mode, 'apply', '只有文案里写了码，不能按文案分支')
-  assert.equal(p2.data.resultSheet.why, 'TEAM_FULL 已满')
+  assert.equal(p2.data.teamCommandRows[0].state, 'UNKNOWN', '非终态错误不能当作已拒绝')
 })
 
 test('PENDING / REJECTED 卡片', () => {
@@ -202,7 +221,7 @@ test('PENDING / REJECTED 卡片', () => {
   assert.equal(page.data.current.card.primary, null)
 })
 
-test('LEADER → P5 申请列表;同意/拒绝发 handle;APPLY_NOT_PENDING 移除该行', () => {
+test('LEADER → P5 申请列表;同意/拒绝发 handle;APPLY_NOT_PENDING 移除该行', async () => {
   const page = load()
   feedTeams(page, [team({ viewerStatus: 'LEADER', pendingCount: 2 })])
   tapTeam(page, 7)
@@ -212,13 +231,20 @@ test('LEADER → P5 申请列表;同意/拒绝发 handle;APPLY_NOT_PENDING 移�
   a.success({ code: 200, data: [{ memberId: 5, memberName: '阿杰' }, { memberId: 6, memberName: 'Mia' }] })
   assert.equal(page.data.applicants.length, 2)
   page.onHandle({ currentTarget: { dataset: { id: 5, ok: 'true' } } })
-  const h = requests.filter((r) => r.url === '/api/team/handle').pop()
-  assert.deepEqual(JSON.parse(h.data), { teamId: 7, memberId: 5, approved: true })
-  h.success({ code: 500, errorCode: 'APPLY_NOT_PENDING', msg: '已处理' })
+  await tick()
+  const h = requests.filter((r) => r.url === '/api/team/command' && JSON.parse(r.data).action === 'handle').pop()
+  const handled = JSON.parse(h.data)
+  assert.deepEqual({ targetId: handled.targetId, memberId: handled.memberId, approved: handled.approved }, { targetId: '7', memberId: '5', approved: true })
+  assert.match(handled.requestId, /^[a-f0-9]{32}$/)
+  receipt(h, 'REJECTED', { errorCode: 'APPLY_NOT_PENDING', message: '已处理' })
+  assert.equal(page.data.applicants.length, 2, '等待实际名单回读')
+  requests.filter(r => r.url === '/api/team/applications').pop().success({ code: 200, data: [{ memberId: 6, memberName: 'Mia' }] })
+  page.onTeamCommandAction({ currentTarget: { dataset: { teamId: '7', action: 'acknowledge' } } })
   assert.deepEqual(page.data.applicants.map((x) => x.memberId), [6])
   assert.equal(page.data.resultSheet.kind, 'fail')
   page.onHandle({ currentTarget: { dataset: { id: 6, ok: 'false' } } })
-  const h2 = requests.filter((r) => r.url === '/api/team/handle').pop()
+  await tick()
+  const h2 = requests.filter((r) => r.url === '/api/team/command' && JSON.parse(r.data).action === 'handle').pop()
   assert.equal(JSON.parse(h2.data).approved, false)
 })
 
@@ -263,17 +289,18 @@ test('申请列表迟到的旧响应不串到别的队伍;非队长读列表失�
   assert.equal(page.data.resultSheet.title, '申请列表没读到')
 })
 
-test('P6 撤回成功只重拉列表,不重开半屏;角控件计数不算被拒', () => {
+test('P6 撤回成功只重拉列表,不重开半屏;角控件计数不算被拒', async () => {
   const page = load()
   page.openMyTeams()
   requests.filter((r) => r.url === '/api/team/my').pop().success({ code: 200, data: [] })
   requests.filter((r) => r.url === '/api/team/my-applications').pop().success({ code: 200, data: [
     { teamId: 8, title: 'a', applyStatus: 'PENDING' }, { teamId: 10, title: 'b', applyStatus: 'REJECTED' }] })
-  assert.equal(page.data.myTeamsText, '我的队伍 · 1')
+  assert.equal(page.data.myTeamsN, 1)
   let reopened = 0
   page._openSheet = () => { reopened += 1 }
   page.onMyRowAction({ currentTarget: { dataset: { index: 0 } } })
-  requests.filter((r) => r.url === '/api/team/withdraw').pop().success({ code: 200 })
+  await tick()
+  receipt(requests.filter((r) => r.url === '/api/team/command' && JSON.parse(r.data).action === 'withdraw').pop(), 'APPLIED')
   assert.equal(reopened, 0)
   assert.ok(requests.filter((r) => r.url === '/api/team/my').length >= 3)
 })

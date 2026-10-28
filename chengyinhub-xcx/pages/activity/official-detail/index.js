@@ -5,6 +5,8 @@ const { toTimestamp, chinaParts } = require('../../../utils/datetime');
 const { activityStatusText } = require('../../../utils/activity-status');
 const { bizFailureMessage } = require('../../../utils/response-shape.js');
 const merchantTheme = require('../../../utils/merchant-theme.js');
+const { exactId, reader, sameReader } = require('../../../utils/user-character.js');
+const { createRecovery } = require('../../../utils/team-event-command.js');
 const app = getApp();
 let subscribe = null;
 try { subscribe = require('../../../utils/subscribe.js'); } catch (e) {}
@@ -14,6 +16,9 @@ function toTs(v) {
   return isNaN(t) ? 0 : t;
 }
 function isV2(e) { return Number((e && e.contractVersion) || 1) >= 2; }
+function participationInvalid(e) {
+  return isV2(e) && e && e.participation && e.participation.state !== 'ACTIVE';
+}
 
 const CATEGORY_TEXT = {
   city_light: '城市点亮',
@@ -146,17 +151,40 @@ Page({
     loadErrAction: '重试',
     loadErrActionType: 'retry',
     organizerEntry: false,
+    commandRecovery: null,
+    privacyGateShow: false,
+    policyChecked: false,
+    signupBlocked: false,
   },
 
+  // 赛事签到组件的扫码(wx.scanCode)需要隐私授权：页内弹窗承接，不让 app.js 回退整页跳隐私页。
+  showPrivacyGate() { this.setData({ privacyGateShow: true }); },
+  onPrivacyGateSettled() { this.setData({ privacyGateShow: false }); },
+
   onLoad(q) {
-    this.setData({ id: +(q && q.id || 0) });
+    this._hidden = false;
+    this._disposed = false;
+    this._reader = reader(app);
+    this.setData({ id: exactId(q && q.id) });
     merchantTheme.merchantPageShow();
+    this._openRecovery();
     this.fetch();
   },
 
-  onShow() { this._navigating = false; merchantTheme.merchantPageShow(); },
+  onShow() {
+    this._navigating = false;
+    const refresh = this._hidden || this._reader && !sameReader(app, this._reader);
+    this._hidden = false;
+    merchantTheme.merchantPageShow();
+    if (refresh) { this._openRecovery(); this.fetch(); }
+  },
 
-  onHide() { merchantTheme.merchantPageRestore(); },
+  onHide() {
+    if (this._recovery) this._recovery.dispose();
+    this._hidden = true;
+    this._fetchSeq = (this._fetchSeq || 0) + 1;
+    merchantTheme.merchantPageRestore();
+  },
 
   onScroll(event) {
     const next = Number(event && event.detail && event.detail.scrollTop) > 180;
@@ -164,6 +192,8 @@ Page({
   },
 
   onUnload() {
+    if (this._recovery) this._recovery.dispose();
+    this._disposed = true;
     merchantTheme.merchantPageRestore();
     this._fetchSeq = (this._fetchSeq || 0) + 1;
   },
@@ -194,16 +224,47 @@ Page({
     });
   },
 
+  _context() {
+    return { id: exactId(this.data.id), seq: this._fetchSeq, reader: reader(app) };
+  },
+
+  _current(context) {
+    if (this._disposed || this._hidden || context.id !== exactId(this.data.id)
+        || context.seq !== this._fetchSeq) return false;
+    if (!sameReader(app, context.reader)) {
+      this.setData({ e: null, rewards: [], cta: { text: '', type: '' },
+        organizerEntry: false, boundTopicError: '', countdown: '' });
+      return false;
+    }
+    return true;
+  },
+
   fetch() {
-    const id = this.data.id;
+    if (this._disposed || this._hidden) return;
+    const id = exactId(this.data.id);
+    if (!id) {
+      this.data.loadErrActionType = 'back';
+      this.setData({ loading: false, e: null, organizerEntry: false,
+        loadErrKind: 'data', loadErrTitle: '活动参数无效', loadErrSub: '',
+        loadErrAction: '返回活动列表' });
+      return;
+    }
+    if (this._reader && !sameReader(app, this._reader)) {
+      this.setData({ e: null, rewards: [], cta: { text: '', type: '' }, countdown: '', boundTopicError: '' });
+      this._ctaBusy = false;
+      this._ctaContext = null;
+    }
+    this._reader = reader(app);
     const seq = (this._fetchSeq || 0) + 1;
     this._fetchSeq = seq;
+    const context = this._context();
+    this.setData({ organizerEntry: false });
     this.setData({ loading: true, loadErrTitle: '', loadErrSub: '' });
     app.sendRequest({
       url: '/api/official/events/' + id, method: 'GET',
       autoErrorToast: false,   // 落 wx:else 整页留白;保留旧详情的刷新失败同样不提示(F-R2U-01)
       success: (res) => {
-        if (seq !== this._fetchSeq) return;
+        if (!this._current(context)) return;
         if (!res || (res.code != 200 && res.code != '200') || !res.data) {
           const code = res && Number(res.code);
           // 只有服务端明确表达「内容没了」才走不可恢复态。畸形 200(200 但没有 data)
@@ -236,7 +297,7 @@ Page({
         this._probeOrganizer(e);
       },
       fail: () => {
-        if (seq !== this._fetchSeq) return;
+        if (!this._current(context)) return;
         this.data.loadErrActionType = 'retry';
         this.setData({
           loadErrKind: 'network',
@@ -246,7 +307,7 @@ Page({
         });
       },
       complete: () => {
-        if (seq === this._fetchSeq) this.setData({ loading: false });
+        if (this._current(context)) this.setData({ loading: false });
       }
     });
   },
@@ -255,16 +316,16 @@ Page({
   // 不提示、不报错 —— 对绝大多数玩家这本来就是「不是主办」,不是故障。
   _probeOrganizer(e) {
     if (!e || !e._isV2) { this.setData({ organizerEntry: false }); return; }
-    const seq = this._fetchSeq;
+    const context = this._context();
     app.sendRequest({
       url: `/api/official/v2/events/${this.data.id}/publish-check`, method: 'GET',
       hideLoading: true, autoErrorToast: false,
       success: (res) => {
-        if (seq !== this._fetchSeq) return;
+        if (!this._current(context)) return;
         this.setData({ organizerEntry: !!res && (res.code == 200 || res.code == '200') });
       },
       fail: () => {
-        if (seq !== this._fetchSeq) return;
+        if (!this._current(context)) return;
         this.setData({ organizerEntry: false });
       },
     });
@@ -305,8 +366,11 @@ Page({
 
   _cta(e) {
     const s = e.status;
+    if (s == 9) return { text: '活动已下线', type: 'ended' };
     if (s >= 5) return { text: '活动已结束', type: 'ended' };
+    if (s == 4) return { text: '活动待结算', type: 'wait' };
     if (e.paused) return { text: '活动已暂停', type: 'wait' };
+    if (participationInvalid(e)) return { text: '参与资格已失效', type: 'wait' };
     if (e.signed) {
       if (s == 3 && isV2(e)) {
         const missions = e.missions || [];
@@ -382,8 +446,20 @@ Page({
     e._taskDone = done;
     e._taskTotal = v2 ? missions.length : cards.length;
     e._progressText = v2 ? (done + '/' + missions.length) : String(e.myProgress || 0);
-    e._eligibleText = v2 ? (e.eligible ? '已满足资格' : '完成全部任务后获得资格') : '';
+    e._eligibleText = v2 ? (participationInvalid(e) ? '参与资格已失效' : e.eligible ? '已满足资格' : '完成全部任务后获得资格') : '';
     e._showStoryDetail = !!(e.story && e.subtitle);
+    // 赛事榜单(原型 B T-30 / B8,需后端 e.leaderboard):主办没开时整段不出;公示期内写「暂列第 N 名」
+    const lb = e.leaderboard;
+    if (lb && lb.enabled === true) {
+      const clock = (sec) => { const n = Math.max(0, Math.floor(Number(sec) || 0)); const p2 = (v) => (v < 10 ? '0' : '') + v; return Math.floor(n / 3600) + ':' + p2(Math.floor(n / 60) % 60) + ':' + p2(n % 60); };
+      const rows = (Array.isArray(lb.rows) ? lb.rows : []).filter((r) => r && Number.isSafeInteger(Number(r.rank)) && Number(r.rank) > 0).map((r, i) => ({
+        _key: i, rank: Number(r.rank), name: r.name || '城瘾玩家',
+        value: (Number(r.doneCount) || 0) + ' / ' + (Number(r.totalCount) || 0) + (r.elapsedSeconds != null ? ' · ' + clock(r.elapsedSeconds) : '') }));
+      const my = Number(lb.myRank);
+      e._board = { rows, chip: Number.isSafeInteger(my) && my > 0 ? (lb.final === true ? '第 ' + my + ' 名' : '暂列第 ' + my + ' 名') : '' };
+    } else e._board = null;
+    // 安全须知(原型 B T-35,需后端 e.safetyNotice{title,version}):报名前单独勾选,不默认勾
+    e._policyTitle = e.safetyNotice && e.safetyNotice.title ? String(e.safetyNotice.title) : '';
     if (v2) e.missions = missions;
     return e;
   },
@@ -408,27 +484,28 @@ Page({
     const ids = [];
     (e.missions || []).forEach((m) => {
       const b = m && m.binding;
-      const id = b && b.bindingType === 'THEME' ? Number(b.sourceRefId) : 0;
-      if (Number.isSafeInteger(id) && id > 0 && ids.indexOf(id) < 0) ids.push(id);
+      const id = b && b.bindingType === 'THEME' ? exactId(b.sourceRefId) : '';
+      if (id && ids.indexOf(id) < 0) ids.push(id);
     });
-    const eventId = e.id;
+    const eventId = exactId(e.id);
+    const context = this._context();
     ids.forEach((topicId) => {
       app.sendRequest({
-        url: '/api/topic/info-to-user', method: 'POST', data: { id: topicId }, hideLoading: true, silentError: true,
+        url: '/api/topic/info-to-user', method: 'POST', data: { id: Number.isSafeInteger(Number(topicId)) ? Number(topicId) : topicId }, hideLoading: true, silentError: true,
         success: (res) => {
           const cur = this.data.e;
-          if (!cur || cur.id !== eventId) return;   // 已切到别的活动,旧回包作废
+          if (!this._current(context) || !cur || exactId(cur.id) !== eventId) return;   // 已切到别的活动,旧回包作废
           const name = res && (res.code == 200 || res.code == '200') && res.data && res.data.name;
           if (!name) { this.setData({ boundTopicError: '点任务仍可前往绑定主题' }); return; }
           const missions = (cur.missions || []).map((m) => {
             const b = m && m.binding;
-            return b && b.bindingType === 'THEME' && Number(b.sourceRefId) === topicId
+            return b && b.bindingType === 'THEME' && exactId(b.sourceRefId) === topicId
               ? Object.assign({}, m, { _topicName: String(name) }) : m;
           });
           this.setData({ 'e.missions': missions });
         },
         fail: () => {
-          if (this.data.e && this.data.e.id === eventId) this.setData({ boundTopicError: '点任务仍可前往绑定主题' });
+          if (this._current(context) && this.data.e && exactId(this.data.e.id) === eventId) this.setData({ boundTopicError: '点任务仍可前往绑定主题' });
         },
       });
     });
@@ -438,8 +515,8 @@ Page({
   // (OfficialEventV2ServiceImpl 发布校验按它读主题);完成事实仍由服务端核验同步,这里只是入口。
   goBoundTopic(mission) {
     const binding = mission && mission.binding;
-    const topicId = binding && binding.bindingType === 'THEME' ? Number(binding.sourceRefId) : 0;
-    if (!Number.isSafeInteger(topicId) || topicId <= 0) return false;
+    const topicId = binding && binding.bindingType === 'THEME' ? exactId(binding.sourceRefId) : '';
+    if (!topicId) return false;
     if (this._navigating) return true; this._navigating = true; wx.navigateTo({ url: '/pages/topic/index/index?id=' + topicId, complete: () => { this._navigating = false; } });
     return true;
   },
@@ -449,6 +526,8 @@ Page({
     const code = ev && ev.currentTarget && ev.currentTarget.dataset && ev.currentTarget.dataset.code;
     const mission = (e.missions || []).find(item => item.missionCode === code);
     if (!mission || mission.complete) return;
+    if (participationInvalid(e)) { toast('参与资格已失效'); return; }
+    if (e.paused || e.status != null && Number(e.status) >= 4) { toast(this._cta(e).text); return; }
     // 后端禁发布/无核验路径的类型:给明确提示,不静默,也不误触发报名。
     if (mission._supported === false) { toast('该任务类型暂不支持核验'); return; }
     if (!e.signed) { this.doSignup(); return; }
@@ -466,41 +545,60 @@ Page({
     wx.switchTab({ url: '/pages/roam/index' });
   },
 
-  doSignup() {
-    // BL-199:报名/完成任务共用在途标记,连点只发一次。
-    if (this._ctaBusy) return;
-    this._ctaBusy = true;
-    // 报名人只会收到活动开始提醒；招募状态发给主题发布者，不能在这里代授权。
-    if (subscribe && subscribe.request) {
-      subscribe.request(['activityStart']).then((result) => {
-        this._activityStartSubscribeStatus = result.status;
-      });
-    }
-    app.sendRequest({
-      url: '/api/official/events/' + this.data.id + '/signup', method: 'POST',
-      success: (res) => {
-        if (res && (res.code == 200 || res.code == '200')) {
+  _openRecovery() {
+    this._recoveryReader = reader(app);
+    if (this._recovery) this._recovery.dispose();
+    this._recovery = createRecovery({ app, platform: wx, domain: 'SIGNUP', targetId: this.data.id,
+      changed: value => this.setData({ commandRecovery: value }),
+      terminal: result => {
+        // 服务端按平台规则拒绝报名时,只在安全须知段写一句中性说明
+        if (result.state === 'REJECTED' && (result.errorCode || (result.data && result.data.errorCode)) === 'ORIENT_SAFETY_BLOCKED') this.setData({ signupBlocked: true });
+        if (result.state === 'APPLIED') {
           motion.haptic({ type: 'light', reducedMotion: readReducedMotion() });
           toast.success('报名成功');
-          this.fetch();
-        } else {
-          toast((res && res.msg) || '报名失败');
         }
-      },
-      complete: () => { this._ctaBusy = false; }
-    });
+        this.fetch();
+      } });
+  },
+  queryCommand() { this._recovery.query(); },
+  retryCommand() { this._recovery.retry(); },
+  cancelCommand() { this._recovery.cancel(); },
+  acknowledgeCommand() { this._recovery.acknowledge(); },
+
+  onPolicyChange(ev) { this.setData({ policyChecked: !!(ev && ev.detail && ev.detail.checked) }); },
+
+  doSignup() {
+    if (app.ensureLoginFor && !app.ensureLoginFor('signup', () => this.doSignup())) return;
+    if (participationInvalid(this.data.e)) { toast('参与资格已失效'); return; }
+    if (this.data.e && this.data.e._policyTitle && !this.data.policyChecked) { toast('请先勾选安全须知'); return; }
+    if (!exactId(this.data.id) || this._disposed || this._hidden) return;
+    if (this._ctaBusy) return;
+    if (!this._recovery || !sameReader(app, this._recoveryReader)) this._openRecovery();
+    if (this._recovery.pending()) return;
+    // Notification permission is independent of the command receipt and never proves signup.
+    if (subscribe && subscribe.request) {
+      const context = this._context();
+      subscribe.request(['activityStart']).then(result => {
+        if (this._current(context)) this._activityStartSubscribeStatus = result.status;
+      }).catch(() => {});
+    }
+    return this._recovery.start('signup', {});
   },
 
   doComplete() {
+    if (!exactId(this.data.id) || this._disposed || this._hidden) return;
     if (isV2(this.data.e)) {
       toast('任务完成需现场验证');
       return;
     }
     if (this._ctaBusy) return;
     this._ctaBusy = true;
+    const context = this._context();
+    this._ctaContext = context;
     app.sendRequest({
       url: '/api/official/events/' + this.data.id + '/complete', method: 'POST',
       success: (res) => {
+        if (!this._current(context)) return;
         if (res && (res.code == 200 || res.code == '200')) {
           toast.success('完成 +1');
           this.fetch();
@@ -508,7 +606,7 @@ Page({
           toast((res && res.msg) || '操作失败');
         }
       },
-      complete: () => { this._ctaBusy = false; }
+      complete: () => { if (this._ctaContext === context) this._ctaBusy = false; }
     });
   },
 

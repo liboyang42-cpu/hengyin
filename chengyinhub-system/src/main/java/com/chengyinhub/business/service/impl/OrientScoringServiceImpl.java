@@ -2,6 +2,8 @@ package com.chengyinhub.business.service.impl;
 
 import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.OrientScoreAppeal;
+import com.chengyinhub.business.domain.OrientScoreRecovery;
+import com.chengyinhub.business.domain.OrientScoreSyncReceipt;
 import com.chengyinhub.business.domain.OrientScoreEntry;
 import com.chengyinhub.business.domain.OrientScoreSettlement;
 import com.chengyinhub.business.domain.PlayerNodeProgress;
@@ -58,6 +60,9 @@ public class OrientScoringServiceImpl implements IOrientScoringService {
             OrientScoreEntry.DIM_PENALTY, OrientScoreEntry.DIM_BONUS, OrientScoreEntry.DIM_ADJUSTMENT);
     private static final Set<String> SOURCES = Set.of("PROGRESS", "ANTI_CHEAT", "APPEAL", "DISPUTE", "ADMIN", "LIFECYCLE");
 
+    @Autowired @org.springframework.context.annotation.Lazy private com.chengyinhub.business.service.ICmsRegistrationService scoringRegistrations;
+    @Autowired @org.springframework.context.annotation.Lazy private com.chengyinhub.business.service.ICmsActivityService scoringActivities;
+    @Autowired @org.springframework.context.annotation.Lazy private com.chengyinhub.business.service.IGameSessionRuntimeService scoringGameSessions;
     @Autowired private OrientScoringMapper mapper;
     @Autowired private ISysConfigService configService;
     @Autowired private ICmsTopicService cmsTopicService;
@@ -69,12 +74,8 @@ public class OrientScoringServiceImpl implements IOrientScoringService {
 
     @Override
     public boolean isEnabled() {
-        try {
-            String value = configService.selectConfigByKey(CFG_ENABLED);
-            return value != null && "true".equalsIgnoreCase(value.trim());
-        } catch (RuntimeException unavailable) {
-            return false; // 配置读不到一律按关闭处理(fail closed)
-        }
+        String value = configService.selectConfigByKey(CFG_ENABLED);
+        return value != null && "true".equalsIgnoreCase(value.trim());
     }
 
     @Override
@@ -94,12 +95,12 @@ public class OrientScoringServiceImpl implements IOrientScoringService {
     }
 
     private int intConfig(String key, int fallback, int min, int max) {
+        String value = configService.selectConfigByKey(key);
         try {
-            String value = configService.selectConfigByKey(key);
             if (value == null || value.trim().isEmpty()) return fallback;
             int parsed = Integer.parseInt(value.trim());
             return parsed < min || parsed > max ? fallback : parsed;
-        } catch (RuntimeException invalid) {
+        } catch (NumberFormatException invalid) {
             return fallback;
         }
     }
@@ -177,6 +178,7 @@ public class OrientScoringServiceImpl implements IOrientScoringService {
         data.put("activityId", session.getActivityId());
         data.put("topicId", session.getTopicId());
         data.put("status", session.getStatus());
+        data.put("pendingReviewCount", pendingReviews(session));
         data.put("startedAt", session.getCreateTime());
         data.put("endedAt", ended(session) ? endedAt(session) : null);
         data.put("totalCenti", total);
@@ -185,6 +187,8 @@ public class OrientScoringServiceImpl implements IOrientScoringService {
         data.put("settlement", settlement == null ? null : settlementReceipt(settlement, false));
         data.put("disputeWindowDeadline", ended(session) ? windowDeadline(session) : null);
         data.put("appeals", mapper.selectAppealsBySession(session.getId()));
+        List<OrientScoreRecovery> recoveries = mapper.selectRecoveriesBySession(session.getId());
+        data.put("recoveries", memberId == null ? recoveries : recoveries.stream().map(OrientScoreRecovery::playerView).toList());
         List<OrientScoreAppeal> disputes = new ArrayList<>();
         for (OrientScoreAppeal d : mapper.selectDisputesBySession(session.getId())) {
             if (memberId == null || memberId.equals(d.getMemberId())) disputes.add(d);
@@ -241,6 +245,44 @@ public class OrientScoringServiceImpl implements IOrientScoringService {
         return data;
     }
 
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Map<String, Object> syncSession(Long memberId, Long sessionId, String idempotencyKey) {
+        requireEnabled();
+        String key = requireKey(idempotencyKey);
+        if (memberId == null) throw new OrientScoringException(OrientScoringException.SESSION_NOT_FOUND, "对局不存在");
+        TopicRouteSession session = lockOwned(memberId, sessionId);
+        requireActive(session);
+        OrientScoreSyncReceipt existing = mapper.selectSyncReceiptForUpdate(sessionId, key);
+        if (existing != null) return syncReceipt(existing);
+        OrientScoreSyncReceipt receipt = new OrientScoreSyncReceipt();
+        receipt.setSessionId(sessionId);
+        receipt.setMemberId(memberId);
+        receipt.setIdempotencyKey(key);
+        receipt.setAdded(accrue(session));
+        receipt.setTotalCenti(sum(mapper.selectEntriesBySession(sessionId)));
+        if (mapper.insertSyncReceipt(receipt) != 1) throw new IllegalStateException("同步回执写入失败");
+        return syncReceipt(receipt);
+    }
+
+    private Map<String, Object> syncReceipt(OrientScoreSyncReceipt receipt) {
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("state", "SYNCED");
+        data.put("kind", KIND_SYNC);
+        data.put("sessionId", receipt.getSessionId());
+        data.put("memberId", receipt.getMemberId());
+        data.put("idempotencyKey", receipt.getIdempotencyKey());
+        data.put("added", receipt.getAdded());
+        data.put("totalCenti", receipt.getTotalCenti());
+        return data;
+    }
+
+    private int pendingReviews(TopicRouteSession session) {
+        String instance = session.getPlayInstanceId() == null ? "default" : session.getPlayInstanceId();
+        return mapper.countPendingProgress(session.getMemberId(), session.getActivityId(), session.getTopicId(), instance)
+                + mapper.countPendingAlternatives(session.getMemberId(), session.getActivityId(), session.getTopicId(), instance);
+    }
+
     /** 已通过任务入账。已结算的局冻结(投影之后只允许冲正/申诉修正)。返回新增条数。 */
     int accrue(TopicRouteSession session) {
         if (mapper.selectSettlementBySession(session.getId()) != null) return 0;
@@ -253,10 +295,24 @@ public class OrientScoringServiceImpl implements IOrientScoringService {
             if (accrueOnce(session, OrientScoreEntry.DIM_TASK, taskCenti, "TASK_CLEARED", p.getNodeId(),
                     "task:node:" + p.getNodeId())) added++;
             Integer puzzle = p.getPuzzleScore();
-            if (puzzle != null && puzzle > 0 && accrueOnce(session, OrientScoreEntry.DIM_PUZZLE, puzzle * 100,
+            if (puzzle != null && puzzle > 0 && accrueOnce(session, OrientScoreEntry.DIM_PUZZLE, puzzleCenti(puzzle),
                     "PUZZLE_SCORE", p.getNodeId(), "puzzle:node:" + p.getNodeId())) added++;
         }
+        for (Long nodeId : mapper.selectCompletedAlternativeNodes(session.getMemberId(), session.getActivityId(),
+                session.getTopicId(), session.getPlayInstanceId() == null ? "default" : session.getPlayInstanceId())) {
+            // Same logical task and same key as the primary route, never a second TASK award.
+            if (accrueOnce(session, OrientScoreEntry.DIM_TASK, taskCenti, "TASK_CLEARED", nodeId,
+                    "task:node:" + nodeId)) added++;
+        }
         return added;
+    }
+
+    static int puzzleCenti(int score) {
+        try {
+            return Math.multiplyExact(score, 100);
+        } catch (ArithmeticException overflow) {
+            throw invalid("谜题分值超出可入账范围");
+        }
     }
 
     /** 系统入账:同键已存在即视为已入(首值为准,规则后续调整不回写历史)。 */
@@ -304,8 +360,14 @@ public class OrientScoringServiceImpl implements IOrientScoringService {
                                            String sourceType, String sourceRef, Long operatorId, String key) {
         if (original.getReversesEntryId() != null) throw invalid("冲正条目不能再被冲正,请追加修正条目");
         String reason = reasonCode == null || !CODE.matcher(reasonCode).matches() ? "REVERSAL" : reasonCode;
+        int reversedDelta;
+        try {
+            reversedDelta = Math.negateExact(original.getDeltaCenti() == null ? 0 : original.getDeltaCenti());
+        } catch (ArithmeticException overflow) {
+            throw invalid("原流水分值超出可冲正范围");
+        }
         OrientScoreEntry reversal = newEntry(session, original.getDimension(),
-                -(original.getDeltaCenti() == null ? 0 : original.getDeltaCenti()), reason, sourceType, sourceRef,
+                reversedDelta, reason, sourceType, sourceRef,
                 original.getNodeId(), original.getId(), key, "ADMIN", operatorId);
         OrientScoreEntry replay = mapper.selectEntryByIdem(session.getId(), key);
         if (replay != null) return sameOrConflict(replay, reversal);
@@ -339,6 +401,7 @@ public class OrientScoringServiceImpl implements IOrientScoringService {
     private OrientScoreEntry newEntry(TopicRouteSession session, String dimension, int delta, String reason,
                                       String sourceType, String sourceRef, Long nodeId, Long reverses, String key,
                                       String operatorType, Long operatorId) {
+        if (delta == Integer.MIN_VALUE) throw invalid("计分分值超出可冲正范围");
         OrientScoreEntry e = new OrientScoreEntry();
         e.setSessionId(session.getId());
         e.setActivityId(session.getActivityId() == null ? 0L : session.getActivityId());
@@ -378,12 +441,26 @@ public class OrientScoringServiceImpl implements IOrientScoringService {
         return settleLocked(lockOwned(null, sessionId), requireKey(idempotencyKey));
     }
 
+    @Override
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.MANDATORY)
+    public void assertCompletionAllowed(Long sessionId) {
+        requireEnabled();
+        TopicRouteSession session = lockOwned(null, sessionId);
+        requireActive(session);
+        if (mapper.selectSettlementBySession(sessionId) == null && pendingReviews(session) > 0) {
+            throw new OrientScoringException(OrientScoringException.REVIEW_PENDING, "本局仍有任务待审核，不能结算");
+        }
+    }
+
     private Map<String, Object> settleLocked(TopicRouteSession session, String key) {
         requireActive(session);
         OrientScoreSettlement existing = mapper.selectSettlementBySession(session.getId());
         if (existing != null) return settlementReceipt(existing, true);
         if (!ended(session)) {
             throw new OrientScoringException(OrientScoringException.SESSION_NOT_ENDED, "对局尚未结束,不能结算");
+        }
+        if (pendingReviews(session) > 0) {
+            throw new OrientScoringException(OrientScoringException.REVIEW_PENDING, "本局仍有任务待审核，不能结算");
         }
         accrue(session);
         List<OrientScoreEntry> entries = mapper.selectEntriesBySession(session.getId());
@@ -429,6 +506,8 @@ public class OrientScoringServiceImpl implements IOrientScoringService {
     /** 分数(1/100 分) × 折算百分比 → 整数奖励;负分不扣奖励,向下取整。 */
     static int project(long totalCenti, int ratePct) {
         if (totalCenti <= 0 || ratePct <= 0) return 0;
+        // Saturate before multiplication; preserve the existing floor/cap policy without long overflow.
+        if (totalCenti > (long) Integer.MAX_VALUE * 10_000L / ratePct) return Integer.MAX_VALUE;
         long value = totalCenti * ratePct / 10_000L;
         return value > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) value;
     }
@@ -667,6 +746,11 @@ public class OrientScoringServiceImpl implements IOrientScoringService {
         notFound.put("state", "NOT_FOUND");
         notFound.put("kind", kind);
         notFound.put("idempotencyKey", key);
+        if (KIND_SYNC.equals(kind)) {
+            TopicRouteSession session = readOwned(memberId, sessionId);
+            OrientScoreSyncReceipt receipt = mapper.selectSyncReceipt(session.getId(), key);
+            return receipt == null ? notFound : syncReceipt(receipt);
+        }
         if (KIND_SETTLE.equals(kind)) {
             TopicRouteSession session = readOwned(memberId, sessionId);
             OrientScoreSettlement s = mapper.selectSettlementBySession(session.getId());
@@ -679,7 +763,7 @@ public class OrientScoringServiceImpl implements IOrientScoringService {
         } else if (KIND_DISPUTE.equals(kind)) {
             found = mapper.selectDisputeByIdem(memberId, key);
         } else {
-            throw invalid("kind 只能是 SETTLE/APPEAL/DISPUTE");
+            throw invalid("kind 只能是 SYNC/SETTLE/APPEAL/DISPUTE");
         }
         if (found == null) return notFound;
         Map<String, Object> r = new LinkedHashMap<>();
@@ -690,6 +774,116 @@ public class OrientScoringServiceImpl implements IOrientScoringService {
         r.put("idempotencyKey", key);
         r.put("record", found);
         return r;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public OrientScoreRecovery submitRecovery(Long memberId, Long sessionId, String kind) {
+        requireEnabled();
+        if (memberId == null) throw new OrientScoringException(OrientScoringException.SESSION_NOT_FOUND, "对局不存在");
+        if (!Set.of(KIND_SYNC, KIND_SETTLE, KIND_APPEAL, KIND_DISPUTE).contains(kind == null ? "" : kind)) throw invalid("历史操作类型不合法");
+        TopicRouteSession session = lockOwned(memberId, sessionId);
+        requireActive(session);
+        OrientScoreRecovery existing = mapper.selectRecoveryForUpdate(sessionId, kind);
+        if (existing != null) return existing;
+        OrientScoreRecovery recovery = new OrientScoreRecovery();
+        recovery.setSessionId(sessionId); recovery.setMemberId(memberId); recovery.setKind(kind);
+        recovery.setStatus(0); recovery.setCreateTime(new Date());
+        if (mapper.insertRecovery(recovery) != 1) throw new IllegalStateException("人工核对登记失败");
+        return recovery;
+    }
+
+    @Override
+    public List<OrientScoreRecovery> listRecoveries(Integer status, int limit) {
+        return mapper.selectRecoveriesByStatus(status, Math.max(1, Math.min(limit, 200)));
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public OrientScoreRecovery reviewRecovery(Long id, Long referenceId, String note, String handledBy) {
+        requireEnabled();
+        String text = requireReason(note);
+        OrientScoreRecovery row = id == null ? null : mapper.selectRecoveryById(id);
+        if (row == null) throw new OrientScoringException(OrientScoringException.NOT_FOUND, "人工核对记录不存在");
+        TopicRouteSession session = lockOwned(null, row.getSessionId());
+        row = mapper.selectRecoveryForUpdate(session.getId(), row.getKind());
+        if (!Integer.valueOf(0).equals(row.getStatus())) throw new OrientScoringException(OrientScoringException.ALREADY_RESOLVED, "人工核对已记录");
+        // References must be actual same-owner/session facts; no arbitrary success or NOT_FOUND attestation.
+        if (referenceId != null) {
+            if (KIND_SETTLE.equals(row.getKind())) {
+                OrientScoreSettlement settlement = mapper.selectSettlementBySession(session.getId());
+                if (settlement == null || !referenceId.equals(settlement.getId())
+                        || !row.getMemberId().equals(settlement.getMemberId())) throw invalid("关联结算不属于本局本人");
+            } else if (KIND_APPEAL.equals(row.getKind()) || KIND_DISPUTE.equals(row.getKind())) {
+                OrientScoreAppeal record = KIND_APPEAL.equals(row.getKind()) ? mapper.selectAppealById(referenceId) : mapper.selectDisputeById(referenceId);
+                if (record == null || !session.getId().equals(record.getSessionId())
+                        || !row.getMemberId().equals(record.getMemberId())) throw invalid("关联申请不属于本局本人");
+            } else throw invalid("同步核对不接受不明流水作为原请求凭据");
+        }
+        if (!Boolean.TRUE.equals(verify(session.getId()).get("consistent"))) throw invalid("计分复算不一致，请先处理账本差异");
+        row.setReferenceId(referenceId); row.setResolutionNote(text);
+        row.setHandledBy(handledBy == null ? null : truncate(handledBy, 64)); row.setHandledAt(new Date());
+        row.setStatus(1);
+        if (mapper.reviewRecovery(row) != 1) throw new OrientScoringException(OrientScoringException.ALREADY_RESOLVED, "人工核对已记录");
+        return row;
+    }
+
+    @Override
+    public Map<String, Object> leaderboard(Long memberId, Long sessionId) {
+        requireEnabled();
+        if (memberId == null) throw new OrientScoringException(OrientScoringException.SESSION_NOT_FOUND, "对局不存在");
+        TopicRouteSession session = readOwned(memberId, sessionId);
+        requireActive(session);
+        requireLeaderboardAccess(memberId, session);
+        boolean route = com.chengyinhub.business.service.support.LeaderboardRankPolicy.isRouteRanked(
+                cmsTopicService.selectCmsTopicById(session.getTopicId()));
+        List<Map<String, Object>> rows = mapper.selectRankedBoard(session.getActivityId() == null ? 0L : session.getActivityId(),
+                session.getTopicId(), memberId, route, 50);
+        List<Map<String, Object>> list = new ArrayList<>();
+        Map<String, Object> me = null;
+        for (Map<String, Object> row : rows) {
+            Map<String, Object> item = new LinkedHashMap<>();
+            Object id = valueIgnoreCase(row, "memberId");
+            boolean mine = id instanceof Number n && n.longValue() == memberId;
+            item.put("rank", String.valueOf(valueIgnoreCase(row, "boardRank")));
+            item.put("scoreCenti", valueIgnoreCase(row, "scoreCenti"));
+            Object elapsed = valueIgnoreCase(row, "elapsedMs");
+            item.put("elapsedMs", elapsed == null ? null : elapsed.toString());
+            Object reached = valueIgnoreCase(row, "reachedEnding");
+            item.put("reachedEnding", Boolean.TRUE.equals(reached) || reached instanceof Number n && n.intValue() == 1);
+            item.put("mine", mine);
+            // Do not expose other players' session or member identifiers through this read model.
+            item.put("rowKey", String.valueOf(valueIgnoreCase(row, "displayRow")));
+            if (mine) me = item;
+            Object index = valueIgnoreCase(row, "displayRow");
+            if (index instanceof Number n && n.longValue() <= 50) list.add(item);
+        }
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("sessionId", sessionId);
+        result.put("mode", route ? "ROUTE" : "SCORE");
+        result.put("list", list);
+        result.put("me", me);
+        return result;
+    }
+
+    /** Keep the existing /api/play/leaderboard entitlement and visibility policy. Owning an old run is insufficient. */
+    private void requireLeaderboardAccess(Long memberId, TopicRouteSession session) {
+        boolean activity = session.getActivityId() != null && session.getActivityId() > 0;
+        if (activity) {
+            com.chengyinhub.business.domain.CmsActivity current = scoringActivities.selectCmsActivityById(session.getActivityId());
+            if (current == null || !session.getTopicId().equals(current.getTopicId())) throw invalid("活动与主题不匹配");
+        }
+        com.chengyinhub.business.domain.CmsRegistration probe = new com.chengyinhub.business.domain.CmsRegistration();
+        probe.setMemberId(memberId); probe.setOwnerType(activity ? 2L : 1L);
+        probe.setOwnerId(activity ? session.getActivityId() : session.getTopicId()); probe.setRegistrationStatus(2);
+        List<com.chengyinhub.business.domain.CmsRegistration> registrations = scoringRegistrations.selectCmsRegistrationList(probe);
+        Date now = new Date();
+        boolean admitted = registrations != null && registrations.stream().anyMatch(registration -> registration != null
+                && (activity || registration.getExpiresAt() == null || registration.getExpiresAt().after(now)));
+        if (!admitted) throw new OrientScoringException("ORIENT_FORBIDDEN", activity ? "请先报名并完成支付" : "请先购买有效自玩通行证");
+        if (activity && scoringGameSessions.isRouteLeaderboardHidden(session.getActivityId())) {
+            throw new OrientScoringException("ORIENT_FORBIDDEN", "主理人暂未开放本场排行榜");
+        }
     }
 
     // ---------------------------------------------------------------- 排行榜附加

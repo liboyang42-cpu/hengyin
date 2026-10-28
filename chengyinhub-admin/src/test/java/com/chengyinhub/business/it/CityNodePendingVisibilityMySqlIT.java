@@ -159,8 +159,8 @@ class CityNodePendingVisibilityMySqlIT {
                     + "(17,'在线待审投放',2,31.7,121.7,80,'在线待审内容','310000',1,0,1,801,801,901,1,'','',0),"
                     + "(18,'在线驳回投放',2,31.8,121.8,80,'在线驳回内容','310000',1,2,1,801,801,901,1,'','',0),"
                     + "(19,'在线已下线投放',2,31.9,121.9,80,'在线下线内容','310000',1,3,1,801,801,901,1,'','',0)");
-            statement.execute("ALTER TABLE roam_poi ADD address varchar(255), ADD gallery_json text, ADD photo_required int, ADD badge_code varchar(80)");
-            statement.execute("ALTER TABLE cms_member_template ADD photo_require_desc varchar(255)");
+            statement.execute("ALTER TABLE roam_poi ADD address varchar(255), ADD gallery_json text, ADD quotes_json text, ADD photo_credit text, ADD photo_required int, ADD badge_code varchar(80)");
+            statement.execute("ALTER TABLE cms_member_template ADD photo_require_desc varchar(255), ADD description varchar(255)");
             statement.execute("CREATE TABLE ums_comment (owner_type bigint, owner_id bigint, rating int, reply_id bigint, status int, del_flag int)");
         }
     }

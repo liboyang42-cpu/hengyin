@@ -16,12 +16,15 @@
       <xr-badge wx:if="{{rendererMounted && !unsupported}}" id="xr" class="b3__xr {{renderState === 'ready' ? '' : 'b3__xr--loading'}}" src="{{src}}"
                 reduced="{{reducedMotion}}" bind:unsupported="onUnsupported" bind:loaded="onLoaded" bind:xready="onXrReady" />
     </block>
+    <!-- 2026-10-28 pin=勋章墙的珐琅勋章:点一下转两圈,左右拖动;背面是拉丝金属 -->
+    <pin-spin wx:elif="{{style=='pin' && !unsupported}}" class="b3__xr {{renderState === 'ready' ? '' : 'b3__xr--loading'}}" glyph="{{glyph}}" track="{{rarity}}"
+              reduced="{{reducedMotion}}" bind:unsupported="onUnsupported" bind:loaded="onLoaded" />
     <!-- glow=勋章墙同一台波点引擎渲染单枚(用户裁决:不是 CSS 光圈,是那种波点) -->
     <canvas wx:elif="{{!unsupported}}" type="webgl" id="glowcv" class="b3__xr {{renderState === 'ready' ? '' : 'b3__xr--loading'}}"></canvas>
   </view>
   <view class="b3__name">{{name}}</view>
   <view class="b3__sub" wx:if="{{sub}}">{{sub}}</view>
   <view class="b3__hint" wx:if="{{motionReduced && renderState === 'ready'}}">已减少动态效果</view>
-  <view class="b3__hint" aria-live="polite">{{renderState === 'loading' ? (style === 'glow' ? '正在准备发光徽章…' : '正在准备 3D 徽章…') : (renderState === 'fallback' ? '静态预览' : (style === 'glow' ? '' : '拖动可旋转查看'))}}</view>
+  <view class="b3__hint" aria-live="polite">{{renderState === 'loading' ? (style === 'glow' ? '正在准备发光徽章…' : '正在准备 3D 徽章…') : (renderState === 'fallback' ? '静态预览' : (style === 'glow' ? '' : (style === 'pin' ? '点一下转一圈，左右拖动' : '拖动可旋转查看')))}}</view>
 </view>
 </view>

@@ -560,9 +560,13 @@ class CmsTopicPublishStateKeyGuardTest {
         RuntimeException unknown = assertThrows(RuntimeException.class, () -> service.publishDraft(TOPIC_ID));
         assertTrue(unknown.getMessage().contains("数值绑定类型无效"), unknown.getMessage());
         r5OutcomeDraft("counter.unregistered");
+        // 属性定义唯一来源是注册表（AuthorAttributeBindingTest#oldDraftsRemainEditableButCannotPublishUnconfirmedCopies）：
+        // 作者只能经确认过的 attributeBinding 启用数值，发布冻结时注册表里没有这个键就拒。
+        when(keyMapper.lockRegistryVersion(TOPIC_ID)).thenReturn(1L);
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        RuntimeException counter = assertThrows(RuntimeException.class, () -> service.publishDraft(TOPIC_ID));
-        assertTrue(counter.getMessage().contains("状态键未注册") && counter.getMessage().contains("counter.unregistered"), counter.getMessage());
+        RuntimeException counter = assertThrows(RuntimeException.class,
+                () -> service.publishDraftWithBinding(TOPIC_ID, 100L, 1L, "1"));
+        assertTrue(counter.getMessage().contains("尚未注册") && counter.getMessage().contains("counter.unregistered"), counter.getMessage());
         verify(topicMapper, never()).publishRouteSnapshot(anyLong(), nullable(String.class), any(Date.class));
     }
 
@@ -597,7 +601,9 @@ class CmsTopicPublishStateKeyGuardTest {
         if (target.startsWith("counter.")) {
             ObjectNode rules = (ObjectNode) json.readTree(topic.getJourneyRulesJson());
             rules.putArray("attributes").addObject().put("key", target).put("label", "数值")
-                    .put("initial", 2).put("min", 0).put("max", 12);
+                    .put("initial", 2).put("min", 0).put("max", 12).put("visible", true);
+            rules.putObject("attributeBinding").put("schemaVersion", 1).put("registryVersion", "1")
+                    .putArray("enabledKeys").add(target);
             topic.setJourneyRulesJson(rules.toString());
         }
         ObjectNode theme = json.createObjectNode().put("schemaVersion", 1);

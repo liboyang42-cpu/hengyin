@@ -11,8 +11,12 @@ const reducedMotionBehavior = require('../../../behaviors/reduced-motion.js');
 // 显式传入的 icon / title / sub 恒优先于 kind 默认值。
 // ⚠️ 这张表里不许出现 cta:默认 CTA 没有默认动作,点下去什么都不发生 = 假按钮。
 //   CTA 只能由页面显式传,并自己 bind:cta 接住。
+// 2026-10-24 owner(Figma ku2oaN9ag1XUMC9lKNnrcr node 2807:12251):空态插画由「空白纸」no_data.svg
+// 换成两层插画(empty_state_bg.svg 背景 + empty_state_figure.svg 人物)。EMPTY_ART 是组件内渲染两层的
+// 记号而非图片路径;页面要这张图就传 kind="empty" 或 icon="empty-state"。no_data.svg 只留给缺封面/缺图占位。
+const EMPTY_ART = 'empty-state';
 const KIND_DEFAULTS = {
-  empty:           { icon: '/images/no_data.svg',  glyph: '',        title: '暂无内容',       sub: '' },
+  empty:           { icon: EMPTY_ART,              glyph: '',        title: '暂无内容',       sub: '' },
   success:         { icon: '',                     glyph: 'check',   title: '已完成',         sub: '' },
   offline:         { icon: '',                     glyph: 'warning', title: '网络好像断开了', sub: '' },
   network:         { icon: '',                     glyph: 'warning', title: '网络没连上',     sub: '' },
@@ -58,6 +62,7 @@ Component({
   },
   data: {
     _icon: '',
+    _art: false,
     _glyph: '',
     _title: '暂无内容',
     _sub: '',
@@ -70,8 +75,10 @@ Component({
       const d = knownKind ? KIND_DEFAULTS[kind] : LEGACY_DEFAULT;
       const resolvedTitle = title || d.title;
       const resolvedSub = sub || d.sub;
+      const resolvedIcon = icon || d.icon;
       this.setData({
-        _icon: icon || d.icon,
+        _icon: resolvedIcon,
+        _art: resolvedIcon === EMPTY_ART,
         // 页面显式传位图时沿用既有优先级，不再同时叠一枚默认线性图标。
         _glyph: icon ? '' : d.glyph,
         _title: resolvedTitle,

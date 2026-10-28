@@ -20,6 +20,7 @@ const { captureFromQuery } = require('./utils/ticket-source.js');
 const { captureDoorScene } = require('./utils/game-door-entry.js');
 const roleGuard = require('./utils/roleGuard.js');
 const { safeUserMessage } = require('./utils/transport/safe-user-message.js');
+const requireLoginGuard = require('./utils/auth/require-login.js');
 App({
   // 开发版判定:只用于开发调试入口(如 debug_user_view、显式预览参数);不得用于伪造登录身份(F-W1-01)。
   isDevEnv: function () {
@@ -130,6 +131,13 @@ App({
       setTimeout(() => { if (!that._usageDeclined) that.openPrivacyAuthorizationPage(); }, 0);
       return Promise.resolve();
     }
+    // owner 2026-10-24:「没登录也能浏览,写库时才弹窗登录」。冷启动只恢复本机已缓存的会话
+    // (老用户照旧保持登录,ensureSession 命中缓存、不发 wx.login);没有缓存会话的访客保持游客,
+    // 不在打开时 wx.login → /api/login/code 静默建号。账号只在写入动作的登录弹窗里创建(utils/auth/require-login.js)。
+    if (!that.hasCachedSession()) {
+      that.loadFeatureFlags();
+      return Promise.resolve();
+    }
     return new Promise((resolve, reject) => {
       that.firstLogin(e).then(() => {
         that.loadFeatureFlags(); // M10 灰度开关(不阻断初始化)
@@ -231,6 +239,27 @@ App({
       // 不 reject:登录失败不阻断初始化(契约 #18/#19)。
       return r;
     });
+  },
+  // 本机是否已缓存一个会话(onLaunch restore 落地的 user_id + authorization)。
+  hasCachedSession: function () {
+    return !!(this.getUserID() && this.getAuthorization());
+  },
+  // 写前登录闸(owner 2026-10-24):游客写库前弹「登录后继续」(cy-modal),确认后走 firstLogin。
+  // requireLogin({ reason }) → Promise<boolean>;唯一实现在 utils/auth/require-login.js。
+  getLoginGuard: function () {
+    var that = this;
+    if (!this._loginGuard) this._loginGuard = requireLoginGuard.createRequireLogin({ getApp: function () { return that; } });
+    return this._loginGuard;
+  },
+  requireLogin: function (options) {
+    return this.getLoginGuard().requireLogin(options);
+  },
+  // 写入口同步用法:if (!app.ensureLoginFor('club', () => this.joinClub(e))) return;
+  // 已登录 → true,调用方照原样同步往下走;游客 → false,弹窗,登录成功后 resume() 恢复原动作恰好一次。
+  ensureLoginFor: function (reason, resume) {
+    if (requireLoginGuard.hasSession(this)) return true;
+    this.getLoginGuard().withLogin({ reason: reason }, resume);
+    return false;
   },
   // 旧开发版假会话的 token 标记。F-W1-01 已删除写入它的开发版假用户兜底;保留常量只用于
   // 识别并清除升级前残留在 Storage 里的假会话,以及页面侧拒绝用它发起写操作。
@@ -348,10 +377,14 @@ App({
         getAuthorization: function () { return that.getAuthorization(); },
         getUserID: function () { return that.getUserID(); },
         reLogin: function (cb) { that.reLogin(cb); },
+        // owner 2026-10-24:游客的写请求被 401 拦下时弹同一个登录窗,登录成功后重发一次;游客读请求不再静默建号。
+        promptLogin: function (param) { return that.requireLogin({ reason: param && param.loginReason }); },
         showToast: function (msg) { cyToast(msg); },
         hideToast: function () { that.hideToast(); },
         getErrorMessage: function (res, fallback) { return that.getRequestErrorMessage(res, fallback); },
-        shouldAutoToast: function (param, body) { return that.shouldAutoToastRequestError(param, body); }
+        shouldAutoToast: function (param, body) { return that.shouldAutoToastRequestError(param, body); },
+        // G-4(2026-10-27):玩家视角不请求商家工作台接口、不展示商家身份报错,页面不再各自打补丁。
+        isPlayerView: function () { return !roleGuard.isMerchantView(); }
       });
     }
     return this._requestClient;
@@ -399,7 +432,13 @@ App({
       this._usageConsent = createUsageConsent({wx: wx,
         openGate: function () { that._usageDeclined = false; that.openPrivacyAuthorizationPage(); },
         resolveNative: function (result) { that.resolvePrivacyAuthorization(result); },
-        login: function () { return that.firstLogin(); }, getUserID: function () { return that.getUserID(); },
+        // owner 2026-10-24:同意隐私协议不等于登录。已有会话(或正有一次写前登录在途)才走 firstLogin
+        // 补传同意留痕;游客只记本机选择,留痕在其首次登录成功后由 firstLogin → syncPending 补传。
+        login: function () {
+          return that.hasCachedSession() || that.getSessionManager().isLoggingIn()
+            ? that.firstLogin() : Promise.resolve({ ok: true, guest: true });
+        },
+        getUserID: function () { return that.getUserID(); },
         getAuthorization: function () { return that.getAuthorization(); },
         record: function (input) { return that.recordConsent(input); }
       });
@@ -555,7 +594,8 @@ App({
   // ⚠️ 别改回「调用方逐张开页」:emit 同步 → resolve 后同一 tick 就发下一次 navigateTo,
   //    而上一张的 navigateBack 还没落地 → 弹错页 / 静默丢图(2026-07-17 review 实证)。
   // resolve(null) = 用户取消整批;resolve(原数组) = 裁剪页拉不起来的兜底(绝不静默丢图)。
-  cropAll: function (paths, ratio) {
+  // shape:'circle' = 圆形取景框(M-08 Logo);导出仍是正方形,只是取景时看到的就是主页上的圆。
+  cropAll: function (paths, ratio, shape) {
     return new Promise(function (resolve) {
       var settled = false;
       var once = function (v) { if (!settled) { settled = true; resolve(v); } };
@@ -566,7 +606,7 @@ App({
         },
         // 临时路径可能有 9 条,塞 query 会超长 → 经 eventChannel 递
         success: function (res) {
-          res.eventChannel.emit('cropInit', { paths: paths, ratio: ratio || 'free' });
+          res.eventChannel.emit('cropInit', { paths: paths, ratio: ratio || 'free', shape: shape || '' });
         },
         // 页面栈满(10 层)等原因打不开 → 退回原图上传,别让整条流程断在这
         fail: function () { once(paths); },
@@ -638,7 +678,7 @@ App({
         var paths = pickImagePaths(res);
         if (!paths.length) { operation.finish(); return; }
         if (options.skipCrop) { doUpload(paths); return; }
-        that.cropAll(paths, ratio).then(function (out) {
+        that.cropAll(paths, ratio, options.cropShape).then(function (out) {
           if (operation.isAborted()) return;
           // null = 用户取消整批。给一次提示:选了 9 张裁到第 9 张才取消,
           // 无声返回会让人以为卡住了(旧代码单张时无声尚可,排队后是随张数放大的悬崖)

@@ -7,7 +7,7 @@
 
   <cy-empty class="if-fill cy-fade-in" wx:elif="{{missing}}" fill="{{true}}" size="lg" kind="missing-param" cta="返回" bind:cta="onMissingBack" />
 
-  <cy-error load-failure class="if-fill cy-fade-in" wx:elif="{{error}}" fill="{{true}}" size="lg" icon="/images/no_data.svg" title="玩法说明加载失败" sub="{{errorMsg}}" retry="重试" bind:retry="retryLoad" />
+  <cy-error load-failure class="if-fill cy-fade-in" wx:elif="{{error}}" fill="{{true}}" size="lg" icon="empty-state" title="玩法说明加载失败" sub="{{errorMsg}}" retry="重试" bind:retry="retryLoad" />
 
   <cy-empty class="if-fill cy-fade-in" wx:elif="{{empty}}" fill="{{true}}" size="lg" kind="empty" title="这篇玩法说明暂时没有内容" cta="返回" bind:cta="onBack" />
 

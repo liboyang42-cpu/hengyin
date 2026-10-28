@@ -123,11 +123,13 @@ test('C04 coupon: 空态有出路，导航文字动作与弹层 token 化', () =
   // class="fill-slot" 是让宿主节点本身成为 flex 项的钩子(组件内部的 fill 撑不开宿主),
   // 少了它整条 flex 链断在最后一环,空态不居中 —— 属于契约的一部分,一起钉住
   // CU-M-142:券的用途只在页标题副文案写一遍,空态不再重复同一句(也不许再长出 sub)
-  assert.match(wxml, /<cy-empty\s+wx:if="\{\{loadState === 'ready' && list\.length === 0\}\}"\s+kind="empty"\s+fill\s+size="lg"\s+class="fill-slot"\s+title="还没有优惠券"\s*\/>/)
+  // 2026-10-27 业主 M-07:空态补一行引导 sub(不重复券用途),其余形态不变
+  assert.match(wxml, /<cy-empty\s+wx:if="\{\{loadState === 'ready' && list\.length === 0\}\}"\s+kind="empty"\s+fill\s+size="lg"\s+class="fill-slot"\s+title="还没有优惠券"\s+sub="[^"]+"\s*\/>/)
   assert.match(wxml, /<cy-error\b[^>]*wx:elif="\{\{loadState === 'error'\}\}"[^>]*title="优惠券加载失败"[^>]*sub="\{\{errorMsg\}\}"[^>]*bind:retry="retryLoad"/)
   // "新建"从导航栏文字入口移到底部固定 cy-btn(见上一条注释),.coupon-page__action 随之作废并删除;
   // 底部按钮走 cy-footer-bar + cy-btn 组件默认命中区/配色,不需要页面私有规则再断言一遍
-  assert.match(wxml, /<cy-footer-bar wx:if="\{\{loadState === 'ready' && !tpShow\}\}">[\s\S]*<cy-btn variant="primary" bindtap="GoAdd">新建<\/cy-btn>[\s\S]*<\/cy-footer-bar>/)
+  // 2026-10-27 业主 M-07:主按钮文案改「发布优惠券」,加载中也在位,只在整页失败态让位给重试
+  assert.match(wxml, /<cy-footer-bar wx:if="\{\{loadState !== 'error' && !tpShow\}\}">[\s\S]*<cy-btn variant="primary" bindtap="GoAdd">发布优惠券<\/cy-btn>[\s\S]*<\/cy-footer-bar>/)
   assert.doesNotMatch(wxss, /\.coupon-page__action/)
   assert.match(wxml, /<cy-sheet show="\{\{tpShow\}\}"[^>]*bind:close="tpClose"/)
   assert.match(rule(wxss, '.david_tkb_li'), /border-radius:\s*var\(--cy-radius-lg\)/)

@@ -13,7 +13,9 @@
     "cy-danger-confirm": "/components/cy/danger-confirm/index",
     "cy-toast": "/components/cy/toast/index",
     "cy-loading-mask": "/components/cy/loading-mask/index",
-    "cy-modal-host": "/components/cy/modal-host/index"
+    "cy-modal-host": "/components/cy/modal-host/index",
+    "cy-event-attendance": "/components/cy/event-attendance/index",
+    "cy-privacy-gate": "/components/cy/privacy-gate/index"
   },
   "navigationStyle": "custom",
   "enablePullDownRefresh": true

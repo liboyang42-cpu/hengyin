@@ -8,7 +8,6 @@ const { applyTheme } = require('../../utils/theme.js');
 const policy = require('../../utils/identity/identity-policy.js');
 const indexFormat = require('../../utils/index/index-format.js');
 const { decorateFeedCards } = require('../../utils/index/feed-card.js');
-const { buildContinueExplore, buildContinueGame } = require('../../utils/index/continue-explore.js');
 const { buildHomeActionBanners, openHomeActionBanner } = require('../../utils/index/home-action-banner.js');
 const { readReducedMotion } = require('../../utils/motion-preference.js');
 const { openScene } = require('../../utils/scene-entry.js');
@@ -85,7 +84,6 @@ function normalizeMemberId(memberId) {
 function clearPrivateDisplay(page) {
   page.setData({
     userInfo: { avatar: '', nickname: '', point: '0' },
-    continueExplore: null,
     showPhoneModal: false,
   });
 }
@@ -243,7 +241,6 @@ Page({
     recommendedTopicList: [],
     nearbyActivityList: [],
     upcomingActivityList: [],
-    continueExplore: null,
     bottomTopicList: [],
     bottomActivityList: [],
     _navUp: false,  // 底部导航:首屏隐藏,向下滑动升起
@@ -364,6 +361,8 @@ Page({
         method: 'POST',
         data: { code },
         hideLoading: true,
+        // 2026-10-24 游客可浏览:扫门口码 = 开始游玩(按本人进度分流),游客 401 时由请求层弹「登录后继续」,登录后重发一次。
+        write: true, loginReason: 'play',
         success(res) {
           const path = pathForScanEntry(res && res.data);
           if ((res.code == 200 || res.code == '200') && path) {
@@ -377,8 +376,9 @@ Page({
           cyToast((res && res.msg) || '这张码无法打开');
           that.finishDoorSceneFallback();
         },
-        fail() {
-          cyToast('这张码无法打开');
+        fail(res, status) {
+          // 游客在登录弹窗里点了「暂不登录」:不报「码无法打开」,直接回到可浏览的首页。
+          if (!(Number(status) === 401 && !app.getUserID())) cyToast('这张码无法打开');
           that.finishDoorSceneFallback();
         },
       });
@@ -406,6 +406,9 @@ Page({
   retryPendingInviter() {
     const inviterId = this._pendingInviter;
     if (!inviterId || this._unloaded) return;
+    // 2026-10-24 游客可浏览:打开不再建号,被邀请的游客要等首次登录(写前登录弹窗)后才有身份 ——
+    // 没身份时留着 pending,回到首页 onShow 再补发,别在游客态把邀请关系消费掉。
+    if (!app.getUserID()) return;
     this._pendingInviter = '';
     this.handleInviter(inviterId);
   },
@@ -506,6 +509,8 @@ Page({
 
     const that = this;
 
+    // 2026-10-24:游客在别处登录后回到首页,补发一次待发的邀请关系(A-01)。
+    if (this._pendingInviter) this.retryPendingInviter();
     // 热启动扫小程序码只在 App.onShow 收下 pending。这里消费一次就清掉。
     if (this.consumeDoorScene()) return;
     if (this._doorSceneInFlight) return;
@@ -553,7 +558,6 @@ Page({
       // 刷新用户数据（可选）
       if (that.data.isAppReady) {
         that.getUserData();
-        that.loadContinueExplore();
         if (resumeHomeLocation && (that._locationEpoch || 0) === locationEpochAtShow) that.getHomeCityLocation();
       }
 
@@ -686,7 +690,6 @@ Page({
 
 
     // 固定行动 Banner 不再请求后台随机图。
-    that.loadContinueExplore();
 
 
     // 推荐主题只取人工推荐位，避免与底部全量主题重复。
@@ -802,15 +805,6 @@ Page({
       recoCards: cards,
       recoCurrent: current,
       recoCardStyles: buildRecoCardStyles(cards.length, current, -1, 0),
-    });
-  },
-
-  showRecommendationSource() {
-    modal.show({
-      title: '为什么看到这些主题',
-      content: '这里展示编辑精选，不是根据个人兴趣生成的推荐。是否可以参加及参加条件，请以主题详情的当前信息为准。',
-      confirmText: '知道了',
-      showCancel: false,
     });
   },
 
@@ -1047,58 +1041,6 @@ Page({
     const req = this._listReq && this._listReq[listName];
     if (!req) return;
     this.getListData(listName, req.url, req.params, req.processor);
-  },
-
-  // 首页第二屏只显示已报名且仍在进行中的真实记录；点击回票夹的对应卡片，
-  // 继续沿用既有报名/游玩权限判断，避免首页绕过业务链路。
-  loadContinueExplore: function () {
-    const that = this;
-    const memberId = normalizeMemberId(app.getUserID());
-    const requestEpoch = capturePrivateRequest(that, memberId);
-    if (!memberId) {
-      return;
-    }
-    // 第二轮拍板 22:进行中的游戏会话优先占这张卡(换手机登录也能从首页继续),没有才显示报名旅程。
-    let journey = null;
-    let game = null;
-    const apply = function () { that.setData({ continueExplore: game || journey }); };
-    app.sendRequest({
-      hideLoading: true,
-      url: '/api/registration/my-joined',
-      method: 'POST',
-      data: {},
-      success: function (res) {
-        if (!isCurrentPrivateRequest(that, memberId, requestEpoch)) return;
-        journey = res && (res.code == 200 || res.code == '200') ? buildContinueExplore(res.data) : null;
-        apply();
-      },
-      fail: function () {
-        if (!isCurrentPrivateRequest(that, memberId, requestEpoch)) return;
-        journey = null;
-        apply();
-      }
-    });
-    app.sendRequest({
-      hideLoading: true,
-      url: '/api/play/run-session/list',
-      method: 'GET',
-      data: {},
-      success: function (res) {
-        if (!isCurrentPrivateRequest(that, memberId, requestEpoch)) return;
-        game = res && (res.code == 200 || res.code == '200') ? buildContinueGame(res.data) : null;
-        apply();
-      },
-      fail: function () {
-        if (!isCurrentPrivateRequest(that, memberId, requestEpoch)) return;
-        game = null;
-        apply();
-      }
-    });
-  },
-
-  goContinueExplore: function () {
-    const card = this.data.continueExplore;
-    if (card && card.focusPath) wx.navigateTo({ url: card.focusPath });
   },
 
   getListData: function (listName, url, params, dataProcessor = null) {

@@ -58,15 +58,16 @@ test('真实请求封装的俱乐部首登、HTTP403及换号401保持当前身�
   })
   h.app.sendRequest = o => client.send(o); h.app.globalData.user_id = ''; h.vm.onLoad({ clubId: 21 })
   h.requests[0].success({ statusCode: 401, data: { code: 401 } })
-  h.requests[1].success({ statusCode: 200, data: contextSummary('¥60.00') })
-  assert.equal(h.requests.length, 3); assert.equal(h.vm.data.summary, null)
-  h.requests[2].success({ statusCode: 200, data: contextSummary('¥20.00') })
+  // 2026-10-24 owner 拍板「游客可浏览，写入时弹窗登录」:游客读私有结算 401 不再静默首登建号。
+  assert.equal(logins, 0); assert.equal(h.requests.length, 1); assert.equal(h.vm.data.summary, null)
+  h.app.globalData.user_id = 990001; h.vm.loadSummary()
+  h.requests[1].success({ statusCode: 200, data: contextSummary('¥20.00') })
   assert.equal(h.vm.data.summary.settledAmountText, '¥20.00')
-  h.vm.loadSummary(); h.requests[3].success({ statusCode: 403, data: { msg: '无权限' } })
+  h.vm.loadSummary(); h.requests[2].success({ statusCode: 403, data: { msg: '无权限' } })
   assert.equal(h.vm.data.summary, null); assert.equal(h.vm.data.withdrawState, 'unknown')
   h.vm.loadSummary(); h.app.globalData.user_id = 990002
-  h.requests[4].success({ statusCode: 401, data: { code: 401 } })
-  assert.equal(logins, 1); assert.equal(h.requests.length, 5); assert.equal(h.vm.data.summary, null)
+  h.requests[3].success({ statusCode: 401, data: { code: 401 } })
+  assert.equal(logins, 0); assert.equal(h.requests.length, 4); assert.equal(h.vm.data.summary, null)
 })
 
 test('俱乐部换号或切俱乐部立即清除旧金额与余额，旧回调不改新结果或停止新下拉', () => {

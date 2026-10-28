@@ -100,44 +100,46 @@ class ApiPlayRouteConflictHttpContractTest {
         runtimeService = mock(ITopicRouteRuntimeService.class);
 
         ApiPlayProgressController controller = new TestController();
-        ReflectionTestUtils.setField(controller, "playerNodeProgressService", progressService);
-        ReflectionTestUtils.setField(controller, "cmsTopicNodeService", nodeService);
-        ReflectionTestUtils.setField(controller, "cmsTopicService", cmsTopicService);
-        ReflectionTestUtils.setField(controller, "cmsActivityService", activityService);
-        ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrationService);
-        ReflectionTestUtils.setField(controller, "perkLedgerService", mock(IPerkLedgerService.class));
-        ReflectionTestUtils.setField(controller, "shopDayProofService", mock(IShopDayProofService.class));
-        ReflectionTestUtils.setField(controller, "omsTicketService", mock(IOmsTicketService.class));
-        ReflectionTestUtils.setField(controller, "pointsAwardService", pointsAwardService);
-        ReflectionTestUtils.setField(controller, "playerProgressionService", playerProgressionService);
-        ReflectionTestUtils.setField(controller, "growthService", growthService);
-        ReflectionTestUtils.setField(controller, "xpBudgetService", xpBudgetService);
-        ReflectionTestUtils.setField(controller, "rewardDropService", rewardDropService);
-        ReflectionTestUtils.setField(controller, "playerBadgeMapper", mock(PlayerBadgeMapper.class));
-        ReflectionTestUtils.setField(controller, "playAttemptLogMapper", mock(PlayAttemptLogMapper.class));
-        ReflectionTestUtils.setField(controller, "memberCollectibleMapper", mock(MemberCollectibleMapper.class));
-        ReflectionTestUtils.setField(controller, "smsCouponHistoryService", smsCouponHistoryService);
-        ReflectionTestUtils.setField(controller, "topicCompletionCouponRewardService",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService", progressService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicNodeService", nodeService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicService", cmsTopicService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsActivityService", activityService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsRegistrationService", registrationService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "perkLedgerService", mock(IPerkLedgerService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "shopDayProofService", mock(IShopDayProofService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "omsTicketService", mock(IOmsTicketService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "pointsAwardService", pointsAwardService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerProgressionService", playerProgressionService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "growthService", growthService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "xpBudgetService", xpBudgetService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "rewardDropService", rewardDropService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerBadgeMapper", mock(PlayerBadgeMapper.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playAttemptLogMapper", mock(PlayAttemptLogMapper.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "memberCollectibleMapper", mock(MemberCollectibleMapper.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "smsCouponHistoryService", smsCouponHistoryService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "topicCompletionCouponRewardService",
                 mock(ITopicCompletionCouponRewardService.class));
-        ReflectionTestUtils.setField(controller, "cmsMemberTemplateService", mock(ICmsMemberTemplateService.class));
-        ReflectionTestUtils.setField(controller, "officialEventV2Service", mock(IOfficialEventV2Service.class));
-        ReflectionTestUtils.setField(controller, "topicCompletionAwardService",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsMemberTemplateService", mock(ICmsMemberTemplateService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "officialEventV2Service", mock(IOfficialEventV2Service.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "topicCompletionAwardService",
                 mock(ITopicCompletionAwardService.class));
-        ReflectionTestUtils.setField(controller, "clubLeadMapper", mock(ClubLeadMapper.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "clubLeadMapper", mock(ClubLeadMapper.class));
         // 承接方现场层:没有中标商家时返回空对象,取值全部回落主办方模板 —— 用真实现而不是 mock。
-        ReflectionTestUtils.setField(controller, "nodeMerchantOverrideService",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "nodeMerchantOverrideService",
                 new NodeMerchantOverrideServiceImpl(mock(
                         com.chengyinhub.business.service.ICmsRegistrationMerchantService.class)));
-        ReflectionTestUtils.setField(controller, "topicRouteRuntimeService", runtimeService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "topicRouteRuntimeService", runtimeService);
         // 真实协调器:验证冲突 code 不被协调器吞掉,而是一路传到全局异常处理器。
-        ReflectionTestUtils.setField(controller, "topicRouteCompletionCoordinator",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "topicRouteCompletionCoordinator",
                 new TopicRouteCompletionCoordinator(runtimeService));
 
         when(nodeService.selectCmsTopicNodeList(any())).thenReturn(Collections.singletonList(nodeEntity()));
+        when(nodeService.selectCmsTopicNodeById(NODE)).thenReturn(nodeEntity());
         when(cmsTopicService.selectCmsTopicById(TOPIC)).thenReturn(linearTopic());
         when(activityService.selectCmsActivityById(ACTIVITY)).thenReturn(activity());
-        when(registrationService.selectCmsRegistrationList(any()))
-                .thenReturn(Collections.singletonList(new CmsRegistration()));
+        CmsRegistration ticket = new CmsRegistration(); ticket.setId(901L); ticket.setMemberId(MEMBER);
+        ticket.setOwnerType(2L); ticket.setOwnerId(ACTIVITY); ticket.setRegistrationStatus(2);
+        when(registrationService.selectCmsRegistrationList(any())).thenReturn(Collections.singletonList(ticket));
         when(progressService.insertPlayerNodeProgress(any())).thenAnswer(inv -> {
             PlayerNodeProgress progress = inv.getArgument(0);
             progress.setId(701L);
@@ -155,17 +157,21 @@ class ApiPlayRouteConflictHttpContractTest {
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
         CurrentPlayControllerFixtures.install(controller);
+        BasicPlayCommandFixtures.scope(controller, TOPIC);
+        BasicPlayCommandFixtures.routeVersion(controller, ACTIVITY, TOPIC, 0);
     }
 
     @Test
     void routeVersionConflictIsHttp200WithBodyCode409() throws Exception {
-        when(runtimeService.advance(anyLong(), anyLong(), anyLong(), anyInt(), anyString(), anyString(),
+        when(runtimeService.advanceOriginal(anyLong(), anyLong(), anyLong(), eq(99L), anyInt(), anyString(), anyString(),
                 any(NodeOutcome.class)))
                 .thenThrow(new ServiceException("路线状态已更新，请刷新后重试", HttpStatus.CONFLICT));
 
         mockMvc.perform(post("/api/play/checkin")
                         .param("activityId", String.valueOf(ACTIVITY))
                         .param("code", "CHECKIN")
+                        .param("nodeId", String.valueOf(NODE))
+                        .param("routeSessionId", "99")
                         .param("routeActionId", "client-action")
                         .param("expectedRouteVersion", "0"))
                 .andExpect(status().isOk())
@@ -180,13 +186,15 @@ class ApiPlayRouteConflictHttpContractTest {
         current.setVersion(4);
         Map<String, Object> data = new LinkedHashMap<String, Object>();
         data.put("routeState", current);
-        when(runtimeService.advance(anyLong(), anyLong(), anyLong(), anyInt(), anyString(), anyString(),
+        when(runtimeService.advanceOriginal(anyLong(), anyLong(), anyLong(), eq(99L), anyInt(), anyString(), anyString(),
                 any(NodeOutcome.class)))
                 .thenThrow(new ServiceException("路线状态已更新，请刷新后重试", HttpStatus.CONFLICT).setData(data));
 
         mockMvc.perform(post("/api/play/checkin")
                         .param("activityId", String.valueOf(ACTIVITY))
                         .param("code", "CHECKIN")
+                        .param("nodeId", String.valueOf(NODE))
+                        .param("routeSessionId", "99")
                         .param("routeActionId", "client-action")
                         .param("expectedRouteVersion", "0"))
                 .andExpect(status().isOk())
@@ -196,13 +204,15 @@ class ApiPlayRouteConflictHttpContractTest {
 
     @Test
     void nonConflictCompletionErrorStaysHttp200Without409() throws Exception {
-        when(runtimeService.advance(anyLong(), anyLong(), anyLong(), anyInt(), anyString(), anyString(),
+        when(runtimeService.advanceOriginal(anyLong(), anyLong(), anyLong(), eq(99L), anyInt(), anyString(), anyString(),
                 any(NodeOutcome.class)))
                 .thenThrow(new IllegalStateException("节点当前不可用"));
 
         mockMvc.perform(post("/api/play/checkin")
                         .param("activityId", String.valueOf(ACTIVITY))
                         .param("code", "CHECKIN")
+                        .param("nodeId", String.valueOf(NODE))
+                        .param("routeSessionId", "99")
                         .param("routeActionId", "client-action")
                         .param("expectedRouteVersion", "0"))
                 .andExpect(status().isOk())
@@ -242,7 +252,11 @@ class ApiPlayRouteConflictHttpContractTest {
         when(runtimeService.canPlay(anyLong(), anyLong(), anyLong(), anyLong(), any()))
                 .thenThrow(new IllegalStateException("本站尚未开放或已暂停，请联系带队主理人"));
         mockMvc.perform(post("/api/play/checkin")
-                        .param("activityId", String.valueOf(ACTIVITY)).param("code", "CHECKIN"))
+                        .param("activityId", String.valueOf(ACTIVITY)).param("code", "CHECKIN")
+                        .param("nodeId", String.valueOf(NODE))
+                        .param("routeSessionId", "99")
+                        .param("routeActionId", "paused-route-action")
+                        .param("expectedRouteVersion", "0"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(500))
                 .andExpect(jsonPath("$.msg").value("本站尚未开放或已暂停，请联系带队主理人"));

@@ -63,7 +63,7 @@ class AuditCommunityMediaDetailTest {
     @Test void listKeepsPageTotalAndOriginalObjectsWhileSanitizingMediaFields() {
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(new MockHttpServletRequest()));
         Page<AuditTask> page = new Page<>(2, 10); page.setTotal(77); page.add(task);
-        when(audits.selectAuditTaskList(any())).thenReturn(page);
+        when(audits.selectWorkbenchQueueWithGuardScope(any(), eq(List.of()))).thenReturn(page);
         com.chengyinhub.common.core.page.TableDataInfo result = controller.list(new AuditTask());
         assertEquals(77L, result.getTotal());
         AuditTask projected = (AuditTask) result.getRows().iterator().next();
@@ -77,7 +77,7 @@ class AuditCommunityMediaDetailTest {
         AuditTask other = new AuditTask(); other.setBizType(AuditTask.BIZ_TOPIC);
         other.setSnapshotJson("unrelated snapshot");
         List<AuditTask> immutable = Collections.unmodifiableList(Arrays.asList(task, other));
-        when(audits.selectAuditTaskList(any())).thenReturn(immutable);
+        when(audits.selectWorkbenchQueueWithGuardScope(any(), eq(List.of()))).thenReturn(immutable);
         com.chengyinhub.common.core.page.TableDataInfo result = controller.list(new AuditTask());
         assertEquals(2L, result.getTotal());
         assertNotSame(immutable, result.getRows());

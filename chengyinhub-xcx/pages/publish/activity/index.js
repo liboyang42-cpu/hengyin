@@ -507,6 +507,7 @@ Page({
 
   // 提交表单
   submitForm() {
+    if (app.ensureLoginFor && !app.ensureLoginFor('publish', () => this.submitForm())) return; // 2026-10-24 游客写前登录
     // 防重复发布:发布键收编 cy-btn 后视觉 disabled 不拦点击,提交中须早退(原靠原生 <button disabled> 拦)
     if (this.data.submitting) return;
     if (!this.validateForm()) {

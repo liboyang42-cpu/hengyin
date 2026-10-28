@@ -1,5 +1,8 @@
 package com.chengyinhub.business.service;
 
+import java.util.List;
+import java.util.Map;
+
 /**
  * 服务端地理编码，避免把第三方地图密钥下发到小程序。
  */
@@ -18,4 +21,11 @@ public interface IMapGeocodeService {
      * @return {经度, 纬度};无法可靠定位时返回 null
      */
     double[] suggestCoords(String address, String region);
+
+    /**
+     * 关键词搜地点(漫游地图顶部搜索框):按当前位置就近排序。
+     * 每条只给 name / address / lat / lng / distance(米),不透传供应商的其它字段。
+     * 供应商不可用或没有结果时返回空列表,调用方按「这附近没有搜到」处理。
+     */
+    List<Map<String, Object>> searchPlaces(String keyword, double longitude, double latitude);
 }
