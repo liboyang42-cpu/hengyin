@@ -2199,4 +2199,72 @@ class CombinedBudgetControls(unittest.TestCase):
         self.assertNotIn('PRIVATE_LOG',json.dumps(report));self.assertNotIn('PRIVATE_LOG',json.dumps(report['compileFailure']))
 
 
+    def test_verified_execution_reuses_compiler_outputs_without_skipping_surefire_or_preparation(self):
+        actual=B.fixed_maven_command();warm=B.fixed_cache_command()[1]
+        flag='-Dcombined.execution.precompiled=true'
+        self.assertEqual(actual.count(flag),1)
+        self.assertNotIn('combined.execution.precompiled',warm)
+        self.assertIn('-P'+B.TEST_PROFILE,actual);self.assertIn('-am',actual);self.assertIn('test',actual)
+        self.assertIn('-Dtest='+B.CLASS,actual);self.assertIn('-DforkCount=1',actual)
+        for forbidden in ('-DskipTests','-DskipTests=true','-Dmaven.test.skip=true','-Dmaven.main.skip=true',
+                          'surefire:test','org.apache.maven.plugins:maven-surefire-plugin:3.5.6:test'):
+            self.assertNotIn(forbidden,actual)
+        self.assertIn("'package' '-DskipTests'",warm)
+        self.assertIn('ONLINE_PROVIDER_RUNTIME',warm);self.assertIn('OFFLINE_PROVIDER_RUNTIME',warm)
+        self.assertIn('ONLINE_CONFIGURATION_UNITS',warm);self.assertIn('OFFLINE_TEST_PREFLIGHT',warm)
+
+    def test_reuse_property_is_compiler_execution_local_with_original_lifecycle_and_admin_inputs(self):
+        import xml.etree.ElementTree as ET
+        ns={'m':'http://maven.apache.org/POM/4.0.0'}
+        root=ET.parse(B.ROOT/'pom.xml').getroot()
+        profiles=[p for p in root.findall('m:profiles/m:profile',ns) if p.findtext('m:id',namespaces=ns)==B.TEST_PROFILE]
+        self.assertEqual(len(profiles),1);profile=profiles[0]
+        self.assertEqual(profile.findtext('m:properties/m:combined.execution.precompiled',namespaces=ns),'false')
+        plugins=profile.findall('m:build/m:plugins/m:plugin',ns);self.assertEqual(len(plugins),1)
+        self.assertEqual(plugins[0].findtext('m:artifactId',namespaces=ns),'maven-compiler-plugin')
+        executions=plugins[0].findall('m:executions/m:execution',ns)
+        self.assertEqual([e.findtext('m:id',namespaces=ns) for e in executions],['default-compile','default-testCompile'])
+        for execution,tag in zip(executions,('skipMain','skip')):
+            self.assertIsNone(execution.find('m:phase',ns));self.assertIsNone(execution.find('m:goals',ns))
+            configuration=execution.find('m:configuration',ns)
+            self.assertEqual([c.tag.rsplit('}',1)[-1] for c in configuration],[tag])
+            self.assertEqual(configuration.findtext('m:'+tag,namespaces=ns),'${combined.execution.precompiled}')
+        self.assertEqual([c.tag.rsplit('}',1)[-1] for c in profile.find('m:properties',ns)],['combined.execution.precompiled'])
+        admin=ET.parse(B.ROOT/'chengyinhub-admin/pom.xml').getroot()
+        admin_profiles=[p for p in admin.findall('m:profiles/m:profile',ns) if p.findtext('m:id',namespaces=ns)==B.TEST_PROFILE]
+        self.assertEqual(len(admin_profiles),1)
+        configuration=admin_profiles[0].find('m:build/m:plugins/m:plugin/m:executions/m:execution/m:configuration',ns)
+        self.assertEqual(configuration.findtext('m:implicit',namespaces=ns),'none')
+        self.assertEqual([e.text for e in configuration.findall('m:testIncludes/m:testInclude',ns)],list(B.TEST_SOURCES))
+
+    def test_reused_execution_requires_verified_cache_and_full_source_before_any_app_creation(self):
+        path=Path('/tmp/cy-http-budget.abcdefgh')
+        for stage in ('cache','source'):
+            with self.subTest(stage=stage):
+                state={'cache':'/existing/repository','cacheProof':{'fixed':'proof'}}
+                with patch.object(B,'backing_mysql'),patch.object(B,'verified_cache',
+                        side_effect=ValueError('OFFLINE_CACHE_PROOF_CHANGED') if stage=='cache' else None,
+                        return_value=state['cacheProof']),patch.object(B,'source_manifest',
+                        side_effect=ValueError('SOURCE_MANIFEST_REQUIRED')),patch.object(B,'create_slot') as create:
+                    with self.assertRaisesRegex(ValueError,'OFFLINE_CACHE_PROOF_CHANGED' if stage=='cache' else 'SOURCE_MANIFEST_REQUIRED'):
+                        B.run_owned_app(path,state)
+                    create.assert_not_called()
+        state={'cache':'/existing/repository','jdkEnvironment':{'PATH':'/trusted-image'}}
+        obj={'HostConfig':{'ReadonlyRootfs':True},'Config':{'User':str(os.getuid())+':'+str(os.getgid()),
+             'Entrypoint':['/bin/bash'],'Cmd':B.fixed_maven_command()},'Mounts':[]}
+        rows=[(str(B.ROOT),str(B.ROOT),False),('/existing/repository','/cache/repository',False),
+              (str(path/'launch'),'/budget',False),
+              (str(B.ROOT/'chengyinhub-admin/target/controlled-content-security'),str(B.ROOT/'chengyinhub-admin/target/controlled-content-security'),False)]
+        rows += [(str(B.ROOT/m/'target'),str(B.ROOT/m/'target'),True) for m in B.MODULES]
+        obj['Mounts']=[{'Source':source,'Destination':target,'RW':rw,'Type':'bind'} for source,target,rw in rows]
+        obj['Config']['Env']=[k+'='+v for k,v in {**state['jdkEnvironment'],**B.child_environment(self.env())}.items()]
+        with patch.dict(os.environ,self.env(),clear=True):
+            B.validate_app_inputs(obj,path,state)
+            for replacement in ([],['-Dcombined.execution.precompiled=false'],['-Dcombined.execution.precompiled=true']*2):
+                wrong=copy.deepcopy(obj);args=wrong['Config']['Cmd'];at=args.index('-Dcombined.execution.precompiled=true')
+                args[at:at+1]=replacement
+                with self.assertRaisesRegex(ValueError,'FIXED_OFFLINE_MAVEN_COMMAND_CHANGED'):
+                    B.validate_app_inputs(wrong,path,state)
+
+
 if __name__=='__main__':unittest.main()

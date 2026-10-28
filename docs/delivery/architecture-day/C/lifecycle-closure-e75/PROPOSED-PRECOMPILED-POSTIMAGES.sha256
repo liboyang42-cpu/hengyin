@@ -1,0 +1,3 @@
+bf03b770f3653dafde776dbde43d70c7f4ca47c09cdc912bf3238e76f1d1d2a3  pom.xml
+a50336ac0638215731114c938553164f1388fe89056fc0e093892abdc89d3f3d  ci/combined_http_budget.py
+7acb1e91343150ae5c0239fed4536400a2350ff87c35ce81f04ec952ff986c13  ci/test_combined_http_budget.py

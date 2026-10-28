@@ -47,6 +47,11 @@ class CrossDomainCombinedLoadMySqlIT {
 
     public static class Initializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
         @Override public void initialize(ConfigurableApplicationContext application) {
+            try {
+                requirePreparedTestClasspath(P0AcceptanceSchema.repoRoot().toRealPath(), System.getProperty("surefire.test.class.path"));
+            } catch (IOException failure) {
+                throw new IllegalStateException("PREPARED_TEST_CLASSPATH_REQUIRED", failure);
+            }
             new GenericGameplayHttpE2eIT.LocalInitializer().initialize(application);
             configureBoundedPool(application);
             TestPropertySourceUtils.addInlinedPropertiesToEnvironment(application,
@@ -62,6 +67,25 @@ class CrossDomainCombinedLoadMySqlIT {
                     "spring.datasource.druid.initialSize=0", "spring.datasource.druid.minIdle=0",
                     "spring.datasource.druid.maxActive=3", "spring.datasource.druid.maxWait=5000",
                     "spring.datasource.druid.socketTimeout=5000");
+        }
+    }
+
+    /** Compare original bytes only; the existing pinned codec/owner validates their entries and source binding. */
+    static void requirePreparedTestClasspath(Path root, String actual) throws IOException {
+        assertNotNull(actual); byte[] bytes = actual.getBytes(StandardCharsets.UTF_8);
+        assertTrue(bytes.length > 0 && bytes.length < 1024 * 1024);
+        assertTrue(root.isAbsolute() && root.equals(root.toRealPath()));
+        Path directory = root.resolve("chengyinhub-admin/target/provider-runtime");
+        assertEquals(directory, directory.toRealPath());
+        assertEquals(java.nio.file.attribute.PosixFilePermissions.fromString("rwx------"), Files.getPosixFilePermissions(directory));
+        assertEquals(Files.getOwner(root), Files.getOwner(directory));
+        for (String phase : List.of("online", "offline")) {
+            Path file = directory.resolve(phase + ".classpath");
+            assertTrue(Files.isRegularFile(file) && !Files.isSymbolicLink(file) && file.equals(file.toRealPath()));
+            assertTrue(Files.size(file) > 0 && Files.size(file) < 1024 * 1024);
+            assertEquals(java.nio.file.attribute.PosixFilePermissions.fromString("rw-------"), Files.getPosixFilePermissions(file));
+            assertEquals(Files.getOwner(root), Files.getOwner(file));
+            assertTrue(Arrays.equals(bytes, Files.readAllBytes(file)), "Actual Surefire classpath must retain both original probe byte sequences");
         }
     }
 

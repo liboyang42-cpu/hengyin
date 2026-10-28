@@ -393,4 +393,35 @@
         </pluginRepository>
     </pluginRepositories>
 
+    <profiles>
+        <!-- Fixed controlled-combination execution only. Preparation leaves this false. -->
+        <profile>
+            <id>combined-http-fixture-closure</id>
+            <properties>
+                <combined.execution.precompiled>false</combined.execution.precompiled>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>default-compile</id>
+                                <configuration>
+                                    <skipMain>${combined.execution.precompiled}</skipMain>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>default-testCompile</id>
+                                <configuration>
+                                    <skip>${combined.execution.precompiled}</skip>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

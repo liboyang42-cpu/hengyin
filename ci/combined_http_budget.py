@@ -1905,6 +1905,7 @@ def fixed_maven_command():
             'for i in {1..1200}; do [ -f /budget/stop ] && break; sleep .1; done; exit "$status"','--',
             '-o','-q','--settings','/budget/settings.xml','--global-settings','/budget/settings.xml',
             '-Dmaven.repo.local=/cache/repository','-P'+TEST_PROFILE,'-pl','chengyinhub-admin','-am','test',
+            '-Dcombined.execution.precompiled=true',
             '-DargLine='+SUREFIRE_FORK_ARGUMENTS,
             '-Dtest='+CLASS,'-DforkCount=1','-DreuseForks=true','-DfailIfNoTests=false','-Dsurefire.failIfNoSpecifiedTests=false']
 

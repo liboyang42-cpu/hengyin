@@ -765,6 +765,22 @@ class CombinedContextConfigurationTest {
         assertArrayEquals(bytes, Files.readAllBytes(output.resolve("online.classpath")));
         assertArrayEquals(bytes, Files.readAllBytes(output.resolve("offline.classpath")));
         try (var files = Files.list(output)) { assertEquals(2L, files.count(), "No invalid capture may create another output"); }
+
+        CrossDomainCombinedLoadMySqlIT.requirePreparedTestClasspath(root, cp);
+        assertThrows(AssertionError.class, () -> CrossDomainCombinedLoadMySqlIT.requirePreparedTestClasspath(root, null));
+        assertThrows(AssertionError.class, () -> CrossDomainCombinedLoadMySqlIT.requirePreparedTestClasspath(root, entries));
+        assertThrows(AssertionError.class, () -> CrossDomainCombinedLoadMySqlIT.requirePreparedTestClasspath(root, cp + separator));
+        Files.writeString(output.resolve("offline.classpath"), "different-original-classpath");
+        assertThrows(AssertionError.class, () -> CrossDomainCombinedLoadMySqlIT.requirePreparedTestClasspath(root, cp));
+        Files.write(output.resolve("offline.classpath"), bytes);
+        Files.setPosixFilePermissions(output.resolve("offline.classpath"), PosixFilePermissions.fromString("rw-r--r--"));
+        assertThrows(AssertionError.class, () -> CrossDomainCombinedLoadMySqlIT.requirePreparedTestClasspath(root, cp));
+        Files.setPosixFilePermissions(output.resolve("offline.classpath"), PosixFilePermissions.fromString("rw-------"));
+        Files.delete(output.resolve("offline.classpath"));
+        assertThrows(AssertionError.class, () -> CrossDomainCombinedLoadMySqlIT.requirePreparedTestClasspath(root, cp));
+        Files.createFile(output.resolve("offline.classpath"), PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-------")));
+        Files.write(output.resolve("offline.classpath"), bytes);
+        CrossDomainCombinedLoadMySqlIT.requirePreparedTestClasspath(root, cp);
     }
 
     private Path copiedPreparedSecurity(String label) throws Exception {

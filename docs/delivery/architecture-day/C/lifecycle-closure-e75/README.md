@@ -12,7 +12,7 @@ OOM 探索器。被杀 PID、精确分配、必要进程同时 live/committed �
 | 独立 SQL fixture | 保持原独立 schema/DataSource/事务/全部 13 XML，仅以 XML 真正用到的 10 个短 alias 替代再次扫描整个 domain 包。FQ 类型、内建 alias、所有 statement/真实 mapper 与 SQL 均保留；完整父 Spring 工厂不改。 |
 | 双 scheduler child | 只提供一份 root-owned review.patch：原 SpringUtils 公共 BeanFactoryPostProcessor 入口替代静态字段测试辅助；两原 private 协调器字段用 JDK Field 写同值。真实 DefaultListableBeanFactory/alias、Druid/Wall、Coordinator/SQL/并发/READY/hash/kill/receipt/cleanup 全保留。没有参数修改或新进程。 |
 | 原完整 Spring/Redis | 保留完整 context 和既有真实共享 Redis factory；不换轻量 owner，不再重写上轮资源归属。 |
-| Maven/Surefire | 原完整 reactor、实际 fork、只读/offline/classpath/source/JAR/agent 及预算均不动。不能直接换成 surefire:test：Maven 3.9.11 ReactorReader:133–163 依赖当前 project artifact file 或 compile/test-compile phase。静态已存在 target 不能替代这些合同。本包无猜测的共享 launcher hunk。 |
+| Maven/Surefire | 原完整 reactor、实际 fork、只读/offline/classpath/source/JAR/agent 及预算均不动。保留 mvn test 生命周期；仅实际业务执行用 compiler 局部 skipMain/skip 复用本源准备产物。准备仍完整 compile/package，禁止直接 surefire:test/global maven.test.skip。精确接线与固定版本依据见 PRECOMPILED-EXECUTION.md；shared patch 由 root 唯一应用。 |
 | Core/facts/输出资源 | 原 72 身份/240HTTP/完整快照/SQL回读/有界记录、六 target 磁盘 bind 都必要且保留；没有删行/删列/滚掉原证据，也没有所谓整 JAR tmpfs 副本可删。 |
 
 唯一组合 caller 在原 stillHeld 见证中、原 assertHeldAfterAiCallerTimeouts 后调用
@@ -25,8 +25,9 @@ retireImageSource(pending)，不移动任何 HTTP/故障屏障或释放时点。
 拒绝、未完成 Future 拒绝、退役不动 fault/release/exit 状态、幂等与自身 executor 清理。
 这些是有限 SOURCE 控制，不是伪造物理 handler/SQL/容量通过。无新类型、依赖、schema。
 
-共享 hunk 仅位于 scheduler-reflection.review.patch，原他-owner Java 未改；root 如采纳
-应整体应用该 hunk，配套签名控制已在本包。Coordinator 的原字节 hash/协议算法不变。
+共享 hunk 分别位于 scheduler-reflection.review.patch 与 precompiled-execution.review.patch，
+原他-owner Java、POM、Python 均未改；root 应完整串接，配套控制 SOURCE 已在本包。
+Coordinator 的原字节 hash/协议算法不变。
 SpringUtils.postProcessBeanFactory 的仓库原实现仅赋原 static beanFactory；原新建具体
 Coordinator 的 running:boolean/activatedAt:long 与 JDK Field 写法一一对应。
 
