@@ -694,6 +694,7 @@ jobs:
             --output chengyinhub-admin/target/private-mapper-references.json
       - name: Verify compiled boundary negative and restored controls
         run: |
+          python3 -m unittest -v ci/architecture/test_compiled_controls.py
           python3 ci/architecture/compiled_controls.py --source . \
             --artifact chengyinhub-admin/target/chengyinhub-admin.jar \
             --identity chengyinhub-admin/target/chengyinhub-admin.build.json \

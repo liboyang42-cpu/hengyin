@@ -4,6 +4,7 @@ import io
 import json
 import os
 from pathlib import Path
+import re
 import sys
 import tempfile
 import unittest
@@ -97,6 +98,25 @@ class CompiledControlSourceTest(unittest.TestCase):
             self.assertNotIn(b"com.chengyinhub", data)
             self.assertNotIn(b".class", data)
         self.assertIn(b"public interface", controls.LEAF_SOURCES["architecture.leafcontrol.EmptyInterface"])
+
+    def test_exact_clean_verifier_matches_both_workflow_callers_and_loads_once(self):
+        expected = "9782954919075c4a13d209f5f3ab4e3ff8f4e9e8"
+        self.assertEqual(expected, controls.VERIFIER)
+        workflow = (ROOT / ".github/workflows/ci.yml").read_text()
+        self.assertEqual([expected, expected], re.findall(r"(?m)^\s+ref: ([0-9a-f]{40})$", workflow))
+        module = object()
+        with patch.object(controls, "git", side_effect=[expected.encode(), b""]), \
+                patch.object(controls.importlib.util, "spec_from_file_location") as spec, \
+                patch.object(controls.importlib.util, "module_from_spec", return_value=module) as factory:
+            self.assertIs(module, controls.load_verifier(Path("unused")))
+            factory.assert_called_once_with(spec.return_value)
+            spec.return_value.loader.exec_module.assert_called_once_with(module)
+
+    def test_superseded_reviewed_verifiers_are_refused_before_loading_any_code(self):
+        for wrong in ("2181ad835d2c7e6b5d5ca0f9692849c890c7d7d1", "92fd81c313766b07087858f02967f430115642ab"):
+            with self.subTest(wrong=wrong), patch.object(controls, "git", return_value=wrong.encode()), \
+                    patch.object(controls.importlib.util, "spec_from_file_location", side_effect=AssertionError("must not load superseded code")):
+                with self.assertRaises(ValueError): controls.load_verifier(Path("unused"))
 
     def test_wrong_or_dirty_frozen_verifier_is_refused_before_loading_any_code(self):
         for wrong in ("refs/heads/master", "9637bbcb21b822afec83464f8309bef92ab2bc68", "d58288edc65e4c57bc98ef61253fb084f38642f1", "16ce2a260f59a377dfac337749435d04f1d72ab7", "4a14940614d6ebe8d6d28a8b5314fef366541bc9", "4255beb508b64bce639e25d4fc7f16742cd4946a", "b94428f0242be4a33332d05e29bb7d0a7e02c734", "c2db98326366c52e640c2b1c421b0fb6bde611fa", "0297c2cc9d093e8127103da26325e7da0f1f18e1", "3d3a63d4120c83eaecd8b2bf70a12b51d5f4988c", "5caf6b288c8df612d8420e4007032e4d9568e18e", "0e00ce639dea8e7f266dd326878532f45c59a032", "bd33ed0be7fafaf89daaec2eb772c15b034d3ec0", "f8531bfd6cca90d88f9c281d1904a170b635f990", "0979b03b594b5b5bbc4ad500c89bca6b3d353d70", "e9a9db4949e5bf8d51647ccb3d44ea5684960901", "8a5a781edeaec0dc7e24a460a0fdba1394252ded", "f15fcf2161868732a188d9c2892a4c31bba496b9", "20f0ed72f4dcdb1db73758095dd896a33f702c72", "5c2e2d8c46f17fec3a3e61dfe7e020577a187cc1", "beffa2023a68ffba2da5fce35f00e697252e72f4", "f35cf5cc49215017669061950e39071bbb5ce2fa", "f864f4f4311ef6106f78d15b4c0a2276688e3dfc", "e5b5818f2230eb9e81d2a825960c0470ac1640ec", "0" * 40):
