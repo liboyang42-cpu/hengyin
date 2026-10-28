@@ -2965,7 +2965,9 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
                             "ATTRIBUTE_REGISTRY_VERSION_CONFLICT", "发布版本与已确认草稿不一致，请重新读取后确认", 409);
                 }
             }
-            freezeAuthorAttributes(topic, expectedConfigVersion == null ? version : expectedConfigVersion, version, version, false);
+            // 建局按 published_config_version 核对冻结定义，定义须标本次发布将产生的发布版本，而非编辑版本。
+            long publishedVersion = (topic.getPublishedConfigVersion() == null ? 0L : topic.getPublishedConfigVersion()) + 1L;
+            freezeAuthorAttributes(topic, expectedConfigVersion == null ? version : expectedConfigVersion, version, publishedVersion, false);
         }
         boolean supplyResubmission = allowSupplyResubmission && supplyReviewService.canResubmit(topic);
         if (topic != null) mediaPublicationGuard.requireTopicPublication(id);
