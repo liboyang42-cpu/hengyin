@@ -11,7 +11,7 @@ const read = rel => fs.readFileSync(path.join(ROOT, rel), 'utf8')
 
 function fresh(url, wxStub) {
   delete require.cache[require.resolve(MODULE)]
-  const source = fs.readFileSync(MODULE, 'utf8').replace("var STORY_FONT_URL = '';", 'var STORY_FONT_URL = ' + JSON.stringify(url) + ';')
+  const source = fs.readFileSync(MODULE, 'utf8').replace(/var STORY_FONT_URL = '[^']*';/, 'var STORY_FONT_URL = ' + JSON.stringify(url) + ';')
   const Module = require('node:module')
   const m = new Module(MODULE)
   m.filename = MODULE
@@ -76,4 +76,10 @@ test('样式类只挂在故事流正文 / 对白上,字族带系统字体回落;
 test('两份分包副本逐字一致,且不放进主包 utils/(3 MiB 棘轮)', () => {
   assert.equal(read(PUBLISH_COPY), read('pages/play/utils/story-font.js'))
   assert.equal(fs.existsSync(path.join(ROOT, 'utils/story-font.js')), false)
+})
+
+test('业主选定龙藏体:两份副本都指向 OSS 上的 https 子集文件', () => {
+  for (const f of ['pages/play/utils/story-font.js', 'pages/publish/utils/publish/story-font.js']) {
+    assert.match(read(f), /var STORY_FONT_URL = 'https:\/\/chengyin-oss\.oss-cn-shanghai\.aliyuncs\.com\/fonts\/cy-story-longcang-v\d+\.woff2';/)
+  }
 })

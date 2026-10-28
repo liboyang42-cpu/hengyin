@@ -6,13 +6,13 @@
 //
 // STORY_FONT_URL 为空 = 不加载;加载失败也不报错 —— 样式类的 font-family 后面跟着系统字体,
 // 认不出 STORY_FONT_FAMILY 时自动回落,玩家看到的就是原来的字。
-// 选型(候选字体、授权链接、子集化命令)见 PR 说明,业主选定并上传后把 https 地址填进来。
+// 文件放在 OSS 上:需公开可读,且 CORS 放行 https://servicewechat.com(wx.loadFontFace 的要求)。
 //
 // 主包已满(3 MiB 发版棘轮),所以不放 utils/:pages/play/utils 与 pages/publish/utils/publish
 // 两个分包各留一份逐字相同的副本(分包之间不能互相 require),tests/unit/story-font-loader.test.js 钉住一致。
 
 var STORY_FONT_FAMILY = 'CyStoryHand';
-var STORY_FONT_URL = '';
+var STORY_FONT_URL = 'https://chengyin-oss.oss-cn-shanghai.aliyuncs.com/fonts/cy-story-longcang-v1.woff2'; // 2026-10-28 业主选定龙藏体(Long Cang · SIL OFL 1.1),常用 4113 字子集 1.48 MB;换字时改文件名里的版本号,别覆盖旧文件
 
 var state = 'idle'; // idle | loading | loaded | failed
 var waiters = [];
