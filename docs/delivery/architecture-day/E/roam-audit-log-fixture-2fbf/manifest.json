@@ -1,0 +1,15 @@
+{
+  "parent": "2fbfd6df4c4480d924eddd0984169a8d86877075",
+  "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RoamAuditLogCorrelationTest.java",
+  "beforeBlob": "e4e5410f69efdc6dcabc1c8484b086e2223733f6",
+  "afterBlob": "dbb8bb1fede6f8e4c1358bd90b82004ae69d6244",
+  "postSha256": "0046fe4536c8cac54b72c3fe85e60b0af1bb504a65d3f919ab5cd77795d2d057",
+  "bytes": 7829,
+  "testCases": {
+    "before": 1,
+    "after": 1
+  },
+  "verification": "NOT_RUN",
+  "patchBytes": 2416,
+  "patchSha256": "44881317a14aae9ce212ff50aa1eee8346fa8dbce3b66f4b525a280c945b7192"
+}

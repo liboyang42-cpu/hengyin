@@ -1,6 +1,7 @@
 package com.chengyinhub.business.service.impl;
 
 import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 import com.chengyinhub.business.domain.ConsentRecord;
@@ -63,6 +64,7 @@ class RoamAuditLogCorrelationTest {
         });
         var service = new RoamPresenceRevokeAuditService(intents, consents, members, alarms, manager);
         Logger logger = (Logger) LoggerFactory.getLogger(RoamPresenceRevokeAuditService.class);
+        Level previousLevel = logger.getLevel();
         var logs = new ListAppender<ILoggingEvent>() {
             @Override protected void append(ILoggingEvent event) {
                 event.prepareForDeferredProcessing(); super.append(event);
@@ -70,6 +72,9 @@ class RoamAuditLogCorrelationTest {
         };
         logs.start(); logger.addAppender(logs);
         try {
+            // The shared test profile is WARN; this test observes the real owner's INFO audit contract.
+            logger.setLevel(Level.INFO);
+            assertTrue(logger.isInfoEnabled());
             var task = new AtomicReference<Runnable>();
             var firstResult = new AtomicBoolean(true);
             var request = new MockHttpServletRequest("POST", "/api/roam/presence-visibility");
@@ -118,6 +123,11 @@ class RoamAuditLogCorrelationTest {
                 assertFalse(event.getFormattedMessage().contains("private-"));
                 for (String owner : owners.getAllValues()) assertFalse(event.getFormattedMessage().contains(owner));
             }
-        } finally { logger.detachAppender(logs); }
+        } finally {
+            logger.detachAppender(logs);
+            logs.stop();
+            logger.setLevel(previousLevel);
+        }
+        assertSame(previousLevel, logger.getLevel());
     }
 }
