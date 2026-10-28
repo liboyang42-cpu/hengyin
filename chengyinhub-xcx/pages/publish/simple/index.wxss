@@ -96,7 +96,7 @@
 .simple-ai__stop { width: 200rpx; display: flex; flex-direction: column; align-items: center; gap: var(--cy-space-2); }
 .simple-ai__stop-n { width: 96rpx; height: 96rpx; border-radius: 32rpx; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,.92); font-size: var(--cy-type-card-title); font-weight: 800; color: var(--cy-color-ai-ink); } /* ds-ok: 玻璃白 */
 .simple-ai__stop-t { max-width: 100%; font-size: var(--cy-type-caption); color: var(--cy-color-ai-muted); text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.simple-ai__composer-wrap { position: fixed; left: 0; right: 0; bottom: 0; display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--cy-space-3); padding: var(--cy-space-3) var(--cy-page-x) calc(var(--cy-space-4) + env(safe-area-inset-bottom)); box-sizing: border-box; }
+.simple-ai__composer-wrap { position: fixed; left: 0; right: 0; bottom: 0; background: linear-gradient(180deg, rgba(246,247,250,0) 0%, #F6F7FA 28%); /* ds-ok: 与画布底同色的渐隐托底 */ display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--cy-space-3); padding: var(--cy-space-3) var(--cy-page-x) calc(var(--cy-space-4) + env(safe-area-inset-bottom)); box-sizing: border-box; }
 .simple-ai__chips { width: 100%; white-space: nowrap; }
 .simple-ai__chips-track { display: inline-flex; gap: var(--cy-space-2); }
 .simple-ai__chip { min-height: 88rpx; display: inline-flex; align-items: center; box-sizing: border-box; padding: 0 var(--cy-space-4); border-radius: var(--cy-radius-pill); background: rgba(255,255,255,.92); font-size: var(--cy-type-label); color: var(--cy-color-ai-ink); } /* ds-ok: 玻璃白 */

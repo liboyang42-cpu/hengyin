@@ -1046,7 +1046,7 @@ page { background: var(--cy-bg-page); }
 .post-composer-ph { font-size: var(--cy-type-card-title); color: var(--cy-color-text-secondary); }
 .post-composer-tools { display: flex; align-items: center; gap: var(--cy-space-5); padding-top: var(--cy-space-3); }
 .post-composer-ico { flex: none; color: var(--cy-color-text-primary); }
-.post-composer-sq { width: 40rpx; height: 40rpx; box-sizing: border-box; border: 3rpx solid var(--cy-color-text-secondary); border-radius: 8rpx; }
+.post-composer-sq { width: 40rpx; height: 40rpx; box-sizing: border-box; border: 3rpx solid var(--cy-color-text-secondary); border-radius: 8rpx; } /* ds-ok: Figma 285:395 线框方块图标 4px 圆角,是图标笔画不是卡片圆角 */
 
 /* —— 概览 tab(Figma N3 23:2 / N5 24:216 / N6 24:355)——
    页边 16 · 区块间距 16。简介直接铺开:全局规约「标题下不要小标题」,

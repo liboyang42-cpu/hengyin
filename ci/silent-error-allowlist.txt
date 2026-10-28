@@ -247,3 +247,9 @@ chengyinhub-xcx/utils/predict-entry.js 1  # 2026-10-23 PR #508 业主第四轮:�
 chengyinhub-xcx/subpackageRoam/nearby/index.js 3  # 2026-10-25 官方地点卡展开:节点补读与评价列表是背景读取,卡片已先用地图数据渲染,读不到只少相册/玩法块或评价区(挑战页会重读同一节点并给错误页与重试);发布评价失败由 done() 自己 toast 后端原因,不再叠通用 toast。
 chengyinhub-xcx/pages/play/poi-challenge/index.js 2  # 2026-10-25 地点挑战页:节点读取失败落 cy-error 错误页 + 重试;提交 /complete 的拒绝原因由答题卡反馈或 toast 显示,未知结果 toast「结果还没确认」,不叠通用 toast。
 chengyinhub-xcx/pages/club/apply/index.js 1  # 2026-10-27 L03 P-23:进页预查 /api/merchant/access/me 只为提前说明「这个账号已经是商家」;查不到就照常放行(后端提交时 requireNoActiveMerchantIdentity 仍兜底拒绝并在第 4 步原位报错),有商家行时落 bootstrapState=merchant 由 cy-state-shell 说明并给出口。通用 toast 在进页时弹一条与表单无关的错误是噪音
+chengyinhub-xcx/components/cy/earnings-overview/index.js 2  # 2026-10-28 G-9 账户收益「本月收入明细」(/api/user/balance/list)与「我的资产」(/api/wallet/stages):失败各自落卡内「没加载出来，点这里重试」(monthError / assetsError),余额主读取不受影响;通用 toast 会与卡内错误双弹
+chengyinhub-xcx/subpackageA/pages/assetcenter/analysis/index.js 1  # 2026-10-28 G-9 账户收益·分析页读余额流水:失败落整页 cy-error 加载失败 + 重试,关闭通用 toast 避免双弹;离页后旧回包按 token 丢弃
+chengyinhub-xcx/components/cy/club-pool-cards/index.js 1  # 2026-10-28 m689 店铺参谋「俱乐部合作」读合作池:失败在原位显示「俱乐部合作暂时没读到，点这里重试」(poolError),页面主卡不连坐;通用 toast 会与卡内提示双弹
+chengyinhub-xcx/components/cy/map-address-search/index.js 1  # 2026-10-28 p115 漫游搜索框联网搜地点(/api/map/place-search):失败时面板写「联网搜索暂时不可用，先显示附近的地点」(remoteError),本地地址照常可选;每次输入都会重搜,弹 toast 会随打字反复打扰
+chengyinhub-xcx/pages/roam/index.js 2  # 2026-10-28 p74「附近活动总是有的」:3 公里为空时 20 公里兜底(/api/roam/entry/nearby)与其他城市公开主题(/api/topic/list)两级背景读取;主读取已成功落定,兜底读不到时卡片带保持主读取的空态卡,页面没有可给的重试动作,弹 toast 会把「附近本来就没有」说成出错
+chengyinhub-xcx/subpackageMember/signup/index.js 1  # 2026-10-28 票夹翻面入场码(/api/verify/dyncode/issue):失败在卡背显示入场码没取到 + 重试(qrState:error),通用 toast 会与卡背提示双弹;翻回正面或换卡即作废旧请求
