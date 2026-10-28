@@ -1,3 +1,5 @@
+// 2026-10-28 核销详情已显式四端点，删除其旧U1豁免(10→9)；带队增加一行仅平移里程碑U5旧锚，其理由及43上限不变。
+// 2026-10-28 整批公共源合并：原10个调用与public master/治理源锚点上下三行逐字相同，仅迁移行号；理由、数量及冻结上限不变，原排序键算法重算摘要。
 // 2026-10-28 完成页改版(业主定稿):play/index.js 的 reviewElapsed / reviewDistance 两条 U4 零消费债务随成绩行真渲染出账,u4Field 126→124,u4Debt digest 按同一算法重算。
 // 2026-10-28 L9 再并 master(#652):取 master 的首页 U1-VARIABLE 1057→1043 换 key、模板页两条 _coverFail U4-DYNAMIC 退役删除(62→60),本线锚点不变;u1Variable / u4Dynamic digest 按同一算法在合并树上重算。
 // 2026-10-28 文档二 L9 集成并 master(#610):play/index.js u4Dynamic 1744→1747、u5Silent 7856→7894,publish/temp/index.js u4Dynamic 1459→1460、1460→1461、1503→1504、2943→2956、3745→3758、3872→3885,仅行号位移(调用行逐字相同),理由与条数不变;u4Dynamic / u5Silent digest 按同一算法重算。
@@ -243,7 +245,7 @@ module.exports = {
     //   ⚠️ 只准调小。这几个数字是欠债余额,不是配额。
     // 2026-09-09 一枚圆钮:roam#onCenterHoldStart / onCenterHoldEnd 两笔零绑定债务已还 ——
     //   长按 3 秒结束的逻辑早就写好了,这次真接到主键的 touchstart/touchend 上,99→97。
-    "u1Variable": 10,
+    "u1Variable": 9,
     // 2026-09-06 合入 github/master:D6 商家承接段装回章节弹窗、音频块回归故事流,
     //   master 里 6 条「零绑定债务」(onChapterRecruitToggleChange / onChapterMerchantCategoryChange /
     //   onChapterMaxMerchantInput / onChapterTermsModeChange / onChapterPerkMinValueInput / onPreviewAudio)
@@ -421,7 +423,7 @@ module.exports = {
       // 受控路由、理由及 10 条登记保持，digest 仅随行号更新。
       // 2026-10-11 登录隔离及正常失败状态兼容：App consent wrapper 329→343，同一调用及理由，数量仍11。
       // 2026-10-14 W5尾项:profile 544→559/870→885、参与详情 176→177 仅行号下移，同一调用及理由，数量仍11。
-      "u1Variable": "35d0f33f4f83f560cfb5bd7b6043fa1ecef664621dfaab68fb30281cdf14a106",
+      "u1Variable": "5355079effbb04369592177b1817e01345e1812d7671c95c9d13c3fabe88771f",
       // 2026-08-25 816 并入:key 集合按上面的逐条核对结果变化,digest 显式更新。
       "u3Debt": // 2026-09-09 一枚圆钮:roam#onCenterHoldStart / onCenterHoldEnd 两笔零绑定债务已还
       //   —— 长按 3 秒结束的逻辑接到了主键的 touchstart/touchend 上。99→97,digest 显式更新。
@@ -840,7 +842,7 @@ module.exports = {
 // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):45 个既有锚点仅行号位移换 key + 本线 6 处新增登记,digest 按门禁同一算法(sha256 of sorted keys joined by \n)重算。
 // 2026-10-20 合并 master(#327 等)进 #293:两侧重锚逐条按合并后源码同一行文本定位一致(fabu 12 条、merchantinfo 2 条、scene-club-edit 1 条),square/list 196/1259 随 #325 点赞修复后移一行;digest 按门禁同一算法重算。
 // 2026-10-28 模板页货架改版(#652)合 master(#610):本线删 template/index 两条 + master play 1621→1624 重锚，合并树 60 条，digest 按同一算法重算。
-"8485246a4c69fcae4827ab3f72caae3ff6480d1c1c62f61d3f7c86f783b42b8d",
+"159188a8c5ac9afe13b2a4d5b1c602e983ca7dabd900e0c52181cd1d23b8f786",
 // 2026-10-20 R5 尾段(#327,owner 批准 12 条重锚):fabu 729→731、898→900、2524→2530、3570→3588、3951→3969、4957→4990、5215→5248、5866→5899、5876→5909、5929→5962、6270→6303、7936→8060,逐行比对 master 原行一字未改,理由与条数 58 不变;digest 按同一算法显式重算。
       // 2026-08-20 开卡包四拍动效:u5Silent 条数不变(12),只是 play/index.js 的调用点
       //   行号从 2360 移到 2573(见下方 u5Silent 区块的逐条说明)。等量换 key,显式改 digest。
@@ -1029,7 +1031,7 @@ module.exports = {
       //   逐条回读仍是「只为读章节 recruitEnabled、失败不弹全局 toast」这一处,静默理由一字未改,条数 27 不变。
 // 2026-10-17 合并 master 进漫游上线分支:roam/index.js 14 条、nearby/index.js 2 条既有调用仅行号位移(按 master 源码逐行回读定位);漫游两栏改版删掉 /api/registration/list 静默读取(749),U5 29→28。digest 按同一算法显式重算。
 // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):锚点位移 + 举报半屏/AI 对话组件下沉会员分包换路径 + 本线 9 处新增登记,digest 按同一算法重算。
-"2e3a1371d54e785580b883553fb15bae9329890eb61c2be94f90594e41d53ba6"
+"11fb7791379e4999d8a7c332149b8af825728b0fd9c39c24cd60922c92a01312"
 
     }
   },
@@ -1054,7 +1056,6 @@ module.exports = {
     "chengyinhub-xcx/components/cy/scene-route-content/index.js:551": "request 只取自本方法内 requests[sceneId] 的七个非提现固定写接口对象，未知 sceneId 显示提交错误并返回；提现分支在此前已转交 withdrawal-preflight，不会走到本调用；owner=小程序，复核=2026-09-15",
     "chengyinhub-xcx/pages/index/index.js:1043": "retry 只回放 _listReq 中由 getListData 首次字面量调用冻结的 topic/list 或 activity/list，外部输入不能写该缓存；owner=小程序，复核=2026-09-15",
     "chengyinhub-xcx/pages/search2/result/index.js:193": "request 数组只由 utils/discover-search.buildRequests 构造，其按搜索类型枚举后端字面量且当前 U1 全仓扫描覆盖；owner=小程序，复核=2026-09-15",
-    "chengyinhub-xcx/subpackageMember/components/scene-member-participation-detail/index.js:243": "会员快捷核销只消费 verification-scan.js 的有限核销路由，非法扫码在 sendRequest 前显示 toast 并返回；owner=小程序，复核=2026-09-15"
   },
   "u3Debt": {
     "chengyinhub-xcx/subpackageMember/components/cy/profile/index.js#onThemeTap": "存量零绑定债务：onThemeTap 在同页 WXML 与 JS 调用图均无入口；owner=小程序，到期=2026-09-30",
@@ -1267,7 +1268,7 @@ module.exports = {
     "chengyinhub-xcx/pages/square/components/route-map/index.js:56": "同一loadRoute业务拒绝清图，routePreview.build([])只返回固定路线视图字段并触发empty；共享topic-route-preview实现与WXML逐字段核对，不从响应提供键。owner=小程序；复核=2026-10-24",
     "chengyinhub-xcx/pages/square/components/route-map/index.js:62": "同一loadRoute网络失败清图，current()先校验session revision/read epoch，固定投影routePreview.build([])与empty事件给宿主可见空态；不回写其他页面。owner=小程序；复核=2026-10-24",
     "chengyinhub-xcx/pages/square/components/route-map/index.js:71": "buildRouteMap的局部view只由utils/topic-route-preview.build(chaptersList)产生；固定路线视图八字段，routeReady决定ready/empty，节点只供值、不能供setData键；地图与提示消费其余七字段，routeIsRoad仅同源固定判定元数据，不声称直接渲染。owner=小程序；复核=2026-10-24",
-    "chengyinhub-xcx/pages/topic/index/index.js:1961": "buildRouteMap只提交utils/topic-route-preview.build(chaptersList)固定八个路线视图字段；每章道路独立校验，缺损退节点虚线，不展开章节任意键；路线地图/提示与JS选择消费其余七字段，routeIsRoad仅同源固定判定元数据，不声称直接渲染。owner=小程序；复核=2026-10-24",
+    "chengyinhub-xcx/pages/topic/index/index.js:2041": "buildRouteMap只提交utils/topic-route-preview.build(chaptersList)固定八个路线视图字段；每章道路独立校验，缺损退节点虚线，不展开章节任意键；路线地图/提示与JS选择消费其余七字段，routeIsRoad仅同源固定判定元数据，不声称直接渲染。owner=小程序；复核=2026-10-24",
 
     // 2026-10-19 Claude 小程序线移植到 master:本线新增 6 处动态 setData 逐项登记(棘轮/digest 待审批后同步)。
     "chengyinhub-xcx/pages/activity/official-mine/index.js:155": "BL-80 通知复盘按卡片位置拼 broadcasts[i]._statsLoading/_statsText 路径写入「正在读取复盘」;字段在本页 wxml 该卡触达行消费;owner=小程序,复核=2026-12-31",
@@ -1277,15 +1278,15 @@ module.exports = {
     "chengyinhub-xcx/pages/activity/official-mine/index.js:171": "BL-80 通知复盘读取网络失败:按卡片路径写 _statsLoading=false;sameItem 校验防止写到换行后的另一张卡;owner=小程序,复核=2026-12-31",
     "chengyinhub-xcx/pages/activity/official-mine/index.js:172": "BL-80 通知复盘读取网络失败的 _statsText 动态键:写「网络连接失败，点一下重试」,在该卡触达行消费;owner=小程序,复核=2026-12-31",
     "chengyinhub-xcx/pages/roam/index.js:560": "BL-70 横滑卡头像堆按命中行拼 shopStrip.rows[i].visitors 路径批量回写;只在横滑卡 poi__who 头像堆消费,epoch 丢弃迟到回包;owner=小程序,复核=2026-12-31",
-    "chengyinhub-xcx/subpackageMember/components/cy/profile/index.js:1991": "本人帖文翻页patch只用list[oldLen+i]固定列表名与响应遍历下标，其余feedErr/feedAuthError/hasMore/nodata为字面字段；服务端仅供值不供键；owner=小程序，复核=2026-09-30",
+    "chengyinhub-xcx/subpackageMember/components/cy/profile/index.js:2009": "本人帖文翻页patch只用list[oldLen+i]固定列表名与响应遍历下标，其余feedErr/feedAuthError/hasMore/nodata为字面字段；服务端仅供值不供键；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/pages/index/index.js:1259": "底部主题翻页只追加bottomTopicList[oldLen+i]，其余页码/状态/hasMore固定字面字段；下标来自当前列表长度和响应遍历序号；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/pages/index/index.js:1366": "底部活动翻页只追加bottomActivityList[oldLen+i]，其余页码/状态/hasMore固定字面字段；下标来自当前列表长度和响应遍历序号；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/pages/merchant/customer/index.js:504": "客户翻页只追加rows[oldLen+i]，其余页面状态与分群摘要为同方法固定字面字段；hasMore仍用rowCount/total主线规则；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/pages/searchmap/index.js:316": "地图活动翻页只追加list[oldLen+i]，无坐标计数/页码/时间与加载状态均为固定字面字段；只处理当前query epoch响应；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/pages/searchmap/index.js:570": "新增活动marker只拼activityMarkers[at]路径，at从已建点数量顺序递增；marker全局activityId来自列表offset+i，不接收服务端键名；owner=小程序，复核=2026-09-30",
-    "chengyinhub-xcx/pages/square/detail/index.js:1261": "评论翻页只追加list[oldLen+i]，其余commentState/listErr/nodata/hasMore固定字面字段；响应遍历序号只形成数组下标；owner=小程序，复核=2026-09-30",
+    "chengyinhub-xcx/pages/square/detail/index.js:1262": "评论翻页只追加list[oldLen+i]，其余commentState/listErr/nodata/hasMore固定字面字段；响应遍历序号只形成数组下标；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/pages/square/list/index.js:1287": "广场翻页只追加list[oldLen+i]，其余listErr/loading/nodata/hasMore固定字面字段；下标由当前长度和响应序号形成；owner=小程序，复核=2026-09-30",
-    "chengyinhub-xcx/pages/play/index.js:1747": "章节正文显形局部patch只写chapterParas[i]或chapStory.lines[i]的in/dir/d三个固定字段；i来自当前冻结数组遍历，值为本地布尔/方向枚举/延迟数值，异步回包前后校验章节模式及数组身份；WXML真消费两namespace；替代旧opacity/scale/blur渲染登记，经人工审查迁移；owner=小程序，复核=2026-09-30",
+    "chengyinhub-xcx/pages/play/index.js:1757": "章节正文显形局部patch只写chapterParas[i]或chapStory.lines[i]的in/dir/d三个固定字段；i来自当前冻结数组遍历，值为本地布尔/方向枚举/延迟数值，异步回包前后校验章节模式及数组身份；WXML真消费两namespace；替代旧opacity/scale/blur渲染登记，经人工审查迁移；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/pages/club/apply/index.js:187": "onInput 的键来自 wxml data-field，取值是同页写死的七个枚举（identity/leaderName/phone/coFounders/avgEventSize/maxEventSize/hasGuideCert），全部在同一份 wxml 表单里被渲染消费，不是外部输入直传；owner=小程序，复核=2026-10-31",
     "chengyinhub-xcx/pages/club/apply/index.js:198": "toggleBool 的键取自同一份 data-field 枚举，只在 0/1 之间翻转能力自评项；owner=小程序，复核=2026-10-31",
     "chengyinhub-xcx/components/cy/nav-bar/index.js:39": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
@@ -1332,13 +1333,13 @@ module.exports = {
     "chengyinhub-xcx/pages/publish/fabu/index.js:6427": "summaryPatch 只由本方法逐项追加 chapterStates/chapterActionLabels/creationAnchor/starterAction/pendingMaterialStates/topicDetailSummary 六个固定派生字段，用于避免无变化 setData，不接收外部键；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/pages/publish/fabu/index.js:6437": "patch 最多只含经本页校验袋计算出的 canPublish 一个固定字段，用于值变化时才写入；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/pages/publish/fabu/index.js:6490": "校验定位 patch 只可能含 secCollapsed.ticket、showTicketEditor、editingTicket 三个固定键；错误 key 仅决定是否进入 ticket 分支和定位下标，不参与字段名拼接；owner=小程序，复核=2026-09-30",
-    "chengyinhub-xcx/pages/publish/fabu/index.js:9064": "地图重绘 patch 固定含 mapMarkers/mapPolyline/mapInclude/hasRoute，未选节点时只追加 mapCenter；节点数据只作为值参与计算。X05 后 patch 由 utils/publish/route-map-view.js 的纯函数算好交回，键集合由该模块单测钉住（publish-route-map-view.test.js）；owner=小程序，复核=2026-09-30",
+    "chengyinhub-xcx/pages/publish/fabu/index.js:9086": "地图重绘 patch 固定含 mapMarkers/mapPolyline/mapInclude/hasRoute，未选节点时只追加 mapCenter；节点数据只作为值参与计算。X05 后 patch 由 utils/publish/route-map-view.js 的纯函数算好交回，键集合由该模块单测钉住（publish-route-map-view.test.js）；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/pages/publish/temp/index.js:1460": "listName 的当前调用点只枚举 difficultyOptions 固定列表名（R5已移除人数/时长选择器），接口结果先验证为记录数组后才写标签数组，不允许请求数据决定字段名；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/pages/publish/temp/index.js:1461": "listName + Data 与上一条共享同一有限调用集，当前只落 difficultyOptionsData 固定字段（R5已移除人数/时长选择器）；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/pages/publish/temp/index.js:1504": "_setFormState 是本页私有写入入口，全部调用点传本文件构造的字段 patch（高级玩法动态路径也来自 WXML 固定 section/field），函数只克隆该 patch 并追加固定 submitError，不展开后端对象键；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/pages/publish/temp/index.js:2956": "玩家预览 patch 先固定写 pvStep/pvStepKey/pvStepLabel 与四个临时态，仅按 story/challenge 枚举追加 pvBeats 或任务展示字段；步骤 key 不参与字段名拼接；owner=小程序，复核=2026-09-30",
-    "chengyinhub-xcx/pages/publish/temp/index.js:3758": "couponPatch 在同方法内从空对象开始，只可能追加 selectedCouponId 与 selectedCouponName 两个固定奖励展示字段，再展开进固定回填对象；owner=小程序，复核=2026-09-30",
-    "chengyinhub-xcx/pages/publish/temp/index.js:3885": "模板回填 patch 只逐项追加 durationIndex/Text、difficultyIndex/Label、playersIndex/Text 六个固定选择器字段，且仅在字典中找到匹配值时写入；owner=小程序，复核=2026-09-30",
+    "chengyinhub-xcx/pages/publish/temp/index.js:3761": "couponPatch 在同方法内从空对象开始，只可能追加 selectedCouponId 与 selectedCouponName 两个固定奖励展示字段，再展开进固定回填对象；owner=小程序，复核=2026-09-30",
+    "chengyinhub-xcx/pages/publish/temp/index.js:3888": "模板回填 patch 只逐项追加 durationIndex/Text、difficultyIndex/Label、playersIndex/Text 六个固定选择器字段，且仅在字典中找到匹配值时写入；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/pages/search2/index.js:459": "动态 setData 需精确登记：[field]: selected；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/pages/searchmap/index.js:962": "动态 setData 需精确登记：[field]: selected；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/pages/square/list/index.js:157": "动态 setData 需精确登记：[key]: item；owner=小程序，复核=2026-09-30",
@@ -1391,8 +1392,8 @@ module.exports = {
     "chengyinhub-xcx/subpackageRoam/nearby/index.js:940": "可选公开相册补充读取，缺失或失败保留已显示的封面与正常导航，不将缺失侧车伪报为地点不可用；不承载提交或奖励，重新点开可重读；owner=上海据点，复核=2026-10-24",
     "chengyinhub-xcx/subpackageMember/components/cy/scene-roam-poi-detail/index.js:573": "可选照片署名与许可补充读取，缺失时保留后端相册、玩法和导航，不阻断任务；没有写入或奖励成功提示；owner=上海据点，复核=2026-10-24",
     // 2026-10-19 Claude 小程序线移植到 master:本线新增 9 处 silentError 逐项登记(超冻结上限 30,棘轮/上限/digest 待审批后同步)。
-    "chengyinhub-xcx/subpackageMember/components/cy/report-sheet/index.js:49": "BL-32/BL-218 举报半屏读原因:失败落 stage=loadfail 结果半屏(failText 带重试),seq 丢弃关掉重开后的旧回包;字段不以 error 命名,静态扫描证明不了;owner=小程序,复核=2026-12-31",
-    "chengyinhub-xcx/subpackageMember/components/cy/report-sheet/index.js:94": "BL-32 举报提交:失败落 fail/unknown 结果半屏(含后端原因,同 requestId 可重试不重复受理),关自动 toast 免双弹;owner=小程序,复核=2026-12-31",
+    "chengyinhub-xcx/subpackageMember/components/cy/report-sheet/index.js:51": "BL-32/BL-218 举报半屏读原因:失败落 stage=loadfail 结果半屏(failText 带重试),seq 丢弃关掉重开后的旧回包;字段不以 error 命名,静态扫描证明不了;owner=小程序,复核=2026-12-31",
+    "chengyinhub-xcx/subpackageMember/components/cy/report-sheet/index.js:96": "BL-32 举报提交:失败落 fail/unknown 结果半屏(含后端原因,同 requestId 可重试不重复受理),关自动 toast 免双弹;owner=小程序,复核=2026-12-31",
     "chengyinhub-xcx/pages/activity/official-mine/index.js:158": "BL-80 通知复盘读取:失败写进该卡 _statsText 触达行并可再点重试(动态键,静态扫描不能证明);owner=小程序,复核=2026-12-31",
     "chengyinhub-xcx/pages/play/merchant/components/safety-rating-sheet/index.js:115": "BL-89 安全感受评价先按 public-home 换取商家 ID:失败经 done(null,msg) 落 submitError 半屏内 cy-inline-error,保留输入可重试;owner=小程序,复核=2026-12-31",
     "chengyinhub-xcx/pages/roam/index.js:552": "BL-70 漫游商家横滑卡打卡头像堆(/api/roam/shop/visitors):附加信息,失败或迟到回包不动卡片,不挡「去这儿」;owner=小程序,复核=2026-12-31",
@@ -1453,7 +1454,7 @@ module.exports = {
       //   loadMilestone 的 /api/play/my-completed 这条 silentError 调用点 5542→5570(门禁实测)。
       //   主包瘦身后 post-compose 已下沉到 pages/square/components/cy/。
       // 2026-09-20 合并后按最终源码重钉，调用与静默降级理由未改。
-      "chengyinhub-xcx/pages/play/index.js:7894": "已完成里程碑为可选增强，请求失败保持 milestone=null 且轴不渲染；owner=小程序，复核=2026-09-15",
+      "chengyinhub-xcx/pages/play/index.js:7939": "已完成里程碑为可选增强，请求失败保持 milestone=null 且轴不渲染；owner=小程序，复核=2026-09-15",
     "chengyinhub-xcx/pages/square/components/cy/post-compose/index.js:470": "广场选活动报名列表读取:失败落组件 activityError,由选活动层呈现并给重试,关掉自动 toast 避免双弹;owner=小程序,复核=2026-12-31",
     "chengyinhub-xcx/pages/square/components/cy/post-compose/index.js:483": "广场选活动「我主办的」列表读取:失败汇总进同一 activityError,同上;owner=小程序,复核=2026-12-31",
     "chengyinhub-xcx/pages/topic/pricing/index.js:184": "合作阵容行补名是 best-effort 装饰读取:拉不到名字就保留「合作俱乐部/承接商家」类型兜底,条款摘要照常、点开合作方页自有错误态;为补名弹全局 toast 会让主办方以为整页定价坏了;owner=小程序,复核=2026-12-31",

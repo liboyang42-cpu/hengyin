@@ -4947,12 +4947,13 @@ Page({
           if (!that._leadVerificationWorkflow) that._leadVerificationWorkflow = createVerificationWorkflow({
             deadlineMs: 15000, storage: wx, getOwner: () => app.getUserID && app.getUserID() });
           const key = seatKey(context.owner, target);
-          that._leadVerificationWorkflow.run(key, done => app.sendRequest(Object.assign({}, request, {
-            hideLoading: true, silentError: true, autoErrorToast: false,
+          that._leadVerificationWorkflow.run(key, done => app.sendRequest({
+            url: '/api/registration/scan_group_member_ticket', method: 'POST', data: request.data,
+            hideLoading: true, autoErrorToast: false,
             success: r => done(classifyVerificationOutcome(r, 'success', undefined, request)),
             fail: (r, status) => done(classifyVerificationOutcome(r, 'fail', status, request)),
             successStatusAbnormal: (r, status) => done(classifyVerificationOutcome(r, 'abnormal', status, request))
-          })), result => {
+          }), result => {
             if (!seatCurrent()) return;
             if (result.status === 'success') motion.haptic({ type: 'medium', reducedMotion: that.data.reducedMotion });
             that.diegetic(result.status === 'unknown'

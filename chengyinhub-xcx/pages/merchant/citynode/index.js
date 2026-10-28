@@ -516,7 +516,7 @@ Page({
       readReceipt(original, done) {
         if (!current()) return null;
         return app.sendRequest({ url: '/api/verify/citynode/receipt', method: 'POST', data: { code },
-          hideLoading: true, silentError: true, autoErrorToast: false,
+          hideLoading: true, autoErrorToast: false,
           success: response => done(response), fail: () => done(null), successStatusAbnormal: () => done(null) });
       },
     });

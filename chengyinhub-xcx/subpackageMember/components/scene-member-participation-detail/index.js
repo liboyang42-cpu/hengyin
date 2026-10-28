@@ -261,8 +261,18 @@ Component({
             cyToast(scan.message);
             return;
           }
-          this._submitVerification(scan.url + ':' + scan.code, scan.loadingTitle, {
-            url: scan.url,
+          if (!['/api/verify/groupcode/redeem', '/api/registration/scan_dynamic_code',
+            '/api/registration/scan_qr_code', '/api/coupon/verification'].includes(scan.url)) {
+            cyToast('二维码格式错误');
+            return;
+          }
+          // 路由仍来自原扫码解析；四个原端点显式展开，不接收任意 URL。
+          const url = scan.url === '/api/verify/groupcode/redeem' ? '/api/verify/groupcode/redeem'
+            : scan.url === '/api/registration/scan_dynamic_code' ? '/api/registration/scan_dynamic_code'
+              : scan.url === '/api/registration/scan_qr_code' ? '/api/registration/scan_qr_code'
+                : '/api/coupon/verification';
+          this._submitVerification(url + ':' + scan.code, scan.loadingTitle, {
+            url,
             data: scan.data,
             method: 'POST',
           }, (r) => {

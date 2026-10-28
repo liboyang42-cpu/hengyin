@@ -59,7 +59,7 @@ function seatRecovery(app, target, isCurrent) {
   return { target, isCurrent, readReceipt(original, done) {
     if (!isCurrent()) return null;
     return app.sendRequest({ url: '/api/verify/seat/receipt', method: 'POST', data: Object.assign({}, original),
-      hideLoading: true, silentError: true, autoErrorToast: false,
+      hideLoading: true, autoErrorToast: false,
       success: response => done(response), fail: () => done(null), successStatusAbnormal: () => done(null) });
   } };
 }
