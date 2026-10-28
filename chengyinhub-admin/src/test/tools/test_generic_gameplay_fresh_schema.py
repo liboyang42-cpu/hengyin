@@ -4,6 +4,7 @@ from contextlib import contextmanager
 import hashlib
 import json
 import pathlib
+import re
 import sqlite3
 import subprocess
 import tempfile
