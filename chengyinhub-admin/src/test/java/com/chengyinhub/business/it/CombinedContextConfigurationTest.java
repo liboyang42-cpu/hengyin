@@ -7,6 +7,7 @@ import com.chengyinhub.business.mapper.UmsMemberMapper;
 import com.chengyinhub.framework.web.service.AppLoginService;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.exc.InvalidDefinitionException;
+import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
@@ -179,7 +180,7 @@ class CombinedContextConfigurationTest {
         var realBeanFactoryEntry = assertDoesNotThrow(() -> com.chengyinhub.common.utils.spring.SpringUtils.class
                 .getMethod("postProcessBeanFactory", org.springframework.beans.factory.config.ConfigurableListableBeanFactory.class));
         assertEquals(void.class, realBeanFactoryEntry.getReturnType());
-        assertTrue(java.lang.reflect.Modifier.isPublic(realBeanFactoryEntry.getModifiers()));
+        assertTrue(Modifier.isPublic(realBeanFactoryEntry.getModifiers()));
     }
 
     @Test
