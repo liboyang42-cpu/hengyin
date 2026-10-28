@@ -100,12 +100,25 @@ public final class CrossDomainSchedulerStage implements AutoCloseable {
             launch.redirectErrorStream(true);launch.environment().clear();
             launch.environment().putAll(Map.of("RUNNER_ENVIRONMENT","github-hosted","WP14_URL",url,"WP14_SCHEMA",schema,"WP14_ORIGINAL",original,
                     "WP14_ALIAS",alias,"CHENGYIN_MYBATIS_IT_USER",user,"CHENGYIN_MYBATIS_IT_PASSWORD",password));
+            if ("CrossDomainCombinedLoadMySqlIT".equals(System.getenv("CHENGYIN_HTTP_E2E_TESTS"))) {
+                launch.environment().put("WP14_MEMORY_READBACK", "1");
+                for (String key : List.of("SOURCE_SHA", "GITHUB_RUN_ID", "GITHUB_RUN_ATTEMPT")) {
+                    String value = System.getenv(key);
+                    if (value == null) throw new IllegalStateException("CONTROLLED_MEMORY_SOURCE_BINDING_REQUIRED");
+                    launch.environment().put(key, value);
+                }
+            }
             process=launch.start();ownedPid=process.pid();assertNotEquals(ProcessHandle.current().pid(),ownedPid);
             commands=new PrintWriter(process.getOutputStream(),true,StandardCharsets.UTF_8);
             reader=new Thread(()->{
                 try(BufferedReader out=new BufferedReader(new InputStreamReader(process.getInputStream(),StandardCharsets.UTF_8))) {
-                    for(String line;(line=out.readLine())!=null;) if(line.startsWith("WP14 ")&&!events.offer(line.substring(5)))
-                        throw new IllegalStateException("Owned probe event budget exceeded");
+                    for(String line;(line=out.readLine())!=null;) {
+                        if (line.startsWith("WP14 MEMORY ")) {
+                            SchedulerFenceProcessProbe.recordMemoryLine(forwardedMemoryLine(line.substring(12),
+                                    System.getenv("SOURCE_SHA"), System.getenv("GITHUB_RUN_ID"), System.getenv("GITHUB_RUN_ATTEMPT"), ownedPid));
+                        } else if(line.startsWith("WP14 ")&&!events.offer(line.substring(5)))
+                            throw new IllegalStateException("Owned probe event budget exceeded");
+                    }
                 }catch(Exception e){events.clear();events.offer("FATAL OwnedProbeReader");}
             },"t19-owned-probe-"+ownedPid);reader.setDaemon(true);reader.start();
             try {
@@ -141,6 +154,27 @@ public final class CrossDomainSchedulerStage implements AutoCloseable {
             assertFalse(process.isAlive());assertFalse(reader.isAlive());assertFalse(forced,"cleanup required an unexpected forced stop");
             if(!expectedKill)assertEquals(0,process.exitValue());closed=true;
         }
+    }
+    private static String forwardedMemoryLine(String line, String source, String run, String attempt, long pid) {
+        if (line == null || line.length() > 4096) throw new IllegalArgumentException("CONTROLLED_MEMORY_PROTOCOL_REQUIRED");
+        String[] fields = line.split(" ", -1);
+        if (fields.length < 18 || !Objects.equals(source, fields[0]) || !Objects.equals(run, fields[1])
+                || !Objects.equals(attempt, fields[2]) || !"SCHEDULER_PROBE".equals(fields[3])
+                || !List.of("READY", "LEADER", "ARMED", "RELEASED", "ENTER", "EFFECT", "RESULT", "STOPPED", "TASK_SESSION_KILLED", "FATAL").contains(fields[4]))
+            throw new IllegalArgumentException("CONTROLLED_MEMORY_PROTOCOL_REQUIRED");
+        for (int i = 5; i < fields.length; i++) {
+            if (!fields[i].matches("-?[0-9]{1,19}")) throw new IllegalArgumentException("CONTROLLED_MEMORY_PROTOCOL_REQUIRED");
+            Long.parseLong(fields[i]);
+        }
+        if (Long.parseLong(fields[5]) != pid || pid <= 0) throw new IllegalArgumentException("CONTROLLED_MEMORY_PROTOCOL_REQUIRED");
+        int pools = Integer.parseInt(fields[16]);
+        if (pools < -1 || pools > 16) throw new IllegalArgumentException("CONTROLLED_MEMORY_PROTOCOL_REQUIRED");
+        int cursor = 17 + Math.max(0, pools) * 5;
+        if (cursor >= fields.length) throw new IllegalArgumentException("CONTROLLED_MEMORY_PROTOCOL_REQUIRED");
+        int buffers = Integer.parseInt(fields[cursor]);
+        if (buffers < -1 || buffers > 4 || fields.length != cursor + 1 + Math.max(0, buffers) * 4)
+            throw new IllegalArgumentException("CONTROLLED_MEMORY_PROTOCOL_REQUIRED");
+        return line;
     }
     @Override public void close() throws Exception {
         List<Throwable> errors=new ArrayList<>();

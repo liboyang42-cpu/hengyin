@@ -1401,6 +1401,7 @@ class CombinedBudgetControls(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory,patch.dict(os.environ,self.env(),clear=True):
             path,state,obj,mysql,namespace=self.namespace_fixture(directory);events=[];reports=[]
             out=Path(directory)/'out';out.mkdir();(out/'run.log').write_bytes(b'private existing log')
+            state['runLogCaptured']=True # This old namespace-only fixture already owns its completed log capture.
             def command(argv,**kw):
                 if argv[-2:]==['readlink','/proc/self/ns/net']:return namespace
                 self.assertEqual(argv,B.DOCKER+['exec','1'*64,'java','-Xmx32m','/budget/CombinedHttpNamespacePortProbe.java','6391'])
@@ -1425,6 +1426,7 @@ class CombinedBudgetControls(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory,patch.dict(os.environ,self.env(),clear=True):
             path,state,obj,mysql,namespace=self.namespace_fixture(directory);events=[];reports=[]
             out=Path(directory)/'out';out.mkdir();(out/'run.log').write_bytes(b'private existing log')
+            state['runLogCaptured']=True # Keep this control scoped to its original namespace failure.
             def cleanup(path,current,role):
                 events.append(role)
                 return {'role':role,'cid':current['slots'][role]['cid'],'result':'EXACT_CID_REMOVED_AND_ABSENT',
@@ -2265,6 +2267,97 @@ class CombinedBudgetControls(unittest.TestCase):
                 args[at:at+1]=replacement
                 with self.assertRaisesRegex(ValueError,'FIXED_OFFLINE_MAVEN_COMMAND_CHANGED'):
                     B.validate_app_inputs(wrong,path,state)
+
+
+    def test_private_mxbean_rows_survive_raw_log_append_and_bind_only_exact_accepted_jvms(self):
+        with tempfile.TemporaryDirectory() as directory,patch.dict(os.environ,self.env(),clear=True),patch.object(B,'OUT',Path(directory)):
+            state={'identity':B.identity(self.env()),'nonce':'nonce','slots':{'app':{'cid':'1'*64,'name':'own-app'}},
+                   'javaProcesses':[{'role':'SUREFIRE','namespacePid':22,'hostPid':100,'startTicks':800,'jvmMemory':{'profile':'SUREFIRE'}},
+                                    {'role':'DESCENDANT_JVM','namespacePid':23,'hostPid':101,'startTicks':900,'jvmMemory':{'profile':'SCHEDULER_PROBE'}}]}
+            log=B.private_run_log(create=True);self.assertEqual(log.stat().st_mode & 0o777,0o600)
+            prefix='CONTROLLED_COMBINATION_MEMORY '+self.env()['SOURCE_SHA']+' 41 2 '
+            scalar=' 0 12 32 64 0 9 16 -1 1 10 0 8 16 -1 1 1 2 7 9\n'
+            original=(prefix+'SUREFIRE HELD 22 100 200'+scalar+prefix+'SCHEDULER_PROBE ENTER 23 80 201'+scalar).encode()
+            log.write_bytes(original)
+            def transport(argv,**kwargs):
+                self.assertEqual(argv,B.DOCKER+['logs','1'*64]);kwargs['stdout'].write(b'PRIVATE_RAW_DOCKER_TEXT\n')
+                return SimpleNamespace(returncode=0)
+            with patch.object(B,'inspect',return_value=self.obj()),patch.object(B,'validate_owner') as owner,\
+                 patch.object(B.subprocess,'run',side_effect=transport),patch.object(B,'save'):
+                B.capture_app_log(Path(directory),state)
+                owner.assert_called_once();self.assertIs(state['runLogCaptured'],True)
+            self.assertEqual(log.read_bytes(),original+b'PRIVATE_RAW_DOCKER_TEXT\n')
+            observed=B.mxbean_readback(state);self.assertEqual(observed['state'],'OBSERVED')
+            self.assertIs(observed['businessAccepted'],False);self.assertEqual(len(observed['records']),2)
+            self.assertEqual([row['hostPid'] for row in observed['records']],[100,101])
+            self.assertEqual(observed['records'][0]['heap'],{'initBytes':0,'usedBytes':12,'committedBytes':32,'maxBytes':64})
+            self.assertEqual(observed['records'][1]['nonheap']['maxBytes'],-1)
+            self.assertEqual(observed['records'][1]['buffers'],[{'kindCode':1,'count':2,'memoryUsedBytes':7,'totalCapacityBytes':9}])
+            self.assertNotIn('PRIVATE_',json.dumps(observed))
+            log.write_bytes(original+(prefix+'SUREFIRE HELD 22').encode())
+            partial=B.mxbean_readback(state);self.assertEqual(partial['state'],'PARTIAL_OR_UNKNOWN')
+            self.assertEqual(partial['records'],observed['records'],'A truncated last write is not another sample and cannot erase complete rows')
+            with self.assertRaises(FileExistsError):B.private_run_log(create=True)
+
+    def test_mxbean_projection_rejects_foreign_malformed_unbounded_and_unowned_log_inputs(self):
+        for kind in ('source','run','attempt','role','phase','value','overflow','truncated','extra','pools','buffers',
+                     'oversize','duplicate','permission','symlink','missing','state-identity','no-pid-proof','missing-reading'):
+            with self.subTest(kind=kind),tempfile.TemporaryDirectory() as directory,patch.dict(os.environ,self.env(),clear=True),patch.object(B,'OUT',Path(directory)):
+                state={'identity':B.identity(self.env()),'runLogCaptured':True,'slots':{'app':{'cid':'1'*64}},
+                       'javaProcesses':[{'role':'SUREFIRE','namespacePid':22,'hostPid':100,'startTicks':800,'jvmMemory':{'profile':'SUREFIRE'}}]}
+                log=B.private_run_log(create=True)
+                line='CONTROLLED_COMBINATION_MEMORY '+self.env()['SOURCE_SHA']+' 41 2 SUREFIRE HELD 22 100 200 0 12 32 64 0 9 16 -1 0 0\n'
+                if kind=='source':line=line.replace(self.env()['SOURCE_SHA'],'b'*40)
+                if kind=='run':line=line.replace(' 41 2 ',' 42 2 ')
+                if kind=='attempt':line=line.replace(' 41 2 ',' 41 3 ')
+                if kind=='role':line=line.replace('SUREFIRE','PRIVATE_ROLE')
+                if kind=='phase':line=line.replace('HELD','PRIVATE_PHASE')
+                if kind=='value':line=line.replace(' 12 ',' PRIVATE_VALUE ')
+                if kind=='overflow':line=line.replace(' 12 ',' 9223372036854775808 ')
+                if kind=='truncated':line=line[:-4]+'\n'
+                if kind=='extra':line=line[:-1]+' 8\n'
+                if kind=='pools':line=line[:-4]+' 17 0\n'
+                if kind=='buffers':line=line[:-2]+'5\n'
+                if kind=='oversize':line=line[:-1]+' 8'*4097+'\n'
+                if kind=='duplicate':line+=line
+                if kind=='state-identity':state['identity']['sourceSha']='b'*40
+                if kind=='no-pid-proof':state['javaProcesses']=[]
+                if kind=='missing-reading':line=line.replace('0 12 32 64','-1 -1 -1 -1')
+                log.write_text(line)
+                if kind=='permission':log.chmod(0o644)
+                if kind=='symlink':log.unlink();target=Path(directory)/'PRIVATE_TARGET';target.write_text(line);log.symlink_to(target)
+                if kind=='missing':log.unlink()
+                observed=B.mxbean_readback(state)
+                if kind in ('no-pid-proof','missing-reading'):
+                    self.assertEqual(observed['state'],'PARTIAL_OR_UNKNOWN');self.assertEqual(len(observed['records']),1)
+                else:self.assertEqual(observed['state'],'UNKNOWN');self.assertEqual(observed['records'],[])
+                self.assertNotIn('PRIVATE_',json.dumps(observed));self.assertNotIn(directory,json.dumps(observed))
+
+    def test_oom_readback_precedes_cleanup_and_cannot_replace_failure_or_sign_business_success(self):
+        with tempfile.TemporaryDirectory() as directory,patch.dict(os.environ,self.env(),clear=True):
+            path,state,obj,mysql,namespace=self.namespace_fixture(directory);events=[];reports=[]
+            out=Path(directory)/'out';out.mkdir()
+            state['firstFailure']={'phase':'APP_EXECUTION','reasonCode':'ACTUAL_CGROUP_CHILD_OOM_KILL'}
+            original=copy.deepcopy(state['firstFailure']);state['cgroupMemoryEvents']={'oom_kill':'1'}
+            state['javaProcesses'].append({'role':'SUREFIRE','namespacePid':22,'hostPid':100,'startTicks':800,'jvmMemory':{'profile':'SUREFIRE'}})
+            def failed_capture(*args):events.append('RAW_LOG_ATTEMPT');raise OSError('PRIVATE_LOG_VALUE')
+            def clean(path,current,role):
+                events.append('CLEANUP_'+role)
+                return {'role':role,'cid':current['slots'][role]['cid'],'result':'EXACT_CID_REMOVED_AND_ABSENT',
+                        'terminal':{'ExitCode':137 if role=='app' else 0,'OOMKilled':role=='app','Running':False,'Pid':0}}
+            with patch.object(B,'OUT',out):
+                log=B.private_run_log(create=True)
+                log.write_text('CONTROLLED_COMBINATION_MEMORY '+self.env()['SOURCE_SHA']+' 41 2 SUREFIRE HELD 22 100 200 0 12 32 64 0 9 16 -1 0 0\n')
+                with patch.object(B,'load_private',return_value=(path,state)),patch.object(B,'capture_app_log',side_effect=failed_capture),\
+                     patch.object(B,'namespace_port_proof',return_value={'result':'UNKNOWN'}),patch.object(B,'cleanup_slot',side_effect=clean),\
+                     patch.object(B,'write',side_effect=lambda path,value:reports.append(copy.deepcopy(value))):
+                    with self.assertRaisesRegex(ValueError,'ORIGINAL_EXIT_OR_BUDGET_OR_CLEANUP_NOT_ACCEPTED'):B.finalize(path,2)
+            report=reports[-1];self.assertEqual(events,['RAW_LOG_ATTEMPT','CLEANUP_redis','CLEANUP_app'])
+            self.assertEqual(report['firstFailure'],original);self.assertEqual(report['result'],'NOT_ACCEPTED')
+            self.assertEqual(report['originalExit'],2);self.assertIsNone(report['mavenExit']);self.assertIsNone(report['appExit'])
+            self.assertEqual(report['jvmMxBeanReadback']['state'],'PARTIAL_OR_UNKNOWN')
+            self.assertEqual(len(report['jvmMxBeanReadback']['records']),1)
+            self.assertEqual(report['cgroupMemoryEvents'],{'oom_kill':'1'});self.assertNotIn('PRIVATE_',json.dumps(report))
 
 
 if __name__=='__main__':unittest.main()
