@@ -12,7 +12,8 @@ test('RUN-001: 客户页没有活动外广播入口或发送代码，活动导�
 
 test('RUN-002: 管理与筛选独立弹层，列表仍可批量选人', () => {
   const wxml = read('pages/merchant/customer/index.wxml');
-  assert.match(wxml, /<cy-sheet[^>]*show="\{\{toolsOpen\}\}"[^>]*title="客户管理"/);
+  // 2026-10-28 m679:管理半屏改成 Threads 式菜单,不带标题
+  assert.match(wxml, /<cy-sheet inset show="\{\{toolsOpen\}\}" bind:close="closeTools">/);
   assert.match(wxml, /<cy-sheet[^>]*show="\{\{filterOpen\}\}"[^>]*title="筛选客户"/);
   assert.match(wxml, /data-memberid="\{\{item.memberId\}\}"/);
   assert.match(wxml, /wx:if="\{\{selecting\}\}"/);

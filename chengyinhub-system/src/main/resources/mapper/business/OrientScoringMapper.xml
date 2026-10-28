@@ -62,11 +62,76 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         null as resolution_entry_id,resolution_note,handled_by,handled_at,window_deadline,idempotency_key,
         request_fingerprint,create_time,update_time</sql>
 
+    <resultMap id="Recovery" type="com.chengyinhub.business.domain.OrientScoreRecovery">
+        <id property="id" column="id"/>
+        <result property="sessionId" column="session_id"/><result property="memberId" column="member_id"/>
+        <result property="kind" column="kind"/><result property="status" column="status"/>
+        <result property="referenceId" column="reference_id"/><result property="resolutionNote" column="resolution_note"/>
+        <result property="handledBy" column="handled_by"/><result property="handledAt" column="handled_at"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+    <select id="selectRecoveryById" resultMap="Recovery">
+        select * from orient_score_recovery where id = #{id}
+    </select>
+    <select id="selectRecoveryForUpdate" resultMap="Recovery">
+        select * from orient_score_recovery where session_id = #{sessionId} and kind = #{kind} for update
+    </select>
+    <select id="selectRecoveriesBySession" resultMap="Recovery">
+        select * from orient_score_recovery where session_id = #{sessionId} order by id
+    </select>
+    <select id="selectRecoveriesByStatus" resultMap="Recovery">
+        select * from orient_score_recovery <where><if test="status != null">status = #{status}</if></where>
+        order by id desc limit #{limit}
+    </select>
+    <insert id="insertRecovery" useGeneratedKeys="true" keyProperty="id">
+        insert into orient_score_recovery(session_id,member_id,kind,status,create_time)
+        values(#{sessionId},#{memberId},#{kind},0,#{createTime})
+    </insert>
+    <update id="reviewRecovery">
+        update orient_score_recovery set status=1,reference_id=#{referenceId},resolution_note=#{resolutionNote},
+               handled_by=#{handledBy},handled_at=#{handledAt}
+         where id=#{id} and status=0
+    </update>
+
     <select id="selectSessionForUpdate" resultMap="RouteSession">
         select <include refid="sessionColumns"/> from topic_route_session where id = #{id} for update
     </select>
     <select id="selectSessionById" resultMap="RouteSession">
         select <include refid="sessionColumns"/> from topic_route_session where id = #{id}
+    </select>
+
+    <select id="selectSyncReceipt" resultType="com.chengyinhub.business.domain.OrientScoreSyncReceipt">
+        select session_id as sessionId, member_id as memberId, idempotency_key as idempotencyKey,
+               added, total_centi as totalCenti
+          from orient_score_sync_receipt
+         where session_id = #{sessionId} and idempotency_key = #{idempotencyKey}
+    </select>
+    <select id="selectSyncReceiptForUpdate" resultType="com.chengyinhub.business.domain.OrientScoreSyncReceipt">
+        select session_id as sessionId, member_id as memberId, idempotency_key as idempotencyKey,
+               added, total_centi as totalCenti
+          from orient_score_sync_receipt
+         where session_id = #{sessionId} and idempotency_key = #{idempotencyKey} for update
+    </select>
+    <insert id="insertSyncReceipt">
+        insert into orient_score_sync_receipt(session_id,member_id,idempotency_key,added,total_centi)
+        values(#{sessionId},#{memberId},#{idempotencyKey},#{added},#{totalCenti})
+    </insert>
+    <select id="countPendingAlternatives" resultType="int">
+        select count(*) from orient_task_attempt
+         where member_id = #{memberId} and activity_id = #{activityId} and topic_id = #{topicId}
+           and play_instance_id = #{playInstanceId} and status = 0 and alternative_task_type = 'PHOTO'
+    </select>
+    <select id="selectCompletedAlternativeNodes" resultType="long">
+        select distinct task_id from orient_task_completion
+         where member_id = #{memberId} and activity_id = #{activityId} and topic_id = #{topicId}
+           and play_instance_id = #{playInstanceId}
+         order by task_id
+    </select>
+
+    <select id="countPendingProgress" resultType="int">
+        select count(*) from player_node_progress
+         where member_id = #{memberId} and activity_id = #{activityId} and topic_id = #{topicId}
+           and play_instance_id = #{playInstanceId} and status = 1 and review_status = 0 and del_flag = 0
     </select>
 
     <insert id="insertEntry" parameterType="com.chengyinhub.business.domain.OrientScoreEntry" useGeneratedKeys="true" keyProperty="id">
@@ -179,6 +244,41 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
                handled_by = #{handledBy}, handled_at = #{handledAt}, update_time = #{updateTime}
          where id = #{id} and status = 0
     </update>
+
+    <!-- Rank the complete scope before limiting: member ID only stabilizes display, never breaks ties.
+         Freeze clock milliseconds; old sessions without a clock retain their server start/end facts. -->
+    <select id="selectRankedBoard" resultType="java.util.LinkedHashMap">
+        with latest as (
+            select r.* from topic_route_session r
+             where r.activity_id = #{activityId} and r.topic_id = #{topicId}
+               and r.id = (select max(x.id) from topic_route_session x
+                            where x.member_id = r.member_id and x.activity_id = r.activity_id and x.topic_id = r.topic_id)
+        ), facts as (
+            select r.member_id as memberId, r.id as sessionId,
+                   case when r.status = 1 then 1 else 0 end as reachedEnding,
+                   coalesce((select sum(l.delta_centi) from orient_score_ledger l where l.session_id = r.id), 0) as scoreCenti,
+                   case when r.status in (1,2) then
+                     case when c.session_id is not null then
+                       case when c.ended_at is not null and c.elapsed_ms &gt;= 0 then c.elapsed_ms end
+                     when r.completed_at is not null and r.create_time is not null and r.completed_at &gt;= r.create_time
+                       then timestampdiff(MICROSECOND,r.create_time,r.completed_at) div 1000 end
+                   end as elapsedMs
+              from latest r left join orient_session_clock c on c.session_id = r.id and c.member_id = r.member_id
+        ), ranked as (
+            select facts.*, rank() over (order by
+              <choose>
+                <when test="routeRanked">reachedEnding desc,</when>
+                <otherwise>scoreCenti desc,</otherwise>
+              </choose>
+              elapsedMs is null asc, elapsedMs asc) as boardRank
+              from facts
+        ), numbered as (
+            select ranked.*, row_number() over (order by boardRank,memberId) as displayRow from ranked
+        )
+        select memberId,sessionId,reachedEnding,scoreCenti,elapsedMs,boardRank,displayRow
+          from numbered where displayRow &lt;= #{limit} or memberId = #{memberId}
+         order by displayRow
+    </select>
 
     <select id="selectBoardTotals" resultType="java.util.HashMap">
         select r.member_id as memberId, coalesce(sum(l.delta_centi), 0) as totalCenti

@@ -111,7 +111,10 @@ test('协调者界面合同：直接切换章节开幕、主题/节点摘要与�
   const built = fixture.build(), p = fixture.page(); p.data.formData.themeRuntimeConfig = JSON.stringify(built.runtime);
   p.data.nodesForm = p.data.formData.chapters[0].nodes[1]; p._refreshStructureSummary();
   assert.deepEqual(p.data.structureSummary, { modeLabel: '队伍共用现场', endingsText: '2 个 · 默认收尾：安全撤离', endingsError: '' });
-  assert.equal(p.data.nodeStructureSummary, '到达：出发站 · 引导开 · 备用 1');
+  // 10-28 e-node：摘要只写到达地点；打开了换个方式时写「可扫码或答题」。
+  assert.equal(p.data.nodeStructureSummary, '出发站');
+  p._altDrafts = { [p.data.nodesForm.id]: { SCAN: { on: true }, QUIZ: { on: true } } }; p._refreshStructureSummary();
+  assert.equal(p.data.nodeStructureSummary, '可扫码或答题');
   assert.equal(p.data.structureModeOptions.find(row => row.selected).key, 'WORLD_SHARED');
   assert.equal(p.data.chapterHostUnlock, true); assert.equal(p.data.chapterHostUnlockDisabledReason, '');
   assert.deepEqual(p.data.structureModeOptions.map(row => row.icon), ['tab-me', 'tab-club', 'tab-explore']);

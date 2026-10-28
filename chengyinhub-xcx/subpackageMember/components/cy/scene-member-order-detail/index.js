@@ -292,7 +292,9 @@ Component({
       loadErrorText: '',
       loadFailureVisible: false,
       // 批5 探店日完局面;非探店日单恒 show:false
-      completion: emptyCompletion()
+      completion: emptyCompletion(),
+      // 10-28 原型 C「发票」段;state: can | ing | issued | paused | blocked
+      invoiceRow: { show: false }
     },
   lifetimes: {
     attached() {
@@ -353,6 +355,37 @@ Component({
     // 导航只由这里发起；保留订单上下文供返回，不能同时让宿主 close 再发一次导航。
     _leave(url) {
       wx.navigateTo({ url, fail: () => toast('页面暂时打不开，请重试') })
+    },
+    /* 10-28 原型 C「订单详情 · 发票」段。只对已付款、非免费的订单;功能未开放或读不出时整段不出。
+       单笔开票状态需后端在 registration/info 带 invoiceStatus / invoiceApplicationId / invoiceNo;
+       这几个字段下发前只认可开票订单列表:在列表里 = 可申请(开票单位未开通 = 暂不可申请),不在 = 不出。 */
+    loadInvoice(info) {
+      const exactId = value => /^[1-9]\d{0,18}$/.test(String(value == null ? '' : value)) ? String(value) : '';
+      const id = exactId(info.id);
+      const key = this._invoiceKey = (this._invoiceKey || 0) + 1;
+      const STATE = { NONE: 'can', SUBMITTED: 'ing', CLAIMED: 'ing', PROCESSING: 'ing', ISSUE_UNKNOWN: 'ing', ISSUED: 'issued', PAUSED: 'paused' };
+      if (Number(info.paymentStatus) !== 2 || info.isFreeOrder || !id) { this.setData({ invoiceRow: { show: false } }); return; }
+      const state = STATE[info.invoiceStatus];
+      const applicationId = exactId(info.invoiceApplicationId);
+      if (state && state !== 'can' && applicationId) {
+        this.setData({ invoiceRow: { show: true, state, applicationId, invoiceNo: String(info.invoiceNo || '') } });
+        return;
+      }
+      const that = this;
+      const settle = function (res) {
+        if (!that._attached || that._invoiceKey !== key) return;
+        const rows = res && Number(res.code) === 200 && Array.isArray(res.data) ? res.data : [];
+        const row = rows.find(item => item && exactId(item.orderId) === id);
+        that.setData({ invoiceRow: row ? { show: true, state: exactId(row.issuerId) ? 'can' : 'blocked' } : { show: false } });
+      };
+      app.sendRequest({ url: '/api/invoice/orders/eligible', method: 'POST', data: '{}', header: { 'Content-Type': 'application/json' },
+        hideLoading: true, autoErrorToast: false, success: settle, fail: function () { settle(null); },
+        successStatusAbnormal: function () { settle(null); } });
+    },
+    goInvoiceApply() { this._leave('/subpackageMember/invoice-apply/index'); },
+    goInvoiceDetail() {
+      const id = this.data.invoiceRow && this.data.invoiceRow.applicationId;
+      if (id) this._leave('/subpackageMember/invoice-detail/index?id=' + id);
     },
     // 沿用原 id 重拉(失败面板已不给重试钮,父层刷新仍走这里)
     reloadOrder() {
@@ -992,6 +1025,7 @@ Component({
             });
             that.loadCompletion(info);
             that.loadMarketingConsent(info);
+            that.loadInvoice(info);
           } else {
             // 过时请求的失败不能在新请求已接管后弹出误导性提示。
             markFailed('failed_business', app.getRequestErrorMessage(res, '订单暂时读不到'));

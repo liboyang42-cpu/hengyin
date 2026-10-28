@@ -124,4 +124,56 @@ function drawPlayStateMarker(ctx, size, stateKey) {
   circle(ctx, size, 5, '#111111')
 }
 
-module.exports = { drawPlayStateMarker }
+/* 带序号的点位(2026-10-27 用户:「地图点位样式要统一」)。
+   以前是「图标 + 头上一块深色序号胶囊」两件套,站点一挤胶囊就互相叠、序号飘在别的点上。
+   现在序号画进圆里,状态只换底色:待去 = 白底黑字,已完成 = 黑底白字 + 右下小勾,未解锁 = 灰底 + 右下小锁。 */
+function drawNumberedMarker(ctx, size, stateKey, num) {
+  const state = stateKey || 'actionable'
+  const mid = size / 2
+  const r = 36
+  ctx.clearRect(0, 0, size, size)
+  let fill = '#FFFFFF'   /* ds-ok canvas 拿不到 var()，与同文件 marker 同值 */
+  let ink = '#111111'
+  if (state === 'completed' || state === 'redeem-pending') { fill = '#111111'; ink = '#FFFFFF' }   /* ds-ok */
+  else if (state === 'restricted' || state === 'paused') { fill = '#4A4A4A'; ink = '#FFFFFF' }   /* ds-ok */
+  if (state === 'candidate') {
+    circle(ctx, size, r, fill)
+    if (ctx.setLineDash) ctx.setLineDash([10, 8])
+    circle(ctx, size, r, null, '#555555', 6)
+    if (ctx.setLineDash) ctx.setLineDash([])
+  } else {
+    circle(ctx, size, r, fill, fill === '#FFFFFF' ? '#111111' : '#FFFFFF', fill === '#FFFFFF' ? 7 : 5)   /* ds-ok */
+  }
+  const label = String(num)
+  ctx.fillStyle = ink
+  ctx.font = 'bold ' + (label.length > 2 ? 30 : 40) + 'px sans-serif'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.fillText(label, mid, mid + 2)
+  if (state === 'completed' || state === 'redeem-pending' || state === 'restricted') {
+    const bx = mid + 32
+    const by = mid + 32
+    ctx.beginPath()
+    ctx.arc(bx, by, 17, 0, Math.PI * 2)
+    ctx.fillStyle = '#FFFFFF'   /* ds-ok */
+    ctx.fill()
+    ctx.strokeStyle = '#111111'   /* ds-ok */
+    ctx.fillStyle = '#111111'   /* ds-ok */
+    if (state === 'restricted') {
+      ctx.lineWidth = 3
+      ctx.beginPath()
+      ctx.arc(bx, by - 4, 6, Math.PI, 0)
+      ctx.stroke()
+      ctx.fillRect(bx - 8, by - 4, 16, 12)
+    } else {
+      ctx.lineWidth = 4
+      ctx.beginPath()
+      ctx.moveTo(bx - 8, by)
+      ctx.lineTo(bx - 2, by + 6)
+      ctx.lineTo(bx + 9, by - 6)
+      ctx.stroke()
+    }
+  }
+}
+
+module.exports = { drawPlayStateMarker, drawNumberedMarker }

@@ -1,0 +1,37 @@
+Source 8bfe4f765053a67e3013d74fe6e157201a86fbcc; run40377384650
+2026-10-26T18:26:14.5275289Z FAIL(组件 WXSS tag selector): components/cy/event-attendance/index.wxss:2 —— WeChat 组件 WXSS 仅允许 class selector
+2026-10-26T18:26:14.5277362Z FAIL(组件 WXSS tag selector): components/cy/event-attendance/index.wxss:2 —— WeChat 组件 WXSS 仅允许 class selector
+2026-10-26T18:26:14.5279209Z FAIL(组件 WXSS tag selector): pages/merchant/components/desk/index.wxss:4 —— WeChat 组件 WXSS 仅允许 class selector
+2026-10-26T18:26:14.5280953Z FAIL(组件 WXSS tag selector): pages/merchant/components/desk/index.wxss:4 —— WeChat 组件 WXSS 仅允许 class selector
+2026-10-26T18:26:14.5282322Z FAIL(组件 WXSS tag selector): pages/merchant/components/desk/index.wxss:5 —— WeChat 组件 WXSS 仅允许 class selector
+2026-10-26T18:26:14.5283371Z FAIL(组件 WXSS tag selector): pages/publish/components/attribute-binding-editor/index.wxss:7 —— WeChat 组件 WXSS 仅允许 class selector
+2026-10-26T18:26:14.5285659Z FAIL(组件 WXSS tag selector): pages/publish/components/story-rule-editor/index.wxss:2 —— WeChat 组件 WXSS 仅允许 class selector
+2026-10-26T18:26:14.5286820Z FAIL(组件 WXSS tag selector): pages/publish/components/story-rule-editor/index.wxss:6 —— WeChat 组件 WXSS 仅允许 class selector
+2026-10-26T18:26:14.5287465Z 组件 WXSS 选择器门禁:未通过(8 处)
+2026-10-26T18:26:23.8902256Z U2 门禁不通过:新增 8 处死链绑定
+2026-10-26T18:26:28.4772612Z U3 门禁不通过:新增 3 个孤儿 handler
+2026-10-26T18:26:34.2157293Z U4 门禁不通过:新增 4 个死数据字段
+2026-10-26T18:26:56.4919989Z 覆盖率门禁不通过:未覆盖 1 / 仅 blocked 0 / 无效豁免 0
+2026-10-26T18:27:56.7939588Z ACTION-LEDGER FAIL: 台账缺失或已漂移；运行 npm run audit:actions:update 后审阅变更
+2026-10-26T18:28:00.7107699Z route-matrix FAIL: 生成物已漂移；运行 build-route-matrix.js --json 后审阅变更
+2026-10-26T18:28:01.3540156Z [SELFTEST][WARN-AS-ERROR] RED caught; restored GREEN — --warn-as-error 下占位/开发者口径/裸网络/半角逗号/超长提示文案会进入失败判定
+2026-10-26T18:30:01.6474934Z U1 FAIL:静态路径 1047,动态路径 72,变量路径 14,逐项理由 9
+2026-10-26T18:30:01.6602776Z UI-GATE-0:FAIL (86 violations)
+2026-10-26T18:30:01.6762746Z U2 FAIL:绑定 5540,显式 skip 3,白名单 0(复用 wxml-handler-lint)
+2026-10-26T18:30:01.6763500Z U3 FAIL:零绑定债务 64/62 已登记,生命周期规则 14
+2026-10-26T18:30:01.6764361Z U4 FAIL:零消费债务 126/126 已登记,动态 setData 63/44 已登记
+2026-10-26T18:30:01.6765089Z U5 FAIL:需逐项理由 43,同请求内静态证明显式处理 311,逐项理由 30
+2026-10-26T18:30:21.2656158Z U3 FAIL:subpackageRoam/my-teams/index.js 孤儿 handler onTeamCommandTerminal（WXML 零绑定且 JS 无调用）
+2026-10-26T18:30:21.2657609Z U3 FAIL:subpackageRoam/nearby/index.js 孤儿 handler onTeamCommandTerminal（WXML 零绑定且 JS 无调用）
+2026-10-26T18:30:21.2658763Z U6 FAIL:components/cy/event-attendance/index.wxml:4 RAW_ERROR_TEXT error
+2026-10-26T18:30:21.2660152Z U6 FAIL:pages/merchant/components/desk/index.wxml:3 RAW_ERROR_TEXT errors[field]
+2026-10-26T18:30:21.2661182Z U6 FAIL:pages/merchant/components/desk/index.wxml:8 RAW_ERROR_TEXT error
+2026-10-26T18:30:21.2662130Z U6 FAIL:pages/merchant/reviews/index.wxml:3 RAW_ERROR_TEXT replyError
+2026-10-26T18:30:21.2663259Z U6 FAIL:pages/publish/components/attribute-binding-editor/index.wxml:14 RAW_ERROR_TEXT error
+2026-10-26T18:30:21.2664739Z U6 FAIL:pages/publish/components/story-rule-editor/index.wxml:18 RAW_ERROR_TEXT error
+2026-10-26T18:30:21.2666914Z U3:未通过（相对 58f4cc429b0d0e3035ccdf1bd4a9c3dfd76eb9a4 新增 2 个孤儿 handler）
+2026-10-26T18:30:21.2677387Z U6:未通过（相对 58f4cc429b0d0e3035ccdf1bd4a9c3dfd76eb9a4 新增 9 个裸错误/空白状态问题）
+2026-10-26T18:30:21.2678036Z U6 FAIL:pages/publish/fabu/index.wxml:982 RAW_ERROR_TEXT templateAdoptionError
+2026-10-26T18:30:21.2678672Z U6 FAIL:subpackageMember/free-explore/index.wxml:9 RAW_ERROR_TEXT error
+2026-10-26T18:30:21.2679314Z U6 FAIL:subpackageRoam/utils/team-recovery-panel.wxml:3 RAW_ERROR_TEXT teamCommandError
+2026-10-26T18:30:25.0439755Z 小程序静态门:未通过。红的子门禁:

@@ -59,6 +59,8 @@ public interface IAuditTaskService {
 
     AuditTaskDetailVO detail(Long taskId, Long viewerId, boolean platformAdmin);
 
+    java.util.Map<String, Object> itemProblemReceipt(Long taskId, Long viewerId, String requestId);
+
     /** 列出某审核单的处置/举报记录(含 action=REPORT 的举报留痕),供工作台 detail 展示举报数与处置历史。 */
     List<AuditRecord> listAuditRecords(Long taskId);
 
@@ -92,6 +94,20 @@ public interface IAuditTaskService {
         return submitAppeal(bizType, bizId, memberId, reason, evidenceJson);
     }
 
+    /** Bound request identity is mandatory for this overload; legacy overloads retain once-only semantics. */
+    com.chengyinhub.business.domain.AuditAppeal submitAppeal(String bizType, Long bizId, Long memberId,
+            String reason, String evidenceJson, java.util.List<String> attachments, String requestId);
+
+    java.util.Map<String, Object> appealReceipt(String bizType, Long bizId, Long memberId, String requestId);
+
     /** 作者只读：自己内容的审核轮次与时间线、申诉状态、是否可申诉。非作者抛 403。 */
     java.util.Map<String, Object> contentTimeline(String bizType, Long bizId, Long memberId);
+    com.chengyinhub.business.domain.AuditAppeal submitGuardAppeal(Long memberId,
+            com.chengyinhub.business.domain.dto.GuardAppealDTO request);
+    java.util.Map<String, Object> guardAppealReceipt(Long memberId, Long guardLogId, String requestId);
+    java.util.Map<String, Object> guardAppealReference(Long memberId, Long guardLogId, String arrivalRequestId);
+    boolean canReadGuardTask(AuditTask task);
+    List<AuditTask> selectWorkbenchQueueWithGuardScope(AuditTask filter, List<Long> guardTopicIds);
+    java.util.Map<String, Object> guardReviewReceipt(Long taskId, Long reviewerId, String requestId);
+
 }

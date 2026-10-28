@@ -20,20 +20,20 @@ function hasPreviewMotionContract(wxml, wxss) {
       const rule = wxss.match(new RegExp(`${escaped}\\s*\\{[^}]*animation:[^;}]+;`, 'm'))
       return Boolean(rule && /var\(--cy-motion-/.test(rule[0]) && /\bboth\b/.test(rule[0]) && !/\binfinite\b/.test(rule[0]))
     })
-  return /class="cg-pv-dots"/.test(wxml)
-    && /class="cg-pv-dot \{\{ pvStep === idx \? 'on' : '' \}\}"/.test(wxml)
+  // 2026-10-28 p81 业主「整体页面重新设计」:顶部圆点换成分段进度条(走到的段都亮)
+  return /class="cg-pv-seg \{\{ pvStep >= idx \? 'on' : '' \}\}"/.test(wxml)
     && panels >= 5
     && /class="cg-pv-medal-ico"/.test(wxml)
     && !/cg-pv-roadmap|cg-pv-medal-coin|cg-pv-medal-face--back/.test(wxml)
     // 2026-10-22 选择玩法改成半屏标签条(Figma 胶囊):按压反馈的承载换成玩法标签
     && /class="cg-tag-pill[^"]*"/.test(wxml)
     && /bindtap="pickR5GameTag"[^>]*hover-class="cy-pressed"/.test(wxml)
-    && /\.cg-pv-dot\s*\{[^}]*transition:[^;}]*var\(--cy-motion-/s.test(wxss)
+    && /\.cg-pv-seg\s*\{[^}]*transition:[^;}]*var\(--cy-motion-/s.test(wxss)
     && /\.cg--reduced-motion[^}]*animation:\s*none\s*!important/s.test(wxss)
     && oneShotRules
 }
 
-test('玩家预览保留原圆点与勋章 UI，只增加一次性步骤和选择反馈', () => {
+test('玩家预览分段进度与勋章 UI，只增加一次性步骤和选择反馈', () => {
   const wxml = read('pages/publish/temp/index.wxml')
   const wxss = read('pages/publish/temp/index.wxss')
   assert.equal(hasPreviewMotionContract(wxml, wxss), true)

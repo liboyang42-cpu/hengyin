@@ -70,14 +70,14 @@ class ApiPlayHistoryFulfillmentAccessTest
 
         controller = spy(new ApiPlayProgressController());
         doReturn(PLAYER).when(controller).getAppUserId();
-        ReflectionTestUtils.setField(controller, "playerNodeProgressService", progressService);
-        ReflectionTestUtils.setField(controller, "cmsTopicNodeService", nodeService);
-        ReflectionTestUtils.setField(controller, "cmsTopicService", topicService);
-        ReflectionTestUtils.setField(controller, "cmsActivityService", activityService);
-        ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrationService);
-        ReflectionTestUtils.setField(controller, "cmsMemberTemplateService", templateService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService", progressService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicNodeService", nodeService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicService", topicService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsActivityService", activityService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsRegistrationService", registrationService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsMemberTemplateService", templateService);
         callbackInboxMapper = mock(com.chengyinhub.business.mapper.WxContentCallbackInboxMapper.class);
-        ReflectionTestUtils.setField(controller, "wxContentCallbackInboxMapper", callbackInboxMapper);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "wxContentCallbackInboxMapper", callbackInboxMapper);
         when(callbackInboxMapper.countRiskyCallback(anyInt(), anyLong())).thenReturn(0);
 
         when(topicService.selectCmsTopicById(TOPIC)).thenReturn(topic());
@@ -407,7 +407,7 @@ class ApiPlayHistoryFulfillmentAccessTest
                 done(PLAYER, NODE_A, 1000L)));
         when(nodeService.selectCmsTopicNodeById(NODE_A))
                 .thenReturn(delistedNode(NODE_A, "普通下架站", "历史碎片"));
-        ReflectionTestUtils.setField(controller, "wxContentCallbackInboxMapper", null);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "wxContentCallbackInboxMapper", null);
 
         AjaxResult result = endingSelfPlay();
 

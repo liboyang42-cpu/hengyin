@@ -467,6 +467,7 @@ class ActivityCancelTest {
         pending.setId(50L);
         pending.setSourceId(2L);
         pending.setStatus(0);
+        pending.setPayoutStatus(RefundApplication.PAYOUT_DISPATCH_PENDING);
         pending.setRefundAmount(new BigDecimal("100.00"));
         when(refundService.selectRegistrationHistoryForUpdate(2L)).thenReturn(Arrays.asList(pending));
         when(refundService.supersedePendingRegistrationRefunds(org.mockito.ArgumentMatchers.eq(2L), anyString()))

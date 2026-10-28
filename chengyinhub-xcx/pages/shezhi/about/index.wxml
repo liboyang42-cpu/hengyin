@@ -56,6 +56,11 @@
         <view class="sz-attribution__body">Lucide Contributors；部分图形源自 Feather · Cole Bemis · MIT License。完整版权与许可声明随图标文件保留。</view>
         <view class="sz-attribution__body">来源：lucide.dev · 许可：lucide.dev/license</view>
       </view>
+      <view class="sz-attribution__divider"></view>
+      <view class="sz-attribution__block">
+        <view class="sz-attribution__name">龙藏体 Long Cang · SIL Open Font License 1.1</view>
+        <view class="sz-attribution__body">Copyright 2018 The LongCang Project Authors · 设计：ZhongQi。故事正文所用字体。</view>
+      </view>
     </view>
   </view>
 </view>

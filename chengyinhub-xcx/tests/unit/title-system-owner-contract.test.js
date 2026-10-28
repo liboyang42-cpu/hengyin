@@ -26,6 +26,17 @@ const WEBGL_EXCEPTION = 'subpackageP3/pages/badge-wall/index/index'
 
 // 完整路由盘点：总数断言只能防止数量漂移，逐路由集合才能防止两个页面互换后仍然假绿。
 const EXPECTED_NAV_ROUTES = [
+  // 2026-10-26 角色卡与本人发票使用共享导航及页标题；定向计分保留原生导航。
+  'subpackageMember/character/index',
+  'subpackageMember/invoice/index',
+  // 2026-10-28 文档二 L7:我的申诉与发票拆出的四页,同为 custom 导航 + cy-nav-bar(申请开票用导航栏标题,不挂 cy-page-title)
+  'subpackageMember/appeal-mine/index',
+  'subpackageMember/invoice-detail/index',
+  'subpackageMember/invoice-apply/index',
+  'subpackageMember/invoice-titles/index',
+  'subpackageMember/invoice-title-edit/index',
+  // 2026-10-26 自由探索权益页同为 custom 导航 + cy-nav-bar + cy-page-title 标准二级页(W8 同批注册,原登记漏记)
+  'subpackageMember/free-explore/index',
   // 2026-10-19 Claude 小程序线移植到 master(用户批准):本线 6 个新二级页,均为 cy-nav-bar + cy-page-title 标准二级页
   'pages/merchant/crm-campaigns/index',
   'subpackageMember/points-history/index',
@@ -45,7 +56,11 @@ const EXPECTED_NAV_ROUTES = [
   'pages/square/list/index', 'pages/square/detail/index',
   'pages/search2/index', 'pages/search2/result/index', 'subpackageMember/signup/index',
   'pages/templatedetail/templatedetail',
+  // 2026-10-28 +1:主题模板卡堆预览(业主定稿原型 v21):custom 导航 + overlay cy-nav-bar,标题由卡堆下方主题名承担
+  'pages/templatedetail/topic-preview/index',
   'pages/address/address', 'pages/addressinfo/addressinfo', 'pages/shezhi/shezhi', 'pages/shezhi/about/index',
+  // 2026-10-27 L02 P-55:营销消息与优惠券改成设置里点进去的独立页
+  'pages/shezhi/marketing/index',
   'pages/club/apply/index',
   'pages/agreement/index', 'pages/deregister/index', 'pages/gerenziliao/gerenziliao', 'pages/userinfo/userinfo',
   'subpackageMember/mytemplate/mytemplate', 'subpackageMember/coupon-qr/index', 'subpackageMember/coupon/coupon',
@@ -63,6 +78,8 @@ const EXPECTED_NAV_ROUTES = [
   'subpackageA/pages/myproject/index', 'subpackageA/pages/infomation/infomation',
   'subpackageA/pages/infomationdetail/infomationdetail',
   'subpackageA/pages/assetcenter/income-detail/income-detail', 'subpackageA/pages/assetcenter/earnings/index',
+  // 2026-10-28 G-9:账户收益 · 分析页
+  'subpackageA/pages/assetcenter/analysis/index',
   'subpackageP3/pages/growthcenter/index/index',
   'subpackageP3/pages/growthcenter/leaderboard/index',
   'subpackageP3/pages/stamp-album/index/index', 'subpackageB/pages/im/list/index',
@@ -104,6 +121,16 @@ const EXPECTED_NAV_ROUTES = [
 ]
 
 const EXPECTED_PAGE_TITLE_ROUTES = [
+  // 2026-10-26 角色卡与本人发票使用共享导航及页标题；定向计分保留原生导航。
+  'subpackageMember/character/index',
+  'subpackageMember/invoice/index',
+  // 2026-10-28 文档二 L7:我的申诉、发票详情、发票抬头、抬头编辑挂 cy-page-title(申请开票用导航栏标题)
+  'subpackageMember/appeal-mine/index',
+  'subpackageMember/invoice-detail/index',
+  'subpackageMember/invoice-titles/index',
+  'subpackageMember/invoice-title-edit/index',
+  // 2026-10-26 自由探索权益页同为 custom 导航 + cy-nav-bar + cy-page-title 标准二级页(W8 同批注册,原登记漏记)
+  'subpackageMember/free-explore/index',
   // 2026-10-19 Claude 小程序线移植到 master(用户批准):本线 6 个新二级页使用共享 cy-page-title 大标题
   'pages/merchant/crm-campaigns/index',
   'subpackageMember/points-history/index',
@@ -129,6 +156,7 @@ const EXPECTED_PAGE_TITLE_ROUTES = [
   // 2026-09-06:申请页大标题用回共享 cy-page-title(不再自绘 .ca-q)
   'pages/club/apply/index',
   'pages/shezhi/shezhi', 'pages/shezhi/about/index', 'pages/agreement/index', 'pages/deregister/index', 'pages/userinfo/userinfo',
+  'pages/shezhi/marketing/index',
   'subpackageMember/mytemplate/mytemplate', 'subpackageMember/coupon/coupon', 'subpackageMember/couponInfo/couponInfo',
   'subpackageMember/order/order', 'subpackageMember/orderinfo/orderinfo', 'subpackageMember/tixian/tixian',
   'subpackageMember/tixianjilu/tixianjilu', 'pages/mylike/mylike', 'subpackageMember/mycanyu/mycanyu',
@@ -139,6 +167,8 @@ const EXPECTED_PAGE_TITLE_ROUTES = [
   'pages/activity/official-organizer/index',
   'subpackageA/pages/infomation/infomation', 'subpackageA/pages/infomationdetail/infomationdetail',
   'subpackageA/pages/assetcenter/income-detail/income-detail', 'subpackageA/pages/assetcenter/earnings/index',
+  // 2026-10-28 G-9:账户收益 · 分析页
+  'subpackageA/pages/assetcenter/analysis/index',
   'subpackageP3/pages/growthcenter/index/index',
   'subpackageP3/pages/growthcenter/leaderboard/index', 'subpackageP3/pages/stamp-album/index/index',
   'pages/publish/activity/index',
@@ -286,8 +316,15 @@ function assertTitleInventory(readSource = read) {
   // 2026-10-23 起名页 templateadd 退役删除(custom 导航页) ⇒ 145 → 144。
   // 2026-10-25 +1:官方地点挑战(pages/play/poi-challenge):整屏玩法页,拍照 / 答题用 cy-playkit-qa 自带的退出键,
   //   勋章用 cy-medal-screen,与 citystamp / stamp-camera 同形态,不挂 cy-nav-bar / cy-page-title ⇒ 144 → 145。
-  assert.equal(rows.length, 145, '注册页面盘点数量发生漂移,需重新核对标题规范')
-  assert.equal(rows.filter((row) => row.custom).length, 145)
+  // 2026-10-27 L02 P-55 +1:营销消息与优惠券独立页(custom 导航 + cy-nav-bar plain + cy-page-title 普通二级页)⇒ 145 → 146;custom 同步 146。
+  // 2026-10-28 G-9 +1:账户收益 · 分析页(custom 导航 + cy-nav-bar + cy-page-title 普通二级页)⇒ 146 → 147;custom 同步 147。
+  // 2026-10-26 +4 注册页，其中角色卡/发票/自由探索权益 +3 custom，定向计分使用原生导航 ⇒ 145 → 149;custom 145 → 148。
+  // 2026-10-28 文档二 L9 集成 +5:我的申诉、发票详情 / 申请开票 / 发票抬头 / 抬头编辑,均为 custom 导航 + cy-nav-bar ⇒ 149 → 154;custom 148 → 153。
+  // 2026-10-28 +1:主题模板卡堆预览 topic-preview(custom 导航 + overlay cy-nav-bar,不挂 cy-page-title)⇒ 145 → 146。
+  // 2026-10-28 L9 再并 master:#652 topic-preview(custom)+1 叠加本线 ⇒ 154 → 155;custom 153 → 154。
+  // 2026-10-28 并 master(#658 后)合流 integrate/devfix-20261027:master 155 / custom 154 叠加本线两页(均 custom)⇒ 157;custom 156。
+  assert.equal(rows.length, 157, '注册页面盘点数量发生漂移,需重新核对标题规范')
+  assert.equal(rows.filter((row) => row.custom).length, 156)
   // 2026-09-02:+2 俱乐部客户列表与客户详情(club/customers、club/customer-detail),
   //   均为 custom 导航 + cy-nav-bar + cy-page-title 的普通二级页 = 133；custom 导航 129 + 2 = 131。
   const knownRoutes = new Set(routes)

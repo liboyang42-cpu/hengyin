@@ -602,7 +602,9 @@ test('★列表不写「城市身份卡」分组标题、详情来源不带它;�
     identity: [{ badgeCode: 'FIRST_STEP', badgeName: '开始在场', category: 'EXPLORE', unlocked: false }]
   });
   assert.equal(page.data.badgeGroups.length, 1);
-  assert.equal(page.data.badgeGroups[0].title, '', '身份卡那一组不写标题');
+  // 2026-10-27 owner P-30:分组改为「已点亮 / 未解锁」两段,段标题就是这两个词(仍不写「城市身份卡」)
+  assert.equal(page.data.badgeGroups[0].title, '未解锁');
+  assert.ok(!/城市身份卡/.test(page.data.badgeGroups[0].title), '分组标题不写城市身份卡');
   assert.ok(!/城市身份卡/.test(page.data.badges[0].source), '来源里不写城市身份卡');
   assert.ok(!('legend' in page.data), '图例删了就不该再产出数据');
   const wxml = fs.readFileSync(WXML_PATH, 'utf8');

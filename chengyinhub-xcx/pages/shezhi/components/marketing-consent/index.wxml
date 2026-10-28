@@ -1,5 +1,5 @@
-<view class="mc">
-  <text class="mc-intro">默认关闭，随时可退订</text>
+<view class="mc mc--{{layout}}">
+  <text class="mc-intro" wx:if="{{layout !== 'page'}}">默认关闭，随时可退订</text>
   <view class="mc-loading" wx:if="{{state === 'loading'}}">正在加载…</view>
   <view class="mc-error" wx:elif="{{state === 'error'}}">
     <cy-inline-error load-failure kind="network" title="营销同意状态加载失败" sub="{{error}}" action="重试" bind:action="retry" />
@@ -7,15 +7,22 @@
   <view class="mc-empty" wx:elif="{{state === 'empty'}}">完成一次真实报名后，可在这里管理对应商家的消息。</view>
   <view class="mc-list" wx:else>
     <view class="mc-merchant" wx:for="{{rows}}" wx:key="merchantRowId">
-      <text class="mc-name">{{item.merchantName}}</text>
+      <!-- 2026-10-28 业主「参考 Revolut,和我们其他页面对齐」:组头 = 商家头像 + 店名,下面两行开关缩进对齐店名;
+           去掉每行的小字说明(版式自己说明) -->
+      <view class="mc-head" wx:if="{{layout === 'page'}}">
+        <image wx:if="{{item.merchantLogo}}" class="mc-logo" src="{{item.merchantLogo}}" mode="aspectFill" lazy-load="true" />
+        <view wx:else class="mc-logo mc-logo--ph">{{item.merchantName[0]}}</view>
+        <text class="mc-name" aria-role="heading">{{item.merchantName}}</text>
+      </view>
+      <text wx:else class="mc-name" aria-role="heading">{{item.merchantName}}</text>
       <view class="mc-channel">
-        <view><text class="mc-label">站内活动消息</text><text class="mc-sub">活动提醒与商家动态</text></view>
+        <view><text class="mc-label">站内活动消息</text><text class="mc-sub" wx:if="{{layout !== 'page'}}">活动提醒与商家动态</text></view>
         <cy-switch checked="{{item.inAppOptedIn}}" disabled="{{!!savingKey}}"
                    data-row="{{item.merchantRowId}}" data-owner="{{item.merchantOwnerMemberId}}"
                    data-channel="IN_APP" bind:change="onConsentChange" />
       </view>
       <view class="mc-channel">
-        <view><text class="mc-label">商家优惠券</text><text class="mc-sub">真实入账到我的优惠券</text></view>
+        <view><text class="mc-label">商家优惠券</text><text class="mc-sub" wx:if="{{layout !== 'page'}}">真实入账到我的优惠券</text></view>
         <cy-switch checked="{{item.couponOptedIn}}" disabled="{{!!savingKey}}"
                    data-row="{{item.merchantRowId}}" data-owner="{{item.merchantOwnerMemberId}}"
                    data-channel="COUPON" bind:change="onConsentChange" />

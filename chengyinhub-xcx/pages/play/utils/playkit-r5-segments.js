@@ -46,7 +46,7 @@ function submitAlbum(page, action, detail, toast) {
   if (game.data.acting || game.data.unknown) { toast('结果正在确认，请稍后再试'); return; }
   if (action === 'shoot') {
     if (!detail || !detail.tempFilePath) { toast('请先拍摄或选择照片'); return; }
-    // 网络/5xx 失败：保留这张已选照片，只重传同一张；上传成功后才提交一次。其他失败请玩家重新选图。
+    // 审核等待沿原文件查询原资产；网络/5xx 仍重传同一张，其他失败仍请玩家重新选图。
     page._albumRetry = null;
     page.setData({ 'playKit.kit.uploadFailure': '' });
     const photo = { tempFilePath: detail.tempFilePath, size: detail.size };
@@ -58,9 +58,13 @@ function submitAlbum(page, action, detail, toast) {
         page.setData({ 'playKit.kit.uploaded': true, 'playKit.kit.uploadFailure': '' });
       },
       onUploadFailed(failure) {
+        // 审核已拒绝不是「审核中」：原图不再沿用，只能重新选图。
+        const rejected = failure && failure.status === 'review_pending' && failure.rejected === true;
+        const pending = !rejected && failure && failure.status === 'review_pending'
+          && /^[1-9][0-9]{0,18}$/.test(String(failure.assetId || ''));
         const retry = failure && failure.retryable === true;
-        page._albumRetry = retry ? { sessionId: kit.sessionId, version: kit.version, photo } : null;
-        page.setData({ 'playKit.kit.uploadFailure': retry ? 'retry' : 'reselect' });
+        page._albumRetry = pending || retry ? { sessionId: kit.sessionId, version: kit.version, photo } : null;
+        page.setData({ 'playKit.kit.uploadFailure': rejected ? 'rejected' : pending ? 'review_pending' : retry ? 'retry' : 'reselect' });
       },
     });
     return;

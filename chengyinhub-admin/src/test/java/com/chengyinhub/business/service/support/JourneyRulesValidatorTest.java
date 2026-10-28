@@ -39,6 +39,31 @@ class JourneyRulesValidatorTest {
     }
 
     @Test
+    void rejectsCoercedSchemaVersionsAndOverflowingThoughtThresholds() {
+        for (String version : new String[] { "\"1\"", "1.5", "4294967297", "true" }) {
+            rejected("{\"schemaVersion\":" + version + "}");
+        }
+        for (String need : new String[] { "4294967297", "18446744073709551617", "1.5", "\"10\"" }) {
+            rejected(config(",\"thoughts\":[{\"key\":\"clue\",\"name\":\"线索\",\"need\":" + need + "}]"));
+        }
+    }
+
+    @Test
+    void thoughtNodeReferencesRejectCoercionAndPreserveExactLongStrings() throws Exception {
+        String prefix = ",\"thoughts\":[{\"key\":\"clue\",\"name\":\"线索\",\"need\":10,"
+                + "\"when\":[{\"op\":\"NODE_COMPLETED\",\"nodeId\":";
+        for (String id : new String[] { "1.5", "true", "0", "-1", "18446744073709551617",
+                "\"9223372036854775808\"", "\"1e3\"", "\"01\"" }) {
+            rejected(config(prefix + id + "}]}]"));
+        }
+        for (String id : new String[] { "1", "\"9007199254740993\"", "9223372036854775807" }) {
+            JsonNode normalized = objectMapper.readTree(validator.validateAndNormalize(config(prefix + id + "}]}]")));
+            assertEquals(Long.parseLong(id.replace("\"", "")),
+                    normalized.path("thoughts").get(0).path("when").get(0).path("nodeId").longValue());
+        }
+    }
+
+    @Test
     void preservesGenericInitialAttributesWithoutEnablingLegacyChecks() throws Exception {
         String raw = "{\"schemaVersion\":1,\"stateEnabled\":true,\"attributes\":["
                 + "{\"key\":\"counter.focus\",\"label\":\"专注\",\"initial\":2,\"min\":0,\"max\":8,\"visible\":true},"

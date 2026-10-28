@@ -218,7 +218,8 @@ const CONTRACTS = {
   },
   B43: {
     sources: ['subpackageA/pages/myproject/index.js', 'subpackageA/pages/myproject/index.wxml'],
-    paths: ['typeTab', 'projectState', 'loading', 'loaded', 'list[].title', 'list[].projectTypeText', 'list[]._stateVariant'],
+    // 2026-10-28 m693:卡上撤掉身份 / 类型小标签,projectTypeText 不再上卡
+    paths: ['typeTab', 'projectState', 'loading', 'loaded', 'list[].title', 'list[]._stateVariant'],
     equals: { typeTab: 'topic', projectState: 'ready', loading: false, loaded: true },
   },
   B44: {
@@ -577,7 +578,7 @@ test('A14/A15、B66、C03 与子组件正文使用状态专属 DOM 断言', () =
     assert.equal(SELECTORS[id].selector, '.club-grid, .club-card')
     assert.ok(!SELECTORS[id].forbid.includes('cy-empty'), `${id}: 同页另一分区允许合法 cy-empty`)
   }
-  assert.equal(SELECTORS.B66.selector, '.bw-list-row')
+  assert.equal(SELECTORS.B66.selector, '.bw-cell')
   assert.ok(SELECTORS.B66.forbid.includes('cy-empty'))
   assert.equal(SELECTORS.B43.selector, '.mp-card')
   // 2026-09-16 去闸:C03 工作台错误态从整屏 cy-error 改为页内 cy-inline-error 宿主类。
@@ -630,9 +631,10 @@ test('商家入驻与俱乐部创建向导的 dots 保持四段数字形状', ()
 
 test('A41 已取消票券由 WXS 消费真实 registrationStatus，而不是旧 status 字段', () => {
   const shots = Object.fromEntries(SHOTS.map(shot => [shot.id, shot]))
-  const wxml = read('subpackageMember/signup/index.wxml')
-  assert.match(wxml, /item\.registrationStatus\s*==\s*3/)
-  assert.match(wxml, /item\.verificationStatus\s*==\s*1/)
+  // 2026-10-28 业主:票夹只放能用的票,状态判定从 wxs 挪到 JS 的 usableTicket(真实 registrationStatus / verificationStatus)
+  const js = read('subpackageMember/signup/index.js')
+  assert.match(js, /item\.registrationStatus\) !== 2/)
+  assert.match(js, /item\.verificationStatus == 1/)
   for (const data of [shots.A41.data, FIXTURES.A41.data]) {
     assert.equal(data.ticketList.length, 1)
     assert.equal(data.ticketList[0].registrationStatus, 3)

@@ -27,7 +27,11 @@ class OWN_C02_27Test {
         RefundServiceImpl service = new RefundServiceImpl();
         ReflectionTestUtils.setField(service, "refundApplicationMapper", refunds);
         ReflectionTestUtils.setField(service, "cmsRegistrationMapper", registrations);
-        when(refunds.insertRefundApplication(any(RefundApplication.class))).thenReturn(1);
+        when(refunds.insertRefundApplication(any(RefundApplication.class))).thenAnswer(invocation -> {
+            RefundApplication inserted = invocation.getArgument(0);
+            inserted.setId(1001L);
+            return 1;
+        });
         return service;
     }
 

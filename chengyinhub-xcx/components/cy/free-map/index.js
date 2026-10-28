@@ -1,6 +1,6 @@
 const BRAND = '#FFFFFF';
 const { getPlayMapState } = require('../../../utils/play-state-contract.js');
-const { drawPlayStateMarker } = require('../../../utils/play-marker-draw.js');
+const { drawPlayStateMarker, drawNumberedMarker } = require('../../../utils/play-marker-draw.js');
 // 保留 marker id(非真实 nodeId),onMarkerTap 需一并过滤,避免撞上真实 nodeId 误触发 pintap
 const PLAYER_MARKER_ID = 99999;
 const ARROW_MARKER_ID = 99998;
@@ -41,6 +41,10 @@ Component({
     target: { type: Object, value: null, observer() { this._rebuild(); } },
     // 精简(故事流左上角的雷达小地图,2026-09-24):只画下一站和「我」,不画其它站的锁 / 序号胶囊 / 候选光圈
     compact: { type: Boolean, value: false, observer() { this._rebuild(); } },
+    // 视野自动框住所有点(含「我」);fitPadding = [上,右,下,左] px。
+    // 雷达小地图要它:以前固定 scale=16 以我为中心,下一站在 3km 外时圆里只有街道(2026-10-27 实测)。
+    fit: { type: Boolean, value: false },
+    fitPadding: { type: Array, value: [40, 40, 40, 40] },
     center: { type: Object, value: { lat: 31.2304, lng: 121.4737 } },
     scale:  { type: Number, value: 16 },
     mapMarkers:   { type: Array, value: [] },
@@ -88,6 +92,7 @@ Component({
     // 五种点位态 + 玩家图标离屏生成；定位/离线/打卡失败由地图外的状态卡承载。
     async _genIcons() {
       this._icons = {};
+      this._numIcons = {};
       try {
         const cv = await new Promise((res, rej) =>
           this.createSelectorQuery().select('#iconcv').fields({ node: true }).exec(r =>
@@ -114,7 +119,48 @@ Component({
         g.fillStyle = '#111111'; g.fill();
         g.lineWidth = 4; g.strokeStyle = '#FFFFFF'; g.stroke();
         this._icons.arrow = await save();
+        this._iconCanvas = { g, S, save };
       } catch (e) { console.warn('icon gen fail'); this._icons = {}; }
+    },
+    // 带序号的点位图标按需生成(序号 × 状态),同一张离屏 canvas 串行画,生成完再重建一次。
+    _ensureNumIcons(keys) {
+      const cv = this._iconCanvas;
+      const todo = keys.filter((k) => !this._numIcons[k]);
+      if (!cv || !todo.length || this._numPending) return;
+      this._numPending = true;
+      (async () => {
+        for (const k of todo) {
+          const i = k.indexOf(':');
+          try { drawNumberedMarker(cv.g, cv.S, k.slice(0, i), k.slice(i + 1)); this._numIcons[k] = await cv.save(); }
+          catch (e) { this._numIcons[k] = ''; }
+        }
+        this._numPending = false;
+        this._rebuild();
+      })();
+    },
+    _fit(mk) {
+      if (!this.data.fit) return;
+      const nodes = mk.filter((m) => m.id !== ARROW_MARKER_ID && m.id !== PLAYER_MARKER_ID);
+      const me = mk.find((m) => m.id === PLAYER_MARKER_ID);
+      // 「我」离所有站都超过 5km 就不框进来:否则视野会缩到整个城市甚至全国(开发者工具模拟定位实测 12956km)。
+      const near = me && nodes.some((m) => _sqDist(me.latitude, me.longitude, m.latitude, m.longitude) < 0.0025);
+      const pts = nodes.concat(near || !nodes.length ? (me ? [me] : []) : []).map((m) => ({ latitude: m.latitude, longitude: m.longitude }));
+      if (!pts.length) return;
+      this._fitPts = pts;
+      const key = JSON.stringify(pts);
+      if (key === this._fitKey) return;
+      this._fitKey = key;
+      this._applyFit();
+    },
+    // 原生 map 还没铺出来时 includePoints 会被吞掉:bindupdated 渲染完再补一次(完成卡地图实测没框住)。
+    _applyFit() {
+      const pts = this._fitPts;
+      if (!pts || !pts.length) return;
+      try {
+        const ctx = wx.createMapContext('fmap', this);
+        if (pts.length === 1) this.setData({ center: { lat: pts[0].latitude, lng: pts[0].longitude } });
+        else if (ctx && ctx.includePoints) ctx.includePoints({ points: pts, padding: this.data.fitPadding });
+      } catch (e) { console.warn('fit fail'); }
     },
     _rebuild() {
       // S5 M2 竞态修复:dropIn 挂起的分批 setTimeout 若在此时仍未跑完,会用过时闭包快照覆盖本次
@@ -124,6 +170,7 @@ Component({
       const t = this.data.target;
       const mk = [];
       const photoCallouts = [];
+      const needNum = [];
       (this.data.nodes || []).forEach(n => {
         if (!n.lat || !n.lng) return;
         const isTarget = !!(t && t.nodeId != null && String(t.nodeId) === String(n.nodeId));
@@ -131,8 +178,13 @@ Component({
         const state = getPlayMapState(n.state, isTarget);
         // 用户裁决:目标点不再叠黑色靶心大图 —— 「第 N 站」白标与图钉重合很花。
         // target 与普通待办同用白色小点,身份由白底高亮 callout(序号胶囊)单独承担。
-        const icon = this._icons[state.key === 'target' ? 'actionable' : state.markerKey] || this._icons.actionable;
-        const sz = 34;
+        const label = n.reviewLabel ? String(n.reviewLabel) : String(n.num || '');
+        // 有序号就画进圆里(numKey);生成好之前先用无字图标,不再挂浮在头上的序号胶囊。
+        const numKey = n.num !== '' && n.num != null ? (state.key === 'target' ? 'actionable' : (state.markerKey || 'actionable')) + ':' + n.num : '';
+        if (numKey) needNum.push(numKey);
+        const numIcon = numKey && this._numIcons && this._numIcons[numKey];
+        const icon = numIcon || this._icons[state.key === 'target' ? 'actionable' : state.markerKey] || this._icons.actionable;
+        const sz = this.data.compact ? 22 : 34; // 雷达圆只有 44px,34px 的点会盖住半个圆
         const m = { id: Number(n.nodeId), latitude: n.lat, longitude: n.lng,
           width: sz, height: sz, anchor: { x: .5, y: .5 }, zIndex: state.key === 'target' ? 12 : (state.key === 'completed' ? 3 : 9) };
         if (icon) m.iconPath = icon;
@@ -144,10 +196,9 @@ Component({
           // reviewLabel:通关回顾层用的成就气泡文案(如「首达 · 街角绿地」)。只有调用方显式给了
           // 才用它顶掉默认的序号胶囊 —— 不给就完全是原行为,现有调用点零影响。
           const highlighted = state.key === 'target' || state.key === 'actionable';
-          const label = n.reviewLabel ? String(n.reviewLabel) : String(n.num || '');
           // 标签为空就整个不挂 callout —— 自由探索不编号(调用方给 num=''),
           // 挂一个空胶囊等于在每个点上贴一块没有字的黑色小牌子。
-          if (label && !this.data.compact) {
+          if (label && !this.data.compact && (n.reviewLabel || !numKey || !this._iconCanvas || this._numIcons[numKey] === '')) {
             m.callout = { content: label, color: highlighted ? '#111111' : '#fff', fontSize: n.reviewLabel ? 10 : 11,  /* ds-ok 原样搬进 if 的既有行,色值一字未改;原生 callout 只吃字面量,拿不到 var() */
               bgColor: highlighted ? BRAND : 'rgba(20,20,20,.9)',
               padding: n.reviewLabel ? 6 : 5, borderRadius: 8, display: 'ALWAYS', anchorY: -2 };
@@ -157,12 +208,14 @@ Component({
       });
       const p = this.data.player;
       if (p && p.lat && p.lng && this._icons.player) {
-        mk.push({ id: PLAYER_MARKER_ID, latitude: p.lat, longitude: p.lng, width: 30, height: 30,
+        const psz = this.data.compact ? 20 : 30;
+        mk.push({ id: PLAYER_MARKER_ID, latitude: p.lat, longitude: p.lng, width: psz, height: psz,
           anchor: { x: .5, y: .5 }, iconPath: this._icons.player, zIndex: 10 });
       }
       // S2 方向箭头:target 非空且玩家位置有效时,在玩家位置放一个 rotate=bearing(玩家→目标) 的箭头 marker
       if (t && t.lat && t.lng && p && p.lat && p.lng && this._icons.arrow) {
-        mk.push({ id: ARROW_MARKER_ID, latitude: p.lat, longitude: p.lng, width: 40, height: 40,
+        const asz = this.data.compact ? 26 : 40;
+        mk.push({ id: ARROW_MARKER_ID, latitude: p.lat, longitude: p.lng, width: asz, height: asz,
           anchor: { x: .5, y: .5 }, iconPath: this._icons.arrow,
           rotate: bearingDeg(p.lat, p.lng, t.lat, t.lng), zIndex: 11 });
       }
@@ -181,6 +234,8 @@ Component({
           fillColor: 'rgba(255,255,255,.22)', color: 'rgba(255,255,255,.55)', strokeWidth: 2 });
       }
       this.setData({ markers: mk, circles, photoCallouts });
+      this._fit(mk);
+      this._ensureNumIcons(Array.from(new Set(needNum)));
     },
     onMarkerTap(e) {
       const id = e.detail.markerId;
@@ -191,7 +246,10 @@ Component({
       if (id === PLAYER_MARKER_ID || id === ARROW_MARKER_ID) return; // 保留 id 钉(玩家/方向箭头)不响应,防撞上真实 nodeId
       this.triggerEvent('pintap', { nodeId: id });
     },
-    onUpdated(e) { this.triggerEvent('updated', e.detail); },
+    onUpdated(e) {
+      if (this.data.fit && this._fitKey && !this._fitRendered) { this._fitRendered = true; this._applyFit(); }
+      this.triggerEvent('updated', e.detail);
+    },
     onRegionChange(e) {
       this.triggerEvent('regionchange', Object.assign({}, e.detail || {}, {
         phase: (e.detail && e.detail.type) || e.type,

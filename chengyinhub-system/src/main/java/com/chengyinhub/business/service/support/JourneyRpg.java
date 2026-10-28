@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
  *   clocks:      [{var:counter.*, label, segments 2..12, kind danger|progress, visible}],  T08 进度钟
  *   bargain:     {enabled},                                            T09 魔鬼交易(check.bargain 才生效)
  *   momentum:    {enabled, max, init, gainOnFail, gainOnSuccess, maxSpend},  T10 动量(sys.momentum)
- *   aspects:     [{key, label, kind aspect|facet, desc}]               T11 特质 / 侧面
+ *   aspects:     [{key, label, kind aspect|facet, desc, atStart}]      T11 特质 / 侧面(atStart = 开局自带)
  * }
  * </pre>
  *
@@ -189,7 +189,7 @@ public final class JourneyRpg {
         Set<String> seen = new LinkedHashSet<String>();
         for (JsonNode row : source) {
             if (!row.isObject()) throw new IllegalArgumentException("rpg.aspects 条目必须是对象");
-            only(row, "rpg.aspects", "key", "label", "kind", "desc");
+            only(row, "rpg.aspects", "key", "label", "kind", "desc", "atStart");
             String key = row.path("key").asText("");
             if (!ASPECT_KEY.matcher(key).matches()) throw new IllegalArgumentException("rpg.aspects 的 key 不合法:" + key);
             if (!seen.add(key)) throw new IllegalArgumentException("rpg.aspects 的 key 重复:" + key);
@@ -204,6 +204,8 @@ public final class JourneyRpg {
             item.put("label", label(row, "rpg.aspects"));
             item.put("kind", kind);
             if (!desc.isEmpty()) item.put("desc", desc);
+            // 文档二 A7「开局自带」:只在打开时输出,老主题规范化结果一字不变。
+            if (row.has("atStart") && bool(row, "atStart", "rpg.aspects.atStart")) item.put("atStart", true);
         }
         return out;
     }
@@ -260,7 +262,9 @@ public final class JourneyRpg {
             state.getVariables().put(SYS_MOMENTUM, Integer.valueOf(momentum(rules).path("init").asInt(0)));
         }
         for (JsonNode aspect : rules.getRpg().path("aspects")) {
-            if (KIND_FACET.equals(aspect.path("kind").asText())) state.getStatusConditions().add(aspect.path("key").asText());
+            if (KIND_FACET.equals(aspect.path("kind").asText()) || startsWith(aspect)) {
+                state.getStatusConditions().add(aspect.path("key").asText());
+            }
         }
     }
 
@@ -308,7 +312,7 @@ public final class JourneyRpg {
                 boolean facet = KIND_FACET.equals(aspect.path("kind").asText());
                 String key = aspect.path("key").asText();
                 // 侧面是常驻的,没建局时也展示;特质只在本局真的挂着时展示。
-                boolean active = state == null ? facet : state.getStatusConditions().contains(key);
+                boolean active = state == null ? facet || startsWith(aspect) : state.getStatusConditions().contains(key);
                 if (!active) continue;
                 Map<String, Object> row = new LinkedHashMap<String, Object>();
                 row.put("key", key);
@@ -329,6 +333,11 @@ public final class JourneyRpg {
         }
         if (bargainEnabled(rules)) view.put("bargain", Boolean.TRUE);
         return view;
+    }
+
+    /** 开局自带的特质(A7):建局时挂上,之后可被 REMOVE_CONDITION 移除。 */
+    public static boolean startsWith(JsonNode aspect) {
+        return aspect != null && aspect.path("atStart").asBoolean(false);
     }
 
     // ==================== 小工具 ====================

@@ -198,3 +198,21 @@ test('简易版不带发布链路:零绑定的孤儿方法不得复活', () => {
   const js = fs.readFileSync(path.join(__dirname, '../../pages/publish/simple/index.js'), 'utf8');
   assert.doesNotMatch(js, /\/api\/topic\/create/, '发布只在 fabu,简易页不得重新直提');
 });
+
+// 2026-10-27 P-43:AI 回包格式异常这类明确失败,失败卡给「重试」,描述原样保留,重试用同一段描述再起一次
+test('P-43 AI 明确失败:描述保留,失败卡重试用同一段描述再生成', () => {
+  const page = makePage();
+  page.data.aiIdea = '外滩夜游三站';
+  page.generateAiPlan();
+  const first = sent.find(r => r.url === '/api/ai/theme/draft');
+  first.success({ code: 500, msg: 'AI 响应格式异常,请重试' });
+  first.complete();
+  assert.equal(page.data.aiError, 'AI 响应格式异常,请重试');
+  assert.equal(page.data.aiIdea, '外滩夜游三站', '描述不能丢');
+  page.retryAiPlan();
+  const drafts = sent.filter(r => r.url === '/api/ai/theme/draft');
+  assert.equal(drafts.length, 2);
+  assert.equal(JSON.parse(drafts[1].data).idea, '外滩夜游三站');
+  const wxml = fs.readFileSync(WXML, 'utf8');
+  assert.match(wxml, /<cy-inline-error wx:elif="\{\{aiError\}\}"[^>]*action="\{\{aiIdea \? \(aiDraftPending \? '查看结果' : '重试'\) : ''\}\}" bind:action="retryAiPlan"/);
+});

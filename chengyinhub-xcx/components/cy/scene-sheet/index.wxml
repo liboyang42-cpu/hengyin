@@ -1,8 +1,14 @@
 <view wx:if="{{_render}}" class="ss ss--{{variant}} ss--{{theme}} {{footer ? 'ss--has-footer' : ''}} {{reducedMotion ? 'ss--reduced-motion' : ''}} {{_in && !_closing ? 'ss--in' : ''}} {{_closing ? 'ss--closing' : ''}} {{_keepMask ? 'ss--keep-mask' : ''}} {{_handoffIn ? 'ss--handoff-in' : ''}}" style="z-index:{{zIndex > 0 ? zIndex : 'var(--cy-z-sheet)'}};">
-  <view class="ss__mask" catchtouchmove="noop" bindtap="onMask" aria-role="button" aria-label="关闭当前面板" hover-class="cy-pressed" hover-stay-time="80"></view>
+  <view wx:if="{{variant !== 'page'}}" class="ss__mask" catchtouchmove="noop" bindtap="onMask" aria-role="button" aria-label="关闭当前面板" hover-class="cy-pressed" hover-stay-time="80"></view>
   <view class="ss__stack">
   <view class="ss__panel" style="--cy-comp-sheet-max-h:calc(100vh - {{panelTopPx}}px);" catchtap="noop">
-    <view class="ss__head">
+    <!-- G-1 page 档:没有遮罩和把手,普通导航栏 + 大标题;左上返回与物理返回同一出口 -->
+    <block wx:if="{{variant === 'page'}}">
+      <cy-nav-bar wx:if="{{bare}}" overlay tint="light" custom-back bind:back="onPageBack" />
+      <cy-nav-bar wx:else plain custom-back bind:back="onPageBack" />
+      <cy-page-title wx:if="{{!bare}}" title="{{title}}" />
+    </block>
+    <view class="ss__head" wx:else>
       <view class="ss__back" wx:if="{{canBack}}" bindtap="onBack" data-testid="scene-sheet-back" aria-role="button" aria-label="返回上一步" hover-class="cy-pressed" hover-stay-time="80"><view class="ss__control"><cy-icon name="back" size="32" /></view></view>
       <view class="ss__title">{{title}}</view>
       <view class="ss__close" wx:if="{{closable}}" bindtap="onClose" data-testid="scene-sheet-close" aria-role="button" aria-label="{{closeLabel}}" hover-class="cy-pressed" hover-stay-time="80"><view class="ss__control"><cy-icon name="close-sm" size="44" /></view></view>
@@ -11,4 +17,6 @@
     <view class="ss__footer" wx:if="{{footer}}"><slot name="footer"></slot></view>
   </view>
   </view>
+  <!-- G-2 物理返回 / 侧滑守卫(utils/native-back-guard.js):0 尺寸、无遮罩,只有最上层弹层挂 -->
+  <page-container show="{{_backGuard}}" duration="{{0}}" overlay="{{false}}" custom-style="width:0;height:0;background:transparent;pointer-events:none" bind:afterleave="_onBackGuardLeave" />
 </view>

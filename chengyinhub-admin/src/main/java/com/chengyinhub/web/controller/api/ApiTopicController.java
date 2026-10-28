@@ -604,6 +604,8 @@ public class ApiTopicController extends BaseController {
             return AjaxResult.error(HttpStatus.BAD_REQUEST, e.getMessage());
         } catch (ServiceException | IllegalStateException | IllegalArgumentException e) {
             releaseDraftRequest(draftRequestKey);
+            AjaxResult attributeError = authorAttributeError(e);
+            if (attributeError != null) return attributeError;
             // 业务闸抛的中文短句原样透出(仍过 UserSafeMessage 掩码,业务异常类型也可能裹着 SQL 片段)。
             // 这些失败是用户自己能改的:「只有俱乐部主理人可以开放商家招商」「仅城市定向主题可开启邀请
             // 俱乐部带队」「在架额度已满」压成通用句 = 真人在后台点一次失败一次,只能找人翻服务器日志。
@@ -767,6 +769,8 @@ public class ApiTopicController extends BaseController {
         } catch (ChapterFlowValidationException e) {
             return AjaxResult.error(HttpStatus.BAD_REQUEST, e.getMessage());
         } catch (RuntimeException e) {
+            AjaxResult attributeError = authorAttributeError(e);
+            if (attributeError != null) return attributeError;
             logger.warn("主题保存失败: topicId={}, chapterId=未生成或未知", dto.getId(), e);
             return error(e.getMessage());
         }
@@ -824,6 +828,15 @@ public class ApiTopicController extends BaseController {
      * 不带彩蛋/库存),回填不回来就等于编辑一次静默丢一批字段。这条只给主题本人,返回原始形状。
      */
     @Operation(summary = "编辑器回填:主题全量详情(仅创作者本人)")
+    @PostMapping("/author-edit-detail")
+    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
+    public AjaxResult authorEditDetail(String id, String scope) {
+        AjaxResult result = topicEditDetail(id, scope);
+        if (Integer.valueOf(200).equals(result.get(AjaxResult.CODE_TAG)))
+            result.put(AjaxResult.DATA_TAG, com.chengyinhub.business.service.support.TemplateAdoptionWire.strings(result.get(AjaxResult.DATA_TAG), "templateId"));
+        return result;
+    }
+
     @PostMapping("/edit-detail")
     @Parameters({@Parameter(name = "id", description = "主题id")})
     @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
@@ -1314,10 +1327,41 @@ public class ApiTopicController extends BaseController {
         return AjaxResult.success(d);
     }
 
+    private AjaxResult authorAttributeError(RuntimeException error) {
+        if (!(error instanceof ServiceException)) return null;
+        ServiceException service = (ServiceException) error;
+        String code = service.getDetailMessage();
+        if (code == null || !(code.startsWith("ATTRIBUTE_") || code.startsWith("STATE_KEY_"))) return null;
+        int status = service.getCode() == null ? 400 : service.getCode();
+        org.springframework.web.context.request.RequestAttributes attributes =
+                org.springframework.web.context.request.RequestContextHolder.getRequestAttributes();
+        if (attributes instanceof org.springframework.web.context.request.ServletRequestAttributes) {
+            jakarta.servlet.http.HttpServletResponse response =
+                    ((org.springframework.web.context.request.ServletRequestAttributes) attributes).getResponse();
+            if (response != null) response.setStatus(status);
+        }
+        return new AjaxResult(status,
+                UserSafeMessage.of(service.getMessage(), "属性配置未保存"),
+                java.util.Collections.singletonMap("errorCode", code));
+    }
+
+    public AjaxResult publishDraft(String id, String scope) {
+        return publishDraft(id, scope, null, null);
+    }
+
     @Operation(summary = "发布草稿")
     @RateLimiter(time = 60, count = 10, limitType = LimitType.MEMBER)
     @PostMapping("/publish-draft")
-    public AjaxResult publishDraft(String id, String scope) {
+    public AjaxResult publishDraft(String id, String scope, Long configVersion, String registryVersion) {
+        try { return publishDraftBound(id, scope, configVersion, registryVersion); }
+        catch (ServiceException error) {
+            AjaxResult attributeError = authorAttributeError(error);
+            if (attributeError != null) return attributeError;
+            throw error;
+        }
+    }
+
+    private AjaxResult publishDraftBound(String id, String scope, Long configVersion, String registryVersion) {
         Long cid = Convert.toLong(id, 0L);
         if (cid < 1) {
             return error("参数不合规");
@@ -1372,11 +1416,14 @@ public class ApiTopicController extends BaseController {
             final Long fMemberId = memberId;
             final Long fCid = cid;
             Boolean ok = quotaService.runWithThemeOnlineGuard(fMemberId, fCid,
-                    () -> cmsTopicService.publishDraft(fCid, fMemberId));
+                    () -> configVersion == null && registryVersion == null
+                            ? cmsTopicService.publishDraft(fCid, fMemberId)
+                            : cmsTopicService.publishDraftWithBinding(fCid, fMemberId, configVersion, registryVersion) != null);
             return (ok != null && ok) ? success("已发布") : error("该主题不是草稿，无法发布");
         }
         com.chengyinhub.business.domain.vo.TopicBundleSubmitResultVO result =
-                cmsTopicService.publishDraftWithReview(cid, memberId);
+                configVersion == null && registryVersion == null ? cmsTopicService.publishDraftWithReview(cid, memberId)
+                        : cmsTopicService.publishDraftWithBinding(cid, memberId, configVersion, registryVersion);
         if (result == null) {
             return error("该主题不是草稿，无法发布");
         }

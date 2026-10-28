@@ -826,7 +826,7 @@ test('章节剧情复用探店日故事流并连接章节开场', () => {
   assert.match(wxss, /\.chfull\s*\{[^}]*background:#000/,
     '采用现有探店日故事流底色');
   assert.match(storyWxml, /chfull__para st-line/, '正文必须共用探店日显形样式');
-  assert.match(storyWxml, /cy-chapter-gate/, '每章开场使用原型数字过场');
+  assert.match(storyWxml, /cy-chapter-flip[^>]*mode="gate"/, '每章开场使用 2026-10-28 定稿的章节翻转过场');
   assert.match(tokens, /--cy-color-play-story-page:\s*#FFFFFF;/, '浅色 token 留着给 roadmap / session')
   assert.doesNotMatch(storyWxml, /passport|invite code|护照|邀请码/i,
     '只复用 Infinity 结构，不把 Atlys 业务对象带入城瘾')
@@ -1533,4 +1533,84 @@ test('媒体块 altText 带进章节条目:图片做 aria-label,音频给出可�
   const wxml = read('pages/play/index.wxml')
   assert.match(wxml, /class="chfull__img"[^>]*aria-label="\{\{item\.altText \|\| '章节配图'\}\}"/)
   assert.match(wxml, /<text wx:if="\{\{item\.altText\}\}" class="chfull__audio-transcript"[^>]*aria-label="音频文字稿：\{\{item\.altText\}\}">文字稿：\{\{item\.altText\}\}<\/text>/)
+})
+
+// 2026-10-27 生产实测(南京路附录):无块流的章节里开一个内嵌玩法(盲盒),旧兜底要求 _playKitNodeId 为空,
+// 而开站必然记下它 ⇒ 玩法一律不铺,玩家只看见手记和「继续探索」,永远打不开。
+test('无块流章节里正开着的内嵌玩法铺在故事流末尾', () => {
+  const node = { nodeId: 322, name: '盲盒', hasAdvanced: true, vm: 5, done: false, lat: 31.2, lng: 121.4 }
+  const page = makePage({ description: '附录收录了几个小彩蛋。' }, [
+    { nodeId: 321, name: '结案', done: true, story: '档案已结案。' }, node])
+  page.data.chapterFull = true
+  page.data.advancedPlay = { show: true, node }
+  page._playKitNodeId = 322
+  page.onAdvancedSession({ detail: { nodeId: 322, sessionId: 9, version: 0, present: 'inline',
+    playKit: { random: { drawCount: 1, drawn: [], pool: [{ id: 'a', label: '今晚看电影' }] } } } })
+  assert.equal(page.data.playKit.kit.type, 'random')
+  page.openChapterFull()
+  const kinds = page.data.chapterParas.map(p => p.kind + (p.nodeId ? ':' + p.nodeId : ''))
+  assert.equal(kinds[kinds.length - 1], 'kit:322', kinds.join(','))
+  assert.equal(kinds.filter(k => k.startsWith('kit')).length, 1)
+})
+
+// 2026-10-27 生产实测:computeNext 只给精简卡片(没有坐标),rebuild 原样塞进 nextNode,
+// openNextStopNav 拿不到 lat/lng 一律静默 return ——「导航过去」一直在,点了什么都不发生。
+// 上面那条导航测试手搓了带坐标的 nextNode,所以一直没抓到;这里走真的 rebuild。
+test('rebuild 出来的下一站带坐标与地址，「导航过去」真的交给微信地图', () => {
+  const page = makePage({ id: 230, blocks: [] }, [
+    { nodeId: 337, chapterId: 230, done: false, name: '延伸 · 四张老照片', address: '上海市虹口区提篮桥', lat: 31.2543, lng: 121.5091 }
+  ])
+  page.data.mode = 1
+  page._routeState = { routeMode: 'LINEAR', attributes: {} }
+  page.computeNext = () => ({ nodeId: 337, num: 1, name: '延伸 · 四张老照片', imgUrl: '' })
+  page.buildJournal = () => {}
+  page._measureDeal = () => {}
+  const previousNextTick = wx.nextTick, previousOpen = wx.openLocation
+  wx.nextTick = fn => fn()
+  const opened = []
+  wx.openLocation = o => opened.push(o)
+  try {
+    page.rebuild()
+    assert.equal(page.data.nextNode.lat, 31.2543)
+    assert.equal(page.data.nextNode.lng, 121.5091)
+    page.openNextStopNav()
+    assert.equal(opened.length, 1)
+    assert.equal(opened[0].name, '延伸 · 四张老照片')
+    assert.equal(opened[0].address, '上海市虹口区提篮桥')
+  } finally { wx.nextTick = previousNextTick; wx.openLocation = previousOpen }
+})
+
+test('下一站是没有坐标的故事玩法时不摆「导航过去」', () => {
+  const wxml = read('pages/play/index.wxml')
+  assert.match(wxml, /class="story-map__go" wx:if="\{\{nextNode\.lat && nextNode\.lng\}\}" bindtap="openNextStopNav"/)
+})
+
+test('章节翻转:进第二章时带上第一章完成页与三面;通关只在整个主题走完时放', () => {
+  const page = makePage({ id: 52, name: '延伸 · 四个小任务', description: '舟山路一带。\n第二行' }, [
+    { nodeId: 1, chapterId: 51, done: true }, { nodeId: 2, chapterId: 52, done: false },
+  ])
+  page.data.chapterCards = [{ id: 51, title: '提篮桥' }, { id: 52, title: '延伸 · 四个小任务' }]
+  page.showChapterGate()
+  const gate = page.data.chapterGate
+  assert.equal(gate.show, true)
+  assert.equal(gate.number, 2)
+  assert.equal(gate.endInfo.number, '01')
+  assert.equal(gate.info.desc, '舟山路一带。', '说明只取第一句')
+  assert.equal(gate.faces.length, 3)
+
+  let saved = 0
+  page.saveFinishCard = () => { saved++ }
+  page._sessionClock = { elapsedSeconds: () => 4044 }
+  Object.assign(page.data, { allDone: false, topicName: '海上方舟', doneCount: 2, finishScore: 0 })
+  page._openFinale(false)
+  assert.equal(page.data.finale.show, false, '没走完不放通关过场')
+  page.data.allDone = true
+  page._openFinale(true)
+  assert.equal(page.data.finale.show, false, '探店日不放')
+  page._openFinale(false)
+  assert.equal(page.data.finale.show, true)
+  assert.equal(page.data.finale.info.title, '海上方舟')
+  page.saveFinale()
+  assert.equal(page.data.finale.show, false)
+  assert.equal(saved, 1)
 })

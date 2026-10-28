@@ -43,10 +43,11 @@ page { background: var(--cy-bg-card); }
    商户主题导航条是浅色，图标本来就该保持深色，只反色暗端。 */
 .theme-dark .nav-icon image { filter: brightness(0) invert(1); }
 .nav-msg { position: relative; }
+/* 2026-10-27 P-13:角标贴在铃铛图标(88rpx 热区内居中 44rpx)的左上角,白字 */
 .im-dot {
-  position: absolute; top: calc(var(--cy-legacy-6) * -1); right: calc(var(--cy-legacy-10) * -1); min-width: 30rpx; height: 30rpx;
-  padding: 0 var(--cy-space-1); box-sizing: border-box; border-radius: var(--cy-radius-pill); background: var(--cy-danger);
-  color: var(--cy-text-inverse); font-size: var(--cy-font-caption); font-weight: 700;
+  position: absolute; top: 8rpx; left: 8rpx; min-width: 30rpx; height: 30rpx;
+  padding: 0 var(--cy-space-1); box-sizing: border-box; border-radius: var(--cy-radius-pill); background: var(--cy-color-action-danger-bg);
+  color: var(--cy-color-action-danger-fg); font-size: var(--cy-font-caption); font-weight: 700;
   display: flex; align-items: center; justify-content: center; line-height: 1;
 }
 /* 2026-09-18 UI-19:一级 tab 页标题,导航栏居中一行(左右各让 96rpx 给右侧消息钮与胶囊) */
@@ -59,8 +60,9 @@ page { background: var(--cy-bg-card); }
   font-weight: 700;
   color: var(--cy-text-title);
 }
-.nav-right {
+.nav-left {
   position: absolute;
+  left: 8rpx;
   top: 50%;
   transform: translateY(-50%);
   display: flex;

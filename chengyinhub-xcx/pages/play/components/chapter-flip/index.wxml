@@ -1,0 +1,19 @@
+<view class="cf cf--{{mode}} {{out ? 'is-out' : ''}}" catchtouchmove="noop" bindtap="onTap" hover-class="cf-tap" hover-stay-time="80" aria-role="{{mode === 'gate' ? 'button' : 'dialog'}}" aria-label="{{mode === 'gate' ? info.title + '，轻点继续' : info.title}}">
+  <canvas type="2d" id="cf" class="cf__fx" aria-hidden="true"></canvas>
+  <view class="cf__copy {{quiet ? 'is-quiet' : ''}}" wx:if="{{copy}}" aria-hidden="true">
+    <view class="cf__k"><text wx:for="{{copy.k}}" wx:key="index" class="cf__c {{item.n ? 'is-n' : ''}}">{{item.c}}</text></view>
+    <view class="cf__t"><text wx:for="{{copy.t}}" wx:key="index" class="cf__c {{item.n ? 'is-n' : ''}}">{{item.c}}</text></view>
+    <view class="cf__d" wx:if="{{copy.d.length}}"><text wx:for="{{copy.d}}" wx:key="index" class="cf__c {{item.n ? 'is-n' : ''}}">{{item.c}}</text></view>
+    <view class="cf__stats" wx:if="{{copy.stats.length}}">
+      <view class="cf__stat" wx:for="{{copy.stats}}" wx:key="index" wx:for-item="st">
+        <view class="cf__v"><text wx:for="{{st.v}}" wx:key="index" class="cf__c {{item.n ? 'is-n' : ''}}">{{item.c}}</text></view>
+        <view class="cf__sk"><text wx:for="{{st.k}}" wx:key="index" class="cf__c {{item.n ? 'is-n' : ''}}">{{item.c}}</text></view>
+      </view>
+    </view>
+  </view>
+  <view class="cf__hint" wx:if="{{mode === 'gate'}}">轻点继续</view>
+  <view class="cf__btns {{cta ? 'is-on' : ''}}" wx:if="{{mode === 'finale'}}">
+    <view class="cf__pill cf__pill--s" catchtap="onClose" aria-role="button" aria-label="继续" hover-class="cf-pressed" hover-stay-time="80">继续</view>
+    <view class="cf__pill cf__pill--p" catchtap="onSave" aria-role="button" aria-label="保存通关卡" hover-class="cf-pressed" hover-stay-time="80">保存通关卡</view>
+  </view>
+</view>

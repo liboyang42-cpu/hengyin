@@ -231,9 +231,10 @@ function buildRoamGoal(input) {
     return {
       stateKey: 'actionable',
       icon: 'discover-shop',
-      text: '该区域暂未开放 · 发现附近真实店',
+      // 2026-10-27 owner P-32:文案不再写「没有开放」
+      text: '这片还没有节点 · 发现附近真实店',
       act: 'discover',
-      readerLabel: '当前区域暂未开放漫游节点。可发现附近真实店铺。',
+      readerLabel: '这片还没有漫游节点。可发现附近真实店铺。',
     }
   }
   return {

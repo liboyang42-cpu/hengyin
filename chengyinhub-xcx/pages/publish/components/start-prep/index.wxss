@@ -1,0 +1,11 @@
+.prep-host { --cy-comp-sheet-role-glass: var(--cy-comp-sheet-role-page); }
+.prep { padding-bottom: var(--cy-space-3); }
+.prep__add { position: relative; display: flex; align-items: center; gap: 20rpx; min-height: 100rpx; padding: 0 var(--cy-space-4); background: var(--cy-color-bg-surface); }
+.prep__add--hr::before { content: ""; position: absolute; left: var(--cy-space-4); right: 0; top: 0; height: 1px; background: var(--cy-color-border-subtle); }
+.prep__plus { flex: none; width: 44rpx; height: 44rpx; margin: 0 8rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--cy-color-action-primary-bg); color: var(--cy-color-action-primary-fg); }
+.prep__in { flex: 1 1 auto; min-width: 0; font-size: var(--cy-type-body); color: var(--cy-color-text-primary); }
+.prep__go { flex: none; min-height: 88rpx; display: flex; align-items: center; font-size: var(--cy-type-button); font-weight: 600; color: var(--cy-color-text-primary); }
+.prep__go.is-off { color: var(--cy-color-text-disabled); }
+
+/* 组件样式隔离,全局 .cy-pressed 进不来,本地补一份(同 cy-card) */
+.cy-pressed { opacity: .88; }

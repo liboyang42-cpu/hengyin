@@ -99,31 +99,27 @@
   </scroll-view>
 
 
-  <cy-sheet inset show="{{toolsOpen}}" title="客户管理" bind:close="closeTools">
-  <view class="cu-head">
-
-    <view class="cu-toolbar">
-      <button wx:if="{{canSegment}}" class="cu-tool" bindtap="toggleSelectMode">{{selecting ? '取消批量' : '批量标签'}}</button>
-      <view wx:if="{{canExport}}" class="cu-tool" bindtap="createExport" aria-role="button"
-            aria-label="导出脱敏客户资料" aria-disabled="{{exportState === 'PENDING' || exportState === 'RUNNING'}}"
-            hover-class="{{exportState === 'PENDING' || exportState === 'RUNNING' ? 'none' : 'cy-pressed'}}" hover-stay-time="80">
-        {{exportState === 'PENDING' || exportState === 'RUNNING' ? '导出中…' : '导出'}}
+  <!-- 2026-10-27 业主 M-04 → 2026-10-28 m679:Threads 式分组菜单(style/threads-menu.wxss),文字左、图标右,不写说明。
+       行按岗位权限出,没有权限的动作整行不出。 -->
+  <cy-sheet inset show="{{toolsOpen}}" bind:close="closeTools">
+    <view class="tm">
+      <view class="tm-group">
+        <view wx:if="{{canSegment}}" class="tm-row" bindtap="toggleSelectMode" aria-role="button"
+              aria-label="{{selecting ? '取消批量' : '批量标签'}}" hover-class="cy-pressed" hover-stay-time="80">
+          <text class="tm-label">{{selecting ? '取消批量' : '批量标签'}}</text><cy-icon class="tm-ico" name="flag" size="40" />
+        </view>
+        <view wx:if="{{canExport}}" class="tm-row" bindtap="createExport" aria-role="button"
+              aria-label="导出脱敏客户资料" aria-disabled="{{exportState === 'PENDING' || exportState === 'RUNNING'}}"
+              hover-class="{{exportState === 'PENDING' || exportState === 'RUNNING' ? 'none' : 'cy-pressed'}}" hover-stay-time="80">
+          <text class="tm-label">{{exportState === 'PENDING' || exportState === 'RUNNING' ? '导出中…' : '导出'}}</text><cy-icon class="tm-ico" name="download" size="40" />
+        </view>
+        <!-- BL-100:触达任务记录(只读,MARKETING_READ)。 -->
+        <view wx:if="{{canCampaigns}}" class="tm-row" bindtap="goCampaigns" aria-role="button"
+              aria-label="查看触达记录" hover-class="cy-pressed" hover-stay-time="80">
+          <text class="tm-label">触达记录</text><cy-icon class="tm-ico" name="clock" size="40" />
+        </view>
       </view>
-      <!-- BL-100:触达任务记录(只读,MARKETING_READ),照「导出」同款工具按钮。 -->
-      <view wx:if="{{canCampaigns}}" class="cu-tool" bindtap="goCampaigns" aria-role="button"
-            aria-label="查看触达记录" hover-class="cy-pressed" hover-stay-time="80">触达记录</view>
-
     </view>
-
-
-
-
-
-
-
-
-
-  </view>
   </cy-sheet>
   <cy-sheet show="{{filterOpen}}" class="cu-filter-sheet" title="筛选客户" handle="{{true}}" fixed="full" footer="{{true}}" bind:close="closeFilters">
     <view class="cu-filter">

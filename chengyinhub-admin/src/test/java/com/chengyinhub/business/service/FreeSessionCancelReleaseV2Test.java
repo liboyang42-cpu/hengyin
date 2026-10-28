@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -48,6 +49,7 @@ class FreeSessionCancelReleaseV2Test {
     private OmsTicketMapper ticketMapper;
     private CmsActivityMapper activityMapper;
     private IPerkLedgerService perkLedgerService;
+    private IRefundService refundService;
     private TeamGroupServiceImpl service;
 
     @BeforeEach
@@ -63,6 +65,8 @@ class FreeSessionCancelReleaseV2Test {
         ReflectionTestUtils.setField(service, "cmsTopicMapper", mock(CmsTopicMapper.class));
         ReflectionTestUtils.setField(service, "perkLedgerService", perkLedgerService);
         ReflectionTestUtils.setField(service, "firstReviewPointsClawback", mock(FirstReviewPointsClawbackService.class));
+        refundService = mock(IRefundService.class);
+        ReflectionTestUtils.setField(service, "refundService", refundService);
         when(regMapper.claimRegistrationRefunded(eq(REG), anyString(), any(Date.class))).thenReturn(1);
         when(ticketMapper.restoreInventory(TICKET, 2L)).thenReturn(1);
     }
@@ -81,6 +85,7 @@ class FreeSessionCancelReleaseV2Test {
         r.setWechatPaymentAmount(payable);
         r.setPointUsed(pointUsed);
         when(regMapper.selectCmsRegistrationById(REG)).thenReturn(r);
+        when(regMapper.selectCmsRegistrationByIdForUpdate(REG)).thenReturn(r);
         return r;
     }
 

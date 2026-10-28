@@ -1,6 +1,16 @@
 package com.chengyinhub.business.service.impl;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.util.Objects;
+import com.chengyinhub.business.access.merchant.IMerchantAccessService;
+import com.chengyinhub.business.access.merchant.MerchantOperationScope;
+import com.chengyinhub.business.access.merchant.MerchantPermission;
+import com.chengyinhub.business.domain.CoopInviteRequestReceipt;
+import com.chengyinhub.business.domain.dto.CoopInviteRequestResult;
+import com.chengyinhub.business.mapper.CoopInviteRequestReceiptMapper;
+import org.springframework.dao.DuplicateKeyException;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -20,6 +30,9 @@ import com.chengyinhub.business.service.support.ClubCoopWindowPolicy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import com.chengyinhub.business.mapper.CoopInviteMapper;
@@ -72,6 +85,10 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
 
     @Autowired
     private CoopInviteMapper coopInviteMapper;
+
+    @Autowired private CoopInviteRequestReceiptMapper requestReceiptMapper;
+    @Autowired private IMerchantAccessService merchantAccessService;
+    @Autowired private PlatformTransactionManager transactionManager;
 
     @Autowired private CoopDepositRefundService depositRefundService;
     @Autowired private com.chengyinhub.business.service.IWechatPayService wechatPayService;
@@ -227,6 +244,11 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public int insertCoopInvite(CoopInvite coopInvite) {
+        return insertStandardInvite(coopInvite, null);
+    }
+
+    private int insertStandardInvite(CoopInvite coopInvite, CoopInviteRequestReceipt requestReceipt) {
+        boolean originalRequest = requestReceipt != null;
         assertLegacyInviteReadOnly(coopInvite);
         if (CoopInvite.FROM_OFFICIAL.equals(coopInvite.getFromType())) {
             throw new IllegalStateException("官方邀约必须通过官方入口创建");
@@ -239,25 +261,309 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
         CmsTopic topic = lockInviteTopic(coopInvite);
         if (topic != null) assertInviteWindowOpen(topic, coopInvite, DateUtils.getNowDate());
         lockActiveClubsForInviteWrite(coopInvite, topic, "发起合作邀请");
+        if (originalRequest && !requestSubjectMatchesCurrent(requestReceipt.getPrincipalMemberId(), requestReceipt, topic)) {
+            throw new ServiceException("COOP_REQUEST_UNAVAILABLE", HttpStatus.FORBIDDEN);
+        }
         // CU-M-48:「一主题一俱乐部」原来只在接受事务里判(acceptInviteWithLock 的同名闸),发起侧不判就能
         // 造出一条永远接不上的待确认邀约:对方点接受必被拒,列表长期挂待确认、双方都不知道在等什么。
         // 位置在 lockInviteTopic 的主题行锁之后、与接受路径同序取锁,避免和并发接受互相漏掉。
-        assertNoClubCoopOnTopic(coopInvite);
+        if (originalRequest) assertRequestBusinessDuplicatesCurrent(coopInvite);
+        else assertNoClubCoopOnTopic(coopInvite);
         // CU-M-96:重复待确认邀约闸。位置必须在 lockInviteTopic 之后 —— 主题行 FOR UPDATE
         // 把同主题的发起串起来,两道并发「发同一对象」才不会都读到「还没有」而双双放过。
-        assertNoDuplicatePendingInvite(coopInvite);
+        if (!originalRequest) assertNoDuplicatePendingInvite(coopInvite);
         assertActiveStandardInviteMerchantForUpdate(coopInvite);
         Date now = DateUtils.getNowDate();
         coopInvite.setCreateTime(now);
+        if (originalRequest && topic != null) coopInvite.setExpireTime(topic.getRecruitDeadline());
         coopInvite.setExpireTime(pendingInviteExpiry(now, coopInvite.getExpireTime()));
         int n = coopInviteMapper.insertCoopInvite(coopInvite);
         // 申请转成邀约后回写申请状态(0→3)。与建邀约**同一事务**:
         // 分开做会出现「邀约建了但申请还显示待处理」—— 俱乐部侧以为主办方没理他,
         // 而主办方那边已经发出去了,两边各看各的,谁也不知道对方在等。
         if (n > 0 && coopInvite.getOriginApplyId() != null) {
-            coopClubApplyService.markConverted(coopInvite.getOriginApplyId());
+            int converted = coopClubApplyService.markConverted(coopInvite.getOriginApplyId());
+            if (originalRequest && converted != 1) throw new IllegalStateException("申请转换失败");
         }
         return n;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public CoopInviteRequestResult createOrReplayInvite(Long principalMemberId, CoopInvite invite, Runnable beforeCreate) {
+        requireRequestPrincipal(principalMemberId);
+        String key = requireRequestId(invite == null ? null : invite.getRequestId());
+        CoopInviteRequestReceipt receipt = requestReceiptMapper.selectByRequest(principalMemberId, key);
+        if (receipt != null) {
+            receipt = requestReceiptMapper.selectByRequestForUpdate(principalMemberId, key);
+            return replayInviteRequest(principalMemberId, invite, receipt);
+        }
+        CoopInviteRequestReceipt claim = requestFacts(principalMemberId, invite);
+        claim.setRequestId(key);
+        claim.setFingerprintVersion(1);
+        claim.setFingerprint(requestFingerprint(invite, claim));
+        try {
+            if (requestReceiptMapper.insertReceipt(claim) != 1 || claim.getId() == null) {
+                throw new IllegalStateException("原请求登记失败");
+            }
+        } catch (DuplicateKeyException duplicate) {
+            // Unique-key wait may outlive this transaction's RR snapshot: only a current read sees the winner.
+            receipt = requestReceiptMapper.selectByRequestForUpdate(principalMemberId, key);
+            if (receipt == null) throw duplicate;
+            return replayInviteRequest(principalMemberId, invite, receipt);
+        }
+        beforeCreate.run();
+        invite.setId(null);
+        invite.setStatus(0);
+        invite.setDelFlag(0);
+        invite.setHandleTime(null);
+        invite.setHandleReason(null);
+        invite.setConfigDeadline(null);
+        invite.setCreateBy(principalMemberId.toString());
+        if (insertStandardInvite(invite, claim) != 1 || invite.getId() == null) {
+            throw new IllegalStateException("邀约创建失败");
+        }
+        if (requestReceiptMapper.bindInvite(claim.getId(), invite.getId()) != 1) {
+            throw new IllegalStateException("原请求绑定失败");
+        }
+        claim.setInviteId(invite.getId());
+        return CoopInviteRequestResult.created(claim, false);
+    }
+
+    private CoopInviteRequestResult replayInviteRequest(Long principalMemberId, CoopInvite invite,
+            CoopInviteRequestReceipt receipt) {
+        if (!requestAvailable(principalMemberId, receipt, true)) {
+            throw new ServiceException("COOP_REQUEST_UNAVAILABLE", HttpStatus.FORBIDDEN);
+        }
+        if (!Integer.valueOf(1).equals(receipt.getFingerprintVersion())
+                || !receipt.getFingerprint().equals(requestFingerprint(invite, receipt))) {
+            throw new ServiceException("COOP_REQUEST_CONFLICT", HttpStatus.CONFLICT);
+        }
+        invite.setId(receipt.getInviteId());
+        return CoopInviteRequestResult.created(receipt, true);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CoopInviteRequestResult findInviteRequest(Long principalMemberId, String requestId) {
+        requireRequestPrincipal(principalMemberId);
+        String key = requireRequestId(requestId);
+        CoopInviteRequestReceipt receipt = requestReceiptMapper.selectByRequest(principalMemberId, key);
+        if (receipt == null) return CoopInviteRequestResult.state("NOT_FOUND", key);
+        return requestAvailable(principalMemberId, receipt) ? CoopInviteRequestResult.created(receipt, null)
+                : CoopInviteRequestResult.state("UNAVAILABLE", key);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<String, Object> listInviteRequests(Long principalMemberId, Long before, int limit) {
+        requireRequestPrincipal(principalMemberId);
+        if ((before != null && before <= 0) || limit < 1 || limit > 50) {
+            throw new ServiceException("原请求分页参数不合法", HttpStatus.BAD_REQUEST);
+        }
+        List<CoopInviteRequestReceipt> rows = requestReceiptMapper.selectPage(principalMemberId, before, limit + 1);
+        boolean hasMore = rows.size() > limit;
+        List<CoopInviteRequestResult> items = new ArrayList<>();
+        Long lastScanned = null;
+        for (CoopInviteRequestReceipt receipt : rows.subList(0, Math.min(limit, rows.size()))) {
+            lastScanned = receipt.getId();
+            items.add(requestAvailable(principalMemberId, receipt) ? CoopInviteRequestResult.created(receipt, null)
+                    : CoopInviteRequestResult.state("UNAVAILABLE", receipt.getRequestId()));
+        }
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("rows", items);
+        result.put("nextCursor", hasMore && lastScanned != null ? lastScanned.toString() : null);
+        result.put("hasMore", hasMore);
+        return result;
+    }
+
+    private void requireRequestPrincipal(Long principalMemberId) {
+        if (principalMemberId == null || principalMemberId <= 0) {
+            throw new ServiceException("请先登录", HttpStatus.UNAUTHORIZED);
+        }
+    }
+
+    private String requireRequestId(String key) {
+        if (key == null || !key.matches("[A-Za-z0-9_-]{1,64}")) {
+            throw new ServiceException("requestId格式不合法", HttpStatus.BAD_REQUEST);
+        }
+        return key;
+    }
+
+    /** Resolve current subject; caller-provided from/status/time/deposit fields are not request facts. */
+    private CoopInviteRequestReceipt requestFacts(Long principalMemberId, CoopInvite invite) {
+        if (invite == null || invite.getTopicId() == null || invite.getToId() == null || invite.getToId() <= 0
+                || invite.getInviteType() == null || invite.getInviteType() < 0 || invite.getInviteType() > 1) {
+            throw new ServiceException("邀请参数不合法", HttpStatus.BAD_REQUEST);
+        }
+        CmsTopic topic = cmsTopicMapper.selectCmsTopicById(invite.getTopicId());
+        if (topic == null || !Integer.valueOf(0).equals(topic.getDelFlag())) {
+            throw new ServiceException("COOP_REQUEST_UNAVAILABLE", HttpStatus.FORBIDDEN);
+        }
+        Long owner = principalMemberId;
+        String fromType;
+        if (invite.getInviteType() == 1 && topic.getClubId() != null && topic.getClubId() > 0) {
+            Club club = clubMapper.selectClubById(topic.getClubId());
+            if (club == null || !Integer.valueOf(0).equals(club.getDelFlag())
+                    || !principalMemberId.equals(club.getMemberId())) {
+                throw new ServiceException("COOP_REQUEST_UNAVAILABLE", HttpStatus.FORBIDDEN);
+            }
+            fromType = "club";
+        } else if (invite.getInviteType() == 1 || MerchantOperationScope.isMerchant(invite.getScope())) {
+            owner = requestMerchantOwner(principalMemberId, invite.getInviteType() == 1
+                    ? MerchantPermission.COOP_MANAGE : MerchantPermission.PROJECT_MANAGE);
+            fromType = "merchant";
+        } else fromType = "talent";
+        if (owner == null || !owner.equals(topic.getMemberId())) {
+            throw new ServiceException("COOP_REQUEST_UNAVAILABLE", HttpStatus.FORBIDDEN);
+        }
+        invite.setFromType(fromType);
+        invite.setFromId("club".equals(fromType) ? topic.getClubId() : owner);
+        invite.setNodeId(null);
+        invite.setTargetLevel(invite.getGameId() == null ? 0 : 1);
+        assertStandardInviteTypeMatrix(invite);
+        Long toOwner = requestRecipientOwner(invite.getToType(), invite.getToId());
+        if (toOwner == null || owner.equals(toOwner)) {
+            throw new ServiceException("COOP_REQUEST_UNAVAILABLE", HttpStatus.FORBIDDEN);
+        }
+        CoopInviteRequestReceipt facts = new CoopInviteRequestReceipt();
+        facts.setPrincipalMemberId(principalMemberId);
+        facts.setFromType(fromType);
+        facts.setFromId(invite.getFromId());
+        facts.setFromOwnerMemberId(owner);
+        facts.setToOwnerMemberId(toOwner);
+        facts.setScope(invite.getInviteType() == 0 && "merchant".equals(fromType) ? "MERCHANT" : "");
+        facts.setInviteType(invite.getInviteType());
+        facts.setTopicId(invite.getTopicId());
+        facts.setToType(invite.getToType());
+        facts.setToId(invite.getToId());
+        return facts;
+    }
+
+    private Long requestMerchantOwner(Long principalMemberId, String permission) {
+        // Receipt/topic waits must not reuse an outer RR snapshot that still grants a revoked employee access.
+        TransactionTemplate authorization = new TransactionTemplate(transactionManager);
+        authorization.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        authorization.setIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED);
+        authorization.setReadOnly(true);
+        return authorization.execute(status -> merchantAccessService.require(principalMemberId, permission).getOwnerMemberId());
+    }
+
+    private Long requestRecipientOwner(String toType, Long toId) {
+        if ("club".equals(toType)) {
+            Club club = clubMapper.selectClubById(toId);
+            return club != null && Integer.valueOf(0).equals(club.getDelFlag()) ? club.getMemberId() : null;
+        }
+        if ("merchant".equals(toType)) {
+            MmsMerchant merchant = mmsMerchantMapper.selectMmsMerchantByMemberId(toId);
+            return merchant != null && Integer.valueOf(0).equals(merchant.getDelFlag()) ? merchant.getMemberId() : null;
+        }
+        return null;
+    }
+
+    private boolean requestAvailable(Long principalMemberId, CoopInviteRequestReceipt receipt) {
+        return requestAvailable(principalMemberId, receipt, false);
+    }
+
+    private boolean requestAvailable(Long principalMemberId, CoopInviteRequestReceipt receipt, boolean currentRead) {
+        if (receipt == null || !principalMemberId.equals(receipt.getPrincipalMemberId()) || receipt.getInviteId() == null) return false;
+        CoopInvite scope = new CoopInvite();
+        scope.setInviteType(receipt.getInviteType());
+        scope.setTopicId(receipt.getTopicId());
+        scope.setFromType(receipt.getFromType());
+        scope.setFromId(receipt.getFromId());
+        scope.setToType(receipt.getToType());
+        scope.setToId(receipt.getToId());
+        scope.setScope(receipt.getScope());
+        try {
+            if (currentRead) {
+                CmsTopic topic = cmsTopicMapper.selectCmsTopicByIdForUpdate(receipt.getTopicId());
+                if (topic == null || !Integer.valueOf(0).equals(topic.getDelFlag())) return false;
+                lockActiveClubsForInviteWrite(scope, topic, "回读原请求");
+                if (!requestSubjectMatchesCurrent(principalMemberId, receipt, topic)) return false;
+            } else {
+                CoopInviteRequestReceipt current = requestFacts(principalMemberId, scope);
+                if (!Objects.equals(current.getFromType(), receipt.getFromType())
+                        || !Objects.equals(current.getFromId(), receipt.getFromId())
+                        || !Objects.equals(current.getFromOwnerMemberId(), receipt.getFromOwnerMemberId())
+                        || !Objects.equals(current.getToOwnerMemberId(), receipt.getToOwnerMemberId())) return false;
+            }
+            CoopInvite original = currentRead ? coopInviteMapper.selectCoopInviteByIdForUpdate(receipt.getInviteId())
+                    : coopInviteMapper.selectCoopInviteById(receipt.getInviteId());
+            return original != null && Integer.valueOf(0).equals(original.getDelFlag())
+                    && Objects.equals(original.getInviteType(), receipt.getInviteType())
+                    && Objects.equals(original.getTopicId(), receipt.getTopicId())
+                    && Objects.equals(original.getFromType(), receipt.getFromType())
+                    && Objects.equals(original.getFromId(), receipt.getFromId())
+                    && Objects.equals(original.getToType(), receipt.getToType())
+                    && Objects.equals(original.getToId(), receipt.getToId());
+        } catch (ServiceException | IllegalStateException unavailable) { return false; }
+    }
+
+    /** Topic and sorted club locks are already held, before any invitation lock. No creation eligibility gates. */
+    private boolean requestSubjectMatchesCurrent(Long principalMemberId, CoopInviteRequestReceipt receipt, CmsTopic topic) {
+        if (!Objects.equals(topic.getMemberId(), receipt.getFromOwnerMemberId())) return false;
+        boolean clubPublisher = receipt.getInviteType() == 1 && topic.getClubId() != null && topic.getClubId() > 0;
+        if (clubPublisher) {
+            Club publisher = clubMapper.selectClubByIdForUpdate(topic.getClubId());
+            if (!"club".equals(receipt.getFromType()) || !Objects.equals(topic.getClubId(), receipt.getFromId())
+                    || publisher == null || !Integer.valueOf(0).equals(publisher.getDelFlag())
+                    || !Objects.equals(publisher.getMemberId(), receipt.getFromOwnerMemberId())
+                    || !Objects.equals(principalMemberId, receipt.getFromOwnerMemberId())) return false;
+        } else if ("merchant".equals(receipt.getFromType())) {
+            Long owner = requestMerchantOwner(principalMemberId, receipt.getInviteType() == 1
+                    ? MerchantPermission.COOP_MANAGE : MerchantPermission.PROJECT_MANAGE);
+            if (!Objects.equals(owner, receipt.getFromOwnerMemberId()) || !Objects.equals(owner, receipt.getFromId())) return false;
+        } else if (receipt.getInviteType() != 0 || !"talent".equals(receipt.getFromType())
+                || !Objects.equals(principalMemberId, receipt.getFromOwnerMemberId())
+                || !Objects.equals(principalMemberId, receipt.getFromId())) return false;
+        if ("club".equals(receipt.getToType())) {
+            Club recipient = clubMapper.selectClubByIdForUpdate(receipt.getToId());
+            return recipient != null && Integer.valueOf(0).equals(recipient.getDelFlag())
+                    && Objects.equals(recipient.getMemberId(), receipt.getToOwnerMemberId());
+        }
+        MmsMerchant recipient = mmsMerchantMapper.selectMmsMerchantByMemberIdForUpdate(receipt.getToId());
+        return recipient != null && Integer.valueOf(0).equals(recipient.getDelFlag())
+                && Objects.equals(recipient.getMemberId(), receipt.getToOwnerMemberId());
+    }
+
+    private String requestFingerprint(CoopInvite invite, CoopInviteRequestReceipt facts) {
+        // Length-prefix every field so embedded separators cannot alias a different contract.
+        String scope = Integer.valueOf(0).equals(invite.getInviteType()) && MerchantOperationScope.isMerchant(invite.getScope()) ? "MERCHANT" : "";
+        Object[] fields = {1, invite.getInviteType(), invite.getTopicId(), invite.getToType(), invite.getToId(),
+                invite.getGameId(), invite.getOriginApplyId(), invite.getMessage() == null ? "" : invite.getMessage(),
+                scope, facts.getFromType(), facts.getFromId(), facts.getFromOwnerMemberId(),
+                facts.getToOwnerMemberId(), invite.getShareMode(), requestDecimal(invite.getShareRate()), requestDecimal(invite.getFixedFee())};
+        StringBuilder canonical = new StringBuilder();
+        for (Object field : fields) {
+            if (field == null) canonical.append("-1:");
+            else { String value = field.toString(); canonical.append(value.length()).append(':').append(value); }
+        }
+        try {
+            byte[] hash = MessageDigest.getInstance("SHA-256").digest(canonical.toString().getBytes(StandardCharsets.UTF_8));
+            StringBuilder hex = new StringBuilder(64);
+            for (byte value : hash) hex.append(String.format("%02x", value & 0xff));
+            return hex.toString();
+        } catch (java.security.NoSuchAlgorithmException impossible) { throw new IllegalStateException(impossible); }
+    }
+
+    private String requestDecimal(BigDecimal value) {
+        return value == null ? null : value.setScale(2, RoundingMode.HALF_UP).toPlainString();
+    }
+
+    private void assertRequestBusinessDuplicatesCurrent(CoopInvite invite) {
+        // Topic lock precedes this current read, including when receipt/auth reads established an older RR snapshot.
+        for (CoopInvite existing : requestReceiptMapper.selectTopicInvitesForUpdate(invite.getTopicId(), DateUtils.getNowDate())) {
+            if (isLegacyMerchantNodeInvite(existing)) continue;
+            if ("club".equals(invite.getToType()) && Integer.valueOf(1).equals(existing.getStatus())
+                    && "club".equals(existing.getToType())) {
+                throw new IllegalStateException("该主题已有合作俱乐部,一个主题只能有一个组织方;请先取消原俱乐部再邀");
+            }
+            if (Integer.valueOf(0).equals(existing.getStatus()) && Objects.equals(invite.getToType(), existing.getToType())
+                    && Objects.equals(invite.getToId(), existing.getToId()) && Objects.equals(invite.getNodeId(), existing.getNodeId())) {
+                throw new ServiceException("你已向对方发过这个主题的邀约,等对方处理后再发", HttpStatus.BAD_REQUEST);
+            }
+        }
     }
 
     @Override

@@ -1,0 +1,59 @@
+<wxs src="../../utils/wxs/money.wxs" module="money" />
+<!-- 发票详情(X5):照抄 scene-member-order-detail 正文(.ocard/.orow、状态卡 .state-notice、次级键 .sec-btn)。 -->
+<view class="theme-dark detail">
+  <cy-toast id="cy-toast" />
+  <cy-loading-mask id="cy-loading" />
+  <cy-modal-host id="cy-modal-host" />
+  <cy-nav-bar custom-back bind:back="onBack" />
+  <cy-page-title title="发票详情" />
+  <view class="body">
+    <cy-empty wx:if="{{login}}" fill size="lg" kind="no-permission" title="登录后查看发票" cta="微信登录" bind:cta="login" />
+    <cy-empty wx:elif="{{unavailable}}" fill size="lg" kind="no-permission" title="发票功能暂未开放" />
+    <cy-skeleton wx:elif="{{loading && !detail}}" type="form-section" count="2" />
+    <cy-error load-failure wx:elif="{{error && !detail}}" fill size="lg" title="发票申请加载失败" retry="重试" bind:retry="refresh" />
+    <block wx:elif="{{detail}}">
+      <view class="ocard state-notice" wx:if="{{cancelPending}}">
+        <view class="state-notice__head"><text class="state-notice__k">撤回结果未确认</text><text class="state-notice__tag state-notice__tag--warning">待确认</text></view>
+      </view>
+      <view class="ocard state-notice" wx:elif="{{detail.statusKey === 'ing'}}">
+        <view class="state-notice__head"><text class="state-notice__k">发票开具中</text><text class="state-notice__tag state-notice__tag--info">开具中</text></view>
+      </view>
+      <view class="ocard state-notice" wx:elif="{{detail.statusKey === 'issued'}}">
+        <view class="state-notice__head"><text class="state-notice__k">发票已开具</text><text class="state-notice__tag state-notice__tag--success">已开具</text></view>
+      </view>
+      <view class="ocard state-notice" wx:elif="{{detail.statusKey === 'rejected'}}">
+        <view class="state-notice__head"><text class="state-notice__k">申请被驳回</text><text class="state-notice__tag">已驳回</text></view>
+        <text class="state-notice__s" wx:if="{{detail.rejectReason}}">驳回原因：{{detail.rejectReason}}</text>
+      </view>
+      <view class="ocard state-notice" wx:elif="{{detail.statusKey === 'paused'}}">
+        <view class="state-notice__head"><text class="state-notice__k">开票已暂停</text><text class="state-notice__tag state-notice__tag--warning">退款核对中</text></view>
+      </view>
+      <view class="ocard state-notice" wx:elif="{{detail.statusKey === 'cancelled'}}">
+        <view class="state-notice__head"><text class="state-notice__k">申请已撤回</text><text class="state-notice__tag">已撤回</text></view>
+      </view>
+
+      <view class="sec-title">发票信息</view>
+      <view class="ocard">
+        <view class="orow"><text class="orow-k">发票抬头</text><text class="orow-v">{{detail.titleName}}</text></view>
+        <view class="orow" wx:if="{{detail.titleType}}"><text class="orow-k">抬头类型</text><text class="orow-v">{{detail.titleType === 'COMPANY' ? '单位' : '个人'}}</text></view>
+        <view class="orow" wx:if="{{detail.taxNoMasked}}"><text class="orow-k">税号</text><text class="orow-v">{{detail.taxNoMasked}}</text></view>
+        <view class="orow" wx:if="{{detail.issuerName}}"><text class="orow-k">开票单位</text><text class="orow-v">{{detail.issuerName}}</text></view>
+        <view class="orow" wx:if="{{detail.statusKey === 'issued' && detail.invoiceNo}}"><text class="orow-k">发票号</text><text class="orow-v" user-select>{{detail.invoiceNo}}</text></view>
+        <view class="orow" wx:if="{{detail.statusKey === 'issued' && detail.issuedText}}"><text class="orow-k">开具时间</text><text class="orow-v">{{detail.issuedText}}</text></view>
+      </view>
+
+      <view class="sec-title">包含订单</view>
+      <view class="ocard">
+        <view class="orow" wx:for="{{detail.orders}}" wx:key="orderId"><text class="orow-k">{{item.orderTitle}}{{item.ticketName ? ' · ' + item.ticketName : ''}}</text><text class="orow-v">{{money.amount(item.amount)}}</text></view>
+        <view class="orow orow--total"><text class="orow-k">开票金额</text><text class="orow-v">{{money.amount(detail.totalAmount)}}</text></view>
+      </view>
+
+      <view class="secondary-actions">
+        <view class="sec-btn sec-danger {{writing ? 'sec-btn--disabled' : ''}}" wx:if="{{detail.status === 'SUBMITTED' && !cancelPending}}" bindtap="cancel" aria-role="button" aria-label="撤回申请" aria-disabled="{{writing}}" hover-class="cy-pressed" hover-stay-time="80">撤回申请</view>
+        <view class="sec-btn sec-solid" wx:if="{{detail.statusKey === 'rejected' && !cancelPending}}" bindtap="reapply" aria-role="button" aria-label="重新申请" hover-class="cy-pressed" hover-stay-time="80">重新申请</view>
+        <view class="sec-btn sec-solid" wx:if="{{cancelPending}}" bindtap="refresh" aria-role="button" aria-label="刷新" hover-class="cy-pressed" hover-stay-time="80">刷新</view>
+        <button class="sec-btn sec-solid sec-contact" open-type="contact" show-message-card="true" send-message-title="发票客服" send-message-path="/subpackageMember/invoice-detail/index?id={{detail.id}}">联系客服</button>
+      </view>
+    </block>
+  </view>
+</view>

@@ -72,7 +72,8 @@ test('R3 站点方案结局仅由终局行控制，资源绑定与缺结局提�
   assert.match(station, /wx:else[^>]*>最终章</);
   assert.match(station, /nodePlanEndingError/);
   assert.match(station, /由工作人员开幕/);
-  assert.match(station, /设置到达与引导/);
+  // 10-28 原型 A e-node：到达与引导是分组列表（L1 cy-list-row）里的一行，点开到达与引导半屏。
+  assert.match(station, /title="到达与引导"[^>]*bind:press="openStructure"/);
   assert.match(topic, /id="fieldSubtitle"[\s\S]*?主题描述[\s\S]*?bindinput="onSubtitleChange"/);
 });
 

@@ -304,7 +304,8 @@ test('门店相册空态、原位错误和图片动作满足恢复及 88rpx aria
   assert.match(wxml, /saveError[\s\S]*bind:action="save"/)
   assert.match(wxml, /class="dg-save-receipt"[^>]*aria-role="status"[^>]*aria-live="polite"/)
   assert.match(wxml, /class="dg-delete"[^>]*aria-role="button"[^>]*aria-label="删除第\{\{index \+ 1 \|\| 1\}\}张图片"/)
-  assert.match(wxml, /class="dg-delete"[^>]*><cy-icon name="close"/)
+  // 2026-10-28 m699:删除是照片右上角的小圆钮(dg-delete-dot),热区仍是外层 44px
+  assert.match(wxml, /class="dg-delete"[^>]*><view class="dg-delete-dot"><cy-icon name="close"/)
   assert.match(wxml, /<cy-icon\b[^>]*name="plus"/)
   assert.doesNotMatch(wxml, />\s*[×✕＋+]\s*</)
   assert.match(wxss, /\.dg-delete\s*\{[^}]*min-height:\s*44px/)

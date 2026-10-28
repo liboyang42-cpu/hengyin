@@ -195,6 +195,8 @@
           <cy-merchant-cards items="{{merchantCards}}" owned="{{is_join == 1}}" bind:open="onMerchantOpen" />
         </view>
         <view wx:if="{{is_join == 1}}" class="topic-audio" bindtap="openThemeHistory" aria-role="button" aria-label="我的游玩记录" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="clock" size="36" /><text>我的游玩记录</text><cy-icon name="chevron-right" size="28" /></view>
+        <!-- 原型 B T-36 开局前准备:作者配了准备项或可玩时段才出现(B1),行形与上一行相同 -->
+        <view wx:if="{{is_join == 1 && prep.show}}" class="topic-audio" bindtap="openPrep" aria-role="button" aria-label="{{prep.rowText}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="{{prep.icon}}" size="36" /><text>{{prep.rowText}}</text><cy-icon wx:if="{{!prep.loading && !prep.error}}" name="chevron-right" size="28" /></view>
         <!-- 主题音频讲解 -->
         <view wx:if="{{info.audioUrl}}" class="topic-audio" bindtap="toggleTopicAudio"
               aria-role="button" aria-label="主题音频讲解，点此{{topicAudioPlaying?'暂停':'播放'}}" hover-class="cy-pressed" hover-stay-time="80">
@@ -320,14 +322,17 @@
              读 /api/team/nearby(以场地坐标为圆心)再按 topicId 过滤;读不到或没有队伍整块不出。 -->
         <view class="topic-teams" wx:if="{{teams.rows.length}}">
           <view class="det-type">组队</view>
-          <view class="topic-teams__card">
+          <!-- 原型 B T-31:已购的城市定向主题整卡可点,进「我的队伍 · 本场招募」 -->
+          <view class="topic-teams__card" bindtap="openTeamLobby" hover-class="{{is_join == 1 && info.productType == 1 ? 'cy-pressed' : 'none'}}" hover-stay-time="80"
+                aria-role="button" aria-label="组队">
             <view class="topic-teams__hd"><text class="topic-teams__n">已组 {{teams.rows.length}} 支队伍</text><text class="topic-teams__need" wx:if="{{teams.need > 0}}">还差 {{teams.need || 0}} 人</text></view>
             <view class="topic-teams__row" wx:for="{{teams.rows}}" wx:key="teamId">
               <view class="topic-teams__av"><cy-avatar wx:for="{{item.faces}}" wx:for-item="f" wx:key="index" size="xs" src="{{f}}" bordered /></view>
               <view class="topic-teams__tx"><text class="topic-teams__t">{{item.title}}</text><text class="topic-teams__s">{{item.sub}}</text></view>
               <view class="topic-teams__cnt"><text class="topic-teams__c">{{item.count}}</text><text class="topic-teams__m" wx:if="{{item.missing > 0}}">还差 {{item.missing || 0}} 人</text></view>
             </view>
-            <view class="topic-teams__ft">购买后可在地图上发起或加入组队</view>
+            <view wx:if="{{is_join == 1 && info.productType == 1}}" class="topic-teams__ft topic-teams__ft--go"><text>查看本场全部队伍</text><cy-icon name="chevron-right" size="24" /></view>
+            <view wx:else class="topic-teams__ft">购买后可在地图上发起或加入组队</view>
           </view>
         </view>
 
@@ -469,6 +474,15 @@
     </view>
   </view>
 
+
+  <cy-sheet show="{{ prepShow }}" title="开局前准备" bind:close="closePrep">
+    <view class="prep">
+      <view wx:if="{{prep.windowText}}" class="prep-li {{prep.closed ? 'is-bad' : ''}}"><text>可玩时段</text><text class="prep-li__v">{{prep.windowText}}{{prep.closed ? ' · 当前未开放' : ''}}</text></view>
+      <view class="prep-check" wx:for="{{prep.items}}" wx:key="k"><cy-consent-check checked="{{item.on}}" text="{{item.text}}" data-index="{{index}}" bind:change="onPrepTick" /></view>
+      <view class="prep-cta"><cy-btn variant="primary" style="width:100%" disabled="{{!prep.ready || prep.refused || prepBusy}}" bindtap="startPrepPlay">开始游玩</cy-btn></view>
+      <text wx:if="{{prep.refused}}" class="prep-note">按平台规则，现在不能开始这个主题。</text>
+    </view>
+  </cy-sheet>
 
   <!-- 投票弹窗标题与关闭出口由共用 sheet 提供。 -->
   <cy-sheet show="{{ voteShow }}" title="评价路线" style="--cy-sheet-heading-size: var(--cy-comp-sheet-title-size);" bind:close="voteClose">

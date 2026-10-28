@@ -38,6 +38,7 @@
               <image src="{{userInfo.avatar || '/images/d_profile.png'}}" mode="aspectFill" />
             </view>
           </view>
+          <!-- 2026-10-27 真机走查 P-01:名字单独占一行，下面一行放「✓ 玩家 · 城市」(原同一行会把名字截成「Hi, 智能科…」) -->
           <view class="v3-hero-greet-row" style="top:{{heroActionsTop}}px; padding-right:{{heroActionsReserve}}px;">
             <text class="v3-hero-hi">Hi, {{userInfo.nickname || '旅人'}}!</text>
             <view wx:if="{{userInfo.nickname}}" class="v3-hero-mem flex-ac">
@@ -62,7 +63,6 @@
       <view id="sec-reco" class="v3-sec v3-sec-reco" style="{{pm_recommendedTopicList === 1 ? '--pm-r:1;' : (pm_recommendedTopicList === 2 ? '--pm-r-d:.32s;--pm-r-s:1;' : '')}}">
         <view class="v3-sec-head">
           <text class="v3-sec-title">编辑精选</text>
-          <cy-btn wx:if="{{recoHero}}" variant="ghost" size="sm" bindtap="showRecommendationSource">为什么看到</cy-btn>
         </view>
         <view class="v3-sec-state" wx:if="{{listLoading.recommendedTopicList && !recoHero}}">
           <cy-skeleton type="feed-card" count="1" />
@@ -109,22 +109,6 @@
             </view>
           </swiper-item>
         </swiper>
-      </view>
-
-      <cy-roam-resume-bar />
-
-      <!-- 继续探索：由服务端进行中的游戏会话(优先)或 /registration/my-joined 的真实报名记录驱动，空时不占首屏。 -->
-      <view class="v3-continue" wx:if="{{continueExplore}}" bindtap="goContinueExplore" hover-class="cy-pressed" hover-stay-time="80">
-        <image wx:if="{{continueExplore.cover}}" class="v3-continue-cover" src="{{continueExplore.cover}}" mode="aspectFill" />
-        <view class="v3-continue-cover v3-continue-cover--fallback" wx:else>
-          <cy-icon name="gps" size="40" />
-        </view>
-        <view class="v3-continue-body">
-          <text class="v3-continue-kicker">{{continueExplore.kicker}}</text>
-          <text class="v3-continue-title ep1">{{continueExplore.title}}</text>
-          <text class="v3-continue-sub ep1">{{continueExplore.sub}}</text>
-        </view>
-        <view class="v3-continue-cta">继续</view>
       </view>
 
       <!-- 附近活动：Figma 双列竖卡 -->
@@ -213,22 +197,15 @@
 
         <view class="v2-feed" wx:if="{{activeTab === '0'}}" style="{{pmFeed === 1 ? '--pm-f:1;' : (pmFeed === 2 ? '--pm-f-d:.32s;--pm-f-s:1;' : '')}}">
           <view class="v2-fitem" wx:for="{{bottomTopicList}}" wx:key="id">
+            <!-- 2026-10-28 业主:主题必须有图,卡片整张用封面,名字一行压在底部渐变上 -->
             <view class="v2-fcard" bindtap="goTopic" data-index="{{index}}" data-id="{{item.id}}" hover-class="cy-pressed" hover-stay-time="80">
+              <image class="v2-fcover" src="{{item.cover || '/images/route_city_cover.png'}}" mode="aspectFill" lazy-load="true" />
               <view class="v2-fcard-l">
                 <view class="v2-feyebrow ep1" wx:if="{{item.feedTypeLabel}}">{{item.feedTypeLabel}}</view>
-                <view class="v2-ftitle ep2">{{item.name}}</view>
+                <view class="v2-ftitle ep1">{{item.name}}</view>
                 <view class="v2-ftags flex-ac">
                   <text class="v2-ftag" wx:for="{{item.feedTags}}" wx:key="index">{{item}}</text>
                 </view>
-              </view>
-              <view class="v2-fgrid v2-fgrid--{{item.feedGridMode || '1'}}">
-                <block wx:for="{{item.feedImages}}" wx:for-item="im" wx:for-index="gi" wx:key="gi">
-                  <view class="v2-fcell">
-                    <image src="{{im}}" mode="aspectFill" lazy-load="true" />
-                    <view class="v2-fmore" wx:if="{{gi === 1 && item.moreCount}}">+{{item.moreCount}}</view>
-                    <view class="v2-fcount" wx:if="{{gi === 3 && item.feedBadgeCount}}">{{item.feedBadgeCount}}</view>
-                  </view>
-                </block>
               </view>
             </view>
             <view class="v2-status" bindtap="goTopic" data-index="{{index}}" data-id="{{item.id}}" hover-class="cy-pressed" hover-stay-time="80">
@@ -238,7 +215,7 @@
               </view>
               <view class="v2-status-row flex-b">
                 <text class="v2-status-k">时间</text>
-                <text class="v2-status-v">{{item.formattedDateTime}}</text>
+                <text class="v2-status-v">{{item.formattedDateTime || '长期开放'}}</text>
               </view>
               <view class="v2-status-row flex-b last">
                 <text class="v2-status-k">地点</text>
@@ -257,21 +234,13 @@
         <view class="v2-feed" wx:if="{{activeTab === '1'}}" style="{{pmFeed === 1 ? '--pm-f:1;' : (pmFeed === 2 ? '--pm-f-d:.32s;--pm-f-s:1;' : '')}}">
           <view class="v2-fitem" wx:for="{{bottomActivityList}}" wx:key="id">
             <view class="v2-fcard" bindtap="goActivity" data-index="{{index}}" data-id="{{item.id}}" hover-class="cy-pressed" hover-stay-time="80">
+              <image class="v2-fcover" src="{{item.cover || '/images/route_city_cover.png'}}" mode="aspectFill" lazy-load="true" />
               <view class="v2-fcard-l">
                 <view class="v2-feyebrow ep1" wx:if="{{item.feedTypeLabel}}">{{item.feedTypeLabel}}</view>
-                <view class="v2-ftitle ep2">{{item.name}}</view>
+                <view class="v2-ftitle ep1">{{item.name}}</view>
                 <view class="v2-ftags flex-ac">
                   <text class="v2-ftag" wx:for="{{item.feedTags}}" wx:key="index">{{item}}</text>
                 </view>
-              </view>
-              <view class="v2-fgrid v2-fgrid--{{item.feedGridMode || '1'}}">
-                <block wx:for="{{item.feedImages}}" wx:for-item="im" wx:for-index="gi" wx:key="gi">
-                  <view class="v2-fcell">
-                    <image src="{{im}}" mode="aspectFill" lazy-load="true" />
-                    <view class="v2-fmore" wx:if="{{gi === 1 && item.moreCount}}">+{{item.moreCount}}</view>
-                    <view class="v2-fcount" wx:if="{{gi === 3 && item.feedBadgeCount}}">{{item.feedBadgeCount}}</view>
-                  </view>
-                </block>
               </view>
             </view>
             <view class="v2-status" bindtap="goActivity" data-index="{{index}}" data-id="{{item.id}}" hover-class="cy-pressed" hover-stay-time="80">
@@ -281,7 +250,7 @@
               </view>
               <view class="v2-status-row flex-b">
                 <text class="v2-status-k">时间</text>
-                <text class="v2-status-v">{{item.formattedDateTime}}</text>
+                <text class="v2-status-v">{{item.formattedDateTime || '长期开放'}}</text>
               </view>
               <view class="v2-status-row flex-b last">
                 <text class="v2-status-k">地点</text>

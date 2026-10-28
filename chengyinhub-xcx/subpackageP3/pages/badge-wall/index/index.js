@@ -9,18 +9,17 @@
 const app = getApp();
 const { recoverReadSession } = require('../../../../utils/session/login-reload.js');
 const { resolveMenuChrome } = require('../../../../utils/nav-safe-area.js'); const pageMotion = require('../../../../utils/page-motion.js');
-const ENGINE = require('./engine.js');
+const ENGINE = require('./engine.js'); const ENAMEL = require('./enamel-pin.js'); const PIN_PX = 420; function pinIdOf(b) { return (b.glyph || 'DEFAULT') + (b.locked ? '_l' : ''); } // 2026-10-28 业主:珐琅徽章(enamel-pin.js)
 const { chinaDateKey } = require('../../../../utils/datetime');
 const { isRecord, isRecordList } = require('../../../../utils/response-shape.js');
 const { sendUiStateRequest } = require('../../../../utils/ui-state-request.js');
 // 9-24 顶部颜色图例删掉后,墙模式顶部少让约 20px(图例一行 + 上边距),170 → 150
 const WALL_HEADER_INSET = 150;
 const WALL_BOTTOM_INSET = 48;
-const BADGE_FAMILIES = [
-  // 身份卡是勋章墙的本体,列表里不再写这一组的标题(9-24 用户:「城市身份卡不用写」)
-  { key: 'identity', title: '' },
-  { key: 'medal', title: '城市纪念章' },
-  { key: 'achievement', title: '成长成就' },
+// 2026-10-27 owner P-30:不再按来源分组,一页两段 —— 上面已点亮,下面未解锁(段内保持接口顺序)
+const BADGE_SECTIONS = [
+  { key: 'lit', title: '已点亮', locked: false },
+  { key: 'locked', title: '未解锁', locked: true },
 ];
 
 // 类别 → 墙面配色轨道。信息层只消费 DS token；WebGL 内部颜色仍由引擎管理。
@@ -190,7 +189,7 @@ Page({
     viewMode: 'list',
     unlockedCount: 0,
     lockedCount: 0,
-    sheetOn: false,
+    sheetOn: false, pins: {},
     sheet: { name: '', rarZh: '', rarColor: '', desc: '', time: '', source: '', cond: '' }
   },
 
@@ -367,13 +366,13 @@ Page({
   applyBadges(list) {
     const unlockedCount = list.filter(function (badge) { return !badge.locked; }).length;
     const numbered = list.map(function (badge, idx) {
-      return Object.assign({}, badge, { _idx: idx });
+      return Object.assign({}, badge, { _idx: idx, pinId: pinIdOf(badge) });
     });
-    const badgeGroups = BADGE_FAMILIES.map(function (fam) {
+    const badgeGroups = BADGE_SECTIONS.map(function (sec) {
       return {
-        key: fam.key,
-        title: fam.title,
-        items: numbered.filter(function (badge) { return badge.family === fam.key; }),
+        key: sec.key,
+        title: sec.title,
+        items: numbered.filter(function (badge) { return !!badge.locked === sec.locked; }),
       };
     }).filter(function (group) { return group.items.length; });
     if (this.data.viewMode === 'list' && !this.data.badges.length) pageMotion.enter(this, 'pmList'); this._badgeCache = list; // 2026-10-23:列表首次到达时依次浮上来
@@ -386,12 +385,16 @@ Page({
       unlockedCount: unlockedCount,
       lockedCount: list.length - unlockedCount,
     });
-    if (this.engine) this.engine.setBadges(list);
+    if (this.engine) this.engine.setBadges(list); this._renderPins(list);
   },
 
   /** 双样式分流:enamel 徽章从墙上点开 3D 转台 */
   goBadge3d() {
     const sh = this.data.sheet || {};
+    if (!sh.iconUrl && sh.pinId && !sh.locked) { // 2026-10-28 业主:珐琅勋章点开能转(badge-3d 的 pin 样式)
+      wx.navigateTo({ url: '/subpackageP3/pages/badge-3d/index?style=pin&glyph=' + encodeURIComponent(sh.glyph) + '&name=' + encodeURIComponent(sh.name || '徽章') + '&rarity=' + (sh.rarity || 0) });
+      return;
+    }
     wx.navigateTo({ url: '/subpackageP3/pages/badge-3d/index?name=' + encodeURIComponent(sh.name || '徽章')
       + '&style=' + (sh.style || 'glow') + '&rarity=' + (sh.rarity || 0)
       + (sh.iconUrl ? '&img=' + encodeURIComponent(sh.iconUrl) : '') });
@@ -427,7 +430,7 @@ Page({
     this.setData({
       sheetOn: true,
       sheet: {
-        style: b.style || 'glow', iconUrl: b.iconUrl || '', rarity: b.rarity || 0,
+        style: b.style || 'glow', iconUrl: b.iconUrl || '', rarity: b.rarity || 0, pinId: pinIdOf(b), glyph: b.glyph || 'DEFAULT', locked: !!b.locked,
         name: b.name,
         rarZh: b.tierZh || meta.zh,
         rarColor: b.rarity === 4 ? 'var(--cy-color-status-danger)' : meta.css,
@@ -446,20 +449,6 @@ Page({
   },
 
   onFbTap(e) { this.openSheet(e.currentTarget.dataset.idx); },
-
-  setWallMode() {
-    if (this.data.viewMode === 'wall') return;
-    this.setData({ viewMode: 'wall' }, () => {
-      if (!this.data.loadFail && !this.data.partialFail && !this.data.glFail) this.initCanvas();
-    });
-  },
-
-  setListMode() {
-    if (this.data.viewMode === 'list') return;
-    this.closeSheet();
-    this.destroyEngine();
-    pageMotion.enter(this, 'pmList'); this.setData({ viewMode: 'list' }); // 2026-10-23:切到列表时勋章行依次浮上来
-  },
 
   goExplore() {
     wx.switchTab({ url: '/pages/index/index' });
@@ -496,5 +485,33 @@ Page({
     const list = (identity || []).map(itemToBadge);
     this.applyBadges(list);
     return list.length;
+  },
+
+  /** 2026-10-28 业主:珐琅徽章。没有上传图的徽记在隐藏的 2D canvas 上逐枚画好、转成临时图;
+   *  同一枚(已点亮 / 未解锁各一张)整页只画一次,画失败的不再重试,格子里就空着底板位置。 */
+  _renderPins(list) {
+    const tried = this._pinTried || (this._pinTried = {});
+    const todo = [], track = {};
+    list.forEach(function (b) { const id = pinIdOf(b); track[id] = b.rarity; if (!b.iconUrl && !tried[id] && todo.indexOf(id) < 0) todo.push(id); });
+    if (!todo.length || this._pinBusy) return;
+    this._pinBusy = true;
+    const that = this;
+    wx.createSelectorQuery().in(this).select('#pinCanvas').fields({ node: true }).exec(function (res) {
+      const canvas = res && res[0] && res[0].node;
+      if (!canvas || that._unloaded) { that._pinBusy = false; return; }
+      canvas.width = PIN_PX; canvas.height = PIN_PX;
+      const ctx = canvas.getContext('2d');
+      (function next(i) {
+        if (i >= todo.length || that._unloaded) { that._pinBusy = false; if (!that._unloaded) that._renderPins(that.data.badges || []); return; }
+        const id = todo[i];
+        tried[id] = true;
+        try { ENAMEL.render(ctx, PIN_PX, id.replace(/_l$/, ''), /_l$/.test(id), ENAMEL.optsFor(track[id])); } catch (e) { next(i + 1); return; }
+        wx.canvasToTempFilePath({
+          canvas: canvas, fileType: 'png', destWidth: PIN_PX, destHeight: PIN_PX,
+          success(r) { if (!that._unloaded) that.setData({ ['pins.' + id]: r.tempFilePath }); },
+          complete() { next(i + 1); }
+        });
+      })(0);
+    });
   }
 });

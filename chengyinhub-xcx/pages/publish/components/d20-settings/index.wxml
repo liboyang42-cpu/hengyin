@@ -1,0 +1,77 @@
+<!-- d20 与角色设定:叠在主题详情上的全高半屏(主题详情那张传 stacked 缩小变暗)。 -->
+<cy-sheet variant="full" show="{{show}}" bind:close="onCancel" class="d20-host">
+  <view class="d20" wx:if="{{model}}">
+    <!-- 第一层 -->
+    <view wx:if="{{level === 'root'}}" class="d20__lv">
+      <cy-sheet-nav title="d20 与角色设定" action="完成" bind:cancel="onCancel" bind:action="onDone" />
+
+      <cy-list-group header="规则难度" bare>
+        <view class="dif {{readOnly ? 'is-ro' : ''}}" aria-role="radiogroup" aria-label="规则难度">
+          <view wx:for="{{presets}}" wx:key="key" class="dif__c dif__c--{{item.key}} {{model.preset === item.key ? 'is-on' : ''}} {{tapKey === item.key ? 'is-tap' : ''}}" data-key="{{item.key}}" bindtap="pickPreset" aria-role="radio" aria-checked="{{model.preset === item.key}}" aria-label="{{item.label}}" hover-class="cy-pressed" hover-stay-time="80">
+            <view class="dif__d"></view>
+            <text class="dif__n">{{item.label}}</text>
+            <view class="dif__p"><view wx:for="{{item.dots}}" wx:for-item="dot" wx:for-index="di" wx:key="di" class="dif__dot {{dot ? '' : 'is-off'}}"></view></view>
+          </view>
+        </view>
+      </cy-list-group>
+
+      <cy-list-group header="规则">
+        <cy-list-row title="天然 20 和天然 1" tappable="{{false}}"><cy-switch checked="{{model.natAuto}}" disabled="{{readOnly}}" data-field="natAuto" bindchange="onRule" accessibility-label="天然 20 和天然 1" /></cy-list-row>
+        <cy-list-row hr title="魔鬼交易" tappable="{{false}}"><cy-switch checked="{{model.bargain}}" disabled="{{readOnly}}" data-field="bargain" bindchange="onRule" accessibility-label="魔鬼交易" /></cy-list-row>
+        <cy-list-row hr title="动量" tappable="{{false}}"><cy-switch checked="{{model.momentum}}" disabled="{{readOnly}}" data-field="momentum" bindchange="onRule" accessibility-label="动量" /></cy-list-row>
+      </cy-list-group>
+
+      <cy-list-group header="属性" action="{{model.attrs.length && !attrLocked ? (editing ? '完成' : '编辑') : ''}}" bind:action="toggleEdit">
+        <cy-swipe-row wx:for="{{model.attrs}}" wx:key="key" index="{{index}}" count="{{model.attrs.length}}" hr="{{index > 0}}" open="{{swipeAttr === index}}" editing="{{editing}}" disabled="{{attrLocked}}" label="{{item.label}}" bind:swipe="attrSwipe" bind:delete="attrDelete" bind:move="attrMove">
+          <cy-list-row title="{{item.label}}" dot="{{item.dot}}" strong="{{item.initial + ''}}" value=" / {{item.max}}" fold="{{!editing && !attrLocked}}" open="{{openAttr === item.key}}" tappable="{{!attrLocked}}" data-key="{{item.key}}" bind:press="attrTap" />
+          <view slot="xp" wx:if="{{openAttr === item.key && !editing}}" class="xp">
+            <cy-list-row hr title="最小值" tappable="{{false}}"><cy-stepper label="最小值" value="{{item.min}}" min="{{0}}" max="{{item.max - 1}}" data-key="{{item.key}}" data-field="min" bind:change="attrStep" /></cy-list-row>
+            <cy-list-row hr title="最大值" tappable="{{false}}"><cy-stepper label="最大值" value="{{item.max}}" min="{{item.min + 1}}" max="{{20}}" data-key="{{item.key}}" data-field="max" bind:change="attrStep" /></cy-list-row>
+            <cy-list-row hr title="开局值" tappable="{{false}}"><cy-stepper label="开局值" value="{{item.initial}}" min="{{item.min}}" max="{{item.max}}" data-key="{{item.key}}" data-field="initial" bind:change="attrStep" /></cy-list-row>
+            <view class="xp__del" data-index="{{index}}" bindtap="attrDelete" aria-role="button" aria-label="删除{{item.label}}" hover-class="cy-pressed" hover-stay-time="80">删除</view>
+          </view>
+        </cy-swipe-row>
+        <cy-chips slot="after" wx:if="{{!attrLocked && !editing}}" items="{{attrChips}}" add="{{model.attrs.length < 6 ? '自定义' : ''}}" placeholder="属性名称" maxlength="{{6}}" taken="{{attrTaken}}" duplicate-text="已有同名的属性。" bind:pick="attrAdd" bind:add="attrAdd" />
+      </cy-list-group>
+
+      <cy-list-group gap>
+        <cy-list-row title="更多规则" value="{{moreValue}}" chevron bind:press="goMore" />
+      </cy-list-group>
+    </view>
+
+    <!-- 下一层:更多规则 -->
+    <view wx:else class="d20__lv d20__lv--sub">
+      <cy-sheet-nav back="d20 与角色" title="更多规则" bind:back="goBack" />
+
+      <cy-list-group header="进度钟">
+        <cy-swipe-row wx:for="{{model.clocks}}" wx:key="var" index="{{index}}" count="{{model.clocks.length}}" hr="{{index > 0}}" open="{{swipeClock === index}}" disabled="{{readOnly}}" label="{{item.label}}" bind:swipe="clockSwipe" bind:delete="clockDelete">
+          <cy-list-row title="{{item.label}}" value="{{item.kind === 'danger' ? '坏事逼近' : '事情进展'}} · {{item.segments}} 格" fold open="{{openClock === item.var}}" data-key="{{item.var}}" bind:press="clockTap" />
+          <view slot="xp" wx:if="{{openClock === item.var}}" class="xp">
+            <cy-list-row hr title="名称" tappable="{{false}}"><input class="xp__in" value="{{item.label}}" maxlength="10" disabled="{{readOnly}}" data-key="{{item.var}}" bindblur="clockRename" bindconfirm="clockRename" aria-label="进度钟名称" /></cy-list-row>
+            <view class="xp__row xp__row--hr"><cy-segmented options="{{clockKinds}}" value="{{item.kind}}" label="进度钟类型" disabled="{{readOnly}}" data-key="{{item.var}}" data-field="kind" bind:change="clockField" /></view>
+            <view class="xp__row xp__row--hr"><cy-segmented options="{{clockSegments}}" value="{{item.segments}}" label="格数" disabled="{{readOnly}}" data-key="{{item.var}}" data-field="segments" bind:change="clockField" /></view>
+            <view class="xp__del" data-index="{{index}}" bindtap="clockDelete" aria-role="button" aria-label="删除进度钟{{item.label}}" hover-class="cy-pressed" hover-stay-time="80">删除</view>
+          </view>
+        </cy-swipe-row>
+        <block wx:if="{{!readOnly && model.clocks.length < 6}}">
+          <cy-list-row wx:if="{{!addingClock}}" hr="{{model.clocks.length > 0}}" add title="添加进度钟" bind:press="clockAddStart" />
+          <view wx:else class="xp__field {{model.clocks.length ? 'xp__row--hr' : ''}}">
+            <input class="xp__in xp__in--l" focus="{{true}}" value="{{clockName}}" maxlength="10" placeholder="进度钟名称" bindinput="clockInput" bindblur="clockBlur" bindconfirm="clockAdd" aria-label="进度钟名称" />
+            <view class="xp__go {{clockName ? '' : 'is-off'}}" bindtap="clockAdd" aria-role="button" aria-label="添加进度钟" aria-disabled="{{!clockName}}" hover-class="cy-pressed" hover-stay-time="80">添加</view>
+          </view>
+        </block>
+      </cy-list-group>
+
+      <cy-list-group header="特质">
+        <cy-swipe-row wx:for="{{model.aspects}}" wx:key="key" index="{{index}}" count="{{model.aspects.length}}" hr="{{index > 0}}" open="{{swipeAspect === index}}" disabled="{{readOnly}}" delete-text="移除" label="{{item.label}}" bind:swipe="aspectSwipe" bind:delete="aspectDelete">
+          <cy-list-row title="{{item.label}}" fold open="{{openAspect === item.key}}" data-key="{{item.key}}" bind:press="aspectTap" />
+          <view slot="xp" wx:if="{{openAspect === item.key}}" class="xp">
+            <cy-list-row wx:if="{{item.desc}}" hr title="{{item.desc}}" tappable="{{false}}" />
+            <view class="xp__del" data-index="{{index}}" bindtap="aspectDelete" aria-role="button" aria-label="移除特质{{item.label}}" hover-class="cy-pressed" hover-stay-time="80">移除</view>
+          </view>
+        </cy-swipe-row>
+        <cy-chips slot="after" wx:if="{{!readOnly}}" items="{{aspectChips}}" plus bind:pick="aspectAdd" />
+      </cy-list-group>
+    </view>
+  </view>
+</cy-sheet>

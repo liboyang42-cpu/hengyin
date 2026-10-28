@@ -81,6 +81,9 @@ const EXPLICIT_WRITE_APIS = new Set([
   // 路径里的 `edit-ops` 被连字符截断,匹配不到通用写动词,只能按真实合同登记。
   '/api/club/lead/edit-ops',
   '/api/club/lead/arrive',
+  // 本人发票抬头按原请求号幂等保存(ApiUserInvoiceController @PostMapping("/titles/save-request"),落库写);
+  // `save-request` 被连字符截断匹配不到通用写动词，按真实合同登记。同前缀 /titles/request 是原请求回读，不登记。
+  '/api/invoice/titles/save-request',
 ])
 // 精确读例外:路径段命中通用写动词、但后端只读的端点。只按完整路径逐个登记,不放宽 API_WRITE_RE。
 // /api/publish/home(ApiPublishController#home)是发布广场首页聚合(能力 + 额度 + 项目摘要),只查不写;
@@ -753,6 +756,21 @@ const ACTION_VARIANTS = new Map([
   ['pages/publish/fabu/index.js:saveServerDraft', [
     { id: 'create-draft', handler: 'saveServerDraft', predicate: { editingTopicId: '' }, apis: ['/api/topic/v2/create'] },
     { id: 'update-draft', handler: 'saveServerDraft', predicate: { editingTopicId: { $not: '' } }, apis: ['/api/topic/v2/update'] },
+  ]],
+  // W8 赛事联络/签到组件:主办侧(organizer)走 EVENT 原命令，参赛侧走 SIGNUP 原命令；终止未执行请求只发本侧一条 cancel。
+  ['components/cy/event-attendance/index.js:cancelCommand', [
+    { id: 'organizer', handler: 'cancelCommand', predicate: { organizer: true }, predicateScope: 'component', apis: ['/api/official/command/cancel'] },
+    { id: 'participant', handler: 'cancelCommand', predicate: { organizer: { $not: true } }, predicateScope: 'component', apis: ['/api/official/signup-command/cancel'] },
+  ]],
+  // W8 分支条件映射完成 / 注册属性确认:点击只改本地规则并经 _onDraftEdited 排队云端草稿自动保存,
+  // 唯一网络写入是延时后的 saveServerDraft({ automatic: true }),与上面 saveServerDraft 同一 v2 草稿写入口。
+  ['pages/publish/fabu/index.js:finishNodeRouteMapping', [
+    { id: 'autosave-create-draft', handler: 'finishNodeRouteMapping', predicate: { editingTopicId: '' }, apis: ['/api/topic/v2/create'] },
+    { id: 'autosave-update-draft', handler: 'finishNodeRouteMapping', predicate: { editingTopicId: { $not: '' } }, apis: ['/api/topic/v2/update'] },
+  ]],
+  ['pages/publish/fabu/index.js:onAttributeBindingConfirm', [
+    { id: 'autosave-create-draft', handler: 'onAttributeBindingConfirm', predicate: { editingTopicId: '' }, apis: ['/api/topic/v2/create'] },
+    { id: 'autosave-update-draft', handler: 'onAttributeBindingConfirm', predicate: { editingTopicId: { $not: '' } }, apis: ['/api/topic/v2/update'] },
   ]],
   ['pages/publish/fabu/index.js:confirmPublishCheck', [
     { id: 'create', handler: 'confirmPublishCheck', predicate: { editingTopicId: '' }, apis: ['/api/topic/create'] },
@@ -2170,10 +2188,27 @@ function extractHandlerTargets(source, jsFile, handlerName, attrs, appHelperBodi
       }
     }
     dependencies.forEach(({ names, request, namedImports, inlineExports }) => {
-      if (!inlineExports && !names.some((alias) => new RegExp(`\\b${alias.replace(/[$]/g, '\\$&')}(?:\\.[A-Za-z_$][\\w$]*)?\\s*\\(`).test(expandedSource))) return
       const dependency = resolveSourceDependency(rel(scanFile), request, ['.js', '/index.js'])
+      // 恢复实例的方法调用(this._recovery.query() 等)不出现模块导入名，须先于导入名过滤判定。
+      if (dependency && recoveryInstanceTargets(dependency, scanFile, expandedSource, targets)) return
+      if (!inlineExports && !names.some((alias) => new RegExp(`\\b${alias.replace(/[$]/g, '\\$&')}(?:\\.[A-Za-z_$][\\w$]*)?\\s*\\(`).test(expandedSource))) return
       if (!dependency) return
       if (dependency === 'utils/community-post-api.js') return
+      // X5（10-28）：发票拆成 5 页，各页经 subpackageMember/invoice/base.js 混入同一套 read/mutate。
+      if (['utils/user-invoice.js', 'subpackageMember/invoice/base.js'].includes(dependency)
+          && /^subpackageMember\/invoice(?:-[a-z-]+)?\/index\.js$/.test(rel(scanFile))) {
+        // Resolve the page's finite dispatch arguments instead of importing every invoice write.
+        const adapter = fs.readFileSync(path.join(ROOT, 'utils/user-invoice.js'), 'utf8')
+        const endpoints = new Map([...adapter.matchAll(/case '([^']+)':[^\n]+url: '([^']+)'/g)].map(match => [match[1], match[2]]))
+        for (const call of expandedSource.matchAll(/this\.(?:read|mutate)\(\s*'([^']+)'|invoice\.send\(\s*app,\s*'([^']+)'/g)) {
+          if (!/^(?:this|invoice)\./.test(maskNonCodeSafely(expandedSource).slice(call.index))) continue
+          const url = endpoints.get(call[1] || call[2])
+          if (!url) throw new Error(`未登记的发票接口: ${call[1] || call[2]}`)
+          targets.apis.push(url)
+          targets.apiContracts.push({ url, method: 'POST', auth: 'authenticated', source: 'invoice-wrapper-call' })
+        }
+        return
+      }
       if (dependency === 'utils/game-session-client.js') {
         const methods = {
           loadProjection: ['/api/game/session/view', 'GET'],
@@ -2298,6 +2333,70 @@ function targetsForHandler(jsFile, handlerName) {
   if (!slices.has(handlerName)) throw new Error(`未找到实际 handler: ${handlerName}`)
   return extractHandlerTargets(expandHandlerBody(handlerName, slices), jsFile, handlerName, {},
     discoverAppHelperBodies(path.join(ROOT, 'app.js')))
+}
+
+// W8 原请求恢复实例:按实例方法取端点(见各分支注释)。返回 true 表示已精确处理，调用方不再做整份依赖扫描。
+function recoveryInstanceTargets(dependency, scanFile, expandedSource, targets) {
+  // W8 原请求恢复(队伍/报名/官方活动命令):utils/team-event-command.js 按 createRecovery 的 domain 三选一发请求，
+  // 实例方法 start/retry → 原命令，query → /query，cancel → /cancel；pending/setTarget/acknowledge/dispose 只读写本机记录。
+  // 只有本页 domain 全是字面量、且只以 this._recovery.<方法>( 静态调用时才按方法取端点；
+  // 动态 domain 或 this._recovery[…] 动态调用仍走下面的整份依赖保守扫描。
+  if (dependency === 'utils/team-event-command.js') {
+    const rawSource = fs.readFileSync(scanFile, 'utf8')
+    const pageSource = maskNonCodeSafely(rawSource)
+    const domainExprs = [...rawSource.matchAll(/\bcreateRecovery\(\s*\{[^}]*?\bdomain\s*:\s*([^,}]+)/g)].map(match => match[1].trim())
+    // domain 只接受字面量，或「条件 ? 字面量 : 字面量」(两者都列，宿主属性决定实际一条)。
+    const domainSets = domainExprs.map(expr => {
+      const literal = /^'([A-Z]+)'$/.exec(expr)
+      const choice = /^[\w.$]+\s*\?\s*'([A-Z]+)'\s*:\s*'([A-Z]+)'$/.exec(expr)
+      return literal ? [literal[1]] : choice ? [choice[1], choice[2]] : null
+    })
+    const literalDomains = domainSets.every(Boolean) ? domainSets.flat() : []
+    // 本地别名(const recovery = this._recovery)同样是实例调用。
+    const aliases = [...new Set([...pageSource.matchAll(/\b([A-Za-z_$][\w$]*)\s*=\s*this\._recovery\b(?!\s*=)/g)].map(match => match[1]))]
+    const receiver = ['this\\._recovery'].concat(aliases.map(alias => alias.replace(/[$]/g, '\\$&'))).join('|')
+    const calls = [...expandedSource.matchAll(new RegExp(`(?:^|[^\\w$.])(?:${receiver})\\.(\\w+)\\s*\\(`, 'g'))].map(match => match[1])
+    if (domainExprs.length && literalDomains.length && !/\b_recovery\s*\[/.test(pageSource)) {
+      const routes = { TEAM: '/api/team/command', SIGNUP: '/api/official/signup-command', EVENT: '/api/official/command' }
+      const methods = { start: '', retry: '', query: '/query', cancel: '/cancel', pending: null, setTarget: null, acknowledge: null, dispose: null }
+      for (const name of calls) {
+        if (!Object.prototype.hasOwnProperty.call(methods, name)) throw new Error(`未登记的 team-event-command 方法: ${name}`)
+        if (methods[name] === null) continue
+        new Set(literalDomains).forEach(domain => {
+          const url = (routes[domain] || routes.EVENT) + methods[name]
+          targets.apis.push(url)
+          targets.apiContracts.push({ url, method: 'POST', auth: 'authenticated', source: 'team-event-command-call' })
+        })
+      }
+      return true
+    }
+  }
+  // W8 商家评价回复原请求恢复:createReplyRecovery 构造与 sync/pending/suspend/resume 只读本机恢复记录、不发请求;
+  // 只有实例的 submit(按调用处 action 字面量取回复/改回复/删回复;无字面量时三条保守全列)与 recover(原请求回读)发请求。
+  // 整份依赖扫描会让每个调了 syncReplyRecovery 的读取(重试、加载更多)都带上三条回复写入。
+  if (dependency === 'pages/merchant/reviews/reply-recovery.js' && rel(scanFile) === 'pages/merchant/reviews/index.js') {
+    const submitByAction = {
+      MERCHANT_REVIEW_REPLIED: ['/api/merchant/reviews/reply', 'POST'],
+      MERCHANT_REVIEW_REPLY_UPDATED: ['/api/merchant/reviews/reply/update', 'POST'],
+      MERCHANT_REVIEW_REPLY_DELETED: ['/api/merchant/reviews/reply/delete', 'POST'],
+    }
+    const methods = {
+      submit: Object.values(submitByAction),
+      recover: [['/api/merchant/reviews/reply/receipt', 'POST']],
+      sync: [], pending: [], suspend: [], resume: [],
+    }
+    for (const call of expandedSource.matchAll(/\bthis\._replyRecovery\.(\w+)\s*\(([^)]*)\)/g)) {
+      if (!methods[call[1]]) throw new Error(`未登记的 reply-recovery 方法: ${call[1]}`)
+      const actions = call[1] === 'submit' ? [...call[2].matchAll(/'(MERCHANT_REVIEW_[A-Z_]+)'/g)].map(match => match[1]) : []
+      if (actions.some(action => !submitByAction[action])) throw new Error(`未登记的回复动作: ${actions.join(',')}`)
+      ;(actions.length ? actions.map(action => submitByAction[action]) : methods[call[1]]).forEach(([url, method]) => {
+        targets.apis.push(url)
+        targets.apiContracts.push({ url, method, auth: 'authenticated', source: 'reply-recovery-call' })
+      })
+    }
+    return true
+  }
+  return false
 }
 
 function buildLedger() {

@@ -360,8 +360,44 @@ function pickJourneyCheck(encounter) {
  */
 function checkReceiptView(receipt) {
   const r = receipt || {};
+  // A hidden/redacted receipt must not leak through totals, modifiers or the dice canvas.
+  const hidden = r.detailsHidden === true || r.hidden === true || r.redacted === true || r.breakdown && (r.breakdown.hidden === true || r.breakdown.redacted === true
+    || r.breakdown.skill && (r.breakdown.skill.hidden === true || r.breakdown.skill.redacted === true)
+    || r.breakdown.situational && (r.breakdown.situational.hidden === true || r.breakdown.situational.redacted === true));
+  if (hidden) return { detailsHidden: true, breakdownRows: [], rolled: true, tier: r.tier || '',
+    dc: null, dice: [], kept: null, total: null, success: typeof r.success === 'boolean' ? r.success : null,
+    nat: '', rerolled: !!r.rerolled, settled: !!r.settled, text: r.settled ? r.text || '' : '',
+    failCostLabel: r.settled ? r.failCostLabel || '' : '', hp: r.hp == null ? null : r.hp,
+    luck: r.luck == null ? null : r.luck, exhausted: !!r.exhausted, mods: [] };
   const num = (v) => (v == null ? null : Number(v) || 0);
+  const breakdownRows = [];
+  const b = r.breakdown;
+  // 明细只搬服务端公开值；缺失或隐藏的加值不能从总分反推。
+  const finite = (value) => typeof value === 'number' && Number.isFinite(value);
+  const signed = (value) => (value > 0 ? '+' : '') + value;
+  // 文档二 L5 p-check:骰子 → 属性 → 条件修正 → 交易 → 动量,一行一项、玩家看得懂的词;
+  // 达成值与难度已在上方大字里,不再列「上限 / DC / 自然骰自动判定」这类规则词。
+  if (b && typeof b === 'object' && !b.hidden && !b.redacted) {
+    if (finite(b.die)) breakdownRows.push({ label: '骰子', value: b.die });
+    if (b.skill && (b.skill.hidden || b.skill.redacted)) {
+      breakdownRows.push({ label: '一项隐藏的加成', value: '已计入' });
+    } else if (b.skill && finite(b.skill.value)) {
+      breakdownRows.push({ label: typeof b.skill.label === 'string' && b.skill.label ? b.skill.label : '属性', value: signed(b.skill.value) });
+    }
+    if (b.situational && !b.situational.hidden && !b.situational.redacted && finite(b.situational.applied) && b.situational.applied !== 0) {
+      const held = (r.mods || []).filter((mod) => mod && mod.applied && mod.label && finite(Number(mod.value)) && Number(mod.value) !== 0);
+      // 逐条名称只在与服务端实际计入值对得上时展示;被上限截过就合成一行,不从总分反推
+      if (held.length && held.reduce((sum, mod) => sum + Number(mod.value), 0) === b.situational.applied) {
+        held.forEach((mod) => breakdownRows.push({ label: mod.label, value: signed(Number(mod.value)) }));
+      } else {
+        breakdownRows.push({ label: '条件修正', value: signed(b.situational.applied) });
+      }
+    }
+    if (finite(b.bargain) && b.bargain !== 0) breakdownRows.push({ label: '魔鬼交易', value: signed(b.bargain) });
+    if (finite(b.momentum) && b.momentum !== 0) breakdownRows.push({ label: '动量', value: signed(b.momentum) });
+  }
   return {
+    breakdownRows,
     rolled: true,
     tier: r.tier || '',
     dc: Number(r.dc) || 0,

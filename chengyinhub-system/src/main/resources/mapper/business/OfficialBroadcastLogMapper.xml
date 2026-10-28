@@ -12,11 +12,11 @@
     </insert>
 
     <select id="countReached" resultType="int">
-        select count(1) from official_broadcast_log where broadcast_id = #{broadcastId} and reached = 1
+        select count(1) from official_broadcast_log where broadcast_id = #{broadcastId} and channel='inapp' and delivery_state='INAPP_STORED'
     </select>
 
     <select id="countClicked" resultType="int">
-        select count(1) from official_broadcast_log where broadcast_id = #{broadcastId} and clicked = 1
+        select count(1) from official_broadcast_log where broadcast_id = #{broadcastId} and channel='inapp' and clicked = 1
     </select>
 
     <select id="countRecentByMember" resultType="int">
@@ -35,4 +35,8 @@
         where broadcast_id = #{broadcastId} and member_id = #{memberId} and channel = #{channel}
     </update>
 
+ <select id="deliveryRows" resultType="map">select id,member_id,role,channel,delivery_state,frozen_title,frozen_sub,intent_id,message_id,attempts from official_broadcast_log where broadcast_id=#{broadcastId} order by id</select>
+ <select id="lockDelivery" resultType="map">select * from official_broadcast_log where id=#{id} for update</select>
+ <insert id="snapshot">insert ignore into official_broadcast_log(broadcast_id,member_id,role,channel,reached,clicked,create_time,delivery_state,frozen_title,frozen_sub) values(#{broadcastId},#{memberId},#{role},#{channel},0,0,now(),#{state},#{title},#{sub})</insert>
+ <update id="deliveryState">update official_broadcast_log set delivery_state=#{state},intent_id=#{intent},message_id=#{message},attempts=attempts+#{attempt},update_time=now(3),reached=case when #{state}='INAPP_STORED' then 1 else 0 end where id=#{id}</update>
 </mapper>

@@ -72,7 +72,8 @@ function assertAnnotationDContract(files) {
   assert.match(files.myinviteWxml, /<cy-scene-member-invite-history id="inviteHistory"/)
   assert.match(files.myinviteSceneWxml, /class="ir-row"[\s\S]*class="ir-time"[\s\S]*class="ir-status"[\s\S]*class="ir-reward"/)
   assert.match(files.myinviteSceneJs, /url:\s*'\/api\/user\/invite_list'[\s\S]*url:\s*'\/api\/user\/points\/list'/)
-  assert.match(files.earningsSceneWxml, /<cy-cell title="邀请记录" bind:tap="openInvite"/)
+  // 2026-10-28 G-9:邀请记录收进「更多」动作菜单
+  assert.match(files.earningsSceneWxml, /class="tm-row" bindtap="openInvite"/)
   assert.match(rule(files.myinviteSceneWxss, '.ir-card'), /background:\s*var\(--cy-scene-card-bg,/)
   assert.doesNotMatch(rule(files.myinviteSceneWxss, '.ir-card'), /border:/)
   assert.doesNotMatch(rule(files.myinviteSceneWxss, '.ir-row + .ir-row'), /border-top:/)
@@ -119,7 +120,8 @@ function assertAnnotationDContract(files) {
   assert.doesNotMatch(files.earningsWxml, /sceneCurrent\.id === 'asset-income-detail'[\s\S]{0,200}closable="\{\{false\}\}"/,
     '2026-08-07 拍板:收益明细半屏，右上叉号回归，不许再锁 closable=false')
 
-  assert.match(files.earningsWxml, /<view class="er-page theme-dark">/,
+  // 2026-10-28 G-9:商家走同一页的浅色版(?theme=merchant),玩家仍显式深色
+  assert.match(files.earningsWxml, /<view class="er-page \{\{merchantView \? 'theme-merchant' : 'theme-dark'\}\}">/,
     'D33 账户收益是玩家资金页，页面根必须显式进入深色主题')
   assert.match(files.earningsJs, /require\('\.\.\/\.\.\/\.\.\/\.\.\/utils\/merchant-theme\.js'\)/)
   assert.match(files.earningsJs, /onShow\(\)\s*\{\s*this\._hidden = false;\s*merchantTheme\.merchantPageRestore\(\)\s*\}/,
@@ -132,8 +134,7 @@ function assertAnnotationDContract(files) {
   assert.match(earningsRoot, /--cy-btn-solid-bg:\s*var\(--cy-color-action-primary-bg\)/,
     'D33 深色根必须把按钮 alias 重映射后再传给隔离组件')
 
-  assert.match(rule(files.earningsSceneWxss, '.ae-card'), /background:\s*var\(--cy-btn-solid-bg\)/)
-  assert.match(rule(files.earningsSceneWxss, '.ae-action'), /background:\s*var\(--cy-color-action-secondary-bg\)/)
+  assert.match(rule(files.earningsSceneWxss, '.ae-action__ic'), /background:\s*var\(--cy-color-action-secondary-bg\)/)
 
   assert.doesNotMatch(files.couponInfoWxss, /(?:^|[;\s])border(?:-top|-right|-bottom|-left)?:/m)
   assert.match(rule(files.couponInfoWxss, '.fabu .form .li .item-cont'), /background:\s*var\(--cy-color-bg-surface-subtle\)/)
@@ -251,7 +252,7 @@ test('负控：账户收益摘掉 theme-dark 或不再恢复深色导航必须�
   const original = sources()
   const brokenTheme = {
     ...original,
-    earningsWxml: original.earningsWxml.replace('er-page theme-dark', 'er-page'),
+    earningsWxml: original.earningsWxml.replace(": 'theme-dark'}}", ": ''}}"),
   }
   const brokenChrome = {
     ...original,

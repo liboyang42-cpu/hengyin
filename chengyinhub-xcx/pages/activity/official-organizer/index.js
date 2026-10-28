@@ -9,6 +9,8 @@ const toast = require('../../../utils/toast.js');
 const { activityStatusText } = require('../../../utils/activity-status');
 const merchantTheme = require('../../../utils/merchant-theme.js');
 const rules = require('./organizer-rules.js');
+const { exactId, reader, sameReader } = require('../../../utils/user-character.js');
+const { createRecovery } = require('../../../utils/team-event-command.js');
 const app = getApp();
 
 const ACTION_LABEL = { schedule: '发布活动', pause: '暂停活动', resume: '恢复活动' };
@@ -43,6 +45,8 @@ function stringList(value) {
 
 Page({
   data: {
+    attendanceEventId: '',
+    commandRecovery: null,
     phase: 'loading', // loading | missing | denied | error | ready
     refreshing: false,
     deniedReason: '',
@@ -56,24 +60,39 @@ Page({
     formError: { action: '', text: '' },
     busyAction: '',
     result: null,
+    privacyGateShow: false,
   },
+
+  // 赛事签到组件的扫码(wx.scanCode)需要隐私授权：页内弹窗承接，不让 app.js 回退整页跳隐私页。
+  showPrivacyGate() { this.setData({ privacyGateShow: true }); },
+  onPrivacyGateSettled() { this.setData({ privacyGateShow: false }); },
 
   onLoad(q) {
     const raw = q && q.id;
-    const id = rules.isPositiveId(raw) ? Number(raw) : 0;
+    const id = exactId(raw);
     merchantTheme.merchantPageShow();
     this._unloaded = false;
+    this._reader = reader(app);
     if (!id) {
       this.setData({ phase: 'missing' });
       return;
     }
     this._id = id;
+    this.setData({attendanceEventId:id});
+    this._openRecovery();
     this.load();
   },
 
-  onShow() { merchantTheme.merchantPageShow(); },
-  onHide() { merchantTheme.merchantPageRestore(); },
+  onShow() {
+    merchantTheme.merchantPageShow();
+    const reload = this._needsReload || this._reader && !sameReader(app, this._reader);
+    if (reload) this._clearAccount();
+    if (this._id) this._openRecovery();
+    if (reload) this.load();
+  },
+  onHide() { if (this._recovery) this._recovery.dispose(); merchantTheme.merchantPageRestore(); },
   onUnload() {
+    if (this._recovery) this._recovery.dispose();
     merchantTheme.merchantPageRestore();
     this._unloaded = true;
     this._loadSeq = (this._loadSeq || 0) + 1;
@@ -88,14 +107,62 @@ Page({
 
   // ===================== 读取 =====================
 
+  _openRecovery() {
+    if (this._recovery) this._recovery.dispose();
+    this._recovery = createRecovery({ app, platform: wx, domain: 'EVENT', targetId: this._id,
+      changed: value => {
+        const forms = value.input ? emptyForms() : this.data.forms;
+        if (value.input) {
+          if (value.action === 'pause') for (const field of rules.PAUSE_FIELDS) forms.pause[field].extra = value.input[field] || '';
+          if (value.action === 'resume') forms.resume.reason = value.input.reason || '';
+        }
+        this.setData({ commandRecovery: value,
+          busyAction: value.state || value.busy ? value.action || 'pending' : '', forms });
+      },
+      terminal: (receipt, command) => {
+        this.setData({ result: { action: command.action,
+          tone: receipt.state === 'APPLIED' ? 'success' : 'error',
+          title: receipt.message, sub: '原请求号：' + receipt.requestId } });
+        // A business snapshot is displayed separately; it never proves the original command outcome.
+        this.load();
+      } });
+  },
+  queryCommand() { if (this._recovery) this._recovery.query(); },
+  retryCommand() { if (this._recovery) this._recovery.retry(); },
+  cancelCommand() { if (this._recovery) this._recovery.cancel(); },
+  acknowledgeCommand() { if (this._recovery) this._recovery.acknowledge(); },
+
+  _clearAccount() {
+    this._loadSeq = (this._loadSeq || 0) + 1;
+    this._reader = reader(app);
+    this._needsReload = true;
+    this._pendingVerify = null;
+    this._state = null;
+    this._busy = false;
+    this.setData({ phase: 'error', loadErrKind: 'no-permission', loadError: '账号状态已变化，请重新加载',
+      refreshing: false, view: null, forms: emptyForms(), busyAction: '', result: null,
+      check: { known: false, pass: false, blockers: [], risks: [] }, avail: rules.actionAvailability(null) });
+  },
+  _sameAccount(captured) {
+    if (this._unloaded) return false;
+    if (!sameReader(app, captured)) {
+      if (!this._reader || this._reader.id === captured.id && this._reader.token === captured.token) this._clearAccount();
+      return false;
+    }
+    return true;
+  },
   load() {
-    if (!this._id) return;
+    if (!this._id || this._unloaded) return;
+    if (this._reader && !sameReader(app, this._reader)) this._clearAccount();
+    this._reader = reader(app);
+    this._needsReload = false;
     const seq = (this._loadSeq || 0) + 1;
     this._loadSeq = seq;
     const hasSnapshot = this.data.phase === 'ready';
     if (hasSnapshot) this.setData({ refreshing: true });
     else this.setData({ phase: 'loading', loadError: '', deniedReason: '' });
-    const current = () => !this._unloaded && seq === this._loadSeq;
+    const captured = reader(app);
+    const current = () => seq === this._loadSeq && this._sameAccount(captured);
     app.sendRequest({
       // 模板字面量:两道 U1 门禁都能把整条路径(含 /publish-check 尾段)对上后端 Mapping
       url: `/api/official/v2/events/${this._id}/publish-check`, method: 'GET',
@@ -139,7 +206,8 @@ Page({
 
   // 已排期以后公开详情能读;草稿在公开详情里不可见,回落到「我发布的」里的同一条服务端记录。
   _loadEventState(seq, hasSnapshot) {
-    const current = () => !this._unloaded && seq === this._loadSeq;
+    const captured = reader(app);
+    const current = () => seq === this._loadSeq && this._sameAccount(captured);
     app.sendRequest({
       url: '/api/official/events/' + this._id, method: 'GET',
       hideLoading: true, autoErrorToast: false,
@@ -159,7 +227,8 @@ Page({
   },
 
   _loadStateFromMine(seq, hasSnapshot) {
-    const current = () => !this._unloaded && seq === this._loadSeq;
+    const captured = reader(app);
+    const current = () => seq === this._loadSeq && this._sameAccount(captured);
     app.sendRequest({
       url: '/api/official/my-published', method: 'GET',
       hideLoading: true, autoErrorToast: false,
@@ -229,6 +298,7 @@ Page({
   },
 
   _setForms(name, value) {
+    if (this._recovery && this._recovery.pending()) return;
     const nextForms = Object.assign({}, this.data.forms);
     nextForms[name] = value;
     if (this.data.formError.action === name) this.setData({ forms: nextForms, formError: { action: '', text: '' } });
@@ -238,7 +308,9 @@ Page({
   // ===================== 命令 =====================
 
   onAction(e) {
+    if (this._reader && !this._sameAccount(this._reader)) return;
     const action = e && e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.action;
+    if (this._recovery && this._recovery.pending()) return;
     if (!CONFIRM_KEY[action] || this._busy || this.data.refreshing || this.data.phase !== 'ready') return;
     const avail = this.data.avail[action];
     // 原因已在按钮上方以 hint / 发布检查列表写明,这里只给一句短提示
@@ -257,96 +329,30 @@ Page({
     }
     const dc = this.selectComponent && this.selectComponent('#dc-' + action);
     if (!dc) return; // 拿不到确认组件就什么都不做,绝不绕过确认直接提交
+    this._confirmationReader = reader(app);
     dc.open(CONFIRM_KEY[action], { name: (this.data.view && this.data.view.title) || '这场活动' });
   },
 
-  onConfirmSchedule() { this._submit('schedule'); },
-  onConfirmPause() { this._submit('pause'); },
-  onConfirmResume() { this._submit('resume'); },
+  onConfirmSchedule() { return this._submit('schedule'); },
+  onConfirmPause() { return this._submit('pause'); },
+  onConfirmResume() { return this._submit('resume'); },
 
   _submit(action) {
+    if (this._confirmationReader && !sameReader(app, this._confirmationReader)) return;
+    if (!exactId(this._id) || this._reader && !this._sameAccount(this._reader)) return;
     const dc = this.selectComponent && this.selectComponent('#dc-' + action);
-    if (!dc || this._busy) return;
-    this._busy = true;
-    dc.busyOn();
-    this.setData({ busyAction: action, result: null });
-    const id = this._id;
-    app.sendRequest({
-      // 三个字面量逐条写在 url 里,供 UI-GATE U1 与后端 Mapping 一一核对;action 已在 onAction 收敛为三个键
-      url: action === 'schedule' ? `/api/official/v2/events/${id}/schedule`
-        : action === 'pause' ? `/api/official/v2/events/${id}/pause`
-          : `/api/official/v2/events/${id}/resume`,
-      method: 'POST',
-      data: rules.buildPayload(action, this.data.forms[action]),
-      header: { 'content-type': 'application/json' },
-      hideLoading: true, autoErrorToast: false,
-      success: (res) => {
-        if (this._unloaded) return;
-        if (isOk(res)) {
-          this._afterAccepted(action, dc);
-          return;
-        }
-        // 业务拒绝:服务端原话(已过统一脱敏)留在确认框里给重试,也落一条页内说明
-        const text = app.getRequestErrorMessage(res, ACTION_LABEL[action] + '没有完成');
-        this._busy = false;
-        this.setData({ busyAction: '', result: { action, tone: 'error', title: ACTION_LABEL[action] + '没有完成', sub: text } });
-        dc.failed(text);
-      },
-      successStatusAbnormal: (body, status) => {
-        if (this._unloaded) return;
-        if (rules.isUnknownOutcome(status)) this._afterUnknown(action, dc);
-        else {
-          const text = app.getRequestErrorMessage(body, ACTION_LABEL[action] + '没有完成');
-          this._busy = false;
-          this.setData({ busyAction: '', result: { action, tone: 'error', title: ACTION_LABEL[action] + '没有完成', sub: text } });
-          dc.failed(text);
-        }
-      },
-      fail: () => {
-        if (this._unloaded) return;
-        this._afterUnknown(action, dc);
-      },
-    });
-  },
-
-  // 服务端受理(200)→ 回读核对 → 只有回读一致才给「已生效」回执
-  _afterAccepted(action, dc) {
-    this._pendingVerify = { action, dc, unknown: false };
-    this.load();
-  },
-
-  // 断网 / 5xx / 超时:不知道服务端有没有执行。先回读,读到预期状态才算数,不引导盲目重发。
-  _afterUnknown(action, dc) {
-    this._pendingVerify = { action, dc, unknown: true };
-    this.load();
-  },
-
-  // 回读结束(readable: true=读到最新状态, false=控制台已被拒绝, null=回读本身失败)
-  _readBackDone(readable) {
-    const pending = this._pendingVerify;
-    if (!pending) return;
-    this._pendingVerify = null;
-    this._busy = false;
-    const { action, dc, unknown } = pending;
-    const label = ACTION_LABEL[action];
-    const verdict = readable === true ? rules.verifyReadBack(action, this._state) : (readable === null ? 'unread' : 'mismatch');
-    if (verdict === 'confirmed') {
-      if (action !== 'schedule') this.setData({ forms: this._withClearedForm(action) });
-      this.setData({ busyAction: '', result: { action, tone: 'success', title: label + '已生效', sub: '已刷新' } });
-      dc.done('');
-      return;
-    }
+    if (!dc || this.data.phase !== 'ready' || this.data.refreshing) return;
+    const avail = this.data.avail[action];
+    if (!avail || !avail.enabled || action === 'schedule' && !this.data.check.pass
+        || rules.validateForm(action, this.data.forms[action])) return;
+    if (!this._recovery) this._openRecovery();
+    if (this._recovery.pending()) return;
     dc.close();
-    let result;
-    if (unknown) {
-      result = verdict === 'unread'
-        ? { action, tone: 'unknown', title: label + '结果未确认', sub: '请下拉刷新后再操作' }
-        : { action, tone: 'unknown', title: label + '结果未确认', sub: '以当前显示的记录为准' };
-    } else {
-      result = { action, tone: 'unknown', title: label + '已受理，但状态未刷新', sub: verdict === 'unread' ? '状态刷新失败，请下拉刷新' : '活动状态与预期不一致，请下拉刷新；仍有问题请联系平台' };
-    }
-    this.setData({ busyAction: '', result });
+    return this._recovery.start(action, rules.buildPayload(action, this.data.forms[action]));
   },
+
+  // Legacy callers may still request a snapshot refresh; snapshots cannot settle a command receipt.
+  _readBackDone() {},
 
   _withClearedForm(action) {
     const next = Object.assign({}, this.data.forms);

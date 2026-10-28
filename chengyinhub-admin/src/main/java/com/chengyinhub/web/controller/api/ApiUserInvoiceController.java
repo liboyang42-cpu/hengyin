@@ -45,13 +45,36 @@ public class ApiUserInvoiceController extends BaseController {
     @Operation(summary = "新建或修改发票抬头（仅本人）")
     @PostMapping("/titles/save")
     public AjaxResult saveTitle(@RequestBody(required = false) Map<String, Object> body) {
+        return run(memberId -> invoiceService.saveTitle(memberId, titleInput(body)));
+    }
+
+    @Operation(summary = "按原请求号幂等保存本人抬头")
+    @PostMapping("/titles/save-request")
+    public AjaxResult saveTitleRequest(@RequestBody(required = false) Map<String, Object> body) {
+        String requestId = text(body, "requestId");
+        return run(memberId -> {
+            if (body != null && body.containsKey("id") && toLong(body, "id") == null) {
+                throw new UserInvoiceException(UserInvoiceException.ARGUMENT_INVALID, "抬头编号不合法");
+            }
+            return invoiceService.saveTitleWithRequest(memberId, requestId, titleInput(body));
+        });
+    }
+
+    private UserInvoiceTitle titleInput(Map<String, Object> body) {
         UserInvoiceTitle input = new UserInvoiceTitle();
         input.setId(toLong(body, "id"));
         input.setTitleType(text(body, "titleType"));
         input.setTitleName(text(body, "titleName"));
         input.setTaxNo(text(body, "taxNo"));
         input.setIsDefault(Boolean.TRUE.equals(body == null ? null : body.get("isDefault")) ? 1 : 0);
-        return run(memberId -> invoiceService.saveTitle(memberId, input));
+        return input;
+    }
+
+    @Operation(summary = "按原请求号回读本人抬头保存回执")
+    @PostMapping("/titles/request")
+    public AjaxResult titleSaveReceipt(@RequestBody(required = false) Map<String, Object> body) {
+        String requestId = text(body, "requestId");
+        return run(memberId -> invoiceService.titleSaveReceipt(memberId, requestId));
     }
 
     @Operation(summary = "删除发票抬头（仅本人）")
@@ -99,6 +122,13 @@ public class ApiUserInvoiceController extends BaseController {
         return run(memberId -> invoiceService.cancel(memberId, id));
     }
 
+    @Operation(summary = "按原请求号回读本人申请（未查到不代表未提交）")
+    @PostMapping("/request")
+    public AjaxResult originalRequest(@RequestBody(required = false) Map<String, Object> body) {
+        String requestId = text(body, "requestId");
+        return run(memberId -> invoiceService.applicationByRequest(memberId, requestId));
+    }
+
     // ── 内部 ─────────────────────────────────────────────────────────
 
     private interface MemberCall {
@@ -141,9 +171,15 @@ public class ApiUserInvoiceController extends BaseController {
     }
 
     private static Long toLong(Object value) {
-        if (value instanceof Number n) return n.longValue();
-        if (value instanceof String s && s.trim().matches("\\d{1,18}")) return Long.valueOf(s.trim());
-        return null;
+        if (!(value instanceof String) && !(value instanceof Number)) return null;
+        String text = value.toString().trim();
+        if (!text.matches("\\d{1,19}")) return null;
+        try {
+            long id = Long.parseLong(text);
+            return id > 0 ? id : null;
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     /** 非法元素原样转成 null，交给服务层统一拒绝，不在这里静默丢弃。 */

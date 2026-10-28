@@ -115,34 +115,14 @@ page { background: var(--cy-color-bg-page); }
 }
 .bw-head .bw-cap-t { font-size: inherit; color: inherit; letter-spacing: 0; font-family: -apple-system, 'PingFang SC', sans-serif; }
 .bw-head .bw-cap-s { margin-top: var(--cy-space-1); color: var(--cy-color-text-secondary); font-family: -apple-system, 'PingFang SC', sans-serif; }
-.bw-view-switch {
-  display: flex;
-  align-items: center;
-  gap: var(--cy-space-1);
-  margin-top: var(--cy-space-3);
-  padding: var(--cy-space-1);
-  border: 1rpx solid var(--cy-color-border-subtle);
-  border-radius: var(--cy-radius-pill);
-  background: var(--cy-color-bg-surface);
-}
-.bw-view-option {
-  flex: 1;
-  min-height: var(--cy-btn-h-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--cy-radius-pill);
-  color: var(--cy-color-text-secondary);
-  font-size: var(--cy-type-label);
-  font-family: -apple-system, 'PingFang SC', sans-serif;
-}
-.bw-view-option.is-active { background: var(--cy-color-bg-surface-subtle); color: var(--cy-color-text-primary); font-weight: 700; }
+/* 2026-10-27 owner P-30:「墙 / 列表」切换已撤,.bw-view-* 样式随之删除 */
 
 .bw-list {
   position: fixed;
+  overflow-y: auto;
   inset: 0;
-  /* 9-24 删掉图例后顶部少了约 40rpx,260 → 220,列表首行紧跟墙/列表切换 */
-  padding: calc(var(--sbh) + var(--nbh) + 220rpx) var(--cy-page-x) calc(var(--cy-space-5) + var(--cy-safe-bottom));
+  /* 9-24 删掉图例后顶部少了约 40rpx,260 → 220;10-27 P-30 撤掉墙/列表切换(约 100rpx),220 → 120,列表首行紧跟标题副标 */
+  padding: calc(var(--sbh) + var(--nbh) + 120rpx) var(--cy-page-x) calc(var(--cy-space-5) + var(--cy-safe-bottom));
   box-sizing: border-box;
   background: var(--cy-color-bg-page);
 }
@@ -155,32 +135,18 @@ page { background: var(--cy-color-bg-page); }
   letter-spacing: .08em;
 }
 .bw-list-h:first-child { padding-top: 0; }
-.bw-list-row {
-  display: flex;
-  align-items: center;
-  gap: var(--cy-space-3);
-  min-height: calc(var(--cy-space-8) + var(--cy-space-3));
-  padding: var(--cy-space-3) 0;
-  border-bottom: 1rpx solid var(--cy-color-border-subtle);
-}
-.bw-list-mark {
-  width: var(--cy-space-7);
-  height: var(--cy-space-7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1rpx solid var(--cy-color-border-strong);
-  border-radius: var(--cy-radius-md);
-  background: var(--cy-color-bg-surface-subtle);
-  color: var(--cy-color-text-primary);
-  flex: none;
-}
-.bw-list-mark image { width: 100%; height: 100%; }
-.bw-list-mark.is-locked { opacity: .48; }
-.bw-list-copy { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: var(--cy-space-1); }
-.bw-list-name { color: var(--cy-color-text-primary); font-size: var(--cy-type-card-title); font-weight: 650; }
-.bw-list-meta { color: var(--cy-color-text-tertiary); font-size: var(--cy-type-caption); }
-.bw-list-state { color: var(--cy-color-text-secondary); font-size: var(--cy-type-label); }
+.bw-grid { display: flex; flex-wrap: wrap; }
+.bw-cell { width: 50%; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; padding: var(--cy-space-2) 0 var(--cy-space-6); }
+.bw-medal { width: 224rpx; height: 224rpx; flex: none; display: flex; align-items: center; justify-content: center; }
+.bw-medal.is-locked .bw-medal__img { filter: grayscale(1) brightness(.6); }
+/* 2026-10-28 业主:珐琅徽章(enamel-pin.js 画);未解锁那张本身就是细线稿,不再压灰 */
+.bw-medal__pin { width: 100%; height: 100%; filter: drop-shadow(0 14rpx 22rpx rgba(0,0,0,.5)); } /* ds-ok: 徽章落在页面上的投影 */
+.bw-medal.is-locked .bw-medal__pin { filter: none; }
+.bw-pin-canvas { position: fixed; left: -4000rpx; top: 0; width: 160px; height: 160px; pointer-events: none; }
+.bw-sh-pin { display: block; width: 280rpx; height: 280rpx; margin: 8rpx auto 28rpx; }
+.bw-medal__img { width: 100%; height: 100%; }
+.bw-cell__name { margin-top: var(--cy-space-3-5); max-width: 100%; color: var(--cy-color-text-primary); font-size: var(--cy-type-card-title); font-weight: 600; text-align: center; }
+.bw-cell__meta { margin-top: var(--cy-space-1); max-width: 100%; color: var(--cy-color-text-tertiary); font-size: var(--cy-type-caption); text-align: center; }
 .bw-empty-state { position: fixed; inset: calc(var(--sbh) + var(--nbh) + 220rpx) 0 0; display: flex !important; flex-direction: column; min-height: 0; }
 
 .bw-sh-3d{ margin-top:23rpx; min-height:88rpx; padding:0 32rpx; border-radius:var(--cy-radius-pill); /* ds-ok Figma 实测(用户裁决字面值) */
@@ -192,16 +158,7 @@ page { background: var(--cy-color-bg-page); }
 .bw-focus{display:inline-flex;align-items:center;margin-top:14rpx;padding:10rpx 22rpx;border-radius:var(--cy-radius-pill);background:rgba(255,255,255,.10);color:rgba(255,255,255,.92);font-size:var(--cy-font-caption);line-height:1.4}
 
 /* 2026-10-23 页面动效(utils/page-motion.js):容器 --pm-* 置 1 时先隐着,再依次浮上来;静止时无过渡,按压反馈不受影响;减少动态效果时从不触发 */
-.bw-list-row { filter: opacity(calc(1 - var(--pm-b, 0))); translate: 0 calc(var(--pm-b, 0) * 31rpx); transition: filter var(--pm-b-d, 0s) ease, translate var(--pm-b-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-b-s, 0) * 0ms), calc(var(--pm-b-s, 0) * 0ms), 0s, 0s; }
-.bw-list-row:nth-child(2) { transition-delay: calc(var(--pm-b-s, 0) * 30ms), calc(var(--pm-b-s, 0) * 30ms), 0s, 0s; }
-.bw-list-row:nth-child(3) { transition-delay: calc(var(--pm-b-s, 0) * 60ms), calc(var(--pm-b-s, 0) * 60ms), 0s, 0s; }
-.bw-list-row:nth-child(4) { transition-delay: calc(var(--pm-b-s, 0) * 90ms), calc(var(--pm-b-s, 0) * 90ms), 0s, 0s; }
-.bw-list-row:nth-child(5) { transition-delay: calc(var(--pm-b-s, 0) * 120ms), calc(var(--pm-b-s, 0) * 120ms), 0s, 0s; }
-.bw-list-row:nth-child(6) { transition-delay: calc(var(--pm-b-s, 0) * 150ms), calc(var(--pm-b-s, 0) * 150ms), 0s, 0s; }
-.bw-list-row:nth-child(7) { transition-delay: calc(var(--pm-b-s, 0) * 180ms), calc(var(--pm-b-s, 0) * 180ms), 0s, 0s; }
-.bw-list-row:nth-child(8) { transition-delay: calc(var(--pm-b-s, 0) * 210ms), calc(var(--pm-b-s, 0) * 210ms), 0s, 0s; }
-.bw-list-row:nth-child(9) { transition-delay: calc(var(--pm-b-s, 0) * 240ms), calc(var(--pm-b-s, 0) * 240ms), 0s, 0s; }
-.bw-list-row:nth-child(10) { transition-delay: calc(var(--pm-b-s, 0) * 270ms), calc(var(--pm-b-s, 0) * 270ms), 0s, 0s; }
-.bw-list-row:nth-child(n+11) { transition-delay: calc(var(--pm-b-s, 0) * 300ms), calc(var(--pm-b-s, 0) * 300ms), 0s, 0s; }
 /* 已点亮的徽记在行落定后轻轻弹出(柔和回弹,不旋转不发光) */
-.bw-list-mark:not(.is-locked) { scale: calc(1 - var(--pm-b, 0) * .45); transition: scale var(--pm-b-d, 0s) cubic-bezier(.34,1.56,.64,1); transition-delay: calc(var(--pm-b-s, 0) * (107ms + min(var(--pmi, 0), 10) * 30ms)); }
+.bw-medal:not(.is-locked) { scale: calc(1 - var(--pm-b, 0) * .45); transition: scale var(--pm-b-d, 0s) cubic-bezier(.34,1.56,.64,1); transition-delay: calc(var(--pm-b-s, 0) * (107ms + min(var(--pmi, 0), 10) * 30ms)); }
+
+.bw-cell { filter: opacity(calc(1 - var(--pm-b, 0))); translate: 0 calc(var(--pm-b, 0) * 31rpx); transition: filter var(--pm-b-d, 0s) ease, translate var(--pm-b-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-b-s, 0) * min(var(--pmi, 0), 10) * 30ms), calc(var(--pm-b-s, 0) * min(var(--pmi, 0), 10) * 30ms), 0s, 0s; }

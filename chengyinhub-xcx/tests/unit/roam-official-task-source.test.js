@@ -24,8 +24,7 @@ function loadList(responses) {
 // PRIVATE-GROUP-official-task-source:漫游入口/列表叫“官方活动任务”,my-events 的行只标来源。
 test('漫游入口与列表标题改名为官方活动任务', () => {
   const wxml = read('pages/roam/index.wxml')
-  assert.match(wxml, /bindtap="openRoamTasks"[^>]*aria-label="官方活动任务"/)
-  assert.match(wxml, /<text class="dt">官方活动任务<\/text>/)
+  // 2026-10-27 owner P-31:「官方活动任务」一行随更多菜单精简撤掉;列表标题仍是「官方活动任务」
   assert.doesNotMatch(wxml, /附近挑战/)
   assert.match(read('utils/scene-registry.js'), /'roam-task-list': \{[^}]*title: '官方活动任务'/)
 })

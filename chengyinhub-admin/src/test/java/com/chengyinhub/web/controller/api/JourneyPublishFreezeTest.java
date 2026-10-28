@@ -119,7 +119,12 @@ class JourneyPublishFreezeTest {
     private final PlayAttemptLogMapper puzzleAttemptMapper = mock(PlayAttemptLogMapper.class);
     private final PuzzlePlayServiceImpl puzzlePlayService = new PuzzlePlayServiceImpl(
             mock(ICmsMemberTemplateService.class), puzzleAttemptMapper,
-            mock(PlayerNodeProgressMapper.class), memberMapper);
+            mock(PlayerNodeProgressMapper.class), memberMapper,
+                mock(com.chengyinhub.business.service.ICmsTopicNodeService.class),
+                mock(com.chengyinhub.business.service.support.PlayNodeAccessService.class),
+                mock(com.chengyinhub.business.service.ICmsPointsSettingService.class),
+                mock(com.chengyinhub.business.service.IUmsMemberService.class),
+                mock(com.chengyinhub.business.service.IUmsMemberPointsDetailService.class));
     private final PreferencePlayService preferencePlayService = mock(PreferencePlayService.class);
     private final ApiPlayProgressController controller = spy(new ApiPlayProgressController());
 
@@ -160,7 +165,7 @@ class JourneyPublishFreezeTest {
 
         CmsRegistration pass = new CmsRegistration();
         pass.setId(9_000_001L); // 真实报名行必有主键；C包当前资格按原ID锁读
-        pass.setMemberId(MEMBER);
+        pass.setMemberId(MEMBER); pass.setOwnerType(2L); pass.setOwnerId(ACTIVITY);
         pass.setRegistrationStatus(2);
         when(registrationMapper.selectCmsRegistrationList(any(CmsRegistration.class)))
                 .thenReturn(Collections.singletonList(pass));
@@ -192,6 +197,7 @@ class JourneyPublishFreezeTest {
 
         when(routeMapper.selectByOwner(anyLong(), eq(TOPIC), eq(MEMBER), eq("default")))
                 .thenAnswer(inv -> stored[0]);
+        when(routeMapper.selectAccessibleByIdForUpdate(99L, MEMBER)).thenAnswer(inv -> stored[0]);
         when(routeMapper.selectMemberTopicSessions(MEMBER, TOPIC)).thenAnswer(inv -> java.util.Collections.singletonList(stored[0]));
         when(routeMapper.insertSession(any(TopicRouteSession.class))).thenAnswer(inv -> {
             TopicRouteSession value = inv.getArgument(0);
@@ -218,33 +224,34 @@ class JourneyPublishFreezeTest {
 
         wireController();
         CurrentPlayControllerFixtures.install(controller);
+        BasicPlayCommandFixtures.scope(controller, TOPIC);
         com.chengyinhub.business.service.support.CurrentPlayTestFixtures.delegateLocks(activityMapper, registrationMapper);
     }
 
     private void wireController() {
         doReturn(MEMBER).when(controller).getAppUserId();
-        ReflectionTestUtils.setField(controller, "cmsTopicNodeService", nodeService);
-        ReflectionTestUtils.setField(controller, "cmsActivityService", activityService);
-        ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrationService);
-        ReflectionTestUtils.setField(controller, "cmsTopicService", topicService);
-        ReflectionTestUtils.setField(controller, "cmsMemberTemplateService", templateService);
-        ReflectionTestUtils.setField(controller, "topicRouteRuntimeService", runtime);
-        ReflectionTestUtils.setField(controller, "playerNodeProgressService", progressService);
-        ReflectionTestUtils.setField(controller, "playerProgressionService", progressionService);
-        ReflectionTestUtils.setField(controller, "growthService", growthService);
-        ReflectionTestUtils.setField(controller, "xpBudgetService", xpBudgetService);
-        ReflectionTestUtils.setField(controller, "rewardDropService", rewardDropService);
-        ReflectionTestUtils.setField(controller, "smsCouponHistoryService", couponHistoryService);
-        ReflectionTestUtils.setField(controller, "topicCompletionAwardService", completionAwardService);
-        ReflectionTestUtils.setField(controller, "pointsAwardService", pointsAwardService);
-        ReflectionTestUtils.setField(controller, "puzzlePlayService", puzzlePlayService);
-        ReflectionTestUtils.setField(controller, "preferencePlayService", preferencePlayService);
-        ReflectionTestUtils.setField(controller, "omsTicketService", mock(IOmsTicketService.class));
-        ReflectionTestUtils.setField(controller, "cmsTopicChapterService", mock(ICmsTopicChapterService.class));
-        ReflectionTestUtils.setField(controller, "clubLeadMapper", mock(ClubLeadMapper.class));
-        ReflectionTestUtils.setField(controller, "playAttemptLogMapper", mock(PlayAttemptLogMapper.class));
-        ReflectionTestUtils.setField(controller, "memberCollectibleMapper", mock(MemberCollectibleMapper.class));
-        ReflectionTestUtils.setField(controller, "nodeMerchantOverrideService",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicNodeService", nodeService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsActivityService", activityService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsRegistrationService", registrationService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicService", topicService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsMemberTemplateService", templateService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "topicRouteRuntimeService", runtime);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService", progressService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerProgressionService", progressionService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "growthService", growthService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "xpBudgetService", xpBudgetService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "rewardDropService", rewardDropService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "smsCouponHistoryService", couponHistoryService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "topicCompletionAwardService", completionAwardService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "pointsAwardService", pointsAwardService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "puzzlePlayService", puzzlePlayService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "preferencePlayService", preferencePlayService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "omsTicketService", mock(IOmsTicketService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicChapterService", mock(ICmsTopicChapterService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "clubLeadMapper", mock(ClubLeadMapper.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playAttemptLogMapper", mock(PlayAttemptLogMapper.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "memberCollectibleMapper", mock(MemberCollectibleMapper.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "nodeMerchantOverrideService",
                 new NodeMerchantOverrideServiceImpl(mock(ICmsRegistrationMerchantService.class)));
         when(progressService.insertPlayerNodeProgress(any(PlayerNodeProgress.class))).thenReturn(1);
         when(progressService.selectPlayerNodeProgressList(any(PlayerNodeProgress.class)))
@@ -276,9 +283,9 @@ class JourneyPublishFreezeTest {
         // 作者重新保存模板答案(同一节点,新答案)
         template.setQuestionAnswer("新答案");
 
-        AjaxResult live = controller.answer(String.valueOf(ACTIVITY), String.valueOf(NODE), "新答案", null, null, null);
+        AjaxResult live = BasicPlayCommandFixtures.answer(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "新答案", null, null, null);
         assertEquals(500, live.get("code"), "新答案不在开局快照里,同一局不得按新配置判定");
-        AjaxResult frozenOk = controller.answer(String.valueOf(ACTIVITY), String.valueOf(NODE), "旧答案", null, null, null);
+        AjaxResult frozenOk = BasicPlayCommandFixtures.answer(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "旧答案", null, null, null);
         assertEquals(200, frozenOk.get("code"), "按开局冻结的旧答案必须判对");
         Map<String, Object> data = (Map<String, Object>) frozenOk.get("data");
         assertEquals(Boolean.TRUE, data.get("firstTime"));
@@ -293,9 +300,23 @@ class JourneyPublishFreezeTest {
         stored[0].setConfigSnapshotJson(JSON.writeValueAsString(snapshot));
         template.setQuestionAnswer("修订答案");
 
-        AjaxResult result = controller.answer(String.valueOf(ACTIVITY), String.valueOf(NODE), "修订答案", null, null, null);
+        AjaxResult result = BasicPlayCommandFixtures.answer(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "修订答案", null, null, null);
 
         assertEquals(200, result.get("code"), "老局快照没有冻结键时必须回退实时模板");
+    }
+
+    /** D1 反向口径:快照有 nodeAnswers 键(冻结后开的局)即使缺本节点也不得回退实时模板。 */
+    @Test
+    void frozenRunMissingNodeAnswerNeverFallsBackToLiveTemplate() throws Exception {
+        startRun();
+        ObjectNode snapshot = (ObjectNode) JSON.readTree(stored[0].getConfigSnapshotJson());
+        snapshot.putObject(NodeJourneySnapshot.NODE_ANSWERS_KEY);
+        stored[0].setConfigSnapshotJson(JSON.writeValueAsString(snapshot));
+        template.setQuestionAnswer("修订答案");
+
+        AjaxResult result = BasicPlayCommandFixtures.answer(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "修订答案", null, null, null);
+
+        assertEquals(500, result.get("code"), "有答案冻结的局缺节点答案时必须拒绝,不得按当前模板判定");
     }
 
     /** 完成方式闸(反作弊:答题节点不得用「到达」绕过)按开局快照判定。 */
@@ -306,7 +327,7 @@ class JourneyPublishFreezeTest {
         // 作者把节点从答题(1)改成 GPS 到点(5);节点没有坐标
         template.setValidationMethod(5);
 
-        AjaxResult result = controller.arrive(String.valueOf(ACTIVITY), String.valueOf(NODE), null, null, null);
+        AjaxResult result = BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), null, null, null);
 
         assertEquals(500, result.get("code"));
         assertEquals("该站需完成对应任务后才能打卡", result.get("msg"),
@@ -324,7 +345,7 @@ class JourneyPublishFreezeTest {
 
         template.setAnswerReveal("新揭示");
 
-        AjaxResult result = controller.revealPuzzle(String.valueOf(ACTIVITY), String.valueOf(NODE), null, null, null);
+        AjaxResult result = BasicPlayCommandFixtures.revealPuzzle(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), null, null, null);
 
         assertEquals(200, result.get("code"));
         Map<String, Object> data = (Map<String, Object>) result.get("data");

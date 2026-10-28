@@ -53,12 +53,7 @@ test('real profile own caller preserves pending state and uses own scope without
   h.page.data.isSelf=true;h.page.data.page_no=1;h.page.getCreativesquareList();await flush();
   assert.equal(h.calls[0].url,'/api/v1/community/me/posts');assert.equal(h.calls[0].data.authorId,undefined);assert.equal(h.page.data.list[0].status,0);assert.equal(h.page.data.list[0].lifecycle,'CHECKING');
 });
-test('real list publish caller confirms actual guideline, creates draft, publishes and reports CHECKING accurately', async () => {
-  const h=load('pages/square/list/index.js',[{id:3,title:'规范',content_json:'{"rules":[{"code":"AUTHENTICITY","title":"真实体验：禁止伪造、搬运和刷量"}]}'},{},created,checked,{items:[],hasMore:false,nextCursor:null}]);
-  h.page.data.valCont='纯本地文案';h.page.data.picList=[];h.page.data.fileList=[];
-  h.page.submitFormData();await flush();assert.equal(h.calls[2].url,'/api/v1/community/posts');assert.equal(h.calls[4].data.expectedVersion,0);
-  assert.equal(h.page.data.resultSheet.title,'已提交审核');assert.equal(h.page.data.submitting,false);assert.equal(h.calls[6].url,'/api/v1/community/feeds/LATEST');
-});
+// 2026-10-27 P-20 owner:广场行内发布框撤掉,新建帖只走 cy-post-compose(下一条 real compose caller 覆盖规范确认 / 草稿 / 发布)。
 test('real compose caller submits canonical draft/publish and preserves pending lifecycle', async () => {
   const h=load('pages/square/components/cy/post-compose/index.js',[{id:3,title:'规范',content_json:'{"rules":[{"code":"AUTHENTICITY","title":"真实体验：禁止伪造、搬运和刷量"}]}'},{},created,checked]);
   h.page.lifetimes.attached.call(h.page);h.page.observers.show.call(h.page,true);

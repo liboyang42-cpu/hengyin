@@ -243,8 +243,7 @@ Page({
     });
   },
 
-  // 被评对象与 reviewCoop 同一口径;回读「我对这次合作打过的分」。读不到就照常给「评价」入口,
-  // 真重复提交由后端「已评价过该合作」兜底。
+  // 被评对象与 reviewCoop 同一口径;回读「我对这次合作打过的分」。
   // done(found):评价结果不明时用来回读核对;found=true 读到已评分,false 读到但没有,null 回读失败。
   loadMyReview(inv, done) {
     const finish = typeof done === 'function' ? done : function () {};
@@ -253,14 +252,22 @@ Page({
     const me = String(app.getUserID() || '');
     const that = this;
     const ctx = this._captureContext();
+    const read = this._reviewRead = {};
+    const current = () => that._isCurrent(ctx) && that._reviewRead === read
+      && that.data.invite && String(that.data.invite.inviteId) === String(inv.inviteId);
     app.sendRequest({
       hideLoading: true,
       url: '/api/coop/review/summary', method: 'POST',
       data: JSON.stringify({ toId: toId }), header: jsonHeader(),
       success(res) {
-        if (!that._isCurrent(ctx)) return;
+        if (!current()) return;
         const readable = !!(res && String(res.code) === '200' && res.data && Array.isArray(res.data.reviews));
         const rows = readable ? res.data.reviews : [];
+        // 畸形条目不能被当作「没有我的评价」,从而放开未知提交的重试。
+        if (!readable || !rows.every(r => r && /^[1-9]\d*$/.test(String(r.fromId))
+          && /^[1-9]\d*$/.test(String(r.topicId)) && Number.isInteger(r.rating)
+          && r.rating >= 1 && r.rating <= 5
+          && (r.toId == null || String(r.toId) === String(toId)))) { finish(null); return; }
         const mine = rows.filter(function (r) {
           return r && String(r.fromId) === me && String(r.topicId) === String(inv.topicId);
         })[0];
@@ -271,9 +278,9 @@ Page({
           finish(true);
           return;
         }
-        finish(readable ? false : null);
+        finish(false);
       },
-      fail() { if (that._isCurrent(ctx)) finish(null); },
+      fail() { if (current()) finish(null); },
     });
   },
 
@@ -541,11 +548,17 @@ Page({
 
   // F4-2 双向互评:先选星级(cy-option-sheet,设计体系内),再写评语(可输入 modal)。
   // 被评对象与卡片搬迁前一致:收件箱评发起方(fromId),发件箱只对商家评(toId)。
+  _reviewKey(inv) {
+    return [identityKey(), this.data.box, inv.inviteId, inv.topicId,
+      this.data.box === 'received' ? inv.fromId : inv.toId].join('|');
+  },
   reviewCoop() {
     const context = this._captureContext();
     if (!this._isCurrent(context)) return;
     const inv = this.data.invite;
     if (!inv || inv.legacyReadonly || this._reviewing) return;
+    if (this.data.myReviewStars) return;
+    if (this._reviewUnknown === this._reviewKey(inv)) { this._verifyReviewAfterUnknown(context); return; }
     const toId = this.data.box === 'received' ? inv.fromId : inv.toId;
     if (!toId || !inv.topicId) { toast('该合作暂不可评价'); return; }
     this._reviewing = true;
@@ -567,23 +580,38 @@ Page({
       title: '评语(选填)', editable: true, placeholderText: '说说这次合作…', confirmText: '提交',
       success(rr) {
         if (!that._isCurrent(ctx.context)) return;
-        that._reviewing = false;
-        if (!rr.confirm) return;
+        if (!rr.confirm) { that._reviewing = false; return; }
+        const submission = that._reviewSubmission = {};
+        that._reviewRead = null; // 提交前的摘要不能结算这次提交。
+        const key = that._reviewUnknown = that._reviewKey(that.data.invite);
+        const current = () => that._isCurrent(ctx.context) && that._reviewSubmission === submission;
         app.sendRequest({
           hideLoading: true, silentError: true,
           url: '/api/coop/review/save', method: 'POST',
           data: JSON.stringify({ topicId: ctx.topicId, toId: ctx.toId, rating: rating, comment: String(rr.content || '').trim() }),
           header: jsonHeader(),
           success(res) {
-            if (!that._isCurrent(ctx.context)) return;
+            if (!current()) return;
+            that._reviewSubmission = null;
+            const code = Number(res && res.code);
+            if (code !== 200 && !(code >= 400 && code < 500 && code !== 408)) {
+              that._verifyReviewAfterUnknown(ctx.context); return;
+            }
+            if (that._reviewUnknown === key) that._reviewUnknown = null;
+            that._reviewing = false;
             if (res.code == '200') that.setData({ actionReceipt: '评价已提交', myReviewStars: '★★★★★'.slice(0, rating) });
-            else toast((res && res.msg) || '评价失败');
+            else toast(res.msg || '评价失败');
           },
           // 断网/网关超时可能已落库:不断言「没提交」,先回读本次评分,核对完才放开重试。
           fail(_data, status) {
-            if (!that._isCurrent(ctx.context)) return;
+            if (!current()) return;
+            that._reviewSubmission = null;
             const code = Number(status);
-            if (code >= 400 && code < 500 && code !== 408) { toast((_data && _data.msg) || '评价失败'); return; }
+            if (code >= 400 && code < 500 && code !== 408) {
+              if (that._reviewUnknown === key) that._reviewUnknown = null;
+              that._reviewing = false;
+              toast((_data && _data.msg) || '评价失败'); return;
+            }
             that._verifyReviewAfterUnknown(ctx.context);
           },
         });
@@ -594,15 +622,18 @@ Page({
 
   _verifyReviewAfterUnknown(context) {
     const inv = this.data.invite;
-    if (!inv) return;
+    if (!inv || !this._isCurrent(context)) return;
+    const key = this._reviewUnknown = this._reviewKey(inv);
+    const verification = this._reviewVerification = {};
     this._reviewing = true;
     this.setData({ reviewVerifying: true, actionReceipt: '', actionError: '' });
     this.loadMyReview(inv, (found) => {
-      if (!this._isCurrent(context)) return;
+      if (!this._isCurrent(context) || this._reviewVerification !== verification) return;
       this._reviewing = false;
+      if ((found === true || found === false) && this._reviewUnknown === key) this._reviewUnknown = null;
       if (found === true) { this.setData({ reviewVerifying: false, actionReceipt: '评价已提交' }); return; }
       this.setData({ reviewVerifying: false,
-        actionError: found === false ? '没有查到这次评价，可以重新评价' : '评价结果暂未确认，请稍后刷新确认后再评价' });
+        actionError: found === false ? '没有查到这次评价，可以重新评价' : '评价结果暂未确认，请再点评价查询结果' });
     });
   },
 

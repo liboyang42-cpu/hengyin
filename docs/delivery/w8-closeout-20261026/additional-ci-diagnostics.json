@@ -1,0 +1,46 @@
+{
+  "observedAt": "2026-10-26T18:25:40.863634+00:00",
+  "runsSource": "4d9c43c2e455ec6de71629d2ef3f7776da91ba45",
+  "funds": {
+    "run": 40376215101,
+    "result": "SELFTEST_FAILED_BEFORE_MYSQL",
+    "diagnostic": "RefundRetryAndRemainderMySqlIT expected count 5, actual @Test 20; fixture also 5"
+  },
+  "redis": {
+    "run": 40376215155,
+    "result": "FAIL_BEFORE_BUSINESS_PROBE",
+    "diagnostic": "Spring application failed to start: auditTaskServiceImpl -> guardArrivalEvidenceReaderImpl -> playBasicIntentApplication -> cmsActivityServiceImpl -> auditTaskServiceImpl",
+    "ownedCleanup": "CONFIRMED_EXACT_OWNED_REMOVAL"
+  },
+  "migration": {
+    "candidate": "8bfe4f765053a67e3013d74fe6e157201a86fbcc",
+    "dependencyOrder": "PASS; 12 migrations",
+    "ratchet": "PASS; no removed dependency edges",
+    "master": "58f4cc429b0d0e3035ccdf1bd4a9c3dfd76eb9a4"
+  },
+  "nextOwner": "W8-12; startup cycle first; no circular-reference bypass",
+  "draft": true,
+  "additionalFullCi": {
+    "run": 40376215392,
+    "head": "4d9c43c2e455ec6de71629d2ef3f7776da91ba45",
+    "conclusion": "failure",
+    "appliesToRepair8bfe4f76": false
+  },
+  "repairManifestCrosscheck": "9 files match cloud afterSHA256 and pushed 8bfe4f76",
+  "currentCandidateCi": {
+    "head": "8bfe4f765053a67e3013d74fe6e157201a86fbcc",
+    "run": 40377384650,
+    "backend": {
+      "tests": 14413,
+      "failures": 60,
+      "errors": 19,
+      "skipped": 638
+    },
+    "adminUiFailures": 5,
+    "migrationDeclaration": "PR body corrected; parser passed; next synchronize event required",
+    "migrationCiTopology": "PASS; 13 PR-relative migrations; ratchet PASS",
+    "apiGate": "FAIL: /api/play/sensor/result unmapped",
+    "conclusion": "failure",
+    "staticGate": "FAIL: action ledger and route matrix drift; UI coverage gap; UI U1-U6 violations"
+  }
+}

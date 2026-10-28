@@ -143,6 +143,8 @@ function loadProfileEditor() {
     require: (id) => {
       if (/response-shape\.js$/.test(id)) return require(path.join(ROOT, 'utils/response-shape.js'))
       if (/form-state\.js$/.test(id)) return require(path.join(ROOT, 'utils/form-state.js'))
+      // 2026-10-27 L08 G-5:资料保存成功广播身份变化(纯内存模块,用真身)
+      if (/identity-sync\.js$/.test(id)) return require(path.join(ROOT, 'utils/identity-sync.js'))
       if (/toast\.js$/.test(id)) return Object.assign(() => {}, { success() {}, error() {} })
       return { show() {}, hide() {} }
     },

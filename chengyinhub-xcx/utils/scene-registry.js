@@ -41,12 +41,12 @@ const SCENES = {
   'roam-poi-detail': { route: '/subpackageRoam/poi-detail/index', title: '节点详情', theme: 'player', variant: 'full' },
   // 2026-09-06 路由页 pages/merchant/discover 已删(无人跳转),场景只在 roam/play 宿主内打开,不再有独立 route。
   'roam-discover': { title: '发现附近店铺', theme: 'player', variant: 'full' },
-  // ⚠️ 漫游域(subpackageRoam)由用户本人维护,本次半屏收口**不动它**:
-  //   · roam-passport 已在 master 下线,这条分支想把它加回来 —— 不加
-  //   · roam-history 保持 full,不改 variant
-  'roam-history': { route: '/subpackageRoam/history/index', title: '漫游历史', theme: 'player', variant: 'full' },
+  // ⚠️ 漫游域(subpackageRoam)由用户本人维护:roam-passport 已在 master 下线,不加回来。
+  // 2026-10-27 P-37(业主 p120):漫游历史「不能是黑色弹窗,要全屏」⇒ page 档;roam / play 宿主按 page 档直接进深链页。
+  'roam-history': { route: '/subpackageRoam/history/index', title: '漫游历史', theme: 'player', variant: 'page' },
   'roam-session': { route: '/subpackageRoam/session/index', title: '本次漫游', theme: 'player', variant: 'full', canBack: true },
-  'game-coupon-wallet': { route: '/subpackageMember/coupon-wallet/index', title: '优惠券', theme: 'player', variant: 'half' },
+  // 2026-10-27 P-58(业主 p101):优惠券「不能是弹窗,之前做好过正常页面」⇒ page 档
+  'game-coupon-wallet': { route: '/subpackageMember/coupon-wallet/index', title: '优惠券', theme: 'player', variant: 'page' },
   'qr-coupon': { route: '/subpackageMember/coupon-qr/index', title: '出示核销码', theme: 'player', variant: 'full', canBack: true },
   'qr-group-code': { route: '/pages/club/group-code/index', title: '团核销码', theme: 'player', variant: 'full', canBack: true },
   'qr-citynode': { route: '/subpackageRoam/citynode-code/index', title: '节点核销码', theme: 'player', variant: 'full', canBack: true },
@@ -66,7 +66,8 @@ const SCENES = {
   'member-withdraw-history': { route: '/subpackageMember/tixianjilu/tixianjilu', title: '提现记录', theme: 'player', variant: 'half' },
   'member-invite-history': { route: '/subpackageMember/myinvite/myinvite', title: '邀请记录', theme: 'player', variant: 'half' },
   'member-order-history': { route: '/subpackageMember/order/order', title: '我的订单', theme: 'player', variant: 'half' },
-  'member-order-detail': { route: '/subpackageMember/orderinfo/orderinfo', title: '订单详情', theme: 'player', variant: 'half' },
+  // 2026-10-27 P-51(业主 p92):订单详情「不能是弹窗,之前做好过」⇒ page 档(与 orderinfo 深链页同一组件)
+  'member-order-detail': { route: '/subpackageMember/orderinfo/orderinfo', title: '订单详情', theme: 'player', variant: 'page', bare: true }, // 2026-10-28 Figma D07:头图顶到最上,返回键浮在图上,不出大标题
 
   // S01-S13 设置三级/四级
   'settings-how-to-play': { route: '/subpackageA/pages/infomation/infomation', title: '城瘾玩法', theme: 'player', variant: 'half' },
@@ -75,7 +76,8 @@ const SCENES = {
   'settings-likes': { route: '/pages/mylike/mylike', title: '我的喜欢', theme: 'player', variant: 'half' },
   'settings-deregister': { route: '/pages/deregister/index', title: '账号注销', theme: 'player', variant: 'full', maskClosable: false },
   'settings-feedback': { route: '/subpackageMember/complaint/index', title: '投诉建议', theme: 'player', variant: 'full', form: true, maskClosable: false, footer: true },
-  'share-invite': { route: '/pages/member/index/index', title: '邀请好友', theme: 'player', variant: 'full' },
+  // 2026-10-27 P-59(业主 p102 补):邀请好友本身也是弹窗 ⇒ page 档
+  'share-invite': { route: '/pages/member/index/index', title: '邀请好友', theme: 'player', variant: 'page' },
   'merchant-decor': { route: '/pages/merchant/decor/index', title: '店铺资料', theme: 'merchant', variant: 'full', form: true, maskClosable: false, footer: true },
   'merchant-apply': { route: '/pages/merchant/apply/index', title: '申请入驻', theme: 'merchant', variant: 'full', form: true, maskClosable: false, footer: true },
   'club-apply': { route: '/pages/club/apply/index', title: '申请俱乐部主理人', theme: 'player', variant: 'full', form: true, maskClosable: false, footer: true },

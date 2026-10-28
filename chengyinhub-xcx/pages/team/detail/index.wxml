@@ -2,6 +2,19 @@
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
+  <view wx:if="{{commandRecovery.state || commandRecovery.busy}}" class="team-card" aria-role="status">
+    <text>{{commandRecovery.label}}</text>
+    <text>{{commandRecovery.message}}</text>
+    <text wx:if="{{commandRecovery.requestId}}">原请求号：{{commandRecovery.requestId}}</text>
+    <block wx:if="{{commandRecovery.state === 'UNKNOWN'}}">
+      <cy-btn disabled="{{commandRecovery.busy}}" bindtap="queryCommand">查询原请求</cy-btn>
+      <cy-btn disabled="{{commandRecovery.busy}}" bindtap="retryCommand">按原输入重试</cy-btn>
+      <cy-btn disabled="{{commandRecovery.busy}}" bindtap="cancelCommand">终止尚未执行的请求</cy-btn>
+      <text>终止只针对未执行的原请求；已经提交的业务不会撤销。</text>
+    </block>
+    <cy-btn wx:if="{{commandRecovery.state === 'APPLIED' || commandRecovery.state === 'REJECTED' || commandRecovery.state === 'CANCELLED'}}"
+      bindtap="acknowledgeCommand">确认结果</cy-btn>
+  </view>
   <cy-nav-bar back />
   <cy-page-title title="队伍详情" safe-top="{{false}}" flush="{{true}}" />
   <cy-skeleton wx:if="{{loading && !team}}" type="detail" count="{{1}}" loading-label="正在加载队伍详情" />
@@ -55,6 +68,40 @@
               aria-role="button" aria-label="移出队员 {{item.memberName || '城瘾玩家'}}" hover-class="cy-pressed" hover-stay-time="80">移出</view>
       </view>
     </view>
+
+    <!-- 定向开关关闭 / 普通队伍 / 非成员(无法确认是否定向队)不适用看板:整段不渲染,不给普通队伍挂定向提示。
+         原型 B T-32:成员 × 节点矩阵(横滑),最后一行写全队是否完成;排名名次按服务端顺排。 -->
+    <view wx:if="{{boardState === 'loading' || boardState === 'error' || boardState === 'login' || boardState === 'ready'}}" class="team-section-title">队伍进度</view>
+    <view wx:if="{{boardState === 'loading'}}" class="team-sync" aria-role="status">正在加载…</view>
+    <cy-inline-error wx:if="{{boardState === 'error' || boardState === 'login'}}"
+      title="{{boardState === 'login' ? boardMessage : '队伍进度加载失败'}}" action="{{boardState === 'login' ? '登录' : '重试'}}" bind:action="retryBoard" />
+    <block wx:if="{{boardState === 'ready' && board}}">
+      <view class="team-card">
+        <view class="team-member tm-sum"><view class="team-member-main"><view class="team-member-name">全队已完成 {{board.summary.teamDoneCount}} / {{board.summary.totalTasks || 0}} 个节点</view></view></view>
+        <cy-empty wx:if="{{!board.tasks.length}}" title="暂无节点" />
+        <scroll-view wx:else scroll-x class="tm-matrix" enhanced show-scrollbar="{{false}}">
+          <view class="tm-mx">
+            <view class="tm-mx-row tm-mx-head"><text class="tm-mx-name"></text><text class="tm-mx-cell" wx:for="{{board.tasks}}" wx:for-item="task" wx:key="taskId">{{task.name}}</text></view>
+            <view class="tm-mx-row" wx:for="{{board.rows}}" wx:for-item="row" wx:key="memberId" aria-label="{{row.name}}">
+              <text class="tm-mx-name">{{row.name}}</text>
+              <view class="tm-mx-cell" wx:for="{{row.cells}}" wx:for-item="cell" wx:key="taskId"><view class="tm-dot {{cell.done ? 'on' : ''}}" aria-label="{{cell.done ? '已完成' : '未完成'}}"></view></view>
+            </view>
+            <view class="tm-mx-row tm-mx-foot"><text class="tm-mx-name">全队</text><text class="tm-mx-cell {{task.teamDone ? 'ok' : ''}}" wx:for="{{board.tasks}}" wx:for-item="task" wx:key="taskId">{{task.teamDone ? '完成' : (task.completedCount || 0) + '/' + (board.threshold.required || 0)}}</text></view>
+          </view>
+        </scroll-view>
+      </view>
+      <view class="team-section-title">本场队伍排名</view>
+      <view wx:if="{{rankingState === 'loading'}}" class="team-sync" aria-role="status">正在加载…</view>
+      <cy-inline-error wx:if="{{rankingState === 'error'}}" title="队伍排名加载失败" action="重试" bind:action="retryBoard" />
+      <view wx:if="{{rankingState === 'ready'}}" class="team-card">
+        <cy-empty wx:if="{{!boardRanks.length}}" title="暂无队伍排名" />
+        <view class="team-member" wx:for="{{boardRanks}}" wx:key="teamId">
+          <text class="tm-rank">{{item.rank}}</text>
+          <view class="team-member-main"><view class="team-member-name">{{item.title}}{{item.mine ? ' · 我的队伍' : ''}}</view></view>
+          <text class="tm-val">{{item.teamDoneCount}} / {{item.totalTasks || 0}}</text>
+        </view>
+      </view>
+    </block>
 
     <view class="team-actions" wx:if="{{joined && team.status < 2}}">
       <view class="team-action secondary" bindtap="quit" aria-role="button"

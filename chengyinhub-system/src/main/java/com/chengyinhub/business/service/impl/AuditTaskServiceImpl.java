@@ -7,6 +7,7 @@ import com.chengyinhub.business.domain.CmsTemplateLibrary;
 import com.chengyinhub.business.mapper.CmsMemberTemplateMapper;
 import com.chengyinhub.business.mapper.CmsTemplateLibraryMapper;
 import com.chengyinhub.business.service.support.TemplateAuditSnapshot;
+import com.chengyinhub.business.service.support.AuditProblemService;
 import com.chengyinhub.business.util.TopicContentSafetyHold;
 
 import com.chengyinhub.business.domain.AuditRecord;
@@ -135,6 +136,14 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
     private boolean itemProblemsEnabled = false;
     @Autowired(required = false)
     private com.chengyinhub.business.service.support.AuditProblemService auditProblemService;
+
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.GuardArrivalEvidenceReader guardArrivalEvidenceReader;
+    @Autowired(required = false)
+    private com.chengyinhub.business.mapper.PlayArriveGuardLogMapper guardAppealLogMapper;
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.support.GuardAppealReviewerScope guardAppealReviewerScope;
+
 
     /** O5b-2 开关(默认关):申诉可附证据图片(复用 OSS 上传 + 媒体审核管线,附件须本人上传且已过内容安全)。 */
     @Value("${chengyin.audit.o5b.appeal-attachments.enabled:false}")
@@ -795,6 +804,26 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         if (task == null) {
             throw new IllegalArgumentException("审核任务不存在");
         }
+        boolean guardReview = isGuardType(task.getBizType());
+        if (guardReview) {
+            requireGuardReviewScope(task, operatorId);
+            if (!SOURCE_APPEAL.equals(task.getSourceType()) || request.getExpectedVersion() == null
+                    || !(AuditTask.STATUS_APPROVED.equals(request.getStatus()) || AuditTask.STATUS_REJECTED.equals(request.getStatus()))) {
+                throw new IllegalArgumentException("守卫申诉仅支持带原版本的成立或驳回裁决");
+            }
+            request.setRequestId(appealRequestId(request.getRequestId()));
+            if (request.getProblems() != null && !request.getProblems().isEmpty()) {
+                throw new IllegalArgumentException("守卫申诉不接受内容逐项问题");
+            }
+            // Read immutable decisions before checking the live run. An ended run must not hide a committed receipt.
+            BusinessAuditEvent original = guardDecisionEvent(taskId, request.getRequestId());
+            if (original != null) {
+                requireExactReviewReplay(original, operatorId, request.getExpectedVersion(), request);
+                return 1;
+            }
+            // Runtime lock precedes appeal/task locks. No engine mutation is performed here.
+            requireActiveGuardTask(task);
+        }
         if (AuditTask.BIZ_TOPIC.equals(task.getBizType()) || AuditTask.BIZ_TOPIC_PROJECT_REVIEW.equals(task.getBizType())
                 || AuditTask.BIZ_TOPIC_SALE_REVIEW.equals(task.getBizType())) {
             auditTaskMapper.selectTopicPublicationTasksForUpdate(task.getBizId());
@@ -824,7 +853,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         com.chengyinhub.business.domain.AuditAppeal appeal = SOURCE_APPEAL.equals(task.getSourceType())
                 ? lockAppeal(task) : null;
         boolean appealAccepted = appeal != null && AuditTask.STATUS_APPROVED.equals(request.getStatus());
-        boolean versionedReview = templateLock != null || isTopicBundle(task) || communityReview || AuditTask.BIZ_MEDIA_ASSET.equals(task.getBizType());
+        boolean versionedReview = guardReview || templateLock != null || isTopicBundle(task) || communityReview || AuditTask.BIZ_MEDIA_ASSET.equals(task.getBizType());
         if (versionedReview && request.getExpectedVersion() == null) {
             throw new ServiceException("请刷新审核内容后重试", HttpStatus.CONFLICT);
         }
@@ -861,7 +890,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         // 不走「回待审 + 通过」(那会把原本未上架的也上架,且举报快照与模板快照比对恒不等)。
         com.fasterxml.jackson.databind.JsonNode reportTakedown = appealAccepted && templateLock != null
                 ? preTakedownState(task.getSnapshotJson()) : null;
-        if (appealAccepted) {
+        if (appealAccepted && !guardReview) {
             requireNoContentSafetyHold(task.getBizType(), task.getBizId(),
                     "内容图片未通过内容安全检测，申诉不能恢复，请作者更换图片后重新提交审核");
             if (reportTakedown != null) {
@@ -885,6 +914,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
             assertTemplateReviewCurrent(templateLock, request);
         }
         // O-05 #4:逐项问题先整单校验(非法即 400,不落任何状态),驳回记录写入后再落库。
+        if (guardReview && request.getProblems() != null && !request.getProblems().isEmpty()) throw new IllegalArgumentException("守卫申诉不接受内容逐项问题");
         List<com.chengyinhub.business.domain.AuditProblem> problems = itemProblems(task, appeal, request);
         Date now = DateUtils.getNowDate();
         int rows = auditTaskMapper.updateAuditTaskReviewCas(taskId, task.getStatus(), request.getStatus(),
@@ -925,12 +955,12 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
             auditProblemService.record(problems, record.getId(), owner == null ? null : owner.ownerId, now);
         }
 
-        applyCommercialReviewLifecycle(task, request.getStatus());
+        if (!guardReview) applyCommercialReviewLifecycle(task, request.getStatus());
 
         // 审核决定 → 内容软封/恢复(REJECT=确认违规下架,APPROVE=举报无效恢复)
         notifyReviewResult(task, request);
         // 申诉驳回 = 维持原驳回/下架，内容不动；申诉成立复用既有通过路径恢复。
-        if (appeal == null || (appealAccepted && reportTakedown == null)) {
+        if (!guardReview && (appeal == null || (appealAccepted && reportTakedown == null))) {
             applyModeration(task, request.getStatus(), request.getReasonText());
         }
         if (appeal != null && isTerminalDecision(request.getStatus())
@@ -1098,6 +1128,8 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
                         ? "本次举报不成立，既有处理不变" : "你举报的内容未发现违规"))
                 : appeal ? (upheld ? "你的申诉未通过，原处理维持" : "你的申诉成立，内容已恢复")
                 : (upheld ? "你提交的内容未通过审核" : "你提交的内容已通过审核");
+        if (isGuardType(task.getBizType())) outcome = upheld ? "守卫申诉未通过，原到达判定维持"
+                : "守卫申诉成立；仍有效原局可重新现场核验，仍须通过原定位与风控条件，不补记完成或奖励";
         String reason = request.getReasonText() == null || request.getReasonText().isEmpty()
                 ? outcome : request.getReasonText();
         // 驳回/举报成立通知带上固定清单原因的中文标签(见 AuditReasonCodes)，自由文本照旧附后。
@@ -1308,7 +1340,26 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
     public com.chengyinhub.business.domain.AuditAppeal submitAppeal(String bizType, Long bizId, Long memberId,
                                                                     String reason, String evidenceJson,
                                                                     List<String> attachments) {
-        if (!isContentDecisionType(bizType) || bizId == null || bizId <= 0L || memberId == null || memberId <= 0L) {
+        return submitAppealInternal(bizType, bizId, memberId, reason, evidenceJson, attachments, null);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public com.chengyinhub.business.domain.AuditAppeal submitAppeal(String bizType, Long bizId, Long memberId,
+            String reason, String evidenceJson, List<String> attachments, String requestId) {
+        return submitAppealInternal(bizType, bizId, memberId, reason, evidenceJson, attachments, appealRequestId(requestId));
+    }
+
+    private com.chengyinhub.business.domain.AuditAppeal submitAppealInternal(String bizType, Long bizId, Long memberId,
+            String reason, String evidenceJson, List<String> attachments, String requestId) {
+        return submitAppealInternal(bizType, bizId, memberId, reason, evidenceJson, attachments, requestId, null);
+    }
+
+    private com.chengyinhub.business.domain.AuditAppeal submitAppealInternal(String bizType, Long bizId, Long memberId,
+            String reason, String evidenceJson, List<String> attachments, String requestId,
+            com.fasterxml.jackson.databind.JsonNode guardReference) {
+        boolean guardAppeal = guardReference != null && isGuardType(bizType);
+        if ((!isContentDecisionType(bizType) && !guardAppeal) || bizId == null || bizId <= 0L || memberId == null || memberId <= 0L) {
             throw governanceError(ERROR_APPEAL_BAD_REQUEST, "申诉参数不完整", HttpStatus.BAD_REQUEST);
         }
         String normalizedReason = reason == null ? null : reason.trim();
@@ -1319,8 +1370,25 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
             throw governanceError(ERROR_APPEAL_BAD_REQUEST, "申诉理由不能超过 500 字", HttpStatus.BAD_REQUEST);
         }
         String evidence = normalizeEvidence(evidenceJson);
+        com.fasterxml.jackson.databind.JsonNode intent = requestId == null ? null
+                : appealIntent(bizType, bizId, memberId, requestId, normalizedReason, evidence, attachments);
+        if (guardAppeal) ((com.fasterxml.jackson.databind.node.ObjectNode) intent).set("guardReference", guardReference.deepCopy());
+        if (requestId != null) {
+            com.chengyinhub.business.domain.AuditAppeal prior = auditAppealMapper.selectByBizMember(bizType, bizId, memberId);
+            if (prior != null) {
+                if (intent.equals(storedAppealIntent(prior))) return prior;
+                throw governanceError(ERROR_APPEAL_DUPLICATE, "申诉已存在，原请求或输入不一致；请读取原申诉记录", HttpStatus.CONFLICT);
+            }
+        }
         List<String> attachmentRefs = normalizeAppealAttachments(memberId, attachments);
         if (!attachmentRefs.isEmpty()) evidence = mergeAttachments(evidence, attachmentRefs);
+        AuditTask rejected = null;
+        com.fasterxml.jackson.databind.JsonNode guardSnapshot = null;
+        if (guardAppeal) {
+            GuardContext context = guardContext(memberId, bizId, guardReference.path("arrivalRequestId").asText(), true);
+            if (!context.active) throw governanceError(ERROR_APPEAL_NOT_ELIGIBLE, "原局已结束或身份已变化，仅可查询已有申诉结果", HttpStatus.CONFLICT);
+            guardSnapshot = guardSnapshot(context, guardReference.path("arrivalRequestId").asText());
+        } else {
         ContentState content = contentState(bizType, bizId);
         if (content == null || content.deleted) {
             throw governanceError(ERROR_APPEAL_BAD_REQUEST, "内容不存在", HttpStatus.NOT_FOUND);
@@ -1331,14 +1399,16 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         if (auditAppealMapper.selectByBizMember(bizType, bizId, memberId) != null) {
             throw governanceError(ERROR_APPEAL_DUPLICATE, "该内容已申诉过，每条内容只能申诉一次", HttpStatus.CONFLICT);
         }
-        AuditTask rejected = latestContentTask(bizType, bizId);
+        rejected = latestContentTask(bizType, bizId);
         if (rejected == null || !AuditTask.STATUS_REJECTED.equals(rejected.getStatus()) || !content.down) {
             throw governanceError(ERROR_APPEAL_NOT_ELIGIBLE, "只能对被驳回或下架的内容申诉", HttpStatus.CONFLICT);
         }
         requireNoContentSafetyHold(bizType, bizId, "内容图片未通过内容安全检测，不能申诉恢复，请更换图片后重新提交审核");
 
+        }
+
         Date now = Date.from(clock.instant());
-        Date dueAt = appealDueAt(rejected, now);
+        Date dueAt = guardAppeal ? new Date(now.getTime() + APPEAL_STANDARD_DUE_MINUTES * 60_000L) : appealDueAt(rejected, now);
         AuditTask task = new AuditTask();
         task.setBizType(bizType);
         task.setBizId(bizId);
@@ -1348,11 +1418,13 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         task.setStatus(AuditTask.STATUS_PENDING);
         task.setSubmittedAt(now);
         task.setDeadlineAt(dueAt);
-        task.setSnapshotJson(rejected.getSnapshotJson());
+        task.setSnapshotJson(guardAppeal ? guardSnapshot.toString() : rejected.getSnapshotJson());
         task.setVersion(0);
         task.setCreateTime(now);
         try {
-            auditTaskMapper.insertAuditTask(task);
+            if (auditTaskMapper.insertAuditTask(task) != 1 || task.getId() == null) {
+                throw new ServiceException("申诉审核任务保存失败", HttpStatus.ERROR);
+            }
         } catch (org.springframework.dao.DuplicateKeyException open) {
             throw governanceError(ERROR_APPEAL_NOT_ELIGIBLE, "该内容已有待处理的审核，请稍后再试", HttpStatus.CONFLICT);
         }
@@ -1383,8 +1455,10 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         submitted.setReasonText(normalizedReason);
         java.util.Map<String, Object> evidenceSnapshot = new java.util.LinkedHashMap<>();
         evidenceSnapshot.put("appealId", appeal.getId());
-        evidenceSnapshot.put("appealOfTaskId", rejected.getId());
+        if (!guardAppeal) evidenceSnapshot.put("appealOfTaskId", rejected.getId());
         evidenceSnapshot.put("evidence", evidence);
+        // This server-owned SUBMIT snapshot is the trust boundary. Client evidence is never metadata.
+        if (intent != null) evidenceSnapshot.put("appealIntent", intent);
         try {
             submitted.setSnapshotJson(new com.fasterxml.jackson.databind.ObjectMapper()
                     .writeValueAsString(evidenceSnapshot));
@@ -1396,6 +1470,293 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
             throw new ServiceException("申诉记录保存失败，请重试", HttpStatus.ERROR);
         }
         return appeal;
+    }
+
+    private static boolean isGuardType(String bizType) {
+        return com.chengyinhub.business.service.support.ArriveLocationGuard.APPEAL_BIZ_TYPE.equals(bizType);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public com.chengyinhub.business.domain.AuditAppeal submitGuardAppeal(Long memberId,
+            com.chengyinhub.business.domain.dto.GuardAppealDTO request) {
+        if (request == null) throw governanceError(ERROR_APPEAL_BAD_REQUEST, "缺少守卫申诉参数", HttpStatus.BAD_REQUEST);
+        com.fasterxml.jackson.databind.node.ObjectNode reference = new com.fasterxml.jackson.databind.ObjectMapper().createObjectNode();
+        reference.put("arrivalRequestId", arrivalRequestId(request.getArrivalRequestId()));
+        reference.put("guardLogId", request.getGuardLogId() == null ? null : request.getGuardLogId().toString());
+        return submitAppealInternal(com.chengyinhub.business.service.support.ArriveLocationGuard.APPEAL_BIZ_TYPE,
+                request.getGuardLogId(), memberId, request.getReason(), request.getEvidence() == null ? null : request.getEvidence().toString(),
+                request.getAttachments(), appealRequestId(request.getRequestId()), reference);
+    }
+
+    private static final class GuardContext {
+        final com.chengyinhub.business.domain.PlayArriveGuardLog log;
+        final com.fasterxml.jackson.databind.JsonNode receipt;
+        final boolean active;
+        GuardContext(com.chengyinhub.business.domain.PlayArriveGuardLog log,
+                     com.fasterxml.jackson.databind.JsonNode receipt, boolean active) {
+            this.log = log; this.receipt = receipt; this.active = active;
+        }
+    }
+
+    private GuardContext guardContext(Long memberId, Long guardLogId, String arrivalRequestId, boolean lock) {
+        if (memberId == null || memberId <= 0 || guardLogId == null || guardLogId <= 0) {
+            throw governanceError(ERROR_APPEAL_BAD_REQUEST, "守卫引用无效", HttpStatus.BAD_REQUEST);
+        }
+        String key = arrivalRequestId(arrivalRequestId);
+        if (guardAppealLogMapper == null || guardArrivalEvidenceReader == null) {
+            throw new ServiceException("原局证据读取暂不可用，请保留原引用", 503);
+        }
+        com.chengyinhub.business.domain.PlayArriveGuardLog log = guardAppealLogMapper.selectByIdAndMemberId(guardLogId, memberId);
+        if (log == null) throw governanceError(ERROR_APPEAL_FORBIDDEN, "没有本人对应的守卫记录", HttpStatus.FORBIDDEN);
+        com.chengyinhub.business.service.GuardArrivalEvidenceReader.Origin origin = lock
+                ? guardArrivalEvidenceReader.lockOwned(memberId, guardLogId, key)
+                : guardArrivalEvidenceReader.readOwned(memberId, guardLogId, key);
+        if (origin == null || log.getTopicId() == null || log.getTopicId() <= 0
+                || !com.chengyinhub.business.service.support.GuardAppealEligibility.matchesOwnedRejection(memberId, log, origin.receipt())) {
+            throw governanceError(ERROR_APPEAL_NOT_ELIGIBLE, "缺少本人原局的精确拒绝回执，不能补绑当前局", HttpStatus.CONFLICT);
+        }
+        return new GuardContext(log, origin.receipt(), origin.originalRunActive());
+    }
+
+    /** Persist only exact identifiers and rejection code; never expose raw GPS or free-form guard detail. */
+    private com.fasterxml.jackson.databind.JsonNode guardSnapshot(GuardContext context, String arrivalRequestId) {
+        com.fasterxml.jackson.databind.node.ObjectNode root = new com.fasterxml.jackson.databind.ObjectMapper().createObjectNode();
+        com.fasterxml.jackson.databind.node.ObjectNode proof = root.putObject("guardOrigin");
+        proof.put("memberId", context.log.getMemberId().toString());
+        proof.put("topicId", context.log.getTopicId().toString());
+        proof.put("activityId", context.log.getActivityId() == null ? null : context.log.getActivityId().toString());
+        proof.put("arrivalRequestId", arrivalRequestId);
+        for (String field : new String[]{"guardLogId", "nodeId", "routeSessionId", "errorCode", "runtimeInstance", "authorityEpoch"}) {
+            if (context.receipt.has(field)) proof.set(field, context.receipt.get(field).deepCopy());
+        }
+        return root;
+    }
+
+    private com.fasterxml.jackson.databind.JsonNode guardTaskOrigin(AuditTask task) {
+        try {
+            com.fasterxml.jackson.databind.JsonNode root = new com.fasterxml.jackson.databind.ObjectMapper().readTree(task.getSnapshotJson());
+            com.fasterxml.jackson.databind.JsonNode origin = root == null ? null : root.get("guardOrigin");
+            if (origin == null || !origin.isObject() || task.getSubmitterId() == null || task.getBizId() == null
+                    || !task.getSubmitterId().toString().equals(origin.path("memberId").asText())
+                    || !task.getBizId().toString().equals(origin.path("guardLogId").asText())) throw new IllegalArgumentException();
+            return origin;
+        } catch (java.io.IOException | IllegalArgumentException invalid) {
+            throw governanceError(ERROR_APPEAL_NOT_ELIGIBLE, "守卫审核单缺少可信原局绑定", HttpStatus.CONFLICT);
+        }
+    }
+
+    private Long persistedGuardTopic(AuditTask task) {
+        if (task == null || !isGuardType(task.getBizType()) || !SOURCE_APPEAL.equals(task.getSourceType())
+                || task.getBizId() == null || task.getSubmitterId() == null || guardAppealLogMapper == null) {
+            throw new ServiceException("守卫审核持久关联缺失", HttpStatus.FORBIDDEN);
+        }
+        com.chengyinhub.business.domain.AuditAppeal appeal = auditAppealMapper.selectByBizMember(
+                task.getBizType(), task.getBizId(), task.getSubmitterId());
+        com.chengyinhub.business.domain.PlayArriveGuardLog log = guardAppealLogMapper.selectByIdAndMemberId(
+                task.getBizId(), task.getSubmitterId());
+        if (appeal == null || !java.util.Objects.equals(task.getId(), appeal.getTaskId()) || log == null
+                || log.getTopicId() == null || log.getTopicId() <= 0) {
+            throw new ServiceException("守卫审核持久关联缺失", HttpStatus.FORBIDDEN);
+        }
+        return log.getTopicId();
+    }
+
+    private void requireGuardReviewScope(AuditTask task, Long operatorId) {
+        Long topicId = persistedGuardTopic(task);
+        if (guardAppealReviewerScope == null || !guardAppealReviewerScope.canReview(operatorId, topicId)) {
+            throw new ServiceException("未配置本主题守卫审核处理范围", HttpStatus.FORBIDDEN);
+        }
+    }
+
+    @Override
+    public java.util.Map<String, Object> guardReviewReceipt(Long taskId, Long reviewerId, String requestId) {
+        AuditTask task = auditTaskMapper.selectAuditTaskById(taskId);
+        if (task == null || !isGuardType(task.getBizType())) throw new IllegalArgumentException("守卫审核单不存在");
+        requireGuardReviewScope(task, reviewerId);
+        java.util.Map<String, Object> result = new java.util.LinkedHashMap<>();
+        result.put("state", "NOT_FOUND");
+        if (requestId == null || requestId.trim().isEmpty()) return result;
+        String key = appealRequestId(requestId);
+        BusinessAuditEvent event = guardDecisionEvent(taskId, key);
+        if (event == null || !java.util.Objects.equals(reviewerId, event.getActorMemberId())) return result;
+        try {
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            com.fasterxml.jackson.databind.JsonNode before = mapper.readTree(event.getBeforeJson());
+            com.fasterxml.jackson.databind.JsonNode after = mapper.readTree(event.getAfterJson());
+            int status = after.path("status").asInt(-1);
+            if (!before.path("version").isIntegralNumber() || !after.path("status").isIntegralNumber()
+                    || !(status == AuditTask.STATUS_APPROVED || status == AuditTask.STATUS_REJECTED)
+                    || !("AUDIT_DECISION_" + statusToAction(status)).equals(event.getAction())) {
+                result.put("state", "UNKNOWN"); return result;
+            }
+            result.put("state", "FOUND"); result.put("taskId", taskId.toString()); result.put("requestId", key);
+            result.put("expectedVersion", before.path("version").asInt()); result.put("status", status);
+            result.put("reasonText", event.getReason()); result.put("applied", false);
+            result.put("reverifyRule", "FRESH_ON_SITE_WITH_ALL_GUARDS");
+            return result;
+        } catch (java.io.IOException invalid) { result.put("state", "UNKNOWN"); return result; }
+    }
+
+    private BusinessAuditEvent guardDecisionEvent(Long taskId, String requestId) {
+        List<BusinessAuditEvent> events = requireBusinessAuditMapper().selectByTarget("AUDIT_TASK", taskId);
+        if (events == null) return null;
+        for (BusinessAuditEvent event : events) {
+            if ("PLATFORM".equals(event.getDomainType()) && java.util.Objects.equals(taskId, event.getDomainId())
+                    && "AUDIT_TASK".equals(event.getTargetType()) && java.util.Objects.equals(taskId, event.getTargetId())
+                    && BusinessAuditEvent.ACTOR_TYPE_SYS_USER.equals(event.getActorType())
+                    && requestId.equals(event.getRequestId())
+                    && ("AUDIT_DECISION_APPROVE".equals(event.getAction()) || "AUDIT_DECISION_REJECT".equals(event.getAction()))) {
+                return event;
+            }
+        }
+        return null;
+    }
+
+    private void requireActiveGuardTask(AuditTask task) {
+        com.fasterxml.jackson.databind.JsonNode frozen = guardTaskOrigin(task);
+        String key = frozen.path("arrivalRequestId").asText();
+        GuardContext current = guardContext(task.getSubmitterId(), task.getBizId(), key, true);
+        if (!current.active || !frozen.equals(guardSnapshot(current, key).get("guardOrigin"))) {
+            throw governanceError(ERROR_APPEAL_NOT_ELIGIBLE, "原局已结束或原身份已变化，仅保留结果查询", HttpStatus.CONFLICT);
+        }
+    }
+
+    @Override
+    public boolean canReadGuardTask(AuditTask task) {
+        if (task == null || !isGuardType(task.getBizType())) return true;
+        try {
+            return guardAppealReviewerScope != null
+                    && guardAppealReviewerScope.canRead(persistedGuardTopic(task));
+        } catch (ServiceException | NumberFormatException invalid) { return false; }
+    }
+
+    @Override
+    public java.util.Map<String, Object> guardAppealReference(Long memberId, Long guardLogId, String arrivalRequestId) {
+        GuardContext context = guardContext(memberId, guardLogId, arrivalRequestId, false);
+        java.util.Map<String, Object> result = new java.util.LinkedHashMap<>();
+        result.put("guardOrigin", guardSnapshot(context, arrivalRequestId).get("guardOrigin"));
+        result.put("originalRunActive", context.active);
+        result.put("canSubmit", context.active && auditAppealMapper.selectByBizMember(
+                com.chengyinhub.business.service.support.ArriveLocationGuard.APPEAL_BIZ_TYPE, guardLogId, memberId) == null);
+        return result;
+    }
+
+    @Override
+    public java.util.Map<String, Object> guardAppealReceipt(Long memberId, Long guardLogId, String requestId) {
+        if (memberId == null || memberId <= 0 || guardLogId == null || guardLogId <= 0) {
+            throw governanceError(ERROR_APPEAL_BAD_REQUEST, "守卫引用无效", HttpStatus.BAD_REQUEST);
+        }
+        java.util.Map<String, Object> result = originalAppealReceipt(
+                com.chengyinhub.business.service.support.ArriveLocationGuard.APPEAL_BIZ_TYPE, guardLogId, memberId, appealRequestId(requestId));
+        if (!"FOUND".equals(result.get("state"))) return result;
+        com.fasterxml.jackson.databind.JsonNode intent = (com.fasterxml.jackson.databind.JsonNode) result.get("intent");
+        com.fasterxml.jackson.databind.JsonNode reference = intent.path("guardReference");
+        if (!guardLogId.toString().equals(reference.path("guardLogId").asText()) || !reference.path("arrivalRequestId").isTextual()) {
+            result.put("state", "UNKNOWN"); return result;
+        }
+        result.put("originalRunActive", false); result.put("canReverify", false);
+        // The result remains queryable even when its run has ended or the runtime reader is temporarily unavailable.
+        try {
+            GuardContext context = guardContext(memberId, guardLogId, reference.path("arrivalRequestId").asText(), false);
+            AuditTask task = auditTaskMapper.selectAuditTaskById(Long.valueOf((String) result.get("taskId")));
+            boolean matches = task != null && guardTaskOrigin(task).equals(guardSnapshot(context, reference.path("arrivalRequestId").asText()).get("guardOrigin"));
+            result.put("originalRunActive", matches && context.active);
+            result.put("canReverify", com.chengyinhub.business.service.support.GuardAppealEligibility.mayReverify(
+                    (String) result.get("appealState"), context.active, matches));
+            result.put("reverifyRule", "FRESH_ON_SITE_WITH_ALL_GUARDS");
+        } catch (ServiceException unavailable) { result.put("reverifyUnavailableReason", unavailable.getMessage()); }
+        for (AuditRecord record : listAuditRecords(Long.valueOf((String) result.get("taskId")))) {
+            if (AuditRecord.ACTION_APPROVE.equals(record.getAction()) || AuditRecord.ACTION_REJECT.equals(record.getAction())) {
+                result.put("decisionReason", record.getReasonText()); result.put("decidedAt", record.getCreateTime()); break;
+            }
+        }
+        return result;
+    }
+
+    private String arrivalRequestId(String supplied) {
+        if (supplied == null || !supplied.matches("[A-Za-z0-9:_-]{1,80}")) {
+            throw governanceError(ERROR_APPEAL_BAD_REQUEST, "原到达请求号无效", HttpStatus.BAD_REQUEST);
+        }
+        return supplied;
+    }
+
+    private String appealRequestId(String supplied) {
+        if (supplied == null || supplied.trim().isEmpty() || supplied.trim().length() > 64) {
+            throw governanceError(ERROR_APPEAL_BAD_REQUEST, "requestId 须为1至64个字符", HttpStatus.BAD_REQUEST);
+        }
+        return supplied.trim();
+    }
+
+    private com.fasterxml.jackson.databind.JsonNode appealIntent(String bizType, Long bizId, Long memberId,
+            String requestId, String reason, String evidence, List<String> attachments) {
+        com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        com.fasterxml.jackson.databind.node.ObjectNode intent = mapper.createObjectNode();
+        intent.put("version", 1); intent.put("requestId", requestId);
+        intent.put("bizType", bizType); intent.put("bizId", bizId.toString()); intent.put("memberId", memberId.toString());
+        intent.put("reason", reason);
+        try { intent.set("evidence", evidence == null ? mapper.nullNode() : mapper.readTree(evidence)); }
+        catch (java.io.IOException e) { throw governanceError(ERROR_APPEAL_BAD_REQUEST, "补充材料格式不正确", HttpStatus.BAD_REQUEST); }
+        java.util.Set<String> refs = new java.util.LinkedHashSet<>();
+        if (attachments != null) for (String ref : attachments) if (ref != null && !ref.trim().isEmpty()) refs.add(ref.trim());
+        com.fasterxml.jackson.databind.node.ArrayNode array = intent.putArray("attachments");
+        for (String ref : refs) array.add(ref);
+        return intent;
+    }
+
+    /** Read only server-created SUBMIT records for this original actor/task/appeal. Never upgrade legacy evidence. */
+    private com.fasterxml.jackson.databind.JsonNode storedAppealIntent(com.chengyinhub.business.domain.AuditAppeal appeal) {
+        AuditRecord query = new AuditRecord(); query.setTaskId(appeal.getTaskId()); query.setAction(AuditRecord.ACTION_SUBMIT);
+        List<AuditRecord> records = auditRecordMapper.selectAuditRecordList(query);
+        if (records == null) return null;
+        for (AuditRecord record : records) {
+            if (!AuditRecord.ACTION_SUBMIT.equals(record.getAction()) || !"APPEAL".equals(record.getReasonCode())
+                    || !java.util.Objects.equals(appeal.getTaskId(), record.getTaskId())
+                    || !java.util.Objects.equals(appeal.getMemberId(), record.getOperatorId())) continue;
+            try {
+                com.fasterxml.jackson.databind.JsonNode snapshot = new com.fasterxml.jackson.databind.ObjectMapper().readTree(record.getSnapshotJson());
+                if (snapshot == null || !snapshot.isObject()) return null;
+                com.fasterxml.jackson.databind.JsonNode intent = snapshot.path("appealIntent");
+                if (!String.valueOf(appeal.getId()).equals(snapshot.path("appealId").asText())
+                        || !snapshot.has("evidence")
+                        || !(snapshot.path("evidence").isNull() || snapshot.path("evidence").isTextual())
+                        || !java.util.Objects.equals(appeal.getEvidenceJson(), snapshot.path("evidence").isNull() ? null : snapshot.path("evidence").asText())
+                        || intent.path("version").asInt() != 1 || !intent.path("attachments").isArray()
+                        || !intent.has("evidence") || !intent.path("requestId").isTextual()
+                        || !appeal.getBizType().equals(intent.path("bizType").asText())
+                        || !appeal.getBizId().toString().equals(intent.path("bizId").asText())
+                        || !appeal.getMemberId().toString().equals(intent.path("memberId").asText())
+                        || !java.util.Objects.equals(appeal.getReason(), intent.path("reason").asText())
+                        || !java.util.Objects.equals(appeal.getReason(), record.getReasonText())) continue;
+                return intent;
+            } catch (java.io.IOException | IllegalArgumentException invalid) {
+                // A legacy/corrupt record cannot prove the original intent; never fabricate binding.
+                return null;
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public java.util.Map<String, Object> appealReceipt(String bizType, Long bizId, Long memberId, String requestId) {
+        String key = appealRequestId(requestId);
+        if (!isContentDecisionType(bizType) || bizId == null || bizId <= 0 || memberId == null || memberId <= 0) {
+            throw governanceError(ERROR_APPEAL_BAD_REQUEST, "申诉参数不完整", HttpStatus.BAD_REQUEST);
+        }
+        return originalAppealReceipt(bizType, bizId, memberId, key);
+    }
+
+    private java.util.Map<String, Object> originalAppealReceipt(String bizType, Long bizId, Long memberId, String key) {
+        java.util.Map<String, Object> result = new java.util.LinkedHashMap<>();
+        result.put("state", "NOT_FOUND");
+        com.chengyinhub.business.domain.AuditAppeal appeal = auditAppealMapper.selectByBizMember(bizType, bizId, memberId);
+        if (appeal == null) return result;
+        com.fasterxml.jackson.databind.JsonNode intent = storedAppealIntent(appeal);
+        if (intent == null || !key.equals(intent.path("requestId").asText())) return result;
+        result.put("state", "FOUND"); result.put("intent", intent);
+        result.put("appealId", appeal.getId().toString()); result.put("taskId", appeal.getTaskId().toString());
+        result.put("appealState", appeal.getState()); result.put("dueAt", appeal.getDueAt());
+        return result;
     }
 
     /**
@@ -1973,6 +2334,13 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         return auditTaskMapper.selectAuditTaskQueue(auditTask);
     }
 
+    @Override
+    public List<AuditTask> selectWorkbenchQueueWithGuardScope(AuditTask filter, List<Long> guardTopicIds) {
+        // Caller resolves authenticated scope before starting PageHelper; never read filter.params as scope.
+        return auditTaskMapper.selectWorkbenchQueueWithGuardScope(filter,
+                guardTopicIds == null ? java.util.List.of() : guardTopicIds);
+    }
+
     /**
      * 认领待审单。认领只是协作提示,不是锁:review() 不校验 current_assignee,
      * 其他有 business:audit:review 权限的审核员仍可直接处理已认领单(保持既有行为,
@@ -1983,6 +2351,11 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
     public void claim(Long taskId, Long operatorId) {
         if (taskId == null || operatorId == null) {
             throw new IllegalArgumentException("认领参数不完整");
+        }
+        AuditTask candidate = auditTaskMapper.selectAuditTaskById(taskId);
+        if (candidate != null && isGuardType(candidate.getBizType())) {
+            requireGuardReviewScope(candidate, operatorId);
+            throw governanceError(ERROR_APPEAL_NOT_ELIGIBLE, "守卫申诉认领队列未启用，请使用已授权的审核处理入口", HttpStatus.CONFLICT);
         }
         if (auditTaskMapper.claimAuditTask(taskId, operatorId, DateUtils.getNowDate()) != 1) {
             throw new ServiceException("该任务已被认领或已处理");
@@ -2024,10 +2397,80 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
                 "AUDIT_DECISION_" + statusToAction(request.getStatus()), requestId,
                 record.getId(), request.getReasonText(),
                 stateJson(task.getStatus(), task.getVersion()),
-                stateJson(request.getStatus(), task.getVersion() + 1), now);
+                decisionStateJson(task, request), now);
         if (auditMapper.insertBusinessAuditEvent(event) != 1) {
             throw new ServiceException("审批审计写入失败", HttpStatus.ERROR);
         }
+    }
+
+    private String decisionStateJson(AuditTask task, AuditReviewDTO request) {
+        try {
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            com.fasterxml.jackson.databind.node.ObjectNode state = (com.fasterxml.jackson.databind.node.ObjectNode)
+                    mapper.readTree(stateJson(request.getStatus(), task.getVersion() + 1));
+            boolean applied = itemProblemsEnabled && auditProblemService != null;
+            state.put("itemProblemsApplied", applied);
+            if (applied) state.set("problems", mapper.valueToTree(AuditProblemService.intent(request.getProblems())));
+            return mapper.writeValueAsString(state);
+        } catch (java.io.IOException e) {
+            throw new ServiceException("审核意图保存失败", HttpStatus.ERROR);
+        }
+    }
+
+    @Override
+    public java.util.Map<String, Object> itemProblemReceipt(Long taskId, Long viewerId, String requestId) {
+        java.util.Map<String, Object> result = new java.util.LinkedHashMap<>();
+        result.put("enabled", itemProblemsEnabled && auditProblemService != null);
+        result.put("state", "NOT_FOUND");
+        if (requestId == null || requestId.trim().isEmpty()) return result;
+        if (requestId.length() > 64) throw new IllegalArgumentException("requestId 长度不能超过 64");
+        // Existing detail permission is enforced by the controller; receipt belongs to the original reviewer.
+        List<BusinessAuditEvent> events = requireBusinessAuditMapper().selectByTarget("AUDIT_TASK", taskId);
+        if (events == null) return result;
+        for (BusinessAuditEvent event : events) {
+            if (!"PLATFORM".equals(event.getDomainType()) || !java.util.Objects.equals(taskId, event.getDomainId())
+                    || !"AUDIT_DECISION_REJECT".equals(event.getAction()) || !requestId.equals(event.getRequestId())
+                    || !java.util.Objects.equals(viewerId, event.getActorMemberId())) continue;
+            try {
+                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                com.fasterxml.jackson.databind.JsonNode after = mapper.readTree(event.getAfterJson());
+                if (!after.has("itemProblemsApplied")) { result.put("state", "LEGACY"); return result; }
+                com.fasterxml.jackson.databind.JsonNode before = mapper.readTree(event.getBeforeJson());
+                if (!after.path("itemProblemsApplied").isBoolean() || !before.path("version").isIntegralNumber()
+                        || !after.path("status").isIntegralNumber() || after.path("status").asInt() != AuditTask.STATUS_REJECTED
+                        || (after.path("itemProblemsApplied").asBoolean() && !after.path("problems").isArray())) {
+                    result.put("state", "UNKNOWN"); return result;
+                }
+                result.put("taskId", taskId.toString());
+                result.put("requestId", requestId);
+                result.put("expectedVersion", before.path("version").asInt());
+                result.put("status", after.path("status").asInt());
+                result.put("reasonText", event.getReason());
+                result.put("applied", after.path("itemProblemsApplied").asBoolean());
+                result.put("problems", after.path("problems"));
+                if (after.path("itemProblemsApplied").asBoolean()) {
+                    AuditTask task = auditTaskMapper.selectAuditTaskById(taskId);
+                    ContentState owner = task == null ? null : contentState(task.getBizType(), task.getBizId());
+                    if (owner == null || auditProblemService == null) { result.put("state", "UNKNOWN"); return result; }
+                    List<AuditReviewDTO.ProblemItem> persisted = new ArrayList<>();
+                    for (com.chengyinhub.business.domain.AuditProblem row : auditProblemService.listForOwner(taskId, owner.ownerId)) {
+                        if (!java.util.Objects.equals(event.getRelationId(), row.getRecordId())) continue;
+                        AuditReviewDTO.ProblemItem item = new AuditReviewDTO.ProblemItem();
+                        item.setItemType(row.getItemType()); item.setItemId(row.getItemId());
+                        item.setReasonCode(row.getReasonCode()); item.setReasonText(row.getReasonText());
+                        persisted.add(item);
+                    }
+                    if (!mapper.valueToTree(AuditProblemService.intent(persisted)).equals(after.path("problems"))) {
+                        result.put("state", "UNKNOWN"); return result;
+                    }
+                }
+                result.put("state", "FOUND");
+                return result;
+            } catch (java.io.IOException e) {
+                throw new ServiceException("审核幂等回执损坏", HttpStatus.CONFLICT);
+            }
+        }
+        return result;
     }
 
     private BusinessAuditEvent decisionAuditEvent(AuditTask task, Long operatorId, String actorRoleCode, String action,
@@ -2088,6 +2531,15 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
                     new com.fasterxml.jackson.databind.ObjectMapper().readTree(replay.getBeforeJson());
             com.fasterxml.jackson.databind.JsonNode after =
                     new com.fasterxml.jackson.databind.ObjectMapper().readTree(replay.getAfterJson());
+            if (after.path("itemProblemsApplied").asBoolean()) {
+                com.fasterxml.jackson.databind.JsonNode intent = new com.fasterxml.jackson.databind.ObjectMapper()
+                        .valueToTree(AuditProblemService.intent(request.getProblems()));
+                if (!intent.equals(after.get("problems"))) throw governanceError(ERROR_REVIEW_KEY_REUSED,
+                        "requestId 已用于其他逐项审核请求", HttpStatus.CONFLICT);
+            } else if (!after.has("itemProblemsApplied") && itemProblemsEnabled
+                    && request.getProblems() != null && !request.getProblems().isEmpty()) {
+                throw governanceError(ERROR_REVIEW_KEY_REUSED, "旧审核回执无法证明逐项意图，请核对原审核记录", HttpStatus.CONFLICT);
+            }
             boolean sameReason = replay.getReason() == null
                     ? request.getReasonText() == null : replay.getReason().equals(request.getReasonText());
             if (!sameReason || !before.hasNonNull("version")

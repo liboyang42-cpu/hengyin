@@ -82,19 +82,19 @@ class ApiPlayHistoryNodesContractTest
 
         controller = spy(new ApiPlayProgressController());
         doReturn(MEMBER).when(controller).getAppUserId();
-        ReflectionTestUtils.setField(controller, "cmsActivityService", activityService);
-        ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrationService);
-        ReflectionTestUtils.setField(controller, "cmsTopicService", topicService);
-        ReflectionTestUtils.setField(controller, "cmsTopicNodeService", nodeService);
-        ReflectionTestUtils.setField(controller, "playerNodeProgressService", progressService);
-        ReflectionTestUtils.setField(controller, "cmsPointsSettingService", mock(ICmsPointsSettingService.class));
-        ReflectionTestUtils.setField(controller, "cmsMemberTemplateService", mock(ICmsMemberTemplateService.class));
-        ReflectionTestUtils.setField(controller, "omsTicketService",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsActivityService", activityService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsRegistrationService", registrationService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicService", topicService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicNodeService", nodeService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService", progressService);
+        var fixtureHintSettings = mock(ICmsPointsSettingService.class);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsMemberTemplateService", mock(ICmsMemberTemplateService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "omsTicketService",
                 mock(com.chengyinhub.business.service.IOmsTicketService.class));
-        ReflectionTestUtils.setField(controller, "cmsTopicChapterService", mock(ICmsTopicChapterService.class));
-        ReflectionTestUtils.setField(controller, "puzzlePlayService", mock(IPuzzlePlayService.class));
-        ReflectionTestUtils.setField(controller, "topicRouteRuntimeService", mock(ITopicRouteRuntimeService.class));
-        ReflectionTestUtils.setField(controller, "wxContentCallbackInboxMapper", callbackInboxMapper);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicChapterService", mock(ICmsTopicChapterService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "puzzlePlayService", mock(IPuzzlePlayService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "topicRouteRuntimeService", mock(ITopicRouteRuntimeService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "wxContentCallbackInboxMapper", callbackInboxMapper);
         when(callbackInboxMapper.countRiskyCallback(anyInt(), anyLong())).thenReturn(0);
 
         CmsActivity activity = new CmsActivity();
@@ -130,6 +130,8 @@ class ApiPlayHistoryNodesContractTest
                 done(MEMBER, ACTIVE_NODE, 3000L)));
         when(progressService.selectPlayerNodeProgressList(any())).thenAnswer(inv -> progressRows);
         CurrentPlayControllerFixtures.install(controller);
+        BasicPlayCommandFixtures.scope(controller, TOPIC);
+        com.chengyinhub.web.controller.api.NodeHintUnlockTestFixtures.pricing(controller, fixtureHintSettings);
     }
 
     private CmsTopicNode node(long id, String name, Long status, String fragment)
@@ -291,7 +293,7 @@ class ApiPlayHistoryNodesContractTest
         // 负控(§7-3):运行态处置事实读取件缺失(未注入/装配失败)属于「读不到处置事实」,
         // 旧行为对 mapper==null 是 fail-open(下架主题的历史照放),现在必须失败关闭。
         topic.setUserStatus(0);
-        ReflectionTestUtils.setField(controller, "wxContentCallbackInboxMapper", null);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "wxContentCallbackInboxMapper", null);
 
         Map<String, Object> data = nodesData();
 
@@ -341,8 +343,7 @@ class ApiPlayHistoryNodesContractTest
         delisted.setTemplateId(88L);
         when(nodeService.selectCmsTopicNodeById(DELISTED_DONE)).thenReturn(delisted);
 
-        AjaxResult answer = controller.answer(
-                String.valueOf(ACTIVITY), String.valueOf(DELISTED_DONE), "A", null, null, null);
+        AjaxResult answer = BasicPlayCommandFixtures.answer(controller, String.valueOf(ACTIVITY), String.valueOf(DELISTED_DONE), "A", null, null, null);
         assertEquals(500, answer.get("code"));
         assertEquals("该站已下架，暂时无法完成", answer.get("msg"));
 
@@ -352,7 +353,7 @@ class ApiPlayHistoryNodesContractTest
         request.setNodeId(DELISTED_DONE);
         request.setSensorType("still");
         request.setPayload(Collections.singletonMap("heldSec", 12));
-        AjaxResult sensor = controller.sensorResult(request);
+        AjaxResult sensor = BasicPlayCommandFixtures.sensorResult(controller, request);
         assertEquals(500, sensor.get("code"));
         assertEquals("该站已下架，暂时无法完成", sensor.get("msg"));
 
@@ -368,7 +369,7 @@ class ApiPlayHistoryNodesContractTest
         delisted.setCheckinCode("OLD-CODE");
         when(nodeService.selectCmsTopicNodeList(any())).thenReturn(Collections.singletonList(delisted));
 
-        AjaxResult result = controller.checkin(String.valueOf(ACTIVITY), "OLD-CODE", null, null, null);
+        AjaxResult result = BasicPlayCommandFixtures.checkin(controller, String.valueOf(ACTIVITY), "OLD-CODE", null, null, null, null, String.valueOf(DELISTED_DONE));
 
         assertEquals(500, result.get("code"));
         assertEquals("该站已下架，暂时无法完成", result.get("msg"));
@@ -382,8 +383,7 @@ class ApiPlayHistoryNodesContractTest
         active.setTemplateId(88L);
         when(nodeService.selectCmsTopicNodeById(ACTIVE_NODE)).thenReturn(active);
 
-        AjaxResult answer = controller.answer(
-                String.valueOf(ACTIVITY), String.valueOf(ACTIVE_NODE), "A", null, null, null);
+        AjaxResult answer = BasicPlayCommandFixtures.answer(controller, String.valueOf(ACTIVITY), String.valueOf(ACTIVE_NODE), "A", null, null, null);
 
         assertNotEquals("该站已下架，暂时无法完成", answer.get("msg"),
                 "正常在线节点不得被下架闸误伤");

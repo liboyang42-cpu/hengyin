@@ -21,6 +21,8 @@ function attach(relativePath, windowInfo, capsule, legacyApi = false) {
       if (request.endsWith('nav-safe-area.js')) return nav
       if (request.endsWith('reduced-motion.js')) return {}
       if (/behaviors\/(exit-motion|morph-entrance)\.js$/.test(request)) return () => ({})
+      // 2026-10-27 L02:共享弹层套了返回守卫(G-2),沙箱里原样返回组件定义
+      if (request.endsWith('native-back-guard.js')) return { withNativeBackGuard: (definition) => definition }
       throw new Error('Unexpected dependency: ' + request)
     },
   }

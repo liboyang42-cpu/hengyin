@@ -70,9 +70,11 @@
       post-index="{{index}}"
       bind:detail="emitPlayDetail"
     />
+    <!-- 2026-10-27 P-21 owner:帖文里关联的路线卡用主题封面(sportCover),路线预览图只做兜底 ——
+         路线预览图常是一整块深色地图底,卡面看起来就是一块黑。 -->
     <cy-feed-play-card
       wx:if="{{post.hasPlayCover && !post.isCompletionShare}}"
-      cover="{{post.playCover || post.routePreviewImg || post.sportCover}}"
+      cover="{{post.sportCover || post.playCover || post.routePreviewImg}}"
       title="{{post.sportName}}"
       subtitle="{{post.playSubtitle}}"
       completed="{{post.completed}}"

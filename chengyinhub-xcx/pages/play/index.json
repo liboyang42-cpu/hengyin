@@ -41,12 +41,13 @@
     "cy-map-address-search": "/components/cy/map-address-search/index",
     "cy-empty": "/components/cy/empty/index",
     "cy-playkit-journey-check": "/pages/play/components/playkit-journey-check/index",
-    "cy-chapter-gate": "/components/cy/chapter-gate/index",
+    "cy-chapter-flip": "/pages/play/components/chapter-flip/index",
     "cy-inline-error": "/components/cy/inline-error/index",
     "cy-playkit-album": "/pages/play/components/playkit-album/index",
     "cy-sheet": "/components/cy/sheet/index",
     "cy-theme-records": "/components/cy/theme-records/index",
-    "cy-dropdown": "/components/cy/dropdown/index"
+    "cy-dropdown": "/components/cy/dropdown/index",
+    "cy-back-guard": "/components/cy/back-guard/index"
   },
   "componentPlaceholder": {
     "cy-scene-play-activity-detail": "view",
