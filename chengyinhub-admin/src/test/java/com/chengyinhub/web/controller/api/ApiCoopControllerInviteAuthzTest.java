@@ -756,8 +756,95 @@ class ApiCoopControllerInviteAuthzTest {
         com.chengyinhub.business.domain.CoopInviteRequestReceipt row = new com.chengyinhub.business.domain.CoopInviteRequestReceipt();
         row.setRequestId(body.getRequestId()); row.setInviteId(9007199254740993L);
         row.setInviteType(body.getInviteType()); row.setTopicId(body.getTopicId());
-        row.setToType(body.getToType()); row.setToId(body.getToId()); row.setScope("");
-        return com.chengyinhub.business.domain.dto.CoopInviteRequestResult.created(row, replayed);
+        row.setToType(body.getToType()); row.setToId(body.getToId());
+        row.setScope(body.getScope() == null ? "" : body.getScope());
+        return com.chengyinhub.business.domain.dto.CoopInviteRequestResult.created(row, replayed, body.getSupplyStationId());
+    }
+
+    private void runFirstOriginalRequestCallback() {
+        org.mockito.Mockito.doAnswer(call -> {
+            CoopInvite input = call.getArgument(1);
+            ((Runnable) call.getArgument(2)).run();
+            input.setId(9007199254740993L);
+            return receiptResult(input, false);
+        }).when(coopInviteService).createOrReplayInvite(org.mockito.ArgumentMatchers.eq(ME), any(), any());
+    }
+
+    @Test
+    void stationCreationKeepsOperatorPrincipalSeparateFromAuthorizedContractOwnerForBothCallers() {
+        for (boolean originalRequest : new boolean[] { false, true }) {
+            org.mockito.Mockito.clearInvocations(coopInviteService, merchantAccessService, notifyService);
+            CmsTopic topic = new CmsTopic(); topic.setId(TOPIC); topic.setMemberId(OTHER); topic.setProductType(1);
+            when(cmsTopicService.selectCmsTopicById(TOPIC)).thenReturn(topic);
+            when(merchantAccessService.require(ME, MerchantPermission.PROJECT_MANAGE))
+                    .thenReturn(new MerchantAccessContext(ME, 9001L, OTHER, "manager"));
+            CmsRegistrationMerchant station = new CmsRegistrationMerchant();
+            station.setId(601L); station.setTopicId(TOPIC); station.setMemberId(INVITEE);
+            when(coopInviteService.listSupplyStations(TOPIC, INVITEE, OTHER)).thenReturn(List.of(station));
+            org.mockito.Mockito.doAnswer(call -> { ((CoopInvite) call.getArgument(0)).setId(77L); return 1; })
+                    .when(coopInviteService).insertCoopInvite(any());
+            runFirstOriginalRequestCallback();
+            CoopInvite request = invite(0); request.setScope("MERCHANT"); request.setSupplyStationId(601L);
+            request.setFromId(12345L); request.setFromType("talent"); request.setNodeId(555L);
+            if (originalRequest) request.setRequestId("vr_delegated_station");
+
+            AjaxResult result = c.invite(request);
+
+            assertEquals(200, result.get("code"));
+            assertEquals(OTHER, request.getFromId()); assertEquals("merchant", request.getFromType());
+            assertEquals(Long.valueOf(601L), request.getSupplyStationId()); assertNull(request.getNodeId());
+            verify(merchantAccessService).require(ME, MerchantPermission.PROJECT_MANAGE);
+            verify(coopInviteService).listSupplyStations(TOPIC, INVITEE, OTHER);
+            verify(coopInviteService, never()).listSupplyStations(TOPIC, INVITEE, ME);
+            if (originalRequest) {
+                verify(coopInviteService).createOrReplayInvite(org.mockito.ArgumentMatchers.eq(ME),
+                        org.mockito.ArgumentMatchers.same(request), any());
+                verify(coopInviteService, never()).insertCoopInvite(any());
+                com.chengyinhub.business.domain.dto.CoopInviteRequestResult receipt =
+                        (com.chengyinhub.business.domain.dto.CoopInviteRequestResult) result.get("data");
+                assertEquals("601", receipt.getSupplyStationId()); assertEquals("MERCHANT", receipt.getScope());
+            } else {
+                verify(coopInviteService).insertCoopInvite(request);
+                verify(coopInviteService, never()).createOrReplayInvite(any(), any(), any());
+            }
+            verify(notifyService).notifyCoopInvited(org.mockito.ArgumentMatchers.eq(INVITEE), any(), any());
+        }
+    }
+
+    @Test
+    void stationValidationRejectionsRemainFailuresBeforePersistenceAndNotificationForBothCallers() {
+        for (boolean originalRequest : new boolean[] { false, true }) {
+            for (String failure : List.of("missing", "foreign", "exception", "null-message", "unsupported", "club")) {
+                org.mockito.Mockito.clearInvocations(coopInviteService, notifyService);
+                CmsTopic topic = new CmsTopic(); topic.setId(TOPIC); topic.setMemberId(ME);
+                topic.setProductType("unsupported".equals(failure) ? 2 : 1);
+                when(cmsTopicService.selectCmsTopicById(TOPIC)).thenReturn(topic);
+                org.mockito.Mockito.doReturn(List.of()).when(coopInviteService).listSupplyStations(TOPIC, INVITEE, ME);
+                if ("exception".equals(failure) || "null-message".equals(failure))
+                    org.mockito.Mockito.doThrow(new IllegalStateException("exception".equals(failure) ? "原据点不可用" : null))
+                            .when(coopInviteService).listSupplyStations(TOPIC, INVITEE, ME);
+                runFirstOriginalRequestCallback();
+                CoopInvite request = invite("club".equals(failure) ? 1 : 0);
+                if (!"missing".equals(failure)) request.setSupplyStationId(601L);
+                if (originalRequest) request.setRequestId("vr_station_" + failure.replace('-', '_'));
+
+                AjaxResult result = c.invite(request);
+
+                assertEquals(500, result.get("code"), failure);
+                String expected = switch (failure) {
+                    case "missing" -> "请选择本主题该商家的真实核销据点";
+                    case "foreign" -> "所选据点不属于本主题受邀商家或已绑定原合作单";
+                    case "exception" -> "原据点不可用";
+                    case "null-message" -> "核销据点无法确认";
+                    default -> "该邀约不支持据点计酬确认";
+                };
+                assertEquals(expected, msg(result));
+                verify(coopInviteService, never()).insertCoopInvite(any());
+                verifyNoInviteNotification();
+                if ("missing".equals(failure) || "unsupported".equals(failure) || "club".equals(failure))
+                    verify(coopInviteService, never()).listSupplyStations(any(), any(), any());
+            }
+        }
     }
 
     @Test

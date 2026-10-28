@@ -1,0 +1,3 @@
+3d801932577e6d12d991e4b4ef6fde6c2f96ffe48b2b28147128ac1842d41b48  chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiCoopSupplyStationsTest.java
+499c71651f935442908e95890ee003ea4c05b47f1c8017ef82f92770c55066dc  chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiCoopControllerInviteAuthzTest.java
+3de9b363f5713972c14ddb76806a4198fcd335707d966f45016ffc54aa5243ee  chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiCoopControllerPartnerNodeTest.java
