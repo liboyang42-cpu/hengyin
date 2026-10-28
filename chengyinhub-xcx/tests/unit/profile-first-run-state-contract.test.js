@@ -469,42 +469,7 @@ async function flush() {
   await new Promise((resolve) => setImmediate(resolve))
 }
 
-test('主理人资格查询失败留在原页，成功重试按归属跳转', async () => {
-  const previous = { wx: global.wx, getApp: global.getApp, getCurrentPages: global.getCurrentPages, message: app.getRequestErrorMessage }
-  const { safeUserMessage } = require('../../utils/transport/safe-user-message.js')
-  const cases = [
-    [r => r.fail({ errMsg: 'request:fail timeout' }), null],
-    [r => r.fail({ errMsg: 'request:fail net::ERR_INTERNET_DISCONNECTED' }), null],
-    [r => r.success({ code: 500, msg: '查询失败' }), null],
-    [r => r.fail({}, 401), null],
-    [r => r.success({ code: 200, data: { owned: [] } }), '/pages/club/apply/index'],
-    [r => r.success({ code: 200, data: { owned: [{ id: 7002 }] } }), '/pages/club/detail/index?id=7002'],
-  ]
-  try {
-    app.getRequestErrorMessage = (res, fallback) => safeUserMessage(res, fallback)
-    global.getApp = () => app
-    global.getCurrentPages = () => []
-    for (const [reply, destination] of cases) {
-      const component = loadProfile()
-      const navigation = [], messages = []
-      let shown = 0, hidden = 0
-      global.wx = { getStorageSync: () => '', showLoading() { shown++ }, hideLoading() { hidden++ },
-        showToast({ title }) { messages.push(title) }, navigateTo({ url }) { navigation.push(url) } }
-      component.goBecomeTalent()
-      reply(requests.find(r => r.url === '/api/club/my'))
-      await flush()
-      assert.deepEqual(navigation, destination ? [destination] : [])
-      assert.equal(shown, 1)
-      assert.equal(hidden, 1)
-      if (!destination) assert.ok(messages.length > 0)
-    }
-  } finally {
-    global.wx = previous.wx
-    global.getApp = previous.getApp
-    global.getCurrentPages = previous.getCurrentPages
-    app.getRequestErrorMessage = previous.message
-  }
-})
+// 2026-10-27 owner 真机走查 P-53:我的页「成为主理人」入口删除(设置页「成为俱乐部主理人」pickClub 承接同一分流),goBecomeTalent 及其用例随之移除。
 
 test('进行中报名成功返回空结果时清除旧报名，读取失败仍保留已有数据', async () => {
   const component = loadProfile()
@@ -712,7 +677,8 @@ function assertFirstRunMarkup(wxml, wxss) {
   assert.match(wxml, /<cy-error load-failure wx:if="\{\{projectErr\}\}"[\s\S]*bind:retry="reloadProjects"/)
   // 2026-10-22 owner:没有未完成订单时整段「我的订单」不显示(不再摆「暂无订单」空态)
   assert.doesNotMatch(wxml, /title="暂无订单"/)
-  assert.match(wxml, /<block wx:if="\{\{orderPreviewList\.length \|\| orderErr\}\}">/)
+  // 2026-10-27 owner 真机走查 M-25:商家视角没有订单段,条件前加 !isMerchantView;玩家侧口径不变
+  assert.match(wxml, /<block wx:if="\{\{!isMerchantView && \(orderPreviewList\.length \|\| orderErr\)\}\}">/)
   assert.match(wxml, /class="pc-achievement-metrics" wx:if="\{\{profileMetricState === 'ready'\}\}"/)
   assert.match(wxml, /aria-label="城瘾积分 \{\{profilePoint\}\}"[\s\S]*class="pc-gs-num">\{\{profilePoint\}\}/)
   assert.match(wxml, /class="pc-rank-v">\{\{exploreStat\.shops \|\| 0\}\}家店/)

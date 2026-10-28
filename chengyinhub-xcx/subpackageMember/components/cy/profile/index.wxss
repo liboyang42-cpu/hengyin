@@ -97,6 +97,11 @@
   filter: brightness(0);
   opacity: 0.78;
 }
+/* P-47(2026-10-27):玩家深色页左上角设置钮用白色(原图是灰,压在深色封面上发闷) */
+.pc-player .pc-nav-ico { filter: brightness(0) invert(1); }
+/* G-5(2026-10-27):商家头像不要描边 —— 去掉外圈渐变环与内圈描边,只留圆形 Logo */
+.pc-merchant .pc-avatar-ring { background: none; padding: 0; }
+.pc-merchant .pc-avatar { border: none; }
 
 .pc-statusbar, .pc-nav, .pc-scroll { position: relative; z-index: 1; }
 .pc-scroll { box-sizing: border-box; background: transparent; }
@@ -476,7 +481,7 @@
 /* v3(2026-10-22 owner 参考图「tayo.」卡):整卡封面铺满 + 浅色外框,下半段黑色渐变,白字与黑色胶囊按钮叠在渐变上。
    卡面内是照片语境,字色固定白、按钮固定黑,不随主题翻转;外框与无封面底色仍走 token。 */
 .pc-ord-card {
-  position: relative; display: inline-block; flex-shrink: 0; width: 500rpx; height: 400rpx; box-sizing: border-box; /* ds-ok: owner 第四轮:高度压窄 600→400,仍露出下一张提示可滑 */
+  position: relative; display: inline-block; flex-shrink: 0; width: 500rpx; height: 440rpx; box-sizing: border-box; /* ds-ok: 2026-10-28 业主「卡片太窄、稍微高一点」:宽度回到 500,高 400→440;卡面渐变不动 */
   vertical-align: top; white-space: normal; overflow: hidden;
   border-radius: 40rpx; /* ds-ok: 参考图大圆角;owner 第二轮:不要白色外框 */
   background: linear-gradient(160deg, #5B6670 0%, #2A2F35 100%); /* ds-ok: 无封面时的照片感底色 */
@@ -501,14 +506,6 @@
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .pc-ord-meta { font-size: var(--cy-type-caption); color: rgba(255,255,255,.72); line-height: 1.45; } /* ds-ok: 照片上的次级白 */
-.pc-ord-foot { margin-top: var(--cy-space-3); display: flex; align-items: center; justify-content: space-between; gap: var(--cy-space-2); }
-.pc-ord-stat { display: flex; align-items: center; gap: 8rpx; font-size: var(--cy-type-body); font-weight: 700; color: #FFFFFF; } /* ds-ok: 照片上的白色统计 */
-.pc-ord-btn {
-  flex: none; height: 76rpx; line-height: 76rpx; padding: 0 var(--cy-space-4); /* ds-ok: 参考图胶囊按钮 */
-  border-radius: var(--cy-radius-pill); font-size: var(--cy-type-body); font-weight: 700; text-align: center;
-  background: #141414; color: #FFFFFF; /* ds-ok: 参考图黑色胶囊按钮 */
-}
-.pc-ord-btn--wait { background: rgba(255,255,255,.18); } /* ds-ok: 待开始用半透明,待核销用实黑 */
 
 /* 我的项目复用订单横滑轨道，下一张卡露出一部分以提示可滑动。 */
 /* 2026-08-20 项目卡 v2(用户定):G 积分/浏览量/时间百分比对商家无决策价值,整排删掉;
@@ -665,6 +662,14 @@
   background: var(--cy-color-bg-surface); border: 2rpx solid var(--cy-color-border-subtle); color: var(--cy-color-text-secondary);
 }
 .pc-tag--muted { color: var(--cy-color-text-tertiary); }
+/* G-8 / M-12(2026-10-27):标签库标签 —— 实底、无灰色描边、比 .pc-tag 小一号,前置图标 */
+.pc-tag--lib {
+  display: inline-flex; align-items: center; gap: var(--cy-space-1);
+  font-size: var(--cy-type-caption); padding: var(--cy-space-1) var(--cy-space-2);
+  border: none; background: var(--cy-color-bg-surface-subtle); color: var(--cy-color-text-primary);
+}
+.pc-tag-ico { width: 28rpx; height: 28rpx; flex-shrink: 0; /* ds-ok: 标签内图标与 caption 字号等高 */ }
+.pc-player .pc-tag-ico { filter: invert(1); }
 .pc-info-list { background: var(--cy-color-bg-surface); border: 2rpx solid var(--cy-color-border-subtle); border-radius: var(--cy-radius-md); overflow: hidden; }
 .pc-info-link { color: var(--cy-color-text-tertiary); }
 
@@ -701,12 +706,9 @@
  * (与已迁移的 pages/shezhi 同一写法);未套 cy-card 的原因见本文件顶部 */
 .pc-menu { padding: var(--cy-legacy-4) 0; margin-bottom: var(--cy-space-1); /* ds-ok: 4rpx 无同值 spacing token */ }
 
-/* 入口图标网格:6 个入口(角色互斥 ⇒ 常态 5 个)压成 4 列 = 2 行,替掉原来 6 行整宽 cell。
-   图标底走明度阶,不加边框(与身份卡同一分层语言)。 */
-.pc-entries { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--cy-space-3) var(--cy-space-2); padding: var(--cy-space-3) var(--cy-space-2); border-radius: var(--cy-radius-lg); background: var(--cy-color-bg-elevated); margin-bottom: var(--cy-space-2); }
-.pc-entry { min-width: 0; display: flex; flex-direction: column; align-items: center; gap: var(--cy-space-1); }
-.pc-entry-ico { width: var(--cy-btn-h); height: var(--cy-btn-h); border-radius: var(--cy-radius-md); background: var(--cy-color-bg-surface-subtle); display: flex; align-items: center; justify-content: center; }
-.pc-entry-t { font-size: var(--cy-type-caption); color: var(--cy-color-text-secondary); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+/* P-53(2026-10-27):「探索与更多」不再用黑色图标网格,与「当前权益」同一套 .pc-benefit 列表行;
+   入口行的圆点是中性底 + 主文字色图标(不是「已解锁」的成功绿)。 */
+.pc-benefit-dot--entry { background: var(--cy-color-bg-surface-subtle); color: var(--cy-color-text-primary); }
 
 /* 成就行 */
 .pc-achv-list { padding: var(--cy-space-1) var(--cy-space-3); }

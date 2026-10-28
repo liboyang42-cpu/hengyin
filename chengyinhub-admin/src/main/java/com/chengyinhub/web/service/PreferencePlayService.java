@@ -68,7 +68,22 @@ public class PreferencePlayService {
     public Map<String, Object> submit(Long memberId, Long topicId, Long actId, Long nodeId,
                                       CmsMemberTemplate template, PreferenceSubmitRequest request,
                                       Function<String, Map<String, Object>> progressFunction) {
+        return submit(memberId, topicId, actId, nodeId, template, request, "default", progressFunction);
+    }
+
+    @DeadlockRetry
+    @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
+    public Map<String, Object> submit(Long memberId, Long topicId, Long actId, Long nodeId,
+                                      CmsMemberTemplate template, PreferenceSubmitRequest request,
+                                      String originalPlayInstance,
+                                      Function<String, Map<String, Object>> progressFunction) {
+        if (StringUtils.isBlank(originalPlayInstance)) throw new IllegalArgumentException("原局身份缺失");
         String idempotencyKey = "preference:" + memberId + ":" + topicId + ":" + actId + ":" + nodeId;
+        // 保留旧 default 身份；新局不能复用旧局的完成投影，也不改写历史键。
+        if (!"default".equals(originalPlayInstance)) {
+            idempotencyKey = "preference:run:" + com.chengyinhub.business.service.support.CanonicalDigest
+                    .sha256Hex(idempotencyKey + "\u001f" + originalPlayInstance);
+        }
         PlayAttemptLog existing = attemptMapper.selectByIdempotencyKey(idempotencyKey);
         if (existing != null) return existingData(existing, memberId, topicId, nodeId, template);
 

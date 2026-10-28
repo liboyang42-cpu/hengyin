@@ -234,6 +234,7 @@ page{ background:var(--cy-color-bg-page); }
 /* 离线变体:状态靠「图标形状 + 文字」承载,颜色只是辅助(DS §8:状态不得只靠颜色)。
    实测 text-primary 压 bg-elevated 16.81:1、warning 图标 5.33:1(图形阈值 3)。 */
 .maptip--offline{ display:flex; align-items:center; gap:var(--cy-space-1); max-width:86vw; }
+.maptip--foreground{ white-space:normal; }
 .maptip--offline .cyi{ color:var(--cy-color-play-accent); flex:none; }
 /* 恢复条:外层 alert 承载错误原因,点击落在内层整行(U6 要求告警区内有可点恢复动作) */
 /* 命中区保持整颗药丸:内边距从外层挪到可点的内层,不因拆出 alert 而缩小 */
@@ -745,11 +746,11 @@ page{ background:var(--cy-color-bg-page); }
 .settle__title{ font-size:46rpx; font-weight:700; color:#FFFFFF; } /* ds-ok Figma 实测(用户裁决字面值) */
 .settle__x{ width:88rpx; height:88rpx; margin-right:-22rpx; display:flex; align-items:center; justify-content:center; color:#FFFFFF; } /* ds-ok Figma 实测(用户裁决字面值) */
 .settle__hr{ margin:0 38rpx; height:1rpx; background:rgba(255,255,255,.14); } /* ds-ok 分隔线 */
-.settle__big{ display:block; padding:31rpx 38rpx 0; font-size:170rpx; line-height:1.05; font-weight:800; color:#FFFFFF; } /* ds-ok Figma 实测 96pt 级 */
+.settle__big{ display:block; padding:31rpx 38rpx 0; font-size:170rpx; line-height:1.05; font-weight:800; font-style:italic; color:#FFFFFF; } /* ds-ok Figma 实测 96pt 级;2026-10-27 owner P-34 恢复 NRC 粗斜体 */
 .settle__unit{ display:block; padding:0 38rpx 23rpx; font-size:42rpx; color:#FFFFFF; } /* ds-ok Figma 实测(用户裁决字面值) */
 .settle__grid{ display:flex; flex-wrap:wrap; padding:23rpx 38rpx 0; }
 .sgc{ width:25%; box-sizing:border-box; /* 四格一行,不再 3+1 落单 */ padding-bottom:38rpx; display:flex; flex-direction:column; }
-.sgc__v{ font-size:44rpx; font-weight:700; color:#FFFFFF; line-height:1.2; /* ds-ok Figma 实测(用户裁决字面值) */
+.sgc__v{ font-size:44rpx; font-weight:800; font-style:italic; color:#FFFFFF; line-height:1.2; /* ds-ok Figma 实测(用户裁决字面值);P-34 NRC 粗斜体 */
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } /* ds-ok Figma 实测 */
 .sgc__l{ margin-top:4rpx; font-size:25rpx; color:#6A7282; } /* ds-ok Figma 实测 */
 .settle__err{ padding:0 38rpx 23rpx; }
@@ -762,6 +763,9 @@ page{ background:var(--cy-color-bg-page); }
 .settle__chip{ position:absolute; left:23rpx; top:23rpx; max-width:70%; padding:15rpx 25rpx;
   border-radius:15rpx; background:rgba(20,20,20,.92); border:1rpx solid rgba(255,255,255,.14); /* ds-ok Figma 实测(用户裁决字面值) */
   font-size:25rpx; color:#FFFFFF; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } /* ds-ok 稿上左上地点片 */
+.settle__mapbtn{ position:absolute; right:23rpx; bottom:23rpx; z-index:2; display:flex; align-items:center; gap:10rpx; min-height:88rpx; padding:0 28rpx; box-sizing:border-box;
+  border-radius:var(--cy-radius-pill); background:rgba(20,20,20,.92); border:1rpx solid rgba(255,255,255,.14); /* ds-ok 沿用 .settle__chip 实测底色 */
+  font-size:25rpx; font-weight:700; color:#FFFFFF; } /* ds-ok P-34 地图浮层按钮 */
 .settle__ctaw{ padding:31rpx 38rpx calc(46rpx + env(safe-area-inset-bottom)); }
 .settle__cta{ height:108rpx; border-radius:var(--cy-radius-pill); background:#FFFFFF; color:#111111; /* ds-ok Figma 实测(用户裁决字面值) */
   font-size:32rpx; font-weight:700; display:flex; align-items:center; justify-content:center; } /* ds-ok Figma 实测白胶囊 */
@@ -797,7 +801,7 @@ page{ background:var(--cy-color-bg-page); }
    左侧不要圆(去掉图标圆底与上下缺口),整体颜色压暗一档。 */
 .intro-card{ height:100%; margin-right:23rpx; box-sizing:border-box; display:flex; align-items:stretch; border-radius:20rpx; background:#E3DED2; color:#141414; overflow:hidden; } /* ds-ok 票根纸色压暗(业主 2026-10-22 裁决) */
 .intro-card__stub{ position:relative; flex:none; width:184rpx; box-sizing:border-box; padding:22rpx 20rpx; display:flex; flex-direction:column; align-items:flex-start; justify-content:space-between; } /* ds-ok 票根左联 */
-.intro-card__stub::after{ content:''; position:absolute; top:0; bottom:0; right:-12rpx; width:24rpx; background:radial-gradient(circle at 12rpx 16rpx,#0B0B0B 8rpx,transparent 9rpx) 0 0/24rpx 32rpx repeat-y; } /* ds-ok 打孔边:孔色 = 漫游页深底 */
+/* 2026-10-27 owner P-28:去掉左联右缘的黑色打孔圆点(原 .intro-card__stub::after) */
 .intro-card__stub.is-roam{ background-color:#5DBE6E; } /* ds-ok 票根左联(压暗一档,业主 2026-10-22 裁决) */
 .intro-card__stub.is-map{ background-color:#5B8FE0; } /* ds-ok 票根左联(压暗一档,业主 2026-10-22 裁决) */
 .intro-card__stub.is-team{ background-color:#DD9447; } /* ds-ok 票根左联(压暗一档,业主 2026-10-22 裁决) */
@@ -816,12 +820,12 @@ page{ background:var(--cy-color-bg-page); }
 .intro-passport{ flex:1; min-height:0; display:flex; flex-direction:column; overflow:hidden; }
 .pp-stats{ flex:none; display:flex; padding:8rpx 46rpx 23rpx; }
 .pp-stat{ flex:1; display:flex; flex-direction:column; align-items:flex-start; gap:4rpx; }
-.pp-stat__v{ font-size:42rpx; font-weight:700; line-height:1; color:var(--cy-color-text-primary); } /* ds-ok 漫游首页定稿值(用户裁决不改) */
+.pp-stat__v{ font-size:58rpx; font-weight:800; font-style:italic; letter-spacing:-2rpx; line-height:1; color:var(--cy-color-text-primary); font-variant-numeric:tabular-nums; } /* ds-ok 2026-10-28 业主:NRC 粗斜体数字 */
 .pp-stat__k{ font-size:21rpx; color:var(--cy-color-text-tertiary); } /* ds-ok 漫游首页定稿值(用户裁决不改) */
 .pp-row{ flex:none; height:408rpx; width:100%; white-space:nowrap; padding-left:31rpx; box-sizing:border-box; }
 .pp-tile{ display:inline-flex; flex-direction:column; width:308rpx; margin-right:19rpx; vertical-align:top; }
 .pp-tile:last-child{ margin-right:31rpx; }
-.pp-tile__box{ position:relative; width:308rpx; height:308rpx; overflow:hidden; border-radius:27rpx; background:var(--cy-color-action-primary-bg); color:var(--cy-color-action-primary-fg); display:flex; align-items:center; justify-content:center; } /* ds-ok 漫游首页定稿值(用户裁决不改) */
+.pp-tile__box{ position:relative; width:308rpx; height:308rpx; overflow:hidden; border-radius:27rpx; background:#F6F5F2; color:var(--cy-color-action-primary-fg); display:flex; align-items:center; justify-content:center; } /* ds-ok 漫游首页定稿值(用户裁决不改) */
 .pp-tile__t{ margin-top:15rpx; font-size:27rpx; font-weight:700; color:var(--cy-color-text-primary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } /* ds-ok 漫游首页定稿值(用户裁决不改) */
 .pp-tile__s{ margin-top:4rpx; font-size:23rpx; color:var(--cy-color-text-tertiary); } /* ds-ok 漫游首页定稿值(用户裁决不改) */
 .pp-trips{ flex:1; min-height:0; width:100%; white-space:nowrap; padding:38rpx 0 31rpx 31rpx; box-sizing:border-box; }
@@ -859,9 +863,9 @@ cy-proto-cam{ position:fixed; left:0; right:0; top:0; bottom:0; z-index:58; poin
    搭子局已下线,那张「加入这个局」卡不再有数据源与入口。 */
 
 /* 2026-10-14 漫游护照:新上线方卡的 NEW 标、官方活动「暂未开放」 */
-.pp-new{ position:absolute; left:15rpx; top:15rpx; padding:2rpx 13rpx; border-radius: var(--cy-radius-sm); background:var(--cy-color-text-primary); color:var(--cy-color-text-inverse); font-size: var(--cy-type-micro); font-weight:800; letter-spacing:1rpx; } /* 漫游主路径保持中性色 */
-.pp-trip__card.is-closed .pp-trip__big, .pp-trip__card.is-closed .pp-trip__ic{ opacity:.4; }
-.pp-closed{ position:absolute; left:19rpx; top:19rpx; z-index:2; padding:6rpx 15rpx; border-radius:15rpx; background:rgba(0,0,0,.7); color:#FFFFFF; font-size:21rpx; font-weight:700; } /* ds-ok 原型 .closed-tag */
+/* 2026-10-27 owner P-29:「暂未开放」灰卡与 NEW 角标已撤;方卡图铺满,无图时放业主空态插画(与 cy-empty 同一套两层) */
+.pp-tile__img{ position:absolute; inset:0; width:100%; height:100%; }
+.pp-tile__art{ width:180rpx; height:180rpx; }
 /* BL-01 点位筛选(.psheet 内容) */
 .poi-filter{ display:flex; flex-direction:column; gap:var(--cy-space-3); margin-top:var(--cy-space-3); }
 .poi-filter__label{ font-size:var(--cy-type-caption); color:var(--cy-color-text-secondary); }
@@ -885,24 +889,18 @@ cy-proto-cam{ position:fixed; left:0; right:0; top:0; bottom:0; z-index:58; poin
 
 /* ===== v13 漫游首页(业主 2026-10-22「和 HTML 一模一样」;护照页不动) ===== */
 /* ds-ok: 本段颜色/尺寸逐项照 v13 原型取值 */
-.intro-head { display: none; }
-.intro-top { position: absolute; left: 0; right: 0; margin: 0; height: 69rpx; padding: 0 46rpx; display: flex; align-items: center; }
-.intro-title { font-size: 54rpx; font-weight: 700; letter-spacing: -2rpx; line-height: 69rpx; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
-.intro .rh-tabs { position: relative; display: flex; gap: 54rpx; height: auto; padding: 0 46rpx 0; z-index: 3; }
-.rh-tabs__b { padding-bottom: 19rpx; font-size: 31rpx; color: #8E8E93; transition: color .2s; } /* ds-ok */
-.rh-tabs__b.on { color: #fff; font-weight: 600; } /* ds-ok */
-.rh-tabs__u { position: absolute; left: 46rpx; bottom: 0; width: 123rpx; height: 4rpx; border-radius: 2rpx; background: #fff; transition: transform .4s cubic-bezier(.34,1.32,.64,1); } /* ds-ok */
-.rh-tabs__u.is-2 { transform: translateX(177rpx); }
-.intro-start { margin-top: 15rpx; }
+/* 2026-10-27 owner P-25:头像行 / 标题 / 标签 / 卡片区高度的覆盖已撤,头部结构与间距回到 7f4bcee9 之前(见文件上方 .intro-head/.intro-top/.intro-nav/.intro-cards) */
 .intro-map__el { opacity: .32; }
 .intro-stage__shade { background: linear-gradient(90deg, #111 0%, rgba(17,17,17,.7) 8%, transparent 26%, transparent 74%, rgba(17,17,17,.7) 92%, #111 100%), linear-gradient(180deg, #111 0%, rgba(17,17,17,.6) 20%, transparent 34%, transparent 62%, rgba(17,17,17,.9) 78%, #111 100%); } /* ds-ok */
-.intro-cards { height: 200rpx; }
-.intro-card { border-radius: 23rpx; padding: 27rpx 31rpx; gap: 23rpx; background: #fff; color: #111; } /* ds-ok */
+/* P-28:票根卡自身不再加内边距/间距 —— 左联与正联各有 padding,外层再叠 27rpx 会把第三行「已加入 · 申请中」挤出卡外被裁半截 */
+.intro-card { border-radius: 23rpx; padding: 0; gap: 0; background: #fff; color: #111; } /* ds-ok */
 .intro-card__ic { width: 119rpx; height: 119rpx; border-radius: 19rpx; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
 .intro-dot { width: 12rpx; height: 12rpx; background: #48484A; } /* ds-ok */
 .intro-dot.is-on { width: 35rpx; background: #fff; } /* ds-ok */
 .entry-peek__head { font-size: 33rpx; padding-bottom: 19rpx; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
-.entry-card { width: 481rpx; height: 235rpx; border-radius: 27rpx; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
+.entry-card { width: 540rpx; height: 330rpx; border-radius: 27rpx; } /* ds-ok: 2026-10-28 业主「活动卡要高一点」 */
+.entry-peek { height: 460rpx; } /* ds-ok: 跟着卡片加高 */
+.entry-peek__cards { height: 330rpx; }
 .entry-card__shade { background: linear-gradient(180deg, rgba(0,0,0,0) 30%, rgba(0,0,0,.8)); } /* ds-ok */
 .entry-card__copy { left: 23rpx; right: 23rpx; bottom: 19rpx; }
 .entry-card__tag { align-self: flex-start; margin-bottom: 8rpx; padding: 4rpx 13rpx; border-radius: 12rpx; font-size: 21rpx; font-weight: 700; color: #000; } /* ds-ok */
@@ -910,3 +908,6 @@ cy-proto-cam{ position:fixed; left:0; right:0; top:0; bottom:0; z-index:58; poin
 .entry-card__tag--free { background: var(--cy-play-role-free); } /* v13 自由探索绿 */
 .entry-card__title { font-size: 29rpx; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
 .entry-card__meta { font-size: 23rpx; color: rgba(255,255,255,.7); } /* ds-ok */
+
+/* 2026-10-27 owner P-31:更多 / 设置两张面板贴内容高,最高 80% 屏,超出在面板里滚动(原先「设置」只露半截) */
+.psheet.roam-menu-sheet{ height:auto; max-height:80vh; overflow-y:auto; }

@@ -1,14 +1,15 @@
 <wxs src="../../../../utils/wxs/money.wxs" module="money" />
-<view class="er-page theme-dark">
+<view class="er-page {{merchantView ? 'theme-merchant' : 'theme-dark'}}">
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
+<!-- 2026-10-28 G-9:商家走同一页的浅色(?theme=merchant) -->
 <cy-nav-bar />
 <view style="height: {{statusBarHeight + navBarHeight}}px;"></view>
 <cy-page-title title="账户收益" safe-top="{{false}}" />
 
 <view class="er-shell">
-  <cy-scene-asset-earnings id="assetEarnings" bind:open="openScene" />
+  <cy-scene-asset-earnings id="assetEarnings" theme="{{merchantView ? 'merchant' : 'player'}}" bind:open="openScene" />
 </view>
 
 <view class="er-scene-host" wx:if="{{sceneCurrent && sceneCurrent.id === 'asset-income-detail'}}" catchtouchmove="blockSceneTouch">

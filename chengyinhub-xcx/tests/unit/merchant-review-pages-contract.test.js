@@ -166,7 +166,7 @@ test('new review UI treats platform review as pending instead of published', () 
 
 test('public route accepts only canonical merchantRowId and never owner member aliases', () => {
   assert.deepEqual(parseReviewRouteOptions({ merchantRowId: '7', merchantMemberId: '202', merchantId: '999', memberId: '888' }), {
-    mode: 'public', merchantRowId: 7,
+    mode: 'public', merchantRowId: '7',
   });
   assert.deepEqual(parseReviewRouteOptions({ merchantId: '999' }), {
     mode: 'public', merchantRowId: null,

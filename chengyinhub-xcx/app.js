@@ -382,7 +382,9 @@ App({
         showToast: function (msg) { cyToast(msg); },
         hideToast: function () { that.hideToast(); },
         getErrorMessage: function (res, fallback) { return that.getRequestErrorMessage(res, fallback); },
-        shouldAutoToast: function (param, body) { return that.shouldAutoToastRequestError(param, body); }
+        shouldAutoToast: function (param, body) { return that.shouldAutoToastRequestError(param, body); },
+        // G-4(2026-10-27):玩家视角不请求商家工作台接口、不展示商家身份报错,页面不再各自打补丁。
+        isPlayerView: function () { return !roleGuard.isMerchantView(); }
       });
     }
     return this._requestClient;
@@ -592,7 +594,8 @@ App({
   // ⚠️ 别改回「调用方逐张开页」:emit 同步 → resolve 后同一 tick 就发下一次 navigateTo,
   //    而上一张的 navigateBack 还没落地 → 弹错页 / 静默丢图(2026-07-17 review 实证)。
   // resolve(null) = 用户取消整批;resolve(原数组) = 裁剪页拉不起来的兜底(绝不静默丢图)。
-  cropAll: function (paths, ratio) {
+  // shape:'circle' = 圆形取景框(M-08 Logo);导出仍是正方形,只是取景时看到的就是主页上的圆。
+  cropAll: function (paths, ratio, shape) {
     return new Promise(function (resolve) {
       var settled = false;
       var once = function (v) { if (!settled) { settled = true; resolve(v); } };
@@ -603,7 +606,7 @@ App({
         },
         // 临时路径可能有 9 条,塞 query 会超长 → 经 eventChannel 递
         success: function (res) {
-          res.eventChannel.emit('cropInit', { paths: paths, ratio: ratio || 'free' });
+          res.eventChannel.emit('cropInit', { paths: paths, ratio: ratio || 'free', shape: shape || '' });
         },
         // 页面栈满(10 层)等原因打不开 → 退回原图上传,别让整条流程断在这
         fail: function () { once(paths); },
@@ -675,7 +678,7 @@ App({
         var paths = pickImagePaths(res);
         if (!paths.length) { operation.finish(); return; }
         if (options.skipCrop) { doUpload(paths); return; }
-        that.cropAll(paths, ratio).then(function (out) {
+        that.cropAll(paths, ratio, options.cropShape).then(function (out) {
           if (operation.isAborted()) return;
           // null = 用户取消整批。给一次提示:选了 9 张裁到第 9 张才取消,
           // 无声返回会让人以为卡住了(旧代码单张时无声尚可,排队后是随张数放大的悬崖)

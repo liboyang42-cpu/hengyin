@@ -684,6 +684,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
                         when viewer_row.status = 0 and viewer_row.apply_expire_time &gt; #{now} then 'PENDING'
                         when viewer_row.status in (3, 4) then 'REJECTED'
                         else 'NONE' end as viewerStatus,
+                   case when t.leader_member_id &lt;&gt; #{viewerMemberId} and viewer_row.status = 0
+                         and viewer_row.apply_expire_time &gt; #{now} then viewer_row.apply_expire_time end as applyExpireTime,
                    exists (select 1 from cms_registration viewer_ticket
                             where viewer_ticket.member_id = #{viewerMemberId}
                               and viewer_ticket.owner_type = 2 and viewer_ticket.owner_id = a.id
@@ -788,6 +790,18 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <select id="selectCmsTopicById" parameterType="Long" resultMap="CmsTopicResult">
         <include refid="selectCmsTopicVo"/>
         where id = #{id}
+    </select>
+
+    <!-- 与单条 selectCmsTopicById 同样不加状态/软删过滤，仅缩窄列。 -->
+    <select id="selectTodoTopicEndDates" resultMap="CmsTopicResult">
+        select id, end_date from cms_topic
+        <choose>
+            <when test="topicIds != null and topicIds.size() > 0">
+                where id in
+                <foreach collection="topicIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+            </when>
+            <otherwise>where 1 = 0</otherwise>
+        </choose>
     </select>
 
     <select id="selectRoamReferralEnabledById" parameterType="Long" resultType="Integer">

@@ -32,4 +32,20 @@ class CoopInviteExactIdJsonTest {
         assertEquals("9007199254740993", json.readTree(json.writeValueAsBytes(request)).path("inviteId").asText());
         assertNull(json.readValue("{\"inviteId\":\"7\"}", CoopInvite.class).getId());
     }
+    @Test
+    void originalRequestProjectionKeepsEveryLongExactAndUnavailableLeaksNoMetadata() throws Exception {
+        com.chengyinhub.business.domain.CoopInviteRequestReceipt row = new com.chengyinhub.business.domain.CoopInviteRequestReceipt();
+        row.setRequestId("vr_original"); row.setInviteId(9007199254740993L); row.setInviteType(0);
+        row.setTopicId(9007199254740995L); row.setToType("merchant"); row.setToId(9007199254740997L); row.setScope("");
+        JsonNode created = json.readTree(json.writeValueAsBytes(
+                com.chengyinhub.business.domain.dto.CoopInviteRequestResult.created(row, true)));
+        for (String field : java.util.List.of("inviteId", "topicId", "toId")) assertTrue(created.path(field).isTextual());
+        assertEquals("9007199254740993", created.path("inviteId").asText());
+        assertEquals("", created.path("scope").asText());
+        assertTrue(created.path("replayed").booleanValue());
+        JsonNode unavailable = json.readTree(json.writeValueAsBytes(
+                com.chengyinhub.business.domain.dto.CoopInviteRequestResult.state("UNAVAILABLE", "vr_original")));
+        assertFalse(unavailable.has("inviteId")); assertFalse(unavailable.has("scope")); assertFalse(unavailable.has("topicId"));
+    }
+
 }

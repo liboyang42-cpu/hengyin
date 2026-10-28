@@ -1,0 +1,15 @@
+{
+  "component": true,
+  "usingComponents": {
+    "cy-sheet": "/components/cy/sheet/index",
+    "cy-switch": "/components/cy/switch/index",
+    "cy-icon": "/components/cy/icon/index",
+    "cy-sheet-nav": "/components/cy/sheet-nav/index",
+    "cy-list-group": "/components/cy/list-group/index",
+    "cy-list-row": "/components/cy/list-row/index",
+    "cy-swipe-row": "/components/cy/swipe-row/index",
+    "cy-stepper": "/components/cy/stepper/index",
+    "cy-segmented": "/components/cy/segmented/index",
+    "cy-chips": "/components/cy/chips/index"
+  }
+}

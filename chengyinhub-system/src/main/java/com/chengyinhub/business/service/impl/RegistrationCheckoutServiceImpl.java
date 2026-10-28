@@ -5,7 +5,6 @@ import com.chengyinhub.business.domain.dto.RegistrationOrderResult;
 import com.chengyinhub.business.domain.dto.RegistrationQuoteResult;
 import com.chengyinhub.business.domain.dto.RegistrationRequest;
 import com.chengyinhub.business.service.ICmsRegistrationService;
-import com.chengyinhub.business.service.IMinorProtectionService;
 import com.chengyinhub.business.service.IRegistrationCheckoutService;
 import com.chengyinhub.business.service.IRegistrationOrderService;
 import com.chengyinhub.business.service.IWechatPayService;
@@ -13,7 +12,6 @@ import com.chengyinhub.business.service.PaymentPreorderException;
 import com.chengyinhub.business.service.RegistrationCheckoutException;
 import com.chengyinhub.business.service.RegistrationCheckoutResult;
 import com.chengyinhub.business.service.RegistrationRequestConflictException;
-import com.chengyinhub.business.service.minor.MinorDecision;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -36,9 +34,6 @@ public class RegistrationCheckoutServiceImpl implements IRegistrationCheckoutSer
     private IRegistrationOrderService registrationOrderService;
     @Autowired
     private IWechatPayService wechatPayService;
-    /** DOC2 F7 未成年支付挂点；开关 feature.flag.minorMode + minorPaymentGate 缺省关闭时恒放行。 */
-    @Autowired
-    private IMinorProtectionService minorProtectionService;
 
     @Override
     public RegistrationQuoteResult quote(Long memberId, RegistrationRequest request) {
@@ -63,7 +58,6 @@ public class RegistrationCheckoutServiceImpl implements IRegistrationCheckoutSer
         if (request == null) {
             throw new RegistrationCheckoutException(400, "报名参数不能为空");
         }
-        requireMinorPurchaseAllowed(memberId);
         RegistrationOrderResult order;
         try {
             order = registrationOrderService.createOrReplay(memberId, request);
@@ -85,23 +79,10 @@ public class RegistrationCheckoutServiceImpl implements IRegistrationCheckoutSer
         if (!wechatPayService.isReady()) {
             throw new RegistrationCheckoutException(503, "支付服务暂不可用，请稍后再试");
         }
-        requireMinorPurchaseAllowed(memberId);
         CmsRegistration registration = registrationService.beginPaymentAttempt(registrationId, memberId);
         Map<String, Object> data = mapOrder(registration, singleton(registration));
         data.put("payParams", createWechatOrder(registration, appChannel));
         return new RegistrationCheckoutResult("支付参数获取成功", data);
-    }
-
-    /**
-     * 建单/发起支付前的未成年挂点。未装配（既有单测直接 new 本类）等同开关关闭；
-     * 生产由 Spring 必选注入，开关打开后按年龄段拒绝并带 MINOR_* 机器码。
-     */
-    private void requireMinorPurchaseAllowed(Long memberId) {
-        if (minorProtectionService == null) return;
-        MinorDecision decision = minorProtectionService.enforcePurchaseIfEnabled(memberId);
-        if (!decision.allowed()) {
-            throw new RegistrationCheckoutException(403, decision.message(), decision.errorCode());
-        }
     }
 
     /** 请求是否指定走原生 App 支付。大小写不敏感,空值一律按 JSAPI。 */

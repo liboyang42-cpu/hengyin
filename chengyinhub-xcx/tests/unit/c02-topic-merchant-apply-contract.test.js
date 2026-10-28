@@ -12,8 +12,9 @@ const read = (rel) => fs.readFileSync(P(rel), 'utf8')
 
 const INFO_WXML = 'pages/topic/components/project-join/index.wxml'
 const INFO_JS = 'pages/topic/merchantinfo/merchantinfo.js'
-const TEMPLATE_INDEX_JS = 'pages/template/index.js'
-const TEMPLATE_INDEX_WXML = 'pages/template/index.wxml'
+// 2026-10-28:模板页货架移进 pages/templatedetail/shelf(业主定稿原型 v21)
+const TEMPLATE_INDEX_JS = 'pages/templatedetail/shelf/index.js'
+const TEMPLATE_INDEX_WXML = 'pages/templatedetail/shelf/index.wxml'
 const TOPIC_INDEX_JS = 'pages/topic/index/index.js'
 const TOPIC_INDEX_JSON = 'pages/topic/index/index.json'
 const TOPIC_INDEX_WXML = 'pages/topic/index/index.wxml'
@@ -119,28 +120,29 @@ function assertTemplateCoverErrorState(js, wxml) {
   )
   assert.doesNotMatch(js, /home-route-city-placeholder\.jpg/, '城市路线图不能冒充模板封面')
 
-  // 2026-08-26:banner 变成单张头牌(走 onDetailCoverError 的稳定身份分支),
-  // 列表卡的封面 <image> 因为前面多了「具象图标位」而降为 wx:elif。
-  // 守的不变量一条没少:两处远端封面都必须有 binderror + 明确失败态。
+  // 2026-10-28:货架上四处主题封面位(精选大卡 / 三行列 / 中卡 / 分类页)。包内封面拉得动;
+  // 不在包内的主题走接口封面，四处都必须有 binderror + 明确失败态。
   const remoteCoverBranches = [
-    { name: '头牌 banner', cls: 'feat-bgimg', condition: 'banner.imgUrl && !banner._coverFail', handler: 'onDetailCoverError' },
-    { name: '列表卡', cls: 'cml-pic', condition: 'item.imgUrl && !item._coverFail', handler: 'onCoverError' },
+    { name: '精选大卡', cls: 'lc__img' },
+    { name: '列表卡', cls: 'r5__pic' },
+    { name: '中卡', cls: 'mc__pic' },
+    { name: '分类页大图', cls: 'tci__pic' },
   ]
-  remoteCoverBranches.forEach(({ name, cls, condition, handler }) => {
-    const remote = new RegExp(`<image wx:(?:if|elif)="\\{\\{ ${condition.replace(/[.]/g, '\\.')} \\}\\}"[^>]*class="${cls}"[^>]*binderror="${handler}"`, 's')
+  remoteCoverBranches.forEach(({ name, cls }) => {
+    const remote = new RegExp(`<image wx:if="\\{\\{ item\\.cover \\}\\}" class="${cls}"[^>]*binderror="onCoverError"`)
     assert.match(wxml, remote, `${name} 的非空远端封面必须有 binderror 失败路径`)
-    const fallback = new RegExp(`<view wx:else[^>]*class="${cls} cover-error"[^>]*aria-role="img"[^>]*>[\\s\\S]*?<image[^>]*class="cover-error-icon"[^>]*src="\\{\\{ coverErrorSrc \\}\\}"[^>]*>[\\s\\S]*?<text class="cover-error-text">封面暂不可用<\\/text>`, 's')
+    const fallback = new RegExp(`<view wx:else class="${cls} cv-err" aria-role="img"[^>]*>[\\s\\S]*?<image class="cv-err__ic" src="\\{\\{ coverErrorSrc \\}\\}"[^>]*>[\\s\\S]*?<text class="cv-err__t">封面暂不可用<\\/text>`)
     assert.match(wxml, fallback, `${name} 必须切到带明确文案的真实封面失败态`)
   })
   assert.match(
     js,
-    /onDetailCoverError\(e\) \{[\s\S]*?target !== 'banner'[\s\S]*?\[`\$\{target\}\._coverFail`\]: true/,
-    '头牌 banner 的 error 事件必须只写白名单对象的失败标记'
+    /onCoverError\(e\) \{[\s\S]*?String\(t\.id\) === id[\s\S]*?hit\.cover = '';/,
+    '封面 error 只按稳定 id 标记那一条'
   )
   assert.doesNotMatch(wxml, /cover-fb-letter/, '封面失败态不得保留首字文本占位')
 }
 
-test('C2:P1 template/index 两处远端封面失败时使用明确的真实失败态', () => {
+test('C2:P1 模板货架远端封面失败时使用明确的真实失败态', () => {
   assertTemplateCoverErrorState(read(TEMPLATE_INDEX_JS), read(TEMPLATE_INDEX_WXML))
 })
 
@@ -155,14 +157,14 @@ test('C2:P1 负控:把失败态资产改为空值时,由封面失败态守卫精
   )
 })
 
-test('C2:P1 负控:摘掉列表卡的 binderror 时,由两处远端封面守卫精准判红', () => {
+test('C2:P1 负控:摘掉封面的 binderror 时,由远端封面守卫精准判红', () => {
   const mutated = read(TEMPLATE_INDEX_WXML).replaceAll(
-    'data-key="{{ item.id }}" binderror="onCoverError"',
-    'data-key="{{ item.id }}"'
+    'data-id="{{ item.id }}" binderror="onCoverError"',
+    'data-id="{{ item.id }}"'
   )
   assert.throws(
     () => assertTemplateCoverErrorState(read(TEMPLATE_INDEX_JS), mutated),
-    /列表卡 的非空远端封面必须有 binderror/
+    /精选大卡 的非空远端封面必须有 binderror/
   )
 })
 

@@ -3,7 +3,7 @@
   "generatedFrom": "app.json + scene-* 组件扫描",
   "previousBatch": null,
   "counts": {
-    "routes": 145,
+    "routes": 157,
     "scenes": 27,
     "added": 0,
     "removed": 0
@@ -142,6 +142,7 @@
       "needsLogin": true,
       "needsData": true,
       "dataKeys": [
+        "sessionId",
         "activityId",
         "topicId",
         "registrationId",
@@ -336,6 +337,17 @@
       "hasWxml": true
     },
     {
+      "pagePath": "subpackageA/pages/assetcenter/analysis/index",
+      "pkg": "subpackageA",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
       "pagePath": "subpackageP3/pages/growthcenter/index/index",
       "pkg": "subpackageP3",
       "tabBar": false,
@@ -416,7 +428,7 @@
       "pagePath": "subpackageB/pages/im/list/index",
       "pkg": "subpackageB",
       "tabBar": false,
-      "role": "player",
+      "role": "merchant",
       "needsLogin": true,
       "needsData": false,
       "dataKeys": [],
@@ -427,7 +439,7 @@
       "pagePath": "subpackageB/pages/im/chat/index",
       "pkg": "subpackageB",
       "tabBar": false,
-      "role": "player",
+      "role": "merchant",
       "needsLogin": true,
       "needsData": true,
       "dataKeys": [
@@ -1344,6 +1356,19 @@
       "hasWxml": true
     },
     {
+      "pagePath": "pages/templatedetail/topic-preview/index",
+      "pkg": "pages/templatedetail",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "id"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
       "pagePath": "pages/address/address",
       "pkg": "pages/address",
       "tabBar": false,
@@ -1383,6 +1408,17 @@
     },
     {
       "pagePath": "pages/shezhi/about/index",
+      "pkg": "pages/shezhi",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": false,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/shezhi/marketing/index",
       "pkg": "pages/shezhi",
       "tabBar": false,
       "role": "merchant",
@@ -1437,6 +1473,107 @@
       "needsLogin": false,
       "needsData": false,
       "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageMember/free-explore/index",
+      "pkg": "subpackageMember",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "registrationId",
+        "topicId",
+        "requestId",
+        "unitId"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageMember/character/index",
+      "pkg": "subpackageMember",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "topicId"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageMember/orient-score/index",
+      "pkg": "subpackageMember",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageMember/invoice/index",
+      "pkg": "subpackageMember",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": false,
+      "needsData": true,
+      "dataKeys": [
+        "id"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageMember/invoice-detail/index",
+      "pkg": "subpackageMember",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": false,
+      "needsData": true,
+      "dataKeys": [
+        "id"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageMember/invoice-apply/index",
+      "pkg": "subpackageMember",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": false,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageMember/invoice-titles/index",
+      "pkg": "subpackageMember",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": false,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageMember/invoice-title-edit/index",
+      "pkg": "subpackageMember",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": false,
+      "needsData": true,
+      "dataKeys": [
+        "id"
+      ],
       "hasJs": true,
       "hasWxml": true
     },
@@ -1603,6 +1740,17 @@
       "hasWxml": true
     },
     {
+      "pagePath": "subpackageMember/appeal-mine/index",
+      "pkg": "subpackageMember",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
       "pagePath": "subpackageMember/signup/index",
       "pkg": "subpackageMember",
       "tabBar": false,
@@ -1680,8 +1828,10 @@
       "tabBar": false,
       "role": "player",
       "needsLogin": true,
-      "needsData": false,
-      "dataKeys": [],
+      "needsData": true,
+      "dataKeys": [
+        "sessionId"
+      ],
       "hasJs": true,
       "hasWxml": true
     },
@@ -1853,7 +2003,7 @@
       "component": "scene-member-order-detail",
       "dir": "subpackageMember/components/cy/scene-member-order-detail",
       "twin": {
-        "route": "subpackageMember/report-detail/index",
+        "route": "subpackageMember/invoice-detail/index",
         "score": 12
       }
     },
@@ -1869,7 +2019,7 @@
       "component": "scene-member-participation-detail",
       "dir": "subpackageMember/components/scene-member-participation-detail",
       "twin": {
-        "route": "subpackageMember/report-detail/index",
+        "route": "subpackageMember/invoice-detail/index",
         "score": 12
       }
     },

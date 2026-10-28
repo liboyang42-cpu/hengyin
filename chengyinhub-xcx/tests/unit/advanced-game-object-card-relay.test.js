@@ -5,8 +5,11 @@
  * 而契约测试直接把 objectCard 喂给 pickPlayKit,绕过了这一层,所以一直绿着。
  * 这里走真 action → 真 hydrate → 真 emitSession,只桩网络。
  *
- * 另一条:提交没成(非 200 / 状态已更新 / 回读说没写进去 / 回读也失败)时抛 actionfail,
- * 页面据此让拍物成卡那一屏回到取景 —— 否则玩家对着「处理中」干等 45 秒。 */
+ * 另一条:提交明确没成(4xx 拒绝 / 409 状态已更新)时抛 actionfail,
+ * 页面据此让拍物成卡那一屏回到取景 —— 否则玩家对着「处理中」干等 45 秒。
+ * 结果未知(5xx 通用错误 / 响应丢失)只按原请求号读 /api/play/advanced/receipt,
+ * 查不到不等于没写入:保持 unknown 并在组件上常驻核对入口,不冒充确定失败
+ * (与 advanced-game-receipt-contract.test.js 同一契约)。 */
 const assert = require('node:assert/strict')
 const test = require('node:test')
 
@@ -31,6 +34,9 @@ const STATE = {
 }
 
 function createGame(queue) {
+  // 写动作前把原请求身份落盘(advanced-original:*)，回执确认后才删除。
+  const storage = new Map()
+  global.wx = { getStorageSync: k => storage.get(k), setStorageSync: (k, v) => storage.set(k, v), removeStorageSync: k => storage.delete(k) }
   const events = []
   const instance = {
     properties: {},
@@ -40,7 +46,9 @@ function createGame(queue) {
     syncTimer() {}, stopTimer() {}, loadLeaderboard() {},
   }
   Object.assign(instance, definition.methods)
-  instance.request = function () {
+  instance.calls = []
+  instance.request = function (url, method, data) {
+    instance.calls.push({ url, method, data })
     const next = queue.shift()
     if (!next) return Promise.reject(new Error('unexpected request'))
     return next.err ? Promise.reject(next.err) : Promise.resolve(next.res)
@@ -67,36 +75,55 @@ test('回包没带卡(老模板 / 没判过 / 回读):objectCard 为 null,不是
   assert.equal(game.events.filter((e) => e.name === 'session').pop().detail.objectCard, null)
 })
 
-test('★提交被服务端拒(非 200):抛 actionfail,带上动作名', async () => {
-  const game = createGame([{ res: { code: 500, msg: '服务繁忙' } }])
+test('★提交被服务端明确拒绝(4xx):抛 actionfail,带上动作名', async () => {
+  const game = createGame([{ res: { code: 400, msg: '照片不符合要求' } }])
   await game.action('SUBMIT_PHOTO_CHECK', {})
   assert.deepEqual(game.events.filter((e) => e.name === 'actionfail').map((e) => e.detail), [{ action: 'SUBMIT_PHOTO_CHECK', sessionId: 42 }])
+  assert.equal(game.data.unknown, false)
+  assert.equal(game.data.acting, false)
 })
 
-test('状态已更新:回读完也抛 actionfail(这一步没提交)', async () => {
-  const game = createGame([{ res: { code: 500, msg: '状态已更新，请刷新' } }, { res: { code: 200, data: view(5) } }])
+test('状态已更新(409 带权威视图):换上视图也抛 actionfail(这一步没提交)', async () => {
+  const game = createGame([{ res: { code: 409, msg: '状态已更新，请刷新后重试', data: { view: view(5) } } }])
   await game.action('SUBMIT_PHOTO_CHECK', {})
   await flush()
   assert.equal(game.events.filter((e) => e.name === 'actionfail').length, 1)
+  assert.equal(game.data.state.version, 5)
 })
 
-test('响应丢失后回读:没写进去 → actionfail;回读也失败 → actionfail', async () => {
-  const notLanded = createGame([{ err: new Error('timeout') }, { res: { code: 200, data: view(3) } }])
-  await notLanded.action('SUBMIT_PHOTO_CHECK', {})
-  await flush(); await flush()
-  assert.equal(notLanded.events.filter((e) => e.name === 'actionfail').length, 1, '刷新说没写进去，却没通知页面')
+test('结果未知(5xx 通用错误 / 响应丢失):只读原请求回执;查不到或读失败都保持 unknown,不冒充失败', async () => {
+  for (const first of [{ res: { code: 500, msg: '服务繁忙' } }, { err: new Error('timeout') }]) {
+    const notFound = createGame([first, { res: { code: 404, msg: '尚未查到原请求回执，结果仍待确认' } }])
+    await notFound.action('SUBMIT_PHOTO_CHECK', {})
+    await flush(); await flush()
+    const original = notFound.calls[0].data
+    assert.deepEqual(notFound.calls[1], { url: '/api/play/advanced/receipt', method: 'GET',
+      data: { sessionId: 42, idempotencyKey: original.idempotencyKey } })
+    assert.equal(notFound.data.unknown, true, '查不到原回执不代表没写入')
+    assert.match(notFound.data.unknownText, /未查到不代表未提交/, '组件上常驻核对提示，那一屏不是无声转圈')
+    assert.equal(notFound.events.filter((e) => e.name === 'actionfail').length, 0)
 
-  const readbackDown = createGame([{ err: new Error('timeout') }, { err: new Error('timeout') }])
-  await readbackDown.action('SUBMIT_PHOTO_CHECK', {})
-  await flush(); await flush()
-  assert.equal(readbackDown.events.filter((e) => e.name === 'actionfail').length, 1, '刷新也失败，那一屏还在转圈')
+    const readbackDown = createGame([first, { err: new Error('timeout') }])
+    await readbackDown.action('SUBMIT_PHOTO_CHECK', {})
+    await flush(); await flush()
+    assert.equal(readbackDown.data.unknown, true, '回执也读不到,保持锁定')
+    assert.equal(readbackDown.events.filter((e) => e.name === 'actionfail').length, 0)
+  }
 })
 
-test('负控:响应丢失但回读证明已写进去 → 不抛 actionfail(那是成功)', async () => {
-  const game = createGame([{ err: new Error('timeout') }, { res: { code: 200, data: view(4) } }])
+test('负控:响应丢失但原请求回执证明已写进去 → 不抛 actionfail(那是成功)', async () => {
+  const receipt = (data) => ({ code: 200, data: { sessionId: '42', idempotencyKey: data.idempotencyKey, view: view(4) } })
+  const game = createGame([{ err: new Error('timeout') }])
+  const request = game.request
+  game.request = function (url, method, data) {
+    if (url === '/api/play/advanced/receipt') { game.calls.push({ url, method, data }); return Promise.resolve(receipt(data)) }
+    return request.call(this, url, method, data)
+  }
   await game.action('SUBMIT_PHOTO_CHECK', {})
   await flush(); await flush()
   assert.equal(game.events.filter((e) => e.name === 'actionfail').length, 0)
+  assert.equal(game.data.unknown, false)
+  assert.equal(game.data.state.version, 4)
 })
 
 for (const withCard of [true, false]) {

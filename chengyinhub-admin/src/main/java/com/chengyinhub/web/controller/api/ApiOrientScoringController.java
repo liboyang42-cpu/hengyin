@@ -38,12 +38,28 @@ public class ApiOrientScoringController extends BaseController {
         return run(() -> orientScoringService.breakdown(memberId, sessionId));
     }
 
-    @Operation(summary = "把本局已通过的任务入账(幂等)")
-    @PostMapping("/session/{sessionId}/sync")
-    public AjaxResult sync(@PathVariable("sessionId") Long sessionId) {
+    @Operation(summary = "历史操作缺少原请求号时登记人工核对，不重放原操作")
+    @PostMapping("/session/{sessionId}/recovery")
+    public AjaxResult recovery(@PathVariable("sessionId") Long sessionId, String kind) {
         Long memberId = currentMemberId();
         if (memberId == null) return error("请先登录");
-        return run(() -> orientScoringService.syncSession(memberId, sessionId));
+        return run(() -> orientScoringService.submitRecovery(memberId, sessionId, kind).playerView());
+    }
+
+    @Operation(summary = "本局所在场次完整排名：先排名后截取，同键同名次")
+    @GetMapping("/session/{sessionId}/leaderboard")
+    public AjaxResult leaderboard(@PathVariable("sessionId") Long sessionId) {
+        Long memberId = currentMemberId();
+        if (memberId == null) return error("请先登录");
+        return run(() -> orientScoringService.leaderboard(memberId, sessionId));
+    }
+
+    @Operation(summary = "把本局已通过的任务入账(幂等)")
+    @PostMapping("/session/{sessionId}/sync")
+    public AjaxResult sync(@PathVariable("sessionId") Long sessionId, String idempotencyKey) {
+        Long memberId = currentMemberId();
+        if (memberId == null) return error("请先登录");
+        return run(() -> orientScoringService.syncSession(memberId, sessionId, idempotencyKey));
     }
 
     @Operation(summary = "局终结算到积分/XP(每局恰好一次)")
@@ -72,7 +88,7 @@ public class ApiOrientScoringController extends BaseController {
                 idempotencyKey));
     }
 
-    @Operation(summary = "结果未知时回读回执(kind=SETTLE/APPEAL/DISPUTE)")
+    @Operation(summary = "结果未知时回读回执(kind=SYNC/SETTLE/APPEAL/DISPUTE)")
     @GetMapping("/receipt")
     public AjaxResult receipt(String kind, String sessionId, String idempotencyKey) {
         Long memberId = currentMemberId();
@@ -85,7 +101,7 @@ public class ApiOrientScoringController extends BaseController {
             return error("城市定向计分暂未开放").put("errorCode", OrientScoringException.DISABLED);
         }
         try {
-            return success(action.get());
+            return success(OrientPlayerWire.response(action.get()));
         } catch (OrientScoringException e) {
             return error(e.getMessage()).put("errorCode", e.getErrorCode());
         }

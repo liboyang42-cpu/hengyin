@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.RoamPassportMapper">
+  <resultMap id="Fact" type="com.chengyinhub.business.domain.RoamSession">
+    <id property="id" column="id"/>
+    <result property="startedAt" column="started_at"/>
+    <result property="finishedAt" column="finished_at"/>
+    <result property="distanceM" column="distance_m"/>
+    <result property="finishResultJson" column="finish_result_json"/>
+  </resultMap>
+  <sql id="columns">id, started_at, finished_at, distance_m, finish_result_json</sql>
+  <select id="page" resultMap="Fact" useCache="false">
+    select <include refid="columns"/> from roam_session
+    where member_id = #{owner} and status = 1
+    <if test="before != null">and id &lt; #{before}</if>
+    order by id desc limit #{limit}
+  </select>
+  <select id="detail" resultMap="Fact" useCache="false">
+    select <include refid="columns"/> from roam_session
+    where member_id = #{owner} and id = #{id} and status = 1
+  </select>
+  <!-- Missing historical values remain unknown; never infer visits from retained location rows. -->
+  <select id="summary" resultType="java.util.LinkedHashMap" useCache="false">
+    select count(*) as trips,
+      case when count(distance_m) = count(*) then coalesce(sum(distance_m),0) else null end as distanceM,
+      case when count(finished_at) = count(*) then count(distinct date(finished_at)) else null end as days,
+      case when count(shop_count) = count(*) then coalesce(sum(shop_count),0) else null end as shops
+    from (
+      select distance_m, finished_at,
+        case when json_valid(finish_result_json) then
+          case when json_type(json_extract(finish_result_json,'$.sessionShops')) = 'INTEGER'
+            and cast(json_unquote(json_extract(finish_result_json,'$.sessionShops')) as decimal(30,0)) &gt;= 0
+          then cast(json_unquote(json_extract(finish_result_json,'$.sessionShops')) as decimal(30,0)) else null end
+        else null end as shop_count
+      from roam_session where member_id = #{owner} and status = 1
+    ) facts
+  </select>
+</mapper>

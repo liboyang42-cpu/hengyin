@@ -1,0 +1,60 @@
+<!-- 条件与效果：句子列表（10-28 原型 A e-route）。点一句就地展开；添加 / 换名字开一层。
+     分组、行、分段、步进器都用 L1 的 cy-list-group / cy-list-row / cy-segmented / cy-stepper。 -->
+<view class="sr" wx:if="{{!layer}}">
+  <cy-list-group header="条件">
+    <view wx:if="{{showTopSeg}}" class="sr-seg"><cy-segmented options="{{topSeg.options}}" value="{{topSeg.value}}" label="条件怎样算满足" bind:change="onTopMode" /></view>
+    <block wx:for="{{conditionRows}}" wx:key="path" wx:for-item="row" wx:for-index="ci">
+      <view class="sr-d{{row.depth}}">
+        <cy-list-row wx:if="{{row.type === 'leaf' || row.type === 'group'}}" class="sr-row" title="{{row.text}}" fold open="{{row.open}}" hr="{{ci > 0 || showTopSeg}}" data-path="{{row.path}}" data-type="{{row.type}}" bind:press="toggleRow" />
+        <view wx:elif="{{row.type === 'groupSeg'}}" class="sr-seg"><cy-segmented options="{{row.seg.options}}" value="{{row.seg.value}}" label="这一组怎样算满足" data-path="{{row.path}}" bind:change="onGroupMode" /></view>
+        <cy-list-row wx:elif="{{row.type === 'groupAdd'}}" class="sr-row" title="添加条件" add hr data-target="{{row.path}}" bind:press="openAdd" />
+        <cy-list-row wx:elif="{{row.type === 'groupDel'}}" class="sr-row" title="删除这组条件" danger hr data-path="{{row.path}}" bind:press="onRemove" />
+        <block wx:if="{{row.type === 'leaf' && row.open && row.editor}}">
+          <view wx:if="{{row.editor.neg}}" class="sr-seg"><cy-segmented options="{{row.editor.neg.options}}" value="{{row.editor.neg.value}}" label="肯定或否定" data-path="{{row.path}}" bind:change="onNegate" /></view>
+          <view wx:if="{{row.editor.names}}" class="sr-seg"><cy-segmented options="{{row.editor.names.options}}" value="{{row.editor.names.value}}" label="名字" data-path="{{row.leafPath}}" bind:change="onPickName" /></view>
+          <cy-list-row wx:if="{{row.editor.rename}}" class="sr-row" title="换一个名字" chevron hr data-path="{{row.leafPath}}" bind:press="openRename" />
+          <view wx:if="{{row.editor.result}}" class="sr-seg"><cy-segmented options="{{row.editor.result.options}}" value="{{row.editor.result.value}}" label="检定结果" data-path="{{row.leafPath}}" bind:change="onResult" /></view>
+          <view wx:if="{{row.editor.cmp}}" class="sr-seg"><cy-segmented options="{{row.editor.cmp.options}}" value="{{row.editor.cmp.value}}" label="比较" data-path="{{row.leafPath}}" bind:change="onCompare" /></view>
+          <cy-list-row wx:if="{{row.editor.cmp}}" class="sr-row" title="{{row.editor.kind === 'visit' ? '次数' : '数值'}}" hr tappable="{{false}}">
+            <cy-stepper value="{{row.editor.amount}}" min="{{row.editor.min}}" max="{{row.editor.max}}" label="{{row.editor.kind === 'visit' ? '次数' : '数值'}}" data-path="{{row.leafPath}}" bind:change="onAmount" />
+          </cy-list-row>
+          <cy-list-row class="sr-row sr-row--del" title="删除" hr data-path="{{row.path}}" bind:press="onRemove" />
+        </block>
+      </view>
+    </block>
+    <cy-list-row wx:if="{{!readOnly}}" class="sr-row" title="添加条件" add hr="{{conditionRows.length > 0 || showTopSeg}}" data-target="conditions" bind:press="openAdd" />
+  </cy-list-group>
+
+  <cy-list-group header="效果" action="{{effectRows.length > 1 && !readOnly ? (sorting ? '完成' : '编辑') : ''}}" bind:action="toggleSort">
+    <block wx:for="{{effectRows}}" wx:key="path" wx:for-item="row" wx:for-index="ei">
+      <cy-list-row wx:if="{{sorting}}" class="sr-row" title="{{row.text}}" hr="{{ei > 0}}" tappable="{{false}}">
+        <text wx:if="{{ei > 0}}" class="sr-move" data-path="{{row.path}}" bindtap="onMoveUp" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">上移</text>
+      </cy-list-row>
+      <cy-list-row wx:else class="sr-row" title="{{row.text}}" fold open="{{row.open}}" hr="{{ei > 0}}" data-path="{{row.path}}" data-type="leaf" bind:press="toggleRow" />
+      <block wx:if="{{row.open && row.editor && !sorting}}">
+        <view wx:if="{{row.editor.op}}" class="sr-seg"><cy-segmented options="{{row.editor.op.options}}" value="{{row.editor.op.value}}" label="怎样改" data-path="{{row.path}}" bind:change="onVarOp" /></view>
+        <cy-list-row wx:if="{{row.editor.rename}}" class="sr-row" title="换一个名字" chevron hr data-path="{{row.path}}" bind:press="openRename" />
+        <cy-list-row wx:if="{{row.editor.hasAmount}}" class="sr-row" title="{{row.editor.kind === 'item' ? '数量' : row.editor.kind === 'clock' ? '格数' : '数值'}}" hr tappable="{{false}}">
+          <cy-stepper value="{{row.editor.amount}}" min="{{row.editor.min}}" max="{{row.editor.max}}" label="数值" data-path="{{row.path}}" bind:change="onAmount" />
+        </cy-list-row>
+        <cy-list-row class="sr-row sr-row--del" title="删除" hr data-path="{{row.path}}" bind:press="onRemove" />
+      </block>
+    </block>
+    <cy-list-row wx:if="{{!readOnly}}" class="sr-row" title="添加效果" add hr="{{effectRows.length > 0}}" data-target="effects" bind:press="openAdd" />
+  </cy-list-group>
+  <cy-inline-error wx:if="{{error}}" kind="error" title="{{error}}" />
+</view>
+
+<!-- 下一层：种类一列，点一种就地展开名字（可搜索）；换名字时直接是名字。 -->
+<view class="sr sr-layer" wx:else>
+  <cy-list-group>
+    <block wx:for="{{layerRows}}" wx:key="kind" wx:for-item="kind" wx:for-index="ki">
+      <cy-list-row wx:if="{{kind.label}}" class="sr-row" title="{{kind.label}}" fold="{{kind.hasNames}}" open="{{kind.open}}" hr="{{ki > 0}}" data-kind="{{kind.kind}}" bind:press="onLayerKind" />
+      <view wx:if="{{kind.open}}" class="sr-d1">
+        <view class="sr-search"><cy-icon name="search" size="28" /><input class="sr-search__in" value="{{query}}" bindinput="onLayerQuery" placeholder="搜索" confirm-type="search" /></view>
+        <cy-list-row wx:for="{{kind.names}}" wx:key="key" wx:for-item="name" class="sr-row" title="{{name.label}}" hr data-key="{{name.key}}" bind:press="onLayerName" />
+        <cy-list-row wx:if="{{!kind.names.length}}" class="sr-row" title="{{query ? '没有找到' : '还没有可选的名字'}}" hr tappable="{{false}}" disabled />
+      </view>
+    </block>
+  </cy-list-group>
+</view>

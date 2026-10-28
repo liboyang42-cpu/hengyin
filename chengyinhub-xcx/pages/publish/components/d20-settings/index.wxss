@@ -1,0 +1,50 @@
+/* 和主题详情同一个灰底面板(node-sheet-host 的那一句,组件里要自己写) */
+.d20-host { --cy-comp-sheet-role-glass: var(--cy-comp-sheet-role-page); }
+.d20 { padding-bottom: var(--cy-space-3); }
+
+/* 规则难度:三张大卡,选中的填满强调色、微微浮起,点一下回弹 */
+.dif { display: flex; gap: 20rpx; padding-top: 4rpx; }
+.dif__c {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16rpx;
+  padding: 32rpx 8rpx 28rpx;
+  border-radius: var(--cy-radius-lg);
+  background: var(--cy-color-bg-surface);
+  box-shadow: inset 0 0 0 1px var(--cy-color-border-strong);
+  color: var(--cy-color-text-primary);
+  transition: transform var(--cy-motion-expand) var(--cy-ease-spring), box-shadow var(--cy-motion-expand) var(--cy-ease-standard), background-color var(--cy-motion-fast) var(--cy-ease-standard), color var(--cy-motion-fast) var(--cy-ease-standard);
+}
+.dif__c.is-on { background: var(--cy-color-action-primary-bg); color: var(--cy-color-action-primary-fg); box-shadow: 0 20rpx 44rpx rgba(0, 0, 0, .16), 0 4rpx 12rpx rgba(0, 0, 0, .10); transform: translateY(-6rpx); } /* ds-ok 选中的难度卡微微浮起(原型 dif__c.is-on) */
+.dif__c:active { transform: scale(.96); }
+/* 点中那一下:放大一点再由 spring 缓动回位,就是回弹;减少动态效果时没有过渡也就不弹 */
+.dif__c.is-on.is-tap { transform: translateY(-6rpx) scale(1.04); }
+.is-ro .dif__c { pointer-events: none; }
+.is-ro .dif__c:not(.is-on) { opacity: .45; }
+/* d20 线稿走 mask,越难线越粗 */
+.dif__d { width: 68rpx; height: 68rpx; background-color: currentColor; -webkit-mask-size: 100% 100%; mask-size: 100% 100%; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; }
+.dif__c--easy .dif__d { -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23000%22%20stroke-width%3D%221.3%22%20stroke-linejoin%3D%22round%22%20stroke-linecap%3D%22round%22%3E%3Cpath%20d%3D%22M12%202.2%2020.5%207.1v9.8L12%2021.8%203.5%2016.9V7.1Z%22%2F%3E%3Cpath%20d%3D%22M12%207.6%2016.3%2015H7.7Z%22%2F%3E%3Cpath%20d%3D%22M12%202.2v5.4M3.5%2016.9%207.7%2015M20.5%2016.9%2016.3%2015M7.7%2015%2012%2021.8%2016.3%2015M3.5%207.1%2012%207.6%2020.5%207.1%22%2F%3E%3C%2Fsvg%3E"); mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23000%22%20stroke-width%3D%221.3%22%20stroke-linejoin%3D%22round%22%20stroke-linecap%3D%22round%22%3E%3Cpath%20d%3D%22M12%202.2%2020.5%207.1v9.8L12%2021.8%203.5%2016.9V7.1Z%22%2F%3E%3Cpath%20d%3D%22M12%207.6%2016.3%2015H7.7Z%22%2F%3E%3Cpath%20d%3D%22M12%202.2v5.4M3.5%2016.9%207.7%2015M20.5%2016.9%2016.3%2015M7.7%2015%2012%2021.8%2016.3%2015M3.5%207.1%2012%207.6%2020.5%207.1%22%2F%3E%3C%2Fsvg%3E"); }
+.dif__c--std .dif__d { -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23000%22%20stroke-width%3D%222%22%20stroke-linejoin%3D%22round%22%20stroke-linecap%3D%22round%22%3E%3Cpath%20d%3D%22M12%202.2%2020.5%207.1v9.8L12%2021.8%203.5%2016.9V7.1Z%22%2F%3E%3Cpath%20d%3D%22M12%207.6%2016.3%2015H7.7Z%22%2F%3E%3Cpath%20d%3D%22M12%202.2v5.4M3.5%2016.9%207.7%2015M20.5%2016.9%2016.3%2015M7.7%2015%2012%2021.8%2016.3%2015M3.5%207.1%2012%207.6%2020.5%207.1%22%2F%3E%3C%2Fsvg%3E"); mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23000%22%20stroke-width%3D%222%22%20stroke-linejoin%3D%22round%22%20stroke-linecap%3D%22round%22%3E%3Cpath%20d%3D%22M12%202.2%2020.5%207.1v9.8L12%2021.8%203.5%2016.9V7.1Z%22%2F%3E%3Cpath%20d%3D%22M12%207.6%2016.3%2015H7.7Z%22%2F%3E%3Cpath%20d%3D%22M12%202.2v5.4M3.5%2016.9%207.7%2015M20.5%2016.9%2016.3%2015M7.7%2015%2012%2021.8%2016.3%2015M3.5%207.1%2012%207.6%2020.5%207.1%22%2F%3E%3C%2Fsvg%3E"); }
+.dif__c--hard .dif__d { -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23000%22%20stroke-width%3D%222.9%22%20stroke-linejoin%3D%22round%22%20stroke-linecap%3D%22round%22%3E%3Cpath%20d%3D%22M12%202.2%2020.5%207.1v9.8L12%2021.8%203.5%2016.9V7.1Z%22%2F%3E%3Cpath%20d%3D%22M12%207.6%2016.3%2015H7.7Z%22%2F%3E%3Cpath%20d%3D%22M12%202.2v5.4M3.5%2016.9%207.7%2015M20.5%2016.9%2016.3%2015M7.7%2015%2012%2021.8%2016.3%2015M3.5%207.1%2012%207.6%2020.5%207.1%22%2F%3E%3C%2Fsvg%3E"); mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23000%22%20stroke-width%3D%222.9%22%20stroke-linejoin%3D%22round%22%20stroke-linecap%3D%22round%22%3E%3Cpath%20d%3D%22M12%202.2%2020.5%207.1v9.8L12%2021.8%203.5%2016.9V7.1Z%22%2F%3E%3Cpath%20d%3D%22M12%207.6%2016.3%2015H7.7Z%22%2F%3E%3Cpath%20d%3D%22M12%202.2v5.4M3.5%2016.9%207.7%2015M20.5%2016.9%2016.3%2015M7.7%2015%2012%2021.8%2016.3%2015M3.5%207.1%2012%207.6%2020.5%207.1%22%2F%3E%3C%2Fsvg%3E"); }
+.dif__n { font-size: var(--cy-type-card-title); font-weight: 700; line-height: 1.2; }
+.dif__p { display: flex; gap: 8rpx; }
+.dif__dot { width: 10rpx; height: 10rpx; border-radius: 50%; background: currentColor; }
+.dif__dot.is-off { background: transparent; box-shadow: inset 0 0 0 2rpx currentColor; opacity: .45; }
+@media (prefers-reduced-motion: reduce) { .dif__c { transition: none; } }
+
+/* 就地展开 */
+.xp__row { position: relative; display: flex; align-items: center; min-height: 92rpx; padding: var(--cy-space-2) var(--cy-space-4); box-sizing: border-box; background: var(--cy-color-bg-surface); }
+.xp__row--hr::before { content: ""; position: absolute; left: var(--cy-space-4); right: 0; top: 0; height: 1px; background: var(--cy-color-border-subtle); }
+.xp__del { position: relative; display: flex; align-items: center; min-height: 92rpx; padding: 0 var(--cy-space-4); font-size: var(--cy-type-body); color: var(--cy-color-status-danger); }
+.xp__del::before { content: ""; position: absolute; left: var(--cy-space-4); right: 0; top: 0; height: 1px; background: var(--cy-color-border-subtle); }
+.xp__in { flex: 1 1 auto; min-width: 0; text-align: right; font-size: var(--cy-type-body); color: var(--cy-color-text-primary); }
+.xp__in--l { text-align: left; }
+.xp__field { position: relative; display: flex; align-items: center; gap: var(--cy-space-2); min-height: 100rpx; padding: 0 var(--cy-space-4); background: var(--cy-color-bg-surface); }
+.xp__go { flex: none; min-height: 88rpx; display: flex; align-items: center; font-size: var(--cy-type-button); font-weight: 600; color: var(--cy-color-text-primary); }
+.xp__go.is-off { color: var(--cy-color-text-disabled); }
+
+/* 组件样式隔离,全局 .cy-pressed 进不来,本地补一份(同 cy-card) */
+.cy-pressed { opacity: .88; }

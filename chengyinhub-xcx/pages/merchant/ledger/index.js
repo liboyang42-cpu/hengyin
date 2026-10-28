@@ -575,7 +575,7 @@ Page({
     if (id === null || id === undefined || id === '') return;
     wx.navigateTo({ url: `/pages/merchant/ledger/batch-detail/index?batchId=${id}` });
   },
-  goAssets() { wx.navigateTo({ url: '/subpackageA/pages/assetcenter/earnings/index' }); },
+  goAssets() { wx.navigateTo({ url: '/subpackageA/pages/assetcenter/earnings/index?theme=merchant' }); },
   goInbox() { wx.navigateTo({ url: '/subpackageB/pages/im/list/index' }); },
   _beginCoopSettleAlertOperation(loading) {
     const memberId = this._scopeMemberId;

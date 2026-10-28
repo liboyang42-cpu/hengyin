@@ -61,6 +61,9 @@ public class ApiTemplateController extends BaseController {
     private ITemplatePublishService templatePublishService;
 
     @Autowired
+    private com.chengyinhub.business.service.support.TemplateAdoptionService templateAdoptionService;
+
+    @Autowired
     private ICmsMemberTemplateService memberTemplateService;
 
     @Autowired
@@ -127,7 +130,7 @@ public class ApiTemplateController extends BaseController {
             Long id = templatePublishService.publishTemplateWithTransaction(request, member_id, username);
             if (id > 0) {
                 submitTemplateMediaCheck(id, request, member_id);
-                AjaxResult ok = success(id);
+                AjaxResult ok = success(authorTemplateId(id));
                 // O5b-5(开关默认关):标题与广场在架模板高度相似只提示,不拦;无提示时不带 warnings,响应形状不变。
                 java.util.List<com.chengyinhub.business.service.support.TopicPublishCheckService.PublishCheckIssue> warnings =
                         templateTitleSimilarityService == null ? null
@@ -170,7 +173,7 @@ public class ApiTemplateController extends BaseController {
             String username = getAppUserName();
             // 草稿不做全局重名拦截(覆盖更新自己的草稿不应被拦)
             Long id = templatePublishService.saveOrUpdateDraft(request, memberId, username);
-            return success(id);
+            return success(authorTemplateId(id));
         } catch (ServiceException e) {
             return new AjaxResult(e.getCode(), e.getMessage());
         } catch (IllegalArgumentException e) {
@@ -181,15 +184,82 @@ public class ApiTemplateController extends BaseController {
         }
     }
 
+    private Object authorTemplateId(Long id) {
+        var attributes = org.springframework.web.context.request.RequestContextHolder.getRequestAttributes();
+        if (id != null && attributes instanceof org.springframework.web.context.request.ServletRequestAttributes servlet
+                && "1".equals(servlet.getRequest().getHeader("X-Author-Exact-Ids"))) return id.toString();
+        return id;
+    }
+
     @Operation(summary = "采用来源模板为草稿")
     @Log(title = "采用模板草稿", businessType = BusinessType.INSERT)
     @RateLimiter(time = 60, count = 30, limitType = LimitType.MEMBER)
     @PostMapping("/adopt-draft")
-    public AjaxResult adoptDraft(@RequestBody CmsTemplatePublishRequest request) {
-        if (request == null) return error("请指定来源模板");
-        // 独立入口使旧后端明确拒绝，而非忽略新字段后误存不完整草稿。
-        request.setAdoptSourceOnly(true);
-        return draft(request);
+    public AjaxResult adoptDraft(@RequestBody com.chengyinhub.business.domain.dto.TemplateAdoptionCommand request) {
+        try {
+            if (request == null) return error("请指定来源模板");
+            Long actor = getAppUserId();
+            if (actor == null || actor <= 0) return error("请先登录");
+            Long owner = resolveTemplateOwner(actor, request.getScope());
+            return success(templateAdoptionService.adopt(actor, owner, request, getAppUserName()));
+        } catch (ServiceException e) { return new AjaxResult(e.getCode(), e.getMessage()); }
+    }
+
+    @GetMapping("/adoption-source")
+    public AjaxResult adoptionSource(@RequestParam String originalTemplateId, @RequestParam(required=false) String scope) {
+        try {
+            Long actor = getAppUserId();
+            if (actor == null || actor <= 0) return error("请先登录");
+            return success(templateAdoptionService.source(actor, resolveTemplateOwner(actor, scope), originalTemplateId));
+        } catch (ServiceException e) { return new AjaxResult(e.getCode(), e.getMessage()); }
+    }
+
+    @GetMapping("/adoption-receipt")
+    public AjaxResult adoptionReceipt(@RequestParam String requestId, @RequestParam(required=false) String scope) {
+        try {
+            Long actor = getAppUserId();
+            if (actor == null || actor <= 0) return error("请先登录");
+            return success(templateAdoptionService.receipt(actor, resolveTemplateOwner(actor, scope), scope, requestId));
+        } catch (ServiceException e) { return new AjaxResult(e.getCode(), e.getMessage()); }
+    }
+
+    @GetMapping("/adoption-detail")
+    public AjaxResult adoptionDetail(@RequestParam String requestId, @RequestParam(required=false) String scope) {
+        AjaxResult receipt = adoptionReceipt(requestId, scope);
+        if (!Integer.valueOf(200).equals(receipt.get(AjaxResult.CODE_TAG))) return receipt;
+        @SuppressWarnings("unchecked")
+        java.util.Map<String, Object> facts = (java.util.Map<String, Object>) receipt.get(AjaxResult.DATA_TAG);
+        if (!"COMPLETED".equals(facts.get("status"))) return new AjaxResult(409, "采用尚未完成");
+        AjaxResult detail = myInfo(String.valueOf(facts.get("draftId")), scope);
+        if (!Integer.valueOf(200).equals(detail.get(AjaxResult.CODE_TAG))) return detail;
+        Object data = detail.get(AjaxResult.DATA_TAG);
+        if (!(data instanceof CmsMemberTemplate template)) return new AjaxResult(409, "采用详情尚未确认");
+        if (!templateAdoptionService.matchesDraft(facts, template)) return new AjaxResult(409, "采用草稿内容版本已变化，请从我的玩法明确选择当前版本");
+        return success(com.chengyinhub.business.service.support.TemplateAdoptionWire.strings(com.chengyinhub.business.service.support.TemplateAdoptionWire.strings(template, "id"), "originalTemplateId"));
+    }
+
+    @PostMapping("/author-info")
+    public AjaxResult authorInfo(String id) {
+        AjaxResult result = producInfo(id);
+        if (Integer.valueOf(200).equals(result.get(AjaxResult.CODE_TAG)))
+            result.put(AjaxResult.DATA_TAG, com.chengyinhub.business.service.support.TemplateAdoptionWire.strings(com.chengyinhub.business.service.support.TemplateAdoptionWire.strings(result.get(AjaxResult.DATA_TAG), "id"), "originalTemplateId"));
+        return result;
+    }
+
+    @PostMapping("/author-myinfo")
+    public AjaxResult authorMyInfo(String id, String scope) {
+        AjaxResult result = myInfo(id, scope);
+        if (Integer.valueOf(200).equals(result.get(AjaxResult.CODE_TAG)))
+            result.put(AjaxResult.DATA_TAG, com.chengyinhub.business.service.support.TemplateAdoptionWire.strings(com.chengyinhub.business.service.support.TemplateAdoptionWire.strings(result.get(AjaxResult.DATA_TAG), "id"), "originalTemplateId"));
+        return result;
+    }
+
+    @PostMapping("/adoption-home")
+    public AjaxResult adoptionHome() {
+        AjaxResult result = getHomeData();
+        if (Integer.valueOf(200).equals(result.get(AjaxResult.CODE_TAG)))
+            result.put(AjaxResult.DATA_TAG, com.chengyinhub.business.service.support.TemplateAdoptionWire.strings(com.chengyinhub.business.service.support.TemplateAdoptionWire.strings(result.get(AjaxResult.DATA_TAG), "id"), "originalTemplateId"));
+        return result;
     }
 
     @Operation(summary = "提交模板广场审核")

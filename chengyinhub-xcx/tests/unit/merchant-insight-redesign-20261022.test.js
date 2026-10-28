@@ -87,15 +87,21 @@ test('主卡:大数字/环比/上期/逐日格档位按所选窗口与指标', (
   assert.equal(page._buildHero(FACTS, 90, 'visitors', false).deltaText, '');
 });
 
-test('旧缓存没有 trends:退回 30 天归因三数,不出窗口切换与格子', () => {
+// 2026-10-27 业主 M-21:方块图每次打开都要画 —— 没有 trends 时铺 30 格全浅色,窗口切换仍不出
+test('旧缓存没有 trends:退回 30 天归因三数,不出窗口切换,格子铺满全浅色', () => {
   const page = loadPage();
   page._trends = null;
   const h = page._buildHero(FACTS, 7, 'visitors', false);
   assert.equal(h.hasTrend, false);
   assert.equal(h.num, '21');
   assert.equal(h.title, '近30天，城瘾为你带来');
-  assert.equal(h.cells.length, 0);
-  assert.match(PAGE_WXML, /<block wx:if="\{\{hero && hero\.hasTrend\}\}">[\s\S]*class="seg"[\s\S]*class="heat[ "]/);
+  assert.equal(h.cells.length, 30);
+  assert.equal(h.cols, 15);
+  assert.ok(h.cells.every((cell) => cell.lv === 0), '无数据时全部最浅一档');
+  assert.match(h.axisFrom, /^\d{2}-\d{2}$/, '轴起点与后端 daily.date 同格式');
+  // 2026-10-28 m689 业主「还原之前 HTML 的设计」:7/30/90 切换每次都在(旧后端没有 trends 时点了不变)
+  assert.match(PAGE_WXML, /<view class="seg" aria-role="tablist" wx:if="\{\{hero\}\}">/);
+  assert.match(PAGE_WXML, /<block wx:if="\{\{hero && hero\.cells\.length\}\}">\s*<view class="heat[ "]/);
 });
 
 test('切窗口/切指标重建主卡;无 trends 时窗口点击不动', () => {
@@ -160,8 +166,10 @@ test('身份失效清场:店名/头像/主卡/时段/客源/弹层一并清掉',
 });
 
 test('页头是问候区 + 店铺头像,不再有店铺档案入口;最近到店玩家无竖线', () => {
-  assert.match(PAGE_WXML, /class="greet-line"><text>Hi，<\/text><text>\{\{storeName \|\| '店主'\}\}<\/text>/);
-  assert.match(PAGE_WXML, /<cy-avatar class="greet-avatar"[^>]*src="\{\{profile\.logo \|\| ''\}\}"/);
+  // 2026-10-27 业主 M-21:真实店名与 Logo,不写「店主」/「店」;头像不描边
+  assert.match(PAGE_WXML, /class="greet-line"><text>Hi\{\{storeName \? '，' : ''\}\}<\/text><text>\{\{storeName\}\}<\/text>/);
+  assert.match(PAGE_WXML, /<cy-avatar class="greet-avatar"[^>]*src="\{\{profile\.logo \|\| ''\}\}"[^>]*name="\{\{storeName\}\}"/);
+  assert.doesNotMatch(PAGE_WXML.replace(/<!--[\s\S]*?-->/g, ''), /'店主'|'店'|greet-avatar"[^>]*bordered/);
   assert.doesNotMatch(PAGE_WXML.replace(/<!--[\s\S]*?-->/g, ''), /店铺档案|goProfileSetup/);
   const wxss = fs.readFileSync(path.join(ROOT, 'pages/merchant/marketing/ai-insight/index.wxss'), 'utf8');
   assert.doesNotMatch(wxss, /\.visitor[^{]*::?before/, '最近到店玩家卡不加竖线');

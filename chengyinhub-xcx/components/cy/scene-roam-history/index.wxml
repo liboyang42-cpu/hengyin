@@ -2,8 +2,11 @@
 <cy-error load-failure wx:if="{{state === 'error'}}" fill size="lg" title="漫游记录加载失败" retry="重试" bind:retry="retry" />
 <view wx:elif="{{state === 'loading'}}" class="history-loading" aria-role="status">正在读取漫游记录…</view>
 <view wx:else class="hs">
+  <view wx:if="{{remoteLoading}}" aria-role="status">正在读取漫游记录…</view>
+  <view wx:if="{{remoteError}}" bindtap="retry" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">漫游记录读取失败，当前仅显示已读取记录。点此重试</view>
+  <view wx:if="{{localWarning}}">本机补充记录暂时无法读取</view>
   <view class="hs-sum" wx:if="{{summary.trips}}">
-    <text>{{ summary.trips || 0 }}次漫游</text>
+    <text>已读取{{ summary.trips || 0 }}次漫游</text>
     <text>{{summary.km || 0}}公里</text>
     <text>探{{summary.shopsText || 0}}家</text>
   </view>
@@ -15,7 +18,7 @@
   </view>
 
   <view class="hs-scroll" style="{{pmList === 1 ? '--pm-l:1;' : (pmList === 2 ? '--pm-l-d:.32s;--pm-l-s:1;' : '')}}">
-    <view class="rc" wx:for="{{list}}" wx:key="ts" bindtap="openSession" data-ts="{{item.ts}}"
+    <view class="rc" wx:for="{{list}}" wx:key="historyKey" bindtap="openSession" data-ts="{{item.ts}}" data-session-id="{{item.serverFact ? item.sessionId : ''}}"
           aria-role="button" aria-label="{{item.dateShort}} {{item.title}},{{item.distanceText || 0}}公里" hover-class="cy-pressed" hover-stay-time="80" style="--pmi:{{index}};">
       <view class="rc__main">
         <view class="rc__thumb">
@@ -23,7 +26,7 @@
           <cy-icon wx:else name="walk" size="61" />
         </view>
         <view class="rc__copy">
-          <text class="rc__date">{{item.dateShort}}</text>
+          <text class="rc__date">{{item.dateShort}} · {{item.serverFact ? '已完成' : '本机记录'}}</text>
           <text class="rc__title">{{item.title}}</text>
         </view>
       </view>
@@ -42,8 +45,9 @@
 
     <!-- CU-M-55:正在漫游时 sessions 必然为空(记录要结算才写),此时说「你还没有开始过」
          与事实相反,CTA 也不该是「出发第一次漫游」。判据在组件:本机 recovery 记录仍在。 -->
-    <cy-empty wx:if="{{!list.length && inProgress}}" fill size="lg" class="fill-slot" kind="not-started" title="正在漫游中" sub="结束后收录" cta="回到地图" bind:cta="closeToRoam" />
-    <cy-empty wx:elif="{{!list.length}}" fill size="lg" class="fill-slot" kind="empty" title="还没有漫游记录" sub="{{tools ? '' : '记录仅存本机'}}" cta="出发第一次漫游" bind:cta="closeToRoam" />
+    <cy-empty wx:if="{{!remoteLoading && !remoteError && !list.length && inProgress}}" fill size="lg" class="fill-slot" kind="not-started" title="正在漫游中" sub="结束后收录" cta="回到地图" bind:cta="closeToRoam" />
+    <cy-empty wx:elif="{{!remoteLoading && !remoteError && !list.length}}" fill size="lg" class="fill-slot" kind="empty" title="还没有漫游记录" sub="" cta="出发第一次漫游" bind:cta="closeToRoam" />
+    <view wx:if="{{hasMore && !remoteLoading}}" bindtap="loadMore" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">加载更多漫游记录</view>
     <view wx:if="{{list.length}}" style="height:80rpx"></view>
   </view>
 </view>

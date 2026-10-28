@@ -416,6 +416,7 @@ Page({
     this.setData({ 'opsSheet.show': false });
     const ds = { id: p.id, biz: p.biz, online: p.online, title: p.title };
     if (k === 'received') return this.goReceivedApplies();
+    if (k === 'edit' && p.biz === 'topic') return this.editTopic(p.id);
     if (k === 'edit') return this.editActivity({ currentTarget: { dataset: { item: { id: p.id, bizType: 'activity', title: p.title, _sold: false, signupCount: 0 } } } });
     if (k === 'toggle') return this.toggleStatus({ currentTarget: { dataset: ds } });
     if (k === 'cancel') {
@@ -480,6 +481,13 @@ Page({
     // CU-M-05:不带 scope 进去就按俱乐部主理人判身份,商家自家活动反而被拦在门外。
     if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/publish/activity/index'
       + (this.data.operationScope ? '?scope=MERCHANT' : ''), complete: () => { this._navigating = false; } });
+  },
+
+  // M-26:长按「编辑」主题 = 进专业编辑器,路由与 onCardTap 的草稿/未通过分支一致
+  editTopic(id) {
+    if (!id || this._navigating) return;
+    this._navigating = true; wx.navigateTo({ url: '/pages/publish/fabu/index?id=' + id
+      + (this.data.operationScope ? '&scope=MERCHANT' : ''), complete: () => { this._navigating = false; } });
   },
 
   editActivity(e) {
@@ -660,16 +668,26 @@ Page({
 
   openAudit(target, title) {
     if (!target) return;
+    if (typeof target.bizId === 'number' && !Number.isSafeInteger(target.bizId)) { toast('内容编号不完整，请刷新列表'); return; }
+    const bizId = String(target.bizId);
+    if (!/^[1-9]\d{0,18}$/.test(bizId) || bizId.length === 19 && bizId > '9223372036854775807') { toast('内容编号无效'); return; }
+    this._auditEpoch = (this._auditEpoch || 0) + 1;
+    this._appealing = false;
+    let draft = null;
+    try { draft = wx.getStorageSync(this.auditDraftKey(target.bizType, bizId)) || null; }
+    catch (e) { toast('申诉草稿无法读取，请稍后重试'); return; }
     this.setData({ auditSheet: { show: true, loading: true, error: '', title: title || '', bizType: target.bizType,
-      bizId: target.bizId, rows: [], appealText: '', canAppeal: false } });
+      bizId, rows: [], appealText: '', canAppeal: false, attachments: draft && draft.attachments || [],
+      draftReason: draft && draft.reason || '', appealCommand: draft && draft.command || null, confirmed: !!(draft && draft.confirmed), pending: !!(draft && draft.pending), appealError: draft && draft.pending ? '原申诉结果待确认，请读取平台记录；不要修改原说明。' : '' } });
     this.loadAudit();
   },
 
   loadAudit() {
     const that = this;
     const sheet = this.data.auditSheet;
-    const current = currentRead(this);
-    const same = () => current() && that.data.auditSheet.show
+    const current = currentRead(this), epoch = this._auditEpoch;
+    const read = this._auditRead = (this._auditRead || 0) + 1;
+    const same = () => current() && epoch === this._auditEpoch && read === this._auditRead && that.data.auditSheet.show
       && that.data.auditSheet.bizType === sheet.bizType && that.data.auditSheet.bizId === sheet.bizId;
     app.sendRequest({
       hideLoading: true, silentError: true, url: '/api/audit/timeline', method: 'GET',
@@ -679,7 +697,7 @@ Page({
         if (res && res.code == '200' && res.data) {
           that.setData({ auditSheet: Object.assign({}, that.data.auditSheet, { loading: false, error: '',
             rows: auditTimeline.timelineRows(res.data), appealText: auditTimeline.appealText(res.data),
-            canAppeal: res.data.canAppeal === true }) });
+            canAppeal: res.data.canAppeal === true && !that.data.auditSheet.confirmed }) });
         } else {
           const msg = app.getRequestErrorMessage(res, '审核记录加载失败');
           that.setData({ auditSheet: Object.assign({}, that.data.auditSheet, { loading: false, error: msg, canAppeal: false }) });
@@ -698,35 +716,133 @@ Page({
     this.setData({ auditSheet: Object.assign({}, this.data.auditSheet, { show: false }) });
   },
 
+  auditDraftKey(bizType, bizId) {
+    return 'audit-appeal:' + String(app.getUserID() || '') + ':' + bizType + ':' + bizId;
+  },
+
+  saveAuditDraft(pending, reason) {
+    const sheet = this.data.auditSheet;
+    const draft = { reason: reason == null ? sheet.draftReason || '' : reason,
+      attachments: (sheet.attachments || []).slice(), pending: !!pending, confirmed: !!sheet.confirmed,
+      command: pending || sheet.confirmed ? sheet.appealCommand || { requestId: 'appeal-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2),
+        bizType: sheet.bizType, bizId: sheet.bizId, reason: reason == null ? sheet.draftReason || '' : reason,
+        attachments: Array.from(new Set((sheet.attachments || []).map(ref => ref.trim()).filter(Boolean))) } : null };
+    try {
+      const key = this.auditDraftKey(sheet.bizType, sheet.bizId);
+      wx.setStorageSync(key, draft);
+      if (JSON.stringify(wx.getStorageSync(key)) !== JSON.stringify(draft)) throw Error('草稿未保存');
+      this.setData({ 'auditSheet.draftReason': draft.reason, 'auditSheet.pending': draft.pending, 'auditSheet.appealCommand': draft.command });
+      return true;
+    } catch (e) { toast('申诉草稿保存失败，请重试'); return false; }
+  },
+
+  addAuditAttachment() {
+    const sheet = this.data.auditSheet;
+    if (!sheet.show || !sheet.canAppeal || sheet.pending || this._appealing || (sheet.attachments || []).length >= 6) return;
+    const owner = String(app.getUserID()), token = authorization(), epoch = this._auditEpoch;
+    app.chooseImage(urls => {
+      if (this._unloaded || owner !== String(app.getUserID()) || token !== authorization()
+        || epoch !== this._auditEpoch || !this.data.auditSheet.show || this.data.auditSheet.pending) return;
+      const refs = (this.data.auditSheet.attachments || []).concat((urls || []).filter(url => typeof url === 'string' && url)).slice(0, 6);
+      this.setData({ 'auditSheet.attachments': refs });
+      this.saveAuditDraft(false);
+    }, 6 - (sheet.attachments || []).length, { skipCrop: true });
+  },
+
+  removeAuditAttachment(e) {
+    if (this.data.auditSheet.pending || this._appealing) return;
+    const refs = (this.data.auditSheet.attachments || []).slice();
+    refs.splice(Number(e.currentTarget.dataset.index), 1);
+    this.setData({ 'auditSheet.attachments': refs }); this.saveAuditDraft(false);
+  },
+
+  recoverAuditAppeal() {
+    const sheet = this.data.auditSheet, command = sheet.appealCommand;
+    if (!sheet.show) return;
+    if (!command) {
+      this.setData({ 'auditSheet.appealError': '历史申诉未绑定原请求号，保留说明；请核对下方平台审核记录。' });
+      this.loadAudit(); return;
+    }
+    if (command.bizType !== sheet.bizType || command.bizId !== sheet.bizId
+      || command.reason !== sheet.draftReason || typeof command.requestId !== 'string'
+      || !command.requestId || command.requestId.length > 64 || !Array.isArray(command.attachments)
+      || JSON.stringify(command.attachments) !== JSON.stringify(Array.from(new Set((sheet.attachments || []).map(ref => ref.trim()).filter(Boolean))))) {
+      this.setData({ 'auditSheet.appealError': '原申诉记录不完整，不能确认或重新提交。' }); return;
+    }
+    const epoch = this._auditEpoch, owner = String(app.getUserID()), current = currentRead(this);
+    const sequence = this._appealRead = (this._appealRead || 0) + 1;
+    const same = () => current() && this.data.auditSheet.show && epoch === this._auditEpoch && sequence === this._appealRead;
+    app.sendRequest({
+      hideLoading: true, silentError: true, url: '/api/audit/appeal/receipt', method: 'GET',
+      data: { bizType: command.bizType, bizId: command.bizId, requestId: command.requestId },
+      success: res => {
+        if (!same()) return;
+        const receipt = res && res.data, intent = receipt && receipt.intent;
+        const matches = res && Number(res.code) === 200 && receipt && receipt.state === 'FOUND' && intent
+          && intent.version === 1 && intent.memberId === owner && intent.bizType === command.bizType
+          && intent.bizId === command.bizId && intent.requestId === command.requestId && intent.reason === command.reason
+          && intent.evidence === null && JSON.stringify(intent.attachments) === JSON.stringify(command.attachments)
+          && typeof receipt.appealId === 'string' && /^[1-9]\d*$/.test(receipt.appealId)
+          && typeof receipt.taskId === 'string' && /^[1-9]\d*$/.test(receipt.taskId)
+          && ['SUBMITTED', 'REVIEWING', 'ACCEPTED', 'REJECTED', 'WITHDRAWN'].includes(receipt.appealState);
+        if (!matches) {
+          this.setData({ 'auditSheet.appealError': '原申诉结果未确认，保留原号和冻结输入；查无不代表未提交。' }); return;
+        }
+        this.setData({ 'auditSheet.pending': false, 'auditSheet.confirmed': true, 'auditSheet.canAppeal': false,
+          'auditSheet.appealError': '原申诉及附件意图已确认，申诉编号 ' + receipt.appealId,
+          'auditSheet.appealText': auditTimeline.appealText({ appeal: { state: receipt.appealState } }) });
+        this.saveAuditDraft(false); this.loadAudit();
+      },
+      fail: () => { if (same()) this.setData({ 'auditSheet.appealError': '结果读取失败，保留原号和冻结输入，请重试读取。' }); }
+    });
+  },
+
   appealAudit() {
     const sheet = this.data.auditSheet;
-    if (!sheet.show || !sheet.canAppeal || this._appealing) return;
-    const that = this;
+    if (!sheet.show || this._appealing) return;
+    if (sheet.pending) { this.recoverAuditAppeal(); return; }
+    if (!sheet.canAppeal) return;
+    const that = this, epoch = this._auditEpoch;
     const current = currentRead(this);
+    const same = () => current() && epoch === that._auditEpoch && that.data.auditSheet.show;
     modal.show({
-      title: '申诉', editable: true, multiline: true, confirmText: '提交申诉',
+      title: '申诉', editable: true, multiline: true, confirmText: '提交申诉', content: sheet.draftReason || '',
       placeholderText: '写清你认为处理有误的理由（500 字内），每条内容只能申诉一次',
       validate: auditTimeline.validateReason,
       success(r) {
-        if (!r.confirm || !current() || that._appealing) return;
+        if (!r.confirm || !same() || that._appealing) return;
         if (auditTimeline.validateReason(r.content)) { toast(auditTimeline.validateReason(r.content)); return; }
+        const reason = String(r.content).trim();
+        if (!that.saveAuditDraft(true, reason)) return;
         that._appealing = true;
-        app.sendRequest({
+        const payload = JSON.parse(JSON.stringify(that.data.auditSheet.appealCommand));
+        try { app.sendRequest({
           hideLoading: true, silentError: true, url: '/api/audit/appeal', method: 'POST',
-          header: { 'content-type': 'application/json' },
-          data: JSON.stringify({ bizType: sheet.bizType, bizId: Number(sheet.bizId), reason: String(r.content).trim() }),
+          header: { 'content-type': 'application/json' }, data: JSON.stringify(payload),
           success(res) {
+            if (!same()) return;
             that._appealing = false;
-            if (!current()) return;
             if (res && res.code == '200') {
-              toast('申诉已提交');
-              if (that.data.auditSheet.show && that.data.auditSheet.bizId === sheet.bizId) that.loadAudit();
+              toast('申诉已提交，正在核对结果'); that.recoverAuditAppeal();
             } else {
-              toast(app.getRequestErrorMessage(res, '申诉失败'));
+              const msg = app.getRequestErrorMessage(res, '申诉结果待确认');
+              that.setData({ 'auditSheet.appealError': msg }); toast(msg);
+              // First-response validation is definite; transport errors/other codes retain the frozen input.
+              if (res && Number(res.code) === 400) that.saveAuditDraft(false, reason);
+              else if (res && Number(res.code) === 409) that.recoverAuditAppeal();
             }
           },
-          fail() { that._appealing = false; if (current()) toast('网络异常，请重试'); }
-        });
+          fail() {
+            if (!same()) return;
+            that._appealing = false;
+            that.setData({ 'auditSheet.appealError': '网络异常，原申诉结果待确认，请读取申诉记录' });
+            toast('网络异常，原申诉结果待确认');
+          }
+        }); } catch (e) {
+          if (!same()) return;
+          that._appealing = false;
+          that.setData({ 'auditSheet.appealError': '请求结果未确认，保留原号和输入，请读取原申诉结果。' });
+        }
       }
     });
   },
@@ -933,7 +1049,10 @@ function decorate(p) {
   const publishedActivity = p.bizType === 'activity'
     && (p.state === 'running' || p.state === 'notStarted' || p.state === 'offline'
       || p.state === 'pending' || p.state === 'rejected');
-  const canEdit = !merchantActivity && publishedActivity;
+  // 2026-10-27 业主 M-26:长按面板要有「编辑」。主题草稿/未通过/已下架回专业编辑器(与点卡进编辑器同一路由);
+  // 在售中的主题不在这里改(改票种/站点会影响已买票的人),仍走项目主页。
+  const editableTopic = p.bizType === 'topic' && (p.state === 'draft' || p.state === 'rejected' || p.state === 'offline');
+  const canEdit = (!merchantActivity && publishedActivity) || editableTopic;
   // [C8-05] 主题:个人/商家主办可「取消并退款」;俱乐部主题有岗位权限,走俱乐部「结束主题」。
   const canCancel = p.bizType === 'topic'
     ? (p.ownerType !== 'club' && (online || p.state === 'offline'))

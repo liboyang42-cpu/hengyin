@@ -237,6 +237,17 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     }
 
     @Override
+    public Map<Long, com.chengyinhub.business.domain.vo.MerchantTodoRegistrationVO> selectTodoRegistrationOwners(
+            java.util.Collection<Long> registrationIds) {
+        Map<Long, com.chengyinhub.business.domain.vo.MerchantTodoRegistrationVO> owners = new java.util.HashMap<>();
+        if (registrationIds == null || registrationIds.isEmpty()) return owners;
+        for (com.chengyinhub.business.domain.vo.MerchantTodoRegistrationVO row : cmsRegistrationMapper.selectTodoRegistrationOwners(registrationIds)) {
+            owners.put(row.getId(), row);
+        }
+        return owners;
+    }
+
+    @Override
     public Map<Long, long[]> countPaidVerificationByOwners(Long ownerType, java.util.Collection<Long> ownerIds) {
         Map<Long, long[]> out = new java.util.HashMap<>();
         if (ownerType == null || ownerIds == null || ownerIds.isEmpty()) return out;
@@ -1090,7 +1101,11 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             }
             BigDecimal userPointCanDeduct = new BigDecimal(userPoint).multiply(pointDeductRate);
             c.pointDeductAmount = userPointCanDeduct.compareTo(maxDeductAmount) > 0 ? maxDeductAmount : userPointCanDeduct;
-            c.pointUsed = c.pointDeductAmount.divide(pointDeductRate, 0, BigDecimal.ROUND_UP).intValue();
+            try {
+                c.pointUsed = c.pointDeductAmount.divide(pointDeductRate, 0, RoundingMode.UP).intValueExact();
+            } catch (ArithmeticException unsupportedPoints) {
+                throw new ServiceException("积分抵扣数量超过系统支持范围，请核对积分配置");
+            }
         }
         c.payableAmount = c.totalAmount.subtract(c.pointDeductAmount);
         if (use == 1) {
@@ -2649,14 +2664,23 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         }
     }
 
-    /**
-     * 返还积分给用户
-     */
-    private void returnPointsToUser(CmsRegistration registration) {
-        if (registration == null || registration.getPointUsed() == null
-                || registration.getPointUsed() <= 0) {
-            return;
+    /** 报名积分列为 Long，现有余额 Mapper 入参为 Integer；禁止在任何恢复出口静默截断。 */
+    private int exactReturnedPoints(Long used) {
+        if (used == null || used == 0) return 0;
+        try {
+            int points = Math.toIntExact(used);
+            if (points < 0) throw new ArithmeticException("negative points");
+            return points;
+        } catch (ArithmeticException invalidPoints) {
+            throw new IllegalStateException("报名积分快照超出支持范围，请人工核对", invalidPoints);
         }
+    }
+
+    /** 返还积分给用户。 */
+    private void returnPointsToUser(CmsRegistration registration) {
+        if (registration == null) return;
+        final int points = exactReturnedPoints(registration.getPointUsed());
+        if (points == 0) return;
         Date now = new Date();
         if (cmsRegistrationMapper.claimPointsReturn(registration.getId(), "system", now) == 0) {
             CmsRegistration current = cmsRegistrationMapper.selectCmsRegistrationByIdForUpdate(registration.getId());
@@ -2665,7 +2689,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             }
             throw new IllegalStateException("报名积分返还资格状态冲突");
         }
-        if (umsMemberMapper.addPoints(registration.getMemberId(), registration.getPointUsed().intValue()) != 1) {
+        if (umsMemberMapper.addPoints(registration.getMemberId(), points) != 1) {
             throw new IllegalStateException("报名积分返还失败");
         }
         logger.info("返还积分成功，用户ID: {}, 返还积分: {}",
@@ -2694,8 +2718,9 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             throw new RuntimeException("已完成支付，请从订单详情申请取消报名，是否可取消以订单规则为准");
         }
 
-        boolean shouldReturnPoints = registration.getPointUsed() != null && registration.getPointUsed() > 0
+        boolean shouldReturnPoints = registration.getPointUsed() != null && registration.getPointUsed() != 0
                 && (registration.getPointsReturned() == null || registration.getPointsReturned() == 0);
+        int points = shouldReturnPoints ? exactReturnedPoints(registration.getPointUsed()) : 0;
         if (cmsRegistrationMapper.cancelUnpaidIfActive(registrationId, memberId, userName) == 0) {
             CmsRegistration current = cmsRegistrationMapper.selectCmsRegistrationByIdForUpdate(registrationId);
             if (current != null && memberId.equals(current.getMemberId())
@@ -2710,7 +2735,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             restoreTicketInventory(registration.getTicketId(), qty);
         }
         if (shouldReturnPoints
-                && umsMemberMapper.addPoints(memberId, registration.getPointUsed().intValue()) != 1) {
+                && umsMemberMapper.addPoints(memberId, points) != 1) {
             throw new IllegalStateException("取消报名积分返还失败");
         }
         if (Integer.valueOf(PurchaseKind.EXPLORE_PASS).equals(registration.getPurchaseKind())) {
@@ -2846,6 +2871,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
      * 必须与条件关单更新在同一事务内 —— 任一步失败整体回滚,订单不关,等下轮重试。
      */
     private void releaseHeldResources(CmsRegistration r, String releaseReason, String updateBy) {
+        int points = exactReturnedPoints(r.getPointUsed());
         // 回补库存(原子,与取消口径一致)
         if (r.getTicketId() != null) {
             long qty = r.getOrderNum() != null && r.getOrderNum() > 0 ? r.getOrderNum() : 1L;
@@ -2853,9 +2879,9 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         }
         // 下单时预扣的积分原数退还。★先 CAS 抢 points_returned 标记、抢到才加积分:
         // 「先读 points_returned 再判」在并发下两个事务能同时读到 0 ⇒ 双份返还。
-        if (r.getPointUsed() != null && r.getPointUsed() > 0
+        if (points > 0
                 && cmsRegistrationMapper.claimPointsReturn(r.getId(), updateBy, new Date()) == 1) {
-            if (umsMemberMapper.addPoints(r.getMemberId(), r.getPointUsed().intValue()) != 1) {
+            if (umsMemberMapper.addPoints(r.getMemberId(), points) != 1) {
                 throw new IllegalStateException("过期订单积分返还失败");
             }
         }

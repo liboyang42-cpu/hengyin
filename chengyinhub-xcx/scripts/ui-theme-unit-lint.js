@@ -23,7 +23,13 @@ const DOMAIN_RULES = [
     // 2026-09-16:提现记录(subpackageMember/tixianjilu)进共享域 —— 商家侧深链壳
     // pages/coop/withdraw/records 带 theme=merchant redirect 进来必须保持商家白底
     // (SMOKE/095 实拍落到黑底),玩家从收益页进来仍是暗色;页面按 options.theme 分档。
-    route: /^(?:pages\/(?:template|templatedetail|talent|shezhi|mylike)\/|pages\/club\/topic-story\/|pages\/activity\/(?:detail|official-(?:inbox|mine))\/|subpackageMember\/(?:mytemplate|tixianjilu)\/|subpackageA\/pages\/infomation\/)/
+    // 2026-10-27:消息列表与会话(subpackageB/pages/im/)进共享域 —— 真机走查 M-01/M-06/G-10
+    // 商家看消息与系统通知必须浅色,玩家仍是暗色;页面按 roleGuard.isMerchantView 分档。
+    // 2026-10-27 M-24 owner(真机走查 m692):俱乐部详情(club/detail)进共享域 —— 商家可以入团、看活动,
+    // 商家看俱乐部页用浅色,玩家仍是纯黑;页面按 isMerchantViewer 在根节点二选一,与上面几页同一种做法。
+    // 2026-10-28 G-9 / m680:账户收益与分析页进共享域 —— 商家「财务」进同一页浅色版(?theme=merchant),
+    // 玩家从「我的收益」进来仍是暗色;根节点按 merchantView 二选一。
+    route: /^(?:pages\/(?:template|templatedetail|talent|shezhi|mylike)\/|pages\/club\/(?:topic-story|detail)\/|pages\/activity\/(?:detail|official-(?:inbox|mine))\/|subpackageMember\/(?:mytemplate|tixianjilu)\/|subpackageA\/pages\/(?:infomation|assetcenter\/(?:earnings|analysis))\/|subpackageB\/pages\/im\/)/
   },
   {
     domain: 'merchant',

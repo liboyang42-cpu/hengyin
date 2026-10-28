@@ -9,7 +9,7 @@
   <view style="height: {{statusBarHeight + navBarHeight}}px; flex-shrink: 0;"></view>
   <cy-page-title title="编辑资料" safe-top="{{false}}" />
   <cy-scene-club-edit wx:if="{{routeReady}}" id="clubEdit" club-id="{{clubId}}" bind:back="requestBack" bind:saved="onSaved" bind:dissolved="onDissolved" bind:transferowner="goGovernance" bind:dirtychange="onDirtyChange" />
-  <cy-modal show="{{confirm.show}}" title="放弃本轮修改" confirm-text="确认放弃" cancel-text="继续编辑" danger bind:confirm="confirmBack" bind:cancel="cancelBack" />
+  <cy-modal show="{{confirm.show}}" back-guard="{{false}}" title="放弃本轮修改" confirm-text="确认放弃" cancel-text="继续编辑" danger bind:confirm="confirmBack" bind:cancel="cancelBack" />
   <!-- BL-18 物理返回/侧滑守卫(照 merchant/decor 写法):有未保存修改时先弹「放弃本轮修改」,确认框开着时返回 = 继续编辑 -->
   <page-container
     show="{{!backGuardOff && (dirty || confirm.show)}}"

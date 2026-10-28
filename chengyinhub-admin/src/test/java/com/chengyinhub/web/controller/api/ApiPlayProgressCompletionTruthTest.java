@@ -59,13 +59,15 @@ class ApiPlayProgressCompletionTruthTest
         topic.setProductType(ProductType.FREE_EXPLORE);
         CmsRegistration pass = new CmsRegistration();
         pass.setId(REGISTRATION);
+        pass.setMemberId(PLAYER); pass.setOwnerType(2L); pass.setOwnerId(ACTIVITY);
+        pass.setRegistrationStatus(2); pass.setPaymentStatus(2);
         pass.setPurchaseKind(PurchaseKind.EXPLORE_PASS);
         when(perkLedgerService.isExploreCompleted(REGISTRATION, TOPIC)).thenReturn(true);
-        assertEquals(true, ReflectionTestUtils.invokeMethod(controller, "isCompletedCompletionFact",
-                topic, 0, pass, TOPIC, 2, 1));
+        assertEquals(true, com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.invokeMethod(controller, "isCompletedCompletionFact",
+                topic, 0, Collections.singletonList(pass), TOPIC, 2, 1));
         when(perkLedgerService.isExploreCompleted(REGISTRATION, TOPIC)).thenReturn(false);
-        assertEquals(false, ReflectionTestUtils.invokeMethod(controller, "isCompletedCompletionFact",
-                topic, 1, pass, TOPIC, 2, 2));
+        assertEquals(false, com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.invokeMethod(controller, "isCompletedCompletionFact",
+                topic, 1, Collections.singletonList(pass), TOPIC, 2, 2));
     }
 
     private static final Long PLAYER = 41L;
@@ -109,36 +111,38 @@ class ApiPlayProgressCompletionTruthTest
         progressionService = mock(IPlayerProgressionService.class);
 
         controller = spy(new ApiPlayProgressController());
+        PlayNodeAccessTestFixtures.setField(controller, "puzzlePlayService",
+                mock(com.chengyinhub.business.service.IPuzzlePlayService.class));
         doReturn(PLAYER).when(controller).getAppUserId();
-        ReflectionTestUtils.setField(controller, "cmsTopicNodeService", nodeService);
-        ReflectionTestUtils.setField(controller, "cmsActivityService", activityService);
-        ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrationService);
-        ReflectionTestUtils.setField(controller, "cmsRegistrationMapper", registrationMapper);
-        ReflectionTestUtils.setField(controller, "cmsTopicService", topicService);
-        ReflectionTestUtils.setField(controller, "perkLedgerService", perkLedgerService);
-        ReflectionTestUtils.setField(controller, "shopDayProofService", proofService);
-        ReflectionTestUtils.setField(controller, "playerNodeProgressService", progressService);
-        ReflectionTestUtils.setField(controller, "topicCompletionAwardService", completionAwardService);
-        ReflectionTestUtils.setField(controller, "pointsAwardService", pointsAwardService);
-        ReflectionTestUtils.setField(controller, "playerProgressionService", progressionService);
-        ReflectionTestUtils.setField(controller, "growthService", mock(IGrowthService.class));
-        ReflectionTestUtils.setField(controller, "xpBudgetService", mock(IXpBudgetService.class));
-        ReflectionTestUtils.setField(controller, "rewardDropService", mock(IRewardDropService.class));
-        ReflectionTestUtils.setField(controller, "smsCouponHistoryService", mock(ISmsCouponHistoryService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicNodeService", nodeService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsActivityService", activityService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsRegistrationService", registrationService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsRegistrationMapper", registrationMapper);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicService", topicService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "perkLedgerService", perkLedgerService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "shopDayProofService", proofService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService", progressService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "topicCompletionAwardService", completionAwardService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "pointsAwardService", pointsAwardService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerProgressionService", progressionService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "growthService", mock(IGrowthService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "xpBudgetService", mock(IXpBudgetService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "rewardDropService", mock(IRewardDropService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "smsCouponHistoryService", mock(ISmsCouponHistoryService.class));
         // 上传事实证明由 FileOssUploadUtils 专属测试覆盖;本类只验到店凭证/通关口径合同。
-        ReflectionTestUtils.setField(controller, "photoUploadFactVerifier",
-                (ApiPlayProgressController.PlayPhotoUploadFactVerifier) (picUrl, memberId) -> { });
-        ReflectionTestUtils.setField(controller, "omsTicketService", mock(IOmsTicketService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "photoUploadFactVerifier",
+                (com.chengyinhub.web.service.play.PlayPhotoCommandApplication.PlayPhotoUploadFactVerifier) (picUrl, memberId) -> { });
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "omsTicketService", mock(IOmsTicketService.class));
         templateService = mock(ICmsMemberTemplateService.class);
-        ReflectionTestUtils.setField(controller, "cmsMemberTemplateService", templateService);
-        ReflectionTestUtils.setField(controller, "cmsTopicChapterService", mock(ICmsTopicChapterService.class));
-        ReflectionTestUtils.setField(controller, "clubLeadMapper",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsMemberTemplateService", templateService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicChapterService", mock(ICmsTopicChapterService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "clubLeadMapper",
                 mock(com.chengyinhub.business.mapper.ClubLeadMapper.class));
-        ReflectionTestUtils.setField(controller, "playAttemptLogMapper",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playAttemptLogMapper",
                 mock(com.chengyinhub.business.mapper.PlayAttemptLogMapper.class));
-        ReflectionTestUtils.setField(controller, "memberCollectibleMapper",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "memberCollectibleMapper",
                 mock(com.chengyinhub.business.mapper.MemberCollectibleMapper.class));
-        ReflectionTestUtils.setField(controller, "nodeMerchantOverrideService",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "nodeMerchantOverrideService",
                 new com.chengyinhub.business.service.impl.NodeMerchantOverrideServiceImpl(
                         mock(com.chengyinhub.business.service.ICmsRegistrationMerchantService.class)));
 
@@ -201,6 +205,7 @@ class ApiPlayProgressCompletionTruthTest
         when(completionAwardService.grantOnce(anyLong(), anyLong(), anyLong(), any()))
                 .thenReturn(new TopicCompletionAwardVO());
         CurrentPlayControllerFixtures.install(controller);
+        BasicPlayCommandFixtures.scope(controller, TOPIC);
     }
 
     @SuppressWarnings("unchecked")
@@ -209,8 +214,8 @@ class ApiPlayProgressCompletionTruthTest
     {
         topic.setProductType(ProductType.FREE_EXPLORE);
 
-        AjaxResult checkin = controller.checkin(String.valueOf(ACTIVITY), CODE, null);
-        AjaxResult photo = controller.photo(String.valueOf(ACTIVITY), String.valueOf(NODE), "photo.jpg", null);
+        AjaxResult checkin = BasicPlayCommandFixtures.checkin(controller, String.valueOf(ACTIVITY), CODE, null, null, null, null, String.valueOf(NODE));
+        AjaxResult photo = BasicPlayCommandFixtures.photo(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "photo.jpg", null);
 
         assertEquals(200, checkin.get("code"));
         assertEquals(Boolean.FALSE, ((Map<String, Object>) checkin.get("data")).get("done"));
@@ -244,7 +249,7 @@ class ApiPlayProgressCompletionTruthTest
         node.setLatitude("31.2304");
         when(perkLedgerService.isExploreCompleted(REGISTRATION, TOPIC)).thenReturn(false);
 
-        AjaxResult result = controller.arrive(String.valueOf(ACTIVITY), String.valueOf(NODE), null, null, null);
+        AjaxResult result = BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), null, null, null);
 
         assertEquals(500, result.get("code"));
         assertEquals("请扫店内的码", result.get("msg"));
@@ -266,7 +271,7 @@ class ApiPlayProgressCompletionTruthTest
         topic.setProductType(ProductType.FREE_EXPLORE);
         node.setMerchantMemberId(777L);
 
-        AjaxResult result = controller.arrive(String.valueOf(ACTIVITY), String.valueOf(NODE), null, null, null);
+        AjaxResult result = BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), null, null, null);
 
         assertEquals(500, result.get("code"));
         assertEquals("请扫店内的码", result.get("msg"));
@@ -286,7 +291,7 @@ class ApiPlayProgressCompletionTruthTest
         topic.setProductType(ProductType.FREE_EXPLORE);
         // 默认夹具节点即纯线上形状:merchant_member_id=null、无坐标
 
-        AjaxResult result = controller.arrive(String.valueOf(ACTIVITY), String.valueOf(NODE), null, null, null);
+        AjaxResult result = BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), null, null, null);
 
         assertEquals(200, result.get("code"));
         assertEquals(Boolean.FALSE, ((Map<String, Object>) result.get("data")).get("done"));
@@ -308,18 +313,18 @@ class ApiPlayProgressCompletionTruthTest
         node.setLongitude("121.5");
         node.setLatitude("31.2");
 
-        AjaxResult missing = controller.arrive(String.valueOf(ACTIVITY), String.valueOf(NODE), null, null, null);
+        AjaxResult missing = BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), null, null, null);
         assertEquals("请开启定位", missing.get("msg"));
-        AjaxResult outside = controller.arrive(String.valueOf(ACTIVITY), String.valueOf(NODE), "120", "30", null, null, null, "10");
+        AjaxResult outside = BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "120", "30", null, null, null, "10");
         assertEquals("还没到这一站附近", outside.get("msg"));
         verify(progressService, never()).insertPlayerNodeProgress(any());
 
-        AjaxResult arrived = controller.arrive(String.valueOf(ACTIVITY), String.valueOf(NODE), "121.5", "31.2", null, null, null, "10");
+        AjaxResult arrived = BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "121.5", "31.2", null, null, null, "10");
         assertEquals(200, arrived.get("code"));
         verify(templateService, never()).selectCmsMemberTemplateById(0L);
 
         node.setTemplateId(999L);
-        AjaxResult dangling = controller.arrive(String.valueOf(ACTIVITY), String.valueOf(NODE), "121.5", "31.2", null, null, null, "10");
+        AjaxResult dangling = BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "121.5", "31.2", null, null, null, "10");
         assertEquals("该站配置异常，暂时无法打卡", dangling.get("msg"));
     }
 
@@ -329,7 +334,7 @@ class ApiPlayProgressCompletionTruthTest
     {
         topic.setProductType(ProductType.ORIENTEERING);
 
-        AjaxResult result = controller.arrive(String.valueOf(ACTIVITY), String.valueOf(NODE), null, null, null);
+        AjaxResult result = BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), null, null, null);
 
         assertEquals(200, result.get("code"));
         assertEquals(Boolean.TRUE, ((Map<String, Object>) result.get("data")).get("completed"));
@@ -340,26 +345,30 @@ class ApiPlayProgressCompletionTruthTest
     @Test
     void genericGpsUsesFrozenCoordinatesAndOnlyItsValidatedOriginCreatesProof() throws Exception {
         topic.setProductType(ProductType.ORIENTEERING);node.setTemplateId(101L);node.setLongitude("120.0");node.setLatitude("30.0");
-        com.chengyinhub.business.service.ITopicRouteRuntimeService runtime=mock(com.chengyinhub.business.service.ITopicRouteRuntimeService.class);ReflectionTestUtils.setField(controller,"topicRouteRuntimeService",runtime);
+        com.chengyinhub.business.service.ITopicRouteRuntimeService runtime=mock(com.chengyinhub.business.service.ITopicRouteRuntimeService.class);com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller,"topicRouteRuntimeService",runtime);
         com.fasterxml.jackson.databind.ObjectMapper json=new com.fasterxml.jackson.databind.ObjectMapper();
-        when(runtime.nodeAnswers(PLAYER,TOPIC,ACTIVITY,NODE)).thenReturn(json.readTree("{\"validationMethod\":5}"));when(runtime.canPlay(PLAYER,TOPIC,ACTIVITY,NODE,null)).thenReturn(true);when(runtime.genericPlayer(PLAYER,TOPIC,ACTIVITY)).thenReturn(true);
-        when(runtime.nodeArrivalConfig(PLAYER,TOPIC,ACTIVITY,NODE)).thenReturn(json.readTree("{\"longitude\":\"121.47\",\"latitude\":\"31.23\"}"));when(runtime.recordPlayerArrival(PLAYER,TOPIC,ACTIVITY,NODE,null,null,"GPS")).thenReturn(Collections.singletonMap("version",1));
-        assertEquals(500,controller.arrive(String.valueOf(ACTIVITY),String.valueOf(NODE),"NaN","31.23",null, null, null, "10").get("code"));assertEquals(500,controller.arrive(String.valueOf(ACTIVITY),String.valueOf(NODE),"120","30",null, null, null, "10").get("code"));
-        AjaxResult result=controller.arrive(String.valueOf(ACTIVITY),String.valueOf(NODE),"121.47","31.23",null, null, null, "10");assertEquals(200,result.get("code"));assertEquals(Boolean.FALSE,((Map<?,?>)result.get("data")).get("done"));
-        verify(runtime).recordPlayerArrival(PLAYER,TOPIC,ACTIVITY,NODE,null,null,"GPS");verify(progressService,never()).insertPlayerNodeProgress(any());verify(pointsAwardService,never()).award(anyLong(),anyLong(),anyLong(),any());
+        when(runtime.nodeAnswers(PLAYER,TOPIC,ACTIVITY,NODE)).thenReturn(json.readTree("{\"validationMethod\":5}"));when(runtime.canPlay(eq(PLAYER),eq(TOPIC),eq(ACTIVITY),eq(NODE),anyString())).thenReturn(true);when(runtime.genericPlayer(PLAYER,TOPIC,ACTIVITY)).thenReturn(true);
+        when(runtime.nodeArrivalConfig(PLAYER,TOPIC,ACTIVITY,NODE)).thenReturn(json.readTree("{\"longitude\":\"121.47\",\"latitude\":\"31.23\"}"));when(runtime.recordPlayerArrival(eq(PLAYER),eq(TOPIC),eq(ACTIVITY),eq(NODE),anyString(),eq(0),eq("GPS"))).thenReturn(Collections.singletonMap("version",1));
+        assertEquals(500,BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "NaN", "31.23", null, null, null, "10").get("code"));assertEquals(500,BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "120", "30", null, null, null, "10").get("code"));
+        BasicPlayCommandFixtures.frozenRun(controller,ACTIVITY,TOPIC,NODE,0,json.readTree("{\"validationMethod\":5}"));
+        Map<String,Object> command=Map.of("routeActionId","gps-current-proof","expectedRouteVersion",0);
+        AjaxResult result=BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "121.47", "31.23", null, (String)command.get("routeActionId"), (Integer)command.get("expectedRouteVersion"), "10");assertEquals(200,result.get("code"));assertEquals(Boolean.FALSE,((Map<?,?>)result.get("data")).get("done"));
+        verify(runtime).recordPlayerArrival(PLAYER,TOPIC,ACTIVITY,NODE,(String)command.get("routeActionId"),(Integer)command.get("expectedRouteVersion"),"GPS");verify(progressService,never()).insertPlayerNodeProgress(any());verify(pointsAwardService,never()).award(anyLong(),anyLong(),anyLong(),any());
     }
 
     @Test
     void genericPlayerScanRecordsCurrentRunArrivalWithoutLegacyAwards() {
         topic.setProductType(ProductType.ORIENTEERING);
         com.chengyinhub.business.service.ITopicRouteRuntimeService runtime=mock(com.chengyinhub.business.service.ITopicRouteRuntimeService.class);
-        ReflectionTestUtils.setField(controller,"topicRouteRuntimeService",runtime);
-        when(runtime.canPlay(PLAYER,TOPIC,ACTIVITY,NODE,null)).thenReturn(true);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller,"topicRouteRuntimeService",runtime);
+        when(runtime.canPlay(eq(PLAYER),eq(TOPIC),eq(ACTIVITY),eq(NODE),anyString())).thenReturn(true);
         when(runtime.genericPlayer(PLAYER,TOPIC,ACTIVITY)).thenReturn(true);
-        when(runtime.recordPlayerArrival(PLAYER,TOPIC,ACTIVITY,NODE,null,null)).thenReturn(Collections.singletonMap("version",1));
-        AjaxResult result=controller.checkin(String.valueOf(ACTIVITY),CODE,null);
+        when(runtime.recordPlayerArrival(eq(PLAYER),eq(TOPIC),eq(ACTIVITY),eq(NODE),anyString(),eq(0))).thenReturn(Collections.singletonMap("version",1));
+        BasicPlayCommandFixtures.frozenRun(controller,ACTIVITY,TOPIC,NODE,0,new com.fasterxml.jackson.databind.ObjectMapper().createObjectNode());
+        Map<String,Object> command=Map.of("routeActionId","scan-current-proof","expectedRouteVersion",0);
+        AjaxResult result=BasicPlayCommandFixtures.checkin(controller, String.valueOf(ACTIVITY), CODE, null, (String)command.get("routeActionId"), (Integer)command.get("expectedRouteVersion"), null, String.valueOf(NODE));
         assertEquals(200,result.get("code"));assertEquals(Boolean.FALSE,((Map<?,?>)result.get("data")).get("done"));
-        verify(runtime).recordPlayerArrival(PLAYER,TOPIC,ACTIVITY,NODE,null,null);
+        verify(runtime).recordPlayerArrival(PLAYER,TOPIC,ACTIVITY,NODE,(String)command.get("routeActionId"),(Integer)command.get("expectedRouteVersion"));
         verify(progressService,never()).insertPlayerNodeProgress(any());
         verify(pointsAwardService,never()).award(anyLong(),anyLong(),anyLong(),any());
         verify(completionAwardService,never()).grantOnce(anyLong(),anyLong(),anyLong(),any());
@@ -371,14 +380,18 @@ class ApiPlayProgressCompletionTruthTest
         topic.setProductType(ProductType.ORIENTEERING);
         com.chengyinhub.business.service.ITopicRouteRuntimeService runtime =
                 mock(com.chengyinhub.business.service.ITopicRouteRuntimeService.class);
-        ReflectionTestUtils.setField(controller, "topicRouteRuntimeService", runtime);
-        when(runtime.canPlay(PLAYER, TOPIC, ACTIVITY, NODE, null)).thenReturn(true);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "topicRouteRuntimeService", runtime);
+        when(runtime.canPlay(eq(PLAYER),eq(TOPIC),eq(ACTIVITY),eq(NODE),anyString())).thenReturn(true);
         com.chengyinhub.business.domain.route.TopicRouteState state =
                 new com.chengyinhub.business.domain.route.TopicRouteState();
         state.setRouteMode("LINEAR"); state.setStatus("ACTIVE");
         state.setOpening(Collections.singletonMap("complete", false));
         when(runtime.state(PLAYER, TOPIC, ACTIVITY)).thenReturn(state);
-        AjaxResult result = controller.arrive(String.valueOf(ACTIVITY), String.valueOf(NODE), null, null, null);
+        BasicPlayCommandFixtures.frozenRun(controller,ACTIVITY,TOPIC,NODE,0,new com.fasterxml.jackson.databind.ObjectMapper().createObjectNode());
+        var coordinator = mock(com.chengyinhub.web.service.TopicRouteCompletionCoordinator.class);
+        when(coordinator.advanceOriginal(eq(PLAYER),eq(TOPIC),eq(ACTIVITY),eq(NODE),eq(99L),anyString(),eq(0),any(),isNull(),isNull())).thenReturn(state);
+        PlayNodeAccessTestFixtures.setField(controller,"topicRouteCompletionCoordinator",coordinator);
+        AjaxResult result = BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), null, null, null);
         assertEquals(200, result.get("code"));
         assertEquals(Boolean.FALSE, ((Map<?, ?>) result.get("data")).get("completed"));
         verify(completionAwardService, never()).grantOnce(anyLong(), anyLong(), anyLong(), any());
@@ -390,7 +403,7 @@ class ApiPlayProgressCompletionTruthTest
     {
         topic.setProductType(ProductType.ORIENTEERING);
 
-        AjaxResult result = controller.checkin(String.valueOf(ACTIVITY), CODE, null);
+        AjaxResult result = BasicPlayCommandFixtures.checkin(controller, String.valueOf(ACTIVITY), CODE, null, null, null, null, String.valueOf(NODE));
 
         assertEquals(200, result.get("code"));
         assertEquals(Boolean.TRUE, ((Map<String, Object>) result.get("data")).get("completed"));
@@ -412,9 +425,9 @@ class ApiPlayProgressCompletionTruthTest
                 mock(com.chengyinhub.business.mapper.NodeMedalClaimMapper.class);
         when(medalMapper.insertClaim(anyLong(), anyInt(), anyLong(), anyLong(), anyLong(), anyLong()))
                 .thenReturn(1);
-        ReflectionTestUtils.setField(controller, "nodeMedalClaimMapper", medalMapper);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "nodeMedalClaimMapper", medalMapper);
 
-        AjaxResult result = controller.checkin(String.valueOf(ACTIVITY), CODE, null);
+        AjaxResult result = BasicPlayCommandFixtures.checkin(controller, String.valueOf(ACTIVITY), CODE, null, null, null, null, String.valueOf(NODE));
 
         assertEquals(200, result.get("code"));
         assertEquals(Integer.valueOf(1), ((Map<String, Object>) result.get("data")).get("medalRank"));
@@ -430,9 +443,9 @@ class ApiPlayProgressCompletionTruthTest
                 mock(com.chengyinhub.business.mapper.NodeMedalClaimMapper.class);
         when(medalMapper.insertClaim(anyLong(), anyInt(), anyLong(), anyLong(), anyLong(), anyLong()))
                 .thenReturn(0);
-        ReflectionTestUtils.setField(controller, "nodeMedalClaimMapper", medalMapper);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "nodeMedalClaimMapper", medalMapper);
 
-        AjaxResult result = controller.checkin(String.valueOf(ACTIVITY), CODE, null);
+        AjaxResult result = BasicPlayCommandFixtures.checkin(controller, String.valueOf(ACTIVITY), CODE, null, null, null, null, String.valueOf(NODE));
 
         assertEquals(200, result.get("code"));
         org.junit.jupiter.api.Assertions.assertNull(
@@ -454,13 +467,13 @@ class ApiPlayProgressCompletionTruthTest
         tpl.setFeedbackText("暗号正确，隐藏奖励已解锁");
         when(templateService.selectCmsMemberTemplateById(900L)).thenReturn(tpl);
 
-        AjaxResult result = controller.answer(String.valueOf(ACTIVITY), String.valueOf(NODE), "乱写一个", null);
+        AjaxResult result = BasicPlayCommandFixtures.answer(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "乱写一个", null);
 
         assertEquals(500, result.get("code"));
         assertEquals("答案不正确", result.get("msg"), "完成反馈不能作为答错文案");
         com.chengyinhub.business.mapper.PlayAttemptLogMapper attemptMapper =
                 (com.chengyinhub.business.mapper.PlayAttemptLogMapper)
-                        ReflectionTestUtils.getField(controller, "playAttemptLogMapper");
+                        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.getField(controller, "playAttemptLogMapper");
         verify(attemptMapper).insertPlayAttemptLog(org.mockito.ArgumentMatchers.argThat(log ->
                 Integer.valueOf(0).equals(log.getResult()) && "乱写一个".equals(log.getWrongAnswer())));
         verify(progressService, never()).insertPlayerNodeProgress(any());
@@ -477,7 +490,7 @@ class ApiPlayProgressCompletionTruthTest
         when(overrides.forNode(NODE)).thenReturn(
                 new com.chengyinhub.business.domain.vo.NodeMerchantOverride(99L, null,
                         "商家隐藏奖励已解锁", null));
-        ReflectionTestUtils.setField(controller, "nodeMerchantOverrideService", overrides);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "nodeMerchantOverrideService", overrides);
         wrongAnswerResponseCarriesTheAnswerWrongMarker();
     }
 
@@ -497,18 +510,18 @@ class ApiPlayProgressCompletionTruthTest
         });
         com.chengyinhub.web.service.TopicRouteCompletionCoordinator coordinator =
                 mock(com.chengyinhub.web.service.TopicRouteCompletionCoordinator.class);
-        ReflectionTestUtils.setField(controller,"topicRouteCompletionCoordinator",coordinator);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller,"topicRouteCompletionCoordinator",coordinator);
         com.chengyinhub.business.domain.route.TopicRouteState state =
                 new com.chengyinhub.business.domain.route.TopicRouteState();
         state.setRouteMode("LINEAR"); state.setStatus("ACTIVE");
-        when(coordinator.advance(eq(PLAYER),eq(TOPIC),eq(ACTIVITY),eq(NODE),eq("answer-1"),eq(2),
+        when(coordinator.advanceOriginal(eq(PLAYER),eq(TOPIC),eq(ACTIVITY),eq(NODE),eq(99L),eq("answer-1"),eq(2),
                 eq("player-node-progress:901"),isNull(),isNull())).thenReturn(state);
-        AjaxResult result = controller.answer(String.valueOf(ACTIVITY),String.valueOf(NODE),"答案",null,
-                "answer-1",2);
+        BasicPlayCommandFixtures.frozenRun(controller,ACTIVITY,TOPIC,NODE,2,new com.fasterxml.jackson.databind.ObjectMapper().createObjectNode().put("validationMethod",1).put("questionAnswer","答案"));
+        AjaxResult result = BasicPlayCommandFixtures.answer(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "答案", null, "answer-1", 2);
         assertEquals(200, result.get("code"));
         assertEquals("答对了！", result.get("msg"));
         assertEquals("暗号正确，隐藏奖励已解锁", tpl.getFeedbackText());
-        verify(coordinator).advance(PLAYER,TOPIC,ACTIVITY,NODE,"answer-1",2,"player-node-progress:901",null,null);
+        verify(coordinator).advanceOriginal(PLAYER,TOPIC,ACTIVITY,NODE,99L,"answer-1",2,"player-node-progress:901",null,null);
         verify(proofService,never()).hasArrived(anyLong(),anyLong(),anyLong());
     }
 
@@ -519,7 +532,7 @@ class ApiPlayProgressCompletionTruthTest
         topic.setProductType(ProductType.ORIENTEERING);
         node.setStatus(0L);   // 已下架且本人无完成行 → 在更早的下架闸被拒
 
-        AjaxResult result = controller.answer(String.valueOf(ACTIVITY), String.valueOf(NODE), "随便", null);
+        AjaxResult result = BasicPlayCommandFixtures.answer(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "随便", null);
 
         assertNotEquals(200, result.get("code"));
         org.junit.jupiter.api.Assertions.assertFalse(result.containsKey("data"),
@@ -533,7 +546,7 @@ class ApiPlayProgressCompletionTruthTest
         when(registrationService.selectCmsRegistrationList(any()))
                 .thenReturn(java.util.Arrays.asList(newer, selected));
 
-        AjaxResult result = controller.checkin(String.valueOf(ACTIVITY), CODE, null, null, null, REGISTRATION);
+        AjaxResult result = BasicPlayCommandFixtures.checkin(controller, String.valueOf(ACTIVITY), CODE, null, null, null, REGISTRATION, String.valueOf(NODE));
 
         assertEquals(200, result.get("code"));
         assertEquals(Boolean.FALSE, ((Map<?, ?>) result.get("data")).get("done"));
@@ -549,7 +562,7 @@ class ApiPlayProgressCompletionTruthTest
         topic.setProductType(ProductType.FREE_EXPLORE);
         when(registrationService.selectCmsRegistrationList(any()))
                 .thenReturn(java.util.Arrays.asList(scanTicket(REGISTRATION + 1), scanTicket(REGISTRATION)));
-        assertEquals(200, controller.checkin(String.valueOf(ACTIVITY), CODE, null).get("code"));
+        assertEquals(200, BasicPlayCommandFixtures.checkin(controller, String.valueOf(ACTIVITY), CODE, null, null, null, null, String.valueOf(NODE)).get("code"));
         verify(registrationMapper).markFirstSuccessfulScan(eq(REGISTRATION + 1), eq(PLAYER), eq(2L), eq(ACTIVITY), any());
         verify(registrationMapper, never()).markFirstSuccessfulScan(eq(REGISTRATION), anyLong(), anyLong(), anyLong(), any());
     }
@@ -557,7 +570,7 @@ class ApiPlayProgressCompletionTruthTest
     @Test
     void ticketOutsideTheCurrentQualificationCannotMarkAnOrderOrArrival() {
         topic.setProductType(ProductType.FREE_EXPLORE);
-        AjaxResult result = controller.checkin(String.valueOf(ACTIVITY), CODE, null, null, null, REGISTRATION + 9);
+        AjaxResult result = BasicPlayCommandFixtures.checkin(controller, String.valueOf(ACTIVITY), CODE, null, null, null, REGISTRATION + 9, String.valueOf(NODE));
         assertEquals(500, result.get("code"));
         verify(proofService, never()).markArrived(anyLong(), anyLong(), any());
         verifyOnlyEligibilityReads();
@@ -568,11 +581,11 @@ class ApiPlayProgressCompletionTruthTest
         topic.setProductType(ProductType.ORIENTEERING);
         com.chengyinhub.business.service.IAdvancedGameRuntimeService advanced =
                 mock(com.chengyinhub.business.service.IAdvancedGameRuntimeService.class);
-        ReflectionTestUtils.setField(controller, "advancedGameRuntimeService", advanced);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "advancedGameRuntimeService", advanced);
         when(advanced.completeGate(PLAYER, ACTIVITY, TOPIC, NODE))
                 .thenThrow(new com.chengyinhub.common.exception.ServiceException("请先完成本章玩法"));
         org.junit.jupiter.api.Assertions.assertThrows(com.chengyinhub.common.exception.ServiceException.class,
-                () -> controller.checkin(String.valueOf(ACTIVITY), CODE, null));
+                () -> BasicPlayCommandFixtures.checkin(controller, String.valueOf(ACTIVITY), CODE, null, null, null, null, String.valueOf(NODE)));
         verifyOnlyEligibilityReads();
     }
 
@@ -585,7 +598,7 @@ class ApiPlayProgressCompletionTruthTest
         when(registrationMapper.markFirstSuccessfulScan(anyLong(), anyLong(), anyLong(), anyLong(), any()))
                 .thenReturn(0);
         when(registrationMapper.selectCmsRegistrationByIdForUpdate(REGISTRATION)).thenReturn(current);
-        assertEquals(200, controller.checkin(String.valueOf(ACTIVITY), CODE, null).get("code"));
+        assertEquals(200, BasicPlayCommandFixtures.checkin(controller, String.valueOf(ACTIVITY), CODE, null, null, null, null, String.valueOf(NODE)).get("code"));
         assertEquals(first, current.getFirstSuccessfulScanAt());
         // C包当前资格锁读一次 + 首扫 CAS 失败后按原ID回读当前行一次。
         verify(registrationMapper, org.mockito.Mockito.times(2)).selectCmsRegistrationByIdForUpdate(REGISTRATION);
@@ -601,7 +614,7 @@ class ApiPlayProgressCompletionTruthTest
                 .thenReturn(0);
         when(registrationMapper.selectCmsRegistrationByIdForUpdate(REGISTRATION)).thenReturn(current);
         // C包当前资格锁读在任何写入前即拒绝已取消的原报名(回错误回包而非事务中途抛错)，整笔不写。
-        org.junit.jupiter.api.Assertions.assertNotEquals(200, controller.checkin(String.valueOf(ACTIVITY), CODE, null).get("code"));
+        org.junit.jupiter.api.Assertions.assertNotEquals(200, BasicPlayCommandFixtures.checkin(controller, String.valueOf(ACTIVITY), CODE, null, null, null, null, String.valueOf(NODE)).get("code"));
         verify(registrationMapper, org.mockito.Mockito.never())
                 .markFirstSuccessfulScan(anyLong(), anyLong(), anyLong(), anyLong(), any());
         assertEquals(new Date(1000L), current.getFirstSuccessfulScanAt());
@@ -610,10 +623,10 @@ class ApiPlayProgressCompletionTruthTest
     @Test
     void failedCodeAndGpsArrivalNeverMarkFirstSuccessfulScan() {
         when(nodeService.selectCmsTopicNodeList(any())).thenReturn(Collections.emptyList());
-        assertEquals(500, controller.checkin(String.valueOf(ACTIVITY), "WRONG-CODE", null).get("code"));
+        assertEquals(500, BasicPlayCommandFixtures.checkin(controller, String.valueOf(ACTIVITY), "WRONG-CODE", null, null, null, null, String.valueOf(NODE)).get("code"));
         verifyOnlyEligibilityReads();
         topic.setProductType(ProductType.FREE_EXPLORE);
-        controller.arrive(String.valueOf(ACTIVITY), String.valueOf(NODE), "121.5", "31.2", null, null, null, "10");
+        BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "121.5", "31.2", null, null, null, "10");
         verifyOnlyEligibilityReads();
     }
 
@@ -633,9 +646,9 @@ class ApiPlayProgressCompletionTruthTest
         when(registrationService.selectCmsRegistrationList(any()))
                 .thenReturn(java.util.Arrays.asList(expired, active));
         when(proofService.markArrived(PLAYER, 0L, node)).thenReturn(new PlayerNodeProgress());
-        assertEquals(402, controller.checkin(null, CODE, String.valueOf(TOPIC), null, null, expired.getId()).get("code"));
+        assertEquals(402, BasicPlayCommandFixtures.checkin(controller, null, CODE, String.valueOf(TOPIC), null, null, expired.getId(), String.valueOf(NODE)).get("code"));
         verifyOnlyEligibilityReads();
-        assertEquals(200, controller.checkin(null, CODE, String.valueOf(TOPIC), null, null, active.getId()).get("code"));
+        assertEquals(200, BasicPlayCommandFixtures.checkin(controller, null, CODE, String.valueOf(TOPIC), null, null, active.getId(), String.valueOf(NODE)).get("code"));
         verify(registrationMapper).markFirstSuccessfulScan(eq(REGISTRATION), eq(PLAYER), eq(1L), eq(TOPIC), any());
     }
 
@@ -649,7 +662,7 @@ class ApiPlayProgressCompletionTruthTest
         redeemed.setChapterId(CHAPTER);
         redeemed.setStatus(1);
         when(perkLedgerService.listEntitlements(REGISTRATION)).thenReturn(Collections.singletonList(redeemed));
-        AjaxResult result = controller.checkin(String.valueOf(ACTIVITY), CODE, null, null, null, REGISTRATION);
+        AjaxResult result = BasicPlayCommandFixtures.checkin(controller, String.valueOf(ACTIVITY), CODE, null, null, null, REGISTRATION, String.valueOf(NODE));
         assertEquals(500, result.get("code"));
         verify(proofService, never()).markArrived(anyLong(), anyLong(), any());
         verifyOnlyEligibilityReads();
@@ -671,16 +684,40 @@ class ApiPlayProgressCompletionTruthTest
     @Test void genericFrozenTextAndChoiceAnswersProduceOnlyControlledCurrentProof() throws Exception {
         topic.setProductType(ProductType.ORIENTEERING);node.setTemplateId(9L);
         com.chengyinhub.business.service.ITopicRouteRuntimeService runtime=mock(com.chengyinhub.business.service.ITopicRouteRuntimeService.class);
-        ReflectionTestUtils.setField(controller,"topicRouteRuntimeService",runtime);when(runtime.canPlay(PLAYER,TOPIC,ACTIVITY,NODE,null)).thenReturn(true);when(runtime.genericPlayer(PLAYER,TOPIC,ACTIVITY)).thenReturn(true);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller,"topicRouteRuntimeService",runtime);when(runtime.canPlay(eq(PLAYER),eq(TOPIC),eq(ACTIVITY),eq(NODE),anyString())).thenReturn(true);when(runtime.genericPlayer(PLAYER,TOPIC,ACTIVITY)).thenReturn(true);
         CmsMemberTemplate live=new CmsMemberTemplate();live.setValidationMethod(1);live.setQuestionAnswer("changed");when(templateService.selectCmsMemberTemplateById(9L)).thenReturn(live);
         com.fasterxml.jackson.databind.ObjectMapper json=new com.fasterxml.jackson.databind.ObjectMapper();
         when(runtime.nodeAnswers(PLAYER,TOPIC,ACTIVITY,NODE)).thenReturn(json.readTree("{\"validationMethod\":1,\"questionAnswer\":\"Ａ B\"}"));
         PlayerNodeProgress proof=new PlayerNodeProgress();proof.setStatus(0);when(proofService.markArrived(PLAYER,ACTIVITY,node)).thenReturn(proof);
-        AjaxResult wrong=controller.answer(String.valueOf(ACTIVITY),String.valueOf(NODE),"changed",null);assertEquals(500,wrong.get("code"));verify(runtime,never()).recordPlayerArrival(anyLong(),anyLong(),anyLong(),anyLong(),any(),any(),anyString());
-        AjaxResult text=controller.answer(String.valueOf(ACTIVITY),String.valueOf(NODE),"ab",null);assertEquals(200,text.get("code"));verify(runtime).recordPlayerArrival(PLAYER,TOPIC,ACTIVITY,NODE,null,null,"ANSWER");
+        BasicPlayCommandFixtures.frozenRun(controller,ACTIVITY,TOPIC,NODE,0,json.readTree("{\"validationMethod\":1,\"questionAnswer\":\"Ａ B\"}"));
+        AjaxResult wrong=BasicPlayCommandFixtures.answer(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "changed", null);assertEquals(500,wrong.get("code"));verify(runtime,never()).recordPlayerArrival(anyLong(),anyLong(),anyLong(),anyLong(),any(),any(),anyString());
+        Map<String,Object> command=Map.of("routeActionId","answer-current-proof","expectedRouteVersion",0);
+        AjaxResult text=BasicPlayCommandFixtures.answer(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "ab", null, (String)command.get("routeActionId"), (Integer)command.get("expectedRouteVersion"));assertEquals(200,text.get("code"));verify(runtime).recordPlayerArrival(PLAYER,TOPIC,ACTIVITY,NODE,(String)command.get("routeActionId"),(Integer)command.get("expectedRouteVersion"),"ANSWER");
         when(runtime.nodeAnswers(PLAYER,TOPIC,ACTIVITY,NODE)).thenReturn(json.readTree("{\"validationMethod\":3,\"correctAnswer\":\"C\"}"));
         when(runtime.canPlay(PLAYER,TOPIC,ACTIVITY,NODE,"pick-proof")).thenReturn(true);
-        AjaxResult pick=controller.answer(String.valueOf(ACTIVITY),String.valueOf(NODE),"c",null,"pick-proof",3);assertEquals(200,pick.get("code"));verify(runtime).recordPlayerArrival(PLAYER,TOPIC,ACTIVITY,NODE,"pick-proof",3,"ANSWER");verify(progressService,never()).insertPlayerNodeProgress(any());verify(pointsAwardService,never()).award(anyLong(),anyLong(),anyLong(),any());
+        BasicPlayCommandFixtures.frozenRun(controller,ACTIVITY,TOPIC,NODE,3,json.readTree("{\"validationMethod\":3,\"correctAnswer\":\"C\"}"));
+        AjaxResult pick=BasicPlayCommandFixtures.answer(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "c", null, "pick-proof", 3);assertEquals(200,pick.get("code"));verify(runtime).recordPlayerArrival(PLAYER,TOPIC,ACTIVITY,NODE,"pick-proof",3,"ANSWER");verify(progressService,never()).insertPlayerNodeProgress(any());verify(pointsAwardService,never()).award(anyLong(),anyLong(),anyLong(),any());
+    }
+
+    @Test void originalPublishedAnswerSurvivesUnbindButDoesNotGrantLegacyCompletionOrRewards() throws Exception {
+        topic.setProductType(ProductType.ORIENTEERING);node.setTemplateId(null);
+        com.chengyinhub.business.service.ITopicRouteRuntimeService runtime=mock(com.chengyinhub.business.service.ITopicRouteRuntimeService.class);
+        PlayNodeAccessTestFixtures.setField(controller,"topicRouteRuntimeService",runtime);
+        when(runtime.canPlay(eq(PLAYER),eq(TOPIC),eq(ACTIVITY),eq(NODE),anyString())).thenReturn(true);
+        when(runtime.genericPlayer(PLAYER,TOPIC,ACTIVITY)).thenReturn(true);
+        var content=new com.fasterxml.jackson.databind.ObjectMapper().createObjectNode();
+        content.put("contentSnapshotVersion",1).put("templateId",9L).put("validationMethod",1).put("questionAnswer","original-answer");
+        content.putObject("nodePresentation").put("id",NODE).put("topicId",TOPIC).put("templateId",9L);
+        content.putObject("templatePresentation").put("questionName","original-question");
+        when(runtime.nodeAnswers(PLAYER,TOPIC,ACTIVITY,NODE)).thenReturn(content);
+        BasicPlayCommandFixtures.frozenRun(controller,ACTIVITY,TOPIC,NODE,0,content);
+        PlayerNodeProgress proof=new PlayerNodeProgress();proof.setStatus(0);when(proofService.markArrived(PLAYER,ACTIVITY,node)).thenReturn(proof);
+        assertEquals(200,BasicPlayCommandFixtures.answer(controller,String.valueOf(ACTIVITY),String.valueOf(NODE),
+                "original-answer",null,"frozen-unbound",0).get("code"));
+        verify(runtime).recordPlayerArrival(PLAYER,TOPIC,ACTIVITY,NODE,"frozen-unbound",0,"ANSWER");
+        verify(templateService,never()).selectCmsMemberTemplateById(any());
+        verify(progressService,never()).insertPlayerNodeProgress(any());
+        verify(pointsAwardService,never()).award(anyLong(),anyLong(),anyLong(),any());
     }
 
     // ---------- N-02 排行榜前置证明:每种完成方式都落 player_node_progress(status=1) ----------
@@ -707,7 +744,7 @@ class ApiPlayProgressCompletionTruthTest
     void leaderboardProofScanCompletionWritesCompletedProgressRow() {
         topic.setProductType(ProductType.ORIENTEERING);
 
-        assertEquals(200, controller.checkin(String.valueOf(ACTIVITY), CODE, null).get("code"));
+        assertEquals(200, BasicPlayCommandFixtures.checkin(controller, String.valueOf(ACTIVITY), CODE, null, null, null, null, String.valueOf(NODE)).get("code"));
 
         org.junit.jupiter.api.Assertions.assertNull(onlyInsertedProgressRow().getPicUrl());
     }
@@ -721,7 +758,7 @@ class ApiPlayProgressCompletionTruthTest
         when(templateService.selectCmsMemberTemplateById(77L)).thenReturn(tpl);
         when(progressService.selectPlayerNodeProgressList(any())).thenReturn(Collections.emptyList());
 
-        assertEquals(200, controller.photo(String.valueOf(ACTIVITY), String.valueOf(NODE), "photo.jpg", null).get("code"));
+        assertEquals(200, BasicPlayCommandFixtures.photo(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "photo.jpg", null).get("code"));
 
         assertEquals("photo.jpg", onlyInsertedProgressRow().getPicUrl());
     }
@@ -737,9 +774,9 @@ class ApiPlayProgressCompletionTruthTest
         com.chengyinhub.business.service.IPuzzlePlayService puzzles =
                 mock(com.chengyinhub.business.service.IPuzzlePlayService.class);
         when(puzzles.solvedScore(PLAYER, TOPIC, NODE, ACTIVITY)).thenReturn(100);
-        ReflectionTestUtils.setField(controller, "puzzlePlayService", puzzles);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "puzzlePlayService", puzzles);
 
-        assertEquals(200, controller.answer(String.valueOf(ACTIVITY), String.valueOf(NODE), "暗号", null).get("code"));
+        assertEquals(200, BasicPlayCommandFixtures.answer(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "暗号", null).get("code"));
 
         onlyInsertedProgressRow();
     }
@@ -750,9 +787,9 @@ class ApiPlayProgressCompletionTruthTest
         com.chengyinhub.business.service.IAdvancedGameRuntimeService advanced =
                 mock(com.chengyinhub.business.service.IAdvancedGameRuntimeService.class);
         when(advanced.completeGate(PLAYER, ACTIVITY, TOPIC, NODE)).thenReturn("PASS");
-        ReflectionTestUtils.setField(controller, "advancedGameRuntimeService", advanced);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "advancedGameRuntimeService", advanced);
 
-        assertEquals(200, controller.checkin(String.valueOf(ACTIVITY), CODE, null).get("code"));
+        assertEquals(200, BasicPlayCommandFixtures.checkin(controller, String.valueOf(ACTIVITY), CODE, null, null, null, null, String.valueOf(NODE)).get("code"));
 
         verify(advanced).completeGate(PLAYER, ACTIVITY, TOPIC, NODE);
         onlyInsertedProgressRow();

@@ -80,6 +80,9 @@ public interface ICmsTopicService
      */
     public CmsTopic selectCmsTopicById(Long id);
 
+    /** 商家待办窄投影：只读指定主题的 id/endDate，空集合不查询。 */
+    Map<Long, java.util.Date> selectTodoTopicEndDates(java.util.Collection<Long> topicIds);
+
     /** 后台逐期漫游导流开关窄读。 */
     Integer selectRoamReferralEnabledById(Long id);
 
@@ -312,6 +315,8 @@ public interface ICmsTopicService
     /** B3 发布草稿:竞态安全(仅当前确为草稿才发)清 is_draft,按 publishMode 直发/提审;非草稿返 false */
     public boolean publishDraft(Long id);
     boolean publishDraft(Long id, Long expectedOwnerId);
+    TopicBundleSubmitResultVO publishDraftWithBinding(Long id, Long expectedOwnerId,
+            Long expectedConfigVersion, String expectedRegistryVersion);
     boolean canResubmitSupplyReview(Long id, Long ownerId);
 
     /** V2 发布回执；专业版返回组合审核任务与冻结玩法 id。 */

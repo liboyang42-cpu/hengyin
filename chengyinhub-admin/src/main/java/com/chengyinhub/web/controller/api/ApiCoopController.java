@@ -53,6 +53,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import com.chengyinhub.business.domain.dto.CoopInviteRequestResult;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -266,6 +269,7 @@ public class ApiCoopController extends BaseController {
     public AjaxResult invite(@RequestBody CoopInvite body) {
         Long principalMemberId;
         try { principalMemberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        if (body == null) return error("缺少邀约参数");
         if (body.getInviteType() == null || body.getInviteType() < 0 || body.getInviteType() > 1) {
             return error("邀请类型不合法");
         }
@@ -344,20 +348,51 @@ public class ApiCoopController extends BaseController {
         if (OwnershipUtils.notOwner(topic.getMemberId(), contractOwnerMemberId)) {
             return error("只能为自己发布的主题发起合作");
         }
+        if (body.getRequestId() != null) {
+            // 微信内容安全是网络调用:在原请求事务(回执唯一键行锁)之外先做,事务回调里只留 DB 校验。
+            String risk = textRisk(principalMemberId, body.getMessage());
+            if (risk != null) return error(risk);
+            try {
+                CoopInviteRequestResult result = coopInviteService.createOrReplayInvite(principalMemberId, body, () -> {
+                    String invalid = prepareFirstInvite(body, principalMemberId, topic, true);
+                    if (invalid != null) throw new IllegalStateException(invalid);
+                });
+                if (!Boolean.TRUE.equals(result.getReplayed())) notifyNewInvite(body, toOwner, contractOwnerMemberId);
+                return AjaxResult.success("已发起", result);
+            } catch (ServiceException e) {
+                return new AjaxResult(e.getCode(), e.getMessage());
+            } catch (IllegalStateException e) {
+                return error(e.getMessage());
+            }
+        }
+        try {
+            String invalid = prepareFirstInvite(body, principalMemberId, topic, false);
+            if (invalid != null) return error(invalid);
+            coopInviteService.insertCoopInvite(body);
+        } catch (IllegalStateException e) {
+            return error(e.getMessage());
+        }
+        notifyNewInvite(body, toOwner, contractOwnerMemberId);
+        Map<String, Object> d = new HashMap<>();
+        d.put("inviteId", body.getId());
+        return AjaxResult.success("已发起", d);
+    }
+
+    private String prepareFirstInvite(CoopInvite body, Long principalMemberId, CmsTopic topic, boolean originalRequest) {
         // node_id 只属于已撤销的历史 type2，新建 type0/type1 一律清掉客户端伪造值。
         body.setNodeId(null);
         // B1-3 条款校验:报酬模式与配套字段一致性(字段可空,向后兼容;传了才校验)
         Integer shareMode = body.getShareMode();
         if (shareMode != null) {
-            if (shareMode < 0 || shareMode > 2) return error("报酬模式不合法");
+            if (shareMode < 0 || shareMode > 2) return "报酬模式不合法";
             if (shareMode == 1) {
                 if (body.getShareRate() == null
                         || body.getShareRate().compareTo(BigDecimal.ZERO) <= 0
                         || body.getShareRate().compareTo(new BigDecimal("90")) > 0)
-                    return error("分成型需填写 0~90% 的分成比例");
+                    return "分成型需填写 0~90% 的分成比例";
             } else if (shareMode == 2) {
                 if (body.getFixedFee() == null || body.getFixedFee().compareTo(BigDecimal.ZERO) <= 0)
-                    return error("固定型需填写每人固定合作费");
+                    return "固定型需填写每人固定合作费";
             }
         }
         // 槽位粒度归一:带 game_id = 游戏级(经典定向),否则主题级
@@ -367,8 +402,8 @@ public class ApiCoopController extends BaseController {
             CoopInvite pendQ = new CoopInvite();
             pendQ.setGameId(body.getGameId());
             pendQ.setStatus(0);
-            if (mutableInviteCount(coopInviteService.selectCoopInviteList(pendQ)) >= 3)
-                return error("该游戏挂起邀约已达上限(3),请等待处理或先取消");
+            if (mutableInviteCount(originalRequest ? coopInviteService.selectCoopInviteListReadOnly(pendQ) : coopInviteService.selectCoopInviteList(pendQ)) >= 3)
+                return "该游戏挂起邀约已达上限(3),请等待处理或先取消";
         }
         // Σ 已接受分成型比例 ≤ 90(给发布者留 ≥10% 余量);平台佣金率待拍板,先按此保守闸
         if (shareMode != null && shareMode == 1 && body.getTopicId() != null) {
@@ -376,13 +411,13 @@ public class ApiCoopController extends BaseController {
             CoopInvite acceptedQ = new CoopInvite();
             acceptedQ.setTopicId(body.getTopicId());
             acceptedQ.setStatus(1);
-            for (CoopInvite a : coopInviteService.selectCoopInviteList(acceptedQ)) {
+            for (CoopInvite a : (originalRequest ? coopInviteService.selectCoopInviteListReadOnly(acceptedQ) : coopInviteService.selectCoopInviteList(acceptedQ))) {
                 if (Integer.valueOf(CoopInvite.TYPE_LEGACY_MERCHANT_NODE).equals(a.getInviteType())) continue;
                 if (a.getShareMode() != null && a.getShareMode() == 1 && a.getShareRate() != null)
                     sum = sum.add(a.getShareRate());
             }
             if (sum.compareTo(new BigDecimal("90")) > 0)
-                return error("分成比例之和超过 90%,请调整");
+                return "分成比例之和超过 90%,请调整";
         }
         // expire_time 先取主题招募截止，Service 再封顶为服务端创建时间+48h；不接受客户端时间。
         body.setConfigDeadline(null);
@@ -393,13 +428,10 @@ public class ApiCoopController extends BaseController {
         body.setStatus(0);
         body.setHandleTime(null);
         body.setDelFlag(0);
-        try {
-            String risk = textRisk(principalMemberId, body.getMessage());
-            if (risk != null) return error(risk);
-            coopInviteService.insertCoopInvite(body);
-        } catch (IllegalStateException e) {
-            return error(e.getMessage());
-        }
+        return originalRequest ? null : textRisk(principalMemberId, body.getMessage());
+    }
+
+    private void notifyNewInvite(CoopInvite body, Long toOwner, Long contractOwnerMemberId) {
         // 订阅消息:通知受邀方收到合作邀约。失败不回滚邀约写入,但必须留可检索日志。
         try {
             notifyService.notifyCoopInvited(toOwner, topicNameOf(body.getTopicId()), nickOf(contractOwnerMemberId));
@@ -408,9 +440,26 @@ public class ApiCoopController extends BaseController {
                     + "memberId={} inviteId={} cause={}",
                     toOwner, body.getId(), e.getClass().getSimpleName());
         }
-        Map<String, Object> d = new HashMap<>();
-        d.put("inviteId", body.getId());
-        return AjaxResult.success("已发起", d);
+    }
+
+    @GetMapping("/invite/request")
+    public AjaxResult inviteRequest(@RequestParam String requestId) {
+        Long principal;
+        try { principal = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        try {
+            return success(coopInviteService.findInviteRequest(principal, requestId));
+        } catch (ServiceException e) { return new AjaxResult(e.getCode(), e.getMessage()); }
+    }
+
+    /** Cursor scans receipt rows, including unavailable rows, so an unauthorized page still advances. */
+    @GetMapping("/invite/requests")
+    public AjaxResult inviteRequests(@RequestParam(required = false) Long before,
+            @RequestParam(defaultValue = "20") int limit) {
+        Long principal;
+        try { principal = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        try {
+            return success(coopInviteService.listInviteRequests(principal, before, limit));
+        } catch (ServiceException e) { return new AjaxResult(e.getCode(), e.getMessage()); }
     }
 
     private String textRisk(Long principalMemberId, String content) {

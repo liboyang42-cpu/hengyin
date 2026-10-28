@@ -104,14 +104,16 @@
         </view>
         <view class="dc-card">
           <cy-cell wx:if="{{merchantAccess.canWriteProfile}}" arrow-icon="chevron-right" title="门店信息" value="名称 · 地址 · 营业时间" required="{{false}}" bind:tap="goSection" data-view="basic" />
-          <cy-cell wx:if="{{merchantAccess.canWriteProfile}}" arrow-icon="chevron-right" title="品牌介绍" value="故事 · 特色 · 一句话介绍" required="{{false}}" bind:tap="goSection" data-view="brand" />
+          <cy-cell wx:if="{{merchantAccess.canWriteProfile}}" arrow-icon="chevron-right" title="品牌介绍" value="故事 · 特色" required="{{false}}" bind:tap="goSection" data-view="brand" />
           <cy-cell arrow-icon="chevron-right" title="门店相册" value="{{gallery.length || 0}} 张照片" required="{{false}}" bind:tap="goGallery" hairline="{{false}}" />
         </view>
         <view class="dc-card">
           <cy-cell arrow-icon="chevron-right" title="AI 店铺角色" value="形象 · 语音" required="{{false}}" bind:tap="goAiNpc" />
           <cy-cell arrow-icon="chevron-right" title="合作经营" value="承接 · 主推 · 权益" required="{{false}}" bind:tap="goSection" data-view="coop" hairline="{{false}}" />
         </view>
-        <view class="dc-card">
+        <!-- M-31(2026-10-27):入驻审核通过(经营身份 active)后不再展示「入驻资料」——执照不用再看,
+             品牌形象图与门店相册是一回事(注册时的照片并入门店相册,数据迁移在后端)。 -->
+        <view class="dc-card" wx:if="{{!merchantAccess.active}}">
           <cy-cell wx:if="{{merchantAccess.canWriteProfile}}" arrow-icon="chevron-right" title="入驻资料" value="执照 · 品牌材料" required="{{false}}" bind:tap="goSection" data-view="qualification" hairline="{{false}}" />
         </view>
       </block>
@@ -144,14 +146,14 @@
                   <view
                     wx:for="{{group.items}}"
                     wx:key="value"
-                    class="dc-tag {{item.checked ? 'dc-selected' : ''}}"
+                    class="dc-tag dc-tag--lib {{item.checked ? 'dc-selected' : ''}}"
                     bindtap="toggleTag"
                     data-t="{{item.value}}"
                     aria-role="checkbox"
                     aria-checked="{{item.checked}}"
                     hover-class="cy-pressed"
                   >
-                    {{item.value}}
+                    <image wx:if="{{item.iconSrc}}" class="dc-tag-ico" src="{{item.iconSrc}}" mode="aspectFit" />{{item.value}}
                   </view>
                 </view>
               </block>
@@ -176,7 +178,8 @@
             </view>
           </cy-dropdown>
           <view class="dc-tags">
-            <text class="dc-tag" wx:for="{{tags}}" wx:key="*this">{{item}}</text>
+            <!-- G-8 / M-12(2026-10-27):商家标签库 —— 图标 + 实底小标签,无灰描边 -->
+            <view class="dc-tag dc-tag--lib" wx:for="{{tagItems}}" wx:key="label"><image wx:if="{{item.iconSrc}}" class="dc-tag-ico" src="{{item.iconSrc}}" mode="aspectFit" /><text>{{item.label}}</text></view>
             <text wx:if="{{!tags.length}}" class="dc-muted">选几个标签，让更多人找到你的店</text>
           </view>
         </view>
@@ -429,7 +432,7 @@
     </view>
   </scroll-view>
   <cy-sheet inset="{{!fieldSheet.multiline}}" variant="{{fieldSheet.multiline ? 'full' : 'bottom'}}"
-    show="{{fieldSheet.show && !discardVisible}}"
+    show="{{fieldSheet.show && !discardVisible}}" back-guard="{{false}}"
     title="{{fieldSheet.label}}"
     bind:close="closeFieldSheet"
     mask-closable="{{!saving}}"
@@ -504,7 +507,7 @@
       <cy-btn disabled="{{!customTag}}" bindtap="addCustomTag" bind:disabledtap="onAddTagBlocked">添加</cy-btn>
     </view>
   </cy-sheet>
-  <cy-sheet inset show="{{discardVisible}}" title="还没有保存" bind:close="keepEditing">
+  <cy-sheet inset show="{{discardVisible}}" back-guard="{{false}}" title="还没有保存" bind:close="keepEditing">
     <view class="dc-sheet-content">
       <text class="dc-muted">离开后，本次修改不会保留。</text>
       <view class="dc-sheet-actions">
@@ -529,10 +532,9 @@
         src="{{imageEditor.value}}"
         mode="aspectFill"
       />
-      <view wx:else class="dc-image-preview dc-placeholder">选择一张图片</view>
-      <text class="dc-muted">
-        {{imageEditor.key === 'logo' ? '正方形图片，在主页显示为圆形' : '选择图片后可移动或缩放，按 5:3 裁剪'}}
-      </text>
+      <!-- M-08(2026-10-27):没有图时不再留一大块空白 —— 占位与预览同尺寸(Logo 为居中圆),点它直接选图 -->
+      <view wx:else class="dc-image-preview dc-placeholder {{imageEditor.key === 'logo' ? 'dc-image-preview--logo' : ''}}" bindtap="chooseEditImage" aria-role="button" aria-label="选择图片" hover-class="cy-pressed"><cy-icon name="camera" size="44" /><text>选择一张图片</text></view>
+      <!-- 2026-10-28 业主 m686:不写 5:3 那句;Logo 那句同样是多余说明,一并去掉 -->
       <cy-inline-error kind="error" wx:if="{{saveError}}" title="暂未完成" sub="{{saveError}}" />
       <!-- 横排一行:从相册选择在左、使用确认在右(2026-09-18 用户定) -->
       <view class="dc-sheet-actions">

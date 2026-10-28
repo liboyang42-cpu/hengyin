@@ -9,6 +9,12 @@ import java.util.Map;
 public interface IRefundService {
     List<RefundApplication> selectRefundList(RefundApplication query);
 
+    /**
+     * 内部当前读：调用方必须在同一事务中先锁原报名（父单按一致次序锁全组），再锁退款历史。
+     * 本方法不自行建立完整事务/归属边界，不应直接暴露为客户端查询接口。
+     * status=0/1 是待审/批准事实；payout 失败不撤销批准。发票消费者据此重新核验自身状态，
+     * 不得因发票占用阻止退款，亦不得把退款驳回或空历史当作自动恢复发票的授权。
+     */
     List<RefundApplication> selectRegistrationHistoryForUpdate(Long registrationId);
 
     /**

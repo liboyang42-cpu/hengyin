@@ -21,6 +21,11 @@ public interface MerchantReviewMapper {
     MerchantReviewEligibility selectLatestEligibility(@Param("authorMemberId") Long authorMemberId,
                                                        @Param("merchantRowId") Long merchantRowId);
 
+    /** Read-only eligibility hint; no locks and no fallback to a different registration. */
+    MerchantReviewEligibility selectEligibilityForRegistration(@Param("authorMemberId") Long authorMemberId,
+                                                               @Param("merchantRowId") Long merchantRowId,
+                                                               @Param("registrationId") Long registrationId);
+
     MerchantReview selectByAuthorRequestForUpdate(@Param("authorMemberId") Long authorMemberId,
                                                   @Param("requestId") String requestId);
 

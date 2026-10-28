@@ -24,11 +24,11 @@ function scanSharedA11y(read = (file) => fs.readFileSync(path.join(ROOT, file), 
   check('btn', 'wxml', /<text\b[^>]*wx:if="{{loading}}"[^>]*aria-live="polite"[^>]*>[^<]*loadingLabel/, '提交中必须保留可见文本替代');
   check('cell', 'wxml', /aria-label="[^"\n]*title[^"\n]*value[^"\n]*description/, '单元格不能只读标题而丢掉当前值和说明');
   const tabs = read('components/cy/tabs/index.wxml').match(/<view\b[^>]*bindtap="onTab"[^>]*>/g) || [];
-  if (tabs.length !== 4 || tabs.some((tag) => !/aria-role="tab"/.test(tag) || !/aria-selected="{{item.key === active}}"/.test(tag) || !/aria-label="{{item.label}}"/.test(tag))) {
+  if (tabs.length !== 5 || tabs.some((tag) => !/aria-role="tab"/.test(tag) || !/aria-selected="{{item.key === active}}"/.test(tag) || !/aria-label="{{item.label}}"/.test(tag))) {
     violations.push({ code: 'A11Y', key: 'components/cy/tabs/index.wxml', message: '所有 tab 分支必须有名称与选中状态' });
   }
   const tablists = read('components/cy/tabs/index.wxml').match(/aria-role="tablist"/g) || [];
-  if (tablists.length !== 4) violations.push({ code: 'A11Y', key: 'components/cy/tabs/index.wxml', message: '所有 tab 容器必须有 tablist 角色' });
+  if (tablists.length !== 5) violations.push({ code: 'A11Y', key: 'components/cy/tabs/index.wxml', message: '所有 tab 容器必须有 tablist 角色' });
   for (const component of ['modal', 'sheet']) {
     check(component, 'wxml', /<view\b[^>]*wx:if="\{\{_render\}\}"[^>]*aria-hidden="\{\{!show \|\| _closing\}\}"/, '关闭中的叠层不能被朗读');
   }
@@ -52,7 +52,9 @@ function scanSharedA11y(read = (file) => fs.readFileSync(path.join(ROOT, file), 
     const clear = component === 'field' ? 'fd__clear' : 'search__clear';
     check(component, 'wxss', new RegExp(`\\.${clear}\\s*\\{[^}]*width:\\s*88rpx;[^}]*height:\\s*88rpx;`), '清除按钮必须具有完整 88rpx 热区');
   }
-  check('cell', 'wxss', /\.cell__value\s*\{[^}]*white-space:\s*normal;[^}]*word-break:\s*break-word;/, '单元格当前值不能被省略截断');
+  // 2026-10-27 业主 G-7/M-20 推翻「当前值不能被省略截断」:设置行右侧说明单行 + 省略号,完整值由整行 aria-label 承载。
+  check('cell', 'wxss', /\.cell__value\s*\{[^}]*white-space:\s*nowrap;[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;/, '单元格右侧值必须单行省略，不能折行');
+  check('cell', 'wxml', /aria-label="\{\{title\}\}[^"]*\{\{value \? '，' \+ value : ''\}\}/, '被省略的单元格值必须完整进入整行 aria-label');
   for (const component of ['btn', 'search', 'empty', 'upload']) {
     check(component, 'js', /behaviors:\s*\[reducedMotionBehavior\]/, '必须复用已有减少动效偏好');
     check(component, 'wxml', /reducedMotion \? '[^']*--reduced-motion'/, '必须消费减少动效状态');

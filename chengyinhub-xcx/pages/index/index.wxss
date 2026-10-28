@@ -83,7 +83,8 @@ page {
  * ============================================================ */
 .v3-scroll { width: 100%; }
 .v3-scroll-inner { box-sizing: border-box; }
-.v3-scroll-pad { height: calc(140rpx + env(safe-area-inset-bottom)); }
+/* P-07(2026-10-27):末条主题卡的价格行不能压在底栏上 —— 留白按底栏真实高度(含安全区)再加一档呼吸。 */
+.v3-scroll-pad { height: calc(var(--cy-tabbar-h) + var(--cy-space-6)); }
 
 /* ============================================================
  * HBO Banner:顶到页面顶部,高度覆盖原页头 + 轮播 + 文案区
@@ -198,14 +199,18 @@ page {
   min-height: var(--cy-btn-h);
   /* 纯文案层横跨整行；必须透传点击，否则右侧透明盒会盖住头像热区。 */
   pointer-events: none;
+  /* P-01(2026-10-27):名字独占一行，「✓ 玩家 · 城市」落在名字下面一行。 */
   display: flex;
-  align-items: center;
-  gap: var(--cy-space-2);
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: var(--cy-space-1);
 }
 /* 字阶:原字面 64rpx。同值 token 是 data-xl,但 DS §2.6 把它限定为金额/里程/核心数字;
    本行是页面 Hero 问候语 = display(「Hero / 完成时刻,低频」)的原义,故按语义取 display 56。 */
 .v3-hero-hi {
   display: block;
+  max-width: 100%;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -336,25 +341,6 @@ page {
    保证「离自己的卡近、离别人的卡远」的亲密性关系) */
 .v3-sec { margin-top: var(--cy-space-6); }
 .v3-sec-reco { margin-top: var(--cy-space-6); }
-.v3-continue {
-  min-height: 152rpx;
-  display: flex;
-  align-items: center;
-  gap: var(--cy-space-3);
-  margin: var(--cy-space-5) var(--cy-space-4) 0;
-  padding: var(--cy-space-4);
-  border: 1rpx solid var(--cy-color-brand);
-  border-radius: var(--cy-radius-md);
-  background: var(--cy-color-bg-surface);
-  box-sizing: border-box;
-}
-.v3-continue-cover { flex: none; width: 112rpx; height: 112rpx; border-radius: var(--cy-radius-sm); background: var(--cy-color-bg-elevated); }
-.v3-continue-cover--fallback { display: flex; align-items: center; justify-content: center; color: var(--cy-color-brand); }
-.v3-continue-body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.v3-continue-kicker { color: var(--cy-color-brand); font-size: var(--cy-type-micro); font-weight: 600; }
-.v3-continue-title { margin-top: var(--cy-legacy-4); color: var(--cy-color-text-primary); font-size: var(--cy-type-card-title); font-weight: 700; }
-.v3-continue-sub { margin-top: var(--cy-legacy-6); color: var(--cy-color-text-tertiary); font-size: var(--cy-type-caption); }
-.v3-continue-cta { flex: none; color: var(--cy-color-text-primary); font-size: var(--cy-type-label); }
 .v3-sec-head { padding: 0 var(--cy-space-4) var(--cy-space-4); align-items: baseline; }
 /* 字阶:2026-08-20 用户要求首页模块标题比 section-title(36) 再大一档 → 回到 40rpx;
    量表 36 与 44 之间无 token,本页属门禁排除页,字面值即刻意值。 */
@@ -591,48 +577,51 @@ page {
  * Feed 区
  * ============================================================ */
 .v3-feed { margin-top: var(--cy-space-6); padding-bottom: var(--cy-space-3); }
-.v3-feed .page-tab { padding: 0 var(--cy-space-4); }
+/* P-03(2026-10-27):「主题 / 活动」tab 下的横线和第一张卡之间留 24rpx。 */
+.v3-feed .page-tab { padding: 0 var(--cy-space-4); margin-bottom: var(--cy-space-3); }
 
 .v2-feed { padding: 0 var(--cy-legacy-36); }
 .v2-fitem { margin-bottom: var(--cy-space-5); }
-/* Figma 3586:13074 / 13132:白卡、左文右图；仅图片区按真实图片数切换。 */
+/* 2026-10-28 业主:主题都有封面 —— 整张卡就是封面图,类型 / 名字 / 标签压在底部渐变上 */
 .v2-fcard {
   position: relative;
   display: flex;
-  align-items: stretch;
-  gap: var(--cy-space-3-5);
-  padding: var(--cy-legacy-36) var(--cy-space-4);
-  height: 372rpx;
+  align-items: flex-end;
+  padding: var(--cy-space-4);
+  height: 496rpx; /* 与帖文里的模板卡(cy-feed-play-card 496rpx)同高,业主要求统一 */
   box-sizing: border-box;
   border-radius: var(--cy-radius-2xl);
   overflow: hidden;
   background: var(--cy-color-home-feed-surface);
 }
+.v2-fcover { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+.v2-fcard::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 70%; background: linear-gradient(180deg, rgba(0, 0, 0, 0), rgba(0, 0, 0, .72)); } /* ds-ok: 压在用户照片上的渐变,不随主题翻转 */
 .v2-fcard-l {
+  position: relative;
+  z-index: 1;
   flex: 1;
   min-width: 0;
-  min-height: 300rpx;
   display: flex;
   flex-direction: column;
 }
 .v2-feyebrow {
   font-size: var(--cy-type-home-feed-eyebrow);
   line-height: 39rpx;
-  color: var(--cy-color-home-feed-muted);
+  color: rgba(255, 255, 255, .78); /* ds-ok: 封面上的白字 */
 }
 .v2-ftitle {
   font-size: var(--cy-type-home-feed-title);
   font-weight: 800;
   line-height: 66rpx;
-  color: var(--cy-color-home-feed-text);
+  color: #fff; /* ds-ok: 封面上的白字 */
 }
-.v2-ftags { gap: var(--cy-space-1); margin-top: auto; padding-top: var(--cy-space-1-5); flex-wrap: wrap; }
+.v2-ftags { gap: var(--cy-space-1); padding-top: var(--cy-space-1-5); flex-wrap: wrap; }
 .v2-ftag {
   max-width: 120rpx;
   padding: var(--cy-legacy-6) var(--cy-space-2);
   border-radius: var(--cy-radius-pill);
-  background: var(--cy-color-home-feed-tag-bg);
-  color: var(--cy-color-home-feed-text);
+  background: rgba(255, 255, 255, .2); /* ds-ok: 封面上的半透明标签 */
+  color: #fff; /* ds-ok */
   font-size: var(--cy-type-home-feed-tag);
   font-weight: 600;
   line-height: 30rpx;
@@ -640,64 +629,6 @@ page {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.v2-fgrid {
-  flex: none;
-  width: 316rpx;
-  height: 300rpx;
-  display: grid;
-  gap: var(--cy-space-1-5);
-  border-radius: var(--cy-radius-md);
-  overflow: hidden;
-}
-/* --1/--2/--3/--4 由 wxml 动态拼接(feedGridMode),静态扫描看不到 → 不是死码 */
-.v2-fgrid--1 { grid-template-columns: 1fr; grid-template-rows: 1fr; }
-.v2-fgrid--2 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr; }
-.v2-fgrid--3,
-.v2-fgrid--4 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
-.v2-fcell {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  min-width: 0;
-  min-height: 0;
-  border-radius: var(--cy-radius-md);
-  overflow: hidden;
-}
-.v2-fcell image { width: 100%; height: 100%; display: block; }
-/* 「+N」蒙层:原样式只存在于 .v2 作用域(根节点无 .v2)= 从未生效,
-   数字裸渲染在图上。规则搬到活的选择器上补活。 */
-.v2-fmore {
-  position: absolute;
-  left: 0;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--cy-type-card-title);
-  font-weight: 700;
-  background: var(--cy-color-overlay);
-  color: var(--cy-color-text-primary);
-}
-.v2-fcount {
-  position: absolute;
-  right: var(--cy-legacy-10);
-  top: var(--cy-legacy-10);
-  width: 36rpx;
-  height: 36rpx;
-  border-radius: var(--cy-radius-pill);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--cy-type-micro);
-  font-weight: 800;
-  line-height: 30rpx;
-  background: var(--cy-color-home-feed-count);
-  color: var(--cy-color-home-upcoming-text);
-}
-
-/* 状态清单(在卡片外,压页底) */
 .v2-status { margin-top: var(--cy-legacy-6); padding: var(--cy-legacy-4) var(--cy-space-3) 0; }
 .v2-status-row {
   padding: var(--cy-legacy-22) 0;

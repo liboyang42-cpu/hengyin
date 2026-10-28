@@ -70,6 +70,7 @@ function loadPage(mutate) {
       showModal() {}, showToast() {},
       navigateBack: () => navigations.push('back'),
       redirectTo: (options) => navigations.push(options.url),
+      reLaunch: (options) => navigations.push('reLaunch:' + options.url),
       nextTick: (fn) => nextTicks.push(fn),
       // 开场形变要两级 boundingClientRect 量起止几何。喂定值进去,
       // 下面就能断言「位移是中心对中心」这件事 —— 按顶边算会差半个高度。
@@ -101,7 +102,13 @@ function loadPage(mutate) {
     setData(patch, done) { Object.assign(this.data, patch); if (done) done.call(this) },
   })
   return {
-    page, requests, roleCallbacks, navigations, nextTicks, timers,
+    page, requests, roleCallbacks, navigations, nextTicks, timers, app,
+    // P-23:进页同时问一次商家身份;回最新一条 /api/merchant/access/me
+    answerMerchant(res) {
+      const asks = requests.filter((r) => r.url === '/api/merchant/access/me')
+      assert.ok(asks.length, '进页必须问一次商家身份')
+      asks[asks.length - 1].success(res || { code: 200, data: { active: false, applicationState: 'NONE' } })
+    },
     setSnapshot(value) { snapshotReady = value },
     setClubLeader(value) { clubLeader = value },
   }
@@ -124,6 +131,9 @@ test('身份快照完成前不露申请表；失败原位重试且草稿不丢',
   assert.equal(h.roleCallbacks.length, 2, '同步连点只能发起一轮资格检查')
   h.setSnapshot(true)
   h.roleCallbacks[1]({ role: 'player', permission: { canApplyClub: true } })
+  // P-23(2026-10-27):资格快照与商家身份都回来才放行
+  assert.equal(h.page.data.bootstrapState, 'checking-role')
+  h.answerMerchant()
   assert.equal(h.page.data.bootstrapState, 'ready')
   // 资格确认完成先落到四步之前的开场屏;表单必须按下「开始申请」才露出来
   assert.equal(h.page.data.mode, 'intro')
@@ -245,6 +255,7 @@ test('epoch 负控：移除保护后旧资格回调会覆盖新一轮结果', ()
   h.page.retryBootstrap()
   h.setSnapshot(true)
   h.roleCallbacks[1]({ role: 'player', permission: { canApplyClub: true } })
+  h.answerMerchant()
   assert.equal(h.page.data.bootstrapState, 'ready')
   h.setSnapshot(false)
   h.roleCallbacks[0](null)
@@ -327,6 +338,44 @@ test('减动效时不放形变，直接切到第一步', () => {
   assert.equal(h.page.data.mode, 'form')
   assert.equal(h.page.data.morphing, false)
   assert.equal(h.page.data.morph, null)
+})
+
+// P-23(owner 2026-10-27 p111):已有商家行的账号进页就说明并给去商家端的出口,不填完 4 步才报错
+for (const [label, res, active, target] of [
+  ['申请中的商家行', { code: 200, data: { active: false, applicationState: 'PENDING', roleCode: 'MERCHANT_OWNER', merchant: { id: 3 } } }, false, '/pages/merchant/apply/index'],
+  ['生效中的商家(含员工)', { code: 200, data: { active: true, roleCode: 'MERCHANT_OWNER', merchant: { id: 3 } } }, true, 'reLaunch:/pages/merchant/index/index'],
+  ['异常商家行(403)', { code: 403, msg: '', roleViewSuppressed: true }, false, '/pages/merchant/apply/index'],
+]) {
+  test(`P-23 ${label}:进页即说明并引导到商家端`, () => {
+    const h = loadPage()
+    h.page.onLoad()
+    h.setSnapshot(true)
+    h.roleCallbacks[0]({ role: 'player', permission: { canApplyClub: true } })
+    h.answerMerchant(res)
+    assert.equal(h.page.data.bootstrapState, 'merchant')
+    assert.equal(h.page.data.merchantActive, active)
+    h.page.goMerchantSide()
+    assert.deepEqual(h.navigations, [target])
+  })
+}
+
+test('P-23 本地身份已是商家:不问后端,直接说明并给「切换到商家端」', () => {
+  const h = loadPage()
+  h.app.getUserRole = () => 'merchant'
+  h.page.onLoad()
+  assert.equal(h.page.data.bootstrapState, 'merchant')
+  assert.equal(h.page.data.merchantActive, true)
+  assert.equal(h.roleCallbacks.length, 0)
+  assert.match(WXML, /bootstrapState === 'merchant'[\s\S]*primary="\{\{merchantActive \? '切换到商家端' : '查看商家入驻'\}\}"[\s\S]*bind:primary="goMerchantSide"/)
+})
+
+test('P-23 商家身份问不到时不拦人(后端提交仍兜底)', () => {
+  const h = loadPage()
+  h.page.onLoad()
+  h.setSnapshot(true)
+  h.roleCallbacks[0]({ role: 'player', permission: { canApplyClub: true } })
+  h.requests.find((r) => r.url === '/api/merchant/access/me').fail({ errMsg: 'request:fail timeout' })
+  assert.equal(h.page.data.bootstrapState, 'ready')
 })
 
 test('申请主理人不要求实名，直接提交资料且不发送身份证字段', () => {
@@ -501,4 +550,15 @@ test('负控：完成态失去身份立即生效提示必须判红', () => {
   const mutated = WXML.replace('你已成为俱乐部主理人，身份立即生效。', '身份申请已提交。')
   assert.notEqual(mutated, WXML, '完成态负控锚点必须存在')
   assert.throws(() => assertDirectLeaderActivationCopy(mutated))
+})
+
+// 2026-10-27 P-24(owner 真机 p98):形变保留,但白色段一开始就快速缩到第一段 ——
+// 不再先画满整条、到收尾才突然变短;翻 morphRun 要等一帧,不能和首帧合并。标题叠在形变条之上。
+test('P-24 形变条先快速缩到当前步长度，再随位移就位；标题不被形变条压住', () => {
+  const css = fs.readFileSync(path.join(ROOT, 'style/wizard-intro.wxss'), 'utf8')
+  assert.match(css, /\.morph__fill\s*\{[^}]*transition:\s*transform\s+220ms\s+cubic-bezier\(\.2, \.8, \.2, 1\)/s)
+  const util = fs.readFileSync(path.join(ROOT, 'utils/wizard-morph.js'), 'utf8')
+  assert.match(util, /setTimeout\(function \(\) \{\s*page\.setData\(\{ morphRun: true \}\);/)
+  assert.doesNotMatch(util, /wx\.nextTick\(function \(\) \{ page\.setData\(\{ morphRun: true \}\); \}\)/)
+  assert.match(WXSS, /\.step-head \{ position: relative; z-index: 21; \}/)
 })

@@ -94,6 +94,7 @@ public class ThemeStateKeyService {
             validate(key);
             validateDefinition(key, false);
         }
+        lockRegistry(topicId);
         Date now = DateUtils.getNowDate();
         for (ThemeStateKey key : keys) {
             key.setTopicId(topicId);
@@ -104,6 +105,7 @@ public class ThemeStateKeyService {
             key.setUpdateTime(now);
             themeStateKeyMapper.upsertThemeStateKey(key);
         }
+        themeStateKeyMapper.advanceRegistryVersion(topicId);
     }
 
     /**
@@ -124,8 +126,9 @@ public class ThemeStateKeyService {
         if (patch.getStateKey() != null && !patch.getStateKey().equals(stateKey)) {
             throw invalid(ERR_RENAME, "状态键名不可修改:" + stateKey + "(改展示名请只改 label)");
         }
+        lockRegistry(topicId);
         ThemeStateKey existing = StringUtils.isEmpty(stateKey) ? null
-                : themeStateKeyMapper.selectByTopicIdAndStateKey(topicId, stateKey);
+                : themeStateKeyMapper.selectByTopicIdAndStateKeyForUpdate(topicId, stateKey);
         if (existing == null) {
             throw new ServiceException("状态键不存在:" + stateKey, HttpStatus.NOT_FOUND).setDetailMessage(ERR_NOT_FOUND);
         }
@@ -142,6 +145,7 @@ public class ThemeStateKeyService {
         validateDefinition(next, true);
         next.setUpdateTime(DateUtils.getNowDate());
         themeStateKeyMapper.updateDefinition(next);
+        themeStateKeyMapper.advanceRegistryVersion(topicId);
         next.setId(existing.getId());
         next.setCreateTime(existing.getCreateTime());
         return next;
@@ -182,12 +186,84 @@ public class ThemeStateKeyService {
         return rows == null ? new ArrayList<ThemeStateKey>() : rows;
     }
 
+    /** 保存点可在同一事务中读取绑定；首次访问仅建立版本行，不改变属性。 */
+    @Transactional(rollbackFor = Exception.class)
+    public com.fasterxml.jackson.databind.node.ObjectNode readBinding(Long topicId, List<String> enabledKeys) {
+        if (topicId == null || topicId <= 0 || enabledKeys == null || enabledKeys.size() > 32)
+            throw invalid(ERR_INVALID, "属性绑定参数无效");
+        Set<String> seen = new HashSet<>();
+        for (String key : enabledKeys) if (key == null || !ThemeStateKey.KEY_NAME.matcher(key).matches() || !seen.add(key))
+            throw invalid(ERR_INVALID, "属性绑定键无效或重复");
+        Long version = lockRegistry(topicId);
+        com.fasterxml.jackson.databind.node.ObjectNode binding = JSON.createObjectNode();
+        binding.put("schemaVersion", 1); binding.put("registryVersion", version.toString());
+        com.fasterxml.jackson.databind.node.ArrayNode keys = binding.putArray("enabledKeys");
+        for (String key : enabledKeys) keys.add(key);
+        return binding;
+    }
+
+    private Long lockRegistry(Long topicId) {
+        themeStateKeyMapper.lockTopic(topicId);
+        themeStateKeyMapper.ensureRegistryVersion(topicId);
+        return themeStateKeyMapper.lockRegistryVersion(topicId);
+    }
+
+    /**
+     * DEC02 A 发布读合同：只导出rules启用的键；同key冲突拒绝，要求作者经03确认并统一。
+     * 返回attributeDefinition块，不写注册表或主题。03/04须在其版本化发布事务中调用。
+     */
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.MANDATORY, rollbackFor = Exception.class)
+    public com.fasterxml.jackson.databind.node.ObjectNode freezeDefinition(Long topicId, Long configVersion,
+            String expectedRegistryVersion, com.chengyinhub.business.domain.JourneyRules rules) {
+        if (topicId == null || topicId <= 0 || configVersion == null || configVersion <= 0 || rules == null)
+            throw invalid(ERR_INVALID, "属性发布版本或主题无效");
+        Long registryVersion = lockRegistry(topicId);
+        if (!registryVersion.toString().equals(expectedRegistryVersion))
+            throw new ServiceException("属性注册版本已变化，请重新读取并确认", HttpStatus.CONFLICT)
+                    .setDetailMessage("ATTRIBUTE_REGISTRY_VERSION_CONFLICT");
+        com.fasterxml.jackson.databind.node.ObjectNode definition = JSON.createObjectNode();
+        definition.put("schemaVersion", 1); definition.put("configVersion", configVersion.toString());
+        definition.put("registryVersion", registryVersion.toString());
+        com.fasterxml.jackson.databind.node.ArrayNode attributes = definition.putArray("attributes");
+        if (!rules.isStateEnabled()) return definition;
+        Map<String, ThemeStateKey> registry = new LinkedHashMap<>();
+        for (ThemeStateKey row : themeStateKeyMapper.selectByTopicIdForUpdate(topicId)) registry.put(row.getStateKey(), row);
+        for (JsonNode enabled : rules.getAttributes()) {
+            String name = enabled.path("key").asText();
+            ThemeStateKey row = registry.get(name);
+            if (row == null) throw invalid(ERR_NOT_FOUND, "启用属性尚未注册:" + name);
+            validate(row); validateDefinition(row, true);
+            int initial = row.getInitialValue() == null ? 0 : row.getInitialValue();
+            if (initial < row.effectiveMin() || initial > row.effectiveMax()) throw invalid(ERR_RANGE, "属性初值超出范围:" + name);
+            if (!row.displayLabel().equals(enabled.path("label").asText())
+                    || initial != enabled.path("initial").asInt() || row.effectiveMin() != enabled.path("min").asInt()
+                    || row.effectiveMax() != enabled.path("max").asInt()
+                    || row.shownOnCard() != enabled.path("visible").asBoolean())
+                throw invalid("ATTRIBUTE_DEFINITION_CONFLICT", "属性定义冲突，请确认并统一注册定义与规则:" + name);
+            com.fasterxml.jackson.databind.node.ObjectNode frozen = attributes.addObject();
+            frozen.put("key", name); frozen.put("keyType", row.getKeyType()); frozen.put("label", row.displayLabel());
+            frozen.put("initial", initial); frozen.put("min", row.effectiveMin()); frozen.put("max", row.effectiveMax());
+            frozen.put("visible", row.shownOnCard());
+            frozen.put("displayType", row.getDisplayType() == null ? ThemeStateKey.DISPLAY_NUMBER : row.getDisplayType());
+            frozen.put("persistScope", row.persistsAcrossRuns() ? ThemeStateKey.PERSIST_TOPIC : ThemeStateKey.PERSIST_RUN);
+            frozen.put("color", row.getColor()); frozen.put("icon", row.getIcon());
+            if (row.getSortOrder() == null) frozen.putNull("sortOrder"); else frozen.put("sortOrder", row.getSortOrder());
+            if (row.getRulesJson() == null) frozen.putNull("rules");
+            else {
+                try { frozen.set("rules", JSON.readTree(row.getRulesJson())); }
+                catch (com.fasterxml.jackson.core.JsonProcessingException invalidRules) { throw invalid(ERR_INVALID, "属性展示规则无效:" + name); }
+            }
+        }
+        return definition;
+    }
+
     /**
      * 删除某主题的一个键;该键本来就不在时返回 false(不报错)。
      *
      * <p>「是否被引用」的闸不在这里:引用收集在 {@link TopicStateKeyRefService},由调用方
      * (创作者接口)先查引用位置再删 —— 这不是本表的仓储语义,不该塞进注册服务。
      */
+    @Transactional(rollbackFor = Exception.class)
     public boolean delete(Long topicId, String stateKey) {
         if (topicId == null || topicId <= 0L) {
             throw new ServiceException("主题编号无效,无法删除状态键");
@@ -195,7 +271,10 @@ public class ThemeStateKeyService {
         if (StringUtils.isEmpty(stateKey)) {
             throw new ServiceException("状态键名不能为空");
         }
-        return themeStateKeyMapper.deleteByTopicIdAndStateKey(topicId, stateKey) > 0;
+        lockRegistry(topicId);
+        boolean deleted = themeStateKeyMapper.deleteByTopicIdAndStateKey(topicId, stateKey) > 0;
+        if (deleted) themeStateKeyMapper.advanceRegistryVersion(topicId);
+        return deleted;
     }
 
     /**
@@ -221,8 +300,9 @@ public class ThemeStateKeyService {
             throw invalid(ERR_RANGE, "状态键下限不能大于上限:" + name);
         }
         boolean checkInitial = strict || min != null || max != null;
-        Integer initial = key.getInitialValue();
-        if (checkInitial && !binary && initial != null
+        // 注册写入阶段会把缺省初值补成 0；校验必须检查同一个值，且在整批写入之前拒绝。
+        Integer initial = key.getInitialValue() == null ? Integer.valueOf(0) : key.getInitialValue();
+        if (checkInitial && !binary
                 && (initial < key.effectiveMin() || initial > key.effectiveMax())) {
             throw invalid(ERR_RANGE, "状态键初值 " + initial + " 超出范围 " + key.effectiveMin() + ".."
                     + key.effectiveMax() + ":" + name);

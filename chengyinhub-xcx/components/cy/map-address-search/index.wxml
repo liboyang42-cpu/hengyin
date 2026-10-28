@@ -4,6 +4,7 @@
      原型是两个状态,不是一个行内输入框:
        ① 收起态 = 一条白色 .searchbar,左搜索图标、中间一句话、右侧一枚筛选图标,点它进 ②;
        ② 展开态 = 全屏 .dim 压暗地图 + 可编辑的 .addrbar(右侧「取消」是绿的)+ .addrlist 结果。
+       2026-10-27 P-33 结果最多 5 条,每条带「导航」;2026-10-28 业主:面板仍是原来的白色样式,只是要有数据。
      ⚠️ 原型里还自绘了一套 iOS 浅色拼音键盘 —— 那是网页 mock 用来替代系统键盘的道具。
         小程序 <input> 聚焦时弹的就是真的系统拼音键盘,自绘一套只会更差,故不搬。
         这是本组件唯一没照搬的东西。 -->
@@ -37,8 +38,11 @@
           <text class="addrrow__t">{{item.name}}</text>
           <text class="addrrow__s">{{item.sub}}</text>
         </view>
+        <text wx:if="{{item.lat && item.lng}}" class="addrrow__nav" data-i="{{index}}" catchtap="onNavigate"
+              aria-role="button" aria-label="导航到{{item.name}}" hover-class="cy-pressed" hover-stay-time="80">导航</text>
       </view>
-      <text wx:if="{{!results.length}}" class="addrlist__none">这附近没有搜到</text>
+      <text wx:if="{{!results.length}}" class="addrlist__none">{{searching ? '正在搜索…' : '这附近没有搜到'}}</text>
+      <text wx:if="{{remoteError}}" class="addrlist__none">联网搜索暂时不可用，先显示附近的地点</text>
     </scroll-view>
   </block>
 </view>

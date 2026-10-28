@@ -113,6 +113,8 @@ const loadPage = (rel, options = {}) => {
     if (request === '../utils/community-report-sheet.js') return require(path.join(ROOT, 'pages/square/utils/community-report-sheet.js'))
     // 性能批4 分页路径追加助手:纯函数无副作用,用真模块不用桩(同上 response-shape 先例)
     if (request.endsWith('list-append.js')) return require(path.join(ROOT, 'utils/list-append.js'))
+    // W8 评论写作用域核对账号(reader/sameReader):纯函数,用真模块不用桩
+    if (request === '../../../utils/user-character.js') return require(path.join(ROOT, 'utils/user-character.js'))
     if (request === '../utils/topic-template-remix.js') return { remixTopicTemplate: () => Promise.resolve(false) }
     if (request === '../../../utils/ui-state-request.js') {
       return {
@@ -756,7 +758,7 @@ test('P1-J: 他人主页不得有看不见但可点的空 button', () => {
 test('P1-J negative control: an empty placeholder button is caught', () => {
   const source = read('pages/userinfo/userinfo.wxml')
   // 锚「结构特征」不锚具体某一行：注入一个空 button，主检查必须抓到
-  const mutated = source.replace(/<view class="pc-actions">/, '<view class="pc-actions"><button></button>')
+  const mutated = source.replace(/<view class="pc-actions"[^>]*>/, (m) => m + '<button></button>')
   assert.notEqual(mutated, source, '负控必须真实突变源文件')
   assert.throws(
     () => assert.doesNotMatch(mutated, /<button>\s*<\/button>/),

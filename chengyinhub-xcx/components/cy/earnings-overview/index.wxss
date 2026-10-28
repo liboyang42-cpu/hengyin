@@ -1,0 +1,20 @@
+:host { display: block; }
+.eo { color: var(--cy-color-text-primary); }
+.eo-sec { display: flex; align-items: baseline; justify-content: space-between; padding: 0 var(--cy-space-1) var(--cy-space-3); }
+.eo-sec--gap { margin-top: var(--cy-space-8); }
+.eo-sec__t { font-size: var(--cy-type-section-title); font-weight: 700; }
+.eo-sec__link { display: flex; align-items: center; font-size: var(--cy-type-label); color: var(--cy-color-text-tertiary); }
+.eo-card { padding: 0 var(--cy-space-4); border-radius: var(--cy-radius-xl); background: var(--cy-color-bg-surface); }
+.eo-row { display: flex; align-items: center; gap: var(--cy-space-3-5); padding: var(--cy-space-5) 0; border-bottom: 1rpx solid var(--cy-color-border-subtle); }
+.eo-row:last-of-type { border-bottom: 0; }
+.eo-row--asset { padding: 44rpx 0; } /* ds-ok: Revolut 式资产行,比明细行更高 */
+.eo-row__ic { width: 80rpx; height: 80rpx; flex: none; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--cy-color-action-secondary-bg); color: var(--cy-color-text-primary); }
+.eo-row__main { flex: 1; min-width: 0; }
+.eo-row__t { display: block; font-size: var(--cy-type-body); color: var(--cy-color-text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.eo-row__meta { display: flex; align-items: center; gap: var(--cy-space-2); margin-top: var(--cy-space-2); font-size: var(--cy-type-caption); color: var(--cy-color-text-tertiary); }
+.eo-row__tag { padding: 2rpx 14rpx; border-radius: 10rpx; background: var(--cy-color-action-secondary-bg); } /* ds-ok: 来源小标签 */
+.eo-row__amt { flex: none; font-size: var(--cy-type-body); font-weight: 600; font-variant-numeric: tabular-nums; }
+.eo-row__amt--in { color: var(--cy-color-status-success); }
+.eo-none { display: block; padding: 72rpx 0; text-align: center; font-size: var(--cy-type-label); color: var(--cy-color-text-tertiary); } /* ds-ok: 空行留白 */
+/* isolated 组件内全局 .cy-pressed 进不来,本地一份(只减淡不位移) */
+.cy-pressed { opacity: .88; }

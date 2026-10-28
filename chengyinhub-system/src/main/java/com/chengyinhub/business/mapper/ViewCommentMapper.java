@@ -1,6 +1,7 @@
 package com.chengyinhub.business.mapper;
 
 import java.util.List;
+import org.apache.ibatis.annotations.Param;
 import com.chengyinhub.business.domain.ViewComment;
 
 /**
@@ -26,6 +27,10 @@ public interface ViewCommentMapper
      * @return VIEW集合
      */
     public List<ViewComment> selectViewCommentList(ViewComment viewComment);
+
+    /** 同一对象下，本页评论的可见直接回复数；空集合不匹配任何回复。 */
+    List<ViewComment> selectVisibleReplyCountsByParents(@Param("ownerType") Long ownerType,
+            @Param("ownerId") Long ownerId, @Param("parentIds") List<Long> parentIds);
 
     /**
      * 新增VIEW

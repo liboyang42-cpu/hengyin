@@ -75,6 +75,12 @@ class FundIdempotencyConcurrencyTest {
                     "两个退款线程必须先共同读到同一笔已支付快照");
             return registration;
         });
+        when(registrationMapper.selectCmsRegistrationByIdForUpdate(registrationId)).thenAnswer(invocation -> {
+            bothReadPaidSnapshot.countDown();
+            assertTrue(bothReadPaidSnapshot.await(5, TimeUnit.SECONDS),
+                    "两个退款线程必须先共同读到同一笔已支付快照");
+            return registration;
+        });
         AtomicBoolean registrationClaimed = new AtomicBoolean();
         when(registrationMapper.claimRegistrationRefunded(eq(registrationId), any(), any()))
                 .thenAnswer(invocation -> registrationClaimed.compareAndSet(false, true) ? 1 : 0);

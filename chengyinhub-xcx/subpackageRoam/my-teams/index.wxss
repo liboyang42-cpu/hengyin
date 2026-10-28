@@ -1,3 +1,4 @@
+@import "../utils/team-recovery-panel.wxss";
 /* 我的队伍:深色,NRC 斜体读数 + Revolut 分组卡。卡/徽色与地图 P6 同一套(mt-badge 色值) */
 page { background: var(--cy-color-bg-page); }
 .mt { min-height: 100vh; padding-bottom: calc(80rpx + env(safe-area-inset-bottom)); background: var(--cy-color-bg-page); color: var(--cy-comp-sheet-player-text); }

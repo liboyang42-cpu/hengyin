@@ -2,7 +2,7 @@
 .ps { position: fixed; inset: 0; z-index: var(--cy-z-sheet); }
 /* 商家主题会给根 view 铺实色；玻璃菜单外壳必须透明，才能采样真实页面。 */
 .ps.ps--quick { background: transparent; }
-.ps__mask { position: absolute; inset: 0; } /* top 由 JS 按胶囊实测下发,见 index.js 的 chrome */
+.ps__mask { position: absolute; inset: 0; } /* P-12:铺满整屏(含状态栏与导航栏),不再让开胶囊 */
 .ps--closing { pointer-events: none; }
 /* 用户视频：整组以右下角加号为锚点等比生长，无卡片底板。 */
 .ps--quick .ps__mask {
@@ -10,7 +10,8 @@
   opacity: 0;
   backdrop-filter: blur(var(--cy-space-4));
   -webkit-backdrop-filter: blur(var(--cy-space-4));
-  transition: opacity var(--cy-motion-standard) var(--cy-ease-out);
+  /* P-12:遮罩淡入淡出 200ms(--cy-motion-fade-swap) */
+  transition: opacity var(--cy-motion-fade-swap) var(--cy-ease-out);
 }
 .ps--quick.ps--quick-open .ps__mask { opacity: 1; }
 .ps__quick {

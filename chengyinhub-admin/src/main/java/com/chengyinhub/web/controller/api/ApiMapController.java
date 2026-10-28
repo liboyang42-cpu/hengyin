@@ -115,6 +115,28 @@ public class ApiMapController extends BaseController {
         return AjaxResult.success(Collections.singletonMap("city", city));
     }
 
+    /** 关键词最长字数:地点名够用,也挡住把整段文本塞进来刷供应商额度 */
+    private static final int MAX_KEYWORD_LENGTH = 40;
+
+    /** 2026-10-28 漫游地图顶部搜地点(业主:搜「海星市场」要能搜到)。与逆地理共用同一份每分钟额度。 */
+    @PostMapping("/place-search")
+    @Operation(summary = "关键词搜地点")
+    public AjaxResult placeSearch(String keyword, String longitude, String latitude) {
+        String kw = keyword == null ? "" : keyword.trim();
+        if (kw.isEmpty() || kw.length() > MAX_KEYWORD_LENGTH) {
+            return AjaxResult.error("请输入要搜索的地点");
+        }
+        Double lng = Convert.toDouble(longitude);
+        Double lat = Convert.toDouble(latitude);
+        if (lng == null || lat == null || lng < -180D || lng > 180D || lat < -90D || lat > 90D) {
+            return AjaxResult.error("经纬度格式不正确");
+        }
+        if (!tryConsumeReverseGeocodeBudget()) {
+            return AjaxResult.success(Collections.emptyList());
+        }
+        return AjaxResult.success(mapGeocodeService.searchPlaces(kw, lng, lat));
+    }
+
     private synchronized boolean tryConsumeReverseGeocodeBudget() {
         long now = System.currentTimeMillis();
         if (now - reverseGeocodeWindowStartedAt >= 60 * 1000L) {

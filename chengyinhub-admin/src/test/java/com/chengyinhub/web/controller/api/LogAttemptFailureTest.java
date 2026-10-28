@@ -40,9 +40,9 @@ class LogAttemptFailureTest {
     void setUp() {
         attemptLogMapper = mock(PlayAttemptLogMapper.class);
         controller = new ApiPlayProgressController();
-        ReflectionTestUtils.setField(controller, "playAttemptLogMapper", attemptLogMapper);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playAttemptLogMapper", attemptLogMapper);
 
-        logger = (Logger) LoggerFactory.getLogger(ApiPlayProgressController.class);
+        logger = (Logger) LoggerFactory.getLogger(com.chengyinhub.web.service.play.PlayNodeCompletionApplication.class);
         originalLevel = logger.getLevel();
         appender = new ListAppender<>();
         appender.start();
@@ -66,7 +66,7 @@ class LogAttemptFailureTest {
 
     private void invokeLogAttempt(Long memberId, CmsTopicNode node, Long actId,
                                    int attemptType, int result, String wrongAnswer) {
-        ReflectionTestUtils.invokeMethod(controller, "logAttempt",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.invokeMethod(controller, "logAttempt",
                 memberId, node, actId, attemptType, result, wrongAnswer);
     }
 

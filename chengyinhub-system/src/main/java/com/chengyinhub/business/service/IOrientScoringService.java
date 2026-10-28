@@ -2,6 +2,7 @@ package com.chengyinhub.business.service;
 
 import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.OrientScoreAppeal;
+import com.chengyinhub.business.domain.OrientScoreRecovery;
 import com.chengyinhub.business.domain.OrientScoreEntry;
 import com.chengyinhub.business.domain.vo.LeaderboardItemVO;
 
@@ -19,6 +20,7 @@ import java.util.Map;
  * F1a(会话生命周期)/F1c(反作弊)的接入点:{@link #syncSession}、{@link #appendEntry}、{@link #settleBySystem}。
  */
 public interface IOrientScoringService {
+    String KIND_SYNC = "SYNC";
     String KIND_SETTLE = "SETTLE";
     String KIND_APPEAL = "APPEAL";
     String KIND_DISPUTE = "DISPUTE";
@@ -34,8 +36,14 @@ public interface IOrientScoringService {
     /** 玩家/F1a:把本局已通过任务入账(幂等;已结算的局冻结不再入账)。 */
     Map<String, Object> syncSession(Long memberId, Long sessionId);
 
+    /** 玩家同步命令：原号持久回执；两参数版本保留给既有内部调用。 */
+    Map<String, Object> syncSession(Long memberId, Long sessionId, String idempotencyKey);
+
     /** 玩家:局终结算(幂等;已结算返回首份回执)。 */
     Map<String, Object> settle(Long memberId, Long sessionId, String idempotencyKey);
+
+    /** 原session锁内的终态写前检查；待审任务不得进入正常结算。 */
+    void assertCompletionAllowed(Long sessionId);
 
     /** F1a 生命周期在会话终态时调用;不校验玩家身份,只校验会话存在。 */
     Map<String, Object> settleBySystem(Long sessionId, String idempotencyKey);
@@ -62,8 +70,15 @@ public interface IOrientScoringService {
 
     List<OrientScoreAppeal> listDisputes(Integer status, int limit);
 
-    /** UNKNOWN 结果回读:按 kind + 幂等键取首份回执;未落库返回 state=NOT_FOUND,端上据此决定重试。 */
+    /** UNKNOWN 结果回读:按 kind + 幂等键取首份回执;未查到返回 state=NOT_FOUND；不能据此证明未写或解除 UNKNOWN。 */
     Map<String, Object> receipt(Long memberId, String kind, Long sessionId, String idempotencyKey);
+
+    OrientScoreRecovery submitRecovery(Long memberId, Long sessionId, String kind);
+    List<OrientScoreRecovery> listRecoveries(Integer status, int limit);
+    OrientScoreRecovery reviewRecovery(Long id, Long referenceId, String note, String handledBy);
+
+    /** 本人对局对应的完整计分/分支榜，先排名后截取，同时返回榜外本人。 */
+    Map<String, Object> leaderboard(Long memberId, Long sessionId);
 
     /** 复算:流水求和 vs 投影。 */
     Map<String, Object> verify(Long sessionId);

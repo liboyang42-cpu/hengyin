@@ -38,7 +38,7 @@ function assertContract(overrides = {}) {
   for (const selector of ['.cg-chip', '.cg-chip-add', '.cg-opt-chip', '.cg-cfg-add', '.cg-medal-clear', '.cg-beat-del', '.cg-audio-del', '.cg-pv-usehint']) {
     assertMinHeight(tempWxss, selector)
   }
-  for (const selector of ['.cg-chip-x', '.cg-choice-radio', '.cg-opt-thumb-hit', '.cg-audio-play', '.cg-pv-arrow']) {
+  for (const selector of ['.cg-chip-x', '.cg-choice-radio', '.cg-opt-thumb-hit', '.cg-audio-play']) { // 2026-10-27 P-40:.cg-pv-arrow 圆形箭头已删除
     assertSquare(tempWxss, selector)
   }
   assertSquare(gridWxss, '.pgrid-del')
@@ -49,7 +49,8 @@ function assertContract(overrides = {}) {
     '配置选项 {{opt.letter}} 音频', '清除选项 {{opt.letter}} 媒体', '添加选项',
     '清除勋章图片',
     '删除时间节点 {{bi + 1}}', "{{audioPreviewPlaying?'暂停导览音频':'播放导览音频'}}", '删除导览音频',
-    '上一步预览', '下一步预览', '使用提示', '删除剧情配图 {{ii + 1}}',
+    '使用提示', // 2026-10-27 P-40:上一步 / 下一步预览箭头已删
+    '删除剧情配图 {{ii + 1}}',
   ]) {
     assert.match(tempWxml, new RegExp(`aria-label="${label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"`), `缺少可读名称：${label}`)
   }

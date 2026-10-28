@@ -9,6 +9,8 @@ const backpack = require('../../pages/play/utils/theme-backpack.js');
 const pending = require('./fixtures/generic-proof-view.json');
 const passed = { ...pending, quests: pending.quests.map(q => ({ ...q, enabled: true, trustedPass: true, disabledReason: null,
   actionSummary: { operation: 'QUEST_RESOLVE', enabled: true, trustedPass: true, disabledReason: null } })) };
+// 基础写入先只读原局身份再发写；这里只让写请求本身丢失响应。
+const ORIGINAL_CONTEXT = { code: 200, data: { routeSessionId: '77', expectedRouteVersion: 0 } };
 function setData(patch, cb) { for (const [key, value] of Object.entries(patch)) { const parts = key.split('.'); let at = this.data; for (const part of parts.slice(0, -1)) at = at[part] || (at[part] = {}); at[parts.at(-1)] = value; } if (cb) cb(); }
 function loadPage() {
   let definition; const calls = [];
@@ -105,7 +107,7 @@ test('共享未知结算读到匹配 APPLIED 才解锁，个人没有 receipt GE
 test('通用到达请求响应丢失立刻权威读回，不留可重写的网络重试', async () => {
   const { page, app, calls } = loadPage(); page.data.themeBag = backpack.present(pending, []); page._withThoughtSync = job => Promise.resolve().then(job);
   page._sessionParams = () => ({ activityId: 5 });
-  app.sendRequest = options => { calls.push(options); options.fail(); };
+  app.sendRequest = options => { calls.push(options); if (options.url === '/api/play/action-context') options.success(ORIGINAL_CONTEXT); else options.fail(); };
   await page.arrive(41, 'arrive'); await new Promise(resolve => setImmediate(resolve));
   assert.ok(page.reads || page.bagReads); assert.equal(page._arrivalWriteUnknown, true);
   await page.arrive(41, 'arrive'); assert.equal(calls.filter(c => c.method === 'POST').length, 1);
@@ -134,7 +136,7 @@ test('结算回读拿到其他 action 的 receipt 不解锁或显示奖励', asy
 test('通用拍照未知只回读，保留照片与输入，不显示重新上传且不重写', async () => {
   const { page, app, calls } = loadPage(); page.data.themeBag = backpack.present(pending, []); page.data.game = { nodeId: 41, vm: 2 }; page.data.photoTaken = true;
   page._sessionParams = () => ({ activityId: 5 }); page._withThoughtSync = job => Promise.resolve().then(job);
-  app.sendRequest = options => { calls.push(options); options.fail(); };
+  app.sendRequest = options => { calls.push(options); if (options.url === '/api/play/action-context') options.success(ORIGINAL_CONTEXT); else options.fail(); };
   await page.submitPhoto(41, 'uploaded/photo.jpg'); await new Promise(resolve => setImmediate(resolve));
   assert.ok(page.reads || page.bagReads); assert.equal(page._gameWriteUnknown, true); assert.equal(page.data.gNetRetryable, false); assert.equal(page.data.photoTaken, true);
   await page.submitPhoto(41, 'uploaded/photo.jpg'); assert.equal(calls.filter(c => c.method === 'POST').length, 1);

@@ -86,6 +86,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.chengyinhub.common.utils.OwnershipUtils;
@@ -1784,22 +1785,50 @@ public class ApiClubController extends BaseController {
         return AjaxResult.success(d);
     }
 
+    /** 当前点赞状态快照，不是原写请求的最终回执。沿用动态列表的俱乐部可见性。 */
+    @Operation(summary = "读取本人的动态点赞状态")
+    @PostMapping("/post/like-state")
+    public AjaxResult postLikeState(@RequestBody(required = false) ClubPost body) {
+        if (body == null || body.getId() == null || body.getId() <= 0
+                || body.getClubId() == null || body.getClubId() <= 0) return error("动态或俱乐部ID不合法");
+        Long memberId;
+        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        if (memberId == null || memberId <= 0) return error("请先登录");
+        Club club = clubService.selectClubById(body.getClubId());
+        if (club == null) return error("俱乐部不存在");
+        if (!canViewClub(club)) return error("这个俱乐部只对成员开放");
+        ClubPost post = clubPostService.selectClubPostById(body.getId());
+        if (post == null || !body.getId().equals(post.getId()) || !body.getClubId().equals(post.getClubId())
+                || !Integer.valueOf(0).equals(post.getDelFlag())) return error("动态不存在");
+        Map<String, Object> data = new HashMap<>();
+        data.put("id", post.getId().toString());
+        data.put("clubId", post.getClubId().toString());
+        data.put("isLiked", clubPostLikeService.selectByPostAndMember(post.getId(), memberId) != null);
+        data.put("likeCount", post.getLikeCount());
+        return AjaxResult.success(data);
+    }
+
     @Operation(summary = "动态点赞/取消")
     @PostMapping("/post/like")
-    @Transactional(rollbackFor = Exception.class)
+    // 锁前的帖子读取不能让锁后的成员与封禁检查沿用旧快照。
+    @Transactional(rollbackFor = Exception.class, isolation = Isolation.READ_COMMITTED)
     public AjaxResult postLike(@RequestBody ClubPostLike body) {
         Long memberId;
         try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
         if (body.getPostId() == null) return error("缺少动态ID");
         ClubPost targetPost = clubPostService.selectClubPostById(body.getPostId());
-        if (targetPost == null || Integer.valueOf(2).equals(targetPost.getDelFlag())
-                || clubService.selectClubByIdForUpdate(targetPost.getClubId()) == null) {
-            return error("动态不存在");
-        }
-        targetPost = clubPostService.selectClubPostByIdForUpdate(body.getPostId());
         if (targetPost == null || Integer.valueOf(2).equals(targetPost.getDelFlag())) {
             return error("动态不存在");
         }
+        Club club = clubService.selectClubByIdForUpdate(targetPost.getClubId());
+        if (club == null) return error("动态不存在");
+        targetPost = clubPostService.selectClubPostByIdForUpdate(body.getPostId());
+        if (targetPost == null || Integer.valueOf(2).equals(targetPost.getDelFlag())
+                || !club.getId().equals(targetPost.getClubId())) {
+            return error("动态不存在");
+        }
+        if (!canViewClub(club)) return error("这个俱乐部只对成员开放");
+        clubParticipationGuard.requireAllowed(club.getId(), memberId);
         // P1-023:带 liked 时按目标态幂等(重试/重复请求不会来回翻转);不带时保持旧切换语义。
         boolean current = clubPostLikeService.selectByPostAndMember(body.getPostId(), memberId) != null;
         boolean liked = body.getLiked() == null ? !current : body.getLiked();

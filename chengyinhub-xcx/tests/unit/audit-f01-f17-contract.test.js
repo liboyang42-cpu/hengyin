@@ -85,12 +85,12 @@ test('F13 已确认的工程术语不再出现在用户可见文案', () => {
   assert.deepEqual(engineeringCopyIssues('pages/example.js', "toast('服务端回执读取失败')"), ['服务端回执读取失败'])
 })
 
-test('F14 票夹四类状态恢复为可见文字，不只藏在 aria-label', () => {
+test('F14 票夹卡上的可见文字只有类型 · 剩几天;只放能用的票(2026-10-28 业主)', () => {
   const wxml = read('subpackageMember/signup/index.wxml')
-  // 2026-10-22 v13 卡组:状态写在每张卡上(类型 · 剩几天 / 待支付 / 已核验 / 已过期 / 已取消)
   assert.match(wxml, /class="wc__s">\{\{item\.wSub\}\}/)
   const js = read('subpackageMember/signup/index.js')
-  assert.match(js, /done \? '已核验' : gone \? \(item\.registrationStatus == 4 \? '已过期' : '已取消'\) : ready \? '' : '待支付'/)
+  assert.match(js, /const list = all\.filter\(usableTicket\)/)
+  assert.match(js, /Number\(item\.registrationStatus\) !== 2 \|\| item\.verificationStatus == 1/)
 })
 
 test('F17 共享活动详情的可空头像在传入 cy-avatar 前归一为空串', () => {

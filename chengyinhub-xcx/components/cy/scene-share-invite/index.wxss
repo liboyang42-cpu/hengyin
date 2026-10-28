@@ -56,10 +56,21 @@
   height: 520rpx;
   display: block;
   opacity: 0;
-  transition: opacity var(--cy-motion-standard) var(--cy-ease);
+  clip-path: circle(0% at 50% 50%);
+  transition: opacity var(--cy-motion-standard) var(--cy-ease), clip-path 900ms cubic-bezier(.2,.7,.2,1);
 }
 
-.siv__qr--ready { opacity: 1; }
+.siv__qr--ready { opacity: 1; clip-path: circle(75% at 50% 50%); }
+/* 彩色圈层压在码上(lighten:黑点被染色、白底不变),码露全后整层淡出,点回到黑色 */
+.siv__ripple { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: lighten; opacity: 1;
+  background: radial-gradient(circle at 50% 50%, #4ade80 0%, #f97316 22%, #6366f1 44%, #a855f7 62%, #be185d 80%); /* ds-ok: 出现动效的彩色圈,终态不可见 */
+  transition: opacity 900ms ease 700ms; }
+.siv__ripple--done { opacity: 0; }
+.siv__logo { position: absolute; left: 50%; top: 50%; width: 112rpx; height: 112rpx; margin: -56rpx 0 0 -56rpx; border-radius: 28rpx; background: #fff; /* ds-ok: 码中心的白底 logo 位 */
+  display: flex; align-items: center; justify-content: center; opacity: 0; transform: scale(.6); transition: opacity 300ms ease 500ms, transform 400ms cubic-bezier(.34,1.56,.64,1) 500ms; }
+.siv__logo-img { width: 84rpx; height: 84rpx; filter: brightness(0); } /* 业主:中间是黑色的城瘾 logo */
+.siv__logo--ready { opacity: 1; transform: scale(1); }
+.siv--reduced .siv__qr, .siv--reduced .siv__ripple, .siv--reduced .siv__logo { transition: none; }
 
 .siv__qr-state {
   width: 520rpx;

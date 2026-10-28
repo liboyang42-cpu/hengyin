@@ -118,41 +118,41 @@ class ApiPlayDelistedCompletedRetryContractTest
         IPlayerProgressionService progressionService = mock(IPlayerProgressionService.class);
         ITopicCompletionAwardService completionAwardService = mock(ITopicCompletionAwardService.class);
 
-        ReflectionTestUtils.setField(controller, "cmsActivityService", activityService);
-        ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrationService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsActivityService", activityService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsRegistrationService", registrationService);
         CmsRegistrationMapper registrationMapper = mock(CmsRegistrationMapper.class);
         when(registrationMapper.markFirstSuccessfulScan(eq(REGISTRATION), eq(PLAYER),
                 eq(2L), eq(ACTIVITY), any(Date.class))).thenReturn(1);
-        ReflectionTestUtils.setField(controller, "cmsRegistrationMapper", registrationMapper);
-        ReflectionTestUtils.setField(controller, "cmsTopicNodeService", nodeService);
-        ReflectionTestUtils.setField(controller, "cmsTopicService", topicService);
-        ReflectionTestUtils.setField(controller, "cmsMemberTemplateService", templateService);
-        ReflectionTestUtils.setField(controller, "playerNodeProgressService", progressService);
-        ReflectionTestUtils.setField(controller, "pointsAwardService", pointsAwardService);
-        ReflectionTestUtils.setField(controller, "rewardDropService", mock(IRewardDropService.class));
-        ReflectionTestUtils.setField(controller, "smsCouponHistoryService", mock(ISmsCouponHistoryService.class));
-        ReflectionTestUtils.setField(controller, "playerProgressionService", progressionService);
-        ReflectionTestUtils.setField(controller, "growthService", mock(IGrowthService.class));
-        ReflectionTestUtils.setField(controller, "topicCompletionAwardService", completionAwardService);
-        ReflectionTestUtils.setField(controller, "shopDayProofService", proofService);
-        ReflectionTestUtils.setField(controller, "xpBudgetService", mock(IXpBudgetService.class));
-        ReflectionTestUtils.setField(controller, "clubLeadMapper",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsRegistrationMapper", registrationMapper);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicNodeService", nodeService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicService", topicService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsMemberTemplateService", templateService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerNodeProgressService", progressService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "pointsAwardService", pointsAwardService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "rewardDropService", mock(IRewardDropService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "smsCouponHistoryService", mock(ISmsCouponHistoryService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playerProgressionService", progressionService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "growthService", mock(IGrowthService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "topicCompletionAwardService", completionAwardService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "shopDayProofService", proofService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "xpBudgetService", mock(IXpBudgetService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "clubLeadMapper",
                 mock(com.chengyinhub.business.mapper.ClubLeadMapper.class));
-        ReflectionTestUtils.setField(controller, "playAttemptLogMapper",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "playAttemptLogMapper",
                 mock(com.chengyinhub.business.mapper.PlayAttemptLogMapper.class));
-        ReflectionTestUtils.setField(controller, "memberCollectibleMapper",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "memberCollectibleMapper",
                 mock(com.chengyinhub.business.mapper.MemberCollectibleMapper.class));
-        ReflectionTestUtils.setField(controller, "nodeMerchantOverrideService",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "nodeMerchantOverrideService",
                 new NodeMerchantOverrideServiceImpl(
                         mock(com.chengyinhub.business.service.ICmsRegistrationMerchantService.class)));
-        ReflectionTestUtils.setField(controller, "cmsTopicChapterService", mock(ICmsTopicChapterService.class));
-        ReflectionTestUtils.setField(controller, "omsTicketService", mock(IOmsTicketService.class));
-        ReflectionTestUtils.setField(controller, "perkLedgerService", mock(IPerkLedgerService.class));
-        ReflectionTestUtils.setField(controller, "puzzlePlayService", mock(IPuzzlePlayService.class));
-        ReflectionTestUtils.setField(controller, "preferencePlayService", preferencePlayService);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "cmsTopicChapterService", mock(ICmsTopicChapterService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "omsTicketService", mock(IOmsTicketService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "perkLedgerService", mock(IPerkLedgerService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "puzzlePlayService", mock(IPuzzlePlayService.class));
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "preferencePlayService", preferencePlayService);
         SensorChallengeServiceImpl sensorChallenges = new SensorChallengeServiceImpl();
         ReflectionTestUtils.setField(sensorChallenges, "playerNodeProgressService", progressService);
-        ReflectionTestUtils.setField(controller, "sensorChallengeService", sensorChallenges);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "sensorChallengeService", sensorChallenges);
 
         node = new CmsTopicNode();
         node.setId(NODE);
@@ -219,7 +219,7 @@ class ApiPlayDelistedCompletedRetryContractTest
             return Long.valueOf(1L).equals(probe.getStatus())
                     ? Collections.emptyList() : Collections.singletonList(node);
         });
-        ReflectionTestUtils.setField(controller, "topicRouteRuntimeService",
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "topicRouteRuntimeService",
                 new TopicRouteRuntimeServiceImpl(routeMapper, routeTopicMapper, routeNodeMapper,
                         routeProgressMapper, routeActivityMapper, routeRegistrationMapper));
 
@@ -237,6 +237,7 @@ class ApiPlayDelistedCompletedRetryContractTest
         when(proofService.hasArrived(anyLong(), anyLong(), anyLong())).thenReturn(true);
         mockProgressRows(true);
         CurrentPlayControllerFixtures.install(controller);
+        BasicPlayCommandFixtures.scope(controller, TOPIC);
     }
 
     /**
@@ -275,19 +276,19 @@ class ApiPlayDelistedCompletedRetryContractTest
 
     private AjaxResult checkin()
     {
-        return controller.checkin(String.valueOf(ACTIVITY), CHECKIN_CODE, null, null, null);
+        return BasicPlayCommandFixtures.checkin(controller, String.valueOf(ACTIVITY), CHECKIN_CODE, null, null, null, null, String.valueOf(NODE));
     }
 
     private AjaxResult answer()
     {
-        return controller.answer(String.valueOf(ACTIVITY), String.valueOf(NODE), "A", null, null, null);
+        return BasicPlayCommandFixtures.answer(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "A", null, null, null);
     }
 
     private AjaxResult preference()
     {
         PreferenceSubmitRequest request = new PreferenceSubmitRequest();
         request.setActivityId(String.valueOf(ACTIVITY));
-        return controller.submitPreference(NODE, request);
+        return BasicPlayCommandFixtures.submitPreference(controller, NODE, request);
     }
 
     private AjaxResult sensor()
@@ -299,12 +300,12 @@ class ApiPlayDelistedCompletedRetryContractTest
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("heldSec", 12);
         request.setPayload(payload);
-        return controller.sensorResult(request);
+        return BasicPlayCommandFixtures.sensorResult(controller, request);
     }
 
     private AjaxResult arrive()
     {
-        return controller.arrive(String.valueOf(ACTIVITY), String.valueOf(NODE), null, null, null, null, null);
+        return BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), null, null, null, null, null);
     }
 
     // ---------- 已完成重试:下架闸必须放行原幂等回执 ----------
@@ -343,14 +344,14 @@ class ApiPlayDelistedCompletedRetryContractTest
         template.setValidationMethod(ValidationMethod.PREFERENCE_GROUP);
         Map<String, Object> stored = new LinkedHashMap<>();
         stored.put("firstTime", false);
-        when(preferencePlayService.submit(anyLong(), anyLong(), anyLong(), anyLong(), any(), any(), any()))
+        when(preferencePlayService.submit(anyLong(), anyLong(), anyLong(), anyLong(), any(), any(), any(), any()))
                 .thenReturn(stored);
 
         AjaxResult result = preference();
 
         assertEquals(200, result.get("code"), String.valueOf(result.get("msg")));
         assertEquals("偏好结果已生成", result.get("msg"));
-        verify(preferencePlayService).submit(anyLong(), anyLong(), anyLong(), anyLong(), any(), any(), any());
+        verify(preferencePlayService).submit(anyLong(), anyLong(), anyLong(), anyLong(), any(), any(), any(), any());
         verify(progressService, never()).insertPlayerNodeProgress(any());
     }
 
@@ -386,7 +387,7 @@ class ApiPlayDelistedCompletedRetryContractTest
         template.setValidationMethod(ValidationMethod.PHOTO);
         mockDuplicateInsert();
 
-        AjaxResult result = controller.photo(String.valueOf(ACTIVITY), String.valueOf(NODE),
+        AjaxResult result = BasicPlayCommandFixtures.photo(controller, String.valueOf(ACTIVITY), String.valueOf(NODE),
                 "https://cdn.example.com/p/1.jpg", null, null, null);
 
         assertEquals(200, result.get("code"), String.valueOf(result.get("msg")));
@@ -436,7 +437,7 @@ class ApiPlayDelistedCompletedRetryContractTest
         // 「该地点尚未解锁」;这是既有次序(不是本次修复引入),关键是回执没被放行、也没写进度。
         assertEquals(500, result.get("code"));
         assertEquals("该地点尚未解锁", result.get("msg"));
-        verify(preferencePlayService, never()).submit(anyLong(), anyLong(), anyLong(), anyLong(), any(), any(), any());
+        verify(preferencePlayService, never()).submit(anyLong(), anyLong(), anyLong(), anyLong(), any(), any(), any(), any());
     }
 
     @Test

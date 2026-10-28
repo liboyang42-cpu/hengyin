@@ -1,0 +1,53 @@
+<!-- 我的申诉:整页照抄「我的举报」report-mine(同导航、同标题、同三个 chip、同记录行);
+     顶部一行账号信誉(X7)行形同 rp-row,点开半屏只解释两种状态(原型 B)。 -->
+<view class="theme-dark rp">
+  <cy-toast id="cy-toast" />
+  <cy-loading-mask id="cy-loading" />
+  <cy-modal-host id="cy-modal-host" />
+  <view style="padding-top: {{statusBarHeight + navBarHeight}}px;">
+    <cy-nav-bar plain custom-back bind:back="goBack" />
+    <cy-page-title title="我的申诉" safe-top="{{false}}" />
+    <view class="rp__body">
+      <cy-state-shell wx:if="{{state === 'login'}}" kind="data" title="登录后查看申诉" primary="微信登录" bind:primary="login" />
+      <block wx:else>
+        <view class="rp-row" wx:if="{{reputation}}" bindtap="openReputation" aria-role="button" aria-label="账号信誉，{{reputation.text}}"
+              hover-class="cy-pressed" hover-stay-time="80">
+          <view class="rp-row__main">
+            <view class="rp-row__head">
+              <text class="rp-row__title">账号信誉</text>
+              <cy-tag variant="{{reputation.tone}}">{{reputation.text}}</cy-tag>
+            </view>
+          </view>
+          <cy-icon class="rp-row__arrow" name="arrow-right" size="28" />
+        </view>
+        <cy-skeleton wx:if="{{state === 'loading'}}" type="feed-card" count="3" />
+        <cy-state-shell wx:elif="{{state === 'error'}}" kind="data" title="申诉记录加载失败" primary="重试" bind:primary="retry" />
+        <cy-state-shell wx:elif="{{state === 'empty'}}" kind="empty" title="还没有申诉记录" />
+        <block wx:else>
+          <cy-tabs variant="chip" tabs="{{tabs}}" active="{{tab}}" bind:change="onTab" />
+          <cy-state-shell wx:if="{{!rows.length}}" kind="empty" title="{{tab === 'decided' ? '还没有已有结论的申诉' : '没有处理中的申诉'}}" />
+          <view class="rp-row" wx:for="{{rows}}" wx:key="key" data-topic="{{item.topicId}}" data-session="{{item.sessionId}}" bindtap="openAppeal"
+                aria-role="button" aria-label="{{item.title}}，{{item.tagText}}" hover-class="cy-pressed" hover-stay-time="80">
+            <view class="rp-row__main">
+              <view class="rp-row__head">
+                <text class="rp-row__title">{{item.title}}</text>
+                <cy-tag variant="{{item.tagTone}}">{{item.tagText}}</cy-tag>
+              </view>
+              <text class="rp-row__sub" wx:if="{{item.sub}}">{{item.sub}}</text>
+            </view>
+            <cy-icon class="rp-row__arrow" name="arrow-right" size="28" />
+          </view>
+          <view class="rp__more rp__more--end" wx:if="{{rows.length}}">已经到底了</view>
+        </block>
+      </block>
+    </view>
+  </view>
+  <cy-sheet show="{{repSheet}}" title="账号信誉" bind:close="closeReputation">
+    <view class="rp-row">
+      <view class="rp-row__main"><view class="rp-row__head"><text class="rp-row__title">正常</text><text class="rp-row__sub">可以组队和报名赛事</text></view></view>
+    </view>
+    <view class="rp-row">
+      <view class="rp-row__main"><view class="rp-row__head"><text class="rp-row__title">受限</text><text class="rp-row__sub">暂时不能申请公开招募队伍和报名赛事</text></view></view>
+    </view>
+  </cy-sheet>
+</view>

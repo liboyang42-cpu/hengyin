@@ -83,7 +83,7 @@
     </view>
   </view>
 
-  <cy-sheet inset show="{{couponTypeSheetVisible}}" title="选择优惠券类型" bind:close="closeCouponTypeSheet">
+  <cy-sheet inset show="{{couponTypeSheetVisible}}" back-guard="{{false}}" title="选择优惠券类型" bind:close="closeCouponTypeSheet">
     <view class="coupon-type-option {{index2 === index ? 'coupon-type-option--on' : ''}}"
       wx:for="{{array2}}" wx:key="*this" data-index="{{index}}" bindtap="selectCouponType" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="{{item}}">{{item}}</view>
   </cy-sheet>
@@ -92,7 +92,7 @@
        原来是「选择开始时间」「选择结束时间」两个先后弹出的面板,选结束时看不到开始选了什么,
        日期与时刻还被拆成两个 picker-view、中间塞一个连接词(读成「9 月 1 日 的 14:30」)。 -->
   <cy-datetime-range
-    show="{{rangePickerShow}}"
+    show="{{rangePickerShow}}" back-guard="{{false}}"
     title="选择优惠券有效期"
     value="{{rangeValue}}"
     bind:cancel="onRangeCancel"

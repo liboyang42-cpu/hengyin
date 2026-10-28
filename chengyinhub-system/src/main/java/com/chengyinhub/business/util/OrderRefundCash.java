@@ -53,6 +53,17 @@ public final class OrderRefundCash {
 
     public static BigDecimal remaining(List<CmsRegistration> order, CmsRegistration payer,
                                        IRefundService refundService, Long excludeRefundId) {
+        return remaining(order, payer, refundService, excludeRefundId, false);
+    }
+
+    /** 系统整单取代须先裁定再驳回待审单：金额只排除未派发待审，不忽略任何已批准事实。 */
+    public static BigDecimal remainingForSystemSupersession(List<CmsRegistration> order, CmsRegistration payer,
+                                                            IRefundService refundService) {
+        return remaining(order, payer, refundService, null, true);
+    }
+
+    private static BigDecimal remaining(List<CmsRegistration> order, CmsRegistration payer,
+                                        IRefundService refundService, Long excludeRefundId, boolean superseding) {
         BigDecimal refunded = BigDecimal.ZERO;
         for (CmsRegistration m : order) {
             List<RefundApplication> apps = refundService.selectRegistrationHistoryForUpdate(m.getId());
@@ -60,8 +71,9 @@ public final class OrderRefundCash {
             if (apps != null) {
                 for (RefundApplication app : apps) {
                     if (excludeRefundId != null && excludeRefundId.equals(app.getId())) continue;
-                    if (excludeRefundId == null && Integer.valueOf(0).equals(app.getStatus())) {
-                        throw new ServiceException("同单有退款申请正在审核,请稍后再试", HttpStatus.CONFLICT);
+                    if (excludeRefundId == null && Integer.valueOf(0).equals(app.getStatus())
+                            && (!superseding || !Integer.valueOf(RefundApplication.PAYOUT_DISPATCH_PENDING).equals(app.getPayoutStatus()))) {
+                        throw new ServiceException("同单有退款申请正在审核或派发事实不明,请稍后核对", HttpStatus.CONFLICT);
                     }
                     if (Integer.valueOf(1).equals(app.getStatus())) {
                         if (app.getRefundAmount() == null || app.getRefundAmount().signum() <= 0) {

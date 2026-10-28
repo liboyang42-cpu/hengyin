@@ -43,6 +43,18 @@
     ><view class="cy-tabs__label">{{item.label}}</view><view wx:if="{{item.badge}}" class="cy-tabs__badge"><cy-badge type="count" count="{{item.badge}}" /></view></view>
   </view>
 </scroll-view>
+<!-- icon:立体图标在上、文字在下(模板页主题 / 玩法,2026-10-28 业主定稿原型 v21)。
+     选中态 = 不透明 + 图标回弹到原尺寸 + 底部短条;没有整条底线。 -->
+<view wx:elif="{{variant === 'icon'}}" class="cy-tabs cy-tabs--icon {{wide ? 'cy-tabs--wide' : ''}} {{size ? 'cy-tabs--' + size : ''}} {{reducedMotion ? 'cy-tabs--reduced-motion' : ''}}" aria-role="tablist">
+  <view
+    wx:for="{{tabs}}"
+    wx:key="key"
+    class="cy-tabs__item {{item.key === active ? 'cy-tabs__item--on' : ''}}"
+    data-key="{{item.key}}"
+    bindtap="onTab"
+    aria-role="tab" aria-selected="{{item.key === active}}" aria-label="{{item.label}}"
+    hover-class="cy-tabs__item--press" hover-stay-time="80"><image class="cy-tabs__icon" src="{{item.icon}}" mode="aspectFit" /><view class="cy-tabs__label">{{item.label}}</view></view>
+</view>
 <view wx:else class="cy-tabs {{variant ? 'cy-tabs--' + variant : ''}} {{wide ? 'cy-tabs--wide' : ''}} {{size ? 'cy-tabs--' + size : ''}} {{sticky ? 'cy-tabs--sticky' : ''}} {{plain ? 'cy-tabs--plain' : ''}} {{hairline ? '' : 'cy-tabs--noline'}}" aria-role="tablist">
   <view
     wx:for="{{tabs}}"

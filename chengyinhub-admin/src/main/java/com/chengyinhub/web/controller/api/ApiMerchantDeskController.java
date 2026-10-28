@@ -86,19 +86,19 @@ public class ApiMerchantDeskController extends BaseController {
     @Operation(summary = "新建/修改商品(幂等;落为待审核,上架中不可改)")
     @PostMapping("/products/save")
     public AjaxResult saveProduct(@RequestBody(required = false) Map<String, Object> body) {
-        return run(MerchantPermission.PROJECT_MANAGE, access -> merchantDeskService.saveProduct(access, safe(body)));
+        return runProductWrite(access -> merchantDeskService.saveProduct(access, safe(body)));
     }
 
     @Operation(summary = "下架商品(幂等)")
     @PostMapping("/products/delist")
     public AjaxResult delistProduct(@RequestBody(required = false) Map<String, Object> body) {
-        return run(MerchantPermission.PROJECT_MANAGE, access -> merchantDeskService.delistProduct(access, safe(body)));
+        return runProductWrite(access -> merchantDeskService.delistProduct(access, safe(body)));
     }
 
     @Operation(summary = "新建/修改 SKU 与预约容量规则(幂等,乐观锁)")
     @PostMapping("/products/sku/save")
     public AjaxResult saveSku(@RequestBody(required = false) Map<String, Object> body) {
-        return run(MerchantPermission.PROJECT_MANAGE, access -> merchantDeskService.saveSku(access, safe(body)));
+        return runProductWrite(access -> merchantDeskService.saveSku(access, safe(body)));
     }
 
     @Operation(summary = "SKU 时段容量(只读;由 App/后台批量生成)")
@@ -106,6 +106,14 @@ public class ApiMerchantDeskController extends BaseController {
     public AjaxResult skuSlots(@RequestBody(required = false) Map<String, Object> body) {
         return run(MerchantPermission.PROJECT_MANAGE, access -> merchantDeskService.capacitySlots(access,
                 number(body, "skuId"), text(body, "fromDate"), integer(body, "days")));
+    }
+
+    @Operation(summary = "SKU时段游标分页（最多14天，实时容量读回）")
+    @PostMapping("/products/sku/slots/page")
+    public AjaxResult skuSlotPage(@RequestBody(required = false) Map<String, Object> body) {
+        return run(MerchantPermission.PROJECT_MANAGE, access -> merchantDeskService.capacitySlotPage(access,
+                number(body, "skuId"), text(body, "fromDate"), integer(body, "days"),
+                number(body, "afterStartAt"), number(body, "afterSlotId")));
     }
 
     @Operation(summary = "今日到店(今日已核销 + 生效供给章节上的未核销权益数)")
@@ -169,10 +177,25 @@ public class ApiMerchantDeskController extends BaseController {
         return run(MerchantPermission.FINANCE_READ, merchantDeskService::frozenBatches);
     }
 
+    @Operation(summary = "当前冻结批次完整历史游标分页（只读）")
+    @PostMapping("/frozen/page")
+    public AjaxResult frozenPage(@RequestBody(required = false) Map<String, Object> body) {
+        return run(MerchantPermission.FINANCE_READ, access -> merchantDeskService.frozenBatchPage(access,
+                text(body, "afterPeriodYm"), number(body, "afterBatchId")));
+    }
+
     @Operation(summary = "商家看板指标口径字典")
     @PostMapping("/metrics/dictionary")
     public AjaxResult metricDictionary() {
         return run(MerchantPermission.BASIC_READ, access -> MerchantMetricDictionary.view());
+    }
+
+    /** D2:商品与履约写入口在子开关关闭时按工作台标准错误(404 + F4_DISABLED)拒绝,不进服务。 */
+    private AjaxResult runProductWrite(Function<MerchantAccessContext, Object> action) {
+        return run(MerchantPermission.PROJECT_MANAGE, access -> {
+            deskSwitch.requireProductsEnabled();
+            return action.apply(access);
+        });
     }
 
     private AjaxResult run(String permission, Function<MerchantAccessContext, Object> action) {
@@ -182,7 +205,7 @@ public class ApiMerchantDeskController extends BaseController {
         try {
             deskSwitch.requireEnabled();
             MerchantAccessContext access = merchantAccessService.require(principal, permission);
-            return success(action.apply(access));
+            return success(MerchantDeskWire.response(action.apply(access)));
         } catch (MerchantDeskException e) {
             AjaxResult result = new AjaxResult(e.getHttpCode(), e.getMessage());
             result.put("errorCode", e.getErrorCode());

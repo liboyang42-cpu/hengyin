@@ -74,10 +74,11 @@ test('club/detail 用中性文案渲染引用不可用标签,不出现下架/私
 })
 
 test('发帖引用被拒的机器错误码都有映射文案,且不说成下架/私密', () => {
-  const src = read(PAGE)
-  const block = src.slice(src.indexOf('const POST_REF_ERROR_TEXT'), src.indexOf('};', src.indexOf('const POST_REF_ERROR_TEXT')) + 2)
+  // 2026-10-27 P-20:俱乐部发帖改走 cy-post-compose 俱乐部模式,错误码映射随发布请求搬进组件
+  const src = read('pages/square/components/cy/post-compose/index.js')
+  const block = src.slice(src.indexOf('const CLUB_POST_REF_ERROR_TEXT'), src.indexOf('};', src.indexOf('const CLUB_POST_REF_ERROR_TEXT')) + 2)
   const sandbox = { module: {} }
-  vm.runInNewContext(block + '\nmodule.exports = POST_REF_ERROR_TEXT;', sandbox)
+  vm.runInNewContext(block + '\nmodule.exports = CLUB_POST_REF_ERROR_TEXT;', sandbox)
   const map = sandbox.module.exports
   for (const code of ['CLUB_POST_REF_UNAVAILABLE', 'CLUB_POST_REF_NOT_JOINED', 'CLUB_POST_REF_INVALID']) {
     assert.ok(map[code], code + ' 需要映射')

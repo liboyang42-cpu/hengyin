@@ -58,7 +58,10 @@
   .fd__arrow,
   .cy-tabs__item,
   .cy-tabs__item .cy-tabs__label::after,
-  .cy-tabs--shared-slab .cy-tabs__slab {
+  .cy-tabs--shared-slab .cy-tabs__slab,
+  .cy-tabs--icon .cy-tabs__item,
+  .cy-tabs--icon .cy-tabs__icon,
+  .cy-tabs--icon .cy-tabs__item::after {
     animation: none !important;
     transition: none !important;
   }

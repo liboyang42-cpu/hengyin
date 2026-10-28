@@ -12,7 +12,8 @@ const PAGE_ROOTS = ['pages', 'subpackageA', 'subpackageB', 'subpackageP3',
 const SHARED_TITLE_CSS = 'components/cy/page-title/index.wxss'
 const HIDDEN_TITLE = new Set(['subpackageMember/orderinfo/orderinfo.wxml'])
 const SELF_DRAWN_NAV = new Set()
-const SELF_DRAWN_TITLE = new Set(['pages/publish/simple/index.wxml'])
+// 2026-10-28 p86:快速配置改成 nav 居中标题 + 气泡首屏,不再自绘 L1 页头 ⇒ 移进 NAV_WITHOUT_L1_TITLE
+const SELF_DRAWN_TITLE = new Set()
 // 整屏编辑器里的「步骤标题」:文件本身是页面的一个 include,该页没有 cy-nav-bar(见下面
 // assertEditorStepTitleSpacing 的理由)。标题仍然只准由 cy-page-title 提供、上下仍然只准吃
 // 组件自己的 space-5/space-2,只是不适用「nav → canonical spacer → 标题」那段结构。
@@ -22,6 +23,8 @@ const EDITOR_STEP_TITLES = new Set(['pages/publish/fabu/step3.wxml'])
 // 清单锁死后，新自绘页不会因为没用 cy-page-title 而静默漏扫。
 const NAV_WITHOUT_L1_TITLE = new Set([
   'pages/merchant/decor/ai-npc/index.wxml',
+  // 2026-10-28 p86:快速配置 —— 「快速配置」在 cy-nav-bar 居中,正文首屏是问句 + 兴趣气泡
+  'pages/publish/simple/index.wxml',
   // 2026-09-05 漫游·附近的局:全屏地图页,nav overlay 居中标题,正文是地图 + 抽屉,没有 L1 大标题行。
   'subpackageRoam/nearby/index.wxml',
   // 2026-09-02 剧情与玩法(Figma J1-A/B/C):标题只在 cy-nav-bar 居中,不挂 cy-page-title。
@@ -52,6 +55,8 @@ const NAV_WITHOUT_L1_TITLE = new Set([
   'pages/merchant/marketing/index.wxml',
   'pages/merchant/relation/index.wxml',
   'pages/activity/baoming/baoming.wxml',
+  // 2026-10-28 X5：申请开票照抄结算页，标题同在 cy-nav-bar 居中。
+  'subpackageMember/invoice-apply/index.wxml',
   'pages/activity/list/index.wxml',
   // Figma 2233:11353：官方活动详情由全幅封面承担内容标题，导航只保留覆盖式返回按钮。
   'pages/activity/official-detail/index.wxml',
@@ -71,6 +76,7 @@ const NAV_WITHOUT_L1_TITLE = new Set([
   'pages/square/detail/index.wxml',
   'pages/square/list/index.wxml', // 2026-08-07 用户裁决:帖文流无大标题
   'pages/templatedetail/templatedetail.wxml',
+  'pages/templatedetail/topic-preview/index.wxml', // 2026-10-28 卡堆预览：封面卡堆 + 主题名承担标题，导航只留返回
   'pages/topic/index/index.wxml',
   'pages/topic/merchantinfo/merchantinfo.wxml',
   // 2026-09-19 批复1-a=2:pricing/partner 页按用户裁决复活,标题只在 cy-nav-bar 居中
@@ -476,7 +482,7 @@ function assertSelfDrawnTitleSpacing(rel, cssOverride) {
 //   (editorPage 1 创作 / 2 票务,靠底部 sheet 切屏),全页没有 cy-nav-bar ——
 //   返回是页面级浮钮 .slopes-back,离开的是整个编辑器。所以「nav → canonical spacer → 标题」
 //   这一段结构在这里不成立,它走 assertEditorStepTitleSpacing(见下面那张名单)。
-test('全仓 82 个 cy-page-title 页面：共享标题统一提供上 space-5 / 下 space-2', () => {
+test('全仓 85 个 cy-page-title 页面：共享标题统一提供上 space-5 / 下 space-2', () => {
   assertSharedTitleSpacing()
   const files = pageTitleFiles()
   /* 2026-09-08 +1:pages/coop/invite-detail(02d 协作详情)。自定义导航 + 实底顶栏无标题,
@@ -491,7 +497,13 @@ test('全仓 82 个 cy-page-title 页面：共享标题统一提供上 space-5 /
   // 两线新增页面不重叠：本线83 + 官方线路列表/详情2 = 85。
   // 2026-10-20 用户要求删掉「我的纠错 / 纠错进度」两页、消息页改收件箱/发件箱(合并 master 584470ad 后按重建实测) ⇒ 83。
   // 2026-10-23 起名页 templateadd 退役删除(业主第四轮去掉起名一步,页面已无入口) ⇒ 83 → 82。
-  assert.equal(files.length, 82, 'cy-page-title 页面清单漂移时必须重新做间距归类')
+  // 2026-10-27 L02 +1:营销消息与优惠券独立页 pages/shezhi/marketing(P-55),cy-nav-bar plain + 共享 cy-page-title 标准二级页 ⇒ 82 → 83(实测)。
+  // 2026-10-28 G-9 +1:账户收益 · 分析页(subpackageA/pages/assetcenter/analysis),cy-nav-bar + 共享 cy-page-title 标准二级页 ⇒ 83 → 84。
+  // 2026-10-26 +2:角色卡、本人发票复用共享页标题，定向计分使用原生导航。
+  // 2026-10-27 +1:自由探索权益页(subpackageMember/free-explore) cy-nav-bar + 共享 cy-page-title 标准二级页 ⇒ 84 → 85。
+  // 2026-10-28 +4:原型 C 的我的申诉(照抄我的举报)与发票详情、发票抬头、抬头编辑(X5 拆页),均为 cy-nav-bar + 共享 cy-page-title 标准二级页 ⇒ 85 → 89。
+  // 2026-10-28 并 master(#658 后)合流 integrate/devfix-20261027:master 89 叠加本线营销消息页(P-55)与账户收益分析页(G-9)两页 ⇒ 89 → 91(实测)。
+  assert.equal(files.length, 91, 'cy-page-title 页面清单漂移时必须重新做间距归类')
 // 2026-09-02:+2 俱乐部客户列表与客户详情，复用 shared page-title 间距，64→66。
 //   客户详情的头像绝对定位在标题行上，不进入标题流，不影响上 space-5 / 下 space-2。
   files.forEach((rel) => {
@@ -538,11 +550,7 @@ test('negative control：共享基准归零、页面叠加或自绘页头错档�
     () => assertPageSpacing(rel, { wxss: `${baseCss}\n.mylike .title-nav-spacer { margin-top: var(--cy-space-4); }\n` }),
     error => error instanceof assert.AssertionError && /不得在 nav 与大标题之间追加/.test(error.message),
   )
-  const selfDrawn = 'pages/publish/simple/index.wxml'
-  assert.throws(
-    () => assertSelfDrawnTitleSpacing(selfDrawn, read(selfDrawn.replace(/\.wxml$/, '.wxss')).replace('margin-top: var(--cy-space-5);', 'margin-top: var(--cy-space-4);')),
-    /自绘 L1 页头上方必须恰好/,
-  )
+  // 2026-10-28:自绘 L1 页头名单已清空(快速配置改 nav 标题),对应负控随之退场;assertSelfDrawnTitleSpacing 留给下一个自绘页
   assert.throws(
     () => assertPageContentSpacing({
       'pages/mylike/mylike.wxss': `${baseCss}\n.favorite-list { margin-top: var(--cy-space-4); }\n`,

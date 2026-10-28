@@ -102,13 +102,15 @@ function createVerificationWorkflow(options) {
     if (!row || typeof row !== 'object' || Array.isArray(row) || row.version !== 1 || row.state !== 'UNKNOWN'
         || row.ownerDigest !== meta.ownerDigest || row.targetDigest !== meta.targetDigest
         || typeof row.attemptId !== 'string' || !/^[a-z0-9_-]{16,96}$/.test(row.attemptId)
+        || row.requestIdentityVersion !== undefined && row.requestIdentityVersion !== 1
         || !Number.isSafeInteger(row.createdAt) || row.createdAt <= 0) throw Error('unreadable');
     return row;
   }
   function removeOriginal(meta, row) {
     try {
       const current = read(meta);
-      if (!current || current.attemptId !== row.attemptId) return false;
+      if (!current || current.attemptId !== row.attemptId
+          || current.requestIdentityVersion !== row.requestIdentityVersion) return false;
       storage.removeStorageSync(meta.key);
       return missing(storage.getStorageSync(meta.key));
     } catch (error) { return false; }
@@ -118,9 +120,50 @@ function createVerificationWorkflow(options) {
     // 终态提示已由 callback 处理；true 不表示已经发出了 POST。
     return true;
   }
+  function requestIdentity(row) {
+    return { requestId: row.requestIdentityVersion === 1 ? row.attemptId : null,
+      legacyRequest: row.requestIdentityVersion !== 1 };
+  }
+  function withIdentity(result, row) {
+    return options.requestIdentity === true ? Object.assign({}, result, requestIdentity(row)) : result;
+  }
+  function launch(key, meta, row, start, callback) {
+    let entered = false, closed = false;
+    const accepted = workflow.run(key, function (done) {
+      entered = true;
+      function finish(result) {
+        if (closed || destroyed) return;
+        closed = true;
+        result = result || unknownResult();
+        // 迟回包只能结算捕获的原待办，绝不按当前账号或新请求删除。
+        // 已证实的回执不因本机清理异常改报 UNKNOWN：删除可能已经完成。
+        // 未清掉的原记录仍会在下一次 run/重建时阻止 POST。
+        if (result.status === 'success' || result.status === 'failed') removeOriginal(meta, row);
+        done(result);
+      }
+      try { return start(finish, options.requestIdentity === true ? { requestId: row.attemptId } : undefined); }
+      catch (error) { finish(unknownResult()); return null; }
+    }, function (result) { closed = true; callback(withIdentity(result, row)); });
+    return { accepted, entered };
+  }
   return {
     isBusy: key => workflow.isBusy(key),
     hold: key => workflow.hold(key),
+    pendingRequest(key) {
+      if (destroyed || options.requestIdentity !== true) return null;
+      const row = read(metadata(key));
+      return row ? { requestId: requestIdentity(row).requestId, legacy: row.requestIdentityVersion !== 1 } : null;
+    },
+    // 调用方须先核对服务端原 requestId 的已创建回执；负向/列表快照不允许调用。
+    confirmRequest(key, requestId) {
+      if (destroyed || options.requestIdentity !== true || typeof requestId !== 'string') return false;
+      try {
+        const meta = metadata(key), row = read(meta);
+        if (!row || row.requestIdentityVersion !== 1 || row.attemptId !== requestId || !removeOriginal(meta, row)) return false;
+        workflow.reset(key);
+        return true;
+      } catch (error) { return false; }
+    },
     run(key, start, callback) {
       if (destroyed) return false;
       let meta, row;
@@ -128,7 +171,7 @@ function createVerificationWorkflow(options) {
       catch (error) { return blocked(callback, '无法读取核销待办，本次未提交，请检查本机存储及登录状态'); }
       if (row) {
         workflow.hold(key);
-        callback(Object.assign(unknownResult(), { recovered: true }));
+        callback(withIdentity(Object.assign(unknownResult(), { recovered: true }), row));
         return true;
       }
       // POST 前按原账号+入口/原码目标摘要占住待办；即使此刻被系统杀死也不能重放。
@@ -137,6 +180,7 @@ function createVerificationWorkflow(options) {
         attemptId: 'vr_' + Date.now().toString(36) + '_' + verificationSequence.toString(36) + '_' + Math.random().toString(36).slice(2),
         createdAt: Date.now() };
       row.attemptId = row.attemptId.padEnd(32, '0');
+      if (options.requestIdentity === true) row.requestIdentityVersion = 1;
       try {
         storage.setStorageSync(meta.key, row);
         const stored = read(meta);
@@ -146,24 +190,19 @@ function createVerificationWorkflow(options) {
         removeOriginal(meta, row);
         return blocked(callback, '核销待办未能保存，本次未提交，请检查本机存储后再试');
       }
-      let entered = false, closed = false;
-      const accepted = workflow.run(key, function (done) {
-        entered = true;
-        function finish(result) {
-          if (closed || destroyed) return;
-          closed = true;
-          result = result || unknownResult();
-          // 迟回包只能结算捕获的原待办，绝不按当前账号或新请求删除。
-          // 已证实的回执不因本机清理异常改报 UNKNOWN：删除可能已经完成。
-          // 未清掉的原记录仍会在下一次 run/重建时阻止 POST。
-          if (result.status === 'success' || result.status === 'failed') removeOriginal(meta, row);
-          done(result);
-        }
-        try { return start(finish); }
-        catch (error) { finish(unknownResult()); return null; }
-      }, function (result) { closed = true; callback(result); });
-      if (!accepted && !entered) removeOriginal(meta, row);
-      return accepted;
+      const launched = launch(key, meta, row, start, callback);
+      if (!launched.accepted && !launched.entered) removeOriginal(meta, row);
+      return launched.accepted;
+    },
+    // 仅当调用方已按原 requestId 精确回读到「服务端无此原请求」(NOT_FOUND)时调用：
+    // 沿用同一 requestId 重发（服务端按原请求号去重/回放），不新建待办、不换号。
+    resumeRequest(key, requestId, start, callback) {
+      if (destroyed || options.requestIdentity !== true || typeof requestId !== 'string' || workflow.inFlight(key)) return false;
+      let meta, row;
+      try { meta = metadata(key); row = read(meta); } catch (error) { return false; }
+      if (!row || row.requestIdentityVersion !== 1 || row.attemptId !== requestId) return false;
+      workflow.reset(key);
+      return launch(key, meta, row, start, callback).accepted;
     },
     // 销毁只销毁内存工作流；磁盘 UNKNOWN 只允许原请求的明确回执结算，不能随离页清除。
     destroy() { destroyed = true; workflow.destroy(); },

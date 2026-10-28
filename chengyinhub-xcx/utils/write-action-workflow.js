@@ -51,6 +51,8 @@ function createWriteActionWorkflow(options) {
   return {
     run: run,
     isBusy: function (key) { return !!active[String(key || '')]; },
+    // 区分「请求仍在途」与「unknown 后仅持锁」：在途时不得以同一业务键再发。
+    inFlight: function (key) { var entry = active[String(key || '')]; return !!entry && !entry.settled; },
     // 页面被系统回收后，持久化的 unknown 需要重新占住同一业务键；这里只恢复锁，
     // 不重放写请求、不创建计时器，必须等权威 receipt readback 后 reset。
     hold: function (key) {

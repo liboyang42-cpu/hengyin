@@ -34,6 +34,7 @@ function loadPage() {
     require(request) {
       if (request === './utils/scroll-motion.js') return { applyHeroRecede: () => false }
       if (request === './utils/templateDetail.js') return require(path.join(ROOT, 'pages/templatedetail/utils/templateDetail.js'))
+      if (request === './shelf/art.js') return require(path.join(ROOT, 'pages/templatedetail/shelf/art.js'))
       if (request === '../../utils/mockData.js') return { getTemplateById: () => null }
       if (request === '../../utils/analytics.js') return { track() {} }
       if (request === '../../utils/identity/identity-policy.js') return require(path.join(ROOT, 'utils/identity/identity-policy.js'))
@@ -119,6 +120,7 @@ test('CU-M-130 负控:把判据换成「有行就给 tab」,上一条必须判�
     require(request) {
       if (request === './utils/scroll-motion.js') return { applyHeroRecede: () => false }
       if (request === './utils/templateDetail.js') return require(path.join(ROOT, 'pages/templatedetail/utils/templateDetail.js'))
+      if (request === './shelf/art.js') return require(path.join(ROOT, 'pages/templatedetail/shelf/art.js'))
       if (request === '../../utils/mockData.js') return { getTemplateById: () => null }
       if (request === '../../utils/analytics.js') return { track() {} }
       if (request === '../../utils/identity/identity-policy.js') return require(path.join(ROOT, 'utils/identity/identity-policy.js'))
