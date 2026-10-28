@@ -11923,7 +11923,7 @@ cy-playkit-album .album__back--press{opacity:.88; transform:translateX(-50%) sca
 .proto-icos{display:flex;gap:6px;flex:none}
 .proto-ib{min-width:34px;height:34px;padding:0 !important;justify-content:center}
 .proto-add{margin-top:12px;justify-content:center}
-.proto-2col{display:flex;gap:10px;align-items:flex-start;margin:0 var(--cy-space-2-5, 10px)}
+.proto-2col{display:flex;gap:10px;align-items:flex-start;margin:0 16px;padding-top:14px}
 .proto-typelist{flex:0 0 84px;display:flex;flex-direction:column;gap:4px}
 .proto-type{padding:11px 10px;border-radius:var(--cy-radius-md);font-size:var(--cy-type-body);color:var(--cy-color-text-primary);background:var(--cy-color-bg-surface-subtle);cursor:pointer;line-height:1.25}
 .proto-type text{display:block;font-size:var(--cy-type-caption);color:var(--cy-color-text-secondary)}
@@ -13393,7 +13393,7 @@ window.ACT = {
     var open = function(id, on){ document.getElementById(id).classList.toggle('is-open', on); };
     var all = mode !== 'add';
     open('stepNext1', !all); open('attrStep2', all); open('stepNext2', !all); open('attrStep3', all); open('attrSave', all && mode !== 'noperm');
-    document.getElementById('addTitle').textContent = mode === 'add' ? '添加属性' : (mode === 'noperm' ? '查看属性' : '修改属性');
+    document.getElementById('addTitle').textContent = (mode === 'add' || mode === 'invalid') ? '添加属性' : (mode === 'noperm' ? '查看属性' : '修改属性');
     document.getElementById('attrSaveBtn').textContent = mode === 'add' ? '添加到角色属性' : '保存';
     Array.prototype.forEach.call(document.querySelectorAll('#attrPicker input'), function(i){ if (mode === 'noperm') i.setAttribute('disabled', ''); else i.removeAttribute('disabled'); });
     document.getElementById('attrErr').textContent = mode === 'noperm' ? '主题已锁定，只能查看' : ''; ACT.attrCheck(true); window.__proto.layoutMarks();
