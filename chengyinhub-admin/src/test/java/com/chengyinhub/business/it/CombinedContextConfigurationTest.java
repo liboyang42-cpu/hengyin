@@ -8,6 +8,10 @@ import com.chengyinhub.framework.web.service.AppLoginService;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.exc.InvalidDefinitionException;
 import java.lang.reflect.Modifier;
+import java.lang.management.MemoryMXBean;
+import java.lang.management.MemoryPoolMXBean;
+import java.lang.management.BufferPoolMXBean;
+import java.lang.management.MemoryUsage;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
@@ -181,6 +185,37 @@ class CombinedContextConfigurationTest {
                 .getMethod("postProcessBeanFactory", org.springframework.beans.factory.config.ConfigurableListableBeanFactory.class));
         assertEquals(void.class, realBeanFactoryEntry.getReturnType());
         assertTrue(Modifier.isPublic(realBeanFactoryEntry.getModifiers()));
+
+        // Bounded numeric protocol SOURCE only. No process, context, database, GC or attach.
+        var memory = mock(MemoryMXBean.class);
+        when(memory.getHeapMemoryUsage()).thenReturn(new MemoryUsage(0, 11, 32, 64));
+        when(memory.getNonHeapMemoryUsage()).thenReturn(new MemoryUsage(0, 7, 16, -1));
+        var pool = mock(MemoryPoolMXBean.class); when(pool.getName()).thenReturn("Metaspace");
+        when(pool.getUsage()).thenReturn(new MemoryUsage(1, 8, 16, -1));
+        var buffer = mock(BufferPoolMXBean.class); when(buffer.getName()).thenReturn("direct");
+        when(buffer.getCount()).thenReturn(2L); when(buffer.getMemoryUsed()).thenReturn(7L); when(buffer.getTotalCapacity()).thenReturn(9L);
+        String source = "a".repeat(40);
+        String numeric = ReflectionTestUtils.invokeMethod(SchedulerFenceProcessProbe.class, "formatMemoryLine",
+                source, "41", "2", "SCHEDULER_PROBE", "ENTER", 123L, 456L, 789L, memory, List.of(pool), List.of(buffer));
+        assertEquals(source + " 41 2 SCHEDULER_PROBE ENTER 123 456 789 0 11 32 64 0 7 16 -1 1 10 1 8 16 -1 1 1 2 7 9", numeric);
+        assertEquals(numeric, ReflectionTestUtils.invokeMethod(CrossDomainSchedulerStage.class, "forwardedMemoryLine",
+                numeric, source, "41", "2", 123L));
+        assertThrows(IllegalArgumentException.class, () -> SchedulerFenceProcessProbe.recordMemoryLine("PRIVATE_VALUE"));
+        for (String invalid : List.of(numeric.replace(source, "b".repeat(40)), numeric.replace(" 41 2 ", " 42 2 "),
+                numeric.replace(" 41 2 ", " 41 3 "), numeric.replace("SCHEDULER_PROBE", "SUREFIRE"),
+                numeric.replace(" ENTER ", " PRIVATE_PHASE "), numeric.replace(" 123 ", " 124 "),
+                numeric + "\nPRIVATE_VALUE", numeric + " 7", numeric.substring(0, numeric.length() - 2), "x".repeat(4097)))
+            assertThrows(IllegalArgumentException.class, () -> ReflectionTestUtils.invokeMethod(CrossDomainSchedulerStage.class,
+                    "forwardedMemoryLine", invalid, source, "41", "2", 123L));
+        when(memory.getHeapMemoryUsage()).thenThrow(new IllegalStateException("PRIVATE_VALUE"));
+        String unavailable = ReflectionTestUtils.invokeMethod(SchedulerFenceProcessProbe.class, "formatMemoryLine",
+                source, "41", "2", "SCHEDULER_PROBE", "READY", 123L, -1L, 790L, memory, null, null);
+        assertEquals(source + " 41 2 SCHEDULER_PROBE READY 123 -1 790 -1 -1 -1 -1 0 7 16 -1 -1 -1", unavailable);
+        assertFalse(unavailable.contains("PRIVATE_VALUE"));
+        when(pool.getName()).thenReturn("PRIVATE_MBEAN_NAME");
+        String unnamed = ReflectionTestUtils.invokeMethod(SchedulerFenceProcessProbe.class, "formatMemoryLine",
+                source, "41", "2", "SUREFIRE", "HELD", 123L, 456L, 791L, memory, List.of(pool), List.of(buffer));
+        assertTrue(unnamed.contains(" SUREFIRE HELD ")); assertFalse(unnamed.contains("PRIVATE_"));
     }
 
     @Test

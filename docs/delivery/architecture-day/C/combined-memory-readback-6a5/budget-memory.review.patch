@@ -1,0 +1,227 @@
+--- a/ci/combined_http_budget.py
++++ b/ci/combined_http_budget.py
+@@ -1912,2 +1912,91 @@
+
++def private_run_log(create=False):
++    path=OUT/'run.log'
++    require(OUT.is_dir() and not OUT.is_symlink() and OUT.resolve()==OUT
++            and OUT.stat().st_uid==os.getuid(),'PRIVATE_LOG_NOT_COMPLETE')
++    if create:
++        with path.open('xb') as stream:os.fchmod(stream.fileno(),0o600)
++    require(path.is_file() and not path.is_symlink() and path.resolve()==path
++            and path.stat().st_uid==os.getuid() and path.stat().st_mode & 0o777==0o600
++            and path.stat().st_size<32*1024*1024,'PRIVATE_LOG_NOT_COMPLETE')
++    return path
++
++
++def capture_app_log(path,state):
++    # Numeric MXBean rows already reside here; never truncate/adopt the original private log.
++    log=private_run_log();slot=state['slots']['app'];cid=slot['cid']
++    obj=inspect(cid);validate_owner(obj,slot['name'],JDK,labels(os.environ,state['nonce']),cid)
++    with os.fdopen(os.open(log,os.O_WRONLY|os.O_APPEND|os.O_NOFOLLOW),'ab') as stream:
++        opened=os.fstat(stream.fileno());current=log.stat()
++        require((opened.st_dev,opened.st_ino)==(current.st_dev,current.st_ino)
++                and opened.st_uid==os.getuid() and opened.st_mode & 0o777==0o600,'PRIVATE_LOG_NOT_COMPLETE')
++        result=subprocess.run(DOCKER+['logs',cid],stdout=stream,stderr=subprocess.STDOUT,timeout=30)
++    require(result.returncode==0 and log.stat().st_size<32*1024*1024,'PRIVATE_LOG_NOT_COMPLETE')
++    state['runLogCaptured']=True;save(path,state)
++
++
++def mxbean_readback(state):
++    # Optional observation only: never changes firstFailure, originalExit, OOM or acceptance.
++    unknown={'state':'UNKNOWN','reasonCode':'MEMORY_READBACK_UNAVAILABLE','records':[]}
++    try:
++        require(state.get('identity')==identity(os.environ),'WRONG_SOURCE_RUN_STATE')
++        cid=state.get('slots',{}).get('app',{}).get('cid')
++        require(isinstance(cid,str) and re.fullmatch('[0-9a-f]{64}',cid),'CREATE_IDENTITY_UNKNOWN')
++        records=[];seen=set();partial=state.get('runLogCaptured') is not True
++        log=private_run_log()
++        with os.fdopen(os.open(log,os.O_RDONLY|os.O_NOFOLLOW),'r',encoding='ascii',errors='replace') as stream:
++            opened=os.fstat(stream.fileno());current=log.stat()
++            require((opened.st_dev,opened.st_ino)==(current.st_dev,current.st_ino)
++                    and opened.st_uid==os.getuid() and opened.st_mode & 0o777==0o600,'PRIVATE_LOG_NOT_COMPLETE')
++            while True:
++                line=stream.readline(8193)
++                if not line:break
++                if not line.startswith('CONTROLLED_COMBINATION_MEMORY '):continue
++                if not line.endswith('\n'):
++                    partial=True;break # A killed writer cannot erase earlier complete rows or supply a new row.
++                require(len(line)<=4096+len('CONTROLLED_COMBINATION_MEMORY ')+1 and len(records)<128,'PRIVATE_LOG_NOT_COMPLETE')
++                fields=line[len('CONTROLLED_COMBINATION_MEMORY '):-1].split(' ')
++                require(len(fields)>=18 and fields[:3]==[os.environ['SOURCE_SHA'],os.environ['GITHUB_RUN_ID'],os.environ['GITHUB_RUN_ATTEMPT']],
++                        'WRONG_SOURCE_RUN_STATE')
++                role,phase=fields[3:5]
++                phases={'SUREFIRE':{'BEFORE','HELD','RECOVERED'},'SCHEDULER_PROBE':
++                        {'READY','LEADER','ARMED','RELEASED','ENTER','EFFECT','RESULT','STOPPED','TASK_SESSION_KILLED','FATAL'}}
++                require(role in phases and phase in phases[role],'BOUNDED_PROCESS_IDENTITY_REQUIRED')
++                require(all(re.fullmatch('-?[0-9]{1,19}',value) and -(2**63)<=int(value)<2**63 for value in fields[5:]),
++                        'BOUNDED_PROCESS_IDENTITY_REQUIRED')
++                values=[int(value) for value in fields[5:]];pid,uptime,nano=values[:3]
++                require(pid>0 and uptime>=-1 and all(value>=-1 for value in values[3:]),'BOUNDED_PROCESS_IDENTITY_REQUIRED')
++                def usage(numbers):return dict(zip(('initBytes','usedBytes','committedBytes','maxBytes'),numbers))
++                row={'role':role,'phase':phase,'namespacePid':pid,'uptimeMillis':uptime,'monotonicNanos':nano,
++                     'heap':usage(values[3:7]),'nonheap':usage(values[7:11]),'pools':[],'buffers':[]}
++                index=12;count=values[11];require(-1<=count<=16,'BOUNDED_PROCESS_IDENTITY_REQUIRED')
++                require(len(values)>=index+max(count,0)*5+1,'BOUNDED_PROCESS_IDENTITY_REQUIRED')
++                if count<0:partial=True
++                for _ in range(max(count,0)):
++                    code=values[index];require(0<=code<=15,'BOUNDED_PROCESS_IDENTITY_REQUIRED')
++                    row['pools'].append({'kindCode':code,**usage(values[index+1:index+5])});index+=5
++                    if code==0 or row['pools'][-1]['usedBytes']<0 or row['pools'][-1]['committedBytes']<0:partial=True
++                count=values[index];index+=1;require(-1<=count<=4 and len(values)==index+max(count,0)*4,'BOUNDED_PROCESS_IDENTITY_REQUIRED')
++                if count<0:partial=True
++                for _ in range(max(count,0)):
++                    code,objects,used,capacity=values[index:index+4];require(0<=code<=3,'BOUNDED_PROCESS_IDENTITY_REQUIRED');index+=4
++                    row['buffers'].append({'kindCode':code,'count':objects,'memoryUsedBytes':used,'totalCapacityBytes':capacity})
++                    if code==0 or min(objects,used,capacity)<0:partial=True
++                candidates=[p for p in state.get('javaProcesses',[]) if p.get('namespacePid')==pid
++                        and p.get('role')==('SUREFIRE' if role=='SUREFIRE' else 'DESCENDANT_JVM')
++                        and p.get('jvmMemory',{}).get('profile')==('SUREFIRE' if role=='SUREFIRE' else 'SCHEDULER_PROBE')]
++                if len(candidates)==1:
++                    proof=candidates[0]
++                    row.update(binding='ACCEPTED_CGROUP_PROCESS',hostPid=proof['hostPid'],startTicks=proof['startTicks'])
++                else:row['binding']='UNKNOWN_NO_UNIQUE_ACCEPTED_PROCESS';partial=True
++                # JDK max/init=-1 can mean undefined; it is not zero or a missing used/committed reading.
++                if uptime<0 or any(value<0 for value in (values[4],values[5],values[8],values[9])):partial=True
++                key=(role,pid,nano,phase);require(key not in seen,'BOUNDED_PROCESS_IDENTITY_REQUIRED');seen.add(key);records.append(row)
++        if not records:return unknown
++        return {'state':'PARTIAL_OR_UNKNOWN' if partial else 'OBSERVED','records':records,
++                'sourceSha':os.environ['SOURCE_SHA'],'runId':os.environ['GITHUB_RUN_ID'],'attempt':os.environ['GITHUB_RUN_ATTEMPT'],
++                'executionCid':cid,'businessAccepted':False,'scope':'NUMERIC_JDK_MXBEANS_NOT_LIVE_HEAP_OR_SIMULTANEOUS_RSS'}
++    except (OSError,ValueError,KeyError,TypeError,UnicodeError,IndexError):return unknown
++
++
+ def validate_app_inputs(obj,path,state):
+@@ -1955,2 +2044,3 @@
+     content=ROOT/'chengyinhub-admin/target/controlled-content-security';mounts.append((content,content,'readonly'))
++    private_run_log(create=True);state['runLogCaptured']=False
+     state['phase']='APP_CREATE';save(path,state)
+@@ -1991,5 +2081,3 @@
+     state['executionSubstage']='PRIVATE_LOG'
+-    with (OUT/'run.log').open('xb') as stream:
+-        result = subprocess.run(DOCKER+['logs',cid],stdout=stream,stderr=subprocess.STDOUT,timeout=30)
+-    require(result.returncode == 0 and (OUT/'run.log').stat().st_size < 32*1024*1024,'PRIVATE_LOG_NOT_COMPLETE')
++    capture_app_log(path,state)
+     state['executionSubstage']='POSTIMAGE'
+@@ -2075,9 +2163,7 @@
+     app = state['slots'].get('app',{})
+-    if app.get('cid') and not (OUT/'run.log').exists():
++    if app.get('cid') and state.get('runLogCaptured') is not True:
+         try:
+-            obj=inspect(app['cid']);validate_owner(obj,app['name'],JDK,labels(os.environ,state['nonce']),app['cid'])
+-            with (OUT/'run.log').open('xb') as stream:
+-                result=subprocess.run(DOCKER+['logs',app['cid']],stdout=stream,stderr=subprocess.STDOUT,timeout=30)
+-            require(result.returncode==0,'PRIVATE_LOG_RECOVERY_FAILED')
++            capture_app_log(path,state)
+         except Exception as failure: failures.append({'phase':'PRIVATE_LOG','type':type(failure).__name__})
++    memory_readback=mxbean_readback(state)
+     # Keep the original namespace and JDK alive until the exact Redis removal + real bind attempt,
+@@ -2115,2 +2201,3 @@
+               'cgroupMemoryUsage':state.get('cgroupMemoryUsage'),
++              'jvmMxBeanReadback':memory_readback,
+               'wholeSystemCapacityAccepted':False,'q4q8Complete':False}
+--- a/ci/test_combined_http_budget.py
++++ b/ci/test_combined_http_budget.py
+@@ -1403,2 +1403,3 @@
+             out=Path(directory)/'out';out.mkdir();(out/'run.log').write_bytes(b'private existing log')
++            state['runLogCaptured']=True # This old namespace-only fixture already owns its completed log capture.
+             def command(argv,**kw):
+@@ -1427,2 +1428,3 @@
+             out=Path(directory)/'out';out.mkdir();(out/'run.log').write_bytes(b'private existing log')
++            state['runLogCaptured']=True # Keep this control scoped to its original namespace failure.
+             def cleanup(path,current,role):
+@@ -2268,3 +2270,94 @@
+
++
++    def test_private_mxbean_rows_survive_raw_log_append_and_bind_only_exact_accepted_jvms(self):
++        with tempfile.TemporaryDirectory() as directory,patch.dict(os.environ,self.env(),clear=True),patch.object(B,'OUT',Path(directory)):
++            state={'identity':B.identity(self.env()),'nonce':'nonce','slots':{'app':{'cid':'1'*64,'name':'own-app'}},
++                   'javaProcesses':[{'role':'SUREFIRE','namespacePid':22,'hostPid':100,'startTicks':800,'jvmMemory':{'profile':'SUREFIRE'}},
++                                    {'role':'DESCENDANT_JVM','namespacePid':23,'hostPid':101,'startTicks':900,'jvmMemory':{'profile':'SCHEDULER_PROBE'}}]}
++            log=B.private_run_log(create=True);self.assertEqual(log.stat().st_mode & 0o777,0o600)
++            prefix='CONTROLLED_COMBINATION_MEMORY '+self.env()['SOURCE_SHA']+' 41 2 '
++            scalar=' 0 12 32 64 0 9 16 -1 1 10 0 8 16 -1 1 1 2 7 9\n'
++            original=(prefix+'SUREFIRE HELD 22 100 200'+scalar+prefix+'SCHEDULER_PROBE ENTER 23 80 201'+scalar).encode()
++            log.write_bytes(original)
++            def transport(argv,**kwargs):
++                self.assertEqual(argv,B.DOCKER+['logs','1'*64]);kwargs['stdout'].write(b'PRIVATE_RAW_DOCKER_TEXT\n')
++                return SimpleNamespace(returncode=0)
++            with patch.object(B,'inspect',return_value=self.obj()),patch.object(B,'validate_owner') as owner,\
++                 patch.object(B.subprocess,'run',side_effect=transport),patch.object(B,'save'):
++                B.capture_app_log(Path(directory),state)
++                owner.assert_called_once();self.assertIs(state['runLogCaptured'],True)
++            self.assertEqual(log.read_bytes(),original+b'PRIVATE_RAW_DOCKER_TEXT\n')
++            observed=B.mxbean_readback(state);self.assertEqual(observed['state'],'OBSERVED')
++            self.assertIs(observed['businessAccepted'],False);self.assertEqual(len(observed['records']),2)
++            self.assertEqual([row['hostPid'] for row in observed['records']],[100,101])
++            self.assertEqual(observed['records'][0]['heap'],{'initBytes':0,'usedBytes':12,'committedBytes':32,'maxBytes':64})
++            self.assertEqual(observed['records'][1]['nonheap']['maxBytes'],-1)
++            self.assertEqual(observed['records'][1]['buffers'],[{'kindCode':1,'count':2,'memoryUsedBytes':7,'totalCapacityBytes':9}])
++            self.assertNotIn('PRIVATE_',json.dumps(observed))
++            log.write_bytes(original+(prefix+'SUREFIRE HELD 22').encode())
++            partial=B.mxbean_readback(state);self.assertEqual(partial['state'],'PARTIAL_OR_UNKNOWN')
++            self.assertEqual(partial['records'],observed['records'],'A truncated last write is not another sample and cannot erase complete rows')
++            with self.assertRaises(FileExistsError):B.private_run_log(create=True)
++
++    def test_mxbean_projection_rejects_foreign_malformed_unbounded_and_unowned_log_inputs(self):
++        for kind in ('source','run','attempt','role','phase','value','overflow','truncated','extra','pools','buffers',
++                     'oversize','duplicate','permission','symlink','missing','state-identity','no-pid-proof','missing-reading'):
++            with self.subTest(kind=kind),tempfile.TemporaryDirectory() as directory,patch.dict(os.environ,self.env(),clear=True),patch.object(B,'OUT',Path(directory)):
++                state={'identity':B.identity(self.env()),'runLogCaptured':True,'slots':{'app':{'cid':'1'*64}},
++                       'javaProcesses':[{'role':'SUREFIRE','namespacePid':22,'hostPid':100,'startTicks':800,'jvmMemory':{'profile':'SUREFIRE'}}]}
++                log=B.private_run_log(create=True)
++                line='CONTROLLED_COMBINATION_MEMORY '+self.env()['SOURCE_SHA']+' 41 2 SUREFIRE HELD 22 100 200 0 12 32 64 0 9 16 -1 0 0\n'
++                if kind=='source':line=line.replace(self.env()['SOURCE_SHA'],'b'*40)
++                if kind=='run':line=line.replace(' 41 2 ',' 42 2 ')
++                if kind=='attempt':line=line.replace(' 41 2 ',' 41 3 ')
++                if kind=='role':line=line.replace('SUREFIRE','PRIVATE_ROLE')
++                if kind=='phase':line=line.replace('HELD','PRIVATE_PHASE')
++                if kind=='value':line=line.replace(' 12 ',' PRIVATE_VALUE ')
++                if kind=='overflow':line=line.replace(' 12 ',' 9223372036854775808 ')
++                if kind=='truncated':line=line[:-4]+'\n'
++                if kind=='extra':line=line[:-1]+' 8\n'
++                if kind=='pools':line=line[:-4]+' 17 0\n'
++                if kind=='buffers':line=line[:-2]+'5\n'
++                if kind=='oversize':line=line[:-1]+' 8'*4097+'\n'
++                if kind=='duplicate':line+=line
++                if kind=='state-identity':state['identity']['sourceSha']='b'*40
++                if kind=='no-pid-proof':state['javaProcesses']=[]
++                if kind=='missing-reading':line=line.replace('0 12 32 64','-1 -1 -1 -1')
++                log.write_text(line)
++                if kind=='permission':log.chmod(0o644)
++                if kind=='symlink':log.unlink();target=Path(directory)/'PRIVATE_TARGET';target.write_text(line);log.symlink_to(target)
++                if kind=='missing':log.unlink()
++                observed=B.mxbean_readback(state)
++                if kind in ('no-pid-proof','missing-reading'):
++                    self.assertEqual(observed['state'],'PARTIAL_OR_UNKNOWN');self.assertEqual(len(observed['records']),1)
++                else:self.assertEqual(observed['state'],'UNKNOWN');self.assertEqual(observed['records'],[])
++                self.assertNotIn('PRIVATE_',json.dumps(observed));self.assertNotIn(directory,json.dumps(observed))
++
++    def test_oom_readback_precedes_cleanup_and_cannot_replace_failure_or_sign_business_success(self):
++        with tempfile.TemporaryDirectory() as directory,patch.dict(os.environ,self.env(),clear=True):
++            path,state,obj,mysql,namespace=self.namespace_fixture(directory);events=[];reports=[]
++            out=Path(directory)/'out';out.mkdir()
++            state['firstFailure']={'phase':'APP_EXECUTION','reasonCode':'ACTUAL_CGROUP_CHILD_OOM_KILL'}
++            original=copy.deepcopy(state['firstFailure']);state['cgroupMemoryEvents']={'oom_kill':'1'}
++            state['javaProcesses'].append({'role':'SUREFIRE','namespacePid':22,'hostPid':100,'startTicks':800,'jvmMemory':{'profile':'SUREFIRE'}})
++            def failed_capture(*args):events.append('RAW_LOG_ATTEMPT');raise OSError('PRIVATE_LOG_VALUE')
++            def clean(path,current,role):
++                events.append('CLEANUP_'+role)
++                return {'role':role,'cid':current['slots'][role]['cid'],'result':'EXACT_CID_REMOVED_AND_ABSENT',
++                        'terminal':{'ExitCode':137 if role=='app' else 0,'OOMKilled':role=='app','Running':False,'Pid':0}}
++            with patch.object(B,'OUT',out):
++                log=B.private_run_log(create=True)
++                log.write_text('CONTROLLED_COMBINATION_MEMORY '+self.env()['SOURCE_SHA']+' 41 2 SUREFIRE HELD 22 100 200 0 12 32 64 0 9 16 -1 0 0\n')
++                with patch.object(B,'load_private',return_value=(path,state)),patch.object(B,'capture_app_log',side_effect=failed_capture),\
++                     patch.object(B,'namespace_port_proof',return_value={'result':'UNKNOWN'}),patch.object(B,'cleanup_slot',side_effect=clean),\
++                     patch.object(B,'write',side_effect=lambda path,value:reports.append(copy.deepcopy(value))):
++                    with self.assertRaisesRegex(ValueError,'ORIGINAL_EXIT_OR_BUDGET_OR_CLEANUP_NOT_ACCEPTED'):B.finalize(path,2)
++            report=reports[-1];self.assertEqual(events,['RAW_LOG_ATTEMPT','CLEANUP_redis','CLEANUP_app'])
++            self.assertEqual(report['firstFailure'],original);self.assertEqual(report['result'],'NOT_ACCEPTED')
++            self.assertEqual(report['originalExit'],2);self.assertIsNone(report['mavenExit']);self.assertIsNone(report['appExit'])
++            self.assertEqual(report['jvmMxBeanReadback']['state'],'PARTIAL_OR_UNKNOWN')
++            self.assertEqual(len(report['jvmMxBeanReadback']['records']),1)
++            self.assertEqual(report['cgroupMemoryEvents'],{'oom_kill':'1'});self.assertNotIn('PRIVATE_',json.dumps(report))
++
+
+ if __name__=='__main__':unittest.main()

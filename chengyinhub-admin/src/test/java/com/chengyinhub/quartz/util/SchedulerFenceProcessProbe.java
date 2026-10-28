@@ -11,6 +11,18 @@ import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
 import java.nio.charset.StandardCharsets;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.LinkOption;
+import java.nio.file.StandardOpenOption;
+import java.nio.file.attribute.PosixFilePermissions;
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
+import java.lang.management.MemoryPoolMXBean;
+import java.lang.management.BufferPoolMXBean;
+import java.lang.management.MemoryUsage;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -144,7 +156,102 @@ public final class SchedulerFenceProcessProbe {
         event("STOPPED");
     }
 
-    private static void event(String message) { EVENTS.println("WP14 " + message); }
+    private static void event(String message) {
+        EVENTS.println("WP14 " + message);
+        if ("1".equals(System.getenv("WP14_MEMORY_READBACK"))) {
+            String phase = message.split(" ", 2)[0];
+            EVENTS.println("WP14 MEMORY " + memoryLine("SCHEDULER_PROBE", phase));
+        }
+    }
+
+    /** Numeric observation only. No attach, GC, extra thread, arbitrary bean name or exception text. */
+    public static String memoryLine(String role, String phase) {
+        MemoryMXBean memory = null;
+        List<MemoryPoolMXBean> pools = null; List<BufferPoolMXBean> buffers = null;
+        long uptime = -1;
+        try { memory = ManagementFactory.getMemoryMXBean(); } catch (RuntimeException unavailable) { }
+        try { pools = ManagementFactory.getMemoryPoolMXBeans(); } catch (RuntimeException unavailable) { }
+        try { buffers = ManagementFactory.getPlatformMXBeans(BufferPoolMXBean.class); } catch (RuntimeException unavailable) { }
+        try { uptime = ManagementFactory.getRuntimeMXBean().getUptime(); } catch (RuntimeException unavailable) { }
+        return formatMemoryLine(required("SOURCE_SHA"), required("GITHUB_RUN_ID"), required("GITHUB_RUN_ATTEMPT"),
+                role, phase, ProcessHandle.current().pid(), uptime, System.nanoTime(), memory, pools, buffers);
+    }
+
+    private static String formatMemoryLine(String source, String run, String attempt, String role, String phase,
+            long pid, long uptime, long nano, MemoryMXBean memory, List<MemoryPoolMXBean> pools, List<BufferPoolMXBean> buffers) {
+        if (source == null || !source.matches("[a-f0-9]{40}") || run == null || !run.matches("[1-9][0-9]{0,18}")
+                || attempt == null || !attempt.matches("[1-9][0-9]{0,18}") || pid <= 0 || uptime < -1
+                || !("SUREFIRE".equals(role) || "SCHEDULER_PROBE".equals(role)) || phase == null || !memoryPhase(role, phase))
+            throw new IllegalArgumentException("CONTROLLED_MEMORY_IDENTITY_REQUIRED");
+        StringBuilder line = new StringBuilder(2048).append(source).append(' ').append(run).append(' ').append(attempt)
+                .append(' ').append(role).append(' ').append(phase).append(' ').append(pid).append(' ').append(uptime).append(' ').append(nano);
+        MemoryUsage heap = null, nonheap = null;
+        if (memory != null) {
+            try { heap = memory.getHeapMemoryUsage(); } catch (RuntimeException unavailable) { }
+            try { nonheap = memory.getNonHeapMemoryUsage(); } catch (RuntimeException unavailable) { }
+        }
+        usage(line, heap); usage(line, nonheap);
+        int count = pools == null || pools.size() > 16 ? -1 : pools.size(); line.append(' ').append(count);
+        if (count >= 0) for (MemoryPoolMXBean pool : pools) {
+            int kind = 0; MemoryUsage value = null;
+            try { kind = poolKind(pool.getName()); } catch (RuntimeException unavailable) { }
+            try { value = pool.getUsage(); } catch (RuntimeException unavailable) { }
+            line.append(' ').append(kind); usage(line, value);
+        }
+        count = buffers == null || buffers.size() > 4 ? -1 : buffers.size(); line.append(' ').append(count);
+        if (count >= 0) for (BufferPoolMXBean buffer : buffers) {
+            int kind = 0; long objects = -1, used = -1, capacity = -1;
+            try { kind = switch (buffer.getName()) { case "direct" -> 1; case "mapped" -> 2;
+                case "mapped - 'non-volatile memory'" -> 3; default -> 0; }; } catch (RuntimeException unavailable) { }
+            try { objects = buffer.getCount(); } catch (RuntimeException unavailable) { }
+            try { used = buffer.getMemoryUsed(); } catch (RuntimeException unavailable) { }
+            try { capacity = buffer.getTotalCapacity(); } catch (RuntimeException unavailable) { }
+            line.append(' ').append(kind).append(' ').append(objects).append(' ').append(used).append(' ').append(capacity);
+        }
+        if (line.length() > 4096) throw new IllegalStateException("CONTROLLED_MEMORY_LINE_OVER_BUDGET");
+        return line.toString();
+    }
+
+    private static void usage(StringBuilder line, MemoryUsage value) {
+        if (value == null) line.append(" -1 -1 -1 -1");
+        else line.append(' ').append(value.getInit()).append(' ').append(value.getUsed())
+                .append(' ').append(value.getCommitted()).append(' ').append(value.getMax());
+    }
+
+    private static int poolKind(String name) {
+        return switch (name) {
+            case "Eden Space" -> 1; case "Survivor Space" -> 2; case "Tenured Gen" -> 3;
+            case "G1 Eden Space" -> 4; case "G1 Survivor Space" -> 5; case "G1 Old Gen" -> 6;
+            case "PS Eden Space" -> 7; case "PS Survivor Space" -> 8; case "PS Old Gen" -> 9;
+            case "Metaspace" -> 10; case "Compressed Class Space" -> 11; case "CodeCache" -> 12;
+            case "CodeHeap 'non-nmethods'" -> 13; case "CodeHeap 'profiled nmethods'" -> 14;
+            case "CodeHeap 'non-profiled nmethods'" -> 15; default -> 0;
+        };
+    }
+
+    private static boolean memoryPhase(String role, String phase) {
+        return "SUREFIRE".equals(role) ? List.of("BEFORE", "HELD", "RECOVERED").contains(phase)
+                : List.of("READY", "LEADER", "ARMED", "RELEASED", "ENTER", "EFFECT", "RESULT", "STOPPED", "TASK_SESSION_KILLED", "FATAL").contains(phase);
+    }
+
+    /** Same fixed private run.log as the existing budget owner; no Surefire output buffering. */
+    public static synchronized void recordMemoryLine(String payload) throws Exception {
+        if (payload == null || payload.length() > 4096 || !payload.matches("[a-f0-9]{40} [1-9][0-9]{0,18} [1-9][0-9]{0,18} (SUREFIRE|SCHEDULER_PROBE) [A-Z_]+(?: -?[0-9]{1,19})+"))
+            throw new IllegalArgumentException("CONTROLLED_MEMORY_NUMERIC_LINE_REQUIRED");
+        Path root = Path.of("").toAbsolutePath();
+        while (root != null && !Files.isRegularFile(root.resolve("ci/combined_http_budget.py"))) root = root.getParent();
+        if (root == null || !root.equals(root.toRealPath())) throw new IllegalStateException("CONTROLLED_MEMORY_ROOT_REQUIRED");
+        Path file = root.resolve("chengyinhub-admin/target/http-e2e/run.log");
+        if (!Files.isRegularFile(file) || Files.isSymbolicLink(file) || !file.equals(file.toRealPath())
+                || !Files.getPosixFilePermissions(file).equals(PosixFilePermissions.fromString("rw-------"))
+                || !Files.getOwner(file).equals(Files.getOwner(root)) || Files.size(file) >= 32L * 1024 * 1024)
+            throw new IllegalStateException("CONTROLLED_MEMORY_PRIVATE_LOG_REQUIRED");
+        // A leading boundary also preserves this row if later raw Docker output ends mid-line.
+        byte[] bytes = ("\nCONTROLLED_COMBINATION_MEMORY " + payload + "\n").getBytes(StandardCharsets.US_ASCII);
+        try (FileChannel output = FileChannel.open(file, StandardOpenOption.WRITE, StandardOpenOption.APPEND, LinkOption.NOFOLLOW_LINKS)) {
+            ByteBuffer chunk = ByteBuffer.wrap(bytes); while (chunk.hasRemaining()) output.write(chunk);
+        } // Direct write, no JVM buffer retained until test/fork completion. No host-crash durability claim.
+    }
     static String coordinatorBytecodeHash() throws Exception {
         try (var bytes = MySqlSchedulerCoordinator.class.getResourceAsStream("MySqlSchedulerCoordinator.class")) {
             if (bytes == null) throw new IllegalStateException("Coordinator class bytes unavailable");

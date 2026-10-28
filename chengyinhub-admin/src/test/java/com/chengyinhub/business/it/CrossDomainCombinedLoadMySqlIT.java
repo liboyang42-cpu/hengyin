@@ -457,6 +457,12 @@ class CrossDomainCombinedLoadMySqlIT {
     }
     private static Map<String,Object> sample(String phase, DruidDataSource app, DruidDataSource fixture,
                                              JdbcTemplate observer, String appSchema, String economicSchema) {
+        try {
+            com.chengyinhub.quartz.util.SchedulerFenceProcessProbe.recordMemoryLine(
+                    com.chengyinhub.quartz.util.SchedulerFenceProcessProbe.memoryLine("SUREFIRE", phase));
+        } catch (Exception failure) {
+            throw new IllegalStateException("CONTROLLED_MEMORY_PRIVATE_LOG_UNAVAILABLE", failure);
+        }
         var heap = java.lang.management.ManagementFactory.getMemoryMXBean().getHeapMemoryUsage();
         var http = (ThreadPoolExecutor) org.springframework.test.util.ReflectionTestUtils.getField(
                 com.chengyinhub.common.utils.http.HttpUtils.class, "HTTP_EXECUTOR");
