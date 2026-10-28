@@ -656,6 +656,11 @@ class GenericGameplayHttpE2eIT {
         ObjectNode reg=json.createObjectNode().put("topicId",topicId);
         reg.putArray("keys").addObject().put("stateKey","counter.str").put("keyType","counter").put("scope","run").put("label","力量").put("initialValue",3);
         success(post("/api/topic/state-keys",reg,author));
+        // #625 模板角色卡只展示 journeyRules 启用的注册键：作者按注册版本确认启用 counter.str 后存草稿。
+        ObjectNode draft=topicRequest("F2属性卡");draft.put("id",topicId);refreshChapterIds(draft,topicId);
+        draft.put("journeyRules","{\"schemaVersion\":1,\"stateEnabled\":true,\"attributes\":[{\"key\":\"counter.str\",\"label\":\"力量\",\"initial\":3,\"min\":0,\"max\":100}]}");
+        confirmAttributeBinding(draft,success(get("/api/topic/attribute-binding?topicId="+topicId,author)));
+        success(post("/api/topic/v2/update",draft,author));
 
         ResponseEntity<JsonNode> anonymous=http.getForEntity("/api/play/character?topicId="+topicId,JsonNode.class);
         record("GET","/api/play/character?topicId="+topicId,null,anonymous);
