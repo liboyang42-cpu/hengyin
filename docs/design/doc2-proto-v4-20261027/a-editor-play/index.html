@@ -12309,6 +12309,122 @@ body.clean .scr .need{display:none}
 .re-kind .ios-xp .ios-row{padding-left:28px}
 .re-kind .ios-xp > *::before{left:28px}
 .re-kind .ios-xp .ios-search{padding-left:28px}
+/* pages/play/components/medal-screen/index.wxss */
+cy-medal-screen .md{ position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 300; overflow: hidden; background: #0c0b0a; color: #fff; --ray: rgba(255,140,60,.10); }
+cy-medal-screen .md__rays{ position: absolute; left: 50%; top: 229.84px; width: 900.12px; height: 900.12px; margin: -449.8px 0 0 -449.8px; border-radius: 50%; opacity: 0; transition: opacity .8s; background: repeating-conic-gradient(from 0deg, var(--ray) 0deg 9deg, rgba(0,0,0,0) 9deg 22.5deg); animation: md-rot 40s linear infinite; -webkit-mask: radial-gradient(circle, #000 0, rgba(0,0,0,.6) 28%, rgba(0,0,0,0) 62%); mask: radial-gradient(circle, #000 0, rgba(0,0,0,.6) 28%, rgba(0,0,0,0) 62%); }
+cy-medal-screen .md.on .md__rays{ opacity: 1; }
+@keyframes md-rot{ to { transform: rotate(360deg); } }
+cy-medal-screen .md__back{ position: absolute; left: 16.12px; z-index: 5; width: 40.04px; height: 40.04px; border-radius: 50%; background: rgba(28,28,30,.72); display: flex; align-items: center; justify-content: center; }
+cy-medal-screen .md__chev{ width: 9.36px; height: 9.36px; border-left: 2.08px solid #fff; border-bottom: 2.08px solid #fff; transform: translateX(1.56px) rotate(45deg); }
+cy-medal-screen .spark{ position: absolute; z-index: 3; opacity: 0; pointer-events: none; animation: md-tw 2.4s ease-in-out infinite; }
+@keyframes md-tw{ 0%, 100% { opacity: .15; transform: scale(.6); } 50% { opacity: 1; transform: scale(1); } }
+cy-medal-screen .mstack{ position: absolute; left: 50%; top: 149.76px; width: 149.76px; height: 167.96px; margin-left: -74.88px; z-index: 2; }
+cy-medal-screen .hexw{ position: absolute; top: 0; right: 0; bottom: 0; left: 0; transition: transform .55s cubic-bezier(.34,1.32,.64,1), filter .4s, opacity .3s; }
+cy-medal-screen .hex{ position: absolute; top: 0; right: 0; bottom: 0; left: 0; display: flex; align-items: center; justify-content: center; clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); background: linear-gradient(160deg, var(--h1), var(--h2) 55%, var(--h3)); opacity: 0; transform: translateY(-160.16px) scale(.3) rotateY(-540deg); transition: transform .9s cubic-bezier(.2,.8,.2,1.25), opacity .5s; }
+cy-medal-screen .md.dropped .hex{ opacity: 1; transform: none; }
+cy-medal-screen .hex--0{ --h1: #FFB067; --h2: #E8590C; --h3: #B8400B; }
+cy-medal-screen .hex--1{ --h1: #9BE7A8; --h2: #22A55A; --h3: #137A3E; }
+cy-medal-screen .hex--2{ --h1: #9FC2FF; --h2: #3B6FE0; --h3: #1E3F9C; }
+cy-medal-screen .hex--3{ --h1: #E7C6FF; --h2: #9B6BFF; --h3: #5B2BC4; }
+cy-medal-screen .hex__in{ position: absolute; top: 11.96px; right: 10.92px; bottom: 11.96px; left: 10.92px; clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); background: linear-gradient(160deg, var(--h2), var(--h3)); }
+cy-medal-screen .hex__ic{ position: relative; z-index: 1; width: 63.96px; height: 63.96px; }
+cy-medal-screen .hex__img{ position: absolute; top: 11.96px; right: 10.92px; bottom: 11.96px; left: 10.92px; width: auto; height: auto; clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); }
+cy-medal-screen .hex__shine{ position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: linear-gradient(115deg, rgba(255,255,255,0) 30%, rgba(255,255,255,.45) 45%, rgba(255,255,255,0) 60%); background-size: 250% 100%; background-position: 120% 0; animation: md-shine 3.6s ease-in-out 1.2s infinite; }
+@keyframes md-shine{ 0% { background-position: 120% 0; } 45%, 100% { background-position: -60% 0; } }
+cy-medal-screen .mname{ position: absolute; left: 0; right: 0; top: 335.92px; z-index: 3; display: flex; flex-direction: column; align-items: center; text-align: center; }
+cy-medal-screen .mname__b{ font-size: 15.08px; font-weight: 700; }
+cy-medal-screen .mname__s{ margin-top: 3.12px; font-size: 11.96px; color: #8E8E93; }
+cy-medal-screen .mdots{ display: flex; justify-content: center; gap: 5.2px; margin-top: 7.8px; }
+cy-medal-screen .mdot{ width: 14.04px; height: 5.2px; border-radius: 3.12px; background: rgba(255,255,255,.3); transform: scaleX(.37); transition: transform .3s, background .3s; }
+cy-medal-screen .mdot.on{ transform: none; background: #fff; }
+cy-medal-screen .mdots{ gap: 0; }
+cy-medal-screen .md__txt{ position: absolute; left: 19.76px; right: 19.76px; top: 404.04px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+cy-medal-screen .md__h{ font-size: 26px; font-weight: 700; }
+cy-medal-screen .md__p{ margin-top: 6.24px; font-size: 13px; color: #8E8E93; }
+cy-medal-screen .md__body{ position: absolute; left: 16.12px; right: 16.12px; top: 477.88px; bottom: 96.2px; overflow: hidden; }
+cy-medal-screen .mg{ display: grid; grid-template-columns: 1fr 1fr; gap: 9.88px; }
+cy-medal-screen .mg__c{ display: flex; align-items: center; gap: 9.88px; padding: 14.04px 14.04px 14.04px 11.96px; border-radius: 18.2px; background: #161616; }
+cy-medal-screen .mg__ic{ flex: none; width: 30.16px; height: 30.16px; }
+cy-medal-screen .mg__k{ display: block; font-size: 11.96px; color: #8E8E93; }
+cy-medal-screen .mg__v{ display: block; margin-top: 2.08px; font-size: 21.84px; font-weight: 600; font-variant-numeric: tabular-nums; }
+cy-medal-screen .mrec{ position: relative; margin-top: 9.88px; min-height: 85.8px; padding: 14.04px; border-radius: 18.2px; background: #161616; overflow: hidden; }
+cy-medal-screen .mrec__h{ display: flex; align-items: center; gap: 6.24px; font-size: 14.04px; font-weight: 600; }
+cy-medal-screen .mrec__ic{ width: 18.2px; height: 18.2px; }
+cy-medal-screen .mrec__s{ display: block; margin-top: 9.88px; font-size: 11.96px; color: #8E8E93; }
+cy-medal-screen .mrec__b{ display: block; margin-top: 3.12px; font-size: 15.08px; font-weight: 600; }
+cy-medal-screen .mrec__stk{ position: absolute; right: 11.96px; bottom: 6.24px; width: 78px; height: 78px; transform: rotate(-8deg); display: flex; flex-direction: column; align-items: center; justify-content: center; clip-path: polygon(50% 4%, 92% 28%, 92% 72%, 50% 96%, 8% 72%, 8% 28%); background: #E8590C; }
+cy-medal-screen .mrec__stk1{ font-size: 13px; font-weight: 900; color: #fff; }
+cy-medal-screen .mrec__stk2{ font-size: 9.88px; font-weight: 800; color: #FFE3C2; }
+cy-medal-screen .md__btns{ position: absolute; left: 16.12px; right: 16.12px; bottom: calc(30.16px + var(--sab,34px)); display: flex; gap: 9.88px; }
+cy-medal-screen .pill{ flex: 1; height: 49.92px; border-radius: 24.96px; display: flex; align-items: center; justify-content: center; font-size: 16.12px; font-weight: 600; }
+cy-medal-screen .pill--w{ background: #fff; color: #000; }
+cy-medal-screen .pill--s{ background: #2C2C2E; color: #fff; }
+cy-medal-screen .md-pressed{ opacity: .8; }
+cy-medal-screen .fade{ opacity: 0; transform: translateY(14.04px); transition: opacity .5s, transform .6s cubic-bezier(.2,.82,.2,1); }
+cy-medal-screen .md.on .fade{ opacity: 1; transform: none; }
+cy-medal-screen .md--reduced .hex{ transition: none; }
+cy-medal-screen .md--reduced .md__rays, cy-medal-screen .md--reduced .spark, cy-medal-screen .md--reduced .hex__shine{ animation: none; }
+cy-medal-screen .md__back::after{ content: ""; position: absolute; left: 50%; top: 50%; width: 45.76px; height: 45.76px; transform: translate(-50%, -50%); }
+/* components/cy/slide-confirm/index.wxss */
+cy-slide-confirm{ display:block; }
+cy-slide-confirm .sc{ position:relative; width:100%; box-sizing:border-box; height:56.16px; border-radius:63.96px; display:flex; align-items:center; justify-content:center; padding:7.8px; background:#147CE1; box-shadow:inset 3.12px 6.24px 9.88px rgba(1,1,20,.15); transition:background .18s linear; }
+cy-slide-confirm .sc--release{ background:#E3EAF9; box-shadow:inset 3.12px 6.24px 7.8px rgba(1,1,20,.02); }
+cy-slide-confirm .sc--done{ background:#12A533; }
+cy-slide-confirm .sc.is-disabled{ opacity:.5; }
+cy-slide-confirm .sc__label{ position:relative; margin-left:47.84px; font-size:18.2px; font-weight:500; color:#FEFDFD; }
+cy-slide-confirm .sc--release .sc__label{ color:#1162B1; }
+cy-slide-confirm .sc__knob{ position:absolute; left:7.8px; width:40.04px; height:40.04px; border-radius:519.48px; background:#FEFDFD; display:flex; align-items:center; justify-content:center; color:#147CE1; box-shadow:0 7.8px 15.08px rgba(1,1,20,.3); transition:transform .18s ease; }
+cy-slide-confirm .sc--release .sc__knob{ box-shadow:0 0 5.2px rgba(1,1,20,.08); color:#1162B1; }
+cy-slide-confirm .sc--done .sc__knob{ color:#12A533; }
+cy-slide-confirm .scp{ position:absolute; left:50%; top:50%; width:22.88px; height:21.84px; pointer-events:none; background-size:contain; background-repeat:no-repeat; background-position:center; animation:scp-burst .7s cubic-bezier(.17,.67,.35,1) both; }
+cy-slide-confirm .sc--reduced .scp{ animation: none; opacity: 0; }
+cy-slide-confirm .scp--sm{ width:13.52px; height:13px; }
+cy-slide-confirm .scp--heart{ background-image:url("data:image/svg+xml,%3Csvg%20preserveAspectRatio%3D%22none%22%20overflow%3D%22visible%22%20style%3D%22display%3A%20block%3B%22%20width%3D%220.0108992%22%20height%3D%220.01%22%20viewBox%3D%220%200%200.0108992%200.01%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Cpath%20id%3D%22Vector%22%20opacity%3D%220.2%22%20d%3D%22M0.00544959%200.01L0.0046594%200.00928065C0.00185286%200.00673569%200%200.00505177%200%200.00299728C0%200.00131335%200.0013188%200%200.00299728%200C0.0039455%200%200.00485559%200.000441417%200.00544959%200.00113351C0.0060436%200.000441417%200.00695368%200%200.00790191%200C0.00958038%200%200.0108992%200.00131335%200.0108992%200.00299728C0.0108992%200.00505177%200.00904632%200.00673569%200.00623978%200.00928065L0.00544959%200.01Z%22%20fill%3D%22%23FF7AD5%22%2F%3E%0A%3C%2Fsvg%3E%0A"); }
+cy-slide-confirm .scp--star{ background-image:url("data:image/svg+xml,%3Csvg%20preserveAspectRatio%3D%22none%22%20overflow%3D%22visible%22%20style%3D%22display%3A%20block%3B%22%20width%3D%220.0104635%22%20height%3D%220.01%22%20viewBox%3D%220%200%200.0104635%200.01%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Cpath%20id%3D%22Vector%22%20d%3D%22M0.00523175%200.0083747L0.00776908%200.00990932C0.00823374%200.0101906%200.00880235%200.00977481%200.00868007%200.009249L0.00800752%200.00636318L0.0102514%200.00441892C0.010661%200.0040643%200.0104409%200.00339176%200.00990287%200.00334896L0.0069498%200.00309829L0.00579424%200.000371428C0.00558637%20-0.000123809%200.00487714%20-0.000123809%200.00466926%200.000371428L0.00351371%200.00309217L0.000560631%200.00334285C2.25959e-05%200.00338565%20-0.000197509%200.00405819%200.000212131%200.0044128L0.00245598%200.00635707L0.00178344%200.00924289C0.00166116%200.0097687%200.00222976%200.0101845%200.00269443%200.00990321L0.00523175%200.0083747Z%22%20fill%3D%22%23FFC362%22%2F%3E%0A%3C%2Fsvg%3E%0A"); }
+cy-slide-confirm .scp--spark{ width:5.2px; height:17.68px; background-image:url("data:image/svg+xml,%3Csvg%20preserveAspectRatio%3D%22none%22%20overflow%3D%22visible%22%20style%3D%22display%3A%20block%3B%22%20width%3D%220.00428061%22%20height%3D%220.01%22%20viewBox%3D%220%200%200.00428061%200.01%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Cpath%20id%3D%22Vector%22%20d%3D%22M0%200.0025V0.0075C0%200.00816304%200.000225496%200.00879893%200.000626882%200.00926777C0.00102827%200.00973661%200.00157266%200.01%200.00214031%200.01C0.00270795%200.01%200.00325235%200.00973661%200.00365373%200.00926777C0.00405512%200.00879893%200.00428061%200.00816304%200.00428061%200.0075V0.0025C0.00428061%200.00183696%200.00405512%200.00120107%200.00365373%200.000732233C0.00325235%200.000263392%200.00270795%200%200.00214031%200C0.00157266%200%200.00102827%200.000263392%200.000626882%200.000732233C0.000225496%200.00120107%200%200.00183696%200%200.0025Z%22%20fill%3D%22%238AB9FF%22%2F%3E%0A%3C%2Fsvg%3E%0A"); }
+@keyframes scp-burst{ 0%{ opacity:0; transform:translate(-50%,-50%) scale(.2); } 35%{ opacity:1; } 100%{ opacity:0; transform:translate(calc(-50% + var(--tx)),calc(-50% + var(--ty))) scale(1.15) rotate(24deg); } }
+cy-slide-confirm .cy-pressed{ opacity: .88; }
+/* components/cy/theme-records/index.wxss */
+cy-theme-records .tr-sheet{padding:var(--cy-space-4) 0 var(--cy-space-5);color:var(--cy-comp-sheet-player-text)}
+cy-theme-records .tr-close, cy-theme-records .tr-circle{display:flex;align-items:center;justify-content:center;width:var(--cy-btn-h);height:var(--cy-btn-h);border-radius:var(--cy-radius-pill);background:var(--cy-comp-sheet-player-surface);flex:none}
+cy-theme-records .tr-title{display:block;font-size:var(--cy-type-page-title);font-weight:700;line-height:1.2;margin:var(--cy-space-4) 0;overflow-wrap:anywhere}
+cy-theme-records .tr-sub{display:block;font-size:var(--cy-type-label);line-height:1.6;color:var(--cy-comp-sheet-player-muted);overflow-wrap:anywhere}
+cy-theme-records .tr-summary{display:block;font-size:var(--cy-type-body);line-height:1.8;overflow-wrap:anywhere;margin-bottom:var(--cy-space-4)}
+cy-theme-records .tr-group{background:var(--cy-comp-sheet-player-surface);border-radius:var(--cy-radius-xl);overflow:hidden;margin:var(--cy-space-4) 0}
+cy-theme-records .tr-row{display:flex;align-items:center;gap:var(--cy-space-3);padding:var(--cy-space-4);min-width:0}
+cy-theme-records .tr-row+.tr-row, cy-theme-records .tr-detail+.tr-detail{border-top:0.52px solid var(--cy-comp-sheet-player-divider)}
+cy-theme-records .tr-circle{background:var(--cy-comp-sheet-player-elevated)}
+cy-theme-records .tr-copy{flex:1;min-width:0}
+cy-theme-records .tr-name{display:block;font-size:var(--cy-type-body);font-weight:600;overflow-wrap:anywhere}
+cy-theme-records .tr-date{max-width:28%;flex:none;text-align:right;font-size:var(--cy-type-label);color:var(--cy-comp-sheet-player-muted);overflow-wrap:anywhere}
+cy-theme-records .tr-detail{display:flex;justify-content:space-between;gap:var(--cy-space-3);padding:var(--cy-space-4);font-size:var(--cy-type-body);overflow-wrap:anywhere}
+cy-theme-records .tr-label{color:var(--cy-comp-sheet-player-muted)}
+cy-theme-records .tr-value{max-width:60%;text-align:right}
+cy-theme-records .tr-button{display:flex;justify-content:center;align-items:center;border-radius:var(--cy-radius-pill);min-height:var(--cy-btn-h);padding:0 var(--cy-space-4);margin-top:var(--cy-space-3);background:var(--cy-comp-sheet-player-text);color:var(--cy-comp-sheet-player-page);font-size:var(--cy-type-body)}
+cy-theme-records .tr-button--muted{background:var(--cy-comp-sheet-player-surface);color:var(--cy-comp-sheet-player-text)}
+cy-theme-records .is-busy{opacity:.4;pointer-events:none}
+cy-theme-records .tr-empty{padding:var(--cy-space-5) 0;text-align:center}
+cy-theme-records .tr-error{display:block;color:var(--cy-color-status-warning);font-size:var(--cy-type-label);line-height:1.6}
+cy-theme-records .tr-cover{width:100%;border-radius:var(--cy-radius-xl);margin-bottom:var(--cy-space-4)}
+cy-theme-records .tr-story{padding:var(--cy-space-4)}
+cy-theme-records .cy-pressed{opacity:.88;transform:scale(.98);transition:transform var(--cy-motion-press) var(--cy-ease-out),opacity var(--cy-motion-press) var(--cy-ease-out)}
+
+/* ===== 结局 · 通关（照 master）：原型占位图 ===== */
+.proto-endmap{position:absolute;inset:0;background:linear-gradient(160deg,#1d2228,#0c0e11);overflow:hidden}
+.proto-endmap:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(255,255,255,.04) 0 1px,transparent 1px 46px),repeating-linear-gradient(90deg,rgba(255,255,255,.04) 0 1px,transparent 1px 46px)}
+.proto-endmap i{position:absolute;width:14px;height:14px;margin:-7px;border-radius:50%;background:#fff;box-shadow:0 0 0 4px rgba(255,255,255,.18)}
+.proto-endroute{position:absolute;inset:0;background:linear-gradient(135deg,#1b1f24,#101215);overflow:hidden}
+.proto-endroute svg{position:absolute;inset:0;width:100%;height:100%}
+.proto-endroute i{position:absolute;width:10px;height:10px;margin:-5px;border-radius:50%;background:#fff}
+.proto-endroute b{position:absolute;transform:translate(-50%,-160%);padding:3px 8px;border-radius:999px;background:#fff;color:#111;font-size:11px;font-weight:600;white-space:nowrap}
+.proto-endava{background:radial-gradient(circle at 50% 38%,#4a5563 0 22%,#232a33 23% 100%)}
+.proto-endph{display:block;background:linear-gradient(160deg,#4a5563,#1b2027)}
+.proto-endph--2{background:linear-gradient(200deg,#5b4a3a,#1d1712)}
+.proto-endph--3{background:linear-gradient(140deg,#2f4a5a,#0e171d)}
+#endFinRail{display:none}
+#endFinMs[data-cur="ms"] ~ #endFinRail{display:block}
+cy-medal-screen,cy-slide-confirm,cy-theme-records{display:block}
+
 </style>
 </head>
 <body>
@@ -13389,6 +13505,393 @@ body.clean .scr .need{display:none}
 </cy-playkit-album>
 </view>
 </section>
+<!-- ======================= 结局 · 通关（照 master pages/play，基线复刻，不标新增/改动）======================= -->
+<section class="scr" id="s-end">
+<view class="pg-play" style="position:absolute;inset:0">
+<view class="play" style="--cy-psheet-max-h:756px">
+
+<!-- 地图底（城市定向主题，不开故事流时）：只给通关 banner 当背景 -->
+<view class="proto-endmap"><i style="left:18%;top:68%"></i><i style="left:34%;top:52%"></i><i style="left:52%;top:44%"></i><i style="left:70%;top:36%"></i><i style="left:80%;top:22%"></i></view>
+
+<!-- 通关 banner（index.wxml:909-912）：allDone 且没有别的底卡时出现，点了打开完成面板 -->
+<view class="banner ps" id="endBanner" data-go="end-finish">
+  <view id="endBannerHost" data-states="orient,shop" data-st-name="玩法（mode）">
+    <view data-st="orient"><view class="b1">本章5处旧址已全部点亮</view><view class="b2 serif">领取你的城市足迹卡</view></view>
+    <view data-st="shop"><view class="b1">本轮探索已完成</view><view class="b2 serif">看看这一天的收获</view></view>
+  </view>
+</view>
+
+<!-- 故事流（chfull）底：故事主题走到最后一站时还在它上面 -->
+<view class="chfull ps" id="endStory" data-states="last,chapter" data-st-name="故事流">
+  <view class="fx-story__hd" style="padding-top:95px">
+    <view class="fx-story__compass fx-story__radar"><view class="radar__disc"><view class="proto-radar"></view><view class="radar__hit"></view></view><text class="compass__dist">0m</text></view>
+    <view class="fx-story__t theme-chapter-nav" style="top:55px"><text data-st="last">第2章 仓库区</text><text data-st="chapter">尾声</text></view>
+    <view class="theme-story-hud">
+      <view class="theme-hp"><view class="theme-heart"><cy-icon><view class="cyi cyi--heart-filled" style="width:18.72px;height:18.72px"></view></cy-icon></view><text>生命值 6<text class="theme-max">/10</text></text></view>
+      <view class="theme-bag-entry"><view class="theme-bag-icon"></view><text>3/6</text></view>
+    </view>
+    <view class="fx-story__acts">
+      <view class="fx-story__act" data-toast="游玩工具"><cy-icon><view class="cyi cyi--more" style="width:15.6px;height:15.6px"></view></cy-icon></view>
+    </view>
+  </view>
+  <view class="chfull__stage">
+    <scroll-view class="chfull__scroll st-scroll">
+      <view class="chfull__pad"></view>
+      <view>
+      <!-- 末站之前的故事流（end-node / end-woo 的底） -->
+      <view data-st="last">
+        <view class="chfull__para st-line is-in">邮局的铁门半掩着，柜台后面没有人。</view>
+        <view class="chfull__para st-line is-in">信箱上的铜牌写着：最后一班收信，凌晨四点。</view>
+        <view class="chfull__para st-line chfull__para--wide is-in"><view class="chfull__game-cue"><view class="chfull__fsentry-title">把货单寄出去</view></view></view>
+      </view>
+      <!-- 结局章（_playEndingChapter → buildChapter，ending:true；章末按钮文字「继续」index.wxml:352） -->
+      <view data-st="chapter">
+        <view class="chfull__para st-line is-in">天快亮的时候，你把另半张货单折好，塞进了信封。</view>
+        <view class="chfull__para st-line is-in">信箱吞下它的声音很轻，像有人在雾里叹了口气。</view>
+        <view class="chfull__para st-line is-in">巡夜人的怀表停在四点十分。你没有回头。</view>
+        <view class="chfull__end"><view class="chfull__continue" data-go="end-life">继续</view></view>
+      </view>
+      </view>
+      <view class="chfull__pad"></view>
+    </scroll-view>
+  </view>
+</view>
+
+<!-- ===== 末站完成 · 节点详情卡（index.wxml:924-956「已完成」块）===== -->
+<view class="mask mask--story ps" id="endNodeMask"></view>
+<view class="sheet sheet--story ps" id="endNodeSheet">
+  <view class="sheet-cover"><view class="proto-cover"></view>
+    <view id="endNodeTag" data-states="orient,shop" data-st-name="玩法（mode）">
+      <view class="cover-tag" data-st="orient">第 5 站</view>
+      <view class="cover-tag" data-st="shop">已体验</view>
+    </view>
+    <view class="cover-fade"></view>
+    <view class="cover-stamp"><cy-icon><view class="cyi cyi--check" style="width:14.56px;height:14.56px"></view></cy-icon></view>
+  </view>
+  <view class="sheet-body">
+    <view class="sheet-grab"></view>
+    <view class="sheet-name serif">老邮局</view>
+    <view class="sheet-meta">滨江路 88 号 · 距你 12 米</view>
+    <view class="sheet-desc serif">信箱上的铜牌写着最后一班收信的时间。把货单寄出去，这一夜就结束了。</view>
+    <view class="post-row"><text class="pl">这一关你已通关</text><text class="pr">+100 分</text></view>
+    <cy-btn style="margin-top:var(--cy-space-3-5)" data-go="end-woo"><view class="btn btn--primary">查看城市足迹卡</view></cy-btn>
+  </view>
+</view>
+
+<!-- ===== 奖励掉落卡（index.wxml:895-908，同在「通关 banner」注释下）===== -->
+<view class="rdrop ps" id="endDrop">
+  <view class="rdrop__head">
+    <view class="rdrop__dot"></view>
+    <view class="rdrop__copy">
+      <view id="endDropHost" data-states="one,two" data-st-name="解锁几枚">
+        <text class="rdrop__t" data-st="one">解锁徽章:雾港夜行者</text>
+        <text class="rdrop__t" data-st="two">解锁徽章:雾港夜行者、钟楼守望</text>
+      </view>
+      <text class="rdrop__s">已记在你的收藏里</text>
+    </view>
+  </view>
+  <view class="rdrop__row">
+    <view class="rdrop__go" data-toast="打开我的收藏">查看收藏</view>
+    <view class="rdrop__next" data-go="end-woo">继续</view>
+  </view>
+</view>
+
+<!-- ===== 勋章颁发 Woo（index.wxml:1424-1434）===== -->
+<view class="woo ps" id="endWoo">
+  <view class="woo__title" style="padding-top:55px">徽章</view>
+  <view class="woo__hero">
+    <img class="woo__img" style="object-fit:contain" src="data:image/png;base64,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" alt="">
+    <text class="woo__name">钟楼守望</text>
+  </view>
+  <view id="endWooHost" data-states="nocoupon,coupon" data-st-name="同时到账券">
+    <view class="woo__coupon" data-st="coupon" data-toast="打开优惠券">同时到账一张券 · 到店出示核销</view>
+  </view>
+  <cy-slide-confirm class="woo__cta" data-go="end-chapter">
+    <view class="sc sc--default">
+      <text class="sc__label">Woo!</text>
+      <view class="sc__knob"><cy-icon><view class="cyi cyi--slide-arrow" style="width:31.72px;height:31.72px"></view></cy-icon></view>
+    </view>
+  </cy-slide-confirm>
+</view>
+
+<!-- ===== 这一生的结局（index.wxml:362-404，previewEnding.real）===== -->
+<view class="pv-ending pv-ending--in ps" id="endLife" style="padding-top:calc(95px + var(--cy-btn-h) + var(--cy-space-5))">
+  <scroll-view class="pv-ending__scroll">
+  <text class="pv-ending__k">这一生的结局</text>
+  <text class="pv-ending__title">寄出的信</text>
+  <text class="pv-ending__copy">你把另半张货单寄了出去。没有人知道寄信的是谁，旧港的雾在天亮时散了。</text>
+  <view id="endLifeHost" data-states="archive,plain" data-st-name="这一生的档案">
+  <view class="life-arc" data-st="archive">
+    <text class="life-arc__h">这一生的档案</text>
+    <view class="life-arc__id">
+      <view class="life-arc__ava proto-endava"></view>
+      <view class="life-arc__rows">
+        <view class="life-arc__row"><text class="life-arc__l">身份</text><text class="life-arc__v">夜巡人</text></view>
+        <view class="life-arc__row"><text class="life-arc__l">来旧港的理由</text><text class="life-arc__v">找回半张货单</text></view>
+      </view>
+    </view>
+    <view class="life-arc__photos">
+      <view class="life-arc__photo"><view class="life-arc__img proto-endph proto-endph--1"></view><text class="life-arc__cap">仓库侧门</text></view>
+      <view class="life-arc__photo"><view class="life-arc__img proto-endph proto-endph--2"></view><text class="life-arc__cap">海关钟楼</text></view>
+    </view>
+    <view class="life-arc__note">
+      <text class="life-arc__quote">“如果有人看到这封信，请替我把灯关上。”</text>
+      <text class="life-arc__cap">老邮局</text>
+    </view>
+    <text class="life-arc__walk">走过 · 旧码头仓库 · 鱼市口 · 海关钟楼 · 仓库二层 · 老邮局</text>
+  </view>
+  </view>
+  <view class="pv-ending__go" data-go="end-medal">继续</view>
+  </scroll-view>
+</view>
+
+<!-- ===== 完成面板 · 已通关（index.wxml:1191-1320）===== -->
+<view class="finmask ps" id="endFinMask" data-act="endClose"></view>
+<view class="finsheet ps" id="endFin" data-states="story,orient,shop" data-st-name="主题类型">
+  <view class="finsheet__grab"></view>
+  <view data-st="story" class="finsheet__records">
+   <view data-act="recOpen" data-rec="card"><cy-icon><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon>查看本局结果</view>
+   <view data-act="recOpen" data-rec="history">我的游玩记录</view>
+   <view data-toast="正在开启新一局">再玩一次</view>
+  </view>
+  <view class="finsheet__title">雾港夜行</view>
+  <view id="endFinMs" data-states="none,ms" data-st-name="累计完成数（/api/play/my-completed）">
+    <view class="finsheet__result" data-st="none">已通关</view>
+    <view class="finsheet__result" data-st="ms">你已完成第 3 个主题</view>
+  </view>
+  <view data-st="story" class="finsheet__game-ending">
+    <text class="finsheet__game-ending-k">本局结局</text>
+    <text class="finsheet__game-ending-title">寄出的信</text>
+    <text class="finsheet__game-ending-copy">你把另半张货单寄了出去。没有人知道寄信的是谁，旧港的雾在天亮时散了。</text>
+  </view>
+  <view id="endFinMedals" data-states="two,one,none" data-st-name="本次获得的勋章">
+  <cy-finish-medals data-st="two"><view class="ms">
+    <view class="ms__k">本次获得 · 2 枚</view>
+    <view class="ms__deck" data-act="msNext">
+      <view class="ms__card" style="z-index:3;transform:translate(0px,0) rotate(0.00deg);"><view class="ms__hex"><view class="ms__glyph"><cy-icon><view class="cyi cyi--flag" style="width:49.92px;height:49.92px"></view></cy-icon></view><view class="ms__shine"></view></view><text class="ms__n">雾港夜行者</text><text class="ms__s">通关 · 主题徽章</text></view>
+      <view class="ms__card" style="z-index:1;opacity:1;transform:translate(13.52px,-9.36px) scale(0.93);"><view class="ms__hex"><view class="ms__glyph"><cy-icon><view class="cyi cyi--star" style="width:49.92px;height:49.92px"></view></cy-icon></view><view class="ms__shine"></view></view><text class="ms__n">钟楼守望</text><text class="ms__s">第 2 名 · 节点奖牌</text></view>
+    </view>
+    <view class="ms__dots"><view class="ms__dot is-on"></view><view class="ms__dot"></view></view>
+  </view></cy-finish-medals>
+  <cy-finish-medals data-st="one"><view class="ms">
+    <view class="ms__k">本次获得 · 1 枚</view>
+    <view class="ms__deck">
+      <view class="ms__card" style="z-index:2;transform:translate(0px,0) rotate(0.00deg);"><view class="ms__hex"><view class="ms__glyph"><cy-icon><view class="cyi cyi--flag" style="width:49.92px;height:49.92px"></view></cy-icon></view><view class="ms__shine"></view></view><text class="ms__n">雾港夜行者</text><text class="ms__s">通关 · 主题徽章</text></view>
+    </view>
+  </view></cy-finish-medals>
+  </view>
+  <view id="endFinRail" class="finish-milestone">
+    <view class="finish-milestone__head">
+      <text>城市探索里程碑</text>
+      <text>距 5 个还差 2 个</text>
+    </view>
+    <view class="finish-milestone__rail">
+      <view class="finish-milestone__progress" style="width:35%"></view>
+      <view class="finish-milestone__tier finish-milestone__tier--current"><view class="finish-milestone__dot"></view><text>1</text></view>
+      <view class="finish-milestone__tier finish-milestone__tier--future"><view class="finish-milestone__dot"></view><text>5</text></view>
+      <view class="finish-milestone__tier finish-milestone__tier--future"><view class="finish-milestone__dot"></view><text>10</text></view>
+      <view class="finish-milestone__tier finish-milestone__tier--future"><view class="finish-milestone__dot"></view><text>30</text></view>
+      <view class="finish-milestone__tier finish-milestone__tier--future"><view class="finish-milestone__dot"></view><text>100</text></view>
+    </view>
+  </view>
+  <view class="finsheet__map"><view class="proto-endroute"><svg viewBox="0 0 100 100" preserveAspectRatio="none"><polyline points="14,74 32,56 50,48 68,38 84,22" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="1" stroke-dasharray="2.5 2" vector-effect="non-scaling-stroke"/></svg><i style="left:14%;top:74%"></i><i style="left:32%;top:56%"></i><i style="left:50%;top:48%"></i><i style="left:68%;top:38%"></i><i style="left:84%;top:22%"></i><b style="left:50%;top:48%">徽章 · 钟楼守望</b></view></view>
+  <view data-st="story orient" class="finsheet__grid">
+    <view class="fst"><cy-icon class="fst__ic"><view class="cyi cyi--pin-solid" style="width:18.72px;height:18.72px"></view></cy-icon><text class="fst__v">5</text><text class="fst__l">点亮坐标</text></view>
+    <view class="fst"><cy-icon class="fst__ic"><view class="cyi cyi--star" style="width:18.72px;height:18.72px"></view></cy-icon><text class="fst__v">36</text><text class="fst__l">本次解谜分 · 3题</text><text class="fst__sub">个人最佳 28</text></view>
+    <view class="fst"><cy-icon class="fst__ic"><view class="cyi cyi--route" style="width:18.72px;height:18.72px"></view></cy-icon><text class="fst__v">120</text><text class="fst__l">探索值</text></view>
+  </view>
+  <view data-st="shop" class="finsheet__grid">
+    <view class="fst"><cy-icon class="fst__ic"><view class="cyi cyi--check" style="width:18.72px;height:18.72px"></view></cy-icon><text class="fst__v">4/4</text><text class="fst__l">玩法完成</text></view>
+    <view class="fst"><cy-icon class="fst__ic"><view class="cyi cyi--walk" style="width:18.72px;height:18.72px"></view></cy-icon><text class="fst__v">4</text><text class="fst__l">本期足迹</text></view>
+  </view>
+  <view data-st="story" class="branchpath">
+    <view class="branchpath__k">你走过的路</view>
+    <view class="branchpath__row"><view class="branchpath__dot"></view><view class="branchpath__copy"><view class="branchpath__step"><text>旧码头仓库</text><cy-icon class="branchpath__arrow"><view class="cyi cyi--arrow-right" style="width:11.44px;height:11.44px"></view></cy-icon><text>鱼市口</text></view><text class="branchpath__meta">2026.10.27</text></view></view>
+    <view class="branchpath__row"><view class="branchpath__dot"></view><view class="branchpath__copy"><view class="branchpath__step"><text>鱼市口</text><cy-icon class="branchpath__arrow"><view class="cyi cyi--arrow-right" style="width:11.44px;height:11.44px"></view></cy-icon><text>海关钟楼</text></view><text class="branchpath__meta">2026.10.27</text></view></view>
+    <view class="branchpath__row"><view class="branchpath__dot"></view><view class="branchpath__copy"><view class="branchpath__step"><text>海关钟楼</text><cy-icon class="branchpath__arrow"><view class="cyi cyi--arrow-right" style="width:11.44px;height:11.44px"></view></cy-icon><text>仓库二层</text></view><text class="branchpath__meta">2026.10.27</text></view></view>
+    <view class="branchpath__row"><view class="branchpath__dot"></view><view class="branchpath__copy"><view class="branchpath__step"><text>仓库二层</text><cy-icon class="branchpath__arrow"><view class="cyi cyi--arrow-right" style="width:11.44px;height:11.44px"></view></cy-icon><text>老邮局</text></view><text class="branchpath__meta">2026.10.28</text></view></view>
+  </view>
+  <view data-st="shop" class="finsheet__stamplist">
+    <view class="finsheet__stampline"><cy-icon><view class="cyi cyi--check" style="width:13.52px;height:13.52px"></view></cy-icon><text>鱼市口早点铺</text></view>
+    <view class="finsheet__stampline"><cy-icon><view class="cyi cyi--check" style="width:13.52px;height:13.52px"></view></cy-icon><text>钟楼咖啡</text></view>
+    <view class="finsheet__stampline"><cy-icon><view class="cyi cyi--check" style="width:13.52px;height:13.52px"></view></cy-icon><text>仓库二层书店</text></view>
+    <view class="finsheet__stampline"><cy-icon><view class="cyi cyi--check" style="width:13.52px;height:13.52px"></view></cy-icon><text>老邮局文创</text></view>
+  </view>
+  <view data-st="story orient"><view class="finish-photos-title">我的旅途照片</view>
+  <scroll-view class="finish-stamps">
+    <view class="finish-stamp"><view class="proto-endph proto-endph--1" style="width:100%;height:100%"></view><view class="finish-stamp__mark"><cy-icon><view class="cyi cyi--check" style="width:12.48px;height:12.48px"></view></cy-icon></view></view>
+    <view class="finish-stamp"><view class="proto-endph proto-endph--2" style="width:100%;height:100%"></view><view class="finish-stamp__mark"><cy-icon><view class="cyi cyi--check" style="width:12.48px;height:12.48px"></view></cy-icon></view></view>
+    <view class="finish-stamp"><view class="proto-endph proto-endph--3" style="width:100%;height:100%"></view><view class="finish-stamp__mark"><cy-icon><view class="cyi cyi--check" style="width:12.48px;height:12.48px"></view></cy-icon></view></view>
+  </scroll-view>
+  <view class="finish-journal-entry" data-toast="打开旅程手记">
+    <view><text class="finish-journal-entry__title">回看旅程手记</text></view>
+    <cy-icon><view class="cyi cyi--arrow-right" style="width:14.56px;height:14.56px"></view></cy-icon>
+  </view></view>
+  <view data-st="shop" class="finsheet__retry">城市故事暂未加载，不影响本次足迹。<text class="finsheet__retry-act" data-toast="重新加载">重新加载</text></view>
+  <view class="finish-route-recommendation" data-toast="打开路线详情">
+    <view class="finish-route-recommendation__cover" style="background:linear-gradient(140deg,#2f4a5a,#0e171d)"></view>
+    <view class="finish-route-recommendation__body">
+      <view class="finish-route-recommendation__eyebrow">附近下一程</view>
+      <view class="finish-route-recommendation__title">外滩夜灯</view>
+      <view class="finish-route-recommendation__meta">城市定向 · 距你 1.2 公里</view>
+    </view>
+    <view class="finish-route-recommendation__action">
+      <text>¥39 起</text>
+      <view><text>查看票价并购票</text><cy-icon><view class="cyi cyi--arrow-right" style="width:12.48px;height:12.48px"></view></cy-icon></view>
+    </view>
+  </view>
+  <view class="finsheet__cta" data-act="endClose">继续</view>
+</view>
+
+<!-- ===== v13 通关勋章页（index.wxml:1322-1325 → components/medal-screen）：盖在完成面板上 ===== -->
+<cy-medal-screen class="ps" id="endMd">
+<view class="md on dropped" id="endMdHost" data-states="multi,one,shop" data-st-name="勋章与统计">
+  <view class="md__rays"></view>
+  <view class="md__back" style="top:95px" data-act="endClose"><view class="md__chev"></view></view>
+  <img class="spark" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSIjRkZEOUE4Ij48cGF0aCBkPSJNMTIgMGwyLjYgOS40TDI0IDEybC05LjQgMi42TDEyIDI0bC0yLjYtOS40TDAgMTJsOS40LTIuNnoiLz48L3N2Zz4=" style="left:15.4%;top:160px;width:14px;height:14px;animation-delay:0s" alt="">
+  <img class="spark" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSIjRkZEOUE4Ij48cGF0aCBkPSJNMTIgMGwyLjYgOS40TDI0IDEybC05LjQgMi42TDEyIDI0bC0yLjYtOS40TDAgMTJsOS40LTIuNnoiLz48L3N2Zz4=" style="left:79.5%;top:180px;width:20px;height:20px;animation-delay:.6s" alt="">
+  <img class="spark" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSIjRkZEOUE4Ij48cGF0aCBkPSJNMTIgMGwyLjYgOS40TDI0IDEybC05LjQgMi42TDEyIDI0bC0yLjYtOS40TDAgMTJsOS40LTIuNnoiLz48L3N2Zz4=" style="left:20.5%;top:300px;width:10px;height:10px;animation-delay:1.1s" alt="">
+  <img class="spark" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSIjRkZEOUE4Ij48cGF0aCBkPSJNMTIgMGwyLjYgOS40TDI0IDEybC05LjQgMi42TDEyIDI0bC0yLjYtOS40TDAgMTJsOS40LTIuNnoiLz48L3N2Zz4=" style="left:76.9%;top:300px;width:12px;height:12px;animation-delay:.3s" alt="">
+  <img class="spark" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSIjRkZEOUE4Ij48cGF0aCBkPSJNMTIgMGwyLjYgOS40TDI0IDEybC05LjQgMi42TDEyIDI0bC0yLjYtOS40TDAgMTJsOS40LTIuNnoiLz48L3N2Zz4=" style="left:51.3%;top:110px;width:16px;height:16px;animation-delay:.9s" alt="">
+  <img class="spark" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSIjRkZEOUE4Ij48cGF0aCBkPSJNMTIgMGwyLjYgOS40TDI0IDEybC05LjQgMi42TDEyIDI0bC0yLjYtOS40TDAgMTJsOS40LTIuNnoiLz48L3N2Zz4=" style="left:33.3%;top:240px;width:8px;height:8px;animation-delay:1.5s" alt="">
+  <!-- 两枚：主题徽章 + 节点奖牌 -->
+  <view class="mstack" data-st="multi" data-act="mdNext">
+    <view class="hexw" data-i="0" style="z-index:3;transform:translate(0px,0) rotate(0.00deg);"><view class="hex hex--0"><view class="hex__in"></view><img class="hex__ic" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iMS42Ij48cGF0aCBkPSJNMyA3bDkgNiA5LTYiLz48cmVjdCB4PSIzIiB5PSI1IiB3aWR0aD0iMTgiIGhlaWdodD0iMTQiIHJ4PSIyIi8+PC9zdmc+" alt=""><view class="hex__shine"></view></view></view>
+    <view class="hexw" data-i="1" style="z-index:1;opacity:1;filter:brightness(0.6);transform:translate(0,-18px) scale(0.86);"><view class="hex hex--1"><view class="hex__in"></view><img class="hex__ic" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iMS42Ij48cGF0aCBkPSJNNSAxOWMwLTggNS0xNCAxNS0xNCAwIDEwLTYgMTUtMTQgMTUiLz48cGF0aCBkPSJNNSAxOWMzLTQgNi03IDEwLTkiLz48L3N2Zz4=" alt=""><view class="hex__shine"></view></view></view>
+  </view>
+  <view class="mstack" data-st="one"><view class="hexw" style="z-index:2;transform:translate(0px,0) rotate(0.00deg);"><view class="hex hex--0"><view class="hex__in"></view><img class="hex__ic" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iMS42Ij48cGF0aCBkPSJNMyA3bDkgNiA5LTYiLz48cmVjdCB4PSIzIiB5PSI1IiB3aWR0aD0iMTgiIGhlaWdodD0iMTQiIHJ4PSIyIi8+PC9zdmc+" alt=""><view class="hex__shine"></view></view></view></view>
+  <view class="mstack" data-st="shop"><view class="hexw" style="z-index:2;transform:translate(0px,0) rotate(0.00deg);"><view class="hex hex--0"><view class="hex__in"></view><img class="hex__ic" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iMS42Ij48cmVjdCB4PSI1IiB5PSI0IiB3aWR0aD0iMTQiIGhlaWdodD0iMTYiIHJ4PSIxIi8+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMSIgcj0iMyIvPjwvc3ZnPg==" alt=""><view class="hex__shine"></view></view></view></view>
+  <view class="mname fade" data-st="multi">
+    <text class="mname__b" id="endMdName">雾港夜行者</text>
+    <text class="mname__s" id="endMdSub">通关 · 主题徽章 · 1/2</text>
+    <view class="mdots"><view class="mdot on"></view><view class="mdot"></view></view>
+  </view>
+  <view class="mname fade" data-st="one"><text class="mname__b">雾港夜行</text><text class="mname__s">主题通关</text></view>
+  <view class="mname fade" data-st="shop"><text class="mname__b">雾港市集日</text><text class="mname__s">全部去完</text></view>
+  <view class="md__txt fade" data-st="multi"><text class="md__h">主题通关</text><text class="md__p">雾港夜行 · 获得 2 枚勋章，点或拖动切换</text></view>
+  <view class="md__txt fade" data-st="one"><text class="md__h">主题通关</text><text class="md__p">雾港夜行 · 获得 1 枚勋章</text></view>
+  <view class="md__txt fade" data-st="shop"><text class="md__h">探店完成</text><text class="md__p">雾港市集日 · 获得 1 枚勋章</text></view>
+  <view class="md__body fade">
+    <view class="mg" data-st="multi one">
+      <view class="mg__c"><img class="mg__ic" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSIjMEE4NEZGIj48cGF0aCBkPSJNOSAxLjVoNnYySDl6Ii8+PHBhdGggZD0iTTEyIDQuNWE4LjUgOC41IDAgMSAwIDAgMTcgOC41IDguNSAwIDAgMCAwLTE3em0xIDguNmwzLjIgMi40LTEuMiAxLjYtNC0zVjhoMnoiLz48cGF0aCBkPSJNMTguNiA1LjRsMS40LTEuNCAxLjQgMS40LTEuNCAxLjR6Ii8+PC9zdmc+" alt=""><view><text class="mg__k">用时</text><text class="mg__v">1:42:08</text></view></view>
+      <view class="mg__c"><img class="mg__ic" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSIjOUI2QkZGIj48Y2lyY2xlIGN4PSIxMy41IiBjeT0iMy41IiByPSIyLjIiLz48cGF0aCBkPSJNMTAgNy41bDQtLjggMi4zIDMuOCAzLjIgMS4yLS43IDEuOS0zLjktMS40LTEuMS0xLjgtMSA0LjEgMi43IDIuNlYyMmgtMi4xdi00LjFsLTMtMi44LTEuMyAzLjktNCAyLjYtMS4xLTEuNyAzLjQtMi4yIDItNi43LTEuNy44LTEuMSAzLjEtMi0uNyAxLjUtNHoiLz48L3N2Zz4=" alt=""><view><text class="mg__k">步行 · 公里</text><text class="mg__v">3.6</text></view></view>
+      <view class="mg__c"><img class="mg__ic" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSIjMmZkMjdhIj48cGF0aCBkPSJNMyA0LjVDNS41IDMuNiA4LjYgMy43IDExIDUuMlYyMGMtMi40LTEuNC01LjUtMS41LTgtLjZ6TTIxIDQuNWMtMi41LS45LTUuNi0uOC04IC43VjIwYzIuNC0xLjQgNS41LTEuNSA4LS42eiIvPjwvc3ZnPg==" alt=""><view><text class="mg__k">节点</text><text class="mg__v">5/5</text></view></view>
+      <view class="mg__c"><img class="mg__ic" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSIjRkY5RjBBIj48cGF0aCBkPSJNMTIgMmE0IDQgMCAwIDEgMi4yIDcuM1YxMkgxOWEyIDIgMCAwIDEgMiAydjNIM3YtM2EyIDIgMCAwIDEgMi0yaDQuOFY5LjNBNCA0IDAgMCAxIDEyIDJ6TTQgMTguNWgxNlYyMUg0eiIvPjwvc3ZnPg==" alt=""><view><text class="mg__k">解谜分</text><text class="mg__v">36</text></view></view>
+    </view>
+    <view class="mg" data-st="shop">
+      <view class="mg__c"><img class="mg__ic" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSIjMEE4NEZGIj48cGF0aCBkPSJNOSAxLjVoNnYySDl6Ii8+PHBhdGggZD0iTTEyIDQuNWE4LjUgOC41IDAgMSAwIDAgMTcgOC41IDguNSAwIDAgMCAwLTE3em0xIDguNmwzLjIgMi40LTEuMiAxLjYtNC0zVjhoMnoiLz48cGF0aCBkPSJNMTguNiA1LjRsMS40LTEuNCAxLjQgMS40LTEuNCAxLjR6Ii8+PC9zdmc+" alt=""><view><text class="mg__k">用时</text><text class="mg__v">3:05:40</text></view></view>
+      <view class="mg__c"><img class="mg__ic" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSIjOUI2QkZGIj48Y2lyY2xlIGN4PSIxMy41IiBjeT0iMy41IiByPSIyLjIiLz48cGF0aCBkPSJNMTAgNy41bDQtLjggMi4zIDMuOCAzLjIgMS4yLS43IDEuOS0zLjktMS40LTEuMS0xLjgtMSA0LjEgMi43IDIuNlYyMmgtMi4xdi00LjFsLTMtMi44LTEuMyAzLjktNCAyLjYtMS4xLTEuNyAzLjQtMi4yIDItNi43LTEuNy44LTEuMSAzLjEtMi0uNyAxLjUtNHoiLz48L3N2Zz4=" alt=""><view><text class="mg__k">步行 · 公里</text><text class="mg__v">2.4</text></view></view>
+      <view class="mg__c"><img class="mg__ic" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSIjMmZkMjdhIj48cGF0aCBkPSJNNCAzaDE2bDEuNSA1YTMgMyAwIDAgMS01LjIgMi40QTMgMyAwIDAgMSAxMiAxMWEzIDMgMCAwIDEtNC4zLS42QTMgMyAwIDAgMSAyLjUgOHpNNCAxMi41YTQuNSA0LjUgMCAwIDAgMy43LS4zIDQuNiA0LjYgMCAwIDAgNC4zLjggNC42IDQuNiAwIDAgMCA0LjMtLjggNC41IDQuNSAwIDAgMCAzLjcuM1YyMWgtNnYtNWgtNHY1SDR6Ii8+PC9zdmc+" alt=""><view><text class="mg__k">去过 · 家</text><text class="mg__v">4/4</text></view></view>
+      <view class="mg__c"><img class="mg__ic" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSIjRkY5RjBBIj48cGF0aCBkPSJNMTIgMmE0IDQgMCAwIDEgMi4yIDcuM1YxMkgxOWEyIDIgMCAwIDEgMiAydjNIM3YtM2EyIDIgMCAwIDEgMi0yaDQuOFY5LjNBNCA0IDAgMCAxIDEyIDJ6TTQgMTguNWgxNlYyMUg0eiIvPjwvc3ZnPg==" alt=""><view><text class="mg__k">邮票 · 枚</text><text class="mg__v">4</text></view></view>
+    </view>
+    <view class="mrec" data-st="multi">
+      <view class="mrec__h"><img class="mrec__ic" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSIjRkY4QTNEIj48cGF0aCBkPSJNNyAzaDEwdjNoM3YyYTUgNSAwIDAgMS00LjMgNUE1IDUgMCAwIDEgMTMgMTUuOVYxOGgzdjNIOHYtM2gzdi0yLjFBNSA1IDAgMCAxIDguMyAxMyA1IDUgMCAwIDEgNCA4VjZoM3ptMCA1VjhINmEzIDMgMCAwIDAgMSAyLjJ6bTEwIDB2Mi4yQTMgMyAwIDAgMCAxOCA4eiIvPjwvc3ZnPg==" alt="">新纪录</view>
+      <text class="mrec__s">解谜分 · 个人最好</text>
+      <text class="mrec__b">比上次最好多 8 分</text>
+      <view class="mrec__stk"><text class="mrec__stk1">新纪录</text><text class="mrec__stk2">BEST</text></view>
+    </view>
+  </view>
+  <view class="md__btns fade">
+    <view class="pill pill--s" data-act="mdRecords">查看记录</view>
+    <view class="pill pill--w" data-act="mdShare">分享战报</view>
+  </view>
+</view>
+</cy-medal-screen>
+
+<!-- ===== 你的城市故事（探店，index.wxml:1328-1344，loadEnding /api/play/ending）===== -->
+<view class="ending ps" id="endLetter">
+  <view class="ending__close" style="top:95px" data-close="endLetter"><cy-icon><view class="cyi cyi--close-sm" style="width:22.88px;height:22.88px"></view></cy-icon></view>
+  <view class="ending__arc">你 的 城 市 故 事</view>
+  <view class="ending__opener serif">这一天你从鱼市口出发，在老邮局停下。四家店，各留下了一句话。</view>
+  <scroll-view class="ending__scroll">
+    <view class="ending__frag"><text class="ending__step">第 1 步 · 鱼市口早点铺</text><text class="ending__text serif">老板多给了你一根油条，说雾天要吃饱。</text></view>
+    <view class="ending__frag"><text class="ending__step">第 2 步 · 钟楼咖啡</text><text class="ending__text serif">钟敲了十下，你的咖啡刚好凉到能喝。</text></view>
+    <view class="ending__frag"><text class="ending__step">第 3 步 · 仓库二层书店</text><text class="ending__text serif">你在一本旧航海志里夹了一张书签。</text></view>
+    <view class="ending__frag"><text class="ending__step">第 4 步 · 老邮局文创</text><text class="ending__text serif">寄给自己的明信片，要一个月后才会到。</text></view>
+  </scroll-view>
+  <view class="ending__acts" id="endLetterSq" data-states="sq,nosq" data-st-name="广场发布权限（communityPostWrite）">
+    <cy-btn style="flex:1" data-act="mdShare"><view class="btn btn--secondary">保存足迹卡</view></cy-btn>
+    <cy-btn style="flex:1" data-st="sq" data-toast="去广场发布你的城市足迹"><view class="btn btn--primary">去广场</view></cy-btn>
+  </view>
+</view>
+
+<!-- ===== 游玩记录 / 本局结果（components/cy/theme-records，从完成面板「查看本局结果」「我的游玩记录」打开）===== -->
+<cy-sheet class="ps" id="endRec" style="--cy-comp-sheet-max-h:calc(844px - 88px);--cy-comp-sheet-blur:0px;--cy-comp-sheet-role-glass:var(--cy-comp-sheet-player-page);--cy-comp-sheet-role-text:var(--cy-comp-sheet-player-text);--cy-comp-sheet-role-text-secondary:var(--cy-comp-sheet-player-text-secondary);--cy-comp-sheet-role-muted:var(--cy-comp-sheet-player-muted);--cy-comp-sheet-role-surface:var(--cy-comp-sheet-player-surface);--cy-comp-sheet-role-divider:var(--cy-comp-sheet-player-divider);--cy-comp-sheet-role-btn-bg:var(--cy-comp-sheet-player-text);--cy-comp-sheet-role-btn-fg:var(--cy-comp-sheet-player-page)">
+<view class="sh sh--bottom sh--fixed sh--fixed-full sh--lv-full">
+  <view class="sh__mask" data-back></view>
+  <view class="sh__panel">
+  <view class="sh__grip"><view class="sh__handle"></view></view>
+  <scroll-view class="sh__body">
+  <cy-theme-records id="endRecHost" data-states="card,history" data-st-name="哪一张">
+  <view class="tr-sheet" data-st="history">
+    <view class="tr-close" data-back><cy-icon><view class="cyi cyi--close-sm" style="width:18.72px;height:18.72px"></view></cy-icon></view>
+    <text class="tr-title">我的游玩记录</text><text class="tr-sub">雾港夜行</text>
+    <view class="tr-group">
+      <view class="tr-row" data-act="recCard"><view class="tr-circle"><cy-icon><view class="cyi cyi--check" style="width:18.72px;height:18.72px"></view></cy-icon></view><view class="tr-copy"><text class="tr-name">寄出的信</text><text class="tr-sub">旧港 · 雾夜</text><text class="tr-sub">你把另半张货单寄了出去。</text></view><text class="tr-date">2026.10.28</text><cy-icon><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view>
+      <view class="tr-row" data-act="recCard"><view class="tr-circle"><cy-icon><view class="cyi cyi--check" style="width:18.72px;height:18.72px"></view></cy-icon></view><view class="tr-copy"><text class="tr-name">熄灭的灯塔</text><text class="tr-sub">旧港 · 雾夜</text><text class="tr-sub">巡夜人比你先到了一步。</text></view><text class="tr-date">2026.10.20</text><cy-icon><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view>
+    </view>
+  </view>
+  <view class="tr-sheet" data-st="card">
+    <view class="tr-close" data-back><cy-icon><view class="cyi cyi--close-sm" style="width:18.72px;height:18.72px"></view></cy-icon></view>
+    <text class="tr-sub">雾港夜行</text><text class="tr-title">寄出的信</text>
+    <text class="tr-summary">你把另半张货单寄了出去。没有人知道寄信的是谁，旧港的雾在天亮时散了。</text>
+    <view class="tr-group">
+      <view class="tr-detail"><text class="tr-label">场景</text><text class="tr-value">旧港 · 雾夜</text></view>
+      <view class="tr-detail"><text class="tr-label">生命值</text><text class="tr-value">6</text></view>
+      <view class="tr-detail"><text class="tr-label">幸运值</text><text class="tr-value">1</text></view>
+    </view>
+    <view class="tr-group tr-detail"><text class="tr-label">旧手电</text><text class="tr-value">×1</text></view>
+    <view class="tr-group tr-detail"><text class="tr-label">钟楼守望</text><text class="tr-value">×1</text></view>
+    <view class="tr-group tr-story"><text class="tr-name">已发现的结局</text><text class="tr-sub">寄出的信</text><text class="tr-sub">熄灭的灯塔</text></view>
+    <view class="tr-button" data-toast="正在开启新一局">再玩一次</view>
+  </view>
+  </cy-theme-records>
+  </scroll-view>
+  </view>
+</view>
+</cy-sheet>
+
+<!-- ===== 本局线索 · 本局结局（index.wxml:1602-1760，gameModule.sheetShow）===== -->
+<view class="mask ps" id="endGmodMask" data-back></view>
+<view class="sheet ps" id="endGmod">
+  <view class="sheet-grab"></view>
+  <view class="sheet__x" data-back><view class="sheet__x-i"></view></view>
+  <view class="sheet-body">
+    <view class="sheet-name">本局线索</view>
+  <view class="gmod" id="endGmodHost" data-states="ok,stale,error" data-st-name="本局状态">
+    <view class="gmod__error" data-st="error">
+      <cy-icon><view class="cyi cyi--warning" style="width:16.64px;height:16.64px"></view></cy-icon>
+      <text>本局状态读取失败，请稍后重试</text>
+      <view class="gmod__retry" data-toast="正在重新同步">重新同步</view>
+    </view>
+    <view data-st="ok stale">
+      <view class="gmod__stale" data-st="stale">
+        <cy-icon><view class="cyi cyi--warning" style="width:16.64px;height:16.64px"></view></cy-icon>
+        <text>同步失败，正在显示旧数据。旧数据更新于 04:12</text>
+        <view class="gmod__retry" data-toast="正在重新同步">重试同步</view>
+      </view>
+      <view class="gmod__role">
+        <text class="gmod__eyebrow">我的身份</text>
+        <text class="gmod__role-name">夜巡人</text>
+        <text class="gmod__sync">状态更新于 04:12</text>
+      </view>
+      <view class="gmod__node">
+        <view class="gmod__node-head"><text>节点 5</text><text class="gmod__status">COMPLETED</text></view>
+        <text class="gmod__clue">信箱的铜牌背面刻着一个日期：1937 年 10 月 28 日。</text>
+      </view>
+      <view class="gmod__ending">
+        <text class="gmod__eyebrow">本局结局</text>
+        <text class="gmod__ending-title">寄出的信</text>
+        <text class="gmod__ending-copy">你把另半张货单寄了出去。没有人知道寄信的是谁，旧港的雾在天亮时散了。</text>
+      </view>
+    </view>
+  </view>
+  </view>
+</view>
+
+</view>
+</view>
+</section>
 
             <div class="mk-layer" id="mkLayer"></div>
             <div class="mk-pop" id="mkPop"><span class="x" onclick="this.parentNode.classList.remove('show')">✕</span><div id="mkPopBody"></div></div>
@@ -13448,6 +13951,8 @@ var META = {
   groups: [
     { name: '编辑器 · 浅色（pages/publish）', items: ['e-fabu', 'e-detail', 'e-time', 'e-prep', 'e-d20', 'e-d20-more', 'e-keys', 'e-init', 'e-init-add', 'e-value', 'e-node', 'e-quest', 'e-quest-place', 'e-route', 'e-route-add', 'e-temp', 'e-temp-mod', 'e-after', 'e-after-add', 'e-publish'] },
     { name: '游玩页 · 深色（pages/play）', items: ['p-story', 'p-tools', 'p-char', 'p-score', 'p-bag', 'p-check', 'p-node', 'p-finish', 'p-album'] }
+,
+    { name: '结局 · 通关（照 master，待业主提改动）', items: ['end-node', 'end-drop', 'end-woo', 'end-chapter', 'end-life', 'end-medal', 'end-finish', 'end-records', 'end-letter', 'end-gmod', 'end-banner'] }
   ],
   screens: {
     'e-fabu': { sec: 'fabu', scope: '.fabu', t: '编辑主题（创作页）', host: 'pages/publish/fabu/index', theme: 'light', badges: '',
@@ -13550,7 +14055,45 @@ var META = {
       notes: ['d20 检定关闭：RPG 小结整块不出现（右栏切「关闭」）。'] },
     'p-album': { sec: 'album', t: '相册 · 照片审核', host: 'components/playkit-album', theme: 'dark', badges: 'c,w',
       files: ['chengyinhub-xcx/pages/play/components/playkit-album/index.wxml'],
-      intro: '审核中可以「换一张」，未通过直接「重新选择照片」。' }
+      intro: '审核中可以「换一张」，未通过直接「重新选择照片」。' },
+    'end-node': { sec: 'end', scope: '#endNodeSheet', init: ['endStory', 'endNodeMask', 'endNodeSheet'], states: [['endStory', 'last'], ['endNodeTag', 'orient']], t: '末站完成 · 节点详情卡', host: 'pages/play/index（C. 节点详情卡 · 已完成）', theme: 'dark', badges: '',
+      files: ['chengyinhub-xcx/pages/play/index.wxml:924-956（.sheet，「这一关你已通关」块在 951-955）', 'chengyinhub-xcx/pages/play/index.js:5067（全部完成后按钮写「查看城市足迹卡」）、6242（continueNext 只收起卡片）'],
+      intro: '最后一站完成后，节点卡换成「这一关你已通关 +100 分」和一个按钮。全部完成时按钮文字是「查看城市足迹卡」（allDone），没完成时是「前往下一站」。完成面板不是这个按钮打开的：打卡回包 completed 后 600ms 自动打开（index.js:6204），有勋章时先出勋章（6200）。原型里点按钮直接进下一屏。右栏切城市定向（第 5 站）/ 探店（已体验）。' },
+    'end-drop': { sec: 'end', scope: '#endDrop', init: ['endDrop'], states: [['endDropHost', 'one']], t: '奖励掉落卡', host: 'pages/play/index（.rdrop）', theme: 'dark', badges: '',
+      files: ['chengyinhub-xcx/pages/play/index.wxml:893-908（「通关 banner」注释下的 .rdrop）', 'chengyinhub-xcx/pages/play/index.js:6184-6188（rewardDrop：newBadges 解锁时出）'],
+      intro: '打卡回包里带新徽章（newBadges）时出现，常驻直到玩家点「查看收藏」或「继续」。底是地图：故事主题里 .rdrop（z-index 60）在故事流 .chfull（106）下面，看不到。' },
+    'end-woo': { sec: 'end', scope: '#endWoo', init: ['endStory', 'endWoo'], states: [['endStory', 'last'], ['endWooHost', 'nocoupon']], t: '勋章颁发（滑动收下）', host: 'pages/play/index（.woo）', theme: 'dark', badges: '',
+      files: ['chengyinhub-xcx/pages/play/index.wxml:1422-1434', 'chengyinhub-xcx/components/cy/slide-confirm/index.wxml', 'chengyinhub-xcx/pages/play/index.js:6196-6200（medalRank>0 才出）、6216-6223（closeMedal → 300ms 后 openFinish）'],
+      intro: '末站配了名次奖牌且这次真的夺到（medalRank &gt; 0）时，全屏出这一页。底部是滑动确认条，文字「Woo!」，滑过去（原型里点一下）收下，然后打开完成面板。右栏切「同时到账券」：节点配了券时多一行。',
+      notes: ['滑动条 tone="success"，但组件里没有用 tone 的样式，所以实际是蓝色。'] },
+    'end-chapter': { sec: 'end', scope: '.no-scope', init: ['endStory'], states: [['endStory', 'chapter']], t: '结局章（故事流）', host: 'pages/play/index（chfull，chapter.ending）', theme: 'dark', badges: '',
+      files: ['chengyinhub-xcx/pages/play/index.js:7392-7406（openFinish：故事主题先读结局）、7338-7371（_loadLifeEnding / _playEndingChapter）', 'chengyinhub-xcx/pages/play/index.wxml:351-353（章末按钮：结局章写「继续」）'],
+      intro: '只有故事主题（本章有块流）、不是试玩、不是探店时走这一步。GET /api/play/journey/ending 带回一章结局章时，先当普通故事流读完；章名由服务端给（原型写「尾声」）。没有结局章就直接出下一屏。点「继续」进「这一生的结局」。' },
+    'end-life': { sec: 'end', scope: '#endLife', init: ['endStory', 'endLife'], states: [['endStory', 'chapter'], ['endLifeHost', 'archive']], t: '这一生的结局', host: 'pages/play/index（.pv-ending，previewEnding.real）', theme: 'dark', badges: '',
+      files: ['chengyinhub-xcx/pages/play/index.wxml:362-404', 'chengyinhub-xcx/pages/play/utils/life-archive.js（档案：身份 / 照片 / 写下的话 / 走过）', 'chengyinhub-xcx/pages/play/index.js:7373-7382（继续 → 关机动画 → openFinish）'],
+      intro: '结局标题与一句总结，下面「这一生的档案」（有内容才出）。点「继续」整屏压成一条亮线收掉，再打开完成面板。右栏切有 / 无档案。' },
+    'end-medal': { sec: 'end', scope: '#endMd', init: ['endStory', 'endFinMask', 'endFin', 'endMd'], run: 'mdRun', states: [['endStory', 'chapter'], ['endMdHost', 'multi'], ['endFin', 'story'], ['endFinMedals', 'two'], ['endFinMs', 'none']], t: '通关勋章页', host: 'pages/play/components/medal-screen（盖在完成面板上）', theme: 'dark', badges: '',
+      files: ['chengyinhub-xcx/pages/play/index.wxml:1322-1325', 'chengyinhub-xcx/pages/play/components/medal-screen/index.wxml / .wxss / .js', 'chengyinhub-xcx/pages/play/index.js:8124-8143（_openMedalScreen：只在 allDone 时出；四格统计；新纪录只在解谜分超过个人最好时出）'],
+      intro: '整个主题走完时，和完成面板一起打开、盖在它上面。勋章叠放，点或左右拖切换（原型里点一下）。「查看记录」收起这一页、露出下面的完成面板；左上返回 = 关掉完成面板；「分享战报」生成足迹卡存相册。右栏切：两枚勋章 + 新纪录 / 一枚都没拿到（用主题本身当勋章）/ 探店完成。',
+      notes: ['标题由 mode 决定：城市定向、故事主题都写「主题通关」，探店写「探店完成」。', '「分享战报」实际是保存足迹卡到相册（saveFinishCard），不是分享给好友。'] },
+    'end-finish': { sec: 'end', scope: '#endFin', init: ['endStory', 'endFinMask', 'endFin'], states: [['endStory', 'chapter'], ['endFin', 'story'], ['endFinMedals', 'two'], ['endFinMs', 'none']], t: '完成面板 · 已通关', host: 'pages/play/index（.finsheet，allDone / topicCompleted）', theme: 'dark', badges: '',
+      files: ['chengyinhub-xcx/pages/play/index.wxml:1190-1320', 'chengyinhub-xcx/pages/play/components/finish-medals/index.wxml', 'chengyinhub-xcx/pages/play/index.js:7392-7446（openFinish）、7447-7451（closeFinish：正式游玩全部完成后回活动详情）'],
+      intro: '主题走完时标题是主题名，标签「已通关」；有本局结局时显示「本局结局」。之后是本次获得的勋章（叠放）、路线缩略图、三格读数、你走过的路（分支路线才有）、旅途照片、回看旅程手记、附近下一程、继续。右栏切：故事主题 / 城市定向 / 探店；累计完成数读到时标签换成「你已完成第 3 个主题」并多一条里程碑；勋章两枚 / 一枚 / 没有。',
+      notes: ['点「继续」或暗处：正式游玩回到活动详情（goBackDetail）；原型回到地图上的通关 banner。', 'd20 检定开关不影响这一屏：master 的完成面板里没有任何 d20 / 属性 / 名次的内容。', '顶上「查看本局结果 / 我的游玩记录 / 再玩一次」只在主题有背包结果（themeBag.result，不是组队）时出。'] },
+    'end-records': { sec: 'end', scope: '#endRec', init: ['endStory', 'endFinMask', 'endFin', 'endRec'], states: [['endStory', 'chapter'], ['endFin', 'story'], ['endFinMedals', 'two'], ['endFinMs', 'none'], ['endRecHost', 'card']], t: '本局结果 / 游玩记录', host: 'components/cy/theme-records', theme: 'dark', badges: '',
+      files: ['chengyinhub-xcx/components/cy/theme-records/index.wxml / .wxss', 'chengyinhub-xcx/pages/play/index.wxml:1194-1199（完成面板顶上的入口）、1797（组件挂载）'],
+      intro: '从完成面板顶上「查看本局结果」「我的游玩记录」打开的半屏。记录列表点一行进本局结果。右栏切本局结果 / 游玩记录。' },
+    'end-letter': { sec: 'end', scope: '#endLetter', init: ['endFinMask', 'endFin', 'endLetter'], states: [['endFin', 'shop'], ['endFinMedals', 'none'], ['endFinMs', 'none'], ['endLetterSq', 'sq']], t: '你的城市故事（探店）', host: 'pages/play/index（.ending）', theme: 'dark', badges: '',
+      files: ['chengyinhub-xcx/pages/play/index.wxml:1328-1344', 'chengyinhub-xcx/pages/play/index.js:7306-7334（loadEnding：只在探店 mode=2，GET /api/play/ending）'],
+      intro: '只有探店主题有：完成面板打开的同时读城市故事，有内容就全屏盖上（z-index 210，在完成面板之上、勋章页之下）。右上 × 收起回到完成面板。「去广场」只在账号开了广场发布时出现（右栏切）。' },
+    'end-gmod': { sec: 'end', scope: '#endGmod', init: ['endStory', 'endGmodMask', 'endGmod'], states: [['endStory', 'chapter'], ['endGmodHost', 'ok']], t: '本局线索 · 本局结局', host: 'pages/play/index（.gmod 半屏）', theme: 'dark', badges: '',
+      files: ['chengyinhub-xcx/pages/play/index.wxml:1602-1760（本局结局在 1750-1754）', 'chengyinhub-xcx/pages/play/index.js:2730-2733（openGameModule / closeGameModule）'],
+      intro: '俱乐部带队的局（gameModule）：身份、各节点线索与状态，最后是「本局结局」。右栏切正常 / 显示旧数据 / 出错。',
+      notes: ['master 里没有地方调用 openGameModule：这张半屏目前打不开。', '节点状态直接显示服务端原值（如 COMPLETED），见 README。'] },
+    'end-banner': { sec: 'end', scope: '#endBanner', init: ['endBanner'], states: [['endBannerHost', 'orient']], t: '通关 banner（地图）', host: 'pages/play/index（.banner）', theme: 'dark', badges: '',
+      files: ['chengyinhub-xcx/pages/play/index.wxml:909-912', 'chengyinhub-xcx/utils/wxs/hud-slots.wxs:33（bottomCard：allDone 时优先出 banner）'],
+      intro: '全部完成、完成面板收起后，地图底部常驻这一张；点它重新打开完成面板。正式游玩关掉完成面板会回活动详情，所以只在试玩、或重新进入已通关的城市定向主题时看得到；故事主题被故事流盖住。右栏切城市定向 / 探店。' }
+
   }
 };
 window.ACT = {
@@ -13805,6 +14348,18 @@ window.ACT = {
   ovClose: function(el){ window.__proto.closeOv(el.dataset.ov); },
   'st:hud': function(st){ var r = ACT.$('charRow'); if (r) window.__proto.setState(r, st === 'd20off' ? 'd20off' : 'ok'); }
 };
+/* ---- 结局 · 通关（照 master）---- */
+Object.assign(window.ACT, {
+  endClose: function(){ window.__proto.push('end-banner'); },
+  recOpen: function(el){ var st = el.dataset.rec; window.__proto.push('end-records'); window.__proto.setState(document.getElementById('endRecHost'), st); },
+  recCard: function(){ window.__proto.setState(document.getElementById('endRecHost'), 'card'); },
+  mdRecords: function(){ window.__proto.closeEl('endMd'); },
+  mdShare: function(){ window.__proto.toast('生成足迹卡…'); setTimeout(function(){ window.__proto.toast('已保存到相册'); }, 900); },
+  mdRun: function(){ var md = document.getElementById('endMdHost'); if (!md) return; md.classList.remove('on', 'dropped'); void md.offsetWidth; setTimeout(function(){ md.classList.add('dropped'); }, 40); setTimeout(function(){ md.classList.add('on'); }, 1100); },
+  mdNext: function(el){ var ws = el.querySelectorAll('.hexw'); if (ws.length < 2) return; var a = ws[0].getAttribute('style'), b = ws[1].getAttribute('style'); ws[0].setAttribute('style', b); ws[1].setAttribute('style', a); var front = /z-index:3/.test(b) ? 0 : 1; var N = [['雾港夜行者', '通关 · 主题徽章 · 1/2'], ['钟楼守望', '第 2 名 · 节点奖牌 · 2/2']]; document.getElementById('endMdName').textContent = N[front][0]; document.getElementById('endMdSub').textContent = N[front][1]; var d = el.parentNode.querySelectorAll('.mdot'); d[0].classList.toggle('on', front === 0); d[1].classList.toggle('on', front === 1); },
+  msNext: function(el){ var cs = el.querySelectorAll('.ms__card'); if (cs.length < 2) return; var a = cs[0].getAttribute('style'), b = cs[1].getAttribute('style'); cs[0].setAttribute('style', b); cs[1].setAttribute('style', a); var front = /z-index:3/.test(b) ? 0 : 1; var d = el.parentNode.querySelectorAll('.ms__dot'); d[0].classList.toggle('is-on', front === 0); d[1].classList.toggle('is-on', front === 1); },
+  'st:endMdHost': function(st){ var m = { multi: ['story', 'two'], one: ['orient', 'none'], shop: ['shop', 'none'] }[st]; if (!m) return; window.__proto.setState(document.getElementById('endFin'), m[0]); window.__proto.setState(document.getElementById('endFinMedals'), m[1]); }
+});
 /* ===== 10-28 下午：条件与效果引擎 ——「选，不填」。作者只看到中文名字；键名、op 由选择生成（见右栏「接口 / 字段」） ===== */
 var RE = window.RE = (function(){
   var CHEV = '<view class="ios-chev"><cy-icon><view class="cyi cyi--chevron-right" style="width:14.56px;height:14.56px"></view></cy-icon></view>';
@@ -14041,6 +14596,7 @@ var vp = $('#vp'), phone = $('#phone'), fit = $('#fit'), stage = $('#stage');
 var stack = [];
 var MK = { 'mk-new': ['n', '新增'], 'mk-chg': ['c', '改动'], 'mk-wip': ['w', '已写码·待确认'], 'mk-fix': ['f', '在途修复'] };
 var ST_LABEL = { pre: '题面', result: '过线', fail: '差一点', settled: '结算', hidden: '隐藏属性', accepted: '已接受', alt: '换个方式', quiz: '答题', guard: '守卫拦下', done: '已完成', wip: '已写码版（原样）', fresh: '新主题', legacy: '旧主题', ok: '正常', loading: '加载中', empty: '空', error: '出错', noperm: '不能修改', guest: '游客', pending: '审核中', rejected: '已驳回', unknown: '结果未知', blocked: '被拦', off: '关闭', on: '开着', add: '添加', edit: '修改', invalid: '填错了', solo: '个人 / 无俱乐部', custom: '自定义时段', club: '俱乐部带队（不显示）', full: '已满 6 项', swipe: '左滑', editing: '编辑中', live: '进行中', final: '已结束', d20off: 'd20 检定关', locked: '被用到', fail: '没过检查', search: '搜索没找到', easy: '轻松', std: '标准', hard: '硬核', open: '展开一行', naming: '自定义名称', adding: '正在添加', new: '就地新建', dest: '去往展开' };
+Object.assign(ST_LABEL, { orient: '城市定向', shop: '探店', story: '故事主题', last: '末站', chapter: '结局章', one: '一枚', two: '两枚', none: '没有', multi: '两枚 + 新纪录', nocoupon: '没有券', coupon: '带券', archive: '有档案', plain: '没有档案', ms: '读到累计', card: '本局结果', history: '游玩记录', stale: '显示旧数据', sq: '能发广场', nosq: '不能发广场' });
 function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
 
 /* ---------- 缩放 ---------- */
