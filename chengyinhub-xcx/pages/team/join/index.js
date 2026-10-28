@@ -34,7 +34,7 @@ Page({
     this._hidden = false;
     if (refresh) { this._openRecovery(); this.load(); }
   },
-  onHide() { if (this._recovery) this._recovery.dispose(); this._hidden = true; this._epoch = (this._epoch || 0) + 1; this._inviteLoading = false; },
+  onHide() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1; if (this._recovery) this._recovery.dispose(); this._hidden = true; this._epoch = (this._epoch || 0) + 1; this._inviteLoading = false; },
   onUnload() { this._disposed = true; this.onHide(); },
 
   _openRecovery() {
@@ -157,7 +157,7 @@ Page({
   },
 
   join() {
-    if (app.ensureLoginFor && !app.ensureLoginFor('team', () => this.join())) return; // 2026-10-24 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('team', () => this.join(), { owner: this, target: () => [this.inviteCode] })) return; // 2026-10-24 游客写前登录
     if (this.data.joining || this._hidden || this._disposed || !this.inviteCode) return;
     if (!this._recoveryReader || !sameReader(app, this._recoveryReader)) this._openRecovery();
     if (!this._recovery || this._recovery.pending() || !exactId(this.teamId)) return;

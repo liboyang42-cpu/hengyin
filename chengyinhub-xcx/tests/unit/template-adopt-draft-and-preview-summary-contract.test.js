@@ -775,3 +775,77 @@ test('采用迟到回执不能跨商家scope、授权或继续编辑的输入回
     assert.equal(JSON.stringify(p.data.formData),before);assert.equal(requests.filter(r=>r.url==='/api/template/adoption-detail').length,0);
   }
 })
+
+test('本人完整内容续编保留原interactionType和零秒语音，不从完成方式推断据点类型', () => {
+  const page = loadPage(TEMP_PAGE)
+  page.onLoad({ id: '6031', scope: 'my' })
+  requests.find(item => item.url === '/api/template/author-myinfo').success({
+    code: 200, data: { ...LIBRARY_TEMPLATE, id: 6031, canEdit: true, originalTemplateId: 16,
+      interactionType: 'hidden_menu', audioUrl: 'media-asset:16', audioDuration: 0 }
+  })
+  page.validateForm = () => true
+  assert.equal(page.data.formData.interactionType, 'hidden_menu')
+  assert.equal(page.data.interactionType, 'hidden_menu')
+  const body = draftBody(page)
+  assert.equal(body.interactionType, 'hidden_menu')
+  assert.equal(body.audioDuration, 0)
+  assert.equal(body.audioUrl, 'media-asset:16')
+  assert.equal(body.id, 6031)
+  assert.equal(body.originalTemplateId, 16)
+  assert.equal(body.validationMethod, 1, '互动语义不改变原基础完成方式')
+})
+
+test('公共内容采用只信个人稿回读的interactionType，保留library到personal的真实ID转换', () => {
+  const page = loadPage(TEMP_PAGE)
+  page.onLoad({ id: '16', scope: 'MERCHANT' })
+  requests.find(item => item.url === '/api/template/author-info').success({ code: 200, data: LIBRARY_TEMPLATE })
+  const adoption = requests.find(item => item.url === '/api/template/adopt-draft')
+  const intent = JSON.parse(adoption.data)
+  assert.match(intent.requestId, /^adopt_/)
+  assert.deepEqual(intent, {
+    requestId: intent.requestId, originalTemplateId: '16', sourceVersion: 'a'.repeat(64), scope: 'MERCHANT'
+  })
+  adoption.success(adoptedReceipt(adoption, 9101))
+  const own = requests.filter(item => item.url === '/api/template/adoption-detail').at(-1)
+  assert.equal(own.data.requestId, intent.requestId)
+  assert.equal(own.data.scope, 'MERCHANT')
+  own.success({ code: 200, data: { ...LIBRARY_TEMPLATE, id: 9101, canEdit: true,
+    originalTemplateId: 16, advancedConfigJson: '{}', interactionType: 'city_story_card' } })
+  page.validateForm = () => true
+  const body = draftBody(page)
+  assert.equal(body.interactionType, 'city_story_card')
+  assert.equal(body.id, 9101)
+  assert.equal(body.originalTemplateId, 16)
+  assert.equal(body.scope, 'MERCHANT')
+  assert.equal(requests.filter(item => item.url === '/api/template/adopt-draft').length, 1)
+})
+
+test('据点续编显示并提交原互动语义，仍走专属路由且不把个人模板ID变成据点ID', () => {
+  const page = loadPage(TEMP_PAGE)
+  page.onLoad({ id: '6032', scope: 'my', from: 'citynode' })
+  requests.find(item => item.url === '/api/template/author-myinfo').success({
+    code: 200, data: { ...LIBRARY_TEMPLATE, id: 6032, canEdit: true, interactionType: 'photo_spot' }
+  })
+  page.data.merchantAccess = { canManageProjects: true }
+  page.validateForm = () => true
+  assert.equal(page.data.interactionType, 'photo_spot')
+  page.publishGame()
+  const request = requests.find(item => item.url === '/api/merchant/city-node/template/submit')
+  assert.ok(request)
+  const body = JSON.parse(request.data)
+  assert.equal(body.interactionType, 'photo_spot')
+  assert.equal(body.validationMethod, 1)
+  assert.equal(body.id, undefined)
+  assert.equal(requests.filter(item => item.url === '/api/template/publish').length, 0)
+})
+
+test('旧内容未记录互动语义时清掉前次显示值，不补第一项、不继承上一模板类型', () => {
+  const page = loadPage(TEMP_PAGE)
+  page.fillFormWithTemplateData({ ...LIBRARY_TEMPLATE, interactionType: 'qr_checkin' })
+  assert.equal(page.data.interactionType, 'qr_checkin')
+  page.fillFormWithTemplateData({ ...LIBRARY_TEMPLATE })
+  assert.equal(page.data.interactionType, '')
+  assert.equal(page.data.formData.interactionType, '')
+  assert.equal(page.prepareFormData().interactionType, '')
+  assert.equal(page.toNodeTemplate(page.prepareFormData()).interactionType, '')
+})

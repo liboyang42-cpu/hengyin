@@ -171,6 +171,7 @@ Page({
   closePublishSheet() { this.setData({ publishSheetShow: false }); },
 
   onUnload() {
+    this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1;
     if (this._scrollStopTimer) clearTimeout(this._scrollStopTimer);
     merchantTheme.merchantPageRestore();
   },
@@ -197,7 +198,7 @@ Page({
     this._lastScrollTop = currentScrollTop;
   },
 
-  onHide() {
+  onHide() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1;
     merchantTheme.merchantPageRestore();
   }
 });
