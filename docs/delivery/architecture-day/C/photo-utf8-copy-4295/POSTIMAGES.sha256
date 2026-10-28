@@ -1,0 +1,5 @@
+ee4ae8c5be45308dc23f45581562467777d53ec20e8c956cf60a600de72bc802  chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CombinedContextConfigurationTest.java
+1c9c45cbbca42b3f1e0efaec95d1ece9334092efc0f8a9ce0a6fe7f9c0bc24f2  chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainCombinedLoadMySqlIT.java
+663a5b1788bf5bf99b5788adb682ad97e81d4f98668216e1b42a45a50de8ee6e  chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainStorageFixture.java
+3c999e40fa48a3f97e8560b4a77ff8f9b9d84cdc3f9e2533009425ea1b0af9a8  chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainTransportStage.java
+6a333530f3c1591412ce56ee2ee6acc6d8cfc3f42254a8ddde2f7d2e19bc4754  docs/delivery/architecture-day/C/photo-utf8-copy-4295/shared-production.review.patch

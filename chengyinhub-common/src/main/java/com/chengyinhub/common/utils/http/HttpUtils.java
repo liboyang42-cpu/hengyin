@@ -144,6 +144,25 @@ public class HttpUtils
     public static String sendJsonPost(String url, String json, String bearer,
             long deadlineNanos, AttemptLease lease, java.util.Map<String, String> additionalHeaders)
     {
+        return sendJsonPostEncoded(url, json == null ? null : () -> json.getBytes(StandardCharsets.UTF_8),
+                bearer, deadlineNanos, lease, additionalHeaders);
+    }
+
+    /**
+     * Takes exclusive ownership of fresh UTF-8 JSON bytes. The caller must never mutate/reuse them,
+     * including after a timeout: the original physical worker may still own the request entity.
+     * Same authenticated single-attempt path; no body clone or String re-encoding.
+     */
+    public static String sendJsonPostBytes(String url, byte[] json, String bearer,
+            long deadlineNanos, AttemptLease lease)
+    {
+        return sendJsonPostEncoded(url, json == null ? null : () -> json,
+                bearer, deadlineNanos, lease, java.util.Map.of());
+    }
+
+    private static String sendJsonPostEncoded(String url, java.util.function.Supplier<byte[]> encode, String bearer,
+            long deadlineNanos, AttemptLease lease, java.util.Map<String, String> additionalHeaders)
+    {
         if (lease == null || !lease.transfer())
         {
             throw notSent("third-party HTTP lease unavailable");
@@ -157,7 +176,7 @@ public class HttpUtils
             {
                 throw notSent("invalid third-party HTTP authorization");
             }
-            if (json == null || Thread.currentThread().isInterrupted())
+            if (encode == null || Thread.currentThread().isInterrupted())
             {
                 throw notSent("third-party HTTP request not started");
             }
@@ -171,7 +190,7 @@ public class HttpUtils
             if (remaining <= 0) throw notSent("third-party HTTP total timeout");
             long boundedDeadline = now + Math.min(remaining,
                     TimeUnit.MILLISECONDS.toNanos(policy.totalTimeoutMs));
-            byte[] body = json.getBytes(StandardCharsets.UTF_8);
+            byte[] body = encode.get();
             if (remainingMillis(boundedDeadline) <= 0) throw notSent("third-party HTTP total timeout");
             handedToAttempt = true;
             return executeAttempt("POST", target, body, MediaType.APPLICATION_JSON_VALUE,

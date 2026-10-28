@@ -196,13 +196,29 @@ public class PhotoCheckVisionService
     {
         try
         {
-            byte[] digest = java.security.MessageDigest.getInstance("SHA-256")
-                    .digest(encoded.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-            return java.util.HexFormat.of().formatHex(digest);
+            var digest = java.security.MessageDigest.getInstance("SHA-256");
+            // Preserve String.getBytes(UTF_8) replacement/continuation semantics with bounded buffers.
+            // The writer carries a surrogate across chunk boundaries and flushes it on close.
+            try (var writer = new java.io.OutputStreamWriter(new java.security.DigestOutputStream(
+                    java.io.OutputStream.nullOutputStream(), digest), java.nio.charset.StandardCharsets.UTF_8))
+            {
+                char[] chunk = new char[4096];
+                for (int offset = 0; offset < encoded.length(); offset += chunk.length)
+                {
+                    int count = Math.min(chunk.length, encoded.length() - offset);
+                    encoded.getChars(offset, offset + count, chunk, 0);
+                    writer.write(chunk, 0, count);
+                }
+            }
+            return java.util.HexFormat.of().formatHex(digest.digest());
         }
         catch (java.security.NoSuchAlgorithmException impossible)
         {
             throw new IllegalStateException("SHA-256 unavailable", impossible);
+        }
+        catch (java.io.IOException impossible)
+        {
+            throw new IllegalStateException("Photo input hash unavailable", impossible);
         }
     }
 

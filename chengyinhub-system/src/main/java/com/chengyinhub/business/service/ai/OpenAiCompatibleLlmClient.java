@@ -168,17 +168,17 @@ public class OpenAiCompatibleLlmClient implements LlmClient
         String phase = "local";
         try (HttpUtils.AttemptLease lease = admission.acquire(url))
         {
-            String json;
+            byte[] json;
             try
             {
-                json = body.toJSONString();
+                json = JSON.toJSONBytes(body);
             }
             catch (RuntimeException invalid)
             {
                 throw new AiProviderNotSentException();
             }
             phase = "transport";
-            String result = HttpUtils.sendJsonPost(url, json, apiKey, deadline, lease);
+            String result = HttpUtils.sendJsonPostBytes(url, json, apiKey, deadline, lease);
             // The String-only common API does not expose a success status; do not invent one.
             phase = "parse";
             return responseText(result);
