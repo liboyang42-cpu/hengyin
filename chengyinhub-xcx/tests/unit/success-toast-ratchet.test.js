@@ -55,7 +55,9 @@ const SUCCESS_TOAST_CEILING = 101
 
 function walk(dir, out = []) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    if (entry.isDirectory()) { if (!SKIP.has(entry.name)) walk(path.join(dir, entry.name), out) }
+    // roam-comment-scan.test.js 在 subpackageRoam 下临时建 scan-comment-test-* 再删掉；两个测试文件并行时，
+    // 这里先列出文件、后读内容，会读到已删的临时文件（ENOENT）。临时目录不是业务代码，跳过。
+    if (entry.isDirectory()) { if (!SKIP.has(entry.name) && !entry.name.startsWith('scan-comment-test-')) walk(path.join(dir, entry.name), out) }
     else if (entry.name.endsWith('.js')) out.push(path.join(dir, entry.name))
   }
   return out
