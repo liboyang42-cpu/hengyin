@@ -1829,7 +1829,7 @@
         </view>
       </block>
     </view>
-    <text class="ic-note ic-note--error" wx:if="{{carryPicker.error}}">{{carryPicker.error}}</text>
+    <cy-inline-error wx:if="{{carryPicker.error}}" title="{{carryPicker.error}}" />
     <text wx:if="{{carryPicker.state === 'error'}}" class="ic-note ic-note--error" bindtap="retryCarryPicker" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">没有读取成功，请再试一次。</text>
     <block wx:for="{{carryPicker.groups}}" wx:key="kind" wx:for-item="group">
       <text class="ic-label">{{group.label}}</text>

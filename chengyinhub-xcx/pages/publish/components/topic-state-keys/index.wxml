@@ -1,7 +1,7 @@
 <view class="node-card sk">
-  <view class="node-card__row" bindtap="onOpen" aria-role="button" aria-label="线索与物品，{{total}} 项" hover-class="cy-pressed" hover-stay-time="80">
+  <view class="node-card__row" bindtap="onOpen" aria-role="button" aria-label="线索与物品，{{total || 0}} 项" hover-class="cy-pressed" hover-stay-time="80">
     <view class="node-card__main"><text class="node-card__title">线索与物品</text></view>
-    <view class="node-pill"><text>{{state === 'loading' ? '…' : total + ' 项'}}</text><cy-icon name="chevron-right" size="24" /></view>
+    <view class="node-pill"><text wx:if="{{state === 'loading'}}">…</text><text wx:else>{{total || 0}} 项</text><cy-icon name="chevron-right" size="24" /></view>
   </view>
 </view>
 
@@ -47,7 +47,7 @@
             </view>
           </block>
         </view>
-        <text class="sk__note sk__note--error" wx:if="{{formError && errorKind === group.kind}}">{{formError}}</text>
+        <cy-inline-error wx:if="{{formError && errorKind === group.kind}}" title="{{formError}}" />
       </block>
     </block>
 

@@ -244,12 +244,17 @@ test('数值关联按后端字段写入且只允许自定义值到已开启 HP',
   const p = page();
   p.data.formData.journeyRules = initial.serialize({ stateEnabled: true, hp: { enabled: true, init: 10, max: 10 }, luck: { enabled: false, init: 3, max: 3 }, attributes: [{ key: 'counter.value_1', label: '探索点', min: 0, max: 10, initial: 5, visible: true }] });
   p.openValueEditor({ currentTarget: { dataset: { index: 0 } } });
-  p.addValueLink();
-  p.onValueLink({ currentTarget: { dataset: { index: 0, field: 'trigger' } }, detail: { value: 2 } });
-  p.onValueLink({ currentTarget: { dataset: { index: 0, field: 'threshold' } }, detail: { value: '3' } });
+  // 2026-10-28 原型 e-value:关联只剩一个开关,打开 = 下降时按点扣生命值的默认一条
+  p.onValueLinkSwitch({ detail: { value: true } });
   p.saveValueEditor();
-  const link = initial.parse(p.data.formData.journeyRules).statLinks[0];
-  assert.deepEqual(link, { id: 'link_1', sourceKey: 'counter.value_1', targetKey: 'sys.hp', trigger: 'FIRST_THRESHOLD', allowedReasons: ['TASK_COST'], frequency: 'RUN', amount: 1, threshold: 3 });
+  assert.deepEqual(initial.parse(p.data.formData.journeyRules).statLinks[0], { id: 'link_1', sourceKey: 'counter.value_1', targetKey: 'sys.hp', trigger: 'PER_POINT', allowedReasons: ['TASK_COST'], frequency: 'EVENT', multiplier: 1 });
+  p.openValueEditor({ currentTarget: { dataset: { index: 0 } } });
+  p.onValueLinkSwitch({ detail: { value: false } });
+  p.saveValueEditor();
+  assert.deepEqual(initial.parse(p.data.formData.journeyRules).statLinks || [], []);
+  // 后端字段校验仍按旧配置里可能存在的首次阈值关联把关
+  const link = { id: 'link_1', sourceKey: 'counter.value_1', targetKey: 'sys.hp', trigger: 'FIRST_THRESHOLD', allowedReasons: ['TASK_COST'], frequency: 'RUN', amount: 1, threshold: 3 };
+  assert.deepEqual(values.links([link], initial.parse(p.data.formData.journeyRules).attributes, true), [link]);
   assert.throws(() => values.links([{ ...link, targetKey: 'sys.luck' }], initial.parse(p.data.formData.journeyRules).attributes, true), /目标/);
   assert.throws(() => values.links([{ ...link, targetKey: 'sys.luck' }], initial.parse(p.data.formData.journeyRules).attributes, true, '体力'), /已启用的体力/);
   assert.throws(() => values.links([{ ...link, frequency: 'EVENT' }], initial.parse(p.data.formData.journeyRules).attributes, true), /本局一次/);

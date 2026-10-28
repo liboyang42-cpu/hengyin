@@ -24,10 +24,6 @@ Component({
   },
   data: {
     state: 'loading', // loading | ready | empty | error
-    keys: [],
-    clues: [],
-    tags: [],
-    itemRows: [],
     groups: [],
     errorKind: '',
     total: 0,
@@ -40,7 +36,6 @@ Component({
     saving: false,
     deleting: '',
     deleteError: '',
-    notice: '',
   },
   observers: {
     'topicId, scope, readOnly'() { if (this._attached) this.load() },
@@ -92,12 +87,13 @@ Component({
         this._saveOperation = this._deleteOperation = this._deleteConfirmation = null
         this._context = this._captureContext()
         this._raw = {}
+        this._keys = []
         const dc = this.selectComponent && this.selectComponent('#sk-dc')
         if (dc) dc.close()
         // Reset only the local view. Previously sent writes retain their server outcome.
-        this.setData({ keys: [], state: this.properties.topicId ? 'loading' : 'empty',
+        this.setData({ state: this.properties.topicId ? 'loading' : 'empty',
           expanded: '', editName: '', adding: '', addName: '',
-          formError: '', saving: false, deleting: '', deleteError: '', notice: '' })
+          formError: '', saving: false, deleting: '', deleteError: '' })
         this._view()
       }
       return this._context
@@ -110,27 +106,27 @@ Component({
     /** 三组显示行:只带名字和「用在」,键名只放在 id 里做定位。 */
     _view() {
       const row = k => ({ id: k.stateKey, name: displayName(k), usedIn: k.usedIn || [] })
-      const keys = this.data.keys || []
+      const keys = this._keys || []
       const clues = keys.filter(k => k.kind === 'clue').map(row)
       const tags = keys.filter(k => k.kind === 'tag').map(row)
       const itemRows = (this.properties.items || []).filter(i => i && i.id != null)
         .map(i => ({ id: 'item:' + i.id, itemId: i.id, name: String(i.name || '').trim() || '物品', usedIn: Array.isArray(i.usedIn) ? i.usedIn : [] }))
       const groups = [{ kind: 'clue', label: '线索', rows: clues }, { kind: 'item', label: '物品', rows: itemRows }, { kind: 'tag', label: '标签', rows: tags }]
-      this.setData({ clues, tags, itemRows, groups, total: clues.length + tags.length + itemRows.length })
+      this.setData({ groups, total: clues.length + tags.length + itemRows.length })
     },
     _row(id) {
-      return this.data.clues.concat(this.data.tags, this.data.itemRows).find(r => r.id === id) || null
+      return this.data.groups.reduce((all, g) => all.concat(g.rows), []).find(r => r.id === id) || null
     },
     _names(kind) {
-      const list = kind === 'clue' ? this.data.clues : kind === 'tag' ? this.data.tags : this.data.itemRows
-      return list.map(r => r.name)
+      const group = this.data.groups.find(g => g.kind === kind)
+      return group ? group.rows.map(r => r.name) : []
     },
     load() {
       const context = this._syncContext()
       if (!context || !context.topicId) return
       const seq = (this._seq = (this._seq || 0) + 1)
       const current = () => seq === this._seq && this._callbackCurrent(context)
-      this.setData({ state: this.data.keys.length ? 'ready' : 'loading', notice: '' })
+      this.setData({ state: (this._keys || []).length ? 'ready' : 'loading' })
       app.sendRequest({
         url: '/api/topic/state-keys', method: 'GET', hideLoading: true, silentError: true,
         data: { topicId: context.topicId, scope: context.scope },
@@ -140,11 +136,12 @@ Component({
           if (!keys) { this.setData({ state: 'error' }); this._view(); return }
           // 已知的「用在」(删除被拒时拿到的)在重读后保留,直到后端列表自己带上。
           const known = {}
-          ;(this.data.keys || []).forEach(k => { if (k.usedIn && k.usedIn.length) known[k.stateKey] = k.usedIn })
+          ;(this._keys || []).forEach(k => { if (k.usedIn && k.usedIn.length) known[k.stateKey] = k.usedIn })
           keys.forEach(k => { if (!k.usedIn.length && known[k.stateKey]) k.usedIn = known[k.stateKey] })
           this._raw = {}
           res.data.forEach(raw => { this._raw[raw.stateKey] = raw })
-          this.setData({ keys, state: keys.length ? 'ready' : 'empty' })
+          this._keys = keys
+          this.setData({ state: keys.length ? 'ready' : 'empty' })
           this._view()
         },
         fail: () => { if (current()) this.setData({ state: 'error' }) },
@@ -180,6 +177,12 @@ Component({
       const row = this._row(this.data.expanded)
       return !!row && !!this.data.editName.trim() && this.data.editName.trim() !== row.name
     },
+    /** 添加 / 改名没成功:只在仍是这一次写、仍是同一会话时收口,写一句可见的错误。 */
+    _writeFailed(operation, context) {
+      if (this._saveOperation !== operation || !this._callbackCurrent(context)) return
+      this._saveOperation = this._afterSave = null
+      this.setData({ saving: false, formError: SAVE_FAILED })
+    },
     _finishSave() {
       if (this._afterSave === 'close') { this._afterSave = null; this.onClose() }
       this._afterSave = null
@@ -202,7 +205,6 @@ Component({
       if (!raw) { this.setData({ formError: SAVE_FAILED }); return }
       const operation = this._saveOperation = {}
       const current = () => this._saveOperation === operation && this._callbackCurrent(context)
-      const fail = () => { if (!current()) return; this._saveOperation = this._afterSave = null; this.setData({ saving: false, formError: SAVE_FAILED }) }
       this.setData({ saving: true, formError: '' })
       app.sendRequest({
         url: `/api/topic/state-keys/${encodeURIComponent(row.id)}`, method: 'PUT', hideLoading: true, silentError: true,
@@ -210,14 +212,14 @@ Component({
         header: { 'Content-Type': 'application/json' },
         success: (res) => {
           if (!current()) return
-          if (!isBizOk(res)) { fail(); return }
+          if (!isBizOk(res)) { this._writeFailed(operation, context); return }
           this._saveOperation = null
           this.setData({ saving: false })
           this._finishSave()
           this.load()
         },
-        fail,
-        successStatusAbnormal: fail,
+        fail: () => this._writeFailed(operation, context),
+        successStatusAbnormal: () => this._writeFailed(operation, context),
       })
     },
     onAddOpen(e) {
@@ -226,7 +228,6 @@ Component({
       if (kind !== 'item' && !KINDS[kind]) return
       this.setData({ adding: kind, errorKind: kind, addName: '', expanded: '', formError: '' })
     },
-    onAddCancel() { if (!this.data.saving) this.setData({ adding: '', addName: '', formError: '' }) },
     onAddInput(e) {
       const addName = e.detail.value
       this.setData({ addName, formError: nameError(this.data.adding, addName.trim(), this._names(this.data.adding)) })
@@ -245,11 +246,10 @@ Component({
         this._finishSave()
         return
       }
-      const key = newKey(kind, name, this.data.keys)
+      const key = newKey(kind, name, this._keys)
       if (!key) return
       const operation = this._saveOperation = {}
       const current = () => this._saveOperation === operation && this._callbackCurrent(context)
-      const fail = () => { if (!current()) return; this._saveOperation = this._afterSave = null; this.setData({ saving: false, formError: SAVE_FAILED }) }
       this.setData({ saving: true, formError: '' })
       app.sendRequest({
         url: '/api/topic/state-keys', method: 'POST', hideLoading: true, silentError: true,
@@ -257,14 +257,14 @@ Component({
         header: { 'Content-Type': 'application/json' },
         success: (res) => {
           if (!current()) return
-          if (!isBizOk(res)) { fail(); return }
+          if (!isBizOk(res)) { this._writeFailed(operation, context); return }
           this._saveOperation = null
           this.setData({ saving: false, adding: '', addName: '' })
           this._finishSave()
           this.load()
         },
-        fail,
-        successStatusAbnormal: fail,
+        fail: () => this._writeFailed(operation, context),
+        successStatusAbnormal: () => this._writeFailed(operation, context),
       })
     },
     onAskDelete(e) {
@@ -316,8 +316,8 @@ Component({
             // 被用到:记下位置,这一行的「删除」变灰,弹窗说用在哪里。
             this._deleteOperation = this._deleteConfirmation = null
             dc.close()
-            const keys = this.data.keys.map(k => (k.stateKey === key ? Object.assign({}, k, { usedIn }) : k))
-            this.setData({ deleting: '', keys })
+            this._keys = this._keys.map(k => (k.stateKey === key ? Object.assign({}, k, { usedIn }) : k))
+            this.setData({ deleting: '' })
             this._view()
             showBlocked(row ? row.name : '', usedIn)
             return

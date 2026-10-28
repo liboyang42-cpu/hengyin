@@ -4,6 +4,7 @@
 const app = getApp();
 const { isBizOk } = require('../../../utils/response-shape.js');
 const keyRules = require('../components/topic-state-keys/rules.js');
+const toast = require('../../../utils/toast.js');
 
 const KIND_TEXT = { clue: '线索', tag: '标签' };
 const kindOf = key => String(key || '').slice(0, String(key || '').indexOf('.'));
@@ -18,6 +19,7 @@ const EMPTY_PICKER = { show: false, state: 'loading', query: '', keys: [], group
 const data = { carryPicker: EMPTY_PICKER };
 
 const methods = {
+  _carryRowsOf(attributes) { return carryRows(attributes); },
   _carryRefresh(attributes) {
     this.setData({ 'initialStateEditor.carry': carryRows(attributes) });
   },
@@ -76,7 +78,6 @@ const methods = {
     if (error) { this._carrySet({ error }); return; }
     const key = keyRules.newKey(kind, name, picker.keys);
     const seq = this._carrySeq;
-    const fail = () => { if (seq === this._carrySeq) this._carrySet({ saving: false, error: '没有保存成功，请再试一次。' }); };
     this._carrySet({ saving: true, error: '' });
     app.sendRequest({
       url: '/api/topic/state-keys', method: 'POST', hideLoading: true, silentError: true,
@@ -84,14 +85,20 @@ const methods = {
       header: { 'Content-Type': 'application/json' },
       success: res => {
         if (seq !== this._carrySeq) return;
-        if (!isBizOk(res)) { fail(); return; }
+        if (!isBizOk(res)) { this._carryCreateFailed(seq); return; }
         const row = keyRules.normalizeKeys([key])[0];
         const selected = Object.assign({}, this.data.carryPicker.selected, { [key.stateKey]: true });
         this._carrySet({ saving: false, creating: false, query: '', newName: '', keys: this.data.carryPicker.keys.concat(row), selected });
       },
-      fail,
-      successStatusAbnormal: fail,
+      fail: () => this._carryCreateFailed(seq),
+      successStatusAbnormal: () => this._carryCreateFailed(seq),
     });
+  },
+  /** 新建没成功:收起「保存中」,轻提示一句(不带后端原话,原话可能含键名)。 */
+  _carryCreateFailed(seq) {
+    if (seq !== this._carrySeq) return;
+    this._carrySet({ saving: false });
+    toast('没有保存成功，请再试一次。');
   },
   confirmCarryPicker() {
     const picker = this.data.carryPicker;

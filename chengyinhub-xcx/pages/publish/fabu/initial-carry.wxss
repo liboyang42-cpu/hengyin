@@ -5,7 +5,7 @@
 .ic-list .ic-row:first-child { border-top: 0; }
 .ic-row__name { flex: 1; min-width: 0; }
 .ic-row__kind { flex: none; color: var(--cy-color-text-secondary); }
-.ic-row__remove { flex: none; width: 64rpx; height: 88rpx; display: flex; align-items: center; justify-content: flex-end; color: var(--cy-color-text-tertiary); }
+.ic-row__remove { flex: none; width: 88rpx; height: 88rpx; display: flex; align-items: center; justify-content: flex-end; color: var(--cy-color-text-tertiary); }
 .ic-row__check { flex: none; color: var(--cy-color-action-primary-bg); }
 .ic-row__input { flex: 1; min-width: 0; min-height: 88rpx; text-align: right; }
 .ic-row__act { flex: none; padding: var(--cy-space-2) 0 var(--cy-space-2) var(--cy-space-2); font-size: var(--cy-type-button); font-weight: 700; }

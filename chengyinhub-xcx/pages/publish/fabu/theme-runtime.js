@@ -567,26 +567,6 @@ const methods = {
     }
     else this.setData({ 'valueEditor.links': [], 'valueEditor.error': '' });
   },
-  removeValueLink(e) {
-    const links = copy(this.data.valueEditor.links);
-    links.splice(Number(e.currentTarget.dataset.index), 1);
-    this.setData({ 'valueEditor.links': links });
-  },
-  onValueLink(e) {
-    const index = Number(e.currentTarget.dataset.index), field = e.currentTarget.dataset.field;
-    const links = copy(this.data.valueEditor.links), link = links[index];
-    if (!link) return;
-    const option = Number(e.detail.value);
-    if (field === 'trigger') {
-      link.trigger = values.TRIGGERS[option];
-      delete link.amount; delete link.multiplier; delete link.threshold;
-      if (link.trigger === 'PER_POINT') link.multiplier = 1; else link.amount = 1;
-      if (link.trigger === 'FIRST_THRESHOLD') { link.frequency = 'RUN'; link.threshold = Number(this.data.valueEditor.row.min); }
-    } else if (field === 'frequency') link.frequency = link.trigger === 'FIRST_THRESHOLD' || option ? 'RUN' : 'EVENT';
-    else if (field === 'reason') link.allowedReasons = [values.REASONS[option]];
-    else if (['amount', 'multiplier', 'threshold'].includes(field)) link[field] = e.detail.value;
-    this.setData({ 'valueEditor.links': links, 'valueEditor.error': '' });
-  },
   saveValueEditor() {
     const editor = this.data.valueEditor, r = initial.parse(this.data.formData.journeyRules);
     const attributes = (r.attributes || []).slice();
