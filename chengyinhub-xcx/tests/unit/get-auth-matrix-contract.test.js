@@ -198,6 +198,9 @@ const MATRIX = [
   ['subpackageMember/report-detail/index.js', 'confirmByReadBack(accepted, receipt) {', 'required', 'member', 'self-account'],
   ['subpackageMember/report-mine/index.js', "url: '/api/community-trust/reports/mine'", 'required', 'member', 'self-account'],
   ['subpackageMember/report-mine/index.js', "url: '/api/community-trust/reports/taxonomy'", 'required', 'member', 'global-authenticated-read'],
+  // 2026-10-28 原型 C 我的申诉：本人跨局申诉列表 + 本人账号信誉（两条均为「需后端」新接口，按本人过滤）。
+  ['subpackageMember/appeal-mine/index.js', "url: '/api/orient/scoring/appeals/mine'", 'required', 'member', 'self-account'],
+  ['subpackageMember/appeal-mine/index.js', "url: '/api/member/reputation'", 'required', 'member', 'self-account'],
 
   // 2026-10-22 W10b #27:NPC 对话原请求只读回读,ApiAiNpcController.chatRequest 只按登录态 + 原会话 + requestId 读本人记录。
   ['subpackageMember/components/cy/npc-chat/index.js', "url: '/api/ai/npc/chat/request'", 'required', 'member', 'self-account'],
@@ -381,7 +384,8 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // Existing team detail adds two authenticated board reads, 87 → 89.
   // 2026-10-27 W8 收口:赛事联络/签到两处、注册属性绑定一处、公共玩法采用六处、原申诉结果一处、定向计分排名一处、
   //   漫游护照读取一处，共 12 处直接 GET(权限档见 MATRIX 同日注释)，89 → 101。
-  assert.equal(directCount, 101, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // 2026-10-28 原型 C 我的申诉：本人申诉列表、本人账号信誉两处认证 GET(已入 MATRIX)，101 → 103。
+  assert.equal(directCount, 103, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
   // 2026-10-09 U04 只读主题请求增加6处，22 → 28。
   // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):漫游 BL-41 可参与官方活动 req 包装 GET +1(已入 MATRIX),28 → 29。
   // 2026-10-22 L21 BL-186:pages/play 本章结算 GET /api/play/journey/stage-end(与 /ending 同档),29 → 30。

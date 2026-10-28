@@ -2194,14 +2194,16 @@ function extractHandlerTargets(source, jsFile, handlerName, attrs, appHelperBodi
       if (!inlineExports && !names.some((alias) => new RegExp(`\\b${alias.replace(/[$]/g, '\\$&')}(?:\\.[A-Za-z_$][\\w$]*)?\\s*\\(`).test(expandedSource))) return
       if (!dependency) return
       if (dependency === 'utils/community-post-api.js') return
-      if (dependency === 'utils/user-invoice.js' && rel(scanFile) === 'subpackageMember/invoice/index.js') {
+      // X5（10-28）：发票拆成 5 页，各页经 subpackageMember/invoice/base.js 混入同一套 read/mutate。
+      if (['utils/user-invoice.js', 'subpackageMember/invoice/base.js'].includes(dependency)
+          && /^subpackageMember\/invoice(?:-[a-z-]+)?\/index\.js$/.test(rel(scanFile))) {
         // Resolve the page's finite dispatch arguments instead of importing every invoice write.
-        const adapter = fs.readFileSync(path.join(ROOT, dependency), 'utf8')
+        const adapter = fs.readFileSync(path.join(ROOT, 'utils/user-invoice.js'), 'utf8')
         const endpoints = new Map([...adapter.matchAll(/case '([^']+)':[^\n]+url: '([^']+)'/g)].map(match => [match[1], match[2]]))
-        for (const call of expandedSource.matchAll(/this\.(?:read|mutate)\(\s*'([^']+)'/g)) {
-          if (!maskNonCodeSafely(expandedSource).slice(call.index).startsWith('this.')) continue
-          const url = endpoints.get(call[1])
-          if (!url) throw new Error(`未登记的发票接口: ${call[1]}`)
+        for (const call of expandedSource.matchAll(/this\.(?:read|mutate)\(\s*'([^']+)'|invoice\.send\(\s*app,\s*'([^']+)'/g)) {
+          if (!/^(?:this|invoice)\./.test(maskNonCodeSafely(expandedSource).slice(call.index))) continue
+          const url = endpoints.get(call[1] || call[2])
+          if (!url) throw new Error(`未登记的发票接口: ${call[1] || call[2]}`)
           targets.apis.push(url)
           targets.apiContracts.push({ url, method: 'POST', auth: 'authenticated', source: 'invoice-wrapper-call' })
         }
