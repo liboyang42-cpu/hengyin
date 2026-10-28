@@ -33,6 +33,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
+import com.chengyinhub.business.domain.TopicRouteSession;
+import com.chengyinhub.business.mapper.TopicRouteSessionMapper;
+import com.chengyinhub.business.service.IOrientScoringService;
 import java.util.regex.Pattern;
 
 @Service
@@ -65,6 +69,11 @@ public class OrientTaskServiceImpl implements IOrientTaskService {
     private IOrientSafetyService safetyService;
     @Autowired
     private OrientSwitches switches;
+
+    @Autowired
+    private TopicRouteSessionMapper routeMapper;
+    @Autowired
+    private IOrientScoringService scoringService;
 
     PhotoVerifier photoVerifier = FileOssUploadUtils::verifyUploadedPhoto;
 
@@ -146,6 +155,32 @@ public class OrientTaskServiceImpl implements IOrientTaskService {
         data.put("scoreKey", taskId);
         data.put("alternatives", alternatives);
         return data;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<String, Object> receipt(Long memberId, Long topicId, Long activityId, String playInstanceId,
+                                       Long taskId, String idempotencyKey) {
+        switches.require(switches.altTaskOn());
+        String key = idempotencyKey == null ? "" : idempotencyKey.trim();
+        if (!IDEMPOTENCY_KEY.matcher(key).matches()) {
+            throw new OrientRejection(OrientRejection.BAD_REQUEST, "缺少或非法的原请求号");
+        }
+        Scope scope = requireParticipantScope(memberId, topicId, activityId, playInstanceId, taskId);
+        OrientTaskAttempt attempt = orientMapper.selectAttemptByIdempotencyKey(memberId, key);
+        if (attempt == null || !java.util.Objects.equals(attempt.getMemberId(), memberId)
+                || !java.util.Objects.equals(attempt.getTopicId(), scope.topicId)
+                || !java.util.Objects.equals(attempt.getActivityId(), scope.activityId)
+                || !java.util.Objects.equals(attempt.getTaskId(), scope.taskId)
+                || !java.util.Objects.equals(attempt.getPlayInstanceId(), scope.playInstanceId)) {
+            throw new OrientRejection(OrientRejection.NOT_FOUND, "尚未查到本次请求回执");
+        }
+        Map<String, Object> result = outcome(attempt, completedVia(scope), true);
+        result.put("idempotencyKey", key);
+        result.put("topicId", scope.topicId);
+        result.put("activityId", scope.activityId);
+        result.put("playInstanceId", scope.playInstanceId);
+        return result;
     }
 
     @Override
@@ -232,13 +267,39 @@ public class OrientTaskServiceImpl implements IOrientTaskService {
     public Map<String, Object> review(Long reviewerId, Long attemptId, boolean approve) {
         switches.require(switches.altTaskOn());
         OrientOwnership.requireLogin(reviewerId);
-        OrientTaskAttempt attempt = attemptId == null ? null : orientMapper.selectAttemptByIdForUpdate(attemptId);
+        OrientTaskAttempt attempt = attemptId == null ? null : orientMapper.selectAttemptById(attemptId);
         if (attempt == null || !AltType.PHOTO.name().equals(attempt.getAlternativeTaskType())) {
             throw new OrientRejection(OrientRejection.NOT_FOUND, "提交不存在");
         }
         CmsTopic topic = OrientOwnership.requireTopicOwner(topicService, reviewerId, attempt.getTopicId());
         if (reviewerId.equals(attempt.getMemberId())) {
             throw new OrientRejection(OrientRejection.NOT_OWNER, "不能审核自己的提交");
+        }
+        // The locator carries no authority. Never substitute current/default for the original run.
+        OrientTaskAttempt hint = attempt;
+        if (hint.getPlayInstanceId() == null || DEFAULT_INSTANCE.equals(hint.getPlayInstanceId())) {
+            throw new OrientRejection(OrientRejection.BAD_REQUEST, "旧提交缺少原局绑定，不能自动审核写入");
+        }
+        TopicRouteSession original = routeMapper.selectByOwner(hint.getActivityId(), hint.getTopicId(),
+                hint.getMemberId(), hint.getPlayInstanceId());
+        if (original == null) throw new OrientRejection(OrientRejection.NOT_FOUND, "原对局不存在");
+        TopicRouteSession locked = routeMapper.selectAccessibleByIdForUpdate(original.getId(), hint.getMemberId());
+        attempt = orientMapper.selectAttemptByIdForUpdate(attemptId);
+        if (locked == null || attempt == null
+                || !Objects.equals(hint.getId(), attempt.getId())
+                || !Objects.equals(hint.getMemberId(), attempt.getMemberId())
+                || !Objects.equals(hint.getActivityId(), attempt.getActivityId())
+                || !Objects.equals(hint.getTopicId(), attempt.getTopicId())
+                || !Objects.equals(hint.getPlayInstanceId(), attempt.getPlayInstanceId())
+                || !Objects.equals(hint.getTaskId(), attempt.getTaskId())
+                || !Objects.equals(hint.getAlternativeTaskType(), attempt.getAlternativeTaskType())
+                || !Objects.equals(hint.getIdempotencyKey(), attempt.getIdempotencyKey())
+                || !Objects.equals(hint.getRequestFingerprint(), attempt.getRequestFingerprint())
+                || !Objects.equals(locked.getMemberId(), attempt.getMemberId())
+                || !Objects.equals(locked.getActivityId(), attempt.getActivityId())
+                || !Objects.equals(locked.getTopicId(), attempt.getTopicId())
+                || !Objects.equals(locked.getPlayInstanceId(), attempt.getPlayInstanceId())) {
+            throw new OrientRejection(OrientRejection.IDEMPOTENCY_CONFLICT, "原提交身份已变化");
         }
         Scope scope = new Scope(topic, null, attempt.getActivityId(), attempt.getTopicId(),
                 attempt.getPlayInstanceId(), attempt.getTaskId(), attempt.getMemberId());
@@ -249,6 +310,9 @@ public class OrientTaskServiceImpl implements IOrientTaskService {
                 throw new OrientRejection(OrientRejection.ATTEMPT_NOT_PENDING, "该提交已审核");
             }
             return outcome(attempt, completedVia(scope), true);
+        }
+        if (!Integer.valueOf(TopicRouteSession.STATUS_RUNNING).equals(locked.getStatus())) {
+            throw new OrientRejection(OrientRejection.ATTEMPT_NOT_PENDING, "原对局已结束，不能追加审核结果");
         }
         Date now = new Date();
         int target;
@@ -263,10 +327,16 @@ public class OrientTaskServiceImpl implements IOrientTaskService {
             throw new OrientRejection(OrientRejection.ATTEMPT_NOT_PENDING, "该提交已审核");
         }
         if (target == COMPLETED && !insertCompletion(scope, AltType.PHOTO.name(), attempt.getId(), now)) {
-            orientMapper.updateAttemptStatus(attempt.getId(), COMPLETED, SUPERSEDED, reviewerId, now);
+            if (orientMapper.updateAttemptStatus(attempt.getId(), COMPLETED, SUPERSEDED, reviewerId, now) != 1) {
+                throw new OrientRejection(OrientRejection.ATTEMPT_NOT_PENDING, "替代完成状态已变化");
+            }
             target = SUPERSEDED;
         }
         attempt.setStatus(target);
+        if (target == COMPLETED && scoringService.isActiveFor(topic)) {
+            scoringService.syncSession(attempt.getMemberId(), locked.getId(),
+                    "lifecycle:alternative:" + attempt.getId());
+        }
         return outcome(attempt, completedVia(scope), false);
     }
 

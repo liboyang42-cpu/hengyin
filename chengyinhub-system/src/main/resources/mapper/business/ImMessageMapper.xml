@@ -33,6 +33,12 @@
             case when #{msgType} = 2 and (#{checkStatus} is null or #{checkStatus} != 1) then null else now(6) end)
     </insert>
 
+    <select id="selectByClientMessageId" resultMap="ImMessageResult" useCache="false">
+        <include refid="selectImMessageVo"/>
+        where conversation_id = #{conversationId} and sender_id = #{senderId}
+            and client_message_id = #{clientMessageId}
+    </select>
+
     <select id="selectByClientMessageIdForUpdate" resultMap="ImMessageResult" useCache="false" flushCache="true">
         <include refid="selectImMessageVo"/>
         where conversation_id = #{conversationId} and sender_id = #{senderId}

@@ -22,6 +22,16 @@ function toPercent(touchX, touchY, rect) {
   return { x: Number(x.toFixed(2)), y: Number(y.toFixed(2)) };
 }
 
+/** 台面里按底图原比例收一个不裁的画框,给百分比(台面开场有缩放动画,量出来的像素会变,比例不会)。 */
+function containFrame(box, img) {
+  if (!box || !(box.width > 0) || !(box.height > 0) || !img || !(img.width > 0) || !(img.height > 0)) return '';
+  const s = Math.min(box.width / img.width, box.height / img.height);
+  const w = (img.width * s / box.width) * 100;
+  const h = (img.height * s / box.height) * 100;
+  const pct = (v) => Number(v.toFixed(3));
+  return 'left:' + pct((100 - w) / 2) + '%;top:' + pct((100 - h) / 2) + '%;width:' + pct(w) + '%;height:' + pct(h) + '%;';
+}
+
 Component({
   behaviors: [reducedMotionBehavior],
   properties: {
@@ -33,23 +43,38 @@ Component({
     limitSeconds: { type: Number, value: 0 },
     maxTries: { type: Number, value: 0 },
   },
-  data: { hits: [], miss: null, foundCount: 0, quad: '' },
+  data: { hits: [], miss: null, foundCount: 0, quad: '', frame: '' },
   observers: {
     'show, targets': function (show) {
       if (!show) return;
       this.setData({ hits: [], miss: null, foundCount: 0, quad: '' });
       const stage = this.selectComponent('#cy-play-stage');
       if (stage) stage.begin();
+      this._fitFrame();
     },
+    imageUrl() { this._imgSize = null; this.setData({ frame: '' }); },
   },
   lifetimes: { detached() { this._clearMiss(); } },
   methods: {
     _toPercent: toPercent,      // 纯算法出口,供单测
+    _containFrame: containFrame,
+    onImgLoad(e) {
+      const d = (e && e.detail) || {};
+      this._imgSize = d.width > 0 && d.height > 0 ? { width: d.width, height: d.height } : null;
+      this._fitFrame();
+    },
+    _fitFrame() {
+      if (!this._imgSize) return;
+      wx.createSelectorQuery().in(this).select('.hd__scene').boundingClientRect((rect) => {
+        const frame = containFrame(rect, this._imgSize);
+        if (frame && frame !== this.data.frame) this.setData({ frame });
+      }).exec();
+    },
     _clearMiss() { if (this._missTimer) { clearTimeout(this._missTimer); this._missTimer = null; } },
 
     onTapScene(e) {
       const q = wx.createSelectorQuery().in(this);
-      q.select('.hd__scene').boundingClientRect((rect) => {
+      q.select('.hd__frame').boundingClientRect((rect) => {
         const t = (e.touches && e.touches[0]) || e.detail || {};
         const p = toPercent(t.clientX != null ? t.clientX : t.x,
                             t.clientY != null ? t.clientY : t.y, rect);

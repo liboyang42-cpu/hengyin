@@ -17,6 +17,8 @@
   <cy-modal-host id="cy-modal-host" />
 
 <!-- 地图入口弹层只服务开始前浏览态；开始后的 psheet 与 HUD 保持原样。 -->
+<!-- G-2:手写 psheet 浮层开着时,物理返回 / 侧滑先关最上层,不退出本页 -->
+<cy-back-guard show="{{!!sceneCurrent}}" bind:back="onProtoSheetClose" />
 <view class="roam-scene-host" wx:if="{{screen=='entry-map' && entrySheet}}" catchtouchmove="blockSceneTouch">
   <view class="pdim {{entrySheetIn?'is-in':''}} entry-sheet__mask" catchtouchmove="noop" bindtap="closeEntrySheet" aria-role="button" aria-label="关闭弹窗" hover-class="cy-pressed" hover-stay-time="80"></view>
   <view class="psheet {{entrySheetIn?'is-in':''}} entry-sheet">
@@ -84,18 +86,15 @@
   <view class="intro-head" style="padding-top:{{chrome.actionTop}}px;">
     <view class="intro-ava-hit" bindtap="goProfile" aria-role="button" aria-label="打开我的" hover-class="cy-pressed" hover-stay-time="80"><image class="intro-ava" src="{{avatar || '/images/d_profile.png'}}" mode="aspectFill" /></view>
   </view>
-  <view class="intro-top" style="top:{{chrome.actionTop}}px;"><view class="intro-title">漫游</view></view>
-  <!-- v13:标签下面一根白色短线,跟着选中项滑动 -->
-  <view class="intro-nav rh-tabs" style="margin-top:{{chrome.actionTop + 50}}px;" aria-role="tablist">
-    <view wx:for="{{introTabs}}" wx:key="key" class="rh-tabs__b {{introTab === item.key ? 'on' : ''}}" data-tab="{{item.key}}" bindtap="switchIntroTab" aria-role="tab" aria-selected="{{introTab === item.key}}" aria-label="{{item.label}}" hover-class="cy-pressed" hover-stay-time="80">{{item.label}}</view>
-    <view class="rh-tabs__u {{introTab === 'passport' ? 'is-2' : ''}}"></view>
-  </view>
+  <!-- 2026-10-27 owner P-25:头部结构与间距还原到 7f4bcee9(票根卡)之前,只保留票根卡本身 -->
+  <view class="intro-top"><view class="intro-title">漫游</view></view>
+  <view class="intro-nav"><cy-tabs plain tabs="{{introTabs}}" active="{{introTab}}" bind:change="switchIntroTab" /></view>
   <cy-state-shell class="intro-permission" wx:if="{{introError}}" kind="no-permission"
                   title="需要定位才能开始漫游" sub="{{introError}}"
                   primary="去设置" bind:primary="openRoamLocationSetting" />
+  <!-- 2026-10-27 owner P-27:删掉「已恢复上次漫游」这一行;找回失败的确认卡保留 -->
   <cy-error wx:if="{{recoveryError}}" title="上次漫游需要确认" sub="{{recoveryError}}"
             retry="确认漫游记录" bind:retry="recoverRoam" />
-  <view wx:elif="{{recoveryAvailable}}" class="intro-permission">已恢复上次漫游</view>
   <view wx:if="{{introTab=='start'}}" class="intro-start">
     <view class="intro-stage">
       <free-map id="entryMap" class="intro-map__el" scene="explore" center="{{center}}" scale="14"
@@ -150,16 +149,16 @@
     </swiper>
     <view class="intro-dots"><view class="intro-dot {{index==introCardIdx?'is-on':''}}" wx:for="{{introCards}}" wx:key="key"></view></view>
     <view class="intro-map-space"></view>
-  <!-- 2026-10-22 owner:附近没有活动时「附近活动」这一块整块不出(连标题带空态文案) -->
-  <view class="entry-peek" wx:if="{{entryReadAccess || entryLoadError || entryCards.length}}">
+  <!-- 2026-10-27 owner P-26(取代 10-22「整块不出」):「附近活动」始终显示,附近没有活动时出一张空态卡 -->
+  <view class="entry-peek">
     <view class="entry-peek__head"><text>附近活动</text></view>
     <!-- 2026-10-17 合并 master:附近内容读权限态(未登录 / 无权)先于错误与列表 -->
     <cy-state-shell wx:if="{{entryReadAccess}}" kind="no-permission"
                     title="{{entryReadAccess === 'login' ? '登录后查看附近活动与队伍' : '当前账号无法查看'}}"
                     primary="{{entryReadAccess === 'login' ? '去登录' : ''}}" bind:primary="loginForEntryRead" />
     <cy-error wx:elif="{{entryLoadError}}" load-failure="{{true}}" />
-    <scroll-view wx:elif="{{entryCards.length}}" class="entry-peek__cards" scroll-x enhanced show-scrollbar="{{false}}"><view class="entry-peek__track">
-      <view class="entry-card" wx:for="{{entryCards}}" wx:key="key" data-kind="{{item.kind}}" data-id="{{item.id}}"
+    <scroll-view wx:elif="{{entryCards.length || entryFarCards.length}}" class="entry-peek__cards" scroll-x enhanced show-scrollbar="{{false}}"><view class="entry-peek__track">
+      <view class="entry-card" wx:for="{{entryCards.length ? entryCards : entryFarCards}}" wx:key="key" data-kind="{{item.kind}}" data-id="{{item.id}}"
             bindtap="onEntryCardTap" aria-role="button" aria-label="打开活动 {{item.title}}" hover-class="cy-pressed" hover-stay-time="80">
         <image wx:if="{{item.cover}}" class="entry-card__cover" src="{{item.cover}}" mode="aspectFill" />
         <view wx:else class="entry-card__cover entry-card__cover--empty"><cy-icon name="image" size="48" /></view>
@@ -167,11 +166,15 @@
         <view class="entry-card__copy"><text class="entry-card__tag entry-card__tag--{{item.tag === '自由探索' ? 'free' : 'city'}}">{{item.tag}}</text><text class="entry-card__title">{{item.title}}</text><text class="entry-card__meta">{{item.meta || item.address || '查看活动详情'}}</text></view>
       </view>
     </view></scroll-view>
-    <view wx:else class="entry-peek__state"><text>附近暂无活动</text><text>打开地图寻找附近活动</text></view>
+    <view wx:else class="entry-peek__state" bindtap="openNearbyMap" aria-role="button" aria-label="附近暂无活动，打开地图寻找附近活动" hover-class="cy-pressed" hover-stay-time="80"><text>附近暂无活动</text><text>打开地图寻找附近活动</text></view>
   </view>
   </view>
   <!-- ② 漫游护照:顶部四项读数 + 上排方卡(功能) + 下排大卡(玩法)。版式与 play 第二 tab 同一套 .pp-* -->
   <view wx:else class="intro-passport">
+    <view wx:if="{{passportLoading}}" aria-role="status">正在读取漫游护照…</view>
+    <cy-error load-failure wx:elif="{{passportError}}" title="漫游护照读取失败" retry="重试" bind:retry="retryPassport" />
+    <block wx:else>
+    <view>以下统计来自已确认完成的漫游；本机旧记录可在漫游记录中查看</view>
     <view class="pp-stats">
       <view class="pp-stat" wx:for="{{passport.stats}}" wx:key="k">
         <text class="pp-stat__v">{{item.v}}</text>
@@ -181,7 +184,12 @@
     <scroll-view class="pp-row" scroll-x enhanced show-scrollbar="{{false}}">
       <view class="pp-tile" wx:for="{{passport.tiles}}" wx:key="key" data-key="{{item.key}}" bindtap="onPassportTileTap"
             aria-role="button" aria-label="{{item.title}} {{item.value}}" hover-class="cy-pressed" hover-stay-time="80">
-        <view class="pp-tile__box"><cy-icon name="{{item.icon}}" size="154" /><text wx:if="{{item.isNew}}" class="pp-new">NEW</text></view>
+        <!-- 2026-10-27 owner P-29:方卡还原 10-15 之前的结构(图优先,图标小号兜底);档案三卡用真实图片,没有就是空态插画 -->
+        <view class="pp-tile__box">
+          <image wx:if="{{item.img}}" class="pp-tile__img" src="{{item.img}}" mode="aspectFill" />
+          <image wx:elif="{{item.art}}" class="pp-tile__art" src="{{item.art}}" mode="aspectFit" aria-hidden="true" />
+          <cy-icon wx:else name="{{item.icon}}" size="48" />
+        </view>
         <text class="pp-tile__t">{{item.title}}</text>
         <text class="pp-tile__s">{{item.value}}</text>
       </view>
@@ -190,7 +198,7 @@
     <scroll-view class="pp-trips" scroll-x enhanced show-scrollbar="{{false}}">
       <view class="pp-trip" wx:for="{{passport.plays}}" wx:key="key" data-key="{{item.key}}" bindtap="onPassportPlayTap"
             aria-role="button" aria-label="{{item.title}} {{item.sub}}" hover-class="cy-pressed" hover-stay-time="80">
-        <view class="pp-trip__card {{item.closed ? 'is-closed' : ''}}"><text wx:if="{{item.closed}}" class="pp-closed">暂未开放</text>
+        <view class="pp-trip__card">
           <image wx:if="{{item.cover}}" class="pp-trip__img" src="{{item.cover}}" mode="aspectFill" />
           <cy-icon wx:else class="pp-trip__ic" name="{{item.icon}}" size="64" />
           <view class="pp-trip__shade"></view>
@@ -199,6 +207,7 @@
         <text class="pp-trip__cap">{{item.sub}}</text>
       </view>
     </scroll-view>
+    </block>
   </view>
 
 </view>
@@ -209,15 +218,18 @@
   <free-map id="roamMap" class="rmap" scene="explore"
        center="{{center}}" scale="{{mapScale}}" show-controls="{{false}}"
        subkey="{{fmSubkey}}" layer-style="{{fmLayerStyle}}"
-       map-markers="{{markers}}" map-polyline="{{polyline}}" map-polygons="{{fogPolys}}" map-circles="{{sparkCircles}}"
+       map-markers="{{markers}}" map-polyline="{{polyline}}" map-polygons="{{fogOff ? noFogPolys : fogPolys}}" map-circles="{{sparkCircles}}"
        accessibility-label="{{roamMapA11y}}" reduced-motion="{{reducedMotion}}"
        bind:updated="onMapUpdated" bind:markertap="onMarkerTap" bind:regionchange="onRegionChange" bind:poitap="onPoiTap" />
   <canvas type="2d" id="fogscreen" class="fogscreen-buffer"></canvas>
+  <!-- P-32:设置里关掉迷雾时整层不画(足迹照常记录) -->
+  <block wx:if="{{!fogOff}}">
   <view class="fogscreen-guard" wx:if="{{fogScreenGuard}}"></view>
   <image wx:for="{{fogScreenLayers}}" wx:key="version"
          class="fogscreen {{item.loaded?'fogscreen--ready':''}}" src="{{item.src}}" mode="scaleToFill"
          data-generation="{{item.generation}}" data-version="{{item.version}}"
          bindload="onFogScreenLoad" binderror="onFogScreenError" />
+  </block>
 </view>
 <view class="vignette"></view>
 <!-- GO → 地图：粗弧线切场 → 品牌开场 → 露出已预热的真实地图。结构对齐 docs/prototypes/roam-opening-animation.html -->
@@ -263,7 +275,7 @@
      容器 pointer-events:none,只有子层可点,不会吃掉地图手势。 -->
 <!-- 顶部输入地址(§6.1):白框是唯一入口,铺在每一张地图上,四个模式共用同一件。
      只在地图屏出现;开场/结算那两屏没有地图,搜地址无处可去。 -->
-<cy-map-address-search wx:if="{{screen=='map'}}" top="{{searchTop}}" places="{{searchPlaces}}"
+<cy-map-address-search wx:if="{{screen=='map'}}" top="{{searchTop}}" places="{{searchPlaces}}" lat="{{center.lat}}" lng="{{center.lng}}"
                        placeholder="输入地址" bind:pick="onSearchPick" />
 
 <view class="roam-topstack" style="top:{{promptTop}}px">
@@ -415,6 +427,9 @@
 </view>
 
 <!-- 底图首帧看门狗兜底:黑屏不再无解释 -->
+<view class="maptip maptip--offline maptip--foreground" wx:if="{{locationForegroundOnly && screen=='map' && mapLoad!='slow' && !roamIdle && !syncOffline && !revealWriteUnknown && !recoveryError}}" aria-role="status" aria-live="polite">
+  <text>仅前台记录，锁屏后可能中断</text>
+</view>
 <view class="maptip" wx:if="{{mapLoad=='slow'}}" bindtap="onMapRetry" hover-class="cy-pressed" hover-stay-time="80">
   <text>地图加载异常 · 点击重试</text>
 </view>
@@ -634,49 +649,16 @@
 </view>
 </block>
 
-<!-- ══ 工具抽屉(原型 f-more)══ 三键左边那枚「更多」拉开。九行逐条照原型。 -->
+<!-- ══ 工具抽屉(原型 f-more)══ 三键左边那枚「更多」拉开。
+     2026-10-27 owner P-31:只留「附近正在走的人 / 玩法说明 / 设置」—— 筛选已在顶部,护照里有的(勋章/奖励/记录/集邮册)不再重复;
+     结束漫游仍是中键长按 3 秒。面板贴内容高,最高 80%,超出可滚动。 -->
 <view class="roam-scene-host" wx:if="{{sceneCurrent && sceneCurrent.id === 'roam-more'}}" catchtouchmove="blockSceneTouch">
 <view class="pdim {{sceneIn ? 'is-in' : ''}} {{reducedMotion ? 'is-reduced' : ''}}" bindtap="onProtoSheetClose" aria-role="button" aria-label="收起更多" hover-class="cy-pressed" hover-stay-time="80"></view>
-<view class="psheet psheet--drw {{sceneIn ? 'is-in' : ''}} {{reducedMotion ? 'is-reduced' : ''}}" catchtap="noop">
+<view class="psheet psheet--drw roam-menu-sheet {{sceneIn ? 'is-in' : ''}} {{reducedMotion ? 'is-reduced' : ''}}" catchtap="noop">
   <view class="psheet__grab" catchtap="onProtoSheetClose" aria-role="button" aria-label="收起更多" hover-class="cy-pressed" hover-stay-time="80"></view>
-  <view class="drow" bindtap="openRoamDiscover" aria-role="button" aria-label="查找附近好玩的" hover-class="cy-pressed" hover-stay-time="80">
-    <view class="dic pic pic--filter2"></view>
-    <view class="dcopy"><text class="dt">查找附近好玩的</text><text class="ds">{{more.funText}}</text></view>
-    <view class="darr"></view>
-  </view>
-  <view class="drow" bindtap="openPoiFilter" aria-role="button" aria-label="筛选地图节点，{{more.filterText}}" hover-class="cy-pressed" hover-stay-time="80">
-    <view class="dic pic pic--route"></view>
-    <view class="dcopy"><text class="dt">筛选节点</text><text class="ds">{{more.filterText}}</text></view>
-    <view class="darr"></view>
-  </view>
   <view class="drow" bindtap="openNearestRunner" aria-role="button" aria-label="附近正在走的人" hover-class="cy-pressed" hover-stay-time="80">
     <view class="dic pic pic--people2"></view>
     <view class="dcopy"><text class="dt">附近正在走的人</text><text class="ds">{{more.runnerText}}</text></view>
-    <view class="darr"></view>
-  </view>
-  <view class="drow" bindtap="openRoamTasks" aria-role="button" aria-label="官方活动任务" hover-class="cy-pressed" hover-stay-time="80">
-    <view class="dic pic pic--flagtask"></view>
-    <view class="dcopy"><text class="dt">官方活动任务</text><text class="ds">官方策展活动</text></view>
-    <view class="darr"></view>
-  </view>
-  <view class="drow" bindtap="openRoamPassport" aria-role="button" aria-label="勋章" hover-class="cy-pressed" hover-stay-time="80">
-    <view class="dic pic pic--medal"></view>
-    <view class="dcopy"><text class="dt">勋章</text><text class="ds">勋章墙</text></view>
-    <view class="darr"></view>
-  </view>
-  <view class="drow" bindtap="openRoamCoupons" aria-role="button" aria-label="奖励" hover-class="cy-pressed" hover-stay-time="80">
-    <view class="dic pic pic--gift"></view>
-    <view class="dcopy"><text class="dt">奖励</text><text class="ds">优惠券</text></view>
-    <view class="darr"></view>
-  </view>
-  <view class="drow" bindtap="openRoamHistory" aria-role="button" aria-label="记录" hover-class="cy-pressed" hover-stay-time="80">
-    <view class="dic pic pic--track"></view>
-    <view class="dcopy"><text class="dt">记录</text><text class="ds">足迹卡 · 本次数据</text></view>
-    <view class="darr"></view>
-  </view>
-  <view class="drow" bindtap="openStampAlbum" aria-role="button" aria-label="集邮册" hover-class="cy-pressed" hover-stay-time="80">
-    <view class="dic pic pic--stamp"></view>
-    <view class="dcopy"><text class="dt">集邮册</text><text class="ds">{{more.stampText}}</text></view>
     <view class="darr"></view>
   </view>
   <view class="drow" bindtap="openRoamRules" aria-role="button" aria-label="玩法说明" hover-class="cy-pressed" hover-stay-time="80">
@@ -686,14 +668,7 @@
   </view>
   <view class="drow" bindtap="openRoamSettings" aria-role="button" aria-label="设置" hover-class="cy-pressed" hover-stay-time="80">
     <view class="dic pic pic--gear"></view>
-    <view class="dcopy"><text class="dt">设置</text><text class="ds">动态效果、位置权限</text></view>
-    <view class="darr"></view>
-  </view>
-  <!-- 结束本次漫游:原来只有「长按中键 3 秒」这一个没有任何文字说明的隐藏手势,
-       玩完想在抽屉里找结束找不到。这一行与长按走同一段确认逻辑(endRoamSession)。 -->
-  <view class="drow" bindtap="endRoamSession" aria-role="button" aria-label="结束本次漫游并结算" hover-class="cy-pressed" hover-stay-time="80">
-    <view class="dic pic pic--settle"></view>
-    <view class="dcopy"><text class="dt">结束本次漫游</text><text class="ds">结算这一趟的足迹与探索值</text></view>
+    <view class="dcopy"><text class="dt">设置</text><text class="ds">迷雾、动效、位置权限</text></view>
     <view class="darr"></view>
   </view>
 </view>
@@ -717,11 +692,17 @@
 <!-- ══ 设置(原型 setScreen)══ 四个模式共用这一页;五行逐条照原型。 -->
 <view class="roam-scene-host" wx:if="{{sceneCurrent && sceneCurrent.id === 'roam-settings'}}" catchtouchmove="blockSceneTouch">
 <view class="pdim {{sceneIn ? 'is-in' : ''}} {{reducedMotion ? 'is-reduced' : ''}}" bindtap="onProtoSheetClose" aria-role="button" aria-label="返回更多" hover-class="cy-pressed" hover-stay-time="80"></view>
-<view class="psheet psheet--half {{sceneIn ? 'is-in' : ''}} {{reducedMotion ? 'is-reduced' : ''}}" catchtap="noop">
+<view class="psheet psheet--half roam-menu-sheet {{sceneIn ? 'is-in' : ''}} {{reducedMotion ? 'is-reduced' : ''}}" catchtap="noop">
   <view class="psheet__grab" catchtap="onProtoSheetClose" aria-role="button" aria-label="返回更多" hover-class="cy-pressed" hover-stay-time="80"></view>
   <view class="psheet__x" catchtap="onProtoSheetClose" aria-role="button" aria-label="返回更多" hover-class="cy-pressed" hover-stay-time="80"><view class="psheet__x-i"></view></view>
   <text class="ph1">设置</text>
   <!-- 真开关:就地翻,不跳页(原型 drawer 的第五格是「开/关」时就当开关渲染) -->
+  <!-- 2026-10-27 owner P-32:迷雾可以关;关掉只是不画雾,足迹与点亮照常记录 -->
+  <view class="drow">
+    <view class="dic pic pic--route"></view>
+    <view class="dcopy"><text class="dt">迷雾</text><text class="ds">关掉后地图不再盖雾</text></view>
+    <view class="dsw {{fogOff ? '' : 'is-on'}}" catchtap="toggleFogOff" aria-role="switch" aria-checked="{{!fogOff}}" aria-label="迷雾，{{fogOff ? '已关闭' : '已开启'}}" hover-class="cy-pressed" hover-stay-time="80"><view class="dsw-i"></view></view>
+  </view>
   <view class="drow">
     <view class="dic pic pic--gear"></view>
     <view class="dcopy"><text class="dt">减少动态效果</text><text class="ds">关掉地图漂移和呼吸</text></view>
@@ -939,7 +920,7 @@
     <view class="settle__meta" style="padding-top:{{chrome.actionTop}}px">{{finish.dateLine}}</view>
     <view class="settle__headrow">
       <text class="settle__title">{{finish.zone}} · 自由漫游</text>
-      <view class="settle__x" bindtap="backToSquare" aria-role="button" aria-label="关闭结算页" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close" size="44" /></view>
+      <view class="settle__x" bindtap="closeSettle" aria-role="button" aria-label="关闭结算页" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close" size="44" /></view>
     </view>
     <view class="settle__hr"></view>
     <!-- 大数字与格子按城瘾口径:探店/探索度/邮票/探索值/勋章 —— 时间与距离是跑步 App 的,不上(用户裁决) -->
@@ -988,12 +969,12 @@
         <text>{{trackTip}}</text>
       </view>
       <view class="settle__chip">{{currentAddress}}</view>
+      <!-- 2026-10-27 owner P-34:「查看漫游数据」改成浮在地图上的按钮 -->
+      <view class="settle__mapbtn" bindtap="openPassport" aria-role="button" aria-label="查看漫游数据" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="route" size="28" /><text>查看漫游数据</text></view>
     </view>
     <view class="settle__ctaw">
       <view class="settle__cta" bindtap="openShare" aria-role="button" aria-label="分享足迹卡" hover-class="cy-pressed" hover-stay-time="80">分享</view>
       <view class="settle__minor">
-        <text class="settle__minor-act" bindtap="openPassport" aria-role="button" aria-label="查看漫游数据" hover-class="cy-pressed" hover-stay-time="80">查看漫游数据</text>
-        <text class="settle__minor-sep">·</text>
         <text class="settle__minor-act" bindtap="backToSquare" aria-role="button" aria-label="返回广场" hover-class="cy-pressed" hover-stay-time="80">返回广场</text>
       </view>
     </view>
@@ -1097,7 +1078,7 @@
      范围走 /api/roam/pois 的 radius;只看未到过只藏地图点,不改进度。 -->
 <view class="roam-scene-host" wx:if="{{sceneCurrent && sceneCurrent.id === 'roam-poi-filter'}}" catchtouchmove="blockSceneTouch">
 <view class="pdim {{sceneIn ? 'is-in' : ''}} {{reducedMotion ? 'is-reduced' : ''}}" bindtap="onProtoSheetClose" aria-role="button" aria-label="返回更多" hover-class="cy-pressed" hover-stay-time="80"></view>
-<view class="psheet psheet--half {{sceneIn ? 'is-in' : ''}} {{reducedMotion ? 'is-reduced' : ''}}" catchtap="noop">
+<view class="psheet psheet--half roam-menu-sheet {{sceneIn ? 'is-in' : ''}} {{reducedMotion ? 'is-reduced' : ''}}" catchtap="noop">
   <view class="psheet__grab" catchtap="onProtoSheetClose" aria-role="button" aria-label="返回更多" hover-class="cy-pressed" hover-stay-time="80"></view>
   <view class="psheet__x" catchtap="onProtoSheetClose" aria-role="button" aria-label="返回更多" hover-class="cy-pressed" hover-stay-time="80"><view class="psheet__x-i"></view></view>
   <text class="ph1">筛选节点</text>

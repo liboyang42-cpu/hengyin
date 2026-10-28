@@ -24,13 +24,13 @@ class ApiPlayProgressCouponGrantFailureTest
     private ApiPlayProgressController controllerWith(ISmsCouponHistoryService service)
     {
         ApiPlayProgressController controller = new ApiPlayProgressController();
-        ReflectionTestUtils.setField(controller, "smsCouponHistoryService", service);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "smsCouponHistoryService", service);
         return controller;
     }
 
     private Object grant(ApiPlayProgressController controller, Long memberId, Long couponId)
     {
-        return ReflectionTestUtils.invokeMethod(controller, "grantCouponById", memberId, couponId);
+        return com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.invokeMethod(controller, "grantCouponById", memberId, couponId);
     }
 
     @Test

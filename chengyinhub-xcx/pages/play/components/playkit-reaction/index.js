@@ -54,8 +54,12 @@ Component({
   },
   observers: {
     'show, rounds': function (show, rounds) {
+      if (!show) { this._abortRound(); this._closed = true; this._configSignature = ''; return; }
+      // 开表后服务端回流会把同值属性再赋一遍:配置没变就不重置台面(与 typein 的 _roundSignature 同口径)
+      const signature = String(rounds);
+      if (signature === this._configSignature && !this._closed) return;
+      this._configSignature = signature;
       this._abortRound();
-      if (!show) { this._closed = true; return; }
       this._closed = false;
       this.setData({ phase: 'idle', big: '—', unit: '', sub: '点一下开始' });
       // 变色就点没有限时或倒数。重开仅重置台面，不提交旧测量。

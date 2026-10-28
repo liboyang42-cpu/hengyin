@@ -10,6 +10,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import com.chengyinhub.business.service.support.CheckReceiptProjection;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -27,45 +29,66 @@ public class ApiPlayCheckController extends BaseController {
     @Autowired(required = false)
     private ITopicRouteRuntimeService topicRouteRuntimeService;
 
+    public AjaxResult roll(String topicId, Long activityId, String nodeId, String checkId) {
+        return roll(topicId, activityId, nodeId, checkId, null);
+    }
+
+    public AjaxResult reroll(String topicId, Long activityId, String nodeId, String checkId) {
+        return reroll(topicId, activityId, nodeId, checkId, null);
+    }
+
+    public AjaxResult settle(String topicId, Long activityId, String nodeId, String checkId) {
+        return settle(topicId, activityId, nodeId, checkId, null);
+    }
+
     @Operation(summary = "掷骰")
     @PostMapping("/roll")
-    public AjaxResult roll(String topicId, Long activityId, String nodeId, String checkId) {
+    public AjaxResult roll(String topicId, Long activityId, String nodeId, String checkId, Long sessionId) {
         Long memberId = currentMemberId();
         if (memberId == null) return error("请先登录");
         if (topicRouteRuntimeService == null) return error("参数有误");
         try {
-            return success(topicRouteRuntimeService.roll(memberId, Convert.toLong(topicId, 0L), activityId,
-                    Convert.toLong(nodeId, 0L), checkId));
-        } catch (IllegalArgumentException | IllegalStateException e) {
-            return error(e.getMessage());
+            return success(CheckReceiptProjection.project(sessionId == null
+                    ? topicRouteRuntimeService.roll(memberId, Long.valueOf(topicId), activityId, Long.valueOf(nodeId), checkId)
+                    : topicRouteRuntimeService.roll(memberId, Long.valueOf(topicId), activityId, Long.valueOf(nodeId), checkId, sessionId)));
+        } catch (IllegalArgumentException e) {
+            return coded(400, e.getMessage(), "CHECK_BAD_REQUEST");
+        } catch (IllegalStateException e) {
+            return coded(409, e.getMessage(), "CHECK_REJECTED");
         }
     }
 
     @Operation(summary = "花幸运重掷")
     @PostMapping("/reroll")
-    public AjaxResult reroll(String topicId, Long activityId, String nodeId, String checkId) {
+    public AjaxResult reroll(String topicId, Long activityId, String nodeId, String checkId, Long sessionId) {
         Long memberId = currentMemberId();
         if (memberId == null) return error("请先登录");
         if (topicRouteRuntimeService == null) return error("参数有误");
         try {
-            return success(topicRouteRuntimeService.reroll(memberId, Convert.toLong(topicId, 0L), activityId,
-                    Convert.toLong(nodeId, 0L), checkId));
-        } catch (IllegalArgumentException | IllegalStateException e) {
-            return error(e.getMessage());
+            return success(CheckReceiptProjection.project(sessionId == null
+                    ? topicRouteRuntimeService.reroll(memberId, Long.valueOf(topicId), activityId, Long.valueOf(nodeId), checkId)
+                    : topicRouteRuntimeService.reroll(memberId, Long.valueOf(topicId), activityId, Long.valueOf(nodeId), checkId, sessionId)));
+        } catch (IllegalArgumentException e) {
+            return coded(400, e.getMessage(), "CHECK_BAD_REQUEST");
+        } catch (IllegalStateException e) {
+            return coded(409, e.getMessage(), "CHECK_REJECTED");
         }
     }
 
     @Operation(summary = "结算检定")
     @PostMapping("/settle")
-    public AjaxResult settle(String topicId, Long activityId, String nodeId, String checkId) {
+    public AjaxResult settle(String topicId, Long activityId, String nodeId, String checkId, Long sessionId) {
         Long memberId = currentMemberId();
         if (memberId == null) return error("请先登录");
         if (topicRouteRuntimeService == null) return error("参数有误");
         try {
-            return success(topicRouteRuntimeService.settle(memberId, Convert.toLong(topicId, 0L), activityId,
-                    Convert.toLong(nodeId, 0L), checkId));
-        } catch (IllegalArgumentException | IllegalStateException e) {
-            return error(e.getMessage());
+            return success(CheckReceiptProjection.project(sessionId == null
+                    ? topicRouteRuntimeService.settle(memberId, Long.valueOf(topicId), activityId, Long.valueOf(nodeId), checkId)
+                    : topicRouteRuntimeService.settle(memberId, Long.valueOf(topicId), activityId, Long.valueOf(nodeId), checkId, sessionId)));
+        } catch (IllegalArgumentException e) {
+            return coded(400, e.getMessage(), "CHECK_BAD_REQUEST");
+        } catch (IllegalStateException e) {
+            return coded(409, e.getMessage(), "CHECK_REJECTED");
         }
     }
 
@@ -76,8 +99,8 @@ public class ApiPlayCheckController extends BaseController {
         if (memberId == null) return error("请先登录");
         if (topicRouteRuntimeService == null) return error("参数有误");
         try {
-            return success(topicRouteRuntimeService.rest(memberId, Convert.toLong(topicId, 0L), activityId,
-                    Convert.toLong(nodeId, 0L)));
+            return success(CheckReceiptProjection.project(topicRouteRuntimeService.rest(memberId, Convert.toLong(topicId, 0L), activityId,
+                    Convert.toLong(nodeId, 0L))));
         } catch (IllegalArgumentException | IllegalStateException e) {
             return error(e.getMessage());
         }
@@ -90,8 +113,8 @@ public class ApiPlayCheckController extends BaseController {
         if (memberId == null) return coded(HttpStatus.UNAUTHORIZED, "请先登录", "CHECK_LOGIN_REQUIRED");
         if (topicRouteRuntimeService == null) return coded(HttpStatus.ERROR, "参数有误", "CHECK_UNAVAILABLE");
         try {
-            return success(topicRouteRuntimeService.bargain(memberId, Convert.toLong(topicId, 0L), activityId,
-                    Convert.toLong(nodeId, 0L), checkId));
+            return success(CheckReceiptProjection.project(topicRouteRuntimeService.bargain(memberId, Convert.toLong(topicId, 0L), activityId,
+                    Convert.toLong(nodeId, 0L), checkId)));
         } catch (ServiceException e) {
             return coded(e.getCode() == null ? HttpStatus.ERROR : e.getCode(), e.getMessage(), e.getDetailMessage());
         } catch (IllegalArgumentException e) {
@@ -108,14 +131,29 @@ public class ApiPlayCheckController extends BaseController {
         if (memberId == null) return coded(HttpStatus.UNAUTHORIZED, "请先登录", "CHECK_LOGIN_REQUIRED");
         if (topicRouteRuntimeService == null) return coded(HttpStatus.ERROR, "参数有误", "CHECK_UNAVAILABLE");
         try {
-            return success(topicRouteRuntimeService.spendMomentum(memberId, Convert.toLong(topicId, 0L), activityId,
-                    Convert.toLong(nodeId, 0L), checkId));
+            return success(CheckReceiptProjection.project(topicRouteRuntimeService.spendMomentum(memberId, Convert.toLong(topicId, 0L), activityId,
+                    Convert.toLong(nodeId, 0L), checkId)));
         } catch (ServiceException e) {
             return coded(e.getCode() == null ? HttpStatus.ERROR : e.getCode(), e.getMessage(), e.getDetailMessage());
         } catch (IllegalArgumentException e) {
             return coded(HttpStatus.BAD_REQUEST, e.getMessage(), "CHECK_BAD_REQUEST");
         } catch (IllegalStateException e) {
             return coded(HttpStatus.CONFLICT, e.getMessage(), "CHECK_REJECTED");
+        }
+    }
+
+    @GetMapping("/receipt")
+    public AjaxResult receipt(Long sessionId, Long nodeId, String checkId, String action) {
+        Long memberId = currentMemberId();
+        if (memberId == null) return coded(401, "请先登录", "CHECK_LOGIN_REQUIRED");
+        if (topicRouteRuntimeService == null) return coded(503, "检定服务不可用", "CHECK_UNAVAILABLE");
+        try {
+            return success(CheckReceiptProjection.project(topicRouteRuntimeService.checkReceipt(memberId,
+                    sessionId, nodeId, checkId, action)));
+        } catch (ServiceException e) {
+            return coded(e.getCode() == null ? 500 : e.getCode(), e.getMessage(), "CHECK_RECEIPT_UNKNOWN");
+        } catch (IllegalArgumentException e) {
+            return coded(400, e.getMessage(), "CHECK_BAD_REQUEST");
         }
     }
 

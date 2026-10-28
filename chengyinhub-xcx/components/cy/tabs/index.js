@@ -1,5 +1,5 @@
 // cy-tabs:统一水平 Tab 栏(封装 style/components.wxss §5.2 的 .cy-tabs 类系统为组件)。
-// properties:tabs=[{key,label,badge?}] · active=当前选中 key · variant=''|fill|wide|segmented|chip|attached · sticky=Boolean
+// properties:tabs=[{key,label,badge?,icon?}] · active=当前选中 key · variant=''|fill|wide|segmented|chip|attached|icon · sticky=Boolean
 // chip(R2 新增):Airbnb Messages 式独立药丸,item 各自成丸、横向可滑,与 segmented(单胶囊内分段)不同。
 // sharedSlab:chip 的等分共享选中块,仅由需要连续位移动效的固定短筛选显式开启。
 // 事件:切换时 triggerEvent('change', { key });强调色可由页面用 --cy-tabs-accent 覆盖。

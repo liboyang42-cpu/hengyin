@@ -1,0 +1,29 @@
+<wxs src="../../../utils/wxs/money.wxs" module="money" />
+<view class="eo">
+  <view class="eo-sec">
+    <text class="eo-sec__t">本月收入明细</text>
+    <view class="eo-sec__link" bindtap="openDetail" aria-role="button" aria-label="查看全部收益明细" hover-class="cy-pressed" hover-stay-time="80">{{month.monthLabel}} 全部<cy-icon name="chevron-right" size="24" /></view>
+  </view>
+  <view class="eo-card">
+    <view class="eo-row" wx:for="{{month.items}}" wx:key="key">
+      <view class="eo-row__ic"><cy-icon name="{{item.icon}}" size="36" /></view>
+      <view class="eo-row__main">
+        <text class="eo-row__t">{{item.title}}</text>
+        <view class="eo-row__meta"><text class="eo-row__tag">{{item.tag}}</text><text>{{item.date}}</text></view>
+      </view>
+      <text class="eo-row__amt eo-row__amt--in">{{item.amountText}}</text>
+    </view>
+    <text class="eo-none" wx:if="{{month.ready && !month.items.length}}">这个月还没有收入</text>
+    <text class="eo-none" wx:elif="{{monthError}}" bindtap="retryMonth" aria-role="button" aria-label="重新加载本月收入" hover-class="cy-pressed" hover-stay-time="80">没加载出来，点这里重试</text>
+  </view>
+
+  <view class="eo-sec eo-sec--gap"><text class="eo-sec__t">我的资产</text></view>
+  <view class="eo-card">
+    <view class="eo-row eo-row--asset" wx:for="{{assets}}" wx:key="key">
+      <view class="eo-row__ic"><cy-icon name="{{item.icon}}" size="36" /></view>
+      <text class="eo-row__t eo-row__main">{{item.label}}</text>
+      <text class="eo-row__amt">{{money.amount(item.amount)}}</text>
+    </view>
+    <text class="eo-none" wx:if="{{assetsError}}" bindtap="retryAssets" aria-role="button" aria-label="重新加载我的资产" hover-class="cy-pressed" hover-stay-time="80">没加载出来，点这里重试</text>
+  </view>
+</view>

@@ -161,6 +161,7 @@
     </div>
 
     <el-row :gutter="10" class="mb8">
+      <el-col :span="1.5"><el-button type="primary" plain size="mini" icon="el-icon-data-analysis" @click="scoringConsoleOpen = true" v-hasPermi="['business:orientScoring:list']">计分申诉与争议</el-button></el-col>
       <el-col :span="1.5">
         <el-button
           v-if="isOfficialEntry()"
@@ -448,14 +449,17 @@
         <el-button @click="cancelRecommend">取 消</el-button>
       </div>
     </el-dialog>
+    <orient-scoring-console :visible.sync="scoringConsoleOpen" />
   </div>
 </template>
 
 <script>
 import { listTopic, getTopic, delTopic, addTopic, updateTopic, updatePlazaRecommendation, copyTopicRequest, reassignTopicContentSlot } from "@/api/business/topic"
+import OrientScoringConsole from '../orient-scoring/components/OrientScoringConsole.vue'
 
 export default {
   name: "Topic",
+  components: { OrientScoringConsole },
   dicts: ['sys_topic_status','sys_topic_type','sys_topic_user_status','sys_merchant_status','sys_recommend'],
   data() {
     return {
@@ -469,6 +473,7 @@ export default {
       multiple: true,
       // 显示搜索条件
       showSearch: true,
+      scoringConsoleOpen: false,
       // 通过官方/广场独立路由进入时锁定来源范围，不能在页内切回全量列表。
       routeContentScope: null,
       invalidRouteContentScope: false,

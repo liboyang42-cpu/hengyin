@@ -559,8 +559,13 @@ public class OfficialEventV2ServiceImpl implements IOfficialEventV2Service {
         if (event.getStatus() == null || (event.getStatus() != OfficialEvent.ST_SIGNUP && event.getStatus() != OfficialEvent.ST_LIVE)) {
             return "活动当前不可报名";
         }
+        // 资格拒绝必须发生在兼容报名投影写入前；返回错误字符串不会回滚事务。
+        OfficialEventParticipation current = v2Mapper.selectParticipation(eventId, memberId);
+        if (current != null && !OfficialEventParticipation.STATE_ACTIVE.equals(current.getState())) {
+            return "当前参与资格已失效";
+        }
         if (event.getSignupLimit() != null && event.getSignupLimit() > 0
-                && v2Mapper.selectParticipation(eventId, memberId) == null
+                && current == null
                 && v2Mapper.countActiveParticipations(eventId) >= event.getSignupLimit()) {
             return "报名人数已满";
         }
@@ -573,10 +578,6 @@ public class OfficialEventV2ServiceImpl implements IOfficialEventV2Service {
             signup.setProgress(0);
             signupMapper.insertIgnore(signup);
             legacy = signupMapper.selectByEventAndMember(eventId, memberId);
-        }
-        OfficialEventParticipation current = v2Mapper.selectParticipation(eventId, memberId);
-        if (current != null && !OfficialEventParticipation.STATE_ACTIVE.equals(current.getState())) {
-            return "当前参与资格已失效";
         }
         if (current == null) {
             OfficialEventParticipation participation = new OfficialEventParticipation();
@@ -1930,6 +1931,11 @@ public class OfficialEventV2ServiceImpl implements IOfficialEventV2Service {
         if (operatorId == null || operatorId <= 0) return false;
         OfficialEventParty organizer = effectiveOrganizer(event, parties);
         return organizer != null && operatorId.equals(organizer.getPartyId());
+    }
+
+    /** Attendance writes require the existing sole effective organizer, never a co-organizer. Caller locks event first. */
+    public boolean canOperateAttendance(OfficialEvent event, Long operatorId) {
+        return isEffectiveOrganizerOperator(event, v2Mapper.selectPartiesByEventForUpdate(event.getId()), operatorId);
     }
 
     private String requireEffectiveOrganizerOperator(OfficialEvent event, Long operatorId) {

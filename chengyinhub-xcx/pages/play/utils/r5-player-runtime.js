@@ -23,7 +23,7 @@ function outcomeReply(view) {
 
 function checkView(view, theme) {
   const check = view.check || {};
-  const receipt = Array.isArray(check.dice) && check.dice.length ? checkReceiptView(check) : null;
+  const receipt = (Array.isArray(check.dice) && check.dice.length || check.attemptId && (check.detailsHidden === true || check.hidden === true || check.redacted === true)) ? checkReceiptView(check) : null;
   if (receipt) {
     receipt.r5 = true;
     receipt.settled = false; receipt.text = ''; receipt.failCostLabel = '';
@@ -39,7 +39,7 @@ function checkView(view, theme) {
   return { show: true, loading: false, r5: true, sessionId: view.sessionId, nodeId: view.nodeId,
     present: view.present === 'inline' ? 'inline' : 'fullscreen', skill: '', tier: check.tier || view.config.check.tier || '',
     allowedActions: check.allowedActions || [], disabledReason: check.disabledReason || '',
-    mods: check.mods || [], advantage: check.advantage === true, disadvantage: check.disadvantage === true,
+    mods: receipt && receipt.detailsHidden ? [] : check.mods || [], advantage: check.advantage === true, disadvantage: check.disadvantage === true,
     receipt };
 }
 
@@ -85,6 +85,20 @@ function methods() {
     },
     _r5CheckAction(action) {
       const kit = this.data.journeyCheck;
+      if (action === 'recover') {
+        const game = this.selectComponent('#advancedGame');
+        if (game && game.data.unknown && game.data.state && String(game.data.state.sessionId) === String(kit.sessionId)) {
+          const owner = this._boundPlayOwner(), sessionKey = this._sessionKey();
+          return Promise.resolve(game.resolveUnknown()).then(() => {
+            if (this._isPlayAccountCurrent() && owner === this._boundPlayOwner() && sessionKey === this._sessionKey()
+                && this.data.journeyCheck === kit && this.selectComponent('#advancedGame') === game) {
+              this.setData({ 'journeyCheck.unknown': !!game.data.unknown,
+                'journeyCheck.disabledReason': game.data.unknown ? '原检定结果仍待确认，请再次核对' : '' });
+            }
+          });
+        }
+        return Promise.resolve(false);
+      }
       const name = CHECK_ACTIONS[action];
       if (!name || !kit.show || this._checkActing || !(kit.allowedActions || []).includes(name)) return Promise.resolve(false);
       const receipt = kit.receipt;
@@ -92,9 +106,20 @@ function methods() {
         || action === 'settle' && (!receipt || receipt.pending || receipt.settled)) return Promise.resolve(false);
       const game = this.selectComponent('#advancedGame');
       if (!game || !game.data.state || String(game.data.state.sessionId) !== String(kit.sessionId)) return Promise.resolve(false);
+      if (game.data.unknown) {
+        this.setData({ 'journeyCheck.unknown': true, 'journeyCheck.disabledReason': '原检定结果待确认，请使用原请求核对入口' });
+        return Promise.resolve(false);
+      }
+      const intent = this._r5CheckIntent = { owner: this._boundPlayOwner(), sessionKey: this._sessionKey(), sessionId: kit.sessionId };
       this._checkActing = true; this.setData({ 'journeyCheck.loading': true });
       return Promise.resolve(game.action(name, {})).finally(() => {
-        this._checkActing = false; this.setData({ 'journeyCheck.loading': false });
+        if (this._r5CheckIntent !== intent) return;
+        this._r5CheckIntent = null;
+        this._checkActing = false;
+        if (!this._isPlayAccountCurrent() || intent.owner !== this._boundPlayOwner() || intent.sessionKey !== this._sessionKey()
+            || !this.data.journeyCheck.show || String(this.data.journeyCheck.sessionId) !== String(intent.sessionId)) return;
+        this.setData({ 'journeyCheck.loading': false, 'journeyCheck.unknown': !!game.data.unknown,
+          'journeyCheck.disabledReason': game.data.unknown ? '原检定结果待确认，请使用原请求核对入口' : this.data.journeyCheck.disabledReason });
       });
     },
   };

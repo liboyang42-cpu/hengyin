@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.TopicPlaySetupMapper">
+
+    <resultMap type="com.chengyinhub.business.domain.TopicPlaySetup" id="TopicPlaySetupResult">
+        <id     property="topicId"       column="topic_id"        />
+        <result property="windowMode"    column="window_mode"     />
+        <result property="windowStart"   column="window_start"    />
+        <result property="windowEnd"     column="window_end"      />
+        <result property="prepItemsJson" column="prep_items_json" />
+        <result property="createTime"    column="create_time"     />
+        <result property="updateTime"    column="update_time"     />
+    </resultMap>
+
+    <select id="selectByTopicId" resultMap="TopicPlaySetupResult">
+        select topic_id, window_mode, window_start, window_end, prep_items_json, create_time, update_time
+        from cms_topic_play_setup
+        where topic_id = #{topicId}
+    </select>
+
+    <insert id="upsert" parameterType="com.chengyinhub.business.domain.TopicPlaySetup">
+        insert into cms_topic_play_setup
+            (topic_id, window_mode, window_start, window_end, prep_items_json, create_time, update_time)
+        values
+            (#{topicId}, #{windowMode}, #{windowStart}, #{windowEnd}, #{prepItemsJson}, #{updateTime}, #{updateTime})
+        on duplicate key update
+            window_mode = values(window_mode),
+            window_start = values(window_start),
+            window_end = values(window_end),
+            prep_items_json = values(prep_items_json),
+            update_time = values(update_time)
+    </insert>
+</mapper>

@@ -138,6 +138,15 @@ public final class JourneyInitialState {
 
     /** 将展示键随本局冻结，防止后来新增的属性进入旧局案件册。 */
     public static void freezeKeys(ObjectNode snapshot, List<ThemeStateKey> keys, JourneyRules rules) {
+        if (snapshot.has("attributeDefinition")) {
+            JourneyRules frozenRules = FrozenAttributeDefinitions.rules(snapshot);
+            ArrayNode frozen = snapshot.putArray("stateKeys");
+            for (JsonNode attribute : frozenRules.getAttributes()) {
+                frozen.addObject().put("key", attribute.path("key").asText())
+                        .put("label", attribute.path("label").asText());
+            }
+            return;
+        }
         ArrayNode frozen = snapshot.putArray("stateKeys");
         Map<String, ThemeStateKey> all = new LinkedHashMap<String, ThemeStateKey>();
         if (keys != null) for (ThemeStateKey key : keys) all.put(key.getStateKey(), key);

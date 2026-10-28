@@ -4,6 +4,7 @@ const toast = require('../../../utils/toast.js');
 const { toTimestamp } = require('../../../utils/datetime');
 const motion = require('../../../utils/motion.js')
 const { readReducedMotion } = require('../../../utils/motion-preference.js')
+const { reader, sameReader } = require('../../../utils/user-character.js');
 const app = getApp();
 const community = require('../../../utils/community-post-api.js').createClient(app, wx);
 const analytics = require('../../../utils/analytics.js');
@@ -55,6 +56,7 @@ Page({
     commentLoadError: false,
     commentLoadMoreError: '',
     commentLoadingMore: false,
+    commentRecoveryPending: false,
     commentContent: '',
     canComment: false,
     commentSubmitting: false,
@@ -72,6 +74,31 @@ Page({
     imageHeight: 600, // 图片固定高度600rpx
     imageWidths: [], // 存储每张图片的动态宽度
     imageAspectRatios: [] // 存储每张图片的宽高比
+  },
+
+  _captureCommunityContext() {
+    const captured = reader(app), id = String(this.data.id), epoch = this._accountEpoch || 0;
+    return () => !this._unloaded && epoch === (this._accountEpoch || 0)
+      && id === String(this.data.id) && sameReader(app, captured)
+      && (!this._pageReader || sameReader(app, this._pageReader));
+  },
+
+  _restorePendingComment() {
+    if (typeof community.pendingComment !== 'function') return;
+    try {
+      const pending = community.pendingComment(this.data.id);
+      this.setData({ commentRecoveryPending: !!pending });
+      if (!pending) return;
+      const message = '上次评论尚未确认，请按原内容重试确认';
+      if (pending.parentId != null) {
+        this.setData({ replyId: pending.parentId, replyContent: pending.body, canReply: true,
+          popShow: true, replySubmitError: message });
+      } else {
+        this.setData({ commentContent: pending.body, canComment: true, commentSubmitError: message });
+      }
+    } catch (error) {
+      this.setData({ commentRecoveryPending: true, commentSubmitError: error.msg || '原评论记录暂不可读，请重试' });
+    }
   },
 
   // 图片加载完成事件
@@ -109,6 +136,7 @@ Page({
   },
   // 评论输入处理
   onCommentInput: function(e) {
+    if (this.data.commentRecoveryPending) return;
     const value = e.detail.value || '';
     this.setData({
       commentContent: value,
@@ -119,6 +147,7 @@ Page({
 
   // 回复输入处理
   onReplyInput: function(e) {
+    if (this.data.commentRecoveryPending) return;
     const value = e.detail.value || '';
     this.setData({
       replyContent: value,
@@ -213,6 +242,7 @@ Page({
     });
 
     community.request({
+      current: that._captureCommunityContext(),
       hideLoading: true,
       silentError: true,
       url: '/api/comment/add',
@@ -229,8 +259,9 @@ Page({
         if (res.code == "200") {
           toast.success('评论成功');
           that.setData({
-            commentContent: '',
-            canComment: false,
+            commentContent: that.data.commentContent.trim() === content ? '' : that.data.commentContent,
+            canComment: that.data.commentContent.trim() !== content,
+            commentRecoveryPending: false,
             commentSubmitError: ''
           });
           that.refreshComments();
@@ -239,6 +270,7 @@ Page({
             commentSubmitError: app.getRequestErrorMessage(res, '评论失败，请稍后重试'),
             commentSubmitErrorKind: 'data'
           });
+          that._restorePendingComment();
         }
       },
       fail: function (res) {
@@ -246,6 +278,7 @@ Page({
           commentSubmitError: app.getRequestErrorMessage(res, '网络异常，请检查连接后重试'),
           commentSubmitErrorKind: 'network'
         });
+        that._restorePendingComment();
       },
       complete: function () {
         that._commentSubmitting = false;
@@ -263,7 +296,14 @@ Page({
     if (app.ensureLoginFor && !app.ensureLoginFor('post', () => this.addReplyComment())) return; // 2026-10-24 游客写前登录
     var that = this;
     const content = String(that.data.replyContent || '').trim();
-    if (!that.data.replyId || that.data.list.some(row => String(row.id) === String(that.data.replyId) && (row.deletedPlaceholder === true || row.lifecycle === 'DELETED'))) { toast('回复目标已变化，请重新选择'); return; }
+    let recoveringOriginal = false;
+    if (that.data.commentRecoveryPending && typeof community.pendingComment === 'function') {
+      try {
+        const pending = community.pendingComment(that.data.id);
+        recoveringOriginal = !!pending && pending.body === content && String(pending.parentId) === String(that.data.replyId);
+      } catch (error) { toast(error.msg || '原评论记录暂不可读'); return; }
+    }
+    if (!that.data.replyId || !recoveringOriginal && that.data.list.some(row => String(row.id) === String(that.data.replyId) && (row.deletedPlaceholder === true || row.lifecycle === 'DELETED'))) { toast('回复目标已变化，请重新选择'); return; }
     
     if (!content) {
       toast('回复内容不能为空');
@@ -278,6 +318,7 @@ Page({
     });
 
     community.request({
+      current: that._captureCommunityContext(),
       hideLoading: true,
       silentError: true,
       url: '/api/comment/add',
@@ -294,8 +335,9 @@ Page({
         if (res.code == "200") {
           toast.success('回复成功');
           that.setData({
-            replyContent: '',
-            canReply: false,
+            replyContent: that.data.replyContent.trim() === content ? '' : that.data.replyContent,
+            canReply: that.data.replyContent.trim() !== content,
+            commentRecoveryPending: false,
             popShow: false,
             replyId: 0,
             replySubmitError: ''
@@ -306,6 +348,7 @@ Page({
             replySubmitError: app.getRequestErrorMessage(res, '回复失败，请稍后重试'),
             replySubmitErrorKind: 'data'
           });
+          that._restorePendingComment();
         }
       },
       fail: function (res) {
@@ -313,6 +356,7 @@ Page({
           replySubmitError: app.getRequestErrorMessage(res, '网络异常，请检查连接后重试'),
           replySubmitErrorKind: 'network'
         });
+        that._restorePendingComment();
       },
       complete: function () {
         that._replySubmitting = false;
@@ -350,6 +394,9 @@ Page({
    * 生命周期函数--监听页面加载
    */
   onLoad(options) {
+    this._pageReader = reader(app);
+    this._unloaded = false;
+    this._accountEpoch = (this._accountEpoch || 0) + 1;
     var that = this
     options = options || {}
     const id = options.id || ''
@@ -363,6 +410,7 @@ Page({
 
     // 直开/失效链接没有详情 id 时，不发空请求；给 WXML 的 missing-param 态一个明确出口。
     if (!id) return
+    this._restorePendingComment()
     
     if (options.comment == '1') {
       that.setData({
@@ -370,9 +418,9 @@ Page({
       })
     }
     // F-L5C-06:分享卡/深链直达也要过当前账号的社区读闸;闸关(含开关拉取失败)时给「暂未开放」空态,不发详情请求。
-    const owner = String(app.getUserID() || '')
+    const current = this._captureCommunityContext()
     const proceed = () => {
-      if (owner !== String(app.getUserID() || '')) return
+      if (!current()) return
       if (typeof app.canUseCommunity === 'function' && app.canUseCommunity(false)) {
         that.getData()
         that.getList()
@@ -521,6 +569,7 @@ Page({
     that._likeRequestInFlight = true;
     let type = e.currentTarget.dataset.type;
     community.request({
+      current: that._captureCommunityContext(),
       hideLoading: true,
       silentError: true,
       url: '/api/creativesquare/like',
@@ -561,6 +610,7 @@ Page({
     this._favoriteRequestInFlight = true;
     const next = info.isBookmarked == 1 ? 0 : 1;
     community.request({
+      current: this._captureCommunityContext(),
       hideLoading: true,
       silentError: true,
       url: '/api/creativesquare/bookmark',
@@ -620,6 +670,7 @@ Page({
           const pageNum = Math.floor(index / pageSize) + 1;
           const confirmFailed = () => toast('已提交，但状态确认失败，请刷新');
           community.request({
+            current: this._captureCommunityContext(),
             url: '/api/comment/list',
             hideLoading: true,
             silentError: true,
@@ -677,6 +728,7 @@ Page({
     that._commentLikeRequests[requestKey] = true;
 
     community.request({
+      current: this._captureCommunityContext(),
       hideLoading: true,
       silentError: true,
       url: '/api/comment/like',
@@ -731,9 +783,9 @@ Page({
           return;
         }
         community.request({
+          current: that._captureCommunityContext(),
           hideLoading: true,
           url: '/api/creativesquare/report',
-          current,
           selectReportReason: (items, task) => reportSheet.open(that, items, task),
           method: 'POST',
           data: {
@@ -792,6 +844,7 @@ Page({
     this._deleting = true;
     const pa = this.selectComponent && this.selectComponent('#post-actions');
     community.request({
+      current: this._captureCommunityContext(),
       hideLoading: true,
       url: '/api/creativesquare/delete',
       method: 'POST',
@@ -879,9 +932,9 @@ Page({
           return;
         }
         community.request({
+          current: that._captureCommunityContext(),
           hideLoading: true,
           url: '/api/comment/report',
-          current,
           selectReportReason: (items, task) => reportSheet.open(that, items, task),
           method: 'POST',
           data: {
@@ -930,6 +983,7 @@ Page({
         that._commentDeleteRequests[requestKey] = true;
         let deleteApplied = false;
         community.request({
+          current: that._captureCommunityContext(),
           hideLoading: true,
           autoErrorToast: false, // 失败由本处精确 toast,不再叠通道的通用 toast
           url: '/api/comment/delete',
@@ -1006,6 +1060,7 @@ Page({
     const feedVersion = (app.globalData && app.globalData.squareListDirtyVersion) || 0;
     that.setData({ detailState: 'loading', detailError: '' });
     that._detailRequestTask = community.request({
+      current: that._captureCommunityContext(),
       hideLoading: true,
       silentError: true,
       url: '/api/creativesquare/info',
@@ -1160,6 +1215,7 @@ Page({
       }
     };
     that._commentsRequestTask = community.request({
+      current: that._captureCommunityContext(),
       hideLoading: true,
       silentError: true,
       url: '/api/comment/list',
@@ -1273,6 +1329,31 @@ Page({
    * 生命周期函数--监听页面显示
    */
   onShow() { this._navigating = false; // 跳转中保护兜底清锁
+    if (this._pageReader && !sameReader(app, this._pageReader)) {
+      this._accountEpoch = (this._accountEpoch || 0) + 1;
+      this._pageReader = reader(app);
+      reportSheet.cancel(this);
+      this._detailRequestId = (this._detailRequestId || 0) + 1;
+      this._commentsRequestId = (this._commentsRequestId || 0) + 1;
+      if (this._detailRequestTask && this._detailRequestTask.abort) this._detailRequestTask.abort();
+      if (this._commentsRequestTask && this._commentsRequestTask.abort) this._commentsRequestTask.abort();
+      this._detailRequestInFlight = this._commentsRequestInFlight = false;
+      this._commentSubmitting = this._replySubmitting = false;
+      this._likeRequestInFlight = this._favoriteRequestInFlight = this._followRequestInFlight = false;
+      this._deleting = false;
+      this._commentLikeRequests = Object.create(null);
+      this._commentDeleteRequests = Object.create(null);
+      this._actionContext = null;
+      this.setData({ userId: app.getUserID(), avatar: app.getAvatar(), info: {}, picList: [], list: [], isMine: false,
+        composeShow: false, composeEdit: null, postActionShow: false, popShow: false, avatarPopShow: false,
+        avatarPopItems: [], commentContent: '', replyContent: '', replyId: 0, canComment: false, canReply: false,
+        commentSubmitting: false, replySubmitting: false, commentRecoveryPending: false, commentSubmitError: '', replySubmitError: '',
+        page_no: 1, hasMore: false, nodata: false, commentLoadError: false, commentLoadMoreError: '',
+        commentLoadingMore: false, detailError: '', commentsState: 'idle', imageWidths: [], imageAspectRatios: [] });
+      // Reapply the existing feature gate for the new reader before loading any private projection.
+      this.onLoad({ id: this.data.id });
+      return;
+    }
     const feedVersion = (app.globalData && app.globalData.squareListDirtyVersion) || 0;
     if (this.data.id && !this._unloaded && !this.data.composeShow) {
       if (feedVersion > (this._communityFeedVersion || 0)) this.getData();

@@ -38,3 +38,11 @@
 }
 .lm.lm--reduced-motion .lm__spinner { animation: none; }
 @keyframes lm-spin { to { transform: rotate(360deg); } }
+
+/* G-10(2026-10-27):商家视角遮罩浅色雾面、面板白底黑字。组件 isolated 读不到 .theme-merchant,就地镜像 tokens 商家值。 */
+.lm.lm--light {
+  --cy-comp-modal-panel: #FFFFFF; /* ds-ok: 镜像 .theme-merchant */
+  --cy-text-title: #000000; /* ds-ok: 镜像 .theme-merchant */
+  --cy-border-card: #E8E8E8; /* ds-ok: 镜像 .theme-merchant */
+  background: rgba(243,244,244,.72); /* ds-ok: 商家 bg-page @72% */
+}

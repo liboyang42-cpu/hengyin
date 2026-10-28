@@ -52,17 +52,17 @@ function assertSquareContract(files) {
 
 function assertBadgeWallContract(files) {
   assert.match(files.badgeWxml, /<canvas[^>]*type="webgl"[^>]*id="wall"/, '单 canvas WebGL 引擎必须保留')
-  assert.match(files.badgeWxml, /class="bw-view-switch"[\s\S]*bindtap="setWallMode"[\s\S]*bindtap="setListMode"/)
+  // 2026-10-27 owner P-30:墙 / 列表切换按业主要求撤掉,只剩一页(上已点亮、下未解锁)
+  assert.doesNotMatch(files.badgeWxml, /class="bw-view-switch"|bindtap="setWallMode"|bindtap="setListMode"/)
   assert.match(files.badgeWxml, /wx:for="\{\{badgeGroups\}\}"/)
   assert.match(files.badgeWxml, /class="bw-list-h"/)
   assert.match(files.badgeWxml, /<scroll-view[^>]*class="bw-list"[^>]*scroll-y/)
-  assert.match(files.badgeWxml, /class="bw-list-row"[^>]*wx:for="\{\{group\.items\}\}"/)
+  // 2026-10-28 p75:每组两列勋章(金属边 + 珐琅面),行列表撤掉
+  assert.match(files.badgeWxml, /class="bw-cell"[^>]*wx:for="\{\{group\.items\}\}"/)
   assert.match(files.badgeWxml, /<cy-empty[^>]*class="bw-empty-state"[^>]*fill[^>]*size="lg"[^>]*title="还没有点亮勋章"/)
   assert.match(files.badgeWxml, /\{\{unlockedCount\}\}[\s\S]*\{\{badges\.length\}\}/)
   assert.match(files.badgeJs, /viewMode:\s*'list'/)
-  assert.match(files.badgeJs, /BADGE_FAMILIES/)
-  assert.match(files.badgeJs, /setWallMode\(\)/)
-  assert.match(files.badgeJs, /setListMode\(\)/)
+  assert.match(files.badgeJs, /BADGE_SECTIONS/)
   assert.match(files.badgeWxss, /\.bw-head\s*\{[^}]*padding:\s*0 var\(--cy-page-x\) var\(--cy-space-3\)/)
   assert.match(files.badgeWxss, /\.bw-page-title\s*\{[^}]*font-size:\s*var\(--cy-type-page-title\)/)
 

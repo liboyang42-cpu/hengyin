@@ -1,0 +1,24 @@
+<block wx:if="{{mode == 1 && !isPreview && !isMock}}">
+  <view class="drow" bindtap="openOrientLifecycle" aria-role="button" aria-label="查询定向对局与原请求结果" hover-class="cy-pressed" hover-stay-time="80">
+    <view class="dcopy"><text class="dt">定向对局</text><text class="ds">{{orientLifecycle.busy ? '正在查询…' : '准备、开始与结果恢复'}}</text></view>
+  </view>
+  <block wx:if="{{orientLifecycle.open}}">
+    <view class="drow drow--static" wx:if="{{orientLifecycle.notice}}" aria-role="text"><text class="ds">{{orientLifecycle.notice}}</text></view>
+    <view class="drow" wx:for="{{orientLifecycle.sessions}}" wx:key="sessionId" data-session-id="{{item.sessionId}}" bindtap="chooseOrientSession" aria-role="button" aria-label="查看对局 {{item.sessionId}}" hover-class="cy-pressed" hover-stay-time="80">
+      <view class="dcopy"><text class="dt">对局 {{item.sessionId}} · {{item.label}}</text><text class="ds">{{item.elapsedText}}</text></view>
+    </view>
+    <view class="drow" wx:if="{{orientLifecycle.ready && !orientLifecycle.sessions.length && !orientLifecycle.pending && !orientLifecycle.busy}}" bindtap="prepareOrientSession" aria-role="button" aria-label="准备本次对局" hover-class="cy-pressed" hover-stay-time="80"><text>准备本次对局</text></view>
+    <block wx:if="{{orientLifecycle.row}}">
+      <view class="drow drow--static" aria-role="text"><view class="dcopy"><text class="dt">已选对局 {{orientLifecycle.row.sessionId}}</text><text class="ds">{{orientLifecycle.row.label}} · {{orientLifecycle.row.elapsedText}}</text></view></view>
+      <block wx:if="{{!orientLifecycle.pending && !orientLifecycle.busy && !orientLifecycle.row.terminal}}">
+        <view class="drow" wx:if="{{orientLifecycle.row.phase === 'PREPARED'}}" bindtap="startOrientSession" aria-role="button" aria-label="确认本局规则并开始" hover-class="cy-pressed" hover-stay-time="80"><text>确认规则并开始</text></view>
+        <view class="drow" bindtap="abandonOrientSession" aria-role="button" aria-label="放弃本局" hover-class="cy-pressed" hover-stay-time="80"><text>放弃本局</text></view>
+      </block>
+      <block wx:if="{{!orientLifecycle.pending && !orientLifecycle.busy && orientLifecycle.row.startedAt && (orientLifecycle.row.phase === 'RUNNING' || orientLifecycle.row.phase === 'FINISHED')}}">
+        <view class="drow" wx:for="{{orientLifecycle.tasks}}" wx:key="taskId" data-task-id="{{item.taskId}}" bindtap="recordOrientTask" aria-role="button" aria-label="确认任务完成结果 {{item.name}}" hover-class="cy-pressed" hover-stay-time="80"><text>确认任务完成结果 · {{item.name}}</text></view>
+      </block>
+      <view class="drow" bindtap="readOrientRewards" aria-role="button" aria-label="刷新本局奖励事实" hover-class="cy-pressed" hover-stay-time="80"><view class="dcopy"><text class="dt">刷新奖励事实</text><text class="ds" wx:if="{{orientLifecycle.reward}}">{{orientLifecycle.reward.message}}</text><text class="ds" wx:if="{{orientLifecycle.reward.state === 'settled'}}">结算单 {{orientLifecycle.reward.settlementId}} · 积分 {{orientLifecycle.reward.points}} · 探索值 {{orientLifecycle.reward.xp}}</text></view></view>
+      <view class="drow" bindtap="openOrientRewards" aria-role="button" aria-label="查看本局计分与奖励事实" hover-class="cy-pressed" hover-stay-time="80"><text>查看计分与奖励</text></view>
+    </block>
+  </block>
+</block>

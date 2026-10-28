@@ -119,16 +119,28 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
                           and <include refid="postStaticPublicGate"/>)
     </update>
 
+    <!-- 城市属于当前源内容事实；NULL 原样返回，不回退过期投影或推断父主题城市。 -->
+    <sql id="currentSourceCity">
+        case d.document_type
+            when 'TOPIC' then current_topic.city_code
+            when 'ACTIVITY' then current_activity.city_code
+            when 'POST' then current_post.city_code
+        end
+    </sql>
+
     <!-- 读侧:投影只是候选,每一行都按源表实时公开闸再过一遍;帖文另按看的人排除互相拉黑/屏蔽的作者。 -->
     <select id="selectUnifiedSearch" resultType="com.chengyinhub.business.domain.vo.ContentSearchItemVO">
         select lower(d.document_type) as type, d.document_id as id, d.title as name, d.title as title,
-               d.img_url as imgUrl, d.city_code as cityCode, d.source_time as sourceTime
+               d.img_url as imgUrl, <include refid="currentSourceCity"/> as cityCode, d.source_time as sourceTime
         from content_search_document d
+        left join cms_topic current_topic on d.document_type = 'TOPIC' and current_topic.id = d.document_id
+        left join cms_activity current_activity on d.document_type = 'ACTIVITY' and current_activity.id = d.document_id
+        left join community_post current_post on d.document_type = 'POST' and current_post.id = d.document_id
         where d.visibility_state = 'VISIBLE'
           and d.document_type in
           <foreach collection="types" item="type" open="(" separator="," close=")">#{type}</foreach>
           and d.search_text like concat('%', #{keyword}, '%') escape '\\'
-          <if test="cityCode != null and cityCode != ''"> and d.city_code = #{cityCode}</if>
+          <if test="cityCode != null and cityCode != ''"> and <include refid="currentSourceCity"/> = #{cityCode}</if>
           and (
               (d.document_type = 'TOPIC' and exists (
                   select 1 from cms_topic where cms_topic.id = d.document_id

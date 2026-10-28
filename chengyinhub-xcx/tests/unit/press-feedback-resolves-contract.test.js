@@ -96,3 +96,11 @@ test('负控:页面引用全局类不算缺口(别把 app.wxss 这条链一起�
   assert.ok(fs.readFileSync(page, 'utf8').includes('hover-class="cy-pressed"'), '负控锚点失效')
   assert.deepEqual(unresolved(page), [], '页面不隔离，全局 .cy-pressed 对它有效，不该报缺口')
 })
+
+test('isolated card resolves its forwarded press class inside the component', () => {
+  const dir = path.join(ROOT, 'components/cy/card')
+  const template = fs.readFileSync(path.join(dir, 'index.wxml'), 'utf8')
+  const css = readCss(path.join(dir, 'index.wxss'))
+  assert.match(template, /hover-class="\{\{hoverClass\}\}"/)
+  assert.match(css, /\.cy-pressed\s*\{[^}]*opacity:\s*\.88/)
+})

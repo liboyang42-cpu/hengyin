@@ -4,7 +4,6 @@ import com.chengyinhub.business.service.support.ThemeCharacterService;
 import com.chengyinhub.common.constant.HttpStatus;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
-import com.chengyinhub.common.core.text.Convert;
 import com.chengyinhub.common.exception.ServiceException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -36,12 +35,28 @@ public class ApiPlayCharacterController extends BaseController {
             result.put("errorCode", "CHARACTER_LOGIN_REQUIRED");
             return result;
         }
+        Long exactTopicId = exactTopicId(topicId);
+        if (exactTopicId == null) {
+            AjaxResult result = new AjaxResult(HttpStatus.BAD_REQUEST, "参数不合规");
+            result.put("errorCode", "CHARACTER_BAD_REQUEST");
+            return result;
+        }
         try {
-            return success(themeCharacterService.card(memberId, Convert.toLong(topicId, 0L)));
+            return success(themeCharacterService.card(memberId, exactTopicId));
         } catch (ServiceException e) {
             AjaxResult result = new AjaxResult(e.getCode() == null ? HttpStatus.ERROR : e.getCode(), e.getMessage());
             if (e.getDetailMessage() != null) result.put("errorCode", e.getDetailMessage());
             return result;
+        }
+    }
+
+    /** 与角色卡客户端一致：不把小数、指数或溢出输入截断成另一个主题。 */
+    private static Long exactTopicId(String value) {
+        if (value == null || !value.matches("[1-9][0-9]{0,18}")) return null;
+        try {
+            return Long.valueOf(value);
+        } catch (NumberFormatException invalid) {
+            return null;
         }
     }
 

@@ -121,5 +121,5 @@ test('切换收藏:以返回值回读;失败如实提示且不改收藏态', () 
 
 test('模板:按钮照「发消息」同款 pc-primary pc-ticket,只在有节点的他人商家主页出现', () => {
   const wxml = fs.readFileSync(PROFILE_WXML, 'utf8')
-  assert.match(wxml, /<view class="pc-primary pc-ticket" wx:if="\{\{!isSelf && subjectIsMerchant && merchantNode\}\}" bindtap="toggleMerchantNodeFavorite"/)
+  assert.match(wxml, /<view class="pc-primary pc-ticket" wx:if="\{\{!isSelf && !viewingOwn && subjectIsMerchant && merchantNode\}\}" bindtap="toggleMerchantNodeFavorite"/)
 })

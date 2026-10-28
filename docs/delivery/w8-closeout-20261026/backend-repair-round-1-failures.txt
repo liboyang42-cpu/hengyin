@@ -1,0 +1,130 @@
+Source 8bfe4f765053a67e3013d74fe6e157201a86fbcc; run 40377384650
+[ERROR] Failures: 
+2026-10-26T18:29:01.4618256Z [ERROR]   CmsTopicPublishStateKeyGuardTest.r5OutcomeRejectsUnknownSystemDomainAndUnregisteredCounter:565 旧属性定义需作者确认注册版本后再发布 ==> expected: <true> but was: <false>
+2026-10-26T18:29:01.4619855Z [ERROR]   CmsTopicPublishStateKeyGuardTest.unparsableJourneyRulesFailClosed:242 Unexpected exception type thrown, expected: <com.chengyinhub.common.exception.ServiceException> but was: <java.lang.IllegalArgumentException>
+2026-10-26T18:29:01.4621216Z [ERROR]   SpoilerIsNotAnswerGateTest.legitimateRevealPathStillExists:105 付费闸 recordReveal 不能被一起删掉 ==> expected: <true> but was: <false>
+2026-10-26T18:29:01.4622211Z [ERROR]   SpoilerIsNotAnswerGateTest.negativeControl:120 负控变异注入失败 —— 锚点没命中,这条负控是假的 ==> expected: <false> but was: <true>
+2026-10-26T18:29:01.4623435Z [ERROR]   TopicUpdateByOwnerTest.draftEdit_illegalJourneyRules_rejectedBeforeAnyWrite:498 Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <java.lang.RuntimeException>
+2026-10-26T18:29:01.4625118Z [ERROR]   UserInvoiceServiceTest.titleSaveReceiptIsOwnerBoundAndNeverExposesPayloadFingerprintOrPii:318->assertCode:381 原保存结果待确认 ==> expected: <INVOICE_NOT_FOUND> but was: <INVOICE_REQUEST_IN_PROGRESS>
+2026-10-26T18:29:01.4626652Z [ERROR]   OfficialEventAttendanceServiceTest.invalidParticipationAndPausedWindowCannotCreateAttendance:28 Expected com.chengyinhub.common.exception.ServiceException to be thrown, but nothing was thrown.
+2026-10-26T18:29:01.4628255Z [ERROR]   OfficialEventAttendanceServiceTest.wrongOrOtherEventCodeDoesNotWrite:24 Unexpected exception type thrown, expected: <com.chengyinhub.common.exception.ServiceException> but was: <java.lang.NullPointerException>
+2026-10-26T18:29:01.4630168Z [ERROR]   OriginalSharedGuardEligibilityTest.missingLedgersPausedExitedEndedAndOutsideWindowNeverPass:56 Unexpected exception type thrown, expected: <com.chengyinhub.common.exception.ServiceException> but was: <com.chengyinhub.business.service.GameSessionException>
+2026-10-26T18:29:01.4632099Z [ERROR]   OriginalSharedGuardEligibilityTest.rejectsOtherOriginalIdentityAndUnregisteredActor:51 Unexpected exception type thrown, expected: <com.chengyinhub.common.exception.ServiceException> but was: <com.chengyinhub.business.service.GameSessionException>
+2026-10-26T18:29:01.4638227Z [ERROR]   UserInvoiceProcessingServiceTest.originalReceiptIsExactAndMissingReceiptNeverMutates:82 Unexpected exception type thrown, expected: <com.chengyinhub.business.service.invoice.UserInvoiceException> but was: <java.lang.NullPointerException>
+2026-10-26T18:29:01.4640052Z [ERROR]   WholeOrderRefundTest.pointsOnlyRefundLosingRaceToVerificationFailsLoudly:594 expected: <已核销报名不可退款> but was: <报名支付或核销状态已变化，请按原退款结果核对>
+2026-10-26T18:29:01.4640989Z [ERROR]   AdvancedGamePublicProjectionTest.playerNodesEndpointCannotPutRawAdvancedConfigIntoResponse:93 expected: <true> but was: <false>
+2026-10-26T18:29:01.4641916Z [ERROR]   ChapterAtmospherePresetTest.playerProjectionHardGatesAtmosphereToLinearOrienting:60 expected: <true> but was: <false>
+2026-10-26T18:29:01.4644188Z [ERROR]   DeadlockRetryEntryPointContractTest.callersOfServiceLevelRetryBoundariesStayNonTransactional:278->assertPlayTransaction:241 public com.chengyinhub.common.core.domain.AjaxResult com.chengyinhub.web.service.play.PlayPhotoCommandApplication.photo(java.lang.Long,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.Integer) must own the application transaction ==> expected: not <null>
+2026-10-26T18:29:01.4646446Z [ERROR]   DeadlockRetryEntryPointContractTest.outermostTransactionalEntryPointsCarryTheRetry:101 入口数与 #294 审计口径不符：新增/删除重载需重新做副作用审计 ==> expected: <12> but was: <13>
+2026-10-26T18:29:01.4647771Z [ERROR]   DeadlockRetryEntryPointContractTest.photoAndRevealCompatibilityOverloadsEnterTheSameWritableApplicationTransaction:155 expected: <节点不存在> but was: <必须提供原运行时身份>
+2026-10-26T18:29:01.4649304Z [ERROR]   DeadlockRetryEntryPointContractTest.playHttpRetryReentersTheActualPhotoApplicationAfterRollbackAndConnectionRelease:143 expected: <节点不存在> but was: <必须提供原运行时身份>
+2026-10-26T18:29:01.4650718Z [ERROR]   ApiPlayDelistedCompletedRetryContractTest.delistedCompletedPreferenceRetryReachesSubmitAndKeepsReceipt:352 必须提供动作标识、期望版本和原运行时身份 ==> expected: <200> but was: <500>
+2026-10-26T18:29:01.4651930Z [ERROR]   ApiPlayDelistedCompletedRetryContractTest.delistedCompletedSensorRetryKeepsIdempotentReceipt:366 必须提供动作标识、期望版本和原运行时身份 ==> expected: <200> but was: <500>
+2026-10-26T18:29:01.4653182Z [ERROR]   ApiPlayDelistedCompletedRetryContractTest.delistedNodeWithoutCompletionStillRejectedOnPreference:439 expected: <该地点尚未解锁> but was: <必须提供动作标识、期望版本和原运行时身份>
+2026-10-26T18:29:01.4654380Z [ERROR]   ApiPlayDelistedCompletedRetryContractTest.delistedNodeWithoutCompletionStillRejectedOnSensor:452 expected: <该站已下架，暂时无法完成> but was: <必须提供动作标识、期望版本和原运行时身份>
+2026-10-26T18:29:01.4655575Z [ERROR]   ApiPlayHistoryNodesContractTest.delistedNodeCannotBeNewlyCompletedThroughAnswerOrSensor:358 expected: <该站已下架，暂时无法完成> but was: <必须提供动作标识、期望版本和原运行时身份>
+2026-10-26T18:29:01.4656642Z [ERROR]   ApiPlayProgressCompletionTruthTest.freeStoryAnswerAdvancesThoughtStateUsingTheServerProgressReceipt:513 expected: <200> but was: <500>
+2026-10-26T18:29:01.4657707Z [ERROR]   ApiPlayProgressCompletionTruthTest.genericGpsUsesFrozenCoordinatesAndOnlyItsValidatedOriginCreatesProof:352 expected: <200> but was: <500>
+2026-10-26T18:29:01.4663470Z [ERROR]   ApiPlayProgressCompletionTruthTest.lastOpeningGameDoesNotAwardTheThemeBeforeDeparture:388 expected: <false> but was: <true>
+2026-10-26T18:29:01.4664600Z [ERROR]   ApiPlayProgressCompletionTruthTest.originalPublishedAnswerSurvivesUnbindButDoesNotGrantLegacyCompletionOrRewards:705 expected: <200> but was: <500>
+2026-10-26T18:29:01.4665482Z [ERROR]   ApiPlayProgressIdempotencyTest.successfulInsert_triggersNodeRewards:556 
+2026-10-26T18:29:01.4665920Z Wanted but not invoked:
+2026-10-26T18:29:01.4666191Z topicRouteCompletionCoordinator.advance(
+2026-10-26T18:29:01.4666475Z     88L,
+2026-10-26T18:29:01.4666643Z     300L,
+2026-10-26T18:29:01.4666807Z     500L,
+2026-10-26T18:29:01.4666978Z     401L,
+2026-10-26T18:29:01.4667141Z     isNull(),
+2026-10-26T18:29:01.4667574Z     isNull(),
+2026-10-26T18:29:01.4667754Z     isNull(),
+2026-10-26T18:29:01.4667930Z     isNull(),
+2026-10-26T18:29:01.4668116Z     isNull()
+2026-10-26T18:29:01.4668296Z );
+2026-10-26T18:29:01.4699097Z -> at com.chengyinhub.web.service.TopicRouteCompletionCoordinator.advance(TopicRouteCompletionCoordinator.java:27)
+2026-10-26T18:29:01.4699588Z 
+2026-10-26T18:29:01.4699745Z However, there was exactly 1 interaction with this mock:
+2026-10-26T18:29:01.4700117Z topicRouteCompletionCoordinator.advanceOriginal(
+2026-10-26T18:29:01.4700417Z     88L,
+2026-10-26T18:29:01.4700594Z     300L,
+2026-10-26T18:29:01.4704478Z     500L,
+2026-10-26T18:29:01.4712141Z     401L,
+2026-10-26T18:29:01.4712329Z     null,
+2026-10-26T18:29:01.4712511Z     null,
+2026-10-26T18:29:01.4712684Z     null,
+2026-10-26T18:29:01.4712851Z     null,
+2026-10-26T18:29:01.4713018Z     null,
+2026-10-26T18:29:01.4713195Z     null
+2026-10-26T18:29:01.4713363Z );
+2026-10-26T18:29:01.4714061Z -> at com.chengyinhub.web.service.play.PlayNodeCompletionApplication.advanceProgress(PlayNodeCompletionApplication.java:376)
+2026-10-26T18:29:01.4714575Z 
+2026-10-26T18:29:01.4714580Z 
+2026-10-26T18:29:01.4715298Z [ERROR]   ApiPlayRouteConflictHttpContractTest.nonConflictCompletionErrorStaysHttp200Without409:218 JSON path "$.msg" expected:<节点当前不可用> but was:<系统繁忙，请稍后重试>
+2026-10-26T18:29:01.4716824Z [ERROR]   ApiPlayRouteConflictHttpContractTest.pausedRouteRejectionReachesGlobalHandlerBeforeProgressWrites:260 JSON path "$.msg" expected:<本站尚未开放或已暂停，请联系带队主理人> but was:<系统繁忙，请稍后重试>
+2026-10-26T18:29:01.4717982Z [ERROR]   ApiPlayRouteConflictHttpContractTest.routeVersionConflictCarriesCurrentWorldInBodyData:199 JSON path "$.code" expected:<409> but was:<500>
+2026-10-26T18:29:01.4721939Z [ERROR]   ApiPlayRouteConflictHttpContractTest.routeVersionConflictIsHttp200WithBodyCode409:176 JSON path "$.code" expected:<409> but was:<500>
+2026-10-26T18:29:01.4723135Z [ERROR]   ApiPlayRouteContractTest.recoveryAndEveryCompletionEntryExposeTheSameCasContract:27->post:41 checkin 必须保持完成写入口 ==> expected: not <null>
+2026-10-26T18:29:01.4724124Z [ERROR]   ApiPlaySensorResultTest.completedDuplicateBypassesFrequencyLockAndReturnsIdempotently:623 expected: <200> but was: <500>
+2026-10-26T18:29:01.4725150Z [ERROR]   ApiPlaySensorResultTest.mode2RequiresExistingArrivalFact:518 expected: <先扫店内静态码进店，再开始任务> but was: <必须提供动作标识、期望版本和原运行时身份>
+2026-10-26T18:29:01.4726316Z [ERROR]   ApiPlaySensorResultTest.originalUnboundSensorStillUsesOriginalConfigAndRefusesUntrustedCompletion:159 expected: <传感器可信证明缺失，暂不能完成挑战> but was: <必须提供动作标识、期望版本和原运行时身份>
+2026-10-26T18:29:01.4727473Z [ERROR]   ApiPlaySensorResultTest.sensorResultCannotBypassNodeUnlock:141 expected: <本关尚未解锁,先完成前置关卡> but was: <必须提供动作标识、期望版本和原运行时身份>
+2026-10-26T18:29:01.4728547Z [ERROR]   ApiPlaySensorResultTest.uncompletedReplayCannotBypassTrustedProofWithRateWindowState:635 expected: <传感器可信证明缺失，暂不能完成挑战> but was: <必须提供动作标识、期望版本和原运行时身份>
+2026-10-26T18:29:01.4729866Z [ERROR]   ApiPlaySensorResultTest.validSelfReportedStepsStillRequireTrustedProof:577 expected: <传感器可信证明缺失，暂不能完成挑战> but was: <必须提供动作标识、期望版本和原运行时身份>
+2026-10-26T18:29:01.4730768Z [ERROR]   ApiPlaySensorResultTest.verifiedUploadStoresPictureAndReviewSlotOnOrdinaryPhoto:393 expected: <0> but was: <1>
+2026-10-26T18:29:01.4731821Z [ERROR]   ApiPlaySensorResultTest.vm7WithoutTrustedProofCannotCompleteOrGrantRewards:123 expected: <传感器可信证明缺失，暂不能完成挑战> but was: <必须提供动作标识、期望版本和原运行时身份>
+2026-10-26T18:29:01.4732855Z [ERROR]   ApiTopicAttributeBindingControllerTest.actualMvcBindsLongTopicAndUsesAuthenticatedOwner:22 No value at JSON path "$.data.topicId"
+2026-10-26T18:29:01.4733984Z [ERROR]   JourneyPublishFreezeTest.answerSubmitUsesTemplateAnswerFrozenAtRunStart:286 新答案不在开局快照里,同一局不得按新配置判定 ==> expected: <500> but was: <409>
+2026-10-26T18:29:01.4734852Z [ERROR]   JourneyPublishFreezeTest.arriveGateUsesValidationMethodFrozenAtRunStart:317 expected: <500> but was: <409>
+2026-10-26T18:29:01.4736076Z [ERROR]   JourneyPublishFreezeTest.oldRunSnapshotWithoutNodeAnswersFallsBackToLiveTemplate:304 老局快照没有冻结键时必须回退实时模板 ==> expected: <200> but was: <409>
+2026-10-26T18:29:01.4737044Z [ERROR]   JourneyPublishFreezeTest.puzzleRevealUsesAnswerFrozenAtRunStart:335 expected: <200> but was: <409>
+2026-10-26T18:29:01.4738571Z [ERROR]   PlayCommandIntentTest.actionContextAllowsSharedRefreshButActionReceiptKeepsItsReadOnlyTransaction:117 expected: <{routeSessionId=77, expectedRouteVersion=3, authorityEpoch=4, runtimeInstance=shared:77:4}> but was: <{routeSessionId=77, expectedRouteVersion=3, runtimeInstance=shared:77:4, authorityEpoch=4}>
+2026-10-26T18:29:01.4740745Z [ERROR]   PlayCommandIntentTest.sharedRefreshUsesPostLockVersionAndRejectsTheOldExpectedBeforeClaiming:156 expected: <{routeSessionId=77, expectedRouteVersion=4, authorityEpoch=2, runtimeInstance=game:77}> but was: <{routeSessionId=77, expectedRouteVersion=4, runtimeInstance=game:77, authorityEpoch=2}>
+2026-10-26T18:29:01.4742583Z [ERROR]   PlayLeadAdmissionFailureTest.preferenceBothHttpMethodsKeepOriginal403WithoutEnteringRouteOrPreference:182 Expected com.chengyinhub.common.exception.ServiceException to be thrown, but nothing was thrown.
+2026-10-26T18:29:01.4744177Z [ERROR]   PlayLeadAdmissionFailureTest.preferenceLeadRefusalTakesPriorityOverUnlockAndRouteRefusalForBothHttpMethods:194 expected: <队伍集合中,等队长开始行程> but was: <必须提供动作标识、期望版本和原运行时身份>
+2026-10-26T18:29:01.4745619Z [ERROR]   PlayLeadAdmissionFailureTest.preferenceNodeOwnershipRefusalStillPrecedesLeadAndRouteForBothHttpMethods:202 expected: <该节点不属于本次活动> but was: <必须提供动作标识、期望版本和原运行时身份>
+2026-10-26T18:29:01.4746956Z [ERROR]   PlayLeadAdmissionFailureTest.preferenceSubmitFaultNeverCallsPreferenceMutation:150->reject:248 Expected com.chengyinhub.common.exception.ServiceException to be thrown, but nothing was thrown.
+2026-10-26T18:29:01.4748239Z [ERROR]   PlayLeadAdmissionFailureTest.preferenceSubmitRecoveryPassesTheOriginalCommandAfterOriginalRouteAdmission:170 expected: <200> but was: <500>
+2026-10-26T18:29:01.4749705Z [ERROR]   PlayLeadAdmissionFailureTest.sensorFaultNeverAcquiresSensorOrAwards:140->reject:248 Expected com.chengyinhub.common.exception.ServiceException to be thrown, but nothing was thrown.
+2026-10-26T18:29:01.4751042Z [ERROR]   PlayLeadAdmissionFailureTest.sensorGatheringRefusalDoesNotEnterWritableRouteOrAcquireProof:213 expected: <队伍集合中,等队长开始行程> but was: <必须提供动作标识、期望版本和原运行时身份>
+2026-10-26T18:29:01.4752302Z [ERROR]   PlayLeadAdmissionFailureTest.sensorLeadRecoveryStillUsesOriginalActorScopeActionAndInput:230 expected: <传感器可信证明缺失，暂不能完成挑战> but was: <必须提供动作标识、期望版本和原运行时身份>
+2026-10-26T18:29:01.4753410Z [ERROR]   AuditCommunityMediaDetailTest.immutableServiceListRemainsUnchangedAndNonCommunityRowsArePreserved:82 expected: <2> but was: <0>
+2026-10-26T18:29:01.4754392Z [ERROR]   AuditCommunityMediaDetailTest.listKeepsPageTotalAndOriginalObjectsWhileSanitizingMediaFields:68 expected: <77> but was: <0>
+2026-10-26T18:29:01.4755067Z [ERROR]   P3AdminControllersTest.auditListUsesServiceQuery:58 
+2026-10-26T18:29:01.4755404Z Wanted but not invoked:
+2026-10-26T18:29:01.4755639Z iAuditTaskService.selectAuditTaskList(
+2026-10-26T18:29:01.4755947Z     <any com.chengyinhub.business.domain.AuditTask>
+2026-10-26T18:29:01.4756217Z );
+2026-10-26T18:29:01.4756740Z -> at com.chengyinhub.web.controller.business.P3AdminControllersTest.auditListUsesServiceQuery(P3AdminControllersTest.java:58)
+2026-10-26T18:29:01.4757247Z 
+2026-10-26T18:29:01.4757398Z However, there was exactly 1 interaction with this mock:
+2026-10-26T18:29:01.4757775Z iAuditTaskService.selectWorkbenchQueueWithGuardScope(
+2026-10-26T18:29:01.4758158Z     com.chengyinhub.business.domain.AuditTask@65183033,
+2026-10-26T18:29:01.4758448Z     []
+2026-10-26T18:29:01.4758798Z );
+2026-10-26T18:29:01.4759231Z -> at com.chengyinhub.web.controller.business.AuditWorkbenchController.list(AuditWorkbenchController.java:96)
+2026-10-26T18:29:01.4759665Z 
+2026-10-26T18:29:01.4759669Z 
+2026-10-26T18:29:01.4760313Z [ERROR]   PlayFrozenContentProjectionTest.newSnapshotCannotBorrowALaterNodeAndEachReadIsADefensiveCopy:139 Expected java.lang.IllegalStateException to be thrown, but nothing was thrown.
+2026-10-26T18:29:01.4761249Z [ERROR] Errors: 
+2026-10-26T18:29:01.4761920Z [ERROR]   ClubFulfillmentChainGateTest.ownerRefundIgnoresPlayerRefundWindowForPastSession:171 » Service 支付现金快照未确认，请通过后台退款工单核对后处理
+2026-10-26T18:29:01.4763643Z [ERROR]   FreeSessionCancelReleaseV2Test.freeSessionOrderWithin24hCancelsAndReleasesPlaces:101 » NullPointer Cannot invoke "com.chengyinhub.business.service.IRefundService.prepareRegistrationFullRefund(java.lang.Long, java.math.BigDecimal)" because "this.refundService" is null
+2026-10-26T18:29:01.4765033Z [ERROR]   TopicUpdateByOwnerTest.draftEdit_persistsNormalizedJourneyRules:463 » Runtime 主题不存在或无权编辑
+2026-10-26T18:29:01.4766116Z [ERROR]   AdvancedGameRuntimeServiceImplTest.defaultContentReadRejectsMismatchedFrozenIdentityAndReturnsIndependentCopy:2954 » IllegalState 原小游戏内容身份不可用
+2026-10-26T18:29:01.4767262Z [ERROR]   FreeOrderCancelAcceptanceTest.repeatedCancelOnStaleSnapshotDoesNotRestoreStockTwice:139 » Service 原报名归属已变化，请刷新后重试
+2026-10-26T18:29:01.4768275Z [ERROR]   UserInvoiceProcessingServiceTest.approvedRefundEvenFailedPayoutPausesInsteadOfIssuing:70 » UserInvoice 原请求已用于不同处理内容
+2026-10-26T18:29:01.4769440Z [ERROR]   UserInvoiceProcessingServiceTest.authorizedTaxViewAuditsMetadataAndAuditFailureReturnsNoTax:53 » UserInvoice 原请求已用于不同处理内容
+2026-10-26T18:29:01.4770629Z [ERROR]   UserInvoiceProcessingServiceTest.pausedAndEmptyRefundHistoryDoesNotResumeAndCommitsDefiniteDeclineReceipt:77 » UserInvoice 原请求已用于不同处理内容
+2026-10-26T18:29:01.4772212Z [ERROR]   UserInvoiceProcessingServiceTest.unknownRetainsOperationAndOccupancyAndUsesCurrentRefundReadBeforeApplicationLock:59 » UserInvoice 原请求已用于不同处理内容
+2026-10-26T18:29:01.4773351Z [ERROR]   FrozenAttributeDefinitionsTest.completeDefinitionMustMatchTheRunVersion:49 » IllegalArgument 旅程数值规则版本不支持
+2026-10-26T18:29:01.4774322Z [ERROR]   FrozenAttributeDefinitionsTest.emptyCompleteDefinitionDoesNotAddUnenabledAttributes:31 » IllegalArgument 旅程数值规则版本不支持
+2026-10-26T18:29:01.4775451Z [ERROR]   FrozenAttributeDefinitionsTest.existingRunReadsDoNotPromoteNestedMetadataAndNewFreezeRejectsConflicts:76 » IllegalArgument 旅程数值规则版本不支持
+2026-10-26T18:29:01.4776689Z [ERROR]   FrozenAttributeDefinitionsTest.newRunCopiesPublishedNestedDefinitionExactlyWithoutSharingMutableNodes:66 » IllegalArgument 旅程数值规则版本不支持
+2026-10-26T18:29:01.4777782Z [ERROR]   FrozenAttributeDefinitionsTest.oldPartialRemainsUnchangedWithoutLiveEnrichment:58 » IllegalArgument 旅程数值规则版本不支持
+2026-10-26T18:29:01.4778947Z [ERROR]   FrozenAttributeDefinitionsTest.publishedDefinitionDrivesInitialStateAndMetadataWithoutLiveRegistry:19 » IllegalArgument 旅程数值规则版本不支持
+2026-10-26T18:29:01.4780089Z [ERROR]   FrozenAttributeDefinitionsTest.versionsStayExactAndNoncanonicalOrOverflowVersionsAreRejected:45 » IllegalArgument 旅程数值规则版本不支持
+2026-10-26T18:29:01.4781168Z [ERROR]   ApiPlayCheckinLiveCodeTest.sharedRouteScanOnlyRecordsArrivalAndNeverRunsPersonalAwardChain:94 » IllegalState 原共享局内容身份已变化
+2026-10-26T18:29:01.4782947Z [ERROR]   ApiPlayProgressCompletionTruthTest.genericFrozenTextAndChoiceAnswersProduceOnlyControlledCurrentProof:684 » NullPointer Cannot invoke "com.chengyinhub.business.service.IPuzzlePlayService.solvedScore(java.lang.Long, java.lang.Long, java.lang.Long, java.lang.Long)" because "this.puzzlePlayService" is null
+2026-10-26T18:29:01.4784790Z [ERROR]   ApiPlayProgressCompletionTruthTest.genericPlayerScanRecordsCurrentRunArrivalWithoutLegacyAwards:365 » Service 通用个人任务请使用任务结算，不能领取旧节点奖励
+2026-10-26T18:29:01.4785437Z [INFO] 
+2026-10-26T18:29:01.4785688Z [ERROR] Tests run: 14413, Failures: 60, Errors: 19, Skipped: 638
+2026-10-26T18:29:01.4786004Z [INFO] 
+2026-10-26T18:29:01.4786339Z 

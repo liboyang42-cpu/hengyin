@@ -40,10 +40,36 @@ function loadSearchResultPage() {
   return { page, requests };
 }
 
-function resolveSearchBatch(batch, failures) {
-  batch.forEach((request, index) => {
-    if (failures && failures.has(index)) request.fail({ errMsg: 'request:fail timeout' });
-    else request.success({ code: 200, data: { rows: [{ id: index + 1, name: '结果-' + index }] } });
+// 六类结果的固定序号(与 discover-search.buildRequests 顺序一致)。登录且无筛选时，W8 起主题+活动
+// 合并为一条 /api/search/unified(按 type 分组回填)，其余四类仍各走原接口；夹具按 URL 回应，
+// 不再按批内下标猜类型。
+const SEARCH_TYPE_INDEX = { topic: 0, activity: 1, club: 2, merchant: 3, topicTemplate: 4, gameTemplate: 5 };
+const SEARCH_URL_TYPE = {
+  '/api/topic/list': 'topic', '/api/activity/list': 'activity', '/api/club/list': 'club',
+  '/api/merchant/list': 'merchant', '/api/template/topic-template/list': 'topicTemplate', '/api/template/list': 'gameTemplate',
+};
+
+function runSearchBatch(page, requests) {
+  const start = requests.length;
+  page.runSearch();
+  return requests.slice(start);
+}
+
+function resolveSearchBatch(batch, failures, rowFor = (index) => ({ id: index + 1, name: '结果-' + index })) {
+  batch.forEach((request) => {
+    if (request.url === '/api/search/unified') {
+      if (failures && (failures.has('topic') || failures.has('activity'))) request.fail({ errMsg: 'request:fail timeout' });
+      else {
+        const rows = ['topic', 'activity'].map((type) => Object.assign({ type }, rowFor(SEARCH_TYPE_INDEX[type])))
+          .map((row) => Object.assign(row, { id: String(row.id) }));
+        request.success({ code: 200, data: { rows, total: rows.length } });
+      }
+      return;
+    }
+    const type = SEARCH_URL_TYPE[request.url];
+    assert.ok(type, '未登记的搜索请求 ' + request.url);
+    if (failures && failures.has(type)) request.fail({ errMsg: 'request:fail timeout' });
+    else request.success({ code: 200, data: { rows: [rowFor(SEARCH_TYPE_INDEX[type])] } });
   });
 }
 
@@ -138,17 +164,18 @@ test('首页与城市事件刷新时保留旧内容，只有无旧内容才显�
   assert.match(activity, /<view wx:if="\{\{events\.length>0\}\}" class="oe-list">/);
 });
 
+// 「同关键词刷新保留旧结果」管的是六类原接口那条路径(带类别筛选时不走合并搜索)。登录且无筛选时主题/活动/帖文
+// 走 /api/search/unified,刷新须替换已删除结果与城市(见 search-unified-page.test.js),不在本合同内。
 test('搜索同关键词重试保留旧结果，部分失败只显示局部错误', () => {
   const { page, requests } = loadSearchResultPage();
-  page.setData({ keyword: '咖啡' });
-  page.runSearch();
-  // 六路请求;主题模板在客户端按关键词过滤,夹具名称不含关键词 ⇒ 5 条可见
-  resolveSearchBatch(requests.slice(0, 6));
+  page.setData({ keyword: '咖啡', categoryId: '8' });
+  // 六类结果;主题模板在客户端按关键词过滤,夹具名称不含关键词 ⇒ 5 条可见
+  resolveSearchBatch(runSearchBatch(page, requests));
   assert.equal(page.data.visibleResults.length, 5);
 
-  page.runSearch();
+  const retry = runSearchBatch(page, requests);
   assert.equal(page.data.visibleResults.length, 5, '同关键词刷新开始时不能清空旧结果');
-  resolveSearchBatch(requests.slice(6, 12), new Set([1, 2, 3]));
+  resolveSearchBatch(retry, new Set(['activity', 'club', 'merchant']));
 
   assert.equal(page.data.visibleResults.length, 5, '失败分类继续展示上一次成功内容');
   assert.equal(page.data.searchError, '');
@@ -157,26 +184,32 @@ test('搜索同关键词重试保留旧结果，部分失败只显示局部错�
 test('搜索部分分类失败且其余分类为空时必须显示未完成错误，不能谎报全站无结果', () => {
   const { page, requests } = loadSearchResultPage();
   page.setData({ keyword: '冷门关键词' });
-  page.runSearch();
-
-  requests.forEach((request, index) => {
-    if (index === 0) request.fail({ errMsg: 'request:fail timeout' });
-    else request.success({ code: 200, data: { rows: [] } });
+  const empty = { code: 200, data: { rows: [] } };
+  runSearchBatch(page, requests).forEach((request) => {
+    if (request.url === '/api/club/list') request.fail({ errMsg: 'request:fail timeout' });
+    else request.success(request.url === '/api/search/unified' ? { code: 200, data: { rows: [], total: 0 } } : empty);
   });
 
   assert.deepEqual(page.data.visibleResults, []);
   assert.match(page.data.searchError, /部分|未完成|重试/);
+
+  // 主题/活动合并搜索失败、其余分类为空:同样不能落成「没有找到」空态。
+  runSearchBatch(page, requests).forEach((request) => {
+    if (request.url === '/api/search/unified') request.fail({ errMsg: 'request:fail timeout' });
+    else request.success(empty);
+  });
+  assert.deepEqual(page.data.visibleResults, []);
+  assert.match(page.data.contentError, /部分|未完成|重试/);
 });
 
 test('搜索当前 tab 恰好为空时，仍按全部分组判断是否存在旧结果', () => {
   const { page, requests } = loadSearchResultPage();
-  page.setData({ keyword: '咖啡' });
-  page.runSearch();
-  resolveSearchBatch(requests.slice(0, 6));
+  page.setData({ keyword: '咖啡', categoryId: '8' });
+  resolveSearchBatch(runSearchBatch(page, requests));
   const previousGroups = page.data.resultGroups;
   page.setData({ activeResultType: 'missing-type', visibleResults: [] });
 
-  page.runSearch();
+  runSearchBatch(page, requests);
 
   assert.deepEqual(page.data.resultGroups, previousGroups);
   assert.equal(page.data.activeResultType, 'missing-type');
@@ -185,14 +218,12 @@ test('搜索当前 tab 恰好为空时，仍按全部分组判断是否存在旧
 test('搜索新关键词用 epoch 拒绝旧请求迟到回写', () => {
   const { page, requests } = loadSearchResultPage();
   page.setData({ keyword: '旧词' });
-  page.runSearch();
-  const oldBatch = requests.slice(0, 6);
+  const oldBatch = runSearchBatch(page, requests);
 
   page.setData({ keyword: '新词' });
-  page.runSearch();
-  const freshBatch = requests.slice(6, 12);
-  freshBatch.forEach((request, index) => request.success({ code: 200, data: { rows: [{ id: index + 20, name: '新结果-' + index }] } }));
-  oldBatch.forEach((request, index) => request.success({ code: 200, data: { rows: [{ id: index + 40, name: '旧结果-' + index }] } }));
+  const freshBatch = runSearchBatch(page, requests);
+  resolveSearchBatch(freshBatch, null, (index) => ({ id: index + 20, name: '新结果-' + index }));
+  resolveSearchBatch(oldBatch, null, (index) => ({ id: index + 40, name: '旧结果-' + index }));
 
   assert.deepEqual(page.data.visibleResults.map(item => item.title), ['新结果-0', '新结果-1', '新结果-2', '新结果-3', '新结果-5']);
 });

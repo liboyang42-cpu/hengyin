@@ -187,12 +187,12 @@ test('发布弹层:实名没齐时确认键置灰且会说话', () => {
   const wxml = read(ENTRY.fabu.wxml)
   const btn = /<cy-btn[^>]*bindtap="confirmPublishCheck"[^>]*>/.exec(wxml)
   assert.ok(btn, '找不到「确认发布」按钮')
-  // L09(2026-10-22):旧草稿归属待确认(legacyScopePending)并进同一个阻断条件
-  assert.match(btn[0], /disabled="\{\{!!publishCheck\.blocking\.length \|\| !identityReady \|\| legacyScopePending\}\}"/,
+  // 2026-10-27 P-44:旧草稿静默归到当前入口,legacyScopePending 阻断条件随归属确认一起删除
+  assert.match(btn[0], /disabled="\{\{!!publishCheck\.blocking\.length \|\| !identityReady\}\}"/,
     '实名不齐时确认发布必须置灰')
   assert.match(btn[0], /bind:disabledtap="onPublishCheckDisabledTap"/,
     '置灰键要点得动并说出缺什么(置灰键会说话)')
-  assert.match(wxml, /wx:if="\{\{publishCheck\.blocking\.length \|\| !identityReady \|\| legacyScopePending\}\}"/,
+  assert.match(wxml, /wx:if="\{\{publishCheck\.blocking\.length \|\| !identityReady\}\}"/,
     '必填项区块要把「发布者实名未填写」也列进阻断')
 })
 

@@ -1,5 +1,6 @@
 const { applyPreviewAction } = require('../../../../utils/game-preview-action.js');
 const toast = require('../../../../utils/toast.js');
+const { id, integer } = require('../../../../utils/orient-score-view.js');
 const app = getApp();
 const { safeUserMessage } = require('../../../../utils/transport/safe-user-message.js');
 const { buildActionKey, buildUnitId } = require('../../utils/play-action-key.js');
@@ -22,7 +23,7 @@ Component({
     acting: false,
     error: '',
     // unknown：请求已发出但结果未知。不是失败，也不能当成功——保持锁定，
-    // 单人局回读 /state；共享局原键重放核对本人回执（见 resolveUnknown）。
+    // 所有局只读原请求回执；负向查询不解除未知状态。
     unknown: false,
     unknownText: '',
     readingBack: false,
@@ -64,7 +65,7 @@ Component({
       const old = this.data.state || {};
       const retry = action === 'RETRY' && !!old.challenge
         && String(state.retrySourceSessionId || '') === context.sessionId
-        && Number.isSafeInteger(state.sessionId) && state.sessionId > 0
+        && !!id(state.sessionId)
         && state.ownerType === old.ownerType && String(state.ownerId) === String(old.ownerId)
         && String(state.nodeId) === context.nodeId
         && (!context.topicId || String(state.topicId) === context.topicId)
@@ -79,8 +80,13 @@ Component({
         data: method === 'GET' ? data : JSON.stringify(data || {}),
         header: method === 'GET' ? undefined : { 'Content-Type': 'application/json' },
         success: resolve,
+        successStatusAbnormal: reject,
         fail: reject
       }));
+    },
+    pendingKey() {
+      const scope = this.sessionRequestContext();
+      return 'advanced-original:' + [scope.memberId, scope.topicId, scope.activityId, scope.nodeId].join(':');
     },
     start() {
       const node = this.data.node || {};
@@ -103,12 +109,25 @@ Component({
             && !(config.multiplayer && config.multiplayer.enabled) });
         return;
       }
+      try {
+        const pending = wx.getStorageSync(this.pendingKey());
+        if (pending) {
+          this._unknownCommand = pending.command;
+          this.setData({ loading: false, acting: false, unknown: true, readingBack: false,
+            state: pending.state, error: '', unknownText: '正在查询原请求结果，请勿重新提交' });
+          return this.resolveUnknown();
+        }
+      } catch (_) {
+        this.setData({ loading: false, unknown: true, error: '原请求记录无法读取，暂不启动新动作' });
+        return;
+      }
+      const scope = { activityId: integer(this.data.activityId || 0),
+        topicId: integer(this.data.topicId || 0), nodeId: integer(node.nodeId || 0) };
+      if (Object.values(scope).some(value => !value)) {
+        this.setData({ loading: false, error: '玩法标识不完整，请重新进入' }); return;
+      }
       this.setData({ loading: true, acting: false, unknown: false, readingBack: false, error: '', state: null });
-      this.request('/api/play/advanced/start', 'POST', {
-        activityId: Number(this.data.activityId) || 0,
-        topicId: Number(this.data.topicId) || 0,
-        nodeId: Number(node.nodeId) || 0
-      }).then(res => {
+      this.request('/api/play/advanced/start', 'POST', scope).then(res => {
         if (!this.currentRequestContext(context, false)) return;
         if (res.code == 200 || res.code == '200') this.hydrate(res.data || {});
         else this.setData({ error: safeUserMessage(res, '高级玩法启动失败') });
@@ -210,7 +229,7 @@ Component({
       // 幂等键由「session + 服务端 version + 动作 + 入参」派生：同一次意图重试复用同一个键，
       // 服务端 selectByIdempotencyKey 才能 replay；写成功后 version 前进，下一动作自动换键。
       const idempotencyKey = buildActionKey(sessionId, version, name, body);
-      if (!idempotencyKey) {
+      if (!id(sessionId) || !idempotencyKey) {
         this.setData({ error: '当前玩法状态不完整，请退出节点后重新进入' });
         return;
       }
@@ -218,36 +237,52 @@ Component({
       const command = {
         sessionId, version, idempotencyKey, action: name, payload: body
       };
+      // Persist only original identity, not answers/photos or the command payload.
+      const original = { sessionId, version, idempotencyKey, action: name };
+      const originalState = { sessionId, version, nodeId: this.data.state.nodeId,
+        ownerId: this.data.state.ownerId, ownerType: this.data.state.ownerType,
+        challenge: this.data.state.challenge ? {} : null };
+      const pendingKey = this.pendingKey();
+      try { wx.setStorageSync(pendingKey, { command: original, state: originalState }); }
+      catch (_) { this.setData({ acting: false, error: '原请求记录无法保存，尚未提交' }); return; }
+      this._unknownCommand = original;
       return this.request('/api/play/advanced/action', 'POST', command).then(res => {
         if (!this.currentRequestContext(context)) return;
         if (res.code == 200 || res.code == '200') {
           if (!this.responseMatchesSession(res.data, context, name)) throw new Error('session response mismatch');
+          wx.removeStorageSync(pendingKey);
+          this._unknownCommand = null;
           this.hydrate(res.data);
           if (!this.currentRequestContext(context, false)) return;
           this.setData({ acting: false });
           return true;
         }
         if (Number(res.code) === 409 && res.data && this.responseMatchesSession(res.data.view, context)) {
+          wx.removeStorageSync(pendingKey);
+          this._unknownCommand = null;
           this.hydrate(res.data.view);
           this.setData({ acting: false, error: safeUserMessage(res, '玩法状态已更新，请确认后再操作') });
           this.emitActionFail(name, sessionId);
           return false;
         }
-        // 服务端说状态已更新 = 我方 version 落后，直接回读权威状态，别让用户拿旧 version 反复重发。
-        if (/状态已更新/.test(res.msg || '')) {
-          return this.refreshState().then(() => {
-            if (!this.currentRequestContext(context)) return;
-            this.setData({ acting: false, error: safeUserMessage(res, '操作失败，请重试') });
-            this.emitActionFail(name, sessionId);
-          });
+        // Explicit 4xx come from ServiceException inside the @Transactional act: rolled back, nothing written.
+        const status = Number(res.code);
+        if (status >= 400 && status < 500 && status !== 408) {
+          wx.removeStorageSync(pendingKey);
+          this._unknownCommand = null;
+          this.setData({ acting: false, error: safeUserMessage(res, '操作失败，请重试') });
+          this.emitActionFail(name, sessionId);
+          return false;
         }
-        this.setData({ error: safeUserMessage(res, '操作失败，请重试'), acting: false });
-        this.emitActionFail(name, sessionId);
+        // act can commit before finishPendingCardMint fails. A generic error is not proof of rollback.
+        this._unknownAction = name;
+        this.enterUnknown(version);
+        return false;
       }).catch(() => {
         if (!this.currentRequestContext(context)) return;
         this._unknownAction = name;
         this._unknownChallengeGame = body.game;
-        this._unknownCommand = JSON.parse(JSON.stringify(command));
+        this._unknownCommand = original;
         this.enterUnknown(version);
       });
     },
@@ -261,82 +296,32 @@ Component({
       this.resolveUnknown();
     },
     resolveUnknown() {
-      if (this.data.readingBack) return Promise.resolve();
-      this.setData({ readingBack: true });
+      if (this.data.readingBack || !this._unknownCommand || !this.data.state) return Promise.resolve(false);
+      const original = this._unknownCommand;
       const context = this.sessionRequestContext();
-      const sessionId = this.data.state.sessionId;
-      // 共享局的版本可由队友推进；原键重放返回本人回执，不能用版本增长猜成功。
-      if (this._unknownCommand && (this.data.state.ownerType === 2 || this._unknownCommand.action === 'RETRY')) {
-        return this.request('/api/play/advanced/action', 'POST', this._unknownCommand).then(res => {
-          if (!this.currentRequestContext(context)) return false;
-          if (res.code == 200) {
-            if (!this.responseMatchesSession(res.data, context, this._unknownCommand.action)) throw new Error('replay session mismatch');
-            const replay = res.data;
-            const currentChallenge = this.data.state.challenge || {};
-            if (this.staleSnapshot(replay) && currentChallenge.instanceId
-                && replay.challenge && replay.challenge.instanceId === currentChallenge.instanceId) {
-              this.setData({ state: Object.assign({}, this.data.state, { challenge: Object.assign({}, replay.challenge, {
-                progress: Math.max(Number(currentChallenge.progress) || 0, Number(replay.challenge.progress) || 0),
-                success: !!currentChallenge.success || !!replay.challenge.success,
-              }) }) });
-            } else this.hydrate(replay);
-            if (!this.currentRequestContext(context, false)) return true;
-            this._unknownCommand = null;
-            this.setData({ readingBack: false, unknown: false, unknownText: '', error: '' });
-            return true;
-          }
-          // 收到明确拒绝才释放；网络未知继续保留原命令和选择。
-          return this.refreshState().then(() => {
-            if (!this.currentRequestContext(context)) return false;
-            this._unknownCommand = null;
-            this.setData({ readingBack: false, unknown: false, unknownText: '', error: safeUserMessage(res, '操作未提交，请重试') });
-            this.emitActionFail(this._unknownAction, sessionId);
-            return false;
-          });
-        }).catch(() => {
-          if (!this.currentRequestContext(context)) return false;
-          this.setData({ readingBack: false, unknownText: '还没确认上，网络恢复后再试 · 原提交会自动去重' });
-          return false;
-        });
-      }
-      return this.request('/api/play/advanced/state', 'GET', { sessionId })
-        .then(res => {
-          if (!this.currentRequestContext(context)) return;
-          if (!(res.code == 200 || res.code == '200')) throw new Error('readback failed');
-          const authoritative = res.data || {};
-          if (!this.responseMatchesSession(authoritative, context) || this.staleSnapshot(authoritative)) throw new Error('readback stale or mismatched');
-          const advanced = Number(authoritative.version) > Number(this._unknownVersion);
-          // ★version 只在单人局是「我那一步」的独占证据。多人局里队友写入同样推高 version，
-          // 拿它当证据会把真丢掉的动作判成成功、把提示清掉，用户再也不知道该重试。
-          // 证不到就别下「成功」的结论；重试本身有 idempotencyKey 兜底，落过的不会重复写。
-          const multiplayer = !!(((authoritative.config || {}).multiplayer || {}).enabled);
-          const typeInStart = this._unknownAction === 'START_CHALLENGE' && this._unknownChallengeGame === 'typeIn';
-          const typeIn = (authoritative.playKit || {}).typeIn || {};
-          // 开表有独立服务端事实，不拿版本增长代替开始计时。
-          if (typeInStart && typeof typeIn.started !== 'boolean') {
-            this.setData({ readingBack: false, unknownText: '还没确认是否开始计时，请再确认 · 期间请勿重复提交' });
-            return;
-          }
-          const landed = typeInStart ? typeIn.started : advanced && !multiplayer;
-          this.hydrate(authoritative);
-          if (!this.currentRequestContext(context)) return;
-          this.setData({
-            readingBack: false, unknown: false, unknownText: '',
-            // 回读说没写进去，才允许重试；这句是结论不是猜测。
-            error: landed ? ''
-              : advanced && !typeInStart ? '没能确认这一步是否提交成功，可以重试（重试不会重复提交）'
-                : '刚才那一步没有提交成功，可以重试'
-          });
-          if (!landed) this.emitActionFail(this._unknownAction, authoritative.sessionId);
-        })
-        .catch(() => {
-          if (!this.currentRequestContext(context)) return;
-          this.setData({
-            readingBack: false,
-            unknownText: '还是没确认上，网络恢复后点这里再试 · 期间请勿重复提交'
-          });
-          this.emitActionFail(this._unknownAction);
-        });
+      const pendingKey = this.pendingKey();
+      this.setData({ readingBack: true });
+      return this.request('/api/play/advanced/receipt', 'GET', {
+        sessionId: original.sessionId, idempotencyKey: original.idempotencyKey
+      }).then(res => {
+        if (!this.currentRequestContext(context)) return false;
+        const receipt = res.data || {};
+        if (Number(res.code) !== 200 || String(receipt.sessionId) !== String(original.sessionId)
+            || receipt.idempotencyKey !== original.idempotencyKey
+            || !this.responseMatchesSession(receipt.view, context, original.action)) throw new Error('Original receipt unconfirmed');
+        // hydrate already rejects older versions. A historical receipt proves this request only.
+        wx.removeStorageSync(pendingKey);
+        this.hydrate(receipt.view);
+        if (!this.currentRequestContext(context, false)) return true;
+        this._unknownCommand = null;
+        this.setData({ readingBack: false, unknown: false, unknownText: '', error: '' });
+        return true;
+      }).catch(() => {
+        if (!this.currentRequestContext(context)) return false;
+        this.setData({ readingBack: false, unknown: true,
+          unknownText: '原请求仍待确认，未查到不代表未提交；请勿重复提交，核对原结果' });
+        return false;
+      });
     },
     previewKitAction(event) {
       if (!this.data.preview || !this.data.state || !this.data.state.previewKit) return false;

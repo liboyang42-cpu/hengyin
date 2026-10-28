@@ -1,5 +1,8 @@
 {
   "usingComponents": {
+    "cy-list-group": "/components/cy/list-group/index",
+    "cy-list-row": "/components/cy/list-row/index",
+    "cy-sheet-nav": "/components/cy/sheet-nav/index",
     "cy-privacy-gate": "/components/cy/privacy-gate/index",
     "cy-card": "/components/cy/card/index",
     "cy-date-sheet": "/components/cy/date-sheet/index",
@@ -23,7 +26,13 @@
     "cy-result-sheet": "/components/cy/result-sheet/index",
     "cy-chapter-gate": "/components/cy/chapter-gate/index",
     "cy-empty": "/components/cy/empty/index",
-    "topic-state-keys": "/pages/publish/components/topic-state-keys/index"
+    "topic-state-keys": "/pages/publish/components/topic-state-keys/index",
+    "story-rule-editor": "/pages/publish/components/story-rule-editor/index",
+    "attribute-binding-editor": "/pages/publish/components/attribute-binding-editor/index",
+    "cy-choice-sheet": "/components/cy/choice-sheet/index",
+    "d20-settings": "/pages/publish/components/d20-settings/index",
+    "start-prep": "/pages/publish/components/start-prep/index",
+    "cy-stepper": "/components/cy/stepper/index"
   },
   "navigationStyle": "custom",
   "navigationBarTextStyle": "black",

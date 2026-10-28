@@ -111,7 +111,8 @@ test('选点成功后回读落点状态,而不是就地相信选点回调', () =
 
 test('负控:判据改回 address 字符串时必须判红', async () => {
   const regressed = PAGE_JS.replace(
-    "storePointText: hasPoint ? (profile.address || '已选择地图位置') : STORE_POINT_UNSET,",
+    // 2026-10-27 G-7:地址行只显示到路名(streetOnly),锚点随之同步
+    "storePointText: hasPoint ? (streetOnly(profile.address) || '已选择地图位置') : STORE_POINT_UNSET,",
     "storePointText: profile.address || '选择地图位置',"
   );
   assert.notEqual(regressed, PAGE_JS, '负控锚点失效:落点判据已改名，扫描口径需同步');

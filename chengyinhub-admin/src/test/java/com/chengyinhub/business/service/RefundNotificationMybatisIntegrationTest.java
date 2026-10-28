@@ -96,6 +96,7 @@ class RefundNotificationMybatisIntegrationTest {
         registration.setWechatPaymentAmount(new BigDecimal("30.00"));
         CmsRegistrationMapper registrations = mock(CmsRegistrationMapper.class);
         when(registrations.selectCmsRegistrationById(11L)).thenReturn(registration);
+        when(registrations.selectCmsRegistrationByIdForUpdate(11L)).thenReturn(registration);
         ReflectionTestUtils.setField(target, "cmsRegistrationMapper", registrations);
         ReflectionTestUtils.setField(target, "notifyService", notifications);
         // 2026-09-16: 回调 inbox 去重是 handleRefundNotify 的必经一步(cc36b4552),本套此前从未真跑过
@@ -188,6 +189,7 @@ class RefundNotificationMybatisIntegrationTest {
         CmsRegistrationMapper registrations =
                 mock(CmsRegistrationMapper.class);
         when(registrations.selectCmsRegistrationById(11L)).thenReturn(registration);
+        when(registrations.selectCmsRegistrationByIdForUpdate(11L)).thenReturn(registration);
         when(registrations.claimRegistrationRefunded(
                 eq(11L), any(), any())).thenReturn(1);
         when(registrations.claimPointsReturn(

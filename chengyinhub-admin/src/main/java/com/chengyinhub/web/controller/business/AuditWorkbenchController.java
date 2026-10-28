@@ -39,6 +39,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -52,6 +53,9 @@ public class AuditWorkbenchController extends BaseController {
 
     @Autowired
     private IAuditTaskService auditTaskService;
+
+    @Autowired
+    private com.chengyinhub.business.service.support.GuardAppealReviewerScope guardAppealReviewerScope;
 
     @Autowired
     private com.chengyinhub.business.service.ICommunityPostService communityPostService;
@@ -87,11 +91,17 @@ public class AuditWorkbenchController extends BaseController {
     @PreAuthorize("@ss.hasPermi('business:audit:list')")
     @GetMapping("/list")
     public TableDataInfo list(AuditTask auditTask) {
+        List<Long> guardTopics = guardAppealReviewerScope == null ? java.util.List.of() : guardAppealReviewerScope.readableTopicIds();
         startPage();
-        List<AuditTask> list = auditTaskService.selectAuditTaskList(auditTask);
+        List<AuditTask> list = auditTaskService.selectWorkbenchQueueWithGuardScope(auditTask, guardTopics);
         TableDataInfo data = getDataTable(list);
         data.setRows(list.stream().map(this::auditTaskForRead).collect(java.util.stream.Collectors.toList()));
         return data;
+    }
+
+    private boolean canReadTask(AuditTask task) {
+        return task == null || !com.chengyinhub.business.service.support.ArriveLocationGuard.APPEAL_BIZ_TYPE.equals(task.getBizType())
+                || auditTaskService.canReadGuardTask(task);
     }
 
     /** 认领待审单(协作提示,不阻止其他审核员处理);已被认领或已处理返回错误。 */
@@ -106,20 +116,25 @@ public class AuditWorkbenchController extends BaseController {
     @PreAuthorize("@ss.hasPermi('business:audit:list')")
     @GetMapping("/{id}")
     public AjaxResult getInfo(@PathVariable("id") Long id) {
-        return success(auditTaskForRead(auditTaskService.selectAuditTaskById(id)));
+        AuditTask task = auditTaskService.selectAuditTaskById(id);
+        if (!canReadTask(task)) return new AjaxResult(HttpStatus.FORBIDDEN, "无该守卫审核范围");
+        return success(auditTaskForRead(task));
     }
 
     /**
      * 审核详情:内容类型/风险原因/快照(task) + 处置记录与举报留痕(records) + 举报数(reportCount)。
      * 工作台人工通过/拒绝/下架前据此看清风险来源与举报热度(《社区内容规范》门禁验收项)。
      */
+    public AjaxResult detail(Long id) { return detail(id, null); }
+
     @PreAuthorize("@ss.hasPermi('business:audit:list')")
     @GetMapping("/{id}/detail")
-    public AjaxResult detail(@PathVariable("id") Long id) {
+    public AjaxResult detail(@PathVariable("id") Long id, @RequestParam(value = "requestId", required = false) String requestId) {
         AuditTask task = auditTaskService.selectAuditTaskById(id);
         if (task == null) {
             return error("审核任务不存在");
         }
+        if (!canReadTask(task)) return new AjaxResult(HttpStatus.FORBIDDEN, "无该守卫审核范围");
         List<AuditRecord> records = auditTaskService.listAuditRecords(id);
         // 举报热度按「不同举报人数」计,而非 REPORT 记录原始条数——否则单个用户连点举报即可把 reportCount
         // 灌成大数,诱导审核员误判下架(武器化举报)。每条 REPORT 仍在 records 里留痕可查。
@@ -136,6 +151,12 @@ public class AuditWorkbenchController extends BaseController {
             ajax.put("communityMediaPreview", communityPostService.auditMediaPreview(task));
         }
         ajax.put("reportCount", reporters.size());
+        if (com.chengyinhub.business.service.support.ArriveLocationGuard.APPEAL_BIZ_TYPE.equals(task.getBizType())) {
+            ajax.put("guardReviewReceipt", requestId == null || requestId.trim().isEmpty()
+                    ? java.util.Map.of("state", "NOT_FOUND") : auditTaskService.guardReviewReceipt(id, getUserId(), requestId));
+        } else {
+            ajax.put("itemProblemReceipt", auditTaskService.itemProblemReceipt(id, getUserId(), requestId));
+        }
         AuditTaskDetailVO governance = auditTaskService.detail(id, getUserId(), SysUser.isAdmin(getUserId()));
         if (governance != null) {
             ajax.put("canRevert", governance.isCanRevert());

@@ -832,7 +832,8 @@ public class ApiMerchantController extends BaseController {
         String greeting = body.getGreeting() == null ? null : body.getGreeting().trim();
         // persona 是门店分身的「人设」系统提示词,只有玩家点「和 TA 聊聊」时消费。
         // null = 本次不改;显式空串 = 清空(清空后玩家侧回到「分身还没上线」)。
-        String persona = body.getPersona() == null ? null : body.getPersona().trim();
+        // M-28:性格改为预设(gentle/cute/savage,也认中文标签);旧版自由填写的人设原样保留为 legacy。
+        String persona = com.chengyinhub.business.support.NpcPersonality.normalize(body.getPersona());
         String knowledge = body.getKnowledge() == null ? null : body.getKnowledge().trim();
         if (name == null) return error("请填写形象名字");
         if (name.length() > 32) return error("名字最多 32 个字");
@@ -864,6 +865,12 @@ public class ApiMerchantController extends BaseController {
         save.setGreeting(greeting);
         if (persona != null) save.setPersona(persona);
         if (knowledge != null) save.setKnowledge(knowledge);
+        // M-28 先发后审:文本已同步过内容安全,保存即对玩家生效(玩家读闸只放 audit_status=1);
+        // 上传的形象图随后异步送检,违规由回调打回。唯一例外:被驳回过、且形象图没换的上传图,
+        // 不能靠重新保存绕过机审结论,仍回到待审。
+        boolean keepsRejectedPhoto = mine != null && Integer.valueOf(2).equals(mine.getAuditStatus())
+                && !preset && avatar.equals(mine.getAvatar());
+        save.setAuditStatus(keepsRejectedPhoto ? 0 : 1);
         if (mine == null) {
             save.setScopeType(NPC_SCOPE_MERCHANT);
             save.setScopeId(merchantId);
@@ -871,7 +878,6 @@ public class ApiMerchantController extends BaseController {
             if (save.getPersona() == null) save.setPersona("");
             save.setSort(0);
             save.setEnabled(1);
-            save.setAuditStatus(0);
             if (npcProfileMapper.insertMerchantNpc(save) != 1) return error("形象未保存，请重试");
         } else {
             // 防 IDOR:只按 id 更新等于谁都能改别人的形象。id 从库里查出来,
@@ -1460,6 +1466,8 @@ public class ApiMerchantController extends BaseController {
         // 全部项目一次分组计数(不再逐项目拉全行 .size()),查询次数与项目数无关。
         Map<Long, long[]> topicCounts = wonTopicIds.isEmpty() ? Collections.<Long, long[]>emptyMap()
                 : cmsRegistrationService.countPaidVerificationByOwners(1L, wonTopicIds);
+        Map<Long, Date> topicEndDates = wonTopicIds.isEmpty() ? Collections.emptyMap()
+                : cmsTopicService.selectTodoTopicEndDates(wonTopicIds);
         for (Long topicId : wonTopicIds) {
             long[] tc = topicCounts == null ? null : topicCounts.get(topicId);
             // verifiedCount 是累计成绩不是待办 ⇒ 已结束的项目也照算,别让历史核销数凭空消失。
@@ -1468,8 +1476,7 @@ public class ApiMerchantController extends BaseController {
             // 待办类(pendingVerify / 项目卡)才按结束时间过滤:结束满一周的主题不再进待办,
             // 口径同玩家侧 ApiRegistrationController.filterEndedOverWeek。不加这层的后果实测过:
             // 2026-02 的一条扫码记录能在半年后仍挂在工作台上,点进去却是「已结束」。
-            com.chengyinhub.business.domain.CmsTopic wonTopic = cmsTopicService.selectCmsTopicById(topicId);
-            if (wonTopic != null && endedOverWeek(wonTopic.getEndDate(), todoNow)) continue;
+            if (endedOverWeek(topicEndDates.get(topicId), todoNow)) continue;
 
             int topicPendingVerify = tc == null ? 0 : (int) tc[0];
             pendingVerify += topicPendingVerify;
@@ -1505,11 +1512,17 @@ public class ApiMerchantController extends BaseController {
         //   按卡片过滤会连自己发布的主题一起漏掉 —— 那类项目从来不进 byProject
         //   (byProject 只收中标承接的主题 + 自己发布的活动),会变成静默漏报。
         //   落不到卡片上的仍只进全局数,保持原语义。
+        LinkedHashSet<Long> scanRegistrationIds = new LinkedHashSet<>();
         for (CmsRegistrationScan s : pendingScans) {
-            CmsRegistration scanReg = s.getRegistrationId() == null ? null
-                    : cmsRegistrationService.selectCmsRegistrationById(s.getRegistrationId());
+            if (s.getRegistrationId() != null) scanRegistrationIds.add(s.getRegistrationId());
+        }
+        Map<Long, com.chengyinhub.business.domain.vo.MerchantTodoRegistrationVO> scanOwners = scanRegistrationIds.isEmpty()
+                ? Collections.emptyMap() : cmsRegistrationService.selectTodoRegistrationOwners(scanRegistrationIds);
+        // 仅批量读取去重；同一报名的多条扫码仍逐条计数。
+        for (CmsRegistrationScan s : pendingScans) {
+            com.chengyinhub.business.domain.vo.MerchantTodoRegistrationVO scanReg = scanOwners.get(s.getRegistrationId());
             if (scanReg == null || scanReg.getOwnerType() == null || scanReg.getOwnerId() == null) continue;
-            if (endedOverWeek(ownerEndDate(scanReg), todoNow)) continue;
+            if (endedOverWeek(scanReg.getEndDate(), todoNow)) continue;
             pendingScanConfirm++;
             Map<String, Object> row = byProject.get(projectKey(scanReg.getOwnerType(), scanReg.getOwnerId()));
             if (row != null) row.put("pendingScanConfirm", ((Integer) row.get("pendingScanConfirm")) + 1);

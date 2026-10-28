@@ -11,11 +11,21 @@ function read(relativePath) {
 }
 
 function loadImWorkbench(overrides = {}) {
+  const intentSource = read('src/utils/im-admin-send-intent.js').replace(/export function /g, 'function ');
+  const intent = new Function(intentSource + '\nreturn { adminSendIntent, clearAdminSendIntent };')();
+  const values = new Map();
+  const browser = { sessionStorage: {
+    getItem: key => values.get(key) || null,
+    setItem: (key, value) => values.set(key, value),
+    removeItem: key => values.delete(key)
+  }, crypto: { randomUUID: require('node:crypto').randomUUID } };
   const source = read('src/views/business/im/index.vue');
   const script = source.match(/<script>([\s\S]*?)<\/script>/)[1]
-    .replace(/^import \{ listImConversations, listImMessages, sendImMessage \} from '@\/api\/business\/im'$/m, 'const { listImConversations, listImMessages, sendImMessage } = dependencies;')
+    .replace(/^import \{ adminSendIntent, clearAdminSendIntent \} from .+$/m, 'const { adminSendIntent, clearAdminSendIntent } = intent;')
+    .replace(/^import \{ getToken \} from .+$/m, 'const getToken = () => "fixture-session";')
+    .replace(/^import \{ [^}]+\} from '@\/api\/business\/im'$/m, 'const { listImConversations, listImMessages, sendImMessage, getImSendReceipt } = dependencies;')
     .replace(/^import (Cy\w+) from .+$/gm, 'const $1 = {};');
-  return new Function('dependencies', script.replace(/export\s+default\s*/, 'return '))(Object.assign({
+  return new Function('intent', 'window', 'dependencies', script.replace(/export\s+default\s*/, 'return '))(intent, browser, Object.assign({
     listImConversations: () => Promise.resolve({ data: [] }),
     listImMessages: () => Promise.resolve({ data: { list: [] } }),
     sendImMessage: () => Promise.resolve({ code: 200 })
@@ -23,6 +33,7 @@ function loadImWorkbench(overrides = {}) {
 }
 
 function attachMethods(component, vm) {
+  vm.$store = vm.$store || { state: { user: { id: 7 } } };
   Object.keys(component.methods).forEach(name => {
     vm[name] = (...args) => component.methods[name].apply(vm, args);
   });
@@ -115,13 +126,15 @@ test('客服会话不直接执行全局封禁，发送失败可见且旧会话�
   const vm = attachMethods(component, Object.assign(component.data(), {
     current: { conversationId: 1, memberId: 11 },
     sendText: '给 A 的回复',
+    $store: { state: { user: { id: 7 } } },
     $modal: { msgError: message => errors.push(message) }
   }));
   vm.loadConvs = () => { listReloads += 1; };
   vm.loadMsgs = () => { messageReloads += 1; };
 
   const firstSend = component.methods.doSend.call(vm);
-  assert.deepEqual(sends[0].payload, { memberId: 11, msgType: 1, content: '给 A 的回复' });
+  assert.deepEqual(sends[0].payload, { memberId: '11', msgType: 1, content: '给 A 的回复', requestId: vm.pendingSend.requestId });
+  assert.match(sends[0].payload.requestId, /^[A-Za-z0-9_-]{8,96}$/);
   vm.current = { conversationId: 2, memberId: 22 };
   vm.sendText = '给 B 的草稿';
   sends[0].resolve({ code: 200 });
@@ -137,7 +150,10 @@ test('客服会话不直接执行全局封禁，发送失败可见且旧会话�
   sends[1].reject(new Error('offline'));
   await failedSend;
   assert.equal(vm.sendText, '失败后保留');
-  assert.deepEqual(errors, ['发送失败，请稍后重试。']);
+  assert.deepEqual(errors, []);
+  assert.match(vm.sendRecoveryError, /offline.*保留原请求号与内容/);
+  assert.equal(vm.pendingSend.requestId, sends[1].payload.requestId);
+  assert.equal(vm.pendingSend.content, '失败后保留');
   assert.equal(vm.sending, false);
 
   const source = read('src/views/business/im/index.vue');

@@ -15,6 +15,25 @@ const profileReview = require('../../../../utils/profile-review.js');
 const pixelPortrait = require('../../../../utils/pixel-portrait.js');
 // 单文件限额与共享上传入口同一真源(生产 application.yml 10MB),避免页面自定 20MB 与服务端脱节。
 const { MAX_UPLOAD_FILE_SIZE } = require('../../../../utils/transport/upload-client.js');
+const { streetOnly } = require('../../utils/address-short.js');
+
+/**
+ * 2026-10-27 业主 M-28(§6.3 已确认):性格设定不再自由输入,改成三选一 chip。
+ * 后端枚举由 L01 落地(personality = gentle / cute / savage);同时把中文标签写进 persona,
+ * 旧后端只认 persona 时角色照样按这个性格说话。读回时优先认 personality 枚举,其次认 persona 恰好是某个标签。
+ */
+const PERSONALITIES = [
+  { key: 'gentle', label: '温柔', desc: '轻声细语，耐心周到' },
+  { key: 'cute', label: '可爱', desc: '活泼俏皮，爱用语气词' },
+  { key: 'savage', label: '毒舌', desc: '嘴上不饶人，心里很热情' },
+];
+function personalityOf(key, persona) {
+  const byKey = PERSONALITIES.filter((p) => p.key === key)[0];
+  if (byKey) return byKey;
+  const text = String(persona || '').trim();
+  return PERSONALITIES.filter((p) => p.label === text)[0] || null;
+}
+const INTRO_SEEN_KEY = 'cy_ai_npc_intro_seen';
 
 /** CU-M-81:没有坐标时的落点文案。地址只能当辅助,不能顶替「已设置点位」。 */
 const STORE_POINT_UNSET = '尚未选择地图位置';
@@ -62,6 +81,16 @@ Page({
     greeting: '',
     persona: '',
     knowledge: '',
+    // M-28:性格三选一(gentle/cute/savage);personaSheet = 选性格的弹层,personaPick = 弹层里的当前勾选
+    personalities: PERSONALITIES,
+    personality: '',
+    personaSheet: false,
+    personaPick: '',
+    // M-28:门店信息版式 —— 行默认只读,点底部「编辑」才可改;首次进入给一段「这是什么」的说明
+    editing: false,
+    introVisible: false,
+    // M-28:麦克风权限被拒后,引导去设置页打开 scope.record
+    voiceNeedSetting: false,
     auditStatus: null,
     auditReason: '',
     // W10b #25:服务端审核回执翻成的一句话(人设审核 / 玩家能否看到 / 形象图复核);读不到为空,不编造。
@@ -107,14 +136,37 @@ Page({
       statusBarHeight: sys.statusBarHeight || 20,
       navBarHeight: app.globalData.navBarHeight || 44,
     });
+    let introSeen = false;
+    try { introSeen = typeof wx.getStorageSync === 'function' && !!wx.getStorageSync(INTRO_SEEN_KEY); } catch (e) { introSeen = false; }
+    if (!introSeen) this.setData({ introVisible: true });
     this._loadProfile();
+  },
+  dismissIntro() {
+    this.setData({ introVisible: false });
+    try { if (typeof wx.setStorageSync === 'function') wx.setStorageSync(INTRO_SEEN_KEY, 1); } catch (e) { /* 存不下只是下次再说明一遍 */ }
+  },
+  toggleEditing() {
+    if (this.data.saving || this.data.processing) return;
+    this.setData({ editing: !this.data.editing });
+  },
+  // 只读态下行不响应;编辑态按 data-action 分派到原来的处理函数(同门店信息 onBasicAction)
+  onHomeAction(e) {
+    if (!this.data.editing) return;
+    const action = e.currentTarget.dataset.action;
+    if (['openAvatar', 'openVoice', 'editField', 'chooseStorePoint'].indexOf(action) !== -1) this[action](e);
   },
   onShow() {
     merchantTheme.merchantPageShow();
     this._hidden = false;
-    if (this.data.voiceStatus === 1) this.refreshVoice();
+    if (this._voiceClearing) {
+      this._voiceClearing = false;
+      this.setData({ voiceBusy: false });
+      // Reentry only queries state; a missing reset response never triggers another reset.
+      this.refreshVoice(this.voiceClearCurrent());
+    } else if (this.data.voiceStatus === 1) this.refreshVoice();
   },
   onHide() {
+    this._voiceClearEpoch = (this._voiceClearEpoch || 0) + 1;
     this._hidden = true;
     this._voiceStatusVersion = (this._voiceStatusVersion || 0) + 1;
     this._voiceHoldReleased = true;
@@ -127,6 +179,7 @@ Page({
     merchantTheme.merchantPageRestore();
   },
   onUnload() {
+    this._voiceClearEpoch = (this._voiceClearEpoch || 0) + 1;
     this._destroyed = true;
     this._voiceHoldReleased = true;
     clearTimeout(this._voiceTimer);
@@ -170,8 +223,9 @@ Page({
         this._photoMember = this._voiceMember = memberId;
         const d = res.data || {},
           avatar = String(d.avatar || '');
-        this._saved = { avatar, name: d.name || '', greeting: d.greeting || '', persona: d.persona || '', knowledge: d.knowledge || '' };
-        (Object.assign(this.data, {hasProfile: !!avatar, savedAvatar: avatar}), this.setData({loading: false, name: this._saved.name, greeting: this._saved.greeting, persona: this._saved.persona, knowledge: this._saved.knowledge, auditStatus: d.auditStatus == null ? null : Number(d.auditStatus), auditReason: d.auditReason || '', voiceStatus: Number(d.voiceStatus) || 0}, () => this.restoreAvatar()));
+        const picked = personalityOf(d.personality, d.persona);
+        this._saved = { avatar, name: d.name || '', greeting: d.greeting || '', persona: picked ? picked.label : (d.persona || ''), knowledge: d.knowledge || '' };
+        (Object.assign(this.data, {hasProfile: !!avatar, savedAvatar: avatar}), this.setData({loading: false, name: this._saved.name, greeting: this._saved.greeting, persona: this._saved.persona, personality: picked ? picked.key : '', knowledge: this._saved.knowledge, auditStatus: d.auditStatus == null ? null : Number(d.auditStatus), auditReason: d.auditReason || '', voiceStatus: Number(d.voiceStatus) || 0}, () => this.restoreAvatar()));
         this.refreshVoice();
         this._loadReview();
       })
@@ -224,7 +278,8 @@ Page({
     const hasPoint = lat !== null && lat !== undefined && lat !== ''
       && lng !== null && lng !== undefined && lng !== '';
     this.setData({
-      storePointText: hasPoint ? (profile.address || '已选择地图位置') : STORE_POINT_UNSET,
+      // G-7:行里只显示到路名,完整地址不进设置行
+      storePointText: hasPoint ? (streetOnly(profile.address) || '已选择地图位置') : STORE_POINT_UNSET,
     });
   },
   restoreAvatar() {
@@ -268,18 +323,54 @@ Page({
   },
   editField(e) {
     const key = e.currentTarget.dataset.key;
-    if (key !== 'name' && key !== 'greeting' && key !== 'persona' && key !== 'knowledge') return;
+    // M-28:性格不再是文本框,走三选一弹层
+    if (key === 'persona') return this.openPersona();
+    if (key !== 'name' && key !== 'greeting' && key !== 'knowledge') return;
     this.setData({
       field: {
         key,
-        label: key === 'name' ? '角色名字' : key === 'persona' ? '性格设定' : key === 'knowledge' ? '店铺知识' : '招呼语',
+        label: key === 'name' ? '角色名字' : key === 'knowledge' ? '店铺知识' : '招呼语',
         value: this.data[key],
         initial: this.data[key],
-        max: key === 'name' ? 32 : key === 'greeting' ? 60 : key === 'knowledge' ? 2000 : 500,
-        multiline: key === 'persona' || key === 'knowledge',
+        max: key === 'name' ? 32 : key === 'greeting' ? 60 : 2000,
+        multiline: key === 'knowledge',
       },
       saveError: '',
     });
+  },
+  openPersona() {
+    this.setData({ personaSheet: true, personaPick: this.data.personality, saveError: '' });
+  },
+  closePersona() {
+    if (!this.data.saving) this.setData({ personaSheet: false });
+  },
+  pickPersona(e) {
+    const key = e.currentTarget.dataset.key;
+    if (this.data.saving || !personalityOf(key)) return;
+    if (key === this.data.personality && this.data.hasProfile) { this.setData({ personaPick: key, personaSheet: false }); return; }
+    this.setData({ personaPick: key });
+    this.savePersona();
+  },
+  // 选定即保存:与其它字段弹层同一条持久化路径(首次建档走 save,已有档案走 persistProfile)
+  savePersona() {
+    if (this.data.saving) return;
+    const picked = personalityOf(this.data.personaPick);
+    if (!picked) return toast('选一个性格');
+    if (!this.data.hasProfile) {
+      this.setData({ persona: picked.label, personality: picked.key });
+      if (!this.data.name.trim()) {
+        toast('先给角色起个名字');
+        this.setData({ personaSheet: false });
+        this.editField({ currentTarget: { dataset: { key: 'name' } } });
+        return;
+      }
+      this.save(() => this.setData({ personaSheet: false }));
+      return;
+    }
+    this.persistProfile(
+      { name: this.data.name, greeting: this.data.greeting, persona: picked.label, knowledge: this.data.knowledge, avatar: this.data.savedAvatar },
+      () => this.setData({ personaSheet: false })
+    );
   },
   onFieldInput(e) {
     if (!this.data.saving) this.setData({ 'field.value': e.detail.value });
@@ -573,13 +664,16 @@ Page({
     const current = () => !this._destroyed && String(app.getUserID() || '') === memberId;
     if (this.data.saving) return;
     this.setData({ saving: true, saveError: '' });
-    return this._request('/api/merchant/npc/save', payload)
+    // M-28:性格枚举随 persona 标签一起提交(L01 后端读 personality;旧后端忽略未知字段、只用 persona)
+    const picked = personalityOf('', payload.persona);
+    const body = picked ? Object.assign({}, payload, { personality: picked.key }) : payload;
+    return this._request('/api/merchant/npc/save', body)
       .then((res) => {
         if (!current()) return;
         const receipt = res && res.receipt;
         this._saved = Object.assign({}, payload);
         this._portrait = null;
-        (Object.assign(this.data, {hasProfile: true, savedAvatar: payload.avatar, dirty: false}), this.setData({saving: false, name: payload.name, greeting: payload.greeting, persona: payload.persona || '', knowledge: payload.knowledge || '', auditStatus: 0, auditReason: ''}));
+        (Object.assign(this.data, {hasProfile: true, savedAvatar: payload.avatar, dirty: false}), this.setData({saving: false, name: payload.name, greeting: payload.greeting, persona: payload.persona || '', personality: picked ? picked.key : '', knowledge: payload.knowledge || '', auditStatus: 0, auditReason: ''}));
         this._reviewSeq = (this._reviewSeq || 0) + 1;
         this.setData({ reviewText: profileReview.merchantNpcText(receipt) });
         if (!receipt) this._loadReview();
@@ -648,10 +742,11 @@ Page({
     this.setData({ voiceVisible: false });
     if (this._audio) this._audio.stop();
   },
-  refreshVoice() {
+  refreshVoice(clearCurrent) {
     const memberId = String(app.getUserID() || '');
     const version = this._voiceStatusVersion = (this._voiceStatusVersion || 0) + 1;
-    const current = () => !this._destroyed && !this._hidden && this._voiceStatusVersion === version
+    const current = () => (!clearCurrent || clearCurrent())
+      && !this._destroyed && !this._hidden && this._voiceStatusVersion === version
       && String(app.getUserID() || '') === memberId;
     clearTimeout(this._voiceTimer);
     if (this._destroyed || this._hidden) return;
@@ -671,13 +766,13 @@ Page({
           voiceUnknown: this.data.voiceUnknown && !original,
           voiceFile: confirmed ? null : this.data.voiceFile,
         });
-        if (status === 1) this._voiceTimer = setTimeout(() => { if (current()) this.refreshVoice(); }, 5000);
+        if (status === 1) this._voiceTimer = setTimeout(() => { if (current()) this.refreshVoice(clearCurrent); }, 5000);
       })
       .catch((e) => {
         if (!current()) return;
         this.setData({ voiceError: e.message });
         if (this.data.voiceStatus === 1)
-          this._voiceTimer = setTimeout(() => { if (current()) this.refreshVoice(); }, 5000);
+          this._voiceTimer = setTimeout(() => { if (current()) this.refreshVoice(clearCurrent); }, 5000);
       });
   },
   onVoiceConsentChange(e) {
@@ -780,6 +875,7 @@ Page({
         voiceSessionActive: true,
         voiceFile: null,
         voiceError: '',
+        voiceNeedSetting: false,
       });
     };
     if (this.data.voiceSessionActive) {
@@ -795,8 +891,19 @@ Page({
       })
       .catch(() => {
         this._voiceStarting = false;
-        if (current()) this.setData({ voiceHolding: false, voiceError: '没有录音权限，请在设置里允许后重试' });
+        // M-28:被拒过一次后 wx.authorize 不会再弹窗,只能去设置页打开 —— 给一颗直达设置的按钮
+        if (current()) this.setData({ voiceHolding: false, voiceNeedSetting: true, voiceError: '没有录音权限，去设置打开麦克风后再录' });
       });
+  },
+  // 必须由用户点击直接触发(wx.openSetting 的调用约束),所以挂在按钮的 bindtap 上
+  openRecordSetting() {
+    if (typeof wx.openSetting !== 'function') return;
+    wx.openSetting({
+      success: (res) => {
+        const granted = !!(res && res.authSetting && res.authSetting['scope.record']);
+        if (granted && !this._destroyed) this.setData({ voiceNeedSetting: false, voiceError: '' });
+      },
+    });
   },
   onVoiceHoldEnd() {
     this._voiceHoldReleased = true;
@@ -829,26 +936,36 @@ Page({
   },
   // BL-43:清除已生成的角色声音(POST /api/merchant/npc/voice/reset),二次确认后回读 voice/status。
   // 「重新录音」只清本地录音,服务端旧音色在新音色生成前仍会被用来合成;这里才是真正停用旧音色。
+  voiceClearCurrent() {
+    const owner = String(app.getUserID() || '');
+    const token = app.getAuthorization ? app.getAuthorization() || '' : '';
+    const epoch = this._voiceClearEpoch = (this._voiceClearEpoch || 0) + 1;
+    return () => !this._destroyed && !this._hidden && epoch === this._voiceClearEpoch
+      && owner === String(app.getUserID() || '')
+      && token === (app.getAuthorization ? app.getAuthorization() || '' : '');
+  },
   clearVoice() {
     if (this.data.voiceBusy || this.data.voiceUnknown || this._voiceClearing) return;
+    const current = this.voiceClearCurrent();
     modal.show({
       title: '清除角色声音？',
       content: '清除后店铺角色不再用这段声音说话，需要重新录音生成才能恢复。',
       confirmText: '清除',
       danger: true,
-      success: (res) => { if (res && res.confirm) this._doClearVoice(); },
+      success: (res) => { if (res && res.confirm && current()) this._doClearVoice(); },
     });
   },
   _doClearVoice() {
-    if (this._voiceClearing) return;
+    if (this._voiceClearing || this._hidden || this._destroyed) return;
+    const current = this.voiceClearCurrent();
     this._voiceClearing = true;
     if (this._audio) this._audio.stop();
     this.setData({ voiceBusy: true, voiceError: '', voicePlaying: false });
     this._request('/api/merchant/npc/voice/reset')
-      .then(() => this.refreshVoice())
+      .then(() => { if (current()) return this.refreshVoice(current); })
       .then(() => {
+        if (!current()) return;
         this._voiceClearing = false;
-        if (this._destroyed) return;
         if (this.data.voiceStatus === 0 && !this.data.voiceError) {
           this.setData({ voiceBusy: false, voiceSample: '' });
           toast('角色声音已清除');
@@ -857,8 +974,9 @@ Page({
         }
       })
       .catch((e) => {
+        if (!current()) return;
         this._voiceClearing = false;
-        if (!this._destroyed) this.setData({ voiceBusy: false, voiceError: e.message });
+        this.setData({ voiceBusy: false, voiceError: e.message });
       });
   },
   resetVoiceRecording() {

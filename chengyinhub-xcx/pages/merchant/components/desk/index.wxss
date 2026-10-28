@@ -1,0 +1,5 @@
+@import '../../../../style/merchant-light.wxss';
+.desk { padding: 24rpx; color: var(--cy-color-text-primary); background: var(--cy-bg-page); }
+.title { font-weight: 600; margin: 24rpx 0 16rpx; }
+.desk__field { box-sizing: border-box; padding: 16rpx; margin: 8rpx 0 16rpx; background: var(--cy-bg-card); color: var(--cy-color-text-primary); }
+.desk__btn { margin: 12rpx 0; }

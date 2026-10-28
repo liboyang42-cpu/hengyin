@@ -1,0 +1,114 @@
+<view class="theme-dark orient-score">
+  <cy-modal-host id="cy-modal-host" />
+  <view wx:if="{{state === 'choosing'}}" class="score-card">
+    <text class="score-title">选择要查看的本人对局</text>
+    <view class="score-entry" wx:for="{{sessions}}" wx:key="sessionId">
+      <text>{{item.phase}} · {{item.sessionId}}</text><text class="score-muted">{{item.startedAt}}</text>
+      <cy-btn variant="secondary" data-session-id="{{item.sessionId}}" bindtap="chooseSession">查看此局计分</cy-btn>
+    </view>
+  </view>
+  <cy-empty wx:elif="{{state !== 'ready'}}" kind="{{state}}" title="{{stateTitle || '计分加载中'}}"
+    cta="{{state === 'loading' ? '' : '重新读取'}}" bind:cta="retry" fill size="lg" />
+  <block wx:else>
+    <view class="score-card">
+      <text class="score-title">本局计分 · {{score.phase}}</text>
+      <text class="score-total">{{score.total}}</text>
+      <text class="score-muted">对局 {{score.sessionId}}</text>
+      <text class="score-muted">计分精确到0.01分；积分与探索值以结算结果为准。</text>
+      <view class="score-row" wx:for="{{score.dimensions}}" wx:key="key">
+        <text>{{item.label}}</text><text>{{item.value}}</text>
+      </view>
+    </view>
+    <view wx:if="{{notice || pending}}" class="score-card" aria-role="status">
+      <text>{{notice || '原操作结果待确认，已冻结新提交'}}</text>
+      <text wx:if="{{pending}}" class="score-muted">{{pending.kind}} · 原请求 {{pending.requestId || '待核对'}}</text>
+      <cy-btn wx:if="{{pending}}" variant="secondary" disabled="{{busy}}" bindtap="recover">查询原操作结果</cy-btn>
+      <cy-btn wx:if="{{pending && !pending.requestId && pending.kind !== 'STORAGE'}}" variant="secondary" disabled="{{busy}}" bindtap="requestManualReview">提交历史操作人工核对</cy-btn>
+      <cy-btn wx:if="{{pending.kind === 'SYNC' && pending.requestId}}" variant="secondary" disabled="{{busy}}" bindtap="resumeSync">继续原任务同步</cy-btn>
+    </view>
+    <view class="score-card">
+      <text class="score-title">结算结果</text>
+      <block wx:if="{{score.settlement}}">
+        <text>本局已结算 · {{score.settlement.total}}</text>
+        <text>积分 {{score.settlement.points}} · 探索值 {{score.settlement.xp}}</text>
+        <text class="score-muted">结算编号 {{score.settlement.id}} · {{score.settlement.at}}</text>
+        <text class="score-muted">结算后冲正只影响展示分，不追发或追扣本局奖励。</text>
+      </block>
+      <text wx:else class="score-muted">本局尚未结算，暂不能确认积分或探索值到账。</text>
+      <cy-btn wx:if="{{score.canSync}}" variant="secondary" disabled="{{busy || !!pending}}" loading="{{busy}}" bindtap="sync">同步已通过任务</cy-btn>
+      <text wx:if="{{score.pendingReviewCount !== '0'}}" class="score-muted">仍有 {{score.pendingReviewCount || '0'}} 项任务待审核，审核结束后再结算。</text>
+      <cy-btn wx:if="{{score.canSettle}}" disabled="{{busy || !!pending}}" bindtap="settle">结算本局</cy-btn>
+    </view>
+    <view wx:if="{{score.recoveries.length}}" class="score-card">
+      <text class="score-title">历史操作人工核对</text>
+      <view class="score-entry" wx:for="{{score.recoveries}}" wx:key="id">
+        <text>{{item.kind}} · {{item.statusText}} · {{item.id}}</text>
+        <text wx:if="{{item.note}}">核对意见：{{item.note}}</text>
+        <text wx:if="{{item.referenceId}}">关联记录 {{item.referenceId}}</text>
+      </view>
+      <text class="score-muted">核对意见不等于原请求成功；原待办保留，不能据此重复提交。</text>
+    </view>
+    <view class="score-card">
+      <text class="score-title">本场榜单</text>
+      <text class="score-muted">每人取最新一局；同分同用时并列，分支主题先看是否到达结局。</text>
+      <cy-btn variant="secondary" disabled="{{boardState === 'loading'}}" bindtap="loadLeaderboard">{{boardState === 'loading' ? '正在读取榜单' : '读取本场榜单'}}</cy-btn>
+      <text wx:if="{{boardState === 'error'}}">榜单暂时无法读取，请重试。</text>
+      <block wx:if="{{boardState === 'ready' && board}}">
+        <text wx:if="{{!board.list.length}}">本场暂无成绩</text>
+        <view class="score-row" wx:for="{{board.list}}" wx:key="rowKey">
+          <text>{{item.rank}} · {{item.mine ? '本人' : '参赛玩家'}}</text>
+          <text>{{board.mode === 'ROUTE' ? (item.reachedEnding ? '已到结局' : '未到结局') : item.score}} · {{item.elapsed}}</text>
+        </view>
+        <text wx:if="{{board.me}}">本人名次 {{board.me.rank}} · {{board.me.score}} · {{board.me.elapsed}}</text>
+      </block>
+    </view>
+    <view class="score-card">
+      <text class="score-title">计分时间线</text>
+      <cy-empty wx:if="{{!score.timeline.length}}" title="还没有计分记录" size="sm" />
+      <view class="score-entry" wx:for="{{score.timeline}}" wx:key="entryId">
+        <view class="score-row"><text>{{item.dimension}}</text><text>{{item.delta}}</text></view>
+        <text>累计 {{item.running}}</text>
+        <text class="score-muted">{{item.reason}} · {{item.at}}</text>
+        <text class="score-muted">流水 {{item.entryId}}{{item.nodeId ? ' · 节点 ' + item.nodeId : ''}}</text>
+        <text wx:if="{{item.reversesEntryId}}" class="score-muted">冲正原流水 {{item.reversesEntryId}}</text>
+        <cy-btn variant="text" size="sm" disabled="{{busy || !!pending || item.appealPending}}"
+          data-entry-id="{{item.entryId}}" bindtap="openAppeal">{{item.appealPending ? '申诉待处理' : '申诉此条流水'}}</cy-btn>
+      </view>
+      <cy-btn variant="secondary" disabled="{{busy || !!pending}}" bindtap="openAppeal">申诉漏记任务</cy-btn>
+    </view>
+    <view class="score-card">
+      <text class="score-title">计分申诉</text>
+      <text wx:if="{{!score.appeals.length}}" class="score-muted">暂无计分申诉</text>
+      <view class="score-entry" wx:for="{{score.appeals}}" wx:key="id">
+        <text>{{item.statusText}} · {{item.id}}</text><text>{{item.reason}}</text>
+        <text wx:if="{{item.note}}" class="score-muted">处理说明：{{item.note}}</text>
+      </view>
+    </view>
+    <view class="score-card">
+      <text class="score-title">成绩争议</text>
+      <text wx:if="{{score.deadline}}" class="score-muted">争议提交截止时间：{{score.deadline}}</text>
+      <text wx:if="{{!score.disputes.length}}" class="score-muted">暂无成绩争议</text>
+      <view class="score-entry" wx:for="{{score.disputes}}" wx:key="id">
+        <text>{{item.statusText}} · {{item.id}}</text><text>{{item.reason}}</text>
+        <text wx:if="{{item.note}}" class="score-muted">处理说明：{{item.note}}</text>
+      </view>
+      <cy-btn wx:if="{{score.canDispute}}" variant="secondary" disabled="{{busy || !!pending}}" bindtap="openDispute">提出成绩争议</cy-btn>
+      <text class="score-muted">提交后等待复核，是否在受理期限内以提交时的核验结果为准。</text>
+    </view>
+    <cy-btn variant="text" disabled="{{busy}}" bindtap="retry">刷新计分</cy-btn>
+    <cy-btn wx:if="{{canChoose}}" variant="text" disabled="{{busy}}" bindtap="chooseAnother">选择其他对局</cy-btn>
+  </block>
+</view>
+<cy-sheet show="{{!!form}}" title="{{form === 'APPEAL' ? '计分申诉' : '成绩争议'}}"
+  closable="{{!busy && !pending}}" mask-closable="{{!busy && !pending}}" dirty="{{!!reason}}" bind:close="closeForm" bind:requestclose="closeForm">
+  <view class="score-form">
+    <text wx:if="{{entryId}}">申诉流水 {{entryId}}</text>
+    <cy-field wx:if="{{form === 'APPEAL' && !entryId}}" label="漏记任务的节点编号" required
+      value="{{nodeId}}" disabled="{{busy || !!pending}}" bind:input="onNodeInput" maxlength="19" />
+    <cy-field label="理由" variant="textarea" required maxlength="500" show-count value="{{reason}}"
+      disabled="{{busy || !!pending}}" bind:input="onReasonInput" error="{{!!formError}}" error-text="{{formError}}" />
+    <text wx:if="{{pending}}">原操作结果待确认，请关闭页面后从对局记录查询，或等待处理结果更新。</text>
+    <cy-btn disabled="{{busy || !!pending}}" loading="{{busy}}" bindtap="submitReview">确认理由并提交</cy-btn>
+    <cy-btn wx:if="{{pending}}" variant="secondary" bindtap="recover">查询原操作结果</cy-btn>
+  </view>
+</cy-sheet>

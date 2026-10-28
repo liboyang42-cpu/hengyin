@@ -17,11 +17,10 @@ test('内容区切换走 fill 下划线，不走 chip 药丸', () => {
   assert.ok(ccTabs)
   assert.doesNotMatch(ccTabs[0], /variant="(chip|segmented)"/, '内容区切换不许退回药丸/分段')
 
+  // 2026-10-27 P-14 owner:俱乐部活动 tab 的「列表 / 月历」子切换已整体删除(不再有 event-view-tabs),
+  // 这一处断言改为钉「子切换不回潮」;其余页面的 fill 约束不变。
   const club = read('pages/club/detail/index.wxml')
-  const eventView = club.match(/<cy-tabs[^>]*class="event-view-tabs"[^>]*>/)
-  assert.ok(eventView)
-  assert.match(eventView[0], /variant="fill"/)
-  assert.doesNotMatch(eventView[0], /variant="chip"/)
+  assert.doesNotMatch(club, /class="event-view-tabs"/)
 })
 
 test('同页状态筛选走 chip 药丸，不走 fill 下划线', () => {

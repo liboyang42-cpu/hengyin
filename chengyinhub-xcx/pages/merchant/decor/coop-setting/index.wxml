@@ -45,30 +45,35 @@
 
   <scroll-view scroll-y class="dc-scroll" wx:elif="{{loadState === 'ok'}}">
     <view class="dc-content">
+      <!-- 2026-10-27 业主 M-30:整页套「门店信息」版式 —— 左上大标题,行默认只读(不出箭头),
+           底部「编辑」进入编辑态后行才可点、箭头才出现,改完点「保存」。 -->
       <text class="dc-brand-title">承接设置</text>
       <view class="dc-card dc-fields">
-        <cy-cell arrow-icon="chevron-right"
+        <cy-cell arrow-icon="chevron-right" arrow="{{editing}}"
           title="接待人数"
           value="{{form.capacity ? form.capacity + ' 人' : '填写人数'}}"
           data-k="capacity"
           bind:tap="editField"
         />
-        <cy-cell arrow-icon="chevron-right"
+        <cy-cell arrow-icon="chevron-right" arrow="{{editing}}"
           title="可承接时间"
           value="{{form.availableTime || '填写时段'}}"
           data-k="availableTime"
           bind:tap="editField"
         />
+        <!-- M-30:「免费承接」与上面两行同一套右对齐 —— 行宽/对齐变量直接挂在下拉宿主上(cs-charge),
+             不依赖跨组件继承。只读态下拉禁用,只有编辑态能改。 -->
         <cy-dropdown
+          class="cs-charge"
           portal="{{false}}"
           range="{{chargeOptions}}"
           value="{{form.chargeType}}"
           below
           gap="4"
-          disabled="{{saving || refreshing}}"
+          disabled="{{!editing || saving || refreshing}}"
           bind:change="onChargeType"
         >
-          <cy-cell arrow-icon="chevron-right"
+          <cy-cell arrow-icon="chevron-right" arrow="{{editing}}"
             bubble-tap
             title="收费方式"
             value="{{form.chargeType === null ? '请选择' : chargeOptions[form.chargeType]}}"
@@ -82,8 +87,8 @@
           class="dc-textarea cs-demand"
           bindtap="editField"
           data-k="demand"
-          aria-role="button"
-          hover-class="cy-pressed"
+          aria-role="{{editing ? 'button' : 'text'}}"
+          hover-class="{{editing ? 'cy-pressed' : 'none'}}"
         >
           {{form.demand || '想要什么样的合作'}}
         </view>
@@ -99,8 +104,11 @@
       <view wx:if="{{saveReceipt}}" class="cs-save-receipt" aria-role="status" aria-live="polite">
         {{saveReceipt}}
       </view>
-      <cy-btn variant="primary" loading="{{saving}}" disabled="{{saving || refreshing}}" bindtap="onSave">
+      <cy-btn wx:if="{{editing}}" variant="primary" loading="{{saving}}" disabled="{{saving || refreshing}}" bindtap="onSave">
         保存
+      </cy-btn>
+      <cy-btn wx:else variant="primary" disabled="{{saving || refreshing}}" bindtap="startEditing">
+        编辑
       </cy-btn>
     </view>
   </scroll-view>

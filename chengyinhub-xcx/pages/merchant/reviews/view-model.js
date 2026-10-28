@@ -1,5 +1,14 @@
 const { decodeDisplayText } = require('../../../utils/display-text.js');
 
+// Never stringify an unsafe Number: its original decimal digits are already lost.
+function decimalId(value) {
+  if (typeof value === 'number') return Number.isSafeInteger(value) && value > 0 ? String(value) : null;
+  if (typeof value !== 'string' || !/^[1-9]\d{0,18}$/.test(value)) return null;
+  return value.length < 19 || value <= '9223372036854775807' ? value : null;
+}
+
+// Compatibility export used by merchant-finance and registration eligibility.
+// Review route/list/action IDs use decimalId instead.
 function positiveId(value) {
   if (value === null || value === undefined || value === '') return null;
   const text = String(value).trim();
@@ -12,7 +21,7 @@ function parseReviewRouteOptions(options) {
   const input = options && typeof options === 'object' ? options : {};
   return {
     mode: input.mode === 'manage' ? 'manage' : 'public',
-    merchantRowId: positiveId(input.merchantRowId),
+    merchantRowId: decimalId(input.merchantRowId),
   };
 }
 
@@ -183,7 +192,7 @@ function ratingStars(value) {
 }
 
 function strictPositiveId(value) {
-  return typeof value === 'number' && Number.isSafeInteger(value) && value > 0 ? value : null;
+  return decimalId(value);
 }
 
 function strictPositiveInt(value) {
@@ -210,5 +219,6 @@ module.exports = {
   normalizeManageFilter,
   parseReviewRouteOptions,
   positiveId,
+  decimalId,
   shapePage,
 };

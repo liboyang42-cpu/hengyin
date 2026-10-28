@@ -3,6 +3,9 @@
 <mapper namespace="com.chengyinhub.business.mapper.OfficialBroadcastMapper">
 
     <resultMap type="OfficialBroadcast" id="OfficialBroadcastResult">
+        <result property="clientRequestId" column="client_request_id" />
+        <result property="requestOwner" column="request_owner" />
+        <result property="requestHash" column="request_hash" />
         <result property="id"            column="id"             />
         <result property="eventId"       column="event_id"       />
         <result property="title"         column="title"          />
@@ -19,7 +22,7 @@
     </resultMap>
 
     <sql id="selectOfficialBroadcastVo">
-        select id, event_id, title, audience, copy_mode, content_json, channels, city,
+        select client_request_id,request_owner,request_hash,id, event_id, title, audience, copy_mode, content_json, channels, city,
                scheduled_time, status, reached_count, sender_account, create_time
         from official_broadcast
     </sql>
@@ -43,12 +46,13 @@
 
     <select id="selectDueScheduled" resultMap="OfficialBroadcastResult">
         <include refid="selectOfficialBroadcastVo"/>
-        where status = 1 and scheduled_time is not null and scheduled_time &lt;= now()
+        where status = 1 and audience_frozen=0 and scheduled_time is not null and scheduled_time &lt;= now()
     </select>
 
     <insert id="insertOfficialBroadcast" parameterType="OfficialBroadcast" useGeneratedKeys="true" keyProperty="id">
         insert into official_broadcast
         <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="clientRequestId != null">client_request_id,request_owner,request_hash,</if>
             <if test="eventId != null">event_id,</if>
             <if test="title != null">title,</if>
             <if test="audience != null">audience,</if>
@@ -62,6 +66,7 @@
             <if test="createTime != null">create_time,</if>
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="clientRequestId != null">#{clientRequestId},#{requestOwner},#{requestHash},</if>
             <if test="eventId != null">#{eventId},</if>
             <if test="title != null">#{title},</if>
             <if test="audience != null">#{audience},</if>
@@ -92,4 +97,11 @@
         where id = #{id}
     </update>
 
+ <select id="lockDispatch" resultType="map">select id,status,audience_frozen from official_broadcast where id=#{id} for update</select>
+ <update id="freezeAudience">update official_broadcast set audience_frozen=1 where id=#{id}</update>
+<select id="findRequest" resultMap="OfficialBroadcastResult"><include refid="selectOfficialBroadcastVo"/> where request_owner=#{owner} and client_request_id=#{key}</select>
+ <insert id="reserveCreation">insert ignore into official_broadcast_creation(request_owner,request_id,state) values(#{owner},#{key},'PENDING')</insert>
+ <select id="readCreation" resultType="map">select state,broadcast_id from official_broadcast_creation where request_owner=#{owner} and request_id=#{key}</select>
+ <select id="lockCreation" resultType="map">select state,broadcast_id from official_broadcast_creation where request_owner=#{owner} and request_id=#{key} for update</select>
+ <update id="finishCreation">update official_broadcast_creation set state=#{state},broadcast_id=#{broadcast} where request_owner=#{owner} and request_id=#{key} and state='PENDING'</update>
 </mapper>

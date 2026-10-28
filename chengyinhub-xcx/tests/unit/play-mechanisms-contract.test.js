@@ -27,7 +27,9 @@ test('O-01 删空精度放行:自动到达只在精度已知且 ≤80m 时发(�
   assert.equal(A.canAutoArrive(80), true);
   assert.equal(A.canAutoArrive(80.1), false);
   for (const v of [undefined, null, '', NaN, -1, '30']) assert.equal(A.canAutoArrive(v), false, String(v));
-  assert.match(src, /\(node\.vm === 0 \|\| node\.vm === 5\) && playAccuracy\.canAutoArrive\(loc\.accuracy\)\) that\.arrive\(node\.nodeId, 'gps'\)/);
+  // 自动到达的站:0/5 恒定;8/9/10 只在本站玩法已通过后(_advancedReadyNodeId)—— 精度闸照旧不能少
+  assert.match(src, /const arrivesHere = node\.vm === 0 \|\| node\.vm === 5\s*\|\| \(\[8, 9, 10\]\.includes\(node\.vm\) && that\._advancedReadyNodeId === node\.nodeId\);/);
+  assert.match(src, /arrivesHere && playAccuracy\.canAutoArrive\(loc\.accuracy\)\) that\.arrive\(node\.nodeId, 'gps'\)/);
   // 两个定位来源都把 accuracy 原样带进 _loc,arrive 请求从 _loc 取
   const locWrites = src.match(/_loc = \{ longitude: loc\.longitude, latitude: loc\.latitude, accuracy: loc\.accuracy \}/g) || [];
   assert.equal(locWrites.length, 2);

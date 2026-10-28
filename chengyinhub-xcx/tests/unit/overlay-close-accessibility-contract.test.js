@@ -45,11 +45,12 @@ function assertContract(overrides = {}) {
   // host 文件里有一行注释正解释「原来 headerVariant=action 为什么废」,全文匹配会命中注释假红。
   assert.doesNotMatch(hostWxml, /<project-drawer[^>]*headerVariant="action"/, '承接商家必须回到默认标题头')
 
-  // CU-M-157:玻璃层原来 inset:0 铺到状态栏,把原页的导航标题与消息入口一起压暗。
-  // 面板顶边(= 遮罩 top)从微信胶囊下方开始,由同一份实测几何下发,不是写死的 vh。
+  // 2026-10-27 真机走查 P-12(owner 新说法，取代 CU-M-157「遮罩从胶囊下方开始」):
+  // 遮罩要盖住状态栏和导航栏、铺满整屏,否则顶部漏出一行没被模糊的列表(p85)。
   // 2026-10-22 业主裁决(L09):右上角 ✕ 撤掉,退出只走首屏底部「返回」与点遮罩。
-  assert.match(publishWxml, /class="ps__mask"[^>]*style="top:\{\{chrome\.contentTop\}\}px"[^>]*bindtap="onMask"/)
-  assert.match(source('components/cy/publish-sheet/index.js'), /resolveMenuChrome\(windowInfo, menuButtonInfo\)/, '遮罩顶边没走胶囊实测几何')
+  assert.match(publishWxml, /class="ps__mask"[^>]*bindtap="onMask"/)
+  assert.doesNotMatch(publishWxml, /class="ps__mask"[^>]*style="[^"]*top:/, 'ps__mask:遮罩不得再从胶囊下方开始(P-12 铺满整屏)')
+  assert.match(rule(publishWxss, '.ps__mask'), /inset:\s*0/, 'ps__mask:遮罩必须 inset:0 铺满')
   assert.doesNotMatch(publishWxml, /class="ps__close"|name="close-sm"/, 'ps__close:发布菜单不该再有右上角 ✕(业主裁决 2026-10-22)')
   assert.match(publishWxml, /ps__quick-action--return"[^>]*bindtap="onClose"[^>]*aria-label="返回"/, '首屏「返回」必须仍能关闭菜单')
 }
@@ -93,7 +94,6 @@ test('负控：CU-C-126 承接商家重新挂上 headerVariant="action" 必须�
 
 const PUBLISH_WXML = 'components/cy/publish-sheet/index.wxml'
 const PUBLISH_WXSS = 'components/cy/publish-sheet/index.wxss'
-const PUBLISH_JS = 'components/cy/publish-sheet/index.js'
 
 test('负控：把右上角 ✕ 塞回发布菜单会判红(业主裁决 2026-10-22)', () => {
   const broken = read(PUBLISH_WXML).replace(
@@ -104,14 +104,8 @@ test('负控：把右上角 ✕ 塞回发布菜单会判红(业主裁决 2026-10
   assert.throws(() => assertContract({ [PUBLISH_WXML]: broken }), /ps__close/)
 })
 
-test('负控：发布菜单顶边不再让开微信导航(遮罩铺回状态栏)会判红', () => {
-  const broken = read(PUBLISH_WXML).replace('class="ps__mask" style="top:{{chrome.contentTop}}px"', 'class="ps__mask"')
-  assert.notEqual(broken, read(PUBLISH_WXML), '负控未命中遮罩 top')
+test('负控：P-12 遮罩重新截在胶囊下方会判红', () => {
+  const broken = read(PUBLISH_WXML).replace('class="ps__mask" catchtouchmove', 'class="ps__mask" style="top:{{chrome.contentTop}}px" catchtouchmove')
+  assert.notEqual(broken, read(PUBLISH_WXML), '负控未命中遮罩锚点')
   assert.throws(() => assertContract({ [PUBLISH_WXML]: broken }), /ps__mask/)
-})
-
-test('负控：胶囊几何退回写死兜底(不实测)会判红', () => {
-  const broken = read(PUBLISH_JS).replace('this.setData({ chrome: resolveMenuChrome(windowInfo, menuButtonInfo) });', 'this.setData({ chrome: { contentTop: 56 } });')
-  assert.notEqual(broken, read(PUBLISH_JS), '负控未命中 chrome 实测')
-  assert.throws(() => assertContract({ [PUBLISH_JS]: broken }), /胶囊实测几何/)
 })

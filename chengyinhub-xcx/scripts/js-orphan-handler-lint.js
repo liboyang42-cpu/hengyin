@@ -74,6 +74,19 @@ function buildCrossFileCallNames(jsFiles) {
   return called;
 }
 
+function includedWxml(wxmlFile, seen = new Set()) {
+  const src = S.maskWxmlComments(fs.readFileSync(wxmlFile, 'utf8'));
+  const re = /<include\s+src="([^"]+)"/g;
+  let m;
+  while ((m = re.exec(src))) {
+    const target = path.resolve(path.dirname(wxmlFile), m[1]);
+    if (seen.has(target) || !fs.existsSync(target)) continue;
+    seen.add(target);
+    includedWxml(target, seen);
+  }
+  return [...seen];
+}
+
 function lintRepo() {
   const { map } = S.buildJsToWxmlMap();
   const jsFiles = [...map.keys()];
@@ -101,7 +114,10 @@ function lintRepo() {
       }))
       .map(S.maskNonCode)
       .join('\n');
-    const owned = map.get(jsFile);
+    // ⚠️ buildJsToWxmlMap 的 include 归属是「一个片段只挂一个宿主」:两个页面 <include> 同一片段时
+    //    只有一个页面拿得到它,另一个页面里被片段绑定的 handler 会被误报成孤儿。
+    //    这里从本页自己的 wxml 出发,把它亲自 <include> 的片段(含多层)一并算进绑定来源。
+    const owned = [...new Set(map.get(jsFile).flatMap((w) => [w, ...includedWxml(w)]))];
     const boundNames = new Set();
     let wxmlRaw = '';
     owned.forEach((w) => {

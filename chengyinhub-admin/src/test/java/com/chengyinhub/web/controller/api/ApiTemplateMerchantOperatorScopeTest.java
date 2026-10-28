@@ -44,6 +44,7 @@ class ApiTemplateMerchantOperatorScopeTest {
     private static final long OWNER = 900L;
 
     private ApiTemplateController controller;
+    private com.chengyinhub.business.service.support.TemplateAdoptionService adoptionService;
     private ITemplatePublishService publishService;
     private ICmsMemberTemplateService memberTemplateService;
     private ICouponRewardAuthorizationService couponAuthorizationService;
@@ -59,6 +60,8 @@ class ApiTemplateMerchantOperatorScopeTest {
                 new ServletRequestAttributes(new MockHttpServletRequest()));
         controller = spy(new ApiTemplateController());
         publishService = mock(ITemplatePublishService.class);
+        adoptionService = mock(com.chengyinhub.business.service.support.TemplateAdoptionService.class);
+        ReflectionTestUtils.setField(controller, "templateAdoptionService", adoptionService);
         memberTemplateService = mock(ICmsMemberTemplateService.class);
         couponAuthorizationService = mock(ICouponRewardAuthorizationService.class);
         IMerchantAccessService accessService = mock(IMerchantAccessService.class);
@@ -79,6 +82,13 @@ class ApiTemplateMerchantOperatorScopeTest {
                 mock(com.chengyinhub.business.service.IUmsMemberService.class));
         when(memberTemplateService.selectNumByTitle(any())).thenReturn(0);
         when(memberTemplateService.selectMemberTemplateList(any())).thenReturn(Collections.emptyList());
+    }
+
+    private com.chengyinhub.business.domain.dto.TemplateAdoptionCommand adoption(CmsTemplatePublishRequest request) {
+        var command = new com.chengyinhub.business.domain.dto.TemplateAdoptionCommand();
+        command.setRequestId("adopt_test_request_001"); command.setSourceVersion("a".repeat(64));
+        command.setScope(request.getScope()); command.setOriginalTemplateId(request.getOriginalTemplateId() == null ? "16" : request.getOriginalTemplateId().toString());
+        return command;
     }
 
     private CmsTemplatePublishRequest request(String scope) {
@@ -153,13 +163,16 @@ class ApiTemplateMerchantOperatorScopeTest {
 
     @Test
     void sourceAdoptionKeepsMerchantOwnerAndForcesSourceOnly() {
-        CmsTemplatePublishRequest request = request("MERCHANT");
-        request.setOriginalTemplateId(16L);
-        request.setAdoptSourceOnly(false);
-        when(publishService.saveOrUpdateDraft(any(), eq(OWNER), eq("operator901"))).thenReturn(74L);
-        assertEquals(74L, controller.adoptDraft(request).get(AjaxResult.DATA_TAG));
-        assertEquals(Boolean.TRUE, request.getAdoptSourceOnly());
-        verify(publishService).saveOrUpdateDraft(request, OWNER, "operator901");
+        CmsTemplatePublishRequest request = request("MERCHANT"); request.setOriginalTemplateId(16L);
+        when(adoptionService.adopt(eq(PRINCIPAL), eq(OWNER), any(), eq("operator901")))
+                .thenReturn(java.util.Map.of("draftId", "74", "status", "COMPLETED"));
+        assertEquals(java.util.Map.of("draftId", "74", "status", "COMPLETED"), controller.adoptDraft(adoption(request)).get(AjaxResult.DATA_TAG));
+        ArgumentCaptor<com.chengyinhub.business.domain.dto.TemplateAdoptionCommand> command = ArgumentCaptor.forClass(com.chengyinhub.business.domain.dto.TemplateAdoptionCommand.class);
+        verify(adoptionService).adopt(eq(PRINCIPAL), eq(OWNER), command.capture(), eq("operator901"));
+        assertEquals("16", command.getValue().getOriginalTemplateId());
+        assertEquals("adopt_test_request_001", command.getValue().getRequestId());
+        assertEquals("a".repeat(64), command.getValue().getSourceVersion());
+        verify(publishService, never()).saveOrUpdateDraft(any(), any(), any());
     }
 
     @Test
@@ -167,22 +180,22 @@ class ApiTemplateMerchantOperatorScopeTest {
         IMerchantAccessService access = (IMerchantAccessService) ReflectionTestUtils.getField(controller, "merchantAccessService");
         when(access.require(PRINCIPAL, MerchantPermission.PROJECT_MANAGE))
                 .thenThrow(new com.chengyinhub.common.exception.ServiceException("无权管理项目", 403));
-        assertEquals(403, controller.adoptDraft(request("MERCHANT")).get(AjaxResult.CODE_TAG));
+        assertEquals(403, controller.adoptDraft(adoption(request("MERCHANT"))).get(AjaxResult.CODE_TAG));
         verify(publishService, never()).saveOrUpdateDraft(any(), any(), any());
     }
 
     @Test
     void sourceAdoptionAcceptsJsonBodyAndPersonalOwner() throws Exception {
-        when(publishService.saveOrUpdateDraft(any(), eq(PRINCIPAL), eq("operator901"))).thenReturn(75L);
+        when(adoptionService.adopt(eq(PRINCIPAL), eq(PRINCIPAL), any(), eq("operator901")))
+                .thenReturn(java.util.Map.of("draftId", "9007199254740993", "status", "COMPLETED"));
         MockMvcBuilders.standaloneSetup(controller).build().perform(post("/api/template/adopt-draft")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"title\":\"旧玩法\",\"originalTemplateId\":16,\"adoptSourceOnly\":false}"))
+                .content("{\"requestId\":\"adopt_test_request_001\",\"sourceVersion\":\"" + "a".repeat(64) + "\",\"originalTemplateId\":\"9007199254740995\"}"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data").value(75));
-        ArgumentCaptor<CmsTemplatePublishRequest> body = ArgumentCaptor.forClass(CmsTemplatePublishRequest.class);
-        verify(publishService).saveOrUpdateDraft(body.capture(), eq(PRINCIPAL), eq("operator901"));
-        assertEquals(16L, body.getValue().getOriginalTemplateId());
-        assertEquals(Boolean.TRUE, body.getValue().getAdoptSourceOnly());
+                .andExpect(jsonPath("$.data.draftId").value("9007199254740993"));
+        ArgumentCaptor<com.chengyinhub.business.domain.dto.TemplateAdoptionCommand> body = ArgumentCaptor.forClass(com.chengyinhub.business.domain.dto.TemplateAdoptionCommand.class);
+        verify(adoptionService).adopt(eq(PRINCIPAL), eq(PRINCIPAL), body.capture(), eq("operator901"));
+        assertEquals("9007199254740995", body.getValue().getOriginalTemplateId());
     }
 
     @Test
@@ -209,8 +222,9 @@ class ApiTemplateMerchantOperatorScopeTest {
 
     @Test
     void merchantAdoptionReadsOwnerDraftThroughSameProjectPermission() throws Exception {
-        when(publishService.saveOrUpdateDraft(any(), eq(OWNER), eq("operator901"))).thenReturn(74L);
-        assertEquals(74L, controller.adoptDraft(request("MERCHANT")).get(AjaxResult.DATA_TAG));
+        when(adoptionService.adopt(eq(PRINCIPAL), eq(OWNER), any(), eq("operator901")))
+                .thenReturn(java.util.Map.of("draftId", "74"));
+        assertEquals(java.util.Map.of("draftId", "74"), controller.adoptDraft(adoption(request("MERCHANT"))).get(AjaxResult.DATA_TAG));
         when(memberTemplateService.selectCmsMemberTemplateById(74L)).thenReturn(draft(OWNER));
         assertEquals(200, controller.myInfo("74", "MERCHANT").get(AjaxResult.CODE_TAG), "已获管理权限的采用者无法回读草稿");
 
@@ -227,8 +241,9 @@ class ApiTemplateMerchantOperatorScopeTest {
 
     @Test
     void merchantReadRejectsRevokedProjectPermissionBeforeLoadingTemplate() throws Exception {
-        when(publishService.saveOrUpdateDraft(any(), eq(OWNER), eq("operator901"))).thenReturn(74L);
-        assertEquals(74L, controller.adoptDraft(request("MERCHANT")).get(AjaxResult.DATA_TAG));
+        when(adoptionService.adopt(eq(PRINCIPAL), eq(OWNER), any(), eq("operator901")))
+                .thenReturn(java.util.Map.of("draftId", "74"));
+        assertEquals(java.util.Map.of("draftId", "74"), controller.adoptDraft(adoption(request("MERCHANT"))).get(AjaxResult.DATA_TAG));
         IMerchantAccessService access = (IMerchantAccessService) ReflectionTestUtils.getField(controller, "merchantAccessService");
         when(access.require(PRINCIPAL, MerchantPermission.PROJECT_MANAGE))
                 .thenThrow(new com.chengyinhub.common.exception.ServiceException("商家身份无效或权限不足", 403));

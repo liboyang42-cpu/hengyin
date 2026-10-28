@@ -19,7 +19,7 @@ import java.util.function.Supplier;
 
 /**
  * F1b 城市定向计分后台:申诉/争议处理、整条冲正、复算核对。
- * 权限 business:orientScoring:* 为新增权限串,未分配给任何预置角色(仅超管),角色授予待 owner 决定。
+ * 权限 business:orientScoring:list/review 由 migration_20261027_orient_scoring_menu_grants.sql 登记,仅授 cy_operator(owner 2026-10-27)。
  */
 @RestController
 @RequestMapping("/business/orient/scoring")
@@ -72,6 +72,25 @@ public class OrientScoringAdminController extends BaseController {
     @PostMapping("/entries/{id}/reverse")
     public AjaxResult reverse(@PathVariable("id") Long id, String reasonCode, String idempotencyKey) {
         return run(() -> orientScoringService.reverseEntry(id, reasonCode, getUserId(), idempotencyKey));
+    }
+
+    @PreAuthorize("@ss.hasPermi('business:orientScoring:list')")
+    @GetMapping("/recoveries")
+    public AjaxResult recoveries(Integer status, Integer limit) {
+        return success(orientScoringService.listRecoveries(status, limit == null ? 50 : limit));
+    }
+
+    @PreAuthorize("@ss.hasPermi('business:orientScoring:review')")
+    @Log(title = "历史计分人工核对", businessType = BusinessType.UPDATE)
+    @PostMapping("/recoveries/{id}/review")
+    public AjaxResult reviewRecovery(@PathVariable("id") Long id, String referenceId, String note) {
+        return run(() -> {
+            Long reference = referenceId == null || referenceId.isBlank() ? null : Convert.toLong(referenceId, null);
+            if (referenceId != null && !referenceId.isBlank() && (reference == null || reference <= 0)) {
+                throw new OrientScoringException(OrientScoringException.INVALID_ARGUMENT, "关联编号不合法");
+            }
+            return orientScoringService.reviewRecovery(id, reference, note, getUsername());
+        });
     }
 
     private AjaxResult run(Supplier<Object> action) {

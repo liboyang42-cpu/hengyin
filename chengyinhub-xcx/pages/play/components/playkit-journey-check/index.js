@@ -27,7 +27,7 @@ const HOLD_FULL_MS = 1400;
 function trackPct(n) { return Math.max(0, Math.min(100, (Number(n) - 1) / 19 * 100)); }
 /** 过线 / 差几点 —— 结果屏那一行,算法出口供单测 */
 function marginText(receipt) {
-  if (!receipt || !receipt.dc) return '';
+  if (!receipt || receipt.detailsHidden || receipt.total == null || receipt.dc == null) return '';
   const diff = Number(receipt.total) - Number(receipt.dc);
   return diff >= 0 ? '过线 ' + diff + ' 点' : '差 ' + (-diff) + ' 点';
 }
@@ -39,6 +39,7 @@ function natTag(receipt) {
 Component({
   behaviors: [reducedMotionBehavior, replayMotionBehavior],
   properties: {
+    unknown: { type: Boolean, value: false },
     show: { type: Boolean, value: false },
     loading: { type: Boolean, value: false },
     skill: { type: String, value: '' },
@@ -94,7 +95,7 @@ Component({
         trackFill: r ? trackPct(r.total) : 0,
         trackDc: r ? trackPct(r.dc) : 0,
       });
-      if (r && r.settled) { this._destroyDie(); return; }   // 画布随 wx:if 卸掉,渲染器跟着停
+      if (r && (r.settled || r.detailsHidden)) { this._destroyDie(); this.setData({ landed: true }); return; }   // 画布随 wx:if 卸掉,渲染器跟着停
       this._syncDie(r, fresh);
     },
   },
@@ -106,6 +107,7 @@ Component({
     hide() { this._stopHold(); },
   },
   methods: {
+    onRecover() { if (!this.data.loading) this.triggerEvent('action', { action: 'recover' }); },
     _canReroll: canReroll,     // 纯算法出口,供单测
     _marginText: marginText,
     _trackPct: trackPct,
@@ -114,7 +116,7 @@ Component({
     _dieCount(r) { return r && Array.isArray(r.dice) && r.dice.length === 2 ? 2 : ((this.data.advantage || this.data.disadvantage) && !r ? 2 : 1); },
     _destroyDie() { this._dieVersion = (this._dieVersion || 0) + 1; if (this._die) this._die.dispose(); this._die = null; this._dieN = 0; },
     _mountDie() {
-      if (!this._dieMounted || !this.data.show) return;
+      if (!this._dieMounted || !this.data.show || this.data.receipt && this.data.receipt.detailsHidden) return;
       const r = this.data.receipt, count = this._dieCount(r);
       if (this._die && this._dieN === count) return;
       this._destroyDie();
@@ -152,7 +154,7 @@ Component({
     },
 
     /* ---------- 按住摇骰 ---------- */
-    _canRoll() { return !this.data.loading && !this.data.receipt && !this._rolling && !(this.data.r5 && !this.data.allowedActions.includes('ROLL_CHECK')); },
+    _canRoll() { return !this.data.unknown && !this.data.loading && !this.data.receipt && !this._rolling && !(this.data.r5 && !this.data.allowedActions.includes('ROLL_CHECK')); },
     onHoldStart() {
       if (!this._canRoll()) return;
       this._holdAt = Date.now();
@@ -186,14 +188,14 @@ Component({
       this.triggerEvent('action', { action: 'roll' });
     },
     onReroll() {
-      if (this.data.loading || !this.data.rerollVisible) return;
+      if (this.data.unknown || this.data.loading || !this.data.rerollVisible) return;
       this._rolling = true;
       if (this._die) this._die.roll(this.data.reducedMotion);
       motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'medium' });
       this.triggerEvent('action', { action: 'reroll' });
     },
     onSettle() {
-      if (this.data.loading || !this.data.receipt || this.data.receipt.settled || this.data.receipt.pending) return;
+      if (this.data.unknown || this.data.loading || !this.data.receipt || this.data.receipt.settled || this.data.receipt.pending) return;
       if (this.data.r5 && !this.data.allowedActions.includes('SUBMIT_CHECK')) return;
       motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'medium' });
       this.triggerEvent('action', { action: 'settle' });

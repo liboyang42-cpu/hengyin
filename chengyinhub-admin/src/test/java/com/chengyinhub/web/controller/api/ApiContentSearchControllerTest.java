@@ -42,6 +42,16 @@ class ApiContentSearchControllerTest {
         assertNull(PageHelper.getLocalPage());
     }
 
+    @Test
+    void unifiedResultPreservesBigintIdAsJsonString() throws Exception {
+        com.chengyinhub.business.domain.vo.ContentSearchItemVO row = new com.chengyinhub.business.domain.vo.ContentSearchItemVO();
+        row.setId(Long.MAX_VALUE); row.setType("post");
+        com.fasterxml.jackson.databind.ObjectMapper json = new com.fasterxml.jackson.databind.ObjectMapper();
+        com.fasterxml.jackson.databind.JsonNode encoded = json.readTree(json.writeValueAsString(row));
+        assertEquals(true, encoded.path("id").isTextual());
+        assertEquals("9223372036854775807", encoded.path("id").asText());
+    }
+
     private static ApiContentSearchController controller(ContentSearchService service, boolean enabled) {
         ApiContentSearchController controller = new ApiContentSearchController() {
             @Override

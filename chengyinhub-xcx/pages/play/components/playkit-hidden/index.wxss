@@ -16,6 +16,7 @@
   overflow: hidden;
   background: #0D0D10;                      /* ds-ok 底图没加载出来时的画布底 */
 }
+.hd__frame { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
 .hd__img { width: 100%; height: 100%; }
 /* 点下去先有回应,不等服务端。判定要一个来回,中间这段没反馈的话
    人会以为没点着,于是连点 —— 那会把一次判定变成好几次。 */

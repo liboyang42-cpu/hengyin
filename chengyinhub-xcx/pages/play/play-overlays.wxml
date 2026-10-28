@@ -1,0 +1,91 @@
+<!-- 文档二 L5:角色卡 / 本局成绩 —— 盖在游玩页上的全屏层(原型 A p-char / p-score),不是新页面。
+     左上 × 关闭;只读 /api/play/character 与 /api/orient/scoring/session/{id}(+ leaderboard)。 -->
+<view class="pov" wx:if="{{charOv.show}}" catchtouchmove="noop" aria-role="dialog" aria-label="我的角色">
+  <view class="pov__x" style="top:{{chrome.actionTop || 51}}px" bindtap="closeCharOverlay" aria-role="button" aria-label="关闭" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close" size="32" /></view>
+  <scroll-view class="pov__sv" scroll-y enhanced show-scrollbar="{{false}}">
+    <block wx:if="{{charOv.state === 'ok'}}">
+      <view class="cc-hero">
+        <view class="cc-art"><view class="cc-fog"></view><view class="cc-fog cc-fog--2"></view></view>
+        <view class="cc-fig"></view>
+        <view class="cc-id"><text class="cc-name">{{charOv.view.name}}</text></view>
+      </view>
+      <view class="cc-sec cc-in" style="--d:1">
+        <view class="cc-h"><text>属性</text></view>
+        <view class="cc-attrs">
+          <image wx:if="{{charOv.view.radar}}" class="cc-radar" src="{{charOv.view.radar}}" mode="aspectFit" />
+          <view class="cc-list">
+            <view class="cc-a" wx:for="{{charOv.view.attrs}}" wx:key="stateKey">
+              <view class="cc-a__top"><text class="cc-a__n">{{item.label}}</text><text class="cc-a__v">{{item.value}}<text class="cc-max">/{{item.max}}</text></text></view>
+              <view class="cc-bar"><view class="cc-bar__f" style="width:{{item.percent}}%"></view></view>
+            </view>
+          </view>
+        </view>
+      </view>
+      <view class="cc-sec cc-in" style="--d:2" wx:if="{{charOv.view.traits.length}}">
+        <view class="cc-h"><text>特质</text></view>
+        <view class="cc-traits">
+          <view class="cc-tr" wx:for="{{charOv.view.traits}}" wx:key="key">
+            <view class="cc-tr__badge"><cy-icon name="star-filled" size="28" /></view>
+            <text class="cc-tr__n">{{item.label}}</text>
+          </view>
+        </view>
+      </view>
+      <view class="cc-sec cc-in" style="--d:3" wx:if="{{total || themeBag.clues.length || charOv.view.momentum || charOv.view.clocks.length}}">
+        <view class="cc-h"><text>进度</text></view>
+        <view class="cc-prog">
+          <view wx:if="{{total}}"><text class="cc-p__k">节点</text><text class="cc-p__v">{{doneCount}}<text class="cc-max">/{{total}}</text></text><view class="cc-bar"><view class="cc-bar__f" style="width:{{total ? doneCount * 100 / total : 0}}%"></view></view></view>
+          <view wx:if="{{themeBag.clues.length}}"><text class="cc-p__k">线索</text><text class="cc-p__v">{{themeBag.clues.length}}</text></view>
+          <view wx:if="{{charOv.view.momentum}}"><text class="cc-p__k">动量</text><text class="cc-p__v">{{charOv.view.momentum.value}}<text class="cc-max">/{{charOv.view.momentum.max}}</text></text><view class="cc-pips"><view class="cc-pip {{pip.on ? 'on' : ''}}" wx:for="{{charOv.view.momentum.pips}}" wx:for-item="pip" wx:key="i"></view></view></view>
+        </view>
+        <view class="cc-clocks" wx:if="{{charOv.view.clocks.length}}">
+          <view class="cc-clock" wx:for="{{charOv.view.clocks}}" wx:key="key">
+            <text class="cc-clock__n">{{item.label}}</text><text class="cc-clock__v">{{item.value}}/{{item.max}}</text>
+            <view class="cc-bar"><view class="cc-bar__f" style="width:{{item.percent}}%"></view></view>
+          </view>
+        </view>
+      </view>
+      <view style="height:88rpx"></view>
+    </block>
+    <view wx:elif="{{charOv.state === 'loading'}}" aria-role="status" aria-label="正在读取角色"><view class="pov-skel pov-skel--hero" style="height:580rpx"></view><cy-skeleton type="list" count="3" /></view>
+    <view wx:else class="pov-empty"><text class="pov-empty__t">角色信息暂时没有读到</text><cy-btn variant="secondary" bindtap="openCharOverlay">重试</cy-btn></view>
+  </scroll-view>
+</view>
+
+<view class="pov" wx:if="{{scoreOv.show}}" catchtouchmove="noop" aria-role="dialog" aria-label="本局成绩">
+  <view class="pov__x" style="top:{{chrome.actionTop || 51}}px" bindtap="closeScoreOverlay" aria-role="button" aria-label="关闭" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close" size="32" /></view>
+  <scroll-view class="pov__sv" scroll-y enhanced show-scrollbar="{{false}}">
+    <block wx:if="{{scoreOv.state === 'ok'}}">
+      <view class="sc-hero">
+        <text class="sc-kicker">本局成绩</text>
+        <block wx:if="{{scoreOv.view.rank}}">
+          <text class="sc-pre">{{scoreOv.view.final ? '最终名次' : '暂列'}}</text>
+          <view class="sc-rank"><text class="sc-rank__a">第</text><text class="sc-rank__n">{{scoreOv.view.rank}}</text><text class="sc-rank__a">名</text><text class="sc-rank__of" wx:if="{{scoreOv.view.of}}">/ {{scoreOv.view.of}}</text></view>
+        </block>
+      </view>
+      <view class="sc-tiles cc-in" style="--d:1">
+        <view class="sc-t"><text class="sc-t__v">{{scoreOv.shown}}</text><text class="sc-t__k">得分</text></view>
+        <view class="sc-t" wx:if="{{scoreOv.view.elapsed}}"><text class="sc-t__v">{{scoreOv.view.elapsed}}</text><text class="sc-t__k">用时</text></view>
+        <view class="sc-t" wx:if="{{scoreOv.view.nodes}}"><text class="sc-t__v">{{scoreOv.view.done}}<text class="sc-t__m">/{{scoreOv.view.nodes}}</text></text><text class="sc-t__k">完成节点</text></view>
+      </view>
+      <view class="cc-sec cc-in" style="--d:2" wx:if="{{scoreOv.view.rows.length}}">
+        <view class="cc-h"><text>得分明细</text></view>
+        <view class="sc-r {{item.wait ? 'is-wait' : ''}}" wx:for="{{scoreOv.view.rows}}" wx:key="key"><text>{{item.label}}</text><text class="sc-r__v">{{item.value}}</text></view>
+      </view>
+      <view class="cc-sec cc-in" style="--d:3" wx:if="{{scoreOv.view.board.length}}">
+        <view class="cc-h"><text>排行</text></view>
+        <view class="sc-p {{item.mine ? 'is-me' : ''}}" wx:for="{{scoreOv.view.board}}" wx:key="rowKey">
+          <text class="sc-p__r {{item.rank === '1' ? 'm1' : ''}}">{{item.rank}}</text>
+          <view class="sc-p__ava">{{item.ava}}</view>
+          <text class="sc-p__n">{{item.name}}</text>
+          <text class="sc-p__t" wx:if="{{item.time}}">{{item.time}}</text>
+          <text class="sc-p__s">{{item.score}}</text>
+        </view>
+      </view>
+      <view class="sc-foot cc-in" style="--d:4">
+        <text class="sc-dispute" wx:if="{{scoreOv.view.canDispute}}" bindtap="disputeScore" aria-role="button" aria-label="申诉成绩" hover-class="cy-pressed" hover-stay-time="80">申诉</text>
+      </view>
+    </block>
+    <view wx:elif="{{scoreOv.state === 'loading'}}" aria-role="status" aria-label="正在读取成绩"><view class="pov-skel pov-skel--hero" style="height:580rpx"></view><cy-skeleton type="list" count="3" /></view>
+    <view wx:else class="pov-empty"><text class="pov-empty__t">成绩暂时没有读到</text><cy-btn variant="secondary" bindtap="openScoreOverlay">重试</cy-btn></view>
+  </scroll-view>
+</view>

@@ -4,7 +4,11 @@
 <view class="nb theme-dark {{sheet === 'poi' ? 'map-open' : ''}}">
   <cy-toast id="cy-toast" />
   <cy-modal-host id="cy-modal-host" />
-  <cy-nav-bar title="" overlay pill tint="dark" custom-back bind:back="goBack" />
+  <!-- 2026-10-27 owner P-38:返回键被状态栏挡住 —— 导航条不再出自带返回,本页按胶囊实测位置画一枚,与胶囊同一行、左侧留白 -->
+  <cy-nav-bar title="" overlay pill tint="dark" back="{{false}}" />
+  <view class="nb-back" style="top:{{capTop}}px;height:{{capH}}px;" bindtap="goBack" aria-role="button" aria-label="返回" hover-class="cy-pressed" hover-stay-time="80">
+    <view class="nb-back__pill" style="width:{{capH}}px;height:{{capH}}px;"><cy-icon name="back" size="40" /></view>
+  </view>
 
   <free-map id="fmap" class="nb-map" scene="explore" center="{{center}}" scale="{{scale}}"
             map-markers="{{markers}}" map-circles="{{circles}}" show-controls="{{false}}"
@@ -30,10 +34,11 @@
     <view class="mt-chip {{layer === 'place' ? 'is-on' : ''}}" data-layer="place" bindtap="onLayerTap" aria-role="button" aria-label="地点玩法{{layer === 'place' && layerSub ? '：' + layerSub : ''}}，展开选项" hover-class="cy-pressed" hover-stay-time="80">{{layer === 'place' && layerSub ? layerSub : '地点玩法'}}<view class="mt-chip__caret {{layerSheet === 'place' ? 'is-up' : ''}}"></view></view>
     <view class="mt-chip {{layer === 'shop' ? 'is-on' : ''}}" data-layer="shop" bindtap="onLayerTap" aria-role="button" aria-label="商家{{layer === 'shop' && layerSub ? '：' + layerSub : ''}}，展开选项" hover-class="cy-pressed" hover-stay-time="80">{{layer === 'shop' && layerSub ? layerSub : '商家'}}<view class="mt-chip__caret {{layerSheet === 'shop' ? 'is-up' : ''}}"></view></view>
   </scroll-view>
-    <view class="mt-mode">
-      <view class="mt-mode__i {{viewMode === 'map' ? 'is-on' : ''}}" data-mode="map" bindtap="setViewMode" aria-role="tab" aria-selected="{{viewMode === 'map'}}" aria-label="地图" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="map" size="36" /></view>
-      <view class="mt-mode__i {{viewMode === 'list' ? 'is-on' : ''}}" data-mode="list" bindtap="setViewMode" aria-role="tab" aria-selected="{{viewMode === 'list'}}" aria-label="列表" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="list" size="36" /></view>
-    </view>
+  </view>
+  <!-- 2026-10-27 owner P-38:地图 / 列表切换从筛选行挪出来,放到右侧筛选行下方、竖排,不再挡住筛选 -->
+  <view class="mt-mode mt-mode--side" style="top:{{hudTop + 56}}px;">
+    <view class="mt-mode__i {{viewMode === 'map' ? 'is-on' : ''}}" data-mode="map" bindtap="setViewMode" aria-role="tab" aria-selected="{{viewMode === 'map'}}" aria-label="地图" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="map" size="36" /></view>
+    <view class="mt-mode__i {{viewMode === 'list' ? 'is-on' : ''}}" data-mode="list" bindtap="setViewMode" aria-role="tab" aria-selected="{{viewMode === 'list'}}" aria-label="列表" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="list" size="36" /></view>
   </view>
 
   <!-- 列表模式:范围内全部队伍,点一行 = 点地图上的那支(同一张队伍卡) -->
@@ -59,9 +64,13 @@
   <!-- P1 角控件(稿 591:1020 / 591:1022)。开卡片时收起。 -->
   <!-- 底栏:范围 · 我的队伍。开任何半屏时收起(9-08 裁决沿用) -->
   <!-- 2026-10-25 业主:附近的队伍 / 地点挪到底部横滑卡片(同漫游首页「附近活动」卡,加高);点卡片 = 点列表那一行 -->
-  <view class="mt-strip" wx:if="{{!sheet && viewMode === 'map' && listRows.length}}" style="padding-bottom:{{safeBottom + 16}}px;">
+  <!-- 2026-10-27 owner P-38:附近没有节点时底部也要有卡片带 —— 出一张空态卡,点它放大到全部范围 -->
+  <view class="mt-strip" wx:if="{{!sheet && viewMode === 'map'}}" style="padding-bottom:{{safeBottom + 16}}px;">
     <view class="mt-strip__head"><text>{{headerText}}</text></view>
     <scroll-view class="mt-strip__cards" scroll-x enhanced show-scrollbar="{{false}}"><view class="mt-strip__track">
+      <view class="mt-card mt-card--empty" wx:if="{{!listRows.length}}" data-layer="all" bindtap="onLayerTap" aria-role="button" aria-label="附近暂无节点，查看全部范围" hover-class="cy-pressed" hover-stay-time="80">
+        <view class="mt-card__copy"><text class="mt-card__title">附近暂无节点</text><text class="mt-card__meta">点这里看看全部范围</text></view>
+      </view>
       <view class="mt-card" wx:for="{{listRows}}" wx:key="key" data-kind="{{item.kind}}" data-id="{{item.id}}" bindtap="onListRowTap"
             aria-role="button" aria-label="{{item.name}}，{{item.badge}}" hover-class="cy-pressed" hover-stay-time="80">
         <image wx:if="{{item.img}}" class="mt-card__cover" src="{{item.img}}" mode="aspectFill" lazy-load="true" />
@@ -71,13 +80,16 @@
       </view>
     </view></scroll-view>
   </view>
-  <!-- 范围保留文字胶囊;我的队伍改图标 + 人数角标。卡片条在时整体抬到卡片条上方 -->
-  <view class="mt-corners" wx:if="{{!sheet && viewMode === 'map'}}" style="bottom:{{listRows.length ? 'calc(' + (safeBottom + 16) + 'px + 410rpx)' : (safeBottom + 26) + 'px'}};">
-    <view class="mt-corner" bindtap="openRange" aria-role="button" aria-label="{{rangeText}}" hover-class="cy-pressed" hover-stay-time="80">{{rangeText}}</view>
+  <!-- 范围、我的队伍都是图标;卡片条在时整体抬到卡片条上方 -->
+  <view class="mt-corners" wx:if="{{!sheet && viewMode === 'map'}}" style="bottom:calc({{safeBottom + 16}}px + 380rpx);">
+    <!-- 2026-10-28 业主:「范围 1 公里」也变成图标按钮(读屏仍报当前范围) -->
+    <view class="mt-corner mt-corner--icon" bindtap="openRange" aria-role="button" aria-label="范围：{{rangeText}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="gps" size="40" /></view>
     <view class="mt-corner mt-corner--icon" bindtap="openMyTeamsPage" aria-role="button" aria-label="{{myTeamsN ? '我的队伍 · ' + myTeamsN : '我的队伍'}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="mtab-customers" size="40" /><text class="mt-corner__n" wx:if="{{myTeamsN}}">{{myTeamsN}}</text></view>
   </view>
 
   <!-- P2 / P3 / P4 / 被拒 / 已加入:队伍卡(稿 593:1017 · 594:1030 · 594:1060) -->
+  <!-- G-2:手写 psheet 浮层开着时,物理返回 / 侧滑先关最上层,不退出本页 -->
+  <cy-back-guard show="{{!!sheet}}" bind:back="closeSheet" />
   <block wx:if="{{sheet === 'team' && current}}">
   <view class="pdim {{sheetIn ? 'is-in' : ''}} {{reducedMotion ? 'is-reduced' : ''}}" bindtap="closeSheet" aria-role="button" aria-label="关闭" hover-class="cy-pressed" hover-stay-time="80"></view>
   <view class="psheet psheet--half {{sheetIn ? 'is-in' : ''}} {{reducedMotion ? 'is-reduced' : ''}}" catchtap="noop">
@@ -250,13 +262,13 @@
             <scroll-view class="pb__hs" scroll-x enhanced show-scrollbar="{{false}}" wx:if="{{poiCard.reviews.length}}"><view class="pb__hs-track">
               <view class="pb__cm" wx:for="{{poiCard.reviews}}" wx:key="id">
                 <view class="pb__cm-h"><text class="pb__cm-n">{{item.name}}</text><text class="pb__cm-time">{{item.time}}</text></view>
-                <text class="pb__cm-s">{{item.stars ? '★ ' + item.stars : ''}}</text>
+                <view class="pb__cm-s" wx:if="{{item.stars}}" aria-label="{{item.stars}} 星"><cy-icon name="star" size="22" /><text>{{item.stars}}</text></view>
                 <text class="pb__cm-t">{{item.text}}</text>
               </view>
             </view></scroll-view>
             <text class="pb__cm-empty" wx:if="{{poiCard.reviewsLoaded && !poiCard.reviews.length}}">还没有评价。完成挑战后来写第一条。</text>
             <view class="pb__mine" wx:if="{{poiCard.game.completed && !poiCard.reviewed}}">
-              <view class="pb__stars"><text wx:for="{{[1,2,3,4,5]}}" wx:key="*this" class="pb__star {{poiCard.myStars >= item ? 'on' : ''}}" data-n="{{item}}" bindtap="onReviewStar" aria-role="button" aria-label="{{item}} 星" hover-class="cy-pressed" hover-stay-time="80">★</text></view>
+              <view class="pb__stars"><view wx:for="{{[1,2,3,4,5]}}" wx:key="*this" class="pb__star {{poiCard.myStars >= item ? 'on' : ''}}" data-n="{{item}}" bindtap="onReviewStar" aria-role="button" aria-label="{{item}} 星" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="star" size="40" /></view></view>
               <textarea class="pb__ta" value="{{poiCard.myText}}" maxlength="200" placeholder="说说这次挑战和这个地方" placeholder-class="pb__ph" bindinput="onReviewInput" auto-height fixed aria-label="写评价" />
               <view class="pb__send {{poiCard.reviewBusy ? 'is-off' : ''}}" bindtap="onReviewSubmit" aria-role="button" aria-label="发布评价" hover-class="cy-pressed" hover-stay-time="80">{{poiCard.reviewBusy ? '发布中…' : '发布评价'}}</view>
             </view>
@@ -296,4 +308,5 @@
   <cy-result-sheet show="{{resultSheet.show}}" kind="{{resultSheet.kind}}" title="{{resultSheet.title}}"
     why="{{resultSheet.why}}" primary-text="{{resultSheet.primaryText}}" secondary-text="{{resultSheet.secondaryText}}"
     bind:primary="onResultPrimary" bind:secondary="onResultClose" bind:close="onResultClose" />
+  <include src="../utils/team-recovery-panel.wxml" />
 </view>

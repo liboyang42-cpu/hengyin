@@ -1,7 +1,7 @@
 const { applyHeroRecede } = require('./utils/scroll-motion.js');
 const app = getApp();
 const analytics = require('../../utils/analytics.js');
-const templateDetailUtil = require('./utils/templateDetail.js');
+const templateDetailUtil = require('./utils/templateDetail.js'); const shelfArt = require('./shelf/art.js');
 const policy = require('../../utils/identity/identity-policy.js');
 const merchantTheme = require('../../utils/merchant-theme.js');
 const { isRecord } = require('../../utils/response-shape.js');
@@ -180,7 +180,6 @@ Page({
     selectedOption: '',
     selectedOptionKey: '',
     inputAnswer: '',
-    moreShow: false,
     isMyScope: false,
     isMerchant: false,
     // 公共库主动作统一「开始应用」(基于模板起草)。scope=my 按服务端 canEdit 定:
@@ -233,7 +232,7 @@ Page({
 
   onHide() { merchantTheme.merchantPageRestore(); },
   onUnload() {
-    this._disposed = true; this._unloaded = true; if (this._reportReasonSelection) require('../../utils/community-report-sheet.js').cancel(this);
+    this._disposed = true; this._unloaded = true;
     this._editorContext = null;
     merchantTheme.merchantPageRestore();
   },
@@ -257,7 +256,7 @@ Page({
     var publisher = resolvePublisherDisplay(normalized.info, target.scope || this.data.scope);
     target.info = normalized.info;
     target.gallery = normalized.gallery;
-    target.coverUrl = normalized.coverUrl;
+    target.coverUrl = detailCover(normalized);
     target.publisherText = publisher.text;
     target.isOfficialPublisher = publisher.official;
     target.capRows = buildCapRows(normalized.info, normalized.categoryText);
@@ -282,7 +281,7 @@ Page({
     this.setData({
       info: normalized.info, primaryLabel: this.data.scope !== 'my' ? '开始应用' : (normalized.info.canEdit === true ? '继续编辑' : '去模板广场选用'),
       gallery: normalized.gallery,
-      coverUrl: normalized.coverUrl,
+      coverUrl: detailCover(normalized),
       publisherText: publisher.text,
       isOfficialPublisher: publisher.official,
       capRows: capRows,
@@ -332,7 +331,6 @@ Page({
     that._detailRequestToken = token;
     if (that._detailContext && that._detailContext !== context) {
       that.applyDetailPayload({});
-      that.setData({ moreShow: false, reportKind: '' });
       that.closePop();
     }
     that._detailContext = context;
@@ -351,7 +349,6 @@ Page({
         if (!that.isDetailRequestCurrent(token, context)) return;
         if (res && res.code == '200' && isRecord(res.data)) {
           that.applyDetailPayload(res.data);
-          that.setData({ reportKind: reportKindOf(res.data, that.data.scope, typeof app.getUserID === 'function' ? app.getUserID() : '') });
         } else {
           that.setData({
             loadError: true,
@@ -434,43 +431,6 @@ Page({
     mediaPreview.open(urls, urls[0]);
   },
 
-  openMore() {
-    this.setData({ moreShow: true });
-  },
-
-  closeMore() {
-    this.setData({ moreShow: false });
-  },
-
-  openPopFromMore() {
-    this.setData({
-      moreShow: false,
-      popDavid: true,
-      canSubmitPreview: false,
-      selectedOption: '',
-      selectedOptionKey: '',
-      inputAnswer: ''
-    });
-  },
-
-  onShare() {
-    this.setData({ moreShow: false });
-  },
-
-  // FOLLOWUP-A-1:举报玩法,流程与动态详情 reportSquare 同一套(utils/content-report.js)。
-  // 广场记录与个人玩法各走各的举报接口,两个入口分开绑定。
-  reportTemplate() {
-    if (this.data.reportKind !== 'template') return;
-    this.setData({ moreShow: false });
-    require('../../utils/content-report.js').reportTemplate(this, app, this.data.id);
-  },
-  reportPersonalTemplate() {
-    if (this.data.reportKind !== 'personalTemplate') return;
-    this.setData({ moreShow: false });
-    require('../../utils/content-report.js').reportPersonalTemplate(this, app, this.data.id);
-  },
-  onReportReasonSelect(e) { require('../../utils/community-report-sheet.js').select(this, e); },
-  onReportReasonCancel() { require('../../utils/community-report-sheet.js').cancel(this); },
 
   closePop() {
     this.setData({
@@ -554,13 +514,8 @@ Page({
   }
 });
 
-// FOLLOWUP-A-1:公开可见、且不是本人的玩法才给举报;谓词与后端 /api/template/report、/personal-report 一致。
-// library = 广场记录(已审核 + 已上架);my = 个人玩法(非草稿 + 已审核 + 已上架)。返回 '' 即不出入口。
-function reportKindOf(info, scope, me) {
-  info = info || {};
-  if (!(Number(info.id) > 0) || Number(info.delFlag || 0) !== 0) return '';
-  if (me && String(info.memberId || '') === String(me)) return '';
-  if (Number(info.status) !== 1 || Number(info.publishStatus) !== 1) return '';
-  if (scope === 'my') return Number(info.draftStatus) === 1 ? 'personalTemplate' : '';
-  return 'template';
+// 货架上的 25 个玩法封面随分包打包(2026-10-28):线上 imgUrl 全空，打开详情也要有图。
+function detailCover(normalized) {
+  const a = shelfArt.gameArt(normalized.info && normalized.info.title);
+  return a ? a.cover : normalized.coverUrl;
 }

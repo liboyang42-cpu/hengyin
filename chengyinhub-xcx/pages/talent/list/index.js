@@ -31,7 +31,6 @@ Page({
     // 顶栏几何
     statusBarHeight: app.globalData.statusBarHeight,
     navBarHeight: app.globalData.navBarHeight,
-    rightGap: 100,
     headerH: 0,
     isSticky: false,
     activeTab: 1, // 固定俱乐部(tab 页面:漫游子 tab 已拆除,直落俱乐部)
@@ -438,13 +437,10 @@ Page({
     });
   },
 
-  // 顶栏 + tab 栏几何(右侧图标避开微信胶囊)
+  // 顶栏 + tab 栏几何。2026-10-27 P-13:消息铃铛挪到左上角,不再需要避让右侧胶囊的 rightGap。
   initNav() {
-    var info = wx.getWindowInfo();
-    var m = app.globalData.menuButtonInfo;
-    var rightGap = info.windowWidth - m.left + 8;
     var headerH = this.data.statusBarHeight + this.data.navBarHeight;
-    this.setData({ rightGap: rightGap, headerH: headerH });
+    this.setData({ headerH: headerH });
   },
 
   onPageScroll(e) {

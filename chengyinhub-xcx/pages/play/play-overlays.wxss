@@ -1,0 +1,94 @@
+/* 文档二 L5(原型 A p-story / p-tools / p-char / p-score):状态栏第二行 + 盖在游玩页上的两张全屏层。
+ * 尺寸按原型 390 宽 px ÷ 0.52 换算成 rpx;颜色只用 cy token,装饰渐变行尾标 ds-ok。 */
+
+/* ---- 状态栏:第一行原样;第二行头像 + 前 3 项属性,不横滑 ---- */
+.hud2{flex:1;min-width:0;align-self:flex-start;display:flex;flex-direction:column}
+.hud2 .theme-story-hud{flex:none}
+.hud2-line{display:flex;align-items:center;gap:18rpx;min-height:46rpx;margin-top:-4rpx;font-size:var(--cy-type-caption);color:var(--cy-comp-sheet-role-text-secondary);white-space:nowrap;overflow:hidden}
+.hud2-ava{flex:none;width:38rpx;height:38rpx;border-radius:50%;background:linear-gradient(160deg,var(--cy-color-play-elevated),var(--cy-color-play-page));box-shadow:0 0 0 2rpx var(--cy-color-play-line);display:flex;align-items:center;justify-content:center;font-size:var(--cy-type-micro);color:var(--cy-color-text-primary);font-weight:700}
+.dic .hud2-ava{width:46rpx;height:46rpx;font-size:var(--cy-type-caption)}
+.hud2-stat{display:inline-flex;align-items:center;gap:8rpx}
+.hud2-stars{display:inline-flex;align-items:center;gap:2rpx;color:var(--cy-color-rare)}
+.hud2-stars .off{opacity:.25}
+.hud2-bar{width:46rpx;height:6rpx;border-radius:var(--cy-radius-pill);background:var(--cy-color-play-accent-soft);overflow:hidden}
+.hud2-bar__f{height:100%;background:var(--cy-color-status-warning)}
+
+/* 「…」右侧值行(本局用时 / 当前得分 / 同行者榜)与章节结算「本局成绩」右侧名次 */
+.fje-v{margin-left:auto;margin-right:12rpx;font-size:var(--cy-type-label);color:var(--cy-color-text-secondary)}
+
+/* ---- 全屏层 ---- */
+.pov{position:fixed;left:0;top:0;right:0;bottom:0;z-index:300;background:var(--cy-color-play-page);color:var(--cy-color-text-primary);overflow:hidden;animation:floatUp .42s cubic-bezier(.2,.8,.2,1) both}
+.pov::before{content:"";position:absolute;left:0;right:0;top:0;height:184rpx;z-index:5;pointer-events:none;background:linear-gradient(180deg,rgba(0,0,0,.72),transparent)} /* ds-ok 顶部压暗,保证关闭钮可读 */
+.pov__sv{position:absolute;left:0;top:0;right:0;bottom:0}
+.pov__x{position:absolute;left:20rpx;z-index:6;width:88rpx;height:88rpx;border-radius:50%;background:var(--cy-color-play-surface);box-shadow:0 0 0 1rpx var(--cy-color-play-line);display:flex;align-items:center;justify-content:center;color:var(--cy-color-text-primary)}
+.cc-in{animation:floatUp .5s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--d,0) * 90ms + 160ms)}
+.cc-sec{margin:0 32rpx 28rpx;padding:32rpx;border-radius:var(--cy-radius-xl);background:var(--cy-color-play-surface-subtle);box-shadow:inset 0 0 0 2rpx var(--cy-color-border-subtle)}
+.cc-h{margin-bottom:24rpx;font-size:var(--cy-type-label);font-weight:700;letter-spacing:.08em;color:var(--cy-color-text-secondary)}
+.cc-bar{height:12rpx;border-radius:var(--cy-radius-pill);background:var(--cy-color-play-accent-soft);overflow:hidden}
+.cc-bar__f{height:100%;border-radius:inherit;background:var(--cy-color-play-accent)}
+.cc-max{font-size:var(--cy-type-body);font-weight:500;color:var(--cy-color-text-tertiary);margin-left:4rpx}
+
+/* 角色卡 */
+.cc-hero{position:relative;height:754rpx;overflow:hidden}
+.cc-art{position:absolute;left:0;top:0;right:0;bottom:0;background:radial-gradient(120% 70% at 72% 62%,rgba(245,159,0,.16),rgba(245,159,0,0) 46%),linear-gradient(180deg,#1b2733 0%,#0e151d 54%,var(--cy-color-play-page) 100%)} /* ds-ok 角色头图装饰渐变(原型 cc-art) */
+.cc-fog{position:absolute;left:-30%;right:-30%;bottom:174rpx;height:230rpx;background:radial-gradient(50% 50% at 50% 50%,rgba(200,215,230,.16),rgba(200,215,230,0) 70%)} /* ds-ok 雾气装饰 */
+.cc-fog--2{bottom:288rpx;opacity:.7}
+.cc-fig{position:absolute;left:50%;bottom:134rpx;width:404rpx;height:525rpx;margin-left:-202rpx;animation:fade .7s ease both}
+.cc-fig{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 260'%3E%3Cdefs%3E%3CradialGradient id='g' cx='50%' cy='50%' r='50%'%3E%3Cstop offset='0' stop-color='%23F59F00' stop-opacity='.6'/%3E%3Cstop offset='1' stop-color='%23F59F00' stop-opacity='0'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='152' cy='172' r='50' fill='url(%23g)'/%3E%3Cpath d='M58 262 L64 134 C66 110 82 100 100 100 C118 100 134 110 136 134 L142 262 Z' fill='%2305080b'/%3E%3Cpath d='M84 104 L100 134 L116 104 L111 100 L100 120 L89 100 Z' fill='%23141c25'/%3E%3Cpath d='M134 128 C144 140 150 150 153 160 L146 163 C142 155 136 147 129 141 Z' fill='%2305080b'/%3E%3Cellipse cx='100' cy='80' rx='18' ry='21' fill='%2305080b'/%3E%3Cellipse cx='100' cy='63' rx='46' ry='8' fill='%2305080b'/%3E%3Cpath d='M75 63 C77 37 123 37 125 63 Z' fill='%2305080b'/%3E%3Crect x='143' y='161' width='17' height='23' rx='3' fill='%23F59F00'/%3E%3Crect x='146' y='165' width='11' height='15' rx='2' fill='%23FFD27A'/%3E%3Cpath d='M147 161 L151.5 153 L156 161' stroke='%2305080b' stroke-width='2' fill='none'/%3E%3C/svg%3E") center/contain no-repeat} /* ds-ok 角色剪影(原型 cc-fig SVG) */
+.cc-id{position:absolute;left:0;right:0;bottom:0;padding:0 40rpx 32rpx;text-align:center;background:linear-gradient(180deg,transparent,var(--cy-color-play-page) 62%)}
+.cc-name{display:block;margin-top:8rpx;font-size:var(--cy-type-display);font-weight:800;letter-spacing:.06em}
+.cc-attrs{display:flex;align-items:center;gap:24rpx}
+.cc-radar{flex:none;width:246rpx;height:246rpx}
+.cc-list{flex:1;min-width:0;display:flex;flex-direction:column;gap:20rpx}
+.cc-a__top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10rpx}
+.cc-a__n{font-size:var(--cy-type-label);color:var(--cy-color-text-secondary)}
+.cc-a__v{font-size:var(--cy-type-sheet-title);font-weight:800;line-height:1}
+.cc-traits{display:flex;flex-wrap:wrap;gap:20rpx}
+.cc-tr{width:calc(50% - 10rpx);box-sizing:border-box;display:flex;flex-direction:column;align-items:flex-start;gap:16rpx;padding:24rpx;border-radius:var(--cy-radius-lg);background:var(--cy-color-play-accent-soft)}
+.cc-tr__badge{width:66rpx;height:74rpx;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:linear-gradient(160deg,var(--cy-color-rare),#7a4e00);display:flex;align-items:center;justify-content:center;color:var(--cy-color-play-page)} /* ds-ok 特质徽章装饰渐变 */
+.cc-tr__n{display:block;font-size:var(--cy-type-body);font-weight:700}
+.cc-prog{display:flex;gap:24rpx}
+.cc-prog > view{flex:1;min-width:0}
+.cc-p__k{display:block;font-size:var(--cy-type-caption);color:var(--cy-color-text-tertiary)}
+.cc-p__v{display:block;margin:6rpx 0 12rpx;font-size:var(--cy-type-sheet-title);font-weight:800;line-height:1}
+.cc-pips{display:flex;gap:6rpx}
+.cc-pip{flex:1;height:12rpx;border-radius:var(--cy-radius-sm);background:var(--cy-color-play-accent-soft)}
+.cc-pip.on{background:var(--cy-color-play-accent)}
+.cc-clocks{display:flex;flex-wrap:wrap;gap:20rpx;margin-top:28rpx}
+.cc-clock{width:calc(50% - 10rpx);box-sizing:border-box;padding:20rpx;border-radius:var(--cy-radius-lg);background:var(--cy-color-play-accent-soft)}
+.cc-clock__n{display:block;font-size:var(--cy-type-label);font-weight:600}
+.cc-clock__v{display:block;margin:4rpx 0 10rpx;font-size:var(--cy-type-caption);color:var(--cy-color-text-tertiary)}
+
+/* 本局成绩 */
+.sc-hero{position:relative;padding:226rpx 40rpx 50rpx;text-align:center;overflow:hidden;background:radial-gradient(80% 60% at 50% 30%,rgba(245,159,0,.18),rgba(245,159,0,0) 70%),linear-gradient(180deg,#151b22,var(--cy-color-play-page))} /* ds-ok 结算头图装饰渐变 */
+.sc-kicker{position:relative;display:block;font-size:var(--cy-type-caption);letter-spacing:.14em;color:var(--cy-color-text-tertiary)}
+.sc-pre{position:relative;display:block;margin-top:34rpx;font-size:var(--cy-type-body);color:var(--cy-color-text-secondary)}
+.sc-rank{position:relative;display:flex;align-items:baseline;justify-content:center;gap:12rpx;margin-top:4rpx;animation:floatUp .6s cubic-bezier(.3,1.4,.5,1) .15s both}
+.sc-rank__a,.sc-rank__of{font-size:var(--cy-type-sheet-title);font-weight:700;color:var(--cy-color-text-secondary)}
+.sc-rank__of{color:var(--cy-color-text-tertiary)}
+.sc-rank__n{font-size:170rpx;font-weight:900;line-height:1;color:var(--cy-color-rare)} /* ds-ok 结算大名次(原型 88px) */
+.sc-tiles{display:flex;gap:20rpx;margin:0 32rpx 28rpx}
+.sc-t{flex:1;padding:28rpx 16rpx;border-radius:var(--cy-radius-lg);background:var(--cy-color-play-surface-subtle);box-shadow:inset 0 0 0 2rpx var(--cy-color-border-subtle);text-align:center}
+.sc-t__v{display:block;font-size:var(--cy-type-display);font-weight:800;line-height:1.05}
+.sc-t__m{font-size:var(--cy-type-body);font-weight:500;color:var(--cy-color-text-tertiary)}
+.sc-t__k{display:block;margin-top:10rpx;font-size:var(--cy-type-caption);color:var(--cy-color-text-tertiary)}
+.sc-r{display:flex;justify-content:space-between;align-items:center;min-height:70rpx;font-size:var(--cy-type-body);color:var(--cy-color-text-secondary)}
+.sc-r + .sc-r{box-shadow:inset 0 2rpx 0 var(--cy-color-border-subtle)}
+.sc-r__v{font-weight:700;color:var(--cy-color-text-primary)}
+.sc-r.is-wait .sc-r__v{font-weight:400;color:var(--cy-color-text-tertiary)}
+.sc-p{display:flex;align-items:center;gap:20rpx;min-height:88rpx;padding:0 12rpx;border-radius:var(--cy-radius-md);font-size:var(--cy-type-body)}
+.sc-p.is-me{background:var(--cy-color-play-accent-soft);box-shadow:inset 0 0 0 2rpx var(--cy-color-play-line)}
+.sc-p__r{flex:none;width:42rpx;text-align:center;font-weight:800;color:var(--cy-color-text-tertiary)}
+.sc-p__r.m1{color:var(--cy-color-rare)}
+.sc-p__ava{flex:none;width:54rpx;height:54rpx;border-radius:50%;background:linear-gradient(160deg,var(--cy-color-play-elevated),var(--cy-color-play-page));display:flex;align-items:center;justify-content:center;font-size:var(--cy-type-caption);font-weight:700}
+.sc-p__n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sc-p__t{flex:none;font-size:var(--cy-type-caption);color:var(--cy-color-text-tertiary)}
+.sc-p__s{flex:none;width:84rpx;text-align:right;font-weight:800}
+.sc-foot{padding:12rpx 32rpx 92rpx;text-align:center}
+.sc-dispute{display:inline-block;padding:16rpx;font-size:var(--cy-type-label);color:var(--cy-color-text-tertiary);text-decoration:underline}
+.pov-skel{margin:0 32rpx 28rpx;border-radius:var(--cy-radius-xl);background:var(--cy-color-skeleton-base);opacity:.7}
+.pov-skel--hero{margin:0 0 28rpx;border-radius:0}
+.pov-empty{padding:500rpx 64rpx 0;text-align:center}
+.pov-empty__t{display:block;margin-bottom:36rpx;font-size:var(--cy-type-section-title);font-weight:700}
+/* 减少动态效果:进场与分段淡入全部直接到位 */
+.play--reduced-motion .pov,.play--reduced-motion .cc-in,.play--reduced-motion .cc-fig,.play--reduced-motion .sc-rank{animation:none;opacity:1;transform:none}
