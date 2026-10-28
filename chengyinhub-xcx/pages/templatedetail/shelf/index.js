@@ -157,7 +157,7 @@ Component({
         success: (res) => {
           if (seq !== this._topicSeq) return;
           if (res && res.code == '200' && isRecordList(res.data)) {
-            this._topics = res.data.map(decorateTopic);
+            this._topics = res.data.filter((t) => art.HIDDEN_TOPICS.indexOf(art.themeKey(t.name)) < 0).map(decorateTopic);
             this.setData({ topicLoaded: true, topicError: '' });
             this.buildTopics();
           } else if (!this.data.topicLoaded) {

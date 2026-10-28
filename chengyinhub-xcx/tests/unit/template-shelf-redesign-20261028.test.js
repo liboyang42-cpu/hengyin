@@ -398,3 +398,11 @@ test('复制回包晚于离开预览页：不再把用户拉去编辑器', () =>
   requests.pop().success(ok({ topicId: 901 }));
   assert.deepEqual(navigations, []);
 });
+
+test('业主暂缓的主题(野生邻居观察局)接口回来也不上货架', async () => {
+  const { vm, requests } = mountShelf();
+  await respond(requests.find((r) => r.url === '/api/template/topic-template/list'), ok([topic(1, '野生邻居观察局'), topic(2, '风味巡游')]));
+  assert.deepEqual(vm._topics.map((t) => t.name), ['风味巡游']);
+  const tagged = art.TOPIC_TAGS.some((t) => (t.members || []).includes('野生邻居观察局'));
+  assert.equal(tagged, false);
+});

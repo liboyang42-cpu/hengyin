@@ -87,16 +87,19 @@ const THEMES = {
 // 主题标签(可多选归属)。quick 按时长现算,不列名单。
 const TOPIC_TAGS = [
   { key: 'story', name: '剧情解谜', members: ['异常事务局：不存在的坐标', '末日广播：最后一座中继站', '时间污染：被删除的今天', '城市藏宝猎人'] },
-  { key: 'walk', name: '城市漫步', members: ['上海像一部旧电影', '野生邻居观察局', '不惑之年', '预制人生', '高温末日逃生'] },
+  { key: 'walk', name: '城市漫步', members: ['上海像一部旧电影', '不惑之年', '预制人生', '高温末日逃生'] },
   { key: 'food', name: '美食探店', members: ['风味巡游'] },
   { key: 'life', name: '生活日常', members: ['生活不掉线'] },
   { key: 'history', name: '历史人文', members: ['城市藏宝猎人', '上海像一部旧电影', '时间污染：被删除的今天'] },
   { key: 'scifi', name: '科幻异常', members: ['异常事务局：不存在的坐标', '末日广播：最后一座中继站', '时间污染：被删除的今天'] },
-  { key: 'photo', name: '拍照出片', members: ['上海像一部旧电影', '风味巡游', '野生邻居观察局'] },
-  { key: 'nature', name: '户外自然', members: ['野生邻居观察局', '异常事务局：不存在的坐标'] },
+  { key: 'photo', name: '拍照出片', members: ['上海像一部旧电影', '风味巡游'] },
+  { key: 'nature', name: '户外自然', members: ['异常事务局：不存在的坐标'] },
   { key: 'indoor', name: '雨天室内', members: ['高温末日逃生', '不惑之年', '生活不掉线'] },
   { key: 'quick', name: '两小时内', members: null }
 ];
+
+// 业主 2026-10-28:暂不上货架的主题(按名称，接口回来也不显示)
+const HIDDEN_TOPICS = ['野生邻居观察局'];
 
 const FEATURED_TOPICS = ['异常事务局：不存在的坐标', '风味巡游', '末日广播：最后一座中继站', '上海像一部旧电影', '时间污染：被删除的今天', '城市藏宝猎人', '高温末日逃生'];
 
@@ -131,6 +134,6 @@ function gameArt(title) {
 }
 
 module.exports = {
-  GROUPS, GAMES, FEATURED_GAMES, GAME_TAGS, THEMES, TOPIC_TAGS, FEATURED_TOPICS, TOPIC_SHELVES,
+  GROUPS, GAMES, FEATURED_GAMES, GAME_TAGS, THEMES, TOPIC_TAGS, FEATURED_TOPICS, TOPIC_SHELVES, HIDDEN_TOPICS,
   propSrc, gameCoverSrc, topicCoverSrc, themeKey, topicArt, gameArt
 };
