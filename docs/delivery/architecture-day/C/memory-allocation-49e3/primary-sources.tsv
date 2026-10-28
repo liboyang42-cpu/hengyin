@@ -1,0 +1,6 @@
+url	sha256
+https://raw.githubusercontent.com/alibaba/fastjson2/2.0.57/core/src/main/java/com/alibaba/fastjson2/JSON.java	3b989c3a90d10692f72581ba3a3fd0b5b323fc8258091507ba1a431c308c63f7
+https://raw.githubusercontent.com/alibaba/fastjson2/2.0.57/core/src/main/java/com/alibaba/fastjson2/JSONWriterUTF8.java	ac6517e9a7e2e39642465372be0466f832b165dbaa00c68b670ce4cd1235038a
+https://raw.githubusercontent.com/alibaba/fastjson2/2.0.57/core/src/main/java/com/alibaba/fastjson2/JSONWriter.java	f37adf465bb1f62d691c333574f38bbcbf3327c32927cba9478aa23e2f2082f8
+https://raw.githubusercontent.com/alibaba/fastjson2/2.0.57/core/src/main/java/com/alibaba/fastjson2/JSONFactory.java	829e2bdef043df9050febd35bc6375b792d391a26f618ef422dd13a0a9afe07b
+https://raw.githubusercontent.com/mybatis/spring/mybatis-spring-4.0.0/src/main/java/org/mybatis/spring/SqlSessionFactoryBean.java	821424144d9f7a35249bcf0edf7b9930854204f9f06bdf6b2555a0e62cc5180e
