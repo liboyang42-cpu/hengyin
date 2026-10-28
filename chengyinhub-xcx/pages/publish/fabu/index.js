@@ -205,13 +205,13 @@ const CLOUD_AUTOSAVE_MS = 2000;
 // 标题旁状态胶囊:本机、上云中、云端已确认、失败、结果待确认必须分开说,不能把本机写入说成已保存。
 const SAVE_STATE_LABELS = { local: '已存本机', localFailed: '本机未存', saving: '保存中', saved: '已存云端', failed: '云端未存', unknown: '待确认' };
 
-const runtimeEditor = require('./theme-runtime.js');
+const runtimeEditor = require('./theme-runtime.js'); const routeNames = require('./theme-route-names.js'); // 文档二 L3
 const structure = require('./theme-runtime-structure.js'); // structure
 const survivalEditor = require('./theme-runtime-survival.js'); // survival
 const zeroHpEditor = require('./theme-runtime-zero-hp.js'); // R5 HP 归零面板（与 runtimeEditor 内同一组方法，直接展开便于 handler 溯源）
 const ownership = require('./theme-ownership.js');
 Page({
-  ...runtimeEditor.methods,
+  ...runtimeEditor.methods, ...routeNames.methods,
   ...structure.methods, // structure
   ...survivalEditor.methods, // survival
   ...zeroHpEditor.methods, // R5 HP 归零
@@ -224,7 +224,7 @@ Page({
   _nodeBindingDraft: null,
   data: {
     creatorLoginRequired: false,
-    ...runtimeEditor.data,
+    ...runtimeEditor.data, ...routeNames.data,
     ...structure.data, // structure
     ...survivalEditor.data, // survival
     ...ownership.data,
@@ -6207,7 +6207,7 @@ Page({
         || source.templateName || '节点完成结果',
       routeMappingRows: rows,
       routeRuleNodes: nodes.map(node => ({ id: node.id, label: node.label })),
-      routeRuleVariables: graph.variables || {},
+      routeRuleVariables: this._routeRuleState(graph.variables || {}, nodes), // 文档二 L3：名单与展开状态在 theme-route-names.js
       routeMappingFallbackLabel: nextNodeId ? '继续故事流' : '故事流结束',
       popChapterNodes: false,
     });
@@ -6236,18 +6236,18 @@ Page({
     const rowIndex = Number(e.currentTarget.dataset.rowindex);
     const rows = (this.data.routeMappingRows || []).map((row) => Object.assign({}, row));
     const row = rows[rowIndex];
-    const selected = row && row.targetOptions[Number(e.detail.value)];
+    const selected = row && row.targetOptions[Number(e.currentTarget.dataset.optionindex ?? (e.detail || {}).value)]; // 就地勾选传 optionindex
     if (!selected) return;
     row.toNodeId = selected.id;
     row.targetLabel = selected.label;
-    this.setData({ routeMappingRows: rows });
+    this.setData({ routeMappingRows: rows, routeMappingDestOpen: false });
   },
 
   closeNodeRouteMapping() {
     const returnToNodeEditor = this._routeMappingReturnToNodeEditor;
     this._routeMappingReturnToNodeEditor = false;
     this.setData({
-      routeMappingShow: false,
+      routeMappingShow: false, routeMappingOpen: '', routeMappingLayer: null,
       popChapterNodes: !!returnToNodeEditor,
     });
   },
@@ -6278,11 +6278,11 @@ Page({
     const nextNodeId = this._nextStoryNodeId(sourceId, nodes);
     let graph = this.data.formData.routeMode === 'BRANCH_GRAPH'
       ? topicRouteGraph.normalizeGraph(this._routeGraph).graph
-      : this._sequentialRouteGraph(nodes);
+      : this._sequentialRouteGraph(nodes); this._declareRouteRuleVariables(graph); // 文档二 L3：用到的属性 / 进度钟补声明
     for (const row of this.data.routeMappingRows || []) {
       if (!row.ruleConfig) continue;
       const errors = storyRuleForm.errors(row.ruleConfig, nodes, graph.variables || {});
-      if (errors.length) { cyToast(row.label + '：' + errors[0].message); return; }
+      if (errors.length) { cyToast(row.label + '：有一句还没选完'); return; }
       if (!row.toNodeId && !nextNodeId && (row.ruleConfig.conditions.length || row.ruleConfig.effects.length)) {
         cyToast(row.label + '：请先选择下一站，再保存条件与效果'); return;
       }

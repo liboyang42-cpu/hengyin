@@ -1,5 +1,8 @@
 {
   "usingComponents": {
+    "cy-list-group": "/components/cy/list-group/index",
+    "cy-list-row": "/components/cy/list-row/index",
+    "cy-sheet-nav": "/components/cy/sheet-nav/index",
     "cy-privacy-gate": "/components/cy/privacy-gate/index",
     "cy-card": "/components/cy/card/index",
     "cy-date-sheet": "/components/cy/date-sheet/index",
