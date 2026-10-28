@@ -45,6 +45,8 @@ const EXPECTED_NAV_ROUTES = [
   'pages/square/list/index', 'pages/square/detail/index',
   'pages/search2/index', 'pages/search2/result/index', 'subpackageMember/signup/index',
   'pages/templatedetail/templatedetail',
+  // 2026-10-28 +1:主题模板卡堆预览(业主定稿原型 v21):custom 导航 + overlay cy-nav-bar,标题由卡堆下方主题名承担
+  'pages/templatedetail/topic-preview/index',
   'pages/address/address', 'pages/addressinfo/addressinfo', 'pages/shezhi/shezhi', 'pages/shezhi/about/index',
   'pages/club/apply/index',
   'pages/agreement/index', 'pages/deregister/index', 'pages/gerenziliao/gerenziliao', 'pages/userinfo/userinfo',
@@ -286,8 +288,9 @@ function assertTitleInventory(readSource = read) {
   // 2026-10-23 起名页 templateadd 退役删除(custom 导航页) ⇒ 145 → 144。
   // 2026-10-25 +1:官方地点挑战(pages/play/poi-challenge):整屏玩法页,拍照 / 答题用 cy-playkit-qa 自带的退出键,
   //   勋章用 cy-medal-screen,与 citystamp / stamp-camera 同形态,不挂 cy-nav-bar / cy-page-title ⇒ 144 → 145。
-  assert.equal(rows.length, 145, '注册页面盘点数量发生漂移,需重新核对标题规范')
-  assert.equal(rows.filter((row) => row.custom).length, 145)
+  // 2026-10-28 +1:主题模板卡堆预览 topic-preview(custom 导航 + overlay cy-nav-bar,不挂 cy-page-title)⇒ 145 → 146。
+  assert.equal(rows.length, 146, '注册页面盘点数量发生漂移,需重新核对标题规范')
+  assert.equal(rows.filter((row) => row.custom).length, 146)
   // 2026-09-02:+2 俱乐部客户列表与客户详情(club/customers、club/customer-detail),
   //   均为 custom 导航 + cy-nav-bar + cy-page-title 的普通二级页 = 133；custom 导航 129 + 2 = 131。
   const knownRoutes = new Set(routes)

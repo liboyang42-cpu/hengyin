@@ -2,7 +2,6 @@
 const toast = require('../../../utils/toast.js');
 const reducedMotionBehavior = require('../../../behaviors/reduced-motion.js');
 const exitMotion = require('../../../behaviors/exit-motion.js');
-const { resolveMenuChrome } = require('../../../utils/nav-safe-area.js');
 
 Component({
   // 与 --cy-motion-standard 的退场时长保持一致。
@@ -20,28 +19,24 @@ Component({
     merchant: { type: Boolean, value: false }
   },
   data: {
-    level: 'cards', selectedMode: 1, quickOpen: false,
-    /* 菜单顶边的起点:原来整层 inset:0 铺到状态栏,把原页的导航标题和
-       消息入口一起压暗(CU-M-157)。和 creation-success 同一份胶囊实测几何:
-       contentTop = 胶囊底 + 呼吸,面板从微信导航下方开始。 */
-    chrome: { contentTop: 56 }
+    level: 'cards', selectedMode: 1, quickOpen: false
   },
   lifetimes: {
-    attached() {
-      let windowInfo = {};
-      let menuButtonInfo = null;
-      try { windowInfo = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync(); } catch (e) {}
-      try { menuButtonInfo = wx.getMenuButtonBoundingClientRect(); } catch (e) {}
-      this.setData({ chrome: resolveMenuChrome(windowInfo, menuButtonInfo) });
+    detached() {
+      if (this._openTimer) { clearTimeout(this._openTimer); this._openTimer = null; }
     }
   },
   observers: {
     '_render, level': function (render, level) {
+      if (this._openTimer) { clearTimeout(this._openTimer); this._openTimer = null; }
       this.setData({ quickOpen: false });
       if (!render) return;
-      wx.nextTick(() => {
+      // P-12(2026-10-27):遮罩原来是「瞬间出现」—— nextTick 的 setData 会和挂载并进同一帧渲染,
+      // opacity 0→1 的过渡根本没起点。隔一帧(~16ms)再置 quickOpen,先让透明态画出来。
+      this._openTimer = setTimeout(() => {
+        this._openTimer = null;
         if (this.data.show && this.data.level === level) this.setData({ quickOpen: true });
-      });
+      }, 16);
     }
   },
   methods: {

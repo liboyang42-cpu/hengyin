@@ -171,6 +171,7 @@ node --test tests/unit/page-cleanup-audit.test.js
 | `pages/search2/result/index` | 否 | `chengyinhub-xcx/pages/search2/index.js:135` | KEEP |
 | `pages/searchmap/index` | 否 | `chengyinhub-xcx/components/cy/icon/spec.json:70` | KEEP |
 | `pages/templatedetail/templatedetail` | 否 | `chengyinhub-xcx/pages/club/topic-story/index.js:239` | KEEP |
+| `pages/templatedetail/topic-preview/index` | 否 | `chengyinhub-xcx/pages/templatedetail/shelf/index.js:324` | KEEP |
 | `pages/address/address` | 否 | `chengyinhub-xcx/pages/activity/baoming/baoming.js:562` | KEEP |
 | `pages/addressinfo/addressinfo` | 否 | `chengyinhub-xcx/pages/activity/baoming/baoming.js:581` | KEEP |
 | `pages/shezhi/shezhi` | 否 | `chengyinhub-xcx/components/cy/scene-deep-link/index.js:34` | KEEP |

@@ -186,7 +186,8 @@
       "root": "pages/templatedetail",
       "name": "subpackageTemplateDetail",
       "pages": [
-        "templatedetail"
+        "templatedetail",
+        "topic-preview/index"
       ]
     },
     {
@@ -299,7 +300,8 @@
     "pages/index/index": {
       "network": "wifi",
       "packages": [
-        "subpackageA"
+        "subpackageA",
+        "subpackageTemplateDetail"
       ]
     },
     "pages/square/list/index": {

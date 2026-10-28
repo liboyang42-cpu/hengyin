@@ -39,8 +39,9 @@ test('route-matrix 生成物必须与当前 app.json 和 scene 扫描逐字一�
   // 2026-10-20 用户要求删掉「我的纠错 / 纠错进度」两页、消息页改收件箱/发件箱(合并 master 584470ad 后按重建实测) ⇒ 145。
   // 2026-10-23 起名页 templateadd 退役删除 ⇒ 145 → 144。
   // 2026-10-25 +1 官方地点挑战页 pages/play/poi-challenge ⇒ 144 → 145。
-  assert.equal(current.routes.length, 145)
-  assert.equal(matrix.counts.routes, 145)
+  // 145 → 146:2026-10-28 新增 pages/templatedetail/topic-preview(主题模板卡堆预览，业主定稿原型 v21)。
+  assert.equal(current.routes.length, 146)
+  assert.equal(matrix.counts.routes, 146)
   // 2026-09-02:+2 俱乐部客户列表与客户详情(club/customers、club/customer-detail)
   assert.equal(inventoryMatchesCurrent(matrix), true)
   // 2026-09-04 导演台整页收编:锚点换成新宿主页 topic-detail。这条要证的是
