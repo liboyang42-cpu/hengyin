@@ -1,6 +1,7 @@
 {
   "schemaVersion": 1,
   "dependencies": {
+    "20261028_remove_wildlife_theme": ["seed_official_solo_story_topics_20260823", "publish_solo_story_topics_20260827"],
     "20261028_template_shelf_list_free_explore": ["seed_shanghai_solo_topics_20260822", "seed_topic_template_shelf_20260726"],
     "20261025_official_poi_quotes": ["20261024_official_roam_challenges"],
     "20261024_official_roam_challenges": ["roam", "city_merchant_node", "20261012_roam_claim_fingerprints"],
