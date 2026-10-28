@@ -560,7 +560,8 @@ page { background: var(--cy-color-bg-page); }
 .chfull__fsentry.is-auto{ opacity:.6; }
 .chfull__fsentry.is-done .chfull__fsentry-go{ background:rgba(255,255,255,.14); color:#FFFFFF; } /* ds-ok 已完成弱化 */
 .chfull__fsentry.is-done{ opacity:.7; }
-.chfull__continue{ height:88rpx; border-radius:999rpx; /* ds-ok 原型 .btn 46px 高 / 全圆角 */
+.chfull__kit{ --pk-verdict-radius:32rpx; } /* ds-ok 与内嵌安静挑战卡同一档圆角(2026-10-27 实测判定色块是直角) */
+.chfull__continue{ margin-top:var(--cy-space-4); height:88rpx; border-radius:999rpx; /* ds-ok 原型 .btn 46px 高 / 全圆角;上边距:不再紧贴判定色块 */
   display:flex; align-items:center; justify-content:center;
   color:#111111; background:#FFFFFF; font-size:29rpx; font-weight:700; } /* ds-ok 原型 .btn.w 15px/700 */
 
@@ -675,6 +676,9 @@ page { background: var(--cy-color-bg-page); }
 .gp2__ctl{ margin-top:31rpx; display:flex; justify-content:space-between; }
 .gp2__ctl-a,.gp2__ctl-b{ font-size:25rpx; color:#6A7282; text-decoration:underline; } /* ds-ok Figma 实测(用户裁决字面值) */
 .gp2__ctaw{ padding:15rpx 31rpx calc(31rpx + env(safe-area-inset-bottom)); background:#0A0A0A; } /* ds-ok Figma 实测(用户裁决字面值) */
+/* 底栏上沿渐隐:滚动区下一行字被底栏一刀切成半截,看着像被遮住(2026-10-27 实测),渐隐告诉玩家下面还有内容 */
+.gp2__ctaw{ position:relative; }
+.gp2__ctaw::before{ content:''; position:absolute; left:0; right:0; top:-64rpx; height:64rpx; pointer-events:none; background:linear-gradient(180deg, rgba(10,10,10,0), #0A0A0A); } /* ds-ok 与底栏同色 */
 .gp2__cta{ height:108rpx; border-radius:var(--cy-radius-pill); background:#FFFFFF; color:#0A0A0A; /* ds-ok Figma 实测(用户裁决字面值) */
   font-size:32rpx; font-weight:700; display:flex; align-items:center; justify-content:center; } /* ds-ok Figma 实测(用户裁决字面值) */
 
@@ -1693,7 +1697,7 @@ page { background: var(--cy-color-bg-page); }
    原生地图吃掉点击,上面再铺一层透明 radar__hit 接住。顶栏为它留出高度,标题仍按行居中。 */
 .fx-story__radar{ align-self:center; }
 .radar__disc{ position:relative; width:88rpx; height:88rpx; border-radius:50%; overflow:hidden; /* ds-ok 2026-09-24 用户:左上角缩小一点 */
-  background:var(--cy-color-bg-elevated); box-shadow:0 0 0 4rpx rgba(255,255,255,.85), 0 8rpx 32rpx rgba(0,0,0,.5); /* ds-ok 故事流装饰值 */
+  background:#EEEEEC; box-shadow:0 0 0 4rpx rgba(255,255,255,.85), 0 8rpx 32rpx rgba(0,0,0,.5); /* ds-ok 故事流装饰值;底色 = 腾讯底图浅灰,地图没铺出来前不再是一个黑圆(2026-10-27) */
   display:flex; align-items:center; justify-content:center; } /* ds-ok GTA 雷达的白描边 */
 /* 地图本体做成圆的三倍大、居中:可见的仍是正中那一块(比例尺不变),「腾讯地图」角标落在圆外被裁掉 */
 .fx-story__radar-map{ position:absolute; left:-100%; top:-100%; width:300%; height:300%; }

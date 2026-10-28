@@ -52,7 +52,7 @@
   text-align: left;
   border-bottom: 1rpx dashed var(--cy-color-play-profile-line);
 }
-.pf__row-label { color: var(--cy-color-play-profile-muted); flex: none; width:128rpx; font-size:var(--cy-type-label); }
+.pf__row-label { color: var(--cy-color-play-profile-muted); flex: none; min-width:128rpx; max-width:50%; margin-right:16rpx; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:var(--cy-type-label); } /* ds-ok 固定 128rpx 把「你的外勤代号」折成「代/号」(2026-10-27 实测),改为按字宽、最多半行 */
 .pf__row-answer { flex: 1; min-height:1.2em; text-align:left; font-family:serif; word-break:break-all; color:var(--cy-color-play-profile-muted); }
 .pf__row-answer.is-filled { color: var(--cy-color-play-profile-ink); font-weight: 700; }
 .pf__progress {

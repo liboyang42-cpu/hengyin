@@ -149,9 +149,12 @@ function startStateRows(routeState, vitalsOn) {
 
 /** 开场页那一句副标:主题简介的第一句(40 字内),没有就不放 */
 function introLine(desc) {
-  const text = String(desc || '').replace(/\s+/g, ' ').trim();
+  // 只取第一行:换行是作者分的段,压成空格会把下一行的半句拼进来,
+  // 40 字一刀切在「｜」上,看着像没删干净的光标(2026-10-27 南京路开场页实测)。
+  const first = String(desc || '').split(/\n/).map((x) => x.trim()).find(Boolean) || '';
+  const text = first.replace(/\s+/g, ' ');
   const m = text.match(/^[^。！？!?]{1,40}[。！？!?]?/);
-  return m ? m[0] : '';
+  return m ? m[0].replace(/[\s｜|·、，,：:；;—-]+$/, '') : '';
 }
 
 function kacchaLines(hits) {
@@ -7636,7 +7639,12 @@ Page({
 
   buildReview() {
     const ordered = this._reviewOrderedNodes();
-    const tags = this._reviewAchievements(ordered);
+    const all = this._reviewAchievements(ordered);
+    // 完成卡小地图上只留一条成就气泡(2026-10-27 用户:站点挨得近,三条气泡互相盖、被裁掉)。
+    // 优先级与 _reviewAchievements 一致:徽章 > 券 > 最快一段 > 首达。
+    const rank = (t) => ['徽章', '到店券', '最快一段', '首达'].findIndex((p) => t.indexOf(p) === 0);
+    const topId = Object.keys(all).sort((a, b) => rank(all[a]) - rank(all[b]))[0];
+    const tags = topId != null ? { [topId]: all[topId] } : {};
     // 成就气泡挂到既有 fmNodes 上(节点 pin 全部保留),没有成就的节点 reviewLabel 为空 = 原样显示序号
     const fmNodes = (this.data.fmNodes || []).map((n) => Object.assign({}, n, { reviewLabel: tags[n.nodeId] || '' }));
     const sec = this._sessionClock ? this._sessionClock.elapsedSeconds() : 0;
