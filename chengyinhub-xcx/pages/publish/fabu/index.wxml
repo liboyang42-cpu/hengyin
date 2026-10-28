@@ -1713,7 +1713,9 @@
       </view>
       <text class="ic-label">范围</text>
       <view class="node-card">
-        <view class="rt-two"><view class="rt-field"><text>最小值</text><input type="text" value="{{valueEditor.row.min}}" disabled="{{valueEditor.definitionReadOnly}}" data-field="min" bindinput="onValueField" /></view><view class="rt-field"><text>最大值</text><input type="text" value="{{valueEditor.row.max}}" disabled="{{valueEditor.definitionReadOnly}}" data-field="max" bindinput="onValueField" /></view></view>
+        <view class="node-card__row"><view class="node-card__main"><text class="node-card__title">最小值</text></view><cy-stepper label="最小值" value="{{valueEditor.row.min}}" min="{{-10000}}" max="{{valueEditor.row.max}}" disabled="{{valueEditor.definitionReadOnly}}" data-field="min" bind:change="onValueField" /></view>
+        <view class="node-card__hr"></view>
+        <view class="node-card__row"><view class="node-card__main"><text class="node-card__title">最大值</text></view><cy-stepper label="最大值" value="{{valueEditor.row.max}}" min="{{valueEditor.row.min}}" max="{{10000}}" disabled="{{valueEditor.definitionReadOnly}}" data-field="max" bind:change="onValueField" /></view>
       </view>
       <text class="ic-label">关联</text>
       <view class="node-card">
@@ -1775,19 +1777,19 @@
     </view>
     <view class="node-card" wx:if="{{initialStateEditor.rules.hp.enabled}}">
       <view class="story-initial__row"><text class="node-card__title">{{runtimeHpInitialLabel}}</text><cy-switch checked="{{true}}" disabled="{{editScope === 'WHITELIST'}}" data-field="hp.enabled" bind:change="onInitialStateField" accessibility-label="启用{{runtimeHpInitialLabel}}" /></view>
-      <view class="story-initial__numbers">
-        <cy-field label="开局{{runtimeHpInitialLabel}}" value="{{initialStateEditor.rules.hp.init}}" data-field="hp.init" bind:input="onInitialStateField" readonly="{{editScope === 'WHITELIST'}}" />
+      <view class="story-initial__row">
+        <text>开局{{runtimeHpInitialLabel}}</text><cy-stepper label="开局{{runtimeHpInitialLabel}}" value="{{initialStateEditor.rules.hp.init}}" min="{{1}}" max="{{initialStateEditor.rules.hp.max}}" disabled="{{editScope === 'WHITELIST'}}" data-field="hp.init" bind:change="onInitialStateField" />
       </view>
     </view>
     <view class="node-card" wx:if="{{initialStateEditor.rules.luck.enabled}}">
       <view class="story-initial__row"><text class="node-card__title">{{runtimeLuckInitialLabel}}</text><cy-switch checked="{{true}}" disabled="{{editScope === 'WHITELIST'}}" data-field="luck.enabled" bind:change="onInitialStateField" accessibility-label="启用{{runtimeLuckInitialLabel}}" /></view>
-      <view class="story-initial__numbers">
-        <cy-field label="开局{{runtimeLuckInitialLabel}}" value="{{initialStateEditor.rules.luck.init}}" data-field="luck.init" bind:input="onInitialStateField" readonly="{{editScope === 'WHITELIST'}}" />
+      <view class="story-initial__row">
+        <text>开局{{runtimeLuckInitialLabel}}</text><cy-stepper label="开局{{runtimeLuckInitialLabel}}" value="{{initialStateEditor.rules.luck.init}}" min="{{0}}" max="{{initialStateEditor.rules.luck.max}}" disabled="{{editScope === 'WHITELIST'}}" data-field="luck.init" bind:change="onInitialStateField" />
       </view>
     </view>
     <view class="node-card" wx:for="{{initialStateEditor.values}}" wx:key="key">
       <view class="story-initial__row"><text class="node-card__title">{{item.label}}</text><text class="node-card__value">{{item.min}} 至 {{item.max}}</text></view>
-      <view class="story-initial__numbers"><cy-field label="开局{{item.label}}" value="{{item.initial}}" data-index="{{item.index}}" data-field="attribute.initial" bind:input="onInitialStateField" readonly="{{editScope === 'WHITELIST' || initialStateEditor.rules.attributeBinding}}" /></view>
+      <view class="story-initial__row"><text>开局{{item.label}}</text><cy-stepper label="开局{{item.label}}" value="{{item.initial}}" min="{{item.min}}" max="{{item.max}}" data-index="{{item.index}}" data-field="attribute.initial" bind:change="onInitialStateField" disabled="{{editScope === 'WHITELIST' || !!initialStateEditor.rules.attributeBinding}}" /></view>
       <cy-inline-error wx:if="{{item.invalidInitial}}" title="开局值超出当前范围，请修改后完成" />
     </view>
     <view class="story-initial__choices" wx:if="{{editScope !== 'WHITELIST'}}">

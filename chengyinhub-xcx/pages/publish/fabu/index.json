@@ -25,7 +25,8 @@
     "cy-empty": "/components/cy/empty/index",
     "topic-state-keys": "/pages/publish/components/topic-state-keys/index",
     "story-rule-editor": "/pages/publish/components/story-rule-editor/index",
-    "attribute-binding-editor": "/pages/publish/components/attribute-binding-editor/index"
+    "attribute-binding-editor": "/pages/publish/components/attribute-binding-editor/index",
+    "cy-stepper": "/components/cy/stepper/index"
   },
   "navigationStyle": "custom",
   "navigationBarTextStyle": "black",
