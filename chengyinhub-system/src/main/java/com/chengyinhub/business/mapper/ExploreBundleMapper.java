@@ -22,9 +22,6 @@ public interface ExploreBundleMapper {
 
     int insertOrder(ExploreBundleOrder order);
 
-    List<ExploreBundleUnit> selectAllUnitsForUpdate(@Param("registrationId") Long registrationId,
-                                                   @Param("holderMemberId") Long holderMemberId);
-
     ExploreBundleOrder selectOrderByRegistration(@Param("registrationId") Long registrationId);
 
     // ---------------------------------------------------------------- 发放 / 单位
@@ -88,6 +85,4 @@ public interface ExploreBundleMapper {
                                                          @Param("idempotencyKey") String idempotencyKey);
 
     List<ExploreBundleExitCase> selectExitCasesByRegistration(@Param("registrationId") Long registrationId);
-
-    List<ExploreBundleExitCase> selectExitCasesByRegistrationForUpdate(@Param("registrationId") Long registrationId);
 }

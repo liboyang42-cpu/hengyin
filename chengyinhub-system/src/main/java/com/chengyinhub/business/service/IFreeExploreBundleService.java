@@ -33,7 +33,7 @@ public interface IFreeExploreBundleService {
     /** 撤销核销钩子:对应单位退回(票已退款则置 REFUNDED)。 */
     void onRedemptionReversed(Long redemptionId);
 
-    /** 旧退款批准钩子:保留REFUND_PENDING；原路到账由IFreeExploreBundleRefundService回读确认。 */
+    /** 整单退款钩子:未履约单位置 REFUNDED,在约预约取消。 */
     void onRegistrationRefunded(Long registrationId);
 
     // ---------------------------------------------------------------- 只读
@@ -56,14 +56,7 @@ public interface IFreeExploreBundleService {
     ExploreBundleReservation reserve(Long memberId, Long registrationId, Long unitId, Long offerId,
                                      Date startAt, String idempotencyKey);
 
-    Map<String, Object> cancellationQuote(Long memberId, Long reservationId, boolean useWaiver);
-
     ExploreBundleReservation cancelReservation(Long memberId, Long reservationId, boolean useWaiver);
-
-    /** Optional quoted outcome: crossing the free-cancel boundary must be reconfirmed. */
-    ExploreBundleReservation cancelReservation(Long memberId, Long reservationId, boolean useWaiver, String expectedOutcome);
-
-    Map<String, Object> merchantExitOptions(Long memberId, Long registrationId, Long unitId);
 
     ExploreBundleReservation markNoShow(Long merchantOwnerMemberId, Long reservationId);
 

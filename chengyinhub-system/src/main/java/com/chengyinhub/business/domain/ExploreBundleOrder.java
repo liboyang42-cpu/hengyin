@@ -6,15 +6,10 @@ import java.util.Date;
 
 /** F3 套票订单冻结快照 explore_bundle_order(只插不改)。 */
 public class ExploreBundleOrder {
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Long id;
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Long registrationId;
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Long holderMemberId;
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Long topicId;
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Long activityId;
     private String productVersion;
     private String quotaVersion;

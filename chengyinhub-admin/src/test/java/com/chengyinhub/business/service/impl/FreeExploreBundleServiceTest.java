@@ -1,8 +1,6 @@
 package com.chengyinhub.business.service.impl;
 
 import com.chengyinhub.business.domain.CmsActivity;
-import com.chengyinhub.business.domain.Redemption;
-import com.chengyinhub.business.mapper.RedemptionMapper;
 import com.chengyinhub.business.domain.CmsRegistration;
 import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.CmsTopicChapter;
@@ -64,7 +62,6 @@ class FreeExploreBundleServiceTest {
     private final Date now = new Date(1792000000000L);
 
     private ExploreBundleMapper bundleMapper;
-    private RedemptionMapper redemptionMapper;
     private CmsRegistrationMapper registrationMapper;
     private CmsTopicMapper topicMapper;
     private CmsTopicChapterMapper chapterMapper;
@@ -74,21 +71,16 @@ class FreeExploreBundleServiceTest {
     @BeforeEach
     void setUp() {
         bundleMapper = mock(ExploreBundleMapper.class);
-        redemptionMapper = mock(RedemptionMapper.class);
         registrationMapper = mock(CmsRegistrationMapper.class);
         topicMapper = mock(CmsTopicMapper.class);
         chapterMapper = mock(CmsTopicChapterMapper.class);
         offerMapper = mock(MerchantChapterOfferMapper.class);
         rules = mock(SettlementRuleMapper.class);
-        when(registrationMapper.selectCmsRegistrationById(1L)).thenReturn(registration(1L, 11L));
-        when(bundleMapper.selectReservationById(41L)).thenReturn(reservation(41L, 31L, 9001L, "BOOKED"));
     }
 
     private FreeExploreBundleServiceImpl service(boolean ledger, boolean sale, boolean reservation) {
         FreeExploreBundleServiceImpl impl = new FreeExploreBundleServiceImpl();
         ReflectionTestUtils.setField(impl, "bundleMapper", bundleMapper);
-        ReflectionTestUtils.setField(impl, "bundleRefundMapper", mock(com.chengyinhub.business.mapper.ExploreBundleRefundMapper.class));
-        ReflectionTestUtils.setField(impl, "redemptionMapper", redemptionMapper);
         ReflectionTestUtils.setField(impl, "registrationMapper", registrationMapper);
         ReflectionTestUtils.setField(impl, "topicMapper", topicMapper);
         ReflectionTestUtils.setField(impl, "chapterMapper", chapterMapper);
@@ -223,44 +215,6 @@ class FreeExploreBundleServiceTest {
         verify(bundleMapper).casUnitStatus(31L, 0, "REDEEMED", "REFUNDED", null, null, "REDEMPTION_REVERSED");
     }
 
-    @Test
-    void reserveRechecksCommittedReceiptAfterWaitingForUnitLock() {
-        FreeExploreBundleServiceImpl impl = service(true, false, true);
-        when(bundleMapper.selectOrderByRegistration(1L)).thenReturn(order(1L, 11L));
-        when(bundleMapper.selectUnitByIdForUpdate(31L)).thenReturn(unit(31L, "RESERVED", 41L));
-        ExploreBundleReservation committed = reservation(41L, 31L, 9001L, "BOOKED");
-        committed.setIdempotencyKey("same-reserve");
-        committed.setRequestFingerprint(ReflectionTestUtils.invokeMethod(impl, "sha256",
-                "1|31|801|" + committed.getStartAt().getTime()));
-        when(bundleMapper.selectReservationByIdForUpdate(41L)).thenReturn(committed);
-        assertEquals(committed, impl.reserve(11L, 1L, 31L, 801L, committed.getStartAt(), "same-reserve"));
-        assertEquals("BUNDLE_IDEMPOTENCY_CONFLICT", assertThrows(FreeExploreBundleException.class,
-                () -> impl.reserve(11L, 1L, 31L, 802L, committed.getStartAt(), "same-reserve")).getBusinessCode());
-        assertEquals("BUNDLE_UNIT_UNAVAILABLE", assertThrows(FreeExploreBundleException.class,
-                () -> impl.reserve(11L, 1L, 31L, 801L, committed.getStartAt(), "different-reserve")).getBusinessCode());
-        verify(bundleMapper, never()).insertReservation(any());
-        verify(bundleMapper, never()).casUnitStatus(anyLong(), any(), anyString(), anyString(), any(), any(), any());
-    }
-
-    @Test
-    void orderProjectsOnlyCurrentOrdersActiveFulfillmentMerchantsWithoutReservations() {
-        when(bundleMapper.selectOrderByRegistration(1L)).thenReturn(order(1L, 11L));
-        Redemption active = new Redemption();
-        active.setRegistrationId(1L); active.setMerchantId(Long.MAX_VALUE); active.setStatus("ACTIVE");
-        Redemption reversed = new Redemption();
-        reversed.setRegistrationId(1L); reversed.setMerchantId(9002L); reversed.setStatus("REVERSED");
-        Redemption otherOrder = new Redemption();
-        otherOrder.setRegistrationId(2L); otherOrder.setMerchantId(9003L); otherOrder.setStatus("ACTIVE");
-        when(redemptionMapper.selectActiveByRegistration(1L)).thenReturn(Arrays.asList(active, active, reversed, otherOrder));
-        Map<?, ?> bundle = (Map<?, ?>) service(true, false, false).orderView(11L, 1L).get("bundle");
-        assertEquals(Collections.emptyList(), bundle.get("reservations"));
-        assertEquals(List.of(Map.of("merchantId", Long.toString(Long.MAX_VALUE), "registrationId", "1", "holderMemberId", "11")),
-                bundle.get("fulfilledMerchants"));
-        assertEquals("BUNDLE_NOT_FOUND", assertThrows(FreeExploreBundleException.class,
-                () -> service(true, false, false).orderView(12L, 1L)).getBusinessCode());
-        verify(redemptionMapper, times(1)).selectActiveByRegistration(1L);
-    }
-
     // ---------------------------------------------------------------- 预约规则
 
     @Test
@@ -351,25 +305,6 @@ class FreeExploreBundleServiceTest {
     // ---------------------------------------------------------------- 退款报价
 
     @Test
-    void refundEligibilityUsesUnroundedRemainingValue() {
-        for (String remaining : List.of("1999.99", "2000.00", "2000.01")) {
-            BigDecimal value = new BigDecimal(remaining);
-            List<ExploreBundleUnit> units = List.of(
-                    valued("AVAILABLE", remaining),
-                    valued("REDEEMED", new BigDecimal("10000.00").subtract(value).toPlainString()));
-            FreeExploreBundlePolicy.RefundQuote quote = FreeExploreBundlePolicy.refundQuote(
-                    new BigDecimal("10000.00"), units);
-            boolean eligible = "2000.01".equals(remaining);
-            assertEquals(eligible ? FreeExploreBundlePolicy.ROUTE_PLATFORM_BALANCE
-                    : FreeExploreBundlePolicy.ROUTE_NOT_REFUNDABLE, quote.getRoute(), remaining);
-            assertEquals(0, (eligible ? value : BigDecimal.ZERO).compareTo(quote.getAmount()), remaining);
-            assertEquals(!eligible, quote.isAfterSalesForMerchantBreach(), remaining);
-            assertEquals(0, new BigDecimal("0.2000").compareTo(quote.getRemainingRatio()),
-                    "Rounded display ratio must not decide refund eligibility");
-        }
-    }
-
-    @Test
     void refundQuoteFollowsTheThreeRules() {
         List<ExploreBundleUnit> units = new ArrayList<>();
         for (int i = 0; i < 5; i++) units.add(valued("AVAILABLE", "20.00"));
@@ -450,85 +385,6 @@ class FreeExploreBundleServiceTest {
         when(registrationMapper.selectCmsRegistrationList(any())).thenReturn(Collections.emptyList());
         Map<String, Object> receipt = service(true, false, false).orderReceiptByRequestId(11L, "req-1");
         assertEquals("NOT_FOUND", receipt.get("receipt"));
-        assertEquals("UNKNOWN", receipt.get("outcome"));
-        assertEquals("req-1", receipt.get("requestId"));
-    }
-
-    @Test
-    void publicOrderProjectionKeepsMaximumRegistrationIdExact() {
-        when(registrationMapper.selectCmsRegistrationById(Long.MAX_VALUE)).thenReturn(registration(Long.MAX_VALUE, 11L));
-        when(bundleMapper.selectOrderByRegistration(Long.MAX_VALUE)).thenReturn(order(Long.MAX_VALUE, 11L));
-        assertEquals(Long.toString(Long.MAX_VALUE), service(true, false, false).orderView(11L, Long.MAX_VALUE).get("registrationId"));
-    }
-
-    @Test
-    void cancelQuoteCrossingTwelveHourBoundaryRequiresFreshConsentBeforeAnyWrite() {
-        ExploreBundleReservation booking = reservation(41L, 31L, 9001L, "BOOKED");
-        booking.setStartAt(new Date(now.getTime() + 12 * HOUR));
-        when(bundleMapper.selectReservationById(41L)).thenReturn(booking);
-        when(bundleMapper.selectReservationByIdForUpdate(41L)).thenReturn(booking);
-        when(bundleMapper.selectUnitByIdForUpdate(31L)).thenReturn(unit(31L, "RESERVED", 41L));
-        FreeExploreBundleServiceImpl impl = service(true, false, true);
-        Map<String, Object> quote = impl.cancellationQuote(11L, 41L, false);
-        assertEquals("CANCELLED", quote.get("expectedOutcome"));
-        verify(bundleMapper, never()).selectReservationByIdForUpdate(anyLong());
-        impl.clock = () -> new Date(now.getTime() + 1);
-        assertEquals("BUNDLE_CANCEL_QUOTE_CHANGED", assertThrows(FreeExploreBundleException.class,
-                () -> impl.cancelReservation(11L, 41L, false, (String) quote.get("expectedOutcome"))).getBusinessCode());
-        verify(bundleMapper, never()).casReservationStatus(anyLong(), any(), anyString(), anyString());
-        verify(bundleMapper, never()).casUnitStatus(anyLong(), any(), anyString(), anyString(), any(), any(), any());
-        verify(bundleMapper, never()).insertWaiverIgnore(anyLong(), anyString(), anyLong());
-    }
-
-    @Test
-    void waiverQuoteCrossingShanghaiMonthCannotConsumeNextMonthSilently() {
-        Date before = new Date(1793462399999L);
-        ExploreBundleReservation booking = reservation(41L, 31L, 9001L, "BOOKED");
-        booking.setStartAt(new Date(before.getTime() + 2 * HOUR));
-        when(bundleMapper.selectReservationById(41L)).thenReturn(booking);
-        when(bundleMapper.selectReservationByIdForUpdate(41L)).thenReturn(booking);
-        when(bundleMapper.selectUnitByIdForUpdate(31L)).thenReturn(unit(31L, "RESERVED", 41L));
-        FreeExploreBundleServiceImpl impl = service(true, false, true);
-        impl.clock = () -> before;
-        Map<String, Object> quote = impl.cancellationQuote(11L, 41L, true);
-        assertEquals("WAIVED:2026-10", quote.get("expectedOutcome"));
-        impl.clock = () -> new Date(before.getTime() + 1);
-        assertEquals("BUNDLE_CANCEL_QUOTE_CHANGED", assertThrows(FreeExploreBundleException.class,
-                () -> impl.cancelReservation(11L, 41L, true, (String) quote.get("expectedOutcome"))).getBusinessCode());
-        verify(bundleMapper, never()).insertWaiverIgnore(anyLong(), anyString(), anyLong());
-    }
-
-    @Test
-    void staleHolderCannotCancelOrRedeemFrozenLedgerAfterOrderOwnerChanged() {
-        when(registrationMapper.selectCmsRegistrationById(1L)).thenReturn(registration(1L, 22L));
-        when(bundleMapper.selectOrderByRegistration(1L)).thenReturn(order(1L, 11L));
-        when(bundleMapper.selectReservationByIdForUpdate(41L)).thenReturn(reservation(41L, 31L, 9001L, "BOOKED"));
-        FreeExploreBundleServiceImpl impl = service(true, false, true);
-        assertEquals("BUNDLE_NOT_FOUND", assertThrows(FreeExploreBundleException.class,
-                () -> impl.cancelReservation(11L, 41L, false)).getBusinessCode());
-        assertEquals("BUNDLE_NOT_FOUND", assertThrows(FreeExploreBundleException.class,
-                () -> impl.onChapterRedeemed(1L, 701L, 9001L, 5001L)).getBusinessCode());
-        verify(bundleMapper, never()).casUnitStatus(anyLong(), any(), anyString(), anyString(), any(), any(), any());
-    }
-
-    @Test
-    void exitOptionsOnlyOfferLiveSameChapterStoresCoveringOriginalValidityAndNeverWrite() {
-        ExploreBundleUnit unit = unit(31L, "RESERVED", 41L);
-        when(bundleMapper.selectUnitsByRegistration(1L)).thenReturn(List.of(unit));
-        when(bundleMapper.selectOrderByRegistration(1L)).thenReturn(order(1L, 11L));
-        when(bundleMapper.selectReservationById(41L)).thenReturn(reservation(41L, 31L, 9001L, "BOOKED"));
-        MerchantChapterOffer exited = offer(801L, 701L); exited.setStatus(0);
-        when(offerMapper.selectById(801L)).thenReturn(exited);
-        MerchantChapterOffer valid = offer(802L, 701L); valid.setValidEnd(unit.getValidTo());
-        MerchantChapterOffer shortOffer = offer(803L, 701L); shortOffer.setValidEnd(new Date(unit.getValidTo().getTime() - 1));
-        when(offerMapper.selectByTopic(70L)).thenReturn(List.of(exited, valid, shortOffer, offer(804L, 702L)));
-        Map<String, Object> options = service(true, false, true).merchantExitOptions(11L, 1L, 31L);
-        assertEquals(true, options.get("merchantExited"));
-        List<?> targets = (List<?>) options.get("targets");
-        assertEquals(1, targets.size()); assertEquals("802", ((Map<?, ?>) targets.get(0)).get("offerId"));
-        assertEquals(false, options.get("refundSubmissionAvailable"));
-        verify(bundleMapper, never()).insertExitCase(any());
-        verify(bundleMapper, never()).selectUnitByIdForUpdate(anyLong());
     }
 
     // ---------------------------------------------------------------- fixtures

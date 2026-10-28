@@ -156,12 +156,6 @@
 
     <!-- 余额键 (registration, holder, chapter) 下的单位当前读;持有人条件写进 SQL,
          A 的核销永远锁不到、改不到 B 的单位。 -->
-    <select id="selectAllUnitsForUpdate" resultMap="ExploreBundleUnitResult">
-        <include refid="selectUnitVo"/>
-        where u.registration_id=#{registrationId} and u.holder_member_id=#{holderMemberId}
-        order by u.chapter_id asc, g.grant_no asc, u.unit_seq asc for update
-    </select>
-
     <select id="selectUnitsForUpdate" resultMap="ExploreBundleUnitResult">
         <include refid="selectUnitVo"/>
         where u.registration_id = #{registrationId}
@@ -298,10 +292,5 @@
         <include refid="selectExitCaseVo"/>
         where registration_id = #{registrationId}
         order by id asc
-    </select>
-    <select id="selectExitCasesByRegistrationForUpdate" resultMap="ExploreBundleExitCaseResult">
-        <include refid="selectExitCaseVo"/>
-        where registration_id = #{registrationId}
-        order by id asc for update
     </select>
 </mapper>

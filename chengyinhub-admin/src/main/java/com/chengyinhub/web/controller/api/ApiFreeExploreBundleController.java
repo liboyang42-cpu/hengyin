@@ -83,22 +83,10 @@ public class ApiFreeExploreBundleController extends BaseController {
         return run(() -> service.reservationByIdempotencyKey(currentMemberId(), idempotencyKey));
     }
 
-    @GetMapping("/reservation/{reservationId}/cancel-quote")
-    public AjaxResult cancellationQuote(@PathVariable Long reservationId,
-                                        @RequestParam(value = "useWaiver", defaultValue = "false") boolean useWaiver) {
-        return run(() -> service.cancellationQuote(currentMemberId(), reservationId, useWaiver));
-    }
-
-    @GetMapping("/exit-options")
-    public AjaxResult exitOptions(@RequestParam("registrationId") Long registrationId, @RequestParam("unitId") Long unitId) {
-        return run(() -> service.merchantExitOptions(currentMemberId(), registrationId, unitId));
-    }
-
     @PostMapping("/reservation/{reservationId}/cancel")
     public AjaxResult cancel(@PathVariable Long reservationId, @RequestBody(required = false) CancelRequest body) {
-        return run(() -> body == null || body.getExpectedOutcome() == null
-                ? service.cancelReservation(currentMemberId(), reservationId, body != null && Boolean.TRUE.equals(body.getUseWaiver()))
-                : service.cancelReservation(currentMemberId(), reservationId, Boolean.TRUE.equals(body.getUseWaiver()), body.getExpectedOutcome()));
+        return run(() -> service.cancelReservation(currentMemberId(), reservationId,
+                body != null && Boolean.TRUE.equals(body.getUseWaiver())));
     }
 
     @PostMapping("/exit-decision")
@@ -177,10 +165,7 @@ public class ApiFreeExploreBundleController extends BaseController {
     public static class CancelRequest {
         /** 开始前不足 12 小时取消时,主动使用本月唯一一次豁免 */
         private Boolean useWaiver;
-        private String expectedOutcome;
 
-        public String getExpectedOutcome() { return expectedOutcome; }
-        public void setExpectedOutcome(String value) { expectedOutcome = value; }
         public Boolean getUseWaiver() { return useWaiver; }
         public void setUseWaiver(Boolean useWaiver) { this.useWaiver = useWaiver; }
     }

@@ -5,21 +5,14 @@ import java.util.Date;
 
 /** F3 套票发放 explore_bundle_grant:余额键 (registration, holder, chapter, grant_no)。 */
 public class ExploreBundleGrant {
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Long id;
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Long bundleOrderId;
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Long registrationId;
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Long holderMemberId;
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Long topicId;
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Long chapterId;
     private Integer grantNo;
     private String grantType;
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Long sourceGrantId;
     private Integer unitsTotal;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")

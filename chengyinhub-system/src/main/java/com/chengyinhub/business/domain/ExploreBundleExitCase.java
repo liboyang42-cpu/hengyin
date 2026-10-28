@@ -5,20 +5,13 @@ import java.util.Date;
 
 /** F3 套票商家退出处置 explore_bundle_exit_case(持有人决定,只插不改)。 */
 public class ExploreBundleExitCase {
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Long id;
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Long unitId;
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Long registrationId;
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Long holderMemberId;
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Long exitedOfferId;
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Long reservationId;
     private String decision;
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Long targetOfferId;
     private String idempotencyKey;
     private String requestFingerprint;

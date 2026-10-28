@@ -1,9 +1,6 @@
 package com.chengyinhub.business.service.impl;
 
 import com.chengyinhub.business.domain.CmsActivity;
-import com.chengyinhub.business.domain.RefundApplication;
-import com.chengyinhub.business.mapper.ExploreBundleRefundMapper;
-import com.chengyinhub.business.mapper.RefundApplicationMapper;
 import com.chengyinhub.business.domain.CmsRegistration;
 import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.CmsTopicChapter;
@@ -85,16 +82,11 @@ class FreeExploreBundleLedgerMySqlIT {
     private String database;
     private JdbcTemplate admin;
     private JdbcTemplate db;
-    private org.springframework.transaction.support.TransactionTemplate transactions;
     private String databaseUrl;
     private String user;
     private String password;
     private ExploreBundleMapper bundleMapper;
     private SettlementClaimMapper claimMapper;
-    private ExploreBundleRefundMapper holdMapper;
-    private FreeExploreBundleRefundServiceImpl refundService;
-    private final RefundApplicationMapper refundMapper = mock(RefundApplicationMapper.class);
-    private final Map<Long, RefundApplication> refundIntents = new HashMap<>();
     private FreeExploreBundleServiceImpl service;
     private final Date now = new Date(1792000000000L);   // 固定时钟
     private final List<CmsTopicChapter> chapters = new ArrayList<>();
@@ -114,33 +106,22 @@ class FreeExploreBundleLedgerMySqlIT {
                 config.databaseUrl().replace("/" + config.databaseName() + "?", "/" + database + "?"),
                 config.user(), config.password());
         db = new JdbcTemplate(source);
-        transactions = new org.springframework.transaction.support.TransactionTemplate(
-                new org.springframework.jdbc.datasource.DataSourceTransactionManager(source));
         databaseUrl = config.databaseUrl().replace("/" + config.databaseName() + "?", "/" + database + "?");
         user = config.user();
         password = config.password();
         db.execute(createTable(read("../sql/base_schema_20260818.sql"), "settlement_claim"));
         apply(LEDGER);
         apply(LEDGER);
-        apply("sql/migration_doc2_f3_refund_hold_20261026.sql");
-        apply("sql/migration_doc2_f3_refund_hold_20261026.sql");
 
         SqlSessionFactoryBean factory = new SqlSessionFactoryBean();
         factory.setDataSource(source);
         factory.setTypeAliasesPackage("com.chengyinhub.business.domain");
         factory.setMapperLocations(new ClassPathResource("mapper/business/ExploreBundleMapper.xml"),
-                new ClassPathResource("mapper/business/SettlementClaimMapper.xml"),
-                new ClassPathResource("mapper/business/ExploreBundleRefundMapper.xml"));
+                new ClassPathResource("mapper/business/SettlementClaimMapper.xml"));
         SqlSessionTemplate template = new SqlSessionTemplate(factory.getObject());
         bundleMapper = template.getMapper(ExploreBundleMapper.class);
         claimMapper = template.getMapper(SettlementClaimMapper.class);
         service = newService();
-        holdMapper = template.getMapper(ExploreBundleRefundMapper.class);
-        refundService = new FreeExploreBundleRefundServiceImpl(registrationMapper, refundMapper, bundleMapper, holdMapper);
-        when(registrationMapper.selectCmsRegistrationByIdForUpdate(anyLong())).thenAnswer(inv -> registrations.get(inv.<Long>getArgument(0)));
-        when(refundMapper.selectRefundApplicationById(anyLong())).thenAnswer(inv -> refundIntents.get(inv.<Long>getArgument(0)));
-        when(refundMapper.selectRegistrationHistoryForUpdate(anyLong())).thenAnswer(inv -> refundIntents.values().stream()
-                .filter(row -> inv.<Long>getArgument(0).equals(row.getSourceId())).collect(java.util.stream.Collectors.toList()));
     }
 
     @AfterAll
@@ -248,308 +229,6 @@ class FreeExploreBundleLedgerMySqlIT {
                 "REDEEMED 必须带真实 redemption_id:" + check.getMessage());
     }
 
-    @Test
-    void concurrentDuplicateCancellationReleasesUnitOnlyOnceInRealTransactions() throws Exception {
-        transactions.executeWithoutResult(tx -> service.freezeOnOrderCreated(registration(3001L, 31L), topic(), activity()));
-        Long unitId = unitId(3001L, CH1);
-        ExploreBundleReservation reservation = transactions.execute(tx -> service.reserve(31L, 3001L, unitId,
-                OFFER1, new Date(now.getTime() + 48L * 3600_000L), "concurrent-cancel"));
-        var start = new java.util.concurrent.CountDownLatch(1);
-        var pool = java.util.concurrent.Executors.newFixedThreadPool(2);
-        try {
-            java.util.concurrent.Callable<String> cancel = () -> {
-                if (!start.await(5, java.util.concurrent.TimeUnit.SECONDS)) throw new IllegalStateException("start timeout");
-                return transactions.execute(tx -> service.cancelReservation(31L, reservation.getId(), false).getStatus());
-            };
-            var first = pool.submit(cancel);
-            var second = pool.submit(cancel);
-            start.countDown();
-            assertEquals("CANCELLED", first.get(15, java.util.concurrent.TimeUnit.SECONDS));
-            assertEquals("CANCELLED", second.get(15, java.util.concurrent.TimeUnit.SECONDS));
-        } finally {
-            pool.shutdownNow();
-            assertTrue(pool.awaitTermination(5, java.util.concurrent.TimeUnit.SECONDS));
-        }
-        assertEquals("AVAILABLE", unitStatus(3001L, CH1));
-        assertEquals(2, db.queryForObject("SELECT version FROM explore_bundle_unit WHERE id=?", Integer.class, unitId),
-                "reserve increments once, concurrent cancels increment only once");
-        assertEquals(1, db.queryForObject("SELECT version FROM explore_bundle_reservation WHERE id=?", Integer.class,
-                reservation.getId()));
-        assertEquals(0, count("SELECT COUNT(*) FROM explore_bundle_waiver WHERE member_id=31"));
-        assertEquals(0, count("SELECT COUNT(*) FROM explore_bundle_unit WHERE registration_id=3001 AND redemption_id IS NOT NULL"));
-    }
-
-    @Test
-    void cancelRedeemAndNoShowRaceConservesSingleUnitAndReservationInRealTransactions() throws Exception {
-        transactions.executeWithoutResult(tx -> service.freezeOnOrderCreated(registration(4001L, 41L), topic(), activity()));
-        Long unitId = unitId(4001L, CH1);
-        ExploreBundleReservation booking = transactions.execute(tx -> service.reserve(41L, 4001L, unitId,
-                OFFER1, new Date(now.getTime() + 2L * 3600_000L), "three-way-race"));
-        service.clock = () -> new Date(now.getTime() + 3L * 3600_000L);
-        var start = new java.util.concurrent.CountDownLatch(1);
-        var pool = java.util.concurrent.Executors.newFixedThreadPool(3);
-        try {
-            List<Runnable> actions = List.of(
-                    () -> service.cancelReservation(41L, booking.getId(), false),
-                    () -> service.onChapterRedeemed(4001L, CH1, MERCHANT, 7001L),
-                    () -> service.markNoShow(MERCHANT, booking.getId()));
-            List<java.util.concurrent.Future<String>> results = new ArrayList<>();
-            for (Runnable action : actions) {
-                results.add(pool.submit(() -> {
-                    if (!start.await(5, java.util.concurrent.TimeUnit.SECONDS)) throw new IllegalStateException("start timeout");
-                    try {
-                        transactions.executeWithoutResult(tx -> action.run());
-                        return "DONE";
-                    } catch (FreeExploreBundleException rejected) {
-                        // These are committed terminal-state refusals, not SQL/deadlock exceptions.
-                        assertTrue(List.of("BUNDLE_NO_BALANCE", "BUNDLE_RESERVATION_CLOSED").contains(rejected.getBusinessCode()),
-                                rejected.getBusinessCode());
-                        return rejected.getBusinessCode();
-                    }
-                }));
-            }
-            start.countDown();
-            for (var result : results) result.get(15, java.util.concurrent.TimeUnit.SECONDS);
-        } finally {
-            pool.shutdownNow();
-            assertTrue(pool.awaitTermination(5, java.util.concurrent.TimeUnit.SECONDS));
-            service.clock = () -> now;
-        }
-        ExploreBundleReservation terminal = bundleMapper.selectReservationById(booking.getId());
-        assertTrue(List.of("FULFILLED", "LATE_CANCELLED", "NO_SHOW").contains(terminal.getStatus()));
-        assertEquals("FULFILLED".equals(terminal.getStatus()) ? "REDEEMED" : "FORFEITED", unitStatus(4001L, CH1));
-        assertEquals(2, db.queryForObject("SELECT version FROM explore_bundle_unit WHERE id=?", Integer.class, unitId));
-        assertEquals(1, terminal.getVersion());
-        assertEquals("FULFILLED".equals(terminal.getStatus()) ? 1 : 0,
-                count("SELECT COUNT(*) FROM explore_bundle_unit WHERE registration_id=4001 AND redemption_id IS NOT NULL"));
-        assertEquals("AVAILABLE", unitStatus(4001L, CH2));
-        assertEquals(0, count("SELECT COUNT(*) FROM explore_bundle_waiver WHERE member_id=41"));
-    }
-
-    @Test
-    void concurrentSameReservationRequestReturnsOneReservationAndConsumesUnitOnce() throws Exception {
-        transactions.executeWithoutResult(tx -> service.freezeOnOrderCreated(registration(5001L, 51L), topic(), activity()));
-        Long unitId = unitId(5001L, CH1);
-        Date startAt = new Date(now.getTime() + 48L * 3600_000L);
-        var start = new java.util.concurrent.CountDownLatch(1);
-        var pool = java.util.concurrent.Executors.newFixedThreadPool(2);
-        try {
-            java.util.concurrent.Callable<Long> reserve = () -> {
-                if (!start.await(5, java.util.concurrent.TimeUnit.SECONDS)) throw new IllegalStateException("start timeout");
-                return transactions.execute(tx -> service.reserve(51L, 5001L, unitId,
-                        OFFER1, startAt, "concurrent-reserve").getId());
-            };
-            var first = pool.submit(reserve);
-            var second = pool.submit(reserve);
-            start.countDown();
-            assertEquals(first.get(15, java.util.concurrent.TimeUnit.SECONDS),
-                    second.get(15, java.util.concurrent.TimeUnit.SECONDS));
-        } finally {
-            pool.shutdownNow();
-            assertTrue(pool.awaitTermination(5, java.util.concurrent.TimeUnit.SECONDS));
-        }
-        assertEquals(1, count("SELECT COUNT(*) FROM explore_bundle_reservation WHERE registration_id=5001"));
-        assertEquals("RESERVED", unitStatus(5001L, CH1));
-        assertEquals(1, db.queryForObject("SELECT version FROM explore_bundle_unit WHERE id=?", Integer.class, unitId));
-        assertEquals("AVAILABLE", unitStatus(5001L, CH2));
-    }
-
-    @Test
-    void refundFreezeApprovalUnknownFailureAndSuccessKeepOriginalIdentity() {
-        CmsRegistration row = registration(6001L, 61L); row.setWechatPaymentAmount(new BigDecimal("99.00"));
-        transactions.executeWithoutResult(tx -> service.freezeOnOrderCreated(row, topic(), activity()));
-        RefundApplication app = refundIntent(6601L, row);
-        transactions.executeWithoutResult(tx -> {
-            var context = refundService.prepareFullRefund(6001L, new BigDecimal("99.00"));
-            refundIntents.put(app.getId(), app);
-            refundService.bindFullRefund(context, app.getId(), null);
-        });
-        assertEquals("REFUND_PENDING", unitStatus(6001L, CH1));
-        app.setStatus(1);
-        transactions.executeWithoutResult(tx -> refundService.onRegistrationRefundApproved(6001L));
-        assertEquals("APPROVED", holdMapper.selectByRegistration(6001L).getState());
-        assertEquals("REFUND_PENDING", unitStatus(6001L, CH1), "approval is not arrival");
-        for (int payout : List.of(5, 6, 0, 2, 3, 4)) {
-            app.setPayoutStatus(payout);
-            transactions.executeWithoutResult(tx -> refundService.syncRefundOutcome(app.getId()));
-            assertEquals("REFUND_PENDING", unitStatus(6001L, CH1));
-            assertEquals(app.getId(), holdMapper.selectByRegistration(6001L).getRefundId());
-        }
-        app.setPayoutStatus(1);
-        transactions.executeWithoutResult(tx -> refundService.syncRefundOutcome(app.getId()));
-        assertEquals("SUCCEEDED", holdMapper.selectByRegistration(6001L).getState());
-        assertEquals("REFUNDED", unitStatus(6001L, CH1));
-        int version = holdMapper.selectByRegistration(6001L).getVersion();
-        transactions.executeWithoutResult(tx -> refundService.syncRefundOutcome(app.getId()));
-        assertEquals(version, holdMapper.selectByRegistration(6001L).getVersion());
-        assertEquals(2, db.queryForObject("SELECT version FROM explore_bundle_unit WHERE id=?", Integer.class, unitId(6001L, CH1)));
-    }
-
-    @Test
-    void unboundPreparationRollsBackAndPenaltyInZeroCashChildBlocksFullParent() {
-        CmsRegistration payer = registration(6101L, 71L), child = registration(6102L, 72L);
-        payer.setWechatPaymentAmount(new BigDecimal("99.00")); child.setWechatPaymentAmount(BigDecimal.ZERO);
-        for (CmsRegistration row : List.of(payer, child)) {
-            row.setParentOrderNo("f3-parent-61"); row.setOwnerType(2L); row.setOwnerId(60L);
-            transactions.executeWithoutResult(tx -> service.freezeOnOrderCreated(row, topic(), activity()));
-        }
-        when(registrationMapper.selectByParentOrderNoForUpdate("f3-parent-61", 60L)).thenReturn(List.of(payer, child));
-        assertEquals("BUNDLE_REFUND_CASH_SCOPE", assertThrows(FreeExploreBundleException.class,
-                () -> transactions.executeWithoutResult(tx -> refundService.prepareFullRefund(6102L, BigDecimal.ZERO)))
-                .getBusinessCode(), "zero-cash child cannot bypass the original cash payer");
-        assertEquals(0, count("SELECT COUNT(*) FROM explore_bundle_refund_hold WHERE registration_id IN (6101,6102)"));
-        assertThrows(FreeExploreBundleException.class, () -> transactions.executeWithoutResult(tx ->
-                refundService.prepareFullRefund(6101L, new BigDecimal("99.00"))), "unbound positive cash must not commit");
-        assertEquals("AVAILABLE", unitStatus(6101L, CH1));
-        assertEquals(0, count("SELECT COUNT(*) FROM explore_bundle_refund_hold WHERE registration_id IN (6101,6102)"));
-        transactions.executeWithoutResult(tx -> {
-            var reservation = service.reserve(72L, 6102L, unitId(6102L, CH1), OFFER1,
-                    new Date(now.getTime() + 2L * 3600_000L), "late-parent-child");
-            service.cancelReservation(72L, reservation.getId(), false);
-        });
-        assertEquals("FORFEITED", unitStatus(6102L, CH1));
-        assertEquals("BUNDLE_REFUND_CONSUMED", assertThrows(FreeExploreBundleException.class,
-                () -> transactions.executeWithoutResult(tx -> refundService.prepareFullRefund(6101L, new BigDecimal("99.00"))))
-                .getBusinessCode());
-        assertEquals("AVAILABLE", unitStatus(6101L, CH1));
-    }
-
-    @Test
-    void zeroCashCompletesWithoutFinancialIntentAndReplacementNeverReleasesUnits() {
-        CmsRegistration zero = registration(6201L, 81L); zero.setWechatPaymentAmount(BigDecimal.ZERO); zero.setPayableAmount(BigDecimal.ZERO);
-        transactions.executeWithoutResult(tx -> service.freezeOnOrderCreated(zero, topic(), activity()));
-        transactions.executeWithoutResult(tx -> {
-            var context = refundService.prepareFullRefund(6201L, BigDecimal.ZERO);
-            zero.setRegistrationStatus(3);
-            refundService.completeZeroCashRefund(context);
-        });
-        assertEquals("ZERO_CASH_COMPLETED", holdMapper.selectByRegistration(6201L).getState());
-        assertEquals(null, holdMapper.selectByRegistration(6201L).getRefundId());
-        assertEquals("REFUNDED", unitStatus(6201L, CH1));
-        CmsRegistration row = registration(6202L, 82L); row.setWechatPaymentAmount(new BigDecimal("99.00"));
-        transactions.executeWithoutResult(tx -> service.freezeOnOrderCreated(row, topic(), activity()));
-        RefundApplication old = refundIntent(6621L, row), replacement = refundIntent(6622L, row);
-        transactions.executeWithoutResult(tx -> {
-            var context = refundService.prepareFullRefund(row.getId(), new BigDecimal("99.00"));
-            refundIntents.put(old.getId(), old); refundService.bindFullRefund(context, old.getId(), null);
-        });
-        transactions.executeWithoutResult(tx -> {
-            var context = refundService.prepareFullRefund(row.getId(), new BigDecimal("99.00"));
-            old.setStatus(2); refundIntents.put(replacement.getId(), replacement);
-            refundService.bindFullRefund(context, replacement.getId(), old.getId());
-        });
-        assertEquals(replacement.getId(), holdMapper.selectByRegistration(row.getId()).getRefundId());
-        assertEquals("REFUND_PENDING", unitStatus(row.getId(), CH1));
-        old.setStatus(1); old.setPayoutStatus(1);
-        transactions.executeWithoutResult(tx -> refundService.syncRefundOutcome(old.getId()));
-        assertEquals("RECONCILIATION_REQUIRED", holdMapper.selectByRegistration(row.getId()).getState());
-        assertEquals("REFUND_PENDING", unitStatus(row.getId(), CH1), "late old success cannot complete replacement");
-    }
-
-    @Test
-    void unusedMerchantExitCanBindOrdinaryFullRefundButBarePendingCannot() {
-        CmsRegistration row = registration(6241L, 83L); row.setWechatPaymentAmount(new BigDecimal("99.00"));
-        transactions.executeWithoutResult(tx -> {
-            service.freezeOnOrderCreated(row, topic(), activity());
-            service.reserve(83L, row.getId(), unitId(row.getId(), CH1), OFFER1,
-                    new Date(now.getTime() + 24L * 3600_000L), "exit-before-refund");
-        });
-        MerchantChapterOfferMapper offers = (MerchantChapterOfferMapper) ReflectionTestUtils.getField(service, "offerMapper");
-        MerchantChapterOffer exited = offers.selectById(OFFER1);
-        exited.setStatus(0);
-        try {
-            transactions.executeWithoutResult(tx -> service.decideMerchantExit(83L, unitId(row.getId(), CH1),
-                    "REFUND_UNFULFILLED", null, "unused-exit-refund"));
-        } finally { exited.setStatus(1); }
-        RefundApplication app = refundIntent(6641L, row);
-        transactions.executeWithoutResult(tx -> {
-            var context = refundService.prepareFullRefund(row.getId(), new BigDecimal("99.00"));
-            refundIntents.put(app.getId(), app); refundService.bindFullRefund(context, app.getId(), null);
-        });
-        assertEquals("BOUND", holdMapper.selectByRegistration(row.getId()).getState());
-        assertEquals("REFUND_PENDING", unitStatus(row.getId(), CH1));
-
-        CmsRegistration bare = registration(6242L, 84L); bare.setWechatPaymentAmount(new BigDecimal("99.00"));
-        transactions.executeWithoutResult(tx -> service.freezeOnOrderCreated(bare, topic(), activity()));
-        db.update("UPDATE explore_bundle_unit SET status='REFUND_PENDING',status_reason='MERCHANT_EXIT' WHERE id=?", unitId(bare.getId(), CH1));
-        assertEquals("BUNDLE_REFUND_CONSUMED", assertThrows(FreeExploreBundleException.class,
-                () -> transactions.executeWithoutResult(tx -> refundService.prepareFullRefund(bare.getId(), new BigDecimal("99.00"))))
-                .getBusinessCode(), "status alone cannot invent a holder's merchant-exit decision");
-        assertEquals(null, holdMapper.selectByRegistration(bare.getId()));
-    }
-
-    @Test
-    void realSuccessWithBrokenBookingOrLegacyPenaltyRequiresReconciliationWithoutRewritingUnits() {
-        CmsRegistration row = registration(6251L, 85L); row.setWechatPaymentAmount(new BigDecimal("99.00"));
-        transactions.executeWithoutResult(tx -> service.freezeOnOrderCreated(row, topic(), activity()));
-        RefundApplication app = refundIntent(6651L, row);
-        transactions.executeWithoutResult(tx -> {
-            var context = refundService.prepareFullRefund(row.getId(), new BigDecimal("99.00"));
-            refundIntents.put(app.getId(), app); refundService.bindFullRefund(context, app.getId(), null);
-        });
-        db.update("UPDATE explore_bundle_unit SET reservation_id=999999 WHERE id=?", unitId(row.getId(), CH1));
-        app.setStatus(1); app.setPayoutStatus(1);
-        transactions.executeWithoutResult(tx -> refundService.syncRefundOutcome(app.getId()));
-        assertEquals("RECONCILIATION_REQUIRED", holdMapper.selectByRegistration(row.getId()).getState());
-        assertEquals("REFUND_PENDING", unitStatus(row.getId(), CH1));
-        assertEquals(1, app.getPayoutStatus(), "F3 must preserve the authoritative cash fact");
-
-        CmsRegistration legacy = registration(6252L, 86L); legacy.setWechatPaymentAmount(new BigDecimal("99.00"));
-        transactions.executeWithoutResult(tx -> {
-            service.freezeOnOrderCreated(legacy, topic(), activity());
-            var booking = service.reserve(86L, legacy.getId(), unitId(legacy.getId(), CH1), OFFER1,
-                    new Date(now.getTime() + 2L * 3600_000L), "legacy-penalty");
-            service.cancelReservation(86L, booking.getId(), false);
-        });
-        RefundApplication legacyApp = refundIntent(6652L, legacy); legacyApp.setStatus(1); legacyApp.setPayoutStatus(1);
-        refundIntents.put(legacyApp.getId(), legacyApp);
-        transactions.executeWithoutResult(tx -> refundService.syncRefundOutcome(legacyApp.getId()));
-        assertEquals("RECONCILIATION_REQUIRED", holdMapper.selectByRegistration(legacy.getId()).getState());
-        assertEquals("FORFEITED", unitStatus(legacy.getId(), CH1), "external success is not penalty waiver authority");
-    }
-
-    @Test
-    void penaltyVersusRefundPreparationHasOneWinnerInRealUnitTransactions() throws Exception {
-        CmsRegistration row = registration(6301L, 91L); row.setWechatPaymentAmount(new BigDecimal("99.00"));
-        transactions.executeWithoutResult(tx -> service.freezeOnOrderCreated(row, topic(), activity()));
-        var booking = transactions.execute(tx -> service.reserve(91L, 6301L, unitId(6301L, CH1), OFFER1,
-                new Date(now.getTime() + 2L * 3600_000L), "refund-penalty-race"));
-        RefundApplication app = refundIntent(6631L, row); refundIntents.put(app.getId(), app);
-        var gate = new java.util.concurrent.CountDownLatch(1);
-        var pool = java.util.concurrent.Executors.newFixedThreadPool(2);
-        try {
-            var refund = pool.submit(() -> {
-                if (!gate.await(5, java.util.concurrent.TimeUnit.SECONDS)) throw new IllegalStateException("start timeout");
-                try {
-                    transactions.executeWithoutResult(tx -> {
-                        var context = refundService.prepareFullRefund(6301L, new BigDecimal("99.00"));
-                        refundService.bindFullRefund(context, app.getId(), null);
-                    });
-                    return "FROZEN";
-                } catch (FreeExploreBundleException e) { assertEquals("BUNDLE_REFUND_CONSUMED", e.getBusinessCode()); return "PENALTY"; }
-            });
-            var penalty = pool.submit(() -> {
-                if (!gate.await(5, java.util.concurrent.TimeUnit.SECONDS)) throw new IllegalStateException("start timeout");
-                try { transactions.executeWithoutResult(tx -> service.cancelReservation(91L, booking.getId(), false)); }
-                catch (FreeExploreBundleException e) { assertEquals("BUNDLE_REFUND_PENDING", e.getBusinessCode()); }
-                return true;
-            });
-            gate.countDown();
-            String winner = refund.get(15, java.util.concurrent.TimeUnit.SECONDS);
-            assertTrue(penalty.get(15, java.util.concurrent.TimeUnit.SECONDS));
-            assertEquals("FROZEN".equals(winner) ? "REFUND_PENDING" : "FORFEITED", unitStatus(6301L, CH1));
-            assertEquals("FROZEN".equals(winner) ? 1 : 0,
-                    count("SELECT COUNT(*) FROM explore_bundle_refund_hold WHERE registration_id=6301"));
-        } finally { pool.shutdownNow(); assertTrue(pool.awaitTermination(5, java.util.concurrent.TimeUnit.SECONDS)); }
-    }
-
-    private RefundApplication refundIntent(Long id, CmsRegistration source) {
-        RefundApplication app = new RefundApplication(); app.setId(id); app.setRefundNo("RF" + source.getId() + "-" + id);
-        app.setSourceType("registration"); app.setSourceId(source.getId()); app.setMemberId(source.getMemberId());
-        app.setRefundAmount(new BigDecimal("99.00")); app.setPaidAmount(new BigDecimal("99.00"));
-        app.setStatus(0); app.setPayoutStatus(5); app.setDelFlag(0); return app;
-    }
-
     // ---------------------------------------------------------------- fixtures
 
     private FreeExploreBundleServiceImpl newService() {
@@ -569,8 +248,6 @@ class FreeExploreBundleLedgerMySqlIT {
                 .thenAnswer(inv -> registrations.get(inv.<Long>getArgument(0)));
         FreeExploreBundleServiceImpl impl = new FreeExploreBundleServiceImpl();
         ReflectionTestUtils.setField(impl, "bundleMapper", bundleMapper);
-        ReflectionTestUtils.setField(impl, "bundleRefundMapper", mock(com.chengyinhub.business.mapper.ExploreBundleRefundMapper.class));
-        ReflectionTestUtils.setField(impl, "redemptionMapper", mock(com.chengyinhub.business.mapper.RedemptionMapper.class));
         ReflectionTestUtils.setField(impl, "registrationMapper", registrationMapper);
         ReflectionTestUtils.setField(impl, "topicMapper", topicMapper);
         ReflectionTestUtils.setField(impl, "chapterMapper", chapterMapper);

@@ -91,8 +91,7 @@ public final class FreeExploreBundlePolicy {
             quote.route = ROUTE_ORIGINAL_METHOD;
             quote.amount = paidAmount == null ? total : paidAmount.setScale(2, RoundingMode.HALF_UP);
             quote.reason = "完全未使用,原路全额退回";
-        } else if (total.signum() > 0
-                && remaining.compareTo(total.multiply(PARTIAL_REFUND_MIN_RATIO)) > 0) {
+        } else if (quote.remainingRatio.compareTo(PARTIAL_REFUND_MIN_RATIO) > 0) {
             quote.route = ROUTE_PLATFORM_BALANCE;
             quote.amount = remaining;
             quote.reason = "部分使用且剩余价值占比大于20%,剩余价值可退平台余额";

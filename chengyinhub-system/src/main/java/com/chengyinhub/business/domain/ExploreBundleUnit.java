@@ -6,23 +6,16 @@ import java.util.Date;
 
 /** F3 套票单位 explore_bundle_unit:一单位一行一码,状态即持有人余额真源。 */
 public class ExploreBundleUnit {
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Long id;
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Long grantId;
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Long registrationId;
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Long holderMemberId;
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Long chapterId;
     private Integer unitSeq;
     private String unitCode;
     private BigDecimal unitValue;
     private String status;
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Long redemptionId;
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Long reservationId;
     private String statusReason;
     private Integer version;

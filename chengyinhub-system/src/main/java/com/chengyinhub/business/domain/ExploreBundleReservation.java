@@ -5,19 +5,12 @@ import java.util.Date;
 
 /** F3 套票预约 explore_bundle_reservation。 */
 public class ExploreBundleReservation {
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Long id;
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Long unitId;
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Long registrationId;
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Long holderMemberId;
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Long chapterId;
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Long offerId;
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Long merchantId;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date startAt;
