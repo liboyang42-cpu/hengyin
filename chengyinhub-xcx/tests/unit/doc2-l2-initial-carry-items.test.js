@@ -76,7 +76,7 @@ test('白名单 / 注册表绑定时开局带着只读', () => {
 })
 
 test('物品一组:用在列位置;被用到的删不掉;改名 / 添加写回主题物品表', () => {
-  const c = { items: [{ id: 'a', kind: 'ITEM', name: '旧手电', image: 'https://x/a.png' }, { id: 'b', kind: 'ITEM', name: '撬棍' }, { id: 'm', kind: 'MEDAL', name: '勋章' }],
+  const c = { items: [{ id: 'a', kind: 'ITEM', name: '旧手电', image: 'https://fixture.invalid/a.png' }, { id: 'b', kind: 'ITEM', name: '撬棍' }, { id: 'm', kind: 'MEDAL', name: '勋章' }],
     grants: [{ id: 'completion_material', itemId: 'a' }], chapters: [{ index: 0, grants: [], eggs: [{ name: '旧仓库', rewards: [{ itemId: 'a' }] }] }] }
   assert.deepEqual(items.itemUsedIn(c, 'a'), ['主题通关奖励', '第 1 章彩蛋「旧仓库」'])
   let saved = JSON.parse(JSON.stringify(c))
