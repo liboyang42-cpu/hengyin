@@ -1,0 +1,7 @@
+06ae57318069f628944deb299162949ccbb6200e59a1efc0fa3e7c0e93754f08  chengyinhub-xcx/pages/coop/invite/index.js
+c83f92ff95eabeec2a4a32097ae8e4e1d5695bba7758d325ee64dfdf2a3115b2  chengyinhub-xcx/tests/tools/audit-page-cleanup.js
+78d55e1d20461e45509b01cb5bee1b0b0d8ba8a3fdf3ab133882699ecf7a836b  chengyinhub-xcx/tests/unit/coop-supply-station-contract.test.js
+b38bc32cdf2a006242a9fda049ed531204d867f54360ec9b85e2a5742d160ba3  chengyinhub-xcx/tests/unit/merchant-secondary-uiux-recovery-contract.test.js
+96f59466e959a5bfec7a100a087f13bb92a5fb56049c87daca89389a57dbe837  chengyinhub-xcx/tests/unit/page-cleanup-audit.test.js
+2a451f801747d0949a1c447da4182072f94d5e9afefc4fc3477863f564985668  chengyinhub-xcx/tests/unit/coop-invite-flow-contract.test.js
+e2957e1ea3f5c6f22f274c71e3ba6819fb90d330122ab1b32b037e71148cf469  chengyinhub-xcx/tests/unit/template-tab-failure-state-contract.test.js

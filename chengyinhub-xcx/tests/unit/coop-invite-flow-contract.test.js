@@ -441,7 +441,11 @@ test('W3 成功/明确失败/UNKNOWN三分；重试失败对象不清其他UNKNO
     env.requests[1].success({ code: 400, msg: '明确拒绝' })
     env.requests[2].fail({})
     assert.deepEqual(env.page.data.selected, [{ toId: 22, name: '乙店' }])
-    assert.deepEqual(env.page.data.unknownTargets, [{ toId: 33, name: '丙店' }])
+    assert.deepEqual(env.page.data.unknownTargets, [{ toId: 33, name: '丙店',
+      key: '7:coop-invite:[1,"","9","33"]', payload: { inviteType: 1, toType: 'club', toId: 33,
+        topicId: 9, shareMode: 0, message: '邀请贵俱乐部来参加活动' } }])
+    assert.equal(env.page._inviteWorkflow().pendingRequest(env.page.data.unknownTargets[0].key).requestId,
+      JSON.parse(env.requests[2].data).requestId, '摘要保留真实原请求号，不只保留显示名称')
     env.page.confirmInvite()
     assert.equal(JSON.parse(env.requests[3].data).toId, 22)
     okInvite(env.requests[3])
@@ -465,7 +469,11 @@ test('W3 成功、明确失败、UNKNOWN与本次未提交同批出现时保留�
     env.requests[2].fail({})
     assert.equal(env.requests.length, 3, '第四个对象尚未POST')
     assert.deepEqual(env.page.data.selected, [targets[1], targets[3]])
-    assert.deepEqual(env.page.data.unknownTargets, [targets[2]])
+    assert.deepEqual(env.page.data.unknownTargets, [{ ...targets[2],
+      key: '7:coop-invite:[1,"","9","33"]', payload: { inviteType: 1, toType: 'club', toId: 33,
+        topicId: 9, shareMode: 0, message: '邀请贵俱乐部来参加活动' } }])
+    assert.equal(env.page._inviteWorkflow().pendingRequest(env.page.data.unknownTargets[0].key).requestId,
+      JSON.parse(env.requests[2].data).requestId)
     for (const summary of [/已发起 1 条/, /明确失败 1 条/, /本次未提交 1 个对象/, /另有 1 条原邀请结果待确认/]) {
       assert.match(env.page.data.sendResult, summary)
       assert.match(env.page.data.resultSheet.sub, summary)
@@ -550,11 +558,20 @@ for (const change of ['hide', 'unload', 'identity', 'topic']) {
       }
       if (change === 'topic') {
         env.page.data.myTopics = [{ id: 10, name: 'B' }, { id: 9, name: 'A' }]
-        env.page.onTopicChange({ detail: { value: 0 } }); env.page.onTopicChange({ detail: { value: 1 } })
+        const epoch = env.page._submitEpoch
+        env.page.onTopicChange({ detail: { value: 1 } })
+        assert.equal(env.page._submitEpoch, epoch, '相同主题事件不能退休原活跃命令')
+        assert.equal(env.page._submitting, true)
+        env.page.onTopicChange({ detail: { value: 0 } })
+        assert.equal(env.page.data.topicId, 10, '真实主题切换必须发生，不能靠 busy 提前返回伪装往返')
+        assert.notEqual(env.page._submitEpoch, epoch)
+        env.page.onTopicChange({ detail: { value: 1 } })
+        assert.equal(env.page.data.topicId, 9)
       }
       env.page._setSelected([{ toId: 22, name: '乙店' }]); env.page.confirmInvite()
       const before = snapshot(env), busy = env.page._submitting
       old.success({ code: 200, data: { inviteId: 501 } }); old.fail({})
+      okInvite(old)
       assert.equal(snapshot(env), before); assert.equal(env.page._submitting, busy)
       assert.equal(env.page.data.submitting, true)
     } finally { env.restore() }
