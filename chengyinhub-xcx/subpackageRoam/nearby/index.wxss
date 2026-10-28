@@ -236,7 +236,7 @@ page { background: var(--cy-comp-sheet-player-page); }
 /* 2026-10-25 业主:顶部一行 = 筛选(文字)+ 地图 / 列表(图标);底部横滑卡片(漫游首页「附近活动」卡,加高,与标题左缘对齐) */
 .mt-toprow { position: absolute; left: 23rpx; right: 23rpx; z-index: 20; display: flex; align-items: center; gap: 14rpx; transition: opacity .25s ease; }
 .mt-toprow__chips { flex: 1; min-width: 0; white-space: nowrap; }
-.mt-toprow .mt-chip { padding: 0 20rpx; margin-right: 12rpx; font-size: 24rpx; gap: 8rpx; } /* 四枚筛选与图标切换并排时整行放得下,不被截在图标边上 */
+.mt-toprow .mt-chip { padding: 0 20rpx; margin-right: 12rpx; font-size: 24rpx; gap: 8rpx; } /* ds-ok 同 .mt-chip 原型定值;四枚筛选与图标切换并排时整行放得下,不被截在图标边上 */
 .mt-toprow .mt-chip:last-child { margin-right: 0; }
 .mt-toprow .mt-mode { flex: none; height: 65rpx; padding: 4rpx; }
 .mt-toprow .mt-mode__i { min-width: 64rpx; padding: 0; color: rgba(255,255,255,.6); } /* ds-ok 同 .mt-mode__i 未选 */
