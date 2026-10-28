@@ -327,6 +327,8 @@ const RAW = [
   ['B73', 'B73-leaderboard-growth.png', '/subpackageP3/pages/growthcenter/leaderboard/index', 'player', 'normal', leaderboardFixture('exp', 'total'), undefined, { selector: '.gc-pod-name', min: 3 }, 'setData', 'P1', '', '成长榜使用 metric=exp 与 EXP 单位，不再注入页面已删除的 rankType'],
   ['B74', 'B74-leaderboard-empty.png', '/subpackageP3/pages/growthcenter/leaderboard/index', 'player', 'empty', { list: [] }, undefined, EMPTY, 'setData', 'P1', '', '⚠️ 字段名按页面实况:activeTopTab/activeClubTab/nearbyClubs。早先写成 activeTab/clubs,两态都落到空态、md5 相同'],
   ['B75', 'B75-leaderboard-error.png', '/subpackageP3/pages/growthcenter/leaderboard/index', 'player', 'error', { loading: false, errorMsg: '排行榜没有加载出来', metric: 'point', period: 'total', unit: '积分', top3: [], rest: [], me: null }, undefined, { selector: '.gc-error-board', min: 1 }, 'setData', 'P1', '', 'HTTP/业务失败(含 404)走 cy-error 可重试错误态，不再映射暂未开放'],
+  ['B76', 'B76-topic-preview-normal.png', '/pages/templatedetail/topic-preview/index?id=1', 'player', 'normal', null, undefined, { selector: '.stk', min: 1 }, 'real-data', 'P1', '', '主题卡堆预览(玩家深色):扇形卡堆 + ✓ 清单 + 「用这个模板」'],
+  ['B77', 'B77-topic-preview-merchant.png', '/pages/templatedetail/topic-preview/index?id=1&scope=MERCHANT&readonly=1', 'merchant', 'normal', null, undefined, { selector: '.tp--light', min: 1 }, 'real-data', 'P1', '', '主题卡堆预览商家侧浅色版(只换颜色)'],
 
   // ---------- D-C 商家、俱乐部与合作（55） ----------
   ['C01', 'C01-merchant-home-normal.png', '/pages/merchant/index/index', 'merchant', 'normal', { merchantAccess: MERCHANT_OWNER_ACCESS, displayName: '外滩夜行补给站', merchantInfo: { id: 1, name: '外滩夜行补给站', logo: IMG }, dashboardLoading: false, dashboardError: '', dashboardData: { revenue: '128.00' }, joinLoading: false, hostLoading: false, todoLoading: false, gameEntryLoading: false, joinTotal: 0, hostProjectTotal: 1, projectCards: [{ key: 'host:9', role: 'host', roleLabel: '主办', id: 9, ownerId: 9, bizType: 'topic', title: '外滩夜行路线', statusLabel: '招募中', catLabel: '城市路线', thumb: IMG, meta: '8月23日 · 上海', todoCount: 2, todoChips: [{ key: 'verify', label: '待核销', count: 2, tone: 'warn' }], msgCount: 1 }], notifications: [{ id: 1, label: '待确认承接', content: '外滩夜行路线', time: '刚刚' }] }, undefined, TITLE, 'identity+setData', 'P0', '', '首屏显示已确认收入、项目与消息，未知值不冒充 ¥0'],
@@ -658,11 +660,13 @@ const countBy = (pred) => SHOTS.filter(pred).length;
 // 2026-10-23 起名页 templateadd 退役删除:B46(P0 real-data)/E21(P0 identity+setData)两行退场,total 341→339、P0 133→131、actionable 317→315(P0 124→122)、B 70→69、E 27→26、identity+setData 117→116、real-data 38→37。
 // 2026-10-25 新增官方地点挑战缺参真实态 F200；不新增 blocked 或已验 fixture。
 // 2026-10-27 新增自由探索权益缺参真实态 D12d(P0 real-data)：total 343→344、P0 134→135、actionable 319→320(P0 125→126)、D 45→46、real-data 40→41；不新增 blocked 或已验 fixture。
+// 2026-10-28 模板页货架改版新增主题卡堆预览页:B76 玩家深色 / B77 商家浅色两条 P1 real-data,total 340→342、P1 199→201、actionable 316→318(P1 192→194)、B 69→71、real-data 38→40。
+// 2026-10-28 L9 再并 master(#652 B76/B77)叠加本线 D12h–D12l:total 351、P1 201、actionable 327(P1 194)、B 71、real-data 43。
 const STATS = {
-  "total": 349,
+  "total": 351,
   "byPriority": {
     "P0": 140,
-    "P1": 199,
+    "P1": 201,
     "P2": 10
   },
   "blockedByPriority": {
@@ -672,14 +676,14 @@ const STATS = {
   },
   "actionable": {
     "P0": 131,
-    "P1": 192,
+    "P1": 194,
     "P2": 2,
-    "total": 325
+    "total": 327
   },
   "blocked": 24,
   "domains": {
     "A": 53,
-    "B": 69,
+    "B": 71,
     "C": 56,
     "D": 51,
     "E": 26,
@@ -688,7 +692,7 @@ const STATS = {
   "control": {
     "setData": 185,
     "identity+setData": 116,
-    "real-data": 41,
+    "real-data": 43,
     "real-device": 7
   },
   "fixtureVerified": 16

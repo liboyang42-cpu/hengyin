@@ -159,5 +159,5 @@ test('缺封面/缺图占位继续用 no_data.svg(不随空态换图)', () => {
     'pages/templatedetail/templatedetail.wxml',
     'components/cy/scene-roam-task-list/index.wxml',
   ].forEach((rel) => assert.ok(read(rel).includes('src="/images/no_data.svg"'), `${rel} 的缺图占位被换掉`))
-  assert.match(read('pages/template/index.js'), /coverErrorSrc:\s*'\/images\/no_data\.svg'/)
+  assert.match(read('pages/templatedetail/shelf/index.js'), /coverErrorSrc:\s*'\/images\/no_data\.svg'/)
 })

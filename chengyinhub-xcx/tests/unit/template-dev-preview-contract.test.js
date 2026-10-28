@@ -4,8 +4,6 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const ROOT = path.resolve(__dirname, '../..');
-const PAGE_JS = path.join(ROOT, 'pages/template/index.js');
-const PAGE_WXML = path.join(ROOT, 'pages/template/index.wxml');
 const mockData = require('../../pages/club/utils/mockData');
 
 const INTERACTION_TITLES = [
@@ -18,47 +16,9 @@ const TOPIC_NAMES = [
   '风味巡游', '不惑之年', '预制人生', '高温末日逃生', '上海像一部旧电影',
 ];
 
-const INTERACTION_ICON_PATHS = {
-  今晚的暗号: '/images/interaction-templates/merchant-secret-code.svg',
-  老板的秘密题: '/images/interaction-templates/merchant-secret-question.svg',
-  拍下这一刻: '/images/interaction-templates/merchant-photo-moment.svg',
-  收集这枚风味印章: '/images/interaction-templates/merchant-flavor-stamp.svg',
-  新品盲测局: '/images/interaction-templates/merchant-blind-test.svg',
-  今日搭配任务: '/images/interaction-templates/merchant-style-mission.svg',
-  集合点亮: '/images/interaction-templates/club-gather.svg',
-  小队竞速点亮: '/images/interaction-templates/club-team-race.svg',
-  街角谜题: '/images/interaction-templates/club-street-puzzle.svg',
-  城市取景任务: '/images/interaction-templates/club-city-camera.svg',
-  城市接力棒: '/images/interaction-templates/club-relay.svg',
-  今日角色任务: '/images/interaction-templates/club-role-mission.svg',
-};
-
-function mountTemplatePage(envVersion) {
-  const requests = [];
-  const toasts = [];
-  const navigations = [];
-  let definition;
-  const app = {
-    globalData: { statusBarHeight: 20, navBarHeight: 44, menuButtonInfo: {} },
-    getUserRole: () => 'player',
-    getUserType: () => 0,
-    getRequestErrorMessage: (res, fallback) => (res && res.msg) || fallback,
-    sendRequest(options) { requests.push(options); },
-  };
-  global.getApp = () => app;
-  global.wx = {
-    getAccountInfoSync: () => ({ miniProgram: { envVersion } }),
-    showToast(options) { toasts.push(options); },
-    navigateTo(options) { navigations.push(options); },
-  };
-  global.Page = (config) => { definition = config; };
-  delete require.cache[require.resolve(PAGE_JS)];
-  require(PAGE_JS);
-  const page = Object.assign({}, definition);
-  page.data = JSON.parse(JSON.stringify(definition.data));
-  page.setData = function (patch) { Object.assign(this.data, patch); };
-  return { page, requests, toasts, navigations };
-}
+// 2026-10-28:模板页货架移进 pages/templatedetail/shelf(业主定稿原型 v21)。旧页的装饰器 / 预览注入 / 半屏中转
+// 断言随旧页退役；实验预览不进复制与详情、接口失败不注入演示、真实空态等不变量在
+// template-shelf-redesign-20261028.test.js 重钉。这里只留开发数据本身的两条。
 
 test('开发数据包含已新增的 12 个商家/俱乐部交互模板', () => {
   const titles = mockData.getTemplates().map((item) => item.title);
@@ -89,51 +49,6 @@ function assertUnknownTemplateFallbackUsesDsIcon(markup) {
     '未知模板不得用 CSS 渐变冒充内容图');
 }
 
-test('七款旧玩法缺图时推荐大卡也有封面，作者图和来源记录保持原样', () => {
-  const { page } = mountTemplatePage('release');
-  page.data.tab = 'game';
-  for (const title of ['闭眼味觉师', '沉默点单', '便利店调酒师', '治愈音乐角', '午夜电台', '低碳行动', '今日城市签']) {
-    const source = { id: 1, title, imgUrl: null };
-    page._gameRows = page.decorateGame([source]);
-    page.rebuildLists();
-    assert.match(page.data.banner.imgUrl, /^\/images\/interaction-templates\/.+\.svg$/, title);
-    assert.equal(source.imgUrl, null, '展示补图不能改来源记录');
-    const author = { id: 2, title, imgUrl: 'https://www.chengyinhub.com/author.jpg' };
-    page._gameRows = page.decorateGame([author]);
-    page.rebuildLists();
-    assert.equal(page.data.banner.imgUrl, author.imgUrl, title);
-  }
-  page._gameRows = page.decorateGame([{ id: 3, title: '未知自定义玩法', imgUrl: '' }]);
-  page.rebuildLists();
-  assert.equal(page.data.banner.imgUrl, '', '未知玩法继续显示明确缺图态');
-});
-
-test('12 个交互模板使用具象游戏图标，未知模板使用设计系统兜底图标', () => {
-  // 2026-08-26:首页四刀切退役,玩法走单一列表(gameRows ← decorateGame)。
-  // 图标映射这条不变量原样保留,只是取样口从「四个切片」换成「装饰器输出」。
-  const dev = mountTemplatePage('develop');
-  const decorated = dev.page.decorateGame(mockData.getTemplates());
-
-  Object.entries(INTERACTION_ICON_PATHS).forEach(([title, iconPath]) => {
-    const item = decorated.find((row) => row.title === title);
-    assert.ok(item, `页面切片中找不到交互模板:${title}`);
-    assert.equal(item._iconUrl, iconPath, `${title} 图标映射不正确`);
-    assert.equal(fs.existsSync(path.join(ROOT, iconPath.slice(1))), true, `${title} 图标资源不存在`);
-  });
-
-  const wxml = fs.readFileSync(PAGE_WXML, 'utf8');
-  assert.match(wxml, /<image[^>]*wx:if="\{\{ item\._iconUrl \}\}"[^>]*src="\{\{ item\._iconUrl \}\}"/,
-    '模板图标位应优先渲染具象图标');
-  assertUnknownTemplateFallbackUsesDsIcon(wxml);
-
-  // 负控:把兜底态拆掉,检查器必须真的判红(只比字符串变没变是恒真的假负控)
-  const mutant = wxml.replaceAll('class="cml-pic cover-error"', 'class="cml-pic"');
-  assert.notEqual(mutant, wxml, '负控锚点失效：找不到未知模板保底态');
-  assert.throws(() => assertUnknownTemplateFallbackUsesDsIcon(mutant),
-    '拆掉保底态后检查器仍然放行 —— 这条断言是恒绿的');
-  assert.throws(() => assertUnknownTemplateFallbackUsesDsIcon(mutant));
-});
-
 test('开发数据包含 5 个上海单人自由探索主题，且保持 EXPERIMENTAL 预览状态', () => {
   const topics = mockData.getTopicTemplates();
   assert.deepEqual(topics.map((item) => item.name), TOPIC_NAMES);
@@ -152,103 +67,5 @@ test('开发数据包含 5 个上海单人自由探索主题，且保持 EXPERIM
     assert.equal(
       fs.existsSync(path.join(ROOT, '../docs/assets/template-covers/final', stem)),
       true, `线上封面必须在仓库留有母版:${item.imgUrl}`);
-  });
-});
-
-test('主题模板接口失败时 develop/release 均不注入设计预览', () => {
-  const dev = mountTemplatePage('develop');
-  dev.page.getTopicTemplates();
-  dev.requests[0].fail({ errMsg: 'request:fail' });
-  assert.deepEqual(dev.page._topicRows, []);
-  assert.equal(dev.page.data.banner.id || null, null);
-  assert.match(dev.page.data.errorMsg, /request:fail|主题模板加载失败/);
-
-  const release = mountTemplatePage('release');
-  release.page.getTopicTemplates();
-  release.requests[0].fail({ errMsg: 'request:fail' });
-  assert.deepEqual(release.page._topicRows, []);
-});
-
-test('主题模板业务失败不回填演示；真实成功响应始终显示', () => {
-  const devFailure = mountTemplatePage('develop');
-  devFailure.page.getTopicTemplates();
-  devFailure.requests[0].success({ code: '500', msg: '服务异常' });
-  assert.deepEqual(devFailure.page._topicRows, []);
-  assert.equal(devFailure.page.data.errorMsg, '服务异常');
-
-  const live = mountTemplatePage('develop');
-  live.page.getTopicTemplates();
-  live.requests[0].success({
-    code: '200',
-    data: [{ id: 7, name: '后端已验证主题', templateStatus: 'VERIFIED', chapterCount: 2, gameCount: 3 }],
-  });
-  assert.deepEqual(live.page._topicRows.map((item) => item.name), ['后端已验证主题']);
-  assert.equal(live.page._topicRows[0]._statusText, '');
-});
-
-test('主题模板接口200空列表在develop/release均为真实空态', () => {
-  const dev = mountTemplatePage('develop');
-  dev.page.getTopicTemplates();
-  dev.requests[0].success({ code: '200', data: [] });
-  assert.deepEqual(dev.page._topicRows, []);
-  assert.equal(dev.page.data.banner.id || null, null);
-
-  const release = mountTemplatePage('release');
-  release.page.getTopicTemplates();
-  release.requests[0].success({ code: '200', data: [] });
-  assert.deepEqual(release.page._topicRows, []);
-});
-
-test('实验预览不能调用复制接口，避免把未落库内容伪装成可用模板', () => {
-  const dev = mountTemplatePage('develop');
-  const preview = mockData.getTopicTemplates()[0];
-  dev.page.useTt({ currentTarget: { dataset: { item: preview } } });
-  assert.equal(dev.requests.length, 0);
-  assert.equal(dev.toasts.length, 1);
-  assert.match(dev.toasts[0].title, /预览模板/);
-});
-
-test('未落库的交互模板不进入真实详情，避免把本地 ID 带进接口', () => {
-  const dev = mountTemplatePage('develop');
-  const preview = mockData.getTemplates().find((item) => item.title === '今晚的暗号');
-  dev.page.jumpDetail({ currentTarget: { dataset: { item: preview } } });
-  assert.equal(dev.navigations.length, 0);
-  assert.equal(dev.toasts.length, 1);
-  assert.match(dev.toasts[0].title, /预览模板/);
-});
-
-test('已落库的玩法模板卡片直接进入当前详情页，不再中转半屏预览', () => {
-  const live = mountTemplatePage('release');
-  live.page.jumpDetail({
-    currentTarget: { dataset: { item: { id: 27, title: '街角密码', previewOnly: false } } },
-  });
-
-  assert.deepEqual(live.navigations, [{ url: '/pages/templatedetail/templatedetail?id=27' }]);
-  assert.equal(live.page.data.templateInfoShow, undefined, '退役的半屏预览状态不应残留');
-});
-
-// 图标映射按标题字符串匹配,写错一个字或漏传一个文件都不会报错 ——
-// 页面只是静默回退成首字母色块,肉眼分不出「没配」和「配错了」。
-// 这里把映射从页面源码里逐条读出来,断言文件真的躺在磁盘上。
-test('交互模板图标映射覆盖 19 个官方玩法,且每个文件都真实存在', () => {
-  const src = fs.readFileSync(PAGE_JS, 'utf8');
-  const block = src.match(/const INTERACTION_ICON_BY_TITLE = \{([\s\S]*?)\n\};/);
-  assert.ok(block, '找不到 INTERACTION_ICON_BY_TITLE,常量名或结构变了');
-
-  const entries = [...block[1].matchAll(/'([^']+)':\s*'(\/images\/interaction-templates\/[^']+\.svg)'/g)]
-    .map(([, title, iconPath]) => ({ title, iconPath }));
-
-  assert.equal(entries.length, 19,
-    `映射应覆盖 19 个官方玩法(12 交互 + 7 生活备份),实际 ${entries.length}`);
-  assert.equal(new Set(entries.map((e) => e.title)).size, 19, '标题不得重复');
-  assert.equal(new Set(entries.map((e) => e.iconPath)).size, 19, '两个玩法不得共用同一枚图标');
-
-  entries.forEach(({ title, iconPath }) => {
-    const abs = path.join(ROOT, iconPath.replace(/^\//, ''));
-    assert.ok(fs.existsSync(abs), `${title} 的图标文件不存在:${iconPath}`);
-    const svg = fs.readFileSync(abs, 'utf8');
-    // 全套统一石墨底 + 骨白描边;混进渐变说明有人绕过了这套规范
-    assert.ok(svg.includes('#121215'), `${title} 图标底色不是规范的 #121215`);
-    assert.ok(!/Gradient/i.test(svg), `${title} 图标里出现了渐变，与图标规范不符`);
   });
 });

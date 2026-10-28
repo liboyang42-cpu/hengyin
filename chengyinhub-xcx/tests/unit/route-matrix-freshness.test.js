@@ -42,8 +42,10 @@ test('route-matrix 生成物必须与当前 app.json 和 scene 扫描逐字一�
   // 2026-10-26 +3:角色卡、定向计分、本人发票独立页 ⇒ 145 → 148。
   // W8-12: 已校验W8-09权益页加入现有分包，148 → 149。
   // 2026-10-28 文档二 L9 集成:登记 L7 我的申诉 + 发票拆出的 4 页，149 → 154。
-  assert.equal(current.routes.length, 154)
-  assert.equal(matrix.counts.routes, 154)
+  // 145 → 146:2026-10-28 新增 pages/templatedetail/topic-preview(主题模板卡堆预览，业主定稿原型 v21)。
+  // 2026-10-28 L9 再并 master:#652 topic-preview +1 叠加本线 154 ⇒ 155。
+  assert.equal(current.routes.length, 155)
+  assert.equal(matrix.counts.routes, 155)
   const bundle = matrix.routes.find(route => route.pagePath === 'subpackageMember/free-explore/index')
   assert.equal(bundle.role, 'player')
   assert.equal(bundle.needsLogin, true)

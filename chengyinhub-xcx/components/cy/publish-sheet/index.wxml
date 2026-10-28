@@ -1,7 +1,7 @@
 <view class="ps ps--quick {{merchant ? 'theme-merchant ps--merchant' : 'theme-dark'}} {{quickOpen ? 'ps--quick-open' : ''}} {{reducedMotion ? 'ps--reduced' : ''}} {{_closing ? 'ps--closing' : ''}} {{_keepMask ? 'ps--keep-mask' : ''}} {{_handoffIn ? 'ps--handoff-in' : ''}}" wx:if="{{_render}}">
-  <!-- top 由 JS 按微信胶囊实测下发:整层玻璃菜单原来铺到状态栏,把原页的导航标题
-       和消息入口一起压暗了(CU-M-157)。面板从微信导航下方开始,不再盖住导航行。 -->
-  <view class="ps__mask" style="top:{{chrome.contentTop}}px" catchtouchmove="noop" bindtap="onMask" aria-role="button" aria-label="关闭发布菜单" hover-class="cy-pressed" hover-stay-time="80"></view>
+  <!-- 2026-10-27 真机走查 P-12(取代 CU-M-157):遮罩铺满整屏、盖住状态栏和导航栏,
+       原来从胶囊下方开始,顶部会漏出一行没被模糊的列表。淡入淡出 200ms 见 wxss。 -->
+  <view class="ps__mask" catchtouchmove="noop" bindtap="onMask" aria-role="button" aria-label="关闭发布菜单" hover-class="cy-pressed" hover-stay-time="80"></view>
   <!-- 2026-10-22 业主裁决:去掉右上角 ✕,退出菜单只走首屏底部「返回」与点遮罩
        (取代此前「走查点名要 ✕」的注释)。二级那行「返回」仍是「上一步」。 -->
   <view class="ps__quick" catchtap="noop" catchtouchmove="noop">

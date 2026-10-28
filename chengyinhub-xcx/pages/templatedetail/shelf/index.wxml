@@ -1,0 +1,179 @@
+<view class="shelf {{ light ? 'shelf--light' : '' }} {{ reducedMotion ? 'cy-motion-reduced' : '' }}" style="--glow: {{ glow || 'rgba(0,0,0,0)' }};">
+  <view class="sh-glow" aria-hidden="true"></view>
+
+  <!-- 左侧立体图标 tab + 搜索 -->
+  <view class="sh-top">
+    <cy-tabs class="sh-tabs" variant="icon" tabs="{{ tabItems }}" active="{{ tab }}" bind:change="switchTab" />
+    <view class="sh-search" bindtap="goSearch" aria-role="button" aria-label="搜索主题与玩法模板" hover-class="cy-pressed" hover-stay-time="80">
+      <view class="sh-search__pill">
+        <image class="sh-search__ic" src="/images/icon_search.svg" mode="aspectFit" />
+        <text class="sh-search__ph">搜索主题与玩法模板</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- ===================== 主题 ===================== -->
+  <block wx:if="{{ tab === 'topic' }}">
+    <cy-skeleton wx:if="{{ !topicLoaded && !topicError }}" class="sh-state" type="list" count="3" />
+    <cy-error wx:elif="{{ topicError && !topicLoaded }}" class="sh-state" load-failure size="lg" title="{{ topicError }}" sub="" bindretry="retry" />
+    <cy-empty wx:elif="{{ !featTopics.length }}" class="sh-state" size="lg" kind="empty" title="还没有可复用的主题模板" sub="" />
+    <block wx:else>
+      <scroll-view class="sh-rail" scroll-x enhanced show-scrollbar="{{ false }}" paging-enabled bindscroll="onRailScroll">
+        <view class="sh-rail__in">
+          <view class="lc" wx:for="{{ featTopics }}" wx:key="id" data-item="{{ item }}" bindtap="openTopic" aria-role="button" aria-label="{{ item.name }}" hover-class="cy-pressed" hover-stay-time="80">
+            <image wx:if="{{ item.cover }}" class="lc__img" src="{{ item.cover }}" data-id="{{ item.id }}" binderror="onCoverError" mode="aspectFill" />
+            <view wx:else class="lc__img cv-err" aria-role="img" aria-label="{{ item.name }} 的封面未能加载"><image class="cv-err__ic" src="{{ coverErrorSrc }}" mode="aspectFit" /><text class="cv-err__t">封面暂不可用</text></view>
+            <view class="lc__cap">
+              <text class="lc__type lc__type--{{ item.typeCls }}">{{ item.typeName }}</text>
+              <text class="lc__name">{{ item.name }}</text>
+              <text class="lc__meta">{{ item.meta }}</text>
+            </view>
+          </view>
+        </view>
+      </scroll-view>
+      <view class="sh-dots" aria-hidden="true">
+        <view class="sh-dot {{ index === featIndex ? 'sh-dot--on' : '' }}" wx:for="{{ featTopics }}" wx:key="id"></view>
+      </view>
+
+      <scroll-view class="sh-tags" scroll-x enhanced show-scrollbar="{{ false }}">
+        <view class="sh-tags__in">
+          <view class="tg {{ tf === 'all' ? 'tg--on' : '' }}" data-key="all" bindtap="pickTag" aria-role="button" aria-label="全部" hover-class="cy-pressed" hover-stay-time="80">全部</view>
+          <view class="tg {{ tf === item.key ? 'tg--on' : '' }}" wx:for="{{ topicTags }}" wx:key="key" data-key="{{ item.key }}" bindtap="pickTag"
+            aria-role="button" aria-label="{{ item.name }}" hover-class="cy-pressed" hover-stay-time="80">
+            <image class="tg__ic" src="{{ item.prop }}" mode="aspectFit" />{{ item.name }}
+          </view>
+          <view class="tg tg--more" bindtap="openAllTags" aria-role="button" aria-label="全部分类" hover-class="cy-pressed" hover-stay-time="80">全部分类</view>
+        </view>
+      </scroll-view>
+
+      <view wx:if="{{ !topicCat }}" class="sh-body cy-rise-in">
+        <view class="shf" wx:for="{{ topicShelves }}" wx:for-item="shelf" wx:key="title">
+          <view class="sh5"><text>{{ shelf.title }}</text><image class="sh5__chev" src="/pages/templatedetail/art/tab/chev.svg" mode="aspectFit" /></view>
+          <scroll-view class="sh-rail" scroll-x enhanced show-scrollbar="{{ false }}">
+            <view class="sh-rail__in">
+              <block wx:if="{{ shelf.rows }}">
+                <view class="col3" wx:for="{{ shelf.cols }}" wx:for-item="col" wx:for-index="ci" wx:key="ci">
+                  <view class="r5" wx:for="{{ col }}" wx:key="id" data-item="{{ item }}" bindtap="openTopic" aria-role="button" aria-label="{{ item.name }}" hover-class="cy-pressed" hover-stay-time="80">
+                    <image wx:if="{{ item.cover }}" class="r5__pic" src="{{ item.cover }}" data-id="{{ item.id }}" binderror="onCoverError" mode="aspectFill" lazy-load />
+            <view wx:else class="r5__pic cv-err" aria-role="img" aria-label="{{ item.name }} 的封面未能加载"><image class="cv-err__ic" src="{{ coverErrorSrc }}" mode="aspectFit" /><text class="cv-err__t">封面暂不可用</text></view>
+                    <view class="r5__tx">
+                      <text class="r5__name">{{ item.name }}</text>
+                      <text class="r5__sub">{{ item.sub }}</text>
+                      <view class="r5__meta"><text class="tb tb--{{ item.typeCls }}">{{ item.typeName }}</text><text>{{ item.meta }}</text></view>
+                    </view>
+                  </view>
+                </view>
+              </block>
+              <block wx:else>
+                <view class="mc" wx:for="{{ shelf.items }}" wx:key="id" data-item="{{ item }}" bindtap="openTopic" aria-role="button" aria-label="{{ item.name }}" hover-class="cy-pressed" hover-stay-time="80">
+                  <image wx:if="{{ item.cover }}" class="mc__pic" src="{{ item.cover }}" data-id="{{ item.id }}" binderror="onCoverError" mode="aspectFill" lazy-load />
+            <view wx:else class="mc__pic cv-err" aria-role="img" aria-label="{{ item.name }} 的封面未能加载"><image class="cv-err__ic" src="{{ coverErrorSrc }}" mode="aspectFit" /><text class="cv-err__t">封面暂不可用</text></view>
+                  <text class="mc__name">{{ item.name }}</text>
+                  <text class="mc__meta">{{ item.meta }}</text>
+                </view>
+              </block>
+            </view>
+          </scroll-view>
+        </view>
+      </view>
+
+      <view wx:else class="sh-body cy-rise-in">
+        <view class="ch9"><image class="ch9__ic" src="{{ topicCat.prop }}" mode="aspectFit" /><text class="ch9__t">{{ topicCat.name }}</text></view>
+        <view class="tci" wx:for="{{ topicCat.items }}" wx:key="id" data-item="{{ item }}" bindtap="openTopic" aria-role="button" aria-label="{{ item.name }}" hover-class="cy-pressed" hover-stay-time="80">
+          <image wx:if="{{ item.cover }}" class="tci__pic" src="{{ item.cover }}" data-id="{{ item.id }}" binderror="onCoverError" mode="aspectFill" lazy-load />
+            <view wx:else class="tci__pic cv-err" aria-role="img" aria-label="{{ item.name }} 的封面未能加载"><image class="cv-err__ic" src="{{ coverErrorSrc }}" mode="aspectFit" /><text class="cv-err__t">封面暂不可用</text></view>
+          <view class="tci__tx">
+            <text class="tci__type tci__type--{{ item.typeCls }}">{{ item.typeName }} · {{ item.meta }}</text>
+            <text class="tci__name">{{ item.name }}</text>
+            <text class="tci__sub">{{ item.sub }}</text>
+            <text class="tci__desc">{{ item.desc }}</text>
+          </view>
+        </view>
+      </view>
+    </block>
+  </block>
+
+  <!-- ===================== 玩法 ===================== -->
+  <block wx:else>
+    <cy-skeleton wx:if="{{ !gameLoaded && !gameError }}" class="sh-state" type="list" count="3" />
+    <cy-error wx:elif="{{ gameError && !gameLoaded }}" class="sh-state" load-failure size="lg" title="{{ gameError }}" sub="" bindretry="retry" />
+    <cy-empty wx:elif="{{ !featGames.length && !gameShelves.length }}" class="sh-state" size="lg" kind="empty" title="还没有玩法模板" sub="" />
+    <block wx:else>
+      <scroll-view class="sh-rail" scroll-x enhanced show-scrollbar="{{ false }}" paging-enabled>
+        <view class="sh-rail__in sh-rail__in--g">
+          <view class="ap" wx:for="{{ featGames }}" wx:key="id" data-item="{{ item }}" bindtap="openGame" aria-role="button" aria-label="{{ item.title }}" hover-class="cy-pressed" hover-stay-time="80">
+            <text class="ap__eyebrow" style="color: {{ item.groupColor }};">{{ item.groupName }}</text>
+            <view class="ap__blurb"><text class="ap__lead">{{ item.lead }}</text><text>{{ item.rest }}</text></view>
+            <view class="ap__card" style="--tint-mid: {{ item.tintMid }}; --tint-end: {{ item.tintEnd }};">
+              <image class="ap__cover" src="{{ item.cover }}" mode="aspectFill" />
+              <view class="ap__blur ap__blur--1"></view>
+              <view class="ap__blur ap__blur--2"></view>
+              <view class="ap__blur ap__blur--3"></view>
+              <view class="ap__tint"></view>
+              <view class="ap__bar">
+                <image class="ap__icon" src="{{ item.prop }}" mode="aspectFit" />
+                <view class="ap__tx"><text class="ap__name">{{ item.title }}</text><text class="ap__short">{{ item.short }}</text></view>
+                <text class="ap__pill">使用</text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </scroll-view>
+
+      <scroll-view class="sh-tags" scroll-x enhanced show-scrollbar="{{ false }}">
+        <view class="sh-tags__in">
+          <view class="tg {{ gf === 'all' ? 'tg--on' : '' }}" data-key="all" bindtap="pickTag" aria-role="button" aria-label="全部" hover-class="cy-pressed" hover-stay-time="80">全部</view>
+          <view class="tg {{ gf === item.key ? 'tg--on' : '' }}" wx:for="{{ gameTags }}" wx:key="key" data-key="{{ item.key }}" bindtap="pickTag"
+            aria-role="button" aria-label="{{ item.name }}" hover-class="cy-pressed" hover-stay-time="80">
+            <image class="tg__ic" src="{{ item.prop }}" mode="aspectFit" />{{ item.name }}
+          </view>
+          <view class="tg tg--more" bindtap="openAllTags" aria-role="button" aria-label="全部分类" hover-class="cy-pressed" hover-stay-time="80">全部分类</view>
+        </view>
+      </scroll-view>
+
+      <view wx:if="{{ !gameCat }}" class="sh-body cy-rise-in">
+        <view class="shf" wx:for="{{ gameShelves }}" wx:for-item="shelf" wx:key="title">
+          <view class="sh5"><text>{{ shelf.title }}</text><image class="sh5__chev" src="/pages/templatedetail/art/tab/chev.svg" mode="aspectFit" /></view>
+          <scroll-view class="sh-rail" scroll-x enhanced show-scrollbar="{{ false }}">
+            <view class="sh-rail__in sh-rail__in--rows">
+              <view class="col3 col3--g" wx:for="{{ shelf.cols }}" wx:for-item="col" wx:for-index="ci" wx:key="ci">
+                <view class="r16" wx:for="{{ col }}" wx:key="id" data-item="{{ item }}" bindtap="openGame" aria-role="button" aria-label="{{ item.title }}" hover-class="cy-pressed" hover-stay-time="80">
+                  <image class="r16__ic" src="{{ item.prop }}" mode="aspectFit" lazy-load />
+                  <view class="r16__tx"><text class="r16__name">{{ item.title }}</text><text class="r16__short">{{ item.short }}</text></view>
+                </view>
+              </view>
+            </view>
+          </scroll-view>
+        </view>
+      </view>
+
+      <view wx:else class="sh-body cy-rise-in">
+        <view class="ch9"><image class="ch9__ic" src="{{ gameCat.prop }}" mode="aspectFit" /><text class="ch9__t">{{ gameCat.name }}</text></view>
+        <view class="gg">
+          <view class="gg__it" wx:for="{{ gameCat.items }}" wx:key="id" data-item="{{ item }}" bindtap="openGame" aria-role="button" aria-label="{{ item.title }}" hover-class="cy-pressed" hover-stay-time="80">
+            <view class="gg__im">
+              <image wx:if="{{ item.lead }}" class="gg__cover" src="{{ item.cover }}" mode="aspectFill" lazy-load />
+              <image wx:else class="gg__prop" src="{{ item.prop }}" mode="aspectFit" lazy-load />
+            </view>
+            <text class="gg__name">{{ item.title }}</text>
+            <text class="gg__short">{{ item.short }}</text>
+          </view>
+        </view>
+      </view>
+    </block>
+  </block>
+  <!-- 「全部分类」:按组列出当前 tab 的全部标签;点一个 = 横滑行里点它(只换标签下方内容)-->
+  <cy-sheet show="{{ allTagsShow }}" title="全部分类" closable maskClosable bind:close="closeAllTags">
+    <view class="at">
+      <view class="at__grp" wx:for="{{ tab === 'topic' ? topicTagGroups : gameTagGroups }}" wx:for-item="grp" wx:key="name">
+        <text class="at__hd">{{ grp.name }}</text>
+        <view class="at__tags">
+          <view class="tg at__tg {{ (tab === 'topic' ? tf : gf) === item.key ? 'tg--on' : '' }}" wx:for="{{ grp.tags }}" wx:key="key" data-key="{{ item.key }}" bindtap="pickTag"
+            aria-role="button" aria-label="{{ item.name }}" hover-class="cy-pressed" hover-stay-time="80">
+            <image class="tg__ic" src="{{ item.prop }}" mode="aspectFit" />{{ item.name }}
+          </view>
+        </view>
+      </view>
+    </view>
+  </cy-sheet>
+</view>

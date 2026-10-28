@@ -56,6 +56,8 @@ const EXPECTED_NAV_ROUTES = [
   'pages/square/list/index', 'pages/square/detail/index',
   'pages/search2/index', 'pages/search2/result/index', 'subpackageMember/signup/index',
   'pages/templatedetail/templatedetail',
+  // 2026-10-28 +1:主题模板卡堆预览(业主定稿原型 v21):custom 导航 + overlay cy-nav-bar,标题由卡堆下方主题名承担
+  'pages/templatedetail/topic-preview/index',
   'pages/address/address', 'pages/addressinfo/addressinfo', 'pages/shezhi/shezhi', 'pages/shezhi/about/index',
   'pages/club/apply/index',
   'pages/agreement/index', 'pages/deregister/index', 'pages/gerenziliao/gerenziliao', 'pages/userinfo/userinfo',
@@ -309,8 +311,10 @@ function assertTitleInventory(readSource = read) {
   //   勋章用 cy-medal-screen,与 citystamp / stamp-camera 同形态,不挂 cy-nav-bar / cy-page-title ⇒ 144 → 145。
   // 2026-10-26 +4 注册页，其中角色卡/发票/自由探索权益 +3 custom，定向计分使用原生导航 ⇒ 145 → 149;custom 145 → 148。
   // 2026-10-28 文档二 L9 集成 +5:我的申诉、发票详情 / 申请开票 / 发票抬头 / 抬头编辑,均为 custom 导航 + cy-nav-bar ⇒ 149 → 154;custom 148 → 153。
-  assert.equal(rows.length, 154, '注册页面盘点数量发生漂移,需重新核对标题规范')
-  assert.equal(rows.filter((row) => row.custom).length, 153)
+  // 2026-10-28 +1:主题模板卡堆预览 topic-preview(custom 导航 + overlay cy-nav-bar,不挂 cy-page-title)⇒ 145 → 146。
+  // 2026-10-28 L9 再并 master:#652 topic-preview(custom)+1 叠加本线 ⇒ 154 → 155;custom 153 → 154。
+  assert.equal(rows.length, 155, '注册页面盘点数量发生漂移,需重新核对标题规范')
+  assert.equal(rows.filter((row) => row.custom).length, 154)
   // 2026-09-02:+2 俱乐部客户列表与客户详情(club/customers、club/customer-detail),
   //   均为 custom 导航 + cy-nav-bar + cy-page-title 的普通二级页 = 133；custom 导航 129 + 2 = 131。
   const knownRoutes = new Set(routes)

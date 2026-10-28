@@ -24,11 +24,11 @@ function scanSharedA11y(read = (file) => fs.readFileSync(path.join(ROOT, file), 
   check('btn', 'wxml', /<text\b[^>]*wx:if="{{loading}}"[^>]*aria-live="polite"[^>]*>[^<]*loadingLabel/, '提交中必须保留可见文本替代');
   check('cell', 'wxml', /aria-label="[^"\n]*title[^"\n]*value[^"\n]*description/, '单元格不能只读标题而丢掉当前值和说明');
   const tabs = read('components/cy/tabs/index.wxml').match(/<view\b[^>]*bindtap="onTab"[^>]*>/g) || [];
-  if (tabs.length !== 4 || tabs.some((tag) => !/aria-role="tab"/.test(tag) || !/aria-selected="{{item.key === active}}"/.test(tag) || !/aria-label="{{item.label}}"/.test(tag))) {
+  if (tabs.length !== 5 || tabs.some((tag) => !/aria-role="tab"/.test(tag) || !/aria-selected="{{item.key === active}}"/.test(tag) || !/aria-label="{{item.label}}"/.test(tag))) {
     violations.push({ code: 'A11Y', key: 'components/cy/tabs/index.wxml', message: '所有 tab 分支必须有名称与选中状态' });
   }
   const tablists = read('components/cy/tabs/index.wxml').match(/aria-role="tablist"/g) || [];
-  if (tablists.length !== 4) violations.push({ code: 'A11Y', key: 'components/cy/tabs/index.wxml', message: '所有 tab 容器必须有 tablist 角色' });
+  if (tablists.length !== 5) violations.push({ code: 'A11Y', key: 'components/cy/tabs/index.wxml', message: '所有 tab 容器必须有 tablist 角色' });
   for (const component of ['modal', 'sheet']) {
     check(component, 'wxml', /<view\b[^>]*wx:if="\{\{_render\}\}"[^>]*aria-hidden="\{\{!show \|\| _closing\}\}"/, '关闭中的叠层不能被朗读');
   }

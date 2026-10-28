@@ -83,7 +83,8 @@ page {
  * ============================================================ */
 .v3-scroll { width: 100%; }
 .v3-scroll-inner { box-sizing: border-box; }
-.v3-scroll-pad { height: calc(140rpx + env(safe-area-inset-bottom)); }
+/* P-07(2026-10-27):末条主题卡的价格行不能压在底栏上 —— 留白按底栏真实高度(含安全区)再加一档呼吸。 */
+.v3-scroll-pad { height: calc(var(--cy-tabbar-h) + var(--cy-space-6)); }
 
 /* ============================================================
  * HBO Banner:顶到页面顶部,高度覆盖原页头 + 轮播 + 文案区
@@ -198,14 +199,18 @@ page {
   min-height: var(--cy-btn-h);
   /* 纯文案层横跨整行；必须透传点击，否则右侧透明盒会盖住头像热区。 */
   pointer-events: none;
+  /* P-01(2026-10-27):名字独占一行，「✓ 玩家 · 城市」落在名字下面一行。 */
   display: flex;
-  align-items: center;
-  gap: var(--cy-space-2);
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: var(--cy-space-1);
 }
 /* 字阶:原字面 64rpx。同值 token 是 data-xl,但 DS §2.6 把它限定为金额/里程/核心数字;
    本行是页面 Hero 问候语 = display(「Hero / 完成时刻,低频」)的原义,故按语义取 display 56。 */
 .v3-hero-hi {
   display: block;
+  max-width: 100%;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -336,25 +341,6 @@ page {
    保证「离自己的卡近、离别人的卡远」的亲密性关系) */
 .v3-sec { margin-top: var(--cy-space-6); }
 .v3-sec-reco { margin-top: var(--cy-space-6); }
-.v3-continue {
-  min-height: 152rpx;
-  display: flex;
-  align-items: center;
-  gap: var(--cy-space-3);
-  margin: var(--cy-space-5) var(--cy-space-4) 0;
-  padding: var(--cy-space-4);
-  border: 1rpx solid var(--cy-color-brand);
-  border-radius: var(--cy-radius-md);
-  background: var(--cy-color-bg-surface);
-  box-sizing: border-box;
-}
-.v3-continue-cover { flex: none; width: 112rpx; height: 112rpx; border-radius: var(--cy-radius-sm); background: var(--cy-color-bg-elevated); }
-.v3-continue-cover--fallback { display: flex; align-items: center; justify-content: center; color: var(--cy-color-brand); }
-.v3-continue-body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.v3-continue-kicker { color: var(--cy-color-brand); font-size: var(--cy-type-micro); font-weight: 600; }
-.v3-continue-title { margin-top: var(--cy-legacy-4); color: var(--cy-color-text-primary); font-size: var(--cy-type-card-title); font-weight: 700; }
-.v3-continue-sub { margin-top: var(--cy-legacy-6); color: var(--cy-color-text-tertiary); font-size: var(--cy-type-caption); }
-.v3-continue-cta { flex: none; color: var(--cy-color-text-primary); font-size: var(--cy-type-label); }
 .v3-sec-head { padding: 0 var(--cy-space-4) var(--cy-space-4); align-items: baseline; }
 /* 字阶:2026-08-20 用户要求首页模块标题比 section-title(36) 再大一档 → 回到 40rpx;
    量表 36 与 44 之间无 token,本页属门禁排除页,字面值即刻意值。 */
@@ -591,7 +577,8 @@ page {
  * Feed 区
  * ============================================================ */
 .v3-feed { margin-top: var(--cy-space-6); padding-bottom: var(--cy-space-3); }
-.v3-feed .page-tab { padding: 0 var(--cy-space-4); }
+/* P-03(2026-10-27):「主题 / 活动」tab 下的横线和第一张卡之间留 24rpx。 */
+.v3-feed .page-tab { padding: 0 var(--cy-space-4); margin-bottom: var(--cy-space-3); }
 
 .v2-feed { padding: 0 var(--cy-legacy-36); }
 .v2-fitem { margin-bottom: var(--cy-space-5); }
@@ -651,6 +638,9 @@ page {
 }
 /* --1/--2/--3/--4 由 wxml 动态拼接(feedGridMode),静态扫描看不到 → 不是死码 */
 .v2-fgrid--1 { grid-template-columns: 1fr; grid-template-rows: 1fr; }
+/* P-04(2026-10-27):单封面 / 无封面时图区收窄，把宽度让给标题(「预制人生 · 第一站」不再折行)。
+   四图宫格仍按 Figma 316rpx。 */
+.v2-fgrid.v2-fgrid--1 { width: 240rpx; }
 .v2-fgrid--2 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr; }
 .v2-fgrid--3,
 .v2-fgrid--4 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
@@ -664,6 +654,10 @@ page {
   overflow: hidden;
 }
 .v2-fcell image { width: 100%; height: 100%; display: block; }
+/* 无封面占位:owner 两层空态插画(#602),几何与 cy-empty 的 .cy-empty-art 同比例 */
+.v2-fcell--empty { background: var(--cy-color-home-feed-tag-bg); }
+.v2-fcell image.v2-fempty-bg { position: absolute; left: 10%; top: 12%; width: 80%; height: 76%; }
+.v2-fcell image.v2-fempty-figure { position: absolute; left: 26.9%; top: 22.6%; width: 46.2%; height: 54.8%; }
 /* 「+N」蒙层:原样式只存在于 .v2 作用域(根节点无 .v2)= 从未生效,
    数字裸渲染在图上。规则搬到活的选择器上补活。 */
 .v2-fmore {
