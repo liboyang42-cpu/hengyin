@@ -112,6 +112,220 @@
     "meaning": "Explicit technical responsibility classes and restrictive binary companions, not business table/field authorization. Existing global debt/baselines remain outside this new acyclic cut. Shared observation anchor 986; additional exact frozen sources: A configuration 1e74766d3832953af2b8bc621e984f2e43601dc6, G judgement ca9d608e5c7a193d402ca51d52a1f6a456ef0f91, E narrative 1b743737f374e6b4c251e2819062c510b11488f5. Not a compiled graph or baseline. D final publication/content/self-host source 7f7752a16b010a5f6a0f3790919f722b80a1384f. Follow-up exact sources: public 06a571b1247620a9bdcea068be0ded973671d17c/A immutable DTO; B 0ffb9c8fee278c11fe47aa6bcfd95745c9e73850; D 4061bac25dbe113574632dde61d4ae416185db77; G 2457bf1851c0573df7a69270a4532b00b9e8404c; F MDC 1fb99670c066496c3b19da6b3ac4b132e14ab785. Structural directions only; no lock/immutability/log-safety proof. E_TOPIC_QUERY exact System class from 9e14a73e50c9afd5c8f38027c3ecd059967a51d3; existing seven read-side dependencies retained, no transitive read-only or table authority inference. Wiring sources: G 54c524ca99204804b6b84af517359eabc8c6ee8d, D 379d5615608663c47302598ba238447b264c2bba, C f61b8ea8c829d0b4e050a8b61ac592ae819a8a09; exact G rollback callback binary $1 is explicit, never a prefix consumer grant. No compiled evidence or transaction/amount proof. G e57f0a32037bf88b2abf1626cca4760714d88592 read service/SELECT port only; read->producer records actual VERSION constant reference, not permission to invoke producer mutations or proof of transitive read-only. G 4e5ee6e1acafa5cd4efbf366c29445d5d5c1249e: exact mapper-only RegistrationSeatSettlementReader; consumers only settlement evidence and original seat-service compatibility delegate. Constructor RegistrationSeatMapper, verifiedSeatsForGroup is original MANDATORY/current-read contract. No Mapper namespace/table-write grant or transitive read/transaction proof. Exact b626f425625ccae793aa84a44147fe557c8df6ef compiled blockers: G claim and B router use original immutable payment Reference DTO; fact store uses canonical original-order lock interface/Snapshot/MissingOrderException; intent store only queries confirmed external success before original prepay/close/retry. Four declared owner directions, no table/Mapper/command/incoming grant. CityNode->Ticket remains prohibited; its constant coupling is fixed in C source, not waived. Class references do not prove method-level economic authorization.",
     "owners": [
       {
+        "id": "M_API_MEMBER_ACCOUNT",
+        "module": "chengyinhub-admin",
+        "members": ["com.chengyinhub.web.controller.api.ApiMemberAccountController"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiPlayProgressController"]
+      },
+      {
+        "id": "M_API_REVIEW_RECEIPT",
+        "module": "chengyinhub-admin",
+        "members": ["com.chengyinhub.web.controller.api.ApiMerchantReviewReplyReceiptController"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiMerchantController"]
+      },
+      {
+        "id": "M_API_ORIENT_RECEIPT",
+        "module": "chengyinhub-admin",
+        "members": ["com.chengyinhub.web.controller.api.ApiOrientTaskReceiptController"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiPlayProgressController"]
+      },
+      {
+        "id": "M_API_ROAM_PASSPORT",
+        "module": "chengyinhub-admin",
+        "members": ["com.chengyinhub.web.controller.api.ApiRoamPassportController"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiRoamController"]
+      },
+      {
+        "id": "M_API_ATTRIBUTE_BINDING",
+        "module": "chengyinhub-admin",
+        "members": ["com.chengyinhub.web.controller.api.ApiTopicAttributeBindingController"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiTopicController"]
+      },
+      {
+        "id": "M_API_TOPIC_ATTRIBUTE",
+        "module": "chengyinhub-admin",
+        "members": ["com.chengyinhub.web.controller.api.ApiTopicAttributeController"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiTopicController"]
+      },
+      {
+        "id": "M_API_PLAY_SETUP",
+        "module": "chengyinhub-admin",
+        "members": ["com.chengyinhub.web.controller.api.ApiTopicPlaySetupController"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiTopicController"]
+      },
+      {
+        "id": "M_GUARD_ARRIVAL_READER",
+        "module": "chengyinhub-admin",
+        "members": ["com.chengyinhub.web.service.audit.GuardArrivalEvidenceReaderImpl"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiPlayProgressController"]
+      },
+      {
+        "id": "M_COOP_INVITE_RECEIPT_STORAGE",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.mapper.CoopInviteRequestReceiptMapper"],
+        "forbidden_backrefs": ["com.chengyinhub.business.service.impl.CoopInviteServiceImpl"],
+        "allowed_consumers": ["com.chengyinhub.business.service.impl.CoopInviteServiceImpl"]
+      },
+      {
+        "id": "M_MEMBER_ACCOUNT_STORAGE",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.mapper.MemberAccountMapper"],
+        "forbidden_backrefs": ["com.chengyinhub.business.service.support.MemberAccountService"],
+        "allowed_consumers": ["com.chengyinhub.business.service.support.MemberAccountService"]
+      },
+      {
+        "id": "M_REVIEW_RECEIPT_STORAGE",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.mapper.MerchantReviewReplyReceiptMapper"],
+        "forbidden_backrefs": ["com.chengyinhub.business.service.support.MerchantReviewReplyReceiptService"],
+        "allowed_consumers": ["com.chengyinhub.business.service.support.MerchantReviewReplyReceiptService"]
+      },
+      {
+        "id": "M_EVENT_ATTENDANCE_STORAGE",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.mapper.OfficialEventAttendanceMapper"],
+        "forbidden_backrefs": ["com.chengyinhub.business.service.impl.OfficialEventAttendanceService"],
+        "allowed_consumers": ["com.chengyinhub.business.service.impl.OfficialEventAttendanceService"]
+      },
+      {
+        "id": "M_ROAM_PASSPORT_STORAGE",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.mapper.RoamPassportMapper"],
+        "forbidden_backrefs": ["com.chengyinhub.business.service.support.RoamPassportReadService"],
+        "allowed_consumers": ["com.chengyinhub.business.service.support.RoamPassportReadService"]
+      },
+      {
+        "id": "M_TEAM_EVENT_COMMAND_STORAGE",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.mapper.TeamEventCommandMapper"],
+        "forbidden_backrefs": ["com.chengyinhub.business.service.impl.TeamEventCommandService"],
+        "allowed_consumers": ["com.chengyinhub.business.service.impl.TeamEventCommandService"]
+      },
+      {
+        "id": "M_TEMPLATE_ADOPTION_STORAGE",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.mapper.TemplateAdoptionReceiptMapper"],
+        "forbidden_backrefs": ["com.chengyinhub.business.service.support.TemplateAdoptionService"],
+        "allowed_consumers": ["com.chengyinhub.business.service.support.TemplateAdoptionService"]
+      },
+      {
+        "id": "M_ATTRIBUTE_MARK_STORAGE",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.mapper.ThemeAttributeMapper"],
+        "forbidden_backrefs": ["com.chengyinhub.business.service.support.ThemeAttributeService", "com.chengyinhub.business.service.support.ThemeKeyNamingService"],
+        "allowed_consumers": ["com.chengyinhub.business.service.support.ThemeAttributeService", "com.chengyinhub.business.service.support.ThemeKeyNamingService"]
+      },
+      {
+        "id": "M_PLAY_SETUP_STORAGE",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.mapper.TopicPlaySetupMapper"],
+        "forbidden_backrefs": ["com.chengyinhub.business.service.support.TopicPlaySetupService"],
+        "allowed_consumers": ["com.chengyinhub.business.service.support.TopicPlaySetupService"]
+      },
+      {
+        "id": "M_INVOICE_PROCESSING_STORAGE",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.mapper.UserInvoiceProcessingMapper"],
+        "forbidden_backrefs": ["com.chengyinhub.business.service.impl.UserInvoiceProcessingService"],
+        "allowed_consumers": ["com.chengyinhub.business.service.impl.UserInvoiceProcessingService", "com.chengyinhub.business.service.impl.UserInvoiceRefundReconciliationJob"]
+      },
+      {
+        "id": "M_OFFICIAL_ROAM_POI",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.service.OfficialRoamPoiService"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.business.RoamPoiAdminController"]
+      },
+      {
+        "id": "M_BROADCAST_DELIVERY",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.service.impl.OfficialBroadcastDeliveryService"],
+        "forbidden_backrefs": ["com.chengyinhub.business.service.impl.OfficialBroadcastServiceImpl"]
+      },
+      {
+        "id": "M_EVENT_ATTENDANCE",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.service.impl.OfficialEventAttendanceService"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiOfficialEventController"]
+      },
+      {
+        "id": "M_TEAM_EVENT_COMMAND",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.service.impl.TeamEventCommandService"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiPlayTeamController", "com.chengyinhub.web.controller.api.ApiOfficialEventController"]
+      },
+      {
+        "id": "M_INVOICE_PROCESSING",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.service.impl.UserInvoiceProcessingService"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.business.UserInvoiceProcessingController"]
+      },
+      {
+        "id": "M_ADVANCED_RECEIPT_READER",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.service.support.AdvancedActionReceiptReader"],
+        "forbidden_backrefs": ["com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl", "com.chengyinhub.web.controller.api.ApiAdvancedPlayController"]
+      },
+      {
+        "id": "M_ATTRIBUTE_REGISTRY_READER",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.service.support.AuthorAttributeRegistryReader"],
+        "forbidden_backrefs": ["com.chengyinhub.business.service.ICmsTopicService", "com.chengyinhub.business.service.impl.CmsTopicServiceImpl", "com.chengyinhub.web.controller.api.ApiTopicAttributeBindingController"]
+      },
+      {
+        "id": "M_MEMBER_ACCOUNT_READ",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.service.support.MemberAccountService"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiMemberAccountController"]
+      },
+      {
+        "id": "M_REVIEW_RECEIPT_READ",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.service.support.MerchantReviewReplyReceiptService"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiMerchantReviewReplyReceiptController"]
+      },
+      {
+        "id": "M_ORIENT_SETTLEMENT",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.service.support.OrientRouteSettlement"],
+        "forbidden_backrefs": ["com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl"]
+      },
+      {
+        "id": "M_PLAY_CONTACT",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.service.support.PlayContactService"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiMemberAccountController"]
+      },
+      {
+        "id": "M_ROAM_PASSPORT_READ",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.service.support.RoamPassportReadService"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiRoamPassportController"]
+      },
+      {
+        "id": "M_TEMPLATE_ADOPTION",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.service.support.TemplateAdoptionService"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiTemplateController"]
+      },
+      {
+        "id": "M_TOPIC_ATTRIBUTES",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.service.support.ThemeAttributeService"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiTopicAttributeController"]
+      },
+      {
+        "id": "M_KEY_NAMING",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.service.support.ThemeKeyNamingService"],
+        "forbidden_backrefs": ["com.chengyinhub.business.service.support.ThemeAttributeService", "com.chengyinhub.web.controller.api.ApiTopicAttributeController"]
+      },
+      {
+        "id": "M_PLAY_SETUP",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.service.support.TopicPlaySetupService"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiTopicPlaySetupController", "com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl"]
+      },
+      {
         "id": "A_WITHDRAW_ADMISSION",
         "module": "chengyinhub-system",
         "members": [
@@ -1460,6 +1674,27 @@
       }
     ],
     "allowed_directions": [
+      ["M_API_MEMBER_ACCOUNT", "M_MEMBER_ACCOUNT_READ"],
+      ["M_API_MEMBER_ACCOUNT", "M_PLAY_CONTACT"],
+      ["M_API_REVIEW_RECEIPT", "M_REVIEW_RECEIPT_READ"],
+      ["M_API_ROAM_PASSPORT", "M_ROAM_PASSPORT_READ"],
+      ["M_API_ATTRIBUTE_BINDING", "M_ATTRIBUTE_REGISTRY_READER"],
+      ["M_API_TOPIC_ATTRIBUTE", "M_TOPIC_ATTRIBUTES"],
+      ["M_API_TOPIC_ATTRIBUTE", "M_KEY_NAMING"],
+      ["M_API_PLAY_SETUP", "M_PLAY_SETUP"],
+      ["M_GUARD_ARRIVAL_READER", "C_PLAY_BASIC_INTENT"],
+      ["M_MEMBER_ACCOUNT_READ", "M_MEMBER_ACCOUNT_STORAGE"],
+      ["M_REVIEW_RECEIPT_READ", "M_REVIEW_RECEIPT_STORAGE"],
+      ["M_ROAM_PASSPORT_READ", "M_ROAM_PASSPORT_STORAGE"],
+      ["M_TEAM_EVENT_COMMAND", "M_TEAM_EVENT_COMMAND_STORAGE"],
+      ["M_TEAM_EVENT_COMMAND", "M_EVENT_ATTENDANCE"],
+      ["M_EVENT_ATTENDANCE", "M_EVENT_ATTENDANCE_STORAGE"],
+      ["M_TEMPLATE_ADOPTION", "M_TEMPLATE_ADOPTION_STORAGE"],
+      ["M_TOPIC_ATTRIBUTES", "M_ATTRIBUTE_MARK_STORAGE"],
+      ["M_TOPIC_ATTRIBUTES", "M_KEY_NAMING"],
+      ["M_KEY_NAMING", "M_ATTRIBUTE_MARK_STORAGE"],
+      ["M_PLAY_SETUP", "M_PLAY_SETUP_STORAGE"],
+      ["M_INVOICE_PROCESSING", "M_INVOICE_PROCESSING_STORAGE"],
       [
         "A_WITHDRAW_ADMISSION",
         "A_TRANSFER_INTENT_STORAGE"

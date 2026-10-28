@@ -1866,5 +1866,160 @@ class StationFulfillmentTechnicalOwnerTest(unittest.TestCase):
         self.assertIn("business table/field authority", result["not_proven"])
 
 
+class MergedMasterBoundaryPolicyTest(unittest.TestCase):
+    """Fixed dbd12 primary types; rule-only controls do not stand in for compiled evidence."""
+    setUp = InventoryAndDeltaTest.setUp
+    write = InventoryAndDeltaTest.write
+    commit = InventoryAndDeltaTest.commit
+    prepare_policy = InventoryAndDeltaTest.prepare_policy
+    source_cli = BusinessOwnerPolicyTest.source_cli
+    assert_rule = BusinessOwnerPolicyTest.assert_rule
+    source = "dbd12e0a0d88e54597c274b56b08f2784c415d0e"
+    expected = {
+        "M_API_MEMBER_ACCOUNT": "com.chengyinhub.web.controller.api.ApiMemberAccountController",
+        "M_API_REVIEW_RECEIPT": "com.chengyinhub.web.controller.api.ApiMerchantReviewReplyReceiptController",
+        "M_API_ORIENT_RECEIPT": "com.chengyinhub.web.controller.api.ApiOrientTaskReceiptController",
+        "M_API_ROAM_PASSPORT": "com.chengyinhub.web.controller.api.ApiRoamPassportController",
+        "M_API_ATTRIBUTE_BINDING": "com.chengyinhub.web.controller.api.ApiTopicAttributeBindingController",
+        "M_API_TOPIC_ATTRIBUTE": "com.chengyinhub.web.controller.api.ApiTopicAttributeController",
+        "M_API_PLAY_SETUP": "com.chengyinhub.web.controller.api.ApiTopicPlaySetupController",
+        "M_GUARD_ARRIVAL_READER": "com.chengyinhub.web.service.audit.GuardArrivalEvidenceReaderImpl",
+        "M_COOP_INVITE_RECEIPT_STORAGE": "com.chengyinhub.business.mapper.CoopInviteRequestReceiptMapper",
+        "M_MEMBER_ACCOUNT_STORAGE": "com.chengyinhub.business.mapper.MemberAccountMapper",
+        "M_REVIEW_RECEIPT_STORAGE": "com.chengyinhub.business.mapper.MerchantReviewReplyReceiptMapper",
+        "M_EVENT_ATTENDANCE_STORAGE": "com.chengyinhub.business.mapper.OfficialEventAttendanceMapper",
+        "M_ROAM_PASSPORT_STORAGE": "com.chengyinhub.business.mapper.RoamPassportMapper",
+        "M_TEAM_EVENT_COMMAND_STORAGE": "com.chengyinhub.business.mapper.TeamEventCommandMapper",
+        "M_TEMPLATE_ADOPTION_STORAGE": "com.chengyinhub.business.mapper.TemplateAdoptionReceiptMapper",
+        "M_ATTRIBUTE_MARK_STORAGE": "com.chengyinhub.business.mapper.ThemeAttributeMapper",
+        "M_PLAY_SETUP_STORAGE": "com.chengyinhub.business.mapper.TopicPlaySetupMapper",
+        "M_INVOICE_PROCESSING_STORAGE": "com.chengyinhub.business.mapper.UserInvoiceProcessingMapper",
+        "M_OFFICIAL_ROAM_POI": "com.chengyinhub.business.service.OfficialRoamPoiService",
+        "M_BROADCAST_DELIVERY": "com.chengyinhub.business.service.impl.OfficialBroadcastDeliveryService",
+        "M_EVENT_ATTENDANCE": "com.chengyinhub.business.service.impl.OfficialEventAttendanceService",
+        "M_TEAM_EVENT_COMMAND": "com.chengyinhub.business.service.impl.TeamEventCommandService",
+        "M_INVOICE_PROCESSING": "com.chengyinhub.business.service.impl.UserInvoiceProcessingService",
+        "M_ADVANCED_RECEIPT_READER": "com.chengyinhub.business.service.support.AdvancedActionReceiptReader",
+        "M_ATTRIBUTE_REGISTRY_READER": "com.chengyinhub.business.service.support.AuthorAttributeRegistryReader",
+        "M_MEMBER_ACCOUNT_READ": "com.chengyinhub.business.service.support.MemberAccountService",
+        "M_REVIEW_RECEIPT_READ": "com.chengyinhub.business.service.support.MerchantReviewReplyReceiptService",
+        "M_ORIENT_SETTLEMENT": "com.chengyinhub.business.service.support.OrientRouteSettlement",
+        "M_PLAY_CONTACT": "com.chengyinhub.business.service.support.PlayContactService",
+        "M_ROAM_PASSPORT_READ": "com.chengyinhub.business.service.support.RoamPassportReadService",
+        "M_TEMPLATE_ADOPTION": "com.chengyinhub.business.service.support.TemplateAdoptionService",
+        "M_TOPIC_ATTRIBUTES": "com.chengyinhub.business.service.support.ThemeAttributeService",
+        "M_KEY_NAMING": "com.chengyinhub.business.service.support.ThemeKeyNamingService",
+        "M_PLAY_SETUP": "com.chengyinhub.business.service.support.TopicPlaySetupService",
+    }
+
+    def test_exact_34_primary_roles_preserve_all_old_bindings_and_business_contracts(self):
+        current = json.loads((gate.HERE / "owners.json").read_text())
+        before = json.loads(gate.blob(gate.REPO, self.source, "ci/architecture/owners.json"))
+        self.assertEqual(set(before), set(current))
+        for key in before.keys() - {"technical_dependency_policy"}:
+            self.assertEqual(before[key], current[key], key)
+        policy = gate.technical_dependency_policy()
+        added = {key: owner for key, owner in policy["owners"].items() if key.startswith("M_")}
+        self.assertEqual(34, len(self.expected))
+        self.assertEqual(set(self.expected), set(added))
+        for key, member in self.expected.items():
+            self.assertEqual([member], added[key]["members"])
+            module = "chengyinhub-admin" if member.startswith("com.chengyinhub.web.") else "chengyinhub-system"
+            self.assertEqual(module, added[key]["module"])
+            self.assertTrue(added[key]["forbidden_backrefs"])
+        old = before["technical_dependency_policy"]
+        now = current["technical_dependency_policy"]
+        for key in old.keys() - {"owners", "allowed_directions"}:
+            self.assertEqual(old[key], now[key], key)
+        self.assertEqual(old["owners"], [o for o in now["owners"] if not o["id"].startswith("M_")])
+        self.assertEqual(old["allowed_directions"], [e for e in now["allowed_directions"] if not any(n.startswith("M_") for n in e)])
+
+    def test_actual_source_cli_accepts_exact_registered_primaries_but_not_foreign_peers(self):
+        trusted, _ = self.prepare_policy()
+        policy = gate.technical_dependency_policy()
+        for key, member in self.expected.items():
+            owner = policy["owners"][key]
+            package, name = member.rsplit(".", 1)
+            path = owner["module"] + "/src/main/java/" + member.replace(".", "/") + ".java"
+            if name.endswith("Mapper"):
+                declaration = "public interface %s {}" % name
+            else:
+                annotation = "@org.springframework.web.bind.annotation.RestController" if name.endswith("Controller") else "@org.springframework.stereotype.Service"
+                declaration = annotation + " public class %s {}" % name
+            self.write(path, ("package %s; %s" % (package, declaration)).encode())
+        status, report = self.source_cli(trusted, self.commit())
+        self.assertEqual(0, status, report)
+        self.assertEqual("NOT_CHECKED_BY_SOURCE_GATE", report["technical_dependencies"]["compiled_inputs"])
+        for suffix, directory in (("Controller", "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/"),
+                                  ("Service", "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/"),
+                                  ("Mapper", "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/")):
+            path = directory + "UnreviewedMerge" + suffix + ".java"
+            package = path.split("/src/main/java/", 1)[1].rsplit("/", 1)[0].replace("/", ".")
+            self.write(path, ("package %s; public class UnreviewedMerge%s {}" % (package, suffix)).encode())
+            self.assert_rule(self.source_cli(trusted, self.commit()), "NEW_UNOWNED_BOUNDARY")
+
+    def test_candidate_cannot_delete_or_self_grant_any_new_binding(self):
+        trusted, _ = self.prepare_policy()
+        original = json.loads((trusted / "owners.json").read_text())
+        for change in ("delete", "consumer", "backref", "direction"):
+            with self.subTest(change=change):
+                value = copy.deepcopy(original)
+                policy = value["technical_dependency_policy"]
+                owner = next(o for o in policy["owners"] if o["id"] == "M_MEMBER_ACCOUNT_STORAGE")
+                if change == "delete":
+                    policy["owners"].remove(owner)
+                elif change == "consumer":
+                    owner["allowed_consumers"].append("com.chengyinhub.business.service.impl.WechatPaymentSdkGateway")
+                elif change == "backref":
+                    owner["forbidden_backrefs"] = []
+                else:
+                    policy["allowed_directions"].append(["M_MEMBER_ACCOUNT_STORAGE", "M_MEMBER_ACCOUNT_READ"])
+                self.write("ci/architecture/owners.json", gate.encode(value))
+                status, report = self.source_cli(trusted, self.commit())
+                self.assertEqual(1, status, report)
+                self.assertIn("POLICY_CHANGE", report["error"])
+
+    def test_exact_forward_edges_backrefs_and_foreign_storage_consumers_remain_bounded(self):
+        spec = importlib.util.spec_from_file_location("merged_master_rule_only", gate.HERE / "collect_jdeps.py")
+        collector = importlib.util.module_from_spec(spec); spec.loader.exec_module(collector)
+        policy = gate.technical_dependency_policy()
+        owners = policy["owners"]
+        selected_owners = {key: owners[key] for key in self.expected}
+        selected_owners["C_PLAY_BASIC_INTENT"] = owners["C_PLAY_BASIC_INTENT"]
+        index = {member: {"owner": owner["module"]} for owner in selected_owners.values() for member in owner["members"]}
+        forward = [(owners[a]["members"][0], owners[b]["members"][0]) for a, b in policy["allowed_directions"]
+                   if a in self.expected or b in self.expected]
+        def check(pairs, current=index):
+            # Synthetic direct predicate inputs only. No JAR/raw/source validation is claimed.
+            selected = {"rule-only": {str(i): {"source_class": a, "target_class": b, "line": "rule-only"}
+                                      for i, (a, b) in enumerate(pairs)}}
+            return collector.technical_dependency_findings(current, selected, policy)
+        result = check(forward)
+        self.assertEqual([], result["findings"])
+        self.assertEqual("UNKNOWN", result["verdict"], "partial rule inputs cannot prove actual JAR coverage")
+        for key, owner in selected_owners.items():
+            if key not in self.expected:
+                continue
+            source = owner["members"][0]
+            for backref in owner["forbidden_backrefs"]:
+                with self.subTest(owner=key, backref=backref):
+                    rules = {r["rule"] for r in check(forward + [(source, backref)])["findings"]}
+                    self.assertIn("OWNER_GOD_BACKREFERENCE", rules)
+            if "allowed_consumers" in owner:
+                for consumer in owner["allowed_consumers"]:
+                    self.assertFalse(any(r["rule"] == "EXACT_STORAGE_PORT_CONSUMER"
+                                         for r in check(forward + [(consumer, source)])["findings"]))
+                for consumer in ("com.chengyinhub.business.service.impl.WechatPaymentSdkGateway",
+                                 owner["allowed_consumers"][0] + "$Late"):
+                    self.assertIn("EXACT_STORAGE_PORT_CONSUMER", {r["rule"] for r in check(forward + [(consumer, source)])["findings"]})
+        a = owners["M_API_MEMBER_ACCOUNT"]["members"][0]
+        b = owners["M_API_ROAM_PASSPORT"]["members"][0]
+        self.assertIn("NEW_OWNER_DEPENDENCY_DIRECTION", {r["rule"] for r in check(forward + [(a, b)])["findings"]})
+        missing = dict(index); absent = owners["M_MEMBER_ACCOUNT_STORAGE"]["members"][0]; missing.pop(absent)
+        unknown = check(forward, missing)
+        self.assertEqual("UNKNOWN", unknown["verdict"])
+        self.assertTrue(any(r["reason"] == "OWNER_TYPE_INPUT_UNKNOWN" and r["type"] == absent for r in unknown["review_items"]))
+
+
 if __name__ == "__main__":
     unittest.main()
