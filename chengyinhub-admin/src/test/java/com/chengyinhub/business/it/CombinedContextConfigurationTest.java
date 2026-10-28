@@ -841,12 +841,12 @@ class CombinedContextConfigurationTest {
             assertFalse(unsent.isRetryable()); assertEquals(1, partReleases.get());
         }
         assertEquals(1, partReleases.get());
-        for (String invalid : List.of("bad\\image", "中文")) {
+        for (String invalidImage : List.of("bad\\image", "中文")) {
             var released = new java.util.concurrent.atomic.AtomicInteger();
             try (var lease = new com.chengyinhub.common.utils.http.HttpUtils.AttemptLease(released::incrementAndGet)) {
                 var unsent = assertThrows(com.chengyinhub.common.utils.http.HttpRequestException.class,
                         () -> com.chengyinhub.common.utils.http.HttpUtils.sendJsonPostParts("http://127.0.0.1:1/", new byte[]{'{','"'},
-                                invalid, new byte[]{'"','}'}, "fixture-token", System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(2), lease));
+                                invalidImage, new byte[]{'"','}'}, "fixture-token", System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(2), lease));
                 assertEquals(com.chengyinhub.common.utils.http.HttpRequestException.SendDisposition.NOT_SENT, unsent.getSendDisposition());
                 assertEquals(1, released.get());
             }
