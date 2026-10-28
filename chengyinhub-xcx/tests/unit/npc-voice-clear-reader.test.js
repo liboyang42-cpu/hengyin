@@ -55,7 +55,11 @@ test('same reader clears only after zero-status readback', async () => {
     const h = mount(legacy), saved = h.snapshot(); h.page.clearVoice(); h.dialogs[0].success({ confirm: true });
     h.requests[0].success({ code: 200 }); await settle(); assert.equal(h.toasts.length, 0);
     assert.equal(h.requests[1].url, '/api/merchant/npc/voice/status');
-    if (h.original) assert.equal(h.requests[1].data.voiceRequestId, h.original.requestId);
+    assert.equal(typeof h.requests[1].data, 'string', '真实_request发送JSON文本，不是可变参数对象');
+    const query = JSON.parse(h.requests[1].data);
+    if (h.original) assert.equal(query.voiceRequestId, h.original.requestId);
+    else assert.equal(query.voiceRequestId, null);
+    assert.deepEqual(Object.keys(query), ['voiceRequestId']);
     h.requests[1].success(h.response()); await settle();
     assert.equal(h.toasts[0], '角色声音已清除'); assert.equal(h.page.data.voiceBusy, false);
     assert.equal(h.snapshot(), saved, '清除选中声音不删除原READY事实/身份');
