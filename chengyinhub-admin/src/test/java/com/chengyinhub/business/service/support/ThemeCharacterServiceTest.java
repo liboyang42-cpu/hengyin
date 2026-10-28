@@ -82,11 +82,16 @@ class ThemeCharacterServiceTest {
 
     @Test
     void newRunSeedsOriginalPublishedPersistPolicyWithoutChangingCarryLedgerPolicy() throws Exception {
-        String snapshot = freezeDefinitions();
-        TopicRouteSession previous = session(41L, 6, TopicRouteSession.STATUS_COMPLETED,
+        ObjectMapper json = new ObjectMapper();
+        ObjectNode published = (ObjectNode) json.readTree(freezeDefinitions());
+        published.set(ThemeAttributeDefinition.KEY, json.readTree(definitionSnapshot("topic", 20)).get(ThemeAttributeDefinition.KEY));
+        String snapshot = published.toString();
+        assertTrue(ThemeAttributeDefinition.read(snapshot).complete);
+        TopicRouteSession previous = carrySession(41L, 6, TopicRouteSession.STATUS_COMPLETED,
                 "{\"variables\":{\"counter.str\":9,\"counter.focus\":1}}");
         when(sessions.selectHistoryPage(eq(MEMBER), eq(TOPIC), isNull(), eq(1))).thenReturn(Collections.singletonList(previous));
         when(keys.selectByTopicId(TOPIC)).thenThrow(new AssertionError("new run must use its publication's definitions"));
+        when(characters.updateIfNewer(any(ThemeCharacter.class))).thenReturn(1);
         TopicRouteEngine.State next = new TopicRouteEngine.State();
         JourneyRules rules = JourneyRules.parse(RULES); JourneyInitialState.initialize(rules, next);
 
@@ -105,6 +110,19 @@ class ThemeCharacterServiceTest {
         TopicRouteEngine.State next = new TopicRouteEngine.State();
         assertThrows(IllegalArgumentException.class, () -> service.seedRun(MEMBER, TOPIC, JourneyRules.parse(RULES), next,
                 "{\"stateKeySnapshotVersion\":2,\"stateKeys\":[]}"));
+        verifyNoInteractions(keys, characters, sessions);
+        assertTrue(next.getVariables().isEmpty(), "unsupported metadata must fail before changing new-run values");
+        ObjectNode marked = new ObjectMapper().valueToTree(Map.of(
+                "stateKeySnapshotVersion", 2, "stateKeys", java.util.Collections.emptyList()));
+        try {
+            marked.set(ThemeAttributeDefinition.KEY,
+                    new ObjectMapper().readTree(definitionSnapshot("topic", 20)).get(ThemeAttributeDefinition.KEY));
+        } catch (com.fasterxml.jackson.core.JsonProcessingException impossibleFixture) {
+            throw new AssertionError(impossibleFixture);
+        }
+        assertThrows(IllegalArgumentException.class, () -> service.seedRun(
+                MEMBER, TOPIC, JourneyRules.parse(RULES), next, marked.toString()));
+        assertTrue(next.getVariables().isEmpty());
         verifyNoInteractions(keys, characters, sessions);
     }
 

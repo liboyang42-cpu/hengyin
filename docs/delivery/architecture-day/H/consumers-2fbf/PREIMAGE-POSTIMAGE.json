@@ -1,0 +1,121 @@
+{
+  "parent": "2fbfd6df4c4480d924eddd0984169a8d86877075",
+  "baseTree": "76ba8268302a5b7ab61f10cd676833666d5b7c1e",
+  "checks": "NOT_RUN",
+  "files": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/ThemeCharacterServiceTest.java",
+      "delivery": "owned source",
+      "preBlob": "df185b37c1661590e3d65a85c8d931a71d31f741",
+      "postBlob": "b2fc8dc20e64cbb8180b13f39e21582d9bc035b9",
+      "preSha256": "0201c34539023ef50b68cf48fd70034014b54fcb81eda7dd6ff94d11942fca4f",
+      "postSha256": "bd8d3921a68ed62abbe74a95b2f621ce073906adb2a3023fb621d3e324438a6d",
+      "originalVoidMethods": [
+        "originalCardUsesPublishedDefinitionsAndRulesAfterLiveAuthorChanges",
+        "newRunSeedsOriginalPublishedPersistPolicyWithoutChangingCarryLedgerPolicy",
+        "unsupportedDefinitionVersionDoesNotReadLiveOrWriteCarryValues",
+        "setUp",
+        "noCharacterYetReturnsTheTemplateWithInitialValues",
+        "legacyCardHasNoRpgBlockAndRpgTopicAddsFacetsMomentumAndActiveAspects",
+        "topicScopedValueSurvivesIntoTheNextRunWhileRunScopedValueResets",
+        "replayingTheSameSourceDoesNotRewriteTheLedger",
+        "firstRecordRechecksSourceAfterInsertRegardlessOfDriverAffectedRows",
+        "carriedValueIsClampedOnlyToNewFrozenRange",
+        "topicWithoutPersistedKeysNeverTouchesTheLedger",
+        "runningSessionIsTheLiveSourceOfTheCard",
+        "runWithoutCompleteFrozenDefinitionDisplaysCurrentRegistryAfterAuthorEdits",
+        "oldSessionWithoutAttributeSnapshotKeepsLiveDefinitionsButHasNoKnownDefinitionVersion",
+        "emptyTemplateDoesNotCreateCharacterOrSession",
+        "partialSnapshotDisplaysCurrentRegistryDefinitions",
+        "malformedExistingSnapshotDisplaysCurrentRegistryDefinitions",
+        "frozenEmptyAttributesWithoutDefinitionDisplayCurrentRegistry",
+        "topicAndConfigVersionRemainExactBeyondJavascriptSafeIntegers",
+        "invalidFrozenIntegerRangesNeverReachTheCardAndRegistryIsShownInstead",
+        "verifyCardReadsOnly",
+        "unpublishedTopicOfSomeoneElseIsNotFound",
+        "cardRulesComeBackAsObject",
+        "scopeChangesAndUnknownOldScopeStartFromNewFrozenInitial",
+        "oldSeedSignatureNeverInfersScopeFromCurrentRegistryOrLedger",
+        "completedVersionedCardKeepsFrozenDefinitionAndFinalRunValues",
+        "unsupportedOrIncompleteDefinitionDisplaysCurrentRegistry"
+      ]
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/service/play/PlayCompletionLockFailureTest.java",
+      "delivery": "owned source",
+      "preBlob": "2e82f778acff95c483dd51dbcff587cf534e8371",
+      "postBlob": "07527b735526ce27b0e48404478cb5a26ea7a05b",
+      "preSha256": "ca2fecd14529c6cb010fd2ca5f0ad3281c64ca72e329adc89556e187a7bb791c",
+      "postSha256": "b51fa1b2a2146ee60e86318a528a5a5b0a1c9ccdfa528667226ef81179645643",
+      "originalVoidMethods": [
+        "attemptTransientFailuresEscapeAsTheOriginalException",
+        "bingoTransientFailuresEscapeWithoutPublishingSuccessData",
+        "nonTransientOptionalFailuresKeepTheirOriginalBestEffortBehavior",
+        "normalBingoProjectionKeepsBothOriginalMasks",
+        "photoAuditDeadlockRollsBackBeforeRetryingTheOriginalCommand",
+        "repeatedAuditDeadlockNeverReturnsSuccessOrRunsDownstreamEffects",
+        "assertWritableTransaction"
+      ]
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/service/play/PlayFrozenPreferenceAdmissionTest.java",
+      "delivery": "owned source",
+      "preBlob": "d3d65c036823a345adcca3b47903d59ef487688a",
+      "postBlob": "bca65ccfd9f1a298c89b2db7a47a4273053e53d2",
+      "preSha256": "c07e9c383e949bc10559e8450673c9b4b1a60a6f126f16711774d00806a9e593",
+      "postSha256": "a0f4463c7ba27c1243a7e214797dba58a05bbfde3db09b7cc1d8c63a6a09658e",
+      "originalVoidMethods": [
+        "fixture",
+        "originalPreferenceSurvivesUnbindAfterOriginalScopeAndRouteAdmission",
+        "frozenContentDoesNotOverrideTheOriginalOwnerDenial",
+        "originalCurrentDelistingStillPreventsANewPreferenceMutation"
+      ]
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RestoreDispatchConsumersTest.java",
+      "delivery": "owned source",
+      "preBlob": "d8b93484850f7b3ec18d63faf89003c222fa0777",
+      "postBlob": "4349e2e3c7512bd980b59fa6454ebff93f348463",
+      "preSha256": "a46b9d29ff649601a77568da51146d1e081b3d62c84954f1195a87aefa517586",
+      "postSha256": "35201a2ad6109cac6d2325724cada45989581f9b91caaf9819b8c82e9da948da",
+      "originalVoidMethods": [
+        "blocked",
+        "creatorAdmissionsCannotConsumeOrAllocateInRestore",
+        "gatewayDoesNotTurnRestoreIntoQuotaRefundOrProviderFailure",
+        "themeIntentNeitherCreatesClaimsNorTerminalizesWhenPaused",
+        "photoCannotClaimOldPreparedOrReleaseOriginalReservation",
+        "asrAndTextAdmissionsKeepOriginalRowsAndQuotaUntouched",
+        "restoredAsrUnknownCanStillBeReadWithoutProviderOrCompensation",
+        "quotaRecoveryDoesNotClaimExpireRefundOrReclassifyOldEvidence",
+        "providerAndMediaPortsRefuseBeforeAnyRealIo",
+        "notificationAndMarketingEntriesRefuseBeforeGrantClaimOrMutation",
+        "durableNotificationWorkersPauseBeforeEnumeratingOrClaiming",
+        "legacyRunnableBoundaryCannotCallOrReportSupplierSuccessWhenRestored",
+        "normalModeStillDelegatesAnExistingPublicGenerationContract",
+        "voiceEnrollmentDoesNotCreateAnIntentOrResolveAProcessingUrl",
+        "originalVoiceStatusQueryRemainsAQueryInRestore",
+        "originalMissingBeforeStartReadDoesNotCreateOrClaimAnIntent",
+        "mediaAdmissionAndLegacyUnknownReadHaveNoRepairSideEffects",
+        "clubAndRecallPauseBeforeClaimsOrSubscriptionAttempts",
+        "cachedQrIsReadableButMissingQrCannotAllocateOrCallItsGateway",
+        "objectMintRefusesBeforeAnyWorkIsQueuedOrAnyCardIsWritten",
+        "mapMissCannotBecomeANormalProviderFailureOrEnterItsRequestSlot",
+        "guardFromADeeperCreatorDependencyCannotTriggerFinallyCompensation",
+        "guardFromModelIsNotReclassifiedAsNotSentOrUnknownByGateway"
+      ]
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/ThemeCharacterService.java",
+      "delivery": "production.review.patch only",
+      "preBlob": "0873ee248a053452cb0af75f17460c015428209a",
+      "postBlob": "a55a3b2210c6db44fdb25d6202fb6cac78da276e",
+      "preSha256": "059f38ddf566ecf1244722f172e15e86edb54d24214bf6d59a9867d8ee3570f2",
+      "postSha256": "69205b6b01dd27b088774b76dbddacca4c2ce841e129af8b78bc62c7c28584c8",
+      "originalVoidMethods": [
+        "seedRun",
+        "seedRun",
+        "record"
+      ]
+    }
+  ]
+}

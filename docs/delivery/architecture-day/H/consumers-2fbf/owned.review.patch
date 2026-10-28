@@ -1,0 +1,239 @@
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/ThemeCharacterServiceTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/ThemeCharacterServiceTest.java
+index df185b3..b2fc8dc 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/ThemeCharacterServiceTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/ThemeCharacterServiceTest.java
+@@ -82,11 +82,16 @@ class ThemeCharacterServiceTest {
+ 
+     @Test
+     void newRunSeedsOriginalPublishedPersistPolicyWithoutChangingCarryLedgerPolicy() throws Exception {
+-        String snapshot = freezeDefinitions();
+-        TopicRouteSession previous = session(41L, 6, TopicRouteSession.STATUS_COMPLETED,
++        ObjectMapper json = new ObjectMapper();
++        ObjectNode published = (ObjectNode) json.readTree(freezeDefinitions());
++        published.set(ThemeAttributeDefinition.KEY, json.readTree(definitionSnapshot("topic", 20)).get(ThemeAttributeDefinition.KEY));
++        String snapshot = published.toString();
++        assertTrue(ThemeAttributeDefinition.read(snapshot).complete);
++        TopicRouteSession previous = carrySession(41L, 6, TopicRouteSession.STATUS_COMPLETED,
+                 "{\"variables\":{\"counter.str\":9,\"counter.focus\":1}}");
+         when(sessions.selectHistoryPage(eq(MEMBER), eq(TOPIC), isNull(), eq(1))).thenReturn(Collections.singletonList(previous));
+         when(keys.selectByTopicId(TOPIC)).thenThrow(new AssertionError("new run must use its publication's definitions"));
++        when(characters.updateIfNewer(any(ThemeCharacter.class))).thenReturn(1);
+         TopicRouteEngine.State next = new TopicRouteEngine.State();
+         JourneyRules rules = JourneyRules.parse(RULES); JourneyInitialState.initialize(rules, next);
+ 
+@@ -106,6 +111,19 @@ class ThemeCharacterServiceTest {
+         assertThrows(IllegalArgumentException.class, () -> service.seedRun(MEMBER, TOPIC, JourneyRules.parse(RULES), next,
+                 "{\"stateKeySnapshotVersion\":2,\"stateKeys\":[]}"));
+         verifyNoInteractions(keys, characters, sessions);
++        assertTrue(next.getVariables().isEmpty(), "unsupported metadata must fail before changing new-run values");
++        ObjectNode marked = new ObjectMapper().valueToTree(Map.of(
++                "stateKeySnapshotVersion", 2, "stateKeys", java.util.Collections.emptyList()));
++        try {
++            marked.set(ThemeAttributeDefinition.KEY,
++                    new ObjectMapper().readTree(definitionSnapshot("topic", 20)).get(ThemeAttributeDefinition.KEY));
++        } catch (com.fasterxml.jackson.core.JsonProcessingException impossibleFixture) {
++            throw new AssertionError(impossibleFixture);
++        }
++        assertThrows(IllegalArgumentException.class, () -> service.seedRun(
++                MEMBER, TOPIC, JourneyRules.parse(RULES), next, marked.toString()));
++        assertTrue(next.getVariables().isEmpty());
++        verifyNoInteractions(keys, characters, sessions);
+     }
+ 
+     @BeforeEach
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/web/service/play/PlayCompletionLockFailureTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/web/service/play/PlayCompletionLockFailureTest.java
+index 2e82f77..07527b7 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/web/service/play/PlayCompletionLockFailureTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/web/service/play/PlayCompletionLockFailureTest.java
+@@ -1,6 +1,13 @@
+ package com.chengyinhub.web.service.play;
+ 
+ import com.chengyinhub.business.domain.CmsMemberTemplate;
++import com.chengyinhub.business.domain.CmsActivity;
++import com.chengyinhub.business.domain.CmsRegistration;
++import com.chengyinhub.business.domain.TopicRouteSession;
++import com.chengyinhub.business.mapper.GameSessionRuntimeMapper;
++import com.chengyinhub.business.mapper.TopicRouteSessionMapper;
++import com.chengyinhub.business.service.ICmsActivityService;
++import com.chengyinhub.business.service.ICmsRegistrationService;
+ import com.chengyinhub.business.domain.CmsTopicNode;
+ import com.chengyinhub.business.domain.PlayBingoCard;
+ import com.chengyinhub.business.mapper.PlayAttemptLogMapper;
+@@ -89,14 +96,14 @@ class PlayCompletionLockFailureTest {
+ 
+     @Test void photoAuditDeadlockRollsBackBeforeRetryingTheOriginalCommand() throws Exception {
+         Boundary boundary = photoBoundary(false);
+-        var result = boundary.controller().photo("500", "401", "media-asset:71", null, "photo-original", 4);
++        var result = boundary.controller().photo("500", "401", "media-asset:71", null, "photo-original", 4, 91L, null, null);
+         assertEquals(200, result.get("code"));
+         assertEquals("已提交,打卡成功", result.get("msg"));
+         assertEquals(Map.of("firstTime", true, "nodeId", 401L), result.get("data"));
+         assertEquals(1, boundary.downstreamEffects().get(), "no progress/reward leaf after the failed audit attempt");
+         assertEquals(List.of("identity", "begin1", "audit1", "rollback1", "close1", "identity", "begin2",
+                 "audit2", "effects", "commit2", "close2"), boundary.events());
+-        List<Object> original = Arrays.asList(7L, "500", "401", "media-asset:71", null, "photo-original", 4);
++        List<Object> original = Arrays.asList(7L, "500", "401", "media-asset:71", null, "photo-original", 4, 91L, null, null);
+         assertEquals(List.of(original, original), boundary.commands());
+         assertFalse(TransactionSynchronizationManager.isActualTransactionActive());
+     }
+@@ -104,11 +111,11 @@ class PlayCompletionLockFailureTest {
+     @Test void repeatedAuditDeadlockNeverReturnsSuccessOrRunsDownstreamEffects() throws Exception {
+         Boundary boundary = photoBoundary(true);
+         assertThrowsExactly(DeadlockLoserDataAccessException.class,
+-                () -> boundary.controller().photo("500", "401", "media-asset:71", null, "photo-original", 4));
++                () -> boundary.controller().photo("500", "401", "media-asset:71", null, "photo-original", 4, 91L, null, null));
+         assertEquals(0, boundary.downstreamEffects().get());
+         assertEquals(List.of("identity", "begin1", "audit1", "rollback1", "close1", "identity", "begin2",
+                 "audit2", "rollback2", "close2"), boundary.events());
+-        List<Object> original = Arrays.asList(7L, "500", "401", "media-asset:71", null, "photo-original", 4);
++        List<Object> original = Arrays.asList(7L, "500", "401", "media-asset:71", null, "photo-original", 4, 91L, null, null);
+         assertEquals(List.of(original, original), boundary.commands());
+         assertFalse(TransactionSynchronizationManager.isActualTransactionActive());
+     }
+@@ -141,7 +148,8 @@ class PlayCompletionLockFailureTest {
+         when(context.resolveCtx(7L, "500", null, node)).thenReturn(scope);
+         when(context.resolveMode(500L, 300L)).thenReturn(PlayMode.LINEAR_ORIENTEERING);
+         CmsMemberTemplate template = new CmsMemberTemplate(); template.setValidationMethod(2);
+-        when(context.effectiveTemplate(7L, 300L, 500L, node)).thenReturn(template);
++        when(context.effectiveTemplate(eq(7L), eq(300L), eq(500L), same(node), any(PlayOriginalRun.class)))
++                .thenReturn(template);
+         PlayAttemptLogMapper attempts = mock(PlayAttemptLogMapper.class);
+         doAnswer(call -> {
+             assertWritableTransaction();
+@@ -155,12 +163,58 @@ class PlayCompletionLockFailureTest {
+         PlayNodeCompletionApplication completion = spy(new PlayNodeCompletionApplication());
+         ReflectionTestUtils.setField(completion, "playAttemptLogMapper", attempts);
+         doAnswer(call -> {
+-            assertWritableTransaction(); effects.incrementAndGet(); events.add("effects");
++            assertWritableTransaction();
++            PlayOriginalRun original = call.getArgument(11);
++            assertEquals(91L, original.routeSessionId()); assertEquals(7L, original.session().getMemberId());
++            assertEquals(500L, original.session().getActivityId()); assertEquals(300L, original.session().getTopicId());
++            effects.incrementAndGet(); events.add("effects");
+             return new LinkedHashMap<>(Map.of("firstTime", true, "nodeId", 401L));
+         }).when(completion).advanceProgress(eq(7L), same(node), eq(500L), eq("media-asset:71"), isNull(), isNull(),
+-                eq(RewardPolicy.FULL), eq("photo-original"), eq(4), isNull(), isNull());
++                eq(RewardPolicy.FULL), eq("photo-original"), eq(4), isNull(), isNull(), any(PlayOriginalRun.class));
++        // Exercise the actual intent admission/receipt owner, not the rejected legacy overload.
++        PlayBasicIntentApplication intents = new PlayBasicIntentApplication();
++        ICmsActivityService activities = mock(ICmsActivityService.class);
++        CmsActivity activity = new CmsActivity(); activity.setId(500L); activity.setTopicId(300L);
++        when(activities.selectCmsActivityById(500L)).thenReturn(activity);
++        ICmsRegistrationService registrations = mock(ICmsRegistrationService.class);
++        CmsRegistration registration = new CmsRegistration(); registration.setMemberId(7L);
++        registration.setOwnerType(2L); registration.setOwnerId(500L); registration.setRegistrationStatus(2);
++        when(registrations.selectCmsRegistrationList(any())).thenReturn(List.of(registration));
++        GameSessionRuntimeMapper receipts = mock(GameSessionRuntimeMapper.class);
++        TopicRouteSessionMapper routes = mock(TopicRouteSessionMapper.class);
++        TopicRouteSession original = new TopicRouteSession(); original.setId(91L); original.setMemberId(7L);
++        original.setActivityId(500L); original.setTopicId(300L); original.setVersion(4);
++        original.setStatus(TopicRouteSession.STATUS_RUNNING); original.setPlayInstanceId("original-photo-run");
++        original.setConfigSnapshotJson("{}");
++        when(routes.selectAccessibleByIdForUpdate(91L, 7L)).thenAnswer(call -> {
++            assertWritableTransaction(); return original;
++        });
++        when(routes.selectCurrentByOwner(500L, 300L, 7L)).thenReturn(original);
++        when(receipts.selectReceiptForUpdate(eq(500L), eq(7L), anyString())).thenAnswer(call -> {
++            assertWritableTransaction(); return null;
++        });
++        when(receipts.insertReceiptClaim(any())).thenAnswer(call -> {
++            assertWritableTransaction();
++            com.chengyinhub.business.domain.GameCommandReceipt row = call.getArgument(0);
++            assertEquals(intents.basicRequestId("photo-original"), row.getRequestId());
++            assertEquals(7L, row.getActorMemberId()); assertEquals(401L, row.getNodeId());
++            assertEquals("PLAY_BASIC_PHOTO", row.getAction()); assertEquals("PENDING", row.getOutcome());
++            return 1;
++        });
++        when(receipts.completeReceipt(any())).thenAnswer(call -> {
++            assertWritableTransaction();
++            com.chengyinhub.business.domain.GameCommandReceipt row = call.getArgument(0);
++            assertEquals("APPLIED", row.getOutcome()); assertEquals(1, effects.get());
++            return 1;
++        });
++        ReflectionTestUtils.setField(intents, "cmsTopicNodeService", nodes);
++        ReflectionTestUtils.setField(intents, "cmsActivityService", activities);
++        ReflectionTestUtils.setField(intents, "cmsRegistrationService", registrations);
++        ReflectionTestUtils.setField(intents, "playCommandReceiptMapper", receipts);
++        ReflectionTestUtils.setField(intents, "playCommandRouteMapper", routes);
+         PlayPhotoCommandApplication application = new PlayPhotoCommandApplication();
+         ReflectionTestUtils.setField(application, "cmsTopicNodeService", nodes);
++        ReflectionTestUtils.setField(application, "playBasicIntentApplication", intents);
+         ReflectionTestUtils.setField(application, "playNodeContext", context);
+         ReflectionTestUtils.setField(application, "playNodeCompletionApplication", completion);
+         ReflectionTestUtils.setField(application, "photoUploadFactVerifier",
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/web/service/play/PlayFrozenPreferenceAdmissionTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/web/service/play/PlayFrozenPreferenceAdmissionTest.java
+index d3d65c0..bca65cc 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/web/service/play/PlayFrozenPreferenceAdmissionTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/web/service/play/PlayFrozenPreferenceAdmissionTest.java
+@@ -75,7 +75,41 @@ class PlayFrozenPreferenceAdmissionTest {
+     @Test void originalCurrentDelistingStillPreventsANewPreferenceMutation() {
+         when(access.isDelistedNode(any())).thenReturn(true);
+         PreferenceSubmitRequest request = new PreferenceSubmitRequest(); request.setTopicId("21");
++        request.setRouteActionId("preference-original"); request.setExpectedRouteVersion(2); request.setRouteSessionId(91L);
++        PlayBasicIntentApplication intents = new PlayBasicIntentApplication();
++        var receipts = mock(com.chengyinhub.business.mapper.GameSessionRuntimeMapper.class);
++        var sessions = mock(com.chengyinhub.business.mapper.TopicRouteSessionMapper.class);
++        var registrations = mock(com.chengyinhub.business.service.ICmsRegistrationService.class);
++        var registration = new com.chengyinhub.business.domain.CmsRegistration();
++        registration.setMemberId(7L); registration.setOwnerType(1L); registration.setOwnerId(21L);
++        registration.setRegistrationStatus(2);
++        when(registrations.selectCmsRegistrationList(any())).thenReturn(java.util.List.of(registration));
++        var original = new com.chengyinhub.business.domain.TopicRouteSession();
++        original.setId(91L); original.setMemberId(7L); original.setActivityId(0L); original.setTopicId(21L);
++        original.setVersion(2); original.setStatus(com.chengyinhub.business.domain.TopicRouteSession.STATUS_RUNNING);
++        original.setPlayInstanceId("original-preference-run");
++        ObjectNode snapshot = new ObjectMapper().createObjectNode();
++        snapshot.putObject("nodeAnswers").set("11", routes.nodeAnswers(7L, 21L, 0L, 11L));
++        original.setConfigSnapshotJson(snapshot.toString());
++        when(sessions.selectAccessibleByIdForUpdate(91L, 7L)).thenReturn(original);
++        when(sessions.selectCurrentByOwner(0L, 21L, 7L)).thenReturn(original);
++        when(receipts.insertReceiptClaim(any())).thenReturn(1);
++        when(receipts.completeReceipt(any())).thenReturn(1);
++        ReflectionTestUtils.setField(intents, "cmsTopicNodeService", nodes);
++        ReflectionTestUtils.setField(intents, "cmsRegistrationService", registrations);
++        ReflectionTestUtils.setField(intents, "playCommandReceiptMapper", receipts);
++        ReflectionTestUtils.setField(intents, "playCommandRouteMapper", sessions);
++        ReflectionTestUtils.setField(application, "playBasicIntentApplication", intents);
+         assertEquals(500, application.submitPreference(7L, 11L, request).get("code"));
+-        verifyNoInteractions(preference);
++        verifyNoInteractions(preference, templates);
++        verify(access).isDelistedNode(any());
++        verify(sessions).selectAccessibleByIdForUpdate(91L, 7L);
++        ArgumentCaptor<com.chengyinhub.business.domain.GameCommandReceipt> terminal =
++                ArgumentCaptor.forClass(com.chengyinhub.business.domain.GameCommandReceipt.class);
++        verify(receipts).completeReceipt(terminal.capture());
++        assertEquals("FAILED", terminal.getValue().getOutcome());
++        assertTrue(terminal.getValue().getResultJson().contains("该站已下架"));
++        assertEquals("PLAYER", terminal.getValue().getActorPerspective());
++        assertEquals(intents.basicRequestId("preference-original"), terminal.getValue().getRequestId());
+     }
+ }
+diff --git a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RestoreDispatchConsumersTest.java b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RestoreDispatchConsumersTest.java
+index d8b9348..4349e2e 100644
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RestoreDispatchConsumersTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RestoreDispatchConsumersTest.java
+@@ -371,16 +371,19 @@ class RestoreDispatchConsumersTest {
+         PlayerWxacodeServiceImpl service = new PlayerWxacodeServiceImpl(gateway, storage);
+         ReflectionTestUtils.setField(service, "redisCache", redis);
+         ReflectionTestUtils.setField(service, "signingSecret", "synthetic-source-test-secret");
+-        when(redis.getCacheObject("wx:player-code:v1:7")).thenReturn("original-url");
++        when(redis.getCacheObject("wx:player-code:v2:7")).thenReturn("original-object-key");
++        when(storage.url("original-object-key")).thenReturn("original-url");
+         try (var flag = restored()) {
+             assertEquals("original-url", service.getOrCreate(7L));
+             blocked(() -> service.getOrCreate(8L));
+             blocked(() -> service.getOrCreateScene("original-scene"));
+         }
+-        verifyNoInteractions(gateway, storage);
+-        verify(redis).getCacheObject("wx:player-code:v1:7");
+-        verify(redis).getCacheObject("wx:player-code:v1:8");
+-        verify(redis).getCacheObject("wx:door-code:v1:original-scene");
++        verifyNoInteractions(gateway);
++        verify(storage).url("original-object-key");
++        verifyNoMoreInteractions(storage);
++        verify(redis).getCacheObject("wx:player-code:v2:7");
++        verify(redis).getCacheObject("wx:player-code:v2:8");
++        verify(redis).getCacheObject("wx:door-code:v2:original-scene");
+         verifyNoMoreInteractions(redis);
+     }
+ 

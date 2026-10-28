@@ -1,6 +1,13 @@
 package com.chengyinhub.web.service.play;
 
 import com.chengyinhub.business.domain.CmsMemberTemplate;
+import com.chengyinhub.business.domain.CmsActivity;
+import com.chengyinhub.business.domain.CmsRegistration;
+import com.chengyinhub.business.domain.TopicRouteSession;
+import com.chengyinhub.business.mapper.GameSessionRuntimeMapper;
+import com.chengyinhub.business.mapper.TopicRouteSessionMapper;
+import com.chengyinhub.business.service.ICmsActivityService;
+import com.chengyinhub.business.service.ICmsRegistrationService;
 import com.chengyinhub.business.domain.CmsTopicNode;
 import com.chengyinhub.business.domain.PlayBingoCard;
 import com.chengyinhub.business.mapper.PlayAttemptLogMapper;
@@ -89,14 +96,14 @@ class PlayCompletionLockFailureTest {
 
     @Test void photoAuditDeadlockRollsBackBeforeRetryingTheOriginalCommand() throws Exception {
         Boundary boundary = photoBoundary(false);
-        var result = boundary.controller().photo("500", "401", "media-asset:71", null, "photo-original", 4);
+        var result = boundary.controller().photo("500", "401", "media-asset:71", null, "photo-original", 4, 91L, null, null);
         assertEquals(200, result.get("code"));
         assertEquals("已提交,打卡成功", result.get("msg"));
         assertEquals(Map.of("firstTime", true, "nodeId", 401L), result.get("data"));
         assertEquals(1, boundary.downstreamEffects().get(), "no progress/reward leaf after the failed audit attempt");
         assertEquals(List.of("identity", "begin1", "audit1", "rollback1", "close1", "identity", "begin2",
                 "audit2", "effects", "commit2", "close2"), boundary.events());
-        List<Object> original = Arrays.asList(7L, "500", "401", "media-asset:71", null, "photo-original", 4);
+        List<Object> original = Arrays.asList(7L, "500", "401", "media-asset:71", null, "photo-original", 4, 91L, null, null);
         assertEquals(List.of(original, original), boundary.commands());
         assertFalse(TransactionSynchronizationManager.isActualTransactionActive());
     }
@@ -104,11 +111,11 @@ class PlayCompletionLockFailureTest {
     @Test void repeatedAuditDeadlockNeverReturnsSuccessOrRunsDownstreamEffects() throws Exception {
         Boundary boundary = photoBoundary(true);
         assertThrowsExactly(DeadlockLoserDataAccessException.class,
-                () -> boundary.controller().photo("500", "401", "media-asset:71", null, "photo-original", 4));
+                () -> boundary.controller().photo("500", "401", "media-asset:71", null, "photo-original", 4, 91L, null, null));
         assertEquals(0, boundary.downstreamEffects().get());
         assertEquals(List.of("identity", "begin1", "audit1", "rollback1", "close1", "identity", "begin2",
                 "audit2", "rollback2", "close2"), boundary.events());
-        List<Object> original = Arrays.asList(7L, "500", "401", "media-asset:71", null, "photo-original", 4);
+        List<Object> original = Arrays.asList(7L, "500", "401", "media-asset:71", null, "photo-original", 4, 91L, null, null);
         assertEquals(List.of(original, original), boundary.commands());
         assertFalse(TransactionSynchronizationManager.isActualTransactionActive());
     }
@@ -141,7 +148,8 @@ class PlayCompletionLockFailureTest {
         when(context.resolveCtx(7L, "500", null, node)).thenReturn(scope);
         when(context.resolveMode(500L, 300L)).thenReturn(PlayMode.LINEAR_ORIENTEERING);
         CmsMemberTemplate template = new CmsMemberTemplate(); template.setValidationMethod(2);
-        when(context.effectiveTemplate(7L, 300L, 500L, node)).thenReturn(template);
+        when(context.effectiveTemplate(eq(7L), eq(300L), eq(500L), same(node), any(PlayOriginalRun.class)))
+                .thenReturn(template);
         PlayAttemptLogMapper attempts = mock(PlayAttemptLogMapper.class);
         doAnswer(call -> {
             assertWritableTransaction();
@@ -155,12 +163,58 @@ class PlayCompletionLockFailureTest {
         PlayNodeCompletionApplication completion = spy(new PlayNodeCompletionApplication());
         ReflectionTestUtils.setField(completion, "playAttemptLogMapper", attempts);
         doAnswer(call -> {
-            assertWritableTransaction(); effects.incrementAndGet(); events.add("effects");
+            assertWritableTransaction();
+            PlayOriginalRun original = call.getArgument(11);
+            assertEquals(91L, original.routeSessionId()); assertEquals(7L, original.session().getMemberId());
+            assertEquals(500L, original.session().getActivityId()); assertEquals(300L, original.session().getTopicId());
+            effects.incrementAndGet(); events.add("effects");
             return new LinkedHashMap<>(Map.of("firstTime", true, "nodeId", 401L));
         }).when(completion).advanceProgress(eq(7L), same(node), eq(500L), eq("media-asset:71"), isNull(), isNull(),
-                eq(RewardPolicy.FULL), eq("photo-original"), eq(4), isNull(), isNull());
+                eq(RewardPolicy.FULL), eq("photo-original"), eq(4), isNull(), isNull(), any(PlayOriginalRun.class));
+        // Exercise the actual intent admission/receipt owner, not the rejected legacy overload.
+        PlayBasicIntentApplication intents = new PlayBasicIntentApplication();
+        ICmsActivityService activities = mock(ICmsActivityService.class);
+        CmsActivity activity = new CmsActivity(); activity.setId(500L); activity.setTopicId(300L);
+        when(activities.selectCmsActivityById(500L)).thenReturn(activity);
+        ICmsRegistrationService registrations = mock(ICmsRegistrationService.class);
+        CmsRegistration registration = new CmsRegistration(); registration.setMemberId(7L);
+        registration.setOwnerType(2L); registration.setOwnerId(500L); registration.setRegistrationStatus(2);
+        when(registrations.selectCmsRegistrationList(any())).thenReturn(List.of(registration));
+        GameSessionRuntimeMapper receipts = mock(GameSessionRuntimeMapper.class);
+        TopicRouteSessionMapper routes = mock(TopicRouteSessionMapper.class);
+        TopicRouteSession original = new TopicRouteSession(); original.setId(91L); original.setMemberId(7L);
+        original.setActivityId(500L); original.setTopicId(300L); original.setVersion(4);
+        original.setStatus(TopicRouteSession.STATUS_RUNNING); original.setPlayInstanceId("original-photo-run");
+        original.setConfigSnapshotJson("{}");
+        when(routes.selectAccessibleByIdForUpdate(91L, 7L)).thenAnswer(call -> {
+            assertWritableTransaction(); return original;
+        });
+        when(routes.selectCurrentByOwner(500L, 300L, 7L)).thenReturn(original);
+        when(receipts.selectReceiptForUpdate(eq(500L), eq(7L), anyString())).thenAnswer(call -> {
+            assertWritableTransaction(); return null;
+        });
+        when(receipts.insertReceiptClaim(any())).thenAnswer(call -> {
+            assertWritableTransaction();
+            com.chengyinhub.business.domain.GameCommandReceipt row = call.getArgument(0);
+            assertEquals(intents.basicRequestId("photo-original"), row.getRequestId());
+            assertEquals(7L, row.getActorMemberId()); assertEquals(401L, row.getNodeId());
+            assertEquals("PLAY_BASIC_PHOTO", row.getAction()); assertEquals("PENDING", row.getOutcome());
+            return 1;
+        });
+        when(receipts.completeReceipt(any())).thenAnswer(call -> {
+            assertWritableTransaction();
+            com.chengyinhub.business.domain.GameCommandReceipt row = call.getArgument(0);
+            assertEquals("APPLIED", row.getOutcome()); assertEquals(1, effects.get());
+            return 1;
+        });
+        ReflectionTestUtils.setField(intents, "cmsTopicNodeService", nodes);
+        ReflectionTestUtils.setField(intents, "cmsActivityService", activities);
+        ReflectionTestUtils.setField(intents, "cmsRegistrationService", registrations);
+        ReflectionTestUtils.setField(intents, "playCommandReceiptMapper", receipts);
+        ReflectionTestUtils.setField(intents, "playCommandRouteMapper", routes);
         PlayPhotoCommandApplication application = new PlayPhotoCommandApplication();
         ReflectionTestUtils.setField(application, "cmsTopicNodeService", nodes);
+        ReflectionTestUtils.setField(application, "playBasicIntentApplication", intents);
         ReflectionTestUtils.setField(application, "playNodeContext", context);
         ReflectionTestUtils.setField(application, "playNodeCompletionApplication", completion);
         ReflectionTestUtils.setField(application, "photoUploadFactVerifier",

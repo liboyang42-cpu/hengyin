@@ -1,0 +1,5 @@
+bd8d3921a68ed62abbe74a95b2f621ce073906adb2a3023fb621d3e324438a6d  chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/ThemeCharacterServiceTest.java
+b51fa1b2a2146ee60e86318a528a5a5b0a1c9ccdfa528667226ef81179645643  chengyinhub-admin/src/test/java/com/chengyinhub/web/service/play/PlayCompletionLockFailureTest.java
+a0f4463c7ba27c1243a7e214797dba58a05bbfde3db09b7cc1d8c63a6a09658e  chengyinhub-admin/src/test/java/com/chengyinhub/web/service/play/PlayFrozenPreferenceAdmissionTest.java
+35201a2ad6109cac6d2325724cada45989581f9b91caaf9819b8c82e9da948da  chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RestoreDispatchConsumersTest.java
+69205b6b01dd27b088774b76dbddacca4c2ce841e129af8b78bc62c7c28584c8  chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/ThemeCharacterService.java
