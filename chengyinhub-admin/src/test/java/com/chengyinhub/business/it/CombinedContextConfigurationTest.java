@@ -433,6 +433,76 @@ class CombinedContextConfigurationTest {
         assertEquals("Photo completed before the four-handler barrier: state=NULL, providerState=UNAVAILABLE",
                 noFailureCause.getSuppressed()[0].getMessage());
         assertFalse(unfinished.isDone());
+
+        var originalMemoryFailure = new OutOfMemoryError("controlled error identity; no heap exhaustion");
+        var memoryCall = java.util.concurrent.CompletableFuture
+                .<com.chengyinhub.business.service.ai.PhotoCheckIntentView>failedFuture(originalMemoryFailure);
+        var memoryEntry = assertDoesNotThrow(() -> CrossDomainTransportStage.aiEntryFailure(
+                List.of(memoryCall, unfinished, unfinished, unfinished), List.of()));
+        assertSame(originalMemoryFailure, memoryEntry.getCause(), "An Error must never become a fabricated result/retry");
+        assertFalse(unfinished.isDone());
+
+        // Finite encoding controls, not a heap measurement or a substitute for four real provider handlers.
+        for (String encoded : List.of("", "data:image/jpeg;base64," + "A".repeat(8193), "中文\u0000\"\\",
+                "\uD800", "\uDC00", "A".repeat(4095) + "\uD83D\uDE00" + "B".repeat(4097),
+                "A".repeat(4095) + "\uD800" + "B", "A".repeat(4096) + "\uDC00", "A".repeat(4095) + "\uD800")) {
+            String originalHash = assertDoesNotThrow(() -> HexFormat.of().formatHex(
+                    java.security.MessageDigest.getInstance("SHA-256").digest(encoded.getBytes(StandardCharsets.UTF_8))));
+            assertEquals(originalHash, ReflectionTestUtils.invokeMethod(
+                    com.chengyinhub.business.service.ai.PhotoCheckVisionService.class, "encodedInputHash", encoded));
+        }
+        var bytePosts = new java.util.concurrent.atomic.AtomicInteger();
+        var wire = new java.util.concurrent.atomic.AtomicReference<byte[]>();
+        // Stop at the actual new transport entry with a proven local NOT_SENT; never invent provider success.
+        try (var transport = mockStatic(com.chengyinhub.common.utils.http.HttpUtils.class, invocation -> {
+            assertEquals("sendJsonPostBytes", invocation.getMethod().getName(), "No intermediate JSON String transport");
+            bytePosts.incrementAndGet();
+            wire.set(assertInstanceOf(byte[].class, invocation.getArgument(1)));
+            throw new com.chengyinhub.business.service.ai.AiProviderNotSentException();
+        })) {
+            String origin = "http://127.0.0.1:1";
+            var client = new com.chengyinhub.business.service.ai.OpenAiCompatibleLlmClient("controlled-encoding",
+                    origin, "fixture-token", "fixture-model", true, 2000,
+                    new com.chengyinhub.business.service.ai.AiHttpAdmission(List.of(origin)));
+            assertThrows(com.chengyinhub.business.service.ai.AiProviderNotSentException.class,
+                    () -> client.chatVision("中文\u0000\"\\", "data:image/jpeg;base64,AA==", "要求\uD83D\uDE00"));
+        }
+        assertEquals(1, bytePosts.get(), "The new encoding path cannot retry");
+        var sent = com.alibaba.fastjson2.JSON.parseObject(wire.get());
+        assertEquals(java.util.Set.of("model", "messages"), sent.keySet());
+        assertEquals("fixture-model", sent.getString("model"));
+        var messages = sent.getJSONArray("messages"); assertEquals(2, messages.size());
+        assertEquals("system", messages.getJSONObject(0).getString("role"));
+        assertEquals("中文\u0000\"\\", messages.getJSONObject(0).getString("content"));
+        assertEquals("user", messages.getJSONObject(1).getString("role"));
+        var content = messages.getJSONObject(1).getJSONArray("content"); assertEquals(2, content.size());
+        assertEquals("image_url", content.getJSONObject(0).getString("type"));
+        assertEquals("data:image/jpeg;base64,AA==", content.getJSONObject(0).getJSONObject("image_url").getString("url"));
+        assertEquals("text", content.getJSONObject(1).getString("type"));
+        assertEquals("要求\uD83D\uDE00", content.getJSONObject(1).getString("text"));
+        assertArrayEquals(sent.toJSONString().getBytes(StandardCharsets.UTF_8), wire.get(),
+                "Finite original String codec and direct UTF-8 JSON retain the same complete body");
+
+        // The shared production review.patch is required before these byte-entry controls can pass.
+        byte[] body = "{\"value\":\"中文\"}".getBytes(StandardCharsets.UTF_8), retainedBody = body.clone();
+        for (int refusal = 0; refusal < 4; refusal++) {
+            String target = refusal == 0 ? "ftp://127.0.0.1/" : "http://127.0.0.1:1/";
+            byte[] input = refusal == 1 ? null : body;
+            String bearer = refusal == 2 ? "fixture\r\nInjected: header" : "fixture-token";
+            long deadline = refusal == 3 ? System.nanoTime() - 1 : System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(2);
+            var releases = new java.util.concurrent.atomic.AtomicInteger();
+            try (var lease = new com.chengyinhub.common.utils.http.HttpUtils.AttemptLease(releases::incrementAndGet)) {
+                var unsent = assertThrows(com.chengyinhub.common.utils.http.HttpRequestException.class,
+                        () -> ReflectionTestUtils.invokeMethod(com.chengyinhub.common.utils.http.HttpUtils.class,
+                                "sendJsonPostBytes", target, input, bearer, deadline, lease));
+                assertEquals(com.chengyinhub.common.utils.http.HttpRequestException.SendDisposition.NOT_SENT,
+                        unsent.getSendDisposition());
+                assertFalse(unsent.isRetryable()); assertNull(unsent.getCause());
+                assertEquals(1, releases.get());
+            }
+            assertEquals(1, releases.get(), "Original lease releases once even after caller close");
+            assertArrayEquals(retainedBody, body, "Exclusive input bytes must not be mutated");
+        }
     }
 
     @Test
