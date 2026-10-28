@@ -164,6 +164,22 @@ class CombinedContextConfigurationTest {
         assertEquals(10L, sessions.getConfiguration().getTypeAliasRegistry().getTypeAliases().values().stream()
                 .filter(type -> type.getName().startsWith("com.chengyinhub.business.domain.")).distinct().count());
         verifyNoInteractions(metadataOnly); // Parse every original XML without opening SQL or scanning unrelated domains.
+
+        // The production scan is recursive. Keep every namespace, but do not rescan its descendants.
+        List<String> expanded = List.of("com.chengyinhub.business.domain.dto", "com.chengyinhub.business.domain",
+                "com.chengyinhub.business.domain.vo", "com.chengyinhub.common.core.domain.entity",
+                "com.chengyinhub.common.core.domain", "com.chengyinhub.business.domainish", "com.chengyinhub.business.domain");
+        List<String> roots = ReflectionTestUtils.invokeMethod(com.chengyinhub.framework.config.MyBatisConfig.class,
+                "recursivePackageRoots", expanded);
+        assertEquals(List.of("com.chengyinhub.business.domain", "com.chengyinhub.common.core.domain",
+                "com.chengyinhub.business.domainish"), roots);
+        for (String name : List.of("com.chengyinhub.business.domain.UmsMember", "com.chengyinhub.business.domain.dto.GameActorContext",
+                "com.chengyinhub.common.core.domain.entity.SysUser", "com.chengyinhub.business.domainish.Separate")) {
+            assertTrue(expanded.stream().anyMatch(pkg -> name.startsWith(pkg + ".")));
+            assertTrue(roots.stream().anyMatch(pkg -> name.startsWith(pkg + ".")));
+        }
+        assertEquals(List.of("one.domain", "one.domainish"), ReflectionTestUtils.invokeMethod(
+                com.chengyinhub.framework.config.MyBatisConfig.class, "recursivePackageRoots", List.of("one.domain", "one.domainish")));
     }
 
     @Test
@@ -691,6 +707,31 @@ class CombinedContextConfigurationTest {
         assertEquals("要求\uD83D\uDE00", content.getJSONObject(1).getString("text"));
         assertArrayEquals(sent.toJSONString().getBytes(StandardCharsets.UTF_8), wire.get(),
                 "Finite original String codec and direct UTF-8 JSON retain the same complete body");
+
+        // The same complete body/codec/entry order; capacity is only a hint, never a shared entity.
+        for (String image : List.of("", "data:image/jpeg;base64," + "A".repeat(8193), "中文\u0000\"\\", "\uD800")) {
+            content.getJSONObject(0).getJSONObject("image_url").put("url", image);
+            byte[] originalBytes = com.alibaba.fastjson2.JSON.toJSONBytes(sent);
+            byte[] encoded = ReflectionTestUtils.invokeMethod(com.chengyinhub.business.service.ai.OpenAiCompatibleLlmClient.class,
+                    "encodeBody", sent, image, "中文\u0000\"\\", "要求\uD83D\uDE00", "fixture-model");
+            byte[] second = ReflectionTestUtils.invokeMethod(com.chengyinhub.business.service.ai.OpenAiCompatibleLlmClient.class,
+                    "encodeBody", sent, image, "中文\u0000\"\\", "要求\uD83D\uDE00", "fixture-model");
+            assertArrayEquals(originalBytes, encoded); assertArrayEquals(originalBytes, second); assertNotSame(encoded, second);
+            int capacity = ReflectionTestUtils.invokeMethod(com.chengyinhub.business.service.ai.OpenAiCompatibleLlmClient.class,
+                    "visionCapacity", image, "中文\u0000\"\\", "要求\uD83D\uDE00", "fixture-model");
+            if (capacity > 0) {
+                var context = new com.alibaba.fastjson2.JSONWriter.Context(com.alibaba.fastjson2.JSONFactory.getDefaultObjectWriterProvider());
+                for (var feature : com.alibaba.fastjson2.JSONWriter.Feature.values()) context.config(feature, false);
+                try (var writer = com.alibaba.fastjson2.JSONWriter.ofUTF8(context);
+                     var baselineWriter = com.alibaba.fastjson2.JSONWriter.ofUTF8(context)) {
+                    Object reserved = writer.ensureCapacity(capacity); writer.setRootObject(sent); writer.write(sent);
+                    baselineWriter.setRootObject(sent); baselineWriter.write(sent);
+                    assertSame(reserved, writer.ensureCapacity(0), "The trailing text must not allocate another geometrically larger image buffer");
+                    assertArrayEquals(baselineWriter.getBytes(), writer.getBytes());
+                }
+            } else assertTrue(image.indexOf('中') >= 0 || image.indexOf('\uD800') >= 0);
+            assertArrayEquals(originalBytes, com.alibaba.fastjson2.JSON.toJSONBytes(sent), "Encoding must not mutate the input or caller's earlier output");
+        }
 
         // The shared production review.patch is required before these byte-entry controls can pass.
         byte[] body = "{\"value\":\"中文\"}".getBytes(StandardCharsets.UTF_8), retainedBody = body.clone();

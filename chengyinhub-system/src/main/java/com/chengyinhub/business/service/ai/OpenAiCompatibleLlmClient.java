@@ -6,6 +6,8 @@ import org.slf4j.LoggerFactory;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
+import com.alibaba.fastjson2.JSONFactory;
+import com.alibaba.fastjson2.JSONWriter;
 import com.chengyinhub.common.config.AiModelConfig;
 
 import java.util.concurrent.TimeUnit;
@@ -136,7 +138,7 @@ public class OpenAiCompatibleLlmClient implements LlmClient
         messages.add(user);
         body.put("messages", messages);
 
-        return post(body);
+        return post(body, imageUrl, systemPrompt, userPrompt);
     }
 
     /** Local configuration check only; never sends a provider request. */
@@ -160,6 +162,11 @@ public class OpenAiCompatibleLlmClient implements LlmClient
     /** Text/vision share one bounded authenticated POST; no provider retry is allowed. */
     private String post(JSONObject body)
     {
+        return post(body, null, null, null);
+    }
+
+    private String post(JSONObject body, String image, String systemPrompt, String userPrompt)
+    {
         com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         requireReady();
         long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(Math.min(timeoutMs, 10_000));
@@ -171,7 +178,7 @@ public class OpenAiCompatibleLlmClient implements LlmClient
             byte[] json;
             try
             {
-                json = JSON.toJSONBytes(body);
+                json = encodeBody(body, image, systemPrompt, userPrompt, model);
             }
             catch (RuntimeException invalid)
             {
@@ -205,6 +212,39 @@ public class OpenAiCompatibleLlmClient implements LlmClient
             logFailure(phase, status, "PROVIDER_OUTCOME_UNKNOWN");
             throw failure(phase, status);
         }
+    }
+
+    /** Preserve the pinned default UTF-8 codec; reserve space before the image's trailing text grows it again. */
+    private static byte[] encodeBody(JSONObject body, String image, String systemPrompt, String userPrompt, String model)
+    {
+        int capacity = visionCapacity(image, systemPrompt, userPrompt, model);
+        if (capacity == 0 || body == null || body.getClass() != JSONObject.class) return JSON.toJSONBytes(body);
+        JSONWriter.Context context = new JSONWriter.Context(JSONFactory.getDefaultObjectWriterProvider());
+        if (context.getFeatures() != 0) return JSON.toJSONBytes(body);
+        try (JSONWriter writer = JSONWriter.ofUTF8(context))
+        {
+            writer.ensureCapacity(capacity);
+            writer.setRootObject(body);
+            writer.write(body); // Same JSONObject/default-feature branch as JSON.toJSONBytes, same entry order.
+            return writer.getBytes(); // Still a fresh exclusive entity; never borrow/reuse the writer's buffer.
+        }
+    }
+
+    private static int visionCapacity(String image, String systemPrompt, String userPrompt, String model)
+    {
+        if (image == null) return 0;
+        for (int i = 0; i < image.length(); i++)
+        {
+            char value = image.charAt(i);
+            if (value < 32 || value > 126 || value == '"' || value == '\\') return 0;
+        }
+        // The fixed envelope is small. Pinned UTF-16 string writes can request twelve bytes per
+        // source char; cover all non-image strings including their original escape/Unicode cases.
+        long metadata = (long) (model == null ? 0 : model.length())
+                + (systemPrompt == null ? 0 : systemPrompt.length()) + (userPrompt == null ? 0 : userPrompt.length());
+        long capacity = image.length() + metadata * 12L + 1024L;
+        // A hint is optional, never a new input rejection or an override of the pinned codec limit.
+        return capacity < 67108864L ? (int) capacity : 0;
     }
 
     private RuntimeException failure(String phase, int status)
