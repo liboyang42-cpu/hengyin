@@ -55,6 +55,16 @@ class ApiCoopSupplyStationsTest {
         assertEquals(200,controller.supplyStations(7L,22L).get(AjaxResult.CODE_TAG));
         verify(invites).listSupplyStations(7L,22L,11L);
     }
+    @Test void delegatedProjectOwnerMustStillOwnTheExactTopicBeforeReadingStations() {
+        principal=33;
+        when(access.require(33L,MerchantPermission.PROJECT_MANAGE))
+                .thenReturn(new MerchantAccessContext(33L,90L,44L,"manager"));
+        AjaxResult response=controller.supplyStations(7L,22L);
+        assertNotEquals(200,response.get(AjaxResult.CODE_TAG));
+        assertEquals("只能为自己发布的主题选择合作据点",response.get(AjaxResult.MSG_TAG));
+        verify(invites,never()).listSupplyStations(any(),any(),any());
+        verify(invites,never()).insertCoopInvite(any());
+    }
     @Test void invalidOrInapplicableScopeIsErrorNotRequiresFalse() {
         assertNotEquals(200,controller.supplyStations(-1L,22L).get(AjaxResult.CODE_TAG));
         when(invites.listSupplyStations(7L,22L,11L)).thenThrow(new IllegalStateException("不是经典主题"));

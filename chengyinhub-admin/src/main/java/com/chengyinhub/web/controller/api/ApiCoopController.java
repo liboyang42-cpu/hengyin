@@ -351,13 +351,16 @@ public class ApiCoopController extends BaseController {
         if (OwnershipUtils.notOwner(topic.getMemberId(), contractOwnerMemberId)) {
             return error("只能为自己发布的主题发起合作");
         }
+        // Freeze the already-authorized contract member for both entry paths.
+        // The principal remains the operator/security identity, including inside the receipt callback.
+        final Long checkedContractOwnerMemberId = contractOwnerMemberId;
         if (body.getRequestId() != null) {
             // 微信内容安全是网络调用:在原请求事务(回执唯一键行锁)之外先做,事务回调里只留 DB 校验。
             String risk = textRisk(principalMemberId, body.getMessage());
             if (risk != null) return error(risk);
             try {
                 CoopInviteRequestResult result = coopInviteService.createOrReplayInvite(principalMemberId, body, () -> {
-                    String invalid = prepareFirstInvite(body, principalMemberId, topic, true);
+                    String invalid = prepareFirstInvite(body, principalMemberId, checkedContractOwnerMemberId, topic, true);
                     if (invalid != null) throw new IllegalStateException(invalid);
                 });
                 if (!Boolean.TRUE.equals(result.getReplayed())) notifyNewInvite(body, toOwner, contractOwnerMemberId);
@@ -369,7 +372,7 @@ public class ApiCoopController extends BaseController {
             }
         }
         try {
-            String invalid = prepareFirstInvite(body, principalMemberId, topic, false);
+            String invalid = prepareFirstInvite(body, principalMemberId, checkedContractOwnerMemberId, topic, false);
             if (invalid != null) return error(invalid);
             coopInviteService.insertCoopInvite(body);
         } catch (IllegalStateException e) {
@@ -381,22 +384,25 @@ public class ApiCoopController extends BaseController {
         return AjaxResult.success("已发起", d);
     }
 
-    private String prepareFirstInvite(CoopInvite body, Long principalMemberId, CmsTopic topic, boolean originalRequest) {
+    private String prepareFirstInvite(CoopInvite body, Long principalMemberId, Long contractOwnerMemberId,
+                                      CmsTopic topic, boolean originalRequest) {
         // node_id 只属于已撤销的历史 type2，新建 type0/type1 一律清掉客户端伪造值。
         body.setNodeId(null);
         if (body.getInviteType() == 0
                 && Integer.valueOf(com.chengyinhub.common.constant.ProductType.ORIENTEERING).equals(topic.getProductType())) {
             if (body.getSupplyStationId() == null || body.getSupplyStationId() <= 0)
-                return error("请选择本主题该商家的真实核销据点");
+                return "请选择本主题该商家的真实核销据点";
             try {
                 boolean selected = false;
                 for (CmsRegistrationMerchant station : coopInviteService.listSupplyStations(
                         topic.getId(), body.getToId(), contractOwnerMemberId))
                     if (body.getSupplyStationId().equals(station.getId())) selected = true;
-                if (!selected) return error("所选据点不属于本主题受邀商家或已绑定原合作单");
-            } catch (IllegalStateException e) { return error(e.getMessage()); }
+                if (!selected) return "所选据点不属于本主题受邀商家或已绑定原合作单";
+            } catch (IllegalStateException e) {
+                return e.getMessage() == null ? "核销据点无法确认" : e.getMessage();
+            }
         } else if (body.getSupplyStationId() != null) {
-            return error("该邀约不支持据点计酬确认");
+            return "该邀约不支持据点计酬确认";
         }
         // B1-3 条款校验:报酬模式与配套字段一致性(字段可空,向后兼容;传了才校验)
         Integer shareMode = body.getShareMode();
