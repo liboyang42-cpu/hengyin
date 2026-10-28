@@ -25,7 +25,10 @@
     "cy-empty": "/components/cy/empty/index",
     "topic-state-keys": "/pages/publish/components/topic-state-keys/index",
     "story-rule-editor": "/pages/publish/components/story-rule-editor/index",
-    "attribute-binding-editor": "/pages/publish/components/attribute-binding-editor/index"
+    "attribute-binding-editor": "/pages/publish/components/attribute-binding-editor/index",
+    "cy-choice-sheet": "/components/cy/choice-sheet/index",
+    "d20-settings": "/pages/publish/components/d20-settings/index",
+    "start-prep": "/pages/publish/components/start-prep/index"
   },
   "navigationStyle": "custom",
   "navigationBarTextStyle": "black",

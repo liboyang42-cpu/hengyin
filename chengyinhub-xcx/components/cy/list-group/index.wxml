@@ -1,0 +1,8 @@
+<view class="lg {{gap ? 'lg--gap' : ''}}">
+  <view wx:if="{{header || action}}" class="lg__hd">
+    <text>{{header}}</text>
+    <text wx:if="{{action}}" class="lg__act" bindtap="onAction" aria-role="button" aria-label="{{action}}{{header}}" hover-class="cy-pressed" hover-stay-time="80">{{action}}</text>
+  </view>
+  <view class="{{bare ? '' : 'lg__box'}}"><slot></slot></view>
+  <slot name="after"></slot>
+</view>

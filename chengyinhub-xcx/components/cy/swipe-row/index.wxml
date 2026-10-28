@@ -1,0 +1,10 @@
+<view class="sw {{hr ? 'sw--hr' : ''}} {{open ? 'is-open' : ''}} {{editing ? 'is-editing' : ''}} {{_dragging ? 'is-drag' : ''}}" style="{{_dragging ? 'transform: translateY(' + _dy + 'px);' : ''}}">
+  <view class="sw__del" bindtap="onDelete" aria-role="button" aria-label="{{deleteText}}{{label}}" aria-hidden="{{!open}}" hover-class="cy-pressed" hover-stay-time="80">{{deleteText}}</view>
+  <view class="sw__row {{_swiping ? 'is-swiping' : ''}}" style="{{_swiping ? 'transform: translateX(' + _dx + 'px);' : ''}}"
+        bindtouchstart="onStart" bindtouchmove="onMove" bindtouchend="onEnd" bindtouchcancel="onEnd">
+    <view wx:if="{{editing}}" class="sw__minus" catchtap="onMinus" aria-role="button" aria-label="删除{{label}}" hover-class="cy-pressed" hover-stay-time="80"></view>
+    <view class="sw__main"><slot></slot></view>
+    <view wx:if="{{editing}}" class="sw__grip" catchtouchstart="onGripStart" catchtouchmove="onGripMove" catchtouchend="onGripEnd" catchtouchcancel="onGripEnd" aria-label="拖动排序{{label}}"></view>
+  </view>
+  <slot name="xp"></slot>
+</view>
