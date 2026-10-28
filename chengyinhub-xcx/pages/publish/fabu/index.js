@@ -117,6 +117,8 @@ const publishIssueTarget = require('../utils/publish/publish-issue-target.js');
 const templateAuthorFields = require('../utils/publish/template-author-fields.js');
 const storyEnding = require('../utils/publish/story-ending');
 const routeMapView = require('../utils/publish/route-map-view.js');
+const { drawPlayStateMarker } = require('../../../utils/play-marker-draw.js');
+const { MAP_STYLE } = require('../../../utils/map-style.js');
 const publishValidationBag = require('../utils/publish/publish-validation-bag.js');
 const publisherIdentity = require('../../../utils/publisher-identity.js');
 const nodeOutcomeContract = require('../utils/publish/node-outcome-contract.js');
@@ -303,7 +305,6 @@ Page({
     identityRequired: true,
     identityReady: false,
     // 旧草稿没记录商家/个人入口、用户还没确认归属:页内横幅 + 发布确认里的「需要先处理」都看它
-    legacyScopePending: false,
     identityRealName: '',
     identityIdCard: '',
     identityConsented: false,
@@ -544,6 +545,9 @@ Page({
     mapInclude: [MAP_DEFAULT_CENTER], // include-points 自动适配视野;空数组会让腾讯 SDK fitBounds 崩,兜底中心点
     mapCenter: MAP_DEFAULT_CENTER,
     mapScale: 12,
+    // P-45 / G-12:编辑器地图与玩家地图同一套个性化样式(utils/map-style.js;key 未配置时是官方默认底图)
+    mapSubkey: MAP_STYLE.subkey,
+    mapLayerStyle: MAP_STYLE.layerStyle,
     hasRoute: false,       // 是否已有有效坐标节点(空态判断)
     selectedNodeLid: '',   // 列表↔地图双向高亮选中的节点 _localId
     rowHpx: 0,             // 节点卡片行高(px),movable-view y 用 px,onLoad 由 rpx 折算
@@ -934,7 +938,6 @@ Page({
       return false;
     }
     if (restored.status !== 'ready') return false;
-    if (restored.scopeUnknown) { this._confirmLegacyDraftScope(restored.envelope); return false; }
     const restoredForm = restored.envelope.formData || {};
     const modeMismatch = !options.draftUuid && options.mode != null
       && Number(restoredForm.productType) !== (Number(options.mode) === 2 ? 2 : 1);
@@ -946,6 +949,7 @@ Page({
       return false;
     }
     this._applyDraftEnvelope(restored.envelope);
+    if (restored.scopeUnknown) this._persistDraftEnvelope(); // P-44:旧草稿静默归到当前入口,立即补记入口
     return true;
   },
 
@@ -983,7 +987,6 @@ Page({
       this._markDraftStorageUnavailable();
       return;
     }
-    if (result.scopeUnknown) { this._confirmLegacyDraftScope(result.envelope); return; }
     if (result.envelope && result.envelope.publishAttempt) {
       this._publishAttempt = result.envelope.publishAttempt;
     }
@@ -1011,6 +1014,7 @@ Page({
     this._cloudLoadedKey = this._cloudDraftKey();
     if (result.status === 'ready' && !unknownExistingWrite) {
       this._applyDraftEnvelope(result.envelope);
+      if (result.scopeUnknown) this._persistDraftEnvelope(); // P-44:旧草稿静默归到当前入口,立即补记入口
       finish();
       return;
     }
@@ -1041,70 +1045,9 @@ Page({
     finish();
   },
 
-  // 2026-10-22 业主裁决(L09):原来每次进页都弹「确认旧草稿的发布入口」,并把提示塞进底部固定的
-  // 「这次还没有保存」错误卡 —— 盖住章节卡与地图、还和 toast 叠在一起。现在:
-  // ① 提示改成内容流里的横幅(legacyScopePending),不再借用 submitError;
-  // ② 选过「暂不恢复」就按草稿记下来,下次进来不再自动弹窗,横幅上的「确认归属」随时可再打开。
-  _confirmLegacyDraftScope(envelope) {
-    this._draftScopeUnconfirmed = true;
-    this._legacyScopeEnvelope = envelope;
-    this.setData({ legacyScopePending: true });
-    if (this._legacyScopeDeferred()) return;
-    this._promptLegacyDraftScope();
-  },
-
-  _legacyScopeChoiceKey() {
-    const identity = this._draftIdentity();
-    const memberId = String(app.getUserID() || '');
-    if (!identity || !memberId) return '';
-    const draft = identity.topicId ? ('t' + identity.topicId) : ('d' + identity.draftUuid);
-    return 'cy_legacy_scope_later:' + memberId + ':' + (this.data.operationScope || '') + ':' + draft;
-  },
-
-  _legacyScopeDeferred() {
-    const key = this._legacyScopeChoiceKey();
-    try { return !!(key && wx.getStorageSync(key)); } catch (error) { return false; }
-  },
-
-  _rememberLegacyScopeChoice(deferred) {
-    const key = this._legacyScopeChoiceKey();
-    if (!key) return;
-    try {
-      if (deferred) wx.setStorageSync(key, 1);
-      else wx.removeStorageSync(key);
-    } catch (error) {}
-  },
-
-  // 横幅「确认归属」/ 发布确认「需要先处理」那一条:重新打开同一个确认弹窗
-  reopenLegacyDraftScope() {
-    if (!this._draftScopeUnconfirmed || !this._legacyScopeEnvelope) return;
-    if (this.data.publishCheck && this.data.publishCheck.show) this.closePublishCheck();
-    this._promptLegacyDraftScope();
-  },
-
-  _promptLegacyDraftScope() {
-    const envelope = this._legacyScopeEnvelope;
-    const owner = String(app.getUserID() || '');
-    const scope = this.data.operationScope;
-    modal.show({
-      title: '确认旧草稿的发布入口',
-      content: '这份旧草稿没有记录商家或个人入口。确认属于当前入口后才恢复；上次结果未知的发布仍会保留并先确认。',
-      confirmText: '属于此入口', cancelText: '暂不恢复',
-      success: (res) => {
-        if (this._unloaded || owner !== String(app.getUserID() || '')
-            || scope !== this.data.operationScope || !this._draftScopeUnconfirmed) return;
-        if (!res.confirm) { this._rememberLegacyScopeChoice(true); return; }
-        this._draftScopeUnconfirmed = false;
-        this._legacyScopeEnvelope = null;
-        this._rememberLegacyScopeChoice(false);
-        this.setData({ legacyScopePending: false });
-        this._applyDraftEnvelope(envelope);
-        const stored = this._persistDraftEnvelope();
-        this._draftAutosaveReady = true;
-        this._markRestoredDraft(stored);
-      }
-    });
-  },
+  // 2026-10-27 P-44(业主):没有记录入口的旧草稿默认归到当前入口、静默恢复 ——
+  // 「确认旧草稿的发布入口」弹窗、「旧草稿还没恢复」横幅和发布确认里的归属阻断项都已删除。
+  // 恢复后立刻按当前入口重存一次(_persistDraftEnvelope 写 operationScope),下次进来就是已知入口。
 
   _markDraftStorageUnavailable() {
     this._draftStorageUnavailable = true;
@@ -6758,7 +6701,6 @@ Page({
     if (app.ensureLoginFor && !app.ensureLoginFor('publish', () => this.confirmPublishCheck(), { owner: this, target: () => [this.data.editingTopicId, this.data.draftUuid, this.data.operationScope, this.data.formData.clubId, this.data.formData.productType] })) return; // 2026-10-24 游客写前登录
     if (this._identityRegistering) return;
     this.syncIdentityReady();
-    if (this.data.legacyScopePending) return; // 旧草稿归属没确认:发出去也会被 sendData 静默拦下
     if (this.data.publishCheck.blocking.length || !this.data.identityReady) return;
     if (!this.data.identityRequired || this.data.identityRegistered) { this._publishAfterIdentity(); return; }
     // 先落实名、再落主题:后端两道闸就是这个顺序(/api/publisher/identity 先于 /api/topic/create
@@ -6798,10 +6740,6 @@ Page({
 
   // 发布弹层的「确认发布」被置灰时点它 —— 报第一条真缺项,不打空炮。
   onPublishCheckDisabledTap() {
-    if (this.data.legacyScopePending) {
-      cyToast('请先确认这份草稿的发布入口');
-      return;
-    }
     if (!this.data.identityReady) {
       const check = publisherIdentity.checkIdentityForm(this.identityForm());
       cyToast(check.ok ? '发布者实名还没登记' : check.message);
@@ -9073,8 +9011,38 @@ Page({
   // 路线地图视图 = 纯函数,见 utils/publish/route-map-view.js。
   // 这里只做三件页面才能做的事:取 data 切片、存 markerMap 反查表、setData。
   // 配色/简化阈值/折线规则那 178 行搬去模块后有了单测覆盖 —— 埋在页面里时一行都没有。
+  // P-45:离屏画玩家地图同款圆点图钉(utils/play-marker-draw.js),只画一次;画完重绘一遍地图。
+  // 画失败就留空,route-map-view 回落旧图钉,不影响编辑。
+  _ensureRouteIcons() {
+    if (this._routeIcons || this._routeIconsPending || !wx.canvasToTempFilePath || !this.createSelectorQuery) return;
+    this._routeIconsPending = true;
+    const done = (icons) => {
+      this._routeIconsPending = false;
+      this._routeIcons = icons;
+      if (!this._unloaded && icons.actionable) this.buildRouteMap();
+    };
+    this.createSelectorQuery().select('#routeIconCv').fields({ node: true }).exec((res) => {
+      const cv = res && res[0] && res[0].node;
+      // 地图层还没渲染出来(画布跟着地图 wx:if):不记结果,下次重绘地图再试
+      if (!cv) { this._routeIconsPending = false; return; }
+      const S = 108; cv.width = S; cv.height = S;
+      const g = cv.getContext('2d'), icons = {};
+      const keys = ['actionable', 'candidate', 'target'];
+      const next = (i) => {
+        if (i >= keys.length) { done(icons); return; }
+        drawPlayStateMarker(g, S, keys[i]);
+        wx.canvasToTempFilePath({ canvas: cv, fileType: 'png',
+          success: (r) => { icons[keys[i]] = r.tempFilePath; next(i + 1); },
+          fail: () => done({}) });
+      };
+      next(0);
+    });
+  },
+
   buildRouteMap() {
+    this._ensureRouteIcons();
     const view = routeMapView.buildRouteMapView({
+      icons: this._routeIcons,
       chapters: (this.data.formData && this.data.formData.chapters) || [],
       selectedNodeLid: this.data.selectedNodeLid,
       pendingMaterials: this.data.pendingMaterials,

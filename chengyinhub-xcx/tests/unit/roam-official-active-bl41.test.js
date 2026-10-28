@@ -33,8 +33,9 @@ test('BL-41: 页面接线——护照 tab 拉取、失败静默、单场直达�
   assert.match(js, /req\('\/api\/official\/active-for-roam', 'GET', \{\}, \{ silentError: true \}\)/)
   // W8 起晚回包还要核对读作用域(换号/卸载后丢弃),令牌与失败静默两道闸不变
   assert.match(js, /if \(!current\(\) \|\| this\._unloaded \|\| this\._activeRoamToken !== token \|\| !apiOk\(res\)\) return;/)
-  assert.match(js, /this\.setData\(\{ 'passport\.plays': applyEventCard\(passport\.plays, card\) \}\);/)
-  // 有可参与的漫游官方活动时直达详情;没有时照 master「官方活动暂未开放」不进列表
+  // 2026-10-27 owner P-29:默认不摆「暂未开放」灰卡;有可参与活动时才把官方活动大卡插到最前再套用卡面
+  assert.match(js, /this\.setData\(\{ 'passport\.plays': applyEventCard\(plays, card\) \}\);/)
+  // 有可参与的漫游官方活动时直达详情;没有可参与活动时不出这张卡(P-29)
   assert.match(js, /if \(key === 'event' && this\._activeRoamEventId\) \{ if \(this\._eventNavigating\) return; this\._eventNavigating = true; wx\.navigateTo\(\{ url: '\/pages\/activity\/official-detail\/index\?id=' \+ this\._activeRoamEventId, complete: \(\) => \{ this\._eventNavigating = false; \} \}\); return; \}/)
   // onShow 兜底清锁(返回时 complete 万一没回调也不会锁死入口)
   assert.match(js, /onShow\(\)\s*\{[\s\S]{0,600}?this\._syncPresencePrivacy\(\); this\._eventNavigating = false;/)

@@ -45,6 +45,8 @@ function resume(options) {
     else app.sendRequest({url:'/api/template/author-myinfo',method:'POST',data:{id:record.draftId,scope},success:success(detail),fail:()=>fail('原草稿读取失败，请重试')});
   };
   const accept=res=>{
+    // P-39:明确的拒绝回包(如媒体来源未经审核)交给页面就地处理;采用没有发生,清掉日志
+    if(res&&res.code!=200&&typeof options.onRejected==='function'&&options.onRejected(res)===true){try{clear(storage,record);}catch(_){}return;}
     const facts=res&&res.code==200&&res.data;
     if(!facts||facts.requestId!==record.requestId||facts.sourceVersion!==record.sourceVersion||facts.originalTemplateId!==sourceId){fail('原采用结果未确认，请按原请求重试');return;}
     if(facts.status==='REJECTED'){

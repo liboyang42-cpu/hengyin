@@ -114,3 +114,32 @@ test('简易版不带发布链路:零绑定的孤儿方法不得复活', () => {
   const js = fs.readFileSync(path.join(__dirname, '../../pages/publish/simple/index.js'), 'utf8');
   assert.doesNotMatch(js, /\/api\/topic\/create/, '发布只在 fabu,简易页不得重新直提');
 });
+
+// P-43:保留失败卡/描述/明确失败后重试；普通500本身不能越过V2原意图回读。
+test('P-43 AI 明确失败:描述保留,失败卡重试用同一段描述再生成', () => {
+  const h = harness(); h.ready(); const page = h.page;
+  const dispatched = [], send = h.app.sendRequest;
+  h.app.sendRequest = request => { dispatched.push(request); return send(request); };
+  page.data.aiIdea = '外滩夜游三站';
+  const first = h.prepare(), original = Object.assign({}, page._aiPending);
+  first.success({ code: 500, msg: 'AI 响应格式异常,请重试' });
+  first.complete();
+  assert.match(page.data.aiError, /原起草结果还没确认/);
+  assert.equal(page.data.aiDraftPending, true);
+  assert.deepEqual(page._aiPending, original);
+  assert.equal(page.data.aiIdea, '外滩夜游三站', '描述不能丢');
+  page.retryAiPlan();
+  const read = h.take('/request');
+  assert.deepEqual(read.data, { requestId: original.requestId });
+  assert.equal(dispatched.filter(r => r.url.endsWith('/prepare')).length, 1);
+  assert.equal(dispatched.filter(r => r.url.endsWith('/execute')).length, 1);
+  h.finish(read, { code: 200, data: view('FAILED') });
+  assert.equal(page.data.aiDraftPending, false);
+  page.retryAiPlan();
+  const drafts = dispatched.filter(r => r.url.endsWith('/prepare'));
+  assert.equal(drafts.length, 2);
+  assert.equal(JSON.parse(drafts[1].data).idea, '外滩夜游三站');
+  assert.notEqual(JSON.parse(drafts[1].data).prepareKey, original.prepareKey);
+  const wxml = fs.readFileSync(WXML, 'utf8');
+  assert.match(wxml, /<cy-inline-error wx:elif="\{\{aiError\}\}"[^>]*action="\{\{aiIdea \? \(aiDraftPending \? '查看结果' : '重试'\) : ''\}\}" bind:action="retryAiPlan"/);
+});

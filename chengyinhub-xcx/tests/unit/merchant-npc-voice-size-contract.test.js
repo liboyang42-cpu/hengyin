@@ -68,6 +68,8 @@ function loadPage(options = {}) {
     if (id.endsWith('pixel-portrait.js')) return {}
     if (id.endsWith('transport/upload-client.js')) return upload
     if (id.endsWith('profile-review.js')) return require('../../utils/profile-review.js')
+    // 2026-10-27 M-28/G-7:漫游落点只显示到路名(纯函数,无副作用)
+    if (id.endsWith('address-short.js')) return require('../../pages/merchant/utils/address-short.js')
     throw new Error('unexpected require ' + id)
   }
   vm.runInNewContext(SOURCE, {
@@ -243,6 +245,8 @@ test('录音权限被拒绝时不假装开始', async () => {
   assert.equal(h.recorderStarts.length, 0)
   assert.equal(h.page.data.voiceHolding, false)
   assert.match(h.page.data.voiceError, /录音权限/)
+  // 2026-10-27 M-28:被拒后给「去设置开启麦克风」直达按钮(wx.authorize 不会再弹第二次)
+  assert.equal(h.page.data.voiceNeedSetting, true)
 })
 
 test('等待录音授权时切后台不会晚到启动麦克风', async () => {
@@ -296,4 +300,16 @@ test('拒绝第三方声音克隆单独同意保留合法录音且不上传、�
   h.page.uploadVoice(); await tick();
   assert.equal(h.wxUploads,0); assert.equal(h.requests.length,0); assert.ok(h.page.data.voiceFile);
   assert.equal(h.page.data.voiceBusy,false); assert.match(h.page.data.voiceError,/拒绝/);
+});
+
+test('声音查询绑定接收真实tap事件，同时保留内部清除guard且只读不派发', async () => {
+  const h = loadPage();
+  await assert.doesNotReject(h.page.refreshVoice({ type: 'tap', detail: {}, currentTarget: { dataset: {} } }));
+  assert.equal(h.requests.length, 1);
+  assert.equal(h.requests[0].url, '/api/merchant/npc/voice/status');
+  const before = JSON.stringify(h.page.data);
+  await assert.doesNotReject(h.page.refreshVoice(() => false));
+  assert.equal(h.requests.length, 1, '失效清除代次不得查询或重新派发');
+  assert.equal(JSON.stringify(h.page.data), before);
+  assert.equal(h.wxUploads, 0);
 });

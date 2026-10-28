@@ -758,7 +758,7 @@ test('P1-J: 他人主页不得有看不见但可点的空 button', () => {
 test('P1-J negative control: an empty placeholder button is caught', () => {
   const source = read('pages/userinfo/userinfo.wxml')
   // 锚「结构特征」不锚具体某一行：注入一个空 button，主检查必须抓到
-  const mutated = source.replace(/<view class="pc-actions">/, '<view class="pc-actions"><button></button>')
+  const mutated = source.replace(/<view class="pc-actions"[^>]*>/, (m) => m + '<button></button>')
   assert.notEqual(mutated, source, '负控必须真实突变源文件')
   assert.throws(
     () => assert.doesNotMatch(mutated, /<button>\s*<\/button>/),

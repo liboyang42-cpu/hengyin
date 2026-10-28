@@ -129,6 +129,8 @@ page {
   font-size: var(--cy-font-body); color: var(--cy-text-title);
   display: flex; align-items: center; justify-content: space-between;
 }
+/* P-41:多选的商铺类型(「茶饮店/咖啡馆/酒吧」)单行省略,不折行 */
+.cg-pick-text { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .cg-pick.empty { color: var(--cy-text-secondary); }
 .cg-pick.err { border-color: var(--cy-danger); background: var(--cy-danger-soft); }
 
@@ -173,6 +175,7 @@ page {
   font-size: var(--cy-font-label); font-weight: 600;
   padding: var(--cy-legacy-14) var(--cy-space-2-5) var(--cy-legacy-14) var(--cy-space-3); border-radius: 22rpx; /* ds-ok */
 }
+.cg-chip-ico { display: flex; flex: none; }
 .cg-chip-x {
   width: var(--cy-btn-h); height: var(--cy-btn-h); margin: calc(var(--cy-legacy-14) * -1) calc(var(--cy-space-2-5) * -1) calc(var(--cy-legacy-14) * -1) 0;
   color: var(--cy-text-secondary); font-size: var(--cy-font-body); line-height: 1;
@@ -551,6 +554,12 @@ page {
 }
 
 .cg-bottombar > cy-btn { flex: 1; min-width: 0; }
+/* P-40:保存 / 发布失败说明浮在底部按钮上方(预览里的提交栏已删) */
+.cg-submit-error {
+  position: fixed; left: 0; right: 0; z-index: 61;
+  bottom: calc(160rpx + env(safe-area-inset-bottom)); /* ds-ok 底部按钮栏高度 */
+  padding: 0 var(--cy-page-x);
+}
 
 .cg-load-state {
   box-sizing: border-box;
@@ -565,33 +574,7 @@ page {
   text-align: center;
 }
 
-/* 2026-09-18 UI-22:底栏是预览层 flex 列的最后一格,不再 fixed 盖在滚动区上 ——
-   原来摘要 + 按钮 ~440rpx 高,滚动区只垫了 400rpx,「开始任务」一类主键被压在摘要底下。
-   margin-top:auto 让玩法壳在场(没有滚动区)时它照样落在底部。 */
-.cg-pv-submit {
-  flex: none;
-  margin-top: auto;
-  position: relative;
-  z-index: 20;
-  padding-bottom: env(safe-area-inset-bottom);
-  background: var(--cy-color-bg-surface);
-}
-
-.cg-pv-submit .cg-pv-bottombar {
-  position: static;
-}
-
-.cg-pv-submit > cy-inline-error {
-  display: block;
-  padding: var(--cy-space-3) var(--cy-page-x) var(--cy-space-1);
-}
 .cg-preview .cg-scroll-pad { height: var(--cy-space-6); }
-/* 玩法那一步的预览是暗底(.cg-preview--kit),提交栏(保存并绑定)跟着暗;到达 / 完成那几步是浅底,不动。本分包是浅色主题,--cy-color-bg-surface 在这里
-   解析成白 —— 那条通栏白带就是它:内嵌预览里它从玩法卡两侧露出来,读成「游戏底下还有一层」
-   (2026-09-22 走查截图)。暗色值同 .cg-preview 自身那套写死的暗底。 */
-.cg-preview--kit .cg-pv-submit { background: #0A0A0A; /* ds-ok 同 .cg-preview 暗底 */
-  /* 暗底上主按钮反成白药丸墨字(城瘾规矩:主按钮 = 背景反色中性),否则「保存并绑定」黑底黑字看不见 */
-  --cy-comp-btn-primary-bg: #F8F8F8; --cy-comp-btn-primary-fg: #0A0A0A; } /* ds-ok 玩家暗色主题的主按钮值 */
 /* ============ 预览态(深色底) ============ */
 .cg-preview {
   position: fixed; inset: 0; z-index: 80;
@@ -603,50 +586,38 @@ page {
 .cg-pv-scroll { flex: 1; min-height: 0; box-sizing: border-box; }
 .cg-pv-pager {
   position: relative; z-index: 3;
-  display: flex; align-items: center; justify-content: center; gap: var(--cy-space-3);
-  padding: var(--cy-space-3);
-  background: rgba(0,0,0,.7);
-  backdrop-filter: blur(16rpx);
+  display: flex; align-items: center; gap: var(--cy-space-2);
+  padding: var(--cy-space-2) var(--cy-legacy-36) 0;
 }
-.cg-pv-arrow {
-  width: var(--cy-btn-h); height: var(--cy-btn-h); border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: var(--cy-font-display); color: #fff;
-  background: rgba(255,255,255,.12);
-}
-.cg-pv-arrow.disabled { color: rgba(255,255,255,.3); }
-.cg-pv-dots { display: flex; gap: var(--cy-space-1-5); }
-.cg-pv-dot { width: var(--cy-legacy-14); height: var(--cy-legacy-14); border-radius: 8rpx; background: rgba(255,255,255,.35); transition: width var(--cy-motion-standard) var(--cy-ease-out), background var(--cy-motion-fast) var(--cy-ease-out); } /* ds-ok */
-.cg-pv-dot.on { width: 40rpx; background: #fff; }
+.cg-pv-seg { flex: 1; height: 8rpx; border-radius: 4rpx; background: rgba(127,127,127,.28); transition: background var(--cy-motion-fast) var(--cy-ease-out); } /* ds-ok: 2026-10-28 分段进度条 */
+.cg-pv-seg.on { background: var(--cy-color-text-primary); }
 
 .cg-pv-body { padding: var(--cy-space-2) var(--cy-legacy-36) 0; }
-.cg-pv-step { font-size: var(--cy-font-label); color: #8fa6d8; text-align: center; padding-bottom: var(--cy-space-3); } /* ds-ok */
+.cg-pv-step { font-size: var(--cy-font-label); color: var(--cy-color-text-tertiary); padding: var(--cy-space-3) var(--cy-legacy-36) var(--cy-space-4); }
 .cg-pv-panel { animation: cg-pv-panel-in var(--cy-motion-slow) var(--cy-ease-out) both; }
 
 /* 到达 */
 .cg-pv-cover {
-  width: 100%; height: 376rpx; border-radius: 40rpx; overflow: hidden;
-  position: relative; background: #33405f;
-  box-shadow: 0 16rpx 60rpx rgba(0,0,0,.3);
+  width: 100%; height: 440rpx; border-radius: var(--cy-radius-2xl); overflow: hidden;
+  position: relative; background: #141414; /* ds-ok */
+  box-shadow: 0 16rpx 60rpx rgba(0,0,0,.18); /* ds-ok: 到达封面浮起投影,深浅两色页同值 */
 }
 .cg-pv-cover-img { width: 100%; height: 100%; }
 /* 没配封面图:不再用一块压暗纱托一张不存在的图(灰块压标题),标题直接落在卡面上、贴底 */
 .cg-pv-cover--noimg { height: auto; min-height: 240rpx; display: flex; align-items: flex-end; } /* ds-ok: 无图封面的最小高 */
-.cg-pv-cover--noimg .cg-pv-cover-mask { position: static; flex: 1; background: none; }
-.cg-pv-cover-mask {
-  position: absolute; left: 0; right: 0; bottom: 0; padding: var(--cy-space-4);
-  /* 2026-09-02 去墨蓝:原 rgba(10,18,38,.85) 是 #0A1226 的墨蓝纱。封面压字的纱本就有 DS 档
-     (--cy-comp-cover-scrim,底 .82 起手、55% 处 .28、到顶透明),直接读它,别再自调一条。
-     ⚠️ 本页是创建域,真正生效的是下面那条 .theme-topic-editor 覆写;改这条是为了组件在
-     别的域渲染时不落回墨蓝。 */
-  background: var(--cy-comp-cover-scrim);
-}
 .cg-pv-badge {
   display: inline-block;
-  background: var(--cy-brand); color: #fff; /* ds-ok: 紫底白字徽章,#fff 是恒定前景色不随主题翻转 */
+  background: #111; color: #fff; /* ds-ok: 紫底白字徽章,#fff 是恒定前景色不随主题翻转 */
   font-size: var(--cy-font-caption); font-weight: 600; padding: var(--cy-space-1) var(--cy-legacy-18); border-radius: var(--cy-radius-sm); margin-bottom: 16rpx;
 }
-.cg-pv-cover-tit { font-size: var(--cy-font-page-title); font-weight: 800; color: #fff; } /* ds-ok: hero 图遮罩上恒白字,预览态深色场景既有色 */
+.cg-pv-cover-tit { margin-top: var(--cy-space-3); font-size: var(--cy-font-page-title); font-weight: 800; color: var(--cy-color-text-primary); }
+.cg-pv-intro { padding: var(--cy-space-6) var(--cy-space-2) 0; }
+.cg-pv-intro .cg-pv-meta-v { margin-top: var(--cy-space-2); font-weight: 400; color: var(--cy-color-text-tertiary); }
+.cg-pv-intro .cg-pv-desc { margin-top: var(--cy-space-5); line-height: 1.75; color: var(--cy-color-text-secondary); }
+.cg-pv-nav { flex: none; display: flex; align-items: center; justify-content: space-between; padding: var(--cy-space-3) var(--cy-legacy-36) calc(var(--cy-space-4) + env(safe-area-inset-bottom)); }
+.cg-pv-navbtn { width: 112rpx; height: 112rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--cy-color-bg-surface); color: var(--cy-color-text-primary); box-shadow: 0 4rpx 20rpx rgba(0,0,0,.08); } /* ds-ok */
+.cg-pv-navbtn.is-off { opacity: .35; }
+.cg-pv-navn { font-size: var(--cy-font-label); color: var(--cy-color-text-tertiary); }
 .cg-pv-card {
   margin-top: var(--cy-space-4);
   --cy-comp-card-bg: rgba(255,255,255,.58); /* ds-ok: 深色玩法预览舞台上的既有玻璃卡,非页面主题卡 */
@@ -779,14 +750,6 @@ page {
   100% { opacity: 1; transform: translateY(0); }
 }
 
-/* 预览态底部栏 */
-.cg-pv-bottombar {
-  display: flex; gap: var(--cy-space-2-5); z-index: 6;
-  padding: var(--cy-space-3) var(--cy-space-4) calc(24rpx + env(safe-area-inset-bottom));
-  background: rgba(255,255,255,.6);
-  backdrop-filter: blur(60rpx) saturate(190%);
-  border-top: 1rpx solid rgba(255,255,255,.55);
-}
 /* ============ 通用遮罩 / sheet ============ */
 .cg-mask { position: fixed; inset: 0; z-index: 95; background: rgba(15,25,45,.26); }
 /* 2026-10-23 弹层动效:原来一帧出现。进场用全局 cy-fade-in / cy-rise(app.wxss 已有,不新增关键帧),
@@ -1003,14 +966,12 @@ page {
 .theme-topic-editor .cg-mask { background: var(--cy-color-overlay); }
 
 .theme-topic-editor .cg-preview,
-.theme-topic-editor .cg-pv-pager,
-.theme-topic-editor .cg-pv-bottombar {
+.theme-topic-editor .cg-pv-pager {
   background: var(--cy-color-bg-page);
   border-color: var(--cy-color-border-subtle);
   backdrop-filter: none;
 }
 
-.theme-topic-editor .cg-pv-arrow,
 .theme-topic-editor .cg-pv-choice,
 .theme-topic-editor .cg-pv-answer,
 .theme-topic-editor .cg-pv-photo,
@@ -1032,7 +993,6 @@ page {
   color: var(--cy-color-text-primary);
 }
 
-.theme-topic-editor .cg-pv-arrow,
 .theme-topic-editor .cg-pv-choice,
 .theme-topic-editor .cg-pv-answer,
 .theme-topic-editor .cg-pv-photo,
@@ -1059,11 +1019,7 @@ page {
   box-shadow: none;
 }
 
-.theme-topic-editor .cg-pv-cover-mask {
-  background: var(--cy-color-overlay);
-}
-.theme-topic-editor .cg-pv-cover--noimg .cg-pv-cover-mask { background: none; }
-/* 有封面图时标题压在暗纱上:必须反白,跟随上面那条 text-primary 会变成黑字压灰纱 */
+.theme-topic-editor /* 有封面图时标题压在暗纱上:必须反白,跟随上面那条 text-primary 会变成黑字压灰纱 */
 .theme-topic-editor .cg-pv-cover--img .cg-pv-cover-tit { color: var(--cy-color-text-inverse); }
 
 .theme-topic-editor .cg-pv-step,
@@ -1277,15 +1233,11 @@ page {
 /* 玩法屏是深色的,它上面那条(安全区 + 翻页器)不能是白的 ——
    一白一黑两截读成「游戏卡在一个白框里」。玩法在场时整屏收到玩法域的底色。 */
 .theme-topic-editor .cg-preview--kit,
-.theme-topic-editor .cg-preview--kit .cg-pv-pager,
-.theme-topic-editor .cg-preview--kit .cg-pv-bottombar {
+.theme-topic-editor .cg-preview--kit .cg-pv-pager {
   background: var(--cy-color-play-surface-base);
   border-color: transparent;
 }
-.cg-preview--kit .cg-pv-step,
-.cg-preview--kit .cg-pv-arrow { color: var(--cy-color-text-inverse); }
-/* 2026-09-23 走查:编辑器主题把翻页圆钮底刷成白、上面这条又把箭头刷成反色白 —— 暗底预览里成了两个空白圆。回到基础样式 */
-.theme-topic-editor .cg-preview--kit .cg-pv-arrow { background: rgba(255,255,255,.12); color: #FFFFFF; } /* ds-ok 同 .cg-pv-arrow 基础值 */
+.cg-preview--kit .cg-pv-step { color: var(--cy-color-text-inverse); }
 .cg-preview--kit .cg-pv-dot { background: rgba(255,255,255,.28); } /* ds-ok: 深底上的弱点,无对应 token */
 .cg-preview--kit .cg-pv-dot.on { background: var(--cy-color-text-inverse); }
 /* 玩法屏自己有安全区,外面那 188rpx 的留白会把它整块往下推 */
@@ -1470,6 +1422,13 @@ page {
 }
 .cg-hero-c2 { font-size: 23rpx; }                       /* ds-ok 原型 11.5px */
 .cg-hero-body { padding: var(--cy-space-4); }           /* ds-ok 原型 16px */
+/* P-39:采用时原封面被媒体校验拒绝 —— 就地提示替换,不再整页拦截 */
+.cg-cover-unusable {
+  padding: var(--cy-space-2) var(--cy-space-4);
+  font-size: var(--cy-font-caption);
+  color: var(--cy-color-status-danger);
+  background: var(--cy-color-status-danger-soft);
+}
 
 .cg-pv-inline-scroll { position:absolute; inset:0; height:100%; padding-top:calc(env(safe-area-inset-top) + 160rpx); box-sizing:border-box;
   background:#000000; color:var(--cy-color-text-inverse); } /* ds-ok 160rpx 让开胶囊与翻页条;#000 = 玩家暗色 --cy-color-bg-page(故事流 .chfull 的底)。本分包是浅色主题,令牌在这里解析成浅灰,只能写死 */
@@ -1505,6 +1464,9 @@ page {
 .cg-chips { display: flex; flex-wrap: wrap; gap: var(--cy-space-1-5); }
 .cg-chip { min-height: 56rpx; padding: 0 var(--cy-space-3); border-radius: var(--cy-radius-pill); background: var(--cy-color-bg-surface-subtle); display: flex; align-items: center; font-size: var(--cy-font-label); font-weight: 600; color: var(--cy-color-text-primary); }
 .cg-chip.is-on { background: var(--cy-color-action-primary-bg); color: var(--cy-color-action-primary-fg); }
+/* P-41 / G-8(2026-10-27):玩法类别标签更小、实底无描边、前面带品类图标;删除键的 44px 热区靠负边距吃回来,不撑高标签 */
+.cg-cat-chips .cg-chip { min-height: 48rpx; gap: var(--cy-space-1); padding: 0 var(--cy-space-1) 0 var(--cy-space-2-5); border: none; font-size: var(--cy-font-caption); } /* ds-ok 24px 小标签 */
+.cg-cat-chips .cg-chip-x { margin: -20rpx -16rpx -20rpx -8rpx; } /* ds-ok 44px 热区压回 24px 标签高 */
 
 /* 编辑面板：不用毛玻璃 —— backdrop-filter 会把面板变成 fixed 子层的包含块，面板内的下拉会错位。 */
 .cg-sheet.cg-edit-sheet { backdrop-filter: none; background: var(--cy-color-bg-surface); padding-top: var(--cy-space-2); }
@@ -1674,6 +1636,8 @@ page {
 }
 .cg-bottombar > cy-btn { border-radius: var(--cy-comp-btn-radius); box-shadow: 0 12rpx 32rpx rgba(17, 18, 20, .12); } /* ds-ok 浮起来的投影 */
 
+/* P-60:编辑器玩家视角预览里的故事正文同玩家端,用手写体(加载失败回落系统字体) */
+.cy-story-hand { font-family: 'CyStoryHand', -apple-system, "PingFang SC", "Noto Sans SC", sans-serif; } /* ds-ok 字族名同 story-font.js STORY_FONT_FAMILY */
 /* ===== 10-28 原型 A e-temp / e-after:分组列表 + 就地展开(检定段、添加加值半屏、消耗与效果半屏) =====
    L1 的半屏基础样式(feature/cy27-l1-editor-d20)落地后并过去,这里不再单留一份。 */
 /* 检定段沿用 cg-gcfg > cg-adv-body 外壳(段形状契约),里面这一层盖住白卡,分组列表直接落在页面底色上 */

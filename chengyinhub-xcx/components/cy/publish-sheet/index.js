@@ -2,12 +2,21 @@
 const toast = require('../../../utils/toast.js');
 const reducedMotionBehavior = require('../../../behaviors/reduced-motion.js');
 const exitMotion = require('../../../behaviors/exit-motion.js');
+const { withNativeBackGuard, onBackGuardLeave } = require('../../../utils/native-back-guard.js');
 
-Component({
+/* G-2(2026-10-27):物理返回先退到首屏卡片,首屏再按 = 底部「返回」关闭菜单。 */
+function onNativeBack(vm) {
+  if (vm.data.level && vm.data.level !== 'cards') vm.backToCards();
+  else vm.onClose();
+}
+
+Component(withNativeBackGuard({
   // 与 --cy-motion-standard 的退场时长保持一致。
   behaviors: [reducedMotionBehavior, exitMotion(220)],
   options: { styleIsolation: 'apply-shared' },
   properties: {
+    // G-2:页面已有自己的 page-container 覆盖这个弹层时传 false 让位(一页只能有一个容器)
+    backGuard: { type: Boolean, value: true },
     show: {
       type: Boolean, value: false,
       observer(v) {
@@ -40,6 +49,8 @@ Component({
     }
   },
   methods: {
+    // G-2 返回守卫 page-container 的 afterleave(判定逻辑在 utils/native-back-guard.js)
+    _onBackGuardLeave() { onBackGuardLeave(this); },
     onClose() { this.triggerEvent('close'); },
     onMask() { this.triggerEvent('close'); },
     noop() {},
@@ -98,4 +109,4 @@ Component({
       });
     }
   }
-});
+}, onNativeBack));

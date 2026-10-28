@@ -10,3 +10,25 @@
 .mc-error { display: flex; align-items: center; justify-content: space-between; color: var(--cy-color-status-danger); }
 .mc-retry { margin: 0; font-size: var(--cy-font-caption); }
 .mc-error-text { display: block; margin-top: var(--cy-space-2); font-size: var(--cy-font-caption); color: var(--cy-color-status-danger); }
+
+/* P-55 page 档 → 2026-10-28 业主「参考 Revolut,和设置页对齐,间距也不对」:
+   组头是商家头像 + 店名(大一号),两行开关从店名那一列开始,行高 128rpx,组与组之间 56rpx */
+.mc--page { padding: var(--cy-space-2) 0 var(--cy-space-4); }
+.mc--page .mc-loading,
+.mc--page .mc-empty,
+.mc--page .mc-error,
+.mc--page .mc-error-text { padding: 0 var(--cy-page-x); }
+.mc--page .mc-list { gap: 56rpx; margin-top: 0; }
+.mc--page .mc-merchant { padding: 0 var(--cy-page-x); border-radius: 0; background: transparent; }
+.mc-head { display: flex; align-items: center; gap: var(--cy-space-4); min-height: 128rpx; }
+.mc-logo { width: 88rpx; height: 88rpx; flex: none; border-radius: 50%; background: var(--cy-color-bg-surface-subtle); }
+.mc-logo--ph { display: flex; align-items: center; justify-content: center; font-size: var(--cy-type-body); font-weight: 600; color: var(--cy-color-text-secondary); }
+.mc--page .mc-name { font-size: var(--cy-type-card-title); font-weight: 600; color: var(--cy-color-text-primary); }
+.mc--page .mc-channel {
+  min-height: 128rpx;
+  margin-left: calc(88rpx + var(--cy-space-4));
+  box-sizing: border-box;
+  border-top: 0;
+  border-bottom: 1rpx solid var(--cy-color-border-subtle);
+}
+.mc--page .mc-label { font-size: var(--cy-type-body); color: var(--cy-color-text-primary); }

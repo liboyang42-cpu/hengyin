@@ -16,6 +16,15 @@ function mount(canonical = false) {
   const member = { value: 'member-A' }, requests = [], events = [], tips = [], drafts = [], intents = [], modals = [];
   let writes = 0;
   const app = {
+    // Explicit current-account server-open fixture; a changed actor is not granted by default.
+    globalData: { features: { communityPostRead: true, communityPostWrite: true } },
+    _communityFeatureOwner: 'member-A', _communityFeatureAuthorization: 'Bearer fixture-A',
+    getAuthorization: () => 'Bearer fixture-A',
+    canUseCommunity(write) {
+      return this._communityFeatureOwner === String(this.getUserID() || '')
+        && this._communityFeatureAuthorization === this.getAuthorization()
+        && this.globalData.features[write ? 'communityPostWrite' : 'communityPostRead'] === true;
+    },
     getUserID: () => member.value, getAvatar: () => '', getNickname: () => '',
     getRequestErrorMessage: (res, fallback) => res && (res.msg || res.errMsg) || fallback,
     tips: text => tips.push(text),

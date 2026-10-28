@@ -217,6 +217,59 @@ class AiCreatorServiceImplTest {
         assertEquals(1, refunded.size());
     }
 
+    /** P-43:模型真实回包的外形(plan 对象 / 根即 plan / 前后带说明 / 节点用 name)都能解析成草稿。 */
+    @Test
+    void themeDraftAcceptsRealModelOutputShapes() {
+        String[] outputs = {
+            "{\"plan\":{\"title\":\"夜行\",\"storyline\":\"沿街探索\",\"nodes\":[{\"order\":1,\"name\":\"老码头\",\"roleText\":\"起点\"}]}}",
+            "{\"title\":\"夜行\",\"storyline\":\"沿街探索\",\"nodes\":[{\"name\":\"老码头\"}]}",
+            "好的,下面是草稿:\n```json\n{\"plans\":[{\"title\":\"夜行\",\"storyline\":\"沿街探索\",\"nodes\":[{\"name\":\"老码头\"}]}]}\n```",
+            "这是方案 {\"plans\":[{\"title\":\"夜行\",\"storyline\":\"沿街探索\",\"nodes\":[{\"name\":\"老码头\"}]}]} 祝玩得开心"
+        };
+        for (String text : outputs) {
+            when(gateway.generate(any(Long.class), anyString(), eq("theme_draft"), anyString(), anyString()))
+                    .thenReturn(new AiGatewayResult("trace-shape", text, "deepseek-chat", 0));
+            AiThemeDraftResp resp = service.themeDraft(new AiThemeDraftReq(), MEMBER_ID);
+            assertEquals("夜行", resp.getDraft().getTitle(), text);
+            assertEquals("老码头", resp.getDraft().getNodes().get(0).getMerchantName(), text);
+        }
+    }
+
+    /** P-43:外形放宽不等于放掉必填:缺故事线、节点没名字、根本没有节点,仍然报格式异常。 */
+    @Test
+    void themeDraftStillRequiresTitleStorylineAndNamedNodes() {
+        String[] outputs = {
+            "{\"plan\":{\"title\":\"夜行\",\"nodes\":[{\"name\":\"老码头\"}]}}",
+            "{\"title\":\"夜行\",\"storyline\":\"沿街探索\",\"nodes\":[{\"roleText\":\"没有名字\"}]}",
+            "{\"title\":\"夜行\",\"storyline\":\"沿街探索\"}",
+            "{\"plans\":[]}",
+            "完全不是 JSON"
+        };
+        for (String text : outputs) {
+            when(gateway.generate(any(Long.class), anyString(), eq("theme_draft"), anyString(), anyString()))
+                    .thenReturn(new AiGatewayResult("trace-bad", text, "deepseek-chat", 0));
+            com.chengyinhub.business.service.ai.AiServiceException error = assertThrows(
+                    com.chengyinhub.business.service.ai.AiServiceException.class,
+                    () -> service.themeDraft(new AiThemeDraftReq(), MEMBER_ID), text);
+            assertEquals("AI 响应格式异常,请重试", error.getMessage(), text);
+        }
+    }
+
+    /** P-43 根因:提示词曾只说「同 merchant_plan 的 plans 结构」,模型看不到那份结构;现在必须自带结构与节点名称字段。 */
+    @Test
+    void themeDraftPromptCarriesItsOwnSchema() {
+        when(gateway.generate(any(Long.class), anyString(), eq("theme_draft"), anyString(), anyString()))
+                .thenReturn(new AiGatewayResult("trace-prompt",
+                        "{\"plans\":[{\"title\":\"夜行\",\"storyline\":\"沿街探索\",\"nodes\":[{\"name\":\"老码头\"}]}]}",
+                        "deepseek-chat", 0));
+        service.themeDraft(new AiThemeDraftReq(), MEMBER_ID);
+        ArgumentCaptor<String> system = ArgumentCaptor.forClass(String.class);
+        verify(gateway).generate(any(Long.class), anyString(), eq("theme_draft"), system.capture(), anyString());
+        assertTrue(system.getValue().contains("\"plans\""));
+        assertTrue(system.getValue().contains("\"name\""));
+        assertFalse(system.getValue().contains("同 merchant_plan"));
+    }
+
     @Test
     @SuppressWarnings("unchecked")
     void playerThemeDraftCountsOnlyCompleteRealDraft() {

@@ -12,6 +12,7 @@ const { inactiveAccess, normalizeMerchantAccess } = require('../../../utils/merc
 const { ensureSession } = require('../utils/session/ensure-session.js');
 const { normalizeMerchantFinanceRoute } = require('../utils/merchant-finance.js');
 const { pendingPrerequisites } = require('../utils/merchant-prerequisites.js');
+const identitySync = require('../../../utils/identity-sync.js');
 
 // cms_topic.product_type → 展示名(与 marketing 页同口径)
 const PRODUCT_TYPE_TEXT = { 1: '城市定向', 2: '自由探索' };
@@ -142,14 +143,21 @@ Page({
       statusBarHeight: gd.statusBarHeight || 44,
       navBarHeight: gd.navBarHeight || 44,
     });
+    // G-5 / M-27(2026-10-27):品牌中心换 Logo / 改店名后立刻换掉首页头像与问候名,随后 onShow 的 access/me 回读兜底
+    this._offIdentitySync = identitySync.onIdentityChange((evt) => {
+      if (evt.scope !== 'merchant' || !this.data.merchantAccess.active) return;
+      const merchantInfo = Object.assign({}, this.data.merchantInfo, evt.patch);
+      this.setData({ merchantInfo });
+      this.refreshProfileHeader(merchantInfo, this._userInfo);
+    });
     // 首屏数据统一由紧随其后的 onShow 在远程身份确认后加载，避免 onLoad/onShow 并发拉两整组工作台。
     if (options && options.scene) this.openScene(options.scene, { id: options.id, tab: options.tab });
   },
 
   refreshProfileHeader(merchantInfo, userInfo) {
     const info = merchantInfo || {};
-    const user = userInfo || {};
-    const displayName = info.name || user.nickname || '商家';
+    // G-5(2026-10-27):商家视角名称只认商家名,不再拿会员昵称兜底(同一家店不能有两个名字)
+    const displayName = info.name || '商家';
     const businessStatus = (info.businessStatus === 0 || info.businessStatus === '0') ? 0 : 1;
     this.setData({ displayName: displayName, businessStatus: businessStatus });
   },
@@ -819,7 +827,12 @@ Page({
         }
         this.syncMerchantScope(access);
         this._accessMemberId = identityMemberId;
-        const merchantInfo = Object.assign({}, this.data.merchantInfo, access.merchant);
+        // G-5:access/me 回读的空 Logo/空店名不覆盖已有值(刚保存的新 Logo 不能被一次空回包抹掉成白圈)
+        const accessMerchant = {};
+        Object.keys(access.merchant || {}).forEach((key) => {
+          if (access.merchant[key] !== '' && access.merchant[key] != null) accessMerchant[key] = access.merchant[key];
+        });
+        const merchantInfo = Object.assign({}, this.data.merchantInfo, accessMerchant);
         this.setData({ consoleError: '', consoleStatus: null, merchantAccess: access, merchantInfo });
         this.refreshProfileHeader(merchantInfo, this._userInfo);
         this.loadMerchantConsole(access, dataEpoch);
@@ -1437,7 +1450,7 @@ Page({
   },
 
   goFinance() {
-    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/merchant/ledger/index?view=settlement', complete: () => { this._navigating = false; } });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageA/pages/assetcenter/earnings/index?theme=merchant', complete: () => { this._navigating = false; } }); // 2026-10-28 M-32:先进账户收益(浅色),结算明细在「更多」里
   },
 
   goBrandManage() {
@@ -1548,6 +1561,7 @@ Page({
   },
 
   onUnload() {
+    if (this._offIdentitySync) { this._offIdentitySync(); this._offIdentitySync = null; }
     if (this._revenueCountStop) this._revenueCountStop();
     this._revenueCountStop = null;
     this._consoleVersion = (this._consoleVersion || 0) + 1;

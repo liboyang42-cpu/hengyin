@@ -60,7 +60,8 @@ class PlayerWxacodeServiceImplTest {
     void generatesSignedBoundedSceneAndCachesOssUrl() {
         when(gateway.generate(anyString(), anyString()))
                 .thenReturn(new PlayerWxacodeServiceImpl.WxCodeResponse("image/png", PNG));
-        when(storage.store(PNG, "png")).thenReturn("https://oss.example/player-code.png");
+        when(storage.store(PNG, "png")).thenReturn("upload/player-code.png");
+        when(storage.url("upload/player-code.png")).thenReturn("https://oss.example/player-code.png");
 
         String result = service.getOrCreate(9223372036854775807L);
 
@@ -76,14 +77,15 @@ class PlayerWxacodeServiceImplTest {
         assertEquals("release", body.get("env_version"));
         assertEquals(430, ((Number) body.get("width")).intValue());
         verify(redisCache).setCacheObject(
-                "wx:player-code:v1:9223372036854775807", "https://oss.example/player-code.png");
+                "wx:player-code:v2:9223372036854775807", "upload/player-code.png");
     }
 
     @Test
     void doorSceneUsesRawCheckinCodeAndSameLandingPage() {
         when(gateway.generate(anyString(), anyString()))
                 .thenReturn(new PlayerWxacodeServiceImpl.WxCodeResponse("image/png", PNG));
-        when(storage.store(PNG, "png")).thenReturn("https://oss.example/door.png");
+        when(storage.store(PNG, "png")).thenReturn("upload/door.png");
+        when(storage.url("upload/door.png")).thenReturn("https://oss.example/door.png");
 
         String result = service.getOrCreateScene("0f1e2d3c4b5a69788796a5b4c3d2e1f0");
 
@@ -94,14 +96,16 @@ class PlayerWxacodeServiceImplTest {
         assertEquals("0f1e2d3c4b5a69788796a5b4c3d2e1f0", body.get("scene"));
         assertEquals("pages/index/index", body.get("page"));
         verify(redisCache).setCacheObject(
-                "wx:door-code:v1:0f1e2d3c4b5a69788796a5b4c3d2e1f0", "https://oss.example/door.png");
+                "wx:door-code:v2:0f1e2d3c4b5a69788796a5b4c3d2e1f0", "upload/door.png");
     }
 
+    /** E-4:缓存的是对象 key,每次读取现签;AccessKey 轮换后旧签名不会永久留成空白码图。 */
     @Test
     void cachedCodeAvoidsWechatFrequencyAndStorageCalls() {
-        when(redisCache.getCacheObject("wx:player-code:v1:42")).thenReturn("https://oss.example/cached.png");
+        when(redisCache.getCacheObject("wx:player-code:v2:42")).thenReturn("upload/cached.png");
+        when(storage.url("upload/cached.png")).thenReturn("https://oss.example/fresh-signature.png");
 
-        assertEquals("https://oss.example/cached.png", service.getOrCreate(42L));
+        assertEquals("https://oss.example/fresh-signature.png", service.getOrCreate(42L));
 
         verify(tokenService, never()).getAccessToken();
         verify(gateway, never()).generate(anyString(), anyString());
@@ -133,7 +137,8 @@ class PlayerWxacodeServiceImplTest {
         when(tokenService.refreshAccessToken()).thenReturn("refreshed-access-token");
         when(gateway.generate(eq("refreshed-access-token"), anyString()))
                 .thenReturn(new PlayerWxacodeServiceImpl.WxCodeResponse("image/png", PNG));
-        when(storage.store(PNG, "png")).thenReturn("https://oss.example/player-code.png");
+        when(storage.store(PNG, "png")).thenReturn("upload/player-code.png");
+        when(storage.url("upload/player-code.png")).thenReturn("https://oss.example/player-code.png");
 
         assertEquals("https://oss.example/player-code.png", service.getOrCreate(42L));
 

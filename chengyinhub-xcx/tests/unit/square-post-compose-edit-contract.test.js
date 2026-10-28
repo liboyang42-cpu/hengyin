@@ -26,6 +26,14 @@ function loadComponent(opts) {
   const draftCalls = [];
   const intentCalls = [];
   const app = {
+    globalData: { features: { communityPostRead: true, communityPostWrite: true } },
+    _communityFeatureOwner: '1', _communityFeatureAuthorization: 'Bearer fixture-editor',
+    getAuthorization: () => 'Bearer fixture-editor',
+    canUseCommunity(write) {
+      return this._communityFeatureOwner === String(this.getUserID() || '')
+        && this._communityFeatureAuthorization === this.getAuthorization()
+        && this.globalData.features[write ? 'communityPostWrite' : 'communityPostRead'] === true;
+    },
     getUserID: () => 1,
     getAvatar: () => '',
     getNickname: () => '',

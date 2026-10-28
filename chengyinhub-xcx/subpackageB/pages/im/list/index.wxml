@@ -1,4 +1,4 @@
-<view class="theme-dark">
+<view class="{{isMerchantView ? 'theme-merchant' : 'theme-dark'}}">
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
@@ -25,7 +25,41 @@
 
   <!-- 合作邀请:收到的在收件箱、我发出的在发件箱,点进邀约详情处理。与会话是两套数据源,读不到只在这里局部报错。 -->
   <cy-inline-error wx:if="{{inviteError}}" kind="data" title="{{inviteError}}" action="重试" bind:action="loadInvites" />
-  <view wx:for="{{activeTab === 'in' ? invitesIn : invitesOut}}" wx:key="rowKey" class="invite-row cy-fly-in" style="animation-delay: {{index < 5 ? index * 40 : 200}}ms"
+  <!-- M-06(owner 2026-10-27 m681):商家视角的协作邀请不再是一条条消息,而是顶部一条横滑卡片带;
+       卡片同宽同高,点开进协作邀请详情。玩家视角保持下面原来的邀请行。 -->
+  <view wx:if="{{isMerchantView && (activeTab === 'in' ? invitesIn.length : invitesOut.length)}}" class="invite-strip">
+    <text class="invite-strip__title">协作邀请</text>
+    <scroll-view class="invite-strip__scroll" scroll-x enhanced show-scrollbar="{{false}}">
+      <view class="invite-strip__track">
+        <view wx:for="{{activeTab === 'in' ? invitesIn : invitesOut}}" wx:key="rowKey" class="invite-card"
+              data-id="{{item.inviteId}}" data-box="{{activeTab === 'in' ? 'received' : 'sent'}}" bindtap="openInvite"
+              aria-role="button" aria-label="协作邀请：{{item.partnerName || item.topicText}}，{{item.statusText}}"
+              hover-class="cy-pressed" hover-stay-time="80">
+          <!-- 2026-10-28 业主 m681:照 Figma 393:429 / 393:442 —— 状态 · 来自谁,封面 + 档期 / 主题名 / 地点,条款一行,待确认的直接给两颗按钮(进详情处理) -->
+          <view class="invite-card__top">
+            <text class="invite-status is-{{item.badgeTone}}">{{item.statusText}}</text>
+            <text class="invite-card__from">{{activeTab === 'in' ? '来自' : '发给'}} {{item.partnerName}}</text>
+          </view>
+          <view class="invite-card__main">
+            <image wx:if="{{item.topicImgUrl}}" class="invite-card__cover" src="{{item.topicImgUrl}}" mode="aspectFill" lazy-load />
+            <view wx:else class="invite-card__cover invite-card__cover--none" aria-hidden="true"><cy-icon name="connect" size="44" /></view>
+            <view class="invite-card__info">
+              <text class="invite-card__date" wx:if="{{item.dateText}}">{{item.dateText}} 起</text>
+              <text class="invite-card__name">{{item.topicText || item.partnerName}}</text>
+              <text class="invite-card__sub" wx:if="{{item.topicAddressName}}">{{item.topicAddressName}}</text>
+            </view>
+          </view>
+          <text class="invite-card__terms" wx:if="{{item.termsText}}">{{item.termsText}}</text>
+          <view class="invite-card__acts" wx:if="{{activeTab === 'in' && item.status === 0}}">
+            <view class="invite-card__btn" aria-role="button" aria-label="拒绝" hover-class="cy-pressed" hover-stay-time="80">拒绝</view>
+            <view class="invite-card__btn invite-card__btn--primary" aria-role="button" aria-label="接受合作" hover-class="cy-pressed" hover-stay-time="80">接受合作</view>
+          </view>
+          <text wx:else class="invite-card__time">{{item.timeText}}</text>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+  <view wx:for="{{isMerchantView ? [] : (activeTab === 'in' ? invitesIn : invitesOut)}}" wx:key="rowKey" class="invite-row cy-fly-in" style="animation-delay: {{index < 5 ? index * 40 : 200}}ms"
         data-id="{{item.inviteId}}" data-box="{{activeTab === 'in' ? 'received' : 'sent'}}" bindtap="openInvite"
         aria-role="button" aria-label="合作邀请：{{item.partnerName || item.topicText}}，{{item.statusText}}"
         hover-class="cy-pressed-bg" hover-stay-time="80">
@@ -59,6 +93,7 @@
 
   <!-- 列表 -->
   <scroll-view class="body" wx:else scroll-y enhanced show-scrollbar="{{false}}" style="{{pmList === 1 ? '--pm-l:1;' : (pmList === 2 ? '--pm-l-d:.32s;--pm-l-s:1;' : '')}}">
+    <text wx:if="{{isMerchantView && viewList.length && (activeTab === 'in' ? invitesIn.length : invitesOut.length)}}" class="invite-strip__title">消息</text>
     <view class="conv-wrap {{item._open ? 'is-open' : ''}}" wx:for="{{viewList}}" wx:key="conversationId">
       <!-- 左滑露出的操作 -->
       <view class="conv-actions" style="opacity: {{item.offset ? 1 : 0}};">

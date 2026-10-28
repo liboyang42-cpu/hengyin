@@ -95,7 +95,8 @@ test('旧本机记录兼容且同会话不重复，服务器统计优先，照�
 test('护照真实Page只用服务端汇总，本机坏存储不阻断；失败保留错误而非零', async () => {
   delete require.cache[require.resolve('../../pages/roam/index.js')]; require('../../pages/roam/index.js')
   const view = { ...pageConfig, data: JSON.parse(JSON.stringify(pageConfig.data)),
-    setData(patch) { Object.assign(this.data, patch) }, _loadActiveRoamEvents() {} }
+    // 勋章墙方卡(P-29 _loadPassportBadge)与官方活动卡同为护照附属读取,本用例只核服务端汇总,一并桩掉
+    setData(patch) { Object.assign(this.data, patch) }, _loadActiveRoamEvents() {}, _loadPassportBadge() {} }
   global.wx.getStorageSync = () => { throw new Error('storage unavailable') }
   let pending = view._loadIntroPassport()
   assert.equal(view.data.passportLoading, true)

@@ -243,9 +243,9 @@ page { background: var(--cy-comp-sheet-player-page); }
 .mt-strip { position: absolute; left: 0; right: 0; bottom: 0; z-index: 18; pointer-events: none; }
 .mt-strip__head, .mt-strip__cards { pointer-events: auto; }
 .mt-strip__head { display: inline-flex; margin: 0 0 15rpx 31rpx; height: 54rpx; padding: 0 23rpx; align-items: center; border-radius: 27rpx; background: rgba(28,28,30,.88); box-shadow: 0 8rpx 24rpx rgba(0,0,0,.25); font-size: 25rpx; font-weight: 600; color: #fff; } /* ds-ok 同 .mt-chip 底色 */
-.mt-strip__cards { width: 100%; height: 330rpx; white-space: nowrap; }
+.mt-strip__cards { width: 100%; height: 290rpx; white-space: nowrap; } /* 2026-10-28 业主:卡片加宽,铺在最底部 */
 .mt-strip__track { display: inline-flex; gap: 23rpx; padding: 0 31rpx; }
-.mt-card { position: relative; display: inline-flex; flex: none; width: 481rpx; height: 300rpx; overflow: hidden; border-radius: 27rpx; background: #2C2C2E; vertical-align: top; box-shadow: 0 12rpx 31rpx rgba(0,0,0,.3); } /* ds-ok 同 .entry-card,加高;压在地图上加投影 */
+.mt-card { position: relative; display: inline-flex; flex: none; width: 620rpx; height: 260rpx; overflow: hidden; border-radius: 27rpx; background: #2C2C2E; vertical-align: top; box-shadow: 0 12rpx 31rpx rgba(0,0,0,.3); } /* ds-ok 同 .entry-card,加高;压在地图上加投影 */
 .mt-card__cover { position: absolute; top: 0; right: 0; bottom: 0; left: 0; width: 100%; height: 100%; }
 .mt-card__cover--team { background: linear-gradient(135deg, #0d2a4d, #123b6b); } /* ds-ok 队伍蓝 */
 .mt-card__cover--place, .mt-card__cover--shop { background: #2C2C2E; } /* ds-ok */
@@ -265,3 +265,12 @@ page { background: var(--cy-comp-sheet-player-page); }
 .pb__hs .pb__qt, .pb__hs .pb__cm { display: inline-flex; flex-direction: column; flex: none; width: 470rpx; min-height: 200rpx; box-sizing: border-box; padding: 23rpx 27rpx; border: 0; border-radius: 31rpx; background: #2C2C2E; white-space: normal; vertical-align: top; } /* ds-ok 同 .pb__game 卡底 */
 .pb__hs .pb__qt-t, .pb__hs .pb__cm-t { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
 .pb__hs .pb__qt-s { margin-top: auto; padding-top: 12rpx; }
+/* 2026-10-27 owner P-38:地图 / 列表切换挪到右侧、筛选行下方、竖排;返回键按胶囊行定位;底部卡片带始终在(空态卡) */
+.mt-mode--side { position: absolute; right: 23rpx; z-index: 21; height: auto; width: auto; flex-direction: column; gap: 4rpx; padding: 4rpx; border-radius: var(--cy-radius-pill); }
+.mt-mode--side .mt-mode__i { min-width: 74rpx; height: 74rpx; padding: 0; }
+.nb.map-open .mt-mode--side { opacity: 0; pointer-events: none; }
+.mt-list { padding-right: 140rpx; }
+.nb-back { position: fixed; left: 23rpx; z-index: 40; display: flex; align-items: center; }
+.nb-back__pill { border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(28,28,30,.88); color: #fff; } /* ds-ok 同 .mt-chip 底色 */
+.nb-back::after { content: ''; position: absolute; left: 50%; top: 50%; width: 88rpx; height: 88rpx; transform: translate(-50%, -50%); }
+.mt-card--empty { align-items: flex-end; background: linear-gradient(180deg, #2C2C2E, #1C1C1E); } /* ds-ok 空态卡与 .mt-card 同底 */

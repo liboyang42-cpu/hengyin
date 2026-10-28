@@ -39,12 +39,14 @@ function assertCommentReportGate(wxml) {
 // 漏一处就等于「进行中的项目报不了、已结束还能报」这种半拉子行为。
 function assertActivityReportGate(wxml) {
   const sites = wxml.match(/is="clubEventCard"\s*\n?\s*data="\{\{[^"]*\}\}"/g) || [];
-  assert.equal(sites.length, 2, '活动卡有两个调用点(进行中 / 已结束),断言必须覆盖两处');
+  // 2026-10-27 P-14 owner:已结束的活动不在俱乐部活动 tab 显示,「已结束」段撤掉,调用点只剩一处
+  assert.equal(sites.length, 1, '活动卡只剩一个调用点(未结束的活动),断言必须覆盖它');
   sites.forEach(function (site) {
     assert.match(site, /canReport:\s*canSeeMembers && item\.memberId != myMemberId/,
       'CU-C-149:本人创建的项目不给「举报活动」:' + site);
   });
-  assert.match(wxml, /wx:if="\{\{canReport\}\}" class="event-report"/,
+  // P-14:「举报活动」收进卡片「更多」,入口仍按 canReport 渲染
+  assert.match(wxml, /wx:if="\{\{canReport\}\}" class="ev-more" catchtap="onEventMore"/,
     '模板内仍按 canReport 渲染(闸加在 data 上，不是加在模板里)');
 }
 
@@ -116,7 +118,7 @@ test('CU-C-138 静态:自己的评论没有举报入口,删除入口照旧', () 
   assertCommentReportGate(read(DETAIL_WXML));
 });
 
-test('CU-C-149 静态:活动卡两处调用点都按作者收回报举入口', () => {
+test('CU-C-149 静态:活动卡调用点按作者收回报举入口', () => {
   assertActivityReportGate(read(DETAIL_WXML));
 });
 

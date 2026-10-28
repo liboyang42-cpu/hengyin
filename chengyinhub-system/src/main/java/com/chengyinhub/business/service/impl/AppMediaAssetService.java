@@ -124,6 +124,14 @@ public class AppMediaAssetService {
         if("LOCAL".equals(row.get("storageType")))return localApprovedUrl(String.valueOf(row.get("objectKey")));
         return FileOssUploadUtils.generatePresignedUrl(String.valueOf(row.get("objectKey")));
     }
+    /**
+     * G-3:未登记的本站系统图(后台上传、模板自带、登记表上线前的旧图)按存储 key 出公开地址;
+     * 本地发布地址没配时返回 null,由读路径跳过这张图,不让整页失败。
+     */
+    public String systemImageUrl(String objectKey) {
+        if(objectKey.startsWith("/profile/"))return publicBaseUrl==null || publicBaseUrl.trim().isEmpty()?null:localPublicBase()+objectKey;
+        return FileOssUploadUtils.generatePresignedUrl(objectKey);
+    }
     public void requireLocalPublicationOrigin() {localPublicBase();}
     private String localApprovedUrl(String objectKey) {
         if(objectKey==null || !objectKey.matches("/profile/upload/[0-9]{4}/[0-9]{2}/[0-9]{2}/[0-9a-f]{32}\\.(jpg|jpeg|png|gif)"))

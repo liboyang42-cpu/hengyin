@@ -9,7 +9,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -22,6 +27,9 @@ public class MapGeocodeServiceImpl implements IMapGeocodeService {
     private static final Logger log = LoggerFactory.getLogger(MapGeocodeServiceImpl.class);
     private static final String GEOCODE_URL = "https://apis.map.qq.com/ws/geocoder/v1/?location=";
     private static final String FORWARD_GEOCODE_URL = "https://apis.map.qq.com/ws/geocoder/v1/?address=";
+    private static final String PLACE_SUGGESTION_URL = "https://apis.map.qq.com/ws/place/v1/suggestion/?page_size=10&keyword=";
+    /** 搜索结果上限:前端面板最多展示 5 条,多拿一点给去重留余量 */
+    private static final int MAX_PLACES = 10;
     /** 供应商可信度门槛:>=7 才是门牌/道路级定位,以下是区县或城市中心的回退值。 */
     private static final int MIN_RELIABILITY = 7;
     static final long CITY_CACHE_BYTES = 512L * 1024;
@@ -111,6 +119,55 @@ public class MapGeocodeServiceImpl implements IMapGeocodeService {
             return null;
         } finally {
             synchronized (inFlight) { inFlight.remove(requestKey); }
+        }
+    }
+
+    @Override
+    public List<Map<String, Object>> searchPlaces(String keyword, double longitude, double latitude) {
+        if (!tencentMapClient.isReady() || StringUtils.isEmpty(keyword) || StringUtils.isEmpty(keyword.trim())) {
+            return Collections.emptyList();
+        }
+        try {
+            String url = PLACE_SUGGESTION_URL + urlEncode(keyword.trim()) + "&location=" + latitude + "," + longitude;
+            String city = resolveCity(longitude, latitude);
+            if (!StringUtils.isEmpty(city)) {
+                url += "&region=" + urlEncode(city);
+            }
+            JSONObject root = JSONObject.parseObject(requestGeocode(url));
+            int status = root == null ? -1 : root.getIntValue("status", -1);
+            if (status != 0) {
+                log.warn("[MapGeocode] provider rejected place suggestion, status={}", status);
+                return Collections.emptyList();
+            }
+            com.alibaba.fastjson2.JSONArray data = root.getJSONArray("data");
+            if (data == null) {
+                return Collections.emptyList();
+            }
+            List<Map<String, Object>> out = new ArrayList<>();
+            for (int i = 0; i < data.size() && out.size() < MAX_PLACES; i++) {
+                JSONObject row = data.getJSONObject(i);
+                JSONObject location = row == null ? null : row.getJSONObject("location");
+                Double lat = location == null ? null : location.getDouble("lat");
+                Double lng = location == null ? null : location.getDouble("lng");
+                String title = row == null ? null : row.getString("title");
+                if (lat == null || lng == null || StringUtils.isEmpty(title)) {
+                    continue;
+                }
+                Map<String, Object> place = new LinkedHashMap<>();
+                place.put("name", title);
+                place.put("address", StringUtils.nvl(row.getString("address"), ""));
+                place.put("lat", lat);
+                place.put("lng", lng);
+                Double distance = row.getDouble("_distance");
+                if (distance != null) {
+                    place.put("distance", Math.round(distance));
+                }
+                out.add(place);
+            }
+            return out;
+        } catch (Exception e) {
+            log.warn("[MapGeocode] place suggestion request failed: {}", e.getClass().getSimpleName());
+            return Collections.emptyList();
         }
     }
 

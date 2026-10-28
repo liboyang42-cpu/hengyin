@@ -5,6 +5,9 @@ const { decodeDisplayText } = require('../../../../utils/display-text.js');
 const { normalizeMerchantAccess } = require('../../../../utils/merchant-access-policy.js');
 const { isLoginRequired, retryLogin } = require('../../../../utils/session/login-reload.js');
 const { decorate: decorateInvites } = require('../../../../utils/coop-invite-view.js');
+const roleGuard = require('../../../../utils/roleGuard.js');
+const roleViewFilter = require('../../../../utils/transport/role-view-filter.js');
+const merchantTheme = require('../../../../utils/merchant-theme.js');
 const { reader, sameReader } = require('../../../../utils/user-character.js');
 const app = getApp();
 
@@ -30,6 +33,8 @@ Page({
     invitesIn: [],
     invitesOut: [],
     inviteError: '',
+    // M-06 / G-10:商家视角整页浅色,合作邀请做成顶部横滑卡片带;玩家视角保持深色与原邀请行。
+    isMerchantView: false,
   },
 
   onLoad() {
@@ -44,6 +49,7 @@ Page({
     this.setData({ statusBarHeight: statusBarHeight, navBarHeight: navBarHeight, capsuleRightGap: capsuleRightGap });
     // 左滑面板总宽 = 3 × 120rpx = 360rpx;rpx→px 换算随屏宽变,不能写死 px(P1-1:大屏机型上曾被写死值压掉)
     this._openPx = Math.round(360 * ((sys.windowWidth || 375) / 750));
+    this._syncViewTheme();
     this.loadConversations();
     this.loadInvites();
   },
@@ -51,6 +57,7 @@ Page({
     const resumed = this._hidden;
     this._hidden = false;
     this._navigating = false; // 从聊天页返回时刷新未读/最后一条;兜底清跳转中标记
+    this._syncViewTheme();
     this._syncCommunityEntry();
     if (this.data.loaded || resumed || this._conversationReader && !sameReader(app, this._conversationReader)) {
       this.loadConversations(true);
@@ -63,8 +70,15 @@ Page({
     this._inviteEpoch = (this._inviteEpoch || 0) + 1;
     this._conversationRequestEpoch = (this._conversationRequestEpoch || 0) + 1;
     this._merchantEntryRequestEpoch = (this._merchantEntryRequestEpoch || 0) + 1;
+    if (this.data.isMerchantView) merchantTheme.merchantPageRestore();
   },
   onUnload() { this._disposed = true; this.onHide(); },
+  // 视角只认 roleGuard(与请求层 G-4 闸同源):商家浅色(原生导航栏跟着切亮),玩家保持默认深色。
+  _syncViewTheme() {
+    const isMerchantView = roleGuard.isMerchantView();
+    if (isMerchantView !== this.data.isMerchantView) this.setData({ isMerchantView: isMerchantView });
+    if (isMerchantView) merchantTheme.merchantPageShow();
+  },
 
   _isPageContextCurrent(memberId) {
     return !this._disposed && !this._hidden
@@ -183,6 +197,12 @@ Page({
       silentError: true,
       success(res) {
         if (!finish()) return;
+        // G-4:玩家视角下商家身份报错已被请求层清掉文案;对玩家而言就是「没有商家合作邀请」,不出横幅。
+        if (roleViewFilter.isSuppressed(res)) {
+          that.setData({ invitesIn: [], invitesOut: [], inviteError: '' });
+          that.refreshView();
+          return;
+        }
         const d = res && res.code == 200 ? res.data : null;
         if (!d || !isRecordList(d.received) || !isRecordList(d.sent)) {
           that.setData({ invitesIn: [], invitesOut: [], inviteError: (res && res.msg) || '邀请暂时没读到' });
@@ -195,8 +215,9 @@ Page({
         that.setData({ invitesIn: shape(d.received), invitesOut: shape(d.sent), inviteError: '' });
         that.refreshView();
       },
-      fail() {
+      fail(res) {
         if (!finish()) return;
+        if (roleViewFilter.isSuppressed(res)) { that.setData({ invitesIn: [], invitesOut: [], inviteError: '' }); return; }
         that.setData({ inviteError: '邀请暂时没读到' });
       },
     });
@@ -259,6 +280,8 @@ Page({
    * 身份问一次、条数留给页面自己说,这一行只负责「有这么个地方」。
    */
   loadMerchantEntry() {
+    // G-4:玩家视角不问商家身份 —— 竞猜待答只给商家,玩家这一行永远不出。
+    if (!this.data.isMerchantView) { this._merchantEntryRequestEpoch = (this._merchantEntryRequestEpoch || 0) + 1; this.setData({ canSettlePredict: false }); return; }
     const that = this;
     const requestEpoch = (this._merchantEntryRequestEpoch || 0) + 1;
     this._merchantEntryRequestEpoch = requestEpoch;

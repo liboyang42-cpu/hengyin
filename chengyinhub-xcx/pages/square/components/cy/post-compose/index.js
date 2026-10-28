@@ -18,6 +18,15 @@ const { pickLocation } = require('../../../../../utils/location/location-manager
 
 const MAX_LEN = 8000;
 const MAX_PICS = 6;
+// 2026-10-27 P-20 owner:俱乐部发帖也走这一个全屏发帖弹窗(club-id 非空即俱乐部模式)。
+// 俱乐部帖沿用原俱乐部页的上限与接口:最多 9 张图、可以只发图、可带一条游玩记录、管理员可发公告。
+const CLUB_MAX_PICS = 9;
+// 发帖引用被服务端拒绝时的机器错误码 → 用户文案;未知码回落到服务端 msg(原在 club/detail)。
+const CLUB_POST_REF_ERROR_TEXT = {
+  CLUB_POST_REF_UNAVAILABLE: '引用的记录暂不可用，已取消引用',
+  CLUB_POST_REF_NOT_JOINED: '只能带上你自己参加过的记录，已取消引用',
+  CLUB_POST_REF_INVALID: '引用信息有误，已取消引用',
+};
 
 function activityIdOf(row) {
   if (!row) return '';
@@ -85,7 +94,9 @@ function placeLine(poi) {
 // (loadDraft 本身也会按 memberId 判 member_mismatch,这里是第二道)。
 // 四个调用点(show 观察器 / persist / readDrafts / onPublish)都先判过 memberId,
 // 所以这里不再兜 falsy —— 兜了也永远走不到,只会让人以为「没登录也能存草稿」。
-function draftIdentity(memberId) {
+// 俱乐部模式按团分槽(club_post_<clubId>_<memberId>),不和广场那一份互相覆盖。
+function draftIdentity(memberId, clubId) {
+  if (clubId != null && clubId !== '') return { topicId: 'club_post_' + String(clubId) + '_' + String(memberId) };
   return { topicId: 'square_post_' + String(memberId) };
 }
 
@@ -115,7 +126,9 @@ function sheetTopStyle(extraPt) {
   if (!mb) { try { mb = wx.getMenuButtonBoundingClientRect(); } catch (e) { mb = null; } }
   var win = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync();
   var top = resolveMenuChrome(win, mb).sheetTop + (extraPt || 0);
-  return '--cy-comp-sheet-max-h: calc(100vh - ' + Math.round(top) + 'px);';
+  // 2026-10-27 P-20 owner:发帖是全屏弹窗 —— 还原 10-23 统一 80% 档之前的「面板顶 = 胶囊底」,
+  // 只对发帖与草稿这两层把 full 档抬到整屏,上限仍由胶囊实测(--cy-comp-sheet-max-h)封顶。
+  return '--cy-comp-sheet-max-h: calc(100vh - ' + Math.round(top) + 'px); --cy-comp-sheet-full: 100vh;';
 }
 
 Component({
@@ -130,6 +143,12 @@ Component({
     // 只改正文与关联 —— 图片/地点不提交,后端 R10-06「未提交字段不清空」会原样保留,
     // 所以编辑态不给附件工具(给了也提交不上去,等于骗用户)。
     editPost: { type: Object, value: null },
+    // 俱乐部模式(P-20):发到 /api/club/post/create。传 club.id(页面的 clubId 不走 setData)。
+    clubId: { type: null, value: '' },
+    // 俱乐部模式:可发公告(主理人 / 有内容管理权的管理员)
+    canAnnounce: { type: Boolean, value: false },
+    // 俱乐部模式:「带上一次游玩记录」由宿主页的选择器选,这里只展示与提交
+    postRef: { type: Object, value: null },
   },
 
   data: {
@@ -143,6 +162,7 @@ Component({
     submitting: false,
     // 编辑态(editPost 非空):标题/提交键换文案,草稿与附件工具收起 —— wxml 直接消费它
     editMode: false,
+    asAnnouncement: false,
     draftsShow: false,
     drafts: [],
     picList: [],
@@ -222,7 +242,7 @@ Component({
       if (!this._memberId) return;
       // member_mismatch / revision_conflict 一律当没有草稿:
       // 宁可让用户少恢复一次,也不能把别人的文字塞进他的输入框。
-      const res = proEditorDraft.loadDraft(wx, draftIdentity(this._memberId), { memberId: this._memberId });
+      const res = proEditorDraft.loadDraft(wx, draftIdentity(this._memberId, this.data.clubId), { memberId: this._memberId });
       const saved = res.status === 'ready' && res.envelope && res.envelope.formData
         ? String(res.envelope.formData.contents || '')
         : '';
@@ -232,6 +252,7 @@ Component({
 
   methods: {
     cancelPublish() {
+      this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1;
       const pending = this._publishContext;
       this._publishContext = null;
       this._submitting = false;
@@ -265,7 +286,7 @@ Component({
       try {
         proEditorDraft.saveDraft(wx, {
           memberId: this._memberId,
-          topicId: draftIdentity(this._memberId).topicId,
+          topicId: draftIdentity(this._memberId, this.data.clubId).topicId,
           formData: { contents: this.data.content },
         });
       } catch (e) {
@@ -279,8 +300,14 @@ Component({
       this.setData({
         content: text,
         contentLen: text.length,
-        canSubmit: text.trim().length > 0,
+        canSubmit: this.submittable(text, this.data.picList),
       });
+    },
+
+    // 广场帖必须有正文;俱乐部帖沿用原俱乐部页口径「说点什么，或加张图」。
+    submittable(text, pics) {
+      if (String(text || '').trim().length > 0) return true;
+      return !!(this.data.clubId && !this.data.editMode && pics && pics.length);
     },
 
     // 以编辑态打开:正文与关联来自被编辑的帖子;图片/地点/预览图不参与(后端保留原值)。
@@ -321,7 +348,7 @@ Component({
     readDrafts() {
       const memberId = this._memberId;
       if (!memberId) return [];
-      const identity = draftIdentity(memberId);
+      const identity = draftIdentity(memberId, this.data.clubId);
       const res = proEditorDraft.loadDraft(wx, identity, { memberId: memberId });
       const envelope = res.status === 'ready' ? res.envelope : null;
       const contents = envelope && envelope.formData ? String(envelope.formData.contents || '') : '';
@@ -398,15 +425,20 @@ Component({
 
     onPickImage() {
       const that = this;
-      const left = MAX_PICS - (that.data.picList || []).length;
+      const club = !!that.data.clubId;
+      const max = club ? CLUB_MAX_PICS : MAX_PICS;
+      const left = max - (that.data.picList || []).length;
       if (left <= 0) {
-        cyToast('最多 6 张图片');
+        cyToast('最多 ' + max + ' 张图片');
         return;
       }
-      app.chooseImage(function (res) {
-        const next = (that.data.picList || []).concat(res || []).slice(0, MAX_PICS);
-        that.setData({ picList: next });
-      }, left, { bizType: 'COMMUNITY_POST', mapResult: community.captureUpload });
+      const pick = function (res) {
+        const next = (that.data.picList || []).concat(res || []).slice(0, max);
+        that.setData({ picList: next, canSubmit: that.submittable(that.data.content, next) });
+      };
+      // 俱乐部帖沿用原俱乐部页的上传口径(不走社区帖的媒体登记)
+      if (club) app.chooseImage(pick, left);
+      else app.chooseImage(pick, left, { bizType: 'COMMUNITY_POST', mapResult: community.captureUpload });
     },
 
     onClearPic(e) {
@@ -414,7 +446,15 @@ Component({
       if (!Number.isFinite(idx)) return;
       const arr = (this.data.picList || []).slice();
       arr.splice(idx, 1);
-      this.setData({ picList: arr });
+      this.setData({ picList: arr, canSubmit: this.submittable(this.data.content, arr) });
+    },
+
+    // 俱乐部模式的「带上一次游玩记录」与公告开关
+    onPickClubRef() { this.triggerEvent('refpick'); },
+    onClearClubRef() { this.triggerEvent('refclear'); },
+    onToggleAnnouncement() {
+      if (!this.data.canAnnounce) return;
+      this.setData({ asAnnouncement: !this.data.asAnnouncement });
     },
 
     onPickLocation() {
@@ -514,11 +554,19 @@ Component({
     clearAttachments() {
       this._lng = '';
       this._lat = '';
-      this.setData({ picList: [], address: '', selectedActivity: null, activityPickerShow: false });
+      this.setData({ picList: [], address: '', selectedActivity: null, activityPickerShow: false, asAnnouncement: false,
+        canSubmit: this.submittable(this.data.content, []) });
     },
 
     onPublish() {
-      if (app.ensureLoginFor && !app.ensureLoginFor('post', () => this.onPublish(), { owner: this, target: () => [this._editId, this._editDataId, this._editDataType, this.data.selectedActivity && this.data.selectedActivity.activityId, this._composeVisible] })) return; // 2026-10-24 游客写前登录
+      if (this._disposed || !this._composeVisible) return;
+      if (app.ensureLoginFor && !app.ensureLoginFor('post', () => this.onPublish(), {
+        owner: this,
+        target: () => [this.data.clubId, !!this.data.editMode, this._editId,
+          this.data.postRef && this.data.postRef.refType, this.data.postRef && this.data.postRef.refId,
+          !!this.data.asAnnouncement, !!this.data.canAnnounce, this.composeSnapshot(),
+          this._editDataId, this._editDataType, this.data.selectedActivity && this.data.selectedActivity.activityId, this._composeVisible]
+      })) return; // 两个原入口及现存组件的续登目标均保留
       const that = this;
       if (that._disposed || !that._composeVisible) return;
       if (String(app.getUserID() || '') !== String(that._memberId || '')) {
@@ -526,15 +574,22 @@ Component({
         cyToast('登录身份已变化，请重新打开编辑器');
         return;
       }
+      // Club creation keeps its separate authorization; community writes keep the original square gate.
+      if ((!that.data.clubId || that.data.editMode)
+          && (typeof app.canUseCommunity !== 'function' || !app.canUseCommunity(true))) {
+        cyToast('当前账号未开放广场发布');
+        return;
+      }
       const content = String(that.data.content || '').trim();
-      // 与 canSubmit 同一口径(trim 后非空)。视觉禁用只是 opacity,真正的闸在这里。
-      if (!content) {
-        cyToast('请输入内容');
+      // 与 canSubmit 同一口径。视觉禁用只是 opacity,真正的闸在这里。
+      if (!that.submittable(content, that.data.picList)) {
+        cyToast(that.data.clubId ? '说点什么，或加张图' : '请输入内容');
         return;
       }
       if (that._submitting) return;
       that._submitting = true;
       that.setData({ submitting: true });
+      if (that.data.clubId && !that.data.editMode) { that.publishClubPost(content); return; }
 
       const activity = that.data.selectedActivity;
       const editing = that.data.editMode && that._editId;
@@ -599,7 +654,7 @@ Component({
             publishIntent.settle(wx, 'square:compose', pending.memberId, intent.key, 'success');
             pending.settled = true;
             if (!keepOpen && pending.memberId) {
-              proEditorDraft.removeDraft(wx, draftIdentity(pending.memberId), { memberId: pending.memberId });
+              proEditorDraft.removeDraft(wx, draftIdentity(pending.memberId, that.data.clubId), { memberId: pending.memberId });
             }
           }
           if (res.data && res.data.lifecycle !== 'PUBLISHED') cyToast('已提交审核，审核通过后公开显示');
@@ -631,6 +686,62 @@ Component({
           that._publishContext = null;
           that._submitting = false;
           that.setData({ submitting: false });
+        },
+      });
+      if (that._publishContext === pending) pending.task = task;
+    },
+
+    // 俱乐部模式发布(P-20):请求体与原俱乐部页内嵌输入框一致;单飞 / 关闭即存 / 发后删草稿与广场同一套。
+    publishClubPost(content) {
+      const that = this;
+      const ref = that.data.postRef;
+      const clubId = that.data.clubId;
+      const pending = { memberId: that._memberId, editing: false, editId: that._editId,
+        intent: null, snapshot: that.composeSnapshot(), settled: true, task: null };
+      that._publishContext = pending;
+      const finish = function () {
+        that._publishContext = null;
+        that._submitting = false;
+        that.setData({ submitting: false });
+      };
+      const task = app.sendRequest({
+        url: '/api/club/post/create', method: 'POST',
+        data: JSON.stringify({
+          clubId: clubId,
+          content: content,
+          images: (that.data.picList || []).join(','),
+          type: that.data.canAnnounce && that.data.asAnnouncement ? 2 : 0,
+          // 没选就一个字段都不带 —— 半个引用(只有类型没有 ID)会被服务端挡下
+          refType: ref ? ref.refType : null,
+          refId: ref ? ref.refId : null,
+        }),
+        header: { 'Content-Type': 'application/json', 'Authorization': app.getAuthorization() },
+        success(res) {
+          if (!that.isCurrentPublish(pending)) return;
+          finish();
+          if (res && res.code == '200') {
+            if (pending.memberId) {
+              proEditorDraft.removeDraft(wx, draftIdentity(pending.memberId, clubId), { memberId: pending.memberId });
+            }
+            that._published = true;
+            that.applyContent('');
+            that.clearAttachments();
+            that.triggerEvent('published');
+            that.triggerEvent('close');
+            return;
+          }
+          if (res && CLUB_POST_REF_ERROR_TEXT[res.errorCode]) {
+            // 正文与图片保留,只撤掉这条引用,用户可以直接再发
+            that.triggerEvent('refclear');
+            cyToast(CLUB_POST_REF_ERROR_TEXT[res.errorCode]);
+            return;
+          }
+          cyToast((res && res.msg) || '发布失败');
+        },
+        fail() {
+          if (!that.isCurrentPublish(pending)) return;
+          finish();
+          cyToast('网络异常，请重试');
         },
       });
       if (that._publishContext === pending) pending.task = task;

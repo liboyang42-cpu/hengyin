@@ -16,6 +16,7 @@
         <result property="merchantRowId" column="merchant_row_id"/>
         <result property="merchantOwnerMemberId" column="merchant_owner_member_id"/>
         <result property="merchantName" column="merchant_name"/>
+        <result property="merchantLogo" column="merchant_logo"/>
         <result property="inAppOptedIn" column="in_app_opted_in"/>
         <result property="couponOptedIn" column="coupon_opted_in"/>
     </resultMap>
@@ -55,6 +56,7 @@
     <sql id="EligibleProjection">
         m.id as merchant_row_id, m.member_id as merchant_owner_member_id,
         coalesce(nullif(m.name, ''), '商家') as merchant_name,
+        m.logo as merchant_logo,
         exists (
           select 1 from merchant_crm_marketing_consent c
           where c.member_id = #{memberId} and c.merchant_row_id = m.id

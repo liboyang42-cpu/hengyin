@@ -4,7 +4,8 @@
   <cy-loading-mask id="cy-loading" />
   <!-- 4-07:门店 AI 形象 /api/merchant/npc/* 要 PROFILE_WRITE,门禁留空会放行到 403。 -->
   <cy-access-gate id="cy-access-gate" kind="merchant" need="canWriteProfile" />
-  <cy-nav-bar title="{{view === 'home' ? 'AI 店铺角色' : '上传角色形象'}}" custom-back bind:back="onNavBack" />
+  <!-- 2026-10-27 业主 M-28:主页套「门店信息」版式 —— 标题在内容区左上角(导航栏只留返回),形象页仍居中标题 -->
+  <cy-nav-bar title="{{view === 'home' ? '' : '上传角色形象'}}" custom-back bind:back="onNavBack" />
   <view style="height:{{statusBarHeight + navBarHeight}}px;flex-shrink:0;" />
   <cy-skeleton wx:if="{{loading}}" type="detail" />
   <cy-error load-failure
@@ -16,6 +17,15 @@
   />
   <scroll-view wx:else scroll-y class="dc-scroll">
     <view class="dc-content">
+      <block wx:if="{{view === 'home'}}">
+        <text class="dc-brand-title">AI 店铺角色</text>
+        <!-- M-28:第一次进来先说清楚这是什么;点「知道了」后不再出现 -->
+        <view class="dc-card npc-intro" wx:if="{{introVisible}}">
+          <text class="npc-intro__title">AI 店铺角色是什么</text>
+          <text class="npc-intro__text">它是你的店在城瘾里的分身：出现在漫游地图和店铺主页上，玩家路过会和它打招呼、聊天，问菜单和营业时间。起个名字、选个性格、录一段声音，它就按你的方式招呼客人。</text>
+          <view class="npc-intro__ok" bindtap="dismissIntro" aria-role="button" aria-label="知道了" hover-class="cy-pressed" hover-stay-time="80">知道了</view>
+        </view>
+      </block>
       <view class="{{view === 'home' ? 'npc-hero' : 'npc-stage'}}">
         <view class="npc-preview {{view === 'avatar' ? 'npc-preview--large' : ''}}">
           <image wx:if="{{source === 'photo' && uploadedUrl}}" src="{{uploadedUrl}}" mode="aspectFill" />
@@ -55,42 +65,45 @@
       </view>
       <cy-inline-error kind="error" wx:if="{{photoError || previewError}}" title="暂未完成" sub="{{photoError || previewError}}" />
       <block wx:if="{{view === 'home'}}">
-        <view class="dc-card">
-          <cy-cell arrow-icon="chevron-right" title="角色形象" value="上传 / 更换" bind:tap="openAvatar" />
-          <cy-cell arrow-icon="chevron-right"
+        <!-- M-28:行默认只读(不出箭头、点了不动),底部「编辑」后才可改 —— 与门店信息一致。
+             行尾说明一律单行(G-7),文案缩短:「填写菜单、招牌与营业信息」→「菜单与招牌」。 -->
+        <view class="dc-card dc-fields">
+          <cy-cell arrow-icon="chevron-right" arrow="{{editing}}" title="角色形象" value="{{editing ? '上传 / 更换' : (hasProfile ? '已设置' : '未设置')}}" bind:tap="onHomeAction" data-action="openAvatar" />
+          <cy-cell arrow-icon="chevron-right" arrow="{{editing}}"
             title="角色声音"
-            value="{{voiceStatus === 1 ? '声音生成中' : voiceStatus === 2 ? '声音可用' : voiceStatus === 3 ? '生成失败 · 重试' : '上传语音'}}"
-            bind:tap="openVoice"
+            value="{{voiceStatus === 1 ? '生成中' : voiceStatus === 2 ? '可用' : voiceStatus === 3 ? '生成失败' : '未录制'}}"
+            bind:tap="onHomeAction" data-action="openVoice"
             hairline="{{false}}"
           />
         </view>
-        <view class="dc-card">
-          <cy-cell arrow-icon="chevron-right" title="名字" required="{{true}}" value="{{name || '填写名字'}}" bind:tap="editField" data-key="name" />
-          <cy-cell arrow-icon="chevron-right"
+        <view class="dc-card dc-fields">
+          <cy-cell arrow-icon="chevron-right" arrow="{{editing}}" title="名字" required="{{true}}" value="{{name || '未填写'}}" bind:tap="onHomeAction" data-action="editField" data-key="name" />
+          <cy-cell arrow-icon="chevron-right" arrow="{{editing}}"
             title="招呼语"
-            value="{{greeting || '填写招呼语'}}"
-            bind:tap="editField"
+            value="{{greeting || '未填写'}}"
+            bind:tap="onHomeAction" data-action="editField"
             data-key="greeting"
           />
-          <cy-cell arrow-icon="chevron-right"
+          <cy-cell arrow-icon="chevron-right" arrow="{{editing}}"
             title="性格设定"
-            value="{{persona || '填写性格设定'}}"
-            bind:tap="editField"
+            value="{{persona || '选择性格'}}"
+            bind:tap="onHomeAction" data-action="editField"
             data-key="persona"
           />
-          <cy-cell arrow-icon="chevron-right"
+          <cy-cell arrow-icon="chevron-right" arrow="{{editing}}"
             title="店铺知识"
-            value="{{knowledge || '填写菜单、招牌与营业信息'}}"
-            bind:tap="editField"
+            value="{{knowledge || '菜单与招牌'}}"
+            bind:tap="onHomeAction" data-action="editField"
             data-key="knowledge"
           />
-          <cy-cell arrow-icon="chevron-right"
+          <cy-cell arrow-icon="chevron-right" arrow="{{editing}}"
             title="漫游落点"
             value="{{storePointText}}"
-            bind:tap="chooseStorePoint"
+            bind:tap="onHomeAction" data-action="chooseStorePoint"
             hairline="{{false}}"
           />
         </view>
+        <cy-btn bindtap="toggleEditing" disabled="{{saving || processing}}">{{editing ? '完成编辑' : '编辑'}}</cy-btn>
       </block>
       <block wx:else>
         <cy-inline-error kind="error" wx:if="{{saveError}}" title="暂未完成" sub="{{saveError}}" />
@@ -153,6 +166,23 @@
       <text class="dc-counter">{{field.value.length}}/{{field.max}}</text>
       <cy-inline-error kind="error" wx:if="{{saveError}}" title="暂未完成" sub="{{saveError}}" />
       <cy-btn bindtap="saveField" loading="{{saving}}">保存</cy-btn>
+    </view>
+  </cy-sheet>
+  <!-- M-28:性格三选一(温柔 / 可爱 / 毒舌,§6.3 已确认),不再自由输入。
+       2026-10-28 业主 m698:按内容高度的底部菜单(Threads 式),点一下就选上并保存,不要保存按钮。 -->
+  <cy-sheet inset show="{{personaSheet}}" bind:close="closePersona"
+    mask-closable="{{!saving}}" closable="{{!saving}}">
+    <view class="tm" aria-role="radiogroup" aria-label="性格设定">
+      <view class="tm-group">
+        <view class="tm-row {{personality === item.key ? 'tm-row--on' : ''}}"
+          wx:for="{{personalities}}" wx:key="key" data-key="{{item.key}}" bindtap="pickPersona"
+          aria-role="radio" aria-checked="{{personaPick === item.key}}" aria-label="{{item.label}}"
+          hover-class="cy-pressed" hover-stay-time="80">
+          <text class="tm-label">{{item.label}}</text>
+          <cy-icon wx:if="{{personaPick === item.key}}" class="tm-ico" name="{{saving ? 'clock' : 'check'}}" size="40" />
+        </view>
+      </view>
+      <cy-inline-error kind="error" wx:if="{{saveError}}" title="暂未完成" sub="{{saveError}}" />
     </view>
   </cy-sheet>
   <cy-sheet inset show="{{discardVisible}}" title="还没有保存" bind:close="keepEditing">
@@ -249,6 +279,8 @@
       <text wx:if="{{voiceHistoryResult}}">{{voiceHistoryResult}}</text>
       <cy-inline-error kind="error" wx:if="{{voiceError}}" title="暂未完成" sub="{{voiceError}}"
         action="{{voiceUnknown ? '查询原请求' : ''}}" bind:action="refreshVoice" />
+      <!-- M-28:麦克风权限被拒后,直达设置页打开「麦克风」(scope.record) -->
+      <cy-btn wx:if="{{voiceNeedSetting}}" variant="secondary" bindtap="openRecordSetting">去设置开启麦克风</cy-btn>
       <cy-btn wx:if="{{voiceUnknown}}" variant="secondary" bindtap="refreshVoice">查询生成状态</cy-btn>
     </view>
   </cy-sheet>

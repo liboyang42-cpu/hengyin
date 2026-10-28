@@ -26,6 +26,8 @@ function classifyFailure(error, fallback) {
 Page({
   data: {
     editor:null, discardVisible:false, chargeOptions:['免费承接','收费承接'],
+    // M-30:门店信息版式 —— 默认只读,点底部「编辑」才可改
+    editing: false,
     statusBarHeight: 20,
     navBarHeight: 44,
     loadState: 'loading',   // loading | ok | error | empty
@@ -62,8 +64,9 @@ Page({
 
   keepEditing() { this.setData({discardVisible:false}); },
   discardChanges() { if(this.data.discardEditor) return (Object.assign(this.data, {discardEditor:false}), this.setData({editor:null, discardVisible:false})); this._initialForm = JSON.stringify(this.data.form); this.setData({discardVisible:false}); this.onNavBack(); },
+  startEditing() { if (!this.data.saving && !this.data.refreshing && this.data.loadState === 'ok') this.setData({ editing: true }); },
   editField(e) {
-    if(this.data.saving || this.data.refreshing) return;
+    if(!this.data.editing || this.data.saving || this.data.refreshing) return;
     const key=e.currentTarget.dataset.k, labels={capacity:'接待人数',availableTime:'可承接时间',demand:'合作诉求'};
     if (!labels[key]) return;
     this.setData({editor:{key,label:labels[key],value:this.data.form[key]}});
@@ -170,7 +173,7 @@ Page({
   retryLoad() { this.load(); },
 
   onChargeType(e) {
-    if (this.data.saving || this.data.refreshing) return;
+    if (!this.data.editing || this.data.saving || this.data.refreshing) return;
     const form = Object.assign({}, this.data.form, { chargeType: parseInt(e.detail.value) });
     this.setData({ form: form });
   },
@@ -221,7 +224,7 @@ Page({
       success(res) {
         if (!isCurrent()) return;
         if (res.code === '200' || res.code === 200) {
-          that.setData({ saving: false, saveErrorKind: '', saveError: '', saveReceipt: '承接设置已保存' });
+          that.setData({ saving: false, editing: false, saveErrorKind: '', saveError: '', saveReceipt: '承接设置已保存' });
           that._initialForm = JSON.stringify(that.data.form);
           toast.success('已保存');
           that._successTimer = setTimeout(function () {

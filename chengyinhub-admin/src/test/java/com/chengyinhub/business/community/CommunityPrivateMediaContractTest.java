@@ -235,6 +235,24 @@ class CommunityPrivateMediaContractTest {
         }
     }
 
+    /** P-52/G-3:一张认不出来源的历史媒体只跳过这一张,同帖其余媒体照常读出,整页不报错。 */
+    @Test
+    void unrecognisedStoredMediaIsSkippedInsteadOfFailingTheWholePost() {
+        ownerPost();
+        String foreign = "https://foreign.invalid/legacy/photo.png";
+        Map<String, Object> broken = media(foreign);
+        broken.put("id", 12L);
+        when(mapper.selectMedia(7L)).thenReturn(java.util.Arrays.asList(broken, media(LEGACY)));
+        try (MockedStatic<FileOssUploadUtils> storage = signer()) {
+            storage.when(() -> FileOssUploadUtils.communityMediaObjectKey(foreign))
+                    .thenThrow(new IllegalArgumentException("社区媒体来源无效"));
+            List<?> media = (List<?>) service.detail(9L, 7L).get("media");
+            assertEquals(1, media.size());
+            assertEquals(13L, ((Map<?, ?>) media.get(0)).get("id"));
+            assertEquals(PREVIEW, ((Map<?, ?>) media.get(0)).get("derived_object_key"));
+        }
+    }
+
     private MockedStatic<FileOssUploadUtils> signer() {
         MockedStatic<FileOssUploadUtils> storage = mockStatic(FileOssUploadUtils.class);
         storage.when(() -> FileOssUploadUtils.communityMediaObjectKey(KEY)).thenReturn(KEY);

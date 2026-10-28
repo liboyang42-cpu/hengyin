@@ -175,6 +175,8 @@ const MATRIX = [
   ['pages/roam/index.js', "req('/api/official/events/' + eventId", 'optional', 'visitor/member', 'public-detail+viewer-personalization'],
   ['pages/roam/index.js', "req('/api/roam/nearby-exploreday'", 'required', 'member', 'global-authenticated-read'],
   ['pages/roam/index.js', "req('/api/roam/entry/nearby'", 'required', 'member', 'global-authenticated-read'],
+  // 2026-10-28 p74:附近 3km 为空时 20km 兜底,同端点同权限档
+  ['pages/roam/index.js', "req('/api/roam/entry/nearby', 'GET', { lat: c.lat, lng: c.lng, radius: 20000 }", 'required', 'member', 'global-authenticated-read'],
   ['pages/roam/index.js', "req('/api/team/nearby'", 'required', 'member', 'global-authenticated-read'],
   ['pages/roam/index.js', "req('/api/roam/badge/shop-streak'", 'required', 'member', 'global-authenticated-read'],
   ['pages/merchant/customer/index.js', 'loadSavedSegments() {', 'required', 'merchant/merchant:crm:segment', 'self-merchant'],
@@ -414,10 +416,12 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-10-09 U04 只读主题请求增加6处，22 → 28。
   // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):漫游 BL-41 可参与官方活动 req 包装 GET +1(已入 MATRIX),28 → 29。
   // 2026-10-22 L21 BL-186:pages/play 本章结算 GET /api/play/journey/stage-end(与 /ending 同档),29 → 30。
+  // 2026-10-28 p74:漫游「附近活动」为空时按 20km 再读一次 /api/roam/entry/nearby(同端点同权限档,已入 MATRIX),30 → 31。
   // 2026-10-27 W8 收口:pages/play 基础动作原结果两处、动作上下文一处、定向计分排名一处、其回退排行榜一处，30 → 35。
   // 2026-10-28 文档二 L5:pages/play 角色卡一处、本局计分与本场排名两处(权限档见 MATRIX 同日注释)，35 → 38。
   // 2026-10-28 L9 集成:游玩菜单联系主办 / 商家改读 L8 GET /api/play/contact(已入 MATRIX),38 → 39。
-  assert.equal(wrapperCount, 40, 'req 包装 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // 2026-10-28 并 master(#658 后)合流 integrate/devfix-20261027:master 39 叠加本线 p74 20km 兜底读一处,39 → 40。
+  assert.equal(wrapperCount, 41, 'req 包装 GET 数量变化时必须逐条复核权限并更新矩阵');
   assert.equal(ownMediaWrapperCount, 5, '作者媒体实际GET调用点变化需显式复核');
   assert.equal(MATRIX.length, directCount + wrapperCount + ownMediaWrapperCount);
 
@@ -721,4 +725,38 @@ test('roam GET scope 与后端资源模型一致：tiles 是 member-owned，pois
   assert.match(tiles, /Long memberId = uid\(\)/);
   assert.match(tiles, /selectTilesByMember\(memberId,/);
   assert.match(tiles, /selectTilePageByMember\(memberId, cursor, pageSize \+ 1\)/);
+});
+
+test('广场商业身份权限仍来自当前账号与授权，不以俱乐部发布角色替代', () => {
+  const app = fs.readFileSync(path.join(XCX_ROOT, 'app.js'), 'utf8');
+  const policy = app.match(/canUseCommunity:\s*function\s*\(write\)\s*\{([\s\S]*?)\n\s*\},/);
+  assert.ok(policy, '必须读取真实当前身份权限投影');
+  assert.match(policy[1], /this\._communityFeatureOwner === String\(this\.getUserID\(\) \|\| ''\)/);
+  assert.match(policy[1], /this\._communityFeatureAuthorization === this\.getAuthorization\(\)/);
+  assert.match(policy[1], /\[write \? 'communityPostWrite' : 'communityPostRead'\] === true/);
+  const square = fs.readFileSync(path.join(XCX_ROOT, 'pages/square/list/index.js'), 'utf8');
+  assert.match(square, /if \(!write\) this\.setData\(\{ composeShow: false, composeEdit: null \}\)/);
+  assert.match(square, /if \(!read\) \{[\s\S]*?list: \[\]/, '读资格失效仍撤下原列表');
+  assert.doesNotMatch(square, /submitFormData\s*\(/, '不能复活 master 已迁出的旧发布写入口');
+});
+
+test('迁移到真实共用发布器的续登仍绑定原俱乐部、引用、编辑稿与内容，广场写拒绝闸不丢', () => {
+  const source = fs.readFileSync(path.join(XCX_ROOT, 'pages/square/components/cy/post-compose/index.js'), 'utf8');
+  const publish = source.slice(source.indexOf('    onPublish() {'), source.indexOf('    publishClubPost(content) {'));
+  assert.match(publish, /owner: this/);
+  assert.match(publish, /target: \(\) => \[this\.data\.clubId, !!this\.data\.editMode, this\._editId/);
+  assert.match(publish, /this\.data\.postRef && this\.data\.postRef\.refType/);
+  assert.match(publish, /this\.data\.postRef && this\.data\.postRef\.refId/);
+  assert.match(publish, /this\.composeSnapshot\(\)/);
+  assert.match(publish, /this\._editDataId, this\._editDataType, this\.data\.selectedActivity && this\.data\.selectedActivity\.activityId, this\._composeVisible/);
+  assert.match(publish, /\(!that\.data\.clubId \|\| that\.data\.editMode\)[\s\S]*?typeof app\.canUseCommunity !== 'function' \|\| !app\.canUseCommunity\(true\)/);
+  assert.ok(publish.indexOf('!app.canUseCommunity(true)') < publish.indexOf('publishIntent.begin('), '拒绝须早于原发布意图与外呼');
+  assert.match(publish, /if \(that\.data\.clubId && !that\.data\.editMode\) \{ that\.publishClubPost\(content\); return; \}/);
+  const cancel = source.slice(source.indexOf('    cancelPublish() {'), source.indexOf('    isCurrentPublish(pending) {'));
+  assert.match(cancel, /this\._loginContinuationEpoch = \(this\._loginContinuationEpoch \|\| 0\) \+ 1/);
+  assert.match(cancel, /publishIntent\.settle\(wx, 'square:compose', pending\.memberId, pending\.intent\.key, 'unknown'\)/);
+  assert.match(source, /hide\(\) \{ this\._loginContinuationEpoch = \(this\._loginContinuationEpoch \|\| 0\) \+ 1; this\._composeVisible = false; this\.cancelPublish\(\); \}/);
+  const club = fs.readFileSync(path.join(XCX_ROOT, 'pages/club/detail/index.js'), 'utf8');
+  assert.match(club, /onComposePublished\(\) \{\s*this\.setData\(\{ postRef: null \}\);\s*this\.loadPosts\(\);/);
+  assert.doesNotMatch(club, /onPostSubmit\s*\(/, '原俱乐部命令只保留实际组件路径，不恢复被迁出的旧实现');
 });

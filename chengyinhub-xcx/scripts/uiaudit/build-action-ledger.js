@@ -3677,6 +3677,15 @@ function selfTest() {
 function main() {
   if (process.argv.includes('--selftest')) return selfTest()
   const current = serialized()
+  if (process.env.GITHUB_ACTIONS === 'true' && process.env.SOURCE_INVENTORY_DIR) {
+    const out = process.env.SOURCE_INVENTORY_DIR
+    fs.mkdirSync(out, { recursive: true })
+    fs.writeFileSync(path.join(out, 'action-ledger.json'), current)
+    fs.writeFileSync(path.join(out, 'identity.json'), JSON.stringify({
+      sourceSha: process.env.GITHUB_SHA, runId: process.env.GITHUB_RUN_ID,
+      runAttempt: process.env.GITHUB_RUN_ATTEMPT, scope: 'SOURCE_METADATA_ONLY_NOT_BUSINESS_ACCEPTANCE',
+    }, null, 2) + '\n')
+  }
   if (process.argv.includes('--write')) {
     fs.writeFileSync(OUTPUT, current)
     console.log(`ACTION-LEDGER WRITE PASS: ${JSON.parse(current).controlCount} controls`)

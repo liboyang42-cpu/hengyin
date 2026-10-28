@@ -12827,6 +12827,39 @@
   "dropped": [],
   "switchKeys": []
  },
+ "D33A": {
+  "data": {
+   "state": "ready",
+   "mode": "income",
+   "current": {
+    "label": "10月",
+    "totalText": "89.70"
+   },
+   "series": [
+    {
+     "key": "2026-10",
+     "label": "10月",
+     "totalText": "89.70",
+     "height": 100,
+     "current": true
+    }
+   ],
+   "sources": [
+    {
+     "key": "topic",
+     "label": "主题售卖",
+     "totalText": "89.70",
+     "percent": 100
+    }
+   ]
+  },
+  "dropped": [],
+  "switchKeys": [
+   "state",
+   "series",
+   "sources"
+  ]
+ },
  "D34": {
   "data": {
    "loading": false,
@@ -14827,6 +14860,11 @@
   ]
  },
  "F10": {
+  "data": null,
+  "dropped": [],
+  "switchKeys": []
+ },
+ "F201": {
   "data": null,
   "dropped": [],
   "switchKeys": []

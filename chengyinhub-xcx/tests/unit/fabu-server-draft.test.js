@@ -668,7 +668,9 @@ test('同账号商家与个人的新草稿、active指针和UNKNOWN各自恢复�
   assert.equal(restored.envelope.publishAttempt.topicId, '501');
 });
 
-test('旧信封缺少scope需当场确认，确认前不能自动保存/发布且换入口后旧确认无效', () => {
+// 2026-10-27 P-44(业主):旧信封缺 scope 不再当场确认 —— 默认归到当前入口、静默恢复。
+// 原「确认前不能自动保存/发布、换入口后旧确认无效」随确认弹窗一起退役;UNKNOWN 发布结果仍保留、仍不自动发。
+test('旧信封缺少scope:静默恢复到当前入口,不弹窗,UNKNOWN 发布结果照旧保留且不自动发', () => {
   const t = loadPage();
   t.stored.pro_editor_draft_member_7_new_legacy = { memberId: 7, draftUuid: 'legacy',
     formData: { name: '旧原稿', chapters: [] }, publishAttempt: { status: 'UNKNOWN', topicId: '' } };
@@ -676,21 +678,38 @@ test('旧信封缺少scope需当场确认，确认前不能自动保存/发布�
   const modals = [];
   wx.showModal = options => { modals.push(options); };
   t.page._ensureLocalIds = t.page._materializeCityStoryChapters = t.page.updateAllStatistics = () => {};
-  t.page._bootstrapNewLocalDraft({});
-  assert.equal(t.page._draftScopeUnconfirmed, true);
-  t.page.sendData(payload); t.page._runServerDraft(payload, true);
-  assert.equal(t.sent.length, 0);
-  assert.equal(t.stored.pro_editor_draft_member_7_new_legacy.formData.name, '旧原稿');
-  t.page.data.operationScope = 'MERCHANT';
-  modals[0].success({ confirm: true });
-  assert.equal(t.page._draftScopeUnconfirmed, true, '旧入口确认不能迁移到另一个入口');
-  t.page.data.operationScope = '';
-  modals[0].success({ confirm: true });
-  assert.equal(t.page._draftScopeUnconfirmed, false);
+  assert.equal(t.page._bootstrapNewLocalDraft({}), true);
+  assert.equal(modals.length, 0, '不再弹「确认旧草稿的发布入口」');
+  assert.notEqual(t.page._draftScopeUnconfirmed, true);
   assert.equal(t.page.data.formData.name, '旧原稿');
-  assert.equal(t.page._publishAttempt.status, 'UNKNOWN', '确认scope不会擅自解除UNKNOWN');
+  assert.equal(t.page._publishAttempt.status, 'UNKNOWN', '静默恢复不会擅自解除UNKNOWN');
   t.page.sendData(payload);
   assert.equal(t.sent.length, 0);
+});
+
+// 2026-10-27 P-44(业主):没有记录入口的旧草稿默认归到当前入口、静默恢复,不弹「确认旧草稿的发布入口」。
+test('P-44 旧草稿没有记录入口:静默恢复到当前入口并立即补记入口,不弹窗', () => {
+  const drafts = require('../../pages/publish/utils/publish/pro-editor-draft.js');
+  const stored = {};
+  const seed = loadPage(stored);
+  seed.page.data.formData = { name: '旧稿', chapters: [] };
+  assert.equal(seed.page._persistDraftEnvelope(), true);
+  const key = drafts.draftKeyFor({ draftUuid: 'u-1' }, 7, '');
+  delete stored[key].operationScope; // 模拟 operationScope 字段出现之前存下的旧草稿
+  const t = loadPage(stored);
+  const modal = require('../../utils/modal.js');
+  const original = modal.show; let prompts = 0;
+  modal.show = () => { prompts += 1; };
+  try {
+    t.page._newDraftUuid = () => 'u-1';
+    assert.equal(t.page._bootstrapNewLocalDraft({}), true, '旧草稿直接恢复');
+  } finally { modal.show = original; }
+  assert.equal(prompts, 0, '不再弹归属确认');
+  assert.equal(t.page.data.formData.name, '旧稿');
+  assert.equal(t.page._draftScopeUnconfirmed, undefined);
+  assert.equal(stored[key].operationScope, '', '恢复后按当前入口补记');
+  const fabuWxml = require('node:fs').readFileSync(require('node:path').join(__dirname, '../../pages/publish/fabu/index.wxml'), 'utf8');
+  assert.doesNotMatch(fabuWxml, /旧草稿还没恢复|确认归属|legacyScopePending/);
 });
 
 test('W8：发布确定拒绝的迟到回包不覆盖保存后继续编辑的内容', () => {

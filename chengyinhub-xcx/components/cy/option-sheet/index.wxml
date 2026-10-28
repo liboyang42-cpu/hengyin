@@ -1,5 +1,5 @@
 <cy-sheet inset="{{immediate && rows.length <= 3}}" show="{{show}}" title="{{title}}" closable="{{true}}" footer="{{!immediate}}"
-          bind:close="onClose" bind:requestclose="onClose">
+          bind:close="onClose" bind:requestclose="onClose" back-guard="{{backGuard}}">
   <view class="os">
     <view class="os__row {{!immediate && !checkmark ? 'os__row--point' : ''}} {{row.disabled ? 'os__row--off' : ''}} {{row.danger ? 'os__row--danger' : ''}} {{(!immediate && picked === row.index) ? 'os__row--on' : ''}}"
           wx:for="{{rows}}" wx:for-item="row" wx:key="index"

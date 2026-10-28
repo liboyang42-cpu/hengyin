@@ -47,6 +47,8 @@
       latitude="{{mapCenter.latitude}}"
       scale="{{mapScale}}"
       markers="{{mapMarkers}}"
+      subkey="{{mapSubkey}}"
+      layer-style="{{mapLayerStyle}}"
       polyline="{{mapPolyline}}"
       include-points="{{mapInclude}}"
       enable-rotate="{{false}}"
@@ -54,6 +56,8 @@
       show-location="{{false}}"
       bindmarkertap="onMarkerTap">
     </map>
+    <!-- P-45:离屏画玩家地图同款圆点图钉(_ensureRouteIcons) -->
+    <canvas type="2d" id="routeIconCv" class="slopes-icon-cv"></canvas>
   </view>
 
   <!-- 状态栏保护层:地图铺到 y=0,浅色瓦片下白色状态栏文字不可读,故压一层由深到透明的 scrim。
@@ -95,11 +99,6 @@
       <text wx:if="{{themeSaveLabel}}" class="pd-save-state {{themeSaveState === 'saved' ? 'pd-save-state--saved' : 'pd-save-state--unsaved'}}"
         aria-role="text" aria-label="{{themeSaveLabel}}">{{themeSaveLabel}}</text>
     </view>
-    <!-- 2026-10-22 业主裁决(L09):旧草稿归属待确认 = 内容流里的一条横幅(随内容滚动、只在创作页),
-         不再借底部固定的「这次还没有保存」错误卡 —— 那张卡盖住章节卡/地图,还和 toast 叠在一起。 -->
-    <cy-inline-error class="pd-legacy-banner" wx:if="{{editorPage === 1 && legacyScopePending}}" kind="data"
-      title="旧草稿还没恢复" sub="它没有记录商家或个人入口，确认属于当前入口后才恢复；原稿与上次发布状态均已保留。"
-      action="确认归属" bind:action="reopenLegacyDraftScope" />
     <!-- 主题详情:一个入口 → 一个弹窗,装除章节/玩法/票务外的全部主题内容。
          摘要要能一眼看出还差几项,否则用户不知道该不该点进去。
          ⚠️ 稿子(4028:13649)里它排在两格卡【之上】—— 主题详情是整个主题的必填集合,
@@ -804,7 +803,7 @@
        ⚠️ 不传 title:稿子的头是「左灰圆 × + 右黑药丸 完成」,而 cy-sheet 的 .sh__head 是
        「左标题 + 右 ×」且那段 wxml/wxss 被无障碍契约逐字锁死(不能改)。不传 title 时
        .sh__head 整段不渲染,头就完全交给这里画,不用 CSS 去盖组件的头。 -->
-  <cy-sheet variant="full" show="{{popChapterNodes}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="cancelPopChapter" class="node-sheet-host">
+  <cy-sheet variant="full" show="{{popChapterNodes}}" back-guard="{{false}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="cancelPopChapter" class="node-sheet-host">
   <view class="pop-chapter node-sheet">
     <!-- 头是两态,写成两段而不是把 handler 名塞进 {{}}:事件名走数据绑定的话,
          「死链按钮门禁」(扫 bind* → 必须有同名 js 方法)就看不见它绑到哪儿了。
@@ -1001,7 +1000,7 @@
 
   <!-- 节点下一站（10-28 原型 A e-route）：每种结果一行，点开就地改去往、条件、效果；
        添加条件 / 效果、换名字开一层（routeMappingLayer），这时头部换成「‹ 下一站」。 -->
-  <cy-sheet variant="full" show="{{routeMappingShow}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="closeNodeRouteMapping" class="node-sheet-host">
+  <cy-sheet variant="full" show="{{routeMappingShow}}" back-guard="{{false}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="closeNodeRouteMapping" class="node-sheet-host">
     <view class="route-mapping-sheet node-sheet">
       <cy-sheet-nav wx:if="{{routeMappingLayer}}" back="下一站" title="{{routeMappingLayer.title}}" bind:back="closeRouteRuleLayer" />
       <cy-sheet-nav wx:else title="下一站" action="完成" bind:cancel="closeNodeRouteMapping" bind:action="finishNodeRouteMapping" />
@@ -1353,15 +1352,9 @@
     <view class="pop-cont pc-cont">
       <view class="pc-lede">发布后平台审核</view>
       <!-- 2026-10-22 业主裁决(L09):真正挡住发布的项排在最前,统一叫「需要先处理」,每条都带修复动作;
-           旧草稿没记录入口时也是一条阻断项(否则确认后会静默发不出去)。红字提示只在这组非空时出现。 -->
-      <block wx:if="{{publishCheck.blocking.length || !identityReady || legacyScopePending}}">
+           红字提示只在这组非空时出现。(P-44 起旧草稿静默归到当前入口,不再有归属阻断项) -->
+      <block wx:if="{{publishCheck.blocking.length || !identityReady}}">
         <view class="pc-section-tit pc-blocking">需要先处理</view>
-        <view class="pc-item pc-item-blocking" wx:if="{{legacyScopePending}}" bindtap="reopenLegacyDraftScope"
-              aria-role="button" aria-label="确认这份草稿属于{{operationScope === 'MERCHANT' ? '商家入口' : '个人入口'}}" hover-class="cy-pressed" hover-stay-time="80">
-          <text class="pc-dot pc-dot-red"></text>
-          <text class="pc-label">确认这份草稿属于{{operationScope === 'MERCHANT' ? '商家入口' : '个人入口'}}</text>
-          <view class="pc-arrow"><text>去确认</text><cy-icon name="arrow-right" size="24" /></view>
-        </view>
         <view class="pc-item pc-item-blocking" wx:for="{{publishCheck.blocking}}" wx:key="index"
               data-field="{{item.field}}" data-label="{{item.label}}" data-tab="{{item.tab}}" bindtap="locatePublishIssue" aria-role="button" aria-label="去填写 {{item.label}}" hover-class="cy-pressed" hover-stay-time="80">
           <text class="pc-dot pc-dot-red"></text>
@@ -1459,11 +1452,11 @@
       </block>
       <!-- blocking 非空(内容安全/AI 判定为 error)时不给发布:按钮禁用,红字说明为什么点不动。 -->
       <view class="pc-actions">
-        <view wx:if="{{publishCheck.blocking.length || !identityReady || legacyScopePending}}" class="pc-blocked-tip">请先完成必填项</view>
+        <view wx:if="{{publishCheck.blocking.length || !identityReady}}" class="pc-blocked-tip">请先完成必填项</view>
         <view class="pc-actions__row">
           <cy-btn class="pc-actions__btn" variant="secondary" bindtap="closePublishCheck">返回修改</cy-btn>
-          <cy-btn class="pc-actions__btn" variant="primary" disabled="{{!!publishCheck.blocking.length || !identityReady || legacyScopePending}}"
-                  aria-disabled="{{!!publishCheck.blocking.length || !identityReady || legacyScopePending}}"
+          <cy-btn class="pc-actions__btn" variant="primary" disabled="{{!!publishCheck.blocking.length || !identityReady}}"
+                  aria-disabled="{{!!publishCheck.blocking.length || !identityReady}}"
                   bind:disabledtap="onPublishCheckDisabledTap"
                   bindtap="confirmPublishCheck">确认发布</cy-btn>
         </view>
@@ -1620,7 +1613,7 @@
        两种模式的差别(要不要定集合时间地点、票怎么卖)全靠创作者自己知道,切错了
        整条票务链路的必填项都跟着变。改成先把两种模式摊开讲清楚再让人选。
        文案取自票种编辑器稿(2770:11762 / 2770:13325)的那两句模式说明,同一句话只有一份。 -->
-  <cy-sheet show="{{modePickerShow}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="closeModePicker" class="node-sheet-host">
+  <cy-sheet show="{{modePickerShow}}" back-guard="{{false}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="closeModePicker" class="node-sheet-host">
     <view class="pd-topic-detail node-sheet">
       <view class="node-sheet__top"><view class="node-sheet__close" bindtap="closeModePicker" aria-role="button" aria-label="关闭模式选择" hover-class="cy-pressed" hover-stay-time="80">退出</view>
         <view class="node-sheet__done" bindtap="confirmModePicker" aria-role="button" aria-label="确认创作模式" hover-class="cy-pressed" hover-stay-time="80">使用此模式</view>
@@ -1659,7 +1652,7 @@
 
   <include src="./topic-detail-sheet.wxml" /><!-- 文档二 L1:可玩时段底部选择卡,和主题详情同在主题根节点下 --><cy-choice-sheet show="{{playWindowSheet.show}}" title="可玩时段" options="{{playWindowOptions}}" value="{{playWindow.mode}}" error="{{playWindowSheet.error}}" bind:change="onPlayWindowPick" bind:close="closePlayWindow"><view wx:if="{{playWindow.mode === 'custom'}}" class="pw-custom"><view class="pw-custom__grp"><cy-dropdown topic-editor range="{{playWindowStarts}}" value="{{playWindowStartIndex}}" data-field="start" bind:change="onPlayWindowTime"><view class="pw-custom__row"><text class="pw-custom__t">开始</text><text class="pw-custom__v">{{playWindow.start}}</text><cy-icon name="chevron-right" size="28" /></view></cy-dropdown><cy-dropdown topic-editor range="{{playWindowEnds}}" value="{{playWindowEndIndex}}" data-field="end" bind:change="onPlayWindowTime"><view class="pw-custom__row pw-custom__row--hr"><text class="pw-custom__t">结束</text><text class="pw-custom__v">{{playWindow.end}}</text><cy-icon name="chevron-right" size="28" /></view></cy-dropdown></view><view class="pw-custom__done" bindtap="closePlayWindow" aria-role="button" aria-label="完成" hover-class="cy-pressed" hover-stay-time="80">完成</view></view></cy-choice-sheet>
 
-  <cy-sheet show="{{valueEditor.show}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="closeValueEditor" class="node-sheet-host">
+  <cy-sheet show="{{valueEditor.show}}" back-guard="{{false}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="closeValueEditor" class="node-sheet-host">
     <view class="node-sheet story-initial" wx:if="{{valueEditor.row}}">
       <view class="node-sheet__top"><view class="node-sheet__close" bindtap="closeValueEditor" aria-role="button" aria-label="关闭数值编辑" hover-class="cy-pressed">退出</view><view class="node-sheet__done" bindtap="saveValueEditor" aria-role="button" aria-label="保存数值" hover-class="cy-pressed">完成</view></view>
       <view class="node-sheet__titlebar"><text class="node-sheet__name node-sheet__name--static">{{valueEditor.row.label || (valueEditor.index < 0 ? '添加数值' : '编辑数值')}}</text></view>
@@ -1706,7 +1699,7 @@
   </view>
 </cy-sheet>
 
-<cy-sheet show="{{initialStateEditor.show}}" stacked="{{carryPicker.show}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="closeInitialState" class="node-sheet-host">
+<cy-sheet show="{{initialStateEditor.show}}" stacked="{{carryPicker.show}}" back-guard="{{false}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="closeInitialState" class="node-sheet-host">
   <view class="node-sheet story-initial" wx:if="{{initialStateEditor.rules}}">
     <view class="node-sheet__top"><view class="node-sheet__close" bindtap="closeInitialState" aria-role="button" aria-label="关闭初始状态" hover-class="cy-pressed" hover-stay-time="80">退出</view>
       <view class="node-sheet__done" bindtap="saveInitialState" aria-role="button" aria-label="保存初始状态" hover-class="cy-pressed" hover-stay-time="80">完成</view>
@@ -1761,7 +1754,7 @@
   </view>
 </cy-sheet>
 
-<cy-sheet show="{{carryPicker.show}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="closeCarryPicker" class="node-sheet-host">
+<cy-sheet show="{{carryPicker.show}}" back-guard="{{false}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" bind:close="closeCarryPicker" class="node-sheet-host">
   <view class="node-sheet story-initial ic-picker" wx:if="{{carryPicker.show}}">
     <view class="node-sheet__top">
       <view class="node-sheet__close" bindtap="closeCarryPicker" aria-role="button" aria-label="返回初始状态" hover-class="cy-pressed" hover-stay-time="80">返回</view>

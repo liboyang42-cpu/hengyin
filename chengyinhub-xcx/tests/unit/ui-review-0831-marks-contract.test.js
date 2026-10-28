@@ -77,11 +77,12 @@ test('B31 官方活动邀约接受绿拒绝红', () => {
   assert.match(wxss, /\.oi-btn\.decline[\s\S]{0,180}action-danger-bg/)
 })
 
-test('B66 勋章墙默认列表并按来源分组', () => {
+// 2026-10-27 owner P-30:不再按来源分组,改为「已点亮 / 未解锁」两段
+test('B66 勋章墙默认列表并分「已点亮 / 未解锁」两段', () => {
   const js = read('subpackageP3/pages/badge-wall/index/index.js')
   const wxml = read('subpackageP3/pages/badge-wall/index/index.wxml')
   assert.match(js, /viewMode:\s*'list'/)
-  assert.match(js, /BADGE_FAMILIES/)
+  assert.match(js, /BADGE_SECTIONS/)
   assert.match(wxml, /badgeGroups/)
   assert.match(wxml, /城市身份卡|bw-list-h/)
 })
@@ -152,7 +153,7 @@ test('B66 列表夹具带 family 分组，断言打在勋章行上', () => {
   assert.ok(data.badges.every((badge) => badge.family && badge.name && !String(badge.name).includes('示例')))
   assert.ok(data.badgeGroups.length >= 1)
   assert.ok(data.badgeGroups.every((group) => group.items && group.items.length))
-  assert.equal(SELECTORS().B66.selector, '.bw-list-row')
+  assert.equal(SELECTORS().B66.selector, '.bw-cell')
 })
 
 test('第2批错误态夹具不再把出错了写进可见文案', () => {
@@ -421,11 +422,10 @@ test('内容区切换走 fill 下划线，不走 chip 药丸或 segmented', () =
   assert.ok(ccTabs)
   assert.doesNotMatch(ccTabs[0], /variant="(chip|segmented)"/, '内容区切换不许退回药丸/分段')
 
+  // 2026-10-27 P-14 owner:俱乐部活动 tab 的「列表 / 月历」子切换已整体删除(不再有 event-view-tabs),
+  // 这一处断言改为钉「子切换不回潮」;其余页面的 fill 约束不变。
   const club = read('pages/club/detail/index.wxml')
-  const eventView = club.match(/<cy-tabs[^>]*class="event-view-tabs"[^>]*>/)
-  assert.ok(eventView)
-  assert.match(eventView[0], /variant="fill"/)
-  assert.doesNotMatch(eventView[0], /variant="chip"/)
+  assert.doesNotMatch(club, /class="event-view-tabs"/)
 })
 
 test('同页状态筛选走 chip 药丸，不走 fill 下划线', () => {

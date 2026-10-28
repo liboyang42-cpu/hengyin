@@ -13,7 +13,7 @@
   border: 2rpx solid var(--cy-color-bg-surface);
 }
 .bd--count.bd--overlay { top: -8rpx; right: -8rpx; }
-.bd__count { font-size: var(--cy-type-micro); font-weight: 600; line-height: 1; color: var(--cy-comp-oncover-fg); }
+.bd__count { font-size: var(--cy-type-micro); font-weight: 600; line-height: 1; text-align: center; font-variant-numeric: tabular-nums; color: var(--cy-comp-oncover-fg); }
 .bd--count.bd--rare .bd__count { color: var(--cy-color-text-inverse); }
 
 /* ---- dot 圆点 ---- */

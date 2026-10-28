@@ -47,6 +47,8 @@ public class TopicPublicationContentGuard {
     private TopicStateKeyRefService topicStateKeyRefService;
     @Autowired
     private com.chengyinhub.business.mapper.NpcProfileMapper npcProfileMapper;
+    @Autowired
+    private MerchantNpcIdentityDirectory merchantNpcIdentityDirectory;
     private final com.chengyinhub.business.service.support.JourneyStoryValidator journeyStoryValidator =
             new com.chengyinhub.business.service.support.JourneyStoryValidator();
     private final com.chengyinhub.business.service.support.AdvancedGameConfigValidator advancedGameConfigValidator =
@@ -490,8 +492,11 @@ public class TopicPublicationContentGuard {
                     NpcProfileService.SCOPE_NODE, node.getId()))) {
                 if (profile.getId() != null) ids.add(profile.getId());
             }
-            if (node.getMerchantMemberId() != null) {
-                for (NpcProfile profile : nullToEmpty(npcProfileMapper.selectEnabledByScope(2, node.getMerchantMemberId()))) {
+            // Scope 2 belongs to mms_merchant.id, never the node's merchant owner member ID (M-28).
+            Long merchantId = node.getMerchantMemberId() == null ? null
+                    : merchantNpcIdentityDirectory.availableMerchantIdForMember(node.getMerchantMemberId());
+            if (merchantId != null) {
+                for (NpcProfile profile : nullToEmpty(npcProfileMapper.selectEnabledByScope(2, merchantId))) {
                     if (profile.getId() != null) ids.add(profile.getId());
                 }
             }

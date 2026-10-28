@@ -10,6 +10,16 @@ const VIEW_FIELDS = 'contextAvailable,executeBefore,productType,reasonCode,repla
 const ITEM_FIELDS = 'createdAt,cursor,executeBefore,prepareKey,productType,reasonCode,requestId,resultExpiresAt,state';
 const LABELS = { PREPARED: '已准备', PROCESSING: '处理中', UNKNOWN: '结果待确认', SUCCEEDED: '已成功', FAILED: '已失败' };
 const MAX_AI_PLAN_NODES = 3;
+// p86 兴趣气泡:位置按稿错落摆放(x 为百分比、y 为 rpx),选中的标签拼进发给 AI 的描述
+const INTERESTS = [
+  { key: 'coffee', label: '咖啡', icon: 'category-food', x: 14, y: 90, size: 150 },
+  { key: 'food', label: '美食', icon: 'discover-shop', x: 36, y: 10, size: 132 },
+  { key: 'photo', label: '拍照', icon: 'camera', x: 58, y: 110, size: 140 },
+  { key: 'story', label: '老建筑', icon: 'poi-landmark', x: 78, y: 20, size: 128 },
+  { key: 'night', label: '夜游', icon: 'star', x: 18, y: 280, size: 128 },
+  { key: 'walk', label: '散步', icon: 'walk', x: 44, y: 250, size: 140 },
+  { key: 'park', label: '公园', icon: 'poi-park', x: 70, y: 280, size: 132 },
+];
 function terminal(record) { return record && ['SUCCEEDED', 'FAILED'].indexOf(record.state) >= 0; }
 function makeRequestId() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, char => {
@@ -36,7 +46,11 @@ Page({
     aiTraceId: '', aiQuotaLoaded: false, aiDraftPending: false, aiRemaining: 0, reducedMotion: false,
     aiIntentLabel: '', aiIntentIdentity: '', aiCanContinue: false, aiCanConfirmNew: false, aiHistoryPreviewLabel: '',
     aiRecoveryLoading: false, aiHistoryShow: false, aiHistoryItems: [],
-    aiPrompts: ['老城建筑与咖啡', '周末亲子探险', '雨天室内漫游'], mode: 2, operationScope: ''
+    aiPrompts: ['老城建筑与咖啡', '周末亲子探险', '雨天室内漫游'],
+    aiTweaks: ['再加一站', '换成晚上', '缩短到 1 小时'],
+    interests: INTERESTS.map(function (it) { return Object.assign({ on: false }, it); }),
+    interestText: '', interestCount: 0, planOpen: false,
+    mode: 2, operationScope: ''
   },
   onCreatorLogin() { return retryLogin(this, app, this._resumeCreatorLoad); },
   _resumeCreatorLoad() {
@@ -193,6 +207,25 @@ Page({
   },
   onAiIdeaInput(e) { this.setData({ aiIdea: e.detail.value, aiError: '' }); },
   useAiPrompt(e) { this.setData({ aiIdea: e.currentTarget.dataset.text || '', aiError: '' }); },
+  toggleInterest(e) {
+    const key = e.currentTarget.dataset.key;
+    const interests = this.data.interests.map(function (it) { return it.key === key ? Object.assign({}, it, { on: !it.on }) : it; });
+    const picked = interests.filter(function (it) { return it.on; }).map(function (it) { return it.label; });
+    this.setData({ interests, interestText: picked.join(' · '), interestCount: picked.length, aiError: '' });
+  },
+  openDraft() { this.setData({ planOpen: true }); },
+  /** 发给 AI 的一句话 = 输入框 + 选中的兴趣;两样都空时为空串 */
+  _composeIdea() {
+    const typed = (this.data.aiIdea || '').trim();
+    const picked = this.data.interests.filter(function (it) { return it.on; }).map(function (it) { return it.label; });
+    if (!picked.length) return typed;
+    return (typed ? typed + '，' : '') + '喜欢' + picked.join('、');
+  },
+  // P-43:结果未确认只回读原身份；明确终态后的重试才进入原V2新起草准入。
+  retryAiPlan() {
+    if (this._aiPending && !terminal(this._aiPending)) this.checkAiDraftRequest();
+    else this.generateAiPlan();
+  },
   _beginAi(kind) {
     this._writeEpoch = (this._writeEpoch || 0) + 1; // An older quota response cannot overwrite a newer action/read.
     this._sheetContext = null;
@@ -230,7 +263,7 @@ Page({
     if (this._journalBlocked) { this._identityError(this._capture('ai', this._aiPending)); return; }
     if (this._aiPending && !terminal(this._aiPending)) { this.checkAiDraftRequest(); return; }
     if (!this._aiPending && !this._recoveryEmpty) { this.openAiHistory(); return; }
-    const idea = (this.data.aiIdea || '').trim();
+    const idea = this._composeIdea();
     if (!idea) { this.setData({ aiError: '先说说你想做什么路线。' }); return; }
     if (this.data.aiQuotaLoaded && this.data.aiRemaining <= 0) {
       this.setData({ aiError: '这一轮的 AI 起草次数用完了，可以先手动填，或稍后再试。' }); return;
@@ -561,7 +594,7 @@ Page({
     if (!this._ensureAiSession() || !this._syncAiRecord() || this.data.aiGenerating || this.data.aiRecoveryLoading
         || !this.data.aiCanConfirmNew || this._aiProtocolBlocked) return;
     if (this._newActionPrompt && this._current(this._newActionPrompt)) return;
-    const idea = (this.data.aiIdea || '').trim();
+    const idea = this._composeIdea();
     if (!idea) { this.setData({ aiError: '先说说这次新起草的灵感。' }); return; }
     const ctx = this._capture('modal', this._aiPending); if (!ctx || !this._current(ctx)) return;
     const input = Object.freeze({ idea, productType: this.data.mode });
@@ -606,6 +639,7 @@ Page({
     this._aiResultMode = ctx ? ctx.originalMode : null;
     const freshQuota = !replayed && Number.isSafeInteger(res.data.remainingQuota) && res.data.remainingQuota >= 0;
     this.setData({
+      planOpen: false,
       aiPlanModeKnown: this._aiResultMode === 1 || this._aiResultMode === 2, aiPlanProductType: this._aiResultMode,
       aiPlan: { title: draft.title, subtitle: draft.subtitle || '', storyline: draft.storyline || '' },
       aiPlanNodes: nodes.map((node, index) => ({
