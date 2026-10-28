@@ -1875,6 +1875,9 @@ class MergedMasterBoundaryPolicyTest(unittest.TestCase):
     source_cli = BusinessOwnerPolicyTest.source_cli
     assert_rule = BusinessOwnerPolicyTest.assert_rule
     source = "dbd12e0a0d88e54597c274b56b08f2784c415d0e"
+    original_intent_edges = {("C_PLAY_PHOTO_COMMAND", "C_PLAY_BASIC_INTENT"),
+                             ("C_PLAY_PREFERENCE", "C_PLAY_BASIC_INTENT"),
+                             ("C_PLAY_PUZZLE_COMMAND", "C_PLAY_BASIC_INTENT")}
     expected = {
         "M_API_MEMBER_ACCOUNT": "com.chengyinhub.web.controller.api.ApiMemberAccountController",
         "M_API_REVIEW_RECEIPT": "com.chengyinhub.web.controller.api.ApiMerchantReviewReplyReceiptController",
@@ -1932,7 +1935,50 @@ class MergedMasterBoundaryPolicyTest(unittest.TestCase):
         for key in old.keys() - {"owners", "allowed_directions"}:
             self.assertEqual(old[key], now[key], key)
         self.assertEqual(old["owners"], [o for o in now["owners"] if not o["id"].startswith("M_")])
-        self.assertEqual(old["allowed_directions"], [e for e in now["allowed_directions"] if not any(n.startswith("M_") for n in e)])
+        self.assertEqual(old["allowed_directions"], [e for e in now["allowed_directions"]
+                         if not any(n.startswith("M_") for n in e) and tuple(e) not in self.original_intent_edges])
+        self.assertEqual(self.original_intent_edges, {tuple(e) for e in now["allowed_directions"]
+                                                    if tuple(e) in self.original_intent_edges})
+
+    def test_original_run_intent_forwards_only_and_real_backreference_cycle_stays_red(self):
+        spec = importlib.util.spec_from_file_location("original_play_direction_rule_only", gate.HERE / "collect_jdeps.py")
+        collector = importlib.util.module_from_spec(spec); spec.loader.exec_module(collector)
+        policy = gate.technical_dependency_policy()
+        owners = policy["owners"]
+        ids = {n for pair in self.original_intent_edges for n in pair}
+        ids.update(("M_API_TOPIC_ATTRIBUTE", "M_API_PLAY_SETUP", "M_KEY_NAMING", "M_TOPIC_ATTRIBUTES",
+                    "C_PLAY_HISTORY_QUERY"))
+        index = {owners[n]["members"][0]: {"owner": owners[n]["module"]} for n in ids}
+        def ref(pair):
+            return tuple(owners[n]["members"][0] for n in pair)
+        forward = [ref(pair) for pair in sorted(self.original_intent_edges)]
+        forward.append(ref(("M_TOPIC_ATTRIBUTES", "M_KEY_NAMING")))
+        def check(pairs):
+            # Direct predicates only, never fabricated JAR/raw/source evidence.
+            selected = {"rule-only": {str(i): {"source_class": a, "target_class": b, "line": "rule-only"}
+                                      for i, (a, b) in enumerate(pairs)}}
+            return collector.technical_dependency_findings(index, selected, policy)
+        result = check(forward)
+        self.assertEqual([], result["findings"])
+        self.assertEqual("UNKNOWN", result["verdict"])
+        for source, target in self.original_intent_edges:
+            rules = {r["rule"] for r in check(forward + [ref((target, source))])["findings"]}
+            self.assertIn("NEW_OWNER_DEPENDENCY_DIRECTION", rules)
+            self.assertIn("NEW_OWNER_CYCLE", rules)
+        self.assertIn("NEW_OWNER_DEPENDENCY_DIRECTION", {r["rule"] for r in check(forward + [
+            ref(("C_PLAY_PHOTO_COMMAND", "C_PLAY_PREFERENCE"))])["findings"]})
+        self.assertNotIn(("C_PLAY_HISTORY_QUERY", "C_PLAY_BASIC_INTENT"), policy["allowed_directions"])
+        self.assertIn("NEW_OWNER_DEPENDENCY_DIRECTION", {r["rule"] for r in check(forward + [
+            ref(("C_PLAY_HISTORY_QUERY", "C_PLAY_BASIC_INTENT"))])["findings"]})
+        # The peer controller helper is extracted in production, not granted here.
+        self.assertNotIn(("M_API_TOPIC_ATTRIBUTE", "M_API_PLAY_SETUP"), policy["allowed_directions"])
+        self.assertIn("NEW_OWNER_DEPENDENCY_DIRECTION", {r["rule"] for r in check(forward + [
+            ref(("M_API_TOPIC_ATTRIBUTE", "M_API_PLAY_SETUP"))])["findings"]})
+        self.assertNotIn(("M_KEY_NAMING", "M_TOPIC_ATTRIBUTES"), policy["allowed_directions"])
+        rules = {r["rule"] for r in check(forward + [ref(("M_KEY_NAMING", "M_TOPIC_ATTRIBUTES"))])["findings"]}
+        self.assertIn("OWNER_GOD_BACKREFERENCE", rules)
+        self.assertIn("NEW_OWNER_DEPENDENCY_DIRECTION", rules)
+        self.assertIn("NEW_OWNER_CYCLE", rules)
 
     def test_actual_source_cli_accepts_exact_registered_primaries_but_not_foreign_peers(self):
         trusted, _ = self.prepare_policy()
