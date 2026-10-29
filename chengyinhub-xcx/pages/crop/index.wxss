@@ -55,26 +55,24 @@
 
 .crop__frame {
   position: relative;
-  overflow: hidden;              /* 框外直接裁掉 = 参考图里的纯黑 */
   box-sizing: border-box;
-  border: 1px solid var(--cy-comp-crop-frame-line);
 }
 
-/* M-08(2026-10-27):圆形取景框。方框描边换成圆,圆外用超大 box-shadow 压暗(被 .crop__frame 的 overflow 裁在框内) */
-.crop__frame--round { border-color: transparent; }
-.crop__round-mask {
+/* M-09(2026-10-29):框外不再裁掉 —— 遮罩用超大 box-shadow 把框外的图压暗(由 .crop__stage 的 overflow 收在台面内)。
+   M-08:Logo 时遮罩是圆,圆外(四角 + 框外)一起压暗。遮罩是图的后一个兄弟且 z-index 更高,始终盖在图上。 */
+.crop__mask {
   position: absolute;
   left: 0;
   top: 0;
   width: 100%;
   height: 100%;
-  border-radius: 50%;
   box-sizing: border-box;
   border: 1px solid var(--cy-comp-crop-frame-line);
   box-shadow: 0 0 0 2000px rgba(0, 0, 0, 0.55); /* ds-ok: 取景遮罩,照片语境固定半透明黑 */
   pointer-events: none;
   z-index: 1;
 }
+.crop__mask--round { border-radius: 50%; }
 
 /* 定位在框心,translate(-50%,-50%) 让 transform-origin 与几何模型的「相对框心位移」对齐 */
 .crop__img {
@@ -118,11 +116,14 @@
   font-weight: 600;
   justify-content: center;
   text-align: center;
-  padding-left: var(--cy-btn-pad-x);
-  padding-right: var(--cy-btn-pad-x);
+  box-sizing: border-box;
+  padding: 12rpx 0; /* M-09:命中区仍 88rpx,实心只画在内容盒(64rpx 高),按钮看起来变小 */
   color: var(--cy-btn-solid-fg);
   background: var(--cy-btn-solid-bg);
+  background-clip: content-box;
+  font-size: var(--cy-type-body);
 }
+.crop__action--confirm text { padding: 0 var(--cy-space-4); }
 .crop__bar--missing {
   justify-content: center;
 }

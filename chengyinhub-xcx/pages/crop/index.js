@@ -10,11 +10,13 @@
  *   收在页内后全程只有一次 navigateTo + 一次 navigateBack,该竞态不复存在。
  * ★ emit 唯一出口在 onUnload(pop 已提交),侧滑/物理返回也能兜住,调用方不会永久挂起。
  */
-const { parseRatio, clampTransform, computeCropRect } = require('./utils/crop-geometry');
+const { parseRatio, clampTransform, computeCropRect, fitFrame } = require('./utils/crop-geometry');
 
 const NAV_CONTENT_H = 44;     // 导航栏内容区(状态栏之外),对齐微信胶囊
 const BOTTOM_BAR_H = 56;      // 底栏 取消/选取
 const MAX_OUTPUT_EDGE = 1440; // 导出长边上限:防止大图裁完仍是几 MB 拖垮上传
+const FRAME_INSET = 24;       // M-09:取景框离取景台四边的留白(px)
+const FRAME_MIN_FRACTION = 0.5; // M-09:为露出整图缩框时,框最小留到可用宽高的一半
 // cropInit 从 app.cropAll 的 navigateTo success 回调抛来,比 onLoad 晚;通道在但图始终不来
 // (opener 在 emit 前就崩 / 被顶掉)时用这只闸兜到无源态,不让用户卡在等待里。
 const SOURCE_WAIT_MS = 3000;
@@ -148,15 +150,11 @@ Page({
 
     // 自由比例 = 跟随原图比例(此时框即全图,用户仍可放大取局部)
     const ratio = parseRatio(this.ratioLiteral) || natW / natH;
-    let frameW = this.avail.w;
-    let frameH = frameW / ratio;
-    if (frameH > this.avail.h) {           // 竖长框放不下 → 以高为准回算宽
-      frameH = this.avail.h;
-      frameW = frameH * ratio;
-    }
-
-    // 图片渲染基准 = cover 满框
-    const base = Math.max(frameW / natW, frameH / natH);
+    // 框居中留边;图片渲染基准 = cover 满框,框外部分压暗显示(M-09)
+    const { frameW, frameH, base } = fitFrame({
+      availW: this.avail.w, availH: this.avail.h, natW, natH, ratio,
+      inset: FRAME_INSET, minFraction: FRAME_MIN_FRACTION,
+    });
     this.setData({
       frameW,
       frameH,

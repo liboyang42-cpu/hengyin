@@ -54,7 +54,7 @@ test('写入方:品牌中心 Logo/封面/店名保存成功广播;个人资料�
   assert.match(app, /that\.cropAll\(paths, ratio, options\.cropShape\)/)
   const crop = read('pages/crop/index.js')
   assert.match(crop, /round: !!\(d && d\.shape === 'circle'\)/)
-  assert.match(read('pages/crop/index.wxml'), /<view wx:if="\{\{round\}\}" class="crop__round-mask">/)
+  assert.match(read('pages/crop/index.wxml'), /<view class="crop__mask \{\{round \? 'crop__mask--round' : ''\}\}">/)
 })
 
 test('消费方:我的页按视角取名称与头像,商家背景读店铺封面;商家首页头像无描边并订阅广播', () => {

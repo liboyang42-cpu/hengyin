@@ -3,7 +3,7 @@
      本页不再手抄一份;.pc-merchant 只留本页自有语义(去品牌化 + 隐藏 hero 底图) -->
 <view class="pc-page {{isMerchantView ? 'pc-merchant theme-merchant' : 'pc-player'}} {{isSelf ? 'pc-self' : 'pc-public'}} {{reducedMotion ? 'pc-reduced-motion' : ''}}">
   <view class="pc-hero-bg">
-    <image class="pc-hero-bg-img" src="{{heroImg}}" mode="aspectFill" />
+    <image class="pc-hero-bg-img" src="{{img.one(heroImg)}}" mode="aspectFill" />
   </view>
   <view class="pc-page-fade"></view>
 
@@ -43,7 +43,7 @@
           <view class="pc-avatar-ring">
             <!-- 商家主体没上传 logo 时落店名首字(lettermark),不借玩家默认头像那张人脸;
                  玩家档不变,仍兜底 /images/d_profile.png。 -->
-            <image wx:if="{{_avatarSrc}}" class="pc-avatar" src="{{_avatarSrc}}" mode="aspectFill" />
+            <image wx:if="{{_avatarSrc}}" class="pc-avatar" src="{{img.one(_avatarSrc)}}" mode="aspectFill" />
             <view wx:else class="pc-avatar pc-avatar--initial">{{_avatarInitial}}</view>
           </view>
           <view class="pc-avatar-edit" wx:if="{{isSelf}}"><image class="pc-avatar-edit-ico" src="/images/icon_pen.svg" mode="aspectFit" /></view>
@@ -719,3 +719,4 @@
   bind:close="closeMerchantNpcChat" />
 
 <view class="{{isMerchantView ? 'theme-merchant' : ''}}"><cy-coop-invite-sheet id="coop-invite" show="{{coopInviteShow}}" target-id="{{userId}}" target-name="{{(subjectMerchant && subjectMerchant.name) || (userInfo && userInfo.nickname) || ''}}" invite-type="{{0}}" topic-id="{{topicId}}" chapter-id="{{chapterId}}" topic-name="{{topicName || ''}}" operation-scope="{{operationScope || ''}}" bind:close="closeCoopInvite" bind:sent="onCoopInviteSent" /></view>
+<wxs src="../../../../utils/wxs/img.wxs" module="img" />

@@ -7,7 +7,6 @@
   <cy-page-title title="{{pageTitle}}" safe-top="{{false}}" flush="{{true}}" />
   <!-- F-W1-02:无权限是可见的身份说明(不是加载失败),放在导航与标题之后,且下方内容整段不再渲染。 -->
   <cy-empty wx:if="{{accessDenied}}" kind="no-permission" title="当前身份不能查看这份商家账本" />
-  <cy-club-direct-ledger wx:if="{{!accessDenied && !routeError && view === 'settlement' && merchantAccess.canReadFinance}}" kind="merchant" />
   <block wx:if="{{!accessDenied}}">
   <cy-state-shell class="fill-slot" wx:if="{{routeError}}" kind="missing-param" fill size="lg"
                   title="链接已失效" sub="请返回重新进入"

@@ -61,4 +61,21 @@ function computeCropRect(s) {
   };
 }
 
-module.exports = { parseRatio, baseScaleOf, clampTransform, computeCropRect, MIN_SCALE, MAX_SCALE };
+// M-09(2026-10-29 复查):取景框四周留边居中,不再贴满屏宽;框外的图压暗露出来。
+// cover 满框时图若比取景台还大,整体缩小取景框,让整张图都在台面里(框最小留可用宽高的 minFraction)。
+// 只决定框多大,平移/缩放约束与导出(clampTransform/computeCropRect)不变。
+function fitFrame(o) {
+  const inset = o.inset || 0;
+  const maxW = Math.max(1, o.availW - inset * 2);
+  const maxH = Math.max(1, o.availH - inset * 2);
+  const ratio = o.ratio > 0 ? o.ratio : o.natW / o.natH;
+  let frameW = maxW;
+  let frameH = frameW / ratio;
+  if (frameH > maxH) { frameH = maxH; frameW = frameH * ratio; }
+  const cover = baseScaleOf(o.natW, o.natH, frameW, frameH);
+  const fit = Math.min(1, o.availW / (o.natW * cover), o.availH / (o.natH * cover));
+  const k = Math.max(fit, o.minFraction || 0);
+  return { frameW: frameW * k, frameH: frameH * k, base: cover * k };
+}
+
+module.exports = { parseRatio, baseScaleOf, clampTransform, computeCropRect, fitFrame, MIN_SCALE, MAX_SCALE };

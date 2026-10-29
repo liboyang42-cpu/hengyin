@@ -75,6 +75,8 @@ const MATRIX = [
   ['pages/publish/utils/publish/gameplay-support-matrix.js', "url: '/api/play/theme/support-matrix'", 'required', 'author', 'global-authenticated-read'],
   // 俱乐部直付应收只读：商家岗位 FINANCE_READ 派生店主，俱乐部按当前主理人归属校验。
   ['components/cy/club-direct-ledger/index.js', "url: scope.kind === 'club'", 'required', 'merchant/club', 'owned-merchant-or-club-receivable'],
+  // 2026-10-29 M-32:俱乐部计酬并进账户收益「本月收入明细」,同端点同权限档(商家 FINANCE_READ 派生店主)。
+  ['components/cy/earnings-overview/index.js', "url: '/api/club-direct-merchant/merchant'", 'required', 'merchant', 'owned-merchant-or-club-receivable'],
   ['utils/deregister-flow.js', "sendUiStateRequest(app, '/api/user/deregister/status'", 'required', 'member', 'self-account'],
   ['utils/deregister-flow.js', "sendUiStateRequest(app, '/api/user/deregister/status', { method: 'GET',", 'required', 'member', 'self-account'],
   ['pages/square/list/index.js', "url: '/api/official/events'", 'optional', 'visitor/member', 'public-list+viewer-personalization'],
@@ -412,7 +414,8 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-10-28 L9 再并 master:P-08 首页 run-session/list 退场 −1,108 → 107。
   // Frozen-master calls + creator-scoped supply stations + V2 original-request recovery.
   // Source accounting only; this merged tree has NOT_RUN validation.
-  assert.equal(directCount, 109, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // 2026-10-29 M-32:账户收益本月收入明细读俱乐部计酬一处(同 club-direct-ledger 端点与权限档,已入 MATRIX),109 → 110。
+  assert.equal(directCount, 110, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
   // 2026-10-09 U04 只读主题请求增加6处，22 → 28。
   // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):漫游 BL-41 可参与官方活动 req 包装 GET +1(已入 MATRIX),28 → 29。
   // 2026-10-22 L21 BL-186:pages/play 本章结算 GET /api/play/journey/stage-end(与 /ending 同档),29 → 30。

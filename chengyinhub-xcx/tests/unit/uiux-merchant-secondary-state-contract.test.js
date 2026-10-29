@@ -206,7 +206,7 @@ test('店铺参谋只接受最后一次请求，卸载后迟到回调不得继�
   const freshRequest = requests[1]
   const response = (visitors) => ({
     code: 200,
-    data: { facts: { attribution: { visitors, checkins: 1, redeems: 1 } } },
+    data: { facts: { attribution: { visitors, checkins: 1, redeems: 1 } }, profile: { storeName: '城南小馆', logo: 'https://x/l.png' } },
   })
 
   freshRequest.success(response(22))
@@ -235,7 +235,7 @@ test('店铺参谋切换商家主体时立即清空上一商家的敏感展示',
     data: {
       facts: { attribution: { visitors: 9, checkins: 3, redeems: 1 } },
       ai: { summary: 'A 商家建议' },
-      profile: { configured: true },
+      profile: { configured: true, storeName: '城南小馆', logo: 'https://x/l.png' },
       recentVisitors: [{ memberId: 7, displayName: 'A 商家顾客' }],
     },
   })
@@ -247,7 +247,8 @@ test('店铺参谋切换商家主体时立即清空上一商家的敏感展示',
   assert.equal(requests.length, 2, '主体变化必须立即发起新主体请求')
   assert.equal(insight.data.facts, null)
   assert.equal(insight.data.ai, null)
-  assert.equal(insight.data.profile, null)
+  assert.equal(insight.data.storeName, '')
+  assert.equal(insight.data.storeLogo, '')
   assert.deepEqual(insight.data.recentVisitors, [])
   assert.equal(insight.data.valueCard, null)
 
@@ -352,7 +353,7 @@ test('同账号商家资格被撤销后，返回页面必须重验并清除客�
     data: {
       facts: { attribution: { visitors: 6, checkins: 2, redeems: 1 } },
       ai: { summary: '仅商家可见' },
-      profile: { configured: true },
+      profile: { configured: true, storeName: '城南小馆', logo: 'https://x/l.png' },
       recentVisitors: [{ memberId: 7, displayName: '敏感访客' }],
     },
   })
@@ -364,7 +365,8 @@ test('同账号商家资格被撤销后，返回页面必须重验并清除客�
   requests[1].complete()
   assert.equal(insight.data.facts, null)
   assert.equal(insight.data.ai, null)
-  assert.equal(insight.data.profile, null)
+  assert.equal(insight.data.storeName, '')
+  assert.equal(insight.data.storeLogo, '')
   assert.deepEqual(insight.data.recentVisitors, [])
 
   const customer = loadPage('pages/merchant/customer/index.js')
@@ -653,17 +655,17 @@ test('AI 事实未知不冒充有数,计数位写 0、比率位写 0%、状态�
   assert.equal(insight._buildMetricCards({ checkin: {}, crowd: {}, supply: {} })[0].num, '0%')
 
   insight.load()
-  requests[0].success({ code: 200, data: { facts: { attribution: {} } } })
+  requests[0].success({ code: 200, data: { facts: { attribution: {} }, profile: { storeName: '城南小馆', logo: 'https://x/l.png' } } })
   requests[0].complete()
   assert.equal(insight.data.factState, 'unknown')
 
   insight.load()
-  requests[1].success({ code: 200, data: { facts: { attribution: { visitors: 0, checkins: 0, redeems: 0 } } } })
+  requests[1].success({ code: 200, data: { facts: { attribution: { visitors: 0, checkins: 0, redeems: 0 } }, profile: { storeName: '城南小馆', logo: 'https://x/l.png' } } })
   requests[1].complete()
   assert.equal(insight.data.factState, 'empty')
 
   insight.load()
-  requests[2].success({ code: 200, data: { facts: { attribution: { visitors: 2, checkins: 1, redeems: 0 } } } })
+  requests[2].success({ code: 200, data: { facts: { attribution: { visitors: 2, checkins: 1, redeems: 0 } }, profile: { storeName: '城南小馆', logo: 'https://x/l.png' } } })
   requests[2].complete()
   assert.equal(insight.data.factState, 'ready')
 })
