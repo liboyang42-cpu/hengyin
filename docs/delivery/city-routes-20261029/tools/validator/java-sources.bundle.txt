@@ -1,0 +1,92 @@
+=== javastub/org/springframework/beans/BeanUtils.java ===
+package org.springframework.beans;
+public class BeanUtils { public static void copyProperties(Object a, Object b){ throw new UnsupportedOperationException("stub"); } }
+=== javastub/org/springframework/transaction/annotation/Propagation.java ===
+package org.springframework.transaction.annotation;
+public enum Propagation { REQUIRED, SUPPORTS, MANDATORY, REQUIRES_NEW, NOT_SUPPORTED, NEVER, NESTED }
+=== javastub/org/springframework/transaction/annotation/Transactional.java ===
+package org.springframework.transaction.annotation;
+import java.lang.annotation.*;
+@Retention(RetentionPolicy.RUNTIME) @Target({ElementType.METHOD, ElementType.TYPE})
+public @interface Transactional { Propagation propagation() default Propagation.REQUIRED; Class<? extends Throwable>[] rollbackFor() default {}; boolean readOnly() default false; }
+=== javastub/org/springframework/transaction/support/TransactionSynchronizationManager.java ===
+package org.springframework.transaction.support;
+public class TransactionSynchronizationManager { public static boolean isActualTransactionActive(){return false;} public static boolean isCurrentTransactionReadOnly(){return false;} }
+=== javastub/org/springframework/stereotype/Service.java ===
+package org.springframework.stereotype;
+import java.lang.annotation.*;
+@Retention(RetentionPolicy.RUNTIME) @Target(ElementType.TYPE) public @interface Service { String value() default ""; }
+=== javastub/org/apache/ibatis/annotations/Param.java ===
+package org.apache.ibatis.annotations;
+import java.lang.annotation.*;
+@Retention(RetentionPolicy.RUNTIME) @Target(ElementType.PARAMETER) public @interface Param { String value(); }
+=== javastub/com/chengyinhub/common/annotation/Excel.java ===
+package com.chengyinhub.common.annotation;
+import java.lang.annotation.*;
+@Retention(RetentionPolicy.RUNTIME) @Target(ElementType.FIELD)
+public @interface Excel { String name() default ""; String dateFormat() default ""; String readConverterExp() default ""; double width() default 16; }
+=== javastub/com/chengyinhub/common/exception/ServiceException.java ===
+package com.chengyinhub.common.exception;
+public class ServiceException extends RuntimeException {
+  private Integer code; private String detailMessage;
+  public ServiceException(){} public ServiceException(String m){super(m);} public ServiceException(String m, Integer c){super(m);code=c;}
+  public ServiceException setDetailMessage(String d){detailMessage=d;return this;} public String getDetailMessage(){return detailMessage;} public Integer getCode(){return code;} private Object data; public ServiceException setData(Object d){data=d;return this;} public Object getData(){return data;}
+}
+=== javastub/com/chengyinhub/common/constant/HttpStatus.java ===
+package com.chengyinhub.common.constant;
+public class HttpStatus { public static final int SUCCESS=200, BAD_REQUEST=400, UNAUTHORIZED=401, FORBIDDEN=403, NOT_FOUND=404, CONFLICT=409, ERROR=500; }
+=== javastub/com/chengyinhub/common/core/domain/BaseEntity.java ===
+package com.chengyinhub.common.core.domain;
+import java.util.*;
+public class BaseEntity implements java.io.Serializable {
+  private String searchValue, createBy, updateBy, remark; private Date createTime, updateTime; private Map<String,Object> params = new HashMap<>();
+  public String getSearchValue(){return searchValue;} public void setSearchValue(String s){searchValue=s;}
+  public String getCreateBy(){return createBy;} public void setCreateBy(String s){createBy=s;}
+  public String getUpdateBy(){return updateBy;} public void setUpdateBy(String s){updateBy=s;}
+  public String getRemark(){return remark;} public void setRemark(String s){remark=s;}
+  public Date getCreateTime(){return createTime;} public void setCreateTime(Date d){createTime=d;}
+  public Date getUpdateTime(){return updateTime;} public void setUpdateTime(Date d){updateTime=d;}
+  public Map<String,Object> getParams(){return params;} public void setParams(Map<String,Object> p){params=p;}
+}
+=== javastub/com/chengyinhub/common/utils/DateUtils.java ===
+package com.chengyinhub.common.utils;
+public class DateUtils { public static java.util.Date getNowDate(){ return new java.util.Date(); } }
+=== javastub/com/chengyinhub/common/utils/StringUtils.java ===
+package com.chengyinhub.common.utils;
+/** Minimal stub for harness compile only. */
+public class StringUtils {
+    public static boolean isBlank(CharSequence s) { return s == null || s.toString().trim().isEmpty(); }
+    public static boolean isNotBlank(CharSequence s) { return !isBlank(s); }
+    public static boolean isEmpty(CharSequence s) { return s == null || s.length() == 0; }
+    public static boolean isNotEmpty(CharSequence s) { return !isEmpty(s); }
+}
+=== javarunner/RunValidator.java ===
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.chengyinhub.business.service.support.AdvancedGameConfigValidator;
+import java.nio.file.*;
+import java.util.Iterator;
+import java.util.Map;
+
+/** Harness: run the repo's AdvancedGameConfigValidator.validateAndNormalize on each entry of {key: config}. */
+public class RunValidator {
+    public static void main(String[] args) throws Exception {
+        ObjectMapper om = new ObjectMapper();
+        JsonNode root = om.readTree(Files.readString(Path.of(args[0])));
+        boolean quiet = args.length > 1 && "--quiet".equals(args[1]);
+        int ok = 0, bad = 0;
+        for (Iterator<Map.Entry<String, JsonNode>> it = root.fields(); it.hasNext();) {
+            Map.Entry<String, JsonNode> e = it.next();
+            String raw = e.getValue().isTextual() ? e.getValue().asText() : e.getValue().toString();
+            try {
+                String out = new AdvancedGameConfigValidator().validateAndNormalize(raw);
+                ok++;
+                System.out.println("[JAVA OK ] " + e.getKey() + (quiet ? "" : "\n    -> " + out));
+            } catch (Exception ex) {
+                bad++;
+                System.out.println("[JAVA ERR] " + e.getKey() + " :: " + ex.getClass().getSimpleName() + ": " + ex.getMessage());
+            }
+        }
+        System.out.println("java summary: " + ok + " ok, " + bad + " rejected");
+    }
+}
