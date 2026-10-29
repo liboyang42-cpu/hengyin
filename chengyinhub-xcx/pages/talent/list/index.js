@@ -9,6 +9,7 @@ const { isRecord, isRecordList } = require('../../../utils/response-shape.js');
 // variant 判定与广场、俱乐部页共用同一份,别在这里写第二套(两套迟早分叉)。
 const { isCompletedShare, hasFeedPlayCover } = require('../../../utils/feed-play-card.js');
 const { decodeDisplayText } = require('../../../utils/display-text.js');
+const clubPostRepost = require('../../../utils/club-post-repost.js');
 
 // 主理人 L1-L5 等级对外文案(俱乐部继承展示;level=0 不显示)
 const LEVEL_LABELS = ['', 'L1 新手', 'L2 稳定', 'L3 成熟', 'L4 城市运营者', 'L5 区域策划方'];
@@ -115,7 +116,8 @@ Page({
         const noClub = res.data.clubCount === 0;
         that._feedLoading = false; pageMotion.enter(that, 'pmFeed');
         that.setData({
-          feed: rows.map(function (p) {
+          // dw29 L8:转发条目摊平成「原帖 + repostBy」,映射与俱乐部页同一份
+          feed: clubPostRepost.mapClubFeedRows(rows, function (p) {
             // refType 的编号就是广场的 dataType;后端投影不出 sportName(被引对象已删/下架)时
             // 两个判定都会自然判假,卡片降级成普通图文帖。
             const ref = Object.assign({}, p, { dataType: p.refType, completed: true });
@@ -158,6 +160,14 @@ Page({
     const post = this.data.feed[e.detail && e.detail.index];
     if (!post || !post.sportTopicId) return this.onPostTap(e);
     wx.navigateTo({ url: '/pages/play/index?topicId=' + post.sportTopicId });
+  },
+
+  // dw29 L8 转发/撤销:乐观切换,失败回滚并原样显示后端提示
+  onRepostPost(e) {
+    if (app.ensureLoginFor && !app.ensureLoginFor('like', () => this.onRepostPost(e), { owner: this, target: () => [e.detail && e.detail.postId] })) return;
+    const postId = e.detail && e.detail.postId;
+    if (postId == null) return;
+    clubPostRepost.toggleRepost({ page: this, listKey: 'feed', postId: postId, app: app, toast: toast });
   },
 
   onPostUser(e) {

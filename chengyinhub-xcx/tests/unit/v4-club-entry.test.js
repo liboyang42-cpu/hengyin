@@ -140,6 +140,7 @@ function loadDetail() {
         '../../../utils/subscribe.js': require('../../utils/subscribe.js'),
         '../../../utils/toast.js': require('../../utils/toast.js'),
         '../utils/club-pinned-notice.js': require('../../pages/club/utils/club-pinned-notice.js'),
+        '../../../utils/club-post-repost.js': require('../../utils/club-post-repost.js'),
       }
       if (modules[request]) return modules[request]
       if (request.endsWith('/utils/session/login-reload.js')) return require('../../utils/session/login-reload.js')

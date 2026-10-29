@@ -218,7 +218,9 @@ test('A45：我的收藏保留主题长方卡，并新增帖文/主题双域与�
   const wxss = read('pages/mylike/mylike.wxss')
   assertFavoriteCardsOnly(wxml)
   assert.match(wxml, /<cy-tabs\b[^>]*tabs="\{\{favoriteTabs\}\}"/)
-  assert.match(wxml, /<cy-post-card\b[^>]*show-favorite/)
+  // 2026-10-29 业主:收藏从卡片动作行挪进「···」,本页「···」只给「取消收藏」
+  assert.match(wxml, /<cy-post-card\b[^>]*show-more[^>]*bind:more="onPostMore"/)
+  assert.match(wxml, /<cy-option-sheet immediate[^>]*bind:select="onPostMoreSelect"/)
   assert.match(wxss, /\.favorite-card\s*\{[^}]*aspect-ratio:\s*16 \/ 9/)
   assert.match(wxss, /\.favorite-card__actions button\s*\{[^}]*width:\s*var\(--cy-btn-h\);[^}]*height:\s*var\(--cy-btn-h\)/)
   assert.match(wxml, /class="favorite-card__action-visual"/)

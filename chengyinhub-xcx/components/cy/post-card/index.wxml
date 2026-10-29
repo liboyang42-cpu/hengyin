@@ -3,7 +3,9 @@
      picList 有图 → Image(头像 44) · 都没有 → Text(头像 44)
      2026-10-22 新稿(俱乐部页重做 211:271 / 211:326 / 211:354):头像只在头部那一行,正文、图、模板封面、
      动作行都占满整宽(不再缩进到头像右侧);Roam 的点赞头像组与评论预览排在动作行之后。 -->
-<view class="post-card {{reducedMotion ? 'post-card--reduced' : ''}} {{light ? 'post-card--light' : ''}} {{post.isCompletionShare || post.hasPlayCover ? 'post-card--compact' : ''}} {{post.isCompletionShare ? 'post-card--roam' : ''}}" bindtap="emitDetail" aria-role="button" aria-label="{{accessibilityLabel}}" hover-class="cy-pressed" hover-stay-time="80">
+<view class="post-card {{reducedMotion ? 'post-card--reduced' : ''}} {{light ? 'post-card--light' : ''}} {{post.isCompletionShare || post.hasPlayCover ? 'post-card--compact' : ''}} {{post.isCompletionShare ? 'post-card--roam' : ''}} {{post.repostBy ? 'post-card--repost' : ''}}" bindtap="emitDetail" aria-role="button" aria-label="{{accessibilityLabel}}" hover-class="cy-pressed" hover-stay-time="80">
+  <!-- 2026-10-29 业主:转发条目在头像上方一行「某某 转发了」,原帖照常排在下面,同一张卡 -->
+  <view class="post-card__repost-by" wx:if="{{post.repostBy}}">{{post.repostBy.nick || '城瘾玩家'}} 转发了</view>
   <view class="post-card__avatar">
       <image class="post-card__avatar-img" wx:if="{{interactiveUser}}" lazy-load="true" catchtap="emitUser" aria-role="button" aria-label="打开用户主页"
              src="{{post.memberAvatar || '/images/d_profile.png'}}" mode="aspectFill" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true" />
@@ -121,12 +123,13 @@
       <view wx:else class="post-card__action" aria-hidden="true">
         <cy-icon class="post-card__comment-icon" name="comment" size="44" /><text class="post-card__action-text">{{post.commentCount || ''}}</text>
       </view>
-      <view wx:if="{{showFavorite}}" class="post-card__action post-card__action--favorite {{post.isBookmarked == 1 ? 'is-on' : ''}}"
-            catchtap="emitFavorite" aria-role="button" aria-label="{{post.isBookmarked == 1 ? '取消收藏' : '收藏帖文'}}" aria-pressed="{{post.isBookmarked == 1}}" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true">
-        <cy-icon class="post-card__favorite-icon" name="{{post.isBookmarked == 1 ? 'star-filled' : 'star'}}" size="44" />
+      <!-- 2026-10-29 业主:动作行 = 点赞 / 评论 / 转发 / 分享;收藏挪进「···」菜单 -->
+      <view wx:if="{{showRepost}}" class="post-card__action post-card__action--repost {{post.viewerReposted ? 'is-on' : ''}}"
+            catchtap="emitRepost" aria-role="button" aria-label="{{post.viewerReposted ? '撤销转发' : '转发'}}，当前 {{post.repostCount || 0}}" aria-pressed="{{post.viewerReposted ? true : false}}" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true">
+        <cy-icon class="post-card__repost-icon" name="repost" size="44" /><text class="post-card__action-text">{{post.repostCount || ''}}</text>
       </view>
       </view>
-      <button class="post-card__share" wx:if="{{showShare}}" open-type="share" data-id="{{post.id}}" data-post-id="{{post.id}}" data-club-id="{{post.clubId}}" aria-label="转发帖文">
+      <button class="post-card__share" wx:if="{{showShare}}" open-type="share" data-id="{{post.id}}" data-post-id="{{post.id}}" data-club-id="{{post.clubId}}" aria-label="分享到微信">
         <image class="post-card__share-icon" src="/images/icon_share.png" mode="aspectFit" />
       </button>
     </view>

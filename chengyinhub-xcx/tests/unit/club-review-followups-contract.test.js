@@ -50,7 +50,8 @@ test('★达人页要能派生 variant,而且必须复用同一份判据', () =>
   // 后端不投影的话,前端派生出来也是空壳
   const controller = read('../chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubController.java')
   const feed = controller.slice(controller.indexOf('@PostMapping("/post/feed")'))
-  assert.match(feed.slice(0, 2000), /projectPostReferences\(posts\);/,
+  // dw29 L8:投影对象是「帖文 + 转发条目里嵌的原帖」(all),帖文本身仍在其中
+  assert.match(feed.slice(0, 2000), /withRepostOriginals\(posts, reposts\)[\s\S]*projectPostReferences\(all\);/,
     '聚合流也要投影引用，否则达人页拿不到 sportName,卡片永远不出现')
 })
 

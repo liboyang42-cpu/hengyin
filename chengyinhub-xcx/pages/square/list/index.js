@@ -61,6 +61,7 @@ Page({
     // 只作行定位用的内部状态;setData 死数据字段门禁对 A2「只当内部状态」判红)
     currentActionId: '', currentActionSummary: '',   // 当前操作帖的 id / 正文前段(给 cy-post-actions;摘要用于 CU-C-107 的删除确认)
     currentActionOwner: false, // 当前操作帖是不是本人的(决定编辑/删除行是否出现)
+    currentActionBookmarked: false, // 「···」里收藏行的文案(收藏 / 取消收藏)
 
     avatar: '',
     nickname: '',
@@ -288,7 +289,8 @@ Page({
       postActionShow: true,
       currentActionId: item.id == null ? '' : String(item.id),
       currentActionSummary: item.contents || '',
-      currentActionOwner: !!(item.memberId && String(item.memberId) === String(this.data.userId))
+      currentActionOwner: !!(item.memberId && String(item.memberId) === String(this.data.userId)),
+      currentActionBookmarked: item.isBookmarked == 1
     });
   },
 
@@ -299,7 +301,8 @@ Page({
       postActionShow: false,
       currentActionId: '',
       currentActionSummary: '',
-      currentActionOwner: false
+      currentActionOwner: false,
+      currentActionBookmarked: false
     });
   },
 
@@ -310,6 +313,12 @@ Page({
     if (detail.action === 'edit') { this.editCurrentSquarePost(detail.id); return; }
     if (detail.action === 'delete') { this.deleteCurrentSquarePost(detail.id); return; }
     if (detail.action === 'report') { this.reportSquare(detail.id); return; }
+    // 收藏(2026-10-29 从动作行挪进「···」):按 id 找回当前行,走原来的收藏请求
+    if (detail.action === 'bookmark') {
+      const index = this.data.list.findIndex(row => row && String(row.id) === String(detail.id));
+      if (index >= 0) this.favoriteClick({ detail: { index: index } });
+      return;
+    }
   },
 
   // 删除(H051):软删 + 归属校验都在后端;成功后本地摘掉这一行(与举报同一口径)。
