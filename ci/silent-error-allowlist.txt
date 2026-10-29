@@ -252,7 +252,7 @@ chengyinhub-xcx/pages/club/apply/index.js 1  # 2026-10-27 L03 P-23:进页预查 
 chengyinhub-xcx/components/cy/earnings-overview/index.js 2  # 2026-10-28 G-9 账户收益「本月收入明细」(/api/user/balance/list)与「我的资产」(/api/wallet/stages):失败各自落卡内「没加载出来，点这里重试」(monthError / assetsError),余额主读取不受影响;通用 toast 会与卡内错误双弹
 chengyinhub-xcx/subpackageA/pages/assetcenter/analysis/index.js 1  # 2026-10-28 G-9 账户收益·分析页读余额流水:失败落整页 cy-error 加载失败 + 重试,关闭通用 toast 避免双弹;离页后旧回包按 token 丢弃
 chengyinhub-xcx/components/cy/club-pool-cards/index.js 1  # 2026-10-28 m689 店铺参谋「俱乐部合作」读合作池:失败在原位显示「俱乐部合作暂时没读到，点这里重试」(poolError),页面主卡不连坐;通用 toast 会与卡内提示双弹
-chengyinhub-xcx/components/cy/map-address-search/index.js 1  # 2026-10-28 p115 漫游搜索框联网搜地点(/api/map/place-search):失败时面板写「联网搜索暂时不可用，先显示附近的地点」(remoteError),本地地址照常可选;每次输入都会重搜,弹 toast 会随打字反复打扰
+chengyinhub-xcx/components/cy/map-address-search/index.js 2  # 2026-10-28 p115 漫游搜索框联网搜地点(/api/map/place-search);2026-10-29 V-06 联网搜不到时再查商家节点库(/api/city/nodes)兜底。两处失败都由面板写「联网搜索暂时不可用，先显示附近的地点」(remoteError),本地地址照常可选;每次输入都会重搜,弹 toast 会随打字反复打扰
 chengyinhub-xcx/pages/roam/index.js 2  # 2026-10-28 p74「附近活动总是有的」:3 公里为空时 20 公里兜底(/api/roam/entry/nearby)与其他城市公开主题(/api/topic/list)两级背景读取;主读取已成功落定,兜底读不到时卡片带保持主读取的空态卡,页面没有可给的重试动作,弹 toast 会把「附近本来就没有」说成出错
 chengyinhub-xcx/subpackageMember/signup/index.js 1  # 2026-10-28 票夹翻面入场码(/api/verify/dyncode/issue):失败在卡背显示入场码没取到 + 重试(qrState:error),通用 toast 会与卡背提示双弹;翻回正面或换卡即作废旧请求
 

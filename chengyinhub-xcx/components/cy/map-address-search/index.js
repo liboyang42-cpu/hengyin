@@ -1,6 +1,6 @@
 // 顶部输入地址(§6.1)。四个模式共用这一件:白框是唯一入口,抽屉里不再有同名的一行。
 // 组件只负责「输入 → 过滤 → 选中」,选中之后去哪由页面决定(bind:pick)。
-const { matchPlaces, decoratePlaces } = require('../../../utils/map-address-search.js');
+const { matchPlaces, decoratePlaces, cityNodesToPlaces } = require('../../../utils/map-address-search.js');
 // 2026-10-27 owner P-33:下拉面板最多 5 条结果,面板之下要还能看到地图
 const MAX_RESULTS = 5;
 
@@ -44,13 +44,28 @@ Component({
             const rows = res && (res.code === 200 || res.code === '200') && Array.isArray(res.data) ? res.data : [];
             const names = {}; (local || []).forEach((p) => { names[p && p.name] = true; });
             const far = rows.filter((r) => r && r.name && !names[r.name]).map((r, i) => ({ id: 'place-' + i, kind: 'place', name: r.name, address: r.address || '', lat: r.lat, lng: r.lng }));
+            // 2026-10-29 V-06:腾讯地点搜索没启用时后端回空列表,改查商家节点库兜底
+            if (!far.length) { this._searchNodes(keyword, lat, lng, token, local, false); return; }
             this.setData({ searching: false, results: decoratePlaces((local || []).concat(far)).slice(0, MAX_RESULTS) });
           },
-          // 联网搜不到时如实说一句,本地地址照常可选
-          fail: () => { if (token === this._searchToken) this.setData({ searching: false, remoteError: true }); },
-          successStatusAbnormal: () => { if (token === this._searchToken) this.setData({ searching: false, remoteError: true }); },
+          // 联网搜不到时如实说一句,本地地址照常可选;节点库能搜到的接在后面
+          fail: () => { if (token !== this._searchToken) return; this.setData({ remoteError: true }); this._searchNodes(keyword, lat, lng, token, local, true); },
+          successStatusAbnormal: () => { if (token !== this._searchToken) return; this.setData({ remoteError: true }); this._searchNodes(keyword, lat, lng, token, local, true); },
         });
       }, 350);
+    },
+    // 2026-10-29 V-06:腾讯地点搜索没启用(后端回空)或失败时,查后端商家节点库兜底
+    _searchNodes(keyword, lat, lng, token, local, remoteFailed) {
+      getApp().sendRequest({
+        url: '/api/city/nodes', method: 'GET', data: { lat, lng, radius: 20000, keyword }, hideLoading: true, silentError: true,
+        success: (res) => {
+          if (token !== this._searchToken) return;
+          const rows = res && (res.code === 200 || res.code === '200') && Array.isArray(res.data) ? res.data : [];
+          this.setData({ searching: false, remoteError: remoteFailed, results: decoratePlaces((local || []).concat(cityNodesToPlaces(rows, local))).slice(0, MAX_RESULTS) });
+        },
+        fail: () => { if (token === this._searchToken) this.setData({ searching: false, remoteError: true }); },
+        successStatusAbnormal: () => { if (token === this._searchToken) this.setData({ searching: false, remoteError: true }); },
+      });
     },
     /* 原型是两个状态:点白条进搜索态,点「取消」或压暗层退回。
        不是「聚焦就展开」—— 那样退不回去,压暗层也没地方挂。 */

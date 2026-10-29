@@ -50,8 +50,9 @@ function assertScreenFogContract({ roamWxml, roamWxss, roamJs, mapWxml }) {
     '只有遮罩 ready 后才允许真正激活漫游')
   assert.match(roamJs, /this\._fogMode = 'blocked';[\s\S]*?fogScreenGuard: true[\s\S]*?_finishFogSetup\(false, generation\)/,
     'screen 初始化失败必须显式 blocked，不能假装旧 map 内雾可用')
-  assert.match(roamJs, /onRegionChange\(e\)[\s\S]*?phase === 'begin'[\s\S]*?_guardScreenViewportChange\(\)[\s\S]*?phase !== 'end'[\s\S]*?_guardScreenViewportChange\(\);[\s\S]*?_scheduleScreenFogRender\(\)/,
-    '视野 begin 到新 image load 之间必须先全黑，不能让旧圆洞错位漏字')
+  // 2026-10-29 V-07:手势拖动不再全黑(业主:一闪一闪、黑一下);只有程序跳远/程序缩放才遮
+  assert.match(roamJs, /onRegionChange\(e\)[\s\S]*?phase === 'begin'[\s\S]*?_cancelScreenFogRender\(\)[\s\S]*?phase !== 'end'[\s\S]*?!byGesture && \(scaleChanged \|\| this\._screenFogDriftTooFar\(\)\)\) this\._guardScreenViewportChange\(\);[\s\S]*?_scheduleScreenFogRender\(/,
+    '手势只作废在途重绘不遮；程序视野大幅变化到新 image load 之间仍须全黑')
   assert.match(roamJs, /onPoiTap\(e\)[\s\S]*?if \(this\.data\.fogScreenGuard\) return;[\s\S]*?this\._fogMode === 'screen'[\s\S]*?!isPointRevealed\([\s\S]*?\)\) return;[\s\S]*?req\('\/api\/roam\/checkin'/,
     '黑雾区的隐形原生 POI 必须在请求前被坐标闸拦住')
   assert.match(mapWxml, /enable-poi="\{\{true\}\}"/, '原生 POI 必须保留，否则点到店入口会失效')

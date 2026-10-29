@@ -174,7 +174,6 @@
     <view wx:if="{{passportLoading}}" aria-role="status">正在读取漫游护照…</view>
     <cy-error load-failure wx:elif="{{passportError}}" title="漫游护照读取失败" retry="重试" bind:retry="retryPassport" />
     <block wx:else>
-    <view>以下统计来自已确认完成的漫游；本机旧记录可在漫游记录中查看</view>
     <view class="pp-stats">
       <view class="pp-stat" wx:for="{{passport.stats}}" wx:key="k">
         <text class="pp-stat__v">{{item.v}}</text>
@@ -427,9 +426,6 @@
 </view>
 
 <!-- 底图首帧看门狗兜底:黑屏不再无解释 -->
-<view class="maptip maptip--offline maptip--foreground" wx:if="{{locationForegroundOnly && screen=='map' && mapLoad!='slow' && !roamIdle && !syncOffline && !revealWriteUnknown && !recoveryError}}" aria-role="status" aria-live="polite">
-  <text>仅前台记录，锁屏后可能中断</text>
-</view>
 <view class="maptip" wx:if="{{mapLoad=='slow'}}" bindtap="onMapRetry" hover-class="cy-pressed" hover-stay-time="80">
   <text>地图加载异常 · 点击重试</text>
 </view>
@@ -545,8 +541,8 @@
       <view class="pact__ic pact__ic--main {{paused ? 'is-go' : 'is-pause'}} {{endHoldPct >= 100 ? 'is-holdfull' : ''}}">
         <!-- 长按进度环:两个半圆各扫 180°,合起来一圈;满了整枚转红 -->
         <view class="hold" wx:if="{{endHoldPct > 0}}">
-          <view class="hold__h hold__h--r"><view class="hold__f" style="transform:rotate({{endHoldPct < 50 ? endHoldPct * 3.6 - 180 : 0}}deg)"></view></view>
-          <view class="hold__h hold__h--l"><view class="hold__f" style="transform:rotate({{endHoldPct > 50 ? (endHoldPct - 50) * 3.6 - 180 : -180}}deg)"></view></view>
+          <view class="hold__h hold__h--r"><view class="hold__f" style="transform:rotate({{endHoldPct < 50 ? endHoldPct * 3.6 - 135 : 45}}deg)"></view></view>
+          <view class="hold__h hold__h--l"><view class="hold__f" style="transform:rotate({{endHoldPct > 50 ? (endHoldPct - 50) * 3.6 - 135 : -135}}deg)"></view></view>
         </view>
         <view wx:if="{{paused}}" class="pic pic--play pact__glyph pact__glyph--main"></view>
         <view wx:else class="pic pic--pause pact__glyph pact__glyph--main"></view>
@@ -975,7 +971,7 @@
     <view class="settle__ctaw">
       <view class="settle__cta" bindtap="openShare" aria-role="button" aria-label="分享足迹卡" hover-class="cy-pressed" hover-stay-time="80">分享</view>
       <view class="settle__minor">
-        <text class="settle__minor-act" bindtap="backToSquare" aria-role="button" aria-label="返回广场" hover-class="cy-pressed" hover-stay-time="80">返回广场</text>
+        <text class="settle__minor-act" bindtap="openSettleHistory" aria-role="button" aria-label="漫游记录" hover-class="cy-pressed" hover-stay-time="80">漫游记录</text>
       </view>
     </view>
   </scroll-view>

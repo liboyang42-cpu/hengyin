@@ -73,11 +73,24 @@ test('走路跟随(causedBy=update)在 begin 不拉黑遮罩', () => {
   cleanup(page);
 });
 
-test('手势拖拽在 begin 立刻拉黑(拖动期间没有中间态 region,错位会一路放大)', () => {
+// 2026-10-29 V-07 业主:地图滑不动、一闪一闪、时不时黑一下 ⇒ 手势不再拉黑。
+test('手势拖拽 begin/end 都不拉黑，且按下即停止跟随回中', () => {
   const page = screenPageAt();
+  const before = Date.now();
   page.onRegionChange({ detail: { phase: 'begin', causedBy: 'drag' } });
-  assert.strictEqual(page.data.fogScreenGuard, true,
-    '手势期间不遮 = 旧帧错位越拖越大，会把没探过的地名成片亮出来');
+  assert.strictEqual(page.data.fogScreenGuard, false, '拖动中全屏黑 = 用户看不到地图在动');
+  assert.ok(page._hold > before + 30000, '拖动中定位回调不能把 center 拽回玩家');
+  page.onRegionChange({ detail: { phase: 'end', causedBy: 'drag', scale: 17 } });
+  assert.strictEqual(page.data.fogScreenGuard, false);
+  assert.ok(page._hold <= Date.now() && page._hold >= before, '松手后从此刻起算 3s 再恢复跟随');
+  cleanup(page);
+});
+
+test('手势缩放松手也不拉黑，旧帧顶到新帧 load', () => {
+  const page = screenPageAt();
+  page.onRegionChange({ detail: { phase: 'end', causedBy: 'scale', scale: 15 } });
+  assert.strictEqual(page.data.fogScreenGuard, false);
+  assert.ok(page._fogScreenRenderTimer, '松手必须排一次重绘');
   cleanup(page);
 });
 

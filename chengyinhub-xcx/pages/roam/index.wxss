@@ -234,7 +234,6 @@ page{ background:var(--cy-color-bg-page); }
 /* 离线变体:状态靠「图标形状 + 文字」承载,颜色只是辅助(DS §8:状态不得只靠颜色)。
    实测 text-primary 压 bg-elevated 16.81:1、warning 图标 5.33:1(图形阈值 3)。 */
 .maptip--offline{ display:flex; align-items:center; gap:var(--cy-space-1); max-width:86vw; }
-.maptip--foreground{ white-space:normal; }
 .maptip--offline .cyi{ color:var(--cy-color-play-accent); flex:none; }
 /* 恢复条:外层 alert 承载错误原因,点击落在内层整行(U6 要求告警区内有可点恢复动作) */
 /* 命中区保持整颗药丸:内边距从外层挪到可点的内层,不因拆出 alert 而缩小 */
@@ -713,13 +712,19 @@ page{ background:var(--cy-color-bg-page); }
   pointer-events:none; }
 .hold__h{ position:absolute; top:0; width:71rpx; height:142rpx; overflow:hidden; }
 .hold__h--r{ right:0; } .hold__h--l{ left:0; }
+/* 2026-10-29 V-07:标准「按住进度环」。原来每个半边遮罩里放的是整圈白环且贴着遮罩边,
+   两枚环心各偏 71rpx,真机上是两道交叉的白弧(业主:绿色的 X 弧线)。
+   改为:环心对齐主键中心,每个半边只描半圈(两条边着色),在遮罩里转 -135°→45° 扫出 180°。 */
+.hold::before{ content:''; position:absolute; inset:0; box-sizing:border-box;
+  border:8rpx solid rgba(255,255,255,.28); border-radius:var(--cy-radius-pill); } /* ds-ok 进度环底轨,主键上的半透明白 */
 .hold__f{ position:absolute; top:0; width:142rpx; height:142rpx; box-sizing:border-box;
-  border:8rpx solid #FFFFFF; border-radius:var(--cy-radius-pill); } /* ds-ok 原型 stroke:#fff stroke-width:4 */
-.hold__h--r .hold__f{ left:0; transform-origin:71rpx 71rpx; }
-.hold__h--l .hold__f{ right:0; transform-origin:71rpx 71rpx; }
+  border:8rpx solid transparent; border-radius:var(--cy-radius-pill); transform-origin:50% 50%; }
+.hold__h--r .hold__f{ left:-71rpx; border-top-color:#FFFFFF; border-right-color:#FFFFFF; } /* ds-ok 原型 stroke:#fff stroke-width:4 */
+.hold__h--l .hold__f{ left:0; border-bottom-color:#FFFFFF; border-left-color:#FFFFFF; } /* ds-ok 同上 */
 /* 满圈变红 = 已经结束,松手也拦不住了 */
 .pact__ic--main.is-holdfull{ background:#EF4444 !important; } /* ds-ok 原型 var(--red) */
-.pact__ic--main.is-holdfull .hold__f{ border-color:#EF4444; } /* ds-ok 同上 */
+.pact__ic--main.is-holdfull .hold__h--r .hold__f{ border-top-color:#EF4444; border-right-color:#EF4444; } /* ds-ok 同上 */
+.pact__ic--main.is-holdfull .hold__h--l .hold__f{ border-bottom-color:#EF4444; border-left-color:#EF4444; } /* ds-ok 同上 */
 
 
 /* 徽章(woo,与 play 页同构) */
@@ -818,7 +823,7 @@ page{ background:var(--cy-color-bg-page); }
 .intro-dot.is-on{ width:35rpx; background:var(--cy-color-text-primary); }
 .intro-map-space{ flex:1; min-height:0; }
 .intro-passport{ flex:1; min-height:0; display:flex; flex-direction:column; overflow:hidden; }
-.pp-stats{ flex:none; display:flex; padding:8rpx 46rpx 23rpx; }
+.pp-stats{ flex:none; display:flex; padding:24rpx 46rpx 40rpx; } /* 2026-10-29 V-09 区块间距放开 */
 .pp-stat{ flex:1; display:flex; flex-direction:column; align-items:flex-start; gap:4rpx; }
 .pp-stat__v{ font-size:58rpx; font-weight:800; font-style:italic; letter-spacing:-2rpx; line-height:1; color:var(--cy-color-text-primary); font-variant-numeric:tabular-nums; } /* ds-ok 2026-10-28 业主:NRC 粗斜体数字 */
 .pp-stat__k{ font-size:21rpx; color:var(--cy-color-text-tertiary); } /* ds-ok 漫游首页定稿值(用户裁决不改) */
@@ -828,7 +833,7 @@ page{ background:var(--cy-color-bg-page); }
 .pp-tile__box{ position:relative; width:308rpx; height:308rpx; overflow:hidden; border-radius:27rpx; background:#F6F5F2; color:var(--cy-color-action-primary-fg); display:flex; align-items:center; justify-content:center; } /* ds-ok 漫游首页定稿值(用户裁决不改) */
 .pp-tile__t{ margin-top:15rpx; font-size:27rpx; font-weight:700; color:var(--cy-color-text-primary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } /* ds-ok 漫游首页定稿值(用户裁决不改) */
 .pp-tile__s{ margin-top:4rpx; font-size:23rpx; color:var(--cy-color-text-tertiary); } /* ds-ok 漫游首页定稿值(用户裁决不改) */
-.pp-trips{ flex:1; min-height:0; width:100%; white-space:nowrap; padding:38rpx 0 31rpx 31rpx; box-sizing:border-box; }
+.pp-trips{ flex:1; min-height:0; width:100%; white-space:nowrap; padding:72rpx 0 31rpx 31rpx; box-sizing:border-box; } /* 2026-10-29 V-09 漫游记录卡与官方活动之间放开 */
 .pp-trip{ display:inline-flex; flex-direction:column; width:615rpx; height:100%; margin-right:23rpx; vertical-align:top; }
 .pp-trip:last-child{ margin-right:31rpx; }
 .pp-trip__card{ position:relative; flex:1; min-height:0; width:615rpx; max-height:398rpx; overflow:hidden; border-radius:27rpx; background:var(--cy-color-play-elevated); display:flex; align-items:center; justify-content:center; } /* ds-ok 漫游首页定稿值(用户裁决不改) */

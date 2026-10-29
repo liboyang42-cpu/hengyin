@@ -44,7 +44,9 @@
   background: var(--cy-color-bg-elevated);
 }
 
-.post-card__follow {
+/* 2026-10-29 V-08:必须两级选择器(0,2,0)。微信内置 wx-button:not([size=mini]) { width:184px } 是 (0,1,1),
+   单写 .post-card__follow 时角标被顶成 184px 宽的白色椭圆,从头像左下方伸出去(业主:头像下面的白色月牙)。 */
+.post-card__avatar .post-card__follow {
   position: absolute;
   right: -8rpx;
   bottom: -8rpx;
@@ -62,7 +64,7 @@
   justify-content: center;
 }
 
-.post-card__follow::after {
+.post-card__avatar .post-card__follow::after {
   content: '';
   position: absolute;
   left: -28rpx;
