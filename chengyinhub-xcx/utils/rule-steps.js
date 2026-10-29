@@ -3,6 +3,7 @@
 // 只拆出一步、里面挤着四条。这里在换行之外,再按行内从 1 起连续递增的序号拆开,
 // 并去掉每步开头的序号 —— 编辑页自己画序号圆点,不去掉就会印成「① 1. …」。
 // 序号可以跨行接续(「1. a\n2. b」)。不是从 1 起连续的数字(「2.5 公里」「第 3 站」)不拆。
+// 2026-10-29 V-12:从 pages/publish 挪到主包,模板详情(另一分包)也按同一规则拆。
 
 // 序号:行首或句读 / 空白之后的 1~2 位数字 + 「.」「、」「．」「)」「）」,后面不能紧跟数字(排除小数)
 var MARK = /(^|[\s。；;，,：:！!？?])(\d{1,2})\s*[.、．)）](?!\d)\s*/g;
@@ -43,4 +44,12 @@ function splitRuleSteps(text) {
   return steps.length ? steps : [''];
 }
 
-module.exports = { splitRuleSteps: splitRuleSteps };
+// V-12:官方模板种子把写给运营/商家的备注「(运营提示:…)」直接拼在规则末尾,玩家面不能看到。
+// 展示前去掉整段括注;没写右括号的,从「(运营提示」起到行尾都算备注。
+var OPERATOR_NOTE = /\s*[（(]\s*运营(?:提示|备注)\s*[:：](?:[^)）]*[)）]|[^\n]*)/g;
+
+function stripOperatorNotes(text) {
+  return String(text == null ? '' : text).replace(OPERATOR_NOTE, '');
+}
+
+module.exports = { splitRuleSteps: splitRuleSteps, stripOperatorNotes: stripOperatorNotes };

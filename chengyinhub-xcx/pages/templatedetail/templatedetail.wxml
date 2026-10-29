@@ -50,7 +50,7 @@
     <!-- 主动作:头部正下方的通栏大按钮 + 右侧圆形分享键(参考图 Xbox 63 的形态,在页面流里)。
          P-42(2026-10-27):原来右侧是 ⋯ 和它的「分享玩法 / 举报」弹层,业主说没有意义 —— 改成直接分享。 -->
     <view class="xb-cta">
-      <cy-btn class="xb-cta-btn" variant="primary" bindtap="goPrimary">{{ primaryLabel }}</cy-btn>
+      <cy-btn class="xb-cta-btn" variant="{{ isMyScope ? 'primary' : 'ghost' }}" bindtap="goPrimary">{{ primaryLabel }}</cy-btn>
       <button class="xb-share" open-type="share" aria-label="分享玩法" hover-class="cy-pressed" hover-stay-time="80">
         <cy-icon name="share" size="40" />
       </button>
@@ -263,6 +263,10 @@
             hover-class="cy-pressed" hover-stay-time="80">{{ capExpanded[item.key] ? '收起' : '展开' }}</view>
         </view>
       </view>
+      <!-- V-11:能力 tab 恒在;一行能力都没有时给「—」,不出空白页 -->
+      <view class="xb-caps" wx:else>
+        <view class="xb-caprow"><text class="xb-caprow-k">—</text></view>
+      </view>
 
     </block>
 
@@ -272,7 +276,7 @@
     <view class="xb-block">
       <view class="xb-notice-card">
         <view class="xb-notice-tit">这是玩法模板，不能直接开团</view>
-        <view class="xb-notice-txt">{{isMyScope ? (info.canEdit === true ? '这是你的玩法模板，可以继续编辑；玩家要在活动发布后才能玩到。' : '此个人模板仅供查看，请到模板广场的“游戏”中选用玩法；保存为自己的副本后可查看完整配置。') : '「开始应用」会把这个玩法复制成你自己的玩法模板；玩家要在活动发布后才能玩到。'}}</view>
+        <view class="xb-notice-txt">{{isMyScope ? (info.canEdit === true ? '这是你的玩法模板，可以继续编辑；玩家要在活动发布后才能玩到。' : '此个人模板仅供查看，请到模板广场的“游戏”中选用玩法；保存为自己的副本后可查看完整配置。') : '「应用」会把这个玩法复制成你自己的玩法模板；玩家要在活动发布后才能玩到。'}}</view>
       </view>
     </view>
 

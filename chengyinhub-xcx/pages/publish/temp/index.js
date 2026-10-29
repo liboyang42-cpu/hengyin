@@ -37,7 +37,8 @@ const merchantAccessPolicy = require('../../../utils/merchant-access-policy.js')
 const { formatDurationMinutes, gameTemplateCover } = require('../../../utils/template-display.js');
 const { resolveCategoryIcon } = require('../../../utils/category-icon.js');
 const { loadStoryFont } = require('../utils/publish/story-font.js');
-const { splitRuleSteps } = require('../utils/publish/rule-steps.js');
+const { splitRuleSteps } = require('../../../utils/rule-steps.js');
+const { rejectionNamesCover } = require('../utils/publish/cover-rejection.js');
 
 /* 发布全量校验的报错顺序 —— validateForm 与「查看预览」置灰点击必须读同一份。
    2026-09-19 审查 F-PU-1:这里曾各自维护一份,发布那份漏了 interactionType,
@@ -1602,7 +1603,7 @@ Page({
      ★ 不新建后端字段:整份规则仍然存在 formData.ruleInstructions 里,**一行一步**。
      ruleSteps 只是这一页的展示形态,存盘前拼回去 —— 存量模板里那一大段文字
      按换行拆开就是现成的步骤,不会因为换了界面就读不出来。 */
-  // P-41:旧草稿 / 模板库里「1. … 2. … 3. …」挤在一行的,回填时按序号拆成一步一条(pages/publish/utils/publish/rule-steps.js)
+  // P-41:旧草稿 / 模板库里「1. … 2. … 3. …」挤在一行的,回填时按序号拆成一步一条(utils/rule-steps.js)
   _stepsFromText: function (text) {
     return splitRuleSteps(text);
   },
@@ -3637,11 +3638,17 @@ Page({
   },
 
   // P-39(2026-10-27):采用被「媒体来源未经审核」类明确拒绝时不再整页拦截 ——
-  // 采用没有发生(业务结论,不是结果未知),按库模板回填成未落库的本地稿,封面清空并就地提示重新上传;
+  // 采用没有发生(业务结论,不是结果未知),按库模板回填成未落库的本地稿;
   // 保存仍走 /api/template/draft 只带 originalTemplateId(见 saveDraft),由后端新建草稿。
-  _openWithUnusableMedia: function (data) {
+  // V-13:回包点名封面才清空并就地提示重新上传;否则封面照留,后端原话提示一次。
+  _openWithUnusableMedia: function (data, res) {
     this._applyLoadedTemplate(data);
-    this.setData({ 'formData.imgUrl': '', coverMediaUnusable: true });
+    if (rejectionNamesCover(res, this.data.formData.imgUrl)) {
+      this.setData({ 'formData.imgUrl': '', coverMediaUnusable: true });
+      return;
+    }
+    const msg = res && (res.msg || res.message);
+    if (msg) toast(String(msg));
   },
 
   inspectAdoptionTemplates() {
@@ -3658,7 +3665,7 @@ Page({
     templateAdoption.resume({app,storage:wx,owner:editorMemberId(),scope,sourceId,current,
       target:{editor:'temp',sourceId:String(sourceId)},
       onBusy:busy=>{this._adoptingTemplate=busy;},
-      onRejected:res=>{if(!sourceData||!isMediaRejection(res))return false;this._openWithUnusableMedia(sourceData);return true;},
+      onRejected:res=>{if(!sourceData||!isMediaRejection(res))return false;this._openWithUnusableMedia(sourceData,res);return true;},
       onError:message=>{this._adoptionUnconfirmed=true;this.setData({editorLoading:false,loadErrorIsOperation:true,loadError:message});},
       onReady:detail=>{
         if(detail.canEdit!==true){this.setData({editorLoading:false,loadError:'采用草稿归属未确认'});return false;}

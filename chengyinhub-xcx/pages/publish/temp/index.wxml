@@ -1319,7 +1319,7 @@
               <view class="cg-beat-tag"><view class="cg-beat-no">{{ bi + 1 }}</view>时间节点</view>
               <view class="cg-beat-del" wx:if="{{ storyBeats.length > 1 }}" bindtap="removeStoryBeat" data-index="{{ bi }}" aria-role="button" aria-label="删除时间节点 {{bi + 1}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="28" /></view>
             </view>
-            <textarea class="cg-beat-text" value="{{ beat.text }}" bindinput="onStoryBeatText" data-index="{{ bi }}"
+            <textarea class="cg-beat-text" value="{{ beat.text }}" bindinput="onStoryBeatText" data-index="{{ bi }}" auto-height
               placeholder="这一刻发生了什么?写下玩家此时读到的片段…" placeholder-class="cg-ph" />
             <view class="cg-beat-row">
               <input class="cg-beat-tagin" value="{{ beat.tag }}" bindinput="onStoryBeatTag" data-index="{{ bi }}"

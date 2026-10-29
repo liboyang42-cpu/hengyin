@@ -1,3 +1,4 @@
+var ruleSteps = require('../../../utils/rule-steps.js');
 /**
  * 玩法详情页：画廊图列表 + 展示字段归一化
  * imgUrls 支持：JSON 数组、逗号/分号分隔字符串；后续后端多图字段可直接对接
@@ -76,9 +77,10 @@ function normalizeTemplateDetail(info) {
 
 // 编辑器把规则按「一行一步」存进 ruleInstructions(pages/publish/temp 的 ruleSteps ↔ join('\n')),
 // 详情页按同一规则拆回步骤,每步一个序号;空行不算一步。
+// V-12:与编辑器共用 utils/rule-steps.js —— 一行里的「1. … 2. … 3. …」也拆成多步,运营备注不展示。
 function splitRuleSteps(raw) {
   if (raw === null || raw === undefined) return [];
-  return String(raw).split(/\r?\n/).map(function (s) { return s.trim(); }).filter(Boolean);
+  return ruleSteps.splitRuleSteps(ruleSteps.stripOperatorNotes(String(raw).replace(/\r/g, ''))).filter(Boolean);
 }
 
 module.exports = {

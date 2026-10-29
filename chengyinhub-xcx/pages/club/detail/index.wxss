@@ -382,16 +382,11 @@ page { background: var(--cy-bg-page); }
 .ev-time { font-size: var(--cy-font-label); color: var(--cy-color-text-secondary); }
 .ev-acts { display: flex; align-items: center; flex-wrap: wrap; gap: var(--cy-space-2); }
 
-/* 空态(282:478):卡容器内标题 / 说明 / 主按钮 / 归属提示 */
+/* 空态:2026-10-29 V-05 业主 —— 不用卡片框住,下移到与「帖子」tab 空态同一高度
+   (帖子 tab 空态上方压着发帖入口,这里用同等的顶部留白对齐)。 */
 .ev-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--cy-space-2);
-  margin: 0 var(--cy-page-x);
-  padding: var(--cy-space-4) var(--cy-space-5) var(--cy-space-3-5);
-  border-radius: var(--cy-radius-lg);
-  background: var(--cy-color-bg-elevated);
+  display: block;
+  margin-top: calc(var(--cy-space-8) * 2 + var(--cy-space-5));
 }
 
 .event-group-code {
@@ -1046,7 +1041,6 @@ page { background: var(--cy-bg-page); }
 .post-composer-ph { font-size: var(--cy-type-card-title); color: var(--cy-color-text-secondary); }
 .post-composer-tools { display: flex; align-items: center; gap: var(--cy-space-5); padding-top: var(--cy-space-3); }
 .post-composer-ico { flex: none; color: var(--cy-color-text-primary); }
-.post-composer-sq { width: 40rpx; height: 40rpx; box-sizing: border-box; border: 3rpx solid var(--cy-color-text-secondary); border-radius: 8rpx; } /* ds-ok: Figma 285:395 线框方块图标 4px 圆角,是图标笔画不是卡片圆角 */
 
 /* —— 概览 tab(Figma N3 23:2 / N5 24:216 / N6 24:355)——
    页边 16 · 区块间距 16。简介直接铺开:全局规约「标题下不要小标题」,

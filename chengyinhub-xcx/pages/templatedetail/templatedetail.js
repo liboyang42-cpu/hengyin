@@ -135,15 +135,11 @@ function buildCapRows(info, categoryText) {
 var TAB_DETAILS = { key: 'details', label: '详情' };
 var TAB_CAPABILITIES = { key: 'capabilities', label: '能力' };
 
-// CU-M-130:能力 tab 里只有「方式」是这一栏独有的信息 —— 场景在详情栏已经铺成 chips,
-// 来源就是头部的发布者署名。三者只剩署名时,点「能力」看到的是一句和主按钮重复的说明,
-// 标签与内容对不上,这时候不把「能力」这个 tab 给出去。
-function hasCapabilityInfo(capRows) {
-  return (capRows || []).some(function (row) { return row && row.key === 'way'; });
-}
-
-function buildTplTabs(capable) {
-  return capable ? [TAB_DETAILS, TAB_CAPABILITIES] : [TAB_DETAILS];
+// V-11(2026-10-29 业主):每个模板都给「详情 / 能力」两个 tab。
+// 原 CU-M-130 判据只认「方式」行,而 b27 起的机制型官方模板 validation_method=0、
+// 玩法写在 advanced_config 里,没有「方式」行 ⇒ 整批模板丢了「能力」tab。
+function buildTplTabs() {
+  return [TAB_DETAILS, TAB_CAPABILITIES];
 }
 
 Page({
@@ -182,10 +178,10 @@ Page({
     inputAnswer: '',
     isMyScope: false,
     isMerchant: false,
-    // 公共库主动作统一「开始应用」(基于模板起草)。scope=my 按服务端 canEdit 定:
+    // 公共库主动作统一「应用」(基于模板起草;V-11 由「开始应用」改名)。scope=my 按服务端 canEdit 定:
     // 本人可编辑才叫「继续编辑」,否则「去模板广场选用」,不让非本人进编辑器。
     // 详情回包前保持默认文案,goPrimary 在 canEdit 未确认时不进编辑页。
-    primaryLabel: '开始应用',
+    primaryLabel: '应用',
     tplTabs: [TAB_DETAILS, TAB_CAPABILITIES]
   },
 
@@ -260,8 +256,7 @@ Page({
     target.publisherText = publisher.text;
     target.isOfficialPublisher = publisher.official;
     target.capRows = buildCapRows(normalized.info, normalized.categoryText);
-    target.tplTabs = buildTplTabs(hasCapabilityInfo(target.capRows));
-    if (!hasCapabilityInfo(target.capRows)) target.activeTab = 'details';
+    target.tplTabs = buildTplTabs();
     target.ruleSteps = templateDetailUtil.splitRuleSteps(normalized.info.ruleInstructions);
     target.detailStats = detail.detailStats;
     target.materialChips = detail.materialChips;
@@ -277,16 +272,14 @@ Page({
     var detail = buildDetailDisplay(normalized.info, normalized.categoryText);
     var publisher = resolvePublisherDisplay(normalized.info, this.data.scope);
     var capRows = buildCapRows(normalized.info, normalized.categoryText);
-    var capable = hasCapabilityInfo(capRows);
     this.setData({
-      info: normalized.info, primaryLabel: this.data.scope !== 'my' ? '开始应用' : (normalized.info.canEdit === true ? '继续编辑' : '去模板广场选用'),
+      info: normalized.info, primaryLabel: this.data.scope !== 'my' ? '应用' : (normalized.info.canEdit === true ? '继续编辑' : '去模板广场选用'),
       gallery: normalized.gallery,
       coverUrl: detailCover(normalized),
       publisherText: publisher.text,
       isOfficialPublisher: publisher.official,
       capRows: capRows,
-      tplTabs: buildTplTabs(capable),
-      activeTab: capable ? this.data.activeTab : 'details',
+      tplTabs: buildTplTabs(),
       ruleSteps: templateDetailUtil.splitRuleSteps(normalized.info.ruleInstructions),
       detailStats: detail.detailStats,
       materialChips: detail.materialChips,

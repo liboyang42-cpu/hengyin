@@ -483,13 +483,14 @@ page {
   width: 100%; box-sizing: border-box;
   border: 3rpx solid var(--cy-border-line); background: var(--cy-bg-card); border-radius: 22rpx;
   padding: var(--cy-legacy-22) var(--cy-legacy-26); font-size: var(--cy-font-body); color: var(--cy-text-title);
-  height: 152rpx; margin-bottom: var(--cy-legacy-18);
+  min-height: 152rpx; margin-bottom: var(--cy-legacy-18); /* V-14:随正文撑高(auto-height),不再裁字 */
 }
 .cg-beat-row { display: flex; gap: var(--cy-legacy-18); align-items: stretch; }
 .cg-beat-tagin {
   flex: 1; min-width: 0; box-sizing: border-box;
   border: 3rpx solid var(--cy-border-line); background: var(--cy-bg-card); border-radius: 22rpx;
-  padding: var(--cy-space-2-5) var(--cy-space-3); font-size: var(--cy-font-body); color: var(--cy-text-title);
+  height: var(--cy-btn-h); line-height: var(--cy-btn-h); /* V-14:原生 input 默认矮,上下内距把字压扁 */
+  padding: 0 var(--cy-space-3); font-size: var(--cy-font-body); color: var(--cy-text-title);
 }
 .cg-beat-img.add { border: 3rpx dashed var(--cy-border-line); background: var(--cy-bg-card-2); color: var(--cy-text-secondary); font-size: var(--cy-font-title); }
 .cg-beat-img.has { position: relative; overflow: hidden; background: var(--cy-bg-card-2); }

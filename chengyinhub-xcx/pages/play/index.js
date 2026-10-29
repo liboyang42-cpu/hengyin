@@ -11,6 +11,7 @@ let playLocationOwnerSequence = 0; // 每次实际持有使用独立key，旧页
 const analytics = require('../../utils/analytics.js');
 const { activityShareFromEvent } = require('../../utils/activity-share.js');
 const { bundledMerchantGameAudioPath } = require('./utils/merchant-game-assets.js');
+const { stripOperatorNotes } = require('../../utils/rule-steps.js');
 const geo = require('../../utils/geo.js'); // 纯地理/时间工具(haversine/营业窗判定),可单测
 const recommend = require('./utils/play-recommend.js'); // P0 推荐评分(纯函数,已单测)
 const { buildPlayRoute, createSessionClock, formatElapsed } = require('../../utils/play-ui-contract.js');
@@ -4250,7 +4251,7 @@ Page({
       // 模板呈现字段(/api/play/nodes 已下发)
       gameTitle: n.gameTitle || (vm === 6 ? '生活偏好校准' : (vm === 4 ? '现场打卡' : (vm === 2 ? '拍照任务' : (vm ? '节点任务' : '')))),
       duration: n.duration ? (n.duration + ' 分钟') : '', difficulty: n.difficulty || '', players: n.players || '',
-      materials: n.requiredMaterials || '', rule: n.ruleInstructions || '',
+      materials: n.requiredMaterials || '', rule: stripOperatorNotes(n.ruleInstructions || ''), // V-12:运营备注不给玩家看
       story: n.storyText || '', cover: n.storyImg || n.imgUrl || '',
       cardHook: n.cardHookLong || '',
       fragmentText: n.fragmentText || '',
