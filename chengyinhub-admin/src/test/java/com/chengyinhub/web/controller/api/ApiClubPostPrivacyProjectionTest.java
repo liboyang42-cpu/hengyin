@@ -7,6 +7,7 @@ import com.chengyinhub.business.domain.dto.ClubPostMutationRequest;
 import com.chengyinhub.business.service.IClubMemberService;
 import com.chengyinhub.business.service.IClubPostCommentService;
 import com.chengyinhub.business.service.IClubPostLikeService;
+import com.chengyinhub.business.service.IClubPostRepostService;
 import com.chengyinhub.business.service.IClubPostService;
 import com.chengyinhub.business.service.IClubService;
 import com.chengyinhub.business.service.IViewCreativeSquareService;
@@ -68,6 +69,7 @@ class ApiClubPostPrivacyProjectionTest {
         ReflectionTestUtils.setField(controller, "viewCreativeSquareService", squareService);
         ReflectionTestUtils.setField(controller, "clubPostReferenceGuard", guard);
         ReflectionTestUtils.setField(controller, "clubPostLikeService", mock(IClubPostLikeService.class));
+        ReflectionTestUtils.setField(controller, "clubPostRepostService", mock(IClubPostRepostService.class));
         ReflectionTestUtils.setField(controller, "clubPostCommentService", mock(IClubPostCommentService.class));
         club = new Club();
         club.setId(CLUB_ID);

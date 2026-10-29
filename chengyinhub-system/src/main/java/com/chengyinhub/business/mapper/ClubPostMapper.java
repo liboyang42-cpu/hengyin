@@ -46,6 +46,12 @@ public interface ClubPostMapper
     /** 评论数 +delta（原子） */
     public int incrementCommentCount(@Param("id") Long id, @Param("delta") int delta);
 
+    /** 转发数 +delta（原子） */
+    public int incrementRepostCount(@Param("id") Long id, @Param("delta") int delta);
+
+    /** 转发条目里嵌的原帖:只取仍在营俱乐部里未删的帖文。ids 必须非空。 */
+    List<ClubPost> selectFeedPostsByIds(@Param("ids") List<Long> ids);
+
     /** 聚合动态流:按俱乐部集合取。clubIds 必须非空(空集合会生成 `in ()` 语法错,调用方先挡)。 */
     List<ClubPost> selectFeedByClubIds(@org.apache.ibatis.annotations.Param("clubIds") List<Long> clubIds,
                                        @org.apache.ibatis.annotations.Param("limit") int limit);

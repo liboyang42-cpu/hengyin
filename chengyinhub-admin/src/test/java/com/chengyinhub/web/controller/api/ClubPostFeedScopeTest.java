@@ -8,6 +8,7 @@ import com.chengyinhub.business.access.club.IClubAccessService;
 import com.chengyinhub.business.domain.CoopInvite;
 import com.chengyinhub.business.service.IClubMemberService;
 import com.chengyinhub.business.service.IClubPostLikeService;
+import com.chengyinhub.business.service.IClubPostRepostService;
 import com.chengyinhub.business.service.IClubPostService;
 import com.chengyinhub.business.service.IClubService;
 import com.chengyinhub.business.service.ICoopInviteService;
@@ -77,6 +78,7 @@ class ClubPostFeedScopeTest {
         ReflectionTestUtils.setField(controller, "coopInviteService", inviteSvc);
         ReflectionTestUtils.setField(controller, "clubPostService", postSvc);
         ReflectionTestUtils.setField(controller, "clubPostLikeService", likeSvc);
+        ReflectionTestUtils.setField(controller, "clubPostRepostService", mock(IClubPostRepostService.class));
         ReflectionTestUtils.setField(controller, "clubService", clubSvc);
         ReflectionTestUtils.setField(controller, "clubAccessService", accessSvc);
     }

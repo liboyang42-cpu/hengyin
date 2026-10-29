@@ -50,7 +50,7 @@ class ClubPostPageMyBatisTest {
     private void seed(JdbcTemplate jdbc) {
         jdbc.execute("create table club(id bigint primary key,name varchar(64),logo varchar(255),del_flag int)");
         jdbc.execute("create table ums_member(id bigint primary key,nickname varchar(64),avatar varchar(255))");
-        jdbc.execute("create table club_post(id bigint primary key,club_id bigint,author_member_id bigint,content varchar(255),images varchar(2000),ref_type varchar(32),ref_id bigint,type int,like_count int,comment_count int,del_flag int,is_pinned int,pinned_at timestamp,version int,create_time timestamp,update_time timestamp)");
+        jdbc.execute("create table club_post(id bigint primary key,club_id bigint,author_member_id bigint,content varchar(255),images varchar(2000),ref_type varchar(32),ref_id bigint,type int,like_count int,comment_count int,repost_count int default 0,del_flag int,is_pinned int,pinned_at timestamp,version int,create_time timestamp,update_time timestamp)");
         jdbc.execute("create table club_post_revision(id bigint primary key,post_id bigint)");
         jdbc.update("insert into club values (?,'club','',0),(?,'other','',0)", CLUB, OTHER_CLUB);
         jdbc.update("insert into ums_member values (11,'author','')");

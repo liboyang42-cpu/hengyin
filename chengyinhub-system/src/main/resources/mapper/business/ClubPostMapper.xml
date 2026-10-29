@@ -16,6 +16,7 @@
         <result property="type"    column="type"    />
         <result property="likeCount"    column="like_count"    />
         <result property="commentCount"    column="comment_count"    />
+        <result property="repostCount"    column="repost_count"    />
         <result property="delFlag"    column="del_flag"    />
         <result property="isPinned"    column="is_pinned"    />
         <result property="pinnedAt"    column="pinned_at"    />
@@ -31,21 +32,21 @@
 
     <select id="selectClubPostById" parameterType="Long" resultMap="ClubPostResult">
         select cp.id, cp.club_id, cp.author_member_id, cp.content, cp.images, cp.ref_type, cp.ref_id, cp.type,
-               cp.like_count, cp.comment_count, cp.del_flag, cp.is_pinned, cp.pinned_at,
+               cp.like_count, cp.comment_count, cp.repost_count, cp.del_flag, cp.is_pinned, cp.pinned_at,
                cp.version, cp.create_time, cp.update_time,
                exists(select 1 from club_post_revision r where r.post_id = cp.id) as edited
         from club_post cp where cp.id = #{id}
     </select>
 
     <select id="selectClubPostByIdForUpdate" parameterType="Long" resultMap="ClubPostResult">
-        select id, club_id, author_member_id, content, images, ref_type, ref_id, type, like_count, comment_count,
+        select id, club_id, author_member_id, content, images, ref_type, ref_id, type, like_count, comment_count, repost_count,
                del_flag, is_pinned, pinned_at, version, create_time, update_time
         from club_post where id = #{id} for update
     </select>
 
     <select id="selectClubPostList" parameterType="ClubPost" resultMap="ClubPostResult">
         select cp.id, cp.club_id, cp.author_member_id, cp.content, cp.images, cp.ref_type, cp.ref_id, cp.type,
-               cp.like_count, cp.comment_count, cp.del_flag, cp.is_pinned, cp.pinned_at,
+               cp.like_count, cp.comment_count, cp.repost_count, cp.del_flag, cp.is_pinned, cp.pinned_at,
                cp.version, cp.create_time, cp.update_time,
                exists(select 1 from club_post_revision r where r.post_id = cp.id) as edited,
                m.nickname as nickname, m.avatar as avatar
@@ -63,7 +64,7 @@
     <!-- 俱乐部动态流分页(P0-82):pinned=true 取置顶帖;否则取非置顶帖按 id 倒序,beforeId 为翻页游标。 -->
     <select id="selectClubPostPage" resultMap="ClubPostResult">
         select cp.id, cp.club_id, cp.author_member_id, cp.content, cp.images, cp.ref_type, cp.ref_id, cp.type,
-               cp.like_count, cp.comment_count, cp.del_flag, cp.is_pinned, cp.pinned_at,
+               cp.like_count, cp.comment_count, cp.repost_count, cp.del_flag, cp.is_pinned, cp.pinned_at,
                cp.version, cp.create_time, cp.update_time,
                exists(select 1 from club_post_revision r where r.post_id = cp.id) as edited,
                m.nickname as nickname, m.avatar as avatar
@@ -90,7 +91,7 @@
          不进这里 —— MyBatis 的 foreach 遇到空集合会生成 `in ()` 语法错。 -->
     <select id="selectFeedByClubIds" resultMap="ClubPostResult">
         select cp.id, cp.club_id, cp.author_member_id, cp.content, cp.images, cp.ref_type, cp.ref_id, cp.type,
-               cp.like_count, cp.comment_count, cp.del_flag, cp.is_pinned, cp.pinned_at,
+               cp.like_count, cp.comment_count, cp.repost_count, cp.del_flag, cp.is_pinned, cp.pinned_at,
                cp.version, cp.create_time, cp.update_time,
                exists(select 1 from club_post_revision r where r.post_id = cp.id) as edited,
                m.nickname as nickname, m.avatar as avatar,
@@ -103,6 +104,22 @@
           <foreach collection="clubIds" item="cid" open="(" separator="," close=")">#{cid}</foreach>
         order by cp.id desc
         limit #{limit}
+    </select>
+
+    <!-- 转发条目嵌的原帖(dw29 L8):与聚合流同一组列;已删帖文、已解散俱乐部的不返回,调用方据此略去该条转发。 -->
+    <select id="selectFeedPostsByIds" resultMap="ClubPostResult">
+        select cp.id, cp.club_id, cp.author_member_id, cp.content, cp.images, cp.ref_type, cp.ref_id, cp.type,
+               cp.like_count, cp.comment_count, cp.repost_count, cp.del_flag, cp.is_pinned, cp.pinned_at,
+               cp.version, cp.create_time, cp.update_time,
+               exists(select 1 from club_post_revision r where r.post_id = cp.id) as edited,
+               m.nickname as nickname, m.avatar as avatar,
+               c.name as clubName, c.logo as clubLogo
+        from club_post cp
+        left join ums_member m on m.id = cp.author_member_id
+        join club c on c.id = cp.club_id and c.del_flag = 0
+        where cp.del_flag = 0
+          and cp.id in
+          <foreach collection="ids" item="pid" open="(" separator="," close=")">#{pid}</foreach>
     </select>
 
     <insert id="insertClubPost" parameterType="ClubPost" useGeneratedKeys="true" keyProperty="id">
@@ -148,6 +165,10 @@
 
     <update id="incrementCommentCount">
         update club_post set comment_count = greatest(ifnull(comment_count, 0) + #{delta}, 0) where id = #{id}
+    </update>
+
+    <update id="incrementRepostCount">
+        update club_post set repost_count = greatest(ifnull(repost_count, 0) + #{delta}, 0) where id = #{id}
     </update>
 
 </mapper>
