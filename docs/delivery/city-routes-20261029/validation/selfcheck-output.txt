@@ -1,0 +1,62 @@
+[OK ] commercial-press 主题名称
+[OK ] commercial-press 主题描述
+[OK ] commercial-press 剧情详情
+[OK ] commercial-press A1 站名≤40
+[OK ] commercial-press A1 反馈≤2000
+[OK ] commercial-press A1 到达文字≤5000
+[OK ] commercial-press A1 史实有来源
+[OK ] commercial-press A2 站名≤40
+[OK ] commercial-press A2 反馈≤2000
+[OK ] commercial-press A2 到达文字≤5000
+[OK ] commercial-press A2 史实有来源
+[OK ] commercial-press A3 站名≤40
+[OK ] commercial-press A3 反馈≤2000
+[OK ] commercial-press A3 到达文字≤5000
+[OK ] commercial-press A3 史实有来源
+[OK ] commercial-press A4 站名≤40
+[OK ] commercial-press A4 反馈≤2000
+[OK ] commercial-press A4 到达文字≤5000
+[OK ] commercial-press A4 史实有来源
+[OK ] commercial-press A5 站名≤40
+[OK ] commercial-press A5 反馈≤2000
+[OK ] commercial-press A5 到达文字≤5000
+[OK ] commercial-press A5 史实有来源
+[OK ] commercial-press A6 站名≤40
+[OK ] commercial-press A6 反馈≤2000
+[OK ] commercial-press A6 到达文字≤5000
+[OK ] commercial-press A6 史实有来源
+[OK ] commercial-press 玩家可见文字无网址、无英文
+[OK ] commercial-press 开头声明游戏设定
+[OK ] post 主题名称
+[OK ] post 主题描述
+[OK ] post 剧情详情
+[OK ] post B1 站名≤40
+[OK ] post B1 反馈≤2000
+[OK ] post B1 到达文字≤5000
+[OK ] post B1 史实有来源
+[OK ] post B2 站名≤40
+[OK ] post B2 反馈≤2000
+[OK ] post B2 到达文字≤5000
+[OK ] post B2 史实有来源
+[OK ] post B3 站名≤40
+[OK ] post B3 反馈≤2000
+[OK ] post B3 到达文字≤5000
+[OK ] post B3 史实有来源
+[OK ] post B4 站名≤40
+[OK ] post B4 反馈≤2000
+[OK ] post B4 到达文字≤5000
+[OK ] post B4 史实有来源
+[OK ] post B5 站名≤40
+[OK ] post B5 反馈≤2000
+[OK ] post B5 到达文字≤5000
+[OK ] post B5 史实有来源
+[OK ] post B6 站名≤40
+[OK ] post B6 反馈≤2000
+[OK ] post B6 到达文字≤5000
+[OK ] post B6 史实有来源
+[OK ] post B7 站名≤40
+[OK ] post B7 反馈≤2000
+[OK ] post B7 到达文字≤5000
+[OK ] post B7 史实有来源
+[OK ] post 玩家可见文字无网址、无英文
+[OK ] post 开头声明游戏设定
