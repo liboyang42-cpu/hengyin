@@ -199,24 +199,38 @@ page {
   gap: var(--cy-space-3);
   padding: 0 40rpx;  /* ds-ok: 40rpx 与本页其余分节左右内距对齐,量表无半步 token */
   margin-bottom: var(--cy-space-6);
+  --xb-share-bg: rgba(255, 255, 255, 0.1);
 }
 .xb-cta-btn { flex: 1; min-width: 0; }
+/* V-24(2026-10-29 业主「应用和旁边分享一样的样式」):cy-btn 是样式隔离组件,改不到内层背景,
+   只能经 CSS 变量下传 —— 幽灵底 / 标题色换成分享键的底色与文字色,圆角取药丸,只是更宽。
+   只挂在幽灵态(非我的模板);「继续编辑」的 primary 态不受影响。 */
+.xb-cta .xb-cta-btn--share {
+  --cy-bg-glass: var(--xb-share-bg);
+  --cy-text-title: var(--xb-text);
+  --cy-comp-btn-radius: var(--cy-radius-pill);
+}
 
-.xb-share {
-  width: 104rpx;
-  height: 104rpx;
+/* V-11 R2(2026-10-29 业主「改回圆形」):⚠️ 必须两级选择器 —— 微信内置
+   wx-button:not([size=mini]) { width:184px } 的优先级(0,1,1)高过单个类,单写 .xb-share
+   时宽度被顶成 184px 的椭圆(同 pages/club/detail .profile-id .profile-share)。
+   直径取 --cy-btn-h,与左侧「应用」同高。 */
+.xb-cta .xb-share {
+  width: var(--cy-btn-h);
+  height: var(--cy-btn-h);
   margin: 0;
   padding: 0;
+  border: 0;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--xb-share-bg);
   color: var(--xb-text);
   display: flex;
   align-items: center;
   justify-content: center;
   flex: none;
-  line-height: 1;
+  line-height: normal;
 }
-.xb-share::after { border: 0; }
+.xb-cta .xb-share::after { border: 0; }
 
 /* P-42:举报放在页面末尾,一行弱化文字 */
 .xb-report {
@@ -374,6 +388,14 @@ page {
 
 .xb-section-title cy-icon {
   color: var(--xb-muted);
+}
+
+/* V-11 R2(2026-10-29 业主「简介 规则 验证 用上合适的 3d 的 icon」):分节标题图标换成
+   Fluent Emoji 3D(MIT,见 art/3d/README.md);彩色图不着色;「评价」暂无合适的 3D 星,仍用上面的线性 star。 */
+.xb-section-ico {
+  width: 40rpx; /* ds-ok: 3D 彩图比 30rpx 线性图标视觉更轻,放大一档与标题字同高 */
+  height: 40rpx; /* ds-ok: 同上 */
+  flex: none;
 }
 
 .xb-section-note {

@@ -53394,15 +53394,6 @@
           "route": "pages/templatedetail/templatedetail",
           "segments": [
             {
-              "selector": "cy-btn.xb-cta-btn",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/templatedetail/templatedetail",
-          "segments": [
-            {
               "selector": "cy-btn",
               "index": 0
             }
@@ -53441,6 +53432,15 @@
             {
               "selector": "cy-btn",
               "index": 4
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "cy-btn",
+              "index": 5
             }
           ]
         },
@@ -1335919,7 +1335919,7 @@
       }
     },
     {
-      "id": "pages/templatedetail/templatedetail.wxml:119:bindtap:toggleRuleMore:6",
+      "id": "pages/templatedetail/templatedetail.wxml:120:bindtap:toggleRuleMore:6",
       "route": "pages/templatedetail/templatedetail",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1335942,7 +1335942,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "toggleRuleMore",
-        "line": 119,
+        "line": 120,
         "selectorHint": ".xb-link-more",
         "visibleCondition": "{{ ruleNeedMore || ruleExpanded }}",
         "disabledCondition": null,
@@ -1336057,7 +1336057,7 @@
       }
     },
     {
-      "id": "pages/templatedetail/templatedetail.wxml:254:bindtap:tapCapChip:7",
+      "id": "pages/templatedetail/templatedetail.wxml:255:bindtap:tapCapChip:7",
       "route": "pages/templatedetail/templatedetail",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1336080,7 +1336080,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "tapCapChip",
-        "line": 254,
+        "line": 255,
         "selectorHint": ".xb-chip",
         "visibleCondition": "{{ chip.action }}",
         "disabledCondition": null,
@@ -1336124,7 +1336124,7 @@
       }
     },
     {
-      "id": "pages/templatedetail/templatedetail.wxml:261:bindtap:toggleCapRow:8",
+      "id": "pages/templatedetail/templatedetail.wxml:262:bindtap:toggleCapRow:8",
       "route": "pages/templatedetail/templatedetail",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1336147,7 +1336147,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "toggleCapRow",
-        "line": 261,
+        "line": 262,
         "selectorHint": ".xb-caprow-more",
         "visibleCondition": "{{ item.collapsible }}",
         "disabledCondition": null,
@@ -1336191,7 +1336191,7 @@
       }
     },
     {
-      "id": "pages/templatedetail/templatedetail.wxml:291:bind:close:closePop:9",
+      "id": "pages/templatedetail/templatedetail.wxml:292:bind:close:closePop:9",
       "route": "pages/templatedetail/templatedetail",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1336214,7 +1336214,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closePop",
-        "line": 291,
+        "line": 292,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1336258,7 +1336258,7 @@
       }
     },
     {
-      "id": "pages/templatedetail/templatedetail.wxml:300:bindinput:onInputAnswer:10",
+      "id": "pages/templatedetail/templatedetail.wxml:301:bindinput:onInputAnswer:10",
       "route": "pages/templatedetail/templatedetail",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1336281,7 +1336281,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onInputAnswer",
-        "line": 300,
+        "line": 301,
         "selectorHint": "input[bindinput]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1336325,7 +1336325,7 @@
       }
     },
     {
-      "id": "pages/templatedetail/templatedetail.wxml:303:bind:disabledtap:onPreviewDisabledTap:12",
+      "id": "pages/templatedetail/templatedetail.wxml:304:bind:disabledtap:onPreviewDisabledTap:12",
       "route": "pages/templatedetail/templatedetail",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1336348,7 +1336348,7 @@
         "tag": "cy-btn",
         "event": "bind:disabledtap",
         "handler": "onPreviewDisabledTap",
-        "line": 303,
+        "line": 304,
         "selectorHint": "cy-btn[bind:disabledtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!canSubmitPreview}}",
@@ -1336393,7 +1336393,7 @@
       }
     },
     {
-      "id": "pages/templatedetail/templatedetail.wxml:303:bindtap:completePreview:11",
+      "id": "pages/templatedetail/templatedetail.wxml:304:bindtap:completePreview:11",
       "route": "pages/templatedetail/templatedetail",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1336416,7 +1336416,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "completePreview",
-        "line": 303,
+        "line": 304,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!canSubmitPreview}}",
@@ -1336460,7 +1336460,7 @@
       }
     },
     {
-      "id": "pages/templatedetail/templatedetail.wxml:311:bindtap:onSelectOption:13",
+      "id": "pages/templatedetail/templatedetail.wxml:312:bindtap:onSelectOption:13",
       "route": "pages/templatedetail/templatedetail",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1336483,7 +1336483,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onSelectOption",
-        "line": 311,
+        "line": 312,
         "selectorHint": ".david_tk_sr_tgb_li",
         "visibleCondition": "{{ info.questionA }}",
         "disabledCondition": null,
@@ -1336527,7 +1336527,7 @@
       }
     },
     {
-      "id": "pages/templatedetail/templatedetail.wxml:313:bindtap:onSelectOption:14",
+      "id": "pages/templatedetail/templatedetail.wxml:314:bindtap:onSelectOption:14",
       "route": "pages/templatedetail/templatedetail",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1336550,7 +1336550,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onSelectOption",
-        "line": 313,
+        "line": 314,
         "selectorHint": ".david_tk_sr_tgb_li",
         "visibleCondition": "{{ info.questionB }}",
         "disabledCondition": null,
@@ -1336594,7 +1336594,7 @@
       }
     },
     {
-      "id": "pages/templatedetail/templatedetail.wxml:315:bindtap:onSelectOption:15",
+      "id": "pages/templatedetail/templatedetail.wxml:316:bindtap:onSelectOption:15",
       "route": "pages/templatedetail/templatedetail",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1336617,7 +1336617,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onSelectOption",
-        "line": 315,
+        "line": 316,
         "selectorHint": ".david_tk_sr_tgb_li",
         "visibleCondition": "{{ info.questionC }}",
         "disabledCondition": null,
@@ -1336661,7 +1336661,7 @@
       }
     },
     {
-      "id": "pages/templatedetail/templatedetail.wxml:317:bindtap:onSelectOption:16",
+      "id": "pages/templatedetail/templatedetail.wxml:318:bindtap:onSelectOption:16",
       "route": "pages/templatedetail/templatedetail",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1336684,7 +1336684,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onSelectOption",
-        "line": 317,
+        "line": 318,
         "selectorHint": ".david_tk_sr_tgb_li",
         "visibleCondition": "{{ info.questionD }}",
         "disabledCondition": null,
@@ -1336728,7 +1336728,7 @@
       }
     },
     {
-      "id": "pages/templatedetail/templatedetail.wxml:319:bind:disabledtap:onPreviewDisabledTap:18",
+      "id": "pages/templatedetail/templatedetail.wxml:320:bind:disabledtap:onPreviewDisabledTap:18",
       "route": "pages/templatedetail/templatedetail",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1336751,7 +1336751,7 @@
         "tag": "cy-btn",
         "event": "bind:disabledtap",
         "handler": "onPreviewDisabledTap",
-        "line": 319,
+        "line": 320,
         "selectorHint": "cy-btn[bind:disabledtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!canSubmitPreview}}",
@@ -1336796,7 +1336796,7 @@
       }
     },
     {
-      "id": "pages/templatedetail/templatedetail.wxml:319:bindtap:completePreview:17",
+      "id": "pages/templatedetail/templatedetail.wxml:320:bindtap:completePreview:17",
       "route": "pages/templatedetail/templatedetail",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1336819,7 +1336819,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "completePreview",
-        "line": 319,
+        "line": 320,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!canSubmitPreview}}",
@@ -1336863,7 +1336863,7 @@
       }
     },
     {
-      "id": "pages/templatedetail/templatedetail.wxml:53:bindtap:goPrimary:2",
+      "id": "pages/templatedetail/templatedetail.wxml:54:bindtap:goPrimary:2",
       "route": "pages/templatedetail/templatedetail",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1336886,7 +1336886,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "goPrimary",
-        "line": 53,
+        "line": 54,
         "selectorHint": ".xb-cta-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1336945,7 +1336945,7 @@
       }
     },
     {
-      "id": "pages/templatedetail/templatedetail.wxml:63:bind:change:switchTab:3",
+      "id": "pages/templatedetail/templatedetail.wxml:64:bind:change:switchTab:3",
       "route": "pages/templatedetail/templatedetail",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1336968,7 +1336968,7 @@
         "tag": "cy-tabs",
         "event": "bind:change",
         "handler": "switchTab",
-        "line": 63,
+        "line": 64,
         "selectorHint": "cy-tabs[bind:change]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1337012,7 +1337012,7 @@
       }
     },
     {
-      "id": "pages/templatedetail/templatedetail.wxml:73:bindtap:previewGallery:4",
+      "id": "pages/templatedetail/templatedetail.wxml:74:bindtap:previewGallery:4",
       "route": "pages/templatedetail/templatedetail",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1337035,7 +1337035,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "previewGallery",
-        "line": 73,
+        "line": 74,
         "selectorHint": ".xb-mosaic-cell",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1337089,7 +1337089,7 @@
       }
     },
     {
-      "id": "pages/templatedetail/templatedetail.wxml:86:bindtap:toggleDescMore:5",
+      "id": "pages/templatedetail/templatedetail.wxml:87:bindtap:toggleDescMore:5",
       "route": "pages/templatedetail/templatedetail",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1337112,7 +1337112,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "toggleDescMore",
-        "line": 86,
+        "line": 87,
         "selectorHint": ".xb-link-more",
         "visibleCondition": "{{ descNeedMore || descExpanded }}",
         "disabledCondition": null,

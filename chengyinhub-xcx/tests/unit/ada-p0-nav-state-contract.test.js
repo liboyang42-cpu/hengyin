@@ -69,7 +69,7 @@ function assertTemplateStateNav(source) {
   const successScroll = source.indexOf('class="xb-scroll xb-scroll--bleed"')
   assert.ok(successScroll >= 0 && source.indexOf('class="xb-cta"') > successScroll,
     'CTA 必须落在成功态滚动区内(loading/error 没有可点的主动作)')
-  const ctaBtn = source.match(/<cy-btn[^>]*class="xb-cta-btn"[^>]*>/)
+  const ctaBtn = source.match(/<cy-btn[^>]*class="xb-cta-btn[^"]*"[^>]*>/)
   assert.ok(ctaBtn, 'CTA 主按钮必须存在')
   assert.doesNotMatch(ctaBtn[0], /--cy-btn-h\s*:/, 'CTA 主按钮必须消费全站 --cy-btn-h')
   assert.match(source, /class="xb-scroll-pad"/, '正文末尾必须留收尾留白 + 安全区')

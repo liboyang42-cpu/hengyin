@@ -37,7 +37,7 @@ test('V-05 活动 tab 空态不套卡片,下移到与帖子 tab 空态同高', (
 
 test('V-11 模板详情:主按钮幽灵样式、文字「应用」,分享键保留', () => {
   const wxml = read('pages/templatedetail/templatedetail.wxml')
-  assert.match(wxml, /<cy-btn class="xb-cta-btn" variant="\{\{ isMyScope \? 'primary' : 'ghost' \}\}" bindtap="goPrimary">\{\{ primaryLabel \}\}<\/cy-btn>/)
+  assert.match(wxml, /<cy-btn class="xb-cta-btn \{\{ isMyScope \? '' : 'xb-cta-btn--share' \}\}" variant="\{\{ isMyScope \? 'primary' : 'ghost' \}\}" bindtap="goPrimary">\{\{ primaryLabel \}\}<\/cy-btn>/)
   assert.match(wxml, /<button class="xb-share" open-type="share"/)
   assert.doesNotMatch(wxml, /开始应用/)
   const js = read('pages/templatedetail/templatedetail.js')
@@ -98,4 +98,60 @@ test('V-14 剧情故事时间节点:正文随内容撑高,时刻标签输入框�
   assert.match(tag, /height:\s*var\(--cy-btn-h\)/)
   assert.match(tag, /line-height:\s*var\(--cy-btn-h\)/)
   assert.match(tag, /padding:\s*0 var\(--cy-space-3\)/)
+})
+
+// ---- Round 2(2026-10-29 业主二审)----
+
+test('V-11 R2 分享键是圆:两级选择器压过内置 button 宽度,宽高同为 --cy-btn-h', () => {
+  const wxss = read('pages/templatedetail/templatedetail.wxss')
+  const body = rule(wxss, '.xb-cta .xb-share')
+  assert.match(body, /width:\s*var\(--cy-btn-h\)/)
+  assert.match(body, /height:\s*var\(--cy-btn-h\)/)
+  assert.match(body, /border-radius:\s*50%/)
+  assert.match(body, /background:\s*var\(--xb-share-bg\)/)
+  assert.match(rule(wxss, '.xb-cta .xb-share::after'), /border:\s*0/)
+  // 负控:单类选择器会被 wx-button:not([size=mini]) 的 184px 压过,不许留着
+  const clean = wxss.replace(/\/\*[\s\S]*?\*\//g, '')
+  assert.doesNotMatch(clean, /(^|\})\s*\.xb-share\s*\{/)
+})
+
+test('V-24 「应用」与分享键同底色 / 文字色 / 无描边,只是更宽(玩法与主题模板同一页)', () => {
+  const wxss = read('pages/templatedetail/templatedetail.wxss')
+  assert.match(rule(wxss, '.xb-cta'), /--xb-share-bg:\s*rgba\(255, 255, 255, 0\.1\)/)
+  const body = rule(wxss, '.xb-cta .xb-cta-btn--share')
+  assert.match(body, /--cy-bg-glass:\s*var\(--xb-share-bg\)/)
+  assert.match(body, /--cy-text-title:\s*var\(--xb-text\)/)
+  assert.match(rule(wxss, '.xb-cta .xb-share'), /color:\s*var\(--xb-text\)/)
+  // cy-btn 幽灵态正是用这两个变量上色,且没有描边 —— 变量下传才真的生效
+  const btn = read('components/cy/btn/index.wxss')
+  const ghost = rule(btn, '.btn--ghost')
+  assert.match(ghost, /background:\s*var\(--cy-bg-glass\)/)
+  assert.match(ghost, /color:\s*var\(--cy-text-title\)/)
+  assert.doesNotMatch(ghost, /border/)
+  assert.match(rule(wxss, '.xb-cta-btn'), /flex:\s*1/, '主按钮占满分享键以外的宽度')
+})
+
+test('V-11 R2 分节标题用 Fluent Emoji 3D 图标,文字不变', () => {
+  const wxml = read('pages/templatedetail/templatedetail.wxml')
+  const want = [
+    ["{{ isTopicTemplate ? '剧情' : '简介' }}", '/pages/templatedetail/art/3d/book.png'],
+    ['规则', '/images/publish-quick/interaction.png'],
+    ['怎么验证', '/pages/templatedetail/art/3d/magnifier.png'],
+    ['分类与适用场景', '/images/publish-quick/city.png'],
+    ['所需物料', '/pages/templatedetail/art/3d/flashlight.png'],
+    ["{{ isTopicTemplate ? '节点' : '包含内容' }}", '/images/publish-quick/explore.png'],
+    ['创作者说', '/pages/templatedetail/art/3d/bulb.png'],
+  ]
+  for (const [title, src] of want) {
+    const esc = (x) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    assert.match(wxml, new RegExp('<image class="xb-section-ico" src="' + esc(src) + '" mode="aspectFit" aria-hidden="true" />\\s*<text>' + esc(title) + '</text>'), title)
+    assert.ok(fs.existsSync(path.join(ROOT, src)), src + ' 不存在')
+    assert.equal(fs.readFileSync(path.join(ROOT, src)).subarray(1, 4).toString(), 'PNG')
+  }
+  for (const old of ['info', 'route', 'check', 'gift', 'image']) {
+    assert.doesNotMatch(wxml, new RegExp('<cy-icon name="' + old + '" size="30" />'), '旧线性图标 ' + old + ' 应已换掉')
+  }
+  assert.match(read('pages/templatedetail/art/3d/LICENSE'), /MIT License[\s\S]*Microsoft Corporation/)
+  assert.match(read('pages/templatedetail/art/3d/README.md'), /fluentui-emoji/)
+  assert.match(rule(read('pages/templatedetail/templatedetail.wxss'), '.xb-section-ico'), /width:\s*40rpx/)
 })
