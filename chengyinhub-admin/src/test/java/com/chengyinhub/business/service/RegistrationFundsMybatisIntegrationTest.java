@@ -2002,6 +2002,260 @@ class RegistrationFundsMybatisIntegrationTest {
     }
 
     @Test
+    void zeroPendingIdRetriesWithoutSdkAfterCompletionRollbackAndDomainReconstruction() throws Exception {
+        List<CmsRegistration> originals = createZeroPendingAfterCompletionRollback("zero-id-retry", false);
+        CmsRegistration original = originals.get(0);
+        // The original zero completion/replay contract does not treat a WeChat payment window as a new cash attempt.
+        setPayExpireTime(original.getId(), System.currentTimeMillis() - 86_400_000L);
+        IWechatPayService unavailable = mock(IWechatPayService.class);
+        IRegistrationCheckoutService checkout = checkoutService(unavailable);
+        ReflectionTestUtils.setField(checkout, "registrationService", reconstructedZeroRecoveryService());
+        RegistrationCheckoutResult completed = checkout.retryPayment(7L, original.getId());
+        assertEquals(original.getId(), completed.getData().get("registrationId"));
+        assertEquals(original.getRegistrationNo(), completed.getData().get("registrationNo"));
+        assertEquals(List.of(original.getId()), completed.getData().get("registrationIds"));
+        assertEquals(2, completed.getData().get("paymentStatus"));
+        assertEquals(2, completed.getData().get("registrationStatus"));
+        assertFalse(completed.getData().containsKey("payParams"));
+        assertZeroOrderCompletedOnce(originals, 99);
+        Map<String, Object> committed = zeroRecoveryRows();
+        ICmsRegistrationService fresh = reconstructedZeroRecoveryService();
+        RegistrationCheckoutServiceImpl reconstructedCheckout = new RegistrationCheckoutServiceImpl();
+        ReflectionTestUtils.setField(reconstructedCheckout, "registrationService", fresh);
+        ReflectionTestUtils.setField(reconstructedCheckout, "registrationOrderService", registrationOrderService);
+        ReflectionTestUtils.setField(reconstructedCheckout, "wechatPayService", unavailable);
+        RegistrationCheckoutResult replay = reconstructedCheckout.retryPayment(7L, original.getId(), true);
+        assertEquals(completed.getData(), replay.getData());
+        assertEquals(committed, zeroRecoveryRows());
+        org.mockito.Mockito.verifyNoInteractions(unavailable);
+        ISystemNotificationIntentService intents = (ISystemNotificationIntentService)
+                ReflectionTestUtils.getField(registrationTarget, "systemNotificationIntents");
+        verify(intents, org.mockito.Mockito.times(1)).enqueue(org.mockito.ArgumentMatchers.eq(7L),
+                org.mockito.ArgumentMatchers.anyInt(), org.mockito.ArgumentMatchers.eq("报名成功"),
+                org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.eq("registration-signup:" + original.getId()));
+    }
+
+    @Test
+    void zeroParentBatchRetriesFromChildOnAppAndReplaysEveryOriginalIdWithoutDuplicatingEffects() throws Exception {
+        List<CmsRegistration> originals = createZeroPendingAfterCompletionRollback("zero-parent-retry", true);
+        assertEquals(2, originals.size());
+        CmsRegistration child = originals.get(1);
+        assertNotNull(child.getParentOrderNo());
+        IWechatPayService unavailable = mock(IWechatPayService.class);
+        RegistrationCheckoutResult completed = checkoutService(unavailable).retryPayment(7L, child.getId(), true);
+        assertEquals(child.getId(), completed.getData().get("registrationId"));
+        assertEquals(child.getRegistrationNo(), completed.getData().get("registrationNo"));
+        assertEquals(originals.stream().map(CmsRegistration::getId).toList(), completed.getData().get("registrationIds"));
+        assertEquals(2, completed.getData().get("paymentStatus"));
+        assertEquals(2, completed.getData().get("registrationStatus"));
+        assertFalse(completed.getData().containsKey("payParams"));
+        assertZeroOrderCompletedOnce(originals, 98);
+        Map<String, Object> committed = zeroRecoveryRows();
+        for (CmsRegistration row : originals) {
+            RegistrationCheckoutResult replay = checkoutService(unavailable).retryPayment(7L, row.getId());
+            assertEquals(row.getId(), replay.getData().get("registrationId"));
+            assertEquals(originals.stream().map(CmsRegistration::getId).toList(), replay.getData().get("registrationIds"));
+            assertEquals(2, replay.getData().get("paymentStatus"));
+            assertEquals(2, replay.getData().get("registrationStatus"));
+        }
+        assertEquals(committed, zeroRecoveryRows());
+        // Existing completion awards the batch participation key to the original payer, never the retrying child.
+        assertEquals(0, number("SELECT COUNT(*) FROM ums_member_points_detail WHERE reward_business_key='registration:3:" + child.getId() + "'"));
+        org.mockito.Mockito.verifyNoInteractions(unavailable);
+    }
+
+    @Test
+    void zeroRetryRejectsMissingFrozenMoneyUnknownAndClosedStatesWithoutChangingOriginalRows() throws Exception {
+        CmsRegistration original = createZeroPendingAfterCompletionRollback("zero-invalid-retry", false).get(0);
+        long id = original.getId();
+        IWechatPayService unavailable = mock(IWechatPayService.class);
+        for (String invalid : List.of("payable_amount=NULL", "payable_amount=-1", "wechat_payment_amount=NULL",
+                "wechat_payment_amount=1", "payment_status=1", "registration_status=3", "registration_status=4",
+                "transaction_id='unconfirmed-original-transaction'")) {
+            execute("UPDATE cms_registration SET payable_amount=0,wechat_payment_amount=0,payment_status=0,"
+                    + "registration_status=1,transaction_id=NULL WHERE id=" + id,
+                    "UPDATE cms_registration SET " + invalid + " WHERE id=" + id);
+            Map<String, Object> before = zeroRecoveryRows();
+            assertThrows(RuntimeException.class, () -> checkoutService(unavailable).retryPayment(7L, id), invalid);
+            assertEquals(before, zeroRecoveryRows(), invalid);
+        }
+        execute("UPDATE cms_registration SET payable_amount=0,wechat_payment_amount=0,payment_status=0,"
+                + "registration_status=1,transaction_id=NULL WHERE id=" + id,
+                "UPDATE cms_activity SET cancel_time=NOW() WHERE id=55");
+        Map<String, Object> before = zeroRecoveryRows();
+        assertThrows(RuntimeException.class, () -> checkoutService(unavailable).retryPayment(7L, id));
+        assertEquals(before, zeroRecoveryRows());
+        org.mockito.Mockito.verifyNoInteractions(unavailable);
+    }
+
+    @Test
+    void zeroRetryRejectsForeignActorAndMixedParentScopeOrMoneyBeforeAnyCompletion() throws Exception {
+        List<CmsRegistration> originals = createZeroPendingAfterCompletionRollback("zero-scope-retry", true);
+        long payer = originals.get(0).getId(), child = originals.get(1).getId();
+        IWechatPayService unavailable = mock(IWechatPayService.class);
+        Map<String, Object> before = zeroRecoveryRows();
+        assertThrows(RuntimeException.class, () -> checkoutService(unavailable).retryPayment(8L, payer));
+        assertEquals(before, zeroRecoveryRows());
+        for (String invalid : List.of("member_id=8", "owner_id=56", "payable_amount=1", "wechat_payment_amount=1")) {
+            execute("UPDATE cms_registration SET member_id=7,owner_id=55,payable_amount=0,wechat_payment_amount=0 WHERE id=" + child,
+                    "UPDATE cms_registration SET " + invalid + " WHERE id=" + child);
+            before = zeroRecoveryRows();
+            assertThrows(RuntimeException.class, () -> checkoutService(unavailable).retryPayment(7L, payer), invalid);
+            assertEquals(before, zeroRecoveryRows(), invalid);
+        }
+        org.mockito.Mockito.verifyNoInteractions(unavailable);
+    }
+
+    @Test
+    void zeroRetryLocksCurrentActorAfterAnOldOwnershipSnapshotWithoutCompletingOrCallingSdk() throws Exception {
+        long id = createZeroPendingAfterCompletionRollback("zero-owner-race", false).get(0).getId();
+        CountDownLatch observed = new CountDownLatch(1), resume = new CountDownLatch(1);
+        java.util.concurrent.atomic.AtomicBoolean first = new java.util.concurrent.atomic.AtomicBoolean(true);
+        CmsRegistrationMapper observedMapper = (CmsRegistrationMapper) java.lang.reflect.Proxy.newProxyInstance(
+                getClass().getClassLoader(), new Class<?>[]{CmsRegistrationMapper.class}, (proxy, method, args) -> {
+                    Object result;
+                    try { result = method.invoke(registrationMapper, args); }
+                    catch (java.lang.reflect.InvocationTargetException failure) { throw failure.getTargetException(); }
+                    if ("selectCmsRegistrationById".equals(method.getName()) && Long.valueOf(id).equals(args[0])
+                            && first.compareAndSet(true, false)) {
+                        observed.countDown(); assertTrue(resume.await(10, java.util.concurrent.TimeUnit.SECONDS));
+                    }
+                    return result;
+                });
+        ReflectionTestUtils.setField(registrationTarget, "cmsRegistrationMapper", observedMapper);
+        IWechatPayService unavailable = mock(IWechatPayService.class);
+        ExecutorService worker = Executors.newSingleThreadExecutor();
+        try {
+            Future<?> attempt = worker.submit(() -> assertThrows(RuntimeException.class,
+                    () -> checkoutService(unavailable).retryPayment(7L, id)));
+            assertTrue(observed.await(10, java.util.concurrent.TimeUnit.SECONDS));
+            execute("UPDATE cms_registration SET member_id=8 WHERE id=" + id);
+            Map<String, Object> before = zeroRecoveryRows();
+            resume.countDown(); attempt.get(10, java.util.concurrent.TimeUnit.SECONDS);
+            assertEquals(before, zeroRecoveryRows());
+            org.mockito.Mockito.verifyNoInteractions(unavailable);
+        } finally {
+            resume.countDown(); worker.shutdownNow();
+            ReflectionTestUtils.setField(registrationTarget, "cmsRegistrationMapper", registrationMapper);
+        }
+    }
+
+    @Test
+    void zeroRetryKeepsExternalSuccessConflictAndPaidSdkUnavailableOrdersUnchanged() throws Exception {
+        IWechatPayService unavailable = mock(IWechatPayService.class);
+        Map<String, Object> before = zeroRecoveryRows();
+        RegistrationCheckoutException notReady = assertThrows(RegistrationCheckoutException.class,
+                () -> checkoutService(unavailable).retryPayment(7L, 11L));
+        assertEquals(503, notReady.getCode());
+        assertEquals(before, zeroRecoveryRows());
+        verify(unavailable, never()).createOrder(any()); verify(unavailable, never()).createAppOrder(any());
+        prepareExpiredMultiTicketPayingOrder();
+        Long cashOrderChild = new JdbcTemplate(dataSource).queryForObject(
+                "SELECT id FROM cms_registration WHERE registration_no='T20260724SIB'", Long.class);
+        before = zeroRecoveryRows();
+        RegistrationCheckoutException stillCash = assertThrows(RegistrationCheckoutException.class,
+                () -> checkoutService(unavailable).retryPayment(7L, cashOrderChild));
+        assertEquals(503, stillCash.getCode());
+        assertEquals(before, zeroRecoveryRows(), "A paid parent order's zero-valued child cannot become a free completion");
+        // Reuse the original real fact producer while the original paid basis is still 100.
+        callback();
+        execute("UPDATE cms_registration SET payable_amount=0,wechat_payment_amount=0 WHERE id=11");
+        before = zeroRecoveryRows();
+        assertThrows(RuntimeException.class, () -> checkoutService(unavailable).retryPayment(7L, 11L, true));
+        assertEquals(before, zeroRecoveryRows());
+    }
+
+    @Test
+    void legacyZeroIdWithoutRequestMetadataCompletesAndReplaysWithoutInventingANewRequest() throws Exception {
+        // The suite's original persisted id=11 has no request_id/fingerprint. Set only this
+        // case's frozen zero-cash input; completion must use the real domain transaction.
+        execute("UPDATE cms_registration SET owner_type=2,owner_id=55,ticket_id=9,"
+                + "payable_amount=0,wechat_payment_amount=0 WHERE id=11");
+        CmsRegistration original = registrationMapper.selectCmsRegistrationById(11L);
+        assertEquals(null, original.getRequestId()); assertEquals(null, original.getRequestFingerprint());
+        IWechatPayService unavailable = mock(IWechatPayService.class);
+        RegistrationCheckoutResult first = checkoutService(unavailable).retryPayment(7L, 11L);
+        assertEquals("T20260724PAY", first.getData().get("registrationNo"));
+        assertEquals(List.of(11L), first.getData().get("registrationIds"));
+        assertEquals(2, first.getData().get("paymentStatus"));
+        assertEquals(2, first.getData().get("registrationStatus"));
+        assertZeroOrderCompletedOnce(List.of(original), 0);
+        Map<String, Object> committed = zeroRecoveryRows();
+        assertEquals(first.getData(), checkoutService(unavailable).retryPayment(7L, 11L, true).getData());
+        assertEquals(committed, zeroRecoveryRows());
+        assertEquals(1, number("SELECT COUNT(*) FROM cms_registration"));
+        org.mockito.Mockito.verifyNoInteractions(unavailable);
+    }
+
+    private List<CmsRegistration> createZeroPendingAfterCompletionRollback(String key, boolean batch) throws Exception {
+        execute("UPDATE oms_ticket SET price=0,remaining_inventory=100 WHERE id=9",
+                "UPDATE cms_activity SET member_id=NULL WHERE id=55",
+                "ALTER TABLE ums_member ADD CONSTRAINT ck_zero_retry_points CHECK (point=100)");
+        RegistrationRequest request = request(key);
+        if (batch) {
+            var first = new com.chengyinhub.business.domain.dto.RegistrationTicketItem(); first.setTicketId(9L); first.setCount(1);
+            var second = new com.chengyinhub.business.domain.dto.RegistrationTicketItem(); second.setTicketId(9L); second.setCount(1);
+            request.setTicketId(null); request.setTickets(List.of(first, second));
+        }
+        IWechatPayService unavailable = mock(IWechatPayService.class);
+        IRegistrationCheckoutService checkout = checkoutService(unavailable);
+        request.setQuoteSign(checkout.quote(7L, request).getQuoteSign());
+        assertThrows(RuntimeException.class, () -> checkout.createOrReplay(7L, request));
+        Long payerId = new JdbcTemplate(dataSource).queryForObject(
+                "SELECT id FROM cms_registration WHERE member_id=7 AND request_id=?", Long.class, key);
+        CmsRegistration payer = registrationMapper.selectCmsRegistrationById(payerId);
+        assertNotNull(payer);
+        List<CmsRegistration> rows = payer.getParentOrderNo() == null ? List.of(payer)
+                : registrationMapper.selectByParentOrderNo(payer.getParentOrderNo());
+        assertEquals(batch ? 2 : 1, rows.size());
+        for (CmsRegistration row : rows) {
+            assertEquals(1, row.getRegistrationStatus()); assertEquals(0, row.getPaymentStatus());
+            assertEquals(0, row.getPayableAmount().signum()); assertEquals(0, row.getWechatPaymentAmount().signum());
+        }
+        assertEquals(100, number("SELECT point FROM ums_member WHERE id=7"));
+        assertEquals(0, number("SELECT COUNT(*) FROM ums_member_points_detail"));
+        assertEquals(batch ? 98 : 99, number("SELECT remaining_inventory FROM oms_ticket WHERE id=9"));
+        execute("ALTER TABLE ums_member DROP CHECK ck_zero_retry_points");
+        org.mockito.Mockito.verifyNoInteractions(unavailable);
+        return rows;
+    }
+
+    private void assertZeroOrderCompletedOnce(List<CmsRegistration> originals, long inventory) throws Exception {
+        for (CmsRegistration original : originals) {
+            CmsRegistration current = registrationMapper.selectCmsRegistrationById(original.getId());
+            assertEquals(original.getRegistrationNo(), current.getRegistrationNo());
+            assertEquals(original.getParentOrderNo(), current.getParentOrderNo());
+            assertEquals(original.getRequestId(), current.getRequestId());
+            assertEquals(original.getRequestFingerprint(), current.getRequestFingerprint());
+            assertEquals(2, current.getRegistrationStatus()); assertEquals(2, current.getPaymentStatus());
+        }
+        assertEquals(inventory, number("SELECT remaining_inventory FROM oms_ticket WHERE id=9"));
+        assertEquals(115, number("SELECT point FROM ums_member WHERE id=7"));
+        assertEquals(2, number("SELECT COUNT(*) FROM ums_member_points_detail WHERE member_id=7"));
+        assertEquals(1, number("SELECT COUNT(*) FROM ums_member_points_detail WHERE reward_business_key='registration:2:0'"));
+    }
+
+    private Map<String, Object> zeroRecoveryRows() {
+        JdbcTemplate db = new JdbcTemplate(dataSource);
+        Map<String, Object> rows = new java.util.LinkedHashMap<>();
+        for (String table : List.of("cms_registration", "cms_registration_scan", "ums_member", "ums_member_points_detail", "oms_ticket"))
+            rows.put(table, db.queryForList("SELECT * FROM " + table + " ORDER BY id"));
+        return rows;
+    }
+
+    private ICmsRegistrationService reconstructedZeroRecoveryService() {
+        CmsRegistrationServiceImpl target = new CmsRegistrationServiceImpl();
+        for (String port : List.of("platformMemberId", "cmsRegistrationMapper", "cmsActivityMapper", "cmsTopicMapper",
+                "omsTicketMapper", "umsMemberMapper", "umsMemberPointsDetailMapper", "cmsRegistrationScanMapper",
+                "cmsPointsSettingService", "settlementEntryService", "verifiedPaymentFacts", "systemNotificationIntents",
+                "imService", "committedBusinessNotice", "growthService"))
+            ReflectionTestUtils.setField(target, port, ReflectionTestUtils.getField(registrationTarget, port));
+        ProxyFactory proxy = new ProxyFactory(target); proxy.setInterfaces(ICmsRegistrationService.class);
+        proxy.addAdvice(new TransactionInterceptor(transactionManager, new AnnotationTransactionAttributeSource()));
+        return (ICmsRegistrationService) proxy.getProxy();
+    }
+
+    @Test
     void concurrentCancellationReturnsPointsAndInventoryExactlyOnce() throws Exception {
         execute("UPDATE cms_registration SET owner_type=2,owner_id=55,ticket_id=9,point_used=20,points_returned=0 WHERE id=11",
                 "UPDATE ums_member SET point=80 WHERE id=7");

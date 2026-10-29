@@ -135,7 +135,59 @@ class RegistrationCheckoutTransactionBoundaryTest {
         verifyNoInteractions(provider);
     }
 
+    @Test void zeroRetryCommitsActorBoundCompletionWithoutConsultingOrCallingSdk() {
+        CmsRegistration zero = original();
+        zero.setPayableAmount(BigDecimal.ZERO); zero.setWechatPaymentAmount(BigDecimal.ZERO);
+        zero.setPaymentStatus(2); zero.setRegistrationStatus(2);
+        when(registrations.completeZeroAmountPaymentForRetry(registrationId, member)).thenAnswer(call ->
+                new TransactionTemplate(transactions).execute(tx -> {
+                    assertTrue(TransactionSynchronizationManager.isActualTransactionActive());
+                    events.add("zero-completion"); return List.of(zero);
+                }));
+        RegistrationCheckoutResult result = checkout.retryPayment(member, registrationId, true);
+        assertEquals(List.of("zero-completion", "commit"), events);
+        assertEquals("REG-PHASE-1", result.getData().get("registrationNo"));
+        assertEquals(List.of(registrationId), result.getData().get("registrationIds"));
+        assertEquals(2, result.getData().get("paymentStatus"));
+        assertEquals(2, result.getData().get("registrationStatus"));
+        assertFalse(result.getData().containsKey("payParams"));
+        verifyNoInteractions(gateway, orders);
+        verify(registrations, never()).beginPaymentAttempt(anyLong(), anyLong());
+        verify(registrations, never()).releasePaymentAttempt(anyLong());
+        assertEquals(0, transactions.suspensions);
+    }
+
+    @Test void paidSdkNotReadyRejectsBeforeClaimAndPreservesOriginalAttempt() {
+        when(registrations.completeZeroAmountPaymentForRetry(registrationId, member)).thenReturn(null);
+        when(gateway.isReady()).thenReturn(false);
+        RegistrationCheckoutException rejected = assertThrows(RegistrationCheckoutException.class,
+                () -> checkout.retryPayment(member, registrationId));
+        assertEquals(503, rejected.getCode());
+        var order = inOrder(registrations, gateway);
+        order.verify(registrations).completeZeroAmountPaymentForRetry(registrationId, member);
+        order.verify(gateway).isReady();
+        verify(registrations, never()).beginPaymentAttempt(anyLong(), anyLong());
+        verify(registrations, never()).releasePaymentAttempt(anyLong());
+        verify(gateway, never()).createOrder(any()); verify(gateway, never()).createAppOrder(any());
+        assertTrue(events.isEmpty());
+        assertEquals(0, transactions.suspensions);
+    }
+
+    @Test void restoreDispatchFenceBlocksZeroRetryBeforeReadingOrCompletingAnyOrder() {
+        try (var guard = mockStatic(com.chengyinhub.common.config.RestoreDispatchGuard.class)) {
+            guard.when(com.chengyinhub.common.config.RestoreDispatchGuard::requireDispatchAllowed)
+                    .thenThrow(new com.chengyinhub.common.config.RestoreDispatchGuard.Blocked());
+            assertThrows(com.chengyinhub.common.config.RestoreDispatchGuard.Blocked.class,
+                    () -> checkout.retryPayment(member, registrationId, true));
+            verifyNoInteractions(registrations, orders, gateway);
+            assertTrue(events.isEmpty());
+            assertEquals(0, transactions.suspensions);
+        }
+    }
+
     private void readyAndClaim() {
+        // Explicit positive-cash classification seam; the real locked bridge is covered by the MySQL suite.
+        when(registrations.completeZeroAmountPaymentForRetry(registrationId, member)).thenReturn(null);
         when(gateway.isReady()).thenReturn(true);
         when(registrations.beginPaymentAttempt(registrationId, member)).thenAnswer(call ->
                 new TransactionTemplate(transactions).execute(tx -> {
