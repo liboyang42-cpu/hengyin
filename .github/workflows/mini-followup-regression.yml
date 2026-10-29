@@ -75,7 +75,7 @@ jobs:
           import json, os, time, xml.etree.ElementTree as ET
           from pathlib import Path
           expected = {
-            'com.chengyinhub.business.service.impl.NpcChatServiceTest': 22,
+            'com.chengyinhub.business.service.impl.NpcChatServiceTest': 24,
             'com.chengyinhub.web.controller.api.ApiAiNpcChatDataTest': 2,
             'com.chengyinhub.business.it.NpcChatUserDataMyBatisIT': 3,
             'com.chengyinhub.business.service.impl.A02NpcDeleteBarrierMySqlIT': 8,
@@ -95,11 +95,11 @@ jobs:
               if observed != dict(tests=count, failures=0, errors=0, skipped=0) or len(set(methods)) != count:
                   failures.append(name + ': count/status mismatch')
           Path('mini-followup-observed.json').write_text(json.dumps(dict(
-              source_sha=os.environ['VALIDATED_SOURCE_SHA'], expected_total=39, suites=results,
+              source_sha=os.environ['VALIDATED_SOURCE_SHA'], expected_total=41, suites=results,
               failures=failures, finished_at=int(time.time()), layer='CI_SELECTED_AUTOMATED_ONLY',
               test_deployed=False), indent=2) + '\n')
           assert not failures, failures
-          assert sum(s['observed']['tests'] for s in results) == 39
+          assert sum(s['observed']['tests'] for s in results) == 41
           PY
       - uses: actions/upload-artifact@v4
         if: always()
