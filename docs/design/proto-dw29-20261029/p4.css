@@ -1,0 +1,53 @@
+/* P-4 提案:主题从模板到发布。只用 master token。 */
+/* 模板预览:按钮修复(master 的 .tp > view:not(.tp-glow){position:relative} 把 fixed 的按钮条盖成 relative,
+   left/right 32rpx 变成整宽右移 → 溢出屏幕)。落代码:.tp > .tp-cta { position: fixed; } */
+.pg-tp .p4-fix .tp > .tp-cta{position:fixed}
+/* 翻面后的卡背:不要描边 */
+.pg-tp .p4-fix .bk{border:0}
+/* 必填提示:红 * 与「还有 N 项未填」 */
+.req-left{display:inline-flex;align-items:center;gap:2px;color:var(--cy-color-action-danger-bg);font-size:var(--cy-font-label);cursor:pointer}
+.req-left b{font-weight:700}
+.pd-modecard__action.is-missing{color:var(--cy-color-action-danger-bg)}
+.pd-entry-card__sub.is-missing{color:var(--cy-color-action-danger-bg)}
+.sec-hd{display:flex;align-items:baseline;justify-content:space-between}
+.sec-hd .req-left{margin-right:4px}
+.node-card__value.is-missing{color:var(--cy-color-action-danger-bg)}
+.is-flash{animation:flash 1.2s ease}
+@keyframes flash{0%,100%{background:transparent}20%,60%{background:var(--cy-color-status-danger-soft)}}
+/* 剧情预览页(玩家视角,深色) */
+.sp{min-height:100%;padding-bottom:60px;background:var(--cy-color-bg-page);color:var(--cy-color-text-primary)}
+.sp-top{position:absolute;left:0;right:0;top:47px;height:40px;z-index:60;display:flex;align-items:center;justify-content:space-between;padding:0 102px 0 12px}
+.sp-x{width:32px;height:32px;border-radius:50%;background:rgba(28,28,30,.62);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;color:#fff;cursor:pointer}
+.sp-done{height:32px;padding:0 16px;border-radius:999px;background:var(--cy-color-action-primary-bg);color:var(--cy-color-action-primary-fg);font-size:15px;font-weight:600;display:flex;align-items:center;cursor:pointer}
+.sp-done.is-off{opacity:.4}
+.sp-hero{position:relative;height:460px;overflow:hidden}
+.sp-hero img{width:100%;height:100%;object-fit:cover;display:block}
+.sp-hero:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.35) 0%,rgba(0,0,0,0) 30%,rgba(0,0,0,.2) 60%,var(--cy-color-bg-page) 100%)}
+.sp-hero__copy{position:absolute;left:20px;right:20px;bottom:18px;z-index:1}
+.sp-title{font-size:34px;font-weight:800;letter-spacing:-.01em;line-height:1.1}
+.sp-meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.sp-chip{padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.14);font-size:13px;font-weight:500}
+.sp-sec{padding:20px 20px 0}
+.sp-lede{font-size:16px;line-height:1.6;color:var(--cy-color-text-secondary)}
+.sp-ch{display:flex;align-items:baseline;gap:8px;margin:28px 20px 4px}
+.sp-ch b{font-size:13px;font-weight:700;letter-spacing:.08em;color:var(--cy-color-text-tertiary)}
+.sp-ch text{font-size:22px;font-weight:700}
+.sp-blk{position:relative;margin:12px 20px 0;cursor:pointer;border-radius:14px}
+.sp-blk:hover .sp-edit{opacity:1}
+.sp-edit{position:absolute;right:8px;top:8px;width:28px;height:28px;border-radius:50%;background:rgba(28,28,30,.7);color:#fff;display:flex;align-items:center;justify-content:center;opacity:.85}
+.sp-say{padding:14px 16px;border-radius:14px;background:var(--cy-color-bg-elevated);font-size:16px;line-height:1.6}
+.sp-say .who{display:block;font-size:13px;font-weight:600;color:var(--cy-color-text-tertiary);margin-bottom:4px}
+.sp-node{display:grid;grid-template-columns:28px 1fr;gap:10px}
+.sp-node__no{width:28px;height:28px;border-radius:50%;background:var(--cy-color-text-primary);color:var(--cy-color-bg-page);font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:6px}
+.sp-node__card{border-radius:14px;overflow:hidden;background:var(--cy-color-bg-elevated)}
+.sp-node__img{width:100%;height:170px;object-fit:cover;display:block}
+.sp-node__body{padding:12px 14px}
+.sp-node__name{font-size:17px;font-weight:600}
+.sp-node__addr{margin-top:2px;font-size:13px;color:var(--cy-color-text-tertiary)}
+.sp-node__play{display:inline-flex;align-items:center;gap:4px;margin-top:8px;padding:3px 10px;border-radius:999px;background:var(--cy-color-bg-surface-strong);font-size:12px;font-weight:600}
+.sp-end{margin:28px 20px 0;padding:20px;border-radius:18px;background:var(--cy-color-bg-elevated);display:flex;align-items:center;gap:16px}
+.sp-end canvas{width:84px;height:84px;flex:none}
+.sp-end .t{font-size:13px;color:var(--cy-color-text-tertiary)}.sp-end .n{margin-top:2px;font-size:19px;font-weight:700}
+.sp-ticket{margin:12px 20px 0;padding:14px 16px;border-radius:14px;background:var(--cy-color-bg-elevated);display:flex;justify-content:space-between;align-items:center;font-size:15px}
+.sp-ticket b{font-size:17px}
+.c-btn.p4-ghost .btn{background:transparent;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.55);color:#fff}

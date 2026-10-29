@@ -1,0 +1,42 @@
+/* P-3 提案:收集册合页、3D 行图标、主题勋章。只用 master token。 */
+/* 成就 tab 的唯一入口 */
+.cj-entry{display:flex;align-items:center;gap:12px}
+.cj-entry .pc-wall-l{flex:1}
+.cj-prev{display:flex;align-items:center;gap:2px}
+.cj-prev canvas{width:40px;height:40px}
+.cj-prev .st{width:30px;height:38px;object-fit:cover;border:2.5px solid #F4F1EA;box-shadow:0 2px 6px rgba(0,0,0,.4);transform:rotate(-6deg);margin:0 2px}
+.cj-prev .ob{width:34px;height:34px;border-radius:8px;object-fit:cover;transform:rotate(5deg);box-shadow:0 2px 6px rgba(0,0,0,.4)}
+/* 合页 */
+.cj-page{min-height:100%;padding:87px 0 60px;background:var(--cy-color-bg-page)}
+.cj-seg{padding:0 var(--cy-page-x) 6px}
+.cj-sum{display:flex;align-items:baseline;gap:4px;padding:10px var(--cy-page-x) 4px}
+.pg-bw .bw-list{position:static;padding:0 var(--cy-page-x);background:transparent;overflow:visible}
+.cj-medal{width:116px;height:116px}
+.cj-pane-al .al-stage{position:relative;margin:0 var(--cy-page-x)}
+.cj-pane-al .al-item{position:absolute;box-shadow:0 6px 14px rgba(0,0,0,.45);border:4px solid #F4F1EA;background:#F4F1EA}
+.cj-pile{position:relative;height:480px;margin:8px var(--cy-page-x) 0}
+.cj-pile img{position:absolute;width:118px;height:150px;object-fit:cover;border-radius:14px;box-shadow:0 10px 22px rgba(0,0,0,.5);border:3px solid rgba(255,255,255,.9)}
+.cj-pile .ground{position:absolute;left:0;right:0;bottom:30px;height:1px;background:var(--cy-color-border-subtle)}
+/* 勋章详情半屏 */
+.cj-dt{display:flex;flex-direction:column;align-items:center;padding:6px 20px 24px;text-align:center}
+.cj-dt canvas{width:200px;height:200px;cursor:pointer}
+.cj-dt .nm{margin-top:12px;font-size:22px;font-weight:700;color:var(--cy-color-text-primary)}
+.cj-dt .rar{margin-top:8px;padding:3px 10px;border-radius:999px;background:var(--cy-color-bg-surface-strong);font-size:12px;font-weight:600}
+.cj-dt .ds{margin-top:12px;font-size:15px;line-height:1.5;color:var(--cy-color-text-secondary)}
+.cj-dt .meta{margin-top:16px;width:100%;border-radius:12px;background:var(--cy-color-bg-surface-strong);text-align:left}
+.cj-dt .meta view{display:flex;justify-content:space-between;padding:12px 14px;font-size:15px;border-bottom:.5px solid var(--cy-color-border-subtle)}
+.cj-dt .meta view:last-child{border-bottom:0}
+.cj-dt .meta text:first-child{color:var(--cy-color-text-tertiary)}
+.cj-dt .three{margin-top:14px;font-size:15px;font-weight:600;color:var(--cy-color-text-primary);cursor:pointer}
+/* 3D 行图标:去掉白色圆底,图标 28pt,与文字同一中线 */
+.pc-benefit--3d{gap:12px;padding:12px 0}
+.pc-benefit-3d{width:28px;height:28px;flex:none;object-fit:contain;display:block}
+.pc-benefit--3d .pc-benefit-text{font-size:var(--cy-type-body)}
+.pc-benefit--3d.pc-benefit--lock .pc-benefit-3d{filter:grayscale(1);opacity:.45}
+.pc-benefit-lock{flex:none;color:var(--cy-color-text-tertiary)}
+/* 主题勋章样张 */
+.tm-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 8px;padding:0 var(--cy-page-x)}
+.tm-cell{display:flex;flex-direction:column;align-items:center;padding:8px 0 18px;cursor:pointer}
+.tm-cell canvas{width:132px;height:132px;filter:drop-shadow(0 7px 11px rgba(0,0,0,.5))}
+.tm-cell .n{margin-top:8px;font-size:15px;font-weight:600;color:var(--cy-color-text-primary);text-align:center}
+.tm-cell .t{margin-top:2px;font-size:12px;color:var(--cy-color-text-tertiary);text-align:center;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
