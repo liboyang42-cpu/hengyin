@@ -47,10 +47,8 @@ Component({
   pageLifetimes: { hide() { this.stopDrawAudio(); this.stopBackgroundMusic(); } },
   methods: {
     sessionRequestContext() {
-      let issuedAt = '';
-      try { issuedAt = wx.getStorageSync('authorization_issued_at') || ''; } catch (_) {}
       return { memberId: String(app.getUserID() || ''),
-        loginGeneration: String(app._featureFlagsEpoch || 0) + ':' + String(issuedAt),
+        loginGeneration: String(app._loginEpoch || 0),
         sessionId: String((this.data.state || {}).sessionId || ''),
         nodeId: String((this.data.node || {}).nodeId || ''),
         topicId: String(this.data.topicId || ''), activityId: String(this.data.activityId || ''),

@@ -103,8 +103,8 @@ test('late photo consent '+completion+' after '+change+' cannot affect current c
   h.app.requestSeparateConsent=()=>new Promise((yes,no)=>{resolve=yes;reject=no;});
   p.page._submitKitPhoto({tempFilePath:'/tmp/original.jpg'},{name:'SUBMIT_PHOTO_CHECK'});
   if(change==='aba-rebind'){
-    h.session.setUserID('8');h.session.setAuthorization('fixture-eight');h.app._featureFlagsEpoch=1;
-    h.session.setUserID('7');h.session.setAuthorization('fixture-seven-new');h.app._featureFlagsEpoch=2;
+    h.session.setUserID('8');h.session.setAuthorization('fixture-eight');h.app._loginEpoch=1;
+    h.session.setUserID('7');h.session.setAuthorization('fixture-seven-new');h.app._loginEpoch=2;
     p.page._playLoginContext=p.page._capturePlayLoginContext();
     assert.equal(p.page._isPlayAccountCurrent(),true,'new login may rebind the same Page; old intent must remain obsolete');
   }

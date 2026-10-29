@@ -53,8 +53,8 @@ test('显式重试不能把原 expectedRouteVersion 换成最新值', () => {
 function host(subject, disk, requests, respond, restart) {
   let definition
   let owner = subject
-  const app = { globalData: {}, _featureFlagsEpoch: 1, getUserID: () => owner,
-    getAuthorization: () => 'session-' + owner + '-' + app._featureFlagsEpoch,
+  const app = { globalData: {}, _loginEpoch: 1, getUserID: () => owner,
+    getAuthorization: () => 'session-' + owner + '-' + app._loginEpoch,
     sendRequest: options => { requests.push({ ...options, subject: owner }); if (respond) respond(options) } }
   global.getApp = () => app
   global.Page = value => { definition = value }
@@ -64,7 +64,7 @@ function host(subject, disk, requests, respond, restart) {
   delete require.cache[file]; require(file)
   const page = Object.assign({}, definition, { data: { ...definition.data, activityId: 20, mode: 1 }, _routeState: { sessionId: '99', version: 3 },
     setData(patch) { Object.assign(this.data, patch) }, diegetic() {} })
-  return { page, switchTo(value) { owner = value; app._featureFlagsEpoch++ } }
+  return { page, switchTo(value) { owner = value; app._loginEpoch++ } }
 }
 
 test('提交后断网保留原身份，换页面/重启只查询原命令，实体变新版本不改原期望', async () => {

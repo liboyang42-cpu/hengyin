@@ -342,7 +342,7 @@ test('H-C9: A→B→A 同意记录迟到拒绝不得修改新登录 UI', async (
   const { createPageBoundOperation } = require('../../utils/page-bound-operation.js');
   const actor = makeAppStub();
   actor.globalData.authorization = 'A-original-login';
-  actor._featureFlagsEpoch = 100;
+  actor._loginEpoch = 100;
   actor.getUserID = () => actor.globalData.user_id;
   actor.getAuthorization = () => actor.globalData.authorization;
   let consentModal, consentRecorded;
@@ -362,8 +362,8 @@ test('H-C9: A→B→A 同意记录迟到拒绝不得修改新登录 UI', async (
   consentModal.success({ confirm: true });
   await new Promise(setImmediate);
   assert.equal(typeof consentRecorded, 'function');
-  actor.globalData.user_id = 8; actor.globalData.authorization = 'B-login'; actor._featureFlagsEpoch++;
-  actor.globalData.user_id = 9; actor.globalData.authorization = 'A-new-login'; actor._featureFlagsEpoch++;
+  actor.globalData.user_id = 8; actor.globalData.authorization = 'B-login'; actor._loginEpoch++;
+  actor.globalData.user_id = 9; actor.globalData.authorization = 'A-new-login'; actor._loginEpoch++;
   assert.equal(page._isPlayAccountCurrent(), false);
   assert.equal(lastOperation.isAborted(), false, 'same-member return can occur between owner polling ticks');
   const before = JSON.parse(JSON.stringify(page.data));
