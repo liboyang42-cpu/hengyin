@@ -113,9 +113,8 @@ class B04ScheduleReadbackMySqlIT {
         sql = new SqlSessionTemplate(new SqlSessionFactoryBuilder().build(configuration));
         mapper = sql.getMapper(ClubEventOpsMapper.class);
         transactions = new DataSourceTransactionManager(dataSource());
-        // Force MySQL's READ ONLY mode, not just Connection.setReadOnly's driver hint.
-        // The old service annotations must fail at the real SELECT FOR UPDATE in this fixture.
-        transactions.setEnforceReadOnly(true);
+        // Keep Spring's production-default preparation. Connector/J propagates setReadOnly
+        // to MySQL; a second executeUpdate("SET TRANSACTION READ ONLY") is not needed.
         wire();
     }
 
@@ -269,9 +268,22 @@ class B04ScheduleReadbackMySqlIT {
         readOnly.setReadOnly(true);
         org.springframework.dao.DataAccessException denied = assertThrows(
                 org.springframework.dao.DataAccessException.class,
-                () -> readOnly.execute(status -> access.require(OWNER, CLUB, null, ClubPermission.ACTIVITY_MANAGE)));
+                () -> readOnly.execute(status -> {
+                    assertTrue(org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive());
+                    assertTrue(org.springframework.transaction.support.TransactionSynchronizationManager.isCurrentTransactionReadOnly());
+                    // Use the SAME transaction-bound connection, not the independent readback connection.
+                    assertEquals(Integer.valueOf(1), new JdbcTemplate(dataSource()).queryForObject(
+                            "select @@session.transaction_read_only", Integer.class));
+                    return access.require(OWNER, CLUB, null, ClubPermission.ACTIVITY_MANAGE);
+                }));
+        assertTrue(Arrays.stream(denied.getStackTrace()).anyMatch(frame ->
+                ClubAccessServiceImpl.class.getName().equals(frame.getClassName())
+                        && "resolve".equals(frame.getMethodName())), "The real access service must be entered");
+        assertTrue(Arrays.stream(denied.getStackTrace()).anyMatch(frame ->
+                "lockActiveMemberById".equals(frame.getMethodName())), "The original locking Mapper must be entered");
         java.sql.SQLException mysqlFailure = assertInstanceOf(java.sql.SQLException.class, denied.getMostSpecificCause());
         assertEquals(1792, mysqlFailure.getErrorCode(), "The real principal FOR UPDATE must hit MySQL's read-only guard");
+        assertEquals("25006", mysqlFailure.getSQLState());
         assertEquals(before, persistedRows());
     }
 
