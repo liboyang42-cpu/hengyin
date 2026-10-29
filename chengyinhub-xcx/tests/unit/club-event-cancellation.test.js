@@ -169,6 +169,32 @@ test('网络结果未知时保留同一 requestId，同原因重试不会重复�
   const changed = JSON.parse(sandbox.requests[2].data)
   assert.notEqual(changed.requestId, first.requestId,
     '不同原因不能复用旧幂等键，否则服务端只能冲突')
+  const restarted = page({ clubId: 21, activityId: 71, canManage: true })
+  restarted.submitOccurrenceCancellation('场地临时关闭')
+  assert.equal(JSON.parse(sandbox.requests[3].data).requestId, first.requestId,
+    '同原活动/原因跨页面重建必须仍为原请求，不得重造网络随机键')
+})
+
+test('页面重建从原状态端点读回原结果或原处理中身份，不重新派发取消', () => {
+  const vm = page({ clubId: 21, activityId: 71, canManage: true })
+  vm.loadCancellationState()
+  sandbox.requests[0].success({ code: 200, data: {
+    activityId: 71, occurrenceStatus: 'ACTIVE', activityCancelled: false, publishStatus: 1,
+    cancellationReceiptState: 'PENDING', cancellationRequestId: 'original-request', cancellationRequestReason: '原原因',
+  } })
+  assert.equal(vm._cancellationRequestId, 'original-request')
+  assert.equal(vm._cancellationRequestReason, '原原因')
+  vm.cancelCurrentOccurrence()
+  assert.equal(sandbox.modals.at(-1).content, '原原因')
+  vm.loadCancellationState()
+  sandbox.requests[1].success({ code: 200, data: {
+    activityId: 71, occurrenceStatus: 'CANCELLED', activityCancelled: true, publishStatus: 0,
+    cancellationReceiptState: 'DONE', cancellationRequestId: 'original-request', cancellationRequestReason: '原原因',
+    originalCancellationResult: { refundedOrders: 3, manualOrders: 2, closedPendingOrders: 1 },
+  } })
+  assert.equal(sandbox.requests.length, 2)
+  assert.match(vm.data.cancellationSummary, /退款 3 单；人工跟进 2 单；关闭待付 1 单/)
+  assert.equal(vm.data.cancellationState, 'cancelled')
 })
 
 test('EVENT-only 角色没有 ACTIVITY_MANAGE 时前端不发取消请求', () => {

@@ -95,7 +95,7 @@ def all_required_clean(directory):
         ("ShareSnapshotRunSessionMybatisIntegrationTest", 5),
         ("PlayerRunSessionOrderingMybatisIntegrationTest", 6),
         ("RoamShareSnapshotConcurrencyMySqlIT", 3),
-        ("ClubEventTransferCancellationMySqlIT", 3),
+        ("ClubEventTransferCancellationMySqlIT", 14),
         ("RefundRetryAndRemainderMySqlIT", 10),
         ("SignupNoticeAfterCommitPersistenceMySqlIT", 18),
         ("TopicLikeDesiredStateMySqlIT", 3),
@@ -355,6 +355,8 @@ class FundsItTriggerPathCoverageTest(unittest.TestCase):
     """
 
     _NEW_PATTERNS = (
+        "chengyinhub-admin/sql/migration_20261029_activity_cancellation_receipt.sql",
+        "chengyinhub-admin/sql/migration_20261029_topic_cancellation_receipt.sql",
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/**",
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/*MybatisIT.java",
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/*MySqlIT.java",

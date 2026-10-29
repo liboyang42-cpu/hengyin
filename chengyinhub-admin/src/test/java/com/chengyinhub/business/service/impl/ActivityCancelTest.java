@@ -132,6 +132,7 @@ class ActivityCancelTest {
         ReflectionTestUtils.setField(s, "imService", imService);
         ReflectionTestUtils.setField(s, "refundPayoutService", refundPayoutService);
         ReflectionTestUtils.setField(s, "manualRefundCaseService", manualRefundCaseService);
+        ReflectionTestUtils.setField(s,"cmsTopicMapper",mock(com.chengyinhub.business.mapper.CmsTopicMapper.class));
         com.chengyinhub.business.service.CancellationPhaseTestSupport.wireTeamUnit(s, regMapper);
         return s;
     }
@@ -260,6 +261,29 @@ class ActivityCancelTest {
         notificationSnapshot(java.util.Collections.singletonList(pending(3L)));
         s.cancelActivityByOwner(ACTIVITY_ID, OWNER_ID, "天气原因");
         verify(imService).sendSystem(org.mockito.ArgumentMatchers.eq(503L), any(), anyString(), anyString());
+        assertEquals(Long.valueOf(0L),standalone.getClubId(),"仅回执规范化，不改原报名/活动范围");
+        var transactions=(org.springframework.transaction.PlatformTransactionManager)
+                ReflectionTestUtils.getField(s,"cancellationTransactions");
+        String receipt=new org.springframework.transaction.support.TransactionTemplate(transactions)
+                .execute(status -> activityMapper.selectCancellationReceiptForUpdate(ACTIVITY_ID));
+        var original=com.alibaba.fastjson2.JSON.parseObject(receipt);
+        assertEquals("DONE",original.getString("state"));
+        assertEquals(null,original.getJSONObject("identity").get("club"));
+    }
+
+    @Test
+    void negativeClubIdentityIsNotNormalizedToStandalone() {
+        CmsActivity unknown=liveActivity();
+        unknown.setClubId(-1L);
+        TeamGroupServiceImpl s=service(unknown,java.util.Collections.emptyList());
+        ServiceException denied=assertThrows(ServiceException.class,
+                () -> s.cancelActivityByOwner(ACTIVITY_ID,OWNER_ID,"天气原因"));
+        assertEquals("原取消范围不完整",denied.getMessage());
+        verify(regMapper,never()).selectCancellationRowsForUpdate(anyLong(),anyLong());
+        verify(activityMapper,never()).updateCmsActivity(any());
+        verify(imService,never()).sendSystem(anyLong(),any(),anyString(),anyString());
+        verify(refundService,never()).saveRefund(any(RefundApplication.class));
+        verify(refundPayoutService,never()).payoutAfterReview(anyLong());
     }
 
     @Test
@@ -339,6 +363,7 @@ class ActivityCancelTest {
             CmsActivity activity = liveActivity();
             if (jdbc.queryForObject("select cancelled from cancellation where id=?", Integer.class, ACTIVITY_ID) == 1) {
                 activity.setCancelTime(new Date());
+                activity.setStatus(0L);activity.setPublishStatus(0L);
             }
             return activity;
         });
@@ -366,11 +391,13 @@ class ActivityCancelTest {
             assertEquals(0, jdbc.queryForObject("select cancelled from cancellation", Integer.class));
             assertEquals(0, jdbc.queryForObject("select count(*) from cancellation_notice", Integer.class));
             failSecond.set(false);
-            transactional.cancelActivityByOwner(ACTIVITY_ID, OWNER_ID, "天气原因");
+            ActivityCancelResult original=transactional.cancelActivityByOwner(ACTIVITY_ID, OWNER_ID, "天气原因");
             assertEquals(1, jdbc.queryForObject("select cancelled from cancellation", Integer.class));
             assertEquals(2, jdbc.queryForObject("select count(*) from cancellation_notice", Integer.class));
-            assertThrows(ServiceException.class,
-                    () -> transactional.cancelActivityByOwner(ACTIVITY_ID, OWNER_ID, "天气原因"));
+            ActivityCancelResult replay=transactional.cancelActivityByOwner(ACTIVITY_ID, OWNER_ID, "天气原因");
+            assertEquals(original.getRefundedOrders(),replay.getRefundedOrders());
+            assertEquals(original.getManualOrders(),replay.getManualOrders());
+            assertEquals(original.getClosedPendingOrders(),replay.getClosedPendingOrders());
             assertEquals(2, jdbc.queryForObject("select count(*) from cancellation_notice", Integer.class));
             assertEquals(org.springframework.transaction.annotation.Propagation.REQUIRED,
                     ImServiceImpl.class.getMethod("sendSystem", Long.class, Integer.class, String.class, String.class)
@@ -684,7 +711,8 @@ class ActivityCancelTest {
                 order.add(child);
             }
             if (rows == 3) first.setPointUsed(200L);
-            TeamGroupServiceImpl s = service(liveActivity(), order);
+            CmsActivity activity=liveActivity();
+            TeamGroupServiceImpl s = service(activity, order);
             when(regMapper.selectByParentOrderNoForUpdate(PARENT, ACTIVITY_ID)).thenReturn(order);
             when(regMapper.selectByParentOrderNo(PARENT)).thenReturn(order);
             when(regMapper.claimRegistrationRefunded(anyLong(), anyString(), any(Date.class)))
@@ -704,8 +732,23 @@ class ActivityCancelTest {
 
             when(regMapper.claimRegistrationRefunded(anyLong(), anyString(), any(Date.class)))
                     .thenReturn(0);
-            s.cancelActivityByOwner(ACTIVITY_ID, OWNER_ID, "重试");
+            // The unit mapper must read the activity state that the first successful update wrote.
+            ArgumentCaptor<CmsActivity> committed=ArgumentCaptor.forClass(CmsActivity.class);
+            verify(activityMapper).updateCmsActivity(committed.capture());
+            activity.setCancelTime(committed.getValue().getCancelTime());
+            activity.setStatus(committed.getValue().getStatus());
+            activity.setPublishStatus(committed.getValue().getPublishStatus());
+            ServiceException changedReason=assertThrows(ServiceException.class,
+                    () -> s.cancelActivityByOwner(ACTIVITY_ID,OWNER_ID,"重试"));
+            assertEquals("原请求号已用于不同取消语义或范围已变化",changedReason.getMessage());
+            ActivityCancelResult replay=s.cancelActivityByOwner(ACTIVITY_ID,OWNER_ID,"无法履约");
+            assertEquals(result.getRefundedOrders(),replay.getRefundedOrders());
+            assertEquals(result.getManualOrders(),replay.getManualOrders());
+            assertEquals(result.getClosedPendingOrders(),replay.getClosedPendingOrders());
             verify(ticketMapper, times(rows)).restoreInventory(TICKET_ID, 1L);
+            verify(activityMapper).updateCmsActivity(any(CmsActivity.class));
+            verify(refundService, never()).saveRefund(any(RefundApplication.class));
+            verify(refundPayoutService, never()).payoutAfterReview(anyLong());
             if (rows == 3) verify(members).addPoints(first.getMemberId(), 200);
         }
     }

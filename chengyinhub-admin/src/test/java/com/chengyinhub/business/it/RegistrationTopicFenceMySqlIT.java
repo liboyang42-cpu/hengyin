@@ -88,7 +88,9 @@ class RegistrationTopicFenceMySqlIT {
         db.execute("ALTER TABLE refund_application ADD COLUMN platform_takeover_at DATETIME");
         P0AcceptanceSchema.migrations(source, "migration_20260919_cms_registration_selfplay_ticket_columns_nullable.sql", "migration_20261023_wx_pay_order_intent.sql",
                 "migration_wx_payment_callback_inbox_outbox_20260725.sql",
-                "migration_20261024_wx_verified_payment_fact.sql");
+                "migration_20261024_wx_verified_payment_fact.sql",
+                "migration_20261029_activity_cancellation_receipt.sql",
+                "migration_20261029_topic_cancellation_receipt.sql");
         SqlSessionTemplate sql = P0AcceptanceSchema.sql(source, "CmsTopicMapper", "CmsActivityMapper", "CmsRegistrationMapper",
                 "RefundApplicationMapper", "WxPaymentCallbackInboxMapper", "WechatVerifiedPaymentFactMapper", "CmsRegistrationPaymentFactMapper");
         registrations = sql.getMapper(CmsRegistrationMapper.class); activities = sql.getMapper(CmsActivityMapper.class);

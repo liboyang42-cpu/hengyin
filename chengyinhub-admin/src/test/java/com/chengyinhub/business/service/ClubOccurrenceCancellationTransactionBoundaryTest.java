@@ -146,6 +146,7 @@ class ClubOccurrenceCancellationTransactionBoundaryTest {
         org.springframework.test.util.ReflectionTestUtils.setField(service,"cancellationActivityMapper",activities);
         org.springframework.test.util.ReflectionTestUtils.setField(service,"cancellationTopicMapper",
                 mock(com.chengyinhub.business.mapper.CmsTopicMapper.class));
+        CancellationPhaseTestSupport.wireReceiptMocks(service);
         return service;
     }
 

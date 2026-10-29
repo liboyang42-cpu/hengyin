@@ -82,6 +82,8 @@ class ClubOwnerCancelOwnershipGateTest {
         ReflectionTestUtils.setField(service, "cmsActivityMapper", activityMapper);
         ReflectionTestUtils.setField(service, "cmsRegistrationMapper", registrationMapper);
         ReflectionTestUtils.setField(service, "clubMapper", clubMapper);
+        ReflectionTestUtils.setField(service,"cmsTopicMapper",mock(com.chengyinhub.business.mapper.CmsTopicMapper.class));
+        CancellationPhaseTestSupport.wireReceiptMocks(service);
 
         when(activityMapper.selectCmsActivityByIdForUpdate(ACTIVITY_ID)).thenReturn(activity);
         when(activityMapper.selectCmsActivityById(ACTIVITY_ID)).thenReturn(activity);
@@ -202,6 +204,7 @@ class ClubOwnerCancelOwnershipGateTest {
     }
 
     private ClubTopicSettingServiceImpl topicSetting(TeamGroupServiceImpl teamGroup, CmsActivity session) {
+        session.setTopicId(TOPIC_ID);
         IClubAccessService accessService = mock(IClubAccessService.class);
         ICmsTopicService topicService = mock(ICmsTopicService.class);
         ICmsActivityService activityService = mock(ICmsActivityService.class);
@@ -211,15 +214,41 @@ class ClubOwnerCancelOwnershipGateTest {
         topic.setId(TOPIC_ID);
         topic.setClubId(CLUB_ID);
         topic.setMemberId(PREVIOUS_OWNER); // 主题是转让前的旧主理人写的
+        topic.setUserStatus(1);
         when(topicService.selectCmsTopicById(TOPIC_ID)).thenReturn(topic);
         when(accessService.resolve(CURRENT_OWNER, CLUB_ID, null)).thenReturn(new ClubAccessContext(
                 CURRENT_OWNER, CLUB_ID, CURRENT_OWNER, null,
                 new LinkedHashSet<>(Collections.singletonList(ClubRoleCode.CLUB_OWNER))));
         when(activityService.selectCmsActivityList(any(CmsActivity.class)))
                 .thenReturn(Collections.singletonList(session));
-        // 没有 occurrence 行 ⇒ event-ops 那条路走不通,逼进程走兜底取消
-        when(eventOpsService.cancelOccurrence(anyLong(), any(), any(ClubEventCancellationRequest.class)))
-                .thenThrow(new ServiceException("场次不存在或不属于当前俱乐部"));
+        // Current event-ops supports non-series club sessions. Exercise that real branch instead of
+        // turning any ServiceException/UNKNOWN into a second cancellation identity.
+        when(accessService.require(CURRENT_OWNER,CLUB_ID,ACTIVITY_ID,
+                com.chengyinhub.business.access.club.ClubPermission.ACTIVITY_MANAGE))
+                .thenReturn(new ClubAccessContext(CURRENT_OWNER,CLUB_ID,CURRENT_OWNER,ACTIVITY_ID,
+                        new LinkedHashSet<>(Collections.singletonList(ClubRoleCode.CLUB_OWNER))));
+        var ops=mock(com.chengyinhub.business.mapper.ClubEventOpsMapper.class);
+        when(ops.selectActivityTopicForUpdate(ACTIVITY_ID,CLUB_ID)).thenReturn(TOPIC_ID);
+        when(ops.selectClubOwnerForUpdate(CLUB_ID)).thenReturn(CURRENT_OWNER);
+        com.chengyinhub.business.domain.vo.ClubEventCancellationStateVO state=new com.chengyinhub.business.domain.vo.ClubEventCancellationStateVO();
+        state.setClubId(CLUB_ID);state.setActivityId(ACTIVITY_ID);state.setOccurrenceStatus("ACTIVE");
+        state.setActivityCancelled(false);state.setPublishStatus(1L);
+        when(ops.selectOccurrenceCancellationState(ACTIVITY_ID,CLUB_ID)).thenReturn(state);
+        java.util.concurrent.atomic.AtomicLong ids=new java.util.concurrent.atomic.AtomicLong(4000L);
+        when(ops.insertCampaign(any(com.chengyinhub.business.domain.ClubEventCampaign.class))).thenAnswer(call -> {
+            call.getArgument(0,com.chengyinhub.business.domain.ClubEventCampaign.class).setId(ids.incrementAndGet());return 1;
+        });
+        var phaseTopics=mock(com.chengyinhub.business.mapper.CmsTopicMapper.class);
+        when(phaseTopics.selectCmsTopicByIdForUpdate(TOPIC_ID)).thenReturn(topic);
+        var events=new com.chengyinhub.business.service.impl.ClubEventOpsServiceImpl(accessService,
+                new com.chengyinhub.business.service.impl.ClubEventScheduleMaterializer(),mock(IClubSessionService.class),ops,
+                mock(com.chengyinhub.business.mapper.ClubMemberMapper.class),mock(com.chengyinhub.business.mapper.ClubLeadMapper.class),
+                mock(IClubRoleAssignmentService.class),teamGroup);
+        ReflectionTestUtils.setField(events,"cancellationActivityMapper",activityMapper);
+        ReflectionTestUtils.setField(events,"cancellationTopicMapper",phaseTopics);
+        CancellationPhaseTestSupport.wireTransactions(events,CancellationPhaseTestSupport.memoryTransactions());
+        CancellationPhaseTestSupport.wireReceiptMocks(activityMapper,phaseTopics);
+        eventOpsService=events;
 
         ClubTopicSettingServiceImpl topicSetting = new ClubTopicSettingServiceImpl();
         ReflectionTestUtils.setField(topicSetting, "clubAccessService", accessService);
@@ -227,6 +256,11 @@ class ClubOwnerCancelOwnershipGateTest {
         ReflectionTestUtils.setField(topicSetting, "cmsActivityService", activityService);
         ReflectionTestUtils.setField(topicSetting, "clubEventOpsService", eventOpsService);
         ReflectionTestUtils.setField(topicSetting, "teamGroupService", teamGroup);
+        ReflectionTestUtils.setField(topicSetting,"cmsTopicMapper",phaseTopics);
+        ReflectionTestUtils.setField(topicSetting,"cancellationActivityMapper",activityMapper);
+        ReflectionTestUtils.setField(topicSetting,"cancellationTransactions",CancellationPhaseTestSupport.memoryTransactions());
+        when(activityService.selectCmsActivityById(ACTIVITY_ID)).thenReturn(session);
+        when(topicService.casUserStatus(TOPIC_ID,1,0)).thenAnswer(call -> {topic.setUserStatus(0);return 1;});
         return topicSetting;
     }
 
@@ -280,6 +314,7 @@ class ClubOwnerCancelOwnershipGateTest {
         ReflectionTestUtils.setField(teamGroup, "notifyService", mock(INotifyService.class));
         ReflectionTestUtils.setField(teamGroup, "manualRefundCaseService",
                 mock(IActivityCancelManualRefundCaseService.class));
+        CancellationPhaseTestSupport.wireReceiptMocks(teamGroup);
         return teamGroup;
     }
 

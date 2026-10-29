@@ -1,6 +1,9 @@
 package com.chengyinhub.business.service.impl;
 
 import com.chengyinhub.common.config.RestoreDispatchGuard;
+import com.chengyinhub.business.service.support.CancellationReceiptStore;
+import com.chengyinhub.business.service.support.CancellationReceiptStore.Request;
+import com.chengyinhub.business.service.support.CancellationReceiptStore.Resource;
 
 import com.chengyinhub.business.domain.dto.RegistrationCancellationPayments;
 import com.chengyinhub.business.domain.dto.RegistrationCancellationPayments.Identity;
@@ -386,7 +389,7 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
     public com.chengyinhub.business.domain.dto.ActivityCancelResult cancelActivityByOwner(
             Long activityId, Long ownerMemberId, String reason) {
         RestoreDispatchGuard.requireDispatchAllowed();
-        return cancelActivityOutsideTransaction(activityId, ownerMemberId, ownerMemberId, reason, false);
+        return cancelActivityOutsideTransaction(activityId, ownerMemberId, ownerMemberId, reason, false, "ACTIVITY_OWNER");
     }
 
     @Override
@@ -397,7 +400,7 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
         if (actorMemberId == null || actorMemberId <= 0) {
             throw new ServiceException("活动取消操作人无效", HttpStatus.FORBIDDEN);
         }
-        return cancelActivityOutsideTransaction(activityId, ownerMemberId, actorMemberId, reason, false);
+        return cancelActivityOutsideTransaction(activityId, ownerMemberId, actorMemberId, reason, false, "ACTIVITY_CLUB");
     }
 
     @Override
@@ -408,7 +411,7 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
         if (actorMemberId == null || actorMemberId <= 0) {
             throw new ServiceException("活动取消操作人无效", HttpStatus.FORBIDDEN);
         }
-        return cancelActivityOutsideTransaction(activityId, merchantOwnerMemberId, actorMemberId, reason, true);
+        return cancelActivityOutsideTransaction(activityId, merchantOwnerMemberId, actorMemberId, reason, true, "ACTIVITY_MERCHANT");
     }
 
     /**
@@ -436,37 +439,84 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
     @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NEVER, rollbackFor = Exception.class)
     public com.chengyinhub.business.domain.dto.ActivityCancelResult cancelTopicByHost(
             Long topicId, Long hostMemberId, Long actorMemberId, String reason) {
+        return cancelTopicByHost(topicId,hostMemberId,actorMemberId,reason,null);
+    }
+
+    @Override
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NEVER, rollbackFor = Exception.class)
+    public com.chengyinhub.business.domain.dto.ActivityCancelResult cancelTopicByHost(
+            Long topicId,Long hostMemberId,Long actorMemberId,String reason,Long cancellationEpoch) {
         RestoreDispatchGuard.requireDispatchAllowed();
         requireNoCancellationTransaction();
         if (actorMemberId == null || actorMemberId <= 0) {
             throw new ServiceException("主题取消操作人无效", HttpStatus.FORBIDDEN);
         }
-        RegistrationCancellationPayments captured = cancellationTransaction(() -> {
-            requireHostedTopicForCancel(topicId, hostMemberId, true);
+        PreparedCancellation prepared = cancellationTransaction(() -> {
+            CmsTopic topic=requireHostedTopicForCancel(topicId, hostMemberId, true);
+            Request request=topicCancellationRequest(topic,hostMemberId,actorMemberId,reason,cancellationEpoch);
+            long currentEpoch=cancellationReceipts().currentTopicEpoch(topicId);
+            var receipt=request.epoch()<currentEpoch?cancellationReceipts().current(request)
+                    :cancellationReceipts().beginTopicEnd(request,topicSessionsToCancel(topicId).stream()
+                            .map(com.chengyinhub.business.domain.CmsActivity::getId).sorted().toList(),
+                            Integer.valueOf(1).equals(topic.getUserStatus()));
+            if(request.epoch()<currentEpoch && !receipt.done()) throw retryLater();
+            if(request.epoch()==currentEpoch) requireOriginalTopicPlan(receipt,topicId);
+            if (receipt.done()) {
+                if (request.epoch()==currentEpoch && Integer.valueOf(1).equals(topic.getUserStatus())) throw retryLater();
+                return new PreparedCancellation(request,null,receipt.activity());
+            }
             List<Scope> scopes = new ArrayList<>(captureCancellationPayments(1L, topicId).scopes());
-            for (com.chengyinhub.business.domain.CmsActivity shell : topicSessionsToCancel(topicId)) {
+            for (com.chengyinhub.business.domain.CmsActivity shell : plannedTopicSessions(receipt,topicId)) {
                 if (shell.getClubId() != null) {
                     scopes.addAll(clubEventOpsService.captureAuthorizedTopicCancellationPayments(
                             actorMemberId, topicId, shell.getClubId(), shell.getId(), reason).scopes());
                 } else {
-                    requireCancellableActivity(shell.getId(), shell.getMemberId());
+                    var current=lockAuthorizedCancellationActivity(shell.getId(),shell.getMemberId(),true);
+                    Request child=topicActivityCancellationRequest(current,actorMemberId,reason);
+                    var original=cancellationReceipts().begin(child,current.getCancelTime()!=null);
+                    if(original.done()) requireOriginalCancelledLifecycle(current);
                     scopes.addAll(captureCancellationPayments(2L, shell.getId()).scopes());
                 }
             }
-            return new RegistrationCancellationPayments(scopes);
+            return new PreparedCancellation(request,new RegistrationCancellationPayments(scopes),null);
         });
-        RegistrationCancellationPayments observed = observeCancellationPayments(captured);
+        if (prepared.replay()!=null) return prepared.replay();
+        final RegistrationCancellationPayments observed;
+        try {observed=observeCancellationPayments(prepared.payments());}
+        catch(RuntimeException uncertain) {
+            var replay=cancellationTransaction(() -> {
+                CmsTopic current=requireHostedTopicForCancel(topicId,hostMemberId,true);
+                var request=topicCancellationRequest(current,hostMemberId,actorMemberId,reason,prepared.request().epoch());
+                var receipt=cancellationReceipts().current(request);
+                long currentEpoch=cancellationReceipts().currentTopicEpoch(topicId);
+                if(request.epoch()==currentEpoch) requireOriginalTopicPlan(receipt,topicId);
+                if(!receipt.done()) return null;
+                if(request.epoch()==currentEpoch && Integer.valueOf(1).equals(current.getUserStatus())) throw retryLater();
+                return receipt.activity();
+            });
+            if(replay!=null) return replay;
+            throw uncertain;
+        }
         return cancellationAfterObservation(observed,
-                () -> cancelTopicWithObservedPayments(topicId, hostMemberId, actorMemberId, reason, observed));
+                () -> cancelTopicWithObservedPayments(topicId, hostMemberId, actorMemberId, reason, observed,prepared.request().epoch()));
     }
 
     private com.chengyinhub.business.domain.dto.ActivityCancelResult cancelTopicWithObservedPayments(
-            Long topicId, Long hostMemberId, Long actorMemberId, String reason, RegistrationCancellationPayments observed) {
+            Long topicId, Long hostMemberId, Long actorMemberId, String reason, RegistrationCancellationPayments observed,Long cancellationEpoch) {
         if (actorMemberId == null || actorMemberId <= 0) {
             throw new ServiceException("主题取消操作人无效", HttpStatus.FORBIDDEN);
         }
         CmsTopic topic = requireHostedTopicForCancel(topicId, hostMemberId, true);
-        List<com.chengyinhub.business.domain.CmsActivity> sessions = topicSessionsToCancel(topicId);
+        Request request=topicCancellationRequest(topic,hostMemberId,actorMemberId,reason,cancellationEpoch);
+        var receipt=cancellationReceipts().current(request);
+        long currentEpoch=cancellationReceipts().currentTopicEpoch(topicId);
+        if(request.epoch()==currentEpoch) requireOriginalTopicPlan(receipt,topicId);
+        if (receipt.done()) {
+            if (request.epoch()==currentEpoch && Integer.valueOf(1).equals(topic.getUserStatus())) throw retryLater();
+            return receipt.activity();
+        }
+        if(request.epoch()!=currentEpoch) throw retryLater();
+        List<com.chengyinhub.business.domain.CmsActivity> sessions = plannedTopicSessions(receipt,topicId);
         observed.requireScope(1L, topicId);
         if (observed.scopes().size() != sessions.size() + 1) throw retryLater();
         for (com.chengyinhub.business.domain.CmsActivity session : sessions) observed.requireScope(2L, session.getId());
@@ -491,7 +541,7 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
             com.chengyinhub.business.domain.dto.ActivityCancelResult r = shell.getClubId() != null
                     ? clubEventOpsService.cancelAuthorizedTopicWithObservedPayments(
                             actorMemberId, topicId, shell.getClubId(), shell.getId(), reason, observed)
-                    : cancelActivity(shell.getId(), shell.getMemberId(), actorMemberId, reason, true, observed);
+                    : cancelTopicActivity(shell,actorMemberId,reason,observed);
             if (r == null) {
                 throw new ServiceException("场次取消回执为空，无法确认是否退成", HttpStatus.CONFLICT);
             }
@@ -501,7 +551,8 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
         }
         logger.info("主办方取消主题完成 topicId={} hostMemberId={} actorMemberId={} 自动退款={}单 "
                 + "关闭待支付={}单 待人工处置={}单", topicId, hostMemberId, actorMemberId, refunded, closed, manual);
-        return new com.chengyinhub.business.domain.dto.ActivityCancelResult(refunded, manual, closed);
+        return cancellationReceipts().complete(request,
+                new com.chengyinhub.business.domain.dto.ActivityCancelResult(refunded, manual, closed));
     }
 
     @Override
@@ -598,6 +649,11 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
     }
 
     private com.chengyinhub.business.domain.CmsActivity requireCancellableActivity(Long activityId, Long ownerMemberId) {
+        return lockAuthorizedCancellationActivity(activityId,ownerMemberId,false);
+    }
+
+    private com.chengyinhub.business.domain.CmsActivity lockAuthorizedCancellationActivity(
+            Long activityId,Long ownerMemberId,boolean replayAllowed) {
         com.chengyinhub.business.domain.CmsActivity act = RegistrationTopicFence.lockActivity(
                 cmsActivityMapper.selectCmsActivityById(activityId), cmsActivityMapper, cmsTopicMapper);
         // 这三条抛 ServiceException 而非裸 RuntimeException:文案是写给主办方看的,入口据此原样回显;
@@ -614,7 +670,7 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
             throw new ServiceException("无权操作该活动");
         }
         // 幂等闸:已取消不得重复取消,否则会对已退款的报名再走一遍退款链路
-        if (act.getCancelTime() != null) {
+        if (!replayAllowed && act.getCancelTime() != null) {
             throw new ServiceException("活动已取消,请勿重复操作");
         }
 
@@ -904,18 +960,119 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
     }
 
     private com.chengyinhub.business.domain.dto.ActivityCancelResult cancelActivityOutsideTransaction(
-            Long activityId, Long ownerMemberId, Long actorMemberId, String reason, boolean merchantHost) {
+            Long activityId, Long ownerMemberId, Long actorMemberId, String reason, boolean merchantHost, String operation) {
         requireNoCancellationTransaction();
-        RegistrationCancellationPayments captured = cancellationTransaction(() -> {
-            com.chengyinhub.business.domain.CmsActivity act = requireCancellableActivity(activityId, ownerMemberId);
+        PreparedCancellation prepared = cancellationTransaction(() -> {
+            com.chengyinhub.business.domain.CmsActivity act = lockAuthorizedCancellationActivity(activityId, ownerMemberId,true);
             if (merchantHost) requireMerchantHostsSession(act, ownerMemberId);
-            return captureCancellationPayments(2L, activityId);
+            Request request=activityCancellationRequest(act,ownerMemberId,actorMemberId,operation,reason);
+            var original=cancellationReceipts().begin(request,act.getCancelTime()!=null);
+            if (original.done()) {
+                requireOriginalCancelledLifecycle(act);
+                return new PreparedCancellation(request,null,original.activity());
+            }
+            return new PreparedCancellation(request,captureCancellationPayments(2L,activityId),null);
         });
-        RegistrationCancellationPayments observed = observeCancellationPayments(captured);
+        if (prepared.replay()!=null) return prepared.replay();
+        final RegistrationCancellationPayments observed;
+        try {observed=observeCancellationPayments(prepared.payments());}
+        catch(RuntimeException uncertain) {
+            var replay=cancellationTransaction(() -> {
+                var current=lockAuthorizedCancellationActivity(activityId,ownerMemberId,true);
+                if(merchantHost) requireMerchantHostsSession(current,ownerMemberId);
+                var receipt=cancellationReceipts().current(activityCancellationRequest(current,ownerMemberId,actorMemberId,operation,reason));
+                if(!receipt.done()) return null;
+                requireOriginalCancelledLifecycle(current);return receipt.activity();
+            });
+            if(replay!=null) return replay;
+            throw uncertain;
+        }
         return cancellationAfterObservation(observed, () -> {
-            if (merchantHost) requireMerchantHostsSession(cmsActivityMapper.selectCmsActivityById(activityId), ownerMemberId);
-            return cancelActivity(activityId, ownerMemberId, actorMemberId, reason, false, observed);
+            var current=lockAuthorizedCancellationActivity(activityId,ownerMemberId,true);
+            if (merchantHost) requireMerchantHostsSession(current,ownerMemberId);
+            Request request=activityCancellationRequest(current,ownerMemberId,actorMemberId,operation,reason);
+            var original=cancellationReceipts().current(request);
+            if (original.done()) {
+                requireOriginalCancelledLifecycle(current);
+                return original.activity();
+            }
+            return cancellationReceipts().complete(request,
+                    cancelActivity(activityId,ownerMemberId,actorMemberId,reason,false,observed));
         });
+    }
+
+    private record PreparedCancellation(Request request,RegistrationCancellationPayments payments,
+                                         com.chengyinhub.business.domain.dto.ActivityCancelResult replay) { }
+
+    private void requireOriginalCancelledLifecycle(com.chengyinhub.business.domain.CmsActivity activity) {
+        if(activity.getCancelTime()==null || !Long.valueOf(0L).equals(activity.getStatus())
+                || !Long.valueOf(0L).equals(activity.getPublishStatus()))
+            throw new ServiceException("原取消生命周期已变化，请人工核对原结果",HttpStatus.CONFLICT);
+    }
+
+    private CancellationReceiptStore cancellationReceipts() {
+        return new CancellationReceiptStore(cmsActivityMapper,cmsTopicMapper);
+    }
+
+    private Request activityCancellationRequest(com.chengyinhub.business.domain.CmsActivity activity,Long owner,
+            Long actor,String operation,String reason) {
+        // Legacy HTTP bodies have no requestId: original aggregate ID is the permanent action key,
+        // never a fresh UUID. Mutable counters/versions are deliberately absent from the identity.
+        // The existing owner and standalone-notice paths explicitly treat legacy club_id=0 as
+        // standalone. Normalize only that known sentinel in the receipt; keep the raw order /
+        // payment-observation scope unchanged. Negative/other invalid clubs still fail validation.
+        Long receiptClubId=Long.valueOf(0L).equals(activity.getClubId())?null:activity.getClubId();
+        return new Request(Resource.ACTIVITY,activity.getId(),actor,owner,activity.getMemberId(),
+                activity.getTopicId(),receiptClubId,operation,"activity-cancel-"+activity.getId(),reason);
+    }
+
+    private Request topicCancellationRequest(CmsTopic topic,Long owner,Long actor,String reason,Long suppliedEpoch) {
+        return new Request(Resource.TOPIC,topic.getId(),actor,owner,topic.getMemberId(),topic.getId(),
+                null,"TOPIC_HOST","topic-cancel-"+topic.getId(),reason,cancellationReceipts().requestEpoch(topic.getId(),suppliedEpoch));
+    }
+
+    @Override
+    public Long topicCancellationEpoch(Long topicId,Long hostMemberId) {
+        requireHostedTopicForCancel(topicId,hostMemberId,false);
+        Long epoch=cmsTopicMapper.selectCancellationEpoch(topicId);
+        if(epoch==null || epoch<0) throw new ServiceException("原主题取消轮次无法确认",HttpStatus.CONFLICT);
+        return epoch;
+    }
+
+    private Request topicActivityCancellationRequest(com.chengyinhub.business.domain.CmsActivity activity,Long actor,String reason) {
+        return new Request(Resource.ACTIVITY,activity.getId(),actor,activity.getMemberId(),activity.getMemberId(),
+                activity.getTopicId(),activity.getClubId(),"TOPIC_ACTIVITY",
+                "topic-cancel-"+activity.getTopicId()+"-activity-"+activity.getId(),reason);
+    }
+
+    private List<com.chengyinhub.business.domain.CmsActivity> plannedTopicSessions(
+            CancellationReceiptStore.Snapshot receipt,Long topicId) {
+        List<com.chengyinhub.business.domain.CmsActivity> sessions=new ArrayList<>();
+        for(Long id:receipt.activities()) {
+            var row=cmsActivityMapper.selectCmsActivityByIdForUpdate(id);
+            if(row==null || !id.equals(row.getId()) || !topicId.equals(row.getTopicId())
+                    || Integer.valueOf(2).equals(row.getDelFlag())) throw retryLater();
+            // An elapsed, uncompleted original session remains manual/pending, never a fresh refund policy.
+            if(row.getCancelTime()==null && row.getEndDate()!=null && !row.getEndDate().after(new Date())) throw retryLater();
+            sessions.add(row);
+        }
+        return sessions;
+    }
+
+    private void requireOriginalTopicPlan(CancellationReceiptStore.Snapshot receipt,Long topicId) {
+        for(var current:topicSessionsToCancel(topicId)) {
+            if(!receipt.activities().contains(current.getId()))
+                throw new ServiceException("原主题取消范围已变化，请人工核对原批次",HttpStatus.CONFLICT);
+        }
+    }
+
+    private com.chengyinhub.business.domain.dto.ActivityCancelResult cancelTopicActivity(
+            com.chengyinhub.business.domain.CmsActivity shell,Long actor,String reason,RegistrationCancellationPayments observed) {
+        var current=lockAuthorizedCancellationActivity(shell.getId(),shell.getMemberId(),true);
+        Request child=topicActivityCancellationRequest(current,actor,reason);
+        var receipt=cancellationReceipts().current(child);
+        if(receipt.done()) {requireOriginalCancelledLifecycle(current);return receipt.activity();}
+        return cancellationReceipts().complete(child,cancelActivity(current.getId(),current.getMemberId(),actor,reason,true,observed));
     }
 
     @Override

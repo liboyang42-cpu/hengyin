@@ -67,6 +67,9 @@ public interface ITeamGroupService {
      * 俱乐部名下的场次走俱乐部收尾。俱乐部主题本身不走这里。
      */
     ActivityCancelResult cancelTopicByHost(Long topicId, Long hostMemberId, Long actorMemberId, String reason);
+    ActivityCancelResult cancelTopicByHost(Long topicId,Long hostMemberId,Long actorMemberId,String reason,Long cancellationEpoch);
+    /** Read-only original cancellation cursor, with the same current host authorization as preview. */
+    Long topicCancellationEpoch(Long topicId,Long hostMemberId);
 
     /** 取消前确认框用:该场次「已付款且未核销」的玩家人数(按人去重)。非归属人 403。 */
     int countPaidPlayersForActivityCancel(Long activityId, Long hostMemberId);

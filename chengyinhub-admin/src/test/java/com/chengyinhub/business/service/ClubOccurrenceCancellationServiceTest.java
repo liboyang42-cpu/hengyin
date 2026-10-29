@@ -90,6 +90,7 @@ class ClubOccurrenceCancellationServiceTest {
         when(phaseTopics.selectCmsTopicByIdForUpdate(31L)).thenReturn(phaseTopic);
         ReflectionTestUtils.setField(service,"cancellationActivityMapper",phaseActivities);
         ReflectionTestUtils.setField(service,"cancellationTopicMapper",phaseTopics);
+        CancellationPhaseTestSupport.wireReceiptMocks(service);
         when(accessService.require(ACTOR, CLUB, ACTIVITY, ClubPermission.ACTIVITY_MANAGE))
                 .thenReturn(access(ClubRoleCode.CLUB_CO_OWNER));
         when(mapper.selectSeriesByActivityAnyStatusForUpdate(ACTIVITY)).thenReturn(series());
@@ -296,8 +297,7 @@ class ClubOccurrenceCancellationServiceTest {
     @ParameterizedTest
     @ValueSource(booleans = {false, true})
     void sameRequestReplaysDurableReceiptsWithoutRefundingOrCancellingTwice(boolean legacy) {
-        when(mapper.selectOccurrenceByActivityAndClubForUpdate(ACTIVITY, CLUB))
-                .thenReturn(occurrence(ClubEventOccurrence.STATUS_CANCELLED));
+        ClubEventCancellationResult original=commitOriginalCancellation("cancel-replay",REASON);
         when(mapper.selectCampaignByRequest(eq(CLUB), eq(ACTOR), anyString())).thenAnswer(call -> {
             String requestId = call.getArgument(2, String.class);
             return requestId.startsWith("cancel-r-")
@@ -312,8 +312,10 @@ class ClubOccurrenceCancellationServiceTest {
         ClubEventCancellationResult replay = service.cancelOccurrence(
                 ACTOR, "co-owner", request("cancel-replay", REASON));
 
-        assertEquals("ALREADY_ACCEPTED", replay.getRefundStatus());
-        assertEquals(null, replay.getRefundedOrders());
+        assertEquals(original.getRefundStatus(), replay.getRefundStatus());
+        assertEquals(Integer.valueOf(2), replay.getRefundedOrders());
+        assertEquals(Integer.valueOf(1),replay.getManualOrders());
+        assertEquals(Integer.valueOf(1),replay.getClosedPendingOrders());
         assertEquals(Long.valueOf(901L), replay.getRegisteredCampaignId());
         assertEquals(Long.valueOf(902L), replay.getWaitlistCampaignId());
         verify(teamGroupService, never()).cancelActivityWithObservedPayments(anyLong(), anyLong(), anyLong(), anyString(), eq(false), any(RegistrationCancellationPayments.class));
@@ -324,8 +326,7 @@ class ClubOccurrenceCancellationServiceTest {
     @ParameterizedTest
     @ValueSource(booleans = {false, true})
     void changingReasonUnderSameRequestIdIsRejectedAndNeverRepeatsSideEffects(boolean legacy) {
-        when(mapper.selectOccurrenceByActivityAndClubForUpdate(ACTIVITY, CLUB))
-                .thenReturn(occurrence(ClubEventOccurrence.STATUS_CANCELLED));
+        commitOriginalCancellation("cancel-replay","旧原因");
         when(mapper.selectCampaignByRequest(eq(CLUB), eq(ACTOR), anyString())).thenAnswer(call -> {
             String requestId = call.getArgument(2, String.class);
             return requestId.startsWith("cancel-r-")
@@ -341,6 +342,24 @@ class ClubOccurrenceCancellationServiceTest {
                 () -> service.cancelOccurrence(ACTOR, "co-owner", request("cancel-replay", REASON)));
 
         verify(teamGroupService, never()).cancelActivityWithObservedPayments(anyLong(), anyLong(), anyLong(), anyString(), eq(false), any(RegistrationCancellationPayments.class));
+    }
+
+    private ClubEventCancellationResult commitOriginalCancellation(String id,String reason) {
+        when(teamGroupService.cancelActivityWithObservedPayments(ACTIVITY,OWNER,ACTOR,reason,false,payments))
+                .thenReturn(new ActivityCancelResult(2,1,1));
+        when(mapper.cancelOccurrenceCas(81L,0)).thenReturn(1);
+        AtomicLong ids=new AtomicLong(900L);
+        when(mapper.insertCampaign(any(ClubEventCampaign.class))).thenAnswer(call -> {
+            call.getArgument(0,ClubEventCampaign.class).setId(ids.incrementAndGet());return 1;
+        });
+        ClubEventCancellationResult original=service.cancelOccurrence(ACTOR,"co-owner",request(id,reason));
+        CmsActivityMapper activities=(CmsActivityMapper)ReflectionTestUtils.getField(service,"cancellationActivityMapper");
+        var activity=activities.selectCmsActivityById(ACTIVITY);
+        activity.setCancelTime(new Date());activity.setStatus(0L);activity.setPublishStatus(0L);
+        when(mapper.selectOccurrenceByActivityAndClubForUpdate(ACTIVITY,CLUB))
+                .thenReturn(occurrence(ClubEventOccurrence.STATUS_CANCELLED));
+        org.mockito.Mockito.clearInvocations(mapper,teamGroupService,roleService);
+        return original;
     }
 
     @Test
@@ -373,7 +392,8 @@ class ClubOccurrenceCancellationServiceTest {
         assertEquals(ClubEventOccurrence.STATUS_CANCELLED, readback.getOccurrenceStatus());
         assertEquals(true, readback.isActivityCancelled());
         assertEquals(Long.valueOf(0L), readback.getPublishStatus());
-        verify(accessService).require(ACTOR, CLUB, ACTIVITY, ClubPermission.ACTIVITY_MANAGE);
+        verify(accessService,times(2)).require(ACTOR, CLUB, ACTIVITY, ClubPermission.ACTIVITY_MANAGE);
+        assertEquals("UNKNOWN",readback.getCancellationReceiptState());
     }
 
     private ClubAccessContext access(String role) {

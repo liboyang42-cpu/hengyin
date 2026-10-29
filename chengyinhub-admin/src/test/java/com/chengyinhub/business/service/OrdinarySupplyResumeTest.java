@@ -59,7 +59,7 @@ class OrdinarySupplyResumeTest {
         when(offers.selectByTopicIncludingInactiveForUpdate(41L)).thenThrow(new RuntimeException(
                 new java.sql.SQLException("NOWAIT conflict", "HY000", 3572)));
         assertTrue(com.chengyinhub.business.service.support.TopicPublicationTestWiring.wire(service).topicSupplyAutoOnlineBlockReason(41L).contains("稍后恢复"));
-        assertTrue(assertThrows(IllegalStateException.class, () -> com.chengyinhub.business.service.support.TopicPublicationTestWiring.wire(service).casUserStatus(41L, 0, 1))
+        assertTrue(assertThrows(IllegalStateException.class, () -> com.chengyinhub.business.service.support.TopicPublicationTestWiring.transactional(service).casUserStatus(41L, 0, 1))
                 .getMessage().contains("稍后恢复"));
         verify(topics, never()).casUserStatus(anyLong(), anyInt(), anyInt(), any());
     }
@@ -68,16 +68,16 @@ class OrdinarySupplyResumeTest {
     void mandatoryExitSnapshotCannotBeErasedByMakingTheChapterOptional() {
         MerchantChapterOffer original = offer(801, 0, null); original.setWithdrawRequired(true);
         chapter.setRequired(0); history(original);
-        assertThrows(IllegalStateException.class, () -> com.chengyinhub.business.service.support.TopicPublicationTestWiring.wire(service).casUserStatus(41L, 0, 1));
+        assertThrows(IllegalStateException.class, () -> com.chengyinhub.business.service.support.TopicPublicationTestWiring.transactional(service).casUserStatus(41L, 0, 1));
         history(original, offer(802, 1, 801L));
-        assertEquals(1, com.chengyinhub.business.service.support.TopicPublicationTestWiring.wire(service).casUserStatus(41L, 0, 1));
+        assertEquals(1, com.chengyinhub.business.service.support.TopicPublicationTestWiring.transactional(service).casUserStatus(41L, 0, 1));
     }
 
     @Test
     void auditCannotAutomaticallyResumeEvenAfterReplacementWasConfirmed() {
         history(offer(801, 0, null), offer(802, 1, 801L));
         assertNotNull(com.chengyinhub.business.service.support.TopicPublicationTestWiring.wire(service).topicSupplyAutoOnlineBlockReason(41L));
-        assertEquals(1, com.chengyinhub.business.service.support.TopicPublicationTestWiring.wire(service).casUserStatus(41L, 0, 1));
+        assertEquals(1, com.chengyinhub.business.service.support.TopicPublicationTestWiring.transactional(service).casUserStatus(41L, 0, 1));
         history();
         assertNull(com.chengyinhub.business.service.support.TopicPublicationTestWiring.wire(service).topicSupplyAutoOnlineBlockReason(41L));
     }
@@ -85,7 +85,7 @@ class OrdinarySupplyResumeTest {
     @Test
     void anInvitationOrAnotherUnlinkedLiveMerchantDoesNotPermitResume() {
         history(offer(801, 0, null), offer(802, 1, null));
-        assertThrows(IllegalStateException.class, () -> com.chengyinhub.business.service.support.TopicPublicationTestWiring.wire(service).casUserStatus(41L, 0, 1));
+        assertThrows(IllegalStateException.class, () -> com.chengyinhub.business.service.support.TopicPublicationTestWiring.transactional(service).casUserStatus(41L, 0, 1));
         verify(topics, never()).casUserStatus(anyLong(), anyInt(), anyInt(), any());
         verify(square, never()).syncTopicPostVisibility(anyLong(), anyBoolean());
     }
@@ -93,7 +93,7 @@ class OrdinarySupplyResumeTest {
     @Test
     void actualConfirmedLiveReplacementAllowsExplicitHostResumeWithCurrentReads() {
         history(offer(801, 0, null), offer(802, 1, 801L));
-        assertEquals(1, com.chengyinhub.business.service.support.TopicPublicationTestWiring.wire(service).casUserStatus(41L, 0, 1));
+        assertEquals(1, com.chengyinhub.business.service.support.TopicPublicationTestWiring.transactional(service).casUserStatus(41L, 0, 1));
         InOrder order = inOrder(topics, offers, chapters);
         order.verify(topics).selectCmsTopicByIdForUpdate(41L);
         order.verify(offers).selectByTopicIncludingInactiveForUpdate(41L);
@@ -107,20 +107,20 @@ class OrdinarySupplyResumeTest {
     void expiredInactiveAndAlteredTermsReplacementCannotRestoreSales() {
         MerchantChapterOffer next = offer(802, 1, 801L); next.setValidEnd(new Date(0));
         history(offer(801, 0, null), next);
-        assertThrows(IllegalStateException.class, () -> com.chengyinhub.business.service.support.TopicPublicationTestWiring.wire(service).casUserStatus(41L, 0, 1));
+        assertThrows(IllegalStateException.class, () -> com.chengyinhub.business.service.support.TopicPublicationTestWiring.transactional(service).casUserStatus(41L, 0, 1));
         next.setValidEnd(null); next.setStatus(0);
-        assertThrows(IllegalStateException.class, () -> com.chengyinhub.business.service.support.TopicPublicationTestWiring.wire(service).casUserStatus(41L, 0, 1));
+        assertThrows(IllegalStateException.class, () -> com.chengyinhub.business.service.support.TopicPublicationTestWiring.transactional(service).casUserStatus(41L, 0, 1));
         next.setStatus(1); next.setMaxNodeXp(99);
-        assertThrows(IllegalStateException.class, () -> com.chengyinhub.business.service.support.TopicPublicationTestWiring.wire(service).casUserStatus(41L, 0, 1));
+        assertThrows(IllegalStateException.class, () -> com.chengyinhub.business.service.support.TopicPublicationTestWiring.transactional(service).casUserStatus(41L, 0, 1));
         verify(topics, never()).casUserStatus(anyLong(), anyInt(), anyInt(), any());
     }
 
     @Test
     void repeatExitPreservesAtoBtoCAndNeedsTheLastLiveReplacement() {
         history(offer(801, 0, null), offer(802, 0, 801L), offer(803, 1, 802L));
-        assertEquals(1, com.chengyinhub.business.service.support.TopicPublicationTestWiring.wire(service).casUserStatus(41L, 0, 1));
+        assertEquals(1, com.chengyinhub.business.service.support.TopicPublicationTestWiring.transactional(service).casUserStatus(41L, 0, 1));
         history(offer(801, 0, null), offer(802, 0, 801L));
-        assertThrows(IllegalStateException.class, () -> com.chengyinhub.business.service.support.TopicPublicationTestWiring.wire(service).casUserStatus(41L, 0, 1));
+        assertThrows(IllegalStateException.class, () -> com.chengyinhub.business.service.support.TopicPublicationTestWiring.transactional(service).casUserStatus(41L, 0, 1));
     }
 
     @Test
@@ -134,14 +134,14 @@ class OrdinarySupplyResumeTest {
     @Test
     void optionalExitAndEmptyRecruitmentStillAllowPublishing() {
         chapter.setRequired(0); history(offer(801, 0, null));
-        assertEquals(1, com.chengyinhub.business.service.support.TopicPublicationTestWiring.wire(service).casUserStatus(41L, 0, 1));
+        assertEquals(1, com.chengyinhub.business.service.support.TopicPublicationTestWiring.transactional(service).casUserStatus(41L, 0, 1));
         chapter.setRequired(1); history();
-        assertEquals(1, com.chengyinhub.business.service.support.TopicPublicationTestWiring.wire(service).casUserStatus(41L, 0, 1));
+        assertEquals(1, com.chengyinhub.business.service.support.TopicPublicationTestWiring.transactional(service).casUserStatus(41L, 0, 1));
     }
 
     @Test
     void pauseDoesNotIntroduceTopicOfferOrChapterLocks() {
-        assertEquals(1, com.chengyinhub.business.service.support.TopicPublicationTestWiring.wire(service).casUserStatus(41L, 1, 0));
+        assertEquals(1, com.chengyinhub.business.service.support.TopicPublicationTestWiring.transactional(service).casUserStatus(41L, 1, 0));
         verify(topics, never()).selectCmsTopicByIdForUpdate(anyLong());
         verifyNoInteractions(offers, chapters, nodes);
     }
@@ -152,8 +152,8 @@ class OrdinarySupplyResumeTest {
         original.setQuotaTotal(10); original.setQuotaUsed(3); original.setValidEnd(new Date(System.currentTimeMillis()+600000));
         MerchantChapterOffer next = offer(802, 1, 801L); next.setTermsMode("PERK"); next.setQuotaTotal(6);
         next.setValidEnd(original.getValidEnd()); history(original, next);
-        assertThrows(IllegalStateException.class, () -> com.chengyinhub.business.service.support.TopicPublicationTestWiring.wire(service).casUserStatus(41L, 0, 1));
+        assertThrows(IllegalStateException.class, () -> com.chengyinhub.business.service.support.TopicPublicationTestWiring.transactional(service).casUserStatus(41L, 0, 1));
         next.setQuotaTotal(7); next.setQuotaUsed(2);
-        assertEquals(1, com.chengyinhub.business.service.support.TopicPublicationTestWiring.wire(service).casUserStatus(41L, 0, 1), "补位后正常履约不应再次要求补满已履约份数");
+        assertEquals(1, com.chengyinhub.business.service.support.TopicPublicationTestWiring.transactional(service).casUserStatus(41L, 0, 1), "补位后正常履约不应再次要求补满已履约份数");
     }
 }

@@ -44,6 +44,11 @@ public interface CmsActivityMapper
     /** 复制活动票前锁定父活动，串行化同一活动的幂等检查与插入。 */
     CmsActivity selectCmsActivityByIdForUpdate(Long id);
 
+    /** Cancellation owner only, after current authorization/scope locks. Never a generic entity patch. */
+    String selectCancellationReceiptForUpdate(@Param("id") Long id);
+    int compareAndSetCancellationReceipt(@Param("id") Long id, @Param("requestHash") String requestHash,
+                                        @Param("receipt") String receipt, @Param("first") boolean first);
+
     /** 公开详情：SQL 固定可见性 Gate，状态不接受调用方放宽。 */
     CmsActivity selectPublicCmsActivityById(Long id);
 

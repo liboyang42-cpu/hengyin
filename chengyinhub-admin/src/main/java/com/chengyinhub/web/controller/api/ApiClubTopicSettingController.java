@@ -56,12 +56,24 @@ public class ApiClubTopicSettingController extends BaseController {
         if (principal == null) return error("请先登录");
         if (body == null) return error("缺少参数");
         try {
-            return success(clubTopicSettingService.endTopic(principal, appUsername(principal),
-                    asLong(body.get("clubId")), asLong(body.get("topicId")),
-                    body.get("reason") == null ? null : String.valueOf(body.get("reason"))));
+            Long epoch=cancellationEpoch(body);
+            String reason=body.get("reason")==null?null:String.valueOf(body.get("reason"));
+            return success(epoch==null?clubTopicSettingService.endTopic(principal,appUsername(principal),
+                    asLong(body.get("clubId")),asLong(body.get("topicId")),reason)
+                    :clubTopicSettingService.endTopic(principal,appUsername(principal),asLong(body.get("clubId")),
+                    asLong(body.get("topicId")),reason,epoch));
         } catch (ServiceException e) {
             return serviceError(e);
         }
+    }
+
+    private Long cancellationEpoch(Map<String,Object> body) {
+        if(!body.containsKey("cancellationEpoch")) return null;
+        Object value=body.get("cancellationEpoch");
+        if(value==null || !(value instanceof String || value instanceof Number)
+                || !value.toString().matches("0|[1-9][0-9]{0,18}")) throw new ServiceException("取消轮次无效",400);
+        try {return Long.valueOf(value.toString());}
+        catch(NumberFormatException invalid) {throw new ServiceException("取消轮次无效",400);}
     }
 
     private Long principal() {

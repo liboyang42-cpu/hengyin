@@ -21,7 +21,7 @@ import java.util.Arrays;
  * 其后的结构变化执行 {@code chengyinhub-admin/sql/migration_*.sql} 原文件。不新增任何 schema 文件,
  * 因此不进 ci/migration_ledger 的 TEST_FIXTURE 名单。库由 {@link MybatisItDatabase} 一类一库建出、跑完即删。
  */
-final class P0AcceptanceSchema {
+public final class P0AcceptanceSchema {
 
     private P0AcceptanceSchema() { }
 
@@ -35,7 +35,7 @@ final class P0AcceptanceSchema {
     }
 
     /** 从 base schema 快照截取这些表的原样 CREATE TABLE 并执行。 */
-    static void baseTables(JdbcTemplate db, String... tables) throws Exception {
+    public static void baseTables(JdbcTemplate db, String... tables) throws Exception {
         String snapshot = new String(Files.readAllBytes(repoRoot().resolve("sql/base_schema_20260818.sql")),
                 StandardCharsets.UTF_8);
         for (String table : tables) {

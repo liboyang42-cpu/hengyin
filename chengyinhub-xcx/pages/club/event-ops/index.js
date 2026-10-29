@@ -176,12 +176,28 @@ function normalizeCancellationState(value, activityId) {
       && (value.activityCancelled !== true || publishStatus !== 0)) return null
   if (occurrenceStatus === 'ACTIVE'
       && (value.activityCancelled !== false || publishStatus !== 1)) return null
+  const receiptState = value.cancellationReceiptState || 'UNKNOWN'
+  if (!['UNKNOWN', 'PENDING', 'DONE'].includes(receiptState)) return null
+  let originalResult = null
+  if (receiptState !== 'UNKNOWN') {
+    if (typeof value.cancellationRequestId !== 'string' || !value.cancellationRequestId.trim()
+        || typeof value.cancellationRequestReason !== 'string' || !value.cancellationRequestReason.trim()) return null
+    if (receiptState === 'DONE') {
+      originalResult = value.originalCancellationResult
+      if (occurrenceStatus !== 'CANCELLED' || !originalResult
+          || !['refundedOrders', 'manualOrders', 'closedPendingOrders'].every(key =>
+            Number.isSafeInteger(originalResult[key]) && originalResult[key] >= 0)) return null
+    }
+  }
   return {
     activityId: scopedActivityId,
     occurrenceStatus,
     activityCancelled: value.activityCancelled,
     publishStatus,
     cancelReason: typeof value.cancelReason === 'string' ? value.cancelReason.trim() : '',
+    receiptState, originalResult,
+    requestId: receiptState === 'UNKNOWN' ? '' : value.cancellationRequestId,
+    requestReason: receiptState === 'UNKNOWN' ? '' : value.cancellationRequestReason,
   }
 }
 function cancellationSummary(result) {
@@ -920,13 +936,19 @@ Page({
           return
         }
         const cancelled = state.occurrenceStatus === 'CANCELLED'
+        if (state.receiptState === 'PENDING') {
+          that._cancellationRequestId = state.requestId
+          that._cancellationRequestReason = state.requestReason
+        }
         if (cancelled) that._pendingCancellationResult = null
         that.setData({
           cancellationState: cancelled ? 'cancelled' : 'active',
           cancellationError: '',
           cancellationReason: state.cancelReason,
-          cancellationSummary: cancelResult
-            ? cancellationSummary(cancelResult) : that.data.cancellationSummary,
+          cancellationSummary: state.originalResult
+            ? '原取消结果：退款 ' + state.originalResult.refundedOrders + ' 单；人工跟进 '
+              + state.originalResult.manualOrders + ' 单；关闭待付 ' + state.originalResult.closedPendingOrders + ' 单'
+            : cancelResult ? cancellationSummary(cancelResult) : that.data.cancellationSummary,
         })
         if (cancelResult && cancelled) {
           that._cancellationRequestId = ''
@@ -954,7 +976,7 @@ Page({
     const that = this
     cyModal.show({
       title: '取消本场活动',
-      content: '',
+      content: this._cancellationRequestReason || '',
       editable: true,
       placeholderText: '请输入取消原因（至少 2 个字）',
       confirmText: '确认取消',
@@ -996,8 +1018,10 @@ Page({
     if (normalizedReason.length < 2 || normalizedReason.length > 255) return
     const sameAttempt = this._cancellationRequestId
       && this._cancellationRequestReason === normalizedReason
-    const idempotencyKey = sameAttempt
-      ? this._cancellationRequestId : requestId('event-cancel')
+    const idempotencyKey = sameAttempt ? this._cancellationRequestId
+      : 'event-cancel-' + require('../../../utils/verification-readback.js').sha256(JSON.stringify([
+        String(this.data.clubId), String(this.data.activityId), normalizedReason,
+      ])).slice(0, 24)
     const that = this
     this._cancellationRequestId = idempotencyKey
     this._cancellationRequestReason = normalizedReason

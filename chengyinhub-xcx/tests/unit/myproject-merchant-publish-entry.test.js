@@ -13,6 +13,7 @@ let toasts = [];
 let navigations = [];
 let pageConfig = null;
 let actor = 1;
+let pendingStorage = new Map();
 
 global.getApp = () => ({
   globalData: { statusBarHeight: 20, navBarHeight: 44 },
@@ -23,9 +24,9 @@ global.getApp = () => ({
   getRequestErrorMessage: (res, fallback) => (res && res.msg) || fallback,
 });
 global.wx = {
-  getStorageSync: () => undefined,
-  setStorageSync: () => {},
-  removeStorageSync: () => {},
+  getStorageSync: key => pendingStorage.get(key),
+  setStorageSync: (key, value) => pendingStorage.set(key, value),
+  removeStorageSync: key => pendingStorage.delete(key),
   showToast: (o) => { toasts.push(o && o.title); },
   showLoading: () => {},
   hideLoading: () => {},
@@ -42,6 +43,7 @@ global.Page = (cfg) => { pageConfig = cfg; };
 
 beforeEach(() => {
   actor = 1;
+  pendingStorage = new Map();
   sent = [];
   toasts = [];
   navigations = [];
@@ -349,7 +351,7 @@ const operationCases = [
   ['activity refund preview', 'cancelActivity', '/api/activity/cancel_preview', { currentTarget: { dataset: { id: 91 } } }],
   ['topic refund preview', 'cancelTopic', '/api/topic/cancel_preview', { currentTarget: { dataset: { id: 91 } } }],
   ['activity cancel', 'onConfirmCancelActivity', '/api/activity/cancel', { detail: { params: { id: 91 } } }],
-  ['topic cancel', 'onConfirmCancelTopic', '/api/topic/cancel', { detail: { params: { id: 91 } } }],
+  ['topic cancel', 'onConfirmCancelTopic', '/api/topic/cancel', { detail: { params: { id: 91, count: 2, scope: '', cancellationEpoch: '0' } } }],
   ['activity delete', 'onConfirmDeleteActivity', '/api/activity/delete', { detail: { params: { id: 91 } } }],
   ['topic delete', 'onConfirmDeleteRoute', '/api/topic/delete', { detail: { params: { id: 91 } } }],
   ['template delete', 'onConfirmDeleteTemplate', '/api/template/delete', { detail: { params: { id: 91 } } }]
@@ -376,7 +378,8 @@ function deliverOperation(req, outcome) {
   if (outcome === 'fail') req.fail({});
   else {
     const res = outcome === 'success'
-      ? { code: 200, data: { paidPlayers: 2 } } : { code: 409, msg: 'rejected' };
+      ? { code: 200, data: { paidPlayers: 2, cancellationEpoch: '0', cancellationState: 'DONE',
+        refundedOrders: 2, manualOrders: 0, closedPendingOrders: 0 } } : { code: 409, msg: 'rejected' };
     // Mirror the existing request client's automatic business-error toast.
     if (res.code !== 200 && !req.silentError) toasts.push('transport error');
     req.success(res);
@@ -459,7 +462,7 @@ test('real danger confirmation does not remain busy or consume an old result aft
   const { p } = operationPage();
   p.selectComponent = id => id === '#dcCancelTopic' ? dc : null;
   p.cancelTopic({ currentTarget: { dataset: { id: 91 } } });
-  last('/api/topic/cancel_preview').success({ code: 200, data: { paidPlayers: 2 } });
+  last('/api/topic/cancel_preview').success({ code: 200, data: { paidPlayers: 2, cancellationEpoch: '0' } });
   p.onConfirmCancelTopic({ detail: { params: dc._params } });
   const old = last('/api/topic/cancel');
   assert.equal(dc.data.busy, true);

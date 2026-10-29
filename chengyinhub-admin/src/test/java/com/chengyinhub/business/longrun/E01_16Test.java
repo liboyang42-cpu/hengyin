@@ -222,6 +222,7 @@ class E01_16Test {
             return current.isEmpty() ? null : current.getFirst();
         });
         ReflectionTestUtils.setField(target, "cancellationTopicMapper", topics);
+        com.chengyinhub.business.service.CancellationPhaseTestSupport.wireReceiptMocks(target);
         ProxyFactory factory = new ProxyFactory(target);
         factory.setInterfaces(IClubEventOpsService.class);
         factory.addAdvice(new TransactionInterceptor(transactions,

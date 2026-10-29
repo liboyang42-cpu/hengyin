@@ -5,6 +5,7 @@
 // (「这一站玩什么」是讲给商家听的「玩家到店会跟你做什么」),不是俱乐部要看的东西。
 // 日常详情不跳 merchantinfo；只有「承接审核」显式复用它已有的主办方审核台，避免复制审核链。
 const toast = require('../../../utils/toast.js');
+const cancellationIntent = require('../../../utils/topic-cancellation-intent.js');
 const { resolveMenuChrome } = require('../../../utils/nav-safe-area.js');
 const app = getApp();
 const { toTimestamp, chinaParts } = require('../../../utils/datetime');
@@ -1037,6 +1038,11 @@ Page({
   openEndTopic() {
     const setting = this.data.setting;
     if (!setting || !setting.canManage) return;
+    try {
+      const pending = cancellationIntent.peek(String(app.getUserID() || ''), 'CLUB:' + this._clubId, this._topicId);
+      this._endCancellationEpoch = pending ? pending.epoch : cancellationIntent.epoch(setting.cancellationEpoch);
+      if (pending) toast('将查回上次结束结果，不结束新一轮');
+    } catch (error) { toast(error.message || '原结束请求无法确认'); return; }
     this.setData({ settingSheetVisible: false, endConfirmVisible: true, endErrorText: '' });
   },
 
@@ -1047,13 +1053,21 @@ Page({
 
   confirmEndTopic() {
     if (this.data.endSubmitting || !this._topicId || !this._clubId) return;
+    let intent;
+    try {
+      intent = cancellationIntent.remember(String(app.getUserID() || ''), 'CLUB:' + this._clubId,
+        this._topicId, this._endCancellationEpoch, 0);
+    } catch (error) { this.setData({ endErrorText: error.message || '原结束请求未保存，不发送' }); return; }
+    const current = () => String(app.getUserID() || '') === intent.actor
+      && 'CLUB:' + this._clubId === intent.scope && String(this._topicId) === intent.id;
     this.setData({ endSubmitting: true, endErrorText: '' });
     const that = this;
     app.sendRequest({
       hideLoading: true, silentError: true,
       url: '/api/club/topic-setting/end', method: 'POST',
-      data: jsonBody({ clubId: this._clubId, topicId: this._topicId }), header: jsonHeader(),
+      data: jsonBody({ clubId: this._clubId, topicId: this._topicId, cancellationEpoch: intent.epoch }), header: jsonHeader(),
       success(res) {
+        if (!current()) return;
         that.setData({ endSubmitting: false });
         if (!isSuccess(res) || !res.data) {
           // 后端的拒绝文案是写给主理人看的(「当前岗位没有这个权限」「主题状态刚刚变过」),非 200 原样回显;
@@ -1062,18 +1076,30 @@ Page({
           return;
         }
         const d = res.data;
-        const failed = Array.isArray(d.failedSessions) ? d.failedSessions : [];
+        let sameEpoch = false;
+        try { sameEpoch = cancellationIntent.epoch(d.cancellationEpoch) === intent.epoch; } catch (error) { /* Unknown stays held. */ }
+        if (!sameEpoch || !Array.isArray(d.failedSessions) || !['PENDING', 'DONE'].includes(d.cancellationState)
+            || !['sessionTotal', 'cancelledSessions', 'refundedOrders', 'manualOrders', 'closedPendingOrders']
+              .every(key => Number.isSafeInteger(d[key]) && d[key] >= 0)) {
+          that.setData({ endErrorText: '结束结果尚未确认，请保留原请求重试' }); return;
+        }
+        const failed = d.failedSessions;
         if (failed.length) {
           // 有场次没退成:框不关,把是哪一场、为什么留在屏幕上,让人能再点一次
           that.setData({ endErrorText: failed.length + ' 场没能取消：' + failed[0] });
           return;
         }
+        if (d.cancellationState !== 'DONE') {
+          that.setData({ endErrorText: '原结束请求仍在处理中，请按原请求查回' }); return;
+        }
+        try { cancellationIntent.acknowledge(intent.actor, intent.scope, intent.id, intent.epoch); }
+        catch (error) { that.setData({ endErrorText: '结束结果暂未确认，请重新查看' }); return; }
         that.setData({ endConfirmVisible: false });
         toast(endResultText(d));
         that.fetchDetail();
         that.loadTopicSetting();
       },
-      fail() { that.setData({ endSubmitting: false, endErrorText: '网络异常，没能结束。' }); },
+      fail() { if (current()) that.setData({ endSubmitting: false, endErrorText: '网络异常，没能结束。' }); },
     });
   },
 
@@ -1123,6 +1149,7 @@ Page({
       pinned: !!d.pinned,
       memberOnly: !!d.memberOnly,
       canManage: !!d.canManage,
+      cancellationEpoch: d.cancellationEpoch,
       // 未开放的章节不显示「N 家」——那会让人以为已经招到了
       chapterRows: (Array.isArray(d.chapters) ? d.chapters : []).map(function (c) {
         return {

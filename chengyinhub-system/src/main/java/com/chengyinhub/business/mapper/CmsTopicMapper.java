@@ -25,6 +25,13 @@ public interface CmsTopicMapper
      */
     public CmsTopic selectCmsTopicById(Long id);
 
+    /** Cancellation owner only; not exposed by the ordinary topic JSON/update mapping. */
+    Long selectCancellationEpoch(@Param("id") Long id);
+    Long selectCancellationEpochForUpdate(@Param("id") Long id);
+    String selectCancellationReceiptForUpdate(@Param("id") Long id,@Param("epoch") Long epoch);
+    int compareAndSetCancellationReceipt(@Param("id") Long id,@Param("epoch") Long epoch,@Param("requestHash") String requestHash,
+                                        @Param("receipt") String receipt, @Param("first") boolean first);
+
     List<CmsTopic> selectTodoTopicEndDates(@Param("topicIds") java.util.Collection<Long> topicIds);
 
     /** 5-4 后台逐期开关窄读；避免把新列扩散进全部主题查询。 */

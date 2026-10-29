@@ -48,9 +48,11 @@ class ClubTopicSettingServiceImplTest {
     private IClubEventOpsService eventOpsService;
     private ITeamGroupService teamGroupService;
     private ClubTopicSettingServiceImpl service;
+    private final Map<Long,CmsActivity> originalActivities=new java.util.HashMap<>();
 
     @BeforeEach
     void setUp() {
+        originalActivities.clear();
         accessService = mock(IClubAccessService.class);
         topicService = mock(ICmsTopicService.class);
         chapterService = mock(ICmsTopicChapterService.class);
@@ -68,7 +70,11 @@ class ClubTopicSettingServiceImplTest {
         ReflectionTestUtils.setField(service, "cmsActivityService", activityService);
         ReflectionTestUtils.setField(service, "clubEventOpsService", eventOpsService);
         ReflectionTestUtils.setField(service, "teamGroupService", teamGroupService);
-        when(topicService.casUserStatus(anyLong(), anyInt(), anyInt())).thenReturn(1);
+        var activities=mock(com.chengyinhub.business.mapper.CmsActivityMapper.class);
+        ReflectionTestUtils.setField(service,"cancellationActivityMapper",activities);
+        ReflectionTestUtils.setField(service,"cancellationTransactions",CancellationPhaseTestSupport.memoryTransactions());
+        CancellationPhaseTestSupport.wireReceiptMocks(activities,topicMapper);
+        when(activityService.selectCmsActivityById(anyLong())).thenAnswer(call -> originalActivities.get(call.getArgument(0)));
 
         CmsTopic topic = new CmsTopic();
         topic.setId(TOPIC_ID);
@@ -76,7 +82,13 @@ class ClubTopicSettingServiceImplTest {
         topic.setMemberId(1L);
         topic.setName("外滩夜行 · 霓虹拾光");
         topic.setLifecycle(3);
+        topic.setUserStatus(1);
         when(topicService.selectCmsTopicById(TOPIC_ID)).thenReturn(topic);
+        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC_ID)).thenReturn(topic);
+        when(topicService.casUserStatus(anyLong(),anyInt(),anyInt())).thenAnswer(call -> {
+            if(!topic.getUserStatus().equals(call.getArgument(1))) return 0;
+            topic.setUserStatus(call.getArgument(2));return 1;
+        });
         when(chapterService.selectCmsTopicChapterList(any(CmsTopicChapter.class)))
                 .thenReturn(Collections.<CmsTopicChapter>emptyList());
         when(nodeService.selectCmsTopicNodeList(any(CmsTopicNode.class)))
@@ -146,6 +158,7 @@ class ClubTopicSettingServiceImplTest {
         a.setName(name);
         a.setTopicId(TOPIC_ID);
         a.setClubId(CLUB_ID);
+        originalActivities.put(id,a);
         return a;
     }
 
@@ -153,6 +166,7 @@ class ClubTopicSettingServiceImplTest {
         ClubEventCancellationResult r = new ClubEventCancellationResult();
         r.setRefundedOrders(orders);
         r.setManualOrders(manual);
+        r.setClosedPendingOrders(0);
         return r;
     }
 
@@ -180,8 +194,10 @@ class ClubTopicSettingServiceImplTest {
     @Test
     void 不是场次系列物化出来的活动改走通用取消而不是跳过() throws Exception {
         actingAs(ClubRoleCode.CLUB_OWNER);
+        CmsActivity standalone=session(21L,"单场活动");standalone.setClubId(null);
         when(activityService.selectCmsActivityList(any(CmsActivity.class)))
-                .thenReturn(Collections.singletonList(session(21L, "单场活动")));
+                .thenAnswer(call -> call.getArgument(0,CmsActivity.class).getClubId()==null
+                        ?Collections.singletonList(standalone):Collections.emptyList());
         when(eventOpsService.cancelOccurrence(anyLong(), any(), any(ClubEventCancellationRequest.class)))
                 .thenThrow(new ServiceException("场次不存在或不属于当前俱乐部"));
         ActivityCancelResult fallback = new ActivityCancelResult(4, 0);
@@ -282,6 +298,55 @@ class ClubTopicSettingServiceImplTest {
         assertEquals(0, out.get("cancelledSessions"));
         assertEquals(0, out.get("refundedOrders"));
         assertEquals(Collections.singletonList("归属不一致的默认场次：无权取消该活动"), out.get("failedSessions"));
+    }
+
+    @Test
+    void lostResponseReplaysOriginalMultiSessionCountsEvenAfterCurrentListChanges() {
+        actingAs(ClubRoleCode.CLUB_OWNER);
+        when(activityService.selectCmsActivityList(any(CmsActivity.class)))
+                .thenReturn(Arrays.asList(session(61L,"第一场"),session(62L,"第二场")));
+        when(eventOpsService.cancelOccurrence(anyLong(),any(),any(ClubEventCancellationRequest.class)))
+                .thenReturn(refunded(3,1),refunded(2,0));
+        Map<String,Object> original=service.endTopic(1L,"owner",CLUB_ID,TOPIC_ID,"原原因");
+        assertEquals(5,original.get("refundedOrders"));assertEquals(1,original.get("manualOrders"));
+        when(activityService.selectCmsActivityList(any(CmsActivity.class))).thenReturn(Collections.emptyList());
+        org.mockito.Mockito.clearInvocations(eventOpsService,teamGroupService,topicService);
+        assertEquals(original,service.endTopic(1L,"owner",CLUB_ID,TOPIC_ID,"原原因"));
+        verify(eventOpsService,never()).cancelOccurrence(anyLong(),any(),any());
+        verify(teamGroupService,never()).cancelActivityByClubOperator(anyLong(),anyLong(),anyLong(),any());
+        verify(topicService,never()).casUserStatus(anyLong(),anyInt(),anyInt());
+        assertThrows(ServiceException.class,() -> service.endTopic(1L,"owner",CLUB_ID,TOPIC_ID,"不同原因"));
+        actingAs(ClubRoleCode.CLUB_OPERATOR);
+        assertThrows(ServiceException.class,() -> service.endTopic(1L,"owner",CLUB_ID,TOPIC_ID,"原原因"));
+    }
+
+    @Test
+    void partialFailureKeepsOriginalPlanAndNeverFallsBackToAnotherCancellationIdentity() {
+        actingAs(ClubRoleCode.CLUB_OWNER);
+        when(activityService.selectCmsActivityList(any(CmsActivity.class)))
+                .thenReturn(Arrays.asList(session(71L,"已完成"),session(72L,"待确认")));
+        when(eventOpsService.cancelOccurrence(anyLong(),any(),any(ClubEventCancellationRequest.class)))
+                .thenAnswer(call -> {
+                    var request=call.getArgument(2,ClubEventCancellationRequest.class);
+                    if(request.getActivityId().equals(72L)) throw new ServiceException("原渠道UNKNOWN",409);
+                    return refunded(4,1);
+                });
+        Map<String,Object> partial=service.endTopic(1L,"owner",CLUB_ID,TOPIC_ID,"原原因");
+        assertEquals("PENDING",partial.get("cancellationState"));assertEquals(1,partial.get("cancelledSessions"));
+        assertEquals(4,partial.get("refundedOrders"));
+        verify(teamGroupService,never()).cancelActivityByClubOperator(anyLong(),anyLong(),anyLong(),any());
+        // The first child now returns its original receipt; the second completes its SAME original request.
+        when(activityService.selectCmsActivityList(any(CmsActivity.class))).thenReturn(Collections.emptyList());
+        when(eventOpsService.cancelOccurrence(anyLong(),any(),any(ClubEventCancellationRequest.class)))
+                .thenAnswer(call -> refunded(call.getArgument(2,ClubEventCancellationRequest.class).getActivityId().equals(71L)?4:2,1));
+        Map<String,Object> completed=service.endTopic(1L,"owner",CLUB_ID,TOPIC_ID,"原原因");
+        assertEquals(2,completed.get("sessionTotal"));assertEquals(2,completed.get("cancelledSessions"));
+        assertEquals(6,completed.get("refundedOrders"));assertEquals(2,completed.get("manualOrders"));
+        assertEquals(Collections.emptyList(),completed.get("failedSessions"));
+        org.mockito.ArgumentCaptor<ClubEventCancellationRequest> requests=org.mockito.ArgumentCaptor.forClass(ClubEventCancellationRequest.class);
+        verify(eventOpsService,org.mockito.Mockito.times(4)).cancelOccurrence(eq(1L),any(),requests.capture());
+        assertEquals(Arrays.asList("topic-end-501-71","topic-end-501-72","topic-end-501-71","topic-end-501-72"),
+                requests.getAllValues().stream().map(ClubEventCancellationRequest::getRequestId).toList());
     }
 
     @Test

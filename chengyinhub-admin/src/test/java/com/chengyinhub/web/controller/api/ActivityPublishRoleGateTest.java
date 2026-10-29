@@ -247,6 +247,7 @@ class ActivityPublishRoleGateTest
         ReflectionTestUtils.setField(realWrapUp, "cancellationActivityMapper", activities);
         ReflectionTestUtils.setField(realWrapUp, "cancellationTopicMapper",
                 mock(com.chengyinhub.business.mapper.CmsTopicMapper.class));
+        com.chengyinhub.business.service.CancellationPhaseTestSupport.wireReceiptMocks(realWrapUp);
         ReflectionTestUtils.setField(controller, "clubEventOpsService", realWrapUp);
 
         AjaxResult result = controller.activityCancel("9", "天气原因", null);
