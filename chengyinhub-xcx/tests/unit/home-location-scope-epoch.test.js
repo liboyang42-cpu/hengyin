@@ -92,7 +92,7 @@ test('无效坐标、换账号后迟到城市结果不写入当前页面',()=>{
   assert.equal(requests.some(x=>x.url==='/api/map/reverse-geocode'),false)
   locations[0].success({latitude:31.23,longitude:121.47})
   const r=requests.find(x=>x.url==='/api/map/reverse-geocode');member='1002'
-  r.success({code:200,data:{city:'上海市'}});assert.equal(p.data.city,'')
+  r.success({code:200,data:{city:'杭州市'}});assert.notEqual(p.data.city,'杭州市')
 })
 test('首页刷新即使残留旧坐标也不上传给附近排序',()=>{
   const p=page();p.data.locationInfo={latitude:31.23,longitude:121.47}
@@ -126,14 +126,12 @@ test('定位权限被拒只引导打开设置一次',()=>{
   locations[0].fail({errMsg:'getLocation:fail auth deny'})
   assert.equal(modals.length,1)
 })
-test('服务端要求手动输入时露出手动选城市而不是死胡同',()=>{
+test('服务端要求手动输入时固定默认城市上海市而不是死胡同',()=>{
   const p=page();latest(p)
   locations[0].success({latitude:31.23,longitude:121.47})
   const geo=requests.find(x=>x.url==='/api/map/reverse-geocode')
   geo.success({code:200,data:{city:'',manualInputRequired:true,reason:'MAP_UNAVAILABLE'}})
-  assert.equal(p.data.cityManual,true);assert.equal(p.data.city,'')
-  p.onManualCityChange({detail:{value:1}})
-  assert.equal(p.data.city,'上海市');assert.equal(p.data.cityManual,false)
+  assert.equal(p.data.cityManual,false);assert.equal(p.data.city,'上海市')
 })
 test('逆地理请求失败与空城市给出不同提示',()=>{
   let p=page();latest(p,consent(),{userInitiated:true});locations[0].success({latitude:31.23,longitude:121.47})

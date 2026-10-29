@@ -21,4 +21,7 @@ function saveLastCity(city) {
   try { if (city) wx.setStorageSync(LAST_CITY_KEY, String(city).trim()); } catch (e) { /* 存储失败不影响展示 */ }
 }
 
-module.exports = { CITY_OPTIONS, message, readLastCity, saveLastCity };
+// V-01:没有记住的城市且自动定位失败时固定落到上海市(取自上面的候选城市,不另设配置)。
+const DEFAULT_CITY = CITY_OPTIONS[CITY_OPTIONS.indexOf('上海市')];
+
+module.exports = { CITY_OPTIONS, DEFAULT_CITY, message, readLastCity, saveLastCity };

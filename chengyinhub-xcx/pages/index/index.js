@@ -136,7 +136,7 @@ function showHomeCityLocationError(page, scope, kind) {
   if (!isCurrentLocationRequest(page, scope)) return;
   // V-01:冷启动/onShow 的自动定位失败不弹提示，保留上次城市，没有就露出手动选择；只有用户主动点定位才提示。
   if (scope.userInitiated) cyToast(homeCity.message(kind));
-  else if (!page.data.city) page.setData({ cityManual: true });
+  else if (!page.data.city) page.setData({ city: homeCity.DEFAULT_CITY, cityManual: false });
 }
 
 function hideLocationLoading(page, scope) {
@@ -1450,7 +1450,10 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
     if (this._unloaded || this._homeLocationHidden) return;
     const scope = captureLocationRequest(this);
     scope.userInitiated = !!(opts && opts.userInitiated);
-    if (!(Number(scope.memberId) > 0) || !scope.authorization || scope.authorization === 'dev-token') return;
+    if (!(Number(scope.memberId) > 0) || !scope.authorization || scope.authorization === 'dev-token') {
+      if (!this.data.city) this.setData({ city: homeCity.readLastCity() || homeCity.DEFAULT_CITY, cityManual: false });
+      return;
+    }
     const that = this;
     this.setData({ city: this.data.city || homeCity.readLastCity(), cityManual: false });
     app.sendRequest({
@@ -1573,7 +1576,7 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
 function offerManualCity(page, scope, reason) {
   hideLocationLoading(page, scope);
   if (!isCurrentLocationRequest(page, scope)) return;
-  page.setData({ cityManual: !page.data.city });
+  if (!page.data.city) page.setData({ city: homeCity.DEFAULT_CITY, cityManual: false });
   if (scope.userInitiated) cyToast(reason === 'MAP_RATE_LIMITED' ? '定位请求较频繁，请手动选择城市' : '暂时无法自动识别城市，请手动选择');
 }
 
@@ -1581,7 +1584,7 @@ function offerManualCity(page, scope, reason) {
 function offerLocationSettings(page, scope) {
   hideLocationLoading(page, scope);
   if (!isCurrentLocationRequest(page, scope)) return;
-  if (!scope.userInitiated) { if (!page.data.city) page.setData({ cityManual: true }); return; }
+  if (!scope.userInitiated) { if (!page.data.city) page.setData({ city: homeCity.DEFAULT_CITY, cityManual: false }); return; }
   if (page._locationSettingsOffered) { cyToast(homeCity.message('device')); return; }
   page._locationSettingsOffered = true;
   modal.show({

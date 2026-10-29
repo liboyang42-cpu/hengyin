@@ -37,10 +37,11 @@ function latest(p,row=consent(),opts) {
   r.success({code:200,data:row});return r
 }
 const COLD_TOAST='暂时无法自动识别城市，请手动选择'
-test('V-01 冷启动/onShow 自动定位失败不弹城市提示，露出手动选择',()=>{
+test('V-01 冷启动/onShow 自动定位失败不弹城市提示，没有记住的城市就固定上海市',()=>{
   const p=page();latest(p);locations[0].success({latitude:31.23,longitude:121.47})
   requests.find(x=>x.url==='/api/map/reverse-geocode').success({code:200,data:{city:'',manualInputRequired:true,reason:'MAP_UNAVAILABLE'}})
-  assert.deepEqual(toasts,[]);assert.equal(p.data.cityManual,true)
+  assert.deepEqual(toasts,[]);assert.equal(p.data.city,'上海市');assert.equal(p.data.cityManual,false)
+  assert.equal(store.home_city_last,undefined,'默认城市不冒充定位结果写入记忆')
   for(const fail of [l=>l.fail({errMsg:'x'}),l=>l.fail({errMsg:'getLocation:fail auth deny'})]){
     requests=[];locations=[];latest(p);fail(locations[0])
   }
@@ -68,4 +69,26 @@ test('V-01 用户主动点定位失败才提示',()=>{
 test('V-01 首页城市文字可点击重新定位',()=>{
   const wxml=require('fs').readFileSync(require('path').join(__dirname,'../../pages/index/index.wxml'),'utf8')
   assert.match(wxml,/<view wx:if="\{\{city\}\}" class="v3-hero-mem-loc" catchtap="onTapHomeCity"[^>]*hover-class="cy-pressed"[^>]*>· \{\{city\}\}<\/view>/)
+})
+
+test('V-01 各类自动定位失败与未登录都默认上海市',()=>{
+  const cases=[
+    p=>{latest(p);locations[0].fail({errMsg:'getLocation:fail auth deny'})},
+    p=>{latest(p);locations[0].fail({errMsg:'x'})},
+    p=>{p.getHomeCityLocation();requests[0].fail()},
+    p=>{latest(p);locations[0].success({latitude:31.23,longitude:121.47});requests.find(x=>x.url==='/api/map/reverse-geocode').fail()},
+    p=>{token='';p.getHomeCityLocation()},
+  ]
+  for(const run of cases){
+    store={};requests=[];locations=[];token='normal-session'
+    const p=page();run(p)
+    assert.equal(p.data.city,'上海市');assert.equal(p.data.cityManual,false)
+  }
+  assert.deepEqual(toasts,[]);assert.equal(modals.length,0)
+  const homeCity=require('../../utils/index/home-city-location.js')
+  assert.equal(homeCity.DEFAULT_CITY,'上海市');assert.ok(homeCity.CITY_OPTIONS.includes(homeCity.DEFAULT_CITY))
+})
+test('V-01 未登录有记住的城市时沿用记住的城市',()=>{
+  store={home_city_last:'杭州市'};token=''
+  const p=page();p.getHomeCityLocation();assert.equal(p.data.city,'杭州市')
 })
