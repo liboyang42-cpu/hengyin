@@ -1,5 +1,5 @@
 // 故事流背景随剧情换景(2026-09-23 用户裁决「优化顺序第 3 项」):照原型 cosmos 的场景参数,
-// 场景名与环境音同一张表(氛围 / 氛围块决定),梦块换成「苏醒」那一景;切换是逐帧插值过去,不是硬切。
+// 场景由氛围决定,梦块换成「苏醒」那一景;切换是逐帧插值过去,不是硬切。
 const { test } = require('node:test')
 const assert = require('node:assert/strict')
 const scene = require('../../pages/play/utils/story-scene.js')

@@ -1,0 +1,2109 @@
+{
+  "schemaVersion": 1,
+  "kind": "release-migration-pack",
+  "releaseCloseout": "release-closeout-20261029",
+  "generatedFor": {
+    "masterCommit": "60048713ab6a57890a056fe3091f5be441919939",
+    "sourceTree": "13c8857e937b54eb9c363fad6018a25ba25ca486",
+    "migrationTree": "e8a6ecc5d0169807de4643e1656b7e4f607f09e1",
+    "dependencySha256": "2a81586be28c40e6949d2432bd764309a93bc11f80351f7811dea19320d5ab61",
+    "date": "2026-10-29"
+  },
+  "baseline": {
+    "commit": "19408d49172c1d8fd16ec012f4498ff8ea584a37",
+    "source": "docs/delivery/release-closeout-20261029/migration-ledger.md §0（生产参考基线仍为 Merge #452，与 10-22、10-28 两个包相同；两个旧包均未在生产确认执行，故并入同一发布集）",
+    "productionAppliedState": "UNKNOWN（仅为仓库参考基线，不代表生产已应用状态；生产仍须由 owner 运行只读预检并留存回执）"
+  },
+  "ordering": {
+    "strategy": "explicit-dependencies-then-path-bytewise",
+    "source": "ci/migration-dependencies.json via ci/migration_ledger.py",
+    "orderField": "order = 该迁移在源提交全量 573 个迁移拓扑序中的位置；发布集内按 step 顺序执行"
+  },
+  "phases": {
+    "PRE_DEPLOY_REQUIRED": "新 jar 直接读写该表/列，必须先于新 jar 落库",
+    "PRE_DEPLOY": "新 jar 在开关关闭/表缺失时可容忍，但发布文档统一要求先于新 jar 落库",
+    "OWNER_GATED_DATA": "数据回填，先跑只读预览并经 owner 抽检；不阻塞 jar 部署，但必须在打开对应开关之前完成"
+  },
+  "precheck": "docs/delivery/release-closeout-20261029/release-migration-precheck.sql",
+  "rehearsal": {
+    "script": "ci/release_migration_rehearsal.py",
+    "workflow": ".github/workflows/release-migration-rehearsal.yml"
+  },
+  "migrations": [
+    {
+      "step": 1,
+      "migrationId": "20261018_infomation_change_audit",
+      "path": "chengyinhub-admin/sql/migration_20261018_infomation_change_audit.sql",
+      "sha256": "0e023798a882a7aec4e5a9de9815d7dcf39175600fc9d3c6d6c640a4dc304695",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 45,
+      "dependsOn": [],
+      "phase": "PRE_DEPLOY",
+      "changes": "新表 cms_infomation_change_audit（玩法说明追加审计）",
+      "idempotencyGuard": "CREATE TABLE IF NOT EXISTS + information_schema 全形状断言（列/索引/约束/无触发器）",
+      "lockRisk": "无：只建新表，空表，瞬时完成",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN ('cms_infomation_change_audit'); -- 期望 1"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ]
+    },
+    {
+      "step": 2,
+      "migrationId": "20261022_audit_activity_switch_seed",
+      "path": "chengyinhub-admin/sql/migration_20261022_audit_activity_switch_seed.sql",
+      "sha256": "4a9d4e63cde4afc7b5d6f4a17f46d0489b7508bafead3f3e8363448c3d4f59c7",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 46,
+      "dependsOn": [],
+      "phase": "PRE_DEPLOY",
+      "changes": "sys_config 落种 audit.activity.pre_review_all='false'、audit.activity.high_risk_categories=''（= 代码现行默认）",
+      "idempotencyGuard": "INSERT … WHERE NOT EXISTS(config_key) + 回读断言每键恰好 1 行",
+      "lockRisk": "无：sys_config 小表，按自然键 INSERT … WHERE NOT EXISTS",
+      "verifySelectOnly": [
+        "SELECT config_key, config_value, COUNT(*) OVER (PARTITION BY config_key) n FROM sys_config WHERE config_key IN ('audit.activity.pre_review_all', 'audit.activity.high_risk_categories'); -- 每键 n=1"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ]
+    },
+    {
+      "step": 3,
+      "migrationId": "20261022_f7_minor_guardian",
+      "path": "chengyinhub-admin/sql/migration_20261022_f7_minor_guardian.sql",
+      "sha256": "c375ee6846c1ed0702b224ab12ad5301e6f6056b236ee30ca2ca052fb3b66c1e",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 47,
+      "dependsOn": [],
+      "phase": "PRE_DEPLOY",
+      "changes": "新表 minor_guardian_authorization（F7 未成年监护授权；feature.flag.minorMode 缺省关）",
+      "idempotencyGuard": "CREATE TABLE IF NOT EXISTS + information_schema 列串与两个唯一键断言",
+      "lockRisk": "无：只建新表，空表，瞬时完成",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN ('minor_guardian_authorization'); -- 期望 1"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ]
+    },
+    {
+      "step": 4,
+      "migrationId": "20261022_f7_user_invoice",
+      "path": "chengyinhub-admin/sql/migration_20261022_f7_user_invoice.sql",
+      "sha256": "1ee515288464e4998ee4ea1341add368dd3e0db611908adccf7d950a7adb8c98",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 48,
+      "dependsOn": [],
+      "phase": "PRE_DEPLOY",
+      "changes": "新表 user_invoice_title / user_invoice_application / user_invoice_application_order（F7 发票；feature.flag.userInvoice 缺省关）",
+      "idempotencyGuard": "CREATE TABLE IF NOT EXISTS + information_schema 三表列串与唯一键断言",
+      "lockRisk": "无：只建新表，空表，瞬时完成",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN ('user_invoice_title', 'user_invoice_application', 'user_invoice_application_order'); -- 期望 3"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ]
+    },
+    {
+      "step": 5,
+      "migrationId": "20261022_location_guard_switch_seed",
+      "path": "chengyinhub-admin/sql/migration_20261022_location_guard_switch_seed.sql",
+      "sha256": "8eac6d4ec7c88e223611e9c2a9c41fc7fa814941361c36e4e8f856ab4b6bd377",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 49,
+      "dependsOn": [],
+      "phase": "PRE_DEPLOY",
+      "changes": "sys_config 落种 play.arrive.location_guard.mode='off'、play.arrive.require_accuracy='false'、roam.visited_poi.stable_identity='false'",
+      "idempotencyGuard": "INSERT … WHERE NOT EXISTS(config_key) + 回读断言",
+      "lockRisk": "无：sys_config 小表，按自然键 INSERT … WHERE NOT EXISTS",
+      "verifySelectOnly": [
+        "SELECT config_key, config_value, COUNT(*) OVER (PARTITION BY config_key) n FROM sys_config WHERE config_key IN ('play.arrive.location_guard.mode', 'play.arrive.require_accuracy', 'roam.visited_poi.stable_identity'); -- 每键 n=1"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ]
+    },
+    {
+      "step": 6,
+      "migrationId": "20261022_merchant_desk_switch_seed",
+      "path": "chengyinhub-admin/sql/migration_20261022_merchant_desk_switch_seed.sql",
+      "sha256": "99ccf252582db7d085d9061c18c91afec30783ee829e585038fc479b95da5b8f",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 50,
+      "dependsOn": [],
+      "phase": "PRE_DEPLOY",
+      "changes": "sys_config 落种 merchant.desk.f4.enabled='false'",
+      "idempotencyGuard": "INSERT … WHERE NOT EXISTS(config_key) + 回读断言",
+      "lockRisk": "无：sys_config 小表，按自然键 INSERT … WHERE NOT EXISTS",
+      "verifySelectOnly": [
+        "SELECT config_key, config_value, COUNT(*) OVER (PARTITION BY config_key) n FROM sys_config WHERE config_key IN ('merchant.desk.f4.enabled'); -- 每键 n=1"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ]
+    },
+    {
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "ums_creative_square_like 增加唯一键 uk_square_like_member_data(member_id,data_id)，每个会员/帖子只保留一个态度状态；不自动删除历史重复行",
+      "idempotencyGuard": "执行前 runner 断言无重复 member_id/data_id；按索引名判是否建键；末尾断言唯一性及完整列序。预检额外核对同名索引形状；重复行必须由 owner 导出/核对后处置",
+      "lockRisk": "中/高：先全表 GROUP BY 查重复，再在线建唯一索引；耗时与表体量相关，需短暂元数据锁。发现重复或同名异形索引禁止执行",
+      "verifySelectOnly": [
+        "SELECT member_id, data_id, COUNT(*) AS duplicate_rows FROM ums_creative_square_like GROUP BY member_id, data_id HAVING COUNT(*) > 1; -- 期望 0 行",
+        "SELECT index_name, non_unique, seq_in_index, column_name, sub_part, index_type, is_visible FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'ums_creative_square_like' AND index_name = 'uk_square_like_member_data'; -- 两列唯一 BTREE，无前缀"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "sha256": "8fe2deeef171d7c44e09f5dacc661c9c834ff6f2ca436d2f810e87235b212780",
+      "baseSha256": null,
+      "step": 7,
+      "migrationId": "20261023_creative_square_like_unique",
+      "path": "chengyinhub-admin/sql/migration_20261023_creative_square_like_unique.sql",
+      "order": 51,
+      "dependsOn": [],
+      "change": "ADDED"
+    },
+    {
+      "migrationId": "20261023_points_value_config_seed",
+      "path": "chengyinhub-admin/sql/migration_20261023_points_value_config_seed.sql",
+      "sha256": "c3b7d857e6c0d72107964eb6d049fe9ebe639410ab2a5abe567b4e4054a54923",
+      "baseSha256": null,
+      "change": "ADDED",
+      "phase": "PRE_DEPLOY",
+      "changes": "sys_config 缺失时落种 points.deduct.rate_yuan_per_point='0.02' 与 points.deduct.max_yuan_per_order='50.00'；PointsValuePolicy 缺失/无效时有同值缺省，不覆盖已配置值",
+      "idempotencyGuard": "INSERT SELECT WHERE NOT EXISTS(config_key)；末尾 runner 断言两个键各恰好一行。只检查行数，不强制覆盖运维配置值；重复自然键预检判 CONFLICT",
+      "lockRisk": "低：sys_config 小表，自然键查询后按需插入；执行窗口仍须避免并发写入相同键。公开回执只包含这两个非敏感积分配置键",
+      "verifySelectOnly": [
+        "SELECT config_key, config_value, COUNT(*) OVER (PARTITION BY config_key) AS rows_for_key FROM sys_config WHERE config_key IN ('points.deduct.rate_yuan_per_point','points.deduct.max_yuan_per_order'); -- 每键恰好 1 行，已有值保持原样"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "step": 8,
+      "order": 52,
+      "dependsOn": []
+    },
+    {
+      "migrationId": "20261023_wx_pay_order_intent",
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "新表 wx_pay_order_intent（微信支付下单意图冻结；WechatPayServiceImpl 下单前读写）",
+      "idempotencyGuard": "普通 CREATE TABLE（无 IF NOT EXISTS）：直接重跑必报 1050。只在预检 NEEDED 时执行一次；APPLIED 跳过；PARTIAL/CONFLICT 停止交 owner",
+      "lockRisk": "无：只建新表，空表，瞬时完成",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN ('wx_pay_order_intent'); -- 期望 1"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "rerunPolicy": "PRECHECK_SKIP_APPLIED",
+      "path": "chengyinhub-admin/sql/migration_20261023_wx_pay_order_intent.sql",
+      "sha256": "da55f93a46f7e71a48633e42f05adafb9db1c06d5c3e7e06594d7feeb407c292",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 53,
+      "dependsOn": [],
+      "step": 9
+    },
+    {
+      "migrationId": "20261024_community_open_flags",
+      "phase": "PRE_DEPLOY",
+      "changes": "sys_config 3 键：专业广场浏览/发帖开关 true、灰度账号 *（owner 2026-10-24：上线即对所有玩家开放；键缺失时网关按关闭处理）",
+      "idempotencyGuard": "INSERT … WHERE NOT EXISTS（自然键 config_key），不覆盖已配置值；末尾断言每键恰好一行",
+      "lockRisk": "无：sys_config 3 行插入",
+      "verifySelectOnly": [
+        "SELECT config_key, config_value FROM sys_config WHERE config_key IN ('feature.flag.communityPostRead', 'feature.flag.communityPostWrite', 'feature.flag.communityPostPilotMembers'); -- 期望 3 行；值以 owner 决定为准"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "path": "chengyinhub-admin/sql/migration_20261024_community_open_flags.sql",
+      "sha256": "b936a66c590a25b1ea57e827aa036b874e06ae620763dd0f53586fda1e3ae4b0",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 54,
+      "dependsOn": [],
+      "step": 10
+    },
+    {
+      "migrationId": "20261024_d_committed_official_notice_wx",
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "新表 committed_official_notice_wx（官方通知微信冻结意图）+ 一条默认暂停的 sys_job（committedOfficialNoticeTask.deliverPending()，不自动启用）",
+      "idempotencyGuard": "无 IF NOT EXISTS / 无存在性守卫：直接重跑必报 1050 Table already exists。只在预检 NEEDED 时执行一次；APPLIED 跳过；PARTIAL/CONFLICT/BLOCKED_PREREQ 停止交 owner",
+      "lockRisk": "无：只建新表，空表，瞬时完成",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN ('committed_official_notice_wx'); -- 期望 1",
+        "SELECT COUNT(*), MIN(status) FROM sys_job WHERE invoke_target = 'committedOfficialNoticeTask.deliverPending()'; -- 期望 1 行；新登记为 status=1（暂停）"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "rerunPolicy": "PRECHECK_SKIP_APPLIED",
+      "sourceMarker": "Run only after the documented read-only preflight and the coordinator's migration approval",
+      "path": "chengyinhub-admin/sql/migration_20261024_d_committed_official_notice_wx.sql",
+      "sha256": "132e2d74d13a3729e40266969d6501aa48a37bd8264361eb81b1f8f0e85b88f3",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 55,
+      "dependsOn": [
+        "20261013_b_im_notification_intent"
+      ],
+      "step": 11
+    },
+    {
+      "migrationId": "20261024_c_before_start_notice_typed",
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "committed_official_notice_wx 加 notice_type / wx_payload_json、im_intent_id 改可空、换 CHECK（与 v2 的 DDL 完全相同）",
+      "idempotencyGuard": "REPLACED_UNAPPLIED：本文件的元数据断言在 MySQL 8.0.45 上会误判，已由 v2 原样替代。永不执行；预检 APPLIED 只表示 v2（或历史上的本文件）已把表改成 typed 形状",
+      "lockRisk": "不执行，无锁",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'committed_official_notice_wx' AND column_name IN ('notice_type','wx_payload_json'); -- v2 执行后期望 2"
+      ],
+      "expectedAtBaseline": "REPLACED_UNAPPLIED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "rerunPolicy": "REPLACED_UNAPPLIED",
+      "sourceMarker": "DO NOT execute without coordinator DDL approval",
+      "path": "chengyinhub-admin/sql/migration_20261024_c_before_start_notice_typed.sql",
+      "sha256": "615c8c7883a97ca70e1cc14ff4ac965a895db9ccfea91f6f08e269dbf99e889a",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 56,
+      "dependsOn": [
+        "20261024_d_committed_official_notice_wx"
+      ],
+      "step": 12
+    },
+    {
+      "migrationId": "20261024_d_npc_asr_intent",
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "新表 npc_asr_intent（NPC 语音识别意图身份；NpcChatService 读写）",
+      "idempotencyGuard": "无 IF NOT EXISTS / 无存在性守卫：直接重跑必报 1050 Table already exists。只在预检 NEEDED 时执行一次；APPLIED 跳过；PARTIAL/CONFLICT/BLOCKED_PREREQ 停止交 owner",
+      "lockRisk": "无：只建新表，空表，瞬时完成",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN ('npc_asr_intent'); -- 期望 1"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "rerunPolicy": "PRECHECK_SKIP_APPLIED",
+      "sourceMarker": "SOURCE ONLY; no production DDL or historical inference authorized",
+      "path": "chengyinhub-admin/sql/migration_20261024_d_npc_asr_intent.sql",
+      "sha256": "eab5fa521fa2c6ad06b1095571b4a7e58acfd7c3355fa9bb820700e14dc70d38",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 57,
+      "dependsOn": [],
+      "step": 13
+    },
+    {
+      "migrationId": "20261024_d_npc_asr_shared_quota",
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "npc_asr_intent 加 quota_reservation / quota_refund_pending 两列 + 索引",
+      "idempotencyGuard": "无 IF NOT EXISTS / 无存在性守卫：直接重跑必报 1060 Duplicate column。只在预检 NEEDED 时执行一次；APPLIED 跳过；PARTIAL/CONFLICT/BLOCKED_PREREQ 停止交 owner",
+      "lockRisk": "ALTER 新表 npc_asr_intent，瞬时",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'npc_asr_intent' AND column_name IN ('quota_reservation','quota_refund_pending'); -- 期望 2"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "rerunPolicy": "PRECHECK_SKIP_APPLIED",
+      "sourceMarker": "Additive only; DDL NOT EXECUTED",
+      "path": "chengyinhub-admin/sql/migration_20261024_d_npc_asr_shared_quota.sql",
+      "sha256": "ed8a14aeabb2470a2c8ba55daf8db134c5c99eda4c6e1638bee6cc55c9f44556",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 58,
+      "dependsOn": [
+        "20261024_d_npc_asr_intent"
+      ],
+      "step": 14
+    },
+    {
+      "migrationId": "20261024_g_before_start_notice_metadata_v2",
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "committed_official_notice_wx 加 notice_type / wx_payload_json、im_intent_id 改可空、DROP 旧 recipient CHECK、加 typed CHECK 与索引（替代旧 C 文件）",
+      "idempotencyGuard": "前置断言要求表恰好是旧 12 列形状，已 typed 的表在 DDL 之前断言失败：直接重跑必失败。只在预检 NEEDED 时执行一次；APPLIED 跳过；PARTIAL 停止",
+      "lockRisk": "ALTER committed_official_notice_wx（新表，空或极少行），瞬时",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'committed_official_notice_wx'; -- 期望 14",
+        "SELECT COUNT(*) FROM information_schema.table_constraints WHERE constraint_schema = DATABASE() AND constraint_name = 'ck_committed_official_notice_typed'; -- 期望 1"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "rerunPolicy": "PRECHECK_SKIP_APPLIED",
+      "sourceMarker": "No production execution is authorized here",
+      "path": "chengyinhub-admin/sql/migration_20261024_g_before_start_notice_metadata_v2.sql",
+      "sha256": "a36889f13d1de308edfcba06409ef153438521268f355881006864ae842bc02c",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 59,
+      "dependsOn": [
+        "20261024_d_committed_official_notice_wx"
+      ],
+      "step": 15
+    },
+    {
+      "migrationId": "20261024_registration_verified_seats",
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "新表 cms_registration_seat",
+      "idempotencyGuard": "无 IF NOT EXISTS / 无存在性守卫：直接重跑必报 1050 Table already exists。只在预检 NEEDED 时执行一次；APPLIED 跳过；PARTIAL/CONFLICT/BLOCKED_PREREQ 停止交 owner",
+      "lockRisk": "无：只建新表，空表，瞬时完成",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN ('cms_registration_seat'); -- 期望 1"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "rerunPolicy": "PRECHECK_SKIP_APPLIED",
+      "sourceMarker": "Run only through separately authorized migration",
+      "path": "chengyinhub-admin/sql/migration_20261024_registration_verified_seats.sql",
+      "sha256": "8d1912dd674a657db43ab6a44431066723741113e263faa554811194c81e5495",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 60,
+      "dependsOn": [],
+      "step": 16
+    },
+    {
+      "migrationId": "20261024_registration_seat_activity_scope",
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "cms_registration_seat 的 chk_registration_seat_fact 放宽为允许独立活动（topic_id 可空）",
+      "idempotencyGuard": "可重入：同一条 ALTER 先 DROP CHECK 再 ADD 同名 CHECK，重跑结果相同（演练实际重跑）",
+      "lockRisk": "ALTER 新表 cms_registration_seat（空表），瞬时",
+      "verifySelectOnly": [
+        "SELECT cc.check_clause FROM information_schema.check_constraints cc WHERE cc.constraint_schema = DATABASE() AND cc.constraint_name = 'chk_registration_seat_fact'; -- 期望包含 topic_id is null or topic_id > 0"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "sourceMarker": "Execute only in a separately authorized migration",
+      "path": "chengyinhub-admin/sql/migration_20261024_registration_seat_activity_scope.sql",
+      "sha256": "b2c1aabc496c7cd28ced1864e6db78d3736325890035c8b90d1d4e5c16603ae8",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 61,
+      "dependsOn": [
+        "20261024_registration_verified_seats"
+      ],
+      "step": 17
+    },
+    {
+      "migrationId": "20261025_coop_invite_request_receipt",
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "新表 coop_invite_request_receipt（协作邀请原请求回执）",
+      "idempotencyGuard": "CREATE TABLE IF NOT EXISTS；同名异形表不会被迁移拒绝，靠预检列/索引指纹判 CONFLICT",
+      "lockRisk": "无：只建新表，空表，瞬时完成",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN ('coop_invite_request_receipt'); -- 期望 1"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "path": "chengyinhub-admin/sql/migration_20261025_coop_invite_request_receipt.sql",
+      "sha256": "0d3bbaf69303ad78a8a094b777be40f4eae89c442400559a6d093d10eefeea53",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 62,
+      "dependsOn": [],
+      "step": 18
+    },
+    {
+      "migrationId": "20261026_official_event_attendance",
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "新表 official_event_attendance_config、official_event_attendance（官方赛事签到）",
+      "idempotencyGuard": "CREATE TABLE IF NOT EXISTS；同名异形表不会被迁移拒绝，靠预检列/索引指纹判 CONFLICT",
+      "lockRisk": "无：只建新表，空表，瞬时完成",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN ('official_event_attendance_config', 'official_event_attendance'); -- 期望 2"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "path": "chengyinhub-admin/sql/migration_20261026_official_event_attendance.sql",
+      "sha256": "b49da83d06dd84b699f11c1e21ab4188bd4c8bf32d7e14e83b06fad6f57373d9",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 63,
+      "dependsOn": [],
+      "step": 19
+    },
+    {
+      "migrationId": "20261026_team_event_command_receipt",
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "新表 team_event_command_receipt（组队/赛事命令原请求回执）",
+      "idempotencyGuard": "CREATE TABLE IF NOT EXISTS；同名异形表不会被迁移拒绝，靠预检列/索引指纹判 CONFLICT",
+      "lockRisk": "无：只建新表，空表，瞬时完成",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN ('team_event_command_receipt'); -- 期望 1"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "path": "chengyinhub-admin/sql/migration_20261026_team_event_command_receipt.sql",
+      "sha256": "06888f11813bb1024de1ae0041fbbfacd57aff1cbf0b99433fadd537ee18c1ce",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 64,
+      "dependsOn": [],
+      "step": 20
+    },
+    {
+      "migrationId": "20261026_theme_attribute_registry_version",
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "新表 theme_attribute_registry_version（主题属性注册表版本；ThemeStateKeyMapper 读写）",
+      "idempotencyGuard": "CREATE TABLE IF NOT EXISTS；同名异形表不会被迁移拒绝，靠预检列/索引指纹判 CONFLICT",
+      "lockRisk": "无：只建新表，空表，瞬时完成",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN ('theme_attribute_registry_version'); -- 期望 1"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "path": "chengyinhub-admin/sql/migration_20261026_theme_attribute_registry_version.sql",
+      "sha256": "6864624782c112b9c804112fe559002e97a83fb85b78ea2364772ac0573ff54f",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 65,
+      "dependsOn": [],
+      "step": 21
+    },
+    {
+      "migrationId": "20261026_user_invoice_processing",
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "新表 x6：user_invoice_issuer、user_invoice_issuer_owner、user_invoice_scope、user_invoice_processing、user_invoice_processing_audit、user_invoice_issued_reference（发票处理台；空配置，无授权）",
+      "idempotencyGuard": "CREATE TABLE IF NOT EXISTS；同名异形表不会被迁移拒绝，靠预检列/索引指纹判 CONFLICT；文件末尾 information_schema 断言（列序/唯一键/ascii_bin）",
+      "lockRisk": "无：只建新表，空表，瞬时完成",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN ('user_invoice_issuer', 'user_invoice_issuer_owner', 'user_invoice_scope', 'user_invoice_processing', 'user_invoice_processing_audit', 'user_invoice_issued_reference'); -- 期望 6"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "path": "chengyinhub-admin/sql/migration_20261026_user_invoice_processing.sql",
+      "sha256": "35067817cedcf73e0e513fee1024fd32a018cf18802d6ca0fd4f612932487b1a",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 66,
+      "dependsOn": [
+        "20261022_f7_user_invoice"
+      ],
+      "step": 22
+    },
+    {
+      "migrationId": "20261026_user_invoice_title_receipt",
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "新表 user_invoice_title_receipt（发票抬头保存原请求回执）",
+      "idempotencyGuard": "CREATE TABLE IF NOT EXISTS；同名异形表不会被迁移拒绝，靠预检列/索引指纹判 CONFLICT；文件末尾列类型/主键/ascii_bin 断言",
+      "lockRisk": "无：只建新表，空表，瞬时完成",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN ('user_invoice_title_receipt'); -- 期望 1"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "path": "chengyinhub-admin/sql/migration_20261026_user_invoice_title_receipt.sql",
+      "sha256": "db0dfe988c1d1963f7d4313b9032c9ece9f63cbddd55ef4e0493aaa683cb4e68",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 67,
+      "dependsOn": [
+        "20261022_f7_user_invoice"
+      ],
+      "step": 23
+    },
+    {
+      "migrationId": "20261027_template_adoption_receipt",
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "新表 template_adoption_receipt（模板采用原请求回执）",
+      "idempotencyGuard": "CREATE TABLE IF NOT EXISTS；同名异形表不会被迁移拒绝，靠预检列/索引指纹判 CONFLICT",
+      "lockRisk": "无：只建新表，空表，瞬时完成",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN ('template_adoption_receipt'); -- 期望 1"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "path": "chengyinhub-admin/sql/migration_20261027_template_adoption_receipt.sql",
+      "sha256": "9c72d1698d6de5920ad00d87fed6f0f37789c78793b2119d113cc394f88663da",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 68,
+      "dependsOn": [],
+      "step": 24
+    },
+    {
+      "migrationId": "20261027_user_invoice_processing_backfill",
+      "phase": "OWNER_GATED_DATA",
+      "changes": "为 W8 之前提交、全部订单行能经 user_invoice_issuer_owner 映射到唯一开票主体的发票申请补 user_invoice_processing 行（version=0、reconciliation_status=NONE）；映射缺失或跨主体的申请不回填，留人工",
+      "idempotencyGuard": "INSERT … SELECT … WHERE NOT EXISTS（已有处理行的申请跳过），重跑零变更；不改申请状态/票号/订单占用",
+      "lockRisk": "低：按申请数插入；user_invoice_issuer_owner 为空配置时插入 0 行（开票主体须先由 owner 配置）",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM user_invoice_application a WHERE NOT EXISTS (SELECT 1 FROM user_invoice_processing p WHERE p.application_id = a.id); -- 回填后仍无处理行的申请数（映射缺失/跨主体），交 owner 核对"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "DATA_PREVIEW"
+      ],
+      "path": "chengyinhub-admin/sql/migration_20261027_user_invoice_processing_backfill.sql",
+      "sha256": "cb3554540f429268e0f8476844754f98c7250c6cc54a40a2102d25a59f6e0e43",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 69,
+      "dependsOn": [
+        "20261022_f7_user_invoice",
+        "20261026_user_invoice_processing"
+      ],
+      "step": 25
+    },
+    {
+      "migrationId": "20261028_topic_play_setup",
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "新表 cms_topic_play_setup（主题可玩时段与开局前准备；/api/topic/play-setup 读写）",
+      "idempotencyGuard": "CREATE TABLE IF NOT EXISTS；同名异形表不会被迁移拒绝，靠预检列/索引指纹判 CONFLICT",
+      "lockRisk": "无：只建新表，空表，瞬时完成",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN ('cms_topic_play_setup'); -- 期望 1"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "path": "chengyinhub-admin/sql/migration_20261028_topic_play_setup.sql",
+      "sha256": "15aeb5092729262b25d330948ebdf28e22e9e0af59d8084c48e6531350d7e482",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 70,
+      "dependsOn": [],
+      "step": 26
+    },
+    {
+      "migrationId": "ai_theme_draft_request_intent_20261024",
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "新表 ai_theme_draft_request_intent",
+      "idempotencyGuard": "无 IF NOT EXISTS / 无存在性守卫：直接重跑必报 前置断言 ASSERT_FAILED__atdi_v2_before_ddl。只在预检 NEEDED 时执行一次；APPLIED 跳过；PARTIAL/CONFLICT/BLOCKED_PREREQ 停止交 owner",
+      "lockRisk": "无：只建新表，空表，瞬时完成",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN ('ai_theme_draft_request_intent'); -- 期望 1"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "rerunPolicy": "PRECHECK_SKIP_APPLIED",
+      "sourceMarker": "Theme Draft v2 candidate only. No production execution",
+      "path": "chengyinhub-admin/sql/migration_ai_theme_draft_request_intent_20261024.sql",
+      "sha256": "d0ff6289481fadf4aab16d875fabc3f4075ec05fd285b8fe630e9ad6e6f60a94",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 82,
+      "dependsOn": [],
+      "step": 27
+    },
+    {
+      "step": 28,
+      "migrationId": "audit_problem_20261022",
+      "path": "chengyinhub-admin/sql/migration_audit_problem_20261022.sql",
+      "sha256": "02353f0296b49751e5a035a129a03fccf9173cddba2194e7489b32449434a080",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 87,
+      "dependsOn": [],
+      "phase": "PRE_DEPLOY",
+      "changes": "新表 audit_problem（审核逐项驳回原因）；必须先于打开 chengyin.audit.item-problems.enabled",
+      "idempotencyGuard": "仅 CREATE TABLE IF NOT EXISTS，无 information_schema 断言（同名残表会被静默接受 → 由预检指纹判 CONFLICT）",
+      "lockRisk": "无：只建新表，空表，瞬时完成",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN ('audit_problem'); -- 期望 1"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ]
+    },
+    {
+      "migrationId": "20261024_d_chapter_application_round",
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "merchant_chapter_application 加 application_round 列 + CHECK",
+      "idempotencyGuard": "无 IF NOT EXISTS / 无存在性守卫：直接重跑必报 1060 Duplicate column。只在预检 NEEDED 时执行一次；APPLIED 跳过；PARTIAL/CONFLICT/BLOCKED_PREREQ 停止交 owner",
+      "lockRisk": "ALTER merchant_chapter_application（INSTANT 加可空列 + CHECK 需校验存量行），先看 [6/7] 行数",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'merchant_chapter_application' AND column_name = 'application_round'; -- 期望 1"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "rerunPolicy": "PRECHECK_SKIP_APPLIED",
+      "sourceMarker": "Source candidate only; coordinator reviews/executes DDL separately",
+      "path": "chengyinhub-admin/sql/migration_20261024_d_chapter_application_round.sql",
+      "sha256": "800f1cd74678c78e4350a4b38474f87b567bc62456353b463abcecac8958ab01",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 103,
+      "dependsOn": [
+        "chapter_recruitment_20260722"
+      ],
+      "step": 29
+    },
+    {
+      "phase": "PRE_DEPLOY",
+      "changes": "club 增加 welcome_note VARCHAR(600) NULL DEFAULT NULL；代码独立读取，旧行保持默认欢迎文案",
+      "idempotencyGuard": "历史 SQL 是普通 ADD COLUMN，不可直接重跑；开头 SELECT 仅供人工看结果，并不阻止 ALTER。只在预检 NEEDED 时执行一次；APPLIED 必须跳过；其他状态停止",
+      "lockRisk": "低：加可空列需要短暂元数据锁；旧 SQL 未显式指定 ALGORITHM。直接重跑必须报 MySQL 1060，禁止吞错后继续",
+      "verifySelectOnly": [
+        "SELECT column_name, column_type, is_nullable, column_default, extra, generation_expression FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'club' AND column_name = 'welcome_note'; -- varchar(600)、YES、NULL、普通列"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "rerunPolicy": "PRECHECK_SKIP_APPLIED",
+      "sha256": "668c8955b2c965eeb84436ad70a72e264a9c3aaa7d8d77450a282cc3b680f1ee",
+      "baseSha256": null,
+      "step": 30,
+      "migrationId": "club_welcome_note_20261022",
+      "path": "chengyinhub-admin/sql/migration_club_welcome_note_20261022.sql",
+      "order": 127,
+      "dependsOn": [
+        "club_open_settings_20260909"
+      ],
+      "change": "ADDED"
+    },
+    {
+      "step": 31,
+      "migrationId": "doc2_f3_bundle_ledger_20261022",
+      "path": "chengyinhub-admin/sql/migration_doc2_f3_bundle_ledger_20261022.sql",
+      "sha256": "f94e363d84923f4b6e97bce4ec49382364ec2568e7efe6cdcc83c10ed4b8f419",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 160,
+      "dependsOn": [],
+      "phase": "PRE_DEPLOY",
+      "changes": "新表 explore_bundle_order/grant/unit/reservation/waiver/exit_case（F3 套票台账；ledger-enabled 默认关）",
+      "idempotencyGuard": "CREATE TABLE IF NOT EXISTS + information_schema 列与唯一键 SHA-256 指纹；不符时 guard 临时表主键冲突让执行器停",
+      "lockRisk": "无：只建新表，空表，瞬时完成",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN ('explore_bundle_order', 'explore_bundle_grant', 'explore_bundle_unit', 'explore_bundle_reservation', 'explore_bundle_waiver', 'explore_bundle_exit_case'); -- 期望 6"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ]
+    },
+    {
+      "migrationId": "doc2_f3_refund_hold_20261026",
+      "phase": "PRE_DEPLOY",
+      "changes": "新表 explore_bundle_refund_hold（F3 履约冻结；本 SHA 主代码尚无读写方）",
+      "idempotencyGuard": "CREATE TABLE IF NOT EXISTS；同名异形表不会被迁移拒绝，靠预检列/索引指纹判 CONFLICT",
+      "lockRisk": "无：只建新表，空表，瞬时完成",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN ('explore_bundle_refund_hold'); -- 期望 1"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "path": "chengyinhub-admin/sql/migration_doc2_f3_refund_hold_20261026.sql",
+      "sha256": "74b1ef1e1488b1ee69eb8f104dde6466246d690db7fc01de19ab8c84d37b2556",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 161,
+      "dependsOn": [],
+      "step": 32
+    },
+    {
+      "migrationId": "20261023_cash_withdraw_fund_fact",
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "新表 member_cash_withdraw_fund_fact（提现资金事实，只追加）+ 触发器 cash_fund_fact_no_update / cash_fund_fact_no_delete；FK 指向 member_cash_withdraw",
+      "idempotencyGuard": "无 IF NOT EXISTS / 无存在性守卫：直接重跑必报 1050 Table already exists。只在预检 NEEDED 时执行一次；APPLIED 跳过；PARTIAL/CONFLICT/BLOCKED_PREREQ 停止交 owner",
+      "lockRisk": "建新表；FK 会对 member_cash_withdraw 取短暂元数据锁",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN ('member_cash_withdraw_fund_fact'); -- 期望 1",
+        "SELECT COUNT(*) FROM information_schema.triggers WHERE trigger_schema = DATABASE() AND trigger_name IN ('cash_fund_fact_no_update','cash_fund_fact_no_delete'); -- 期望 2"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "rerunPolicy": "PRECHECK_SKIP_APPLIED",
+      "sourceMarker": "CI REVIEW CANDIDATE ONLY. Integrator must approve the schema before any production application",
+      "path": "chengyinhub-admin/sql/migration_20261023_cash_withdraw_fund_fact.sql",
+      "sha256": "cf981d89214b219c41639537f301f2b55b2b568f2d310c06621e6df473b3f4ba",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 202,
+      "dependsOn": [
+        "member_cash_withdraw"
+      ],
+      "step": 33
+    },
+    {
+      "migrationId": "20261024_cash_withdraw_transfer_intent",
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "新表 member_cash_withdraw_transfer_intent（提现扣款/转账原始身份；CashWithdrawTransferIntentMapper 读写）",
+      "idempotencyGuard": "普通 CREATE TABLE（无 IF NOT EXISTS）：直接重跑必报 1050。只在预检 NEEDED 时执行一次；APPLIED 跳过；PARTIAL/CONFLICT 停止交 owner",
+      "lockRisk": "无：只建新表，空表，瞬时完成",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN ('member_cash_withdraw_transfer_intent'); -- 期望 1"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "rerunPolicy": "PRECHECK_SKIP_APPLIED",
+      "path": "chengyinhub-admin/sql/migration_20261024_cash_withdraw_transfer_intent.sql",
+      "sha256": "f2488f404fa9c1940377b47cbe531351bd2e31e3f8b1fc50aa7b2813ba00e55c",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 203,
+      "dependsOn": [
+        "20261023_cash_withdraw_fund_fact"
+      ],
+      "step": 34
+    },
+    {
+      "migrationId": "20261025_cash_withdraw_fund_request_compat",
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "member_cash_withdraw_fund_fact 加 8 列请求身份 + CHECK ck_cash_fund_request",
+      "idempotencyGuard": "无 IF NOT EXISTS / 无存在性守卫：直接重跑必报 1060 Duplicate column。只在预检 NEEDED 时执行一次；APPLIED 跳过；PARTIAL/CONFLICT/BLOCKED_PREREQ 停止交 owner",
+      "lockRisk": "ALTER 新表（空表），瞬时；表有只追加触发器，ALTER 不触发",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'member_cash_withdraw_fund_fact' AND column_name IN ('request_mchid','request_appid','request_amount_fen','request_openid','request_remark','request_version','request_hash','channel_batch_id'); -- 期望 8"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "rerunPolicy": "PRECHECK_SKIP_APPLIED",
+      "sourceMarker": "Apply once through the migration ledger. No production DDL is executed by this change",
+      "path": "chengyinhub-admin/sql/migration_20261025_cash_withdraw_fund_request_compat.sql",
+      "sha256": "7f94d39360c9b85c4ca2a65fedbbd3638cd6b09268a509748cc97e0a19212a1f",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 204,
+      "dependsOn": [
+        "20261023_cash_withdraw_fund_fact"
+      ],
+      "step": 35
+    },
+    {
+      "step": 36,
+      "migrationId": "member_profile_version_20261022",
+      "path": "chengyinhub-admin/sql/migration_member_profile_version_20261022.sql",
+      "sha256": "8be4a0d82578fe1d74579f5abbf859307f0b827655d670ff0e398cf026d018ba",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 209,
+      "dependsOn": [],
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "新表 ums_member_profile_version（资料版本回执；新 jar 表缺失只 WARN）",
+      "idempotencyGuard": "仅 CREATE TABLE IF NOT EXISTS，无 information_schema 断言（台账已标风险 → 由预检指纹判 CONFLICT）",
+      "lockRisk": "无：只建新表，空表，瞬时完成",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN ('ums_member_profile_version'); -- 期望 1"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ]
+    },
+    {
+      "step": 37,
+      "migrationId": "member_visited_poi_poi_key_20261022",
+      "path": "chengyinhub-admin/sql/migration_member_visited_poi_poi_key_20261022.sql",
+      "sha256": "ddb6c4652f8138a42a2ec380af3981f6674e574834ade341736e12eacb31c07a",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 211,
+      "dependsOn": [
+        "member_visited_poi"
+      ],
+      "phase": "PRE_DEPLOY",
+      "changes": "member_visited_poi 加可空列 poi_key VARCHAR(32) AFTER geo_key + 唯一键 uk_member_poi_key(member_id, poi_key)",
+      "idempotencyGuard": "information_schema 判列/索引是否存在 → 动态 PREPARE（存在则 SELECT 1）+ 回读断言",
+      "lockRisk": "中：ADD COLUMN 在 8.0.45 走 INSTANT（仅元数据锁）；ADD UNIQUE KEY 为 INPLACE 在线建索引，耗时 ∝ 表行数，全为 NULL 不会撞唯一",
+      "verifySelectOnly": [
+        "SELECT column_name, column_type, is_nullable, column_default FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'member_visited_poi' AND column_name IN ('poi_key');",
+        "SELECT index_name, non_unique, seq_in_index, column_name FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'member_visited_poi' AND index_name = 'uk_member_poi_key';"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ]
+    },
+    {
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "mms_merchant 增加 category_ids VARCHAR(255) NULL；将为空且 category_id>0 的行回填为原主行业，保留已有多选值",
+      "idempotencyGuard": "InnoDB 表与同名列形状 guard；按 information_schema 判列后 INSTANT ADD；只回填空值，runner 断言回填无遗漏。主预检只核结构，列存在时标 DATA_PREVIEW，须执行附录 B3 的数据回读",
+      "lockRisk": "中：INSTANT 加列需短暂元数据锁；UPDATE 扫描并锁住待回填商家行，低峰执行，先留只读行数预览",
+      "verifySelectOnly": [
+        "SELECT column_name, column_type, is_nullable, column_default FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'mms_merchant' AND column_name = 'category_ids'; -- varchar(255)、YES、NULL",
+        "SELECT COUNT(*) AS remaining_backfill FROM mms_merchant WHERE category_id > 0 AND (category_ids IS NULL OR category_ids = ''); -- 列存在后执行，期望 0"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "DATA_PREVIEW"
+      ],
+      "sha256": "e26703b2a6cb15eea3996c2d188af546002c88f46135accd5956ce1fdd37cbd1",
+      "baseSha256": null,
+      "step": 38,
+      "migrationId": "merchant_category_ids_20261022",
+      "path": "chengyinhub-admin/sql/migration_merchant_category_ids_20261022.sql",
+      "order": 217,
+      "dependsOn": [],
+      "change": "ADDED"
+    },
+    {
+      "migrationId": "20261027_merchant_brand_images_to_gallery",
+      "phase": "OWNER_GATED_DATA",
+      "changes": "把入驻品牌形象图 mms_merchant.derivatives（逗号/分号分隔）追加进门店相册 gallery（JSON 数组，上限 9 张）；derivatives 原值保留",
+      "idempotencyGuard": "只追加相册里还没有的图、相册满 9 张不再追加；含引号/反斜杠或 gallery 非 JSON 数组的行不碰；重跑零变更",
+      "lockRisk": "中：单条 UPDATE … JOIN（窗口函数 + JSON_TABLE）扫 mms_merchant 全表并锁命中行；按商家数线性，低峰执行",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM mms_merchant WHERE derivatives IS NOT NULL AND TRIM(derivatives) <> ''; -- 有品牌形象图的商家数",
+        "SELECT COUNT(*) FROM mms_merchant WHERE gallery IS NOT NULL AND TRIM(gallery) <> '' AND (JSON_VALID(gallery) = 0 OR JSON_TYPE(gallery) <> 'ARRAY'); -- 被跳过的非法 gallery 行，交 owner"
+      ],
+      "expectedAtBaseline": "DATA_PREVIEW",
+      "expectedAfterApply": [
+        "DATA_PREVIEW"
+      ],
+      "path": "chengyinhub-admin/sql/migration_20261027_merchant_brand_images_to_gallery.sql",
+      "sha256": "e7f68c884d431fc095102a6327d3a76dc023d9940e30511052c0826322563b58",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 223,
+      "dependsOn": [
+        "merchant_decor_20260708"
+      ],
+      "step": 39
+    },
+    {
+      "step": 40,
+      "migrationId": "merchant_desk_receipt_20261022",
+      "path": "chengyinhub-admin/sql/migration_merchant_desk_receipt_20261022.sql",
+      "sha256": "83746d2cb7e5de51365f97782d9e8692fb58c6bdf3196e854475d102d2fc2278",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 225,
+      "dependsOn": [],
+      "phase": "PRE_DEPLOY",
+      "changes": "新表 merchant_desk_receipt（F4 工作台幂等回执；merchant.desk.f4.enabled 默认关）",
+      "idempotencyGuard": "CREATE TABLE IF NOT EXISTS + 列串指纹 guard + 唯一键断言",
+      "lockRisk": "无：只建新表，空表，瞬时完成",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN ('merchant_desk_receipt'); -- 期望 1"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ]
+    },
+    {
+      "step": 41,
+      "migrationId": "merchant_redemption_anchor_20261022",
+      "path": "chengyinhub-admin/sql/migration_merchant_redemption_anchor_20261022.sql",
+      "sha256": "907c01f72fb7f77ceed83a0aa8eb51de4cbd55dc740218a0e1a65ca33c2da6e0",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 236,
+      "dependsOn": [],
+      "phase": "PRE_DEPLOY",
+      "changes": "新表 merchant_redemption_anchor（F4 核销锚点配置）",
+      "idempotencyGuard": "CREATE TABLE IF NOT EXISTS + 列串指纹 guard + 唯一键断言",
+      "lockRisk": "无：只建新表，空表，瞬时完成",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN ('merchant_redemption_anchor'); -- 期望 1"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ]
+    },
+    {
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "mms_merchant 增加 wechat_qrcode VARCHAR(512) NULL；原 wechat 中的 URL 搬入新列并清空 URL 文本，保留已有二维码及文本微信号",
+      "idempotencyGuard": "InnoDB 表与同名列形状 guard；按 information_schema 判列后 INSTANT ADD；复制只命中二维码空值，清理只命中已有二维码的 URL。主预检只核结构，列存在时标 DATA_PREVIEW，须执行附录 B4 的数据回读",
+      "lockRisk": "中：INSTANT 加列需短暂元数据锁；两条 UPDATE 扫描并锁定待搬迁行。超长 URL 或历史异常会让末尾断言失败，必须停下核对，禁止放松断言",
+      "verifySelectOnly": [
+        "SELECT column_name, column_type, is_nullable, column_default FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'mms_merchant' AND column_name = 'wechat_qrcode'; -- varchar(512)、YES、NULL",
+        "SELECT COUNT(*) AS remaining_url FROM mms_merchant WHERE wechat LIKE 'http://%' OR wechat LIKE 'https://%'; -- 期望 0"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "DATA_PREVIEW"
+      ],
+      "sha256": "c5f52a9512e615c08522a8d0fa7b62241863664e3853461aecbd7406d680017e",
+      "baseSha256": null,
+      "step": 42,
+      "migrationId": "merchant_wechat_qrcode_20261022",
+      "path": "chengyinhub-admin/sql/migration_merchant_wechat_qrcode_20261022.sql",
+      "order": 240,
+      "dependsOn": [],
+      "change": "ADDED"
+    },
+    {
+      "migrationId": "npc_voice_enrollment_intent_20261024",
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "新表 npc_voice_enrollment_intent",
+      "idempotencyGuard": "无 IF NOT EXISTS / 无存在性守卫：直接重跑必报 前置断言 ASSERT_FAILED_nvei_before_ddl。只在预检 NEEDED 时执行一次；APPLIED 跳过；PARTIAL/CONFLICT/BLOCKED_PREREQ 停止交 owner",
+      "lockRisk": "无：只建新表，空表，瞬时完成",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN ('npc_voice_enrollment_intent'); -- 期望 1"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "rerunPolicy": "PRECHECK_SKIP_APPLIED",
+      "sourceMarker": "Canonical candidate only: no production execution",
+      "path": "chengyinhub-admin/sql/migration_npc_voice_enrollment_intent_20261024.sql",
+      "sha256": "b4573ae45593a8e9b823a69d7060f94a57c8cbb4d70e9d27444f2afa4d72a996",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 262,
+      "dependsOn": [
+        "20261011_npc_voice_version"
+      ],
+      "step": 43
+    },
+    {
+      "migrationId": "npc_voice_confirmed_attempt_20261024",
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "npc_voice_enrollment_intent 加 request_id / previous_intent_id，回填 request_id='sample:'||sha，换唯一键 uk_nvei_request、加 CHECK",
+      "idempotencyGuard": "前置断言要求 request_id 不存在：直接重跑必失败。只在预检 NEEDED 时执行一次；APPLIED 跳过；PARTIAL 停止（DDL 非原子，交 owner 核对）",
+      "lockRisk": "ALTER 新表（空或极少行），瞬时",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'npc_voice_enrollment_intent'; -- 期望 15"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "rerunPolicy": "PRECHECK_SKIP_APPLIED",
+      "sourceMarker": "Candidate only; never execute automatically against production",
+      "path": "chengyinhub-admin/sql/migration_npc_voice_confirmed_attempt_20261024.sql",
+      "sha256": "a25f38f256e3c6447ac8d891b35eb2dd3914c143503ff1fe51b0fe48df949041",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 263,
+      "dependsOn": [
+        "npc_voice_enrollment_intent_20261024"
+      ],
+      "step": 44
+    },
+    {
+      "step": 45,
+      "migrationId": "o14_city_code_backfill_log_20261022",
+      "path": "chengyinhub-admin/sql/migration_o14_city_code_backfill_log_20261022.sql",
+      "sha256": "cc5f6e4dd6e8880f42012cbb7069a2ffaf79b8ac5ac75565e09b2c159922a1ed",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 264,
+      "dependsOn": [],
+      "phase": "PRE_DEPLOY",
+      "changes": "新表 o14_city_code_backfill_log（O-14 回填来源标记）",
+      "idempotencyGuard": "CREATE TABLE IF NOT EXISTS + 关键列计数断言",
+      "lockRisk": "无：只建新表，空表，瞬时完成",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN ('o14_city_code_backfill_log'); -- 期望 1"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ]
+    },
+    {
+      "step": 46,
+      "migrationId": "o14_cms_activity_city_code_20261022",
+      "path": "chengyinhub-admin/sql/migration_o14_cms_activity_city_code_20261022.sql",
+      "sha256": "6f8aa378506994897748617ae9209445cca32c2eefe613549194f6252351ee95",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 265,
+      "dependsOn": [],
+      "phase": "PRE_DEPLOY",
+      "changes": "cms_activity 加可空列 city_code VARCHAR(32)（ALGORITHM=INSTANT）+ 索引 idx_cms_activity_city_code（INPLACE, LOCK=NONE）",
+      "idempotencyGuard": "information_schema 判列/索引；同名异形列 guard 让执行器停 + 回读断言",
+      "lockRisk": "中：INSTANT 加列只需短暂元数据锁；建索引在线进行，耗时 ∝ 行数",
+      "verifySelectOnly": [
+        "SELECT column_name, column_type, is_nullable, column_default FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'cms_activity' AND column_name IN ('city_code');",
+        "SELECT index_name, non_unique, seq_in_index, column_name FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'cms_activity' AND index_name = 'idx_cms_activity_city_code';"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ]
+    },
+    {
+      "step": 47,
+      "migrationId": "o14_cms_topic_city_code_20261022",
+      "path": "chengyinhub-admin/sql/migration_o14_cms_topic_city_code_20261022.sql",
+      "sha256": "fcda5dcf5bf4172238564758d008b4b64d6eab6a8861335dbb5d063e2dd93ff1",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 266,
+      "dependsOn": [],
+      "phase": "PRE_DEPLOY",
+      "changes": "cms_topic 加可空列 city_code VARCHAR(32)（INSTANT）+ 索引 idx_cms_topic_city_code（INPLACE, LOCK=NONE）",
+      "idempotencyGuard": "同上",
+      "lockRisk": "中：同上",
+      "verifySelectOnly": [
+        "SELECT column_name, column_type, is_nullable, column_default FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'cms_topic' AND column_name IN ('city_code');",
+        "SELECT index_name, non_unique, seq_in_index, column_name FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'cms_topic' AND index_name = 'idx_cms_topic_city_code';"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ]
+    },
+    {
+      "step": 48,
+      "migrationId": "o14_content_city_code_backfill_20261022",
+      "path": "chengyinhub-admin/sql/migration_o14_content_city_code_backfill_20261022.sql",
+      "sha256": "abfb4c27b3219ab3906c29feb9c3a9c920f498913f26f06bb177740a271c085a",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 267,
+      "dependsOn": [
+        "o14_city_code_backfill_log_20261022",
+        "o14_cms_activity_city_code_20261022",
+        "o14_cms_topic_city_code_20261022"
+      ],
+      "phase": "OWNER_GATED_DATA",
+      "changes": "按 club.city 白名单回填 cms_topic / cms_activity.city_code，并在 o14_city_code_backfill_log 记来源；只改 city_code IS NULL 或本回填写过且未被改动的行",
+      "idempotencyGuard": "逻辑幂等（同规则重跑 city_code 零变更）；无 information_schema 守卫；有回读断言（只允许 6 位城市码与两种来源）。重跑会删除并重插本回填自己的 log 行（write_time 刷新）",
+      "lockRisk": "中/高：对 cms_topic、cms_activity 全表扫描 + UPDATE JOIN，行锁覆盖被写行；放低峰执行。执行前必须跑 _precheck_o14_content_city_code_backfill_20261022.sql 预览并由 owner 抽检",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM cms_topic WHERE city_code IS NOT NULL AND city_code NOT REGEXP '^[0-9]{6}$'; -- 期望 0",
+        "SELECT target_table, source, COUNT(*) FROM o14_city_code_backfill_log GROUP BY target_table, source;"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "DATA_PREVIEW"
+      ],
+      "rerunKnownDelta": {
+        "table": "o14_city_code_backfill_log",
+        "ignoredColumns": [
+          "write_time"
+        ],
+        "reason": "重跑会 DELETE 再 INSERT 本回填自己写过的 log 行，write_time 刷新为 NOW()；city_code 与 cms_topic/cms_activity 零变更"
+      }
+    },
+    {
+      "step": 49,
+      "migrationId": "o14_content_search_document_20261022",
+      "path": "chengyinhub-admin/sql/migration_o14_content_search_document_20261022.sql",
+      "sha256": "1d153c6fbbe8e7595cb169e906c64df975d1f85b88c486d1a0db6e4e8ebe3d5f",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 268,
+      "dependsOn": [],
+      "phase": "PRE_DEPLOY",
+      "changes": "新表 content_search_document（O-14 统一搜索投影）",
+      "idempotencyGuard": "CREATE TABLE IF NOT EXISTS + 关键列计数断言",
+      "lockRisk": "无：只建新表，空表，瞬时完成",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN ('content_search_document'); -- 期望 1"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ]
+    },
+    {
+      "migrationId": "20261023_d_official_broadcast_delivery",
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "official_broadcast_log 加 6 列（delivery_state VARCHAR(16) NOT NULL DEFAULT 'UNKNOWN'、delivery_title、delivery_sub、failure_code、message_id、reached_time），按旧 reached/channel 回填 delivery_state/failure_code，修正 official_broadcast.reached_count/status；带 SQL 前置/后置守卫",
+      "idempotencyGuard": "一次性迁移：普通 ADD COLUMN，重跑必报 1060；文件头要求先停所有广播 worker/发布者。只在预检 NEEDED 时执行一次；APPLIED 跳过；CONFLICT（10-26 旧协议已单独落库）/PARTIAL 停止",
+      "lockRisk": "ALTER official_broadcast_log（INSTANT 加列）+ 全表 UPDATE 回填 + official_broadcast 派生计数修正；按 [6/7] 行数评估，低峰执行并先停广播 worker",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'official_broadcast_log' AND column_name IN ('delivery_state','delivery_title','delivery_sub','failure_code','message_id','reached_time'); -- 期望 6",
+        "SELECT delivery_state, failure_code, COUNT(*) FROM official_broadcast_log GROUP BY delivery_state, failure_code; -- 只读核对回填分布"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "rerunPolicy": "PRECHECK_SKIP_APPLIED",
+      "sourceMarker": "CANDIDATE ONLY. Do not execute without integrator review and an approved migration window",
+      "path": "chengyinhub-admin/sql/migration_20261023_d_official_broadcast_delivery.sql",
+      "sha256": "c822ad772727ed4ae0328998f7a99be1ece5d6c881f6259fc63de3ebb0822ba1",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 272,
+      "dependsOn": [
+        "official_broadcast"
+      ],
+      "step": 50
+    },
+    {
+      "migrationId": "20261026_official_broadcast_delivery",
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "（旧协议）official_broadcast 4 列 + 唯一键、official_broadcast_log 7 列、新表 official_broadcast_creation —— 已被 D + union 组合取代",
+      "idempotencyGuard": "REPLACED_UNAPPLIED：与 D 同加 delivery_state/message_id，与 D 不能同时执行；union 只接受“D 已落、本文件未落”的前缀。永不执行。预检 CONFLICT = 生产已单独执行过本文件，停下交 owner（需另写前向修复）",
+      "lockRisk": "不执行，无锁",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'official_broadcast_creation'; -- union 执行后期望 1（由 union 创建，不是本文件）"
+      ],
+      "expectedAtBaseline": "REPLACED_UNAPPLIED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "rerunPolicy": "REPLACED_UNAPPLIED",
+      "path": "chengyinhub-admin/sql/migration_20261026_official_broadcast_delivery.sql",
+      "sha256": "ca5538fae79b01ac4690065da6cde4ac3b7922dce5c0d09a04a5ff58bca1076f",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 273,
+      "dependsOn": [
+        "official_broadcast"
+      ],
+      "step": 51
+    },
+    {
+      "migrationId": "20261028_official_broadcast_protocol_union",
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "在 D 前缀上组合 10-26 旧协议：delivery_state 放宽为 VARCHAR(32)，official_broadcast_log 加 frozen_title/frozen_sub/intent_id/attempts/update_time，official_broadcast 加 audience_frozen/client_request_id/request_owner/request_hash + 唯一键，新表 official_broadcast_creation",
+      "idempotencyGuard": "SQL 守卫只接受“D 6 列恰好存在、旧协议列和 creation 表都不存在”的前缀，否则在任何 DDL 前报错：直接重跑必失败。只在预检 NEEDED 时执行一次；APPLIED 跳过；PARTIAL/CONFLICT 停止（DDL 非原子）",
+      "lockRisk": "ALTER official_broadcast_log（MODIFY delivery_state 加宽需重建表）+ ALTER official_broadcast（加唯一键）；按 [6/7] 行数评估，低峰执行，广播 worker 保持停止直到新 jar 启动",
+      "verifySelectOnly": [
+        "SELECT column_type, is_nullable, column_default FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'official_broadcast_log' AND column_name = 'delivery_state'; -- 期望 varchar(32) / NO / UNKNOWN",
+        "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'official_broadcast_creation'; -- 期望 1"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "rerunPolicy": "PRECHECK_SKIP_APPLIED",
+      "sourceMarker": "Candidate: compose the two retained broadcast protocols; do not execute without integrator approval",
+      "path": "chengyinhub-admin/sql/migration_20261028_official_broadcast_protocol_union.sql",
+      "sha256": "44dc1ee52ab1591f0e893f26aaed8b6b1af4948ab53f98307c41a30c637b8b8b",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 274,
+      "dependsOn": [
+        "20261023_d_official_broadcast_delivery",
+        "20261026_official_broadcast_delivery"
+      ],
+      "step": 52
+    },
+    {
+      "step": 53,
+      "migrationId": "orient_geo_ar_team_20261022",
+      "path": "chengyinhub-admin/sql/migration_orient_geo_ar_team_20261022.sql",
+      "sha256": "d297c399d1c12d568d551ebe6dc17d6cc87bc95a6bae6d5667ef1e991d01f1e3",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 287,
+      "dependsOn": [],
+      "phase": "PRE_DEPLOY",
+      "changes": "新表 orient_node_geo / orient_task_alternative / orient_task_attempt / orient_task_completion / orient_safety_rule + sys_config orient.* 5 键（默认关）",
+      "idempotencyGuard": "CREATE TABLE IF NOT EXISTS + INSERT … WHERE NOT EXISTS + 回读断言（只数表与键，不核列形状 → 由预检指纹兜底）",
+      "lockRisk": "无：只建新表，空表，瞬时完成",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN ('orient_node_geo', 'orient_task_alternative', 'orient_task_attempt', 'orient_task_completion', 'orient_safety_rule'); -- 期望 5",
+        "SELECT config_key, config_value, COUNT(*) OVER (PARTITION BY config_key) n FROM sys_config WHERE config_key IN ('orient.geo.normalize.enabled', 'orient.alt_task.enabled', 'orient.team.board.enabled', 'orient.team.completion_ratio', 'orient.safety.enabled'); -- 每键 n=1"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ]
+    },
+    {
+      "migrationId": "orient_score_recovery_20261026",
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "新表 orient_score_recovery（定向计分 UNKNOWN 人工处置；OrientScoringMapper 读写）",
+      "idempotencyGuard": "CREATE TABLE IF NOT EXISTS；同名异形表不会被迁移拒绝，靠预检列/索引指纹判 CONFLICT",
+      "lockRisk": "无：只建新表，空表，瞬时完成",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN ('orient_score_recovery'); -- 期望 1"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "path": "chengyinhub-admin/sql/migration_orient_score_recovery_20261026.sql",
+      "sha256": "7ad0d698bd3b5f0ebb5d36b1c30a2099868ca2b7598570cb82c8848fb93134a8",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 288,
+      "dependsOn": [],
+      "step": 54
+    },
+    {
+      "migrationId": "orient_score_sync_receipt_20261026",
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "新表 orient_score_sync_receipt（定向计分同步回执；OrientScoringMapper 读写）",
+      "idempotencyGuard": "CREATE TABLE IF NOT EXISTS；同名异形表不会被迁移拒绝，靠预检列/索引指纹判 CONFLICT",
+      "lockRisk": "无：只建新表，空表，瞬时完成",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN ('orient_score_sync_receipt'); -- 期望 1"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "path": "chengyinhub-admin/sql/migration_orient_score_sync_receipt_20261026.sql",
+      "sha256": "615f1a9e64f42ff8d8ee398e32aac14168ff00f67edd4ddf34b6c12f90fd9f33",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 289,
+      "dependsOn": [],
+      "step": 55
+    },
+    {
+      "step": 56,
+      "migrationId": "o14_reco_search_jobs_20261022",
+      "path": "chengyinhub-admin/sql/migration_o14_reco_search_jobs_20261022.sql",
+      "sha256": "046921a70dbbf4f8ea32aa582d651e0a0d9c798cfd9c79a2df3b027972ccc370",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 320,
+      "dependsOn": [
+        "o14_content_search_document_20261022",
+        "p3_platform_foundation"
+      ],
+      "phase": "PRE_DEPLOY",
+      "changes": "sys_job 登记 recommendationScoreDailyTask.run() 与 contentSearchProjectionTask.refresh()，status='1'（暂停）",
+      "idempotencyGuard": "INSERT … WHERE NOT EXISTS(invoke_target) + 回读断言恰好 1 行；已存在的登记不改",
+      "lockRisk": "无：sys_job 小表。暂停任务不会被调度，旧 jar 无对应 bean 也不会触发",
+      "verifySelectOnly": [
+        "SELECT invoke_target, status, COUNT(*) FROM sys_job WHERE invoke_target IN ('recommendationScoreDailyTask.run()', 'contentSearchProjectionTask.refresh()') GROUP BY invoke_target, status; -- 每个 1 行且 status='1'"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ]
+    },
+    {
+      "step": 57,
+      "migrationId": "play_arrive_guard_log_20261022",
+      "path": "chengyinhub-admin/sql/migration_play_arrive_guard_log_20261022.sql",
+      "sha256": "52b937c5468f03006aef2e6b15c1beeb9a625c539558ca805c57fc4ff453b1fb",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 334,
+      "dependsOn": [],
+      "phase": "PRE_DEPLOY",
+      "changes": "新表 play_arrive_guard_log（到达守卫留痕；mode=off 时不读写）",
+      "idempotencyGuard": "CREATE TABLE IF NOT EXISTS + 列串指纹 guard + 索引断言",
+      "lockRisk": "无：只建新表，空表，瞬时完成",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN ('play_arrive_guard_log'); -- 期望 1"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ]
+    },
+    {
+      "step": 58,
+      "migrationId": "pms_sku_booking_20261022",
+      "path": "chengyinhub-admin/sql/migration_pms_sku_booking_20261022.sql",
+      "sha256": "0057c4368f7ade02120c109c791950e75b7f4c5d0dd6b42b8baf1fcb8f1fd8ac",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 343,
+      "dependsOn": [],
+      "phase": "PRE_DEPLOY",
+      "changes": "新表 pms_sku_booking_rule / pms_sku_capacity_slot（F4 SKU 预约容量）",
+      "idempotencyGuard": "CREATE TABLE IF NOT EXISTS + 列串指纹 guard + 唯一键断言",
+      "lockRisk": "无：只建新表，空表，瞬时完成",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN ('pms_sku_booking_rule', 'pms_sku_capacity_slot'); -- 期望 2"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ]
+    },
+    {
+      "migrationId": "20261023_advanced_command_fingerprint",
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "play_attempt_log 加 request_fingerprint CHAR(64) ascii_bin NULL（高级动作请求指纹）",
+      "idempotencyGuard": "可重入：列存在且形状一致时跳过 ALTER（PREPARE 守卫），形状不一致在断言处停止（演练实际重跑）",
+      "lockRisk": "ALTER play_attempt_log（INSTANT 加可空列），先看 [6/7] 行数",
+      "verifySelectOnly": [
+        "SELECT column_type, is_nullable FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'play_attempt_log' AND column_name = 'request_fingerprint'; -- 期望 char(64) / YES"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "sourceMarker": "C 后续候选：仅编写，不在代码任务执行生产 DDL",
+      "path": "chengyinhub-admin/sql/migration_20261023_advanced_command_fingerprint.sql",
+      "sha256": "d1c413a6abab0a4f613a2ef7c41914adb1b6e69b0de51d6cb08a01d08a88951f",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 365,
+      "dependsOn": [
+        "20260820_new_city_preference_chain"
+      ],
+      "step": 59
+    },
+    {
+      "migrationId": "20261029_unlist_test_topics",
+      "phase": "OWNER_GATED_DATA",
+      "changes": "软删 5 个测试/演示主题（id+名称+member_id 三者钉住；del_flag=1、update_by='unlist_test_topics_20261029'、update_time=NOW()）；有未取消报名/支付中或已支付/进行中会话的主题跳过",
+      "idempotencyGuard": "幂等：WHERE 带 del_flag = 0，重跑命中 0 行；纯 DML（演练实际重跑）",
+      "lockRisk": "无：按主键更新至多 5 行",
+      "verifySelectOnly": [
+        "SELECT id, name, member_id, del_flag, update_by FROM cms_topic WHERE id IN (990062, 8, 7, 6, 1); -- 钉住的行应为 del_flag=1；仍为 0 的必须是被守卫跳过的（看文件头预检 SELECT 的 live_* 计数）"
+      ],
+      "expectedAtBaseline": "DATA_PREVIEW",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "path": "chengyinhub-admin/sql/migration_20261029_unlist_test_topics.sql",
+      "sha256": "f4d7cb0f0c55e4f5d5cbd40ffc2ca9c7071b7717a38dffdf5afa611c86f1a023",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 366,
+      "dependsOn": [
+        "20260823_topic_route_graph",
+        "20260917_player_run_session"
+      ],
+      "step": 60
+    },
+    {
+      "step": 61,
+      "migrationId": "orient_scoring_20261022",
+      "path": "chengyinhub-admin/sql/migration_orient_scoring_20261022.sql",
+      "sha256": "17893c96611ad13875178c9b6ebf4fcb332e7a11fad5f6fb8a7d1f25fd9e055a",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 367,
+      "dependsOn": [
+        "20260823_topic_route_graph"
+      ],
+      "phase": "PRE_DEPLOY",
+      "changes": "新表 orient_score_ledger / settlement / appeal / orient_result_dispute + sys_config orient.scoring.* 5 键（默认不发奖）",
+      "idempotencyGuard": "CREATE TABLE IF NOT EXISTS + INSERT … WHERE NOT EXISTS + 回读断言（只数表与键 → 由预检指纹兜底）",
+      "lockRisk": "无：只建新表，空表，瞬时完成",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN ('orient_score_ledger', 'orient_score_settlement', 'orient_score_appeal', 'orient_result_dispute'); -- 期望 4",
+        "SELECT config_key, config_value FROM sys_config WHERE config_key LIKE 'orient.scoring.%'; -- 5 行"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ]
+    },
+    {
+      "step": 62,
+      "migrationId": "orient_session_lifecycle_20261022",
+      "path": "chengyinhub-admin/sql/migration_orient_session_lifecycle_20261022.sql",
+      "sha256": "ffc9001685f87179b58fa7bb9c104bc27c608664b3288e79234053699ffd2735",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 368,
+      "dependsOn": [
+        "20260823_topic_route_graph"
+      ],
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "topic_route_session 加可空列 phase VARCHAR(16) AFTER status；status 列只改注释（类型/默认不变）；新表 orient_session_clock",
+      "idempotencyGuard": "information_schema 判列/注释 → 动态 PREPARE；CREATE TABLE IF NOT EXISTS；回读断言",
+      "lockRisk": "低/中：ADD COLUMN 走 INSTANT；MODIFY 只改注释时为元数据变更。若生产 status 列类型/默认与 TINYINT NOT NULL DEFAULT 0 不一致，MODIFY 会变成整表重建——预检会判 CONFLICT，先停",
+      "verifySelectOnly": [
+        "SELECT column_name, column_type, is_nullable, column_default FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'topic_route_session' AND column_name IN ('phase', 'status');",
+        "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN ('orient_session_clock'); -- 期望 1"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ]
+    },
+    {
+      "migrationId": "photo_check_intent_20261023",
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "新表 photo_check_intent",
+      "idempotencyGuard": "无 IF NOT EXISTS / 无存在性守卫：直接重跑必报 1050 Table already exists。只在预检 NEEDED 时执行一次；APPLIED 跳过；PARTIAL/CONFLICT/BLOCKED_PREREQ 停止交 owner",
+      "lockRisk": "无：只建新表，空表，瞬时完成",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN ('photo_check_intent'); -- 期望 1"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "rerunPolicy": "PRECHECK_SKIP_APPLIED",
+      "sourceMarker": "Never execute on production as part of this change",
+      "path": "chengyinhub-admin/sql/migration_photo_check_intent_20261023.sql",
+      "sha256": "8671f805d52071ce1067838b21581ff53d278be34b8fd4a744b4b14183cbad6e",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 369,
+      "dependsOn": [
+        "20261023_advanced_command_fingerprint"
+      ],
+      "step": 63
+    },
+    {
+      "step": 64,
+      "migrationId": "member_visited_poi_poi_key_backfill_20261022",
+      "path": "chengyinhub-admin/sql/migration_member_visited_poi_poi_key_backfill_20261022.sql",
+      "sha256": "2980391167e7bb4113a9523158e7a7fb5577eb8875d534f27db7f612e240af27",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 411,
+      "dependsOn": [
+        "member_visited_poi_poi_key_20261022",
+        "roam"
+      ],
+      "phase": "OWNER_GATED_DATA",
+      "changes": "回填 member_visited_poi.poi_key（poi:{地标id} 或 pt:{5位坐标}；判为重复的行保持 NULL）；不删行、不改 geo_key",
+      "idempotencyGuard": "只处理 poi_key IS NULL 的行；重跑时剩下的都是重复行，不再写；回读断言",
+      "lockRisk": "中/高：相关子查询 ∝ 每会员点数²，大表需放低峰；只写 poi_key。必须在打开 roam.visited_poi.stable_identity 之前执行",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM member_visited_poi WHERE poi_key IS NULL; -- 只剩重复行",
+        "SELECT member_id, poi_key, COUNT(*) c FROM member_visited_poi WHERE poi_key IS NOT NULL GROUP BY member_id, poi_key HAVING c > 1; -- 期望 0 行"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "DATA_PREVIEW"
+      ]
+    },
+    {
+      "step": 65,
+      "migrationId": "roam_share_version_20261022",
+      "path": "chengyinhub-admin/sql/migration_roam_share_version_20261022.sql",
+      "sha256": "563ddd80ae4e23ce96d02183380d9175209e68702aaf06f1061fd9a6688170b6",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 422,
+      "dependsOn": [
+        "20260917_roam_share_snapshot"
+      ],
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "roam_share_snapshot 加列 version INT NOT NULL DEFAULT 1（旧行即为 1）",
+      "idempotencyGuard": "information_schema 判列 → 动态 PREPARE + 回读断言（类型/非空/默认）",
+      "lockRisk": "低：INT NOT NULL DEFAULT 加在末尾，8.0.45 走 INSTANT，只需短暂元数据锁",
+      "verifySelectOnly": [
+        "SELECT column_name, column_type, is_nullable, column_default FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'roam_share_snapshot' AND column_name IN ('version');"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ]
+    },
+    {
+      "migrationId": "20261024_official_roam_challenges",
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "roam_poi 加 gallery_json/photo_required/badge_code；roam_poi_reward_log 加 photo_url/submitted_answer（RoamMapper 直接 SELECT 新列）",
+      "idempotencyGuard": "每列 information_schema 存在性守卫 + 动态 ALTER（已存在则 SELECT 1），可重跑；不校验既有同名列形状，靠预检判 CONFLICT",
+      "lockRisk": "低：两张既有表加可空/常量默认列，MySQL 8.0 走 INSTANT；仍需短暂元数据锁",
+      "verifySelectOnly": [
+        "SELECT table_name, column_name, column_type, is_nullable, column_default FROM information_schema.columns WHERE table_schema = DATABASE() AND ((table_name = 'roam_poi' AND column_name IN ('gallery_json', 'photo_required', 'badge_code')) OR (table_name = 'roam_poi_reward_log' AND column_name IN ('photo_url', 'submitted_answer'))); -- 期望 5 行"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "path": "chengyinhub-admin/sql/migration_20261024_official_roam_challenges.sql",
+      "sha256": "dbe4bae0ce203ca9959ef649a5eeb4e807395249a1a408d6513ef54fac27692c",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 427,
+      "dependsOn": [
+        "20261012_roam_claim_fingerprints",
+        "city_merchant_node",
+        "roam"
+      ],
+      "step": 66
+    },
+    {
+      "migrationId": "20261025_official_poi_quotes",
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "roam_poi 加 quotes_json/photo_credit（官方地点公开引述与照片署名；RoamMapper 直接 SELECT）",
+      "idempotencyGuard": "每列 information_schema 存在性守卫 + 动态 ALTER，可重跑",
+      "lockRisk": "低：加可空 TEXT 列，INSTANT；短暂元数据锁",
+      "verifySelectOnly": [
+        "SELECT column_name, column_type, is_nullable FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'roam_poi' AND column_name IN ('quotes_json', 'photo_credit'); -- 期望 2 行"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "path": "chengyinhub-admin/sql/migration_20261025_official_poi_quotes.sql",
+      "sha256": "7a0f93fc0dfd6b552a13951e9ccfdb4b7ac72c7fad90d55e332855fe1d8ad77d",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 428,
+      "dependsOn": [
+        "20261024_official_roam_challenges"
+      ],
+      "step": 67
+    },
+    {
+      "migrationId": "20261023_g_cash_evidence_expand",
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "新表 coop_settlement_cash_close / _contribution / _event；coop_settlement merchant_id 改可空 + 加 cash_head_kind/cash_close_id + 3 个 STORED 生成列 + 5 索引 + 3 FK + CHECK；coop_settlement_adjustment 加 2 列 + 3 索引 + 2 FK + CHECK",
+      "idempotencyGuard": "无 IF NOT EXISTS / 无存在性守卫：直接重跑必报 前置断言 ASSERT_FAILED__g_cash_evidence_before_ddl。只在预检 NEEDED 时执行一次；APPLIED 跳过；PARTIAL/CONFLICT/BLOCKED_PREREQ 停止交 owner；前置断言还要求存量 coop_settlement 无平台行/空受款人、adjustment 无悬空 claim（预检 BLOCKED_PREREQ 即此情况）",
+      "lockRisk": "高：ALTER coop_settlement 加 STORED 生成列与 FK，需 COPY 重建并持有写锁；ALTER coop_settlement_adjustment 同理。按 [6/7] 行数评估，低峰执行；DDL 自动提交，失败后不得盲目重跑（仓库另有 _precheck_g_cash_evidence_20261023.sql 只读预检）",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN ('coop_settlement_cash_close','coop_settlement_cash_contribution','coop_settlement_cash_event'); -- 期望 3",
+        "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'coop_settlement' AND column_name IN ('cash_head_kind','cash_close_id','cash_member_id','cash_initiator_member_id','cash_global_line_type'); -- 期望 5"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "rerunPolicy": "PRECHECK_SKIP_APPLIED",
+      "sourceMarker": "G cash evidence EXPAND ONLY; no production execution/worker/payment activation",
+      "path": "chengyinhub-admin/sql/migration_20261023_g_cash_evidence_expand.sql",
+      "sha256": "5f37c67e857850926b0fbe35c442ca003d0ce31a799a445c728f2371c2d484cf",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 437,
+      "dependsOn": [
+        "coop_settlement",
+        "coop_settlement_line",
+        "fee_snapshot_20260716",
+        "p3_phase_c_web_rules_refund",
+        "settlement_claim_20260811"
+      ],
+      "step": 68
+    },
+    {
+      "step": 69,
+      "migrationId": "20261022_theme_state_key_attribute_def",
+      "path": "chengyinhub-admin/sql/migration_20261022_theme_state_key_attribute_def.sql",
+      "sha256": "8b69583c24795742c0244610bb8dab6ef9abec64577a0a13666c5929146e0b25",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 463,
+      "dependsOn": [
+        "theme_state_key_20260916"
+      ],
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "theme_state_key 加 9 个可空列 min_value/max_value/display_type/color/icon/sort_order/visible/persist_scope/rules_json（ALGORITHM=INSTANT）",
+      "idempotencyGuard": "DDL 前断言（同名异形列 fail-closed）+ 逐列 information_schema 判断 → 动态 PREPARE + DDL 后断言",
+      "lockRisk": "低：9 次 INSTANT 加列，每次短暂元数据锁",
+      "verifySelectOnly": [
+        "SELECT column_name, column_type, is_nullable, column_default FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'theme_state_key' AND column_name IN ('min_value', 'max_value', 'display_type', 'color', 'icon', 'sort_order', 'visible', 'persist_scope', 'rules_json');"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ]
+    },
+    {
+      "step": 70,
+      "migrationId": "20261022_theme_character",
+      "path": "chengyinhub-admin/sql/migration_20261022_theme_character.sql",
+      "sha256": "a0a8637bdf95674f4c11dabeb3852ab53a923789507a59e0b5cd64587f1adc71",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 464,
+      "dependsOn": [
+        "20261022_theme_state_key_attribute_def",
+        "theme_state_key_20260916"
+      ],
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "新表 theme_character（F2 跨局角色卡）",
+      "idempotencyGuard": "CREATE TABLE IF NOT EXISTS + 列计数与唯一键断言",
+      "lockRisk": "无：只建新表，空表，瞬时完成",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN ('theme_character'); -- 期望 1"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ]
+    },
+    {
+      "migrationId": "20261028_d20_attribute_registry",
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "theme_state_key 加 is_attribute/attribute_preset（ALGORITHM=INSTANT）；把老主题 journey_rules_json.attributes 的 counter.* 登记进 theme_state_key 并标为属性（ThemeAttributeMapper 直接读写新列）",
+      "idempotencyGuard": "列存在性守卫 + 动态 ALTER；回填 INSERT … ON DUPLICATE KEY UPDATE（只补 is_attribute/attribute_preset，不改 label/范围/初值），重跑零变更",
+      "lockRisk": "低：INSTANT 加列；回填扫 cms_topic.journey_rules_json（JSON_TABLE），按主题数线性",
+      "verifySelectOnly": [
+        "SELECT column_name, column_type, is_nullable, column_default FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'theme_state_key' AND column_name IN ('is_attribute', 'attribute_preset'); -- 期望 2 行",
+        "SELECT COUNT(*) FROM theme_state_key WHERE is_attribute = 1; -- 回填后的属性键数，仅记录"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "path": "chengyinhub-admin/sql/migration_20261028_d20_attribute_registry.sql",
+      "sha256": "9cba286e9a9963314ee572364b8b944f3c7dd865c00e4266735c37a2a16ecdf0",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 477,
+      "dependsOn": [
+        "20261022_theme_state_key_attribute_def",
+        "theme_state_key_20260916",
+        "topic_journey_rules_20260916"
+      ],
+      "step": 71
+    },
+    {
+      "migrationId": "20261028_remove_wildlife_theme",
+      "phase": "OWNER_GATED_DATA",
+      "changes": "软删测试主题「野生邻居观察局」（990052–990056 区间同名行）：del_flag=2、user_status=0、is_recommend=0",
+      "idempotencyGuard": "WHERE 钉住 id 区间 + 名称 + del_flag=0，重跑命中 0 行；末尾断言无在架目标行。执行前必须先跑 _precheck_remove_wildlife_theme_20261028.sql（报名/购买/开玩/结算全 0）",
+      "lockRisk": "无：主键区间内单行 UPDATE",
+      "verifySelectOnly": [
+        "SELECT id, del_flag, user_status, is_recommend FROM cms_topic WHERE id BETWEEN 990052 AND 990056 AND name = '野生邻居观察局'; -- 期望 del_flag=2（或无行）"
+      ],
+      "expectedAtBaseline": "APPLIED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "path": "chengyinhub-admin/sql/migration_20261028_remove_wildlife_theme.sql",
+      "sha256": "96a0967b9529c4bd62158c2fd5ca660458a7feb60a1e1937bf325295c02bcf62",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 489,
+      "dependsOn": [
+        "publish_solo_story_topics_20260827",
+        "seed_official_solo_story_topics_20260823"
+      ],
+      "step": 72
+    },
+    {
+      "migrationId": "20261028_template_shelf_list_free_explore",
+      "phase": "OWNER_GATED_DATA",
+      "changes": "6 个自由探索主题模板 user_status 0→1，出现在模板页货架（templateStatus 仍为 EXPERIMENTAL）",
+      "idempotencyGuard": "WHERE 钉住名称 + is_template=1 + status=1 + user_status=0，重跑命中 0 行；末尾断言无待上架行",
+      "lockRisk": "无：最多 6 行 UPDATE",
+      "verifySelectOnly": [
+        "SELECT id, name, is_template, status, user_status, del_flag FROM cms_topic WHERE del_flag = 0 AND name IN ('风味巡游', '不惑之年', '预制人生', '高温末日逃生', '上海像一部旧电影', '生活不掉线'); -- 期望 6 行，user_status=1"
+      ],
+      "expectedAtBaseline": "APPLIED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "path": "chengyinhub-admin/sql/migration_20261028_template_shelf_list_free_explore.sql",
+      "sha256": "6779e927a59031f4bfeff8fee4e4f63de746dd4056f18e655ae979c1b46bd181",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 501,
+      "dependsOn": [
+        "seed_shanghai_solo_topics_20260822",
+        "seed_topic_template_shelf_20260726"
+      ],
+      "step": 73
+    },
+    {
+      "step": 74,
+      "migrationId": "verification_review_evidence_20261022",
+      "path": "chengyinhub-admin/sql/migration_verification_review_evidence_20261022.sql",
+      "sha256": "9b13f58da4455c4af67429bbe604086cf28cd451f19ad71f0bf09b489d42d889",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 520,
+      "dependsOn": [],
+      "phase": "PRE_DEPLOY",
+      "changes": "新表 verification_review_evidence（F4 复核补材料）",
+      "idempotencyGuard": "CREATE TABLE IF NOT EXISTS + 列串指纹 guard + 唯一键断言",
+      "lockRisk": "无：只建新表，空表，瞬时完成",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN ('verification_review_evidence'); -- 期望 1"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ]
+    },
+    {
+      "migrationId": "20261025_coop_order_station_fulfillment",
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "coop_invite 加 supply_station_id + 索引 + CHECK + FK；新表 coop_order_station_fulfillment（6 FK）+ 两个不可改触发器",
+      "idempotencyGuard": "无 IF NOT EXISTS / 无存在性守卫：直接重跑必报 前置断言（表/列/约束/触发器名必须都不存在）。只在预检 NEEDED 时执行一次；APPLIED 跳过；PARTIAL/CONFLICT/BLOCKED_PREREQ 停止交 owner",
+      "lockRisk": "ALTER coop_invite 加列 + FK（需校验存量行，取写锁），先看 [6/7] 行数；建新表瞬时",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN ('coop_order_station_fulfillment'); -- 期望 1",
+        "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'coop_invite' AND column_name = 'supply_station_id'; -- 期望 1"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "rerunPolicy": "PRECHECK_SKIP_APPLIED",
+      "sourceMarker": "no production execution authorized",
+      "path": "chengyinhub-admin/sql/migration_20261025_coop_order_station_fulfillment.sql",
+      "sha256": "73f6586a2f6c0616e3e0283abc0be8bc626d5923b0a776a6a3f01e4ebeec3ba3",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 523,
+      "dependsOn": [
+        "20261023_g_cash_evidence_expand",
+        "business_audit_event_20260823",
+        "w2_terms_axes_20260811"
+      ],
+      "step": 75
+    },
+    {
+      "migrationId": "w8_refund_fulfillment_recovery_20261026",
+      "phase": "PRE_DEPLOY",
+      "changes": "refund_application 加 fulfillment_sync_queue_at（DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6)）与索引 idx_refund_fulfillment_recovery（本 SHA 主代码尚无读写方）",
+      "idempotencyGuard": "列/索引存在性守卫 + 动态 DDL，可重跑；末尾临时守卫表对既有列/索引形状失败即报主键冲突（fail closed）",
+      "lockRisk": "中：既有退款表加带 CURRENT_TIMESTAMP(6) 默认的 NOT NULL 列可能触发表重建，另建 4 列二级索引；看预检 [6] 体量，低峰执行",
+      "verifySelectOnly": [
+        "SELECT column_type, is_nullable, column_default FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'refund_application' AND column_name = 'fulfillment_sync_queue_at'; -- 期望 datetime(6)/NO/CURRENT_TIMESTAMP(6)",
+        "SELECT GROUP_CONCAT(column_name ORDER BY seq_in_index) FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'refund_application' AND index_name = 'idx_refund_fulfillment_recovery'; -- 期望 source_type,del_flag,fulfillment_sync_queue_at,id"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "path": "chengyinhub-admin/sql/migration_w8_refund_fulfillment_recovery_20261026.sql",
+      "sha256": "28b65fad53c1aa768b7d7d56886e4b4a1998cecb8faad59bcc8d9c996bf432f1",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 524,
+      "dependsOn": [
+        "p3_phase_c_web_rules_refund"
+      ],
+      "step": 76
+    },
+    {
+      "migrationId": "20261026_user_invoice_menu",
+      "phase": "PRE_DEPLOY",
+      "changes": "sys_menu 新增「用户发票处理」C 菜单（funds-aftercare 下）与 query/taxView/process/reconcile 4 个 F 按钮；不授任何角色",
+      "idempotencyGuard": "runner: requires=transaction；逐行 INSERT … WHERE NOT EXISTS（按 perms）；临时守卫表对父菜单不唯一、同名权限重复或形状不符即主键冲突整批回滚",
+      "lockRisk": "无：sys_menu 5 行插入，事务内完成",
+      "verifySelectOnly": [
+        "SELECT menu_id, parent_id, menu_type, path, component, perms FROM sys_menu WHERE perms IN ('business:userInvoice:list', 'business:userInvoice:query', 'business:userInvoice:taxView', 'business:userInvoice:process', 'business:userInvoice:reconcile') ORDER BY menu_type, perms; -- 期望 1 行 C + 4 行 F"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "path": "chengyinhub-admin/sql/migration_20261026_user_invoice_menu.sql",
+      "sha256": "078d59279328a462bf73a948382904129ef2abce8acb9864b3731a9bd9614c61",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 529,
+      "dependsOn": [
+        "20261012_missing_business_menu",
+        "20261026_user_invoice_processing",
+        "20261026_user_invoice_title_receipt"
+      ],
+      "step": 77
+    },
+    {
+      "step": 78,
+      "migrationId": "20261013_admin_role_page_grants",
+      "path": "chengyinhub-admin/sql/migration_20261013_admin_role_page_grants.sql",
+      "sha256": "1f147a2136e999b6fd87a7e0a865d8fde5b0c332170d561b28e415b9fccaf56e",
+      "baseSha256": "0834bcafb1c9a2f169377445d463cc34a6dce7fa2e96e6b6f81d09ab65254ead",
+      "change": "MODIFIED",
+      "order": 544,
+      "dependsOn": [
+        "20261012_media_review_menu",
+        "20261012_missing_business_menu",
+        "role2_analytics_perm_20260918",
+        "web_admin_roles_20260719"
+      ],
+      "phase": "PRE_DEPLOY",
+      "changes": "仅对「一个页面授权都没有」的 cy_operator/cy_auditor/cy_support/cy_finance 按 20260719 矩阵补授权并补祖先菜单；已有页面授权的角色不动（已有页面时 no-op；生产状态未知）",
+      "idempotencyGuard": "全部 INSERT … NOT EXISTS；临时表先 DROP TEMPORARY IF EXISTS；无 information_schema 守卫（纯 DML）；有回读断言",
+      "lockRisk": "低：sys_role_menu 小表",
+      "verifySelectOnly": [
+        "SELECT r.role_key, COUNT(*) FROM sys_role r JOIN sys_role_menu rm ON rm.role_id = r.role_id JOIN sys_menu m ON m.menu_id = rm.menu_id WHERE r.del_flag = '0' AND m.menu_type = 'C' AND r.role_key LIKE 'cy\\\\_%' GROUP BY r.role_key; -- 4 个角色均 > 0"
+      ],
+      "expectedAtBaseline": "APPLIED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ]
+    },
+    {
+      "step": 79,
+      "migrationId": "20261016_admin_role_payee_separation_forward",
+      "path": "chengyinhub-admin/sql/migration_20261016_admin_role_payee_separation_forward.sql",
+      "sha256": "4eeef3936f72f05e69b3440aa818c2c39d53e046aaabd82cfdef10c868cca34e",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 545,
+      "dependsOn": [
+        "20260816_tandianri_batch3_funds_club_compensation",
+        "20260816_tandianri_batch3_funds_club_payee",
+        "20260817_tandianri_batch3_funds_club_hours_correction",
+        "20261013_admin_role_page_grants"
+      ],
+      "phase": "PRE_DEPLOY",
+      "changes": "D-PAYEE：撤销 cy_operator→business:clubpayee:verify 与 cy_finance→business:clubpayee:payout，补齐 cy_operator→payout 与 cy_finance→verify；全新安装（sys_user 为空且角色无页面）才走批量初始化分支",
+      "idempotencyGuard": "-- runner: requires=transaction，单事务；guard 临时表主键冲突（角色/菜单不全、断言失败）让整个事务回滚；INSERT 带 NOT EXISTS，DELETE 重跑删 0 行",
+      "lockRisk": "低：sys_role_menu 小表；SELECT … FOR UPDATE 锁 4 个角色行与 4 个菜单行，事务很短",
+      "verifySelectOnly": [
+        "SELECT r.role_key, m.perms FROM sys_role_menu rm JOIN sys_role r ON r.role_id = rm.role_id JOIN sys_menu m ON m.menu_id = rm.menu_id WHERE r.del_flag = '0' AND r.role_key IN ('cy_operator', 'cy_finance') AND m.perms IN ('business:clubpayee:verify', 'business:clubpayee:payout'); -- 期望恰好 2 行：cy_operator/payout、cy_finance/verify"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ]
+    },
+    {
+      "migrationId": "20261027_orient_scoring_menu_grants",
+      "phase": "PRE_DEPLOY",
+      "changes": "sys_menu 在官方主题 C 菜单下补 business:orientScoring:list/review 两个 F 按钮；sys_role_menu 只授 cy_operator（owner 2026-10-27）",
+      "idempotencyGuard": "runner: requires=transaction；INSERT … WHERE NOT EXISTS；前置（父菜单恰好 1 行、同名权限不重复且为 F）与回读（2 个按钮、每个有效 cy_operator 持有、其他角色不持有）任一不成立即主键冲突整批回滚",
+      "lockRisk": "无：sys_menu 2 行 + sys_role_menu 少量行，事务内完成",
+      "verifySelectOnly": [
+        "SELECT r.role_key, m.perms FROM sys_role_menu rm JOIN sys_role r ON r.role_id = rm.role_id JOIN sys_menu m ON m.menu_id = rm.menu_id WHERE m.perms IN ('business:orientScoring:list', 'business:orientScoring:review') ORDER BY r.role_key, m.perms; -- 期望只有 cy_operator x2"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "path": "chengyinhub-admin/sql/migration_20261027_orient_scoring_menu_grants.sql",
+      "sha256": "6af4376c7606e5bce733fe97f97f56213930d02cc0d4c2a1e9a39313505606cc",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 546,
+      "dependsOn": [
+        "20261012_missing_business_menu",
+        "topic_source_menu_20260722",
+        "web_admin_roles_20260719"
+      ],
+      "step": 80
+    },
+    {
+      "migrationId": "20261023_g_wp08_delivery_jobs_paused",
+      "phase": "OWNER_GATED_DATA",
+      "changes": "sys_job 登记两个默认暂停的补偿任务：imNotificationDeliveryTask.deliverPending()、roamRewardDeliveryTask.run()（已存在则原样保留）",
+      "idempotencyGuard": "幂等：WHERE NOT EXISTS 按精确 invoke_target 判重，事务内插入并断言恰好 2 行（演练实际重跑）",
+      "lockRisk": "无：sys_job 插入至多 2 行",
+      "verifySelectOnly": [
+        "SELECT invoke_target, status, cron_expression FROM sys_job WHERE invoke_target IN ('imNotificationDeliveryTask.deliverPending()','roamRewardDeliveryTask.run()'); -- 期望 2 行；新登记为 status=1（暂停）"
+      ],
+      "expectedAtBaseline": "APPLIED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "sourceMarker": "G/WP08 POST_DEPLOY DML candidate only; NOT executed on production",
+      "path": "chengyinhub-admin/sql/migration_20261023_g_wp08_delivery_jobs_paused.sql",
+      "sha256": "9d5b05113ddbf878735ae391313814540a855bd41f21aeaa61b63578e76ee7ab",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 553,
+      "dependsOn": [
+        "20261012_im_media_visibility",
+        "20261013_b_im_notification_intent",
+        "20261013_roam_badge_delivery",
+        "20261013_roam_reward_delivery",
+        "member_exp_earned_20261011"
+      ],
+      "step": 81
+    },
+    {
+      "migrationId": "club_post_media_review_budget_20261024",
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "club_post_media_review_outbox 两个 CHECK（owner/trace）放宽为允许 state=5（停止/人工）保留原 owner/trace",
+      "idempotencyGuard": "可重入：前置断言接受旧或新 CHECK，同一条 ALTER 先 DROP 再 ADD 同名 CHECK（演练实际重跑）",
+      "lockRisk": "ALTER club_post_media_review_outbox 换 CHECK（需校验存量行），先看 [6/7] 行数",
+      "verifySelectOnly": [
+        "SELECT constraint_name, check_clause FROM information_schema.check_constraints WHERE constraint_schema = DATABASE() AND constraint_name IN ('chk_club_post_media_review_owner','chk_club_post_media_review_trace'); -- 期望两条都含 state=5"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "sourceMarker": "Source only: run the read-only preflight separately before approving any production DDL",
+      "path": "chengyinhub-admin/sql/migration_club_post_media_review_budget_20261024.sql",
+      "sha256": "5d4f02c02dcd1b67c45ce6d05e575fd9a3045bfea30cb4094fce2063d492669e",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 555,
+      "dependsOn": [
+        "club_role_media_review_outbox_20260824"
+      ],
+      "step": 82
+    },
+    {
+      "migrationId": "20261024_wx_verified_payment_fact",
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "新表 wx_verified_payment_fact、wx_verified_payment_fact_rejection、wx_payment_callback_fact_link",
+      "idempotencyGuard": "无 IF NOT EXISTS / 无存在性守卫：直接重跑必报 1050 Table already exists。只在预检 NEEDED 时执行一次；APPLIED 跳过；PARTIAL/CONFLICT/BLOCKED_PREREQ 停止交 owner",
+      "lockRisk": "建 3 张新表；fact_link 的 FK 对 wx_payment_callback_inbox 取短暂元数据锁",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN ('wx_verified_payment_fact', 'wx_verified_payment_fact_rejection', 'wx_payment_callback_fact_link'); -- 期望 3"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "rerunPolicy": "PRECHECK_SKIP_APPLIED",
+      "sourceMarker": "SOURCE-ONLY PROPOSAL. No DDL is authorized/executed by this candidate",
+      "path": "chengyinhub-admin/sql/migration_20261024_wx_verified_payment_fact.sql",
+      "sha256": "1bc8ed6c9fdfefbb63890802f663961a27adb5636770394a0671123504d060e9",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 559,
+      "dependsOn": [
+        "wx_payment_callback_inbox_outbox_20260725"
+      ],
+      "step": 83
+    },
+    {
+      "migrationId": "20261024_clm_commerce_payment_proof",
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "club_membership_invoice、oms_order 各加 verified_payment_fact_id / verified_payment_fact_hash + 唯一键 + FK(→wx_verified_payment_fact) + CHECK",
+      "idempotencyGuard": "前置断言要求两表都没有这些列/约束：直接重跑必失败。只在预检 NEEDED 时执行一次；APPLIED 跳过；PARTIAL（第一条 ALTER 已提交）停止交 owner",
+      "lockRisk": "ALTER club_membership_invoice、oms_order（加列 + 唯一键 + FK，需校验存量行并取写锁），先看 [6/7] 行数，低峰执行",
+      "verifySelectOnly": [
+        "SELECT table_name, COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name IN ('club_membership_invoice','oms_order') AND column_name IN ('verified_payment_fact_id','verified_payment_fact_hash') GROUP BY table_name; -- 期望两表各 2"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "rerunPolicy": "PRECHECK_SKIP_APPLIED",
+      "sourceMarker": "Source-only ordered migration. No historical inference, DML/backfill, DROP or production execution",
+      "path": "chengyinhub-admin/sql/migration_20261024_clm_commerce_payment_proof.sql",
+      "sha256": "039c786834993b88734742b25ee96e6f42773a755ed5f935b8cf6950679d15f5",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 560,
+      "dependsOn": [
+        "20261024_wx_verified_payment_fact",
+        "club_role_membership_20260823",
+        "commerce_order_fields_and_verification_review_20260805"
+      ],
+      "step": 84
+    },
+    {
+      "migrationId": "20261024_coop_original_refund_components",
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "新表 coop_settlement_original_component、coop_settlement_refund_receipt、coop_settlement_original_adjustment",
+      "idempotencyGuard": "无 IF NOT EXISTS / 无存在性守卫：直接重跑必报 前置断言 ASSERT_FAILED__original_refund_preflight。只在预检 NEEDED 时执行一次；APPLIED 跳过；PARTIAL/CONFLICT/BLOCKED_PREREQ 停止交 owner",
+      "lockRisk": "无：只建新表，空表，瞬时完成",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN ('coop_settlement_original_component', 'coop_settlement_refund_receipt', 'coop_settlement_original_adjustment'); -- 期望 3"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "rerunPolicy": "PRECHECK_SKIP_APPLIED",
+      "sourceMarker": "SOURCE CANDIDATE ONLY. NO PRODUCTION DDL EXECUTED. This candidate is NOT approved for application",
+      "path": "chengyinhub-admin/sql/migration_20261024_coop_original_refund_components.sql",
+      "sha256": "ccde7e23229557657541c972bc55820bb8ed6e078165ed94a9c2c4df778fd6fe",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 561,
+      "dependsOn": [
+        "20261023_g_cash_evidence_expand",
+        "20261024_wx_verified_payment_fact"
+      ],
+      "step": 85
+    },
+    {
+      "migrationId": "20261024_coop_negative_margin_manual",
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "新表 coop_settlement_manual_case",
+      "idempotencyGuard": "无 IF NOT EXISTS / 无存在性守卫：直接重跑必报 1050 Table already exists。只在预检 NEEDED 时执行一次；APPLIED 跳过；PARTIAL/CONFLICT/BLOCKED_PREREQ 停止交 owner",
+      "lockRisk": "无：只建新表，空表，瞬时完成",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN ('coop_settlement_manual_case'); -- 期望 1"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "rerunPolicy": "PRECHECK_SKIP_APPLIED",
+      "sourceMarker": "ADDITIVE SOURCE ONLY: no production DDL/backfill is authorized or executed",
+      "path": "chengyinhub-admin/sql/migration_20261024_coop_negative_margin_manual.sql",
+      "sha256": "8c1d57fdce3717f39a3b6b671c5671e10f9f7e9035a4cf6c81495b84f27cb5f5",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 562,
+      "dependsOn": [
+        "20261024_coop_original_refund_components"
+      ],
+      "step": 86
+    },
+    {
+      "migrationId": "20261024_registration_payment_fact",
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "新表 cms_registration_payment_fact",
+      "idempotencyGuard": "无 IF NOT EXISTS / 无存在性守卫：直接重跑必报 1050 Table already exists。只在预检 NEEDED 时执行一次；APPLIED 跳过；PARTIAL/CONFLICT/BLOCKED_PREREQ 停止交 owner",
+      "lockRisk": "建新表；FK 对 cms_registration 取短暂元数据锁",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN ('cms_registration_payment_fact'); -- 期望 1",
+        "SELECT COUNT(*) FROM information_schema.triggers WHERE trigger_schema = DATABASE() AND trigger_name IN ('registration_paid_fact_no_update','registration_paid_fact_no_delete'); -- 期望 2"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "rerunPolicy": "PRECHECK_SKIP_APPLIED",
+      "sourceMarker": "SOURCE-ONLY CANDIDATE. No production DDL/backfill is authorized or executed here",
+      "path": "chengyinhub-admin/sql/migration_20261024_registration_payment_fact.sql",
+      "sha256": "fdc733febedd2a1781bf0976d0ebf2d9b5b411b0d3f5787c72d00c328a5017eb",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 563,
+      "dependsOn": [
+        "20261024_wx_verified_payment_fact"
+      ],
+      "step": 87
+    },
+    {
+      "migrationId": "20261024_wx_success_fact_business_index",
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "wx_verified_payment_fact 加索引 ix_wx_fact_business(business_out_trade_no, mchid)",
+      "idempotencyGuard": "无 IF NOT EXISTS / 无存在性守卫：直接重跑必报 1061 Duplicate key name。只在预检 NEEDED 时执行一次；APPLIED 跳过；PARTIAL/CONFLICT/BLOCKED_PREREQ 停止交 owner",
+      "lockRisk": "ALTER 新表（空表）加索引，瞬时",
+      "verifySelectOnly": [
+        "SELECT COUNT(*) FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'wx_verified_payment_fact' AND index_name = 'ix_wx_fact_business'; -- 期望 2（两列）"
+      ],
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "rerunPolicy": "PRECHECK_SKIP_APPLIED",
+      "sourceMarker": "SOURCE-ONLY proposal. No DDL executed",
+      "path": "chengyinhub-admin/sql/migration_20261024_wx_success_fact_business_index.sql",
+      "sha256": "0937ea8846f8ab661d272016b2cf9aa655c18c062f38266ae1e6caecbce7a12c",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 564,
+      "dependsOn": [
+        "20261024_wx_verified_payment_fact"
+      ],
+      "step": 88
+    }
+  ],
+  "previousPack": "docs/delivery/release-closeout-20261028/release-migration-pack.json",
+  "statuses": {
+    "REPLACED_UNAPPLIED": "已被替代的迁移：永不执行（旧 C 通知由 v2 原样替代；10-26 旧广播协议由 D + union 组合替代）"
+  },
+  "finalSha": "963b351c5adf55934a20e34010e2f90e473296dd"
+}

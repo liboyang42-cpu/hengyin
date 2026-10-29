@@ -23,6 +23,8 @@ class PlayOriginalSessionIntentTest {
 
     @BeforeEach void prepare() {
         app = new PlayBasicIntentApplication();
+        ReflectionTestUtils.setField(app, "responseObjectMapper", org.springframework.http.converter.json.Jackson2ObjectMapperBuilder.json()
+                .timeZone(java.util.TimeZone.getTimeZone("Asia/Shanghai")).build());
         receipts = mock(GameSessionRuntimeMapper.class);
         routes = mock(TopicRouteSessionMapper.class);
         ICmsTopicNodeService nodes = mock(ICmsTopicNodeService.class);
@@ -89,6 +91,20 @@ class PlayOriginalSessionIntentTest {
         assertEquals(409, invoke("a", 72L).get("code"));
         verifyNoInteractions(routes);
         assertNull(executed.get());
+    }
+
+    @Test void replayPreservesTheHttpTimestampRepresentation() throws Exception {
+        var wire = (com.fasterxml.jackson.databind.ObjectMapper) ReflectionTestUtils.getField(app, "responseObjectMapper");
+        var payload = new java.util.LinkedHashMap<String, Object>();
+        payload.put("arrivedAt", new java.util.Date(1793200000000L));
+        AjaxResult first = app.executeBasicIntent(1L, "ANSWER", null, "2", "3", "date", 4, null,
+                71L, null, null, List.of("answer"), locked -> AjaxResult.success(payload));
+        var saved = org.mockito.ArgumentCaptor.forClass(GameCommandReceipt.class);
+        verify(receipts).completeReceipt(saved.capture());
+        when(receipts.selectReceiptForUpdate(eq(0L), eq(1L), anyString())).thenReturn(saved.getValue());
+        AjaxResult replay = invoke("date", 71L);
+        assertEquals(wire.readTree(wire.writeValueAsString(first)), wire.readTree(wire.writeValueAsString(replay)));
+        verify(receipts, times(1)).insertReceiptClaim(any());
     }
 
     @Test void terminalReceiptFailurePropagatesInsteadOfReturningSuccess() {

@@ -94,10 +94,25 @@ class ReleaseMigrationPackTest(unittest.TestCase):
             with self.assertRaises(ValueError):
                 rehearsal.rerun_action({**single, "rerunPolicy": "EXECUTE"}, "APPLIED")
         for item in PACK["migrations"]:
-            if item["migrationId"] not in rehearsal.SINGLE_APPLY:
+            if item["migrationId"] not in rehearsal.SINGLE_APPLY | set(rehearsal.REPLACED_UNAPPLIED):
                 self.assertEqual("EXECUTE", rehearsal.rerun_action(item, None))
                 with self.assertRaises(ValueError):
                     rehearsal.rerun_action({**item, "rerunPolicy": "PRECHECK_SKIP_APPLIED"}, "APPLIED")
+
+    def test_replaced_migrations_are_never_executed(self):
+        declared = {m["migrationId"] for m in PACK["migrations"] if m.get("rerunPolicy") == "REPLACED_UNAPPLIED"}
+        self.assertEqual(set(rehearsal.REPLACED_UNAPPLIED), declared)
+        ids = {m["migrationId"] for m in PACK["migrations"]}
+        self.assertTrue(set(rehearsal.REPLACED_UNAPPLIED.values()) <= ids)
+        self.assertFalse(set(rehearsal.REPLACED_UNAPPLIED) & rehearsal.SINGLE_APPLY)
+        for item in PACK["migrations"]:
+            if item["migrationId"] in rehearsal.REPLACED_UNAPPLIED:
+                for status in (None, "APPLIED", "NEEDED", "REPLACED_UNAPPLIED", "CONFLICT"):
+                    self.assertEqual("SKIP_REPLACED", rehearsal.rerun_action(item, status))
+                with self.assertRaises(ValueError):
+                    rehearsal.rerun_action({**item, "rerunPolicy": "EXECUTE"}, None)
+            else:
+                self.assertIsNone(rehearsal.replaced_action(item))
 
     def test_direct_rerun_negative_control_requires_exact_failure_and_no_mutation(self):
         duplicate = [("probe", 2, "EXEC",

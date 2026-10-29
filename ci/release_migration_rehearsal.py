@@ -13,7 +13,8 @@
   3. 第一遍：按执行序逐个执行发布集（严格模式，断言为假即停），记录每个迁移改动了哪些表。
   4. 再跑预检：每一项都必须落在 pack 声明的 expectedAfterApply 状态里。
   5. 第二遍：可重入迁移实际重跑；welcome_note 先证明直接重跑必报 1060 且零变更，
-     再仅在只读预检为 APPLIED 时跳过。所有执行/跳过分别记账，仍核对全库指纹。
+     单次执行迁移仅在只读预检为 APPLIED 时跳过。所有执行/跳过分别记账，仍核对全库指纹。
+     已被替代的迁移（REPLACED_UNAPPLIED：旧 C 通知、10-26 旧广播协议）两遍都不执行，只记账。
   6. 负控：人为制造同名异形表 / 列 / 重复配置键 / 重复菜单 / 授权漂移，预检必须判出对应状态。
   7. 风险探针：另建一个「后台角色无页面授权」的库，复现 20261013 在断言处中途停止（见 pack 的 D-PAYEE 节）。
 
@@ -40,8 +41,8 @@ from ci.migration_ledger import build_manifest  # noqa: E402
 from ci.release_manifest import migration_diff  # noqa: E402
 from ci.sql_splitter import split_statements, executable_statement  # noqa: E402
 
-# 当前发布包；docs/delivery/release-closeout-20261022 保留为历史记录，不再随 HEAD 刷新。
-PACK_DIR = REPO / "docs/delivery/release-closeout-20261028"
+# 当前发布包；release-closeout-20261022 / 20261028 保留为历史记录，不再随 HEAD 刷新。
+PACK_DIR = REPO / "docs/delivery/release-closeout-20261029"
 PACK_JSON = PACK_DIR / "release-migration-pack.json"
 PRECHECK_SQL = PACK_DIR / "release-migration-precheck.sql"
 PASSWORD_ENV = "CHENGYIN_REHEARSAL_MYSQL_PASSWORD"
@@ -73,6 +74,12 @@ SYNTHETIC_ROWS = [
     # 品牌形象图并入门店相册（20261027）：一张已在相册、一张待追加、一个分号分隔。
     "UPDATE mms_merchant SET derivatives = 'https://example.invalid/b1.jpg;https://example.invalid/b2.jpg', "
     "gallery = '[\"https://example.invalid/b1.jpg\"]' WHERE id = 9801",
+    # 下架测试主题（20261029）：1、8 应被软删；6 有已支付报名被守卫跳过；7 的 member_id 不吻合不得改动。
+    "INSERT INTO cms_topic(id, name, member_id, del_flag) VALUES (1, '上海滨江 10KM 骑行', 100086, 0), "
+    "(6, '成都宽窄巷子辣味食材寻味', 100000, 0), (7, '上海沉浸式戏剧', 100001, 0), (8, '西安大唐不夜城灯光秀', 100000, 0)",
+    "INSERT INTO cms_registration(id, registration_no, member_id, owner_type, owner_id, topic_id, registration_status, "
+    "payment_status, purchase_kind, original_amount, total_amount, payable_amount, pay_expire_time, create_time) "
+    "VALUES (9501, 'rehearsal-reg-6', 9801, 1, 6, 6, 2, 2, 2, 0, 0, 0, NOW(), NOW())",
 ]
 
 # 合成的已有页面形态（不代表生产状态）：四个后台角色都已配置过页面，且收款审核/打款授权按
@@ -125,7 +132,16 @@ NEGATIVE_CONTROLS = [
     ("20261023_wx_pay_order_intent", "ALTER TABLE wx_pay_order_intent ADD COLUMN rehearsal_bogus INT NULL", "CONFLICT"),
     ("20261024_cash_withdraw_transfer_intent",
      "ALTER TABLE member_cash_withdraw_transfer_intent DROP INDEX uk_cash_transfer_batch", "CONFLICT"),
-    ("20261026_official_broadcast_delivery", "DROP TABLE official_broadcast_creation", "PARTIAL"),
+    ("20261028_official_broadcast_protocol_union", "DROP TABLE official_broadcast_creation", "PARTIAL"),
+    ("20261024_wx_success_fact_business_index",
+     "ALTER TABLE wx_verified_payment_fact DROP INDEX ix_wx_fact_business", "NEEDED"),
+    ("20261023_cash_withdraw_fund_fact", "DROP TRIGGER cash_fund_fact_no_delete", "PARTIAL"),
+    ("20261023_advanced_command_fingerprint",
+     "ALTER TABLE play_attempt_log MODIFY request_fingerprint CHAR(32) CHARACTER SET ascii COLLATE ascii_bin NULL",
+     "CONFLICT"),
+    ("20261023_g_wp08_delivery_jobs_paused",
+     "INSERT INTO sys_job(job_name, job_group, invoke_target, cron_expression, misfire_policy, concurrent, status) "
+     "VALUES ('dup', 'DEFAULT', 'roamRewardDeliveryTask.run()', '0 0/10 * * * ?', '3', '1', '1')", "CONFLICT"),
     ("20261024_official_roam_challenges", "ALTER TABLE roam_poi MODIFY badge_code VARCHAR(40) NULL", "CONFLICT"),
     ("20261024_community_open_flags",
      "INSERT INTO sys_config(config_name, config_key, config_value, config_type) "
@@ -205,13 +221,53 @@ SINGLE_APPLY = frozenset({
     "club_welcome_note_20261022",
     "20261023_wx_pay_order_intent",
     "20261024_cash_withdraw_transfer_intent",
-    "20261026_official_broadcast_delivery",
+    # 20261029 包新增（#660 的候选迁移；普通 CREATE/ADD 或前置断言要求对象不存在）。
+    "20261023_cash_withdraw_fund_fact",
+    "20261023_d_official_broadcast_delivery",
+    "20261023_g_cash_evidence_expand",
+    "20261024_clm_commerce_payment_proof",
+    "20261024_coop_negative_margin_manual",
+    "20261024_coop_original_refund_components",
+    "20261024_d_chapter_application_round",
+    "20261024_d_committed_official_notice_wx",
+    "20261024_d_npc_asr_intent",
+    "20261024_d_npc_asr_shared_quota",
+    "20261024_g_before_start_notice_metadata_v2",
+    "20261024_registration_payment_fact",
+    "20261024_registration_verified_seats",
+    "20261024_wx_success_fact_business_index",
+    "20261024_wx_verified_payment_fact",
+    "20261025_cash_withdraw_fund_request_compat",
+    "20261025_coop_order_station_fulfillment",
+    "20261028_official_broadcast_protocol_union",
+    "ai_theme_draft_request_intent_20261024",
+    "npc_voice_confirmed_attempt_20261024",
+    "npc_voice_enrollment_intent_20261024",
+    "photo_check_intent_20261023",
 })
+
+# 已被替代、永不执行的迁移 -> 替代者（与 scripts/e2e/build_schema.py 的 REPLACED_UNAPPLIED 选择一致）。
+REPLACED_UNAPPLIED = {
+    "20261024_c_before_start_notice_typed": "20261024_g_before_start_notice_metadata_v2",
+    "20261026_official_broadcast_delivery": "20261028_official_broadcast_protocol_union",
+}
+
+
+def replaced_action(item):
+    """Replaced migrations are never executed in either pass; the pack must say so explicitly."""
+    if item["migrationId"] not in REPLACED_UNAPPLIED:
+        return None
+    if item.get("rerunPolicy") != "REPLACED_UNAPPLIED":
+        raise ValueError("replaced migration without REPLACED_UNAPPLIED policy: %s" % item["migrationId"])
+    return "SKIP_REPLACED"
 
 
 def rerun_action(item, status):
     """Only reviewed single-apply migrations may skip, after a fresh APPLIED readback."""
     policy = item.get("rerunPolicy", "EXECUTE")
+    replaced = replaced_action(item)
+    if replaced:
+        return replaced
     if item["migrationId"] in SINGLE_APPLY:
         if policy != "PRECHECK_SKIP_APPLIED" or status != "APPLIED":
             raise ValueError("single-apply rerun refused: %s policy=%s, status=%s"
@@ -525,6 +581,16 @@ def main():
             for migration_id in ids:
                 delta = known_delta.get(migration_id) if rerun else None
                 before = schema_fingerprint(cur)
+                try:
+                    replaced = replaced_action(pack_by_id[migration_id])
+                except ValueError as error:
+                    return changes, (migration_id, [str(error)])
+                if replaced:
+                    report.setdefault("replacedUnapplied", []).append(
+                        {"migrationId": migration_id, "replacedBy": REPLACED_UNAPPLIED[migration_id],
+                         "pass": 2 if rerun else 1})
+                    changes[migration_id] = []
+                    continue
                 if rerun:
                     status = run_precheck(cur).get(migration_id) if migration_id in SINGLE_APPLY else None
                     try:
@@ -558,7 +624,8 @@ def main():
         if error:
             return fail("第一遍在 %s 停止（stop-on-first-error）" % error[0], problems=error[1])
         report["steps"].append({"step": "run-1", "changedTables": first})
-        print("[3] 第一遍：%d 个迁移全部成功" % len(first))
+        print("[3] 第一遍：%d 个迁移全部成功（其中已替代不执行 %d 个）"
+              % (len(first), sum(r["pass"] == 1 for r in report.get("replacedUnapplied", []))))
 
         post = run_precheck(cur)
         wrong = {i: post.get(i) for i in release_ids if post.get(i) not in expected_after[i]}
@@ -592,6 +659,13 @@ def main():
                 json.loads(gallery_row[1]) != ["https://example.invalid/b1.jpg", "https://example.invalid/b2.jpg"]:
             return fail("品牌形象图未按原顺序去重追加进相册，或 derivatives 被改动", observed=gallery_row)
 
+        cur.execute("SELECT id, del_flag, update_by FROM cms_topic WHERE id IN (1, 6, 7, 8) ORDER BY id")
+        topic_rows = [list(row) for row in cur.fetchall()]
+        report["steps"].append({"step": "unlist-test-topics-readback", "rows": topic_rows})
+        if topic_rows != [[1, 1, "unlist_test_topics_20261029"], [6, 0, None], [7, 0, None],
+                          [8, 1, "unlist_test_topics_20261029"]]:
+            return fail("测试主题下架未按 id+名称+member_id 钉住或未尊重报名守卫", observed=topic_rows)
+
         # Preserve the raw failure as an explicit negative control; never pretend this SQL is idempotent.
         before_probe = schema_fingerprint(cur)
         raw_problems = []
@@ -612,9 +686,11 @@ def main():
         report["steps"].append({"step": "run-2", "changedTables": second})
         if drift:
             return fail("第二遍不是零变更", drift=drift)
-        print("[5] 第二遍：实际重跑 %d 个，APPLIED 预检后跳过 %d 个；零变更（已声明的元数据列除外：%s）"
-              % (len(second) - len(report.get("rerunSkippedApplied", [])),
-                 len(report.get("rerunSkippedApplied", [])), report.get("rerunKnownDeltaObserved", "无")))
+        replaced_second = sum(r["pass"] == 2 for r in report.get("replacedUnapplied", []))
+        print("[5] 第二遍：实际重跑 %d 个，APPLIED 预检后跳过 %d 个，已替代不执行 %d 个；零变更（已声明的元数据列除外：%s）"
+              % (len(second) - len(report.get("rerunSkippedApplied", [])) - replaced_second,
+                 len(report.get("rerunSkippedApplied", [])), replaced_second,
+                 report.get("rerunKnownDeltaObserved", "无")))
 
         controls = []
         for migration_id, mutation, expected in NEGATIVE_CONTROLS:

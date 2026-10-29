@@ -288,12 +288,6 @@
         <!-- 动态效果是本机偏好,就地能翻 —— 真开关,不带箭头、不跳页。
              ⚠️ 这一行此前被写在「设置」那一行的内部(标签没闭合就插了新行),
              于是屏上出现两行「设置」,里外两层还都可点。 -->
-        <!-- 声音(2026-09-23):环境音与音效,本机记住。 -->
-        <view class="drow">
-          <view class="dic pic pic--bell"></view>
-          <view class="dcopy"><text class="dt">声音</text><text class="ds">{{soundOn ? '环境音与音效' : '已关闭'}}</text></view>
-          <view class="dsw {{soundOn ? 'is-on' : ''}}" catchtap="toggleStorySound" aria-role="switch" aria-checked="{{soundOn}}" aria-label="声音" hover-class="cy-pressed" hover-stay-time="80"><view class="dsw-i"></view></view>
-        </view>
         <view class="drow">
           <view class="dic pic pic--gear"></view>
           <view class="dcopy"><text class="dt">动态效果</text><text class="ds">{{reducedMotion ? '已减少' : '正常播放'}}</text></view>
