@@ -58,6 +58,7 @@ public class AppMediaAssetService {
     }
     @Transactional
     public Map<String,Object> stage(Long memberId,String objectKey) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         if(memberId==null || memberId<=0 || objectKey==null || !objectKey.matches("upload/[0-9a-f]{32}\\.(mp3|m4a|aac|wav|glb|jpg|jpeg|png|gif)"))
             throw new ServiceException("媒体归属或文件来源无效");
         Map<String,Object> row=new LinkedHashMap<>(); row.put("memberId",memberId);row.put("objectKey",objectKey);
@@ -76,6 +77,7 @@ public class AppMediaAssetService {
     }
     @Transactional
     public Map<String,Object> retry(Long id,Long memberId) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         Map<String,Object> row=owned(mapper.selectForUpdate(id),memberId);
         int version=((Number)row.get("version")).intValue();
         if(mapper.retry(id,memberId,version)!=1)throw new ServiceException("媒体当前状态不允许重新提审");
@@ -121,6 +123,14 @@ public class AppMediaAssetService {
         if(row==null || !"APPROVED".equals(row.get("reviewState")))throw new ServiceException("媒体尚未审核通过");
         if("LOCAL".equals(row.get("storageType")))return localApprovedUrl(String.valueOf(row.get("objectKey")));
         return FileOssUploadUtils.generatePresignedUrl(String.valueOf(row.get("objectKey")));
+    }
+    /**
+     * G-3:未登记的本站系统图(后台上传、模板自带、登记表上线前的旧图)按存储 key 出公开地址;
+     * 本地发布地址没配时返回 null,由读路径跳过这张图,不让整页失败。
+     */
+    public String systemImageUrl(String objectKey) {
+        if(objectKey.startsWith("/profile/"))return publicBaseUrl==null || publicBaseUrl.trim().isEmpty()?null:localPublicBase()+objectKey;
+        return FileOssUploadUtils.generatePresignedUrl(objectKey);
     }
     public void requireLocalPublicationOrigin() {localPublicBase();}
     private String localApprovedUrl(String objectKey) {

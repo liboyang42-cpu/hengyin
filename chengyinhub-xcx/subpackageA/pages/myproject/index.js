@@ -416,6 +416,7 @@ Page({
     this.setData({ 'opsSheet.show': false });
     const ds = { id: p.id, biz: p.biz, online: p.online, title: p.title };
     if (k === 'received') return this.goReceivedApplies();
+    if (k === 'edit' && p.biz === 'topic') return this.editTopic(p.id);
     if (k === 'edit') return this.editActivity({ currentTarget: { dataset: { item: { id: p.id, bizType: 'activity', title: p.title, _sold: false, signupCount: 0 } } } });
     if (k === 'toggle') return this.toggleStatus({ currentTarget: { dataset: ds } });
     if (k === 'cancel') {
@@ -480,6 +481,13 @@ Page({
     // CU-M-05:不带 scope 进去就按俱乐部主理人判身份,商家自家活动反而被拦在门外。
     if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/publish/activity/index'
       + (this.data.operationScope ? '?scope=MERCHANT' : ''), complete: () => { this._navigating = false; } });
+  },
+
+  // M-26:长按「编辑」主题 = 进专业编辑器,路由与 onCardTap 的草稿/未通过分支一致
+  editTopic(id) {
+    if (!id || this._navigating) return;
+    this._navigating = true; wx.navigateTo({ url: '/pages/publish/fabu/index?id=' + id
+      + (this.data.operationScope ? '&scope=MERCHANT' : ''), complete: () => { this._navigating = false; } });
   },
 
   editActivity(e) {
@@ -1041,7 +1049,10 @@ function decorate(p) {
   const publishedActivity = p.bizType === 'activity'
     && (p.state === 'running' || p.state === 'notStarted' || p.state === 'offline'
       || p.state === 'pending' || p.state === 'rejected');
-  const canEdit = !merchantActivity && publishedActivity;
+  // 2026-10-27 业主 M-26:长按面板要有「编辑」。主题草稿/未通过/已下架回专业编辑器(与点卡进编辑器同一路由);
+  // 在售中的主题不在这里改(改票种/站点会影响已买票的人),仍走项目主页。
+  const editableTopic = p.bizType === 'topic' && (p.state === 'draft' || p.state === 'rejected' || p.state === 'offline');
+  const canEdit = (!merchantActivity && publishedActivity) || editableTopic;
   // [C8-05] 主题:个人/商家主办可「取消并退款」;俱乐部主题有岗位权限,走俱乐部「结束主题」。
   const canCancel = p.bizType === 'topic'
     ? (p.ownerType !== 'club' && (online || p.state === 'offline'))

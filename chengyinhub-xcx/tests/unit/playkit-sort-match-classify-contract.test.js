@@ -218,8 +218,8 @@ test('★分类:没分完按钮拦得住 + 还差几条说得出来;分满才发
 
 test('★qa 多选:勾多个再提交,发的是 optionIds 全集', () => {
   const { def, inst, events } = mount('pages/play/components/playkit-qa/index.js')
-  inst.data.mode = 'pick'
-  def.observers['show, options, mode, multi, passed, finished, judge, lastOptionId, lastOptionIds, feedbackText, feedbackImages'].call(inst, true,
+  Object.assign(inst.data, { show: true, mode: 'pick', multi: true, sessionId: 'qa-multi', nodeId: '21' })
+  def.observers['show, options, mode, multi, passed, finished, judge, lastOptionId, lastOptionIds, feedbackText, feedbackImages, sessionId, nodeId'].call(inst, true,
     [{ id: 'a', t: '冷萃' }, { id: 'b', t: '拿铁' }, { id: 'c', t: '冰滴' }], 'pick', true, false, false)
   inst.data.multi = true
 
@@ -238,8 +238,8 @@ test('★qa 多选:勾多个再提交,发的是 optionIds 全集', () => {
 
 test('★qa 单选一字不变:点选项即提交,仍然是单个 optionId', () => {
   const { def, inst, events } = mount('pages/play/components/playkit-qa/index.js')
-  inst.data.mode = 'pick'
-  def.observers['show, options, mode, multi, passed, finished, judge, lastOptionId, lastOptionIds, feedbackText, feedbackImages'].call(inst, true,
+  Object.assign(inst.data, { show: true, mode: 'pick', multi: false, sessionId: 'qa-single', nodeId: '22' })
+  def.observers['show, options, mode, multi, passed, finished, judge, lastOptionId, lastOptionIds, feedbackText, feedbackImages, sessionId, nodeId'].call(inst, true,
     [{ id: 'a', t: '冷萃' }, { id: 'b', t: '拿铁' }], 'pick', false, false, false)
   inst.data.multi = false
   inst.onPick({ currentTarget: { dataset: { i: 1 } } })

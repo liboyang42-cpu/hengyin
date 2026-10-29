@@ -45,6 +45,8 @@ public class TopicBundleReviewService {
     private com.chengyinhub.business.mapper.MerchantChapterOfferMapper offerMapper;
     @org.springframework.beans.factory.annotation.Autowired
     private com.chengyinhub.business.mapper.MmsMerchantMapper merchantMapper;
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.chengyinhub.business.mapper.ThemeStateKeyMapper themeStateKeyMapper;
     private final ObjectMapper json = new ObjectMapper()
             .enable(com.fasterxml.jackson.databind.DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS);
     private final AdvancedGameConfigValidator advancedConfigValidator = new AdvancedGameConfigValidator();
@@ -85,7 +87,16 @@ public class TopicBundleReviewService {
     }
 
     public Submission freezeForSubmission(Long topicId, Long ownerId) {
-        CmsTopic topic = topicMapper.selectCmsTopicById(topicId);
+        return freezeForSubmission(topicId, ownerId, null);
+    }
+
+    public Submission freezeForSubmission(Long topicId, Long ownerId,
+            List<com.chengyinhub.business.domain.ThemeStateKey> preparedDeclarations) {
+        boolean currentRead = org.springframework.transaction.support.TransactionSynchronizationManager
+                .isActualTransactionActive()
+                && !org.springframework.transaction.support.TransactionSynchronizationManager.isCurrentTransactionReadOnly();
+        CmsTopic topic = currentRead ? topicMapper.selectCmsTopicByIdForUpdate(topicId)
+                : topicMapper.selectCmsTopicById(topicId);
         if (topic == null || Integer.valueOf(2).equals(topic.getDelFlag())) {
             throw new IllegalStateException("主题不存在或已删除");
         }
@@ -96,14 +107,15 @@ public class TopicBundleReviewService {
         CmsTopicChapter chapterQuery = new CmsTopicChapter();
         chapterQuery.setTopicId(topicId);
         List<CmsTopicChapter> chapters = new ArrayList<CmsTopicChapter>(
-                safe(chapterMapper.selectCmsTopicChapterList(chapterQuery)));
+                safe(currentRead ? chapterMapper.selectByTopicForUpdate(topicId)
+                        : chapterMapper.selectCmsTopicChapterList(chapterQuery)));
         sortChapters(chapters);
         CmsTopicNode nodeQuery = new CmsTopicNode();
         nodeQuery.setTopicId(topicId);
         List<CmsTopicNode> nodes = new ArrayList<CmsTopicNode>(safe(nodeMapper.selectCmsTopicNodeList(nodeQuery)));
         sortNodes(nodes);
         Map<Long, Long> merchantOwners = Collections.emptyMap();
-        if (nodes.stream().anyMatch(node -> node.getMerchantMemberId() != null && !ownerId.equals(node.getMerchantMemberId()))) {
+        if (currentRead || nodes.stream().anyMatch(node -> node.getMerchantMemberId() != null && !ownerId.equals(node.getMerchantMemberId()))) {
             CmsTopic locked = topicMapper.selectCmsTopicByIdForUpdate(topicId);
             if (locked == null || !ownerId.equals(locked.getMemberId()) || Integer.valueOf(2).equals(locked.getDelFlag())) throw stale();
             topic = locked;
@@ -132,15 +144,25 @@ public class TopicBundleReviewService {
 
         List<Long> templateIds = new ArrayList<Long>(referencedTemplateIds);
         Collections.sort(templateIds);
+        Map<Long, CmsMemberTemplate> currentTemplates = new LinkedHashMap<Long, CmsMemberTemplate>();
+        if (currentRead && !templateIds.isEmpty()) {
+            List<CmsMemberTemplate> locked = safe(templateMapper.selectCmsMemberTemplateByIdsForUpdate(templateIds));
+            if (locked.size() != templateIds.size()) throw stale();
+            for (CmsMemberTemplate template : locked) {
+                if (template == null || !referencedTemplateIds.contains(template.getId())
+                        || currentTemplates.put(template.getId(), template) != null) throw stale();
+            }
+        }
         List<CmsMemberTemplate> templates = new ArrayList<CmsMemberTemplate>();
         for (Long templateId : templateIds) {
-            CmsMemberTemplate template = templateMapper.selectCmsMemberTemplateById(templateId);
+            CmsMemberTemplate template = currentRead ? currentTemplates.get(templateId)
+                    : templateMapper.selectCmsMemberTemplateById(templateId);
             validateTemplate(template, templateId, ownerId, merchantOwners.get(templateId));
             validateTemplateReferences(nodes, template, ownerId);
             templates.add(template);
         }
 
-        ObjectNode topicContent = topicContent(topic, chapters, nodes);
+        ObjectNode topicContent = topicContent(topic, chapters, nodes, preparedDeclarations);
         ObjectNode topicSnapshot = json.createObjectNode();
         topicSnapshot.put("id", topic.getId());
         topicSnapshot.put("memberId", topic.getMemberId());
@@ -239,13 +261,12 @@ public class TopicBundleReviewService {
         Collections.sort(currentIds);
         if (!submittedIds.equals(currentIds)) throw stale();
 
-        String currentTopicHash = sha256(topicContent(topic, chapters, nodes));
-        if (!currentTopicHash.equals(submittedTopic.path("contentHash").asText())) throw stale();
-
         List<CmsMemberTemplate> templates = submittedIds.isEmpty()
                 ? Collections.<CmsMemberTemplate>emptyList()
                 : safe(templateMapper.selectCmsMemberTemplateByIdsForUpdate(submittedIds));
         if (templates.size() != submittedIds.size()) throw stale();
+        String currentTopicHash = sha256(topicContent(topic, chapters, nodes));
+        if (!currentTopicHash.equals(submittedTopic.path("contentHash").asText())) throw stale();
         for (int i = 0; i < templates.size(); i++) {
             CmsMemberTemplate template = templates.get(i);
             Long expectedId = submittedIds.get(i);
@@ -292,6 +313,11 @@ public class TopicBundleReviewService {
     }
 
     private ObjectNode topicContent(CmsTopic topic, List<CmsTopicChapter> chapters, List<CmsTopicNode> nodes) {
+        return topicContent(topic, chapters, nodes, null);
+    }
+
+    private ObjectNode topicContent(CmsTopic topic, List<CmsTopicChapter> chapters, List<CmsTopicNode> nodes,
+            List<com.chengyinhub.business.domain.ThemeStateKey> preparedDeclarations) {
         ObjectNode content = json.createObjectNode();
         ObjectNode topicJson = json.valueToTree(topic);
         topicJson.remove("createBy"); topicJson.remove("createTime");
@@ -302,6 +328,18 @@ public class TopicBundleReviewService {
         topicJson.remove("lifecycle");
         topicJson.remove("publishedRouteGraphJson"); topicJson.remove("publishedConfigVersion");
         topicJson.remove("routePublishedAt");
+        // This authored field is @JsonIgnore on the API entity. Bind it explicitly to review,
+        // while leaving the derived publishedThemeRuntimeConfigJson outside the content hash.
+        if (StringUtils.isNotBlank(topic.getThemeRuntimeConfigJson())) {
+            topicJson.set("themeRuntimeConfig", parseJson(topic.getThemeRuntimeConfigJson(), "主题运行配置 JSON 非法"));
+        }
+        ArrayNode currentDeclarations = declarationSnapshot(topic.getId());
+        ArrayNode frozenDeclarations = preparedDeclarations == null ? currentDeclarations
+                : ThemeStateKeyDeclarationSnapshot.capture(topic.getId(), preparedDeclarations);
+        if (!frozenDeclarations.equals(currentDeclarations)) throw stale();
+        // Existing empty-declaration reviews retain their old content identity; a subsequently added
+        // declaration makes the current hash differ, rather than being silently backfilled.
+        if (!frozenDeclarations.isEmpty()) topicJson.set("stateKeyDeclarations", frozenDeclarations);
         content.set("topic", topicJson);
 
         Map<Long, List<CmsTopicNode>> nodesByChapter = new LinkedHashMap<Long, List<CmsTopicNode>>();
@@ -329,6 +367,28 @@ public class TopicBundleReviewService {
         }
         content.set("chapters", chapterValues);
         return content;
+    }
+
+    private ArrayNode declarationSnapshot(Long topicId) {
+        if (themeStateKeyMapper == null) throw new IllegalStateException("主题属性声明读取依赖缺失");
+        boolean currentRead = org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()
+                && !org.springframework.transaction.support.TransactionSynchronizationManager.isCurrentTransactionReadOnly();
+        java.util.List<com.chengyinhub.business.domain.ThemeStateKey> declarations;
+        if (currentRead) {
+            if (!topicId.equals(themeStateKeyMapper.lockTopicForStateKeyWrite(topicId))) throw stale();
+            declarations = themeStateKeyMapper.selectByTopicIdForUpdate(topicId);
+        } else declarations = themeStateKeyMapper.selectByTopicId(topicId);
+        return ThemeStateKeyDeclarationSnapshot.capture(topicId, declarations);
+    }
+
+    /** Submission and its publication share one declaration identity, including auto-registered keys. */
+    public void assertDeclarationsUnchanged(Long topicId, String snapshotJson) {
+        if (topicId == null || topicId <= 0) throw stale();
+        JsonNode submitted = snapshot(snapshotJson).path("topic");
+        if (submitted.path("id").asLong(-1L) != topicId) throw stale();
+        JsonNode expected = submitted.path("content").path("stateKeyDeclarations");
+        if (expected.isMissingNode()) expected = json.createArrayNode();
+        if (!expected.equals(declarationSnapshot(topicId))) throw stale();
     }
 
     private ObjectNode templateContent(CmsMemberTemplate template) {

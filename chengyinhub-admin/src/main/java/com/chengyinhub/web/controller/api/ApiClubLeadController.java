@@ -2,6 +2,7 @@ package com.chengyinhub.web.controller.api;
 
 import com.chengyinhub.business.domain.ClubLeadCheckin;
 import com.chengyinhub.business.domain.ClubLeadState;
+import com.chengyinhub.business.domain.GameCommandReceipt;
 import com.chengyinhub.business.domain.ClubRoleAssignment;
 import com.chengyinhub.business.domain.CmsActivity;
 import com.chengyinhub.business.domain.CmsRegistration;
@@ -62,6 +63,8 @@ public class ApiClubLeadController extends BaseController {
 
     @Autowired
     private ClubLeadMapper clubLeadMapper;
+    @Autowired
+    private com.chengyinhub.business.mapper.GameSessionRuntimeMapper commandReceiptMapper;
     @Autowired
     private CmsActivityMapper cmsActivityMapper;
     @Autowired
@@ -197,26 +200,96 @@ public class ApiClubLeadController extends BaseController {
 
     @Operation(summary = "队长放行下一章")
     @PostMapping("/unlock-chapter")
-    public AjaxResult unlockChapter(String activityId) {
+    @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED, rollbackFor = Exception.class)
+    public AjaxResult unlockChapter(String activityId, String commandId, Long expectedChapterId, Long targetChapterId) {
         Long memberId = uid();
         if (memberId <= 0) return error("请先登录");
         Long actId = Convert.toLong(activityId, 0L);
-        ClubLeadState st = actId > 0 ? ensureState(actId) : null;
+        // 0 明确表示尚未放行；缺字段不能解释成“读取当前章再前进”。
+        if (actId <= 0 || commandId == null || !commandId.matches("[A-Za-z0-9:_-]{1,80}")
+                || expectedChapterId == null || expectedChapterId < 0 || targetChapterId == null || targetChapterId <= 0) {
+            return error("必须提供命令标识、期望章节和目标章节");
+        }
+        CmsActivity probe = cmsActivityService.selectCmsActivityById(actId);
+        if (probe == null || probe.getClubId() == null || probe.getClubId() <= 0) return error("该场次不是带领场");
+        if (clubLeadMapper.lockClubOwner(probe.getClubId()) == null) return error("俱乐部不存在");
+        CmsActivity activity = cmsActivityMapper.selectCmsActivityByIdForUpdate(actId);
+        if (activity == null || !probe.getClubId().equals(activity.getClubId())) return error("场次不可用");
+        // 先读权威授权，再读回执。旧队长不能借已知 commandId 读取新队长的结果。
+        if (!memberId.equals(resolveLeaderMemberId(activity))) return error("只有当前队长可以放行章节");
+        String requestId = "lead:" + commandHash(commandId).substring(0, 48);
+        String hash = commandHash(actId + ":" + memberId + ":" + expectedChapterId + ":" + targetChapterId);
+        GameCommandReceipt prior = commandReceiptMapper.selectReceiptForUpdate(actId, memberId, requestId);
+        if (prior != null) return chapterReplay(prior, hash);
+        if (!Integer.valueOf(0).equals(activity.getDelFlag()) || activity.getCancelTime() != null) return error("场次不可用");
+        // 导演运行时拥有的场次不能从旧带队入口推进另一个 state。
+        if (gameSessionRuntimeService != null && gameSessionRuntimeService.routeSessionStatus(actId) != null) return error("请使用本场导演的章节命令");
+        ClubLeadState st = clubLeadMapper.selectByActivityForUpdate(actId);
         if (st == null) return error("该场次不是带领场");
-        if (!memberId.equals(st.getLeaderMemberId())) return error("只有队长可以放行章节");
+        if (!Integer.valueOf(2).equals(st.getStatus())) return error("仅行进中的场次可放行章节");
+        Long expected = expectedChapterId == 0 ? null : expectedChapterId;
+        if (!java.util.Objects.equals(expected, st.getCurrentChapterId())) return new AjaxResult(409, "期望章节已过期，请核对后重新确认").put("intentNotExecuted", true);
         List<CmsTopicChapter> chapters = chaptersOf(actId);
         if (chapters.isEmpty()) return error("本场无章节");
         int idx = -1;
         for (int i = 0; i < chapters.size(); i++) {
-            if (chapters.get(i).getId().equals(st.getCurrentChapterId())) { idx = i; break; }
+            if (chapters.get(i).getId().equals(expected)) { idx = i; break; }
         }
-        // idx=-1(未放行过) → 下一步放行第一章
-        if (idx + 1 >= chapters.size()) return AjaxResult.success("已是最后一章");
-        ClubLeadState upd = new ClubLeadState();
-        upd.setId(st.getId());
-        upd.setCurrentChapterId(chapters.get(idx + 1).getId());
-        clubLeadMapper.updateClubLeadState(upd);
-        return AjaxResult.success("已开启:" + chapters.get(idx + 1).getName());
+        if (expected != null && idx < 0) return error("期望章节不属于本场主题");
+        if (idx + 1 >= chapters.size()) return error("已是最后一章");
+        CmsTopicChapter target = chapters.get(idx + 1);
+        if (!targetChapterId.equals(target.getId())) return error("目标必须是期望章节的相邻下一章");
+        GameCommandReceipt claim = new GameCommandReceipt();
+        claim.setActivityId(actId); claim.setActorMemberId(memberId); claim.setActorPerspective("CLUB_LEAD");
+        claim.setRequestId(requestId); claim.setRequestHash(hash); claim.setAction("LEAD_UNLOCK_CHAPTER");
+        claim.setOutcome("PENDING"); claim.setCreateTime(new Date()); claim.setUpdateTime(new Date());
+        if (commandReceiptMapper.insertReceiptClaim(claim) != 1) {
+            prior = commandReceiptMapper.selectReceiptForUpdate(actId, memberId, requestId);
+            if (prior == null) throw new IllegalStateException("章节命令登记失败");
+            return chapterReplay(prior, hash);
+        }
+        if (clubLeadMapper.unlockChapterCas(actId, st.getLeaderMemberId(), memberId, expected, targetChapterId) != 1) throw new IllegalStateException("章节状态已变化，命令未执行");
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("commandId", commandId); result.put("expectedChapterId", expectedChapterId); result.put("targetChapterId", targetChapterId);
+        AjaxResult response = AjaxResult.success("已开启:" + target.getName(), result);
+        claim.setOutcome("APPLIED"); claim.setResultJson(commandJson(response)); claim.setUpdateTime(new Date());
+        if (commandReceiptMapper.completeReceipt(claim) != 1) throw new IllegalStateException("章节回执保存失败");
+        // 首响也使用已保存回执的表示，避免 Long ID 经无类型 JSON 回放变为 Integer 后不等价。
+        return chapterReplay(claim, hash);
+    }
+
+    /** 仅保留 Java 调用的显式拒绝，不提供旧语义执行路径。 */
+    public AjaxResult unlockChapter(String activityId) { return unlockChapter(activityId, null, null, null); }
+
+    @GetMapping("/unlock-chapter-receipt")
+    @Transactional(readOnly = true)
+    public AjaxResult unlockChapterReceipt(String activityId, String commandId) {
+        Long memberId = uid();
+        Long actId = Convert.toLong(activityId, 0L);
+        if (memberId <= 0) return error("请先登录");
+        if (actId <= 0 || commandId == null || !commandId.matches("[A-Za-z0-9:_-]{1,80}")) return error("参数有误");
+        CmsActivity activity = cmsActivityService.selectCmsActivityById(actId);
+        if (activity == null || !memberId.equals(resolveLeaderMemberId(activity))) return error("无权读取本场章节命令");
+        GameCommandReceipt receipt = commandReceiptMapper.selectReceipt(actId, memberId, "lead:" + commandHash(commandId).substring(0, 48));
+        return receipt == null ? new AjaxResult(520, "章节命令结果待确认") : chapterReplay(receipt, receipt.getRequestHash());
+    }
+
+    private AjaxResult chapterReplay(GameCommandReceipt receipt, String hash) {
+        if (!"LEAD_UNLOCK_CHAPTER".equals(receipt.getAction()) || !"CLUB_LEAD".equals(receipt.getActorPerspective())
+                || !hash.equals(receipt.getRequestHash())) return new AjaxResult(409, "命令标识已用于其他输入");
+        if (!"APPLIED".equals(receipt.getOutcome())) return new AjaxResult(520, "章节命令结果待确认");
+        try { return com.chengyinhub.common.utils.JsonUtils.getObjectMapper().readValue(receipt.getResultJson(), AjaxResult.class); }
+        catch (java.io.IOException e) { throw new IllegalStateException("章节回执不可读", e); }
+    }
+
+    private String commandJson(Object value) {
+        try { return com.chengyinhub.common.utils.JsonUtils.getObjectMapper().writeValueAsString(value); }
+        catch (com.fasterxml.jackson.core.JsonProcessingException e) { throw new IllegalStateException("章节回执不可编码", e); }
+    }
+
+    private String commandHash(String value) {
+        try { return java.util.HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256").digest(value.getBytes(java.nio.charset.StandardCharsets.UTF_8))); }
+        catch (java.security.NoSuchAlgorithmException e) { throw new IllegalStateException(e); }
     }
 
     @Operation(summary = "承接方改运营详情(集合时间/地点/结束时间/当日备注,报备留痕通知发起人)")
@@ -322,6 +395,13 @@ public class ApiClubLeadController extends BaseController {
         data.put("leaderMemberId", st.getLeaderMemberId());
         data.put("isLeader", memberId.equals(st.getLeaderMemberId()));
         data.put("currentChapterId", st.getCurrentChapterId());
+        List<CmsTopicChapter> ordered = chaptersOf(activityId);
+        Long nextChapterId = null;
+        if (st.getCurrentChapterId() == null && !ordered.isEmpty()) nextChapterId = ordered.get(0).getId();
+        for (int i = 0; i + 1 < ordered.size(); i++) {
+            if (ordered.get(i).getId().equals(st.getCurrentChapterId())) nextChapterId = ordered.get(i + 1).getId();
+        }
+        data.put("nextChapterId", nextChapterId);
         // 当前章节名
         if (st.getCurrentChapterId() != null) {
             CmsTopicChapter c = cmsTopicChapterService.selectCmsTopicChapterById(st.getCurrentChapterId());
@@ -372,10 +452,10 @@ public class ApiClubLeadController extends BaseController {
             doneCount.merge(p.getMemberId(), 1, Integer::sum);
         }
         List<Map<String, Object>> members = new ArrayList<>();
-        List<Long> ordered = new ArrayList<>(memberIds);
-        ordered.sort(Comparator.comparingInt(id -> -doneCount.getOrDefault(id, 0)));
+        List<Long> orderedMembers = new ArrayList<>(memberIds);
+        orderedMembers.sort(Comparator.comparingInt(id -> -doneCount.getOrDefault(id, 0)));
         int cap = 0;
-        for (Long mid : ordered) {
+        for (Long mid : orderedMembers) {
             if (++cap > 20) break; // 轮询接口,人数封顶防大团刷库
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("memberId", mid);

@@ -300,7 +300,7 @@
       <view class="chfull__pad"></view>
       <!-- ⚠️ 外层 .chfull__para 每项一个,不能按类型拆成不同类名:measureChapter 用
            selectAll('.chfull__para') 按下标对齐 chapterParas,少一个就整屏焦点错位。 -->
-      <view wx:for="{{chapterParas}}" wx:key="i" id="{{item.nodeId ? 'chapter-game-' + item.nodeId : 'chapter-block-' + item.i}}" class="chfull__para st-line {{item.kind !== 'text' ? 'chfull__para--wide' : ''}} {{item.in ? 'is-in' : ''}} {{item.dir === 'down' ? 'from-top' : ''}} {{item.odd ? 'odd' + item.odd : ''}} {{oddFlick === item.i ? 'is-flick' : ''}}"
+      <view wx:for="{{chapterParas}}" wx:key="i" id="{{item.nodeId ? 'chapter-game-' + item.nodeId : 'chapter-block-' + item.i}}" class="chfull__para st-line {{item.kind !== 'text' ? 'chfull__para--wide' : 'cy-story-hand'}} {{item.in ? 'is-in' : ''}} {{item.dir === 'down' ? 'from-top' : ''}} {{item.odd ? 'odd' + item.odd : ''}} {{oddFlick === item.i ? 'is-flick' : ''}}"
             style="--d:{{item.d}}s">
         <image wx:if="{{item.kind === 'cover'}}" class="chfull__cover" src="{{item.url}}" mode="aspectFit" />
         <image wx:elif="{{item.kind === 'image'}}" class="chfull__img" src="{{item.url}}" mode="widthFix" lazy-load="true"
@@ -338,13 +338,13 @@
         <!-- 终章反转:对面回的话,左侧气泡;读到这一块整章翻成对话框(.chfull.is-chat) -->
         <view wx:elif="{{item.kind === 'reveal'}}" class="chfull__reveal" aria-role="text" aria-label="{{item.who || '对面'}}回复">
           <view wx:if="{{item.who}}" class="chfull__reveal-who">{{item.who}}</view>
-          <view class="chfull__reveal-b" wx:for="{{lk.rows(item.lines)}}" wx:for-item="line" wx:key="key">{{line.text}}</view>
+          <view class="chfull__reveal-b cy-story-hand" wx:for="{{lk.rows(item.lines)}}" wx:for-item="line" wx:key="key">{{line.text}}</view>
         </view>
         <!-- 内心声音(咔哒等):原型 .voice —— 左对齐,名字前一颗发光的点,颜色随说话的那个声音 -->
         <view wx:elif="{{item.kind === 'voice'}}" class="chfull__voice" style="--vc:{{item.color}}" aria-role="text" aria-label="{{item.who}}:{{item.text}}">
           <text class="chfull__cond" wx:if="{{item.cond}}">{{item.cond}}</text>
           <view class="chfull__voice-n"><text class="chfull__voice-dot"></text>{{item.who}}</view>
-          <view class="chfull__voice-t">{{item.text}}</view>
+          <view class="chfull__voice-t cy-story-hand">{{item.text}}</view>
         </view>
         <view wx:elif="{{item.kind === 'thought'}}" class="chfull__thought" aria-role="text" aria-label="得到一个念头:{{item.name}}">
           <view class="chfull__thought-orb"></view>
@@ -799,7 +799,7 @@
           <view class="st-line__meta" wx:if="{{item.meta}}">{{item.meta}}</view>
           <view class="st-line__ttl">{{item.title}}</view>
         </view>
-        <view wx:else class="st-line {{item.in ? 'is-in' : ''}} {{item.dir === 'down' ? 'from-top' : ''}}" style="--d:{{item.d}}s">{{item.text}}</view>
+        <view wx:else class="st-line {{item.in ? 'is-in' : ''}} {{item.dir === 'down' ? 'from-top' : ''}} cy-story-hand" style="--d:{{item.d}}s">{{item.text}}</view>
       </block>
       <view class="fx-story__pad"></view>
     </scroll-view>
@@ -1503,6 +1503,8 @@
 </view>
 
 <!-- G01-G12:游玩宿主内的二级内容统一进入 sceneStack；内容组件与漫游宿主同源，避免两套状态/空壳。 -->
+<!-- G-2:手写 psheet 浮层开着时,物理返回 / 侧滑先关最上层,不退出本页 -->
+<cy-back-guard show="{{!!sceneCurrent}}" bind:back="onProtoSheetClose" />
 <view class="play-scene-host" wx:if="{{sceneCurrent && sceneCurrent.id === 'play-activity-detail'}}" catchtouchmove="blockSceneTouch">
 <view class="pdim {{sceneIn ? 'is-in' : ''}} {{reducedMotion ? 'is-reduced' : ''}}" bindtap="onProtoSheetClose" aria-role="button" aria-label="关闭{{sceneCurrent.title}}" hover-class="cy-pressed" hover-stay-time="80"></view>
 <view class="psheet psheet--{{sceneCurrent.variant}} {{sceneIn ? 'is-in' : ''}} {{reducedMotion ? 'is-reduced' : ''}}" catchtap="noop">

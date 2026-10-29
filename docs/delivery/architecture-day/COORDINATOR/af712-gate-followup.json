@@ -1,0 +1,29 @@
+{
+  "run": 40030174071,
+  "tested_source": "af712b5a9d93df8ab4a6ab5d29fc791a5369cd0f",
+  "architecture": "Real trusted GitHub source gate BLOCKED exactly4 LOCKING_SELECT_CACHE; 71 review items not safety proof",
+  "pending_owners": {
+    "C": [
+      "ClubLeadMapper#lockClubOwner",
+      "ClubLeadMapper#selectByActivityForUpdate"
+    ],
+    "E": [
+      "PhotoCheckIntentMapper#selectForUpdate"
+    ],
+    "G": [
+      "CoopSettlementEvidenceMapper#selectCashBasisBlockingRefundIdsForUpdate"
+    ]
+  },
+  "migration_contract_failure": "prelaunch source fingerprint stale after reviewed A admin immutable registration status fix",
+  "correction": {
+    "file": "ci/prelaunch-seed-provenance.json",
+    "only_source": "CmsRegistrationController.java",
+    "routes_permissions": "annotation list byte-identical to pinned public 2ec base",
+    "role_grants_sql": "unchanged",
+    "actual_contract_tests": 8,
+    "failures": 0,
+    "skipped": 0
+  },
+  "no_gate_relaxation": true,
+  "rerun": "next full candidate after owned lock fixes; old run retained"
+}

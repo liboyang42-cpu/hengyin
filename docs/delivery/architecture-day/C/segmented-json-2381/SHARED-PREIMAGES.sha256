@@ -1,0 +1,2 @@
+ae455320a53995def1c7876053df395c07f4ac01d4482670a56692a4904fdee1  chengyinhub-common/src/main/java/com/chengyinhub/common/utils/http/HttpUtils.java
+f87ac5be0729d9b229fdf1b3599ab2b466ee91719ae82bc58138a0444fc3ceb4  chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/OpenAiCompatibleLlmClient.java

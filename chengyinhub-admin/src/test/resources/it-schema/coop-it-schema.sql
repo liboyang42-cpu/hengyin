@@ -31,6 +31,7 @@ CREATE TABLE `coop_invite` (
   `game_id` bigint DEFAULT NULL COMMENT '城市定向:目标游戏(游戏级邀约)',
   `target_level` tinyint(1) DEFAULT '0' COMMENT '槽位粒度 0主题级/1游戏级',
   `node_id` bigint DEFAULT NULL COMMENT '节点',
+  `supply_station_id` bigint DEFAULT NULL COMMENT 'Explicit station; historical rows stay NULL (test fixture)',
   `status` tinyint(1) NOT NULL DEFAULT '0' COMMENT '状态 0待确认 1已接受 2已拒绝 3已取消 4已顶替 5已过期',
   `message` varchar(500) DEFAULT NULL,
   `handle_time` datetime DEFAULT NULL,

@@ -4,6 +4,8 @@ const app = getApp();
 Component({
   properties: {
     show: { type: Boolean, value: false },
+    // P-55(2026-10-27):'page' = 设置里点进去的独立页面,按商家分组、每组两行开关用设置页行样式
+    layout: { type: String, value: 'sheet' },
   },
   data: {
     state: 'idle',
@@ -89,6 +91,7 @@ function shapeMerchant(value) {
     merchantRowId: positiveSafeId(row.merchantRowId),
     merchantOwnerMemberId: positiveSafeId(row.merchantOwnerMemberId),
     merchantName: String(row.merchantName || '商家'),
+    merchantLogo: row.merchantLogo && typeof app.getImgUrl === 'function' ? app.getImgUrl(String(row.merchantLogo)) : String(row.merchantLogo || ''),
     inAppOptedIn: row.inAppOptedIn === true,
     couponOptedIn: row.couponOptedIn === true,
   };

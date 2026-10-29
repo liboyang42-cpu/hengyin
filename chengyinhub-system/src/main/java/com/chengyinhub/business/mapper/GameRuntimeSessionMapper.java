@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 public interface GameRuntimeSessionMapper {
+    /** Same member/team visibility as the existing selectors, only the no-route default instance. */
     List<GameRuntimeSession> selectDefaultMemberSessionsByTopic(@Param("activityId") Long activityId,
             @Param("topicId") Long topicId, @Param("memberId") Long memberId);
 
@@ -28,6 +29,9 @@ public interface GameRuntimeSessionMapper {
                                      @Param("ownerId") Long ownerId);
 
     GameRuntimeSession selectAccessibleById(@Param("id") Long id, @Param("memberId") Long memberId);
+
+    /** Current locking read with the same player/active-team scope as the existing XML statement. */
+    GameRuntimeSession selectAccessibleByIdForUpdate(@Param("id") Long id, @Param("memberId") Long memberId);
 
     GameRuntimeSession selectPlayerByOwner(@Param("activityId") Long activityId,
                                            @Param("topicId") Long topicId,

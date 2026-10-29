@@ -1,0 +1,137 @@
+{
+  "schema": 1,
+  "resumed_by": "Explicit latest human instruction: continue until all remaining failures fixed; old deadline revoked",
+  "common_base": "d19276f56b3eb2a34ed8fab06e41ea8ea654a0d0",
+  "standard_run": 40122522919,
+  "storage_run": 40122516880,
+  "source_sha": "ca0e0d2598727f6e567c802b7a664f9634d945c6",
+  "source_unit": {
+    "unique": 15069,
+    "pass": 14384,
+    "failure": 31,
+    "error": 7,
+    "skipped": 647,
+    "failed_suites": 19
+  },
+  "source_storage": {
+    "classes": 65,
+    "pass": 46,
+    "fail": 19,
+    "independent_clean": 65
+  },
+  "root_owner": "Shared contracts, registry/migration dependency/ledger generated output, immutable candidate integration, remaining dependency High report",
+  "workstreams": [
+    {
+      "owner": "A",
+      "threadId": "01a16a22-3076-7196-88f5-86d5b2c83036",
+      "scope": "拥有支付报名闭环的以下失败及对应生产路径/共享测试factory：unit StandaloneCheckoutSignupNoticeAcceptanceTest（verifiedPaymentFacts未注入）、ClubWaitlistClaimMembershipRaceTransactionTest（原会员退出guard预期未到）、ClubFulfillmentChainGateTest（Club owner退款权限归属顺序）、WholeOrderRefundTest（全核销终局报错语义）；storage RegistrationTopicFenceMySqlIT（failedPaymentDone...期望SUCCESS得FAIL；inlineConfirmed... Verified payment fact identity conflict）、RegistrationFundsMybatisIntegrationTest（取消前原支付关闭未确认alarm文案、历史paid-half修复FAIL）、RefundNotificationMybatisIntegrationTest（确认现金退款通知payer/畸形recipient/零额断言失败）。你独占这几个测试及必要 RegistrationPaymentFlow/RegistrationScope/TeamGroup业务根因与 WechatVerifiedFactTestSupport共享factory；B负责RefundRetry/Wp04Approved/WechatIntent，不得重复改B文件。若同一事实身份fixture根因影响B，给B精确共享合同，避免伪造fact或让done覆盖未知。不得为了旧测试报错文案改变正确归属校验顺序或新增退款放行。",
+      "base": "d19276f56b3eb2a34ed8fab06e41ea8ea654a0d0",
+      "state": "IDENTIFIED_FAILURE_TASK_CLOSED_BY_CCD5_UNIFIED_AUTOMATED_ACCEPTANCE",
+      "delivery": "Complete2 chatdiff blocks8files applied,184original methods retained",
+      "historical_state": "DELIVERED_APPLIED_NOT_RUN"
+    },
+    {
+      "owner": "B",
+      "threadId": "01a16a22-956c-723f-b51b-afcbee69802b",
+      "scope": "拥有以下支付退款/提现失败及对应必要生产路径：unit OWN_C04_22Test.staleUnknownQueryCannotWriteTerminalReceiptOrEscalateFromOldSnapshot（updateReceiptIfProcessing没调用，需按当前原身份CAS判断）、OWN_C06_29Test.missingKeyPreservesBothLiveFallbacks；storage RefundRetryAndRemainderMySqlIT（Incomplete verified payment facts、CmsActivityMapper查t.team_mode而fixture缺列）、Wp04ApprovedRefundFenceMySqlIT.inlineParentChildRollbackRetainsOriginalFact...（原期望TOPIC_CLOSED_PAID_HALF_STATE_RECOVERY_REQUIRED却verified fact identity conflict）、WechatPaymentIntentMySqlIT.oldClosedObservationCannotCloseNewAttemptAndNewSuccessCreditsExactlyOnce（true得false）。只拥有上述测试和必要B退款/微信intent/withdrawal原机制。A独占RegistrationPaymentFlow/RegistrationScope/TeamGroup与WechatVerifiedFactTestSupport共享factory；遇那边共同根因给A/root精确变更，不改其文件。不改已通过的累计退款分币Ledger算法或原支付身份，仅因失败才动真正根因。",
+      "base": "d19276f56b3eb2a34ed8fab06e41ea8ea654a0d0",
+      "state": "IDENTIFIED_FAILURE_TASK_CLOSED_BY_CCD5_UNIFIED_AUTOMATED_ACCEPTANCE",
+      "delivery": "Complete2 main chatdiff blocks4files plus1shared historical factory review hunk applied,22original cases retained",
+      "historical_state": "DELIVERED_APPLIED_NOT_RUN"
+    },
+    {
+      "owner": "C",
+      "threadId": "01a16a22-c697-7637-ae29-cdff6341000b",
+      "scope": "你的3579声音修补已集成，5个Node文件156/156PASS，勿重做/扩声音改动。现在拥有剩余小程序既有CI失败：shard11 job120957052582 action-ledger.test.js:1209/1211，原零未知多写断言15 !==0（build-action-ledger.js已有新_request证明和confirmed流程，但其他真实入口仍缺明确互斥请求合同，不能删除零断言或忽略enroll/consent）；静态job120957052461：U4动态setData68/60未精确登记，U5需理由42/逐项理由38，U6 node-npc-form/index.wxml:43 RAW_ERROR_TEXT voiceError。你拥有生成器、直接小测试源码、原两页声音WXML及最小精确UI静态证据登记/契约，root拥有生成JSON和snapshot常量（不要交自动生成文件、不要擅改总数）。用既有错误组件和逐请求错误承接，写明实际重试/UNKNOWN原记录语义，不用全局豁免、宽泛前缀或新增通用屏蔽。共享16KB脚本片需按真实调用链注册，不做额外抽象。",
+      "base": "d19276f56b3eb2a34ed8fab06e41ea8ea654a0d0",
+      "state": "IDENTIFIED_FAILURE_TASK_CLOSED_BY_CCD5_UNIFIED_AUTOMATED_ACCEPTANCE",
+      "delivery": "2cd05f1c4e11751951cad68175d72cb496147a81",
+      "historical_state": "DELIVERED_APPLIED_NOT_RUN"
+    },
+    {
+      "owner": "D",
+      "threadId": "01a16a22-f399-7110-ba27-ef3f7245603b",
+      "scope": "你的ASR竞态289e完整3文件已由root集成到统一新基线，原NpcAsrIntentMySqlIT:92 Mockito重stub也已doReturn(null)修，勿再重做。你现在拥有ASR/原额度所有既有剩余失败及必要直接调用者：unit NpcAsrProjectionContractTest.originalRecoveryFields...（ASR_OUTCOME_UNKNOWN实际ASR_QUOTA_UNAVAILABLE，需用真正预占语义接fixture而非改UNKNOWN规则）；OWN_C04_18Test.existingShopBizTypeReachesRegisteredProviderWithoutChangingQuotaOrAuditIdentity（SUCCEEDED实际FAILED）；storage AiQuotaReservationRedisIT.photoUnknownReservationReplyStopsBeforeModelAfterActualCompensation（No value present）。请一并搜索你新增insertTerminal的现有直接构造/调用测试，补必需asrIntents真实port装配，不准null时跳过守卫。保留quota原Lua/UNKNOWN/NOT_SENT/48h与delete墓碑，改模型/额度生产逻辑只针对已证实根因；仅拥ASR/NpcChat/AiQuota/Gateway路径及这些直接tests，不碰C的生成器台账。",
+      "base": "d19276f56b3eb2a34ed8fab06e41ea8ea654a0d0",
+      "state": "IDENTIFIED_FAILURE_TASK_CLOSED_BY_CCD5_UNIFIED_AUTOMATED_ACCEPTANCE",
+      "delivery": "93a372f6e2441af2553cd14aa48365dc4a1cd7d7 full3testfiles applied",
+      "historical_state": "DELIVERED_APPLIED_NOT_RUN"
+    },
+    {
+      "owner": "E",
+      "threadId": "01a16a23-2723-72e4-813f-03d7f1aa6017",
+      "scope": "保留你原未交ledger工作，root已采用D等价完整实现，不继续旧ledger重复任务。现在新隔离分支只修主题/内容共同装配失败，拥有这些unit：TopicCreativePostVisibilitySyncTest（缺CmsTopicChapterMapper）、TopicSizeLimitsTest（预期IllegalState却NPE）、OWN_C03_13Test五例、OrdinarySupplyResumeTest十例（缺CmsTopicNodeMapper等）、CmsTopicPublishStateKeyGuardTest六例（预期ServiceException却NPE）、AuditTopicBudgetDecisionTest（当前锁读期望1次实为2次）；storage TopicContentGraphMySqlIT.runtimeBindingsUseCorrectOldAndCreatedClientMaps（工具costs报尚无通用结算完成证明）。复用现有内容/发布真实facade和共享测试fixture一次补正确装配；保留原limits、thought/statekey、发布归属、当前锁、内容复制客户端ID映射断言，不为了旧fixture放宽能力证明。只改这些测试+必要主题/内容直接根因，别碰别人资金/语音文件。若原执行器仍不可用，使用GitHub工具读公共源后交完整聊天diff，不重置/删除原工作区，立刻报告精确可用能力。",
+      "base": "d19276f56b3eb2a34ed8fab06e41ea8ea654a0d0",
+      "state": "IDENTIFIED_FAILURE_TASK_CLOSED_BY_CCD5_UNIFIED_AUTOMATED_ACCEPTANCE",
+      "delivery": "2f09aa52011938785e686a42f0e1f58eb57833cc",
+      "historical_state": "DELIVERED_APPLIED_NOT_RUN"
+    },
+    {
+      "owner": "F",
+      "threadId": "01a16a23-5e0c-736b-9fc1-d4d070393009",
+      "scope": "4255 verifier/3bdd工具及双pin已集成，不重做来源绑定。你拥有余下真实Spring装配2失败：SupportedStackServiceCyclesTest.realCycleStartsAndLazyEdgeResolvesToManagedTransactionalTarget(Cycle)[1]（TopicCompletionAwardServiceImpl代理/managed target isSameAs失败，同toString不代表同实例）；eagerEdgesPreserveExpectedCycleOrOutboundBoundary(Cycle)[7]（原预期context启动失败，实际成功）。按当前拆分边界验证真实managed bean/事务代理/无外呼，不修改生产以恢复已经消掉的旧循环、不删整个场景或把mock当Spring。若需要新增类型精确policy/入口，在原可信6文件及双pin机制内最小接线，不能改旧baseline/允许任意class。只拥有该测试及最小context helpers/必要精确F配置；root暂负责依赖High告警，不做新广泛安全审计。",
+      "base": "d19276f56b3eb2a34ed8fab06e41ea8ea654a0d0",
+      "state": "IDENTIFIED_FAILURE_TASK_CLOSED_BY_CCD5_UNIFIED_AUTOMATED_ACCEPTANCE",
+      "delivery": "2faf2427c2f1d06d9c18cb7e378b830ea1abedc7 fullmanaged-cycle fixture increment applied,33cases retained",
+      "historical_state": "DELIVERED_APPLIED_NOT_RUN"
+    },
+    {
+      "owner": "G",
+      "threadId": "01a16a23-8904-73e8-a024-378a96f0800c",
+      "scope": "24945生产order_sn修补已集成，勿重做。你拥有7个通知/轮次真库失败及其共同fixture/必要通知路径：BeforeStartNoticeMySqlIT、CommittedOfficialNoticeMySqlIT、CoopComplaintCommittedNoticeMySqlIT、ComplaintCloseReporterNoticeMySqlIT、ChapterApplicationRoundMySqlIT、ChapterApplicationOutcomeMySqlIT均在migration_20261024_c_before_start_notice_typed.sql第1条严格schema/preflight CAST报错；SignupNoticeAfterCommitPersistenceMySqlIT.concurrentPaymentClaimLoser... ExecutionException/UndeclaredThrowableException。优先只修一次共同canonical DDL/fixture装配顺序并保持旧迁移字节/前置断言，不能跳过CAST、硬编码已通过或手写缩水表；若canonical迁移本身缺陷需提供证据给root做受控前向修正，不直接改已有迁移。原模板、wx/IM渠道冻结、UNKNOWN/一次外呼、通知同事务/并发唯一与rollback断言全部保留。A拥有RegistrationPaymentFlow/TeamGroup/WeChatFact共享helper，不改其生产文件，必要时给A精确装配需求。 Plus ClmCommercePaymentProofMySqlIT canonical audit schema and original closed payment proof fixtures; exact message sent.",
+      "base": "d19276f56b3eb2a34ed8fab06e41ea8ea654a0d0",
+      "state": "IDENTIFIED_FAILURE_TASK_CLOSED_BY_CCD5_UNIFIED_AUTOMATED_ACCEPTANCE",
+      "delivery": "fff8f312 + db3eb060 diagnostics + 018c6253bb086d0bb7e3b9ee492dfb1ba354be2a strict v2 migration and six cases",
+      "historical_state": "DELIVERED_APPLIED_NOT_RUN"
+    },
+    {
+      "owner": "H",
+      "threadId": "01a16a23-aeb0-70ec-b671-6f778f1fd011",
+      "scope": "你的最终声音P2已由C3579修并156Node通过，勿再审声音或找新范围。现在拥有余下玩法/漫游/核销查询既有失败：unit ApiPlayMyCompletedSelfPlayContractTest.publicReferencePurposePreservesDefaultHistoryAndErrors（原data=[dataId63 completedtrue]实际[]）、ApiPlayPuzzleHintTest.orientingPuzzleSecretsAreNotDownlinkedBeforeServerFactIsRecorded（true实际false）、RegistrationSeatEndpointTest.originalClubTimeWindowRejectsBeforeAnySeatEffect（旧verifyNoInteractions现真实只读verifierSeatReceipt发生，应区分允许终态读与禁止写副作用，不能删owner/window保护）；RegistrationQueryApplicationTest.rawListRemainsOnTheHttpThreadAndOnlyTheControllerCreatesTheOriginalPageEnvelope（expected notnull，调用者搬移相关）；storage RoamLocationRetentionMySqlIT.realCleanupTaskPreservesFavoriteRouteAndNonLocationFactsAcrossReplay（retention cleanup failed steps=[npc_chat_request]）。只拥有这5个测试与必要play/history/hint/retention/query路径，优先复用原真实fact/fixture，不放松谜底下发与scope/TTL；保留favorite/route/non-location数据断言。不能改A报名付款/退款生产路径或D ASR文件；共享问题给root精确补片。",
+      "base": "d19276f56b3eb2a34ed8fab06e41ea8ea654a0d0",
+      "state": "IDENTIFIED_FAILURE_TASK_CLOSED_BY_CCD5_UNIFIED_AUTOMATED_ACCEPTANCE",
+      "delivery": "cfc6c3bd150fbafe3297d30e0fc2b116e84770e1 full5tests applied,63original methods retained",
+      "historical_state": "DELIVERED_APPLIED_NOT_RUN"
+    }
+  ],
+  "acceptance": "Collect full fixes, callers/test source and necessary wiring first; freeze one candidate; one final review and standard+real-storage regression; no assertion deletion or gate weakening",
+  "all_complete": false,
+  "root_dependency_repair": {
+    "advisory": "GHSA-mrhx-c7xc-m3w5",
+    "source_package": "ops/turntable-render/puppeteer-core25.11.0 -> chromium-bidi17.0.2 -> zod3.25.76",
+    "repair": "Same-major Puppeteer25.16.0 official dependency graph, regenerated lock tochromium157/zod4.6.7; no override/new direct dependency/waiver",
+    "tests": "Actual BiDi Zod early bound negative/positive test source +Puppeteer import/renderer header selftest wired to existing CI dependency job",
+    "validation": "NOT_RUN; final uniform CI/Grype pending"
+  },
+  "new_declarations": {
+    "storage_unique_classes": 65,
+    "storage_declared_cases": 810,
+    "status": "SOURCE_ONLY_NOT_PASS"
+  },
+  "open_root_cause": "Source repair collected and integrated; no known implementation work uncollected; final unified validation pending. Do not treat source delivery as acceptance.",
+  "historical_failure_snapshot": true,
+  "latest_failure_stage_acceptance": {
+    "source_sha": "ccd55005c75d105f8245b0591e63adcd0dd15280",
+    "status": "PASS_IDENTIFIED_FAILURES_AND_UNIFIED_AUTOMATED_STAGE",
+    "standard_run": 40138581031,
+    "standard_jobs_passed": 31,
+    "real_storage_run": 40138589827,
+    "real_storage_classes": 65,
+    "real_storage_actual_passed": 810,
+    "real_storage_skipped": 0,
+    "real_storage_duplicates": 0,
+    "clean_classes": 65,
+    "java_passed": 14826,
+    "java_environment_skipped": 633,
+    "java_failures": 0,
+    "java_errors": 0,
+    "atomic_python_passed": 88,
+    "original_backend_failed_cases_now_passed": 38,
+    "original_storage_case_keys_retained_and_now_passed": 804,
+    "compiled_negative_restored_pairs": 3,
+    "original_artifact_hashes_verified": 292,
+    "jar_sha256": "4ef3cf8a76ad15552586aea8efc4628c35701f09c06e049712f31ad949bf2235",
+    "full_scope_complete": false
+  },
+  "current_pending_code_owners": []
+}

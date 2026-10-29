@@ -7,10 +7,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <insert id="insertPlayAttemptLog" parameterType="PlayAttemptLog" useGeneratedKeys="true" keyProperty="id">
         insert into play_attempt_log
         (member_id, topic_id, node_id, activity_id, attempt_type, result, wrong_answer, duration_s,
-         result_json, idempotency_key, created_at)
+         result_json, idempotency_key, request_fingerprint, created_at)
         values
         (#{memberId}, #{topicId}, #{nodeId}, #{activityId}, #{attemptType}, #{result}, #{wrongAnswer}, #{durationS},
-         #{resultJson}, #{idempotencyKey}, #{createdAt})
+         #{resultJson}, #{idempotencyKey}, #{requestFingerprint}, #{createdAt})
     </insert>
 
     <select id="selectMaxPuzzleHintLevel" resultType="int">
@@ -45,20 +45,29 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="durationS" column="duration_s"/>
         <result property="resultJson" column="result_json"/>
         <result property="idempotencyKey" column="idempotency_key"/>
+        <result property="requestFingerprint" column="request_fingerprint"/>
         <result property="createdAt" column="created_at"/>
     </resultMap>
 
     <select id="selectByIdempotencyKey" resultMap="PlayAttemptLogResult">
         select id, member_id, topic_id, node_id, activity_id, attempt_type, result, wrong_answer,
-               duration_s, result_json, idempotency_key, created_at
+               duration_s, result_json, idempotency_key, request_fingerprint, created_at
           from play_attempt_log
          where idempotency_key = #{idempotencyKey}
          limit 1
     </select>
+    <select id="selectByIdempotencyKeyForUpdate" useCache="false" flushCache="true" resultMap="PlayAttemptLogResult">
+        select id, member_id, topic_id, node_id, activity_id, attempt_type, result, wrong_answer,
+               duration_s, result_json, idempotency_key, request_fingerprint, created_at
+          from play_attempt_log
+         where idempotency_key = #{idempotencyKey}
+         limit 1 for update
+    </select>
+
 
     <select id="selectPreferenceResults" resultMap="PlayAttemptLogResult">
         select id, member_id, topic_id, node_id, activity_id, attempt_type, result, wrong_answer,
-               duration_s, result_json, idempotency_key, created_at
+               duration_s, result_json, idempotency_key, request_fingerprint, created_at
           from play_attempt_log
           where member_id = #{memberId} and topic_id = #{topicId} and attempt_type = 6 and result = 1
           order by created_at, id

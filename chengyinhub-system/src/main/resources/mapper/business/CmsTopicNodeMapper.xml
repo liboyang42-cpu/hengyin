@@ -87,6 +87,15 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where id = #{id}
     </select>
 
+    <select id="countContentByTopicForUpdate" resultType="java.lang.Long" useCache="false" flushCache="true">
+        select count(*) from cms_topic_node where topic_id = #{topicId} for update nowait
+    </select>
+
+    <select id="selectContentByIdForUpdate" resultMap="CmsTopicNodeResult" useCache="false" flushCache="true">
+        <include refid="selectCmsTopicNodeVo"/>
+        where id = #{id} for update nowait
+    </select>
+
     <select id="selectByTopicForUpdate" parameterType="Long" resultMap="CmsTopicNodeResult">
         <include refid="selectCmsTopicNodeVo"/>
         where topic_id = #{topicId}

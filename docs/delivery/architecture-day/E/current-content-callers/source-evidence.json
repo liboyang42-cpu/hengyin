@@ -1,0 +1,31 @@
+{
+  "parent": "56bc9324e1ebb7244130c6f9525a43262a046d88",
+  "branch": "codex/architecture-day-e-current-content-callers",
+  "dependency": {
+    "collector_commit": "1718c569ffb9e09847a6199c85b27b2dafd56689",
+    "collector_path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/TopicStateKeyRefService.java",
+    "included_in_delta": false
+  },
+  "source_patch_sha256": "fe9741955fa24f194fefce0d3684b21e7107b8de7d5ba5d77580aab6d7d8b2b8",
+  "postimages": [
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/TopicPublicationContentGuard.java",
+      "sha256": "7898bea16109a589bb14b89f016a6e88a318d4d9dc5ea3120acd504faaf14565"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/TopicPublicationDeclarationsTest.java",
+      "sha256": "59189401b76c65efa4b99bc58d89bf80d5647545cc0bd9e2e03d4848628cd28b"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicPublishStateKeyGuardTest.java",
+      "sha256": "22589985e213ef201f2c518239056dabf2fafb4410b241c4e0333ac1abf7a26f"
+    }
+  ],
+  "execution": {
+    "compile": "NOT_RUN",
+    "unit": "NOT_RUN",
+    "mysql": "NOT_RUN",
+    "ci": "NOT_RUN",
+    "full_gitleaks": "NOT_RUN"
+  }
+}

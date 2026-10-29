@@ -26,7 +26,7 @@ class OWN_C03_05Test {
         service = new CmsTopicServiceImpl(); topics = mock(CmsTopicMapper.class);
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topics);
         when(topics.updateCmsTopic(any(CmsTopic.class))).thenReturn(1);
-        Class<?> type = Class.forName(CmsTopicServiceImpl.class.getName() + "$RouteNodeMaps");
+        Class<?> type = Class.forName("com.chengyinhub.business.service.impl.TopicContentGraphAuthoringServiceImpl$Builder");
         Constructor<?> ctor = type.getDeclaredConstructor(); ctor.setAccessible(true); maps = ctor.newInstance();
         nodeMap().put(11L, 901L); chapterMap().put(10L, 810L);
     }
@@ -37,7 +37,7 @@ class OWN_C03_05Test {
         return (Map<Long, Long>) ReflectionTestUtils.getField(maps, "chapterOldToNew");
     }
     private JsonNode save(String raw) throws Exception {
-        ReflectionTestUtils.invokeMethod(service, "persistJourneyStoryAfterChapterRebuild", 700L, raw, maps, "creator");
+        ReflectionTestUtils.invokeMethod(com.chengyinhub.business.service.support.TopicGraphTestWiring.graph(service), "persistJourneyStoryAfterChapterRebuild", 700L, raw, ReflectionTestUtils.invokeMethod(maps, "freeze"), "creator");
         ArgumentCaptor<CmsTopic> patch = ArgumentCaptor.forClass(CmsTopic.class);
         verify(topics).updateCmsTopic(patch.capture());
         return json.readTree(patch.getValue().getJourneyStoryJson());
@@ -63,11 +63,11 @@ class OWN_C03_05Test {
         verifyNoInteractions(topics);
     }
     @Test void generatedEndingConditionsAreMappedOnceAfterStoredStory() throws Exception {
-        @SuppressWarnings("unchecked") List<JourneyStory.EndingChapter> endings =
-                (List<JourneyStory.EndingChapter>) ReflectionTestUtils.getField(maps, "endingChapters");
-        endings.add(new JourneyStory.EndingChapter(820L, "到过", null,
+        @SuppressWarnings("unchecked") List<com.chengyinhub.business.service.support.TopicAuthoredGraphIds.EndingChapterSnapshot> endings =
+                (List<com.chengyinhub.business.service.support.TopicAuthoredGraphIds.EndingChapterSnapshot>) ReflectionTestUtils.getField(maps, "endingChapters");
+        endings.add(new com.chengyinhub.business.service.support.TopicAuthoredGraphIds.EndingChapterSnapshot(820L, "到过", null,
                 json.readTree("{\"when\":[{\"op\":\"NODE_COMPLETED\",\"nodeId\":11}]}")));
-        endings.add(new JourneyStory.EndingChapter(821L, "其他", null, json.readTree("{\"fallback\":true}")));
+        endings.add(new com.chengyinhub.business.service.support.TopicAuthoredGraphIds.EndingChapterSnapshot(821L, "其他", null, json.readTree("{\"fallback\":true}")));
         JsonNode result = save("{\"schemaVersion\":1}");
         assertEquals(901L, result.path("ending").path("endings").get(0).path("when").get(0).path("nodeId").asLong());
         assertEquals(820L, result.path("ending").path("endings").get(0).path("chapterId").asLong());

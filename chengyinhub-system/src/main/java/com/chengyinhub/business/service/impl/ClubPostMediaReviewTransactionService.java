@@ -2,8 +2,6 @@ package com.chengyinhub.business.service.impl;
 
 import com.chengyinhub.business.domain.ClubPostMediaReviewOutbox;
 import com.chengyinhub.business.mapper.ClubPostMediaReviewOutboxMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,8 +14,7 @@ import java.util.UUID;
 /** Short database transactions for enqueue, claim, and fenced state receipts. */
 @Service
 public class ClubPostMediaReviewTransactionService {
-    private static final Logger log = LoggerFactory.getLogger(ClubPostMediaReviewTransactionService.class);
-    private static final int MAX_ATTEMPTS = 5;
+    private static final int MAX_ATTEMPTS = ClubPostMediaReviewOutbox.MAX_ATTEMPTS;
     private final ClubPostMediaReviewOutboxMapper mapper;
 
     public ClubPostMediaReviewTransactionService(ClubPostMediaReviewOutboxMapper mapper) {
@@ -58,6 +55,8 @@ public class ClubPostMediaReviewTransactionService {
     public ClubPostMediaReviewOutbox claim(Long taskId) {
         if (taskId == null || taskId <= 0) return null;
         String ownerToken = UUID.randomUUID().toString().replace("-", "");
+        // A lease ending proves neither non-dispatch nor provider failure. Never reclaim it.
+        mapper.retireUnsafeById(taskId);
         if (mapper.claim(taskId, ownerToken) != 1) return null;
         ClubPostMediaReviewOutbox claimed = mapper.selectOwned(taskId, ownerToken);
         if (claimed == null) throw new IllegalStateException("ClubPost media review claim receipt missing");
@@ -72,17 +71,40 @@ public class ClubPostMediaReviewTransactionService {
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
+    public int retireUnsafe(int limit) {
+        if (limit < 1 || limit > 50) throw new IllegalArgumentException("Invalid media review batch limit");
+        return mapper.retireUnsafeBatch(limit);
+    }
+
+    /** Only the caller's pre-dispatch local failure is evidence for automatic retry. */
+    @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
     public boolean retryTransient(ClubPostMediaReviewOutbox task, String errorCode) {
         if (!owned(task)) return false;
+        if (!ClubPostMediaReviewOutbox.PRE_DISPATCH_UNAVAILABLE.equals(errorCode)) {
+            return manual(task, null, ClubPostMediaReviewOutbox.OUTCOME_UNKNOWN);
+        }
         int attempts = task.getAttemptCount() == null ? Integer.MAX_VALUE : task.getAttemptCount();
-        int maxAttempts = task.getMaxAttempts() == null ? 0 : task.getMaxAttempts();
-        if (maxAttempts > 0 && attempts >= maxAttempts) {
-            log.error("ClubPost media review remains retryable beyond alert threshold, taskId={}, attempts={}, code={}",
-                    task.getId(), attempts, safeCode(errorCode));
+        int budget = task.getMaxAttempts() == null ? 0 : Math.min(MAX_ATTEMPTS, task.getMaxAttempts());
+        if (budget <= 0 || attempts >= budget) {
+            return manual(task, null, ClubPostMediaReviewOutbox.ATTEMPTS_EXHAUSTED);
         }
         long delayMillis = (1L << Math.min(Math.max(attempts - 1, 0), 6)) * 60_000L;
-        return mapper.markRetryable(task.getId(), task.getOwnerToken(), task.getFenceToken(),
-                new Date(System.currentTimeMillis() + delayMillis), safeCode(errorCode)) == 1;
+        if (mapper.markRetryable(task.getId(), task.getOwnerToken(), task.getFenceToken(),
+                new Date(System.currentTimeMillis() + delayMillis), errorCode) == 1) return true;
+        // SQL, not the worker's snapshot, owns the final budget and fence decision.
+        return manual(task, null, ClubPostMediaReviewOutbox.ATTEMPTS_EXHAUSTED);
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
+    public boolean markUnknown(ClubPostMediaReviewOutbox task, String traceId) {
+        return owned(task) && manual(task, traceId, ClubPostMediaReviewOutbox.OUTCOME_UNKNOWN);
+    }
+
+    private boolean manual(ClubPostMediaReviewOutbox task, String traceId, String code) {
+        String traceHash = traceId == null || traceId.trim().isEmpty() ? null
+                : WxContentCallbackInboxServiceImpl.sha256Hex(traceId.trim());
+        return mapper.markManualReview(task.getId(), task.getOwnerToken(), task.getFenceToken(),
+                traceHash, code) == 1;
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)

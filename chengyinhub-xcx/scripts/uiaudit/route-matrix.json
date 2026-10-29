@@ -3,7 +3,7 @@
   "generatedFrom": "app.json + scene-* 组件扫描",
   "previousBatch": null,
   "counts": {
-    "routes": 155,
+    "routes": 157,
     "scenes": 27,
     "added": 0,
     "removed": 0
@@ -337,6 +337,17 @@
       "hasWxml": true
     },
     {
+      "pagePath": "subpackageA/pages/assetcenter/analysis/index",
+      "pkg": "subpackageA",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
       "pagePath": "subpackageP3/pages/growthcenter/index/index",
       "pkg": "subpackageP3",
       "tabBar": false,
@@ -417,7 +428,7 @@
       "pagePath": "subpackageB/pages/im/list/index",
       "pkg": "subpackageB",
       "tabBar": false,
-      "role": "player",
+      "role": "merchant",
       "needsLogin": true,
       "needsData": false,
       "dataKeys": [],
@@ -428,7 +439,7 @@
       "pagePath": "subpackageB/pages/im/chat/index",
       "pkg": "subpackageB",
       "tabBar": false,
-      "role": "player",
+      "role": "merchant",
       "needsLogin": true,
       "needsData": true,
       "dataKeys": [
@@ -1397,6 +1408,17 @@
     },
     {
       "pagePath": "pages/shezhi/about/index",
+      "pkg": "pages/shezhi",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": false,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/shezhi/marketing/index",
       "pkg": "pages/shezhi",
       "tabBar": false,
       "role": "merchant",

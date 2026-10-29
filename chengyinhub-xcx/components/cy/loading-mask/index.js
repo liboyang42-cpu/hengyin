@@ -3,6 +3,7 @@
 // 一页一个实例,id 固定 "cy-loading",由 utils/loading.js 找到它。show() 计数式:嵌套 show 两次要 hide 两次才消失,
 // 避免「A 的 hide 把 B 的遮罩提前关掉」——这是原生 showLoading 的老坑。
 const reducedMotionBehavior = require('../../../behaviors/reduced-motion.js');
+const roleGuard = require('../../../utils/roleGuard.js');
 
 Component({
   behaviors: [reducedMotionBehavior],
@@ -10,7 +11,8 @@ Component({
     // 遮罩立刻挡触摸,但超过这么久才显出来(ms);快请求不闪。
     delay: { type: Number, value: 400 },
   },
-  data: { visible: false, entered: false, title: '' },
+  // light:G-10(owner 2026-10-27)商家视角遮罩与面板一律浅色,不随宿主页根节点主题变黑。
+  data: { visible: false, entered: false, title: '', light: false },
   lifetimes: { detached() { this._depth = 0; if (this._enterTimer) clearTimeout(this._enterTimer); if (this._exitTimer) clearTimeout(this._exitTimer); } },
   methods: {
     noop() {},   // catchtouchmove 吃掉遮罩下的滚动/点击
@@ -28,7 +30,7 @@ Component({
         return;
       }
       // 先挂上(透明,吃触摸),延时到了再显出
-      this.setData({ visible: true, entered: false, title });
+      this.setData({ visible: true, entered: false, title, light: roleGuard.isMerchantView() });
       const delay = Number(this.data.delay);
       if (!(delay > 0)) { this.setData({ entered: true }); return; }
       this._enterTimer = setTimeout(() => { this._enterTimer = null; this.setData({ entered: true }); }, delay);

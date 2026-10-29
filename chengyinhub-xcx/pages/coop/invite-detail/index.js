@@ -20,7 +20,7 @@ const toast = require('../../../utils/toast.js');
 const modal = require('../../../utils/modal.js');
 const merchantTheme = require('../../../utils/merchant-theme.js');
 const { isRecordList } = require('../../../utils/response-shape.js');
-const { decorate, STATUS_LABEL, parseInviteId, INVITE_ID_ERROR } = require('../../../utils/coop-invite-view.js');
+const { decorate, STATUS_LABEL, parseInviteId, INVITE_ID_ERROR, supplyStationView, supplyStationConfirmation, sameSupplyStationConfirmation } = require('../../../utils/coop-invite-view.js');
 const { partnerMemberId, shapeCredit } = require('./credit-view.js');
 
 // 状态 → 顶部大字的语气。已接受是唯一的正向终态,其余终态一律中性,
@@ -303,7 +303,15 @@ Page({
      status 写成字面量、且落在 _post 的调用点上 —— coop-handle-single-consumer 那条门禁
      是从「直接包含请求 URL 的那个方法」往回找调用点解析角色的,只跟一层。
      所以确认弹层抽成 _confirm 收回调,而不是把 _post 再包一层转发。 */
-  accept() { const that = this; this._confirm('接受合作', '接受后条款锁定，按这张单结算', false, function () { that._post(1); }); },
+  accept() {
+    const that = this;
+    let station;
+    try { station = supplyStationConfirmation(this.data.invite); }
+    catch (error) { this.setData({ actionError: error.message }); return; }
+    const content = station ? '确认核销据点：' + supplyStationView(this.data.invite).supplyStationText + '；接受后归属冻结，不能换站。接受后条款锁定，按这张单结算'
+      : '接受后条款锁定，按这张单结算';
+    this._confirm('接受合作', content, false, function () { that._post(1, undefined, station); });
+  },
   reject() {
     if (!String(this.data.draft || '').trim()) {
       this.setData({ draftError: '请说明拒绝理由，让对方知道如何调整。' });
@@ -339,7 +347,7 @@ Page({
   },
 
   // reasonOverride 给「取消已接受合作」用:理由来自确认框,不走页面上的留言字段
-  _post(status, reasonOverride) {
+  _post(status, reasonOverride, stationConfirmation) {
     const ctx = this._captureContext();
     if (!this._isCurrent(ctx) || this.data.submitting) return;
     const inv = this.data.invite;
@@ -353,6 +361,14 @@ Page({
     // 字段名各自对齐后端 ApiCoopController.handle:取消(3)读 message,接受/拒绝(1/2)读 handleReason。
     // CoopInvite 上这两个字段互相独立,取消发 handleReason 会恒回「取消已接受的合作需填写理由」(审查 C1)。
     const payload = { id: inv.inviteId, status: status };
+    if (status === 1) {
+      try {
+        if (!sameSupplyStationConfirmation(inv, stationConfirmation)) {
+          this.setData({ actionError: '邀约或核销据点已变化，请刷新后重新确认' }); return;
+        }
+        if (stationConfirmation) payload.supplyStationId = stationConfirmation.supplyStationId;
+      } catch (error) { this.setData({ actionError: error.message }); return; }
+    }
     if (status === 3) payload.message = reason; else payload.handleReason = reason;
     this.setData({ submitting: true, actionReceipt: '', actionError: '' });
     app.sendRequest({

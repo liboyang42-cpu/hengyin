@@ -1,0 +1,64 @@
+{
+  "source_sha": "7b12bd43dc7df9df3d80e9019df0a3977caa87e8",
+  "run_id": "40057299841",
+  "job_id": "120763072487",
+  "workflow_ref_sha": "71b6b9100f752d3b21a338f0e97ae23155a3f24e",
+  "verdict": "PASS_SCOPED_REAL_STORAGE",
+  "executed": {
+    "classes": [
+      "com.chengyinhub.business.service.impl.WechatPaymentIntentMySqlIT"
+    ],
+    "errors": 0,
+    "failures": 0,
+    "passed": 4,
+    "skipped": 0,
+    "testcases": [
+      {
+        "classname": "com.chengyinhub.business.service.impl.WechatPaymentIntentMySqlIT",
+        "name": "fourDomainsRetainOriginalParametersAndConflictRollsBackWithoutOverwriting",
+        "status": "passed",
+        "time": "0.838"
+      },
+      {
+        "classname": "com.chengyinhub.business.service.impl.WechatPaymentIntentMySqlIT",
+        "name": "concurrentChannelChoicesHaveOneCommittedWinner",
+        "status": "passed",
+        "time": "0.04"
+      },
+      {
+        "classname": "com.chengyinhub.business.service.impl.WechatPaymentIntentMySqlIT",
+        "name": "oldClosedObservationCannotCloseNewAttemptAndNewSuccessCreditsExactlyOnce",
+        "status": "passed",
+        "time": "0.355"
+      },
+      {
+        "classname": "com.chengyinhub.business.service.impl.WechatPaymentIntentMySqlIT",
+        "name": "sdkObservesCommittedIntentOnIndependentConnectionAndAmbientTransactionCannotSubmit",
+        "status": "passed",
+        "time": "0.071"
+      }
+    ],
+    "tests": 4
+  },
+  "cleanup": {
+    "mysql_leftover_schemas": [],
+    "mysql_schemas_after": [
+      "information_schema",
+      "mysql",
+      "performance_schema",
+      "sys"
+    ],
+    "status": "CLEAN"
+  },
+  "maven_exit_code": 0,
+  "artifact_sha256": {
+    "receipt.json": "1d8f772d56d7504ec9fc831d711e3fefb7d13e680782ec4fb1cfb7c643b81606",
+    "surefire-reports/TEST-com.chengyinhub.business.service.impl.WechatPaymentIntentMySqlIT.xml": "7e1e6e680fd649b95035b73fae7b7cebffbf48fe7b6637e9c06de18ef1be9429"
+  },
+  "limits": [
+    "SDK is a controlled double, not real WeChat",
+    "Domain JDBC-backed mapper adapter and dedicated entitlement table, not complete four-domain MyBatis",
+    "Main Backend CI still in progress; callback HTTP/real inbox/production not accepted",
+    "H review70eb requests alias replay assertion and CLM three-state regression; separate follow-up"
+  ]
+}

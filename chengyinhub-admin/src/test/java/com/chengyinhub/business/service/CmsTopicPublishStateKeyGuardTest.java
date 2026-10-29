@@ -56,6 +56,8 @@ class CmsTopicPublishStateKeyGuardTest {
     private CmsTopicChapterMapper chapterMapper;
     private ThemeStateKeyMapper keyMapper;
     private CmsTopicServiceImpl service;
+    // Unit persistence/current-read fixture only; no MySQL/Spring rollback claim.
+    private final java.util.List<ThemeStateKey> currentDeclarations = new java.util.ArrayList<>();
 
     @BeforeEach
     void setUp() {
@@ -65,7 +67,37 @@ class CmsTopicPublishStateKeyGuardTest {
         nodeMapper = mock(CmsTopicNodeMapper.class);
         templateMapper = mock(CmsMemberTemplateMapper.class);
         chapterMapper = mock(CmsTopicChapterMapper.class);
+        // A publication freezes actual runnable content even when this case has no template references.
+        when(nodeMapper.selectCmsTopicNodeList(any(CmsTopicNode.class)))
+                .thenReturn(Collections.singletonList(topicNode(1L, "原路线地点", null)));
         keyMapper = mock(ThemeStateKeyMapper.class);
+        when(keyMapper.lockTopicForStateKeyWrite(TOPIC_ID)).thenAnswer(call -> {
+            CmsTopic parent = topicMapper.selectCmsTopicByIdForUpdate(TOPIC_ID);
+            return parent == null ? null : parent.getId();
+        });
+        when(keyMapper.selectByTopicIdForUpdate(TOPIC_ID)).thenAnswer(call -> new java.util.ArrayList<>(currentDeclarations));
+        org.mockito.Mockito.doAnswer(call -> {
+            ThemeStateKey row = call.getArgument(0);
+            currentDeclarations.removeIf(old -> old.getStateKey().equals(row.getStateKey()));
+            currentDeclarations.add(row); return 1;
+        }).when(keyMapper).upsertThemeStateKey(any(ThemeStateKey.class));
+        when(chapterMapper.selectByTopicForUpdate(TOPIC_ID)).thenAnswer(call -> {
+            CmsTopicChapter query = new CmsTopicChapter(); query.setTopicId(TOPIC_ID);
+            return chapterMapper.selectCmsTopicChapterList(query);
+        });
+        when(nodeMapper.selectByTopicForUpdate(TOPIC_ID)).thenAnswer(call -> {
+            CmsTopicNode query = new CmsTopicNode(); query.setTopicId(TOPIC_ID);
+            return nodeMapper.selectCmsTopicNodeList(query);
+        });
+        when(templateMapper.selectCmsMemberTemplateByIdsForUpdate(org.mockito.ArgumentMatchers.anyList())).thenAnswer(call -> {
+            java.util.List<Long> ids = call.getArgument(0);
+            java.util.List<CmsMemberTemplate> rows = new java.util.ArrayList<>();
+            for (Long id : ids) {
+                CmsMemberTemplate row = templateMapper.selectCmsMemberTemplateById(id);
+                if (row != null) rows.add(row);
+            }
+            return rows;
+        });
         service = new CmsTopicServiceImpl();
         org.springframework.test.util.ReflectionTestUtils.setField(service, "supplyReviewService", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.TopicSupplyReviewService.class,
                 invocation -> "lockTopic".equals(invocation.getMethod().getName())
@@ -75,21 +107,29 @@ class CmsTopicPublishStateKeyGuardTest {
                 mock(com.chengyinhub.business.service.support.SettlementDebtLedger.class));
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
         ReflectionTestUtils.setField(service, "cmsTopicNodeMapper", nodeMapper);
-        ReflectionTestUtils.setField(service, "cmsMemberTemplateMapper", templateMapper);
+        ReflectionTestUtils.setField(service, "cmsTopicChapterMapper", chapterMapper);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "cmsMemberTemplateMapper", templateMapper);
         ReflectionTestUtils.setField(service, "themeStateKeyService", new ThemeStateKeyService(keyMapper));
         // R8 起引用收集在 TopicStateKeyRefService:节点块 + 数值规则 + 章节故事流(与发布前试检查共用同一份)。
-        ReflectionTestUtils.setField(service, "topicStateKeyRefService",
-                new TopicStateKeyRefService(nodeMapper, templateMapper, chapterMapper));
+        TopicStateKeyRefService references = new TopicStateKeyRefService(nodeMapper, templateMapper, chapterMapper);
+        ReflectionTestUtils.setField(references, "cmsTopicMapper", topicMapper);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "topicStateKeyRefService", references);
         // R18-DRAFT:发布时补建自办活动壳 —— 成功路径会走到这两个协作者,不在场就是 NPE 假红。
         ReflectionTestUtils.setField(service, "cmsActivityMapper",
                 mock(com.chengyinhub.business.mapper.CmsActivityMapper.class));
-        ReflectionTestUtils.setField(service, "omsTicketService",
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "omsTicketService",
                 mock(com.chengyinhub.business.service.IOmsTicketService.class));
         // R19-DRAFT2:发布闸读票种(完整度),不在场就是 NPE 假红。
         ReflectionTestUtils.setField(service, "omsTicketMapper",
                 mock(com.chengyinhub.business.mapper.OmsTicketMapper.class));
         when(topicMapper.updateCmsTopic(any(CmsTopic.class))).thenReturn(1);
         when(topicMapper.publishRouteSnapshot(eq(TOPIC_ID), nullable(String.class), any(Date.class))).thenReturn(1);
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+        service = com.chengyinhub.business.service.support.TopicPublicationTestWiring.transactional(service);
+    }
+
+    private java.util.List<ThemeStateKey> currentRows(java.util.List<ThemeStateKey> rows) {
+        currentDeclarations.clear(); currentDeclarations.addAll(rows); return rows;
     }
 
     @Test
@@ -101,10 +141,10 @@ class CmsTopicPublishStateKeyGuardTest {
         when(templateMapper.selectCmsMemberTemplateById(101L)).thenReturn(template(
                 "{\"requires\":[{\"var\":\"clue.ledger_page\",\"op\":\"EQ\",\"value\":1}],"
                         + "\"effects\":[{\"op\":\"INC\",\"var\":\"counter.coins\",\"value\":2}]}"));
-        when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.singletonList(registered("clue.ledger_page")));
+        when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(currentRows(Collections.singletonList(registered("clue.ledger_page"))));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
+        ServiceException error = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
 
         assertTrue(error.getMessage().contains("counter.coins"), error.getMessage());
         assertTrue(error.getMessage().contains("书房"), error.getMessage());
@@ -122,11 +162,11 @@ class CmsTopicPublishStateKeyGuardTest {
                 "{\"check\":{\"enabled\":true,\"checkId\":\"ask_lin\",\"tier\":\"easy\","
                         + "\"mods\":[{\"when\":{\"var\":\"counter.coins\",\"op\":\"GTE\",\"value\":1},\"value\":2}],"
                         + "\"failCostTag\":\"tag.hurried\"}}"));
-        when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Arrays.asList(
-                registered("counter.coins"), registered("tag.hurried")));
+        when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(currentRows(Arrays.asList(
+                registered("counter.coins"), registered("tag.hurried"))));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        assertTrue(service.publishDraft(TOPIC_ID));
+        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
 
         ArgumentCaptor<CmsTopic> captured = ArgumentCaptor.forClass(CmsTopic.class);
         verify(topicMapper).updateCmsTopic(captured.capture());
@@ -143,11 +183,11 @@ class CmsTopicPublishStateKeyGuardTest {
         when(templateMapper.selectCmsMemberTemplateById(101L)).thenReturn(template(
                 "{\"qa\":{\"enabled\":true,\"mode\":\"PICK\",\"options\":[{\"id\":\"A\",\"label\":\"害虫\","
                         + "\"effects\":[{\"op\":\"ADD_TAG\",\"value\":\"tag.m_pest\"}]}]}}"));
-        when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.<ThemeStateKey>emptyList(),
+        when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(currentRows(Collections.<ThemeStateKey>emptyList()),
                 Collections.singletonList(registered("tag.m_pest")));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        assertTrue(service.publishDraft(TOPIC_ID));
+        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
         ArgumentCaptor<ThemeStateKey> upserted = ArgumentCaptor.forClass(ThemeStateKey.class);
         verify(keyMapper).upsertThemeStateKey(upserted.capture());
         assertEquals("tag.m_pest", upserted.getValue().getStateKey());
@@ -164,7 +204,7 @@ class CmsTopicPublishStateKeyGuardTest {
                 "{\"schemaVersion\":1,\"timer\":{\"enabled\":true}}"));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        assertTrue(service.publishDraft(TOPIC_ID));
+        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
 
         verify(keyMapper, never()).selectByTopicId(anyLong());
     }
@@ -181,10 +221,10 @@ class CmsTopicPublishStateKeyGuardTest {
         when(topicMapper.selectCmsTopicById(TOPIC_ID)).thenReturn(topic);
         when(nodeMapper.selectCmsTopicNodeList(any(CmsTopicNode.class)))
                 .thenReturn(Collections.<CmsTopicNode>emptyList());
-        when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.<ThemeStateKey>emptyList());
+        when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(currentRows(Collections.<ThemeStateKey>emptyList()));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
+        ServiceException error = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
 
         assertTrue(error.getMessage().contains("tag.injured"), error.getMessage());
         assertTrue(error.getMessage().contains("主题数值规则"), "要说明这个键是主题级规则要的,不是节点引用:" + error.getMessage());
@@ -199,10 +239,10 @@ class CmsTopicPublishStateKeyGuardTest {
         topic.setJourneyRulesJson("{\"schemaVersion\":1,\"checkEnabled\":true,"
                 + "\"recovery\":{\"exhaustTag\":\"tag.injured\"}}");
         when(topicMapper.selectCmsTopicById(TOPIC_ID)).thenReturn(topic);
-        when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.singletonList(registered("tag.injured")));
+        when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(currentRows(Collections.singletonList(registered("tag.injured"))));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        assertTrue(service.publishDraft(TOPIC_ID));
+        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
 
         verify(topicMapper).publishRouteSnapshot(eq(TOPIC_ID), nullable(String.class), any(Date.class));
     }
@@ -220,10 +260,10 @@ class CmsTopicPublishStateKeyGuardTest {
         topic.setJourneyRulesJson("{\"schemaVersion\":1,\"checkEnabled\":false,"
                 + "\"recovery\":{\"exhaustTag\":\"tag.injured\"}}");
         when(topicMapper.selectCmsTopicById(TOPIC_ID)).thenReturn(topic);
-        when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.<ThemeStateKey>emptyList());
+        when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(currentRows(Collections.<ThemeStateKey>emptyList()));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
+        ServiceException error = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
 
         assertTrue(error.getMessage().contains("tag.injured"), error.getMessage());
         assertTrue(error.getMessage().contains("主题数值规则"), "要说明这个键是主题级规则要的:" + error.getMessage());
@@ -239,7 +279,7 @@ class CmsTopicPublishStateKeyGuardTest {
         when(topicMapper.selectCmsTopicById(TOPIC_ID)).thenReturn(topic);
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
+        ServiceException error = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
 
         assertTrue(error.getMessage().contains("旅程数值规则"), error.getMessage());
         verify(topicMapper, never()).updateCmsTopic(any(CmsTopic.class));
@@ -252,10 +292,10 @@ class CmsTopicPublishStateKeyGuardTest {
                 .thenReturn(Collections.singletonList(topicNode(1L, "书房", 101L)));
         when(templateMapper.selectCmsMemberTemplateById(101L)).thenReturn(template(
                 "{\"requires\":[{\"var\":\"clue.ledger_page\",\"op\":\"EQ\",\"value\":1}]}"));
-        when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.<ThemeStateKey>emptyList());
+        when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(currentRows(Collections.<ThemeStateKey>emptyList()));
 
         ServiceException error = assertThrows(ServiceException.class,
-                () -> service.publishApprovedRouteSnapshot(TOPIC_ID));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishApprovedRouteSnapshot(TOPIC_ID));
 
         assertTrue(error.getMessage().contains("clue.ledger_page"), error.getMessage());
         verify(topicMapper, never()).publishRouteSnapshot(any(Long.class), nullable(String.class), any(Date.class));
@@ -268,10 +308,10 @@ class CmsTopicPublishStateKeyGuardTest {
                 .thenReturn(Collections.singletonList(topicNode(1L, "书房", 101L)));
         when(templateMapper.selectCmsMemberTemplateById(101L)).thenReturn(template(
                 "{\"requires\":[{\"var\":\"clue.ledger_page\",\"op\":\"EQ\",\"value\":1}]}"));
-        when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.singletonList(registered("clue.ledger_page")));
+        when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(currentRows(Collections.singletonList(registered("clue.ledger_page"))));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        service.publishApprovedRouteSnapshot(TOPIC_ID);
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishApprovedRouteSnapshot(TOPIC_ID);
 
         verify(topicMapper).publishRouteSnapshot(eq(TOPIC_ID), nullable(String.class), any(Date.class));
     }
@@ -294,10 +334,10 @@ class CmsTopicPublishStateKeyGuardTest {
                         "[{\"type\":\"text\",\"beat\":\"brief\",\"field\":\"carry\",\"nodeId\":501,"
                                 + "\"content\":\"带上那一页\","
                                 + "\"when\":{\"var\":\"clue.receipt_071\",\"op\":\"GTE\",\"value\":1}}]")));
-        when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.<ThemeStateKey>emptyList());
+        when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(currentRows(Collections.<ThemeStateKey>emptyList()));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        ServiceException error = assertThrows(ServiceException.class, () -> service.publishDraft(TOPIC_ID));
+        ServiceException error = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
 
         assertTrue(error.getMessage().contains("clue.receipt_071"), error.getMessage());
         assertTrue(error.getMessage().contains("章节故事流"),
@@ -310,18 +350,19 @@ class CmsTopicPublishStateKeyGuardTest {
     void chapterStoryFlowBeatWhenRegisteredPublishes() {
         when(topicMapper.clearDraftIfDraft(TOPIC_ID)).thenReturn(1);
         when(topicMapper.selectCmsTopicById(TOPIC_ID)).thenReturn(simpleDraft());
+        CmsTopicNode storyNode = topicNode(501L, "章节叙事地点", null); storyNode.setChapterId(88L);
         when(nodeMapper.selectCmsTopicNodeList(any(CmsTopicNode.class)))
-                .thenReturn(Collections.<CmsTopicNode>emptyList());
+                .thenReturn(Collections.singletonList(storyNode));
         when(chapterMapper.selectCmsTopicChapterList(any(CmsTopicChapter.class)))
                 .thenReturn(Collections.singletonList(chapter(
                         "[{\"type\":\"text\",\"beat\":\"outcome\",\"field\":\"fact\",\"nodeId\":501,"
                                 + "\"content\":\"翻到过\","
                                 + "\"when\":{\"var\":\"clue.receipt_071\",\"op\":\"GTE\",\"value\":1}}]")));
         when(keyMapper.selectByTopicId(TOPIC_ID))
-                .thenReturn(Collections.singletonList(registered("clue.receipt_071")));
+                .thenReturn(currentRows(Collections.singletonList(registered("clue.receipt_071"))));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        assertTrue(service.publishDraft(TOPIC_ID));
+        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
 
         verify(topicMapper).publishRouteSnapshot(eq(TOPIC_ID), nullable(String.class), any(Date.class));
     }
@@ -342,10 +383,10 @@ class CmsTopicPublishStateKeyGuardTest {
         topic.setJourneyRulesJson(thoughtRules("window"));
         topic.setJourneyStoryJson(thoughtEnding("thought.window.done"));
         when(topicMapper.selectCmsTopicById(TOPIC_ID)).thenReturn(topic);
-        when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.<ThemeStateKey>emptyList());
+        when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(currentRows(Collections.<ThemeStateKey>emptyList()));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        service.publishApprovedRouteSnapshot(TOPIC_ID);
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishApprovedRouteSnapshot(TOPIC_ID);
 
         verify(topicMapper).publishRouteSnapshot(eq(TOPIC_ID), nullable(String.class), any(Date.class));
         verify(keyMapper, never()).upsertThemeStateKey(any(ThemeStateKey.class));
@@ -376,10 +417,10 @@ class CmsTopicPublishStateKeyGuardTest {
                 "\"op\":\"HAS_TAG\",\"value\":\"thought.window.done\"},"
                         + "{\"op\":\"GTE\",\"var\":\"counter.missing\",\"value\":1}"));
         when(topicMapper.selectCmsTopicById(TOPIC_ID)).thenReturn(topic);
-        when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.<ThemeStateKey>emptyList());
+        when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(currentRows(Collections.<ThemeStateKey>emptyList()));
 
         ServiceException error = assertThrows(ServiceException.class,
-                () -> service.publishApprovedRouteSnapshot(TOPIC_ID));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishApprovedRouteSnapshot(TOPIC_ID));
         assertTrue(error.getMessage().contains("counter.missing"), error.getMessage());
         verify(topicMapper, never()).publishRouteSnapshot(any(Long.class), nullable(String.class), any(Date.class));
         verify(keyMapper, never()).upsertThemeStateKey(any(ThemeStateKey.class));
@@ -399,10 +440,10 @@ class CmsTopicPublishStateKeyGuardTest {
             when(nodeMapper.selectCmsTopicNodeList(any(CmsTopicNode.class)))
                     .thenReturn(Collections.singletonList(topicNode(1L, "书房", 101L)));
             when(templateMapper.selectCmsMemberTemplateById(101L)).thenReturn(template("{\"effects\":[" + effect + "]}"));
-            when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.<ThemeStateKey>emptyList());
+            when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(currentRows(Collections.<ThemeStateKey>emptyList()));
 
             ServiceException error = assertThrows(ServiceException.class,
-                    () -> service.publishApprovedRouteSnapshot(TOPIC_ID));
+                    () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishApprovedRouteSnapshot(TOPIC_ID));
             assertTrue(error.getMessage().contains("thought.window.done") && error.getMessage().contains("节点"), error.getMessage());
             verify(topicMapper, never()).publishRouteSnapshot(any(Long.class), nullable(String.class), any(Date.class));
             verify(keyMapper, never()).upsertThemeStateKey(any(ThemeStateKey.class));
@@ -416,13 +457,15 @@ class CmsTopicPublishStateKeyGuardTest {
         topic.setJourneyRulesJson(thoughtRules("window"));
         when(topicMapper.selectCmsTopicById(TOPIC_ID)).thenReturn(topic);
         CmsTopicChapter chapter = new CmsTopicChapter();
+        chapter.setId(88L);
+        chapter.setTopicId(TOPIC_ID);
         chapter.setBlocksJson("[{\"type\":\"text\",\"beat\":\"outcome\",\"content\":\"窗已打开\","
                 + "\"when\":{\"op\":\"HAS_TAG\",\"value\":\"thought.window.done\"}}]");
         when(chapterMapper.selectCmsTopicChapterList(any(CmsTopicChapter.class))).thenReturn(Collections.singletonList(chapter));
-        when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.<ThemeStateKey>emptyList());
+        when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(currentRows(Collections.<ThemeStateKey>emptyList()));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        service.publishApprovedRouteSnapshot(TOPIC_ID);
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishApprovedRouteSnapshot(TOPIC_ID);
         verify(topicMapper).publishRouteSnapshot(eq(TOPIC_ID), nullable(String.class), any(Date.class));
         verify(keyMapper, never()).upsertThemeStateKey(any(ThemeStateKey.class));
     }
@@ -433,13 +476,15 @@ class CmsTopicPublishStateKeyGuardTest {
         topic.setJourneyRulesJson(thoughtRules("window"));
         when(topicMapper.selectCmsTopicById(TOPIC_ID)).thenReturn(topic);
         CmsTopicChapter chapter = new CmsTopicChapter();
+        chapter.setId(88L);
+        chapter.setTopicId(TOPIC_ID);
         chapter.setBlocksJson("[{\"type\":\"text\",\"beat\":\"outcome\",\"when\":{\"op\":\"HAS_TAG\","
                 + "\"value\":\"thought.other.done\"}}]");
         when(chapterMapper.selectCmsTopicChapterList(any(CmsTopicChapter.class))).thenReturn(Collections.singletonList(chapter));
-        when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.<ThemeStateKey>emptyList());
+        when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(currentRows(Collections.<ThemeStateKey>emptyList()));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        ServiceException error = assertThrows(ServiceException.class, () -> service.publishApprovedRouteSnapshot(TOPIC_ID));
+        ServiceException error = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishApprovedRouteSnapshot(TOPIC_ID));
         assertTrue(error.getMessage().contains("thought.other.done") && error.getMessage().contains("章节故事流"));
         verify(topicMapper, never()).publishRouteSnapshot(any(Long.class), nullable(String.class), any(Date.class));
     }
@@ -451,12 +496,14 @@ class CmsTopicPublishStateKeyGuardTest {
         topic.setJourneyRulesJson(thoughtRules("window"));
         when(topicMapper.selectCmsTopicById(TOPIC_ID)).thenReturn(topic);
         CmsTopicChapter chapter = new CmsTopicChapter();
+        chapter.setId(88L);
+        chapter.setTopicId(TOPIC_ID);
         chapter.setBlocksJson("[{\"type\":\"text\",\"beat\":\"outcome\",\"when\":{\"op\":\"EQ\","
                 + "\"var\":\"thought.window.done\",\"value\":1}}]");
         when(chapterMapper.selectCmsTopicChapterList(any(CmsTopicChapter.class))).thenReturn(Collections.singletonList(chapter));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        ServiceException error = assertThrows(ServiceException.class, () -> service.publishApprovedRouteSnapshot(TOPIC_ID));
+        ServiceException error = assertThrows(ServiceException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishApprovedRouteSnapshot(TOPIC_ID));
         assertTrue(error.getMessage().contains("HAS_TAG"), error.getMessage());
         verify(topicMapper, never()).publishRouteSnapshot(any(Long.class), nullable(String.class), any(Date.class));
     }
@@ -466,10 +513,10 @@ class CmsTopicPublishStateKeyGuardTest {
         topic.setJourneyRulesJson(rules);
         topic.setJourneyStoryJson(thoughtEnding(tag));
         when(topicMapper.selectCmsTopicById(TOPIC_ID)).thenReturn(topic);
-        when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.<ThemeStateKey>emptyList());
+        when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(currentRows(Collections.<ThemeStateKey>emptyList()));
 
         ServiceException error = assertThrows(ServiceException.class,
-                () -> service.publishApprovedRouteSnapshot(TOPIC_ID));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishApprovedRouteSnapshot(TOPIC_ID));
         assertTrue(error.getMessage().contains(message), error.getMessage());
         verify(topicMapper, never()).publishRouteSnapshot(any(Long.class), nullable(String.class), any(Date.class));
         verify(keyMapper, never()).upsertThemeStateKey(any(ThemeStateKey.class));
@@ -489,8 +536,9 @@ class CmsTopicPublishStateKeyGuardTest {
     void genericHpAndLuckChapterCostsAndItemsPublishWithoutSkillChecks() {
         ReflectionTestUtils.setField(service, "cmsTopicChapterMapper", chapterMapper);
         ITopicRouteRuntimeService runtime = mock(ITopicRouteRuntimeService.class);
-        ReflectionTestUtils.setField(service, "topicRouteRuntimeService", runtime);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "topicRouteRuntimeService", runtime);
         when(runtime.freezePublication(any(CmsTopic.class), nullable(String.class))).thenReturn("{}");
+        when(runtime.freezePublication(any(CmsTopic.class), nullable(String.class), org.mockito.ArgumentMatchers.anyList())).thenReturn("{}");
         CmsTopic topic = approvedTopic();
         topic.setJourneyRulesJson("{\"schemaVersion\":1,\"stateEnabled\":true,\"checkEnabled\":false,"
                 + "\"hp\":{\"enabled\":true,\"init\":8,\"max\":12},\"luck\":{\"enabled\":true,\"init\":4,\"max\":5}}");
@@ -507,14 +555,14 @@ class CmsTopicPublishStateKeyGuardTest {
                 .thenReturn(Collections.singletonList(topicNode(1L, "城门", null)));
         when(chapterMapper.selectCmsTopicChapterList(any(CmsTopicChapter.class)))
                 .thenReturn(Collections.singletonList(chapter("[]")));
-        when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.<ThemeStateKey>emptyList());
+        when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(currentRows(Collections.<ThemeStateKey>emptyList()));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        service.publishApprovedRouteSnapshot(TOPIC_ID);
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishApprovedRouteSnapshot(TOPIC_ID);
         verify(topicMapper).publishRouteSnapshot(eq(TOPIC_ID), nullable(String.class), any(Date.class));
         topic.setThemeRuntimeConfigJson(legacy);
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        assertThrows(IllegalArgumentException.class, () -> service.publishApprovedRouteSnapshot(TOPIC_ID));
+        assertThrows(IllegalArgumentException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishApprovedRouteSnapshot(TOPIC_ID));
     }
 
     @Test
@@ -529,11 +577,11 @@ class CmsTopicPublishStateKeyGuardTest {
                 java.time.Clock.systemUTC(), RouteReachabilityProvider.UNKNOWN);
         ReflectionTestUtils.setField(runtime, "cmsTopicChapterMapper", chapterMapper);
         ReflectionTestUtils.setField(runtime, "themeStateKeyMapper", keyMapper);
-        ReflectionTestUtils.setField(service, "topicRouteRuntimeService", runtime);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "topicRouteRuntimeService", runtime);
         ReflectionTestUtils.setField(service, "cmsTopicChapterMapper", chapterMapper);
         String authored = templateMapper.selectCmsMemberTemplateById(101L).getAdvancedConfigJson();
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        assertTrue(service.publishDraft(TOPIC_ID));
+        assertTrue(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
         ArgumentCaptor<String> snapshot = ArgumentCaptor.forClass(String.class);
         verify(topicMapper).publishRouteSnapshot(eq(TOPIC_ID), snapshot.capture(), any(Date.class));
         JsonNode frozen = new ObjectMapper().readTree(snapshot.getValue());
@@ -557,7 +605,7 @@ class CmsTopicPublishStateKeyGuardTest {
     void r5OutcomeRejectsUnknownSystemDomainAndUnregisteredCounter() throws Exception {
         r5OutcomeDraft("sys.foo");
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        RuntimeException unknown = assertThrows(RuntimeException.class, () -> service.publishDraft(TOPIC_ID));
+        RuntimeException unknown = assertThrows(RuntimeException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
         assertTrue(unknown.getMessage().contains("数值绑定类型无效"), unknown.getMessage());
         r5OutcomeDraft("counter.unregistered");
         // 属性定义唯一来源是注册表（AuthorAttributeBindingTest#oldDraftsRemainEditableButCannotPublishUnconfirmedCopies）：
@@ -565,7 +613,7 @@ class CmsTopicPublishStateKeyGuardTest {
         when(keyMapper.lockRegistryVersion(TOPIC_ID)).thenReturn(1L);
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
         RuntimeException counter = assertThrows(RuntimeException.class,
-                () -> service.publishDraftWithBinding(TOPIC_ID, 100L, 1L, "1"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraftWithBinding(TOPIC_ID, 100L, 1L, "1"));
         assertTrue(counter.getMessage().contains("尚未注册") && counter.getMessage().contains("counter.unregistered"), counter.getMessage());
         verify(topicMapper, never()).publishRouteSnapshot(anyLong(), nullable(String.class), any(Date.class));
     }
@@ -576,7 +624,7 @@ class CmsTopicPublishStateKeyGuardTest {
             CmsTopic topic = r5OutcomeDraft(target);
             topic.setJourneyRulesJson("{\"schemaVersion\":1,\"stateEnabled\":true,\"hp\":{\"enabled\":false},\"luck\":{\"enabled\":false}}");
             com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-            RuntimeException disabled = assertThrows(RuntimeException.class, () -> service.publishDraft(TOPIC_ID));
+            RuntimeException disabled = assertThrows(RuntimeException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service).publishDraft(TOPIC_ID));
             assertTrue(disabled.getMessage().contains("未启用"), disabled.getMessage());
         }
         verify(topicMapper, never()).publishRouteSnapshot(anyLong(), nullable(String.class), any(Date.class));
@@ -647,13 +695,20 @@ class CmsTopicPublishStateKeyGuardTest {
 
     private static CmsMemberTemplate template(String advancedConfigJson) {
         CmsMemberTemplate template = new CmsMemberTemplate();
+        template.setId(101L); // Original fixture's explicit template binding/mapper identity.
         template.setAdvancedConfigJson(advancedConfigJson);
         return template;
     }
 
     private static ThemeStateKey registered(String stateKey) {
         ThemeStateKey key = new ThemeStateKey();
+        key.setTopicId(TOPIC_ID);
         key.setStateKey(stateKey);
+        // Explicit declaration metadata, matching the existing ThemeStateKeyService namespace contract.
+        key.setKeyType(stateKey.startsWith("counter.") ? ThemeStateKey.TYPE_COUNTER
+                : stateKey.startsWith("relation.") ? ThemeStateKey.TYPE_RELATION
+                : stateKey.startsWith("tag.") ? ThemeStateKey.TYPE_TAG : ThemeStateKey.TYPE_FLAG);
+        key.setScope(ThemeStateKey.SCOPE_RUN); key.setLabel(stateKey);
         return key;
     }
 }

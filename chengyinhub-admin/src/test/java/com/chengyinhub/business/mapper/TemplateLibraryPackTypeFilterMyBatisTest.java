@@ -40,6 +40,7 @@ class TemplateLibraryPackTypeFilterMyBatisTest {
         dataSource.setPassword("");
         JdbcTemplate jdbc = new JdbcTemplate(dataSource);
         jdbc.execute("drop all objects");
+        jdbc.execute("create table cms_member_template(id bigint primary key, member_id bigint, interaction_type varchar(32))");
         jdbc.execute("create table cms_template_library("
                 + "id bigint auto_increment primary key,"
                 + "member_id bigint, member_template_id bigint, category_id bigint,"

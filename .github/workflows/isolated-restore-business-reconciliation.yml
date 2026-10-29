@@ -1,0 +1,174 @@
+name: Isolated restore business reconciliation
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_sha:
+        description: Reviewed full40 source, identical to this workflow commit
+        required: true
+        type: string
+      restore_scope:
+        description: Full seven cohorts or fixed payment-gap/voice-gap DIAGNOSTIC_PARTIAL only
+        required: false
+        type: choice
+        default: full-seven
+        options:
+          - full-seven
+          - payment-gap-diagnostic
+          - voice-gap-diagnostic
+  workflow_call:
+    inputs:
+      source_sha:
+        description: Reviewed full40 source, identical to the actual caller workflow commit
+        required: true
+        type: string
+      restore_scope:
+        description: full-seven or fixed payment-gap-diagnostic/voice-gap-diagnostic (DIAGNOSTIC_PARTIAL)
+        required: false
+        type: string
+        default: full-seven
+
+permissions:
+  contents: read
+
+env:
+  SOURCE_SHA: ${{ inputs.source_sha }}
+  WORKFLOW_SHA: ${{ github.workflow_sha }}
+  RESTORE_SCOPE: ${{ inputs.restore_scope }}
+
+jobs:
+  restore-source-build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    outputs:
+      jar_sha256: ${{ steps.build.outputs.jar_sha256 }}
+    steps:
+      - name: Validate caller source before checkout
+        run: |
+          test "$GITHUB_REPOSITORY" = liboyang42-cpu/hengyin
+          test "$GITHUB_EVENT_NAME" = workflow_dispatch
+          [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]
+          test "$SOURCE_SHA" = "$GITHUB_SHA"
+          test "$SOURCE_SHA" = "$WORKFLOW_SHA"
+          case "$RESTORE_SCOPE" in full-seven|payment-gap-diagnostic|voice-gap-diagnostic) ;; *) exit 2 ;; esac
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Check the same source and pure controls once for the matrix
+        run: |
+          test "${CHENGYIN_RESTORE_MODE+x}" != x
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 -B ci/test_restore_business_reconciliation_probe.py
+          python3 -B ci/test_restore_business_domain_facts.py
+          python3 -B ci/test_restore_business_reconciliation_host.py
+          python3 -B ci/test_restore_business_reconciliation_build.py
+          if [[ "$RESTORE_SCOPE" != voice-gap-diagnostic ]]; then
+            python3 -B ci/test_combined_http_budget.py
+            python3 -B ci/test_restore_application_http_probe.py
+            python3 -B ci/test_http_e2e_entry.py
+          fi
+      - name: Compile one exact candidate and copy only its existing test dependencies
+        id: build
+        run: |
+          mvn -B -pl chengyinhub-admin -am -DskipTests install
+          mvn -B -pl chengyinhub-admin dependency:copy-dependencies -DincludeScope=test "-DoutputDirectory=$GITHUB_WORKSPACE/chengyinhub-admin/target/restore-lib" -Dmdep.useRepositoryLayout=true
+          if [[ "$RESTORE_SCOPE" = voice-gap-diagnostic ]]; then
+            mvn -B -pl chengyinhub-admin -Dtest=RestoreVoiceReconciliationFixtureTest test
+            python3 -I ci/assert_it_ran.py chengyinhub-admin/target/surefire-reports RestoreVoiceReconciliationFixtureTest
+          else
+            mvn -B -pl chengyinhub-admin -Dtest=RestoreRefundObservationSourceTest test
+            python3 -I ci/assert_it_ran.py chengyinhub-admin/target/surefire-reports RestoreRefundObservationSourceTest
+          fi
+          python3 -I ci/restore_business_reconciliation_build.py pack
+      - name: Preserve changed source unit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: restore-business-source-unit-${{ github.run_attempt }}
+          path: ${{ inputs.restore_scope == 'voice-gap-diagnostic' && 'chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.ai.RestoreVoiceReconciliationFixtureTest.xml' || 'chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.impl.RestoreRefundObservationSourceTest.xml' }}
+          if-no-files-found: warn
+          retention-days: 1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: restore-business-build-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/restore-business-build/
+          if-no-files-found: error
+          retention-days: 1
+          include-hidden-files: true
+  isolated-restore-business-reconciliation:
+    name: ${{ inputs.restore_scope != 'full-seven' && format('DIAGNOSTIC_PARTIAL {0}', matrix.cohort) || format('Restore {0}', matrix.cohort) }}
+    needs: restore-source-build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        cohort: ${{ fromJSON(inputs.restore_scope == 'payment-gap-diagnostic' && '["payment-gap"]' || inputs.restore_scope == 'voice-gap-diagnostic' && '["voice-gap"]' || '["payment-gap","withdrawal-complete","withdrawal-gap","refund-complete","refund-gap","voice-complete","voice-gap"]') }}
+    env:
+      CHENGYIN_CI_RESTORE_BUSINESS: 'true'
+      CHENGYIN_RESTORE_BUSINESS_COHORT: ${{ matrix.cohort }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/download-artifact@v4
+        with:
+          name: restore-business-build-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/restore-business-build/
+      - name: Verify and reuse the exact build without compiling again
+        run: |
+          test "$SOURCE_SHA" = "$GITHUB_SHA"
+          test "$SOURCE_SHA" = "$WORKFLOW_SHA"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 -I ci/restore_business_reconciliation_build.py unpack
+      - name: Run the fixed two UUID restore drill and exact cleanup
+        id: restore
+        run: python3 -I ci/restore_business_reconciliation_host.py
+      - name: Mark DIAGNOSTIC_PARTIAL scope without a full verdict
+        if: ${{ always() && inputs.restore_scope != 'full-seven' }}
+        run: |
+          printf '%s\n' "## DIAGNOSTIC_PARTIAL — $RESTORE_SCOPE only" 'NOT_FULL: six other cohorts and the seven-receipt/three-positive verifier were not run. No full recovery or production release verdict.' >> "$GITHUB_STEP_SUMMARY"
+      - name: Preserve only scoped public JSON receipts
+        if: ${{ always() && steps.restore.outcome != 'skipped' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: isolated-restore-business-reconciliation-${{ matrix.cohort }}-${{ github.run_attempt }}
+          if-no-files-found: error
+          retention-days: 7
+          path: |
+            ${{ runner.temp }}/isolated-restore-business-reconciliation/host.json
+            ${{ runner.temp }}/isolated-restore-business-reconciliation/reconciliation.json
+            ${{ runner.temp }}/isolated-restore-business-reconciliation/finalized.json
+  restore-business-summary:
+    if: ${{ always() && inputs.restore_scope == 'full-seven' }}
+    needs: [restore-source-build, isolated-restore-business-reconciliation]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Validate caller source before summary
+        run: |
+          test "$SOURCE_SHA" = "$GITHUB_SHA"
+          test "$SOURCE_SHA" = "$WORKFLOW_SHA"
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: isolated-restore-business-reconciliation-*-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/restore-business-receipts/
+      - name: Independently bind all seven receipts and the original complete-cohort verifier
+        if: ${{ always() }}
+        env:
+          RESTORE_BUILD_JAR_SHA256: ${{ needs.restore-source-build.outputs.jar_sha256 }}
+        run: python3 -I ci/restore_business_reconciliation_host.py --summarize
+      - uses: actions/upload-artifact@v4
+        if: ${{ always() }}
+        with:
+          name: restore-business-summary-${{ github.run_attempt }}
+          if-no-files-found: error
+          retention-days: 7
+          path: ${{ runner.temp }}/restore-business-summary/summary.json

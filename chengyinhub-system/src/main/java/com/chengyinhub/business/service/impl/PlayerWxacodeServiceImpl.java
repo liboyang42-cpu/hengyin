@@ -34,14 +34,17 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-/** 微信 getwxacodeunlimit 玩家个人码：固定落地页、签名 scene、Redis 单飞与永久复用。 */
+/**
+ * 微信 getwxacodeunlimit 玩家个人码：固定落地页、签名 scene、Redis 单飞与永久复用。
+ * E-4:缓存里存 OSS 对象 key,每次读取现签地址;永久缓存一条预签名 URL 会在 AccessKey 轮换或桶迁移后变成空白码图。
+ */
 @Service
 public class PlayerWxacodeServiceImpl implements IPlayerWxacodeService {
     private static final Logger log = LoggerFactory.getLogger(PlayerWxacodeServiceImpl.class);
     private static final String ENDPOINT = "https://api.weixin.qq.com/wxa/getwxacodeunlimit";
     private static final String PAGE = "pages/index/index";
-    private static final String CACHE_PREFIX = "wx:player-code:v1:";
-    private static final String DOOR_CACHE_PREFIX = "wx:door-code:v1:";
+    private static final String CACHE_PREFIX = "wx:player-code:v2:";
+    private static final String DOOR_CACHE_PREFIX = "wx:door-code:v2:";
     private static final String LOCK_SUFFIX = ":lock";
     private static final String TOKEN_REFRESH_LOCK = "wx:mini:access-token:refresh-lock";
     private static final int LOCK_SECONDS = 300;
@@ -103,8 +106,10 @@ public class PlayerWxacodeServiceImpl implements IPlayerWxacodeService {
     private String getOrCreateCached(String cacheKey, String scene, String lockLabel) {
         String cached = redisCache.getCacheObject(cacheKey);
         if (StringUtils.isNotEmpty(cached)) {
-            return cached;
+            return storage.url(cached);
         }
+
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
 
         String lockKey = cacheKey + LOCK_SUFFIX;
         String lockOwner = UUID.randomUUID().toString();
@@ -112,7 +117,7 @@ public class PlayerWxacodeServiceImpl implements IPlayerWxacodeService {
                 lockKey, lockOwner, LOCK_SECONDS, TimeUnit.SECONDS))) {
             String observed = redisCache.getCacheObject(cacheKey);
             if (StringUtils.isNotEmpty(observed)) {
-                return observed;
+                return storage.url(observed);
             }
             throw new IllegalStateException("个人码正在生成，请稍后重试");
         }
@@ -139,12 +144,12 @@ public class PlayerWxacodeServiceImpl implements IPlayerWxacodeService {
                 image = requireImage(generateWithinRateLimit(refreshed, requestJson));
             }
 
-            String url = storage.store(image.bytes, image.extension);
-            if (StringUtils.isEmpty(url)) {
+            String objectKey = storage.store(image.bytes, image.extension);
+            if (StringUtils.isEmpty(objectKey)) {
                 throw new IllegalStateException("个人码存储失败，请稍后重试");
             }
-            redisCache.setCacheObject(cacheKey, url);
-            return url;
+            redisCache.setCacheObject(cacheKey, objectKey);
+            return storage.url(objectKey);
         } finally {
             releaseOwnedLock(lockKey, lockOwner, lockLabel);
         }
@@ -281,7 +286,11 @@ public class PlayerWxacodeServiceImpl implements IPlayerWxacodeService {
     }
 
     interface WxCodeStorage {
+        /** 写入码图,返回对象 key(可长期缓存的身份,不是 bearer URL)。 */
         String store(byte[] bytes, String extension);
+
+        /** 按对象 key 现签可展示地址。 */
+        String url(String objectKey);
     }
 
     static final class WxCodeResponse {
@@ -316,6 +325,7 @@ public class PlayerWxacodeServiceImpl implements IPlayerWxacodeService {
     private static final class HttpWxCodeGateway implements WxCodeGateway {
         @Override
         public WxCodeResponse generate(String accessToken, String requestJson) {
+            com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
             HttpURLConnection connection = null;
             try {
                 connection = (HttpURLConnection) new URL(ENDPOINT + "?access_token=" + accessToken).openConnection();
@@ -367,11 +377,16 @@ public class PlayerWxacodeServiceImpl implements IPlayerWxacodeService {
         public String store(byte[] bytes, String extension) {
             try {
                 JSONObject uploaded = FileOssUploadUtils.upload(new ByteArrayMultipartFile(bytes, extension));
-                return uploaded == null ? null : uploaded.getString("url");
+                return uploaded == null ? null : uploaded.getString("fileName");
             } catch (Exception e) {
                 log.error("玩家个人码存储失败，exceptionType={}", e.getClass().getSimpleName());
                 throw new IllegalStateException("个人码存储失败，请稍后重试", e);
             }
+        }
+
+        @Override
+        public String url(String objectKey) {
+            return FileOssUploadUtils.generatePresignedUrl(objectKey);
         }
     }
 

@@ -7,7 +7,7 @@ import com.wechat.pay.java.service.refund.RefundService;
 import com.wechat.pay.java.service.transferbatch.TransferBatchService;
 import com.chengyinhub.common.config.WxPayConfig;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.util.ReflectionTestUtils;
+import com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport;
 
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
@@ -27,9 +27,9 @@ class WechatPayReadinessTest {
 
     @Test
     void sharedDepositRefreshRejectsAnotherRefundAndPreservesExactMatch() {
-        WechatPayServiceImpl service=org.mockito.Mockito.spy(new WechatPayServiceImpl());
+        WechatPayServiceImpl service=org.mockito.Mockito.spy(WechatVerifiedFactTestSupport.gateway());
         com.chengyinhub.business.service.ICoopInviteService coop=mock(com.chengyinhub.business.service.ICoopInviteService.class);
-        ReflectionTestUtils.setField(service,"coopInviteService",coop);
+        WechatVerifiedFactTestSupport.setField(service,"coopInviteService",coop);
         java.util.Map<String,String> facts=new java.util.HashMap<>();
         facts.put("outRefundNo","RDEP_B");facts.put("outTradeNo","DEP_B");facts.put("status","SUCCESS");
         org.mockito.Mockito.doReturn(facts).when(service).queryRefundFacts("RDEP_A");
@@ -45,8 +45,8 @@ class WechatPayReadinessTest {
     void disabledPaymentCannotCreateGenericJsapiOrder() {
         WxPayConfig config = mock(WxPayConfig.class);
         when(config.isWechatPayEnabled()).thenReturn(false);
-        WechatPayServiceImpl service = new WechatPayServiceImpl();
-        ReflectionTestUtils.setField(service, "wxPayConfig", config);
+        WechatPayServiceImpl service = WechatVerifiedFactTestSupport.gateway();
+        WechatVerifiedFactTestSupport.setField(service, "wxPayConfig", config);
 
         assertFalse(service.isReady());
         IllegalStateException error = assertThrows(IllegalStateException.class,
@@ -58,8 +58,8 @@ class WechatPayReadinessTest {
     void disabledRegistrationPreorderIsAClassifiedDefiniteFailure() {
         WxPayConfig config = mock(WxPayConfig.class);
         when(config.isWechatPayEnabled()).thenReturn(false);
-        WechatPayServiceImpl service = new WechatPayServiceImpl();
-        ReflectionTestUtils.setField(service, "wxPayConfig", config);
+        WechatPayServiceImpl service = WechatVerifiedFactTestSupport.gateway();
+        WechatVerifiedFactTestSupport.setField(service, "wxPayConfig", config);
 
         PaymentPreorderException error = assertThrows(PaymentPreorderException.class,
                 () -> service.createOrder(new CmsRegistration()));
@@ -72,22 +72,22 @@ class WechatPayReadinessTest {
         WxPayConfig config = mock(WxPayConfig.class);
         RefundService refundAdapter = mock(RefundService.class);
         when(refundAdapter.create(any())).thenThrow(new RuntimeException("response lost"));
-        WechatPayServiceImpl service = new WechatPayServiceImpl();
-        WechatPaymentIntentTestSupport.install(service, java.util.Map.of());
-        ReflectionTestUtils.setField(service, "wxPayConfig", config);
-        ReflectionTestUtils.setField(service, "refundService", refundAdapter);
+        WechatPayServiceImpl service = WechatVerifiedFactTestSupport.gateway();
+        WechatVerifiedFactTestSupport.setField(service, "wxPayConfig", config);
+        WechatVerifiedFactTestSupport.installRefundOriginal(service,refundAdapter,"REG-1","REG-1","TX1",BigDecimal.ONE);
 
         RefundRequestResult result = service.submitRefund("REG-1", "RF1",
                 new BigDecimal("1.00"), new BigDecimal("1.00"), "测试");
 
         org.junit.jupiter.api.Assertions.assertEquals(RefundRequestResult.UNKNOWN, result);
+        verify(refundAdapter).create(any());
     }
 
     @Test
     void depositRefundQueryDistinguishesConfirmedMissingFromTransportOrOther404() {
         RefundService adapter = mock(RefundService.class);
-        WechatPayServiceImpl service = new WechatPayServiceImpl();
-        ReflectionTestUtils.setField(service,"refundService",adapter);
+        WechatPayServiceImpl service = WechatVerifiedFactTestSupport.gateway();
+        WechatVerifiedFactTestSupport.bind(service,mock(com.wechat.pay.java.service.payments.jsapi.JsapiService.class),adapter,"merchant");
         com.wechat.pay.java.core.exception.ServiceException missing = mock(com.wechat.pay.java.core.exception.ServiceException.class);
         when(missing.getHttpStatusCode()).thenReturn(404);
         when(missing.getErrorCode()).thenReturn("RESOURCE_NOT_EXISTS");
@@ -103,9 +103,9 @@ class WechatPayReadinessTest {
     @Test
     void refundRejectsFractionalCentAndChannelOverflowBeforeAdapter() {
         RefundService refundAdapter = mock(RefundService.class);
-        WechatPayServiceImpl service = new WechatPayServiceImpl();
-        ReflectionTestUtils.setField(service, "wxPayConfig", mock(WxPayConfig.class));
-        ReflectionTestUtils.setField(service, "refundService", refundAdapter);
+        WechatPayServiceImpl service = WechatVerifiedFactTestSupport.gateway();
+        WechatVerifiedFactTestSupport.setField(service, "wxPayConfig", mock(WxPayConfig.class));
+        WechatVerifiedFactTestSupport.setField(service, "refundService", refundAdapter);
 
         org.junit.jupiter.api.Assertions.assertEquals(RefundRequestResult.DEFINITIVE_FAILED,
                 service.submitRefund("REG-1", "RF1", new BigDecimal("1.999"),
@@ -124,7 +124,7 @@ class WechatPayReadinessTest {
             root = root.getParent();
         }
         String source = new String(Files.readAllBytes(root.resolve(
-                "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPayServiceImpl.java")),
+                "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPaymentSdkGateway.java")),
                 StandardCharsets.UTF_8);
         org.junit.jupiter.api.Assertions.assertTrue(source.contains("setScale(2, java.math.RoundingMode.UNNECESSARY)"));
         org.junit.jupiter.api.Assertions.assertTrue(source.contains("movePointRight(2).longValueExact()"));
@@ -136,8 +136,8 @@ class WechatPayReadinessTest {
     @Test
     void transferRejectsFractionalCentAndOverflowBeforeAdapter() {
         TransferBatchService transferAdapter = mock(TransferBatchService.class);
-        WechatPayServiceImpl service = new WechatPayServiceImpl();
-        ReflectionTestUtils.setField(service, "transferBatchService", transferAdapter);
+        WechatPayServiceImpl service = WechatVerifiedFactTestSupport.gateway();
+        WechatVerifiedFactTestSupport.setField(service, "transferBatchService", transferAdapter);
 
         java.util.Map<String, String> fractional = service.transferToBalance(
                 "B1", "D1", new BigDecimal("1.999"), "openid", "测试", "wx_test_appid");

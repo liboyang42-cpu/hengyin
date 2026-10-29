@@ -41,16 +41,20 @@ function assertGameSheetContract(js, wxml) {
   assert.match(wxml, /bindtap="taskGoPhoto"/)
 }
 
-// W8 起 ApiPlayProgressController 拆成 web/service/play/* 应用服务(代码原样搬迁):
-// 节点投影/hasGame 剥离在 PlayNodeQueryApplication,答题进店硬闸在 PlayBasicCommandApplication,
-// 条件更新首完在 PlayNodeCompletionApplication。合同对这几处拼起来的源码断言,判据不变。
-function readPlayProgressBackend() {
+function backendPlaySource() {
+  const base = '../chengyinhub-admin/src/main/java/com/chengyinhub/web/'
+  const controller = read(base + 'controller/api/ApiPlayProgressController.java')
+  assert.match(controller, /return playEntryApplication\.nodes\(currentMemberId\(\)/)
+  assert.match(controller, /return playBasicCommandApplication\.answer\(currentMemberId\(\)/)
+  const entry = read(base + 'service/play/PlayEntryApplication.java')
+  assert.match(entry, /playNodeQueryApplication\.projectNodeBeforeRuntime\(/)
+  const command = read(base + 'service/play/PlayBasicCommandApplication.java')
+  assert.match(command, /playNodeCompletionApplication\.advanceProgress\(/)
   return [
-    'controller/api/ApiPlayProgressController.java',
-    'service/play/PlayNodeQueryApplication.java',
-    'service/play/PlayBasicCommandApplication.java',
-    'service/play/PlayNodeCompletionApplication.java',
-  ].map((rel) => read('../chengyinhub-admin/src/main/java/com/chengyinhub/web/' + rel)).join('\n')
+    read(base + 'service/play/PlayNodeQueryApplication.java'),
+    command,
+    read(base + 'service/play/PlayNodeCompletionApplication.java'),
+  ].join('\n')
 }
 
 function backendHasGameExpression(ctrl) {
@@ -98,7 +102,7 @@ test('没配游戏的店:任务卡必须读归一化后的拍摄要求与规则,
 })
 
 test('后端契约:hasGame 覆盖答题、App 传感器与滤镜拍照,未进店不下发题面;答题带进店硬闸与条件更新首完', () => {
-  const ctrl = readPlayProgressBackend()
+  const ctrl = backendPlaySource()
   assertBackendHasGameKinds(ctrl)
   // 偏好题组是本分支新增的一类 hasGame，master 的 helper 还没覆盖，单独钉住
   assert.match(backendHasGameExpression(ctrl), /vmVal == ValidationMethod\.PREFERENCE_GROUP/)
@@ -131,7 +135,7 @@ test('后端契约:hasGame 覆盖答题、App 传感器与滤镜拍照,未进店
 })
 
 test('mutation 负控:hasGame 漏掉滤镜拍照时契约确实变红', () => {
-  const ctrl = readPlayProgressBackend()
+  const ctrl = backendPlaySource()
   const expression = backendHasGameExpression(ctrl)
   const mutatedExpression = expression.replace(PLAYABLE_PHOTO_FILTER_BRANCH, '')
   assert.notEqual(mutatedExpression, expression, '负控必须真实删除滤镜拍照分支')

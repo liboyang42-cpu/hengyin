@@ -67,6 +67,21 @@ class ThemeKeyNamingServiceTest {
         assertEquals("半张旧货单", w.naming.rename(w.topic, "clue.k1", "半张旧货单").get("label"));
         assertEquals("已有同名的线索。", fail(() -> w.naming.rename(w.topic, "clue.k1", "怀表")).getMessage());
         assertEquals(Integer.valueOf(404), fail(() -> w.naming.rename(w.topic, "clue.k99", "x")).getCode());
+
+        Doc2KeyRegistryFakes.World attributes = new Doc2KeyRegistryFakes.World();
+        attributes.attributes.add(attributes.topic, "custom", "原属性");
+        attributes.attributes.add(attributes.topic, "custom", "另一属性");
+        String twelve = "一二三四五六七八九十一二";
+        assertEquals(twelve, attributes.naming.rename(attributes.topic, "counter.attr_1", twelve).get("label"));
+        long version = attributes.registry.version;
+        assertEquals("名称最多 12 字。", fail(() -> attributes.naming.rename(
+                attributes.topic, "counter.attr_1", twelve + "三")).getMessage());
+        assertEquals("已有同名的属性。", fail(() -> attributes.naming.rename(
+                attributes.topic, "counter.attr_1", "另一属性")).getMessage());
+        assertEquals(twelve, attributes.registry.rows.get("counter.attr_1").getLabel());
+        assertEquals(version, attributes.registry.version);
+        String twenty = "一二三四五六七八九十一二三四五六七八九十";
+        assertEquals(twenty, attributes.naming.create(attributes.topic, "counter", twenty).get("label"));
     }
 
     @Test

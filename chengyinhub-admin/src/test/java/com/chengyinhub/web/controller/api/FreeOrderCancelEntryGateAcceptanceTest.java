@@ -1,5 +1,6 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.web.service.verify.RegistrationTicketApplication;
 
 import com.chengyinhub.business.domain.CmsRegistration;
 import com.chengyinhub.business.service.ICmsActivityService;
@@ -55,9 +56,9 @@ class FreeOrderCancelEntryGateAcceptanceTest {
         ICmsActivityService activitySvc = mock(ICmsActivityService.class);
         ApiVerifyController controller = spy(new ApiVerifyController());
         doReturn(MEMBER).when(controller).getAppUserId();
-        ReflectionTestUtils.setField(controller, "registrationService", regSvc);
-        ReflectionTestUtils.setField(controller, "activityService", activitySvc);
-        ReflectionTestUtils.setField(controller, "perkLedgerService", perkSvc);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "registrationTicketApplication",
+                new RegistrationTicketApplication(regSvc, mock(com.chengyinhub.business.service.RegistrationSeatService.class),
+                        activitySvc, perkSvc, mock(com.chengyinhub.business.service.impl.QrcodeServiceImpl.class), "test-secret"));
         when(regSvc.selectCmsRegistrationById(REG)).thenReturn(cancelledFreeOrder());
 
         AjaxResult res = controller.issueDynCode(REG);

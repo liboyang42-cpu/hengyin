@@ -1,0 +1,13 @@
+# D精确通知/拒绝端口技术边界
+
+parent `f15fcf2161868732a188d9c2892a4c31bba496b9`，实际来源公共0d32d888e29c6d5ef51322b10d7aca736be856ff。只加两个精确System技术owner：ComplaintCloseReporterNotice、CommittedNoticeRejectionMapper；只加notice.rejections→port的insertIgnore/selectForUpdate方向。notice不反调ICoopComplaintService/Impl，port不反调notice/原投诉门面；其它旧owner/方法/方向全部保留，现63类型/52职责/61方向。只改owners、两份专属测试及本目录，生产/CI/基线不改。
+
+先做真实可用Git比较预检：public origin广告默认master，取回master=e1083c6c5f4dd5fa992a43015d2ae8c764626d52，是与0d32唯一merge-base。现checker读实际Git XML再算，CommittedNoticeRejectionMapper.xml#insertIgnore确实命中NEW_TABLE_WRITER；原namespace只有BusinessAuditEventMapper。见audit-writer-precheck.json。不是某CI事件或未来base的回执；后续master变化须重核。
+
+用途是既有business_audit_event的窄拒绝审计追加，非退款/支付/玩法写。源码固定PLATFORM/COMPLAINT_CLOSE_NOTICE_REJECTED/COOP_COMPLAINT/INVALID_RECIPIENT，写既有14字段（无relation_id），但确实新增了namespace。目标解析正确，不是正则误读；**技术owner登记不能授这项写权，本片保留该BLOCKER**。无新business fact、表/字段许可、baseline增长或例外。建议root交D审两条窄SQL由原审计writer namespace承载、保留insert-ignore/当前锁读/原身份冲突合同；原共享方法不改，具体生产hunk仍由root/D持有，不在F偷改。
+
+新增5个控制：合法notice→port及原caller、禁止notice回调原门面、port反调形成有hash witness环、任一新type缺raw行UNKNOWN，以及真实source CLI负控证明technical Mapper owner仍不能让共享审计新writer通过。原测试正文AST逐个不变；全Python217/217、0skip、19.688s。协议ZIP/class为NOT_COMPILED，不替代JDK/数据库。业务授权不从Mapper/namespace观察推定。
+
+六可信hash见trusted-files.sha256。基线2ec、三私有Mapper、两AI整表facts和所有旧约束不变；缺真实input/index/raw仍UNKNOWN。SupportedStack fixture86fb未注册真实CoopComplaint，不声明本投诉链启动通过；若root扩该scope必须真实notice+审计边界，不能mock掩环。本片不改Bean、不动e9/615冻结及root CI。
+
+Java/jdeps/JAR/Spring/DB/CI均NOT_RUN。源码不能证明原CAS唯一赢家/实际MANDATORY/审计原子/不可变/已通知，须D/root场景验收。D片先冻结，E语音随后独立父增量；工具将在最终审定头配套固定，不能浮动信任。当前D source writer blocker没有因Python绿消失。

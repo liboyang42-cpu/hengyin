@@ -1,0 +1,4 @@
+chengyinhub-system/src/main/resources/mapper/business/AiThemeDraftIntentMapper.xml:3:<mapper namespace="com.chengyinhub.business.mapper.AiThemeDraftIntentMapper">
+chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/AiThemeDraftIntentMapper.java:8:public interface AiThemeDraftIntentMapper {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiThemeDraftRequestService.java:38:import com.chengyinhub.business.mapper.AiThemeDraftIntentMapper;
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiThemeDraftRequestService.java:75:    private AiThemeDraftIntentMapper intentMapper;

@@ -1,0 +1,28 @@
+{
+  "source_assembly": "abf93ce43771bce59ba304d04a9a008a4ed794ad",
+  "batch": "architecture-day-runtime-governance",
+  "tests": 36,
+  "classes": [
+    "com.chengyinhub.business.service.ai.PhotoCheckIntentMySqlIT",
+    "com.chengyinhub.business.service.ai.PhotoCheckIntentRecoveryMySqlIT",
+    "com.chengyinhub.business.service.ai.PhotoCheckIntentFreshReadMySqlIT",
+    "com.chengyinhub.business.service.ai.PhotoCheckIntentLockReadMySqlIT",
+    "com.chengyinhub.business.it.Wp04CoopSettlementEvidenceMySqlIT",
+    "com.chengyinhub.business.it.Wp04CurrentCashBasisMySqlIT",
+    "com.chengyinhub.business.it.Wp08DeliveryJobsMySqlIT"
+  ],
+  "actual_source_binding": "Final harness-only child commit recorded by CI receipt; source code equal to registered assembly requires independent diff proof",
+  "compile_and_storage": "PENDING",
+  "full_CI": "PENDING",
+  "production_actions": 0,
+  "formal_acceptance": false,
+  "local_checks": {
+    "python_storage_harness": 44,
+    "architecture_selftests": 94,
+    "photo_node": 125,
+    "ledger_node": 68,
+    "merged_ui_gate": "PASS",
+    "ledger_controls": 5105,
+    "real_dynamic_device_evidence": 0
+  }
+}

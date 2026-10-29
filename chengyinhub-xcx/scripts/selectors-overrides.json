@@ -655,7 +655,7 @@
     "min": 1
   },
   "B66": {
-    "selector": ".bw-list-row",
+    "selector": ".bw-cell",
     "min": 1,
     "forbid": [
       "cy-empty",

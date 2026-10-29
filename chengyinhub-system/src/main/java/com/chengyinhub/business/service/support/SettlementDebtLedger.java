@@ -62,6 +62,28 @@ public class SettlementDebtLedger {
         debtMapper.insertIgnore(debt);
     }
 
+    /** 原分项ID唯一且不可释放；同身份不同本金必须冲突，不能把INSERT IGNORE当成功回执。 */
+    public void recordOriginalRefund(Long memberId, Long adjustmentId, BigDecimal shortfall) {
+        if (!org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()
+                || org.springframework.transaction.support.TransactionSynchronizationManager.isCurrentTransactionReadOnly()) {
+            throw new IllegalStateException("ORIGINAL_REFUND_DEBT_TRANSACTION_REQUIRED");
+        }
+        if (memberId == null || memberId <= 0 || adjustmentId == null || adjustmentId <= 0 || shortfall == null || shortfall.signum() <= 0) {
+            throw new IllegalArgumentException("原分项退款欠款身份/金额缺失");
+        }
+        String sourceType = "coop_refund_component";
+        UmsMemberSettlementDebt requested = new UmsMemberSettlementDebt();
+        requested.setMemberId(memberId); requested.setSourceType(sourceType); requested.setSourceId(adjustmentId);
+        requested.setAmount(shortfall); requested.setDueTime(new Date(System.currentTimeMillis() + REPAY_DAYS * 24L * 3600 * 1000));
+        if (debtMapper.insertIgnore(requested) == 1) return;
+        UmsMemberSettlementDebt stored = debtMapper.selectBySourceForUpdate(memberId, sourceType, adjustmentId);
+        if (stored == null || stored.getAmount() == null || stored.getAmount().compareTo(shortfall) != 0
+                || !memberId.equals(stored.getMemberId()) || !adjustmentId.equals(stored.getSourceId())
+                || !sourceType.equals(stored.getSourceType())) {
+            throw new IllegalStateException("ORIGINAL_REFUND_DEBT_IDENTITY_CONFLICT");
+        }
+    }
+
     /**
      * 收款方刚入账 credited 元结算款后调用:先抵未清欠款,抵扣额不超过本次入账。
      *

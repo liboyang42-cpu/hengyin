@@ -156,6 +156,16 @@
   background: var(--cy-color-action-primary-bg);
   color: var(--cy-color-action-primary-fg);
 }
+/* G-8 / M-12(2026-10-27):标签库标签 —— 前置图标、实底无描边、比 .dc-tag 小一号 */
+.dc-tag--lib {
+  display: inline-flex;
+  align-items: center;
+  gap: 8rpx; /* ds-ok: 图标与字的间距 */
+  padding: 8rpx 18rpx; /* ds-ok: 小一号标签内距 */
+  font-size: var(--cy-type-caption);
+}
+.dc-tag-ico { width: 28rpx; height: 28rpx; flex-shrink: 0; /* ds-ok: 与 caption 字号等高 */ }
+.dc-selected .dc-tag-ico { filter: invert(1); }
 .dc-touch {
   min-height: 44px;
   display: flex;
@@ -278,9 +288,13 @@
   border-radius: 23rpx; /* ds-ok: Figma 商家定稿数值，原生截图已复核 */
 }
 .dc-image-preview--logo {
-  height: 612rpx;
+  /* M-08(2026-10-27):Logo 预览是居中的正圆(原 100% × 612rpx 在宽屏上是椭圆、空着时像一大块白) */
+  width: 420rpx; /* ds-ok: 预览圆直径,无对应尺寸 token */
+  height: 420rpx; /* ds-ok: 同上,正圆 */
+  align-self: center;
   border-radius: 50%; /* ds-ok: Figma 商家定稿数值，原生截图已复核 */
 }
+.dc-image-preview.dc-placeholder { flex-direction: column; gap: var(--cy-space-1); }
 .dc-state {
   flex: 1;
   display: flex;

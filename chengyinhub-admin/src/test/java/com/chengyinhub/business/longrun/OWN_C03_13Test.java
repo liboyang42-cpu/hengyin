@@ -59,12 +59,16 @@ class OWN_C03_13Test {
 
     private static class Fixture {
         final CmsTopicServiceImpl service = new CmsTopicServiceImpl();
+        final com.chengyinhub.business.mapper.CmsTopicMapper topics =
+                mock(com.chengyinhub.business.mapper.CmsTopicMapper.class);
         final CmsTopicChapterMapper chapters = mock(CmsTopicChapterMapper.class);
         final CmsTopicNodeMapper nodes = mock(CmsTopicNodeMapper.class);
         final ChapterDTO chapter = new ChapterDTO();
         final boolean compiled;
         Fixture(boolean compiled) {
             this.compiled = compiled;
+            ReflectionTestUtils.setField(service, "cmsTopicMapper", topics);
+            when(topics.lockTopicContentBudget(700L)).thenReturn(700L);
             ReflectionTestUtils.setField(service, "cmsTopicChapterMapper", chapters);
             ReflectionTestUtils.setField(service, "cmsTopicNodeMapper", nodes);
             NodeDTO node = new NodeDTO();
@@ -94,9 +98,9 @@ class OWN_C03_13Test {
                     .when(nodes).insertCmsTopicNode(any(CmsTopicNode.class));
         }
         Object save() {
-            if (compiled) return ReflectionTestUtils.invokeMethod(service, "compileChapterFlow",
+            if (compiled) return ReflectionTestUtils.invokeMethod(com.chengyinhub.business.service.support.TopicGraphTestWiring.graph(service), "compileChapterFlow",
                     Collections.singletonList(chapter), 700L, "creator", 42L, false, false);
-            return ReflectionTestUtils.invokeMethod(service, "saveChaptersAndNodes",
+            return ReflectionTestUtils.invokeMethod(com.chengyinhub.business.service.support.TopicGraphTestWiring.graph(service), "saveChaptersAndNodes",
                     Collections.singletonList(chapter), 700L, "creator", 42L, false);
         }
     }

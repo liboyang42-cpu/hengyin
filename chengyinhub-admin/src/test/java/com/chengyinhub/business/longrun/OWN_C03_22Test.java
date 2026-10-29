@@ -34,9 +34,10 @@ class OWN_C03_22Test {
             if (Modifier.isStatic(field.getModifiers()) || field.getType().isPrimitive()) continue;
             field.setAccessible(true);
             if (field.get(service) == null && field.isAnnotationPresent(Autowired.class)) {
-                ReflectionTestUtils.setField(service, field.getName(), mock(field.getType()));
+                com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, field.getName(), mock(field.getType()));
             }
         }
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.wireRelocatedCollaborators(service, publicationField -> org.mockito.Mockito.mock(publicationField.getType()));
         topics = (CmsTopicMapper) ReflectionTestUtils.getField(service, "cmsTopicMapper");
         CmsTopicChapterMapper chapters = (CmsTopicChapterMapper) ReflectionTestUtils.getField(service, "cmsTopicChapterMapper");
         nodes = (CmsTopicNodeMapper) ReflectionTestUtils.getField(service, "cmsTopicNodeMapper");
@@ -112,7 +113,7 @@ class OWN_C03_22Test {
             }).when(nodes).insertCmsTopicNode(any(CmsTopicNode.class));
             assertThrows(IllegalStateException.class, () -> copy());
             verify(topics, never()).updateCmsTopic(any());
-            verifyNoInteractions(ReflectionTestUtils.getField(service, "npcProfileMapper"));
+            verifyNoInteractions(com.chengyinhub.business.service.support.TopicPublicationTestWiring.get(service, "npcProfileMapper"));
         }
     }
     @Test void successfulCopyStillReturnsGeneratedIdentity() {
@@ -121,7 +122,7 @@ class OWN_C03_22Test {
     private Long copy() {
         Map<String, Object> params = new HashMap<String, Object>();
         params.put("memberId", 42L); params.put("copyType", 2);
-        return service.copyCmsTopic(SOURCE, params);
+        return com.chengyinhub.business.service.support.TopicCopyTestWiring.owner(service).copyCmsTopic(SOURCE, params);
     }
     private CmsTopicNode stored(Long id) {
         CmsTopicNode node = new CmsTopicNode();

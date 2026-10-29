@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "user_decisions": [
+    "Generic admin registration creation disabled; formal checkout only",
+    "Refund original frozen order allocation only; no other-order recalculation",
+    "Fixed fulfillment fee once per actually verified seat; unverified seats do not accrue fees"
+  ],
+  "source_scope": [
+    "CmsRegistrationController.add rejects all generic writes with403 body and stable errorCode",
+    "Admin registration unused create caller/API removed; existing edit continues",
+    "Unit forged-body/no-writer case and real MySQL zero-effect negative authored; NOT_RUN",
+    "D5d25 four paths and Cab8 one path integrated byte-exact; D8 residual paths/lock order still assigned to D"
+  ],
+  "checks": {
+    "Vue2_template": "PASS",
+    "UI_script_API_syntax": "PASS",
+    "C_get_auth": "30 PASS; includes15 mutations in one case",
+    "non_network_gate_contracts": "21 PASS",
+    "Java_MySQL": "NOT_RUN"
+  },
+  "registry_changes": "RegistrationFunds96 ordinary cases counted; SignupNotice18 existing source methods counted, source931 provenance retained; new deposit8 registered with exact commit and class-specific hosted scratch admission",
+  "not_complete": [
+    "A integer-fen boundary source integrated; Java/MySQL not run",
+    "A53 ordinary tests integrated; coordinated hosted CI still required",
+    "D8 remainingentry/count/lock gaps",
+    "G original-allocation refund integration/commonfence",
+    "current batch compiled/runtime/DB/wholebusiness acceptance"
+  ],
+  "all_complete": false
+}

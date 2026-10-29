@@ -1,0 +1,24 @@
+✔ 会话代次识别同毫秒同token的 A→B→A，不增加持久字段 (1.656112ms)
+✔ 相同快照的刷新、角色和身份变化会使旧回调代次失效，头像昵称不影响 (0.343139ms)
+✔ 身份持久化中断和失败的清空也会使旧回调代次失效 (1.424552ms)
+✔ 恢复身份及单字段写入失败不会复用旧代次 (0.584774ms)
+✔ 生产回退:未注入 wx 时使用全局 wx(防自遮蔽 bug 回归) (0.211059ms)
+✔ SESSION_FIELDS 恰为七个会话字段 (0.140993ms)
+✔ restore: 从 Storage 恢复全部七字段到 target (0.168795ms)
+✔ restore: 空/falsy 值不覆盖 target 已有默认值 (0.150397ms)
+✔ setter 双写:同时更新 target 与 Storage (0.13942ms)
+✔ applySnapshot 任一字段持久化失败时回滚整份身份，不留下半个新账号 (0.353054ms)
+✔ target 即 globalData:setter 反映到同一对象,直接读者自动同步 (0.143526ms)
+✔ getter 读取 target 当前值 (0.114883ms)
+✔ setUserRole 空值守卫:不写空 role(复刻 if(!role) return) (0.148484ms)
+✔ clearSession: 同时清内存与 Storage 的七个会话 key (0.303979ms)
+✔ clearSession 必须同步调用权限缓存清理钩子 (0.166061ms)
+✔ token 写入携带 issuedAt/expiry，启动时本地淘汰已过期会话 (0.236998ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 15.016764

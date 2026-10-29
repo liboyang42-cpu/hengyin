@@ -38,6 +38,7 @@ class OWN_C03_23Test {
                 ReflectionTestUtils.setField(service, field.getName(), mock(field.getType()));
             }
         }
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.wireRelocatedCollaborators(service, publicationField -> org.mockito.Mockito.mock(publicationField.getType()));
         topics = (CmsTopicMapper) ReflectionTestUtils.getField(service, "cmsTopicMapper");
         CmsTopicChapterMapper chapters = (CmsTopicChapterMapper) ReflectionTestUtils.getField(service, "cmsTopicChapterMapper");
         nodes = (CmsTopicNodeMapper) ReflectionTestUtils.getField(service, "cmsTopicNodeMapper");
@@ -103,7 +104,7 @@ class OWN_C03_23Test {
     private Long copy(int type) {
         Map<String, Object> params = new HashMap<String, Object>();
         params.put("memberId", 42L); params.put("copyType", type);
-        return service.copyCmsTopic(SOURCE, params);
+        return com.chengyinhub.business.service.support.TopicCopyTestWiring.owner(service).copyCmsTopic(SOURCE, params);
     }
     private CmsTopicNode stored(Long id) {
         CmsTopicNode node = new CmsTopicNode();

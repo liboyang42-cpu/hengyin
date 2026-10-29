@@ -40,13 +40,26 @@
     <view class="nnf-field">
       <view class="nnf-label">声音 <text class="nnf-optional">选填</text></view>
       <view class="nnf-voice-status">{{voiceStatusText}}</view>
+      <cy-inline-error wx:if="{{voiceError}}" kind="error" title="声音暂未完成" sub="{{voiceError}}"
+        action="{{voiceUnknown ? '查询原请求' : ''}}" bind:action="refreshVoice" />
       <view class="nnf-voice-file" wx:if="{{voiceFileText}}">{{voiceFileText}}</view>
       <view class="nnf-actions">
-        <cy-btn variant="secondary" class="nnf-action-button" disabled="{{saving || voiceBusy || voiceStatus === 1}}"
+        <cy-btn variant="secondary" class="nnf-action-button" disabled="{{saving || voiceBusy || voiceUnknown || voiceStatus === 1}}"
           bindtap="chooseVoice">选择录音</cy-btn>
-        <cy-btn variant="primary" class="nnf-action-button" disabled="{{!voiceFile || saving || voiceBusy || voiceStatus === 1}}"
+        <cy-btn variant="primary" class="nnf-action-button" disabled="{{!voiceFile || saving || voiceBusy || voiceUnknown || voiceStatus === 1}}"
           bindtap="uploadVoice">生成声音</cy-btn>
       </view>
+
+      <view wx:if="{{voiceUnknown}}">
+        <text>原结果未知，仍可能完成并占用额度。不会自动重发。</text>
+        <cy-btn variant="secondary" bindtap="refreshVoice" disabled="{{voiceBusy}}">查询原请求</cy-btn>
+        <cy-btn variant="secondary" bindtap="confirmNewVoiceRequest" disabled="{{voiceBusy}}">确认后另起独立请求</cy-btn>
+      </view>
+      <view wx:for="{{voiceHistory}}" wx:key="requestId">
+        <text>原声音请求 · {{item.state}}</text>
+        <cy-btn variant="ghost" data-request="{{item.requestId}}" bindtap="readVoiceHistory">查看原结果</cy-btn>
+      </view>
+      <text wx:if="{{voiceHistoryResult}}">{{voiceHistoryResult}}</text>
       <view class="nnf-actions" wx:if="{{voiceSample || voiceStatus === 3}}">
         <cy-btn variant="secondary" class="nnf-action-button" wx:if="{{voiceSample}}" bindtap="playVoice">{{voicePlaying ? '停止' : '试听'}}</cy-btn>
         <cy-btn variant="secondary" class="nnf-action-button" bindtap="resetVoice">清除重录</cy-btn>

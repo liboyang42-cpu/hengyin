@@ -118,16 +118,14 @@ class ApiRegistrationCompletionCouponTest
 
         controller = spy(new ApiRegistrationController());
         doReturn(MERCHANT).when(controller).getAppUserId();
-        ReflectionTestUtils.setField(controller, "registrationService", registrationService);
-        ReflectionTestUtils.setField(controller, "cmsActivityService", mock(ICmsActivityService.class));
-        ReflectionTestUtils.setField(controller, "topicService", topicService);
-        ReflectionTestUtils.setField(controller, "perkLedgerService", perkLedgerService);
-        ReflectionTestUtils.setField(controller, "pointsAwardService", pointsAwardService);
-        ReflectionTestUtils.setField(controller, "growthService", growthService);
-        ReflectionTestUtils.setField(controller, "redemptionMapper", redemptionMapper);
-        ReflectionTestUtils.setField(controller, "topicCompletionAwardService", completionAwardService);
-        ReflectionTestUtils.setField(controller, "exploreCollectibleService", collectibleService);
-        ReflectionTestUtils.setField(controller, "merchantAccessService", merchantAccessService);
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "registrationService", registrationService);
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "cmsActivityService", mock(ICmsActivityService.class));
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "topicService", topicService);
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "perkLedgerService", perkLedgerService);
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "pointsAwardService", pointsAwardService);
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "growthService", growthService);
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "exploreCollectibleService", collectibleService);
+        ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(controller), "merchantAccessService", merchantAccessService);
         when(merchantAccessService.require(MERCHANT, MerchantPermission.VERIFY))
                 .thenReturn(new MerchantAccessContext(MERCHANT, 11L, MERCHANT,
                         MerchantRoleCode.MERCHANT_OWNER));
@@ -147,7 +145,7 @@ class ApiRegistrationCompletionCouponTest
         activity.setEndDate(new java.util.Date(System.currentTimeMillis() + 86400000L));
         activity.setMemberId(99L);
         ICmsActivityService activityService = (ICmsActivityService) ReflectionTestUtils.getField(
-                controller, "cmsActivityService");
+                RegistrationRedemptionTestFixtures.application(controller), "cmsActivityService");
         when(activityService.selectCmsActivityById(ACTIVITY)).thenReturn(activity);
 
         CmsTopic topic = new CmsTopic();

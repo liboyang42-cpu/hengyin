@@ -1,0 +1,191 @@
+{
+  "source": "f1fe75d646f8ae57864ee5603c68e70e7fabc854",
+  "tree": "e293cc5976c22de88731ee792e75d16e6544fc7b",
+  "parent": "6fcdf747e17cb5094121f609ae33f7734fda2ae7",
+  "branch": "codex/architecture-day-runtime-repairs-6fcdf-20261025",
+  "state": "STANDARD_ACTUAL_SUCCESS_ALL4_RUNTIME_TERMINAL_FAILURE_ORIGINAL_B_C_E_H_PARALLEL_SOURCE_PURPOSE_PACKAGES",
+  "all_five_source_packages_complete": true,
+  "source_delivery_record": "6fcdf747-runtime-source-integration.json",
+  "impact_plan": "6fcdf747-next-impacted-validation-plan.json",
+  "diff_whitelist_paths": 42,
+  "diff_bytes": 373731,
+  "diff_sha256": "d36936307236f74bb5e13215c8a52214a0156be3866dc40b866d0269889bd67f",
+  "scan": {
+    "diff_check": "PASS",
+    "gitleaks": "PASS",
+    "remote_api_SHA_exact": true
+  },
+  "runs": {
+    "standard_backend_selected": 40236711614,
+    "storage_cross_domain1": 40237886431,
+    "mixed": 40237888671,
+    "restore_http": 40237890983,
+    "cohort_payment_gap_diagnostic": 40237893397
+  },
+  "runtime_not_dispatched_until_actual_common_admission": [],
+  "python_controls": {
+    "modules": 6,
+    "first_tests": 181,
+    "first_passed": 180,
+    "first_errors": 1,
+    "first_failures": 0,
+    "only_failed_recheck_tests": 1,
+    "only_failed_recheck_passed": 1,
+    "first_log_sha256": "8a0554f9ddb70baf2c8536e30f1036ec789857ca4e9165f5a7f62dc936cdfe67",
+    "focused_log_sha256": "1f595a73b2ed09c1daaeb8becdd5972805c2e54d319d1d1379fd724d863b04e4",
+    "no_repeated180_controls": true,
+    "not_single181_green_run": true
+  },
+  "not_repeat": [
+    "6fcdf Deposit12/Gameplay1",
+    "e82217 storageclasses",
+    "unaffected frontend/client/migrations/HTTP"
+  ],
+  "all_complete": false,
+  "read_only_backend_watch": {
+    "session_id": 81881,
+    "run": 40236711614,
+    "path": "/private/tmp/hengyin-f1fe75d64-ci-watch.json",
+    "terminal_poll_interval_seconds": 30,
+    "not_a_new_test_or_dispatch": true,
+    "terminal_exit": 0,
+    "not_running": true
+  },
+  "conditional_dispatch": {
+    "session_id": 34537,
+    "script": "/private/tmp/hengyin-f1fe75d64-conditional-dispatch.py",
+    "receipt": "/private/tmp/hengyin-f1fe75d64-conditional-dispatch.json",
+    "lock": "/private/tmp/hengyin-f1fe75d64-conditional-dispatch.lock",
+    "state": "TERMINAL_EXIT0_ALL_FOUR_DISPATCHED_ONCE",
+    "guard": "Actual API verifies build step and backend job success, exact source/ref, no other same-source runs; atomic exclusive lock; each original command attempted once; nonzero stops without retry",
+    "do_not_dispatch_again_while_process_live": true,
+    "actual_prerequisite": {
+      "job_status": "completed",
+      "job_conclusion": "success",
+      "build_status": "completed",
+      "build_conclusion": "success",
+      "build_completed_at": "2026-10-25T21:52:19Z"
+    },
+    "each_dispatched_once": true,
+    "not_running": true
+  },
+  "backend_build_test_actual": {
+    "job": 121299889488,
+    "build_test_step_completed_at": "2026-10-25T21:52:19Z",
+    "build_test_step_conclusion": "success",
+    "backend_whole_job_still_pending": false,
+    "artifact": 12615447625,
+    "original_XML_hashes_verified": 1961,
+    "tests": 15779,
+    "passed": 15146,
+    "skipped": 633,
+    "failures": 0,
+    "errors": 0,
+    "duplicate_case_ids": 0,
+    "new7_actual_passed": 7,
+    "original15772_same_case_status": true,
+    "old40_failure_identities_current_passed": true,
+    "public_readback": "f1fe75d64-backend-original-XML-readback.json",
+    "not_full_business_acceptance": true,
+    "backend_job_conclusion": "success"
+  },
+  "runtime_read_only_watch": {
+    "session_id": 32514,
+    "snapshot": "/private/tmp/hengyin-f1fe75d64-runtime-watch.json",
+    "runs": [
+      40237886431,
+      40237888671,
+      40237890983,
+      40237893397
+    ],
+    "interval_seconds": 45,
+    "status": "TERMINAL_EXIT0_ALL_FOUR_TERMINAL",
+    "not_new_dispatch": true,
+    "not_running": true
+  },
+  "all_five_current_run_sources_verified": {
+    "source": "f1fe75d646f8ae57864ee5603c68e70e7fabc854",
+    "attempt": 1,
+    "all": true
+  },
+  "standard_whole_run_conclusion": "success",
+  "actual_new_failures": {
+    "storage": {
+      "run": 40237886431,
+      "job": 121303347255,
+      "state": "FAILED_AT_REAL_ORACLE_CALIBRATION_RELEASE_BEFORE_HELD_TRANSPORT",
+      "readback": "f1fe75d64-cross-domain-failure-readback.json",
+      "owner": "C",
+      "thread": "01a16a22-c697-7637-ae29-cdff6341000b",
+      "dispatch": "COMPLETE_PURPOSE_SOURCE_ONLY_TASK_SENT",
+      "first_failure": "expected released calibration transactions0 observed1;activePool0;rowsModified0;original assertion retained",
+      "official_source": "https://github.com/mysql/mysql-server/blob/mysql-8.0.45/storage/innobase/trx/trx0i_s.cc",
+      "source_verified_lineage": "100ms min idle keyed by last_read; every cache read updates it; current20ms loop requires whole sampling-chain freshness fix; no businessTX-normal claim"
+    },
+    "payment_gap": {
+      "run": 40237893397,
+      "job": 121303678122,
+      "state": "FAILED_SOURCE_CHILD_BEFORE_FIXED_BOUNDARY_AND_SECONDARY_FINALIZE_REASON",
+      "readback": "f1fe75d64-payment-gap-failure-readback.json",
+      "owner": "B",
+      "thread": "01a16a22-956c-723f-b51b-afcbee69802b",
+      "dispatch": "COMPLETE_PURPOSE_SOURCE_ONLY_TASK_SENT",
+      "original_binding_guard_crossed": true,
+      "root_cause": "UNKNOWN_NO_REVIEWED_CHILD_EXIT_CAUSE_YET",
+      "cleanup": "EXACT_ABSENCE",
+      "scope": "e6d02c14170747a1b71236e4be784fbe",
+      "all_seven_accepted": false
+    },
+    "restore_http": {
+      "run": 40237890983,
+      "job": 121303282684,
+      "owner": "E",
+      "thread": "01a16a23-2723-72e4-813f-03d7f1aa6017",
+      "dispatch": "COMPLETE_PURPOSE_SOURCE_ONLY_TASK_SENT",
+      "state": "FAIL_SOURCE_APPLICATION_START_APP_READINESS_TIMEOUT",
+      "readback": "f1fe75d64-restore-http-failure-readback.json",
+      "actual_application_exception_type": "java.lang.IllegalStateException",
+      "exact_cause": "UNKNOWN_FIXED_SAFE_MARKERS_ONLY",
+      "independent_exact_cleanup": "CONFIRMED",
+      "no_old_137_pass_claim": true
+    },
+    "mixed": {
+      "run": 40237888671,
+      "job": 121303274475,
+      "owner": "H",
+      "thread": "01a16a23-aeb0-70ec-b671-6f778f1fd011",
+      "dispatch": "COMPLETE_PURPOSE_SOURCE_ONLY_TASK_SENT",
+      "state": "FAIL_AFTER_FIXED_GAMEPLAY_PROFILE_PASSED_AT_NO_CASH_EMPTY_PRECONDITION",
+      "readback": "f1fe75d64-mixed-failure-readback.json",
+      "old_profile_guard_crossed": true,
+      "partial_runtime": [
+        "original3 physical boundaries assertions passed",
+        "144 core business HTTP at1/3/6 assertions passed"
+      ],
+      "not_whole_capacity": true,
+      "technical_seam": "FINANCIAL_TABLES includes ums_member; actual gameplay original A/B rows2 conflict with default all-empty gate",
+      "root_decision": "Default exact all-empty gate unchanged. Only strict known gameplay profile may prove its exact original2 noncash identities and unchanged full money/permission rows, reject any additional identity or any economic mutation; not a generic dirty baseline allowance",
+      "independent_exact_cleanup": "CONFIRMED_OWNED3_CID_ABSENCE"
+    }
+  },
+  "next_source_owners_pending": [
+    "B",
+    "C",
+    "E",
+    "H"
+  ],
+  "runtime_still_running": [],
+  "all_five_runs_terminal": true,
+  "source_task_turns": {
+    "C": {
+      "turn": "01a17518-5f74-71ec-9be9-f95bc3c555fc",
+      "cursor": "587dd7ff-a4ef-45f7-b8ca-5c38d84758ff:43",
+      "state": "inProgress"
+    },
+    "B": {
+      "turn": "01a17518-70b4-7529-8cd9-d4bd1c985267",
+      "cursor": "b03dff2c-10cc-4156-add7-1e422e41c5d1:39",
+      "state": "inProgress"
+    }
+  }
+}

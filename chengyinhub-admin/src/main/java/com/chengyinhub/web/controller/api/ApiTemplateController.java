@@ -162,13 +162,17 @@ public class ApiTemplateController extends BaseController {
                 return error("请先登录");
             }
             Long memberId = resolveTemplateOwner(principalMemberId, request.getScope());
-            if (StringUtils.isBlank(request.getTitle())) {
-                return error("请填写游戏标题");
-            }
-            try {
-                couponRewardAuthorizationService.assertOwnedRewardCoupon(request.getCouponId(), memberId);
-            } catch (IllegalArgumentException e) {
-                return error(e.getMessage());
+            // 采用入口只接收来源身份；标题与优惠券由 service 从可见原单读取并校验。
+            // 普通草稿仍校验调用者实际提交的内容和发券权限。
+            if (!Boolean.TRUE.equals(request.getAdoptSourceOnly())) {
+                if (StringUtils.isBlank(request.getTitle())) {
+                    return error("请填写游戏标题");
+                }
+                try {
+                    couponRewardAuthorizationService.assertOwnedRewardCoupon(request.getCouponId(), memberId);
+                } catch (IllegalArgumentException e) {
+                    return error(e.getMessage());
+                }
             }
             String username = getAppUserName();
             // 草稿不做全局重名拦截(覆盖更新自己的草稿不应被拦)

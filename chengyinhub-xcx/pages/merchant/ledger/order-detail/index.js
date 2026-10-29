@@ -120,7 +120,7 @@ Page({
     });
   },
   retryLoad() { this.load(); },
-  goAssets() { wx.navigateTo({ url: '/subpackageA/pages/assetcenter/earnings/index' }); },
+  goAssets() { wx.navigateTo({ url: '/subpackageA/pages/assetcenter/earnings/index?theme=merchant' }); },
 });
 function settlementAmountText(detail) {
   if (detail.displayState === 'NO_CASH_SETTLEMENT') return null;

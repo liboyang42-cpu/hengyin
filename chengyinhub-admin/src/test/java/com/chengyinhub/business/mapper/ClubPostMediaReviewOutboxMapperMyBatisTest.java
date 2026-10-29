@@ -104,16 +104,17 @@ public class ClubPostMediaReviewOutboxMapperMyBatisTest {
     }
 
     @Test
-    void expiredLeaseCanBeReclaimedAndOnlyTheNewOwnerAndFenceCanSubmit() throws Exception {
+    void provenPreDispatchRetryAllowsOnlyTheNewOwnerAndFenceToSubmit() throws Exception {
         long id = seedPending();
         try (SqlSession session = factory.openSession(true)) {
             ClubPostMediaReviewOutboxMapper mapper =
                     session.getMapper(ClubPostMediaReviewOutboxMapper.class);
             assertEquals(1, mapper.claim(id, WORKER_A));
             assertEquals(Long.valueOf(1L), mapper.selectOwned(id, WORKER_A).getFenceToken());
+            assertEquals(1, mapper.markRetryable(id, WORKER_A, 1L,
+                    new java.util.Date(System.currentTimeMillis() - 1000),
+                    ClubPostMediaReviewOutbox.PRE_DISPATCH_UNAVAILABLE));
         }
-
-        expireLease(id);
 
         try (SqlSession session = factory.openSession(true)) {
             ClubPostMediaReviewOutboxMapper mapper =
@@ -128,6 +129,87 @@ public class ClubPostMediaReviewOutboxMapperMyBatisTest {
                     "the expired owner and its old fence must not complete the row");
             assertEquals(1, mapper.markSubmitted(id, WORKER_B, 2L, TRACE_HASH),
                     "only the current owner and fence may complete the row");
+        }
+    }
+
+    @Test
+    void fifthClaimMayCompleteButCannotScheduleASixthAttempt() throws Exception {
+        long id = seedPending();
+        update("update club_post_media_review_outbox set attempt_count=4 where id=" + id);
+        try (SqlSession session = factory.openSession(true)) {
+            ClubPostMediaReviewOutboxMapper mapper = session.getMapper(ClubPostMediaReviewOutboxMapper.class);
+            assertEquals(1, mapper.claim(id, WORKER_A));
+            assertEquals(5, mapper.selectOwned(id, WORKER_A).getAttemptCount());
+            assertEquals(0, mapper.markRetryable(id, WORKER_A, 1L, new java.util.Date(0),
+                    ClubPostMediaReviewOutbox.PRE_DISPATCH_UNAVAILABLE));
+            assertEquals(1, mapper.markSubmitted(id, WORKER_A, 1L, TRACE_HASH));
+            assertEquals(0, mapper.claim(id, WORKER_B));
+        }
+        assertEquals(5, number("select attempt_count from club_post_media_review_outbox where id=" + id));
+        assertEquals(2, number("select state from club_post_media_review_outbox where id=" + id));
+    }
+
+    @Test
+    void expiredProcessingStopsBelowAndAtBudgetAndRetainsLateOriginalTrace() throws Exception {
+        long id = seedPending();
+        try (SqlSession session = factory.openSession(true)) {
+            ClubPostMediaReviewOutboxMapper mapper = session.getMapper(ClubPostMediaReviewOutboxMapper.class);
+            assertEquals(1, mapper.claim(id, WORKER_A));
+        }
+        expireLease(id);
+        try (SqlSession session = factory.openSession(true)) {
+            ClubPostMediaReviewOutboxMapper mapper = session.getMapper(ClubPostMediaReviewOutboxMapper.class);
+            assertTrue(mapper.selectDueIds(50).isEmpty());
+            assertEquals(0, mapper.claim(id, WORKER_B));
+            assertEquals(1, mapper.retireUnsafeById(id));
+            assertEquals(0, mapper.claim(id, WORKER_B));
+            assertEquals(1, mapper.markManualReview(id, WORKER_A, 1L, TRACE_HASH,
+                    ClubPostMediaReviewOutbox.OUTCOME_UNKNOWN));
+            assertEquals(0, mapper.markManualReview(id, WORKER_A, 1L, repeat('e',64),
+                    ClubPostMediaReviewOutbox.OUTCOME_UNKNOWN));
+        }
+        assertEquals(1, number("select attempt_count from club_post_media_review_outbox where id=" + id));
+        assertEquals(5, number("select state from club_post_media_review_outbox where id=" + id));
+        update("update club_post_media_review_outbox set attempt_count=5 where id=" + id);
+        try (SqlSession session = factory.openSession(true)) {
+            assertEquals(0, session.getMapper(ClubPostMediaReviewOutboxMapper.class).claim(id, WORKER_B));
+        }
+    }
+
+    @Test
+    void exhaustedPendingAndAmbiguousLegacyRetryAreNeverDueOrClaimable() throws Exception {
+        long id = seedPending();
+        update("update club_post_media_review_outbox set attempt_count=5 where id=" + id);
+        try (SqlSession session = factory.openSession(true)) {
+            ClubPostMediaReviewOutboxMapper mapper = session.getMapper(ClubPostMediaReviewOutboxMapper.class);
+            assertTrue(mapper.selectDueIds(50).isEmpty());
+            assertEquals(0, mapper.claim(id, WORKER_A));
+            assertEquals(1, mapper.retireUnsafeById(id));
+        }
+        assertEquals(5, number("select state from club_post_media_review_outbox where id=" + id));
+        update("update club_post_media_review_outbox set state=3,attempt_count=1,"
+                + "last_error_code='WX_NO_RECEIPT' where id=" + id);
+        try (SqlSession session = factory.openSession(true)) {
+            ClubPostMediaReviewOutboxMapper mapper = session.getMapper(ClubPostMediaReviewOutboxMapper.class);
+            assertTrue(mapper.selectDueIds(50).isEmpty());
+            assertEquals(0, mapper.claim(id, WORKER_A));
+            assertEquals(1, mapper.retireUnsafeById(id));
+        }
+        assertEquals(1, number("select attempt_count from club_post_media_review_outbox where id=" + id));
+        assertEquals(5, number("select state from club_post_media_review_outbox where id=" + id));
+    }
+
+    private void update(String sql) throws Exception {
+        try (SqlSession session = factory.openSession(true); Statement statement=session.getConnection().createStatement()) {
+            statement.executeUpdate(sql);
+        }
+    }
+
+    private int number(String sql) throws Exception {
+        try (SqlSession session = factory.openSession(true); Statement statement=session.getConnection().createStatement();
+             java.sql.ResultSet rows=statement.executeQuery(sql)) {
+            assertTrue(rows.next());
+            return rows.getInt(1);
         }
     }
 

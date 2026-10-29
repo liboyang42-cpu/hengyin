@@ -301,7 +301,7 @@ Component({
       this._attached = true
       this._setOrderId(this.data.orderId)
     },
-    detached() {
+    detached() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1;
       if (this._finishCancelPrompt) this._finishCancelPrompt()
       if (this._finishCancellation) this._finishCancellation()
       this._attached = false
@@ -311,6 +311,7 @@ Component({
     },
   },
   pageLifetimes: {
+    hide() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1; },
     show() {
       if (this._skipFetch) return
       // 失败面板正在 2s 回列表:此时重拉会把面板切回 loading、计时从头来,原因一闪就没
@@ -510,6 +511,7 @@ Component({
       if (!members || !info.ownerId) return
       that.setData({ teamSheetShow: false })
       teamUp.createActivityTeam(app, info.ownerId, members, that.data.teamInviteOnly || info.teamStarted ? 1 : null, {
+        loginContext: { owner: that, target: () => [that._orderId, that._orderGeneration, that.data.info && that.data.info.ownerId] },
         success(teamId) { that._leave('/pages/team/detail/index?teamId=' + teamId) },
         fail(message) { toast(message) }
       })

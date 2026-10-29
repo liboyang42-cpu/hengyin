@@ -2,10 +2,15 @@ package com.chengyinhub.business.service.impl;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.TreeSet;
 
 import com.chengyinhub.business.domain.dto.MerchantSharingRateDTO;
 import com.chengyinhub.common.utils.DateUtils;
 import com.chengyinhub.common.utils.SecurityUtils;
+import com.chengyinhub.common.constant.HttpStatus;
+import com.chengyinhub.common.exception.ServiceException;
+import com.chengyinhub.business.service.ITopicOperationsScopeAuthorizer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.chengyinhub.business.mapper.CmsRegistrationMerchantMapper;
@@ -24,6 +29,9 @@ public class CmsRegistrationMerchantServiceImpl implements ICmsRegistrationMerch
 {
     @Autowired
     private CmsRegistrationMerchantMapper cmsRegistrationMerchantMapper;
+
+    @Autowired
+    private ITopicOperationsScopeAuthorizer topicOperationsScopeAuthorizer;
 
     /**
      * 查询商家主题报名
@@ -181,9 +189,38 @@ public class CmsRegistrationMerchantServiceImpl implements ICmsRegistrationMerch
      * @return 结果
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public int deleteCmsRegistrationMerchantByIds(Long[] ids)
     {
-        return cmsRegistrationMerchantMapper.deleteCmsRegistrationMerchantByIds(ids);
+        if (ids == null || ids.length == 0) {
+            throw new ServiceException("商家报名ID不能为空", HttpStatus.CONFLICT);
+        }
+        TreeSet<Long> ordered = new TreeSet<>();
+        for (Long id : ids) {
+            if (id == null || id <= 0) {
+                throw new ServiceException("商家报名ID无效", HttpStatus.CONFLICT);
+            }
+            ordered.add(id);
+        }
+        List<CmsRegistrationMerchant> locked = new ArrayList<>();
+        for (Long id : ordered) {
+            locked.add(cmsRegistrationMerchantMapper.selectForDeletionByIdForUpdate(id));
+        }
+        // 所有目标锁定后再复验。与 Controller 原 scope 规则相同，不把快照预检当删除授权。
+        for (CmsRegistrationMerchant current : locked) {
+            if (current == null || current.getTopicId() == null
+                    || !topicOperationsScopeAuthorizer.canViewTopic(current.getTopicId())) {
+                throw new ServiceException("商家报名不存在或当前账号无操作范围", HttpStatus.CONFLICT);
+            }
+            if (Long.valueOf(1L).equals(current.getAuditStatus())) {
+                throw new ServiceException("已中标报名不可直接删除，请先取消承接", HttpStatus.CONFLICT);
+            }
+        }
+        int deleted = cmsRegistrationMerchantMapper.deleteCmsRegistrationMerchantByIds(ordered.toArray(new Long[0]));
+        if (deleted != ordered.size()) {
+            throw new ServiceException("商家报名状态已变化，整批删除已取消", HttpStatus.CONFLICT);
+        }
+        return deleted;
     }
 
     /**
@@ -193,9 +230,10 @@ public class CmsRegistrationMerchantServiceImpl implements ICmsRegistrationMerch
      * @return 结果
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public int deleteCmsRegistrationMerchantById(Long id)
     {
-        return cmsRegistrationMerchantMapper.deleteCmsRegistrationMerchantById(id);
+        return deleteCmsRegistrationMerchantByIds(new Long[]{id});
     }
 
     @Override
@@ -255,9 +293,8 @@ public class CmsRegistrationMerchantServiceImpl implements ICmsRegistrationMerch
             throw new RuntimeException("该报名已中标,不能直接取消;已发布的活动与票需一并处理,请走撤销中标流程");
         }
 
-        registration.setDelFlag(2);
-        registration.setUpdateBy(username);
-        registration.setUpdateTime(new java.util.Date());
-        return cmsRegistrationMerchantMapper.updateCmsRegistrationMerchant(registration) > 0;
+        // The read above only supplies a useful denial. Owner/review/deletion must still match at the write.
+        return cmsRegistrationMerchantMapper.cancelUnwonByMember(
+                registrationId, memberId, username, new java.util.Date()) == 1;
     }
 }

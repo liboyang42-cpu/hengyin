@@ -319,7 +319,6 @@ page { background: var(--cy-color-bg-page); }
 
 /* 发布器里"已选地点/已选活动"两枚 chip 的文案。原先由 WXML 内联写死了灰色与字号
    (C01 文档 P0-G),提到样式层并落 token。 */
-.compose-chip-txt { color: var(--cy-text-secondary); font-size: var(--cy-font-caption); }
 
 .summary { display: flex; gap: var(--cy-space-2); padding: var(--cy-space-1) var(--cy-page-x) var(--cy-space-2-5); }
 .sum-card {
@@ -341,7 +340,6 @@ page { background: var(--cy-color-bg-page); }
 }
 
 .square .list { padding-bottom: 140rpx; }  /* ds-ok: 底部安全区留白,匹配 tabBar+发布钮实际占高,量表外 */
-.activity-complete-icon { color: var(--cy-color-brand); margin-right: var(--cy-space-1); vertical-align: middle; }
 
 /* ===== A05 横向活动 banner ===== */
 .sq-upcoming-track {
@@ -446,57 +444,16 @@ page { background: var(--cy-color-bg-page); }
 /* 昵称:稿 15px Medium。15px=30rpx 落在 body 28 与 subtitle 32 正中,按语义(输入区正文)取 body。
    与下方占位的竖间距 = 稿 2pt = 4rpx。 */
 .compose-title { display: block; margin-bottom: var(--cy-legacy-4); font-size: var(--cy-font-body); font-weight: 500; color: var(--cy-color-text-primary); }
-.square.theme-dark .fabu.compose .compose-input {
-  width: 100%;
-  min-height: 44rpx;
-  padding: 0;
-  margin: 0;
-  background: transparent;
-  color: var(--cy-color-text-primary);
-  font-size: var(--cy-font-body);
-  line-height: 1.65;
-  box-sizing: border-box;
-}
 .compose-ph {
   color: var(--cy-color-input-placeholder); /* 稿 15px Regular，占位色走 token */
   font-size: var(--cy-font-body);
   line-height: 1.65;
 }
-.square.theme-dark .fabu.compose .compose-body .btns button {
-  width: 88rpx;
-  min-width: 88rpx;
-  height: 88rpx;
-  min-height: 88rpx;
-  padding: 0;
-  /* 稿 379:2437 三枚 22pt 图标间距 20pt → 中心距 84rpx；88rpx(44pt) 热区不可缩，
-     故取 margin 0、中心距 88rpx,与稿差 2pt,热区优先。 */
-  margin: 0;
-  line-height: 1;
-  background: transparent;
-  color: var(--cy-color-text-primary); /* cy-icon 取 currentColor */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.square.theme-dark .fabu.compose .compose-body .btns button::after {
-  border: none;
-}
 .compose-toolbar { gap: var(--cy-space-3); margin-top: var(--cy-space-3); } /* 稿:工具栏上内边距 12pt = 24rpx */
-/* UI-15:发布钮从文字 cy-btn 收成 88rpx 图标钮(与工具栏三颗同热区),
-   主按钮底色 = 反色中性(玩家白底深字),disabled 只降透明度不用灰底冒充。 */
-.compose-submit {
-  width: 88rpx;
-  min-width: 88rpx;
-  height: 88rpx;
-  flex-shrink: 0;
-  border-radius: var(--cy-radius-pill);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--cy-btn-solid-bg);
-  color: var(--cy-btn-solid-fg);
-}
-.compose-submit--off { opacity: var(--cy-opacity-disabled); }
+/* 2026-10-27 P-20:行内发布框撤掉后这里只剩入口行 —— 整行是一个按钮,工具图标只做提示 */
+.compose-entry { display: block; }
+.compose-entry .compose-ph { display: block; }
+.compose-entry-tools { display: flex; align-items: center; gap: var(--cy-space-5); color: var(--cy-color-text-secondary); }
 .sq-refresh-status,
 .sq-load-more-status {
   padding: var(--cy-space-3) var(--cy-page-x);

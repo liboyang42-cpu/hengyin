@@ -79,6 +79,12 @@ public class CmsTemplatePublishRequest implements Serializable {
     @Schema(description = "验证方式: 1、文字验证 2、图片验证 3、选项验证", example = "1")
     private Integer validationMethod;
 
+    @Schema(description = "玩法语义，沿用个人模板 interactionType；与验证方式正交")
+    private String interactionType;
+
+    public String getInteractionType() { return interactionType; }
+    public void setInteractionType(String interactionType) { this.interactionType = interactionType; }
+
     @Schema(description = "vm=7 传感器类型:still/steps/audio_clip")
     private String sensorType;
 
@@ -549,6 +555,7 @@ public class CmsTemplatePublishRequest implements Serializable {
                 Objects.equals(isSync, that.isSync) &&
                 Objects.equals(ruleInstructions, that.ruleInstructions) &&
                 Objects.equals(validationMethod, that.validationMethod) &&
+                Objects.equals(interactionType, that.interactionType) &&
                 Objects.equals(sensorType, that.sensorType) &&
                 Objects.equals(sensorConfig, that.sensorConfig) &&
                 Objects.equals(questionName, that.questionName) &&
@@ -582,7 +589,7 @@ public class CmsTemplatePublishRequest implements Serializable {
     // hashCode方法
     @Override
     public int hashCode() {
-        return Objects.hash(originalTemplateId, categoryId, title, description, imgUrl,players,usageLocation,requiredMaterials, duration, difficulty, isSync, ruleInstructions, validationMethod, sensorType, sensorConfig, questionName, questionAnswer, feedbackText, couponId, medalStyle, questionA, questionB, questionC, questionD, correctAnswer, activityCategoryids, storyText, storyImg, storyJson, hint1, hint2, answerReveal, photoRequireDesc, photoReview, audioUrl, audioDuration, questionImg, questionAudio, questionOptionMediaJson, preferenceJson, advancedConfigJson);
+        return Objects.hash(originalTemplateId, categoryId, title, description, imgUrl,players,usageLocation,requiredMaterials, duration, difficulty, isSync, ruleInstructions, validationMethod, interactionType, sensorType, sensorConfig, questionName, questionAnswer, feedbackText, couponId, medalStyle, questionA, questionB, questionC, questionD, correctAnswer, activityCategoryids, storyText, storyImg, storyJson, hint1, hint2, answerReveal, photoRequireDesc, photoReview, audioUrl, audioDuration, questionImg, questionAudio, questionOptionMediaJson, preferenceJson, advancedConfigJson);
     }
 
     // toString方法

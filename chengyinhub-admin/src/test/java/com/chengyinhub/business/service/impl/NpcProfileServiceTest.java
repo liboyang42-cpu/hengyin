@@ -107,4 +107,17 @@ class NpcProfileServiceTest {
         assertNull(service.resolveForNodeOrMerchant(NODE, MEMBER));
         assertNull(service.resolveForNodeOrMerchant(NODE, null), "没挂商家的节点也不该 NPE");
     }
+
+    /** M-28:节点上记的是商家 member_id,门店分身按 mms_merchant.id 存;剧情 NPC 列表必须先换算再查。 */
+    @Test
+    void merchantMemberListResolvesTheMerchantRowIdBeforeReadingScopeTwo() {
+        when(mapper.selectEnabledByScope(2, MERCHANT)).thenReturn(Collections.singletonList(
+                row(88L, 2, MERCHANT, "店长")));
+
+        List<NpcProfileVO> list = service.resolveEnabledListForMerchantMember(MEMBER);
+
+        assertEquals(1, list.size());
+        assertEquals("店长", list.get(0).getName());
+        verify(mapper, never()).selectEnabledByScope(2, MEMBER);
+    }
 }

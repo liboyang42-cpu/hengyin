@@ -13,6 +13,8 @@ public class ClubMembershipInvoice extends BaseEntity {
     public static final String STATUS_CLOSED = "CLOSED";
 
     private Long id;
+    private Long verifiedPaymentFactId;
+    private String verifiedPaymentFactHash;
     private String invoiceNo;
     private String outTradeNo;
     private Long clubId;
@@ -37,6 +39,14 @@ public class ClubMembershipInvoice extends BaseEntity {
     private Date resumeBlockedAt;
     private Date paidAt;
     private Integer version;
+
+    /** Internal immutable successful consumption proof, never a client-writable API field. */
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    public Long getVerifiedPaymentFactId() { return verifiedPaymentFactId; }
+    public void setVerifiedPaymentFactId(Long value) { verifiedPaymentFactId = value; }
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    public String getVerifiedPaymentFactHash() { return verifiedPaymentFactHash; }
+    public void setVerifiedPaymentFactHash(String value) { verifiedPaymentFactHash = value; }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

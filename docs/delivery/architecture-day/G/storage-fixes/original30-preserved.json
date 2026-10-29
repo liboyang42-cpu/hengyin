@@ -1,0 +1,145 @@
+{
+  "baseline": "61834b1ba96fcfb025d8442955b69f1d6b35d5f3",
+  "original_methods": [
+    {
+      "method_name": "zeroSalesCloseNeedsNeitherPositiveAmountNorInventedMemberRateOrHead",
+      "body_sha256": "b09fe87e030c4b364c07f996a54b9eb9c52ab570c535e713de87a90ad057fcf1"
+    },
+    {
+      "method_name": "zeroCloseCanRetainWaitingOriginalOrderWithoutAddingItsPayableAmountToOriginalSales",
+      "body_sha256": "e4557059f5bdbf8b37dc9304fad0908723bcf6539dd7e06d08a32dfe135a5c8e"
+    },
+    {
+      "method_name": "zeroPositiveAndNullCloseKindsCannotMislabelFrozenBasis",
+      "body_sha256": "f60528332d75a38cb140fc9ae4e35b50994d8cc0ece28f7646aa8969900893e2"
+    },
+    {
+      "method_name": "originalAllStateSnapshotPreservesClosedAndNullStatesInsteadOfCallingThemPaid",
+      "body_sha256": "afd1cc7191e968e71a0997c6bda15b427adaed3ee52e3ab5a70099f6d12a6a93"
+    },
+    {
+      "method_name": "paidOriginalSnapshotCannotInventZeroBasisOrClaimDifferentCurrentState",
+      "body_sha256": "2ac393432377de1d1ec5d1c84b1b2ee2c292d7a3f6293a2ac0a1281b820405c8"
+    },
+    {
+      "method_name": "positiveCloseRequiresActualNonNullInitiatorAndEveryFrozenRate",
+      "body_sha256": "5c1b9b7c580a490aaafe038b1009f98f975df9289e09970e0a6e2dde4346bae3"
+    },
+    {
+      "method_name": "zeroCloseCannotReplaceActualUnknownOwnerAndRatesWithInventedDefaults",
+      "body_sha256": "475a6b82f1bc938293fba8944854873dddd597592d91d66227319745cd175cf4"
+    },
+    {
+      "method_name": "eventStorageRejectsSelfDeclaredVerifiedPaymentEvenWithExistingRefundAndContribution",
+      "body_sha256": "b35674123e391363ff2677b1afa3d0d48c1688cdd65d3a143e0e7f6d69b9e4f2"
+    },
+    {
+      "method_name": "expandPreservesLegacyOriginalRowsAndBothOldUniqueKeys",
+      "body_sha256": "2a66a7bb54a20e3067183caf1e977b012f67683c644b0aafedefd025b34ce28a"
+    },
+    {
+      "method_name": "onlyExplicitAccountingPlatformAndDepositRowsMayHaveNoMember",
+      "body_sha256": "27602553ab2a9e620c2a5ad1606aafc4c96a7932f260e3853df25fc859425ec6"
+    },
+    {
+      "method_name": "sqlNullCannotBypassAccountingKindRoleLineOrStatus",
+      "body_sha256": "6c32c84c5b7b11394b1a4dac33c4ea560b9d5c69d37ab888ddd69f21f60f01aa"
+    },
+    {
+      "method_name": "sourceTopicInitiatorAndJsonObjectMustActuallyMatch",
+      "body_sha256": "b315261058ab0b001a305f1ad05713aefbf9d6317957b3e57dae2938720f0fd5"
+    },
+    {
+      "method_name": "parentOrderUsesOriginalPayerNotMinimumRegistrationId",
+      "body_sha256": "3217b7ce4851d23cee4adbc7892c7bcf2f92e51023eddbc190305075a1ef66f5"
+    },
+    {
+      "method_name": "contributionCannotBorrowAnotherCloseTopicOrPayer",
+      "body_sha256": "60a7df7ba56b767b5fa2e94064c44f35183e7aae5469e64602ca714336039ec0"
+    },
+    {
+      "method_name": "eventCannotPointToRegistrationContributionInAnotherClose",
+      "body_sha256": "22929a34bdd05f963ce3e31f3fa16ca452e583b3c3531367339e7d079491ae03"
+    },
+    {
+      "method_name": "refundAndContributionExistingIndependentlyDoNotProveTheSameSourceRegistration",
+      "body_sha256": "cc6b7606ed07766e343c549451a29ec588a3728139aa76f7bf0de2962312b872"
+    },
+    {
+      "method_name": "headAndAdjustmentCompositeForeignKeysRejectCrossCloseAndHalfLinks",
+      "body_sha256": "fc9cfaa80ab08e38f0b9254ae3d3981f9e272832e5aecbb8e4991cc3a73cd0bb"
+    },
+    {
+      "method_name": "globalHeadIdentityAndInitiatorMustMatchFrozenClose",
+      "body_sha256": "b16b4501811cc80a74579a84ad2a7bda4f97e52ebc59c01c8bec07082f5f0967"
+    },
+    {
+      "method_name": "sameCloseIdentityReadsOriginalAndDifferentPayloadCannotOverwrite",
+      "body_sha256": "2c1435647730e3667a5cde6834d11aced865fb69967a97c9c47e495ad7539244"
+    },
+    {
+      "method_name": "originalContributionReceiptSurvivesSourceRefundAndRejectsChangedAmount",
+      "body_sha256": "8ea9d6e983de676ee93681d6844612d1171776dd21288f57d1fec131e39a1cb3"
+    },
+    {
+      "method_name": "repeatedEventWithSameHashStillConflictsOnDifferentActualPayload",
+      "body_sha256": "84c54df10cc401f31dd5fc162d7ca2712a424911e97047cea6a36f83e30e0163"
+    },
+    {
+      "method_name": "failureAfterEvidenceHeadAndAdjustmentRollsBackAllNewRows",
+      "body_sha256": "6cbab36173e10d7b8d4797967f776d4e11aee96fa49141a404c7846e9c11d9cc"
+    },
+    {
+      "method_name": "dirtyLegacyPreflightFailsBeforeAnyDdlAndDoesNotDeleteTheEvidence",
+      "body_sha256": "1f186ce5888f6eae17837ee2584567d51598f4feb83306dcb18209cd54eceb5e"
+    },
+    {
+      "method_name": "changedOriginalOrderUniqueKeyFailsPreflightBeforeAnyDdl",
+      "body_sha256": "cf10c9028f6cce49d9b5d6f354b35c0cc76398ad6fb43c4c7b32aa38ae722e6d"
+    },
+    {
+      "method_name": "changedOriginalAdjustmentIdentityFailsPreflightEvenWithThreeUniqueColumns",
+      "body_sha256": "53f61aaa7b2534d4c9cb4240d723720034ad031dc265027bb940866af1c5dbde"
+    },
+    {
+      "method_name": "existingPartialSchemaIsNotOverwrittenOrTreatedAsApplied",
+      "body_sha256": "8497db23133e9e77055ce475b341d744b8d4f2ead3243e125a80d216dafa6a00"
+    },
+    {
+      "method_name": "emptyOnlyRollbackRestoresOriginalColumnsAndIndexShape",
+      "body_sha256": "ee8c8802a4cf4266cc5ff71e1cacd94b3e5fe76f908a557ddb53fa78eb87c303"
+    },
+    {
+      "method_name": "rollbackRefusesAnyCommittedEvidenceInsteadOfDroppingMoneyHistory",
+      "body_sha256": "95024518dc20206ab321df1f45c2d5c1a07f2527bd3a4ea0f9a09c715f495f34"
+    },
+    {
+      "method_name": "rollbackAlsoRefusesAccountingRowsEvenWithoutCashClose",
+      "body_sha256": "db9efa0231601f23274df14452d88bcbd1ffe47aedbd5f7f069eea88479f7a22"
+    },
+    {
+      "method_name": "defaultRecordRequiresRealTransactionAndOriginalSourceScope",
+      "body_sha256": "755602ddbbcc911dcf577896491da46fd69620095bcc2e6bd212a3bac6db7693"
+    }
+  ],
+  "unchanged_fixture_helper_tail_sha256": "a857fadcfdad8316f8345c4d73708f0bdf990c7d2a4c15a57e77dc396526d7e3",
+  "total_authored_test_methods": 45,
+  "new_methods": [
+    "everyEmptyCommittedDdlPrefixCanRecoverAndForwardApplyAgain",
+    "everyPlannedLegacyTableIndexNameIsABeforeDdlBlocker",
+    "fullOnlyRollbackRefusesPrefixBeforeReferencingMissingColumns",
+    "independentOrdersWithNullParentCannotBorrowEachOthersPaymentIdentity",
+    "interruptedEmptyMigrationNeedsSafeRollbackBeforeAdjustmentAlterExists",
+    "nullParentCannotBorrowPayerThroughDirectInsertEither",
+    "parentWithAllZeroAmountsHasNoProvenPaymentSubject",
+    "parentWithOnePositiveOriginalPayerStillRecordsAndReplaysBothRows",
+    "parentWithTwoPositiveOrMissingSiblingAmountsCannotGuessItsPayer",
+    "plannedCheckAndForeignKeySymbolsAreBeforeDdlBlockers",
+    "recoveryRefusesAccountingHeadAtCommittedHeadStage",
+    "recoveryRefusesNonemptyCommittedClosePrefix",
+    "recoveryRefusesUnknownColumnsAndChangedCheckEvenWhenEmpty",
+    "reservedAdjustmentIndexNameCollisionMustBeRejectedBeforeAnyDdl",
+    "zeroPayableSiblingCannotSelfDeclareAsTheParentPaymentIdentity"
+  ],
+  "java_mysql_executed_here": 0
+}

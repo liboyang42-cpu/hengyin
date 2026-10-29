@@ -40,6 +40,10 @@ public class ThemeKeyNamingService {
     public static final String KIND_COUNTER = "counter";
 
     public static final int MAX_LABEL = 20;
+    public static final int MAX_ATTRIBUTE_LABEL = 12;
+
+    static final String MSG_ATTRIBUTE_NAME_LONG = "名称最多 12 字。";
+    static final String MSG_ATTRIBUTE_DUPLICATE = "已有同名的属性。";
 
     public static final String ERR_INVALID = ThemeStateKeyService.ERR_INVALID;
     public static final String ERR_IN_USE = "STATE_KEY_IN_USE";
@@ -99,11 +103,11 @@ public class ThemeKeyNamingService {
                 .setDetailMessage(ThemeStateKeyService.ERR_NOT_FOUND);
         Set<String> attributes = attributeKeys(topic.getId());
         boolean attribute = attributes.contains(key);
-        String name = attribute ? requireLabel(label, ThemeAttributeService.MAX_LABEL, ThemeAttributeService.MSG_NAME_LONG)
+        String name = attribute ? requireLabel(label, MAX_ATTRIBUTE_LABEL, MSG_ATTRIBUTE_NAME_LONG)
                 : requireLabel(label, MAX_LABEL, MSG_NAME_LONG);
         String kind = kindOf(existing);
         requireUniqueLabel(themeStateKeyService.listByTopic(topic.getId()), attributes, existing.getKeyType(), attribute,
-                name, key, attribute ? ThemeAttributeService.MSG_DUPLICATE : duplicateMessage(kind));
+                name, key, attribute ? MSG_ATTRIBUTE_DUPLICATE : duplicateMessage(kind));
         ThemeStateKey patch = copy(existing);
         patch.setLabel(name);
         themeStateKeyService.updateDefinition(topic.getId(), key, patch);

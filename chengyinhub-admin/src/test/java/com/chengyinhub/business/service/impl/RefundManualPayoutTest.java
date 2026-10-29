@@ -41,6 +41,7 @@ class RefundManualPayoutTest {
     private INotifyService notifyService;
     private AlarmService alarmService;
     private RefundServiceImpl svc;
+    private WechatVerifiedPaymentFactService factsReader;
 
     @BeforeEach
     void setUp() {
@@ -48,19 +49,32 @@ class RefundManualPayoutTest {
         notifyService = mock(INotifyService.class);
         alarmService = mock(AlarmService.class);
         svc = new RefundServiceImpl();
+        var originalOwner = mock(com.chengyinhub.business.service.ICoopSettlementClaimService.class);
+        when(originalOwner.hasFrozenOriginalRefundComponents(anyLong())).thenReturn(false);
+        ReflectionTestUtils.setField(svc, "coopSettlementClaimService", originalOwner);
         ReflectionTestUtils.setField(svc, "refundApplicationMapper", refundApplicationMapper);
         CmsRegistration registration = new CmsRegistration();
+        registration.setId(88L); registration.setOwnerType(1L); registration.setOwnerId(7L);
+        registration.setMemberId(9L); registration.setTransactionId("TX88");
+        registration.setPaymentStatus(4); registration.setRegistrationStatus(3);
         registration.setRegistrationNo("REG88");
         registration.setWechatPaymentAmount(new BigDecimal("30.00"));
         CmsRegistrationMapper registrations = mock(CmsRegistrationMapper.class);
         when(registrations.selectCmsRegistrationById(88L)).thenReturn(registration);
+        when(registrations.selectCmsRegistrationByIdForUpdate(88L)).thenReturn(registration);
+        var topics = mock(com.chengyinhub.business.mapper.CmsTopicMapper.class);
+        var topic = new com.chengyinhub.business.domain.CmsTopic(); topic.setId(7L); topic.setMemberId(3L);
+        when(topics.selectCmsTopicByIdForUpdate(7L)).thenReturn(topic);
+        ReflectionTestUtils.setField(svc, "cmsTopicMapper", topics);
+        factsReader = com.chengyinhub.business.service.ARefundFactFixture.memoryFacts();
+        ReflectionTestUtils.setField(svc, "verifiedPaymentFacts", factsReader);
         ReflectionTestUtils.setField(svc, "cmsRegistrationMapper", registrations);
         ReflectionTestUtils.setField(svc, "notifyService", notifyService);
         ReflectionTestUtils.setField(svc, "alarmService", alarmService);
         // 2026-09-16 补合 paycb:退款回调先落 inbox 去重(cc36b4552),返回值不参与状态推进;
         // inbox 自身语义由 WxPaymentCallbackInboxServiceImplTest 覆盖,这里桩掉,不注入即 NPE。
         ReflectionTestUtils.setField(svc, "wxPaymentCallbackInboxService",
-                mock(com.chengyinhub.business.service.IWxPaymentCallbackInboxService.class));
+                com.chengyinhub.business.service.PaymentCallbackInboxStubs.passThrough(null, factsReader));
     }
 
     @Test
@@ -140,6 +154,10 @@ class RefundManualPayoutTest {
     void verifyManualPayout_sameAsHandler_rejected() {
         RefundApplication r = new RefundApplication();
         r.setId(7L);
+        r.setRefundNo("RF88"); r.setSourceType("registration"); r.setSourceId(88L); r.setStatus(1);
+        r.setRefundAmount(new BigDecimal("12.50")); r.setPayoutStatus(3);
+        r.setPayoutMethod("offline_transfer"); r.setPayoutReceiptUrl(RECEIPT); r.setPayoutHandledAt(new java.util.Date());
+        when(refundApplicationMapper.selectRegistrationHistoryForUpdate(88L)).thenReturn(java.util.List.of(r));
         r.setPayoutHandlerId(100L);
         when(refundApplicationMapper.selectRefundApplicationById(7L)).thenReturn(r);
 
@@ -152,6 +170,10 @@ class RefundManualPayoutTest {
     void verifyManualPayout_differentReviewer_verifiesAndNotifies() {
         RefundApplication r = new RefundApplication();
         r.setId(7L);
+        r.setRefundNo("RF88"); r.setSourceType("registration"); r.setSourceId(88L); r.setStatus(1);
+        r.setRefundAmount(new BigDecimal("12.50")); r.setPayoutStatus(3);
+        r.setPayoutMethod("offline_transfer"); r.setPayoutReceiptUrl(RECEIPT); r.setPayoutHandledAt(new java.util.Date());
+        when(refundApplicationMapper.selectRegistrationHistoryForUpdate(88L)).thenReturn(java.util.List.of(r));
         r.setMemberId(9L);
         r.setPayoutHandlerId(100L);
         r.setRefundAmount(new BigDecimal("12.50"));
@@ -176,16 +198,17 @@ class RefundManualPayoutTest {
     private RefundApplication byRefundNo(Long id) {
         RefundApplication r = new RefundApplication();
         r.setId(id);
-        r.setRefundNo("RF88");
+        r.setRefundNo("RF88"); r.setStatus(1);
         r.setSourceType("registration");
         r.setSourceId(88L);
         r.setRefundAmount(new BigDecimal("12.50"));
         when(refundApplicationMapper.selectByRefundNo("RF88")).thenReturn(r);
+        when(refundApplicationMapper.selectRegistrationHistoryForUpdate(88L)).thenReturn(java.util.List.of(r));
         when(refundApplicationMapper.updatePayoutResult(eq(id), any(), any())).thenReturn(1);
         return r;
     }
 
-    private static Map<String, String> facts(String refundNo, String status) {
+    private Map<String, String> facts(String refundNo, String status) {
         Map<String, String> facts = new HashMap<>();
         facts.put("outRefundNo", refundNo);
         facts.put("outTradeNo", "REG88");
@@ -193,7 +216,10 @@ class RefundManualPayoutTest {
         facts.put("refund", "1250");
         facts.put("total", "3000");
         facts.put("currency", "CNY");
-        return facts;
+        facts.put("mchid", "merchant");
+        facts.put("refundId", "WX-" + refundNo);
+        return "SUCCESS".equals(status) && "RF88".equals(refundNo)
+                ? com.chengyinhub.business.service.ARefundFactFixture.bindSuccess(factsReader, facts, "TX88") : facts;
     }
 
     @Test
@@ -228,15 +254,17 @@ class RefundManualPayoutTest {
     void notify_zeroAffectedOnlyAcksTheExactPersistedTerminal() {
         RefundApplication initial = new RefundApplication();
         initial.setId(3L);
-        initial.setRefundNo("RF88");
+        initial.setRefundNo("RF88"); initial.setStatus(1);
         initial.setSourceType("registration");
         initial.setSourceId(88L);
         initial.setRefundAmount(new BigDecimal("12.50"));
         RefundApplication exact = new RefundApplication();
         exact.setId(3L);
         exact.setRefundNo("RF88");
+        org.springframework.beans.BeanUtils.copyProperties(initial, exact);
         exact.setPayoutStatus(RefundApplication.PAYOUT_SUCCESS);
         when(refundApplicationMapper.selectByRefundNo("RF88")).thenReturn(initial, exact);
+        when(refundApplicationMapper.selectRegistrationHistoryForUpdate(88L)).thenReturn(java.util.List.of(exact));
         when(refundApplicationMapper.updatePayoutResult(eq(3L), eq(RefundApplication.PAYOUT_SUCCESS), any()))
                 .thenReturn(0);
 
@@ -247,19 +275,63 @@ class RefundManualPayoutTest {
     void notify_zeroAffectedRejectsDifferentPersistedTerminal() {
         RefundApplication initial = new RefundApplication();
         initial.setId(3L);
-        initial.setRefundNo("RF88");
+        initial.setRefundNo("RF88"); initial.setStatus(1);
         initial.setSourceType("registration");
         initial.setSourceId(88L);
         initial.setRefundAmount(new BigDecimal("12.50"));
         RefundApplication different = new RefundApplication();
         different.setId(3L);
         different.setRefundNo("RF88");
+        org.springframework.beans.BeanUtils.copyProperties(initial, different);
         different.setPayoutStatus(RefundApplication.PAYOUT_MANUAL_HANDLED);
         when(refundApplicationMapper.selectByRefundNo("RF88")).thenReturn(initial, different);
+        when(refundApplicationMapper.selectRegistrationHistoryForUpdate(88L)).thenReturn(java.util.List.of(different));
         when(refundApplicationMapper.updatePayoutResult(eq(3L), eq(RefundApplication.PAYOUT_SUCCESS), any()))
                 .thenReturn(0);
 
         assertEquals(false, svc.handleRefundNotify(facts("RF88", "SUCCESS")));
+    }
+
+    @Test
+    void persistedSuccessPreventsStaleAbnormalFromOpeningManualPayout() {
+        assertPersistedSuccessBlocksFailure("ABNORMAL");
+    }
+
+    @Test
+    void persistedSuccessPreventsStaleClosedFromOpeningManualPayout() {
+        assertPersistedSuccessBlocksFailure("CLOSED");
+    }
+
+    private void assertPersistedSuccessBlocksFailure(String status) {
+        byRefundNo(3L);
+        Map<String, String> success = facts("RF88", "SUCCESS");
+        assertEquals(false, svc.handleRefundNotify(facts("RF88", status)));
+        verify(refundApplicationMapper, never()).updatePayoutResult(any(), any(), any());
+        org.mockito.Mockito.verifyNoInteractions(notifyService);
+        assertTrue(svc.handleRefundNotify(success));
+        verify(refundApplicationMapper).updatePayoutResult(eq(3L), eq(RefundApplication.PAYOUT_SUCCESS), any());
+    }
+
+    @Test
+    void unavailableSuccessReaderCannotOpenManualPayout() {
+        byRefundNo(3L);
+        WechatVerifiedPaymentFactService reader = mock(WechatVerifiedPaymentFactService.class);
+        when(reader.findRefundSuccess("merchant", "RF88", "WX-RF88"))
+                .thenThrow(new IllegalStateException("fixture reader unavailable"));
+        ReflectionTestUtils.setField(svc, "verifiedPaymentFacts", reader);
+        assertEquals(false, svc.handleRefundNotify(facts("RF88", "ABNORMAL")));
+        verify(refundApplicationMapper, never()).updatePayoutResult(any(), any(), any());
+        org.mockito.Mockito.verifyNoInteractions(notifyService);
+    }
+
+    @Test
+    void missingOriginalRefundProviderIdentityCannotOpenManualPayout() {
+        byRefundNo(3L);
+        Map<String, String> incomplete = facts("RF88", "CLOSED");
+        incomplete.remove("refundId");
+        assertEquals(false, svc.handleRefundNotify(incomplete));
+        verify(refundApplicationMapper, never()).updatePayoutResult(any(), any(), any());
+        org.mockito.Mockito.verifyNoInteractions(notifyService);
     }
 
     @Test

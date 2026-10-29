@@ -141,6 +141,9 @@ public class MySqlSchedulerCoordinator implements SmartLifecycle {
             if (work == null) return false;
             synchronized (this) {
                 if (!isLeader() || epoch != generation || !leadership.isOwned()) return false;
+                // GET_LOCK returning success does not prove that its session survived until admission.
+                // Do not consume this fire time or enter business work after the task session was lost.
+                if (!work.isOwned()) throw new IllegalStateException("任务互斥会话在执行前失效，任务未调用");
                 if (fireTime != null) {
                     Long previous = lastFire.get(canonical);
                     if (previous != null && previous >= fireTime.getTime()) return false;

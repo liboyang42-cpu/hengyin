@@ -1,0 +1,25 @@
+✔ identity must be persisted and read back before becoming usable; it contains no input or token (2.050898ms)
+✔ failed or silent-no-op writes are not executable identity evidence (0.261465ms)
+✔ read exceptions, malformed records and unexpected sensitive fields never become absence (1.066942ms)
+✔ server identity is a verified update of the original prepare identity, not a new action (0.279402ms)
+✔ old-account callbacks cannot save into another owner key or replace a changed journal (0.404702ms)
+✔ a post-write verification error preserves the written identity for future recovery (0.17201ms)
+✔ terminal and legacy facts retain identity without a 24-hour deletion rule or execution upgrade (0.345302ms)
+✔ confirmed server identity and unknown execution cannot be replaced or reset to prepared (0.21218ms)
+✔ known terminal facts may update availability but cannot become unknown or a different terminal fact (0.281175ms)
+✔ history selection preserves the previous terminal identity and refuses to displace pending work (0.662ms)
+✔ explicit new action archives the exact unknown identity before CAS and never changes its fields (0.287384ms)
+✔ a timed-out prepare without a server id remains discoverable after an explicitly confirmed new action (0.243167ms)
+✔ archive write errors, no-ops, corruption and failed readback prohibit replacing the active identity (0.986641ms)
+✔ a changed active identity cannot be overwritten after archival; a failed active write can be retried safely (0.375587ms)
+✔ historical metadata enumeration is owner-scoped and storage failures never appear as empty history (0.154814ms)
+✔ an archived prepare can bind its later confirmed server identity after the active replacement failed (0.293283ms)
+✔ archive identity binding never accepts conflicting known ids or hides a failed write or readback (0.592104ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 17
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 19.438783

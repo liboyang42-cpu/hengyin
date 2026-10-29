@@ -41,6 +41,7 @@ const NON_INCREASING_CEILING = Object.freeze({
   u1Variable: 13,
   u3Debt: 103,
   u4Debt: 196,
+  // Retain master's ratchet; merged exact projections still require final key/digest accounting.
   u4Dynamic: 65,
   // 2026-08-26 12 → 13:merchant/customer 触达历史改为「有旧记录时刷新失败静默降级」,
   //   fail 不再写可见错误态,故该 silentError 调用点需要逐项登记理由(已登记,见 baseline)。
@@ -72,7 +73,8 @@ const NON_INCREASING_CEILING = Object.freeze({
   // 2026-10-24 上线合并 37 → 39:业主 UI(#508)合作 tab 帖文流与竞猜待答入口两处静默读取,逐项理由见 baseline。
   // 上海据点新增两处可选公开照片资料读取，逐项校验与失败保留封面理由见 baseline。
   // 2026-10-25 官方地点卡片两条背景读取(节点补读 / 评价列表)逐项登记,41 → 43。
-  u5Silent: 43,
+  // 2026-10-27 L06 漫游护照勋章方卡读最新点亮勋章图(失败保持空态插画)逐项登记,43 → 44。
+  u5Silent: 44,
 });
 const EXCLUDED_DIRS = new Set([
   '.git', 'node_modules', 'miniprogram_npm', 'tests', 'scripts', 'coverage', 'dist',

@@ -64,10 +64,13 @@ class TopicSettlementIdempotencyTest {
         ReflectionTestUtils.setField(svc, "cmsTopicMapper", cmsTopicMapper);
         ReflectionTestUtils.setField(svc, "cmsRegistrationMapper", cmsRegistrationMapper);
         ReflectionTestUtils.setField(svc, "coopOrderMapper", coopOrderMapper);
+        ReflectionTestUtils.setField(svc, "coopSettlementEvidenceMapper", mock(com.chengyinhub.business.mapper.CoopSettlementEvidenceMapper.class));
+        com.chengyinhub.business.service.impl.OriginalCloseRefundHistoryFixture.install(svc, 100L, Collections.emptyList());
         ReflectionTestUtils.setField(svc, "umsMemberService", umsMemberService);
         ReflectionTestUtils.setField(svc, "settlementRuleService", settlementRuleService);
         ReflectionTestUtils.setField(svc, "transactionManager", transactionManager);
         // 无销售收口也要登记该主题的保证金退款意图(d7593ff37)
+        ReflectionTestUtils.setField(svc, "coopInviteMapper", mock(com.chengyinhub.business.mapper.CoopInviteMapper.class));
         coopInviteService = mock(ICoopInviteService.class);
         ReflectionTestUtils.setField(svc, "coopInviteService", coopInviteService);
 
@@ -75,6 +78,7 @@ class TopicSettlementIdempotencyTest {
         t.setId(100L);
         t.setProductType(ProductType.ORIENTEERING);
         when(cmsTopicMapper.selectTopicsForSettlement()).thenReturn(Collections.singletonList(t));
+        when(cmsTopicMapper.selectCmsTopicByIdForUpdate(t.getId())).thenReturn(t);
 
         // 费率真源 settlement_rule(小数);merchant+creator ≤ 1.0 让 validateCommissionSettings 通过
         topicRule = new SettlementRule();
@@ -114,6 +118,7 @@ class TopicSettlementIdempotencyTest {
         t.setId(100L);
         t.setProductType(ProductType.FREE_EXPLORE);
         when(cmsTopicMapper.selectTopicsForSettlement()).thenReturn(Collections.singletonList(t));
+        when(cmsTopicMapper.selectCmsTopicByIdForUpdate(t.getId())).thenReturn(t);
         when(cmsTopicMapper.claimTopicForSettlement(100L)).thenReturn(1);
 
         assertThrows(IllegalStateException.class, svc::executeTopicSettlement,
@@ -130,6 +135,7 @@ class TopicSettlementIdempotencyTest {
         t.setId(100L);
         t.setProductType(null);
         when(cmsTopicMapper.selectTopicsForSettlement()).thenReturn(Collections.singletonList(t));
+        when(cmsTopicMapper.selectCmsTopicByIdForUpdate(t.getId())).thenReturn(t);
         when(cmsTopicMapper.claimTopicForSettlement(100L)).thenReturn(1, 0);
         when(cmsRegistrationMapper.selectTotalSalesByTopicId(100L)).thenReturn(BigDecimal.ZERO);
 
@@ -149,6 +155,7 @@ class TopicSettlementIdempotencyTest {
         t.setId(100L);
         t.setProductType(null);
         when(cmsTopicMapper.selectTopicsForSettlement()).thenReturn(Collections.singletonList(t));
+        when(cmsTopicMapper.selectCmsTopicByIdForUpdate(t.getId())).thenReturn(t);
         when(cmsTopicMapper.claimTopicForSettlement(100L)).thenReturn(1);
         when(cmsRegistrationMapper.selectTotalSalesByTopicId(100L)).thenReturn(new BigDecimal("69.00"));
 

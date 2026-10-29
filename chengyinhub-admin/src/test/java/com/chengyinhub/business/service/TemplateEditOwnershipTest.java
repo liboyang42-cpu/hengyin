@@ -410,6 +410,74 @@ class TemplateEditOwnershipTest {
     }
 
     @Test
+    void adoptedEditKeepsLocalAnswersMedalAndOriginEvenWhenSourceCannotBeRead() {
+        for (boolean draft : new boolean[]{true, false}) {
+            setUp();
+            CmsMemberTemplate owned = existing(OWNER, 0); owned.setOriginalTemplateId(9001L);
+            owned.setMedalName("采用时奖章"); owned.setMedalImg("media-asset:1"); owned.setMedalStyle("enamel");
+            when(memberTemplateService.selectCmsMemberTemplateById(TEMPLATE_ID)).thenReturn(owned);
+            when(templateLibraryService.selectCmsTemplateLibraryById(anyLong()))
+                    .thenThrow(new IllegalStateException("原来源已经不可读"));
+            CmsTemplatePublishRequest request = request(TEMPLATE_ID);
+            request.setAdvancedConfigJson("{\"schemaVersion\":1,\"qa\":{\"enabled\":true,"
+                    + "\"mode\":\"TYPE\",\"title\":\"副本题目\",\"answerText\":\"本地答案\"}}");
+            request.setMedalName("客户端替换"); request.setMedalStyle("glow");
+            if (draft) service.saveOrUpdateDraft(request, OWNER, "作者");
+            else service.publishTemplateWithTransaction(request, OWNER, "作者");
+            ArgumentCaptor<CmsMemberTemplate> saved = ArgumentCaptor.forClass(CmsMemberTemplate.class);
+            verify(memberTemplateService).updateCmsMemberTemplate(saved.capture());
+            assertEquals(9001L, saved.getValue().getOriginalTemplateId());
+            assertTrue(saved.getValue().getAdvancedConfigJson().contains("本地答案"));
+            assertEquals("采用时奖章", saved.getValue().getMedalName());
+            assertEquals("media-asset:1", saved.getValue().getMedalImg());
+            assertEquals("enamel", saved.getValue().getMedalStyle());
+            verify(templateLibraryService, never()).selectCmsTemplateLibraryById(anyLong());
+        }
+    }
+
+    @Test
+    void adoptedEditCannotRestoreMissingLocalSecretFromLiveSource() {
+        CmsMemberTemplate owned = existing(OWNER, 0); owned.setOriginalTemplateId(9001L);
+        when(memberTemplateService.selectCmsMemberTemplateById(TEMPLATE_ID)).thenReturn(owned);
+        CmsTemplatePublishRequest request = request(TEMPLATE_ID);
+        request.setAdvancedConfigJson("{\"schemaVersion\":1,\"qa\":{\"enabled\":true,"
+                + "\"mode\":\"TYPE\",\"title\":\"缺本地答案\"}}");
+        assertThrows(IllegalArgumentException.class,
+                () -> service.saveOrUpdateDraft(request, OWNER, "作者"));
+        verify(templateLibraryService, never()).selectCmsTemplateLibraryById(anyLong());
+        verify(memberTemplateService, never()).updateCmsMemberTemplate(any());
+    }
+
+    @Test
+    void adoptedEditsKeepClearFieldsButCannotEraseOrSwitchOriginalLibraryIdentity() {
+        for (boolean draft : new boolean[]{true, false}) {
+            setUp();
+            CmsMemberTemplate owned = existing(OWNER, 0); owned.setOriginalTemplateId(9001L);
+            when(memberTemplateService.selectCmsMemberTemplateById(TEMPLATE_ID)).thenReturn(owned);
+            for (Long replacement : Arrays.asList(0L, 9002L)) {
+                CmsTemplatePublishRequest forged = request(TEMPLATE_ID);
+                forged.setOriginalTemplateId(replacement);
+                assertThrows(IllegalArgumentException.class, () -> {
+                    if (draft) service.saveOrUpdateDraft(forged, OWNER, "作者");
+                    else service.publishTemplateWithTransaction(forged, OWNER, "作者");
+                });
+            }
+            verify(memberTemplateService, never()).updateCmsMemberTemplate(any());
+            CmsTemplatePublishRequest valid = request(TEMPLATE_ID);
+            valid.setClearFields(new HashSet<>(Arrays.asList("merchantGuide", "rewardRulesJson", "storyImg")));
+            if (draft) service.saveOrUpdateDraft(valid, OWNER, "作者");
+            else service.publishTemplateWithTransaction(valid, OWNER, "作者");
+            ArgumentCaptor<CmsMemberTemplate> saved = ArgumentCaptor.forClass(CmsMemberTemplate.class);
+            verify(memberTemplateService).updateCmsMemberTemplate(saved.capture());
+            assertEquals(9001L, saved.getValue().getOriginalTemplateId());
+            assertEquals(valid.getClearFields(), saved.getValue().getClearFields());
+            org.junit.jupiter.api.Assertions.assertNull(saved.getValue().getMerchantGuide());
+            org.junit.jupiter.api.Assertions.assertNull(saved.getValue().getRewardRulesJson());
+            org.junit.jupiter.api.Assertions.assertNull(saved.getValue().getStoryImg());
+        }
+    }
+
+    @Test
     void creatingStillInsertsAndCountsPopularity() {
         CmsTemplatePublishRequest request = request(null);
         request.setOriginalTemplateId(9001L);

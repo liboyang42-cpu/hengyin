@@ -1,0 +1,40 @@
+{
+  "node": "v24.19.0",
+  "workdir": "chengyinhub-xcx",
+  "rows": [
+    {
+      "file": "tests/unit/get-auth-matrix-contract.test.js",
+      "command": "node --test --experimental-test-isolation=none --test-reporter=tap tests/unit/get-auth-matrix-contract.test.js",
+      "exit_code": 0,
+      "tests": 29,
+      "pass": 29,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/unit/play-journey-request.test.js",
+      "command": "node --test --experimental-test-isolation=none --test-reporter=tap tests/unit/play-journey-request.test.js",
+      "exit_code": 0,
+      "tests": 11,
+      "pass": 11,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/unit/play-request-recovery.test.js",
+      "command": "node --test --experimental-test-isolation=none --test-reporter=tap tests/unit/play-request-recovery.test.js",
+      "exit_code": 0,
+      "tests": 30,
+      "pass": 30,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0
+    }
+  ],
+  "total_tests": 70,
+  "total_pass": 70,
+  "default_process_isolation": "3 files pass; not counted as 3 individual test cases",
+  "java_or_mysql_evidence": false
+}

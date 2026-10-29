@@ -1,6 +1,8 @@
 package com.chengyinhub.business.service.ai;
 
 import com.chengyinhub.business.domain.AiQuotaReservationRecord;
+import com.chengyinhub.business.domain.NpcAsrIntent;
+import com.chengyinhub.business.mapper.NpcAsrIntentMapper;
 import com.chengyinhub.business.mapper.AiQuotaReservationMapper;
 import com.chengyinhub.common.utils.uuid.IdUtils;
 import org.slf4j.Logger;
@@ -19,6 +21,7 @@ import java.util.List;
 public class AiQuotaRecoveryService {
     private static final Logger log = LoggerFactory.getLogger(AiQuotaRecoveryService.class);
     private final AiQuotaReservationMapper mapper;
+    private final NpcAsrIntentMapper asrIntents;
     private final RedisTemplate<Object,Object> redis;
     private final TransactionTemplate transaction;
 
@@ -37,13 +40,14 @@ public class AiQuotaRecoveryService {
         "if used>0 then redis.call('DECR',KEYS[1]) end; redis.call('SET',KEYS[3],'0','EX',172800); return 2;", Long.class);
 
     public AiQuotaRecoveryService(AiQuotaReservationMapper mapper, RedisTemplate<Object,Object> redis,
-                                 PlatformTransactionManager transactionManager) {
-        this.mapper=mapper; this.redis=redis;
+                                 PlatformTransactionManager transactionManager,NpcAsrIntentMapper asrIntents) {
+        this.mapper=mapper; this.redis=redis; this.asrIntents=asrIntents;
         transaction=new TransactionTemplate(transactionManager);
         transaction.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
     }
 
     public void prepare(Long memberId,String bizType,String pool,String key,String receipt) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         AiQuotaReservationRecord row=new AiQuotaReservationRecord();
         row.setMemberId(memberId); row.setBizType(bizType); row.setPool(pool); row.setCounterKey(key);
         row.setOriginalDay(key.substring(key.length()-8)); row.setReceiptKey(receipt);
@@ -65,13 +69,84 @@ public class AiQuotaRecoveryService {
 
     public void stage(String receipt,String stage) {
         if(receipt==null) return;
-        if(!"INPUT_REVIEW_STARTED".equals(stage) && !"MODEL_STARTED".equals(stage)) throw new IllegalArgumentException("invalid quota stage");
+        if(!"INPUT_REVIEW_STARTED".equals(stage) && !"MODEL_STARTED".equals(stage)
+                && !"ASR_STARTED".equals(stage)) throw new IllegalArgumentException("invalid quota stage");
         transaction.execute(status -> { if(mapper.advanceStage(receipt,stage)!=1) throw unavailable(); return null; });
     }
 
     public void retain(String receipt,String reason) { outcome(receipt,"RETAINED",reason); }
 
+    /** The ASR provider was already attempted. Text execution consumes this same original, even after Redis TTL. */
+    public void requireNpcAsrHandoff(NpcAsrQuotaHandoff handoff) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+        if (handoff==null) throw unavailable();
+        transaction.execute(status -> {
+            NpcAsrIntent original=asrIntents.selectForUpdate(handoff.memberId(),handoff.requestId());
+            if (original==null || !java.util.Objects.equals(original.getUserId(),handoff.memberId())
+                    || !java.util.Objects.equals(original.getNodeId(),handoff.nodeId())
+                    || !java.util.Objects.equals(original.getMerchantMemberId(),handoff.merchantMemberId())
+                    || !java.util.Objects.equals(original.getQuotaReservation(),handoff.reservation())
+                    || !"RECEIVED".equals(original.getState()) || !original.isHandoffStarted()
+                    || !original.isTextAdmitted() || original.isBodyErased()
+                    || original.getTranscript()==null || original.getTranscript().isEmpty()) throw unavailable();
+            // No quota lock after the ASR row: refund workers only change quota metadata for NOT_SENT originals.
+            AiQuotaReservationRecord quota=originalAsrQuota(original,false);
+            if (!"ASR_STARTED".equals(quota.getStage()) || quota.getGeneration()==null
+                    || quota.getUsedAfterReserve()==null || quota.getUsedAfterReserve()<1
+                    || !java.util.Set.of("RESERVED","RETAINED","UNCERTAIN").contains(quota.getState())) throw unavailable();
+            return null;
+        });
+    }
+
+    /** Read the durable same-claim NOT_SENT proof. A normal text failure cannot enter this compensation path. */
+    public void refundNpcAsrNotSent(Long userId,String requestId) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+        AiQuotaReservationRecord quota=transaction.execute(status -> {
+            NpcAsrIntent original=asrIntents.selectQuotaRefundProof(userId,requestId);
+            if (original==null || !original.isQuotaRefundPending()) return null;
+            if (!java.util.Objects.equals(userId,original.getUserId()) || !"NOT_SENT".equals(original.getState())
+                    || original.isHandoffStarted() || original.isTextAdmitted()) throw unavailable();
+            AiQuotaReservationRecord row=originalAsrQuota(original,true);
+            if (refunded(row)) { asrIntents.completeQuotaRefund(userId,requestId,original.getQuotaReservation()); return null; }
+            if (!"REFUND_DUE".equals(row.getState())) {
+                if (mapper.requestAsrNotSentRefund(row.getReceiptKey(),row.getFenceVersion())!=1) throw unavailable();
+                row=mapper.selectByReceipt(row.getReceiptKey());
+            }
+            return row;
+        });
+        if (quota!=null) {
+            reconcile(quota);
+            transaction.execute(status -> {
+                NpcAsrIntent original=asrIntents.selectQuotaRefundProof(userId,requestId);
+                if (original!=null && original.isQuotaRefundPending() && refunded(originalAsrQuota(original,true)))
+                    asrIntents.completeQuotaRefund(userId,requestId,original.getQuotaReservation());
+                return null;
+            });
+        }
+    }
+
+    private static boolean refunded(AiQuotaReservationRecord row) {
+        return "REFUNDED".equals(row.getState()) || "RESOLVED_NO_ACTIVE_RESERVATION".equals(row.getState());
+    }
+
+    private AiQuotaReservationRecord originalAsrQuota(NpcAsrIntent original,boolean forUpdate) {
+        String token=original.getQuotaReservation(),claim=original.getClaimToken();
+        if (token==null || claim==null || original.getUserId()==null || original.getNodeId()==null
+                || original.getMerchantMemberId()==null) throw unavailable();
+        int split=token.lastIndexOf('|');
+        if (split<=0 || !claim.replace("-","").equals(token.substring(split+1))) throw unavailable();
+        String receipt="ai:gen:reservation:"+token.substring(0,split)+":"+token.substring(split+1);
+        AiQuotaReservationRecord row=forUpdate?mapper.selectByReceiptForUpdate(receipt):mapper.selectByReceipt(receipt);
+        if (row==null || !original.getUserId().equals(row.getMemberId()) || !"npc_shop_chat".equals(row.getBizType())
+                || !"gen".equals(row.getPool()) || !(row.getCounterKey()+"|"+row.getNonce()).equals(token)
+                || !claim.replace("-","").equals(row.getNonce()) || row.getOriginalDay()==null
+                || !row.getOriginalDay().matches("[0-9]{8}")
+                || !("ai:gen:limit:gen:"+original.getUserId()+":"+row.getOriginalDay()).equals(row.getCounterKey())) throw unavailable();
+        return row;
+    }
+
     public void requireRefund(String receipt,String reason) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         outcome(receipt,"REFUND_DUE",reason); // 独立事务已提交，之后 Redis 故障仍有原身份待办。
         AiQuotaReservationRecord row=mapper.selectByReceipt(receipt);
         if(row!=null) reconcile(row);
@@ -92,6 +167,11 @@ public class AiQuotaRecoveryService {
 
     /** 一页固定小批；每条失败推迟其自身，后续行仍被处理。无需安装新调度器。 */
     public void runDue() {
+        if (com.chengyinhub.common.config.RestoreDispatchGuard.isRestoreMode()) return;
+        for (NpcAsrIntent original:asrIntents.selectQuotaRefundPending(100)) {
+            try { refundNpcAsrNotSent(original.getUserId(),original.getRequestId()); }
+            catch(RuntimeException failure) { log.warn("NPC ASR quota refund pending id={} code={}",original.getId(),failure.getClass().getSimpleName()); }
+        }
         List<AiQuotaReservationRecord> due=mapper.selectDue(100);
         for(AiQuotaReservationRecord row:due) {
             try { reconcile(row); }
@@ -100,6 +180,7 @@ public class AiQuotaRecoveryService {
     }
 
     private void reconcile(AiQuotaReservationRecord candidate) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         String owner=IdUtils.simpleUUID();
         AiQuotaReservationRecord row=transaction.execute(status -> {
             if(mapper.claim(candidate.getId(),candidate.getFenceVersion(),owner)!=1) return null;

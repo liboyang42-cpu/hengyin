@@ -91,7 +91,11 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
     @Autowired private PlatformTransactionManager transactionManager;
 
     @Autowired private CoopDepositRefundService depositRefundService;
-    @Autowired private com.chengyinhub.business.service.IWechatPayService wechatPayService;
+    @Autowired private WechatPaymentIntentStore paymentIntentStore;
+    @Autowired private org.springframework.transaction.PlatformTransactionManager depositPaymentTransactions;
+    @Autowired private WechatVerifiedPaymentFactService depositVerifiedFacts;
+    @Autowired @org.springframework.beans.factory.annotation.Qualifier("wechatPaymentSdkGateway")
+    private com.chengyinhub.business.service.WechatPaymentOperations wechatPayService;
 
     @Autowired
     private CoopOrderMapper coopOrderMapper;
@@ -225,7 +229,9 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
 
     @Override
     public CoopInvite selectCoopInviteById(Long id) {
-        return coopInviteMapper.selectCoopInviteById(id);
+        CoopInvite invite = coopInviteMapper.selectCoopInviteById(id);
+        if (invite != null) attachSupplyStationNames(Collections.singletonList(invite));
+        return invite;
     }
 
     @Override
@@ -233,12 +239,12 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
     public List<CoopInvite> selectCoopInviteList(CoopInvite coopInvite) {
         // 查询前先把已超时的待确认行幂等写入终态，列表不依赖 Quartz 是否正常运行。
         coopInviteMapper.expirePendingInvites(DateUtils.getNowDate());
-        return coopInviteMapper.selectCoopInviteList(coopInvite);
+        return attachSupplyStationNames(coopInviteMapper.selectCoopInviteList(coopInvite));
     }
 
     @Override
     public List<CoopInvite> selectCoopInviteListReadOnly(CoopInvite coopInvite) {
-        return coopInviteMapper.selectCoopInviteListReadOnly(coopInvite, DateUtils.getNowDate());
+        return attachSupplyStationNames(coopInviteMapper.selectCoopInviteListReadOnly(coopInvite, DateUtils.getNowDate()));
     }
 
     @Override
@@ -273,6 +279,12 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
         // 把同主题的发起串起来,两道并发「发同一对象」才不会都读到「还没有」而双双放过。
         if (!originalRequest) assertNoDuplicatePendingInvite(coopInvite);
         assertActiveStandardInviteMerchantForUpdate(coopInvite);
+        assertSupplyStation(coopInvite, topic, true);
+        if (isClassicSupplyInvite(coopInvite, topic)) {
+            if (coopInvite.getStatus() != null && coopInvite.getStatus() != 0)
+                throw new IllegalStateException("新邀约只能进入待确认状态");
+            coopInvite.setStatus(0);
+        }
         Date now = DateUtils.getNowDate();
         coopInvite.setCreateTime(now);
         if (originalRequest && topic != null) coopInvite.setExpireTime(topic.getRecruitDeadline());
@@ -327,7 +339,7 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
             throw new IllegalStateException("原请求绑定失败");
         }
         claim.setInviteId(invite.getId());
-        return CoopInviteRequestResult.created(claim, false);
+        return originalInviteRequestResult(claim, false, true);
     }
 
     private CoopInviteRequestResult replayInviteRequest(Long principalMemberId, CoopInvite invite,
@@ -339,8 +351,12 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
                 || !receipt.getFingerprint().equals(requestFingerprint(invite, receipt))) {
             throw new ServiceException("COOP_REQUEST_CONFLICT", HttpStatus.CONFLICT);
         }
+        CoopInvite original = coopInviteMapper.selectCoopInviteByIdForUpdate(receipt.getInviteId());
+        if (original == null || !Objects.equals(original.getSupplyStationId(), invite.getSupplyStationId())) {
+            throw new ServiceException("COOP_REQUEST_CONFLICT", HttpStatus.CONFLICT);
+        }
         invite.setId(receipt.getInviteId());
-        return CoopInviteRequestResult.created(receipt, true);
+        return originalInviteRequestResult(receipt, true, true);
     }
 
     @Override
@@ -350,7 +366,7 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
         String key = requireRequestId(requestId);
         CoopInviteRequestReceipt receipt = requestReceiptMapper.selectByRequest(principalMemberId, key);
         if (receipt == null) return CoopInviteRequestResult.state("NOT_FOUND", key);
-        return requestAvailable(principalMemberId, receipt) ? CoopInviteRequestResult.created(receipt, null)
+        return requestAvailable(principalMemberId, receipt) ? originalInviteRequestResult(receipt, null, false)
                 : CoopInviteRequestResult.state("UNAVAILABLE", key);
     }
 
@@ -367,7 +383,7 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
         Long lastScanned = null;
         for (CoopInviteRequestReceipt receipt : rows.subList(0, Math.min(limit, rows.size()))) {
             lastScanned = receipt.getId();
-            items.add(requestAvailable(principalMemberId, receipt) ? CoopInviteRequestResult.created(receipt, null)
+            items.add(requestAvailable(principalMemberId, receipt) ? originalInviteRequestResult(receipt, null, false)
                     : CoopInviteRequestResult.state("UNAVAILABLE", receipt.getRequestId()));
         }
         Map<String, Object> result = new LinkedHashMap<>();
@@ -375,6 +391,22 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
         result.put("nextCursor", hasMore && lastScanned != null ? lastScanned.toString() : null);
         result.put("hasMore", hasMore);
         return result;
+    }
+
+    private CoopInviteRequestResult originalInviteRequestResult(CoopInviteRequestReceipt receipt,
+            Boolean replayed, boolean currentRead) {
+        CoopInvite original = currentRead ? coopInviteMapper.selectCoopInviteByIdForUpdate(receipt.getInviteId())
+                : coopInviteMapper.selectCoopInviteById(receipt.getInviteId());
+        if (original == null || !Objects.equals(original.getId(), receipt.getInviteId())
+                || !Objects.equals(original.getTopicId(), receipt.getTopicId())
+                || !Objects.equals(original.getInviteType(), receipt.getInviteType())
+                || !Objects.equals(original.getToType(), receipt.getToType())
+                || !Objects.equals(original.getToId(), receipt.getToId())
+                || !Objects.equals(original.getFromType(), receipt.getFromType())
+                || !Objects.equals(original.getFromId(), receipt.getFromId())) {
+            throw new ServiceException("COOP_REQUEST_UNAVAILABLE", HttpStatus.CONFLICT);
+        }
+        return CoopInviteRequestResult.created(receipt, replayed, original.getSupplyStationId());
     }
 
     private void requireRequestPrincipal(Long principalMemberId) {
@@ -535,7 +567,14 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
                 scope, facts.getFromType(), facts.getFromId(), facts.getFromOwnerMemberId(),
                 facts.getToOwnerMemberId(), invite.getShareMode(), requestDecimal(invite.getShareRate()), requestDecimal(invite.getFixedFee())};
         StringBuilder canonical = new StringBuilder();
-        for (Object field : fields) {
+        java.util.List<Object> contractFields = new java.util.ArrayList<>(java.util.Arrays.asList(fields));
+        // Existing non-station request fingerprints remain byte-identical. New frozen
+        // station contracts must not replay a request created for another station.
+        if (invite.getSupplyStationId() != null) {
+            contractFields.add("REGISTRATION_STATION_V1");
+            contractFields.add(invite.getSupplyStationId());
+        }
+        for (Object field : contractFields) {
             if (field == null) canonical.append("-1:");
             else { String value = field.toString(); canonical.append(value.length()).append(':').append(value); }
         }
@@ -1003,7 +1042,24 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
         if (coopInvite != null) {
             if (isLegacyMerchantNodeInvite(coopInvite)) assertLegacyInviteReadOnly(coopInvite);
             if (coopInvite.getId() != null) {
-                assertLegacyInviteReadOnly(coopInviteMapper.selectCoopInviteById(coopInvite.getId()));
+                CoopInvite current = coopInviteMapper.selectCoopInviteById(coopInvite.getId());
+                assertLegacyInviteReadOnly(current);
+                if (coopInvite.getSupplyStationId() != null
+                        && (current == null || !coopInvite.getSupplyStationId().equals(current.getSupplyStationId())))
+                    throw new IllegalStateException("已发送邀约不可改绑据点，历史邀约不可补绑");
+                if (current != null && current.getSupplyStationId() != null) {
+                    if (coopInvite.getStatus() != null && !coopInvite.getStatus().equals(current.getStatus()))
+                        throw new IllegalStateException("请通过原邀约处理入口变更状态");
+                    if (coopInvite.getInviteType() != null && !coopInvite.getInviteType().equals(current.getInviteType())
+                            || coopInvite.getTopicId() != null && !coopInvite.getTopicId().equals(current.getTopicId())
+                            || coopInvite.getToId() != null && !coopInvite.getToId().equals(current.getToId())
+                            || coopInvite.getToType() != null && !coopInvite.getToType().equals(current.getToType())
+                            || coopInvite.getFromId() != null && !coopInvite.getFromId().equals(current.getFromId())
+                            || coopInvite.getFromType() != null && !coopInvite.getFromType().equals(current.getFromType())
+                            || coopInvite.getNodeId() != null && !coopInvite.getNodeId().equals(current.getNodeId())
+                            || coopInvite.getGameId() != null && !coopInvite.getGameId().equals(current.getGameId()))
+                        throw new IllegalStateException("原据点邀约身份不可改绑");
+                }
             }
         }
         coopInvite.setUpdateTime(DateUtils.getNowDate());
@@ -1019,6 +1075,12 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
     @Override
     @Transactional(rollbackFor = Exception.class, noRollbackFor = CoopInviteExpiredException.class)
     public CoopInvite acceptInviteWithLock(Long inviteId, Long nodeId) {
+        return acceptInviteWithLock(inviteId, nodeId, null);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class, noRollbackFor = CoopInviteExpiredException.class)
+    public CoopInvite acceptInviteWithLock(Long inviteId, Long nodeId, Long confirmedSupplyStationId) {
         CoopInvite location = coopInviteMapper.selectCoopInviteById(inviteId);
         if (location == null) throw new IllegalStateException("邀请不存在");
         CmsTopic pricedTopic = location.getTopicId() == null ? null
@@ -1028,6 +1090,9 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
             throw new IllegalStateException("邀约归属已变化");
         assertLegacyInviteReadOnly(inv);
         assertStandardInviteTypeMatrix(inv);
+        if (!java.util.Objects.equals(inv.getSupplyStationId(), confirmedSupplyStationId))
+            throw new IllegalStateException(inv.getSupplyStationId() == null
+                    ? "历史邀约未确认据点，不能在接受时补绑" : "请明确确认原邀约据点，不能换站接受");
         Date now = DateUtils.getNowDate();
         terminalizeIfExpired(inv, now);
         if (inv.getStatus() == null || inv.getStatus() != 0) throw new IllegalStateException("该邀请已处理");
@@ -1134,6 +1199,7 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
         // Controller 门禁只是快速拒绝；生成合作单前必须在同一事务里重读商家状态。
         // 否则「预检后被停用」或绕过 Controller 的调用仍会进入结算阵容。
         assertActiveStandardInviteMerchantForUpdate(inv);
+        assertSupplyStation(inv, pricedTopic, false);
 
         // 接受
         CoopInvite upd = new CoopInvite();
@@ -1141,7 +1207,8 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
         upd.setStatus(1);
         upd.setHandleTime(now);
         // 阻断#8 / 台账 1-11:主题级邀约报名时已选章节,没有「配置游戏」步骤,接受时不写 config_deadline
-        coopInviteMapper.updateCoopInvite(upd);
+        if (coopInviteMapper.updateCoopInvite(upd) != 1)
+            throw new IllegalStateException("原邀约接受状态冲突");
 
         // 生成合作单:条款快照冻结,后续结算只认合作单
         CoopOrder order = new CoopOrder();
@@ -1726,6 +1793,7 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public java.util.Map<String, Object> prepareDeposit(Long inviteId, Long callerMemberId) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         CoopInvite location = coopInviteMapper.selectCoopInviteById(inviteId);
         if (location == null) throw new IllegalStateException("邀约不存在");
         CmsTopic topic = location.getTopicId() == null ? null
@@ -1771,8 +1839,15 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
         if (inv.getDepositStatus() == null || inv.getDepositStatus() != 5) {
             throw new IllegalStateException("当前没有待缴保证金");
         }
+        String originalNo = inv.getDepositOutTradeNo();
+        if (originalNo != null && !originalNo.isBlank()
+                && !paymentIntentStore.lockClosedPaymentAttemptForRetry(originalNo)) {
+            throw new IllegalStateException("原保证金支付身份、金额或关闭事实未确认，请恢复原业务结果");
+        }
         BigDecimal amount = inv.getDepositAmount() == null ? DEPOSIT_AMOUNT : inv.getDepositAmount();
-        String outTradeNo = "DEP" + inviteId + "T" + System.currentTimeMillis();
+        // The business identity is permanent; wx_pay_order_intent alone assigns a new provider alias after proven CLOSED.
+        String outTradeNo = originalNo != null && !originalNo.isBlank() ? originalNo
+                : "DEP" + inviteId + "T" + System.currentTimeMillis();
         if (coopInviteMapper.updateDeposit(inviteId, 1, outTradeNo, null, amount) != 1)
             throw new IllegalStateException("保证金支付状态写入失败");
         java.util.Map<String, Object> m = new HashMap<>();
@@ -1785,6 +1860,7 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public CoopInvite authorizeDepositRefundRetry(Long inviteId, Long operatorMemberId) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         CoopInvite location = coopInviteMapper.selectCoopInviteById(inviteId);
         if (location == null) throw new IllegalStateException("邀约不存在");
         CmsTopic topic = location.getTopicId() == null ? null
@@ -1843,18 +1919,83 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NEVER)
     public boolean markDepositPaid(String outTradeNo) {
-        Map<String,String> facts = wechatPayService.queryOrderStatus(outTradeNo);
-        if (facts == null || outTradeNo == null || !outTradeNo.equals(facts.get("out_trade_no"))
+        // Reject rather than suspend an outer transaction that could still own the original business lock.
+        if (TransactionSynchronizationManager.isActualTransactionActive())
+            throw new IllegalStateException("保证金渠道查询必须在业务事务与行锁之外执行");
+        if (outTradeNo == null || outTradeNo.isBlank()) return false;
+        CoopInvite observed = coopInviteMapper.selectByDepositOutTradeNo(outTradeNo);
+        if (observed == null) return false;
+        Map<String,String> queried = wechatPayService.queryOrderStatus(outTradeNo);
+        Map<String,String> facts = queried == null ? null : new HashMap<>(queried);
+        if (facts == null || !outTradeNo.equals(facts.get("out_trade_no"))
                 || !"CNY".equals(facts.get("currency")) || !"SUCCESS".equals(facts.get("trade_state"))) return false;
-        try { return markDepositPaid(outTradeNo, Long.valueOf(facts.get("total")), facts.get("transaction_id")); }
-        catch (NumberFormatException e) { return false; }
+        Long paidCents;
+        try { paidCents = Long.valueOf(facts.get("total")); }
+        catch (RuntimeException invalid) { return false; }
+        String attempt = facts.get("wx_out_trade_no");
+        if (attempt == null || attempt.isBlank()) return false;
+        checkedDepositPaymentReference(facts);
+        var mutation = new org.springframework.transaction.support.TransactionTemplate(depositPaymentTransactions);
+        mutation.setPropagationBehavior(org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        return Boolean.TRUE.equals(mutation.execute(status -> {
+            if (observed.getTopicId() != null) {
+                CmsTopic topic = cmsTopicMapper.selectCmsTopicByIdForUpdate(observed.getTopicId());
+                if (topic == null || !observed.getTopicId().equals(topic.getId())) return false;
+            }
+            CoopInvite current = coopInviteMapper.selectCoopInviteByIdForUpdate(observed.getId());
+            if (current == null || !java.util.Objects.equals(observed.getTopicId(), current.getTopicId())
+                    || !outTradeNo.equals(current.getDepositOutTradeNo()) || current.getDepositAmount() == null
+                    || observed.getDepositAmount() == null || observed.getDepositAmount().compareTo(current.getDepositAmount()) != 0
+                    || !wechatPayService.lockPaymentAttemptForUpdate(outTradeNo, attempt)) return false;
+            return markDepositPaid(outTradeNo, paidCents, facts.get("transaction_id"), checkedDepositPaymentReference(facts));
+        }));
     }
 
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public boolean markDepositPaid(String outTradeNo, Long paidCents, String transactionId) {
+    static com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference checkedDepositPaymentReference(Map<String,String> facts) {
+        try {
+            var reference = new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference(
+                    Long.parseLong(facts.get("verified_fact_id")), facts.get("verified_fact_hash"));
+            if (reference.id() <= 0 || reference.hash() == null || !reference.hash().matches("[0-9a-f]{64}"))
+                throw new IllegalArgumentException("原支付事实引用缺失");
+            return reference;
+        } catch (RuntimeException invalid) { throw new IllegalStateException("保证金原支付事实引用缺失", invalid); }
+    }
+
+    /** Caller holds the original topic/invite transaction; the existing paid-TX CAS is the local consumption receipt. */
+    private static void completeConsumedDepositRecovery(WechatVerifiedPaymentFactService verified, CoopInviteMapper mapper,
+            Long inviteId, Map<String,String> observed) {
+        if (!TransactionSynchronizationManager.isActualTransactionActive())
+            throw new IllegalStateException("保证金恢复票必须与原成功消费同事务");
+        var reference = checkedDepositPaymentReference(observed);
+        var original = verified.requireVerified(reference);
+        var payment = original.facts(); payment.requireValid();
+        CoopInvite consumed = mapper.selectCoopInviteByIdForUpdate(inviteId);
+        if (consumed == null || !inviteId.equals(consumed.getId()) || consumed.getDepositAmount() == null
+                || consumed.getDepositStatus() == null || !java.util.Set.of(2,3,4).contains(consumed.getDepositStatus())
+                || payment.kind() != com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Kind.PAYMENT
+                || !"CNY".equals(payment.currency()) || payment.amountFen() != payment.totalFen()
+                || !payment.businessOutTradeNo().equals(consumed.getDepositOutTradeNo())
+                || !payment.businessOutTradeNo().equals(observed.get("out_trade_no"))
+                || !payment.wxOutTradeNo().equals(observed.get("wx_out_trade_no"))
+                || !payment.transactionId().equals(consumed.getDepositPaidTransactionId())
+                || !payment.transactionId().equals(observed.get("transaction_id"))
+                || payment.amountFen() != consumed.getDepositAmount().movePointRight(2).longValueExact())
+            throw new IllegalStateException("保证金原成功消费凭据不匹配");
+        var recovery = verified.findPaymentRecovery(reference);
+        if (recovery == null) throw new IllegalStateException("保证金恢复票读取未确认");
+        if (recovery.isPresent()) {
+            var ticket = recovery.get();
+            if (ticket.businessId() != inviteId || !reference.equals(ticket.original().reference())
+                    || (ticket.state() != 4 && ticket.state() != 2))
+                throw new IllegalStateException("保证金恢复票原身份冲突");
+            verified.completePaymentRecovery(reference, inviteId);
+        }
+    }
+
+    private boolean applyConfirmedDepositPaid(String outTradeNo, Long paidCents, String transactionId) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         CoopInvite inv = coopInviteMapper.selectByDepositOutTradeNoForUpdate(outTradeNo);
         if (inv == null || isLegacyMerchantNodeInvite(inv) || inv.getDepositAmount() == null
                 || paidCents == null || transactionId == null || transactionId.trim().isEmpty()) return false;
@@ -1868,7 +2009,29 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean markDepositPaid(String outTradeNo, Long paidCents, String transactionId,
+            com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference reference) {
+        if (!TransactionSynchronizationManager.isActualTransactionActive())
+            throw new IllegalStateException("保证金事实消费必须与原业务回执同事务");
+        var payment = depositVerifiedFacts.requireConsumablePayment(reference).facts(); payment.requireValid();
+        if (payment.kind() != com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Kind.PAYMENT
+                || !payment.businessOutTradeNo().equals(outTradeNo) || !payment.transactionId().equals(transactionId)
+                || paidCents == null || payment.amountFen() != paidCents || payment.totalFen() != paidCents
+                || !"CNY".equals(payment.currency())) return false;
+        if (!applyConfirmedDepositPaid(outTradeNo, paidCents, transactionId)) return false;
+        CoopInvite consumed = coopInviteMapper.selectByDepositOutTradeNoForUpdate(outTradeNo);
+        if (consumed == null) throw new IllegalStateException("保证金成功消费读回缺失");
+        Map<String,String> original = new HashMap<>(); original.put("out_trade_no",outTradeNo);
+        original.put("wx_out_trade_no",payment.wxOutTradeNo()); original.put("transaction_id",transactionId);
+        original.put("verified_fact_id",Long.toString(reference.id())); original.put("verified_fact_hash",reference.hash());
+        completeConsumedDepositRecovery(depositVerifiedFacts, coopInviteMapper, consumed.getId(), original);
+        return true;
+    }
+
+    @Override
     public int deductDeposit(Long inviteId) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         return coopInviteMapper.deductHeldDeposit(inviteId);
     }
 
@@ -1886,6 +2049,7 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void requestDepositRefund(Long inviteId, Long operatorMemberId) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         CoopInvite invite = authorizeDepositRefundRetry(inviteId, operatorMemberId);
         depositRefundService.requestLocked(invite);
     }
@@ -1893,6 +2057,7 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void requestTopicDepositRefunds(Long topicId) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         CmsTopic topic = cmsTopicMapper.selectCmsTopicByIdForUpdate(topicId);
         if (topic == null || !Integer.valueOf(1).equals(topic.getIsSettlement()))
             throw new IllegalStateException("主题尚未完成结算，不能退保证金");
@@ -1909,24 +2074,195 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long createCoopOrder(CoopOrder order) {
-        CoopInvite invite = order.getInviteId() == null || coopInviteMapper == null
-                ? null : coopInviteMapper.selectCoopInviteById(order.getInviteId());
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+        if (order == null || order.getInviteId() == null) throw new IllegalStateException("原已接受邀约必填");
+        CoopInvite located = coopInviteMapper.selectCoopInviteById(order.getInviteId());
+        if (located == null) throw new IllegalStateException("原邀约不可核实");
+        assertLegacyInviteReadOnly(located);
+        if (located.getSupplyStationId() != null && located.getTopicId() == null)
+            throw new IllegalStateException("原邀约主题不可核实");
+        CmsTopic topic = lockInviteTopic(located); // First business lock, also on direct public entry.
+        CoopInvite invite = coopInviteMapper.selectCoopInviteByIdForUpdate(located.getId());
+        if (invite == null || !java.util.Objects.equals(located.getTopicId(), invite.getTopicId())
+                || !Integer.valueOf(1).equals(invite.getStatus()) || !Integer.valueOf(0).equals(invite.getDelFlag()))
+            throw new IllegalStateException("原已接受邀约不可核实");
         assertLegacyInviteReadOnly(invite);
-        // A-13 防双开单:同一报名已建过生效合作单则复用旧单,不重复建(库 reg_id 无 UNIQUE 前的代码兜底)。
-        if (order.getRegId() != null) {
-            List<CoopOrder> existing = coopOrderMapper.selectCoopOrderByRegId(order.getRegId());
-            if (existing != null && !existing.isEmpty()) {
-                return existing.get(0).getId();
-            }
+        assertOrderInviteIdentity(order, invite);
+        List<CoopOrder> originals = coopInviteMapper.selectOriginalCoopOrdersForUpdate(invite.getId(), order.getRegId());
+        if (originals == null || originals.size() > 1) throw new IllegalStateException("原合作单身份冲突");
+        if (!originals.isEmpty()) {
+            CoopOrder original = originals.get(0);
+            assertOrderInviteIdentity(original, invite);
+            if (original.getId() == null || original.getId() <= 0
+                    || order.getRegId() != null && !order.getRegId().equals(original.getRegId())
+                    || !java.util.Objects.equals(invite.getSupplyStationId(),
+                        frozenSupplyStation(original, invite.getTopicId(), invite.getToId())))
+                throw new IllegalStateException("原合作单冻结范围不一致");
+            return original.getId(); // Never re-freeze live perks or edit an original receipt on replay.
         }
+        if (order.getRegId() != null) {
+            CmsRegistrationMerchant candidate = coopInviteMapper.selectSupplyStationForUpdate(
+                    order.getRegId(), invite.getTopicId(), invite.getToId());
+            if (!eligibleSupplyStation(candidate, invite.getTopicId(), invite.getToId()))
+                throw new IllegalStateException("候选报名来源不属于原邀约");
+        }
+        if (invite.getSupplyStationId() != null) assertActiveStandardInviteMerchantForUpdate(invite);
+        assertSupplyStation(invite, topic, false);
+        if (order.getStatus() != null && order.getStatus() != 0 || order.getDelFlag() != null && order.getDelFlag() != 0)
+            throw new IllegalStateException("新合作单必须为原有效状态");
+        order.setId(null); order.setStatus(0); order.setDelFlag(0);
         if (order.getCreateTime() == null) order.setCreateTime(DateUtils.getNowDate());
-        if (order.getStatus() == null) order.setStatus(0);
-        if (order.getDelFlag() == null) order.setDelFlag(0);
         freezeOrderContractSnapshot(order, invite);
-        coopOrderMapper.insertCoopOrder(order);
-        invalidateApprovedCanonical(order.getTopicId() == null && invite != null ? invite.getTopicId() : order.getTopicId(),
-                "coop-order-create");
+        if (coopOrderMapper.insertCoopOrder(order) != 1 || order.getId() == null || order.getId() <= 0)
+            throw new IllegalStateException("原合作单保存失败");
+        invalidateApprovedCanonical(order.getTopicId(), "coop-order-create");
         return order.getId();
+    }
+
+    private boolean isClassicSupplyInvite(CoopInvite invite, CmsTopic topic) {
+        return invite != null && Integer.valueOf(0).equals(invite.getInviteType())
+                && CoopInvite.TO_MERCHANT.equals(invite.getToType()) && invite.getNodeId() == null
+                && topic != null && Integer.valueOf(ProductType.ORIENTEERING).equals(topic.getProductType());
+    }
+
+    private void assertSupplyCreator(CmsTopic topic, Long creatorMemberId, Long merchantMemberId) {
+        if (topic == null || topic.getId() == null || !Integer.valueOf(0).equals(topic.getDelFlag())
+                || !Integer.valueOf(ProductType.ORIENTEERING).equals(topic.getProductType()))
+            throw new IllegalStateException("仅经典主题商家邀约可选择计酬据点");
+        if (creatorMemberId == null || !creatorMemberId.equals(topic.getMemberId()))
+            throw new IllegalStateException("只能为自己发布的主题选择合作据点");
+        if (merchantMemberId == null || merchantMemberId <= 0 || merchantMemberId.equals(creatorMemberId))
+            throw new IllegalStateException("受邀商家不合法");
+    }
+
+    private boolean eligibleSupplyStation(CmsRegistrationMerchant station, Long topicId, Long merchantMemberId) {
+        // Same predicate as the existing whole-order station redemption owner; status/template method is not a new gate.
+        return station != null && station.getId() != null && station.getId() > 0
+                && topicId.equals(station.getTopicId()) && merchantMemberId.equals(station.getMemberId())
+                && Long.valueOf(1L).equals(station.getAuditStatus()) && Integer.valueOf(0).equals(station.getDelFlag());
+    }
+
+    @Override
+    public List<CmsRegistrationMerchant> listSupplyStations(Long topicId, Long merchantMemberId, Long creatorMemberId) {
+        if (topicId == null || topicId <= 0) throw new IllegalStateException("主题参数不合法");
+        CmsTopic topic = cmsTopicMapper.selectCmsTopicById(topicId);
+        assertSupplyCreator(topic, creatorMemberId, merchantMemberId);
+        CoopInvite probe = new CoopInvite(); probe.setInviteType(0); probe.setTopicId(topicId);
+        assertInviteWindowOpen(topic, probe, DateUtils.getNowDate());
+        assertActiveMerchant(merchantMemberId);
+        List<CmsRegistrationMerchant> rows = coopInviteMapper.selectSupplyStations(topicId, merchantMemberId);
+        List<CoopOrder> orders = coopInviteMapper.selectEffectiveSupplyOrders(topicId, merchantMemberId);
+        if (rows == null || orders == null) throw new IllegalStateException("合作据点范围读取失败");
+        java.util.Set<Long> occupied = occupiedSupplyStations(orders, topicId, merchantMemberId);
+        List<CmsRegistrationMerchant> available = new ArrayList<>();
+        for (CmsRegistrationMerchant row : rows) {
+            if (!eligibleSupplyStation(row, topicId, merchantMemberId))
+                throw new IllegalStateException("合作据点读取范围不一致");
+            if (!occupied.contains(row.getId())) available.add(row);
+        }
+        return available;
+    }
+
+    private void assertSupplyStation(CoopInvite invite, CmsTopic topic, boolean newInvite) {
+        if (!isClassicSupplyInvite(invite, topic)) {
+            if (invite.getSupplyStationId() != null) throw new IllegalStateException("该邀约不支持据点计酬确认");
+            return; // Historical/non-classic contracts retain their original strict path, without V1 inference.
+        }
+        if (invite.getSupplyStationId() == null && !newInvite) return;
+        assertSupplyCreator(topic, invite.getFromId(), invite.getToId());
+        if (invite.getSupplyStationId() == null || invite.getSupplyStationId() <= 0)
+            throw new IllegalStateException("请选择本主题该商家的真实核销据点");
+        CmsRegistrationMerchant station = coopInviteMapper.selectSupplyStationForUpdate(
+                invite.getSupplyStationId(), invite.getTopicId(), invite.getToId());
+        if (!eligibleSupplyStation(station, invite.getTopicId(), invite.getToId())
+                || !invite.getSupplyStationId().equals(station.getId()))
+            throw new IllegalStateException("所选据点不属于本主题受邀商家或已不可用");
+        List<CoopOrder> orders = coopInviteMapper.selectEffectiveSupplyOrdersForUpdate(invite.getTopicId(), invite.getToId());
+        if (orders == null) throw new IllegalStateException("原合作单范围读取失败");
+        if (occupiedSupplyStations(orders, invite.getTopicId(), invite.getToId()).contains(invite.getSupplyStationId()))
+            throw new IllegalStateException("该据点已绑定有效原合作单，订单间不能重复");
+    }
+
+    private Long scopeLong(Object value) {
+        if (!(value instanceof Byte || value instanceof Short || value instanceof Integer || value instanceof Long
+                || value instanceof java.math.BigInteger)) throw new IllegalStateException("原据点合同身份不合法");
+        try {
+            long id = new java.math.BigInteger(value.toString()).longValueExact();
+            if (id <= 0) throw new ArithmeticException();
+            return id;
+        } catch (ArithmeticException invalid) { throw new IllegalStateException("原据点合同身份不合法", invalid); }
+    }
+
+    private Long frozenSupplyStation(CoopOrder order, Long topicId, Long merchantMemberId) {
+        if (com.chengyinhub.common.utils.StringUtils.isBlank(order.getTermsSnapshot())) return null;
+        Map<String,Object> terms;
+        try { terms = JSON.parseObject(order.getTermsSnapshot()); }
+        catch (RuntimeException invalid) { throw new IllegalStateException("原合作合同无法核实", invalid); }
+        if (terms == null) throw new IllegalStateException("原合作合同无法核实");
+        if (!terms.containsKey("supplyBillingScope")) return null;
+        Object raw = terms.get("supplyBillingScope");
+        if (!(raw instanceof Map)) throw new IllegalStateException("原据点合同无法核实");
+        Map<?,?> scope = (Map<?,?>) raw;
+        if (!"REGISTRATION_STATION_V1".equals(scope.get("version"))
+                || !topicId.equals(scopeLong(scope.get("topicId")))
+                || !merchantMemberId.equals(scopeLong(scope.get("merchantMemberId")))
+                || !topicId.equals(order.getTopicId()) || !merchantMemberId.equals(order.getToId())
+                || !CoopInvite.TO_MERCHANT.equals(order.getToType()) || !"SUPPLY".equals(order.getRoleSnapshot())
+                || !"TOPIC".equals(order.getScopeTypeSnapshot()) || !topicId.equals(order.getScopeIdSnapshot())
+                || !"GUIDED_TICKET".equals(order.getEligiblePurchaseKindsSnapshot())
+                || !"REGISTRATION_SCAN".equals(order.getFulfillmentEvidenceRuleSnapshot()))
+            throw new IllegalStateException("原据点合同范围不一致");
+        return scopeLong(scope.get("stationId"));
+    }
+
+    private java.util.Set<Long> occupiedSupplyStations(List<CoopOrder> orders, Long topicId, Long merchantMemberId) {
+        java.util.Set<Long> ids = new java.util.HashSet<>();
+        for (CoopOrder order : orders) {
+            if (order == null || order.getId() == null || !topicId.equals(order.getTopicId())
+                    || !merchantMemberId.equals(order.getToId()) || !CoopInvite.TO_MERCHANT.equals(order.getToType())
+                    || !Integer.valueOf(0).equals(order.getStatus()) || !Integer.valueOf(0).equals(order.getDelFlag()))
+                throw new IllegalStateException("有效合作单读取范围不一致");
+            Long stationId = frozenSupplyStation(order, topicId, merchantMemberId);
+            if (stationId != null && !ids.add(stationId)) throw new IllegalStateException("已有原合作单据点归属冲突");
+        }
+        return ids;
+    }
+
+    private void assertOrderInviteIdentity(CoopOrder order, CoopInvite invite) {
+        if (!java.util.Objects.equals(order.getInviteId(), invite.getId())
+                || !java.util.Objects.equals(order.getTopicId(), invite.getTopicId())
+                || !java.util.Objects.equals(order.getFromId(), invite.getFromId())
+                || !java.util.Objects.equals(order.getToId(), invite.getToId())
+                || !java.util.Objects.equals(order.getToType(), invite.getToType())
+                || !java.util.Objects.equals(order.getGameId(), invite.getGameId()))
+            throw new IllegalStateException("合作单必须匹配原已接受邀约身份");
+    }
+
+    private <T extends CoopInvite> List<T> attachSupplyStationNames(List<T> rows) {
+        if (rows == null) return null;
+        List<CoopInvite> selected = new ArrayList<>();
+        for (CoopInvite row : rows) {
+            if (row == null) continue;
+            row.setSupplyStationName(null);
+            boolean candidate = Integer.valueOf(0).equals(row.getInviteType())
+                    && CoopInvite.TO_MERCHANT.equals(row.getToType()) && row.getNodeId() == null;
+            row.setRequiresSupplyStation(candidate
+                    ? (row.getSupplyStationId() == null ? null : Boolean.TRUE) : Boolean.FALSE);
+            if (row.getSupplyStationId() != null && row.getTopicId() != null && row.getToId() != null
+                    && CoopInvite.TO_MERCHANT.equals(row.getToType())) selected.add(row);
+        }
+        // 1000 original tuples = 3000 bound parameters, below MySQL's 65535 limit; never truncate rows.
+        for (int start = 0; start < selected.size(); start += 1000) {
+            List<CoopInvite> batch = selected.subList(start, Math.min(start + 1000, selected.size()));
+            List<CmsRegistrationMerchant> names = coopInviteMapper.selectSupplyStationNames(batch);
+            if (names == null) throw new IllegalStateException("原据点名称读取失败");
+            Map<String,String> byIdentity = new HashMap<>();
+            for (CmsRegistrationMerchant station : names) if (station != null)
+                byIdentity.put(station.getId()+":"+station.getTopicId()+":"+station.getMemberId(), station.getAddressName());
+            for (CoopInvite invite : batch) invite.setSupplyStationName(byIdentity.get(
+                    invite.getSupplyStationId()+":"+invite.getTopicId()+":"+invite.getToId()));
+        }
+        return rows;
     }
 
     private void invalidateApprovedCanonical(Long topicId, String mutation) {
@@ -1999,6 +2335,12 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
             terms.put("perksSnapshot", order.getPerksSnapshot());
             terms.put("compensationMode", order.getCompensationMode());
             terms.put("benefitMode", order.getBenefitMode());
+            if (invite != null && invite.getSupplyStationId() != null) {
+                Map<String,Object> scope = new LinkedHashMap<>();
+                scope.put("version", "REGISTRATION_STATION_V1"); scope.put("stationId", invite.getSupplyStationId());
+                scope.put("topicId", invite.getTopicId()); scope.put("merchantMemberId", invite.getToId());
+                terms.put("supplyBillingScope", scope);
+            }
             order.setTermsSnapshot(JSON.toJSONString(terms));
         }
     }

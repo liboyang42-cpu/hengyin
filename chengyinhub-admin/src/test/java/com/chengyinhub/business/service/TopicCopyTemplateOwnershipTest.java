@@ -78,9 +78,9 @@ class TopicCopyTemplateOwnershipTest {
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
         ReflectionTestUtils.setField(service, "cmsTopicChapterMapper", chapterMapper);
         ReflectionTestUtils.setField(service, "cmsTopicNodeMapper", nodeMapper);
-        ReflectionTestUtils.setField(service, "cmsMemberTemplateMapper", memberTemplateMapper);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "cmsMemberTemplateMapper", memberTemplateMapper);
         ReflectionTestUtils.setField(service, "productRoleService", productRoleService);
-        ReflectionTestUtils.setField(service, "sysCategoryService", mock(ISysCategoryService.class));
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "sysCategoryService", mock(ISysCategoryService.class));
 
         CmsTopic original = new CmsTopic();
         original.setId(SOURCE_TOPIC);
@@ -147,7 +147,7 @@ class TopicCopyTemplateOwnershipTest {
         Map<String, Object> params = new HashMap<>();
         params.put("copyType", 2);
         params.put("memberId", NEW_OWNER);
-        return service.copyCmsTopic(SOURCE_TOPIC, params);
+        return com.chengyinhub.business.service.support.TopicCopyTestWiring.owner(service).copyCmsTopic(SOURCE_TOPIC, params);
     }
 
     private String installSlotBindings() {
@@ -195,7 +195,7 @@ class TopicCopyTemplateOwnershipTest {
         advanced.putArray("requires").addObject().put("var", "sys.passed.501").put("op", "EQ").put("value", 1);
         template.setAdvancedConfigJson(advanced.toString());
         Map<String, Object> params = new HashMap<>(); params.put("copyType", 2); params.put("memberId", SOURCE_OWNER);
-        service.copyCmsTopic(SOURCE_TOPIC, params);
+        com.chengyinhub.business.service.support.TopicCopyTestWiring.owner(service).copyCmsTopic(SOURCE_TOPIC, params);
         ArgumentCaptor<CmsTopic> patches = ArgumentCaptor.forClass(CmsTopic.class);
         verify(topicMapper).updateCmsTopic(patches.capture());
         assertEquals(8001L, new ObjectMapper().readTree(patches.getValue().getThemeRuntimeConfigJson()).path("templateBindings").path("901").path("templateId").asLong());
@@ -205,7 +205,7 @@ class TopicCopyTemplateOwnershipTest {
     void sameOwnerSharedTemplateKeepsBindingIdentity() throws Exception {
         installSlotBindings();
         Map<String, Object> params = new HashMap<>(); params.put("copyType", 2); params.put("memberId", SOURCE_OWNER);
-        service.copyCmsTopic(SOURCE_TOPIC, params);
+        com.chengyinhub.business.service.support.TopicCopyTestWiring.owner(service).copyCmsTopic(SOURCE_TOPIC, params);
         ArgumentCaptor<CmsTopic> patches = ArgumentCaptor.forClass(CmsTopic.class);
         verify(topicMapper).updateCmsTopic(patches.capture());
         assertEquals(SOURCE_TEMPLATE.longValue(), new ObjectMapper().readTree(patches.getValue().getThemeRuntimeConfigJson()).path("templateBindings").path("901").path("templateId").asLong());
@@ -247,7 +247,7 @@ class TopicCopyTemplateOwnershipTest {
         Map<String, Object> params = new HashMap<>();
         params.put("copyType", 2);
         params.put("memberId", SOURCE_OWNER);
-        service.copyCmsTopic(SOURCE_TOPIC, params);
+        com.chengyinhub.business.service.support.TopicCopyTestWiring.owner(service).copyCmsTopic(SOURCE_TOPIC, params);
 
         assertTrue(insertedTemplates.isEmpty(), "归属未变不深拷贝模板");
         assertEquals(2, insertedNodes.size());
@@ -319,7 +319,7 @@ class TopicCopyTemplateOwnershipTest {
         // P0-35:无法判定归属的复制不猜归属,也不动 templateId
         Map<String, Object> params = new HashMap<>();
         params.put("copyType", 2);
-        service.copyCmsTopic(SOURCE_TOPIC, params);
+        com.chengyinhub.business.service.support.TopicCopyTestWiring.owner(service).copyCmsTopic(SOURCE_TOPIC, params);
 
         verify(memberTemplateMapper, never()).insertCmsMemberTemplate(any(CmsMemberTemplate.class));
         assertEquals(2, insertedNodes.size());

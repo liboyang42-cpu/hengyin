@@ -44,6 +44,7 @@ class CoopSettlementClaimServiceImplTest {
         CoopSettlementAdjustmentMapper adjustmentMapper = mock(CoopSettlementAdjustmentMapper.class);
         CoopSettlementClaimServiceImpl service = new CoopSettlementClaimServiceImpl(snapshotReader, windowResolver,
                 evidenceService, claimService, headMapper, detailMapper, adjustmentMapper);
+        wireTopic(service);
 
         CoopOrder order = order();
         CoopSettlementSnapshot snapshot = snapshot();
@@ -70,7 +71,7 @@ class CoopSettlementClaimServiceImplTest {
         when(detailMapper.refreshOriginAggregate(501L)).thenReturn(1);
 
         CoopSettlementPlan plan = service.prepare(order, new Date(1_100_000L));
-        CoopSettlement head = new CoopSettlement();
+        CoopSettlement head = new CoopSettlement(); head.setTopicId(11L);
         head.setCoopOrderId(order.getId());
         service.persist(plan, head);
 
@@ -110,11 +111,15 @@ class CoopSettlementClaimServiceImplTest {
         CoopSettlementAdjustmentMapper adjustmentMapper = mock(CoopSettlementAdjustmentMapper.class);
         CoopSettlementClaimServiceImpl service = new CoopSettlementClaimServiceImpl(snapshotReader, windowResolver,
                 evidenceService, claimService, headMapper, detailMapper, adjustmentMapper);
+        wireTopic(service);
         CoopSettlementDetail origin = new CoopSettlementDetail();
         origin.setSettlementId(501L);
         origin.setClaimId(11L);
         origin.setRegistrationId(1L);
         origin.setOriginAmount(new BigDecimal("0.01"));
+        CoopSettlement originalHead = new CoopSettlement(); originalHead.setId(501L); originalHead.setTopicId(11L);
+        when(headMapper.selectByClaimId(11L)).thenReturn(originalHead);
+        when(headMapper.selectByIdForUpdate(501L)).thenReturn(originalHead);
         when(detailMapper.selectByClaimIdForUpdate(11L)).thenReturn(origin);
         when(adjustmentMapper.insertIgnoreAdjustment(any())).thenReturn(1);
 
@@ -140,15 +145,22 @@ class CoopSettlementClaimServiceImplTest {
     private static CoopSettlementSnapshot snapshot() {
         CoopSettlementSnapshot s = new CoopSettlementSnapshot();
         s.setOrderId(701L);
+        s.setTopicId(11L);
+        s.setInitiatorMemberId(77L);
+        s.setProductType(1);
+        s.setTermsVersion("v1");
+        s.setCatalogFrozenAt(new Date(0));
+        s.setFulfillmentStartInclusive(new Date(0));
+        s.setFulfillmentEndExclusive(new Date(1_000_000L));
         s.setCommercialContextType("TOPIC_EDITION");
         s.setCommercialContextId(11L);
         s.setBeneficiaryRole("MERCHANT");
         s.setBeneficiaryId(88L);
         s.setServiceUnit("MERCHANT_PARTICIPATION");
-        s.setScopeType("TOPIC_EDITION");
+        s.setScopeType("TOPIC");
         s.setScopeId(11L);
-        s.setEligiblePurchaseKinds(Arrays.asList("SELF_PLAY_PASS"));
-        s.setFulfillmentEvidenceRule("V1_PER_REGISTRATION");
+        s.setEligiblePurchaseKinds(Arrays.asList("GUIDED_TICKET"));
+        s.setFulfillmentEvidenceRule("REGISTRATION_SCAN");
         s.setCompensationMode("SALES_PERCENT");
         s.setShareRate(new BigDecimal("50"));
         return s;
@@ -157,12 +169,17 @@ class CoopSettlementClaimServiceImplTest {
     private static CoopSettlementCandidate candidate(Long id) {
         CoopSettlementCandidate c = new CoopSettlementCandidate();
         c.setRegistrationId(id);
+        c.setSourceTopicId(11L);
+        c.setOrderQuantity(1L);
+        c.setTicketOwnerMatches(true);
+        c.setFulfillmentStartInclusive(new Date(0));
+        c.setFulfillmentEndExclusive(new Date(1_000_000L));
         c.setOwnerType(1L);
         c.setOwnerId(11L);
         c.setRegistrationStatus(2);
         c.setPaymentStatus(2);
         c.setVerificationStatus(1);
-        c.setPurchaseKind("SELF_PLAY_PASS");
+        c.setPurchaseKind("GUIDED_TICKET");
         c.setEligibleSalesSnapshot(new BigDecimal("0.01"));
         c.setScopeCovered(true);
         c.setMerchantScanPresent(true);
@@ -173,4 +190,11 @@ class CoopSettlementClaimServiceImplTest {
     private static void assertAmount(String expected, BigDecimal actual, String message) {
         assertEquals(0, new BigDecimal(expected).compareTo(actual), message + ",实际=" + actual);
     }
+    private static void wireTopic(CoopSettlementClaimServiceImpl service) {
+        com.chengyinhub.business.mapper.CmsTopicMapper topics = mock(com.chengyinhub.business.mapper.CmsTopicMapper.class);
+        com.chengyinhub.business.domain.CmsTopic topic = new com.chengyinhub.business.domain.CmsTopic(); topic.setId(11L);
+        when(topics.selectCmsTopicByIdForUpdate(11L)).thenReturn(topic);
+        org.springframework.test.util.ReflectionTestUtils.setField(service,"topicMapper",topics);
+    }
+
 }

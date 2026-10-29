@@ -1,0 +1,14 @@
+[
+  "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationDynamicSelectionCodeTest.java",
+  "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ExploreScanDispatchTest.java",
+  "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationCompletionCouponTest.java",
+  "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ScanContextSharedGateTest.java",
+  "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRegistrationVerifyGateTest.java",
+  "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/RegistrationSeatReplayBoundaryTest.java",
+  "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ScanDynamicCodeReasonAcceptanceTest.java",
+  "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ScanTypeOwnerMismatchGateTest.java",
+  "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/RegistrationSeatEndpointTest.java",
+  "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ExploreChapterScanReplayAcceptanceTest.java",
+  "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/DoublePaymentReproductionTest.java",
+  "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ExploreChapterScanReplayChapterNameTest.java"
+]

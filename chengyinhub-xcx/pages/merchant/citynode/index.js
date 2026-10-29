@@ -7,6 +7,7 @@ const merchantTheme = require('../../../utils/merchant-theme.js');
 const merchantAccessPolicy = require('../../../utils/merchant-access-policy.js');
 const codeTextUtil = require('../utils/code-text.js');
 const { createVerificationWorkflow } = require('../../../utils/verification-readback.js');
+const { captureLogin, loginCurrent } = require('../../../utils/registration-seat.js');
 const { cityNodeTarget, classifyCityNodeRedeem } = require('../utils/citynode-redeem-outcome.js');
 
 function scalarText(value, fallback) {
@@ -114,8 +115,12 @@ Page({
     this.loadAccess();
   },
 
-  onHide() { merchantTheme.merchantPageRestore(); },
+  onHide() {
+    this._verificationEpoch = (this._verificationEpoch || 0) + 1;
+    merchantTheme.merchantPageRestore();
+  },
   onUnload() {
+    this._verificationEpoch = (this._verificationEpoch || 0) + 1;
     merchantTheme.merchantPageRestore();
     // 只销毁内存写闸;磁盘上的 UNKNOWN 待办保留,重进本页仍先回读不重放
     if (this._redeemWorkflow) this._redeemWorkflow.destroy();
@@ -471,26 +476,29 @@ Page({
   // PRIVATE-GROUP-nucleation-original-request:与 #424 的四个核销入口同一持久写闸(verification-readback)——POST 前按账号+据点+玩家落持久
   // UNKNOWN 待办;断网/畸形回执只算「待确认」,同一目标在本机先回读(不重放),只有原请求的明确回执才结算。
   submitCityNodeRedeem(code) {
-    const owner = String(app.getUserID && app.getUserID() || '');
+    const login = captureLogin(app, wx), epoch = this._verificationEpoch || 0;
+    const current = () => loginCurrent(app, wx, login) && epoch === (this._verificationEpoch || 0);
+    if (!current()) return false;
+    const owner = login.owner;
     const target = cityNodeTarget(code);
+    if (!target) return toast('非据点核销码');
     const key = owner + ':citynode:' + (target ? target.poiId + ':' + target.memberId : code);
     if (!this._redeemWorkflow) this._redeemWorkflow = createVerificationWorkflow({ deadlineMs: 15000, storage: wx, getOwner: () => app.getUserID && app.getUserID() });
-    if (this._redeemWorkflow.isBusy(key)) return toast('核销处理中，请勿重复提交');
-    this._redeemWorkflow.run(key, function (done) {
+    const accepted = this._redeemWorkflow.run(key, function (done) {
       return app.sendRequest({
-        url: '/api/verify/citynode/redeem', method: 'POST', data: { code: code }, autoErrorToast: false,
+        url: '/api/verify/citynode/redeem', method: 'POST', data: { code: code }, autoErrorToast: false, hideLoading: true, silentError: true,
         success(res) { done(classifyCityNodeRedeem(res, 'success', undefined, code)); },
         fail(res, status) { done(classifyCityNodeRedeem(res, 'fail', status, code)); },
         successStatusAbnormal(res, status) { done(classifyCityNodeRedeem(res, 'abnormal', status, code)); },
       });
     }, function (result) {
-      if (owner !== String(app.getUserID && app.getUserID() || '')) return;
+      if (!current()) return;
       const res = result.response || {};
       if (result.status === 'unknown') {
         modal.show({
           title: '核销结果待确认',
           content: (result.recovered ? '该玩家在本节点的上一次核销结果仍待确认，本次没有重新提交。' : '网络异常，核销可能已经完成。')
-            + '请让玩家在「我的券」确认是否到账，不要重复扫码；无法确认时请联系平台处理。',
+            + '再次扫描同一玩家的据点码只查询原结果，不重新发券；无法确认时请联系平台处理。',
           showCancel: false,
           confirmText: '知道了',
         });
@@ -502,7 +510,18 @@ Page({
         return;
       }
       modal.show({ title: '核销失败', content: res.msg || '请重试', showCancel: false });
+    }, {
+      city: target, isCurrent: current,
+      isReceipt: response => classifyCityNodeRedeem(response, 'success', undefined, code).status === 'success',
+      readReceipt(original, done) {
+        if (!current()) return null;
+        return app.sendRequest({ url: '/api/verify/citynode/receipt', method: 'POST', data: { code },
+          hideLoading: true, autoErrorToast: false,
+          success: response => done(response), fail: () => done(null), successStatusAbnormal: () => done(null) });
+      },
     });
+    if (!accepted && current()) toast('核销处理中，请勿重复提交');
+    return accepted;
   },
 
   // C2 扫码核销:扫玩家「据点核销码」→ 后端校验归属+幂等后发券给玩家(防伪造GPS白领券)
@@ -510,15 +529,19 @@ Page({
     if (!this.data.merchantAccess.canVerify) {
       return toast('当前岗位没有核销权限');
     }
-    const that = this;
+    const that = this, login = captureLogin(app, wx), epoch = this._verificationEpoch || 0;
+    const current = () => loginCurrent(app, wx, login) && epoch === (that._verificationEpoch || 0);
+    if (!current()) return;
     wx.scanCode({
       onlyFromCamera: true, scanType: ['qrCode'],
       success(sc) {
+        if (!current()) return;
         const code = sc.result;
         if (!code) return toast('未识别到核销码');
         that.submitCityNodeRedeem(code);
       },
       fail(err) {
+        if (!current()) return;
         const message = err && err.errMsg || '';
         if (!/cancel/i.test(message)) {
           toast('扫码失败，请重试');

@@ -1,0 +1,74 @@
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java
+@@ -1126,5 +1126,5 @@
+         }
+         // 与下方邀约 CAS 共用原事务/行锁，旧尝试的关闭事实不得作用于新尝试。
+-        if (!wechatPayService.lockPaymentAttemptForUpdate(invite.getDepositOutTradeNo(), observedWxOutTradeNo)) {
++        if (!wechatPayService.lockClosablePaymentAttemptForUpdate(invite.getDepositOutTradeNo(), observedWxOutTradeNo)) {
+             throw new IllegalStateException("保证金支付尝试已变化 inviteId=" + invite.getId());
+         }
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopDepositSettlementAttemptTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopDepositSettlementAttemptTest.java
+@@ -45,5 +45,5 @@
+         when(gateway.queryOrderStatus(BUSINESS)).thenReturn(facts("PAYERROR"));
+         when(gateway.closePaymentAttempt(BUSINESS, ATTEMPT)).thenReturn(true);
+-        when(gateway.lockPaymentAttemptForUpdate(BUSINESS, ATTEMPT)).thenReturn(true);
++        when(gateway.lockClosablePaymentAttemptForUpdate(BUSINESS, ATTEMPT)).thenReturn(true);
+         when(mapper.updateDepositIfCurrent(89L, 1, AMOUNT, 5, AMOUNT)).thenReturn(1);
+         assertTrue(resolve());
+@@ -51,5 +51,5 @@
+         order.verify(gateway).queryOrderStatus(BUSINESS);
+         order.verify(gateway).closePaymentAttempt(BUSINESS, ATTEMPT);
+-        order.verify(gateway).lockPaymentAttemptForUpdate(BUSINESS, ATTEMPT);
++        order.verify(gateway).lockClosablePaymentAttemptForUpdate(BUSINESS, ATTEMPT);
+         order.verify(mapper).updateDepositIfCurrent(89L, 1, AMOUNT, 5, AMOUNT);
+         verify(gateway, never()).closeOrder(anyString());
+@@ -61,9 +61,9 @@
+     void closedObservationStillRequiresCurrentAttemptFence() {
+         when(gateway.queryOrderStatus(BUSINESS)).thenReturn(facts("CLOSED"));
+-        when(gateway.lockPaymentAttemptForUpdate(BUSINESS, ATTEMPT)).thenReturn(true);
++        when(gateway.lockClosablePaymentAttemptForUpdate(BUSINESS, ATTEMPT)).thenReturn(true);
+         when(mapper.updateDepositIfCurrent(89L, 1, AMOUNT, 5, AMOUNT)).thenReturn(1);
+         assertTrue(resolve());
+         var order = inOrder(gateway, mapper);
+-        order.verify(gateway).lockPaymentAttemptForUpdate(BUSINESS, ATTEMPT);
++        order.verify(gateway).lockClosablePaymentAttemptForUpdate(BUSINESS, ATTEMPT);
+         order.verify(mapper).updateDepositIfCurrent(89L, 1, AMOUNT, 5, AMOUNT);
+         verify(gateway, never()).closePaymentAttempt(anyString(), anyString());
+@@ -78,5 +78,5 @@
+         }
+         verifyNoInteractions(mapper, invites);
+-        verify(gateway, never()).lockPaymentAttemptForUpdate(anyString(), anyString());
++        verify(gateway, never()).lockClosablePaymentAttemptForUpdate(anyString(), anyString());
+     }
+
+@@ -112,5 +112,5 @@
+         assertThrows(IllegalStateException.class, this::resolve);
+         unchanged();
+-        verify(gateway).lockPaymentAttemptForUpdate(BUSINESS, ATTEMPT);
++        verify(gateway).lockClosablePaymentAttemptForUpdate(BUSINESS, ATTEMPT);
+         verifyNoInteractions(mapper, invites);
+     }
+@@ -144,5 +144,5 @@
+     void failedUnpaidCasDoesNotMutateInMemoryReceipt() {
+         when(gateway.queryOrderStatus(BUSINESS)).thenReturn(facts("CLOSED"));
+-        when(gateway.lockPaymentAttemptForUpdate(BUSINESS, ATTEMPT)).thenReturn(true);
++        when(gateway.lockClosablePaymentAttemptForUpdate(BUSINESS, ATTEMPT)).thenReturn(true);
+         assertThrows(IllegalStateException.class, this::resolve);
+         unchanged();
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopDepositSettlementAttemptMySqlIT.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopDepositSettlementAttemptMySqlIT.java
+@@ -146,5 +146,5 @@
+         order.verify(gateway).queryOrderStatus(BUSINESS);
+         order.verify(gateway).closePaymentAttempt(BUSINESS, BUSINESS);
+-        order.verify(gateway).lockPaymentAttemptForUpdate(BUSINESS, BUSINESS);
++        order.verify(gateway).lockClosablePaymentAttemptForUpdate(BUSINESS, BUSINESS);
+         verify(gateway, never()).closeOrder(anyString());
+     }
+@@ -161,5 +161,5 @@
+         assertTrue(resolve());
+         verify(gateway).closePaymentAttempt(BUSINESS, next);
+-        verify(gateway).lockPaymentAttemptForUpdate(BUSINESS, next);
++        verify(gateway).lockClosablePaymentAttemptForUpdate(BUSINESS, next);
+         assertEquals(5, mapper.selectCoopInviteById(89L).getDepositStatus());
+         assertEquals(BUSINESS, mapper.selectCoopInviteById(89L).getDepositOutTradeNo());

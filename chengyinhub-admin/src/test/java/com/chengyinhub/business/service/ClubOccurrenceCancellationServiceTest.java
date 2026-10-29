@@ -12,6 +12,7 @@ import com.chengyinhub.business.domain.ClubEventOccurrence;
 import com.chengyinhub.business.domain.ClubEventSeries;
 import com.chengyinhub.business.domain.ClubWaitlistEntry;
 import com.chengyinhub.business.domain.dto.ActivityCancelResult;
+import com.chengyinhub.business.domain.dto.RegistrationCancellationPayments;
 import com.chengyinhub.business.domain.dto.ClubEventCancellationRequest;
 import com.chengyinhub.business.domain.vo.ClubEventCancellationResult;
 import com.chengyinhub.business.domain.vo.ClubEventCancellationStateVO;
@@ -63,6 +64,7 @@ class ClubOccurrenceCancellationServiceTest {
     private IClubRoleAssignmentService roleService;
     private ITeamGroupService teamGroupService;
     private ClubEventOpsServiceImpl service;
+    private RegistrationCancellationPayments payments;
 
     @BeforeEach
     void setUp() {
@@ -73,6 +75,21 @@ class ClubOccurrenceCancellationServiceTest {
         service = new ClubEventOpsServiceImpl(accessService, new ClubEventScheduleMaterializer(),
                 mock(IClubSessionService.class), mapper, mock(ClubMemberMapper.class),
                 mock(ClubLeadMapper.class), roleService, teamGroupService);
+        CancellationPhaseTestSupport.wireTransactions(service,CancellationPhaseTestSupport.memoryTransactions());
+        payments = CancellationPhaseTestSupport.stubEmptyObservation(teamGroupService,ACTIVITY);
+        CmsActivityMapper phaseActivities = mock(CmsActivityMapper.class);
+        com.chengyinhub.business.mapper.CmsTopicMapper phaseTopics =
+                mock(com.chengyinhub.business.mapper.CmsTopicMapper.class);
+        com.chengyinhub.business.domain.CmsActivity phaseActivity = new com.chengyinhub.business.domain.CmsActivity();
+        phaseActivity.setId(ACTIVITY); phaseActivity.setMemberId(OWNER);
+        phaseActivity.setClubId(CLUB); phaseActivity.setTopicId(31L);
+        com.chengyinhub.business.domain.CmsTopic phaseTopic = new com.chengyinhub.business.domain.CmsTopic();
+        phaseTopic.setId(31L);
+        when(phaseActivities.selectCmsActivityById(ACTIVITY)).thenReturn(phaseActivity);
+        when(phaseActivities.selectCmsActivityByIdForUpdate(ACTIVITY)).thenReturn(phaseActivity);
+        when(phaseTopics.selectCmsTopicByIdForUpdate(31L)).thenReturn(phaseTopic);
+        ReflectionTestUtils.setField(service,"cancellationActivityMapper",phaseActivities);
+        ReflectionTestUtils.setField(service,"cancellationTopicMapper",phaseTopics);
         when(accessService.require(ACTOR, CLUB, ACTIVITY, ClubPermission.ACTIVITY_MANAGE))
                 .thenReturn(access(ClubRoleCode.CLUB_CO_OWNER));
         when(mapper.selectSeriesByActivityAnyStatusForUpdate(ACTIVITY)).thenReturn(series());
@@ -86,7 +103,7 @@ class ClubOccurrenceCancellationServiceTest {
     void coOwnerCancelsExactOccurrenceWithRefundAndTwoImmutableAudienceSnapshots() {
         when(mapper.selectRegisteredRecipients(CLUB, ACTIVITY)).thenReturn(Arrays.asList(101L, 102L));
         when(mapper.selectWaitlistRecipients(CLUB, ACTIVITY)).thenReturn(Collections.singletonList(201L));
-        when(teamGroupService.cancelActivityByClubOperator(ACTIVITY, OWNER, ACTOR, REASON))
+        when(teamGroupService.cancelActivityWithObservedPayments(ACTIVITY, OWNER, ACTOR, REASON, false, payments))
                 .thenReturn(new ActivityCancelResult(2, 1, 1));
         when(mapper.cancelOccurrenceCas(81L, 0)).thenReturn(1);
         ClubWaitlistEntry waiting = waitlist(91L, 201L, 301L, ClubWaitlistEntry.WAITING, null);
@@ -141,7 +158,7 @@ class ClubOccurrenceCancellationServiceTest {
         lifecycle.verify(mapper).selectWaitlistRecipients(CLUB, ACTIVITY);
         lifecycle.verify(roleService).revokeEventLeadForCancelledOccurrence(
                 ACTOR, CLUB, ACTIVITY, "event-cancel-role-cancel-1");
-        lifecycle.verify(teamGroupService).cancelActivityByClubOperator(ACTIVITY, OWNER, ACTOR, REASON);
+        lifecycle.verify(teamGroupService).cancelActivityWithObservedPayments(ACTIVITY, OWNER, ACTOR, REASON, false, payments);
         lifecycle.verify(mapper).cancelOccurrenceCas(81L, 0);
     }
 
@@ -157,12 +174,12 @@ class ClubOccurrenceCancellationServiceTest {
         when(mapper.selectOccurrenceByActivityAndClubForUpdate(ACTIVITY, CLUB)).thenReturn(null);
         when(mapper.selectActivityTopicForUpdate(ACTIVITY, CLUB)).thenReturn(990028L);
         when(mapper.selectOccurrenceCancellationState(ACTIVITY, CLUB))
-                .thenReturn(activeState(), cancelledState());
+                .thenReturn(activeState(), activeState(), cancelledState());
         when(mapper.selectRegisteredRecipients(CLUB, ACTIVITY)).thenReturn(Collections.singletonList(101L));
         when(mapper.selectWaitlistRecipients(CLUB, ACTIVITY)).thenReturn(Collections.<Long>emptyList());
         when(mapper.selectActiveWaitlistsForUpdate(CLUB, ACTIVITY))
                 .thenReturn(Collections.<ClubWaitlistEntry>emptyList());
-        when(teamGroupService.cancelActivityByClubOperator(ACTIVITY, OWNER, ACTOR, REASON))
+        when(teamGroupService.cancelActivityWithObservedPayments(ACTIVITY, OWNER, ACTOR, REASON, false, payments))
                 .thenReturn(new ActivityCancelResult(1, 0, 0));
         AtomicLong ids = new AtomicLong(900L);
         when(mapper.insertCampaign(any(ClubEventCampaign.class))).thenAnswer(call -> {
@@ -183,7 +200,7 @@ class ClubOccurrenceCancellationServiceTest {
         assertEquals(Integer.valueOf(1), result.getRefundedOrders());
         assertEquals(Integer.valueOf(1), result.getRegisteredRecipientCount());
         assertEquals(Integer.valueOf(0), result.getWaitlistRecipientCount());
-        verify(teamGroupService).cancelActivityByClubOperator(ACTIVITY, OWNER, ACTOR, REASON);
+        verify(teamGroupService).cancelActivityWithObservedPayments(ACTIVITY, OWNER, ACTOR, REASON, false, payments);
         // 没有 occurrence 行可 CAS —— 真正落「已取消」的是退款服务写的 cms_activity.cancel_time
         verify(mapper, never()).cancelOccurrenceCas(anyLong(), org.mockito.ArgumentMatchers.anyInt());
     }
@@ -199,8 +216,7 @@ class ClubOccurrenceCancellationServiceTest {
                 () -> service.cancelOccurrence(ACTOR, "co-owner", request("cancel-foreign", REASON)));
 
         assertEquals("场次不存在或不属于当前俱乐部", error.getMessage());
-        verify(teamGroupService, never()).cancelActivityByClubOperator(
-                anyLong(), anyLong(), anyLong(), anyString());
+        verify(teamGroupService, never()).cancelActivityWithObservedPayments(anyLong(), anyLong(), anyLong(), anyString(), eq(false), any(RegistrationCancellationPayments.class));
         verify(mapper, never()).insertCampaign(any(ClubEventCampaign.class));
     }
 
@@ -214,7 +230,7 @@ class ClubOccurrenceCancellationServiceTest {
 
         assertEquals(Integer.valueOf(403), denied.getCode());
         verify(mapper, never()).selectSeriesByActivityAnyStatusForUpdate(anyLong());
-        verify(teamGroupService, never()).cancelActivityByClubOperator(anyLong(), anyLong(), anyLong(), anyString());
+        verify(teamGroupService, never()).cancelActivityWithObservedPayments(anyLong(), anyLong(), anyLong(), anyString(), eq(false), any(RegistrationCancellationPayments.class));
     }
 
     @Test
@@ -229,7 +245,7 @@ class ClubOccurrenceCancellationServiceTest {
         assertEquals(Integer.valueOf(403), denied.getCode());
         verify(accessService, times(2)).require(ACTOR, CLUB, ACTIVITY, ClubPermission.ACTIVITY_MANAGE);
         verify(roleService, never()).revokeEventLeadForCancelledOccurrence(anyLong(), anyLong(), anyLong(), anyString());
-        verify(teamGroupService, never()).cancelActivityByClubOperator(anyLong(), anyLong(), anyLong(), anyString());
+        verify(teamGroupService, never()).cancelActivityWithObservedPayments(anyLong(), anyLong(), anyLong(), anyString(), eq(false), any(RegistrationCancellationPayments.class));
         verify(mapper, never()).cancelOccurrenceCas(anyLong(), any());
         verify(mapper, never()).insertCampaign(any(ClubEventCampaign.class));
     }
@@ -265,6 +281,7 @@ class ClubOccurrenceCancellationServiceTest {
                 currentAccountAccess, new ClubEventScheduleMaterializer(),
                 mock(IClubSessionService.class), mapper, mock(ClubMemberMapper.class),
                 mock(ClubLeadMapper.class), roleService, teamGroupService);
+        CancellationPhaseTestSupport.wireTransactions(guardedService,CancellationPhaseTestSupport.memoryTransactions());
 
         ServiceException denied = assertThrows(ServiceException.class,
                 () -> guardedService.cancelOccurrence(
@@ -273,8 +290,7 @@ class ClubOccurrenceCancellationServiceTest {
         assertEquals(Integer.valueOf(403), denied.getCode());
         verify(accounts).lockActiveMemberById(ACTOR);
         verify(mapper, never()).selectSeriesByActivityAnyStatusForUpdate(anyLong());
-        verify(teamGroupService, never()).cancelActivityByClubOperator(
-                anyLong(), anyLong(), anyLong(), anyString());
+        verify(teamGroupService, never()).cancelActivityWithObservedPayments(anyLong(), anyLong(), anyLong(), anyString(), eq(false), any(RegistrationCancellationPayments.class));
     }
 
     @ParameterizedTest
@@ -300,7 +316,7 @@ class ClubOccurrenceCancellationServiceTest {
         assertEquals(null, replay.getRefundedOrders());
         assertEquals(Long.valueOf(901L), replay.getRegisteredCampaignId());
         assertEquals(Long.valueOf(902L), replay.getWaitlistCampaignId());
-        verify(teamGroupService, never()).cancelActivityByClubOperator(anyLong(), anyLong(), anyLong(), anyString());
+        verify(teamGroupService, never()).cancelActivityWithObservedPayments(anyLong(), anyLong(), anyLong(), anyString(), eq(false), any(RegistrationCancellationPayments.class));
         verify(roleService, never()).revokeEventLeadForCancelledOccurrence(anyLong(), anyLong(), anyLong(), anyString());
         verify(mapper, never()).insertCampaign(any(ClubEventCampaign.class));
     }
@@ -324,7 +340,7 @@ class ClubOccurrenceCancellationServiceTest {
         assertThrows(ServiceException.class,
                 () -> service.cancelOccurrence(ACTOR, "co-owner", request("cancel-replay", REASON)));
 
-        verify(teamGroupService, never()).cancelActivityByClubOperator(anyLong(), anyLong(), anyLong(), anyString());
+        verify(teamGroupService, never()).cancelActivityWithObservedPayments(anyLong(), anyLong(), anyLong(), anyString(), eq(false), any(RegistrationCancellationPayments.class));
     }
 
     @Test
@@ -336,7 +352,7 @@ class ClubOccurrenceCancellationServiceTest {
                 () -> service.cancelOccurrence(ACTOR, "co-owner", request("brand-new-request", REASON)));
 
         assertEquals(Integer.valueOf(409), conflict.getCode());
-        verify(teamGroupService, never()).cancelActivityByClubOperator(anyLong(), anyLong(), anyLong(), anyString());
+        verify(teamGroupService, never()).cancelActivityWithObservedPayments(anyLong(), anyLong(), anyLong(), anyString(), eq(false), any(RegistrationCancellationPayments.class));
         verify(roleService, never()).revokeEventLeadForCancelledOccurrence(anyLong(), anyLong(), anyLong(), anyString());
         verify(mapper, never()).insertCampaign(any(ClubEventCampaign.class));
     }
@@ -459,7 +475,7 @@ class ClubOccurrenceCancellationServiceTest {
         when(mapper.selectSeriesByActivityAnyStatusForUpdate(ACTIVITY)).thenReturn(closed);
         when(mapper.selectRegisteredRecipients(CLUB, ACTIVITY)).thenReturn(Collections.singletonList(101L));
         when(mapper.selectWaitlistRecipients(CLUB, ACTIVITY)).thenReturn(Collections.singletonList(201L));
-        when(teamGroupService.cancelActivityByClubOperator(ACTIVITY, OWNER, ACTOR, REASON))
+        when(teamGroupService.cancelActivityWithObservedPayments(ACTIVITY, OWNER, ACTOR, REASON, false, payments))
                 .thenReturn(new ActivityCancelResult(1, 0, 0));
         when(mapper.cancelOccurrenceCas(81L, 0)).thenReturn(1);
         ClubWaitlistEntry offered = waitlist(92L, 201L, 302L, ClubWaitlistEntry.OFFERED, null);
@@ -483,7 +499,7 @@ class ClubOccurrenceCancellationServiceTest {
 
         assertEquals(ClubEventOccurrence.STATUS_CANCELLED, result.getOccurrenceStatus());
         assertEquals("REFUND_REQUESTED", result.getRefundStatus());
-        verify(teamGroupService).cancelActivityByClubOperator(ACTIVITY, OWNER, ACTOR, REASON);
+        verify(teamGroupService).cancelActivityWithObservedPayments(ACTIVITY, OWNER, ACTOR, REASON, false, payments);
         verify(mapper).cancelOccurrenceCas(81L, 0);
         verify(mapper).restoreWaitlistHold(302L, ACTIVITY);
         verify(mapper, times(2)).insertCampaign(any(ClubEventCampaign.class));
@@ -500,6 +516,6 @@ class ClubOccurrenceCancellationServiceTest {
                 () -> service.cancelOccurrence(ACTOR, "co-owner", request("cancel-odd", REASON)));
 
         assertEquals(Integer.valueOf(409), error.getCode());
-        verify(teamGroupService, never()).cancelActivityByClubOperator(anyLong(), anyLong(), anyLong(), anyString());
+        verify(teamGroupService, never()).cancelActivityWithObservedPayments(anyLong(), anyLong(), anyLong(), anyString(), eq(false), any(RegistrationCancellationPayments.class));
     }
 }

@@ -272,7 +272,9 @@ test('入场码是场景栈内的真实动态码，不再保留旧 ticket 页面
   assert.doesNotMatch(hostJs, /closeTicket\(/)
   assert.match(ticketJs, /url: '\/api\/verify\/dyncode\/issue'/)
   assert.match(ticketJs, /registrationId\(value\)\s*\{[\s\S]*?if \(!this\._attached\) return[\s\S]*?value !== this\._loadedRegistrationId/, '初始化 observer 不得与 attached 重复签发动态码')
-  assert.match(ticketJs, /const token = \(this\._loadToken \|\| 0\) \+ 1[\s\S]*?if \(token !== this\._loadToken\) return/, '过期响应不得覆盖新码或创建遗留 interval')
+  assert.match(ticketJs, /const token = \(this\._loadToken \|\| 0\) \+ 1[\s\S]*?const current = \(\) => this\._attached !== false && token === this\._loadToken/, '过期响应不得覆盖新码或创建遗留 interval')
+  assert.match(ticketJs, /String\(this\.data\.registrationId\) === String\(registrationId\) && this\.data\.seatNo === seatNo[\s\S]*?loginCurrent\(app, wx, this\._ticketLogin\)/, '原报名、席位、登录代次都必须保持原样')
+  assert.match(ticketJs, /success: \(res\) => \{\s*if \(!current\(\)\) return/, '成功响应必须先验证完整原上下文')
   assert.match(ticketWxml, /class="voucher__card"/, '主线票券终态应收敛到 qr-ticket 场景组件')
   assert.match(ticketWxml, /class="bigqr" wx:if="\{\{bigQr\}\}"/, '放大核销码也应留在同一场景组件')
   assert.doesNotMatch(hostWxml, /ticket\.show/, 'play 页面不得保留第二套票券视图')
@@ -365,11 +367,11 @@ function assertProfileUserAssetEntries(profileJs, registry, hostWxml, hostJson, 
     appJson.subPackages.find((pkg) => pkg.root === 'subpackageMember').pages.includes('coupon-wallet/index'),
     '玩家券夹宿主必须注册到 app.json',
   )
-  assert.match(
-    profileJs,
-    /goComplaint: function \(\) \{ if \(this\._navigating\) return; this\._navigating = true; wx\.navigateTo\(\{ url: '\/subpackageMember\/complaint\/index', complete: \(\) => \{ this\._navigating = false; \} \}\); \}/,
-    '投诉建议必须进入完整投诉页',
-  )
+  // 2026-10-27 owner 真机走查 P-53:「探索与更多」只留优惠券与邀请好友,我的页不再有投诉建议入口(goComplaint 删除);
+  // 完整投诉页仍由场景注册表 settings-feedback 指向,这里改钉那一条真源。
+  assert.doesNotMatch(profileJs, /goComplaint/)
+  assert.match(registry, /'settings-feedback': \{ route: '\/subpackageMember\/complaint\/index'/,
+    '投诉建议必须进入完整投诉页')
 }
 
 function assertCouponWalletFallback(deepLinkJs) {
@@ -407,12 +409,14 @@ test('负控：个人页入口接回商家券管理或缩水反馈时必须判�
     "'/subpackageMember/coupon-wallet/index'",
     "'/subpackageMember/coupon/coupon'",
   )
-  const wrongComplaint = profileJs.replace(
-    "'/subpackageMember/complaint/index'",
-    "'/pages/shezhi/shezhi?scene=settings-feedback'",
+  // 2026-10-27 L08 P-53:我的页不再有投诉入口,投诉页真源改钉场景注册表 ⇒ 负控改为篡改注册表那一条
+  const wrongComplaint = registry.replace(
+    "'settings-feedback': { route: '/subpackageMember/complaint/index'",
+    "'settings-feedback': { route: '/pages/shezhi/shezhi?scene=settings-feedback'",
   )
+  assert.notEqual(wrongComplaint, registry, '变异未生效,负控本身是假的')
   assert.throws(() => assertProfileUserAssetEntries(wrongCoupon, registry, hostWxml, hostJson, appJson), assert.AssertionError)
-  assert.throws(() => assertProfileUserAssetEntries(wrongComplaint, registry, hostWxml, hostJson, appJson), assert.AssertionError)
+  assert.throws(() => assertProfileUserAssetEntries(profileJs, wrongComplaint, hostWxml, hostJson, appJson), assert.AssertionError)
 
   const wrongFallback = read('components/cy/scene-deep-link/index.js')
     .replace("if (id === 'game-coupon-wallet') return '/pages/member/index/index'", '')

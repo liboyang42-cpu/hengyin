@@ -78,4 +78,6 @@ public interface ICmsMemberTemplateService
      * @return 结果
      */
     public int deleteCmsMemberTemplateById(Long id);
+    /** Clone a private content template for a target owner, joining the caller's transaction. Does not publish or submit review. */
+    Long copyForContentOwner(Long templateId, Long ownerMemberId, boolean forceCopy);
 }

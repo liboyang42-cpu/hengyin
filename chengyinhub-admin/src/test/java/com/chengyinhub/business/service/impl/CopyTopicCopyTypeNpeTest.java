@@ -69,7 +69,7 @@ class CopyTopicCopyTypeNpeTest {
         ReflectionTestUtils.setField(svc, "productRoleService", mock(IProductRoleService.class));
         // [W4闭环] copyNodes 会查节点模板决定是否深拷贝;本测试聚焦 copyType 语义,
         // 模板查不到 = 原样保留 templateId(与断言「模板 id 带过去」一致)。
-        ReflectionTestUtils.setField(svc, "cmsMemberTemplateMapper",
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(svc, "cmsMemberTemplateMapper",
                 mock(com.chengyinhub.business.mapper.CmsMemberTemplateMapper.class));
     }
 
@@ -82,7 +82,7 @@ class CopyTopicCopyTypeNpeTest {
         Map<String, Object> params = new HashMap<>();
         params.put("memberId", MEMBER); // 与 ApiTopicController:377 逐字一致:只有 memberId
 
-        Long newId = svc.copyCmsTopic(ORIGINAL, params);
+        Long newId = com.chengyinhub.business.service.support.TopicCopyTestWiring.owner(svc).copyCmsTopic(ORIGINAL, params);
 
         assertEquals(NEW_TOPIC, newId, "移交承接必须复制成功,不能 NPE");
     }
@@ -90,7 +90,7 @@ class CopyTopicCopyTypeNpeTest {
     /** params 为 null(后台 CmsTopicController:71 不传 body)照旧走默认 1 —— 既有行为不许回归。 */
     @Test
     void copyWithNullParams_stillDefaultsToOne() {
-        assertEquals(NEW_TOPIC, svc.copyCmsTopic(ORIGINAL, null), "params=null 既有行为不变");
+        assertEquals(NEW_TOPIC, com.chengyinhub.business.service.support.TopicCopyTestWiring.owner(svc).copyCmsTopic(ORIGINAL, null), "params=null 既有行为不变");
     }
 
     /**
@@ -103,7 +103,7 @@ class CopyTopicCopyTypeNpeTest {
         params.put("memberId", MEMBER);
         params.put("copyType", 1);
 
-        assertEquals(NEW_TOPIC, svc.copyCmsTopic(ORIGINAL, params), "显式 copyType 契约不变");
+        assertEquals(NEW_TOPIC, com.chengyinhub.business.service.support.TopicCopyTestWiring.owner(svc).copyCmsTopic(ORIGINAL, params), "显式 copyType 契约不变");
     }
 
     /**
@@ -114,11 +114,11 @@ class CopyTopicCopyTypeNpeTest {
     void copyWithNonIntegerCopyType_fallsBackToDefault_neverThrows() {
         Map<String, Object> longValued = new HashMap<>();
         longValued.put("copyType", 1L); // Jackson 可能给 Long
-        assertEquals(NEW_TOPIC, svc.copyCmsTopic(ORIGINAL, longValued), "Long 不该 CCE");
+        assertEquals(NEW_TOPIC, com.chengyinhub.business.service.support.TopicCopyTestWiring.owner(svc).copyCmsTopic(ORIGINAL, longValued), "Long 不该 CCE");
 
         Map<String, Object> garbage = new HashMap<>();
         garbage.put("copyType", "abc"); // 畸形值
-        assertEquals(NEW_TOPIC, svc.copyCmsTopic(ORIGINAL, garbage), "畸形值该落回默认 1,不该 NPE");
+        assertEquals(NEW_TOPIC, com.chengyinhub.business.service.support.TopicCopyTestWiring.owner(svc).copyCmsTopic(ORIGINAL, garbage), "畸形值该落回默认 1,不该 NPE");
     }
 
     /**
@@ -161,7 +161,7 @@ class CopyTopicCopyTypeNpeTest {
         params.put("memberId", MEMBER);
         params.put("copyType", 2);
 
-        svc.copyCmsTopic(ORIGINAL, params);
+        com.chengyinhub.business.service.support.TopicCopyTestWiring.owner(svc).copyCmsTopic(ORIGINAL, params);
 
         ArgumentCaptor<CmsTopicNode> cap = ArgumentCaptor.forClass(CmsTopicNode.class);
         verify(nodeMapper).insertCmsTopicNode(cap.capture());

@@ -69,6 +69,7 @@ class FreeSessionCancelReleaseV2Test {
         ReflectionTestUtils.setField(service, "refundService", refundService);
         when(regMapper.claimRegistrationRefunded(eq(REG), anyString(), any(Date.class))).thenReturn(1);
         when(ticketMapper.restoreInventory(TICKET, 2L)).thenReturn(1);
+        CancellationPhaseTestSupport.wireTeamTransactions(service, CancellationPhaseTestSupport.memoryTransactions());
     }
 
     private CmsRegistration sessionOrder(BigDecimal payable, long pointUsed, int verification) {
@@ -80,6 +81,8 @@ class FreeSessionCancelReleaseV2Test {
         r.setTicketId(TICKET);
         r.setOrderNum(2L);
         r.setPaymentStatus(2);
+        r.setRegistrationStatus(2);
+        r.setRegistrationNo("FREE-SESSION-" + REG);
         r.setVerificationStatus(verification);
         r.setPayableAmount(payable);
         r.setWechatPaymentAmount(payable);
@@ -94,6 +97,7 @@ class FreeSessionCancelReleaseV2Test {
         a.setId(ACTIVITY);
         a.setStartDate(new Date(System.currentTimeMillis() + millis));
         when(activityMapper.selectCmsActivityById(ACTIVITY)).thenReturn(a);
+        when(activityMapper.selectCmsActivityByIdForUpdate(ACTIVITY)).thenReturn(a);
     }
 
     /** CL-13:免费单集合前 2 小时(已在 24h 窗口内)取消成功,并回补 2 张票库存、释放权益。 */

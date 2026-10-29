@@ -13,7 +13,8 @@
     "cy-toast": "/components/cy/toast/index",
     "cy-loading-mask": "/components/cy/loading-mask/index",
     "cy-modal-host": "/components/cy/modal-host/index",
-    "cy-field": "/components/cy/field/index"
+    "cy-field": "/components/cy/field/index",
+    "cy-icon": "/components/cy/icon/index"
   },
   "navigationBarTitleText": "个人资料",
   "navigationStyle": "custom",

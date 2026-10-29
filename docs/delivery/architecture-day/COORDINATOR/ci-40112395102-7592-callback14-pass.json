@@ -1,0 +1,43 @@
+{
+  "run_id": 40112395102,
+  "source_sha": "759291b481b0ca9c3fd0f7b2572f16072bac54bc",
+  "class": "com.chengyinhub.business.it.RegistrationCallbackIntentMySqlIT",
+  "evidence": "INDEPENDENT_ORIGINAL_XML_AND_CLEAN_READBACK",
+  "tests": 14,
+  "passed": 14,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "cleanup": {
+    "mysql_leftover_schemas": [],
+    "mysql_schemas_after": [
+      "information_schema",
+      "mysql",
+      "performance_schema",
+      "sys"
+    ],
+    "status": "CLEAN"
+  },
+  "xml_sha256": "990c4168ddbd594bf2843c7f282426a0c401a438ccd1f7b0d82d940eb17c0d80",
+  "receipt_sha256": "924f4f770197941c754936132f0c8ed4338284c2604aa834481fe116734bf448",
+  "case_names": [
+    "durableSuccessRetriesTheRealRegistrationAndInboxWhileProviderQueryIsUnavailable",
+    "suspendedNewTransactionsAndAnotherThreadCannotBorrowTheOuterVerifiedResult",
+    "signedSuccessCommitsRegistrationLedgerScansAndDoneTogetherAndDuplicateDoesNotRebook",
+    "originalBusinessRowSerializesFactCommitAndCloseCasAndRetainsLateSuccessForRecovery",
+    "successfulParticipatingMutationAndDoneCommitTogetherWithoutReleasingTheCompletedClaim",
+    "exceptionalOuterRollbackClearsTheMarkerAndTheSameStoredCallbackCanRecoverInANewTransaction",
+    "exceptionAfterBusinessAndDoneSqlRollsBothBackAndSameInboxIdentityRecovers",
+    "oldSignedClosedW1CannotCloseOrReleaseNewW2AndLaterW2SuccessStaysPaid",
+    "successfulMutationAndDoneRollBackTogetherAndThenReleaseTheSameClaimOnOuterRollback",
+    "throwingMutationReleasesOriginalOwnerAndFenceOnlyAfterExplicitOuterRollback",
+    "repeatedVerifiedCallbackInOneActualTransactionUsesOnlyItsExactFactAndOriginalReceipt",
+    "differentNotificationsInTheSameOuterTransactionKeepIndependentClaimAndReceiptIdentities",
+    "falseMutationReleasesOriginalOwnerAndFenceOnlyAfterOuterRollback",
+    "oldOuterRepeatableReadViewCanVerifyAndApplyANewCommittedFactInItsOriginalDomainTransaction"
+  ],
+  "limits": [
+    "Only this exact candidate and callback class",
+    "No full financial, provider, HTTP, device, restart or deployment acceptance"
+  ]
+}

@@ -1,0 +1,13 @@
+# D80原审计writer精确适配（最小后续）
+
+parent20f0ed72f4dcdb1db73758095dd896a33f702c72；遵root最终采用D80b1126b0c73b5f67e66945e5371cfadb0d2d5ae三文件exact源。撤掉已删除CommittedNoticeRejectionMapper物理类型/旧port id，不使用缺类豁免；该slot改声明既有BusinessAuditEventMapper精确System技术port，id=SHARED_BUSINESS_AUDIT_PORT，不归为D独占/新business fact。原3Mapper/2facts/2ecbaseline/所有source writer gate原样不动。
+
+调用证据穷举：当前已登记类型只有C_PLAY_NODE_COMPLETION（field业务审计，insertBusinessAuditEvent）、C_CITY_NODE_REDEMPTION_APPLICATION（同field/method）、D_COMPLAINT_CLOSE_REPORTER_NOTICE（rejections，D80的insertComplaintCloseNoticeRejectionIgnore/原selectByDomainActionRequestForUpdate）。故旧D→port换成D→shared，另保留两条既有C→shared；没有包通配或其它领域许可。其余未登记共享审计caller仍unscoped，不能从technical观察推定任何写权限。现69类型/57职责/67方向。
+
+新增/迁移控制保持原场景及assert：旧missing-row测试改测active shared port缺raw仍UNKNOWN；旧反调/有hash环测试改用真实shared port；删除type缺席合法，不是忽略活动输入缺失。已有CityNode正控承认实际shared边。另加三原consumer精确方向正控、退休type不再要求的正控、原namespace新增窄statement正常；旧namespace重新引入NEW_TABLE_WRITER负控全部保留，未删违规断言。Python227/227、0skip、21.819s，输出见python-tests.txt；协议fixture是NOT_COMPILED。
+
+D80只读复算（真实可用merge-base e108）literal audit namespace仅原BusinessAuditEventMapper、相关两XML无findings；99d仍有旧namespace且BLOCKED，不能把独立D候选当root已合/CI绿。详见d80-readback.json，库存table_hints不是writer证明，实际使用原literal解析。这里只声明原有writer，不加新writer白名单/字段/退款/支付/玩法表权，不改原Shared方法或D生产。
+
+六可信hash见trusted-files.sha256；五其它可信文件逐字承接20f，gate/producer/commands/2ecbaseline/locking提案没变。D80新窄insert来自原SQL，cache两flags在源补齐；实际TX/重复/审计失败/原CAS/全字段hash与actor仍需D/root同源Java/DB，类图不代证。
+
+Java/jdeps/JAR/leaf/DB/Spring/CI全NOT_RUN。D/E旧冻结链保留，最终工具将独立改绑该新完整SHA，root唯一双ref。Bean邀请/消费leaf后续独立，不扩A/G新policy；CoopClosedPaymentRecovery只在拿到G8ca实际源后按原覆盖集合装配，不靠inert签全启动。

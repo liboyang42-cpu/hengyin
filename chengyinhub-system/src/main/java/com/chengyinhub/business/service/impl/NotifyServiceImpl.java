@@ -31,15 +31,22 @@ public class NotifyServiceImpl implements INotifyService {
     @Autowired
     private WxSubscribeChannel wxChannel;
 
+    @Autowired
+    private com.chengyinhub.business.service.support.CommittedOfficialNoticeService committedNotices;
+
+
     /**
      * 投递给所有通道,返回「至少一条成功」。
      * 不短路:即使第一条成功,其余通道也要发 —— push 成功不代表站内信可以不写。
      */
     private boolean fanout(NotifyMessage m) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         boolean anyDelivered = false;
         for (NotifyChannel c : channels) {
             try {
                 if (c.send(m)) anyDelivered = true;
+            } catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) {
+                throw paused;
             } catch (Throwable t) {
                 // ⚠️ 这里必须是 Throwable,不能只接 RuntimeException/Exception。
                 // 通道是**旁路**,上游是带 @Transactional(rollbackFor=Exception.class) 的资金路径。
@@ -76,6 +83,19 @@ public class NotifyServiceImpl implements INotifyService {
     public boolean notifyBeforeStart(Long memberId, String topicName, String whenText) {
         return fanout(NotifyMessage.of(NotifyEvent.BEFORE_START, memberId)
                 .with("topicName", topicName).with("whenText", whenText));
+    }
+
+    @Override
+    public com.chengyinhub.business.domain.dto.BeforeStartNotifyResult.Delivery notifyBeforeStart(
+            Long ticketId, Long memberId, String topicName, java.util.Date startsAt) {
+        try {
+            return committedNotices.beforeStart(ticketId, memberId, topicName, startsAt);
+        } catch (Throwable failure) {
+            // Same best-effort boundary; a failed/unknown local ack never means the provider did not execute.
+            log.error("[通知] 出发提醒原意图待核实 ticketId={} memberId={} reason={}",
+                    ticketId, memberId, failure.getClass().getSimpleName());
+            return new com.chengyinhub.business.domain.dto.BeforeStartNotifyResult.Delivery(null, "UNKNOWN", false);
+        }
     }
 
     @Override

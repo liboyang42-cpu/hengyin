@@ -1,0 +1,318 @@
+{
+  "original_source_sha": "ca0e0d2598727f6e567c802b7a664f9634d945c6",
+  "original_run": 40122522919,
+  "final_source_sha": "ccd55005c75d105f8245b0591e63adcd0dd15280",
+  "final_run": 40138581031,
+  "original_failure_error_count": 38,
+  "final_counts": {
+    "passed": 38
+  },
+  "missing_or_skipped_or_nonpass": [],
+  "cases": [
+    {
+      "classname": "com.chengyinhub.business.service.TopicCreativePostVisibilitySyncTest",
+      "case": "casOffline_hidesSyncedPost_casOnline_restoresIt",
+      "original_status": "error",
+      "original_report_sha256": "587cc016f510d60723aad3cf4e4b0ca8d669a46ed95c3989205f8d5631f77d33",
+      "final_status": "passed",
+      "final_report_sha256": "3bd9e74c6c43b43a46a7f0c21f7053a0074e776edecf7a9c16aed3856fbe429e"
+    },
+    {
+      "classname": "com.chengyinhub.business.service.StandaloneCheckoutSignupNoticeAcceptanceTest",
+      "case": "userPublishedStandalonePaidOrderIsRefusedBeforeAnyWechatPrepayOnRetry",
+      "original_status": "failure",
+      "original_report_sha256": "1612ce6616ddaeba48ad3bc68d0eeae2f5353b5b8ec9575be64d51432233b350",
+      "final_status": "passed",
+      "final_report_sha256": "a944f7d4f926d41344042eba618b526ffc071d39b388553f8ad2414952becb93"
+    },
+    {
+      "classname": "com.chengyinhub.business.service.support.TopicSizeLimitsTest",
+      "case": "publishCountsRowsAlreadyInTheDatabase",
+      "original_status": "failure",
+      "original_report_sha256": "b0d61132dc9e4af7d403ee501efb1c784f5db7e74dd259c04dccd11c19b536cc",
+      "final_status": "passed",
+      "final_report_sha256": "7f3315527c2fbdc6957388f784f126fcb93bdc3a4f5a7b301ed58450828de441"
+    },
+    {
+      "classname": "com.chengyinhub.business.service.impl.NpcAsrProjectionContractTest",
+      "case": "originalRecoveryFieldsAndIndependentAsrMetadataSurviveRealJsonSerialization",
+      "original_status": "failure",
+      "original_report_sha256": "91af889b723f6717c27139adb47cf3c262f20ef6776ce06a96e934d3e557abc2",
+      "final_status": "passed",
+      "final_report_sha256": "4b3c7651720a254f3f211beff4024698353c9c992519f1614afc6ee0203f9b4a"
+    },
+    {
+      "classname": "com.chengyinhub.business.longrun.OWN_C04_18Test",
+      "case": "existingShopBizTypeReachesRegisteredProviderWithoutChangingQuotaOrAuditIdentity",
+      "original_status": "failure",
+      "original_report_sha256": "d0772ed1956a4a60154f72bcb5395a0266da4bc9d586e2b79d01a1dccdb6e35a",
+      "final_status": "passed",
+      "final_report_sha256": "e8c0c845bb22478db4d23ea1045c8a9ab1d5e24d41bc701f4b0f7b5c97108231"
+    },
+    {
+      "classname": "com.chengyinhub.business.service.ClubWaitlistClaimMembershipRaceTransactionTest",
+      "case": "memberExitBetweenClaimAndClubLockRejectsOrderAndRollsBackClaimedCas",
+      "original_status": "failure",
+      "original_report_sha256": "d984acc2ace2bbdef005b84e61774f63a5650daac0d0314b82ca3fdecf148f80",
+      "final_status": "passed",
+      "final_report_sha256": "9c1c20844e85674d7edfd3432c6338ab7749e0df7a20459dada100280b6edaa6"
+    },
+    {
+      "classname": "com.chengyinhub.business.longrun.OWN_C03_13Test",
+      "case": "missingChapterIdentityStopsBeforeNodes",
+      "original_status": "failure",
+      "original_report_sha256": "9b8e2128f1a3fe100a1fea287c2b5397b743ce92ff81d235f40353c48e0b148a",
+      "final_status": "passed",
+      "final_report_sha256": "8aa7ec545534d1b960e53fe00e370c6ab18addccb051143dc8c011cf66f14808"
+    },
+    {
+      "classname": "com.chengyinhub.business.longrun.OWN_C03_13Test",
+      "case": "nodeZeroRowsCannotReachMaterializedBlocks",
+      "original_status": "failure",
+      "original_report_sha256": "9b8e2128f1a3fe100a1fea287c2b5397b743ce92ff81d235f40353c48e0b148a",
+      "final_status": "passed",
+      "final_report_sha256": "8aa7ec545534d1b960e53fe00e370c6ab18addccb051143dc8c011cf66f14808"
+    },
+    {
+      "classname": "com.chengyinhub.business.longrun.OWN_C03_13Test",
+      "case": "missingNodeIdentityCannotBeSilentlySkipped",
+      "original_status": "failure",
+      "original_report_sha256": "9b8e2128f1a3fe100a1fea287c2b5397b743ce92ff81d235f40353c48e0b148a",
+      "final_status": "passed",
+      "final_report_sha256": "8aa7ec545534d1b960e53fe00e370c6ab18addccb051143dc8c011cf66f14808"
+    },
+    {
+      "classname": "com.chengyinhub.business.longrun.OWN_C03_13Test",
+      "case": "chapterZeroRowsCannotBeUsedEvenIfIdIsPresent",
+      "original_status": "failure",
+      "original_report_sha256": "9b8e2128f1a3fe100a1fea287c2b5397b743ce92ff81d235f40353c48e0b148a",
+      "final_status": "passed",
+      "final_report_sha256": "8aa7ec545534d1b960e53fe00e370c6ab18addccb051143dc8c011cf66f14808"
+    },
+    {
+      "classname": "com.chengyinhub.business.longrun.OWN_C03_13Test",
+      "case": "positiveGeneratedIdentitiesKeepBothPathsWorking",
+      "original_status": "error",
+      "original_report_sha256": "9b8e2128f1a3fe100a1fea287c2b5397b743ce92ff81d235f40353c48e0b148a",
+      "final_status": "passed",
+      "final_report_sha256": "8aa7ec545534d1b960e53fe00e370c6ab18addccb051143dc8c011cf66f14808"
+    },
+    {
+      "classname": "com.chengyinhub.business.service.OrdinarySupplyResumeTest",
+      "case": "optionalExitAndEmptyRecruitmentStillAllowPublishing",
+      "original_status": "error",
+      "original_report_sha256": "0f53ecbcf8d332b2dd1002da75a7de7c4c12100ab3023ce7ce3903619d6172f3",
+      "final_status": "passed",
+      "final_report_sha256": "be068ce05ecc1a8ce93c0ab56e53c71617b04ff106692f63e04b3d66e05f30b2"
+    },
+    {
+      "classname": "com.chengyinhub.business.service.OrdinarySupplyResumeTest",
+      "case": "expiredInactiveAndAlteredTermsReplacementCannotRestoreSales",
+      "original_status": "failure",
+      "original_report_sha256": "0f53ecbcf8d332b2dd1002da75a7de7c4c12100ab3023ce7ce3903619d6172f3",
+      "final_status": "passed",
+      "final_report_sha256": "be068ce05ecc1a8ce93c0ab56e53c71617b04ff106692f63e04b3d66e05f30b2"
+    },
+    {
+      "classname": "com.chengyinhub.business.service.OrdinarySupplyResumeTest",
+      "case": "auditCannotAutomaticallyResumeEvenAfterReplacementWasConfirmed",
+      "original_status": "error",
+      "original_report_sha256": "0f53ecbcf8d332b2dd1002da75a7de7c4c12100ab3023ce7ce3903619d6172f3",
+      "final_status": "passed",
+      "final_report_sha256": "be068ce05ecc1a8ce93c0ab56e53c71617b04ff106692f63e04b3d66e05f30b2"
+    },
+    {
+      "classname": "com.chengyinhub.business.service.OrdinarySupplyResumeTest",
+      "case": "perkReplacementMustCarryOriginalUnusedCapacityAndValidity",
+      "original_status": "failure",
+      "original_report_sha256": "0f53ecbcf8d332b2dd1002da75a7de7c4c12100ab3023ce7ce3903619d6172f3",
+      "final_status": "passed",
+      "final_report_sha256": "be068ce05ecc1a8ce93c0ab56e53c71617b04ff106692f63e04b3d66e05f30b2"
+    },
+    {
+      "classname": "com.chengyinhub.business.service.OrdinarySupplyResumeTest",
+      "case": "actualConfirmedLiveReplacementAllowsExplicitHostResumeWithCurrentReads",
+      "original_status": "error",
+      "original_report_sha256": "0f53ecbcf8d332b2dd1002da75a7de7c4c12100ab3023ce7ce3903619d6172f3",
+      "final_status": "passed",
+      "final_report_sha256": "be068ce05ecc1a8ce93c0ab56e53c71617b04ff106692f63e04b3d66e05f30b2"
+    },
+    {
+      "classname": "com.chengyinhub.business.service.OrdinarySupplyResumeTest",
+      "case": "busyRedemptionNeverSkipsSupplyOrWaitsWithTheOrganizerAccountLock",
+      "original_status": "error",
+      "original_report_sha256": "0f53ecbcf8d332b2dd1002da75a7de7c4c12100ab3023ce7ce3903619d6172f3",
+      "final_status": "passed",
+      "final_report_sha256": "be068ce05ecc1a8ce93c0ab56e53c71617b04ff106692f63e04b3d66e05f30b2"
+    },
+    {
+      "classname": "com.chengyinhub.business.service.OrdinarySupplyResumeTest",
+      "case": "anInvitationOrAnotherUnlinkedLiveMerchantDoesNotPermitResume",
+      "original_status": "failure",
+      "original_report_sha256": "0f53ecbcf8d332b2dd1002da75a7de7c4c12100ab3023ce7ce3903619d6172f3",
+      "final_status": "passed",
+      "final_report_sha256": "be068ce05ecc1a8ce93c0ab56e53c71617b04ff106692f63e04b3d66e05f30b2"
+    },
+    {
+      "classname": "com.chengyinhub.business.service.OrdinarySupplyResumeTest",
+      "case": "mandatoryExitSnapshotCannotBeErasedByMakingTheChapterOptional",
+      "original_status": "failure",
+      "original_report_sha256": "0f53ecbcf8d332b2dd1002da75a7de7c4c12100ab3023ce7ce3903619d6172f3",
+      "final_status": "passed",
+      "final_report_sha256": "be068ce05ecc1a8ce93c0ab56e53c71617b04ff106692f63e04b3d66e05f30b2"
+    },
+    {
+      "classname": "com.chengyinhub.business.service.OrdinarySupplyResumeTest",
+      "case": "repeatExitPreservesAtoBtoCAndNeedsTheLastLiveReplacement",
+      "original_status": "error",
+      "original_report_sha256": "0f53ecbcf8d332b2dd1002da75a7de7c4c12100ab3023ce7ce3903619d6172f3",
+      "final_status": "passed",
+      "final_report_sha256": "be068ce05ecc1a8ce93c0ab56e53c71617b04ff106692f63e04b3d66e05f30b2"
+    },
+    {
+      "classname": "com.chengyinhub.business.service.OrdinarySupplyResumeTest",
+      "case": "genericUpdateCannotBypassTheResumeGate",
+      "original_status": "failure",
+      "original_report_sha256": "0f53ecbcf8d332b2dd1002da75a7de7c4c12100ab3023ce7ce3903619d6172f3",
+      "final_status": "passed",
+      "final_report_sha256": "be068ce05ecc1a8ce93c0ab56e53c71617b04ff106692f63e04b3d66e05f30b2"
+    },
+    {
+      "classname": "com.chengyinhub.business.longrun.OWN_C04_22Test",
+      "case": "staleUnknownQueryCannotWriteTerminalReceiptOrEscalateFromOldSnapshot",
+      "original_status": "failure",
+      "original_report_sha256": "3f9e67cdd2645984dbc1bda8d1617f7aee2921ac6f4abfbd79164ba1653dc39a",
+      "final_status": "passed",
+      "final_report_sha256": "5abbbebdbc7dfa2ebf3801d15b63b3829352e83969177b1e034c1588e9655240"
+    },
+    {
+      "classname": "com.chengyinhub.web.controller.api.RegistrationSeatEndpointTest",
+      "case": "originalClubTimeWindowRejectsBeforeAnySeatEffect",
+      "original_status": "failure",
+      "original_report_sha256": "1dd9391ce319a04c91f971241a8b97cf970369e553ddc4618c1575f5b86146b6",
+      "final_status": "passed",
+      "final_report_sha256": "ac674c9923e14a77098897ce483b56fd1b9292d08dcf24c6dace3c3779877175"
+    },
+    {
+      "classname": "com.chengyinhub.web.controller.api.ApiPlayMyCompletedSelfPlayContractTest",
+      "case": "publicReferencePurposePreservesDefaultHistoryAndErrors",
+      "original_status": "failure",
+      "original_report_sha256": "6791b2bc275fd7f9e7211bce06ea18fbde3beffe3271f62b29f92b75805f7dcb",
+      "final_status": "passed",
+      "final_report_sha256": "52d0bc09f62330ecd506d7f2b34940fa8b6fae28cbd479d042bc12a621866e6c"
+    },
+    {
+      "classname": "com.chengyinhub.business.longrun.OWN_C06_29Test",
+      "case": "missingKeyPreservesBothLiveFallbacks",
+      "original_status": "failure",
+      "original_report_sha256": "e83c4ab87dd474cd5bd8d4a60f6a07c75449b5ac466790b8eb0eb10631e239a0",
+      "final_status": "passed",
+      "final_report_sha256": "cac77c6da5f945696e9ac6a1fe5aec1c4bf20155c5bc6b928e3aab5de9183abe"
+    },
+    {
+      "classname": "com.chengyinhub.business.service.ClubFulfillmentChainGateTest",
+      "case": "ownerRefundAcceptsSessionRegistrationFromClubOwner",
+      "original_status": "failure",
+      "original_report_sha256": "e6bfe1a4705c36b57e280ad4f57fb7eccd4f2e0e57ad668854d5ad11017618f1",
+      "final_status": "passed",
+      "final_report_sha256": "a8757e7bff6c9a3dcf8dc43b046fbcf872694a20ab777104a7c8ec5085593c1b"
+    },
+    {
+      "classname": "com.chengyinhub.web.service.registration.RegistrationQueryApplicationTest",
+      "case": "rawListRemainsOnTheHttpThreadAndOnlyTheControllerCreatesTheOriginalPageEnvelope",
+      "original_status": "failure",
+      "original_report_sha256": "d089098caf859a21b4a16d86002ee9dcf39eb3ddee150b7d340d4b5a5aeae6d2",
+      "final_status": "passed",
+      "final_report_sha256": "e36cd880ccf0cddf01d280164fd847895768568fb4811297f85eb2cef152a80e"
+    },
+    {
+      "classname": "com.chengyinhub.business.service.CmsTopicPublishStateKeyGuardTest",
+      "case": "declaredThoughtDoesNotAuthorizeUnregisteredOrdinaryKey",
+      "original_status": "failure",
+      "original_report_sha256": "a7ece1daa4fe53af0c5c80b3276083d432fb65c9a17c5470a83f3b68e5168c27",
+      "final_status": "passed",
+      "final_report_sha256": "2bcdbea23821970447aa2b89c56fb7e92759fe503d48baf6e15a949d69952303"
+    },
+    {
+      "classname": "com.chengyinhub.business.service.CmsTopicPublishStateKeyGuardTest",
+      "case": "malformedThoughtRulesCannotAuthorizeRuntimeTag",
+      "original_status": "failure",
+      "original_report_sha256": "a7ece1daa4fe53af0c5c80b3276083d432fb65c9a17c5470a83f3b68e5168c27",
+      "final_status": "passed",
+      "final_report_sha256": "2bcdbea23821970447aa2b89c56fb7e92759fe503d48baf6e15a949d69952303"
+    },
+    {
+      "classname": "com.chengyinhub.business.service.CmsTopicPublishStateKeyGuardTest",
+      "case": "declaredThoughtCannotBeWrittenByAdvancedNodeEffects",
+      "original_status": "failure",
+      "original_report_sha256": "a7ece1daa4fe53af0c5c80b3276083d432fb65c9a17c5470a83f3b68e5168c27",
+      "final_status": "passed",
+      "final_report_sha256": "2bcdbea23821970447aa2b89c56fb7e92759fe503d48baf6e15a949d69952303"
+    },
+    {
+      "classname": "com.chengyinhub.business.service.CmsTopicPublishStateKeyGuardTest",
+      "case": "thoughtDeclaredByAnotherTopicDoesNotAuthorizeThisTopic",
+      "original_status": "failure",
+      "original_report_sha256": "a7ece1daa4fe53af0c5c80b3276083d432fb65c9a17c5470a83f3b68e5168c27",
+      "final_status": "passed",
+      "final_report_sha256": "2bcdbea23821970447aa2b89c56fb7e92759fe503d48baf6e15a949d69952303"
+    },
+    {
+      "classname": "com.chengyinhub.business.service.CmsTopicPublishStateKeyGuardTest",
+      "case": "approvedTopicSnapshotBlocksUnregisteredKey",
+      "original_status": "failure",
+      "original_report_sha256": "a7ece1daa4fe53af0c5c80b3276083d432fb65c9a17c5470a83f3b68e5168c27",
+      "final_status": "passed",
+      "final_report_sha256": "2bcdbea23821970447aa2b89c56fb7e92759fe503d48baf6e15a949d69952303"
+    },
+    {
+      "classname": "com.chengyinhub.business.service.CmsTopicPublishStateKeyGuardTest",
+      "case": "undeclaredThoughtDoneStillBlocksPublish",
+      "original_status": "failure",
+      "original_report_sha256": "a7ece1daa4fe53af0c5c80b3276083d432fb65c9a17c5470a83f3b68e5168c27",
+      "final_status": "passed",
+      "final_report_sha256": "2bcdbea23821970447aa2b89c56fb7e92759fe503d48baf6e15a949d69952303"
+    },
+    {
+      "classname": "com.chengyinhub.web.controller.api.ApiPlayPuzzleHintTest",
+      "case": "orientingPuzzleSecretsAreNotDownlinkedBeforeServerFactIsRecorded",
+      "original_status": "failure",
+      "original_report_sha256": "915a46bf01ab2883dd185cdb18023ef63a6bd394100f27f6bcf63941f664eebf",
+      "final_status": "passed",
+      "final_report_sha256": "18ba7bb569d9e9ffbe5372690747d7f96ba42e5062cb552097210a6b4345ef92"
+    },
+    {
+      "classname": "com.chengyinhub.business.service.impl.AuditTopicBudgetDecisionTest",
+      "case": "currentLockedRowKeepsAnAuthorsCommittedOfflineChoiceDespiteStaleRrOnlineRow",
+      "original_status": "failure",
+      "original_report_sha256": "bbf94b16b9e43f4da0d80a8661e1f41217e70bf46765af1387c132a80f5749cd",
+      "final_status": "passed",
+      "final_report_sha256": "2277ecc0ccfec32cb09a4b223943c69146024163d6936b47d02bdd697ef0b84d"
+    },
+    {
+      "classname": "com.chengyinhub.business.service.impl.WholeOrderRefundTest",
+      "case": "fullyVerifiedOrderIsNotRefundedNorRoutedToManual",
+      "original_status": "failure",
+      "original_report_sha256": "48dd398657ad613ae6198d8562efc5d18fa3ce6ec17d9601f16a167a34ae846b",
+      "final_status": "passed",
+      "final_report_sha256": "eb711c4eb1c2700f206d30d13823d7fd1314137faf06a9025d61165664157bc1"
+    },
+    {
+      "classname": "com.chengyinhub.upgrade.SupportedStackServiceCyclesTest",
+      "case": "realCycleStartsAndLazyEdgeResolvesToManagedTransactionalTarget(Cycle)[1]",
+      "original_status": "failure",
+      "original_report_sha256": "f4ee210030189b60794f029bf1367f7f79983f12b3587f19dd94e80c80d30641",
+      "final_status": "passed",
+      "final_report_sha256": "3f02b730ec94574ae82db275bba9427714f16928158e7761824332dcbcca739b"
+    },
+    {
+      "classname": "com.chengyinhub.upgrade.SupportedStackServiceCyclesTest",
+      "case": "eagerEdgesPreserveExpectedCycleOrOutboundBoundary(Cycle)[7]",
+      "original_status": "failure",
+      "original_report_sha256": "f4ee210030189b60794f029bf1367f7f79983f12b3587f19dd94e80c80d30641",
+      "final_status": "passed",
+      "final_report_sha256": "3f02b730ec94574ae82db275bba9427714f16928158e7761824332dcbcca739b"
+    }
+  ],
+  "scope": "Exact original backend failure/error keys only; not overall business acceptance"
+}

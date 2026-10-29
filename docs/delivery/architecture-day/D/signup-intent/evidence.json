@@ -1,0 +1,136 @@
+{
+  "public_baseline": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+  "initial_joint_source": "765ea0366f43029b6fbd33df777e3f86e19c74e7",
+  "parent_source": "33ffb50086e85fca2238d9ca75df585a46226835",
+  "parent_tree": "68eea620c5812d10392a7eb986bed5b5a3d17ea1",
+  "runtime_database_inspected": false,
+  "unchanged_shared_sources": [
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ImServiceImpl.java",
+      "sha256": "c42698d6d21525fd17921e5f1beaaa757b92d5f8ace5af8e4a6327693b1d1c4b",
+      "unchanged_from_parent": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationCheckoutServiceImpl.java",
+      "sha256": "b31de7d54a83df85071bb721a2a2711bbb95a1186ba471e10861132c2818cbd0",
+      "unchanged_from_parent": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ISystemNotificationIntentService.java",
+      "sha256": "efc7f6a956738131dd1eb1b70a424a6020822e790c68690f2fa3e30bba696d0c",
+      "unchanged_from_parent": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/ImNotificationDeliveryTask.java",
+      "sha256": "4b7e09df442d7311e24fbc52def8022fb0db22e98e16bbc4563c35e8304bff2d",
+      "unchanged_from_parent": true
+    },
+    {
+      "path": "chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/util/ScheduleUtils.java",
+      "sha256": "c5542b38dc37b41ea9cf7548aa7e31bf8b5a221e8bd6a82d12dc77ce07df7fd1",
+      "unchanged_from_parent": true
+    }
+  ],
+  "java_inventory": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RegistrationSignupIntentTest.java",
+      "tests": 9,
+      "methods": [
+        "outsideTransactionRejectsBeforeIntentOrDelivery",
+        "freshWinnerUsesOriginalFirstIdAndOneCardOnlyAfterCommit",
+        "historyWithoutOriginalIntentNeverCreatesOrSendsSignup",
+        "historyWithOriginalIntentOnlyWakesThatIdentityWithoutLiveRebuild",
+        "existingFreshIntentKeepsFrozenPayloadDespiteLiveChanges",
+        "missingOrMismatchedOriginalPaidRecipientRejectsBeforeEnqueue",
+        "invalidIdentityRejectsWithoutAnyIntentLookup",
+        "enqueueConflictCannotRegisterSuccessWakeOrExternalActions",
+        "missingOrInvalidIntentReceiptCannotBecomeAcceptedWake"
+      ],
+      "executed_by_D": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/SignupNoticeAfterCommitPersistenceMySqlIT.java",
+      "tests": 18,
+      "methods": [
+        "successfulPaymentQueuesOnlyAfterCommitAndBothIndependentWritesReallyPersist",
+        "rollbackOfThePaymentTransactionDoesNotQueueQrOrSendNotice",
+        "imFailureAfterActualInsertRollsBackOnlyNoticeAndKeepsCommittedPaymentAndQr",
+        "qrFailureAfterActualUpdateRollsBackOnlyQrAndDoesNotLoseSignupNotice",
+        "rejectedQueueDoesNotTurnCommittedPaymentIntoFailure",
+        "historicalHalfStateWithoutIntentDoesNotBackfillSignup",
+        "historicalHalfStateWithOriginalIntentOnlyWakesThatReceipt",
+        "commitBeforeWakeLossRecoversSameIntentWithFreshTaskAndLateWakeDoesNotDuplicate",
+        "lostPaymentCommitResponseReplaysWithoutAnotherIntentOrWake",
+        "twoRecoveryWorkersProduceOneMessageAndOneUnread",
+        "lostCommitAcknowledgementReadsOriginalReceiptRatherThanSendingAgain",
+        "sameEventDifferentPayloadIsRejectedWithoutReplacingOriginal",
+        "liveRecipientAndTopicChangesDoNotRebuildFrozenDelivery",
+        "intentWriteFailureRollsBackPaymentAndIntentWithNoWake",
+        "concurrentPaymentClaimLoserDoesNotCreateAnotherIntentOrWake",
+        "originalFirstRegistrationIdentityIsKeptWhenSiblingHasSmallerId",
+        "rejectedAmountLeavesPaymentIntentMessageAndWakeUnchanged",
+        "conflictingCompletedPaymentCannotProduceIntentAfterLosingCas"
+      ],
+      "executed_by_D": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/StandaloneCheckoutSignupNoticeAcceptanceTest.java",
+      "tests": 4,
+      "methods": [
+        "userPublishedStandalonePaidOrderIsRefusedBeforeAnyWechatPrepayOnRetry",
+        "platformPublishedStandalonePaidActivityStillQuotesAndRetries",
+        "signupNoticeIsSentOnlyOnceAfterZeroAmountConfirmation",
+        "paidOrderCreationDoesNotSendSignupNoticeBeforePayment"
+      ],
+      "executed_by_D": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RegistrationSignupNoticeCardTest.java",
+      "tests": 2,
+      "methods": [
+        "unthemedSignupNoticeOnlyStatesTheFactItCanBackUp",
+        "themedSignupNoticeStillRoutesToTheTopic"
+      ],
+      "executed_by_D": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationPaymentAtomicityContractTest.java",
+      "tests": 1,
+      "methods": [
+        "paymentCallbackMustClaimOnceInsideTransactionBeforeEffects"
+      ],
+      "executed_by_D": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ImFoundationBMybatisIntegrationTest.java",
+      "tests": 4,
+      "methods": [
+        "oldReadToDoesNotLoseNewUnreadAndIncrementRecoversAllSegments",
+        "originalIntentAndCallerBusinessTransactionRollbackTogether",
+        "twoWorkersAndLateReplayProduceOneOriginalMessageAndOneUnread",
+        "originalEventContentConflictIsRejectedAndSourceRemainsUntouched"
+      ],
+      "executed_by_D": false
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ImNotificationIntentTest.java",
+      "tests": 6,
+      "methods": [
+        "duplicateOriginalIntentReturnsSameReceiptAndNeverWritesMessage",
+        "sameKeyDifferentContentOrRecipientRejectsInsteadOfClaimingAccepted",
+        "deliveredIntentReturnsOriginalMessageWithoutNewSideEffects",
+        "pendingIntentWritesOriginalMessageKeyAndMarksReceiptInSameTransaction",
+        "existingOriginalMessageIsReusedWithoutUnreadIncrement",
+        "missingReceiptTransitionThrowsAndKeepsTransactionalBoundary"
+      ],
+      "executed_by_D": false
+    }
+  ],
+  "worktree": "/workspace/architecture-day-d-signup",
+  "branch": "codex/architecture-day-d-signup-intent",
+  "local_head_before_candidate": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+  "backend_execution_by_D": [],
+  "ci_dispatched_by_D": false,
+  "migration_added": false,
+  "production_ddl_executed": false
+}

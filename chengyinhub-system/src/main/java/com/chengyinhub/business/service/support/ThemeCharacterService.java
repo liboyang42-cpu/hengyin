@@ -73,19 +73,21 @@ public class ThemeCharacterService {
         if (deleted || (!published && OwnershipUtils.notOwner(topic.getMemberId(), memberId))) {
             throw new ServiceException("主题不存在", HttpStatus.NOT_FOUND).setDetailMessage("CHARACTER_TOPIC_NOT_FOUND");
         }
-        ThemeCharacter character = themeCharacterMapper.selectByMemberAndTopic(memberId, topicId);
         TopicRouteSession latest = latestSession(memberId, topicId);
+        String snapshot = latest == null ? topic.getPublishedRouteGraphJson() : latest.getConfigSnapshotJson();
+        List<ThemeStateKey> definitions = JourneyInitialState.frozenDefinitions(snapshot);
+        String capturedRules = NodeJourneySnapshot.journeyRules(snapshot);
+        if (definitions != null) capturedRules = JourneyInitialState.frozenDefinitionRules(snapshot);
+        String rulesJson = capturedRules == null ? topic.getJourneyRulesJson() : capturedRules;
+        ThemeCharacter character = themeCharacterMapper.selectByMemberAndTopic(memberId, topicId);
         ThemeAttributeDefinition.Snapshot definition = latest == null ? null
                 : ThemeAttributeDefinition.read(latest.getConfigSnapshotJson());
-        // D3:本局有完整冻结定义才按冻结定义展示;否则属性定义读当前注册表(仅展示,不影响结转)。
+        // DEC02 complete definitions retain their versioned card/carry contract.
         if (matchesVersion(definition, latest)) return versionedCard(topicId, latest, definition);
-        if (latest == null && character == null) return templateCard(topic);
+        if (latest == null && character == null) return templateCard(topic, rulesJson, definitions);
         boolean running = latest != null && Integer.valueOf(TopicRouteSession.STATUS_RUNNING).equals(latest.getStatus());
-        // 非运行态仍按既有跨局台账/模板口径展示，不改变每局重置和结转语义。
-        JsonNode frozen = running ? frozenRules(latest.getConfigSnapshotJson()) : null;
-        String rulesJson = frozen == null ? topic.getJourneyRulesJson() : frozen.toString();
-        Map<String, JsonNode> attributes = journeyAttributes(topic.getJourneyRulesJson());
-        List<ThemeStateKey> keys = cardKeys(topicId, attributes);
+        Map<String, JsonNode> attributes = journeyAttributes(rulesJson);
+        List<ThemeStateKey> keys = cardKeys(topicId, attributes, definitions);
         Map<String, Integer> carried = carriedValues(character, latest, keys);
         Map<String, Integer> live = running ? variables(latest.getStateJson()) : new HashMap<String, Integer>();
 
@@ -167,6 +169,9 @@ public class ThemeCharacterService {
     public void seedRun(Long memberId, Long topicId, JourneyRules rules, TopicRouteEngine.State state,
                         String newSnapshotJson) {
         if (memberId == null || memberId <= 0L || topicId == null || topicId <= 0L || state == null) return;
+        // A marked author-declaration snapshot must pass the same reader used by cards.
+        // Validate before the DEC02 partial/legacy no-carry return; never repair it from live rows.
+        JourneyInitialState.frozenDefinitions(newSnapshotJson);
         ThemeAttributeDefinition.Snapshot next = ThemeAttributeDefinition.read(newSnapshotJson);
         if (next == null || !next.complete) return;
         // 只重置已经由当前运行规则初始化的变量，不自动启用注册表里的其他键。
@@ -215,15 +220,15 @@ public class ThemeCharacterService {
         return card;
     }
 
-    private Map<String, Object> templateCard(CmsTopic topic) {
+    private Map<String, Object> templateCard(CmsTopic topic, String rulesJson, List<ThemeStateKey> definitions) {
         JourneyRules templateRules;
         try {
-            templateRules = JourneyRules.parse(topic.getJourneyRulesJson());
+            templateRules = JourneyRules.parse(rulesJson);
         } catch (IllegalArgumentException invalidRules) { templateRules = new JourneyRules(); }
         Map<String, JsonNode> enabled = new HashMap<>();
         if (templateRules.isStateEnabled()) for (JsonNode row : templateRules.getAttributes()) enabled.put(row.path("key").asText(), row);
         List<ThemeStateKey> selected = new ArrayList<>();
-        for (ThemeStateKey key : cardKeys(topic.getId(), java.util.Collections.emptyMap())) {
+        for (ThemeStateKey key : cardKeys(topic.getId(), java.util.Collections.emptyMap(), definitions)) {
             if (enabled.containsKey(key.getStateKey())) selected.add(key);
         }
         Map<String, Object> card = definitionCard(topic.getId(), selected, java.util.Collections.emptyMap(), false, false);
@@ -307,9 +312,9 @@ public class ThemeCharacterService {
     }
 
     /** 角色卡展示的键:counter、可见,且没被 journeyRules 标成隐藏属性;按 sortOrder 升序,null 排最后。 */
-    private List<ThemeStateKey> cardKeys(Long topicId, Map<String, JsonNode> attributes) {
+    private List<ThemeStateKey> cardKeys(Long topicId, Map<String, JsonNode> attributes, List<ThemeStateKey> definitions) {
         List<ThemeStateKey> keys = new ArrayList<ThemeStateKey>();
-        List<ThemeStateKey> all = themeStateKeyMapper.selectByTopicId(topicId);
+        List<ThemeStateKey> all = definitions == null ? themeStateKeyMapper.selectByTopicId(topicId) : definitions;
         if (all == null) return keys;
         for (ThemeStateKey key : all) {
             if (key == null || !ThemeStateKey.TYPE_COUNTER.equals(key.getKeyType()) || !key.shownOnCard()) continue;

@@ -31,7 +31,6 @@ Page({
     // 顶栏几何
     statusBarHeight: app.globalData.statusBarHeight,
     navBarHeight: app.globalData.navBarHeight,
-    rightGap: 100,
     headerH: 0,
     isSticky: false,
     activeTab: 1, // 固定俱乐部(tab 页面:漫游子 tab 已拆除,直落俱乐部)
@@ -277,8 +276,8 @@ Page({
     this.loadImUnread();
   },
 
-  onHide() { merchantTheme.merchantPageRestore(); },
-  onUnload() {
+  onHide() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1; merchantTheme.merchantPageRestore(); },
+  onUnload() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1;
     merchantTheme.merchantPageRestore();
     this._unloaded = true;
     this._feedRequestId = (this._feedRequestId || 0) + 1;
@@ -438,13 +437,10 @@ Page({
     });
   },
 
-  // 顶栏 + tab 栏几何(右侧图标避开微信胶囊)
+  // 顶栏 + tab 栏几何。2026-10-27 P-13:消息铃铛挪到左上角,不再需要避让右侧胶囊的 rightGap。
   initNav() {
-    var info = wx.getWindowInfo();
-    var m = app.globalData.menuButtonInfo;
-    var rightGap = info.windowWidth - m.left + 8;
     var headerH = this.data.statusBarHeight + this.data.navBarHeight;
-    this.setData({ rightGap: rightGap, headerH: headerH });
+    this.setData({ headerH: headerH });
   },
 
   onPageScroll(e) {
@@ -642,7 +638,7 @@ Page({
 
   // 加入俱乐部(即时)
   onClubJoin(e) {
-    if (app.ensureLoginFor && !app.ensureLoginFor('club', () => this.onClubJoin(e))) return; // 2026-10-24 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('club', () => this.onClubJoin(e), { owner: this, target: () => [e.currentTarget.dataset.id] })) return; // 2026-10-24 游客写前登录
     var id = e.currentTarget.dataset.id;
     if (!id) return;
     var that = this;

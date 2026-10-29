@@ -36,6 +36,7 @@ class ThemeStateKeyServiceTest {
     @BeforeEach
     void setUp() {
         mapper = mock(ThemeStateKeyMapper.class);
+        when(mapper.lockTopicForStateKeyWrite(7L)).thenReturn(7L);
         service = new ThemeStateKeyService(mapper);
     }
 
@@ -209,11 +210,17 @@ class ThemeStateKeyServiceTest {
                 new com.chengyinhub.business.domain.JourneyRules()));
         assertEquals("ATTRIBUTE_REGISTRY_VERSION_CONFLICT", conflict.getDetailMessage());
         verify(mapper, never()).selectByTopicIdForUpdate(anyLong());
+        verify(mapper, never()).selectByTopicId(anyLong());
+        verify(mapper, never()).selectByTopicIdAndStateKeyForUpdate(anyLong(), anyString());
+        verify(mapper, never()).upsertThemeStateKey(any(ThemeStateKey.class));
+        verify(mapper, never()).updateDefinition(any(ThemeStateKey.class));
+        verify(mapper, never()).deleteByTopicIdAndStateKey(anyLong(), anyString());
         verify(mapper, never()).advanceRegistryVersion(anyLong());
         org.mockito.InOrder locks = inOrder(mapper);
-        locks.verify(mapper).lockTopic(7L);
+        locks.verify(mapper).lockTopicForStateKeyWrite(7L);
         locks.verify(mapper).ensureRegistryVersion(7L);
         locks.verify(mapper).lockRegistryVersion(7L);
+        locks.verifyNoMoreInteractions();
     }
 
     private static ThemeStateKey key(String stateKey, String type, String scope) {
@@ -345,5 +352,76 @@ class ThemeStateKeyServiceTest {
         assertEquals(3, problems.size(), problems.toString());
         verify(mapper, never()).upsertThemeStateKey(any(ThemeStateKey.class));
         verify(mapper, never()).updateDefinition(any(ThemeStateKey.class));
+    }
+
+    @Test
+    void allDeclarationWritesAcquireTheTopicFenceBeforeTouchingKeys() {
+        ThemeStateKey current = key("counter.str", "counter", "run");
+        when(mapper.selectByTopicIdAndStateKeyForUpdate(7L, "counter.str")).thenReturn(current);
+        service.register(7L, Arrays.asList(key("tag.a", "tag", "run")));
+        ThemeStateKey patch = new ThemeStateKey(); patch.setInitialValue(3);
+        service.updateDefinition(7L, "counter.str", patch);
+        service.delete(7L, "tag.a");
+        org.mockito.InOrder order = org.mockito.Mockito.inOrder(mapper);
+        order.verify(mapper).lockTopicForStateKeyWrite(7L);
+        order.verify(mapper).upsertThemeStateKey(any(ThemeStateKey.class));
+        order.verify(mapper).lockTopicForStateKeyWrite(7L);
+        order.verify(mapper).selectByTopicIdAndStateKeyForUpdate(7L, "counter.str");
+        order.verify(mapper).updateDefinition(any(ThemeStateKey.class));
+        order.verify(mapper).lockTopicForStateKeyWrite(7L);
+        order.verify(mapper).deleteByTopicIdAndStateKey(7L, "tag.a");
+        verify(mapper, never()).selectByTopicIdAndStateKey(any(), anyString());
+    }
+
+    @Test
+    void missingParentCannotCreateEditOrDeleteAnOrphanDeclaration() {
+        when(mapper.lockTopicForStateKeyWrite(7L)).thenReturn(null);
+        assertThrows(ServiceException.class, () -> service.register(7L, Arrays.asList(key("tag.a", "tag", "run"))));
+        assertThrows(ServiceException.class, () -> service.updateDefinition(7L, "counter.a", new ThemeStateKey()));
+        assertThrows(ServiceException.class, () -> service.delete(7L, "tag.a"));
+        verify(mapper, never()).upsertThemeStateKey(any());
+        verify(mapper, never()).updateDefinition(any());
+        verify(mapper, never()).deleteByTopicIdAndStateKey(any(), anyString());
+    }
+
+    @Test
+    void invalidBatchAndReadOnlyPreviewDoNotAcquireDeclarationWriteLocks() {
+        assertThrows(ServiceException.class, () -> service.register(7L, Arrays.asList(key("bad", "flag", "run"))));
+        service.listByTopic(7L);
+        service.check(Arrays.asList(key("tag.a", "tag", "run")));
+        verify(mapper, never()).lockTopicForStateKeyWrite(any());
+        verify(mapper, never()).selectByTopicIdForUpdate(any());
+    }
+
+    @Test
+    void narrowCurrentQueriesRetainCacheBypassAndTheOriginalDeclarationProjection() throws Exception {
+        javax.xml.parsers.DocumentBuilderFactory factory = javax.xml.parsers.DocumentBuilderFactory.newInstance();
+        factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+        try (InputStream in = getClass().getResourceAsStream("/mapper/business/ThemeStateKeyMapper.xml")) {
+            assertNotNull(in);
+            org.w3c.dom.Document doc = factory.newDocumentBuilder().parse(in);
+            for (String id : Arrays.asList("lockTopicForStateKeyWrite", "selectByTopicIdForUpdate", "selectByTopicIdAndStateKeyForUpdate")) {
+                org.w3c.dom.Element found = null;
+                org.w3c.dom.NodeList nodes = doc.getElementsByTagName("select");
+                for (int i = 0; i < nodes.getLength(); i++) {
+                    org.w3c.dom.Element node = (org.w3c.dom.Element) nodes.item(i);
+                    if (id.equals(node.getAttribute("id"))) { assertTrue(found == null); found = node; }
+                }
+                assertNotNull(found, id);
+                assertEquals("false", found.getAttribute("useCache"));
+                assertEquals("true", found.getAttribute("flushCache"));
+                assertTrue(found.getTextContent().toLowerCase(java.util.Locale.ROOT).contains("for update"));
+                assertTrue(found.getTextContent().contains("#{topicId}"));
+                if (!id.equals("lockTopicForStateKeyWrite")) assertEquals("ThemeStateKeyResult", found.getAttribute("resultMap"));
+            }
+        }
+    }
+
+    @Test
+    void explicitPublicationProducerNeverFallsBackToAnUnlockedReadOutsideTheOriginalTransaction() {
+        assertThrows(ServiceException.class, () -> service.listCurrentDeclarations(7L));
+        verify(mapper, never()).lockTopicForStateKeyWrite(any());
+        verify(mapper, never()).selectByTopicId(any());
+        verify(mapper, never()).selectByTopicIdForUpdate(any());
     }
 }

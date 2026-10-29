@@ -17,6 +17,13 @@ public class NpcChatResp
     /** 门店音色已就绪时的合成音频；缺席不影响文字回答。 */
     private String audioUrl;
     private boolean ai;
+    /** Original ASR phase/reason only; neither field is a retry or provider-send authorization. */
+    private String asrState;
+    private String asrReason;
+    /** Advisory: explicit POST may continue this saved transcript using the same requestId, never re-ASR. */
+    private boolean asrResumable;
+    /** User function quota only; PROCESSING is neither a completed debit nor proof of provider billing. */
+    private String quotaStatus;
 
     public NpcChatResp() {}
 
@@ -38,6 +45,15 @@ public class NpcChatResp
     public void setSafeText(String safeText) { this.safeText = safeText; }
     public String getAudioUrl() { return audioUrl; }
     public void setAudioUrl(String audioUrl) { this.audioUrl = audioUrl; }
+    public String getAsrState() { return asrState; }
+    public void setAsrState(String value) { this.asrState = value; }
+    public String getAsrReason() { return asrReason; }
+    public void setAsrReason(String value) { this.asrReason = value; }
+    public boolean isAsrResumable() { return asrResumable; }
+    public void setAsrResumable(boolean value) { this.asrResumable = value; }
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    public String getQuotaStatus() { return quotaStatus; }
+    public void setQuotaStatus(String value) { this.quotaStatus=value; }
     public boolean isAi() { return ai; }
     public void setAi(boolean ai) { this.ai = ai; }
 }

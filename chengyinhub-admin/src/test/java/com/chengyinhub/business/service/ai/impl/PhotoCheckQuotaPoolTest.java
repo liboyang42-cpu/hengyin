@@ -71,4 +71,43 @@ class PhotoCheckQuotaPoolTest {
         String token=service.consumeQuota(7L,"some_future_scene");
         assertTrue(token.startsWith("ai:gen:limit:gen:7:"));
     }
+
+    @Test void planningDoesNotWriteQuotaAndConsumptionKeepsOriginalDayAndNonce() {
+        String nonce = "0123456789abcdef0123456789abcdef";
+        String planned = service.planQuotaReservation(7L, "photo_check", nonce);
+        assertTrue(planned.endsWith("|" + nonce));
+        assertTrue(reserves.isEmpty());
+        assertTrue(refunds.isEmpty());
+        String original = "ai:gen:limit:photo:7:20261020|" + nonce;
+        assertEquals(original, service.consumePlannedQuota(7L, "photo_check", original));
+        assertEquals("ai:gen:limit:photo:7:20261020", reserves.get(0).get(0));
+        assertEquals("ai:gen:reservation:ai:gen:limit:photo:7:20261020:" + nonce, reserves.get(0).get(2));
+    }
+
+    @Test void plannedQuotaRejectsForeignOwnerPoolAndInvalidIdentityBeforeRedis() {
+        String token = "ai:gen:limit:photo:7:20261020|0123456789abcdef0123456789abcdef";
+        assertThrows(IllegalArgumentException.class,
+                () -> service.consumePlannedQuota(8L, "photo_check", token));
+        assertThrows(IllegalArgumentException.class,
+                () -> service.consumePlannedQuota(7L, "theme_draft", token));
+        assertThrows(java.time.format.DateTimeParseException.class,
+                () -> service.consumePlannedQuota(7L, "photo_check", token.replace("20261020", "20260230")));
+        assertThrows(IllegalArgumentException.class,
+                () -> service.planQuotaReservation(7L, "photo_check", "new-nonce"));
+        assertTrue(reserves.isEmpty());
+        assertTrue(refunds.isEmpty());
+    }
+
+    @Test void plannedQuotaRecordsOriginalRecoveryEvidenceBeforeRedis() {
+        com.chengyinhub.business.service.ai.AiQuotaRecoveryService recovery =
+                mock(com.chengyinhub.business.service.ai.AiQuotaRecoveryService.class);
+        ReflectionTestUtils.setField(service, "quotaRecovery", recovery);
+        String token = "ai:gen:limit:photo:7:20261020|0123456789abcdef0123456789abcdef";
+        service.consumePlannedQuota(7L, "photo_check", token);
+        org.mockito.InOrder order = inOrder(recovery, redis);
+        order.verify(recovery).prepare(eq(7L), eq("photo_check"), eq("photo"),
+                eq("ai:gen:limit:photo:7:20261020"), eq((String) reserves.get(0).get(2)));
+        order.verify(redis).execute(any(RedisScript.class), anyList(), anyInt(), anyInt(), anyInt());
+        order.verify(recovery).reserved((String) reserves.get(0).get(2), 1L);
+    }
 }

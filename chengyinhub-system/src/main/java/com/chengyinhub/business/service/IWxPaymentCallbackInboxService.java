@@ -22,6 +22,14 @@ public interface IWxPaymentCallbackInboxService {
      */
     boolean register(String notifyId, int bizType, Long bizId, String eventType);
 
+    /** Verified SUCCESS only; immutable provider evidence is bound to the original inbox identity. */
+    boolean registerVerified(String notifyId, int bizType, Long bizId, String eventType,
+            com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference facts);
+
+    /** Checks the immutable fact binding even for an already-DONE replay before invoking the existing fenced processor. */
+    boolean processVerified(String notifyId,
+            com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference facts, Mutation mutation);
+
     /** 该回调是否已登记过(用于快速幂等短路,不做业务判断)。 */
     boolean isRegistered(String notifyId);
 

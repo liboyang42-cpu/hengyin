@@ -44,6 +44,7 @@ class CmsTopicDraftBindingsTest {
             field.setAccessible(true);
             if (field.get(target) == null) ReflectionTestUtils.setField(target, field.getName(), mock(field.getType()));
         }
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.wireRelocatedCollaborators(target, publicationField -> org.mockito.Mockito.mock(publicationField.getType()));
         DriverManagerDataSource source = new DriverManagerDataSource("jdbc:h2:mem:" + UUID.randomUUID() + ";MODE=MySQL;DB_CLOSE_DELAY=-1", "sa", "");
         jdbc = new JdbcTemplate(source);
         jdbc.execute("create table saved_topic (id bigint primary key, config clob)");
@@ -82,7 +83,7 @@ class CmsTopicDraftBindingsTest {
             CmsTopicNode node = new CmsTopicNode(); node.setId(row.getLong("id")); node.setName(row.getString("name")); node.setTemplateId(row.getLong("template_id")); node.setTopicId(700L); return node;
         }));
         when(nodes.deleteCmsTopicNodeById(anyLong())).thenAnswer(call -> jdbc.update("delete from saved_node where id=?", (Long) call.getArgument(0)));
-        CmsMemberTemplateMapper templates = (CmsMemberTemplateMapper) ReflectionTestUtils.getField(target, "cmsMemberTemplateMapper");
+        CmsMemberTemplateMapper templates = (CmsMemberTemplateMapper) com.chengyinhub.business.service.support.TopicPublicationTestWiring.get(target, "cmsMemberTemplateMapper");
         CmsMemberTemplate template = new CmsMemberTemplate(); template.setId(501L); template.setMemberId(42L); template.setStatus(1L); template.setDraftStatus(1);
         when(templates.selectCmsMemberTemplateById(501L)).thenReturn(template);
         ReflectionTestUtils.setField(target, "commercialTopicPolicy",
@@ -127,7 +128,7 @@ class CmsTopicDraftBindingsTest {
     private void create() {
         TopicCreateDTO request = request(new TopicCreateDTO(), node("first", null), node("second", null));
         request.setThemeRuntimeConfig(config("client:first", "client:second"));
-        assertEquals(700L, service.createTopic(request, 42L, "author"));
+        assertEquals(700L, com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).createTopic(request, 42L, "author"));
     }
 
     @Test void createPersistsTwoBindingsUsingGeneratedIdsOnly() {
@@ -141,12 +142,12 @@ class CmsTopicDraftBindingsTest {
         List<ChapterBlockDTO> blocks = new ArrayList<>();
         for (int index = 0; index < 2; index++) { ChapterBlockDTO block = new ChapterBlockDTO(); block.setType("node"); block.setNodeIndex(index); blocks.add(block); }
         request.getChapters().get(0).setSchemaVersion(1); request.getChapters().get(0).setBlocks(blocks);
-        service.createTopicV2(request, 42L, "author");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).createTopicV2(request, 42L, "author");
         assertTrue(saved().path("templateBindings").has("1001")); assertTrue(saved().path("templateBindings").has("1002"));
     }
     @Test void danglingClientKeyRollsBackTopicAndNodes() {
         TopicCreateDTO request = request(new TopicCreateDTO(), node("first", null), node("second", null)); request.setThemeRuntimeConfig(config("client:missing"));
-        String error = assertThrows(IllegalArgumentException.class, () -> service.createTopic(request, 42L, "author")).getMessage();
+        String error = assertThrows(IllegalArgumentException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).createTopic(request, 42L, "author")).getMessage();
         assertTrue(error.contains("client:missing"), error);
         assertEquals(0, jdbc.queryForObject("select count(*) from saved_topic", Integer.class));
         assertEquals(0, jdbc.queryForObject("select count(*) from saved_node", Integer.class));
@@ -154,7 +155,7 @@ class CmsTopicDraftBindingsTest {
     @Test void updateWithoutConfigKeepsRealBindingsAcrossReorder() {
         create();
         TopicUpdateDTO request = request(new TopicUpdateDTO(), node("second", 1002L), node("first", 1001L)); request.setId(700L);
-        service.updateTopicByOwner(request, 42L, "author");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwner(request, 42L, "author");
         assertTrue(saved().path("templateBindings").has("1003")); assertTrue(saved().path("templateBindings").has("1004"));
         assertFalse(saved().path("templateBindings").has("1001"));
         assertEquals("spare", saved().path("templateBindings").path("1003").path("items").path("material").asText());
@@ -164,28 +165,28 @@ class CmsTopicDraftBindingsTest {
         create();
         TopicUpdateDTO request = request(new TopicUpdateDTO(), node("first", 1001L), node("third", null)); request.setId(700L);
         request.setThemeRuntimeConfig(config("1001", "client:third"));
-        service.updateTopicByOwner(request, 42L, "author");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwner(request, 42L, "author");
         assertTrue(saved().path("templateBindings").has("1003")); assertTrue(saved().path("templateBindings").has("1004"));
     }
     @Test void existingNodeCannotBeReboundUsingAClientAlias() {
         create(); String before = saved().toString();
         TopicUpdateDTO request = request(new TopicUpdateDTO(), node("first", 1001L), node("second", 1002L)); request.setId(700L);
         request.setThemeRuntimeConfig(config("client:first", "1002"));
-        assertThrows(IllegalArgumentException.class, () -> service.updateTopicByOwner(request, 42L, "author"));
+        assertThrows(IllegalArgumentException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwner(request, 42L, "author"));
         assertEquals(before, saved().toString());
         assertEquals(2, jdbc.queryForObject("select count(*) from saved_node where id in (1001,1002)", Integer.class));
     }
     @Test void deletingBoundNodeRejectsUnlessBindingIsExplicitlyRemoved() {
         create(); String before = saved().toString();
         TopicUpdateDTO request = request(new TopicUpdateDTO(), node("first", 1001L)); request.setId(700L);
-        assertThrows(IllegalArgumentException.class, () -> service.updateTopicByOwner(request, 42L, "author"));
+        assertThrows(IllegalArgumentException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwner(request, 42L, "author"));
         assertEquals(before, saved().toString());
-        request.setThemeRuntimeConfig(config("1001")); service.updateTopicByOwner(request, 42L, "author");
+        request.setThemeRuntimeConfig(config("1001")); com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwner(request, 42L, "author");
         assertEquals(1, saved().path("templateBindings").size());
     }
     @Test void duplicateClientKeysRollBackAndCopyStillUsesRealIds() {
         TopicCreateDTO request = request(new TopicCreateDTO(), node("same", null), node("same", null)); request.setThemeRuntimeConfig(config("client:same"));
-        assertThrows(IllegalArgumentException.class, () -> service.createTopic(request, 42L, "author"));
+        assertThrows(IllegalArgumentException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).createTopic(request, 42L, "author"));
         assertEquals(0, jdbc.queryForObject("select count(*) from saved_node", Integer.class));
         ObjectNode copy = ThemeRuntimeConfig.parseDraft(ThemeRuntimeConfig.remapNodes(config("1001"), Collections.singletonMap(1001L, 2001L)));
         assertTrue(copy.path("templateBindings").has("2001")); assertFalse(copy.path("templateBindings").has("1001"));
@@ -196,7 +197,7 @@ class CmsTopicDraftBindingsTest {
         assertThrows(IllegalArgumentException.class, () -> ThemeRuntimeConfig.parseForNodeSave(config("client: first")));
         create();
         TopicUpdateDTO request = request(new TopicUpdateDTO(), node("first", 1001L)); request.setId(700L);
-        assertThrows(RuntimeException.class, () -> service.updateTopicByOwner(request, 99L, "other"));
+        assertThrows(RuntimeException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwner(request, 99L, "other"));
         assertEquals(2, saved().path("templateBindings").size());
     }
 }

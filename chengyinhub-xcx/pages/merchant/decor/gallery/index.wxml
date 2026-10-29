@@ -22,10 +22,10 @@
     <view class="dg-grid">
       <view class="dg-item" wx:for="{{gallery}}" wx:key="index">
         <image class="dg-image" src="{{item}}" mode="aspectFill" aria-hidden="true" />
-        <view class="dg-delete" data-index="{{index}}" catchtap="removeGallery" aria-role="button" aria-disabled="{{saving || refreshing}}" aria-label="删除第{{index + 1 || 1}}张图片" hover-class="{{saving || refreshing ? 'none' : 'cy-pressed'}}" hover-stay-time="80"><cy-icon name="close" size="38" /></view>
+        <view class="dg-delete" data-index="{{index}}" catchtap="removeGallery" aria-role="button" aria-disabled="{{saving || refreshing}}" aria-label="删除第{{index + 1 || 1}}张图片" hover-class="{{saving || refreshing ? 'none' : 'cy-pressed'}}" hover-stay-time="80"><view class="dg-delete-dot"><cy-icon name="close" size="24" /></view></view>
       </view>
       <view class="dg-add" wx:if="{{gallery.length < 9}}" bindtap="addGallery" aria-role="button" aria-disabled="{{saving || refreshing}}" aria-label="添加相册图片" hover-class="{{saving || refreshing ? 'none' : 'cy-pressed'}}" hover-stay-time="80">
-        <view class="dg-add-mark"><cy-icon name="plus" size="40" /></view><text>添加图片</text>
+        <view class="dg-add-mark"><cy-icon name="plus" size="48" /></view>
       </view>
     </view>
     <view class="dg-pad"></view>

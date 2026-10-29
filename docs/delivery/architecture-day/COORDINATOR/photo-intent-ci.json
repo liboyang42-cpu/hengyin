@@ -1,0 +1,23 @@
+{
+  "source_assembly": "fa7a9492033e30a9d15cf2ac5e3ec487c6d3d4e6",
+  "base": "765ea0366f43029b6fbd33df777e3f86e19c74e7",
+  "status": "ISOLATED_NOT_ACCEPTED",
+  "components": [
+    "root bb4a18520 fully CI passed, targeted66 tests",
+    "C83a0479d advanced fingerprint (no new C orchestration)",
+    "E493c7dead new durable intent and isolated test env fix"
+  ],
+  "merge_resolution": "Only two overlapping root-owned direct-photo files restored exactly to reviewed/CI-green bb4a; no other-owner edits replaced",
+  "required_storage_tests": 15,
+  "unit_source_not_yet_executed": [
+    "PhotoCheckIntentServiceTest16",
+    "AdvancedCommandFingerprintTest11",
+    "TopicRouteSpringWiringTest8"
+  ],
+  "known_open": [
+    "C full Photo prepare/execute/finalize still not wired",
+    "Original C first candidate cached-empty P1 / fixtures pending",
+    "Overall WP acceptance incomplete",
+    "Provider and production schema not executed"
+  ]
+}

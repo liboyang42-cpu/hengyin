@@ -1,0 +1,92 @@
+--- a/chengyinhub-framework/src/main/java/com/chengyinhub/framework/config/MyBatisConfig.java
++++ b/chengyinhub-framework/src/main/java/com/chengyinhub/framework/config/MyBatisConfig.java
+@@ -79,3 +79,3 @@
+             {
+-                typeAliasesPackage = String.join(",", (String[]) allResult.toArray(new String[0]));
++                typeAliasesPackage = String.join(",", recursivePackageRoots(allResult));
+             }
+@@ -92,2 +92,22 @@
+     }
++
++    /** Each MyBatis package scan is recursive; descendants of an existing root add no classes. */
++    private static List<String> recursivePackageRoots(List<String> packages)
++    {
++        List<String> roots = new ArrayList<>();
++        for (String candidate : packages)
++        {
++            boolean covered = false;
++            for (String other : packages)
++            {
++                if (!candidate.equals(other) && candidate.startsWith(other + "."))
++                {
++                    covered = true;
++                    break;
++                }
++            }
++            if (!covered && !roots.contains(candidate)) roots.add(candidate);
++        }
++        return roots;
++    }
+
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/OpenAiCompatibleLlmClient.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/OpenAiCompatibleLlmClient.java
+@@ -8,2 +8,4 @@
+ import com.alibaba.fastjson2.JSONObject;
++import com.alibaba.fastjson2.JSONFactory;
++import com.alibaba.fastjson2.JSONWriter;
+ import com.chengyinhub.common.config.AiModelConfig;
+@@ -138,3 +140,3 @@
+
+-        return post(body);
++        return post(body, imageUrl, systemPrompt, userPrompt);
+     }
+@@ -162,2 +164,7 @@
+     {
++        return post(body, null, null, null);
++    }
++
++    private String post(JSONObject body, String image, String systemPrompt, String userPrompt)
++    {
+         com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+@@ -173,3 +180,3 @@
+             {
+-                json = JSON.toJSONBytes(body);
++                json = encodeBody(body, image, systemPrompt, userPrompt, model);
+             }
+@@ -208,3 +215,36 @@
+     }
++
++    /** Preserve the pinned default UTF-8 codec; reserve space before the image's trailing text grows it again. */
++    private static byte[] encodeBody(JSONObject body, String image, String systemPrompt, String userPrompt, String model)
++    {
++        int capacity = visionCapacity(image, systemPrompt, userPrompt, model);
++        if (capacity == 0 || body == null || body.getClass() != JSONObject.class) return JSON.toJSONBytes(body);
++        JSONWriter.Context context = new JSONWriter.Context(JSONFactory.getDefaultObjectWriterProvider());
++        if (context.getFeatures() != 0) return JSON.toJSONBytes(body);
++        try (JSONWriter writer = JSONWriter.ofUTF8(context))
++        {
++            writer.ensureCapacity(capacity);
++            writer.setRootObject(body);
++            writer.write(body); // Same JSONObject/default-feature branch as JSON.toJSONBytes, same entry order.
++            return writer.getBytes(); // Still a fresh exclusive entity; never borrow/reuse the writer's buffer.
++        }
++    }
++
++    private static int visionCapacity(String image, String systemPrompt, String userPrompt, String model)
++    {
++        if (image == null) return 0;
++        for (int i = 0; i < image.length(); i++)
++        {
++            char value = image.charAt(i);
++            if (value < 32 || value > 126 || value == '"' || value == '\\') return 0;
++        }
++        // The fixed envelope is small. Pinned UTF-16 string writes can request twelve bytes per
++        // source char; cover all non-image strings including their original escape/Unicode cases.
++        long metadata = (long) (model == null ? 0 : model.length())
++                + (systemPrompt == null ? 0 : systemPrompt.length()) + (userPrompt == null ? 0 : userPrompt.length());
++        long capacity = image.length() + metadata * 12L + 1024L;
++        // A hint is optional, never a new input rejection or an override of the pinned codec limit.
++        return capacity < 67108864L ? (int) capacity : 0;
++    }
+
+     private RuntimeException failure(String phase, int status)

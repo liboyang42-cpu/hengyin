@@ -1,5 +1,7 @@
 package com.chengyinhub.business.service;
 
+import com.chengyinhub.web.service.verify.CityNodeRedemptionApplication;
+
 import com.chengyinhub.business.mapper.CmsRegistrationScanMapper;
 import com.chengyinhub.business.mapper.RoamMapper;
 import com.chengyinhub.business.access.merchant.IMerchantAccessService;
@@ -261,15 +263,14 @@ class RegistrationEquityMybatisIntegrationTest {
         when(access.require(99L, MerchantPermission.VERIFY)).thenReturn(
                 new MerchantAccessContext(99L, 77L, 99L, MerchantRoleCode.MERCHANT_OWNER));
         ReflectionTestUtils.setField(target, "merchantAccessService", access);
-        ReflectionTestUtils.setField(target, "roamMapper", mapper);
-        ReflectionTestUtils.setField(target, "couponHistoryService", couponHistoryService);
-        ReflectionTestUtils.setField(target, "businessAuditEventMapper", session.getMapper(BusinessAuditEventMapper.class));
-        ReflectionTestUtils.setField(target, "dynSecret", "city-node-it-secret");
-        ProxyFactory factory = new ProxyFactory(target);
+        CityNodeRedemptionApplication application = new CityNodeRedemptionApplication(
+                access, mapper, couponHistoryService, session.getMapper(BusinessAuditEventMapper.class), mock(com.chengyinhub.business.service.impl.QrcodeServiceImpl.class), "city-node-it-secret");
+        ProxyFactory factory = new ProxyFactory(application);
         factory.setProxyTargetClass(true);
         factory.addAdvice(new TransactionInterceptor(new DataSourceTransactionManager(dataSource),
                 new AnnotationTransactionAttributeSource()));
-        ApiVerifyController controller = (ApiVerifyController) factory.getProxy();
+        ReflectionTestUtils.setField(target, "cityNodeRedemptionApplication", (CityNodeRedemptionApplication) factory.getProxy());
+        ApiVerifyController controller = target;
         String code = VerifyDynCodeUtil.issue(51L, "citynode_7001", System.currentTimeMillis(),
                 60000L, 77L, "city-node-it-secret");
         com.chengyinhub.common.exception.ServiceException exhausted = assertThrows(
@@ -292,6 +293,53 @@ class RegistrationEquityMybatisIntegrationTest {
         assertEquals(1, number("SELECT COUNT(*) FROM sms_coupon_history WHERE member_id=7001 AND coupon_id=30"));
         assertEquals(0, number("SELECT COUNT(*) FROM sms_coupon_history WHERE coupon_id=999"));
         assertEquals(2, number("SELECT receive_count FROM sms_coupon WHERE id=30"));
+        assertEquals(1, number("SELECT COUNT(*) FROM business_audit_event WHERE domain_type='CITY_NODE'"));
+    }
+
+    @Test
+    void cityNodeOriginalReceiptSurvivesResponseLossExpiryAndCouponChangeWithoutAnotherGrant() throws Exception {
+        execute("ALTER TABLE sms_coupon_history MODIFY id BIGINT NOT NULL AUTO_INCREMENT",
+                "INSERT INTO roam_poi_reward_log VALUES (51,7001,30,0)",
+                "UPDATE sms_coupon SET publish_count=2, receive_count=1 WHERE id=30");
+        SqlSessionTemplate session = new SqlSessionTemplate(buildFactory(dataSource));
+        RoamMapper realMapper = session.getMapper(RoamMapper.class);
+        RoamMapper mapper = mock(RoamMapper.class, invocation -> {
+            try { return invocation.getMethod().invoke(realMapper, invocation.getArguments()); }
+            catch (java.lang.reflect.InvocationTargetException failed) { throw failed.getCause(); }
+        });
+        CityNodeVO detail = new CityNodeVO(); detail.setMerchantId(77L); detail.setStatus(0); detail.setCouponId(999L);
+        org.mockito.Mockito.doReturn(detail).when(mapper).selectMerchantNodeDetail(51L);
+        org.mockito.Mockito.doReturn(detail).when(mapper).selectPlayerMerchantNodeDetail(51L, 0L);
+        IMerchantAccessService access = mock(IMerchantAccessService.class);
+        when(access.require(99L, MerchantPermission.VERIFY)).thenReturn(
+                new MerchantAccessContext(99L, 77L, 99L, MerchantRoleCode.MERCHANT_OWNER));
+        CityNodeRedemptionApplication target = new CityNodeRedemptionApplication(access, mapper, couponHistoryService,
+                session.getMapper(BusinessAuditEventMapper.class), new com.chengyinhub.business.service.impl.QrcodeServiceImpl(), "city-node-it-secret");
+        ProxyFactory factory = new ProxyFactory(target); factory.setProxyTargetClass(true);
+        factory.addAdvice(new TransactionInterceptor(new DataSourceTransactionManager(dataSource), new AnnotationTransactionAttributeSource()));
+        java.util.concurrent.atomic.AtomicLong actor = new java.util.concurrent.atomic.AtomicLong(7001L);
+        ApiVerifyController controller = new ApiVerifyController() { @Override public Long getAppUserId() { return actor.get(); } };
+        ReflectionTestUtils.setField(controller, "cityNodeRedemptionApplication", (CityNodeRedemptionApplication) factory.getProxy());
+        AjaxResult issued = controller.issueCityNodeCode(51L); assertEquals(200, issued.get("code"));
+        String code = (String) ((java.util.Map<?, ?>) issued.get("data")).get("code");
+        assertTrue(VerifyDynCodeUtil.verify(code, System.currentTimeMillis(), "city-node-it-secret").valid);
+        actor.set(99L); AjaxResult original = controller.redeemCityNodeCode(code); assertEquals(200, original.get("code"));
+        assertEquals(30L, ((java.util.Map<?, ?>) original.get("data")).get("couponId"));
+        execute("UPDATE sms_coupon SET status=3 WHERE id=30");
+        String expired = VerifyDynCodeUtil.issue(51L, "citynode_7001", 1L, 1L, 999L, "city-node-it-secret");
+        assertEquals(original, controller.cityNodeReceipt(expired), "丢失响应后只能读保存的原结论，不能用当前停发状态改写");
+        assertEquals(original, controller.cityNodeReceipt(code));
+        assertEquals("已过期", controller.redeemCityNodeCode(expired).get("msg"), "原结果回读不能放松新核销TTL");
+        assertEquals(1, number("SELECT status FROM roam_poi_reward_log WHERE poi_id=51 AND member_id=7001"));
+        assertEquals(1, number("SELECT COUNT(*) FROM sms_coupon_history WHERE member_id=7001 AND coupon_id=30"));
+        assertEquals(2, number("SELECT receive_count FROM sms_coupon WHERE id=30"));
+        assertEquals(1, number("SELECT COUNT(*) FROM business_audit_event WHERE domain_type='CITY_NODE'"));
+        org.mockito.Mockito.doThrow(new com.chengyinhub.common.exception.ServiceException("商家身份无效或权限不足", 403))
+                .when(access).require(99L, MerchantPermission.VERIFY);
+        com.chengyinhub.common.exception.ServiceException revoked = assertThrows(
+                com.chengyinhub.common.exception.ServiceException.class, () -> controller.cityNodeReceipt(code));
+        assertEquals(Integer.valueOf(403), revoked.getCode());
+        assertEquals(1, number("SELECT COUNT(*) FROM sms_coupon_history WHERE member_id=7001 AND coupon_id=30"));
         assertEquals(1, number("SELECT COUNT(*) FROM business_audit_event WHERE domain_type='CITY_NODE'"));
     }
 

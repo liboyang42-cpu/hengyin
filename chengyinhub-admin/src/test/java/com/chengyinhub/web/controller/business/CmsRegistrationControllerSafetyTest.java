@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -37,8 +38,8 @@ import static org.mockito.Mockito.when;
 /**
  * A3-1(P0):报名通用写端点封口。
  *
- * <p>报名承载支付/核销事实(金额/交易号/核销码/核销状态)。原先通用 PUT 可裸改这些事实、
- * 通用 DELETE 可删掉整条支付记录。本测试钉住:remove 一律 FORBIDDEN;edit 把支付/核销字段
+ * <p>报名承载支付、报名生命周期及核销事实。原先通用 PUT 可裸改这些事实、
+ * 通用 DELETE 可删掉整条支付记录。本测试钉住:remove 一律 FORBIDDEN;edit 把交易事实字段
  * 剥成 null(对所有人含超管生效),合法业务字段照常提交。
  */
 class CmsRegistrationControllerSafetyTest {
@@ -78,6 +79,24 @@ class CmsRegistrationControllerSafetyTest {
     }
 
     @Test
+    void genericAddRejectsForgedFinancialFactsWithoutCallingWriter() {
+        loginAs(1L, "business:registration:add");
+        CmsRegistration request = new CmsRegistration();
+        request.setMemberId(300L);
+        request.setTicketId(200L);
+        request.setPointUsed(1000L);
+        request.setPointsReturned(0);
+        request.setOrderNum(100L);
+
+        AjaxResult result = controller.add(request);
+
+        assertEquals(403, result.get(AjaxResult.CODE_TAG));
+        assertEquals("REGISTRATION_GENERIC_CREATE_DISABLED", result.get("errorCode"));
+        assertTrue(String.valueOf(result.get(AjaxResult.MSG_TAG)).contains("正式下单"));
+        verifyNoInteractions(registrationService, perkLedgerService);
+    }
+
+    @Test
     void removeRejectsDeletingPaymentRecord() {
         AjaxResult result = controller.remove(new Long[] { 1L });
 
@@ -98,6 +117,7 @@ class CmsRegistrationControllerSafetyTest {
         submitted.setTotalAmount(new BigDecimal("999"));
         submitted.setPayableAmount(new BigDecimal("999"));
         submitted.setPaymentStatus(1);
+        submitted.setRegistrationStatus(3);
         submitted.setPaymentType(2);
         submitted.setPaymentTime(new Date());
         submitted.setTransactionId("HACK-TXN");
@@ -110,12 +130,13 @@ class CmsRegistrationControllerSafetyTest {
 
         controller.edit(submitted);
 
-        // 10 个支付/核销事实字段全部被剥成 null → mapper 动态 <if> 跳过 → 库中真值不动;
+        // 支付/报名/核销事实字段全部被剥成 null → mapper 动态 <if> 跳过 → 库中真值不动;
         // 业务字段 ticketName 与主键 id 必须保留,否则封口顺手废掉了编辑功能。
         verify(registrationService).updateCmsRegistration(argThat(r ->
                 r.getTotalAmount() == null
                         && r.getPayableAmount() == null
                         && r.getPaymentStatus() == null
+                        && r.getRegistrationStatus() == null
                         && r.getPaymentType() == null
                         && r.getPaymentTime() == null
                         && r.getTransactionId() == null
@@ -127,6 +148,100 @@ class CmsRegistrationControllerSafetyTest {
                         && r.getVerifierId() == null
                         && "普通业务字段".equals(r.getTicketName())
                         && Long.valueOf(5L).equals(r.getId())));
+    }
+
+    @Test
+    void genericEditCannotCancelExpireOrResurrectRegistrationLifecycle() {
+        loginWith("business:registration:pii");
+        when(registrationService.updateCmsRegistration(org.mockito.ArgumentMatchers.any())).thenReturn(1);
+        for (int target : new int[] {1, 2, 3, 4}) {
+            CmsRegistration request = new CmsRegistration();
+            request.setId(5L);
+            request.setRegistrationStatus(target);
+            request.setTicketName("保留正常编辑");
+            assertEquals(200, controller.edit(request).get(AjaxResult.CODE_TAG));
+        }
+        org.mockito.ArgumentCaptor<CmsRegistration> writes = org.mockito.ArgumentCaptor.forClass(CmsRegistration.class);
+        verify(registrationService, org.mockito.Mockito.times(4)).updateCmsRegistration(writes.capture());
+        for (CmsRegistration write : writes.getAllValues()) {
+            assertNull(write.getRegistrationStatus(), "生命周期只能经已有支付/取消/过期命令迁移");
+            assertEquals(Long.valueOf(5L), write.getId());
+            assertEquals("保留正常编辑", write.getTicketName());
+        }
+        verifyNoInteractions(perkLedgerService);
+    }
+
+    @Test
+    void genericEditCannotRewriteOriginalPointsInventoryOrBeneficiary() {
+        loginWith("business:registration:pii");
+        CmsRegistration request = new CmsRegistration();
+        request.setId(5L);
+        request.setPointUsed(1000L);
+        request.setPointsReturned(0);
+        request.setOrderNum(100L);
+        request.setTicketId(200L);
+        request.setMemberId(300L);
+        request.setTicketName("ordinary editable label");
+        controller.edit(request);
+        org.mockito.ArgumentCaptor<CmsRegistration> writes =
+                org.mockito.ArgumentCaptor.forClass(CmsRegistration.class);
+        verify(registrationService).updateCmsRegistration(writes.capture());
+        CmsRegistration write = writes.getValue();
+        assertNull(write.getPointUsed(), "generic edits must not invent points to refund");
+        assertNull(write.getPointsReturned(), "generic edits must not release a consumed refund identity");
+        assertNull(write.getOrderNum(), "inventory release must use the original reservation quantity");
+        assertNull(write.getTicketId(), "inventory release must use the original ticket identity");
+        assertNull(write.getMemberId(), "generic edits must not change the economic beneficiary");
+        assertEquals("ordinary editable label", write.getTicketName());
+    }
+
+    @Test
+    void genericEditDoesNotCopyOriginalIdentityContextOrAuditFacts() throws Exception {
+        loginWith("business:registration:pii");
+        CmsRegistration request = new CmsRegistration();
+        // Poison every scalar property, including inherited create/update metadata.
+        for (java.beans.PropertyDescriptor property : java.beans.Introspector
+                .getBeanInfo(CmsRegistration.class).getPropertyDescriptors()) {
+            if (property.getWriteMethod() == null) continue;
+            Class<?> type = property.getPropertyType();
+            Object value = null;
+            if (type == String.class) value = "untrusted";
+            else if (type == Long.class) value = 99L;
+            else if (type == Integer.class) value = 99;
+            else if (type == BigDecimal.class) value = new BigDecimal("99.99");
+            else if (type == Date.class) value = new Date();
+            if (value != null) property.getWriteMethod().invoke(request, value);
+        }
+        controller.edit(request);
+        org.mockito.ArgumentCaptor<CmsRegistration> writes =
+                org.mockito.ArgumentCaptor.forClass(CmsRegistration.class);
+        verify(registrationService).updateCmsRegistration(writes.capture());
+        CmsRegistration write = writes.getValue();
+        for (String protectedProperty : new String[]{"registrationNo", "parentOrderNo", "requestId",
+                "requestFingerprint", "ownerType", "ownerId", "topicId", "memberId", "ticketId",
+                "orderNum", "participateDate", "purchaseKind", "ticketPrice", "originalAmount",
+                "discountAmount", "pointUsed", "pointsReturned", "pointDeductAmount", "pointDeductRate",
+                "maxPointDeduct", "feePlatformRate", "sourceClubId", "sourceFrozenAt", "sourceChannelCode",
+                "refundPolicyCode", "refundPolicyVersion", "refundDeadline", "expiresAt", "payExpireTime",
+                "firstSuccessfulScanAt", "qrcodeUrl", "createBy", "createTime", "updateBy", "updateTime"}) {
+            assertNull(org.springframework.beans.BeanUtils.getPropertyDescriptor(
+                    CmsRegistration.class, protectedProperty).getReadMethod().invoke(write), protectedProperty);
+        }
+        assertEquals(99L, write.getId());
+        assertEquals("untrusted", write.getActivityTitle());
+        assertEquals("untrusted", write.getTicketName());
+        assertEquals("untrusted", write.getRealName());
+        assertEquals("untrusted", write.getPhone());
+        assertEquals("untrusted", write.getEmail());
+        assertEquals("untrusted", write.getAddress());
+        assertEquals(99L, write.getAddressId());
+    }
+
+    @Test
+    void genericEditRequiresAnOriginalIdBeforeCallingWriter() {
+        assertEquals(500, controller.edit(null).get(AjaxResult.CODE_TAG));
+        assertEquals(500, controller.edit(new CmsRegistration()).get(AjaxResult.CODE_TAG));
+        verifyNoInteractions(registrationService);
     }
 
     // ------------------------------------------- 错核撤销入口(平台后台唯一入口)

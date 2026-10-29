@@ -22,6 +22,19 @@ public interface AiGatewayService
     AiGatewayResult generate(Long memberId, String role, String bizType,
                               String systemPrompt, String userPrompt);
 
+    /** NPC shop ASR has already reserved this conversation; verify its persisted handoff, never consume again. */
+    AiGatewayResult generateNpcAsrHandoff(NpcAsrQuotaHandoff original,String systemPrompt,String userPrompt);
+
+    /** Compensate only the persisted original NOT_SENT proof, through the existing quota recovery owner. */
+    void refundNpcAsrNotSent(Long memberId,String requestId);
+
+    /** Local configuration fingerprint only; excludes credentials and credential digests. */
+    String themeDraftConfigurationHash();
+
+    /** Consumes the original plan, never a newly planned quota identity. */
+    AiGatewayResult generateThemeDraftPrepared(Long memberId, AiThemeDraftPlan plan,
+            String systemPrompt, String userPrompt);
+
     /**
      * 查询某会员在指定场景所属额度池当日的剩余次数。
      *
@@ -56,9 +69,15 @@ public interface AiGatewayService
      */
     String consumeQuota(Long memberId, String bizType);
 
+    /** Pure identity planning; caller persists this original reservation before any Redis/provider work. */
+    String planQuotaReservation(Long memberId, String bizType, String nonce);
+
+    /** Consume only the previously persisted member/pool/day/nonce; never substitutes a fresh identity. */
+    String consumePlannedQuota(Long memberId, String bizType, String reservation);
+
     /**
-     * 退还 {@link #consumeQuota} 扣掉的那一次。只在「用户没拿到任何结论」时调用
-     * (未配置 key / 超时 / 网络失败),口径同 {@code generate}:超限不退、我们自己的锅才退。
+     * 退还原预占；仅限能证明未调用/未受理的路径。供应商超时、网络失败或结果未知
+     * 不能证明未发生费用，必须保留原身份核验；超限不退。
      * 退失败只 warn,不抛异常。
      *
      * @param memberId 会员

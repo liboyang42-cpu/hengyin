@@ -10,6 +10,8 @@ const WXML = path.join(ROOT, 'pages/club/detail/index.wxml')
 const WXSS = path.join(ROOT, 'pages/club/detail/index.wxss')
 const POST_CARD_WXML = path.join(ROOT, 'components/cy/post-card/index.wxml')
 const POST_CARD_WXSS = path.join(ROOT, 'components/cy/post-card/index.wxss')
+// 2026-10-27 P-20 owner:俱乐部发帖改走全站统一的全屏发帖弹窗,删图 / 加图 / 发布三枚动作随之搬进组件
+const COMPOSE_WXML = path.join(ROOT, 'pages/square/components/cy/post-compose/index.wxml')
 
 function rule(source, selector) {
   const clean = source.replace(/\/\*[\s\S]*?\*\//g, '')
@@ -26,15 +28,16 @@ function assertContract(overrides = {}) {
   const wxss = overrides.wxss === undefined ? fs.readFileSync(WXSS, 'utf8') : overrides.wxss
   const postCardWxml = fs.readFileSync(POST_CARD_WXML, 'utf8')
   const postCardWxss = fs.readFileSync(POST_CARD_WXSS, 'utf8')
-  const del = rule(wxss, '.post-thumb-del')
-  assert.match(del, /width:\s*var\(--cy-btn-h\)/)
-  assert.match(del, /height:\s*var\(--cy-btn-h\)/)
-  for (const selector of ['.post-send', '.post-moderation__action', '.comment-mod', '.comment-send', '.event-group-code']) {
+  const composeWxml = fs.readFileSync(COMPOSE_WXML, 'utf8')
+  for (const label of ['删除这张图片', '添加图片', '{{editMode ? \'保存\' : \'发布\'}}']) {
+    assert.ok(composeWxml.includes(`aria-label="${label}"`), `发帖组件缺少可读名称：${label}`)
+  }
+  for (const selector of ['.post-moderation__action', '.comment-mod', '.comment-send', '.event-group-code']) {
     assert.match(rule(wxss, selector), /min-height:\s*var\(--cy-btn-h\)/, `${selector} 高度不足 44px`)
   }
   assert.match(rule(postCardWxss, '.post-card__action'), /min-height:\s*88rpx/)
   for (const label of [
-    '删除发帖图片 {{index + 1}}', '添加发帖图片', '发布俱乐部动态',
+    '发布俱乐部动态',
     '删除动态', '举报动态', '删除评论', '举报评论', '发送评论',
     '出示 {{item.name}} 团码',
   ]) {
@@ -48,12 +51,14 @@ test('俱乐部发帖、互动、评论与团码动作均满足 44px 和可读�
   assertContract()
 })
 
-test('负控：发帖图片删除退回 36rpx 会判红', () => {
+// 2026-10-27 P-20:原负控钉的 .post-thumb-del 随页内发帖框撤掉,改钉同组仍在页内的评论发送钮
+test('负控：评论发送钮高度退回 36rpx 会判红', () => {
   const wxss = fs.readFileSync(WXSS, 'utf8').replace(
-    /(\.post-thumb-del\s*\{[^}]*?)width:\s*var\(--cy-btn-h\);\s*height:\s*var\(--cy-btn-h\);/s,
-    '$1width:36rpx; height:36rpx;',
+    /(\.comment-send\s*\{[^}]*?)min-height:\s*var\(--cy-btn-h\);/s,
+    '$1min-height:36rpx;',
   )
-  assert.throws(() => assertContract({ wxss }), /--cy-btn-h/)
+  assert.notEqual(wxss, fs.readFileSync(WXSS, 'utf8'), '负控锚点失配')
+  assert.throws(() => assertContract({ wxss }), /--cy-btn-h|高度不足/)
 })
 
 test('负控：删除动态丢失动作名称会判红', () => {

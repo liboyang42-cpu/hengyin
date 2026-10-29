@@ -1,0 +1,902 @@
+{
+  "base_sha": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+  "authorization": "root supplemental delegation: necessary reversible unit owner assembly only",
+  "files": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_03Test.java",
+      "base_blob": "cf5d771159f88f58e2f67e8aae9c56362343d8f6",
+      "base_sha256": "0e46cbb1a291ddc6c409c30842daa42434513d7dd80ca2d5f1453f6877ac333c",
+      "tests": 5,
+      "call_sites": [
+        {
+          "line": 75,
+          "entry": "updateTopicByOwner",
+          "chain": "updateTopicByOwner → updateTopicByOwnerInternal → legacy guard / rebuildTopicContent → graph写口"
+        },
+        {
+          "line": 81,
+          "entry": "updateTopicByOwnerV2WithReview",
+          "chain": "updateTopicByOwnerV2WithReview → rebuildTopicContent → graph写口"
+        },
+        {
+          "line": 88,
+          "entry": "updateTopicByOwner",
+          "chain": "updateTopicByOwner → updateTopicByOwnerInternal → legacy guard / rebuildTopicContent → graph写口"
+        },
+        {
+          "line": 95,
+          "entry": "updateTopicByOwner",
+          "chain": "updateTopicByOwner → updateTopicByOwnerInternal → legacy guard / rebuildTopicContent → graph写口"
+        },
+        {
+          "line": 103,
+          "entry": "updateTopicByOwner",
+          "chain": "updateTopicByOwner → updateTopicByOwnerInternal → legacy guard / rebuildTopicContent → graph写口"
+        }
+      ],
+      "necessity": "存在实际create/edit或已迁私有seam调用，需用原doubles装配真实owner；否则仍引用移除目标或新owner缺装配。",
+      "status": "APPLIED_OWNER_ONLY_SOURCE_RESTORATION_PASS",
+      "candidate_blob": "82641fe846d04b714399eb92b48bc9b338f09674"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_10Test.java",
+      "base_blob": "8d6ce48db4e04d6865a5cc37044b0a06c97960d6",
+      "base_sha256": "050af9891630b2f9b945ccbcc3518010e65acb5d7565bd224667d40d320d01fa",
+      "tests": 3,
+      "call_sites": [
+        {
+          "line": 73,
+          "entry": "updateTopicByOwner",
+          "chain": "updateTopicByOwner → updateTopicByOwnerInternal → legacy guard / rebuildTopicContent → graph写口"
+        },
+        {
+          "line": 84,
+          "entry": "updateTopicByOwner",
+          "chain": "updateTopicByOwner → updateTopicByOwnerInternal → legacy guard / rebuildTopicContent → graph写口"
+        },
+        {
+          "line": 93,
+          "entry": "updateTopicByOwner",
+          "chain": "updateTopicByOwner → updateTopicByOwnerInternal → legacy guard / rebuildTopicContent → graph写口"
+        }
+      ],
+      "necessity": "存在实际create/edit或已迁私有seam调用，需用原doubles装配真实owner；否则仍引用移除目标或新owner缺装配。",
+      "status": "APPLIED_OWNER_ONLY_SOURCE_RESTORATION_PASS",
+      "candidate_blob": "7eea466dca17092b57b7b228b2fb23cf99c47563"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_12Test.java",
+      "base_blob": "c485c60ad5841522350f996c3cdcb256e35bcf57",
+      "base_sha256": "d0bdf72de1ba9c376cb0839e5550be5e17d222b4088f759c812af255004140b8",
+      "tests": 4,
+      "call_sites": [
+        {
+          "line": 55,
+          "entry": "createTopic",
+          "chain": "createTopic → createTopicInternal → graph.saveTopicChapters / template / story / route / runtime"
+        },
+        {
+          "line": 74,
+          "entry": "createTopic",
+          "chain": "createTopic → createTopicInternal → graph.saveTopicChapters / template / story / route / runtime"
+        }
+      ],
+      "necessity": "存在实际create/edit或已迁私有seam调用，需用原doubles装配真实owner；否则仍引用移除目标或新owner缺装配。",
+      "status": "APPLIED_OWNER_ONLY_SOURCE_RESTORATION_PASS",
+      "candidate_blob": "3be297f3245483e06ac5886f046e709e7d3dccf7"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_13Test.java",
+      "base_blob": "4f1d4cfd893e46a3289ee8091c92b6e03118ccae",
+      "base_sha256": "b14e22ac8a44df6eee0bd1746380fcd09d57459808d7677c897ff0325d738870",
+      "tests": 5,
+      "call_sites": [
+        {
+          "line": 97,
+          "entry": "reflect:compileChapterFlow",
+          "chain": "原私有compileChapterFlow → 真实graph owner（原方法已迁出，或shared reader已委托）"
+        },
+        {
+          "line": 99,
+          "entry": "reflect:saveChaptersAndNodes",
+          "chain": "原私有saveChaptersAndNodes → 真实graph owner（原方法已迁出，或shared reader已委托）"
+        }
+      ],
+      "necessity": "存在实际create/edit或已迁私有seam调用，需用原doubles装配真实owner；否则仍引用移除目标或新owner缺装配。",
+      "status": "APPLIED_OWNER_ONLY_SOURCE_RESTORATION_PASS",
+      "candidate_blob": "0e945bba512faacdff3e56896863c999a157dc0c"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_14Test.java",
+      "base_blob": "3c5768ebcd20a356ad3ffc49d62723d3f330ae25",
+      "base_sha256": "e98b424e972332dfa13fae35fc58872b5b374596bd283bbee50d6ea231feba0c",
+      "tests": 10,
+      "call_sites": [
+        {
+          "line": 93,
+          "entry": "createTopicV2",
+          "chain": "createTopicV2 → createTopicV2WithReview → createTopicInternal → graph写口"
+        },
+        {
+          "line": 93,
+          "entry": "createTopic",
+          "chain": "createTopic → createTopicInternal → graph.saveTopicChapters / template / story / route / runtime"
+        },
+        {
+          "line": 97,
+          "entry": "updateTopicByOwnerV2",
+          "chain": "updateTopicByOwnerV2 → updateTopicByOwnerV2WithReview → rebuildTopicContent → graph写口"
+        },
+        {
+          "line": 98,
+          "entry": "updateTopicByOwner",
+          "chain": "updateTopicByOwner → updateTopicByOwnerInternal → legacy guard / rebuildTopicContent → graph写口"
+        },
+        {
+          "line": 193,
+          "entry": "updateTopicByOwner",
+          "chain": "updateTopicByOwner → updateTopicByOwnerInternal → legacy guard / rebuildTopicContent → graph写口"
+        }
+      ],
+      "necessity": "存在实际create/edit或已迁私有seam调用，需用原doubles装配真实owner；否则仍引用移除目标或新owner缺装配。",
+      "status": "APPLIED_OWNER_ONLY_SOURCE_RESTORATION_PASS",
+      "candidate_blob": "0cdaefb656a41e8b08bff9d4e26d71a91ce53335"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_18Test.java",
+      "base_blob": "658b46a622ba188bc82d5714a816769a5ca9b20e",
+      "base_sha256": "c99c873e4e82e78cfaf194205cdddd914ca6c4a240d6f13969ff56f8385bb43a",
+      "tests": 4,
+      "call_sites": [
+        {
+          "line": 57,
+          "entry": "createTopic",
+          "chain": "createTopic → createTopicInternal → graph.saveTopicChapters / template / story / route / runtime"
+        },
+        {
+          "line": 65,
+          "entry": "updateTopicByOwner",
+          "chain": "updateTopicByOwner → updateTopicByOwnerInternal → legacy guard / rebuildTopicContent → graph写口"
+        }
+      ],
+      "necessity": "存在实际create/edit或已迁私有seam调用，需用原doubles装配真实owner；否则仍引用移除目标或新owner缺装配。",
+      "status": "APPLIED_OWNER_ONLY_SOURCE_RESTORATION_PASS",
+      "candidate_blob": "c4fa62c0fd03f8a01f2530d1a77824d59d730caa"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicPublishDraftTest.java",
+      "base_blob": "7f29db915617cae0b27d43dee7f5e4d7c4ab2f53",
+      "base_sha256": "bb33f7afbf0c76421cb276dfa66c7369758b46268e7df32141ebca4c86dca2f0",
+      "tests": 18,
+      "call_sites": [
+        {
+          "line": 142,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 156,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 177,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 200,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 218,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 239,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 256,
+          "entry": "publishDraftWithReview",
+          "chain": "publishDraftWithReview → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 282,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 305,
+          "entry": "publishDraftWithReview",
+          "chain": "publishDraftWithReview → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 321,
+          "entry": "publishDraftWithReview",
+          "chain": "publishDraftWithReview → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 338,
+          "entry": "publishDraftWithReview",
+          "chain": "publishDraftWithReview → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 360,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 389,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 403,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 420,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 436,
+          "entry": "publishDraftWithReview",
+          "chain": "publishDraftWithReview → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 452,
+          "entry": "publishDraftWithReview",
+          "chain": "publishDraftWithReview → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 455,
+          "entry": "publishDraftWithReview",
+          "chain": "publishDraftWithReview → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 467,
+          "entry": "publishDraftWithReview",
+          "chain": "publishDraftWithReview → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        }
+      ],
+      "necessity": "触发已迁shared content guard/reader，不迁publish编排；仅shared装配，不构造未用graph。",
+      "status": "APPLIED_OWNER_ONLY_SOURCE_RESTORATION_PASS",
+      "candidate_blob": "6dd74b6e9c3472ff438053f663fa9dd66c54e495"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicPublishNarrativeNpcGuardTest.java",
+      "base_blob": "53d7f1cb486db360eed487786604b1a0e1b952c4",
+      "base_sha256": "c22eca75314663af13ca41264735e52c0e536f0068ea8f24beba7d931d4609a0",
+      "tests": 5,
+      "call_sites": [
+        {
+          "line": 105,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 127,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 145,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 170,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 194,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        }
+      ],
+      "necessity": "触发已迁shared content guard/reader，不迁publish编排；仅shared装配，不构造未用graph。",
+      "status": "APPLIED_OWNER_ONLY_SOURCE_RESTORATION_PASS",
+      "candidate_blob": "f8325b6cb294c7ffbbfc7073329ac9ff85b84fe1"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicPublishStateKeyGuardTest.java",
+      "base_blob": "b40f3c48eaef97edfa7f7908f7b24ec913dbee41",
+      "base_sha256": "b8b048d49828b97e3ecbcd40a30659b41974db59b6cab2102bfe315b0fb20bdd",
+      "tests": 25,
+      "call_sites": [
+        {
+          "line": 107,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 129,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 150,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 167,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 187,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 205,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 226,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 242,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 258,
+          "entry": "publishApprovedRouteSnapshot",
+          "chain": "publishApprovedRouteSnapshot → publishValidatedRouteSnapshot → normalizedBranchRouteForPublish:3376 → TopicRouteOutcomeReader真实算法"
+        },
+        {
+          "line": 274,
+          "entry": "publishApprovedRouteSnapshot",
+          "chain": "publishApprovedRouteSnapshot → publishValidatedRouteSnapshot → normalizedBranchRouteForPublish:3376 → TopicRouteOutcomeReader真实算法"
+        },
+        {
+          "line": 300,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 324,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 348,
+          "entry": "publishApprovedRouteSnapshot",
+          "chain": "publishApprovedRouteSnapshot → publishValidatedRouteSnapshot → normalizedBranchRouteForPublish:3376 → TopicRouteOutcomeReader真实算法"
+        },
+        {
+          "line": 382,
+          "entry": "publishApprovedRouteSnapshot",
+          "chain": "publishApprovedRouteSnapshot → publishValidatedRouteSnapshot → normalizedBranchRouteForPublish:3376 → TopicRouteOutcomeReader真实算法"
+        },
+        {
+          "line": 405,
+          "entry": "publishApprovedRouteSnapshot",
+          "chain": "publishApprovedRouteSnapshot → publishValidatedRouteSnapshot → normalizedBranchRouteForPublish:3376 → TopicRouteOutcomeReader真实算法"
+        },
+        {
+          "line": 425,
+          "entry": "publishApprovedRouteSnapshot",
+          "chain": "publishApprovedRouteSnapshot → publishValidatedRouteSnapshot → normalizedBranchRouteForPublish:3376 → TopicRouteOutcomeReader真实算法"
+        },
+        {
+          "line": 442,
+          "entry": "publishApprovedRouteSnapshot",
+          "chain": "publishApprovedRouteSnapshot → publishValidatedRouteSnapshot → normalizedBranchRouteForPublish:3376 → TopicRouteOutcomeReader真实算法"
+        },
+        {
+          "line": 459,
+          "entry": "publishApprovedRouteSnapshot",
+          "chain": "publishApprovedRouteSnapshot → publishValidatedRouteSnapshot → normalizedBranchRouteForPublish:3376 → TopicRouteOutcomeReader真实算法"
+        },
+        {
+          "line": 472,
+          "entry": "publishApprovedRouteSnapshot",
+          "chain": "publishApprovedRouteSnapshot → publishValidatedRouteSnapshot → normalizedBranchRouteForPublish:3376 → TopicRouteOutcomeReader真实算法"
+        },
+        {
+          "line": 513,
+          "entry": "publishApprovedRouteSnapshot",
+          "chain": "publishApprovedRouteSnapshot → publishValidatedRouteSnapshot → normalizedBranchRouteForPublish:3376 → TopicRouteOutcomeReader真实算法"
+        },
+        {
+          "line": 517,
+          "entry": "publishApprovedRouteSnapshot",
+          "chain": "publishApprovedRouteSnapshot → publishValidatedRouteSnapshot → normalizedBranchRouteForPublish:3376 → TopicRouteOutcomeReader真实算法"
+        },
+        {
+          "line": 536,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 560,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 564,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 575,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        }
+      ],
+      "necessity": "触发已迁shared content guard/reader，不迁publish编排；仅shared装配，不构造未用graph。",
+      "status": "APPLIED_OWNER_ONLY_SOURCE_RESTORATION_PASS",
+      "candidate_blob": "57bc652510823d415373e84a9f11d95d72e9c731"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicRoutePublishPolicyTest.java",
+      "base_blob": "59839a810b668fa7499b4f3851249eaa7fbc9550",
+      "base_sha256": "74a2263506a6b4b2db5abe3c2d9e698654385feb9c6960527736028b920cd5f4",
+      "tests": 8,
+      "call_sites": [
+        {
+          "line": 60,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 96,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 141,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 193,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 224,
+          "entry": "publishApprovedRouteSnapshot",
+          "chain": "publishApprovedRouteSnapshot → publishValidatedRouteSnapshot → normalizedBranchRouteForPublish:3376 → TopicRouteOutcomeReader真实算法"
+        },
+        {
+          "line": 245,
+          "entry": "publishApprovedRouteSnapshot",
+          "chain": "publishApprovedRouteSnapshot → publishValidatedRouteSnapshot → normalizedBranchRouteForPublish:3376 → TopicRouteOutcomeReader真实算法"
+        },
+        {
+          "line": 268,
+          "entry": "publishApprovedRouteSnapshot",
+          "chain": "publishApprovedRouteSnapshot → publishValidatedRouteSnapshot → normalizedBranchRouteForPublish:3376 → TopicRouteOutcomeReader真实算法"
+        },
+        {
+          "line": 307,
+          "entry": "reflect:declaredRouteOutcomes",
+          "chain": "原私有declaredRouteOutcomes → 真实reader owner（原方法已迁出，或shared reader已委托）"
+        }
+      ],
+      "necessity": "触发已迁shared content guard/reader，不迁publish编排；仅shared装配，不构造未用graph。",
+      "status": "APPLIED_OWNER_ONLY_SOURCE_RESTORATION_PASS",
+      "candidate_blob": "93a6076cc1d8092995cdcc2b2dd21ab1a63b90a4"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicSysVarPublishGateTest.java",
+      "base_blob": "816b9fa9e73468a9136473ca07b911fac2a7da76",
+      "base_sha256": "148b1234268a96495fc67f85750e6f8e958d4e8636cf4ae2d05b14bff8bcd913",
+      "tests": 8,
+      "call_sites": [
+        {
+          "line": 105,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 120,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 135,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 150,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 164,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 178,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 191,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 206,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        }
+      ],
+      "necessity": "触发已迁shared content guard/reader，不迁publish编排；仅shared装配，不构造未用graph。",
+      "status": "APPLIED_OWNER_ONLY_SOURCE_RESTORATION_PASS",
+      "candidate_blob": "f7aceee092dd26d7b46b1369a2061c97507be0f4"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/NodeTemplateOwnershipTest.java",
+      "base_blob": "02331f0d8de5ca33e8a21af9863038613862fd83",
+      "base_sha256": "3dd9cd2bf0b3c068a33c8dc053d69f0d62e15171d60b142a1ad8b881143d8d18",
+      "tests": 6,
+      "call_sites": [
+        {
+          "line": 88,
+          "entry": "reflect:saveNodes",
+          "chain": "原私有saveNodes → 真实graph owner（原方法已迁出，或shared reader已委托）"
+        }
+      ],
+      "necessity": "存在实际create/edit或已迁私有seam调用，需用原doubles装配真实owner；否则仍引用移除目标或新owner缺装配。",
+      "status": "APPLIED_OWNER_ONLY_SOURCE_RESTORATION_PASS",
+      "candidate_blob": "03a076bf6051c45374736f088c1f4da1fb899a36"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicPendingReviewSelfHostShellTest.java",
+      "base_blob": "14653b664085b95f8f9245ebb39a6bd09f1e277f",
+      "base_sha256": "f8e1b953c9c3bd6a0c5f93007cec1d2dbd196ce35d19d38e589df69db9115a3c",
+      "tests": 13,
+      "call_sites": [
+        {
+          "line": 123,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 144,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 271,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        }
+      ],
+      "necessity": "触发已迁shared content guard/reader，不迁publish编排；仅shared装配，不构造未用graph。",
+      "status": "APPLIED_OWNER_ONLY_SOURCE_RESTORATION_PASS",
+      "candidate_blob": "9a57456a9ac442fab2331a323eca9740f5765193"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicProductTypeTest.java",
+      "base_blob": "a00acac9ab452f702ab6ce087ada33a914eed01e",
+      "base_sha256": "4df0d6bbf4f55c0955555ea5f5dbb3b055bbf675c475f8dae30ad87d2ec25947",
+      "tests": 16,
+      "call_sites": [
+        {
+          "line": 65,
+          "entry": "reflect:assertChapterShapeForTopic",
+          "chain": "原私有assertChapterShapeForTopic → 真实guard owner（原方法已迁出，或shared reader已委托）"
+        },
+        {
+          "line": 67,
+          "entry": "reflect:assertChapterShapeForTopic",
+          "chain": "原私有assertChapterShapeForTopic → 真实guard owner（原方法已迁出，或shared reader已委托）"
+        },
+        {
+          "line": 70,
+          "entry": "reflect:assertChapterShapeForTopic",
+          "chain": "原私有assertChapterShapeForTopic → 真实guard owner（原方法已迁出，或shared reader已委托）"
+        },
+        {
+          "line": 72,
+          "entry": "reflect:assertChapterShapeForTopic",
+          "chain": "原私有assertChapterShapeForTopic → 真实guard owner（原方法已迁出，或shared reader已委托）"
+        },
+        {
+          "line": 114,
+          "entry": "reflect:assertChapterShape",
+          "chain": "原私有assertChapterShape → 真实guard owner（原方法已迁出，或shared reader已委托）"
+        }
+      ],
+      "necessity": "存在实际create/edit或已迁私有seam调用，需用原doubles装配真实owner；否则仍引用移除目标或新owner缺装配。",
+      "status": "APPLIED_OWNER_ONLY_SOURCE_RESTORATION_PASS",
+      "candidate_blob": "9b0d297b662133457884bb14eb2c5a8c8e0954e6"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicPublishJourneyStoryGateTest.java",
+      "base_blob": "3042f4cbd29770a362348f605947622886ddb4b8",
+      "base_sha256": "04856b24ab4e7f0cd0a057a2baf4754d77961cffb40836a793217ad43b899860",
+      "tests": 12,
+      "call_sites": [
+        {
+          "line": 98,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 113,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 130,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 146,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 158,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 178,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 193,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 210,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 232,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 240,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 266,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        },
+        {
+          "line": 283,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        }
+      ],
+      "necessity": "触发已迁shared content guard/reader，不迁publish编排；仅shared装配，不构造未用graph。",
+      "status": "APPLIED_OWNER_ONLY_SOURCE_RESTORATION_PASS",
+      "candidate_blob": "f628097f12d0ad73389c9cca1a41806cdf35cc35"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleReviewDecouplingTest.java",
+      "base_blob": "571673ec03beeb108e40938dc5ca2f7fd0f6b7b1",
+      "base_sha256": "5b6331d68c340a4244d503ac7021afe8c437ed63089059f6a05f8e89d5c9c565",
+      "tests": 2,
+      "call_sites": [
+        {
+          "line": 187,
+          "entry": "updateTopicByOwner",
+          "chain": "updateTopicByOwner → updateTopicByOwnerInternal → legacy guard / rebuildTopicContent → graph写口"
+        },
+        {
+          "line": 195,
+          "entry": "updateTopicByOwner",
+          "chain": "updateTopicByOwner → updateTopicByOwnerInternal → legacy guard / rebuildTopicContent → graph写口"
+        }
+      ],
+      "necessity": "存在实际create/edit或已迁私有seam调用，需用原doubles装配真实owner；否则仍引用移除目标或新owner缺装配。",
+      "status": "APPLIED_OWNER_ONLY_SOURCE_RESTORATION_PASS",
+      "candidate_blob": "c4b67e13824b83d15a48cf2a0df31f17e5476bb1"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplayReskinFixture.java",
+      "base_blob": "0e083e2a3ae529869b34c6b5936fb1c707a3bb08",
+      "base_sha256": "7967f6ee29e3ddd25ad4a0d1592f971ad1221b1cba177b9f0e8e69337ca7a16b",
+      "tests": 0,
+      "call_sites": [
+        {
+          "line": 174,
+          "entry": "createTopic",
+          "chain": "createTopic → createTopicInternal → graph.saveTopicChapters / template / story / route / runtime"
+        },
+        {
+          "line": 177,
+          "entry": "updateTopicByOwner",
+          "chain": "updateTopicByOwner → updateTopicByOwnerInternal → legacy guard / rebuildTopicContent → graph写口"
+        },
+        {
+          "line": 178,
+          "entry": "updateTopicByOwner",
+          "chain": "updateTopicByOwner → updateTopicByOwnerInternal → legacy guard / rebuildTopicContent → graph写口"
+        },
+        {
+          "line": 180,
+          "entry": "publishDraft",
+          "chain": "publishDraft → publishDraftInternal:2464 → 原shared helper → TopicContentWriteGuard真实算法"
+        }
+      ],
+      "necessity": "存在实际create/edit或已迁私有seam调用，需用原doubles装配真实owner；否则仍引用移除目标或新owner缺装配。",
+      "status": "APPLIED_OWNER_ONLY_SOURCE_RESTORATION_PASS",
+      "candidate_blob": "13035dd238d86045bdf68db5eb9a63837636a839"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PersonalGameplayRuntimeServiceTest.java",
+      "base_blob": "4ffb84cbe29ccf3ad6fd910f5741a0f139666724",
+      "base_sha256": "1606cd4a03dacd742354cd64028cc462c2ddf00d2124fd2860d99191c89ff613",
+      "tests": 49,
+      "call_sites": [
+        {
+          "line": 526,
+          "entry": "reflect:persistTemplateInteractionRules",
+          "chain": "原私有persistTemplateInteractionRules → 真实graph owner（原方法已迁出，或shared reader已委托）"
+        }
+      ],
+      "necessity": "存在实际create/edit或已迁私有seam调用，需用原doubles装配真实owner；否则仍引用移除目标或新owner缺装配。",
+      "status": "APPLIED_OWNER_ONLY_SOURCE_RESTORATION_PASS",
+      "candidate_blob": "8ae3c98443a651b00cf70ca70b616c672d582c5f"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicCreateOpenClubPoolTest.java",
+      "base_blob": "aa9fa7c42587a292d1a67d6ff265f29e2d102898",
+      "base_sha256": "bcc29f1c24f56799e26499c97e9c67f696e0ac8980ee3e3ba3dc3576f9cc39d1",
+      "tests": 15,
+      "call_sites": [
+        {
+          "line": 108,
+          "entry": "createTopic",
+          "chain": "createTopic → createTopicInternal → graph.saveTopicChapters / template / story / route / runtime"
+        },
+        {
+          "line": 122,
+          "entry": "createTopic",
+          "chain": "createTopic → createTopicInternal → graph.saveTopicChapters / template / story / route / runtime"
+        },
+        {
+          "line": 159,
+          "entry": "createTopic",
+          "chain": "createTopic → createTopicInternal → graph.saveTopicChapters / template / story / route / runtime"
+        },
+        {
+          "line": 174,
+          "entry": "createTopic",
+          "chain": "createTopic → createTopicInternal → graph.saveTopicChapters / template / story / route / runtime"
+        },
+        {
+          "line": 185,
+          "entry": "createTopic",
+          "chain": "createTopic → createTopicInternal → graph.saveTopicChapters / template / story / route / runtime"
+        },
+        {
+          "line": 198,
+          "entry": "createTopic",
+          "chain": "createTopic → createTopicInternal → graph.saveTopicChapters / template / story / route / runtime"
+        },
+        {
+          "line": 215,
+          "entry": "createTopic",
+          "chain": "createTopic → createTopicInternal → graph.saveTopicChapters / template / story / route / runtime"
+        },
+        {
+          "line": 231,
+          "entry": "createTopic",
+          "chain": "createTopic → createTopicInternal → graph.saveTopicChapters / template / story / route / runtime"
+        },
+        {
+          "line": 244,
+          "entry": "createTopic",
+          "chain": "createTopic → createTopicInternal → graph.saveTopicChapters / template / story / route / runtime"
+        },
+        {
+          "line": 288,
+          "entry": "createTopic",
+          "chain": "createTopic → createTopicInternal → graph.saveTopicChapters / template / story / route / runtime"
+        },
+        {
+          "line": 323,
+          "entry": "createTopic",
+          "chain": "createTopic → createTopicInternal → graph.saveTopicChapters / template / story / route / runtime"
+        },
+        {
+          "line": 334,
+          "entry": "createTopic",
+          "chain": "createTopic → createTopicInternal → graph.saveTopicChapters / template / story / route / runtime"
+        },
+        {
+          "line": 350,
+          "entry": "createTopic",
+          "chain": "createTopic → createTopicInternal → graph.saveTopicChapters / template / story / route / runtime"
+        },
+        {
+          "line": 364,
+          "entry": "createTopic",
+          "chain": "createTopic → createTopicInternal → graph.saveTopicChapters / template / story / route / runtime"
+        },
+        {
+          "line": 382,
+          "entry": "createTopic",
+          "chain": "createTopic → createTopicInternal → graph.saveTopicChapters / template / story / route / runtime"
+        }
+      ],
+      "necessity": "存在实际create/edit或已迁私有seam调用，需用原doubles装配真实owner；否则仍引用移除目标或新owner缺装配。",
+      "status": "APPLIED_OWNER_ONLY_SOURCE_RESTORATION_PASS",
+      "candidate_blob": "04d0cab68d6f4404626550f22948dfc73ecfb7f1"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicCreateSaveDraftSideEffectTest.java",
+      "base_blob": "42585313f4fc07af0844390036a8041fdde7d4ff",
+      "base_sha256": "8ae237f52e89c33e0c4df3574b7c292b065ed38591863c028fe26cedc79f805e",
+      "tests": 5,
+      "call_sites": [
+        {
+          "line": 101,
+          "entry": "createTopic",
+          "chain": "createTopic → createTopicInternal → graph.saveTopicChapters / template / story / route / runtime"
+        },
+        {
+          "line": 115,
+          "entry": "createTopic",
+          "chain": "createTopic → createTopicInternal → graph.saveTopicChapters / template / story / route / runtime"
+        },
+        {
+          "line": 128,
+          "entry": "createTopic",
+          "chain": "createTopic → createTopicInternal → graph.saveTopicChapters / template / story / route / runtime"
+        },
+        {
+          "line": 143,
+          "entry": "createTopic",
+          "chain": "createTopic → createTopicInternal → graph.saveTopicChapters / template / story / route / runtime"
+        },
+        {
+          "line": 161,
+          "entry": "createTopic",
+          "chain": "createTopic → createTopicInternal → graph.saveTopicChapters / template / story / route / runtime"
+        }
+      ],
+      "necessity": "存在实际create/edit或已迁私有seam调用，需用原doubles装配真实owner；否则仍引用移除目标或新owner缺装配。",
+      "status": "APPLIED_OWNER_ONLY_SOURCE_RESTORATION_PASS",
+      "candidate_blob": "4e57d51921801db2d1c5642d44b3838a6411dcdb"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/OldClientUpgradeRequiredContractTest.java",
+      "base_blob": "4022b7c7fdfaad2970de2dbbabbbc7eb254241bc",
+      "base_sha256": "67bf3c2cc397aef307ee8b3f1bc60abd4ba04e9d80d78c542c8a2a703840a13a",
+      "tests": 3,
+      "call_sites": [
+        {
+          "line": 68,
+          "entry": "reflect:assertLegacyChapterFlowWritable",
+          "chain": "原私有assertLegacyChapterFlowWritable → 真实guard owner（原方法已迁出，或shared reader已委托）"
+        }
+      ],
+      "necessity": "存在实际create/edit或已迁私有seam调用，需用原doubles装配真实owner；否则仍引用移除目标或新owner缺装配。",
+      "status": "APPLIED_OWNER_ONLY_SOURCE_RESTORATION_PASS",
+      "candidate_blob": "43591ee1b442554e3f071abc65fe577ee7640300"
+    }
+  ]
+}

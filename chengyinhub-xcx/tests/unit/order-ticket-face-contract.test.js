@@ -45,8 +45,9 @@ function assertWalletContract(wxml, wxss, json) {
   assert.match(wxml, /class="wc"/)
   assert.match(wxml, /src="\{\{item\.wImg\}\}"/)
   assert.match(wxml, /class="wc__b">\{\{item\.wTitle\}\}/)
-  assert.match(wxml, /aria-label="\{\{tk\.cta\(item\) \|\| tk\.label\(item\)\}\}，\{\{item\.wTitle\}\}"/,
-    '票名与状态必须以 aria-label 保留(读屏等价物),不能连同可见文字一起消失')
+  /* 2026-10-28 业主:点卡翻面出示入场码,卡上不写状态;读屏只读「出示入场码 / 翻回正面」+ 票名 */
+  assert.match(wxml, /aria-label="\{\{flipped && index === currentSwiperTicket \? '翻回正面' : '出示入场码'\}\}，\{\{item\.wTitle\}\}"/,
+    '票名必须以 aria-label 保留(读屏等价物)')
   /* 2026-10-22 业主:票夹标题放回顶栏居中。仍是悬浮(overlay)导航 —— 不长出实底导航条。 */
   assert.match(wxml, /<cy-nav-bar overlay pill pillDark tint="light" title=""\s*\/>/,
     '全屏主题图上只保留悬浮导航(返回),不得重新长出实底导航条')
@@ -61,15 +62,10 @@ function assertWalletContract(wxml, wxss, json) {
   assert.match(shortScreen, /\.signup\s*\{[^}]*height:\s*auto;[^}]*min-height:\s*100vh;[^}]*overflow-y:\s*auto/s)
   assert.match(shortScreen, /\.team-entry\s*\{[^}]*position:\s*static/s,
     '短屏容不下固定票卡和队伍入口时必须允许纵向滚动')
-  /* 2026-09-10 用户定的方向:票夹点进去就是开始玩,票夹去不了订单 ——
-     订单有订单的页面,而且只有订单页能来票夹,反过来不行。
-     所以 cta 不再出现「查看详情」(它以前指的就是订单页),没有下一步的档整颗不渲染。
-     待支付是唯一例外:那还不是一张票,是一笔没付完的单,文案写「去支付」。 */
-  assert.doesNotMatch(wxml, /(?:进入游玩|开始游戏|出示入场码)\s*›/)
-  const cta = wxml.slice(wxml.indexOf('function cta('), wxml.indexOf('module.exports'))
-  assert.doesNotMatch(cta, /return '查看详情'/, '票夹不能再给一条通往订单页的入口')
-  assert.match(cta, /if \(s === 'ready'\) return '开始游戏'/)
-  assert.match(cta, /if \(s === 'pending'\) return '去支付'/, '没付完的单要能去付，文案照实写')
+  /* 2026-10-28 业主:票夹只放能用的票,进游戏走底部「开始游戏」,卡面不再有 cta / 状态 / 「去支付」 */
+  assert.match(wxml, /bindtap="goTicket" data-index="\{\{currentSwiperTicket\}\}" data-go="1"/)
+  assert.match(wxml, /<text>开始游戏<\/text>/)
+  assert.doesNotMatch(wxml, /去支付|查看详情|wl-tab/, '票夹不放待支付的单,也没有可用/已用/已过期切换')
   assert.equal(json.usingComponents?.['cy-icon'], '/components/cy/icon/index')
 }
 

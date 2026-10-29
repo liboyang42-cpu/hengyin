@@ -36,14 +36,14 @@ import java.util.Set;
 public class ThemeAttributeService {
 
     public static final int MAX_ATTRIBUTES = 6;
-    public static final int MAX_LABEL = 12;
+    public static final int MAX_LABEL = ThemeKeyNamingService.MAX_ATTRIBUTE_LABEL;
     public static final int RANGE_MIN = 0;
     public static final int RANGE_MAX = 20;
     public static final String PRESET_CUSTOM = "custom";
 
     static final String MSG_FULL = "最多 6 项属性。";
-    static final String MSG_DUPLICATE = "已有同名的属性。";
-    static final String MSG_NAME_LONG = "名称最多 12 字。";
+    static final String MSG_DUPLICATE = ThemeKeyNamingService.MSG_ATTRIBUTE_DUPLICATE;
+    static final String MSG_NAME_LONG = ThemeKeyNamingService.MSG_ATTRIBUTE_NAME_LONG;
     static final String MSG_PRESET = "请选择属性。";
     static final String MSG_MIN_MAX = "最小值要小于最大值。";
     static final String MSG_INITIAL = "开局值要在最小值和最大值之间。";

@@ -1,0 +1,100 @@
+path	line	source
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java	87	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java	179	} catch (RestoreDispatchGuard.Blocked paused) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java	207	} catch (RestoreDispatchGuard.Blocked paused) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java	259	} catch (RestoreDispatchGuard.Blocked paused) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java	284	} catch (RestoreDispatchGuard.Blocked paused) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java	303	catch (RestoreDispatchGuard.Blocked paused) { throw paused; }
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java	330	if (RestoreDispatchGuard.isRestoreMode()) return;
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java	341	} catch (RestoreDispatchGuard.Blocked paused) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java	470	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java	569	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java	825	if (RestoreDispatchGuard.isRestoreMode()) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java	861	} catch (RestoreDispatchGuard.Blocked paused) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java	955	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java	994	catch (RestoreDispatchGuard.Blocked paused) { throw paused; }
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java	1008	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java	428	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java	730	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java	839	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java	1514	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java	1551	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java	1635	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java	1679	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java	2046	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java	2219	if (RestoreDispatchGuard.isRestoreMode()) return "FAIL";
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java	2375	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java	2407	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java	2769	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java	2892	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java	2910	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java	2929	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundPayoutServiceImpl.java	81	} catch (RestoreDispatchGuard.Blocked paused) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundPayoutServiceImpl.java	108	if (RestoreDispatchGuard.isRestoreMode()) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundPayoutServiceImpl.java	112	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundPayoutServiceImpl.java	192	} catch (RestoreDispatchGuard.Blocked paused) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java	210	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java	229	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java	253	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java	367	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java	444	if (RestoreDispatchGuard.isRestoreMode()) return false;
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java	534	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java	583	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java	635	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java	677	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationCheckoutServiceImpl.java	89	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationCheckoutServiceImpl.java	153	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationCheckoutServiceImpl.java	162	} catch (RestoreDispatchGuard.Blocked paused) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationOrderServiceImpl.java	74	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationOrderServiceImpl.java	101	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java	146	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java	319	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java	388	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java	396	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java	407	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java	439	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java	930	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java	1056	} catch (RestoreDispatchGuard.Blocked paused) { throw paused; }
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java	1439	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java	1626	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java	1650	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberWithdrawalServiceImpl.java	105	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberWithdrawalServiceImpl.java	158	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberWithdrawalServiceImpl.java	188	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberWithdrawalServiceImpl.java	336	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberWithdrawalServiceImpl.java	362	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberWithdrawalServiceImpl.java	378	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPaymentIntentStore.java	20	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPaymentIntentStore.java	102	} catch (RestoreDispatchGuard.Blocked paused) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPaymentSdkGateway.java	185	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPaymentSdkGateway.java	198	} catch (RestoreDispatchGuard.Blocked paused) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPaymentSdkGateway.java	209	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPaymentSdkGateway.java	233	} catch (RestoreDispatchGuard.Blocked paused) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPaymentSdkGateway.java	243	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPaymentSdkGateway.java	285	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPaymentSdkGateway.java	291	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPaymentSdkGateway.java	471	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPaymentSdkGateway.java	581	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPaymentSdkGateway.java	589	} catch (RestoreDispatchGuard.Blocked paused) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPaymentSdkGateway.java	597	} catch (RestoreDispatchGuard.Blocked paused) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPaymentSdkGateway.java	618	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPaymentSdkGateway.java	624	} catch (RestoreDispatchGuard.Blocked paused) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPaymentSdkGateway.java	635	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPaymentSdkGateway.java	641	} catch (RestoreDispatchGuard.Blocked paused) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPaymentSdkGateway.java	704	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPaymentSdkGateway.java	759	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPaymentSdkGateway.java	787	} catch (RestoreDispatchGuard.Blocked paused) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPaymentSdkGateway.java	850	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPaymentSdkGateway.java	879	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPaymentSdkGateway.java	1124	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/WithdrawalBalanceAdmissionService.java	42	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/WithdrawalBalanceAdmissionService.java	48	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/WithdrawalBalanceAdmissionService.java	103	RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java	77	} catch (RestoreDispatchGuard.Blocked paused) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java	184	if (RestoreDispatchGuard.isRestoreMode()) continue;
+chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java	198	if (RestoreDispatchGuard.isRestoreMode()) continue;
+chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java	205	} catch (RestoreDispatchGuard.Blocked paused) { throw paused; }
+chengyinhub-system/src/main/java/com/chengyinhub/business/task/OrderCloseTask.java	228	} catch (RestoreDispatchGuard.Blocked paused) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/task/RefundReconcileTask.java	57	catch (RestoreDispatchGuard.Blocked paused) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/task/RefundReconcileTask.java	115	if (RestoreDispatchGuard.isRestoreMode()) continue;
+chengyinhub-system/src/main/java/com/chengyinhub/business/task/RefundReconcileTask.java	128	} catch (RestoreDispatchGuard.Blocked paused) {

@@ -1,0 +1,11 @@
+UTC 2026-10-23T19:39:37.557080+00:00
+MODE: static evidence + synthetic contract specification; no production behavior claims
+PASS synthetic specification: 16 unique facts; 11 exact expected sets; ticket isolation; overlapping person sets; 3 money cases; durable claim replay/conflict
+PASS static source anchors: 28 evidence groups (not execution proof)
+PASS lexical caller inventory: 4 searches, full output saved; no network/database access
+PASS static only: new mapper XML is select-only; Java delimiters balanced; 14 test methods inventoried without executing Java
+EXPECTED_RED_BY_SOURCE_REVIEW_NOT_EXECUTION: completedGameNodeWithoutExploreTicketDoesNotBecomeACompletedExploreProduct (C controller fix pending)
+PASS isolation: HEAD=2ec68899099a1e250df0949a8383bf85b5d3ffe0; branch=codex/architecture-day-g-fact-contracts; only G delivery directory and 7 explicitly owned new source files changed
+PASS git diff --check and git diff --cached --check; all document source files also checked for trailing whitespace
+candidate_sha256=d8f0835d4b92f84866fcd2964693b164b521add5ff8ad751e3c6842dc79305cb
+NOT_RUN: Maven/Java/MySQL/Redis/Spring transaction/approved VPS or CI/external payment or refund

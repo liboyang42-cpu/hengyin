@@ -102,6 +102,13 @@ class CashWithdrawFrozenRequeryH2Test {
 
         jdbc = new JdbcTemplate(dataSource);
         jdbc.execute(DDL);
+        // Legacy H2 regression fixture only; MySQL fund guarantees are tested separately.
+        jdbc.execute("create table member_cash_withdraw_fund_fact (id bigint primary key auto_increment,"
+                + "withdrawal_id bigint, member_id bigint, amount decimal(15,2), out_batch_no varchar(64), out_detail_no varchar(64),"
+                + "request_mchid varchar(64),request_appid varchar(64),request_amount_fen bigint,request_openid varchar(128),request_remark varchar(32),request_version int,request_hash varchar(64),channel_batch_id varchar(64),"
+                + "kind varchar(20), submission_intent_id bigint, balance_before decimal(15,2), balance_after decimal(15,2), create_time datetime,"
+                + "channel_batch_status varchar(32), channel_detail_status varchar(32), channel_detail_id varchar(64), channel_error_code varchar(64),"
+                + "unique(withdrawal_id, kind))");
 
         SqlSessionFactoryBean factory = new SqlSessionFactoryBean();
         factory.setDataSource(dataSource);
@@ -111,6 +118,7 @@ class CashWithdrawFrozenRequeryH2Test {
         mapper = new SqlSessionTemplate(sqlSessionFactory).getMapper(MemberCashWithdrawMapper.class);
 
         umsMemberService = mock(IUmsMemberService.class);
+        when(umsMemberService.addBalance(any(), any())).thenReturn(true);
         wechatPayService = mock(IWechatPayService.class);
 
         CashWithdrawServiceImpl target = new CashWithdrawServiceImpl();
@@ -165,7 +173,7 @@ class CashWithdrawFrozenRequeryH2Test {
         long id = insertProcessing(0);
         Map<String, String> q = failResponse(id);
         // 模拟并发:requery 已通过入口守卫、正在查微信时,另一个会话把这单冻结了
-        when(wechatPayService.queryTransferResult(any(CashWithdrawTransferIntent.class))).thenAnswer(inv -> {
+        when(wechatPayService.queryTransferResult(org.mockito.ArgumentMatchers.argThat(i -> i != null && ("CW" + id).equals(i.outBatchNo()) && ("CD" + id).equals(i.outDetailNo())))).thenAnswer(inv -> {
             jdbc.update("update member_cash_withdraw set frozen = 1, frozen_reason = ? where id = ?",
                     "风控核查中", id);
             return q;
@@ -173,7 +181,7 @@ class CashWithdrawFrozenRequeryH2Test {
 
         service.requery(id);   // 入口守卫读到的是未冻结的快照,不抛异常
 
-        verify(wechatPayService, times(1)).queryTransferResult(any(CashWithdrawTransferIntent.class));
+        verify(wechatPayService, times(1)).queryTransferResult(org.mockito.ArgumentMatchers.argThat(i -> i != null && ("CW" + id).equals(i.outBatchNo()) && ("CD" + id).equals(i.outDetailNo())));
         //  ↑ 确实走进了 syncOne 的 FAIL 分支,是在 CAS 才被拦 —— 排除「没进 syncOne 所以没加钱」的假通过
         verify(umsMemberService, never()).addBalance(any(), any());
 
@@ -213,7 +221,7 @@ class CashWithdrawFrozenRequeryH2Test {
         assertNull(row.get("wechat_detail_id"), "wechat_detail_id 同上");
 
         // 入口就拦下了 ⇒ 连微信都不该查(比 CAS 那层更早,省一次外部调用)
-        verify(wechatPayService, never()).queryTransferResult(any(CashWithdrawTransferIntent.class));
+        verify(wechatPayService, never()).queryTransferResult(org.mockito.ArgumentMatchers.any(CashWithdrawTransferIntent.class));
     }
 
     /** (b) 未冻结的同型单:正常路径不许被改坏,微信 FAIL 仍要自动回补。 */
@@ -327,26 +335,51 @@ class CashWithdrawFrozenRequeryH2Test {
         idc.setOutBatchNo("CW" + id);
         idc.setOutDetailNo("CD" + id);
         mapper.updateMemberCashWithdraw(idc);
+        // Explicit fixture evidence for an already debited/submitted original; no real debit is claimed by H2.
+        w.setOutBatchNo(idc.getOutBatchNo()); w.setOutDetailNo(idc.getOutDetailNo());
+        com.chengyinhub.business.domain.CashWithdrawFundFact debit =
+                com.chengyinhub.business.domain.CashWithdrawFundFact.of(w, "DEBIT");
+        debit.setBalanceBefore(new BigDecimal("100.00")); debit.setBalanceAfter(new BigDecimal("50.00"));
+        mapper.insertFundFact(debit);
+        jdbc.update("update member_cash_withdraw set balance_deduct_id=? where id=?", debit.getId(), id);
+        com.chengyinhub.business.domain.CashWithdrawFundFact submitted =
+                com.chengyinhub.business.domain.CashWithdrawFundFact.of(w, "SUBMIT_INTENT");
+        submitted.bindTransferIntent(CashWithdrawTransferIntent.fromRequest(id, "unit-merchant", "wx-mp-appid",
+                w.getOutBatchNo(), w.getOutDetailNo(), AMOUNT, "o_test", "城瘾分润提现"));
+        mapper.insertFundFact(submitted);
         jdbc.update("update member_cash_withdraw set frozen = ?, frozen_reason = ?, frozen_by = ? where id = ?",
                 frozen, frozen == 1 ? "风控核查中" : null, frozen == 1 ? "finance01" : null, id);
-        evidence.seed(mapper.selectById(id), true);
         return id;
     }
 
+    private Map<String, String> originalFacts(long id) {
+        Map<String, String> facts = new HashMap<>();
+        facts.put("mchid", "unit-merchant"); facts.put("appid", "wx-mp-appid"); facts.put("openid", "o_test");
+        facts.put("outBatchNo", "CW" + id); facts.put("outDetailNo", "CD" + id);
+        facts.put("transferAmount", "5000"); facts.put("batchId", "provider-batch"); facts.put("detailId", "provider-detail");
+        return facts;
+    }
+
     private Map<String, String> failResponse(long id) {
-        Map<String, String> q = CashWithdrawIntentTestSupport.facts(evidence.get(id), "FAIL");
+        Map<String, String> q = new HashMap<>();
+        q.put("result", "FAIL");
+        q.put("detailStatus", "FAIL");
+        q.put("batchStatus", "FINISHED");
+        q.putAll(originalFacts(id));
         q.put("failReasonCode", "ACCOUNT_FROZEN");
         return q;
     }
 
     private void wechatReturnsFail(long id) {
-        when(wechatPayService.queryTransferResult(any(CashWithdrawTransferIntent.class))).thenReturn(failResponse(id));
+        when(wechatPayService.queryTransferResult(org.mockito.ArgumentMatchers.argThat(i -> i != null && ("CW" + id).equals(i.outBatchNo()) && ("CD" + id).equals(i.outDetailNo())))).thenReturn(failResponse(id));
     }
 
     private void wechatReturnsSuccess(long id) {
-        Map<String, String> q = CashWithdrawIntentTestSupport.facts(evidence.get(id), "SUCCESS");
+        Map<String, String> q = new HashMap<>();
+        q.put("result", "SUCCESS"); q.put("detailStatus", "SUCCESS"); q.putAll(originalFacts(id));
+        q.put("batchStatus", "FINISHED");
         q.put("detailId", "D123456");
-        when(wechatPayService.queryTransferResult(any(CashWithdrawTransferIntent.class))).thenReturn(q);
+        when(wechatPayService.queryTransferResult(org.mockito.ArgumentMatchers.argThat(i -> i != null && ("CW" + id).equals(i.outBatchNo()) && ("CD" + id).equals(i.outDetailNo())))).thenReturn(q);
     }
 
     private Map<String, Object> row(long id) {

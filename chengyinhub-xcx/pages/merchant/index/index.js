@@ -1,3 +1,4 @@
+const { seatTarget, seatKey, captureLogin, loginCurrent, seatRecovery } = require('../../../utils/registration-seat.js');
 const loading = require('../../../utils/loading.js'); const pageMotion = require('../../../utils/page-motion.js');
 const { chinaParts } = require('../../../utils/datetime');
 const cyToast = require('../../../utils/toast.js');
@@ -11,6 +12,7 @@ const { inactiveAccess, normalizeMerchantAccess } = require('../../../utils/merc
 const { ensureSession } = require('../utils/session/ensure-session.js');
 const { normalizeMerchantFinanceRoute } = require('../utils/merchant-finance.js');
 const { pendingPrerequisites } = require('../utils/merchant-prerequisites.js');
+const identitySync = require('../../../utils/identity-sync.js');
 
 // cms_topic.product_type → 展示名(与 marketing 页同口径)
 const PRODUCT_TYPE_TEXT = { 1: '城市定向', 2: '自由探索' };
@@ -141,14 +143,21 @@ Page({
       statusBarHeight: gd.statusBarHeight || 44,
       navBarHeight: gd.navBarHeight || 44,
     });
+    // G-5 / M-27(2026-10-27):品牌中心换 Logo / 改店名后立刻换掉首页头像与问候名,随后 onShow 的 access/me 回读兜底
+    this._offIdentitySync = identitySync.onIdentityChange((evt) => {
+      if (evt.scope !== 'merchant' || !this.data.merchantAccess.active) return;
+      const merchantInfo = Object.assign({}, this.data.merchantInfo, evt.patch);
+      this.setData({ merchantInfo });
+      this.refreshProfileHeader(merchantInfo, this._userInfo);
+    });
     // 首屏数据统一由紧随其后的 onShow 在远程身份确认后加载，避免 onLoad/onShow 并发拉两整组工作台。
     if (options && options.scene) this.openScene(options.scene, { id: options.id, tab: options.tab });
   },
 
   refreshProfileHeader(merchantInfo, userInfo) {
     const info = merchantInfo || {};
-    const user = userInfo || {};
-    const displayName = info.name || user.nickname || '商家';
+    // G-5(2026-10-27):商家视角名称只认商家名,不再拿会员昵称兜底(同一家店不能有两个名字)
+    const displayName = info.name || '商家';
     const businessStatus = (info.businessStatus === 0 || info.businessStatus === '0') ? 0 : 1;
     this.setData({ displayName: displayName, businessStatus: businessStatus });
   },
@@ -607,7 +616,7 @@ Page({
     if (this._verificationWorkflow) {
       this._verificationWorkflow.destroy();
       this._verificationWorkflow = null;
-      loading.hide();
+      if (this._verificationLoadingOwners) { this._verificationLoadingOwners.forEach(() => loading.hide()); this._verificationLoadingOwners.clear(); }
     }
     // hero 头像不再兜底个人头像后,userInfo 只剩 js 内部读(昵称兜底/角色同步),不进 data
     this._userInfo = null;
@@ -818,7 +827,12 @@ Page({
         }
         this.syncMerchantScope(access);
         this._accessMemberId = identityMemberId;
-        const merchantInfo = Object.assign({}, this.data.merchantInfo, access.merchant);
+        // G-5:access/me 回读的空 Logo/空店名不覆盖已有值(刚保存的新 Logo 不能被一次空回包抹掉成白圈)
+        const accessMerchant = {};
+        Object.keys(access.merchant || {}).forEach((key) => {
+          if (access.merchant[key] !== '' && access.merchant[key] != null) accessMerchant[key] = access.merchant[key];
+        });
+        const merchantInfo = Object.assign({}, this.data.merchantInfo, accessMerchant);
         this.setData({ consoleError: '', consoleStatus: null, merchantAccess: access, merchantInfo });
         this.refreshProfileHeader(merchantInfo, this._userInfo);
         this.loadMerchantConsole(access, dataEpoch);
@@ -1241,18 +1255,31 @@ Page({
   _submitVerification(key, loadingTitle, options, callback) {
     const that = this;
     const owner = String(app.getUserID && app.getUserID() || '');
-    key = owner + ':' + key;
+    const target = seatTarget(options);
+    const login = captureLogin(app, wx);
+    key = target ? seatKey(owner, target) : owner + ':' + key;
     const verificationEpoch = this._verificationEpoch || 0;
     const scopeKey = this._merchantScopeKey || '';
+    const seatCurrent = () => loginCurrent(app, wx, login) && owner === String(app.getUserID && app.getUserID() || '') && verificationEpoch === (that._verificationEpoch || 0) && scopeKey === (that._merchantScopeKey || '');
+    if (target && !seatCurrent()) return false;
     if (!this._verificationWorkflow) this._verificationWorkflow = createVerificationWorkflow({ deadlineMs: 15000, storage: wx, getOwner: () => app.getUserID && app.getUserID() });
-    if (this._verificationWorkflow.isBusy(key)) {
+    if (!target && this._verificationWorkflow.isBusy(key)) {
       cyToast('核销处理中，请勿重复提交');
       return false;
     }
-    loading.show(loadingTitle);
+    const loadingOwner = {};
+    if (!target) {
+      if (!this._verificationLoadingOwners) this._verificationLoadingOwners = new Set();
+      this._verificationLoadingOwners.add(loadingOwner);
+      loading.show(loadingTitle);
+    }
+    const finishLoading = () => {
+      if (that._verificationLoadingOwners && that._verificationLoadingOwners.delete(loadingOwner)) loading.hide();
+    };
     const submitted = this._verificationWorkflow.run(key, function (done) {
       return app.sendRequest(Object.assign({}, options, {
         autoErrorToast: false,
+        hideLoading: !!target || options.hideLoading, silentError: !!target || options.silentError,
         success(res) { done(classifyVerificationOutcome(res, 'success', undefined, options)); },
         fail(res, status) { done(classifyVerificationOutcome(res, 'fail', status, options)); },
         successStatusAbnormal(res, status) {
@@ -1260,29 +1287,34 @@ Page({
         }
       }));
     }, function (result) {
-      loading.hide();
+      finishLoading();
+      if (target && !seatCurrent()) return;
       if (owner !== String(app.getUserID && app.getUserID() || '')
         || verificationEpoch !== (that._verificationEpoch || 0)
         || scopeKey !== (that._merchantScopeKey || '')) return;
       if (result.status === 'unknown') {
-        callback({ code: 202, msg: '核销结果待确认，请勿重复核销；请先查看核销记录' }, result);
-        offerVerificationReadback(key, that._verificationWorkflow);
+        callback({ code: 202, msg: target ? '原席位结果待确认；再次扫描同一席位只查询结果，请勿改选席位重发' : '核销结果待确认，请勿重复核销；请先查看核销记录' }, result);
+        if (!target) offerVerificationReadback(key, that._verificationWorkflow);
         return;
       }
       callback(result.response, result);
-    });
-    if (!submitted) loading.hide();
+    }, target ? seatRecovery(app, target, seatCurrent) : undefined);
+    if (!submitted) finishLoading();
     return submitted;
   },
 
   goScanQR() {
     const that = this;
+    const login = captureLogin(app, wx), scanEpoch = this._verificationEpoch || 0;
+    const scanCurrent = () => loginCurrent(app, wx, login) && scanEpoch === (that._verificationEpoch || 0);
     wx.scanCode({
       fail(err) {
+        if (!scanCurrent()) return;
         if (err && /cancel/i.test(err.errMsg || '')) return;
         cyToast('未识别到二维码，请对准后重试');
       },
       success(res) {
+        if (!scanCurrent()) return;
         const scan = resolveVerificationScan(res.result);
         if (scan.kind === 'invalid') {
           // 护栏不能是哑巴:码是好的,只是核销口在别处。给一条能点过去的指路,
@@ -1418,7 +1450,7 @@ Page({
   },
 
   goFinance() {
-    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/merchant/ledger/index?view=settlement', complete: () => { this._navigating = false; } });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageA/pages/assetcenter/earnings/index?theme=merchant', complete: () => { this._navigating = false; } }); // 2026-10-28 M-32:先进账户收益(浅色),结算明细在「更多」里
   },
 
   goBrandManage() {
@@ -1529,6 +1561,7 @@ Page({
   },
 
   onUnload() {
+    if (this._offIdentitySync) { this._offIdentitySync(); this._offIdentitySync = null; }
     if (this._revenueCountStop) this._revenueCountStop();
     this._revenueCountStop = null;
     this._consoleVersion = (this._consoleVersion || 0) + 1;
@@ -1542,7 +1575,7 @@ Page({
     }
     if (this._verificationWorkflow) {
       this._verificationWorkflow.destroy();
-      loading.hide();
+      if (this._verificationLoadingOwners) { this._verificationLoadingOwners.forEach(() => loading.hide()); this._verificationLoadingOwners.clear(); }
     }
     this.resetGameStationSummaries(false);
     merchantTheme.merchantPageRestore();

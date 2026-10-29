@@ -5,9 +5,21 @@ import java.util.Date;
 
 /** EligibleRegistrationSet 的单条冻结事实投影。 */
 public class CoopSettlementCandidate {
+    private Long stationFulfillmentId;
+    public Long getStationFulfillmentId() { return stationFulfillmentId; }
+    public void setStationFulfillmentId(Long value) { stationFulfillmentId = value; }
+    private java.util.List<Long> verifiedSeatIds;
+    /** null means no canonical seat source; an explicit empty list proves zero verified seats. */
+    public java.util.List<Long> getVerifiedSeatIds() { return verifiedSeatIds; }
+    public void setVerifiedSeatIds(java.util.List<Long> ids) { verifiedSeatIds = ids == null ? null : java.util.List.copyOf(ids); }
     private Long registrationId;
     private Long ownerType;
     private Long ownerId;
+    private Long sourceTopicId;
+    private Long orderQuantity;
+    private boolean ticketOwnerMatches;
+    private Date fulfillmentStartInclusive;
+    private Date fulfillmentEndExclusive;
     private Integer registrationStatus;
     private Integer paymentStatus;
     private Integer verificationStatus;
@@ -22,6 +34,16 @@ public class CoopSettlementCandidate {
     private Date groupMemberVerifyTime;
     private Date verificationTime;
 
+    public Long getSourceTopicId() { return sourceTopicId; }
+    public void setSourceTopicId(Long value) { sourceTopicId = value; }
+    public Long getOrderQuantity() { return orderQuantity; }
+    public void setOrderQuantity(Long value) { orderQuantity = value; }
+    public boolean isTicketOwnerMatches() { return ticketOwnerMatches; }
+    public void setTicketOwnerMatches(boolean value) { ticketOwnerMatches = value; }
+    public Date getFulfillmentStartInclusive() { return fulfillmentStartInclusive; }
+    public void setFulfillmentStartInclusive(Date value) { fulfillmentStartInclusive = value; }
+    public Date getFulfillmentEndExclusive() { return fulfillmentEndExclusive; }
+    public void setFulfillmentEndExclusive(Date value) { fulfillmentEndExclusive = value; }
     public Long getRegistrationId() { return registrationId; }
     public void setRegistrationId(Long value) { this.registrationId = value; }
     public Long getOwnerType() { return ownerType; }

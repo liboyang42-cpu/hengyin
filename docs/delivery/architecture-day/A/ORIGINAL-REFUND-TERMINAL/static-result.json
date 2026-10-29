@@ -1,0 +1,155 @@
+{
+  "status": "STATIC_ONLY",
+  "parent": "36687c65464ea569ba774c128005a094916771fa",
+  "G_dependency": "8818837b3717e3340384545d04b81abef4697fc7",
+  "Java_MySQL_CI_executed": false,
+  "counts": {
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RegistrationTopicFenceMySqlIT.java": {
+      "declared_tests": 25,
+      "dynamic": [],
+      "nested": [],
+      "gates": [],
+      "conditions": [],
+      "required_database_bases": []
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundOriginalComponentOwnerTest.java": {
+      "declared_tests": 5,
+      "dynamic": [],
+      "nested": [],
+      "gates": [],
+      "conditions": [],
+      "required_database_bases": []
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationFundsMybatisIntegrationTest.java": {
+      "declared_tests": 96,
+      "dynamic": [],
+      "nested": [],
+      "gates": [
+        [
+          "CHENGYIN_FUNDS_MYSQL_IT",
+          "1"
+        ]
+      ],
+      "conditions": [],
+      "required_database_bases": []
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundBalanceFloorTest.java": {
+      "declared_tests": 5,
+      "dynamic": [],
+      "nested": [],
+      "gates": [],
+      "conditions": [],
+      "required_database_bases": []
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundMultiPartyClawbackTest.java": {
+      "declared_tests": 1,
+      "dynamic": [],
+      "nested": [],
+      "gates": [],
+      "conditions": [],
+      "required_database_bases": []
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundPartialClawbackTest.java": {
+      "declared_tests": 2,
+      "dynamic": [],
+      "nested": [],
+      "gates": [],
+      "conditions": [],
+      "required_database_bases": []
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundSingleSidedDebitGuardTest.java": {
+      "declared_tests": 7,
+      "dynamic": [],
+      "nested": [],
+      "gates": [],
+      "conditions": [],
+      "required_database_bases": []
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundSingleSidedDebitTopicGuardTest.java": {
+      "declared_tests": 8,
+      "dynamic": [],
+      "nested": [],
+      "gates": [],
+      "conditions": [],
+      "required_database_bases": []
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundManualPayoutTest.java": {
+      "declared_tests": 19,
+      "dynamic": [],
+      "nested": [],
+      "gates": [],
+      "conditions": [],
+      "required_database_bases": []
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundPayoutReceiptUrlGateTest.java": {
+      "declared_tests": 14,
+      "dynamic": [],
+      "nested": [],
+      "gates": [],
+      "conditions": [],
+      "required_database_bases": []
+    }
+  },
+  "preserved_funds_test_bodies": 96,
+  "preserved_topic_test_bodies": 20,
+  "legacy_original_methods_unchanged": {
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundBalanceFloorTest.java": 5,
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundMultiPartyClawbackTest.java": 1,
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundPartialClawbackTest.java": 2,
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundSingleSidedDebitGuardTest.java": 7,
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundSingleSidedDebitTopicGuardTest.java": 8,
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundManualPayoutTest.java": 19,
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundPayoutReceiptUrlGateTest.java": 14
+  },
+  "precise_source_lines": {
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java": {
+      "public int verifyManualPayout": 361,
+      "private boolean updatePayoutTerminal": 512,
+      "public int reviewRefund": 652
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java": {
+      "topic_closed_original_payment_recovery_required": 2254,
+      "private String completePaymentSuccess": 2349,
+      "private CmsRegistration repairHistoricalPaidHalfState": 2501
+    }
+  },
+  "protected_equal_to_parent": [
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPayServiceImpl.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubEventOpsServiceImpl.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackMutationService.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementClaimServiceImpl.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SettlementEntryServiceImpl.java",
+    "ci/real_storage_it.py",
+    "ci/real-storage-it-registry.json",
+    "pom.xml"
+  ],
+  "sha256": {
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RegistrationTopicFenceMySqlIT.java": "fb73fd7847e87382230414c8d4a4c947e61208309c7a746c7ad06f1dbca9e202",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundBalanceFloorTest.java": "67a4d00bf65693be9f1644b5038fb328f202465cc6295acf6730e2001e278a45",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundMultiPartyClawbackTest.java": "bc31b24334e757dbc1db30dd8907cf2f1d6ecda98d89def5ed24450bb5268ebb",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundPartialClawbackTest.java": "c6f9408207e1913dc0a0f8cc651b3363211eb7f126609f262abdee78811dccbe",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundSingleSidedDebitGuardTest.java": "2489d193ab75d478fccde2003573619f50ba2e5936a44752c144bc1c7672c240",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundSingleSidedDebitTopicGuardTest.java": "41570c3b237f2c4d49eea9932c4b7c0cc38b8ab6b7eb2ff519c8b4df38130afb",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationFundsMybatisIntegrationTest.java": "1c7d52717a0bb9e412776527632ba2f5d9a5643e6a380982f6f3ea2c7e0fef2f",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundManualPayoutTest.java": "60176bfbc3644c85bc03e1d5f068b773d6188563cbd6f93791426a200eeec30f",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundOriginalComponentOwnerTest.java": "795c42c4419cbf2dded519bfd8dae8fd9a0ebfabca11ca640c0c351702f3aaf2",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundPayoutReceiptUrlGateTest.java": "76466c8976cd20ab224e58e9228dbb3276e183fc8fd98d75ef1e6897ea842660",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java": "6d70a420649ea81863fae0678f7507de9bcb54103cd2ab4c79a5b99109a0e4c0",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java": "d2c85a82e45c5d5d3595ada047d95b04b8305d68ab7d0152ac8d60d159f6c32f"
+  },
+  "actual_G_interface_sha256": "103ff33f7354ea6e1cc98051a4e92473ee3f3ec85d8ffcb47f1941a42c87dcc4",
+  "not_verified": [
+    "Java/test compilation",
+    "JUnit",
+    "MySQL/rollback/concurrency/cleanup",
+    "B/G same-head linked proof and original-money reversal",
+    "post-close final recovery"
+  ],
+  "remaining": [
+    "G original allocation producer and partial/rounding/negative-margin decisions",
+    "B inline original fact ref association",
+    "old refund notification/typed fixture adaptation from pre-f31 contract (RefundNotificationMybatisIntegrationTest, RefundRetryAndRemainderMySqlIT, RefundVerifiedFactsTest, RefundManualPayoutTest callback cases)",
+    "root unified regression and receipt registration"
+  ]
+}

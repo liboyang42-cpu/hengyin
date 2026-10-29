@@ -54,7 +54,10 @@ function loadPage(options = {}) {
     createInnerAudioContext: () => audio,
     getSystemInfoSync: () => ({}),
   }
+  require('../helpers/voice-enrollment-environment.cjs').install(app, wx);
   const localRequire = (id) => {
+    if (id.endsWith('voice-enrollment-journal.js')) return require('../../utils/voice-enrollment-journal.js');
+    if (id.endsWith('modal.js')) return { show() {} };
     if (id.endsWith('toast.js')) return function () {}
     if (id.endsWith('modal.js')) return { show() {} }
     if (id.endsWith('merchant-theme.js')) return { merchantPageShow() {}, merchantPageRestore() {} }
@@ -65,6 +68,8 @@ function loadPage(options = {}) {
     if (id.endsWith('pixel-portrait.js')) return {}
     if (id.endsWith('transport/upload-client.js')) return upload
     if (id.endsWith('profile-review.js')) return require('../../utils/profile-review.js')
+    // 2026-10-27 M-28/G-7:漫游落点只显示到路名(纯函数,无副作用)
+    if (id.endsWith('address-short.js')) return require('../../pages/merchant/utils/address-short.js')
     throw new Error('unexpected require ' + id)
   }
   vm.runInNewContext(SOURCE, {
@@ -79,7 +84,8 @@ function loadPage(options = {}) {
   }
   page._request = (url, payload) => {
     state.requests.push({ url, payload })
-    return Promise.resolve({ data: { voiceStatus: 2 } })
+    return Promise.resolve({ data: { voiceStatus: 2, voiceSample: 'media-asset:73',
+      voiceRequestId: payload && payload.voiceRequestId, voiceIntentId: 17, voiceIntentState: 'READY', voiceSelected: true } })
   }
   state.page = page
   return state
@@ -184,7 +190,7 @@ test('录音不足 10 秒时明确拒绝', async () => {
 
 test('合法录音上传一次并携带声音授权发起复刻', async () => {
   const h = loadPage({
-    onWxUpload(opts) { opts.success({ data: JSON.stringify({ code: 200, url: 'https://cdn/voice.mp3' }) }) },
+    onWxUpload(opts) { opts.success({ data: JSON.stringify({ code: 200, assetId: 73, url: 'https://cdn/voice.mp3' }) }) },
   })
   h.page.onVoiceConsentChange({ detail: { checked: true } })
   h.page.onVoiceHoldStart()
@@ -198,7 +204,7 @@ test('合法录音上传一次并携带声音授权发起复刻', async () => {
 
   assert.equal(h.wxUploads, 1)
   assert.equal(h.requests[0].url, '/api/merchant/npc/voice/enroll')
-  assert.equal(h.requests[0].payload.voiceSample, 'https://cdn/voice.mp3')
+  assert.equal(h.requests[0].payload.voiceSample, 'media-asset:73')
   assert.equal(h.requests[0].payload.voiceConsent, true)
 })
 
@@ -239,6 +245,8 @@ test('录音权限被拒绝时不假装开始', async () => {
   assert.equal(h.recorderStarts.length, 0)
   assert.equal(h.page.data.voiceHolding, false)
   assert.match(h.page.data.voiceError, /录音权限/)
+  // 2026-10-27 M-28:被拒后给「去设置开启麦克风」直达按钮(wx.authorize 不会再弹第二次)
+  assert.equal(h.page.data.voiceNeedSetting, true)
 })
 
 test('等待录音授权时切后台不会晚到启动麦克风', async () => {
@@ -292,4 +300,16 @@ test('拒绝第三方声音克隆单独同意保留合法录音且不上传、�
   h.page.uploadVoice(); await tick();
   assert.equal(h.wxUploads,0); assert.equal(h.requests.length,0); assert.ok(h.page.data.voiceFile);
   assert.equal(h.page.data.voiceBusy,false); assert.match(h.page.data.voiceError,/拒绝/);
+});
+
+test('声音查询绑定接收真实tap事件，同时保留内部清除guard且只读不派发', async () => {
+  const h = loadPage();
+  await assert.doesNotReject(h.page.refreshVoice({ type: 'tap', detail: {}, currentTarget: { dataset: {} } }));
+  assert.equal(h.requests.length, 1);
+  assert.equal(h.requests[0].url, '/api/merchant/npc/voice/status');
+  const before = JSON.stringify(h.page.data);
+  await assert.doesNotReject(h.page.refreshVoice(() => false));
+  assert.equal(h.requests.length, 1, '失效清除代次不得查询或重新派发');
+  assert.equal(JSON.stringify(h.page.data), before);
+  assert.equal(h.wxUploads, 0);
 });

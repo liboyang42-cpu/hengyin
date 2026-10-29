@@ -18,6 +18,8 @@ public class OfficialBroadcastDeliveryService {
  private final IImService im;
  private final WxSubscribeChannel subscribe;
  private final TransactionTemplate tx;
+ @org.springframework.beans.factory.annotation.Autowired
+ private UmsMemberMapper members;
  public OfficialBroadcastDeliveryService(OfficialBroadcastLogMapper logs,OfficialBroadcastMapper broadcasts,IImService im,WxSubscribeChannel subscribe,PlatformTransactionManager manager){
   this.logs=logs;this.broadcasts=broadcasts;this.im=im;this.subscribe=subscribe;
   tx=new TransactionTemplate(manager);tx.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
@@ -35,15 +37,22 @@ public class OfficialBroadcastDeliveryService {
   if(bc==null || Integer.valueOf(OfficialBroadcast.ST_REVOKED).equals(bc.getStatus()))return;
   for(Map<String,Object> row:logs.deliveryRows(bc.getId())) {
    Long id=((Number)row.get("id")).longValue();String state=(String)row.get("delivery_state");
-   if("inapp".equals(row.get("channel")) && ("READY".equals(state)||"RETRYABLE".equals(state))) inapp(bc.getId(),id);
+   if("inapp".equals(row.get("channel")) && ("READY".equals(state)||"RETRYABLE".equals(state))) inapp(bc.getId(),id,number(row.get("member_id")));
    if("subscribe".equals(row.get("channel")) && ("READY".equals(state)||state!=null && state.startsWith("NOT_SUBMITTED_"))) subscription(bc.getId(),id);
   }
  }
- private void inapp(Long broadcastId,Long id){
+ private void inapp(Long broadcastId,Long id,Long member){
   try {
-   tx.execute(status->{if(!active(broadcastId))return null;Map<String,Object> row=logs.lockDelivery(id);String state=(String)row.get("delivery_state");
+   tx.execute(status->{if(!active(broadcastId))return null;
+    // All broadcast protocols share the same existing member fence. Lock it before delivery/IM.
+    // This transaction has made only locking reads; the following frequency read sees the last holder's commit.
+    if(member==null || !member.equals(members.lockMemberById(member)))return null;
+    Map<String,Object> row=logs.lockDelivery(id);if(row==null)return null;String state=(String)row.get("delivery_state");
     if(!Set.of("READY","RETRYABLE").contains(state))return null;
-    Long member=((Number)row.get("member_id")).longValue(),bc=((Number)row.get("broadcast_id")).longValue();
+    if(!member.equals(number(row.get("member_id"))) || !broadcastId.equals(number(row.get("broadcast_id"))))
+     throw new IllegalStateException("通知投递归属已变化");
+    if(logs.countRecentByMember(member,60)>=5)return null;
+    Long bc=((Number)row.get("broadcast_id")).longValue();
     String title=(String)row.get("frozen_title"),sub=(String)row.get("frozen_sub");
     String extra=JSON.toJSONString(Map.of("title",title,"sub",sub,"bcId",String.valueOf(bc)));
     Long intent=im.enqueueSystemNotification(member,ImMessage.MSG_CARD,title,extra,"official_bc:"+bc+":"+member+":inapp");
@@ -94,7 +103,7 @@ public class OfficialBroadcastDeliveryService {
    int unresolved=counts.get("UNKNOWN")+counts.get("RETRYABLE")+counts.get("READY")+counts.get("LEGACY_UNCONFIRMED")+counts.get("CAPPED")+counts.get("NOT_SUBMITTED");
    int reached=counts.get("INAPP_STORED");OfficialBroadcast update=new OfficialBroadcast();update.setId(bc.getId());update.setReachedCount(reached);update.setStatus(unresolved==0?OfficialBroadcast.ST_SENT:OfficialBroadcast.ST_PENDING);
    if(batch==null || ((Number)batch.get("status")).intValue()==OfficialBroadcast.ST_REVOKED)return reached;
-   broadcasts.updateOfficialBroadcast(update);bc.setReachedCount(reached);bc.setStatus(update.getStatus());return reached;
+   if(broadcasts.updateOfficialBroadcast(update)!=1)throw new IllegalStateException("通知统计保存失败");bc.setReachedCount(reached);bc.setStatus(update.getStatus());return reached;
   });
  }
  public Map<String,Object> summary(Long id){

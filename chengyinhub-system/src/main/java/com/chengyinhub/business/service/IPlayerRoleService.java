@@ -12,6 +12,9 @@ public interface IPlayerRoleService {
      */
     PlayerActivityRole assignOrGet(Long memberId, Long activityId);
 
+    /** 只读已有角色；未分配返回 null，不轮转、不创建。 */
+    PlayerActivityRole readAssigned(Long memberId, Long activityId);
+
     /** 角色码 → 中文名(未知码回空串,不抛) */
     String roleName(String roleCode);
 }

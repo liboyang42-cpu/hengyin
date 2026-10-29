@@ -93,6 +93,7 @@ node --test tests/unit/page-cleanup-audit.test.js
 | `subpackageA/pages/infomationdetail/infomationdetail` | 否 | `chengyinhub-xcx/utils/scene-registry.js:71` | KEEP |
 | `subpackageA/pages/assetcenter/income-detail/income-detail` | 否 | `chengyinhub-xcx/components/cy/scene-asset-earnings/index.js:90` | KEEP |
 | `subpackageA/pages/assetcenter/earnings/index` | 否 | `chengyinhub-xcx/pages/coop/finance/index.js:16` | KEEP |
+| `subpackageA/pages/assetcenter/analysis/index` | 否 | `chengyinhub-xcx/components/cy/scene-asset-earnings/index.js:153` | KEEP |
 | `subpackageP3/pages/growthcenter/index/index` | 否 | `chengyinhub-xcx/pages/topic/index/index.js:458` | KEEP |
 | `subpackageP3/pages/growthcenter/leaderboard/index` | 否 | `chengyinhub-xcx/subpackageP3/pages/growthcenter/index/index.js:296` | KEEP |
 | `subpackageP3/pages/stamp-camera/index/index` | 否 | `chengyinhub-xcx/components/cy/scene-deep-link/index.js:153` | KEEP |
@@ -178,6 +179,7 @@ node --test tests/unit/page-cleanup-audit.test.js
 | `pages/addressinfo/addressinfo` | 否 | `chengyinhub-xcx/pages/activity/baoming/baoming.js:581` | KEEP |
 | `pages/shezhi/shezhi` | 否 | `chengyinhub-xcx/components/cy/scene-deep-link/index.js:34` | KEEP |
 | `pages/shezhi/about/index` | 否 | `chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubController.java:899` | KEEP |
+| `pages/shezhi/marketing/index` | 否 | `chengyinhub-xcx/pages/shezhi/shezhi.js:192` | KEEP |
 | `pages/gerenziliao/gerenziliao` | 否 | `chengyinhub-xcx/pages/shezhi/shezhi.js:139` | KEEP |
 | `pages/userinfo/userinfo` | 否 | `chengyinhub-admin/sql/migration_merchant_npc_menu_20260824.sql:116` | KEEP |
 | `pages/mylike/mylike` | 否 | `chengyinhub-xcx/pages/shezhi/shezhi.js:154` | KEEP |

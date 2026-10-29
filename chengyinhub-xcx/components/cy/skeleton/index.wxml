@@ -1,6 +1,6 @@
 <block wx:if="{{ready}}">
 <!-- 首页/广场 Feed:封面、标题、摘要和标签位与最终卡片同构。 -->
-<view wx:if="{{type === 'feed-card'}}" class="sk sk-feed {{reducedMotion ? 'sk--static' : ''}}"
+<view wx:if="{{type === 'feed-card'}}" class="sk sk-feed {{reducedMotion ? 'sk--static' : ''}} {{light ? 'sk--light' : ''}}"
       aria-role="status" aria-live="polite" aria-label="{{loadingLabel}}">
   <view class="sk-feed-card" wx:for="{{items}}" wx:key="index">
     <view class="sk-bar sk-feed-cover"></view>
@@ -17,7 +17,7 @@
 </view>
 
 <!-- 地图卡:地图画布、地点标题与两行元信息。 -->
-<view wx:elif="{{type === 'map-card'}}" class="sk sk-map-list {{reducedMotion ? 'sk--static' : ''}}"
+<view wx:elif="{{type === 'map-card'}}" class="sk sk-map-list {{reducedMotion ? 'sk--static' : ''}} {{light ? 'sk--light' : ''}}"
       aria-role="status" aria-live="polite" aria-label="{{loadingLabel}}">
   <view class="sk-map-card" wx:for="{{items}}" wx:key="index">
     <view class="sk-bar sk-map-canvas"></view>
@@ -29,7 +29,7 @@
 </view>
 
 <!-- 商家指标:保留标签、主数和趋势三层，加载中不渲染伪金额/伪数值。 -->
-<view wx:elif="{{type === 'merchant-metric'}}" class="sk sk-metric-grid {{reducedMotion ? 'sk--static' : ''}}"
+<view wx:elif="{{type === 'merchant-metric'}}" class="sk sk-metric-grid {{reducedMotion ? 'sk--static' : ''}} {{light ? 'sk--light' : ''}}"
       aria-role="status" aria-live="polite" aria-label="{{loadingLabel}}">
   <view class="sk-metric-card" wx:for="{{items}}" wx:key="index">
     <view class="sk-bar sk-metric-label"></view>
@@ -39,7 +39,7 @@
 </view>
 
 <!-- 路线时间线:节点、连接线、标题与说明。 -->
-<view wx:elif="{{type === 'route-timeline'}}" class="sk sk-route {{reducedMotion ? 'sk--static' : ''}}"
+<view wx:elif="{{type === 'route-timeline'}}" class="sk sk-route {{reducedMotion ? 'sk--static' : ''}} {{light ? 'sk--light' : ''}}"
       aria-role="status" aria-live="polite" aria-label="{{loadingLabel}}">
   <view class="sk-route-row" wx:for="{{items}}" wx:key="index">
     <view class="sk-route-rail">
@@ -54,7 +54,7 @@
 </view>
 
 <!-- 表单区:字段标签和输入框同构，避免加载后整页跳位。 -->
-<view wx:elif="{{type === 'form-section'}}" class="sk sk-form {{reducedMotion ? 'sk--static' : ''}}"
+<view wx:elif="{{type === 'form-section'}}" class="sk sk-form {{reducedMotion ? 'sk--static' : ''}} {{light ? 'sk--light' : ''}}"
       aria-role="status" aria-live="polite" aria-label="{{loadingLabel}}">
   <view class="sk-form-field" wx:for="{{items}}" wx:key="index">
     <view class="sk-bar sk-form-label"></view>
@@ -63,14 +63,14 @@
 </view>
 
 <!-- 金额骨架:资金 hero / 余额行。只画结构，不渲染伪金额或“加载中”文案。 -->
-<view wx:elif="{{type === 'amount'}}" class="sk sk-amount {{reducedMotion ? 'sk--static' : ''}}"
+<view wx:elif="{{type === 'amount'}}" class="sk sk-amount {{reducedMotion ? 'sk--static' : ''}} {{light ? 'sk--light' : ''}}"
       aria-role="status" aria-live="polite" aria-label="{{loadingLabel}}">
   <view class="sk-bar sk-amount-label"></view>
   <view class="sk-bar sk-amount-value"></view>
 </view>
 
 <!-- 详情骨架:Hero 大图 + 标题 + 多行 -->
-<view wx:elif="{{type === 'detail'}}" class="sk sk-detail {{reducedMotion ? 'sk--static' : ''}}"
+<view wx:elif="{{type === 'detail'}}" class="sk sk-detail {{reducedMotion ? 'sk--static' : ''}} {{light ? 'sk--light' : ''}}"
       aria-role="status" aria-live="polite" aria-label="{{loadingLabel}}">
   <view class="sk-bar sk-hero"></view>
   <view class="sk-bar sk-line sk-w70"></view>
@@ -82,7 +82,7 @@
 </view>
 
 <!-- 票券骨架:票面 + 撕线 + 票根，与票夹最终卡片同构，避免转圈结束后整块跳位。 -->
-<view wx:elif="{{type === 'ticket'}}" class="sk sk-ticket-list {{reducedMotion ? 'sk--static' : ''}}"
+<view wx:elif="{{type === 'ticket'}}" class="sk sk-ticket-list {{reducedMotion ? 'sk--static' : ''}} {{light ? 'sk--light' : ''}}"
       aria-role="status" aria-live="polite" aria-label="{{loadingLabel}}">
   <view class="sk-ticket" wx:for="{{items}}" wx:key="index">
     <view class="sk-bar sk-ticket-band"></view>
@@ -102,7 +102,7 @@
 
 <!-- 帖文鱼骨:头像 + 三条长短不一的正文线 + 媒体块 + 操作行,与 cy-post-card 同构。
      线必须长短不一 —— 等长看起来像表格不像文字。 -->
-<view wx:elif="{{type === 'post-card'}}" class="sk sk-post-list {{reducedMotion ? 'sk--static' : ''}}"
+<view wx:elif="{{type === 'post-card'}}" class="sk sk-post-list {{reducedMotion ? 'sk--static' : ''}} {{light ? 'sk--light' : ''}}"
       aria-role="status" aria-live="polite" aria-label="{{loadingLabel}}">
   <view class="sk-post" wx:for="{{items}}" wx:key="index">
     <view class="sk-bar sk-post-avatar"></view>
@@ -121,7 +121,7 @@
 </view>
 
 <!-- 卡片骨架:图 + 标题 + 元信息 -->
-<view wx:elif="{{type === 'card'}}" class="sk {{reducedMotion ? 'sk--static' : ''}}"
+<view wx:elif="{{type === 'card'}}" class="sk {{reducedMotion ? 'sk--static' : ''}} {{light ? 'sk--light' : ''}}"
       aria-role="status" aria-live="polite" aria-label="{{loadingLabel}}">
   <view class="sk-card" wx:for="{{items}}" wx:key="index">
     <view class="sk-bar sk-cover"></view>
@@ -131,7 +131,7 @@
 </view>
 
 <!-- 列表骨架:头像 + 两行 -->
-<view wx:else class="sk {{reducedMotion ? 'sk--static' : ''}}"
+<view wx:else class="sk {{reducedMotion ? 'sk--static' : ''}} {{light ? 'sk--light' : ''}}"
       aria-role="status" aria-live="polite" aria-label="{{loadingLabel}}">
   <view class="sk-row" wx:for="{{items}}" wx:key="index">
     <view class="sk-bar sk-avatar"></view>

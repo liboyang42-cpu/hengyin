@@ -19,6 +19,8 @@ public class MerchantChapterApplication extends BaseEntity {
     public static final int STATUS_REJECTED = 2;
 
     private Long id;
+    /** Persistent attempt identity. NULL means legacy evidence is unknown, never an implicit round 1. */
+    private Long applicationRound;
     /** 由 chapterId 反查写入，仅用于查询索引，不能作为归属判据。 */
     private Long topicId;
     private Long chapterId;
@@ -64,6 +66,9 @@ public class MerchantChapterApplication extends BaseEntity {
     private String circleThemeCode;
     private Date circleSupplyCheckedAt;
 
+    public Long getApplicationRound() { return applicationRound; }
+    @com.fasterxml.jackson.annotation.JsonProperty(access = com.fasterxml.jackson.annotation.JsonProperty.Access.READ_ONLY)
+    public void setApplicationRound(Long value) { applicationRound = value; }
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public Long getTopicId() { return topicId; }

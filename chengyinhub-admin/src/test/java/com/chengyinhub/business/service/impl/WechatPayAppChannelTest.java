@@ -4,7 +4,7 @@ import com.chengyinhub.business.domain.CmsRegistration;
 import com.chengyinhub.business.service.PaymentPreorderException;
 import com.chengyinhub.common.config.WxPayConfig;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.util.ReflectionTestUtils;
+import com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport;
 
 import java.math.BigDecimal;
 
@@ -33,13 +33,13 @@ class WechatPayAppChannelTest {
         when(config.getAppAppid()).thenReturn("wx_native_app");
         when(config.getMerchantId()).thenReturn("1900000109");
         when(config.getNotifyUrl()).thenReturn("https://example.test/pay/notify");
-        WechatPayServiceImpl service = new WechatPayServiceImpl();
-        ReflectionTestUtils.setField(service, "wxPayConfig", config);
+        WechatPayServiceImpl service = WechatVerifiedFactTestSupport.gateway();
+        WechatVerifiedFactTestSupport.setField(service, "wxPayConfig", config);
         markServiceReady(service);
 
         com.wechat.pay.java.service.payments.app.AppServiceExtension appExtension =
                 mock(com.wechat.pay.java.service.payments.app.AppServiceExtension.class);
-        ReflectionTestUtils.setField(service, "appServiceExtension", appExtension);
+        WechatVerifiedFactTestSupport.setField(service, "appServiceExtension", appExtension);
         assertTrue(service.isAppReady());
         com.wechat.pay.java.service.payments.app.model.PrepayWithRequestPaymentResponse response =
                 new com.wechat.pay.java.service.payments.app.model.PrepayWithRequestPaymentResponse();
@@ -83,13 +83,13 @@ class WechatPayAppChannelTest {
         when(config.getAppAppid()).thenReturn("wx_native_app");
         when(config.getMerchantId()).thenReturn("1900000109");
         when(config.getNotifyUrl()).thenReturn("https://example.test/pay/notify");
-        WechatPayServiceImpl service = new WechatPayServiceImpl();
-        ReflectionTestUtils.setField(service, "wxPayConfig", config);
+        WechatPayServiceImpl service = WechatVerifiedFactTestSupport.gateway();
+        WechatVerifiedFactTestSupport.setField(service, "wxPayConfig", config);
         markServiceReady(service);
 
         com.wechat.pay.java.service.payments.app.AppServiceExtension appExtension =
                 mock(com.wechat.pay.java.service.payments.app.AppServiceExtension.class);
-        ReflectionTestUtils.setField(service, "appServiceExtension", appExtension);
+        WechatVerifiedFactTestSupport.setField(service, "appServiceExtension", appExtension);
         com.wechat.pay.java.service.payments.app.model.PrepayWithRequestPaymentResponse incomplete =
                 new com.wechat.pay.java.service.payments.app.model.PrepayWithRequestPaymentResponse();
         incomplete.setAppid("wx_native_app");
@@ -109,8 +109,8 @@ class WechatPayAppChannelTest {
         WxPayConfig config = mock(WxPayConfig.class);
         when(config.isWechatPayEnabled()).thenReturn(true);
         when(config.getAppAppid()).thenReturn("   ");
-        WechatPayServiceImpl service = new WechatPayServiceImpl();
-        ReflectionTestUtils.setField(service, "wxPayConfig", config);
+        WechatPayServiceImpl service = WechatVerifiedFactTestSupport.gateway();
+        WechatVerifiedFactTestSupport.setField(service, "wxPayConfig", config);
         markServiceReady(service);
 
         PaymentPreorderException error = assertThrows(PaymentPreorderException.class,
@@ -128,12 +128,12 @@ class WechatPayAppChannelTest {
         when(config.isWechatPayEnabled()).thenReturn(true);
         when(config.getAppAppid()).thenReturn("wx_native_app");
         when(config.getNotifyUrl()).thenReturn("https://example.test/pay/notify");
-        WechatPayServiceImpl service = new WechatPayServiceImpl();
-        ReflectionTestUtils.setField(service, "wxPayConfig", config);
+        WechatPayServiceImpl service = WechatVerifiedFactTestSupport.gateway();
+        WechatVerifiedFactTestSupport.setField(service, "wxPayConfig", config);
         markServiceReady(service);
         com.wechat.pay.java.service.payments.app.AppServiceExtension appExtension =
                 mock(com.wechat.pay.java.service.payments.app.AppServiceExtension.class);
-        ReflectionTestUtils.setField(service, "appServiceExtension", appExtension);
+        WechatVerifiedFactTestSupport.setField(service, "appServiceExtension", appExtension);
 
         PaymentPreorderException missingOrderNo = assertThrows(PaymentPreorderException.class,
                 () -> service.createGenericAppOrder(" ", new BigDecimal("50.00"), "保证金"));
@@ -164,8 +164,8 @@ class WechatPayAppChannelTest {
     void disabledPaymentRejectsAppOrderAsDefiniteFailure() {
         WxPayConfig config = mock(WxPayConfig.class);
         when(config.isWechatPayEnabled()).thenReturn(false);
-        WechatPayServiceImpl service = new WechatPayServiceImpl();
-        ReflectionTestUtils.setField(service, "wxPayConfig", config);
+        WechatPayServiceImpl service = WechatVerifiedFactTestSupport.gateway();
+        WechatVerifiedFactTestSupport.setField(service, "wxPayConfig", config);
 
         assertFalse(service.isReady());
         PaymentPreorderException ex = assertThrows(PaymentPreorderException.class,
@@ -185,8 +185,8 @@ class WechatPayAppChannelTest {
         WxPayConfig config = mock(WxPayConfig.class);
         when(config.isWechatPayEnabled()).thenReturn(true);
         when(config.getAppAppid()).thenReturn("");   // 未配置
-        WechatPayServiceImpl service = new WechatPayServiceImpl();
-        ReflectionTestUtils.setField(service, "wxPayConfig", config);
+        WechatPayServiceImpl service = WechatVerifiedFactTestSupport.gateway();
+        WechatVerifiedFactTestSupport.setField(service, "wxPayConfig", config);
         // 绕过 init:把 isReady() 需要的五个字段全部填上,只考察 appid 这道闸。
         markServiceReady(service);
         assertFalse(service.isAppReady());
@@ -207,8 +207,8 @@ class WechatPayAppChannelTest {
         WxPayConfig config = mock(WxPayConfig.class);
         when(config.isWechatPayEnabled()).thenReturn(true);
         when(config.getAppAppid()).thenReturn(null);
-        WechatPayServiceImpl service = new WechatPayServiceImpl();
-        ReflectionTestUtils.setField(service, "wxPayConfig", config);
+        WechatPayServiceImpl service = WechatVerifiedFactTestSupport.gateway();
+        WechatVerifiedFactTestSupport.setField(service, "wxPayConfig", config);
         markServiceReady(service);
 
         assertThrows(PaymentPreorderException.class,
@@ -224,15 +224,15 @@ class WechatPayAppChannelTest {
     private void markServiceReady(WechatPayServiceImpl service) {
         WechatPaymentIntentTestSupport.install(service, java.util.Map.of(
                 "DEP19T1000", new BigDecimal("50.00"), "R-APP-0001", new BigDecimal("69.00")));
-        ReflectionTestUtils.setField(service, "jsapiService",
+        WechatVerifiedFactTestSupport.setField(service, "jsapiService",
                 WechatPaymentIntentTestSupport.absentOrderSdk());
-        ReflectionTestUtils.setField(service, "jsapiServiceExtension",
+        WechatVerifiedFactTestSupport.setField(service, "jsapiServiceExtension",
                 mock(com.wechat.pay.java.service.payments.jsapi.JsapiServiceExtension.class));
-        ReflectionTestUtils.setField(service, "refundService",
+        WechatVerifiedFactTestSupport.setField(service, "refundService",
                 mock(com.wechat.pay.java.service.refund.RefundService.class));
-        ReflectionTestUtils.setField(service, "notificationParser",
+        WechatVerifiedFactTestSupport.setField(service, "notificationParser",
                 mock(com.wechat.pay.java.core.notification.NotificationParser.class));
-        ReflectionTestUtils.setField(service, "appServiceExtension",
+        WechatVerifiedFactTestSupport.setField(service, "appServiceExtension",
                 mock(com.wechat.pay.java.service.payments.app.AppServiceExtension.class));
     }
 
@@ -247,9 +247,9 @@ class WechatPayAppChannelTest {
     void transferRejectsBlankAppidInsteadOfFallingBack() {
         WxPayConfig config = mock(WxPayConfig.class);
         when(config.isWechatPayEnabled()).thenReturn(true);
-        WechatPayServiceImpl service = new WechatPayServiceImpl();
-        ReflectionTestUtils.setField(service, "wxPayConfig", config);
-        ReflectionTestUtils.setField(service, "transferBatchService",
+        WechatPayServiceImpl service = WechatVerifiedFactTestSupport.gateway();
+        WechatVerifiedFactTestSupport.setField(service, "wxPayConfig", config);
+        WechatVerifiedFactTestSupport.setField(service, "transferBatchService",
                 mock(com.wechat.pay.java.service.transferbatch.TransferBatchService.class));
 
         for (String blank : new String[] {null, "", "   "}) {

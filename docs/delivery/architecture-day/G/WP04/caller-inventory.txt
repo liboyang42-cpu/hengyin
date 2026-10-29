@@ -1,0 +1,198 @@
+chengyinhub-admin/src/test/java/com/chengyinhub/business/support/LockedSupplyReplacementPolicyAcceptanceTest.java:156:        CmsTopic settling = new CmsTopic();
+chengyinhub-admin/src/test/java/com/chengyinhub/business/support/LockedSupplyReplacementPolicyAcceptanceTest.java:157:        settling.setLifecycle(TopicLifecycleState.SETTLING.getCode());
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicWorkspaceServiceImpl.java:369:        TopicSettlementEvidenceService.Summary evidence = settlementEvidenceService.readTopic(topicId);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicWorkspaceServiceImpl.java:549:        for (CoopSettlement settlement : safe(settlementMapper.selectByTopicId(topicId))) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopInviteServiceImpl.java:1176:            List<com.chengyinhub.business.domain.vo.ClubSettlementSummaryRow> settles = coopSettlementMapper.selectSummaryByTopicId(topicId);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OrientScoringServiceImpl.java:381:    private Map<String, Object> settleLocked(TopicRouteSession session, String key) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SettlementServiceImpl.java:97:     * （{@code CmsActivityServiceImpl.settleActivity} / {@code CmsTopicServiceImpl.settleTopic}，
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicSettlementEvidenceService.java:4:import com.chengyinhub.business.domain.dto.CoopSettlementCandidate;
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicSettlementEvidenceService.java:5:import com.chengyinhub.business.domain.dto.CoopSettlementSnapshot;
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicSettlementEvidenceService.java:71:    public List<CoopSettlementCandidate> lockCandidates(CoopSettlementSnapshot snapshot, Date settlementCutoff) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicSettlementEvidenceService.java:77:        return evidenceMapper.selectTopicEvidenceCandidatesForUpdate(snapshot,
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UnavailableCoopOrderSettlementSnapshotReader.java:4:import com.chengyinhub.business.domain.dto.CoopSettlementSnapshot;
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UnavailableCoopOrderSettlementSnapshotReader.java:5:import com.chengyinhub.business.service.ICoopOrderSettlementSnapshotReader;
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UnavailableCoopOrderSettlementSnapshotReader.java:20: * {@code CmsTopicServiceImpl.settleCoopTopic} 循环开头的 {@code countByOrderId(o.getId()) > 0}
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UnavailableCoopOrderSettlementSnapshotReader.java:44:public class UnavailableCoopOrderSettlementSnapshotReader implements ICoopOrderSettlementSnapshotReader {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UnavailableCoopOrderSettlementSnapshotReader.java:46:    public CoopSettlementSnapshot read(CoopOrder order) { return null; }
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/FrozenCoopOrderSettlementSnapshotReader.java:9:import com.chengyinhub.business.domain.dto.CoopSettlementSnapshot;
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/FrozenCoopOrderSettlementSnapshotReader.java:14:import com.chengyinhub.business.service.ICoopOrderSettlementSnapshotReader;
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/FrozenCoopOrderSettlementSnapshotReader.java:26:public class FrozenCoopOrderSettlementSnapshotReader implements ICoopOrderSettlementSnapshotReader {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/FrozenCoopOrderSettlementSnapshotReader.java:41:    public CoopSettlementSnapshot read(CoopOrder order) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/FrozenCoopOrderSettlementSnapshotReader.java:51:    private CoopSettlementSnapshot readFrozen(CoopOrder order) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/FrozenCoopOrderSettlementSnapshotReader.java:105:        CoopSettlementSnapshot snapshot = new CoopSettlementSnapshot();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java:112:    /** [P0-1] 主题分 coop / 存量两条放款路,分流条件与 settleTopic:547 同源 —— 有没有生效合作单。 */
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java:1012:     *   <li><b>主题</b>(owner_type=1)→ {@code settleTopic:547} 自己就分两条路放款,这里必须**用同一个
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java:1015:     *         <li><b>coop 主题</b>(有生效合作单)→ {@code settleCoopTopic} 只挂账,真放款是
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java:1025:     *       ⚠️ 不能拿 {@code cms_topic.is_settlement} 当 coop 路的凭据:{@code settleTopic:555}
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java:1061:            // 分流条件与 settleTopic:547 同源:有生效合作单走 coop 放款,否则走存量发布者分润
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java:1064:                return settled -> coopSettlementMapper.countPaidByTopicAndPayee(parentId, settled.getReceiverId()) > 0;
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java:1067:            boolean settledTopic = topic != null && Integer.valueOf(1).equals(topic.getIsSettlement());
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java:1069:            Set<Long> paidCreators = settledTopic
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java:1071:            return settled -> settledTopic
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:1252:            try { applied = cooperationEngine.settleFacility(sessionConfig(session).path("themeConfig"), routeRules(session),new TopicRouteEngine.State(),rewardOwners,Collections.singletonMap(player.teamId,actor.getMemberId()),player.teamId,actor.getMemberId(),facilityPayload(state,command.getPayload()),"receipt:"+receiptId,evaluationTime().getTime());state=rewardOwners.get(player.teamId); }
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java:1403:                    result.put("settlement",cooperationEngine.previewQuest(sessionConfig(session).path("themeConfig"),routeRules(session),scope==null?new TopicRouteEngine.State():scope.world,scope==null?Collections.singletonMap(player.teamId,state):scope.teams,scope==null?Collections.singletonMap(player.teamId,actor.getMemberId()):scope.leaders,player.teamId,actor.getMemberId(),questKey,choiceKey,discard,commandCostOption(payload),"TEAM:"+player.teamId,evaluationTime().getTime()));
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementClaimServiceImpl.java:8:import com.chengyinhub.business.domain.dto.CoopSettlementCandidate;
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementClaimServiceImpl.java:11:import com.chengyinhub.business.domain.dto.CoopSettlementSnapshot;
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementClaimServiceImpl.java:16:import com.chengyinhub.business.service.ICoopOrderSettlementSnapshotReader;
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementClaimServiceImpl.java:30:    private final ICoopOrderSettlementSnapshotReader snapshotReader;
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementClaimServiceImpl.java:39:    public CoopSettlementClaimServiceImpl(ICoopOrderSettlementSnapshotReader snapshotReader,
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementClaimServiceImpl.java:89:        CoopSettlementSnapshot snapshot = snapshotReader.read(order);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementClaimServiceImpl.java:100:        List<CoopSettlementCandidate> candidates = evidenceService.lockCandidates(snapshot, cutoff);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementClaimServiceImpl.java:150:        CoopSettlementSnapshot s = plan.getSnapshot();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementClaimServiceImpl.java:157:    private static void applyHeaderAttribution(CoopSettlement head, CoopSettlementSnapshot s) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SettlementEntryServiceImpl.java:145:        // ⇒ 走 settleCoopTopic),两边同源才不会各判各的又漂移;
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubFulfillmentMapperContractTest.java:31:        String settlementQuery = query(verifyXml, "selectSettlementBasisByTopicAndMerchant");
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java:1126:                Boolean settled = tx.execute(status -> settleTopic(topic, topicRule));
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java:1226:    private boolean settleTopic(CmsTopic topic, SettlementRule rule) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java:1248:            // is_settlement 已由入口 claimTopicForSettlement 置 1,无需再标记
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java:1272:        settleCoopTopic(topic, totalSales);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java:1278:        // 6. is_settlement 已由入口 claimTopicForSettlement 置 1(CAS),无需重复标记
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java:1288:        TopicSettlementDTO settlement = new TopicSettlementDTO();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java:1289:        settlement.setTopicId(topic.getId());
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java:1290:        settlement.setTopicName(topic.getName());
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java:1343:     * 只在 settleTopic 里对"有生效 coop_order 的主题"调用,存量主题不受影响。
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java:1345:    void settleCoopTopic(CmsTopic topic, BigDecimal totalSales) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java:1641:     * 修复:此前 settleCoopTopic 直接 setMerchantId(o.getToId()),toType=club 的结算单 merchantId=club_id,
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java:1814:    // A3-7:updateTopicSettlementStatus 已删 —— is_settlement 置位改由入口 claimTopicForSettlement(CAS)承担。
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SnapshotFulfillmentWindowResolver.java:3:import com.chengyinhub.business.domain.dto.CoopSettlementSnapshot;
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SnapshotFulfillmentWindowResolver.java:13:    public Date endExclusive(CoopSettlementSnapshot snapshot) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayEncounterServiceImpl.java:630:    private Boolean settledCheckSuccess(JsonNode config, TopicRouteSession run, Long memberId, Long nodeId) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java:501:    private void settleThoughts(TopicRouteEngine.State state, JourneyRules rules) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java:4504:                result=gameplayCooperation.settleFacility(config,rules,new TopicRouteEngine.State(),owners,Collections.singletonMap(memberId,memberId),memberId,memberId,payload,key,clock.millis());state=owners.get(memberId);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSettlementIdempotencyTest.java:91:        int settled = svc.executeTopicSettlement();
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSettlementIdempotencyTest.java:103:        int settled = svc.executeTopicSettlement();
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSettlementIdempotencyTest.java:156:                () -> ReflectionTestUtils.invokeMethod(svc, "settleTopic", t, topicRule));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/Wp04CoopSettlementContractTest.java:21:        CoopSettlementSnapshot s = f.reader.read(f.order);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/Wp04CoopSettlementContractTest.java:74:        CoopSettlementSnapshot s = f.reader.read(f.order);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/Wp04CoopSettlementContractTest.java:85:        Fixture f = new Fixture(); CoopSettlementSnapshot s = f.snapshot();
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/Wp04CoopSettlementContractTest.java:86:        CoopSettlementCandidate c = f.candidate(); c.setMerchantScanTime(new Date(1_000));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/Wp04CoopSettlementContractTest.java:92:        Fixture f = new Fixture(); CoopSettlementCandidate c = f.candidate();
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/Wp04CoopSettlementContractTest.java:100:            Fixture f = new Fixture(); CoopSettlementCandidate c = f.candidate(); c.setOrderQuantity(quantity);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/Wp04CoopSettlementContractTest.java:105:        Fixture f = new Fixture(); CoopSettlementCandidate c = f.candidate(); c.setOwnerType(2L);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/Wp04CoopSettlementContractTest.java:107:        CoopSettlementSnapshot activity = f.snapshot(); activity.setCommercialContextType("ACTIVITY");
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/Wp04CoopSettlementContractTest.java:112:        Fixture f = new Fixture(); CoopSettlementCandidate c = f.candidate(); c.setSourceTopicId(99L);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/Wp04CoopSettlementContractTest.java:118:        Fixture f = new Fixture(); CoopSettlementCandidate wrongOwner = f.candidate(); wrongOwner.setTicketOwnerMatches(false);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/Wp04CoopSettlementContractTest.java:120:        CoopSettlementCandidate noMoney = f.candidate(); noMoney.setEligibleSalesSnapshot(null);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/Wp04CoopSettlementContractTest.java:163:    private static List<CoopSettlementOriginLine> origins(CoopSettlementSnapshot s, CoopSettlementCandidate c) {
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/Wp04CoopSettlementContractTest.java:203:        CoopSettlementSnapshot snapshot() { CoopSettlementSnapshot s = reader.read(order); s.setSettlementSnapshotAt(new Date(11_000)); return s; }
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/Wp04CoopSettlementContractTest.java:204:        CoopSettlementCandidate candidate() {
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/Wp04CoopSettlementContractTest.java:205:            CoopSettlementCandidate c = new CoopSettlementCandidate(); c.setRegistrationId(31L); c.setOwnerType(1L); c.setOwnerId(11L);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopSettlementClaimServiceImplTest.java:8:import com.chengyinhub.business.domain.dto.CoopSettlementCandidate;
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopSettlementClaimServiceImplTest.java:10:import com.chengyinhub.business.domain.dto.CoopSettlementSnapshot;
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopSettlementClaimServiceImplTest.java:38:        ICoopOrderSettlementSnapshotReader snapshotReader = mock(ICoopOrderSettlementSnapshotReader.class);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopSettlementClaimServiceImplTest.java:49:        CoopSettlementSnapshot snapshot = snapshot();
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopSettlementClaimServiceImplTest.java:104:        ICoopOrderSettlementSnapshotReader snapshotReader = mock(ICoopOrderSettlementSnapshotReader.class);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopSettlementClaimServiceImplTest.java:140:    private static CoopSettlementSnapshot snapshot() {
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopSettlementClaimServiceImplTest.java:141:        CoopSettlementSnapshot s = new CoopSettlementSnapshot();
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopSettlementClaimServiceImplTest.java:164:    private static CoopSettlementCandidate candidate(Long id) {
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopSettlementClaimServiceImplTest.java:165:        CoopSettlementCandidate c = new CoopSettlementCandidate();
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicWorkspaceServiceImplTest.java:104:        settlementEvidenceService = mock(TopicSettlementEvidenceService.class);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicWorkspaceServiceImplTest.java:106:        when(settlementEvidenceService.readTopic(TOPIC_ID)).thenReturn(topicEvidence);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicWorkspaceServiceImplTest.java:352:        verify(settlementEvidenceService).readTopic(TOPIC_ID);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicWorkspaceServiceImplTest.java:561:        TopicWorkspaceDTO.ClubFulfillment.Session settledSession = new TopicWorkspaceDTO.ClubFulfillment.Session();
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicWorkspaceServiceImplTest.java:593:        when(settlementMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.<CoopSettlement>emptyList());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/it/ThemeRuntimeMySqlIT.java:395:        String settled=sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(personalId,7L).getStateJson();assertEquals(3,JSON.readTree(settled).path("variables").path("sys.hp").asInt());advanced.state(7L,advancedId);assertEquals(settled,sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(personalId,7L).getStateJson());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/SettlementRateConvergenceTest.java:515:        // 否则 settleTopic 入口即因抢不到而跳过、settledCount 恒 0。
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/SettlementRateConvergenceTest.java:562:                () -> ReflectionTestUtils.invokeMethod(topicSvc, "settleTopic", topic,
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicAdminCommandServiceImplTest.java:177:    void settledAndClosedTopicsCannotUseGenericEdit() {
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/SettlementPayoutDecommissionedTest.java:12: *   <li><b>系统1</b> = {@code CmsActivityServiceImpl.settleActivity} / {@code CmsTopicServiceImpl.settleTopic},
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/SettlementPayoutDecommissionedTest.java:49:                "SettlementServiceImpl 不得调用 addBalance —— 打款由系统1(settleActivity/settleTopic)独占,"
+chengyinhub-admin/src/test/java/com/chengyinhub/business/it/Wp04CoopSettlementEvidenceMySqlIT.java:3:import com.chengyinhub.business.domain.dto.CoopSettlementCandidate;
+chengyinhub-admin/src/test/java/com/chengyinhub/business/it/Wp04CoopSettlementEvidenceMySqlIT.java:4:import com.chengyinhub.business.domain.dto.CoopSettlementSnapshot;
+chengyinhub-admin/src/test/java/com/chengyinhub/business/it/Wp04CoopSettlementEvidenceMySqlIT.java:66:        List<Long> ids = rows(snapshot("TOPIC",11)).stream().map(CoopSettlementCandidate::getRegistrationId).toList();
+chengyinhub-admin/src/test/java/com/chengyinhub/business/it/Wp04CoopSettlementEvidenceMySqlIT.java:76:                List<CoopSettlementCandidate> rows = mapper.selectTopicEvidenceCandidatesForUpdate(snapshot("TOPIC",11), ids, cutoff());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/it/Wp04CoopSettlementEvidenceMySqlIT.java:85:        CoopSettlementCandidate node = row(1,snapshot("NODE",11));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/it/Wp04CoopSettlementEvidenceMySqlIT.java:102:        CoopSettlementSnapshot s = snapshot("TOPIC",11);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/it/Wp04CoopSettlementEvidenceMySqlIT.java:127:    private List<CoopSettlementCandidate> rows(CoopSettlementSnapshot s) {
+chengyinhub-admin/src/test/java/com/chengyinhub/business/it/Wp04CoopSettlementEvidenceMySqlIT.java:129:        return tx.execute(status -> mapper.selectTopicEvidenceCandidatesForUpdate(s,activityIds,cutoff()));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/it/Wp04CoopSettlementEvidenceMySqlIT.java:131:    private CoopSettlementCandidate row(long id,CoopSettlementSnapshot s) {
+chengyinhub-admin/src/test/java/com/chengyinhub/business/it/Wp04CoopSettlementEvidenceMySqlIT.java:135:    private CoopSettlementSnapshot snapshot(String scope,long scopeId) {
+chengyinhub-admin/src/test/java/com/chengyinhub/business/it/Wp04CoopSettlementEvidenceMySqlIT.java:136:        CoopSettlementSnapshot s = new CoopSettlementSnapshot(); s.setTopicId(11L); s.setOrderId(701L);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicEditionFinalizationServiceTest.java:74:        when(refundMapper.countUnsettledRefundsByTopic(TOPIC)).thenReturn(0);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicEditionFinalizationServiceTest.java:463:        when(refundMapper.countUnsettledRefundsByTopic(TOPIC)).thenReturn(1);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TandianriBatch0FundsMybatisIntegrationTest.java:8:import com.chengyinhub.business.domain.dto.CoopSettlementCandidate;
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TandianriBatch0FundsMybatisIntegrationTest.java:9:import com.chengyinhub.business.domain.dto.CoopSettlementSnapshot;
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TandianriBatch0FundsMybatisIntegrationTest.java:288:        CoopSettlementSnapshot snapshot = new CoopSettlementSnapshot();
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TandianriBatch0FundsMybatisIntegrationTest.java:297:            List<CoopSettlementCandidate> candidates = service.lockCandidates(snapshot, new Date());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TandianriBatch0FundsMybatisIntegrationTest.java:299:            for (CoopSettlementCandidate candidate : candidates) {
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TandianriBatch0FundsMybatisIntegrationTest.java:363:        CoopSettlementSnapshot snapshot = new CoopSettlementSnapshot();
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TandianriBatch0FundsMybatisIntegrationTest.java:371:            List<CoopSettlementCandidate> candidates = session.getMapper(CoopSettlementEvidenceMapper.class)
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TandianriBatch0FundsMybatisIntegrationTest.java:372:                    .selectTopicEvidenceCandidatesForUpdate(snapshot, activityIds, new Date());
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicOperationalSummaryServiceImplTest.java:115:    void settledAndClosedTopics_areBlockedInsteadOfPretendingRunnable() {
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundSingleSidedDebitTopicGuardTest.java:246:     * ⚠️ coop 主题**也会**被置 is_settlement=1(settleTopic:555 两条分支共用),
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundSingleSidedDebitTopicGuardTest.java:249:     * 判据必须先分流「有没有生效合作单」,与 settleTopic 自己的分支条件同源。
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/Wp04TopicSettlementEntryGuardsTest.java:19:        IllegalStateException failure = assertThrows(IllegalStateException.class, () -> f.service.settleCoopTopic(f.topic,new BigDecimal("10")));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/Wp04TopicSettlementEntryGuardsTest.java:26:        IllegalStateException failure = assertThrows(IllegalStateException.class, () -> f.service.settleCoopTopic(f.topic,new BigDecimal("10")));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/Wp04TopicSettlementEntryGuardsTest.java:36:                () -> ReflectionTestUtils.invokeMethod(f.service,"settleTopic",f.topic,new SettlementRule()));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/Wp04TopicSettlementEntryGuardsTest.java:45:        IllegalStateException failure = assertThrows(IllegalStateException.class, () -> f.service.settleCoopTopic(f.topic,new BigDecimal("10")));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/Wp04TopicSettlementEntryGuardsTest.java:51:        f.service.settleCoopTopic(f.topic,new BigDecimal("10.00"));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/Wp04TopicSettlementEntryGuardsTest.java:90:            CoopSettlementSnapshot s = new CoopSettlementSnapshot(); s.setOrderId(701L); s.setTopicId(11L); s.setInitiatorMemberId(77L);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicPublisherSlotTest.java:34: * 而它一旦落错,下游 REVSHARE / settleCoopTopic 全部照错的槽算钱,且不会报错。
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/SettlementServiceImplTest.java:147:     * 打款由系统1(settleActivity/settleTopic)独占;系统2 若也打款,同一笔 gross 会被切两次。
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundServiceImplTest.java:845:        return service(refundMapper, registrationMapper, settlementDetailMapper, mock(CmsActivityMapper.class), mock(CmsTopicMapper.class));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementGroupBasisTest.java:140:        svc.settleCoopTopic(topic(), new BigDecimal("5000"));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementGroupBasisTest.java:152:        svc.settleCoopTopic(topic(), new BigDecimal("5000"));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementGroupBasisTest.java:169:        svc.settleCoopTopic(topic(), new BigDecimal("5000"));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementGroupBasisTest.java:179:        svc.settleCoopTopic(topic(), new BigDecimal("5000"));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementGroupBasisTest.java:190:        svc.settleCoopTopic(topic(), new BigDecimal("5000"));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementGroupBasisTest.java:203:        svc.settleCoopTopic(topic(), new BigDecimal("5000"));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementPayoutTransactionTest.java:289:        settlement.setTopicId(topicId);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopSettlementContractTest.java:3:import com.chengyinhub.business.domain.dto.CoopSettlementCandidate;
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopSettlementContractTest.java:4:import com.chengyinhub.business.domain.dto.CoopSettlementSnapshot;
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopSettlementContractTest.java:25:        CoopSettlementSnapshot snapshot = snapshot("MERCHANT", 88L, "MERCHANT_PARTICIPATION",
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopSettlementContractTest.java:27:        List<CoopSettlementCandidate> candidates = Arrays.asList(
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopSettlementContractTest.java:43:        CoopSettlementSnapshot merchant = snapshot("MERCHANT", 88L, "MERCHANT_PARTICIPATION",
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopSettlementContractTest.java:45:        CoopSettlementCandidate guided = candidate(1L, "GUIDED_TICKET", "10", 900_000L, false, true);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopSettlementContractTest.java:50:        CoopSettlementCandidate selfPlay = candidate(2L, "SELF_PLAY_PASS", "10", 900_000L, true, false);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopSettlementContractTest.java:57:        CoopSettlementSnapshot organizer = snapshot("CLUB", 99L, "ORGANIZER_LEAD",
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopSettlementContractTest.java:67:        CoopSettlementSnapshot snapshot = snapshot("MERCHANT", 88L, "MERCHANT_PARTICIPATION",
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopSettlementContractTest.java:69:        CoopSettlementCandidate valid = candidate(1L, "SELF_PLAY_PASS", "10", 999_999L, true, false);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopSettlementContractTest.java:70:        CoopSettlementCandidate duplicate = candidate(1L, "SELF_PLAY_PASS", "10", 999_999L, true, false);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopSettlementContractTest.java:71:        CoopSettlementCandidate atCutoff = candidate(2L, "SELF_PLAY_PASS", "10", 1_000_000L, true, false);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopSettlementContractTest.java:72:        CoopSettlementCandidate missingKind = candidate(3L, null, "10", 900_000L, true, false);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopSettlementContractTest.java:73:        CoopSettlementCandidate wrongState = candidate(4L, "SELF_PLAY_PASS", "10", 900_000L, true, false);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopSettlementContractTest.java:75:        CoopSettlementCandidate outsideScope = candidate(5L, "SELF_PLAY_PASS", "10", 900_000L, true, false);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopSettlementContractTest.java:87:        CoopSettlementSnapshot snapshot = snapshot("MERCHANT", 88L, "MERCHANT_PARTICIPATION",
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopSettlementContractTest.java:89:        CoopSettlementCandidate wrongOrder = candidate(1L, "GUIDED_TICKET", "10", 900_000L, false, true);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopSettlementContractTest.java:94:        CoopSettlementCandidate memberAtCutoff = candidate(2L, "GUIDED_TICKET", "10", 900_000L, false, true);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopSettlementContractTest.java:99:        CoopSettlementCandidate exactIntersection = candidate(3L, "GUIDED_TICKET", "10", 900_000L, false, true);
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopSettlementContractTest.java:114:        CoopSettlementSnapshot snapshot = snapshot("MERCHANT", 88L, "MERCHANT_PARTICIPATION",
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopSettlementContractTest.java:128:        CoopSettlementSnapshot snapshot = snapshot("MERCHANT", 88L, "MERCHANT_PARTICIPATION",
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopSettlementContractTest.java:147:    private static CoopSettlementSnapshot snapshot(String role, Long beneficiaryId, String unit,
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopSettlementContractTest.java:149:        CoopSettlementSnapshot snapshot = new CoopSettlementSnapshot();
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopSettlementContractTest.java:170:    private static CoopSettlementCandidate candidate(Long id, String purchaseKind, String sales,
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopSettlementContractTest.java:172:        CoopSettlementCandidate c = new CoopSettlementCandidate();
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementPerMerchantTest.java:44: * (ApiRegistrationController:1109),而 settleCoopTopic 让每个 coop_order 都用
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementPerMerchantTest.java:173:        svc.settleCoopTopic(topic(), new BigDecimal("5000"));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementPerMerchantTest.java:207:        svc.settleCoopTopic(topic(), new BigDecimal("5000"));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementPerMerchantTest.java:232:        svc.settleCoopTopic(topic(), new BigDecimal("50"));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementPerMerchantTest.java:262:        svc.settleCoopTopic(topic(), new BigDecimal("5000"));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementPerMerchantTest.java:283:        svc.settleCoopTopic(topic(), new BigDecimal("5000"));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSettlementEvidenceServiceTest.java:3:import com.chengyinhub.business.domain.dto.CoopSettlementSnapshot;
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSettlementEvidenceServiceTest.java:28:        CoopSettlementSnapshot snapshot = new CoopSettlementSnapshot();
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSettlementEvidenceServiceTest.java:39:        inOrder.verify(evidenceMapper).selectTopicEvidenceCandidatesForUpdate(
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementTest.java:174:    void settleCoopTopic_splitsFiveLineItems_conserves() {
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementTest.java:187:        svc.settleCoopTopic(topic, new BigDecimal("100"));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementTest.java:209:    void settleTopic_coopWritesEveryPayableBeforeEvent15() {
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementTest.java:223:        ReflectionTestUtils.invokeMethod(svc, "settleTopic", topic,
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementTest.java:232:    void settleTopic_coopPayableInsertZeroFailsClosedBeforeEvent15() {
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementTest.java:248:                svc, "settleTopic", topic, new com.chengyinhub.business.domain.SettlementRule()));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementTest.java:309:    void settleCoopTopic_clubInvitee_leadFeePayeeIsClubOwner() {
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementTest.java:323:        svc.settleCoopTopic(topic, new BigDecimal("100"));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementTest.java:335:    void settleCoopTopic_antiDilution_perMerchantIndependent() {
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementTest.java:349:        svc.settleCoopTopic(topic, new BigDecimal("100"));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementTest.java:362:    void settleCoopTopic_preservesClaimOriginUntilDepositAdjustmentExists() {
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementTest.java:383:                () -> svc.settleCoopTopic(topic, new BigDecimal("100")));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementTest.java:390:    void settleCoopTopic_pendingPaymentRequiresReconciliationOutsideSettlement() {
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementTest.java:408:                () -> svc.settleCoopTopic(topic, new BigDecimal("100")));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementTest.java:466:    void settleCoopTopic_overDistribution_alertsAndWritesNothing() {
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementTest.java:479:                () -> svc.settleCoopTopic(topic, new BigDecimal("100")));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementTest.java:487:    void settleCoopTopic_snapshotsVerifiedRegistrationIds_onOrderLine() {
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementTest.java:499:        svc.settleCoopTopic(topic, new BigDecimal("100"));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementTest.java:506:    void settleCoopTopic_skipsAlreadySettledOrder_stillWritesInitiatorAndPlatform() {
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementTest.java:517:        svc.settleCoopTopic(topic, new BigDecimal("100"));
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/MerchantWinnerAxisTest.java:53:    // 详见 CmsTopicServiceImpl.settleTopic 的拆除说明与 MerchantReferralBountyTest。
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PreparedCoopPlanFixture.java:7:import com.chengyinhub.business.domain.dto.CoopSettlementSnapshot;
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PreparedCoopPlanFixture.java:51:            CoopSettlementSnapshot snapshot = new CoopSettlementSnapshot();
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopFinanceTest.java:72:    void clubFinance_settledTopic_computesMyIncomeAndMerchantStatus() {
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopFinanceTest.java:95:    void clubFinance_unsettledTopic_myIncomeNull() {

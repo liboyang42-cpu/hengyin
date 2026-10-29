@@ -17,4 +17,6 @@
       <view class="ps__quick-action ps__quick-action--return" bindtap="backToCards" aria-role="button" aria-label="返回发布类型" hover-class="cy-pressed" hover-stay-time="80"><text>返回</text><view class="ps__quick-return"><image class="ps__quick-icon" src="/images/publish-quick/return.png" mode="aspectFit" /></view></view>
     </block>
   </view>
+  <!-- G-2 物理返回 / 侧滑守卫(utils/native-back-guard.js):0 尺寸、无遮罩,只有最上层弹层挂 -->
+  <page-container show="{{_backGuard}}" duration="{{0}}" overlay="{{false}}" custom-style="width:0;height:0;background:transparent;pointer-events:none" bind:afterleave="_onBackGuardLeave" />
 </view>

@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import com.chengyinhub.common.config.AiModelConfig;
+import com.chengyinhub.common.config.AiVoiceConfig;
 import com.chengyinhub.common.config.AiProviderProperties;
 
 /**
@@ -19,16 +20,39 @@ public class LlmClientConfig
 {
     private static final Logger log = LoggerFactory.getLogger(LlmClientConfig.class);
 
-    @Bean("qwenLlmClient")
-    public LlmClient qwenLlmClient(AiModelConfig config)
+    @Bean
+    public AiHttpAdmission aiHttpAdmission(AiModelConfig text, VisionModelConfig vision, AiProviderProperties props,
+            AiVoiceConfig voice)
     {
-        return new OpenAiCompatibleLlmClient("qwen", config);
+        java.util.List<String> endpoints = new java.util.ArrayList<>();
+        addEndpoint(endpoints, text.getBaseUrl());
+        addEndpoint(endpoints, vision.getBaseUrl());
+        endpoints.add(voice.baseUrl()); // Fixed startup voice origin; the same registry/permits as text and vision.
+        if (voice.isAsrUsable()) endpoints.add(voice.asrUrl()); // Fixed ASR origin; no runtime registry.
+        AiProviderProperties.ProviderConfig minimax = props.getProviders() == null
+                ? null : props.getProviders().get("minimax");
+        if (minimax != null) addEndpoint(endpoints, minimax.getBaseUrl());
+        return new AiHttpAdmission(endpoints);
+    }
+
+    private static void addEndpoint(java.util.List<String> endpoints, String baseUrl)
+    {
+        try { endpoints.add(OpenAiCompatibleLlmClient.completionUrl(baseUrl)); }
+        catch (AiProviderNotSentException invalid) { /* Invalid config cannot acquire admission. */ }
+    }
+
+    @Bean("qwenLlmClient")
+    public LlmClient qwenLlmClient(AiModelConfig config, AiHttpAdmission admission)
+    {
+        return new OpenAiCompatibleLlmClient("qwen", config.getBaseUrl(), config.getApiKey(),
+                config.getModel(), config.isEnabled(), config.getTimeoutMs(), admission);
     }
 
     @Bean("deepseekLlmClient")
-    public LlmClient deepseekLlmClient(AiModelConfig config)
+    public LlmClient deepseekLlmClient(AiModelConfig config, AiHttpAdmission admission)
     {
-        return new OpenAiCompatibleLlmClient("deepseek", config);
+        return new OpenAiCompatibleLlmClient("deepseek", config.getBaseUrl(), config.getApiKey(),
+                config.getModel(), config.isEnabled(), config.getTimeoutMs(), admission);
     }
 
     /**
@@ -36,14 +60,14 @@ public class LlmClientConfig
      * 与文本实例分开:模型、baseUrl、超时、额度口径都独立,配置见 ai.vision.*。
      */
     @Bean("visionLlmClient")
-    public LlmClient visionLlmClient(VisionModelConfig config)
+    public LlmClient visionLlmClient(VisionModelConfig config, AiHttpAdmission admission)
     {
         return new OpenAiCompatibleLlmClient("vision", config.getBaseUrl(), config.getApiKey(),
-                config.getModel(), config.isEnabled(), config.getTimeoutMs());
+                config.getModel(), config.isEnabled(), config.getTimeoutMs(), admission);
     }
 
     @Bean("minimaxLlmClient")
-    public LlmClient minimaxLlmClient(AiProviderProperties props)
+    public LlmClient minimaxLlmClient(AiProviderProperties props, AiHttpAdmission admission)
     {
         AiProviderProperties.ProviderConfig cfg = props.getProviders() != null
             ? props.getProviders().get("minimax") : null;
@@ -53,12 +77,12 @@ public class LlmClientConfig
             LlmClient disabled = new LlmClient() {
                 @Override public String name() { return "minimax"; }
                 @Override public String chat(String systemPrompt, String userPrompt) {
-                    throw new IllegalStateException("MiniMax provider is not enabled. Set ai.providers.minimax.enabled=true");
+                    throw new AiProviderNotSentException();
                 }
             };
             return disabled;
         }
         return new OpenAiCompatibleLlmClient("minimax", cfg.getBaseUrl(), cfg.getApiKey(),
-            cfg.getModel() != null ? cfg.getModel() : "MiniMax-M2.7", true, props.getTimeoutMs());
+            cfg.getModel() != null ? cfg.getModel() : "MiniMax-M2.7", true, props.getTimeoutMs(), admission);
     }
 }

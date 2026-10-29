@@ -1,0 +1,88 @@
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/AiHttpAdmissionTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/AiHttpAdmissionTest.java
+@@ -225,6 +225,85 @@
+         }
+     }
+
++    @Test
++    void realAdmissionStaysHeldAfterCallerTimeoutAndCleanupRejectionUntilWorkersExit() throws Exception
++    {
++        java.util.concurrent.ThreadPoolExecutor http = (java.util.concurrent.ThreadPoolExecutor)
++                ReflectionTestUtils.getField(HttpUtils.class, "HTTP_EXECUTOR");
++        java.util.concurrent.ThreadPoolExecutor cleanup = (java.util.concurrent.ThreadPoolExecutor)
++                ReflectionTestUtils.getField(HttpUtils.class, "DISCONNECT_EXECUTOR");
++        assertNotNull(http); assertNotNull(cleanup);
++        long initialIdle = System.nanoTime() + TimeUnit.SECONDS.toNanos(8);
++        while (http.getActiveCount() != 0 || !http.getQueue().isEmpty()
++                || cleanup.getActiveCount() != 0 || !cleanup.getQueue().isEmpty()) {
++            assertTrue(System.nanoTime() - initialIdle < 0, "prior controlled fixtures must finish before measuring slots");
++            Thread.sleep(10);
++        }
++        CountDownLatch releaseCleanup = new CountDownLatch(1);
++        CountDownLatch cleanupEntered = new CountDownLatch(cleanup.getMaximumPoolSize());
++        CountDownLatch releaseBody = new CountDownLatch(1);
++        CountDownLatch providerEntered = new CountDownLatch(2);
++        List<java.util.concurrent.Future<?>> ownCleanup = new ArrayList<>();
++        AtomicInteger calls = new AtomicInteger();
++        HttpServer source = server(exchange -> {
++            calls.incrementAndGet(); providerEntered.countDown();
++            try {
++                if (!releaseBody.await(10, TimeUnit.SECONDS)) throw new java.io.IOException("fixture body gate expired");
++                byte[] buffer = new byte[8192];
++                while (exchange.getRequestBody().read(buffer) != -1) { /* physical write may finish only now */ }
++                exchange.sendResponseHeaders(200, -1);
++            } catch (java.io.IOException expectedDisconnect) {
++                // Caller cancellation can close the controlled loopback fixture after the assertion.
++            } catch (InterruptedException interrupted) {
++                Thread.currentThread().interrupt();
++            } finally { exchange.close(); }
++        });
++        String base = url(source);
++        AiHttpAdmission gate = new AiHttpAdmission(List.of(base, "https://held-probe.invalid/", "https://overflow-probe.invalid/"));
++        OpenAiCompatibleLlmClient client = new OpenAiCompatibleLlmClient(
++                "safe", base, "synthetic", "model", true, 1000, gate);
++        ExecutorService callers = Executors.newFixedThreadPool(2); fixtures.add(callers);
++        List<java.util.concurrent.Future<RuntimeException>> replies = new ArrayList<>();
++        String largePrompt = "x".repeat(16 * 1024 * 1024);
++        try {
++            int capacity = cleanup.getMaximumPoolSize() + cleanup.getQueue().remainingCapacity();
++            for (int i = 0; i < capacity; i++) ownCleanup.add(cleanup.submit(() -> {
++                cleanupEntered.countDown();
++                try { releaseCleanup.await(); }
++                catch (InterruptedException interrupted) { Thread.currentThread().interrupt(); }
++            }));
++            assertTrue(cleanupEntered.await(5, TimeUnit.SECONDS));
++            for (int i = 0; i < 2; i++) replies.add(callers.submit(() ->
++                    assertThrows(RuntimeException.class, () -> client.chat("s", largePrompt))));
++            assertTrue(providerEntered.await(3, TimeUnit.SECONDS));
++            for (java.util.concurrent.Future<RuntimeException> reply : replies) {
++                RuntimeException timeout = reply.get(4, TimeUnit.SECONDS);
++                assertFalse(timeout instanceof AiProviderNotSentException, "server received this POST; it is UNKNOWN");
++                assertNull(timeout.getCause());
++                assertEquals(0, timeout.getSuppressed().length);
++            }
++            assertEquals(capacity, cleanup.getActiveCount() + cleanup.getQueue().size(), "cleanup remains saturated");
++            assertThrows(AiProviderNotSentException.class, () -> client.chat("s", "must not dispatch"));
++            try (HttpUtils.AttemptLease one = gate.acquire("https://held-probe.invalid/");
++                 HttpUtils.AttemptLease two = gate.acquire("https://held-probe.invalid/")) {
++                assertThrows(AiProviderNotSentException.class, () -> gate.acquire("https://overflow-probe.invalid/"),
++                        "two timed-out physical workers still consume the other two global slots");
++            }
++            assertEquals(2, calls.get());
++        } finally {
++            releaseBody.countDown(); releaseCleanup.countDown();
++            for (java.util.concurrent.Future<?> task : ownCleanup) task.get(5, TimeUnit.SECONDS);
++            long end = System.nanoTime() + TimeUnit.SECONDS.toNanos(8);
++            while (http.getActiveCount() != 0 || !http.getQueue().isEmpty()) {
++                assertTrue(System.nanoTime() - end < 0, "controlled physical workers must actually exit");
++                Thread.sleep(10);
++            }
++        }
++        try (HttpUtils.AttemptLease one = gate.acquire(base); HttpUtils.AttemptLease two = gate.acquire(base)) {
++            assertNotNull(two, "after real worker cleanup the same origin regains both slots");
++        }
++    }
++
+     private HttpServer server(com.sun.net.httpserver.HttpHandler handler) throws Exception
+     {
+         HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);

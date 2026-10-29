@@ -1,0 +1,7 @@
+515b85a87f8fcbceed557a7c19de33f64d72a185e16796111e0865f143b3c430  .github/workflows/ci.yml
+a69e0c0fff331a03979ddcbf522140d6d5b3478c3548629e3a4e1bd5ecef1321  ci/ci-selected-validation.js
+096808011bf243fd4f2b3262ecaae89e7046ef2663f492353c3efa526ea2ef28  ci/test_ci_selected_validation.js
+83ac586a18fdaaebd0a9e9003a48eef7af2b6304ec057f7d4af3a6d1e26feb06  ci/test_ci_cost_contract.py
+b494fc01e4ffe6bba7baa94e8e151f10a77a97cce7b24170971c5ef620e1bde3  docs/delivery/architecture-day/F/selected-ci-119d/README.md
+42b683da1416f1d8f4b2bdf9d615b5d4f2b464548d00e0d89035c5e8c5b9243e  docs/delivery/architecture-day/F/selected-ci-119d/PATCH.sha256
+3bdffa4daa0a67926bfce5eff01405665519f87e2b6bb00d5104c872ee60497b  docs/delivery/architecture-day/F/selected-ci-119d/review.patch.b64

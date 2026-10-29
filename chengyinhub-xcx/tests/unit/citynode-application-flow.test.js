@@ -8,8 +8,12 @@ function loadPage(relativePath = 'pages/merchant/citynode/index.js') {
   const requests = []
   const toasts = []
   const scans = []
+  const session = { revision: 1, owner: 9000, authorization: 'fixture-login', issuedAt: 1 }
   const app = {
     globalData: { navBarHeight: 44 },
+    getSession: () => ({ getRevision: () => session.revision }),
+    getUserID: () => session.owner,
+    getAuthorization: () => session.authorization,
     sendRequest(request) { requests.push(request) }
   }
   global.getApp = () => app
@@ -17,6 +21,7 @@ function loadPage(relativePath = 'pages/merchant/citynode/index.js') {
     getSystemInfoSync: () => ({ statusBarHeight: 20 }),
     setNavigationBarColor() {},
     setBackgroundColor() {},
+    getStorageSync: key => key === 'authorization_issued_at' ? session.issuedAt : undefined,
     showToast(options) { toasts.push(options) },
     scanCode(options) { scans.push(options) },
     showModal() {}
@@ -31,7 +36,7 @@ function loadPage(relativePath = 'pages/merchant/citynode/index.js') {
   page.data.merchantAccess = { active: true, canManageProjects: true, canVerify: true }
   page.setData = function setData(patch) { Object.assign(this.data, patch) }
   return {
-    page, requests, toasts, scans,
+    page, requests, toasts, scans, session,
     restore() {
       if (old.Page === undefined) delete global.Page; else global.Page = old.Page
       if (old.getApp === undefined) delete global.getApp; else global.getApp = old.getApp
@@ -53,6 +58,44 @@ test('据点核销扫码只对用户主动取消静默，系统扫码失败必�
     assert.match(env.toasts[0].title, /扫码失败/)
   } finally {
     env.restore()
+  }
+})
+
+test('据点扫码没有当前登录身份时不调用扫码或提交核销', () => {
+  const env = loadPage()
+  try {
+    env.session.owner = null
+    env.page.scanRedeem()
+    assert.equal(env.scans.length, 0)
+    assert.equal(env.requests.length, 0)
+    assert.equal(env.toasts.length, 0)
+  } finally {
+    env.restore()
+  }
+})
+
+test('据点扫码返回前登录变化或页面离开后旧回调不得提示或提交核销', () => {
+  for (const invalidate of [
+    env => { env.session.revision += 1 },
+    env => env.page.onHide(),
+    env => env.page.onUnload(),
+  ]) {
+    const env = loadPage()
+    try {
+      let submitted = 0
+      const submit = env.page.submitCityNodeRedeem
+      env.page.submitCityNodeRedeem = function (code) { submitted += 1; return submit.call(this, code) }
+      env.page.scanRedeem()
+      assert.equal(env.scans.length, 1, '有效的原登录必须实际进入扫码')
+      invalidate(env)
+      env.scans[0].fail({ errMsg: 'scanCode:fail system error' })
+      env.scans[0].success({ result: 'v1.9.citynode_10.9999999999.nonce.fixture-signature' })
+      assert.equal(env.toasts.length, 0, '旧扫码错误不得污染新页面或会话')
+      assert.equal(submitted, 0, '旧扫码结果不得进入核销提交方法')
+      assert.equal(env.requests.length, 0, '旧扫码结果不得提交核销')
+    } finally {
+      env.restore()
+    }
   }
 })
 

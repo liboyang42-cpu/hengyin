@@ -1,0 +1,37 @@
+{
+  "core_source": "0de20ce8398a00b9bca6b83ccaccea270da66de7",
+  "harness": {
+    "registration_write": 109,
+    "im_team_revocation": 2,
+    "classes": 3,
+    "selftests": 45,
+    "workflow_matrix_max_parallel": 20
+  },
+  "previous_static_test_failure": {
+    "source": "addeb6edc912223ce2a5d3d9d89d87b2ebb84adf",
+    "tests": 99,
+    "passed": 98,
+    "failed": 1,
+    "cause": "source regex expected consent call immediately after if; newly required consentCurrent declaration makes old syntactic expectation stale",
+    "fix": "exact consentCurrent original intent/login/question guards + actual helper argument and mutation negative control",
+    "targeted_case": "PASS",
+    "full99_after_fix": "NOT_RERUN_LOCALLY; full CI pending"
+  },
+  "source_bound_previous_ci": {
+    "run": 40033336984,
+    "source": "07172e6fddf28f99ea4ad214b5c92cfe7608e441",
+    "overall": "FAILURE",
+    "business_java_executed": 0,
+    "compile_error": "ambiguous Quartz/regex Matcher",
+    "node_failed": 6,
+    "architecture_source_gate": {
+      "verdict": "PASS_WITH_REVIEW_ITEMS",
+      "findings": 0,
+      "review_items": 85
+    },
+    "compiled_jdeps": "UNKNOWN"
+  },
+  "candidate_scope": "A de31+C09b/1eb+H APPLIED+E7aeb; no production provider/DDL/merge/deployment",
+  "F_doc_source": "1c19941ed00e96307ca9e6a7036a11d12309aff2",
+  "all_complete": false
+}

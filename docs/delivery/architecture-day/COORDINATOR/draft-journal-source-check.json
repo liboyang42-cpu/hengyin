@@ -1,0 +1,29 @@
+{
+  "purpose": "Page-specific original AI action identity persistence, not an execution authorization",
+  "module": "chengyinhub-xcx/utils/ai-theme-draft-journal.js",
+  "node_tests": {
+    "tests": 9,
+    "failures": 0,
+    "skipped": 0
+  },
+  "verified": [
+    "Write then exact readback; silent no-op rejected",
+    "ABSENT distinguished from I/O error/corrupt data",
+    "Only flat identity metadata accepted; original input/token/result not stored",
+    "Original member key and full expected journal checked before replacement",
+    "Original server ID can be recovered after a post-write read failure",
+    "Terminal/legacy identity retained; no24h identity deletion or legacy execution upgrade",
+    "Known server ID cannot be switched under one prepare identity",
+    "UNKNOWN/PROCESSING cannot reset to PREPARED or replace the action",
+    "Terminal facts cannot downgrade; result availability may change without changing identity"
+  ],
+  "secret_scan": "0 findings, no exemptions; test action ID constants named PREPARE_ID",
+  "limits": [
+    "Page has not consumed this module yet; H12 callback risks not closed",
+    "Local synchronous journal is not a multi-process CAS or backend authorization",
+    "Owner-level cold recovery is being implemented separately by E",
+    "Provider-unknown new explicit action policy awaiting human answer",
+    "No WeChat/device or actual network verification"
+  ],
+  "initial_persistence_tests": 7
+}

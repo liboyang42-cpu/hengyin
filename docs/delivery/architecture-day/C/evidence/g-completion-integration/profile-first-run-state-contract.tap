@@ -1,0 +1,646 @@
+TAP version 13
+# Subtest: 个人页返回：host-self初始show=false，离开后首次返回刷新一次
+ok 1 - 个人页返回：host-self初始show=false，离开后首次返回刷新一次
+  ---
+  duration_ms: 14.632941
+  type: 'test'
+  ...
+# Subtest: 个人页返回：host-self初始show=true，离开后首次返回刷新一次
+ok 2 - 个人页返回：host-self初始show=true，离开后首次返回刷新一次
+  ---
+  duration_ms: 1.170105
+  type: 'test'
+  ...
+# Subtest: 个人页返回：visitor-self初始show=false，离开后首次返回刷新一次
+ok 3 - 个人页返回：visitor-self初始show=false，离开后首次返回刷新一次
+  ---
+  duration_ms: 1.013935
+  type: 'test'
+  ...
+# Subtest: 个人页返回：visitor-self初始show=true，离开后首次返回刷新一次
+ok 4 - 个人页返回：visitor-self初始show=true，离开后首次返回刷新一次
+  ---
+  duration_ms: 0.999383
+  type: 'test'
+  ...
+# Subtest: 个人页返回：visitor-other初始show=false，离开后首次返回刷新一次
+ok 5 - 个人页返回：visitor-other初始show=false，离开后首次返回刷新一次
+  ---
+  duration_ms: 1.873211
+  type: 'test'
+  ...
+# Subtest: 个人页返回：visitor-other初始show=true，离开后首次返回刷新一次
+ok 6 - 个人页返回：visitor-other初始show=true，离开后首次返回刷新一次
+  ---
+  duration_ms: 0.913737
+  type: 'test'
+  ...
+# Subtest: 个人页返回：身份变化仍优先重新初始化，不读取旧视角
+ok 7 - 个人页返回：身份变化仍优先重新初始化，不读取旧视角
+  ---
+  duration_ms: 3.19535
+  type: 'test'
+  ...
+# Subtest: 排名文案与实际总积分榜一致，视觉和无障碍都不声称月份或城市筛选
+ok 8 - 排名文案与实际总积分榜一致，视觉和无障碍都不声称月份或城市筛选
+  ---
+  duration_ms: 0.466477
+  type: 'test'
+  ...
+# Subtest: 资料指标回包：loadUserData旧账号success不覆盖当前读取
+ok 9 - 资料指标回包：loadUserData旧账号success不覆盖当前读取
+  ---
+  duration_ms: 2.291618
+  type: 'test'
+  ...
+# Subtest: 资料指标回包：loadUserData旧账号auth不覆盖当前读取
+ok 10 - 资料指标回包：loadUserData旧账号auth不覆盖当前读取
+  ---
+  duration_ms: 1.186499
+  type: 'test'
+  ...
+# Subtest: 资料指标回包：loadUserData旧账号network不覆盖当前读取
+ok 11 - 资料指标回包：loadUserData旧账号network不覆盖当前读取
+  ---
+  duration_ms: 1.373675
+  type: 'test'
+  ...
+# Subtest: 资料指标回包：loadUserData旧账号malformed不覆盖当前读取
+ok 12 - 资料指标回包：loadUserData旧账号malformed不覆盖当前读取
+  ---
+  duration_ms: 1.193539
+  type: 'test'
+  ...
+# Subtest: 资料指标回包：loadUserData同账号连续刷新保留最新结果
+ok 13 - 资料指标回包：loadUserData同账号连续刷新保留最新结果
+  ---
+  duration_ms: 1.04471
+  type: 'test'
+  ...
+# Subtest: 资料指标回包：loadUserData在cleared-identity后不再接收结果
+ok 14 - 资料指标回包：loadUserData在cleared-identity后不再接收结果
+  ---
+  duration_ms: 0.939495
+  type: 'test'
+  ...
+# Subtest: 资料指标回包：loadUserData在detached后不再接收结果
+ok 15 - 资料指标回包：loadUserData在detached后不再接收结果
+  ---
+  duration_ms: 2.644778
+  type: 'test'
+  ...
+# Subtest: 资料指标回包：loadUserData组件销毁后不发起请求
+ok 16 - 资料指标回包：loadUserData组件销毁后不发起请求
+  ---
+  duration_ms: 0.953836
+  type: 'test'
+  ...
+# Subtest: 资料指标回包：loadGrowthBundle旧账号success不覆盖当前读取
+ok 17 - 资料指标回包：loadGrowthBundle旧账号success不覆盖当前读取
+  ---
+  duration_ms: 1.589483
+  type: 'test'
+  ...
+# Subtest: 资料指标回包：loadGrowthBundle旧账号auth不覆盖当前读取
+ok 18 - 资料指标回包：loadGrowthBundle旧账号auth不覆盖当前读取
+  ---
+  duration_ms: 0.923531
+  type: 'test'
+  ...
+# Subtest: 资料指标回包：loadGrowthBundle旧账号network不覆盖当前读取
+ok 19 - 资料指标回包：loadGrowthBundle旧账号network不覆盖当前读取
+  ---
+  duration_ms: 4.288041
+  type: 'test'
+  ...
+# Subtest: 资料指标回包：loadGrowthBundle旧账号malformed不覆盖当前读取
+ok 20 - 资料指标回包：loadGrowthBundle旧账号malformed不覆盖当前读取
+  ---
+  duration_ms: 1.04478
+  type: 'test'
+  ...
+# Subtest: 资料指标回包：loadGrowthBundle同账号连续刷新保留最新结果
+ok 21 - 资料指标回包：loadGrowthBundle同账号连续刷新保留最新结果
+  ---
+  duration_ms: 1.259787
+  type: 'test'
+  ...
+# Subtest: 资料指标回包：loadGrowthBundle在cleared-identity后不再接收结果
+ok 22 - 资料指标回包：loadGrowthBundle在cleared-identity后不再接收结果
+  ---
+  duration_ms: 0.82088
+  type: 'test'
+  ...
+# Subtest: 资料指标回包：loadGrowthBundle在detached后不再接收结果
+ok 23 - 资料指标回包：loadGrowthBundle在detached后不再接收结果
+  ---
+  duration_ms: 0.867078
+  type: 'test'
+  ...
+# Subtest: 资料指标回包：loadGrowthBundle组件销毁后不发起请求
+ok 24 - 资料指标回包：loadGrowthBundle组件销毁后不发起请求
+  ---
+  duration_ms: 0.626674
+  type: 'test'
+  ...
+# Subtest: 资料指标回包：loadThemes旧账号success不覆盖当前读取
+ok 25 - 资料指标回包：loadThemes旧账号success不覆盖当前读取
+  ---
+  duration_ms: 1.018051
+  type: 'test'
+  ...
+# Subtest: 资料指标回包：loadThemes旧账号auth不覆盖当前读取
+ok 26 - 资料指标回包：loadThemes旧账号auth不覆盖当前读取
+  ---
+  duration_ms: 1.049497
+  type: 'test'
+  ...
+# Subtest: 资料指标回包：loadThemes旧账号network不覆盖当前读取
+ok 27 - 资料指标回包：loadThemes旧账号network不覆盖当前读取
+  ---
+  duration_ms: 1.052892
+  type: 'test'
+  ...
+# Subtest: 资料指标回包：loadThemes旧账号malformed不覆盖当前读取
+ok 28 - 资料指标回包：loadThemes旧账号malformed不覆盖当前读取
+  ---
+  duration_ms: 1.025451
+  type: 'test'
+  ...
+# Subtest: 资料指标回包：loadThemes同账号连续刷新保留最新结果
+ok 29 - 资料指标回包：loadThemes同账号连续刷新保留最新结果
+  ---
+  duration_ms: 1.195498
+  type: 'test'
+  ...
+# Subtest: 资料指标回包：loadThemes在cleared-identity后不再接收结果
+ok 30 - 资料指标回包：loadThemes在cleared-identity后不再接收结果
+  ---
+  duration_ms: 2.178992
+  type: 'test'
+  ...
+# Subtest: 资料指标回包：loadThemes在detached后不再接收结果
+ok 31 - 资料指标回包：loadThemes在detached后不再接收结果
+  ---
+  duration_ms: 0.96993
+  type: 'test'
+  ...
+# Subtest: 资料指标回包：loadThemes组件销毁后不发起请求
+ok 32 - 资料指标回包：loadThemes组件销毁后不发起请求
+  ---
+  duration_ms: 0.90225
+  type: 'test'
+  ...
+# Subtest: 资料指标回包：loadPointsStat旧账号success不覆盖当前读取
+ok 33 - 资料指标回包：loadPointsStat旧账号success不覆盖当前读取
+  ---
+  duration_ms: 1.140401
+  type: 'test'
+  ...
+# Subtest: 资料指标回包：loadPointsStat旧账号auth不覆盖当前读取
+ok 34 - 资料指标回包：loadPointsStat旧账号auth不覆盖当前读取
+  ---
+  duration_ms: 1.068966
+  type: 'test'
+  ...
+# Subtest: 资料指标回包：loadPointsStat旧账号network不覆盖当前读取
+ok 35 - 资料指标回包：loadPointsStat旧账号network不覆盖当前读取
+  ---
+  duration_ms: 1.152749
+  type: 'test'
+  ...
+# Subtest: 资料指标回包：loadPointsStat旧账号malformed不覆盖当前读取
+ok 36 - 资料指标回包：loadPointsStat旧账号malformed不覆盖当前读取
+  ---
+  duration_ms: 1.040914
+  type: 'test'
+  ...
+# Subtest: 资料指标回包：loadPointsStat同账号连续刷新保留最新结果
+ok 37 - 资料指标回包：loadPointsStat同账号连续刷新保留最新结果
+  ---
+  duration_ms: 1.863587
+  type: 'test'
+  ...
+# Subtest: 资料指标回包：loadPointsStat在cleared-identity后不再接收结果
+ok 38 - 资料指标回包：loadPointsStat在cleared-identity后不再接收结果
+  ---
+  duration_ms: 0.760461
+  type: 'test'
+  ...
+# Subtest: 资料指标回包：loadPointsStat在detached后不再接收结果
+ok 39 - 资料指标回包：loadPointsStat在detached后不再接收结果
+  ---
+  duration_ms: 0.846398
+  type: 'test'
+  ...
+# Subtest: 资料指标回包：loadPointsStat组件销毁后不发起请求
+ok 40 - 资料指标回包：loadPointsStat组件销毁后不发起请求
+  ---
+  duration_ms: 0.870864
+  type: 'test'
+  ...
+# Subtest: 订单预览旧账号rows回包不覆盖新账号
+ok 41 - 订单预览旧账号rows回包不覆盖新账号
+  ---
+  duration_ms: 1.531458
+  type: 'test'
+  ...
+# Subtest: 订单预览旧账号empty回包不覆盖新账号
+ok 42 - 订单预览旧账号empty回包不覆盖新账号
+  ---
+  duration_ms: 0.904223
+  type: 'test'
+  ...
+# Subtest: 订单预览旧账号business-failure回包不覆盖新账号
+ok 43 - 订单预览旧账号business-failure回包不覆盖新账号
+  ---
+  duration_ms: 0.972113
+  type: 'test'
+  ...
+# Subtest: 订单预览旧账号network回包不覆盖新账号
+ok 44 - 订单预览旧账号network回包不覆盖新账号
+  ---
+  duration_ms: 0.817486
+  type: 'test'
+  ...
+# Subtest: 订单预览旧账号malformed回包不覆盖新账号
+ok 45 - 订单预览旧账号malformed回包不覆盖新账号
+  ---
+  duration_ms: 0.912646
+  type: 'test'
+  ...
+# Subtest: 订单预览同账号连续刷新只接受最新请求
+ok 46 - 订单预览同账号连续刷新只接受最新请求
+  ---
+  duration_ms: 0.782404
+  type: 'test'
+  ...
+# Subtest: 订单预览在cleared-identity后不接收旧回包
+ok 47 - 订单预览在cleared-identity后不接收旧回包
+  ---
+  duration_ms: 1.108414
+  type: 'test'
+  ...
+# Subtest: 订单预览在detached后不接收旧回包
+ok 48 - 订单预览在detached后不接收旧回包
+  ---
+  duration_ms: 0.688334
+  type: 'test'
+  ...
+# Subtest: 订单预览换号发起新读取时清除旧订单，当前失败保持未加载
+ok 49 - 订单预览换号发起新读取时清除旧订单，当前失败保持未加载
+  ---
+  duration_ms: 0.793049
+  type: 'test'
+  ...
+# Subtest: 订单预览组件销毁后不发起新读取
+ok 50 - 订单预览组件销毁后不发起新读取
+  ---
+  duration_ms: 0.829022
+  type: 'test'
+  ...
+# Subtest: 项目预览回包：旧账号rows不覆盖当前项目或错误
+ok 51 - 项目预览回包：旧账号rows不覆盖当前项目或错误
+  ---
+  duration_ms: 1.521363
+  type: 'test'
+  ...
+# Subtest: 项目预览回包：旧账号empty不覆盖当前项目或错误
+ok 52 - 项目预览回包：旧账号empty不覆盖当前项目或错误
+  ---
+  duration_ms: 0.795833
+  type: 'test'
+  ...
+# Subtest: 项目预览回包：旧账号business-failure不覆盖当前项目或错误
+ok 53 - 项目预览回包：旧账号business-failure不覆盖当前项目或错误
+  ---
+  duration_ms: 1.002017
+  type: 'test'
+  ...
+# Subtest: 项目预览回包：旧账号network不覆盖当前项目或错误
+ok 54 - 项目预览回包：旧账号network不覆盖当前项目或错误
+  ---
+  duration_ms: 0.930532
+  type: 'test'
+  ...
+# Subtest: 项目预览回包：旧账号malformed不覆盖当前项目或错误
+ok 55 - 项目预览回包：旧账号malformed不覆盖当前项目或错误
+  ---
+  duration_ms: 1.30219
+  type: 'test'
+  ...
+# Subtest: 项目预览回包：同账号连续刷新只接收最新请求
+ok 56 - 项目预览回包：同账号连续刷新只接收最新请求
+  ---
+  duration_ms: 0.961818
+  type: 'test'
+  ...
+# Subtest: 项目预览回包：旧分页首包不再向当前身份发下一页
+ok 57 - 项目预览回包：旧分页首包不再向当前身份发下一页
+  ---
+  duration_ms: 18.731232
+  type: 'test'
+  ...
+# Subtest: 项目预览回包：已发出的旧第二页不覆盖最新预览
+ok 58 - 项目预览回包：已发出的旧第二页不覆盖最新预览
+  ---
+  duration_ms: 1.344923
+  type: 'test'
+  ...
+# Subtest: 项目预览回包：cleared-identity后忽略旧成功
+ok 59 - 项目预览回包：cleared-identity后忽略旧成功
+  ---
+  duration_ms: 1.138809
+  type: 'test'
+  ...
+# Subtest: 项目预览回包：detached后忽略旧成功
+ok 60 - 项目预览回包：detached后忽略旧成功
+  ---
+  duration_ms: 0.936831
+  type: 'test'
+  ...
+# Subtest: 项目预览回包：换号新读取先清除旧项目
+ok 61 - 项目预览回包：换号新读取先清除旧项目
+  ---
+  duration_ms: 0.826168
+  type: 'test'
+  ...
+# Subtest: 项目预览回包：销毁后不发新读取
+ok 62 - 项目预览回包：销毁后不发新读取
+  ---
+  duration_ms: 0.784016
+  type: 'test'
+  ...
+# Subtest: 项目待处理回包：changed-member不覆盖最新角标
+ok 63 - 项目待处理回包：changed-member不覆盖最新角标
+  ---
+  duration_ms: 1.012603
+  type: 'test'
+  ...
+# Subtest: 项目待处理回包：same-member-refresh不覆盖最新角标
+ok 64 - 项目待处理回包：same-member-refresh不覆盖最新角标
+  ---
+  duration_ms: 0.760892
+  type: 'test'
+  ...
+# Subtest: 项目待处理回包：cleared-identity不覆盖最新角标
+ok 65 - 项目待处理回包：cleared-identity不覆盖最新角标
+  ---
+  duration_ms: 0.818146
+  type: 'test'
+  ...
+# Subtest: 项目待处理回包：detached不覆盖最新角标
+ok 66 - 项目待处理回包：detached不覆盖最新角标
+  ---
+  duration_ms: 0.750497
+  type: 'test'
+  ...
+# Subtest: 项目待处理回包：换号新读取先清除旧角标
+ok 67 - 项目待处理回包：换号新读取先清除旧角标
+  ---
+  duration_ms: 0.818697
+  type: 'test'
+  ...
+# Subtest: 项目待处理回包：销毁后不发新读取
+ok 68 - 项目待处理回包：销毁后不发新读取
+  ---
+  duration_ms: 0.653614
+  type: 'test'
+  ...
+# Subtest: 主理人资格查询失败留在原页，成功重试按归属跳转
+ok 69 - 主理人资格查询失败留在原页，成功重试按归属跳转
+  ---
+  duration_ms: 7.914247
+  type: 'test'
+  ...
+# Subtest: 进行中报名成功返回空结果时清除旧报名，读取失败仍保留已有数据
+ok 70 - 进行中报名成功返回空结果时清除旧报名，读取失败仍保留已有数据
+  ---
+  duration_ms: 0.855741
+  type: 'test'
+  ...
+# Subtest: 首访：所有来源成功且从未参与时进入引导态，不把空数据渲染成一屏零值
+ok 71 - 首访：所有来源成功且从未参与时进入引导态，不把空数据渲染成一屏零值
+  ---
+  duration_ms: 2.888748
+  type: 'test'
+  ...
+# Subtest: 真实零：有过节点参与的老用户即使里程、EXP、周积分都为零，仍展示真实指标
+ok 72 - 真实零：有过节点参与的老用户即使里程、EXP、周积分都为零，仍展示真实指标
+  ---
+  duration_ms: 1.027564
+  type: 'test'
+  ...
+# Subtest: 历史参与：没有节点打卡但已有核销通关记录时，不得误判为首访
+ok 73 - 历史参与：没有节点打卡但已有核销通关记录时，不得误判为首访
+  ---
+  duration_ms: 1.106321
+  type: 'test'
+  ...
+# Subtest: 非零资料：已有关注或发布记录时直接展示，不用探索空态遮住真实资料
+ok 74 - 非零资料：已有关注或发布记录时直接展示，不用探索空态遮住真实资料
+  ---
+  duration_ms: 0.975007
+  type: 'test'
+  ...
+# Subtest: 请求失败：参与判据这次没取到时进入错误态，不能降级成首访或真实零
+ok 75 - 请求失败：参与判据这次没取到时进入错误态，不能降级成首访或真实零
+  ---
+  duration_ms: 0.966605
+  type: 'test'
+  ...
+# Subtest: HTTP401和历史鉴权码2必须正常登录后才恢复指标读取
+ok 76 - HTTP401和历史鉴权码2必须正常登录后才恢复指标读取
+  ---
+  duration_ms: 2.215997
+  type: 'test'
+  ...
+# Subtest: 订单、项目、推文和勋章分别区分登录与网络失败，成功重试清除登录提示
+ok 77 - 订单、项目、推文和勋章分别区分登录与网络失败，成功重试清除登录提示
+  ---
+  duration_ms: 3.421744
+  type: 'test'
+  ...
+# Subtest: 字段缺失：成功响应缺少 totalCheckins 时仍是错误态，不能把缺失字段补成零
+ok 78 - 字段缺失：成功响应缺少 totalCheckins 时仍是错误态，不能把缺失字段补成零
+  ---
+  duration_ms: 1.338553
+  type: 'test'
+  ...
+# Subtest: 字段缺失：积分响应只有 weekPoints 时进入错误态，不能把缺失排名标成 ready
+ok 79 - 字段缺失：积分响应只有 weekPoints 时进入错误态，不能把缺失排名标成 ready
+  ---
+  duration_ms: 1.045721
+  type: 'test'
+  ...
+# Subtest: 界面契约：主页统计始终展示，订单仅在成功加载后展示空态
+ok 80 - 界面契约：主页统计始终展示，订单仅在成功加载后展示空态
+  ---
+  duration_ms: 1.324713
+  type: 'test'
+  ...
+# Subtest: 负控：隐藏未加载统计时，契约必须变红
+ok 81 - 负控：隐藏未加载统计时，契约必须变红
+  ---
+  duration_ms: 2.033828
+  type: 'test'
+  ...
+# Subtest: 负控：把 ready 分支的真实 0 改成占位符时，契约必须精准变红
+ok 82 - 负控：把 ready 分支的真实 0 改成占位符时，契约必须精准变红
+  ---
+  duration_ms: 1.109185
+  type: 'test'
+  ...
+# Subtest: 订单预览失败保持未加载，重试成功才允许显示真实空态，再次失败保留失败标记
+ok 83 - 订单预览失败保持未加载，重试成功才允许显示真实空态，再次失败保留失败标记
+  ---
+  duration_ms: 0.864814
+  type: 'test'
+  ...
+# Subtest: 开发版真实空订单和空项目保持为空，不用演示卡替代本人数据
+ok 84 - 开发版真实空订单和空项目保持为空，不用演示卡替代本人数据
+  ---
+  duration_ms: 0.89572
+  type: 'test'
+  ...
+# Subtest: 资料排名：后端无排名哨兵只显示占位，不把它当 TOP0% 或排名上升
+ok 85 - 资料排名：后端无排名哨兵只显示占位，不把它当 TOP0% 或排名上升
+  ---
+  duration_ms: 2.980344
+  type: 'test'
+  ...
+# Subtest: 资料排名：真实 TOP20 和 TOP100 原样保留，旧契约缺 userRank 不误降为空态
+ok 86 - 资料排名：真实 TOP20 和 TOP100 原样保留，旧契约缺 userRank 不误降为空态
+  ---
+  duration_ms: 1.855335
+  type: 'test'
+  ...
+# Subtest: 资料排名：重复正常刷新稳定，网络或业务失败保留最近有效排名快照
+ok 87 - 资料排名：重复正常刷新稳定，网络或业务失败保留最近有效排名快照
+  ---
+  duration_ms: 0.808672
+  type: 'test'
+  ...
+# Subtest: 本周EXP：积分7与EXP13分别展示，累计积分50不改写
+ok 88 - 本周EXP：积分7与EXP13分别展示，累计积分50不改写
+  ---
+  duration_ms: 0.769154
+  type: 'test'
+  ...
+# Subtest: 本周EXP：网络失败保留EXP快照且积分独立成功
+ok 89 - 本周EXP：网络失败保留EXP快照且积分独立成功
+  ---
+  duration_ms: 0.654074
+  type: 'test'
+  ...
+# Subtest: 本周EXP：业务错误保留EXP快照且积分独立成功
+ok 90 - 本周EXP：业务错误保留EXP快照且积分独立成功
+  ---
+  duration_ms: 0.681114
+  type: 'test'
+  ...
+# Subtest: 本周EXP：缺少本人保留EXP快照且积分独立成功
+ok 91 - 本周EXP：缺少本人保留EXP快照且积分独立成功
+  ---
+  duration_ms: 0.620604
+  type: 'test'
+  ...
+# Subtest: 本周EXP：错误身份保留EXP快照且积分独立成功
+ok 92 - 本周EXP：错误身份保留EXP快照且积分独立成功
+  ---
+  duration_ms: 0.670659
+  type: 'test'
+  ...
+# Subtest: 本周EXP：错误指标保留EXP快照且积分独立成功
+ok 93 - 本周EXP：错误指标保留EXP快照且积分独立成功
+  ---
+  duration_ms: 0.632793
+  type: 'test'
+  ...
+# Subtest: 本周EXP：错误周期保留EXP快照且积分独立成功
+ok 94 - 本周EXP：错误周期保留EXP快照且积分独立成功
+  ---
+  duration_ms: 0.709246
+  type: 'test'
+  ...
+# Subtest: 本周EXP：缺少分数保留EXP快照且积分独立成功
+ok 95 - 本周EXP：缺少分数保留EXP快照且积分独立成功
+  ---
+  duration_ms: 0.769204
+  type: 'test'
+  ...
+# Subtest: 本周EXP：空分数保留EXP快照且积分独立成功
+ok 96 - 本周EXP：空分数保留EXP快照且积分独立成功
+  ---
+  duration_ms: 1.424991
+  type: 'test'
+  ...
+# Subtest: 本周EXP：负分数保留EXP快照且积分独立成功
+ok 97 - 本周EXP：负分数保留EXP快照且积分独立成功
+  ---
+  duration_ms: 0.761923
+  type: 'test'
+  ...
+# Subtest: 本周EXP：非安全分数保留EXP快照且积分独立成功
+ok 98 - 本周EXP：非安全分数保留EXP快照且积分独立成功
+  ---
+  duration_ms: 0.645701
+  type: 'test'
+  ...
+# Subtest: 本周EXP：小数保留EXP快照且积分独立成功
+ok 99 - 本周EXP：小数保留EXP快照且积分独立成功
+  ---
+  duration_ms: 0.699151
+  type: 'test'
+  ...
+# Subtest: 本周EXP：字符串分数保留EXP快照且积分独立成功
+ok 100 - 本周EXP：字符串分数保留EXP快照且积分独立成功
+  ---
+  duration_ms: 1.419483
+  type: 'test'
+  ...
+# Subtest: 本周EXP：布尔分数保留EXP快照且积分独立成功
+ok 101 - 本周EXP：布尔分数保留EXP快照且积分独立成功
+  ---
+  duration_ms: 0.781462
+  type: 'test'
+  ...
+# Subtest: 本周EXP：经验周榜登录失效按本人读取守卫进入登录态，不保留旧积分或EXP
+ok 102 - 本周EXP：经验周榜登录失效按本人读取守卫进入登录态，不保留旧积分或EXP
+  ---
+  duration_ms: 1.027044
+  type: 'test'
+  ...
+# Subtest: 本周EXP：首次缺失进入指标错误态，不声称真实0
+ok 103 - 本周EXP：首次缺失进入指标错误态，不声称真实0
+  ---
+  duration_ms: 10.851947
+  type: 'test'
+  ...
+# Subtest: 本周EXP：真实0且无排名有效，不拿榜首或积分替代
+ok 104 - 本周EXP：真实0且无排名有效，不拿榜首或积分替代
+  ---
+  duration_ms: 1.149365
+  type: 'test'
+  ...
+# Subtest: 本周EXP：积分失败保留积分快照，EXP独立成功
+ok 105 - 本周EXP：积分失败保留积分快照，EXP独立成功
+  ---
+  duration_ms: 0.850063
+  type: 'test'
+  ...
+# Subtest: 本周EXP：他人视角不发本人指标请求
+ok 106 - 本周EXP：他人视角不发本人指标请求
+  ---
+  duration_ms: 0.729175
+  type: 'test'
+  ...
+1..106
+# tests 106
+# suites 0
+# pass 106
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 196.028458

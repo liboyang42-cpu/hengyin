@@ -1,0 +1,14 @@
+2026-10-23T20:47:25.031231+00:00
+COMMAND: python3 docs/delivery/architecture-day/A-merchant-cancel/verify-static.py
+PASS SOURCE: cancellation binds current owner/active/unwon atomically; winner rejects deleted/unknown-deletion; other XML statements unchanged
+PASS SOURCE COUNTEREXAMPLE: baseline forwards stale owner/audit/status snapshot by ID; fix replaces only cancel write and preserves readable denials
+PASS SOURCE NEGATIVE CONTROLS: removing winner deletion or cancellation owner predicates restores missing protection; not a DB execution
+SOURCE ONLY, NOT RUN: MerchantCancelAuditGateTest.java 7 tests
+SOURCE ONLY, NOT RUN: MerchantRegistrationCancellationMySqlIT.java 8 tests
+PASS SOURCE: five scoped source/test files only; frozen candidates unchanged; diff check passed
+NOT RUN: Java compilation/tests, real MySQL locks/concurrency, HTTP authorization, B/G/channel integration; no DDL or CI dispatch
+PASS: payment/state/notification methods and B Checkout/G/CI/schema/RBAC files unchanged in this candidate
+PASS: changed tracked/untracked files pass secret-file and known-credential checks; diff check passed
+LIMIT: no full gitleaks entropy/history scan
+NOT RUN: all 7 unit and 8 MySQL fixture tests; Java compilation; HTTP/RBAC/Dispatch/G integration
+NO ACTION: DDL/database/backend/VPS access, dependencies, CI dispatch, production payment/merge/deploy

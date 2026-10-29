@@ -1,0 +1,73 @@
+{
+  "parent": "90e18550ae75e83641e85bf4bb218f08922c7d3e",
+  "parent_tree": "55ad70d6e20746d7b47ce368ca1d08f2014b59ff",
+  "branch": "codex/architecture-day-e-final-reuse-coupons",
+  "owned_code_patch_sha256": "1177b583922e6db220101ba487db92dd7ffde934eeaa1b1f1c1d280bc9658d92",
+  "owned_code_patch_bytes": 37989,
+  "owned_code_files": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TemplateRewardOwnershipTest.java",
+      "preimage_sha256": null,
+      "postimage_sha256": "e99d1e00a895814a7e2a25f98d6780b8fb5421a59a59a92ea4a710369788ee72",
+      "old_test_declarations": 0,
+      "new_test_declarations": 16
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicContentCopyMySqlFixture.java",
+      "preimage_sha256": "02df2704a2bbaf75335c18c31c31825228ec12e8f980c56fd298929131292c8d",
+      "postimage_sha256": "4aac0f20fb9ea7ec79f35f1d3ca79cb39ae456455e4d424593c964b29b34c10d"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicContentCopyMySqlIT.java",
+      "preimage_sha256": "4b5b9d9d4643864d8521760deeed0ee480f94f1c8ab83e85f6548cb0189f5033",
+      "postimage_sha256": "e80ea101a645340fd891d3be3e9256131bbc61a7ffc29bb40ee58aa024d0f066",
+      "old_test_declarations": 25,
+      "new_test_declarations": 28
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/TopicPublicationDeclarationsTest.java",
+      "preimage_sha256": "59189401b76c65efa4b99bc58d89bf80d5647545cc0bd9e2e03d4848628cd28b",
+      "postimage_sha256": "558b7dc3b85c2d991bc4b33723beb08ca86077b1abc989fb1f0b32138ab173b4",
+      "old_test_declarations": 32,
+      "new_test_declarations": 35
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsMemberTemplateServiceImpl.java",
+      "preimage_sha256": "235e79381483658179bea7c7de8a5aa93598f4b303ef594090756f578e1e4904",
+      "postimage_sha256": "e2cdd7d44cd393e3e15524ec4a00e05bff71d6a51afee38f78a6a2f9d7712833"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TemplatePublishServiceImpl.java",
+      "preimage_sha256": "4146b0b95833e31ad73ce4e982393c2f17e5674d52ead784ffdfd3609596d3c5",
+      "postimage_sha256": "33b538d63d55131a06c31d4b9d59994d14bae52d39e5dbca94aa50dc1c97b53a"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/RewardRulesValidator.java",
+      "preimage_sha256": "b03c9367c136a378827c970eaf126b80aef7d5ceb59ba1e5808119b31e461992",
+      "postimage_sha256": "c8eacd577363d66066897f35ee5bcfff86e4fbe3443693243dcbffee21691866"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/TopicPublicationContentGuard.java",
+      "preimage_sha256": "c24902f056539f0b2792f272eb2a28eef25fd75c5793de2cd1a9be091d21f65f",
+      "postimage_sha256": "18dbd539a0703c7a584ccf5cc4cd56cb3ac8bc12ce38269a1233a39c6c3c0c92"
+    }
+  ],
+  "execution": {
+    "compile": "NOT_RUN",
+    "tests": "NOT_RUN",
+    "node_python_controls": "NOT_RUN",
+    "mysql_redis": "NOT_RUN",
+    "http": "NOT_RUN",
+    "fault_injection": "NOT_RUN",
+    "ci": "NOT_RUN",
+    "full_gitleaks": "NOT_RUN"
+  },
+  "source_controls": {
+    "git_diff_cached_check": "clean",
+    "limited_added_source_secret_pattern_findings": 0
+  },
+  "frontend_changed": false,
+  "sql_migration_changed": false,
+  "public_protocol_changed": false,
+  "registry_owner": "root"
+}

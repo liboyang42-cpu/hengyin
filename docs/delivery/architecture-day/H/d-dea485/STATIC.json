@@ -1,0 +1,24 @@
+{
+  "candidate": "dea48565cc8789df7a9aac44a01657d2924e0985",
+  "base": "91962c94af463cbfe9b4d4406f9d88d269b097e4",
+  "static_only": true,
+  "unchanged_facade_method_bodies": 168,
+  "removed_definitions": 23,
+  "changed_facade_method_names": [
+    "assertBranchGraphOnlyForOrienteering",
+    "createTopicInternal",
+    "declaredRouteOutcomes",
+    "deleteTopicEditableChildren",
+    "rebuildTopicContent",
+    "updateTopicByOwnerInternal"
+  ],
+  "relocated_methods_under_explicit_owner_and_snapshot_replacements": 25,
+  "runtime": "NOT_RUN",
+  "facade_orchestration_exact_after_explicit_delegation_reversal": [
+    "createTopicInternal",
+    "updateTopicByOwnerInternal",
+    "rebuildTopicContent",
+    "deleteTopicEditableChildren"
+  ],
+  "two_runtime_inline_writes_match_after_indent_and_identity_variable_rename": true
+}

@@ -182,8 +182,14 @@ test('门店分身对话:归属校验必须在进模型之前', () => {
     const call = method.indexOf('chatWithShop')
     assert.ok(gate > 0 && call > gate, name + ':必须先过闸再进模型')
     assert.match(method.slice(0, call), /Long userId = getAppUserId\(\)/, '资格主体必须来自登录身份')
-    assert.match(method.slice(gate, call), /if \(gate\.deny != null\) return gate\.deny;/, '被拒必须在模型调用前退出')
+    assert.match(method.slice(gate, call), /if \(gate\.deny\s*!=\s*null\) return gate\.deny;/, '被拒必须在模型调用前退出')
     assert.match(method, /npcFeatureFlags\.shopChatOn\(\)/, '功能闸必须在最前面')
+    if (name === 'public AjaxResult voiceChat(') {
+      const asrAdmission = method.indexOf('npcAsrIntentService.recognize(')
+      assert.ok(asrAdmission > gate && asrAdmission < call, 'ASR登记也必须先过原资格闸')
+      assert.match(method.slice(gate, asrAdmission), /if \(before\.deny\s*!=\s*null\) return before\.deny;/,
+        '拒绝资格不能登记ASR或启动付费识别')
+    }
   }
   const method = between(ctrl, 'public AjaxResult shopChat(', 'private ShopGate gateShopChat(', 'shopChat')
   // chatOn() 是「无形陪伴 V1 不提供自由追问」的合规闸,硬编码 false 且注明不许复用。
@@ -292,15 +298,25 @@ test('ASR 没接入时在进模型之前就拒绝,不扣额度不留假记录', 
   assert.ok(avail > 0 && (call < 0 || avail < call), 'available() 必须先判')
   assert.match(m, /语音识别还没接入/, '要说清楚缺的是什么；含糊成「暂时不可用」会让人反复重试')
   // 空识别不许拿去调模型
-  assert.match(m, /text == null \|\| text\.trim\(\)\.isEmpty\(\)/)
+  const emptyReceipt = m.indexOf('receipt.getTranscript()==null || receipt.getTranscript().isEmpty()')
+  assert.ok(emptyReceipt > 0 && emptyReceipt < m.indexOf('npcChatService.chatWithShop('),
+    '原持久转写为空必须在模型调用前拦住')
+  assert.match(m, /receipt\.getTranscript\(\)==null \|\| receipt\.getTranscript\(\)\.isEmpty\(\)\)\s*return asrOnly\(receipt\);/)
+  const asr = fs.readFileSync(path.join(REPO,
+    'chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcAsrIntentService.java'), 'utf8')
+  assert.match(asr, /return finish\(admitted\.receipt\(\),"RECEIVED",text==null\?"":text\.trim\(\)\);/,
+    '空识别也必须先成为原ASR终态,不能删身份后再次收费识别')
 })
 
 test('语音片段不落盘:只有识别出的文字进对话记录', () => {
   const ctrl = fs.readFileSync(
     path.join(REPO, 'chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAiNpcController.java'), 'utf8')
   const m = ctrl.slice(ctrl.indexOf('public AjaxResult voiceChat('), ctrl.indexOf('private String shopMemoryOf('))
+  const asr = fs.readFileSync(path.join(REPO,
+    'chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcAsrIntentService.java'), 'utf8')
   for (const persist of ['uploadOss', 'uploadLocal', 'transferTo', 'FileOutputStream']) {
     assert.doesNotMatch(m, new RegExp(persist), '音频一旦落盘就多出一份没人管的声纹数据')
+    assert.doesNotMatch(asr, new RegExp(persist), '迁入ASR owner也不能持久保存原音频')
   }
   const noop = fs.readFileSync(
     path.join(REPO, 'chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/NoopSpeechToTextService.java'), 'utf8')

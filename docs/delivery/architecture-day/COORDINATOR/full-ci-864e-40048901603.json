@@ -1,0 +1,37 @@
+{
+  "source_sha": "864e708e2f38130e21780485e462f8dc147bb76f",
+  "run_id": 40048901603,
+  "conclusion": "SUCCESS",
+  "all_report_hashes_verified": 1841,
+  "raw_report_totals": {
+    "tests": 14479,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 619
+  },
+  "architecture_source": {
+    "verdict": "PASS_WITH_REVIEW_ITEMS",
+    "blockers": 0,
+    "review_items": 121,
+    "business_policy": {
+      "coverage": "PARTIAL",
+      "fact_ids": [
+        "AI_QUOTA_RESERVATION",
+        "PHOTO_CHECK_INTENT"
+      ]
+    },
+    "compare_base": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+    "legacy_baseline": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+    "raw_json_sha256": "96708291ed6debab3dc2571890bad313972c3c7a3d741585561ac91680c8b14e"
+  },
+  "trusted_verifier": "8da17d4c4efed6ebbe426e6257ecaf174a349fa8",
+  "scope": "D content copy/full app + F first two facts source policy + G production storage fixes, before C M1",
+  "limits": [
+    "Aggregate overwritten multi-phase reports are not unique business scenarios",
+    "Skipped suites are not accepted as real storage success",
+    "G45 exact SQL results are separate1e source; C M1 not in this source",
+    "Only partial two-fact source policy, not complete call-path/owner graph or wholeWP01"
+  ],
+  "actual_ci_trusted_checkout_and_115_controls_log_verified": true,
+  "trusted_ci_selftests": 115
+}

@@ -88,6 +88,7 @@ class FreeOrderCancelAcceptanceTest {
         activity.setStartDate(new Date(System.currentTimeMillis() + 3L * 24 * 3600 * 1000));
         CmsActivityMapper activityMapper = mock(CmsActivityMapper.class);
         when(activityMapper.selectCmsActivityById(ACTIVITY)).thenReturn(activity);
+        when(activityMapper.selectCmsActivityByIdForUpdate(ACTIVITY)).thenReturn(activity);
 
         service = new TeamGroupServiceImpl();
         ReflectionTestUtils.setField(service, "cmsRegistrationMapper", regMapper);
@@ -101,6 +102,8 @@ class FreeOrderCancelAcceptanceTest {
         ReflectionTestUtils.setField(service, "notifyService", mock(INotifyService.class));
         ReflectionTestUtils.setField(service, "firstReviewPointsClawback",
                 mock(FirstReviewPointsClawbackService.class));
+        com.chengyinhub.business.service.CancellationPhaseTestSupport.wireTeamTransactions(service,
+                com.chengyinhub.business.service.CancellationPhaseTestSupport.memoryTransactions());
     }
 
     @Test
@@ -130,12 +133,14 @@ class FreeOrderCancelAcceptanceTest {
                 .thenAnswer(inv -> claimed.compareAndSet(false, true) ? 1 : 0);
         // loser 当前读:已退款(payment_status=4)⇒ 视为已被处理,静默返回
         CmsRegistration current = new CmsRegistration();
+        org.springframework.beans.BeanUtils.copyProperties(registration, current);
         current.setId(REG_ID);
         current.setPaymentStatus(4);
         current.setRegistrationStatus(3);
         current.setVerificationStatus(0);
-        // 两次入口锁内读都还是同一已支付快照;只有 claim loser 的复读看到已退款。
-        when(regMapper.selectCmsRegistrationByIdForUpdate(REG_ID)).thenReturn(registration, registration, current);
+        // 每次先经原主题/报名 fence，再经 refundOne 当前读；只有第二次 claim loser 的复读看到已退款。
+        org.mockito.Mockito.doReturn(registration, registration, registration, registration, current)
+                .when(regMapper).selectCmsRegistrationByIdForUpdate(REG_ID);
 
         service.cancelPaidRegistration(REG_ID, MEMBER);
         service.cancelPaidRegistration(REG_ID, MEMBER);

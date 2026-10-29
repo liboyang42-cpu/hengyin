@@ -1,0 +1,28 @@
+{
+  "source_sha": "0cef7270d48db8f690584ec021b55ccd32f44609",
+  "run_id": 40045893438,
+  "workflow_conclusion": "success",
+  "verified_report_hashes": 1840,
+  "selected_suites": [
+    {
+      "name": "com.chengyinhub.business.service.impl.AiThemeDraftRequestServiceTest",
+      "tests": "11",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.ApiAiThemeDraftRequestTest",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    }
+  ],
+  "scope": "Original12 +new5 provider UNKNOWN submit/read/replay +machine code contract",
+  "limits": [
+    "Durable request identity after Redis TTL still unimplemented",
+    "No actual model/HTTP provider or persistent request MySQL acceptance",
+    "D copy source not in this candidate; D25 equivalence separately verified"
+  ]
+}

@@ -3,6 +3,9 @@ package com.chengyinhub.business.service.impl;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.ArrayList;
 import com.chengyinhub.common.utils.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,6 +26,9 @@ public class CmsTopicNodeServiceImpl implements ICmsTopicNodeService
 {
     @Autowired
     private CmsTopicNodeMapper cmsTopicNodeMapper;
+
+    @Autowired
+    private com.chengyinhub.business.service.support.TopicContentWriteGuard contentWriteGuard;
 
     @Autowired(required = false)
     private ITopicSaleCanonicalMutationService canonicalMutationService;
@@ -61,12 +67,14 @@ public class CmsTopicNodeServiceImpl implements ICmsTopicNodeService
     @Transactional(rollbackFor = Exception.class)
     public int insertCmsTopicNode(CmsTopicNode cmsTopicNode)
     {
+        contentWriteGuard.lockTopicContent(cmsTopicNode == null ? null : cmsTopicNode.getTopicId());
         cmsTopicNode.setCreateTime(DateUtils.getNowDate());
         if (isBlank(cmsTopicNode.getCheckinCode())) {
             cmsTopicNode.setCheckinCode(newCheckinCode());
         }
         int rows = cmsTopicNodeMapper.insertCmsTopicNode(cmsTopicNode);
         if (rows > 0) {
+            contentWriteGuard.assertTopicSizeWithinLimits(cmsTopicNode.getTopicId());
             invalidateApprovedCanonical(cmsTopicNode.getTopicId(), "node-insert");
         }
         return rows;
@@ -84,6 +92,18 @@ public class CmsTopicNodeServiceImpl implements ICmsTopicNodeService
     {
         CmsTopicNode existing = cmsTopicNode == null || cmsTopicNode.getId() == null ? null
                 : cmsTopicNodeMapper.selectCmsTopicNodeById(cmsTopicNode.getId());
+        if (existing == null) return 0;
+        Long expectedTopicId = existing.getTopicId();
+        Set<Long> parents = new TreeSet<>();
+        if (expectedTopicId == null) throw new IllegalStateException("节点缺少父主题，拒绝修改");
+        parents.add(expectedTopicId);
+        if (cmsTopicNode.getTopicId() != null) parents.add(cmsTopicNode.getTopicId());
+        for (Long topicId : parents) contentWriteGuard.lockTopicContent(topicId);
+        existing = cmsTopicNodeMapper.selectContentByIdForUpdate(cmsTopicNode.getId());
+        if (existing == null) return 0;
+        if (!java.util.Objects.equals(expectedTopicId, existing.getTopicId())) {
+            throw new IllegalStateException("节点归属已变化，请刷新后重试");
+        }
         // 空码在编辑时自愈:迁移只回填生产库，开发/测试库与「回填之后又被清空」的行仍会是空码，
         // 而空码节点在页面上看起来完全正常。⚠️ 只补空码，不换已有码 —— 换码 = 店里已印好的海报全部作废。
         // 传空串同样视同「不改」:mapper 的 <if test="checkinCode != null"> 会把空串真写进去，
@@ -95,6 +115,9 @@ public class CmsTopicNodeServiceImpl implements ICmsTopicNodeService
         cmsTopicNode.setUpdateTime(DateUtils.getNowDate());
         int rows = cmsTopicNodeMapper.updateCmsTopicNode(cmsTopicNode);
         if (rows > 0) {
+            if (cmsTopicNode.getTopicId() != null && !cmsTopicNode.getTopicId().equals(expectedTopicId)) {
+                contentWriteGuard.assertTopicSizeWithinLimits(cmsTopicNode.getTopicId());
+            }
             invalidateApprovedCanonical(existing == null ? cmsTopicNode.getTopicId() : existing.getTopicId(),
                     "node-update");
         }
@@ -111,16 +134,31 @@ public class CmsTopicNodeServiceImpl implements ICmsTopicNodeService
     @Transactional(rollbackFor = Exception.class)
     public int deleteCmsTopicNodeByIds(Long[] ids)
     {
+        Map<Long, Long> expectedTopics = new TreeMap<>();
         Set<Long> topicIds = new TreeSet<>();
         if (ids != null) {
             for (Long id : ids) {
                 CmsTopicNode existing = id == null ? null : cmsTopicNodeMapper.selectCmsTopicNodeById(id);
-                if (existing != null && existing.getTopicId() != null) {
+                if (existing != null) {
+                    if (existing.getTopicId() == null) throw new IllegalStateException("节点缺少父主题，拒绝删除");
                     topicIds.add(existing.getTopicId());
+                    expectedTopics.put(id, existing.getTopicId());
                 }
             }
         }
-        int rows = cmsTopicNodeMapper.deleteCmsTopicNodeByIds(ids);
+        if (expectedTopics.isEmpty()) return 0;
+        for (Long topicId : topicIds) contentWriteGuard.lockTopicContent(topicId);
+        List<Long> lockedIds = new ArrayList<>();
+        for (Map.Entry<Long, Long> locator : expectedTopics.entrySet()) {
+            CmsTopicNode locked = cmsTopicNodeMapper.selectContentByIdForUpdate(locator.getKey());
+            if (locked == null) continue;
+            if (!java.util.Objects.equals(locator.getValue(), locked.getTopicId())) {
+                throw new IllegalStateException("节点归属已变化，请刷新后重试");
+            }
+            lockedIds.add(locator.getKey());
+        }
+        if (lockedIds.isEmpty()) return 0;
+        int rows = cmsTopicNodeMapper.deleteCmsTopicNodeByIds(lockedIds.toArray(new Long[0]));
         if (rows > 0) {
             for (Long topicId : topicIds) {
                 invalidateApprovedCanonical(topicId, "node-delete-batch");
@@ -140,6 +178,14 @@ public class CmsTopicNodeServiceImpl implements ICmsTopicNodeService
     public int deleteCmsTopicNodeById(Long id)
     {
         CmsTopicNode existing = id == null ? null : cmsTopicNodeMapper.selectCmsTopicNodeById(id);
+        if (existing == null) return 0;
+        Long expectedTopicId = existing.getTopicId();
+        contentWriteGuard.lockTopicContent(expectedTopicId);
+        existing = cmsTopicNodeMapper.selectContentByIdForUpdate(id);
+        if (existing == null) return 0;
+        if (!java.util.Objects.equals(expectedTopicId, existing.getTopicId())) {
+            throw new IllegalStateException("节点归属已变化，请刷新后重试");
+        }
         int rows = cmsTopicNodeMapper.deleteCmsTopicNodeById(id);
         if (rows > 0 && existing != null) {
             invalidateApprovedCanonical(existing.getTopicId(), "node-delete");

@@ -1,0 +1,16 @@
+test_final_d_publication_directions_facade_and_public_domain_ports_are_allowed (test_collect_jdeps.PrivatePortsReadbackTest.test_final_d_publication_directions_facade_and_public_domain_ports_are_allowed) ... ok
+test_final_d_all_three_new_owners_block_cms_god_and_its_interface (test_collect_jdeps.PrivatePortsReadbackTest.test_final_d_all_three_new_owners_block_cms_god_and_its_interface) ... ok
+test_final_d_guard_cannot_reverse_call_publication_or_create_scoped_cycle (test_collect_jdeps.PrivatePortsReadbackTest.test_final_d_guard_cannot_reverse_call_publication_or_create_scoped_cycle) ... ok
+test_final_d_missing_actual_new_type_is_unknown_for_each_owner (test_collect_jdeps.PrivatePortsReadbackTest.test_final_d_missing_actual_new_type_is_unknown_for_each_owner) ... ok
+test_final_d_candidate_cannot_delete_publication_owner_or_clear_god (test_gate.PrivatePortPolicyFreezeTest.test_final_d_candidate_cannot_delete_publication_owner_or_clear_god) ... architecture gate FAIL-CLOSED: POLICY_CHANGE: candidate changed trusted policy: ci/architecture/owners.json
+architecture gate FAIL-CLOSED: POLICY_CHANGE: candidate changed trusted policy: ci/architecture/owners.json
+ok
+test_declared_owner_directions_use_verified_same_module_refs_without_a_second_jdeps (test_collect_jdeps.PrivatePortsReadbackTest.test_declared_owner_directions_use_verified_same_module_refs_without_a_second_jdeps) ... ok
+test_third_cli_pass_blocked_unknown_are_zero_one_two (test_collect_jdeps.PrivatePortsReadbackTest.test_third_cli_pass_blocked_unknown_are_zero_one_two) ... ok
+test_v11_public_runtime_port_does_not_prove_read_only_or_null_semantics (test_collect_jdeps.PrivatePortsReadbackTest.test_v11_public_runtime_port_does_not_prove_read_only_or_null_semantics) ... ok
+test_three_private_ports_do_not_approve_a_third_whole_table_fact_or_command (test_gate.PrivatePortPolicyFreezeTest.test_three_private_ports_do_not_approve_a_third_whole_table_fact_or_command) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 0.714s
+
+OK

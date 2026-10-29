@@ -1,5 +1,5 @@
 'use strict';
-// NOT_RUN: authored source-only regression.
+// Uses the real page helpers and an isolated persistent storage fixture.
 const {test}=require('node:test');const assert=require('node:assert/strict');const path=require('node:path');
 // W8 起登录态写意图按账号/场次持久化到本机(play-route-state scopedRouteActionStore → wx storage),
 // 模块级按作用域缓存;每个用例给新存储并重载该模块。

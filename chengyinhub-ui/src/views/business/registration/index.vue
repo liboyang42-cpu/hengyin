@@ -62,16 +62,6 @@
     <el-row :gutter="10" class="mb8">
       <!-- <el-col :span="1.5">
         <el-button
-          type="primary"
-          plain
-          icon="el-icon-plus"
-          size="mini"
-          @click="handleAdd"
-          v-hasPermi="['business:registration:add']"
-        >新增</el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-button
           type="success"
           plain
           icon="el-icon-edit"
@@ -440,7 +430,7 @@
 </template>
 
 <script>
-import { listRegistration, getRegistration, delRegistration, addRegistration, updateRegistration, listRegistrationRedemptions, reverseRedemption, reverseParentOrderRedemptions, reverseWholeOrderVerification } from "@/api/business/registration"
+import { listRegistration, getRegistration, delRegistration, updateRegistration, listRegistrationRedemptions, reverseRedemption, reverseParentOrderRedemptions, reverseWholeOrderVerification } from "@/api/business/registration"
 import { addRefund } from "@/api/business/refund"
 import auth from '@/plugins/auth'
 import CyPageHeader from '@/components/CyPageHeader'
@@ -815,12 +805,6 @@ export default {
         this.reverseSubmitting = false
       })
     },
-    /** 新增按钮操作 */
-    handleAdd() {
-      this.reset()
-      this.open = true
-      this.title = "添加活动/主题报名"
-    },
     /** 修改按钮操作 */
     handleUpdate(row) {
       this.reset()
@@ -842,11 +826,7 @@ export default {
               this.getList()
             })
           } else {
-            addRegistration(this.form).then(response => {
-              this.$modal.msgSuccess("新增成功")
-              this.open = false
-              this.getList()
-            })
+            this.$modal.msgError("通用新增报名已关闭，请通过正式下单流程创建报名")
           }
         }
       })

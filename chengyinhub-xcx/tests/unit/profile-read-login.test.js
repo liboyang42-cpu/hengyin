@@ -47,7 +47,8 @@ function profile(owner, token, self = true) {
   h.definition = definition
   return h
 }
-const PRIVATE_READS = ['loadRoleInfo','loadClubSummary','loadMerchantAccess','loadGrowthBundle','loadJoinData',
+// 2026-10-27 L08 P-53:俱乐部入口删除后 loadClubSummary(/api/club/my)随之移除,私有读集合同步去掉它。
+const PRIVATE_READS = ['loadRoleInfo','loadMerchantAccess','loadGrowthBundle','loadJoinData',
   'loadThemes','loadMedals','loadPointsStat','loadOrderPreview','loadProjectPreview','loadProjectPending','loadPointsTasks']
 
 for (const [owner, token] of [['', ''], ['7', ''], ['', 'Bearer unit'], ['0', 'Bearer unit']]) {
@@ -97,7 +98,7 @@ test('private primary profile late token response cannot mutate data or global r
   h.identity('7', 'Bearer replacement'); h.requests[0].success({ code: 200, data: { role: 'merchant', nickname: 'Old token' } }); await pending
   assert.deepEqual(h.roleWrites, []); assert.equal(h.component.data.userInfo.nickname, undefined)
 })
-for (const method of ['loadMedals','loadJoinData','loadMerchantAccess','loadClubSummary','loadPointsTasks']) {
+for (const method of ['loadMedals','loadJoinData','loadMerchantAccess','loadPointsTasks']) {
   test(`${method} rejects old owner, hidden and detached callback mutations`, async () => {
     for (const transition of ['owner', 'hide', 'detach']) {
       const h = profile('7', 'Bearer old'); const pending = h.component[method]()
@@ -112,7 +113,6 @@ for (const method of ['loadMedals','loadJoinData','loadMerchantAccess','loadClub
         assert.deepEqual(h.component.data.joinInfo, { id: 0 })
         assert.equal(h.component.data.merchantAccess.active, false)
         assert.deepEqual(h.component.data.pointsSheet.tasks, [])
-        assert.equal(h.component.data.clubOwnedCount, 0)
       } else assert.equal(JSON.stringify(h.component.data), before)
       assert.deepEqual(h.roleWrites, [])
     }

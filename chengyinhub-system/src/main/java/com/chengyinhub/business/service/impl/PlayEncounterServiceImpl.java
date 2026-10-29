@@ -93,13 +93,6 @@ public class PlayEncounterServiceImpl implements IPlayEncounterService {
         if (memberId == null || memberId <= 0L || topicId == null || topicId <= 0L || nodeId == null || nodeId <= 0L) {
             throw new ServiceException("参数有误");
         }
-        CmsTopicNode node = cmsTopicNodeService.selectCmsTopicNodeById(nodeId);
-        if (node == null || !topicId.equals(node.getTopicId())) {
-            throw new ServiceException("节点不存在");
-        }
-        CmsMemberTemplate template = node.getTemplateId() == null ? null
-                : cmsMemberTemplateService.selectCmsMemberTemplateById(node.getTemplateId());
-
         TopicRouteSession run = TopicRouteSessionScope.findCurrent(topicRouteSessionMapper, memberId, topicId, activityId);
         if (run == null) {
             throw new ServiceException("这一局还没开始");
@@ -107,11 +100,31 @@ public class PlayEncounterServiceImpl implements IPlayEncounterService {
         if (!memberId.equals(run.getMemberId())) {
             throw new ServiceException("无权访问这一局");
         }
+        CmsTopicNode currentNode = cmsTopicNodeService.selectCmsTopicNodeById(nodeId);
+        if (currentNode == null || !topicId.equals(currentNode.getTopicId())) throw new ServiceException("节点不存在");
+        JsonNode content;
+        try {
+            NodeJourneySnapshot.requireContentSnapshot(parseConfigOrNull(run.getConfigSnapshotJson()));
+            content = NodeJourneySnapshot.answer(run.getConfigSnapshotJson(), nodeId);
+        }
+        catch (IllegalStateException invalid) { throw new ServiceException(invalid.getMessage()); }
+        boolean frozenContent = content != null && content.has("contentSnapshotVersion");
+        CmsTopicNode node;
+        CmsMemberTemplate template;
+        if (frozenContent) {
+            node = contentNode(content, topicId, nodeId);
+            template = NodeJourneySnapshot.contentTemplate(content);
+        } else {
+            // 没有新标志的旧发布/旧局保持旧路径；不能拿当前作者行补造冻结身份。
+            node = currentNode;
+            template = node.getTemplateId() == null ? null
+                    : cmsMemberTemplateService.selectCmsMemberTemplateById(node.getTemplateId());
+        }
         // 旅程段(requires / check)优先读建局冻结块;老局快照没有 nodeJourney 键时回退实时模板配置。
         JsonNode frozen = NodeJourneySnapshot.block(run.getConfigSnapshotJson(), node.getId());
         JsonNode liveConfig = parseConfigOrNull(template == null ? null : template.getAdvancedConfigJson());
         JsonNode runSnapshot=parseConfigOrNull(run.getConfigSnapshotJson());
-        JsonNode themeNodeConfig=runSnapshot==null || !runSnapshot.has("themeConfig")?null:runSnapshot.path("nodeConfigs").get(String.valueOf(nodeId));
+        JsonNode themeNodeConfig=runSnapshot==null || !frozenContent && !runSnapshot.has("themeConfig")?null:runSnapshot.path("nodeConfigs").get(String.valueOf(nodeId));
         if(themeNodeConfig!=null && template!=null){CmsMemberTemplate frozenTemplate=new CmsMemberTemplate();org.springframework.beans.BeanUtils.copyProperties(template,frozenTemplate);frozenTemplate.setAdvancedConfigJson(themeNodeConfig.toString());template=frozenTemplate;liveConfig=themeNodeConfig;}
 
         if (frozen == null && liveConfig == null) {
@@ -142,12 +155,22 @@ public class PlayEncounterServiceImpl implements IPlayEncounterService {
             view.put("config",Collections.singletonMap("outcomeRulesVersion",1));
         view.put("outcomeContract", outcomeContract(journey, liveConfig, run, node.getId(), arrived));
         view.put("fallbackPlan", fallbackPlan());
-        view.put("preload", preload(template, node, presentation));
+        view.put("preload", preload(template, node, presentation, frozenContent, content));
         view.put("beat", beat(journey, state, node.getId(), arrived,
                 Boolean.TRUE.equals(presentation.get("revisit"))));
         appendNarrative(view, journey, state, node, run, memberId, topicId, activityId);
         appendRoleView(view, journey, run, memberId);
         return view;
+    }
+
+    /** 个人局按原 node/topic 身份读；共享 alias 的授权映射由独立纯读口处理。 */
+    private CmsTopicNode contentNode(JsonNode content, Long topicId, Long nodeId) {
+        CmsTopicNode node;
+        try { node = NodeJourneySnapshot.contentNode(content, null); }
+        catch (IllegalStateException invalid) { throw new ServiceException(invalid.getMessage()); }
+        if (node == null || !topicId.equals(node.getTopicId()) || !nodeId.equals(node.getId()))
+            throw new ServiceException("本局内容归属不可用");
+        return node;
     }
 
     /** 本局权威状态的唯一读侧:topic_route_session.state_json。 */
@@ -539,7 +562,7 @@ public class PlayEncounterServiceImpl implements IPlayEncounterService {
             if (node == null || node.getId() == null) continue;
             putProfiles(profiles, npcProfileService.resolveEnabledList(NpcProfileService.SCOPE_NODE, node.getId()));
             if (node.getMerchantMemberId() != null) {
-                putProfiles(profiles, npcProfileService.resolveEnabledList(SCOPE_MERCHANT, node.getMerchantMemberId()));
+                putProfiles(profiles, npcProfileService.resolveEnabledListForMerchantMember(node.getMerchantMemberId()));
             }
         }
         return profiles;
@@ -903,14 +926,18 @@ public class PlayEncounterServiceImpl implements IPlayEncounterService {
      * 节点停用段(如 hiddenObject.enabled=false)同样不进。
      */
     private List<String> preload(CmsMemberTemplate template, CmsTopicNode node,
-            Map<String, Object> presentation) {
+            Map<String, Object> presentation, boolean frozenContent, JsonNode content) {
         List<String> urls = new ArrayList<String>();
         Set<String> seen = new LinkedHashSet<String>();
         addUrl(urls, seen, node == null ? null : node.getImgUrl());
         addUrl(urls, seen, template == null ? null : template.getImgUrl());
-        CmsTopicChapter chapter = node == null || node.getChapterId() == null ? null
-                : cmsTopicChapterService.selectCmsTopicChapterById(node.getChapterId());
-        addUrl(urls, seen, chapter == null ? null : chapter.getAudioUrl());
+        if (frozenContent) {
+            addUrl(urls, seen, content.path("chapterAudioUrl").asText(null));
+        } else {
+            CmsTopicChapter chapter = node == null || node.getChapterId() == null ? null
+                    : cmsTopicChapterService.selectCmsTopicChapterById(node.getChapterId());
+            addUrl(urls, seen, chapter == null ? null : chapter.getAudioUrl());
+        }
         addUrl(urls, seen, template == null ? null : template.getAudioUrl());
         collectMedia(publicMediaConfig(template), urls, seen);
         Object npc = presentation == null ? null : presentation.get("npc");

@@ -1,0 +1,56 @@
+{
+  "source_sha": "c86d212f66b92ed1af2c0c661d68169ddc9c48a5",
+  "run": 40144172218,
+  "job": 121021893563,
+  "artifact": 12580135669,
+  "zip_sha256": "720a21f2cb3e8590ace98a2c8c2549e5ab2a3211c79e8916e4d4ffc7013cc756",
+  "zip_crc": "PASS",
+  "files": 3,
+  "status": "FAIL_BEFORE_APP_SCHEMA_PREPARE",
+  "embedded_checkout_matched": true,
+  "prepared_not_executed_jar_sha256": "c45425c02bf25921cdf2086ec625e6f894b8568ad3440955ed6664ad28a236cb",
+  "builder_exit": 1,
+  "base_tables": 227,
+  "base_errors": 0,
+  "seed_errors": 0,
+  "seed_negative_controls": "6/6",
+  "ledger_migrations": 547,
+  "pending_migrations": 257,
+  "final_tables": 256,
+  "errors": [
+    {
+      "migration": "20261024_c_before_start_notice_typed",
+      "statement": 1,
+      "mysql_errno": 3141,
+      "operation": "JSON_EXTRACT error branch of strict schema preflight",
+      "cause": "Exact false precondition NOT_YET_IDENTIFIED; original artifact has aggregate only"
+    }
+  ],
+  "wp08_previous_assertion": "No longer listed as failure in this complete builder report; do not call entire schema PASS",
+  "diagnostics": {
+    "fixturePhase": "prepare",
+    "result": "FAIL_OR_UNKNOWN_NO_RETRY",
+    "failureType": "RuntimeError",
+    "reason": "full schema builder failed; no continuation",
+    "resourceCleanup": {
+      "cleanup": "CONFIRMED_EXACT_OWNED_REMOVAL",
+      "ownedRemoved": [
+        {
+          "name": "cy-auth-98dc2e4266fd405ea74d9bc78fc9f052-mysql",
+          "id": "949f9905982251be171c5c8f7d152a08137e67a43344b50be6e8f7269713c897",
+          "independentNoSuch": true
+        },
+        {
+          "name": "cy-auth-98dc2e4266fd405ea74d9bc78fc9f052-redis",
+          "id": "e067f435b8a1143e73f2f5345bd2f6805931c28b1fea4bdb34731f4267d5a355",
+          "independentNoSuch": true
+        }
+      ]
+    },
+    "applicationLogPreserved": false,
+    "applicationLogStatus": "NOT_STARTED"
+  },
+  "business_HTTP_and_Redis_fault": "NOT_RUN",
+  "root_action": "Original G assigned exact canonical precondition/topology diagnosis only; old SQL and assertions preserved",
+  "full_governance_complete": false
+}

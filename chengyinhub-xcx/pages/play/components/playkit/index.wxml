@@ -114,6 +114,7 @@
   bind:start="onStart" bind:submit="onSubmit" bind:verdict="onVerdict" bind:close="onClose" />
 
 <cy-playkit-qa wx:elif="{{kit.type === 'qa'}}"
+  session-id="{{kit.sessionId}}" node-id="{{kit.nodeId}}"
   show="{{show}}" mode="{{kit.mode}}" theme="{{kit.theme}}" title="{{kit.title}}"
   image-url="{{kit.imageUrl}}" audio-url="{{kit.audioUrl}}" lead="{{kit.lead}}"
   options="{{kit.options}}" shot-lead="{{kit.shotLead}}" shot-note="{{kit.shotNote}}"

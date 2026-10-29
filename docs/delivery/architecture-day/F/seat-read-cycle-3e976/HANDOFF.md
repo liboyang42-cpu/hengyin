@@ -1,0 +1,21 @@
+# 结算席位真实Spring环回归（第一片）
+
+Parent公开 `3e976bcefb2a14b19600e6bc4a20029767d58b75`；只改SupportedStackServiceCyclesTest及本目录。根报告run40130007237/job120979619091在隔离整应用启动暴露 Reg→Claim→Evidence→RegistrationSeatService→Reg。
+
+旧fixture在Claim/evidence闭包将RegistrationSeatService当inert外部collaborator。本片让Reg/Claim/原ledger相关闭包纳入真实RegistrationSeatService和CmsRegistrationServiceImpl，原整体正控明确检查这两类及Evidence非mock，逐跳same-instance验证Reg→Claim、Claim→Evidence、Seat writer→Reg。不以Lazy/Provider/可选注入或允许circular绕过。
+
+原33例和全部负控/断言保留，新增1例=34源码case：使用真实Evidence父类及原四Mapper构造，加一条显式必需forbiddenSeatWriter字段重建实际旧环。必须失败为BeanCurrentlyInCreationException、栈包含该反向字段、unexpectedCalls为空。Mapper/Jdbc/Redis/executor等仍仅是既有inert外部边界，未执行业务/外呼。
+
+这是与G生产拆分合用的回归源码，不是单独绿色候选；原3e976的真实环在本正控下仍应失败。待G交精确新reader/FQN/构造及原方法合同，再追加真实reader到闭包和字段绑定断言，并沿4a149机制登记精确owner/consumer及fixed pin。本片不预猜类型，不改任何policy/旧baseline/生产/workflow。
+
+Java/DB/编译/CI均NOT_RUN，未签整应用启动通过。原测试源码/场景均保留，只做必要差分静态/秘密扫描后交root串行集成。
+
+## 第二片：G精确来源已接
+
+来源 `4e5ee6e1acafa5cd4efbf366c29445d5d5c1249e`，未覆盖G任何生产文件。真实类 `com.chengyinhub.business.service.RegistrationSeatSettlementReader`；构造只有原RegistrationSeatMapper，原public verifiedSeatsForGroup(Long,Long,Date)保持MANDATORY。旧Evidence四参构造未改，首片负控可原样保留。
+
+真实闭包加入reader；原整体正控验证Evidence.registrationSeats与SeatService.settlementReader均为同一managed reader，reader.seats为同一原Mapper，并从实际TransactionInterceptor读取MANDATORY合同。新增reader反调ICmsRegistrationService的真实Spring负控，必须BeanCurrentlyInCreationException且栈包含该字段；原33+首片1+本片1=35 Java源码case，全部Java NOT_RUN。
+
+policy仅增加G_SETTLEMENT_SEAT_READER一个技术类型，精确incoming consumers为Evidence/旧SeatService；mapper出向只允许RegistrationSeatMapper，service出向只允许自身（未给Mapper新增owner、writer、fact或私有port）。Evidence禁止旧Seat/报名反调。原4a149 gate/manual-LCA/commands/producer/旧baseline均不改，六文件中仅owners变化。classgraph不证明方法级只读、金额或SQL/事务语义。
+
+实际仅跑新增4项轻量Python控制：4/4 PASS、0skip，0.913s。含明确临时Git/source CLI及synthetic ZIP/raw fixtures，不冒充实际Java/jdeps/JAR。覆盖两个合法consumer/原Mapper、外来/内部前缀caller拒绝、反调/环拒绝、其它Mapper拒绝、缺raw UNKNOWN、candidate自改policy拒绝。全套回归/Java/DB/CI仍NOT_RUN，root唯一统一验证。

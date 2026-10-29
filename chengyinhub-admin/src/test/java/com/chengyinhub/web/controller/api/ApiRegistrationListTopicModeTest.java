@@ -61,13 +61,13 @@ class ApiRegistrationListTopicModeTest {
                 .thenReturn(new ArrayList<>(Collections.singletonList(reg)));
 
         controller = spy(new ApiRegistrationController());
-        ReflectionTestUtils.setField(controller, "registrationService", registrationService);
-        ReflectionTestUtils.setField(controller, "topicService", topicService);
-        ReflectionTestUtils.setField(controller, "activityService", mock(ICmsActivityService.class));
-        ReflectionTestUtils.setField(controller, "omsTicketService", ticketService);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "registrationService", registrationService);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "topicService", topicService);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "activityService", mock(ICmsActivityService.class));
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "omsTicketService", ticketService);
         IRefundService refundService = mock(IRefundService.class);
         when(refundService.selectRefundList(any())).thenReturn(new ArrayList<>());
-        ReflectionTestUtils.setField(controller, "refundService", refundService);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "refundService", refundService);
         doReturn(100L).when(controller).getAppUserId();
         when(ticketService.selectOmsTicketList(any())).thenReturn(Collections.<OmsTicket>emptyList());
     }
@@ -80,7 +80,7 @@ class ApiRegistrationListTopicModeTest {
     }
 
     private CmsTopic listedTopic() {
-        AjaxResult res = controller.myRegistrationList("3", "0", null);
+        AjaxResult res = RegistrationQueryTestFixtures.wire(controller).myRegistrationList("3", "0", null);
         assertEquals(200, res.get(AjaxResult.CODE_TAG), "订单列表应正常返回");
         TableDataInfo data = (TableDataInfo) res.get(AjaxResult.DATA_TAG);
         List<?> rows = data.getRows();

@@ -1,0 +1,41 @@
+{
+  "candidate_parent": "be05256849ef204ced0f6353dc4458e1d2ad6dd7",
+  "scope": "Isolated CI source assembly, not formal acceptance",
+  "D_source": "dbbb2350abe95f22fcc7b6fb291fcd0f66d7a004",
+  "D_files_exact": 57,
+  "D_original_facade_methods_exact": 168,
+  "D_moved_bodies_matched": 25,
+  "D_old_case_inventory_preserved": 366,
+  "D_real_cases_authored": 32,
+  "D_real_scenarios_authored": 62,
+  "A_HTTP_cases_authored": 35,
+  "H_ACK_original22_preserved": true,
+  "H_ACK_new_cases_authored": 1,
+  "AI_registry_exact": 23,
+  "Node_action_ledger_actual": {
+    "tests": 46,
+    "failures": 0,
+    "skipped": 0,
+    "controls": 5111,
+    "new_controls": 6,
+    "local_tap": 2176,
+    "local_event_contract": 2542,
+    "new_dynamic_results": "pending, not fabricated"
+  },
+  "Python_actual": {
+    "real_storage_and_migration_controls": 117,
+    "D_comparator_synthetic_controls": 11
+  },
+  "sql_audit": {
+    "files": 580,
+    "problems": 0,
+    "new_graph_sql": "TEST_FIXTURE exact path only"
+  },
+  "static_A_verifier_in_root": "inapplicable whole-branch scope check rejects mixed integrated assembly; no control removed or changed",
+  "not_proven": [
+    "Java compilation and actual HTTP35 on this source",
+    "actual H ACK23/MySQL/Redis",
+    "actual D32 and old/new equivalence",
+    "full integrated CI/startup/production/device/provider"
+  ]
+}

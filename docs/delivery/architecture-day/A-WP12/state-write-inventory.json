@@ -1,0 +1,1428 @@
+{
+  "base": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+  "meaning": "source SQL state writes/predicates and raw deletes, not runtime reachability or executed SQL",
+  "items": [
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml",
+      "line": 181,
+      "statement": "markFirstSuccessfulScan",
+      "type": "update",
+      "state_tokens": [
+        "payment_status",
+        "registration_status"
+      ],
+      "where": " id = #{id} and member_id = #{memberId} and owner_type = #{ownerType} and owner_id = #{ownerId} and payment_status = 2 and registration_status = 2 and (owner_type <> 1 or expires_at is null or expires_at > #{scanTime}) and first_successful_scan_at is null",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml",
+      "line": 311,
+      "statement": "insertCmsRegistration",
+      "type": "insert",
+      "state_tokens": [
+        "payment_status",
+        "points_returned",
+        "registration_status",
+        "verification_status"
+      ],
+      "where": null,
+      "dynamic_predicates": [
+        "registrationNo != null and registrationNo != ''",
+        "ownerType != null",
+        "ownerId != null",
+        "activityTitle != null",
+        "ticketId != null",
+        "ticketName != null",
+        "ticketPrice != null",
+        "memberId != null",
+        "realName != null",
+        "phone != null",
+        "phone != null",
+        "email != null",
+        "address != null",
+        "addressId != null",
+        "participateDate != null",
+        "parentOrderNo != null",
+        "requestId != null",
+        "requestFingerprint != null",
+        "orderNum != null",
+        "originalAmount != null",
+        "discountAmount != null",
+        "totalAmount != null",
+        "pointUsed != null",
+        "pointDeductAmount != null",
+        "pointDeductRate != null",
+        "maxPointDeduct != null",
+        "payableAmount != null",
+        "paymentStatus != null",
+        "paymentType != null",
+        "paymentTime != null",
+        "transactionId != null",
+        "pointPaymentAmount != null",
+        "wechatPaymentAmount != null",
+        "feePlatformRate != null",
+        "registrationStatus != null",
+        "payExpireTime != null",
+        "topicId != null",
+        "purchaseKind != null",
+        "sourceClubId != null",
+        "sourceChannelCode != null",
+        "refundPolicyCode != null",
+        "refundPolicyVersion != null",
+        "refundDeadline != null",
+        "expiresAt != null",
+        "createBy != null",
+        "createTime != null",
+        "updateBy != null",
+        "updateTime != null",
+        "verificationCode != null",
+        "qrcodeUrl != null",
+        "verificationStatus != null",
+        "verificationTime != null",
+        "verifierId != null",
+        "pointsReturned != null ",
+        "registrationNo != null and registrationNo != ''",
+        "ownerType != null",
+        "ownerId != null",
+        "activityTitle != null",
+        "ticketId != null",
+        "ticketName != null",
+        "ticketPrice != null",
+        "memberId != null",
+        "realName != null",
+        "phone != null",
+        "phone != null",
+        "email != null",
+        "address != null",
+        "addressId != null",
+        "participateDate != null",
+        "parentOrderNo != null",
+        "requestId != null",
+        "requestFingerprint != null",
+        "orderNum != null",
+        "originalAmount != null",
+        "discountAmount != null",
+        "totalAmount != null",
+        "pointUsed != null",
+        "pointDeductAmount != null",
+        "pointDeductRate != null",
+        "maxPointDeduct != null",
+        "payableAmount != null",
+        "paymentStatus != null",
+        "paymentType != null",
+        "paymentTime != null",
+        "transactionId != null",
+        "pointPaymentAmount != null",
+        "wechatPaymentAmount != null",
+        "feePlatformRate != null",
+        "registrationStatus != null",
+        "payExpireTime != null",
+        "topicId != null",
+        "purchaseKind != null",
+        "sourceClubId != null",
+        "sourceChannelCode != null",
+        "refundPolicyCode != null",
+        "refundPolicyVersion != null",
+        "refundDeadline != null",
+        "expiresAt != null",
+        "createBy != null",
+        "createTime != null",
+        "updateBy != null",
+        "updateTime != null",
+        "verificationCode != null",
+        "qrcodeUrl != null",
+        "verificationStatus != null",
+        "verificationTime != null",
+        "verifierId != null",
+        "pointsReturned != null "
+      ]
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml",
+      "line": 435,
+      "statement": "updateCmsRegistration",
+      "type": "update",
+      "state_tokens": [
+        "payment_status",
+        "points_returned",
+        "registration_status",
+        "verification_status"
+      ],
+      "where": " id = #{id}",
+      "dynamic_predicates": [
+        "registrationNo != null and registrationNo != ''",
+        "ownerType != null",
+        "ownerId != null",
+        "activityTitle != null",
+        "ticketId != null",
+        "ticketName != null",
+        "ticketPrice != null",
+        "memberId != null",
+        "realName != null",
+        "phone != null",
+        "phone != null",
+        "email != null",
+        "address != null",
+        "addressId != null",
+        "participateDate != null",
+        "parentOrderNo != null",
+        "requestId != null",
+        "requestFingerprint != null",
+        "orderNum != null",
+        "originalAmount != null",
+        "discountAmount != null",
+        "totalAmount != null",
+        "pointUsed != null",
+        "pointDeductAmount != null",
+        "pointDeductRate != null",
+        "maxPointDeduct != null",
+        "payableAmount != null",
+        "paymentStatus != null",
+        "paymentType != null",
+        "paymentTime != null",
+        "transactionId != null",
+        "pointPaymentAmount != null",
+        "wechatPaymentAmount != null",
+        "feePlatformRate != null",
+        "registrationStatus != null",
+        "payExpireTime != null",
+        "createBy != null",
+        "createTime != null",
+        "updateBy != null",
+        "updateTime != null",
+        "verificationCode != null",
+        "qrcodeUrl != null",
+        "verificationStatus != null",
+        "verificationTime != null",
+        "verifierId != null",
+        "pointsReturned != null "
+      ]
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml",
+      "line": 488,
+      "statement": "deleteCmsRegistrationById",
+      "type": "delete",
+      "state_tokens": [],
+      "where": " id = #{id}",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml",
+      "line": 492,
+      "statement": "deleteCmsRegistrationByIds",
+      "type": "delete",
+      "state_tokens": [],
+      "where": " id in #{id}",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml",
+      "line": 511,
+      "statement": "claimPaymentSuccess",
+      "type": "update",
+      "state_tokens": [
+        "payment_status",
+        "registration_status"
+      ],
+      "where": " id = #{id} and payment_status in (0, 1) and registration_status = 1 and (#{transactionId} is null or #{transactionId} = '' or transaction_id is null or transaction_id = #{transactionId})",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml",
+      "line": 542,
+      "statement": "freezeTicketSourceOnPayment",
+      "type": "update",
+      "state_tokens": [
+        "payment_status",
+        "registration_status"
+      ],
+      "where": " r.id = #{id} and r.purchase_kind = 3 and r.payment_status = 2 and r.registration_status = 2 and r.source_frozen_at is null",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml",
+      "line": 583,
+      "statement": "repairHistoricalPaidHalfState",
+      "type": "update",
+      "state_tokens": [
+        "payment_status",
+        "registration_status",
+        "state"
+      ],
+      "where": " id = #{id} and payment_status = 2 and registration_status = 1 and wechat_payment_amount = #{wechatPaymentAmount} and (transaction_id is null or transaction_id = #{transactionId})",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml",
+      "line": 597,
+      "statement": "claimRegistrationRefunded",
+      "type": "update",
+      "state_tokens": [
+        "payment_status",
+        "registration_status",
+        "verification_status"
+      ],
+      "where": " id = #{id} and payment_status = 2 and registration_status = 2 and (verification_status is null or verification_status <> 1 or purchase_kind = 3)",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml",
+      "line": 612,
+      "statement": "claimRegistrationRefundedByGateway",
+      "type": "update",
+      "state_tokens": [
+        "payment_status",
+        "registration_status"
+      ],
+      "where": " id = #{id} and payment_status = 2 and registration_status = 2",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml",
+      "line": 623,
+      "statement": "claimPointsReturn",
+      "type": "update",
+      "state_tokens": [
+        "payment_status",
+        "points_returned"
+      ],
+      "where": " id = #{id} and payment_status in (3, 4) and point_used > 0 and (points_returned is null or points_returned = 0)",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml",
+      "line": 635,
+      "statement": "claimPaymentProcessing",
+      "type": "update",
+      "state_tokens": [
+        "payment_status",
+        "registration_status"
+      ],
+      "where": " id = #{id} and member_id = #{memberId} and payment_status = 0 and registration_status = 1",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml",
+      "line": 647,
+      "statement": "claimPaymentFailure",
+      "type": "update",
+      "state_tokens": [
+        "payment_status",
+        "registration_status"
+      ],
+      "where": " id = #{id} and payment_status in (0, 1) and registration_status = 1",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml",
+      "line": 657,
+      "statement": "releasePaymentProcessing",
+      "type": "update",
+      "state_tokens": [
+        "payment_status",
+        "registration_status"
+      ],
+      "where": " id = #{id} and payment_status = 1 and registration_status = 1",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml",
+      "line": 905,
+      "statement": "closeExpired",
+      "type": "update",
+      "state_tokens": [
+        "payment_status",
+        "registration_status"
+      ],
+      "where": " id = #{id} and payment_status = 0 and registration_status = 1",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml",
+      "line": 916,
+      "statement": "closeExpiredPaying",
+      "type": "update",
+      "state_tokens": [
+        "payment_status",
+        "registration_status"
+      ],
+      "where": " id = #{id} and payment_status = 1 and registration_status = 1",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml",
+      "line": 958,
+      "statement": "autoVerifyExpiredSession",
+      "type": "update",
+      "state_tokens": [
+        "del_flag",
+        "payment_status",
+        "registration_status",
+        "status",
+        "verification_status"
+      ],
+      "where": " id = #{id} and owner_type = 2 and (purchase_kind is null or purchase_kind <> 3) and payment_status = 2 and registration_status = 2 and (verification_status is null or verification_status <> 1) and exists ( select 1 from cms_activity a where a.id = cms_registration.owner_id and a.cancel_time is null and (a.del_flag is null or a.del_flag <> 2) and a.end_date is not null and a.end_date <= date_sub(now(), interval #{bufferDays} day)) and not exists ( select 1 from refund_application ra where ra.source_type = 'registration' and ra.source_id = cms_registration.id and ra.status in (0, 1) and (ra.del_flag is null or ra.del_flag <> 2)) and not exists ( select 1 from activity_cancel_manual_refund_case c where c.parent_order_no = cms_registration.parent_order_no and c.payer_member_id = cms_registration.member_id and c.status <> 'NO_REFUND' and ((cms_registration.owner_type = 2 and c.activity_id = cms_registration.owner_id and c.topic_id is null) or (cms_registration.owner_type = 1 and c.topic_id = cms_registration.owner_id and c.activity_id is null)) and (json_contains(c.verified_registration_ids_json, cast(cms_registration.id as char)) or json_contains(c.unverified_registration_ids_json, cast(cms_registration.id as char))) )",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml",
+      "line": 994,
+      "statement": "cancelUnpaidIfActive",
+      "type": "update",
+      "state_tokens": [
+        "payment_status",
+        "points_returned",
+        "registration_status"
+      ],
+      "where": " id = #{id} and member_id = #{memberId} and registration_status = 1 and payment_status in (0, 3)",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml",
+      "line": 1007,
+      "statement": "verifyIfNotVerified",
+      "type": "update",
+      "state_tokens": [
+        "payment_status",
+        "registration_status",
+        "status",
+        "verification_status"
+      ],
+      "where": " id = #{id} and (verification_status is null or verification_status <> 1) and payment_status = 2 and registration_status = 2 and not exists ( select 1 from activity_cancel_manual_refund_case c where c.parent_order_no = cms_registration.parent_order_no and c.payer_member_id = cms_registration.member_id and c.status <> 'NO_REFUND' and ((cms_registration.owner_type = 2 and c.activity_id = cms_registration.owner_id and c.topic_id is null) or (cms_registration.owner_type = 1 and c.topic_id = cms_registration.owner_id and c.activity_id is null)) and (json_contains(c.verified_registration_ids_json, cast(cms_registration.id as char)) or json_contains(c.unverified_registration_ids_json, cast(cms_registration.id as char))) )",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml",
+      "line": 1064,
+      "statement": "clearVerification",
+      "type": "update",
+      "state_tokens": [
+        "status",
+        "verification_status"
+      ],
+      "where": " r.id = #{id} and r.verification_status = 1 and not exists ( select 1 from redemption d where d.registration_id = r.id and d.status = 'ACTIVE' )",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMerchantMapper.xml",
+      "line": 102,
+      "statement": "insertCmsRegistrationMerchant",
+      "type": "insert",
+      "state_tokens": [
+        "audit_status",
+        "del_flag",
+        "status"
+      ],
+      "where": null,
+      "dynamic_predicates": [
+        "memberId != null",
+        "topicId != null",
+        "mode != null",
+        "nodeId != null",
+        "addressName != null",
+        "longitude != null",
+        "latitude != null",
+        "address != null",
+        "templateId != null",
+        "picUrl != null",
+        "email != null",
+        "startDate != null",
+        "endDate != null",
+        "cooperateDate != null",
+        "activityDesc != null",
+        "limitNum != null",
+        "ruleInstructions != null",
+        "validationMethod != null",
+        "questionName != null",
+        "questionAnswer != null",
+        "feedbackText != null",
+        "couponId != null",
+        "questionA != null",
+        "questionB != null",
+        "questionC != null",
+        "questionD != null",
+        "correctAnswer != null",
+        "status != null",
+        "auditStatus != null",
+        "delFlag != null",
+        "reason != null",
+        "createBy != null",
+        "createTime != null",
+        "updateBy != null",
+        "updateTime != null",
+        "memberId != null",
+        "topicId != null",
+        "mode != null",
+        "nodeId != null",
+        "addressName != null",
+        "longitude != null",
+        "latitude != null",
+        "address != null",
+        "templateId != null",
+        "picUrl != null",
+        "email != null",
+        "startDate != null",
+        "endDate != null",
+        "cooperateDate != null",
+        "activityDesc != null",
+        "limitNum != null",
+        "ruleInstructions != null",
+        "validationMethod != null",
+        "questionName != null",
+        "questionAnswer != null",
+        "feedbackText != null",
+        "couponId != null",
+        "questionA != null",
+        "questionB != null",
+        "questionC != null",
+        "questionD != null",
+        "correctAnswer != null",
+        "status != null",
+        "auditStatus != null",
+        "delFlag != null",
+        "reason != null",
+        "createBy != null",
+        "createTime != null",
+        "updateBy != null",
+        "updateTime != null"
+      ]
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMerchantMapper.xml",
+      "line": 186,
+      "statement": "confirmWinnerIfPending",
+      "type": "update",
+      "state_tokens": [
+        "audit_status",
+        "status"
+      ],
+      "where": " id = #{id} and (audit_status is null or audit_status = 0)",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMerchantMapper.xml",
+      "line": 194,
+      "statement": "rejectIfPending",
+      "type": "update",
+      "state_tokens": [
+        "audit_status",
+        "del_flag",
+        "status"
+      ],
+      "where": " id = #{id} and del_flag = 0 and (audit_status is null or audit_status = 0)",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMerchantMapper.xml",
+      "line": 210,
+      "statement": "updateEditableFieldsIfStateMatches",
+      "type": "update",
+      "state_tokens": [
+        "audit_status",
+        "del_flag",
+        "status"
+      ],
+      "where": " id = #{patch.id} and member_id = #{memberId} and coalesce(del_flag, 0) = 0 and coalesce(status, 0) = #{expectedStatus} and coalesce(audit_status, 0) = #{expectedAuditStatus}",
+      "dynamic_predicates": [
+        "patch.picUrl != null",
+        "patch.address != null",
+        "patch.addressName != null",
+        "patch.longitude != null",
+        "patch.latitude != null",
+        "patch.cooperateDate != null",
+        "patch.activityDesc != null",
+        "patch.startDate != null",
+        "patch.endDate != null",
+        "rejected",
+        "patch.updateBy != null",
+        "patch.updateTime != null"
+      ]
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMerchantMapper.xml",
+      "line": 241,
+      "statement": "updateCmsRegistrationMerchant",
+      "type": "update",
+      "state_tokens": [
+        "audit_status",
+        "del_flag",
+        "status"
+      ],
+      "where": " id = #{id}",
+      "dynamic_predicates": [
+        "memberId != null",
+        "topicId != null",
+        "mode != null",
+        "nodeId != null",
+        "addressName != null",
+        "longitude != null",
+        "latitude != null",
+        "address != null",
+        "templateId != null",
+        "picUrl != null",
+        "email != null",
+        "startDate != null",
+        "endDate != null",
+        "cooperateDate != null",
+        "activityDesc != null",
+        "limitNum != null",
+        "ruleInstructions != null",
+        "validationMethod != null",
+        "questionName != null",
+        "questionAnswer != null",
+        "feedbackText != null",
+        "couponId != null",
+        "questionA != null",
+        "questionB != null",
+        "questionC != null",
+        "questionD != null",
+        "correctAnswer != null",
+        "sharingRate != null",
+        "sharingAmount != null",
+        "status != null",
+        "auditStatus != null",
+        "delFlag != null",
+        "reason != null",
+        "createBy != null",
+        "createTime != null",
+        "updateBy != null",
+        "updateTime != null"
+      ]
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMerchantMapper.xml",
+      "line": 286,
+      "statement": "deleteCmsRegistrationMerchantById",
+      "type": "delete",
+      "state_tokens": [],
+      "where": " id = #{id}",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMerchantMapper.xml",
+      "line": 290,
+      "statement": "deleteCmsRegistrationMerchantByIds",
+      "type": "delete",
+      "state_tokens": [],
+      "where": " id in #{id}",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/RefundApplicationMapper.xml",
+      "line": 87,
+      "statement": "insertRefundApplication",
+      "type": "insert",
+      "state_tokens": [
+        "del_flag",
+        "payout_status",
+        "status"
+      ],
+      "where": null,
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/RefundApplicationMapper.xml",
+      "line": 98,
+      "statement": "updateRefundStatusIfPending",
+      "type": "update",
+      "state_tokens": [
+        "del_flag",
+        "status"
+      ],
+      "where": " id = #{id} and status = 0 and del_flag = 0",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/RefundApplicationMapper.xml",
+      "line": 111,
+      "statement": "updatePayoutResult",
+      "type": "update",
+      "state_tokens": [
+        "del_flag",
+        "payout_status"
+      ],
+      "where": " id = #{id} and del_flag = 0 and (payout_status is null or payout_status in (0, 2, 5, 6))",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/RefundApplicationMapper.xml",
+      "line": 122,
+      "statement": "claimPayoutDispatch",
+      "type": "update",
+      "state_tokens": [
+        "del_flag",
+        "payout_status",
+        "status"
+      ],
+      "where": " id = #{id} and status = 1 and del_flag = 0 and ( payout_status is null or payout_status = 5 or (payout_status = 6 and COALESCE(update_time, create_time) < NOW(3) - INTERVAL #{staleMinutes} MINUTE) )",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/RefundApplicationMapper.xml",
+      "line": 152,
+      "statement": "releasePayoutDispatch",
+      "type": "update",
+      "state_tokens": [
+        "del_flag",
+        "payout_status"
+      ],
+      "where": " id = #{id} and del_flag = 0 and payout_status = 6 and payout_lease_token = #{leaseToken}",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/RefundApplicationMapper.xml",
+      "line": 164,
+      "statement": "updatePayoutResultWithLease",
+      "type": "update",
+      "state_tokens": [
+        "del_flag",
+        "payout_status"
+      ],
+      "where": " id = #{id} and del_flag = 0 and payout_status = 6 and payout_lease_token = #{leaseToken}",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/RefundApplicationMapper.xml",
+      "line": 176,
+      "statement": "ensureRefundNo",
+      "type": "update",
+      "state_tokens": [
+        "del_flag"
+      ],
+      "where": " id = #{id} and del_flag = 0 and (refund_no is null or refund_no = '' or refund_no = #{refundNo})",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/RefundApplicationMapper.xml",
+      "line": 188,
+      "statement": "claimManualPayout",
+      "type": "update",
+      "state_tokens": [
+        "del_flag",
+        "payout_status"
+      ],
+      "where": " id = #{id} and del_flag = 0 and payout_status = 2 and ( payout_lease_token is null or (payout_lease_owner = #{handlerId} and payout_lease_expires_at is not null and payout_lease_expires_at < now()) )",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/RefundApplicationMapper.xml",
+      "line": 210,
+      "statement": "releaseManualPayoutClaim",
+      "type": "update",
+      "state_tokens": [
+        "del_flag",
+        "payout_status"
+      ],
+      "where": " id = #{id} and del_flag = 0 and payout_status = 2 and payout_lease_owner = #{handlerId} and payout_lease_token = #{leaseToken} and payout_lease_expires_at is not null",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/RefundApplicationMapper.xml",
+      "line": 225,
+      "statement": "takeoverExpiredManualPayout",
+      "type": "update",
+      "state_tokens": [
+        "del_flag",
+        "payout_status"
+      ],
+      "where": " id = #{id} and del_flag = 0 and payout_status = 2 and payout_lease_owner is not null and payout_lease_owner <> #{handlerId} and payout_lease_expires_at is not null and payout_lease_expires_at < now()",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/RefundApplicationMapper.xml",
+      "line": 242,
+      "statement": "completeManualPayout",
+      "type": "update",
+      "state_tokens": [
+        "del_flag",
+        "payout_status"
+      ],
+      "where": " id = #{id} and del_flag = 0 and payout_status = 2 and payout_lease_owner = #{handlerId} and payout_lease_token = #{leaseToken} and payout_lease_expires_at is not null and payout_lease_expires_at >= now()",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/RefundApplicationMapper.xml",
+      "line": 261,
+      "statement": "markPayoutVerified",
+      "type": "update",
+      "state_tokens": [
+        "del_flag",
+        "payout_status"
+      ],
+      "where": " id = #{id} and del_flag = 0 and payout_status = 3 and (payout_handler_id is null or payout_handler_id != #{reviewer2Id})",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/RegistrationEntitlementMapper.xml",
+      "line": 27,
+      "statement": "insertRegistrationEntitlement",
+      "type": "insert",
+      "state_tokens": [
+        "status"
+      ],
+      "where": null,
+      "dynamic_predicates": [
+        "registrationId != null",
+        "chapterId != null",
+        "topicId != null",
+        "status != null",
+        "redeemedAt != null",
+        "createTime != null",
+        "updateTime != null",
+        "registrationId != null",
+        "chapterId != null",
+        "topicId != null",
+        "status != null",
+        "redeemedAt != null",
+        "createTime != null",
+        "updateTime != null"
+      ]
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/RegistrationEntitlementMapper.xml",
+      "line": 80,
+      "statement": "markRedeemed",
+      "type": "update",
+      "state_tokens": [
+        "status"
+      ],
+      "where": " registration_id = #{registrationId} and chapter_id = #{chapterId} and status = 0",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/RegistrationEntitlementMapper.xml",
+      "line": 90,
+      "statement": "invalidateByRegistration",
+      "type": "update",
+      "state_tokens": [
+        "status"
+      ],
+      "where": " registration_id = #{registrationId} and status = 0",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/RegistrationEntitlementMapper.xml",
+      "line": 125,
+      "statement": "restoreToPending",
+      "type": "update",
+      "state_tokens": [
+        "payment_status",
+        "status"
+      ],
+      "where": " e.registration_id = #{registrationId} and e.chapter_id = #{chapterId} and e.status = 1 and r.payment_status = 2",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationScanMapper.xml",
+      "line": 58,
+      "statement": "markWholeOrderScansReversed",
+      "type": "update",
+      "state_tokens": [
+        "status"
+      ],
+      "where": " registration_id = #{registrationId} and registration_type = 1 and ifnull(status, 0) <> 2",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationScanMapper.xml",
+      "line": 71,
+      "statement": "insertMissingScansForTopic",
+      "type": "insert",
+      "state_tokens": [
+        "del_flag",
+        "status"
+      ],
+      "where": " node.topic_id = #{topicId} and node.template_id is not null and node.template_id > 0 and not exists ( select 1 from cms_registration_scan existing where existing.registration_id = #{registrationId} and existing.member_id = template.member_id and existing.template_id = node.template_id )",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationScanMapper.xml",
+      "line": 93,
+      "statement": "insertCmsRegistrationScan",
+      "type": "insert",
+      "state_tokens": [
+        "status"
+      ],
+      "where": null,
+      "dynamic_predicates": [
+        "registrationType != null",
+        "registrationId != null",
+        "memberId != null",
+        "validationMethod != null",
+        "questionAnswer != null",
+        "feedbackText != null",
+        "name != null",
+        "address != null",
+        "latitude != null",
+        "longitude != null",
+        "templateId != null",
+        "status != null",
+        "createBy != null",
+        "createTime != null",
+        "updateBy != null",
+        "updateTime != null",
+        "registrationType != null",
+        "registrationId != null",
+        "memberId != null",
+        "validationMethod != null",
+        "questionAnswer != null",
+        "feedbackText != null",
+        "name != null",
+        "address != null",
+        "latitude != null",
+        "longitude != null",
+        "templateId != null",
+        "status != null",
+        "createBy != null",
+        "createTime != null",
+        "updateBy != null",
+        "updateTime != null"
+      ]
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationScanMapper.xml",
+      "line": 140,
+      "statement": "updateCmsRegistrationScan",
+      "type": "update",
+      "state_tokens": [
+        "status"
+      ],
+      "where": " id = #{id}",
+      "dynamic_predicates": [
+        "registrationId != null",
+        "memberId != null",
+        "validationMethod != null",
+        "questionAnswer != null",
+        "feedbackText != null",
+        "status != null",
+        "createBy != null",
+        "createTime != null",
+        "updateBy != null",
+        "updateTime != null"
+      ]
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationScanMapper.xml",
+      "line": 157,
+      "statement": "deleteCmsRegistrationScanById",
+      "type": "delete",
+      "state_tokens": [],
+      "where": " id = #{id}",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationScanMapper.xml",
+      "line": 161,
+      "statement": "deleteCmsRegistrationScanByIds",
+      "type": "delete",
+      "state_tokens": [],
+      "where": " id in #{id}",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/RedemptionMapper.xml",
+      "line": 35,
+      "statement": "insertRedemption",
+      "type": "insert",
+      "state_tokens": [
+        "status"
+      ],
+      "where": null,
+      "dynamic_predicates": [
+        "registrationId != null",
+        "chapterId != null",
+        "topicId != null",
+        "merchantId != null",
+        "offerId != null",
+        "operatorId != null",
+        "status != null",
+        "idempotencyKey != null",
+        "reversedAt != null",
+        "reverseReason != null",
+        "createTime != null",
+        "registrationId != null",
+        "chapterId != null",
+        "topicId != null",
+        "merchantId != null",
+        "offerId != null",
+        "operatorId != null",
+        "status != null",
+        "idempotencyKey != null",
+        "reversedAt != null",
+        "reverseReason != null",
+        "createTime != null"
+      ]
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/RedemptionMapper.xml",
+      "line": 130,
+      "statement": "reverse",
+      "type": "update",
+      "state_tokens": [
+        "status"
+      ],
+      "where": " id = #{id} and status = 'ACTIVE'",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/WxPaymentCallbackInboxMapper.xml",
+      "line": 25,
+      "statement": "insertIgnore",
+      "type": "insert",
+      "state_tokens": [
+        "state"
+      ],
+      "where": null,
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/WxPaymentCallbackInboxMapper.xml",
+      "line": 44,
+      "statement": "claim",
+      "type": "update",
+      "state_tokens": [
+        "state"
+      ],
+      "where": " notify_hash = UNHEX(#{notifyHash}) and (state in (0, 3) or (state = 1 and lease_until <= NOW(3)))",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/WxPaymentCallbackInboxMapper.xml",
+      "line": 77,
+      "statement": "markDone",
+      "type": "update",
+      "state_tokens": [
+        "state"
+      ],
+      "where": " notify_hash = UNHEX(#{notifyHash}) and state = 1 and owner_token = UNHEX(#{ownerToken}) and fence_token = #{fenceToken}",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/WxPaymentCallbackInboxMapper.xml",
+      "line": 85,
+      "statement": "markIgnoredStale",
+      "type": "update",
+      "state_tokens": [
+        "state"
+      ],
+      "where": " notify_hash = UNHEX(#{notifyHash}) and state = 1 and owner_token = UNHEX(#{ownerToken}) and fence_token = #{fenceToken}",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/WxPaymentCallbackInboxMapper.xml",
+      "line": 92,
+      "statement": "release",
+      "type": "update",
+      "state_tokens": [
+        "state"
+      ],
+      "where": " notify_hash = UNHEX(#{notifyHash}) and state = 1 and owner_token = UNHEX(#{ownerToken}) and fence_token = #{fenceToken}",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/WxPaymentCallbackOutboxMapper.xml",
+      "line": 29,
+      "statement": "insertIgnore",
+      "type": "insert",
+      "state_tokens": [
+        "state"
+      ],
+      "where": null,
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/WxPaymentCallbackOutboxMapper.xml",
+      "line": 49,
+      "statement": "claimById",
+      "type": "update",
+      "state_tokens": [
+        "state"
+      ],
+      "where": " id = #{id} and state in (0, 3) and money_affecting = 0",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/WxPaymentCallbackOutboxMapper.xml",
+      "line": 63,
+      "statement": "complete",
+      "type": "update",
+      "state_tokens": [
+        "state"
+      ],
+      "where": " id = #{id} and state = 1 and owner_token = UNHEX(#{ownerToken}) and fence_token = #{fenceToken}",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/WxPaymentCallbackOutboxMapper.xml",
+      "line": 72,
+      "statement": "retryOrEscalate",
+      "type": "update",
+      "state_tokens": [
+        "state"
+      ],
+      "where": " id = #{id} and state = 1 and owner_token = UNHEX(#{ownerToken}) and fence_token = #{fenceToken} and money_affecting = 0",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/WxPaymentCallbackOutboxMapper.xml",
+      "line": 85,
+      "statement": "escalateToManual",
+      "type": "update",
+      "state_tokens": [
+        "state"
+      ],
+      "where": " id = #{id} and state = 1 and owner_token = UNHEX(#{ownerToken}) and fence_token = #{fenceToken}",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/UmsMemberWithdrawalMapper.xml",
+      "line": 103,
+      "statement": "insertUmsMemberWithdrawal",
+      "type": "insert",
+      "state_tokens": [
+        "del_flag",
+        "status"
+      ],
+      "where": null,
+      "dynamic_predicates": [
+        "memberId != null",
+        "requestId != null",
+        "requestFingerprint != null",
+        "realnameEncrypted != null",
+        "bankNameEncrypted != null",
+        "bankAccountEncrypted != null",
+        "mobilephoneEncrypted != null",
+        "realnameMask != null",
+        "bankNameMask != null",
+        "bankAccountMask != null",
+        "mobilephoneMask != null",
+        "piiCipherVersion != null",
+        "piiMigratedAt != null",
+        "withdrawalAmount != null",
+        "serviceFee != null",
+        "receivedAmount != null",
+        "status != null",
+        "payoutReference != null",
+        "delFlag != null",
+        "remark != null",
+        "createBy != null",
+        "createTime != null",
+        "updateBy != null",
+        "updateTime != null",
+        "auditTime != null",
+        "auditBy != null",
+        "handleBy != null",
+        "handleTime != null",
+        "memberId != null",
+        "requestId != null",
+        "requestFingerprint != null",
+        "realnameEncrypted != null",
+        "bankNameEncrypted != null",
+        "bankAccountEncrypted != null",
+        "mobilephoneEncrypted != null",
+        "realnameMask != null",
+        "bankNameMask != null",
+        "bankAccountMask != null",
+        "mobilephoneMask != null",
+        "piiCipherVersion != null",
+        "piiMigratedAt != null",
+        "withdrawalAmount != null",
+        "serviceFee != null",
+        "receivedAmount != null",
+        "status != null",
+        "payoutReference != null",
+        "delFlag != null",
+        "remark != null",
+        "createBy != null",
+        "createTime != null",
+        "updateBy != null",
+        "updateTime != null",
+        "auditTime != null",
+        "auditBy != null",
+        "handleBy != null",
+        "handleTime != null"
+      ]
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/UmsMemberWithdrawalMapper.xml",
+      "line": 167,
+      "statement": "updateUmsMemberWithdrawal",
+      "type": "update",
+      "state_tokens": [
+        "del_flag",
+        "status"
+      ],
+      "where": " id = #{id}",
+      "dynamic_predicates": [
+        "memberId != null",
+        "realnameEncrypted != null",
+        "bankNameEncrypted != null",
+        "bankAccountEncrypted != null",
+        "mobilephoneEncrypted != null",
+        "realnameMask != null",
+        "bankNameMask != null",
+        "bankAccountMask != null",
+        "mobilephoneMask != null",
+        "piiCipherVersion != null",
+        "piiMigratedAt != null",
+        "withdrawalAmount != null",
+        "serviceFee != null",
+        "receivedAmount != null",
+        "status != null",
+        "payoutReference != null",
+        "delFlag != null",
+        "remark != null",
+        "createBy != null",
+        "createTime != null",
+        "updateBy != null",
+        "updateTime != null",
+        "auditTime != null",
+        "auditBy != null",
+        "handleBy != null",
+        "handleTime != null"
+      ]
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/UmsMemberWithdrawalMapper.xml",
+      "line": 228,
+      "statement": "updateWithdrawalStatusIfPending",
+      "type": "update",
+      "state_tokens": [
+        "del_flag",
+        "status"
+      ],
+      "where": " id = #{id} and status = 0 and del_flag = 0",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/UmsMemberWithdrawalMapper.xml",
+      "line": 240,
+      "statement": "updateWithdrawalPaidIfApproved",
+      "type": "update",
+      "state_tokens": [
+        "del_flag",
+        "status"
+      ],
+      "where": " id = #{id} and status = 1 and del_flag = 0",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/UmsMemberWithdrawalMapper.xml",
+      "line": 253,
+      "statement": "softDeletePendingByMember",
+      "type": "update",
+      "state_tokens": [
+        "del_flag",
+        "status"
+      ],
+      "where": " id = #{id} and member_id = #{memberId} and status = 0 and del_flag = 0",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/UmsMemberWithdrawalMapper.xml",
+      "line": 268,
+      "statement": "deleteUmsMemberWithdrawalById",
+      "type": "delete",
+      "state_tokens": [],
+      "where": " id = #{id}",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/UmsMemberWithdrawalMapper.xml",
+      "line": 272,
+      "statement": "deleteUmsMemberWithdrawalByIds",
+      "type": "delete",
+      "state_tokens": [],
+      "where": " id in #{id}",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/MemberCashWithdrawMapper.xml",
+      "line": 47,
+      "statement": "insertMemberCashWithdraw",
+      "type": "insert",
+      "state_tokens": [
+        "del_flag",
+        "status"
+      ],
+      "where": null,
+      "dynamic_predicates": [
+        "memberId != null",
+        "openid != null",
+        "amount != null",
+        "outBatchNo != null",
+        "outDetailNo != null",
+        "transferBatchId != null",
+        "wechatDetailId != null",
+        "status != null",
+        "failReason != null",
+        "channelErrorCode != null",
+        "createTime != null",
+        "finishTime != null",
+        "delFlag != null",
+        "wechatBatchStatus != null",
+        "submitTime != null",
+        "lastQueryTime != null",
+        "balanceDeductId != null",
+        "balanceRefundId != null",
+        "manualOperator != null",
+        "manualVerifier != null",
+        "manualNote != null",
+        "traceId != null",
+        "auditBy != null",
+        "auditTime != null",
+        "memberId != null",
+        "openid != null",
+        "amount != null",
+        "outBatchNo != null",
+        "outDetailNo != null",
+        "transferBatchId != null",
+        "wechatDetailId != null",
+        "status != null",
+        "failReason != null",
+        "channelErrorCode != null",
+        "createTime != null",
+        "finishTime != null",
+        "delFlag != null",
+        "wechatBatchStatus != null",
+        "submitTime != null",
+        "lastQueryTime != null",
+        "balanceDeductId != null",
+        "balanceRefundId != null",
+        "manualOperator != null",
+        "manualVerifier != null",
+        "manualNote != null",
+        "traceId != null",
+        "auditBy != null",
+        "auditTime != null"
+      ]
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/MemberCashWithdrawMapper.xml",
+      "line": 103,
+      "statement": "updateMemberCashWithdraw",
+      "type": "update",
+      "state_tokens": [
+        "status"
+      ],
+      "where": " id = #{id}",
+      "dynamic_predicates": [
+        "outBatchNo != null",
+        "outDetailNo != null",
+        "transferBatchId != null",
+        "wechatDetailId != null",
+        "status != null",
+        "failReason != null",
+        "channelErrorCode != null",
+        "finishTime != null",
+        "wechatBatchStatus != null",
+        "submitTime != null",
+        "lastQueryTime != null",
+        "balanceDeductId != null",
+        "balanceRefundId != null",
+        "manualOperator != null",
+        "manualVerifier != null",
+        "manualNote != null",
+        "traceId != null",
+        "auditBy != null",
+        "auditTime != null"
+      ]
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/MemberCashWithdrawMapper.xml",
+      "line": 129,
+      "statement": "updateReceiptIfProcessing",
+      "type": "update",
+      "state_tokens": [
+        "status"
+      ],
+      "where": " id = #{id} and status = 0 and (frozen is null or frozen = 0)",
+      "dynamic_predicates": [
+        "transferBatchId != null",
+        "wechatBatchStatus != null",
+        "wechatDetailId != null",
+        "submitTime != null",
+        "lastQueryTime != null"
+      ]
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/MemberCashWithdrawMapper.xml",
+      "line": 211,
+      "statement": "updateStatusIfProcessing",
+      "type": "update",
+      "state_tokens": [
+        "status"
+      ],
+      "where": " id = #{id} and status = 0 and (frozen is null or frozen = 0)",
+      "dynamic_predicates": [
+        "status != null",
+        "failReason != null",
+        "channelErrorCode != null",
+        "wechatDetailId != null",
+        "finishTime != null",
+        "wechatBatchStatus != null",
+        "lastQueryTime != null",
+        "balanceRefundId != null",
+        "manualNote != null"
+      ]
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/MemberCashWithdrawMapper.xml",
+      "line": 238,
+      "statement": "updateStatusIfManual",
+      "type": "update",
+      "state_tokens": [
+        "status"
+      ],
+      "where": " id = #{id} and status = 3 and (frozen is null or frozen = 0)",
+      "dynamic_predicates": [
+        "status != null",
+        "balanceRefundId != null",
+        "manualOperator != null",
+        "manualNote != null",
+        "finishTime != null"
+      ]
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/MemberCashWithdrawMapper.xml",
+      "line": 252,
+      "statement": "updateStatusIfRefundReview",
+      "type": "update",
+      "state_tokens": [
+        "status"
+      ],
+      "where": " id = #{id} and status = 4 and (frozen is null or frozen = 0) and manual_operator is not null and manual_operator != #{manualVerifier}",
+      "dynamic_predicates": [
+        "status != null",
+        "manualVerifier != null",
+        "manualNote != null",
+        "finishTime != null",
+        "auditBy != null",
+        "auditTime != null"
+      ]
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/MemberCashWithdrawMapper.xml",
+      "line": 271,
+      "statement": "freezeWithdraw",
+      "type": "update",
+      "state_tokens": [
+        "del_flag"
+      ],
+      "where": " id = #{id} and del_flag = 0 and (frozen is null or frozen = 0)",
+      "dynamic_predicates": []
+    },
+    {
+      "mapper": "chengyinhub-system/src/main/resources/mapper/business/MemberCashWithdrawMapper.xml",
+      "line": 278,
+      "statement": "unfreezeWithdraw",
+      "type": "update",
+      "state_tokens": [
+        "del_flag"
+      ],
+      "where": " id = #{id} and del_flag = 0 and frozen = 1",
+      "dynamic_predicates": []
+    }
+  ]
+}

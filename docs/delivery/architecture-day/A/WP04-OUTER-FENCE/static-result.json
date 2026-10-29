@@ -1,0 +1,95 @@
+{
+  "baseline": "ae1606843cca6ed847d84059640b1bab6e1decdc",
+  "status": "STATIC_ONLY",
+  "actual_java_mysql_ci_run": 0,
+  "tests": {
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RegistrationTopicFenceMySqlIT.java": {
+      "declared_tests": 13,
+      "dynamic": [],
+      "nested": [],
+      "gates": [],
+      "conditions": [],
+      "required_database_bases": []
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubActivityCancelWrapUpTest.java": {
+      "declared_tests": 8,
+      "dynamic": [],
+      "nested": [],
+      "gates": [],
+      "conditions": [],
+      "required_database_bases": []
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubEventTransferCancellationMySqlIT.java": {
+      "declared_tests": 3,
+      "dynamic": [],
+      "nested": [],
+      "gates": [
+        [
+          "CHENGYIN_FUNDS_MYSQL_IT",
+          "1"
+        ]
+      ],
+      "conditions": [],
+      "required_database_bases": []
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubOwnerCancelOwnershipGateTest.java": {
+      "declared_tests": 6,
+      "dynamic": [],
+      "nested": [],
+      "gates": [],
+      "conditions": [],
+      "required_database_bases": []
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundDeadlineGateTest.java": {
+      "declared_tests": 10,
+      "dynamic": [],
+      "nested": [],
+      "gates": [],
+      "conditions": [],
+      "required_database_bases": []
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ActivityCancelTest.java": {
+      "declared_tests": 44,
+      "dynamic": [],
+      "nested": [],
+      "gates": [],
+      "conditions": [],
+      "required_database_bases": []
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OuterCancellationTopicFenceTest.java": {
+      "declared_tests": 8,
+      "dynamic": [],
+      "nested": [],
+      "gates": [],
+      "conditions": [],
+      "required_database_bases": []
+    }
+  },
+  "protected_production": [
+    "CmsRegistrationServiceImpl",
+    "RefundServiceImpl",
+    "WxPaymentCallbackMutationService",
+    "WechatPayServiceImpl",
+    "SettlementServiceImpl",
+    "CoopSettlementClaimServiceImpl",
+    "ClubWaitlistServiceImpl"
+  ],
+  "sha256": {
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RegistrationTopicFenceMySqlIT.java": "2bd3626ec4a815cc9a9c41b089c9d872b03714ecf72a195203660df60ba35e1f",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubActivityCancelWrapUpTest.java": "6b7b53fd51149f5d40405830d4e3cc218b1e0c2aea6ecadf0184e29d39dc7a57",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubEventTransferCancellationMySqlIT.java": "9ba457b119d36c48662c346e2f8b93160a6b0860825efe81f79638eff3721606",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubOwnerCancelOwnershipGateTest.java": "63fab94eb3565ff55bf4343ac66e911fe0b08b72e97c4ddc34318ed64c9eefb4",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundDeadlineGateTest.java": "48268c3dabce5905efe2361be5b0c7fa573531b21eea0e87908e0ae66a621f14",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ActivityCancelTest.java": "9b140dd58183ff405796522f38b41fdb290c2a3830642af285a79e0f6c22e874",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubEventOpsServiceImpl.java": "5da9602b120aaec0916e21541417343943d1887e9df161c69a2e03d1748c336e",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationTopicFence.java": "5b02dc740adbfa8167481ede9a4824a0a580f3e1fbd474a59e60e1dde659ea40",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java": "679a0c3756a07317760f9c0f4fe4e5028985068204a260a6c3593e7415fa7f73",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OuterCancellationTopicFenceTest.java": "248ed5b2d8263e50a75cb2ae93bb12ed3e9bc6f4433fe6ec295e7100e327b73d"
+  },
+  "not_covered": [
+    "Java compilation/JUnit/MySQL/cleanup",
+    "real provider",
+    "G frozen refund allocations/reversal",
+    "all caller lock graph"
+  ]
+}

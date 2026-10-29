@@ -93,7 +93,7 @@ class HostWeatherCancelTest {
 
         when(regMapper.selectCmsRegistrationList(any(CmsRegistration.class))).thenAnswer(inv -> {
             CmsRegistration q = inv.getArgument(0, CmsRegistration.class);
-            if (!Integer.valueOf(2).equals(q.getPaymentStatus())) return Collections.emptyList();
+            if (q.getPaymentStatus() != null && !Integer.valueOf(2).equals(q.getPaymentStatus())) return Collections.emptyList();
             List<CmsRegistration> rows = paidByOwner.get(q.getOwnerType() + ":" + q.getOwnerId());
             return rows == null ? Collections.emptyList() : rows;
         });
@@ -138,10 +138,14 @@ class HostWeatherCancelTest {
         ReflectionTestUtils.setField(service, "refundService", refundService);
         ReflectionTestUtils.setField(service, "umsMemberMapper", mock(UmsMemberMapper.class));
         ReflectionTestUtils.setField(service, "notifyService", mock(INotifyService.class));
+        var notices = mock(com.chengyinhub.business.service.IImService.class);
+        when(notices.sendSystem(any(), any(), any(), any())).thenReturn(910L);
+        ReflectionTestUtils.setField(service, "imService", notices);
         ReflectionTestUtils.setField(service, "refundPayoutService", payout);
         ReflectionTestUtils.setField(service, "manualRefundCaseService", manualCases);
         settlementDetails = mock(com.chengyinhub.business.mapper.SettlementDetailMapper.class);
         ReflectionTestUtils.setField(service, "settlementDetailMapper", settlementDetails);
+        com.chengyinhub.business.service.CancellationPhaseTestSupport.wireTeamUnit(service, regMapper);
     }
 
     private com.chengyinhub.business.mapper.SettlementDetailMapper settlementDetails;
@@ -269,18 +273,31 @@ class HostWeatherCancelTest {
         activity(SHELL, null, OWNER).setClubId(5L);          // 不挂主题的俱乐部系列场次
         paid(1L, 2L, ACTIVITY, 0);
         paid(2L, 2L, SHELL, 0);
+        var clubs = mock(com.chengyinhub.business.mapper.ClubMapper.class);
+        var club = new com.chengyinhub.business.domain.Club();
+        club.setId(5L);
+        club.setMemberId(OWNER);
+        club.setDelFlag(0);
+        when(clubs.selectClubByIdForUpdate(5L)).thenReturn(club);
+        ReflectionTestUtils.setField(service, "clubMapper", clubs);
 
+        // Preview remains read-only; cancellation now rechecks the current club
+        // owner under the original scope locks before rejecting merchant scope.
         for (Long id : Arrays.asList(ACTIVITY, SHELL)) {
-            ServiceException denied = assertThrows(ServiceException.class,
-                    () -> service.cancelActivityByMerchantHost(id, OWNER, STAFF, "暴雨预警"));
-            assertEquals(Integer.valueOf(403), denied.getCode());
             ServiceException previewDenied = assertThrows(ServiceException.class,
                     () -> service.countPaidPlayersForMerchantActivityCancel(id, OWNER));
             assertEquals(Integer.valueOf(403), previewDenied.getCode());
         }
+        verify(activityMapper, never()).selectCmsActivityByIdForUpdate(anyLong());
+        for (Long id : Arrays.asList(ACTIVITY, SHELL)) {
+            ServiceException denied = assertThrows(ServiceException.class,
+                    () -> service.cancelActivityByMerchantHost(id, OWNER, STAFF, "暴雨预警"));
+            assertEquals(Integer.valueOf(403), denied.getCode());
+        }
         verify(refundService, never()).saveRefund(any(RefundApplication.class));
         verify(activityMapper, never()).updateCmsActivity(any(CmsActivity.class));
-        verify(activityMapper, never()).selectCmsActivityByIdForUpdate(anyLong());
+        verify(activityMapper, times(2)).selectCmsActivityByIdForUpdate(anyLong());
+        verify(regMapper, never()).selectCancellationRowsForUpdate(anyLong(), anyLong());
     }
 
     /** 重复点:第一次已把活动置取消,第二次必须被拒,不能对已退的单再走一遍退款。 */
@@ -378,6 +395,10 @@ class HostWeatherCancelTest {
         verify(activityMapper, never()).selectCmsActivityByIdForUpdate(202L);
         verify(clubOps, never()).cancelActivityForAuthorizedTopicCancellation(
                 anyLong(), anyLong(), anyLong(), anyLong(), any());
+        verify(clubOps, never()).captureAuthorizedTopicCancellationPayments(
+                anyLong(), anyLong(), anyLong(), anyLong(), any());
+        verify(clubOps, never()).cancelAuthorizedTopicWithObservedPayments(
+                anyLong(), anyLong(), anyLong(), anyLong(), any(), any());
     }
 
     /**
@@ -570,13 +591,35 @@ class HostWeatherCancelTest {
         paid(4L, 2L, 202L, 0);
         com.chengyinhub.business.service.IClubEventOpsService clubOps =
                 mock(com.chengyinhub.business.service.IClubEventOpsService.class);
-        when(clubOps.cancelActivityForAuthorizedTopicCancellation(STAFF, TOPIC, 5L, 202L, "台风停运"))
-                .thenReturn(new ActivityCancelResult(1, 0, 0));
+        var captured = new com.chengyinhub.business.domain.dto.RegistrationCancellationPayments(Collections.singletonList(
+                new com.chengyinhub.business.domain.dto.RegistrationCancellationPayments.Scope(
+                        2L,202L,TOPIC,STRANGER,5L,Collections.emptyList())));
+        when(clubOps.captureAuthorizedTopicCancellationPayments(STAFF, TOPIC, 5L, 202L, "台风停运"))
+                .thenAnswer(call -> {
+                    org.junit.jupiter.api.Assertions.assertTrue(org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive());
+                    return captured;
+                });
+        when(clubOps.cancelAuthorizedTopicWithObservedPayments(org.mockito.ArgumentMatchers.eq(STAFF),
+                org.mockito.ArgumentMatchers.eq(TOPIC), org.mockito.ArgumentMatchers.eq(5L),
+                org.mockito.ArgumentMatchers.eq(202L), org.mockito.ArgumentMatchers.eq("台风停运"),
+                org.mockito.ArgumentMatchers.any(com.chengyinhub.business.domain.dto.RegistrationCancellationPayments.class)))
+                .thenAnswer(call -> {
+                    org.junit.jupiter.api.Assertions.assertTrue(org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive());
+                    com.chengyinhub.business.domain.dto.RegistrationCancellationPayments original = call.getArgument(5);
+                    assertEquals(captured.scopes().getFirst(), original.requireScope(2L,202L));
+                    return new ActivityCancelResult(1, 0, 0);
+                });
         ReflectionTestUtils.setField(service, "clubEventOpsService", clubOps);
 
         ActivityCancelResult res = service.cancelTopicByHost(TOPIC, OWNER, STAFF, "台风停运");
 
-        verify(clubOps).cancelActivityForAuthorizedTopicCancellation(STAFF, TOPIC, 5L, 202L, "台风停运");
+        verify(clubOps).captureAuthorizedTopicCancellationPayments(STAFF, TOPIC, 5L, 202L, "台风停运");
+        ArgumentCaptor<com.chengyinhub.business.domain.dto.RegistrationCancellationPayments> observed =
+                ArgumentCaptor.forClass(com.chengyinhub.business.domain.dto.RegistrationCancellationPayments.class);
+        verify(clubOps).cancelAuthorizedTopicWithObservedPayments(org.mockito.ArgumentMatchers.eq(STAFF),
+                org.mockito.ArgumentMatchers.eq(TOPIC), org.mockito.ArgumentMatchers.eq(5L),
+                org.mockito.ArgumentMatchers.eq(202L), org.mockito.ArgumentMatchers.eq("台风停运"), observed.capture());
+        assertEquals(captured.scopes().getFirst(), observed.getValue().requireScope(2L,202L));
         verify(refundService, never()).saveRefund(any(RefundApplication.class));
         assertEquals(1, res.getRefundedOrders());
     }

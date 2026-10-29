@@ -1,0 +1,163 @@
+{
+  "parent": "6fcdf747e17cb5094121f609ae33f7734fda2ae7",
+  "deliveries": [
+    {
+      "owner": "B",
+      "parent": "6fcdf747e17cb5094121f609ae33f7734fda2ae7",
+      "commit": null,
+      "complete_chat_patch_bytes": 42758,
+      "complete_chat_patch_sha256": "3f2e92c8abf90409640f238c7f43e9b25c32dd817637d296348492646731a75f",
+      "owned_patch_sha256": "c662711e53cc3f7ba50f8b6a616b3eab0d41019e0fec6eccb0394f9a7a3b8521",
+      "shared_review_patch_sha256": "5745d01defc385199e2b87dcce9edd2786856ab7a66bfcbfbd2de6f06109754b",
+      "root_shared_review_applied": true,
+      "postimages_exact": {
+        "ci/restore_business_reconciliation_host.py": "569ebf9e17b7a99baf234d71de5bcba1b96a89e6475bad0b3494c50f4b0a334a",
+        "ci/test_restore_business_reconciliation_host.py": "66f6618f8f7409b309016e10ed2d3110b43e35d482260e65d3698247e590a5d4",
+        "docs/delivery/architecture-day/B/6fcd-internal-mysql-binding/README.md": "b0f8f97a991d5247bc4bf85d9bab756df6b3d2b50fd79f8faee08119cf14c492",
+        "ci/authenticated_redis_recovery_probe.py": "d62fbeb4b3280356c019f92d24435da352e639f7af3543dde2305e83f73279d8",
+        "ci/restore_business_reconciliation_probe.py": "5711d9af34b92b1ec0dd36e0fbc478f5b7bc124f72b586ce57e85793d1aab7a6",
+        "ci/test_authenticated_redis_recovery_probe.py": "df6b94fe5d4158261131c4b5a51149cac3f0470862d030527dd8480bef43a95c",
+        "ci/test_restore_business_reconciliation_probe.py": "ecaf4a6c2029b4313d37e49ce92c3917782127b6301af3633b53bd1c84a067fc"
+      },
+      "applied": true,
+      "verification": "NOT_RUN",
+      "internal_loopback_owner_UUID_cleanup_guards_preserved": true
+    },
+    {
+      "owner": "C",
+      "parent": "6fcdf747e17cb5094121f609ae33f7734fda2ae7",
+      "commit": "56763bc5c51ab1f1c59a0f4da39043e0e8058123",
+      "patch_sha256": "6197e58370d29b18b8ef2e455d4a691d70b98723cd50e7a9b8dd0d913daeebf3",
+      "postimages_exact": true,
+      "files": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainFaultIsolationMySqlIT.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainStorageFixture.java",
+        "docs/delivery/architecture-day/C/6fcdf-cross-domain-transactions/README.md",
+        "docs/delivery/architecture-day/C/6fcdf-cross-domain-transactions/postimages.sha256"
+      ],
+      "applied": true,
+      "verification": "NOT_RUN",
+      "original_run_no_long_transaction_not_yet_proven": true
+    },
+    {
+      "owner": "F",
+      "parent": "6fcdf747e17cb5094121f609ae33f7734fda2ae7",
+      "commit": "93e3aa9eb585501c5a1c5b9bee7decd9763f469a",
+      "patch_sha256": "636dc31a5b949c0fc67ff2626e9462bfd362d832ff6f836ec6c6a9314ad8306c",
+      "postimages_exact": true,
+      "files": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainTransportStage.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainTransportStageTest.java",
+        "docs/delivery/architecture-day/F/cross-domain-transport-6fcd/PATCH.sha256",
+        "docs/delivery/architecture-day/F/cross-domain-transport-6fcd/POSTIMAGES.sha256",
+        "docs/delivery/architecture-day/F/cross-domain-transport-6fcd/README.md",
+        "docs/delivery/architecture-day/F/cross-domain-transport-6fcd/review.patch.b64"
+      ],
+      "applied": true,
+      "verification": "NOT_RUN",
+      "new_java_unit_source_methods": 7,
+      "requires_actual_new_unit_execution": true,
+      "installed_jackson2_dependency": "2.21.7 existing BOM unchanged",
+      "actual_provider_paths_checked": "chatVision model+messages only; notSent chat no transport dispatch"
+    },
+    {
+      "owner": "H",
+      "parent": "6fcdf747e17cb5094121f609ae33f7734fda2ae7",
+      "commit": "5189f2720e409a7555c38826857362055577288a",
+      "patch_sha256": "47092d209e8386c2b67be51d4d0d0ea0638b94241036dc728d6c4dd1f06c813d",
+      "postimages_exact": true,
+      "files": [
+        "ci/capacity_mixed_probe.py",
+        "ci/gameplay_process_recovery_probe.py",
+        "ci/test_capacity_mixed_probe.py",
+        "ci/test_gameplay_process_recovery_probe.py",
+        "docs/delivery/architecture-day/H/mixed-profile-6fcdf/POSTIMAGE.sha256",
+        "docs/delivery/architecture-day/H/mixed-profile-6fcdf/PREIMAGE.md",
+        "docs/delivery/architecture-day/H/mixed-profile-6fcdf/README.md",
+        "docs/delivery/architecture-day/H/mixed-profile-6fcdf/owned.review.patch"
+      ],
+      "applied": true,
+      "verification": "NOT_RUN",
+      "transport_only_normalization": {
+        "literal_context_whitespace_lines": 18,
+        "decoded_sha256": "46623c1ddb45dc116c0bb3415d62228e3fd2debfcea27c81bfb2eaf9e54b6b55",
+        "encoding": "lossless base64",
+        "code_postimages_unchanged": true
+      },
+      "actual_child_ready_mode_and_fullSpring_main_source_checked": true,
+      "doc_only_whitespace_normalization": []
+    },
+    {
+      "owner": "E",
+      "parent": "6fcdf747e17cb5094121f609ae33f7734fda2ae7",
+      "commit": "d8ac1f0abf2b4c09f1ad1146d6191262a3ac4ef8",
+      "patch_sha256": "5ece812d2f363097adcce493926b8368081d93fefeac9ca751808908ed82ed73",
+      "original_code_patch_sha256": "c2996e6a95587555431fe7cef7959ba9be3aa2133148264a503cc650b19cf35b",
+      "postimages_exact": true,
+      "files": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RestoreHttpApplicationChild.java",
+        "ci/restore_application_http_probe.py",
+        "ci/restore_application_http_runtime.py",
+        "ci/test_restore_application_http_probe.py",
+        "docs/delivery/architecture-day/E/restore-http-graceful-stop-6fcdf/README.md",
+        "docs/delivery/architecture-day/E/restore-http-graceful-stop-6fcdf/manifest.json",
+        "docs/delivery/architecture-day/E/restore-http-graceful-stop-6fcdf/owned.patch"
+      ],
+      "applied": true,
+      "verification": "NOT_RUN",
+      "transport_only_normalization": {
+        "literal_context_whitespace_lines": 10,
+        "decoded_sha256": "c2996e6a95587555431fe7cef7959ba9be3aa2133148264a503cc650b19cf35b",
+        "encoding": "lossless base64",
+        "code_postimages_unchanged": true
+      },
+      "new_direct_controls_source": 8,
+      "no_B_relay_file_overlap": true
+    }
+  ],
+  "remaining_owners": [],
+  "root_test_fixture_overlay": {
+    "path": "ci/test_capacity_mixed_probe.py",
+    "change": "Only the failing temporary fixture root is canonicalized with Path(directory).resolve(); actual production profile guards unchanged",
+    "reason": "macOS TemporaryDirectory /var prefix resolves to /private/var and violated the synthetic absolute-mount fixture; not runtime application failure",
+    "current_sha256": "a756ce25ff5dce3bf41b72de6735b5a18e05370be15f9d892fa03febe67399ea",
+    "original_first_batch_result": "181 tests:180PASS/1ERROR",
+    "only_failed_control_recheck": "1PASS",
+    "not_single_181_green_run": true
+  },
+  "pure_python_controls": {
+    "modules": 6,
+    "first_tests": 181,
+    "first_passed": 180,
+    "first_errors": 1,
+    "first_failures": 0,
+    "only_failed_recheck_tests": 1,
+    "only_failed_recheck_passed": 1,
+    "first_log_sha256": "8a0554f9ddb70baf2c8536e30f1036ec789857ca4e9165f5a7f62dc936cdfe67",
+    "focused_log_sha256": "1f595a73b2ed09c1daaeb8becdd5972805c2e54d319d1d1379fd724d863b04e4",
+    "no_repeated180_controls": true,
+    "not_single181_green_run": true
+  },
+  "source_precheck": {
+    "parent": "6fcdf747e17cb5094121f609ae33f7734fda2ae7",
+    "changed_python_ast_files": 13,
+    "syntax_problems": 0,
+    "integrated_registered_classes": 76,
+    "ordinary_source_declarations": 921,
+    "storage_source_precheck_problems": [],
+    "new_transport_unit_source_methods": 7,
+    "runtime_acceptance": "NOT_RUN"
+  },
+  "focused_existing_java_LSP": {
+    "files": 5,
+    "errors": 0,
+    "not_compilation_proof": true
+  },
+  "Java_DB_CI": "NOT_RUN",
+  "all_complete": false,
+  "donor_transport_paths_note": "deliveries[].files retain original donor path names; only raw review-patch evidence transports were losslessly base64-renamed in final candidate, code unchanged except explicitly recorded root fixture overlay",
+  "candidate_transport_path_map": {
+    "docs/delivery/architecture-day/H/mixed-profile-6fcdf/owned.review.patch": "docs/delivery/architecture-day/H/mixed-profile-6fcdf/owned.review.patch.base64",
+    "docs/delivery/architecture-day/E/restore-http-graceful-stop-6fcdf/owned.patch": "docs/delivery/architecture-day/E/restore-http-graceful-stop-6fcdf/owned.patch.base64"
+  }
+}

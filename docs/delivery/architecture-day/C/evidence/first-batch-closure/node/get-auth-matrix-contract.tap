@@ -1,0 +1,184 @@
+TAP version 13
+# Subtest: GET 矩阵窗口覆盖完整当前调用且不跨到下一请求
+ok 1 - GET 矩阵窗口覆盖完整当前调用且不跨到下一请求
+  ---
+  duration_ms: 3.665605
+  type: 'test'
+  ...
+# Subtest: 全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新增调用必须先入矩阵
+ok 2 - 全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新增调用必须先入矩阵
+  ---
+  duration_ms: 877.352867
+  type: 'test'
+  ...
+# Subtest: 后端权限真源：official events/roam share 仅精确 GET 匿名，city nodes 仍需鉴权
+ok 3 - 后端权限真源：official events/roam share 仅精确 GET 匿名，city nodes 仍需鉴权
+  ---
+  duration_ms: 1.171681
+  type: 'test'
+  ...
+# Subtest: legacy DSL 正例保留全部 15 条权限规则
+ok 4 - legacy DSL 正例保留全部 15 条权限规则
+  ---
+  duration_ms: 0.327051
+  type: 'test'
+  ...
+# Subtest: legacy DSL 负面控制：official POST 改写 GET 必须判红
+ok 5 - legacy DSL 负面控制：official POST 改写 GET 必须判红
+  ---
+  duration_ms: 1.037724
+  type: 'test'
+  ...
+# Subtest: legacy DSL 负面控制：official 移除 GET 限制 必须判红
+ok 6 - legacy DSL 负面控制：official 移除 GET 限制 必须判红
+  ---
+  duration_ms: 0.423252
+  type: 'test'
+  ...
+# Subtest: legacy DSL 负面控制：official 额外 POST 放行 必须判红
+ok 7 - legacy DSL 负面控制：official 额外 POST 放行 必须判红
+  ---
+  duration_ms: 0.381901
+  type: 'test'
+  ...
+# Subtest: legacy DSL 负面控制：official 扩大通配符 必须判红
+ok 8 - legacy DSL 负面控制：official 扩大通配符 必须判红
+  ---
+  duration_ms: 0.429691
+  type: 'test'
+  ...
+# Subtest: legacy DSL 负面控制：city nodes GET 放行 必须判红
+ok 9 - legacy DSL 负面控制：city nodes GET 放行 必须判红
+  ---
+  duration_ms: 0.340811
+  type: 'test'
+  ...
+# Subtest: legacy DSL 负面控制：city nodes 所有方法放行 必须判红
+ok 10 - legacy DSL 负面控制：city nodes 所有方法放行 必须判红
+  ---
+  duration_ms: 0.45585
+  type: 'test'
+  ...
+# Subtest: legacy DSL 负面控制：roam share POST 放行 必须判红
+ok 11 - legacy DSL 负面控制：roam share POST 放行 必须判红
+  ---
+  duration_ms: 0.423422
+  type: 'test'
+  ...
+# Subtest: legacy DSL 负面控制：roam share 扩大通配符 必须判红
+ok 12 - legacy DSL 负面控制：roam share 扩大通配符 必须判红
+  ---
+  duration_ms: 0.343374
+  type: 'test'
+  ...
+# Subtest: legacy DSL 负面控制：兜底匿名 必须判红
+ok 13 - legacy DSL 负面控制：兜底匿名 必须判红
+  ---
+  duration_ms: 0.77603
+  type: 'test'
+  ...
+# Subtest: legacy DSL 负面控制：GET 正例藏入注释 必须判红
+ok 14 - legacy DSL 负面控制：GET 正例藏入注释 必须判红
+  ---
+  duration_ms: 0.338958
+  type: 'test'
+  ...
+# Subtest: boot4 DSL 正例保留全部 15 条权限规则
+ok 15 - boot4 DSL 正例保留全部 15 条权限规则
+  ---
+  duration_ms: 0.140616
+  type: 'test'
+  ...
+# Subtest: boot4 DSL 负面控制：official POST 改写 GET 必须判红
+ok 16 - boot4 DSL 负面控制：official POST 改写 GET 必须判红
+  ---
+  duration_ms: 0.291618
+  type: 'test'
+  ...
+# Subtest: boot4 DSL 负面控制：official 移除 GET 限制 必须判红
+ok 17 - boot4 DSL 负面控制：official 移除 GET 限制 必须判红
+  ---
+  duration_ms: 0.252781
+  type: 'test'
+  ...
+# Subtest: boot4 DSL 负面控制：official 额外 POST 放行 必须判红
+ok 18 - boot4 DSL 负面控制：official 额外 POST 放行 必须判红
+  ---
+  duration_ms: 0.190961
+  type: 'test'
+  ...
+# Subtest: boot4 DSL 负面控制：official 扩大通配符 必须判红
+ok 19 - boot4 DSL 负面控制：official 扩大通配符 必须判红
+  ---
+  duration_ms: 0.185132
+  type: 'test'
+  ...
+# Subtest: boot4 DSL 负面控制：city nodes GET 放行 必须判红
+ok 20 - boot4 DSL 负面控制：city nodes GET 放行 必须判红
+  ---
+  duration_ms: 0.248535
+  type: 'test'
+  ...
+# Subtest: boot4 DSL 负面控制：city nodes 所有方法放行 必须判红
+ok 21 - boot4 DSL 负面控制：city nodes 所有方法放行 必须判红
+  ---
+  duration_ms: 0.44922
+  type: 'test'
+  ...
+# Subtest: boot4 DSL 负面控制：roam share POST 放行 必须判红
+ok 22 - boot4 DSL 负面控制：roam share POST 放行 必须判红
+  ---
+  duration_ms: 0.204881
+  type: 'test'
+  ...
+# Subtest: boot4 DSL 负面控制：roam share 扩大通配符 必须判红
+ok 23 - boot4 DSL 负面控制：roam share 扩大通配符 必须判红
+  ---
+  duration_ms: 0.278989
+  type: 'test'
+  ...
+# Subtest: boot4 DSL 负面控制：兜底匿名 必须判红
+ok 24 - boot4 DSL 负面控制：兜底匿名 必须判红
+  ---
+  duration_ms: 0.718956
+  type: 'test'
+  ...
+# Subtest: boot4 DSL 负面控制：GET 正例藏入注释 必须判红
+ok 25 - boot4 DSL 负面控制：GET 正例藏入注释 必须判红
+  ---
+  duration_ms: 0.207865
+  type: 'test'
+  ...
+# Subtest: team-progress 后端必须同时校验登录身份与本场资源归属
+ok 26 - team-progress 后端必须同时校验登录身份与本场资源归属
+  ---
+  duration_ms: 0.303336
+  type: 'test'
+  ...
+# Subtest: 偏好题组与新生活 OS GET 都绑定当前会员及其游玩/完成事实
+ok 27 - 偏好题组与新生活 OS GET 都绑定当前会员及其游玩/完成事实
+  ---
+  duration_ms: 0.907863
+  type: 'test'
+  ...
+# Subtest: 排行榜 GET 绑定当前会员及本场报名支付或自玩通行证
+ok 28 - 排行榜 GET 绑定当前会员及本场报名支付或自玩通行证
+  ---
+  duration_ms: 0.819685
+  type: 'test'
+  ...
+# Subtest: roam GET scope 与后端资源模型一致：tiles 是 member-owned，pois 是全局读取+本人 found 投影
+ok 29 - roam GET scope 与后端资源模型一致：tiles 是 member-owned，pois 是全局读取+本人 found 投影
+  ---
+  duration_ms: 0.358737
+  type: 'test'
+  ...
+1..29
+# tests 29
+# suites 0
+# pass 29
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 921.514551

@@ -1,5 +1,6 @@
 package com.chengyinhub.business.it;
 
+import com.chengyinhub.web.controller.api.RegistrationQueryTestFixtures;
 import com.chengyinhub.business.domain.CmsActivity;
 import com.chengyinhub.business.domain.CmsRegistration;
 import com.chengyinhub.business.domain.CmsTopic;
@@ -210,7 +211,7 @@ class ComplaintPickerOwnerType3RealDbIT {
     void ownerType3_returnsAllOwnerTypes_andAttachesTopic() throws Exception {
         try (SqlSession s = factory().openSession(true)) {
             seed(s);
-            AjaxResult res = listController(s).myRegistrationList("3", "0", null);
+            AjaxResult res = RegistrationQueryTestFixtures.wire(listController(s)).myRegistrationList("3", "0", null);
             assertEquals(200, res.get(AjaxResult.CODE_TAG));
             List<CmsRegistration> rows =
                     (List<CmsRegistration>) ((TableDataInfo) res.get(AjaxResult.DATA_TAG)).getRows();
@@ -300,7 +301,7 @@ class ComplaintPickerOwnerType3RealDbIT {
     void orderLedgerKeepsEndedOverSevenDaysRegistration() throws Exception {
         try (SqlSession s = factory().openSession(true)) {
             seed(s);
-            AjaxResult res = listController(s).myRegistrationList("3", "0", null);
+            AjaxResult res = RegistrationQueryTestFixtures.wire(listController(s)).myRegistrationList("3", "0", null);
             List<CmsRegistration> rows =
                     (List<CmsRegistration>) ((TableDataInfo) res.get(AjaxResult.DATA_TAG)).getRows();
             assertTrue(rows.stream().anyMatch(r -> r.getId() == 900302L),
@@ -328,11 +329,11 @@ class ComplaintPickerOwnerType3RealDbIT {
         when(refundService.selectRefundList(any())).thenReturn(new ArrayList<>());
 
         ApiRegistrationController c = spy(new ApiRegistrationController());
-        ReflectionTestUtils.setField(c, "registrationService", registrationService);
-        ReflectionTestUtils.setField(c, "topicService", topicService);
-        ReflectionTestUtils.setField(c, "activityService", activityService);
-        ReflectionTestUtils.setField(c, "refundService", refundService);
-        ReflectionTestUtils.setField(c, "omsTicketService", mock(IOmsTicketService.class));
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(c), "registrationService", registrationService);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(c), "topicService", topicService);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(c), "activityService", activityService);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(c), "refundService", refundService);
+        ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(c), "omsTicketService", mock(IOmsTicketService.class));
         doReturn(MEMBER).when(c).getAppUserId();
         return c;
     }

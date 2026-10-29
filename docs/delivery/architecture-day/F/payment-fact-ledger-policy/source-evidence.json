@@ -1,0 +1,424 @@
+{
+  "observed_source": "de7f432ec6f0c1c6225168ecf2e4808210de42e0",
+  "evidence_kind": "PUBLIC_SOURCE_LITERALS_NOT_COMPILED_OR_COMPLETE_CALL_GRAPH",
+  "files": {
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatVerifiedPaymentFactService.java": {
+      "git_blob": "73561c97bb6a267b8c3e564129447837a3327023",
+      "sha256": "8b1b56c7e3ffc028c47e294bf7766130e5082e2fbad70885a329f0e6abdb5d5d"
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPaymentSdkGateway.java": {
+      "git_blob": "123be4436f8b345eeba039faf4669a6ad3ac8958",
+      "sha256": "a27f54a9b1de088316a686e84da78e802ba18b4fb26408fd7b6ca0728f8da87b"
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPayServiceImpl.java": {
+      "git_blob": "e31970db7d6997503b9a8aa6953704d14a920478",
+      "sha256": "62bab90dec4f0b5d71e6f4f0f6b6b0caeb6a10da6c68d670dd814be79b6d0053"
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/WechatPaymentOperations.java": {
+      "git_blob": "e4cefda12a71c6be371469d0aa06bc38457f990f",
+      "sha256": "1514c1da3d76d48aad1e979640e96afff3ca01fac712f77ae5b791bd15cbfe14"
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementOriginalLedger.java": {
+      "git_blob": "400a18e84b503603959d1975b3cf356a8a4cba70",
+      "sha256": "2bb7e297c582347ec6e7bfd880b3ae43d00ed462e69908eed3f6c70e589a64d7"
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementClaimServiceImpl.java": {
+      "git_blob": "8d08587d5e801b55885f106e50ca51c525fe3b1a",
+      "sha256": "e75edf0cd722bd3ad3e7d2b0eccb6e2bc097e8cb9e6f5926fe52da59c43f07d3"
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/dto/WechatVerifiedPaymentFact.java": {
+      "git_blob": "f2d08f14fada91729fea9f331232b66a8653a154",
+      "sha256": "d04d8007475c369a7d70e20d52c6a2f30dd1cc7ca02ec01630b6cbb3433d9fdf"
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackInboxServiceImpl.java": {
+      "git_blob": "dc9e52eaf0c7907e9115d5352c47bc1328c195b9",
+      "sha256": "50b7e0c9682426399ca2c3ecb96559d054da42b9de72a7e19dd1238366b2a017"
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java": {
+      "git_blob": "79c43ec7e2823e94816ecbd8abee6603dc2e1c56",
+      "sha256": "37c3249b31dba05b725d805b316c7af556856d40330c74a737b62f5c0bd1ccc5"
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java": {
+      "git_blob": "c5a739604865b49dd5054ecb03bf22df9b64b8da",
+      "sha256": "5eb83d4c9beee111adbbeaaac40302c145ade9d4f11399c1a783091f2f9a130c"
+    }
+  },
+  "approved_technical_directions": [
+    {
+      "direction": [
+        "B_VERIFIED_PAYMENT_FACT_STORE",
+        "B_VERIFIED_PAYMENT_FACT_DTO"
+      ],
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatVerifiedPaymentFactService.java",
+      "source_lines": [
+        {
+          "line": 3,
+          "source": "import com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact;"
+        },
+        {
+          "line": 4,
+          "source": "import com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference;"
+        },
+        {
+          "line": 5,
+          "source": "import com.chengyinhub.business.mapper.WechatVerifiedPaymentFactMapper;"
+        },
+        {
+          "line": 17,
+          "source": "public class WechatVerifiedPaymentFactService {"
+        },
+        {
+          "line": 18,
+          "source": "    @Autowired private WechatVerifiedPaymentFactMapper mapper;"
+        },
+        {
+          "line": 19,
+          "source": "    public record Stored(Reference reference, WechatVerifiedPaymentFact facts) { }"
+        },
+        {
+          "line": 25,
+          "source": "    public Reference recordVerified(WechatVerifiedPaymentFact candidate) {"
+        },
+        {
+          "line": 86,
+          "source": "        row.put(\"candidate_fact_hash\",WechatVerifiedPaymentFact.sha256(value));"
+        },
+        {
+          "line": 87,
+          "source": "        row.put(\"rejection_key\",WechatVerifiedPaymentFact.sha256(\"REFUND_NOTIFICATION:\"+(original==null?\"UNVERIFIED\":original.hash())+\":\"+value));"
+        },
+        {
+          "line": 100,
+          "source": "        row.put(\"candidate_fact_hash\",WechatVerifiedPaymentFact.sha256(value));"
+        },
+        {
+          "line": 101,
+          "source": "        row.put(\"rejection_key\",WechatVerifiedPaymentFact.sha256(\"UNVERIFIED_PAYMENT:\"+value));"
+        },
+        {
+          "line": 112,
+          "source": "            return \"sha256:\"+WechatVerifiedPaymentFact.sha256(raw);"
+        },
+        {
+          "line": 120,
+          "source": "    private void reject(WechatVerifiedPaymentFact candidate, Long originalId, String notifyHash, String reason) {"
+        },
+        {
+          "line": 122,
+          "source": "        row.put(\"rejection_key\", WechatVerifiedPaymentFact.sha256(reason+\":\"+candidate.factHash()+\":\""
+        },
+        {
+          "line": 134,
+          "source": "                || !WechatVerifiedPaymentFact.VERIFICATION_METHOD.equals(row.get(\"verification_method\"))) {"
+        },
+        {
+          "line": 137,
+          "source": "        WechatVerifiedPaymentFact fact = new WechatVerifiedPaymentFact("
+        },
+        {
+          "line": 138,
+          "source": "                WechatVerifiedPaymentFact.Kind.valueOf((String)row.get(\"fact_kind\")), (String)row.get(\"mchid\"),"
+        },
+        {
+          "line": 148,
+          "source": "    public static Map<String,Object> columns(WechatVerifiedPaymentFact f) {"
+        },
+        {
+          "line": 157,
+          "source": "        row.put(\"verification_method\",WechatVerifiedPaymentFact.VERIFICATION_METHOD);"
+        }
+      ]
+    },
+    {
+      "direction": [
+        "B_PAYMENT_SDK",
+        "B_VERIFIED_PAYMENT_FACT_STORE"
+      ],
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPaymentSdkGateway.java",
+      "source_lines": [
+        {
+          "line": 77,
+          "source": "    @Autowired private WechatVerifiedPaymentFactService verifiedFacts;"
+        },
+        {
+          "line": 852,
+          "source": "            var expected=verifiedFacts.requireVerified(originalPayment);"
+        },
+        {
+          "line": 862,
+          "source": "    private Map<String,String> queryRefundFactsForOriginal(String outRefundNo,WechatVerifiedPaymentFactService.Stored expected) {"
+        },
+        {
+          "line": 902,
+          "source": "                addVerifiedReference(facts,verifiedFacts.recordVerified(fact));"
+        },
+        {
+          "line": 1098,
+          "source": "            verifiedFacts.recordRejectedPaymentNotification(transaction==null?new String[]{null}:new String[]{"
+        },
+        {
+          "line": 1158,
+          "source": "        return verifiedFacts.recordVerified(new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact("
+        },
+        {
+          "line": 1207,
+          "source": "        verifiedFacts.recordRejectedRefundNotification("
+        }
+      ]
+    },
+    {
+      "direction": [
+        "B_PAYMENT_SDK",
+        "B_VERIFIED_PAYMENT_FACT_DTO"
+      ],
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPaymentSdkGateway.java",
+      "source_lines": [
+        {
+          "line": 850,
+          "source": "    public Map<String,String> queryRefundFacts(com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference originalPayment, String outRefundNo) {"
+        },
+        {
+          "line": 853,
+          "source": "            if (expected.facts().kind()!=com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Kind.PAYMENT"
+        },
+        {
+          "line": 896,
+          "source": "                var fact = new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact("
+        },
+        {
+          "line": 897,
+          "source": "                        com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Kind.REFUND,"
+        },
+        {
+          "line": 1156,
+          "source": "    private com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference recordPaymentSuccess(Transaction original) {"
+        },
+        {
+          "line": 1158,
+          "source": "        return verifiedFacts.recordVerified(new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact("
+        },
+        {
+          "line": 1159,
+          "source": "                com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Kind.PAYMENT,"
+        },
+        {
+          "line": 1178,
+          "source": "            com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference reference) {"
+        },
+        {
+          "line": 1209,
+          "source": "                ? new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference("
+        }
+      ]
+    },
+    {
+      "direction": [
+        "B_PAYMENT_FACADE",
+        "B_VERIFIED_PAYMENT_FACT_DTO"
+      ],
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPayServiceImpl.java",
+      "source_lines": [
+        {
+          "line": 73,
+          "source": "    public Map<String,String> queryRefundFacts(com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference originalPayment, String outRefundNo) {"
+        }
+      ]
+    },
+    {
+      "direction": [
+        "B_PAYMENT_OUTBOUND_PORT",
+        "B_VERIFIED_PAYMENT_FACT_DTO"
+      ],
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/WechatPaymentOperations.java",
+      "source_lines": [
+        {
+          "line": 62,
+          "source": "    java.util.Map<String,String> queryRefundFacts(com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference originalPayment, String outRefundNo);"
+        }
+      ]
+    },
+    {
+      "direction": [
+        "G_ORIGINAL_SETTLEMENT_LEDGER",
+        "B_VERIFIED_PAYMENT_FACT_STORE"
+      ],
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementOriginalLedger.java",
+      "source_lines": [
+        {
+          "line": 30,
+          "source": "    private final WechatVerifiedPaymentFactService verifiedFacts;"
+        },
+        {
+          "line": 37,
+          "source": "            CoopSettlementOriginalMapper originals, CoopSettlementMapper heads, CoopSettlementAdjustmentMapper legacyAdjustments, WechatVerifiedPaymentFactService verifiedFacts,"
+        },
+        {
+          "line": 113,
+          "source": "            WechatVerifiedPaymentFact payment = verifiedFacts.requireVerified(paymentReference).facts();"
+        },
+        {
+          "line": 325,
+          "source": "        var payment = verifiedFacts.requireVerified(new WechatVerifiedPaymentFact.Reference(origin.getPaymentFactId(), origin.getPaymentFactHash())).facts();"
+        },
+        {
+          "line": 330,
+          "source": "            var stored = verifiedFacts.requireVerified(reference); var fact = stored.facts(); fact.requireValid();"
+        }
+      ]
+    },
+    {
+      "direction": [
+        "G_ORIGINAL_SETTLEMENT_LEDGER",
+        "B_VERIFIED_PAYMENT_FACT_DTO"
+      ],
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementOriginalLedger.java",
+      "source_lines": [
+        {
+          "line": 4,
+          "source": "import com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact;"
+        },
+        {
+          "line": 30,
+          "source": "    private final WechatVerifiedPaymentFactService verifiedFacts;"
+        },
+        {
+          "line": 37,
+          "source": "            CoopSettlementOriginalMapper originals, CoopSettlementMapper heads, CoopSettlementAdjustmentMapper legacyAdjustments, WechatVerifiedPaymentFactService verifiedFacts,"
+        },
+        {
+          "line": 74,
+          "source": "        Map<Long, WechatVerifiedPaymentFact.Reference> paymentByPayer = new HashMap<>();"
+        },
+        {
+          "line": 110,
+          "source": "            WechatVerifiedPaymentFact.Reference paymentReference = new WechatVerifiedPaymentFact.Reference(component.getPaymentFactId(), component.getPaymentFactHash());"
+        },
+        {
+          "line": 111,
+          "source": "            WechatVerifiedPaymentFact.Reference previousPayment = paymentByPayer.putIfAbsent(component.getPayerRegistrationId(), paymentReference);"
+        },
+        {
+          "line": 113,
+          "source": "            WechatVerifiedPaymentFact payment = verifiedFacts.requireVerified(paymentReference).facts();"
+        },
+        {
+          "line": 316,
+          "source": "    private void requirePayment(WechatVerifiedPaymentFact fact, String payerOrderNo, BigDecimal originalCash) {"
+        },
+        {
+          "line": 319,
+          "source": "        if (fact.kind() != WechatVerifiedPaymentFact.Kind.PAYMENT || !Objects.equals(payerOrderNo, fact.businessOutTradeNo())"
+        },
+        {
+          "line": 325,
+          "source": "        var payment = verifiedFacts.requireVerified(new WechatVerifiedPaymentFact.Reference(origin.getPaymentFactId(), origin.getPaymentFactHash())).facts();"
+        },
+        {
+          "line": 331,
+          "source": "            if (fact.kind() != WechatVerifiedPaymentFact.Kind.REFUND || !Objects.equals(refund.getRefundNo(), fact.merchantEventNo())"
+        }
+      ]
+    },
+    {
+      "direction": [
+        "G_CASH_CLAIM",
+        "G_ORIGINAL_SETTLEMENT_LEDGER"
+      ],
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementClaimServiceImpl.java",
+      "source_lines": [
+        {
+          "line": 44,
+          "source": "    private CoopSettlementOriginalLedger originalLedger;"
+        },
+        {
+          "line": 49,
+          "source": "        originalLedger.reverseCompletedRegistrationRefund(refundId);"
+        },
+        {
+          "line": 55,
+          "source": "        return originalLedger.hasFrozenOriginalRefundComponents(refundId);"
+        }
+      ]
+    }
+  ],
+  "all_literal_production_references": [
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/domain/dto/WechatVerifiedPaymentFact.java:9:public record WechatVerifiedPaymentFact(Kind kind, String mchid, String appid,",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CoopSettlementOriginalMapper.java:5:import com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact;",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CoopSettlementOriginalMapper.java:24:    WechatVerifiedPaymentFact.Reference selectRefundVerifiedReferenceForUpdate(@Param(\"refundId\") Long refundId);",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/WechatVerifiedPaymentFactMapper.java:8:public interface WechatVerifiedPaymentFactMapper {",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/IWechatPayService.java:64:    java.util.Map<String,String> queryRefundFacts(com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference originalPayment, String outRefundNo);",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/IWxPaymentCallbackInboxService.java:27:            com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference facts);",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/IWxPaymentCallbackInboxService.java:31:            com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference facts, Mutation mutation);",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/WechatPaymentOperations.java:62:    java.util.Map<String,String> queryRefundFacts(com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference originalPayment, String outRefundNo);",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementClaimServiceImpl.java:44:    private CoopSettlementOriginalLedger originalLedger;",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementOriginalLedger.java:4:import com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact;",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementOriginalLedger.java:23:public class CoopSettlementOriginalLedger {",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementOriginalLedger.java:30:    private final WechatVerifiedPaymentFactService verifiedFacts;",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementOriginalLedger.java:36:    public CoopSettlementOriginalLedger(CmsTopicMapper topics, CoopSettlementCashEvidenceMapper evidence,",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementOriginalLedger.java:37:            CoopSettlementOriginalMapper originals, CoopSettlementMapper heads, CoopSettlementAdjustmentMapper legacyAdjustments, WechatVerifiedPaymentFactService verifiedFacts,",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementOriginalLedger.java:74:        Map<Long, WechatVerifiedPaymentFact.Reference> paymentByPayer = new HashMap<>();",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementOriginalLedger.java:110:            WechatVerifiedPaymentFact.Reference paymentReference = new WechatVerifiedPaymentFact.Reference(component.getPaymentFactId(), component.getPaymentFactHash());",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementOriginalLedger.java:111:            WechatVerifiedPaymentFact.Reference previousPayment = paymentByPayer.putIfAbsent(component.getPayerRegistrationId(), paymentReference);",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementOriginalLedger.java:113:            WechatVerifiedPaymentFact payment = verifiedFacts.requireVerified(paymentReference).facts();",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementOriginalLedger.java:236:        BigDecimal before = previous.stream().map(CoopSettlementRefundReceipt::getRefundAmount).map(CoopSettlementOriginalLedger::cents).reduce(ZERO, BigDecimal::add);",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementOriginalLedger.java:316:    private void requirePayment(WechatVerifiedPaymentFact fact, String payerOrderNo, BigDecimal originalCash) {",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementOriginalLedger.java:319:        if (fact.kind() != WechatVerifiedPaymentFact.Kind.PAYMENT || !Objects.equals(payerOrderNo, fact.businessOutTradeNo())",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementOriginalLedger.java:325:        var payment = verifiedFacts.requireVerified(new WechatVerifiedPaymentFact.Reference(origin.getPaymentFactId(), origin.getPaymentFactHash())).facts();",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementOriginalLedger.java:331:            if (fact.kind() != WechatVerifiedPaymentFact.Kind.REFUND || !Objects.equals(refund.getRefundNo(), fact.merchantEventNo())",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementOriginalLedger.java:362:        return rows.stream().map(CoopSettlementOriginalAdjustment::getAmount).map(CoopSettlementOriginalLedger::cents).reduce(ZERO, BigDecimal::add);",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPayServiceImpl.java:73:    public Map<String,String> queryRefundFacts(com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference originalPayment, String outRefundNo) {",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPaymentSdkGateway.java:77:    @Autowired private WechatVerifiedPaymentFactService verifiedFacts;",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPaymentSdkGateway.java:850:    public Map<String,String> queryRefundFacts(com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference originalPayment, String outRefundNo) {",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPaymentSdkGateway.java:853:            if (expected.facts().kind()!=com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Kind.PAYMENT",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPaymentSdkGateway.java:862:    private Map<String,String> queryRefundFactsForOriginal(String outRefundNo,WechatVerifiedPaymentFactService.Stored expected) {",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPaymentSdkGateway.java:896:                var fact = new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact(",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPaymentSdkGateway.java:897:                        com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Kind.REFUND,",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPaymentSdkGateway.java:1156:    private com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference recordPaymentSuccess(Transaction original) {",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPaymentSdkGateway.java:1158:        return verifiedFacts.recordVerified(new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact(",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPaymentSdkGateway.java:1159:                com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Kind.PAYMENT,",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPaymentSdkGateway.java:1178:            com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference reference) {",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPaymentSdkGateway.java:1209:                ? new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference(",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatVerifiedPaymentFactService.java:3:import com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact;",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatVerifiedPaymentFactService.java:4:import com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference;",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatVerifiedPaymentFactService.java:5:import com.chengyinhub.business.mapper.WechatVerifiedPaymentFactMapper;",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatVerifiedPaymentFactService.java:17:public class WechatVerifiedPaymentFactService {",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatVerifiedPaymentFactService.java:18:    @Autowired private WechatVerifiedPaymentFactMapper mapper;",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatVerifiedPaymentFactService.java:19:    public record Stored(Reference reference, WechatVerifiedPaymentFact facts) { }",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatVerifiedPaymentFactService.java:25:    public Reference recordVerified(WechatVerifiedPaymentFact candidate) {",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatVerifiedPaymentFactService.java:86:        row.put(\"candidate_fact_hash\",WechatVerifiedPaymentFact.sha256(value));",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatVerifiedPaymentFactService.java:87:        row.put(\"rejection_key\",WechatVerifiedPaymentFact.sha256(\"REFUND_NOTIFICATION:\"+(original==null?\"UNVERIFIED\":original.hash())+\":\"+value));",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatVerifiedPaymentFactService.java:100:        row.put(\"candidate_fact_hash\",WechatVerifiedPaymentFact.sha256(value));",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatVerifiedPaymentFactService.java:101:        row.put(\"rejection_key\",WechatVerifiedPaymentFact.sha256(\"UNVERIFIED_PAYMENT:\"+value));",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatVerifiedPaymentFactService.java:112:            return \"sha256:\"+WechatVerifiedPaymentFact.sha256(raw);",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatVerifiedPaymentFactService.java:120:    private void reject(WechatVerifiedPaymentFact candidate, Long originalId, String notifyHash, String reason) {",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatVerifiedPaymentFactService.java:122:        row.put(\"rejection_key\", WechatVerifiedPaymentFact.sha256(reason+\":\"+candidate.factHash()+\":\"",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatVerifiedPaymentFactService.java:134:                || !WechatVerifiedPaymentFact.VERIFICATION_METHOD.equals(row.get(\"verification_method\"))) {",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatVerifiedPaymentFactService.java:137:        WechatVerifiedPaymentFact fact = new WechatVerifiedPaymentFact(",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatVerifiedPaymentFactService.java:138:                WechatVerifiedPaymentFact.Kind.valueOf((String)row.get(\"fact_kind\")), (String)row.get(\"mchid\"),",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatVerifiedPaymentFactService.java:148:    public static Map<String,Object> columns(WechatVerifiedPaymentFact f) {",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatVerifiedPaymentFactService.java:157:        row.put(\"verification_method\",WechatVerifiedPaymentFact.VERIFICATION_METHOD);",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackInboxServiceImpl.java:48:    @Autowired private WechatVerifiedPaymentFactService verifiedFacts;",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackInboxServiceImpl.java:91:            com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference reference) {",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackInboxServiceImpl.java:93:        int expectedType = fact.kind() == com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Kind.PAYMENT",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackInboxServiceImpl.java:105:        } catch (WechatVerifiedPaymentFactService.ConflictException rejected) {",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackInboxServiceImpl.java:114:            com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference reference, Mutation mutation) {",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/resources/mapper/business/CoopSettlementOriginalMapper.xml:141:    <resultMap id=\"VerifiedReference\" type=\"com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact$Reference\">",
+    "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/resources/mapper/business/WechatVerifiedPaymentFactMapper.xml:3:<mapper namespace=\"com.chengyinhub.business.mapper.WechatVerifiedPaymentFactMapper\">"
+  ],
+  "a_domain_seam": {
+    "typed_A_domain_reference": "NOT_OBSERVED; inbox implementation has direct fact calls, not assigned A owner without confirmation",
+    "verified_methods_literal_occurrences": [
+      "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/IWxPaymentCallbackInboxService.java:26:    boolean registerVerified(String notifyId, int bizType, Long bizId, String eventType,",
+      "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/IWxPaymentCallbackInboxService.java:30:    boolean processVerified(String notifyId,",
+      "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackInboxServiceImpl.java:90:    public boolean registerVerified(String notifyId, int bizType, Long bizId, String eventType,",
+      "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackInboxServiceImpl.java:113:    public boolean processVerified(String notifyId,"
+    ],
+    "legacy_A_call_sites": [
+      "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:2165:            wxPaymentCallbackInboxService.register(notifyId,",
+      "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:2171:        boolean completed = wxPaymentCallbackInboxService.process(notifyId,",
+      "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java:400:            wxPaymentCallbackInboxService.register(",
+      "de7f432ec6f0c1c6225168ecf2e4808210de42e0:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java:408:        return wxPaymentCallbackInboxService.process("
+    ],
+    "not_proven": "runtime/reflection/dynamic dispatch, actual business outcome and unpushed candidates"
+  }
+}

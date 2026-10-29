@@ -19,17 +19,21 @@ import com.chengyinhub.business.mapper.CmsTopicMapper;
 import com.chengyinhub.business.mapper.CmsTopicNodeMapper;
 import com.chengyinhub.business.mapper.OmsTicketMapper;
 import com.chengyinhub.business.service.impl.CmsTopicServiceImpl;
+import com.chengyinhub.business.service.support.TopicPublicationTestWiring;
 import com.chengyinhub.common.constant.ProductType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -96,18 +100,30 @@ class TopicUpdateByOwnerTest {
         xpBudgetService = mock(IXpBudgetService.class);
         auditTaskService = mock(IAuditTaskService.class);
         omsTicketService = mock(IOmsTicketService.class);
+        java.util.List<CmsTopicChapter> writtenChapters = new ArrayList<>();
+        java.util.List<CmsTopicNode> writtenNodes = new ArrayList<>();
+        org.mockito.Mockito.doAnswer(call -> {
+            if (!writtenChapters.isEmpty()) return new ArrayList<>(writtenChapters);
+            CmsTopicChapter probe = new CmsTopicChapter(); probe.setTopicId(call.getArgument(0));
+            return chapterMapper.selectCmsTopicChapterList(probe);
+        }).when(chapterMapper).selectByTopicForUpdate(anyLong());
+        org.mockito.Mockito.doAnswer(call -> {
+            if (!writtenNodes.isEmpty()) return new ArrayList<>(writtenNodes);
+            CmsTopicNode probe = new CmsTopicNode(); probe.setTopicId(call.getArgument(0));
+            return nodeMapper.selectCmsTopicNodeList(probe);
+        }).when(nodeMapper).selectByTopicForUpdate(anyLong());
 
         // Mapper 成功插入须返回 1 并回填生成 ID；null 是 Mockito 重 stub 的占位调用。
         AtomicLong chapterIds = new AtomicLong(801L);
         org.mockito.Mockito.doAnswer(invocation -> {
             CmsTopicChapter chapter = invocation.getArgument(0);
-            if (chapter != null) chapter.setId(chapterIds.getAndIncrement());
+            if (chapter != null) { chapter.setId(chapterIds.getAndIncrement()); writtenChapters.add(chapter); }
             return 1;
         }).when(chapterMapper).insertCmsTopicChapter(any());
         AtomicLong nodeIds = new AtomicLong(901L);
         org.mockito.Mockito.doAnswer(invocation -> {
             CmsTopicNode node = invocation.getArgument(0);
-            if (node != null) node.setId(nodeIds.getAndIncrement());
+            if (node != null) { node.setId(nodeIds.getAndIncrement()); writtenNodes.add(node); }
             return 1;
         }).when(nodeMapper).insertCmsTopicNode(any());
         AtomicLong activityIds = new AtomicLong(1001L);
@@ -123,8 +139,7 @@ class TopicUpdateByOwnerTest {
                 invocation -> "lockTopic".equals(invocation.getMethod().getName())
                         ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(svc, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
                         : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
-        ReflectionTestUtils.setField(svc, "quotaService", mock(IQuotaService.class));
-        when(topicMapper.publishRouteSnapshot(any(), any(), any())).thenReturn(1);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(svc, "quotaService", mock(IQuotaService.class));
         org.springframework.test.util.ReflectionTestUtils.setField(svc, "settlementDebtLedger", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.SettlementDebtLedger.class));
         commercialTopicPolicy = new com.chengyinhub.business.service.support.CommercialTopicPolicy(
                 ticketMapper, chapterMapper, mock(com.chengyinhub.business.mapper.MerchantChapterOfferMapper.class), topicMapper);
@@ -140,13 +155,37 @@ class TopicUpdateByOwnerTest {
         ReflectionTestUtils.setField(svc, "clubService", clubService);
         ReflectionTestUtils.setField(svc, "xpBudgetService", xpBudgetService);
         ReflectionTestUtils.setField(svc, "auditTaskService", auditTaskService);
-        ReflectionTestUtils.setField(svc, "omsTicketService", omsTicketService);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(svc, "omsTicketService", omsTicketService);
 
         // 没有任何报名(钱不在场),结构重建的钱闸放行
         when(registrationMapper.selectCmsRegistrationList(any())).thenReturn(Collections.<CmsRegistration>emptyList());
         // 自办活动:主题下没有既有活动 → refreshSelfHostActivity 走「按需新建」分支
         when(activityMapper.selectCmsActivityList(any())).thenReturn(Collections.<CmsActivity>emptyList());
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
+        ReflectionTestUtils.setField(svc, "themeStateKeyService", new com.chengyinhub.business.service.support.ThemeStateKeyService(
+                mock(com.chengyinhub.business.mapper.ThemeStateKeyMapper.class)));
+        wirePublicationInputs(writtenChapters, writtenNodes);
+        svc = com.chengyinhub.business.service.support.TopicPublicationTestWiring.transactional(svc);
+    }
+
+    private void wirePublicationInputs(List<CmsTopicChapter> writtenChapters, List<CmsTopicNode> writtenNodes) {
+        // Keep D's insert/current-read capture; ordinary readers consume those same actual written rows.
+        when(chapterMapper.selectCmsTopicChapterList(any())).thenAnswer(call -> new ArrayList<>(writtenChapters));
+        when(nodeMapper.selectCmsTopicNodeList(any())).thenAnswer(call -> new ArrayList<>(writtenNodes));
+        org.mockito.Mockito.doAnswer(call -> writtenChapters.removeIf(row -> row.getId().equals(call.getArgument(0))) ? 1 : 0)
+                .when(chapterMapper).deleteCmsTopicChapterById(anyLong());
+        org.mockito.Mockito.doAnswer(call -> writtenNodes.removeIf(row -> row.getId().equals(call.getArgument(0))) ? 1 : 0)
+                .when(nodeMapper).deleteCmsTopicNodeById(anyLong());
+        org.mockito.Mockito.doAnswer(call -> {
+            assertTrue(TransactionSynchronizationManager.isActualTransactionActive());
+            DataSourceTransactionManager manager = (DataSourceTransactionManager) ReflectionTestUtils.getField(svc, "transactionManager");
+            assertTrue(TransactionSynchronizationManager.hasResource(manager.getDataSource()));
+            var frozen = new com.fasterxml.jackson.databind.ObjectMapper().readTree((String) call.getArgument(1));
+            assertEquals(1, frozen.path("runtimeSnapshotVersion").asInt());
+            assertEquals(writtenNodes.size(), frozen.path("routeStations").size());
+            assertEquals(writtenNodes.get(0).getId().longValue(), frozen.path("routeStations").get(0).path("nodeId").asLong());
+            return 1;
+        }).when(topicMapper).publishRouteSnapshot(any(), any(), any());
     }
 
     // ---------- 夹具 ----------
@@ -208,8 +247,15 @@ class TopicUpdateByOwnerTest {
         when(topicMapper.selectTopicIsDraft(TOPIC)).thenReturn(isDraft);
         org.mockito.Mockito.doAnswer(invocation -> {
             CmsTopic patch = invocation.getArgument(0);
-            if (patch.getStatus() != null) t.setStatus(patch.getStatus());
-            if (patch.getUserStatus() != null) t.setUserStatus(patch.getUserStatus());
+            // Match the original dynamic mapper: omitted/null fields retain their current values.
+            var values = new org.springframework.beans.BeanWrapperImpl(patch);
+            var current = new org.springframework.beans.BeanWrapperImpl(t);
+            for (var property : values.getPropertyDescriptors()) {
+                String name = property.getName();
+                if (current.isWritableProperty(name) && values.isReadableProperty(name)
+                        && values.getPropertyValue(name) != null)
+                    current.setPropertyValue(name, values.getPropertyValue(name));
+            }
             return 1;
         }).when(topicMapper).updateCmsTopic(any());
     }
@@ -221,7 +267,7 @@ class TopicUpdateByOwnerTest {
         stubExisting(topic(0, daysFromNow(3)), 1);
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
-        Long id = svc.updateTopicByOwner(fullDto(), ME, "me");
+        Long id = com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(fullDto(), ME, "me");
 
         assertEquals(TOPIC, id);
         ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
@@ -263,7 +309,7 @@ class TopicUpdateByOwnerTest {
         dto.setTickets(new ArrayList<>(Collections.singletonList(paid)));
 
         IllegalStateException error = assertThrows(IllegalStateException.class,
-                () -> svc.updateTopicByOwner(dto, ME, "me"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(dto, ME, "me"));
         assertEquals(com.chengyinhub.business.service.support.CommercialTopicPolicy.FREE_TO_COMMERCIAL_REJECTED,
                 error.getMessage());
         verify(reviewService, never()).submitProjectReview(anyLong(), anyLong(), any());
@@ -280,7 +326,7 @@ class TopicUpdateByOwnerTest {
         dto.setRecruitDeadline(daysFromNow(2));
 
         IllegalStateException error = assertThrows(IllegalStateException.class,
-                () -> svc.updateTopicByOwner(dto, ME, "me"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(dto, ME, "me"));
         assertEquals(com.chengyinhub.business.service.support.CommercialTopicPolicy.FREE_TO_COMMERCIAL_REJECTED,
                 error.getMessage());
         verify(reviewService, never()).submitProjectReview(anyLong(), anyLong(), any());
@@ -304,7 +350,7 @@ class TopicUpdateByOwnerTest {
         dto.setOpenClubPool(1);
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
-        svc.updateTopicByOwner(dto, ME, "me");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(dto, ME, "me");
 
         ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
         verify(topicMapper).updateCmsTopic(cap.capture());
@@ -319,7 +365,7 @@ class TopicUpdateByOwnerTest {
         dto.setOpenClubPool(1);
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
-        svc.updateTopicByOwner(dto, ME, "me");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(dto, ME, "me");
 
         ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
         verify(topicMapper).updateCmsTopic(cap.capture());
@@ -331,7 +377,7 @@ class TopicUpdateByOwnerTest {
         stubExisting(topic(0, daysFromNow(3)), 1);
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
-        svc.updateTopicByOwner(fullDto(), ME, "me");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(fullDto(), ME, "me");
 
         ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
         verify(topicMapper).updateCmsTopic(cap.capture());
@@ -352,7 +398,7 @@ class TopicUpdateByOwnerTest {
         dto.setRecruitDeadline(daysFromNow(2));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
-        svc.updateTopicByOwner(dto, ME, "me");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(dto, ME, "me");
 
         verify(reviewService, never()).submitProjectReview(anyLong(), anyLong(), any());
     }
@@ -392,7 +438,7 @@ class TopicUpdateByOwnerTest {
         assertTrue(commercialTopicPolicy.evaluate(TOPIC).isCommercial(), "已有真实收费票，不能把本次编辑视为免费转商业");
         org.junit.jupiter.api.Assertions.assertFalse(commercialTopicPolicy.isConversionProtected(existing));
 
-        svc.updateTopicByOwner(dto, ME, "me");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(dto, ME, "me");
 
         assertTrue(commercialTopicPolicy.evaluate(TOPIC).isCommercial());
         assertEquals(501L,stored.getId());
@@ -410,7 +456,7 @@ class TopicUpdateByOwnerTest {
         stubExisting(topic(0, daysFromNow(3)), 1);
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
-        svc.updateTopicByOwner(fullDto(), ME, "me");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(fullDto(), ME, "me");
 
         verify(activityMapper, never()).insertCmsActivity(any());
     }
@@ -421,7 +467,7 @@ class TopicUpdateByOwnerTest {
         stubExisting(topic(0, daysFromNow(3)), 0);
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
-        svc.updateTopicByOwner(fullDto(), ME, "me");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(fullDto(), ME, "me");
 
         verify(activityMapper).insertCmsActivity(any());
     }
@@ -432,7 +478,7 @@ class TopicUpdateByOwnerTest {
         stubExisting(topic(2, daysFromNow(3)), 0);
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
-        svc.updateTopicByOwner(fullDto(), ME, "me");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(fullDto(), ME, "me");
 
         verify(activityMapper).insertCmsActivity(any());
     }
@@ -442,7 +488,7 @@ class TopicUpdateByOwnerTest {
         stubExisting(topic(2, daysFromNow(3)), 0);
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
-        svc.updateTopicByOwner(fullDto(), ME, "me");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(fullDto(), ME, "me");
 
         ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
         verify(topicMapper, org.mockito.Mockito.times(2)).updateCmsTopic(cap.capture());
@@ -462,7 +508,7 @@ class TopicUpdateByOwnerTest {
         dto.setJourneyRules("{\"schemaVersion\":1,\"checkEnabled\":true,\"hp\":{\"max\":6}}");
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
-        svc.updateTopicByOwner(dto, ME, "me");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(dto, ME, "me");
 
         ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
         verify(topicMapper).updateCmsTopic(cap.capture());
@@ -482,7 +528,7 @@ class TopicUpdateByOwnerTest {
         stubExisting(topic(0, daysFromNow(3)), 1);
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
-        svc.updateTopicByOwner(fullDto(), ME, "me");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(fullDto(), ME, "me");
 
         ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
         verify(topicMapper).updateCmsTopic(cap.capture());
@@ -498,7 +544,7 @@ class TopicUpdateByOwnerTest {
         dto.setJourneyRules("{\"schemaVersion\":1,\"checkEnabled\":true,\"modCap\":11}");
 
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
-                () -> svc.updateTopicByOwner(dto, ME, "me"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(dto, ME, "me"));
 
         assertTrue(error.getMessage().contains("modCap"), error.getMessage());
         verify(topicMapper, never()).updateCmsTopic(any());
@@ -510,7 +556,7 @@ class TopicUpdateByOwnerTest {
         stubExisting(topic(0, daysFromNow(3)), 1);
 
         RuntimeException e = assertThrows(RuntimeException.class,
-                () -> svc.updateTopicByOwner(fullDto(), 999L, "attacker"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(fullDto(), 999L, "attacker"));
 
         assertTrue(e.getMessage().contains("无权编辑"), "错误文案要指明是哪道闸,别只断言抛了异常:" + e.getMessage());
         verify(topicMapper, never()).updateCmsTopic(any());
@@ -531,7 +577,7 @@ class TopicUpdateByOwnerTest {
 
         TopicUpdateDTO dto = fullDto();
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
-        Long id = svc.updateTopicByOwner(dto, ME, "me");
+        Long id = com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(dto, ME, "me");
 
         assertEquals(TOPIC, id, "从没公开过的草稿,startDate 只是表单上的值,作者进来就是为了改它");
         verify(topicMapper).updateCmsTopic(any());
@@ -543,7 +589,7 @@ class TopicUpdateByOwnerTest {
         stubExisting(topic(1, daysFromNow(-1)), 0);
 
         RuntimeException e = assertThrows(RuntimeException.class,
-                () -> svc.updateTopicByOwner(whitelistOnlyDto(), ME, "me"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(whitelistOnlyDto(), ME, "me"));
 
         assertTrue(e.getMessage().contains("已开始"), "应命中「已开始」只读闸,实际:" + e.getMessage());
         verify(topicMapper, never()).updateCmsTopic(any());
@@ -557,7 +603,7 @@ class TopicUpdateByOwnerTest {
                 .thenReturn(Collections.singletonList(paid));
 
         RuntimeException e = assertThrows(RuntimeException.class,
-                () -> svc.updateTopicByOwner(fullDto(), ME, "me"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(fullDto(), ME, "me"));
 
         assertTrue(e.getMessage().contains("报名"), "钱在场必须拦住物理重建,实际:" + e.getMessage());
         verify(nodeMapper, never()).deleteCmsTopicNodeById(any());
@@ -579,7 +625,7 @@ class TopicUpdateByOwnerTest {
         for (String image : new String[]{"https://unregistered/image.jpg","media-asset:99"}) {
             TopicUpdateDTO request = whitelistOnlyDto(); request.setImgUrl(image);
             assertThrows(com.chengyinhub.common.exception.ServiceException.class,
-                    () -> svc.updateTopicByOwner(request,ME,"owner"));
+                    () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(request,ME,"owner"));
         }
         verify(topicMapper,never()).updateCmsTopic(any());
     }
@@ -593,7 +639,7 @@ class TopicUpdateByOwnerTest {
         com.chengyinhub.business.mapper.AppMediaAssetMapper media =
                 (com.chengyinhub.business.mapper.AppMediaAssetMapper) ReflectionTestUtils.getField(references,"mapper");
         RuntimeException error = assertThrows(RuntimeException.class,
-                () -> svc.updateTopicByOwner(whitelistOnlyDto(),999L,"foreign"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(whitelistOnlyDto(),999L,"foreign"));
         assertEquals("无权编辑该主题",error.getMessage());
         org.mockito.Mockito.verifyNoInteractions(media);
         verify(topicMapper,never()).updateCmsTopic(any());
@@ -608,7 +654,7 @@ class TopicUpdateByOwnerTest {
         stubExisting(online, 0);
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
-        svc.updateTopicByOwner(whitelistOnlyDto(), ME, "me");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(whitelistOnlyDto(), ME, "me");
 
         ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
         verify(topicMapper).updateCmsTopic(cap.capture());
@@ -636,7 +682,7 @@ class TopicUpdateByOwnerTest {
         dto.setRecruitDeadline(daysFromNow(2));
 
         RuntimeException error = assertThrows(RuntimeException.class,
-                () -> svc.updateTopicByOwner(dto, ME, "me"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(dto, ME, "me"));
 
         assertTrue(error.getMessage().contains("招募截止时间"),
                 "拒绝信息要指明招募截止被锁定:" + error.getMessage());
@@ -653,7 +699,7 @@ class TopicUpdateByOwnerTest {
         dto.setRecruitDeadline(daysFromNow(4));
 
         RuntimeException error = assertThrows(RuntimeException.class,
-                () -> svc.updateTopicByOwner(dto, ME, "me"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(dto, ME, "me"));
 
         assertTrue(error.getMessage().contains("招募截止时间"),
                 "拒绝信息要指明招募截止被锁定:" + error.getMessage());
@@ -671,7 +717,7 @@ class TopicUpdateByOwnerTest {
         dto.setRecruitDeadline(new Date(deadline.getTime()));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
-        svc.updateTopicByOwner(dto, ME, "me");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(dto, ME, "me");
 
         ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
         verify(topicMapper).updateCmsTopic(cap.capture());
@@ -688,7 +734,7 @@ class TopicUpdateByOwnerTest {
         stubExisting(online, 0);
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
-        svc.updateTopicByOwner(whitelistOnlyDto(), ME, "me");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(whitelistOnlyDto(), ME, "me");
 
         ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
         verify(topicMapper).updateCmsTopic(cap.capture());
@@ -704,7 +750,7 @@ class TopicUpdateByOwnerTest {
         dto.setStartDate(daysFromNow(9));
 
         RuntimeException e = assertThrows(RuntimeException.class,
-                () -> svc.updateTopicByOwner(dto, ME, "me"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(dto, ME, "me"));
 
         assertTrue(e.getMessage().contains("开始/结束日期"), "拒绝信息要指名是日期被拦:" + e.getMessage());
         verify(topicMapper, never()).updateCmsTopic(any());
@@ -720,7 +766,7 @@ class TopicUpdateByOwnerTest {
         dto.setChapters(new ArrayList<>(Arrays.asList(chapter)));
 
         RuntimeException e = assertThrows(RuntimeException.class,
-                () -> svc.updateTopicByOwner(dto, ME, "me"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(dto, ME, "me"));
 
         assertTrue(e.getMessage().contains("章节站点结构"), "拒绝信息要指名是结构被拦:" + e.getMessage());
         verify(topicMapper, never()).updateCmsTopic(any());
@@ -738,7 +784,7 @@ class TopicUpdateByOwnerTest {
         dto.setTickets(new ArrayList<>(Arrays.asList(ticket)));
 
         RuntimeException e = assertThrows(RuntimeException.class,
-                () -> svc.updateTopicByOwner(dto, ME, "me"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(dto, ME, "me"));
 
         assertTrue(e.getMessage().contains("票种与价格"), "拒绝信息要指名是票价被拦:" + e.getMessage());
         verify(topicMapper, never()).updateCmsTopic(any());
@@ -759,7 +805,7 @@ class TopicUpdateByOwnerTest {
         dto.setTickets(new ArrayList<>(Arrays.asList(new ActivityTicketRequest())));
 
         RuntimeException e = assertThrows(RuntimeException.class,
-                () -> svc.updateTopicByOwner(dto, ME, "me"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(dto, ME, "me"));
 
         String msg = e.getMessage();
         assertTrue(msg.contains("开始/结束日期") && msg.contains("章节站点结构") && msg.contains("票种与价格"),
@@ -774,7 +820,7 @@ class TopicUpdateByOwnerTest {
         dto.setId(null);
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
-        assertThrows(RuntimeException.class, () -> svc.updateTopicByOwner(dto, ME, "me"));
+        assertThrows(RuntimeException.class, () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(dto, ME, "me"));
         verify(topicMapper, never()).selectCmsTopicById(any());
     }
 
@@ -785,7 +831,7 @@ class TopicUpdateByOwnerTest {
         stubExisting(gone, 1);
 
         RuntimeException e = assertThrows(RuntimeException.class,
-                () -> svc.updateTopicByOwner(fullDto(), ME, "me"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(fullDto(), ME, "me"));
         assertTrue(e.getMessage().contains("不存在"), e.getMessage());
     }
 
@@ -804,7 +850,7 @@ class TopicUpdateByOwnerTest {
         when(ticketMapper.selectOmsTicketList(any())).thenReturn(Collections.singletonList(oldTicket));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
-        svc.updateTopicByOwner(fullDto(), ME, "me");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(fullDto(), ME, "me");
 
         verify(nodeMapper).deleteCmsTopicNodeById(11L);
         verify(chapterMapper).deleteCmsTopicChapterById(21L);
@@ -852,7 +898,7 @@ class TopicUpdateByOwnerTest {
                     .setId(insertedId[0]++);
             return 1;
         });
-        ReflectionTestUtils.setField(svc, "cmsMemberTemplateMapper",
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(svc, "cmsMemberTemplateMapper",
                 mock(com.chengyinhub.business.mapper.CmsMemberTemplateMapper.class));
         ReflectionTestUtils.setField(svc, "distanceCalculatorUtils",
                 mock(com.chengyinhub.common.utils.DistanceCalculatorUtils.class));
@@ -860,7 +906,7 @@ class TopicUpdateByOwnerTest {
                 eq(4L), eq(5L), any(Date.class))).thenReturn(1);
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
-        svc.updateTopicByOwner(dto, ME, "me");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(dto, ME, "me");
 
         ArgumentCaptor<String> graph = ArgumentCaptor.forClass(String.class);
         verify(topicMapper).updateRouteDefinition(eq(TOPIC), eq("BRANCH_GRAPH"), graph.capture(),
@@ -901,7 +947,7 @@ class TopicUpdateByOwnerTest {
             if (patch.getStatus() != null) row.setStatus(patch.getStatus());
             return 1;
         });
-        ReflectionTestUtils.setField(svc, "cmsMemberTemplateMapper",
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(svc, "cmsMemberTemplateMapper",
                 mock(com.chengyinhub.business.mapper.CmsMemberTemplateMapper.class));
         ReflectionTestUtils.setField(svc, "distanceCalculatorUtils",
                 mock(com.chengyinhub.common.utils.DistanceCalculatorUtils.class));
@@ -913,7 +959,7 @@ class TopicUpdateByOwnerTest {
         nodes.add(nodeDto(null, "新站"));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
-        svc.updateTopicByOwner(dto, ME, "me");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(dto, ME, "me");
 
         java.util.Map<String, Long> statusByName = new java.util.LinkedHashMap<>();
         for (com.chengyinhub.business.domain.CmsTopicNode n : table.values()) statusByName.put(n.getName(), n.getStatus());
@@ -965,7 +1011,7 @@ class TopicUpdateByOwnerTest {
         partial.setOpenMerchantPool(1);
 
         RuntimeException e = assertThrows(RuntimeException.class,
-                () -> svc.updateTopicByOwner(partial, ME, "me"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(partial, ME, "me"));
 
         assertTrue(e.getMessage().contains("chapters"),
                 "拒绝文案必须点名缺的是哪个字段,否则调用方仍然不知道该补什么:" + e.getMessage());
@@ -993,7 +1039,7 @@ class TopicUpdateByOwnerTest {
         partial.setChapters(new ArrayList<ChapterDTO>());
 
         RuntimeException e = assertThrows(RuntimeException.class,
-                () -> svc.updateTopicByOwner(partial, ME, "me"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(partial, ME, "me"));
 
         String msg = e.getMessage();
         assertTrue(msg.contains("tickets") && msg.contains("collaboratorIds"),
@@ -1020,7 +1066,7 @@ class TopicUpdateByOwnerTest {
         explicit.setCollaboratorIds(new ArrayList<Long>());
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
-        svc.updateTopicByOwner(explicit, ME, "me");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(explicit, ME, "me");
 
         verify(chapterMapper).deleteCmsTopicChapterById(21L);
         verify(topicMapper).updateCmsTopic(any());

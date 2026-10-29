@@ -12,10 +12,11 @@ public class TopicChapterVO extends CmsTopicChapter {
     @Schema(description = "章节下的节点", example = "")
     private List<TopicNodeVO> nodes;
 
-    /** 沿城市道路的路线坐标(JSON: [{"latitude":..,"longitude":..}, ...])，
-     *  由腾讯路线规划算好后返回；为空时前端用节点直连兜底。 */
+    /** Only a complete provider route; a missing route may be shown as a separately labelled node preview. */
     @Schema(description = "沿路路线坐标JSON")
     private String routeGeometry;
+    private Boolean routeGeometryAvailable;
+    private String routeGeometryErrorCode;
 
     public List<TopicNodeVO> getNodes() {
         return nodes;
@@ -39,6 +40,12 @@ public class TopicChapterVO extends CmsTopicChapter {
 
     public void setRouteGeometry(String routeGeometry) {
         this.routeGeometry = routeGeometry;
+        this.routeGeometryAvailable = routeGeometry != null && !routeGeometry.isBlank();
+        this.routeGeometryErrorCode = this.routeGeometryAvailable ? null : "MAP_ROUTE_UNAVAILABLE";
     }
+
+    public Boolean getRouteGeometryAvailable() { return routeGeometryAvailable; }
+
+    public String getRouteGeometryErrorCode() { return routeGeometryErrorCode; }
 
 }

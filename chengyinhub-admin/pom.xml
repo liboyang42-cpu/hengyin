@@ -178,4 +178,49 @@
         <finalName>${project.artifactId}</finalName>
     </build>
 
+    <profiles>
+        <!-- Fixed combined workload only. Default/full test compilation is unchanged. -->
+        <profile>
+            <id>combined-http-fixture-closure</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>default-testCompile</id>
+                                <configuration>
+                                    <implicit>none</implicit>
+                                    <testIncludes>
+                                        <testInclude>com/chengyinhub/business/it/CrossDomainCombinedLoadMySqlIT.java</testInclude>
+                                        <testInclude>com/chengyinhub/business/it/CombinedCoreHttpWorkload.java</testInclude>
+                                        <testInclude>com/chengyinhub/business/it/CombinedControlledProviders.java</testInclude>
+                                        <testInclude>com/chengyinhub/business/it/CrossDomainStorageFixture.java</testInclude>
+                                        <testInclude>com/chengyinhub/business/it/CrossDomainTransportStage.java</testInclude>
+                                        <testInclude>com/chengyinhub/business/it/GameplayProcessRecoveryChild.java</testInclude>
+                                        <testInclude>com/chengyinhub/business/it/GenericGameplayHttpE2eIT.java</testInclude>
+                                        <testInclude>com/chengyinhub/business/it/MybatisItDatabase.java</testInclude>
+                                        <testInclude>com/chengyinhub/business/it/P0AcceptanceSchema.java</testInclude>
+                                        <testInclude>com/chengyinhub/business/it/ItSchema.java</testInclude>
+                                        <testInclude>com/chengyinhub/business/it/R5WeRunFixture.java</testInclude>
+                                        <testInclude>com/chengyinhub/business/service/MysqlIntegrationTestConfig.java</testInclude>
+                                        <testInclude>com/chengyinhub/business/service/ai/AiNotSentGatewayFixture.java</testInclude>
+                                        <testInclude>com/chengyinhub/business/service/impl/CrossDomainSubscriptionProvider.java</testInclude>
+                                        <testInclude>com/chengyinhub/business/service/impl/WechatVerifiedFactTestSupport.java</testInclude>
+                                        <testInclude>com/chengyinhub/business/service/impl/WechatPayTestWiring.java</testInclude>
+                                        <testInclude>com/chengyinhub/quartz/util/CrossDomainSchedulerStage.java</testInclude>
+                                        <testInclude>com/chengyinhub/quartz/util/SchedulerFenceProcessProbe.java</testInclude>
+                                        <testInclude>com/chengyinhub/business/it/CombinedSurefireRuntimeProbeTest.java</testInclude>
+                                        <testInclude>com/chengyinhub/business/service/ai/PhotoCheckIntentServiceTest.java</testInclude>
+                                        <testInclude>com/chengyinhub/business/it/CombinedContextConfigurationTest.java</testInclude>
+                                    </testIncludes>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

@@ -77,7 +77,7 @@ public class MyBatisConfig
             }
             if (allResult.size() > 0)
             {
-                typeAliasesPackage = String.join(",", (String[]) allResult.toArray(new String[0]));
+                typeAliasesPackage = String.join(",", recursivePackageRoots(allResult));
             }
             else
             {
@@ -89,6 +89,26 @@ public class MyBatisConfig
             e.printStackTrace();
         }
         return typeAliasesPackage;
+    }
+
+    /** Each MyBatis package scan is recursive; descendants of an existing root add no classes. */
+    private static List<String> recursivePackageRoots(List<String> packages)
+    {
+        List<String> roots = new ArrayList<>();
+        for (String candidate : packages)
+        {
+            boolean covered = false;
+            for (String other : packages)
+            {
+                if (!candidate.equals(other) && candidate.startsWith(other + "."))
+                {
+                    covered = true;
+                    break;
+                }
+            }
+            if (!covered && !roots.contains(candidate)) roots.add(candidate);
+        }
+        return roots;
     }
 
     public Resource[] resolveMapperLocations(String[] mapperLocations)

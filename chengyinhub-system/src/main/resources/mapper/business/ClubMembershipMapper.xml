@@ -54,6 +54,8 @@
         <result property="version" column="version"/>
         <result property="createTime" column="create_time"/>
         <result property="updateTime" column="update_time"/>
+        <result column="verified_payment_fact_id" property="verifiedPaymentFactId"/>
+        <result column="verified_payment_fact_hash" property="verifiedPaymentFactHash"/>
     </resultMap>
     <resultMap id="TermMap" type="com.chengyinhub.business.domain.ClubMembershipTerm">
         <id property="id" column="id"/>
@@ -140,17 +142,18 @@
         member_id, plan_id, plan_version_snapshot, plan_name_snapshot, duration_days_snapshot,
         amount_fen, benefits_snapshot, grace_days_snapshot, past_due_days_snapshot,
         exit_policy_snapshot, refund_policy_snapshot, snapshot_hash, status, idempotency_key, request_fingerprint,
-        transaction_id, pay_params_json, resume_blocked_at, paid_at, version, create_time, update_time</sql>
+        transaction_id, pay_params_json, resume_blocked_at, paid_at, version, create_time, update_time, verified_payment_fact_id,
+        CONVERT(verified_payment_fact_hash USING ascii) AS verified_payment_fact_hash</sql>
     <select id="selectInvoiceById" resultMap="InvoiceMap">
         select <include refid="InvoiceColumns"/> from club_membership_invoice where id = #{id}
     </select>
-    <select id="selectInvoiceByIdForUpdate" resultMap="InvoiceMap">
+    <select id="selectInvoiceByIdForUpdate" resultMap="InvoiceMap" useCache="false" flushCache="true">
         select <include refid="InvoiceColumns"/> from club_membership_invoice where id = #{id} for update
     </select>
     <select id="selectInvoiceByOutTradeNo" resultMap="InvoiceMap">
         select <include refid="InvoiceColumns"/> from club_membership_invoice where out_trade_no = #{outTradeNo}
     </select>
-    <select id="selectInvoiceByOutTradeNoForUpdate" resultMap="InvoiceMap">
+    <select id="selectInvoiceByOutTradeNoForUpdate" resultMap="InvoiceMap" useCache="false" flushCache="true">
         select <include refid="InvoiceColumns"/> from club_membership_invoice where out_trade_no = #{outTradeNo} for update
     </select>
     <select id="selectInvoiceByIdempotency" resultMap="InvoiceMap">
@@ -287,4 +290,11 @@
           (#{clubId}, #{memberId}, #{invoiceId}, #{status}, #{reason}, #{requestId}, 0,
            #{createBy}, #{createTime}, #{updateBy}, #{updateTime})
     </insert>
+    <update id="bindInvoicePaymentProof">
+        UPDATE club_membership_invoice
+        SET verified_payment_fact_id=#{factId}, verified_payment_fact_hash=CAST(#{factHash} AS BINARY)
+        WHERE id=#{id} AND status='PAID' AND transaction_id=#{transactionId}
+          AND amount_fen=#{amountFen} AND snapshot_hash=#{snapshotHash}
+          AND verified_payment_fact_id IS NULL AND verified_payment_fact_hash IS NULL
+    </update>
 </mapper>

@@ -1,0 +1,51 @@
+{
+  "source_sha": "97b823e5c8bb86675825476a07c9cdf671063f2a",
+  "run_id": 40044883897,
+  "workflow_conclusion": "failure",
+  "branch": "codex/architecture-day-g-negative-evidence-20261023",
+  "status": "REPRODUCED_TWO_P2_WITH_FOUR_FAILING_SAFETY_ASSERTIONS",
+  "tests": 34,
+  "passed": 30,
+  "failures": 4,
+  "errors": 0,
+  "skipped": 0,
+  "cleanup": {
+    "mysql_leftover_schemas": [],
+    "mysql_schemas_after": [
+      "information_schema",
+      "mysql",
+      "performance_schema",
+      "sys"
+    ],
+    "status": "CLEAN"
+  },
+  "raw_xml_sha256": "7c6e4edf6868faacb77ab9a495bb3df2ad3ca635c9f3ce218b85816e00643da2",
+  "raw_receipt_sha256": "40a34d472fe30e2f58c7a2928f45652447f69b53e08a978bf19e17d502b30b76",
+  "failing_cases": [
+    {
+      "name": "independentOrdersWithNullParentCannotBorrowEachOthersPaymentIdentity",
+      "kind": "failure",
+      "message": "NULL parent is absence of a payment group, not proof that two independent orders share a payer ==> Expected java.lang.IllegalStateException to be thrown, but nothing was thrown."
+    },
+    {
+      "name": "reservedAdjustmentIndexNameCollisionMustBeRejectedBeforeAnyDdl",
+      "kind": "failure",
+      "message": "existing planned index name is a migration blocker even without new columns ==> expected: <1> but was: <0>"
+    },
+    {
+      "name": "zeroPayableSiblingCannotSelfDeclareAsTheParentPaymentIdentity",
+      "kind": "failure",
+      "message": "fixture302 is the original100 payment subject; sibling301 is not made payer by caller choice ==> Expected java.lang.IllegalStateException to be thrown, but nothing was thrown."
+    },
+    {
+      "name": "interruptedEmptyMigrationNeedsSafeRollbackBeforeAdjustmentAlterExists",
+      "kind": "failure",
+      "message": "empty partial apply must have a reviewed recovery route; no money/evidence row may be removed ==> Unexpected exception thrown: org.springframework.jdbc.datasource.init.ScriptStatementFailedException: Failed to execute SQL script statement #1 of file [/home/runner/work/hengyin/hengyin/candidate/chengyinhub-admin/../chengyinhub-admin/sql/_deploy_g_cash_evidence_empty_rollback_20261023.sql]: SELECT CAST(IF( (SELECT COUNT(*) FROM coop_settlement_cash_event)=0 AND (SELECT COUNT(*) FROM coop_settlement_cash_contribution)=0 AND (SELECT COUNT(*) FROM coop_settlement_cash_close)=0 AND (SELECT COUNT(*) FROM coop_settlement WHERE cash_close_id IS NOT NULL OR cash_head_kind<>'MEMBER' OR merchant_id IS NULL)=0 AND (SELECT COUNT(*) FROM coop_settlement_adjustment WHERE cash_close_id IS NOT NULL OR cash_event_id IS NOT NULL)=0, 1, JSON_EXTRACT('ASSERT_FAILED__g_cash_evidence_rollback_requires_empty','$') ) AS UNSIGNED) AS assertion_ok"
+    }
+  ],
+  "limits": [
+    "Test-only evidence branch; original production source unchanged, never merge/deploy",
+    "No production use, external payment, real financial loss or full settlement algorithm acceptance",
+    "G fix candidate and regression not yet available"
+  ]
+}

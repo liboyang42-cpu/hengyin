@@ -25,6 +25,7 @@ let toasts
 let lastOperation
 let mediaSuccess
 let server
+let storage
 
 function setByPath(target, rawPath, value) {
   const parts = rawPath.split('.')
@@ -63,6 +64,11 @@ function makeServer() {
   }
   s.view = () => ({
     sessionId: s.sessionId,
+    nodeId: 51,
+    topicId: 10,
+    activityId: 0,
+    ownerType: 1,
+    ownerId: 9,
     version: s.version,
     status: 'RUNNING',
     readyForBase: true,
@@ -136,9 +142,9 @@ function makeAppStub() {
 }
 
 global.Behavior = (config) => config
-global.wx = {  getStorageSync: () => '',
-  setStorageSync() {},
-  removeStorageSync() {},
+global.wx = {  getStorageSync: key => storage.get(key),
+  setStorageSync(key, value) { storage.set(key, value) },
+  removeStorageSync(key) { storage.delete(key) },
   getWindowInfo: () => ({ statusBarHeight: 20 }),
   getSystemInfoSync: () => ({ statusBarHeight: 20 }),
   showLoading() {},
@@ -165,6 +171,7 @@ beforeEach(() => {
   lastOperation = null
   mediaSuccess = null
   server = makeServer()
+  storage = new Map()
   global.getApp = makeAppStub
 })
 
@@ -196,6 +203,10 @@ function loadChain() {
   delete require.cache[require.resolve(ADVANCED_GAME)]
   require(ADVANCED_GAME)
   const advanced = instance(advancedConfig)
+  // Component properties are supplied by the real host; definition.data alone omits them.
+  advanced.data.node = { nodeId: 51 }
+  advanced.data.topicId = 10
+  advanced.data.activityId = 0
   advanced.triggerEvent = (name, detail) => {
     if (name === 'session') page.onAdvancedSession({ detail })
   }

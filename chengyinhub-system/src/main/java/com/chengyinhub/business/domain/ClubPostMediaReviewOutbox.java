@@ -10,6 +10,12 @@ public class ClubPostMediaReviewOutbox {
     public static final int STATE_RETRYABLE = 3;
     public static final int STATE_STALE = 4;
     public static final int STATE_POISONED = 5;
+    /** Existing stopped state; reason distinguishes invalid input, exhausted budget and UNKNOWN. */
+    public static final int STATE_MANUAL_REVIEW = STATE_POISONED;
+    public static final int MAX_ATTEMPTS = 5;
+    public static final String PRE_DISPATCH_UNAVAILABLE = "PRE_DISPATCH_UNAVAILABLE";
+    public static final String OUTCOME_UNKNOWN = "REVIEW_OUTCOME_UNKNOWN";
+    public static final String ATTEMPTS_EXHAUSTED = "REVIEW_ATTEMPTS_EXHAUSTED";
 
     private Long id;
     private Long postId;

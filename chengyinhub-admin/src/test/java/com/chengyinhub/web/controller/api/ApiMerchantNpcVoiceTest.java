@@ -45,10 +45,12 @@ class ApiMerchantNpcVoiceTest {
     private static final Long MERCHANT_ID = 11L;
     private static final Long NPC_ID = 42L;
     private static final String SAMPLE = "https://cdn.example.com/voice/sample.mp3";
+    private static final String CANONICAL_SAMPLE = "media-asset:41";
 
     private NpcProfileMapper npcProfileMapper;
     private VoiceCloneClient voiceClient;
     private ApiMerchantController controller;
+    private com.chengyinhub.business.service.ai.NpcVoiceEnrollmentFixture enrollment;
 
 
     private static final String REGISTRY_AUDIO_KEY = "upload/0123456789abcdef0123456789abcdef.mp3";
@@ -69,7 +71,7 @@ class ApiMerchantNpcVoiceTest {
         actualAudioRegistry("APPROVED");
         for (int state : new int[]{1,2}) {
             NpcProfile row = new NpcProfile();
-            row.setId(NPC_ID); row.setScopeId(MERCHANT_ID);
+            row.setId(NPC_ID); row.setScopeType(2); row.setScopeId(MERCHANT_ID);
             row.setVoiceSample(REGISTRY_AUDIO_REF); row.setVoiceStatus(state);
             when(npcProfileMapper.selectMerchantNpcList(MERCHANT_ID, null)).thenReturn(new ArrayList<>(Arrays.asList(row)));
             for (String signature : new String[]{"x", "y"}) {
@@ -84,7 +86,7 @@ class ApiMerchantNpcVoiceTest {
     @Test void heldSampleCannotUseExistingVoiceStateAsAnApprovalBypass() {
         actualAudioRegistry("HOLD");
         NpcProfile row = new NpcProfile();
-        row.setId(NPC_ID); row.setScopeId(MERCHANT_ID);
+        row.setId(NPC_ID); row.setScopeType(2); row.setScopeId(MERCHANT_ID);
         row.setVoiceSample(REGISTRY_AUDIO_REF); row.setVoiceStatus(2);
         when(npcProfileMapper.selectMerchantNpcList(MERCHANT_ID, null)).thenReturn(new ArrayList<>(Arrays.asList(row)));
         org.junit.jupiter.api.Assertions.assertThrows(com.chengyinhub.common.exception.ServiceException.class,
@@ -96,7 +98,7 @@ class ApiMerchantNpcVoiceTest {
     @Test void newApprovedSampleStoresCanonicalReferenceAndSignsOnlyOnceBeforeMockProviderCall() {
         actualAudioRegistry("APPROVED");
         NpcProfile row = new NpcProfile();
-        row.setId(NPC_ID); row.setScopeId(MERCHANT_ID);
+        row.setId(NPC_ID); row.setScopeType(2); row.setScopeId(MERCHANT_ID);
         when(npcProfileMapper.selectMerchantNpcList(MERCHANT_ID, null)).thenReturn(new ArrayList<>(Arrays.asList(row)));
         when(npcProfileMapper.updateMerchantNpcVoice(any())).thenReturn(1);
         when(voiceClient.usable()).thenReturn(true);
@@ -122,8 +124,8 @@ class ApiMerchantNpcVoiceTest {
         voiceClient = mock(VoiceCloneClient.class);
         controller = new TestableController(MEMBER_ID);
         com.chengyinhub.business.service.support.AppMediaReferenceGuard media = mock(com.chengyinhub.business.service.support.AppMediaReferenceGuard.class);
-        when(media.requireAttachment(MEMBER_ID, SAMPLE, true)).thenReturn(SAMPLE);
-        when(media.processingUrl(SAMPLE, MEMBER_ID, "AUDIO")).thenReturn(SAMPLE);
+        when(media.requireAttachment(MEMBER_ID, SAMPLE, true)).thenReturn(CANONICAL_SAMPLE);
+        when(media.processingUrl(CANONICAL_SAMPLE, MEMBER_ID, "AUDIO")).thenReturn(SAMPLE);
         ReflectionTestUtils.setField(controller, "mediaReferences", media);
 
         IMerchantAccessService accessService = mock(IMerchantAccessService.class);
@@ -135,6 +137,12 @@ class ApiMerchantNpcVoiceTest {
         ReflectionTestUtils.setField(controller, "consentGuard", mock(com.chengyinhub.business.service.ConsentGuard.class));
         ReflectionTestUtils.setField(controller, "voiceCloneClient", voiceClient);
         ReflectionTestUtils.setField(controller, "merchantAccessService", accessService);
+        enrollment = new com.chengyinhub.business.service.ai.NpcVoiceEnrollmentFixture(
+                npcProfileMapper, voiceClient, 2, MERCHANT_ID, () -> {
+                    java.util.List<NpcProfile> list = npcProfileMapper.selectMerchantNpcList(MERCHANT_ID, null);
+                    return list == null || list.isEmpty() ? null : list.get(0);
+                });
+        ReflectionTestUtils.setField(controller, "voiceEnrollmentService", enrollment.service);
     }
 
     @Test
@@ -154,15 +162,17 @@ class ApiMerchantNpcVoiceTest {
         haveOwnNpc();
         when(voiceClient.usable()).thenReturn(true);
         when(npcProfileMapper.updateMerchantNpcVoice(any())).thenReturn(0);
-        assertEquals(500, controller.npcVoiceEnroll(body(SAMPLE)).get(AjaxResult.CODE_TAG));
+        org.junit.jupiter.api.Assertions.assertThrows(
+                com.chengyinhub.business.service.ai.NpcVoiceEnrollmentService.StateUnavailableException.class,
+                () -> controller.npcVoiceEnroll(body(SAMPLE)));
         verify(voiceClient, never()).enroll(anyString());
     }
 
     @Test
     void retryOfSameCompletedSampleDoesNotEnrollAgain() throws Exception {
         NpcProfile mine = new NpcProfile();
-        mine.setId(10L); mine.setScopeId(MERCHANT_ID);
-        mine.setVoiceStatus(2); mine.setVoiceSample(SAMPLE);
+        mine.setId(10L); mine.setScopeType(2); mine.setScopeId(MERCHANT_ID);
+        mine.setVoiceStatus(2); mine.setVoiceSample(CANONICAL_SAMPLE); mine.setVoiceId("existing");
         when(npcProfileMapper.selectMerchantNpcList(MERCHANT_ID, null))
                 .thenReturn(new ArrayList<>(Arrays.asList(mine)));
         assertEquals(2, controller.npcVoiceEnroll(body(SAMPLE)).get("voiceStatus"));
@@ -172,7 +182,7 @@ class ApiMerchantNpcVoiceTest {
 
     private void haveOwnNpc() {
         NpcProfile mine = new NpcProfile();
-        mine.setId(NPC_ID);
+        mine.setId(NPC_ID); mine.setScopeType(2);
         mine.setScopeId(MERCHANT_ID);
         when(npcProfileMapper.selectMerchantNpcList(MERCHANT_ID, null))
                 .thenReturn(new ArrayList<>(Arrays.asList(mine)));
@@ -211,11 +221,13 @@ class ApiMerchantNpcVoiceTest {
         order.verify(voiceClient).enroll(SAMPLE);
 
         ArgumentCaptor<NpcProfile> cap = ArgumentCaptor.forClass(NpcProfile.class);
-        verify(npcProfileMapper, times(2)).updateMerchantNpcVoice(cap.capture());
+        verify(npcProfileMapper, times(3)).updateMerchantNpcVoice(cap.capture());
         assertEquals(Integer.valueOf(1), cap.getAllValues().get(0).getVoiceStatus());
         assertNull(cap.getAllValues().get(0).getVoiceId(), "复刻中不该有音色 id");
-        assertEquals(Integer.valueOf(2), cap.getAllValues().get(1).getVoiceStatus());
+        assertEquals(Integer.valueOf(1), cap.getAllValues().get(1).getVoiceStatus());
         assertEquals("cosyvoice-v2-chengyin-abc", cap.getAllValues().get(1).getVoiceId());
+        assertEquals(Integer.valueOf(2), cap.getAllValues().get(2).getVoiceStatus());
+        assertEquals("cosyvoice-v2-chengyin-abc", cap.getAllValues().get(2).getVoiceId());
     }
 
     @Test
@@ -236,19 +248,35 @@ class ApiMerchantNpcVoiceTest {
     }
 
     @Test
-    void enrollMarksFailedWhenUpstreamRejects() throws Exception {
+    void enrollRecordsUnknownWhenUpstreamResponseIsUnconfirmed() throws Exception {
         haveOwnNpc();
         when(voiceClient.usable()).thenReturn(true);
         when(voiceClient.enroll(SAMPLE)).thenThrow(new AiServiceException("录音太短"));
-
         AjaxResult r = controller.npcVoiceEnroll(body(SAMPLE));
+        assertEquals(200, r.get(AjaxResult.CODE_TAG));
+        assertEquals("UNKNOWN", r.get("voiceIntentState"));
+        assertEquals("VOICE_PROVIDER_OUTCOME_UNKNOWN", r.get("voiceReasonCode"));
+        ArgumentCaptor<NpcProfile> cap = ArgumentCaptor.forClass(NpcProfile.class);
+        verify(npcProfileMapper).updateMerchantNpcVoice(cap.capture());
+        assertEquals(Integer.valueOf(1), cap.getValue().getVoiceStatus());
+        assertNull(cap.getValue().getVoiceId());
+        assertEquals(r.get("voiceIntentId"), controller.npcVoiceEnroll(body(SAMPLE)).get("voiceIntentId"));
+        verify(voiceClient, times(1)).enroll(SAMPLE);
+    }
 
-        assertEquals(500, r.get(AjaxResult.CODE_TAG));
-        assertEquals("录音太短", r.get(AjaxResult.MSG_TAG));   // 上游的拒绝原因要原样带回
+    @Test
+    void trustedNotSentRetainsKnownFailedStatusWithoutAnotherAttempt() {
+        haveOwnNpc();
+        when(voiceClient.usable()).thenReturn(true);
+        when(voiceClient.enroll(SAMPLE)).thenThrow(new AiServiceException("local admission", new com.chengyinhub.business.service.ai.AiProviderNotSentException()));
+        AjaxResult r = controller.npcVoiceEnroll(body(SAMPLE));
+        assertEquals("NOT_SENT", r.get("voiceIntentState"));
         ArgumentCaptor<NpcProfile> cap = ArgumentCaptor.forClass(NpcProfile.class);
         verify(npcProfileMapper, times(2)).updateMerchantNpcVoice(cap.capture());
         assertEquals(Integer.valueOf(3), cap.getAllValues().get(1).getVoiceStatus());
-        assertNull(cap.getAllValues().get(1).getVoiceId(), "失败了不能留下音色 id");
+        assertNull(cap.getAllValues().get(1).getVoiceId(), "明确未派发没有新的音色 id");
+        assertEquals(r.get("voiceIntentId"), controller.npcVoiceEnroll(body(SAMPLE)).get("voiceIntentId"));
+        verify(voiceClient, times(1)).enroll(SAMPLE);
     }
 
     // ===== 入参 =====
@@ -293,7 +321,7 @@ class ApiMerchantNpcVoiceTest {
     @Test
     void enrollRefusesRowOwnedByAnotherMerchant() throws Exception {
         NpcProfile other = new NpcProfile();
-        other.setId(999L);
+        other.setId(999L); other.setScopeType(2);
         other.setScopeId(MERCHANT_ID + 1);
         when(npcProfileMapper.selectMerchantNpcList(MERCHANT_ID, null))
                 .thenReturn(new ArrayList<>(Arrays.asList(other)));
@@ -311,7 +339,7 @@ class ApiMerchantNpcVoiceTest {
     @Test
     void statusPromotesPendingToReadyWhenUpstreamSaysSo() throws Exception {
         NpcProfile mine = new NpcProfile();
-        mine.setId(NPC_ID);
+        mine.setId(NPC_ID); mine.setScopeType(2);
         mine.setScopeId(MERCHANT_ID);
         mine.setVoiceId("v-1");
         mine.setVoiceStatus(1);
@@ -329,7 +357,7 @@ class ApiMerchantNpcVoiceTest {
     @Test
     void statusKeepsPendingWhenUpstreamIsDown() throws Exception {
         NpcProfile mine = new NpcProfile();
-        mine.setId(NPC_ID);
+        mine.setId(NPC_ID); mine.setScopeType(2);
         mine.setScopeId(MERCHANT_ID);
         mine.setVoiceId("v-1");
         mine.setVoiceStatus(1);

@@ -1,0 +1,15 @@
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java
+@@ -188,2 +188,4 @@
+     @Autowired
++    private com.chengyinhub.business.mapper.RegistrationSeatMapper registrationSeatMapper;
++    @Autowired
+     private CoopGroupMemberVerifyMapper coopGroupMemberVerifyMapper;
+@@ -3138,2 +3140,7 @@
+         }
++        if (current.getOrderNum() != null && current.getOrderNum() > 1
++                && registrationSeatMapper.selectByRegistrationForUpdate(registrationId).stream()
++                    .anyMatch(seat -> Integer.valueOf(1).equals(seat.getStatus()))) {
++            throw new IllegalStateException("该订单有逐席位核销事实，请走席位售后核验，不能整单清除核销状态");
++        }
+         if (!Integer.valueOf(1).equals(current.getVerificationStatus())) {

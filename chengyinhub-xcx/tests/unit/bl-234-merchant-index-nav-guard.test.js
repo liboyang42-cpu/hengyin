@@ -39,7 +39,7 @@ const CASES = [
   ['goApplicationProgress', undefined, '/pages/merchant/apply/index'],
   ['goPredictInbox', undefined, '/pages/merchant/predict/index'],
   ['goEvent', { currentTarget: { dataset: { type: 'income' } } }, '/pages/merchant/ledger/index?view=settlement'],
-  ['goFinance', undefined, '/pages/merchant/ledger/index?view=settlement'],
+  ['goFinance', undefined, '/subpackageA/pages/assetcenter/earnings/index?theme=merchant'], // 2026-10-28 M-32:财务先进账户收益浅色版
   ['goBrandManage', undefined, '/pages/merchant/decor/index'],
   ['goCustomers', undefined, '/pages/merchant/customer/index'],
   ['goProjectMessages', { currentTarget: { dataset: { ownertype: 1, ownerid: 7 } } }, '/pages/merchant/ledger/index?view=messages&ownerType=1&ownerId=7'],

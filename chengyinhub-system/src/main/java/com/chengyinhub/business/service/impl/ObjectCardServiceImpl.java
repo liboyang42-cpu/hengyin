@@ -100,6 +100,7 @@ public class ObjectCardServiceImpl implements ObjectCardService {
     @Override
     public PlayerObjectCard mint(Long memberId, String sourceUrl, JsonNode photoCheck,
             String originType, String originId) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         if (memberId == null || memberId <= 0) {
             throw new IllegalArgumentException("请先登录");
         }

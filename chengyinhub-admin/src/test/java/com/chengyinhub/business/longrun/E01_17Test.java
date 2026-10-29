@@ -1,5 +1,12 @@
 package com.chengyinhub.business.longrun;
 
+import com.chengyinhub.business.domain.CmsActivity;
+import com.chengyinhub.business.domain.dto.RegistrationCancellationPayments;
+import com.chengyinhub.business.mapper.CmsActivityMapper;
+import com.chengyinhub.business.mapper.CmsTopicMapper;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
+import org.springframework.test.util.ReflectionTestUtils;
+
 import com.chengyinhub.business.access.club.ClubAccessContext;
 import com.chengyinhub.business.access.club.ClubPermission;
 import com.chengyinhub.business.access.club.ClubRoleCode;
@@ -59,6 +66,7 @@ class E01_17Test {
         JdbcTemplate jdbc = new JdbcTemplate(source);
         schema(jdbc);
         seed(jdbc);
+        jdbc.update("update cms_activity set member_id=? where id=?", OWNER, ACTIVITY);
         Configuration config = new Configuration(new Environment("e01-17", new SpringManagedTransactionFactory(), source));
         config.getTypeAliasRegistry().registerAliases("com.chengyinhub.business.domain");
         String resource = "mapper/business/ClubEventOpsMapper.xml";
@@ -91,8 +99,20 @@ class E01_17Test {
                 new ClubAccessContext(ACTOR, CLUB, OWNER, ACTIVITY, Collections.singleton(ClubRoleCode.CLUB_CO_OWNER)));
         AtomicBoolean refundCalled = new AtomicBoolean();
         ITeamGroupService refundStub = mock(ITeamGroupService.class);
-        when(refundStub.cancelActivityByClubOperator(ACTIVITY, OWNER, ACTOR, "场地临时关闭")).thenAnswer(call -> {
+        RegistrationCancellationPayments payments = new RegistrationCancellationPayments(java.util.List.of(
+                new RegistrationCancellationPayments.Scope(2L, ACTIVITY, null, OWNER, CLUB, java.util.List.of())));
+        when(refundStub.captureCancellationPayments(2L, ACTIVITY)).thenAnswer(call -> {
             assertTrue(TransactionSynchronizationManager.isActualTransactionActive());
+            assertTrue(TransactionSynchronizationManager.hasResource(source));
+            return payments;
+        });
+        when(refundStub.observeCancellationPayments(payments)).thenAnswer(call -> {
+            assertFalse(TransactionSynchronizationManager.isActualTransactionActive());
+            return payments; // 已付款领域夹具没有需要 SDK 查证的 PAYING 原单。
+        });
+        when(refundStub.cancelActivityWithObservedPayments(ACTIVITY, OWNER, ACTOR, "场地临时关闭", false, payments)).thenAnswer(call -> {
+            assertTrue(TransactionSynchronizationManager.isActualTransactionActive());
+            assertTrue(TransactionSynchronizationManager.hasResource(source));
             refundCalled.set(true);
             // Existing registered recipients stop matching the live recipient query.
             jdbc.update("update cms_registration set payment_status=3,registration_status=3 "
@@ -107,9 +127,29 @@ class E01_17Test {
         ClubEventOpsServiceImpl target = new ClubEventOpsServiceImpl(access, new ClubEventScheduleMaterializer(),
                 mock(IClubSessionService.class), mapper, mock(ClubMemberMapper.class), mock(ClubLeadMapper.class),
                 mock(IClubRoleAssignmentService.class), refundStub);
+        DataSourceTransactionManager transactions = new DataSourceTransactionManager(source);
+        ReflectionTestUtils.setField(target, "cancellationTransactions", transactions);
+        CmsActivityMapper activities = mock(CmsActivityMapper.class);
+        when(activities.selectCmsActivityById(ACTIVITY)).thenAnswer(call -> {
+            java.util.List<CmsActivity> current = jdbc.query(
+                    "select id,member_id,club_id,topic_id from cms_activity where id=?",
+                    new BeanPropertyRowMapper<>(CmsActivity.class), ACTIVITY);
+            return current.isEmpty() ? null : current.getFirst();
+        });
+        when(activities.selectCmsActivityByIdForUpdate(ACTIVITY)).thenAnswer(call -> {
+            assertTrue(TransactionSynchronizationManager.isActualTransactionActive());
+            assertTrue(TransactionSynchronizationManager.hasResource(source));
+            java.util.List<CmsActivity> current = jdbc.query(
+                    "select id,member_id,club_id,topic_id from cms_activity where id=? for update",
+                    new BeanPropertyRowMapper<>(CmsActivity.class), ACTIVITY);
+            return current.isEmpty() ? null : current.getFirst();
+        });
+        ReflectionTestUtils.setField(target, "cancellationActivityMapper", activities);
+        // 原夹具是无父主题场次，series.topicId 与当前活动 topic_id 都保持 null。
+        ReflectionTestUtils.setField(target, "cancellationTopicMapper", mock(CmsTopicMapper.class));
         ProxyFactory proxy = new ProxyFactory(target);
         proxy.setInterfaces(IClubEventOpsService.class);
-        proxy.addAdvice(new TransactionInterceptor(new DataSourceTransactionManager(source), new AnnotationTransactionAttributeSource()));
+        proxy.addAdvice(new TransactionInterceptor(transactions, new AnnotationTransactionAttributeSource()));
         IClubEventOpsService service = (IClubEventOpsService) proxy.getProxy();
         ClubEventCancellationRequest request = new ClubEventCancellationRequest();
         request.setClubId(CLUB); request.setActivityId(ACTIVITY); request.setReason("场地临时关闭");
@@ -147,7 +187,7 @@ class E01_17Test {
     }
 
     private void schema(JdbcTemplate jdbc) {
-        jdbc.execute("create table cms_activity(id bigint primary key,club_id bigint,del_flag int,status int,"
+        jdbc.execute("create table cms_activity(id bigint primary key,club_id bigint,member_id bigint,topic_id bigint,del_flag int,status int,"
                 + "publish_status int,cancel_time timestamp)");
         jdbc.execute("create table cms_registration(id bigint primary key,owner_type int,owner_id bigint,"
                 + "member_id bigint,payment_status int,registration_status int)");

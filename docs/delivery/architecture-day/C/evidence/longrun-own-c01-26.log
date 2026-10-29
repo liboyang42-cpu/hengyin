@@ -1,0 +1,13 @@
+✔ old scanner and picker cannot submit for replacement game (39.473696ms)
+✔ submitPhoto cannot send after thought wait changes scope (6.328504ms)
+✔ submitGame cannot send after thought wait changes scope (5.819066ms)
+✔ revealAnswer cannot send after thought wait changes scope (4.07028ms)
+✔ old photo response cannot finish replacement game or release its write lock (9.614407ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 70.032038

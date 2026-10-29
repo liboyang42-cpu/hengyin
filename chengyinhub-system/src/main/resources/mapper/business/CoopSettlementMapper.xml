@@ -6,6 +6,7 @@
 
     <resultMap type="CoopSettlement" id="CoopSettlementResult">
         <result property="id"    column="id"    />
+        <result property="cashHeadKind" column="cash_head_kind"/>
         <result property="settlementRoute" column="settlement_route"/>
         <result property="sourceContractType" column="source_contract_type"/>
         <result property="sourceContractId" column="source_contract_id"/>
@@ -42,6 +43,16 @@
         line_type, payee_type, create_time, del_flag
     </sql>
 
+    <select id="selectByClaimId" resultMap="CoopSettlementResult" useCache="false" flushCache="true">
+        select <include refid="cols"/> from coop_settlement
+        where exists (select 1 from coop_settlement_detail d
+                      where d.settlement_id = coop_settlement.id and d.claim_id = #{claimId})
+    </select>
+
+    <select id="selectByIdForUpdate" resultMap="CoopSettlementResult" useCache="false" flushCache="true">
+        select <include refid="cols"/> from coop_settlement where id = #{id} for update
+    </select>
+
     <!-- D1 历史 type2 仅保留只读展示：既有合作单衍生的结算也不得再发生状态或资金写入。 -->
     <sql id="excludeLegacyType2Settlement">
         and not exists (
@@ -56,6 +67,7 @@
     <insert id="insertCoopSettlement" parameterType="CoopSettlement" useGeneratedKeys="true" keyProperty="id">
         insert into coop_settlement
         <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="cashHeadKind != null">cash_head_kind,</if>
             <if test="settlementRoute != null">settlement_route,</if>
             <if test="sourceContractType != null">source_contract_type,</if>
             <if test="sourceContractId != null">source_contract_id,</if>
@@ -84,6 +96,7 @@
             <if test="payeeType != null">payee_type,</if>
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="cashHeadKind != null">#{cashHeadKind},</if>
             <if test="settlementRoute != null">#{settlementRoute},</if>
             <if test="sourceContractType != null">#{sourceContractType},</if>
             <if test="sourceContractId != null">#{sourceContractId},</if>

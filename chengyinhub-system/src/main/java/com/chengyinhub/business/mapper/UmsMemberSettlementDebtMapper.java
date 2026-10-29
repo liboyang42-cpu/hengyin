@@ -11,6 +11,9 @@ public interface UmsMemberSettlementDebtMapper {
     /** 同一来源 + 收款方只记一次(uk_debt_source)。 */
     int insertIgnore(UmsMemberSettlementDebt debt);
 
+    UmsMemberSettlementDebt selectBySourceForUpdate(@Param("memberId") Long memberId,
+            @Param("sourceType") String sourceType, @Param("sourceId") Long sourceId);
+
     List<UmsMemberSettlementDebt> selectOpenByMemberForUpdate(@Param("memberId") Long memberId);
 
     /** 抵扣 amount;抵满即置已清。超抵(repaid > amount)的更新命中 0 行。 */

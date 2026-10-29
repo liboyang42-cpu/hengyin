@@ -25,13 +25,14 @@ public class TopicRoutePublishGate {
         JsonNode root = read(normalizedConfigJson);
         JsonNode edges = root.path("edges");
         if (edges.isArray()) {
-            for (JsonNode edge : edges) assertEdgeHasFixture(normalizedConfigJson, root, edges, edge);
+            for (int index = 0; index < edges.size(); index++)
+                assertEdgeHasFixture(normalizedConfigJson, root, edges, edges.get(index), index);
         }
         assertFallbackFixtures(normalizedConfigJson, root.path("fallbacks"),
                 realityGatedNodeIds(root.path("nodeRequirements")));
     }
 
-    private void assertEdgeHasFixture(String configJson, JsonNode root, JsonNode edges, JsonNode target) {
+    private void assertEdgeHasFixture(String configJson, JsonNode root, JsonNode edges, JsonNode target, int index) {
         String edgeId = target.path("id").asText();
         long from = target.path("fromNodeId").asLong();
         String triggerType = target.path("trigger").path("type").asText();
@@ -52,15 +53,15 @@ public class TopicRoutePublishGate {
         applyPositiveFacts(base, target.path("conditions"));
 
         Map<String, List<Double>> domains = variableDomains(root, competing, target.path("conditions"));
-        if (domains == null) throw unreachable(edgeId);
+        if (domains == null) throw unreachable(edgeId, target, index);
         List<String> names = new ArrayList<String>(domains.keySet());
         int[] attempts = new int[] { 0 };
         if (!hasFixture(configJson, edgeId, triggerType, outcomeCode, from, base,
                 names, domains, 0, attempts)) {
             if (attempts[0] >= MAX_FIXTURES_PER_EDGE) {
-                throw new IllegalArgumentException("路线 edge " + edgeId + " 的条件组合过于复杂，无法确定性验收");
+                throw new IllegalArgumentException("路线 edge " + edgeId + " 的条件组合过于复杂，无法确定性验收" + edgeLocation(target, index));
             }
-            throw unreachable(edgeId);
+            throw unreachable(edgeId, target, index);
         }
     }
 
@@ -150,12 +151,13 @@ public class TopicRoutePublishGate {
 
     private void assertFallbackFixtures(String configJson, JsonNode fallbacks, Set<Long> realityGatedNodeIds) {
         if (!fallbacks.isArray()) return;
-        for (JsonNode fallback : fallbacks) {
+        for (int index = 0; index < fallbacks.size(); index++) {
+            JsonNode fallback = fallbacks.get(index);
             long from = fallback.path("fromNodeId").asLong();
             long to = fallback.path("toNodeId").asLong();
             if (realityGatedNodeIds.contains(to)) {
                 throw new IllegalArgumentException("路线 fallback " + from + "->" + to
-                        + " 的目标受现实门禁约束，无法保证安全回退");
+                        + " 的目标受现实门禁约束，无法保证安全回退" + fallbackLocation(index));
             }
             TopicRouteEngine.State state = engine.initial(configJson);
             state.setCurrentNodeId(from);
@@ -165,11 +167,11 @@ public class TopicRoutePublishGate {
                 decision = engine.advance(configJson, state, "PUBLISH_GATE_FALLBACK",
                         new NodeOutcome(from, "FALLBACK", "publish-fallback:" + from), 0L);
             } catch (RuntimeException error) {
-                throw new IllegalArgumentException("路线 fallback " + from + "->" + to + " 没有确定性可达状态夹具", error);
+                throw new IllegalArgumentException("路线 fallback " + from + "->" + to + " 没有确定性可达状态夹具" + fallbackLocation(index), error);
             }
             if (!"FALLBACK".equals(decision.getReason())
                     || !Long.valueOf(to).equals(decision.getState().getCurrentNodeId())) {
-                throw new IllegalArgumentException("路线 fallback " + from + "->" + to + " 没有确定性可达状态夹具");
+                throw new IllegalArgumentException("路线 fallback " + from + "->" + to + " 没有确定性可达状态夹具" + fallbackLocation(index));
             }
         }
     }
@@ -202,8 +204,18 @@ public class TopicRoutePublishGate {
         }
     }
 
-    private IllegalArgumentException unreachable(String edgeId) {
-        return new IllegalArgumentException("路线 edge " + edgeId + " 没有确定性可达状态夹具");
+    private IllegalArgumentException unreachable(String edgeId, JsonNode edge, int index) {
+        return new IllegalArgumentException("路线 edge " + edgeId + " 没有确定性可达状态夹具"
+                + edgeLocation(edge, index));
+    }
+
+    private String edgeLocation(JsonNode edge, int index) {
+        return " [path=routeGraphJson.edges[" + index + "], fromNodeId="
+                + edge.path("fromNodeId").asLong() + ", toNodeId=" + edge.path("toNodeId").asLong() + "]";
+    }
+
+    private String fallbackLocation(int index) {
+        return " [path=routeGraphJson.fallbacks[" + index + "]]";
     }
 
     private JsonNode read(String raw) {

@@ -89,7 +89,7 @@ public class GameplayTemplateSlotRuntimeTest {
     private void run(CmsTopic topic, long nodeId, int hp, int value, String item) throws Exception {
         runtime.state(7L, topic.getId(), 0L);
         TopicRouteSession session = sessions.get(topic.getId());
-        runtime.recordPlayerArrival(7L, topic.getId(), 0L, nodeId, "scan", null);
+        runtime.recordPlayerArrival(7L, topic.getId(), 0L, nodeId, "scan-"+nodeId+"-"+session.getVersion(),session.getVersion());
         String quest = "node_" + nodeId;
         runtime.gameplayAction(7L, session.getId(), session.getVersion(), "start", "QUEST_START", quest, null);
         runtime.gameplayAction(7L, session.getId(), session.getVersion(), "resolve", "QUEST_RESOLVE", quest, null);
@@ -166,7 +166,7 @@ public class GameplayTemplateSlotRuntimeTest {
             definition.with("gameplayRuntime").putObject("survival").put("zeroHpPolicy","BLOCK_HP_COST").put("actionLimitPolicy","BLOCK_OVERFLOW").put("consumeOnNoEffect",consume);
             topic.setThemeRuntimeConfigJson(definition.toString());publish(topic);
             long nodeId=topic.getId()+1;runtime.state(7L,topic.getId(),0L);TopicRouteSession session=sessions.get(topic.getId());
-            runtime.recordPlayerArrival(7L,topic.getId(),0L,nodeId,"scan",null);
+            runtime.recordPlayerArrival(7L,topic.getId(),0L,nodeId,"scan-"+nodeId+"-"+session.getVersion(),session.getVersion());
             runtime.gameplayAction(7L,session.getId(),session.getVersion(),"start","QUEST_START","node_"+nodeId,null);
             ObjectNode full=(ObjectNode)JSON.readTree(session.getStateJson());full.with("variables").put("sys.hp",10).put("counter.x",10);session.setStateJson(full.toString());
             runtime.gameplayAction(7L,session.getId(),session.getVersion(),"resolve","QUEST_RESOLVE","node_"+nodeId,null);
@@ -301,7 +301,7 @@ public class GameplayTemplateSlotRuntimeTest {
         template.setAdvancedConfigJson(new AdvancedGameConfigValidator().validateAndNormalize(config.toString()));
         CmsTopic topic = topics.get(10L); JsonNode frozen = publish(topic);
         runtime.state(7L, 10L, 0L); TopicRouteSession session = sessions.get(10L);
-        runtime.recordPlayerArrival(7L, 10L, 0L, 11L, "scan", null);
+        runtime.recordPlayerArrival(7L, 10L, 0L, 11L, "scan",session.getVersion());
         runtime.gameplayAction(7L, session.getId(), session.getVersion(), "start", "QUEST_START", "node_11", null);
         if (!"scan".equals(key)) {
             JsonNode answers = GameplaySupportMatrixTest.answers(key);
@@ -410,7 +410,7 @@ public class GameplayTemplateSlotRuntimeTest {
         topic.setThemeRuntimeConfigJson(author.toString()); publish(topic); runtime.state(7L, 10L, 0L);
         TopicRouteSession session = sessions.get(10L);
         for (long id : new long[]{11, 12}) {
-            runtime.recordPlayerArrival(7L, 10L, 0L, id, "scan", null);
+            runtime.recordPlayerArrival(7L, 10L, 0L, id, "scan-"+id+"-"+session.getVersion(),session.getVersion());
             runtime.gameplayAction(7L, session.getId(), session.getVersion(), "start" + id, "QUEST_START", "node_" + id, null);
             runtime.gameplayAction(7L, session.getId(), session.getVersion(), "resolve" + id, "QUEST_RESOLVE", "node_" + id, null);
         }

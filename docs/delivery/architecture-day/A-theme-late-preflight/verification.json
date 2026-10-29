@@ -1,0 +1,15 @@
+{
+  "baseline": "40fdffaa345c4c239553f54f36a4ae9147191a1b",
+  "old_escape_witness": "STATIC_ONLY; INPUT_REJECTED retain path; no production incident or executed old JUnit failure",
+  "old_stage_review_cases": "ALREADY_WRAPPED; not represented as old red tests",
+  "production_delta": "8 added/2 replaced lines; post-consumption local-type catch only",
+  "creator_shared_exception_original_37_original_66": "BYTE_PRESERVED",
+  "new_unit_source_expected_cases": 13,
+  "java_compile": "NOT_RUN_E_PLAN_REQUIRED",
+  "java_junit_executed": 0,
+  "mysql_provider_ci_dispatches": 0,
+  "complete_delta_apply_check": "PASS_TEMPORARY_INDEX",
+  "secret_file_gate_and_limited_patterns": "PASS; includes decompressed patch, not full entropy/history scan",
+  "diff_check": "PASS",
+  "business_policy_changes": "NONE"
+}

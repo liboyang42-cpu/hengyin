@@ -1,0 +1,27 @@
+.....F.E
+======================================================================
+ERROR: test_task_dictionary_forward_is_selected_by_supported_fresh_builder (ci.test_prelaunch_business_seeds.MissingBusinessSeedsContract.test_task_dictionary_forward_is_selected_by_supported_fresh_builder)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/hengyin-f-migration-layout/ci/test_prelaunch_business_seeds.py", line 139, in test_task_dictionary_forward_is_selected_by_supported_fresh_builder
+    manifest = build_schema.build_manifest(ROOT, target_commit="a" * 40,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/hengyin-f-migration-layout/ci/migration_ledger.py", line 403, in build_manifest
+    raise LedgerError("SQL inventory is unsafe", inventory["problems"])
+ci.migration_ledger.LedgerError: SQL inventory is unsafe
+
+======================================================================
+FAIL: test_source_hashes_and_real_controller_permissions (ci.test_prelaunch_business_seeds.MissingBusinessSeedsContract.test_source_hashes_and_real_controller_permissions)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/hengyin-f-migration-layout/ci/test_prelaunch_business_seeds.py", line 25, in test_source_hashes_and_real_controller_permissions
+    self.assertEqual(sha, hashlib.sha256((ROOT / path).read_bytes()).hexdigest(), path)
+AssertionError: '8c2953bf9e1f429215d1c97cb4b4add01c78143ee4ed02e80adeb041c619f141' != '3e901e9d8777fbd529101db064cd040e5f81590635243bc239d999fe54c6b7a8'
+- 8c2953bf9e1f429215d1c97cb4b4add01c78143ee4ed02e80adeb041c619f141
++ 3e901e9d8777fbd529101db064cd040e5f81590635243bc239d999fe54c6b7a8
+ : chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CashWithdrawAdminController.java
+
+----------------------------------------------------------------------
+Ran 8 tests in 1.784s
+
+FAILED (failures=1, errors=1)

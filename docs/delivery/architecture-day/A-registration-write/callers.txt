@@ -1,0 +1,24 @@
+chengyinhub-ui/src/views/business/registration/index.vue:839:            updateRegistration(this.form).then(response => {
+chengyinhub-ui/src/api/business/registration.js:30:export function updateRegistration(data) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CmsRegistrationMapper.java:163:    public int updateCmsRegistration(CmsRegistration cmsRegistration);
+chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CmsRegistrationMerchantMapper.java:30:    CmsRegistrationMerchant selectForDeletionByIdForUpdate(Long id);
+chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CmsRegistrationMerchantMapper.java:85:    public int deleteCmsRegistrationMerchantById(Long id);
+chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CmsRegistrationMerchantMapper.java:93:    public int deleteCmsRegistrationMerchantByIds(Long[] ids);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:255:    public int updateCmsRegistration(CmsRegistration cmsRegistration) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:257:        return cmsRegistrationMapper.updateCmsRegistration(cmsRegistration);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:772:        updateCmsRegistration(first);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:1996:        cmsRegistrationMapper.updateCmsRegistration(registration);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:2033:        return cmsRegistrationMapper.updateCmsRegistration(registration) > 0;
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:2078:        if (cmsRegistrationMapper.updateCmsRegistration(registration) != 1) {
+chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationMerchantController.java:157:    public AjaxResult updateRegistration(@RequestBody RegistrationMerchantDTO param) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationMerchantServiceImpl.java:193:    public int deleteCmsRegistrationMerchantByIds(Long[] ids)
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationMerchantServiceImpl.java:207:            locked.add(cmsRegistrationMerchantMapper.selectForDeletionByIdForUpdate(id));
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationMerchantServiceImpl.java:219:        int deleted = cmsRegistrationMerchantMapper.deleteCmsRegistrationMerchantByIds(ordered.toArray(new Long[0]));
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationMerchantServiceImpl.java:234:    public int deleteCmsRegistrationMerchantById(Long id)
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationMerchantServiceImpl.java:236:        return deleteCmsRegistrationMerchantByIds(new Long[]{id});
+chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsRegistrationMerchantController.java:249:            return toAjax(cmsRegistrationMerchantService.deleteCmsRegistrationMerchantByIds(ids));
+chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsRegistrationController.java:242:        return toAjax(cmsRegistrationService.updateCmsRegistration(cmsRegistration));
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ICmsRegistrationMerchantService.java:76:    public int deleteCmsRegistrationMerchantByIds(Long[] ids);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ICmsRegistrationMerchantService.java:84:    public int deleteCmsRegistrationMerchantById(Long id);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ICmsRegistrationService.java:58:    public int updateCmsRegistration(CmsRegistration cmsRegistration);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java:1486:            cmsRegistrationMapper.updateCmsRegistration(st);

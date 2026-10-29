@@ -110,6 +110,9 @@ public class ApiMerchantController extends BaseController {
     @Autowired
     private VoiceCloneClient voiceCloneClient;
 
+    @Autowired
+    private com.chengyinhub.business.service.ai.NpcVoiceEnrollmentService voiceEnrollmentService;
+
     private static final int NPC_SCOPE_MERCHANT = 2;
     private static final String NPC_PRESET_PREFIX = "px1:";
     /** persona 是喂给对话模型的系统提示词,商家自己写;上限防止把一次对话的 token 预算撑爆。 */
@@ -832,7 +835,8 @@ public class ApiMerchantController extends BaseController {
         String greeting = body.getGreeting() == null ? null : body.getGreeting().trim();
         // persona 是门店分身的「人设」系统提示词,只有玩家点「和 TA 聊聊」时消费。
         // null = 本次不改;显式空串 = 清空(清空后玩家侧回到「分身还没上线」)。
-        String persona = body.getPersona() == null ? null : body.getPersona().trim();
+        // M-28:性格改为预设(gentle/cute/savage,也认中文标签);旧版自由填写的人设原样保留为 legacy。
+        String persona = com.chengyinhub.business.support.NpcPersonality.normalize(body.getPersona());
         String knowledge = body.getKnowledge() == null ? null : body.getKnowledge().trim();
         if (name == null) return error("请填写形象名字");
         if (name.length() > 32) return error("名字最多 32 个字");
@@ -864,6 +868,12 @@ public class ApiMerchantController extends BaseController {
         save.setGreeting(greeting);
         if (persona != null) save.setPersona(persona);
         if (knowledge != null) save.setKnowledge(knowledge);
+        // M-28 先发后审:文本已同步过内容安全,保存即对玩家生效(玩家读闸只放 audit_status=1);
+        // 上传的形象图随后异步送检,违规由回调打回。唯一例外:被驳回过、且形象图没换的上传图,
+        // 不能靠重新保存绕过机审结论,仍回到待审。
+        boolean keepsRejectedPhoto = mine != null && Integer.valueOf(2).equals(mine.getAuditStatus())
+                && !preset && avatar.equals(mine.getAvatar());
+        save.setAuditStatus(keepsRejectedPhoto ? 0 : 1);
         if (mine == null) {
             save.setScopeType(NPC_SCOPE_MERCHANT);
             save.setScopeId(merchantId);
@@ -871,7 +881,6 @@ public class ApiMerchantController extends BaseController {
             if (save.getPersona() == null) save.setPersona("");
             save.setSort(0);
             save.setEnabled(1);
-            save.setAuditStatus(0);
             if (npcProfileMapper.insertMerchantNpc(save) != 1) return error("形象未保存，请重试");
         } else {
             // 防 IDOR:只按 id 更新等于谁都能改别人的形象。id 从库里查出来,
@@ -960,79 +969,34 @@ public class ApiMerchantController extends BaseController {
         if (mine == null) return error("请先保存形象,再给它配声音");
         sample = mediaReferences.requireAttachment(memberId, sample, true);
         if (sample.length() > 255) return error("录音引用过长");
-        if (sample.equals(mine.getVoiceSample()) && (Integer.valueOf(VOICE_PENDING).equals(mine.getVoiceStatus())
-                || Integer.valueOf(VOICE_READY).equals(mine.getVoiceStatus()))) {
-            AjaxResult existing = AjaxResult.success();
-            existing.put("voiceStatus", mine.getVoiceStatus());
-            return existing;
-        }
-        if (Integer.valueOf(VOICE_PENDING).equals(mine.getVoiceStatus())) return error("声音仍在生成，请稍后再试");
-
-
-        if (!voiceCloneClient.usable()) {
-            // 开关没开时明确说未开通。返回「成功但没声音」会让商家反复重试一件做不到的事。
-            return error("语音服务未开通");
-        }
-
-        String processingSample = mediaReferences.processingUrl(sample, memberId, "AUDIO");
-
-        // 先落「复刻中」再打上游:反过来的话,上游成功但落库失败就成了花了钱没记住,
-        // 而商家看到的是失败、会再点一次,又生成一个音色。
-        NpcProfile pending = new NpcProfile();
-        pending.setId(mine.getId());
-        pending.setScopeId(access.getMerchantId());
-        pending.setVoiceVersion(mine.getVoiceVersion());
-        pending.setVoiceId(null);
-        pending.setVoiceStatus(VOICE_PENDING);
-        pending.setVoiceSample(sample);
-        if (npcProfileMapper.updateMerchantNpcVoice(pending) != 1) {
-            NpcProfile latest = ownNpcOrNull(access.getMerchantId());
-            if (latest != null && sample.equals(latest.getVoiceSample())
-                    && (Integer.valueOf(VOICE_PENDING).equals(latest.getVoiceStatus())
-                        || Integer.valueOf(VOICE_READY).equals(latest.getVoiceStatus()))) {
-                AjaxResult existing = AjaxResult.success();
-                existing.put("voiceStatus", latest.getVoiceStatus());
-                return existing;
-            }
-            return error("声音任务未保存，请重试");
-        }
-
-        String voiceId;
+        final String canonicalSample = sample;
+        NpcProfile result;
         try {
-            voiceId = voiceCloneClient.enroll(processingSample);
-        } catch (AiServiceException e) {
-            NpcProfile failed = new NpcProfile();
-            failed.setId(mine.getId());
-            failed.setScopeId(access.getMerchantId());
-            failed.setVoiceVersion(mine.getVoiceVersion() + 1);
-            failed.setVoiceId(null);
-            failed.setVoiceStatus(VOICE_FAILED);
-            npcProfileMapper.updateMerchantNpcVoice(failed);
-            return error(e.getMessage());
+            result = voiceEnrollmentService.enroll(memberId, NPC_SCOPE_MERCHANT, access.getMerchantId(),
+                    mine.getId(), canonicalSample, body.getVoiceRequestId(), body.getVoicePreviousIntentId(),
+                    Boolean.TRUE.equals(body.getVoiceDuplicateChargeConsent()),
+                    () -> mediaReferences.processingUrl(canonicalSample, memberId, "AUDIO"));
+        } catch (com.chengyinhub.business.service.ai.NpcVoiceEnrollmentService.Rejected rejected) {
+            return error(rejected.getMessage());
         }
-
-        // 刚建好的音色可能还在部署。就绪与否如实落库,不要一律写「可用」——
-        // 那会把「还没好」伪装成「好了」,失败推迟到第一次说话时才暴露。
-        boolean ready;
-        try { ready = voiceCloneClient.isReady(voiceId); }
-        catch (AiServiceException e) { ready = false; }
-
-        NpcProfile done = new NpcProfile();
-        done.setId(mine.getId());
-        done.setScopeId(access.getMerchantId());
-        done.setVoiceVersion(mine.getVoiceVersion() + 1);
-        done.setVoiceId(voiceId);
-        done.setVoiceStatus(ready ? VOICE_READY : VOICE_PENDING);
-        if (npcProfileMapper.updateMerchantNpcVoice(done) != 1) return error("声音结果待确认，请稍后查询状态");
-
-        AjaxResult r = AjaxResult.success(ready ? "声音已就绪" : "声音正在生成,稍后可用");
-        r.put("voiceStatus", ready ? VOICE_READY : VOICE_PENDING);
+        AjaxResult r = AjaxResult.success(Integer.valueOf(VOICE_READY).equals(result.getVoiceStatus())
+                ? "声音已就绪" : "声音结果已记录，请查询原任务");
+        r.put("voiceStatus", result.getVoiceStatus());
+        r.put("voiceSample", result.getVoiceSample());
+        r.put("voicePreviousIntentId", result.getVoicePreviousIntentId());
+        r.put("voiceRequestId", result.getVoiceRequestId());
+        r.put("voiceSelected", result.getVoiceSelected());
+        r.put("voiceIntentId", result.getVoiceIntentId());
+        r.put("voiceIntentState", result.getVoiceIntentState());
+        r.put("voiceReasonCode", result.getVoiceReasonCode());
         return r;
     }
 
     /** 查声音状态。复刻中时前端轮询这里,不要拿合成失败去反推状态。 */
+    public AjaxResult npcVoiceStatus() { return npcVoiceStatus(null); }
+
     @PostMapping("/npc/voice/status")
-    public AjaxResult npcVoiceStatus() {
+    public AjaxResult npcVoiceStatus(@RequestBody(required = false) NpcProfile body) {
         Long memberId;
         try { memberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
         if (memberId == null || memberId < 1) return error("请先登录");
@@ -1045,25 +1009,17 @@ public class ApiMerchantController extends BaseController {
             r.put("voiceStatus", VOICE_NONE);
             return r;
         }
-        int status = mine.getVoiceStatus() == null ? VOICE_NONE : mine.getVoiceStatus();
-        // 还在部署的,顺手问一次上游;上游挂了就保持原状,不要因为查不到就判失败
-        if (status == VOICE_PENDING && mine.getVoiceId() != null && voiceCloneClient.usable()) {
-            try {
-                if (voiceCloneClient.isReady(mine.getVoiceId())) {
-                    NpcProfile upd = new NpcProfile();
-                    upd.setId(mine.getId());
-                    upd.setScopeId(access.getMerchantId());
-                    upd.setVoiceVersion(mine.getVoiceVersion());
-                    upd.setVoiceId(mine.getVoiceId());
-                    upd.setVoiceStatus(VOICE_READY);
-                    if (npcProfileMapper.updateMerchantNpcVoice(upd) == 1) mine.setVoiceStatus(VOICE_READY);
-                }
-            } catch (AiServiceException ignore) {}
-            mine = ownNpcOrNull(access.getMerchantId());
-            status = mine == null || mine.getVoiceStatus() == null ? VOICE_NONE : mine.getVoiceStatus();
-        }
-        r.put("voiceStatus", status);
-        r.put("voiceSample", mine == null ? null : mine.getVoiceSample());
+        mine = voiceEnrollmentService.status(memberId, NPC_SCOPE_MERCHANT, access.getMerchantId(), mine.getId(),
+                body == null ? null : body.getVoiceRequestId());
+        r.put("voiceStatus", mine.getVoiceStatus() == null ? VOICE_NONE : mine.getVoiceStatus());
+        r.put("voiceSample", mine.getVoiceSample());
+        r.put("voicePreviousIntentId", mine.getVoicePreviousIntentId());
+        r.put("voiceRequestId", mine.getVoiceRequestId());
+        r.put("voiceSelected", mine.getVoiceSelected());
+        r.put("voiceHistory", voiceEnrollmentService.history(memberId, NPC_SCOPE_MERCHANT, access.getMerchantId(), mine.getId()));
+        r.put("voiceIntentId", mine.getVoiceIntentId());
+        r.put("voiceIntentState", mine.getVoiceIntentState());
+        r.put("voiceReasonCode", mine.getVoiceReasonCode());
         return r;
     }
 
@@ -1561,14 +1517,14 @@ public class ApiMerchantController extends BaseController {
     }
 
     /**
-     * 与玩家侧「我参与的」同口径:项目结束满 {@link ApiRegistrationController#HIDE_AFTER_END_DAYS}
+     * 与玩家侧「我参与的」同口径:项目结束满 {@link com.chengyinhub.web.service.registration.RegistrationQueryApplication#HIDE_AFTER_END_DAYS}
      * 天即从商家待办里隐去(只隐藏,不删数据)。
      *
      * <p>★ 窗口期直接借玩家侧那个常量,不在这里自留一份 —— 两边各写一个 7,改口径时必然只改一半。
      */
     static boolean endedOverWeek(Date endDate, Date now) {
         if (endDate == null || now == null) return false;
-        long cutoff = now.getTime() - ApiRegistrationController.HIDE_AFTER_END_DAYS * 24L * 60L * 60L * 1000L;
+        long cutoff = now.getTime() - com.chengyinhub.web.service.registration.RegistrationQueryApplication.HIDE_AFTER_END_DAYS * 24L * 60L * 60L * 1000L;
         return endDate.getTime() < cutoff;
     }
 

@@ -74,7 +74,7 @@ class GameplayChapterRuntimeServiceTest {
     private JsonNode stored(long member) throws Exception {return JSON.readTree(sessions.get(member).getStateJson());}
     private void start(long member,long node) {
         TopicRouteSession s=sessions.get(member);
-        runtime.recordPlayerArrival(member,10L,0L,node,"scan",null);
+        runtime.recordPlayerArrival(member,10L,0L,node,"scan-"+(++request),s.getVersion());
         runtime.gameplayAction(member,s.getId(),s.getVersion(),"start"+(++request),"QUEST_START","node_"+node,null);
     }
     private void resolve(long member,long node) {

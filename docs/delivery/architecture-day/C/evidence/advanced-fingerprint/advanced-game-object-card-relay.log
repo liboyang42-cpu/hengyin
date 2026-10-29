@@ -1,0 +1,16 @@
+✔ ★判过的回包带着卡:session 事件把 objectCard 原样抛给页面 (1.731954ms)
+✔ 回包没带卡(老模板 / 没判过 / 回读):objectCard 为 null,不是 undefined (0.248888ms)
+✔ ★提交被服务端拒(非 200):抛 actionfail,带上动作名 (1.647199ms)
+✔ 状态已更新:回读完也抛 actionfail(这一步没提交) (2.556741ms)
+✔ 响应丢失后回读:没写进去 → actionfail;回读也失败 → actionfail (1.506061ms)
+✔ 负控:响应丢失但回读证明已写进去 → 不抛 actionfail(那是成功) (0.341523ms)
+✔ 迟到成功动作回执不回退快照，保留有效成功及当次卡片 (2.487549ms)
+✔ 迟到成功动作回执不回退快照，保留有效成功且不制造卡片 (0.198893ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 18.683839

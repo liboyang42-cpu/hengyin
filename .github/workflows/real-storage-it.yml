@@ -20,6 +20,11 @@ on:
         description: 待验候选的完整 40 位 commit SHA（须已推到本仓库）
         required: true
         type: string
+      old_source_sha:
+        description: 可选，仅M1完整14项对照；旧观察候选完整40SHA，source_sha为新侧
+        required: false
+        default: ''
+        type: string
       batch:
         description: 登记批次（ci/real-storage-it-registry.json）
         required: true
@@ -44,6 +49,47 @@ on:
           - funnel-max-date
           - port-prelaunch-69
           - p0-acceptance-ac1
+          - architecture-day-batch1
+          - architecture-day-wave2
+          - architecture-day-photo
+          - architecture-day-broadcast-migration
+          - architecture-day-settlement
+          - architecture-day-state-recovery
+          - architecture-day-runtime-governance
+          - architecture-day-registration-write
+          - architecture-day-im-revocation
+          - architecture-day-w19-owner-notice
+          - architecture-day-play-scheduler
+          - architecture-day-cash-expand
+          - architecture-day-ai-not-sent
+          - architecture-day-lead-admission
+          - architecture-day-topic-copy
+          - architecture-day-topic-authoring
+          - architecture-day-theme-intent
+          - architecture-day-deposit-attempt
+          - architecture-day-payment-inbox
+          - architecture-day-verified-payment-facts
+          - architecture-day-registration-seats
+          - architecture-day-original-refund
+          - architecture-day-topic-content-budget
+          - architecture-day-committed-official-notice
+          - architecture-day-complaint-committed-notice
+          - architecture-day-complaint-notice-rejection
+          - architecture-day-chapter-application-round
+          - architecture-day-citynode-original-receipt
+          - architecture-day-registration-topic-fence
+          - architecture-day-topic-cash-fence
+          - architecture-day-scheduler-two-process
+          - architecture-day-payment-intent
+          - architecture-day-cash-recovery
+          - architecture-day-npc-voice-asr
+          - architecture-day-clm-commerce-proof
+          - architecture-day-media-retry-budget
+          - architecture-day-before-start-notice
+          - architecture-day-commerce-generic-guard
+          - architecture-day-funds-closure
+          - architecture-day-refund-lifecycle
+          - architecture-day-integrated-changes
       classes:
         description: 可选，只跑批次内这些类（逗号分隔的简单类名），用于失败后定点复跑
         required: false
@@ -62,7 +108,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: real-storage-it-${{ inputs.batch }}-${{ inputs.source_sha }}
+  group: ${{ inputs.old_source_sha != '' && format('rs-m1-pair-{0}-{1}-{2}', inputs.old_source_sha, inputs.source_sha, inputs.timezone) || format('real-storage-it-{0}-{1}', inputs.batch, inputs.source_sha) }}
   cancel-in-progress: false
 
 jobs:
@@ -72,7 +118,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     outputs:
-      matrix: ${{ steps.plan.outputs.matrix }}
+      matrix: ${{ steps.plan.outputs.matrix || steps.pair_plan.outputs.matrix }}
+      pair_planned: ${{ steps.pair_plan.outputs.planned }}
+      pair_sides: ${{ steps.pair_plan.outputs.sides }}
       sha12: ${{ steps.plan.outputs.sha12 }}
     steps:
       - uses: actions/checkout@v4
@@ -80,6 +128,13 @@ jobs:
           persist-credentials: false
       - name: Real storage gate negative controls
         run: python3 -m unittest -v ci/test_real_storage_it.py
+      - name: Checkout optional old observed candidate
+        if: inputs.old_source_sha != ''
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.old_source_sha }}
+          path: old-candidate
+          persist-credentials: false
       - name: Checkout candidate source
         uses: actions/checkout@v4
         with:
@@ -87,6 +142,7 @@ jobs:
           path: candidate
           persist-credentials: false
       - name: Resolve batch and precheck every class
+        if: inputs.old_source_sha == ''
         id: plan
         env:
           SOURCE_SHA: ${{ inputs.source_sha }}
@@ -94,9 +150,26 @@ jobs:
           CLASSES: ${{ inputs.classes }}
           TIMEZONE: ${{ inputs.timezone }}
         run: python3 ci/real_storage_it.py plan --source candidate
+      - name: Plan original M1 classes on both observed sources
+        if: inputs.old_source_sha != ''
+        id: pair_plan
+        env:
+          SOURCE_SHA: ${{ inputs.source_sha }}
+          OLD_SOURCE_SHA: ${{ inputs.old_source_sha }}
+          BATCH: ${{ inputs.batch }}
+          CLASSES: ${{ inputs.classes }}
+          TIMEZONE: ${{ inputs.timezone }}
+        run: python3 ci/real_storage_it.py m1-pair-plan --source candidate --old-source old-candidate
+      - name: Upload pair input manifest
+        if: inputs.old_source_sha != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: rs-m1-plan-a${{ github.run_attempt }}
+          path: out/pair-plan.json
+          if-no-files-found: error
 
   storage_it:
-    name: ${{ matrix.simple }}
+    name: ${{ inputs.old_source_sha != '' && format('{0} / {1}', matrix.side, matrix.simple) || matrix.simple }}
     needs: plan
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -107,9 +180,19 @@ jobs:
         include: ${{ fromJSON(needs.plan.outputs.matrix) }}
     env:
       TEST_CLASS: ${{ matrix.class }}
-      SOURCE_SHA: ${{ inputs.source_sha }}
+      SOURCE_SHA: ${{ matrix.source_sha || inputs.source_sha }}
+      VALIDATED_SOURCE_SHA: ${{ matrix.source_sha || inputs.source_sha }}
       BATCH: ${{ inputs.batch }}
       TIMEZONE: ${{ inputs.timezone }}
+      B_PAYMENT_INTENT_DDL_APPROVED: ${{ (matrix.simple == 'WechatPaymentIntentMySqlIT' || matrix.simple == 'RegistrationCallbackIntentMySqlIT' || matrix.simple == 'CoopDepositSettlementAttemptMySqlIT' || matrix.simple == 'CashWithdrawFundEvidenceMySqlIT' || matrix.simple == 'RefundPayoutMybatisIntegrationTest' || matrix.simple == 'FundsProcessRecoveryMySqlIT') && '1' || '' }}
+      B_FUNDS_PROCESS_RECOVERY_APPROVED: ${{ matrix.simple == 'FundsProcessRecoveryMySqlIT' && '1' || '' }}
+      WP04_TOPIC_CASH_DDL_APPROVED: ${{ matrix.simple == 'Wp04TopicCashFenceMySqlIT' && '1' || '' }}
+      B_PAYMENT_FACT_DDL_APPROVED: ${{ (matrix.simple == 'OmsOrderCommerceGuardMySqlIT' || matrix.simple == 'ClmCommercePaymentProofMySqlIT' || matrix.simple == 'WechatVerifiedPaymentFactMySqlIT' || matrix.simple == 'RegistrationTopicFenceMySqlIT' || matrix.simple == 'RefundNotificationMybatisIntegrationTest' || matrix.simple == 'RefundRetryAndRemainderMySqlIT' || matrix.simple == 'RegistrationFundsMybatisIntegrationTest' || matrix.simple == 'RefundPayoutMybatisIntegrationTest' || matrix.simple == 'CrossDomainFaultIsolationMySqlIT' || matrix.simple == 'RestoreMoneyDispatchMySqlIT') && '1' || '' }}
+      WP04_ORIGINAL_REFUND_DDL_APPROVED: ${{ (matrix.simple == 'Wp04OriginalRefundMySqlIT' || matrix.simple == 'Wp04CoopOrderScopeMySqlIT' || matrix.simple == 'CoopOrderStationFulfillmentMySqlIT' || matrix.simple == 'Wp04OriginalProducerMySqlIT' || matrix.simple == 'CoopSettlementManualCaseReadMySqlIT') && '1' || '' }}
+      WP04_MANUAL_CASE_READ_DDL_APPROVED: ${{ matrix.simple == 'CoopSettlementManualCaseReadMySqlIT' && '1' || '' }}
+      WP04_ORIGINAL_PRODUCER_DDL_APPROVED: ${{ matrix.simple == 'Wp04OriginalProducerMySqlIT' && '1' || '' }}
+      WP04_PAID_HALF_STATE_DDL_APPROVED: ${{ (matrix.simple == 'Wp04PaidHalfStateMySqlIT' || matrix.simple == 'Wp04ApprovedRefundFenceMySqlIT') && '1' || '' }}
+      A_REGISTRATION_PAYMENT_FACT_DDL_APPROVED: ${{ (matrix.simple == 'RegistrationCallbackIntentMySqlIT' || matrix.simple == 'RegistrationTopicFenceMySqlIT' || matrix.simple == 'RegistrationFundsMybatisIntegrationTest' || matrix.simple == 'RefundPayoutMybatisIntegrationTest' || matrix.simple == 'RefundRetryAndRemainderMySqlIT' || matrix.simple == 'RestoreMoneyDispatchMySqlIT') && '1' || '' }}
     steps:
       - name: Checkout gate scripts
         uses: actions/checkout@v4
@@ -119,7 +202,7 @@ jobs:
       - name: Checkout candidate source
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.source_sha }}
+          ref: ${{ matrix.source_sha || inputs.source_sha }}
           path: candidate
           persist-credentials: false
       - name: Static precheck
@@ -138,18 +221,64 @@ jobs:
       - name: Remove scratch containers
         if: always()
         run: python3 gate/ci/real_storage_it.py storage-stop
+      - name: Preserve query plan observation when produced
+        if: always()
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import shutil
+          report = Path('candidate/chengyinhub-admin/target/surefire-reports/ImConversationQueryScopeMySqlIT-explain.json')
+          if report.is_file():
+              Path('out').mkdir(exist_ok=True)
+              shutil.copyfile(report, 'out/im-query-plan-observation.json')
+          PY
+      - name: Collect funds process JSON receipts
+        if: always() && matrix.simple == 'FundsProcessRecoveryMySqlIT'
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib, json, os, re
+          source_sha = os.environ['SOURCE_SHA']
+          if not re.fullmatch(r'[a-f0-9]{40}', source_sha) or os.environ.get('GITHUB_SHA') != source_sha:
+              raise ValueError('funds evidence requires the exact source SHA')
+          run_id, attempt = os.environ.get('GITHUB_RUN_ID', ''), os.environ.get('GITHUB_RUN_ATTEMPT', '')
+          if not all(re.fullmatch(r'[1-9][0-9]*', value) for value in (run_id, attempt)):
+              raise ValueError('funds evidence requires the actual workflow run/attempt')
+          source = Path('candidate/chengyinhub-admin/target/funds-process-recovery') / source_sha
+          files = sorted(source.rglob('*.json'))
+          if source.is_symlink() or not files or not any(path.name == 'identity.json' for path in files):
+              raise ValueError('funds process JSON receipts are absent or unsafe')
+          hashes = {}
+          for path in files:
+              if path.is_symlink() or source.resolve() not in path.resolve().parents:
+                  raise ValueError('funds evidence cannot leave its source directory')
+              if not path.is_file() or path.stat().st_size > 8 * 1024 * 1024:
+                  raise ValueError('funds evidence must be bounded regular JSON')
+              data = path.read_bytes()
+              value = json.loads(data)
+              if path.name == 'identity.json' and (not isinstance(value, dict) or value.get('sourceSha') != source_sha):
+                  raise ValueError('funds native identity differs from source SHA')
+              target = Path('out/funds-process-recovery') / source_sha / path.relative_to(source)
+              target.parent.mkdir(parents=True, exist_ok=True)
+              target.write_bytes(data)
+              hashes[path.relative_to(source).as_posix()] = hashlib.sha256(target.read_bytes()).hexdigest()
+          Path('out/funds-process-evidence-index.json').write_text(json.dumps({
+              'sourceSha': source_sha, 'runId': run_id, 'runAttempt': attempt,
+              'files': hashes, 'notProven': ['bootJarIdentity', 'productionRecovery']
+          }, sort_keys=True, indent=2) + '\n')
+          PY
       - name: Upload class receipt
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: rs-class-${{ matrix.simple }}-a${{ github.run_attempt }}
+          name: ${{ inputs.old_source_sha != '' && format('rs-m1-{0}-{1}-{2}-a{3}', matrix.side, matrix.source_sha, matrix.simple, github.run_attempt) || format('rs-class-{0}-a{1}', matrix.simple, github.run_attempt) }}
           path: out/
           if-no-files-found: error
 
   summary:
     name: Batch summary
     needs: [plan, storage_it]
-    if: always() && needs.plan.result == 'success'
+    if: always() && needs.plan.result == 'success' && inputs.old_source_sha == ''
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -158,10 +287,11 @@ jobs:
           persist-credentials: false
       - uses: actions/download-artifact@v4
         with:
-          pattern: rs-class-*
+          pattern: rs-class-*-a${{ github.run_attempt }}
           path: receipts
       - name: Summarize batch (fail-closed)
         env:
+          STORAGE_MATRIX_RESULT: ${{ needs.storage_it.result }}
           PLANNED: ${{ needs.plan.outputs.matrix }}
           SOURCE_SHA: ${{ inputs.source_sha }}
           BATCH: ${{ inputs.batch }}
@@ -174,3 +304,94 @@ jobs:
           name: rs-summary-${{ inputs.batch }}-${{ needs.plan.outputs.sha12 }}-a${{ github.run_attempt }}
           path: summary/
           if-no-files-found: warn
+
+  pair_summary:
+    name: M1 ${{ matrix.side }} source summary
+    needs: [plan, storage_it]
+    if: always() && needs.plan.result == 'success' && inputs.old_source_sha != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        include: ${{ fromJSON(needs.plan.outputs.pair_sides) }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: rs-m1-${{ matrix.side }}-${{ matrix.source_sha }}-*-a${{ github.run_attempt }}
+          path: receipts
+      - name: Summarize this source only with the original strict gate
+        if: always()
+        env:
+          STORAGE_MATRIX_RESULT: ${{ needs.storage_it.result }}
+          PLANNED: ${{ needs.plan.outputs.pair_planned }}
+          SOURCE_SHA: ${{ matrix.source_sha }}
+          BATCH: ${{ inputs.batch }}
+          TIMEZONE: ${{ inputs.timezone }}
+        run: python3 ci/real_storage_it.py summarize --receipts receipts --out summary
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rs-m1-summary-${{ matrix.side }}-${{ matrix.source_sha }}-a${{ github.run_attempt }}
+          path: summary/
+          if-no-files-found: error
+
+  compare:
+    needs: [plan, storage_it, pair_summary]
+    if: always() && needs.plan.result == 'success' && inputs.old_source_sha != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: gate
+          persist-credentials: false
+      - name: Checkout frozen observer comparison tools (no Java execution)
+        uses: actions/checkout@v4
+        with:
+          ref: f671227c0bd483b290a72c04ca2ed60bb5f7748e
+          path: evidence
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: rs-m1-old-${{ inputs.old_source_sha }}-*-a${{ github.run_attempt }}
+          path: old-receipts
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: rs-m1-new-${{ inputs.source_sha }}-*-a${{ github.run_attempt }}
+          path: new-receipts
+      - name: Require original PASS14/CLEAN and this exact run/attempt/suffix
+        env:
+          SOURCE_SHA: ${{ inputs.source_sha }}
+          OLD_SOURCE_SHA: ${{ inputs.old_source_sha }}
+          BATCH: ${{ inputs.batch }}
+          CLASSES: ${{ inputs.classes }}
+          TIMEZONE: ${{ inputs.timezone }}
+          PAIR_STORAGE_RESULT: ${{ needs.storage_it.result }}
+          PAIR_SUMMARY_RESULT: ${{ needs.pair_summary.result }}
+        run: python3 gate/ci/real_storage_it.py m1-pair-verify --old-receipts old-receipts --new-receipts new-receipts
+      - name: Verify pinned comparator controls
+        run: |
+          PYTHONDONTWRITEBYTECODE=1 python3 evidence/docs/delivery/architecture-day/C/evidence/wp09-m1-equivalence/test_compare_receipts.py
+          PYTHONDONTWRITEBYTECODE=1 python3 evidence/docs/delivery/architecture-day/C/evidence/wp09-m1-comparator-patches/test_member_fk_review.py
+      - name: Frozen strict canonical comparison, both original 14 XML/CLEAN sets required
+        env:
+          OLD_SOURCE_SHA: ${{ inputs.old_source_sha }}
+          NEW_SOURCE_SHA: ${{ inputs.source_sha }}
+        run: |
+          python3 evidence/docs/delivery/architecture-day/C/evidence/wp09-m1-equivalence/compare_receipts.py \
+            --old-dir old-receipts --old-source "$OLD_SOURCE_SHA" \
+            --new-dir new-receipts --new-source "$NEW_SOURCE_SHA" \
+            --out canonical-comparison.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rs-m1-comparison-${{ inputs.old_source_sha }}-${{ inputs.source_sha }}-a${{ github.run_attempt }}
+          path: |
+            canonical-comparison.json
+            pair-provenance.json
+          if-no-files-found: error

@@ -14,14 +14,16 @@
 
   <view class="body" wx:else>
     <!-- 2026-10-22 owner:页头 = 商家工作台同款问候区(Hi，店名 + 欢迎语 + 店铺头像),不放店铺档案 -->
+    <!-- 2026-10-27 业主 M-21:用真实店名与真实 Logo(后端 profile.storeName / profile.logo 实时读商家行),
+         不写「店主」/「店」占位;问候与头像垂直居中对齐;头像不描边(G-5)。 -->
     <view class="greet mi-in" style="transition-delay: 0ms;">
       <view class="greet-b">
-        <view class="greet-line"><text>Hi，</text><text>{{storeName || '店主'}}</text></view>
+        <view class="greet-line"><text>Hi{{storeName ? '，' : ''}}</text><text>{{storeName}}</text></view>
         
         <text class="gen-at" wx:if="{{loading}}" aria-role="status">正在更新经营数据…</text>
         <!-- 2026-10-23 业主:删去「生成于 … · 次日更新」 -->
       </view>
-      <cy-avatar class="greet-avatar" size="112" bordered shape="circle" src="{{profile.logo || ''}}" name="{{storeName || '店'}}" />
+      <cy-avatar class="greet-avatar" size="112" shape="circle" src="{{profile.logo || ''}}" name="{{storeName}}" />
     </view>
 
     <!-- 主卡:大数字 + 环比 + 时间窗 + 逐日格 + 三指标 + 淡紫核销进度(字段缺失 unknown 不画卡) -->
@@ -38,13 +40,14 @@
         </view>
       </view>
 
-      <block wx:if="{{hero && hero.hasTrend}}">
-        <view class="seg" aria-role="tablist">
-          <view class="seg-thumb" style="transform: translateX({{(winIdx || 0) * 100}}%);"></view>
-          <view class="seg-btn {{win === 7 ? 'seg-btn--on' : ''}}" data-win="7" bindtap="onWinTap" hover-class="cy-pressed" hover-stay-time="80" aria-role="tab" aria-selected="{{win === 7}}">近7天</view>
-          <view class="seg-btn {{win === 30 ? 'seg-btn--on' : ''}}" data-win="30" bindtap="onWinTap" hover-class="cy-pressed" hover-stay-time="80" aria-role="tab" aria-selected="{{win === 30}}">近30天</view>
-          <view class="seg-btn {{win === 90 ? 'seg-btn--on' : ''}}" data-win="90" bindtap="onWinTap" hover-class="cy-pressed" hover-stay-time="80" aria-role="tab" aria-selected="{{win === 90}}">近90天</view>
-        </view>
+      <!-- M-21:窗口切换只在有逐日数据时出;方块图每次都画(无数据时全浅色格,见 _buildHero) -->
+      <view class="seg" aria-role="tablist" wx:if="{{hero}}">
+        <view class="seg-thumb" style="transform: translateX({{(winIdx || 0) * 100}}%);"></view>
+        <view class="seg-btn {{win === 7 ? 'seg-btn--on' : ''}}" data-win="7" bindtap="onWinTap" hover-class="cy-pressed" hover-stay-time="80" aria-role="tab" aria-selected="{{win === 7}}">近7天</view>
+        <view class="seg-btn {{win === 30 ? 'seg-btn--on' : ''}}" data-win="30" bindtap="onWinTap" hover-class="cy-pressed" hover-stay-time="80" aria-role="tab" aria-selected="{{win === 30}}">近30天</view>
+        <view class="seg-btn {{win === 90 ? 'seg-btn--on' : ''}}" data-win="90" bindtap="onWinTap" hover-class="cy-pressed" hover-stay-time="80" aria-role="tab" aria-selected="{{win === 90}}">近90天</view>
+      </view>
+      <block wx:if="{{hero && hero.cells.length}}">
         <view class="heat {{hero.cols === 7 ? 'heat--week' : ''}}" style="grid-template-columns: repeat({{hero.cols}}, 1fr);" aria-hidden="true">
           <view class="heat-cell heat-cell--l{{cell.lv}} cy-rise-in" wx:for="{{hero.cells}}" wx:for-item="cell" wx:key="k"
                 style="animation-delay: {{cell.delay}}ms;"></view>
@@ -193,6 +196,9 @@
         </view>
       </scroll-view>
     </block>
+
+    <!-- 2026-10-28 m689:俱乐部合作(Figma 350:557),组件自读合作池 -->
+    <cy-club-pool-cards class="mi-in" style="transition-delay: 360ms;" />
 
     <!-- 推荐联动的商家 -->
     <block wx:if="{{recPartners.length}}">

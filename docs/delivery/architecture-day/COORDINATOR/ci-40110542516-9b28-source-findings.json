@@ -1,0 +1,48 @@
+{
+  "run_id": 40110542516,
+  "source_sha": "9b284f0111b4337e388fc18d797b11c62112cd82",
+  "comparison_base_sha": "e1083c6c5f4dd5fa992a43015d2ae8c764626d52",
+  "evidence": "REAL_TRUSTED_GITHUB_SOURCE_GATE",
+  "verdict": "BLOCKED",
+  "findings": [
+    {
+      "detail": "explicit FOR UPDATE requires useCache=false AND flushCache=true",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/UmsMemberSettlementDebtMapper.xml#selectOpenByMemberForUpdate",
+      "rule": "LOCKING_SELECT_CACHE",
+      "statement": {
+        "analysis": "LOCKING_SELECT",
+        "body_sha256": "fb8ed03e5bb14b11982b37cc76db3419c952746d241a3850e880bc5c6274bab6",
+        "flushCache": null,
+        "id": "selectOpenByMemberForUpdate",
+        "namespace": "com.chengyinhub.business.mapper.UmsMemberSettlementDebtMapper",
+        "statement_sha256": "1e9a560e67365a6627f200f3c46974f2e8698004a5aaf6ab5d54fdfd88e80905",
+        "unknown": [],
+        "useCache": null
+      }
+    },
+    {
+      "detail": "wx_payment_callback_outbox <- chengyinhub-system:com.chengyinhub.business.mapper.WechatVerifiedPaymentFactMapper",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/WechatVerifiedPaymentFactMapper.xml#completeRecovery",
+      "rule": "NEW_TABLE_WRITER"
+    },
+    {
+      "detail": "wx_payment_callback_outbox <- chengyinhub-system:com.chengyinhub.business.mapper.WechatVerifiedPaymentFactMapper",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/WechatVerifiedPaymentFactMapper.xml#insertRecovery",
+      "rule": "NEW_TABLE_WRITER"
+    }
+  ],
+  "review_items_count": 517,
+  "not_proven": [
+    "Java/SQL authorization semantics",
+    "transaction atomicity",
+    "complete fresh-read semantics (RR current SQL/transactions still require tests)",
+    "persistent intent/recovery",
+    "Java or real storage test execution",
+    "business service call paths and writes outside declared facts"
+  ],
+  "artifact_sha256": "a4be68b749b5ba41711a3c26a1274ff3156f808578378033fa1a3b89e3fe535c",
+  "owners": {
+    "LOCKING_SELECT_CACHE": "G",
+    "NEW_TABLE_WRITER": "F review B recovery writer"
+  }
+}

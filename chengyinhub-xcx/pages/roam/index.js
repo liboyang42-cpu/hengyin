@@ -26,6 +26,7 @@ const {
 } = require('../../utils/play-state-contract.js');
 const { drawPlayStateMarker } = require('../../utils/play-marker-draw.js');
 const { readReducedMotion, writeReducedMotion } = require('../../utils/motion-preference.js');
+const { readFogOff, writeFogOff } = require('../../utils/roam-fog-preference.js');
 const countUp = require('../../utils/count-up.js');
 const { selectDemoRoamPois } = require('../../utils/roam-demo-gate.js');
 const {
@@ -80,6 +81,7 @@ const { currentScene, exitDecision, popScene, pushScene } = require('../../utils
 // 个性化地图(暗色底图)与 play 页共用一份配置,见 utils/map-style.js
 const { MAP_STYLE } = require('../../utils/map-style.js');
 const { getScene } = require('../../utils/scene-registry.js');
+const { openScene: openPageScene } = require('../../utils/scene-entry.js');
 const { getNodeLevelStyle, buildNodeLevelMarkerStyle } = require('./node-level-style.js'); const entryMap = require('../../utils/roam-entry-map.js');
 // 后台定位开关(与 play 页共用,引用计数收口)。★必须在模块顶层:#750 曾把这行插进 req() 函数体,
 // bgTracker 变成 req 的局部变量,_startReal 一调就 ReferenceError —— 漫游实时定位整条静默死掉。
@@ -254,6 +256,7 @@ function httpFail(res) { return !!res && res.httpFail === true; }
 // 官方活动虽可匿名访问，但登录态会返回报名进度，不能强制降为匿名请求。
 const { createRoamNpcCoordinator } = require('../../utils/roam-npc-coordinator.js');
 const { activeRoamEventCard, applyEventCard } = require('../../utils/roam-official-active.js');
+const { latestTrackThumb, latestStampImage, latestBadgeImage } = require('../../utils/roam-passport-tiles.js');
 const { persistPhoto, retainRecentPhotos, archivedSessionPhotos, droppedSavedPhotos, evictedSavedPhotos, releaseSavedPhotos } = require('../../utils/roam-session-photos.js');
 
 const NPC_JSON_HEADER = { header: { 'content-type': 'application/json' } };
@@ -298,7 +301,7 @@ Page({
     privacyGateShow: false,
     // BL-01 漫游点位筛选(范围 + 只看未到过),值在 utils/roam-poi-filter.js。
     poiFilter: { radiusM: 3000, unvisitedOnly: false }, poiFilterTabs: roamPoiFilter.radiusTabs(),
-    screen: 'entry-map', entryMarkers: [], entryCards: [], entryActivity: null, entryTeam: null, entrySheet: '', entrySheetView: 'main', entrySheetIn: false, entryLayers: { activities: true, teams: true, posts: true }, entryLoadError: false, entryReadAccess: '',
+    screen: 'entry-map', entryMarkers: [], entryCards: [], entryFarCards: [], entryActivity: null, entryTeam: null, entrySheet: '', entrySheetView: 'main', entrySheetIn: false, entryLayers: { activities: true, teams: true, posts: true }, entryLoadError: false, entryReadAccess: '',
     introError: '',
     // 个性化地图透传给本页三个 <free-map>(起始预览 / 主漫游图 / 结算图),三处必须同源,
     // 否则同一次漫游里会出现一亮一暗。值在 utils/map-style.js。
@@ -314,6 +317,7 @@ Page({
     passportError: false,
     passport: { tiles: [], trips: [] }, ppOpen: { show: false, on: false, icon: '', title: '', value: '', style: '' }, // ppOpen:护照方卡放大层
     introCardIdx: 0,
+    fogOff: false, noFogPolys: [], // P-32:迷雾开关(本机偏好);关时 map-polygons 换成空数组
     introCards: [
       { key: 'start', icon: 'route', title: '开始漫游', sub: '走到哪，雾散到哪' },
       { key: 'map', nav: '/subpackageRoam/nearby/index', icon: 'map', title: '打开地图', sub: '寻找组队' },
@@ -407,7 +411,7 @@ Page({
     syncOffline: false, syncOfflineText: ROAM_SYNC_OFFLINE_TEXT,
     recoveryCanContinue: false,
     recoveryError: '',
-    recoveryAvailable: false,
+    // 2026-10-27 owner P-27:「已恢复上次漫游」行已删,recoveryAvailable 无人渲染,随之去掉(死字段门禁 U4)
     roamSessionReady: false,
     locErr: false,
     locationForegroundOnly: false,
@@ -453,6 +457,8 @@ Page({
   },
   openScene(id, params = {}) {
     const next = getScene(id, params);
+    // G-1(2026-10-27):page 档场景(漫游历史 / 优惠券)是页面,不在地图上压 psheet
+    if (next.variant === 'page' && next.route) { openPageScene(id, params); return true; }
     if (exitDecision(this.data.sceneStack, 'close') === 'confirm') {
       this.setData({ sceneConfirm: { show: true, action: 'replace', pending: next } });
       return false;
@@ -728,8 +734,8 @@ Page({
     const current = () => reader.current() && scope() && !this._unloaded && !this._hidden
       && startGeneration === this._roamStartGen && reader === this._passportReader;
     this.setData({ passportLoading: true, passportError: false, passport: { stats: [], tiles: [], plays: [] } });
-    let stamps = null;
-    try { stamps = reader.local().reduce((n, row) => n + (Array.isArray(row.photos) ? row.photos.length : 0), 0); } catch (_) { /* Keep server read independent of local storage. */ }
+    let stamps = null, localRows = [];
+    try { localRows = reader.local(); stamps = localRows.reduce((n, row) => n + (Array.isArray(row.photos) ? row.photos.length : 0), 0); } catch (_) { /* Keep server read independent of local storage. */ }
     let summary;
     try { summary = await reader.summary(); }
     catch (_) {
@@ -749,22 +755,37 @@ Page({
           { k: '活跃日', v: value(summary.days) },
           { k: '公里', v: summary.distanceM == null ? '—' : (summary.distanceM / 1000).toFixed(1) },
         ],
+        // 2026-10-27 owner P-29:三张档案卡用真实图片(最近轨迹 / 最新邮票 / 最新点亮勋章);拿不到用各自的插画图标(2026-10-28 业主:原图标太丑)
         tiles: [
-          { key: 'history', icon: 'route', title: '漫游记录', value: summary.trips + ' 次已完成旅程' },
-          { key: 'stamp', icon: 'image', title: '集邮册', value: stamps == null ? '本机邮票暂不可读' : stamps + ' 张本机邮票' },
-          { key: 'badge', icon: 'star', title: '勋章墙', value: '我的徽章' },
+          { key: 'history', icon: 'route', title: '漫游记录', value: summary.trips + ' 次已完成旅程', img: latestTrackThumb(localRows), art: '/images/roam/tile-route.svg' },
+          { key: 'stamp', icon: 'image', title: '集邮册', value: stamps == null ? '本机邮票暂不可读' : stamps + ' 张本机邮票', img: latestStampImage(localRows), art: '/images/roam/tile-stamp.svg' },
+          { key: 'badge', icon: 'star', title: '勋章墙', value: '我的徽章', img: '', art: '/images/roam/tile-medal.svg' },
           // 2026-10-14 随漫游上线的两项(读数在各自页面现读,方卡不摆数字)
-          { key: 'goals', icon: 'flag', title: '探索目标', value: '给自己定个小目标', isNew: true },
-          { key: 'capsule', icon: 'clock', title: '时光胶囊', value: '写给以后的自己', isNew: true },
+          { key: 'goals', icon: 'flag', title: '探索目标', value: '给自己定个小目标' },
+          { key: 'capsule', icon: 'clock', title: '时光胶囊', value: '写给以后的自己' },
         ],
+        // 2026-10-28 业主:「官方活动就是漫游」—— 大卡常驻(不再是「暂未开放」灰卡),有可参与的活动时换上它的封面(_loadActiveRoamEvents)
         plays: [
-          // 官方活动暂未开放(用户裁决):卡片留位、点按只提示,不进列表
-          { key: 'event', icon: 'calendar', title: '官方活动', sub: '限时任务与奖励', cover: '', closed: true },
-          { key: 'discover', icon: 'discover-shop', title: '发现附近店铺', sub: '现在能去哪', cover: '' },
+          { key: 'event', icon: 'calendar', title: '官方活动', sub: '限时任务与奖励', cover: '' }, { key: 'discover', icon: 'discover-shop', title: '发现附近店铺', sub: '现在能去哪', cover: '' },
         ],
       },
     });
     this._loadActiveRoamEvents();
+    if (typeof getApp().sendRequest === 'function') this._loadPassportBadge();
+  },
+  // P-29:勋章墙方卡取最新点亮的那枚勋章图;失败静默,方卡保持空态插画
+  _loadPassportBadge() {
+    const token = {};
+    this._passportBadgeToken = token;
+    req('/api/medal/wall', 'POST', {}, { silentError: true }).then((res) => {
+      if (this._passportBadgeToken !== token || !apiOk(res) || !res.data) return;
+      const app = getApp();
+      const raw = latestBadgeImage(res.data.medals);
+      const img = raw && typeof app.getImgUrl === 'function' ? app.getImgUrl(raw) : raw;
+      const tiles = (this.data.passport && this.data.passport.tiles) || [];
+      const idx = tiles.findIndex((t) => t.key === 'badge');
+      if (img && idx >= 0) this.setData({ ['passport.tiles[' + idx + '].img']: img });
+    });
   },
   retryPassport() { return this._loadIntroPassport(); },
   onPassportTileTap(e) {
@@ -791,13 +812,16 @@ Page({
       const passport = this.data.passport || {};
       if (!card || !Array.isArray(passport.plays)) return;
       this._activeRoamEventId = card.eventId;
-      this.setData({ 'passport.plays': applyEventCard(passport.plays, card) });
+      // P-29:没有可参与活动时不摆灰卡;有活动才把官方活动大卡插到最前
+      const plays = passport.plays.some((p) => p && p.key === 'event') ? passport.plays
+        : [{ key: 'event', icon: 'calendar', title: '官方活动', sub: '限时任务与奖励', cover: '' }].concat(passport.plays);
+      this.setData({ 'passport.plays': applyEventCard(plays, card) });
     });
   },
   onPassportPlayTap(e) {
     const key = e.currentTarget.dataset.key;
     if (key === 'event' && this._activeRoamEventId) { if (this._eventNavigating) return; this._eventNavigating = true; wx.navigateTo({ url: '/pages/activity/official-detail/index?id=' + this._activeRoamEventId, complete: () => { this._eventNavigating = false; } }); return; } // 跳转中不响应连点,免得叠两层活动详情
-    if (key === 'event') return;   // 官方活动暂未开放:卡上已标状态,点按不进列表
+    if (key === 'event') { this.openRoamTasks(); return; }   // 没有单场可直达时进官方活动任务列表
     // 发现附近店铺:漫游开始前 _pois 为空、横滑条只在 map 态渲染,原 goDiscover 在这里只会弹「没有合作商家」→ 改去地图
     this.openNearbyMap();
   },
@@ -850,6 +874,12 @@ Page({
     this.setData({ reducedMotion });
     cyToast(reducedMotion ? '已减少动态效果' : '已恢复动态效果');
   },
+  // 2026-10-27 owner P-32:设置里关掉迷雾 —— 只停画雾层,足迹/点亮照常记;地点搜索本来就不受迷雾影响
+  toggleFogOff() {
+    const fogOff = writeFogOff(null, !this.data.fogOff); if (fogOff === null) { cyToast('设置未保存，请重试'); return; }
+    this.setData({ fogOff });
+    cyToast(fogOff ? '已关闭迷雾' : '已开启迷雾');
+  },
   _triggerCelebration(moment) {
     if (!moment) return;
     this._celebrationSeq = (this._celebrationSeq || 0) + 1;
@@ -893,6 +923,7 @@ Page({
       chrome,
       isDevtools: this._isDevtools(),
       reducedMotion: readReducedMotion(),
+      fogOff: readFogOff(),
     });
     // BL-23:入口地图首屏不再固定落在默认城市坐标 —— 有上次成功定位就从那里开始
     const lastPoint = lastLocation.load();
@@ -1531,7 +1562,7 @@ Page({
     this._roamRecoveryAbandoned = true; this._shopMedalFromServer = false;
     this._recoveryNeedsLookup = this._revealBootstrapUnknown = this._recoveryReadFailed = false;
     this._finishRequested = false; this._revealInFlight = false;
-    this.setData({ recoveryError: '', recoveryAvailable: false, recoveryCanContinue: false, revealWriteUnknown: false });
+    this.setData({ recoveryError: '', recoveryCanContinue: false, revealWriteUnknown: false });
   },
 
   _resetRoamRecoverySession() {
@@ -1580,7 +1611,7 @@ Page({
       medal: { show: false }, discoverReward: { show: false, poi: {} },
       visit: { active: false, checkinOk: false, poi: {}, photos: [] },
       archSegs: [], archPois: [], archEnd: {}, 'share.squarePostUnknown': this._squarePostUnknown,
-      recoveryError: '', recoveryAvailable: false,
+      recoveryError: '',
       recoveryCanContinue: false, revealWriteUnknown: false, roamSessionReady: false });
   },
 
@@ -1590,7 +1621,7 @@ Page({
   },
 
   _recoveryFailure(message) {
-    this.setData({ recoveryError: message, recoveryAvailable: true });
+    this.setData({ recoveryError: message });
     if (this.data.screen === 'arrive') this.setData({ 'finish.settleErr': 'recovery' });
     return false;
   },
@@ -1656,7 +1687,7 @@ Page({
     }
     this._eventId = r.eventId || 0; this._eventMissionCode = r.missionCode || '';
     this._recoveryNeedsLookup = true;
-    this.setData({ recoveryAvailable: true, roamSessionReady: false });
+    this.setData({ roamSessionReady: false });
     if (r.finishRequested) this.setData({ screen: 'arrive', finish: r.finish || {} });
     this.recoverRoam();
     return true;
@@ -2020,7 +2051,7 @@ Page({
     const shopMedal = result.shopMedal && delivered(result.shopMedal.code) ? result.shopMedal : null;
     this.setData({ screen: 'arrive', 'finish.xpAwarded': result.totalXp, 'finish.medal': medal,
       'finish.shopMedal': shopMedal, 'finish.routeStory': result.routeStory || '',
-      'finish.resultIncomplete': !complete, 'finish.settleErr': '', recoveryError: '', recoveryAvailable: false });
+      'finish.resultIncomplete': !complete, 'finish.settleErr': '', recoveryError: '' });
     this._shopMedalFromServer = !!shopMedal;
     const memory = roamMemory(this);
     const archiveState = memory.readSessionState();
@@ -2328,9 +2359,9 @@ Page({
 
   /* 顶部输入地址的候选(§6.1)。喂的是这张图上真有的点位:
    *   挂着主题的 = 按玩法给绿 / 蓝针;没挂主题的 = 灰针 + 副标题「没有局」。
-   * ⚠️ 雾里的点不进候选 —— 搜出一个自己还没走到、地图上看不见的地方,等于把雾直接绕过去。 */
+   * 2026-10-27 owner P-32:搜地点不受迷雾影响 —— 雾里的点也进候选,开着迷雾也能搜、能导航(取代原「雾里的点不进候选」)。 */
   _searchPlaces() {
-    return (this._pois || []).filter((p) => p.state !== 'fog' && p.lat && p.lng).map((p) => ({
+    return (this._pois || []).filter((p) => p.lat && p.lng).map((p) => ({
       id: String(p.id),
       name: p.name || '未命名地点',
       address: p.desc || '',
@@ -5507,6 +5538,13 @@ Page({
     this.setData({ paused, endHoldPct: 0 }, () => this._syncPlayHud());
   },
 
+  // 2026-10-27 owner P-35:结算页右上角 × 只关掉结算页,回到漫游首页;不再走 backToSquare(单页栈时会 redirect 到无 tab 栏的动态页)
+  closeSettle() {
+    if (this.data.screen !== 'arrive') return;
+    this.setData({ screen: 'entry-map', introTab: 'start', sceneStack: [], sceneCurrent: null });
+    this._loadIntroPassport();
+    if (typeof getApp().sendRequest === 'function') this._loadEntryMap(this.data.center);
+  },
   backToSquare() {
     if (getCurrentPages().length > 1) wx.navigateBack();
     else if (typeof getApp().canUseCommunity === 'function' && getApp().canUseCommunity(false)) wx.redirectTo({ url: '/pages/square/list/index' });
@@ -5769,7 +5807,7 @@ Page({
     const app = getApp();
     const getImgUrl = typeof app.getImgUrl === 'function' ? app.getImgUrl.bind(app) : (url) => url;
     const view = entryMap.build(this._entryItems, this._entryTeams, this.data.entryLayers, getImgUrl);
-    this.setData({ entryMarkers: view.markers, entryCards: view.cards, searchPlaces: view.searchPlaces, introTeamsLive: this._entryTeams.length ? '附近 ' + this._entryTeams.length + ' 支队伍在组队' : '附近正在组队' });
+    this.setData({ entryMarkers: view.markers, entryCards: view.cards, searchPlaces: view.searchPlaces, introTeamsLive: this._entryTeams.length ? '附近 ' + this._entryTeams.length + ' 支队伍在组队' : '附近正在组队' }); if (!view.cards.length && this._entryErrors && !this._entryErrors.activities) this._loadEntryFallback(); else if (view.cards.length) this.setData({ entryFarCards: [] }); // 2026-10-28 附近为空走兜底
   },
   _showEntrySheet(entrySheet, entryActivity) {
     this.setData({ entrySheet, entryActivity: entryActivity || null, entryTeam: null, entrySheetView: 'main', entrySheetIn: false }, () => {
@@ -5789,7 +5827,7 @@ Page({
     this.setData({ entryLayers }, () => this._syncEntryMap());
   },
   openEntryActivityList() { wx.navigateTo({ url: '/pages/activity/list/index' }); },
-  onEntryCardTap(e) { this.openEntryActivity(e.currentTarget.dataset.kind, e.currentTarget.dataset.id); },
+  onEntryCardTap(e) { const d = e.currentTarget.dataset; if (d.kind === 'far-topic') { wx.navigateTo({ url: '/pages/topic/index/index?id=' + d.id }); return; } this.openEntryActivity(d.kind, d.id); },
   openEntryActivity(kind, id) {
     const row = (this._entryItems || []).find((item) => item && item.kind === kind && String(item.id) === String(id));
     if (!row) return;
@@ -5904,5 +5942,29 @@ Page({
       if (!this._unloaded && !this.data.topicIn) this.setData({ topicView: null });
     }, 250);
   },
-
+  /* 2026-10-28 业主:「附近活动」总是有的 —— 3 公里内没有就放同城(20 公里,接口上限)的,
+     同城也没有就放其他城市的公开主题。只进底部卡片带,不往地图上打点(离得远的点放在附近地图上是误导)。 */
+  _loadEntryFallback() {
+    const seq = this._entrySeq, c = this.data.center || FALLBACK, owner = this._entryIdentity();
+    if (this._entryFallbackSeq === seq) return;
+    this._entryFallbackSeq = seq;
+    const app = getApp(), img = typeof app.getImgUrl === 'function' ? app.getImgUrl.bind(app) : (url) => url;
+    const stale = () => this._unloaded || seq !== this._entrySeq || owner !== this._entryIdentity();
+    req('/api/roam/entry/nearby', 'GET', { lat: c.lat, lng: c.lng, radius: 20000 }, { silentError: true }).then((res) => {
+      if (stale()) return;
+      const data = apiOk(res) && res.data;
+      const rows = data && isRecordList(data.items) ? data.items.filter((row) => row && row.kind !== 'hangout') : [];
+      if (rows.length) {
+        this._entryItems = (this._entryItems || []).concat(rows.filter((row) => !(this._entryItems || []).some((it) => it.kind === row.kind && String(it.id) === String(row.id))));
+        this.setData({ entryFarCards: rows.slice(0, 8).map((row) => entryMap.activityView(row, this._entryTeams, img)) });
+        return;
+      }
+      req('/api/topic/list', 'POST', { pageNum: 1, pageSize: 8, sort_type: 1 }, { silentError: true, auth: false }).then((r2) => {
+        if (stale()) return;
+        const list = apiOk(r2) && r2.data && isRecordList(r2.data.rows) ? r2.data.rows : [];
+        this.setData({ entryFarCards: list.map((t) => ({ key: 'far-topic-' + t.id, id: t.id, kind: 'far-topic', title: String(t.name || '未命名主题'),
+          cover: img(String(t.imgArr || t.imgUrl || '').split(/[,;]/)[0].trim()), tag: Number(t.productType) === 2 ? '自由探索' : '城市定向', meta: String(t.city || t.addressName || '') })) });
+      });
+    });
+  }
 });

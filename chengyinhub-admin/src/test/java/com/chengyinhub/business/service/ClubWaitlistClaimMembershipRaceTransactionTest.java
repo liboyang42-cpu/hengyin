@@ -175,6 +175,7 @@ class ClubWaitlistClaimMembershipRaceTransactionTest {
         activity.setPublishStatus(1L);
         activity.setDelFlag(0);
         when(activities.selectCmsActivityById(ACTIVITY)).thenReturn(activity);
+        when(activities.selectCmsActivityByIdForUpdate(ACTIVITY)).thenReturn(activity);
 
         IClubWaitlistOrderBridge bridge = mock(IClubWaitlistOrderBridge.class);
         when(bridge.claimForOrder(eq(MEMBER), any(RegistrationRequest.class), any(Date.class)))

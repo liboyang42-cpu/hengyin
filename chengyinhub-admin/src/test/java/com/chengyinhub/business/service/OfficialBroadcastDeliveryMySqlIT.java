@@ -33,18 +33,28 @@ class OfficialBroadcastDeliveryMySqlIT {
   new JdbcTemplate(new DriverManagerDataSource(mysql.adminUrl(),mysql.user(),mysql.password())).execute("CREATE DATABASE "+mysql.databaseName());
   DriverManagerDataSource source=new DriverManagerDataSource(mysql.databaseUrl(),mysql.user(),mysql.password());jdbc=new JdbcTemplate(source);manager=new DataSourceTransactionManager(source);
   try(Connection c=source.getConnection()){for(String f:List.of("migration_official_broadcast.sql","migration_20261026_official_broadcast_delivery.sql"))ScriptUtils.executeSqlScript(c,new FileSystemResource("sql/"+f));}
+  jdbc.execute("CREATE TABLE fixture_member_fence(id BIGINT PRIMARY KEY) ENGINE=InnoDB");
   jdbc.execute("CREATE TABLE fixture_intent(id BIGINT PRIMARY KEY AUTO_INCREMENT,event_key VARCHAR(96) UNIQUE,delivered INT NOT NULL DEFAULT 0) ENGINE=InnoDB");
   Configuration cfg=new Configuration(new Environment("test",new SpringManagedTransactionFactory(),source));cfg.getTypeAliasRegistry().registerAlias(OfficialBroadcast.class);cfg.getTypeAliasRegistry().registerAlias(OfficialBroadcastLog.class);
   for(Class<?> type:List.of(OfficialBroadcastMapper.class,OfficialBroadcastLogMapper.class)){cfg.addMapper(type);String resource="mapper/business/"+type.getSimpleName()+".xml";try(InputStream xml=getClass().getClassLoader().getResourceAsStream(resource)){assertNotNull(xml);new XMLMapperBuilder(xml,cfg,resource,cfg.getSqlFragments()).parse();}}
   SqlSessionTemplate session=new SqlSessionTemplate(new SqlSessionFactoryBuilder().build(cfg));batches=session.getMapper(OfficialBroadcastMapper.class);logs=session.getMapper(OfficialBroadcastLogMapper.class);
  }
  @BeforeEach void reset(){
-  for(String table:List.of("official_broadcast_creation","official_broadcast_log","official_broadcast","fixture_intent"))jdbc.update("DELETE FROM "+table);
+  for(String table:List.of("official_broadcast_creation","official_broadcast_log","official_broadcast","fixture_intent","fixture_member_fence"))jdbc.update("DELETE FROM "+table);
   jdbc.update("INSERT INTO official_broadcast(id,title,audience,channels,status) VALUES(9,'frozen','player','inapp,subscribe',1)");bc=batches.selectOfficialBroadcastById(9L);
+  jdbc.update("INSERT INTO fixture_member_fence(id) VALUES(7)");
   im=mock(IImService.class);channel=mock(WxSubscribeChannel.class);
   when(im.enqueueSystemNotification(anyLong(),anyInt(),anyString(),anyString(),anyString())).thenAnswer(c->{String key=c.getArgument(4);jdbc.update("INSERT IGNORE INTO fixture_intent(event_key) VALUES(?)",key);return jdbc.queryForObject("SELECT id FROM fixture_intent WHERE event_key=?",Long.class,key);});
   when(im.deliverSystemNotification(anyLong())).thenAnswer(c->{Long id=c.getArgument(0);jdbc.queryForMap("SELECT * FROM fixture_intent WHERE id=? FOR UPDATE",id);jdbc.update("UPDATE fixture_intent SET delivered=1 WHERE id=?",id);return id;});
   service=new OfficialBroadcastDeliveryService(logs,batches,im,channel,manager);
+  // Same SQL/transaction resource as the real delivery mapper; this remains a member-fact adapter,
+  // not evidence that the full member/IM domain was assembled.
+  UmsMemberMapper members=mock(UmsMemberMapper.class);
+  when(members.lockMemberById(anyLong())).thenAnswer(c->{
+   List<Long> ids=jdbc.queryForList("SELECT id FROM fixture_member_fence WHERE id=? FOR UPDATE",Long.class,c.getArgument(0));
+   return ids.isEmpty()?null:ids.get(0);
+  });
+  org.springframework.test.util.ReflectionTestUtils.setField(service,"members",members);
  }
  void freeze(String channel){service.prepare(bc,List.of(Map.of("member",7L,"role","player","channel",channel,"title","frozen","sub","original","state","READY")));}
  void parallel(Runnable a,Runnable b)throws Exception{ExecutorService pool=Executors.newFixedThreadPool(2);try{Future<?> x=pool.submit(a),y=pool.submit(b);x.get(10,TimeUnit.SECONDS);y.get(10,TimeUnit.SECONDS);}finally{pool.shutdownNow();}}

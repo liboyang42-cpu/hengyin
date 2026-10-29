@@ -9,12 +9,32 @@
 const app = getApp();
 const toast = require('../../../../utils/toast.js');
 const modal = require('../../../../utils/modal.js');
+const voiceJournal = require('../../../../utils/voice-enrollment-journal.js');
 const merchantTheme = require('../../../../utils/merchant-theme.js');
 const pixelAvatar = require('../../../../utils/pixel-avatar.js');
 const profileReview = require('../../../../utils/profile-review.js');
 const pixelPortrait = require('../../../../utils/pixel-portrait.js');
 // 单文件限额与共享上传入口同一真源(生产 application.yml 10MB),避免页面自定 20MB 与服务端脱节。
 const { MAX_UPLOAD_FILE_SIZE } = require('../../../../utils/transport/upload-client.js');
+const { streetOnly } = require('../../utils/address-short.js');
+
+/**
+ * 2026-10-27 业主 M-28(§6.3 已确认):性格设定不再自由输入,改成三选一 chip。
+ * 后端枚举由 L01 落地(personality = gentle / cute / savage);同时把中文标签写进 persona,
+ * 旧后端只认 persona 时角色照样按这个性格说话。读回时优先认 personality 枚举,其次认 persona 恰好是某个标签。
+ */
+const PERSONALITIES = [
+  { key: 'gentle', label: '温柔', desc: '轻声细语，耐心周到' },
+  { key: 'cute', label: '可爱', desc: '活泼俏皮，爱用语气词' },
+  { key: 'savage', label: '毒舌', desc: '嘴上不饶人，心里很热情' },
+];
+function personalityOf(key, persona) {
+  const byKey = PERSONALITIES.filter((p) => p.key === key)[0];
+  if (byKey) return byKey;
+  const text = String(persona || '').trim();
+  return PERSONALITIES.filter((p) => p.label === text)[0] || null;
+}
+const INTRO_SEEN_KEY = 'cy_ai_npc_intro_seen';
 
 /** CU-M-81:没有坐标时的落点文案。地址只能当辅助,不能顶替「已设置点位」。 */
 const STORE_POINT_UNSET = '尚未选择地图位置';
@@ -62,6 +82,16 @@ Page({
     greeting: '',
     persona: '',
     knowledge: '',
+    // M-28:性格三选一(gentle/cute/savage);personaSheet = 选性格的弹层,personaPick = 弹层里的当前勾选
+    personalities: PERSONALITIES,
+    personality: '',
+    personaSheet: false,
+    personaPick: '',
+    // M-28:门店信息版式 —— 行默认只读,点底部「编辑」才可改;首次进入给一段「这是什么」的说明
+    editing: false,
+    introVisible: false,
+    // M-28:麦克风权限被拒后,引导去设置页打开 scope.record
+    voiceNeedSetting: false,
     auditStatus: null,
     auditReason: '',
     // W10b #25:服务端审核回执翻成的一句话(人设审核 / 玩家能否看到 / 形象图复核);读不到为空,不编造。
@@ -84,6 +114,8 @@ Page({
     voicePlaying: false,
     voiceSample: '',
     voiceUnknown: false,
+    voiceHistory: [],
+    voiceHistoryResult: '',
     voiceConsent: false,
     voiceSentences: VOICE_SENTENCES,
     voiceSentenceIndex: 0,
@@ -107,7 +139,24 @@ Page({
       statusBarHeight: sys.statusBarHeight || 20,
       navBarHeight: app.globalData.navBarHeight || 44,
     });
+    let introSeen = false;
+    try { introSeen = typeof wx.getStorageSync === 'function' && !!wx.getStorageSync(INTRO_SEEN_KEY); } catch (e) { introSeen = false; }
+    if (!introSeen) this.setData({ introVisible: true });
     this._loadProfile();
+  },
+  dismissIntro() {
+    this.setData({ introVisible: false });
+    try { if (typeof wx.setStorageSync === 'function') wx.setStorageSync(INTRO_SEEN_KEY, 1); } catch (e) { /* 存不下只是下次再说明一遍 */ }
+  },
+  toggleEditing() {
+    if (this.data.saving || this.data.processing) return;
+    this.setData({ editing: !this.data.editing });
+  },
+  // 只读态下行不响应;编辑态按 data-action 分派到原来的处理函数(同门店信息 onBasicAction)
+  onHomeAction(e) {
+    if (!this.data.editing) return;
+    const action = e.currentTarget.dataset.action;
+    if (['openAvatar', 'openVoice', 'editField', 'chooseStorePoint'].indexOf(action) !== -1) this[action](e);
   },
   onShow() {
     merchantTheme.merchantPageShow();
@@ -121,6 +170,11 @@ Page({
   },
   onHide() {
     this._voiceClearEpoch = (this._voiceClearEpoch || 0) + 1;
+    this._voicePageEpoch = (this._voicePageEpoch || 0) + 1;
+    // Retire only this page generation's in-memory confirmation; durable UNKNOWN identities stay intact.
+    this._voiceConfirming = false;
+    this._voiceRiskModalOpen = false;
+    this._voiceRiskModalOwner = null;
     this._hidden = true;
     this._voiceStatusVersion = (this._voiceStatusVersion || 0) + 1;
     this._voiceHoldReleased = true;
@@ -134,6 +188,11 @@ Page({
   },
   onUnload() {
     this._voiceClearEpoch = (this._voiceClearEpoch || 0) + 1;
+    this._voicePageEpoch = (this._voicePageEpoch || 0) + 1;
+    // Retire only this page generation's in-memory confirmation; durable UNKNOWN identities stay intact.
+    this._voiceConfirming = false;
+    this._voiceRiskModalOpen = false;
+    this._voiceRiskModalOwner = null;
     this._destroyed = true;
     this._voiceHoldReleased = true;
     clearTimeout(this._voiceTimer);
@@ -177,8 +236,9 @@ Page({
         this._photoMember = this._voiceMember = memberId;
         const d = res.data || {},
           avatar = String(d.avatar || '');
-        this._saved = { avatar, name: d.name || '', greeting: d.greeting || '', persona: d.persona || '', knowledge: d.knowledge || '' };
-        (Object.assign(this.data, {hasProfile: !!avatar, savedAvatar: avatar}), this.setData({loading: false, name: this._saved.name, greeting: this._saved.greeting, persona: this._saved.persona, knowledge: this._saved.knowledge, auditStatus: d.auditStatus == null ? null : Number(d.auditStatus), auditReason: d.auditReason || '', voiceStatus: Number(d.voiceStatus) || 0}, () => this.restoreAvatar()));
+        const picked = personalityOf(d.personality, d.persona);
+        this._saved = { avatar, name: d.name || '', greeting: d.greeting || '', persona: picked ? picked.label : (d.persona || ''), knowledge: d.knowledge || '' };
+        (Object.assign(this.data, {hasProfile: !!avatar, savedAvatar: avatar}), this.setData({loading: false, name: this._saved.name, greeting: this._saved.greeting, persona: this._saved.persona, personality: picked ? picked.key : '', knowledge: this._saved.knowledge, auditStatus: d.auditStatus == null ? null : Number(d.auditStatus), auditReason: d.auditReason || '', voiceStatus: Number(d.voiceStatus) || 0}, () => this.restoreAvatar()));
         this.refreshVoice();
         this._loadReview();
       })
@@ -231,7 +291,8 @@ Page({
     const hasPoint = lat !== null && lat !== undefined && lat !== ''
       && lng !== null && lng !== undefined && lng !== '';
     this.setData({
-      storePointText: hasPoint ? (profile.address || '已选择地图位置') : STORE_POINT_UNSET,
+      // G-7:行里只显示到路名,完整地址不进设置行
+      storePointText: hasPoint ? (streetOnly(profile.address) || '已选择地图位置') : STORE_POINT_UNSET,
     });
   },
   restoreAvatar() {
@@ -275,18 +336,54 @@ Page({
   },
   editField(e) {
     const key = e.currentTarget.dataset.key;
-    if (key !== 'name' && key !== 'greeting' && key !== 'persona' && key !== 'knowledge') return;
+    // M-28:性格不再是文本框,走三选一弹层
+    if (key === 'persona') return this.openPersona();
+    if (key !== 'name' && key !== 'greeting' && key !== 'knowledge') return;
     this.setData({
       field: {
         key,
-        label: key === 'name' ? '角色名字' : key === 'persona' ? '性格设定' : key === 'knowledge' ? '店铺知识' : '招呼语',
+        label: key === 'name' ? '角色名字' : key === 'knowledge' ? '店铺知识' : '招呼语',
         value: this.data[key],
         initial: this.data[key],
-        max: key === 'name' ? 32 : key === 'greeting' ? 60 : key === 'knowledge' ? 2000 : 500,
-        multiline: key === 'persona' || key === 'knowledge',
+        max: key === 'name' ? 32 : key === 'greeting' ? 60 : 2000,
+        multiline: key === 'knowledge',
       },
       saveError: '',
     });
+  },
+  openPersona() {
+    this.setData({ personaSheet: true, personaPick: this.data.personality, saveError: '' });
+  },
+  closePersona() {
+    if (!this.data.saving) this.setData({ personaSheet: false });
+  },
+  pickPersona(e) {
+    const key = e.currentTarget.dataset.key;
+    if (this.data.saving || !personalityOf(key)) return;
+    if (key === this.data.personality && this.data.hasProfile) { this.setData({ personaPick: key, personaSheet: false }); return; }
+    this.setData({ personaPick: key });
+    this.savePersona();
+  },
+  // 选定即保存:与其它字段弹层同一条持久化路径(首次建档走 save,已有档案走 persistProfile)
+  savePersona() {
+    if (this.data.saving) return;
+    const picked = personalityOf(this.data.personaPick);
+    if (!picked) return toast('选一个性格');
+    if (!this.data.hasProfile) {
+      this.setData({ persona: picked.label, personality: picked.key });
+      if (!this.data.name.trim()) {
+        toast('先给角色起个名字');
+        this.setData({ personaSheet: false });
+        this.editField({ currentTarget: { dataset: { key: 'name' } } });
+        return;
+      }
+      this.save(() => this.setData({ personaSheet: false }));
+      return;
+    }
+    this.persistProfile(
+      { name: this.data.name, greeting: this.data.greeting, persona: picked.label, knowledge: this.data.knowledge, avatar: this.data.savedAvatar },
+      () => this.setData({ personaSheet: false })
+    );
   },
   onFieldInput(e) {
     if (!this.data.saving) this.setData({ 'field.value': e.detail.value });
@@ -580,13 +677,16 @@ Page({
     const current = () => !this._destroyed && String(app.getUserID() || '') === memberId;
     if (this.data.saving) return;
     this.setData({ saving: true, saveError: '' });
-    return this._request('/api/merchant/npc/save', payload)
+    // M-28:性格枚举随 persona 标签一起提交(L01 后端读 personality;旧后端忽略未知字段、只用 persona)
+    const picked = personalityOf('', payload.persona);
+    const body = picked ? Object.assign({}, payload, { personality: picked.key }) : payload;
+    return this._request('/api/merchant/npc/save', body)
       .then((res) => {
         if (!current()) return;
         const receipt = res && res.receipt;
         this._saved = Object.assign({}, payload);
         this._portrait = null;
-        (Object.assign(this.data, {hasProfile: true, savedAvatar: payload.avatar, dirty: false}), this.setData({saving: false, name: payload.name, greeting: payload.greeting, persona: payload.persona || '', knowledge: payload.knowledge || '', auditStatus: 0, auditReason: ''}));
+        (Object.assign(this.data, {hasProfile: true, savedAvatar: payload.avatar, dirty: false}), this.setData({saving: false, name: payload.name, greeting: payload.greeting, persona: payload.persona || '', personality: picked ? picked.key : '', knowledge: payload.knowledge || '', auditStatus: 0, auditReason: ''}));
         this._reviewSeq = (this._reviewSeq || 0) + 1;
         this.setData({ reviewText: profileReview.merchantNpcText(receipt) });
         if (!receipt) this._loadReview();
@@ -655,37 +755,135 @@ Page({
     this.setData({ voiceVisible: false });
     if (this._audio) this._audio.stop();
   },
+  _voiceContext() {
+    const epoch = this._voicePageEpoch || 0;
+    return voiceJournal.context(app, wx, () => !this._destroyed && !this._hidden && (this._voicePageEpoch || 0) === epoch);
+  },
+  _voiceObserve(context, requestId, value) {
+    if (!context.current()) return false;
+    if (value.voiceSelected !== false && /^media-asset:[1-9][0-9]*$/.test(this.data.voiceSample)
+        && value.voiceSample !== this.data.voiceSample) throw Error('返回结果与这段录音不一致，请查询原请求');
+    const observed = voiceJournal.observe(wx, context.member, 'merchant', requestId, value);
+    this.setData({ voiceHistory: voiceJournal.recover(wx, context.member, 'merchant', value.voiceHistory).records });
+    if (!observed.selected) return false;
+    this._voiceDisplayContext = context;
+    const uncertain = ['IN_FLIGHT', 'UNKNOWN'].includes(value.voiceIntentState);
+    this.setData({ voiceStatus: Number(value.voiceStatus), voiceSample: value.voiceSample || this.data.voiceSample,
+      voiceUnknown: uncertain, voiceFile: uncertain || value.voiceIntentState === 'NOT_SENT' ? this.data.voiceFile : null });
+    return true;
+  },
   refreshVoice(clearCurrent) {
-    const memberId = String(app.getUserID() || '');
+    if (typeof clearCurrent !== 'function') clearCurrent = undefined;
+    let context, pending;
+    try { context = this._voiceContext(); pending = voiceJournal.load(wx, context.member, 'merchant'); }
+    catch (e) { this.setData({ voiceError: e.message }); return Promise.resolve(); }
     const version = this._voiceStatusVersion = (this._voiceStatusVersion || 0) + 1;
-    const current = () => (!clearCurrent || clearCurrent())
-      && !this._destroyed && !this._hidden && this._voiceStatusVersion === version
-      && String(app.getUserID() || '') === memberId;
+    const current = () => (!clearCurrent || clearCurrent()) && context.current() && this._voiceStatusVersion === version;
     clearTimeout(this._voiceTimer);
-    if (this._destroyed || this._hidden) return;
-    return this._request('/api/merchant/npc/voice/status')
+    if (!current()) return Promise.resolve();
+    this.setData({ voiceHistory: pending.records });
+    return this._request('/api/merchant/npc/voice/status', { voiceRequestId: pending.active })
       .then((res) => {
         if (!current()) return;
-        const value = res.data || res,
-          status = Number(value.voiceStatus);
-        if (![0, 1, 2, 3].includes(status)) throw Error('声音状态暂时无法确认');
-        // PRIVATE-GROUP-H-voice-original-result:UNKNOWN 只能由「服务端样本 = 原录音」解除;
-        // 状态有效但样本还是旧的,说明原提交没确认,继续锁住重录/上传,等再次查询。
-        const original = !!(this.data.voiceFile && this.data.voiceFile.url) && value.voiceSample === this.data.voiceFile.url;
-        const confirmed = (status === 1 || status === 2) && original;
-        this.setData({
-          voiceStatus: status,
-          voiceSample: value.voiceSample || '',
-          voiceUnknown: this.data.voiceUnknown && !original,
-          voiceFile: confirmed ? null : this.data.voiceFile,
-        });
-        if (status === 1) this._voiceTimer = setTimeout(() => { if (current()) this.refreshVoice(clearCurrent); }, 5000);
-      })
-      .catch((e) => {
+        const value = res.data || res;
+        if (!value.voiceRequestId && !pending.active) {
+          this._voiceDisplayContext = context;
+          this.setData({ voiceStatus: Number(value.voiceStatus) || 0, voiceSample: value.voiceSample || '' });
+          if (Number(value.voiceStatus) === 1) this._voiceTimer = setTimeout(() => { if (current()) this.refreshVoice(clearCurrent); }, 5000);
+          return;
+        }
+        const selected = this._voiceObserve(context, pending.active, value);
+        // Reset changes the selected profile, not the original READY enrollment fact.
+        // Only this still-current clear reader may project its authoritative empty profile.
+        if (clearCurrent && !selected && value.voiceSelected === false && value.voiceStatus === 0
+            && value.voiceIntentState === 'READY' && value.voiceReasonCode === 'VOICE_PROFILE_CHANGED'
+            && voiceJournal.load(wx, context.member, 'merchant').active === pending.active) {
+          this._voiceDisplayContext = context;
+          this.setData({ voiceStatus: 0, voiceSample: '', voiceUnknown: false });
+        }
+        if (selected && value.voiceIntentState === 'PENDING')
+          this._voiceTimer = setTimeout(() => { if (current()) this.refreshVoice(clearCurrent); }, 5000);
+      }).catch((e) => {
         if (!current()) return;
         this.setData({ voiceError: e.message });
         if (this.data.voiceStatus === 1)
           this._voiceTimer = setTimeout(() => { if (current()) this.refreshVoice(clearCurrent); }, 5000);
+      });
+  },
+  readVoiceHistory(e) {
+    let context;
+    try { context = this._voiceContext(); } catch (error) { this.setData({ voiceError: error.message }); return; }
+    const requestId = e.currentTarget.dataset.request;
+    const pending = voiceJournal.load(wx, context.member, 'merchant');
+    if (!pending.records.some(row => row.requestId === requestId)) return;
+    this._request('/api/merchant/npc/voice/status', { voiceRequestId: requestId }).then(res => {
+      if (!context.current()) return;
+      const value = res.data || res;
+      voiceJournal.observe(wx, context.member, 'merchant', requestId, value);
+      this.setData({ voiceHistory: voiceJournal.load(wx, context.member, 'merchant').records,
+        voiceHistoryResult: '原请求状态：' + value.voiceIntentState });
+
+    }).catch(error => { if (context.current()) this.setData({ voiceError: error.message }); });
+  },
+  confirmNewVoiceRequest() {
+    if (this._voiceConfirming || this._voiceRiskModalOpen || this.data.voiceBusy || !this.data.voiceUnknown) return;
+    let context, original;
+    try { context = this._voiceContext(); original = voiceJournal.load(wx, context.member, 'merchant').active; }
+    catch (e) { this.setData({ voiceError: e.message }); return; }
+    this._voiceConfirming = true;
+    // Prefer querying the original known voice id/result; status never creates a new enrollment.
+    return this.refreshVoice().then(() => {
+      if (!context.current() || voiceJournal.load(wx, context.member, 'merchant').active !== original) return;
+      if (this.data.voiceUnknown) this._confirmNewVoiceAfterRead();
+    }).finally(() => { if (context.current()) this._voiceConfirming = false; });
+  },
+  _confirmNewVoiceAfterRead() {
+    if (this.data.voiceBusy || !this.data.voiceUnknown || !this.data.voiceConsent) return;
+    let context, original;
+    try {
+      context = this._voiceContext();
+      const pending = voiceJournal.load(wx, context.member, 'merchant');
+      original = pending.records.find(row => row.requestId === pending.active);
+      if (!original || !original.intentId) throw Error('请先查询原请求，保留未知记录');
+      if (!/^media-asset:[1-9][0-9]*$/.test(this.data.voiceSample)) throw Error('请先查询原录音身份');
+    } catch (e) { this.setData({ voiceError: e.message }); return; }
+    const sample = this.data.voiceSample;
+    const confirmation = {};
+    this._voiceRiskModalOwner = confirmation;
+    this._voiceRiskModalOpen = true;
+    modal.show({ title: '另起独立声音请求？',
+      content: '原结果仍可能完成。新建可能产生重复音色或占用额度，费用以实际模型为准；原未知记录会保留，系统不会重发原请求。', confirmText: '确认新建',
+      success: result => {
+        if (!context.current() || this._voiceRiskModalOwner !== confirmation) return;
+        this._voiceRiskModalOwner = null;
+        this._voiceRiskModalOpen = false;
+        if (!result || !result.confirm) return;
+        this.setData({ voiceBusy: true, voiceError: '' });
+        app.requestSeparateConsent('voice', context.current).then(() => {
+          if (!context.current()) return;
+          const row = voiceJournal.begin(wx, context.member, 'merchant', original.requestId, true);
+          return this._sendVoiceIntent(context, row, sample);
+        }).catch(e => { if (context.current()) this.setData({ voiceBusy: false, voiceError: e.message }); });
+      }, complete: () => { if (context.current() && this._voiceRiskModalOwner === confirmation) {
+          this._voiceRiskModalOwner = null; this._voiceRiskModalOpen = false;
+        } } });
+  },
+  _sendVoiceIntent(context, row, sample) {
+    if (!context.current()) return Promise.resolve();
+    voiceJournal.dispatched(wx, context.member, 'merchant', row);
+    this._voiceStatusVersion = (this._voiceStatusVersion || 0) + 1;
+    return this._request('/api/merchant/npc/voice/enroll', { voiceSample: sample, voiceConsent: this.data.voiceConsent,
+      voiceRequestId: row.requestId, voicePreviousIntentId: row.previousIntentId,
+      voiceDuplicateChargeConsent: row.previousIntentId !== null }).then(res => {
+        if (!context.current()) return;
+        if (!this._voiceObserve(context, row.requestId, res.data || res)) return;
+        this.setData({ voiceBusy: false });
+        return this.refreshVoice();
+      }).catch(e => {
+        if (context.current() && voiceJournal.load(wx, context.member, 'merchant').active === row.requestId) {
+          this.setData({ voiceBusy: false, voiceUnknown: e.message !== '语音服务未开通', voiceError: e.message || '原请求结果未知，请查询状态' });
+          if (e.message !== '语音服务未开通') this.refreshVoice();
+        }
       });
   },
   onVoiceConsentChange(e) {
@@ -694,10 +892,12 @@ Page({
   voiceRecorder() {
     if (this._voiceRecorder) return this._voiceRecorder;
     const memberId = String(app.getUserID() || '');
+    const context = this._voiceContext();
+    this._voiceRecorderContext = context;
     this._voiceRecorderMember = memberId;
     const recorder = wx.getRecorderManager();
     this._voiceRecorderOnStop = (res) => {
-      if (this._destroyed || memberId !== String(app.getUserID() || '')) return;
+      if (!context.current()) return;
       const durationMs = Number(res && res.duration) || 0;
       const size = Number(res && res.fileSize) || 0;
       if (this._discardVoiceStop) {
@@ -733,6 +933,7 @@ Page({
       if (durationMs < 10000) return this.setData({ voiceFile: null, voiceSentenceIndex: 0, voiceSentenceConfirmed: 0, voiceSentenceText: VOICE_SENTENCES[0], voiceError: '请至少录满 10 秒' });
       if (!Number.isFinite(size) || size <= 0) return this.setData({ voiceFile: null, voiceSentenceIndex: 0, voiceSentenceConfirmed: 0, voiceSentenceText: VOICE_SENTENCES[0], voiceError: '录音文件为空或无效，请重新录制' });
       if (size > MAX_UPLOAD_FILE_SIZE) return this.setData({ voiceFile: null, voiceSentenceIndex: 0, voiceSentenceConfirmed: 0, voiceSentenceText: VOICE_SENTENCES[0], voiceError: '录音过大，请缩短后重录（最大10MB）' });
+      this._voiceFileContext = context;
       this.setData({
         voiceFile: {
           path: res.tempFilePath,
@@ -745,7 +946,7 @@ Page({
       });
     };
     this._voiceRecorderOnError = () => {
-      if (!this._destroyed && memberId === String(app.getUserID() || '')) this.setData({
+      if (context.current()) this.setData({
         voiceFile: null,
         voiceHolding: false,
         voiceSessionActive: false,
@@ -764,9 +965,11 @@ Page({
   },
   onVoiceHoldStart() {
     const memberId = String(app.getUserID() || '');
-    const current = () => !this._destroyed && String(app.getUserID() || '') === memberId;
+    let context;
+    try { context = this._voiceContext(); } catch (e) { this.setData({ voiceError: e.message }); return; }
+    const current = context.current;
     // shortcut: 跨账号的原生录音句柄需重进页面释放；要支持同页换号录制时再重建会话。
-    if (this._voiceRecorder && this._voiceRecorderMember !== memberId) {
+    if (this._voiceRecorder && (!this._voiceRecorderContext || !this._voiceRecorderContext.current())) {
       this.setData({ voiceError: '登录状态已变更，请退出页面后重新录音' });
       return;
     }
@@ -788,6 +991,7 @@ Page({
         voiceSessionActive: true,
         voiceFile: null,
         voiceError: '',
+        voiceNeedSetting: false,
       });
     };
     if (this.data.voiceSessionActive) {
@@ -803,8 +1007,19 @@ Page({
       })
       .catch(() => {
         this._voiceStarting = false;
-        if (current()) this.setData({ voiceHolding: false, voiceError: '没有录音权限，请在设置里允许后重试' });
+        // M-28:被拒过一次后 wx.authorize 不会再弹窗,只能去设置页打开 —— 给一颗直达设置的按钮
+        if (current()) this.setData({ voiceHolding: false, voiceNeedSetting: true, voiceError: '没有录音权限，去设置打开麦克风后再录' });
       });
+  },
+  // 必须由用户点击直接触发(wx.openSetting 的调用约束),所以挂在按钮的 bindtap 上
+  openRecordSetting() {
+    if (typeof wx.openSetting !== 'function') return;
+    wx.openSetting({
+      success: (res) => {
+        const granted = !!(res && res.authSetting && res.authSetting['scope.record']);
+        if (granted && !this._destroyed) this.setData({ voiceNeedSetting: false, voiceError: '' });
+      },
+    });
   },
   onVoiceHoldEnd() {
     this._voiceHoldReleased = true;
@@ -847,25 +1062,28 @@ Page({
   },
   clearVoice() {
     if (this.data.voiceBusy || this.data.voiceUnknown || this._voiceClearing) return;
+    let context;
+    try { context = this._voiceContext(); } catch (e) { this.setData({ voiceError: e.message }); return; }
+    if (this._voiceDisplayContext && !this._voiceDisplayContext.current()) return;
     const current = this.voiceClearCurrent();
     modal.show({
       title: '清除角色声音？',
       content: '清除后店铺角色不再用这段声音说话，需要重新录音生成才能恢复。',
       confirmText: '清除',
       danger: true,
-      success: (res) => { if (res && res.confirm && current()) this._doClearVoice(); },
+      success: (res) => { if (res && res.confirm && context.current() && current()) this._doClearVoice(context); },
     });
   },
-  _doClearVoice() {
-    if (this._voiceClearing || this._hidden || this._destroyed) return;
+  _doClearVoice(context) {
+    if (this._voiceClearing || this._hidden || this._destroyed || !context || !context.current()) return;
     const current = this.voiceClearCurrent();
     this._voiceClearing = true;
     if (this._audio) this._audio.stop();
     this.setData({ voiceBusy: true, voiceError: '', voicePlaying: false });
     this._request('/api/merchant/npc/voice/reset')
-      .then(() => { if (current()) return this.refreshVoice(current); })
+      .then(() => context.current() && current() ? this.refreshVoice(current) : null)
       .then(() => {
-        if (!current()) return;
+        if (!context.current() || !current()) return;
         this._voiceClearing = false;
         if (this.data.voiceStatus === 0 && !this.data.voiceError) {
           this.setData({ voiceBusy: false, voiceSample: '' });
@@ -875,7 +1093,7 @@ Page({
         }
       })
       .catch((e) => {
-        if (!current()) return;
+        if (!context.current() || !current()) return;
         this._voiceClearing = false;
         this.setData({ voiceBusy: false, voiceError: e.message });
       });
@@ -919,6 +1137,11 @@ Page({
     return audio;
   },
   playVoice() {
+    const original = this.data.voiceFile ? this._voiceFileContext : this._voiceDisplayContext;
+    if (!original || !original.current()) {
+      if (this._audio) this._audio.stop();
+      this.setData({ voicePlaying: false, voiceError: '登录或页面已变化，请重新读取声音' }); return;
+    }
     const audio = this.audio();
     if (this.data.voicePlaying) {
       audio.stop();
@@ -931,77 +1154,28 @@ Page({
     this.setData({ voicePlaying: true });
   },
   uploadVoice() {
-    const memberId = String(app.getUserID() || '');
-    const current = () => !this._destroyed && String(app.getUserID() || '') === memberId;
-    if (this.data.voiceBusy || this.data.voiceStatus === 1 || this.data.voiceUnknown || !this.data.voiceFile)
-      return;
-    if (this._voiceMember !== memberId) {
-      this.setData({ voiceError: '登录状态已变更，请重新录音' });
-      return;
+    if (this.data.voiceBusy || this.data.voiceStatus === 1 || this.data.voiceUnknown || !this.data.voiceFile) return;
+    let context, pending;
+    try { context = this._voiceContext(); pending = voiceJournal.load(wx, context.member, 'merchant'); }
+    catch (e) { this.setData({ voiceError: e.message }); return; }
+    if ((this._voiceFileContext && !this._voiceFileContext.current()) || this._voiceMember !== context.member || !this.data.voiceConsent) {
+      this.setData({ voiceError: '请确认当前账号的声音使用授权并重新录音' }); return;
     }
-    if (!this.data.voiceConsent) {
-      this.setData({ voiceError: '请确认这是本人声音或已获得声音使用授权' });
-      return;
-    }
-    this.audio().stop();
-    this.setData({ voiceBusy: true, voiceError: '' });
-    const upload = () => this.data.voiceFile.url
-      ? Promise.resolve(this.data.voiceFile.url)
-      : new Promise((resolve, reject) => {
-          app.getUploadClient().uploadAll([this.data.voiceFile.path], {
-            // 该页持有真实 size:交给共享入口按生产 10MB 前置拒绝,超出不发起注定被容器截断的连接。
-            fileSizes: [this.data.voiceFile.size],
-            mapResult: (d) => d.url,
-            onDone: (r) => {
-              if (r.ok && r.results[0]) { resolve(r.results[0]); return; }
-              // 共享入口的「已知 size 超限」预检带 reason:'oversize',直接展示其可操作文案;
-              // 其余(含 socket closed 等未知故障)沿用页面既有兜底,明确告知文件已保留、可重试。
-              const failure = r.failures && r.failures[0];
-              const msg = failure && failure.reason === 'oversize'
-                ? failure.msg
-                : '录音上传失败，文件已保留';
-              reject(Error(msg));
-            },
-          });
-        });
-    app.requestSeparateConsent('voice', current).then(() => current() ? upload() : null)
-      .then((url) => {
-        if (!current()) return;
-        this.setData({ 'voiceFile.url': url });
-        this._voiceSubmitted = true;
-        return this._request('/api/merchant/npc/voice/enroll', {
-          voiceSample: url,
-          voiceConsent: this.data.voiceConsent,
-        });
-      })
-      .then((res) => {
-        if (!current()) return;
-        const d = res.data || res;
-        // enroll 成功只会回 1(生成中)/2(已就绪);类型不对就当结果未知,保留原录音去回读
-        if (!(d.voiceStatus === 1 || d.voiceStatus === 2)) {
-          this.setData({ voiceBusy: false, voiceError: '声音结果待确认，请查询生成状态', voiceUnknown: true });
-          this.refreshVoice();
-          return;
-        }
-        this.setData({
-          voiceBusy: false,
-          voiceStatus: d.voiceStatus,
-          voiceFile: null,
-          voiceUnknown: false,
-        });
-        this.refreshVoice();
-      })
-      .catch((e) => {
-        if (!current()) return;
-        // 只有已发出 enroll 且没拿到明确业务回执(断网/HTTP 异常/后端「结果待确认」)才是 UNKNOWN;
-        // 明确的业务拒绝(未开通、上游拒绝等)是确定失败,保留录音可直接重试。
-        const unknown = !!this._voiceSubmitted && (e.transport === true || e.message === '声音结果待确认，请稍后查询状态');
-        this.setData({ voiceBusy: false, voiceError: e.message, voiceUnknown: unknown });
-        // 可能已经提交成功，先查状态再允许重试，避免重复生成。
-        if (unknown) this.refreshVoice();
-      })
-      .finally(() => {
-        if (current()) this._voiceSubmitted = false;
-      });
+    const file = this.data.voiceFile;
+    this.audio().stop(); this.setData({ voiceBusy: true, voiceError: '' });
+    const upload = () => file.url && /^media-asset:[1-9][0-9]*$/.test(file.url) ? Promise.resolve(file.url)
+      : new Promise((resolve, reject) => app.getUploadClient().uploadAll([file.path], {
+        fileSizes: [file.size], mapResult: d => d.assetId ? 'media-asset:' + d.assetId : '',
+        onDone: r => { if (r.ok && r.results[0]) resolve(r.results[0]); else {
+          const failure = r.failures && r.failures[0];
+          reject(Error(failure && failure.reason === 'oversize' ? failure.msg : '录音上传失败或缺少资产身份，文件已保留'));
+        } } }));
+    app.requestSeparateConsent('voice', context.current).then(() => context.current() ? upload() : null)
+      .then(sample => {
+        if (!context.current()) return;
+        this.setData({ 'voiceFile.url': sample, voiceSample: sample });
+        const row = voiceJournal.begin(wx, context.member, 'merchant', pending.active, false);
+        return this._sendVoiceIntent(context, row, sample);
+      }).catch(e => { if (context.current()) this.setData({ voiceBusy: false, voiceError: e.message }); });
   },
 });

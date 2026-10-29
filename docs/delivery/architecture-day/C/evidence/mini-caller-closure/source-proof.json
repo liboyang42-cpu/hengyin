@@ -1,0 +1,22 @@
+[
+  {
+    "file": "chengyinhub-xcx/pages/play/index.js",
+    "identicalToPublic07172": true,
+    "sha256": "83f00347d7e443f2a0fc603c1ca8154606ba5ae34a1f4aadc8f09d922cb46e2c"
+  },
+  {
+    "file": "chengyinhub-xcx/pages/play/components/advanced-game/index.js",
+    "identicalToPublic07172": true,
+    "sha256": "263684c469708279897cd512600e1dad1d653fe1ce4aafe9e94a59b25ee9deb2"
+  },
+  {
+    "file": "chengyinhub-xcx/pages/play/utils/advanced-photo-pending.js",
+    "identicalToPublic07172": true,
+    "sha256": "90c7bedaaacccaa6ecf408ee70adcf783c01d987bb1f8a271ee6f8949d5959ad"
+  },
+  {
+    "file": "chengyinhub-xcx/utils/transport/upload-client.js",
+    "identicalToPublic07172": true,
+    "sha256": "84f2de2f04405e91c4fbb1d0082e77623f4b5ff4de821a6200186b63a1ab237a"
+  }
+]

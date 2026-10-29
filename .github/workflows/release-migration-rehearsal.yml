@@ -1,6 +1,6 @@
 name: Release migration rehearsal
 
-# 发布迁移包（docs/delivery/release-closeout-20261022/release-migration-pack.*）的演练：
+# 发布迁移包（docs/delivery/release-closeout-20261028/release-migration-pack.*；10-22 包保留为历史）的演练：
 # 在 GitHub 托管 runner 上起一次性、钉 digest 的 MySQL 8.0.45，从 base schema 建库，
 # 按序执行本次发布的全部迁移，再原样重跑一遍证明零变更，并回读只读预检脚本。
 # 不连任何真实主机；库、容器、口令都只活在这一个 job 里。
@@ -10,8 +10,8 @@ on:
       - '.github/workflows/release-migration-rehearsal.yml'
       - 'ci/release_migration_rehearsal.py'
       - 'ci/test_release_migration_rehearsal.py'
-      - 'docs/delivery/release-closeout-20261022/release-migration-pack.json'
-      - 'docs/delivery/release-closeout-20261022/release-migration-precheck.sql'
+      - 'docs/delivery/release-closeout-20261028/release-migration-pack.json'
+      - 'docs/delivery/release-closeout-20261028/release-migration-precheck.sql'
   workflow_dispatch:
 
 permissions:

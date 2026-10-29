@@ -1,4 +1,5 @@
 name: GitHub CI
+run-name: ${{ github.event_name == 'workflow_dispatch' && inputs.validation_scope == 'selected' && 'PARTIAL SELECTED CI' || 'GitHub CI' }} @ ${{ github.sha }}
 
 # 2026-09-01:检查改回 GitHub-hosted ubuntu-latest(不再占本机 runner)。
 #    部署(deploy.yml / deploy-ui.yml / codeup-mirror.yml)仍用 self-hosted Mac。
@@ -6,6 +7,20 @@ name: GitHub CI
 
 on:
   workflow_dispatch:
+    inputs:
+      validation_scope:
+        description: Full original routing, or explicit PARTIAL selected validation
+        type: choice
+        options: [full, selected]
+        default: full
+      selected_jobs:
+        description: 'Selected only: exact CSV IDs fast_gates,backend,mini_unit,mini_static,admin_ui,admin_ui_contract,dependency_audit,migration_layout,migration_safety'
+        type: string
+        default: ''
+      mini_shards:
+        description: 'Selected mini_unit only: explicit unique JSON integers 1..20, chosen for the final source manifest; no old failure list is assumed'
+        type: string
+        default: '[]'
   pull_request:
     branches: [master, feature/mini-unify-1003, feature/popup-ship-1005, feature/prelaunch-audit-1007]
   push:
@@ -20,12 +35,12 @@ permissions:
 concurrency:
   # master:用 run_id 让每个 run 独占一组,彼此不取消 —— 每次合并都必须跑完,才能触发 deploy(workflow_run success)
   # PR/feature:按 ref 分组,同分支新 push 取消旧的 in-progress/queued CI,只保留最新 SHA
-  group: ci-${{ github.workflow }}-${{ github.ref == 'refs/heads/master' && github.run_id || github.ref }}
+  group: ci-${{ github.workflow }}-${{ github.ref == 'refs/heads/master' && github.run_id || github.ref }}${{ github.event_name == 'workflow_dispatch' && inputs.validation_scope == 'selected' && '-partial' || '' }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
 
 jobs:
   changes:
-    name: Detect changed areas
+    name: ${{ github.event_name == 'workflow_dispatch' && inputs.validation_scope == 'selected' && 'PARTIAL SELECTED - admission and changed areas' || 'Detect changed areas' }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -37,12 +52,45 @@ jobs:
       xcx: ${{ steps.filter.outputs.xcx }}
       dependency: ${{ steps.filter.outputs.dependency }}
       migration: ${{ steps.filter.outputs.migration }}
+      selected: ${{ steps.selection.outputs.selected }}
+      selection_json: ${{ steps.selection.outputs.selection_json }}
+      mini_exclude: ${{ steps.selection.outputs.mini_exclude }}
+      run_fast_gates: ${{ steps.selection.outputs.run_fast_gates }}
+      run_backend: ${{ steps.selection.outputs.run_backend }}
+      run_mini_unit: ${{ steps.selection.outputs.run_mini_unit }}
+      run_mini_static: ${{ steps.selection.outputs.run_mini_static }}
+      run_admin_ui: ${{ steps.selection.outputs.run_admin_ui }}
+      run_admin_ui_contract: ${{ steps.selection.outputs.run_admin_ui_contract }}
+      run_dependency_audit: ${{ steps.selection.outputs.run_dependency_audit }}
+      run_migration_layout: ${{ steps.selection.outputs.run_migration_layout }}
+      run_migration_safety: ${{ steps.selection.outputs.run_migration_safety }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0        # 红线门禁的 H11 那一族要算 master 合并基线(同 mini_program 的 DS 门)
           filter: blob:none     # 2026-08-28:只拉提交图不拉历史 blob。这些门禁只需算 merge-base,
                                 # 不需要历史文件内容;实测 unshallow 216s→46s。gitleaks 那处**不加**(它要扫内容)。
+      - uses: actions/setup-node@v4
+        if: github.event_name == 'workflow_dispatch' && inputs.validation_scope == 'selected'
+        with:
+          node-version: '22'
+      - name: Admit exact manual selection or preserve original full routing
+        id: selection
+        env:
+          CI_VALIDATION_SCOPE: ${{ inputs.validation_scope }}
+          CI_SELECTED_JOBS: ${{ inputs.selected_jobs }}
+          CI_MINI_SHARDS: ${{ github.event_name != 'workflow_dispatch' && '[]' || inputs.mini_shards }}
+        run: node ci/ci-selected-validation.js plan
+      - name: Preserve source-bound selection plan
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-selection-plan-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/ci-selection/plan.json
+            ${{ runner.temp }}/ci-selection/mini-manifest.json
+          if-no-files-found: warn
+          retention-days: 1
       - uses: dorny/paths-filter@v3
         id: filter
         with:
@@ -188,6 +236,7 @@ jobs:
               - '**/pnpm-lock.yaml'
               - 'ci/dependency-audit-gate.py'
               - 'ci/test_dependency_audit_gate.py'
+              - 'ops/turntable-render/dependency-contract.test.cjs'
               - 'ci/grype.yaml'
               - 'ci/test_ci_cost_contract.py'
               - '.github/workflows/ci.yml'
@@ -232,6 +281,8 @@ jobs:
               - '.github/workflows/ci.yml'
       - name: Verify CI cost routing contract
         run: python3 ci/test_ci_cost_contract.py
+      - name: Verify selected validation admission and evidence controls
+        run: node --test ci/test_ci_selected_validation.js
       - name: Verify fresh test administrator bootstrap contracts
         run: python3 ci/test_bootstrap_test_admin.py
       - name: Verify template cover contract
@@ -262,9 +313,13 @@ jobs:
           python3 ci/forbidden_hosts_gate.py
 
   fast_gates:
-    name: Fast gates (CWD / API existence / silentError)
+    name: ${{ github.event_name == 'workflow_dispatch' && inputs.validation_scope == 'selected' && 'PARTIAL SELECTED - Fast gates (CWD / API existence / silentError)' || 'Fast gates (CWD / API existence / silentError)' }}
+    needs: changes
+    if: ${{ always() && ((github.event_name != 'workflow_dispatch' || inputs.validation_scope != 'selected') || needs.changes.result != 'success' || needs.changes.outputs.run_fast_gates == 'true') }}
     # ★ 2026-08-28:由 cwd_independence / api_existence / silent_error 三个 job 合并而来。
-    #   三者条件完全相同(都【没有】needs 与 if,永远运行),各自只跑几十秒,却各做一次
+    #   原完整模式三者仍永远运行(即使 changes 失败)；显式 selected 才按精确 admission 选择。
+    #   当前 needs 只提供该显式选择，不把 fast 的失败并入完整模式 required mini 判定。
+    #   各自只跑几十秒,却各做一次
     #   checkout —— 这个仓库 6826 个文件,三次检出的开销比闸本身还大。
     #   ⚠️ 合并的边界在哪:原 silent_error 的注释写明「不塞进 mini_program」,理由是并进
     #      【required check】后一红会把它一起拖红,而 master 开着 enforce_admins ⇒ 所有 PR
@@ -318,12 +373,69 @@ jobs:
         if: '!cancelled()'
         run: node ci/silent-error-gate.js
 
+      # F architecture gate: begin
+      # Reuse this unconditional job; no new job/matrix or Java receipt requirement.
+      - name: Checkout reviewed architecture verifier
+        id: architecture_checkout
+        if: '!cancelled()'
+        uses: actions/checkout@v4
+        with:
+          repository: liboyang42-cpu/hengyin
+          ref: 9782954919075c4a13d209f5f3ab4e3ff8f4e9e8
+          path: .architecture-gate
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Architecture gate positive and negative controls
+        id: architecture_selftest
+        if: ${{ !cancelled() && steps.architecture_checkout.outcome == 'success' }}
+        env:
+          ARCHITECTURE_WORKFLOW: ${{ github.workspace }}/.github/workflows/ci.yml
+        run: python3 -m unittest discover -s .architecture-gate/ci/architecture -p 'test_*.py' -v
+      - name: Check architecture changes against trusted CI base
+        id: architecture_check
+        if: ${{ !cancelled() && steps.architecture_selftest.outcome == 'success' }}
+        env:
+          ARCH_CANDIDATE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          ARCH_TARGET_SHA: ${{ github.event.pull_request.base.sha }}
+          ARCH_BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+          case "$GITHUB_EVENT_NAME" in
+            pull_request) arch_base=$(git merge-base "$ARCH_CANDIDATE_SHA" "$ARCH_TARGET_SHA") ;;
+            push) arch_base="$ARCH_BEFORE_SHA" ;;
+            workflow_dispatch) arch_base=$(python3 .architecture-gate/ci/architecture/gate.py manual-base --source . --candidate "$ARCH_CANDIDATE_SHA") ;;
+            *) echo '::error::Unsupported architecture CI event'; exit 1 ;;
+          esac
+          arch_source=$(mktemp -d "$RUNNER_TEMP/architecture-source.XXXXXX")
+          cleanup_architecture_source() {
+            arch_status=$?
+            trap - EXIT
+            if ! git worktree remove "$arch_source"; then
+              echo '::error::Could not remove this job architecture source worktree'
+              exit 1
+            fi
+            exit "$arch_status"
+          }
+          trap cleanup_architecture_source EXIT
+          git worktree add --detach "$arch_source" "$ARCH_CANDIDATE_SHA"
+          python3 .architecture-gate/ci/architecture/gate.py source \
+            --source "$arch_source" --candidate "$ARCH_CANDIDATE_SHA" \
+            --compare-base "$arch_base" > "$RUNNER_TEMP/architecture-findings.json"
+      - name: Preserve architecture blockers and review items
+        if: ${{ !cancelled() && steps.architecture_check.outcome != 'skipped' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: architecture-findings-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/architecture-findings.json
+          if-no-files-found: error
+      # F architecture gate: end
+
   backend:
-    name: Backend tests
+    name: ${{ github.event_name == 'workflow_dispatch' && inputs.validation_scope == 'selected' && 'PARTIAL SELECTED - Backend tests' || 'Backend tests' }}
     needs: changes
     # PR 和 master push 都按路径跑。合一个小程序 PR 不必再付一遍 Java/SBOM。
-    # workflow_dispatch 仍全开,方便手动补跑。
-    if: ${{ github.event_name == 'workflow_dispatch' || needs.changes.outputs.backend == 'true' }}
+    # 默认 workflow_dispatch 仍全开；只有显式 selected 按精确 admission 执行。
+    if: ${{ (github.event_name == 'workflow_dispatch' && inputs.validation_scope == 'selected' && needs.changes.outputs.run_backend == 'true') || ((github.event_name != 'workflow_dispatch' || inputs.validation_scope != 'selected') && (github.event_name == 'workflow_dispatch' || needs.changes.outputs.backend == 'true')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     # PublicVisibilityMyBatisTest 故意设计成"fixture 不可达即失败"(拒绝静默跳过),
@@ -429,6 +541,17 @@ jobs:
           distribution: temurin
           java-version: '21'
           cache: maven
+      - name: Verify selected recovery and isolation protocol controls
+        if: github.event_name == 'workflow_dispatch' && inputs.validation_scope == 'selected'
+        run: |
+          python3 -m unittest -v \
+            ci/test_restore_business_reconciliation_probe.py \
+            ci/test_restore_application_http_probe.py \
+            ci/test_combined_http_budget.py \
+            ci/test_authenticated_redis_recovery_probe.py \
+            ci/test_controlled_combination_probe.py \
+            ci/test_controlled_combination_entry.py \
+            ci/test_http_e2e_entry.py
       - name: Build and test backend
         run: |
           python3 -m unittest ci/test_wechat_registration_ci_contract.py
@@ -454,6 +577,29 @@ jobs:
           CHENGYIN_TEST_MYSQL_PORT: ${{ env.IT_PORT }}
           CHENGYIN_TEST_MYSQL_USER: root
           CHENGYIN_TEST_MYSQL_PASSWORD: root
+      - name: Record backend test report identity
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import hashlib, json, os, pathlib, subprocess
+          reports = sorted(pathlib.Path('.').glob('chengyinhub-*/target/surefire-reports/TEST-*.xml'))
+          identity = {'source_sha': subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
+                      'run_id': os.environ['GITHUB_RUN_ID'], 'run_attempt': os.environ['GITHUB_RUN_ATTEMPT'],
+                      'reports_sha256': {p.as_posix(): hashlib.sha256(p.read_bytes()).hexdigest() for p in reports}}
+          identity_path = pathlib.Path('target/backend-test-identity.json')
+          identity_path.parent.mkdir(parents=True, exist_ok=True)
+          identity_path.write_text(json.dumps(identity, indent=2) + '\n')
+          PY
+      - name: Preserve backend test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-reports-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            chengyinhub-*/target/surefire-reports/TEST-*.xml
+            target/backend-test-identity.json
+          retention-days: 1
+          if-no-files-found: error
       - name: Verify isolated full application startup
         run: |
           python3 -I ci/test_upgrade_startup_network.py
@@ -498,7 +644,16 @@ jobs:
         run: python3 ci/dup_create_table_gate.py --selftest
       - name: Duplicate CREATE TABLE gate
         run: python3 ci/dup_create_table_gate.py
+      - name: Checkout reviewed compiled-reference verifier
+        uses: actions/checkout@v4
+        with:
+          repository: liboyang42-cpu/hengyin
+          ref: 9782954919075c4a13d209f5f3ab4e3ff8f4e9e8
+          path: chengyinhub-admin/target/f-private-port-verifier
+          fetch-depth: 1
+          persist-credentials: false
       - name: Describe the tested Boot Jar
+        id: tested_artifact
         run: |
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           bash ci/verify-built-jar.sh "$GITHUB_SHA"
@@ -524,7 +679,30 @@ jobs:
                       'startupPassedInThisJob': True, 'mainResourceProof': resources}
           jar.with_suffix('.build.json').write_text(json.dumps(metadata, indent=2) + '\n')
           PYARTIFACT
+          # F JDK21 module observation: begin (no baseline or new acceptance gate)
+          python3 chengyinhub-admin/target/f-private-port-verifier/ci/architecture/collect_jdeps.py --source . \
+            --artifact chengyinhub-admin/target/chengyinhub-admin.jar \
+            --identity chengyinhub-admin/target/chengyinhub-admin.build.json \
+            --output chengyinhub-admin/target/architecture-jdeps
+          # F JDK21 module observation: end
+      - name: Check private Mapper compiled references
+        run: |
+          python3 chengyinhub-admin/target/f-private-port-verifier/ci/architecture/gate.py compiled-ports \
+            --source . --artifact chengyinhub-admin/target/chengyinhub-admin.jar \
+            --identity chengyinhub-admin/target/chengyinhub-admin.build.json \
+            --observation chengyinhub-admin/target/architecture-jdeps \
+            --output chengyinhub-admin/target/private-mapper-references.json
+      - name: Verify compiled boundary negative and restored controls
+        run: |
+          python3 -m unittest -v ci/architecture/test_compiled_controls.py
+          python3 ci/architecture/compiled_controls.py --source . \
+            --artifact chengyinhub-admin/target/chengyinhub-admin.jar \
+            --identity chengyinhub-admin/target/chengyinhub-admin.build.json \
+            --observation chengyinhub-admin/target/architecture-jdeps \
+            --verifier chengyinhub-admin/target/f-private-port-verifier \
+            --output chengyinhub-admin/target/architecture-boundary-controls
       - name: Preserve tested Boot Jar for test VPS UAT
+        if: ${{ !cancelled() && steps.tested_artifact.outcome == 'success' }}
         uses: actions/upload-artifact@v4
         with:
           name: chengyin-tested-backend-${{ github.run_attempt }}
@@ -532,6 +710,9 @@ jobs:
             chengyinhub-admin/target/chengyinhub-admin.jar
             chengyinhub-admin/target/chengyinhub-admin.jar.sha256
             chengyinhub-admin/target/chengyinhub-admin.build.json
+            chengyinhub-admin/target/architecture-jdeps/
+            chengyinhub-admin/target/private-mapper-references.json
+            chengyinhub-admin/target/architecture-boundary-controls/
           if-no-files-found: error
           compression-level: 0
           retention-days: 7
@@ -542,13 +723,16 @@ jobs:
         run: docker rm -f -v chengyin-mybatis-it-${{ github.run_id }}-${{ github.run_attempt }} >/dev/null 2>&1 || true
 
   mini_program:
-    name: Mini program static checks
-    needs: [changes, mini_unit, mini_static]
+    name: ${{ github.event_name == 'workflow_dispatch' && inputs.validation_scope == 'selected' && 'PARTIAL SELECTED CI summary' || 'Mini program static checks' }}
+    # Full mode still checks only its original three results below, not fast/AdminUI/etc.
+    # Extra needs enable one selected-only receipt in this existing aggregate, with no new job.
+    needs: [changes, mini_unit, mini_static, fast_gates, backend, admin_ui, admin_ui_contract, secret_scan, dependency_audit, migration_layout, migration_safety]
     if: ${{ always() && (needs.changes.result != 'success' || github.event_name == 'workflow_dispatch' || needs.changes.outputs.xcx == 'true') }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - name: Verify all mini program checks
+        if: ${{ needs.changes.outputs.selected != 'true' }}
         env:
           CHANGES_RESULT: ${{ needs.changes.result }}
           UNIT_RESULT: ${{ needs.mini_unit.result }}
@@ -557,11 +741,36 @@ jobs:
           test "$CHANGES_RESULT" = success
           test "$UNIT_RESULT" = success
           test "$STATIC_RESULT" = success
+      - uses: actions/checkout@v4
+        if: needs.changes.outputs.selected == 'true'
+      - uses: actions/setup-node@v4
+        if: needs.changes.outputs.selected == 'true'
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        if: needs.changes.outputs.selected == 'true' && needs.changes.outputs.run_mini_unit == 'true'
+        with:
+          pattern: ci-selected-mini-*-a${{ github.run_attempt }}
+          path: ${{ runner.temp }}/ci-selected-mini
+      - name: Verify selected jobs and exact mini evidence without a full-CI claim
+        if: ${{ always() && needs.changes.outputs.selected == 'true' }}
+        env:
+          CI_SELECTION_PLAN: ${{ needs.changes.outputs.selection_json }}
+          CI_NEEDS: ${{ toJSON(needs) }}
+        run: node ci/ci-selected-validation.js summarize
+      - name: Preserve PARTIAL SELECTED summary
+        if: ${{ always() && needs.changes.outputs.selected == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-selected-summary-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/ci-selection/summary.json
+          if-no-files-found: error
+          retention-days: 1
 
   mini_unit:
-    name: Mini program unit shard (${{ matrix.shard }}/20)
+    name: ${{ github.event_name == 'workflow_dispatch' && inputs.validation_scope == 'selected' && format('PARTIAL SELECTED - Mini shard {0} of 20 partitions', matrix.shard) || format('Mini program unit shard ({0}/20)', matrix.shard) }}
     needs: changes
-    if: ${{ github.event_name == 'workflow_dispatch' || needs.changes.outputs.xcx == 'true' }}
+    if: ${{ (github.event_name == 'workflow_dispatch' && inputs.validation_scope == 'selected' && needs.changes.outputs.run_mini_unit == 'true') || ((github.event_name != 'workflow_dispatch' || inputs.validation_scope != 'selected') && (github.event_name == 'workflow_dispatch' || needs.changes.outputs.xcx == 'true')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
@@ -569,6 +778,7 @@ jobs:
       max-parallel: 20
       matrix:
         shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+        exclude: ${{ fromJSON(needs.changes.outputs.mini_exclude) }}
     env:
       TZ: Asia/Shanghai
     steps:
@@ -582,13 +792,29 @@ jobs:
       - name: Verify mini program unit discovery manifest
         run: node ci/xcx-unit-manifest.js --selftest
       - name: Run mini program unit contracts
+        id: unit
         working-directory: chengyinhub-xcx
         run: node --test --test-shard=${{ matrix.shard }}/20 "tests/unit/**/*.test.js"
+      - name: Record the original selected shard execution (PARTIAL SELECTED)
+        if: ${{ always() && needs.changes.outputs.selected == 'true' }}
+        env:
+          CI_SELECTION_PLAN: ${{ needs.changes.outputs.selection_json }}
+          CI_MATRIX_SHARD: ${{ matrix.shard }}
+          CI_UNIT_OUTCOME: ${{ steps.unit.outcome }}
+        run: node ci/ci-selected-validation.js record-mini
+      - name: Preserve exact selected mini execution receipt
+        if: ${{ always() && needs.changes.outputs.selected == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-selected-mini-${{ matrix.shard }}-a${{ github.run_attempt }}
+          path: ${{ runner.temp }}/ci-selection/mini-result.json
+          if-no-files-found: error
+          retention-days: 1
 
   mini_static:
-    name: Mini program static gates
+    name: ${{ github.event_name == 'workflow_dispatch' && inputs.validation_scope == 'selected' && 'PARTIAL SELECTED - Mini program static gates' || 'Mini program static gates' }}
     needs: changes
-    if: ${{ github.event_name == 'workflow_dispatch' || needs.changes.outputs.xcx == 'true' }}
+    if: ${{ (github.event_name == 'workflow_dispatch' && inputs.validation_scope == 'selected' && needs.changes.outputs.run_mini_static == 'true') || ((github.event_name != 'workflow_dispatch' || inputs.validation_scope != 'selected') && (github.event_name == 'workflow_dispatch' || needs.changes.outputs.xcx == 'true')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     # ★ 用**生产用户的时区**跑,不要用 runner 默认的 UTC。
@@ -632,9 +858,9 @@ jobs:
         run: bash ci/xcx-check.sh
 
   admin_ui:
-    name: Admin UI build gate
+    name: ${{ github.event_name == 'workflow_dispatch' && inputs.validation_scope == 'selected' && 'PARTIAL SELECTED - Admin UI build gate' || 'Admin UI build gate' }}
     needs: changes
-    if: ${{ github.event_name == 'workflow_dispatch' || needs.changes.outputs.ui == 'true' }}
+    if: ${{ (github.event_name == 'workflow_dispatch' && inputs.validation_scope == 'selected' && needs.changes.outputs.run_admin_ui == 'true') || ((github.event_name != 'workflow_dispatch' || inputs.validation_scope != 'selected') && (github.event_name == 'workflow_dispatch' || needs.changes.outputs.ui == 'true')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -660,10 +886,10 @@ jobs:
           retention-days: 7
 
   admin_ui_contract:
-    name: Admin UI E2E contract gate
+    name: ${{ github.event_name == 'workflow_dispatch' && inputs.validation_scope == 'selected' && 'PARTIAL SELECTED - Admin UI E2E contract gate' || 'Admin UI E2E contract gate' }}
     needs: changes
     # 与 admin_ui 同一路径闸；手动 dispatch 才全开。
-    if: ${{ github.event_name == 'workflow_dispatch' || needs.changes.outputs.ui == 'true' }}
+    if: ${{ (github.event_name == 'workflow_dispatch' && inputs.validation_scope == 'selected' && needs.changes.outputs.run_admin_ui_contract == 'true') || ((github.event_name != 'workflow_dispatch' || inputs.validation_scope != 'selected') && (github.event_name == 'workflow_dispatch' || needs.changes.outputs.ui == 'true')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -686,9 +912,11 @@ jobs:
       # 起服务、不需要浏览器,失败即门禁红。
       - name: Run admin UI route/permission contracts
         run: npm --prefix chengyinhub-ui run test:e2e:contract
+      - name: Run admin UI content units
+        run: npm --prefix chengyinhub-ui run test:unit
 
   secret_scan:
-    name: Secret scan (gitleaks)
+    name: ${{ github.event_name == 'workflow_dispatch' && inputs.validation_scope == 'selected' && 'PARTIAL SELECTED - Secret scan (gitleaks)' || 'Secret scan (gitleaks)' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -744,10 +972,10 @@ jobs:
           "$scanner/gitleaks" dir --redact --config .gitleaks.toml "$source_tree"
 
   dependency_audit:
-    name: SBOM + dependency scan
+    name: ${{ github.event_name == 'workflow_dispatch' && inputs.validation_scope == 'selected' && 'PARTIAL SELECTED - SBOM + dependency scan' || 'SBOM + dependency scan' }}
     needs: changes
     # 依赖/扫描配置改动才跑；合页面 PR 进 master 也不再付一次 SBOM。
-    if: ${{ github.event_name == 'workflow_dispatch' || needs.changes.outputs.dependency == 'true' }}
+    if: ${{ (github.event_name == 'workflow_dispatch' && inputs.validation_scope == 'selected' && needs.changes.outputs.run_dependency_audit == 'true') || ((github.event_name != 'workflow_dispatch' || inputs.validation_scope != 'selected') && (github.event_name == 'workflow_dispatch' || needs.changes.outputs.dependency == 'true')) }}
     runs-on: ubuntu-latest
     # 2026-08-29:Grype DB cache 恢复在自托管 Mac 上实测接近 5 分钟,10 分钟会在
     # 扫描完成后、dependency-audit-gate 读 JSON 前被取消。只放宽 job 上限,不改 fail-on 口径。
@@ -758,6 +986,15 @@ jobs:
       - uses: actions/checkout@v4
       - name: Test dependency gate contract
         run: python3 -m unittest ci/test_dependency_audit_gate.py
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify locked renderer dependency contract
+        working-directory: ops/turntable-render
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          node --test dependency-contract.test.cjs
+          node render.js --selftest
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -798,10 +1035,10 @@ jobs:
           if-no-files-found: error
 
   migration_layout:
-    name: Migration layout gate
+    name: ${{ github.event_name == 'workflow_dispatch' && inputs.validation_scope == 'selected' && 'PARTIAL SELECTED - Migration layout gate' || 'Migration layout gate' }}
     needs: changes
     # 后端/SQL/分类门禁改动才跑；纯 xcx/UI 合进 master 也跳过。
-    if: ${{ github.event_name == 'workflow_dispatch' || needs.changes.outputs.migration == 'true' }}
+    if: ${{ (github.event_name == 'workflow_dispatch' && inputs.validation_scope == 'selected' && needs.changes.outputs.run_migration_layout == 'true') || ((github.event_name != 'workflow_dispatch' || inputs.validation_scope != 'selected') && (github.event_name == 'workflow_dispatch' || needs.changes.outputs.migration == 'true')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -820,10 +1057,10 @@ jobs:
         run: bash ci/ci-config-guard.sh
 
   migration_safety:
-    name: Migration safety gate
+    name: ${{ github.event_name == 'workflow_dispatch' && inputs.validation_scope == 'selected' && 'PARTIAL SELECTED - Migration safety gate' || 'Migration safety gate' }}
     needs: changes
     # 后端/SQL/迁移门禁改动才跑；纯 xcx/UI 合进 master 也跳过。
-    if: ${{ github.event_name == 'workflow_dispatch' || needs.changes.outputs.migration == 'true' }}
+    if: ${{ (github.event_name == 'workflow_dispatch' && inputs.validation_scope == 'selected' && needs.changes.outputs.run_migration_safety == 'true') || ((github.event_name != 'workflow_dispatch' || inputs.validation_scope != 'selected') && (github.event_name == 'workflow_dispatch' || needs.changes.outputs.migration == 'true')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:

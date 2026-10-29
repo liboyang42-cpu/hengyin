@@ -1,0 +1,115 @@
+{
+  "source_sha": "089790aaf3254f62ebbc79394b8aaf5fa66cb2b5",
+  "run_id": "40016642215",
+  "source": "Root read of public run Surefire XML; 1751 report digests verified by root. Method-level XML not locally available.",
+  "classes": [
+    {
+      "class": "com.chengyinhub.web.controller.business.OfficialBroadcastSubmissionControllerTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "1"
+    },
+    {
+      "class": "com.chengyinhub.web.controller.api.ApiPlayCheckinLiveCodeTest",
+      "tests": "7",
+      "failures": "7",
+      "errors": "0"
+    },
+    {
+      "class": "com.chengyinhub.web.controller.api.JourneyPublishFreezeTest",
+      "tests": "7",
+      "failures": "3",
+      "errors": "0"
+    },
+    {
+      "class": "com.chengyinhub.web.controller.api.ApiPlayRouteContractTest",
+      "tests": "1",
+      "failures": "1",
+      "errors": "0"
+    },
+    {
+      "class": "com.chengyinhub.web.controller.api.ApiPlaySensorResultTest",
+      "tests": "30",
+      "failures": "1",
+      "errors": "0"
+    },
+    {
+      "class": "com.chengyinhub.framework.aspectj.DeadlockRetryEntryPointContractTest",
+      "tests": "4",
+      "failures": "1",
+      "errors": "0"
+    },
+    {
+      "class": "com.chengyinhub.web.controller.api.ApiPlayGpsGeofenceValidationTest",
+      "tests": "21",
+      "failures": "19",
+      "errors": "0"
+    },
+    {
+      "class": "com.chengyinhub.web.controller.api.ApiPlayProgressCompletionTruthTest",
+      "tests": "31",
+      "failures": "24",
+      "errors": "0"
+    },
+    {
+      "class": "com.chengyinhub.web.controller.api.ShopDayExperienceLayerContractTest",
+      "tests": "13",
+      "failures": "3",
+      "errors": "1"
+    },
+    {
+      "class": "com.chengyinhub.web.controller.api.ApiPlayDelistedCompletedRetryContractTest",
+      "tests": "13",
+      "failures": "8",
+      "errors": "0"
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.PersonalGameplayRuntimeServiceTest",
+      "tests": "49",
+      "failures": "2",
+      "errors": "1"
+    },
+    {
+      "class": "com.chengyinhub.web.controller.api.ApiPlayHistoryNodesContractTest",
+      "tests": "15",
+      "failures": "2",
+      "errors": "0"
+    },
+    {
+      "class": "com.chengyinhub.web.controller.api.ApiPlayCheckinDuplicateCodeTest",
+      "tests": "1",
+      "failures": "1",
+      "errors": "0"
+    },
+    {
+      "class": "com.chengyinhub.web.controller.api.ApiPlayHistoryNodesOldEntryContractTest",
+      "tests": "3",
+      "failures": "2",
+      "errors": "0"
+    },
+    {
+      "class": "com.chengyinhub.web.controller.api.ApiPlayRouteConflictHttpContractTest",
+      "tests": "4",
+      "failures": "4",
+      "errors": "0"
+    },
+    {
+      "class": "com.chengyinhub.web.controller.api.ClubLeadChapterIntentTest",
+      "tests": "5",
+      "failures": "1",
+      "errors": "0"
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.GameplayChapterRuntimeServiceTest",
+      "tests": "11",
+      "failures": "0",
+      "errors": "4"
+    },
+    {
+      "class": "com.chengyinhub.web.controller.api.ApiPlayCurrentUseBoundaryTest",
+      "tests": "6",
+      "failures": "5",
+      "errors": "0"
+    }
+  ]
+}

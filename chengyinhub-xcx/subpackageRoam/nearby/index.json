@@ -16,6 +16,7 @@
     "cy-icon": "/components/cy/icon/index",
     "cy-proto-cam": "/components/cy/proto-cam/index",
     "cy-privacy-gate": "/components/cy/privacy-gate/index",
-    "cy-loading-mask": "/components/cy/loading-mask/index"
+    "cy-loading-mask": "/components/cy/loading-mask/index",
+    "cy-back-guard": "/components/cy/back-guard/index"
   }
 }

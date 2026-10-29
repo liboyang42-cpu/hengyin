@@ -1,0 +1,28 @@
+{
+  "parent": "61834b1ba96fcfb025d8442955b69f1d6b35d5f3",
+  "H_review": "4b6bbf16ccd6cc554f6a26d02875db36312b08a8",
+  "runtime_negative_evidence_reported_by_root": {
+    "source": "97b823e5c8bb86675825476a07c9cdf671063f2a",
+    "run": 40044883897,
+    "original_pass": 30,
+    "new_failure": 4,
+    "error": 0,
+    "skip": 0,
+    "cleanup": "CLEAN"
+  },
+  "this_candidate_java_mysql_executed": 0,
+  "files": {
+    "chengyinhub-admin/sql/_deploy_g_cash_evidence_empty_recovery.sh": "e0ea01cf7877ec8c16c69a7f8b6fde2a958b04f351a6ed82d1f4c2b3b6f37c39",
+    "chengyinhub-admin/sql/_deploy_g_cash_evidence_empty_rollback_20261023.sql": "0eb03c0b87f9bcb8dadb055f1f7e1a9cb5c57a60f872f7c3c0414b547d06e960",
+    "chengyinhub-admin/sql/_precheck_g_cash_evidence_20261023.sql": "41e55bc6edb9c6abf2743e084ae89b3820b7aab81bd5c5c549054fcb08b5a80d",
+    "chengyinhub-admin/sql/migration_20261023_g_cash_evidence_expand.sql": "5f37c67e857850926b0fbe35c442ca003d0ce31a799a445c728f2371c2d484cf",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/GCashEvidenceEmptyRecovery.java": "26bec327c543ea11e144b19b18ec1f569ba49b025baa27f1633bd6dbc4f222e6",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/Wp04CashEvidenceExpandMySqlIT.java": "36dac4494d93c0a584f18301085ad63da909ecb8c34d2f53881318188c57f7ef",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CoopSettlementCashEvidenceMapper.java": "193a6008494b377381e6a922616c257b4cc5ec52c809b2eba7c5ca76d2ea141e",
+    "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementCashEvidenceMapper.xml": "6f26cd8fcba6b7fc40b0a900363883daadf6cbeb9cf195bedab4604720fa40ab",
+    "docs/delivery/architecture-day/G/storage-fixes/IMPLEMENTATION.md": "da736699f4f6996cfa00d510eb73cd655e3e592178be806e5e1f7d53e32eb9bb",
+    "docs/delivery/architecture-day/G/storage-fixes/original30-preserved.json": "92aa6a066aee6e1cbdef5af1712f478cad04138f190ca7221407ada2e497666e",
+    "docs/delivery/architecture-day/G/storage-fixes/static-checks.txt": "feb337f0636781adf01c53fe00f00356dd46fb5f8222cd7eddcfe33f76b29d2c",
+    "docs/delivery/architecture-day/G/storage-fixes/verify_static.py": "4c4b607f7ffdd3bf1b3b905aaeceb6ae4fe4e4fa0f05ebd1ebb3edb38cab6f83"
+  }
+}

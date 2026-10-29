@@ -4,6 +4,7 @@ const test = require('node:test');
 const COMPONENT_PATH = require.resolve('../../pages/play/components/advanced-game/index.js');
 let definition;
 const appStub = { sendRequest() {}, getUserID: () => 7 };
+let photoStorage;
 
 function loadDefinition() {
   const previousComponent = global.Component;
@@ -20,11 +21,14 @@ loadDefinition();
 /** queue: 每次 request 按顺序取一项；{ res } 走 resolve，{ err } 走 reject。 */
 function createGame(queue, state) {
   const storage = new Map();
-  global.wx = { getStorageSync: k => storage.get(k), setStorageSync: (k,v) => storage.set(k,v), removeStorageSync: k => storage.delete(k) };
+  global.wx = photoStorage || { getStorageSync: k => storage.get(k), setStorageSync: (k,v) => storage.set(k,v), removeStorageSync: k => storage.delete(k) };
   const calls = [];
+  global.wx = global.wx || {};
+  if (!global.wx.getStorageSync) global.wx.getStorageSync = () => undefined;
   const instance = {
     properties: {},
     data: Object.assign(JSON.parse(JSON.stringify(definition.data)), {
+      node: { nodeId: 7 },
       state: Object.assign({
         sessionId: 42, version: 3, status: 'RUNNING', draws: [],
         config: { random: { enabled: true, drawCount: 3, items: [] }, branch: { enabled: false, steps: [] },
@@ -48,6 +52,7 @@ function createGame(queue, state) {
     return next.err ? Promise.reject(next.err) : Promise.resolve(next.res);
   };
   instance._unknownCommand = { sessionId: 42, version: 3, idempotencyKey: 'original', action: 'DRAW' };
+  instance._unknownRequestContext = instance.sessionRequestContext();
   instance.calls = calls;
   return instance;
 }
@@ -441,7 +446,7 @@ for (const method of ['start', 'action', 'resolveUnknown', 'loadLeaderboard', 'r
         const events = [];
         game.triggerEvent = (name, detail) => events.push({ name, detail });
         game._unknownVersion = 3;
-        if (method === 'resolveUnknown') game.data.unknown = true;
+        if (method === 'resolveUnknown') { game.data.unknown = true; game._unknownRequestContext = game.sessionRequestContext(); }
         const old = method === 'action' ? game.action('DRAW', {}) : game[method]();
         await clearIdentity();
         assert.equal(game._requestEpoch || 0, method === 'start' ? 1 : 0,
@@ -610,6 +615,7 @@ test('团队挑战原回执查询冲突不能解除UNKNOWN或发起state副作�
 test('共享挑战旧原键回执迟到不能覆盖新局或解除新局写锁', async () => {
   const game=createGame([],{ownerType:2,nodeId:7});game.data.node={nodeId:7};
   game._unknownCommand={sessionId:42,version:3,idempotencyKey:'original',action:'SUBMIT_BALL_SHAKE',payload:{hits:6}};
+  game._unknownRequestContext=game.sessionRequestContext();
   let finish;game.request=()=>new Promise(resolve=>{finish=resolve;});
   const waiting=game.resolveUnknown();
   game.data.state={sessionId:99,version:1,nodeId:7,ownerType:2,config:{}};game.data.unknown=true;game.data.acting=true;game.data.error='新局待确认';
@@ -708,4 +714,152 @@ test('unsafe numeric node identity cannot be rounded into a start request', () =
   game.start();
   assert.equal(game.calls.length, 0);
   assert.match(game.data.error, /标识不完整/);
+});
+
+
+function photoDisk() {
+  const rows = new Map();
+  photoStorage = global.wx = { getStorageSync: key => rows.get(key),
+    setStorageSync: (key, value) => rows.set(key, JSON.parse(JSON.stringify(value))),
+    removeStorageSync: key => rows.delete(key) };
+  return rows;
+}
+const photoInput = () => ({ imageUrl: 'media-asset:701' });
+const tick = () => new Promise(setImmediate);
+
+test('Photo 520 保留原 key/输入/expected；个人局只读原回执，版本变化不推断成功', async () => {
+  photoDisk();
+  const game = createGame([{ res: { code: 520, intentUnknown: true } }, { res: { code: 520 } }], { ownerType: 1 });
+  await game.action('SUBMIT_PHOTO_CHECK', photoInput()); await tick();
+  assert.equal(game.data.unknown, true); assert.equal(game.calls.length, 2);
+  assert.deepEqual(game.calls[1], { url: '/api/play/advanced/receipt', method: 'GET',
+    data: { sessionId: 42, idempotencyKey: game.calls[0].data.idempotencyKey } });
+  assert.equal(game.calls.filter(c => c.method === 'POST').length, 1);
+  assert.deepEqual(game._unknownCommand, game.calls[0].data);
+  game.data.state.version = 9;
+  game.request = async (url, method, data) => { game.calls.push({ url, method, data }); return { code: 520 }; };
+  await game.resolveUnknown();
+  assert.deepEqual(game.calls[2], game.calls[1]); assert.equal(game._unknownCommand.version, 3); assert.equal(game.data.unknown, true);
+});
+
+test('Photo 已保存原结果但玩法冲突，不清 pending、不换版本重发', async () => {
+  const disk = photoDisk();
+  const game = createGame([{ res: { code: 409, data: { view: { sessionId: 42, version: 9 } } } }, { res: { code: 520 } }]);
+  await game.action('SUBMIT_PHOTO_CHECK', photoInput()); await tick();
+  assert.equal(game.data.unknown, true); assert.equal(game.data.state.version, 3); assert.ok(disk.size > 0);
+  assert.equal(game._unknownCommand.version, 3);
+  assert.equal(game.calls[1].url, '/api/play/advanced/receipt'); assert.equal(game.calls[1].method, 'GET');
+});
+
+test('Photo 重启先读取原 session，用户核对只读原回执，不自动启动另一局', async () => {
+  photoDisk();
+  const first = createGame([{ err: Error('response lost') }, { res: { code: 520 } }]);
+  await first.action('SUBMIT_PHOTO_CHECK', photoInput()); await tick();
+  const recovered = createGame([okAction(8)], { sessionId: 99 });
+  await recovered.start();
+  assert.equal(recovered.calls.length, 1); assert.equal(recovered.calls[0].method, 'GET');
+  assert.deepEqual(recovered.calls[0].data, { sessionId: 42 }); assert.equal(recovered.data.state.sessionId, 42);
+  assert.equal(recovered.data.unknown, true);
+  recovered.request = async (url, method, data) => { recovered.calls.push({ url, method, data });
+    return { code: 200, data: { sessionId: String(data.sessionId), idempotencyKey: data.idempotencyKey, view: okAction(4).res.data } }; };
+  await recovered.resolveUnknown();
+  assert.deepEqual(recovered.calls[1], { url: '/api/play/advanced/receipt', method: 'GET',
+    data: { sessionId: 42, idempotencyKey: first.calls[0].data.idempotencyKey } });
+  assert.equal(recovered.data.unknown, false);
+  assert.equal(recovered.calls.some(c => c.method === 'POST'), false);
+});
+
+test('Photo A UNKNOWN 切 B retry 与 A→B→A 同页迟到均不再发 A 命令', async () => {
+  photoDisk(); appStub._featureFlagsEpoch = 10;
+  try {
+    const game = createGame([{ res: { code: 520 } }, { res: { code: 520 } }]);
+    await game.action('SUBMIT_PHOTO_CHECK', photoInput()); await tick();
+    const before = game.calls.length;
+    appStub.getUserID = () => 8; appStub._featureFlagsEpoch++;
+    assert.equal(await game.resolveUnknown(), false); assert.equal(game.calls.length, before);
+    appStub.getUserID = () => 7; appStub._featureFlagsEpoch++;
+    assert.equal(await game.resolveUnknown(), false); assert.equal(game.calls.length, before);
+  } finally { appStub.getUserID = () => 7; delete appStub._featureFlagsEpoch; }
+});
+
+test('Photo A 迟到成功仅清 A 原键，不清 B pending，不改变 B UI', async () => {
+  const disk = photoDisk(); appStub._featureFlagsEpoch = 20;
+  try {
+    const a = createGame([]); let finish;
+    a.request = () => new Promise(resolve => { finish = resolve; });
+    const old = a.action('SUBMIT_PHOTO_CHECK', photoInput());
+    appStub.getUserID = () => 8; appStub._featureFlagsEpoch++;
+    const b = createGame([{ res: { code: 520 } }, { res: { code: 520 } }]);
+    await b.action('SUBMIT_PHOTO_CHECK', photoInput()); await tick();
+    const bKeys = [...disk.keys()].filter(k => k.startsWith('advanced_photo_pending:8:'));
+    const before = JSON.parse(JSON.stringify(b.data));
+    finish(okAction(4).res); await old;
+    assert.deepEqual(b.data, before); assert.ok(bKeys.length > 0); assert.ok(bKeys.every(k => disk.has(k)));
+    assert.ok(![...disk.keys()].some(k => k.startsWith('advanced_photo_pending:7:')));
+  } finally { appStub.getUserID = () => 7; delete appStub._featureFlagsEpoch; }
+});
+
+test('Photo 仅显式 intentNotExecuted 释放原记录，缺媒体或存储失败零发送', async () => {
+  const disk = photoDisk();
+  const rejected = createGame([{ res: { code: 409, data: { intentNotExecuted: true,
+    view: { sessionId: 42, version: 8 } } } }]);
+  await rejected.action('SUBMIT_PHOTO_CHECK', photoInput()); assert.equal(rejected.data.unknown, false); assert.equal(disk.size, 0);
+  const absent = createGame([]); await absent.action('SUBMIT_PHOTO_CHECK', { imageUrl: 'https://example.invalid/signed?token=private' });
+  assert.equal(absent.calls.length, 0);
+  global.wx.setStorageSync = () => { throw Error('storage full'); };
+  const full = createGame([]); await full.action('SUBMIT_PHOTO_CHECK', photoInput()); assert.equal(full.calls.length, 0);
+});
+
+test('Photo 存储写入无异常但无法读回时明确拒绝，不发送原动作', async () => {
+  photoDisk();
+  global.wx.setStorageSync = () => {};
+  const game = createGame([]);
+  assert.equal(await game.action('SUBMIT_PHOTO_CHECK', photoInput()), false);
+  assert.equal(game.calls.length, 0);
+  assert.equal(game.data.acting, false);
+  assert.equal(game.data.unknown, false);
+  assert.match(game.data.error, /未保存/);
+});
+
+test('Photo A→B→A 的旧成功不改新登录代次 UI，原终态只清原存储键', async () => {
+  const disk = photoDisk(); appStub._featureFlagsEpoch = 30;
+  try {
+    const game = createGame([]); let finish;
+    game.request = () => new Promise(resolve => { finish = resolve; });
+    const old = game.action('SUBMIT_PHOTO_CHECK', photoInput());
+    appStub.getUserID = () => 8; appStub._featureFlagsEpoch++;
+    appStub.getUserID = () => 7; appStub._featureFlagsEpoch++;
+    const before = JSON.parse(JSON.stringify(game.data));
+    finish(okAction(4).res); await old;
+    assert.deepEqual(game.data, before); assert.equal(disk.size, 0);
+  } finally { appStub.getUserID = () => 7; delete appStub._featureFlagsEpoch; }
+});
+
+test('Photo 在途时调用者改 payload，原发送、原存储和原重试仍冻结首次输入', async () => {
+  const disk = photoDisk(); const game = createGame([]); let finish;
+  game.request = (url, method, data) => {
+    game.calls.push({ url, method, data });
+    if (game.calls.length === 1) return new Promise(resolve => { finish = resolve; });
+    return Promise.resolve({ code: 520 });
+  };
+  const payload = photoInput(); const waiting = game.action('SUBMIT_PHOTO_CHECK', payload);
+  payload.imageUrl = 'media-asset:702'; finish({ code: 520 }); await waiting; await tick();
+  assert.equal(game.calls[0].data.payload.imageUrl, 'media-asset:701');
+  assert.deepEqual(game._unknownCommand, game.calls[0].data);
+  assert.deepEqual(game.calls[1], { url: '/api/play/advanced/receipt', method: 'GET',
+    data: { sessionId: 42, idempotencyKey: game.calls[0].data.idempotencyKey } });
+  assert.ok([...disk.values()].some(value => value && value.command && value.command.payload.imageUrl === 'media-asset:701'));
+});
+
+test('共享高级动作 A UNKNOWN 切 B 及 A→B→A 不得用当前 token 重发旧命令', async () => {
+  appStub._featureFlagsEpoch = 50;
+  try {
+    const game = createGame([{ err: Error('timeout') }, { err: Error('offline') }], { ownerType: 2 });
+    await game.action('SUBMIT_BALL_SHAKE', { hits: 6 }); await tick();
+    assert.equal(game.data.unknown, true); const count = game.calls.length;
+    appStub.getUserID = () => 8; appStub._featureFlagsEpoch++;
+    assert.equal(await game.resolveUnknown(), false); assert.equal(game.calls.length, count);
+    appStub.getUserID = () => 7; appStub._featureFlagsEpoch++;
+    assert.equal(await game.resolveUnknown(), false); assert.equal(game.calls.length, count);
+  } finally { appStub.getUserID = () => 7; delete appStub._featureFlagsEpoch; }
 });

@@ -1,0 +1,19 @@
+# F：现有Spring cycle canary补真实新Bean闭包
+
+结论：只改SupportedStackServiceCyclesTest最小fixture/断言与本目录；不改生产、不改e9a9/6150冻结verifier/tool/CI。公共parent `de7f432ec6f0c1c6225168ecf2e4808210de42e0`，独立codex/architecture-day-f-stack-wiring。依据root已纳Ae6/fd350的事实，另实际读取B `f6f382500ff1a1dfd6fad120b3895f70ae563278` reader必需PTM依赖；本测试片必须和这些已审源码组合，**单独de7父树尚无Ae6/Bf6字段，不是独立可验收业务候选**。没有整blob搬入/回退其生产代码。
+
+失败机制：现有registerInertCollaborators扫描当前声明服务的依赖，但凡依赖未在realServices就自动注册inert/Mockito对象。SDK新verifiedFacts、A新verifiedPaymentFacts、Claim→OriginalLedger和typed notice等因此可能被mock掉；旧context通过不能证明新增路径能装配。CommittedBusinessNotice构造器还要求精确scheduledExecutorService qualifier，原按inert.<类型>命名不能满足它。
+
+沿原ApplicationContextRunner/AnnotationConfig应用上下文和@EnableTransactionManagement（未引入框架），只补明确的payment/ledger/notice真实闭包：SDK/intent/order owner/router→FactService；Refund/Claim→OriginalLedger/TopicSettlementEvidenceService/SettlementDebtLedger；原使用CommittedBusinessNotice的报名/章节应用→真实CommittedNotice/Notify/InApp/Wx channel/IM。保留全部13旧cycle行、原3测试方法正文、原inertCall异常记录/禁外部调用正文及old Lazy负控。新组合正控复用全部旧真实服务，再加真实Refund/Claim，不用mock隔开旧member/balance等交互。
+
+新正控断言关键对象非Mockito，SDK/A领域/G ledger使用同一受事务代理管理的FactService，Claim使用同一真实OriginalLedger，reader使用当前Mapper/PTM替身，typed通知接口和InApp channel落到同一IM，CommittedNotice连接真实Notify及原具名调度器和同一PTM。直接bean identity也拒绝以新@Lazy代理掩盖这组既定eager边。未调用业务方法、发通知或读取渠道凭据。
+
+新负控：缺reader Mapper、缺PTM分别必须以该依赖的NoSuchBeanDefinitionException失败；通过替换**同一个reader BeanDefinition**为继承真实reader的测试子类，仅新增一个eager reader→真实SDK反向@Autowired，保留其继承的Mapper/PTM/原事务AOP，SDK→reader仍为真实生产字段，须BeanCurrentlyInCreationException失败。此为故意违规控制，不声称生产已有该反向环；没有mock reader/SDK来造红/造绿。所有路径仍检查unexpectedCalls为空，异常被生产catch也不能掩盖外部调用。
+
+外部边界仍明确inert：所有Mapper、PlatformTransactionManager、scheduledExecutorService、Alarm和未命名外部服务/Redis/微信渠道依赖。只把现有ScheduledExecutorService替身注册为构造器实际qualifier名，无线程/调度/真实事务/数据库或模型。故不证明SQL/RR/资金原子性、事务实际传播/提交、通知排队/投递、完整Boot自动配置/真实配置启动或全系统无环。
+
+实际执行仅git diff --check、只读源码字段/qualifier对照、旧13行/旧3方法及inert handler逐字保留检查、精确范围秘密扫描；static-evidence.json为源证据，**不是Java解析/编译/JUnit结果**。预期旧27→31个JUnit invocation（新增组合正控1、missing依赖参数2、循环负控1），实际Java/JUnit/Spring context/DB/CI均NOT_RUN。没有增加skip/缩断言/改已有场景。源码未证明新增生产循环，也不能在未运行context时宣布无环；本片未产生需改生产的确定hunk。
+
+由root下一批正常Backend统一编译执行原*Test即可，无新job/registry/runner。若需点名，在获准GitHub/VPS入口按原预算运行 `mvn -B -pl chengyinhub-admin -am -Dtest=SupportedStackServiceCyclesTest -Dsurefire.failIfNoSpecifiedTests=false test`，必须回读该suite原始XML无failure/error/skip且31实际invocation，并保持同HEAD/run/attempt身份；子模块无匹配suite的选项不等于可漏掉目标suite。不要把本静态报告/新Bean编译成功当JUnit实际执行。
+
+旧de7的A未消费verified结论只保留为旧基线，不再派A重复修；本片已依据Ae6校验新字段。fd350创建首锁片不触碰。C d2d09精确应用源码另读另作下一片owner，不往本fixture猜名。

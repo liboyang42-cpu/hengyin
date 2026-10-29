@@ -1,0 +1,32 @@
+{
+  "source_sha": "b626f425625ccae793aa84a44147fe557c8df6ef",
+  "run": 40135082606,
+  "attempt": 1,
+  "xml_files": 1934,
+  "unique_testcases": 15459,
+  "duplicate_testcases": 0,
+  "xml_counts": {
+    "passed": 14826,
+    "skipped": 633
+  },
+  "selected_suites": {
+    "NpcAsrTerminalFenceBarrierTest": {
+      "passed": 3
+    },
+    "RegistrationSeatSettlementReaderTest": {
+      "passed": 4
+    },
+    "SupportedStackServiceCyclesTest": {
+      "passed": 35
+    },
+    "P0DeregistrationMySqlIT": {
+      "passed": 1
+    }
+  },
+  "original_identity_sha256": "17b5c6426c678f77f7dae79fa00d71bc738be2201d5e0d0fe1c8ae357b4766b9",
+  "report_hash_binding_problems": [],
+  "full_application_startup": "PASS_REAL_PACKAGED_HEALTH_MYSQL_REDIS_CACHE_HTTP401",
+  "atomic_python": "88PASS_0FAILURE_0ERROR",
+  "compiled_and_tested_jar_provenance": "Actual JAR hash/source/metadata verified; compiled owner-direction gate FAIL11; negative/restored SKIPPED",
+  "all_complete": false
+}

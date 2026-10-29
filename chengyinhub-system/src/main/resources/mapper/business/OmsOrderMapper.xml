@@ -47,10 +47,12 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="createTime"    column="create_time"    />
         <result property="updateBy"    column="update_by"    />
         <result property="updateTime"    column="update_time"    />
+        <result property="verifiedPaymentFactId" column="verified_payment_fact_id"/>
+        <result property="verifiedPaymentFactHash" column="verified_payment_fact_hash"/>
     </resultMap>
 
     <sql id="selectOmsOrderVo">
-        select id, order_type, order_sn, pay_id, member_id, mms_merchant_id, product_quantity, product_total_amount, delivery_fee, pay_amount, tax_fee, order_total_amount, points_amount, pay_type, status, aftersale_status, delivery_company, delivery_sn, auto_confirm_day, receiver_name, receiver_phone, receiver_phone_code, receiver_province, receiver_detail_address, order_note, merchant_note, confirm_status, payment_time, delivery_time, receive_time, member_coupon_id, coupon_amount, del_flag, biz_type, entitlement_max_usage, entitlement_days, payment_transaction_id, commerce_request_id, create_by, create_time, update_by, update_time from oms_order
+        select id, order_type, order_sn, pay_id, member_id, mms_merchant_id, product_quantity, product_total_amount, delivery_fee, pay_amount, tax_fee, order_total_amount, points_amount, pay_type, status, aftersale_status, delivery_company, delivery_sn, auto_confirm_day, receiver_name, receiver_phone, receiver_phone_code, receiver_province, receiver_detail_address, order_note, merchant_note, confirm_status, payment_time, delivery_time, receive_time, member_coupon_id, coupon_amount, del_flag, biz_type, entitlement_max_usage, entitlement_days, payment_transaction_id, commerce_request_id, verified_payment_fact_id, CONVERT(verified_payment_fact_hash USING ascii) AS verified_payment_fact_hash, create_by, create_time, update_by, update_time from oms_order
     </sql>
 
     <sql id="merchantLedgerWhere">
@@ -319,4 +321,20 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             receiver_detail_address = #{receiverDetailAddress,typeHandler=com.chengyinhub.business.security.PiiCryptoTypeHandler}
         where id = #{id} and receiver_phone_hash is null
     </update>
+    <select id="selectCommerceOrderForUpdate" resultMap="OmsOrderResult" useCache="false" flushCache="true">
+        <include refid="selectOmsOrderVo"/>
+        WHERE order_sn=#{orderSn} AND biz_type IN ('premium_template','promotion_slot','custom_event') FOR UPDATE
+    </select>
+    <update id="bindCommercePaymentProof">
+        UPDATE oms_order
+        SET verified_payment_fact_id=#{factId}, verified_payment_fact_hash=CAST(#{factHash} AS BINARY)
+        WHERE id=#{order.id} AND order_sn=#{order.orderSn} AND member_id=#{order.memberId}
+          AND mms_merchant_id=#{order.mmsMerchantId} AND biz_type=#{order.bizType} AND pay_amount=#{order.payAmount}
+          AND status=1 AND payment_transaction_id=#{transactionId}
+          AND verified_payment_fact_id IS NULL AND verified_payment_fact_hash IS NULL
+    </update>
+    <select id="selectOmsOrderByIdForUpdate" resultMap="OmsOrderResult" useCache="false" flushCache="true">
+        <include refid="selectOmsOrderVo"/>
+        WHERE id=#{id} FOR UPDATE
+    </select>
 </mapper>

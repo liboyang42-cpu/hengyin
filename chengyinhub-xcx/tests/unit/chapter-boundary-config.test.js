@@ -86,7 +86,10 @@ test('③ 承接时冻结:新供给取章节边界，补位沿用原退出供给
 });
 
 test('④ 复制主题(移交)要带上边界,否则新主题条款静默退化成不限', () => {
-  const svc = stripJs(read('../chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java'));
+  const facade = stripJs(read('../chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java'));
+  assert.match(facade, /public Long copyCmsTopic\(Long id, Map<String, Object> params\)\s*\{\s*return topicContentCopyService\.copyCmsTopic\(id, params\);\s*\}/);
+  assert.match(facade, /public Long transferToClub\([\s\S]*?Long newTopicId = copyCmsTopic\(id, params\);/);
+  const svc = stripJs(read('../chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicContentCopyServiceImpl.java'));
   assert.match(svc, /newChapter\.setAllowedValidationMethods\s*\(\s*originalChapter\.getAllowedValidationMethods\(\)\s*\)/);
   assert.match(svc, /newChapter\.setMaxNodeXp\s*\(\s*originalChapter\.getMaxNodeXp\(\)\s*\)/);
 });

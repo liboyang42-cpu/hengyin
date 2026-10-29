@@ -59,6 +59,7 @@ class ApiAiNpcPassExpiryTest {
         ReflectionTestUtils.setField(controller, "cmsTopicNodeService", nodes);
         ReflectionTestUtils.setField(controller, "playTeamMapper", registrations);
         ReflectionTestUtils.setField(controller, "speechToTextService", speech);
+        com.chengyinhub.business.service.impl.NpcAsrTestFixture.wireController(controller,speech);
         ReflectionTestUtils.setField(controller, "npcChatService", chat);
         ReflectionTestUtils.setField(controller, "npcChatDataService", history);
         mvc = MockMvcBuilders.standaloneSetup(controller).build();

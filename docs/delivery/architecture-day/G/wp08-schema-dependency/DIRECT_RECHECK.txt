@@ -1,0 +1,17 @@
+Source: cfda5cde6e6c85ad45718de56d3815903099c0aa (no code/config edits since this commit)
+Authorized targeted recheck only; pure Python/canonical manifest, not SQL/Java/CI execution.
+
+Command:
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=ci python3 -m unittest -v test_migration_ledger.HistorySchemaContract.test_wp08_missing_guard_prerequisite_is_rejected_by_manifest_gate
+
+Actual output:
+test_wp08_missing_guard_prerequisite_is_rejected_by_manifest_gate (test_migration_ledger.HistorySchemaContract.test_wp08_missing_guard_prerequisite_is_rejected_by_manifest_gate) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 4.822s
+
+OK
+
+The one method executes three subtests: remove experience dependency, remove visibility dependency,
+remove both. All reject incomplete authoritative manifest metadata; the last also proves the exact
+original three-edge entry puts WP08 before both providers. Original first-pass failure remains in README.

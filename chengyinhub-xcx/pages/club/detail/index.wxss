@@ -1,4 +1,5 @@
 @import "../../../style/fade-in.wxss";  /* 减动效兜底要用它的 cy-fade-in(只淡不移) */
+@import "../../../style/merchant-light-scope.wxss";  /* M-24:商家浅色版根节点挂 .theme-merchant */
 /* Strava 风俱乐部主页 — 纯黑顶区 + 炭灰内容区 + 橙色强调 */
 page { background: var(--cy-bg-page); }
 
@@ -13,6 +14,14 @@ page { background: var(--cy-bg-page); }
   --club-glass: rgba(255, 255, 255, 0.12);
   --club-glass-border: var(--cy-border-card);
 }
+/* 2026-10-27 M-24:商家浅色版 —— 本页几处写死的暗色字面量在浅色根下换回语义色 */
+.theme-merchant .club-page {
+  --club-text-muted: var(--cy-color-text-secondary);
+  --club-glass: var(--cy-color-border-subtle);
+}
+.theme-merchant .cover-wrap { background: var(--cy-color-bg-surface-subtle); }
+/* 2026-10-28 m692:浅色版灰块再浅一档 */
+.theme-merchant .ov-fact { background: var(--cy-color-bg-surface-subtle); }
 .club-nav-spacer { width: 100%; }
 
 /* —— 封面 Hero —— */
@@ -146,21 +155,6 @@ page { background: var(--cy-bg-page); }
   justify-content: center;
 }
 .profile-id .profile-share::after { border: 0; }
-.profile-links {
-  display: flex;
-  gap: var(--cy-space-4);
-  margin-top: var(--cy-space-2-5);
-}
-.profile-link {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--cy-legacy-4);
-  min-height: var(--cy-btn-h);
-  font-size: var(--cy-font-label);
-  font-weight: 500;
-  color: var(--club-text-muted);
-}
-.profile-link-arrow { flex: none; }
 .profile-name {
   /* Figma 93:21:27px Bold 单行省略 */
   font-size: var(--cy-type-page-title);
@@ -176,7 +170,7 @@ page { background: var(--cy-bg-page); }
 /* Figma 93:22 Meta:三枚「图标 19 + 文字 15」chip,gap 20。
    2026-08-26 曾把它压成一行 · 拼接的纯文本并撤掉图标,282:x 那版稿又把图标行留着 —— 以稿为准复原。 */
 .profile-meta {
-  /* 拍板 2026-10-22:固定两行(「类型 · N 名成员」/ 入会方式),不再随宽度任意折行。 */
+  /* 拍板 2026-10-22:固定两行(「类型 · N 名成员」/ 入会方式);2026-10-28 业主:间距退回这一版 */
   margin-top: var(--cy-space-2-5);
   display: flex;
   flex-direction: column;
@@ -184,6 +178,17 @@ page { background: var(--cy-bg-page); }
   gap: var(--cy-space-1-5);
 }
 .profile-meta-chip { display: flex; align-items: center; gap: var(--cy-space-1-5); min-width: 0; max-width: 100%; }
+.profile-meta-row { align-self: stretch; display: flex; align-items: center; gap: var(--cy-space-3); }
+.profile-quit {
+  flex: none;
+  margin-left: auto;
+  min-height: var(--cy-btn-h);
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--cy-font-label);
+  font-weight: 500;
+  color: var(--club-text-muted);
+}
 .profile-meta-ico { flex: none; color: var(--cy-color-text-primary); }
 .profile-meta-text {
   font-size: var(--cy-type-card-title);
@@ -300,47 +305,8 @@ page { background: var(--cy-bg-page); }
 .feed { padding: 0 0 var(--cy-space-4); background: var(--cy-bg-page); }
 .feed--plain { background: var(--cy-bg-page); }
 
-/* 发帖 */
-.post-composer {
-  display: flex;
-  flex-direction: column;
-  gap: var(--cy-space-2);
-  padding: var(--cy-space-3) var(--cy-space-4);
-  border-bottom: 2rpx solid rgba(255, 255, 255, 0.06);
-}
-.post-input {
-  width: 100%;
-  min-height: 64rpx;
-  max-height: 240rpx;
-  font-size: var(--cy-font-body);
-  color: var(--club-text);
-  line-height: 1.5;
-  box-sizing: border-box;
-}
+/* 评论输入框的占位色(原发帖输入框同用;2026-10-27 P-20 内嵌发帖框撤掉后只剩评论) */
 .post-ph { color: var(--club-text-muted); }
-.post-imgrow { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cy-space-1-5); }
-.post-thumb { position: relative; width: 120rpx; height: 120rpx; }
-.post-thumb-img { width: 100%; height: 100%; border-radius: var(--cy-radius-sm); }
-.post-thumb-del {
-  position: absolute; top: calc(var(--cy-legacy-10) * -1); right: calc(var(--cy-legacy-10) * -1); width: var(--cy-btn-h); height: var(--cy-btn-h);
-}
-.post-thumb-del__glyph {
-  position: absolute; top: 0; right: 0; width: var(--cy-legacy-36); height: var(--cy-legacy-36);
-  display: flex; align-items: center; justify-content: center; background: var(--cy-color-overlay);
-  color: var(--cy-color-text-inverse); border-radius: var(--cy-radius-pill);
-}
-.post-addimg {
-  width: 120rpx; height: 120rpx; display: flex; align-items: center; justify-content: center;
-  color: var(--club-text-muted);
-  background: var(--club-surface); border: 1rpx dashed rgba(255,255,255,0.12);
-  border-radius: var(--cy-radius-sm);
-}
-.post-send {
-  min-height: var(--cy-btn-h); box-sizing: border-box; display: flex; align-items: center;
-  margin-left: auto; align-self: flex-end; padding: 0 var(--cy-space-4);
-  border-radius: var(--cy-radius-pill); background: var(--cy-btn-solid-bg); color: var(--cy-btn-solid-fg); font-size: var(--cy-font-label);
-}
-.post-send.disabled { opacity: 0.5; }
 
 /* —— 活动 tab(Figma N2-A 282:350 / N2-B 282:499)—— */
 /* 段头:20px Bold + 分隔线 + 右侧「发布 +」 */
@@ -352,8 +318,6 @@ page { background: var(--cy-bg-page); }
   margin-top: var(--cy-space-5);
   margin-bottom: var(--cy-space-4);
 }
-.ev-sec-head--second { margin-top: var(--cy-space-5); }
-.ev-sec-tit { font-size: var(--cy-type-section-title); font-weight: 700; color: var(--cy-color-text-primary); }
 /* 稿里 282:622 / 23:16 / 23:41 这一格是 h-px 的**透明** spacer(get_design_context 无 bg,
    PNG 导出该区整片 RGB(0,0,0))—— 只负责把右侧文字链推到行尾,不画分隔线。 */
 .ev-sec-rule { flex: 1; min-width: 0; height: 1rpx; }
@@ -443,55 +407,30 @@ page { background: var(--cy-bg-page); }
   color: var(--club-accent);
   font-size: var(--cy-font-caption);
 }
-.ev-no-signup {
-  display: flex;
-  align-items: center;
-  align-self: flex-start;
-  margin-top: var(--cy-space-1);
-  padding: 0 var(--cy-space-2);
-  color: var(--club-text-muted);
-  font-size: var(--cy-font-caption);
-}
-.event-report {
+/* 2026-10-27 M-24·M-34:商家在活动卡上看到「邀约承接」(代替报名) */
+.ev-undertake {
   min-height: var(--cy-btn-h);
   box-sizing: border-box;
   display: flex;
   align-items: center;
   align-self: flex-start;
-  margin-top: var(--cy-space-1);
-  padding: 0 var(--cy-space-2);
-  color: var(--cy-color-status-warning);
+  margin-top: var(--cy-space-2);
+  padding: var(--cy-space-1) var(--cy-space-3);
+  border-radius: var(--cy-radius-pill);
+  background: var(--cy-btn-solid-bg);
+  color: var(--cy-btn-solid-fg);
   font-size: var(--cy-font-caption);
+  font-weight: 600;
 }
-.event-view-tabs { display: block; padding: 0 var(--cy-space-4) var(--cy-space-2); }
-.event-calendar { padding: 0 var(--cy-space-4) var(--cy-space-5); }
-.event-calendar-head { display: flex; align-items: center; justify-content: space-between; min-height: var(--cy-btn-h); }
-.event-calendar-title { color: var(--club-text); font-size: var(--cy-font-body); font-weight: 700; }
-.event-calendar-shift {
-  width: var(--cy-btn-h); height: var(--cy-btn-h); display: flex; align-items: center; justify-content: center;
-  border-radius: var(--cy-radius-pill); background: var(--club-surface); color: var(--club-text);
-  font-size: var(--cy-font-title);
-}
-.event-calendar-notice {
-  display: flex; align-items: center; justify-content: space-between; gap: var(--cy-space-2);
-  padding: var(--cy-space-1) 0; color: var(--club-text-muted); font-size: var(--cy-font-caption);
-}
-.event-calendar-retry { flex-shrink: 0; color: var(--club-text); font-weight: 600; }
-.event-calendar-week, .event-calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
-.event-calendar-week { padding: var(--cy-space-1) 0; color: var(--club-text-muted); font-size: var(--cy-font-caption); text-align: center; }
-.event-calendar-day {
-  min-height: 112rpx; /* ds-ok: month cell must hold date plus one event label */
-  padding: var(--cy-space-1) 4rpx; /* ds-ok: seven columns need compact optical inset */
-  border-top: 1rpx solid var(--cy-border-card); color: var(--club-text); overflow: hidden;
-}
-.event-calendar-day.is-outside { opacity: 0.35; }
-.event-calendar-number { display: block; margin-bottom: var(--cy-space-1); text-align: center; font-size: var(--cy-font-caption); }
-.event-calendar-day.has-event .event-calendar-number { color: var(--club-accent); font-weight: 700; }
-.event-calendar-item {
-  margin-top: 4rpx; /* ds-ok: compact labels within fixed calendar cell */
-  padding: 4rpx 6rpx; /* ds-ok: compact labels within seven-column grid */
-  border-radius: var(--cy-radius-sm); background: var(--cy-accent-soft); color: var(--club-text);
-  font-size: var(--cy-font-caption); line-height: 1.25; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;
+/* 2026-10-27 P-14:「举报活动」收进卡片右下「更多」,热区 88rpx */
+.ev-more {
+  width: var(--cy-btn-h);
+  height: var(--cy-btn-h);
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--club-text-muted);
 }
 
 /* 概览 */
@@ -784,8 +723,8 @@ page { background: var(--cy-bg-page); }
 .ov-lb-row {
   display: flex;
   align-items: center;
-  gap: var(--cy-space-2-5);
-  padding: var(--cy-space-2-5) var(--cy-space-3);
+  gap: var(--cy-space-3);
+  padding: var(--cy-space-4) var(--cy-space-3); /* 2026-10-28 业主:贡献榜每行加高 */
 }
 .ov-lb-row.is-me { background: var(--cy-color-action-secondary-bg); }
 .ov-lb-rank {
@@ -876,13 +815,6 @@ page { background: var(--cy-bg-page); }
 }
 .comment-send.disabled { opacity: 0.5; }
 
-.post-kind-toggle {
-  margin-top: var(--cy-space-2); min-height: var(--cy-btn-h); padding: 0 var(--cy-space-3);
-  display: flex; align-items: center; justify-content: space-between; box-sizing: border-box;
-  border: 1rpx solid var(--cy-border-line); border-radius: var(--cy-radius-sm);
-  color: var(--club-text-muted); font-size: var(--cy-font-label);
-}
-.post-kind-toggle.on { border-color: var(--club-accent); color: var(--club-accent); background: var(--cy-brand-soft); }
 .post-edit-sheet, .post-history-sheet { padding: 0; }
 .post-edit-input { width: 100%; min-height: 220rpx; padding: var(--cy-space-3); box-sizing: border-box; border-radius: var(--cy-radius-sm); background: var(--cy-color-input-idle-bg); color: var(--club-text); font-size: var(--cy-font-body); line-height: var(--cy-leading-normal); }
 .post-edit-input.is-filled { background: var(--cy-color-input-filled-bg); }
@@ -1033,18 +965,6 @@ page { background: var(--cy-bg-page); }
   font-size: var(--cy-font-micro);
   color: var(--club-text-muted);
 }
-/* 「带上一次游玩记录」:选中后是一枚可撤的 chip,没选时是一行浅入口。
-   两者占同一个位置,不叠加 —— 已经带了还留着「带上」入口会让人以为能带两条。 */
-.post-ref, .post-ref-add {
-  margin-top: var(--cy-space-2); min-height: 72rpx;
-  display: flex; align-items: center; gap: var(--cy-space-2);
-  padding: 0 var(--cy-space-3);
-  border-radius: var(--cy-radius-pill); background: var(--club-glass-border);
-  font-size: var(--cy-font-caption); color: var(--club-text-muted);
-}
-.post-ref-name { flex: 1; min-width: 0; color: var(--club-text); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.post-ref-del { flex: none; display: flex; align-items: center; justify-content: center; min-width: var(--cy-btn-h); min-height: var(--cy-btn-h); }
-.post-ref-ico { flex: none; }
 .post-ref-pick { padding: 0 0 var(--cy-space-4); max-height: 60vh; overflow-y: auto; /* cy-sheet 面板已带页边距,内容不再重复内缩 */ }
 .post-ref-opt {
   min-height: 104rpx; display: flex; align-items: center; gap: var(--cy-space-2);
@@ -1125,14 +1045,8 @@ page { background: var(--cy-bg-page); }
 }
 .post-composer-ph { font-size: var(--cy-type-card-title); color: var(--cy-color-text-secondary); }
 .post-composer-tools { display: flex; align-items: center; gap: var(--cy-space-5); padding-top: var(--cy-space-3); }
-.post-composer-ico { flex: none; color: var(--cy-color-text-secondary); }
-.post-cancel {
-  min-height: var(--cy-btn-h);
-  display: flex; align-items: center;
-  padding: 0 var(--cy-space-3);
-  font-size: var(--cy-font-label);
-  color: var(--club-text-muted);
-}
+.post-composer-ico { flex: none; color: var(--cy-color-text-primary); }
+.post-composer-sq { width: 40rpx; height: 40rpx; box-sizing: border-box; border: 3rpx solid var(--cy-color-text-secondary); border-radius: 8rpx; } /* ds-ok: Figma 285:395 线框方块图标 4px 圆角,是图标笔画不是卡片圆角 */
 
 /* —— 概览 tab(Figma N3 23:2 / N5 24:216 / N6 24:355)——
    页边 16 · 区块间距 16。简介直接铺开:全局规约「标题下不要小标题」,

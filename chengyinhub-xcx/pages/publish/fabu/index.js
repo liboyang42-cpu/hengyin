@@ -117,6 +117,8 @@ const publishIssueTarget = require('../utils/publish/publish-issue-target.js');
 const templateAuthorFields = require('../utils/publish/template-author-fields.js');
 const storyEnding = require('../utils/publish/story-ending');
 const routeMapView = require('../utils/publish/route-map-view.js');
+const { drawPlayStateMarker } = require('../../../utils/play-marker-draw.js');
+const { MAP_STYLE } = require('../../../utils/map-style.js');
 const publishValidationBag = require('../utils/publish/publish-validation-bag.js');
 const publisherIdentity = require('../../../utils/publisher-identity.js');
 const nodeOutcomeContract = require('../utils/publish/node-outcome-contract.js');
@@ -303,7 +305,6 @@ Page({
     identityRequired: true,
     identityReady: false,
     // 旧草稿没记录商家/个人入口、用户还没确认归属:页内横幅 + 发布确认里的「需要先处理」都看它
-    legacyScopePending: false,
     identityRealName: '',
     identityIdCard: '',
     identityConsented: false,
@@ -544,6 +545,9 @@ Page({
     mapInclude: [MAP_DEFAULT_CENTER], // include-points 自动适配视野;空数组会让腾讯 SDK fitBounds 崩,兜底中心点
     mapCenter: MAP_DEFAULT_CENTER,
     mapScale: 12,
+    // P-45 / G-12:编辑器地图与玩家地图同一套个性化样式(utils/map-style.js;key 未配置时是官方默认底图)
+    mapSubkey: MAP_STYLE.subkey,
+    mapLayerStyle: MAP_STYLE.layerStyle,
     hasRoute: false,       // 是否已有有效坐标节点(空态判断)
     selectedNodeLid: '',   // 列表↔地图双向高亮选中的节点 _localId
     rowHpx: 0,             // 节点卡片行高(px),movable-view y 用 px,onLoad 由 rpx 折算
@@ -934,7 +938,6 @@ Page({
       return false;
     }
     if (restored.status !== 'ready') return false;
-    if (restored.scopeUnknown) { this._confirmLegacyDraftScope(restored.envelope); return false; }
     const restoredForm = restored.envelope.formData || {};
     const modeMismatch = !options.draftUuid && options.mode != null
       && Number(restoredForm.productType) !== (Number(options.mode) === 2 ? 2 : 1);
@@ -946,6 +949,7 @@ Page({
       return false;
     }
     this._applyDraftEnvelope(restored.envelope);
+    if (restored.scopeUnknown) this._persistDraftEnvelope(); // P-44:旧草稿静默归到当前入口,立即补记入口
     return true;
   },
 
@@ -983,7 +987,6 @@ Page({
       this._markDraftStorageUnavailable();
       return;
     }
-    if (result.scopeUnknown) { this._confirmLegacyDraftScope(result.envelope); return; }
     if (result.envelope && result.envelope.publishAttempt) {
       this._publishAttempt = result.envelope.publishAttempt;
     }
@@ -1011,6 +1014,7 @@ Page({
     this._cloudLoadedKey = this._cloudDraftKey();
     if (result.status === 'ready' && !unknownExistingWrite) {
       this._applyDraftEnvelope(result.envelope);
+      if (result.scopeUnknown) this._persistDraftEnvelope(); // P-44:旧草稿静默归到当前入口,立即补记入口
       finish();
       return;
     }
@@ -1041,70 +1045,9 @@ Page({
     finish();
   },
 
-  // 2026-10-22 业主裁决(L09):原来每次进页都弹「确认旧草稿的发布入口」,并把提示塞进底部固定的
-  // 「这次还没有保存」错误卡 —— 盖住章节卡与地图、还和 toast 叠在一起。现在:
-  // ① 提示改成内容流里的横幅(legacyScopePending),不再借用 submitError;
-  // ② 选过「暂不恢复」就按草稿记下来,下次进来不再自动弹窗,横幅上的「确认归属」随时可再打开。
-  _confirmLegacyDraftScope(envelope) {
-    this._draftScopeUnconfirmed = true;
-    this._legacyScopeEnvelope = envelope;
-    this.setData({ legacyScopePending: true });
-    if (this._legacyScopeDeferred()) return;
-    this._promptLegacyDraftScope();
-  },
-
-  _legacyScopeChoiceKey() {
-    const identity = this._draftIdentity();
-    const memberId = String(app.getUserID() || '');
-    if (!identity || !memberId) return '';
-    const draft = identity.topicId ? ('t' + identity.topicId) : ('d' + identity.draftUuid);
-    return 'cy_legacy_scope_later:' + memberId + ':' + (this.data.operationScope || '') + ':' + draft;
-  },
-
-  _legacyScopeDeferred() {
-    const key = this._legacyScopeChoiceKey();
-    try { return !!(key && wx.getStorageSync(key)); } catch (error) { return false; }
-  },
-
-  _rememberLegacyScopeChoice(deferred) {
-    const key = this._legacyScopeChoiceKey();
-    if (!key) return;
-    try {
-      if (deferred) wx.setStorageSync(key, 1);
-      else wx.removeStorageSync(key);
-    } catch (error) {}
-  },
-
-  // 横幅「确认归属」/ 发布确认「需要先处理」那一条:重新打开同一个确认弹窗
-  reopenLegacyDraftScope() {
-    if (!this._draftScopeUnconfirmed || !this._legacyScopeEnvelope) return;
-    if (this.data.publishCheck && this.data.publishCheck.show) this.closePublishCheck();
-    this._promptLegacyDraftScope();
-  },
-
-  _promptLegacyDraftScope() {
-    const envelope = this._legacyScopeEnvelope;
-    const owner = String(app.getUserID() || '');
-    const scope = this.data.operationScope;
-    modal.show({
-      title: '确认旧草稿的发布入口',
-      content: '这份旧草稿没有记录商家或个人入口。确认属于当前入口后才恢复；上次结果未知的发布仍会保留并先确认。',
-      confirmText: '属于此入口', cancelText: '暂不恢复',
-      success: (res) => {
-        if (this._unloaded || owner !== String(app.getUserID() || '')
-            || scope !== this.data.operationScope || !this._draftScopeUnconfirmed) return;
-        if (!res.confirm) { this._rememberLegacyScopeChoice(true); return; }
-        this._draftScopeUnconfirmed = false;
-        this._legacyScopeEnvelope = null;
-        this._rememberLegacyScopeChoice(false);
-        this.setData({ legacyScopePending: false });
-        this._applyDraftEnvelope(envelope);
-        const stored = this._persistDraftEnvelope();
-        this._draftAutosaveReady = true;
-        this._markRestoredDraft(stored);
-      }
-    });
-  },
+  // 2026-10-27 P-44(业主):没有记录入口的旧草稿默认归到当前入口、静默恢复 ——
+  // 「确认旧草稿的发布入口」弹窗、「旧草稿还没恢复」横幅和发布确认里的归属阻断项都已删除。
+  // 恢复后立刻按当前入口重存一次(_persistDraftEnvelope 写 operationScope),下次进来就是已知入口。
 
   _markDraftStorageUnavailable() {
     this._draftStorageUnavailable = true;
@@ -3142,7 +3085,7 @@ Page({
   },
 
   // 页面销毁:让在途发布回调失效,避免 setData / redirect after unload
-  onHide() {
+  onHide() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1;
     this._hidden = true;
     this._precheckToken = (this._precheckToken || 0) + 1;
     // 保存/发布意图已在发请求前落盘。隐藏后只允许下一次显式核对，旧回包不结算新页面。
@@ -3163,7 +3106,7 @@ Page({
     this._cancelCloudDraftAutosave();
   },
 
-  onUnload() {
+  onUnload() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1;
     this._unloaded = true;
     this._cloudAutosaveEnabled = false;
     this._cancelCloudDraftAutosave();
@@ -6755,10 +6698,9 @@ Page({
 
   // 发布弹层「继续发布」:仅在无 blocking 时出现,置一次性放行标记后重走 submitForm
   confirmPublishCheck() {
-    if (app.ensureLoginFor && !app.ensureLoginFor('publish', () => this.confirmPublishCheck())) return; // 2026-10-24 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('publish', () => this.confirmPublishCheck(), { owner: this, target: () => [this.data.editingTopicId, this.data.draftUuid, this.data.operationScope, this.data.formData.clubId, this.data.formData.productType] })) return; // 2026-10-24 游客写前登录
     if (this._identityRegistering) return;
     this.syncIdentityReady();
-    if (this.data.legacyScopePending) return; // 旧草稿归属没确认:发出去也会被 sendData 静默拦下
     if (this.data.publishCheck.blocking.length || !this.data.identityReady) return;
     if (!this.data.identityRequired || this.data.identityRegistered) { this._publishAfterIdentity(); return; }
     // 先落实名、再落主题:后端两道闸就是这个顺序(/api/publisher/identity 先于 /api/topic/create
@@ -6798,10 +6740,6 @@ Page({
 
   // 发布弹层的「确认发布」被置灰时点它 —— 报第一条真缺项,不打空炮。
   onPublishCheckDisabledTap() {
-    if (this.data.legacyScopePending) {
-      cyToast('请先确认这份草稿的发布入口');
-      return;
-    }
     if (!this.data.identityReady) {
       const check = publisherIdentity.checkIdentityForm(this.identityForm());
       cyToast(check.ok ? '发布者实名还没登记' : check.message);
@@ -7288,7 +7226,7 @@ Page({
 
   // 提交表单
   submitForm() {
-    if (app.ensureLoginFor && !app.ensureLoginFor('publish', () => this.submitForm())) return; // 2026-10-24 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('publish', () => this.submitForm(), { owner: this, target: () => [this.data.editingTopicId, this.data.draftUuid, this.data.operationScope, this.data.formData.clubId, this.data.formData.productType] })) return; // 2026-10-24 游客写前登录
     // 一次性消费放行标记:必须在任何 early return 之前取走并清掉,
     // 否则「确认发布 → 下面某条校验拦下」会把 true 留到下一次点击,让那一版内容静默绕过预检。
     const precheckAcked = this._precheckAcked;
@@ -8345,6 +8283,28 @@ Page({
    * 先走既有 /api/template/adopt-draft 采用成「我的草稿」,拿到会员模板 id 再绑。
    * 结果不确定(超时/断网)时不自动重发,避免重复建草稿;请作者去「我的玩法」查回。
    */
+  // 复用原节点对象/身份与选择代次；编辑器导航可正常返回，换节点/主题/账号不能接旧结果。
+  _nodeTemplateTargetCurrent(editorReturn = false) {
+    const node = this.data.nodesForm, key = templateBinding.nodeKey(node);
+    const owner = memberId(app), scope = this.data.operationScope, topicId = this.data.editingTopicId;
+    const token = this._nodeTemplateLoadToken, epoch = this._loginContinuationEpoch || 0;
+    const draftUuid = this.data.draftUuid, editToken = this._editLoadToken;
+    const authorization = typeof app.getAuthorization === 'function' ? app.getAuthorization() : '';
+    const session = typeof app.getSession === 'function' ? app.getSession() : null;
+    const revision = session && typeof session.getRevision === 'function' ? session.getRevision() : null;
+    // A child editor emits before navigateBack, while its opener is hidden. Only that explicitly
+    // captured navigation may cross one hide; ordinary author reads still require the original epoch.
+    return () => !this._unloaded && (editorReturn || !this._hidden)
+      && ((this._loginContinuationEpoch || 0) === epoch
+        || editorReturn && (this._loginContinuationEpoch || 0) === epoch + 1)
+      && owner === memberId(app) && scope === this.data.operationScope
+      && authorization === (typeof app.getAuthorization === 'function' ? app.getAuthorization() : '')
+      && session === (typeof app.getSession === 'function' ? app.getSession() : null)
+      && (revision === null || session.getRevision() === revision)
+      && draftUuid === this.data.draftUuid && editToken === this._editLoadToken
+      && topicId === this.data.editingTopicId && token === this._nodeTemplateLoadToken
+      && node === this.data.nodesForm && key === templateBinding.nodeKey(this.data.nodesForm);
+  },
   _adoptPublicTemplate(libraryTemplate) {
     if (this._adoptingPublicTemplate) return;
     const owner = String(app.getUserID() || '');
@@ -8355,7 +8315,7 @@ Page({
     const context = () => JSON.stringify([String(app.getUserID() || ''), this.data.operationScope || '',
       typeof app.getAuthorization === 'function' ? app.getAuthorization() : '',
       this.data.draftUuid, this.data.editingTopicId, this._editLoadToken,
-      this.data.nodesForm, this.data.selectedTempSource, this.data.selectedTempId]);
+      this.data.nodesForm, this.data.selectedTempSource, this.data.selectedTempId, this._loginContinuationEpoch]);
     const originalContext = context();
     const current = () => !this._hidden && !this._unloaded && context() === originalContext;
     let record;
@@ -8479,22 +8439,26 @@ Page({
   },
   _bindNodeTemplate(selectedTemplate) {
     if (!Object.prototype.hasOwnProperty.call(selectedTemplate, 'advancedConfigJson')) {
-      if (this._loadingSelectedTemplate === templateAdoption.id(selectedTemplate.id)) return;
+      if (this._loadingSelectedTemplate === templateAdoption.id(selectedTemplate.id)
+          && this._loadingSelectedTemplateCurrent && this._loadingSelectedTemplateCurrent()) return;
       this._loadingSelectedTemplate = templateAdoption.id(selectedTemplate.id);
       const token = (this._nodeTemplateLoadToken || 0) + 1;
       this._nodeTemplateLoadToken = token;
+      const targetCurrent = this._nodeTemplateTargetCurrent(), epoch = this._loginContinuationEpoch;
+      const current = () => targetCurrent() && epoch === this._loginContinuationEpoch;
+      this._loadingSelectedTemplateCurrent = current;
       const that = this;
       app.sendRequest({ url: '/api/template/author-myinfo', method: 'POST', hideLoading: true, silentError: true,
         data: { id: selectedTemplate.id, scope: this.data.operationScope },
         success(res) {
-          if (token !== that._nodeTemplateLoadToken) return;
-          that._loadingSelectedTemplate = 0;
+          if (token === that._nodeTemplateLoadToken) that._loadingSelectedTemplate = 0;
+          if (!current()) return;
           if (res && res.code == '200' && isRecord(res.data) && templateAdoption.id(res.data.id) === templateAdoption.id(selectedTemplate.id))
             that._bindNodeTemplate(res.data);
           else cyToast('玩法详情未加载，请重新选择');
         },
-        fail() { if (token !== that._nodeTemplateLoadToken) return;
-          that._loadingSelectedTemplate = 0; cyToast('玩法详情未加载，请重新选择'); },
+        fail() { if (token === that._nodeTemplateLoadToken) that._loadingSelectedTemplate = 0;
+          if (current()) cyToast('玩法详情未加载，请重新选择'); },
       });
       return;
     }
@@ -8819,10 +8783,13 @@ Page({
     const ctx = this._nodeSupportContext();
     const reason = game && supportMatrix.choice(this.data.supportMatrix, game.key, {}, ctx);
     if (reason && !dataset.preview) { cyToast(reason); return; }
+    if (this._navigating) return;
+    this._nodeTemplateLoadToken = (this._nodeTemplateLoadToken || 0) + 1;
     const that = this;
+    const targetCurrent = this._nodeTemplateTargetCurrent(true);
     const themeName = this.data.formData.name;
     const nodeName = this.data.nodesForm.name || ('节点' + (this.data.editTargetNodeLid || ''));
-    if (this._navigating) return; this._navigating = true; wx.navigateTo({ // 跳转中不响应连点,免得叠两层玩法编辑页
+    this._navigating = true; wx.navigateTo({ // 跳转中不响应连点,免得叠两层玩法编辑页
       url: '/pages/publish/temp/index?from=fabu&themeName=' + encodeURIComponent(themeName || '')
         + '&nodeName=' + encodeURIComponent(nodeName || '') + checkContext.query(this.data.formData.journeyRules)
         + (this.data.supportMatrix ? '&supportContext=' + encodeURIComponent(JSON.stringify(ctx)) : '')
@@ -8830,7 +8797,7 @@ Page({
         + (this.data.operationScope ? '&scope=MERCHANT' : ''),
       events: {
         templateCreated(tpl) {
-          if (!tpl || !tpl.id) return;
+          if (!targetCurrent() || !tpl || !templateAdoption.id(tpl.id)) return;
           if (that._insertAlbumTemplate(tpl)) return;
           const templateInfo = Object.assign({}, tpl, {
             title: tpl.title || '',
@@ -8844,35 +8811,42 @@ Page({
     });
   },
 
-  // 公共玩法库。用 /api/template/homeData —— 它不需要 category_id,和创意广场/发布引导页
-  // 是同一个数据源(三处已在用),而 /api/template/list 必须带分类,拿"全部"没有稳妥参数。
+  // 公共玩法库完整分页：list 的 category_id 可省略，homeData 只是推荐切片，不能替代库。
   // ⚠️ 拉不到就留空并在界面上直说,不塞占位假模板:选中一个不存在的 templateId
   // 会让玩家端到了点位打不开玩法,而创作者这边显示"已配置"。
   // 公共玩法库三态分开:加载中 / 已加载(可能为空) / 请求失败(给重试),别把「库里没有」说成「拉不到」
   getPublicTempList: function () {
-    var that = this;
-    this.setData({ publicTempState: 'loading' });
-    app.sendRequest({
+    const that = this, rows = [], seen = new Set(), pageSize = 100;
+    const owner = memberId(app), scope = this.data.operationScope, epoch = this._loginContinuationEpoch;
+    const token = this._publicTempListToken = (this._publicTempListToken || 0) + 1;
+    const current = () => !that._unloaded && token === that._publicTempListToken
+      && owner === memberId(app) && scope === that.data.operationScope && epoch === that._loginContinuationEpoch;
+    const fail = () => { if (current()) that.setData({ publicTempList: [], publicTempState: 'error' }); };
+    this.setData({ publicTempList: [], publicTempState: 'loading' });
+    let received = 0;
+    const load = pageNum => app.sendRequest({
       hideLoading: true,
-      silentError: true,
-      url: '/api/template/adoption-home',
+      url: '/api/template/list',
       method: 'POST',
-      data: {},
+      data: { pageNum: pageNum, pageSize: pageSize },
       success: function (res) {
-        if (!(res && res.code == '200' && res.data)) { that.setData({ publicTempList: [], publicTempState: 'error' }); return; }
-        var d = res.data;
-        var merged = [].concat(d.recommendList || [], d.hotList || [], d.latestList || []);
-        var seen = {};
-        var rows = merged.filter(function (item) {
-          if (!item || item.id == null || seen[item.id]) return false;
-          seen[item.id] = true;
-          return true;
-        });
+        if (!current()) return;
+        const data = res && res.data, total = Number(data && data.total);
+        if (!(res && res.code == '200' && isRecord(data) && isRecordList(data.rows)
+          && Number.isSafeInteger(total) && total >= 0)) { fail(); return; }
+        // 重复页/坏ID/总数前提前空页不能冒充完整库；失败只重读，不产生采用写入。
+        if (new Set(data.rows.map(item => String(item.id))).size !== data.rows.length
+          || data.rows.some(item => !templateAdoption.id(item.id)
+          || seen.has(String(item.id))) || (!data.rows.length && received < total)) { fail(); return; }
+        data.rows.forEach(item => { seen.add(String(item.id)); rows.push(item); });
+        received += data.rows.length;
+        if (received < total) { load(pageNum + 1); return; }
         that.setData({ publicTempList: rows, publicTempState: 'ready' });
         that._refreshSupportMatrix();
       },
-      fail: function () { that.setData({ publicTempList: [], publicTempState: 'error' }); },
+      fail: fail,
     });
+    load(1);
   },
 
   /* 我的故事玩法草稿(W-10):从发布页存下的故事玩法是 status=0 草稿,「我的模板」按 is_quote
@@ -9051,8 +9025,38 @@ Page({
   // 路线地图视图 = 纯函数,见 utils/publish/route-map-view.js。
   // 这里只做三件页面才能做的事:取 data 切片、存 markerMap 反查表、setData。
   // 配色/简化阈值/折线规则那 178 行搬去模块后有了单测覆盖 —— 埋在页面里时一行都没有。
+  // P-45:离屏画玩家地图同款圆点图钉(utils/play-marker-draw.js),只画一次;画完重绘一遍地图。
+  // 画失败就留空,route-map-view 回落旧图钉,不影响编辑。
+  _ensureRouteIcons() {
+    if (this._routeIcons || this._routeIconsPending || !wx.canvasToTempFilePath || !this.createSelectorQuery) return;
+    this._routeIconsPending = true;
+    const done = (icons) => {
+      this._routeIconsPending = false;
+      this._routeIcons = icons;
+      if (!this._unloaded && icons.actionable) this.buildRouteMap();
+    };
+    this.createSelectorQuery().select('#routeIconCv').fields({ node: true }).exec((res) => {
+      const cv = res && res[0] && res[0].node;
+      // 地图层还没渲染出来(画布跟着地图 wx:if):不记结果,下次重绘地图再试
+      if (!cv) { this._routeIconsPending = false; return; }
+      const S = 108; cv.width = S; cv.height = S;
+      const g = cv.getContext('2d'), icons = {};
+      const keys = ['actionable', 'candidate', 'target'];
+      const next = (i) => {
+        if (i >= keys.length) { done(icons); return; }
+        drawPlayStateMarker(g, S, keys[i]);
+        wx.canvasToTempFilePath({ canvas: cv, fileType: 'png',
+          success: (r) => { icons[keys[i]] = r.tempFilePath; next(i + 1); },
+          fail: () => done({}) });
+      };
+      next(0);
+    });
+  },
+
   buildRouteMap() {
+    this._ensureRouteIcons();
     const view = routeMapView.buildRouteMapView({
+      icons: this._routeIcons,
       chapters: (this.data.formData && this.data.formData.chapters) || [],
       selectedNodeLid: this.data.selectedNodeLid,
       pendingMaterials: this.data.pendingMaterials,

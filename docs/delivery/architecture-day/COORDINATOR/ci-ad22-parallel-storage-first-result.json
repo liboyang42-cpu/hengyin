@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "source_sha": "ad2228771f532c21ac5328e577e308578d6fd231",
+  "full_acceptance": false,
+  "classes": {
+    "CoopDepositSettlementAttemptMySqlIT": {
+      "run": 40107488706,
+      "executed": 11,
+      "pass": 10,
+      "failure": 0,
+      "error": 1,
+      "skipped": 0,
+      "root": "Mockito spy over advised proxy triggers unfinished stubbing; raw target spy isolated before stub"
+    },
+    "ClmCommercePaymentProofMySqlIT": {
+      "run": 40107493018,
+      "executed_business_cases": 0,
+      "before_all_error": "canonical sys_config missing from baseTables prerequisite"
+    },
+    "OmsOrderCommerceGuardMySqlIT": {
+      "run": 40107501942,
+      "executed_business_cases": 0,
+      "before_all_error": "same canonical sys_config prerequisite"
+    }
+  },
+  "source_fixes_only": "No production changes or weakened assertions; add canonical base table and isolate the existing spy target",
+  "cleanup": "Not yet independently read back for these three runs"
+}

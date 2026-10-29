@@ -1,0 +1,443 @@
+{
+  "observed_source": "92829af2f738b0dbf10c14b05d6cb949032e3ba1",
+  "parent": "047dff9bd9f64762ce3b7c2f0839d10e803956f4",
+  "source_sha256": {
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/CoopOrderStationFulfillment.java": "fe7392730f8684f7814e00ebc29f8ec66c91ce13afd7053aade5e1e3c74782f0",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CoopOrderStationFulfillmentMapper.java": "51c8b788376387655307dc7ebc70410ce1ba8e19661dc3ea2f03c4aee2f7f1f8",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/CoopOrderStationScope.java": "173e99c3969b7aef27744554af1c2ad1a417a1728eca2b4a91af51521339f4d9",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementClaimServiceImpl.java": "c9aa5539fe58aa0d391656259ec7f60bfc8a0fe4fcdb702dab2f9c44b417eb2c",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicSettlementEvidenceService.java": "488c56be3f0d0c0faff4c788d064193a6fa6c4f75ba1dae6d44c7e9706c21e8c",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/FrozenCoopOrderSettlementSnapshotReader.java": "6295242c1573f5f10df74e8c140ff4a49486394fdb9f704dd277f37dc0b47ca7",
+    "chengyinhub-system/src/main/resources/mapper/business/CoopOrderStationFulfillmentMapper.xml": "2fbb7a33584a1055df215bfcd5199e052e6cce5f8a2c7064c1a8e2a46e4fbd97"
+  },
+  "statements": [
+    {
+      "key": "chengyinhub-system/src/main/resources/mapper/business/CoopOrderStationFulfillmentMapper.xml#selectAuditRegistrationLocation",
+      "kind": "select",
+      "fingerprint": "96333244d278e9e43cd8872a6f1bd354dba57320e660d6687c55cd553d5742ab",
+      "analysis": "UNKNOWN",
+      "locking_select": {
+        "namespace": "com.chengyinhub.business.mapper.CoopOrderStationFulfillmentMapper",
+        "id": "selectAuditRegistrationLocation",
+        "body_sha256": "c3642b8dde3a1635da50507a9e1cc5f6f492d6c3b886deb7d4384ab6d6e547bb",
+        "statement_sha256": "5efc5bd80b4e06f457c3f18fb856ff45dc03a21070313d18f3f99b430c8cd9a5",
+        "useCache": "false",
+        "flushCache": "true",
+        "analysis": "NOT_LOCKING_SELECT",
+        "unknown": []
+      }
+    },
+    {
+      "key": "chengyinhub-system/src/main/resources/mapper/business/CoopOrderStationFulfillmentMapper.xml#selectRegistrationForUpdate",
+      "kind": "select",
+      "fingerprint": "4e4e87b28ae7bace635fd23f75f99cb8acd9ffa49e8f683899fa24ec5110ad2a",
+      "analysis": "UNKNOWN",
+      "locking_select": {
+        "namespace": "com.chengyinhub.business.mapper.CoopOrderStationFulfillmentMapper",
+        "id": "selectRegistrationForUpdate",
+        "body_sha256": "127f3b6fb08dea34f6c972ca3df0808cb3fdd02214cf04f805c66dacc0557bbf",
+        "statement_sha256": "52635545d971ffc081cd2b711945e86410a7c5920ba3132d0414f844500c0910",
+        "useCache": "false",
+        "flushCache": "true",
+        "analysis": "LOCKING_SELECT",
+        "unknown": []
+      }
+    },
+    {
+      "key": "chengyinhub-system/src/main/resources/mapper/business/CoopOrderStationFulfillmentMapper.xml#selectStationForUpdate",
+      "kind": "select",
+      "fingerprint": "f33b650031874129698caef75d8b4fe9e747c41c74425b467fd7bc9d4237fe5e",
+      "analysis": "UNKNOWN",
+      "locking_select": {
+        "namespace": "com.chengyinhub.business.mapper.CoopOrderStationFulfillmentMapper",
+        "id": "selectStationForUpdate",
+        "body_sha256": "ae99b81319376c9621bd0a95c592353dbc69bccaadb915235f209c446296b604",
+        "statement_sha256": "3dabf11240f1d1fe1ccc13975acaf80d5953f22f79206c99296b006a29422cfb",
+        "useCache": "false",
+        "flushCache": "true",
+        "analysis": "LOCKING_SELECT",
+        "unknown": []
+      }
+    },
+    {
+      "key": "chengyinhub-system/src/main/resources/mapper/business/CoopOrderStationFulfillmentMapper.xml#selectAuditForUpdate",
+      "kind": "select",
+      "fingerprint": "031f5617021b03d8f56637cfba5fb824fdaf8f4967417d1f966989d608a8eafb",
+      "analysis": "UNKNOWN",
+      "locking_select": {
+        "namespace": "com.chengyinhub.business.mapper.CoopOrderStationFulfillmentMapper",
+        "id": "selectAuditForUpdate",
+        "body_sha256": "9990726aa07b269deacd8517263da124a12a58a5c68127a95ee86ef6eb326935",
+        "statement_sha256": "55193a5aee40d95b89fc9beb7f739efbe9b15f6241b7cf4ffe99da8fefedd168",
+        "useCache": "false",
+        "flushCache": "true",
+        "analysis": "UNKNOWN",
+        "unknown": [
+          "include_or_dynamic_xml"
+        ]
+      }
+    },
+    {
+      "key": "chengyinhub-system/src/main/resources/mapper/business/CoopOrderStationFulfillmentMapper.xml#selectVerificationEventsForUpdate",
+      "kind": "select",
+      "fingerprint": "78cac1e3ce3f1a85f845ceb50e57ad355da3bdb70c44e1f2476dbc34461c028a",
+      "analysis": "UNKNOWN",
+      "locking_select": {
+        "namespace": "com.chengyinhub.business.mapper.CoopOrderStationFulfillmentMapper",
+        "id": "selectVerificationEventsForUpdate",
+        "body_sha256": "f645755d82e621c6a47ed2c12237ce641b498bbf72648bdae1f6f8bd8530995e",
+        "statement_sha256": "d4f25c316ec7fa2442461dbef39071673ffde8fc35332adbcc98b5602665d3f5",
+        "useCache": "false",
+        "flushCache": "true",
+        "analysis": "UNKNOWN",
+        "unknown": [
+          "include_or_dynamic_xml"
+        ]
+      }
+    },
+    {
+      "key": "chengyinhub-system/src/main/resources/mapper/business/CoopOrderStationFulfillmentMapper.xml#selectEffectiveOrdersForUpdate",
+      "kind": "select",
+      "fingerprint": "bd91f97ab44e3b67baa5ce06f6241b9a77e214d64852ab168f5fbe55fb8c5aa7",
+      "analysis": "UNKNOWN",
+      "locking_select": {
+        "namespace": "com.chengyinhub.business.mapper.CoopOrderStationFulfillmentMapper",
+        "id": "selectEffectiveOrdersForUpdate",
+        "body_sha256": "ad2df28db15dbe27895c888cb467ad97c2717bb12d3888e778ae21687a7881b7",
+        "statement_sha256": "880b02bd12bce2c2fad2999dddb1733d5b85598d64753ab9967ae58973d01a16",
+        "useCache": "false",
+        "flushCache": "true",
+        "analysis": "LOCKING_SELECT",
+        "unknown": []
+      }
+    },
+    {
+      "key": "chengyinhub-system/src/main/resources/mapper/business/CoopOrderStationFulfillmentMapper.xml#selectByAuditForUpdate",
+      "kind": "select",
+      "fingerprint": "5eb73412c49998fb2a9ba509bd056989b4b169a07d737cab0f43c008b50ebe45",
+      "analysis": "UNKNOWN",
+      "locking_select": {
+        "namespace": "com.chengyinhub.business.mapper.CoopOrderStationFulfillmentMapper",
+        "id": "selectByAuditForUpdate",
+        "body_sha256": "3c9f9e54965da74079b92e1e20b6fb59694ba0642db72f35cc666dd7091db89b",
+        "statement_sha256": "33f0207daac58dcb3e02154ba5109146e18f3bfb542a5838a3546eba903ce01e",
+        "useCache": "false",
+        "flushCache": "true",
+        "analysis": "UNKNOWN",
+        "unknown": [
+          "include_or_dynamic_xml"
+        ]
+      }
+    },
+    {
+      "key": "chengyinhub-system/src/main/resources/mapper/business/CoopOrderStationFulfillmentMapper.xml#selectByOrderForUpdate",
+      "kind": "select",
+      "fingerprint": "4264077bb6107ca8fb69cc5ede806c273d345accd2be97af874c6e95b3f37077",
+      "analysis": "UNKNOWN",
+      "locking_select": {
+        "namespace": "com.chengyinhub.business.mapper.CoopOrderStationFulfillmentMapper",
+        "id": "selectByOrderForUpdate",
+        "body_sha256": "3385c46861eaf93b2e4a6dff9544ba1958aef99ef5a8d3612a541c4b62469c73",
+        "statement_sha256": "be03cbea891e2481b80d94d300381ec66ef9f1819093463cd972caa689592360",
+        "useCache": "false",
+        "flushCache": "true",
+        "analysis": "UNKNOWN",
+        "unknown": [
+          "include_or_dynamic_xml"
+        ]
+      }
+    },
+    {
+      "key": "chengyinhub-system/src/main/resources/mapper/business/CoopOrderStationFulfillmentMapper.xml#insertConfirmed",
+      "kind": "insert",
+      "fingerprint": "53b80fbabde8fa9e92f8e5b173de6fbdbc4f173a41674947ce3e54fc16074d74",
+      "analysis": "LITERAL_SHAPE_ONLY",
+      "literal_target": "coop_order_station_fulfillment"
+    },
+    {
+      "key": "chengyinhub-system/src/main/resources/mapper/business/CoopOrderStationFulfillmentMapper.xml#selectV1CandidatesForUpdate",
+      "kind": "select",
+      "fingerprint": "30ea040b84be415f955fb2f9f816cf34cc1b483197dd1294e9ff243f27dc186c",
+      "analysis": "UNKNOWN",
+      "locking_select": {
+        "namespace": "com.chengyinhub.business.mapper.CoopOrderStationFulfillmentMapper",
+        "id": "selectV1CandidatesForUpdate",
+        "body_sha256": "f5cbe838fda3d1a78106d87d428c888cac5923d85f9cf2189fc701bf2ce5be9c",
+        "statement_sha256": "ed12fe617846bd93b825c8dd51ee68911615c636279d2994828e6d359dc5a73b",
+        "useCache": "false",
+        "flushCache": "true",
+        "analysis": "LOCKING_SELECT",
+        "unknown": []
+      }
+    }
+  ],
+  "literal_callsite_observations": {
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/CoopOrderStationFulfillment.java": [
+      {
+        "line": 7,
+        "source": "public class CoopOrderStationFulfillment {"
+      }
+    ],
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CoopOrderStationFulfillmentMapper.java": [
+      {
+        "line": 11,
+        "source": "public interface CoopOrderStationFulfillmentMapper {"
+      },
+      {
+        "line": 18,
+        "source": "CoopOrderStationFulfillment selectByAuditForUpdate(@Param(\"auditId\") Long auditId);"
+      },
+      {
+        "line": 19,
+        "source": "List<CoopOrderStationFulfillment> selectByOrderForUpdate(@Param(\"orderId\") Long orderId);"
+      },
+      {
+        "line": 20,
+        "source": "int insertConfirmed(CoopOrderStationFulfillment receipt);"
+      }
+    ],
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/CoopOrderStationScope.java": [
+      {
+        "line": 69,
+        "source": "public static CoopOrderStationFulfillment expected(CoopOrder order, CmsRegistration registration, BusinessAuditEvent audit) {"
+      },
+      {
+        "line": 98,
+        "source": "CoopOrderStationFulfillment receipt = new CoopOrderStationFulfillment();"
+      },
+      {
+        "line": 115,
+        "source": "public static void requireSame(CoopOrderStationFulfillment actual, CoopOrderStationFulfillment expected) {"
+      }
+    ],
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementClaimServiceImpl.java": [
+      {
+        "line": 46,
+        "source": "private CoopOrderStationFulfillmentMapper stationFulfillments;"
+      },
+      {
+        "line": 140,
+        "source": "throw CoopOrderStationScope.fail(\"ORIGINAL_TRANSACTION_REQUIRED\");"
+      },
+      {
+        "line": 142,
+        "source": "throw CoopOrderStationScope.fail(\"AUDIT_ID_REQUIRED\");"
+      },
+      {
+        "line": 143,
+        "source": "var location = stationFulfillments.selectAuditRegistrationLocation(verificationAuditEventId);"
+      },
+      {
+        "line": 145,
+        "source": "throw CoopOrderStationScope.fail(\"AUDIT_LOCATION_UNPROVEN\");"
+      },
+      {
+        "line": 148,
+        "source": "throw CoopOrderStationScope.fail(\"TOPIC_FENCE_REQUIRED\");"
+      },
+      {
+        "line": 149,
+        "source": "var registration = stationFulfillments.selectRegistrationForUpdate(location.getId());"
+      },
+      {
+        "line": 151,
+        "source": "throw CoopOrderStationScope.fail(\"REGISTRATION_SCOPE_CONFLICT\");"
+      },
+      {
+        "line": 152,
+        "source": "var audit = stationFulfillments.selectAuditForUpdate(verificationAuditEventId);"
+      },
+      {
+        "line": 155,
+        "source": "|| !CoopOrderStationScope.ACTION.equals(audit.getAction())"
+      },
+      {
+        "line": 157,
+        "source": "throw CoopOrderStationScope.fail(\"AUDIT_SOURCE_CONFLICT\");"
+      },
+      {
+        "line": 158,
+        "source": "var orders = stationFulfillments.selectEffectiveOrdersForUpdate(topic.getId());"
+      },
+      {
+        "line": 159,
+        "source": "CoopOrderStationScope.requireDistinctStations(orders);"
+      },
+      {
+        "line": 162,
+        "source": "var scope = CoopOrderStationScope.read(order);"
+      },
+      {
+        "line": 166,
+        "source": "var original = stationFulfillments.selectByAuditForUpdate(verificationAuditEventId);"
+      },
+      {
+        "line": 168,
+        "source": "if (original != null) throw CoopOrderStationScope.fail(\"ORIGINAL_BINDING_CHANGED\");"
+      },
+      {
+        "line": 171,
+        "source": "if (matching.size() != 1) throw CoopOrderStationScope.fail(\"AMBIGUOUS_ORDER\");"
+      },
+      {
+        "line": 175,
+        "source": "var scope = CoopOrderStationScope.read(order).orElseThrow();"
+      },
+      {
+        "line": 181,
+        "source": "throw CoopOrderStationScope.fail(\"FROZEN_WINDOW_OR_SCOPE_CONFLICT\");"
+      },
+      {
+        "line": 182,
+        "source": "CoopOrderStationScope.requireCurrentAudit(audit,"
+      },
+      {
+        "line": 183,
+        "source": "stationFulfillments.selectVerificationEventsForUpdate(registration.getId()));"
+      },
+      {
+        "line": 184,
+        "source": "var expected = CoopOrderStationScope.expected(order, registration, audit);"
+      },
+      {
+        "line": 186,
+        "source": "CoopOrderStationScope.requireSame(original, expected);"
+      },
+      {
+        "line": 190,
+        "source": "throw CoopOrderStationScope.fail(\"CLOSED_TOPIC\");"
+      },
+      {
+        "line": 191,
+        "source": "var station = stationFulfillments.selectStationForUpdate(expected.getStationId());"
+      },
+      {
+        "line": 194,
+        "source": "throw CoopOrderStationScope.fail(\"CURRENT_STATION_CONFLICT\");"
+      },
+      {
+        "line": 195,
+        "source": "if (stationFulfillments.insertConfirmed(expected) != 1 || expected.getId() == null)"
+      },
+      {
+        "line": 196,
+        "source": "throw CoopOrderStationScope.fail(\"SOURCE_INSERT_CONFLICT\");"
+      },
+      {
+        "line": 197,
+        "source": "var inserted = stationFulfillments.selectByAuditForUpdate(verificationAuditEventId);"
+      },
+      {
+        "line": 198,
+        "source": "CoopOrderStationScope.requireSame(inserted, expected);"
+      }
+    ],
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicSettlementEvidenceService.java": [
+      {
+        "line": 32,
+        "source": "private CoopOrderStationFulfillmentMapper stationFulfillments;"
+      },
+      {
+        "line": 127,
+        "source": "throw CoopOrderStationScope.fail(\"FROZEN_SCOPE_REQUIRED\");"
+      },
+      {
+        "line": 131,
+        "source": "throw CoopOrderStationScope.fail(\"CURRENT_REGISTRATIONS_REQUIRED\");"
+      },
+      {
+        "line": 132,
+        "source": "var orders = stationFulfillments.selectEffectiveOrdersForUpdate(snapshot.getTopicId());"
+      },
+      {
+        "line": 133,
+        "source": "CoopOrderStationScope.requireDistinctStations(orders);"
+      },
+      {
+        "line": 135,
+        "source": "if (matches.size() != 1) throw CoopOrderStationScope.fail(\"CURRENT_ORDER_REQUIRED\");"
+      },
+      {
+        "line": 137,
+        "source": "var scope = CoopOrderStationScope.read(order)"
+      },
+      {
+        "line": 138,
+        "source": ".orElseThrow(() -> CoopOrderStationScope.fail(\"CONFIRMED_SCOPE_REQUIRED\"));"
+      },
+      {
+        "line": 141,
+        "source": "throw CoopOrderStationScope.fail(\"FROZEN_SCOPE_DRIFT\");"
+      },
+      {
+        "line": 142,
+        "source": "var proofs = stationFulfillments.selectByOrderForUpdate(order.getId());"
+      },
+      {
+        "line": 143,
+        "source": "if (proofs == null) throw CoopOrderStationScope.fail(\"CURRENT_PROOFS_REQUIRED\");"
+      },
+      {
+        "line": 144,
+        "source": "java.util.Map<Long, CoopOrderStationFulfillment> valid = new java.util.HashMap<>();"
+      },
+      {
+        "line": 148,
+        "source": "throw CoopOrderStationScope.fail(\"PROOF_IDENTITY_REQUIRED\");"
+      },
+      {
+        "line": 149,
+        "source": "var registration = stationFulfillments.selectRegistrationForUpdate(proof.getRegistrationId());"
+      },
+      {
+        "line": 150,
+        "source": "var events = stationFulfillments.selectVerificationEventsForUpdate(proof.getRegistrationId());"
+      },
+      {
+        "line": 152,
+        "source": "throw CoopOrderStationScope.fail(\"ORIGINAL_AUDIT_MISSING\");"
+      },
+      {
+        "line": 155,
+        "source": "var audit = stationFulfillments.selectAuditForUpdate(proof.getVerificationAuditId());"
+      },
+      {
+        "line": 156,
+        "source": "CoopOrderStationScope.requireCurrentAudit(audit, events);"
+      },
+      {
+        "line": 157,
+        "source": "var expected = CoopOrderStationScope.expected(order, registration, audit);"
+      },
+      {
+        "line": 158,
+        "source": "CoopOrderStationScope.requireSame(proof, expected);"
+      },
+      {
+        "line": 160,
+        "source": "throw CoopOrderStationScope.fail(\"CURRENT_PROOF_OVERLAP\");"
+      },
+      {
+        "line": 163,
+        "source": "var candidates = stationFulfillments.selectV1CandidatesForUpdate(snapshot, cutoff);"
+      },
+      {
+        "line": 164,
+        "source": "if (candidates == null) throw CoopOrderStationScope.fail(\"CURRENT_CANDIDATES_REQUIRED\");"
+      },
+      {
+        "line": 171,
+        "source": "throw CoopOrderStationScope.fail(\"CANDIDATE_SOURCE_CONFLICT\");"
+      }
+    ],
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/FrozenCoopOrderSettlementSnapshotReader.java": [
+      {
+        "line": 140,
+        "source": "CoopOrderStationScope.read(order);"
+      }
+    ]
+  },
+  "compiled_or_database_evidence": "NOT_RUN",
+  "method_level_write_authorization": "NOT_PROVEN_BY_CLASS_REFERENCE_RULES",
+  "statement_write_owners": "UNCHANGED_B_ONLY; G_NEW_TABLE_IS_NOT_A_B_RECOVERY_EXCEPTION"
+}

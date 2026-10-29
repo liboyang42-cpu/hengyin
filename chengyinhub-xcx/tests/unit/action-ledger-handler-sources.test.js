@@ -368,7 +368,9 @@ test('PlayKit parent delegates real advanced retry and scopes photo consent to i
   assert.match(parent, /case 'retry':[\s\S]{0,650}return game\.retry\(\)/);
   assert.match(child, /retry\(\)[\s\S]{0,420}return this\.action\('RETRY', \{\}\)/);
   assert.match(child, /this\.request\('\/api\/play\/advanced\/action', 'POST', command\)/);
-  assert.match(parent, /if \(option\.name === 'SUBMIT_PHOTO_CHECK'\) \{\s*app\.requestSeparateConsent\('photo'/);
+  const consentGuard = /const consentCurrent = \(\) => !operation\.isAborted\(\) && this\._kitPhotoIntent === intent && contextCurrent\(\) && sameQuestion\(\);/;
+  assert.match(parent, consentGuard);
+  assert.match(parent, /if \(option\.name === 'SUBMIT_PHOTO_CHECK'\) \{\s*const consentCurrent = [^\n]+;\s*app\.requestSeparateConsent\('photo', consentCurrent\)/);
   assert.match(album, /game\.action\('SUBMIT_ALBUM'/);
   const source = fs.readFileSync(path.join(root, 'scripts/uiaudit/build-action-ledger.js'), 'utf8');
   const plan = source.slice(source.indexOf("['pages/play/index.js:onPlayKitAction'"), source.indexOf("['pages/play/index.js:retryGameSubmission'"));
@@ -388,4 +390,20 @@ test('PlayKit parent delegates real advanced retry and scopes photo consent to i
   }
   // A changed delegate or consent guard must turn this proof red rather than retaining a hand-written plan.
   assert.throws(() => assert.match(child.replace("this.action('RETRY', {})", "this.start()"), /retry\(\)[\s\S]{0,420}return this\.action\('RETRY', \{\}\)/));
+  assert.throws(() => assert.match(parent.replace('contextCurrent() && sameQuestion();', 'contextCurrent();'), consentGuard));
 });
+
+
+test('真实 roleGuard.clear 只清缓存；load 仍保留 Controller POST，未知别名不裁剪', () => {
+  const { namespaceDependencySource, extractTargets } = require('../../scripts/uiaudit/build-action-ledger')
+  const file = pathFor('utils/roleGuard.js')
+  const clear = namespaceDependencySource(file, ['roleGuard'], 'roleGuard.clear()')
+  assert.match(clear, /removeStorageSync/)
+  assert.deepEqual(extractTargets(clear).apiContracts, [])
+  const load = namespaceDependencySource(file, ['roleGuard'], 'roleGuard.load(callback)')
+  assert.ok(extractTargets(load).apiContracts.some(api => api.url === '/api/role/info' && api.method === 'POST'))
+  for (const source of ['const alias = roleGuard; alias.clear()', 'roleGuard[method]()', 'roleGuard.unknown()']) {
+    const conservative = namespaceDependencySource(file, ['roleGuard'], source)
+    assert.ok(extractTargets(conservative).apis.includes('/api/role/info'), source)
+  }
+})

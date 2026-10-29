@@ -147,7 +147,13 @@ public class JourneyStoryValidator {
         }
         Context ctx = context == null ? Context.none() : context;
         Long openingChapterId = optionalPositiveLong(parsed, "openingChapterId", "开局章节");
-        if (openingChapterId != null) requireChapterAvailable(openingChapterId, ctx);
+        if (openingChapterId != null) {
+            try {
+                requireChapterAvailable(openingChapterId, ctx);
+            } catch (IllegalArgumentException invalid) {
+                throw new IllegalArgumentException(invalid.getMessage() + " [path=openingChapterId]", invalid);
+            }
+        }
         validateCall(parsed.get("call"), ctx);
         validateStages(parsed.get("stages"), ctx);
         validateEnding(parsed.get("ending"), ctx);

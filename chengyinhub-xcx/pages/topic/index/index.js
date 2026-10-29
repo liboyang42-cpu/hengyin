@@ -19,6 +19,7 @@ const { createRegistrationPaymentVerifier } = require('../../../utils/checkout/r
 const { buildTopicStatBar } = require('../utils/topic-detail-facts.js');
 const { isRecordList } = require('../../../utils/response-shape.js');
 const { haversine, distanceText } = require('../../../utils/geo.js');
+const routePreview = require('../../../utils/topic-route-preview.js');
 const marketingConsent = require('../../../utils/marketing-consent-entry.js');
 const ticketSource = require('../../../utils/ticket-source.js');
 const { buildTopicShare, resolveTopicCover } = require('../../../utils/topic-share.js');
@@ -31,18 +32,8 @@ const KB_MS = 3600;          // 封面每张停留时长
 const DOCK_MS = 620;         // 价格/收藏停靠动画时长(慢-快-慢)
 
 // 只接受真实数值/十进制数字串；先验类型，不能把布尔、数组或空值强转为坐标。
-function routeCoordinate(value, limit) {
-  if (typeof value !== 'number' && typeof value !== 'string') return null;
-  if (typeof value === 'string' && !/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(value.trim())) return null;
-  const number = Number(value);
-  return Number.isFinite(number) && Math.abs(number) <= limit ? number : null;
-}
-function routePoint(row) {
-  if (!row || typeof row !== 'object' || Array.isArray(row)) return null;
-  const latitude = routeCoordinate(row.latitude === undefined ? row.lat : row.latitude, 90);
-  const longitude = routeCoordinate(row.longitude === undefined ? row.lng : row.longitude, 180);
-  return latitude === null || longitude === null ? null : { latitude, longitude };
-}
+function routeCoordinate(value, limit) { return routePreview.routeCoordinate(value, limit); }
+function routePoint(row) { return routePreview.routePoint(row); }
 // 只有站点坐标，没有道路距离和实际步行时长；nodeTime 是停留时长，不能代替交通时间。
 function walkText(prev, node) {
   const a = routePoint(prev), b = routePoint(node);
@@ -358,7 +349,7 @@ Page({
   /**
    * 页面隐藏时
    */
-  onHide() {
+  onHide() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1;
     this._stopKenBurns();
     this.pauseTopicAudio();
     this.setData({
@@ -369,7 +360,7 @@ Page({
   /**
    * 页面卸载时
    */
-  onUnload() {
+  onUnload() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1;
     this._unloaded = true;
     reportSheet.cancel(this);
     this._themeRecordsDisposed = true;
@@ -661,7 +652,7 @@ Page({
   },
 
   toggleFav() {
-    if (app.ensureLoginFor && !app.ensureLoginFor('like', () => this.toggleFav())) return; // 2026-10-24 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('like', () => this.toggleFav(), { owner: this, target: () => [this.data.id, this.data.info && this.data.info.id] })) return; // 2026-10-24 游客写前登录
     const id = (this.data.info && this.data.info.id) || this.data.id;
     if (!id || this._favBusy) return;
     const next = !this.data.faved;
@@ -814,7 +805,7 @@ Page({
 
   /* 自玩:弹层只说清买的是什么,按钮「去结算」进确认订单页(业主:随时开玩不直接付款) */
   onSelfPlayGoCheckout() {
-    if (app.ensureLoginFor && !app.ensureLoginFor('checkout', () => this.onSelfPlayGoCheckout())) return; // 2026-10-24 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('checkout', () => this.onSelfPlayGoCheckout(), { owner: this, target: () => [this.data.id, this.data.info && this.data.info.id] })) return; // 2026-10-24 游客写前登录
     if (this.lockedTip()) return;
     const info = this.data.info || {};
     const win = motion.passWindow({ topicEnd: info.endDate });
@@ -1178,7 +1169,7 @@ Page({
   
   // 提交评价
   submitComment() {
-    if (app.ensureLoginFor && !app.ensureLoginFor('post', () => this.submitComment())) return; // 2026-10-24 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('post', () => this.submitComment(), { owner: this, target: () => [this.data.id] })) return; // 2026-10-24 游客写前登录
     const that = this;
     if (!that.data.canSubmitComment) return;
     const {
@@ -1240,7 +1231,7 @@ Page({
   },
 
   bmClick(e) {
-    if (app.ensureLoginFor && !app.ensureLoginFor('signup', () => this.bmClick(e))) return; // 2026-10-24 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('signup', () => this.bmClick(e), { owner: this, target: () => [this.data.id] })) return; // 2026-10-24 游客写前登录
 
     if(app.getUserType()==2){
       toast('商家用户不可报名主题');
@@ -1491,7 +1482,7 @@ Page({
 
   // M2 购买自玩通行证:确认(90天有效期+安全须知)→ /create(ownerType=1) → 支付 → play?topicId=
   selfPlayBuy() {
-    if (app.ensureLoginFor && !app.ensureLoginFor('checkout', () => this.selfPlayBuy())) return; // 2026-10-24 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('checkout', () => this.selfPlayBuy(), { owner: this, target: () => [this.data.id, this.data.info && this.data.info.id] })) return; // 2026-10-24 游客写前登录
     const that = this;
     if (that.data.merchantClosed) { toast('商家暂停营业，暂不可报名', { icon: 'none' }); return; }
     const info = that.data.info || {};
@@ -2047,57 +2038,7 @@ Page({
   //获取数据
   /** 每章单独使用完整道路；缺失或损坏时只画本章节点虚线，不能跨章补线。 */
   buildRouteMap: function (chaptersList) {
-    const chapters = (Array.isArray(chaptersList) ? chaptersList : []).filter(function (chapter) {
-      return chapter && typeof chapter === 'object' && !Array.isArray(chapter);
-    });
-    const valid = [], polyline = [];
-    let roadSegments = 0, straightSegments = 0;
-    chapters.forEach(function (chapter) {
-      const nodes = (Array.isArray(chapter.nodes) ? chapter.nodes : []).slice().sort(function (a, b) {
-        return (Number(a && a.sortId) || 0) - (Number(b && b.sortId) || 0);
-      }).filter(function (node) { return routePoint(node) !== null; });
-      nodes.forEach(function (node) { valid.push(node); });
-      let points = [];
-      try {
-        const geometry = typeof chapter.routeGeometry === 'string' ? JSON.parse(chapter.routeGeometry) : chapter.routeGeometry;
-        // 不过滤坏道路点：任何断点都让整章道路降级，不能跳点后虚连成道路。
-        if (Array.isArray(geometry) && geometry.length >= 2 && Array.from(geometry).every(function (row) { return routePoint(row) !== null; }))
-          points = geometry.map(routePoint);
-      } catch (error) { points = []; }
-      const road = points.length >= 2;
-      if (road) roadSegments += 1;
-      else points = nodes.map(routePoint);
-      if (points.length >= 2) {
-        if (!road) straightSegments += 1;
-        polyline.push({
-          points: points, color: '#1A1A1A', width: 5, borderColor: '#FFFFFF', borderWidth: 1, /* ds-ok: 原生地图不支持CSS token，沿用既有路线颜色 */
-          arrowLine: road, dottedLine: !road
-        });
-      }
-    });
-    const markers = valid.map(function (node, i) {
-      const point = routePoint(node);
-      return {
-        id: i, latitude: point.latitude, longitude: point.longitude,
-        width: 24, height: 24, iconPath: '/images/icon_map4.png',
-        callout: {
-          content: (i + 1) + (node.name ? ' ' + node.name : ''),
-          color: '#FFFFFF', bgColor: '#1A1A1A', /* ds-ok: 原生地图callout不支持CSS token，沿用既有颜色 */
-          padding: 6, borderRadius: 8, fontSize: 11, display: 'BYCLICK'
-        }
-      };
-    });
-    // 包含道路以及所有节点，不能因为某章已有道路就把另一章单独的节点排除出视野。
-    const include = markers.map(function (marker) { return { latitude: marker.latitude, longitude: marker.longitude }; });
-    polyline.forEach(function (line) { line.points.forEach(function (point) { include.push(point); }); });
-    const source = roadSegments ? (straightSegments ? '道路段参考 · 虚线为节点直线预览，章间未规划' : '道路段参考 · 按章节分段，章间未规划')
-      : (straightSegments ? '节点直线预览 · 尚未规划步行路线，章间未规划' : '仅显示节节点置 · 尚未规划步行路线，章间未规划');
-    this.setData({
-      routeReady: include.length > 0,
-      routeSourceText: include.length ? source : '', routeMarkers: markers, routePolyline: polyline, routeIncludePoints: include,
-      mapLatitude: include.length ? include[0].latitude : 0,
-      mapLongitude: include.length ? include[0].longitude : 0
-    });
+    this.setData(routePreview.build(chaptersList));
   },
 
   /**
@@ -2355,7 +2296,7 @@ Page({
 
   // FOLLOWUP-A-1:举报主题,流程与动态详情 reportSquare 同一套(utils/content-report.js)
   reportTopic() {
-    if (app.ensureLoginFor && !app.ensureLoginFor('report', () => this.reportTopic())) return; // 2026-10-24 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('report', () => this.reportTopic(), { owner: this, target: () => [this.data.id] })) return; // 2026-10-24 游客写前登录
     if (!this.data.canReport) return;
     contentReport.reportTopic(this, app, this.data.id);
   },

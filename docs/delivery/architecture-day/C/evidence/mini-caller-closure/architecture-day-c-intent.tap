@@ -1,0 +1,52 @@
+TAP version 13
+# Subtest: 同一意图冻结原输入与期望版本，明确完成后相同答案产生新 attempt
+ok 1 - 同一意图冻结原输入与期望版本，明确完成后相同答案产生新 attempt
+  ---
+  duration_ms: 2.14841
+  type: 'test'
+  ...
+# Subtest: 进程恢复只恢复脱敏回执身份，账号与局隔离，存储失败不得发送
+ok 2 - 进程恢复只恢复脱敏回执身份，账号与局隔离，存储失败不得发送
+  ---
+  duration_ms: 0.707584
+  type: 'test'
+  ...
+# Subtest: 显式重试不能把原 expectedRouteVersion 换成最新值
+ok 3 - 显式重试不能把原 expectedRouteVersion 换成最新值
+  ---
+  duration_ms: 30.644148
+  type: 'test'
+  ...
+# Subtest: 提交后断网保留原身份，换页面/重启只查询原命令，实体变新版本不改原期望
+ok 4 - 提交后断网保留原身份，换页面/重启只查询原命令，实体变新版本不改原期望
+  ---
+  duration_ms: 14.458109
+  type: 'test'
+  ...
+# Subtest: A 的预检完成前切到 B，不把 A 的命令用 B token 发出
+ok 5 - A 的预检完成前切到 B，不把 A 的命令用 B token 发出
+  ---
+  duration_ms: 8.075083
+  type: 'test'
+  ...
+# Subtest: 预检发现另一运行时直接阻止写入，不自动绑定新局
+ok 6 - 预检发现另一运行时直接阻止写入，不自动绑定新局
+  ---
+  duration_ms: 2.96274
+  type: 'test'
+  ...
+# Subtest: A→B→A 后原登录代次的预检回调不能继续发写
+ok 7 - A→B→A 后原登录代次的预检回调不能继续发写
+  ---
+  duration_ms: 3.249704
+  type: 'test'
+  ...
+1..7
+# tests 7
+# suites 0
+# pass 7
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 78.423004

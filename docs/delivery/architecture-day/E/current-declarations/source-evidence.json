@@ -1,0 +1,34 @@
+{
+  "parent": "91a3bdd2aea254e39fe245337bfdd3f89122cf10",
+  "guard_baseline_sha256": "bc32e871c0db0aa8a9d7dea9a18181ba05ffae6f3be0fb69c129936054f0fdf5",
+  "tests": "ALL NOT_RUN",
+  "standalone_compile": "NOT_CLAIMED; requires F e306 APIs + shared review patches + G producer",
+  "owned_patch_sha256": "fa733b25d8008e0e0feb751e05693ef5f9ff49c7d1958a5903154717267efcba",
+  "files": [
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/TopicPublicationContentGuard.java",
+      "postimage_sha256": "22bbe2282c9d63ba83bedd0d0df2a09a800becc327b8693b532f5fad52767327"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicPublishStateKeyGuardTest.java",
+      "postimage_sha256": "5869ff4e46283acfe8352424cb3786bc38f9a237b836c47e91507f4eb02781fe"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/TopicPublicationDeclarationsTest.java",
+      "postimage_sha256": "4fb2aa80b7ac0b5f4b562fe357108af28a54c62ba0ab9397b5677012bf1e0a04"
+    }
+  ],
+  "shared_review_patches": [
+    {
+      "path": "docs/delivery/architecture-day/E/current-declarations/shared-clue-projection.review.patch.b64",
+      "decoded_patch_sha256": "1537b6859e8de55a011dd7bff0ba3cf67f6f341036f406a7308ab0e7a6d506b9",
+      "application": "root/G only; not applied to E production worktree"
+    },
+    {
+      "path": "docs/delivery/architecture-day/E/current-declarations/preview-check-caller.review.patch.b64",
+      "decoded_patch_sha256": "1b3ee283b14ff4a760cca8140f2bf93460b239ec2a0a4ab7bd0c64f190fa0c0c",
+      "application": "root/G only; not applied to E production worktree"
+    }
+  ],
+  "freeze_contract": "normalizedBranchRouteForPublish(CmsTopic,List<ThemeStateKey>) directly uses G freezePublication(CmsTopic,String,List<ThemeStateKey>); no legacy compile call after capture"
+}

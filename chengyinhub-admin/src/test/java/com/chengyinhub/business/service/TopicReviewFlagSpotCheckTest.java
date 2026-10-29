@@ -81,6 +81,7 @@ class TopicReviewFlagSpotCheckTest {
         exist.setId(77L);
         exist.setMemberId(5L);
         when(topicMapper.selectCmsTopicById(77L)).thenReturn(exist);
+        when(topicMapper.selectCmsTopicByIdForUpdate(77L)).thenReturn(exist);
         when(topicMapper.updateCmsTopic(any(CmsTopic.class))).thenReturn(1);
         // 配额未满 → 过审自动上架
         when(quotaService.lockAndCheckThemeOnline(5L, 77L)).thenReturn(null);

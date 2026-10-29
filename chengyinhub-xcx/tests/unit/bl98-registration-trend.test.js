@@ -48,7 +48,9 @@ test('页面:打开报名参与者时加载趋势,form 绑定 owner_type=1 + top
 test('合同:后端路径/参数/返回字段与前端一致', () => {
   const ctl = fs.readFileSync(path.join(REPO, 'chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java'), 'utf8')
   assert.match(ctl, /@PostMapping\("\/count_by_date"\)[\s\S]*?public AjaxResult countByDate\(String owner_type, String owner_id\)/)
-  assert.match(ctl, /无权查看该项目趋势/)
+  assert.match(ctl, /return registrationQueryApplication.countByDate\(principalMemberId, owner_type, owner_id\)/)
+  const application = fs.readFileSync(path.join(REPO, 'chengyinhub-admin/src/main/java/com/chengyinhub/web/service/registration/RegistrationQueryApplication.java'), 'utf8')
+  assert.match(application, /无权查看该项目趋势/)
   const xml = fs.readFileSync(path.join(REPO, 'chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml'), 'utf8')
   const sel = xml.slice(xml.indexOf('id="selectCountGroupByDate"'))
   assert.match(sel, /participate_date AS participateDate/)

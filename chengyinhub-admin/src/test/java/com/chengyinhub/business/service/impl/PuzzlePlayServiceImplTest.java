@@ -24,6 +24,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.springframework.test.util.ReflectionTestUtils;
 
 class PuzzlePlayServiceImplTest
 {
@@ -98,5 +102,46 @@ class PuzzlePlayServiceImplTest
         service.recordReveal(10L, 20L, 30L, 0L);
 
         verify(attemptLogMapper, never()).insertPlayAttemptLog(any(PlayAttemptLog.class));
+    }
+
+    private com.fasterxml.jackson.databind.node.ObjectNode originalContent() {
+        com.fasterxml.jackson.databind.node.ObjectNode content = new com.fasterxml.jackson.databind.ObjectMapper().createObjectNode();
+        content.put("contentSnapshotVersion", 1).put("templateId", 40L).put("validationMethod", 1);
+        content.putObject("nodePresentation").put("id", 30L).put("topicId", 20L).put("templateId", 40L);
+        content.putObject("templatePresentation");
+        content.put("hint1", "原第一提示").put("hint2", "原第二提示");
+        return content;
+    }
+
+    @Test
+    void hintUsesOriginalContentAfterUnbindAndKeepsOriginalAttemptIdentityAndRetry()
+    {
+        com.chengyinhub.business.service.ITopicRouteRuntimeService route = mock(com.chengyinhub.business.service.ITopicRouteRuntimeService.class);
+        ReflectionTestUtils.setField(service, "topicRouteRuntimeService", route);
+        when(route.nodeAnswers(10L, 20L, 0L, 30L)).thenReturn(originalContent());
+        node.setTemplateId(null); template.setHint1("作者后来编辑的提示");
+        when(attemptLogMapper.selectMaxPuzzleHintLevel(10L, 20L, 30L, 0L)).thenReturn(0, 1);
+        when(attemptLogMapper.insertPlayAttemptLog(any())).thenReturn(1);
+
+        assertEquals(Collections.singletonList("原第一提示"), service.requestHint(10L, 20L, node, 0L, 1).getHints());
+        assertEquals(Collections.singletonList("原第一提示"), service.requestHint(10L, 20L, node, 0L, 1).getHints());
+        ArgumentCaptor<PlayAttemptLog> attempt = ArgumentCaptor.forClass(PlayAttemptLog.class);
+        verify(attemptLogMapper, times(1)).insertPlayAttemptLog(attempt.capture());
+        assertEquals(10L, attempt.getValue().getMemberId()); assertEquals(20L, attempt.getValue().getTopicId());
+        assertEquals(30L, attempt.getValue().getNodeId()); assertEquals(0L, attempt.getValue().getActivityId());
+        assertEquals(Integer.valueOf(1), attempt.getValue().getResult());
+        verify(templateService, never()).selectCmsMemberTemplateById(any());
+    }
+
+    @Test
+    void damagedNewHintContentCannotReadCurrentTemplateOrWriteHintFact()
+    {
+        com.chengyinhub.business.service.ITopicRouteRuntimeService route = mock(com.chengyinhub.business.service.ITopicRouteRuntimeService.class);
+        ReflectionTestUtils.setField(service, "topicRouteRuntimeService", route);
+        com.fasterxml.jackson.databind.node.ObjectNode damaged = originalContent(); damaged.remove("templatePresentation");
+        when(route.nodeAnswers(10L, 20L, 0L, 30L)).thenReturn(damaged);
+        assertThrows(IllegalStateException.class, () -> service.requestHint(10L, 20L, node, 0L, 1));
+        verify(templateService, never()).selectCmsMemberTemplateById(any());
+        verifyNoInteractions(memberMapper, attemptLogMapper);
     }
 }

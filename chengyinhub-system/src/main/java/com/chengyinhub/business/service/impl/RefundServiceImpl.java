@@ -1,5 +1,7 @@
 package com.chengyinhub.business.service.impl;
 
+import com.chengyinhub.common.config.RestoreDispatchGuard;
+
 import com.chengyinhub.common.annotation.CriticalPath;
 import com.chengyinhub.common.observability.CriticalPathCode;
 import com.chengyinhub.business.domain.CmsRegistration;
@@ -11,6 +13,7 @@ import com.chengyinhub.business.domain.UmsMember;
 import com.chengyinhub.business.domain.UmsMemberBalanceDetail;
 import com.chengyinhub.business.domain.WxPaymentCallbackInbox;
 import com.chengyinhub.business.domain.dto.RefundReviewDTO;
+import com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact;
 import com.chengyinhub.business.mapper.CmsActivityMapper;
 import com.chengyinhub.business.mapper.CmsRegistrationMapper;
 import com.chengyinhub.business.mapper.CmsTopicMapper;
@@ -135,10 +138,14 @@ public class RefundServiceImpl implements IRefundService {
 
     @Autowired
     private AlarmService alarmService;
+    @Autowired private WechatVerifiedPaymentFactService verifiedPaymentFacts;
 
     /** P1:退款回调先按 notify_hash 落 inbox 去重;状态推进仍由下方既有 CAS 负责。 */
     @Autowired
     private IWxPaymentCallbackInboxService wxPaymentCallbackInboxService;
+
+    @Autowired
+    private com.chengyinhub.business.service.ICoopSettlementClaimService coopSettlementClaimService;
 
     /**
      * best-effort 告警,失败不影响主流程 —— 但不能静默:资金类告警(待人工/接管/ABNORMAL/冲销失败)
@@ -200,6 +207,7 @@ public class RefundServiceImpl implements IRefundService {
 
     @Override
     public String claimManualPayout(Long refundId, Long handlerId) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         if (refundId == null || handlerId == null) {
             throw new IllegalArgumentException("退款单与处理人不能为空");
         }
@@ -218,6 +226,7 @@ public class RefundServiceImpl implements IRefundService {
 
     @Override
     public String takeoverExpiredManualPayout(Long refundId, Long handlerId) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         if (refundId == null || handlerId == null) {
             throw new IllegalArgumentException("退款单与处理人不能为空");
         }
@@ -241,6 +250,7 @@ public class RefundServiceImpl implements IRefundService {
     @Override
     public int handleManualPayout(Long refundId, String method, String receiptUrl, String remark,
                                   Long handlerId, String leaseToken) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         if (refundId == null || handlerId == null) {
             throw new IllegalArgumentException("退款单与处理人不能为空");
         }
@@ -354,6 +364,7 @@ public class RefundServiceImpl implements IRefundService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public int verifyManualPayout(Long refundId, Long reviewer2Id) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         if (refundId == null || reviewer2Id == null) {
             throw new IllegalArgumentException("退款单与复核人不能为空");
         }
@@ -361,13 +372,26 @@ public class RefundServiceImpl implements IRefundService {
         if (refund == null) {
             throw new IllegalArgumentException("退款单不存在");
         }
+        if ("registration".equals(refund.getSourceType())) {
+            CmsRegistration locked = lockRefundRegistration(refund.getSourceId());
+            RefundApplication original = refund;
+            refund = registrationRefundHistory(locked.getId()).stream()
+                    .filter(row -> original.getId().equals(row.getId())).findFirst()
+                    .orElseThrow(() -> new IllegalStateException("原退款不存在"));
+            requireSameRefundIdentity(original, refund);
+        }
         // 双人复核:复核人须≠处理人(应用层显式拦,mapper WHERE 再兜一层防绕过)
         if (reviewer2Id.equals(refund.getPayoutHandlerId())) {
             throw new IllegalStateException("复核人不能与处理人为同一人(双人复核)");
         }
         int rows = refundApplicationMapper.markPayoutVerified(refundId, reviewer2Id, DateUtils.getNowDate());
         if (rows == 1) {
+            coopSettlementClaimService.reverseCompletedRegistrationRefund(refund.getId());
             notifyRefundAfterCommit(refund);
+        } else if (Integer.valueOf(RefundApplication.PAYOUT_MANUAL_VERIFIED).equals(refund.getPayoutStatus())
+                && reviewer2Id.equals(refund.getPayoutReviewer2Id())) {
+            // Exact original second-review replay may repair only its own missing downstream receipt.
+            coopSettlementClaimService.reverseCompletedRegistrationRefund(refund.getId());
         }
         return rows;
     }
@@ -379,7 +403,7 @@ public class RefundServiceImpl implements IRefundService {
             return false;
         }
         String outRefundNo = facts.get("outRefundNo");
-        String refundStatus = facts.get("status");
+        String refundStatus = "SUCCESS".equalsIgnoreCase(facts.get("status")) ? "SUCCESS" : facts.get("status");
         // 非本系统退款号/未知号(保证金由验签入口单独路由，不能在这里丢弃):回 true 让微信 ACK,避免重试风暴
         if (outRefundNo == null || outRefundNo.trim().isEmpty()) {
             return true;
@@ -393,16 +417,71 @@ public class RefundServiceImpl implements IRefundService {
         if (!matchesRefundFacts(refund, facts)) {
             return false;
         }
+        final WechatVerifiedPaymentFactService.Stored verified;
+        try {
+            verified = "SUCCESS".equals(refundStatus) ? checkedVerifiedRefund(facts) : null;
+        } catch (RuntimeException unavailableOrConflicting) {
+            return false;
+        }
+        final String notifyId = "REFUND:" + outRefundNo + ":" + (refundStatus == null ? "" : refundStatus);
         // P1:回调先落 inbox 去重(表 wx_payment_callback_inbox,notify_hash 唯一键);
         // 重投只多一次 insert ignore,不影响下方 ACK 与状态推进语义。
         // 同一 notify 已登记为另一笔业务 = 身份冲突(register 内已告警):回 FAIL,不推进状态。
         try {
-            wxPaymentCallbackInboxService.register(
-                    "REFUND:" + outRefundNo + ":" + (refundStatus == null ? "" : refundStatus),
-                    WxPaymentCallbackInbox.BIZ_TYPE_REFUND, refund.getId(), refundStatus);
+            if (verified != null) {
+                wxPaymentCallbackInboxService.registerVerified(notifyId,
+                        WxPaymentCallbackInbox.BIZ_TYPE_REFUND, refund.getId(), refundStatus, verified.reference());
+            } else {
+                wxPaymentCallbackInboxService.register(notifyId,
+                        WxPaymentCallbackInbox.BIZ_TYPE_REFUND, refund.getId(), refundStatus);
+            }
         } catch (IWxPaymentCallbackInboxService.IdentityConflictException conflict) {
             return false;
         }
+        final RefundApplication original = refund;
+        // registerVerified above retains the exact callback for later recovery. Pausing settlement
+        // is neither a channel failure nor a completed refund; no new money/points/clawback here.
+        if (RestoreDispatchGuard.isRestoreMode()) return false;
+        final Map<String, String> originalFacts = new java.util.HashMap<>(facts);
+        IWxPaymentCallbackInboxService.Mutation mutation = new IWxPaymentCallbackInboxService.Mutation() {
+                    @Override public boolean isCurrent(WxPaymentCallbackInbox inbox) {
+                        if (!original.getId().equals(inbox.getBizId())
+                                || !Integer.valueOf(WxPaymentCallbackInbox.BIZ_TYPE_REFUND).equals(inbox.getBizType())
+                                || !java.util.Objects.equals(refundStatus, inbox.getEventType()))
+                            throw new IWxPaymentCallbackInboxService.IdentityConflictException("退款回调原事件身份不一致");
+                        return true;
+                    }
+                    @Override public boolean apply(WxPaymentCallbackInbox inbox) {
+                        CmsRegistration locked = lockRefundRegistration(original.getSourceId());
+                        RefundApplication current = registrationRefundHistory(locked.getId()).stream()
+                                .filter(row -> original.getId().equals(row.getId())).findFirst()
+                                .orElseThrow(() -> new IllegalStateException("原退款不存在"));
+                        requireSameRefundIdentity(original, current);
+                        boolean sameOriginal = verified == null ? matchesRefundFacts(current, locked, originalFacts)
+                                : matchesVerifiedRefundOriginal(verified.facts(), current, locked);
+                        return sameOriginal
+                                && mayApplyRefundFailureProjection(current, refundStatus, originalFacts)
+                                && applyRefundPayoutEvent(current, refundStatus);
+                    }
+                };
+        return verified != null
+                ? wxPaymentCallbackInboxService.processVerified(notifyId, verified.reference(), mutation)
+                : wxPaymentCallbackInboxService.process(notifyId, mutation);
+    }
+
+    private boolean mayApplyRefundFailureProjection(RefundApplication refund, String refundStatus,
+                                                     Map<String, String> facts) {
+        if (!"ABNORMAL".equalsIgnoreCase(refundStatus) && !"CLOSED".equalsIgnoreCase(refundStatus)) {
+            return true;
+        }
+        // Under the original business locks, keep a durable external SUCCESS available for its own
+        // verified replay. A stale failure cannot open manual payout; read/conflict errors must retry.
+        return verifiedPaymentFacts.findRefundSuccess(facts.get("mchid"), refund.getRefundNo(),
+                facts.get("refundId")) == null;
+    }
+
+    private boolean applyRefundPayoutEvent(RefundApplication refund, String refundStatus) {
+        String outRefundNo = refund.getRefundNo();
         // updatePayoutResult 的 WHERE 只允许从待派发/处理中/待人工(5/0/2)置位,
         // 不会覆盖人工已处理(3/4)的成果
         if ("SUCCESS".equalsIgnoreCase(refundStatus)) {
@@ -430,6 +509,11 @@ public class RefundServiceImpl implements IRefundService {
             return false;
         }
         CmsRegistration registration = cmsRegistrationMapper.selectCmsRegistrationById(refund.getSourceId());
+        return matchesRefundFacts(refund, registration, facts);
+    }
+
+    private boolean matchesRefundFacts(RefundApplication refund, CmsRegistration registration,
+                                       Map<String, String> facts) {
         if (registration == null || StringUtils.isBlank(registration.getRegistrationNo())
                 || !registration.getRegistrationNo().equals(facts.get("outTradeNo"))
                 || !"CNY".equals(facts.get("currency"))) {
@@ -447,12 +531,20 @@ public class RefundServiceImpl implements IRefundService {
     }
 
     private boolean updatePayoutTerminal(RefundApplication refund, int expectedStatus, String message) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         if (refundApplicationMapper.updatePayoutResult(refund.getId(), expectedStatus, message) == 1) {
-            if (expectedStatus == RefundApplication.PAYOUT_SUCCESS) notifyRefundAfterCommit(refund);
+            if (expectedStatus == RefundApplication.PAYOUT_SUCCESS) {
+                coopSettlementClaimService.reverseCompletedRegistrationRefund(refund.getId());
+                notifyRefundAfterCommit(refund);
+            }
             return true;
         }
-        RefundApplication current = refundApplicationMapper.selectByRefundNo(refund.getRefundNo());
-        return current != null && Integer.valueOf(expectedStatus).equals(current.getPayoutStatus());
+        // The caller holds this current refund-history row through inbox DONE. A plain SELECT here
+        // could replay the older RR snapshot taken before the topic fence instead of the winning terminal.
+        boolean sameTerminal = Integer.valueOf(expectedStatus).equals(refund.getPayoutStatus());
+        if (sameTerminal && expectedStatus == RefundApplication.PAYOUT_SUCCESS)
+            coopSettlementClaimService.reverseCompletedRegistrationRefund(refund.getId());
+        return sameTerminal;
     }
 
     /** 仅首次到账终态调用；沿用 best-effort 通道，不把发送失败伪装成送达或回滚资金。 */
@@ -488,6 +580,7 @@ public class RefundServiceImpl implements IRefundService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public int saveRefund(RefundApplication refund) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         if (refund == null || refund.getSourceType() == null || refund.getSourceId() == null
                 || refund.getRefundAmount() == null || refund.getRefundAmount().compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("source and refundAmount are required");
@@ -545,6 +638,7 @@ public class RefundServiceImpl implements IRefundService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public int saveBackOfficeRefund(RefundApplication refund) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         ensureWithinOrderCash(refund);
         return saveRefund(refund);
     }
@@ -586,6 +680,7 @@ public class RefundServiceImpl implements IRefundService {
     @Transactional(rollbackFor = Exception.class)
     @CriticalPath(value = CriticalPathCode.CP_REFUND_FAILED, op = "review")
     public int reviewRefund(RefundReviewDTO request, Long operatorId) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         if (request == null || request.getId() == null) {
             throw new IllegalArgumentException("refund id is required");
         }
@@ -605,16 +700,20 @@ public class RefundServiceImpl implements IRefundService {
         }
         CmsRegistration registration = loadRegistration(refund);
         if (registration != null) {
+            boolean found = false;
             for (RefundApplication persisted : registrationRefundHistory(registration.getId())) {
                 if (refund.getId().equals(persisted.getId())) {
+                    requireSameRefundIdentity(refund, persisted);
                     if (!Integer.valueOf(0).equals(persisted.getStatus())) {
                         if (request.getStatus().equals(persisted.getStatus())) return 0;
                         throw new IllegalStateException("退款申请已处理，不能改变审核结果");
                     }
                     refund = persisted;
+                    found = true;
                     break;
                 }
             }
+            if (!found) throw new IllegalStateException("原退款不在报名退款历史中，请重试");
         } else if (refund.getStatus() != null && !Integer.valueOf(0).equals(refund.getStatus())) {
             if (request.getStatus().equals(refund.getStatus())) return 0;
             throw new IllegalStateException("退款申请已处理，不能改变审核结果");
@@ -639,6 +738,9 @@ public class RefundServiceImpl implements IRefundService {
                 ensureWithinOrderCash(refund);
             }
         }
+        // G原分项在真实SUCCESS时冲回；审核阶段不能再从旧明细并行扣同一笔资金。
+        boolean originalComponentOwner = Integer.valueOf(1).equals(request.getStatus())
+                && coopSettlementClaimService.hasFrozenOriginalRefundComponents(refund.getId());
         int rows = refundApplicationMapper.updateRefundStatusIfPending(
                 request.getId(), request.getStatus(), operatorId, DateUtils.getNowDate(), request.getReviewReason());
         if (rows <= 0 || !Integer.valueOf(1).equals(request.getStatus())) {
@@ -649,8 +751,8 @@ public class RefundServiceImpl implements IRefundService {
         // P0-B 多方分账退款漏冲:一笔支付拆 merchant/platform/creator 多条明细,必须逐条负向冲销。
         // 旧 selectSettledDetail 的 `order by id desc limit 1` 只冲最大 id 一条(商家 id 最小 → 永远漏冲),
         // 改用 selectSettledDetails 取全部已结算明细逐条冲销;退款比例按订单口径统一算一次再套到每条。
-        List<SettlementDetail> settledList = settlementDetailMapper.selectSettledDetails(
-                refund.getSourceType(), refund.getSourceId());
+        List<SettlementDetail> settledList = originalComponentOwner ? java.util.Collections.emptyList()
+                : settlementDetailMapper.selectSettledDetails(refund.getSourceType(), refund.getSourceId());
         if (settledList != null && !settledList.isEmpty()) {
             settledList = new ArrayList<>(settledList);
             settledList.sort(Comparator.comparing(SettlementDetail::getReceiverId,
@@ -690,15 +792,22 @@ public class RefundServiceImpl implements IRefundService {
 
     private CmsRegistration lockRefundRegistration(Long registrationId) {
         CmsRegistration observed = cmsRegistrationMapper.selectCmsRegistrationById(registrationId);
-        if (observed != null && StringUtils.isNotEmpty(observed.getParentOrderNo())) {
-            List<CmsRegistration> order = cmsRegistrationMapper.selectByParentOrderNoForUpdate(observed.getParentOrderNo(), Long.valueOf(2L).equals(observed.getOwnerType()) ? observed.getOwnerId() : null);
-            OrderRefundCash.assertOrderScope(order, observed);
-            for (CmsRegistration registration : order) {
-                if (registrationId.equals(registration.getId())) return registration;
-            }
-            throw new IllegalStateException("报名不在原父订单中");
-        }
-        return cmsRegistrationMapper.selectCmsRegistrationByIdForUpdate(registrationId);
+        return observed == null ? null : RegistrationTopicFence.lock(observed, cmsRegistrationMapper,
+                cmsActivityMapper, cmsTopicMapper).registration();
+    }
+
+    static void requireSameRefundIdentity(RefundApplication expected, RefundApplication current) {
+        if (!java.util.Objects.equals(expected.getId(), current.getId())
+                || !java.util.Objects.equals(expected.getSourceType(), current.getSourceType())
+                || !java.util.Objects.equals(expected.getSourceId(), current.getSourceId())
+                || !java.util.Objects.equals(expected.getRefundNo(), current.getRefundNo())
+                || !java.util.Objects.equals(expected.getMemberId(), current.getMemberId())
+                || !java.util.Objects.equals(expected.getOwnerType(), current.getOwnerType())
+                || !java.util.Objects.equals(expected.getOwnerId(), current.getOwnerId())
+                || !java.util.Objects.equals(expected.getCreatedByUserId(), current.getCreatedByUserId())
+                || expected.getRefundAmount() == null || current.getRefundAmount() == null
+                || expected.getRefundAmount().compareTo(current.getRefundAmount()) != 0)
+            throw new IllegalStateException("原退款身份已变化，请重试");
     }
 
     private void enrichRegistrationRefund(RefundApplication refund) {
@@ -1189,4 +1298,35 @@ public class RefundServiceImpl implements IRefundService {
     private BigDecimal defaultZero(BigDecimal value) {
         return value == null ? BigDecimal.ZERO : value;
     }
+    private WechatVerifiedPaymentFactService.Stored checkedVerifiedRefund(Map<String, String> facts) {
+        WechatVerifiedPaymentFact.Reference reference = new WechatVerifiedPaymentFact.Reference(
+                Long.parseLong(facts.get("verified_fact_id")), facts.get("verified_fact_hash"));
+        WechatVerifiedPaymentFactService.Stored stored = verifiedPaymentFacts.requireVerified(reference);
+        WechatVerifiedPaymentFact fact = stored.facts();
+        fact.requireValid();
+        if (fact.kind() != WechatVerifiedPaymentFact.Kind.REFUND
+                || !fact.merchantEventNo().equals(facts.get("outRefundNo"))
+                || !fact.providerId().equals(facts.get("refundId")) || !fact.transactionId().equals(facts.get("transactionId"))
+                || !fact.businessOutTradeNo().equals(facts.get("outTradeNo")) || !fact.wxOutTradeNo().equals(facts.get("wxOutTradeNo"))
+                || !fact.mchid().equals(facts.get("mchid")) || !fact.appid().equals(facts.get("appid"))
+                || !fact.tradeType().equals(facts.get("tradeType")) || !fact.currency().equals(facts.get("currency"))
+                || fact.amountFen() != Long.parseLong(facts.get("refund")) || fact.totalFen() != Long.parseLong(facts.get("total")))
+            throw new IllegalArgumentException("可信退款事实与原事件不一致");
+        return stored;
+    }
+
+    private boolean matchesVerifiedRefundOriginal(WechatVerifiedPaymentFact fact, RefundApplication refund,
+                                                  CmsRegistration registration) {
+        if (registration == null || !fact.businessOutTradeNo().equals(registration.getRegistrationNo())
+                || !fact.transactionId().equals(registration.getTransactionId())
+                || !fact.merchantEventNo().equals(refund.getRefundNo())
+                || refund.getRefundAmount() == null || registration.getWechatPaymentAmount() == null) return false;
+        try {
+            return refund.getRefundAmount().movePointRight(2).longValueExact() == fact.amountFen()
+                    && registration.getWechatPaymentAmount().movePointRight(2).longValueExact() == fact.totalFen();
+        } catch (ArithmeticException invalidOriginalAmount) {
+            return false;
+        }
+    }
+
 }

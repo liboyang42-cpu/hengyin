@@ -12,6 +12,15 @@ test('original answer and action key survive UNKNOWN and recovery only reads rec
  query.success({code:520});await reading;assert.equal(h.page._gameWriteUnknown,true);
 });
 test('attempt from another game cannot be retried',()=>{const h=load();const old=h.page._legacyGameContext();h.page.recordGameNetworkFailure('fixture',{type:'photo',nodeId:31,pic:'fixture',viewContext:old});h.page.data.game={nodeId:32};h.page.retryGameSubmission();assert.deepEqual(h.requests,[]);});
+test('unknown answer keeps original request and never dispatches a replacement write',async()=>{
+ const h=load();
+ h.page._routeWritePayload=(kind,nodeId,extra)=>Object.assign({routeActionId:'original-key',routeSessionId:'99',expectedRouteVersion:4},extra);
+ h.page.submitGame();await new Promise(r=>setImmediate(r));
+ assert.equal(h.requests[0].data.answer,'original');assert.equal(h.requests[0].data.expectedRouteVersion,4);
+ h.requests[0].fail({errMsg:'fixture'});await new Promise(r=>setImmediate(r));
+ h.page.data.answerInput='replacement';h.page.retryGameSubmission();await new Promise(r=>setImmediate(r));
+ assert.equal(h.requests.length,1);assert.equal(h.page._gameWriteUnknown,true);
+});
 test('HTTP unknown never dispatches a retry',()=>{const h=load();h.page._gameWriteUnknown=true;h.page._lastGameAttempt={type:'answer',viewContext:h.page._legacyGameContext()};h.page.retryGameSubmission();assert.deepEqual(h.requests,[]);});
 
 test('retry preserves original session, version, epoch and input after state refresh',()=>{

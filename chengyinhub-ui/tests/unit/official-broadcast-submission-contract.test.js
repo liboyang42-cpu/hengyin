@@ -1,0 +1,164 @@
+const test = require('node:test')
+const assert = require('node:assert/strict')
+const fs = require('node:fs')
+const path = require('node:path')
+const { createBroadcastRecovery } = require('../../src/utils/official-broadcast-recovery')
+
+const source = fs.readFileSync(path.resolve(__dirname, '../../src/views/business/officialevent/index.vue'), 'utf8')
+
+function mount(send, permitted = true, options = {}) {
+  const script = source.match(/<script>([\s\S]*?)<\/script>/)[1]
+    .replace(/^import\s+\{([^}]*)\}\s+from\s+['"][^'"]+['"];?\s*$/gm,
+      (_, names) => 'const { ' + names.split(',').map(name => name.trim()).filter(Boolean).join(', ') + ' } = __deps')
+    .replace(/^import\s+(\w+)\s+from\s+['"][^'"]+['"];?\s*$/gm, 'const $1 = __deps.$1')
+    .replace(/export\s+default\s*/, 'return ')
+  const values = options.values || {}
+  const storage = {
+    getItem: key => Object.prototype.hasOwnProperty.call(values, key) ? values[key] : null,
+    setItem: (key, value) => { values[key] = value },
+    removeItem: key => { delete values[key] }
+  }
+  const deps = {
+    broadcastOfficial: send,
+    queryBroadcastCreation: options.query || (requestId => Promise.resolve({ code: 200, data: { state: 'UNKNOWN', requestId } })),
+    cancelBroadcastCreation: requestId => Promise.resolve({ code: 200, data: { state: 'CANCELLED', requestId } }),
+    createBroadcastRecovery,
+    auth: { hasPermi: () => permitted },
+    listOfficialEvent: () => Promise.resolve({ rows: [], total: 0 }),
+    getOfficialEventV2OperatorIdentity: () => Promise.resolve({ data: { authorized: false } })
+  }
+  const browser = { localStorage: storage, crypto: { getRandomValues: bytes => bytes.fill(1) } }
+  const component = new Function('__deps', 'window', script)(deps, browser)
+  const vm = { $store: { state: { user: { id: 17, token: 'fixture-session' } } } }
+  for (const [name, fn] of Object.entries(component.methods)) vm[name] = fn.bind(vm)
+  Object.assign(vm, component.data.call(vm))
+  const successes = [], warnings = []
+  vm.$modal = { msgSuccess: msg => successes.push(msg), msgWarning: msg => warnings.push(msg) }
+  // Exercise the real lifecycle and durable helper before opening the form. No fake start port.
+  component.created.call(vm)
+  vm.notifyOpen = true
+  vm.notifyEventId = 7
+  vm.notify = { audience: ['player'], title: '官方通知', content: '活动说明', channels: ['inapp', 'subscribe'], city: '' }
+  return { vm, successes, warnings, values, destroy: () => component.beforeDestroy.call(vm) }
+}
+
+test('发布响应只确认提交；UNKNOWN/部分成功不能从响应文案推断全部送达', async () => {
+  for (const msg of [undefined, '', '通知已发送,触达 1 人']) {
+    let finish, finishRead, observeRead
+    const readStarted = new Promise(resolve => { observeRead = resolve })
+    const sent = []
+    const h = mount(data => { sent.push(data); return new Promise(resolve => { finish = resolve }) }, true, {
+      query: requestId => { observeRead(requestId); return new Promise(resolve => { finishRead = resolve }) }
+    })
+    const pending = h.vm.submitNotify()
+    assert.equal(sent.length, 1)
+    assert.equal(sent[0].eventId, 7)
+    assert.equal(sent[0].channels, 'inapp,subscribe')
+    assert.equal(h.successes.length, 0, '请求尚未确认前不显示提交成功')
+    assert.equal(h.vm.notifyOpen, true)
+    finish({ code: 200, data: 71, msg })
+    const requestId = await readStarted
+    assert.equal(requestId, sent[0].clientRequestId, '沿原请求号回读，不另起创建')
+    assert.equal(h.successes.length, 0, 'POST正文不能取代原创建回执')
+    assert.equal(h.vm.notifyOpen, true)
+    finishRead({ code: 200, data: { state: 'APPLIED', requestId, broadcastId: '71' } })
+    await pending
+    assert.deepEqual(h.successes, ['通知已提交'])
+    assert.equal(h.vm.notifyOpen, false)
+    assert.equal(sent.length, 1)
+    const saved = JSON.parse(h.values['official-broadcast-create-v1:17'])
+    assert.equal(saved.result.broadcastId, '71')
+    assert.equal(saved.result.delivered, undefined, '创建回执不伪造投递结果')
+    assert.equal(saved.payload.clientRequestId, requestId, '回执保留到明确归档')
+  }
+})
+
+test('待发/部分成功/UNKNOWN 的主状态显示未全部确认，非法状态不冒充送达', () => {
+  const h = mount(() => Promise.resolve())
+  assert.equal(h.vm.broadcastStatusText(1), '投递未全部确认')
+  assert.equal(h.vm.broadcastStatusText(2), '投递处理结束（不代表已读）')
+  for (const state of [null, undefined, 'UNKNOWN', 'constructor']) {
+    assert.equal(h.vm.broadcastStatusText(state), '状态未知')
+  }
+})
+
+test('无权限或缺受众仍拒绝发布，结果文案修改不产生额外请求', () => {
+  for (const permitted of [false, true]) {
+    const sent = []
+    const h = mount(data => { sent.push(data); return Promise.resolve() }, permitted)
+    if (permitted) h.vm.notify.audience = []
+    h.vm.submitNotify()
+    assert.equal(sent.length, 0)
+    assert.equal(h.successes.length, 0)
+    assert.equal(h.warnings.length, 1)
+    assert.equal(h.vm.notifyOpen, true)
+  }
+})
+
+test('创建回读UNKNOWN保留原输入原号，后续只读APPLIED才关闭原表单', async () => {
+  const sent = [], queried = []
+  let state = 'UNKNOWN'
+  const h = mount(data => { sent.push(data); return Promise.resolve({ code: 200, data: 71, msg: '全部送达' }) }, true, {
+    query: requestId => { queried.push(requestId); return Promise.resolve({ code: 200, data: { state, requestId, broadcastId: '71' } }) }
+  })
+  await h.vm.submitNotify()
+  const original = JSON.stringify(h.values)
+  assert.deepEqual(h.successes, [])
+  assert.equal(h.vm.notifyOpen, true)
+  assert.equal(h.vm.broadcastRecovery.record.result, undefined)
+  h.vm.notify.title = '后改标题'
+  await h.vm.submitNotify()
+  assert.equal(sent.length, 1, '未决原意图不能另号重发')
+  assert.equal(JSON.stringify(h.values), original)
+  state = 'APPLIED'
+  await h.vm.broadcastRecoveryAction('query')
+  assert.deepEqual(h.successes, ['通知已提交'])
+  assert.equal(h.vm.notifyOpen, false)
+  assert.equal(sent.length, 1, '只读回查不能变成重发')
+  assert.deepEqual(queried, [sent[0].clientRequestId, sent[0].clientRequestId])
+  assert.equal(h.vm.broadcastRecovery.record.payload.title, '官方通知')
+})
+
+test('恢复已存APPLIED不是新提交，不自动提示成功或归档原回执', () => {
+  const requestId = 'a'.repeat(32)
+  const values = { 'official-broadcast-create-v1:17': JSON.stringify({
+    actor: '17',
+    payload: { eventId: 7, title: '旧通知', audience: 'player', copyMode: 1, contentJson: '{"title":"旧通知","sub":"原内容"}', channels: 'inapp', city: null, clientRequestId: requestId },
+    result: { state: 'APPLIED', requestId, broadcastId: '71' }
+  }) }
+  const original = JSON.stringify(values), sent = []
+  const h = mount(data => { sent.push(data); return Promise.resolve() }, true, { values })
+  assert.equal(h.vm.broadcastRecovery.record.result.state, 'APPLIED')
+  assert.deepEqual(h.successes, [])
+  assert.equal(JSON.stringify(values), original)
+  assert.equal(sent.length, 0)
+})
+
+test('组件销毁后的迟到回读不改变表单或清除原持久意图', async () => {
+  let finish
+  const h = mount(() => new Promise(resolve => { finish = resolve }), true, {
+    query: requestId => Promise.resolve({ code: 200, data: { state: 'APPLIED', requestId, broadcastId: '71' } })
+  })
+  const pending = h.vm.submitNotify(), original = JSON.stringify(h.values)
+  h.destroy()
+  finish({ code: 200, data: 71 })
+  await pending
+  assert.deepEqual(h.successes, [])
+  assert.equal(h.vm.notifyOpen, true)
+  assert.equal(JSON.stringify(h.values), original)
+})
+
+test('原事件回执不关闭已切到其他事件的表单，保留原回执可查', async () => {
+  let finish
+  const h = mount(() => new Promise(resolve => { finish = resolve }), true, {
+    query: requestId => Promise.resolve({ code: 200, data: { state: 'APPLIED', requestId, broadcastId: '71' } })
+  })
+  const pending = h.vm.submitNotify()
+  h.vm.notifyEventId = 8
+  finish({ code: 200, data: 71 })
+  await pending
+  assert.deepEqual(h.successes, [])
+  assert.equal(h.vm.notifyOpen, true)
+  assert.equal(h.vm.broadcastRecovery.record.payload.eventId, 7)
+  assert.equal(h.vm.broadcastRecovery.record.result.broadcastId, '71')
+})

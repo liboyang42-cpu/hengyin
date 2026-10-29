@@ -1,5 +1,7 @@
 package com.chengyinhub.business.task;
 
+import com.chengyinhub.common.config.RestoreDispatchGuard;
+
 import com.chengyinhub.business.domain.CmsRegistration;
 import com.chengyinhub.business.service.ICmsRegistrationService;
 import com.chengyinhub.business.service.IWechatPayService;
@@ -56,9 +58,6 @@ public class OrderCloseTask {
     @Autowired
     private AlarmService alarmService;
 
-    @Autowired
-    private org.springframework.transaction.PlatformTransactionManager paymentTransactions;
-
     /** 扫描 pay_expire_time 已过仍待支付的报名单:关单 + 回补库存 + 退还预扣积分 */
     public synchronized void closeExpired() {
         Date now = new Date();
@@ -75,6 +74,8 @@ public class OrderCloseTask {
                 scanned++;
                 try {
                     if (cmsRegistrationService.closeExpiredOne(id)) closed++;
+                } catch (RestoreDispatchGuard.Blocked paused) {
+                    log.info("过期关单暂停 reason=RECOVERY_DISPATCH_BLOCKED");
                 } catch (Exception e) {
                     log.error("过期关单失败 registrationId={}", id, e);
                 } finally {
@@ -107,6 +108,9 @@ public class OrderCloseTask {
      * cron 建议每 10 分钟(见 migration_registration_paying_reconcile_job_20260915.sql)。
      */
     public void reconcileExpiredPaying() {
+        if (org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()) {
+            throw new IllegalStateException("支付对账必须在原业务事务外执行");
+        }
         if (wechatPayService == null || !wechatPayService.isReady()) {
             log.warn("微信支付能力未就绪,跳过支付中过期订单对账");
             return;
@@ -175,6 +179,9 @@ public class OrderCloseTask {
                     if ("SUCCESS".equalsIgnoreCase(tradeState)) {
                         // 钱真的到了:走支付回调同一条链路补记,不能关单回补。
                         String result = cmsRegistrationService.handleWechatPayCallback(wxOrder);
+                        // The original verified callback/inbox is retained above. A paused business
+                        // consumer is not a provider failure, and must not be counted as applied.
+                        if (RestoreDispatchGuard.isRestoreMode()) continue;
                         if ("SUCCESS".equalsIgnoreCase(result)) {
                             applied++;
                         } else {
@@ -186,13 +193,17 @@ public class OrderCloseTask {
                         }
                         continue;
                     }
+                    // Keep querying original attempts, but neither close externally nor release
+                    // points/inventory locally from a restored database.
+                    if (RestoreDispatchGuard.isRestoreMode()) continue;
                     if ("NOTPAY".equalsIgnoreCase(tradeState) || "USERPAYING".equalsIgnoreCase(tradeState)
                             || "PAYERROR".equalsIgnoreCase(tradeState)) {
                         // 未支付不是终态(PAYERROR 能否再付未核实,按裁决保守同处理):先把微信订单关掉,关单被微信接受才可能安全本地关单。
                         boolean closeAccepted;
                         try {
                             closeAccepted = wechatPayService.closePaymentAttempt(registration.getRegistrationNo(), wxOrder.get("wx_out_trade_no"));
-                        } catch (Exception closeFailure) {
+                        } catch (RestoreDispatchGuard.Blocked paused) { throw paused; }
+                        catch (Exception closeFailure) {
                             closeAccepted = false;
                             log.error("支付中过期订单关微信单失败 registrationId={}", id, closeFailure);
                         }
@@ -214,6 +225,8 @@ public class OrderCloseTask {
                     if (closeObservedRegistration(registration, wxOrder.get("wx_out_trade_no"))) {
                         closed++;
                     }
+                } catch (RestoreDispatchGuard.Blocked paused) {
+                    log.info("支付派发与本地关单暂停 reason=RECOVERY_DISPATCH_BLOCKED");
                 } catch (Exception e) {
                     uncertain++;
                     if (firstFailure == null) {
@@ -244,12 +257,8 @@ public class OrderCloseTask {
         }
     }
     private boolean closeObservedRegistration(CmsRegistration registration, String observedWxNo) {
-        return Boolean.TRUE.equals(new org.springframework.transaction.support.TransactionTemplate(paymentTransactions)
-                .execute(status -> {
-                    if (!wechatPayService.lockPaymentAttemptForUpdate(registration.getRegistrationNo(), observedWxNo)) return false;
-                    return cmsRegistrationService.settlePayingOne(registration.getId(),
-                            EntitlementInvalidReason.ORGANIZER_CANCEL, RECONCILE_UPDATE_BY, 4);
-                }));
+        return cmsRegistrationService.settleClosedPayingOne(registration, observedWxNo,
+                EntitlementInvalidReason.ORGANIZER_CANCEL, RECONCILE_UPDATE_BY, 4);
     }
 
 }

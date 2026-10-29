@@ -10,5 +10,5 @@
     enable-rotate="{{false}}"
     bindmarkertap="onNodeTap">
   </map>
-  <view class="rm-tip" wx:if="{{!routeIsRoad}}">直连预览 · 道路路线待生成</view>
+  <view class="rm-tip">{{routeSourceText}}</view>
 </view>

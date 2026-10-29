@@ -234,10 +234,11 @@ test('deferred old text measurement cannot change new detail or a disposed page'
   assert.equal(JSON.stringify(h.page.data), current)
 })
 
-test('「分享玩法」是真实小程序分享按钮，不是只关弹层的假入口', () => {
+// 2026-10-27 P-42:业主删掉 ⋯ 和它的「分享玩法 / 举报」弹层,分享直接放在主动作旁(open-type="share")
+test('「分享玩法」是页面上的真实小程序分享按钮，不再藏在 ⋯ 弹层里', () => {
   const wxml = read('pages/templatedetail/templatedetail.wxml').replace(/<!--[\s\S]*?-->/g, '')
-  assert.match(wxml, /<button\b[^>]*class="xb-sheet-item"[^>]*open-type="share"[^>]*bindtap="onShare"[^>]*>分享玩法<\/button>/s)
-  assert.doesNotMatch(wxml, /<view\b[^>]*bindtap="onShare"[^>]*>分享玩法<\/view>/s)
+  assert.match(wxml, /<button\b[^>]*class="xb-share"[^>]*open-type="share"[^>]*aria-label="分享玩法"[^>]*>/s)
+  assert.doesNotMatch(wxml, /openMore|moreShow|xb-sheet-item/, '⋯ 弹层不许回潮')
   assert.match(read('pages/templatedetail/templatedetail.js'), /onShareAppMessage\(\)/)
 })
 
@@ -283,7 +284,8 @@ test('更多操作与预览链接使用图标库，不用文字符号伪造图�
   const wxml = read('pages/templatedetail/templatedetail.wxml')
   const json = JSON.parse(read('pages/templatedetail/templatedetail.json'))
   assert.equal(json.usingComponents['cy-icon'], '/components/cy/icon/index')
-  assert.match(wxml, /class="xb-more"[^>]*>[\s\S]*<cy-icon name="more"/)
+  // 2026-10-27 P-42:⋯ 已删,右侧圆钮换成分享图标
+  assert.match(wxml, /class="xb-share"[^>]*>[\s\S]*<cy-icon name="share"/)
   // 2026-08-26 能力 tab 压成标签行:「查看预览」行变成动作 chip,文案挪进 js 的 chip 数据,
   // 所以锚点两边各钉一半 —— 意图不变:预览入口必须用图标库,不许拿 › 文字冒充箭头。
   const js = fs.readFileSync(path.join(__dirname, '../../pages/templatedetail/templatedetail.js'), 'utf8')
@@ -295,7 +297,8 @@ test('更多操作与预览链接使用图标库，不用文字符号伪造图�
 test('负控：分享退回普通 view 必须判红', () => {
   const source = read('pages/templatedetail/templatedetail.wxml')
   assert.match(source, /open-type="share"/)
-  const broken = source.replace(/<button([^>]*)open-type="share"([^>]*)>分享玩法<\/button>/, '<view$1$2>分享玩法</view>')
+  // 2026-10-27 P-42:分享改成主动作旁的图标按钮(aria-label 分享玩法),锚点随之换
+  const broken = source.replace(/<button([^>]*)open-type="share"([^>]*)>([\s\S]*?)<\/button>/, '<view$1$2>$3</view>')
   assert.notEqual(broken, source, '负控锚点失效')
   assert.doesNotMatch(broken, /open-type="share"/)
 })

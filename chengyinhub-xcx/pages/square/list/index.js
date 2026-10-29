@@ -4,10 +4,8 @@ const toast = require('../../../utils/toast.js');
 const { toTimestamp } = require('../../../utils/datetime');
 const app = getApp();
 const community = require('../../../utils/community-post-api.js').createClient(app, wx);
-/* 结果面板终态停留时长。发帖不跳页,收掉就留在广场。 */
-const RESULT_SHEET_MS = 2000;
 const analytics = require('../../../utils/analytics.js');
-const { pickLocation, getCurrentLocation } = require('../../../utils/location/location-manager.js');
+const { getCurrentLocation } = require('../../../utils/location/location-manager.js');
 const merchantTheme = require('../../../utils/merchant-theme.js');
 const { appendByIndex } = require('../../../utils/list-append.js');
 const {
@@ -20,7 +18,6 @@ const {
 } = require('../../../utils/feed-play-card.js');
 const { remixTopicTemplate } = require('../utils/topic-template-remix.js');
 const { isRecordList } = require('../../../utils/response-shape.js');
-const publishIntent = require('../../../utils/publish/publish-intent.js');
 const mediaPreview = require('../../../utils/media-preview.js');
 
 // 开场倒计时文案:天/小时/分三档取整,不到 1 分钟按「即将开始」收口。
@@ -47,8 +44,6 @@ Page({
   data: {
     reportReasonShow: false,
     reportReasonItems: [],
-    resultSheet: { show: false, kind: 'success', title: '', sub: '', meta: '', pill: '',
-      why: '', duration: RESULT_SHEET_MS },
     list: [],//列表数组
     page_no: 1,//页码
     hasMore: false,//还有更多
@@ -70,27 +65,12 @@ Page({
     avatar: '',
     nickname: '',
 
-    address: '',
-    longitude: '',
-    latitude: '',
-    valCont: '',
     communityPostRead: false,
     communityPostWrite: false,
     composeShow: false,      // 新建帖文弹窗
     avatarPopShow: false,    // 点头像的 T5 胶囊
     avatarPopAnchor: null,
     avatarPopItems: [],
-    composePrefill: '',      // 展开时把行内已写的正文带进弹窗
-    canSubmit: false,
-    submitting: false,
-    submitError: '',
-    submitErrorKind: 'data',
-    switch1Checked: false, // 是否参与众筹投票，默认参与
-    picList: [],
-    fileList: [],
-    // 关联运动feed:选中的已通关活动
-    selectedActivity: null,
-    activityPickerShow: false,
 
     // 「即将开始」聚合横幅:null = 当前没有临近活动 ⇒ 整块不渲染(不留空标题)
     upcoming: null,
@@ -160,7 +140,7 @@ Page({
   },
 
   lickClick(e) {
-    if (app.ensureLoginFor && !app.ensureLoginFor('like', () => this.lickClick(e))) return; // 2026-10-24 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('like', () => this.lickClick(e), { owner: this, target: () => [this.data.list[feedIndexFromEvent(e)] && this.data.list[feedIndexFromEvent(e)].id] })) return; // 2026-10-24 游客写前登录
     var that = this
     let index = feedIndexFromEvent(e);
     let type = (e.detail && e.detail.type) || e.currentTarget.dataset.type;
@@ -215,7 +195,7 @@ Page({
   },
 
   favoriteClick(e) {
-    if (app.ensureLoginFor && !app.ensureLoginFor('like', () => this.favoriteClick(e))) return; // 2026-10-24 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('like', () => this.favoriteClick(e), { owner: this, target: () => [this.data.list[feedIndexFromEvent(e)] && this.data.list[feedIndexFromEvent(e)].id] })) return; // 2026-10-24 游客写前登录
     const index = feedIndexFromEvent(e);
     const item = this.data.list[index];
     if (!item || !item.id) return;
@@ -252,7 +232,7 @@ Page({
   },
 
   followClick(e) {
-    if (app.ensureLoginFor && !app.ensureLoginFor('like', () => this.followClick(e))) return; // 2026-10-24 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('like', () => this.followClick(e), { owner: this, target: () => [this.data.list[feedIndexFromEvent(e)] && this.data.list[feedIndexFromEvent(e)].id, this.data.list[feedIndexFromEvent(e)] && this.data.list[feedIndexFromEvent(e)].memberId] })) return; // 2026-10-24 游客写前登录
     var that = this
     const index = feedIndexFromEvent(e);
     let topicList = that.data.list
@@ -295,34 +275,6 @@ Page({
         delete that._followRequests[requestKey];
       }
     })
-  },
-
-  // 清除位置
-  clearLocation: function () {
-    this.setData({
-      address: '',
-      longitude: '',
-      latitude: ''
-    });
-  },
-
-  // 关联运动feed:打开/选择/清除「已通关活动」
-  openActivityPicker: function () {
-    this.setData({ activityPickerShow: true });
-  },
-  onActivityPickerClose: function () {
-    this.setData({ activityPickerShow: false });
-  },
-  onActivitySelect: function (e) {
-    const activity = e.detail.activity || null;
-    if (activity) activity.routePreviewImg = e.detail.routePreviewImg || '';
-    this.setData({
-      selectedActivity: activity,
-      activityPickerShow: false
-    });
-  },
-  clearActivity: function () {
-    this.setData({ selectedActivity: null });
   },
 
   // 显示操作弹层(卡片 more 入口)。行数据当场解析成 id / owner 交给组件,
@@ -413,7 +365,7 @@ Page({
   onReportReasonCancel() { reportSheet.cancel(this); },
 
   reportSquare: function (id = this.data.currentActionId) {
-    if (app.ensureLoginFor && !app.ensureLoginFor('report', () => this.reportSquare(id))) return; // 2026-10-24 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('report', () => this.reportSquare(id), { owner: this, target: () => [id, this.data.list.some(row => String(row.id) === String(id))] })) return; // 2026-10-24 游客写前登录
     const that = this;
     const owner = String(app.getUserID() || ''), current = () => !that._unloaded && owner === String(app.getUserID() || '');
     const item = that.data.list.find(row => String(row.id) === String(id));
@@ -578,7 +530,7 @@ Page({
     });
   },
 
-  onUnload() {
+  onUnload() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1;
     this._unloaded = true;
     reportSheet.cancel(this);
     this._feedRequestId = (this._feedRequestId || 0) + 1;
@@ -818,191 +770,6 @@ Page({
     wx.navigateTo({ url: '/pages/activity/official-detail/index?id=' + id, complete: function () { self._navigating = false; } });
   },
 
-  // 为节点选择地点
-  choosePoiForNode() {
-    const that = this;
-    pickLocation({
-      onPick(poi) {
-        that.setData({
-          address: poi.name,
-          longitude: poi.longitude,
-          latitude: poi.latitude
-        });
-      }
-    });
-  },
-
-  bindTextAreaBlur: function (e) {
-    const value = e.detail.value || '';
-    this.setData({
-      valCont: value,
-      canSubmit: value.trim().length > 0,
-      submitError: ''
-    });
-  },
-
-  onResultSheetClose() {
-    this.setData({ 'resultSheet.show': false });
-  },
-
-  resetForm: function (e) {
-    var that = this
-    that.setData({
-      address: '',
-      longitude: '',
-      latitude: '',
-      valCont: '',
-      canSubmit: false,
-      picList: [],
-      fileList: [],
-      selectedActivity: null,
-      popOrig: false,
-      popShow: false,
-      submitError: '',
-      submitErrorKind: 'data'
-    });
-  },
-
-  // 提交表单数据
-  submitFormData() {
-    if (app.ensureLoginFor && !app.ensureLoginFor('post', () => this.submitFormData())) return; // 2026-10-24 游客写前登录
-    const that = this;
-    if (typeof app.canUseCommunity !== 'function' || !app.canUseCommunity(true)) {
-      toast('当前账号未开放广场发布');
-      return;
-    }
-
-    // 验证必填字段
-    const content = String(that.data.valCont || '').trim();
-    if (!content) {
-      toast('请输入内容');
-      return;
-    }
-
-    // 防重:发布在途中禁止重复提交,避免重复发帖
-    if (that._submitting) {
-      return;
-    }
-    that._submitting = true;
-    that.setData({
-      submitting: true,
-      submitError: '',
-      submitErrorKind: 'data'
-    });
-
-    let data = {
-      contents: content,
-      pics: that.data.picList.join(';'),
-      file_url: that.data.fileList.join(';'),
-      address: that.data.address,
-      longitude: that.data.longitude,
-      latitude: that.data.latitude,
-      is_crowdfunding: that.data.switch1Checked ? 1 : 2,
-      // 关联运动feed:data_type 1活动/2自玩主题(picker仅返回已完成项);data_id优先显式dataId,旧结构回退activityId,无则空
-      data_id: that.data.selectedActivity
-        ? (that.data.selectedActivity.dataId != null && that.data.selectedActivity.dataId !== ''
-            ? that.data.selectedActivity.dataId
-            : (that.data.selectedActivity.activityId || ''))
-        : '',
-      data_type: that.data.selectedActivity ? (that.data.selectedActivity.dataType || 1) : '',
-      route_preview_img: that.data.selectedActivity ? (that.data.selectedActivity.routePreviewImg || '') : ''
-    };
-    // R10-03:稳定发布意图键(账号隔离);同 payload 重试/冷恢复复用,成功后清除,改内容=新意图。
-    const publishMemberId = (typeof app.getUserID === 'function' ? String(app.getUserID() || '') : '');
-    const intent = publishIntent.begin(wx, {
-      scope: 'square:list',
-      memberId: publishMemberId,
-      payload: [data.contents, data.pics, data.file_url, data.address, data.longitude, data.latitude, data.is_crowdfunding, data.data_id, data.data_type, data.route_preview_img]
-    });
-    data.request_id = intent.key;
-    const submissionSnapshot = JSON.stringify([that.data.valCont, that.data.picList, that.data.fileList, that.data.address, that.data.latitude, that.data.longitude, that.data.selectedActivity]);
-    if (intent.previousUnknown) toast('上次结果未确认，重试不重复发');
-
-    community.request({
-      hideLoading: true,
-      silentError: true,
-      url: '/api/creativesquare/action',
-      intentScope: 'square:list',
-      current: () => !that._unloaded && publishMemberId === String(app.getUserID() || ''),
-      data: data,
-      method: "POST",
-      success: function (res) {
-        if (res.code == "200") {
-          publishIntent.settle(wx, 'square:list', publishMemberId, intent.key, 'success');
-          // 草稿创建不代表公开；以正常发布响应的实际lifecycle给出回执。
-          that.setData({
-            resultSheet: {
-              show: true, kind: 'success', title: res.data.lifecycle === 'PUBLISHED' ? '发布成功' : '已提交审核',
-              sub: res.data.lifecycle === 'PUBLISHED' ? '帖文已发布，现在广场里就能看到。' : '内容已保存，审核通过后公开显示。',
-              meta: '', pill: res.data.lifecycle === 'PUBLISHED' ? '' : '以实际审核状态为准',
-              why: '', duration: RESULT_SHEET_MS,
-            },
-          });
-          if (res.recoveredPrevious !== true && submissionSnapshot === JSON.stringify([that.data.valCont, that.data.picList, that.data.fileList, that.data.address, that.data.latitude, that.data.longitude, that.data.selectedActivity])) that.resetForm();
-          that.refreshList();
-        } else {
-          if (res && res.intentDiscarded === true) {
-            // 服务端明确该发布已软删:丢弃意图键,重新发布自然换新键(旧帖不自动复活)
-            publishIntent.discard(wx, 'square:list', publishMemberId, intent.key);
-          } else {
-            publishIntent.settle(wx, 'square:list', publishMemberId, intent.key, 'rejected');
-          }
-          // 文本机审是**同步**拦下的(status=2 + 返错),这一下有明确的动作结果 ⇒ 面板说清楚;
-          // 页内 cy-inline-error 带「重试」,仍是持久的恢复出口,面板收掉它还在。
-          const message = app.getRequestErrorMessage(res, '发布失败，请稍后重试');
-          that.setData({
-            submitError: message,
-            submitErrorKind: 'data',
-            resultSheet: {
-              show: true, kind: 'fail', title: '这条没有发出去',
-              sub: '修改后重试',
-              meta: '', pill: '', why: message, duration: RESULT_SHEET_MS,
-            },
-          });
-        }
-      },
-      fail: function (res) {
-        publishIntent.settle(wx, 'square:list', publishMemberId, intent.key, 'unknown');
-        that.setData({
-          submitError: app.getRequestErrorMessage(res, '网络异常，请检查连接后重试'),
-          submitErrorKind: 'network'
-        });
-      },
-      complete: function () {
-        that._submitting = false;
-        that.setData({ submitting: false });
-      }
-    });
-  },
-
-  retrySubmit() {
-    this.submitFormData();
-  },
-
-  // 上传图片
-  uploadPic: function (e) {
-    var that = this;
-    app.chooseImage(function (res) {
-      let ll = that.data.picList != "" ? that.data.picList : [];
-      res.forEach(function (v) {
-        ll.push(v);
-      })
-      that.setData({
-        'picList': ll
-      })
-    }, 6, { bizType: 'COMMUNITY_POST', mapResult: community.captureUpload });
-  },
-
-  // 删除图片
-  delPic: function (e) {
-    var that = this;
-    let arr = that.data.picList;
-    arr.splice(e.currentTarget.dataset.inx, 1);
-    that.setData({
-      'picList': arr,
-    })
-  },
-
   // A-05:详情页删/改成功后给本页置脏标(跨页通过页面栈实例调用),回页只刷一次首屏。
   markSquareListDirty() {
     this._squareListDirty = true;
@@ -1065,7 +832,7 @@ Page({
     else settle();
   },
 
-  onHide() { merchantTheme.merchantPageRestore(); },
+  onHide() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1; merchantTheme.merchantPageRestore(); },
 
   initMapLocation: function () {
     var that = this;
@@ -1100,9 +867,18 @@ Page({
     wx.navigateTo({ url: '/pages/publish/fabu/index' });
   },
 
-  // UI-15(2026-09-18 用户定):行内发布区的「展开」口和「发布」文字一起删除,
-  // 新建帖不再走完整编辑弹窗(行内 composer 已支持配图/地点/活动与长文本次发布);
-  // cy-post-compose 只剩「编辑已有帖」这一条入口(由 onPostAction edit 打开)。
+  // 2026-10-27 P-20 owner:发帖入口全站统一成同一个全屏发帖弹窗(带草稿)。
+  // 取代 UI-15(2026-09-18)「新建走行内 composer、弹窗只管编辑」—— 行内 textarea 发布框已撤,
+  // 新建与编辑都走 cy-post-compose;composeEdit 为空即新建。
+  openCompose: function () {
+    if (typeof app.canUseCommunity !== 'function' || !app.canUseCommunity(true)) {
+      toast('当前账号未开放广场发布');
+      return;
+    }
+    this.setData({ composeEdit: null });
+    this.setData({ composeShow: true });
+  },
+
   onComposeClose: function () {
     this.setData({ composeShow: false, composeEdit: null });
   },
@@ -1110,7 +886,7 @@ Page({
   // 弹窗发布/保存成功 —— 同页,直接刷,不必再靠 onShow 猜。
   onComposePublished: function (e) {
     if (!(e && e.detail && e.detail.keepOpen)) {
-      this.setData({ valCont: '', canSubmit: false, composePrefill: '', composeEdit: null });
+      this.setData({ composeEdit: null });
     }
     this.refreshList();
   },

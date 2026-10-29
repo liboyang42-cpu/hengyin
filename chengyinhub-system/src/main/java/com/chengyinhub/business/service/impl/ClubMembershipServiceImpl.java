@@ -26,7 +26,7 @@ import com.chengyinhub.business.mapper.ClubMemberMapper;
 import com.chengyinhub.business.mapper.ClubMembershipMapper;
 import com.chengyinhub.business.service.IClubMembershipService;
 import com.chengyinhub.business.service.IUmsMemberService;
-import com.chengyinhub.business.service.IWechatPayService;
+import com.chengyinhub.business.service.WechatPaymentOperations;
 import com.chengyinhub.business.service.support.CanonicalDigest;
 import com.chengyinhub.common.constant.HttpStatus;
 import com.chengyinhub.common.exception.ServiceException;
@@ -40,6 +40,8 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact;
+import com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
@@ -69,9 +71,12 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
     @Autowired private ClubMapper clubMapper;
     @Autowired private ClubMemberMapper clubMemberMapper;
     @Autowired private IUmsMemberService memberService;
-    @Autowired private IWechatPayService wechatPayService;
+    @Autowired @org.springframework.beans.factory.annotation.Qualifier("wechatPaymentSdkGateway")
+    private WechatPaymentOperations wechatPayService;
     @Autowired private BusinessAuditEventMapper businessAuditEventMapper;
     @Autowired private PlatformTransactionManager transactionManager;
+    @Autowired private WechatVerifiedPaymentFactService verifiedPaymentFacts;
+
     private Clock clock = Clock.system(SHANGHAI);
 
     @Override
@@ -218,8 +223,10 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
     }
 
     @Override
-    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    @Transactional(propagation = Propagation.NEVER)
     public ClubMembershipRenewalVO renew(Long principalMemberId, ClubMembershipRenewRequest request) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+        requirePaymentOutsideTransaction();
         requireRequest(request, request == null ? null : request.getClubId());
         requireMember(principalMemberId, request.getClubId());
         if (request.getPlanId() == null || request.getPlanId() <= 0
@@ -241,6 +248,8 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
                     "俱乐部会费-" + invoice.getPlanNameSnapshot(), intent.wxOpenId);
             requirePaymentParams(payParams);
             payJson = JSON.writeValueAsString(payParams);
+        } catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) {
+            throw paused;
         } catch (Exception uncertain) {
             result.setPayParams(Collections.<String, String>emptyMap());
             result.setPaymentState("PREPAY_UNKNOWN");
@@ -263,8 +272,9 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
     }
 
     @Override
-    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    @Transactional(propagation = Propagation.NEVER)
     public ClubMembershipRenewalVO resumeInvoice(Long principalMemberId, ClubMembershipActionRequest request) {
+        requirePaymentOutsideTransaction();
         requireAction(request);
         InvoiceActionIntent intent = transaction().execute(status ->
                 prepareResumeIntent(principalMemberId, request));
@@ -281,6 +291,7 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
         if (!blank(invoice.getPayParamsJson())) return result;
         // D-12：会费开关关闭时只拦新的微信预下单；上面的查单对账仍照常执行。
         featureGate.requireEnabled();
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         Map<String, String> payParams;
         String payJson;
         try {
@@ -289,6 +300,8 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
                     "俱乐部会费-" + invoice.getPlanNameSnapshot(), intent.wxOpenId);
             requirePaymentParams(payParams);
             payJson = JSON.writeValueAsString(payParams);
+        } catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) {
+            throw paused;
         } catch (Exception uncertain) {
             result.setPayParams(Collections.<String, String>emptyMap());
             result.setPaymentState("PREPAY_UNKNOWN");
@@ -312,8 +325,9 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
     }
 
     @Override
-    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    @Transactional(propagation = Propagation.NEVER)
     public ClubMembershipRenewalVO closeInvoice(Long principalMemberId, ClubMembershipActionRequest request) {
+        requirePaymentOutsideTransaction();
         requireAction(request);
         InvoiceActionIntent intent = transaction().execute(status ->
                 prepareCloseIntent(principalMemberId, request));
@@ -333,6 +347,8 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
         boolean closeAccepted;
         try {
             closeAccepted = wechatPayService.closePaymentAttempt(invoice.getOutTradeNo(), closingObservation.get("wx_out_trade_no"));
+        } catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) {
+            throw paused;
         } catch (Exception closeUnknown) {
             throw new ServiceException("微信关单结果未确认，原账单继续保留", HttpStatus.CONFLICT);
         }
@@ -467,7 +483,21 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean handlePaidInvoice(String outTradeNo, boolean paid, Integer amountFen, String transactionId) {
+    public boolean handlePaidInvoice(String outTradeNo, boolean paid, Integer amountFen, String transactionId,
+            Reference reference) {
+        if (reference == null) throw new IllegalArgumentException("原成功支付事实引用必填");
+        if (!supportsOutTradeNo(outTradeNo) || !paid || amountFen == null || amountFen <= 0
+                || blank(transactionId) || transactionId.trim().length() > 64) return false;
+        WechatVerifiedPaymentFactService.Stored verified = checkedPayment(reference, outTradeNo, amountFen, transactionId);
+        // REQUIRED joins original callback/DONE; programmatic boundary also covers self/direct calls.
+        var application = new org.springframework.transaction.support.TransactionTemplate(transactionManager);
+        return Boolean.TRUE.equals(application.execute(status -> applyVerifiedPayment(
+                outTradeNo, paid, amountFen, transactionId, verified)));
+    }
+
+    private boolean applyVerifiedPayment(String outTradeNo, boolean paid, Integer amountFen, String transactionId,
+            WechatVerifiedPaymentFactService.Stored verified) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         if (!supportsOutTradeNo(outTradeNo) || !paid || amountFen == null || amountFen <= 0
                 || blank(transactionId) || transactionId.trim().length() > 64) return false;
         // 先做不加锁的不可变快照定位，只用来发现锁键；真正状态决策在统一锁序下重读。
@@ -477,11 +507,9 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
             return false;
         }
         String tx = transactionId.trim();
-        if (ClubMembershipInvoice.STATUS_PAID.equals(preview.getStatus())) {
-            return tx.equals(preview.getTransactionId());
-        }
         if (!ClubMembershipInvoice.STATUS_CREATED.equals(preview.getStatus())
-                && !ClubMembershipInvoice.STATUS_PAYING.equals(preview.getStatus())) return false;
+                && !ClubMembershipInvoice.STATUS_PAYING.equals(preview.getStatus())
+                && !ClubMembershipInvoice.STATUS_PAID.equals(preview.getStatus())) return false;
 
         // 与退出/移除保持 club -> club_member -> invoice 的锁序。任一方先拿到 club 锁，
         // 另一方都会在其完整事务提交后看到终态，不能出现“离会已完成却又补发 ACTIVE 权益”。
@@ -499,12 +527,14 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
         if (!sameCallbackInvoice(preview, invoice) || !validCallbackSnapshot(invoice, outTradeNo)
                 || !Long.valueOf(amountFen.longValue()).equals(invoice.getAmountFen())) return false;
         if (ClubMembershipInvoice.STATUS_PAID.equals(invoice.getStatus())) {
-            return tx.equals(invoice.getTransactionId());
+            return completeInvoiceProof(invoice, verified);
         }
         if (!ClubMembershipInvoice.STATUS_CREATED.equals(invoice.getStatus())
                 && !ClubMembershipInvoice.STATUS_PAYING.equals(invoice.getStatus())) return false;
         ClubMembershipInvoice transactionOwner = clubMembershipMapper.selectInvoiceByTransactionId(tx);
         if (transactionOwner != null && !invoice.getId().equals(transactionOwner.getId())) return false;
+        if (invoice.getVerifiedPaymentFactId() != null || invoice.getVerifiedPaymentFactHash() != null) return false;
+        if (!currentInvoicePayment(verified)) return false;
         Date paidAt = now();
         if (invoice.getVersion() == null || clubMembershipMapper.markInvoicePaidCas(
                 invoice.getId(), invoice.getVersion(), tx, paidAt) != 1) return false;
@@ -541,6 +571,12 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
                         + "\",\"fundState\":\""
                         + (accessStillActive ? "PAID_ENTITLEMENT_CREATED" : "PAID_NO_ENTITLEMENT")
                         + "\",\"payout\":false}", "pay-" + invoice.getOutTradeNo(), null);
+        if (clubMembershipMapper.bindInvoicePaymentProof(invoice.getId(), tx, invoice.getAmountFen(), invoice.getSnapshotHash(),
+                verified.reference().id(), verified.reference().hash()) != 1)
+            throw new IllegalStateException("会费原支付消费凭据绑定失败");
+        ClubMembershipInvoice readback = clubMembershipMapper.selectInvoiceByOutTradeNoForUpdate(outTradeNo);
+        if (!sameCallbackInvoice(invoice, readback) || !completeInvoiceProof(readback, verified))
+            throw new IllegalStateException("会费原支付消费凭据回读不一致");
         return true;
     }
 
@@ -961,7 +997,9 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
     }
 
     private TransactionTemplate transaction() {
-        return new TransactionTemplate(transactionManager);
+        TransactionTemplate transaction = new TransactionTemplate(transactionManager);
+        transaction.setPropagationBehavior(org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        return transaction;
     }
 
     private static final class RenewalIntent {
@@ -995,6 +1033,7 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
 
     private ClubMembershipInvoice freezeInvoice(ClubAccessContext access, ClubMembershipPlan plan,
                                                   String key, String fingerprint) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         ClubMembershipInvoice invoice = new ClubMembershipInvoice();
         invoice.setClubId(access.getClubId());
         invoice.setOwnerMemberIdSnapshot(access.getOwnerMemberId());
@@ -1101,7 +1140,7 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
             throw new ServiceException("微信支付成功但交易号缺失，未恢复会员权益", HttpStatus.CONFLICT);
         }
         Boolean paidApplied = transaction().execute(status ->
-                handlePaidInvoice(invoice.getOutTradeNo(), true, amountFen, transactionId));
+                handlePaidInvoice(invoice.getOutTradeNo(), true, amountFen, transactionId, paymentReference(wxOrder)));
         if (!Boolean.TRUE.equals(paidApplied)) {
             throw new ServiceException("微信支付已成功，但本地账单恢复冲突", HttpStatus.CONFLICT);
         }
@@ -1125,7 +1164,7 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
                                                            ClubAccessContext access,
                                                            String requestId,
                                                            String wechatState, String observedWxNo) {
-        if (!wechatPayService.lockPaymentAttemptForUpdate(invoice.getOutTradeNo(), observedWxNo)) {
+        if (!wechatPayService.lockClosablePaymentAttemptForUpdate(invoice.getOutTradeNo(), observedWxNo)) {
             throw new ServiceException("支付尝试已变化，未关闭当前账单", HttpStatus.CONFLICT);
         }
         if (invoice.getVersion() == null || clubMembershipMapper.markInvoiceClosedCas(
@@ -1445,4 +1484,55 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
     private void bad(String message) { throw new ServiceException(message, HttpStatus.BAD_REQUEST); }
     private void forbidden() { throw new ServiceException("俱乐部身份无效或权限不足", HttpStatus.FORBIDDEN); }
     private void conflict() { throw new ServiceException("数据已变化或幂等键冲突", HttpStatus.CONFLICT); }
+    /** NEVER rejects proxied outer transactions; this also protects self/direct invocation before any local intent. */
+    private static void requirePaymentOutsideTransaction() {
+        if (org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()) {
+            throw new IllegalStateException("支付外呼必须在原业务事务外，不能挂起持锁事务继续执行");
+        }
+    }
+
+    /** Known current-attempt denial remains false; DB/read failures must propagate. No local intent policy. */
+    private boolean currentInvoicePayment(WechatVerifiedPaymentFactService.Stored verified) {
+        try {
+            var consumable = verifiedPaymentFacts.requireConsumablePayment(verified.reference());
+            if (!verified.equals(consumable)) throw new IllegalStateException("原成功支付事实回读不一致");
+            return true;
+        } catch (WechatVerifiedPaymentFactService.ConflictException rejected) {
+            return false;
+        }
+    }
+
+    private boolean completeInvoiceProof(ClubMembershipInvoice invoice, WechatVerifiedPaymentFactService.Stored verified) {
+        if (invoice == null || !ClubMembershipInvoice.STATUS_PAID.equals(invoice.getStatus())
+                || !validCallbackSnapshot(invoice, verified.facts().businessOutTradeNo())
+                || !verified.facts().transactionId().equals(invoice.getTransactionId())
+                || !Long.valueOf(verified.facts().totalFen()).equals(invoice.getAmountFen())
+                || !Long.valueOf(verified.reference().id()).equals(invoice.getVerifiedPaymentFactId())
+                || !verified.reference().hash().equals(invoice.getVerifiedPaymentFactHash())) return false;
+        if (!currentInvoicePayment(verified)) return false;
+        verifiedPaymentFacts.completePaymentRecovery(verified.reference(), invoice.getId());
+        return true;
+    }
+
+    private WechatVerifiedPaymentFactService.Stored checkedPayment(Reference reference, String outTradeNo,
+            Integer amountFen, String transactionId) {
+        WechatVerifiedPaymentFactService.Stored verified = verifiedPaymentFacts.requireVerified(reference);
+        WechatVerifiedPaymentFact fact = verified.facts();
+        fact.requireValid();
+        if (!reference.equals(verified.reference()) || !reference.hash().equals(fact.factHash())
+                || fact.kind() != WechatVerifiedPaymentFact.Kind.PAYMENT || !"CNY".equals(fact.currency())
+                || !outTradeNo.equals(fact.businessOutTradeNo()) || fact.totalFen() != amountFen.longValue()
+                || fact.amountFen() != fact.totalFen() || !transactionId.trim().equals(fact.transactionId()))
+            throw new IllegalStateException("原支付事实与业务单号、金额或交易身份不符");
+        // Original merchant/app/channel/intent hash are immutable B facts, never current-config defaults.
+        return verified;
+    }
+
+    private Reference paymentReference(Map<String, String> observed) {
+        if (observed == null || observed.get("verified_fact_id") == null || observed.get("verified_fact_hash") == null)
+            throw new IllegalStateException("微信成功观察缺少原支付事实引用");
+        try { return new Reference(Long.parseLong(observed.get("verified_fact_id")), observed.get("verified_fact_hash")); }
+        catch (IllegalArgumentException invalid) { throw new IllegalStateException("微信成功观察的原支付事实引用无效", invalid); }
+    }
+
 }

@@ -42,6 +42,9 @@
 .addrrow:first-child{ border-top:0; }
 .addrrow--pressed{ background:#F4F5F7; } /* ds-ok 原型 .addrrow:active */
 /* 原型 ADDRPIN 是 19px 的水滴针;这里用图标库的实心针,颜色由 JS 按四类结果给 */
+.addrrow__nav{ position:relative; flex:none; padding:10rpx 22rpx; border-radius:28rpx; background:#111111; /* ds-ok 2026-10-27 P-32 导航胶囊;10-28 业主:白色结果框保持原样 */
+  color:#FFFFFF; font-size:23rpx; font-weight:700; } /* ds-ok */
+.addrrow__nav::after{ content:''; position:absolute; left:50%; top:50%; width:88rpx; height:88rpx; transform:translate(-50%,-50%); }
 .addrrow__pin{ flex:none; display:flex; align-items:center; justify-content:center; }
 .addrrow__copy{ flex:1; min-width:0; display:flex; flex-direction:column; }
 .addrrow__t{ font-size:27rpx; font-weight:700; color:#111111; /* ds-ok 原型 14px 700 */

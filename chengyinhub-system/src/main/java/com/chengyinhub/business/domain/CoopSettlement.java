@@ -14,6 +14,10 @@ public class CoopSettlement extends BaseEntity {
     private static final long serialVersionUID = 1L;
 
     private Long id;
+    private String cashHeadKind;
+
+    public String getCashHeadKind() { return cashHeadKind; }
+    public void setCashHeadKind(String value) { cashHeadKind = value; }
     private String settlementRoute;
     private String sourceContractType;
     private Long sourceContractId;

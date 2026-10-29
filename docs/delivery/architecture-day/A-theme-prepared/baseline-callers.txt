@@ -1,0 +1,12 @@
+chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAiController.java:157:public AjaxResult themeDraft(@RequestBody AiThemeDraftReq req)
+chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAiController.java:170:return success(aiCreatorService.themeDraft(req, memberId));
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/IAiCreatorService.java:30:AiThemeDraftResp themeDraft(AiThemeDraftReq req, Long memberId);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiGatewayService.java:60:String planQuotaReservation(Long memberId, String bizType, String nonce);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiGatewayService.java:63:String consumePlannedQuota(Long memberId, String bizType, String reservation);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckIntentService.java:62:String reservation = gateway.planQuotaReservation(command.memberId(), "photo_check", nonce);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckVisionService.java:224:: aiGatewayService.consumePlannedQuota(memberId, BIZ_TYPE, plannedReservation);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java:333:return consumePlannedQuota(memberId, bizType, planQuotaReservation(memberId, bizType, IdUtils.simpleUUID()));
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java:337:public String planQuotaReservation(Long memberId, String bizType, String nonce)
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java:347:public String consumePlannedQuota(Long memberId, String bizType, String reservation)
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java:102:public AiThemeDraftResp themeDraft(AiThemeDraftReq req, Long memberId)
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiThemeDraftRequestService.java:102:AiThemeDraftResp resp = aiCreatorService.themeDraft(req, memberId);

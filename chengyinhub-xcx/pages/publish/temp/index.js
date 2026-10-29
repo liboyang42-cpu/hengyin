@@ -35,6 +35,9 @@ const publishIssueTarget = require('../utils/publish/publish-issue-target.js');
 const templateAuthorFields = require('../utils/publish/template-author-fields.js');
 const merchantAccessPolicy = require('../../../utils/merchant-access-policy.js');
 const { formatDurationMinutes, gameTemplateCover } = require('../../../utils/template-display.js');
+const { resolveCategoryIcon } = require('../../../utils/category-icon.js');
+const { loadStoryFont } = require('../utils/publish/story-font.js');
+const { splitRuleSteps } = require('../utils/publish/rule-steps.js');
 
 /* 发布全量校验的报错顺序 —— validateForm 与「查看预览」置灰点击必须读同一份。
    2026-09-19 审查 F-PU-1:这里曾各自维护一份,发布那份漏了 interactionType,
@@ -65,6 +68,18 @@ function currentEditor(page) {
 function positiveId(value) {
   const text = templateAdoption.id(value);
   return !text ? null : Number.isSafeInteger(Number(text)) ? Number(text) : text;
+}
+
+// 采用被媒体校验明确拒绝(422 或「媒体来源未经审核/请重新上传」类回包),不是结果未知。
+function isMediaRejection(res) {
+  if (!res || res.code == '200') return false;
+  if (res.code == 422) return true;
+  return /媒体|图片|封面|对象存储|重新上传/.test(String(res.msg || res.message || ''));
+}
+
+// P-41(2026-10-27):类别标签前面带图标(同 utils/category-icon 的品类映射)
+function withCategoryIcons(list) {
+  return (list || []).map(item => Object.assign({}, item, { icon: resolveCategoryIcon(item && item.categoryName) }));
 }
 
 function isTemplateDetailPayload(value) {
@@ -366,6 +381,7 @@ Page({
     loadError: '',
     loadErrorIsAccess: false,
     loadErrorIsOperation: false,
+    coverMediaUnusable: false,
     submitting: false,
     submittingAction: '',
     lastSubmitAction: '',
@@ -518,9 +534,9 @@ Page({
     });
   },
 
-  onHide: function () { this._hidden = true; },
+  onHide: function () { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1; this._hidden = true; },
 
-  onUnload: function () {
+  onUnload: function () { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1;
     this._unloaded = true;
     this._disposed = true;
     this._templateLoadToken = (this._templateLoadToken || 0) + 1;
@@ -1586,9 +1602,9 @@ Page({
      ★ 不新建后端字段:整份规则仍然存在 formData.ruleInstructions 里,**一行一步**。
      ruleSteps 只是这一页的展示形态,存盘前拼回去 —— 存量模板里那一大段文字
      按换行拆开就是现成的步骤,不会因为换了界面就读不出来。 */
+  // P-41:旧草稿 / 模板库里「1. … 2. … 3. …」挤在一行的,回填时按序号拆成一步一条(pages/publish/utils/publish/rule-steps.js)
   _stepsFromText: function (text) {
-    const lines = String(text || '').split('\n').map((one) => one.trim()).filter(Boolean);
-    return lines.length ? lines : [''];
+    return splitRuleSteps(text);
   },
   _syncRuleSteps: function (steps) {
     this._setFormState({
@@ -2183,6 +2199,7 @@ Page({
     var that = this;
     app.chooseImage(function (res) {
       that._setFormState({ 'formData.imgUrl': res[0] });
+      if (that.data.coverMediaUnusable) that.setData({ coverMediaUnusable: false });
     }, 1, { crop: true, cropScale: '16:9' });
   },
   clearCover: function () {
@@ -2350,7 +2367,7 @@ Page({
       selectedCategoryIds: selectedCategoryIds,
       selectedCategoryNames: selectedCategoryNames,
       selectedCategoryNamesStr: selectedCategoryNamesStr,
-      categoryList: selectedCategories || [],
+      categoryList: withCategoryIcons(selectedCategories),
       'formData.activityCategoryids': selectedCategoryIds.join(',')
     });
   },
@@ -2800,7 +2817,7 @@ Page({
     });
     if (!pvKit) { app.tips(noPreviewTip(this.data.gameSection)); return; }
     this.setData({
-      previewVisible: true, canPublishGame: false,
+      previewVisible: true,
       pvSteps: ['challenge'], pvStep: 0, pvKit,
     }, () => { this._applyPvStep(0); });
   },
@@ -2821,13 +2838,14 @@ Page({
       return;
     }
     this.setData({
-      gameSheetOpen: false, previewVisible: true, canPublishGame: false,
+      gameSheetOpen: false, previewVisible: true,
       pvSteps: ['challenge'], pvStep: 0, pvKit
     }, () => { this._applyPvStep(0); });
   },
 
   openPreview: function () {
     this._pvTypeStartedAt = 0; this._pvAdvanced = null;
+    loadStoryFont(); // P-60:预览里的故事正文同玩家端手写体
     // 查看预览前必填校验
     const formData = this.prepareFormData();
     if (!this.validateForm(formData, false)) return;
@@ -2841,7 +2859,7 @@ Page({
       limitSeconds: (this.data.advanced.timer && this.data.advanced.timer.enabled)
         ? Number(this.data.advanced.timer.durationSeconds) || 0 : 0,
     });
-    this.setData({ previewVisible: true, canPublishGame: true, pvSteps: steps, pvStep: 0, pvKit }, () => {
+    this.setData({ previewVisible: true, pvSteps: steps, pvStep: 0, pvKit }, () => {
       this._applyPvStep(0);
     });
   },
@@ -2862,7 +2880,7 @@ Page({
   },
   closePreview: function () {
     this._pvTypeStartedAt = 0;
-    this.setData({ previewVisible: false, canPublishGame: false, pvKit: null, pvVerdict: { show: false, kind: 'win', text: '', images: [] } });
+    this.setData({ previewVisible: false, pvKit: null, pvVerdict: { show: false, kind: 'win', text: '', images: [] } });
     this.syncNativeTheme();
   },
 
@@ -2964,6 +2982,19 @@ Page({
   pvPrev: function () {
     if (this.data.pvStep <= 0) return;
     this._applyPvStep(this.data.pvStep - 1);
+  },
+  // P-40:预览只靠左右滑动翻步 —— 横向位移超过 60px 且明显大于纵向位移才算翻页,避免和上下滚动抢手势
+  onPvTouchStart: function (e) {
+    const t = e.changedTouches && e.changedTouches[0];
+    this._pvTouch = t ? { x: t.clientX, y: t.clientY } : null;
+  },
+  onPvTouchEnd: function (e) {
+    const start = this._pvTouch, t = e.changedTouches && e.changedTouches[0];
+    this._pvTouch = null;
+    if (!start || !t) return;
+    const dx = t.clientX - start.x, dy = t.clientY - start.y;
+    if (Math.abs(dx) < 60 || Math.abs(dx) <= Math.abs(dy) * 1.5) return;
+    if (dx < 0) this.pvNext(); else this.pvPrev();
   },
   onPvAnswer: function (e) {
     this.setData({ pvAnswer: e.detail.value, pvWrong: false });
@@ -3189,7 +3220,10 @@ Page({
 
   refreshPreviewState: function () {
     const canOpenPreview = Object.keys(this._collectValidationErrors(false)).length === 0;
-    if (canOpenPreview !== this.data.canOpenPreview) this.setData({ canOpenPreview });
+    // P-40:发布 / 保存并绑定挪到编辑态底栏,不再要求先打开预览 —— 可用态与「查看预览」同一份校验
+    if (canOpenPreview !== this.data.canOpenPreview || canOpenPreview !== this.data.canPublishGame) {
+      this.setData({ canOpenPreview, canPublishGame: canOpenPreview });
+    }
     /* 推理类三段:校验错当场显示在玩法面板里(保存本来就会被 validateForm 拦下,
        这里解决的是「填错了要等点保存才知道」)。常量段名,不是拿 selected 的段去算。 */
     const gameConfigError = PANEL_LIVE_ERROR_SECTIONS.indexOf(this.data.gameSection) >= 0
@@ -3246,7 +3280,7 @@ Page({
   },
 
   publishGame: function () {
-    if (app.ensureLoginFor && !app.ensureLoginFor('publish', () => this.publishGame())) return; // 2026-10-24 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('publish', () => this.publishGame(), { owner: this, target: () => [this._templateId, this._boundDraftId, this.data.from, this.data.operationScope, this.data.isMyScope] })) return; // 2026-10-24 游客写前登录
     if (this.data.from === 'citynode' && !this.data.merchantAccess.canManageProjects) {
       toast('当前岗位没有节点管理权限');
       return;
@@ -3292,7 +3326,7 @@ Page({
       body.feedbackMethodStr = String(body.feedbackMethod);
       delete body.feedbackMethod;
     }
-    // 玩法语义:正交于 validationMethod,只有据点用,普通模板发布链路没有这个字段
+    // 据点提交取本页确认的互动语义；普通模板沿 formData 保留个人详情读回的原字段。
     body.interactionType = this.data.interactionType || '';
     // categoryIds 是本页拼给发布 DTO 的,实体侧取 categoryId / activityCategoryids
     if (body.categoryIds) {
@@ -3315,7 +3349,7 @@ Page({
   },
 
   saveDraft: function () {
-    if (app.ensureLoginFor && !app.ensureLoginFor('publish', () => this.saveDraft())) return; // 2026-10-24 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('publish', () => this.saveDraft(), { owner: this, target: () => [this._templateId, this._boundDraftId, this.data.from, this.data.operationScope, this.data.isMyScope] })) return; // 2026-10-24 游客写前登录
     if (this.data.from === 'fabu') return this.publishGame();
     if (this.data.from === 'citynode') {
       toast('节点玩法请配置完成后直接保存');
@@ -3559,23 +3593,10 @@ Page({
           if (that._applyTemplateEditPermission(res.data, isMyScope, preserveForm)) return;
           if (!isMyScope && !that.data.previewMode) {
             that._templateLoadToken++;
-            that._resumeSourceAdoption();
+            that._resumeSourceAdoption(res.data);
             return;
           }
-          if (isRecordList(res.data.sysCategoryList) && res.data.sysCategoryList.length > 0) {
-            const selectedIds = res.data.sysCategoryList.map(item => item.id);
-            const selectedNames = res.data.sysCategoryList.map(item => item.categoryName);
-            that.setData({
-              useNum: res.data.useNum,
-              categoryList: res.data.sysCategoryList,
-              selectedCategoryIds: selectedIds,
-              selectedCategoryNames: selectedNames,
-              selectedCategoryNamesStr: selectedNames.join('，')
-            });
-          }
-          that.fillFormWithTemplateData(res.data);
-          that.data.dirty = false;
-          that.setData({ editorLoading: false, loadError: '' });
+          that._applyLoadedTemplate(res.data);
         } else {
           that._showTemplateLoadError(res, '玩法详情格式异常，请重试');
         }
@@ -3598,11 +3619,36 @@ Page({
     });
   },
 
+  _applyLoadedTemplate: function (data) {
+    if (isRecordList(data.sysCategoryList) && data.sysCategoryList.length > 0) {
+      const selectedIds = data.sysCategoryList.map(item => item.id);
+      const selectedNames = data.sysCategoryList.map(item => item.categoryName);
+      // useNum 本页从不展示,不再写进 data(U4 死数据字段门禁)
+      this.setData({
+        categoryList: withCategoryIcons(data.sysCategoryList),
+        selectedCategoryIds: selectedIds,
+        selectedCategoryNames: selectedNames,
+        selectedCategoryNamesStr: selectedNames.join('，')
+      });
+    }
+    this.fillFormWithTemplateData(data);
+    this.data.dirty = false;
+    this.setData({ editorLoading: false, loadError: '' });
+  },
+
+  // P-39(2026-10-27):采用被「媒体来源未经审核」类明确拒绝时不再整页拦截 ——
+  // 采用没有发生(业务结论,不是结果未知),按库模板回填成未落库的本地稿,封面清空并就地提示重新上传;
+  // 保存仍走 /api/template/draft 只带 originalTemplateId(见 saveDraft),由后端新建草稿。
+  _openWithUnusableMedia: function (data) {
+    this._applyLoadedTemplate(data);
+    this.setData({ 'formData.imgUrl': '', coverMediaUnusable: true });
+  },
+
   inspectAdoptionTemplates() {
     if (!currentEditor(this)()) return;
     wx.reLaunch({url:'/subpackageMember/mytemplate/mytemplate'+(this.data.operationScope==='MERCHANT'?'?scope=MERCHANT':'')});
   },
-  _resumeSourceAdoption() {
+  _resumeSourceAdoption(sourceData) {
     if (this._adoptingTemplate) return;
     const scope=this.data.operationScope||'', sourceId=this._templateId;
     const original=JSON.stringify([editorMemberId(),scope,sourceId,this.data.formData,this.data.advanced,this.data.ruleSteps,this._albumEditRevision,
@@ -3612,6 +3658,7 @@ Page({
     templateAdoption.resume({app,storage:wx,owner:editorMemberId(),scope,sourceId,current,
       target:{editor:'temp',sourceId:String(sourceId)},
       onBusy:busy=>{this._adoptingTemplate=busy;},
+      onRejected:res=>{if(!sourceData||!isMediaRejection(res))return false;this._openWithUnusableMedia(sourceData);return true;},
       onError:message=>{this._adoptionUnconfirmed=true;this.setData({editorLoading:false,loadErrorIsOperation:true,loadError:message});},
       onReady:detail=>{
         if(detail.canEdit!==true){this.setData({editorLoading:false,loadError:'采用草稿归属未确认'});return false;}
@@ -3668,6 +3715,8 @@ Page({
       isSync: 0,
       ruleInstructions: templateData.ruleInstructions || "",
       validationMethod: templateData.validationMethod || 0,
+      // 原据点语义与完成方式独立；采用/本人续编均沿服务器读回值，不按玩法名称推导。
+      interactionType: templateData.interactionType == null ? '' : templateData.interactionType,
       feedbackMethod: feedbackMethod,
       questionName: templateData.questionName || "",
       questionAnswer: templateData.questionAnswer || "",
@@ -3691,7 +3740,7 @@ Page({
       // 存量 photo_review=1 由 migration_play_photo_review_off_20260917.sql 置回。
       photoReview: 0,
       audioUrl: templateData.audioUrl || "",
-      audioDuration: templateData.audioDuration || "",
+      audioDuration: templateData.audioDuration == null ? "" : templateData.audioDuration,
       questionImg: templateData.questionImg || "",
       questionAudio: templateData.questionAudio || "",
       questionOptionMediaJson: templateData.questionOptionMediaJson || "",
@@ -3732,12 +3781,16 @@ Page({
     });
     that._toolSelected = templateTools.selected(advancedResult.value);
     that._toolSummaries = templateTools.summaries(advancedResult.value);
+    // P-41:回填时就把「1. 2. 3.」拆好,存回去也是一行一步(旧草稿随下一次保存迁移)
+    const loadedRuleSteps = that._stepsFromText(formData.ruleInstructions);
+    formData.ruleInstructions = loadedRuleSteps.filter(Boolean).join('\n');
     that.setData({
       formData: formData,
+      interactionType: formData.interactionType,
       descriptionMaxLength: Math.max(30, formData.description.length),
       defaultCover: gameTemplateCover({ title: formData.title, advancedConfigJson: formData.advancedConfigJson }),
       // 存量模板里规则是一整段文字,按换行拆成步骤 —— 换界面不能让老数据读不出来
-      ruleSteps: that._stepsFromText(formData.ruleInstructions),
+      ruleSteps: loadedRuleSteps,
       difficultyLabel: formData.difficulty ? String(formData.difficulty) : '',
       storyBeats: storyBeats,
       preferencePreview: preferencePreview.rows,

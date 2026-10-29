@@ -1,0 +1,146 @@
+[
+  {
+    "test": "chengyinhub-xcx/tests/unit/architecture-day-c-intent.test.js",
+    "command": "node chengyinhub-xcx/tests/unit/architecture-day-c-intent.test.js",
+    "exitCode": 0,
+    "tests": 7,
+    "pass": 7,
+    "fail": 0
+  },
+  {
+    "test": "chengyinhub-xcx/tests/unit/play-route-state.test.js",
+    "command": "node chengyinhub-xcx/tests/unit/play-route-state.test.js",
+    "exitCode": 0,
+    "tests": 10,
+    "pass": 10,
+    "fail": 0
+  },
+  {
+    "test": "chengyinhub-xcx/tests/unit/play-route-page-behavior.test.js",
+    "command": "node chengyinhub-xcx/tests/unit/play-route-page-behavior.test.js",
+    "exitCode": 0,
+    "tests": 9,
+    "pass": 9,
+    "fail": 0
+  },
+  {
+    "test": "chengyinhub-xcx/tests/unit/play-generic-flow.test.js",
+    "command": "node chengyinhub-xcx/tests/unit/play-generic-flow.test.js",
+    "exitCode": 0,
+    "tests": 18,
+    "pass": 18,
+    "fail": 0
+  },
+  {
+    "test": "chengyinhub-xcx/tests/unit/longrun-own-c01-24.test.js",
+    "command": "node chengyinhub-xcx/tests/unit/longrun-own-c01-24.test.js",
+    "exitCode": 0,
+    "tests": 4,
+    "pass": 4,
+    "fail": 0
+  },
+  {
+    "test": "chengyinhub-xcx/tests/unit/longrun-own-c01-26.test.js",
+    "command": "node chengyinhub-xcx/tests/unit/longrun-own-c01-26.test.js",
+    "exitCode": 0,
+    "tests": 5,
+    "pass": 5,
+    "fail": 0
+  },
+  {
+    "test": "chengyinhub-xcx/tests/unit/longrun-own-c01-34.test.js",
+    "command": "node chengyinhub-xcx/tests/unit/longrun-own-c01-34.test.js",
+    "exitCode": 0,
+    "tests": 3,
+    "pass": 3,
+    "fail": 0
+  },
+  {
+    "test": "chengyinhub-xcx/tests/unit/longrun-own-c01-37.test.js",
+    "command": "node chengyinhub-xcx/tests/unit/longrun-own-c01-37.test.js",
+    "exitCode": 0,
+    "tests": 3,
+    "pass": 3,
+    "fail": 0
+  },
+  {
+    "test": "chengyinhub-xcx/tests/unit/play-request-recovery.test.js",
+    "command": "node chengyinhub-xcx/tests/unit/play-request-recovery.test.js",
+    "exitCode": 0,
+    "tests": 30,
+    "pass": 30,
+    "fail": 0
+  },
+  {
+    "test": "chengyinhub-xcx/tests/unit/play-proof-receipt-contract.test.js",
+    "command": "node chengyinhub-xcx/tests/unit/play-proof-receipt-contract.test.js",
+    "exitCode": 0,
+    "tests": 20,
+    "pass": 20,
+    "fail": 0
+  },
+  {
+    "test": "chengyinhub-xcx/tests/unit/shop-day-game-sheet-contract.test.js",
+    "command": "node chengyinhub-xcx/tests/unit/shop-day-game-sheet-contract.test.js",
+    "exitCode": 0,
+    "tests": 6,
+    "pass": 6,
+    "fail": 0
+  },
+  {
+    "test": "chengyinhub-xcx/tests/unit/shop-day-onsite-proof-contract.test.js",
+    "command": "node chengyinhub-xcx/tests/unit/shop-day-onsite-proof-contract.test.js",
+    "exitCode": 0,
+    "tests": 5,
+    "pass": 5,
+    "fail": 0
+  },
+  {
+    "test": "chengyinhub-xcx/tests/unit/play-merchant-advanced-handoff-contract.test.js",
+    "command": "node chengyinhub-xcx/tests/unit/play-merchant-advanced-handoff-contract.test.js",
+    "exitCode": 0,
+    "tests": 12,
+    "pass": 12,
+    "fail": 0
+  },
+  {
+    "test": "chengyinhub-xcx/tests/unit/play-merchant-a11y-state-contract.test.js",
+    "command": "node chengyinhub-xcx/tests/unit/play-merchant-a11y-state-contract.test.js",
+    "exitCode": 0,
+    "tests": 2,
+    "pass": 2,
+    "fail": 0
+  },
+  {
+    "test": "chengyinhub-xcx/tests/unit/club-route-recovery-contract.test.js",
+    "command": "node chengyinhub-xcx/tests/unit/club-route-recovery-contract.test.js",
+    "exitCode": 0,
+    "tests": 4,
+    "pass": 4,
+    "fail": 0
+  },
+  {
+    "test": "chengyinhub-xcx/tests/unit/v4-scan-cancel.test.js",
+    "command": "node chengyinhub-xcx/tests/unit/v4-scan-cancel.test.js",
+    "exitCode": 0,
+    "tests": 5,
+    "pass": 5,
+    "fail": 0
+  },
+  {
+    "test": "chengyinhub-xcx/tests/unit/architecture-day-c-director-isolation.test.js",
+    "command": "node chengyinhub-xcx/tests/unit/architecture-day-c-director-isolation.test.js",
+    "exitCode": 0,
+    "tests": 5,
+    "pass": 5,
+    "fail": 0
+  },
+  {
+    "test": "chengyinhub-xcx/tests/unit/club-game-director-contract.test.js",
+    "command": "node chengyinhub-xcx/tests/unit/club-game-director-contract.test.js",
+    "exitCode": 0,
+    "tests": 43,
+    "pass": 43,
+    "fail": 0
+  }
+]

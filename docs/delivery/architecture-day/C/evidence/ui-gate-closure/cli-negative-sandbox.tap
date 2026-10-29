@@ -1,0 +1,66 @@
+TAP version 13
+# Subtest: UI 门禁自证独立于扫描参数：--selftest
+not ok 1 - UI 门禁自证独立于扫描参数：--selftest
+  ---
+  duration_ms: 1185.612183
+  type: 'test'
+  location: '/workspace/hengyin-c/chengyinhub-xcx/tests/unit/ui-integrity-selftest-cli.test.js:11:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /\[SELFTEST\]\[WARN-AS-ERROR\] RED caught; restored GREEN/. Input:
+
+    ''
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: ''
+  operator: 'match'
+  stack: |-
+    TestContext.<anonymous> (/workspace/hengyin-c/chengyinhub-xcx/tests/unit/ui-integrity-selftest-cli.test.js:14:12)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+    Test.run (node:internal/test_runner/test:1382:25)
+    Test.start (node:internal/test_runner/test:1242:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)
+  ...
+# Subtest: UI 门禁自证独立于扫描参数：--selftest --warn-as-error
+not ok 2 - UI 门禁自证独立于扫描参数：--selftest --warn-as-error
+  ---
+  duration_ms: 728.155905
+  type: 'test'
+  location: '/workspace/hengyin-c/chengyinhub-xcx/tests/unit/ui-integrity-selftest-cli.test.js:11:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /\[SELFTEST\]\[WARN-AS-ERROR\] RED caught; restored GREEN/. Input:
+
+    ''
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: ''
+  operator: 'match'
+  stack: |-
+    TestContext.<anonymous> (/workspace/hengyin-c/chengyinhub-xcx/tests/unit/ui-integrity-selftest-cli.test.js:14:12)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+    Test.run (node:internal/test_runner/test:1382:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+    Test.postRun (node:internal/test_runner/test:1522:19)
+    Test.run (node:internal/test_runner/test:1447:12)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+  ...
+# Subtest: 负控：自证误用默认CLI策略时，省略warn-as-error必须再次判红
+ok 3 - 负控：自证误用默认CLI策略时，省略warn-as-error必须再次判红
+  ---
+  duration_ms: 882.916199
+  type: 'test'
+  ...
+1..3
+# tests 3
+# suites 0
+# pass 1
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2816.184453

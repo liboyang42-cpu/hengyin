@@ -1,0 +1,191 @@
+{
+  "parent": "6fcd5ac009cec1dd82c438528d24da30c1f302f4",
+  "source": "e1f6b67d3a84e7105e9e6e7e1e48bf089b7e4178",
+  "baselineBeforeSha256": "37b7510c1ea0abf5b262118a6da276a0fce801a71efdfb32eb635e9d401bd254",
+  "baselineAfterSha256": "63b6b62adec717d326c5c8c5f6c978baa2905ad109e1d80ce79e8ecc48b5205f",
+  "scope": "Only existing baseline line keys and their existing sorted-key digests; no production, ledger or exception changes.",
+  "checkedAnchorCount": 30,
+  "movedAnchors": [
+    {
+      "section": "u1Variable",
+      "old": "chengyinhub-xcx/app.js:419",
+      "new": "chengyinhub-xcx/app.js:422",
+      "statement": "        sendRequest: function (options) { that.sendRequest(options); },",
+      "context3Exact": true,
+      "oldContextOccurrences": 1,
+      "newContextOccurrences": 1,
+      "contextSha256": "605b1f6340eaea0d461eb8303ab9284b9138c415fbca6c5fe141e03bd2a98514"
+    },
+    {
+      "section": "u4Dynamic",
+      "old": "chengyinhub-xcx/pages/square/detail/index.js:1205",
+      "new": "chengyinhub-xcx/pages/square/detail/index.js:1206",
+      "statement": "            that.setData(Object.assign(",
+      "context3Exact": true,
+      "oldContextOccurrences": 1,
+      "newContextOccurrences": 1,
+      "contextSha256": "b31827cd4144c10d6e1b8eebff5fe27d68ba0a294abb7d680b55923c9294cf06"
+    },
+    {
+      "section": "u5Silent",
+      "old": "chengyinhub-xcx/subpackageMember/components/cy/report-sheet/index.js:49",
+      "new": "chengyinhub-xcx/subpackageMember/components/cy/report-sheet/index.js:51",
+      "statement": "        url: '/api/community-trust/reports/taxonomy', method: 'GET', hideLoading: true, silentError: true,",
+      "context3Exact": true,
+      "oldContextOccurrences": 1,
+      "newContextOccurrences": 1,
+      "contextSha256": "de6d5a26f9c2053f087a0921f2b6a596b61c5c4f8a99dfc5f835f844796c064d"
+    },
+    {
+      "section": "u5Silent",
+      "old": "chengyinhub-xcx/subpackageMember/components/cy/report-sheet/index.js:94",
+      "new": "chengyinhub-xcx/subpackageMember/components/cy/report-sheet/index.js:96",
+      "statement": "        url: '/api/community-trust/reports/submit', method: 'POST', hideLoading: true, silentError: true,",
+      "context3Exact": true,
+      "oldContextOccurrences": 1,
+      "newContextOccurrences": 1,
+      "contextSha256": "62cefe7cb08ceab1982994ddea14a63af1e35c9dfbf22fe0a08b31ed63ed07a6"
+    }
+  ],
+  "checkedUnmovedKeys": [
+    "chengyinhub-xcx/pages/topic/index/index.js:1961",
+    "chengyinhub-xcx/pages/square/list/index.js:1287",
+    "chengyinhub-xcx/pages/publish/fabu/index.js:863",
+    "chengyinhub-xcx/pages/publish/fabu/index.js:1163",
+    "chengyinhub-xcx/pages/publish/fabu/index.js:2864",
+    "chengyinhub-xcx/pages/publish/fabu/index.js:3930",
+    "chengyinhub-xcx/pages/publish/fabu/index.js:4311",
+    "chengyinhub-xcx/pages/publish/fabu/index.js:5374",
+    "chengyinhub-xcx/pages/publish/fabu/index.js:5633",
+    "chengyinhub-xcx/pages/publish/fabu/index.js:6289",
+    "chengyinhub-xcx/pages/publish/fabu/index.js:6299",
+    "chengyinhub-xcx/pages/publish/fabu/index.js:6352",
+    "chengyinhub-xcx/pages/publish/fabu/index.js:8666",
+    "chengyinhub-xcx/pages/publish/temp/index.js:1458",
+    "chengyinhub-xcx/pages/publish/temp/index.js:1459",
+    "chengyinhub-xcx/pages/publish/temp/index.js:1502",
+    "chengyinhub-xcx/pages/publish/temp/index.js:2942",
+    "chengyinhub-xcx/pages/publish/temp/index.js:3740",
+    "chengyinhub-xcx/pages/publish/temp/index.js:3867",
+    "chengyinhub-xcx/pages/square/list/index.js:157",
+    "chengyinhub-xcx/pages/square/list/index.js:197",
+    "chengyinhub-xcx/pages/template/index.js:268",
+    "chengyinhub-xcx/pages/template/index.js:280",
+    "chengyinhub-xcx/pages/publish/fabu/index.js:6699",
+    "chengyinhub-xcx/pages/square/components/cy/post-compose/index.js:470",
+    "chengyinhub-xcx/pages/square/components/cy/post-compose/index.js:483"
+  ],
+  "proof": "Every checked old/new anchor line plus its immediate neighbors is byte-identical and occurs exactly once in each complete source file.",
+  "sourceGitBlobs": [
+    {
+      "p": "chengyinhub-xcx/app.js",
+      "mode": "before",
+      "sha": "67e05e11a0054c2c383d21f5b2240c4c7f319be6"
+    },
+    {
+      "p": "chengyinhub-xcx/app.js",
+      "mode": "after",
+      "sha": "490f3ef6e8e88771f94b5254f483c61679f99a23"
+    },
+    {
+      "p": "chengyinhub-xcx/pages/topic/index/index.js",
+      "mode": "before",
+      "sha": "4dcf5e55b3d3bf7de933536a37b5ad3f4b2864ec"
+    },
+    {
+      "p": "chengyinhub-xcx/pages/topic/index/index.js",
+      "mode": "after",
+      "sha": "11cf23df365b857f194a2f5c8c2afb85f5bba227"
+    },
+    {
+      "p": "chengyinhub-xcx/pages/square/detail/index.js",
+      "mode": "before",
+      "sha": "003963fe6c7cf916af8eb2f7776dba54b4cb5aef"
+    },
+    {
+      "p": "chengyinhub-xcx/pages/square/detail/index.js",
+      "mode": "after",
+      "sha": "e4d5b15d9d369f9be86136dfa005d11203e83c7b"
+    },
+    {
+      "p": "chengyinhub-xcx/pages/square/list/index.js",
+      "mode": "before",
+      "sha": "0daf9da7e3de21e5319bd240750a147ef15fd9c3"
+    },
+    {
+      "p": "chengyinhub-xcx/pages/square/list/index.js",
+      "mode": "after",
+      "sha": "01c9695e8d6518bdcc078219669738858d612eda"
+    },
+    {
+      "p": "chengyinhub-xcx/pages/publish/fabu/index.js",
+      "mode": "before",
+      "sha": "a4ce3204c1f872372451339d2073a0f01ff74207"
+    },
+    {
+      "p": "chengyinhub-xcx/pages/publish/fabu/index.js",
+      "mode": "after",
+      "sha": "c5c6478fa92d74b0e5fc1e755cc98a0e736f89d3"
+    },
+    {
+      "p": "chengyinhub-xcx/pages/publish/temp/index.js",
+      "mode": "before",
+      "sha": "bafc536bcd4e90fcdfd8ce7f313e957fc1e27e19"
+    },
+    {
+      "p": "chengyinhub-xcx/pages/publish/temp/index.js",
+      "mode": "after",
+      "sha": "9b73a70b42256bd0771897e5002faee7c9adb878"
+    },
+    {
+      "p": "chengyinhub-xcx/pages/template/index.js",
+      "mode": "before",
+      "sha": "a6056e7fea2814de2cb25eab88253ed95907f5c5"
+    },
+    {
+      "p": "chengyinhub-xcx/pages/template/index.js",
+      "mode": "after",
+      "sha": "4988a554aca233515942b33693d5941610c16841"
+    },
+    {
+      "p": "chengyinhub-xcx/subpackageMember/components/cy/report-sheet/index.js",
+      "mode": "before",
+      "sha": "53c7e8b4af5051dc135be55814db6e16e42be5fc"
+    },
+    {
+      "p": "chengyinhub-xcx/subpackageMember/components/cy/report-sheet/index.js",
+      "mode": "after",
+      "sha": "cc0da9dafa4ba6697ebdae79de2a38569341a494"
+    },
+    {
+      "p": "chengyinhub-xcx/pages/square/components/cy/post-compose/index.js",
+      "mode": "before",
+      "sha": "8397fc5c8cca8c11a747fd58fd4cd0142c0f4d32"
+    },
+    {
+      "p": "chengyinhub-xcx/pages/square/components/cy/post-compose/index.js",
+      "mode": "after",
+      "sha": "7290e4933f5bd9ac0f032d840c9e275b67cbbaa9"
+    }
+  ],
+  "sessionPatch": {
+    "source": "docs/delivery/architecture-day/H/login-continuation-6fcd/session-manager.review.patch",
+    "target": "chengyinhub-xcx/utils/session/session-manager.js",
+    "baselineKeys": 0
+  },
+  "retainedCaps": {
+    "u1Variable": 9,
+    "u3Handler": 62,
+    "u4Field": 126,
+    "u4Dynamic": 67,
+    "u5Silent": 42
+  },
+  "validation": {
+    "pureNodeMetadataControl": "PASS",
+    "Java": "NOT_RUN",
+    "MySQL": "NOT_RUN",
+    "fullClientAudit": "NOT_RUN",
+    "CI": "NOT_RUN",
+    "ledgerGeneration": "NOT_RUN"
+  }
+}

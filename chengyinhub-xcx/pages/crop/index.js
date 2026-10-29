@@ -40,6 +40,7 @@ Page({
     exportError: '',
     ready: false,
     busy: false,
+    round: false,
   },
 
   onLoad() {
@@ -77,6 +78,8 @@ Page({
       this.clearSourceWait();
       this.queue = (d && d.paths) || [];
       this.ratioLiteral = (d && d.ratio) || 'free';
+      // M-08(2026-10-27):Logo 走圆形取景框;只改取景遮罩,几何与导出(正方形)不变
+      this.setData({ round: !!(d && d.shape === 'circle') });
       // 通道通了但一张图都没给 = 真的没有可裁的图,不是还在等。
       if (!this.queue.length) { this.showMissingSource(); return; }
       this.startAt(0);

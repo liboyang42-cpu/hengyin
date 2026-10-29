@@ -60,7 +60,7 @@ class ChapterFlowTransactionTest
         JdbcTemplate jdbc = new JdbcTemplate(dataSource);
         createFlowTables(jdbc);
         jdbc.update("insert into cms_topic_chapter (id, topic_id, description, blocks, sort_id, required) values (10, 71, '旧正文', '[{\"type\":\"text\",\"content\":\"旧正文\"}]', 1, 1)");
-        jdbc.update("insert into cms_topic_node (id, topic_id, chapter_id, name, sort_id) values (20, 71, 10, '旧节点', 9)");
+        jdbc.update("insert into cms_topic_node (id, topic_id, chapter_id, name, sort_id, status) values (20, 71, 10, '旧节点', 9, 1)");
 
         CmsTopicChapterMapper chapterMapper = chapterMapper(jdbc, true);
         CmsTopicNodeMapper nodeMapper = nodeMapper(jdbc);
@@ -68,7 +68,7 @@ class ChapterFlowTransactionTest
         ICmsTopicService proxy = transactionalProxy(target, dataSource);
 
         IllegalStateException failure = assertThrows(IllegalStateException.class,
-                () -> proxy.updateTopicByOwnerV2(validUpdate(), 19L, "tester"));
+                () -> com.chengyinhub.business.service.support.TopicPublicationTestWiring.wire(proxy).updateTopicByOwnerV2(validUpdate(), 19L, "tester"));
 
         assertTrue(failure.getMessage().contains("注入 blocks 写失败"), failure.getMessage());
         assertEquals(1, jdbc.queryForObject("select count(*) from cms_topic_chapter where id = 10", Integer.class),
@@ -96,7 +96,7 @@ class ChapterFlowTransactionTest
         JdbcTemplate jdbc = new JdbcTemplate(dataSource);
         createFlowTables(jdbc);
         jdbc.update("insert into cms_topic_chapter values (10, 71, '旧正文', '[{\"type\":\"text\",\"content\":\"旧正文\"}]', 1, 1)");
-        jdbc.update("insert into cms_topic_node values (20, 71, 10, '旧节点', 9)");
+        jdbc.update("insert into cms_topic_node (id, topic_id, chapter_id, name, sort_id, status) values (20, 71, 10, '旧节点', 9, 1)");
 
         CmsTopicServiceImpl target = service(chapterMapper(jdbc, false), nodeMapper(jdbc));
         CmsTopicMapper topicMapper = (CmsTopicMapper) ReflectionTestUtils.getField(target, "cmsTopicMapper");
@@ -161,7 +161,7 @@ class ChapterFlowTransactionTest
     {
         CmsTopicNodeMapper mapper = mock(CmsTopicNodeMapper.class);
         when(mapper.selectCmsTopicNodeList(any())).thenAnswer(invocation -> jdbc.query(
-                "select id, topic_id, chapter_id, name, sort_id from cms_topic_node where topic_id = 71",
+                "select id, topic_id, chapter_id, name, sort_id, status from cms_topic_node where topic_id = 71",
                 (rs, rowNum) -> {
                     CmsTopicNode row = new CmsTopicNode();
                     row.setId(rs.getLong("id"));
@@ -169,6 +169,7 @@ class ChapterFlowTransactionTest
                     row.setChapterId(rs.getLong("chapter_id"));
                     row.setName(rs.getString("name"));
                     row.setSortId(rs.getLong("sort_id"));
+                    row.setStatus(rs.getLong("status"));
                     return row;
                 }));
         doAnswer(invocation -> jdbc.update("delete from cms_topic_node where id = ?",
@@ -177,8 +178,8 @@ class ChapterFlowTransactionTest
         doAnswer(invocation -> {
             CmsTopicNode node = invocation.getArgument(0);
             node.setId(ids.incrementAndGet());
-            return jdbc.update("insert into cms_topic_node (id, topic_id, chapter_id, name, sort_id) values (?, ?, ?, ?, ?)",
-                    node.getId(), node.getTopicId(), node.getChapterId(), node.getName(), node.getSortId());
+            return jdbc.update("insert into cms_topic_node (id, topic_id, chapter_id, name, sort_id, status) values (?, ?, ?, ?, ?, ?)",
+                    node.getId(), node.getTopicId(), node.getChapterId(), node.getName(), node.getSortId(), node.getStatus());
         }).when(mapper).insertCmsTopicNode(any());
         return mapper;
     }
@@ -245,8 +246,10 @@ class ChapterFlowTransactionTest
         ReflectionTestUtils.setField(media, "topics", topicMapper);
         ReflectionTestUtils.setField(media, "chapters", chapterMapper);
         ReflectionTestUtils.setField(media, "nodes", nodeMapper);
-        ReflectionTestUtils.setField(media, "templates", (com.chengyinhub.business.mapper.CmsMemberTemplateMapper) ReflectionTestUtils.getField(service, "cmsMemberTemplateMapper"));
+        ReflectionTestUtils.setField(media, "templates", (com.chengyinhub.business.mapper.CmsMemberTemplateMapper) com.chengyinhub.business.service.support.TopicPublicationTestWiring.get(service, "cmsMemberTemplateMapper"));
         ReflectionTestUtils.setField(service, "mediaPublicationGuard", media);
+        set(service, "themeStateKeyService", new com.chengyinhub.business.service.support.ThemeStateKeyService(
+                mock(com.chengyinhub.business.mapper.ThemeStateKeyMapper.class)));
         return service;
     }
 
@@ -254,7 +257,7 @@ class ChapterFlowTransactionTest
     {
         TransactionInterceptor interceptor = new TransactionInterceptor(
                 new DataSourceTransactionManager(dataSource), new AnnotationTransactionAttributeSource());
-        ProxyFactory factory = new ProxyFactory(target);
+        ProxyFactory factory = new ProxyFactory(com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(target));
         factory.setInterfaces(ICmsTopicService.class);
         factory.addAdvice(interceptor);
         return (ICmsTopicService) factory.getProxy();
@@ -289,11 +292,11 @@ class ChapterFlowTransactionTest
     private void createFlowTables(JdbcTemplate jdbc)
     {
         jdbc.execute("create table cms_topic_chapter (id bigint primary key, topic_id bigint, description varchar(500), blocks clob, sort_id bigint, required int)");
-        jdbc.execute("create table cms_topic_node (id bigint primary key, topic_id bigint, chapter_id bigint, name varchar(100), sort_id bigint)");
+        jdbc.execute("create table cms_topic_node (id bigint primary key, topic_id bigint, chapter_id bigint, name varchar(100), sort_id bigint, status bigint)");
     }
 
     private void set(CmsTopicServiceImpl service, String field, Object value)
     {
-        ReflectionTestUtils.setField(service, field, value);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, field, value);
     }
 }

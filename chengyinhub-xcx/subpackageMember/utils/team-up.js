@@ -16,7 +16,7 @@ function memberOptions(maxMembers) {
  * 其余取值一律当没传 —— 别把 0/'' /2 送进后端的枚举校验,也别在前端复制一份后端默认值。 */
 function createActivityTeam(app, activityId, maxMembers, joinMode, callbacks) {
   // 2026-10-24 游客写前登录:建队写库,游客先弹「登录后继续」,登录后恢复建队一次。
-  if (app.ensureLoginFor && !app.ensureLoginFor('team', () => createActivityTeam(app, activityId, maxMembers, joinMode, callbacks))) return
+  if (app.ensureLoginFor && !app.ensureLoginFor('team', () => createActivityTeam(app, activityId, maxMembers, joinMode, callbacks), callbacks && callbacks.loginContext)) return
   const cb = callbacks || {}
   const body = { ownerType: 2, ownerId: Number(activityId), maxMembers: Number(maxMembers) }
   if (joinMode === 1 || joinMode === '1' || joinMode === true) body.joinMode = 1

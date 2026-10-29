@@ -47,12 +47,13 @@
       </view>
     </view>
 
-    <!-- 主动作:头部正下方的通栏大按钮 + 右侧圆形 ···(参考图 Xbox 63 的形态,在页面流里)。 -->
+    <!-- 主动作:头部正下方的通栏大按钮 + 右侧圆形分享键(参考图 Xbox 63 的形态,在页面流里)。
+         P-42(2026-10-27):原来右侧是 ⋯ 和它的「分享玩法 / 举报」弹层,业主说没有意义 —— 改成直接分享。 -->
     <view class="xb-cta">
       <cy-btn class="xb-cta-btn" variant="primary" bindtap="goPrimary">{{ primaryLabel }}</cy-btn>
-      <view class="xb-more" bindtap="openMore" aria-role="button" aria-label="更多操作" hover-class="cy-pressed" hover-stay-time="80">
-        <cy-icon name="more" size="40" />
-      </view>
+      <button class="xb-share" open-type="share" aria-label="分享玩法" hover-class="cy-pressed" hover-stay-time="80">
+        <cy-icon name="share" size="40" />
+      </button>
     </view>
 
     <!-- Tab:切换「详情/能力」两段正文。 -->
@@ -275,21 +276,10 @@
       </view>
     </view>
 
+    <!-- P-42(2026-10-28 业主确认「删」):页面末尾那行举报一并删掉 -->
+
     <view class="xb-scroll-pad"></view>
   </scroll-view>
-
-  <!-- 更多菜单 -->
-  <cy-sheet variant="full" show="{{moreShow}}" maskClosable bind:close="closeMore">
-    <button class="xb-sheet-item" open-type="share" bindtap="onShare" hover-class="xb-sheet-item--press" hover-stay-time="80">分享玩法</button>
-    <view class="xb-sheet-item" wx:if="{{ info.validationMethod }}" bindtap="openPopFromMore" hover-class="xb-sheet-item--press" hover-stay-time="80">预览节点</view>
-    <view class="xb-sheet-item" wx:if="{{ reportKind === 'template' }}" bindtap="reportTemplate" hover-class="xb-sheet-item--press" hover-stay-time="80">举报</view>
-    <view class="xb-sheet-item" wx:elif="{{ reportKind === 'personalTemplate' }}" bindtap="reportPersonalTemplate" hover-class="xb-sheet-item--press" hover-stay-time="80">举报</view>
-    <view class="xb-sheet-item xb-sheet-cancel" bindtap="closeMore" hover-class="xb-sheet-item--press" hover-stay-time="80">取消</view>
-  </cy-sheet>
-
-  <!-- FOLLOWUP-A-1:举报原因弹层,与动态详情同一组件 / 同一文案 -->
-  <cy-option-sheet show="{{reportReasonShow}}" title="选择举报原因" items="{{reportReasonItems}}"
-    confirm-text="提交举报" bind:select="onReportReasonSelect" bind:cancel="onReportReasonCancel" />
 
   <!-- 节点预览:chrome 交给 cy-sheet(标题 + 右上角 ✕)。
        原来面板自己摆一行「取消 / 节点交互预览 / 关闭」,与全站统一的右上 ✕ 是两套关闭手势;

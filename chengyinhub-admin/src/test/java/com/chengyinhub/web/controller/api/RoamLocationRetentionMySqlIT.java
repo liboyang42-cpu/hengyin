@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.web.service.verify.CityNodeRedemptionApplication;
+
 import com.chengyinhub.business.mapper.RoamMapper;
 import com.chengyinhub.business.mapper.RoamShareSnapshotMapper;
 import com.chengyinhub.business.service.MysqlIntegrationTestConfig;
@@ -348,9 +350,6 @@ class RoamLocationRetentionMySqlIT {
         ProxyFactory couponProxy=new ProxyFactory(couponTarget);
         couponProxy.addAdvice(new TransactionInterceptor(new DataSourceTransactionManager(source),new AnnotationTransactionAttributeSource()));
         ApiVerifyController target=new ApiVerifyController(){@Override public Long getAppUserId(){return 1001L;}};
-        org.springframework.test.util.ReflectionTestUtils.setField(target,"roamMapper",mapper);
-        org.springframework.test.util.ReflectionTestUtils.setField(target,"dynSecret","retention-transaction-test-only");
-        org.springframework.test.util.ReflectionTestUtils.setField(target,"couponHistoryService",couponProxy.getProxy());
         com.chengyinhub.business.access.merchant.IMerchantAccessService access=org.mockito.Mockito.mock(com.chengyinhub.business.access.merchant.IMerchantAccessService.class);
         org.mockito.Mockito.when(access.require(1001L,com.chengyinhub.business.access.merchant.MerchantPermission.VERIFY)).thenReturn(new com.chengyinhub.business.access.merchant.MerchantAccessContext(1001L,11L,1001L,com.chengyinhub.business.access.merchant.MerchantRoleCode.MERCHANT_CHECKIN));
         org.springframework.test.util.ReflectionTestUtils.setField(target,"merchantAccessService",access);
@@ -361,10 +360,12 @@ class RoamLocationRetentionMySqlIT {
             if(failAudit)db.update("insert into ums_member(id) values(9)"); // after actual audit insertion, rollback every earlier SQL effect
             return result;
         });
-        org.springframework.test.util.ReflectionTestUtils.setField(target,"businessAuditEventMapper",audit);
-        ProxyFactory proxy=new ProxyFactory(target);proxy.setProxyTargetClass(true);
+        CityNodeRedemptionApplication application=new CityNodeRedemptionApplication(access,mapper,
+                (com.chengyinhub.business.service.ISmsCouponHistoryService)couponProxy.getProxy(),audit,org.mockito.Mockito.mock(com.chengyinhub.business.service.impl.QrcodeServiceImpl.class),"retention-transaction-test-only");
+        ProxyFactory proxy=new ProxyFactory(application);proxy.setProxyTargetClass(true);
         proxy.addAdvice(new TransactionInterceptor(new DataSourceTransactionManager(source),new AnnotationTransactionAttributeSource()));
-        return (ApiVerifyController)proxy.getProxy();
+        org.springframework.test.util.ReflectionTestUtils.setField(target,"cityNodeRedemptionApplication",(CityNodeRedemptionApplication)proxy.getProxy());
+        return target;
     }
     @Test void actualCityRedeemAuditFailureRollsBackStatusStockHistoryAndAuditThenRetry() {
         db.update("insert into sms_coupon(id,name,publish_count,receive_count,status,del_flag) values(22,'actual transaction coupon',1,0,1,0)");
@@ -517,6 +518,27 @@ class RoamLocationRetentionMySqlIT {
     }
 
     @Test void realCleanupTaskPreservesFavoriteRouteAndNonLocationFactsAcrossReplay() throws Exception {
+        // The real retention owner also redacts expired ASR bodies; retain its original durable identities.
+        try (java.sql.Connection connection = source.getConnection()) {
+            org.springframework.jdbc.datasource.init.ScriptUtils.executeSqlScript(connection,
+                    new org.springframework.core.io.FileSystemResource("sql/migration_20261024_d_npc_asr_intent.sql"));
+            org.springframework.jdbc.datasource.init.ScriptUtils.executeSqlScript(connection,
+                    new org.springframework.core.io.FileSystemResource("sql/migration_20261024_d_npc_asr_shared_quota.sql"));
+        }
+        for (int id = 101; id <= 103; id++) {
+            boolean unknown = id == 103;
+            db.update("insert into npc_asr_intent(id,user_id,request_id,node_id,merchant_member_id,audio_sha256,audio_format,"
+                    + "claim_token,state,transcript,body_expires_at,handoff_started,text_admitted,quota_reservation,create_time) "
+                    + "values(?,9,?,31,81,?,'wav',?,?,?,?,?,?,?,date_sub(now(),interval 49 hour))",
+                    id, UUID.randomUUID().toString(), "b".repeat(64), UUID.randomUUID().toString(),
+                    unknown ? "UNKNOWN" : "RECEIVED", unknown ? null : "original transcript " + id,
+                    unknown ? null : db.queryForObject(id == 101 ? "select date_sub(now(),interval 1 hour)"
+                            : "select date_add(now(),interval 1 hour)", Date.class),
+                    unknown ? 0 : 1, unknown ? 0 : 1, "original-reservation-" + id);
+        }
+        var asrIdentities = asrIdentitySnapshot();
+        var freshAsr = db.queryForMap("select * from npc_asr_intent where id=102");
+        var unknownAsr = db.queryForMap("select * from npc_asr_intent where id=103");
         for (String table : java.util.List.of("tms_browse_record", "biz_event_log", "npc_chat_log", "npc_chat_request")) {
             String timeColumn = table.equals("tms_browse_record") ? "browse_time" : "create_time";
             db.execute("create table " + table + "(id bigint primary key," + timeColumn + " datetime not null) engine=InnoDB");
@@ -553,13 +575,15 @@ class RoamLocationRetentionMySqlIT {
         extraFactory.setMapperLocations(new ClassPathResource("mapper/business/TmsBrowseRecordMapper.xml"),
                 new ClassPathResource("mapper/business/BizEventLogMapper.xml"),
                 new ClassPathResource("mapper/business/NpcChatLogMapper.xml"),
-                new ClassPathResource("mapper/business/NpcChatRequestMapper.xml"));
+                new ClassPathResource("mapper/business/NpcChatRequestMapper.xml"),
+                new ClassPathResource("mapper/business/NpcAsrIntentMapper.xml"));
         SqlSessionTemplate extra = new SqlSessionTemplate(extraFactory.getObject());
         var target = new com.chengyinhub.business.service.impl.DataRetentionServiceImpl();
         org.springframework.test.util.ReflectionTestUtils.setField(target, "tmsBrowseRecordMapper", extra.getMapper(com.chengyinhub.business.mapper.TmsBrowseRecordMapper.class));
         org.springframework.test.util.ReflectionTestUtils.setField(target, "bizEventLogMapper", extra.getMapper(com.chengyinhub.business.mapper.BizEventLogMapper.class));
         org.springframework.test.util.ReflectionTestUtils.setField(target, "npcChatLogMapper", extra.getMapper(com.chengyinhub.business.mapper.NpcChatLogMapper.class));
         org.springframework.test.util.ReflectionTestUtils.setField(target, "npcChatRequestMapper", extra.getMapper(com.chengyinhub.business.mapper.NpcChatRequestMapper.class));
+        org.springframework.test.util.ReflectionTestUtils.setField(target, "npcAsrIntents", extra.getMapper(com.chengyinhub.business.mapper.NpcAsrIntentMapper.class));
         org.springframework.test.util.ReflectionTestUtils.setField(target, "roamMapper", roam);
         org.springframework.test.util.ReflectionTestUtils.setField(target, "roamShareSnapshotMapper", shares);
         org.springframework.test.util.ReflectionTestUtils.setField(target, "roamLocationRetentionService", service(roam));
@@ -576,6 +600,12 @@ class RoamLocationRetentionMySqlIT {
         assertDoesNotThrow(task::run);
         for (String table : java.util.List.of("tms_browse_record", "biz_event_log", "npc_chat_log", "npc_chat_request"))
             assertEquals(java.util.List.of(2L), db.queryForList("select id from " + table + " order by id", Long.class));
+        assertEquals(asrIdentities, asrIdentitySnapshot(), "body expiry must not release ASR/quota/UNKNOWN identity");
+        assertEquals(java.util.List.of(101L, 102L, 103L), db.queryForList("select id from npc_asr_intent order by id", Long.class));
+        assertNull(db.queryForObject("select transcript from npc_asr_intent where id=101", String.class));
+        assertEquals(1, db.queryForObject("select body_erased from npc_asr_intent where id=101", Integer.class));
+        assertEquals(freshAsr, db.queryForMap("select * from npc_asr_intent where id=102"));
+        assertEquals(unknownAsr, db.queryForMap("select * from npc_asr_intent where id=103"));
         assertEquals(0, db.queryForObject("select count(*) from roam_session where id in(1,4) and (last_lat is not null or last_lng is not null)", Integer.class));
         assertEquals(14, db.queryForObject("select sum(xp_awarded) from roam_session where id in(1,4)", Integer.class));
         assertEquals(1800, db.queryForObject("select sum(distance_m) from roam_session where id in(1,4)", Integer.class));
@@ -603,11 +633,17 @@ class RoamLocationRetentionMySqlIT {
                 + " from cms_topic t join cms_topic_like l on l.data_id=t.id order by t.id,l.id");
     }
 
+    private java.util.List<java.util.Map<String,Object>> asrIdentitySnapshot() {
+        return db.queryForList("select id,user_id,request_id,node_id,merchant_member_id,audio_sha256,audio_format,"
+                + "claim_token,state,handoff_started,text_admitted,quota_reservation,quota_refund_pending,"
+                + "body_expires_at,create_time from npc_asr_intent order by id");
+    }
+
     private java.util.Map<String,java.util.List<java.util.Map<String,Object>>> retainedFactsSnapshot() {
         var result = new java.util.LinkedHashMap<String,java.util.List<java.util.Map<String,Object>>>();
         for (String table : java.util.List.of("roam_session","roam_fog_tile","roam_poi_found","roam_poi_reward_log",
                 "roam_shop_visit","roam_share_snapshot","roam_shop_visitor_claim","roam_shop_visitor_total",
-                "tms_browse_record","biz_event_log","npc_chat_log","npc_chat_request"))
+                "tms_browse_record","biz_event_log","npc_chat_log","npc_chat_request","npc_asr_intent"))
             result.put(table,db.queryForList("select * from " + table + " order by 1,2"));
         return result;
     }

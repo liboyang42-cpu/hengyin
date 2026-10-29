@@ -59,6 +59,8 @@ class CoopPerksSnapshotTest {
     private static final Long TOPIC = 300L;
     private static final Long GAME = 55L;
 
+    private CoopInviteMapper originalInvites;
+    private CoopInvite original;
     private CoopPerkMapper perkMapper;
     private CoopOrderMapper orderMapper;
     private CoopInviteServiceImpl service;
@@ -74,6 +76,24 @@ class CoopPerksSnapshotTest {
         ReflectionTestUtils.setField(service, "coopOrderMapper", orderMapper);
         // A-13 幂等复用探针:默认无既有单
         when(orderMapper.selectCoopOrderByRegId(anyLong())).thenReturn(Collections.<CoopOrder>emptyList());
+        originalInvites = mock(CoopInviteMapper.class);
+        ReflectionTestUtils.setField(service, "coopInviteMapper", originalInvites);
+        CmsTopicMapper topics = mock(CmsTopicMapper.class);
+        ReflectionTestUtils.setField(service, "cmsTopicMapper", topics);
+        CmsTopic topic = new CmsTopic(); topic.setId(TOPIC); topic.setDelFlag(0);
+        when(topics.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(topic);
+        original = new CoopInvite(); original.setId(INVITE); original.setStatus(1); original.setDelFlag(0);
+        original.setInviteType(0); original.setTopicId(TOPIC); original.setGameId(GAME);
+        original.setFromId(11L); original.setFromType("talent"); original.setToId(22L); original.setToType("merchant");
+        when(originalInvites.selectCoopInviteById(INVITE)).thenReturn(original);
+        when(originalInvites.selectCoopInviteByIdForUpdate(INVITE)).thenReturn(original);
+        when(originalInvites.selectOriginalCoopOrdersForUpdate(any(), any())).thenReturn(Collections.emptyList());
+        com.chengyinhub.business.domain.CmsRegistrationMerchant registration = new com.chengyinhub.business.domain.CmsRegistrationMerchant();
+        registration.setId(REG); registration.setTopicId(TOPIC); registration.setMemberId(22L);
+        registration.setAuditStatus(1L); registration.setDelFlag(0);
+        when(originalInvites.selectSupplyStationForUpdate(REG, TOPIC, 22L)).thenReturn(registration);
+        org.mockito.Mockito.doAnswer(call -> { CoopOrder row = call.getArgument(0); row.setId(800L); return 1; })
+                .when(orderMapper).insertCoopOrder(any());
     }
 
     private CoopPerk perk(String name, String cost) {
@@ -87,7 +107,8 @@ class CoopPerksSnapshotTest {
 
     private CoopOrder order() {
         CoopOrder o = new CoopOrder();
-        o.setInviteId(INVITE);
+        o.setInviteId(INVITE); o.setTopicId(TOPIC); o.setGameId(GAME);
+        o.setFromId(11L); o.setToId(22L); o.setToType("merchant");
         o.setRegId(REG);
         return o;
     }
@@ -145,23 +166,25 @@ class CoopPerksSnapshotTest {
         assertNull(inserted().getPerksSnapshot());
     }
 
-    /** 无 inviteId(后台直接建单)⇒ 无从取权益,不炸。 */
+    /** Retired unsafe bypass: an unbound direct order now fails before any insert or snapshot. */
     @Test
     void createOrder_noInviteId_skipsSnapshot() {
         CoopOrder o = new CoopOrder();
         o.setRegId(REG);
 
-        service.createCoopOrder(o);
-
-        assertNull(inserted().getPerksSnapshot());
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class, () -> service.createCoopOrder(o));
+        verify(orderMapper, org.mockito.Mockito.never()).insertCoopOrder(any());
+        assertNull(o.getPerksSnapshot());
     }
 
     /** A-13 幂等复用:已有生效单则直接返旧单,不重复建、也不该再冻一次。 */
     @Test
     void createOrder_reusesExistingOrder() {
         CoopOrder existing = new CoopOrder();
-        existing.setId(7L);
-        when(orderMapper.selectCoopOrderByRegId(REG)).thenReturn(Collections.singletonList(existing));
+        existing.setId(7L); existing.setInviteId(INVITE); existing.setRegId(REG);
+        existing.setTopicId(TOPIC); existing.setGameId(GAME); existing.setFromId(11L);
+        existing.setToId(22L); existing.setToType("merchant");
+        when(originalInvites.selectOriginalCoopOrdersForUpdate(INVITE, REG)).thenReturn(Collections.singletonList(existing));
 
         assertEquals(Long.valueOf(7L), service.createCoopOrder(order()));
         verify(orderMapper, org.mockito.Mockito.never()).insertCoopOrder(any());
@@ -186,7 +209,7 @@ class CoopPerksSnapshotTest {
 
         CoopInvite inv = new CoopInvite();
         inv.setId(INVITE);
-        inv.setStatus(0);                 // 待处理
+        inv.setStatus(0); inv.setDelFlag(0);                 // 待处理
         inv.setInviteType(0);             // H1:type2 已只读，快照主路改用现役 type0
         inv.setTopicId(TOPIC);
         inv.setGameId(GAME);              // gameLevel=true → 走「每游戏已接受=1」的容量复核
@@ -197,10 +220,13 @@ class CoopPerksSnapshotTest {
         when(inviteMapper.selectCoopInviteByIdForUpdate(INVITE)).thenReturn(inv);
         // 接受前先无锁读定位 topic,再按「topic→invite」顺序加锁
         when(inviteMapper.selectCoopInviteById(INVITE)).thenReturn(inv);
+        when(inviteMapper.selectOriginalCoopOrdersForUpdate(any(), any())).thenReturn(Collections.emptyList());
+        org.mockito.Mockito.doAnswer(call -> { CoopInvite update = call.getArgument(0); inv.setStatus(update.getStatus()); return 1; })
+                .when(inviteMapper).updateCoopInvite(any());
         when(inviteMapper.selectCoopInviteList(any())).thenReturn(Collections.<CoopInvite>emptyList());
 
         CmsTopic topic = new CmsTopic();
-        topic.setId(TOPIC);
+        topic.setId(TOPIC); topic.setDelFlag(0);
         topic.setLifecycle(1);            // <3:未锁价,可接受
         topic.setRecruitDeadline(new Date(System.currentTimeMillis() + 60L * 60L * 1000L));
         when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(topic);
