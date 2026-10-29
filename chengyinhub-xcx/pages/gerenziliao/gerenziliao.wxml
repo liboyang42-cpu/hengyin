@@ -16,7 +16,7 @@
 </view>
 <view class="shzltop">
   <view class="shzltop_tu" bindtap="uploadPic" aria-role="button" aria-label="修改头像" hover-class="cy-pressed" hover-stay-time="80">
-      <cy-avatar src="{{userInfo.avatar || '/images/d_profile.png'}}" size="170" />
+      <cy-avatar src="{{avatarSrc || '/images/d_profile.png'}}" size="170" />
       <view class="dbj pen-badge" aria-hidden="true"><cy-icon name="edit" size="24" /></view>
   </view>
   <text wx:if="{{avatarReviewText}}" class="profile-avatar-review" aria-role="status">{{avatarReviewText}}</text>
@@ -43,11 +43,11 @@
   </view>
   <view class="shzlbox_li">
     <view class="shzlbox_li_left">
-      <view class="shzlbox_li_left_name">城市签名</view>
+      <view class="shzlbox_li_left_name">个人介绍</view>
 
       <view class="shzlbox_li_left_txt {{userInfo.introduction ? '' : 'is-empty'}}">{{userInfo.introduction || '未填写'}}</view>
     </view>
-    <view class="shzlbox_li_right" bindtap="openPop" aria-role="button" aria-label="编辑城市签名" hover-class="cy-pressed" hover-stay-time="80"><view class="pen-badge" aria-hidden="true"><cy-icon name="edit" size="24" /></view></view>
+    <view class="shzlbox_li_right" bindtap="openPop" aria-role="button" aria-label="编辑个人介绍" hover-class="cy-pressed" hover-stay-time="80"><view class="pen-badge" aria-hidden="true"><cy-icon name="edit" size="24" /></view></view>
   </view>
   <view class="shzlbox_li">
     <view class="shzlbox_li_left">
@@ -113,7 +113,7 @@
 </cy-footer-bar>
 
 <!-- 个人介绍 -->
-<cy-sheet class="profile-edit-sheet" show="{{ popDavid }}" title="城市签名" footer bind:close="cancel">
+<cy-sheet class="profile-edit-sheet" show="{{ popDavid }}" title="个人介绍" footer bind:close="cancel">
   <view class="pop-model pop-temp">
     <view class="david_tk">
       <view class="david_tk_box {{tempIntroduction ? 'is-filled' : ''}}">

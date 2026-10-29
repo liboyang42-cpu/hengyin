@@ -1,4 +1,5 @@
 <wxs src="../../../../utils/wxs/money.wxs" module="money" />
+<wxs src="../../../../utils/wxs/img.wxs" module="img" />
 <!-- 商家视角挂 theme-merchant:日间 token 真源在 style/tokens.wxss(.theme-light/.theme-merchant),
      本页不再手抄一份;.pc-merchant 只留本页自有语义(去品牌化 + 隐藏 hero 底图) -->
 <view class="pc-page {{isMerchantView ? 'pc-merchant theme-merchant' : 'pc-player'}} {{isSelf ? 'pc-self' : 'pc-public'}} {{reducedMotion ? 'pc-reduced-motion' : ''}}">
@@ -250,7 +251,7 @@
           <cy-empty wx:elif="{{nodata}}" title="还没有帖文" sub="{{isSelf ? '你还没有发布过帖文' : 'TA 还没有发布帖文'}}" />
           <view class="pc-post" wx:for="{{list}}" wx:key="id">
             <view class="pc-post-head">
-              <cy-avatar size="sm64" src="{{item.memberAvatar || userInfo.avatar || '/images/d_profile.png'}}" name="{{item.memberNickname || userInfo.nickname}}" />
+              <cy-avatar size="sm64" src="{{img.first(item.memberAvatar) || _avatarSrc || '/images/d_profile.png'}}" name="{{item.memberNickname || userInfo.nickname}}" />
               <view class="pc-post-meta">
                 <text class="pc-post-name">{{item.memberNickname || userInfo.nickname}}</text>
                 <text class="pc-post-time">{{item.formattedCreateTime}}</text>

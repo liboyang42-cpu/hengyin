@@ -31,6 +31,7 @@ const { buildOrderPreviewList } = require('./order-preview.js');
 const { shapeMerchantSafety } = require('./merchant-safety-summary.js');
 const { shapeMerchantNode, readFavoriteToggle } = require('./merchant-node-favorite.js');
 const identitySync = require('../../../../utils/identity-sync.js');
+const { avatarSrc } = identitySync;
 const tagLibrary = require('../../../../utils/tag-library.js');
 const THEME_EMOJI = ['🍜', '❤️', '📚', '☕', '🌸', '🎮', '📷', '🏯'];
 const MEDAL_EMOJI = {
@@ -1106,6 +1107,8 @@ Component({
       d.subjectIsMerchant ? d.subjectMerchant : selfMerchant, d.userInfo);
     // 本人商家身份还没回来时先不落「商家」两个字,沿用会员昵称占位一帧,避免闪成默认名
     if (selfAsMerchant && !(selfMerchant && selfMerchant.name)) id.name = (d.userInfo && d.userInfo.nickname) || id.name;
+    // V-15:后端头像是 http 签名链接 / 相对路径时真机拒载,显示前过 getImgUrl
+    id.avatar = avatarSrc(id.avatar, app.getImgUrl && app.getImgUrl.bind(app));
     return id;
   },
 
@@ -2263,7 +2266,7 @@ Component({
   },
   // CU-M-28:这一块显示的是会员本人的 introduction,编辑必须进个人资料;
   // goUserInfo 在商家视角会去品牌中心,那里没有「个人介绍」字段。
-  goEditIntro: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/gerenziliao/gerenziliao', complete: () => { this._navigating = false; } }); },
+  goEditIntro: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/gerenziliao/gerenziliao?field=introduction', complete: () => { this._navigating = false; } }); },
   // FE-14 商家店铺资料收编进「我的」更多菜单(原 shanghuziliao 页保留即重定向)
   goShop: function () { this.closeScene(); if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/merchant/decor/index', complete: () => { this._navigating = false; } }); },
   // 访客看商家主页的底部「发起合作」:与 club/detail onInviteMerchant 同链路(coop/invite type=0,

@@ -6,6 +6,7 @@ const { isValidMobile } = require('../../utils/form-state.js');
 const nicknameCheck = require('./nickname-check.js');
 const profileReview = require('../../utils/profile-review.js');
 const identitySync = require('../../utils/identity-sync.js');
+const { avatarSrc } = identitySync;
 
 // 输入停顿多久再问后端:太短每个字都打一枪,太长用户等不到反馈。
 const NICKNAME_CHECK_DEBOUNCE_MS = 400;
@@ -57,12 +58,14 @@ Page({
       phone: ''
     },
     phoneMasked: '',
+    // V-15:头像位显示地址。刚选的图先显示本机临时文件,服务端值统一过 getImgUrl;提交给后端的仍是 userInfo.avatar
+    avatarSrc: '',
     avatarReviewText: '',
     casePicsList: [], // 个人项目图片数组
     tempCasePics: [], // 临时个人项目图片数组（编辑时使用）
     tempCaseIntroducton: '', // 临时个人项目描述
     tempWechat: '', // 临时微信二维码
-    tempIntroduction: '', // 城市签名草稿；完成前不写回 userInfo
+    tempIntroduction: '', // 个人介绍草稿；完成前不写回 userInfo
     tempName: '', // 昵称草稿；完成前不写回 userInfo
     // 昵称校验(N4):'' 未检查/与原昵称相同 | checking | available | taken | invalid | error(查询失败,可重试)
     nicknameState: '',
@@ -469,6 +472,8 @@ Page({
     var that = this
     this._unloaded = false;
     this._hidden = false;
+    // V-21:「关于」里的「编辑」带 field=introduction 进来,资料读完直接打开个人介绍面板
+    this._openIntroOnLoad = !!(options && options.field === 'introduction');
     that.getUserData()
   },
 
@@ -543,7 +548,7 @@ Page({
       this.setData({
         userInfo: { name: '', introduction: '', website: '', caseIntroducton: '',
           avatar: '', tag_ids: '', casePics: '', wechat: '', phone: '' },
-        phoneMasked: '', casePicsList: [], tempCasePics: [], tempCaseIntroducton: '',
+        phoneMasked: '', avatarSrc: '', casePicsList: [], tempCasePics: [], tempCaseIntroducton: '',
         tempWechat: '', tempIntroduction: '', tempName: '', nicknameState: '', nicknameHint: '',
         nicknameSuggestions: [], nicknameSuggesting: false, nicknameSuggestError: '', selectedCategoryIds: [],
         selectedCategoryNames: [], selectedCategoryNamesStr: '', categoryList: [],
@@ -631,6 +636,7 @@ Page({
               ...res.data
             },
             phoneMasked: maskPhone(res.data.phone),
+            avatarSrc: avatarSrc(res.data.avatar, app.getImgUrl && app.getImgUrl.bind(app)),
             casePicsList: casePicsList,
             loading: false,
             refreshing: false,
@@ -639,6 +645,10 @@ Page({
             loadErrorSub: ''
           }, () => that.refreshSaveState());
           that.loadProfileReview(context);
+          if (that._openIntroOnLoad) {
+            that._openIntroOnLoad = false;
+            that.openPop();
+          }
 
           if (isRecordList(res.data.sysCategoryList) && res.data.sysCategoryList.length > 0) {
             const selectedIds = res.data.sysCategoryList.map(item => item.id);
@@ -782,12 +792,27 @@ Page({
   uploadPic() {
     let that = this;
     const context = this.profileContext();
+    let previousSrc = null;
     app.chooseImage(function (res) {
       that.applyProfileResult(context, () => {
         // 换了还没保存的新头像:旧头像的审核回执不再对应屏幕上这张,先不显示。
-        that.setData({ 'userInfo.avatar': res[0], avatarReviewText: '' });
+        // 屏幕上继续用本机那张(上传开始时已换上),不等签名链接再下载一遍。
+        that.setData({ 'userInfo.avatar': res[0], avatarSrc: that.data.avatarSrc || avatarSrc(res[0], app.getImgUrl && app.getImgUrl.bind(app)), avatarReviewText: '' });
       });
-    }, 1, { crop: true, cropScale: '1:1' });
+    }, 1, {
+      crop: true, cropScale: '1:1',
+      // V-15:裁完就把本机图换上头像位,上传、审核期间都不留空圈
+      onUploadStart(filePaths) {
+        if (!that.currentProfileContext(context) || !filePaths || !filePaths[0]) return;
+        previousSrc = that.data.avatarSrc;
+        that.setData({ avatarSrc: filePaths[0], avatarReviewText: '' });
+      },
+      // 上传失败退回原头像;返回 false 让 chooseImage 照常弹失败提示
+      onUploadDone(r) {
+        if (!r.ok && previousSrc !== null && that.currentProfileContext(context)) that.setData({ avatarSrc: previousSrc });
+        return false;
+      }
+    });
   },
 
   releaseProfilePhoneLoading(token = this._profilePhoneLoading) {

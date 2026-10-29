@@ -2229,7 +2229,9 @@ Page({
           that.setData({ members: [], membersState: 'business-error', memberStrip: [] });
           return;
         }
-        that.setData({ members: res.data, membersState: 'ready', memberStrip: buildMemberStrip(res.data, that.data.club && that.data.club.memberCount) });
+        // V-15:成员头像是后端 http 签名链接 / 相对路径时真机拒载,入列前过 getImgUrl
+        const members = res.data.map((m) => (m && m.avatar && app.getImgUrl ? Object.assign({}, m, { avatar: app.getImgUrl(m.avatar) }) : m));
+        that.setData({ members: members, membersState: 'ready', memberStrip: buildMemberStrip(members, that.data.club && that.data.club.memberCount) });
         if (that._leaderboardRows) that.setData({ leaderboard: that.composeLeaderboard() });
       },
       fail() {
