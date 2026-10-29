@@ -262,6 +262,10 @@ class RegistrationFundsMybatisIntegrationTest {
     @BeforeEach
     void resetSchema() throws Exception {
         clearInvocations(localPaymentGuards);
+        // These controlled ports live with the class, but SQL identities restart per case.
+        // Reset history HERE, before any case effect, never before its once-only assertions.
+        clearInvocations(ReflectionTestUtils.getField(registrationTarget, "systemNotificationIntents"),
+                ReflectionTestUtils.getField(registrationTarget, "imService"));
         // SQL originals/facts are recreated per case. Their unit inbox must have the same
         // lifetime; retain reference conflict checks and repeated mutation within each case.
         ReflectionTestUtils.setField(registrationTarget, "wxPaymentCallbackInboxService",
@@ -2167,9 +2171,13 @@ class RegistrationFundsMybatisIntegrationTest {
 
     @Test
     void legacyZeroIdWithoutRequestMetadataCompletesAndReplaysWithoutInventingANewRequest() throws Exception {
-        // The suite's original persisted id=11 has no request_id/fingerprint. Set only this
-        // case's frozen zero-cash input; completion must use the real domain transaction.
-        execute("UPDATE cms_registration SET owner_type=2,owner_id=55,ticket_id=9,"
+        // Keep the original legacy id/no/NULL request metadata. Like the existing zero
+        // recovery fixture, this is a platform activity without a merchant receivable;
+        // use coherent zero-price source/frozen inputs, not a mocked settlement result.
+        execute("UPDATE cms_activity SET member_id=NULL WHERE id=55",
+                "UPDATE oms_ticket SET price=0 WHERE id=9",
+                "UPDATE cms_registration SET owner_type=2,owner_id=55,ticket_id=9,ticket_price=0,"
+                + "original_amount=0,total_amount=0,point_payment_amount=0,point_deduct_amount=0,"
                 + "payable_amount=0,wechat_payment_amount=0 WHERE id=11");
         CmsRegistration original = registrationMapper.selectCmsRegistrationById(11L);
         assertEquals(null, original.getRequestId()); assertEquals(null, original.getRequestFingerprint());
