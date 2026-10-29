@@ -72,7 +72,8 @@ class RegistrationDynCodeLedgerTest {
     }
 
     private VerifyDynCodeUtil.Result current(String code) {
-        return ReflectionTestUtils.invokeMethod(scanner, "verifyCurrentCode", code);
+        return ReflectionTestUtils.invokeMethod(scanner, "rejectSuperseded",
+                VerifyDynCodeUtil.verify(code, System.currentTimeMillis(), SECRET), code);
     }
 
     @Test void newCodeInvalidatesThePreviousOneOnTheScanSide() {
