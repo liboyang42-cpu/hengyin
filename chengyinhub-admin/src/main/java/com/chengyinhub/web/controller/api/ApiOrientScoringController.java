@@ -1,6 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
 import com.chengyinhub.business.service.IOrientScoringService;
+import com.chengyinhub.business.service.orienteering.EventScoreVersioning;
 import com.chengyinhub.business.service.support.OrientScoringException;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Map;
 import java.util.function.Supplier;
 
 /**
@@ -93,7 +95,19 @@ public class ApiOrientScoringController extends BaseController {
     public AjaxResult receipt(String kind, String sessionId, String idempotencyKey) {
         Long memberId = currentMemberId();
         if (memberId == null) return error("请先登录");
-        return run(() -> orientScoringService.receipt(memberId, kind, Convert.toLong(sessionId, null), idempotencyKey));
+        return run(() -> {
+            Long sid = Convert.toLong(sessionId, null);
+            Map<String, Object> raw = orientScoringService.receipt(memberId, kind, sid, idempotencyKey);
+            Map<String, Object> original = new EventScoreVersioning(orientScoringService, null, null)
+                    .recoverFromScoringReceipt(memberId, kind, sid, idempotencyKey);
+            if (original != null) {
+                return original;
+            }
+            if (raw != null && "NOT_FOUND".equals(raw.get("state"))) {
+                return raw;
+            }
+            return null;
+        });
     }
 
     private AjaxResult run(Supplier<Object> action) {
