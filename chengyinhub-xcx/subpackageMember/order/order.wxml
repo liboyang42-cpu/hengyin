@@ -11,7 +11,8 @@
   <cy-scene-member-order-history id="orderHistory" bind:open="openScene" />
 </view>
 
-<view class="order-scene-host" wx:if="{{sceneCurrent && sceneCurrent.id === 'member-order-detail'}}" catchtouchmove="blockSceneTouch">
+<!-- V-20:订单详情是 page 档整页,宿主再 catchtouchmove 会把 ss__body 的纵向滚动一起吃掉(真机滑不到底) -->
+<view class="order-scene-host" wx:if="{{sceneCurrent && sceneCurrent.id === 'member-order-detail'}}">
   <cy-scene-sheet show="{{true}}" variant="{{sceneCurrent.variant}}" bare="{{!!sceneCurrent.bare}}" theme="{{sceneCurrent.theme}}" title="{{sceneCurrent.title}}" can-back="{{sceneCurrent.canBack}}" dirty="{{sceneCurrent.dirty}}" mask-closable="{{sceneCurrent.maskClosable}}" bind:requestclose="closeScene" bind:back="closeScene">
     <cy-scene-member-order-detail order-id="{{sceneCurrent.params.id}}" theme="{{sceneCurrent.theme}}" bind:open="openScene" bind:back="closeScene" bind:close="closeScene" bind:orderchanged="onOrderChanged" />
   </cy-scene-sheet>

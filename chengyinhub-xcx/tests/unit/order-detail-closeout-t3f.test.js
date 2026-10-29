@@ -155,11 +155,11 @@ test('首次扫码完成订单不冒充活动结束，票夹和退款资格仍�
   } })
   assert.equal(vm.data.info.orderStateKey, 'completed')
   assert.equal(vm.data.info.orderHint, '首次扫码成功，订单已完成')
-  assert.equal(vm.data.showSecondaryTicket, true)
+  assert.equal(vm.data.primaryCta, '', '2026-10-29 V-20:订单详情不再出「查看票夹」')
   assert.equal(vm.data.info.canRequestRefund, true)
 })
 
-test('OT-01 只有票夹接口可返回的 registrationStatus=2 订单保留票夹入口', () => {
+test('OT-01 主 CTA 只剩待支付的去支付，订单详情不再出票夹入口(2026-10-29 V-20)', () => {
   const cases = [
     {
       label: '待支付', info: { registrationStatus: 1, paymentStatus: 0 },
@@ -189,25 +189,25 @@ test('OT-01 只有票夹接口可返回的 registrationStatus=2 订单保留票�
     },
     {
       label: '进行中有效票', info: { registrationStatus: 2, paymentStatus: 2, verificationStatus: 0 },
-      state: 'in_progress', primary: 'ticket', secondary: false,
+      state: 'in_progress', primary: '', secondary: false,
     },
     {
       label: '自然结束有效票', info: {
         registrationStatus: 2, paymentStatus: 2, verificationStatus: 0,
         cmsActivity: { startDate: '2020-01-01 10:00:00', endDate: '2020-01-01 11:00:00' },
       },
-      state: 'completed', primary: '', secondary: true,
+      state: 'completed', primary: '', secondary: false,
     },
     {
       label: '已核销有效票', info: { registrationStatus: 2, paymentStatus: 2, verificationStatus: 1 },
-      state: 'completed', primary: '', secondary: true,
+      state: 'completed', primary: '', secondary: false,
     },
     {
       label: '首次扫码完成有效票', info: {
         registrationStatus: 2, paymentStatus: 2, verificationStatus: 0,
         firstSuccessfulScanAt: '2026-10-01 18:16:47',
       },
-      state: 'completed', primary: '', secondary: true,
+      state: 'completed', primary: '', secondary: false,
     },
   ]
 
@@ -221,6 +221,6 @@ test('OT-01 只有票夹接口可返回的 registrationStatus=2 订单保留票�
     }, entry.info) })
     assert.equal(vm.data.info.orderStateKey, entry.state, entry.label + ' 状态锚点')
     assert.equal(vm.data.primaryCta, entry.primary, entry.label + ' 主 CTA')
-    assert.equal(vm.data.showSecondaryTicket, entry.secondary, entry.label + ' 次级票夹 CTA')
+    assert.equal(vm.data.showSecondaryTicket, undefined, entry.label + ' 次级票夹 CTA 已删')
   })
 })
