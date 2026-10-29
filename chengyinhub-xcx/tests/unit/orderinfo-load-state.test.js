@@ -75,7 +75,7 @@ test('订单深链查看票夹只发起一次导航，普通返回仍回订单�
   )
   global.wx = wx
   detail.triggerEvent = (name, data) => { if (name === 'close') shell.backToOrderList({ detail: data }) }
-  detail.data.info = { id: 42, ownerType: 2 }
+  detail.data.info = { id: 42, ownerType: 2, paymentStatus: 2, registrationStatus: 2 }
   detail.goSignInfo()
   assert.deepEqual(navigations, ['/subpackageMember/signup/index?focusId=42&stype=2'])
   shell.backToOrderList()

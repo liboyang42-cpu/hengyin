@@ -230,7 +230,7 @@ Page({
       toast(status === 4 ? '票已过期' : '票已取消');
       return;
     }
-    if (status !== 2) {
+    if (status !== 2 || Number(item.paymentStatus) !== 2) {
       toast('票状态待确认');
       return;
     }
@@ -694,7 +694,7 @@ function walletCard(item) {
 }
 /* 能用的票:已报名(已付款 / 免费)、没核验、没取消没过期,到期日也还没过 */
 function usableTicket(item) {
-  if (Number(item.registrationStatus) !== 2 || item.verificationStatus == 1) return false;
+  if (Number(item.registrationStatus) !== 2 || Number(item.paymentStatus) !== 2 || item.verificationStatus == 1) return false;
   const until = item.wUntil ? new Date(String(item.wUntil).replace(/-/g, '/')) : null;
   return !(until && !isNaN(until.getTime()) && until.getTime() < Date.now());
 }
