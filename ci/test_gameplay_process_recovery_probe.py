@@ -393,5 +393,222 @@ class GameplayProcessRecoveryControls(unittest.TestCase):
         self.assertIn('UNKNOWN_PRESERVE_ORIGINAL', source)
 
 
+
+    def test_packaged_scope_is_manual_and_explicit_without_reusing_old_run_action(self):
+        env = {'CHENGYIN_CI_GAMEPLAY_PROCESS_RECOVERY': 'true',
+               'CHENGYIN_CI_GAMEPLAY_CAPACITY': 'true',
+               'CHENGYIN_CI_PACKAGED_GAMEPLAY_CAPACITY': 'true',
+               'GITHUB_EVENT_NAME': 'workflow_dispatch', 'GITHUB_SHA': 'a' * 40}
+        with mock.patch.object(probe.owned, 'validate_execution_env'), \
+                mock.patch.object(probe, 'command', return_value=('a' * 40).encode()):
+            probe.packaged_gate(env)
+            for key, value in [('CHENGYIN_CI_PACKAGED_GAMEPLAY_CAPACITY', 'false'),
+                               ('GITHUB_EVENT_NAME', 'pull_request'),
+                               ('CHENGYIN_CI_GAMEPLAY_CAPACITY', 'false')]:
+                with self.subTest(key=key), self.assertRaises(RuntimeError):
+                    probe.packaged_gate(dict(env, **{key: value}))
+
+    def test_packaged_jar_requires_real_main_and_unique_nested_production_classes(self):
+        # Synthetic ZIPs only exercise this validator, never claim Java/runtime acceptance.
+        import io
+        import zipfile
+        with tempfile.TemporaryDirectory() as directory:
+            jar = Path(directory) / 'application.jar'
+            def write(main='com.chengyinhub.RuoYiApplication', source='a' * 40, child=False, duplicate=False):
+                nested = io.BytesIO()
+                with zipfile.ZipFile(nested, 'w') as library:
+                    for key in probe.PACKAGED_CLASSES[2:]:
+                        library.writestr(key + '.class', key.encode())
+                    if duplicate:
+                        library.writestr(probe.PACKAGED_CLASSES[0] + '.class', b'duplicate')
+                    if child:
+                        library.writestr(probe.CHILD_PATH + '.class', b'test-only')
+                with zipfile.ZipFile(jar, 'w') as archive:
+                    archive.writestr('META-INF/MANIFEST.MF',
+                        'Manifest-Version: 1.0\r\nMain-Class: org.springframework.boot.loader.launch.JarLauncher\r\n'
+                        'Start-Class: ' + main + '\r\n\r\n')
+                    archive.writestr('BOOT-INF/classes/git.properties', 'git.commit.id.full=' + source)
+                    for key in probe.PACKAGED_CLASSES[:2]:
+                        archive.writestr('BOOT-INF/classes/' + key + '.class', key.encode())
+                    archive.writestr('BOOT-INF/lib/original.jar', nested.getvalue())
+            write()
+            result = probe.packaged_jar_proof(jar, 'a' * 40)
+            self.assertEqual('com.chengyinhub.RuoYiApplication', result['startClass'])
+            self.assertFalse(result['testClasspathMountedIntoSubject'])
+            self.assertEqual(set(key.replace('/', '.') for key in probe.PACKAGED_CLASSES),
+                             set(result['productionClassSha256']))
+            self.assertIn('BOOT-INF/lib/original.jar!/', result['productionClassOwners'][
+                probe.PACKAGED_CLASSES[-1].replace('/', '.')]['entry'])
+            for mutation in ({'main': probe.CHILD}, {'source': 'b' * 40}, {'child': True}, {'duplicate': True}):
+                write(**mutation)
+                with self.subTest(mutation=mutation), self.assertRaises(RuntimeError):
+                    probe.packaged_jar_proof(jar, 'a' * 40)
+
+    def test_packaged_hard_budget_requires_real_subject_and_rejects_foreign_or_override(self):
+        name = 'cy-auth-' + 'a' * 32
+        row = {'Id': 'b' * 64, 'Name': '/' + name + '-app', 'Image': 'sha256:owned',
+               'State': {'Running': True, 'Paused': False, 'OOMKilled': False, 'Pid': 123, 'StartedAt': 'owned'},
+               'Config': {'Image': probe.JDK_IMAGE, 'Labels': {'chengyin.auth-recovery': name},
+                   'Entrypoint': ['/trace/strace'],
+                   'Cmd': ['-A', '-f', '-s', '0', '-e', 'trace=connect,sendto,sendmsg',
+                           '-o', '/evidence/gameplay-packaged-network.trace'] + probe.PACKAGED_COMMAND,
+                   'Env': ['GITHUB_SHA=' + 'a' * 40, 'CHENGYIN_CI_PACKAGED_GAMEPLAY_CAPACITY=true']},
+               'HostConfig': {'Memory': 1073741824, 'MemorySwap': 1073741824, 'NanoCpus': 1000000000,
+                              'PidsLimit': 256, 'ReadonlyRootfs': True, 'Privileged': False,
+                              'PortBindings': {}, 'NetworkMode': name},
+               'NetworkSettings': {'Networks': {name: {'NetworkID': 'n'}}}}
+        with mock.patch.dict(os.environ, {'GITHUB_SHA': 'a' * 40}):
+            self.assertEqual('b' * 64, probe.packaged_resource_proof(row, name, 'n')['cid'])
+            for field, value in [('Memory', 2 * 1073741824), ('MemorySwap', -1), ('NanoCpus', 2000000000),
+                                 ('PidsLimit', 512), ('ReadonlyRootfs', False), ('Privileged', True)]:
+                bad = copy.deepcopy(row); bad['HostConfig'][field] = value
+                with self.subTest(field=field), self.assertRaises(RuntimeError):
+                    probe.packaged_resource_proof(bad, name, 'n')
+            for key, value in [('Id', 'foreign'), ('Name', '/foreign')]:
+                with self.subTest(key=key), self.assertRaises(RuntimeError):
+                    probe.packaged_resource_proof(dict(row, **{key: value}), name, 'n')
+            for override in ('JAVA_TOOL_OPTIONS=-javaagent:/foreign.jar', 'CLASSPATH=/recovery-testclasses',
+                             'LOADER_MAIN=' + probe.CHILD, 'SPRING_PROFILES_ACTIVE=foreign'):
+                bad = copy.deepcopy(row); bad['Config']['Env'].append(override)
+                with self.subTest(override=override), self.assertRaises(RuntimeError):
+                    probe.packaged_resource_proof(bad, name, 'n')
+            bad = copy.deepcopy(row); bad['Config']['Cmd'][-len(probe.PACKAGED_COMMAND):] = ['java', '-jar', '/foreign.jar']
+            with self.assertRaises(RuntimeError): probe.packaged_resource_proof(bad, name, 'n')
+
+    def test_packaged_jvm_is_bound_to_actual_app_cgroup_not_a_witness_or_heap_claim(self):
+        cmd = b'\0'.join(item.encode() for item in probe.PACKAGED_COMMAND) + b'\0'
+        stat = b'23 (java) ' + b' '.join([b'S', b'1'] + [b'0'] * 17 + [b'123'])
+        group = b'0::/owned-app\n'
+        args = [cmd, stat, group, group, b'100000 100000\n', b'1073741824\n', b'0\n', b'256\n']
+        self.assertEqual('123', probe.packaged_jvm_proof(*args)['javaStartTicks'])
+        for index, bad in [(0, b'java\0-Xmx512m\0'), (1, b'23 (java) S 1'),
+                           (2, b'0::/foreign\n'), (4, b'max 100000'), (5, b'2147483648'),
+                           (6, b'1073741824'), (7, b'512')]:
+            changed = list(args); changed[index] = bad
+            with self.subTest(index=index), self.assertRaises(RuntimeError):
+                probe.packaged_jvm_proof(*changed)
+
+    def test_takeover_hook_follows_committed_writes_without_extra_business_requests(self):
+        capacity = probe.load('packaged_curve_protocol_control', 'ci/capacity_mixed_probe.py')
+        identities, http, rows, calls, receipts = self.protocol_fixture()
+        stages = []
+        def transition(concurrency):
+            stages.append((concurrency, len(calls), len(receipts)))
+            return None if concurrency != 6 else {'originalIdentityReadbackRequired': True}
+        report = probe.observe_core_workload(identities, http, rows, capacity.run_curve,
+            lambda: self.fail('unexpected deadline'), before_readback=transition)
+        self.assertEqual([(1, 24, 24), (3, 72, 48), (6, 120, 72)], stages)
+        self.assertEqual(144, len(calls))
+        self.assertEqual(72, len(receipts))
+        self.assertEqual('BUSINESS_ASSERTIONS_PASSED', report['status'])
+        self.assertEqual({'originalIdentityReadbackRequired': True}, report['waves'][-1]['subjectTransition'])
+
+    def test_failed_transition_preserves_original_committed_intents_and_never_replays(self):
+        capacity = probe.load('packaged_transition_failure_control', 'ci/capacity_mixed_probe.py')
+        identities, http, rows, calls, receipts = self.protocol_fixture()
+        report = {}
+        def rejected(_):
+            raise RuntimeError('original instance absence unconfirmed')
+        with self.assertRaisesRegex(RuntimeError, 'original instance absence unconfirmed'):
+            probe.observe_core_workload(identities, http, rows, capacity.run_curve,
+                lambda: self.fail('unexpected deadline'), report, before_readback=rejected)
+        self.assertEqual('NOT_COMPLETED', report['status'])
+        self.assertEqual(24, len(calls))
+        self.assertEqual(24, len(receipts), 'original committed receipts survive a failed takeover')
+
+    def test_packaged_receipt_fault_classification_never_invents_unsent_or_success(self):
+        original = {'commandId': 'original', 'expectedChapterId': 31, 'targetChapterId': 32}
+        self.assertEqual('SUCCESS', probe.packaged_receipt_outcome({'code': 200, 'data': original}, original))
+        self.assertEqual('LEGAL_AUTH_REJECTION', probe.packaged_receipt_outcome({'code': 401}, original))
+        self.assertEqual('SYSTEM_FAILURE', probe.packaged_receipt_outcome({'code': 500}, original))
+        for response in ({'code': 520}, {'code': 409}, {'code': 401, 'data': original}, {}, {'code': '500'}):
+            self.assertEqual('UNKNOWN', probe.packaged_receipt_outcome(response, original))
+        with self.assertRaises(RuntimeError):
+            probe.packaged_receipt_outcome({'code': 200, 'data': dict(original, targetChapterId=33)}, original)
+
+    def test_packaged_failed_business_cannot_call_missing_mixed_finalizer_or_clear_first_error(self):
+        name, schema = 'cy-auth-' + 'a' * 32, 'cy_e2e_auth_' + 'a' * 32
+        first = {'type': 'TimeoutError', 'reasonCode': 'PACKAGED_SCOPE_NOT_ACCEPTED'}
+        original = {'result': 'FAIL_OR_UNKNOWN_NO_RETRY', 'firstFailure': first}
+        with tempfile.TemporaryDirectory() as directory, mock.patch.object(probe, 'packaged_gate'), \
+                mock.patch.object(probe, 'load') as shared:
+            out = Path(directory)
+            (out / 'gameplay-packaged-capacity.json').write_text(json.dumps(original))
+            with self.assertRaises(RuntimeError): probe.finalize_packaged(name, schema, out, 1)
+            shared.assert_not_called()
+            saved = json.loads((out / 'gameplay-packaged-capacity.json').read_text())
+            self.assertEqual(first, saved['firstFailure'])
+            self.assertEqual(original['result'], saved['businessResultBeforeCleanup'])
+            self.assertEqual('FAIL_OR_UNKNOWN_CLEANUP_OR_SCOPE', saved['result'])
+
+    def test_seed_only_path_is_separate_from_packaged_main_and_has_no_fixture_endpoint(self):
+        source = (ROOT / 'chengyinhub-admin/src/test/java/com/chengyinhub/business/it/GameplayProcessRecoveryChild.java').read_text()
+        host = (ROOT / 'ci/gameplay_process_recovery_probe.py').read_text()
+        self.assertIn('config.path("packagedSeedOnly").isBoolean()', source)
+        self.assertIn('context.close();', source)
+        self.assertIn('CHENGYIN_CI_PACKAGED_GAMEPLAY_CAPACITY', source)
+        self.assertIn("retire(True, expected_exit=0)", host)
+        self.assertIn("if seed:\n            cmd += ['-v', str(child_classes)", host)
+        self.assertIn('boot = boot_main()', host)
+        self.assertIn('packaged_subject=True, business_probe=business_probe', host)
+        self.assertIn("report['actualBusinessHttpInvocations'] = 146", host)
+        self.assertNotIn('@RestController', source)
+        self.assertNotIn('setAuthentication(', source)
+        self.assertNotIn('System.exit(', source)
+
+
+    def test_packaged_business_validator_keeps_original_curves_categories_and_economic_facts(self):
+        capacity = probe.load('packaged_complete_protocol_control', 'ci/capacity_mixed_probe.py')
+        identities, http, rows, calls, receipts = self.protocol_fixture()
+        transition = {'oldCid': 'a' * 64, 'newCid': 'b' * 64, 'originalFactsSha256': 'c' * 64,
+                      'status': 'ORIGINAL_24_IDENTITY_READ_REPLAY_FOREIGN_AND_ALL_SQL_FACTS_VERIFIED'}
+        core = probe.observe_core_workload(identities, http, rows, capacity.run_curve,
+            lambda: self.fail('unexpected deadline'), before_readback=lambda size: transition if size == 6 else None)
+        subject = {'sourceSha': 'd' * 40, 'jarSha256': 'e' * 64, 'productionClassSha256': {key.replace('/', '.'): 'f' * 64 for key in probe.PACKAGED_CLASSES},
+                   'testClasspathMountedIntoSubject': False, 'allObservedJvmThreadsInSameCgroup': True,
+                   'memoryBytes': 1073741824, 'memorySwapBytes': 1073741824, 'nanoCpus': 1000000000, 'pidsLimit': 256,
+                   'actualMemoryMaxBytes': 1073741824, 'actualSwapMaxBytes': 0, 'actualPidsMax': 256}
+        finance = {key: {'rows': 0, 'sha256': '0' * 64} for key in probe.owned.FINANCIAL_TABLES}
+        report = {'sourceSha': 'd' * 40, 'jarSha256': 'e' * 64, 'productionClassSha256': subject['productionClassSha256'],
+                  'coreBusinessCurve': core, 'instanceTakeover': transition, 'subjects': [subject, copy.deepcopy(subject)],
+                  'financialBefore': finance, 'financialAfter': copy.deepcopy(finance),
+                  'wholeSystemCapacityAccepted': False, 'q4q8Complete': False, 'actualBusinessHttpInvocations': 146,
+                  'businessFaultReadbacks': [{'stage': 'FAULT_HELD', 'category': 'LEGAL_AUTH_REJECTION', 'elapsedSeconds': 1,
+                                              'originalIntentSha256': 'a' * 64, 'beforeFactsSha256': 'b' * 64,
+                                              'afterFactsSha256': 'b' * 64, 'resultSha256': None},
+                                            {'stage': 'RECOVERED', 'category': 'SUCCESS', 'elapsedSeconds': 1,
+                                             'originalIntentSha256': 'a' * 64, 'beforeFactsSha256': 'b' * 64,
+                                             'afterFactsSha256': 'b' * 64, 'resultSha256': 'c' * 64}]}
+        probe.validate_packaged_business(report)
+        for mutation in ('whole', 'budget', 'foreign', 'curve-missing', 'economic', 'fault-missing', 'recovery-unknown'):
+            changed = copy.deepcopy(report)
+            if mutation == 'whole': changed['q4q8Complete'] = True
+            if mutation == 'budget': changed['subjects'][0]['actualSwapMaxBytes'] = 1073741824
+            if mutation == 'foreign': changed['coreBusinessCurve']['waves'][0]['readbackCurve']['counts']['LEGAL_AUTH_REJECTION'] = 0
+            if mutation == 'curve-missing': changed['coreBusinessCurve']['waves'][2]['writeCurve']['records'].pop()
+            if mutation == 'economic': changed['financialAfter']['ums_member_balance_detail']['rows'] = 1
+            if mutation == 'fault-missing': changed['businessFaultReadbacks'].pop()
+            if mutation == 'recovery-unknown': changed['businessFaultReadbacks'][1]['category'] = 'UNKNOWN'
+            with self.subTest(mutation=mutation), self.assertRaises(RuntimeError):
+                probe.validate_packaged_business(changed)
+
+
+    def test_fault_oracle_allows_only_explicit_owned_redis_pause_and_never_mysql_pause(self):
+        name = 'cy-auth-' + 'a' * 32
+        objects = {}
+        for key in ('mysql', 'redis'):
+            objects[name + '-' + key] = {
+                'Name': '/' + name + '-' + key, 'Id': key,
+                'Config': {'Labels': {'chengyin.auth-recovery': name}},
+                'NetworkSettings': {'Networks': {name: {'NetworkID': 'original-network'}}},
+                'State': {'Running': True, 'Paused': key == 'redis', 'OOMKilled': False,
+                          'Pid': 1 if key == 'mysql' else 2, 'StartedAt': 'original-' + key}}
+        with mock.patch.object(probe, 'inspect', side_effect=lambda key: objects[key]):
+            with self.assertRaises(RuntimeError): probe.store_identity(name)
+            observed = probe.store_identity(name, allow_redis_pause=True)
+            self.assertEqual('redis', observed['redis']['id'])
+            objects[name + '-mysql']['State']['Paused'] = True
+            with self.assertRaises(RuntimeError): probe.store_identity(name, allow_redis_pause=True)
+
 if __name__ == '__main__':
     unittest.main()
