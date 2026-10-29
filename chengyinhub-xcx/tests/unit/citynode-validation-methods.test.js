@@ -36,6 +36,7 @@ function mountPoiScene(node, overrides) {
     getApp() { return app; },
     require(request) {
       if (request === '../../../../utils/geo.js') return require('../../utils/geo.js');
+      if (request === '../../../../utils/roam-recovery.js') return require('../../utils/roam-recovery.js');
       if (request === '../../../../utils/response-shape.js') return require('../../utils/response-shape.js');
       if (request === '../../../../utils/validation-method-labels.js') return require('../../utils/validation-method-labels.js');
       if (request === '../../../../utils/media-preview.js') return loadMediaPreview(wx);

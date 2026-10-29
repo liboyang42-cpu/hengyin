@@ -4,6 +4,7 @@ const modal = require('../../../../utils/modal.js'); const pageMotion = require(
 const toast = require('../../../../utils/toast.js');
 const app = getApp()
 const { isRecord, isRecordList, bizFailureMessage } = require('../../../../utils/response-shape.js')
+const { exactSessionId } = require('../../../../utils/roam-recovery.js')
 
 const { validationMethodLabel } = require('../../../../utils/validation-method-labels.js')
 const mediaPreview = require('../../../../utils/media-preview.js')
@@ -14,9 +15,11 @@ function nonEmptyString(value) {
 }
 
 function positiveId(value) {
-  if (typeof value !== 'number' && (typeof value !== 'string' || !/^[1-9]\d*$/.test(value))) return null
-  const id = Number(value)
-  return Number.isSafeInteger(id) && id > 0 ? id : null
+  if (typeof value !== 'number' && typeof value !== 'string') return null
+  const id = exactSessionId(value)
+  if (!id) return null
+  // Keep v1 pending records compatible while preserving Long strings exactly.
+  return Number.isSafeInteger(Number(id)) ? Number(id) : id
 }
 
 let attemptSequence = 0
@@ -583,7 +586,7 @@ Component({
         success: res => {
           if (this._closed || poiId !== this.data.poiId || token !== this._loadToken || actor !== ownerId()) return
           const rows = res && res.code == 200 && res.data && res.data.rows
-          this.setData({ reviews: Array.isArray(rows) ? rows.map(row => ({ ...row, mine: String(row.memberId) === actor })) : [], reviewsError: !Array.isArray(rows) })
+          this.setData({ reviews: Array.isArray(rows) ? rows.map(row => ({ ...row, mine: actor !== null && positiveId(row.memberId) === actor })) : [], reviewsError: !Array.isArray(rows) })
         },
         fail: () => { if (!this._closed && token === this._loadToken && actor === ownerId()) this.setData({ reviewsError: true }) },
         successStatusAbnormal: () => { if (!this._closed && token === this._loadToken && actor === ownerId()) this.setData({ reviewsError: true }) },

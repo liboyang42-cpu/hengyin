@@ -33,7 +33,8 @@ function persistPhoto(wxApi, tempFilePath) {
       resolve({ path: tempFilePath || '', persisted: false })
       return
     }
-    wxApi.saveFile({
+    const fallback = () => resolve({ path: tempFilePath, persisted: false })
+    try { wxApi.saveFile({
       tempFilePath,
       success(res) {
         const savedFilePath = res && res.savedFilePath
@@ -41,10 +42,8 @@ function persistPhoto(wxApi, tempFilePath) {
           ? { path: savedFilePath, persisted: true }
           : { path: tempFilePath, persisted: false })
       },
-      fail() {
-        resolve({ path: tempFilePath, persisted: false })
-      },
-    })
+      fail: fallback,
+    }) } catch (_) { fallback() }
   })
 }
 
