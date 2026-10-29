@@ -89,9 +89,8 @@
 
 <!-- H050/H051 帖文操作弹层(三合一:编辑 / 删除 / 举报,危险确认闸在组件内部)。
      替换掉原来只有「举报」的自绘弹层 —— 它按 index 取行,能力少一半。 -->
-<cy-post-actions id="post-actions" show="{{postActionShow}}" owner="{{currentActionOwner}}"
-                 post-id="{{currentActionId}}" summary="{{currentActionSummary}}" bind:select="onPostAction" bind:close="closePostActions"
-                 bookmarkable="{{true}}" bookmarked="{{currentActionBookmarked}}" />
+<cy-post-actions id="post-actions" show="{{postActionShow}}" owner="{{currentActionOwner}}" bookmarkable bookmarked="{{currentActionBookmarked}}"
+                 post-id="{{currentActionId}}" summary="{{currentActionSummary}}" bind:select="onPostAction" bind:close="closePostActions" />
 
 <!-- 新建帖文弹窗。⚠️ 必须挂在**页面顶层**,和其他弹层平级 ——
      一开始误插进了上面那个自绘举报层里,那一层为假时它永远不渲染,

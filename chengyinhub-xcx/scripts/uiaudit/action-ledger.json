@@ -1328041,7 +1328041,7 @@
       }
     },
     {
-      "id": "pages/square/list/index.wxml:103:bind:close:onComposeClose:19",
+      "id": "pages/square/list/index.wxml:102:bind:close:onComposeClose:19",
       "route": "pages/square/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1328064,7 +1328064,7 @@
         "tag": "cy-post-compose",
         "event": "bind:close",
         "handler": "onComposeClose",
-        "line": 103,
+        "line": 102,
         "selectorHint": "cy-post-compose[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1328108,7 +1328108,7 @@
       }
     },
     {
-      "id": "pages/square/list/index.wxml:103:bind:published:onComposePublished:20",
+      "id": "pages/square/list/index.wxml:102:bind:published:onComposePublished:20",
       "route": "pages/square/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1328189,7 +1328189,7 @@
         "tag": "cy-post-compose",
         "event": "bind:published",
         "handler": "onComposePublished",
-        "line": 103,
+        "line": 102,
         "selectorHint": "cy-post-compose[bind:published]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1328250,7 +1328250,7 @@
       }
     },
     {
-      "id": "pages/square/list/index.wxml:108:bind:close:onAvatarPopClose:22",
+      "id": "pages/square/list/index.wxml:107:bind:close:onAvatarPopClose:22",
       "route": "pages/square/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1328273,7 +1328273,7 @@
         "tag": "cy-popover",
         "event": "bind:close",
         "handler": "onAvatarPopClose",
-        "line": 108,
+        "line": 107,
         "selectorHint": "cy-popover[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1328317,7 +1328317,7 @@
       }
     },
     {
-      "id": "pages/square/list/index.wxml:108:bind:pick:onAvatarPopPick:21",
+      "id": "pages/square/list/index.wxml:107:bind:pick:onAvatarPopPick:21",
       "route": "pages/square/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1328340,7 +1328340,7 @@
         "tag": "cy-popover",
         "event": "bind:pick",
         "handler": "onAvatarPopPick",
-        "line": 108,
+        "line": 107,
         "selectorHint": "cy-popover[bind:pick]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1328430,7 +1328430,7 @@
       }
     },
     {
-      "id": "pages/square/list/index.wxml:111:bind:cancel:onReportReasonCancel:24",
+      "id": "pages/square/list/index.wxml:110:bind:cancel:onReportReasonCancel:24",
       "route": "pages/square/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1328453,7 +1328453,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:cancel",
         "handler": "onReportReasonCancel",
-        "line": 111,
+        "line": 110,
         "selectorHint": "cy-option-sheet[bind:cancel]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1328498,7 +1328498,7 @@
       }
     },
     {
-      "id": "pages/square/list/index.wxml:111:bind:select:onReportReasonSelect:23",
+      "id": "pages/square/list/index.wxml:110:bind:select:onReportReasonSelect:23",
       "route": "pages/square/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1328521,7 +1328521,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:select",
         "handler": "onReportReasonSelect",
-        "line": 111,
+        "line": 110,
         "selectorHint": "cy-option-sheet[bind:select]",
         "visibleCondition": null,
         "disabledCondition": null,

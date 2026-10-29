@@ -20,7 +20,7 @@ test('帖文收藏在列表、详情、个人主页和我的收藏中共用同�
   assert.doesNotMatch(componentJs, /showFavorite|emitFavorite/)
   assert.doesNotMatch(componentWxml, /emitFavorite|isBookmarked/)
   assert.doesNotMatch(list, /show-favorite|bind:favorite=/)
-  assert.match(list, /<cy-post-actions[^>]*bookmarkable="\{\{true\}\}"[^>]*bookmarked="\{\{currentActionBookmarked\}\}"/)
+  assert.match(list, /<cy-post-actions[^>]*\sbookmarkable\s[^>]*bookmarked="\{\{currentActionBookmarked\}\}"/)
   assert.match(read('pages/square/list/index.js'), /detail\.action === 'bookmark'[\s\S]*this\.favoriteClick\(/)
   assert.match(read('pages/mylike/mylike.wxml'), /show-more[^>]*bind:more="onPostMore"/)
   assert.match(detailJs, /favoriteClick\(\)[\s\S]*\/api\/creativesquare\/bookmark/)
