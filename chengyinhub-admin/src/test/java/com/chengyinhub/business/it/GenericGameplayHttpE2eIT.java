@@ -722,6 +722,57 @@ class GenericGameplayHttpE2eIT {
         record("GET","/api/play/theme/state?topicId="+topicId,null,play);
         rejected(play.getBody());assertTrue(play.getBody().path("msg").asText().contains("通行证"),play.getBody().toString());
         assertFreshTemplateCopyFollowsPublishedEligibility(topicId,headers);
+
+        assertNotNull(context.getBean(com.chengyinhub.web.controller.api.ApiLoginController.class));
+        org.springframework.data.redis.connection.RedisConnectionFactory redis =
+                context.getBean(org.springframework.data.redis.connection.RedisConnectionFactory.class);
+        assertFalse(org.mockito.Mockito.mockingDetails(redis).isMock(), "Logout must use the private real Redis");
+        try (org.springframework.data.redis.connection.RedisConnection connection = redis.getConnection()) {
+            assertEquals("PONG", connection.ping());
+        }
+        long memberCount = database.queryForObject("SELECT COUNT(*) FROM ums_member", Long.class);
+        JsonNode authorInfo = success(post("/api/user/info", json.createObjectNode(), headers));
+        JsonNode strangerInfo = success(post("/api/user/info", json.createObjectNode(), stranger));
+        assertEquals(author.getId().longValue(), authorInfo.path("id").asLong());
+        long strangerId = strangerInfo.path("id").asLong();
+        assertTrue(strangerId > 0);
+        assertNotEquals(author.getId().longValue(), strangerId);
+
+        ResponseEntity<JsonNode> loggedOut = http.exchange("/api/logout", org.springframework.http.HttpMethod.POST,
+                new org.springframework.http.HttpEntity<>(json.createObjectNode(), headers), JsonNode.class);
+        record("POST", "/api/logout", null, loggedOut);
+        assertEquals(200, loggedOut.getStatusCode().value());
+        success(loggedOut.getBody());
+        ResponseEntity<JsonNode> revoked = http.exchange("/api/user/info", org.springframework.http.HttpMethod.POST,
+                new org.springframework.http.HttpEntity<>(json.createObjectNode(), headers), JsonNode.class);
+        record("POST", "/api/user/info", null, revoked);
+        assertEquals(401, revoked.getStatusCode().value(), "The logged-out token must fail on a protected HTTP endpoint");
+        assertNotNull(revoked.getBody());
+        assertEquals(401, revoked.getBody().path("code").asInt());
+        assertEquals(strangerId, success(post("/api/user/info", json.createObjectNode(), stranger)).path("id").asLong(),
+                "Logging out one member must not revoke the other member");
+        assertEquals(memberCount, database.queryForObject("SELECT COUNT(*) FROM ums_member", Long.class).longValue());
+        assertEquals(author.getWxOpenId(),
+                database.queryForObject("SELECT wx_open_id FROM ums_member WHERE id=?", String.class, author.getId()));
+
+        String reentryToken;
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(issuance));
+        try { reentryToken = login.loginByMember(author, "phone", author.getPhone(), null); }
+        finally { RequestContextHolder.resetRequestAttributes(); }
+        assertFalse(jwt.equals(reentryToken), "Re-entry must issue a distinct session");
+        org.springframework.http.HttpHeaders reentry = new org.springframework.http.HttpHeaders();
+        reentry.setBearerAuth(reentryToken);
+        reentry.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
+        assertEquals(author.getId().longValue(),
+                success(post("/api/user/info", json.createObjectNode(), reentry)).path("id").asLong());
+        ResponseEntity<JsonNode> stillRevoked = http.exchange("/api/user/info", org.springframework.http.HttpMethod.POST,
+                new org.springframework.http.HttpEntity<>(json.createObjectNode(), headers), JsonNode.class);
+        record("POST", "/api/user/info", null, stillRevoked);
+        assertEquals(401, stillRevoked.getStatusCode().value(), "Re-entry must not resurrect a revoked token");
+        assertNotNull(stillRevoked.getBody());
+        assertEquals(401, stillRevoked.getBody().path("code").asInt());
+        assertEquals(strangerId, success(post("/api/user/info", json.createObjectNode(), stranger)).path("id").asLong());
+        assertEquals(memberCount, database.queryForObject("SELECT COUNT(*) FROM ums_member", Long.class).longValue());
     }
     @Test void terminalVoteAdoptionUsesThePersistedFinalChapter() throws Exception {
         org.springframework.http.HttpHeaders headers=loginHeaders("13800000003","结局测试作者");
