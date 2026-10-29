@@ -486,7 +486,7 @@ Component({
     goSignInfo() {
       const info = this.data.info || {};
       if (Number(info.paymentStatus) !== 2 || Number(info.registrationStatus) !== 2) {
-        toast('请先完成支付，结果待确认时请刷新订单');
+        toast('支付待确认，请刷新订单');
         return;
       }
       const stype = Number(info.ownerType) === 1 ? 0 : 2;
