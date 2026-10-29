@@ -1,0 +1,1116 @@
+-- runner: requires=transaction
+-- ============================================================================
+-- 城瘾功能覆盖测试线路（上海）：《海上方舟》《南京路上的四座高峰》
+-- 生成：seed_chengyin_test_routes_20261024（Grok Bot 草稿，未在任何库执行）
+-- 格式对齐 chengyinhub-admin/sql/migration_seed_official_solo_story_topics_20260823.sql
+--   · member_id=100000 平台自营；product_type=1；is_template=0
+--   · user_status=0 + lifecycle=0(DRAFT)：不公开上架，仅供内测
+--   · 坐标为 GCJ-02（由 OSM WGS84 换算，标 est 的点为人工推估），公开前须双机实走校准
+--   · advanced_config_json 已用仓库 AdvancedGameConfigValidator 原文逐条校验通过
+-- 每主题 2 章：sort_id=1 主线（required=1，逐站 unlock_after_node_id 线性解锁）
+--              sort_id=2 支线（required=0，覆盖剩余玩法）
+-- 幂等键：cms_topic(member_id,name)、cms_member_template(member_id,title)、cms_topic_node(topic_id,name)
+-- ⚠️ 带 ⚠ 的点：hiddenObject 图片需先上传到 /profile/chengyin-test/；vm=4 打卡码需打印。
+-- ============================================================================
+
+START TRANSACTION;
+
+-- ======================= 主题：海上方舟 =======================
+INSERT INTO cms_topic
+       (member_id, topic_type, product_type, name, subtitle, description,
+        address_name, total_time, total_mileage, location_count, template_count, img_url,
+        is_template, status, user_status, merchant_status, self_play, self_play_price,
+        self_play_quota, finish_medal_name, lifecycle, del_flag, create_by, create_time)
+SELECT 100000, 1, 1, '海上方舟', '档案 CUA-HK-39「方舟」：一份仍在变长的名单', '城市异常档案局 · 外勤档案（游戏设定）
+档案编号：CUA-HK-39「方舟」
+档案类别：庇护型 / 蔓生级
+你的身份：外勤调查员，初始权限 L1
+特殊收容措施：调查员须沿苏州河由西向东逐站进入目标区域，每站解密一份残档后方可获得下一站坐标。区域内须保持肃静；不得进入居民楼；不得对名单墙计数以外的任何人进行拍摄。
+描述：一片以提篮桥为中心的街区。档案局记录显示，与该区域相关的一份名单自建档以来持续增长。本档案的任务是查明：是什么在“收留”这些名字。
+【游戏设定】“城市异常档案局”、档案编号、权限等级、调查员身份、受访者与档案员均为虚构；文中“异常”只是叙事装置。所有标【史实】的内容均为真实历史并附来源（见每站来源与《解密附录》）。
+路线：和平饭店北楼→河滨大楼→霍山路JDC旧址→霍山公园→舟山路59号→摩西会堂（上海犹太难民纪念馆）→白马咖啡馆，约4.9公里。纪念馆周一闭馆，16:00停止入场。测试版：EXPERIMENTAL，坐标待双机实走校准。',
+       '上海市黄浦区、虹口区', 12600, 4.9, 14, 14, NULL,
+       0, 1, 0, 0, 1, 0.00, 100, '方舟见证人', 0, 0, 'seed_chengyin_test_routes_20261024', NOW()
+  FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM cms_topic t WHERE t.member_id=100000 AND t.name='海上方舟' AND t.del_flag=0);
+INSERT INTO product_role (topic_id, slot, entity_type, entity_id, status)
+SELECT t.id,'CONTENT','PLATFORM',NULL,1 FROM cms_topic t
+ WHERE t.member_id=100000 AND t.name='海上方舟' AND t.del_flag=0
+   AND NOT EXISTS (SELECT 1 FROM product_role r WHERE r.topic_id=t.id AND r.slot='CONTENT' AND r.status=1);
+INSERT INTO cms_topic_chapter
+       (topic_id, name, description, sort_id, location_count, template_count,
+        required, recruit_enabled, max_merchant, terms_mode, create_by, create_time)
+SELECT t.id, '主线', '按顺序完成，完成上一站才解锁下一站。', 1, 7, 7, 1, 0, 0, 'TRAFFIC', 'seed_chengyin_test_routes_20261024', NOW()
+  FROM cms_topic t WHERE t.member_id=100000 AND t.name='海上方舟' AND t.del_flag=0
+   AND NOT EXISTS (SELECT 1 FROM cms_topic_chapter c WHERE c.topic_id=t.id AND c.sort_id=1);
+INSERT INTO cms_topic_chapter
+       (topic_id, name, description, sort_id, location_count, template_count,
+        required, recruit_enabled, max_merchant, terms_mode, create_by, create_time)
+SELECT t.id, '支线 · 玩法彩蛋', '可选，不影响通关；用于覆盖其余玩法。', 2, 7, 7, 0, 0, 0, 'TRAFFIC', 'seed_chengyin_test_routes_20261024', NOW()
+  FROM cms_topic t WHERE t.member_id=100000 AND t.name='海上方舟' AND t.del_flag=0
+   AND NOT EXISTS (SELECT 1 FROM cms_topic_chapter c WHERE c.topic_id=t.id AND c.sort_id=2);
+INSERT INTO cms_member_template
+       (member_id, title, description, players, usage_location, required_materials,
+        duration, difficulty, is_sync, rule_instructions, validation_method,
+        question_name, question_answer, question_a, question_b, question_c, question_d, correct_answer,
+        photo_require_desc, hint1, hint2, answer_reveal,
+        feedback_text, story_text, advanced_config_json, xp_value,
+        status, publish_status, draft_status, check_status, del_flag, create_by, create_time)
+SELECT 100000, 'CY-T1-01 身份登记：沙逊大厦', '【解密目标】填写空白的入境登记表，激活外勤身份｜第1/7站：在和平饭店北楼外完成身份登记，50米内GPS到达即完成。', '1人', '上海市黄浦区南京东路20号（原沙逊大厦，外部公共区域）', '手机、定位权限',
+       10, '普通', 1, '【解密目标】填写空白的入境登记表，激活外勤身份｜第1/7站：在和平饭店北楼外完成身份登记，50米内GPS到达即完成。', 5,
+       NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       '▌解密完成｜权限 L1 → L2
+登记表备注栏恢复为：“持有者已被收留。收留方：一张签证。”
+🔑 关键词1/7「签证」
+📎 登记表背面渗出一行铅笔字：“北苏州路400号。那栋楼在空中写着它主人的名字。”', '▌CUA-HK-39「方舟」｜残档 01/7｜入境登记表 · 权限 L1
+调查员须知：本档案的第一份文件是一张空白登记表。档案局无法解释它为何每次被打开时都是空白的。请由你本人填写。
+——
+【史实】1938—1940年任中国驻维也纳总领事的何凤山，不顾上级反对持续签发“上海签证”，存世的一张序号已到3639。身后这座绿色金字塔顶的大楼是沙逊大厦（今和平饭店北楼），1926年动工、1929年落成，由公和洋行设计。
+——
+登记表：
+出发城市：█████
+姓名：█████
+抵达地点：外滩
+备注：持有者“已被收留”。收留方：[数据删除]', '{"schemaVersion":1,"profile":{"enabled":true,"title":"1939 抵沪登记","lead":"为这趟旅程建立一个身份，后续结局文字会引用它。","questions":[{"key":"origin","label":"你从哪座城市出发？","kind":"pick","options":[{"key":"vienna","label":"维也纳","effects":[{"op":"ADD_TAG","value":"tag.from_vienna"}]},{"key":"berlin","label":"柏林","effects":[{"op":"ADD_TAG","value":"tag.from_berlin"}]},{"key":"prague","label":"布拉格","effects":[{"op":"ADD_TAG","value":"tag.from_prague"}]}]},{"key":"alias","label":"给1939年的自己起个名字","kind":"text","maxLength":8}]}}', 20,
+       1, 1, 1, 1, 0, 'seed_chengyin_test_routes_20261024', NOW()
+  FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM cms_member_template m WHERE m.member_id=100000 AND m.title='CY-T1-01 身份登记：沙逊大厦' AND m.del_flag=0);
+INSERT INTO cms_topic_node
+       (topic_id, chapter_id, name, description, address, longitude, latitude,
+        template_id, checkin_code, business_time, status, sort_id, xp_value,
+        hook_text, card_hook_long, fragment_text, create_by, create_time)
+SELECT t.id, c.id, '启航 · 和平饭店北楼', '残档01：入境登记表（空白）', '上海市黄浦区南京东路20号（原沙逊大厦，外部公共区域）', '121.489565', '31.239110',
+       m.id, REPLACE(UUID(),'-',''), '00:00-23:59', 1, 101, 20,
+       '残档01：入境登记表（空白）', '【解密目标】填写空白的入境登记表，激活外勤身份｜第1/7站：在和平饭店北楼外完成身份登记，50米内GPS到达即完成。', '▌解密完成｜权限 L1 → L2
+登记表备注栏恢复为：“持有者已被收留。收留方：一张签证。”
+🔑 关键词1/7「签证」
+📎 登记表背面渗出一行铅笔字：“北苏州路400号。那栋楼在空中写着它主人的名字。”', 'seed_chengyin_test_routes_20261024', NOW()
+  FROM cms_topic t
+  JOIN cms_topic_chapter c ON c.topic_id=t.id AND c.sort_id=1
+  JOIN cms_member_template m ON m.member_id=100000 AND m.title='CY-T1-01 身份登记：沙逊大厦' AND m.del_flag=0
+ WHERE t.member_id=100000 AND t.name='海上方舟' AND t.del_flag=0
+   AND NOT EXISTS (SELECT 1 FROM cms_topic_node n WHERE n.topic_id=t.id AND n.name='启航 · 和平饭店北楼');
+INSERT INTO cms_member_template
+       (member_id, title, description, players, usage_location, required_materials,
+        duration, difficulty, is_sync, rule_instructions, validation_method,
+        question_name, question_answer, question_a, question_b, question_c, question_d, correct_answer,
+        photo_require_desc, hint1, hint2, answer_reveal,
+        feedback_text, story_text, advanced_config_json, xp_value,
+        status, publish_status, draft_status, check_status, del_flag, create_by, create_time)
+SELECT 100000, 'CY-T1-02 字母谜：河滨大楼', '【解密目标】破解值班日志中被涂黑的字母｜第2/7站：沿苏州河向西约1.2公里，在河滨大楼外解出字母谜。', '1人', '上海市虹口区北苏州路400号（南侧沿河人行道观察，不进入居民楼）', '手机、定位权限',
+       10, '普通', 1, '【解密目标】破解值班日志中被涂黑的字母｜第2/7站：沿苏州河向西约1.2公里，在河滨大楼外解出字母谜。', 1,
+       '从空中俯瞰，河滨大楼的平面像哪个英文字母？（填1个大写字母）', 'S', NULL, NULL, NULL, NULL, NULL,
+       NULL, '档案员K：“沿河走几步，看楼身在哪里拐弯。”', '档案员K：“出资人：Victor S█████。”', 'S。大楼采用连续S形平面，一方面受地块限制，一方面被认为暗合沙逊（Sassoon）的首字母。',
+       '▌解密完成｜权限 L2 → L3
+原文：“它从天上看，是一个字母 S。”
+档案员K结论：非异常。地块限制＋出资人姓氏，见解密附录。
+🔑 关键词2/7「S」
+📎 日志最后一页：“接待站只能住几个月。下一批人，往东，霍山路119号。”', '▌CUA-HK-39「方舟」｜残档 02/7｜接待站值班日志（节选）· 权限 L2
+【史实】河滨大楼1931年动工、1935年竣工，由公和洋行为沙逊设计，曾被称为“远东第一公寓”。1938年10月19日，上海犹太社团在嘉道理洋行开会，沙逊的代表透露：一个月前，沙逊已无偿提供这栋楼作为欧洲难民的临时接待站；1939年1月，约240名难民暂住于此。据亲历者郑侠飞回忆，1937年10月31日清晨撤出四行仓库的谢晋元，也曾在这栋楼三楼短暂休息。
+——
+值班日志（游戏设定）：
+“第14日。新到者问我这栋楼为什么弯弯曲曲。我答：它从天上看，是一个字母 █。新到者不再提问。”
+档案员K批注：该字母与本楼出资人的姓氏首字母一致。是否构成异常，待定。', NULL, 20,
+       1, 1, 1, 1, 0, 'seed_chengyin_test_routes_20261024', NOW()
+  FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM cms_member_template m WHERE m.member_id=100000 AND m.title='CY-T1-02 字母谜：河滨大楼' AND m.del_flag=0);
+INSERT INTO cms_topic_node
+       (topic_id, chapter_id, name, description, address, longitude, latitude,
+        template_id, checkin_code, business_time, status, sort_id, xp_value,
+        hook_text, card_hook_long, fragment_text, create_by, create_time)
+SELECT t.id, c.id, '接待站 · 河滨大楼', '残档02：接待站值班日志', '上海市虹口区北苏州路400号（南侧沿河人行道观察，不进入居民楼）', '121.483975', '31.243629',
+       m.id, REPLACE(UUID(),'-',''), '00:00-23:59', 1, 102, 20,
+       '残档02：接待站值班日志', '【解密目标】破解值班日志中被涂黑的字母｜第2/7站：沿苏州河向西约1.2公里，在河滨大楼外解出字母谜。', '▌解密完成｜权限 L2 → L3
+原文：“它从天上看，是一个字母 S。”
+档案员K结论：非异常。地块限制＋出资人姓氏，见解密附录。
+🔑 关键词2/7「S」
+📎 日志最后一页：“接待站只能住几个月。下一批人，往东，霍山路119号。”', 'seed_chengyin_test_routes_20261024', NOW()
+  FROM cms_topic t
+  JOIN cms_topic_chapter c ON c.topic_id=t.id AND c.sort_id=1
+  JOIN cms_member_template m ON m.member_id=100000 AND m.title='CY-T1-02 字母谜：河滨大楼' AND m.del_flag=0
+ WHERE t.member_id=100000 AND t.name='海上方舟' AND t.del_flag=0
+   AND NOT EXISTS (SELECT 1 FROM cms_topic_node n WHERE n.topic_id=t.id AND n.name='接待站 · 河滨大楼');
+INSERT INTO cms_member_template
+       (member_id, title, description, players, usage_location, required_materials,
+        duration, difficulty, is_sync, rule_instructions, validation_method,
+        question_name, question_answer, question_a, question_b, question_c, question_d, correct_answer,
+        photo_require_desc, hint1, hint2, answer_reveal,
+        feedback_text, story_text, advanced_config_json, xp_value,
+        status, publish_status, draft_status, check_status, del_flag, create_by, create_time)
+SELECT 100000, 'CY-T1-03 选择题：美犹联合分配委员会', '【解密目标】核对餐券背面被涂黑的机构信息｜第3/7站：步行约3公里到提篮桥（可乘地铁12号线至提篮桥站），在霍山路119号外答题。', '1人', '上海市虹口区霍山路119—121号（外部观察）', '手机、定位权限',
+       10, '普通', 1, '【解密目标】核对餐券背面被涂黑的机构信息｜第3/7站：步行约3公里到提篮桥（可乘地铁12号线至提篮桥站），在霍山路119号外答题。', 3,
+       '美犹联合分配委员会（JDC）最初成立于？', NULL, '1914年·纽约', '1938年·上海', '1943年·上海', '1945年·维也纳', 'A',
+       NULL, '档案员K：“上海分支不是总部，总部早了二十多年。”', '档案员K：“第一次世界大战爆发那年，大西洋另一边。”', 'A。JDC于1914年在美国纽约成立，1938年设立驻沪分支，办公于霍山路119—121号。',
+       '▌解密完成｜权限 L3 → L4
+原文：“本机构成立于1914年，纽约。凭券领汤一份。”
+存活率原因解密：宿舍、食堂、医院。
+🔑 关键词3/7「汤」
+📎 餐券边缘印着一张极小的地图：“边界见对面公园石碑。越界后果：████。”', '▌CUA-HK-39「方舟」｜残档 03/7｜救济餐券（背面）· 权限 L3
+【史实】美犹联合分配委员会（JDC）1938年在上海设立分支，办公于霍山路119—121号，援助资金多用于难民宿舍、救济食堂和医院。1943年2月18日，日本占领当局发布布告，要求1937年后抵沪的无国籍难民三个月内迁入“限定居住区”。
+——
+餐券背面印着（游戏设定）：
+“本券由 J.D.C. 发放。本机构成立于 ████ 年，████。凭券领汤一份。”
+档案员K批注：持券者在区域内的存活率显著高于预期。原因：[数据删除——见解密附录]', NULL, 20,
+       1, 1, 1, 1, 0, 'seed_chengyin_test_routes_20261024', NOW()
+  FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM cms_member_template m WHERE m.member_id=100000 AND m.title='CY-T1-03 选择题：美犹联合分配委员会' AND m.del_flag=0);
+INSERT INTO cms_topic_node
+       (topic_id, chapter_id, name, description, address, longitude, latitude,
+        template_id, checkin_code, business_time, status, sort_id, xp_value,
+        hook_text, card_hook_long, fragment_text, create_by, create_time)
+SELECT t.id, c.id, '救济 · JDC旧址', '残档03：一张餐券的背面', '上海市虹口区霍山路119—121号（外部观察）', '121.510810', '31.253673',
+       m.id, REPLACE(UUID(),'-',''), '00:00-23:59', 1, 103, 20,
+       '残档03：一张餐券的背面', '【解密目标】核对餐券背面被涂黑的机构信息｜第3/7站：步行约3公里到提篮桥（可乘地铁12号线至提篮桥站），在霍山路119号外答题。', '▌解密完成｜权限 L3 → L4
+原文：“本机构成立于1914年，纽约。凭券领汤一份。”
+存活率原因解密：宿舍、食堂、医院。
+🔑 关键词3/7「汤」
+📎 餐券边缘印着一张极小的地图：“边界见对面公园石碑。越界后果：████。”', 'seed_chengyin_test_routes_20261024', NOW()
+  FROM cms_topic t
+  JOIN cms_topic_chapter c ON c.topic_id=t.id AND c.sort_id=1
+  JOIN cms_member_template m ON m.member_id=100000 AND m.title='CY-T1-03 选择题：美犹联合分配委员会' AND m.del_flag=0
+ WHERE t.member_id=100000 AND t.name='海上方舟' AND t.del_flag=0
+   AND NOT EXISTS (SELECT 1 FROM cms_topic_node n WHERE n.topic_id=t.id AND n.name='救济 · JDC旧址');
+INSERT INTO cms_member_template
+       (member_id, title, description, players, usage_location, required_materials,
+        duration, difficulty, is_sync, rule_instructions, validation_method,
+        question_name, question_answer, question_a, question_b, question_c, question_d, correct_answer,
+        photo_require_desc, hint1, hint2, answer_reveal,
+        feedback_text, story_text, advanced_config_json, xp_value,
+        status, publish_status, draft_status, check_status, del_flag, create_by, create_time)
+SELECT 100000, 'CY-T1-04 连线题：限定居住区四至', '【解密目标】依据石碑补全边界勘测记录｜第4/7站：走进JDC旧址对面的霍山公园，找到黑色纪念碑，完成连线。', '1人', '上海市虹口区霍山路118号霍山公园内', '手机、定位权限',
+       10, '普通', 1, '【解密目标】依据石碑补全边界勘测记录｜第4/7站：走进JDC旧址对面的霍山公园，找到黑色纪念碑，完成连线。', 5,
+       NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       '▌解密完成｜权限 L4 → L5
+原文：西起公平路，东到通北路，南起惠民路，北至周家嘴路。
+档案员K：“船的形状只是我们的说法。石碑上没有写船。”
+🔑 关键词4/7「边界」
+📎 勘测员在边界内标了一个点：“舟山路59号。一间不足10平方米的舱室。”', '▌CUA-HK-39「方舟」｜残档 04/7｜边界勘测记录 · 权限 L4
+【史实】这座公园建于1917年，最初叫斯塔德利公园，后改称舟山公园，1944年6月改名霍山公园。限定居住区里，难民很难自由走出边界，这块绿地成了孩子玩耍、大人聊天和举办小型音乐会的地方。1994年“犹太人重聚上海”活动期间，这里竖起“二战期间犹太难民居住区”纪念碑，用中文、英文、希伯来文写下区域的大致范围。
+——
+勘测记录（游戏设定）：
+“区域边界：西 █████ ／ 东 █████ ／ 南 █████ ／ 北 █████。
+形状：近似一条船。
+本区域被内部人员称为‘方舟’。”', '{"schemaVersion":1,"match":{"enabled":true,"prompt":"根据纪念碑碑文，把限定居住区的四个方向与边界道路连起来。","left":[{"id":"w","label":"西"},{"id":"e","label":"东"},{"id":"s","label":"南"},{"id":"n","label":"北"}],"right":[{"id":"gongping","label":"公平路"},{"id":"tongbei","label":"通北路"},{"id":"huimin","label":"惠民路"},{"id":"zhoujiazui","label":"周家嘴路"}],"pairs":[["w","gongping"],["e","tongbei"],["s","huimin"],["n","zhoujiazui"]],"xp":20}}', 20,
+       1, 1, 1, 1, 0, 'seed_chengyin_test_routes_20261024', NOW()
+  FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM cms_member_template m WHERE m.member_id=100000 AND m.title='CY-T1-04 连线题：限定居住区四至' AND m.del_flag=0);
+INSERT INTO cms_topic_node
+       (topic_id, chapter_id, name, description, address, longitude, latitude,
+        template_id, checkin_code, business_time, status, sort_id, xp_value,
+        hook_text, card_hook_long, fragment_text, create_by, create_time)
+SELECT t.id, c.id, '边界 · 霍山公园纪念碑', '残档04：边界勘测记录', '上海市虹口区霍山路118号霍山公园内', '121.511109', '31.253432',
+       m.id, REPLACE(UUID(),'-',''), '06:00-18:00', 1, 104, 20,
+       '残档04：边界勘测记录', '【解密目标】依据石碑补全边界勘测记录｜第4/7站：走进JDC旧址对面的霍山公园，找到黑色纪念碑，完成连线。', '▌解密完成｜权限 L4 → L5
+原文：西起公平路，东到通北路，南起惠民路，北至周家嘴路。
+档案员K：“船的形状只是我们的说法。石碑上没有写船。”
+🔑 关键词4/7「边界」
+📎 勘测员在边界内标了一个点：“舟山路59号。一间不足10平方米的舱室。”', 'seed_chengyin_test_routes_20261024', NOW()
+  FROM cms_topic t
+  JOIN cms_topic_chapter c ON c.topic_id=t.id AND c.sort_id=1
+  JOIN cms_member_template m ON m.member_id=100000 AND m.title='CY-T1-04 连线题：限定居住区四至' AND m.del_flag=0
+ WHERE t.member_id=100000 AND t.name='海上方舟' AND t.del_flag=0
+   AND NOT EXISTS (SELECT 1 FROM cms_topic_node n WHERE n.topic_id=t.id AND n.name='边界 · 霍山公园纪念碑');
+INSERT INTO cms_member_template
+       (member_id, title, description, players, usage_location, required_materials,
+        duration, difficulty, is_sync, rule_instructions, validation_method,
+        question_name, question_answer, question_a, question_b, question_c, question_d, correct_answer,
+        photo_require_desc, hint1, hint2, answer_reveal,
+        feedback_text, story_text, advanced_config_json, xp_value,
+        status, publish_status, draft_status, check_status, del_flag, create_by, create_time)
+SELECT 100000, 'CY-T1-05 拍物成卡：布卢门撒尔旧居', '【解密目标】拍下门牌，作为访谈记录的地点凭证｜第5/7站：在舟山路59号门外拍下门牌或旧居铭牌，生成一张藏品卡。', '1人', '上海市虹口区舟山路59号（居民住宅，仅街面观察）', '手机、定位权限',
+       10, '普通', 1, '【解密目标】拍下门牌，作为访谈记录的地点凭证｜第5/7站：在舟山路59号门外拍下门牌或旧居铭牌，生成一张藏品卡。', 5,
+       NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       '▌解密完成｜权限 L5 → L6
+原文：“受访者：对角。”
+🔑 关键词5/7「对角」
+📎 访谈结束前，受访者问：“名单上……会有我们吗？”档案员K：“去长阳路口。那份名单，至今还在变长。”', '▌CUA-HK-39「方舟」｜残档 05/7｜访谈记录 HK-39-05 · 权限 L5
+受访者：前居民（游戏设定，虚构）
+访谈者：外勤调查员（你）
+——
+调查员：你们一家住哪一间？
+受访者：二楼。不足10平方米。
+调查员：怎么睡？
+受访者：█████。
+［记录中断约11秒］
+——
+【史实】1939年，13岁的迈克·布卢门撒尔随父母从德国逃到上海，一家住在舟山路59号二楼一间不足10平方米的小屋，据讲解员介绍，一家人要“对角”才能平躺睡下。他在上海生活约8年，1947年赴美求学，后获普林斯顿大学经济学博士学位，1977—1979年出任美国第64任财政部长。
+⚠️ 这里仍是居民住宅：只在街面拍门牌或铭牌，不入内、不拍居民。', '{"schemaVersion":1,"photoCheck":{"enabled":true,"title":"拍下旧居的门牌","shotNote":"只拍门牌或铭牌，不拍居民和室内。","requirement":"画面中能看到舟山路59号门牌或“布卢门撒尔旧居”铭牌","minConfidence":60,"maxTries":3,"fallback":"pass","mode":"CARD","cardTitle":"舟山路59号·布卢门撒尔旧居","cardStyle":"plain","xp":20}}', 20,
+       1, 1, 1, 1, 0, 'seed_chengyin_test_routes_20261024', NOW()
+  FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM cms_member_template m WHERE m.member_id=100000 AND m.title='CY-T1-05 拍物成卡：布卢门撒尔旧居' AND m.del_flag=0);
+INSERT INTO cms_topic_node
+       (topic_id, chapter_id, name, description, address, longitude, latitude,
+        template_id, checkin_code, business_time, status, sort_id, xp_value,
+        hook_text, card_hook_long, fragment_text, create_by, create_time)
+SELECT t.id, c.id, '亭子间 · 舟山路59号', '残档05：访谈记录（节选）', '上海市虹口区舟山路59号（居民住宅，仅街面观察）', '121.510013', '31.253976',
+       m.id, REPLACE(UUID(),'-',''), '09:00-18:00', 1, 105, 20,
+       '残档05：访谈记录（节选）', '【解密目标】拍下门牌，作为访谈记录的地点凭证｜第5/7站：在舟山路59号门外拍下门牌或旧居铭牌，生成一张藏品卡。', '▌解密完成｜权限 L5 → L6
+原文：“受访者：对角。”
+🔑 关键词5/7「对角」
+📎 访谈结束前，受访者问：“名单上……会有我们吗？”档案员K：“去长阳路口。那份名单，至今还在变长。”', 'seed_chengyin_test_routes_20261024', NOW()
+  FROM cms_topic t
+  JOIN cms_topic_chapter c ON c.topic_id=t.id AND c.sort_id=1
+  JOIN cms_member_template m ON m.member_id=100000 AND m.title='CY-T1-05 拍物成卡：布卢门撒尔旧居' AND m.del_flag=0
+ WHERE t.member_id=100000 AND t.name='海上方舟' AND t.del_flag=0
+   AND NOT EXISTS (SELECT 1 FROM cms_topic_node n WHERE n.topic_id=t.id AND n.name='亭子间 · 舟山路59号');
+INSERT INTO cms_member_template
+       (member_id, title, description, players, usage_location, required_materials,
+        duration, difficulty, is_sync, rule_instructions, validation_method,
+        question_name, question_answer, question_a, question_b, question_c, question_d, correct_answer,
+        photo_require_desc, hint1, hint2, answer_reveal,
+        feedback_text, story_text, advanced_config_json, xp_value,
+        status, publish_status, draft_status, check_status, del_flag, create_by, create_time)
+SELECT 100000, 'CY-T1-06 排序题：名单墙上的名字', '【解密目标】按时间排列三次观测数据｜第6/7站：周二至周日9:00—16:00入场（周一闭馆，实名购票20元），在名单墙前完成排序。', '1人', '上海市虹口区长阳路62号上海犹太难民纪念馆', '手机、定位权限',
+       10, '普通', 1, '【解密目标】按时间排列三次观测数据｜第6/7站：周二至周日9:00—16:00入场（周一闭馆，实名购票20元），在名单墙前完成排序。', 5,
+       NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       '▌解密完成｜权限 L6 → L7（最高）
+原文：2014年13732人；2020年18578人；2025年19672人。
+🔑 关键词6/7「名字」
+📎 L7 权限已开放最后一份文件。地点：长阳路67号，白马咖啡馆。档案员K留言：“带上全部六个关键词。结案需要你签字。”', '▌CUA-HK-39「方舟」｜残档 06/7｜名单增长观测表 · 权限 L6
+【史实】摩西会堂1927年由俄罗斯犹太人集资修建，二战时是难民聚会和宗教仪式场所；2007年以它为核心建立上海犹太难民纪念馆。广场名单墙以原难民索尼娅·穆尔伯格提供的约1.4万人名单为基础，2014年落成、2020年扩建，2025年10月21日又揭幕新增部分。
+——
+观测表（游戏设定）：
+观测1：█████ 人
+观测2：█████ 人
+观测3：█████ 人
+档案员K批注：名单在无人刻写的年份里也被判定为“未完成”。增长机制：[需权限 L7]', '{"schemaVersion":1,"sort":{"enabled":true,"prompt":"把名单墙三个阶段的姓名数量按时间先后排序（最早在上）。","items":[{"id":"n18578","label":"18578个名字"},{"id":"n19672","label":"19672个名字"},{"id":"n13732","label":"13732个名字"}],"answerOrder":["n13732","n18578","n19672"],"maxAttempts":3,"xp":20},"timeWindow":{"enabled":true,"openFrom":"09:00","openTo":"16:00","eyebrow":"开放时段","title":"纪念馆16:00停止入场"}}', 20,
+       1, 1, 1, 1, 0, 'seed_chengyin_test_routes_20261024', NOW()
+  FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM cms_member_template m WHERE m.member_id=100000 AND m.title='CY-T1-06 排序题：名单墙上的名字' AND m.del_flag=0);
+INSERT INTO cms_topic_node
+       (topic_id, chapter_id, name, description, address, longitude, latitude,
+        template_id, checkin_code, business_time, status, sort_id, xp_value,
+        hook_text, card_hook_long, fragment_text, create_by, create_time)
+SELECT t.id, c.id, '名单墙 · 摩西会堂', '残档06：名单增长观测表', '上海市虹口区长阳路62号上海犹太难民纪念馆', '121.509236', '31.254128',
+       m.id, REPLACE(UUID(),'-',''), '09:00-16:00', 1, 106, 20,
+       '残档06：名单增长观测表', '【解密目标】按时间排列三次观测数据｜第6/7站：周二至周日9:00—16:00入场（周一闭馆，实名购票20元），在名单墙前完成排序。', '▌解密完成｜权限 L6 → L7（最高）
+原文：2014年13732人；2020年18578人；2025年19672人。
+🔑 关键词6/7「名字」
+📎 L7 权限已开放最后一份文件。地点：长阳路67号，白马咖啡馆。档案员K留言：“带上全部六个关键词。结案需要你签字。”', 'seed_chengyin_test_routes_20261024', NOW()
+  FROM cms_topic t
+  JOIN cms_topic_chapter c ON c.topic_id=t.id AND c.sort_id=1
+  JOIN cms_member_template m ON m.member_id=100000 AND m.title='CY-T1-06 排序题：名单墙上的名字' AND m.del_flag=0
+ WHERE t.member_id=100000 AND t.name='海上方舟' AND t.del_flag=0
+   AND NOT EXISTS (SELECT 1 FROM cms_topic_node n WHERE n.topic_id=t.id AND n.name='名单墙 · 摩西会堂');
+INSERT INTO cms_member_template
+       (member_id, title, description, players, usage_location, required_materials,
+        duration, difficulty, is_sync, rule_instructions, validation_method,
+        question_name, question_answer, question_a, question_b, question_c, question_d, correct_answer,
+        photo_require_desc, hint1, hint2, answer_reveal,
+        feedback_text, story_text, advanced_config_json, xp_value,
+        status, publish_status, draft_status, check_status, del_flag, create_by, create_time)
+SELECT 100000, 'CY-T1-07 分支结局：白马咖啡馆', '【结案】在白马咖啡馆完成结案报告，选择档案的最终分类｜第7/7站：走到纪念馆对面的白马咖啡馆，为1939年的你选择结局。', '1人', '上海市虹口区长阳路67号（纪念馆对面）', '手机、定位权限',
+       10, '普通', 1, '【结案】在白马咖啡馆完成结案报告，选择档案的最终分类｜第7/7站：走到纪念馆对面的白马咖啡馆，为1939年的你选择结局。', 5,
+       NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       '▌档案 CUA-HK-39 已结案
+收留者身份解密为：“不是一艘船，是人——签证官、楼主、救济员、邻居，和不停寻找名字的后来者。”
+🔑 关键词7/7「选择」
+档案重新分类：庇护型 / 蔓生级 → 非异常 · 人类行为。
+名单增长机制：持续的史料考证。档案保持开放。', '▌CUA-HK-39「方舟」｜残档 07/7｜结案报告（草稿）· 权限 L7
+【史实】1939年，从维也纳逃到上海的鲁道夫·莫斯伯格夫妇在今长阳路、临潼路口开了白马咖啡馆，提篮桥因此有了“小维也纳”之称。2009年原址小楼因道路拓宽被拆除，部分梁柱构件被保存；2015年按原样复建于长阳路67号，内部陈设参考了店主后人罗恩·克林格从悉尼带来的老照片。战后，莫斯伯格一家去了澳大利亚。
+——
+结案报告：
+“异常来源：一个‘收留’名字的区域。
+收集证据：签证／S／汤／边界／对角／名字。
+收留者身份：█████。”
+档案员K：“最后一栏，由你来填。”', '{"schemaVersion":1,"branch":{"enabled":true,"startStepId":"decision","steps":[{"id":"decision","title":"结案报告 · 最终分类","body":"1945年8月，限定居住区解除。受访者家庭（游戏设定）需要一条去向，档案也需要一个分类。你签署：","terminal":false,"options":[{"id":"stay","label":"分类A：留在上海，继续登记新来的人","nextStepId":"e_stay","score":20},{"id":"usa","label":"分类B：远行，像布卢门撒尔一样去美国读书","nextStepId":"e_usa","score":15},{"id":"aus","label":"分类C：迁徙，像莫斯伯格一家一样去澳大利亚","nextStepId":"e_aus","score":15}]},{"id":"e_stay","title":"分类A · 登记员","body":"档案状态：开放。你把名字抄进册子。【史实】真实的名单墙如今立在长阳路62号纪念馆，仍在增补。","terminal":true,"outcomeCode":"stay","outcomeLabel":"登记员","options":[]},{"id":"e_usa","title":"分类B · 远行者","body":"档案状态：外延。【史实】真实的布卢门撒尔1969年起多次回到舟山路，2015年在名单墙上找到了自己和家人的名字。","terminal":true,"outcomeCode":"usa","outcomeLabel":"远行者","options":[]},{"id":"e_aus","title":"分类C · 白马守护者","body":"档案状态：复建。【史实】真实的白马咖啡馆，参考店主后人从悉尼带来的老照片，按原样复建。","terminal":true,"outcomeCode":"aus","outcomeLabel":"白马守护者","options":[]}]},"leaderboard":{"enabled":true,"metric":"SCORE","scope":"TOPIC","limit":50}}', 20,
+       1, 1, 1, 1, 0, 'seed_chengyin_test_routes_20261024', NOW()
+  FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM cms_member_template m WHERE m.member_id=100000 AND m.title='CY-T1-07 分支结局：白马咖啡馆' AND m.del_flag=0);
+INSERT INTO cms_topic_node
+       (topic_id, chapter_id, name, description, address, longitude, latitude,
+        template_id, checkin_code, business_time, status, sort_id, xp_value,
+        hook_text, card_hook_long, fragment_text, create_by, create_time)
+SELECT t.id, c.id, '终章 · 白马咖啡馆', '残档07：结案报告（待签）', '上海市虹口区长阳路67号（纪念馆对面）', '121.509116', '31.254579',
+       m.id, REPLACE(UUID(),'-',''), '09:00-17:00', 1, 107, 20,
+       '残档07：结案报告（待签）', '【结案】在白马咖啡馆完成结案报告，选择档案的最终分类｜第7/7站：走到纪念馆对面的白马咖啡馆，为1939年的你选择结局。', '▌档案 CUA-HK-39 已结案
+收留者身份解密为：“不是一艘船，是人——签证官、楼主、救济员、邻居，和不停寻找名字的后来者。”
+🔑 关键词7/7「选择」
+档案重新分类：庇护型 / 蔓生级 → 非异常 · 人类行为。
+名单增长机制：持续的史料考证。档案保持开放。', 'seed_chengyin_test_routes_20261024', NOW()
+  FROM cms_topic t
+  JOIN cms_topic_chapter c ON c.topic_id=t.id AND c.sort_id=1
+  JOIN cms_member_template m ON m.member_id=100000 AND m.title='CY-T1-07 分支结局：白马咖啡馆' AND m.del_flag=0
+ WHERE t.member_id=100000 AND t.name='海上方舟' AND t.del_flag=0
+   AND NOT EXISTS (SELECT 1 FROM cms_topic_node n WHERE n.topic_id=t.id AND n.name='终章 · 白马咖啡馆');
+INSERT INTO cms_member_template
+       (member_id, title, description, players, usage_location, required_materials,
+        duration, difficulty, is_sync, rule_instructions, validation_method,
+        question_name, question_answer, question_a, question_b, question_c, question_d, correct_answer,
+        photo_require_desc, hint1, hint2, answer_reveal,
+        feedback_text, story_text, advanced_config_json, xp_value,
+        status, publish_status, draft_status, check_status, del_flag, create_by, create_time)
+SELECT 100000, 'CY-T1-B1 留言：苏州河边', '支线：留一句不超过40字的话，可看到前3位玩家的留言。', '1人', '上海市虹口区北苏州路400号外', '手机、定位权限',
+       10, '普通', 1, '支线：留一句不超过40字的话，可看到前3位玩家的留言。', 5,
+       NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       '已完成。', '▌CUA-HK-39「方舟」｜残档 B1/7｜附录 · 匿名留言簿
+档案员K：“留言簿上的字迹来自不同年代。添一句给下一位到达者的话。”', '{"schemaVersion":1,"note":{"enabled":true,"title":"写给1939年下船的人","prompt":"如果你能对刚到河滨大楼的难民说一句话，你会说什么？","maxLength":40,"presets":["欢迎来到上海","这里会有人帮你","先吃口热的"],"showPrevious":3}}', 20,
+       1, 1, 1, 1, 0, 'seed_chengyin_test_routes_20261024', NOW()
+  FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM cms_member_template m WHERE m.member_id=100000 AND m.title='CY-T1-B1 留言：苏州河边' AND m.del_flag=0);
+INSERT INTO cms_topic_node
+       (topic_id, chapter_id, name, description, address, longitude, latitude,
+        template_id, checkin_code, business_time, status, sort_id, xp_value,
+        hook_text, card_hook_long, fragment_text, create_by, create_time)
+SELECT t.id, c.id, '支线 · 给下船的人留一句话', '给1939年的陌生人', '上海市虹口区北苏州路400号外', '121.483975', '31.243629',
+       m.id, REPLACE(UUID(),'-',''), '00:00-23:59', 1, 201, 20,
+       '给1939年的陌生人', '支线：留一句不超过40字的话，可看到前3位玩家的留言。', NULL, 'seed_chengyin_test_routes_20261024', NOW()
+  FROM cms_topic t
+  JOIN cms_topic_chapter c ON c.topic_id=t.id AND c.sort_id=2
+  JOIN cms_member_template m ON m.member_id=100000 AND m.title='CY-T1-B1 留言：苏州河边' AND m.del_flag=0
+ WHERE t.member_id=100000 AND t.name='海上方舟' AND t.del_flag=0
+   AND NOT EXISTS (SELECT 1 FROM cms_topic_node n WHERE n.topic_id=t.id AND n.name='支线 · 给下船的人留一句话');
+INSERT INTO cms_member_template
+       (member_id, title, description, players, usage_location, required_materials,
+        duration, difficulty, is_sync, rule_instructions, validation_method,
+        question_name, question_answer, question_a, question_b, question_c, question_d, correct_answer,
+        photo_require_desc, hint1, hint2, answer_reveal,
+        feedback_text, story_text, advanced_config_json, xp_value,
+        status, publish_status, draft_status, check_status, del_flag, create_by, create_time)
+SELECT 100000, 'CY-T1-B2 计步：从接待站到弄堂', '支线：从河滨大楼出发步行前往提篮桥，计满3000步完成（不想走可乘地铁跳过）。', '1人', '上海市虹口区北苏州路400号外（出发点）', '手机、定位权限',
+       10, '普通', 1, '支线：从河滨大楼出发步行前往提篮桥，计满3000步完成（不想走可乘地铁跳过）。', 5,
+       NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       '已完成。', '▌CUA-HK-39「方舟」｜残档 B2/7｜附录 · 步行测距
+接待站至提篮桥约3公里。请记录步数。档案局需要知道，一个人要走多少步才算“到达”。', '{"schemaVersion":1,"steps":{"enabled":true,"goal":3000,"eyebrow":"河滨大楼 → 提篮桥","xp":20}}', 20,
+       1, 1, 1, 1, 0, 'seed_chengyin_test_routes_20261024', NOW()
+  FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM cms_member_template m WHERE m.member_id=100000 AND m.title='CY-T1-B2 计步：从接待站到弄堂' AND m.del_flag=0);
+INSERT INTO cms_topic_node
+       (topic_id, chapter_id, name, description, address, longitude, latitude,
+        template_id, checkin_code, business_time, status, sort_id, xp_value,
+        hook_text, card_hook_long, fragment_text, create_by, create_time)
+SELECT t.id, c.id, '支线 · 走向提篮桥', '难民们走过的那段路', '上海市虹口区北苏州路400号外（出发点）', '121.483975', '31.243629',
+       m.id, REPLACE(UUID(),'-',''), '06:00-20:00', 1, 202, 20,
+       '难民们走过的那段路', '支线：从河滨大楼出发步行前往提篮桥，计满3000步完成（不想走可乘地铁跳过）。', NULL, 'seed_chengyin_test_routes_20261024', NOW()
+  FROM cms_topic t
+  JOIN cms_topic_chapter c ON c.topic_id=t.id AND c.sort_id=2
+  JOIN cms_member_template m ON m.member_id=100000 AND m.title='CY-T1-B2 计步：从接待站到弄堂' AND m.del_flag=0
+ WHERE t.member_id=100000 AND t.name='海上方舟' AND t.del_flag=0
+   AND NOT EXISTS (SELECT 1 FROM cms_topic_node n WHERE n.topic_id=t.id AND n.name='支线 · 走向提篮桥');
+INSERT INTO cms_member_template
+       (member_id, title, description, players, usage_location, required_materials,
+        duration, difficulty, is_sync, rule_instructions, validation_method,
+        question_name, question_answer, question_a, question_b, question_c, question_d, correct_answer,
+        photo_require_desc, hint1, hint2, answer_reveal,
+        feedback_text, story_text, advanced_config_json, xp_value,
+        status, publish_status, draft_status, check_status, del_flag, create_by, create_time)
+SELECT 100000, 'CY-T1-B3 拍照打卡：纪念碑', '支线：拍下纪念碑碑文（不拍他人），进入人工/自动审核。', '1人', '上海市虹口区霍山路118号霍山公园内', '手机、定位权限',
+       10, '普通', 1, '支线：拍下纪念碑碑文（不拍他人），进入人工/自动审核。', 2,
+       NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+       '拍下霍山公园纪念碑碑文，画面中能看到中、英、希伯来三种文字；不拍其他游客。', NULL, NULL, NULL,
+       '已完成。', '▌CUA-HK-39「方舟」｜残档 B3/7｜附录 · 碑文影像
+纪念碑用中文、英文、希伯来文三种文字记录了这片区域。请拍摄碑文，存入档案。', NULL, 20,
+       1, 1, 1, 1, 0, 'seed_chengyin_test_routes_20261024', NOW()
+  FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM cms_member_template m WHERE m.member_id=100000 AND m.title='CY-T1-B3 拍照打卡：纪念碑' AND m.del_flag=0);
+INSERT INTO cms_topic_node
+       (topic_id, chapter_id, name, description, address, longitude, latitude,
+        template_id, checkin_code, business_time, status, sort_id, xp_value,
+        hook_text, card_hook_long, fragment_text, create_by, create_time)
+SELECT t.id, c.id, '支线 · 三种文字', '中文、英文、希伯来文', '上海市虹口区霍山路118号霍山公园内', '121.511109', '31.253432',
+       m.id, REPLACE(UUID(),'-',''), '06:00-18:00', 1, 203, 20,
+       '中文、英文、希伯来文', '支线：拍下纪念碑碑文（不拍他人），进入人工/自动审核。', NULL, 'seed_chengyin_test_routes_20261024', NOW()
+  FROM cms_topic t
+  JOIN cms_topic_chapter c ON c.topic_id=t.id AND c.sort_id=2
+  JOIN cms_member_template m ON m.member_id=100000 AND m.title='CY-T1-B3 拍照打卡：纪念碑' AND m.del_flag=0
+ WHERE t.member_id=100000 AND t.name='海上方舟' AND t.del_flag=0
+   AND NOT EXISTS (SELECT 1 FROM cms_topic_node n WHERE n.topic_id=t.id AND n.name='支线 · 三种文字');
+INSERT INTO cms_member_template
+       (member_id, title, description, players, usage_location, required_materials,
+        duration, difficulty, is_sync, rule_instructions, validation_method,
+        question_name, question_answer, question_a, question_b, question_c, question_d, correct_answer,
+        photo_require_desc, hint1, hint2, answer_reveal,
+        feedback_text, story_text, advanced_config_json, xp_value,
+        status, publish_status, draft_status, check_status, del_flag, create_by, create_time)
+SELECT 100000, 'CY-T1-B4 倒计时：静默一分钟', '支线：在名单墙前安静阅读60秒。', '1人', '上海市虹口区长阳路62号上海犹太难民纪念馆', '手机、定位权限',
+       10, '普通', 1, '支线：在名单墙前安静阅读60秒。', 5,
+       NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       '已完成。', '▌CUA-HK-39「方舟」｜残档 B4/7｜附录 · 静默协议
+名单墙上有近两万个名字。执行静默协议：不拍照、不说话，阅读60秒。', '{"schemaVersion":1,"countdown":{"enabled":true,"kicker":"名单墙","seconds":60,"doneText":"谢谢你记住他们。"}}', 20,
+       1, 1, 1, 1, 0, 'seed_chengyin_test_routes_20261024', NOW()
+  FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM cms_member_template m WHERE m.member_id=100000 AND m.title='CY-T1-B4 倒计时：静默一分钟' AND m.del_flag=0);
+INSERT INTO cms_topic_node
+       (topic_id, chapter_id, name, description, address, longitude, latitude,
+        template_id, checkin_code, business_time, status, sort_id, xp_value,
+        hook_text, card_hook_long, fragment_text, create_by, create_time)
+SELECT t.id, c.id, '支线 · 名单墙前的一分钟', '安静地读60秒名字', '上海市虹口区长阳路62号上海犹太难民纪念馆', '121.509236', '31.254128',
+       m.id, REPLACE(UUID(),'-',''), '09:00-16:00', 1, 204, 20,
+       '安静地读60秒名字', '支线：在名单墙前安静阅读60秒。', NULL, 'seed_chengyin_test_routes_20261024', NOW()
+  FROM cms_topic t
+  JOIN cms_topic_chapter c ON c.topic_id=t.id AND c.sort_id=2
+  JOIN cms_member_template m ON m.member_id=100000 AND m.title='CY-T1-B4 倒计时：静默一分钟' AND m.del_flag=0
+ WHERE t.member_id=100000 AND t.name='海上方舟' AND t.del_flag=0
+   AND NOT EXISTS (SELECT 1 FROM cms_topic_node n WHERE n.topic_id=t.id AND n.name='支线 · 名单墙前的一分钟');
+INSERT INTO cms_member_template
+       (member_id, title, description, players, usage_location, required_materials,
+        duration, difficulty, is_sync, rule_instructions, validation_method,
+        question_name, question_answer, question_a, question_b, question_c, question_d, correct_answer,
+        photo_require_desc, hint1, hint2, answer_reveal,
+        feedback_text, story_text, advanced_config_json, xp_value,
+        status, publish_status, draft_status, check_status, del_flag, create_by, create_time)
+SELECT 100000, 'CY-T1-B5 问答：何凤山', '支线：在展厅找到何凤山相关展陈后作答。', '1人', '上海市虹口区长阳路62号上海犹太难民纪念馆', '手机、定位权限',
+       10, '普通', 1, '支线：在展厅找到何凤山相关展陈后作答。', 5,
+       NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       '已完成。', '▌CUA-HK-39「方舟」｜残档 B5/7｜附录 · 签证签发人
+残档01中被涂黑的签发人姓名，可在纪念馆展厅中找到。他被称为“生命签证”的签发者。', '{"schemaVersion":1,"qa":{"enabled":true,"mode":"PICK","title":"1938—1940年，何凤山担任中国驻哪座城市的总领事？","lead":"在展厅中找答案","options":[{"id":"a","label":"维也纳","correct":true,"fb":"对。他在维也纳签发了大量去上海的签证。"},{"id":"b","label":"柏林","fb":"不对，再看看展板。"},{"id":"c","label":"布拉格","fb":"不对，再看看展板。"},{"id":"d","label":"罗马","fb":"不对，再看看展板。"}],"maxTries":3,"xp":20}}', 20,
+       1, 1, 1, 1, 0, 'seed_chengyin_test_routes_20261024', NOW()
+  FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM cms_member_template m WHERE m.member_id=100000 AND m.title='CY-T1-B5 问答：何凤山' AND m.del_flag=0);
+INSERT INTO cms_topic_node
+       (topic_id, chapter_id, name, description, address, longitude, latitude,
+        template_id, checkin_code, business_time, status, sort_id, xp_value,
+        hook_text, card_hook_long, fragment_text, create_by, create_time)
+SELECT t.id, c.id, '支线 · 生命签证', '一位中国外交官', '上海市虹口区长阳路62号上海犹太难民纪念馆', '121.509236', '31.254128',
+       m.id, REPLACE(UUID(),'-',''), '09:00-16:00', 1, 205, 20,
+       '一位中国外交官', '支线：在展厅找到何凤山相关展陈后作答。', NULL, 'seed_chengyin_test_routes_20261024', NOW()
+  FROM cms_topic t
+  JOIN cms_topic_chapter c ON c.topic_id=t.id AND c.sort_id=2
+  JOIN cms_member_template m ON m.member_id=100000 AND m.title='CY-T1-B5 问答：何凤山' AND m.del_flag=0
+ WHERE t.member_id=100000 AND t.name='海上方舟' AND t.del_flag=0
+   AND NOT EXISTS (SELECT 1 FROM cms_topic_node n WHERE n.topic_id=t.id AND n.name='支线 · 生命签证');
+INSERT INTO cms_member_template
+       (member_id, title, description, players, usage_location, required_materials,
+        duration, difficulty, is_sync, rule_instructions, validation_method,
+        question_name, question_answer, question_a, question_b, question_c, question_d, correct_answer,
+        photo_require_desc, hint1, hint2, answer_reveal,
+        feedback_text, story_text, advanced_config_json, xp_value,
+        status, publish_status, draft_status, check_status, del_flag, create_by, create_time)
+SELECT 100000, 'CY-T1-B6 扫码打卡：白马咖啡馆', '支线：扫描测试员张贴/手持的本节点打卡码（checkin_code）。', '1人', '上海市虹口区长阳路67号白马咖啡馆外', '手机、定位权限',
+       10, '普通', 1, '支线：扫描测试员张贴/手持的本节点打卡码（checkin_code）。', 4,
+       NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       '已完成。', '测试扫码打卡链路：请扫描本节点的打卡二维码（由测试员在出发前打印，不张贴在店内）。', NULL, 20,
+       1, 1, 1, 1, 0, 'seed_chengyin_test_routes_20261024', NOW()
+  FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM cms_member_template m WHERE m.member_id=100000 AND m.title='CY-T1-B6 扫码打卡：白马咖啡馆' AND m.del_flag=0);
+INSERT INTO cms_topic_node
+       (topic_id, chapter_id, name, description, address, longitude, latitude,
+        template_id, checkin_code, business_time, status, sort_id, xp_value,
+        hook_text, card_hook_long, fragment_text, create_by, create_time)
+SELECT t.id, c.id, '支线 · 扫码领一杯“维也纳”', '扫一扫测试码', '上海市虹口区长阳路67号白马咖啡馆外', '121.509116', '31.254579',
+       m.id, REPLACE(UUID(),'-',''), '09:00-17:00', 1, 206, 20,
+       '扫一扫测试码', '支线：扫描测试员张贴/手持的本节点打卡码（checkin_code）。', NULL, 'seed_chengyin_test_routes_20261024', NOW()
+  FROM cms_topic t
+  JOIN cms_topic_chapter c ON c.topic_id=t.id AND c.sort_id=2
+  JOIN cms_member_template m ON m.member_id=100000 AND m.title='CY-T1-B6 扫码打卡：白马咖啡馆' AND m.del_flag=0
+ WHERE t.member_id=100000 AND t.name='海上方舟' AND t.del_flag=0
+   AND NOT EXISTS (SELECT 1 FROM cms_topic_node n WHERE n.topic_id=t.id AND n.name='支线 · 扫码领一杯“维也纳”');
+INSERT INTO cms_member_template
+       (member_id, title, description, players, usage_location, required_materials,
+        duration, difficulty, is_sync, rule_instructions, validation_method,
+        question_name, question_answer, question_a, question_b, question_c, question_d, correct_answer,
+        photo_require_desc, hint1, hint2, answer_reveal,
+        feedback_text, story_text, advanced_config_json, xp_value,
+        status, publish_status, draft_status, check_status, del_flag, create_by, create_time)
+SELECT 100000, 'CY-T1-B7 命名：一杯咖啡', '支线：为你今天的这杯咖啡（或这一天）起个名字，不消费也可完成。', '1人', '上海市虹口区长阳路67号白马咖啡馆', '手机、定位权限',
+       10, '普通', 1, '支线：为你今天的这杯咖啡（或这一天）起个名字，不消费也可完成。', 5,
+       NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       '已完成。', '▌CUA-HK-39「方舟」｜残档 B7/7｜附录 · 物品登记
+当年难民在这里重温维也纳的咖啡馆生活。为本次结案时桌上的这杯咖啡登记一个名称。', '{"schemaVersion":1,"diyName":{"enabled":true,"title":"给这杯咖啡起个名字","maxLength":12,"suggestions":["小维也纳","1939的拿铁","方舟一号"]}}', 20,
+       1, 1, 1, 1, 0, 'seed_chengyin_test_routes_20261024', NOW()
+  FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM cms_member_template m WHERE m.member_id=100000 AND m.title='CY-T1-B7 命名：一杯咖啡' AND m.del_flag=0);
+INSERT INTO cms_topic_node
+       (topic_id, chapter_id, name, description, address, longitude, latitude,
+        template_id, checkin_code, business_time, status, sort_id, xp_value,
+        hook_text, card_hook_long, fragment_text, create_by, create_time)
+SELECT t.id, c.id, '支线 · 给你的咖啡起个名字', '小维也纳的一杯咖啡', '上海市虹口区长阳路67号白马咖啡馆', '121.509116', '31.254579',
+       m.id, REPLACE(UUID(),'-',''), '09:00-17:00', 1, 207, 20,
+       '小维也纳的一杯咖啡', '支线：为你今天的这杯咖啡（或这一天）起个名字，不消费也可完成。', NULL, 'seed_chengyin_test_routes_20261024', NOW()
+  FROM cms_topic t
+  JOIN cms_topic_chapter c ON c.topic_id=t.id AND c.sort_id=2
+  JOIN cms_member_template m ON m.member_id=100000 AND m.title='CY-T1-B7 命名：一杯咖啡' AND m.del_flag=0
+ WHERE t.member_id=100000 AND t.name='海上方舟' AND t.del_flag=0
+   AND NOT EXISTS (SELECT 1 FROM cms_topic_node n WHERE n.topic_id=t.id AND n.name='支线 · 给你的咖啡起个名字');
+UPDATE cms_topic_node cur
+  JOIN cms_topic t ON t.id=cur.topic_id AND t.member_id=100000 AND t.name='海上方舟' AND t.del_flag=0
+  JOIN cms_topic_node prev ON prev.topic_id=cur.topic_id AND prev.sort_id=cur.sort_id-1
+   SET cur.unlock_after_node_id=prev.id
+ WHERE cur.sort_id BETWEEN 102 AND 199 AND prev.sort_id>=101 AND cur.unlock_after_node_id IS NULL;
+
+-- ======================= 主题：南京路上的四座高峰 =======================
+INSERT INTO cms_topic
+       (member_id, topic_type, product_type, name, subtitle, description,
+        address_name, total_time, total_mileage, location_count, template_count, img_url,
+        is_template, status, user_status, merchant_status, self_play, self_play_price,
+        self_play_quota, finish_medal_name, lifecycle, del_flag, create_by, create_time)
+SELECT 100000, 1, 1, '南京路上的四座高峰', '档案 CUA-NJ-17「高峰」：四座会互相长高的大楼', '城市异常档案局 · 外勤档案（游戏设定）
+档案编号：CUA-NJ-17「高峰」
+档案类别：竞争型 / 游移级
+你的身份：外勤调查员，初始权限 L1
+特殊收容措施：调查员须自外滩向西逐站推进，每站核对一页残档。四个目标实体（编号 NJ-17-α 至 NJ-17-δ）禁止被单独观察——请务必站在其中一座的门口观察另一座。
+描述：南京路上四座百货大楼。档案记录称它们“像彼此的影子一样相继出现，每一座都要比上一座更高、更新、更会招徕人群”。档案末页指向一处已不存在的地点，标注为“起源点”。
+【游戏设定】“城市异常档案局”、档案编号、权限等级、调查员身份、受访者与档案员均为虚构；文中“异常”只是叙事装置。所有标【史实】的内容均为真实历史并附来源（见每站来源与《解密附录》）。
+路线：汇丰银行大楼→和平饭店→福利→先施→永安→新新→大新→国际饭店→大光明→上海市历史博物馆→张园，约4.6公里。商场可只逛不买。历史博物馆周一闭馆，16:00停止入馆。测试版：EXPERIMENTAL，坐标待双机实走校准。',
+       '上海市黄浦区南京东路、南京西路', 12600, 4.6, 17, 17, NULL,
+       0, 1, 0, 0, 1, 0.00, 100, '南京路掌柜', 0, 0, 'seed_chengyin_test_routes_20261024', NOW()
+  FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM cms_topic t WHERE t.member_id=100000 AND t.name='南京路上的四座高峰' AND t.del_flag=0);
+INSERT INTO product_role (topic_id, slot, entity_type, entity_id, status)
+SELECT t.id,'CONTENT','PLATFORM',NULL,1 FROM cms_topic t
+ WHERE t.member_id=100000 AND t.name='南京路上的四座高峰' AND t.del_flag=0
+   AND NOT EXISTS (SELECT 1 FROM product_role r WHERE r.topic_id=t.id AND r.slot='CONTENT' AND r.status=1);
+INSERT INTO cms_topic_chapter
+       (topic_id, name, description, sort_id, location_count, template_count,
+        required, recruit_enabled, max_merchant, terms_mode, create_by, create_time)
+SELECT t.id, '主线', '按顺序完成，完成上一站才解锁下一站。', 1, 11, 11, 1, 0, 0, 'TRAFFIC', 'seed_chengyin_test_routes_20261024', NOW()
+  FROM cms_topic t WHERE t.member_id=100000 AND t.name='南京路上的四座高峰' AND t.del_flag=0
+   AND NOT EXISTS (SELECT 1 FROM cms_topic_chapter c WHERE c.topic_id=t.id AND c.sort_id=1);
+INSERT INTO cms_topic_chapter
+       (topic_id, name, description, sort_id, location_count, template_count,
+        required, recruit_enabled, max_merchant, terms_mode, create_by, create_time)
+SELECT t.id, '支线 · 玩法彩蛋', '可选，不影响通关；用于覆盖其余玩法。', 2, 6, 6, 0, 0, 0, 'TRAFFIC', 'seed_chengyin_test_routes_20261024', NOW()
+  FROM cms_topic t WHERE t.member_id=100000 AND t.name='南京路上的四座高峰' AND t.del_flag=0
+   AND NOT EXISTS (SELECT 1 FROM cms_topic_chapter c WHERE c.topic_id=t.id AND c.sort_id=2);
+INSERT INTO cms_member_template
+       (member_id, title, description, players, usage_location, required_materials,
+        duration, difficulty, is_sync, rule_instructions, validation_method,
+        question_name, question_answer, question_a, question_b, question_c, question_d, correct_answer,
+        photo_require_desc, hint1, hint2, answer_reveal,
+        feedback_text, story_text, advanced_config_json, xp_value,
+        status, publish_status, draft_status, check_status, del_flag, create_by, create_time)
+SELECT 100000, 'CY-T2-S0 多选题：外滩12号', '【解密目标】核查四条资金来源记录，剔除被篡改的一条｜序章：在外滩12号门前（不进入营业厅也可完成）完成多选题。', '1人', '上海市黄浦区中山东一路10—12号（外部公共区域）', '手机、定位权限',
+       10, '普通', 1, '【解密目标】核查四条资金来源记录，剔除被篡改的一条｜序章：在外滩12号门前（不进入营业厅也可完成）完成多选题。', 5,
+       NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       '▌解密完成｜权限 L1 → L2
+被篡改的一条：“由邬达克设计”——不实。
+档案员M（游戏设定）：“记住这个名字。篡改者往往会在后面的档案里再次出现。”
+🔑 关键词1/10「资本」
+📎 下一站坐标：南京路东端，沙逊大厦脚下。', '▌CUA-NJ-17「高峰」｜残档 00/11｜资金来源核查 · 权限 L1
+调查员须知：NJ-17 系列实体需要大量“养料”。档案局认为，第一批养料来自外滩。
+——
+【史实】外滩12号原汇丰银行大楼，1921年5月开工、1923年6月竣工，由公和洋行建筑师威尔逊设计，是外滩占地最多、立面最宽、体量最大的建筑，门厅穹顶有200多平方米的马赛克壁画。1956—1995年曾是上海市政府办公地；1998年6月23日起由浦发银行启用，修缮时重新发现了1955年被石灰覆盖的穹顶壁画。它与四大公司同属上海第一批优秀历史建筑。
+——
+核查记录：四条描述中有一条被篡改。篡改者在记录中留下了一个设计师的名字：█████。', '{"schemaVersion":1,"qa":{"enabled":true,"mode":"PICK","multi":true,"title":"关于外滩12号，下列哪些说法正确？（多选）","lead":"可在门外观察，也可查看门口铭牌","options":[{"id":"a","label":"由公和洋行设计","correct":true,"fb":"对，设计师为威尔逊。"},{"id":"b","label":"1923年竣工","correct":true,"fb":"对，1923年6月竣工。"},{"id":"c","label":"是外滩体量最大的建筑","correct":true,"fb":"对。"},{"id":"d","label":"由邬达克设计","fb":"不对，邬达克设计的是国际饭店和大光明。"}],"maxTries":3,"xp":20}}', 20,
+       1, 1, 1, 1, 0, 'seed_chengyin_test_routes_20261024', NOW()
+  FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM cms_member_template m WHERE m.member_id=100000 AND m.title='CY-T2-S0 多选题：外滩12号' AND m.del_flag=0);
+INSERT INTO cms_topic_node
+       (topic_id, chapter_id, name, description, address, longitude, latitude,
+        template_id, checkin_code, business_time, status, sort_id, xp_value,
+        hook_text, card_hook_long, fragment_text, create_by, create_time)
+SELECT t.id, c.id, '序章 · 汇丰银行大楼（外滩12号）', '残档00：资金来源核查', '上海市黄浦区中山东一路10—12号（外部公共区域）', '121.490681', '31.236026',
+       m.id, REPLACE(UUID(),'-',''), '00:00-23:59', 1, 101, 20,
+       '残档00：资金来源核查', '【解密目标】核查四条资金来源记录，剔除被篡改的一条｜序章：在外滩12号门前（不进入营业厅也可完成）完成多选题。', '▌解密完成｜权限 L1 → L2
+被篡改的一条：“由邬达克设计”——不实。
+档案员M（游戏设定）：“记住这个名字。篡改者往往会在后面的档案里再次出现。”
+🔑 关键词1/10「资本」
+📎 下一站坐标：南京路东端，沙逊大厦脚下。', 'seed_chengyin_test_routes_20261024', NOW()
+  FROM cms_topic t
+  JOIN cms_topic_chapter c ON c.topic_id=t.id AND c.sort_id=1
+  JOIN cms_member_template m ON m.member_id=100000 AND m.title='CY-T2-S0 多选题：外滩12号' AND m.del_flag=0
+ WHERE t.member_id=100000 AND t.name='南京路上的四座高峰' AND t.del_flag=0
+   AND NOT EXISTS (SELECT 1 FROM cms_topic_node n WHERE n.topic_id=t.id AND n.name='序章 · 汇丰银行大楼（外滩12号）');
+INSERT INTO cms_member_template
+       (member_id, title, description, players, usage_location, required_materials,
+        duration, difficulty, is_sync, rule_instructions, validation_method,
+        question_name, question_answer, question_a, question_b, question_c, question_d, correct_answer,
+        photo_require_desc, hint1, hint2, answer_reveal,
+        feedback_text, story_text, advanced_config_json, xp_value,
+        status, publish_status, draft_status, check_status, del_flag, create_by, create_time)
+SELECT 100000, 'CY-T2-00 到点即完成：南京路东端', '【解密目标】到达观测起点｜第1站：沿外滩北行约400米到和平饭店北楼外，到点即完成。', '1人', '上海市黄浦区南京东路20号和平饭店北楼外', '手机、定位权限',
+       10, '普通', 1, '【解密目标】到达观测起点｜第1站：沿外滩北行约400米到和平饭店北楼外，到点即完成。', 0,
+       NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       '▌到达确认｜权限 L2 → L3
+🔑 关键词2/10「起点」
+📎 前体编号：NJ-17-前01 至 前04。位置：南京东路四川中路口。', '▌CUA-NJ-17「高峰」｜残档 01/11｜观测起点 · 权限 L2
+【史实】和平饭店北楼（原沙逊大厦）脚下，就是南京路的东端。19世纪下半叶，最早的百货生意集中在离外滩不远的南京路、四川路口一带。
+——
+档案员M：“NJ-17 系列之前，这条街上有更早的一批‘前体’。去四川路口。”', NULL, 20,
+       1, 1, 1, 1, 0, 'seed_chengyin_test_routes_20261024', NOW()
+  FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM cms_member_template m WHERE m.member_id=100000 AND m.title='CY-T2-00 到点即完成：南京路东端' AND m.del_flag=0);
+INSERT INTO cms_topic_node
+       (topic_id, chapter_id, name, description, address, longitude, latitude,
+        template_id, checkin_code, business_time, status, sort_id, xp_value,
+        hook_text, card_hook_long, fragment_text, create_by, create_time)
+SELECT t.id, c.id, '过站 · 和平饭店北楼', '残档01：观测起点', '上海市黄浦区南京东路20号和平饭店北楼外', '121.489565', '31.239110',
+       m.id, REPLACE(UUID(),'-',''), '00:00-23:59', 1, 102, 20,
+       '残档01：观测起点', '【解密目标】到达观测起点｜第1站：沿外滩北行约400米到和平饭店北楼外，到点即完成。', '▌到达确认｜权限 L2 → L3
+🔑 关键词2/10「起点」
+📎 前体编号：NJ-17-前01 至 前04。位置：南京东路四川中路口。', 'seed_chengyin_test_routes_20261024', NOW()
+  FROM cms_topic t
+  JOIN cms_topic_chapter c ON c.topic_id=t.id AND c.sort_id=1
+  JOIN cms_member_template m ON m.member_id=100000 AND m.title='CY-T2-00 到点即完成：南京路东端' AND m.del_flag=0
+ WHERE t.member_id=100000 AND t.name='南京路上的四座高峰' AND t.del_flag=0
+   AND NOT EXISTS (SELECT 1 FROM cms_topic_node n WHERE n.topic_id=t.id AND n.name='过站 · 和平饭店北楼');
+INSERT INTO cms_member_template
+       (member_id, title, description, players, usage_location, required_materials,
+        duration, difficulty, is_sync, rule_instructions, validation_method,
+        question_name, question_answer, question_a, question_b, question_c, question_d, correct_answer,
+        photo_require_desc, hint1, hint2, answer_reveal,
+        feedback_text, story_text, advanced_config_json, xp_value,
+        status, publish_status, draft_status, check_status, del_flag, create_by, create_time)
+SELECT 100000, 'CY-T2-01 时间轴对照：前四大与四大', '【解密目标】对照时间轴，确认哪些实体在1920年前出现｜第2站：在南京东路四川中路口完成时间轴对照题。', '1人', '上海市黄浦区南京东路、四川中路路口（今南京东路99号、114号一带）', '手机、定位权限',
+       10, '普通', 1, '【解密目标】对照时间轴，确认哪些实体在1920年前出现｜第2站：在南京东路四川中路口完成时间轴对照题。', 5,
+       NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       '▌解密完成｜权限 L3 → L4
+🔑 关键词3/10「前四大」
+📎 两个新实体已定位：NJ-17-α（先施）与 NJ-17-β（永安），浙江路口，隔街对峙。档案员M：“它们至今仍互相看着。”', '▌CUA-NJ-17「高峰」｜残档 02/11｜前体谱系 · 权限 L3
+【史实】1848年英国商人霍尔在福州路开了福利洋行，后迁至南京路、四川路东南转角（今南京东路99号）；1855年霍尔茨入股，更名“Hall & Holtz”，中文名“福利”。它起初卖面包、洋酒，1892年改组为有限公司并经营环球百货，被称为上海第一家百货公司；1914年迁至路口西北转角（今南京东路114号）。福利、汇司、泰兴、惠罗合称“前四大”，全是外资。
+——
+谱系记录：前体四个，全部外资。此后，同一条街的西段出现了四个新实体，“像在模仿，又像在挑战”。其中出现于1920年以前的是：█████。', '{"schemaVersion":1,"compare":{"enabled":true,"prompt":"标出右侧所有在1920年以前开业的华资百货。","left":{"label":"前四大·外资","items":[{"id":"l1848","time":"1848","text":"霍尔在福州路创办福利洋行"},{"id":"l1892","time":"1892","text":"福利改组为有限公司，经营环球百货"},{"id":"l1904","time":"1904","text":"惠罗公司在上海设立分公司"}]},"right":{"label":"四大·华资","items":[{"id":"r1917","time":"1917","text":"先施公司开业"},{"id":"r1918","time":"1918","text":"永安公司开业"},{"id":"r1926","time":"1926","text":"新新公司开业"},{"id":"r1936","time":"1936","text":"大新公司开业"}]},"answer":["r1917","r1918"],"maxAttempts":3,"xp":20}}', 20,
+       1, 1, 1, 1, 0, 'seed_chengyin_test_routes_20261024', NOW()
+  FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM cms_member_template m WHERE m.member_id=100000 AND m.title='CY-T2-01 时间轴对照：前四大与四大' AND m.del_flag=0);
+INSERT INTO cms_topic_node
+       (topic_id, chapter_id, name, description, address, longitude, latitude,
+        template_id, checkin_code, business_time, status, sort_id, xp_value,
+        hook_text, card_hook_long, fragment_text, create_by, create_time)
+SELECT t.id, c.id, '前传 · 福利公司旧址', '残档02：前体谱系', '上海市黄浦区南京东路、四川中路路口（今南京东路99号、114号一带）', '121.487722', '31.238486',
+       m.id, REPLACE(UUID(),'-',''), '00:00-23:59', 1, 103, 20,
+       '残档02：前体谱系', '【解密目标】对照时间轴，确认哪些实体在1920年前出现｜第2站：在南京东路四川中路口完成时间轴对照题。', '▌解密完成｜权限 L3 → L4
+🔑 关键词3/10「前四大」
+📎 两个新实体已定位：NJ-17-α（先施）与 NJ-17-β（永安），浙江路口，隔街对峙。档案员M：“它们至今仍互相看着。”', 'seed_chengyin_test_routes_20261024', NOW()
+  FROM cms_topic t
+  JOIN cms_topic_chapter c ON c.topic_id=t.id AND c.sort_id=1
+  JOIN cms_member_template m ON m.member_id=100000 AND m.title='CY-T2-01 时间轴对照：前四大与四大' AND m.del_flag=0
+ WHERE t.member_id=100000 AND t.name='南京路上的四座高峰' AND t.del_flag=0
+   AND NOT EXISTS (SELECT 1 FROM cms_topic_node n WHERE n.topic_id=t.id AND n.name='前传 · 福利公司旧址');
+INSERT INTO cms_member_template
+       (member_id, title, description, players, usage_location, required_materials,
+        duration, difficulty, is_sync, rule_instructions, validation_method,
+        question_name, question_answer, question_a, question_b, question_c, question_d, correct_answer,
+        photo_require_desc, hint1, hint2, answer_reveal,
+        feedback_text, story_text, advanced_config_json, xp_value,
+        status, publish_status, draft_status, check_status, del_flag, create_by, create_time)
+SELECT 100000, 'CY-T2-02 填空：先施的口号', '【解密目标】补全实体α铭文中被涂黑的三个字｜第3站：在先施公司旧址外找到东南角的塔楼，完成填空。', '1人', '上海市黄浦区南京东路690号（浙江中路口，今上海时装商店）', '手机、定位权限',
+       10, '普通', 1, '【解密目标】补全实体α铭文中被涂黑的三个字｜第3站：在先施公司旧址外找到东南角的塔楼，完成填空。', 5,
+       NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+       NULL, '档案员M：“明码标价——价格只有一个。”', '档案员M：“不讲价。三个字，第一个字是‘不’。”', NULL,
+       '▌解密完成｜权限 L4 → L5
+原文：“始创不二价，统办环球货。”
+🔑 关键词4/10「不二价」
+📎 警告：α 被观测时，对面的 β 会做出反应。请立即过街。', '▌CUA-NJ-17「高峰」｜残档 03/11｜实体 NJ-17-α 观测报告 · 权限 L4
+【史实】1917年10月20日，先施公司开业，是上海第一家由华人经营的大型环球百货公司。东南角带大钟的塔楼当年叫“摩星塔”；六七楼有先施乐园，京剧、杂技、魔术、电影都有，屋顶还有花园；楼里有东亚酒家和东亚旅馆。它首创商品明码标价、开具发票，还大胆雇用女营业员。今天，这栋楼是上海时装商店。
+——
+观测报告：α 体内部设有“乐园”。乐园的原型来源不明，标注为[见残档10]。
+α 的铭文：“始创█████，统办环球货。”', '{"schemaVersion":1,"mistakeTier":"easy","qa":{"enabled":true,"mode":"TYPE","title":"先施的口号：“始创＿＿＿，统办环球货”，请填入三个字。","lead":"提示：和明码标价有关","answerText":"不二价","maxTries":5,"xp":20}}', 20,
+       1, 1, 1, 1, 0, 'seed_chengyin_test_routes_20261024', NOW()
+  FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM cms_member_template m WHERE m.member_id=100000 AND m.title='CY-T2-02 填空：先施的口号' AND m.del_flag=0);
+INSERT INTO cms_topic_node
+       (topic_id, chapter_id, name, description, address, longitude, latitude,
+        template_id, checkin_code, business_time, status, sort_id, xp_value,
+        hook_text, card_hook_long, fragment_text, create_by, create_time)
+SELECT t.id, c.id, '第一峰 · 先施公司', '残档03：实体 α 的铭文', '上海市黄浦区南京东路690号（浙江中路口，今上海时装商店）', '121.477516', '31.235823',
+       m.id, REPLACE(UUID(),'-',''), '00:00-23:59', 1, 104, 20,
+       '残档03：实体 α 的铭文', '【解密目标】补全实体α铭文中被涂黑的三个字｜第3站：在先施公司旧址外找到东南角的塔楼，完成填空。', '▌解密完成｜权限 L4 → L5
+原文：“始创不二价，统办环球货。”
+🔑 关键词4/10「不二价」
+📎 警告：α 被观测时，对面的 β 会做出反应。请立即过街。', 'seed_chengyin_test_routes_20261024', NOW()
+  FROM cms_topic t
+  JOIN cms_topic_chapter c ON c.topic_id=t.id AND c.sort_id=1
+  JOIN cms_member_template m ON m.member_id=100000 AND m.title='CY-T2-02 填空：先施的口号' AND m.del_flag=0
+ WHERE t.member_id=100000 AND t.name='南京路上的四座高峰' AND t.del_flag=0
+   AND NOT EXISTS (SELECT 1 FROM cms_topic_node n WHERE n.topic_id=t.id AND n.name='第一峰 · 先施公司');
+INSERT INTO cms_member_template
+       (member_id, title, description, players, usage_location, required_materials,
+        duration, difficulty, is_sync, rule_instructions, validation_method,
+        question_name, question_answer, question_a, question_b, question_c, question_d, correct_answer,
+        photo_require_desc, hint1, hint2, answer_reveal,
+        feedback_text, story_text, advanced_config_json, xp_value,
+        status, publish_status, draft_status, check_status, del_flag, create_by, create_time)
+SELECT 100000, 'CY-T2-03 拍照打卡：永安天桥', '【解密目标】拍下实体β的延伸结构｜第4站：过马路到永安百货，拍下新旧两楼之间的封闭式天桥。', '1人', '上海市黄浦区南京东路635号（永安百货）', '手机、定位权限',
+       10, '普通', 1, '【解密目标】拍下实体β的延伸结构｜第4站：过马路到永安百货，拍下新旧两楼之间的封闭式天桥。', 2,
+       NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+       '拍到连接永安老楼与新永安大楼的封闭式跨街天桥（不拍行人正脸）。', NULL, NULL, NULL,
+       '▌解密完成｜权限 L5 → L6
+原文：“并以两座封闭式天桥连接两者。”
+🔑 关键词5/10「天桥」
+📎 下一份残档是一段截获的广播记录，来源：NJ-17-γ，五楼。', '▌CUA-NJ-17「高峰」｜残档 04/11｜实体 NJ-17-β 观测报告 · 权限 L5
+【史实】1918年9月5日，郭氏兄弟创办的永安公司在南京路635号开业，老楼六层，附设旅馆、酒楼、舞厅、游乐场和屋顶花园，与先施隔街对垒。后来永安在旁边建起更高的永安新厦，第七层是著名的“七重天”；永安在新旧楼之间架起两座封闭式天桥，让顾客往来不受日晒雨淋，今天依然可见。
+——
+观测报告：β 在α出现约一年后出现，随后“长出了第二具躯体”，并以 █████ 连接两者。请拍摄该结构作为证据。', NULL, 20,
+       1, 1, 1, 1, 0, 'seed_chengyin_test_routes_20261024', NOW()
+  FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM cms_member_template m WHERE m.member_id=100000 AND m.title='CY-T2-03 拍照打卡：永安天桥' AND m.del_flag=0);
+INSERT INTO cms_topic_node
+       (topic_id, chapter_id, name, description, address, longitude, latitude,
+        template_id, checkin_code, business_time, status, sort_id, xp_value,
+        hook_text, card_hook_long, fragment_text, create_by, create_time)
+SELECT t.id, c.id, '第二峰 · 永安公司', '残档04：实体 β 的延伸结构', '上海市黄浦区南京东路635号（永安百货）', '121.478303', '31.234870',
+       m.id, REPLACE(UUID(),'-',''), '00:00-23:59', 1, 105, 20,
+       '残档04：实体 β 的延伸结构', '【解密目标】拍下实体β的延伸结构｜第4站：过马路到永安百货，拍下新旧两楼之间的封闭式天桥。', '▌解密完成｜权限 L5 → L6
+原文：“并以两座封闭式天桥连接两者。”
+🔑 关键词5/10「天桥」
+📎 下一份残档是一段截获的广播记录，来源：NJ-17-γ，五楼。', 'seed_chengyin_test_routes_20261024', NOW()
+  FROM cms_topic t
+  JOIN cms_topic_chapter c ON c.topic_id=t.id AND c.sort_id=1
+  JOIN cms_member_template m ON m.member_id=100000 AND m.title='CY-T2-03 拍照打卡：永安天桥' AND m.del_flag=0
+ WHERE t.member_id=100000 AND t.name='南京路上的四座高峰' AND t.del_flag=0
+   AND NOT EXISTS (SELECT 1 FROM cms_topic_node n WHERE n.topic_id=t.id AND n.name='第二峰 · 永安公司');
+INSERT INTO cms_member_template
+       (member_id, title, description, players, usage_location, required_materials,
+        duration, difficulty, is_sync, rule_instructions, validation_method,
+        question_name, question_answer, question_a, question_b, question_c, question_d, correct_answer,
+        photo_require_desc, hint1, hint2, answer_reveal,
+        feedback_text, story_text, advanced_config_json, xp_value,
+        status, publish_status, draft_status, check_status, del_flag, create_by, create_time)
+SELECT 100000, 'CY-T2-04 限时打字：解放的第一声', '【解密目标】20秒内复原截获广播的原文｜第5站：在第一食品商店门口，20秒内打出那句广播。', '1人', '上海市黄浦区南京东路720号（今上海市第一食品商店）', '手机、定位权限',
+       10, '普通', 1, '【解密目标】20秒内复原截获广播的原文｜第5站：在第一食品商店门口，20秒内打出那句广播。', 5,
+       NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       '▌解密完成｜权限 L6 → L7
+原文：“我们上海人民解放了！”
+档案员M：“这一条不归异常档案管。归入城市正史。”
+🔑 关键词6/10「第一声」
+📎 最后一个实体 NJ-17-δ：西藏中路口。报告称它“会让地面自己移动”。', '▌CUA-NJ-17「高峰」｜残档 05/11｜广播截获记录 · 权限 L6
+【史实】1926年1月23日，刘锡基、李敏周等人创办的新新公司在南京路720号开业，名字取自“苟日新，日日新，又日新”，主打推销国货。1949年5月25日凌晨，新新公司的地下党组织控制了大楼五楼的凯旋电台，向全市播出“我们上海人民解放了！”，随后连续广播三天，被称为“上海解放的第一声”。今天这里是上海市第一食品商店。
+——
+截获记录：信号源：γ 五楼。持续：三日。原文：“██████████！”
+档案员M：“信号正在衰减。20秒内转写。”', '{"schemaVersion":1,"typeIn":{"enabled":true,"title":"打出那句广播","target":"我们上海人民解放了","seconds":20,"tries":3,"xp":20}}', 20,
+       1, 1, 1, 1, 0, 'seed_chengyin_test_routes_20261024', NOW()
+  FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM cms_member_template m WHERE m.member_id=100000 AND m.title='CY-T2-04 限时打字：解放的第一声' AND m.del_flag=0);
+INSERT INTO cms_topic_node
+       (topic_id, chapter_id, name, description, address, longitude, latitude,
+        template_id, checkin_code, business_time, status, sort_id, xp_value,
+        hook_text, card_hook_long, fragment_text, create_by, create_time)
+SELECT t.id, c.id, '第三峰 · 新新公司', '残档05：截获的广播', '上海市黄浦区南京东路720号（今上海市第一食品商店）', '121.476689', '31.235605',
+       m.id, REPLACE(UUID(),'-',''), '00:00-23:59', 1, 106, 20,
+       '残档05：截获的广播', '【解密目标】20秒内复原截获广播的原文｜第5站：在第一食品商店门口，20秒内打出那句广播。', '▌解密完成｜权限 L6 → L7
+原文：“我们上海人民解放了！”
+档案员M：“这一条不归异常档案管。归入城市正史。”
+🔑 关键词6/10「第一声」
+📎 最后一个实体 NJ-17-δ：西藏中路口。报告称它“会让地面自己移动”。', 'seed_chengyin_test_routes_20261024', NOW()
+  FROM cms_topic t
+  JOIN cms_topic_chapter c ON c.topic_id=t.id AND c.sort_id=1
+  JOIN cms_member_template m ON m.member_id=100000 AND m.title='CY-T2-04 限时打字：解放的第一声' AND m.del_flag=0
+ WHERE t.member_id=100000 AND t.name='南京路上的四座高峰' AND t.del_flag=0
+   AND NOT EXISTS (SELECT 1 FROM cms_topic_node n WHERE n.topic_id=t.id AND n.name='第三峰 · 新新公司');
+INSERT INTO cms_member_template
+       (member_id, title, description, players, usage_location, required_materials,
+        duration, difficulty, is_sync, rule_instructions, validation_method,
+        question_name, question_answer, question_a, question_b, question_c, question_d, correct_answer,
+        photo_require_desc, hint1, hint2, answer_reveal,
+        feedback_text, story_text, advanced_config_json, xp_value,
+        status, publish_status, draft_status, check_status, del_flag, create_by, create_time)
+SELECT 100000, 'CY-T2-05 估数：坐一次扶梯多少钱', '【解密目标】估算进入δ移动地面的“通行费”｜第6站：在第一百货门口估一估当年扶梯票价。', '1人', '上海市黄浦区南京东路830号（西藏中路口，今第一百货商业中心）', '手机、定位权限',
+       10, '普通', 1, '【解密目标】估算进入δ移动地面的“通行费”｜第6站：在第一百货门口估一估当年扶梯票价。', 8,
+       NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       '▌估算已记录｜权限 L7 → L8
+🔑 关键词7/10「扶梯」
+📎 四个实体已全部观测。但残档00里那个“篡改者”的名字，在西藏路对面出现了两次。档案员M：“去测量他。”', '▌CUA-NJ-17「高峰」｜残档 06/11｜实体 NJ-17-δ 观测报告 · 权限 L7
+【史实】1936年1月10日，大新公司在南京路830号开业，后来居上成为“四大公司”之冠。它设地下商场，一楼装了载客自动扶梯，每梯每小时可运客四千人，被称为远东第一家安装自动扶梯的百货商场。开业当天《申报》头版整版广告写着“设备电动扶梯无劳跨步”。据报道，为控制人流，大新临时发售乘扶梯的门票，凭票购物还能抵扣。1953年，上海市第一百货商店迁入。
+——
+观测报告：δ 是四个实体中最晚、也最强的一个。进入其移动地面需支付通行费：█████。', '{"schemaVersion":1,"estimate":{"enabled":true,"title":"1936年，乘一次大新公司自动扶梯的门票是几角钱？","unit":"角","min":0,"max":20,"answer":4,"tolerance":1,"reveal":"四角（四毛）。票款可在商场购物时抵扣。","xp":20}}', 20,
+       1, 1, 1, 1, 0, 'seed_chengyin_test_routes_20261024', NOW()
+  FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM cms_member_template m WHERE m.member_id=100000 AND m.title='CY-T2-05 估数：坐一次扶梯多少钱' AND m.del_flag=0);
+INSERT INTO cms_topic_node
+       (topic_id, chapter_id, name, description, address, longitude, latitude,
+        template_id, checkin_code, business_time, status, sort_id, xp_value,
+        hook_text, card_hook_long, fragment_text, create_by, create_time)
+SELECT t.id, c.id, '第四峰 · 大新公司', '残档06：实体 δ 的移动地面', '上海市黄浦区南京东路830号（西藏中路口，今第一百货商业中心）', '121.474805', '31.235120',
+       m.id, REPLACE(UUID(),'-',''), '00:00-23:59', 1, 107, 20,
+       '残档06：实体 δ 的移动地面', '【解密目标】估算进入δ移动地面的“通行费”｜第6站：在第一百货门口估一估当年扶梯票价。', '▌估算已记录｜权限 L7 → L8
+🔑 关键词7/10「扶梯」
+📎 四个实体已全部观测。但残档00里那个“篡改者”的名字，在西藏路对面出现了两次。档案员M：“去测量他。”', 'seed_chengyin_test_routes_20261024', NOW()
+  FROM cms_topic t
+  JOIN cms_topic_chapter c ON c.topic_id=t.id AND c.sort_id=1
+  JOIN cms_member_template m ON m.member_id=100000 AND m.title='CY-T2-05 估数：坐一次扶梯多少钱' AND m.del_flag=0
+ WHERE t.member_id=100000 AND t.name='南京路上的四座高峰' AND t.del_flag=0
+   AND NOT EXISTS (SELECT 1 FROM cms_topic_node n WHERE n.topic_id=t.id AND n.name='第四峰 · 大新公司');
+INSERT INTO cms_member_template
+       (member_id, title, description, players, usage_location, required_materials,
+        duration, difficulty, is_sync, rule_instructions, validation_method,
+        question_name, question_answer, question_a, question_b, question_c, question_d, correct_answer,
+        photo_require_desc, hint1, hint2, answer_reveal,
+        feedback_text, story_text, advanced_config_json, xp_value,
+        status, publish_status, draft_status, check_status, del_flag, create_by, create_time)
+SELECT 100000, 'CY-T2-06 罗盘：城市坐标原点', '【解密目标】在基准点校准方向，确认“正北”｜第7站：在国际饭店门外，把手机对准正北并保持3秒。', '1人', '上海市黄浦区南京西路170号', '手机、定位权限',
+       10, '普通', 1, '【解密目标】在基准点校准方向，确认“正北”｜第7站：在国际饭店门外，把手机对准正北并保持3秒。', 5,
+       NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       '▌校准完成｜权限 L8 → L9
+原文：“方向：正北。”
+档案员M：“篡改者不是坏人。他只是在这条街上留下了两座楼——一座最高，一座最摩登。”
+🔑 关键词8/10「原点」
+📎 第二座就在隔壁。档案中附有一张它的旧照，三处被红笔圈出。', '▌CUA-NJ-17「高峰」｜残档 07/11｜测量基准点记录 · 权限 L8
+【史实】国际饭店1934年建成，由匈牙利籍建筑师邬达克设计，地上高83.8米，曾是“远东第一高楼”。1950年11月，上海市地政局以楼顶中心旗杆为原点，建立上海城市平面坐标系；大堂旗杆正下方设有“上海城市坐标原点（副点）”标志。2021年启用“上海2000坐标系”，原点仍保留在国际饭店。
+——
+基准点记录：全城的每一个坐标都从这里量起，包括本档案中的每一站。方向：█████。', '{"schemaVersion":1,"compass":{"enabled":true,"kicker":"城市坐标原点","bearing":0,"tolerance":20,"holdSeconds":3,"hint":"慢慢转动手机，让指针对准正北。"}}', 20,
+       1, 1, 1, 1, 0, 'seed_chengyin_test_routes_20261024', NOW()
+  FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM cms_member_template m WHERE m.member_id=100000 AND m.title='CY-T2-06 罗盘：城市坐标原点' AND m.del_flag=0);
+INSERT INTO cms_topic_node
+       (topic_id, chapter_id, name, description, address, longitude, latitude,
+        template_id, checkin_code, business_time, status, sort_id, xp_value,
+        hook_text, card_hook_long, fragment_text, create_by, create_time)
+SELECT t.id, c.id, '原点 · 国际饭店', '残档07：测量基准点', '上海市黄浦区南京西路170号', '121.471535', '31.233678',
+       m.id, REPLACE(UUID(),'-',''), '00:00-23:59', 1, 108, 20,
+       '残档07：测量基准点', '【解密目标】在基准点校准方向，确认“正北”｜第7站：在国际饭店门外，把手机对准正北并保持3秒。', '▌校准完成｜权限 L8 → L9
+原文：“方向：正北。”
+档案员M：“篡改者不是坏人。他只是在这条街上留下了两座楼——一座最高，一座最摩登。”
+🔑 关键词8/10「原点」
+📎 第二座就在隔壁。档案中附有一张它的旧照，三处被红笔圈出。', 'seed_chengyin_test_routes_20261024', NOW()
+  FROM cms_topic t
+  JOIN cms_topic_chapter c ON c.topic_id=t.id AND c.sort_id=1
+  JOIN cms_member_template m ON m.member_id=100000 AND m.title='CY-T2-06 罗盘：城市坐标原点' AND m.del_flag=0
+ WHERE t.member_id=100000 AND t.name='南京路上的四座高峰' AND t.del_flag=0
+   AND NOT EXISTS (SELECT 1 FROM cms_topic_node n WHERE n.topic_id=t.id AND n.name='原点 · 国际饭店');
+INSERT INTO cms_member_template
+       (member_id, title, description, players, usage_location, required_materials,
+        duration, difficulty, is_sync, rule_instructions, validation_method,
+        question_name, question_answer, question_a, question_b, question_c, question_d, correct_answer,
+        photo_require_desc, hint1, hint2, answer_reveal,
+        feedback_text, story_text, advanced_config_json, xp_value,
+        status, publish_status, draft_status, check_status, del_flag, create_by, create_time)
+SELECT 100000, 'CY-T2-07 找东西：大光明立面', '【解密目标】在照片中找出三处被圈出的细节｜第8站：在大光明电影院对面，在立面照片上找出3处细节。', '1人', '上海市黄浦区南京西路216号', '手机、定位权限',
+       10, '普通', 1, '【解密目标】在照片中找出三处被圈出的细节｜第8站：在大光明电影院对面，在立面照片上找出3处细节。', 10,
+       NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       '▌解密完成｜权限 L9 → L10
+🔑 关键词9/10「放映」
+📎 整份档案需要一次最终核对，地点：南京西路325号，钟楼。核对超时，档案将被重新封存。', '▌CUA-NJ-17「高峰」｜残档 08/11｜影像证物 · 权限 L9
+【史实】1928年，原卡尔登舞厅被改建为大光明影戏院；1931年停业后易主，1932年拆除旧院，请邬达克重新设计，1933年6月14日以“大光明大戏院”之名开业，被誉为“远东第一影院”。
+——
+证物说明：照片中三处细节被涂成 █████。请对照实物逐一找出。档案员M：“这是整份档案里唯一一张‘会动的照片’的外壳。”', '{"schemaVersion":1,"hiddenObject":{"enabled":true,"title":"在大光明立面上找3处细节","hint":"先找高处，再找入口。","imageUrl":"/profile/chengyin-test/grand-cinema-facade.webp","maxTries":5,"hotspots":[{"id":"tower","label":"半透明灯柱/塔楼","x":0.78,"y":0.22,"r":0.08},{"id":"sign","label":"“大光明”招牌","x":0.45,"y":0.4,"r":0.08},{"id":"door","label":"主入口","x":0.4,"y":0.78,"r":0.08}],"xp":20}}', 20,
+       1, 1, 1, 1, 0, 'seed_chengyin_test_routes_20261024', NOW()
+  FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM cms_member_template m WHERE m.member_id=100000 AND m.title='CY-T2-07 找东西：大光明立面' AND m.del_flag=0);
+INSERT INTO cms_topic_node
+       (topic_id, chapter_id, name, description, address, longitude, latitude,
+        template_id, checkin_code, business_time, status, sort_id, xp_value,
+        hook_text, card_hook_long, fragment_text, create_by, create_time)
+SELECT t.id, c.id, '光影 · 大光明电影院', '残档08：带红圈的照片', '上海市黄浦区南京西路216号', '121.471076', '31.232929',
+       m.id, REPLACE(UUID(),'-',''), '00:00-23:59', 1, 109, 20,
+       '残档08：带红圈的照片', '【解密目标】在照片中找出三处被圈出的细节｜第8站：在大光明电影院对面，在立面照片上找出3处细节。', '▌解密完成｜权限 L9 → L10
+🔑 关键词9/10「放映」
+📎 整份档案需要一次最终核对，地点：南京西路325号，钟楼。核对超时，档案将被重新封存。', 'seed_chengyin_test_routes_20261024', NOW()
+  FROM cms_topic t
+  JOIN cms_topic_chapter c ON c.topic_id=t.id AND c.sort_id=1
+  JOIN cms_member_template m ON m.member_id=100000 AND m.title='CY-T2-07 找东西：大光明立面' AND m.del_flag=0
+ WHERE t.member_id=100000 AND t.name='南京路上的四座高峰' AND t.del_flag=0
+   AND NOT EXISTS (SELECT 1 FROM cms_topic_node n WHERE n.topic_id=t.id AND n.name='光影 · 大光明电影院');
+INSERT INTO cms_member_template
+       (member_id, title, description, players, usage_location, required_materials,
+        duration, difficulty, is_sync, rule_instructions, validation_method,
+        question_name, question_answer, question_a, question_b, question_c, question_d, correct_answer,
+        photo_require_desc, hint1, hint2, answer_reveal,
+        feedback_text, story_text, advanced_config_json, xp_value,
+        status, publish_status, draft_status, check_status, del_flag, create_by, create_time)
+SELECT 100000, 'CY-T2-08 分类挑战：四座高峰', '【解密目标】5分钟内把八条证据归入四个实体｜第9站：在历史博物馆门前（周一闭馆），5分钟内完成分类挑战并上榜。', '1人', '上海市黄浦区南京西路325号（原跑马总会大楼）', '手机、定位权限',
+       10, '普通', 1, '【解密目标】5分钟内把八条证据归入四个实体｜第9站：在历史博物馆门前（周一闭馆），5分钟内完成分类挑战并上榜。', 5,
+       NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       '▌归档完成｜用时已上榜
+🔑 关键词10/10「归档」
+⚠️ 系统提示：α 与 β 的“乐园”条目指向同一处原型，该原型在现存城市中不可见。档案员M：“残档10。起源点。它在西边，一座已经散场的花园。”', '▌CUA-NJ-17「高峰」｜残档 09/11｜限时归档程序 · 权限 L10
+【史实】这里原是上海跑马总会，1933年动工、1934年建成，钟楼高约53米。2018年3月26日，修缮后的大楼作为上海市历史博物馆（上海革命历史博物馆）开放，周二至周日9:00—17:00，16:00停止入馆，免费、免预约。
+——
+归档程序：八条证据，四个实体（α 先施／β 永安／γ 新新／δ 大新）。限时300秒。错误归档的证据将被[数据删除]。', '{"schemaVersion":1,"classify":{"enabled":true,"prompt":"把每条线索放回它所属的百货公司。","bins":[{"id":"sincere","label":"先施"},{"id":"wingon","label":"永安"},{"id":"sunsun","label":"新新"},{"id":"dasun","label":"大新"}],"items":[{"id":"i1","label":"1917年开业"},{"id":"i2","label":"摩星塔"},{"id":"i3","label":"1918年开业"},{"id":"i4","label":"七重天与天桥"},{"id":"i5","label":"1926年开业"},{"id":"i6","label":"凯旋电台"},{"id":"i7","label":"1936年开业"},{"id":"i8","label":"自动扶梯"}],"answer":{"i1":"sincere","i2":"sincere","i3":"wingon","i4":"wingon","i5":"sunsun","i6":"sunsun","i7":"dasun","i8":"dasun"},"xp":30},"timer":{"enabled":true,"durationSeconds":300,"timeoutResult":"EXPIRED"},"leaderboard":{"enabled":true,"metric":"ELAPSED_TIME","scope":"TOPIC","limit":50}}', 20,
+       1, 1, 1, 1, 0, 'seed_chengyin_test_routes_20261024', NOW()
+  FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM cms_member_template m WHERE m.member_id=100000 AND m.title='CY-T2-08 分类挑战：四座高峰' AND m.del_flag=0);
+INSERT INTO cms_topic_node
+       (topic_id, chapter_id, name, description, address, longitude, latitude,
+        template_id, checkin_code, business_time, status, sort_id, xp_value,
+        hook_text, card_hook_long, fragment_text, create_by, create_time)
+SELECT t.id, c.id, '博物馆 · 上海市历史博物馆', '残档09：限时归档', '上海市黄浦区南京西路325号（原跑马总会大楼）', '121.471166', '31.230697',
+       m.id, REPLACE(UUID(),'-',''), '09:00-16:00', 1, 110, 20,
+       '残档09：限时归档', '【解密目标】5分钟内把八条证据归入四个实体｜第9站：在历史博物馆门前（周一闭馆），5分钟内完成分类挑战并上榜。', '▌归档完成｜用时已上榜
+🔑 关键词10/10「归档」
+⚠️ 系统提示：α 与 β 的“乐园”条目指向同一处原型，该原型在现存城市中不可见。档案员M：“残档10。起源点。它在西边，一座已经散场的花园。”', 'seed_chengyin_test_routes_20261024', NOW()
+  FROM cms_topic t
+  JOIN cms_topic_chapter c ON c.topic_id=t.id AND c.sort_id=1
+  JOIN cms_member_template m ON m.member_id=100000 AND m.title='CY-T2-08 分类挑战：四座高峰' AND m.del_flag=0
+ WHERE t.member_id=100000 AND t.name='南京路上的四座高峰' AND t.del_flag=0
+   AND NOT EXISTS (SELECT 1 FROM cms_topic_node n WHERE n.topic_id=t.id AND n.name='博物馆 · 上海市历史博物馆');
+INSERT INTO cms_member_template
+       (member_id, title, description, players, usage_location, required_materials,
+        duration, difficulty, is_sync, rule_instructions, validation_method,
+        question_name, question_answer, question_a, question_b, question_c, question_d, correct_answer,
+        photo_require_desc, hint1, hint2, answer_reveal,
+        feedback_text, story_text, advanced_config_json, xp_value,
+        status, publish_status, draft_status, check_status, del_flag, create_by, create_time)
+SELECT 100000, 'CY-T2-09 拍照问答：海上第一名园', '【结案】在起源点拍下证物照片，完成档案｜第10站（终点）：从历史博物馆沿南京西路向西约1.4公里到张园，拍一张照片回答问题。', '1人', '上海市静安区威海路590弄张园（石门一路、威海路、茂名北路、吴江路之间，开放街区）', '手机、定位权限',
+       10, '普通', 1, '【结案】在起源点拍下证物照片，完成档案｜第10站（终点）：从历史博物馆沿南京西路向西约1.4公里到张园，拍一张照片回答问题。', 5,
+       NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       '▌档案 CUA-NJ-17 已结案
+起源点名称解密：张园。
+结案结论：四个实体之间不存在异常竞争——存在的是商业竞争；“乐园”的原型来自一座19世纪的花园。
+档案重新分类：竞争型 / 游移级 → 非异常 · 城市记忆。
+十个关键词：资本／起点／前四大／不二价／天桥／第一声／扶梯／原点／放映／归档。', '▌CUA-NJ-17「高峰」｜残档 10/11｜起源点调查 · 权限 L10
+【史实】1882年，无锡富商张叔和购地建园，取名“张氏味莼园”，1885年4月17日对外开放，成为当时上海最大的公共活动场所，被誉为“海上第一名园”。1886年10月6日，园中试燃电灯数十盏，游人“咸以为奇观”；1892年建成的安垲第楼可容千人，是当时上海最高建筑。张园后来被分块出售，建起一片石库门里弄；2018年启动保护性征收，2022年底西区重新开放。
+——
+起源点记录：电灯、千人大楼、游乐——四个实体所具备的特征，最早都出现在这里。起源点名称：█████。请拍摄一处石库门细节作为结案证物。', '{"schemaVersion":1,"qa":{"enabled":true,"mode":"SHOT","title":"拍一张张园里你认为最“摩登”的石库门细节，并说说它让你想起哪家百货公司。","lead":"不拍居民正脸与室内","shotNote":"拍门头、山墙、门牌或弄堂口即可","maxTries":3,"xp":20}}', 20,
+       1, 1, 1, 1, 0, 'seed_chengyin_test_routes_20261024', NOW()
+  FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM cms_member_template m WHERE m.member_id=100000 AND m.title='CY-T2-09 拍照问答：海上第一名园' AND m.del_flag=0);
+INSERT INTO cms_topic_node
+       (topic_id, chapter_id, name, description, address, longitude, latitude,
+        template_id, checkin_code, business_time, status, sort_id, xp_value,
+        hook_text, card_hook_long, fragment_text, create_by, create_time)
+SELECT t.id, c.id, '尾声 · 张园', '残档10：起源点', '上海市静安区威海路590弄张园（石门一路、威海路、茂名北路、吴江路之间，开放街区）', '121.460626', '31.228472',
+       m.id, REPLACE(UUID(),'-',''), '09:00-21:00', 1, 111, 20,
+       '残档10：起源点', '【结案】在起源点拍下证物照片，完成档案｜第10站（终点）：从历史博物馆沿南京西路向西约1.4公里到张园，拍一张照片回答问题。', '▌档案 CUA-NJ-17 已结案
+起源点名称解密：张园。
+结案结论：四个实体之间不存在异常竞争——存在的是商业竞争；“乐园”的原型来自一座19世纪的花园。
+档案重新分类：竞争型 / 游移级 → 非异常 · 城市记忆。
+十个关键词：资本／起点／前四大／不二价／天桥／第一声／扶梯／原点／放映／归档。', 'seed_chengyin_test_routes_20261024', NOW()
+  FROM cms_topic t
+  JOIN cms_topic_chapter c ON c.topic_id=t.id AND c.sort_id=1
+  JOIN cms_member_template m ON m.member_id=100000 AND m.title='CY-T2-09 拍照问答：海上第一名园' AND m.del_flag=0
+ WHERE t.member_id=100000 AND t.name='南京路上的四座高峰' AND t.del_flag=0
+   AND NOT EXISTS (SELECT 1 FROM cms_topic_node n WHERE n.topic_id=t.id AND n.name='尾声 · 张园');
+INSERT INTO cms_member_template
+       (member_id, title, description, players, usage_location, required_materials,
+        duration, difficulty, is_sync, rule_instructions, validation_method,
+        question_name, question_answer, question_a, question_b, question_c, question_d, correct_answer,
+        photo_require_desc, hint1, hint2, answer_reveal,
+        feedback_text, story_text, advanced_config_json, xp_value,
+        status, publish_status, draft_status, check_status, del_flag, create_by, create_time)
+SELECT 100000, 'CY-T2-B1 盲盒：今晚看什么', '支线：抽一张1920年代先施乐园的节目单。', '1人', '上海市黄浦区南京东路690号外', '手机、定位权限',
+       10, '普通', 1, '支线：抽一张1920年代先施乐园的节目单。', 5,
+       NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       '已完成。', '▌CUA-NJ-17「高峰」｜附录 · α 乐园节目单｜先施乐园设有京剧、地方戏、杂技、魔术、电影等专场。随机抽取一张节目单存档。', '{"schemaVersion":1,"random":{"enabled":true,"deckName":"先施乐园节目单","drawCount":1,"items":[{"id":"opera","label":"京剧专场","weight":1,"content":"今晚先施乐园京剧专场。"},{"id":"acro","label":"杂技专场","weight":1,"content":"今晚杂技专场。"},{"id":"magic","label":"魔术专场","weight":1,"content":"今晚魔术专场。"},{"id":"film","label":"电影专场","weight":1,"content":"今晚电影专场。"}]}}', 20,
+       1, 1, 1, 1, 0, 'seed_chengyin_test_routes_20261024', NOW()
+  FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM cms_member_template m WHERE m.member_id=100000 AND m.title='CY-T2-B1 盲盒：今晚看什么' AND m.del_flag=0);
+INSERT INTO cms_topic_node
+       (topic_id, chapter_id, name, description, address, longitude, latitude,
+        template_id, checkin_code, business_time, status, sort_id, xp_value,
+        hook_text, card_hook_long, fragment_text, create_by, create_time)
+SELECT t.id, c.id, '支线 · 先施乐园节目单', '屋顶乐园的一张节目单', '上海市黄浦区南京东路690号外', '121.477516', '31.235823',
+       m.id, REPLACE(UUID(),'-',''), '00:00-23:59', 1, 201, 20,
+       '屋顶乐园的一张节目单', '支线：抽一张1920年代先施乐园的节目单。', NULL, 'seed_chengyin_test_routes_20261024', NOW()
+  FROM cms_topic t
+  JOIN cms_topic_chapter c ON c.topic_id=t.id AND c.sort_id=2
+  JOIN cms_member_template m ON m.member_id=100000 AND m.title='CY-T2-B1 盲盒：今晚看什么' AND m.del_flag=0
+ WHERE t.member_id=100000 AND t.name='南京路上的四座高峰' AND t.del_flag=0
+   AND NOT EXISTS (SELECT 1 FROM cms_topic_node n WHERE n.topic_id=t.id AND n.name='支线 · 先施乐园节目单');
+INSERT INTO cms_member_template
+       (member_id, title, description, players, usage_location, required_materials,
+        duration, difficulty, is_sync, rule_instructions, validation_method,
+        question_name, question_answer, question_a, question_b, question_c, question_d, correct_answer,
+        photo_require_desc, hint1, hint2, answer_reveal,
+        feedback_text, story_text, advanced_config_json, xp_value,
+        status, publish_status, draft_status, check_status, del_flag, create_by, create_time)
+SELECT 100000, 'CY-T2-B2 抛硬币：永安两栋楼', '支线：抛硬币决定去看老楼还是新楼。', '1人', '上海市黄浦区南京东路635号外', '手机、定位权限',
+       10, '普通', 1, '支线：抛硬币决定去看老楼还是新楼。', 5,
+       NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       '已完成。', '▌CUA-NJ-17「高峰」｜附录 · β 双体观测顺序｜永安有一老一新两栋楼。抛硬币决定先观测哪一具。', '{"schemaVersion":1,"coinFlip":{"enabled":true,"kicker":"永安两栋楼","heads":{"label":"老楼","action":"站到635号老楼门口，找一处你认为最老的建筑细节"},"tails":{"label":"新楼","action":"抬头找到新永安大楼顶部的七重天"}}}', 20,
+       1, 1, 1, 1, 0, 'seed_chengyin_test_routes_20261024', NOW()
+  FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM cms_member_template m WHERE m.member_id=100000 AND m.title='CY-T2-B2 抛硬币：永安两栋楼' AND m.del_flag=0);
+INSERT INTO cms_topic_node
+       (topic_id, chapter_id, name, description, address, longitude, latitude,
+        template_id, checkin_code, business_time, status, sort_id, xp_value,
+        hook_text, card_hook_long, fragment_text, create_by, create_time)
+SELECT t.id, c.id, '支线 · 老楼还是新楼', '让硬币决定', '上海市黄浦区南京东路635号外', '121.478303', '31.234870',
+       m.id, REPLACE(UUID(),'-',''), '00:00-23:59', 1, 202, 20,
+       '让硬币决定', '支线：抛硬币决定去看老楼还是新楼。', NULL, 'seed_chengyin_test_routes_20261024', NOW()
+  FROM cms_topic t
+  JOIN cms_topic_chapter c ON c.topic_id=t.id AND c.sort_id=2
+  JOIN cms_member_template m ON m.member_id=100000 AND m.title='CY-T2-B2 抛硬币：永安两栋楼' AND m.del_flag=0
+ WHERE t.member_id=100000 AND t.name='南京路上的四座高峰' AND t.del_flag=0
+   AND NOT EXISTS (SELECT 1 FROM cms_topic_node n WHERE n.topic_id=t.id AND n.name='支线 · 老楼还是新楼');
+INSERT INTO cms_member_template
+       (member_id, title, description, players, usage_location, required_materials,
+        duration, difficulty, is_sync, rule_instructions, validation_method,
+        question_name, question_answer, question_a, question_b, question_c, question_d, correct_answer,
+        photo_require_desc, hint1, hint2, answer_reveal,
+        feedback_text, story_text, advanced_config_json, xp_value,
+        status, publish_status, draft_status, check_status, del_flag, create_by, create_time)
+SELECT 100000, 'CY-T2-B3 城市签：新新', '支线：抽一支南京路城市签。', '1人', '上海市黄浦区南京东路720号外', '手机、定位权限',
+       10, '普通', 1, '支线：抽一支南京路城市签。', 5,
+       NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       '已完成。', '▌CUA-NJ-17「高峰」｜附录 · γ 命名来源｜新新公司的名字来自“苟日新，日日新，又日新”。抽取一支城市签，记录当日读数。', '{"schemaVersion":1,"dailySign":{"enabled":true,"poems":[["苟日新","日日新","又日新"],["始创不二价","统办环球货"],["无劳跨步","四时如春"]],"signer":"南京路","sealText":"新新"}}', 20,
+       1, 1, 1, 1, 0, 'seed_chengyin_test_routes_20261024', NOW()
+  FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM cms_member_template m WHERE m.member_id=100000 AND m.title='CY-T2-B3 城市签：新新' AND m.del_flag=0);
+INSERT INTO cms_topic_node
+       (topic_id, chapter_id, name, description, address, longitude, latitude,
+        template_id, checkin_code, business_time, status, sort_id, xp_value,
+        hook_text, card_hook_long, fragment_text, create_by, create_time)
+SELECT t.id, c.id, '支线 · 南京路城市签', '苟日新，日日新', '上海市黄浦区南京东路720号外', '121.476689', '31.235605',
+       m.id, REPLACE(UUID(),'-',''), '00:00-23:59', 1, 203, 20,
+       '苟日新，日日新', '支线：抽一支南京路城市签。', NULL, 'seed_chengyin_test_routes_20261024', NOW()
+  FROM cms_topic t
+  JOIN cms_topic_chapter c ON c.topic_id=t.id AND c.sort_id=2
+  JOIN cms_member_template m ON m.member_id=100000 AND m.title='CY-T2-B3 城市签：新新' AND m.del_flag=0
+ WHERE t.member_id=100000 AND t.name='南京路上的四座高峰' AND t.del_flag=0
+   AND NOT EXISTS (SELECT 1 FROM cms_topic_node n WHERE n.topic_id=t.id AND n.name='支线 · 南京路城市签');
+INSERT INTO cms_member_template
+       (member_id, title, description, players, usage_location, required_materials,
+        duration, difficulty, is_sync, rule_instructions, validation_method,
+        question_name, question_answer, question_a, question_b, question_c, question_d, correct_answer,
+        photo_require_desc, hint1, hint2, answer_reveal,
+        feedback_text, story_text, advanced_config_json, xp_value,
+        status, publish_status, draft_status, check_status, del_flag, create_by, create_time)
+SELECT 100000, 'CY-T2-B4 精准停表：十秒', '支线：不看数字，精准停在10秒（误差0.5秒内）。', '1人', '上海市黄浦区南京东路830号外', '手机、定位权限',
+       10, '普通', 1, '支线：不看数字，精准停在10秒（误差0.5秒内）。', 5,
+       NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       '已完成。', '▌CUA-NJ-17「高峰」｜附录 · δ 移动地面计时｜大新的扶梯每小时能运四千人。不看屏幕，凭感觉停在10秒整。', '{"schemaVersion":1,"stopwatch":{"enabled":true,"kicker":"扶梯十秒","targetSeconds":10,"toleranceMs":500,"tries":3}}', 20,
+       1, 1, 1, 1, 0, 'seed_chengyin_test_routes_20261024', NOW()
+  FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM cms_member_template m WHERE m.member_id=100000 AND m.title='CY-T2-B4 精准停表：十秒' AND m.del_flag=0);
+INSERT INTO cms_topic_node
+       (topic_id, chapter_id, name, description, address, longitude, latitude,
+        template_id, checkin_code, business_time, status, sort_id, xp_value,
+        hook_text, card_hook_long, fragment_text, create_by, create_time)
+SELECT t.id, c.id, '支线 · 扶梯十秒', '不看秒表数十秒', '上海市黄浦区南京东路830号外', '121.474805', '31.235120',
+       m.id, REPLACE(UUID(),'-',''), '00:00-23:59', 1, 204, 20,
+       '不看秒表数十秒', '支线：不看数字，精准停在10秒（误差0.5秒内）。', NULL, 'seed_chengyin_test_routes_20261024', NOW()
+  FROM cms_topic t
+  JOIN cms_topic_chapter c ON c.topic_id=t.id AND c.sort_id=2
+  JOIN cms_member_template m ON m.member_id=100000 AND m.title='CY-T2-B4 精准停表：十秒' AND m.del_flag=0
+ WHERE t.member_id=100000 AND t.name='南京路上的四座高峰' AND t.del_flag=0
+   AND NOT EXISTS (SELECT 1 FROM cms_topic_node n WHERE n.topic_id=t.id AND n.name='支线 · 扶梯十秒');
+INSERT INTO cms_member_template
+       (member_id, title, description, players, usage_location, required_materials,
+        duration, difficulty, is_sync, rule_instructions, validation_method,
+        question_name, question_answer, question_a, question_b, question_c, question_d, correct_answer,
+        photo_require_desc, hint1, hint2, answer_reveal,
+        feedback_text, story_text, advanced_config_json, xp_value,
+        status, publish_status, draft_status, check_status, del_flag, create_by, create_time)
+SELECT 100000, 'CY-T2-B5 掷骰子：原点任务', '支线：掷一颗骰子，按点数完成一个小观察。', '1人', '上海市黄浦区南京西路170号外', '手机、定位权限',
+       10, '普通', 1, '支线：掷一颗骰子，按点数完成一个小观察。', 5,
+       NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       '已完成。', '▌CUA-NJ-17「高峰」｜附录 · 原点随机观测｜全上海的坐标从这里量起。掷骰子领取一项观测任务。', '{"schemaVersion":1,"diceRoll":{"enabled":true,"kicker":"原点任务","mode":"d6","diceCount":1,"faces":["向北看：找一处1930年代的建筑","向南看：数一数人民公园的入口","向东看：找到第一百货的招牌","向西看：找到大光明的灯柱","抬头：估计国际饭店有多少层","低头：找一块写着路名的铭牌"]}}', 20,
+       1, 1, 1, 1, 0, 'seed_chengyin_test_routes_20261024', NOW()
+  FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM cms_member_template m WHERE m.member_id=100000 AND m.title='CY-T2-B5 掷骰子：原点任务' AND m.del_flag=0);
+INSERT INTO cms_topic_node
+       (topic_id, chapter_id, name, description, address, longitude, latitude,
+        template_id, checkin_code, business_time, status, sort_id, xp_value,
+        hook_text, card_hook_long, fragment_text, create_by, create_time)
+SELECT t.id, c.id, '支线 · 从原点出发', '从原点随机出发', '上海市黄浦区南京西路170号外', '121.471535', '31.233678',
+       m.id, REPLACE(UUID(),'-',''), '00:00-23:59', 1, 205, 20,
+       '从原点随机出发', '支线：掷一颗骰子，按点数完成一个小观察。', NULL, 'seed_chengyin_test_routes_20261024', NOW()
+  FROM cms_topic t
+  JOIN cms_topic_chapter c ON c.topic_id=t.id AND c.sort_id=2
+  JOIN cms_member_template m ON m.member_id=100000 AND m.title='CY-T2-B5 掷骰子：原点任务' AND m.del_flag=0
+ WHERE t.member_id=100000 AND t.name='南京路上的四座高峰' AND t.del_flag=0
+   AND NOT EXISTS (SELECT 1 FROM cms_topic_node n WHERE n.topic_id=t.id AND n.name='支线 · 从原点出发');
+INSERT INTO cms_member_template
+       (member_id, title, description, players, usage_location, required_materials,
+        duration, difficulty, is_sync, rule_instructions, validation_method,
+        question_name, question_answer, question_a, question_b, question_c, question_d, correct_answer,
+        photo_require_desc, hint1, hint2, answer_reveal,
+        feedback_text, story_text, advanced_config_json, xp_value,
+        status, publish_status, draft_status, check_status, del_flag, create_by, create_time)
+SELECT 100000, 'CY-T2-B6 跨日任务：大光明', '支线：今天开始，1天后解锁。', '1人', '上海市黄浦区南京西路216号', '手机、定位权限',
+       10, '普通', 1, '支线：今天开始，1天后解锁。', 5,
+       NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+       NULL, NULL, NULL, NULL,
+       '已完成。', '▌CUA-NJ-17「高峰」｜附录 · 延时观测｜今日仅观测大光明外观。24小时后返回，观测门厅或一场放映。', '{"schemaVersion":1,"slowTask":{"enabled":true,"title":"明天再来一次大光明","startLabel":"今天先看外观","waitHint":"一天后回来解锁下一步","unlockLabel":"我回来了","unlockText":"欢迎回来。走进门厅，看看邬达克设计的楼梯与灯光；看电影是可选项。","waitDays":1}}', 20,
+       1, 1, 1, 1, 0, 'seed_chengyin_test_routes_20261024', NOW()
+  FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM cms_member_template m WHERE m.member_id=100000 AND m.title='CY-T2-B6 跨日任务：大光明' AND m.del_flag=0);
+INSERT INTO cms_topic_node
+       (topic_id, chapter_id, name, description, address, longitude, latitude,
+        template_id, checkin_code, business_time, status, sort_id, xp_value,
+        hook_text, card_hook_long, fragment_text, create_by, create_time)
+SELECT t.id, c.id, '支线 · 明天来看一场电影', '今天看外观，明天看电影', '上海市黄浦区南京西路216号', '121.471076', '31.232929',
+       m.id, REPLACE(UUID(),'-',''), '00:00-23:59', 1, 206, 20,
+       '今天看外观，明天看电影', '支线：今天开始，1天后解锁。', NULL, 'seed_chengyin_test_routes_20261024', NOW()
+  FROM cms_topic t
+  JOIN cms_topic_chapter c ON c.topic_id=t.id AND c.sort_id=2
+  JOIN cms_member_template m ON m.member_id=100000 AND m.title='CY-T2-B6 跨日任务：大光明' AND m.del_flag=0
+ WHERE t.member_id=100000 AND t.name='南京路上的四座高峰' AND t.del_flag=0
+   AND NOT EXISTS (SELECT 1 FROM cms_topic_node n WHERE n.topic_id=t.id AND n.name='支线 · 明天来看一场电影');
+UPDATE cms_topic_node cur
+  JOIN cms_topic t ON t.id=cur.topic_id AND t.member_id=100000 AND t.name='南京路上的四座高峰' AND t.del_flag=0
+  JOIN cms_topic_node prev ON prev.topic_id=cur.topic_id AND prev.sort_id=cur.sort_id-1
+   SET cur.unlock_after_node_id=prev.id
+ WHERE cur.sort_id BETWEEN 102 AND 199 AND prev.sort_id>=101 AND cur.unlock_after_node_id IS NULL;
+
+-- 回滚（仅在明确授权时执行）：
+-- DELETE n FROM cms_topic_node n WHERE n.create_by='seed_chengyin_test_routes_20261024';
+-- DELETE FROM cms_member_template WHERE create_by='seed_chengyin_test_routes_20261024';
+-- DELETE c FROM cms_topic_chapter c WHERE c.create_by='seed_chengyin_test_routes_20261024';
+-- DELETE r FROM product_role r JOIN cms_topic t ON t.id=r.topic_id WHERE t.create_by='seed_chengyin_test_routes_20261024';
+-- DELETE FROM cms_topic WHERE create_by='seed_chengyin_test_routes_20261024';
+-- 默认演练模式：整体回滚。确认无误后把下一行改成 COMMIT; 再执行。
+ROLLBACK;
