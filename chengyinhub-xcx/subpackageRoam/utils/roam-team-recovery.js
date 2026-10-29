@@ -1,6 +1,6 @@
 'use strict'
-const { createRecovery } = require('./team-event-command.js')
-const { exactId, reader, sameReader } = require('./user-character.js')
+const { createRecovery } = require('../../utils/team-event-command.js')
+const { exactId, reader, sameReader } = require('../../utils/user-character.js')
 const FINAL = ['APPLIED', 'REJECTED', 'CANCELLED']
 function dispose(host) {
   if (host._teamRecoveries) host._teamRecoveries.dispose()

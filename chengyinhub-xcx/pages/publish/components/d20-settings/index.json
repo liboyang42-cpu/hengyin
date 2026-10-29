@@ -4,12 +4,12 @@
     "cy-sheet": "/components/cy/sheet/index",
     "cy-switch": "/components/cy/switch/index",
     "cy-icon": "/components/cy/icon/index",
-    "cy-sheet-nav": "/components/cy/sheet-nav/index",
-    "cy-list-group": "/components/cy/list-group/index",
-    "cy-list-row": "/components/cy/list-row/index",
-    "cy-swipe-row": "/components/cy/swipe-row/index",
-    "cy-stepper": "/components/cy/stepper/index",
-    "cy-segmented": "/components/cy/segmented/index",
-    "cy-chips": "/components/cy/chips/index"
+    "cy-sheet-nav": "/pages/publish/components/sheet-nav/index",
+    "cy-list-group": "/pages/publish/components/list-group/index",
+    "cy-list-row": "/pages/publish/components/list-row/index",
+    "cy-swipe-row": "/pages/publish/components/swipe-row/index",
+    "cy-stepper": "/pages/publish/components/stepper/index",
+    "cy-segmented": "/pages/publish/components/segmented/index",
+    "cy-chips": "/pages/publish/components/chips/index"
   }
 }

@@ -73,68 +73,6 @@
       "hasWxml": true
     },
     {
-      "pagePath": "pages/privacy/index",
-      "pkg": "main",
-      "tabBar": false,
-      "role": "player",
-      "needsLogin": true,
-      "needsData": false,
-      "dataKeys": [],
-      "hasJs": true,
-      "hasWxml": true
-    },
-    {
-      "pagePath": "pages/agreement/index",
-      "pkg": "main",
-      "tabBar": false,
-      "role": "player",
-      "needsLogin": false,
-      "needsData": true,
-      "dataKeys": [
-        "type"
-      ],
-      "hasJs": true,
-      "hasWxml": true
-    },
-    {
-      "pagePath": "pages/deregister/index",
-      "pkg": "main",
-      "tabBar": false,
-      "role": "player",
-      "needsLogin": false,
-      "needsData": false,
-      "dataKeys": [],
-      "hasJs": true,
-      "hasWxml": true
-    },
-    {
-      "pagePath": "pages/team/detail/index",
-      "pkg": "main",
-      "tabBar": false,
-      "role": "player",
-      "needsLogin": true,
-      "needsData": true,
-      "dataKeys": [
-        "teamId"
-      ],
-      "hasJs": true,
-      "hasWxml": true
-    },
-    {
-      "pagePath": "pages/team/join/index",
-      "pkg": "main",
-      "tabBar": false,
-      "role": "player",
-      "needsLogin": true,
-      "needsData": true,
-      "dataKeys": [
-        "code",
-        "teamId"
-      ],
-      "hasJs": true,
-      "hasWxml": true
-    },
-    {
       "pagePath": "pages/play/index",
       "pkg": "pages/play",
       "tabBar": false,
@@ -1946,6 +1884,68 @@
       "needsLogin": true,
       "needsData": false,
       "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/privacy/index",
+      "pkg": "pages/privacy",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/agreement/index",
+      "pkg": "pages/agreement",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": false,
+      "needsData": true,
+      "dataKeys": [
+        "type"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/deregister/index",
+      "pkg": "pages/deregister",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": false,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/team/detail/index",
+      "pkg": "pages/team",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "teamId"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/team/join/index",
+      "pkg": "pages/team",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "code",
+        "teamId"
+      ],
       "hasJs": true,
       "hasWxml": true
     }

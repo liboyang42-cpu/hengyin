@@ -1,5 +1,5 @@
 const app = getApp();
-const bundle = require('../../utils/free-explore-bundle.js');
+const bundle = require('../utils/free-explore-bundle.js');
 const modal = require('../../utils/modal.js');
 const empty = () => ({ review: null, reviewPending: null, reviewBusy: false, reviewContent: '', reviewRating: 5, detail: null, catalog: null, quote: null, exitOptions: null, swapPending: null, pending: null, loading: false, error: '', notice: '' });
 

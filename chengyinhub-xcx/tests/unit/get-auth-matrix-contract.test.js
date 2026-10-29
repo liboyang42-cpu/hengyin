@@ -42,7 +42,7 @@ const MATRIX = [
   ['subpackageRoam/my-teams/index.js', "url: '/api/orient/team/lobby'", 'required', 'member', 'global-authenticated-read'],
   // 契约 §1.3 / §4:主题详情开局前准备读 /api/play/setup(requireLogin,只读已发布主题);活动详情联系主办读 /api/play/contact(requireLogin,只回俱乐部名称与电话)。
   ['pages/topic/index/index.js', "url: '/api/play/setup'", 'required', 'member', 'public-detail+viewer-personalization'],
-  ['components/cy/event-attendance/index.js', "url:'/api/play/contact'", 'required', 'member', 'public-detail+viewer-personalization'],
+  ['pages/activity/components/event-attendance/index.js', "url:'/api/play/contact'", 'required', 'member', 'public-detail+viewer-personalization'],
   ['subpackageMember/orient-score/index.js', "url: '/api/play/orient/session/current'", 'required', 'member', 'self-account'],
   ['subpackageMember/orient-score/index.js', "url: BASE + '/session/'", 'required', 'member', 'self-account'],
   ['subpackageMember/orient-score/index.js', "url: BASE + '/receipt'", 'required', 'member', 'self-account'],
@@ -185,7 +185,7 @@ const MATRIX = [
   //   GET 只读本人可管理的商家行,失败即不出现(fail-closed),账号身份由后端 principal 定。
   ['utils/marketing-consent-entry.js', "url: '/api/merchant/crm/marketing-consents'", 'required', 'member', 'self-marketing-consent'],
   // 2026-10-20 FOLLOWUP-A-1:主题/玩法举报先读平台举报原因,与动态举报同一端点(默认认证,无个人态)。
-  ['utils/content-report.js', "url: '/api/v1/community/capabilities'", 'required', 'member', 'global-authenticated-read'],
+  ['pages/topic/utils/content-report.js', "url: '/api/v1/community/capabilities'", 'required', 'member', 'global-authenticated-read'],
   // 2026-10-20 FOLLOWUP-A-2:作者本人内容的审核时间线,ApiAuditController.timeline 按内容 owner 校验。
   ['subpackageA/pages/myproject/index.js', "url: '/api/audit/timeline'", 'required', 'author', 'self-publisher'],
   // 2026-10-19 Claude 小程序线移植到 master:本线新增 20 处 GET 逐条归类(收藏据点页暂不进 master)。全部不在 SecurityConfig permitAll 清单 ⇒ required;
@@ -230,8 +230,8 @@ const MATRIX = [
   // 2026-10-27 W8 收口逐条复核后端(均未进 SecurityConfig permitAll，全部默认认证)：
   //   赛事联络/签到:玩家读 OfficialEventAttendanceService.read(id, uid, false) 仅公开可见赛事 + 本人 mine 投影;
   //   管理读先 canPublish(uid) 再 organizer(e, uid)。
-  ['components/cy/event-attendance/index.js', "url:'/api/official/events/'+id+'/attendance/manage'", 'required', 'publisher', 'controlled-event-operator'],
-  ['components/cy/event-attendance/index.js', "url:'/api/official/events/'+id+'/attendance'}", 'required', 'member', 'public-detail+viewer-personalization'],
+  ['pages/activity/components/event-attendance/index.js', "url:'/api/official/events/'+id+'/attendance/manage'", 'required', 'publisher', 'controlled-event-operator'],
+  ['pages/activity/components/event-attendance/index.js', "url:'/api/official/events/'+id+'/attendance'}", 'required', 'member', 'public-detail+viewer-personalization'],
   //   注册属性绑定:AuthorAttributeRegistryReader.read 校验主题 memberId == 登录人(商家 scope 先换 PROJECT_MANAGE 主体)。
   ['pages/publish/fabu/index.js', "url: '/api/topic/attribute-binding'", 'required', 'publisher', 'self-publisher'],
   //   公共玩法采用来源/原请求结果/采用详情:TemplateAdoptionService principal(actor, owner) + 按 actor 读原请求。

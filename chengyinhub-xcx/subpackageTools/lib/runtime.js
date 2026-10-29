@@ -1,7 +1,7 @@
 const modal = require('../../utils/modal');
 const { readReducedMotion } = require('../../utils/motion-preference.js');
 const factories = {
-  goals: require('../../utils/features/exploration-goals').createExplorationGoalsClient,
+  goals: require('../utils/features/exploration-goals').createExplorationGoalsClient,
   anniversary: require('../utils/features/exploration-anniversary').createExplorationAnniversaryClient,
   export: require('../utils/features/exploration-export').createExplorationExportClient
 };

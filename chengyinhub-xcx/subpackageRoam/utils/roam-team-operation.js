@@ -1,5 +1,5 @@
 'use strict'
-const { exactSessionId } = require('./roam-recovery.js')
+const { exactSessionId } = require('../../utils/roam-recovery.js')
 function teamId(value) {
   const exact = exactSessionId(value)
   return exact ? (typeof value === 'number' ? value : exact) : null

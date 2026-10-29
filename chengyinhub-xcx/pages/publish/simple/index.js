@@ -1,7 +1,7 @@
 // 简单页只生成草稿；发布仍只在 fabu。持久身份来自专属 journal，不保存原输入。
 const app = getApp();
 const { memberId, retryLogin, waitForInitialSession } = require('../../../utils/session/login-reload.js');
-const journal = require('../../../utils/ai-theme-draft-journal.js');
+const journal = require('../utils/ai-theme-draft-journal.js');
 const modal = require('../../../utils/modal.js');
 const { readReducedMotion } = require('../../../utils/motion-preference.js');
 const UUID = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
