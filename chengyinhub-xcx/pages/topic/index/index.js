@@ -174,7 +174,7 @@ Page({
     topBarHeight: 0, // 顶部栏高度
     tabHeight: 100, // 标签栏高度
     totalStickyHeight: 0, // 吸顶总高度（状态栏+导航栏+标签栏）
-    topicAudioPlaying: false,
+    heroDescOpen: false,
   },
 
   onLoad(options) {
@@ -351,7 +351,6 @@ Page({
    */
   onHide() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1;
     this._stopKenBurns();
-    this.pauseTopicAudio();
     this.setData({
       isTabSticky: false,
     });
@@ -365,7 +364,6 @@ Page({
     reportSheet.cancel(this);
     this._themeRecordsDisposed = true;
     this._themeRecordsEpoch = (this._themeRecordsEpoch || 0) + 1;
-    this.destroyTopicAudio();
     this._stopKenBurns();
     (this._motionTimers || []).forEach(clearTimeout);
     if (this._workflow) this._workflow.destroy();
@@ -374,46 +372,12 @@ Page({
     }
   },
 
-  // ===== 主题音频播放 =====
-  toggleTopicAudio() {
-    var that = this;
-    var url = this.data.info && this.data.info.audioUrl;
-    if (!url) return;
-    if (this._topicAudio && this._topicAudio.src === url) {
-      if (this.data.topicAudioPlaying) {
-        this._topicAudio.pause();
-      } else {
-        this._topicAudio.play();
-      }
-      return;
-    }
-    this.destroyTopicAudio();
-    var audio = wx.createInnerAudioContext();
-    audio.src = url;
-    audio.obeyMuteSwitch = false;
-    audio.onPlay(function () { that.setData({ topicAudioPlaying: true }); });
-    audio.onPause(function () { that.setData({ topicAudioPlaying: false }); });
-    audio.onStop(function () { that.setData({ topicAudioPlaying: false }); });
-    audio.onEnded(function () { that.setData({ topicAudioPlaying: false }); });
-    audio.onError(function (err) {
-      that.setData({ topicAudioPlaying: false });
-      toast(app.getRequestErrorMessage(err, '播放失败'));
-    });
-    audio.play();
-    this._topicAudio = audio;
+  // V-23:头图简介点按展开 / 收起
+  toggleHeroDesc() {
+    this.setData({ heroDescOpen: !this.data.heroDescOpen });
   },
 
-  pauseTopicAudio() {
-    if (!this._topicAudio) return;
-    try { this._topicAudio.pause(); } catch (e) {}
-  },
-
-  destroyTopicAudio() {
-    if (!this._topicAudio) return;
-    try { this._topicAudio.destroy(); } catch (e) {}
-    this._topicAudio = null;
-    this.setData({ topicAudioPlaying: false });
-  },
+  // V-22 业主 2026-10-29:主题音频只在游戏里播放,详情页不再放「主题音频讲解」行(播放代码随之删除)
 
   /**
    * 切换标签页
@@ -2113,7 +2077,7 @@ Page({
             // registrationStatus=2 回填 isSignUp,与自玩通行证的建单口径同源,直接用它。
             is_join: (String(that.data.is_join) === '1' || Number(res.data.isSignUp) === 1) ? 1 : 0,
             // 稿 214:384 的数据条:与商家版 181:575 同一份格子(utils 里只有一份实现)
-            statBar: buildTopicStatBar(res.data),
+            statBar: buildTopicStatBar(res.data, { keepZeroCounts: true }),
             ratingStars,
             // 探店日/自由探索(productType=2):场次块换真场次卡,不再当「阵容」花名册渲染
             isExplore: Number(res.data.productType) === 2,

@@ -482,15 +482,7 @@ Component({
       this.triggerEvent('back');
     },
 
-    /* 订单页通往票夹的唯一出口(底部主 CTA 与次级键都走它)。
-       2026-09-11 删掉快捷入口卡之后,原来的 goRoute/goPlay 与这里逐字相同,是重复的一份。
-       ⚠️ 方向是单向的:订单页能来票夹,票夹不回订单(2026-09-10 用户定)。 */
-    goSignInfo() {
-      const info = this.data.info || {};
-      const stype = Number(info.ownerType) === 1 ? 0 : 2;
-      this._leave('/subpackageMember/signup/index?focusId=' + (info.id || '') + '&stype=' + stype);
-    },
-
+    /* V-20 业主 2026-10-29:订单详情不再放「查看票夹」,原 goSignInfo 出口随按钮一起删除。 */
 
     startOrderTeam() {
       const info = this.data.info || {}

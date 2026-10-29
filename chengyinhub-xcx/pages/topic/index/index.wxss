@@ -1959,6 +1959,7 @@ button::after {
 .topic .hero-title { font-size: 69rpx; line-height: 1.08; font-weight: 600; letter-spacing: -1rpx; color: #fff; } /* ds-ok */
 .hero-desc { margin-top: 27rpx; height: 173rpx; overflow: hidden; font-size: 27rpx; line-height: 1.6; color: rgba(255,255,255,.8); /* ds-ok */
   -webkit-mask: linear-gradient(180deg, #000 55%, transparent); mask: linear-gradient(180deg, #000 55%, transparent); } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
+.hero-desc.is-open { height: auto; max-height: 50vh; overflow-y: auto; -webkit-mask: none; mask: none; } /* V-23 简介展开后完整显示(头图定高,超长时在简介内滚) */
 .topic .hero-acts { display: flex; align-items: center; gap: 19rpx; margin-top: 42rpx; min-height: 96rpx; }
 .topic .hero-cta { height: 96rpx; min-width: 288rpx; padding: 0 50rpx; border-radius: 48rpx; background: #fff; color: #000; font-size: 29rpx; font-weight: 600; box-sizing: border-box; } /* ds-ok */
 .topic .hero-cta.is-off { background: #2C2C2E; color: #8E8E93; } /* ds-ok */

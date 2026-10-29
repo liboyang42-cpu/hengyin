@@ -61,7 +61,7 @@ function infoRequests() {
   return sandbox.requests.filter(r => r.url === '/api/registration/info')
 }
 
-test('订单深链查看票夹只发起一次导航，普通返回仍回订单列表', () => {
+test('订单深链不再出「查看票夹」(2026-10-29 走查 V-20)，普通返回仍回订单列表', () => {
   const detail = loadPage()
   let shell
   const navigations = []
@@ -74,12 +74,9 @@ test('订单深链查看票夹只发起一次导航，普通返回仍回订单�
     { Page: config => { shell = config }, require: () => ({}), getCurrentPages: () => [], wx }
   )
   global.wx = wx
-  detail.triggerEvent = (name, data) => { if (name === 'close') shell.backToOrderList({ detail: data }) }
-  detail.data.info = { id: 42, ownerType: 2 }
-  detail.goSignInfo()
-  assert.deepEqual(navigations, ['/subpackageMember/signup/index?focusId=42&stype=2'])
+  assert.equal(typeof detail.goSignInfo, 'undefined')
   shell.backToOrderList()
-  assert.equal(navigations[1], '/subpackageMember/order/order')
+  assert.deepEqual(navigations, ['/subpackageMember/order/order'])
 })
 
 function changeOrderId(vm, id) {

@@ -49,7 +49,7 @@ Page({
           差异塞进 if,还丢掉各自的分页。 */
     ticketList: [],
     currentSwiperTicket: 0, deckPoses: [], deckStill: false, wbg: ['', ''], wbgOn: 0, navH: appGlobal.navBarHeight || 44, // v13 卡堆 / 两层模糊背景
-    flipped: false, qrState: 'idle', qrUrl: '', qrCode: '', qrCountdown: '', entering: false, startLit: false, reduced: false, // 2026-10-28 翻面入场码 + 开始游戏
+    flipped: false, qrState: 'idle', qrUrl: '', entering: false, startLit: false, reduced: false, // 2026-10-28 翻面入场码 + 开始游戏
     walletState: 'loading', // loading | ready | error | login | empty —— 由两条支线的状态合成
     walletErrorMsg: '',
     focusState: '',
@@ -358,12 +358,12 @@ Page({
     const token = this._qrToken = (this._qrToken || 0) + 1;
     this._clearQrTimer();
     if (!silent) this._qrFor = '';
-    if (!registrationId) { this.setData({ qrState: 'error', qrUrl: '', qrCode: '', qrCountdown: '' }); return; }
-    if (!silent) this.setData({ qrState: 'loading', qrUrl: '', qrCode: '', qrCountdown: '' });
-    const failed = () => {
-      if (this._unloaded || token !== this._qrToken) return;
-      if (silent && this._qrExpiresAt > Date.now() + QR_RETRY_MS) { this._scheduleQrRefresh(item, QR_RETRY_MS); return; }
-      this._qrFor = ''; this.setData({ qrState: 'error', qrUrl: '', qrCode: '' });
+    if (!registrationId) { this.setData({ qrState: 'error', qrUrl: '' }); return; }
+    if (!silent) this.setData({ qrState: 'loading', qrUrl: '' });
+    // 静默续签失败而旧码还没到期:旧码继续出示,稍后再续
+    const keepOld = () => {
+      if (!(silent && this._qrExpiresAt > Date.now() + QR_RETRY_MS)) return false;
+      this._scheduleQrRefresh(item, QR_RETRY_MS); return true;
     };
     app.sendRequest({
       url: '/api/verify/dyncode/issue', method: 'POST', data: { registrationId }, hideLoading: true, silentError: true,
@@ -372,13 +372,16 @@ Page({
         const payload = res && (res.code === 200 || res.code === '200') && res.data;
         const raw = payload && payload.expiresAt;
         const expiresAt = typeof raw === 'number' && Number.isFinite(raw) ? (raw < 100000000000 ? raw * 1000 : raw) : 0;
-        if (!payload || !payload.qrcodeUrl || !(expiresAt > Date.now())) { failed(); return; }
+        if (!payload || !payload.qrcodeUrl || !(expiresAt > Date.now())) {
+          if (!keepOld()) { this._qrFor = ''; this.setData({ qrState: 'error', qrUrl: '' }); }
+          return;
+        }
         this._qrFor = registrationId; this._qrExpiresAt = expiresAt;
-        this.setData({ qrState: 'ready', qrUrl: payload.qrcodeUrl, qrCode: payload.code || '' });
+        this.setData({ qrState: 'ready', qrUrl: payload.qrcodeUrl });
         this._scheduleQrRefresh(item, Math.max(QR_MIN_REFRESH_MS, expiresAt - Date.now() - QR_REFRESH_LEAD_MS));
       },
-      fail: failed,
-      successStatusAbnormal: failed,
+      fail: () => { if (this._unloaded || token !== this._qrToken || keepOld()) return; this._qrFor = ''; this.setData({ qrState: 'error', qrUrl: '' }); },
+      successStatusAbnormal: () => { if (this._unloaded || token !== this._qrToken || keepOld()) return; this._qrFor = ''; this.setData({ qrState: 'error', qrUrl: '' }); },
     });
   },
   _scheduleQrRefresh(item, delay) {
@@ -676,7 +679,7 @@ Page({
     const next = (thrown + 1) % n;
     this._throwing = true;
     this._clearQrTimer(); this._qrFor = '';
-    this.setData({ currentSwiperTicket: next, flipped: false, qrState: 'idle', qrUrl: '', qrCode: '', qrCountdown: '' });
+    this.setData({ currentSwiperTicket: next, flipped: false, qrState: 'idle', qrUrl: '' });
     this._deckLay();
     this.setData({ ['deckPoses[' + thrown + ']']: out });
     this._bgTo(list[next] && list[next].wImg);

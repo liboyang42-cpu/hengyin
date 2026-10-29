@@ -94,8 +94,8 @@ test('FOLLOWUP-A-1 主题:本人的、未上架或审核未过的主题不出举
     assert.equal(h.requests.length, 0);
   }
   const wxml = read('pages/topic/index/index.wxml');
-  // 2026-10-20 owner 看截图后:举报不叠在封面上,放在详情页末尾,沿用「我的游玩记录」行样式。
-  assert.match(wxml, /<view wx:if="\{\{canReport\}\}" class="topic-audio topic-report-entry" bindtap="reportTopic"[^>]*>[\s\S]*?<text>举报这个主题<\/text>/);
+  // 2026-10-29 走查 V-23 业主「举报也不展示」:详情正文不再放「举报这个主题」行(本页无自绘 ⋯ 菜单,处理器保留)。
+  assert.doesNotMatch(wxml.replace(/<!--[\s\S]*?-->/g, ''), /举报这个主题|topic-report-entry/);
   const hero = wxml.slice(wxml.indexOf('<view class="cont topic-hero-meta">'), wxml.indexOf('<view class="topic-beta"'));
   assert.doesNotMatch(hero, /reportTopic/, '举报入口不能叠在头图上');
   assert.match(wxml, /<cy-option-sheet show="\{\{reportReasonShow\}\}" title="选择举报原因" items="\{\{reportReasonItems\}\}"/);
