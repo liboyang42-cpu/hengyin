@@ -770,25 +770,25 @@ test('Photo 重启先读取原 session，用户核对只读原回执，不自动
 });
 
 test('Photo A UNKNOWN 切 B retry 与 A→B→A 同页迟到均不再发 A 命令', async () => {
-  photoDisk(); appStub._featureFlagsEpoch = 10;
+  photoDisk(); appStub._loginEpoch = 10;
   try {
     const game = createGame([{ res: { code: 520 } }, { res: { code: 520 } }]);
     await game.action('SUBMIT_PHOTO_CHECK', photoInput()); await tick();
     const before = game.calls.length;
-    appStub.getUserID = () => 8; appStub._featureFlagsEpoch++;
+    appStub.getUserID = () => 8; appStub._loginEpoch++;
     assert.equal(await game.resolveUnknown(), false); assert.equal(game.calls.length, before);
-    appStub.getUserID = () => 7; appStub._featureFlagsEpoch++;
+    appStub.getUserID = () => 7; appStub._loginEpoch++;
     assert.equal(await game.resolveUnknown(), false); assert.equal(game.calls.length, before);
-  } finally { appStub.getUserID = () => 7; delete appStub._featureFlagsEpoch; }
+  } finally { appStub.getUserID = () => 7; delete appStub._loginEpoch; }
 });
 
 test('Photo A 迟到成功仅清 A 原键，不清 B pending，不改变 B UI', async () => {
-  const disk = photoDisk(); appStub._featureFlagsEpoch = 20;
+  const disk = photoDisk(); appStub._loginEpoch = 20;
   try {
     const a = createGame([]); let finish;
     a.request = () => new Promise(resolve => { finish = resolve; });
     const old = a.action('SUBMIT_PHOTO_CHECK', photoInput());
-    appStub.getUserID = () => 8; appStub._featureFlagsEpoch++;
+    appStub.getUserID = () => 8; appStub._loginEpoch++;
     const b = createGame([{ res: { code: 520 } }, { res: { code: 520 } }]);
     await b.action('SUBMIT_PHOTO_CHECK', photoInput()); await tick();
     const bKeys = [...disk.keys()].filter(k => k.startsWith('advanced_photo_pending:8:'));
@@ -796,7 +796,7 @@ test('Photo A 迟到成功仅清 A 原键，不清 B pending，不改变 B UI', 
     finish(okAction(4).res); await old;
     assert.deepEqual(b.data, before); assert.ok(bKeys.length > 0); assert.ok(bKeys.every(k => disk.has(k)));
     assert.ok(![...disk.keys()].some(k => k.startsWith('advanced_photo_pending:7:')));
-  } finally { appStub.getUserID = () => 7; delete appStub._featureFlagsEpoch; }
+  } finally { appStub.getUserID = () => 7; delete appStub._loginEpoch; }
 });
 
 test('Photo 仅显式 intentNotExecuted 释放原记录，缺媒体或存储失败零发送', async () => {
@@ -822,17 +822,17 @@ test('Photo 存储写入无异常但无法读回时明确拒绝，不发送原�
 });
 
 test('Photo A→B→A 的旧成功不改新登录代次 UI，原终态只清原存储键', async () => {
-  const disk = photoDisk(); appStub._featureFlagsEpoch = 30;
+  const disk = photoDisk(); appStub._loginEpoch = 30;
   try {
     const game = createGame([]); let finish;
     game.request = () => new Promise(resolve => { finish = resolve; });
     const old = game.action('SUBMIT_PHOTO_CHECK', photoInput());
-    appStub.getUserID = () => 8; appStub._featureFlagsEpoch++;
-    appStub.getUserID = () => 7; appStub._featureFlagsEpoch++;
+    appStub.getUserID = () => 8; appStub._loginEpoch++;
+    appStub.getUserID = () => 7; appStub._loginEpoch++;
     const before = JSON.parse(JSON.stringify(game.data));
     finish(okAction(4).res); await old;
     assert.deepEqual(game.data, before); assert.equal(disk.size, 0);
-  } finally { appStub.getUserID = () => 7; delete appStub._featureFlagsEpoch; }
+  } finally { appStub.getUserID = () => 7; delete appStub._loginEpoch; }
 });
 
 test('Photo 在途时调用者改 payload，原发送、原存储和原重试仍冻结首次输入', async () => {
@@ -852,14 +852,14 @@ test('Photo 在途时调用者改 payload，原发送、原存储和原重试仍
 });
 
 test('共享高级动作 A UNKNOWN 切 B 及 A→B→A 不得用当前 token 重发旧命令', async () => {
-  appStub._featureFlagsEpoch = 50;
+  appStub._loginEpoch = 50;
   try {
     const game = createGame([{ err: Error('timeout') }, { err: Error('offline') }], { ownerType: 2 });
     await game.action('SUBMIT_BALL_SHAKE', { hits: 6 }); await tick();
     assert.equal(game.data.unknown, true); const count = game.calls.length;
-    appStub.getUserID = () => 8; appStub._featureFlagsEpoch++;
+    appStub.getUserID = () => 8; appStub._loginEpoch++;
     assert.equal(await game.resolveUnknown(), false); assert.equal(game.calls.length, count);
-    appStub.getUserID = () => 7; appStub._featureFlagsEpoch++;
+    appStub.getUserID = () => 7; appStub._loginEpoch++;
     assert.equal(await game.resolveUnknown(), false); assert.equal(game.calls.length, count);
-  } finally { appStub.getUserID = () => 7; delete appStub._featureFlagsEpoch; }
+  } finally { appStub.getUserID = () => 7; delete appStub._loginEpoch; }
 });

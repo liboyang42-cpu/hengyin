@@ -542,7 +542,7 @@ const DIRECTOR_METHODS = {
     let issuedAt = ''
     try { issuedAt = wx.getStorageSync('authorization_issued_at') || '' } catch (_) {}
     return { owner, authorization: app && app.getAuthorization ? app.getAuthorization() : undefined,
-      loginGeneration: String(app && app._featureFlagsEpoch || 0) + ':' + String(issuedAt),
+      loginGeneration: String(app && app._loginEpoch || 0) + ':' + String(issuedAt),
       activityId: String(this._activityId || ''), pageEpoch: this._directorPageEpoch || 0 }
   },
   _isDirectorContextCurrent(context, pending) {

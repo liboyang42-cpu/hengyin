@@ -5,14 +5,14 @@ const { DIRECTOR_DATA, DIRECTOR_METHODS } = require('../../pages/club/topic-deta
 function harness() {
   let owner = 'A', authorization = 'session-A-1'
   const values = new Map(), pending = [], submissions = []
-  const app = { _featureFlagsEpoch: 1, getUserID: () => owner, getAuthorization: () => authorization }
+  const app = { _loginEpoch: 1, getUserID: () => owner, getAuthorization: () => authorization }
   global.getApp = () => app
   global.wx = { getStorageSync: key => values.get(key), setStorageSync: (key, value) => values.set(key, value), removeStorageSync: key => values.delete(key), showToast() {} }
   const adapter = { submit(command) { submissions.push({ command, owner }); return new Promise(resolve => pending.push(resolve)) }, readReceipt() { return Promise.resolve({ state: 'pending' }) } }
   const page = Object.assign({}, DIRECTOR_METHODS, { data: { ...DIRECTOR_DATA, loadState: 'ready', revision: 3 }, _directorAdapter: adapter,
     setData(patch) { Object.assign(this.data, patch) }, loadProjection() {} })
   page.initDirector(701)
-  const change = value => { owner = value; app._featureFlagsEpoch++; authorization = 'session-' + value + '-' + app._featureFlagsEpoch }
+  const change = value => { owner = value; app._loginEpoch++; authorization = 'session-' + value + '-' + app._loginEpoch }
   return { page, values, pending, submissions, change }
 }
 const tick = () => new Promise(resolve => setImmediate(resolve))

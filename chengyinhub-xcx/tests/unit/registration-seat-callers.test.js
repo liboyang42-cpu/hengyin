@@ -16,13 +16,13 @@ function method(file, name) {
 const files = ['pages/club/detail/index.js', 'pages/merchant/index/index.js', 'subpackageMember/components/cy/profile/index.js',
   'subpackageMember/components/scene-member-participation-detail/index.js'];
 for (const file of files) test(file + ' 相机开启后A→B→A不能用新登录提交旧扫码', () => {
-  const scans = [], sends = [], disk = {}, app = { _featureFlagsEpoch: 0, getUserID: () => 11, getSession: () => ({ getRevision: () => 0 }), getAuthorization: () => 'synthetic' };
+  const scans = [], sends = [], disk = {}, app = { _loginEpoch: 0, getUserID: () => 11, getSession: () => ({ getRevision: () => 0 }), getAuthorization: () => 'synthetic' };
   const wx = { scanCode: options => scans.push(options), getStorageSync: key => disk[key] };
   const page = new Function('app', 'wx', 'captureLogin', 'loginCurrent',
     'return ({' + method(file, file.includes('/club/') ? 'onClubScan' : 'goScanQR') + '});')(app, wx, seats.captureLogin, seats.loginCurrent);
   page.data = { clubId: 7, club: { isOwner: true } }; page.canGovern = club => club && club.isOwner;
   page._submitVerification = page.submitClubScan = () => sends.push('sent');
-  page[file.includes('/club/') ? 'onClubScan' : 'goScanQR'](); app._featureFlagsEpoch += 2;
+  page[file.includes('/club/') ? 'onClubScan' : 'goScanQR'](); app._loginEpoch += 2;
   scans[0].success({ result: 'v1.71.activity_seat_2.1999999999999.7.signature' });
   assert.deepEqual(sends, []);
 });
@@ -30,7 +30,7 @@ function lead() {
   const scans = [], requests = [], messages = [], rows = {}, haptics = [], timers = [];
   const disk = { scanCode: options => scans.push(options), getStorageSync: key => rows[key],
     setStorageSync(key, value) { rows[key] = JSON.parse(JSON.stringify(value)); }, removeStorageSync(key) { delete rows[key]; } };
-  const app = { _featureFlagsEpoch: 0, getUserID: () => 11, getSession: () => ({ getRevision: () => 0 }), getAuthorization: () => 'synthetic',
+  const app = { _loginEpoch: 0, getUserID: () => 11, getSession: () => ({ getRevision: () => 0 }), getAuthorization: () => 'synthetic',
     sendRequest: options => requests.push(options) };
   const login = seats.captureLogin(app, disk);
   const names = ['leadVerifyMemberTicket', '_leadOperationContext', '_isLeadOperationContextCurrent', '_canUseLeadTools'];
@@ -68,7 +68,7 @@ test('带队入口拒绝其他场次回执，保留UNKNOWN与原身份', () => {
 test('带队入口A→B→A迟回执与离页回执不触UI或清理待办', () => {
   for (const unload of [false, true]) {
     const h = lead(); h.scan(); if (unload) { h.page._playDisposed = true; h.page._leadVerificationWorkflow.destroy(); }
-    else h.app._featureFlagsEpoch += 2;
+    else h.app._loginEpoch += 2;
     h.requests[0].success(receipt); assert.deepEqual(h.messages, []); assert.equal(h.haptics.length, 0);
     assert.equal(Object.keys(h.rows).length, 1);
   }
