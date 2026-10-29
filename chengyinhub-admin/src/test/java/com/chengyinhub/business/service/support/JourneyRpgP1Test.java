@@ -10,13 +10,22 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Field;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReferenceArray;
+import java.util.function.Function;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -166,6 +175,79 @@ class JourneyRpgP1Test {
         TopicRouteEngine.State off = new TopicRouteEngine.State();
         service.refresh(topic, JourneyRules.parse(LEGACY), off);
         assertTrue(off.getEnvironment().isEmpty());
+    }
+
+
+    @Test
+    void concurrentColdWeatherWritesKeepCapacityAndProviderOutsideCacheLock() throws Exception {
+        AtomicInteger coldCalls = new AtomicInteger();
+        CountDownLatch coldProvidersCalled = new CountDownLatch(2);
+        TopicEnvironmentService service = new TopicEnvironmentService(city -> {
+            if (city.startsWith("cold-")) {
+                coldCalls.incrementAndGet();
+                coldProvidersCalled.countDown();
+            }
+            return "rain";
+        }, Clock.fixed(Instant.parse("2026-10-22T06:00:00Z"), ZoneOffset.UTC));
+        JourneyRules rules = JourneyRules.parse("{\"schemaVersion\":1,\"checkEnabled\":true,\"rpg\":{\"environment\":{\"enabled\":true,\"keys\":[\"weather\"]}}}");
+        Function<String, TopicRouteEngine.State> refresh = city -> {
+            com.chengyinhub.business.domain.CmsTopic topic = new com.chengyinhub.business.domain.CmsTopic();
+            topic.setAddressName(city);
+            TopicRouteEngine.State state = new TopicRouteEngine.State();
+            service.refresh(topic, rules, state);
+            return state;
+        };
+        for (int i = 0; i < 511; i++) {
+            assertEquals("rain", refresh.apply("seed-" + i).getEnvironment().get("weather"));
+        }
+        Field cacheField = TopicEnvironmentService.class.getDeclaredField("cache");
+        cacheField.setAccessible(true);
+        Map<?, ?> cache = (Map<?, ?>) cacheField.get(service);
+        assertEquals(ConcurrentHashMap.class, cache.getClass(), "使用原真实缓存，不替换 Map 或伪造 size");
+        assertEquals(511, cache.size());
+        AtomicReferenceArray<Thread> callers = new AtomicReferenceArray<Thread>(2);
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        try {
+            Future<TopicRouteEngine.State> first;
+            Future<TopicRouteEngine.State> second;
+            synchronized (cache) {
+                first = executor.submit(() -> {
+                    callers.set(0, Thread.currentThread());
+                    return refresh.apply("cold-a");
+                });
+                second = executor.submit(() -> {
+                    callers.set(1, Thread.currentThread());
+                    return refresh.apply("cold-b");
+                });
+                assertTrue(coldProvidersCalled.await(5, TimeUnit.SECONDS),
+                        "持有缓存锁时两个 provider 仍须完成，外呼和等待不能进入临界区");
+                // 等待真实调用者抵达写屏障；旧的无锁写会直接完成，不能冒充受保护写。
+                long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+                while (!(callers.get(0).getState() == Thread.State.BLOCKED
+                        && callers.get(1).getState() == Thread.State.BLOCKED)
+                        && !(first.isDone() && second.isDone()) && System.nanoTime() < deadline) {
+                    Thread.yield();
+                }
+                assertEquals(Thread.State.BLOCKED, callers.get(0).getState());
+                assertEquals(Thread.State.BLOCKED, callers.get(1).getState());
+                assertEquals(511, cache.size(), "解锁前不得写入真实缓存");
+                assertFalse(first.isDone());
+                assertFalse(second.isDone());
+            }
+            assertEquals("rain", first.get(5, TimeUnit.SECONDS).getEnvironment().get("weather"));
+            assertEquals("rain", second.get(5, TimeUnit.SECONDS).getEnvironment().get("weather"));
+            assertEquals(2, coldCalls.get());
+            // 第一笔写达 512，第二笔仍按原策略整缓存清空后写入，只剩一个冷城市。
+            assertEquals(1, cache.size());
+            assertFalse(cache.containsKey("seed-0"));
+            assertTrue(cache.containsKey("cold-a") ^ cache.containsKey("cold-b"));
+            String retainedCity = cache.containsKey("cold-a") ? "cold-a" : "cold-b";
+            assertEquals("rain", refresh.apply(retainedCity).getEnvironment().get("weather"));
+            assertEquals(2, coldCalls.get(), "保留项仍使用原 TTL 缓存");
+        } finally {
+            executor.shutdownNow();
+            assertTrue(executor.awaitTermination(5, TimeUnit.SECONDS), "仅回收本测试的两个调用线程");
+        }
     }
 
     // ==================== T09 交易加值 / 校验 / 投影 ====================
