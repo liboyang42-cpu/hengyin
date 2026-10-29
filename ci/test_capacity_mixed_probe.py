@@ -823,6 +823,7 @@ class PackagedBusinessContractControls(unittest.TestCase):
             fixture.inspect.return_value = ([app] + stores, {"Id": subject["networkId"]})
             fixture.protected.return_value = subject["protectedBefore"]
             fixture.rows.return_value = [(subject["serverUuid"], subject["schema"])]
+            fixture.db = mock.MagicMock()
             cursor = fixture.db.cursor.return_value.__enter__.return_value
             cursor.description = [(key,) for key in columns]
             cursor.fetchmany.return_value = members
@@ -949,6 +950,11 @@ class CapacityEntryCleanupControls(unittest.TestCase):
             (0, 1, 0, 1, 1, 1, "true"),
             (0, 0, 1, 1, 1, 1, "true"),
             (0, 0, 0, 1, 1, 0, "true"),
+            (0, 0, 0, 0, 0, 0, "packaged"),
+            (7, 0, 0, 1, 7, 7, "packaged"),
+            (0, 1, 0, 1, 1, 1, "packaged"),
+            (0, 0, 1, 1, 1, 1, "packaged"),
+            (0, 0, 0, 1, 1, 0, "packaged"),
         ):
             with self.subTest(body=body, outer=outer, private=private, finalizer=finalizer, gameplay=gameplay):
                 # Only the real EXIT function runs; all external effects are shell stubs.
@@ -961,10 +967,12 @@ OUT=/unused-evidence
 PRIVATE=/unused-private
 CHENGYIN_CI_CAPACITY_MIXED=true
 CHENGYIN_CI_GAMEPLAY_PROCESS_RECOVERY=GAMEPLAY_MODE
+CHENGYIN_CI_PACKAGED_GAMEPLAY_CAPACITY=PACKAGED_MODE
+CHENGYIN_CI_RESTORE_HTTP_STARTUP=false
 python3() {
   case "$3" in
     cleanup) printf 'OUTER_CLEANUP\\n'; return OUTER_STATUS ;;
-    finalize)
+    finalize|packaged-finalize)
       if [[ "$2" == */gameplay_process_recovery_probe.py ]]; then
         printf 'FINALIZE:%s\\n' "$7"
       else
@@ -978,7 +986,8 @@ rm() { return 0; }
 rmdir() { printf 'PRIVATE_CLEANUP\\n'; return PRIVATE_STATUS; }
 """.replace("OUTER_STATUS", str(outer)).replace(
                     "PRIVATE_STATUS", str(private)).replace("FINALIZER_STATUS", str(finalizer)).replace(
-                    "GAMEPLAY_MODE", gameplay)
+                    "GAMEPLAY_MODE", "true" if gameplay == "packaged" else gameplay).replace(
+                    "PACKAGED_MODE", "true" if gameplay == "packaged" else "false")
                 result = probe.subprocess.run(
                     ["bash", "-c", script + cleanup + "\ntrap cleanup EXIT\nexit " + str(body)],
                     capture_output=True, text=True, timeout=5)
