@@ -117,8 +117,10 @@ public class TopicEnvironmentService {
             log.warn("rpg weather provider failed, fallback unknown: {}", providerDown.toString());
             value = JourneyRpg.ENV_UNKNOWN;
         }
-        if (cache.size() >= MAX_CACHE) cache.clear();
-        cache.put(city, new Cached(value, nowMillis));
+        synchronized (cache) {
+            if (cache.size() >= MAX_CACHE) cache.clear();
+            cache.put(city, new Cached(value, nowMillis));
+        }
         return value;
     }
 
