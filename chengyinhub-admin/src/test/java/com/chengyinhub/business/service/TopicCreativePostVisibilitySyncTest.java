@@ -98,10 +98,10 @@ class TopicCreativePostVisibilitySyncTest {
         when(cmsTopicMapper.casUserStatus(eq(TOPIC_ID), anyInt(), anyInt(), any())).thenReturn(1);
         when(cmsTopicMapper.selectCmsTopicByIdForUpdate(TOPIC_ID)).thenReturn(ownedTopic());
 
-        assertEquals(1, com.chengyinhub.business.service.support.TopicPublicationTestWiring.wire(topicService).casUserStatus(TOPIC_ID, 1, 0));
+        assertEquals(1, com.chengyinhub.business.service.support.TopicPublicationTestWiring.transactional(topicService).casUserStatus(TOPIC_ID, 1, 0));
         verify(squareService).syncTopicPostVisibility(TOPIC_ID, false);
 
-        assertEquals(1, com.chengyinhub.business.service.support.TopicPublicationTestWiring.wire(topicService).casUserStatus(TOPIC_ID, 0, 1));
+        assertEquals(1, com.chengyinhub.business.service.support.TopicPublicationTestWiring.transactional(topicService).casUserStatus(TOPIC_ID, 0, 1));
         verify(squareService).syncTopicPostVisibility(TOPIC_ID, true);
     }
 
@@ -109,7 +109,7 @@ class TopicCreativePostVisibilitySyncTest {
     void casLosingRace_changesNothing() {
         when(cmsTopicMapper.casUserStatus(eq(TOPIC_ID), anyInt(), anyInt(), any())).thenReturn(0);
 
-        assertEquals(0, com.chengyinhub.business.service.support.TopicPublicationTestWiring.wire(topicService).casUserStatus(TOPIC_ID, 1, 0));
+        assertEquals(0, com.chengyinhub.business.service.support.TopicPublicationTestWiring.transactional(topicService).casUserStatus(TOPIC_ID, 1, 0));
 
         verify(squareService, never()).syncTopicPostVisibility(anyLong(), org.mockito.ArgumentMatchers.anyBoolean());
     }

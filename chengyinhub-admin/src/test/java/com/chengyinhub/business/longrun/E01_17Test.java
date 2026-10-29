@@ -147,6 +147,7 @@ class E01_17Test {
         ReflectionTestUtils.setField(target, "cancellationActivityMapper", activities);
         // 原夹具是无父主题场次，series.topicId 与当前活动 topic_id 都保持 null。
         ReflectionTestUtils.setField(target, "cancellationTopicMapper", mock(CmsTopicMapper.class));
+        com.chengyinhub.business.service.CancellationPhaseTestSupport.wireReceiptMocks(target);
         ProxyFactory proxy = new ProxyFactory(target);
         proxy.setInterfaces(IClubEventOpsService.class);
         proxy.addAdvice(new TransactionInterceptor(transactions, new AnnotationTransactionAttributeSource()));

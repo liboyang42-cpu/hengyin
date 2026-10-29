@@ -86,6 +86,7 @@ class OuterCancellationTopicFenceTest {
         ReflectionTestUtils.setField(events, "cancellationActivityMapper", activities);
         ReflectionTestUtils.setField(events, "cancellationTopicMapper", topics);
         ReflectionTestUtils.setField(events, "cancellationTransactions", transactions);
+        com.chengyinhub.business.service.CancellationPhaseTestSupport.wireReceiptMocks(activities,topics);
     }
 
     @AfterEach void transactionLifecycleIsClosed() {

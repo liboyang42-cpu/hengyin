@@ -6,6 +6,7 @@ const merchantAccessPolicy = require('../../../utils/merchant-access-policy.js')
 const { openScene } = require('../../../utils/scene-entry.js');
 const { isRecordList } = require('../../../utils/response-shape.js');
 const { marketView } = require('../../../utils/template-market.js');
+const cancellationIntent = require('../../../utils/topic-cancellation-intent.js');
 const modal = require('../../../utils/modal.js');
 const { memberId, isLoginRequired, failureStatus, retryLogin, waitForInitialSession, recoverReadSession } = require('../../../utils/session/login-reload.js');
 
@@ -538,7 +539,16 @@ Page({
         if (!current()) return;
         const n = paidPlayersOrToast(res);
         const dc = n === null ? null : that.selectComponent && that.selectComponent('#dcCancelTopic');
-        if (dc) dc.open('topic.cancel-refund', { name: ds.title || '', id: ds.id, count: n });
+        if (dc) {
+          try {
+            const scope = that.data.operationScope || '';
+            const pending = cancellationIntent.peek(String(app.getUserID() || ''), scope, ds.id);
+            const epoch = pending ? pending.epoch : cancellationIntent.epoch(res.data.cancellationEpoch);
+            if (pending) toast('将查回上次取消结果，不取消新一轮');
+            dc.open('topic.cancel-refund', { name: ds.title || '', id: ds.id,
+              count: pending ? pending.count : n, cancellationEpoch: epoch, scope });
+          } catch (error) { toast(error.message || '原取消请求无法确认，请刷新'); }
+        }
       },
       fail() { if (current()) toast('网络异常，请重试'); }
     });
@@ -950,17 +960,28 @@ Page({
     const p = e.detail.params || {};
     const dc = this.selectComponent && this.selectComponent('#dcCancelTopic');
     const that = this;
+    let intent;
+    try {
+      if (p.scope !== (this.data.operationScope || '')) throw new Error('操作身份已变化，请重新确认');
+      intent = cancellationIntent.remember(String(app.getUserID() || ''), p.scope, p.id, p.cancellationEpoch, p.count);
+    } catch (error) { dc.failed(error.message || '原取消请求未保存，不发送'); return; }
     dc.busyOn();
     app.sendRequest({
       hideLoading: true,
       silentError: true,
       url: '/api/topic/cancel',
       method: 'POST',
-      data: { id: p.id, reason: '主办方取消主题', scope: this.data.operationScope },
+      data: { id: p.id, reason: '主办方取消主题', scope: intent.scope, cancellationEpoch: intent.epoch },
       success(res) {
         if (!current()) return;
-        if (res.code == '200') { dc.done(res.msg); that.reload(); }
-        else dc.failed((res && res.msg) || '取消失败');
+        try {
+          if (res.code != '200' || !res.data || res.data.cancellationState !== 'DONE'
+              || cancellationIntent.epoch(res.data.cancellationEpoch) !== intent.epoch
+              || !['refundedOrders', 'manualOrders', 'closedPendingOrders'].every(key => Number.isSafeInteger(res.data[key]) && res.data[key] >= 0))
+            throw new Error((res && res.code != '200' && res.msg) || '取消结果尚未确认，请保留原请求');
+          cancellationIntent.acknowledge(intent.actor, intent.scope, intent.id, intent.epoch);
+          dc.done(res.msg); that.reload();
+        } catch (error) { dc.failed(error.message || '原取消回执尚未确认'); }
       },
       fail() { if (current()) dc.failed('网络异常，请重试'); }
     });

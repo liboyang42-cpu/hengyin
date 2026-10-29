@@ -1,6 +1,9 @@
 package com.chengyinhub.business.service.impl;
 
 import com.chengyinhub.business.domain.dto.RegistrationCancellationPayments;
+import com.chengyinhub.business.service.support.CancellationReceiptStore;
+import com.chengyinhub.business.service.support.CancellationReceiptStore.Request;
+import com.chengyinhub.business.service.support.CancellationReceiptStore.Resource;
 
 import java.util.LinkedHashMap;
 import com.chengyinhub.business.domain.vo.ClubEventOccurrenceRowVO;
@@ -445,7 +448,14 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
                     : teamGroupService.captureCancellationPayments(2L, frozen.getActivityId()));
         });
         if (prepared.original().replay() != null) return prepared.original().replay();
-        RegistrationCancellationPayments observed = teamGroupService.observeCancellationPayments(prepared.payments());
+        final RegistrationCancellationPayments observed;
+        try {observed=teamGroupService.observeCancellationPayments(prepared.payments());}
+        catch(RuntimeException uncertain) {
+            OccurrencePreparation current=cancellationTransaction(Isolation.READ_COMMITTED,
+                    () -> prepareOccurrenceCancellation(actorMemberId,frozen));
+            if(current.replay()!=null) return current.replay();
+            throw uncertain;
+        }
         return cancellationAfterObservation(Isolation.READ_COMMITTED, observed,
                 () -> cancelOccurrenceWithObservedPayments(actorMemberId, username, frozen, observed));
     }
@@ -484,11 +494,12 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
         result.setClosedPendingOrders(refund.getClosedPendingOrders());
         finishOccurrenceCancellation(actorMemberId, request.getClubId(), request.getActivityId(), reason,
                 occurrence, registeredRecipients, waitlistRecipients, requestId, result);
-        return result;
+        return cancellationReceipts().complete(prepared.receiptRequest(),result);
     }
 
     private record OccurrencePreparation(String reason, String requestId, Long ownerMemberId,
-                                          ClubEventOccurrence occurrence, ClubEventCancellationResult replay) { }
+                                          ClubEventOccurrence occurrence, ClubEventCancellationResult replay,
+                                          Request receiptRequest) { }
     private record PreparedOccurrence(OccurrencePreparation original, RegistrationCancellationPayments payments) { }
 
     private OccurrencePreparation prepareOccurrenceCancellation(Long actorMemberId, ClubEventCancellationRequest request) {
@@ -543,12 +554,15 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
         boolean alreadyCancelled = standalone
                 ? standaloneActivityCancelled(request.getClubId(), request.getActivityId())
                 : ClubEventOccurrence.STATUS_CANCELLED.equals(occurrence.getStatus());
-        if (alreadyCancelled) {
+        Request receiptRequest=new Request(Resource.ACTIVITY,request.getActivityId(),actorMemberId,lockedOwner,
+                currentActivity.getMemberId(),currentActivity.getTopicId(),request.getClubId(),"CLUB_OCCURRENCE",requestId,reason);
+        var receipt=cancellationReceipts().begin(receiptRequest,alreadyCancelled || currentActivity.getCancelTime()!=null);
+        if (receipt.done()) {
             requirePersistedCancellationState(request.getClubId(), request.getActivityId());
             return new OccurrencePreparation(reason, requestId, lockedOwner, occurrence,
-                    replayCancellation(actorMemberId, request.getClubId(), request.getActivityId(),
-                            registeredRequestId, waitlistRequestId, reason, waitlistContent));
+                    receipt.occurrence(),receiptRequest);
         }
+        if (alreadyCancelled || currentActivity.getCancelTime()!=null) throw conflict("原取消状态与未完成意图不一致，请按原请求核对");
         // S531-2:系列关闭(CLOSED)只停排新场次,已排场次仍须能从 event-ops 取消并收尾退款/候补/通知。
         if (!standalone && (!ClubEventOccurrence.STATUS_ACTIVE.equals(occurrence.getStatus())
                 || !seriesServesScheduledOccurrences(series.getStatus()))) {
@@ -557,7 +571,7 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
         if (teamGroupService == null) throw conflict("活动取消服务不可用");
 
 
-        return new OccurrencePreparation(reason, requestId, lockedOwner, occurrence, null);
+        return new OccurrencePreparation(reason, requestId, lockedOwner, occurrence, null,receiptRequest);
     }
 
     /**
@@ -619,6 +633,7 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
         com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         WrapperPreparation prepared = prepareWrapperCancellation(actorMemberId, authorizedTopicId,
                 authorizedClubId, activityId, reason, authorizedTopicCancellation);
+        if (prepared.replay()!=null) return prepared.replay();
         ClubEventSeries series = prepared.series();
         ClubEventOccurrence occurrence = prepared.occurrence();
         Long clubId = prepared.clubId();
@@ -647,7 +662,7 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
             finishOccurrenceCancellation(effectiveActorMemberId, clubId, activityId, normalizedReason,
                     occurrence, registeredRecipients, waitlistRecipients, "api-activity-cancel", null);
         }
-        return refund;
+        return cancellationReceipts().complete(prepared.receiptRequest(),refund);
     }
 
     private static void requireCancellationOutsideTransaction() {
@@ -693,12 +708,22 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
 
     private ActivityCancelResult cancelWrapperOutsideTransaction(Long actorMemberId, Long topicId, Long clubId,
             Long activityId, String reason, boolean authorizedTopicCancellation, Isolation isolation) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         requireCancellationOutsideTransaction();
-        RegistrationCancellationPayments captured = cancellationTransaction(isolation, () -> {
-            prepareWrapperCancellation(actorMemberId, topicId, clubId, activityId, reason, authorizedTopicCancellation);
-            return teamGroupService.captureCancellationPayments(2L, activityId);
+        PreparedWrapper prepared = cancellationTransaction(isolation, () -> {
+            WrapperPreparation original=prepareWrapperCancellation(actorMemberId,topicId,clubId,activityId,reason,authorizedTopicCancellation);
+            return new PreparedWrapper(original,original.replay()==null
+                    ? teamGroupService.captureCancellationPayments(2L,activityId) : null);
         });
-        RegistrationCancellationPayments observed = teamGroupService.observeCancellationPayments(captured);
+        if (prepared.original().replay()!=null) return prepared.original().replay();
+        final RegistrationCancellationPayments observed;
+        try {observed=teamGroupService.observeCancellationPayments(prepared.payments());}
+        catch(RuntimeException uncertain) {
+            WrapperPreparation current=cancellationTransaction(isolation,
+                    () -> prepareWrapperCancellation(actorMemberId,topicId,clubId,activityId,reason,authorizedTopicCancellation));
+            if(current.replay()!=null) return current.replay();
+            throw uncertain;
+        }
         return cancellationAfterObservation(isolation, observed, () -> cancelActivityWithClubWrapUp(actorMemberId, topicId,
                 clubId, activityId, reason, authorizedTopicCancellation, observed));
     }
@@ -707,6 +732,7 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
     @Transactional(propagation = org.springframework.transaction.annotation.Propagation.MANDATORY)
     public RegistrationCancellationPayments captureAuthorizedTopicCancellationPayments(Long actorMemberId,
             Long topicId, Long clubId, Long activityId, String reason) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         requireCancellationTransaction();
         if (!positive(topicId) || !positive(clubId)) throw badRequest("主题取消范围不完整");
         prepareWrapperCancellation(actorMemberId, topicId, clubId, activityId, reason, true);
@@ -724,7 +750,9 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
     }
 
     private record WrapperPreparation(ClubEventSeries series, ClubEventOccurrence occurrence, Long clubId,
-                                      Long ownerMemberId, Long effectiveActorMemberId, String reason) { }
+                                      Long ownerMemberId, Long effectiveActorMemberId, String reason,
+                                      Request receiptRequest,ActivityCancelResult replay) { }
+    private record PreparedWrapper(WrapperPreparation original,RegistrationCancellationPayments payments) { }
 
     private WrapperPreparation prepareWrapperCancellation(Long actorMemberId, Long authorizedTopicId,
             Long authorizedClubId, Long activityId, String reason, boolean authorizedTopicCancellation) {
@@ -744,6 +772,7 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
         ClubEventOccurrence occurrence = null;
         Long clubId = null;
         Long ownerMemberId = actorMemberId;
+        boolean occurrenceCancelled=false;
         if (series != null) {
             if (!positive(series.getId()) || !positive(series.getClubId())) {
                 throw conflict("场次状态不完整，请刷新后重试");
@@ -767,7 +796,7 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
                     && !lockedOwner.equals(access.getOwnerMemberId()))) throw forbidden();
             ownerMemberId = lockedOwner;
             if (ClubEventOccurrence.STATUS_CANCELLED.equals(occurrence.getStatus())) {
-                // 已被 event-ops 收尾过:不重复终止候补/发通知,这里只补退款。
+                occurrenceCancelled=true;
                 occurrence = null;
             }
         } else if (authorizedTopicCancellation) {
@@ -780,8 +809,47 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
         }
 
 
-        return new WrapperPreparation(series, occurrence, clubId, ownerMemberId,
-                authorizedTopicCancellation ? ownerMemberId : actorMemberId, normalizedReason);
+        // Reauthorize before reading the original result. A pre-authorized topic child must either
+        // be the current host or join that host flow's exact current PENDING topic intent.
+        if (authorizedTopicCancellation) requireCurrentTopicCancellationCaller(actorMemberId,authorizedTopicId,normalizedReason);
+        else if (series==null) {
+            Long actualClub=currentActivity.getClubId();
+            if (actualClub!=null && actualClub>0) {
+                Long currentOwner=clubEventOpsMapper.selectClubOwnerForUpdate(actualClub);
+                if (!actorMemberId.equals(currentOwner)) throw forbidden();
+                ownerMemberId=currentOwner;
+            } else if (!actorMemberId.equals(currentActivity.getMemberId())) throw forbidden();
+        }
+        Request receiptRequest=new Request(Resource.ACTIVITY,activityId,actorMemberId,ownerMemberId,
+                currentActivity.getMemberId(),currentActivity.getTopicId(),currentActivity.getClubId(),
+                authorizedTopicCancellation?"AUTHORIZED_TOPIC_WRAP":"CLUB_OWNER_WRAP",
+                "api-activity-cancel-"+activityId,normalizedReason);
+        var receipt=cancellationReceipts().begin(receiptRequest,currentActivity.getCancelTime()!=null || occurrenceCancelled);
+        ActivityCancelResult replay=null;
+        if (receipt.done()) {
+            if (currentActivity.getCancelTime()==null || !Long.valueOf(0L).equals(currentActivity.getStatus())
+                    || !Long.valueOf(0L).equals(currentActivity.getPublishStatus()))
+                throw conflict("原取消生命周期已变化，请人工核对原结果");
+            replay=receipt.activity();
+        } else if(currentActivity.getCancelTime()!=null || occurrenceCancelled) {
+            throw conflict("原取消状态与未完成意图不一致，请按原请求核对");
+        }
+        return new WrapperPreparation(series,occurrence,clubId,ownerMemberId,
+                authorizedTopicCancellation?ownerMemberId:actorMemberId,normalizedReason,receiptRequest,replay);
+    }
+
+    private CancellationReceiptStore cancellationReceipts() {
+        return new CancellationReceiptStore(cancellationActivityMapper,cancellationTopicMapper);
+    }
+
+    private void requireCurrentTopicCancellationCaller(Long actor,Long topicId,String reason) {
+        CmsTopic topic=cancellationTopicMapper.selectCmsTopicByIdForUpdate(topicId);
+        if (topic==null || !topicId.equals(topic.getId()) || !positive(topic.getMemberId())
+                || Integer.valueOf(2).equals(topic.getDelFlag())) throw forbidden();
+        if (actor.equals(topic.getMemberId())) return;
+        Request parent=new Request(Resource.TOPIC,topicId,actor,topic.getMemberId(),topic.getMemberId(),
+                topicId,null,"TOPIC_HOST","topic-cancel-"+topicId,reason,cancellationReceipts().currentTopicEpoch(topicId));
+        if (cancellationReceipts().current(parent).done()) throw forbidden();
     }
 
     private com.chengyinhub.business.domain.CmsActivity lockCancellationTopic(
@@ -804,9 +872,22 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
     }
 
     @Override
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NEVER)
     public ClubEventCancellationStateVO getCancellationState(Long actorMemberId, Long clubId,
                                                               Long activityId) {
+        requireCancellationOutsideTransaction();
+        return cancellationTransaction(Isolation.READ_COMMITTED,
+                () -> readCancellationState(actorMemberId,clubId,activityId));
+    }
+
+    private ClubEventCancellationStateVO readCancellationState(Long actorMemberId,Long clubId,Long activityId) {
         requireCancellationAccess(actorMemberId, clubId, activityId);
+        var observed=lockCancellationTopic(activityId,null,clubId);
+        var activity=RegistrationTopicFence.requireCurrentActivity(observed,cancellationActivityMapper);
+        requireCancellationActivityScope(activity,clubId,null);
+        Long owner=clubEventOpsMapper.selectClubOwnerForUpdate(clubId);
+        ClubAccessContext access=requireCancellationAccess(actorMemberId,clubId,activityId);
+        if(!positive(owner) || !owner.equals(access.getOwnerMemberId())) throw forbidden();
         ClubEventCancellationStateVO state = clubEventOpsMapper
                 .selectOccurrenceCancellationState(activityId, clubId);
         if (state == null || !clubId.equals(state.getClubId()) || !activityId.equals(state.getActivityId())
@@ -825,6 +906,16 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
             }
         } else {
             throw conflict("场次取消状态无法确认");
+        }
+        var original=cancellationReceipts().ownedActivity(activityId,actorMemberId,owner,
+                activity.getMemberId(),activity.getTopicId(),clubId);
+        if(original!=null) {
+            var receipt=original.snapshot();
+            if(receipt.done() && !state.isActivityCancelled()) throw conflict("原取消回执与活动状态不一致");
+            state.setCancellationReceiptState(receipt.done()?"DONE":"PENDING");
+            state.setCancellationRequestId(original.requestId());
+            state.setCancellationRequestReason(original.reason());
+            if(receipt.done()) state.setOriginalCancellationResult(receipt.activity());
         }
         return state;
     }

@@ -1793,6 +1793,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             CmsTopic current = cmsTopicMapper.selectCmsTopicByIdForUpdate(topicId);
             if (current == null) return 0;
             assertOrdinarySupplyRestored(current);
+            com.chengyinhub.business.service.support.CancellationReceiptStore.forTopics(cmsTopicMapper).requireRelistable(topicId);
         }
         int rows = cmsTopicMapper.casUserStatus(topicId, expected, target, DateUtils.getNowDate());
         if (rows > 0) {

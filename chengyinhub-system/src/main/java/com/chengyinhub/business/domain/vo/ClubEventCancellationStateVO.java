@@ -8,6 +8,19 @@ public class ClubEventCancellationStateVO {
     private boolean activityCancelled;
     private Long publishStatus;
     private String cancelReason;
+    private String cancellationReceiptState = "UNKNOWN";
+    private String cancellationRequestId;
+    private String cancellationRequestReason;
+    private com.chengyinhub.business.domain.dto.ActivityCancelResult originalCancellationResult;
+
+    public String getCancellationReceiptState() { return cancellationReceiptState; }
+    public void setCancellationReceiptState(String value) { cancellationReceiptState = value; }
+    public String getCancellationRequestId() { return cancellationRequestId; }
+    public void setCancellationRequestId(String value) { cancellationRequestId = value; }
+    public String getCancellationRequestReason() { return cancellationRequestReason; }
+    public void setCancellationRequestReason(String value) { cancellationRequestReason = value; }
+    public com.chengyinhub.business.domain.dto.ActivityCancelResult getOriginalCancellationResult() { return originalCancellationResult; }
+    public void setOriginalCancellationResult(com.chengyinhub.business.domain.dto.ActivityCancelResult value) { originalCancellationResult = value; }
 
     public Long getClubId() { return clubId; }
     public void setClubId(Long clubId) { this.clubId = clubId; }

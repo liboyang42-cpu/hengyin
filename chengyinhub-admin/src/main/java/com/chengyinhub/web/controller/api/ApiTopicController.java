@@ -1073,9 +1073,10 @@ public class ApiTopicController extends BaseController {
     @Parameters({
             @Parameter(name = "id", description = "主题id"),
             @Parameter(name = "reason", description = "取消原因(展示给已付款玩家)"),
-            @Parameter(name = "scope", description = "MERCHANT=以商家主办身份;空=个人主办")
+            @Parameter(name = "scope", description = "MERCHANT=以商家主办身份;空=个人主办"),
+            @Parameter(name = "cancellationEpoch", description = "原预览返回的取消轮次，重试必须保持原值")
     })
-    public AjaxResult topicCancel(String id, String reason, String scope) {
+    public AjaxResult topicCancel(String id,String reason,String scope,Long cancellationEpoch) {
         Long tid = Convert.toLong(id, 0L);
         if (tid < 1) {
             return error("参数不合规");
@@ -1100,7 +1101,8 @@ public class ApiTopicController extends BaseController {
         try {
             Long hostMemberId = resolveProjectOwnerMemberId(actorMemberId, scope);
             com.chengyinhub.business.domain.dto.ActivityCancelResult res =
-                    teamGroupService.cancelTopicByHost(tid, hostMemberId, actorMemberId, reason.trim());
+                    cancellationEpoch==null?teamGroupService.cancelTopicByHost(tid,hostMemberId,actorMemberId,reason.trim())
+                            :teamGroupService.cancelTopicByHost(tid,hostMemberId,actorMemberId,reason.trim(),cancellationEpoch);
             StringBuilder msg = new StringBuilder(res.getRefundedOrders() > 0
                     ? ("主题已取消,已为 " + res.getRefundedOrders() + " 笔订单全额退款(原路退回,预计1-3个工作日)")
                     : "主题已取消(无可自动退款的已付款订单)");
@@ -1108,7 +1110,11 @@ public class ApiTopicController extends BaseController {
                 msg.append(";另有 ").append(res.getManualOrders())
                         .append(" 笔订单含已核销的票,无法自动退款,平台将人工跟进处理");
             }
-            return AjaxResult.success(msg.toString());
+            Map<String,Object> original=new HashMap<>();original.put("refundedOrders",res.getRefundedOrders());
+            original.put("manualOrders",res.getManualOrders());original.put("closedPendingOrders",res.getClosedPendingOrders());
+            original.put("cancellationEpoch",cancellationEpoch==null?0L:cancellationEpoch);
+            original.put("cancellationState","DONE");
+            return AjaxResult.success(msg.toString(),original);
         } catch (ServiceException se) {
             return AjaxResult.error(se.getMessage());
         } catch (Exception e) {
@@ -1116,6 +1122,9 @@ public class ApiTopicController extends BaseController {
             return AjaxResult.error("系统繁忙，请稍后重试");
         }
     }
+
+    /** Source-compatible caller for the legacy first epoch, not another HTTP route. */
+    public AjaxResult topicCancel(String id,String reason,String scope) {return topicCancel(id,reason,scope,null);}
 
     @Operation(summary = "取消主题前预览:将被全额退款的已付款玩家人数")
     @PostMapping("/cancel_preview")
@@ -1137,6 +1146,7 @@ public class ApiTopicController extends BaseController {
             Long hostMemberId = resolveProjectOwnerMemberId(actorMemberId, scope);
             Map<String, Object> out = new HashMap<>();
             out.put("paidPlayers", teamGroupService.countPaidPlayersForTopicCancel(tid, hostMemberId));
+            out.put("cancellationEpoch",teamGroupService.topicCancellationEpoch(tid,hostMemberId));
             return AjaxResult.success(out);
         } catch (ServiceException se) {
             return AjaxResult.error(se.getMessage());

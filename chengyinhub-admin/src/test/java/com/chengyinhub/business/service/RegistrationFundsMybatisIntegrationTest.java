@@ -374,6 +374,8 @@ class RegistrationFundsMybatisIntegrationTest {
         );
         try (Connection connection = dataSource.getConnection()) {
             ScriptUtils.executeSqlScript(connection, new FileSystemResource("sql/migration_20261024_registration_payment_fact.sql"));
+            ScriptUtils.executeSqlScript(connection, new FileSystemResource("sql/migration_20261029_activity_cancellation_receipt.sql"));
+            ScriptUtils.executeSqlScript(connection, new FileSystemResource("sql/migration_20261029_topic_cancellation_receipt.sql"));
         }
         execute("INSERT INTO ums_member(id,status,point,del_flag) VALUES (7,1,100,0)",
                 "INSERT INTO cms_topic(id,member_id,product_type) VALUES (99,1,1)",

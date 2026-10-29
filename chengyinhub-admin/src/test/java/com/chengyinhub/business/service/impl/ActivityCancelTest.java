@@ -132,6 +132,7 @@ class ActivityCancelTest {
         ReflectionTestUtils.setField(s, "imService", imService);
         ReflectionTestUtils.setField(s, "refundPayoutService", refundPayoutService);
         ReflectionTestUtils.setField(s, "manualRefundCaseService", manualRefundCaseService);
+        ReflectionTestUtils.setField(s,"cmsTopicMapper",mock(com.chengyinhub.business.mapper.CmsTopicMapper.class));
         com.chengyinhub.business.service.CancellationPhaseTestSupport.wireTeamUnit(s, regMapper);
         return s;
     }
@@ -339,6 +340,7 @@ class ActivityCancelTest {
             CmsActivity activity = liveActivity();
             if (jdbc.queryForObject("select cancelled from cancellation where id=?", Integer.class, ACTIVITY_ID) == 1) {
                 activity.setCancelTime(new Date());
+                activity.setStatus(0L);activity.setPublishStatus(0L);
             }
             return activity;
         });
@@ -366,11 +368,13 @@ class ActivityCancelTest {
             assertEquals(0, jdbc.queryForObject("select cancelled from cancellation", Integer.class));
             assertEquals(0, jdbc.queryForObject("select count(*) from cancellation_notice", Integer.class));
             failSecond.set(false);
-            transactional.cancelActivityByOwner(ACTIVITY_ID, OWNER_ID, "天气原因");
+            ActivityCancelResult original=transactional.cancelActivityByOwner(ACTIVITY_ID, OWNER_ID, "天气原因");
             assertEquals(1, jdbc.queryForObject("select cancelled from cancellation", Integer.class));
             assertEquals(2, jdbc.queryForObject("select count(*) from cancellation_notice", Integer.class));
-            assertThrows(ServiceException.class,
-                    () -> transactional.cancelActivityByOwner(ACTIVITY_ID, OWNER_ID, "天气原因"));
+            ActivityCancelResult replay=transactional.cancelActivityByOwner(ACTIVITY_ID, OWNER_ID, "天气原因");
+            assertEquals(original.getRefundedOrders(),replay.getRefundedOrders());
+            assertEquals(original.getManualOrders(),replay.getManualOrders());
+            assertEquals(original.getClosedPendingOrders(),replay.getClosedPendingOrders());
             assertEquals(2, jdbc.queryForObject("select count(*) from cancellation_notice", Integer.class));
             assertEquals(org.springframework.transaction.annotation.Propagation.REQUIRED,
                     ImServiceImpl.class.getMethod("sendSystem", Long.class, Integer.class, String.class, String.class)

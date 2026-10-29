@@ -13,6 +13,7 @@ public interface IClubTopicSettingService {
      * 稿 J5 164:118 承诺的就是这件事 —— 「停止售卖并把未核销的票原价退回」。
      */
     Map<String, Object> endTopic(Long principalMemberId, String username, Long clubId, Long topicId, String reason);
+    Map<String,Object> endTopic(Long principalMemberId,String username,Long clubId,Long topicId,String reason,Long cancellationEpoch);
 
     Map<String, Object> save(Long principalMemberId, Long clubId, Long topicId,
                              Boolean coopOpen, Boolean pinned, Boolean memberOnly);

@@ -81,10 +81,24 @@ class ApiTopicHostCancelTest
     void previewReportsPaidPlayersForTheConfirmDialog()
     {
         when(refundCore.countPaidPlayersForTopicCancel(42L, ME)).thenReturn(6);
+        when(refundCore.topicCancellationEpoch(42L,ME)).thenReturn(3L);
 
         AjaxResult result = controller.topicCancelPreview("42", null);
 
         assertEquals(200, result.get(AjaxResult.CODE_TAG));
         assertEquals(6, ((Map<String, Object>) result.get(AjaxResult.DATA_TAG)).get("paidPlayers"));
+        assertEquals(3L,((Map<String,Object>)result.get(AjaxResult.DATA_TAG)).get("cancellationEpoch"));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void explicitOriginalEpochIsPassedUnchangedAndReturnedWithOriginalFullCounts() {
+        when(refundCore.cancelTopicByHost(42L,ME,ME,"原取消",2L)).thenReturn(new ActivityCancelResult(4,1,2));
+        AjaxResult result=controller.topicCancel("42","原取消",null,2L);
+        assertEquals(200,result.get(AjaxResult.CODE_TAG));
+        verify(refundCore).cancelTopicByHost(42L,ME,ME,"原取消",2L);
+        Map<String,Object> original=(Map<String,Object>)result.get(AjaxResult.DATA_TAG);
+        assertEquals("DONE",original.get("cancellationState"));assertEquals(2L,original.get("cancellationEpoch"));
+        assertEquals(4,original.get("refundedOrders"));assertEquals(1,original.get("manualOrders"));assertEquals(2,original.get("closedPendingOrders"));
     }
 }

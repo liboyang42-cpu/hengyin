@@ -101,7 +101,7 @@ class ClubEventTransferCancellationMySqlIT {
     private static final long REGISTRATION = 1601L;
     private static final String REASON = "场地突发取消";
     private static final List<String> TABLES = Arrays.asList(
-            "club", "cms_topic", "cms_activity", "oms_ticket", "cms_registration",
+            "club", "cms_topic", "cms_topic_cancellation_receipt", "cms_topic_chapter", "cms_topic_node", "cms_activity", "oms_ticket", "cms_registration",
             "club_event_series", "club_event_occurrence", "club_event_waitlist",
             "club_event_notification_campaign", "club_event_notification_delivery",
             "club_event_notification_outbox");
@@ -120,10 +120,13 @@ class ClubEventTransferCancellationMySqlIT {
     private final AtomicReference<RefundApplication> lastRefund = new AtomicReference<>();
     private DbClubAccess access;
     private IClubEventOpsService eventOps;
+    private ITeamGroupService group;
+    private final java.util.concurrent.atomic.AtomicBoolean refuseDoneWrite=new java.util.concurrent.atomic.AtomicBoolean();
     private CountDownLatch ownerLockAttempted;
     private CountDownLatch retryTopicLockAttempted;
     private AtomicInteger topicLockCalls;
     private static String mysqlVersion;
+    private volatile java.util.function.Consumer<String> observationBoundary=name -> { };
 
     @BeforeAll
     static void createScratch() throws Exception {
@@ -150,7 +153,9 @@ class ClubEventTransferCancellationMySqlIT {
                 url, mysql.user(), mysql.password())) {
             ItSchema.apply(connection, "it-schema/run41-prod-ddl.sql");
             ItSchema.applyMigrations(connection, "sql/migration_club_role_event_ops_20260823.sql",
-                    "sql/migration_20260930_registration_first_successful_scan.sql");
+                    "sql/migration_20260930_registration_first_successful_scan.sql",
+                    "sql/migration_20261029_activity_cancellation_receipt.sql",
+                    "sql/migration_20261029_topic_cancellation_receipt.sql");
             try (Statement statement = connection.createStatement()) {
                 statement.execute("ALTER TABLE cms_topic ADD COLUMN theme_runtime_config_json MEDIUMTEXT NULL,"
                         + " ADD COLUMN published_theme_runtime_config_json MEDIUMTEXT NULL");
@@ -160,6 +165,8 @@ class ClubEventTransferCancellationMySqlIT {
         dataSource = new PooledDataSource("com.mysql.cj.jdbc.Driver", url,
                 mysql.user(), mysql.password());
         jdbc = new JdbcTemplate(dataSource);
+        // Existing canonical base DDL, not an imitation table: the real listing size guard reads this table.
+        com.chengyinhub.business.it.P0AcceptanceSchema.baseTables(jdbc,"cms_topic_node");
         transactionManager = new DataSourceTransactionManager(dataSource);
         sql = mybatisTemplate();
     }
@@ -187,6 +194,8 @@ class ClubEventTransferCancellationMySqlIT {
         refundApplications.set(0);
         payouts.set(0);
         lastRefund.set(null);
+        observationBoundary=name -> { };
+        refuseDoneWrite.set(false);
         seed();
         wireServices();
     }
@@ -286,7 +295,8 @@ class ClubEventTransferCancellationMySqlIT {
             assertTrue(accepted instanceof ActivityCancelResult);
             assertEquals(Integer.valueOf(1), ((ActivityCancelResult) accepted).getRefundedOrders());
             Object replay = retry.get(5, TimeUnit.SECONDS);
-            assertTrue(replay instanceof ServiceException, "已取消重试应终止，不得再进退款链");
+            assertTrue(replay instanceof ActivityCancelResult, "并发输家必须恢复同一原持久结果，不要求先发必胜");
+            sameResult((ActivityCancelResult)accepted,(ActivityCancelResult)replay);
 
             assertEquals(NEW_OWNER, number("select member_id from club where id=?", CLUB));
             assertEquals(String.valueOf(NEW_OWNER), scalar("select update_by from cms_activity where id=?", ACTIVITY),
@@ -309,6 +319,250 @@ class ClubEventTransferCancellationMySqlIT {
         } finally {
             pool.shutdownNow();
         }
+    }
+
+    @Test
+    void responseLostRecreatedServiceReadsExactOriginalResultWithoutRepeatingWrapUp() {
+        ActivityCancelResult first=(ActivityCancelResult)authorizedCancelOutcome();
+        assertEquals(1,first.getRefundedOrders());
+        String original=scalar("select cancellation_receipt_json from cms_activity where id=?",ACTIVITY);
+        assertEquals("DONE",com.alibaba.fastjson2.JSON.parseObject(original).getString("state"));
+        // Non-identity metadata/version changes must not destroy the valid original receipt.
+        jdbc.update("update club_event_occurrence set version=version+1 where activity_id=?",ACTIVITY);
+        wireServices();
+        ActivityCancelResult replay=(ActivityCancelResult)authorizedCancelOutcome();
+        sameResult(first,replay);
+        assertEquals(original,scalar("select cancellation_receipt_json from cms_activity where id=?",ACTIVITY));
+        assertEquals(1,refundApplications.get());assertEquals(1,payouts.get());
+        assertEquals(2,number("select count(*) from club_event_notification_campaign where activity_id=?",ACTIVITY));
+    }
+
+    @Test
+    void firstObserverMayWinAndLoserReplaysOriginalResult() throws Exception {
+        eitherObserverMayWinAndLoserReplaysOriginalResult(false);
+    }
+
+    @Test
+    void secondObserverMayWinAndLoserReplaysOriginalResult() throws Exception {
+        eitherObserverMayWinAndLoserReplaysOriginalResult(true);
+    }
+
+    private void eitherObserverMayWinAndLoserReplaysOriginalResult(boolean secondWins) throws Exception {
+        CountDownLatch captured=new CountDownLatch(2),firstPermit=new CountDownLatch(1),secondPermit=new CountDownLatch(1);
+        observationBoundary=name -> {
+            assertTrue(!org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive());
+            captured.countDown();
+            try {
+                if(!(name.equals("cancel-first")?firstPermit:secondPermit).await(5,TimeUnit.SECONDS))
+                    throw new AssertionError("观察完成后等待原 apply 许可超时");
+            } catch(InterruptedException interrupted) {Thread.currentThread().interrupt();throw new AssertionError(interrupted);}
+        };
+        ExecutorService workers=Executors.newFixedThreadPool(2);
+        try {
+            Future<Object> first=workers.submit(() -> {Thread.currentThread().setName("cancel-first");return authorizedCancelOutcome();});
+            Future<Object> second=workers.submit(() -> {Thread.currentThread().setName("cancel-second");return authorizedCancelOutcome();});
+            assertTrue(captured.await(5,TimeUnit.SECONDS));
+            (secondWins?secondPermit:firstPermit).countDown();
+            Object winner=(secondWins?second:first).get(5,TimeUnit.SECONDS);
+            assertTrue(winner instanceof ActivityCancelResult);
+            (secondWins?firstPermit:secondPermit).countDown();
+            Object loser=(secondWins?first:second).get(5,TimeUnit.SECONDS);
+            assertTrue(loser instanceof ActivityCancelResult);
+            sameResult((ActivityCancelResult)winner,(ActivityCancelResult)loser);
+            assertEquals(1,refundApplications.get());assertEquals(1,payouts.get());
+            assertEquals(2,number("select count(*) from club_event_notification_campaign where activity_id=?",ACTIVITY));
+        } finally {firstPermit.countDown();secondPermit.countDown();workers.shutdownNow();observationBoundary=name -> { };}
+    }
+
+    @Test
+    void replayRequiresCurrentScopeActorAndSameSemanticRequestBeforeAnyEffect() {
+        ActivityCancelResult original=(ActivityCancelResult)authorizedCancelOutcome();
+        String receipt=scalar("select cancellation_receipt_json from cms_activity where id=?",ACTIVITY);
+        assertThrows(ServiceException.class,() -> eventOps.cancelActivityForAuthorizedTopicCancellation(
+                HOST_ACTOR,TOPIC,CLUB,ACTIVITY,REASON+" changed"));
+        assertThrows(ServiceException.class,() -> eventOps.cancelActivityForAuthorizedTopicCancellation(
+                9999L,TOPIC,CLUB,ACTIVITY,REASON));
+        assertThrows(ServiceException.class,() -> eventOps.cancelActivityForAuthorizedTopicCancellation(
+                HOST_ACTOR,OTHER_TOPIC,CLUB,ACTIVITY,REASON));
+        jdbc.update("update cms_topic set member_id=? where id=?",9999L,TOPIC);
+        assertThrows(ServiceException.class,() -> eventOps.cancelActivityForAuthorizedTopicCancellation(
+                HOST_ACTOR,TOPIC,CLUB,ACTIVITY,REASON));
+        assertEquals(1,original.getRefundedOrders());assertEquals(1,refundApplications.get());assertEquals(1,payouts.get());
+        assertEquals(receipt,scalar("select cancellation_receipt_json from cms_activity where id=?",ACTIVITY));
+        assertEquals(2,number("select count(*) from club_event_notification_campaign where activity_id=?",ACTIVITY));
+    }
+
+    @Test
+    void historicalCancelledNullReceiptAndReopenedSameIdAreUnprovableWithoutNewRefunds() {
+        jdbc.update("update cms_activity set cancel_time=now(),status=0,publish_status=0 where id=?",ACTIVITY);
+        jdbc.update("update club_event_occurrence set status='CANCELLED' where activity_id=?",ACTIVITY);
+        assertThrows(ServiceException.class,() -> eventOps.cancelActivityForAuthorizedTopicCancellation(
+                HOST_ACTOR,TOPIC,CLUB,ACTIVITY,REASON));
+        assertEquals(0,refundApplications.get());assertEquals(0,payouts.get());
+        assertEquals(null,scalar("select cancellation_receipt_json from cms_activity where id=?",ACTIVITY));
+        seed();wireServices();
+        assertTrue(authorizedCancelOutcome() instanceof ActivityCancelResult);
+        String receipt=scalar("select cancellation_receipt_json from cms_activity where id=?",ACTIVITY);
+        jdbc.update("update cms_activity set cancel_time=null,status=1,publish_status=1 where id=?",ACTIVITY);
+        jdbc.update("update club_event_occurrence set status='ACTIVE' where activity_id=?",ACTIVITY);
+        assertThrows(ServiceException.class,() -> eventOps.cancelActivityForAuthorizedTopicCancellation(
+                HOST_ACTOR,TOPIC,CLUB,ACTIVITY,REASON));
+        assertEquals(receipt,scalar("select cancellation_receipt_json from cms_activity where id=?",ACTIVITY));
+        assertEquals(1,refundApplications.get());assertEquals(1,payouts.get());
+    }
+
+    @Test
+    void multiOrderCancellationCommitsEveryOriginalOrderAndReplaysFullBatchCounts() {
+        jdbc.update("insert into cms_registration(id,registration_no,owner_type,owner_id,activity_title,ticket_id,ticket_name,ticket_price,member_id,"
+                +"order_num,original_amount,total_amount,point_used,payable_amount,payment_status,payment_time,wechat_payment_amount,registration_status,verification_status,create_time) "
+                +"select id+100,concat(registration_no,'-2'),owner_type,owner_id,activity_title,ticket_id,ticket_name,ticket_price,member_id+1,"
+                +"order_num,original_amount,total_amount,point_used,payable_amount,payment_status,payment_time,wechat_payment_amount,registration_status,verification_status,create_time "
+                +"from cms_registration where id=?",REGISTRATION);
+        ActivityCancelResult first=(ActivityCancelResult)authorizedCancelOutcome();
+        assertEquals(2,first.getRefundedOrders());assertEquals(0,first.getManualOrders());assertEquals(0,first.getClosedPendingOrders());
+        assertEquals(2,refundApplications.get());assertEquals(2,payouts.get());
+        sameResult(first,(ActivityCancelResult)authorizedCancelOutcome());
+        assertEquals(2,refundApplications.get());assertEquals(2,payouts.get());
+        assertEquals(2,number("select count(*) from cms_registration where owner_type=2 and owner_id=? and registration_status=3",ACTIVITY));
+        assertEquals(2,number("select count(*) from club_event_notification_campaign where activity_id=?",ACTIVITY));
+    }
+
+    private void sameResult(ActivityCancelResult original,ActivityCancelResult replay) {
+        assertEquals(original.getRefundedOrders(),replay.getRefundedOrders());
+        assertEquals(original.getManualOrders(),replay.getManualOrders());
+        assertEquals(original.getClosedPendingOrders(),replay.getClosedPendingOrders());
+    }
+
+    @Test
+    void doneCasFailureRollsBackOriginalDomainBatchAndKeepsPendingIdentityForRecovery() {
+        refuseDoneWrite.set(true);
+        assertTrue(authorizedCancelOutcome() instanceof ServiceException);
+        assertEquals(0,payouts.get(),"回滚事务不得派发 payout");
+        assertEquals(2,number("select payment_status from cms_registration where id=?",REGISTRATION));
+        assertEquals(2,number("select registration_status from cms_registration where id=?",REGISTRATION));
+        assertEquals(0,number("select count(*) from cms_activity where id=? and cancel_time is not null",ACTIVITY));
+        assertEquals("ACTIVE",scalar("select status from club_event_occurrence where activity_id=?",ACTIVITY));
+        assertEquals("WAITING",scalar("select state from club_event_waitlist where activity_id=?",ACTIVITY));
+        assertEquals(0,number("select count(*) from club_event_notification_campaign where activity_id=?",ACTIVITY));
+        var pending=com.alibaba.fastjson2.JSON.parseObject(scalar("select cancellation_receipt_json from cms_activity where id=?",ACTIVITY));
+        assertEquals("PENDING",pending.getString("state"));assertEquals(null,pending.get("result"));
+        refuseDoneWrite.set(false);
+        ActivityCancelResult recovered=(ActivityCancelResult)authorizedCancelOutcome();
+        assertEquals(1,recovered.getRefundedOrders());assertEquals(1,payouts.get());
+        var done=com.alibaba.fastjson2.JSON.parseObject(scalar("select cancellation_receipt_json from cms_activity where id=?",ACTIVITY));
+        assertEquals("DONE",done.getString("state"));assertEquals(pending.getString("requestHash"),done.getString("requestHash"));
+        sameResult(recovered,(ActivityCancelResult)authorizedCancelOutcome());assertEquals(1,payouts.get());
+    }
+
+    @Test
+    void topicParentAndBothClubAndOrdinaryChildReceiptsCommitAndReplayEveryOriginalOrder() {
+        long ordinary=ACTIVITY+100;
+        jdbc.update("update cms_topic set user_status=1 where id=?",TOPIC);
+        jdbc.update("insert into cms_activity(id,member_id,name,status,publish_status,del_flag,start_date,end_date,topic_id,create_time) "
+                +"select id+100,?,concat(name,' ordinary'),status,publish_status,del_flag,start_date,end_date,topic_id,create_time from cms_activity where id=?",
+                HOST_ACTOR,ACTIVITY);
+        jdbc.update("insert into oms_ticket(id,member_id,owner_type,owner_id,name,price,total_inventory,remaining_inventory,del_flag,create_time) "
+                +"select id+100,?,owner_type,?,name,price,total_inventory,remaining_inventory,del_flag,create_time from oms_ticket where id=?",
+                HOST_ACTOR,ordinary,TICKET);
+        jdbc.update("insert into cms_registration(id,registration_no,owner_type,owner_id,activity_title,ticket_id,ticket_name,ticket_price,member_id,"
+                +"order_num,original_amount,total_amount,point_used,payable_amount,payment_status,payment_time,wechat_payment_amount,registration_status,verification_status,create_time) "
+                +"select id+100,concat(registration_no,'-ordinary'),owner_type,?,activity_title,ticket_id+100,ticket_name,ticket_price,member_id+1,"
+                +"order_num,original_amount,total_amount,point_used,payable_amount,payment_status,payment_time,wechat_payment_amount,registration_status,verification_status,create_time "
+                +"from cms_registration where id=?",ordinary,REGISTRATION);
+        ActivityCancelResult first=group.cancelTopicByHost(TOPIC,HOST_ACTOR,HOST_ACTOR,REASON);
+        assertEquals(2,first.getRefundedOrders());assertEquals(2,refundApplications.get());assertEquals(2,payouts.get());
+        String parent=scalar("select receipt_json from cms_topic_cancellation_receipt where topic_id=? and cancellation_epoch=0",TOPIC);
+        assertEquals("DONE",com.alibaba.fastjson2.JSON.parseObject(parent).getString("state"));
+        assertEquals(2,number("select count(*) from cms_activity where topic_id=? and JSON_UNQUOTE(JSON_EXTRACT(cancellation_receipt_json,'$.state'))='DONE'",TOPIC));
+        assertEquals("TOPIC_ACTIVITY",com.alibaba.fastjson2.JSON.parseObject(scalar(
+                "select cancellation_receipt_json from cms_activity where id=?",ordinary)).getJSONObject("identity").getString("operation"));
+        sameResult(first,group.cancelTopicByHost(TOPIC,HOST_ACTOR,HOST_ACTOR,REASON));
+        assertEquals(parent,scalar("select receipt_json from cms_topic_cancellation_receipt where topic_id=? and cancellation_epoch=0",TOPIC));
+        assertEquals(2,refundApplications.get());assertEquals(2,payouts.get());
+        assertEquals(0,number("select count(*) from cms_registration where owner_type=2 and owner_id in (?,?) and registration_status<>3",ACTIVITY,ordinary));
+    }
+
+    @Test
+    void pendingBlocksRelistAndTwoListingCyclesKeepBothOriginalResultsAndNewOrdersIndependent() throws Exception {
+        jdbc.update("update cms_topic set user_status=1,status=1,is_draft=0,del_flag=0,product_type=1 where id=?",TOPIC);
+        var target=new com.chengyinhub.business.service.impl.CmsTopicServiceImpl();
+        ReflectionTestUtils.setField(target,"cmsTopicMapper",sql.getMapper(CmsTopicMapper.class));
+        var unusedTemplates=mock(com.chengyinhub.business.mapper.CmsMemberTemplateMapper.class);
+        var unusedRoles=mock(IProductRoleService.class);
+        var unusedCategories=mock(com.chengyinhub.system.service.ISysCategoryService.class);
+        var writes=new com.chengyinhub.business.service.support.TopicContentWriteGuard(sql.getMapper(CmsTopicMapper.class),
+                sql.getMapper(com.chengyinhub.business.mapper.CmsTopicChapterMapper.class),unusedTemplates,unusedRoles,unusedCategories);
+        ReflectionTestUtils.setField(writes,"cmsTopicNodeMapper",sql.getMapper(com.chengyinhub.business.mapper.CmsTopicNodeMapper.class));
+        var publication=new com.chengyinhub.business.service.support.TopicPublicationContentGuard();
+        ReflectionTestUtils.setField(publication,"contentWriteGuard",writes);
+        ReflectionTestUtils.setField(target,"publicationContentGuard",publication);
+        ReflectionTestUtils.setField(target,"umsCreativeSquareService",mock(IUmsCreativeSquareService.class));
+        ICmsTopicService publisher=transactionalProxy(target,ICmsTopicService.class);
+        CountDownLatch observed=new CountDownLatch(1),permit=new CountDownLatch(1);
+        observationBoundary=name -> {
+            assertTrue(!org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive());
+            observed.countDown();
+            try {if(!permit.await(5,TimeUnit.SECONDS)) throw new AssertionError("原观察阶段未释放");}
+            catch(InterruptedException interrupted) {Thread.currentThread().interrupt();throw new AssertionError(interrupted);}
+        };
+        ExecutorService worker=Executors.newSingleThreadExecutor();
+        ActivityCancelResult first;
+        try {
+            Future<ActivityCancelResult> original=worker.submit(() -> group.cancelTopicByHost(TOPIC,HOST_ACTOR,HOST_ACTOR,REASON,0L));
+            assertTrue(observed.await(5,TimeUnit.SECONDS));
+            assertEquals(1,publisher.casUserStatus(TOPIC,1,0));
+            assertThrows(ServiceException.class,() -> publisher.casUserStatus(TOPIC,0,1));
+            assertEquals(0,number("select cancellation_epoch from cms_topic where id=?",TOPIC));assertEquals(0,payouts.get());
+            permit.countDown();first=original.get(5,TimeUnit.SECONDS);
+        } finally {permit.countDown();worker.shutdownNow();observationBoundary=name -> { };}
+        assertEquals(1,first.getRefundedOrders());assertEquals(1,payouts.get());
+        String old=scalar("select receipt_json from cms_topic_cancellation_receipt where topic_id=? and cancellation_epoch=0",TOPIC);
+        assertEquals(1,publisher.casUserStatus(TOPIC,0,1));
+        assertEquals(1,number("select cancellation_epoch from cms_topic where id=?",TOPIC));
+        for(int sequence=1;sequence<=2;sequence++) {
+            long extra=500L+sequence;
+            jdbc.update("insert into oms_ticket(id,member_id,owner_type,owner_id,name,price,total_inventory,remaining_inventory,del_flag,create_time) "
+                    +"select id+?, ?,1,?,name,price,total_inventory,remaining_inventory,del_flag,create_time from oms_ticket where id=?",
+                    extra,HOST_ACTOR,TOPIC,TICKET);
+            jdbc.update("insert into cms_registration(id,registration_no,owner_type,owner_id,activity_title,ticket_id,ticket_name,ticket_price,member_id,"
+                    +"order_num,original_amount,total_amount,point_used,payable_amount,payment_status,payment_time,wechat_payment_amount,registration_status,verification_status,create_time) "
+                    +"select id+?,concat(registration_no,'-cycle-',?),1,?,activity_title,ticket_id+?,ticket_name,ticket_price,member_id+?,"
+                    +"order_num,original_amount,total_amount,point_used,payable_amount,2,payment_time,wechat_payment_amount,2,verification_status,create_time "
+                    +"from cms_registration where id=?",extra,sequence,TOPIC,extra,extra,REGISTRATION);
+        }
+        sameResult(first,group.cancelTopicByHost(TOPIC,HOST_ACTOR,HOST_ACTOR,REASON,0L));
+        assertEquals(2,number("select count(*) from cms_registration where owner_type=1 and owner_id=? and payment_status=2 and registration_status=2",TOPIC));
+        assertEquals(1,payouts.get());
+        assertThrows(ServiceException.class,() -> group.cancelTopicByHost(TOPIC,HOST_ACTOR,HOST_ACTOR,REASON));
+        assertEquals(1,publisher.casUserStatus(TOPIC,1,0));
+        assertEquals(1,number("select cancellation_epoch from cms_topic where id=?",TOPIC));
+        ActivityCancelResult second=group.cancelTopicByHost(TOPIC,HOST_ACTOR,HOST_ACTOR,REASON,1L);
+        assertEquals(2,second.getRefundedOrders());assertEquals(3,payouts.get());assertEquals(3,refundApplications.get());
+        sameResult(first,group.cancelTopicByHost(TOPIC,HOST_ACTOR,HOST_ACTOR,REASON,0L));
+        sameResult(second,group.cancelTopicByHost(TOPIC,HOST_ACTOR,HOST_ACTOR,REASON,1L));
+        assertEquals(3,payouts.get());assertEquals(3,refundApplications.get());
+        assertEquals(2,number("select count(*) from cms_topic_cancellation_receipt where topic_id=?",TOPIC));
+        assertEquals(old,scalar("select receipt_json from cms_topic_cancellation_receipt where topic_id=? and cancellation_epoch=0",TOPIC));
+        assertEquals(2,number("select count(*) from club_event_notification_campaign where activity_id=?",ACTIVITY));
+        org.mockito.Mockito.verifyNoInteractions(unusedTemplates,unusedRoles,unusedCategories);
+    }
+
+    @Test
+    void originalActorReadbackAfterRecreationReturnsStoredBatchWithoutDispatchAndStillChecksCurrentOwner() {
+        var request=new com.chengyinhub.business.domain.dto.ClubEventCancellationRequest();
+        request.setClubId(CLUB);request.setActivityId(ACTIVITY);request.setReason(REASON);request.setRequestId("original-readback");
+        var first=eventOps.cancelOccurrence(OLD_OWNER,"original-owner",request);
+        wireServices();
+        var state=eventOps.getCancellationState(OLD_OWNER,CLUB,ACTIVITY);
+        assertEquals("DONE",state.getCancellationReceiptState());
+        assertEquals("original-readback",state.getCancellationRequestId());assertEquals(REASON,state.getCancellationRequestReason());
+        assertEquals(first.getRefundedOrders(),state.getOriginalCancellationResult().getRefundedOrders());
+        assertEquals(first.getManualOrders(),state.getOriginalCancellationResult().getManualOrders());
+        assertEquals(first.getClosedPendingOrders(),state.getOriginalCancellationResult().getClosedPendingOrders());
+        assertEquals(1,refundApplications.get());assertEquals(1,payouts.get());
+        jdbc.update("update club set member_id=? where id=?",NEW_OWNER,CLUB);
+        assertThrows(ServiceException.class,() -> eventOps.getCancellationState(OLD_OWNER,CLUB,ACTIVITY));
+        assertEquals(1,refundApplications.get());assertEquals(1,payouts.get());
     }
 
     private Object authorizedCancelOutcome() {
@@ -335,7 +589,11 @@ class ClubEventTransferCancellationMySqlIT {
             return null;
         }).when(payoutService).payoutAfterReview(anyLong());
 
-        TeamGroupServiceImpl teamTarget = new TeamGroupServiceImpl();
+        TeamGroupServiceImpl teamTarget = org.mockito.Mockito.spy(new TeamGroupServiceImpl());
+        org.mockito.Mockito.doAnswer(call -> {
+            Object observed=call.callRealMethod();
+            observationBoundary.accept(Thread.currentThread().getName());return observed;
+        }).when(teamTarget).observeCancellationPayments(any(com.chengyinhub.business.domain.dto.RegistrationCancellationPayments.class));
         ReflectionTestUtils.setField(teamTarget, "cancellationTransactions", transactionManager);
         // 本套只有既有 2/2 已付款领域行；不构造供应商事实或让缺证据读取默认为成功。
         ReflectionTestUtils.setField(teamTarget, "verifiedPaymentFacts",
@@ -344,7 +602,15 @@ class ClubEventTransferCancellationMySqlIT {
                         return org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation);
                     throw new AssertionError("本领域取消夹具不应读取供应商事实: " + invocation.getMethod().getName());
                 }));
-        ReflectionTestUtils.setField(teamTarget, "cmsActivityMapper", sql.getMapper(CmsActivityMapper.class));
+        CmsActivityMapper realActivities=sql.getMapper(CmsActivityMapper.class);
+        CmsActivityMapper activityReceipts=(CmsActivityMapper)Proxy.newProxyInstance(getClass().getClassLoader(),
+                new Class<?>[]{CmsActivityMapper.class},(proxy,method,args) -> {
+                    if("compareAndSetCancellationReceipt".equals(method.getName()) && Boolean.FALSE.equals(args[3])
+                            && refuseDoneWrite.get()) return 0;
+                    try {return method.invoke(realActivities,args);}
+                    catch(InvocationTargetException failure) {throw failure.getTargetException();}
+                });
+        ReflectionTestUtils.setField(teamTarget, "cmsActivityMapper", activityReceipts);
         ReflectionTestUtils.setField(teamTarget, "cmsTopicMapper", sql.getMapper(CmsTopicMapper.class));
         ReflectionTestUtils.setField(teamTarget, "cmsRegistrationMapper", sql.getMapper(CmsRegistrationMapper.class));
         ReflectionTestUtils.setField(teamTarget, "omsTicketMapper", sql.getMapper(OmsTicketMapper.class));
@@ -357,7 +623,16 @@ class ClubEventTransferCancellationMySqlIT {
         ReflectionTestUtils.setField(teamTarget, "notifyService", mock(INotifyService.class));
         ReflectionTestUtils.setField(teamTarget, "redisCache", mock(RedisCache.class));
         ReflectionTestUtils.setField(teamTarget, "manualRefundCaseService", mock(IActivityCancelManualRefundCaseService.class));
-        ITeamGroupService teamGroup = transactionalProxy(teamTarget, ITeamGroupService.class);
+        IImService im=mock(IImService.class);
+        when(im.sendSystem(anyLong(),any(),any(),any())).thenReturn(1901L);
+        ReflectionTestUtils.setField(teamTarget,"imService",im);
+        ICmsTopicService topicService=mock(ICmsTopicService.class);
+        when(topicService.casUserStatus(anyLong(),any(),any())).thenAnswer(call -> sql.getMapper(CmsTopicMapper.class)
+                .casUserStatus(call.getArgument(0),call.getArgument(1),call.getArgument(2),new java.util.Date()));
+        ReflectionTestUtils.setField(teamTarget,"cmsTopicService",topicService);
+        ITeamGroupService actualTeam = transactionalProxy(teamTarget, ITeamGroupService.class);
+        group=actualTeam;
+        ITeamGroupService teamGroup=actualTeam;
 
         access = new DbClubAccess(jdbc);
         ownerLockAttempted = new CountDownLatch(1);
@@ -387,9 +662,10 @@ class ClubEventTransferCancellationMySqlIT {
                 probedMapper, mock(ClubMemberMapper.class), mock(ClubLeadMapper.class),
                 mock(IClubRoleAssignmentService.class), teamGroup);
         ReflectionTestUtils.setField(eventTarget, "cancellationTransactions", transactionManager);
-        ReflectionTestUtils.setField(eventTarget, "cancellationActivityMapper", sql.getMapper(CmsActivityMapper.class));
+        ReflectionTestUtils.setField(eventTarget, "cancellationActivityMapper", activityReceipts);
         ReflectionTestUtils.setField(eventTarget, "cancellationTopicMapper", probedTopics);
         eventOps = transactionalProxy(eventTarget, IClubEventOpsService.class);
+        ReflectionTestUtils.setField(teamTarget,"clubEventOpsService",eventOps);
     }
 
     private <T> T transactionalProxy(Object target, Class<T> contract) {
@@ -405,7 +681,7 @@ class ClubEventTransferCancellationMySqlIT {
                 "cyv-p1002", new SpringManagedTransactionFactory(), dataSource));
         configuration.getTypeAliasRegistry().registerAliases("com.chengyinhub.business.domain");
         for (String mapper : Arrays.asList("ClubEventOpsMapper", "ClubMapper",
-                "CmsActivityMapper", "CmsTopicMapper", "CmsRegistrationMapper", "OmsTicketMapper")) {
+                "CmsActivityMapper", "CmsTopicMapper", "CmsRegistrationMapper", "OmsTicketMapper","CmsTopicChapterMapper","CmsTopicNodeMapper")) {
             String path = "mapper/business/" + mapper + ".xml";
             try (InputStream input = ClubEventTransferCancellationMySqlIT.class
                     .getClassLoader().getResourceAsStream(path)) {
