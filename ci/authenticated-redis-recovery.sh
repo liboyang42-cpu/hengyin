@@ -34,6 +34,11 @@ cleanup() {
       unknown=1
       if [ "$result" -eq 0 ]; then result=1; fi
     fi
+  elif [ "${CHENGYIN_CI_PACKAGED_GAMEPLAY_CAPACITY:-false}" = true ]; then
+    if ! python3 -I "$ROOT/ci/gameplay_process_recovery_probe.py" packaged-finalize "$RUN_NAME" "$SCHEMA" "$OUT" "$result"; then
+      unknown=1
+      if [ "$result" -eq 0 ]; then result=1; fi
+    fi
   elif [ "${CHENGYIN_CI_GAMEPLAY_PROCESS_RECOVERY:-false}" = true ]; then
     if ! python3 -I "$ROOT/ci/gameplay_process_recovery_probe.py" finalize "$RUN_NAME" "$SCHEMA" "$OUT" "$result"; then
       unknown=1
@@ -79,6 +84,11 @@ if [ "${CHENGYIN_CI_RESTORE_HTTP_STARTUP:-false}" = true ]; then
     -e MYSQL_ROOT_PASSWORD -e MYSQL_ROOT_HOST=% "$MYSQL_IMAGE" --skip-log-bin --performance-schema=OFF --event-scheduler=OFF >/dev/null
   python3 -B "$ROOT/ci/authenticated_redis_recovery_probe.py" restore-mysql-ready "$RUN_NAME" "$SCHEMA" "$OUT" "$PRIVATE/credentials.json" 0
   timeout --signal=TERM --kill-after=20s 1550s python3 -I "$ROOT/ci/restore_application_http_probe.py" run "$RUN_NAME" "$SCHEMA" "$OUT" "$PRIVATE/credentials.json"
+  exit 0
+fi
+if [ "${CHENGYIN_CI_PACKAGED_GAMEPLAY_CAPACITY:-false}" = true ]; then
+  test "$GITHUB_EVENT_NAME" = workflow_dispatch
+  timeout --signal=TERM --kill-after=20s 1220s python3 -I "$ROOT/ci/gameplay_process_recovery_probe.py" packaged-run "$RUN_NAME" "$SCHEMA" "$OUT" "$PRIVATE/credentials.json"
   exit 0
 fi
 if [ "${CHENGYIN_CI_GAMEPLAY_PROCESS_RECOVERY:-false}" = true ]; then

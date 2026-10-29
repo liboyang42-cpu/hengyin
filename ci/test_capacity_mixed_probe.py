@@ -540,6 +540,407 @@ class GameplayNoCashActorControls(unittest.TestCase):
         self.assertIn("finalizationFailure", written[-1])
 
 
+class PackagedBusinessContractControls(unittest.TestCase):
+    """Synthetic reducer controls, NOT actual JAR/cgroup/SQL/cleanup execution proof."""
+    def evidence(self):
+        identity = {"sourceSha": "a" * 40, "sourceTree": "b" * 40, "runId": "123", "runAttempt": "1"}
+        name = "cy-auth-" + "c" * 32
+        schema = "cy_e2e_auth_" + name[8:]
+        identities, columns, rows, authority = GameplayNoCashActorControls().facts()
+        protected = {table: {"rows": 0, "sha256": "d" * 64, "ddlSha256": "e" * 64}
+                     for table in set(probe.auth.FINANCIAL_TABLES + probe.AUTHORITY_TABLES + probe.GAMEPLAY_EMPTY_TABLES)}
+        protected.update(copy.deepcopy(authority))
+        protected["ums_member"]["rows"] = 2
+        actor = probe.gameplay_actor_proof(identities, columns, rows, schema,
+            "12345678-1234-1234-1234-123456789abc", "source-seed", "f" * 64, authority)
+        classes = {name: {"sha256": "1" * 64, "origin": "PACKAGED_APPLICATION_JAR"}
+                   for name in probe.PACKAGED_BUSINESS_CLASSES}
+        boot = {"appCid": "2" * 64, "javaPid": 7, "hostPid": 100, "startTicks": 901,
+                "startedAt": "2026-10-29T00:00:00Z", "imageId": "sha256:" + "9" * 64,
+                "argvSha256": "3" * 64, "jarSha256": "4" * 64, "packagedClasses": classes,
+                "classLoadingEvidence": "UNKNOWN_NO_RUNTIME_CLASS_LOAD_EVENTS",
+                "mainClass": probe.PACKAGED_BUSINESS_CLASSES[0],
+                "launcher": "org.springframework.boot.loader.launch.JarLauncher",
+                "cgroup": {"memoryBytes": 1024 ** 3, "memorySwapBytes": 1024 ** 3,
+                    "nanoCpus": 10 ** 9, "pidsLimit": 256, "readOnlyRootfs": True, "datasourceMaxActive": 3,
+                    "actualReadback": {"memoryMaxBytes": 1024 ** 3, "swapMaxBytes": 0,
+                        "cpuMaxQuota": 100000, "cpuMaxPeriod": 100000, "pidsMax": 256}}}
+        second = copy.deepcopy(boot)
+        second.update(appCid="b" * 64, hostPid=101, startTicks=902, startedAt="2026-10-29T00:00:01Z")
+        stores = {kind: {"id": digit * 64, "Pid": pid, "StartedAt": "original-store", "networkId": "7" * 64}
+                  for kind, digit, pid in (("mysql", "5", 200), ("redis", "6", 300))}
+        core = {"status": "BUSINESS_ASSERTIONS_PASSED", "realHttpRequests": 144,
+                "expectedHttpRequests": 144, "newIntents": 72, "waves": []}
+        facts = []
+        for index, concurrency in enumerate(probe.CONCURRENCY):
+            intent_sha, fact_sha = str(index + 1) * 64, str(index + 4) * 64
+            wave = {"status": "ASSERTIONS_PASSED", "concurrency": concurrency,
+                    "newCommands": 24, "readReplayForeign": 24,
+                    "originalIntentSha256": intent_sha, "committedGameFactsSha256": fact_sha}
+            for field in ("writeCurve", "readbackCurve"):
+                records = [{"category": "LEGAL_AUTH_REJECTION" if field == "readbackCurve" and i % 3 == 2 else "SUCCESS",
+                            "elapsedSeconds": .01,
+                            "kind": "command" if field == "writeCurve" else ("replay", "receipt", "foreign")[i % 3],
+                            "fixtureKey": "CAPACITY_%02d" % (index * 24 + i)} for i in range(24)]
+                wave[field] = {**probe.distribution(records, .5), "records": records,
+                    "configuredConcurrency": concurrency, "maxOutstandingClientFutures": concurrency,
+                    "additionalClientWaitingQueue": 0, "serverConcurrentRequests": "UNKNOWN_NOT_MEASURED"}
+            core["waves"].append(wave)
+            facts.append({"originalIntentSha256": intent_sha, "committedGameFactsSha256": fact_sha,
+                          "afterReadbackGameFactsSha256": fact_sha, "receiptCount": 24})
+        subject = {"identity": identity, "taskName": name, "schema": schema,
+            "serverUuid": actor["serverUuid"], "networkId": "7" * 64, "jar": {"sha256": "4" * 64, "size": 100},
+            "classEvidence": classes, "boots": [boot, second], "stores": {"before": stores, "after": copy.deepcopy(stores)},
+            "actorProof": actor, "protectedBefore": protected, "protectedAfter": copy.deepcopy(protected), "waveFacts": facts,
+            "takeover": {"boundary": "THIRD_WAVE_SQL_COMMITTED_BEFORE_READBACK", "oldAppCid": boot["appCid"],
+                "newAppCid": second["appCid"], "oldProcessAbsent": True, "exitCode": 137, "oomKilled": False,
+                "factsBeforeSha256": facts[2]["committedGameFactsSha256"], "factsAfterSha256": facts[2]["committedGameFactsSha256"],
+                "oldReadRequests": 0, "newReadRequests": 24}}
+        fault = {"stage": "FAULT_HELD", "category": "LEGAL_AUTH_REJECTION", "elapsedSeconds": 5.01,
+                 "originalIntentSha256": "8" * 64, "beforeFactsSha256": "9" * 64,
+                 "afterFactsSha256": "9" * 64, "resultSha256": None}
+        recovery = dict(fault, stage="RECOVERED", category="SUCCESS", elapsedSeconds=.01, resultSha256="a" * 64)
+        mixed = {"taskName": name, "schema": schema, "ownedIds": [second["appCid"], stores["mysql"]["id"], stores["redis"]["id"]],
+                 "networkId": subject["networkId"], "jarBefore": subject["jar"], "protectedBefore": protected,
+                 "protectedAfter": protected, "initial": {"applicationJavaPid": second["javaPid"], "databaseUuid": actor["serverUuid"]},
+                 "mixed": {"businessReadProbes": [fault, recovery]}}
+        # Only this synthetic control copies values. Real caller MUST independently read
+        # historical physical/JAR/SQL evidence; this is explicitly not that caller.
+        verified = copy.deepcopy(subject)
+        verified.update(originalExit=0, mixedObservation=mixed, cleanup={
+            "result": "EXACT_IDS_AND_NAMES_ABSENT", "networkId": subject["networkId"],
+            "networkAbsent": True, "oldProcessAbsent": True, "oldContainerAbsent": True,
+            "ownedRemoved": [{"name": name + "-" + suffix, "id": cid, "independentNoSuch": True}
+                             for suffix, cid in zip(("app", "mysql", "redis"), mixed["ownedIds"])]})
+        return core, subject, verified
+
+    def reduce(self, core, subject, verified):
+        # The existing mixed validator has its own retained tests. Isolate only the
+        # added join here; no fake Docker/JAR/native SQL claim is made by this mock.
+        with mock.patch.object(probe, "source_identity", return_value=subject["identity"]), \
+                mock.patch.object(probe, "validate_observation") as original:
+            result = probe.packaged_business_summary(core, subject, verified)
+            original.assert_called_once_with(verified["mixedObservation"], subject["identity"])
+            return result
+
+    def test_three_original_curves_and_two_fault_reads_have_distinct_denominators(self):
+        result = self.reduce(*self.evidence())
+        self.assertEqual((144, 2, 146, 72), tuple(result[key] for key in (
+            "businessHttpRequests", "businessFaultReadRequests", "totalBusinessHttpRequests", "newIntents")))
+        self.assertEqual(6, len(result["curves"]))
+        self.assertEqual(144, result["total"]["requestsRecorded"])
+        self.assertEqual(24, result["total"]["counts"]["LEGAL_AUTH_REJECTION"])
+        self.assertFalse(result["wholeSystemCapacityAccepted"])
+        self.assertFalse(result["q4q8Complete"])
+        self.assertIn("UNKNOWN", result["boots"][0]["classLoadingEvidence"])
+
+    def test_full_source_identity_is_projected_without_losing_runner_binding(self):
+        core, subject, verified = self.evidence()
+        current = dict(subject["identity"], runnerOs="Linux", runnerEnvironment="github-hosted")
+        with mock.patch.object(probe, "source_identity", return_value=current), \
+                mock.patch.object(probe, "validate_observation") as original:
+            result = probe.packaged_business_summary(core, subject, verified)
+            original.assert_called_once_with(verified["mixedObservation"], current)
+        self.assertEqual(subject["identity"], result["identity"])
+
+    def test_new_binding_is_explicit_and_old_mode_cannot_silently_upgrade(self):
+        objects, original = GameplayProfileControls().profile()
+        binding = copy.deepcopy(original)
+        binding.update(subjectProfile=probe.PACKAGED_PROFILE, packagedSubject={"physicalProof": "required later by capture"})
+        binding["boot"]["bootId"] = objects[0]["Id"] + ":901"
+        with GameplayProfileControls().admission(), \
+                mock.patch.dict(probe.os.environ, {"CHENGYIN_CI_PACKAGED_GAMEPLAY_CAPACITY": "true"}):
+            probe.validate_gameplay_binding(objects, original)
+            with self.assertRaisesRegex(RuntimeError, "wrong gameplay application"):
+                probe.validate_gameplay_binding(objects, binding)
+            objects[0]["Config"]["Cmd"] = list(probe.PACKAGED_COMMAND)
+            probe.validate_gameplay_binding(objects, binding)
+            for flag in ("", "false", "invalid"):
+                with mock.patch.dict(probe.os.environ, {"CHENGYIN_CI_PACKAGED_GAMEPLAY_CAPACITY": flag}), \
+                        self.assertRaises(RuntimeError):
+                    probe.validate_gameplay_binding(objects, binding)
+            objects[0]["Config"]["Env"].append("CLASSPATH=/foreign/test-classes")
+            with self.assertRaisesRegex(RuntimeError, "classpath"):
+                probe.validate_gameplay_binding(objects, binding)
+
+    def test_foreign_or_missing_owner_readback_cannot_self_approve(self):
+        for field in ("jar", "identity", "classEvidence", "waveFacts", "protectedBefore", "actorProof"):
+            core, subject, verified = self.evidence()
+            del verified[field]
+            with self.subTest(field=field), self.assertRaises(RuntimeError):
+                self.reduce(core, subject, verified)
+        core, subject, verified = self.evidence()
+        verified["boots"][1]["appCid"] = "f" * 64
+        with self.assertRaisesRegex(RuntimeError, "OWNER_READBACK"):
+            self.reduce(core, subject, verified)
+
+    def test_matching_forged_subject_cannot_change_main_budget_facts_or_takeover(self):
+        changes = [lambda s: s["boots"][0].update(launcher="org.springframework.boot.loader.launch.PropertiesLauncher"),
+                   lambda s: s["boots"][0].update(mainClass=probe.GAMEPLAY_CHILD),
+                   lambda s: s["boots"][0]["cgroup"].update(memoryBytes=2 * 1024 ** 3),
+                   lambda s: s["boots"][0]["cgroup"]["actualReadback"].update(swapMaxBytes=1024),
+                   lambda s: s["boots"][0].update(classLoadingEvidence="ALL_CLASSES_LOADED"),
+                   lambda s: s["classEvidence"].pop(probe.PACKAGED_BUSINESS_CLASSES[2]),
+                   lambda s: s["waveFacts"][1].update(receiptCount=0),
+                   lambda s: s["waveFacts"][2].update(afterReadbackGameFactsSha256="e" * 64),
+                   lambda s: s["protectedAfter"]["oms_order"].update(rows=1),
+                   lambda s: s["stores"]["after"]["redis"].update(id="f" * 64),
+                   lambda s: s["takeover"].update(oldProcessAbsent=False),
+                   lambda s: s["takeover"].update(newReadRequests=23)]
+        for index, change in enumerate(changes):
+            core, subject, verified = self.evidence()
+            change(subject)
+            verified.update(copy.deepcopy(subject))
+            with self.subTest(index=index), self.assertRaises(RuntimeError):
+                self.reduce(core, subject, verified)
+
+    def test_fake_success_unknown_duplicate_or_inflated_curve_is_not_promoted(self):
+        for change in (
+            lambda c: c["waves"][0]["writeCurve"]["records"][0].update(category="UNKNOWN"),
+            lambda c: c["waves"][1]["readbackCurve"]["records"][0].update(fixtureKey="CAPACITY_00"),
+            lambda c: c["waves"][2]["writeCurve"].update(successfulRequestsPerSecond=999),
+            lambda c: c["waves"][0]["writeCurve"].update(maxOutstandingClientFutures=20),
+            lambda c: c.update(realHttpRequests=240),
+        ):
+            core, subject, verified = self.evidence()
+            change(core)
+            with self.assertRaises(RuntimeError):
+                self.reduce(core, subject, verified)
+
+    def test_original_failure_unknown_cleanup_or_foreign_mixed_cannot_promote(self):
+        for change in (
+            lambda v: v.update(originalExit=7),
+            lambda v: v["cleanup"].update(networkAbsent=False),
+            lambda v: v["cleanup"]["ownedRemoved"][0].update(id="e" * 64),
+            lambda v: v["mixedObservation"].update(networkId="e" * 64),
+            lambda v: v["mixedObservation"]["mixed"]["businessReadProbes"][1].update(originalIntentSha256="e" * 64),
+        ):
+            core, subject, verified = self.evidence()
+            change(verified)
+            with self.assertRaises(RuntimeError):
+                self.reduce(core, subject, verified)
+
+    def test_probe_projection_rejects_canary_unknown_and_changed_original_facts(self):
+        _, _, verified = self.evidence()
+        fault, recovery = verified["mixedObservation"]["mixed"]["businessReadProbes"]
+        self.assertIs(fault, probe.validate_business_probe(fault, "FAULT_HELD"))
+        self.assertIs(recovery, probe.validate_business_probe(recovery, "RECOVERED"))
+        for changed in (dict(fault, category="UNKNOWN"), dict(fault, elapsedSeconds=float("nan")),
+                        dict(fault, category="SUCCESS"),
+                        dict(fault, afterFactsSha256="e" * 64), dict(fault, response="private-canary"),
+                        dict(recovery, resultSha256=None), dict(recovery, category="SYSTEM_FAILURE")):
+            with self.assertRaises(RuntimeError) as raised:
+                probe.validate_business_probe(changed, changed["stage"])
+            self.assertNotIn("private-canary", str(raised.exception))
+
+    def test_native_owner_must_match_independently_captured_process_and_jar(self):
+        _, subject, _ = self.evidence()
+        boot = subject["boots"][1]
+        snapshot = {"boot": boot, "identity": subject["identity"],
+                    "networkId": subject["networkId"], "classEvidence": subject["classEvidence"]}
+        native = {
+            "cid": boot["appCid"], "javaPid": boot["javaPid"], "hostJavaPid": boot["hostPid"],
+            "hostInitPid": 101, "startedAt": boot["startedAt"], "imageId": boot["imageId"],
+            "javaStartTicks": str(boot["startTicks"]), "javaArgvSha256": boot["argvSha256"],
+            "jarSha256": boot["jarSha256"], "sourceSha": subject["identity"]["sourceSha"],
+            "networkId": subject["networkId"], "javaMain": boot["mainClass"],
+            "productionClassSha256": {key: row["sha256"] for key, row in subject["classEvidence"].items()},
+            "memoryBytes": 1024 ** 3, "memorySwapBytes": 1024 ** 3, "nanoCpus": 10 ** 9,
+            "pidsLimit": 256, "actualMemoryMaxBytes": 1024 ** 3, "actualSwapMaxBytes": 0,
+            "actualPidsMax": 256, "testClasspathMountedIntoSubject": False,
+            "allObservedJvmThreadsInSameCgroup": True, "workerThreadsObserved": 50,
+        }
+        binding = {"appPid": 101, "packagedSubject": native}
+        probe.validate_packaged_owner(snapshot, binding)
+        for key, wrong in (("cid", "f" * 64), ("javaPid", 999), ("hostInitPid", 999),
+                           ("jarSha256", "f" * 64), ("javaArgvSha256", "f" * 64),
+                           ("actualSwapMaxBytes", 1024), ("testClasspathMountedIntoSubject", True),
+                           ("allObservedJvmThreadsInSameCgroup", False)):
+            with self.subTest(key=key), self.assertRaisesRegex(RuntimeError, "OWNER_READBACK"):
+                probe.validate_packaged_owner(snapshot, {"appPid": 101, "packagedSubject": dict(native, **{key: wrong})})
+        with self.assertRaisesRegex(RuntimeError, "OWNER_READBACK"):
+            probe.validate_packaged_owner(snapshot, {"appPid": 101, "packagedSubject": dict(native, productionClassSha256={})})
+
+    def test_capture_reads_actual_pid_mount_jar_classes_and_cgroup_not_subject_flags(self):
+        # File/JDBC/command doubles only. This exercises the real capture function;
+        # it is not a claim that the fixtures below are compiled or physically run.
+        import io
+        import zipfile
+        core, subject, _ = self.evidence()
+        identities, columns, members, _ = GameplayNoCashActorControls().facts()
+        with tempfile.TemporaryDirectory() as directory:
+            jar = Path(directory).resolve() / "application.jar"
+            system_bytes = io.BytesIO()
+            with zipfile.ZipFile(system_bytes, "w") as system:
+                for name in probe.PACKAGED_BUSINESS_CLASSES[2:]:
+                    system.writestr(name.replace(".", "/") + ".class", b"synthetic-class-bytes")
+            with zipfile.ZipFile(jar, "w") as outer:
+                outer.writestr("BOOT-INF/classes/git.properties", "git.commit.id.full=" + subject["identity"]["sourceSha"] + "\n")
+                outer.writestr("META-INF/MANIFEST.MF", "Main-Class: org.springframework.boot.loader.launch.JarLauncher\r\n"
+                               "Start-Class: com.chengyinhub.RuoYiApplication\r\n\r\n")
+                outer.writestr("BOOT-INF/lib/chengyinhub-system-test.jar", system_bytes.getvalue())
+                for name in probe.PACKAGED_BUSINESS_CLASSES[:2]:
+                    outer.writestr("BOOT-INF/classes/" + name.replace(".", "/") + ".class", b"synthetic-main-bytes")
+            app = {"Id": "2" * 64, "Image": "sha256:" + "9" * 64,
+                   "HostConfig": {"Memory": 1024 ** 3, "MemorySwap": 1024 ** 3, "NanoCpus": 10 ** 9,
+                                  "PidsLimit": 256, "ReadonlyRootfs": True},
+                   "Mounts": [{"Destination": "/application.jar", "Type": "bind", "Source": str(jar), "RW": False}],
+                   "State": {"StartedAt": "2026-10-29T00:00:00Z"}, "Config": {},
+                   "NetworkSettings": {"Networks": {subject["taskName"]: {"IPAddress": "172.20.0.2"}}}}
+            stores = [{"Id": digit * 64, "State": {"Pid": pid, "StartedAt": "original-store"},
+                       "NetworkSettings": {"Networks": {subject["taskName"]: {"IPAddress": ip}}}}
+                      for digit, pid, ip in (("5", 200, "172.20.0.3"), ("6", 300, "172.20.0.4"))]
+            argv = probe.PACKAGED_ARGV
+            private = jar.parent / "gameplay"
+            private.mkdir()
+            identities_path = private / "identities.json"
+            identities_path.write_text(json.dumps(identities)); identities_path.chmod(0o600)
+            subject["actorProof"]["identitiesSha256"] = probe.file_digest(identities_path)["sha256"]
+            config = {"sourceSha": subject["identity"]["sourceSha"], "jarSha256": probe.file_digest(jar)["sha256"],
+                "childClassSha256": "c" * 64, "schema": subject["schema"], "serverUuid": subject["serverUuid"],
+                "jdbcUrl": "jdbc:mysql://172.20.0.3:3306/" + subject["schema"]
+                    + "?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC",
+                "redisHost": "172.20.0.4", "tokenSecret": "s" * 64}
+            config_path = private / "config.json"
+            config_path.write_text(json.dumps(config)); config_path.chmod(0o600)
+            settings = {"spring.datasource.druid.master.url": config["jdbcUrl"],
+                        "spring.data.redis.host": config["redisHost"],
+                        "token.secret": config["tokenSecret"], "coupon.qr-secret": config["tokenSecret"]}
+            properties_path = private / "packaged.properties"
+            properties_path.write_text("\n".join(key + "=" + value for key, value in settings.items()) + "\n")
+            properties_path.chmod(0o600)
+            app["Mounts"].append({"Destination": "/recovery-private", "Type": "bind", "Source": str(private), "RW": False})
+            app["Config"]["Cmd"] = list(probe.PACKAGED_COMMAND)
+            fixture = mock.Mock(packaged_subject=True, name="unused")
+            fixture.name, fixture.schema, fixture.jar = subject["taskName"], subject["schema"], jar
+            fixture.private = jar.parent / "credentials.json"
+            fixture.identity = subject["identity"]
+            fixture.saved = {"serverUuid": subject["serverUuid"]}
+            fixture.gameplay_binding = {"boot": {"javaPid": 7, "bootId": app["Id"] + ":901"},
+                **{key: config[key] for key in ("sourceSha", "jarSha256", "childClassSha256")},
+                "configSha256": probe.file_digest(config_path)["sha256"]}
+            fixture.jar_identity.return_value = probe.file_digest(jar)
+            fixture.inspect.return_value = ([app] + stores, {"Id": subject["networkId"]})
+            fixture.protected.return_value = subject["protectedBefore"]
+            fixture.rows.return_value = ((subject["serverUuid"], subject["schema"]),)
+            fixture.db = mock.MagicMock()
+            cursor = fixture.db.cursor.return_value.__enter__.return_value
+            cursor.description = [(key,) for key in columns]
+            cursor.fetchmany.return_value = members
+            def command(args):
+                if args[-1] == "/proc/7/cmdline":
+                    return b"\0".join(item.encode() for item in argv) + b"\0"
+                if args[-1] == "/proc/7/stat":
+                    return ("7 (java) " + " ".join(["S"] + ["0"] * 18 + ["901"])).encode()
+                if "top" in args:
+                    return b"PID COMMAND\n100 java\n"
+                if args[-1] == "/recovery-private/packaged.properties":
+                    return (probe.file_digest(properties_path)["sha256"] + "  /recovery-private/packaged.properties\n").encode()
+                self.fail("unexpected command")
+            reads = {"/proc/100/status": "NSpid:\t100\t7\n", "/proc/100/cgroup": "0::/source-owned\n",
+                "/sys/fs/cgroup/source-owned/cpu.max": "100000 100000\n",
+                "/sys/fs/cgroup/source-owned/memory.max": str(1024 ** 3),
+                "/sys/fs/cgroup/source-owned/memory.swap.max": "0", "/sys/fs/cgroup/source-owned/pids.max": "256"}
+            original_read_text = Path.read_text
+            def read_text(path):
+                return reads[str(path)] if str(path) in reads else original_read_text(path)
+            with mock.patch.object(probe, "validate_gameplay_binding"), \
+                    mock.patch.object(probe, "source_identity", return_value=fixture.identity), \
+                    mock.patch.object(probe.auth, "command", side_effect=command), \
+                    mock.patch.object(Path, "read_text", autospec=True, side_effect=read_text):
+                observed = probe.capture_packaged_subject(fixture, identities, subject["actorProof"])
+                self.assertEqual(100, observed["boot"]["hostPid"])
+                self.assertEqual(901, observed["boot"]["startTicks"])
+                self.assertEqual(0, observed["boot"]["cgroup"]["actualReadback"]["swapMaxBytes"])
+                self.assertEqual(set(probe.PACKAGED_BUSINESS_CLASSES), set(observed["classEvidence"]))
+                self.assertNotIn("13800000", json.dumps(observed))
+                self.assertNotIn("aaa.bbb.ccc", json.dumps(observed))
+                for wrong in (((subject["serverUuid"], "foreign_schema"),),
+                              (("foreign_uuid", subject["schema"]),),
+                              ((subject["serverUuid"], subject["schema"]),) * 2):
+                    fixture.rows.return_value = wrong
+                    with self.subTest(identity=wrong), self.assertRaisesRegex(RuntimeError, "NATIVE_DATABASE"):
+                        probe.capture_packaged_subject(fixture, identities, subject["actorProof"])
+                fixture.rows.return_value = ((subject["serverUuid"], subject["schema"]),)
+                reads["/sys/fs/cgroup/source-owned/memory.max"] = str(2 * 1024 ** 3)
+                with self.assertRaisesRegex(RuntimeError, "ACTUAL_CGROUP"):
+                    probe.capture_packaged_subject(fixture, identities, subject["actorProof"])
+                reads["/sys/fs/cgroup/source-owned/memory.max"] = str(1024 ** 3)
+                app["Mounts"][0]["RW"] = True
+                with self.assertRaisesRegex(RuntimeError, "WRITABLE_JAR"):
+                    probe.capture_packaged_subject(fixture, identities, subject["actorProof"])
+
+    def test_real_mixed_body_reuses_actor_slot_and_calls_only_two_physical_windows(self):
+        from concurrent.futures import Future
+        fixture = object.__new__(probe.Probe)
+        fixture.packaged_subject = True
+        fixture.schema, fixture.redis, fixture.port = "schema", "r" * 64, 1234
+        fixture.logged_at = probe.time.monotonic()
+        fixture.report, fixture.expected, fixture.nonce, fixture.initial = {}, {}, "qa_owned_", {"same": True}
+        fixture.remember = mock.Mock()
+        fixture.save = mock.Mock()
+        fixture.stamp = mock.Mock(return_value=fixture.initial)
+        fixture.sample = mock.Mock(return_value={})
+        fixture.blocked = mock.Mock(side_effect=[3, 3, 0])
+        original = dict.fromkeys(probe.auth.LEASE_COLUMNS)
+        original.update(refund_no=None, payout_status=2)
+        claimed = dict(original, payout_lease_owner=1, payout_lease_token="private-lease")
+        released = copy.deepcopy(original)
+        fixture.refund = mock.Mock(side_effect=[original, claimed, claimed, released, released])
+        fixture.http = mock.Mock(return_value=({"category": "SUCCESS"}, {"data": "private-lease"}))
+        fixture.rows = mock.Mock(side_effect=[[(0,)], [(1,)], [(0,)]])
+        fixture.db = mock.MagicMock()
+        holder = mock.MagicMock()
+        holder.cursor.return_value.__enter__.return_value.fetchone.return_value = (71, "schema", "root@owned")
+        paused, release_count, stages, submissions = [False], [0], [], []
+        def command(args):
+            if "pause" in args:
+                paused[0] = True
+                return b""
+            if "unpause" in args:
+                paused[0] = False
+                return b""
+            if "inspect" in args:
+                return json.dumps([{"State": {"Paused": paused[0]}}]).encode()
+            if args[-1] == "PING":
+                return b"PONG"
+            self.fail("unexpected external command")
+        def request(kind, value=None):
+            self.assertNotEqual("ACTOR", kind)
+            if kind == "RELEASE":
+                release_count[0] += 1
+                return {"category": ("LEGAL_AUTH_REJECTION", "SUCCESS", "SYSTEM_FAILURE")[release_count[0] - 1]}
+            return {"category": "SUCCESS"}
+        fixture.request = mock.Mock(side_effect=request)
+        _, _, evidence = self.evidence()
+        probe_records = evidence["mixedObservation"]["mixed"]["businessReadProbes"]
+        def business(stage):
+            self.assertEqual(stage == "FAULT_HELD", paused[0])
+            stages.append(stage)
+            return copy.deepcopy(probe_records[0 if stage == "FAULT_HELD" else 1])
+        fixture.business_probe = business
+        class FixedPool:
+            def __init__(inner, max_workers):
+                self.assertEqual(6, max_workers)
+            def submit(inner, fn, *args):
+                submissions.append(args)
+                result = Future()
+                result.set_result(fn(*args))
+                return result
+            def shutdown(inner, **kwargs):
+                pass
+        with mock.patch.object(probe.concurrent.futures, "ThreadPoolExecutor", FixedPool), \
+                mock.patch.object(probe.threading, "Timer"), mock.patch.object(probe.auth, "database", return_value=holder), \
+                mock.patch.object(probe.auth, "command", side_effect=command):
+            fixture.mixed()
+        self.assertEqual(["FAULT_HELD", "RECOVERED"], stages)
+        self.assertEqual(6, len(submissions))
+        self.assertEqual(2, len(fixture.report["mixed"]["businessReadProbes"]))
+        self.assertTrue(fixture.report["mixed"]["faultRowUnchanged"])
+        self.assertTrue(fixture.report["mixed"]["originalReleaseDurablyVerified"])
+        self.assertTrue(fixture.report["mixed"]["releaseReplayRejectedAndFullRowUnchanged"])
+
+
 class CapacityEntryCleanupControls(unittest.TestCase):
     def test_actual_exit_trap_preserves_failure_and_waits_for_private_cleanup(self):
         source = Path(__file__).with_name("authenticated-redis-recovery.sh").read_text()
@@ -556,6 +957,11 @@ class CapacityEntryCleanupControls(unittest.TestCase):
             (0, 1, 0, 1, 1, 1, "true"),
             (0, 0, 1, 1, 1, 1, "true"),
             (0, 0, 0, 1, 1, 0, "true"),
+            (0, 0, 0, 0, 0, 0, "packaged"),
+            (7, 0, 0, 1, 7, 7, "packaged"),
+            (0, 1, 0, 1, 1, 1, "packaged"),
+            (0, 0, 1, 1, 1, 1, "packaged"),
+            (0, 0, 0, 1, 1, 0, "packaged"),
         ):
             with self.subTest(body=body, outer=outer, private=private, finalizer=finalizer, gameplay=gameplay):
                 # Only the real EXIT function runs; all external effects are shell stubs.
@@ -568,10 +974,12 @@ OUT=/unused-evidence
 PRIVATE=/unused-private
 CHENGYIN_CI_CAPACITY_MIXED=true
 CHENGYIN_CI_GAMEPLAY_PROCESS_RECOVERY=GAMEPLAY_MODE
+CHENGYIN_CI_PACKAGED_GAMEPLAY_CAPACITY=PACKAGED_MODE
+CHENGYIN_CI_RESTORE_HTTP_STARTUP=false
 python3() {
   case "$3" in
     cleanup) printf 'OUTER_CLEANUP\\n'; return OUTER_STATUS ;;
-    finalize)
+    finalize|packaged-finalize)
       if [[ "$2" == */gameplay_process_recovery_probe.py ]]; then
         printf 'FINALIZE:%s\\n' "$7"
       else
@@ -585,7 +993,8 @@ rm() { return 0; }
 rmdir() { printf 'PRIVATE_CLEANUP\\n'; return PRIVATE_STATUS; }
 """.replace("OUTER_STATUS", str(outer)).replace(
                     "PRIVATE_STATUS", str(private)).replace("FINALIZER_STATUS", str(finalizer)).replace(
-                    "GAMEPLAY_MODE", gameplay)
+                    "GAMEPLAY_MODE", "true" if gameplay == "packaged" else gameplay).replace(
+                    "PACKAGED_MODE", "true" if gameplay == "packaged" else "false")
                 result = probe.subprocess.run(
                     ["bash", "-c", script + cleanup + "\ntrap cleanup EXIT\nexit " + str(body)],
                     capture_output=True, text=True, timeout=5)

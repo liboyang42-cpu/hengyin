@@ -68,6 +68,14 @@ public final class GameplayProcessRecoveryChild {
         try (java.io.InputStream bytes = GameplayProcessRecoveryChild.class.getResourceAsStream("GameplayProcessRecoveryChild.class")) {
             require(bytes != null && sha(bytes.readAllBytes()).equals(config.path("childClassSha256").asText()), "test child changed");
         }
+        require(!config.has("packagedSeedOnly") || config.path("packagedSeedOnly").isBoolean(),
+                "typed packaged seed mode required");
+        if (config.path("packagedSeedOnly").asBoolean(false)) {
+            require("true".equals(System.getenv("CHENGYIN_CI_PACKAGED_GAMEPLAY_CAPACITY")),
+                    "packaged seed admission missing");
+            require(config.path("capacityItems").asInt() == 72, "fixed packaged seed required");
+            require(!Files.exists(PRIVATE.resolve("identities.json")), "packaged seed must be exclusive");
+        }
         SpringApplication app = new SpringApplication(RuoYiApplication.class, RecoveryConfiguration.class, LostReplyObserver.class);
         app.setAdditionalProfiles(PROFILE);
         ConfigurableApplicationContext context = app.run(
@@ -92,6 +100,15 @@ public final class GameplayProcessRecoveryChild {
                 .put("configSha256", sha(Files.readAllBytes(PRIVATE.resolve("config.json"))))
                 .put("port", ((ServletWebServerApplicationContext) context).getWebServer().getPort());
         write(PRIVATE.resolve("ready.json"), ready);
+        if (config.path("packagedSeedOnly").asBoolean(false)) {
+            require("true".equals(System.getenv("CHENGYIN_CI_PACKAGED_GAMEPLAY_CAPACITY")),
+                    "packaged seed admission missing");
+            require(config.path("capacityItems").asInt() == 72, "fixed packaged seed required");
+            // This is only fixture preparation. It must exit before the host launches the real
+            // immutable JAR main with no child/test classpath and the same original DB/actors.
+            context.close();
+            return;
+        }
         // Keep the actual web application alive. The host must prove physical death and a new boot.
         context.registerShutdownHook();
     }

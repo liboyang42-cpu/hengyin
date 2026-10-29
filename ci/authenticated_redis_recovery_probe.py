@@ -61,7 +61,8 @@ def validate_execution_env(env):
         require('CHENGYIN_RESTORE_MODE' not in env, 'restore mode belongs to the owned application child')
         require(all(env.get(key, 'false') == 'false' for key in
                     ('CHENGYIN_CI_CAPACITY_MIXED', 'CHENGYIN_CI_GAMEPLAY_PROCESS_RECOVERY',
-                     'CHENGYIN_CI_GAMEPLAY_CAPACITY')), 'restore startup cannot mix workload modes')
+                     'CHENGYIN_CI_GAMEPLAY_CAPACITY', 'CHENGYIN_CI_PACKAGED_GAMEPLAY_CAPACITY')),
+                'restore startup cannot mix workload modes')
     require(not env.get('DOCKER_HOST') and not env.get('DOCKER_CONTEXT'), 'Docker override forbidden')
     require(env.get('GITHUB_WORKFLOW_REF', '').startswith(
         'liboyang42-cpu/hengyin/.github/workflows/isolated-authenticated-redis-recovery.yml@refs/'),

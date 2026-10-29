@@ -9,6 +9,7 @@ import datetime
 import decimal
 import hashlib
 import importlib.util
+import io
 import itertools
 import json
 import math
@@ -56,6 +57,15 @@ GAMEPLAY_COMMAND = [
     "-Dloader.path=/recovery-testclasses", "-Dloader.main=" + GAMEPLAY_CHILD,
     "-cp", "/application.jar", "org.springframework.boot.loader.launch.PropertiesLauncher",
 ]
+PACKAGED_PROFILE = "PACKAGED_RUOYI_MAIN"
+PACKAGED_ARGV = [
+    "java", "-Xmx512m", "-Dlogging.config=/fixture/logback.xml",
+    "-Dlogback.configurationFile=/fixture/logback.xml", "-jar", "/application.jar",
+    "--spring.config.location=file:/fixture/application.properties,file:/recovery-private/packaged.properties",
+    "--spring.messages.basename=i18n/messages",
+]
+PACKAGED_COMMAND = ["-A", "-f", "-s", "0", "-e", "trace=connect,sendto,sendmsg",
+                    "-o", "/evidence/gameplay-packaged-network.trace"] + PACKAGED_ARGV
 # Existing economic/entitlement stores used by these actors, never a nonempty-baseline registry.
 GAMEPLAY_EMPTY_TABLES = ("oms_order", "oms_order_item", "coop_order", "registration_entitlement",
                         "sms_coupon_history", "member_capability", "merchant_subscription",
@@ -143,6 +153,12 @@ def validate_env(env):
                 "missing execution identity: " + key)
     require(re.fullmatch(r"[0-9a-f]{40}", env.get("GITHUB_SHA", "")) is not None,
             "complete source SHA required")
+    packaged = env.get("CHENGYIN_CI_PACKAGED_GAMEPLAY_CAPACITY")
+    require(packaged in (None, "false", "true"), "invalid packaged capacity admission")
+    if packaged == "true":
+        require(env.get("CHENGYIN_CI_GAMEPLAY_PROCESS_RECOVERY") == "true"
+                and env.get("CHENGYIN_CI_GAMEPLAY_CAPACITY") == "true",
+                "packaged capacity requires all original owner admissions")
 
 
 def digest(value):
@@ -213,7 +229,9 @@ def validate_gameplay_binding(objects, binding):
             and os.environ.get("CHENGYIN_CI_GAMEPLAY_CAPACITY") == "true", "gameplay profile not explicitly admitted")
     hashes = ("jarSha256", "childSourceSha256", "childClassSha256",
               "testClassTreeSha256", "configSha256", "fixturePropertiesSha256")
-    require(isinstance(binding, dict) and set(binding) == set(hashes) | {
+    packaged = isinstance(binding, dict) and binding.get("subjectProfile") == PACKAGED_PROFILE
+    extra = {"subjectProfile", "packagedSubject"} if packaged else set()
+    require(isinstance(binding, dict) and set(binding) == set(hashes) | extra | {
         "sourceSha", "boot", "appCid", "appPid", "appStartedAt", "networkId", "storeProcessIdentity", "actorProof",
     }, "exact gameplay profile binding required")
     require(isinstance(binding["sourceSha"], str) and binding["sourceSha"] == os.environ.get("GITHUB_SHA")
@@ -235,7 +253,8 @@ def validate_gameplay_binding(objects, binding):
     require(type(boot["javaPid"]) is int and boot["javaPid"] > 0
             and type(boot["port"]) is int and boot["port"] == 8080
             and isinstance(boot["bootId"], str)
-            and re.fullmatch(r"[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}", boot["bootId"]) is not None
+            and (re.fullmatch(r"[0-9a-f]{64}:[1-9][0-9]*", boot["bootId"]) is not None if packaged else
+                 re.fullmatch(r"[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}", boot["bootId"]) is not None)
             and all(boot[key] == binding[key] for key in ("sourceSha", "jarSha256", "childClassSha256", "configSha256")),
             "recovered boot provenance/port mismatch")
     app = objects[0]
@@ -243,13 +262,21 @@ def validate_gameplay_binding(objects, binding):
             and binding["appPid"] > 0 and app["State"]["Pid"] == binding["appPid"]
             and app["State"]["StartedAt"] == binding["appStartedAt"], "recovered app process changed")
     require(app["Config"].get("Entrypoint") == ["/trace/strace"]
-            and app["Config"]["Cmd"] == GAMEPLAY_COMMAND, "wrong gameplay application fixture")
+            and app["Config"]["Cmd"] == (PACKAGED_COMMAND if packaged else GAMEPLAY_COMMAND),
+            "wrong gameplay application fixture")
+    if packaged:
+        require(os.environ.get("CHENGYIN_CI_PACKAGED_GAMEPLAY_CAPACITY") == "true"
+                and isinstance(binding["packagedSubject"], dict) and binding["packagedSubject"],
+                "packaged subject needs explicit admission and physical proof")
     env = app["Config"].get("Env", [])
     require("GITHUB_SHA=" + binding["sourceSha"] in env
             and "CHENGYIN_CI_GAMEPLAY_PROCESS_RECOVERY=true" in env
             and not any(item.split("=", 1)[0].startswith(("SPRING_", "LOADER_"))
                         or item.split("=", 1)[0] in ("JAVA_TOOL_OPTIONS", "JDK_JAVA_OPTIONS", "_JAVA_OPTIONS")
                         for item in env), "gameplay environment overrides forbidden")
+    if packaged:
+        require(not any(item.split("=", 1)[0] in ("CLASSPATH", "JAVA_OPTS") for item in env),
+                "packaged classpath overrides forbidden")
     stores = binding["storeProcessIdentity"]
     require(isinstance(stores, dict) and set(stores) == {"mysql", "redis"}, "original store binding required")
     for name, obj in zip(("app", "mysql", "redis"), objects):
@@ -526,6 +553,464 @@ def controlled_combination_projection(report, receipt, source, run_id, attempt, 
     return safe
 
 
+PACKAGED_BUSINESS_CLASSES = (
+    "com.chengyinhub.RuoYiApplication",
+    "com.chengyinhub.web.controller.api.ApiClubLeadController",
+    "com.chengyinhub.business.mapper.ClubLeadMapper",
+    "com.chengyinhub.business.domain.GameCommandReceipt",
+)
+
+
+def capture_packaged_subject(probe, identities, actor_proof):
+    """Read only: existing owner/relay/JAR; no boot, seed, resource or cleanup owner.
+
+    Call immediately before the first write, and on the live replacement app after
+    takeover. Actual class-load events are unavailable, NOT inferred as observed.
+    """
+    require(probe.packaged_subject is True and probe.gameplay_binding is not None,
+            "PACKAGED_CAPTURE_NOT_ADMITTED")
+    require(probe.identity == source_identity(), "PACKAGED_CAPTURE_FOREIGN_SOURCE")
+    objects, network = probe.inspect()
+    database_identity = probe.rows("SELECT @@server_uuid,DATABASE()")
+    require(len(database_identity) == 1
+            and tuple(database_identity[0]) == (probe.saved["serverUuid"], probe.schema),
+            "PACKAGED_NATIVE_DATABASE_CHANGED")
+    binding = probe.gameplay_binding
+    validate_gameplay_binding(objects, binding)
+    app = objects[0]
+    java_pid = binding["boot"]["javaPid"]
+    raw_argv = auth.command(D + ["exec", app["Id"], "cat", "/proc/%d/cmdline" % java_pid])
+    mysql_ip = objects[1]["NetworkSettings"]["Networks"][probe.name]["IPAddress"]
+    redis_ip = objects[2]["NetworkSettings"]["Networks"][probe.name]["IPAddress"]
+    argv = PACKAGED_ARGV
+    require(app["Config"]["Cmd"] == PACKAGED_COMMAND
+            and raw_argv == b"\0".join(value.encode() for value in argv) + b"\0",
+            "PACKAGED_FIXED_MAIN_ARGV")
+    mounts = {row["Destination"]: row for row in app["Mounts"]}
+    require(len(mounts) == len(app["Mounts"]) and "/recovery-testclasses" not in mounts
+            and not any("test-classes" in row.get("Source", "") or "recovery-testclasses" in row.get("Source", "")
+                        for row in app["Mounts"])
+            and mounts.get("/application.jar", {}).get("Type") == "bind"
+            and mounts["/application.jar"]["Source"] == str(probe.jar)
+            and mounts["/application.jar"]["RW"] is False,
+            "PACKAGED_TEST_MOUNT_OR_WRITABLE_JAR")
+    private = probe.private.parent / "gameplay"
+    config_path, properties_path = private / "config.json", private / "packaged.properties"
+    identities_path = private / "identities.json"
+    for path in (private, config_path, properties_path, identities_path):
+        require(not path.is_symlink() and path.resolve() == path.absolute(), "PACKAGED_CONFIG_PATH")
+    require(all(path.stat().st_mode & 0o777 == 0o600 and path.stat().st_size <= 65536
+                for path in (config_path, properties_path, identities_path)), "PACKAGED_CONFIG_MODE_OR_BOUND")
+    require(file_digest(identities_path)["sha256"] == actor_proof["identitiesSha256"]
+            and json.loads(identities_path.read_text()) == identities, "PACKAGED_ORIGINAL_IDENTITY_FILE")
+    require(file_digest(config_path)["sha256"] == binding["configSha256"], "PACKAGED_SEED_CONFIG_CHANGED")
+    config = json.loads(config_path.read_text())
+    require(all(config.get(key) == binding[key] for key in ("sourceSha", "jarSha256", "childClassSha256"))
+            and config.get("schema") == probe.schema and config.get("serverUuid") == probe.saved["serverUuid"]
+            and config.get("jdbcUrl") == "jdbc:mysql://" + mysql_ip + ":3306/" + probe.schema
+                + "?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
+            and config.get("redisHost") == redis_ip
+            and isinstance(config.get("tokenSecret"), str) and re.fullmatch(r"[A-Za-z0-9_-]{64}", config["tokenSecret"]),
+            "PACKAGED_SEED_MAIN_CONFIG_BINDING")
+    auth.SECRET_VALUES.append(config["tokenSecret"])
+    def properties(path):
+        values = {}
+        for line in path.read_text().splitlines():
+            if not line.strip() or line.lstrip().startswith("#"):
+                continue
+            key, separator, value = line.partition("=")
+            require(separator == "=" and key not in values and key.strip() == key, "PACKAGED_CONFIG_LITERAL_KEYS")
+            values[key] = value
+        return values
+    expected_properties = {"spring.datasource.druid.master.url": config["jdbcUrl"],
+                           "spring.data.redis.host": redis_ip,
+                           "token.secret": config["tokenSecret"], "coupon.qr-secret": config["tokenSecret"]}
+    require(properties(properties_path) == expected_properties, "PACKAGED_CONFIG_OVERRIDE_SCOPE")
+    config_mount = mounts.get("/recovery-private/packaged.properties")
+    directory_mount = mounts.get("/recovery-private")
+    require((config_mount is not None and config_mount.get("Type") == "bind"
+             and config_mount.get("Source") == str(properties_path) and config_mount.get("RW") is False)
+            or (directory_mount is not None and directory_mount.get("Type") == "bind"
+                and directory_mount.get("Source") == str(private) and directory_mount.get("RW") is False),
+            "PACKAGED_CONFIG_NOT_READONLY_MOUNT")
+    require(auth.command(D + ["exec", app["Id"], "sha256sum", "/recovery-private/packaged.properties"]).decode().strip()
+            == file_digest(properties_path)["sha256"] + "  /recovery-private/packaged.properties",
+            "PACKAGED_CONFIG_MOUNTED_BYTES")
+    host = app["HostConfig"]
+    require(host.get("Memory") == host.get("MemorySwap") == 1024 ** 3
+            and host.get("NanoCpus") == 10 ** 9 and host.get("PidsLimit") == 256
+            and host.get("ReadonlyRootfs") is True and not host.get("Privileged")
+            and not host.get("PortBindings"), "PACKAGED_PHYSICAL_CAPS")
+    raw_stat = auth.command(D + ["exec", app["Id"], "cat", "/proc/%d/stat" % java_pid]).decode()
+    fields = raw_stat.rsplit(") ", 1)
+    require(len(fields) == 2 and len(fields[1].split()) > 19, "PACKAGED_PROC_STAT")
+    ticks = fields[1].split()[19]
+    require(re.fullmatch(r"[1-9][0-9]*", ticks) and binding["boot"]["bootId"] == app["Id"] + ":" + ticks,
+            "PACKAGED_BOOT_START_TICKS")
+    top = auth.command(D + ["top", app["Id"], "-eo", "pid,comm"]).decode().splitlines()
+    java_rows = [line.split() for line in top[1:] if len(line.split()) == 2 and line.split()[1] == "java"]
+    require(len(java_rows) == 1 and re.fullmatch(r"[1-9][0-9]*", java_rows[0][0]), "PACKAGED_HOST_JAVA_PID")
+    host_pid = int(java_rows[0][0])
+    status = Path("/proc/%d/status" % host_pid).read_text().splitlines()
+    nspid = [line.split()[1:] for line in status if line.startswith("NSpid:")]
+    require(len(nspid) == 1 and nspid[0][0] == str(host_pid) and nspid[0][-1] == str(java_pid),
+            "PACKAGED_HOST_NAMESPACE_PID")
+    cg_lines = Path("/proc/%d/cgroup" % host_pid).read_text().splitlines()
+    require(len(cg_lines) == 1 and cg_lines[0].startswith("0::/"), "PACKAGED_CGROUP_V2_UNKNOWN")
+    relative = cg_lines[0][3:]
+    require(".." not in Path(relative).parts, "PACKAGED_CGROUP_PATH")
+    cg_root = Path("/sys/fs/cgroup").resolve()
+    cg_path = (cg_root / relative.lstrip("/")).resolve()
+    require(cg_path == cg_root or cg_root in cg_path.parents, "PACKAGED_CGROUP_OUTSIDE_ROOT")
+    cpu = (cg_path / "cpu.max").read_text().strip().split()
+    require(len(cpu) == 2 and all(re.fullmatch(r"[1-9][0-9]*", value) for value in cpu),
+            "PACKAGED_CGROUP_CPU_UNKNOWN")
+    actual_caps = {"memoryMaxBytes": int((cg_path / "memory.max").read_text().strip()),
+                   "swapMaxBytes": int((cg_path / "memory.swap.max").read_text().strip()),
+                   "cpuMaxQuota": int(cpu[0]), "cpuMaxPeriod": int(cpu[1]),
+                   "pidsMax": int((cg_path / "pids.max").read_text().strip())}
+    require(actual_caps["memoryMaxBytes"] == 1024 ** 3 and actual_caps["swapMaxBytes"] == 0
+            and actual_caps["cpuMaxQuota"] == actual_caps["cpuMaxPeriod"]
+            and actual_caps["pidsMax"] == 256, "PACKAGED_ACTUAL_CGROUP_CAPS")
+    require(not probe.jar.is_symlink(), "PACKAGED_JAR_SYMLINK")
+    jar = probe.jar_identity()
+    require(jar["sha256"] == binding["jarSha256"], "PACKAGED_JAR_CHANGED")
+    classes = {}
+    with zipfile.ZipFile(probe.jar) as archive:
+        git_properties = dict(line.split("=", 1) for line in archive.read("BOOT-INF/classes/git.properties").decode().splitlines()
+                              if "=" in line and not line.startswith("#"))
+        require(git_properties.get("git.commit.id.full", git_properties.get("git.commit.id")) == probe.identity["sourceSha"],
+                "PACKAGED_EMBEDDED_SOURCE")
+        manifest = archive.read("META-INF/MANIFEST.MF").decode()
+        require("Start-Class: " + PACKAGED_BUSINESS_CLASSES[0] + "\r\n" in manifest
+                and "Main-Class: org.springframework.boot.loader.launch.JarLauncher\r\n" in manifest,
+                "PACKAGED_MANIFEST_MAIN")
+        system = [name for name in archive.namelist()
+                  if re.fullmatch(r"BOOT-INF/lib/chengyinhub-system-[^/]+\.jar", name)]
+        require(len(system) == 1 and archive.getinfo(system[0]).file_size <= 128 * 1024 ** 2,
+                "PACKAGED_SYSTEM_JAR")
+        with zipfile.ZipFile(io.BytesIO(archive.read(system[0]))) as nested:
+            for name in PACKAGED_BUSINESS_CLASSES:
+                entry = name.replace(".", "/") + ".class"
+                location = archive if name in PACKAGED_BUSINESS_CLASSES[:2] else nested
+                entry = "BOOT-INF/classes/" + entry if location is archive else entry
+                require(location.namelist().count(entry) == 1 and location.getinfo(entry).file_size <= MAX_BODY,
+                        "PACKAGED_CLASS_BOUND_OR_DUPLICATE")
+                classes[name] = {"sha256": hashlib.sha256(location.read(entry)).hexdigest(),
+                                 "origin": "PACKAGED_APPLICATION_JAR"}
+    protected = probe.protected()
+    for table in GAMEPLAY_EMPTY_TABLES:
+        if table not in protected:
+            values = probe.rows("SELECT * FROM `" + table + "` ORDER BY 1")
+            protected[table] = {"rows": len(values), "sha256": digest(values),
+                "ddlSha256": digest(probe.rows("SHOW CREATE TABLE `" + table + "`"))}
+    with probe.db.cursor() as cur:
+        cur.execute("SELECT * FROM ums_member ORDER BY id")
+        rows = cur.fetchmany(4097)
+        columns = [column[0] for column in cur.description]
+    original = gameplay_actor_proof(identities, columns, rows, probe.schema, probe.saved["serverUuid"],
+        actor_proof["seedBootId"], actor_proof["identitiesSha256"],
+        {key: protected[key] for key in AUTHORITY_TABLES + ("accountCredentials",)})
+    require(original == actor_proof, "PACKAGED_ORIGINAL_ACTOR_CHANGED")
+    empty = set(auth.FINANCIAL_TABLES + GAMEPLAY_EMPTY_TABLES) - {"ums_member"}
+    require(all(protected[table]["rows"] == 0 for table in empty), "PACKAGED_NO_CASH_ADMISSION")
+    stores = {kind: {"id": obj["Id"], "Pid": obj["State"]["Pid"], "StartedAt": obj["State"]["StartedAt"],
+                     "networkId": network["Id"]} for kind, obj in zip(("mysql", "redis"), objects[1:])}
+    require(probe.jar_identity() == jar, "PACKAGED_JAR_CHANGED_DURING_CAPTURE")
+    return {"identity": {key: probe.identity[key] for key in ("sourceSha", "sourceTree", "runId", "runAttempt")},
+            "taskName": probe.name, "schema": probe.schema,
+            "serverUuid": probe.saved["serverUuid"], "networkId": network["Id"], "jar": jar,
+            "classEvidence": classes, "actorProof": original, "protected": protected, "stores": stores,
+            "boot": {"appCid": app["Id"], "javaPid": java_pid, "hostPid": host_pid,
+                "startedAt": app["State"]["StartedAt"], "startTicks": int(ticks), "imageId": app["Image"],
+                "argvSha256": hashlib.sha256(raw_argv).hexdigest(), "jarSha256": jar["sha256"],
+                "packagedClasses": classes, "mainClass": PACKAGED_BUSINESS_CLASSES[0],
+                "launcher": "org.springframework.boot.loader.launch.JarLauncher",
+                "classLoadingEvidence": "UNKNOWN_NO_RUNTIME_CLASS_LOAD_EVENTS",
+                "cgroup": {"memoryBytes": host["Memory"], "memorySwapBytes": host["MemorySwap"],
+                    "nanoCpus": host["NanoCpus"], "pidsLimit": host["PidsLimit"],
+                    "readOnlyRootfs": host["ReadonlyRootfs"], "datasourceMaxActive": 3,
+                    "actualReadback": actual_caps}}}
+
+
+def validate_packaged_owner(snapshot, binding):
+    """Compare C's native observations with F's independent process/JAR/store readback."""
+    native, boot = binding["packagedSubject"], snapshot["boot"]
+    require(isinstance(native, dict), "PACKAGED_NATIVE_OWNER_MISSING")
+    expected = {
+        "cid": boot["appCid"], "javaPid": boot["javaPid"], "hostJavaPid": boot["hostPid"],
+        "hostInitPid": binding["appPid"], "startedAt": boot["startedAt"],
+        "imageId": boot["imageId"], "javaStartTicks": str(boot["startTicks"]),
+        "javaArgvSha256": boot["argvSha256"], "jarSha256": boot["jarSha256"],
+        "sourceSha": snapshot["identity"]["sourceSha"], "networkId": snapshot["networkId"],
+        "javaMain": boot["mainClass"],
+        "productionClassSha256": {key: value["sha256"] for key, value in snapshot["classEvidence"].items()},
+        "memoryBytes": boot["cgroup"]["memoryBytes"], "memorySwapBytes": boot["cgroup"]["memorySwapBytes"],
+        "nanoCpus": boot["cgroup"]["nanoCpus"], "pidsLimit": boot["cgroup"]["pidsLimit"],
+        "actualMemoryMaxBytes": boot["cgroup"]["actualReadback"]["memoryMaxBytes"],
+        "actualSwapMaxBytes": boot["cgroup"]["actualReadback"]["swapMaxBytes"],
+        "actualPidsMax": boot["cgroup"]["actualReadback"]["pidsMax"],
+        "testClasspathMountedIntoSubject": False, "allObservedJvmThreadsInSameCgroup": True,
+    }
+    require(all(type(native.get(key)) is type(value) and native[key] == value
+                for key, value in expected.items()), "PACKAGED_NATIVE_OWNER_READBACK_MISMATCH")
+    require(type(native.get("workerThreadsObserved")) is int
+            and 1 <= native["workerThreadsObserved"] <= 256, "PACKAGED_NATIVE_THREADS_MISSING")
+
+
+def validate_business_probe(record, stage):
+    require(isinstance(record, dict) and set(record) == {"stage", "category", "elapsedSeconds",
+        "originalIntentSha256", "beforeFactsSha256", "afterFactsSha256", "resultSha256"}
+        and record["stage"] == stage and stage in ("FAULT_HELD", "RECOVERED")
+        and record["category"] in CATEGORIES
+        and type(record["elapsedSeconds"]) in (int, float) and math.isfinite(record["elapsedSeconds"])
+        and 0 <= record["elapsedSeconds"] <= 41
+        and all(isinstance(record[key], str) and re.fullmatch(r"[0-9a-f]{64}", record[key])
+                for key in ("originalIntentSha256", "beforeFactsSha256", "afterFactsSha256"))
+        and record["beforeFactsSha256"] == record["afterFactsSha256"]
+        and (record["resultSha256"] is None or isinstance(record["resultSha256"], str)
+             and re.fullmatch(r"[0-9a-f]{64}", record["resultSha256"])), "PACKAGED_BUSINESS_PROBE_CONTRACT")
+    require(record["category"] != "SUCCESS" or record["resultSha256"] is not None,
+            "PACKAGED_BUSINESS_SUCCESS_BODY_MISSING")
+    if stage == "RECOVERED":
+        require(record["category"] == "SUCCESS" and record["resultSha256"] is not None,
+                "PACKAGED_BUSINESS_RECOVERY_UNPROVED")
+    else:
+        require(record["category"] in ("SUCCESS", "LEGAL_AUTH_REJECTION", "SYSTEM_FAILURE"),
+                "PACKAGED_BUSINESS_FAULT_UNPROVED")
+    return record
+
+
+def packaged_business_summary(core, subject, verified):
+    """Join C's existing 144-request adapter with independently verified owner evidence.
+
+    `verified` is NOT a second copy of subject or an input JSON approval flag. The
+    fixed host/finalizer must construct it from actual JAR/class/load/process/SQL
+    evidence and the original exact cleanup verifier. This reducer creates no
+    resources, chooses no JVM/argv/profile, and authorizes no retry or dispatch.
+    Missing producer evidence must leave the caller failed/UNKNOWN, never fall
+    back to the old PropertiesLauncher child or dictionary-only observation.
+    """
+    def sha(value):
+        return isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value) is not None
+
+    def positive(value):
+        return type(value) is int and value > 0
+
+    fields = {"identity", "taskName", "schema", "serverUuid", "networkId", "jar",
+              "classEvidence", "boots", "stores", "actorProof", "protectedBefore",
+              "protectedAfter", "waveFacts", "takeover"}
+    require(isinstance(subject, dict) and set(subject) == fields
+            and isinstance(verified, dict) and set(verified) == fields | {
+                "originalExit", "cleanup", "mixedObservation"}, "PACKAGED_SUBJECT_FIELDS")
+    require(all(subject[key] == verified[key] for key in fields), "PACKAGED_OWNER_READBACK_MISMATCH")
+    identity = subject["identity"]
+    require(isinstance(identity, dict) and set(identity) == {
+        "sourceSha", "sourceTree", "runId", "runAttempt"}
+        and all(isinstance(identity[key], str) and re.fullmatch(r"[0-9a-f]{40}", identity[key])
+                for key in ("sourceSha", "sourceTree"))
+        and all(isinstance(identity[key], str) and re.fullmatch(r"[1-9][0-9]*", identity[key])
+                for key in ("runId", "runAttempt")), "PACKAGED_EXECUTION_IDENTITY")
+    current = source_identity()
+    require(all(current.get(key) == value for key, value in identity.items()), "PACKAGED_FOREIGN_SOURCE_RUN")
+    name, schema = subject["taskName"], subject["schema"]
+    require(isinstance(name, str) and re.fullmatch(r"cy-auth-[0-9a-f]{32}", name)
+            and schema == "cy_e2e_auth_" + name[8:]
+            and isinstance(subject["serverUuid"], str) and re.fullmatch(
+                r"[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}", subject["serverUuid"])
+            and sha(subject["networkId"]), "PACKAGED_SCOPE_IDENTITY")
+    jar = subject["jar"]
+    require(isinstance(jar, dict) and set(jar) == {"sha256", "size"}
+            and sha(jar["sha256"]) and positive(jar["size"]), "PACKAGED_JAR_BYTES")
+    classes = subject["classEvidence"]
+    require(isinstance(classes, dict) and set(classes) == set(PACKAGED_BUSINESS_CLASSES)
+            and all(isinstance(row, dict) and set(row) == {"sha256", "origin"}
+                    and sha(row["sha256"]) and row["origin"] == "PACKAGED_APPLICATION_JAR"
+                    for row in classes.values()), "PACKAGED_CLASS_ORIGIN")
+    boots = subject["boots"]
+    require(isinstance(boots, list) and len(boots) == 2, "PACKAGED_TWO_REAL_BOOTS")
+    for boot in boots:
+        require(isinstance(boot, dict) and set(boot) == {
+            "appCid", "javaPid", "hostPid", "startedAt", "argvSha256", "startTicks", "imageId",
+            "jarSha256", "packagedClasses", "mainClass", "launcher", "cgroup", "classLoadingEvidence"}
+            and sha(boot["appCid"]) and positive(boot["javaPid"]) and positive(boot["hostPid"])
+            and isinstance(boot["startedAt"], str) and re.fullmatch(
+                r"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9:.]+Z", boot["startedAt"])
+            and sha(boot["argvSha256"]) and positive(boot["startTicks"])
+            and isinstance(boot["imageId"], str) and re.fullmatch(r"sha256:[0-9a-f]{64}", boot["imageId"])
+            and boot["classLoadingEvidence"] == "UNKNOWN_NO_RUNTIME_CLASS_LOAD_EVENTS"
+            and boot["jarSha256"] == jar["sha256"] and boot["packagedClasses"] == classes
+            and boot["mainClass"] == PACKAGED_BUSINESS_CLASSES[0]
+            and boot["launcher"] == "org.springframework.boot.loader.launch.JarLauncher",
+            "PACKAGED_BOOT_NOT_TEST_CHILD")
+        cg = boot["cgroup"]
+        require(isinstance(cg, dict) and set(cg) == {"memoryBytes", "memorySwapBytes", "nanoCpus",
+                "pidsLimit", "readOnlyRootfs", "datasourceMaxActive", "actualReadback"}
+                and {key: value for key, value in cg.items() if key != "actualReadback"} == {
+                "memoryBytes": 1024 ** 3, "memorySwapBytes": 1024 ** 3,
+                "nanoCpus": 10 ** 9, "pidsLimit": 256, "readOnlyRootfs": True,
+                "datasourceMaxActive": 3}
+                and all(type(boot["cgroup"][key]) is int for key in (
+                    "memoryBytes", "memorySwapBytes", "nanoCpus", "pidsLimit", "datasourceMaxActive"))
+                and boot["cgroup"]["readOnlyRootfs"] is True, "PACKAGED_FIXED_RESOURCE_READBACK")
+        actual = cg["actualReadback"]
+        require(isinstance(actual, dict) and set(actual) == {"memoryMaxBytes", "swapMaxBytes", "cpuMaxQuota", "cpuMaxPeriod", "pidsMax"}
+                and all(type(value) is int for value in actual.values())
+                and actual["memoryMaxBytes"] == 1024 ** 3 and actual["swapMaxBytes"] == 0
+                and actual["cpuMaxQuota"] == actual["cpuMaxPeriod"] and actual["cpuMaxPeriod"] > 0
+                and actual["pidsMax"] == 256, "PACKAGED_ACTUAL_CGROUP_CAPS")
+    require(boots[0]["appCid"] != boots[1]["appCid"] and boots[0]["startedAt"] != boots[1]["startedAt"],
+            "PACKAGED_BOOT_NOT_REPLACED")
+    stores = subject["stores"]
+    require(isinstance(stores, dict) and set(stores) == {"before", "after"}
+            and stores["before"] == stores["after"] and isinstance(stores["before"], dict)
+            and set(stores["before"]) == {"mysql", "redis"}, "PACKAGED_STORE_REPLACEMENT")
+    for store in stores["before"].values():
+        require(isinstance(store, dict) and set(store) == {"id", "Pid", "StartedAt", "networkId"}
+                and sha(store["id"]) and positive(store["Pid"])
+                and isinstance(store["StartedAt"], str) and store["StartedAt"]
+                and store["networkId"] == subject["networkId"], "PACKAGED_STORE_PROCESS")
+    protected = subject["protectedBefore"]
+    required_tables = set(auth.FINANCIAL_TABLES + AUTHORITY_TABLES + GAMEPLAY_EMPTY_TABLES)
+    require(isinstance(protected, dict) and set(protected) == required_tables | {"accountCredentials"}
+            and protected == subject["protectedAfter"] and sha(protected["accountCredentials"]),
+            "PACKAGED_PROTECTED_FACTS_CHANGED_OR_MISSING")
+    for table in required_tables:
+        row = protected[table]
+        require(isinstance(row, dict) and set(row) == {"rows", "sha256", "ddlSha256"}
+                and type(row["rows"]) is int and 0 <= row["rows"] <= 4096
+                and sha(row["sha256"]) and sha(row["ddlSha256"]), "PACKAGED_PROTECTED_FACT_FIELDS")
+        if table in set(auth.FINANCIAL_TABLES + GAMEPLAY_EMPTY_TABLES) - {"ums_member"}:
+            require(row["rows"] == 0, "PACKAGED_NO_CASH_ADMISSION")
+    actor = subject["actorProof"]
+    require(isinstance(actor, dict) and set(actor) == {
+        "schema", "serverUuid", "seedBootId", "identitiesSha256", "columns", "rowsSha256", "actors", "authority"}
+        and actor["schema"] == schema and actor["serverUuid"] == subject["serverUuid"]
+        and isinstance(actor["seedBootId"], str) and actor["seedBootId"]
+        and sha(actor["identitiesSha256"]) and sha(actor["rowsSha256"])
+        and isinstance(actor["columns"], list) and "id" in actor["columns"]
+        and len(set(actor["columns"])) == len(actor["columns"])
+        and actor["authority"] == {key: protected[key] for key in AUTHORITY_TABLES + ("accountCredentials",)}
+        and isinstance(actor["actors"], dict) and set(actor["actors"]) == {"a", "b"}
+        and protected["ums_member"]["rows"] == 2, "PACKAGED_ORIGINAL_ACTOR_PROOF")
+    for value in actor["actors"].values():
+        require(isinstance(value, dict) and set(value) == {"memberId", "tokenSha256", "rowSha256"}
+                and positive(value["memberId"]) and sha(value["tokenSha256"]) and sha(value["rowSha256"]),
+                "PACKAGED_ACTOR_FIELDS")
+    require(actor["actors"]["a"]["memberId"] != actor["actors"]["b"]["memberId"], "PACKAGED_ACTOR_ALIAS")
+    require(isinstance(core, dict) and core.get("status") == "BUSINESS_ASSERTIONS_PASSED"
+            and type(core.get("realHttpRequests")) is int and core["realHttpRequests"] == 144
+            and core.get("expectedHttpRequests") == 144 and core.get("newIntents") == 72
+            and isinstance(core.get("waves"), list) and len(core["waves"]) == 3,
+            "PACKAGED_BUSINESS_ADAPTER_INCOMPLETE")
+    facts = subject["waveFacts"]
+    require(isinstance(facts, list) and len(facts) == 3, "PACKAGED_SQL_WAVE_PROOF_MISSING")
+    projected, records, durations = [], [], []
+    for index, (wave, fact, concurrency) in enumerate(zip(core["waves"], facts, CONCURRENCY)):
+        require(wave.get("status") == "ASSERTIONS_PASSED" and wave.get("concurrency") == concurrency
+                and type(wave.get("concurrency")) is int and wave.get("newCommands") == 24
+                and wave.get("readReplayForeign") == 24 and sha(wave.get("originalIntentSha256"))
+                and sha(wave.get("committedGameFactsSha256")), "PACKAGED_ORIGINAL_WAVE_IDENTITY")
+        require(isinstance(fact, dict) and set(fact) == {"originalIntentSha256", "committedGameFactsSha256",
+                "afterReadbackGameFactsSha256", "receiptCount"}
+                and fact["originalIntentSha256"] == wave["originalIntentSha256"]
+                and fact["committedGameFactsSha256"] == wave["committedGameFactsSha256"]
+                == fact["afterReadbackGameFactsSha256"]
+                and type(fact["receiptCount"]) is int and fact["receiptCount"] == 24,
+                "PACKAGED_ORIGINAL_CAS_RECEIPT_PROOF")
+        keys = {"CAPACITY_%02d" % value for value in range(index * 24, (index + 1) * 24)}
+        for field, kinds in (("writeCurve", ("command",)), ("readbackCurve", ("replay", "receipt", "foreign"))):
+            curve = wave.get(field)
+            require(isinstance(curve, dict) and curve.get("configuredConcurrency") == concurrency
+                    and type(curve.get("configuredConcurrency")) is int
+                    and type(curve.get("requestsRecorded")) is int and curve["requestsRecorded"] == 24
+                    and type(curve.get("maxOutstandingClientFutures")) is int
+                    and 1 <= curve["maxOutstandingClientFutures"] <= concurrency
+                    and type(curve.get("additionalClientWaitingQueue")) is int
+                    and curve["additionalClientWaitingQueue"] == 0
+                    and curve.get("serverConcurrentRequests") == "UNKNOWN_NOT_MEASURED"
+                    and isinstance(curve.get("records"), list) and len(curve["records"]) == 24,
+                    "PACKAGED_FIXED_CURVE_DENOMINATOR")
+            rows = curve["records"]
+            require(all(isinstance(row, dict) and set(row) == {"category", "elapsedSeconds", "kind", "fixtureKey"}
+                    and row["kind"] in kinds and row["fixtureKey"] in keys
+                    and row["category"] == ("LEGAL_AUTH_REJECTION" if row["kind"] == "foreign" else "SUCCESS")
+                    and type(row["elapsedSeconds"]) in (int, float)
+                    and math.isfinite(row["elapsedSeconds"]) and row["elapsedSeconds"] >= 0 for row in rows)
+                    and {row["fixtureKey"] for row in rows} == keys
+                    and all(sum(row["kind"] == kind for row in rows) == (24 if len(kinds) == 1 else 8)
+                            for kind in kinds), "PACKAGED_UNKNOWN_OR_REPLACED_INTENT")
+            duration = curve.get("durationSeconds")
+            require(type(duration) in (int, float) and math.isfinite(duration) and 0 < duration <= 45,
+                    "PACKAGED_CURVE_DEADLINE")
+            measured = distribution(rows, duration)
+            require(all(curve.get(key) == value for key, value in measured.items()), "PACKAGED_FORGED_CURVE_SUMMARY")
+            projected.append({"wave": index, "phase": field, "configuredConcurrency": concurrency,
+                              **measured, "records": rows})
+            records.extend(rows); durations.append(duration)
+    takeover = subject["takeover"]
+    require(isinstance(takeover, dict) and set(takeover) == {
+        "boundary", "oldAppCid", "newAppCid", "oldProcessAbsent", "exitCode", "oomKilled",
+        "factsBeforeSha256", "factsAfterSha256", "oldReadRequests", "newReadRequests"}
+        and takeover["boundary"] == "THIRD_WAVE_SQL_COMMITTED_BEFORE_READBACK"
+        and takeover["oldAppCid"] == boots[0]["appCid"] and takeover["newAppCid"] == boots[1]["appCid"]
+        and takeover["oldProcessAbsent"] is True and takeover["oomKilled"] is False
+        and type(takeover["exitCode"]) is int and 0 <= takeover["exitCode"] <= 255
+        and takeover["factsBeforeSha256"] == facts[2]["committedGameFactsSha256"] == takeover["factsAfterSha256"]
+        and type(takeover["oldReadRequests"]) is int and takeover["oldReadRequests"] == 0
+        and type(takeover["newReadRequests"]) is int and takeover["newReadRequests"] == 24,
+        "PACKAGED_TAKEOVER_NOT_PROVED")
+    mixed = verified["mixedObservation"]
+    require(isinstance(mixed, dict), "PACKAGED_MIXED_MISSING")
+    validate_observation(mixed, current)
+    require(mixed.get("taskName") == name and mixed.get("schema") == schema
+            and mixed.get("ownedIds") == [boots[1]["appCid"], stores["after"]["mysql"]["id"], stores["after"]["redis"]["id"]]
+            and mixed.get("networkId") == subject["networkId"] and mixed.get("jarBefore") == jar
+            and mixed["initial"].get("applicationJavaPid") == boots[1]["javaPid"]
+            and mixed["initial"].get("databaseUuid") == subject["serverUuid"]
+            and mixed.get("protectedBefore") == protected and mixed.get("protectedAfter") == protected,
+            "PACKAGED_MIXED_FOREIGN_OR_UNBOUND")
+    probes = mixed["mixed"].get("businessReadProbes")
+    require(isinstance(probes, list) and len(probes) == 2, "PACKAGED_BUSINESS_FAULT_WINDOWS_MISSING")
+    for row, stage in zip(probes, ("FAULT_HELD", "RECOVERED")):
+        validate_business_probe(row, stage)
+    require(all(probes[0][key] == probes[1][key] for key in (
+        "originalIntentSha256", "beforeFactsSha256", "afterFactsSha256")), "PACKAGED_BUSINESS_FAULT_IDENTITY_CHANGED")
+    require(type(verified["originalExit"]) is int and verified["originalExit"] == 0,
+            "PACKAGED_ORIGINAL_FAILURE_RETAINED")
+    # Existing owner must independently inspect names AND these exact historical IDs/network.
+    cleanup = verified["cleanup"]
+    expected = {name + "-" + suffix: cid for suffix, cid in zip(("app", "mysql", "redis"), mixed["ownedIds"])}
+    require(isinstance(cleanup, dict) and set(cleanup) == {"result", "ownedRemoved", "networkId", "networkAbsent", "oldProcessAbsent", "oldContainerAbsent"}
+            and cleanup["result"] == "EXACT_IDS_AND_NAMES_ABSENT"
+            and cleanup["networkId"] == subject["networkId"] and cleanup["networkAbsent"] is True
+            and cleanup["oldProcessAbsent"] is True and cleanup["oldContainerAbsent"] is True
+            and isinstance(cleanup["ownedRemoved"], list)
+            and len(cleanup["ownedRemoved"]) == 3
+            and all(isinstance(row, dict) and set(row) == {"name", "id", "independentNoSuch"}
+                    and row["independentNoSuch"] is True for row in cleanup["ownedRemoved"])
+            and {row["name"]: row["id"] for row in cleanup["ownedRemoved"]} == expected,
+            "PACKAGED_CLEANUP_UNKNOWN_OR_FOREIGN")
+    return {"format": "PACKAGED_BUSINESS_CAPACITY_V1", "identity": dict(identity),
+            "verdict": "OBSERVED_FIXED_PACKAGED_BUSINESS_AND_MIXED_SCOPE",
+            "subjectSha256": digest(subject), "taskName": name, "schema": schema,
+            "jar": jar, "classEvidence": classes, "boots": boots,
+            "protectedFactsSha256": digest(protected), "actorProofSha256": digest(actor),
+            "waveFacts": facts, "takeover": takeover, "curves": projected,
+            "businessHttpRequests": 144, "newIntents": 72,
+            "businessFaultReadRequests": 2, "totalBusinessHttpRequests": 146,
+            "businessReadProbes": probes,
+            "total": distribution(records, sum(durations)),
+            "mixedObservationSha256": digest(mixed), "cleanup": cleanup,
+            "throughputPopulation": "closed-loop measured business curves only; excludes seed/startup/takeover/fault wait",
+            "requestPopulation": "144 explicit curve invocations plus 2 receipt fault probes; not wire-arrival counts",
+            "dictionaryCurvesAreBusinessCapacity": False,
+            "wholeSystemCapacityAccepted": False, "q4q8Complete": False,
+            "heapBytes": "UNKNOWN_NOT_SAMPLED", "cacheBytes": "UNKNOWN_NOT_SAMPLED",
+            "notCovered": ["productionCapacityLimit", "providerPerformance", "allCacheEviction", "allGameplayFamilies",
+                           "paymentCallbacks", "cashAndEntitlementCommands", "productionProviderExternalActions"]}
+
+
 def assert_fault_overlap(blocked, redis_paused):
     require(type(blocked) is int and blocked == 3 and redis_paused is True,
             "three physical application SQL waits plus owned Redis pause required")
@@ -574,7 +1059,20 @@ def run_curve(items, request, concurrency, stop, seconds=45):
 
 
 class Probe:
-    def __init__(self, name, schema, out, private, port, report, gameplay_binding=None):
+    def __init__(self, name, schema, out, private, port, report, gameplay_binding=None, *,
+                 packaged_subject=False, business_probe=None):
+        require(type(packaged_subject) is bool and (business_probe is None or callable(business_probe)),
+                "fixed packaged callback admission required")
+        self.packaged_subject, self.business_probe = packaged_subject, business_probe
+        if packaged_subject:
+            validate_env(os.environ)
+            require(os.environ.get("CHENGYIN_CI_PACKAGED_GAMEPLAY_CAPACITY") == "true"
+                    and isinstance(gameplay_binding, dict)
+                    and gameplay_binding.get("subjectProfile") == PACKAGED_PROFILE
+                    and callable(business_probe), "packaged mode requires actual subject and business callback")
+        else:
+            require(business_probe is None and not (isinstance(gameplay_binding, dict)
+                    and "subjectProfile" in gameplay_binding), "old scope cannot infer a packaged subject")
         self.name, self.schema, self.out, self.private = name, schema, out, private
         self.report, self.port = report, port
         self.token = None
@@ -721,7 +1219,11 @@ done
         result = {"entry": "ORIGINAL_AUTHENTICATED_FIXTURE",
                   "propertiesSha256": file_digest(properties)["sha256"],
                   "javaArgvSha256": hashlib.sha256(argv).hexdigest()}
-        if self.gameplay_binding is not None:
+        if getattr(self, "packaged_subject", False):
+            snapshot = capture_packaged_subject(self, self.packaged_identities(), self.gameplay_binding["actorProof"])
+            validate_packaged_owner(snapshot, self.gameplay_binding)
+            result.update(entry=PACKAGED_PROFILE, boot=snapshot["boot"], classEvidence=snapshot["classEvidence"])
+        elif self.gameplay_binding is not None:
             binding = self.gameplay_binding
             validate_gameplay_binding(objects, binding)
             require(java_pid == binding["boot"]["javaPid"]
@@ -793,6 +1295,15 @@ done
         require(mounted == [file_digest(path)["sha256"] + "  " + target for path, target in files],
                 "mounted fixture/config/class bytes changed")
         return result
+
+    def packaged_identities(self):
+        """Original private account file only; no token/body enters the subject projection."""
+        path = self.private.parent / "gameplay/identities.json"
+        require(not path.is_symlink() and path.resolve() == path.absolute()
+                and path.stat().st_mode & 0o777 == 0o600
+                and file_digest(path)["sha256"] == self.gameplay_binding["actorProof"]["identitiesSha256"],
+                "packaged original identity file changed")
+        return json.loads(path.read_text())
 
     def remember(self, value):
         auth.SECRET_VALUES.append(value)
@@ -1107,7 +1618,9 @@ done
             fault["ownedRedisPausedAtDispatch"] = True
             release = pool.submit(self.request, "RELEASE",
                                   {"refundId": 20, "leaseToken": lease})
-            actor = pool.submit(self.request, "ACTOR")
+            # Replace the existing actor slot, never add another fault-time worker.
+            actor = (pool.submit(self.business_probe, "FAULT_HELD") if self.packaged_subject
+                     else pool.submit(self.request, "ACTOR"))
             overflow = pool.submit(self.request, "DICT", keys[3])
             fault["samples"].append(self.sample())
             fault["rejectedRelease"] = release.result(timeout=41)
@@ -1117,6 +1630,8 @@ done
             fault["faultRowUnchanged"] = True
             fault["readAttempts"] = [future.result(timeout=41)
                                      for future in pending + [actor, overflow]]
+            if self.packaged_subject:
+                fault["businessReadProbes"] = [validate_business_probe(fault["readAttempts"][3], "FAULT_HELD")]
             require(not safety_release.is_set(), "holder safety deadline released unexpectedly")
             require(all(row["category"] in (
                 "SUCCESS", "LEGAL_AUTH_REJECTION", "SYSTEM_FAILURE")
@@ -1136,7 +1651,13 @@ done
             require(auth.command(D + ["exec", self.redis, "redis-cli", "PING"]).strip()
                     == b"PONG", "owned Redis recovery unknown")
             require(self.blocked() == 0, "owned SQL waits remain")
-            recovery = [self.request("ACTOR"), self.request("DICT", keys[3])]
+            recovery = [(validate_business_probe(self.business_probe("RECOVERED"), "RECOVERED")
+                         if self.packaged_subject else self.request("ACTOR")), self.request("DICT", keys[3])]
+            if self.packaged_subject:
+                fault["businessReadProbes"].append(recovery[0])
+                require(recovery[0]["originalIntentSha256"] == fault["businessReadProbes"][0]["originalIntentSha256"]
+                        and recovery[0]["beforeFactsSha256"] == fault["businessReadProbes"][0]["beforeFactsSha256"],
+                        "fault recovery replaced the original business identity/facts")
             require(all(row["category"] == "SUCCESS" for row in recovery),
                     "post-fault actor/dictionary recovery failed")
             fault["recoveryReads"] = recovery
@@ -1167,7 +1688,8 @@ done
             pool.shutdown(wait=True, cancel_futures=True)
 
 
-def observe(name, schema, out, private, relay_port, *, gameplay_binding=None):
+def observe(name, schema, out, private, relay_port, *, gameplay_binding=None,
+            packaged_subject=False, business_probe=None):
     """Root/C calls this only inside the existing verified mysql_relay context."""
     report = {
         "result": "NOT_COMPLETED", "curves": [],
@@ -1182,7 +1704,10 @@ def observe(name, schema, out, private, relay_port, *, gameplay_binding=None):
     probe = None
     first_error = None
     try:
-        probe = Probe(name, schema, out, private, relay_port, report, gameplay_binding)
+        if packaged_subject:
+            report["scope"] = "packaged RuoYi subject; dictionary observer plus two original business receipt fault reads"
+        probe = Probe(name, schema, out, private, relay_port, report, gameplay_binding,
+                      packaged_subject=packaged_subject, business_probe=business_probe)
         probe.save()
         probe.login()
         protected = probe.protected()
@@ -1275,6 +1800,11 @@ def validate_observation(report, identity):
                 "holderReleaseAndAbsenceVerified", "originalReleaseDurablyVerified",
                 "releaseReplayRejectedAndFullRowUnchanged", "sameProcessRecoveryVerified")),
             "mixed recovery/durable facts incomplete")
+    if report.get("resourceProfile", {}).get("applicationEntry", {}).get("entry") == PACKAGED_PROFILE:
+        reads = fault.get("businessReadProbes")
+        require(isinstance(reads, list) and len(reads) == 2, "packaged business fault/readback missing")
+        for row, stage in zip(reads, ("FAULT_HELD", "RECOVERED")):
+            validate_business_probe(row, stage)
 
 
 def finalize(name, schema, out, original_exit):

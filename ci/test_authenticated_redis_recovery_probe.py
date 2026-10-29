@@ -669,7 +669,7 @@ class AuthenticatedRedisSafetyTest(unittest.TestCase):
         workflow = (path.parents[1] / '.github/workflows/isolated-authenticated-redis-recovery.yml').read_text()
         original = workflow.split('      - name: Install existing pinned schema client\n', 1)[1].split('      - name:', 1)[0]
         isolated = workflow.split('      - name: Install the same pinned driver in the task-owned isolated Python\n', 1)[1].split('      - name:', 1)[0]
-        modes = "github.event_name == 'workflow_dispatch' && (inputs.probe_mode == 'restore-application-startup' || inputs.probe_mode == 'gameplay-process-recovery' || inputs.probe_mode == 'gameplay-capacity-mixed')"
+        modes = "github.event_name == 'workflow_dispatch' && (inputs.probe_mode == 'restore-application-startup' || inputs.probe_mode == 'gameplay-process-recovery' || inputs.probe_mode == 'gameplay-capacity-mixed' || inputs.probe_mode == 'packaged-gameplay-capacity')"
         self.assertIn('if: ${{ !(' + modes + ') }}', original)
         self.assertIn('if: ${{ ' + modes + ' }}', isolated)
         self.assertIn('run: python3 -m pip install --disable-pip-version-check PyMySQL==1.1.1', original)
@@ -698,7 +698,8 @@ class AuthenticatedRedisSafetyTest(unittest.TestCase):
             probe.validate_execution_env(env)
             for key, value in (('GITHUB_EVENT_NAME', 'pull_request'), ('CHENGYIN_RESTORE_MODE', ''),
                                ('CHENGYIN_RESTORE_MODE', 'false'), ('CHENGYIN_CI_CAPACITY_MIXED', 'true'),
-                               ('CHENGYIN_CI_GAMEPLAY_PROCESS_RECOVERY', 'true'), ('CHENGYIN_CI_GAMEPLAY_CAPACITY', 'true')):
+                               ('CHENGYIN_CI_GAMEPLAY_PROCESS_RECOVERY', 'true'), ('CHENGYIN_CI_GAMEPLAY_CAPACITY', 'true'),
+                               ('CHENGYIN_CI_PACKAGED_GAMEPLAY_CAPACITY', 'true')):
                 with self.subTest(key=key, value=value), self.assertRaises(RuntimeError):
                     probe.validate_execution_env(dict(env, **{key: value}))
 

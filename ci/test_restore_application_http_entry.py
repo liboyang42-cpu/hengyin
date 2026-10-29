@@ -34,9 +34,9 @@ def contract_problems(shell, workflow):
     problems = []
     options = re.search(r'        options:\n((?:          - [^\n]+\n)+)', workflow)
     expected = ['recovery', 'capacity-mixed', 'gameplay-process-recovery',
-                'gameplay-capacity-mixed', 'restore-application-startup']
+                'gameplay-capacity-mixed', 'packaged-gameplay-capacity', 'restore-application-startup']
     if not options or re.findall(r'- ([^\n]+)', options[1]) != expected:
-        problems.append('five exact choices with original order required')
+        problems.append('six exact choices retaining original relative order required')
     for text, count in ((FLAG, 2), ('        default: recovery', 1), (BUDGET, 1),
                         ('python3 -B ci/test_restore_application_http_probe.py', 1),
                         ('python3 -B ci/test_restore_application_http_entry.py', 1),
