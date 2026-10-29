@@ -66,7 +66,7 @@ class RegistrationSeatEndpointTest {
     }
     private void wireIssuer(ICmsActivityService activityOwner) {
         ReflectionTestUtils.setField(issuer, "registrationTicketApplication", new RegistrationTicketApplication(
-                orders, seats, activityOwner, perkLedger, qrcode, SECRET));
+                orders, seats, activityOwner, perkLedger, qrcode, SECRET, mock(com.chengyinhub.web.service.verify.RegistrationDynCodeLedger.class)));
     }
     @Test void originalDynamicCodeFormatBindsTheExplicitSeatToTheOriginalRegistration() {
         AjaxResult response = issuer.issueDynCode(31L, 2);

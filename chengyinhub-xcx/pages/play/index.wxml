@@ -1602,7 +1602,7 @@
   <view class="psheet__grab"></view>
   <view class="psheet__x" catchtap="onProtoSheetClose" aria-role="button" aria-label="关闭{{sceneCurrent.title}}" hover-class="cy-pressed" hover-stay-time="80"><view class="psheet__x-i"></view></view>
   <text class="ph1">{{sceneCurrent.title}}</text>
-    <cy-scene-qr-ticket registration-id="{{sceneCurrent.params.registrationId}}" bind:close="backScene" />
+    <cy-scene-qr-ticket registration-id="{{sceneCurrent.params.registrationId}}" title="{{sceneCurrent.params.title}}" until="{{sceneCurrent.params.until}}" bind:close="backScene" />
 </view>
 </view>
 <view class="play-scene-host" wx:if="{{sceneCurrent && sceneCurrent.id === 'roam-stamp-album'}}" catchtouchmove="blockSceneTouch">

@@ -113,7 +113,7 @@ test('seat UNKNOWN/readback timeouts retain original facts; no write retry', () 
 });
 test('multi-seat issuer sends no seat before explicit valid selection', () => {
   const h = component(); h.page.load(); assert.deepEqual(JSON.parse(JSON.stringify(h.requests[0].data)), { registrationId: '71' });
-  h.requests[0].success(choice); assert.equal(h.page.data.state, 'choose'); assert.equal(h.page.data.code, '');
+  h.requests[0].success(choice); assert.equal(h.page.data.state, 'choose'); assert.equal(h.page.data.qr, '');
   for (const value of ['', '0', '4', '2.5']) { h.page.inputSeat({ detail: { value } }); h.page.confirmSeat(); }
   assert.equal(h.requests.length, 1);
   h.page.inputSeat({ detail: { value: '2' } }); h.page.confirmSeat();
@@ -125,11 +125,11 @@ test('refresh and expired code keep the explicit seat; change requires an explic
   h.requests[1].success(issued()); h.page.retry(); assert.equal(h.requests[2].data.seatNo, 2);
   h.requests[2].success({ ...issued(), data: { ...issued().data, expiresAt: Date.now() - 1000 } });
   assert.equal(h.page.data.state, 'error'); h.page.retry(); assert.equal(h.requests[3].data.seatNo, 2);
-  h.page.changeSeat(); assert.equal(h.page.data.state, 'choose'); assert.equal(h.page.data.code, '');
+  h.page.changeSeat(); assert.equal(h.page.data.state, 'choose'); assert.equal(h.page.data.qr, '');
 });
 test('issuer refuses a response for another seat and displays actual already-verified status', () => {
   const h = component(); h.page.load(); h.requests[0].success(choice); h.page.inputSeat({ detail: { value: '2' } }); h.page.confirmSeat();
-  h.requests[1].success(issued(3)); assert.equal(h.page.data.state, 'error'); assert.equal(h.page.data.code, '');
+  h.requests[1].success(issued(3)); assert.equal(h.page.data.state, 'error'); assert.equal(h.page.data.qr, '');
   h.page.retry(); h.requests[2].success({ ...issued(), data: { ...issued().data, seatStatus: 1 } });
   assert.equal(h.page.data.seatVerified, true);
 });
@@ -141,5 +141,5 @@ test('issuer A→B→A callbacks and retries never change UI or send with a new 
 test('issuer registration replacement invalidates the old selection and callback', () => {
   const h = component(); h.page.load(); h.requests[0].success(choice); h.page.inputSeat({ detail: { value: '2' } }); h.page.confirmSeat();
   h.page.data.registrationId = '72'; h.page.load(); h.requests[1].success(issued());
-  assert.equal(h.page.data.code, ''); assert.equal(h.page.data.seatNo, ''); assert.equal(h.requests[2].data.seatNo, undefined);
+  assert.equal(h.page.data.qr, ''); assert.equal(h.page.data.seatNo, ''); assert.equal(h.requests[2].data.seatNo, undefined);
 });

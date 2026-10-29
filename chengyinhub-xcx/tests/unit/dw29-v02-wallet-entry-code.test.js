@@ -1,6 +1,6 @@
 'use strict'
 // 2026-10-29 走查 V-02:票夹入场码 —— 码心放城瘾 logo、不露原始 token、不显示 5:01 倒计时，
-// 到期前后台静默续签，背面写票本身的有效期(长期开放或活动时间)。
+// 到期前后台静默续签。Round 2:背面只有标题 + 码，票 7 天内到期才写「N 天内过期」/「今天过期」。
 const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const path = require('node:path')
@@ -22,6 +22,7 @@ function loadPage() {
       if (r.endsWith('/utils/play-engine.js')) return require('../../utils/play-engine.js')
       if (r.endsWith('/utils/session/login-reload.js')) return require('../../utils/session/login-reload.js')
       if (r.endsWith('/utils/toast.js')) return () => {}
+      if (r.endsWith('/utils/ticket-expiry.js')) return require('../../utils/ticket-expiry.js')
       throw new Error('unexpected require: ' + r)
     },
   }
@@ -33,26 +34,50 @@ function loadPage() {
   return { page, sandbox }
 }
 
-test('V-02 背面不露原始 token、不显示倒计时，改写票本身有效期；码心放城瘾 logo', () => {
+test('V-02 背面只有标题和码:不露原始 token、不显示倒计时、没有说明行；码心放城瘾 logo', () => {
   const xml = read('subpackageMember/signup/index.wxml').replace(/<!--[\s\S]*?-->/g, '')
   const back = xml.slice(xml.indexOf('wc__face wc__back'), xml.indexOf('team-entry'))
   assert.doesNotMatch(back, /qrCode|Code :/)
   assert.doesNotMatch(back, /qrCountdown/)
-  assert.match(back, /<text class="wc__exp">\{\{item\.wValidity\}\}<\/text>/)
+  assert.match(back, /<text wx:if="\{\{item\.wExpiry\}\}" class="wc__exp">\{\{item\.wExpiry\}\}<\/text>/)
+  assert.doesNotMatch(back, /入场码<\/text>|长期开放|wValidity/)
+  const texts = back.match(/<text[^>]*>[^<]*<\/text>/g) || []
+  assert.deepEqual(texts.map(t => t.replace(/<[^>]+>/g, '')), ['{{item.wTitle}}', '重新生成', '生成中…', '{{item.wExpiry}}'])
   assert.match(back, /class="wc__qr-logo"><image class="wc__qr-logo-img" src="\/images\/cy_logo_mark\.png"/)
   assert.ok(fs.statSync(path.join(ROOT, 'images/cy_logo_mark.png')).isFile())
   assert.match(read('subpackageMember/signup/index.wxss'), /\.wc__qr \{ position: relative;/)
   assert.doesNotMatch(read('subpackageMember/signup/index.js'), /有效期剩余/)
 })
 
-test('V-02 票的有效期:没有活动时间写长期开放，有就写时间', () => {
+test('V-02 7 天内到期才写 N 天内过期，当天写今天过期，其余不写', () => {
   const { page } = loadPage()
-  page._topic = { state: 'ready', list: [{ id: 11, registrationStatus: 2, cmsTopic: { name: '海上方舟' } }] }
-  page._activity = { state: 'ready', list: [{ id: 12, registrationStatus: 2, cmsActivity: { name: '夜行', startDate: '2099-12-02 09:00:00' } }] }
+  const pad = n => String(n).padStart(2, '0')
+  const at = days => { const d = new Date(Date.now() + days * 86400000); d.setHours(23, 59, 0, 0); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' 23:59:00' }
+  page._topic = { state: 'ready', list: [
+    { id: 11, registrationStatus: 2, cmsTopic: { name: '海上方舟' } },
+    { id: 13, registrationStatus: 2, expiresAt: at(3), cmsTopic: { name: '三天' } },
+    { id: 14, registrationStatus: 2, expiresAt: at(30), cmsTopic: { name: '一月' } },
+  ] }
+  page._activity = { state: 'ready', list: [{ id: 12, registrationStatus: 2, cmsActivity: { name: '夜行', endDate: at(0) } }] }
   page.rebuildTicketList()
   const byId = Object.fromEntries(page.data.ticketList.map(t => [t.id, t]))
-  assert.equal(byId[11].wValidity, '长期开放')
-  assert.equal(byId[12].wValidity, '2099年12月2日 09:00')
+  assert.equal(byId[11].wExpiry, '')
+  assert.equal(byId[12].wExpiry, '今天过期')
+  assert.equal(byId[13].wExpiry, '3 天内过期')
+  assert.equal(byId[14].wExpiry, '')
+})
+
+test('V-02 过期文案规则(票夹与场景入场码共用)', () => {
+  const { passExpiryText } = require('../../utils/ticket-expiry.js')
+  const now = new Date(2026, 9, 29, 10, 0, 0).getTime()
+  assert.equal(passExpiryText('', now), '')
+  assert.equal(passExpiryText('2026-10-29 22:00:00', now), '今天过期')
+  assert.equal(passExpiryText('2026-10-30 08:00:00', now), '1 天内过期')
+  assert.equal(passExpiryText('2026-11-05 08:00:00', now), '7 天内过期')
+  assert.equal(passExpiryText('2026-11-06 08:00:00', now), '')
+  assert.equal(passExpiryText('2026-10-29 09:00:00', now), '', '已过期不写')
+  assert.equal(passExpiryText(new Date(2026, 9, 31, 12).getTime(), now), '2 天内过期')
+  assert.equal(passExpiryText('not-a-date', now), '')
 })
 
 test('V-02 动态码到期前静默续签，旧码不清空、不进 loading', () => {

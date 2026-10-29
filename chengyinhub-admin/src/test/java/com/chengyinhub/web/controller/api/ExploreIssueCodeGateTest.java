@@ -56,7 +56,7 @@ class ExploreIssueCodeGateTest {
         doReturn(MEMBER).when(controller).getAppUserId();
         ReflectionTestUtils.setField(controller, "registrationTicketApplication", new RegistrationTicketApplication(
                 regSvc, mock(com.chengyinhub.business.service.RegistrationSeatService.class), activitySvc, perkSvc,
-                mock(com.chengyinhub.business.service.impl.QrcodeServiceImpl.class), "test-secret"));
+                mock(com.chengyinhub.business.service.impl.QrcodeServiceImpl.class), "test-secret", mock(com.chengyinhub.web.service.verify.RegistrationDynCodeLedger.class)));
     }
 
     /** verificationStatus=1 且 registrationStatus=2(报名成功) */

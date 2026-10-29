@@ -2,6 +2,7 @@ const toast = require('../../utils/toast.js');
 const QR_REFRESH_LEAD_MS = 30000; // 到期前 30 秒续签
 const QR_MIN_REFRESH_MS = 5000;
 const QR_RETRY_MS = 5000;
+const { passExpiryText } = require('../../utils/ticket-expiry.js');
 const { isLoginRequired, retryLogin } = require('../../utils/session/login-reload.js');
 const app = getApp();
 function walletOwner() { return typeof app.getUserID === 'function' ? String(app.getUserID() || '') : ''; }
@@ -269,7 +270,6 @@ Page({
         kind: 'topic',
         wKey: 'topic-' + item.id,
         wTitle: t.name || '—',
-        wValidity: ticketValidity(t.startDate),
         wImg: t.imgUrl || '/images/route_city_cover.png', wType: Number(t.productType) === 2 ? '自由探索' : '城市定向', wColor: Number(t.productType) === 2 ? '#7CF0A0' : '#5AA9FF', wUntil: item.expiresAt || t.endDate || '', // ds-ok v13 类型色
       });
     });
@@ -279,7 +279,6 @@ Page({
         kind: 'activity',
         wKey: 'activity-' + item.id,
         wTitle: a.name || '—',
-        wValidity: ticketValidity(a.startDate),
         wImg: a.imgUrl || '/images/route_city_cover.png',
         wType: '场次', wColor: '#E8B86B', wUntil: a.endTime || a.endDate || '', // ds-ok v13 卡角色
       });
@@ -705,17 +704,10 @@ function reducedMotionOn() {
 // v13 卡堆每一层的位置:往上错开 / 缩小 / 变暗,第 4 张以后藏在最后
 const DECK_POSE = [{ y: 0, s: 1, b: 1, o: 1 }, { y: -26, s: 0.93, b: 0.5, o: 1 }, { y: -48, s: 0.86, b: 0.32, o: 1 }, { y: -62, s: 0.8, b: 0.2, o: 1 }, { y: -62, s: 0.8, b: 0.2, o: 0 }];
 /* 卡面文字:类型 · 剩几天(有到期日才写),状态不是待使用时写状态;tab 归类 */
-/* V-02:票面背面写票本身的有效期 —— 有活动时间写时间，没有就是长期开放(与首页卡同一格式) */
-function ticketValidity(startDate) {
-  const date = startDate ? new Date(String(startDate).replace(/-/g, '/')) : null;
-  if (!date || isNaN(date.getTime())) return '长期开放';
-  const pad = n => String(n).padStart(2, '0');
-  return date.getFullYear() + '年' + (date.getMonth() + 1) + '月' + date.getDate() + '日 ' + pad(date.getHours()) + ':' + pad(date.getMinutes());
-}
 function walletCard(item) {
   const until = item.wUntil ? new Date(String(item.wUntil).replace(/-/g, '/')) : null;
   const days = until && !isNaN(until.getTime()) ? Math.ceil((until.getTime() - Date.now()) / 86400000) : null;
-  return Object.assign(item, { wSub: days !== null && days >= 0 ? item.wType + ' · 剩 ' + days + ' 天' : item.wType });
+  return Object.assign(item, { wSub: days !== null && days >= 0 ? item.wType + ' · 剩 ' + days + ' 天' : item.wType, wExpiry: passExpiryText(item.wUntil) });
 }
 /* 能用的票:已报名(已付款 / 免费)、没核验、没取消没过期,到期日也还没过 */
 function usableTicket(item) {
