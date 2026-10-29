@@ -43,11 +43,12 @@ function readAppRoutes() {
 const READ_USER = /getAppUserId|getUserID\s*\(|getAuthorization|sendRequest|createGameSessionClient|createClubGameDirectorAdapter/;
 const MERCHANT_HINT = /merchant-theme|theme-merchant|merchantPageShow/;
 // 官方活动详情是商家侧官方活动入口；玩家活动继续使用玩家活动详情页。
-// 账户收益 / 分析是玩家资金页;商家经 ?theme=merchant 进同一页的浅色版,根节点的 theme-merchant 只是条件类。
+// 账户收益 / 分析 / 收益明细是玩家资金页;商家经 ?theme=merchant 进同一页的浅色版,根节点的 theme-merchant 只是条件类。
 const ROLE_OVERRIDES = new Map([
   ['pages/activity/official-detail/index', 'merchant'],
   ['subpackageA/pages/assetcenter/earnings/index', 'player'],
   ['subpackageA/pages/assetcenter/analysis/index', 'player'],
+  ['subpackageA/pages/assetcenter/income-detail/income-detail', 'player'],
 ]);
 
 // These existing factories enforce identity in onShow before constructing a client.
