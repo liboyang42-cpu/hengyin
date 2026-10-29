@@ -275,6 +275,7 @@ public class UmsMemberCartServiceImpl implements IUmsMemberCartService
     @Transactional(rollbackFor = Exception.class)
     public Long settleCart(Long memberId, String username, String rawCartIds, String remark, String rawAddressId)
     {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         Long[] cartIds = parseCartIds(rawCartIds);
         lockCartsForSettlement(memberId, cartIds);
         List<ViewMemberCart> carts = loadValidatedCarts(memberId, cartIds);

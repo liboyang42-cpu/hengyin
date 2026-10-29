@@ -23,6 +23,10 @@ import com.chengyinhub.business.service.ai.AiGatewayService;
 import com.chengyinhub.business.service.ai.AiSceneRouter;
 import com.chengyinhub.business.service.ai.AiServiceException;
 import com.chengyinhub.business.service.ai.LlmClient;
+import com.chengyinhub.business.service.ai.AiThemeDraftPlan;
+import com.chengyinhub.business.service.ai.AiThemeDraftPlanRejectedException;
+import com.chengyinhub.business.service.ai.AiThemeDraftPlanRejectedException.Code;
+import com.chengyinhub.business.service.support.CanonicalDigest;
 import com.chengyinhub.common.config.AiModelConfig;
 import com.chengyinhub.common.config.AiProviderProperties;
 import com.chengyinhub.common.utils.uuid.IdUtils;
@@ -122,11 +126,157 @@ public class AiGatewayServiceImpl implements AiGatewayService
     private int photoDailyLimit;
 
     private volatile Map<String, LlmClient> clientMap;
+    private java.time.Clock themeDraftClock = java.time.Clock.system(QUOTA_ZONE);
+
+    @Override
+    public String themeDraftConfigurationHash()
+    {
+        return themeDraftSnapshot().hash();
+    }
+
+    @Override
+    public AiGatewayResult generateThemeDraftPrepared(Long memberId, AiThemeDraftPlan plan,
+            String systemPrompt, String userPrompt)
+    {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+        Code invalid = themeDraftPlanProblem(memberId, plan);
+        if (invalid != null) throw preparedRejection(plan, invalid);
+        ThemeDraftSnapshot snapshot;
+        String openid;
+        try {
+            if (org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive())
+                throw preparedRejection(plan, Code.CHECK_UNAVAILABLE);
+            if (org.springframework.transaction.support.TransactionSynchronizationManager.getResourceMap().values()
+                    .stream().anyMatch(org.mybatis.spring.SqlSessionHolder.class::isInstance))
+                throw preparedRejection(plan, Code.CHECK_UNAVAILABLE);
+            if (quotaRecovery == null || redisTemplate == null)
+                throw preparedRejection(plan, Code.CHECK_UNAVAILABLE);
+            snapshot = themeDraftSnapshot();
+            if (!plan.gatewayConfigHash().equals(snapshot.hash()))
+                throw preparedRejection(plan, Code.CONFIG_CHANGED);
+            UmsMember member = umsMemberService.selectUmsMemberById(memberId);
+            if (member == null || !memberId.equals(member.getId()) || !Long.valueOf(1L).equals(member.getStatus())
+                    || !Integer.valueOf(0).equals(member.getDelFlag()))
+                throw preparedRejection(plan, Code.AUTHORITY_CHANGED);
+            // RoleService's canonical subject is member.role; compare only, never choose another pool.
+            if (!java.util.Arrays.asList("player", "club", "merchant").contains(member.getRole()))
+                throw preparedRejection(plan, Code.CHECK_UNAVAILABLE);
+            if (!plan.role().equals(member.getRole())) throw preparedRejection(plan, Code.AUTHORITY_CHANGED);
+            openid = member.getWxOpenId() == null ? "" : member.getWxOpenId();
+        } catch (AiThemeDraftPlanRejectedException rejected) {
+            throw rejected;
+        } catch (RuntimeException unavailable) {
+            // The player's Creator has already reserved its separate pool. No zero-effect claim here.
+            throw preparedRejection(plan, Code.CHECK_UNAVAILABLE);
+        }
+        String reservation = null;
+        if (!"player".equals(plan.role())) {
+            try {
+                reservation = consumePlannedQuota(memberId, "theme_draft", plan.reservation(), snapshot.dailyLimit());
+            } catch (AiThemeDraftPlanRejectedException lateFailure) {
+                throw new AiServiceException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE,
+                        "AI 草稿原计划执行失败");
+            }
+        }
+        try {
+            return generateReserved(memberId, plan.role(), "theme_draft", systemPrompt, userPrompt,
+                    reservation, plan.nonce(), snapshot, plan, openid, false);
+        } catch (AiThemeDraftPlanRejectedException lateFailure) {
+            // Quota/review may already have effects; only this local type loses preflight authority.
+            throw new AiServiceException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE,
+                    "AI 草稿原计划执行失败");
+        }
+    }
+
+    private RuntimeException preparedRejection(AiThemeDraftPlan plan, Code code)
+    {
+        if (plan != null && "player".equals(plan.role()))
+            return new AiServiceException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE, "AI 草稿原计划不可执行");
+        return new AiThemeDraftPlanRejectedException(code);
+    }
+
+    private Code themeDraftPlanProblem(Long memberId, AiThemeDraftPlan plan)
+    {
+        if (plan == null || memberId == null || memberId <= 0 || !memberId.equals(plan.memberId())
+                || !java.util.Arrays.asList("player", "club", "merchant").contains(plan.role())
+                || plan.nonce() == null || !plan.nonce().matches("[a-f0-9]{32}")
+                || plan.originalDay() == null || !plan.originalDay().matches("[0-9]{8}")
+                || plan.creatorConfigHash() == null || !plan.creatorConfigHash().matches("[a-f0-9]{64}")
+                || plan.gatewayConfigHash() == null || !plan.gatewayConfigHash().matches("[a-f0-9]{64}")
+                || plan.executeBefore() == null) return Code.PLAN_INVALID;
+        java.time.LocalDate day;
+        try { day = java.time.LocalDate.parse(plan.originalDay(), java.time.format.DateTimeFormatter.BASIC_ISO_DATE); }
+        catch (java.time.DateTimeException invalid) { return Code.PLAN_INVALID; }
+        boolean player = "player".equals(plan.role());
+        String counter = (player ? "ai:theme:draft:player:" : "ai:gen:limit:gen:")
+                + memberId + ":" + plan.originalDay();
+        String receipt = (player ? "ai:player:theme:draft:reservation:" : "ai:gen:reservation:")
+                + counter + ":" + plan.nonce();
+        if (!(player ? "player-draft" : "gen").equals(plan.pool()) || !counter.equals(plan.counterKey())
+                || !receipt.equals(plan.receiptKey()) || !(counter + "|" + plan.nonce()).equals(plan.reservation())
+                || !plan.executeBefore().isAfter(day.atStartOfDay(QUOTA_ZONE).toInstant())
+                || plan.executeBefore().isAfter(day.plusDays(1).atStartOfDay(QUOTA_ZONE).toInstant()))
+            return Code.PLAN_INVALID;
+        java.time.Instant now = themeDraftClock.instant();
+        if (day.isAfter(now.atZone(QUOTA_ZONE).toLocalDate())) return Code.PLAN_INVALID;
+        if (!now.isBefore(plan.executeBefore()) || !day.equals(now.atZone(QUOTA_ZONE).toLocalDate()))
+            return Code.PLAN_EXPIRED;
+        return null;
+    }
+
+    /** Capture once; execution never re-resolves the route, client, model or quota limit. */
+    private ThemeDraftSnapshot themeDraftSnapshot()
+    {
+        String route = sceneRouter == null ? aiModelConfig.getProvider() : sceneRouter.resolve("theme_draft");
+        if (route == null || !route.matches("[A-Za-z0-9_-]{1,64}"))
+            throw new IllegalStateException("Invalid local model identity");
+        if (sceneRouter != null && sceneRouter.isCacheOnly("theme_draft"))
+            throw new IllegalStateException("Theme draft needs a model");
+        LlmClient client = sceneRouter == null ? resolveClient(route) : selectRoutedClient(route);
+        String clientName = client.name();
+        if (clientName == null || !clientName.matches("[A-Za-z0-9_-]{1,64}"))
+            throw new IllegalStateException("Invalid local model identity");
+        String model = "client:" + clientName;
+        if (client instanceof com.chengyinhub.business.service.ai.OpenAiCompatibleLlmClient) {
+            com.chengyinhub.business.service.ai.OpenAiCompatibleLlmClient configured =
+                    (com.chengyinhub.business.service.ai.OpenAiCompatibleLlmClient) client;
+            configured.requireReady();
+            model = configured.configuredModel();
+        }
+        int limit = aiModelConfig.getDailyLimit();
+        if (limit < 0 || model == null || model.isBlank()) throw new IllegalStateException("Invalid local model configuration");
+        // Only allowlisted non-secret assembly fields. Never serialize config/props or hash an API key.
+        String base = aiModelConfig.getBaseUrl();
+        if (base != null && !base.isBlank()) {
+            java.net.URI uri = java.net.URI.create(base);
+            if (uri.getUserInfo() != null || uri.getRawQuery() != null || uri.getFragment() != null)
+                throw new IllegalStateException("Invalid local endpoint configuration");
+        }
+        String hash = CanonicalDigest.sha256Hex(com.alibaba.fastjson2.JSON.toJSONString(java.util.Arrays.asList(
+                "theme-draft.gateway.v2", sceneRouter == null ? "single-provider" : "scene-router", route,
+                client.getClass().getName(), clientName, model, base, aiModelConfig.isEnabled(),
+                aiModelConfig.getTimeoutMs(), limit, "gen", "Asia/Shanghai", REVIEW_CHUNK_MAX, REVIEW_OVERLAP,
+                "typed-not-sent-refund;provider-unknown-retain;received-retain.v1",
+                CanonicalDigest.sha256Hex(RESERVE_QUOTA_SCRIPT.getScriptAsString()),
+                CanonicalDigest.sha256Hex(REFUND_QUOTA_SCRIPT.getScriptAsString()))));
+        return new ThemeDraftSnapshot(client, clientName, limit, hash);
+    }
+
+    private record ThemeDraftSnapshot(LlmClient client, String clientName, int dailyLimit, String hash) { }
+
+    private void stageGenerationQuota(Long memberId, String bizType, String reservation, String stage,
+            AiThemeDraftPlan plan)
+    {
+        if (plan != null && "player".equals(plan.role())) {
+            if (quotaRecovery != null) quotaRecovery.stage(plan.receiptKey(), stage);
+        } else stageQuota(memberId, bizType, reservation, stage);
+    }
 
     @Override
     public AiGatewayResult generate(Long memberId, String role, String bizType,
                                      String systemPrompt, String userPrompt)
     {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         // 玩家草稿由 Creator 的三次独立池计费；其他场景绑定本次原日预占。
         boolean playerThemeDraft = "player".equals(role) && "theme_draft".equals(bizType);
         String reservation = playerThemeDraft ? null : consumeQuota(memberId, bizType);
@@ -134,28 +284,56 @@ public class AiGatewayServiceImpl implements AiGatewayService
         //    两条分支落库的 trace_id 与返给前端的对不上(审计无法 join)。
         //    D-08:traceId 即本次预占 nonce,原日收据/台账 nonce 唯一键保证每个 traceId 至多退一次。
         String traceId = traceIdOf(reservation);
+        return generateReserved(memberId, role, bizType, systemPrompt, userPrompt, reservation, traceId, null, null, null, false);
+    }
+
+    @Override
+    public AiGatewayResult generateNpcAsrHandoff(com.chengyinhub.business.service.ai.NpcAsrQuotaHandoff original,
+            String systemPrompt,String userPrompt) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+        if (quotaRecovery==null) throw new IllegalStateException("NPC ASR quota persistence unavailable");
+        quotaRecovery.requireNpcAsrHandoff(original);
+        return generateReserved(original.memberId(), "player", "npc_shop_chat", systemPrompt, userPrompt,
+                original.reservation(), traceIdOf(original.reservation()), null, null, null, true);
+    }
+
+    @Override
+    public void refundNpcAsrNotSent(Long memberId,String requestId) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+        if (quotaRecovery==null) throw new IllegalStateException("NPC ASR quota persistence unavailable");
+        quotaRecovery.refundNpcAsrNotSent(memberId,requestId);
+    }
+
+    private AiGatewayResult generateReserved(Long memberId, String role, String bizType,
+            String systemPrompt, String userPrompt, String reservation, String traceId,
+            ThemeDraftSnapshot snapshot, AiThemeDraftPlan preparedPlan, String preparedOpenid, boolean asrHandoff)
+    {
+        boolean playerThemeDraft = "player".equals(role) && "theme_draft".equals(bizType);
+        boolean prepared = snapshot != null;
         String openid;
         String secIn;
         try {
-            openid = resolveOpenid(memberId);
-            stageQuota(memberId,bizType,reservation,"INPUT_REVIEW_STARTED");
+            openid = prepared ? preparedOpenid : resolveOpenid(memberId);
+            if (!asrHandoff) stageGenerationQuota(memberId,bizType,reservation,"INPUT_REVIEW_STARTED",preparedPlan);
             // 两段都可能含业务上下文；审核与 provider 收到的文本保持完整，不截掉后缀。
             String assembledInput = (systemPrompt == null ? "" : systemPrompt) + "\n"
                     + (userPrompt == null ? "" : userPrompt);
             secIn = checkTextFully(assembledInput, openid);
+        } catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) {
+            throw paused;
         } catch (RuntimeException unavailable) {
-            if (!playerThemeDraft) refundQuota(memberId, bizType, reservation);
+            if (!playerThemeDraft && !asrHandoff) refundQuota(memberId, bizType, reservation);
             throw new AiServiceException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE,
                     "内容审核暂时不可用，请稍后重试", unavailable);
         }
         if (secIn != null) {
             if (IWxContentSecurityService.isDetectionUnavailable(secIn)) {
-                if (!playerThemeDraft) refundQuota(memberId, bizType, reservation);
-                saveLog(traceId, memberId, role, bizType, null, userPrompt, secIn, 0, 0, 0, 0);
+                if (!playerThemeDraft && !asrHandoff) refundQuota(memberId, bizType, reservation);
+                saveGenerationLog(prepared, traceId, memberId, role, bizType, null, userPrompt, secIn, 0, 0, 0, 0);
                 throw new AiServiceException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE, secIn);
             }
-            retainQuota(memberId,bizType,reservation,"INPUT_REJECTED");
-            saveLog(traceId, memberId, role, bizType, null, userPrompt, secIn,
+            if (!asrHandoff) retainQuota(memberId,bizType,reservation,"INPUT_REJECTED");
+            saveGenerationLog(prepared, traceId, memberId, role, bizType, null, userPrompt, secIn,
                     AiGenerationLog.SAFETY_INPUT_BLOCKED, 0, 0, 0);
             // 与 master #322 统一：微信审核拒绝（含人工复核/未知拒绝）一律按入参被拦截返回，小程序给出同一条“请修改内容”提示。
             throw new AiServiceException(AiServiceException.Reason.INPUT_BLOCKED, secIn);
@@ -166,38 +344,41 @@ public class AiGatewayServiceImpl implements AiGatewayService
         String modelName;
         try
         {
-            client = selectClient(bizType);
+            client = prepared ? snapshot.client() : selectClient(bizType);
             // This local check proves no HTTP was sent; provider exceptions cannot prove that.
             if (client instanceof com.chengyinhub.business.service.ai.OpenAiCompatibleLlmClient)
             {
                 ((com.chengyinhub.business.service.ai.OpenAiCompatibleLlmClient) client).requireReady();
             }
-            modelName = client == null ? null : client.name();
+            modelName = prepared ? snapshot.clientName() : client == null ? null : client.name();
         }
+        catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) { throw paused; }
         catch (RuntimeException e)
         {
             // 「无可用的 AI 模型」= 配置错,纯我们的锅,用户没拿到任何东西 → 退额度。
             // ⚠️ catch RuntimeException 而非 AiServiceException:选模型/场景路由里的
             //    NPE、IllegalStateException 同样是我们的锅,窄 catch 会让它们带着已扣的额度跑掉。
-            if (!playerThemeDraft) refundQuota(memberId, bizType, reservation);
+            if (!playerThemeDraft && !asrHandoff) refundQuota(memberId, bizType, reservation);
             throw new AiServiceException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE,
                     "AI 服务配置缺失,请联系管理员(traceId=" + traceId + ")", e);
         }
         if (client == null)
         {
             // cache-only: npc_event 不调模型,返回空结果
-            saveLog(traceId, memberId, role, bizType, "cache", userPrompt, "", 0, 0, 0, 0);
-            retainQuota(memberId,bizType,reservation,"CACHE_RESULT");
+            saveGenerationLog(prepared, traceId, memberId, role, bizType, "cache", userPrompt, "", 0, 0, 0, 0);
+            if (!asrHandoff) retainQuota(memberId,bizType,reservation,"CACHE_RESULT");
             return new AiGatewayResult(traceId, "[]", "cache", 0);
         }
         long t0 = System.currentTimeMillis();
 
         String modelText;
         try {
-            stageQuota(memberId,bizType,reservation,"MODEL_STARTED");
+            if (!asrHandoff) stageGenerationQuota(memberId,bizType,reservation,"MODEL_STARTED",preparedPlan);
+        } catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) {
+            throw paused;
         } catch (RuntimeException stageUnavailable) {
             // chat has not been invoked; preserve the original unsent compensation path.
-            if (!playerThemeDraft) refundQuota(memberId, bizType, reservation);
+            if (!playerThemeDraft && !asrHandoff) refundQuota(memberId, bizType, reservation);
             throw new AiServiceException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE,
                     "AI 服务暂时不可用，请稍后重试", stageUnavailable);
         }
@@ -209,11 +390,22 @@ public class AiGatewayServiceImpl implements AiGatewayService
                 throw new IllegalStateException("AI 模型返回为空");
             }
         }
+        catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) { throw paused; }
+        catch (com.chengyinhub.business.service.ai.AiProviderNotSentException notSent)
+        {
+            // Only the dedicated transport proof can compensate after MODEL_STARTED.
+            // The player's separate draft reservation remains owned by Creator.
+            if (!playerThemeDraft && !asrHandoff) refundQuota(memberId, bizType, reservation);
+            throw new AiServiceException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE,
+                    "AI 服务暂时不可用，请稍后重试", notSent);
+        }
         catch (RuntimeException e)
         {
-            log.error("[AiGateway] model-error memberId={} provider={}", memberId, modelName, e);
+            if (prepared) log.error("[AiGateway] prepared-model-error traceId={} provider={} code=PROVIDER_OUTCOME_UNKNOWN",
+                    traceId, modelName);
+            else log.error("[AiGateway] model-error memberId={} provider={}", memberId, modelName, e);
             int tokenIn = estimateSingle(systemPrompt) + estimateSingle(userPrompt);
-            saveLog(traceId, memberId, role, bizType, modelName, userPrompt, "ERROR:" + truncate(e.getMessage(), 100),
+            saveGenerationLog(prepared, traceId, memberId, role, bizType, modelName, userPrompt, prepared ? "PROVIDER_OUTCOME_UNKNOWN" : "ERROR:" + truncate(e.getMessage(), 100),
                     0, (int) (System.currentTimeMillis() - t0), tokenIn, null);
             // MODEL_STARTED preserves the original receipt for the existing recovery worker.
             // A timeout/empty or malformed response may already have incurred provider usage.
@@ -230,7 +422,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
         String secOut;
         try { secOut = checkTextFully(modelText, openid); }
         catch(RuntimeException unknownOutput) {
-            retainQuotaAfterResult(memberId,bizType,reservation,"OUTPUT_REVIEW_UNKNOWN");
+            if (!asrHandoff) retainQuotaAfterResult(memberId,bizType,reservation,"OUTPUT_REVIEW_UNKNOWN");
             throw new com.chengyinhub.business.service.ai.AiProviderResultReceivedException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE,
                     "内容审核暂时不可用，请稍后重试", unknownOutput);
         }
@@ -238,24 +430,24 @@ public class AiGatewayServiceImpl implements AiGatewayService
         {
             if (IWxContentSecurityService.isDetectionUnavailable(secOut))
             {
-                retainQuotaAfterResult(memberId,bizType,reservation,"OUTPUT_REVIEW_UNKNOWN");
-                saveLog(traceId, memberId, role, bizType, modelName, userPrompt, secOut,
+                if (!asrHandoff) retainQuotaAfterResult(memberId,bizType,reservation,"OUTPUT_REVIEW_UNKNOWN");
+                saveGenerationLog(prepared, traceId, memberId, role, bizType, modelName, userPrompt, secOut,
                         0, latencyMs, tokenIn, tokenOut);
                 throw new com.chengyinhub.business.service.ai.AiProviderResultReceivedException(
                         AiServiceException.Reason.UPSTREAM_UNAVAILABLE, secOut);
             }
             log.info("[AiGateway] output-blocked memberId={} bizType={}", memberId, bizType);
-            saveLog(traceId, memberId, role, bizType, modelName, userPrompt, modelText,
+            saveGenerationLog(prepared, traceId, memberId, role, bizType, modelName, userPrompt, modelText,
                     AiGenerationLog.SAFETY_OUTPUT_BLOCKED, latencyMs, tokenIn, tokenOut);
-            retainQuotaAfterResult(memberId,bizType,reservation,"OUTPUT_REJECTED");
+            if (!asrHandoff) retainQuotaAfterResult(memberId,bizType,reservation,"OUTPUT_REJECTED");
             throw new com.chengyinhub.business.service.ai.AiProviderResultReceivedException(
                     AiServiceException.Reason.OUTPUT_BLOCKED, "生成内容未通过安全检测,请调整后重试");
         }
 
         // 5. 落日志
-        saveLog(traceId, memberId, role, bizType, modelName, userPrompt, modelText, 0, latencyMs, tokenIn, tokenOut);
+        saveGenerationLog(prepared, traceId, memberId, role, bizType, modelName, userPrompt, modelText, 0, latencyMs, tokenIn, tokenOut);
 
-        retainQuotaAfterResult(memberId,bizType,reservation,"SUCCESS");
+        if (!asrHandoff) retainQuotaAfterResult(memberId,bizType,reservation,"SUCCESS");
         return new AiGatewayResult(traceId, modelText, modelName, 0);
     }
 
@@ -317,22 +509,51 @@ public class AiGatewayServiceImpl implements AiGatewayService
 
     /**
      * 非文本调用(拍照视觉审核)的计次:池子由 bizType 决定(photo_check 走独立 photo 池),
-     * 键名/上限/分池规则与 generate 同源。先扣后调,失败路径退不退由调用方按
-     * 「用户有没有拿到结论」决定(refundQuota 对应本方法)。
+     * 键名/上限/分池规则与 generate 同源；未知供应商结果不得按“没有结论”退额。
      */
     @Override
     public String consumeQuota(Long memberId, String bizType)
     {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+        return consumePlannedQuota(memberId, bizType, planQuotaReservation(memberId, bizType, IdUtils.simpleUUID()));
+    }
+
+    @Override
+    public String planQuotaReservation(Long memberId, String bizType, String nonce)
+    {
+        if (memberId == null || memberId <= 0 || nonce == null || !nonce.matches("[a-f0-9]{32}"))
+            throw new IllegalArgumentException("Invalid original quota identity");
         String group = rateGroupOf(bizType);
         String key = RATE_KEY_PREFIX + group + ":" + memberId + ":" + LocalDate.now(QUOTA_ZONE).format(DATE_FMT);
-        String nonce = IdUtils.simpleUUID();
+        return key + "|" + nonce;
+    }
+
+    @Override
+    public String consumePlannedQuota(Long memberId, String bizType, String reservation)
+    {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+        if (memberId == null || memberId <= 0 || receiptOf(memberId, bizType, reservation) == null)
+            throw new IllegalArgumentException("Invalid original quota reservation");
+        return consumePlannedQuota(memberId, bizType, reservation, dailyLimitOf(rateGroupOf(bizType)));
+    }
+
+    private String consumePlannedQuota(Long memberId, String bizType, String reservation, int limit)
+    {
+        if (memberId == null || memberId <= 0 || receiptOf(memberId, bizType, reservation) == null)
+            throw new IllegalArgumentException("Invalid original quota reservation");
+        int split = reservation.lastIndexOf('|');
+        String key = reservation.substring(0, split);
+        String nonce = reservation.substring(split + 1);
+        String day = key.substring(key.length() - 8);
+        LocalDate.parse(day, java.time.format.DateTimeFormatter.BASIC_ISO_DATE);
+        String group = rateGroupOf(bizType);
         String receipt = "ai:gen:reservation:" + key + ":" + nonce;
         if(quotaRecovery!=null) quotaRecovery.prepare(memberId,bizType,group,key,receipt);
         Long used;
         try {
             used = redisTemplate.execute(RESERVE_QUOTA_SCRIPT,
                     java.util.Arrays.<Object>asList(key, key + ":generation", receipt),
-                    Integer.valueOf(86400), Integer.valueOf(dailyLimitOf(group)), Integer.valueOf(0));
+                    Integer.valueOf(86400), Integer.valueOf(limit), Integer.valueOf(0));
         } catch (RuntimeException unknown) {
             cancelQuota(key, receipt);
             throw unknown;
@@ -346,17 +567,18 @@ public class AiGatewayServiceImpl implements AiGatewayService
             try { quotaRecovery.reserved(receipt,used); }
             catch(RuntimeException persistenceFailure) { cancelQuota(key,receipt); throw persistenceFailure; }
         }
-        if (used > dailyLimitOf(group)) {
+        if (used > limit) {
             if(quotaRecovery!=null) quotaRecovery.retain(receipt,"RATE_LIMITED");
             throw new AiServiceException(AiServiceException.Reason.RATE_LIMITED,
-                    "今日AI次数已用完(" + dailyLimitOf(group) + "/天),明天再来吧");
+                    "今日AI次数已用完(" + limit + "/天),明天再来吧");
         }
-        return key + "|" + nonce;
+        return reservation;
     }
 
     @Override
     public void refundQuota(Long memberId, String bizType, String reservation)
     {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         if (reservation == null) return;
         int split = reservation.lastIndexOf('|');
         if (split <= 0) return;
@@ -371,6 +593,8 @@ public class AiGatewayServiceImpl implements AiGatewayService
     @Override
     public void stageQuota(Long memberId,String bizType,String reservation,String stage) {
         String receipt=receiptOf(memberId,bizType,reservation);
+        if ("ASR_STARTED".equals(stage) && (quotaRecovery==null || receipt==null))
+            throw new IllegalStateException("NPC ASR quota persistence unavailable");
         if(quotaRecovery!=null && receipt!=null) quotaRecovery.stage(receipt,stage);
     }
 
@@ -416,7 +640,8 @@ public class AiGatewayServiceImpl implements AiGatewayService
                     java.util.Arrays.<Object>asList(key, key + ":generation", receipt));
         } catch (RuntimeException unavailable) {
             // 若确定退款意图尚未提交，原结果仍待核；已提交意图由任务按原身份重放。
-            log.warn("[AiGateway] quota compensation unavailable key={}", key, unavailable);
+            log.warn("[AiGateway] quota compensation unavailable traceId={} code=COMPENSATION_UNAVAILABLE",
+                    receipt.substring(Math.max(0, receipt.length() - 32)));
         }
     }
 
@@ -473,6 +698,11 @@ public class AiGatewayServiceImpl implements AiGatewayService
             return null;
         }
 
+        return selectRoutedClient(providerName);
+    }
+
+    private LlmClient selectRoutedClient(String providerName)
+    {
         // 按 bean 名查找
         if (llmClientsByBeanName != null)
         {
@@ -572,8 +802,24 @@ public class AiGatewayServiceImpl implements AiGatewayService
         }
     }
 
+    private void saveGenerationLog(boolean prepared, String traceId, Long memberId, String role,
+            String bizType, String provider, String input, String output, int safetyFlag,
+            int latencyMs, int tokenIn, Integer tokenOut)
+    {
+        saveLog(traceId, memberId, role, bizType, provider,
+                prepared ? "sha256:" + CanonicalDigest.sha256Hex(input == null ? "" : input) : input,
+                prepared ? "sha256:" + CanonicalDigest.sha256Hex(output == null ? "" : output) : output,
+                safetyFlag, latencyMs, tokenIn, tokenOut, prepared);
+    }
+
     private void saveLog(String traceId, Long memberId, String role, String bizType, String provider,
                           String input, String output, int safetyFlag, int latencyMs, int tokenIn, Integer tokenOut)
+    {
+        saveLog(traceId, memberId, role, bizType, provider, input, output, safetyFlag, latencyMs, tokenIn, tokenOut, false);
+    }
+
+    private void saveLog(String traceId, Long memberId, String role, String bizType, String provider,
+            String input, String output, int safetyFlag, int latencyMs, int tokenIn, Integer tokenOut, boolean prepared)
     {
         try
         {
@@ -595,7 +841,8 @@ public class AiGatewayServiceImpl implements AiGatewayService
         }
         catch (Exception e)
         {
-            log.error("[AiGateway] log-failed", e);
+            if (prepared) log.error("[AiGateway] prepared-log-failed traceId={} code=LOG_UNAVAILABLE", traceId);
+            else log.error("[AiGateway] log-failed", e);
         }
     }
 

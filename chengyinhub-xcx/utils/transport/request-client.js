@@ -134,6 +134,11 @@ function createRequestClient(deps) {
   function requestControl(state) {
     if (state.control) return state.control;
     state.control = {
+      isAuthenticatedContinuationCurrent: function () {
+        if (state.aborted || state.sessionChanged || typeof state.renewalCurrent !== 'function'
+            || state.owner !== String(getUserID() || '') || state.authorization !== getAuthorization()) return false;
+        try { return state.renewalCurrent() === true; } catch (error) { return false; }
+      },
       abort: function () {
         if (state.aborted || state.sessionChanged) return;
         state.aborted = true;
@@ -240,6 +245,8 @@ function createRequestClient(deps) {
             if (ok) {
               if (result && typeof result.isCurrentSession === 'function' && !result.isCurrentSession()) { stopForSessionChange(); return; }
               state.authorization = getAuthorization();
+              state.renewalCurrent = result && typeof result.isCurrentSession === 'function'
+                ? function () { return result.isCurrentSession(); } : null;
               send(param, customSiteUrl, state); // 用新 token 重试原请求(共享 state 防二次重登)
             } else {
               hideToast();

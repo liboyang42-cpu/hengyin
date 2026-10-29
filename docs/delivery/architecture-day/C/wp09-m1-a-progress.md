@@ -1,0 +1,9 @@
+# C M1-A：共享准入机械迁移（完整B前不算WP09完成）
+
+本提交只将原14个准入实现归入PlayNodeAccessService：私有领域算法保留，公开不可变投影不含HTTP/Controller；Controller原签名改纯投影桥。findNodeProgressRow的id/status/picUrl和Context原验证报名id/purchaseKind均保留。原isNightNow/firstTicketMode在新owner内部，其他caller先后/事务未改，B1修后lead算法保留。
+
+测试只调整原必要owner装配，PlayNodeAccessTestFixtures在显式setField时重建真实service；后置runtime/progress/mapper替换立即重接，不在生产命令期间回读Controller。普通no-lead默认值仅测试mock；明确null/throwing lead负控不替换。保留原CurrentPlayRegistration锁读/BasicPlayCommandFixtures身份，不向生产增加null fallback。
+
+基线675a92合同，业务源码同9a2/6ec。完整unlock/定价/事务归位和direct应用测试将在独立M1-B提交，本A不单独请求WP09验收。root所有PlayHintUnlockMySqlIT没有改动，完整B依赖的review.patch单独交root；现有hint10夹具需随B调整。
+
+本轮仅源级检查/diff/秘密扫描；Java/JUnit/MySQL/Node/CI未执行。旧B1和hint10已过结果不借给此新source。无新DDL/依赖/@Lazy/CI baseline，不碰D/G资金/Theme/APPLIED/Photo共享夹具。回退只回到修后B1，不清业务数据或原账本身份。

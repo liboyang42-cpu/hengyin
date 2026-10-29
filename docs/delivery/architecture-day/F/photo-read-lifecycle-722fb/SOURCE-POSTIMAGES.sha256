@@ -1,0 +1,3 @@
+a4104da7a55d7f25aed169e6340535802537b241b47ffecc3c353685fafbba82  chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckIntentService.java
+76e93f19b2359e360d4f9b8ee7a25acc4d1f5c5ba58856c8607d10e0e050e939  chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/PhotoCheckIntentServiceTest.java
+df6be7424036cb4efec0a768b34161e34a72cc64df32cb2385fce7d75081721d  chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/PhotoCheckIntentFreshReadMySqlIT.java

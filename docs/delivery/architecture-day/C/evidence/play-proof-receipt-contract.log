@@ -1,0 +1,28 @@
+✔ 回执词典六态齐全，未知值 fail-closed 回 ready (2.166297ms)
+✔ ★unknown 文案不得出现成功/失败/已记录 —— 结果就是不知道 (0.48112ms)
+✔ 只有 submitting 和 unknown 持锁；只有 failed/ready 可重试 (0.144303ms)
+✔ ★负控：现场证据响应丢失 ⇒ 不解锁 busy，不写「失败」 (0.541679ms)
+✔ unknown 回读到「服务端已记下」⇒ 转 confirmed，不重发写请求 (0.276068ms)
+✔ unknown 回读到「节点没动」⇒ 转 failed 并放行重试 (0.292702ms)
+✔ retryProofReadback 只在 unknown 下生效，且只重读不重写 (0.155549ms)
+✔ 业务失败（非网络）仍走 failed，不冒充 unknown (0.17636ms)
+✔ 答题首次完成才显示奖励飞字 (1.84315ms)
+✔ ★重复提交 firstTime=false ⇒ 不再飞一次奖励 (0.320703ms)
+✔ ★负控：答题响应丢失 ⇒ unknown，锁住不放行重答 (0.387582ms)
+✔ 答题 unknown 读到原命令终态成功 ⇒ confirmed 且不编造 xp (0.641887ms)
+✔ 答题 unknown 无原命令终态 ⇒ 保持 unknown，不能凭实体未完成放行重答 (0.210941ms)
+✔ 答错(业务失败)仍走 failed，不冒充 unknown (0.154898ms)
+✔ ★后端必须下发 gameDone —— 没有它答题就没有权威回读 (1.590597ms)
+✔ ★状态条与主 CTA 同在固定容器里，不许漂回折叠线以下 (0.334123ms)
+✔ 状态色只落在圆点上，不整块染色 (0.253895ms)
+✔ ★5xx / 408 是「结果未知」,不是「答错了」 (0.763647ms)
+✔ 4xx 仍是明确的业务失败，不走回读 (0.446629ms)
+✔ ★unknown 期间关掉弹层再打开，业务锁不得被抹掉 (0.339682ms)
+ℹ tests 20
+ℹ suites 0
+ℹ pass 20
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 24.028015

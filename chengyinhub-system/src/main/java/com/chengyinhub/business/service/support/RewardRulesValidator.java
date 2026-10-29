@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.HashSet;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -30,6 +32,22 @@ public class RewardRulesValidator {
     private static final int MAX_JSON_LENGTH = 4000;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
+
+    /** Only collect validated resource references; ownership remains in the existing write-owner service. */
+    public Set<Long> couponIds(String rawJson) {
+        String normalized = validateAndNormalize(rawJson);
+        if (normalized == null) return Collections.emptySet();
+        Set<Long> ids = new LinkedHashSet<>();
+        try {
+            for (JsonNode rule : objectMapper.readTree(normalized)) {
+                long id = rule.path("couponId").asLong(0L);
+                if (id > 0) ids.add(id);
+            }
+        } catch (com.fasterxml.jackson.core.JsonProcessingException impossible) {
+            throw new IllegalStateException("已校验奖励规则无法读取", impossible);
+        }
+        return Collections.unmodifiableSet(ids);
+    }
 
     /**
      * @return 规范化后的紧凑 JSON;空配置返回 null(表示"没有条件奖励")

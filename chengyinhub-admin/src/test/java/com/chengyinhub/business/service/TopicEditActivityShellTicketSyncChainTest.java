@@ -74,6 +74,9 @@ class TopicEditActivityShellTicketSyncChainTest {
     private OmsTicketMapper ticketMapper;
     private OmsTicketServiceImpl ticketService;
     private CmsTopicServiceImpl topicService;
+    private final java.util.Map<Long,com.chengyinhub.business.domain.CmsTopicChapter> publicationChapters=new java.util.LinkedHashMap<>();
+    private final java.util.Map<Long,com.chengyinhub.business.domain.CmsTopicNode> publicationNodes=new java.util.LinkedHashMap<>();
+    private final AtomicLong publicationSequence=new AtomicLong(20000L);
 
     @BeforeEach
     void setUp() {
@@ -98,10 +101,9 @@ class TopicEditActivityShellTicketSyncChainTest {
                 invocation -> "lockTopic".equals(invocation.getMethod().getName())
                         ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(topicService, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
                         : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
-        ReflectionTestUtils.setField(topicService, "quotaService", mock(IQuotaService.class));
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(topicService, "quotaService", mock(IQuotaService.class));
         ReflectionTestUtils.setField(topicService, "settlementDebtLedger", mock(com.chengyinhub.business.service.support.SettlementDebtLedger.class));
         when(topicMapper.updateCmsTopic(any())).thenReturn(1);
-        when(topicMapper.publishRouteSnapshot(any(), any(), any())).thenReturn(1);
         ReflectionTestUtils.setField(topicService, "cmsTopicMapper", topicMapper);
         ReflectionTestUtils.setField(topicService, "cmsActivityMapper", activityMapper);
         ReflectionTestUtils.setField(topicService, "omsTicketMapper", ticketMapper);
@@ -121,7 +123,7 @@ class TopicEditActivityShellTicketSyncChainTest {
                         mock(com.chengyinhub.business.mapper.MerchantChapterOfferMapper.class),topicMapper);
         ReflectionTestUtils.setField(topicService, "commercialTopicPolicy", actualPolicy);
         ReflectionTestUtils.setField(ticketService, "commercialTopicPolicy", actualPolicy);
-        ReflectionTestUtils.setField(topicService, "omsTicketService", ticketService);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(topicService, "omsTicketService", ticketService);
 
         CmsRegistrationMapper registrationMapper = mock(CmsRegistrationMapper.class);
         // 主题层零报名 ⇒ assertTopicDeletable 放行(自办主题的销售在活动层,这道闸本来就看不见)
@@ -150,7 +152,11 @@ class TopicEditActivityShellTicketSyncChainTest {
         when(activityMapper.selectCmsActivityList(any()))
                 .thenReturn(new ArrayList<>(Collections.singletonList(activity)));
         when(activityMapper.selectCmsActivityById(ACTIVITY)).thenReturn(activity);
+        wirePublicationContent();
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(topicService);
+        ReflectionTestUtils.setField(topicService, "themeStateKeyService", new com.chengyinhub.business.service.support.ThemeStateKeyService(
+                mock(com.chengyinhub.business.mapper.ThemeStateKeyMapper.class)));
+        topicService = com.chengyinhub.business.service.support.TopicPublicationTestWiring.transactional(topicService);
     }
 
     // ---------- P1 ----------
@@ -161,7 +167,7 @@ class TopicEditActivityShellTicketSyncChainTest {
         Long shellTicketId = seedShellTicket(topicTicketId, LUNCH, PRICE, 30L, 5L);
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(topicService);
-        topicService.updateTopicByOwner(dtoWithTickets(ticketRequest(LUNCH, PRICE, 40)), ME, "me");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(topicService).updateTopicByOwner(dtoWithTickets(ticketRequest(LUNCH, PRICE, 40)), ME, "me");
 
         OmsTicket shell = row(shellTicketId);
         assertNotNull(shell, "已售壳票不能被删:它被订单的 ticket_id 引用");
@@ -170,6 +176,7 @@ class TopicEditActivityShellTicketSyncChainTest {
         assertEquals(Long.valueOf(15L), shell.getRemainingInventory(),
                 "原票已售 25 张，总量 30 改 40 后余席只能是 15，不能复活成 40");
         assertNotNull(row(topicTicketId), "主题票必须原地保留 id，否则同步键在同步之前就没了");
+        assertRealPublishedContent(TOPIC);
     }
 
     @Test
@@ -178,7 +185,7 @@ class TopicEditActivityShellTicketSyncChainTest {
         Long shellTicketId = seedShellTicket(topicTicketId, LUNCH, PRICE, 30L, 5L);
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(topicService);
-        topicService.updateTopicByOwner(dtoWithTickets(ticketRequest(LUNCH, PRICE, 30)), ME, "me");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(topicService).updateTopicByOwner(dtoWithTickets(ticketRequest(LUNCH, PRICE, 30)), ME, "me");
 
         assertEquals(2, ticketRows.size(), "未改票不得增删任何一行");
         assertNotNull(row(topicTicketId));
@@ -192,7 +199,7 @@ class TopicEditActivityShellTicketSyncChainTest {
         Long shellTicketId = seedShellTicket(topicTicketId, LUNCH, PRICE, 30L, 5L);
 
         ServiceException error = assertThrows(ServiceException.class,
-                () -> topicService.updateTopicByOwner(
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(topicService).updateTopicByOwner(
                         dtoWithTickets(ticketRequest("探店日晚场", PRICE, 20)), ME, "me"));
 
         assertEquals(409, error.getCode());
@@ -207,7 +214,7 @@ class TopicEditActivityShellTicketSyncChainTest {
         Long shellTicketId = seedShellTicket(topicTicketId, LUNCH, PRICE, 30L, 30L);
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(topicService);
-        topicService.updateTopicByOwner(dtoWithTickets(ticketRequest("探店日晚场", PRICE, 20)), ME, "me");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(topicService).updateTopicByOwner(dtoWithTickets(ticketRequest("探店日晚场", PRICE, 20)), ME, "me");
 
         assertNull(row(topicTicketId), "被移出编辑的主题票要真删掉");
         assertNull(row(shellTicketId), "未售孤儿壳票必须被条件删除清掉");
@@ -219,7 +226,7 @@ class TopicEditActivityShellTicketSyncChainTest {
         Long foreignTicketId = seedTopicTicket(OTHER_TOPIC, LUNCH, PRICE, 30L);
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(topicService);
-        topicService.updateTopicByOwner(dtoWithTickets(ticketRequest(LUNCH, PRICE, 30)), ME, "me");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(topicService).updateTopicByOwner(dtoWithTickets(ticketRequest(LUNCH, PRICE, 30)), ME, "me");
 
         OmsTicket foreign = row(foreignTicketId);
         assertNotNull(foreign, "别的主题的同名同价票不得被本次编辑接管");
@@ -235,7 +242,7 @@ class TopicEditActivityShellTicketSyncChainTest {
         Long shellTicketId = seedShellTicket(topicTicketId, LUNCH, PRICE, 30L, 5L);
 
         ServiceException error = assertThrows(ServiceException.class,
-                () -> topicService.updateTopicByOwner(
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(topicService).updateTopicByOwner(
                         dtoWithTickets(ticketRequest(LUNCH, new BigDecimal("99.00"), 30)), ME, "me"));
 
         assertEquals(409, error.getCode());
@@ -251,7 +258,7 @@ class TopicEditActivityShellTicketSyncChainTest {
         Long secondShell = seedShellTicket(second, LUNCH, PRICE, 30L, 30L);
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(topicService);
-        topicService.updateTopicByOwner(
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(topicService).updateTopicByOwner(
                 dtoWithTickets(ticketRequest(LUNCH, PRICE, 30), ticketRequest(LUNCH, PRICE, 30)), ME, "me");
 
         assertEquals(4, ticketRows.size(), "同键重复票按 id 升序做多重集配对，不得因歧义把主题卡成不可编辑");
@@ -268,7 +275,7 @@ class TopicEditActivityShellTicketSyncChainTest {
         org.mockito.Mockito.doReturn(0).when(ticketMapper).updateTopicTicketOnRebuild(any(OmsTicket.class));
 
         ServiceException error = assertThrows(ServiceException.class,
-                () -> topicService.updateTopicByOwner(dtoWithTickets(ticketRequest(LUNCH, PRICE, 40)), ME, "me"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(topicService).updateTopicByOwner(dtoWithTickets(ticketRequest(LUNCH, PRICE, 40)), ME, "me"));
 
         assertEquals(409, error.getCode());
         assertTrue(error.getMessage().contains("TOPIC_TICKET_REBUILD_RACE"), error.getMessage());
@@ -286,7 +293,7 @@ class TopicEditActivityShellTicketSyncChainTest {
                 .deleteUnsoldActivityOrphanTicket(any(), any(), any());
 
         ServiceException error = assertThrows(ServiceException.class,
-                () -> topicService.updateTopicByOwner(
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(topicService).updateTopicByOwner(
                         dtoWithTickets(ticketRequest("探店日晚场", PRICE, 20)), ME, "me"));
 
         assertEquals(409, error.getCode());
@@ -300,7 +307,7 @@ class TopicEditActivityShellTicketSyncChainTest {
         Long shellTicketId = seedShellTicket(foreignTicketId, LUNCH, PRICE, 30L, 5L);
 
         ServiceException error = assertThrows(ServiceException.class,
-                () -> topicService.updateTopicByOwner(dtoWithTickets(ticketRequest(LUNCH, PRICE, 30)), ME, "me"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(topicService).updateTopicByOwner(dtoWithTickets(ticketRequest(LUNCH, PRICE, 30)), ME, "me"));
 
         assertEquals(409, error.getCode());
         assertTrue(error.getMessage().contains("ORPHAN_ALREADY_SOLD"), error.getMessage());
@@ -323,7 +330,7 @@ class TopicEditActivityShellTicketSyncChainTest {
         ticketMapper.insertOmsTicket(foreignShell);
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(topicService);
-        topicService.updateTopicByOwner(dtoWithTickets(ticketRequest(LUNCH, PRICE, 40)), ME, "me");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(topicService).updateTopicByOwner(dtoWithTickets(ticketRequest(LUNCH, PRICE, 40)), ME, "me");
 
         assertEquals(Long.valueOf(30L), row(foreignShell.getId()).getTotalInventory(),
                 "同步只准动本活动的壳票:别的活动的壳票不在 owner scope 内");
@@ -354,7 +361,7 @@ class TopicEditActivityShellTicketSyncChainTest {
 
         // ② 写侧没被毒到:主题编辑仍然点得动
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(topicService);
-        topicService.updateTopicByOwner(dtoWithTickets(ticketRequest(LUNCH, PRICE, 30)), ME, "me");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(topicService).updateTopicByOwner(dtoWithTickets(ticketRequest(LUNCH, PRICE, 30)), ME, "me");
         assertEquals(topicTicketId, row(shellTicketId).getSourceTicketId());
     }
 
@@ -405,7 +412,7 @@ class TopicEditActivityShellTicketSyncChainTest {
         }
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(topicService);
-        topicService.updateTopicByOwner(classicDto(ticketRequest(LUNCH, PRICE, 30)), ME, "me");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(topicService).updateTopicByOwner(classicDto(ticketRequest(LUNCH, PRICE, 30)), ME, "me");
 
         assertEquals(topicTicketId, row(selfHostClassicShellTicketId).getSourceTicketId(),
                 "自办①主题的壳票必须仍钉在同一张主题票上");
@@ -525,7 +532,7 @@ class TopicEditActivityShellTicketSyncChainTest {
         dto.setId(OTHER_TOPIC);
         dto.setName("经典定向");
         dto.setProductType(ProductType.ORIENTEERING);
-        dto.setChapters(new ArrayList<>());
+        dto.setChapters(publicationContent(OTHER_TOPIC));
         dto.setTickets(new ArrayList<>(java.util.Arrays.asList(tickets)));
         return dto;
     }
@@ -565,7 +572,7 @@ class TopicEditActivityShellTicketSyncChainTest {
         dto.setName("探店日");
         dto.setProductType(ProductType.FREE_EXPLORE);
         dto.setRecruitDeadline(new Date(1_790_000_000_000L));
-        dto.setChapters(new ArrayList<>());
+        dto.setChapters(publicationContent(TOPIC));
         dto.setTickets(new ArrayList<>(java.util.Arrays.asList(tickets)));
         return dto;
     }
@@ -773,5 +780,109 @@ class TopicEditActivityShellTicketSyncChainTest {
         OmsTicket target = new OmsTicket();
         org.springframework.beans.BeanUtils.copyProperties(source, target);
         return target;
+    }
+
+    /** Current content rows shared by authoring, publication checks and the real compiler. */
+    private void wirePublicationContent() {
+        var chapters = (com.chengyinhub.business.mapper.CmsTopicChapterMapper)
+                ReflectionTestUtils.getField(topicService,"cmsTopicChapterMapper");
+        var nodes = (com.chengyinhub.business.mapper.CmsTopicNodeMapper)
+                ReflectionTestUtils.getField(topicService,"cmsTopicNodeMapper");
+        Object originalTemplates=com.chengyinhub.business.service.support.TopicPublicationTestWiring.get(topicService,"cmsMemberTemplateMapper");
+        final var templates = originalTemplates==null
+                ? org.mockito.Mockito.mock(com.chengyinhub.business.mapper.CmsMemberTemplateMapper.class)
+                : (com.chengyinhub.business.mapper.CmsMemberTemplateMapper)originalTemplates;
+        var template = new com.chengyinhub.business.domain.CmsMemberTemplate();
+        template.setId(77001L);template.setMemberId(ME);template.setTitle("营业时间核对");template.setStatus(1L);
+        template.setDraftStatus(1);template.setPublishStatus(1L);template.setCheckStatus(1);template.setDelFlag(0);
+        template.setValidationMethod(1);template.setQuestionName("场地何时开放？");template.setQuestionAnswer("18:00");
+        template.setAdvancedConfigJson(new com.chengyinhub.business.service.support.AdvancedGameConfigValidator().validateAndNormalize(
+                "{\"schemaVersion\":1,\"qa\":{\"enabled\":true,\"mode\":\"TYPE\",\"title\":\"场地何时开放？\",\"answerText\":\"18:00\",\"maxTries\":0,\"xp\":0}}"));
+        org.mockito.Mockito.when(templates.selectCmsMemberTemplateById(org.mockito.ArgumentMatchers.anyLong()))
+                .thenAnswer(call -> template.getId().equals(call.getArgument(0)) ? template : null);
+        org.mockito.Mockito.when(templates.selectCmsMemberTemplateByIds(org.mockito.ArgumentMatchers.anyList()))
+                .thenAnswer(call -> {
+                    java.util.List<Long> ids=call.getArgument(0);
+                    return ids.contains(template.getId()) ? java.util.List.of(template) : java.util.List.of();
+                });
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(topicService,"cmsMemberTemplateMapper",templates);
+        var chapter = new com.chengyinhub.business.domain.CmsTopicChapter();
+        chapter.setId(701L);chapter.setTopicId(TOPIC);chapter.setName("入场核对");chapter.setSortId(1L);chapter.setRequired(1);
+        publicationChapters.put(chapter.getId(),chapter);
+        var node = new com.chengyinhub.business.domain.CmsTopicNode();
+        node.setId(702L);node.setTopicId(TOPIC);node.setChapterId(chapter.getId());node.setTemplateId(template.getId());
+        node.setName("营业时间核对");node.setStatus(1L);node.setSortId(1L);
+        publicationNodes.put(node.getId(),node);
+        org.mockito.Mockito.doAnswer(call -> {
+            com.chengyinhub.business.domain.CmsTopicChapter query=call.getArgument(0);
+            return new java.util.ArrayList<>(publicationChapters.values().stream()
+                    .filter(row -> query != null && row.getTopicId().equals(query.getTopicId())).toList());
+        }).when(chapters).selectCmsTopicChapterList(org.mockito.ArgumentMatchers.any());
+        org.mockito.Mockito.doAnswer(call -> publicationChapters.get(call.getArgument(0)))
+                .when(chapters).selectCmsTopicChapterById(org.mockito.ArgumentMatchers.anyLong());
+        org.mockito.Mockito.doAnswer(call -> {
+            com.chengyinhub.business.domain.CmsTopicChapter row=call.getArgument(0);
+            row.setId(publicationSequence.incrementAndGet());publicationChapters.put(row.getId(),row);return 1;
+        }).when(chapters).insertCmsTopicChapter(org.mockito.ArgumentMatchers.any());
+        org.mockito.Mockito.doAnswer(call -> publicationChapters.remove(call.getArgument(0)) == null ? 0 : 1)
+                .when(chapters).deleteCmsTopicChapterById(org.mockito.ArgumentMatchers.anyLong());
+        org.mockito.Mockito.doAnswer(call -> {
+            com.chengyinhub.business.domain.CmsTopicNode query=call.getArgument(0);
+            return new java.util.ArrayList<>(publicationNodes.values().stream()
+                    .filter(row -> query != null && row.getTopicId().equals(query.getTopicId())
+                            && (query.getStatus()==null || query.getStatus().equals(row.getStatus()))).toList());
+        }).when(nodes).selectCmsTopicNodeList(org.mockito.ArgumentMatchers.any());
+        org.mockito.Mockito.doAnswer(call -> publicationNodes.get(call.getArgument(0)))
+                .when(nodes).selectCmsTopicNodeById(org.mockito.ArgumentMatchers.anyLong());
+        org.mockito.Mockito.doAnswer(call -> {
+            com.chengyinhub.business.domain.CmsTopicNode row=call.getArgument(0);
+            row.setId(publicationSequence.incrementAndGet());publicationNodes.put(row.getId(),row);return 1;
+        }).when(nodes).insertCmsTopicNode(org.mockito.ArgumentMatchers.any());
+        org.mockito.Mockito.doAnswer(call -> publicationNodes.remove(call.getArgument(0)) == null ? 0 : 1)
+                .when(nodes).deleteCmsTopicNodeById(org.mockito.ArgumentMatchers.anyLong());
+        org.mockito.Mockito.doAnswer(call -> {
+            CmsTopic patch=call.getArgument(0);CmsTopic row=topicMapper.selectCmsTopicById(patch.getId());
+            if(row==null)return 0;
+            var source=new org.springframework.beans.BeanWrapperImpl(patch);
+            var target=new org.springframework.beans.BeanWrapperImpl(row);
+            for(var property:source.getPropertyDescriptors()) {
+                String name=property.getName();
+                if(source.isReadableProperty(name) && target.isWritableProperty(name)
+                        && source.getPropertyValue(name)!=null)target.setPropertyValue(name,source.getPropertyValue(name));
+            }
+            return 1;
+        }).when(topicMapper).updateCmsTopic(org.mockito.ArgumentMatchers.any());
+        org.mockito.Mockito.doAnswer(call -> {
+            CmsTopic row=topicMapper.selectCmsTopicById(call.getArgument(0));if(row==null)return 0;
+            String snapshot=call.getArgument(1);assertTrue(snapshot!=null && !snapshot.isBlank());
+            row.setPublishedRouteGraphJson(snapshot);
+            row.setPublishedConfigVersion(row.getPublishedConfigVersion()==null ? 1L : row.getPublishedConfigVersion()+1);
+            return 1;
+        }).when(topicMapper).publishRouteSnapshot(org.mockito.ArgumentMatchers.anyLong(),org.mockito.ArgumentMatchers.anyString(),org.mockito.ArgumentMatchers.any());
+    }
+
+    private java.util.List<com.chengyinhub.business.domain.dto.ChapterDTO> publicationContent(Long topicId) {
+        var chapter=new com.chengyinhub.business.domain.dto.ChapterDTO();chapter.setName("入场核对");chapter.setRequired(1);
+        chapter.setAtmospherePreset(com.chengyinhub.business.util.ChapterAtmospherePreset.DEFAULT);
+        publicationChapters.values().stream().filter(row -> topicId.equals(row.getTopicId())).findFirst()
+                .ifPresent(row -> chapter.setId(row.getId()));
+        var node=new com.chengyinhub.business.domain.dto.NodeDTO();node.setName("营业时间核对");
+        node.setTemplateId(77001L);node.setLongitude("121.0");node.setLatitude("31.0");
+        publicationNodes.values().stream().filter(row -> topicId.equals(row.getTopicId())).findFirst()
+                .ifPresent(row -> node.setId(row.getId()));
+        chapter.setNodes(java.util.List.of(node));return java.util.List.of(chapter);
+    }
+
+    private void assertRealPublishedContent(Long topicId) {
+        var row=topicMapper.selectCmsTopicById(topicId);
+        var snapshot=org.junit.jupiter.api.Assertions.assertDoesNotThrow(() ->
+                new com.fasterxml.jackson.databind.ObjectMapper().readTree(row.getPublishedRouteGraphJson()));
+        assertEquals(1,snapshot.path("runtimeSnapshotVersion").asInt());
+        assertEquals(1,snapshot.path("stateKeySnapshotVersion").asInt());
+        assertEquals(1,snapshot.path("nodeAnswers").size());
+        var content=snapshot.path("nodeAnswers").elements().next();
+        assertEquals(77001L,content.path("templateId").asLong());
+        assertEquals(topicId.longValue(),content.path("nodePresentation").path("topicId").asLong());
+        assertEquals("18:00",content.path("questionAnswer").asText());
     }
 }

@@ -1,0 +1,65 @@
+{
+  "run_id": 40096453368,
+  "source_sha": "477696c8eb2fa24bd3d7febc896415bf0d1b67c0",
+  "verdict": "FAIL",
+  "totals": {
+    "tests": 163,
+    "passed": 128,
+    "failures": 21,
+    "errors": 14,
+    "skipped": 0
+  },
+  "classes": [
+    {
+      "class": "com.chengyinhub.business.it.Wp04OriginalRefundMySqlIT",
+      "executed": {
+        "tests": 12,
+        "passed": 12,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "cleanup": "CLEAN"
+    },
+    {
+      "class": "com.chengyinhub.business.it.RegistrationTopicFenceMySqlIT",
+      "executed": {
+        "tests": 46,
+        "passed": 42,
+        "failures": 0,
+        "errors": 4,
+        "skipped": 0
+      },
+      "cleanup": "CLEAN"
+    },
+    {
+      "class": "com.chengyinhub.business.service.RegistrationFundsMybatisIntegrationTest",
+      "executed": {
+        "tests": 96,
+        "passed": 74,
+        "failures": 21,
+        "errors": 1,
+        "skipped": 0
+      },
+      "cleanup": "CLEAN"
+    },
+    {
+      "class": "com.chengyinhub.business.service.RefundNotificationMybatisIntegrationTest",
+      "executed": {
+        "tests": 9,
+        "passed": 0,
+        "failures": 0,
+        "errors": 9,
+        "skipped": 0
+      },
+      "cleanup": "CLEAN"
+    }
+  ],
+  "classification": [
+    "OriginalRefund12 PASS after canonical-prerequisite repair",
+    "TopicFence46:42PASS4ERROR; fixture omitted existing 20260919 nullable-ticket migration",
+    "RefundNotification9:9sharedseed/schemaERROR before original scenarios",
+    "Funds96:74PASS21FAIL1ERROR; B owner assigned complete prerequisite/seed/proof-order audit. Do not label all as fixture or business defects until traced."
+  ],
+  "next": "Batch repair all known real fact factories including newB9d prerequisites before another Java run. Original13PASS at8d and27 unrelated partial passes are scoped historical evidence, not191 integrated PASS."
+}

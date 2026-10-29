@@ -1,0 +1,3 @@
+PASS: project secret-file-gate scan_paths on 28 candidate paths
+PASS: literal credential pattern scan on changed source/test/schema paths
+Gitleaks binary unavailable; this is not a full entropy or historical scan.

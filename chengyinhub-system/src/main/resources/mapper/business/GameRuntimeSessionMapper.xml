@@ -87,7 +87,7 @@
         limit 1
     </select>
 
-    <select id="selectByIdForUpdate" resultMap="GameRuntimeSessionResult">
+    <select id="selectByIdForUpdate" resultMap="GameRuntimeSessionResult" useCache="false" flushCache="true">
         select <include refid="columns"/> from game_runtime_session s where s.id=#{id} for update
     </select>
     <select id="selectAccessibleById" resultMap="GameRuntimeSessionResult">
@@ -101,6 +101,18 @@
         )
         limit 1
     </select>
+    <select id="selectAccessibleByIdForUpdate" useCache="false" flushCache="true" resultMap="GameRuntimeSessionResult">
+        select <include refid="columns"/> from game_runtime_session s
+        where s.id=#{id} and (
+          (s.owner_type=1 and s.owner_id=#{memberId})
+          or (s.owner_type=2 and exists (
+              select 1 from play_team_member m
+              where m.team_id=s.owner_id and m.member_id=#{memberId} and m.status=1 for update
+          ))
+        )
+        limit 1 for update
+    </select>
+
 
     <select id="selectStateJsonsByTopic" resultType="java.lang.String">
         select s.state_json from game_runtime_session s
@@ -126,6 +138,16 @@
               where r.member_id=s.owner_id and s.owner_type=1 and r.topic_id=s.topic_id and r.activity_id=s.activity_id
               order by r.id desc limit 1),'default')
         limit 1
+    </select>
+
+    <select id="selectDefaultMemberSessionsByTopic" resultMap="GameRuntimeSessionResult">
+        select <include refid="columns"/> from game_runtime_session s
+        where s.activity_id=#{activityId} and s.topic_id=#{topicId} and s.play_instance_id='default'
+          and ((s.owner_type=1 and s.owner_id=#{memberId})
+            or (s.owner_type=2 and exists (
+                select 1 from play_team_member m
+                where m.team_id=s.owner_id and m.member_id=#{memberId} and m.status=1)))
+        order by s.id
     </select>
 
     <select id="selectPlayerSessionsByTopic" resultMap="GameRuntimeSessionResult">
@@ -193,15 +215,6 @@
             </otherwise>
         </choose>
         limit #{limit}
-    </select>
-    <select id="selectDefaultMemberSessionsByTopic" resultMap="GameRuntimeSessionResult">
-        select <include refid="columns"/> from game_runtime_session s
-        where s.activity_id=#{activityId} and s.topic_id=#{topicId} and s.play_instance_id='default'
-          and ((s.owner_type=1 and s.owner_id=#{memberId})
-            or (s.owner_type=2 and exists (
-                select 1 from play_team_member m
-                where m.team_id=s.owner_id and m.member_id=#{memberId} and m.status=1)))
-        order by s.id
     </select>
 
 </mapper>

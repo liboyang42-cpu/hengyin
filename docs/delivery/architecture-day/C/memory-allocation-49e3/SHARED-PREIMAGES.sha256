@@ -1,0 +1,2 @@
+30472ff19e963b56c607ba70ee047280eceea672267401a3a4a9bc686cc5def0  chengyinhub-framework/src/main/java/com/chengyinhub/framework/config/MyBatisConfig.java
+94b9c08d95af1ada6d610e69b673ac2b1d984519f981e4d54c6c0999b4ccf38d  chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/OpenAiCompatibleLlmClient.java

@@ -24,6 +24,7 @@ function loadDetail() {
     getApp: () => app,
     Page(p) { definition = p },
     require(request) {
+      if (request === '../../../utils/registration-seat.js') return require('../../utils/registration-seat.js')
       const modules = {
         '../../../utils/motion.js': require('../../utils/motion.js'),
         '../../../utils/media-preview.js': require('../../utils/media-preview.js'),  // 本线俱乐部详情图片预览(#293)

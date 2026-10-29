@@ -1,5 +1,12 @@
 package com.chengyinhub.business.longrun;
 
+import com.chengyinhub.business.domain.CmsActivity;
+import com.chengyinhub.business.domain.dto.RegistrationCancellationPayments;
+import com.chengyinhub.business.mapper.CmsActivityMapper;
+import com.chengyinhub.business.mapper.CmsTopicMapper;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
+import org.springframework.test.util.ReflectionTestUtils;
+
 import com.chengyinhub.business.access.club.ClubAccessContext;
 import com.chengyinhub.business.access.club.ClubPermission;
 import com.chengyinhub.business.access.club.ClubRoleCode;
@@ -61,7 +68,8 @@ class E01_16Test {
         dataSource.setUsername("sa"); dataSource.setPassword("");
         jdbc = new JdbcTemplate(dataSource);
         jdbc.execute("create table club(id bigint primary key, member_id bigint)");
-        jdbc.execute("create table cms_activity(id bigint primary key,club_id bigint,del_flag int,"
+        jdbc.execute("create table cms_topic(id bigint primary key,member_id bigint)");
+        jdbc.execute("create table cms_activity(id bigint primary key,club_id bigint,member_id bigint,topic_id bigint,del_flag int,"
                 + "status int,publish_status int,cancel_time timestamp,cancel_reason varchar(255))");
         jdbc.execute("create table cms_registration(id bigint primary key,owner_type int,owner_id bigint,"
                 + "member_id bigint,payment_status int,registration_status int)");
@@ -88,7 +96,8 @@ class E01_16Test {
         jdbc.execute("create table club_event_notification_outbox(delivery_id bigint primary key,status varchar(24),"
                 + "next_attempt_at timestamp,create_time timestamp,update_time timestamp)");
         jdbc.update("insert into club values(21,42)");
-        jdbc.update("insert into cms_activity(id,club_id,del_flag,status,publish_status) values(71,21,0,1,1)");
+        jdbc.update("insert into cms_topic values(31,42)");
+        jdbc.update("insert into cms_activity(id,club_id,member_id,topic_id,del_flag,status,publish_status) values(71,21,42,31,0,1,1)");
         jdbc.update("insert into cms_registration values(401,2,71,101,2,2)");
         jdbc.update("insert into club_event_series(id,club_id,topic_id,status,version) values(61,21,31,'ACTIVE',0)");
         jdbc.update("insert into club_event_occurrence(id,series_id,activity_id,status,version) values(81,61,71,'ACTIVE',0)");
@@ -164,8 +173,20 @@ class E01_16Test {
         when(roles.revokeEventLeadForCancelledOccurrence(any(), any(), any(), any()))
                 .thenAnswer(call -> jdbc.update("update role_fixture set active=0 where id=1"));
         ITeamGroupService refundStub = mock(ITeamGroupService.class);
-        when(refundStub.cancelActivityByClubOperator(ACTIVITY, OWNER, ACTOR, "场地临时关闭")).thenAnswer(call -> {
+        RegistrationCancellationPayments payments = new RegistrationCancellationPayments(java.util.List.of(
+                new RegistrationCancellationPayments.Scope(2L, ACTIVITY, 31L, OWNER, CLUB, java.util.List.of())));
+        when(refundStub.captureCancellationPayments(2L, ACTIVITY)).thenAnswer(call -> {
             assertTrue(TransactionSynchronizationManager.isActualTransactionActive());
+            assertTrue(TransactionSynchronizationManager.hasResource(dataSource));
+            return payments;
+        });
+        when(refundStub.observeCancellationPayments(payments)).thenAnswer(call -> {
+            assertFalse(TransactionSynchronizationManager.isActualTransactionActive());
+            return payments; // 已付款领域夹具没有需要 SDK 查证的 PAYING 原单。
+        });
+        when(refundStub.cancelActivityWithObservedPayments(ACTIVITY, OWNER, ACTOR, "场地临时关闭", false, payments)).thenAnswer(call -> {
+            assertTrue(TransactionSynchronizationManager.isActualTransactionActive());
+            assertTrue(TransactionSynchronizationManager.hasResource(dataSource));
             refundCalls.incrementAndGet();
             assertEquals(1, jdbc.update("update cms_activity set status=0,publish_status=0,cancel_time=now() where id=71"));
             assertEquals(1, jdbc.update("update cms_registration set payment_status=3,registration_status=3 where id=401"));
@@ -173,9 +194,37 @@ class E01_16Test {
         });
         ClubEventOpsServiceImpl target = new ClubEventOpsServiceImpl(access, new ClubEventScheduleMaterializer(),
                 mock(IClubSessionService.class), probed, mock(ClubMemberMapper.class), mock(ClubLeadMapper.class), roles, refundStub);
+        DataSourceTransactionManager transactions = new DataSourceTransactionManager(dataSource);
+        ReflectionTestUtils.setField(target, "cancellationTransactions", transactions);
+        CmsActivityMapper activities = mock(CmsActivityMapper.class);
+        when(activities.selectCmsActivityById(ACTIVITY)).thenAnswer(call -> {
+            java.util.List<CmsActivity> current = jdbc.query(
+                    "select id,member_id,club_id,topic_id from cms_activity where id=?",
+                    new BeanPropertyRowMapper<>(CmsActivity.class), ACTIVITY);
+            return current.isEmpty() ? null : current.getFirst();
+        });
+        when(activities.selectCmsActivityByIdForUpdate(ACTIVITY)).thenAnswer(call -> {
+            assertTrue(TransactionSynchronizationManager.isActualTransactionActive());
+            assertTrue(TransactionSynchronizationManager.hasResource(dataSource));
+            java.util.List<CmsActivity> current = jdbc.query(
+                    "select id,member_id,club_id,topic_id from cms_activity where id=? for update",
+                    new BeanPropertyRowMapper<>(CmsActivity.class), ACTIVITY);
+            return current.isEmpty() ? null : current.getFirst();
+        });
+        ReflectionTestUtils.setField(target, "cancellationActivityMapper", activities);
+        CmsTopicMapper topics = mock(CmsTopicMapper.class);
+        when(topics.selectCmsTopicByIdForUpdate(31L)).thenAnswer(call -> {
+            assertTrue(TransactionSynchronizationManager.isActualTransactionActive());
+            assertTrue(TransactionSynchronizationManager.hasResource(dataSource));
+            java.util.List<com.chengyinhub.business.domain.CmsTopic> current = jdbc.query(
+                    "select id,member_id from cms_topic where id=? for update",
+                    new BeanPropertyRowMapper<>(com.chengyinhub.business.domain.CmsTopic.class), 31L);
+            return current.isEmpty() ? null : current.getFirst();
+        });
+        ReflectionTestUtils.setField(target, "cancellationTopicMapper", topics);
         ProxyFactory factory = new ProxyFactory(target);
         factory.setInterfaces(IClubEventOpsService.class);
-        factory.addAdvice(new TransactionInterceptor(new DataSourceTransactionManager(dataSource),
+        factory.addAdvice(new TransactionInterceptor(transactions,
                 new AnnotationTransactionAttributeSource()));
         return (IClubEventOpsService) factory.getProxy();
     }

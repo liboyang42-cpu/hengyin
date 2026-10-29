@@ -1,6 +1,7 @@
 package com.chengyinhub.business.service;
 
 import com.chengyinhub.business.domain.CmsRegistration;
+import com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent;
 
 import java.math.BigDecimal;
 import java.util.Map;
@@ -8,7 +9,7 @@ import java.util.Map;
 /**
  * 微信支付服务接口
  */
-public interface IWechatPayService {
+public interface IWechatPayService extends WechatPaymentOperations {
     /** 支付下单、回调验签和退款服务是否都已就绪。 */
     boolean isReady();
 
@@ -59,6 +60,9 @@ public interface IWechatPayService {
     /** 原路退款的渠道归属与金额事实；NOT_FOUND 只用于渠道明确不存在。 */
     java.util.Map<String,String> queryRefundFacts(String outRefundNo);
 
+    /** Query under the original persisted payment success, never another merchant/app/attempt. Null remains UNKNOWN. */
+    java.util.Map<String,String> queryRefundFacts(com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference originalPayment, String outRefundNo);
+
     /** 主动查微信退款态并回写本地 payout(P3 回调的拉取兜底 / admin 刷新)。返回查到的状态。 */
     String refreshPayoutFromWx(String outRefundNo);
 
@@ -82,6 +86,9 @@ public interface IWechatPayService {
     /** Must run inside the domain mutation transaction. Locks business then latest attempt; false means stale. */
     boolean lockPaymentAttemptForUpdate(String businessOutTradeNo, String observedWxOutTradeNo);
 
+    /** Additional predicate for domain CLOSED CAS only; caller must already have verified original CLOSED evidence. */
+    boolean lockClosablePaymentAttemptForUpdate(String businessOutTradeNo, String observedWxOutTradeNo);
+
 
     /**
      * 微信原路退款(退回付款人原支付账户)。
@@ -94,6 +101,10 @@ public interface IWechatPayService {
      */
     RefundRequestResult submitRefund(String outTradeNo, String outRefundNo, BigDecimal refundAmount,
                                      BigDecimal totalAmount, String reason);
+
+    /** Submit only against an immutable original PAYMENT reference; missing proof remains UNKNOWN. */
+    RefundRequestResult submitRefund(com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference originalPayment,
+                                     String outTradeNo, String outRefundNo, BigDecimal refundAmount, BigDecimal totalAmount, String reason);
 
     /** 兼容保证金等旧调用；UNKNOWN 与确定失败都返回 false，资金退款编排必须调用 submitRefund。 */
     default boolean refund(String outTradeNo, String outRefundNo, BigDecimal refundAmount,
@@ -131,18 +142,10 @@ public interface IWechatPayService {
      */
     Map<String, String> queryTransferResult(String outBatchNo, String outDetailNo);
 
-    default Map<String, String> transferToBalance(com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent intent) {
-        intent.requireValid();
-        return transferToBalance(intent.outBatchNo(), intent.outDetailNo(), intent.amountYuan(),
-                intent.openid(), intent.remark(), intent.appid());
-    }
+    /** Submit only the original immutable, hash-validated withdrawal intent; accepted is not settled. */
+    Map<String, String> transferToBalance(CashWithdrawTransferIntent intent);
 
-    default Map<String, String> queryTransferResult(com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent intent) {
-        intent.requireValid();
-        Map<String, String> facts = queryTransferResult(intent.outBatchNo(), intent.outDetailNo());
-        if (facts != null && ("SUCCESS".equals(facts.get("result")) || "FAIL".equals(facts.get("result")))
-                && !intent.matchesObservation(facts))
-            return Map.of("result", "UNKNOWN", "error", "转账事实与原始提交证据不一致");
-        return facts;
-    }
+    /** Only original merchant/app/batch/detail/amount/receiver evidence may authorize a terminal result. */
+    Map<String, String> queryTransferResult(CashWithdrawTransferIntent intent);
+
 }

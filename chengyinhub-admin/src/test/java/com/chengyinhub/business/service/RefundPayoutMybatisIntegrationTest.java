@@ -3,6 +3,14 @@ package com.chengyinhub.business.service;
 import com.chengyinhub.business.domain.RefundApplication;
 import com.chengyinhub.business.domain.dto.ManualPayoutDTO;
 import com.chengyinhub.business.mapper.CmsRegistrationMapper;
+import com.chengyinhub.business.mapper.CmsRegistrationPaymentFactMapper;
+import com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact;
+import com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference;
+import com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport;
+import com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService;
+import com.chengyinhub.business.service.support.RegistrationPaymentConsumptionReadService;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.support.TransactionTemplate;
 import com.chengyinhub.business.mapper.RefundApplicationMapper;
 import com.chengyinhub.business.service.impl.AlarmService;
 import com.chengyinhub.business.service.impl.RefundPayoutServiceImpl;
@@ -72,6 +80,10 @@ class RefundPayoutMybatisIntegrationTest {
     private IWechatPayService wechatPayService;
     private IRefundService refundService;
     private RefundApplicationMapper refundApplicationMapper;
+    private CmsRegistrationPaymentFactMapper consumptionMapper;
+    private DataSourceTransactionManager tx;
+    private WechatVerifiedPaymentFactService paymentFacts;
+    private Reference originalPayment;
 
     @BeforeAll
     void createDatabaseAndService() throws Exception {
@@ -89,7 +101,9 @@ class RefundPayoutMybatisIntegrationTest {
         dataSource = dataSource(MYSQL.databaseUrl());
         SqlSessionTemplate template = new SqlSessionTemplate(buildFactory(dataSource));
         refundApplicationMapper = template.getMapper(RefundApplicationMapper.class);
-        DataSourceTransactionManager tx = new DataSourceTransactionManager(dataSource);
+        tx = new DataSourceTransactionManager(dataSource);
+        consumptionMapper = template.getMapper(CmsRegistrationPaymentFactMapper.class);
+        paymentFacts = WechatVerifiedFactTestSupport.realFacts(dataSource);
 
         RefundServiceImpl refundTarget = new RefundServiceImpl();
         ReflectionTestUtils.setField(refundTarget, "refundApplicationMapper", refundApplicationMapper);
@@ -104,12 +118,22 @@ class RefundPayoutMybatisIntegrationTest {
         ReflectionTestUtils.setField(target, "cmsRegistrationMapper", template.getMapper(CmsRegistrationMapper.class));
         ReflectionTestUtils.setField(target, "refundService", refundService);
         ReflectionTestUtils.setField(target, "wechatPayService", wechatPayService);
+        ReflectionTestUtils.setField(target, "payoutTransactions", tx);
+        ReflectionTestUtils.setField(target, "paymentConsumption", new RegistrationPaymentConsumptionReadService(consumptionMapper));
         payoutService = target;
     }
 
     @BeforeEach
     void resetSchema() throws Exception {
-        execute("DROP TABLE IF EXISTS refund_application", "DROP TABLE IF EXISTS cms_registration",
+        assertEquals("1",System.getenv("B_PAYMENT_FACT_DDL_APPROVED"));
+        assertEquals("1",System.getenv("B_PAYMENT_INTENT_DDL_APPROVED"));
+        assertEquals("1",System.getenv("A_REGISTRATION_PAYMENT_FACT_DDL_APPROVED"));
+        // Only this class-owned scratch schema; keep canonical receipt triggers/FKs enabled.
+        execute("DROP TABLE IF EXISTS cms_registration_payment_fact", "DROP TABLE IF EXISTS wx_payment_callback_fact_link",
+                "DROP TABLE IF EXISTS wx_verified_payment_fact_rejection", "DROP TABLE IF EXISTS wx_verified_payment_fact",
+                "DROP TABLE IF EXISTS wx_payment_callback_outbox", "DROP TABLE IF EXISTS wx_payment_callback_inbox",
+                "DROP TABLE IF EXISTS wx_pay_order_intent",
+                "DROP TABLE IF EXISTS refund_application", "DROP TABLE IF EXISTS cms_registration",
                 "DROP TABLE IF EXISTS cms_topic", "DROP TABLE IF EXISTS cms_activity");
         execute(
                 "CREATE TABLE cms_registration ("
@@ -136,11 +160,28 @@ class RefundPayoutMybatisIntegrationTest {
                 // 费率快照回填的两条来源表：①自玩单 owner_id→cms_topic;②活动单 owner_id→cms_activity→cms_topic。
                 "CREATE TABLE cms_topic (id BIGINT PRIMARY KEY, fee_platform_rate DECIMAL(10,4)) ENGINE=InnoDB",
                 "CREATE TABLE cms_activity (id BIGINT PRIMARY KEY, topic_id BIGINT) ENGINE=InnoDB");
-        execute("INSERT INTO cms_registration(id,registration_no,wechat_payment_amount) VALUES (11,'REG-PAYOUT-11',100)",
+        java.nio.file.Path root=java.nio.file.Paths.get(System.getProperty("user.dir")).toAbsolutePath();
+        if ("chengyinhub-admin".equals(root.getFileName().toString())) root=root.getParent();
+        try (Connection connection=dataSource.getConnection()) {
+            for (String migration:new String[]{"migration_20261023_wx_pay_order_intent.sql",
+                    "migration_wx_payment_callback_inbox_outbox_20260725.sql",
+                    "migration_20261024_wx_verified_payment_fact.sql","migration_20261024_registration_payment_fact.sql"})
+                ScriptUtils.executeSqlScript(connection,new FileSystemResource(root.resolve("chengyinhub-admin/sql/"+migration)));
+        }
+        execute("INSERT INTO cms_topic(id,fee_platform_rate) VALUES(500,0.1000)",
+                "INSERT INTO cms_registration(id,registration_no,owner_type,owner_id,topic_id,payable_amount,wechat_payment_amount,fee_platform_rate,payment_status,registration_status) VALUES (11,'REG-PAYOUT-11',1,500,500,100,100,0.1000,1,1)",
                 "INSERT INTO refund_application(id,refund_no,source_type,source_id,refund_amount,status,reason,del_flag,payout_status,create_time,update_time)"
                         + " VALUES (20,'RF11','registration',11,100,1,'测试退款',0,5,NOW(),NOW())");
+        originalPayment=paymentFacts.recordVerified(new WechatVerifiedPaymentFact(WechatVerifiedPaymentFact.Kind.PAYMENT,
+                "merchant","wx-original","REG-PAYOUT-11","REG-PAYOUT-11","REG-PAYOUT-11","TX11","TX11",
+                "JSAPI","CNY",10000,10000,java.time.Instant.parse(WechatVerifiedFactTestSupport.SUCCESS_TIME),null,"SUCCESS"));
+        new TransactionTemplate(tx).executeWithoutResult(status -> {
+            new JdbcTemplate(dataSource).update("update cms_registration set payment_status=2,registration_status=2,transaction_id='TX11' where id=11");
+            assertEquals(1,consumptionMapper.insertConsumed(11L,originalPayment.id(),originalPayment.hash()));
+        });
+        assertEquals(originalPayment,consumptionMapper.selectByRegistration(11L).reference());
         org.mockito.Mockito.reset(wechatPayService);
-        when(wechatPayService.submitRefund(anyString(), anyString(), any(), any(), any()))
+        when(wechatPayService.submitRefund(eq(originalPayment), anyString(), anyString(), any(), any(), any()))
                 .thenReturn(RefundRequestResult.ACCEPTED);
     }
 
@@ -164,7 +205,7 @@ class RefundPayoutMybatisIntegrationTest {
             start.countDown();
             a.get();
             b.get();
-            verify(wechatPayService, times(1)).submitRefund(anyString(), anyString(), any(), any(), any());
+            verify(wechatPayService, times(1)).submitRefund(eq(originalPayment), anyString(), anyString(), any(), any(), any());
             assertEquals(RefundApplication.PAYOUT_PROCESSING,
                     number("SELECT payout_status FROM refund_application WHERE id=20"));
         } finally {
@@ -176,27 +217,34 @@ class RefundPayoutMybatisIntegrationTest {
     void processingRefundIsPolledNotRedispatched() throws Exception {
         execute("UPDATE refund_application SET payout_status=0 WHERE id=20");
         payoutService.payoutAfterReview(20L);
-        verify(wechatPayService, times(0)).submitRefund(anyString(), anyString(), any(), any(), any());
+        verify(wechatPayService, times(0)).submitRefund(eq(originalPayment), anyString(), anyString(), any(), any(), any());
         assertEquals(RefundApplication.PAYOUT_PROCESSING,
                 number("SELECT payout_status FROM refund_application WHERE id=20"));
     }
 
     @Test
-    void staleDispatchingCanBeReclaimed() throws Exception {
+    void staleDispatchingCanBeReclaimedOnlyForOriginalQuery() throws Exception {
         execute("UPDATE refund_application SET payout_status=6,update_time=DATE_SUB(NOW(),INTERVAL 31 MINUTE) WHERE id=20");
+        when(wechatPayService.queryRefundFacts(originalPayment,"RF11")).thenReturn(java.util.Map.of(
+                "outRefundNo","RF11","outTradeNo","REG-PAYOUT-11","transactionId","TX11",
+                "currency","CNY","refund","10000","total","10000","status","PROCESSING"));
         payoutService.payoutAfterReview(20L);
-        verify(wechatPayService, times(1)).submitRefund(anyString(), anyString(), any(), any(), any());
+        verify(wechatPayService, times(0)).submitRefund(eq(originalPayment), anyString(), anyString(), any(), any(), any());
+        verify(wechatPayService).queryRefundFacts(originalPayment,"RF11");
         assertEquals(RefundApplication.PAYOUT_PROCESSING,
                 number("SELECT payout_status FROM refund_application WHERE id=20"));
     }
 
     @Test
-    void uncertainWechatCallReturnsToPending() throws Exception {
-        when(wechatPayService.submitRefund(anyString(), anyString(), any(), any(), any()))
+    void uncertainWechatCallKeepsOriginalDispatchWithoutRedispatch() throws Exception {
+        when(wechatPayService.submitRefund(eq(originalPayment), anyString(), anyString(), any(), any(), any()))
                 .thenReturn(RefundRequestResult.UNKNOWN);
         payoutService.payoutAfterReview(20L);
-        assertEquals(RefundApplication.PAYOUT_DISPATCH_PENDING,
+        assertEquals(RefundApplication.PAYOUT_DISPATCHING,
                 number("SELECT payout_status FROM refund_application WHERE id=20"));
+        payoutService.payoutAfterReview(20L);
+        verify(wechatPayService,times(1)).submitRefund(eq(originalPayment),eq("REG-PAYOUT-11"),eq("RF11"),any(),any(),any());
+        assertEquals(originalPayment,consumptionMapper.selectByRegistration(11L).reference());
     }
 
     @Test
@@ -371,7 +419,7 @@ class RefundPayoutMybatisIntegrationTest {
 
         payoutService.payoutAfterReview(20L);
 
-        verify(wechatPayService, times(0)).submitRefund(anyString(), anyString(), any(), any(), any());
+        verify(wechatPayService, times(0)).submitRefund(eq(originalPayment), anyString(), anyString(), any(), any(), any());
         assertEquals(RefundApplication.PAYOUT_PENDING_MANUAL,
                 number("SELECT payout_status FROM refund_application WHERE id=20"));
         assertTrue(text("SELECT payout_remark FROM refund_application WHERE id=20").contains("RF11"));
@@ -449,17 +497,17 @@ class RefundPayoutMybatisIntegrationTest {
 
     @Test
     void retryRefreshesUpdateTimeSoStuckCountMustBeCountedBeforeRetry() throws Exception {
-        // H-B 前提坐实(真 SQL):对卡滞单重试一次(claim→微信异常→release)后 update_time 被刷新,
+        // H-B 前提坐实(真 SQL):对卡滞单重试一次(claim→微信异常→保留原派发)后 update_time 被刷新,
         // 同一 stale 谓词立即数到 0 —— 这就是"先重试后计数"的旧顺序恒 0 的机理。
         execute("UPDATE refund_application SET payout_status=5,"
                 + "update_time=DATE_SUB(NOW(),INTERVAL 31 MINUTE) WHERE id=20");
         assertEquals(1, refundApplicationMapper.countStuckPayoutDispatch(30));
-        when(wechatPayService.submitRefund(anyString(), anyString(), any(), any(), any()))
+        when(wechatPayService.submitRefund(eq(originalPayment), anyString(), anyString(), any(), any(), any()))
                 .thenThrow(new RuntimeException("微信网络异常"));
 
         payoutService.payoutAfterReview(20L);
 
-        assertEquals(RefundApplication.PAYOUT_DISPATCH_PENDING,
+        assertEquals(RefundApplication.PAYOUT_DISPATCHING,
                 number("SELECT payout_status FROM refund_application WHERE id=20"));
         assertEquals(0, refundApplicationMapper.countStuckPayoutDispatch(30),
                 "重试后同一 stale 谓词必然数到 0 —— 卡滞计数必须发生在重试之前");
@@ -471,7 +519,7 @@ class RefundPayoutMybatisIntegrationTest {
         // 旧顺序(先重试后计数)下 countStuckPayoutDispatch 恒 0、"退款派发卡滞"永久沉默 —— 本用例红。
         execute("UPDATE refund_application SET payout_status=5,"
                 + "update_time=DATE_SUB(NOW(),INTERVAL 31 MINUTE) WHERE id=20");
-        when(wechatPayService.submitRefund(anyString(), anyString(), any(), any(), any()))
+        when(wechatPayService.submitRefund(eq(originalPayment), anyString(), anyString(), any(), any(), any()))
                 .thenThrow(new RuntimeException("微信网络异常"));
         AlarmService alarmService = mock(AlarmService.class);
         RefundReconcileTask task = new RefundReconcileTask();
@@ -485,7 +533,7 @@ class RefundPayoutMybatisIntegrationTest {
 
         task.reconcile();
 
-        assertEquals(RefundApplication.PAYOUT_DISPATCH_PENDING,
+        assertEquals(RefundApplication.PAYOUT_DISPATCHING,
                 number("SELECT payout_status FROM refund_application WHERE id=20"));
         // F-W3-06:卡滞告警改走按键限频出口，事件名与扫描时卡滞数不变。
         verify(alarmService).alarmThrottled(eq("monitor.refund.dispatch_stuck"), eq("退款派发卡滞"), contains("退款单=1"));
@@ -730,6 +778,7 @@ class RefundPayoutMybatisIntegrationTest {
         configuration.getTypeAliasRegistry().registerAliases("com.chengyinhub.business.domain");
         addMapper(configuration, RefundApplicationMapper.class, "mapper/business/RefundApplicationMapper.xml");
         addMapper(configuration, CmsRegistrationMapper.class, "mapper/business/CmsRegistrationMapper.xml");
+        addMapper(configuration, CmsRegistrationPaymentFactMapper.class, "mapper/business/CmsRegistrationPaymentFactMapper.xml");
         return new SqlSessionFactoryBuilder().build(configuration);
     }
 

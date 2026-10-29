@@ -33,6 +33,7 @@ const { decodeDisplayText, decodeDisplayFields } = require('../../../utils/displ
 // CU-C-60:扫码核销复用全站唯一的路由表(utils/verification-scan)与写闸(防重提/结果未知),
 // 不在本页另写一套解析。
 const { resolveVerificationScan } = require('../../../utils/verification-scan.js');
+const { seatTarget, seatKey, captureLogin, loginCurrent, seatRecovery } = require('../../../utils/registration-seat.js');
 const loading = require('../../../utils/loading.js');
 const { postExcerpt } = require('../../../utils/danger-actions.js');
 const { classifyVerificationOutcome, createVerificationWorkflow } = require('../../../utils/merchant-verification.js');
@@ -498,6 +499,7 @@ function isDemoClubId(id) {
 }
 
 Page({
+  onHide() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1; },
   _clubAccessState: 'idle',
   data: {
     // 稿 40:3 末行「★ 减少动态效果兜底」的接线端。index.wxss 里 .cy-motion-reduced 的
@@ -810,6 +812,9 @@ Page({
   onPickOwnerClub(e) {
     const cid = Number(e.currentTarget.dataset.id);
     if (!cid) return;
+    this._scanGeneration = (this._scanGeneration || 0) + 1;
+    if (this._scanWorkflow) { this._scanWorkflow.destroy(); this._scanWorkflow = null; }
+    if (this._scanLoadingOwners) { this._scanLoadingOwners.forEach(() => loading.hide()); this._scanLoadingOwners.clear(); }
     this.data.clubId = cid;
     this.setData({ ownerPickerShow: false });
     this.loadAll();
@@ -822,9 +827,10 @@ Page({
   },
 
   // 页面销毁:作废在途 AI 生成的回调,避免 setData after unload(sendRequest 不可中断)
-  onUnload() {
+  onUnload() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1;
     this._scanDisposed = true; this._scanGeneration = (this._scanGeneration || 0) + 1;
-    if (this._scanWorkflow) { this._scanWorkflow.destroy(); this._scanWorkflow = null; loading.hide(); }
+    if (this._scanWorkflow) { this._scanWorkflow.destroy(); this._scanWorkflow = null; }
+    if (this._scanLoadingOwners) { this._scanLoadingOwners.forEach(() => loading.hide()); this._scanLoadingOwners.clear(); }
     this._sceneGuardDestroyed = true;
     this._clubAiToken = (this._clubAiToken || 0) + 1;
     this._detailRequestSeq = (this._detailRequestSeq || 0) + 1;
@@ -934,8 +940,14 @@ Page({
     const club = this.data.club;
     if (!club || !(this.canGovern(club) || this.data.canManageActivities)) return;
     const that = this;
+    const login = captureLogin(app, wx), generation = this._scanGeneration || 0;
+    const clubId = this.data.clubId;
+    const current = () => !that._scanDisposed && generation === (that._scanGeneration || 0)
+      && clubId === that.data.clubId && loginCurrent(app, wx, login)
+      && (that.canGovern(that.data.club) || that.data.canManageActivities);
     wx.scanCode({
       success(res) {
+        if (!current()) return;
         const scan = resolveVerificationScan(res && res.result);
         if (scan.kind === 'invalid') {
           // 码是好的、只是入口不对时给一条能点过去的指路,不弹一个 2 秒就消失的 toast。
@@ -945,7 +957,7 @@ Page({
               content: scan.message,
               confirmText: scan.confirmText || '我知道了',
               cancelText: '留在这里',
-              success(r) { if (r && r.confirm) wx.navigateTo({ url: scan.path }); },
+              success(r) { if (current() && r && r.confirm) wx.navigateTo({ url: scan.path }); },
             });
           } else {
             cyToast(scan.message);
@@ -956,6 +968,7 @@ Page({
       },
       // 用户自己取消不是错误(与 play/merchant 页同一口径);相机/系统失败才提示。
       fail(error) {
+        if (!current()) return;
         if (/cancel/i.test((error && error.errMsg) || '')) return;
         cyToast('未能打开扫码，请检查相机权限');
       },
@@ -973,14 +986,26 @@ Page({
     const owner = String(app.getUserID && app.getUserID() || '');
     const generation = this._scanGeneration || 0;
     const ownerPage = this;
+    const login = captureLogin(app, wx), clubId = this.data.clubId;
+    const target = seatTarget({ url, data: scan.data });
+    const current = () => !ownerPage._scanDisposed && generation === (ownerPage._scanGeneration || 0)
+      && clubId === ownerPage.data.clubId && loginCurrent(app, wx, login);
+    if (target && !current()) return;
     if (!this._scanWorkflow) this._scanWorkflow = createVerificationWorkflow({ deadlineMs: 15000, storage: wx, getOwner: () => app.getUserID && app.getUserID() });
-    const key = owner + ':' + url + ':' + (scan.code || '');
-    if (this._scanWorkflow.isBusy(key)) { cyToast('核销处理中，请勿重复提交'); return; }
-    loading.show(scan.loadingTitle);
-    this._scanWorkflow.run(key, function (done) {
+    const key = target ? seatKey(owner, target) : owner + ':' + url + ':' + (scan.code || '');
+    if (!target && this._scanWorkflow.isBusy(key)) { cyToast('核销处理中，请勿重复提交'); return; }
+    const loadingOwner = {};
+    if (!target) {
+      if (!this._scanLoadingOwners) this._scanLoadingOwners = new Set();
+      this._scanLoadingOwners.add(loadingOwner); loading.show(scan.loadingTitle);
+    }
+    const finishLoading = () => {
+      if (ownerPage._scanLoadingOwners && ownerPage._scanLoadingOwners.delete(loadingOwner)) loading.hide();
+    };
+    const submitted = this._scanWorkflow.run(key, function (done) {
       return app.sendRequest(Object.assign({}, {
-        url: url, data: scan.data, method: 'POST', header: jsonHeader(),
-        autoErrorToast: false,
+        url: url, data: scan.data, method: 'POST',
+        autoErrorToast: false, hideLoading: !!target, silentError: !!target,
         success(res) { done(classifyVerificationOutcome(res, 'success', undefined, { url: url, data: scan.data })); },
         fail(res, status) { done(classifyVerificationOutcome(res, 'fail', status, { url: url, data: scan.data })); },
         successStatusAbnormal(res, status) {
@@ -988,16 +1013,20 @@ Page({
         },
       }));
     }, function (result) {
-      loading.hide();
+      finishLoading();
+      if (target && !current()) return;
       if (ownerPage._scanDisposed || generation !== (ownerPage._scanGeneration || 0)
           || owner !== String(app.getUserID && app.getUserID() || '')) return;
       // 结果未知 = 服务端可能已经写入。提示重试等于把「未知」变成重复核销。
-      if (result.status === 'unknown') { cyToast('核销结果待确认，请勿重复核销'); return; }
+      if (result.status === 'unknown') {
+        cyToast(target ? '原席位结果待确认；再次扫描同一席位只查询结果，请勿改选席位重发' : '核销结果待确认，请勿重复核销'); return;
+      }
       const res = result.response || {};
       // 成功用确认框留住结果(全仓成功 toast 只减不增:两秒就消失的提示替代不了「这张码已核销」这个状态)
       if (res.code == '200') modal.show({ title: scan.successTitle || '核销成功', content: res.msg || '', showCancel: false, confirmText: '知道了' });
       else cyToast(res.msg || '核销失败');
-    });
+    }, target ? seatRecovery(app, target, current) : undefined);
+    if (!submitted) finishLoading();
   },
 
   // 快捷动作「结算」:主理人按主题看分润 / 商家应收 / 打款状态(scene-merchant-profit)。
@@ -1687,7 +1716,7 @@ Page({
     });
   },
   onReportPost(e) {
-    if (app.ensureLoginFor && !app.ensureLoginFor('report', () => this.onReportPost(e))) return; // 2026-10-24 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('report', () => this.onReportPost(e), { owner: this, target: () => [this.data.clubId, e.currentTarget.dataset.id] })) return; // 2026-10-24 游客写前登录
     const id = e.currentTarget.dataset.id;
     modal.show({
       title: '举报动态', content: '确认举报?平台将尽快处理。', confirmText: '举报',
@@ -2381,7 +2410,7 @@ Page({
 
   // 加入俱乐部：公开团即时加入，审批团只进入待审态。
   onJoin() {
-    if (app.ensureLoginFor && !app.ensureLoginFor('club', () => this.onJoin())) return; // 2026-10-24 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('club', () => this.onJoin(), { owner: this, target: () => [this.data.clubId] })) return; // 2026-10-24 游客写前登录
     const that = this;
     if (this.data.joinFx) return;   // 请求中 / 已加入动效进行中,不重复提交
     if (isDemoClubId(this.data.clubId)) {
@@ -2541,7 +2570,7 @@ Page({
   },
 
   reportClubMember(e) {
-    if (app.ensureLoginFor && !app.ensureLoginFor('report', () => this.reportClubMember(e))) return; // 2026-10-24 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('report', () => this.reportClubMember(e), { owner: this, target: () => [this.data.clubId, e && e.currentTarget && e.currentTarget.dataset.memberId] })) return; // 2026-10-24 游客写前登录
     const dataset = (e && e.currentTarget && e.currentTarget.dataset) || {};
     const memberId = positiveId(dataset.memberId);
     const clubId = positiveId(this.data.clubId);
@@ -2557,7 +2586,7 @@ Page({
   },
 
   reportClub() {
-    if (app.ensureLoginFor && !app.ensureLoginFor('report', () => this.reportClub())) return; // 2026-10-24 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('report', () => this.reportClub(), { owner: this, target: () => [this.data.clubId] })) return; // 2026-10-24 游客写前登录
     const clubId = positiveId(this.data.clubId);
     if (!this.data.canSeeMembers || !clubId) return;
     const clubName = reportTargetName(this.data.club && this.data.club.name);
@@ -2597,7 +2626,7 @@ Page({
   },
 
   reportTopicActivity(e) {
-    if (app.ensureLoginFor && !app.ensureLoginFor('report', () => this.reportTopicActivity(e))) return; // 2026-10-24 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('report', () => this.reportTopicActivity(e), { owner: this, target: () => [this.data.clubId, e && e.currentTarget && e.currentTarget.dataset.id] })) return; // 2026-10-24 游客写前登录
     const topicId = positiveId(e && e.currentTarget && e.currentTarget.dataset.id);
     if (!this.data.canSeeMembers || !topicId || this._activityReportLoading) return;
     // CU-C-149:卡面上的入口已按作者隐藏,这里再守一道 —— 名单刚刷新、渲染还没跟上时,
@@ -2769,7 +2798,7 @@ Page({
     });
   },
   onReportComment(e) {
-    if (app.ensureLoginFor && !app.ensureLoginFor('report', () => this.onReportComment(e))) return; // 2026-10-24 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('report', () => this.onReportComment(e), { owner: this, target: () => [this.data.clubId, e.currentTarget.dataset.id] })) return; // 2026-10-24 游客写前登录
     const id = e.currentTarget.dataset.id;
     // CU-C-138:与卡面入口同一判据 —— 自己的评论不该给自己开审核单。渲染有延迟时这一行才是真闸,
     // 后端 commentReport 再兜住绕过本页的直调。
@@ -3054,7 +3083,7 @@ Page({
     return scope;
   },
   onLikePost(e) {
-    if (app.ensureLoginFor && !app.ensureLoginFor('like', () => this.onLikePost(e))) return; // 2026-10-24 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('like', () => this.onLikePost(e), { owner: this, target: () => [this.data.clubId, e.detail && e.detail.postId, e.currentTarget.dataset.id] })) return; // 2026-10-24 游客写前登录
     const rawId = (e.detail && e.detail.postId) || e.currentTarget.dataset.id;
     const id = parseInviteId(rawId);
     const scope = this._postLikeContext();
@@ -3179,7 +3208,7 @@ Page({
   onCommentInput(e) { this.setData({ commentText: e.detail.value }); },
 
   onCommentSubmit() {
-    if (app.ensureLoginFor && !app.ensureLoginFor('post', () => this.onCommentSubmit())) return; // 2026-10-24 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('post', () => this.onCommentSubmit(), { owner: this, target: () => [this.data.clubId, this.data.openCommentPost] })) return; // 2026-10-24 游客写前登录
     const postId = this.data.openCommentPost;
     const text = (this.data.commentText || '').trim();
     if (!postId) return;

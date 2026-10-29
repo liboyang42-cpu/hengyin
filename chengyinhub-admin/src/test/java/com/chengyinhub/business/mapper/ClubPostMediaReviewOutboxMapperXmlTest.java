@@ -15,17 +15,25 @@ class ClubPostMediaReviewOutboxMapperXmlTest {
     void mapperAndMigrationKeepUniqueClaimReceiptAndPoisonContracts() throws Exception {
         String mapper = read("../chengyinhub-system/src/main/resources/mapper/business/ClubPostMediaReviewOutboxMapper.xml");
         String migration = read("sql/migration_club_role_media_review_outbox_20260824.sql");
+        String expanded = read("sql/migration_club_post_media_review_budget_20261024.sql");
+        assertTrue(expanded.contains("DROP CHECK chk_club_post_media_review_trace"));
+        assertTrue(expanded.contains("OR state = 5"));
         String jobMigration = read("sql/migration_club_role_media_review_outbox_job_20260825.sql");
 
         assertTrue(mapper.contains("insert ignore into club_post_media_review_outbox"));
         assertTrue(mapper.contains("state in (0, 3)"));
+        assertTrue(mapper.contains("LEAST(max_attempts, 5)"));
         assertTrue(mapper.contains("owner_token = UNHEX(#{ownerToken})"));
         assertTrue(mapper.contains("fence_token = #{fenceToken}"));
         assertTrue(mapper.contains("lease_until = TIMESTAMPADD(SECOND, 120, NOW(3))"));
         assertTrue(mapper.contains("trace_hash = UNHEX(#{traceHash})"));
-        assertTrue(!mapper.contains("attempt_count &lt; max_attempts"),
-                "微信/inbox 瞬时故障不能在固定次数后永久退出 due 集合");
-        assertTrue(mapper.contains("where state in (0, 1, 3)"));
+        assertTrue(mapper.contains("attempt_count &lt; <include refid=\"retryBudget\"/>"),
+                "扫描和原子 claim 必须使用相同预算");
+        assertTrue(mapper.contains("last_error_code = 'PRE_DISPATCH_UNAVAILABLE'"));
+        assertTrue(mapper.contains("id=\"retireUnsafeBatch\""));
+        assertTrue(mapper.contains("id=\"markManualReview\""));
+        assertTrue(mapper.contains("THEN 'REVIEW_OUTCOME_UNKNOWN' ELSE 'REVIEW_ATTEMPTS_EXHAUSTED'"));
+        assertTrue(mapper.contains("where state in (0, 1, 3, 5)"));
         assertTrue(mapper.contains("select min(create_time)"),
                 "积压年龄必须基于不可被退避重写的创建时间");
         assertTrue(migration.contains("UNIQUE KEY uk_club_post_media_review_identity (post_id, post_version, media_hash)"));

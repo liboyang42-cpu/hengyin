@@ -1,0 +1,8 @@
+986551e5072f99788d8713eefcc9944b6cf4da99d28a504697a7d00e278f3461  chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CrossDomainCombinedLoadMySqlIT.java
+257e7be71dd4792520cbc209eb413b7001ce3b4e5f37cf23cba60ed67478ea46  chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CombinedContextConfigurationTest.java
+aadbd40f733a58a4a243f34f64b75551031bd3c1e53634ac913608e36a75f44e  chengyinhub-admin/src/test/java/com/chengyinhub/quartz/util/CrossDomainSchedulerStage.java
+96a2543f2cb275aacfa6a597e52d35f0dc5a6cbc92a2b63eeb8a974efee21ba9  chengyinhub-admin/src/test/java/com/chengyinhub/quartz/util/SchedulerFenceProcessProbe.java
+f460c45c91df5c68e8b4d20772c9167f657f1a57fa664d3172902672aa911d6c  docs/delivery/architecture-day/C/combined-memory-readback-6a5/README.md
+d06407e92b3303563351c1322e726a004fa13533a4a916c214d554ab71d2aede  docs/delivery/architecture-day/C/combined-memory-readback-6a5/SHARED-PREIMAGES.sha256
+237ee4f921abddb1b7a33e0be12c7a87520331fb574c192b503d0acf250ba51d  docs/delivery/architecture-day/C/combined-memory-readback-6a5/PROPOSED-SHARED-POSTIMAGES.sha256
+c483d67097c8d56d371fa25bf6d7ce52272698c7448a5c8cd7c5d5b7bffb51f5  docs/delivery/architecture-day/C/combined-memory-readback-6a5/budget-memory.review.patch

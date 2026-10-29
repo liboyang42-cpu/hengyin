@@ -12,6 +12,7 @@ import com.chengyinhub.business.mapper.ClubLeadMapper;
 import com.chengyinhub.business.mapper.ClubMapper;
 import com.chengyinhub.business.mapper.ClubMemberMapper;
 import com.chengyinhub.business.mapper.CmsActivityMapper;
+import com.chengyinhub.business.mapper.CmsTopicMapper;
 import com.chengyinhub.business.mapper.CmsRegistrationMapper;
 import com.chengyinhub.business.mapper.OmsTicketMapper;
 import com.chengyinhub.business.mapper.UmsMemberMapper;
@@ -120,8 +121,8 @@ class ClubEventTransferCancellationMySqlIT {
     private DbClubAccess access;
     private IClubEventOpsService eventOps;
     private CountDownLatch ownerLockAttempted;
-    private CountDownLatch retrySeriesLockAttempted;
-    private AtomicInteger seriesLockCalls;
+    private CountDownLatch retryTopicLockAttempted;
+    private AtomicInteger topicLockCalls;
     private static String mysqlVersion;
 
     @BeforeAll
@@ -150,6 +151,10 @@ class ClubEventTransferCancellationMySqlIT {
             ItSchema.apply(connection, "it-schema/run41-prod-ddl.sql");
             ItSchema.applyMigrations(connection, "sql/migration_club_role_event_ops_20260823.sql",
                     "sql/migration_20260930_registration_first_successful_scan.sql");
+            try (Statement statement = connection.createStatement()) {
+                statement.execute("ALTER TABLE cms_topic ADD COLUMN theme_runtime_config_json MEDIUMTEXT NULL,"
+                        + " ADD COLUMN published_theme_runtime_config_json MEDIUMTEXT NULL");
+            }
         }
 
         dataSource = new PooledDataSource("com.mysql.cj.jdbc.Driver", url,
@@ -255,7 +260,7 @@ class ClubEventTransferCancellationMySqlIT {
                         HOST_ACTOR, TOPIC, OTHER_CLUB, ACTIVITY, REASON));
         assertEquals(Integer.valueOf(409), wrongScope.getCode());
         assertEquals(0, refundApplications.get(), "不匹配的 topic+club+activity scope 不得进入退款");
-        seriesLockCalls.set(0);
+        topicLockCalls.set(0);
 
         ExecutorService pool = Executors.newFixedThreadPool(2);
         try (Connection transfer = open()) {
@@ -271,10 +276,10 @@ class ClubEventTransferCancellationMySqlIT {
                     "取消必须等转让提交，不得用 series 历史创建人绕锁");
 
             Future<Object> retry = pool.submit(() -> authorizedCancelOutcome());
-            assertTrue(retrySeriesLockAttempted.await(5, TimeUnit.SECONDS),
-                    "重试未到达 series 行锁");
+            assertTrue(retryTopicLockAttempted.await(5, TimeUnit.SECONDS),
+                    "重试未到达原 topic 行锁");
             assertThrows(TimeoutException.class, () -> retry.get(250, TimeUnit.MILLISECONDS),
-                    "重试必须被首请求的 series/occurrence 锁串行化");
+                    "重试必须被首请求的同 topic 首锁串行化");
             transfer.commit();
 
             Object accepted = first.get(5, TimeUnit.SECONDS);
@@ -331,7 +336,16 @@ class ClubEventTransferCancellationMySqlIT {
         }).when(payoutService).payoutAfterReview(anyLong());
 
         TeamGroupServiceImpl teamTarget = new TeamGroupServiceImpl();
+        ReflectionTestUtils.setField(teamTarget, "cancellationTransactions", transactionManager);
+        // 本套只有既有 2/2 已付款领域行；不构造供应商事实或让缺证据读取默认为成功。
+        ReflectionTestUtils.setField(teamTarget, "verifiedPaymentFacts",
+                mock(com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService.class, invocation -> {
+                    if (invocation.getMethod().getDeclaringClass() == Object.class)
+                        return org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation);
+                    throw new AssertionError("本领域取消夹具不应读取供应商事实: " + invocation.getMethod().getName());
+                }));
         ReflectionTestUtils.setField(teamTarget, "cmsActivityMapper", sql.getMapper(CmsActivityMapper.class));
+        ReflectionTestUtils.setField(teamTarget, "cmsTopicMapper", sql.getMapper(CmsTopicMapper.class));
         ReflectionTestUtils.setField(teamTarget, "cmsRegistrationMapper", sql.getMapper(CmsRegistrationMapper.class));
         ReflectionTestUtils.setField(teamTarget, "omsTicketMapper", sql.getMapper(OmsTicketMapper.class));
         ReflectionTestUtils.setField(teamTarget, "clubMapper", sql.getMapper(ClubMapper.class));
@@ -347,27 +361,34 @@ class ClubEventTransferCancellationMySqlIT {
 
         access = new DbClubAccess(jdbc);
         ownerLockAttempted = new CountDownLatch(1);
-        retrySeriesLockAttempted = new CountDownLatch(1);
-        seriesLockCalls = new AtomicInteger();
+        retryTopicLockAttempted = new CountDownLatch(1);
+        topicLockCalls = new AtomicInteger();
         ClubEventOpsMapper realMapper = sql.getMapper(ClubEventOpsMapper.class);
         ClubEventOpsMapper probedMapper = (ClubEventOpsMapper) Proxy.newProxyInstance(
                 getClass().getClassLoader(), new Class<?>[]{ClubEventOpsMapper.class},
                 (proxy, method, args) -> {
                     if ("selectClubOwnerForUpdate".equals(method.getName())) ownerLockAttempted.countDown();
-                    if ("selectSeriesByActivityAnyStatusForUpdate".equals(method.getName())
-                            && seriesLockCalls.incrementAndGet() == 2) {
-                        retrySeriesLockAttempted.countDown();
-                    }
                     try {
                         return method.invoke(realMapper, args);
                     } catch (InvocationTargetException failure) {
                         throw failure.getTargetException();
                     }
                 });
+        CmsTopicMapper actualTopics = sql.getMapper(CmsTopicMapper.class);
+        CmsTopicMapper probedTopics = (CmsTopicMapper) Proxy.newProxyInstance(
+                getClass().getClassLoader(), new Class<?>[]{CmsTopicMapper.class}, (proxy, method, args) -> {
+                    if ("selectCmsTopicByIdForUpdate".equals(method.getName()) && topicLockCalls.incrementAndGet() == 2)
+                        retryTopicLockAttempted.countDown();
+                    try { return method.invoke(actualTopics, args); }
+                    catch (InvocationTargetException failure) { throw failure.getTargetException(); }
+                });
         ClubEventOpsServiceImpl eventTarget = new ClubEventOpsServiceImpl(
                 access, new ClubEventScheduleMaterializer(), mock(IClubSessionService.class),
                 probedMapper, mock(ClubMemberMapper.class), mock(ClubLeadMapper.class),
                 mock(IClubRoleAssignmentService.class), teamGroup);
+        ReflectionTestUtils.setField(eventTarget, "cancellationTransactions", transactionManager);
+        ReflectionTestUtils.setField(eventTarget, "cancellationActivityMapper", sql.getMapper(CmsActivityMapper.class));
+        ReflectionTestUtils.setField(eventTarget, "cancellationTopicMapper", probedTopics);
         eventOps = transactionalProxy(eventTarget, IClubEventOpsService.class);
     }
 
@@ -384,7 +405,7 @@ class ClubEventTransferCancellationMySqlIT {
                 "cyv-p1002", new SpringManagedTransactionFactory(), dataSource));
         configuration.getTypeAliasRegistry().registerAliases("com.chengyinhub.business.domain");
         for (String mapper : Arrays.asList("ClubEventOpsMapper", "ClubMapper",
-                "CmsActivityMapper", "CmsRegistrationMapper", "OmsTicketMapper")) {
+                "CmsActivityMapper", "CmsTopicMapper", "CmsRegistrationMapper", "OmsTicketMapper")) {
             String path = "mapper/business/" + mapper + ".xml";
             try (InputStream input = ClubEventTransferCancellationMySqlIT.class
                     .getClassLoader().getResourceAsStream(path)) {
@@ -400,6 +421,7 @@ class ClubEventTransferCancellationMySqlIT {
         jdbc.update("insert into club(id,member_id,name,status,del_flag,create_time) values (?,?,?,?,?,now()),(?,?,?,?,?,now())",
                 CLUB, OLD_OWNER, "P1-002 target", 1, 0,
                 OTHER_CLUB, 2102L, "P1-002 decoy", 1, 0);
+        jdbc.update("insert into cms_topic(id,member_id) values (?,?),(?,?)", TOPIC, HOST_ACTOR, OTHER_TOPIC, 2102L);
         jdbc.update("insert into cms_activity(id,member_id,name,status,publish_status,del_flag,start_date,end_date,topic_id,club_id,create_time)"
                         + " values (?,?,?,1,1,0,date_add(now(),interval 1 day),date_add(now(),interval 2 day),?,?,now()),"
                         + " (?,?,?,1,1,0,date_add(now(),interval 1 day),date_add(now(),interval 2 day),?,?,now())",

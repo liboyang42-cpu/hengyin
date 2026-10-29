@@ -1,0 +1,24 @@
+{
+  "parent": "fa5c263440573992701263d6bee60830844a49b8",
+  "tests": "ALL NOT_RUN; source only",
+  "patch_sha256": "ac675f0959406dc5ca4cf2216a37b53f9a0392f8e584bf6cf6d7b50f4084b830",
+  "patch_encoding": "standard base64, hash over decoded patch",
+  "files": [
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/TopicPublicationContentGuard.java",
+      "postimage_sha256": "bc32e871c0db0aa8a9d7dea9a18181ba05ffae6f3be0fb69c129936054f0fdf5"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/TopicRoutePublishGate.java",
+      "postimage_sha256": "5bf8ae9d245ee1a0689c9ecd5e7fbeb01dc45c287847f15694948347d1f47099"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/TopicRoutePublishGateTest.java",
+      "postimage_sha256": "f01ca7ede207aad3d0e49a8daf0b1d84d50b9e72099b71d801e5dc94c142e073"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/TopicPublicationDiagnosticsTest.java",
+      "postimage_sha256": "93f51bcc9fc54bb62496f302b60dcd735e3d64a6f1e9b6b4d668d1290fc6944e"
+    }
+  ]
+}

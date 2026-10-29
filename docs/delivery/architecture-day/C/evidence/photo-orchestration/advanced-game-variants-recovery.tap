@@ -1,0 +1,52 @@
+TAP version 13
+# Subtest: variants拒绝畸形when而不是只检查存在
+ok 1 - variants拒绝畸形when而不是只检查存在
+  ---
+  duration_ms: 9.446989
+  type: 'test'
+  ...
+# Subtest: 已支持条件DSL全部正常放行，不新增条件业务规则
+ok 2 - 已支持条件DSL全部正常放行，不新增条件业务规则
+  ---
+  duration_ms: 14.886135
+  type: 'test'
+  ...
+# Subtest: timer量程越界本地拒绝，validate与serialize均生效
+ok 3 - timer量程越界本地拒绝，validate与serialize均生效
+  ---
+  duration_ms: 1.280683
+  type: 'test'
+  ...
+# Subtest: first-match逐条模拟，两条各自合法不能累加误杀
+ok 4 - first-match逐条模拟，两条各自合法不能累加误杀
+  ---
+  duration_ms: 0.800617
+  type: 'test'
+  ...
+# Subtest: current-N与=0合法边界保留，越下界与越次数上界拒绝
+ok 5 - current-N与=0合法边界保留，越下界与越次数上界拒绝
+  ---
+  duration_ms: 1.404504
+  type: 'test'
+  ...
+# Subtest: 同条多字段作用后统一校验，判定误差允许小数底值
+ok 6 - 同条多字段作用后统一校验，判定误差允许小数底值
+  ---
+  duration_ms: 1.274263
+  type: 'test'
+  ...
+# Subtest: 全部次数容错字段统一遵守既有0至10合同，=0不会误作负值或收紧
+ok 7 - 全部次数容错字段统一遵守既有0至10合同，=0不会误作负值或收紧
+  ---
+  duration_ms: 5.21043
+  type: 'test'
+  ...
+1..7
+# tests 7
+# suites 0
+# pass 7
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 51.051384

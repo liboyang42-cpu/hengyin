@@ -1,0 +1,21 @@
+$ /opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 ci/architecture/gate.py source --source /workspace/hengyin-architecture-f --candidate 941612b0ee71a536168a9b103878d834019ae632
+exit_code=0
+{
+  "base_sha": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+  "candidate_sha": "941612b0ee71a536168a9b103878d834019ae632",
+  "coverage": {
+    "observed_tables": 384,
+    "statements": 2948,
+    "unknown_statements": 2031
+  },
+  "findings": [],
+  "not_proven": [
+    "Java/SQL semantics",
+    "authorization",
+    "transaction atomicity",
+    "persistent recovery reachability",
+    "real MySQL/Redis execution"
+  ],
+  "schema": 1,
+  "verdict": "STATIC_ONLY"
+}

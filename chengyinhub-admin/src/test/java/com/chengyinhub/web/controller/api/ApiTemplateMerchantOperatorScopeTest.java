@@ -5,12 +5,16 @@ import com.chengyinhub.business.access.merchant.MerchantAccessContext;
 import com.chengyinhub.business.access.merchant.MerchantPermission;
 import com.chengyinhub.business.access.merchant.MerchantRoleCode;
 import com.chengyinhub.business.domain.dto.CmsTemplatePublishRequest;
+import com.chengyinhub.business.domain.dto.TemplateAdoptionCommand;
 import com.chengyinhub.business.domain.CmsMemberTemplate;
+import com.chengyinhub.business.domain.CmsTemplateLibrary;
+import com.chengyinhub.business.mapper.TemplateAdoptionReceiptMapper;
 import com.chengyinhub.business.domain.vo.MemberTemplateVO;
 import com.chengyinhub.business.service.ICmsMemberTemplateService;
 import com.chengyinhub.business.service.ICouponRewardAuthorizationService;
 import com.chengyinhub.business.service.ITemplatePublishService;
 import com.chengyinhub.business.service.support.TemplateLibraryRepublishReview;
+import com.chengyinhub.business.service.support.TemplateAdoptionService;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
@@ -22,16 +26,23 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.SimpleTransactionStatus;
 
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -96,6 +107,66 @@ class ApiTemplateMerchantOperatorScopeTest {
         request.setTitle("到店互动");
         request.setScope(scope);
         return request;
+    }
+
+    private record SourceAdoptionFixture(TemplateAdoptionCommand command,
+            CmsTemplateLibrary source, CmsMemberTemplate canonical) { }
+
+    /** Real command/hash/receipt owner; mapper and draft persistence are explicit in-memory unit boundaries.
+     * The controlled transaction manager matches the existing adoption unit fixture, not SQL rollback proof. */
+    private SourceAdoptionFixture installSourceAdoption() {
+        TemplateAdoptionReceiptMapper receipts = mock(TemplateAdoptionReceiptMapper.class);
+        PlatformTransactionManager manager = mock(PlatformTransactionManager.class);
+        when(manager.getTransaction(any())).thenAnswer(call -> new SimpleTransactionStatus());
+        Map<String, Object> row = new HashMap<>();
+        when(receipts.reserve(anyMap())).thenAnswer(call -> {
+            if (row.isEmpty()) {
+                Map<String, Object> facts = call.getArgument(0);
+                row.putAll(facts); row.put("status", "PENDING");
+            }
+            return 1;
+        });
+        when(receipts.lock(eq(PRINCIPAL), any())).thenAnswer(call -> new HashMap<>(row));
+        when(receipts.read(eq(PRINCIPAL), any())).thenAnswer(call -> new HashMap<>(row));
+        when(receipts.finish(eq(PRINCIPAL), any(), any(), any(), any(), any())).thenAnswer(call -> {
+            assertEquals(row.get("requestId"), call.getArgument(1));
+            row.put("status", call.getArgument(2)); row.put("draftId", call.getArgument(3));
+            row.put("reason", call.getArgument(4)); row.put("draftVersion", call.getArgument(5));
+            return 1;
+        });
+        CmsTemplateLibrary source = new CmsTemplateLibrary();
+        source.setId(16L); source.setMemberTemplateId(116L); source.setMemberId(800L);
+        source.setTitle("原公共内容"); source.setDelFlag(0); source.setStatus(1L); source.setPublishStatus(1L);
+        source.setQuestionAnswer("原服务端答案"); source.setAdvancedConfigJson("{}");
+        CmsMemberTemplate canonical = draft(800L);
+        canonical.setId(116L); canonical.setTitle(source.getTitle()); canonical.setDraftStatus(1);
+        canonical.setStatus(1L); canonical.setPublishStatus(1L);
+        canonical.setQuestionAnswer(source.getQuestionAnswer()); canonical.setAdvancedConfigJson("{}");
+        when(receipts.sourceCanonicalId(16L)).thenReturn(116L);
+        when(receipts.lockSource(16L)).thenReturn(source);
+        when(receipts.lockDraft(116L)).thenReturn(canonical);
+        CmsMemberTemplate created = draft(OWNER); created.setId(76L); created.setTitle(source.getTitle());
+        created.setOriginalTemplateId(16L); created.setQuestionAnswer(source.getQuestionAnswer());
+        created.setAdvancedConfigJson(source.getAdvancedConfigJson());
+        var draftWritten = new java.util.concurrent.atomic.AtomicBoolean();
+        when(receipts.lockDraft(76L)).thenAnswer(call -> draftWritten.get() ? created : null);
+        when(publishService.saveOrUpdateDraft(any(), eq(OWNER), eq("operator901"))).thenAnswer(call -> {
+            org.junit.jupiter.api.Assertions.assertFalse(draftWritten.getAndSet(true), "原采用命令不可创建第二份草稿");
+            return created.getId();
+        });
+        adoptionService = new TemplateAdoptionService(receipts, publishService, manager);
+        ReflectionTestUtils.setField(controller, "templateAdoptionService", adoptionService);
+        AjaxResult sourceResult = controller.adoptionSource("16", "MERCHANT");
+        assertEquals(200, sourceResult.get(AjaxResult.CODE_TAG));
+        Map<?, ?> version = (Map<?, ?>) sourceResult.get(AjaxResult.DATA_TAG);
+        TemplateAdoptionCommand command = adoption(request("MERCHANT"));
+        command.setSourceVersion((String) version.get("sourceVersion"));
+        assertEquals("16", version.get("originalTemplateId"));
+        return new SourceAdoptionFixture(command, source, canonical);
+    }
+
+    private String adoptionJson(TemplateAdoptionCommand command) throws Exception {
+        return new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(command);
     }
 
     @Test
@@ -181,7 +252,68 @@ class ApiTemplateMerchantOperatorScopeTest {
         when(access.require(PRINCIPAL, MerchantPermission.PROJECT_MANAGE))
                 .thenThrow(new com.chengyinhub.common.exception.ServiceException("无权管理项目", 403));
         assertEquals(403, controller.adoptDraft(adoption(request("MERCHANT"))).get(AjaxResult.CODE_TAG));
+        verify(adoptionService, never()).adopt(any(), any(), any(), any());
         verify(publishService, never()).saveOrUpdateDraft(any(), any(), any());
+    }
+
+    @Test
+    void sourceAdoptionAcceptsOnlyLibraryIdentityWithoutRequiringPublicContentCopy() throws Exception {
+        SourceAdoptionFixture fixture = installSourceAdoption();
+        var mvc = MockMvcBuilders.standaloneSetup(controller).build();
+        String bodyJson = adoptionJson(fixture.command());
+        mvc.perform(post("/api/template/adopt-draft")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(bodyJson))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.draftId").value("76"))
+                .andExpect(jsonPath("$.data.status").value("COMPLETED"))
+                .andExpect(jsonPath("$.data.originalTemplateId").value("16"))
+                .andExpect(jsonPath("$.data.requestId").value(fixture.command().getRequestId()));
+        mvc.perform(post("/api/template/adopt-draft").contentType(MediaType.APPLICATION_JSON).content(bodyJson))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.draftId").value("76"))
+                .andExpect(jsonPath("$.data.requestId").value(fixture.command().getRequestId()));
+        ArgumentCaptor<CmsTemplatePublishRequest> body = ArgumentCaptor.forClass(CmsTemplatePublishRequest.class);
+        verify(publishService, times(1)).saveOrUpdateDraft(body.capture(), eq(OWNER), eq("operator901"));
+        assertEquals(16L, body.getValue().getOriginalTemplateId());
+        assertEquals(Boolean.TRUE, body.getValue().getAdoptSourceOnly());
+        assertEquals("MERCHANT", body.getValue().getScope());
+        assertNull(body.getValue().getTitle(), "客户端不需读取或复制原公共内容");
+        assertNull(body.getValue().getCouponId());
+        assertEquals("原公共内容", fixture.source().getTitle());
+        assertEquals("原服务端答案", fixture.source().getQuestionAnswer());
+        assertEquals(800L, fixture.source().getMemberId());
+        assertEquals(116L, fixture.canonical().getId());
+        assertEquals(800L, fixture.canonical().getMemberId());
+        verify(couponAuthorizationService, never()).assertOwnedRewardCoupon(any(), any());
+    }
+
+    @Test
+    void sourceAdoptionIgnoresDiscardedClientCouponButOrdinaryDraftStillChecksIt() throws Exception {
+        SourceAdoptionFixture fixture = installSourceAdoption();
+        var submitted = new com.fasterxml.jackson.databind.ObjectMapper().valueToTree(fixture.command());
+        ((com.fasterxml.jackson.databind.node.ObjectNode) submitted).put("couponId", 999L).putNull("title");
+        MockMvcBuilders.standaloneSetup(controller).build().perform(post("/api/template/adopt-draft")
+                .contentType(MediaType.APPLICATION_JSON).content(submitted.toString()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.status").value("COMPLETED"))
+                .andExpect(jsonPath("$.data.draftId").value("76"));
+        ArgumentCaptor<CmsTemplatePublishRequest> adopted = ArgumentCaptor.forClass(CmsTemplatePublishRequest.class);
+        verify(publishService).saveOrUpdateDraft(adopted.capture(), eq(OWNER), eq("operator901"));
+        assertEquals(16L, adopted.getValue().getOriginalTemplateId());
+        assertEquals(Boolean.TRUE, adopted.getValue().getAdoptSourceOnly());
+        assertNull(adopted.getValue().getCouponId(), "不可信客户端coupon不能进入真实采用owner转发的draft");
+        assertNull(adopted.getValue().getTitle());
+        assertNull(fixture.source().getCouponId());
+        assertEquals("原服务端答案", fixture.canonical().getQuestionAnswer());
+        verify(couponAuthorizationService, never()).assertOwnedRewardCoupon(any(), any());
+
+        CmsTemplatePublishRequest ordinary = request("MERCHANT"); ordinary.setCouponId(999L);
+        org.mockito.Mockito.doThrow(new IllegalArgumentException("非本主体优惠券"))
+                .when(couponAuthorizationService).assertOwnedRewardCoupon(999L, OWNER);
+        assertEquals(500, controller.draft(ordinary).get(AjaxResult.CODE_TAG));
+        verify(couponAuthorizationService).assertOwnedRewardCoupon(999L, OWNER);
+        verify(publishService, never()).saveOrUpdateDraft(eq(ordinary), any(), any());
     }
 
     @Test

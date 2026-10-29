@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "source_sha": "6fcd5ac009cec1dd82c438528d24da30c1f302f4",
+  "run": 40162306092,
+  "job": 121076227598,
+  "status": "FAILED_BEFORE_STORAGE_MATRIX",
+  "stage": "Real storage gate negative controls",
+  "observed_python_tests": 75,
+  "observed_python_failures": 5,
+  "observed_python_pass": 70,
+  "actual_mysql_redis_business_classes": "NOT_RUN",
+  "root_causes": [
+    "Batchchoiceexactorder:publicworkflowpaymentbatchfirst,mergedregistrylast",
+    "Callbackexpectedemptygateoutdated,originalsourceapprovalgateandregistrycorrect",
+    "Wp04expected15outdatedafter10approvedsourcecasesandnewnote metadata"
+  ],
+  "failure_identities": [
+    "ci.test_real_storage_it.M1PairWorkflowTest.test_pair_workflow_and_original_manual_gates",
+    "ci.test_real_storage_it.RegistryContractTest.test_callback_inbox_registration_and_scratch_admission_are_exact",
+    "ci.test_real_storage_it.RegistryContractTest.test_original_refund_has_exact_isolated_storage_admission",
+    "ci.test_real_storage_it.RegistryContractTest.test_refund_lifecycle_batch_has_unique_original_suites_and_exact_gates",
+    "ci.test_real_storage_it.WorkflowContractTest.test_workflow_contract"
+  ],
+  "raw_log_sha256": "cd35ce8d3248b471c4dbeca62d2e4d16d8f501e97c97c805942b1bce934726f8",
+  "classification": "Proven test-contract integration failures, notfivebusinessbugs",
+  "owner": "F",
+  "must_not_weaken": "Preserveexactgate/order/counts/75negativecontrols; repairallneededcallers",
+  "no_production_actions": true
+}

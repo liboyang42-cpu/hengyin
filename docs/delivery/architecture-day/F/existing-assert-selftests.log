@@ -1,0 +1,12 @@
+$ /opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 -m unittest ci/test_assert_it_ran.py -v
+exit_code=0
+test_green (ci.test_assert_it_ran.T.test_green) ... ok
+test_red_when_failed (ci.test_assert_it_ran.T.test_red_when_failed) ... ok
+test_red_when_missing (ci.test_assert_it_ran.T.test_red_when_missing) ... ok
+test_red_when_skipped (ci.test_assert_it_ran.T.test_red_when_skipped) ... ok
+test_red_when_zero_tests (ci.test_assert_it_ran.T.test_red_when_zero_tests) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.001s
+
+OK

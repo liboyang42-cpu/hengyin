@@ -48,7 +48,27 @@ Component({
       if (v) this.setData({ picked: this.data.defaultIndex });
     },
   },
+  lifetimes: {
+    detached() { this._eventContextClosed = true; },
+  },
   methods: {
+    // Optional one-opening contract. Legacy controlled hosts remain unchanged.
+    // The owning Page keeps auth/pending/epoch/hop; only this opaque UI key travels.
+    bindEventContext(value) {
+      if (this._eventContextClosed || this._boundEventContext !== undefined
+          || typeof value !== 'string' || !value || value.length > 128) return false;
+      this._boundEventContext = value;
+      return true;
+    },
+    _emitSelect(index, label) {
+      if (this._eventContextClosed || this._eventContextSettled) return;
+      const detail = { index, label };
+      if (this._boundEventContext !== undefined) {
+        this._eventContextSettled = true;
+        detail.eventContext = this._boundEventContext;
+      }
+      this.triggerEvent('select', detail);
+    },
     _buildRows(list, immediate) {
       this.setData({
         rows: (list || []).map((item, index) => {
@@ -62,11 +82,12 @@ Component({
       });
     },
     onRow(e) {
+      if (this._eventContextClosed || this._eventContextSettled) return;
       const index = Number(e.currentTarget.dataset.index);
       const row = this.data.rows[index];
       if (!row || row.disabled) return;
       if (this.data.immediate) {
-        this.triggerEvent('select', { index, label: row.label });
+        this._emitSelect(index, row.label);
         return;
       }
       this.setData({ picked: index });
@@ -74,13 +95,17 @@ Component({
     onConfirm() {
       const index = this.data.picked;
       if (index < 0) return;
-      this.triggerEvent('select', { index, label: this.data.rows[index].label });
+      this._emitSelect(index, this.data.rows[index].label);
     },
     /* 关闭 = 取消。showActionSheet 的 fail 分支(用户划走/点取消)在这里对应 cancel,
      * 9 个落点里有 3 个靠它回收状态(team-up 的 callbacks.cancel/complete、
      * roam POI 的 _handleInteractionFailure),不能只发 close 了事。 */
     onClose() {
-      this.triggerEvent('cancel');
+      if (this._eventContextClosed || this._eventContextSettled) return;
+      if (this._boundEventContext !== undefined) {
+        this._eventContextSettled = true;
+        this.triggerEvent('cancel', { eventContext: this._boundEventContext });
+      } else this.triggerEvent('cancel');
     },
   },
 });

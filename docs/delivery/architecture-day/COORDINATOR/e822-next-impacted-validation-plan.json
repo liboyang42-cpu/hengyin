@@ -1,0 +1,46 @@
+{
+  "schema": 1,
+  "state": "SOURCE_COMPLETE_FINAL_IMPACT_PLAN_BEFORE_CANDIDATE_FREEZE",
+  "parent": "e82229ef85e58159078a42956560356074192541",
+  "source_packages_applied": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H"
+  ],
+  "remaining_SOURCE_owners": [],
+  "standard": {
+    "selected_jobs": [
+      "backend"
+    ],
+    "reason": "13 actual failing classes plus directly shared publication/game fixtures changed; use existing backend job, no new workflow or generic selector",
+    "do_not_repeat": [
+      "client unit/static/build",
+      "HTTP36 unaffected Java gameplay execution",
+      "already passed migration/layout/SBOM/dependency/frontend jobs"
+    ]
+  },
+  "storage": {
+    "classes": [
+      "com.chengyinhub.business.service.impl.CoopDepositSettlementAttemptMySqlIT",
+      "com.chengyinhub.business.it.CrossDomainFaultIsolationMySqlIT",
+      "com.chengyinhub.business.service.impl.GameplayReskinMySqlIT"
+    ],
+    "reasons": [
+      "Actual original replay error and new real proof positive12",
+      "Actual original notification positive failure",
+      "Passed1 but directly uses changed GameplayReskinFixture and TopicPublicationTestWiring; new source needs its own evidence"
+    ],
+    "other17_passed_e822_classes": "Preserve exact e822 receipts; C CrossDomainStorageFixture has only CrossDomain caller. E changes are diagnostic path/cause only, unchanged validation predicate, covered original backend3unit and shared actual GameplayReskin storage1; no other17 rerun.",
+    "recompute_after_source_complete": true,
+    "ordinary_source_declarations": 14
+  },
+  "mixed": "Original fixed mode, actual category protocol failure",
+  "restore_application": "Original complete application mode; actual SOURCE_WORKLOAD ValueError, no proved completed boot",
+  "cohort": "Original fixed payment-gap diagnostic only, OWNER ValueError; full seven remains not accepted",
+  "all_complete": false
+}

@@ -1,0 +1,22 @@
+[
+  {
+    "kind": "u4Dynamic",
+    "before": "chengyinhub-xcx/pages/play/index.js:1620",
+    "after": "chengyinhub-xcx/pages/play/index.js:1708",
+    "unchangedCount": 62,
+    "originalFiveLinesEqual": true,
+    "anchorSha256": "262ffafaa1ca98b9c0f620e80320aca8ddcb7318a131df0c2df627851e4347d4",
+    "reasonUnchanged": true,
+    "digestSha256": "baf6e748e04ecf1e87dbdecb7c338e9f8545c56d9f87f08c2418828ce188e4ec"
+  },
+  {
+    "kind": "u5Silent",
+    "before": "chengyinhub-xcx/pages/play/index.js:7688",
+    "after": "chengyinhub-xcx/pages/play/index.js:7772",
+    "unchangedCount": 39,
+    "originalFiveLinesEqual": true,
+    "anchorSha256": "481e603b5745eb0e7e71d9771894bf19fda7520123362d96549909e0f247ce7c",
+    "reasonUnchanged": true,
+    "digestSha256": "7bca8dd2192ced2b4e40128d83732db0375652151c704b65dbe2c9b28e0fb454"
+  }
+]

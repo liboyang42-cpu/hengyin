@@ -1,0 +1,136 @@
+{
+  "check_kind": "SOURCE_DIFF_ONLY_NOT_JAVA_EXECUTION",
+  "donor": "56d0e68e6bd2cdb2066af5940c497587df131d8c",
+  "parent": "4bb00dffdd62d519f7575a949f0630a4fa576e77",
+  "old_13_cycle_rows_and_3_test_bodies_unchanged": true,
+  "old_inert_handler_unchanged": true,
+  "expected_junit_invocations": 32,
+  "java_compile": "NOT_RUN",
+  "spring_context": "NOT_RUN",
+  "ci_40084734777": "USER_REPORTED_NOT_PASSED_NOT_BORROWED",
+  "records": [
+    {
+      "source": "56d0e68e6bd2cdb2066af5940c497587df131d8c",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/CommittedOfficialNoticeService.java",
+      "sha256": "c4ee3b936d916b81a15490175e19635eb7c00a7cc632641b4f45d989ece18eb7",
+      "selected_lines": [
+        {
+          "line": 10,
+          "source": "import com.chengyinhub.business.service.IImService;"
+        },
+        {
+          "line": 11,
+          "source": "import com.chengyinhub.business.service.ISystemNotificationIntentService;"
+        },
+        {
+          "line": 27,
+          "source": "import java.util.concurrent.ScheduledExecutorService;"
+        },
+        {
+          "line": 34,
+          "source": "    private final CommittedOfficialNoticeWxMapper mapper;"
+        },
+        {
+          "line": 35,
+          "source": "    private final ISystemNotificationIntentService intents;"
+        },
+        {
+          "line": 36,
+          "source": "    private final IImService im;"
+        },
+        {
+          "line": 37,
+          "source": "    private final WxSubscribeChannel wx;"
+        },
+        {
+          "line": 38,
+          "source": "    private final ScheduledExecutorService executor;"
+        },
+        {
+          "line": 39,
+          "source": "    private final TransactionTemplate independent;"
+        },
+        {
+          "line": 41,
+          "source": "    public CommittedOfficialNoticeService(CommittedOfficialNoticeWxMapper mapper,"
+        },
+        {
+          "line": 42,
+          "source": "            ISystemNotificationIntentService intents,IImService im,WxSubscribeChannel wx,"
+        },
+        {
+          "line": 44,
+          "source": "            @Qualifier(\"scheduledExecutorService\") ScheduledExecutorService executor) {"
+        }
+      ]
+    },
+    {
+      "source": "56d0e68e6bd2cdb2066af5940c497587df131d8c",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/CommittedOfficialNoticeTask.java",
+      "sha256": "e070ecfdcd38c712532d5063b97b38f42236088a99911b4582cf7bae6e7b9533",
+      "selected_lines": [
+        {
+          "line": 9,
+          "source": "    private final CommittedOfficialNoticeService notices;"
+        },
+        {
+          "line": 10,
+          "source": "    public CommittedOfficialNoticeTask(CommittedOfficialNoticeService notices) { this.notices=notices; }"
+        }
+      ]
+    },
+    {
+      "source": "56d0e68e6bd2cdb2066af5940c497587df131d8c",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatVerifiedPaymentFactService.java",
+      "sha256": "d0c8cc20974ff421edb0792a894245090ce42065c0bb5667e189ea894f92912f",
+      "selected_lines": [
+        {
+          "line": 19,
+          "source": "    @Autowired private org.springframework.transaction.PlatformTransactionManager factReadTransactions;"
+        },
+        {
+          "line": 54,
+          "source": "        var transaction=new org.springframework.transaction.support.TransactionTemplate(factReadTransactions);"
+        }
+      ]
+    },
+    {
+      "source": "56d0e68e6bd2cdb2066af5940c497587df131d8c",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+      "sha256": "c24279dc5f97d90d6ab5b6c41fda290e9b0f27cb2a0455a1fd1666e7de8ef75c",
+      "selected_lines": [
+        {
+          "line": 81,
+          "source": "    private com.chengyinhub.business.service.IImService imService;"
+        },
+        {
+          "line": 84,
+          "source": "    private com.chengyinhub.business.service.ISystemNotificationIntentService systemNotificationIntents;"
+        },
+        {
+          "line": 91,
+          "source": "    @Autowired private WechatVerifiedPaymentFactService verifiedPaymentFacts;"
+        },
+        {
+          "line": 3477,
+          "source": "        WechatVerifiedPaymentFactService.Stored stored = verifiedPaymentFacts.requireVerified(reference);"
+        }
+      ]
+    },
+    {
+      "source": "56d0e68e6bd2cdb2066af5940c497587df131d8c",
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java",
+      "sha256": "d2c85a82e45c5d5d3595ada047d95b04b8305d68ab7d0152ac8d60d159f6c32f",
+      "selected_lines": [
+        {
+          "line": 139,
+          "source": "    @Autowired private WechatVerifiedPaymentFactService verifiedPaymentFacts;"
+        },
+        {
+          "line": 1276,
+          "source": "        WechatVerifiedPaymentFactService.Stored stored = verifiedPaymentFacts.requireVerified(reference);"
+        }
+      ]
+    }
+  ]
+}

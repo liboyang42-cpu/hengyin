@@ -1,0 +1,33 @@
+{
+  "parent": "05f4aa69e61752dcafb0bec73ca9ae9b2ff7a7f5",
+  "C_test_five_fix": "e190fcbf502693c08bb0d43474ca1c221604f3bb",
+  "C_W09_characterization": "918a2fb83dcc8b5a0b04aa0ae78c7abc13fff014",
+  "E_scheduler_boundary": "0c49e282e7aca4eb4df0acf91338b89da916fa3b",
+  "F_transport_proposal": "e024f1c6fc51834d9c30c6968e8f4eddff12b487",
+  "production_changes_in_these_deltas": false,
+  "C_ordinary_unit_methods": {
+    "PlayKit": 17,
+    "ObjectCard": 18,
+    "AdvancedPhoto": 17
+  },
+  "root_adaptation": "PlayHintUnlock2parameter values ->two ordinary@Test wrappers on same private helper, existing8 bodies unchanged,total10; no harness support expansion for dynamic counts",
+  "planned_new_real_storage": {
+    "hint_unlock": 10,
+    "scheduler_existing": 3,
+    "scheduler_new": 3
+  },
+  "new_tests_execution": "NOT_YET_RUN",
+  "known_gaps": [
+    "WP09 actual extraction not begun",
+    "HTTP/JWT/current roles not accepted by service-only tests",
+    "scheduler3 real session-interleaving is not multiple JVM or T20 disaster",
+    "full66e9 had5 unit fail, MyBatis/Theme/APPLIED/startup/jdeps unexecuted"
+  ],
+  "F_budget_decision": "Technical initial globalAI4/per canonical origin2/no extra AI queue approved; reuse bounded common HttpUtils, no new deps; F transport/E quota catches separate owners, final contract pending",
+  "pending_business": [
+    "admin generic create semantics",
+    "refund allocation policy",
+    "multi-ticket fixed service fee"
+  ],
+  "all_complete": false
+}

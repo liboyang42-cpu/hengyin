@@ -25,6 +25,13 @@ final class CurrentPlayControllerFixtures {
     private CurrentPlayControllerFixtures() { }
 
     static void install(Object controller) {
+        if (controller instanceof ApiPlayProgressController) BasicPlayCommandFixtures.install((ApiPlayProgressController) controller);
+        // Only the explicit non-led fixture is supplied here; an existing lead mapper is never replaced.
+        if (PlayNodeAccessTestFixtures.getField(controller, "clubLeadMapper") == null) {
+            com.chengyinhub.business.mapper.ClubLeadMapper noLead = mock(com.chengyinhub.business.mapper.ClubLeadMapper.class);
+            when(noLead.selectByActivity(anyLong())).thenReturn(null);
+            PlayNodeAccessTestFixtures.setField(controller, "clubLeadMapper", noLead);
+        }
         if (PlayNodeAccessTestFixtures.getField(controller, "currentPlayActivityMapper") == null) {
             CmsActivityMapper activityMapper = mock(CmsActivityMapper.class);
             when(activityMapper.selectCmsActivityByIdForUpdate(anyLong())).thenAnswer(call -> {

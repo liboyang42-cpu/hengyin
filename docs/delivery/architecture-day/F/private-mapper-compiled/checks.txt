@@ -1,0 +1,38 @@
+Python 3.12.14; Python/Git only on this VM.
+
+Pre-fix controls actually failed:
+python3 -m unittest discover -s ci/architecture -p test_collect_jdeps.py -k SelectedPrivateReferencesTest -v
+Ran 1 test; FAILED (errors=1): parse_output takes 3 positional arguments but 4 were given.
+Original actual same-System rows were not retained in module references.
+
+python3 -m unittest discover -s ci/architecture -p test_gate.py -k test_candidate_producer -v
+Ran 1 test; FAILED (failures=1): old source CLI exit0/PASS despite changed collector.
+
+After implementation:
+python3 -m unittest discover -s ci/architecture -p test_collect_jdeps.py -k PrivatePortsReadbackTest -v
+Ran 21 tests in 0.833s; OK. ZIP data is explicitly NOT_COMPILED, raw runner mocked.
+
+python3 -m unittest discover -s ci/architecture -p test_collect_jdeps.py -k SelectedPrivateReferencesTest -v
+Ran 2 tests in 0.001s; OK (actual published row format + synthetic nine-module-edge invariance).
+
+python3 -m unittest discover -s ci/architecture -p test_gate.py -k PrivatePortPolicyFreezeTest -v
+Ran 3 tests in 0.209s; OK (includes expected fail-closed candidate forgery errors).
+
+Final complete architecture regression:
+python3 -m unittest discover -s ci/architecture -p 'test_*.py' -v
+----------------------------------------------------------------------
+Ran 141 tests in 7.906s
+
+OK
+jdeps observation: UNKNOWN; no baseline/SCC acceptance
+The UNKNOWN line above is from producer protocol selftests, not a real JDK run.
+
+python3 ci/test_ci_cost_contract.py
+CI cost routing contract: PASS
+
+git check-ignore chengyinhub-admin/target/future-private-port-verifier/ci/architecture/gate.py
+Matched existing target ignore; no ignore exemption added.
+
+NOT RUN by F: Java/javac/jdeps, HTTP/model/database/Redis/CI; actual compiled private-port
+positive/negative CI checks. Root must build a real same-System bad class (XML unchanged),
+observe red, remove it and observe green with new complete source/run/attempt identity.

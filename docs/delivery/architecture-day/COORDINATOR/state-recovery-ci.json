@@ -1,0 +1,22 @@
+{
+  "source_assembly": "931bfbc5bc0f30f8a52b64b777224b7a0c97e3e8",
+  "status": "ISOLATED_NOT_ACCEPTED",
+  "components": [
+    "E1162..91: original-key overload and current owned read; fixes real PREPARED stale return",
+    "D33ff..b626: signup intent producer in original payment transaction; only wake original historical intent",
+    "A2ec..136: registration status strip and cancellation CAS/owner/selection guard",
+    "A b626..138ff: existing RegistrationFunds IT notification/topic fixture only; original 92 tests preserved"
+  ],
+  "storage_tests": 43,
+  "known_open": [
+    "B original-payment attempt/HTTP ACK P1 pending",
+    "C Photo runtime orchestration and remaining full-CI fixtures pending",
+    "G accrual/refund/current cash read P1 pending",
+    "No formal merge, production DDL or deployment",
+    "Full WP00-WP17/Q1-Q10/G0-G5 incomplete"
+  ],
+  "checks": {
+    "real_storage_harness": "44 Python checks PASS; negative-control diagnostics expected",
+    "plan": "5 suites / 43 MySQL cases selected; actual Java/storage tests pending"
+  }
+}

@@ -4,6 +4,79 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.chengyinhub.business.mapper.MemberCashWithdrawMapper">
 
+    <resultMap id="FundFactResult" type="com.chengyinhub.business.domain.CashWithdrawFundFact">
+        <id property="id" column="id"/>
+        <result property="requestMchid" column="request_mchid"/>
+        <result property="requestAppid" column="request_appid"/>
+        <result property="requestAmountFen" column="request_amount_fen"/>
+        <result property="requestOpenid" column="request_openid"/>
+        <result property="requestRemark" column="request_remark"/>
+        <result property="requestVersion" column="request_version"/>
+        <result property="requestHash" column="request_hash"/>
+        <result property="channelBatchId" column="channel_batch_id"/>
+
+        <result property="withdrawalId" column="withdrawal_id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="amount" column="amount"/>
+        <result property="outBatchNo" column="out_batch_no"/>
+        <result property="outDetailNo" column="out_detail_no"/>
+        <result property="kind" column="kind"/>
+        <result property="submissionIntentId" column="submission_intent_id"/>
+        <result property="balanceBefore" column="balance_before"/>
+        <result property="balanceAfter" column="balance_after"/>
+        <result property="createTime" column="create_time"/>
+        <result property="channelBatchStatus" column="channel_batch_status"/>
+        <result property="channelDetailStatus" column="channel_detail_status"/>
+        <result property="channelDetailId" column="channel_detail_id"/>
+        <result property="channelErrorCode" column="channel_error_code"/>
+    </resultMap>
+
+    <select id="selectFundFacts" resultMap="FundFactResult" useCache="false" flushCache="true">
+        select id, withdrawal_id, member_id, amount, out_batch_no, out_detail_no, kind, submission_intent_id,
+               request_mchid, request_appid, request_amount_fen, request_openid, request_remark, request_version, request_hash, channel_batch_id,
+               balance_before, balance_after, create_time,
+               channel_batch_status, channel_detail_status, channel_detail_id, channel_error_code
+          from member_cash_withdraw_fund_fact where withdrawal_id = #{id} order by id for update
+    </select>
+
+    <insert id="insertFundFact" parameterType="com.chengyinhub.business.domain.CashWithdrawFundFact"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into member_cash_withdraw_fund_fact
+            (withdrawal_id, member_id, amount, out_batch_no, out_detail_no, kind, submission_intent_id,
+             request_mchid, request_appid, request_amount_fen, request_openid, request_remark, request_version, request_hash, channel_batch_id,
+             balance_before, balance_after, create_time,
+             channel_batch_status, channel_detail_status, channel_detail_id, channel_error_code)
+        select id, member_id, amount, out_batch_no, out_detail_no, #{kind}, #{submissionIntentId},
+               #{requestMchid}, #{requestAppid}, #{requestAmountFen}, #{requestOpenid}, #{requestRemark}, #{requestVersion}, #{requestHash}, #{channelBatchId},
+               #{balanceBefore}, #{balanceAfter}, #{createTime},
+               #{channelBatchStatus}, #{channelDetailStatus}, #{channelDetailId}, #{channelErrorCode}
+          from member_cash_withdraw
+         where id = #{withdrawalId} and member_id = #{memberId} and amount = #{amount}
+           and out_batch_no = #{outBatchNo} and out_detail_no = #{outDetailNo} and del_flag = 0
+    </insert>
+
+    <update id="bindDebitEvidence" parameterType="MemberCashWithdraw">
+        update member_cash_withdraw
+           set balance_deduct_id = #{balanceDeductId}
+         where id = #{id} and member_id = #{memberId} and amount = #{amount}
+           and out_batch_no = #{outBatchNo} and out_detail_no = #{outDetailNo}
+           and balance_deduct_id is null and balance_refund_id is null and status = 0
+           and del_flag = 0 and (frozen is null or frozen = 0)
+           and exists (select 1 from member_cash_withdraw_fund_fact f
+                        where f.id = #{balanceDeductId} and f.withdrawal_id = #{id} and f.kind = 'DEBIT'
+                          and f.member_id = #{memberId} and f.amount = #{amount}
+                          and f.out_batch_no = #{outBatchNo} and f.out_detail_no = #{outDetailNo})
+    </update>
+
+    <update id="confirmChannelSuccess" parameterType="MemberCashWithdraw">
+        update member_cash_withdraw
+           set status = 1, finish_time = #{finishTime}, last_query_time = #{lastQueryTime}
+            <if test="wechatBatchStatus != null">, wechat_batch_status = #{wechatBatchStatus}</if>
+            <if test="wechatDetailId != null">, wechat_detail_id = #{wechatDetailId}</if>
+         where id = #{id} and status in (0, 3, 4) and balance_refund_id is null
+           and del_flag = 0 and (frozen is null or frozen = 0)
+    </update>
+
     <resultMap type="MemberCashWithdraw" id="MemberCashWithdrawResult">
         <result property="id"    column="id"    />
         <result property="memberId"    column="member_id"    />
@@ -63,8 +136,6 @@
             <if test="wechatBatchStatus != null">wechat_batch_status,</if>
             <if test="submitTime != null">submit_time,</if>
             <if test="lastQueryTime != null">last_query_time,</if>
-            <if test="balanceDeductId != null">balance_deduct_id,</if>
-            <if test="balanceRefundId != null">balance_refund_id,</if>
             <if test="manualOperator != null">manual_operator,</if>
             <if test="manualVerifier != null">manual_verifier,</if>
             <if test="manualNote != null">manual_note,</if>
@@ -89,8 +160,6 @@
             <if test="wechatBatchStatus != null">#{wechatBatchStatus},</if>
             <if test="submitTime != null">#{submitTime},</if>
             <if test="lastQueryTime != null">#{lastQueryTime},</if>
-            <if test="balanceDeductId != null">#{balanceDeductId},</if>
-            <if test="balanceRefundId != null">#{balanceRefundId},</if>
             <if test="manualOperator != null">#{manualOperator},</if>
             <if test="manualVerifier != null">#{manualVerifier},</if>
             <if test="manualNote != null">#{manualNote},</if>
@@ -103,8 +172,8 @@
     <update id="updateMemberCashWithdraw" parameterType="MemberCashWithdraw">
         update member_cash_withdraw
         <trim prefix="SET" suffixOverrides=",">
-            <if test="outBatchNo != null">out_batch_no = #{outBatchNo},</if>
-            <if test="outDetailNo != null">out_detail_no = #{outDetailNo},</if>
+            <if test="outBatchNo != null">out_batch_no = coalesce(out_batch_no, #{outBatchNo}),</if>
+            <if test="outDetailNo != null">out_detail_no = coalesce(out_detail_no, #{outDetailNo}),</if>
             <if test="transferBatchId != null">transfer_batch_id = #{transferBatchId},</if>
             <if test="wechatDetailId != null">wechat_detail_id = #{wechatDetailId},</if>
             <if test="status != null">status = #{status},</if>
@@ -114,8 +183,6 @@
             <if test="wechatBatchStatus != null">wechat_batch_status = #{wechatBatchStatus},</if>
             <if test="submitTime != null">submit_time = #{submitTime},</if>
             <if test="lastQueryTime != null">last_query_time = #{lastQueryTime},</if>
-            <if test="balanceDeductId != null">balance_deduct_id = #{balanceDeductId},</if>
-            <if test="balanceRefundId != null">balance_refund_id = #{balanceRefundId},</if>
             <if test="manualOperator != null">manual_operator = #{manualOperator},</if>
             <if test="manualVerifier != null">manual_verifier = #{manualVerifier},</if>
             <if test="manualNote != null">manual_note = #{manualNote},</if>
@@ -218,7 +285,6 @@
             <if test="finishTime != null">finish_time = #{finishTime},</if>
             <if test="wechatBatchStatus != null">wechat_batch_status = #{wechatBatchStatus},</if>
             <if test="lastQueryTime != null">last_query_time = #{lastQueryTime},</if>
-            <if test="balanceRefundId != null">balance_refund_id = #{balanceRefundId},</if>
             <if test="manualNote != null">manual_note = #{manualNote},</if>
         </trim>
         where id = #{id} and status = 0 and (frozen is null or frozen = 0)
@@ -265,6 +331,7 @@
         update member_cash_withdraw
         <trim prefix="SET" suffixOverrides=",">
             <if test="status != null">status = #{status},</if>
+            <if test="balanceRefundId != null">balance_refund_id = #{balanceRefundId},</if>
             <if test="manualVerifier != null">manual_verifier = #{manualVerifier},</if>
             <if test="manualNote != null">manual_note = #{manualNote},</if>
             <if test="finishTime != null">finish_time = #{finishTime},</if>

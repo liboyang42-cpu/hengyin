@@ -1,0 +1,13 @@
+{
+  "source_sha": "acc4bf5ea10bbefabb9d5db52dd17dc800b3a955",
+  "run_id": "40057912348",
+  "verdict": "FAILED_BEFORE_EXECUTION",
+  "reason": "Existing narrow harness correctly rejects ParameterizedTest; root erroneously registered only ordinary declarations. No business negative proven. Registration removed; no scanner bypass.",
+  "executed": 0,
+  "original_ordinary_methods": 34,
+  "existing_parameter_invocations": 24,
+  "original_expected_real_cases": 58,
+  "negative_expected_real_cases": 60,
+  "positive_expected_real_cases": 63,
+  "next": "Use existing full Backend CI which supports these original parameter branches; preserve all original inputs and assertions."
+}

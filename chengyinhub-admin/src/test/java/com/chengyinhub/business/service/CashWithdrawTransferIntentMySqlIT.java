@@ -36,7 +36,7 @@ import static org.mockito.Mockito.*;
 @EnabledIfEnvironmentVariable(named = "CHENGYIN_FUNDS_MYSQL_IT", matches = "1")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class CashWithdrawTransferIntentMySqlIT {
-    private static final long ID = 7L, MEMBER = 42L;
+    private long ID = 6L, MEMBER = 41L;
     private static final BigDecimal AMOUNT = new BigDecimal("30.00");
     private String schema;
     private boolean created;
@@ -76,7 +76,9 @@ class CashWithdrawTransferIntentMySqlIT {
                 + "submit_time DATETIME, last_query_time DATETIME, balance_deduct_id BIGINT, balance_refund_id BIGINT, manual_operator VARCHAR(64), manual_verifier VARCHAR(64), "
                 + "manual_note VARCHAR(1000), trace_id VARCHAR(255), audit_by BIGINT, audit_time DATETIME, frozen_reason VARCHAR(255), frozen_by VARCHAR(64), frozen_at DATETIME) ENGINE=InnoDB");
         try (Connection connection = source.getConnection()) {
-            ItSchema.applyMigrations(connection, "sql/migration_20261024_cash_withdraw_transfer_intent.sql");
+            ItSchema.applyMigrations(connection, "sql/migration_20261023_cash_withdraw_fund_fact.sql",
+                    "sql/migration_20261024_cash_withdraw_transfer_intent.sql",
+                    "sql/migration_20261025_cash_withdraw_fund_request_compat.sql");
         }
         SqlSessionFactoryBean factory = new SqlSessionFactoryBean();
         factory.setDataSource(source);
@@ -97,10 +99,10 @@ class CashWithdrawTransferIntentMySqlIT {
 
     @BeforeEach
     void reset() {
-        for (String table : new String[]{"member_cash_withdraw_transfer_intent", "member_cash_withdraw", "player_withdrawal_cooldown", "merchant_referral_bounty", "ums_member"})
-            db.execute("DELETE FROM " + table);
+        // Each case retains prior append-only originals; no ledger row is edited/deleted for test cleanup.
+        ID++; MEMBER++;
         db.update("INSERT INTO ums_member VALUES(?,100)", MEMBER);
-        db.update("INSERT INTO member_cash_withdraw(id,member_id,amount,status,frozen,del_flag,openid,out_batch_no,out_detail_no,create_time) VALUES(?,?,30,0,0,0,'original-openid','CW7','CD7',now())", ID, MEMBER);
+        db.update("INSERT INTO member_cash_withdraw(id,member_id,amount,status,frozen,del_flag,openid,out_batch_no,out_detail_no,create_time) VALUES(?,?,30,0,0,0,'original-openid',?,?,now())", ID, MEMBER, "CW" + ID, "CD" + ID);
         failAfterBalanceWrite = false;
         refunds.set(0);
         provider = mock(IWechatPayService.class);
@@ -326,10 +328,16 @@ class CashWithdrawTransferIntentMySqlIT {
     }
 
     private CashWithdrawTransferIntent submitted() {
-        assertTrue(debit(admission(intents)).deducted);
-        CashWithdrawTransferIntent original = intents.selectByWithdrawId(ID);
-        assertEquals(1, intents.markSubmitted(ID, original.requestHash()));
-        return intents.selectByWithdrawId(ID);
+        // A pre-integration master-only original: persist the real debit and original snapshot, without inventing ledger facts.
+        return new org.springframework.transaction.support.TransactionTemplate(transactions).execute(status -> {
+            MemberCashWithdraw row = cash.selectByIdForUpdate(ID);
+            assertEquals(1, members.deductWithdrawableBalance(MEMBER, AMOUNT, BigDecimal.ZERO));
+            CashWithdrawTransferIntent original = CashWithdrawTransferIntent.create(row, "merchant", "wx-original",
+                    "original remark", new BigDecimal("100"), new BigDecimal("70"));
+            assertEquals(1, intents.insert(original));
+            assertEquals(1, intents.markSubmitted(ID, original.requestHash()));
+            return intents.selectByWithdrawId(ID);
+        });
     }
 
     private <T> T transactional(Object target, Class<T> type) {
@@ -351,6 +359,6 @@ class CashWithdrawTransferIntentMySqlIT {
     }
 
     private BigDecimal balance() { return db.queryForObject("SELECT balance FROM ums_member WHERE id=?", BigDecimal.class, MEMBER); }
-    private int countIntents() { return db.queryForObject("SELECT COUNT(*) FROM member_cash_withdraw_transfer_intent", Integer.class); }
+    private int countIntents() { return db.queryForObject("SELECT COUNT(*) FROM member_cash_withdraw_transfer_intent WHERE withdraw_id=?", Integer.class, ID); }
     private void money(String expected, BigDecimal actual) { assertNotNull(actual); assertEquals(0, new BigDecimal(expected).compareTo(actual)); }
 }

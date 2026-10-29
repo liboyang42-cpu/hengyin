@@ -1,0 +1,41 @@
+{
+  "base_sha": "6d113bd0ec177ea6d2423fa2f76e7e50b44ed5ac",
+  "application_type": "com.chengyinhub.web.service.verify.RegistrationTicketApplication",
+  "issuer_normalized_body_sha256": "4bd2a3856363941859ba6935eecc21363295cab70e6be2268b95c63a8d729de2",
+  "receipt_normalized_body_sha256": "a2cad58991c517b7b50004abf7b823db6c161f860aea4566dd0775cb36ceb9f8",
+  "unchanged_controller_methods": {
+    "public AjaxResult issueCityNodeCode(Long poiId)": "9c2b7e6963406ce0a36328d3380ee94aa1326cf7de4cd439b0c9be0d72d13ee2",
+    "public AjaxResult redeemCityNodeCode(String code)": "841f09b581381cf457b9d6fbcf00fd7395234664898e56a1257f534369570e7f",
+    "public AjaxResult issueGroupCode(Long activityId)": "05b7e6f8938e59efa176b11317de9aa5c5c114a763175576206edcc57c9d68b7",
+    "public AjaxResult redeemGroupCode(String code)": "7c3c453687cfe2fc0e39987ba705e4aec70767d0fef23d3f6fbdb542d16bde14",
+    "private long appUid()": "2b100af5ca37d5145c34352acd5f74c46914131e4e0122413f788a74abec95f6"
+  },
+  "unchanged_receipt_priority_files": {
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java": "edceeb9eff9bb32e44cfecb6bcc2f042378a8667153a02c14bdf1c74fd588fa8",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/RegistrationSeatService.java": "298d1eebd53fa66fee65d24ddda9d757afe61d4b0fcfc68241328e480377c0c2",
+    "chengyinhub-common/src/main/java/com/chengyinhub/common/utils/VerifyDynCodeUtil.java": "4eab03db0636048814b6a478103b94c5ba459d8ae66758974d35af7a34e45de5"
+  },
+  "fixtures": {
+    "ApiVerifyControllerTest": {
+      "cases": 19,
+      "assertion_verify_lines_sha256": "12ea47eb7c7d2fae75e8e1dd292176443ee82afd92c7ccf440f09f6ccd3b0127"
+    },
+    "ExploreIssueCodeGateTest": {
+      "cases": 7,
+      "assertion_verify_lines_sha256": "88b982a286d3487ed95d0c675f84130958e6798abaa9cb11163c9e8949a19cb7"
+    },
+    "FreeOrderCancelEntryGateAcceptanceTest": {
+      "cases": 2,
+      "assertion_verify_lines_sha256": "d3660b3afc8e0f37be3b07b58d40601e8ca542f698be6aa30a82525d1321694a"
+    },
+    "RegistrationSeatEndpointTest": {
+      "cases": 16,
+      "assertion_verify_lines_sha256": "61b103d2284a15a41e5037a608e1d918bd9950e50476c83af4b94ea6131a0acb"
+    },
+    "RegistrationSeatReplayBoundaryTest": {
+      "cases": 19,
+      "assertion_verify_lines_sha256": "c20a91744764daf473233eb1a400486019574a709795603825c3b671def0f3ac"
+    }
+  },
+  "java_executed": false
+}

@@ -1,0 +1,404 @@
+{
+  "base_sha": "6d668e381e8f0b6f33db93470c93056161be4b70",
+  "base_tree": "8f4f3463ac50a06415acc75afbc26e2dfd7d8c3f",
+  "branch": "codex/architecture-day-d-topic-publication",
+  "production_file_count": 4,
+  "moved_groups": {
+    "publication": [
+      "attachCommercialPublicationState",
+      "canResubmitSupplyReview",
+      "findOpenTopicTaskId",
+      "isSimplePublishMode",
+      "noBundleReview",
+      "publishBeforeReview",
+      "publishDraftInternal",
+      "requestContentSafetyRelistReview",
+      "submitDraftSpotCheck",
+      "submitPublishedProjectReview",
+      "submitTopicBundle",
+      "publishApprovedRouteSnapshot",
+      "publishValidatedRouteSnapshot"
+    ],
+    "activity": [
+      "assertSoldActivityTimeLocationUntouched",
+      "countActivityOpenSaleRegistrations",
+      "ensureSelfHostActivityShell",
+      "generateSelfHostActivity",
+      "refreshSelfHostActivity",
+      "sameSecondOrBothNull"
+    ],
+    "guard": [
+      "assertAiSimpleNodeLocations",
+      "assertBlockNarrativeNpcReferences",
+      "assertBlockSysVarReferences",
+      "assertBranchGraphOnlyForOrienteering",
+      "assertJourneyStoryReferences",
+      "assertOrdinarySupplyRestored",
+      "assertPublishReady",
+      "assertStateKeysRegistered",
+      "assertThemeRuntimeReferences",
+      "assertThoughtRefsResolvable",
+      "assertTopicSizeWithinLimits",
+      "autoRegisterOptionTags",
+      "blockIsBranch",
+      "blockNarrativeNpcId",
+      "blockWritesOutcome",
+      "chaptersFromNodeRows",
+      "declareNpc",
+      "declaredRouteOutcomes",
+      "extractAllNodes",
+      "journeyRulesExhaustTag",
+      "journeyStoryAvailableNpcIds",
+      "journeyStoryRelationKeys",
+      "journeyStoryStateKeyRefs",
+      "normalizedBranchRouteForPublish",
+      "ordinarySupplyResumeBlockReason",
+      "requiresFullRuntimeSnapshot",
+      "validateCoordinate"
+    ]
+  },
+  "moved_method_count": 47,
+  "unchanged_method_count": 127,
+  "original_366_names_preserved": true,
+  "old_ordinary_cases_in_all_touched_files": 448,
+  "graph_mysql_cases": 32,
+  "graph_mysql_scenarios": 62,
+  "removed_facade_fields": [
+    "NARRATIVE_NPC_SECTIONS",
+    "topicRouteRuntimeService",
+    "omsTicketService",
+    "advancedGameConfigValidator",
+    "npcProfileMapper",
+    "topicStateKeyRefService",
+    "quotaService",
+    "ROUTE_JSON",
+    "topicRoutePublishGate",
+    "topicRouteConfigValidator",
+    "routeOutcomeReader"
+  ],
+  "patch_sha256": "15b89065d89435376397ce010d5ef1f67a328eaebf77dff54875716c6f42dd98",
+  "java_mysql_ci_executed": false,
+  "files": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_03Test.java",
+      "sha256": "e6ad635c7e564eacf8785698679d881eb001c813d27405c0265365cb4a684702",
+      "blob": "4fb4f7b7a8d86133e87975badd7374d4f7d5c4dc",
+      "preimage_blob": "82641fe846d04b714399eb92b48bc9b338f09674"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_10Test.java",
+      "sha256": "f6ca1833fb9ec1f3944f85dce635b75df23d9b051a229689c527cae6d346e739",
+      "blob": "c166c39eff349f7864bcf1ebfd4dcca82283b4fb",
+      "preimage_blob": "7eea466dca17092b57b7b228b2fb23cf99c47563"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_12Test.java",
+      "sha256": "412665291d8b9a4e99c2af27a7d35ddda3008079920f7cdfef08bdd87b56e6d5",
+      "blob": "24bcaf95bde20eae644bf9b54f0c4201c3a5e710",
+      "preimage_blob": "3be297f3245483e06ac5886f046e709e7d3dccf7"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_14Test.java",
+      "sha256": "d2d2abd06af041a1726362102d4e5823a60757851385e3b49cf7c1097ee02a20",
+      "blob": "650aa00ee8a1db29f67cb6174bdee294c8c8dc28",
+      "preimage_blob": "0cdaefb656a41e8b08bff9d4e26d71a91ce53335"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_15Test.java",
+      "sha256": "64e190a0c24e254ae0b0a142b3bdd810c311e0d407d8bc0322c2514b36c6c111",
+      "blob": "763ad1b12083566d06f9e8d781bb674603c64e39",
+      "preimage_blob": "31af7d12a5f23e691b340b4221e8f170165994ff"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_18Test.java",
+      "sha256": "1b1cb4ea52d664aef248fba125e69c126a02ae6fa7b20092f6aedefec3a94aaf",
+      "blob": "724bd960fff1c2d8817997a7dcba0d748c23250b",
+      "preimage_blob": "c4fa62c0fd03f8a01f2530d1a77824d59d730caa"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_19Test.java",
+      "sha256": "61f8ef3fda1f6a7a14f7aa85043847922b30ab83ea7175062f1f4f0551b24546",
+      "blob": "c47e30ba19f75f85e4f6100a01baf67f563b0498",
+      "preimage_blob": "92315715a2bbc7b9253f1a1d5d1c428e771c28af"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_20Test.java",
+      "sha256": "0252ace5a3197d4a472fc12b1bb1857749403d294d02676251270a3a9bad3b70",
+      "blob": "a0ca0a7656c12b40ac59dc0310e1fcb3c3385137",
+      "preimage_blob": "6199461ce2804e0bed77c2a6dd7b82998c86eaf2"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_22Test.java",
+      "sha256": "656c68f45cc9f74c1b004735e3072cf8355512e2ffbf1362c65a25d3724c6de7",
+      "blob": "5fa941a9bc24ca6d31dde051a1a0507110dcc370",
+      "preimage_blob": "e5ebf4cbb5093d7d37ed5518655be2b9f8f1074e"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_23Test.java",
+      "sha256": "a31dfb965716cce3aa79245a425e38f462b61eadce74092d8cae68ad06d80782",
+      "blob": "9e04895134883d34e7b0ce27046f2df3aa18975e",
+      "preimage_blob": "6a67befd6a366960fa24e78c33f433a578b11c0b"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicPublishDraftTest.java",
+      "sha256": "f11228d02b41be54f4a97938c4886428e776bd54e4c576e5a53698502a006397",
+      "blob": "04d5c4d907898dc52ff8969c01a7cfdee00557bc",
+      "preimage_blob": "6dd74b6e9c3472ff438053f663fa9dd66c54e495"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicPublishNarrativeNpcGuardTest.java",
+      "sha256": "20977cfd734054d732e8eb1f82dc54dd7ad9b297088b7ce017b93ebfe6075b2f",
+      "blob": "eeacc5ebe3776cfd215b6c6015d30084134e2bce",
+      "preimage_blob": "f8325b6cb294c7ffbbfc7073329ac9ff85b84fe1"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicPublishStateKeyGuardTest.java",
+      "sha256": "50686e7206c7e009358eb06300d078b3ed1d2f36cf025a007efafdce9ccbf635",
+      "blob": "38d77b460341cd29e01d8de0bd34494d78eede5f",
+      "preimage_blob": "57bc652510823d415373e84a9f11d95d72e9c731"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicRoutePublishPolicyTest.java",
+      "sha256": "663d5d0ccb749128512c741d6cbe1f73576f4d9a330861b49a7fec1936e9fab9",
+      "blob": "a355368fc407710460014c61a65f1ba39c4e8558",
+      "preimage_blob": "93a6076cc1d8092995cdcc2b2dd21ab1a63b90a4"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicSysVarPublishGateTest.java",
+      "sha256": "a31569e9d482a6200562aeabfbe3877ca3d3eb43acb359971f5414f57cfb1618",
+      "blob": "e50ab13648a85fa4eaf60c14e4e8b44e4e8f2969",
+      "preimage_blob": "f7aceee092dd26d7b46b1369a2061c97507be0f4"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/OrdinarySupplyResumeTest.java",
+      "sha256": "dfbc8f209516e825410f2c1011b01aafdef40306f32a2c6c52af71f4f4d138da",
+      "blob": "c2c3711575094b66c0b0d38941497b5dae5d0a57",
+      "preimage_blob": "0fb6f142723276a078226c6af076bd5878bddcf6"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ProductSourceWiringTest.java",
+      "sha256": "1a9f1ec99b136cbac502fa6bd9ea1bb5464cfccfdfbe9465be8fd3ea4bef8ee7",
+      "blob": "93db42bd93739717680fb2de7eccc6d20f84a678",
+      "preimage_blob": "b09da3b7ac5634107bf6b83206d19c10c658470d"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicCopyNpcRemapTest.java",
+      "sha256": "b8292dbf4b7c7e5abf6e97503b7bcbf441004f81e5f2f81a7cc3c156c3ec85b8",
+      "blob": "96be61aff0e100060c8ff70cf276abd285601bfd",
+      "preimage_blob": "8c30d86525aea5b540ea25e538163eb7447c52f7"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicCreativePostVisibilitySyncTest.java",
+      "sha256": "4f8ccc18e953c2d80ca1d5a90f2a45738a85ffad8b7dd4fb59a6509eee90d9e7",
+      "blob": "f192c0c22d54fb1abcd9e4ff1253bad6e6791703",
+      "preimage_blob": "6d8fa803ad349d4db163a86b8659838d17c179c0"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicDraftLegacyFieldPreservationTest.java",
+      "sha256": "33c9163c9f666a8a845cae44c540b391863e8e0dc31fc9e9da2beee3c7ed2646",
+      "blob": "15d296f4a71bc20a117d314c70897eec94af2cba",
+      "preimage_blob": "7169c48bf80556bda2885460b63005c2df57db6f"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicDraftPartialSaveGateTest.java",
+      "sha256": "2ad5f9c7181b2188c0cc54f8bcdfab63dbe830fad2e97cf6b53238354bacb9d6",
+      "blob": "aa382b1b05342a19520068fd50e7d0f6c73428d9",
+      "preimage_blob": "4989ca3ec9d5e6c96c3d93ef2f19c258d9541086"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicDraftSubmittedOrderTest.java",
+      "sha256": "5b0bc45fd293fc5da12fd86c1aa4c09790b6b49d7d4507396957c147b3790fa0",
+      "blob": "249048a0f1bbd2b0f59b7c20be3883ab6dcc86c8",
+      "preimage_blob": "f7d884b2e77c2e6172b8a5ac7eddfa8006cc04c0"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicEditActivityShellTicketSyncChainTest.java",
+      "sha256": "9c0c2085578af908982bed038f2718d22eaf2cf9321bb8356852c27d52409014",
+      "blob": "09efc8b51af8560125ef214c1d350dd1b9e68ac0",
+      "preimage_blob": "118b6baf3cabaa6753f4c5265eacae61ed0036dd"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicJourneyStorySaveTest.java",
+      "sha256": "cc4d85084be8ec27421b7fe107cb92047e65be62efc778b4b67e8e5483291f96",
+      "blob": "344ce9b3846a254592c4e403aa42e2eb2600ec2f",
+      "preimage_blob": "b054771b996b637771a05e651f04a5d13c47d9f3"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicLifecycleWiringTest.java",
+      "sha256": "a63bde62250b7d248baa8991c750cc05e4a6911a1ce44620492240f5b018860e",
+      "blob": "98cd056320634fc647ef8c3c0d95e33ffca6d75b",
+      "preimage_blob": "4235a54fadc05d66062e02d53bb025c785af55a3"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicPendingReviewSelfHostShellTest.java",
+      "sha256": "e674a353b34e713304c97093b70fdef9e680f5ab82b4c2e7016b5228fbf20722",
+      "blob": "540bdbf0644ea044e3e84786cfc9f2e16986a836",
+      "preimage_blob": "9a57456a9ac442fab2331a323eca9740f5765193"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicPublishJourneyStoryGateTest.java",
+      "sha256": "064d8ba500d513aa32231e118ed5107e8c1dd485d15d07aefd30f5e2739b1a5c",
+      "blob": "72fa5bf239d545b472e6d97ba6bbeb11c36e57b2",
+      "preimage_blob": "f628097f12d0ad73389c9cca1a41806cdf35cc35"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleReviewDecouplingTest.java",
+      "sha256": "73d390de65aa156dc947b67a4475598316fa0566a3e6cb63e9bbfc207be3f2b3",
+      "blob": "90ba3694557b234a45a38afcb7b22b617eda3fb3",
+      "preimage_blob": "c4b67e13824b83d15a48cf2a0df31f17e5476bb1"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSoldTimeLocationGuardTest.java",
+      "sha256": "36595a88002ffd306b32b12ce2ae2a2c9c81ab75edf6ead33c4fc097d07bcadc",
+      "blob": "1e427ccc2f1b634d8d873fe968e5546ecd9d51bb",
+      "preimage_blob": "1b5d5bf22171ad7e48c6e968647897071024a285"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicUpdateByOwnerTest.java",
+      "sha256": "227dc9eedb215e5f3cf2d127d213a143757363c5a49f14b6a4a28d87b030639e",
+      "blob": "97798a041c1136641ee99bc015f1c5796d81695f",
+      "preimage_blob": "0e52c3768ba6e20c90cd883b5b2821fc94a54f2c"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowCopyTest.java",
+      "sha256": "1978b8990f640c5eb3c8992623f4ac65ba324f4b0aab792ddd7df9b60fd3c650",
+      "blob": "b354390268c20e17cf6e009a9bd40bfcbbf4b769",
+      "preimage_blob": "b7e3ca5b45b7e1206efa4a1bd062be20ba55a4a6"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowTransactionTest.java",
+      "sha256": "8f5ffa3ecdf14ce9637b1f2ad444db2bd0ddd5f2eff254f389b10715c97ddd6b",
+      "blob": "c7dee576446a0a1d87333d08aa6258a0a1375dea",
+      "preimage_blob": "a9d553189c69d3a71b8497573a62f2580f7019d8"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java",
+      "sha256": "d6163c130c366a35fe0a60d8967f9a6bac135e85e91a640b398b14deb0b6decc",
+      "blob": "bec2bea02ec107515116f4ee13c0d9776c167a68",
+      "preimage_blob": "cf370ab10f9ae66d39bde7fe36520515fd55525c"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CmsTopicDraftBindingsTest.java",
+      "sha256": "5de6f0562e9a259898bc5c9a7b8ee282729aed7e6ae94e8bb722126784452ad4",
+      "blob": "3c8cc347557de16ecd2e734b9a34e5839917c74c",
+      "preimage_blob": "b8619b57014140200530b7715bf59d03ca8364ec"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameplayReskinFixture.java",
+      "sha256": "1262fe8eca37be77c5e0279465323c474096ee89a933d227b7d509bdb521bfb2",
+      "blob": "00560bae2b01d0fe103cf6a834532fd17a5ec5b9",
+      "preimage_blob": "13035dd238d86045bdf68db5eb9a63837636a839"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PersonalGameplayRuntimeServiceTest.java",
+      "sha256": "cb5fa54c6c529f213b1afc0d5b0819a0ad8d8afc8bb1d704931ea7bfbbf9cbb6",
+      "blob": "df348d70597bae3790ba593fbbbe4e39dd06a66e",
+      "preimage_blob": "8ae3c98443a651b00cf70ca70b616c672d582c5f"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicContentCopyMySqlFixture.java",
+      "sha256": "02df2704a2bbaf75335c18c31c31825228ec12e8f980c56fd298929131292c8d",
+      "blob": "1bb37e97aefc032fd097a78aa1bbcb87e5d60cd3",
+      "preimage_blob": "912ee48f92c8cb9e977fff28b4ffbe9fcd4ef9aa"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicContentGraphMySqlFixture.java",
+      "sha256": "3890cd8e43cc4d8315dc5fcdf9b7c3aaa90225ece1d4cdd3dd7d1a534556de1e",
+      "blob": "ead3185fdface05c0d911b0bb27a550157d96630",
+      "preimage_blob": "d628b4654592420cdeb8bf5ba1b2dca6947c3e92"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicContentGraphMySqlIT.java",
+      "sha256": "36d42e29cd35486b11c758a274b00f88b4e4fa43ed0367ad3b44be25eec16abf",
+      "blob": "0d9d1fc7b36a9eb9b0cc08db95abbadaa84e3be5",
+      "preimage_blob": "33793321700490528518f14d185244ddc01d6818"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicCreateOpenClubPoolTest.java",
+      "sha256": "7b5afcbb2e00278c5fc6e6a3ad5bbd872ed03d72b93228a5b5ba1c8602548728",
+      "blob": "939be1c7504a09ac6b611b397cad53d3edec2a04",
+      "preimage_blob": "04d0cab68d6f4404626550f22948dfc73ecfb7f1"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicCreateSaveDraftSideEffectTest.java",
+      "sha256": "c5d9d929e7181fb60d88e11b9e2aeab2ec6b623c661159a5e879e9564a96d280",
+      "blob": "6fc43cc70bd701fa6e3176ecb5d79418a46a8ca5",
+      "preimage_blob": "4e57d51921801db2d1c5642d44b3838a6411dcdb"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/TopicCopyTestWiring.java",
+      "sha256": "d18e0b1ac639cbef867bfc094b3ed5828a92d074a37ae988e0e5e1dd2c28cd72",
+      "blob": "50e9a6df511692f375e2add3153904d971f4903b",
+      "preimage_blob": "5804bfbd12b5e08aa26759677a28e52d6a2e8c37"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/TopicGraphTestWiring.java",
+      "sha256": "d5bfbad30e42a5b5442b7e44b3295f2a0d0855e5e2be509d4d0e5ab9c22b3794",
+      "blob": "ac9a3ce949a1ed0f06552f40bcb0a0ce99abafba",
+      "preimage_blob": "b44e583c5e5492a46aa0aa279aca44d2957b1da6"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/TopicPublicationTestFixtures.java",
+      "sha256": "ca76694ab86a84a9583b9fefcc8f84f0b187af16d53c3073b12985373cad1f05",
+      "blob": "2538ed6c1dc0d9493f5f3682555cc0dfb7ecc964",
+      "preimage_blob": "93cf0cd5de9004903c86b10d49b1e2d1213b4570"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/TopicPublicationTestWiring.java",
+      "sha256": "05574b276240642188479a24f74770505b3137e1c8766874b1f3351f19d86ccb",
+      "blob": "52e08677a84b00276eaa21b59cd8a67068e22c8c",
+      "preimage_blob": null
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/TopicSizeLimitsTest.java",
+      "sha256": "fc014257c0d5474dc5906ccfc7f3e121e7937ec71ec36f2766d78d3eccfb71e3",
+      "blob": "016e04fd0f0e9ba0c929ba76cbb4b8d884e58221",
+      "preimage_blob": "96060edc800daceca2bb9b4b3a8ffe1c0c45d94b"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/upgrade/SupportedStackServiceCyclesTest.java",
+      "sha256": "f9146d1afede7cd0ebaefab933082973c668e1e1dceed09875e5bf516e4bbc60",
+      "blob": "a0eb7fd9424ec1ac5b46c0440605d10fecc42668",
+      "preimage_blob": "4324de152e6ac1b0bc0632df830745364051f706"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/TopicTransferToClubTest.java",
+      "sha256": "782243228b94f0d4812a697015bd2d61f91039fcf8ad3bf3a9f30153173ab793",
+      "blob": "1971182832d3ebd7d753d0b9c6a241f40de1a0b3",
+      "preimage_blob": "84e34d80c59aeae417d59818351eb48e2ecde6aa"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/business/ChapterAtmospherePersistenceContractTest.java",
+      "sha256": "35210175770516a0776cfbcb51cccd2a7a2198d6f05c8dc7487c1e5482d05edd",
+      "blob": "63066a8f2166bc9a0520fb5b6fe7990d5c99188a",
+      "preimage_blob": "1a84d623ccd889221005ce8814c70e6571fc70bc"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java",
+      "sha256": "965cbd0a532364e1c034eaf6031fd58c41affe7d11020d42ae7e368372cfa6fb",
+      "blob": "26e5e9e6e68a0c4b5629ea679baa464ed00923cd",
+      "preimage_blob": "1506dc5b7a73af5f8abdcc0a172c08279b24ceec"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicPublicationService.java",
+      "sha256": "8fa749053e1058b634d0737ba7777581a8b5b752f1c16546882c214a3aa4f759",
+      "blob": "424b509b9aade7c8fce0ef241eed0d180d65b891",
+      "preimage_blob": null
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/TopicPublicationContentGuard.java",
+      "sha256": "5cb77f7c19e7858f471eb183e2e8bb12605e6d4a6ab41340f338148e65334531",
+      "blob": "7cd83c0d27f6198f33d4dab039d8ec1cc54e7b28",
+      "preimage_blob": null
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/TopicSelfHostActivityService.java",
+      "sha256": "72bc2d7d63bd12f73f5a70bdd349b850f563446d074128452c79b95f09f1d829",
+      "blob": "499a32b09fe21a4f46cc6bbb71518b1fd588cc6d",
+      "preimage_blob": null
+    }
+  ],
+  "creation_method_snapshot_port_requalification_only": true,
+  "snapshot_write_port": "TopicPublicationService.persistRouteSnapshot",
+  "previous_frozen_publication_sha": "20d6df7cc53d00fdabf91918c843b5dec6c18d54"
+}

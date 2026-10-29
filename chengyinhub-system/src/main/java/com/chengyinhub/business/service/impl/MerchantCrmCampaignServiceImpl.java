@@ -104,6 +104,7 @@ public class MerchantCrmCampaignServiceImpl implements IMerchantCrmCampaignServi
     @Override
     @Transactional(rollbackFor = Exception.class)
     public MerchantCrmCampaignVO create(Long principalMemberId, MerchantCrmCampaignRequest request) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         MerchantAccessContext access = accessService.require(principalMemberId, MerchantPermission.MARKETING_WRITE);
         String channel = channel(request == null ? null : request.getChannel());
         requireChannelPermission(access, channel);
@@ -184,6 +185,7 @@ public class MerchantCrmCampaignServiceImpl implements IMerchantCrmCampaignServi
 
     @Override
     public MerchantCrmCampaignVO dispatch(Long principalMemberId, Long campaignId) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         MerchantAccessContext access = accessService.require(principalMemberId, MerchantPermission.MARKETING_WRITE);
         MerchantCrmCampaign campaign = ownedCampaign(access, campaignId);
         requireChannelPermission(access, campaign.getChannel());
@@ -201,6 +203,7 @@ public class MerchantCrmCampaignServiceImpl implements IMerchantCrmCampaignServi
 
     @Override
     public MerchantCrmCampaignVO retry(Long principalMemberId, Long campaignId) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         MerchantAccessContext access = accessService.require(principalMemberId, MerchantPermission.MARKETING_WRITE);
         MerchantCrmCampaign campaign = ownedCampaign(access, campaignId);
         requireChannelPermission(access, campaign.getChannel());
@@ -235,6 +238,7 @@ public class MerchantCrmCampaignServiceImpl implements IMerchantCrmCampaignServi
 
     @Override
     public int recoverStaleProcessing() {
+        if (com.chengyinhub.common.config.RestoreDispatchGuard.isRestoreMode()) return 0;
         List<MerchantCrmCampaign> stale = campaignMapper.selectStaleProcessingCampaigns(RECOVERY_LIMIT);
         int recovered = 0;
         if (stale == null) return recovered;

@@ -46,7 +46,8 @@ class OWN_C04_18Test {
         NpcChatWriteService writes = mock(NpcChatWriteService.class);
         AtomicReference<NpcChatRequest> stored = new AtomicReference<>();
         when(writes.read(anyLong(), anyString())).thenAnswer(inv -> stored.get());
-        when(writes.admit(any(NpcChatRequest.class), anyString())).thenAnswer(inv -> inv.getArgument(0));
+        when(writes.admitShop(any(NpcChatRequest.class), anyString(), eq(41L), eq("question")))
+                .thenAnswer(inv -> new NpcChatWriteService.ShopAdmission(inv.getArgument(0), null));
         when(writes.finish(any(NpcChatRequest.class), any(NpcChatLog.class))).thenAnswer(inv -> {
             NpcChatRequest terminal = inv.getArgument(0); stored.set(terminal); return terminal;
         });

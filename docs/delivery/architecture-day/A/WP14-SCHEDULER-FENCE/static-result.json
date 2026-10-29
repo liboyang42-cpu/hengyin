@@ -1,0 +1,38 @@
+{
+  "baseline": "cc91b0845e3abd4a2060d54a857c8c179bd22d4f",
+  "verification": "STATIC_ONLY",
+  "actual_java_tests_run": 0,
+  "new_declared_tests": {
+    "declared_tests": 3,
+    "dynamic": [],
+    "nested": [],
+    "gates": [],
+    "conditions": [],
+    "required_database_bases": []
+  },
+  "unchanged_sources": [
+    "chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/util/AbstractQuartzJob.java",
+    "chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/util/MySqlSessionLock.java",
+    "chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/util/CanonicalJobTarget.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/quartz/util/SchedulerHandoffBoundaryMySqlIT.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/quartz/util/SchedulerSessionLockMySqlIT.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/quartz/service/MySqlSchedulerCoordinatorTest.java",
+    "ci/real_storage_it.py",
+    "ci/real-storage-it-registry.json",
+    "pom.xml"
+  ],
+  "sha256": {
+    "chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/service/MySqlSchedulerCoordinator.java": "8b15994c1282166ead43ba95188f0b093059ee2dff20ea6b82e6a4be0a4f16e5",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/quartz/util/SchedulerWorkFenceTwoProcessMySqlIT.java": "834a9dd6cd95f2f3840a2c5e0eb474a790fd86bbd18815f5416355cad6b2226a",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/quartz/util/SchedulerFenceProcessProbe.java": "1913753dad1d4b5ffba47c81531cafc0479fbf652b19da9a92e544d4403af4e5"
+  },
+  "not_run": [
+    "Java compilation",
+    "JUnit",
+    "MySQL",
+    "child JVMs",
+    "cleanup",
+    "CI",
+    "domain economic effects"
+  ]
+}

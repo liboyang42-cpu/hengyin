@@ -1,0 +1,48 @@
+{
+  "parent": "6788c741c43d9516aa7c691ca93110677c7e1acb",
+  "components": {
+    "E": "91e..87c27b: selectForUpdate dual cache flags+1 SQL regression",
+    "G_finance": "a421..ee71: current cash rows and zero-sale frozen terms; not full refund closure",
+    "G_tasks": "2ec..27a: exact two existing task targets; missing-only paused SQL seed+7 SQL/7 unit",
+    "C": "a480..9da: four-phase Photo and current lock reads; then9da..971 original-version IT/UI baseline closure"
+  },
+  "root_preserved": [
+    "original canonical advanced_command_fingerprint migration in ThemeRuntime",
+    "orderedMembers compilation fix",
+    "original test-only quota adapter",
+    "explicit own-schema cleanup and source-bound CI receipts",
+    "root rebuilt action ledger not C stale generated patch"
+  ],
+  "root_adapter": "Only two legacy Photo unit fixtures wired to explicit Intent double; real Vision test supplier and previous assertions retained",
+  "actual_local_checks": {
+    "photo_node_9files": 125,
+    "photo_node_failures": 0,
+    "architecture_selftests": 94,
+    "architecture_selftest_failures": 0,
+    "ci_cost_contract": "PASS",
+    "new_paused_migration": "run_migration --dry-run accepted10 statements/6 assertions; no DB connection or execution",
+    "ui_gate_merged_source": "PASS, no old baseline keys/ratchet growth",
+    "action_ledger_node_tests": 68,
+    "action_ledger_failures": 0,
+    "action_ledger_skipped": 0
+  },
+  "pending_checks": [
+    "all Java compile/unit",
+    "C Photo actual SQL",
+    "E1/G4/G7 real SQL",
+    "new trusted architecture source CI",
+    "full payment/late success/refund/payout/PLATFORM consistency"
+  ],
+  "critical_not_closed": [
+    "H-G01 refund reversal/late cash shared fence",
+    "H-G04 PLATFORM and guarantee accounting row schema",
+    "H-A136 economic edit and delete race pending A",
+    "B H-B01 payment current-attempt/close race"
+  ],
+  "business_pending": [
+    "per-ticket fixed fee multiple quantity",
+    "post-accrual refund reversal per original allocation vs net-period recomputation"
+  ],
+  "production_actions": 0,
+  "accepted": false
+}

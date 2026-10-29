@@ -1,0 +1,42 @@
+{
+  "status": "DOC_ONLY_CHECKS_PASS_NOT_JAVA_ACCEPTANCE",
+  "source_sha": "addeb6edc912223ce2a5d3d9d89d87b2ebb84adf",
+  "branch": "codex/architecture-day-f-wp13-http-proposal",
+  "source_fingerprints_and_anchor_lines_checked": 50,
+  "production_blob_equal_per_compared_source": 39,
+  "compared_sources": [
+    "00fc58c50febc3366f78af600c8f12636cd13de5",
+    "66e9e1798bf0b3e1c2b7e6cb2b6ab13a3b3e1329",
+    "9b92fb5738244c677fea7470232f67d3b97b7a98"
+  ],
+  "relative_links_checked": 6,
+  "doc_scope": true,
+  "staged_diff_check": "PASS",
+  "secret_file_gate": "PASS (scoped changed documents)",
+  "gitleaks": "PASS (redacted scoped changed-document scan; repeated after final verification metadata update)",
+  "python_branch_model": "EXECUTED_SOURCE_ANCHORS_AND_BOOLEAN_MODEL_ONLY",
+  "python_branch_model_stdout": [
+    "accepted_result: model_release=False",
+    "input_blocked: model_release=False",
+    "proven_pre_send_failure: model_release=True",
+    "generic_input_reason_unknown: model_release=True",
+    "typed_sent_outcome_unknown: model_release=True",
+    "NEGATIVE_CONTROL: sent UNKNOWN no-refund contract FAILS in source-bound branch model",
+    "SCOPE: source anchors + boolean model only; Java/Redis/provider NOT_RUN"
+  ],
+  "java": "NOT_RUN",
+  "mysql_redis": "NOT_RUN",
+  "provider_http": "NOT_RUN",
+  "ci_dispatch": false,
+  "production_changed": false,
+  "migration_or_schema": false,
+  "compiled_jdeps": "UNKNOWN; not run/read back in this task",
+  "artifact_sha256": {
+    "CALLERS.md": "1ce7dfc6636de848d94d1ff10acaf618e91cb9e631b2cea41b2cb9084eef1bfa",
+    "QUOTA-COUNTEREXAMPLE.md": "34dcb42e4b9a678f1d364164cf3b09aa60a853156186075bf7c3266b168f57f8",
+    "REPORT.md": "9707412c4c1b6549f44288543b61a77194e58bc36850888722bd4535beadb592",
+    "TEST-PLAN.md": "ec53ac361d5986d6ee3118424efd1efcd302c7de67a1a9cea0d75476367933ee",
+    "evidence.json": "3e275b9dbc47d342d1e5f0b3da0454385288cf2af403ae6fe2d8cee90bb525c3"
+  },
+  "python_branch_controls": 5
+}

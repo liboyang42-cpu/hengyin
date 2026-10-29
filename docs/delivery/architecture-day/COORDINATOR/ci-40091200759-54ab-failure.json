@@ -1,0 +1,50 @@
+{
+  "run_id": 40091200759,
+  "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/40091200759",
+  "source_sha": "54ab9282bee31c7b6dd276682f4c86e9903709c9",
+  "verdict": "FAIL",
+  "expected_tests": 189,
+  "executed_tests": 0,
+  "cleanup": [
+    {
+      "class": "com.chengyinhub.business.service.RefundNotificationMybatisIntegrationTest",
+      "status": "CLEAN"
+    },
+    {
+      "class": "com.chengyinhub.business.it.RegistrationCallbackIntentMySqlIT",
+      "status": "CLEAN"
+    },
+    {
+      "class": "com.chengyinhub.business.service.RegistrationFundsMybatisIntegrationTest",
+      "status": "CLEAN"
+    },
+    {
+      "class": "com.chengyinhub.business.it.RegistrationTopicFenceMySqlIT",
+      "status": "CLEAN"
+    },
+    {
+      "class": "com.chengyinhub.business.it.WechatVerifiedPaymentFactMySqlIT",
+      "status": "CLEAN"
+    },
+    {
+      "class": "com.chengyinhub.business.it.Wp04ApprovedRefundFenceMySqlIT",
+      "status": "CLEAN"
+    },
+    {
+      "class": "com.chengyinhub.business.it.Wp04OriginalRefundMySqlIT",
+      "status": "CLEAN"
+    },
+    {
+      "class": "com.chengyinhub.business.it.Wp04PaidHalfStateMySqlIT",
+      "status": "CLEAN"
+    }
+  ],
+  "failure_stage": "Admin testCompile; original production compilation passed in observed job",
+  "compiler_diagnostics": [
+    "RegistrationCallbackIntentMySqlIT:480 and530 checked observer exception used in Consumer lambdas",
+    "Wp04ApprovedRefundFenceMySqlIT:106 missing seven existing CoopSettlementClaimServiceImpl constructor dependencies in root integration fixture",
+    "ChapterApplicationRoundMySqlIT:104 ambiguous generic Integer assertion"
+  ],
+  "correction": "Three fixture files only; all13/5/10 test bodies/assertions retained. SQLException becomes AssertionError in the shared independent observer; real claim constructor wired with controlled unused collaborators; typed Integer expected. Recheck pending.",
+  "not_covered": "No business scenario ran; cannot classify8 business failures or infer runtime pass."
+}

@@ -1,0 +1,105 @@
+{
+  "source_sha": "b626f425625ccae793aa84a44147fe557c8df6ef",
+  "source_tree": "3d13807acdc8d033339a46709445dfef7c96b076",
+  "run": 40135082606,
+  "backend_job": 120994889568,
+  "jar_sha256": "4a4a3fe4434b96aa4aa7971ab52b74b109fa8ec5d63a0e73d6d900479a251661",
+  "jar_bytes": 118965075,
+  "original_build_metadata_sha256": "f761cad452294002aa14c55582686b41cff52fe06db8f9dd81b1d732e1fdf856",
+  "original_private_mapper_report_sha256": "98c82357efedf547be563c04fac2e180c6cfd36d6e6c3ad17727b985b6841736",
+  "real_artifact_hash_verified": true,
+  "full_application_startup": "PASS_REAL_PACKAGED_HEALTH_MYSQL_REDIS_CACHE_HTTP401",
+  "atomic_python": {
+    "executed": 88,
+    "failures": 0,
+    "errors": 0,
+    "status": "PASS"
+  },
+  "compiled_private_mapper": {
+    "verdict": "BLOCKED",
+    "evidence_verified": true,
+    "coverage": "THREE_DECLARED_TARGET_TYPES_ONLY",
+    "findings": [
+      {
+        "rule": "NEW_OWNER_DEPENDENCY_DIRECTION",
+        "source_class": "com.chengyinhub.web.service.verify.CityNodeRedemptionApplication",
+        "source_technical_owner": "C_CITY_NODE_REDEMPTION_APPLICATION",
+        "target_class": "com.chengyinhub.web.service.verify.RegistrationTicketApplication",
+        "target_technical_owner": "C_REGISTRATION_TICKET_APPLICATION"
+      },
+      {
+        "rule": "NEW_OWNER_DEPENDENCY_DIRECTION",
+        "source_class": "com.chengyinhub.business.service.ICoopSettlementClaimService",
+        "source_technical_owner": "G_CASH_CLAIM",
+        "target_class": "com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact",
+        "target_technical_owner": "B_VERIFIED_PAYMENT_FACT_DTO"
+      },
+      {
+        "rule": "NEW_OWNER_DEPENDENCY_DIRECTION",
+        "source_class": "com.chengyinhub.business.service.impl.CoopSettlementClaimServiceImpl",
+        "source_technical_owner": "G_CASH_CLAIM",
+        "target_class": "com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact",
+        "target_technical_owner": "B_VERIFIED_PAYMENT_FACT_DTO"
+      },
+      {
+        "rule": "NEW_OWNER_DEPENDENCY_DIRECTION",
+        "source_class": "com.chengyinhub.business.service.impl.WechatPaymentCallbackRouter",
+        "source_technical_owner": "B_PAYMENT_ROUTER",
+        "target_class": "com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact",
+        "target_technical_owner": "B_VERIFIED_PAYMENT_FACT_DTO"
+      },
+      {
+        "rule": "NEW_OWNER_DEPENDENCY_DIRECTION",
+        "source_class": "com.chengyinhub.business.service.ICoopSettlementClaimService",
+        "source_technical_owner": "G_CASH_CLAIM",
+        "target_class": "com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact$Reference",
+        "target_technical_owner": "B_VERIFIED_PAYMENT_FACT_DTO"
+      },
+      {
+        "rule": "NEW_OWNER_DEPENDENCY_DIRECTION",
+        "source_class": "com.chengyinhub.business.service.impl.CoopSettlementClaimServiceImpl",
+        "source_technical_owner": "G_CASH_CLAIM",
+        "target_class": "com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact$Reference",
+        "target_technical_owner": "B_VERIFIED_PAYMENT_FACT_DTO"
+      },
+      {
+        "rule": "NEW_OWNER_DEPENDENCY_DIRECTION",
+        "source_class": "com.chengyinhub.business.service.impl.WechatPaymentCallbackRouter",
+        "source_technical_owner": "B_PAYMENT_ROUTER",
+        "target_class": "com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact$Reference",
+        "target_technical_owner": "B_VERIFIED_PAYMENT_FACT_DTO"
+      },
+      {
+        "rule": "NEW_OWNER_DEPENDENCY_DIRECTION",
+        "source_class": "com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService",
+        "source_technical_owner": "B_VERIFIED_PAYMENT_FACT_STORE",
+        "target_class": "com.chengyinhub.business.service.WechatPaymentOrderOwner",
+        "target_technical_owner": "B_PAYMENT_ORDER_LOCK"
+      },
+      {
+        "rule": "NEW_OWNER_DEPENDENCY_DIRECTION",
+        "source_class": "com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService",
+        "source_technical_owner": "B_VERIFIED_PAYMENT_FACT_STORE",
+        "target_class": "com.chengyinhub.business.service.WechatPaymentOrderOwner$MissingOrderException",
+        "target_technical_owner": "B_PAYMENT_ORDER_LOCK"
+      },
+      {
+        "rule": "NEW_OWNER_DEPENDENCY_DIRECTION",
+        "source_class": "com.chengyinhub.business.service.impl.WechatPaymentIntentStore",
+        "source_technical_owner": "B_PAYMENT_INTENTS",
+        "target_class": "com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService",
+        "target_technical_owner": "B_VERIFIED_PAYMENT_FACT_STORE"
+      },
+      {
+        "rule": "NEW_OWNER_DEPENDENCY_DIRECTION",
+        "source_class": "com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService",
+        "source_technical_owner": "B_VERIFIED_PAYMENT_FACT_STORE",
+        "target_class": "com.chengyinhub.business.service.WechatPaymentOrderOwner$Snapshot",
+        "target_technical_owner": "B_PAYMENT_ORDER_LOCK"
+      }
+    ]
+  },
+  "compiled_negative_and_restored": "SKIPPED_AFTER_PRIVATE_MAPPER_GATE_FAILURE",
+  "assigned_owner": "F",
+  "all_complete": false
+}

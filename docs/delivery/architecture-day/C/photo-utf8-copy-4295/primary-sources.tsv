@@ -1,0 +1,6 @@
+source	sha256	relevant_contract
+https://raw.githubusercontent.com/alibaba/fastjson2/2.0.57/core/src/main/java/com/alibaba/fastjson2/JSON.java	3b989c3a90d10692f72581ba3a3fd0b5b323fc8258091507ba1a431c308c63f7	3279-3303 toJSONBytes uses UTF8 writer and returns getBytes
+https://raw.githubusercontent.com/alibaba/fastjson2/2.0.57/core/src/main/java/com/alibaba/fastjson2/JSONObject.java	8e45cfcf593eed39ef6da47d044ea1d6948bbb2d1a49bd5ef3fbfa8b039ff923	1176-1193 original toJSONString delegates writer.toString
+https://raw.githubusercontent.com/alibaba/fastjson2/2.0.57/core/src/main/java/com/alibaba/fastjson2/JSONWriterUTF8.java	ac6517e9a7e2e39642465372be0466f832b165dbaa00c68b670ce4cd1235038a	166-168 getBytes still copies final bytes; no zero-copy claim
+https://raw.githubusercontent.com/openjdk/jdk21u/jdk-21.0.8-ga/src/java.base/share/classes/sun/nio/cs/StreamEncoder.java	cdb0cf361bdb8f1669b8ed7c7e4439934eda19296e9fa806e7a5fa5c54c0be8f	45-46 buffer 512/8192; 161-167 whole String write allocates char[len] so proposal explicitly writes bounded char[]; 264-268 REPLACE; 315-381 surrogate carry; 416 close
+https://raw.githubusercontent.com/openjdk/jdk21u/jdk-21.0.8-ga/src/java.base/share/classes/java/io/OutputStreamWriter.java	43021bf6f0dbdeeba3247aa5ccfdc4ee339f9436ef88a23fe9e1fbbe38ff0799	218 char[] writer entry; JDK21 source reference, not proof of runtime patchlevel

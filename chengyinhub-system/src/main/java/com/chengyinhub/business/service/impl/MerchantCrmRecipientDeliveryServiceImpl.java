@@ -32,6 +32,7 @@ public class MerchantCrmRecipientDeliveryServiceImpl implements IMerchantCrmReci
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
     public void deliver(Long merchantId, Long campaignId, Long recipientId) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         // 与商家停用/转让共用行锁，并持有到本次外部投递结束，关闭续租后的最终 TOCTOU 窗口。
         MmsMerchant merchant = merchantMapper.selectMmsMerchantByIdForUpdate(merchantId);
         if (merchant == null
@@ -127,6 +128,8 @@ public class MerchantCrmRecipientDeliveryServiceImpl implements IMerchantCrmReci
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
     public void recordFailure(Long merchantId, Long campaignId, Long recipientId, RuntimeException cause) {
+        if (cause instanceof com.chengyinhub.common.config.RestoreDispatchGuard.Blocked) return;
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         MerchantCrmCampaignRecipient recipient = campaignMapper.selectRecipientForUpdate(
                 merchantId, campaignId, recipientId);
         if (recipient == null || !MerchantCrmCampaignRecipient.PENDING.equals(recipient.getStatus())) return;

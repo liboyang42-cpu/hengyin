@@ -1,0 +1,16 @@
+[
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicTemplateRecruitBuildTest.java",
+    "cases_retained": 15,
+    "assertion_lines_unchanged": true,
+    "fixture_base": "after 9e test-wiring.review.patch",
+    "only_stats_mock_and_verification_port_changed": true
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicTemplateMetaBuildTest.java",
+    "cases_retained": 5,
+    "assertion_lines_unchanged": true,
+    "fixture_base": "after 9e test-wiring.review.patch",
+    "only_stats_mock_and_verification_port_changed": true
+  }
+]

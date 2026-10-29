@@ -11,7 +11,7 @@ package com.chengyinhub.business.service;
  * <p>既有微信事件的方法签名与 IWxSubscribeMsgService 一致；只走站内信的业务事件
  * （如玩家队伍状态）也从本语义入口进入，再由对应 NotifyChannel 选择性处理。
  *
- * <p>⚠️ <b>全部方法 best-effort:失败不抛异常,只返回 false + 留日志。</b>
+ * <p>⚠️ <b>全部方法 best-effort:失败不抛异常；boolean 方法返回 false，新原意图方法返回待核实状态并留日志。</b>
  * 调用链上游多处带 @Transactional(rollbackFor=Exception.class),抛出会把已生效的业务
  * (典型如已被微信网关受理的退款)连带回滚 = 资损。想判成败的看返回值,不关心的忽略即可。
  *
@@ -25,8 +25,13 @@ public interface INotifyService {
     /** 报名成功提醒 */
     boolean notifySignupSuccess(Long memberId, String topicName);
 
-    /** 出发前提醒。调用方据返回值决定要不要重试(见 TeamGroupServiceImpl 的去重键逻辑)。 */
+    /** Legacy semantic-channel adapter. Scheduled production uses the original-ticket overload below. */
     boolean notifyBeforeStart(Long memberId, String topicName, String whenText);
+
+    /** Original ticket × recipient, immutable start time; UNKNOWN is read-only and never authorizes resend. */
+    com.chengyinhub.business.domain.dto.BeforeStartNotifyResult.Delivery notifyBeforeStart(
+            Long ticketId, Long memberId, String topicName, java.util.Date startsAt);
+
 
     /** 合作被邀约 → 通知受邀方 */
     boolean notifyCoopInvited(Long toMemberId, String topicName, String fromName);

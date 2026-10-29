@@ -1,0 +1,15 @@
+GitHub job 121011084232 decoded-log excerpts; timestamps preserved in UTC.
+Other lines omitted. This is not the artifact entry.log/application.log.
+2026-10-24T22:54:30.5984750Z ccd55005c75d105f8245b0591e63adcd0dd15280
+2026-10-24T22:54:33.9435642Z Ran 4 tests in 0.002s
+2026-10-24T22:55:13.7187176Z [INFO] BUILD SUCCESS
+2026-10-24T22:56:24.5405154Z PASS observed 24 socket destinations; external destinations/DNS attempts=0
+2026-10-24T22:56:24.5532914Z /cy-startup-2204-1595-app ports={} networks=cy-startup-2204-1595
+2026-10-24T22:56:24.5533347Z /cy-startup-2204-1595-mysql ports={} networks=cy-startup-2204-1595
+2026-10-24T22:56:24.5533632Z /cy-startup-2204-1595-redis ports={} networks=cy-startup-2204-1595
+2026-10-24T22:56:24.5536035Z PASS real packaged application ready, isolated startup health UP (disabled payment DOWN), MySQL/Redis cache roundtrip, protected HTTP 401, jobs disabled
+2026-10-24T22:56:24.7623565Z Startup evidence: /home/runner/work/_temp/isolated-pool-recovery/cy-startup.WK97miNQ (exit=0)
+2026-10-24T22:56:24.7776659Z PASS pool receipt 5001 {'request': 20, 'http': 200, 'businessCode': 500, 'emptyData': False, 'elapsedSeconds': 5.061}
+2026-10-24T22:56:24.8909112Z With the provided path, there will be 7 files uploaded
+2026-10-24T22:56:25.4859290Z Uploaded bytes 11255
+2026-10-24T22:56:25.5464504Z SHA256 digest of uploaded artifact zip is 0c95af72b13821bf0268e56414f0bc3f5b1f75e5112dabc802ec2cdc0835d1aa

@@ -1,5 +1,7 @@
 package com.chengyinhub.business.service.impl;
 
+import com.chengyinhub.common.config.RestoreDispatchGuard;
+
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -100,6 +102,7 @@ public class UmsMemberWithdrawalServiceImpl implements IUmsMemberWithdrawalServi
     @Override
     public int insertUmsMemberWithdrawal(UmsMemberWithdrawal umsMemberWithdrawal)
     {
+        RestoreDispatchGuard.requireDispatchAllowed();
         protectSensitiveData(umsMemberWithdrawal);
         umsMemberWithdrawal.setCreateTime(DateUtils.getNowDate());
         return umsMemberWithdrawalMapper.insertUmsMemberWithdrawal(umsMemberWithdrawal);
@@ -152,6 +155,7 @@ public class UmsMemberWithdrawalServiceImpl implements IUmsMemberWithdrawalServi
     @Override
     @Transactional(rollbackFor = Exception.class)
     public int withdrawPendingByMember(Long id, Long memberId) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         if (id == null || memberId == null) {
             return 0;
         }
@@ -181,6 +185,7 @@ public class UmsMemberWithdrawalServiceImpl implements IUmsMemberWithdrawalServi
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long withdrawalRequest(WithdrawalDTO request, Long memberId, String username){
+        RestoreDispatchGuard.requireDispatchAllowed();
 
         // 提现金额必须为正数：防止负数/零金额经 deductBalance(balance = balance - amount) 反向增加余额
         if (request == null || request.getWithdrawalAmount() == null
@@ -328,6 +333,7 @@ public class UmsMemberWithdrawalServiceImpl implements IUmsMemberWithdrawalServi
     @Override
     @Transactional(rollbackFor = Exception.class)
     public int reviewWithdrawal(WithdrawalReviewDTO request, Long operatorId) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         if (request == null || request.getId() == null) {
             throw new IllegalArgumentException("withdrawal id is required");
         }
@@ -353,6 +359,7 @@ public class UmsMemberWithdrawalServiceImpl implements IUmsMemberWithdrawalServi
 
     @Override
     public int confirmPayout(WithdrawalPayoutDTO request, Long operatorId) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         if (request == null || request.getId() == null) {
             throw new IllegalArgumentException("withdrawal id is required");
         }
@@ -368,6 +375,7 @@ public class UmsMemberWithdrawalServiceImpl implements IUmsMemberWithdrawalServi
     }
 
     private void refundWithdrawalBalance(UmsMemberWithdrawal withdrawal, String changeReason) {
+        RestoreDispatchGuard.requireDispatchAllowed();
         BigDecimal amount = withdrawal.getWithdrawalAmount();
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("withdrawal amount is invalid");

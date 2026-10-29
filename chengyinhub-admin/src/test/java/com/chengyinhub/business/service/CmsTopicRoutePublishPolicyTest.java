@@ -30,6 +30,16 @@ import static org.mockito.Mockito.when;
 
 class CmsTopicRoutePublishPolicyTest {
 
+    private static CmsTopicServiceImpl publication(CmsTopicServiceImpl service) {
+        // Complete the original fixture ports before the real publication owner is invoked.
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "themeStateKeyService",
+                new com.chengyinhub.business.service.support.ThemeStateKeyService(
+                        mock(com.chengyinhub.business.mapper.ThemeStateKeyMapper.class)));
+        com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service);
+        return com.chengyinhub.business.service.support.TopicPublicationTestWiring.transactional(service);
+    }
+
     private static void stubLockedTopicRead(CmsTopicMapper topicMapper) {
         when(topicMapper.selectCmsTopicByIdForUpdate(anyLong()))
                 .thenAnswer(inv -> topicMapper.selectCmsTopicById(inv.getArgument(0)));
@@ -49,7 +59,7 @@ class CmsTopicRoutePublishPolicyTest {
         ReflectionTestUtils.setField(service, "omsTicketMapper", mock(OmsTicketMapper.class));
         when(topicMapper.clearDraftIfDraft(10L)).thenReturn(1);
         CmsTopic topic = new CmsTopic();
-        topic.setId(10L); topic.setProductType(ProductType.FREE_EXPLORE);
+        topic.setId(10L); topic.setMemberId(100L); topic.setProductType(ProductType.FREE_EXPLORE);
         topic.setRouteMode("BRANCH_GRAPH"); topic.setPublishMode("simple");
         // R19-DRAFT2 的发布完整度闸(名称/招募截止)先过,才能测到路线模式这道闸。
         topic.setName("夜跑路线");
@@ -57,7 +67,7 @@ class CmsTopicRoutePublishPolicyTest {
         when(topicMapper.selectCmsTopicById(10L)).thenReturn(topic);
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        assertThrows(IllegalArgumentException.class, () -> service.publishDraft(10L));
+        assertThrows(IllegalArgumentException.class, () -> publication(service).publishDraft(10L));
     }
 
     @Test
@@ -73,11 +83,11 @@ class CmsTopicRoutePublishPolicyTest {
                         : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
         ReflectionTestUtils.setField(service, "cmsTopicNodeMapper", nodeMapper);
-        ReflectionTestUtils.setField(service, "cmsMemberTemplateMapper", templateMapper);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "cmsMemberTemplateMapper", templateMapper);
         ReflectionTestUtils.setField(service, "omsTicketMapper", mock(OmsTicketMapper.class));
         when(topicMapper.clearDraftIfDraft(10L)).thenReturn(1);
         CmsTopic topic = new CmsTopic();
-        topic.setId(10L); topic.setProductType(ProductType.ORIENTEERING);
+        topic.setId(10L); topic.setMemberId(100L); topic.setProductType(ProductType.ORIENTEERING);
         topic.setRouteMode("BRANCH_GRAPH"); topic.setPublishMode("simple");
         topic.setName("夜跑路线");
         topic.setRouteGraphJson("{\"schemaVersion\":1,\"startNodeId\":1,\"terminalNodeIds\":[2,3]," +
@@ -93,9 +103,12 @@ class CmsTopicRoutePublishPolicyTest {
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
-                () -> service.publishDraft(10L));
+                () -> publication(service).publishDraft(10L));
 
-        assertEquals("路线 edge impossible 没有确定性可达状态夹具", error.getMessage());
+        assertEquals("路线 edge impossible 没有确定性可达状态夹具 [path=routeGraphJson.edges[0], fromNodeId=1, toNodeId=2]",
+                error.getCause().getMessage());
+        org.junit.jupiter.api.Assertions.assertTrue(error.getMessage().contains("path=routeGraphJson"));
+        org.junit.jupiter.api.Assertions.assertTrue(error.getMessage().contains("edge impossible"));
         verify(topicMapper, never()).updateCmsTopic(any(CmsTopic.class));
         verify(topicMapper, never()).publishRouteSnapshot(any(Long.class), any(String.class), any(java.util.Date.class));
     }
@@ -113,11 +126,11 @@ class CmsTopicRoutePublishPolicyTest {
                         : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
         ReflectionTestUtils.setField(service, "cmsTopicNodeMapper", nodeMapper);
-        ReflectionTestUtils.setField(service, "cmsMemberTemplateMapper", templateMapper);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "cmsMemberTemplateMapper", templateMapper);
         // R18-DRAFT:发布时补建自办活动壳 —— 成功路径会走到这两个协作者,不在场就是 NPE 假红。
         ReflectionTestUtils.setField(service, "cmsActivityMapper",
                 mock(com.chengyinhub.business.mapper.CmsActivityMapper.class));
-        ReflectionTestUtils.setField(service, "omsTicketService",
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "omsTicketService",
                 mock(com.chengyinhub.business.service.IOmsTicketService.class));
         ReflectionTestUtils.setField(service, "omsTicketMapper", mock(OmsTicketMapper.class));
         // release-0917 同步 master:rule-funds 欠款逾期闸在 publishDraft 提交口与建壳处,手工装配须补上;mock 默认无逾期。
@@ -127,7 +140,7 @@ class CmsTopicRoutePublishPolicyTest {
         when(topicMapper.updateCmsTopic(any(CmsTopic.class))).thenReturn(1);
         when(topicMapper.publishRouteSnapshot(eq(10L), any(String.class), any(java.util.Date.class))).thenReturn(1);
         CmsTopic topic = new CmsTopic();
-        topic.setId(10L); topic.setProductType(ProductType.ORIENTEERING);
+        topic.setId(10L); topic.setMemberId(100L); topic.setProductType(ProductType.ORIENTEERING);
         topic.setRouteMode("BRANCH_GRAPH"); topic.setPublishMode("simple");
         topic.setName("夜跑路线");
         topic.setRouteGraphJson("{\"schemaVersion\":1,\"startNodeId\":\"1\",\"terminalNodeIds\":[\"2\"]," +
@@ -138,7 +151,7 @@ class CmsTopicRoutePublishPolicyTest {
                 .thenReturn(Arrays.asList(node(1L, null), node(2L, null)));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        assertEquals(true, service.publishDraft(10L));
+        assertEquals(true, publication(service).publishDraft(10L));
 
         org.mockito.ArgumentCaptor<String> snapshot = org.mockito.ArgumentCaptor.forClass(String.class);
         verify(topicMapper).publishRouteSnapshot(eq(10L), snapshot.capture(), any(java.util.Date.class));
@@ -157,17 +170,17 @@ class CmsTopicRoutePublishPolicyTest {
                         : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         ReflectionTestUtils.setField(service,"cmsTopicNodeMapper",mock(CmsTopicNodeMapper.class));
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
-        ReflectionTestUtils.setField(service, "quotaService", mock(IQuotaService.class));
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "quotaService", mock(IQuotaService.class));
         ReflectionTestUtils.setField(service, "cmsTopicNodeMapper", mock(CmsTopicNodeMapper.class));
         IAuditTaskService auditTaskService = mock(IAuditTaskService.class);
         ReflectionTestUtils.setField(service, "auditTaskService", auditTaskService);
         com.chengyinhub.business.service.support.TopicBundleReviewService bundles =
                 mock(com.chengyinhub.business.service.support.TopicBundleReviewService.class);
         ReflectionTestUtils.setField(service, "topicBundleReviewService", bundles);
-        when(bundles.freezeForSubmission(10L, null)).thenReturn(
+        when(bundles.freezeForSubmission(10L, 100L)).thenReturn(
                 new com.chengyinhub.business.service.support.TopicBundleReviewService.Submission(
                         "{\"schemaVersion\":2}", java.util.Collections.emptyList()));
-        when(auditTaskService.submitOrRefreshTopicBundle(eq(10L), eq(null), any(String.class))).thenReturn(99L);
+        when(auditTaskService.submitOrRefreshTopicBundle(eq(10L), eq(100L), any(String.class))).thenReturn(99L);
         com.chengyinhub.business.domain.AuditTask task = new com.chengyinhub.business.domain.AuditTask();
         task.setId(99L);
         task.setStatus(com.chengyinhub.business.domain.AuditTask.STATUS_PENDING);
@@ -175,7 +188,7 @@ class CmsTopicRoutePublishPolicyTest {
         // R18-DRAFT:发布时补建自办活动壳 —— 成功路径会走到这两个协作者,不在场就是 NPE 假红。
         ReflectionTestUtils.setField(service, "cmsActivityMapper",
                 mock(com.chengyinhub.business.mapper.CmsActivityMapper.class));
-        ReflectionTestUtils.setField(service, "omsTicketService",
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "omsTicketService",
                 mock(com.chengyinhub.business.service.IOmsTicketService.class));
         ReflectionTestUtils.setField(service, "omsTicketMapper", mock(OmsTicketMapper.class));
         // release-0917 同步 master:rule-funds 欠款逾期闸在 publishDraft 提交口与建壳处,手工装配须补上;mock 默认无逾期。
@@ -184,13 +197,13 @@ class CmsTopicRoutePublishPolicyTest {
         when(topicMapper.clearDraftIfDraft(10L)).thenReturn(1);
         when(topicMapper.updateCmsTopic(any(CmsTopic.class))).thenReturn(1);
         CmsTopic topic = new CmsTopic();
-        topic.setId(10L); topic.setProductType(ProductType.ORIENTEERING);
+        topic.setId(10L); topic.setMemberId(100L); topic.setProductType(ProductType.ORIENTEERING);
         topic.setRouteMode("BRANCH_GRAPH"); topic.setPublishMode("pro");
         topic.setName("夜跑路线");
         when(topicMapper.selectCmsTopicById(10L)).thenReturn(topic);
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        assertThrows(IllegalArgumentException.class, () -> service.publishDraft(10L));
+        assertThrows(IllegalArgumentException.class, () -> publication(service).publishDraft(10L));
 
         verify(topicMapper, never()).publishRouteSnapshot(
                 any(Long.class), any(), any(java.util.Date.class));
@@ -208,7 +221,7 @@ class CmsTopicRoutePublishPolicyTest {
                         : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
         ReflectionTestUtils.setField(service, "cmsTopicNodeMapper", nodeMapper);
-        ReflectionTestUtils.setField(service, "cmsMemberTemplateMapper", templateMapper);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "cmsMemberTemplateMapper", templateMapper);
         CmsTopic topic = new CmsTopic();
         topic.setId(10L); topic.setStatus(1); topic.setProductType(ProductType.ORIENTEERING);
         topic.setRouteMode("BRANCH_GRAPH");
@@ -221,7 +234,7 @@ class CmsTopicRoutePublishPolicyTest {
                 .thenReturn(Arrays.asList(node(1L, null), node(2L, null)));
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        service.publishApprovedRouteSnapshot(10L);
+        publication(service).publishApprovedRouteSnapshot(10L);
 
         org.mockito.ArgumentCaptor<String> snapshot = org.mockito.ArgumentCaptor.forClass(String.class);
         verify(topicMapper).publishRouteSnapshot(eq(10L), snapshot.capture(), any(java.util.Date.class));
@@ -242,7 +255,7 @@ class CmsTopicRoutePublishPolicyTest {
         when(topicMapper.selectCmsTopicById(10L)).thenReturn(topic);
 
         IllegalStateException error = assertThrows(IllegalStateException.class,
-                () -> service.publishApprovedRouteSnapshot(10L));
+                () -> publication(service).publishApprovedRouteSnapshot(10L));
 
         assertEquals("主题尚未成功通过审核，拒绝推进路线发布快照", error.getMessage());
         verify(topicMapper, never()).publishRouteSnapshot(
@@ -260,15 +273,22 @@ class CmsTopicRoutePublishPolicyTest {
         ReflectionTestUtils.setField(service,"cmsTopicNodeMapper",mock(CmsTopicNodeMapper.class));
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
         CmsTopic topic = new CmsTopic();
-        topic.setId(10L); topic.setStatus(1); topic.setRouteMode("LINEAR");
+        topic.setId(10L); topic.setMemberId(100L); topic.setStatus(1); topic.setRouteMode("LINEAR");
+        CmsTopicNodeMapper nodeMapper = (CmsTopicNodeMapper) ReflectionTestUtils.getField(service, "cmsTopicNodeMapper");
+        when(nodeMapper.selectCmsTopicNodeList(any(CmsTopicNode.class)))
+                .thenReturn(java.util.Collections.singletonList(node(1L, null)));
         when(topicMapper.selectCmsTopicById(10L)).thenReturn(topic);
-        when(topicMapper.publishRouteSnapshot(eq(10L), eq(null), any(java.util.Date.class))).thenReturn(1);
+        when(topicMapper.publishRouteSnapshot(eq(10L), any(String.class), any(java.util.Date.class))).thenReturn(1);
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(service);
-        service.publishApprovedRouteSnapshot(10L);
+        publication(service).publishApprovedRouteSnapshot(10L);
 
-        verify(topicMapper).publishRouteSnapshot(
-                eq(10L), nullable(String.class), any(java.util.Date.class));
+        org.mockito.ArgumentCaptor<String> snapshot = org.mockito.ArgumentCaptor.forClass(String.class);
+        verify(topicMapper).publishRouteSnapshot(eq(10L), snapshot.capture(), any(java.util.Date.class));
+        // The authored LINEAR graph remains absent; formal publication now persists complete frozen content.
+        org.junit.jupiter.api.Assertions.assertNull(topic.getRouteGraphJson());
+        org.junit.jupiter.api.Assertions.assertTrue(snapshot.getValue().contains("\"runtimeSnapshotVersion\":1"));
+        org.junit.jupiter.api.Assertions.assertTrue(snapshot.getValue().contains("\"routeMode\":\"LINEAR\""));
     }
 
     @SuppressWarnings("unchecked")
@@ -282,7 +302,7 @@ class CmsTopicRoutePublishPolicyTest {
                         ? ((com.chengyinhub.business.mapper.CmsTopicMapper) org.springframework.test.util.ReflectionTestUtils.getField(service, "cmsTopicMapper")).selectCmsTopicByIdForUpdate(invocation.getArgument(0))
                         : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
         ReflectionTestUtils.setField(service, "cmsTopicNodeMapper", nodeMapper);
-        ReflectionTestUtils.setField(service, "cmsMemberTemplateMapper", templateMapper);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "cmsMemberTemplateMapper", templateMapper);
 
         CmsTopicNode preferenceNode = node(1L, 101L);
         CmsTopicNode advancedNode = node(2L, 102L);
@@ -304,8 +324,7 @@ class CmsTopicRoutePublishPolicyTest {
         d20.setAdvancedConfigJson("{\"diceRoll\":{\"enabled\":true,\"mode\":\"d20\"}}");
         when(templateMapper.selectCmsMemberTemplateById(104L)).thenReturn(d20);
 
-        Map<Long, Set<String>> declared = ReflectionTestUtils.invokeMethod(service,
-                "declaredRouteOutcomes", 10L);
+        Map<Long, Set<String>> declared = ReflectionTestUtils.invokeMethod(com.chengyinhub.business.service.support.TopicPublicationTestWiring.owner(com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(service), "declaredRouteOutcomes"), "declaredRouteOutcomes", 10L);
 
         assertEquals(set("PREFERENCE_RESULT:HISTORY", "PREFERENCE_RESULT:ART"), declared.get(1L));
         assertEquals(set("ADVANCED_RESULT:PHOTO_END"), declared.get(2L));

@@ -89,6 +89,7 @@ class AdvancedGameFactsHookTest {
         playNoteMapper = mock(PlayNoteMapper.class);
         topicRouteRuntimeService = mock(ITopicRouteRuntimeService.class);
         service = new AdvancedGameRuntimeServiceImpl();
+        com.chengyinhub.business.service.impl.AdvancedActionTestFixtures.transactions(service);
         ReflectionTestUtils.setField(service, "sessionMapper", sessionMapper);
         ReflectionTestUtils.setField(service, "nodeMapper", nodeMapper);
         ReflectionTestUtils.setField(service, "templateMapper", templateMapper);
@@ -114,7 +115,7 @@ class AdvancedGameFactsHookTest {
         when(sessionMapper.updateStateCas(any())).thenReturn(1);
         when(playNoteMapper.insert(any(PlayNote.class))).thenReturn(1);
         vision = mock(PhotoCheckVisionService.class);
-        ReflectionTestUtils.setField(service, "photoCheckVisionService", vision);
+        AdvancedActionTestFixtures.photos(service, () -> vision.review(MEMBER_ID, "unit-photo", "unit-requirement"));
         com.chengyinhub.business.service.support.CurrentPlayTestFixtures.installOn(service);
     }
 

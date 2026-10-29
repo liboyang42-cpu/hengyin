@@ -17,7 +17,7 @@
             (#{settlementId}, #{claimId}, #{registrationId}, #{originAmount}, #{createTime})
     </insert>
 
-    <select id="selectByClaimIdForUpdate" resultMap="DetailResult">
+    <select id="selectByClaimIdForUpdate" resultMap="DetailResult" useCache="false" flushCache="true">
         select id, settlement_id, claim_id, registration_id, origin_amount, create_time
         from coop_settlement_detail where claim_id = #{claimId} for update
     </select>

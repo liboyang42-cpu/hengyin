@@ -1,0 +1,10 @@
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatVerifiedPaymentFactService.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatVerifiedPaymentFactService.java
+@@ -37,6 +37,7 @@
+         throw new ConflictException();
+     }
+
++    @Transactional(propagation=Propagation.REQUIRES_NEW, readOnly=true)
+     public Stored requireVerified(Reference reference) {
+         if (reference == null) throw new IllegalArgumentException("Verified fact reference required");
+         Map<String,Object> row = mapper.selectById(reference.id());

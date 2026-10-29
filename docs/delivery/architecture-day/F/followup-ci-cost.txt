@@ -1,0 +1,3 @@
+$ /opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 ci/test_ci_cost_contract.py
+exit_code=0
+CI cost routing contract: PASS

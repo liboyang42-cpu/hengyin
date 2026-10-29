@@ -44,7 +44,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.dao.DuplicateKeyException;
-import org.springframework.test.util.ReflectionTestUtils;
+import com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
@@ -102,6 +102,7 @@ class ClubMembershipServiceImplTest {
     private PlatformTransactionManager transactions;
     private TransactionStatus transactionStatus;
     private ClubMembershipServiceImpl service;
+    private VerifiedPaymentProofFixtures proof;
 
     @BeforeEach
     void setUp() {
@@ -112,21 +113,24 @@ class ClubMembershipServiceImplTest {
         clubMembers = mock(ClubMemberMapper.class);
         members = mock(IUmsMemberService.class);
         pay = mock(IWechatPayService.class);
+        when(pay.lockClosablePaymentAttemptForUpdate(anyString(), anyString())).thenReturn(true);
         when(pay.lockPaymentAttemptForUpdate(anyString(), anyString())).thenReturn(true);
         audits = mock(BusinessAuditEventMapper.class);
         transactions = mock(PlatformTransactionManager.class);
         transactionStatus = mock(TransactionStatus.class);
         service = new ClubMembershipServiceImpl();
-        ReflectionTestUtils.setField(service, "featureGate", feature);
-        ReflectionTestUtils.setField(service, "clubAccessService", access);
-        ReflectionTestUtils.setField(service, "clubMembershipMapper", mapper);
-        ReflectionTestUtils.setField(service, "clubMapper", clubs);
-        ReflectionTestUtils.setField(service, "clubMemberMapper", clubMembers);
-        ReflectionTestUtils.setField(service, "memberService", members);
-        ReflectionTestUtils.setField(service, "wechatPayService", pay);
-        ReflectionTestUtils.setField(service, "businessAuditEventMapper", audits);
-        ReflectionTestUtils.setField(service, "transactionManager", transactions);
-        ReflectionTestUtils.setField(service, "clock", Clock.fixed(
+        proof = new VerifiedPaymentProofFixtures();
+        org.springframework.test.util.ReflectionTestUtils.setField(service,"verifiedPaymentFacts",proof.reader);
+        com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(service, "featureGate", feature);
+        com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(service, "clubAccessService", access);
+        com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(service, "clubMembershipMapper", mapper);
+        com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(service, "clubMapper", clubs);
+        com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(service, "clubMemberMapper", clubMembers);
+        com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(service, "memberService", members);
+        com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(service, "wechatPayService", pay);
+        com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(service, "businessAuditEventMapper", audits);
+        com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(service, "transactionManager", transactions);
+        com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(service, "clock", Clock.fixed(
                 Instant.parse("2026-08-23T16:00:00Z"), ZoneId.of("Asia/Shanghai")));
         when(access.resolve(MEMBER, CLUB, null)).thenReturn(memberAccess());
         when(access.require(OWNER, CLUB, null, ClubPermission.CLUB_WRITE)).thenReturn(ownerAccess());
@@ -145,6 +149,12 @@ class ClubMembershipServiceImplTest {
         when(mapper.selectInvoiceByIdForUpdate(any())).thenAnswer(call ->
                 mapper.selectInvoiceById(call.getArgument(0, Long.class)));
         when(audits.insertBusinessAuditEvent(any(BusinessAuditEvent.class))).thenReturn(1);
+        when(mapper.bindInvoicePaymentProof(any(),anyString(),any(),anyString(),any(),anyString())).thenAnswer(call -> {
+            ClubMembershipInvoice invoice=mapper.selectInvoiceByOutTradeNoForUpdate("CLM01234567890123456789012345678");
+            if(invoice==null)throw new AssertionError("missing original invoice fixture");
+            invoice.setStatus(ClubMembershipInvoice.STATUS_PAID);invoice.setTransactionId(call.getArgument(1));
+            invoice.setVerifiedPaymentFactId(call.getArgument(4));invoice.setVerifiedPaymentFactHash(call.getArgument(5));return 1;
+        });
     }
 
     @Test
@@ -202,7 +212,7 @@ class ClubMembershipServiceImplTest {
         Map<String, String> observed = wxOrder(invoice, "CLOSED");
         observed.put("wx_out_trade_no", "old-wx-attempt");
         when(pay.queryOrderStatus(invoice.getOutTradeNo())).thenReturn(observed);
-        when(pay.lockPaymentAttemptForUpdate(invoice.getOutTradeNo(), "old-wx-attempt")).thenReturn(false);
+        when(pay.lockClosablePaymentAttemptForUpdate(invoice.getOutTradeNo(), "old-wx-attempt")).thenReturn(false);
         assertThrows(ServiceException.class, () -> service.resumeInvoice(
                 MEMBER, action(invoice.getId(), "resume-stale-attempt")));
         verify(mapper, never()).markInvoiceClosedCas(any(), anyInt(), any());
@@ -846,51 +856,17 @@ class ClubMembershipServiceImplTest {
     }
 
     @Test
-    void renewalSuspendsAmbientTransactionAroundWechatAndRestoresCallerAfterShortTransactions() {
-        ClubMembershipInvoice invoice = validPayingInvoice();
-        invoice.setPayParamsJson(null);
-        invoice.setVersion(1);
-        invoice.setIdempotencyKey("ambient-renew");
-        when(mapper.selectSetting(CLUB)).thenReturn(enabledSetting());
+    void renewalRejectsAmbientTransactionWithoutSuspendingCallerLocks() {
         TrackingTransactionManager tracker = useTrackingTransactions();
-        AtomicBoolean preparedInsideShortTransaction = new AtomicBoolean(false);
-        when(mapper.selectInvoiceByIdempotency(CLUB, MEMBER, "ambient-renew")).thenAnswer(call -> {
-            preparedInsideShortTransaction.set(tracker.isTransactionActive());
-            return invoice;
+        new TransactionTemplate(tracker).execute(status -> {
+            assertTrue(tracker.isTransactionActive());
+            assertThrows(org.springframework.transaction.IllegalTransactionStateException.class,
+                    () -> transactionalService(tracker).renew(MEMBER, renew(9L, "ambient-renew")));
+            assertTrue(tracker.isTransactionActive(), "rejected call must not suspend or end the caller transaction");
+            return null;
         });
-        UmsMember member = new UmsMember();
-        member.setId(MEMBER);
-        member.setWxOpenId("openid-71");
-        when(members.selectUmsMemberById(MEMBER)).thenReturn(member);
-        Map<String, String> params = payParams("prepay_id=ambient-renew");
-        AtomicBoolean wechatInsideLocalTransaction = new AtomicBoolean(false);
-        when(pay.createGenericOrder(eq(invoice.getOutTradeNo()), any(), any(), eq("openid-71")))
-                .thenAnswer(call -> {
-                    wechatInsideLocalTransaction.set(tracker.isTransactionActive());
-                    return params;
-                });
-        AtomicBoolean attachedInsideShortTransaction = new AtomicBoolean(false);
-        when(mapper.selectInvoiceByOutTradeNoForUpdate(invoice.getOutTradeNo())).thenAnswer(call -> {
-            attachedInsideShortTransaction.set(tracker.isTransactionActive());
-            return invoice;
-        });
-        when(mapper.attachPayParamsCas(eq(invoice.getId()), eq(1), any(), any())).thenReturn(1);
-        AtomicBoolean callerTransactionRestored = new AtomicBoolean(false);
-
-        ClubMembershipRenewalVO result = new TransactionTemplate(tracker).execute(status -> {
-            ClubMembershipRenewalVO renewal = transactionalService(tracker).renew(
-                    MEMBER, renew(9L, "ambient-renew"));
-            callerTransactionRestored.set(tracker.isTransactionActive());
-            return renewal;
-        });
-
-        assertNotNull(result);
-        assertEquals(ClubMembershipInvoice.STATUS_PAYING, result.getPaymentState());
-        assertTrue(preparedInsideShortTransaction.get());
-        assertTrue(attachedInsideShortTransaction.get());
-        assertFalse(wechatInsideLocalTransaction.get());
-        assertTrue(callerTransactionRestored.get());
         assertFalse(tracker.isTransactionActive());
+        org.mockito.Mockito.verifyNoInteractions(feature, access, mapper, clubs, clubMembers, members, pay, audits);
     }
 
     @Test
@@ -1185,6 +1161,8 @@ class ClubMembershipServiceImplTest {
         ClubMembershipInvoice paidInvoice = validPayingInvoice();
         paidInvoice.setStatus(ClubMembershipInvoice.STATUS_PAID);
         paidInvoice.setTransactionId("wx-tx-recovered");
+        var consumed=proof.issue(paidInvoice.getOutTradeNo(),9900,"wx-tx-recovered");
+        paidInvoice.setVerifiedPaymentFactId(consumed.id());paidInvoice.setVerifiedPaymentFactHash(consumed.hash());
         paidInvoice.setVersion(2);
         when(mapper.selectInvoiceById(invoice.getId())).thenReturn(invoice, paidInvoice);
         UmsMember member = new UmsMember();
@@ -1198,6 +1176,8 @@ class ClubMembershipServiceImplTest {
         Map<String, String> wxOrder = new HashMap<>();
         wxOrder.put("trade_state", "SUCCESS");
         wxOrder.put("transaction_id", "wx-tx-recovered");
+        var originalProof=proof.issue(invoice.getOutTradeNo(),9900,"wx-tx-recovered");
+        wxOrder.put("verified_fact_id",Long.toString(originalProof.id()));wxOrder.put("verified_fact_hash",originalProof.hash());
         wxOrder.put("out_trade_no", invoice.getOutTradeNo());
         wxOrder.put("total", "9900");
         when(pay.queryOrderStatus(invoice.getOutTradeNo())).thenReturn(wxOrder);
@@ -1223,6 +1203,8 @@ class ClubMembershipServiceImplTest {
         Map<String, String> wxOrder = new HashMap<>();
         wxOrder.put("trade_state", "SUCCESS");
         wxOrder.put("transaction_id", "wx-tx-wrong-amount");
+        var originalProof=proof.issue(invoice.getOutTradeNo(),9900,"wx-tx-wrong-amount");
+        wxOrder.put("verified_fact_id",Long.toString(originalProof.id()));wxOrder.put("verified_fact_hash",originalProof.hash());
         wxOrder.put("out_trade_no", invoice.getOutTradeNo());
         wxOrder.put("total", "9899");
         when(pay.queryOrderStatus(invoice.getOutTradeNo())).thenReturn(wxOrder);
@@ -1422,34 +1404,17 @@ class ClubMembershipServiceImplTest {
     }
 
     @Test
-    void resumeSuspendsAmbientTransactionAroundWechatQueryAndRestoresCaller() {
-        ClubMembershipInvoice invoice = validPayingInvoice();
+    void resumeRejectsAmbientTransactionWithoutSuspendingCallerLocks() {
         TrackingTransactionManager tracker = useTrackingTransactions();
-        AtomicBoolean preparedInsideShortTransaction = new AtomicBoolean(false);
-        when(mapper.selectInvoiceById(invoice.getId())).thenAnswer(call -> {
-            preparedInsideShortTransaction.set(tracker.isTransactionActive());
-            return invoice;
+        new TransactionTemplate(tracker).execute(status -> {
+            assertTrue(tracker.isTransactionActive());
+            assertThrows(org.springframework.transaction.IllegalTransactionStateException.class,
+                    () -> transactionalService(tracker).resumeInvoice(MEMBER, action(100L, "resume-ambient-tx-100")));
+            assertTrue(tracker.isTransactionActive(), "rejected call must not suspend or end the caller transaction");
+            return null;
         });
-        AtomicBoolean queriedInsideLocalTransaction = new AtomicBoolean(false);
-        when(pay.queryOrderStatus(invoice.getOutTradeNo())).thenAnswer(call -> {
-            queriedInsideLocalTransaction.set(tracker.isTransactionActive());
-            return wxOrder(invoice, "NOTPAY");
-        });
-        AtomicBoolean callerTransactionRestored = new AtomicBoolean(false);
-
-        ClubMembershipRenewalVO result = new TransactionTemplate(tracker).execute(status -> {
-            ClubMembershipRenewalVO resumed = transactionalService(tracker).resumeInvoice(
-                    MEMBER, action(invoice.getId(), "resume-ambient-tx-100"));
-            callerTransactionRestored.set(tracker.isTransactionActive());
-            return resumed;
-        });
-
-        assertNotNull(result);
-        assertEquals(ClubMembershipInvoice.STATUS_PAYING, result.getPaymentState());
-        assertTrue(preparedInsideShortTransaction.get());
-        assertFalse(queriedInsideLocalTransaction.get());
-        assertTrue(callerTransactionRestored.get());
         assertFalse(tracker.isTransactionActive());
+        org.mockito.Mockito.verifyNoInteractions(feature, access, mapper, clubs, clubMembers, members, pay, audits);
     }
 
     @Test
@@ -1492,7 +1457,7 @@ class ClubMembershipServiceImplTest {
         verify(mapper, never()).markInvoicePaidCas(any(), anyInt(), any(), any());
         verify(mapper, never()).insertTerm(any());
         verify(mapper, never()).insertRefundReview(any());
-        verify(f.gateway, never()).lockPaymentAttemptForUpdate(anyString(), anyString());
+        verify(f.gateway, never()).lockClosablePaymentAttemptForUpdate(anyString(), anyString());
         f.verifyOriginalCloseAndSuccessorQuery();
     }
 
@@ -1540,7 +1505,7 @@ class ClubMembershipServiceImplTest {
         assertEquals(ClubMembershipTerm.STATUS_ACTIVE, term.getValue().getStatus());
         verify(mapper, never()).markInvoiceClosedCas(any(), anyInt(), any());
         verify(mapper, never()).insertRefundReview(any());
-        verify(f.gateway, never()).lockPaymentAttemptForUpdate(anyString(), anyString());
+        verify(f.gateway, never()).lockClosablePaymentAttemptForUpdate(anyString(), anyString());
         f.verifyOriginalCloseAndSuccessorQuery();
     }
 
@@ -1556,9 +1521,9 @@ class ClubMembershipServiceImplTest {
         assertEquals(3, result.getInvoice().getVersion());
         assertFalse(result.isRecoverable());
         InOrder order = inOrder(f.gateway, mapper);
-        order.verify(f.gateway).lockPaymentAttemptForUpdate(f.invoice.getOutTradeNo(), f.w2);
+        order.verify(f.gateway).lockClosablePaymentAttemptForUpdate(f.invoice.getOutTradeNo(), f.w2);
         order.verify(mapper).markInvoiceClosedCas(eq(f.invoice.getId()), eq(2), any());
-        verify(f.gateway, never()).lockPaymentAttemptForUpdate(anyString(), eq(f.w1));
+        verify(f.gateway, never()).lockClosablePaymentAttemptForUpdate(anyString(), eq(f.w1));
         verify(mapper, never()).markInvoicePaidCas(any(), anyInt(), any(), any());
         verify(mapper, never()).insertTerm(any());
         verify(mapper, never()).insertRefundReview(any());
@@ -1618,48 +1583,17 @@ class ClubMembershipServiceImplTest {
     }
 
     @Test
-    void explicitCancelSuspendsAmbientTransactionAroundWechatAndRestoresCaller() {
-        ClubMembershipInvoice invoice = validPayingInvoice();
-        invoice.setVersion(2);
+    void explicitCancelRejectsAmbientTransactionWithoutSuspendingCallerLocks() {
         TrackingTransactionManager tracker = useTrackingTransactions();
-        AtomicBoolean preparedInsideShortTransaction = new AtomicBoolean(false);
-        when(mapper.selectInvoiceById(invoice.getId())).thenAnswer(call -> {
-            preparedInsideShortTransaction.set(tracker.isTransactionActive());
-            return invoice;
+        new TransactionTemplate(tracker).execute(status -> {
+            assertTrue(tracker.isTransactionActive());
+            assertThrows(org.springframework.transaction.IllegalTransactionStateException.class,
+                    () -> transactionalService(tracker).closeInvoice(MEMBER, action(100L, "cancel-ambient-tx-100")));
+            assertTrue(tracker.isTransactionActive(), "rejected call must not suspend or end the caller transaction");
+            return null;
         });
-        AtomicBoolean externalCallInsideLocalTransaction = new AtomicBoolean(false);
-        when(pay.queryOrderStatus(invoice.getOutTradeNo())).thenAnswer(call -> {
-            if (tracker.isTransactionActive()) externalCallInsideLocalTransaction.set(true);
-            return wxOrder(invoice, "NOTPAY");
-        }).thenAnswer(call -> {
-            if (tracker.isTransactionActive()) externalCallInsideLocalTransaction.set(true);
-            return wxOrder(invoice, "CLOSED");
-        });
-        when(pay.closePaymentAttempt(invoice.getOutTradeNo(), invoice.getOutTradeNo())).thenAnswer(call -> {
-            if (tracker.isTransactionActive()) externalCallInsideLocalTransaction.set(true);
-            return true;
-        });
-        AtomicBoolean appliedInsideShortTransaction = new AtomicBoolean(false);
-        when(mapper.markInvoiceClosedCas(eq(invoice.getId()), eq(2), any())).thenAnswer(call -> {
-            appliedInsideShortTransaction.set(tracker.isTransactionActive());
-            return 1;
-        });
-        AtomicBoolean callerTransactionRestored = new AtomicBoolean(false);
-
-        ClubMembershipRenewalVO result = new TransactionTemplate(tracker).execute(status -> {
-            ClubMembershipRenewalVO closed = transactionalService(tracker).closeInvoice(
-                    MEMBER, action(invoice.getId(), "cancel-ambient-tx-100"));
-            callerTransactionRestored.set(tracker.isTransactionActive());
-            return closed;
-        });
-
-        assertNotNull(result);
-        assertEquals(ClubMembershipInvoice.STATUS_CLOSED, result.getPaymentState());
-        assertTrue(preparedInsideShortTransaction.get());
-        assertTrue(appliedInsideShortTransaction.get());
-        assertFalse(externalCallInsideLocalTransaction.get());
-        assertTrue(callerTransactionRestored.get());
         assertFalse(tracker.isTransactionActive());
+        org.mockito.Mockito.verifyNoInteractions(feature, access, mapper, clubs, clubMembers, members, pay, audits);
     }
 
     @Test
@@ -1696,7 +1630,7 @@ class ClubMembershipServiceImplTest {
         ClubMembershipInvoice invoice = validPayingInvoice();
         stubActiveCallback(invoice);
 
-        assertFalse(service.handlePaidInvoice(invoice.getOutTradeNo(), true, 9899, "wx-tx-1"));
+        assertFalse(paidInvoice(invoice.getOutTradeNo(), true, 9899, "wx-tx-1"));
 
         verify(mapper, never()).markInvoicePaidCas(any(), any(Integer.class), any(), any());
         verify(mapper, never()).insertTerm(any());
@@ -1710,7 +1644,7 @@ class ClubMembershipServiceImplTest {
                 .thenReturn(1);
         when(mapper.insertTerm(any(ClubMembershipTerm.class))).thenReturn(1);
 
-        assertTrue(service.handlePaidInvoice(invoice.getOutTradeNo(), true, 9900, "wx-tx-1"));
+        assertTrue(paidInvoice(invoice.getOutTradeNo(), true, 9900, "wx-tx-1"));
         ArgumentCaptor<ClubMembershipTerm> term = ArgumentCaptor.forClass(ClubMembershipTerm.class);
         verify(mapper).insertTerm(term.capture());
         assertEquals(Instant.parse("2026-08-23T16:00:00Z"), term.getValue().getStartsAt().toInstant());
@@ -1719,7 +1653,7 @@ class ClubMembershipServiceImplTest {
 
         invoice.setStatus(ClubMembershipInvoice.STATUS_PAID);
         invoice.setTransactionId("wx-tx-1");
-        assertTrue(service.handlePaidInvoice(invoice.getOutTradeNo(), true, 9900, "wx-tx-1"));
+        assertTrue(paidInvoice(invoice.getOutTradeNo(), true, 9900, "wx-tx-1"));
         verify(mapper, times(1)).insertTerm(any());
     }
 
@@ -1731,7 +1665,7 @@ class ClubMembershipServiceImplTest {
                 .thenReturn(1);
         when(mapper.insertTerm(any(ClubMembershipTerm.class))).thenReturn(1);
 
-        assertTrue(service.handlePaidInvoice(invoice.getOutTradeNo(), true, 9900, "wx-tx-order"));
+        assertTrue(paidInvoice(invoice.getOutTradeNo(), true, 9900, "wx-tx-order"));
 
         InOrder order = inOrder(mapper, clubs, clubMembers);
         order.verify(mapper).selectInvoiceByOutTradeNo(invoice.getOutTradeNo());
@@ -1750,7 +1684,7 @@ class ClubMembershipServiceImplTest {
         stubActiveCallback(invoice);
         when(mapper.selectInvoiceByTransactionId("wx-tx-used")).thenReturn(other);
 
-        assertFalse(service.handlePaidInvoice(invoice.getOutTradeNo(), true, 9900, "wx-tx-used"));
+        assertFalse(paidInvoice(invoice.getOutTradeNo(), true, 9900, "wx-tx-used"));
 
         verify(mapper, never()).markInvoicePaidCas(any(), any(Integer.class), any(), any());
         verify(mapper, never()).insertTerm(any());
@@ -1761,9 +1695,11 @@ class ClubMembershipServiceImplTest {
         ClubMembershipInvoice invoice = validPayingInvoice();
         invoice.setStatus(ClubMembershipInvoice.STATUS_PAID);
         invoice.setTransactionId("wx-tx-original");
+        var original=proof.issue(invoice.getOutTradeNo(),9900,"wx-tx-original");
+        invoice.setVerifiedPaymentFactId(original.id());invoice.setVerifiedPaymentFactHash(original.hash());
         stubActiveCallback(invoice);
 
-        assertFalse(service.handlePaidInvoice(invoice.getOutTradeNo(), true, 9900, "wx-tx-other"));
+        assertFalse(paidInvoice(invoice.getOutTradeNo(), true, 9900, "wx-tx-other"));
 
         verify(mapper, never()).insertTerm(any());
         verify(mapper, never()).markInvoicePaidCas(any(), any(Integer.class), any(), any());
@@ -1784,7 +1720,7 @@ class ClubMembershipServiceImplTest {
         when(mapper.selectLatestTermForUpdate(CLUB, MEMBER)).thenReturn(current);
         when(mapper.insertTerm(any())).thenReturn(1);
 
-        assertTrue(service.handlePaidInvoice(invoice.getOutTradeNo(), true, 9900, "wx-tx-next"));
+        assertTrue(paidInvoice(invoice.getOutTradeNo(), true, 9900, "wx-tx-next"));
 
         ArgumentCaptor<ClubMembershipTerm> term = ArgumentCaptor.forClass(ClubMembershipTerm.class);
         verify(mapper).insertTerm(term.capture());
@@ -1873,7 +1809,7 @@ class ClubMembershipServiceImplTest {
             return 1;
         });
 
-        assertTrue(service.handlePaidInvoice(invoice.getOutTradeNo(), true, 9900, "wx-tx-late"));
+        assertTrue(paidInvoice(invoice.getOutTradeNo(), true, 9900, "wx-tx-late"));
 
         ArgumentCaptor<ClubMembershipTerm> term = ArgumentCaptor.forClass(ClubMembershipTerm.class);
         verify(mapper).insertTerm(term.capture());
@@ -1899,7 +1835,7 @@ class ClubMembershipServiceImplTest {
             return 1;
         });
 
-        assertTrue(service.handlePaidInvoice(
+        assertTrue(paidInvoice(
                 invoice.getOutTradeNo(), true, 9900, "wx-tx-late-nonref"));
 
         ArgumentCaptor<com.chengyinhub.business.domain.ClubMembershipRefundReview> review =
@@ -1920,7 +1856,7 @@ class ClubMembershipServiceImplTest {
         final Set<String> closedAttempts = new HashSet<>();
         final AtomicBoolean w1Closed = new AtomicBoolean();
         final JsapiService sdk = mock(JsapiService.class);
-        final WechatPayServiceImpl gateway = org.mockito.Mockito.spy(new WechatPayServiceImpl());
+        final WechatPayServiceImpl gateway = org.mockito.Mockito.spy(com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.gateway());
 
         CloseAttemptReadbackFixture(Transaction.TradeStateEnum w2State) {
             // Spring's resource-free transaction boundary exercises the gateway's actual-transaction guard;
@@ -1931,14 +1867,16 @@ class ClubMembershipServiceImplTest {
                 @Override protected void doCommit(DefaultTransactionStatus status) { }
                 @Override protected void doRollback(DefaultTransactionStatus status) { }
             };
-            ReflectionTestUtils.setField(service, "transactionManager", manager);
-            ReflectionTestUtils.setField(service, "wechatPayService", gateway);
-            ReflectionTestUtils.setField(gateway, "paymentIntentTransactions", manager);
-            ReflectionTestUtils.setField(gateway, "jsapiService", sdk);
+            com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(service, "transactionManager", manager);
+            com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(service, "wechatPayService", gateway);
+            org.springframework.test.util.ReflectionTestUtils.setField(service,"verifiedPaymentFacts",
+                    com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.getField(gateway,"verifiedFacts"));
+            com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(gateway, "paymentIntentTransactions", manager);
+            com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(gateway, "jsapiService", sdk);
             WxPayConfig config = mock(WxPayConfig.class);
             when(config.getMerchantId()).thenReturn("merchant-clm");
-            ReflectionTestUtils.setField(gateway, "wxPayConfig", config);
-            ReflectionTestUtils.setField(gateway, "paymentIntentJdbc", new JdbcTemplate() {
+            com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(gateway, "wxPayConfig", config);
+            com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(gateway, "paymentIntentJdbc", new JdbcTemplate() {
                 @Override public List<Map<String, Object>> queryForList(String sql, Object... args) {
                     if (sql.contains("FROM club_membership_invoice")) {
                         assertEquals(w1, args[0]);
@@ -1969,6 +1907,13 @@ class ClubMembershipServiceImplTest {
                     return 1;
                 }
             });
+            var actualFacts=(com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService)
+                    com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.getField(gateway,"verifiedFacts");
+            var originalJdbc=(JdbcTemplate)com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.getField(gateway,"paymentIntentJdbc");
+            var originalOwner=new com.chengyinhub.business.service.impl.JdbcWechatPaymentOrderOwner();
+            org.springframework.test.util.ReflectionTestUtils.setField(originalOwner,"paymentIntentJdbc",originalJdbc);
+            org.springframework.test.util.ReflectionTestUtils.setField(actualFacts,"factBusinessOwner",originalOwner);
+            org.springframework.test.util.ReflectionTestUtils.setField(actualFacts,"factIntentJdbc",originalJdbc);
             when(mapper.selectInvoiceById(invoice.getId())).thenReturn(invoice);
             when(mapper.selectInvoiceByIdForUpdate(invoice.getId())).thenReturn(invoice);
             when(sdk.queryOrderByOutTradeNo(any())).thenAnswer(call -> {
@@ -1997,10 +1942,13 @@ class ClubMembershipServiceImplTest {
         }
 
         Map<String, Object> intent(String no) {
-            return Map.of("out_trade_no", no, "business_out_trade_no", w1, "mchid", "merchant-clm",
+            Map<String,Object> original=new HashMap<>(Map.of("out_trade_no", no, "business_out_trade_no", w1, "mchid", "merchant-clm",
                     "appid", w1.equals(no) ? "wx-clm-mini" : "wx-clm-app",
                     "trade_type", w1.equals(no) ? "JSAPI" : "APP", "currency", "CNY",
-                    "total_fen", invoice.getAmountFen());
+                    "total_fen", invoice.getAmountFen(), "request_hash", (w1.equals(no) ? "a" : "b").repeat(64),
+                    "biz_type","CLM","biz_id",invoice.getId()));
+            if(closedAttempts.contains(no))original.put("closed_confirmed_at",new Date(1));
+            return original;
         }
 
         Transaction facts(String no, Transaction.TradeStateEnum state) {
@@ -2009,7 +1957,7 @@ class ClubMembershipServiceImplTest {
             tx.setAppid(w1.equals(no) ? "wx-clm-mini" : "wx-clm-app");
             tx.setTradeType(w1.equals(no) ? Transaction.TradeTypeEnum.JSAPI : Transaction.TradeTypeEnum.APP);
             tx.setTradeState(state);
-            if (state == Transaction.TradeStateEnum.SUCCESS) tx.setTransactionId("wx-w2-success");
+            if (state == Transaction.TradeStateEnum.SUCCESS) tx.setTransactionId("wx-w2-success"); tx.setSuccessTime("2026-10-24T00:00:00Z");
             TransactionAmount amount = new TransactionAmount();
             amount.setTotal(invoice.getAmountFen().intValue()); amount.setCurrency("CNY"); tx.setAmount(amount);
             return tx;
@@ -2078,7 +2026,13 @@ class ClubMembershipServiceImplTest {
         when(transactions.getTransaction(any(org.springframework.transaction.TransactionDefinition.class)))
                 .thenAnswer(call -> {
                     TransactionDefinition definition = call.getArgument(0, TransactionDefinition.class);
-                    if (definition.getPropagationBehavior()
+                    if (definition.getPropagationBehavior() == TransactionDefinition.PROPAGATION_NEVER) {
+                        if (depth.get() > 0) throw new org.springframework.transaction.IllegalTransactionStateException("outer transaction rejected");
+                        frames.push(new TrackedTransactionFrame(false, 0));
+                    } else if (definition.getPropagationBehavior() == TransactionDefinition.PROPAGATION_REQUIRES_NEW) {
+                        int suspendedDepth = depth.getAndSet(1);
+                        frames.push(new TrackedTransactionFrame(true, suspendedDepth));
+                    } else if (definition.getPropagationBehavior()
                             == TransactionDefinition.PROPAGATION_NOT_SUPPORTED) {
                         int suspendedDepth = depth.getAndSet(0);
                         frames.push(new TrackedTransactionFrame(false, suspendedDepth));
@@ -2120,7 +2074,7 @@ class ClubMembershipServiceImplTest {
 
     private TrackingTransactionManager useTrackingTransactions() {
         TrackingTransactionManager tracker = new TrackingTransactionManager();
-        ReflectionTestUtils.setField(service, "transactionManager", tracker);
+        com.chengyinhub.business.service.impl.WechatVerifiedFactTestSupport.setField(service, "transactionManager", tracker);
         return tracker;
     }
 
@@ -2158,6 +2112,15 @@ class ClubMembershipServiceImplTest {
 
         @Override
         public TransactionStatus getTransaction(TransactionDefinition definition) {
+            if (definition.getPropagationBehavior() == TransactionDefinition.PROPAGATION_NEVER) {
+                if (activeDepth > 0) throw new org.springframework.transaction.IllegalTransactionStateException("outer transaction rejected");
+                return new TrackingTransactionStatus(false, 0);
+            }
+            if (definition.getPropagationBehavior() == TransactionDefinition.PROPAGATION_REQUIRES_NEW) {
+                int suspendedDepth = activeDepth;
+                activeDepth = 1;
+                return new TrackingTransactionStatus(true, suspendedDepth);
+            }
             if (definition.getPropagationBehavior() == TransactionDefinition.PROPAGATION_NOT_SUPPORTED) {
                 int suspendedDepth = activeDepth;
                 activeDepth = 0;
@@ -2356,4 +2319,35 @@ class ClubMembershipServiceImplTest {
         return new ClubAccessContext(OWNER, CLUB, OWNER, null,
                 Collections.singleton(ClubRoleCode.CLUB_OWNER));
     }
+    @Test
+    void paymentNetworkEntriesRejectActualOuterTransactionBeforeIntentOrSdk() {
+        org.springframework.transaction.support.TransactionSynchronizationManager.setActualTransactionActive(true);
+        try {
+            assertThrows(IllegalStateException.class, () -> service.renew(MEMBER, null));
+            assertThrows(IllegalStateException.class, () -> service.resumeInvoice(MEMBER, null));
+            assertThrows(IllegalStateException.class, () -> service.closeInvoice(MEMBER, null));
+            org.mockito.Mockito.verifyNoInteractions(feature, access, mapper, clubs, clubMembers, members, pay, audits, transactions);
+        } finally {
+            org.springframework.transaction.support.TransactionSynchronizationManager.setActualTransactionActive(false);
+        }
+    }
+
+    @Test
+    void paymentNetworkEntriesNeverSuspendLocksAndLocalPhasesStayRequiresNew() throws Exception {
+        for (java.lang.reflect.Method method : ClubMembershipServiceImpl.class.getMethods()) {
+            if (java.util.Set.of("renew", "resumeInvoice", "closeInvoice").contains(method.getName())) {
+                assertEquals(org.springframework.transaction.annotation.Propagation.NEVER,
+                        method.getAnnotation(org.springframework.transaction.annotation.Transactional.class).propagation());
+            }
+        }
+        org.springframework.transaction.support.TransactionTemplate transaction =
+                org.springframework.test.util.ReflectionTestUtils.invokeMethod(service, "transaction");
+        assertNotNull(transaction);
+        assertEquals(org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW, transaction.getPropagationBehavior());
+    }
+
+    private boolean paidInvoice(String no,boolean paid,Integer fen,String tx) {
+        return service.handlePaidInvoice(no,paid,fen,tx,proof.issue(no,fen,tx));
+    }
+
 }

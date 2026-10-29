@@ -3,7 +3,7 @@
     <cy-page-header
       eyebrow="资金与售后"
       title="提现回补队列"
-      description="处理微信提现失败后的查询、登记与双人复核；每笔资金状态以微信回读和人工确认记录为准。"
+      description="核查微信提现结果与回补；只有扣款和渠道资金事实符合条件，才能登记并由另一人复核。"
       :updated-at="updatedAt"
     >
       <el-button slot="primary" type="warning" plain icon="el-icon-warning-outline" :disabled="loading" @click="showManualQueue">只看人工队列</el-button>
@@ -31,8 +31,9 @@
               <el-option label="处理中" :value="0" />
               <el-option label="成功" :value="1" />
               <el-option label="失败已退款" :value="2" />
-              <el-option label="失败待人工" :value="3" />
+              <el-option label="待人工核查" :value="3" />
               <el-option label="人工回补待复核" :value="4" />
+              <el-option label="未实际扣款" :value="5" />
             </el-select>
           </el-form-item>
         </cy-filter-bar>
@@ -61,7 +62,7 @@
       <template #status="{ row }"><cy-status-tag :label="statusText(row.status)" :tone="statusTone(row.status)" /></template>
       <template #actions="{ row }">
         <el-button size="mini" type="text" icon="el-icon-refresh" @click="handleRequery(row)"
-          v-hasPermi="['business:cashwithdraw:manage']" v-if="row.status === 0">重查</el-button>
+          v-hasPermi="['business:cashwithdraw:manage']" v-if="canRequery(row)">重查</el-button>
         <el-button size="mini" type="text" icon="el-icon-money" @click="handleManual(row)"
           v-hasPermi="['business:cashwithdraw:manage']" v-if="row.status === 3">登记回补</el-button>
         <el-button size="mini" type="text" icon="el-icon-check" @click="handleManual(row)"
@@ -133,8 +134,8 @@ export default {
     manualImpact() {
       if (!this.manualForm.id) return ''
       const action = this.manualForm.status === 4
-        ? '复核通过后会将金额退回用户余额。'
-        : '登记后会转入另一名财务人员复核，当前操作不会直接退回余额。'
+        ? '资金事实校验通过且由另一人复核后，才会退回用户余额；结果未知时继续核查。'
+        : '资金事实校验通过后转入另一名财务复核，当前操作不会直接退回余额。'
       return `提现单 #${this.manualForm.id} / 用户 ${this.manualForm.memberId} / ¥${this.manualForm.amount}。${action}`
     }
   },
@@ -174,7 +175,7 @@ export default {
         })
     },
     statusText(s) {
-      return { 0: "处理中", 1: "成功", 2: "失败已退款", 3: "失败待人工", 4: "人工回补待复核" }[s] || "-"
+      return { 0: "处理中", 1: "成功", 2: "失败已退款", 3: "待人工核查", 4: "人工回补待复核", 5: "未实际扣款" }[s] || "-"
     },
     statusTone(s) {
       return { 0: 'warning', 1: 'success', 2: 'neutral', 3: 'danger', 4: 'warning' }[s] || 'neutral'
@@ -209,9 +210,13 @@ export default {
       this.queryParams.pageNum = 1
       return this.getList()
     },
+    canRequery(row) {
+      return !!row && [0, 3, 4].includes(row.status)
+    },
     handleRequery(row) {
-      requeryCashwithdraw(row.id).then(() => {
-        this.$modal.msgSuccess("已重新查询微信状态")
+      if (!this.canRequery(row)) return
+      return requeryCashwithdraw(row.id).then(() => {
+        this.$modal.msgSuccess("已重新查询微信状态，请按资金事实继续核查")
         this.getList()
       })
     },

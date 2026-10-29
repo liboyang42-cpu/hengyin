@@ -1,0 +1,11 @@
+{
+  "readerCalls": 1,
+  "exploreListBatchCalls": 1,
+  "entryMutations": 0,
+  "javaDelimiterCheck": "PASS (not compilation)",
+  "javaTestsAuthored": 14,
+  "javaTestsRun": false,
+  "mysqlRun": false,
+  "dependency": "051c1c108653eeb1cbc4f3b69f8ae25728c99e34",
+  "gFixturePatchApplyCheck": "PASS against original 051c test file"
+}

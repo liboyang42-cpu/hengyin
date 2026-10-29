@@ -74,17 +74,19 @@ class CriticalPathInterceptorTest {
                 new java.sql.SQLException(SECRET, new GetConnectionTimeoutException("wait millis 5000, active 20, maxActive 20")));
         assertSame(failure, assertThrows(CannotGetJdbcConnectionException.class, () -> worker.fail(failure)));
         assertEquals(List.of("[CY-CRITICAL] code=CP_REFUND_FAILED kind=FAULT op=review "
-                + "cause=CannotGetJdbcConnectionException root=GetConnectionTimeoutException"), lines());
+                + "cause=CannotGetJdbcConnectionException root=GetConnectionTimeoutException origin="
+                + location(failure.getCause().getCause().getStackTrace()[0])), lines());
         assertEquals(Level.ERROR, appender.list.get(0).getLevel());
         assertEquals(before + 1, CriticalPathEvents.count(CriticalPathCode.CP_REFUND_FAILED, CriticalPathEvents.Kind.FAULT));
     }
 
     @Test
     void redisOutageIsFault() {
-        assertThrows(RedisConnectionFailureException.class,
-                () -> worker.fail(new RedisConnectionFailureException(SECRET)));
+        RedisConnectionFailureException failure = new RedisConnectionFailureException(SECRET);
+        assertThrows(RedisConnectionFailureException.class, () -> worker.fail(failure));
         assertEquals(List.of("[CY-CRITICAL] code=CP_REFUND_FAILED kind=FAULT op=review "
-                + "cause=RedisConnectionFailureException root=RedisConnectionFailureException"), lines());
+                + "cause=RedisConnectionFailureException root=RedisConnectionFailureException origin="
+                + location(failure.getStackTrace()[0])), lines());
     }
 
     @Test
@@ -102,9 +104,10 @@ class CriticalPathInterceptorTest {
 
     @Test
     void nestedCriticalPathsReportTheSameFailureOnlyOnceWithInnermostCode() {
-        assertThrows(NullPointerException.class, worker::outerCallsInner);
+        NullPointerException failure = assertThrows(NullPointerException.class, worker::outerCallsInner);
         assertEquals(List.of("[CY-CRITICAL] code=CP_SETTLEMENT_ACCRUAL_FAILED kind=FAULT op=payment "
-                + "cause=NullPointerException root=NullPointerException"), lines());
+                + "cause=NullPointerException root=NullPointerException origin="
+                + location(failure.getStackTrace()[0])), lines());
     }
 
     @Test
@@ -138,7 +141,8 @@ class CriticalPathInterceptorTest {
             assertFalse(line.contains("13800138000") || line.contains("oABC") || line.contains("4200001"), line);
             assertNull(event.getThrowableProxy(), "事件行不能附带堆栈（堆栈 message 可能含业务数据）");
             assertTrue(line.matches("\\[CY-CRITICAL] code=CP_[A-Z_]+ kind=(FAULT|REJECTED) op=[a-z][a-z0-9_]{0,31} "
-                    + "cause=[A-Za-z0-9_$]+ root=[A-Za-z0-9_$]+"), line);
+                    + "cause=[A-Za-z0-9_$]+ root=[A-Za-z0-9_$]+ "
+                    + "origin=(unknown|com\\.chengyinhub\\.[A-Za-z0-9_.$]+#[A-Za-z0-9_$<>]+:-?[0-9]+)"), line);
         }
         assertTrue(lines().get(1).contains(" op=invalid "));
     }
@@ -147,6 +151,53 @@ class CriticalPathInterceptorTest {
     void nullInputsNeverThrow() {
         assertFalse(CriticalPathEvents.failure(null, "x", new RuntimeException()));
         assertFalse(CriticalPathEvents.failure(CriticalPathCode.CP_REFUND_FAILED, "x", null));
+    }
+
+    @Test
+    void realFailureOriginLocatesTheProjectThrowWithoutLeakingSensitiveMessage() {
+        NullPointerException root = assertThrows(NullPointerException.class,
+                CriticalPathInterceptorTest::failWithSecretMessage);
+        assertTrue(CriticalPathEvents.failure(CriticalPathCode.CP_REFUND_FAILED, "review",
+                new CannotGetJdbcConnectionException(SECRET, new java.sql.SQLException("fixture wrapper", root))));
+        assertEquals(List.of("[CY-CRITICAL] code=CP_REFUND_FAILED kind=FAULT op=review "
+                + "cause=CannotGetJdbcConnectionException root=NullPointerException origin="
+                + location(root.getStackTrace()[0])), lines());
+        assertTrue(root.getStackTrace()[0].getLineNumber() > 0);
+        assertTrue(lines().get(0).contains("#failWithSecretMessage:"));
+        assertFalse(lines().get(0).contains(SECRET));
+        assertFalse(lines().get(0).contains("13800138000"));
+        assertFalse(lines().get(0).contains("oABC"));
+        assertFalse(lines().get(0).contains("4200001"));
+        assertNull(appender.list.get(0).getThrowableProxy());
+    }
+
+    @Test
+    void absentOutOfBudgetOrUnsafeProjectFramesFallBackToUnknown() {
+        StackTraceElement external = new StackTraceElement("java.sql.Driver", "execute", SECRET, 12);
+        StackTraceElement project = new StackTraceElement("com.chengyinhub.business.Worker", "execute", SECRET, 34);
+        StackTraceElement[] beyondBudget = new StackTraceElement[65];
+        java.util.Arrays.fill(beyondBudget, external);
+        beyondBudget[64] = project;
+        StackTraceElement unsafe = new StackTraceElement("com.chengyinhub.business.Worker", "execute\n" + SECRET, SECRET, 56);
+        for (StackTraceElement[] frames : List.of(new StackTraceElement[] {external}, beyondBudget,
+                new StackTraceElement[] {unsafe})) {
+            NullPointerException failure = new NullPointerException(SECRET);
+            failure.setStackTrace(frames);
+            assertTrue(CriticalPathEvents.failure(CriticalPathCode.CP_REFUND_FAILED, "review", failure));
+            ILoggingEvent event = appender.list.get(appender.list.size() - 1);
+            assertEquals("[CY-CRITICAL] code=CP_REFUND_FAILED kind=FAULT op=review "
+                    + "cause=NullPointerException root=NullPointerException origin=unknown", event.getFormattedMessage());
+            assertNull(event.getThrowableProxy());
+        }
+        assertEquals(3, appender.list.size());
+    }
+
+    private static void failWithSecretMessage() {
+        throw new NullPointerException(SECRET);
+    }
+
+    private static String location(StackTraceElement frame) {
+        return frame.getClassName() + "#" + frame.getMethodName() + ":" + frame.getLineNumber();
     }
 
     private List<String> lines() {

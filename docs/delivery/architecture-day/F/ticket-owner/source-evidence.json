@@ -1,0 +1,72 @@
+{
+  "source": "d2d09a0deec78e298d0a814eca65bf80b8e121cb",
+  "parent": "6d113bd0ec177ea6d2423fa2f76e7e50b44ed5ac",
+  "kind": "READ_ONLY_PUBLIC_SOURCE_NOT_COMPILED",
+  "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/verify/RegistrationTicketApplication.java",
+  "git_blob": "a379d78d39e81908819f58020b02d18be496ecaa",
+  "sha256": "95403c9ed59b9333b347d2b04e7b5ceed21d51b82c11afb1b7436df7a3962ce0",
+  "selected_lines": [
+    {
+      "line": 32,
+      "source": "    private final ICmsRegistrationService registrationService;"
+    },
+    {
+      "line": 33,
+      "source": "    private final RegistrationSeatService registrationSeatService;"
+    },
+    {
+      "line": 34,
+      "source": "    private final ICmsActivityService activityService;"
+    },
+    {
+      "line": 35,
+      "source": "    private final IPerkLedgerService perkLedgerService;"
+    },
+    {
+      "line": 36,
+      "source": "    private final QrcodeServiceImpl qrcodeService;"
+    },
+    {
+      "line": 37,
+      "source": "    private final String dynSecret;"
+    },
+    {
+      "line": 39,
+      "source": "    public RegistrationTicketApplication(ICmsRegistrationService registrationService,"
+    },
+    {
+      "line": 59,
+      "source": "        CmsRegistration reg = registrationService.selectCmsRegistrationById(registrationId);"
+    },
+    {
+      "line": 90,
+      "source": "                ? registrationSeatService.prepareOwnedSeat(registrationId, memberId, seatNo) : null;"
+    },
+    {
+      "line": 91,
+      "source": "        if (!multiTopicSeat && perkLedgerService.isTicketFullyConsumed(reg.getVerificationStatus(), reg.getId())) {"
+    },
+    {
+      "line": 97,
+      "source": "            CmsActivity activity = activityService.selectCmsActivityById(reg.getOwnerId());"
+    },
+    {
+      "line": 119,
+      "source": "            qrcodeUrl = qrcodeService.generateInlineQrcode(code, 300, 300);"
+    },
+    {
+      "line": 139,
+      "source": "        var receipt = registrationSeatService.seatReceipt(registrationId, seatNo, activityId, actorMemberId);"
+    }
+  ],
+  "production_literal_callers": [
+    "d2d09a0deec78e298d0a814eca65bf80b8e121cb:chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiVerifyController.java:29:import com.chengyinhub.web.service.verify.RegistrationTicketApplication;",
+    "d2d09a0deec78e298d0a814eca65bf80b8e121cb:chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiVerifyController.java:43:    private static final long DYN_TTL_MS = RegistrationTicketApplication.DYN_TTL_MS;",
+    "d2d09a0deec78e298d0a814eca65bf80b8e121cb:chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiVerifyController.java:46:    private RegistrationTicketApplication registrationTicketApplication;",
+    "d2d09a0deec78e298d0a814eca65bf80b8e121cb:chengyinhub-admin/src/main/java/com/chengyinhub/web/service/verify/RegistrationTicketApplication.java:28:public class RegistrationTicketApplication {",
+    "d2d09a0deec78e298d0a814eca65bf80b8e121cb:chengyinhub-admin/src/main/java/com/chengyinhub/web/service/verify/RegistrationTicketApplication.java:29:    private static final Logger logger = LoggerFactory.getLogger(RegistrationTicketApplication.class);",
+    "d2d09a0deec78e298d0a814eca65bf80b8e121cb:chengyinhub-admin/src/main/java/com/chengyinhub/web/service/verify/RegistrationTicketApplication.java:39:    public RegistrationTicketApplication(ICmsRegistrationService registrationService,"
+  ],
+  "compiled_dependencies": "NOT_RUN",
+  "unowned_public_ports": "observed, not new business owners/table authority"
+}

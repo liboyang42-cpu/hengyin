@@ -1,0 +1,129 @@
+chengyinhub-common/src/main/java/com/chengyinhub/common/utils/sms/AliSmsUtil.java:37:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-framework/src/main/java/com/chengyinhub/framework/web/service/SmsVerificationService.java:51:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-framework/src/main/java/com/chengyinhub/framework/web/service/SmsVerificationService.java:92:        catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) { throw paused; }
+chengyinhub-common/src/main/java/com/chengyinhub/common/utils/file/FileOssUploadUtils.java:115:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-common/src/main/java/com/chengyinhub/common/utils/file/FileOssUploadUtils.java:126:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-common/src/main/java/com/chengyinhub/common/utils/file/FileOssUploadUtils.java:152:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-common/src/main/java/com/chengyinhub/common/utils/file/FileOssUploadUtils.java:163:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-common/src/main/java/com/chengyinhub/common/utils/file/FileOssUploadUtils.java:205:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-common/src/main/java/com/chengyinhub/common/utils/file/FileOssUploadUtils.java:803:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/NpcVoiceEnrollmentService.java:52:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/NpcVoiceEnrollmentService.java:76:        catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) { throw paused; }
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/TencentMapClient.java:64:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/TencentMapClient.java:82:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/OssCardCutoutStorage.java:98:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/OssCardCutoutStorage.java:371:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/DashScopeSpeechToTextService.java:54:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/DashScopeSpeechToTextService.java:105:        catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) { throw paused; }
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java:141:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java:279:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java:293:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java:302:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java:322:        } catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java:355:        catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) { throw paused; }
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java:377:        } catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java:393:        catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) { throw paused; }
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java:517:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java:534:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java:581:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckVisionService.java:101:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckVisionService.java:118:        catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) { throw paused; }
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckVisionService.java:142:        catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) { throw paused; }
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckVisionService.java:163:        catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) { throw paused; }
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/OpenAiCompatibleLlmClient.java:82:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/OpenAiCompatibleLlmClient.java:109:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/OpenAiCompatibleLlmClient.java:163:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/OpenAiCompatibleLlmClient.java:186:        catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) { throw paused; }
+chengyinhub-system/src/main/java/com/chengyinhub/business/notify/WxSubscribeChannel.java:30:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/ImageSegClient.java:86:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/ImageSegClient.java:98:        } catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) {
+chengyinhub-common/src/main/java/com/chengyinhub/common/config/RestoreDispatchGuard.java:9:public final class RestoreDispatchGuard {
+chengyinhub-common/src/main/java/com/chengyinhub/common/config/RestoreDispatchGuard.java:12:    private RestoreDispatchGuard() { }
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiQuotaRecoveryService.java:50:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiQuotaRecoveryService.java:81:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiQuotaRecoveryService.java:103:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiQuotaRecoveryService.java:149:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiQuotaRecoveryService.java:170:        if (com.chengyinhub.common.config.RestoreDispatchGuard.isRestoreMode()) return;
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiQuotaRecoveryService.java:183:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckIntentService.java:46:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckIntentService.java:82:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckIntentService.java:97:        } catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/ObjectNamer.java:77:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/ObjectNamer.java:99:        } catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/DashScopeVoiceClient.java:50:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/DashScopeVoiceClient.java:105:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/DashScopeVoiceClient.java:155:            com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/DashScopeVoiceClient.java:164:        catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) { throw paused; }
+chengyinhub-system/src/main/java/com/chengyinhub/business/task/ImNotificationDeliveryTask.java:19:        if (com.chengyinhub.common.config.RestoreDispatchGuard.isRestoreMode()) return;
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/RoamRecallService.java:36:        if (com.chengyinhub.common.config.RestoreDispatchGuard.isRestoreMode()) return 0;
+chengyinhub-system/src/main/java/com/chengyinhub/business/task/BeforeStartNotifyTask.java:40:        if (com.chengyinhub.common.config.RestoreDispatchGuard.isRestoreMode()) return;
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcChatService.java:100:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcChatService.java:187:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcChatService.java:200:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcChatService.java:363:        catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused)
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CommunityPostServiceImpl.java:1471:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxContentSecurityServiceImpl.java:164:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxContentSecurityServiceImpl.java:268:        catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) { throw paused; }
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxContentSecurityServiceImpl.java:287:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxContentSecurityServiceImpl.java:335:        catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) { throw paused; }
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxContentSecurityServiceImpl.java:346:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxContentSecurityServiceImpl.java:372:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxContentSecurityServiceImpl.java:407:        catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) { throw paused; }
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxContentSecurityServiceImpl.java:1435:            com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/HttpWebhookTransport.java:47:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/CommittedOfficialNoticeService.java:95:        if (com.chengyinhub.common.config.RestoreDispatchGuard.isRestoreMode())
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/CommittedOfficialNoticeService.java:172:        if (com.chengyinhub.common.config.RestoreDispatchGuard.isRestoreMode()) return;
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/CommittedOfficialNoticeService.java:182:        if (com.chengyinhub.common.config.RestoreDispatchGuard.isRestoreMode()) return;
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/CommittedOfficialNoticeService.java:236:        if (com.chengyinhub.common.config.RestoreDispatchGuard.isRestoreMode()) return 0;
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/CommittedBusinessNotice.java:57:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/CommittedBusinessNotice.java:76:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcChatWriteService.java:60:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcChatWriteService.java:66:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MapGeocodeServiceImpl.java:53:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MapGeocodeServiceImpl.java:78:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcAsrIntentService.java:67:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcAsrIntentService.java:108:        } catch(com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcAsrIntentService.java:116:        catch(com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) { throw paused; }
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcAsrIntentService.java:149:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NodeNpcService.java:185:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NotifyServiceImpl.java:43:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NotifyServiceImpl.java:48:            } catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantCrmCampaignServiceImpl.java:107:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantCrmCampaignServiceImpl.java:188:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantCrmCampaignServiceImpl.java:206:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantCrmCampaignServiceImpl.java:241:        if (com.chengyinhub.common.config.RestoreDispatchGuard.isRestoreMode()) return 0;
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AppMediaAssetService.java:61:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AppMediaAssetService.java:80:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxSubscribeMsgServiceImpl.java:98:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxSubscribeMsgServiceImpl.java:150:            if (ex instanceof com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) throw paused;
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxSubscribeMsgServiceImpl.java:186:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayerWxacodeServiceImpl.java:109:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayerWxacodeServiceImpl.java:321:            com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ObjectCardServiceImpl.java:103:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OfficialBroadcastServiceImpl.java:77:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OfficialBroadcastServiceImpl.java:123:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OfficialBroadcastServiceImpl.java:327:        if (com.chengyinhub.common.config.RestoreDispatchGuard.isRestoreMode()) return;
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ImServiceImpl.java:1394:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java:103:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java:110:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java:118:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java:147:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java:170:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java:216:        catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused)
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java:287:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java:316:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java:353:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java:381:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java:457:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java:485:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java:516:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantCrmRecipientDeliveryServiceImpl.java:35:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantCrmRecipientDeliveryServiceImpl.java:131:        if (cause instanceof com.chengyinhub.common.config.RestoreDispatchGuard.Blocked) return;
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantCrmRecipientDeliveryServiceImpl.java:132:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubEventNotificationServiceImpl.java:71:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubEventNotificationServiceImpl.java:120:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubEventNotificationServiceImpl.java:128:        if (com.chengyinhub.common.config.RestoreDispatchGuard.isRestoreMode()) return 0;
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteServiceImpl.java:163:            catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) { throw paused; }
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiThemeDraftRequestService.java:216:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiThemeDraftRequestService.java:275:        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiThemeDraftRequestService.java:309:        catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused)

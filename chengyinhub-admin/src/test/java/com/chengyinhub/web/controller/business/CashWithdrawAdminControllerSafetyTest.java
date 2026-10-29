@@ -65,6 +65,19 @@ class CashWithdrawAdminControllerSafetyTest {
     }
 
     @Test
+    void manualRefundReportsMissingFinancialEvidenceAsInvestigation() {
+        loginAs("finance");
+        MemberCashWithdraw request = new MemberCashWithdraw();
+        request.setId(7L); request.setStatus(MemberCashWithdraw.STATUS_FAILED_MANUAL); request.setManualNote("核查");
+        when(cashWithdrawService.getById(7L)).thenReturn(request);
+        when(cashWithdrawService.manualRefund(7L, "finance", "核查", 3))
+                .thenThrow(new IllegalStateException("缺少原扣款持久证据，保留调查"));
+        AjaxResult result = controller.manualRefund(request);
+        assertEquals(500, result.get(AjaxResult.CODE_TAG));
+        assertEquals("缺少原扣款持久证据，保留调查", result.get(AjaxResult.MSG_TAG));
+    }
+
+    @Test
     void freezeRejectsBlankReasonBeforeCallingService() {
         MemberCashWithdraw request = new MemberCashWithdraw();
         request.setId(7L);

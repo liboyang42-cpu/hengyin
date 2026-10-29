@@ -37,6 +37,7 @@ import com.chengyinhub.business.service.IDispatchService;
 import com.chengyinhub.common.utils.poi.ExcelUtil;
 import com.chengyinhub.common.core.page.TableDataInfo;
 import com.chengyinhub.common.utils.StringUtils;
+import com.chengyinhub.common.exception.ServiceException;
 
 /**
  * 商家主题报名Controller
@@ -243,7 +244,12 @@ public class CmsRegistrationMerchantController extends BaseController
                 return AjaxResult.error("已中标报名不可直接删除，请先取消承接");
             }
         }
-        return toAjax(cmsRegistrationMerchantService.deleteCmsRegistrationMerchantByIds(ids));
+        try {
+            // Service 在同一事务中按稳定顺序锁全批、复验当前 scope/中标态；异常已回滚后再返回拒绝。
+            return toAjax(cmsRegistrationMerchantService.deleteCmsRegistrationMerchantByIds(ids));
+        } catch (ServiceException conflict) {
+            return AjaxResult.error(conflict.getCode(), conflict.getMessage());
+        }
     }
 
     /**

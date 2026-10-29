@@ -1,0 +1,104 @@
+{
+  "baseline": "c7e0ff743f834345098651abe90ef4f55c2c8923",
+  "methods": [
+    "getRegistrationDetail",
+    "exploreCompletion",
+    "getJoinRegistrationDetail",
+    "countByDate",
+    "myRegistrationList",
+    "myJoined"
+  ],
+  "helpers": [
+    "readTopicProductType",
+    "latestRegistrationRefund",
+    "latestRegistrationRefunds",
+    "attachOrganizer",
+    "attachRefundInfoForList",
+    "attachRefundVerdict",
+    "attachManualRefundInfo",
+    "filterEndedOverWeek",
+    "resolveOwnerEndDate"
+  ],
+  "dependencies": [
+    [
+      "ICmsRegistrationService",
+      "registrationService"
+    ],
+    [
+      "IMerchantAccessService",
+      "merchantAccessService"
+    ],
+    [
+      "com.chengyinhub.business.mapper.CoopOrderMapper",
+      "coopOrderMapper"
+    ],
+    [
+      "IClubMemberService",
+      "clubMemberService"
+    ],
+    [
+      "IRefundService",
+      "refundService"
+    ],
+    [
+      "com.chengyinhub.business.service.support.RegistrationCancellationReadService",
+      "cancellationReadService"
+    ],
+    [
+      "ICmsTopicService",
+      "topicService"
+    ],
+    [
+      "ICmsActivityService",
+      "activityService"
+    ],
+    [
+      "com.chengyinhub.business.service.IOmsTicketService",
+      "omsTicketService"
+    ],
+    [
+      "ICmsRegistrationScanService",
+      "registrationScanService"
+    ],
+    [
+      "ICmsMemberTemplateService",
+      "memberTemplateService"
+    ],
+    [
+      "ICmsRegistrationMerchantService",
+      "registrationMerchantService"
+    ],
+    [
+      "com.chengyinhub.business.service.IPerkLedgerService",
+      "perkLedgerService"
+    ],
+    [
+      "com.chengyinhub.business.service.IExploreCompletionReadService",
+      "exploreCompletionReadService"
+    ],
+    [
+      "ICmsTopicChapterService",
+      "topicChapterService"
+    ],
+    [
+      "IUmsMemberService",
+      "umsMemberService"
+    ],
+    [
+      "IMmsMerchantService",
+      "mmsMerchantService"
+    ],
+    [
+      "ISysCategoryService",
+      "sysCategoryService"
+    ]
+  ],
+  "actorBlocks": {
+    "getRegistrationDetail": "            // 获取当前登录用户ID\n            Long memberId = 0L;\n            try {\n                memberId = getAppUserId();\n            } catch (Exception e) {\n\n            }\n",
+    "getJoinRegistrationDetail": "            // 获取当前登录用户ID\n            Long memberId = 0L;\n            try {\n                memberId = getAppUserId();\n            } catch (Exception e) {\n\n            }\n",
+    "exploreCompletion": "        Long memberId;\n        try {\n            memberId = getAppUserId();\n        } catch (Exception e) {\n            return error(\"请先登录\");\n        }\n",
+    "countByDate": "            Long principalMemberId;\n            try { principalMemberId = getAppUserId(); } catch (Exception e) { return error(\"请先登录\"); }\n",
+    "myRegistrationList": "        Long member_id = 0L;\n        try {\n            member_id = getAppUserId();\n        } catch (Exception e) {\n            return error(\"请先登录\");\n        }\n",
+    "myJoined": "        Long memberId;\n        try {\n            memberId = getAppUserId();\n        } catch (Exception e) {\n            return error(\"请先登录\");\n        }\n"
+  }
+}

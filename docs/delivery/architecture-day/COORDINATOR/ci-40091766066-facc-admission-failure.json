@@ -1,0 +1,12 @@
+{
+  "run_id": 40091766066,
+  "source_sha": "faccd991c3060d14d0b0e967cce03d32a84ceb8c",
+  "verdict": "FAIL",
+  "expected_tests": 13,
+  "junit_reported_tests": 13,
+  "failure_stage": "BeforeEach source-controlled scratch admission, RegistrationCallbackIntentMySqlIT:106",
+  "mechanism": "New A_REGISTRATION_PAYMENT_FACT_DDL_APPROVED was asserted by the original fixture but omitted from the manual workflow. Existing B flag and child_env preservation were correct. No business mutation reached.",
+  "fix": "Workflow grants the existing A marker only to the three actual consuming classes: RegistrationCallbackIntentMySqlIT, RegistrationTopicFenceMySqlIT, RegistrationFundsMybatisIntegrationTest. Original source assertions and scratch-host/MySQL/schema checks unchanged. Existing harness contract now asserts exact class list and child inheritance.",
+  "cleanup": "CLEAN",
+  "status": "FIXED_SOURCE_RECHECK_PENDING"
+}

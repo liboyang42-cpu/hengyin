@@ -1,0 +1,68 @@
+{
+  "base": "4197f6a6b11d62cb0a742aae73d7167c93114585",
+  "new_test": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiAiThemeDraftHttpSecurityTest.java",
+  "new_test_sha256": "10d14b141fee5463e580cd5f572691c55bc3484e70833b41e7e654312ad88b69",
+  "authored_cases": {
+    "anonymous": 4,
+    "invalid_app": 16,
+    "valid_admin_wrong_entry": 4,
+    "valid_actual_app_actors": 8,
+    "body_member_spoof": 2,
+    "prepare_key_read": 1
+  },
+  "total_authored": 35,
+  "executed_cases": 0,
+  "protected_source_sha256": [
+    {
+      "source": "chengyinhub-framework/src/main/java/com/chengyinhub/framework/config/SecurityConfig.java",
+      "sha256": "a6b9b31ecc5ab6c32e73d6b0f48cb5c6099b61615e5958b72416ecb3d66940f9"
+    },
+    {
+      "source": "chengyinhub-framework/src/main/java/com/chengyinhub/framework/security/filter/JwtAuthenticationTokenFilter.java",
+      "sha256": "33e1a037323affbe9442f26f8310286f4aa7dd9c3dbc1af804e5bccd72217f5f"
+    },
+    {
+      "source": "chengyinhub-framework/src/main/java/com/chengyinhub/framework/web/service/AppTokenService.java",
+      "sha256": "64557c4cd57869b8707c3e1fb1b80485e61c64c550e82a177e40f2f93fc0241e"
+    },
+    {
+      "source": "chengyinhub-framework/src/main/java/com/chengyinhub/framework/web/service/TokenService.java",
+      "sha256": "bcb444a4c6bfab892082b45620d929a86782998a4973496b0df2c1e0827dde24"
+    },
+    {
+      "source": "chengyinhub-common/src/main/java/com/chengyinhub/common/core/controller/BaseController.java",
+      "sha256": "94c212a4f65b3ac02d0a45836d33a28e5566556e7a1e4bcd48ccfa75eca78307"
+    },
+    {
+      "source": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAiController.java",
+      "sha256": "37a8daecb70bcfec885d0d871494dab2ae985adea3402d2ca9989d505e7bcf95"
+    },
+    {
+      "source": "chengyinhub-admin/src/test/java/com/chengyinhub/framework/config/AppSessionSecurityChainTest.java",
+      "sha256": "a96abc8396fb644acb4a0c6df69dfb546b81e6a525ca73edd59fae7416b8002e"
+    },
+    {
+      "source": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiAiControllerTest.java",
+      "sha256": "4d129a875269b25f868cb72ee12cba6480cc896aecb04d11fc873d25fb8b9652"
+    },
+    {
+      "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java",
+      "sha256": "5388516d3fd387d0386c1cd584e2a4c085369db4efbb2f08b788a51824e9a698"
+    },
+    {
+      "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/vo/ai/AiThemeDraftIntentView.java",
+      "sha256": "58eabd9bb7babae66c4842d314b5fdf1c1895e385b032da57ec6498e8d9886e5"
+    }
+  ],
+  "checks": "PASS: scope, exact protected bytes, component wiring witnesses, no auth override/mock, lexical delimiters, git diff --check",
+  "baseline_compile_risk": "existing ApiAiControllerTest uses 9-argument AiThemeDraftIntentView; current canonical record has 10 fields, no overload",
+  "not_run": [
+    "Java production/test compilation",
+    "JUnit/MockMvc",
+    "JWT runtime",
+    "MySQL/Redis",
+    "CI",
+    "provider/HTTP/backend"
+  ],
+  "root_format_note": "Split source path from digest; generic-api-key scanner matched checksum values keyed by TokenService filenames. Values and protected source bytes unchanged; no scanner exemptions."
+}

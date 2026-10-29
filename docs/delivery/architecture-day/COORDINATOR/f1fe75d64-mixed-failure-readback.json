@@ -1,0 +1,1525 @@
+{
+  "source": "f1fe75d646f8ae57864ee5603c68e70e7fabc854",
+  "run": 40237888671,
+  "attempt": 1,
+  "artifact": 12615537900,
+  "ZIP_sha256": "3fad8c7f6046f888811540b862cded73f7fd765c357e6b9dee66881626e23928",
+  "CRC": "PASS",
+  "original_capacity_receipt": {
+    "result": "FAIL_PARTIAL",
+    "curves": [],
+    "scope": "fixed authenticated fixture: dictionary/actor reads and no-cash lease only",
+    "wholeSystemCapacityAccepted": false,
+    "q4q8Complete": false,
+    "providers": "NOT_COVERED_NO_APPROVED_SAFE_PROVIDER_FAULT_POINT",
+    "paymentCallbacks": "NOT_COVERED",
+    "routeCacheEvictionAndLongProvider": "NOT_COVERED",
+    "instanceTakeover": "NOT_COVERED",
+    "outerCleanup": "NOT_OBSERVED_YET",
+    "admission": {
+      "availableMemoryBytes": 14217900032,
+      "requiredMemoryBytes": 2751463424,
+      "freeDiskBytes": 89306288128,
+      "requiredDiskBytes": 506536874,
+      "logicalCpus": 4,
+      "source": "/proc/meminfo MemAvailable; statvfs; os.cpu_count",
+      "hostExclusivity": "UNKNOWN_NOT_ESTABLISHED"
+    },
+    "identity": {
+      "sourceSha": "f1fe75d646f8ae57864ee5603c68e70e7fabc854",
+      "sourceTree": "e293cc5976c22de88731ee792e75d16e6544fc7b",
+      "runId": "40237888671",
+      "runAttempt": "1",
+      "runnerOs": "Linux",
+      "runnerEnvironment": "github-hosted"
+    },
+    "taskName": "cy-auth-1237873fd53940f288adce1e0320b134",
+    "schema": "cy_e2e_auth_1237873fd53940f288adce1e0320b134",
+    "resourceProfile": {
+      "limits": [
+        {
+          "id": "c0fc9b469fa0c31ec0fce05d0bb15db5eda1fe24b23b937a3cd08c01c1f915c7",
+          "memoryBytes": 1073741824,
+          "memorySwapBytes": 1073741824,
+          "nanoCpus": 1000000000
+        },
+        {
+          "id": "a15afe04207850de362af611bc1d09df23fa547cd0eb45d08a5a28b72890ce65",
+          "memoryBytes": 1073741824,
+          "memorySwapBytes": 1073741824,
+          "nanoCpus": 1000000000
+        },
+        {
+          "id": "e581d97cdf31dded6e487e99c4e5dc9738c4a0da806131a53bcaad3ce2a723a7",
+          "memoryBytes": 67108864,
+          "memorySwapBytes": 67108864,
+          "nanoCpus": 0
+        }
+      ],
+      "properties": {
+        "spring.datasource.druid.maxActive": "3",
+        "spring.datasource.druid.maxWait": "5000",
+        "spring.datasource.druid.socketTimeout": "5000",
+        "spring.data.redis.timeout": "5s",
+        "chengyin.jobs.enabled": "false",
+        "spring.quartz.auto-startup": "false"
+      },
+      "applicationEntry": {
+        "entry": "GAMEPLAY_PROCESS_RECOVERY",
+        "propertiesSha256": "63854ee04d6df5b48bc91d7acd1be421c79981f0d9066705bdb8dc59035a1fb0",
+        "javaArgvSha256": "9aecdacd33a305b54d03e4aa22ae3579842c30b491eff6a7f9a0712d8308cc90",
+        "bindingSha256": "93de30d4f7e74fac26ce795cb2716605d765813b2a3e3e8f9e4c051fd0a210b5",
+        "childSourceSha256": "c7108952a69f0aba9fda2b194e2c63036989e5841819bba2acf3125b8ef1ad50",
+        "testClassTreeSha256": "9e44f88eeae4ddea6254ba1b48dbf43750aef3930492144f6074e1acdcff5ae7",
+        "configSha256": "dc5cf6515c480ee44c5132363f5d58f4860a02cf964e98bb5709455d454ea26c",
+        "bootId": "38661f8c-29e3-455b-bda9-9e13300e96fb"
+      }
+    },
+    "ownedIds": [
+      "c0fc9b469fa0c31ec0fce05d0bb15db5eda1fe24b23b937a3cd08c01c1f915c7",
+      "a15afe04207850de362af611bc1d09df23fa547cd0eb45d08a5a28b72890ce65",
+      "e581d97cdf31dded6e487e99c4e5dc9738c4a0da806131a53bcaad3ce2a723a7"
+    ],
+    "networkId": "94e9238829ec64626be43a444c6adfa5e1a39b5b45a612effb226ec0f71c58f4",
+    "actualImages": [
+      {
+        "id": "sha256:b9611ad9b2f6ebef1c9369a32d794718fc28ebe2b9bb37b81a64b731370907bd",
+        "reference": "maven:3.9.11-eclipse-temurin-21@sha256:6fdc855a6ed81d288ca7ca37ac6ff5e9308b612485c0801d70b25a858c83d237"
+      },
+      {
+        "id": "sha256:9272481a67f6ca40b0b29b2e102d29fa86b54c69e969883ce4705ece06bbf3d5",
+        "reference": "mysql:8.0.45@sha256:4af1f8815716546f5b12410f7621f37f93db8dd11a184706ef59111930b8c2ff"
+      },
+      {
+        "id": "sha256:f84b0c4678011602b9b98c227a4dcd5468bf8b088b02fdd4165cb7758bad8058",
+        "reference": "redis:7.4-alpine@sha256:858f009f9709ce576febc734aa78b8f6d624b82571f9ddb6bda4377c833b3499"
+      }
+    ],
+    "jarBefore": {
+      "sha256": "a4b7d84f7db76e1686038526c01fd30102f1601171eb08078837cf9951aaa5c2",
+      "size": 119050709
+    },
+    "jarProof": "host/mounted byte digests; no independently downloaded JAR",
+    "legacyAuthExercise": "NOT_RUN_BY_THIS_CHILD",
+    "initial": {
+      "identity": {
+        "sourceSha": "f1fe75d646f8ae57864ee5603c68e70e7fabc854",
+        "sourceTree": "e293cc5976c22de88731ee792e75d16e6544fc7b",
+        "runId": "40237888671",
+        "runAttempt": "1",
+        "runnerOs": "Linux",
+        "runnerEnvironment": "github-hosted"
+      },
+      "ids": [
+        "c0fc9b469fa0c31ec0fce05d0bb15db5eda1fe24b23b937a3cd08c01c1f915c7",
+        "a15afe04207850de362af611bc1d09df23fa547cd0eb45d08a5a28b72890ce65",
+        "e581d97cdf31dded6e487e99c4e5dc9738c4a0da806131a53bcaad3ce2a723a7"
+      ],
+      "networkId": "94e9238829ec64626be43a444c6adfa5e1a39b5b45a612effb226ec0f71c58f4",
+      "states": [
+        {
+          "Pid": 13005,
+          "Running": true,
+          "Paused": false,
+          "OOMKilled": false
+        },
+        {
+          "Pid": 2830,
+          "Running": true,
+          "Paused": false,
+          "OOMKilled": false
+        },
+        {
+          "Pid": 2937,
+          "Running": true,
+          "Paused": false,
+          "OOMKilled": false
+        }
+      ],
+      "applicationJavaPid": 9,
+      "databaseUuid": "46de1eaa-d0bf-11f1-828e-52a7d6494b5d",
+      "applicationProfile": {
+        "entry": "GAMEPLAY_PROCESS_RECOVERY",
+        "propertiesSha256": "63854ee04d6df5b48bc91d7acd1be421c79981f0d9066705bdb8dc59035a1fb0",
+        "javaArgvSha256": "9aecdacd33a305b54d03e4aa22ae3579842c30b491eff6a7f9a0712d8308cc90",
+        "bindingSha256": "93de30d4f7e74fac26ce795cb2716605d765813b2a3e3e8f9e4c051fd0a210b5",
+        "childSourceSha256": "c7108952a69f0aba9fda2b194e2c63036989e5841819bba2acf3125b8ef1ad50",
+        "testClassTreeSha256": "9e44f88eeae4ddea6254ba1b48dbf43750aef3930492144f6074e1acdcff5ae7",
+        "configSha256": "dc5cf6515c480ee44c5132363f5d58f4860a02cf964e98bb5709455d454ea26c",
+        "bootId": "38661f8c-29e3-455b-bda9-9e13300e96fb"
+      }
+    },
+    "firstFailure": {
+      "type": "RuntimeError"
+    },
+    "failedRunApplicationFenced": true
+  },
+  "old_fixed_profile_guard_crossed": true,
+  "partial_physical_boundaries": [
+    {
+      "boundary": "BEFORE_TX",
+      "result": "ASSERTIONS_PASSED",
+      "requestSha256": "5a2672d2c8bbf7feea7800c2403be792b50cb4dcd16b64d8bbccb68de9166e94",
+      "beforeSha256": "0d25c8bd7a789187e524266003ba585af4702d746237b661ba2ce7e540cc1014",
+      "afterSha256": "15f3a40aff716e993396fa3aa3d2f6dd0a35475f2cd0eaa88cd9ccea927339cb",
+      "physicalExit": {
+        "code": 137,
+        "oomKilled": false,
+        "oldJavaPid": 9,
+        "oldHostPid": 4278,
+        "oldBootId": "4da40b26-0514-46be-8c78-30c17b92be26",
+        "originalStartedAt": "2026-10-25T21:59:19.653522987Z",
+        "finishedAt": "2026-10-25T22:00:52.058157129Z"
+      },
+      "newBootId": "a5a48029-e1b9-426f-8630-6752ac58b7ae",
+      "receiptSha256": "37895a663039eac41d6284ff9c06cccb341c254f22458962744223e2a08a498d"
+    },
+    {
+      "boundary": "COMMITTED_NO_REPLY",
+      "result": "ASSERTIONS_PASSED",
+      "requestSha256": "a7e4ad73893f3e039a1a3f7201a7c5e91c5e447b05d0d51a47a7bd780df0f6cb",
+      "beforeSha256": "e9bd930c99871b0ca6dc692a8da29b97bf22ca2762ea95358c25b5822d293e2a",
+      "afterSha256": "6a1781aa095e67bc4cfea2e29da3b5f99a0b438b320010a412141d81ff160fd1",
+      "physicalExit": {
+        "code": 137,
+        "oomKilled": false,
+        "oldJavaPid": 9,
+        "oldHostPid": 6938,
+        "oldBootId": "a5a48029-e1b9-426f-8630-6752ac58b7ae",
+        "originalStartedAt": "2026-10-25T22:00:52.16158433Z",
+        "finishedAt": "2026-10-25T22:02:27.949949226Z"
+      },
+      "newBootId": "30d36679-3837-4554-889c-9fdd5ad035ca",
+      "receiptSha256": "819e7c808bb3ae6d75437e990cba1260e3a00d694db2b77270ae341f8a110bbe"
+    },
+    {
+      "boundary": "ACKED",
+      "result": "ASSERTIONS_PASSED",
+      "requestSha256": "f6291f01a4ac8cf53eaeb126459fe42de161529d7520305fa4c07ba0d5cc9948",
+      "beforeSha256": "7d142dd88729afbe4179c95c53dc19817dad1da7b3b341f582cd522461b5fb96",
+      "afterSha256": "f65d49a69507eeb7d6f8e256ea4b9b59d3e5f6e7ae395bd4f631848e28c9a827",
+      "physicalExit": {
+        "code": 137,
+        "oomKilled": false,
+        "oldJavaPid": 9,
+        "oldHostPid": 10042,
+        "oldBootId": "30d36679-3837-4554-889c-9fdd5ad035ca",
+        "originalStartedAt": "2026-10-25T22:02:28.049142773Z",
+        "finishedAt": "2026-10-25T22:04:00.887180568Z"
+      },
+      "newBootId": "38661f8c-29e3-455b-bda9-9e13300e96fb",
+      "receiptSha256": "2e6d99c0402e40d4019b49eabfb309dbc6ebd043525418cd98bd8b6260c484c7"
+    }
+  ],
+  "new_primary_failure": "financial fixture not empty; no cash workload permitted; capacity.observe872 before protectedBefore persisted",
+  "source_confirmed_composition": "FINANCIAL_TABLES includes ums_member; original gameplay has2 A/B rows, other8 guarded tables0. Individual row legitimacy must be source-proven, not blanket nonempty allowance",
+  "no_whole_capacity_acceptance": true,
+  "no_provider_acceptance": true,
+  "all_complete": false,
+  "gameplay_receipt_safe_projection": {
+    "result": "FAIL_OR_UNKNOWN_CLEANUP_OR_SCOPE",
+    "sourceSha": "f1fe75d646f8ae57864ee5603c68e70e7fabc854",
+    "jarSha256": "a4b7d84f7db76e1686038526c01fd30102f1601171eb08078837cf9951aaa5c2",
+    "schema": "cy_e2e_auth_1237873fd53940f288adce1e0320b134",
+    "serverUuid": "46de1eaa-d0bf-11f1-828e-52a7d6494b5d",
+    "storeProcessIdentity": {
+      "mysql": {
+        "Pid": 2830,
+        "StartedAt": "2026-10-25T21:58:56.587582055Z",
+        "id": "a15afe04207850de362af611bc1d09df23fa547cd0eb45d08a5a28b72890ce65",
+        "networkId": "94e9238829ec64626be43a444c6adfa5e1a39b5b45a612effb226ec0f71c58f4"
+      },
+      "redis": {
+        "Pid": 2937,
+        "StartedAt": "2026-10-25T21:58:56.795995955Z",
+        "id": "e581d97cdf31dded6e487e99c4e5dc9738c4a0da806131a53bcaad3ce2a723a7",
+        "networkId": "94e9238829ec64626be43a444c6adfa5e1a39b5b45a612effb226ec0f71c58f4"
+      }
+    },
+    "fixturePropertiesSha256": "63854ee04d6df5b48bc91d7acd1be421c79981f0d9066705bdb8dc59035a1fb0",
+    "childSourceSha256": "c7108952a69f0aba9fda2b194e2c63036989e5841819bba2acf3125b8ef1ad50",
+    "childClassSha256": "d2a24a3ad180de7ac673472ef2b3068097fca13a97cd30974bc52ae7722496c7",
+    "testClassTreeSha256": "9e44f88eeae4ddea6254ba1b48dbf43750aef3930492144f6074e1acdcff5ae7",
+    "cases": [
+      {
+        "boundary": "BEFORE_TX",
+        "commandId": "process-36db7037-ad47-43d2-90b7-7fa1b4a6383b",
+        "activityId": 9,
+        "requestSha256": "5a2672d2c8bbf7feea7800c2403be792b50cb4dcd16b64d8bbccb68de9166e94",
+        "beforeSha256": "0d25c8bd7a789187e524266003ba585af4702d746237b661ba2ce7e540cc1014",
+        "firstResponseReceived": false,
+        "originalProcessCommandSha256": "9aecdacd33a305b54d03e4aa22ae3579842c30b491eff6a7f9a0712d8308cc90",
+        "physicalExit": {
+          "code": 137,
+          "oomKilled": false,
+          "oldJavaPid": 9,
+          "oldHostPid": 4278,
+          "oldBootId": "4da40b26-0514-46be-8c78-30c17b92be26",
+          "originalStartedAt": "2026-10-25T21:59:19.653522987Z",
+          "finishedAt": "2026-10-25T22:00:52.058157129Z"
+        },
+        "newBootId": "a5a48029-e1b9-426f-8630-6752ac58b7ae",
+        "recoverySeconds": 91.604,
+        "result": "ASSERTIONS_PASSED",
+        "afterSha256": "15f3a40aff716e993396fa3aa3d2f6dd0a35475f2cd0eaa88cd9ccea927339cb",
+        "originalReceiptId": 1,
+        "receiptSha256": "37895a663039eac41d6284ff9c06cccb341c254f22458962744223e2a08a498d",
+        "financialTables": {
+          "cms_registration": {
+            "rows": 0,
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "ums_member": {
+            "rows": 2,
+            "sha256": "17d98104b4494d330f624e05d27266ea63e388b9fca21bfac3c37514baaa5ffa"
+          },
+          "ums_member_balance_detail": {
+            "rows": 0,
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "ums_member_points_detail": {
+            "rows": 0,
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "settlement_detail": {
+            "rows": 0,
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "wx_payment_callback_inbox": {
+            "rows": 0,
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "reward_drop_log": {
+            "rows": 0,
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "roam_poi_reward_log": {
+            "rows": 0,
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "cms_topic_completion_coupon_reward_log": {
+            "rows": 0,
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          }
+        },
+        "runtimeEpoch": "NOT_APPLICABLE_NO_SUCH_INPUT_ON_THIS_COMMAND",
+        "originalExpectedAndTargetConflictsRejected": true,
+        "rejectedAllGameFactsSha256": "da00170f8953ab51f77326f23c96ad8993a9915af5e4ad89d9f39edff023e013"
+      },
+      {
+        "boundary": "COMMITTED_NO_REPLY",
+        "commandId": "process-d408e05c-4e8b-46c1-99ef-6b49ac1ed440",
+        "activityId": 10,
+        "requestSha256": "a7e4ad73893f3e039a1a3f7201a7c5e91c5e447b05d0d51a47a7bd780df0f6cb",
+        "beforeSha256": "e9bd930c99871b0ca6dc692a8da29b97bf22ca2762ea95358c25b5822d293e2a",
+        "firstResponseReceived": false,
+        "originalProcessCommandSha256": "9aecdacd33a305b54d03e4aa22ae3579842c30b491eff6a7f9a0712d8308cc90",
+        "physicalExit": {
+          "code": 137,
+          "oomKilled": false,
+          "oldJavaPid": 9,
+          "oldHostPid": 6938,
+          "oldBootId": "a5a48029-e1b9-426f-8630-6752ac58b7ae",
+          "originalStartedAt": "2026-10-25T22:00:52.16158433Z",
+          "finishedAt": "2026-10-25T22:02:27.949949226Z"
+        },
+        "newBootId": "30d36679-3837-4554-889c-9fdd5ad035ca",
+        "recoverySeconds": 88.481,
+        "result": "ASSERTIONS_PASSED",
+        "afterSha256": "6a1781aa095e67bc4cfea2e29da3b5f99a0b438b320010a412141d81ff160fd1",
+        "originalReceiptId": 3,
+        "receiptSha256": "819e7c808bb3ae6d75437e990cba1260e3a00d694db2b77270ae341f8a110bbe",
+        "financialTables": {
+          "cms_registration": {
+            "rows": 0,
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "ums_member": {
+            "rows": 2,
+            "sha256": "17d98104b4494d330f624e05d27266ea63e388b9fca21bfac3c37514baaa5ffa"
+          },
+          "ums_member_balance_detail": {
+            "rows": 0,
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "ums_member_points_detail": {
+            "rows": 0,
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "settlement_detail": {
+            "rows": 0,
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "wx_payment_callback_inbox": {
+            "rows": 0,
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "reward_drop_log": {
+            "rows": 0,
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "roam_poi_reward_log": {
+            "rows": 0,
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "cms_topic_completion_coupon_reward_log": {
+            "rows": 0,
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          }
+        },
+        "runtimeEpoch": "NOT_APPLICABLE_NO_SUCH_INPUT_ON_THIS_COMMAND",
+        "originalExpectedAndTargetConflictsRejected": true,
+        "rejectedAllGameFactsSha256": "f80ac91d301fe0a13fabaf012fdb9668193a2d1a8c4fb7be1d83ed6783c8323e"
+      },
+      {
+        "boundary": "ACKED",
+        "commandId": "process-0b5782da-8113-4b90-866e-9eed6147bc76",
+        "activityId": 11,
+        "requestSha256": "f6291f01a4ac8cf53eaeb126459fe42de161529d7520305fa4c07ba0d5cc9948",
+        "beforeSha256": "7d142dd88729afbe4179c95c53dc19817dad1da7b3b341f582cd522461b5fb96",
+        "firstResponseReceived": true,
+        "originalProcessCommandSha256": "9aecdacd33a305b54d03e4aa22ae3579842c30b491eff6a7f9a0712d8308cc90",
+        "physicalExit": {
+          "code": 137,
+          "oomKilled": false,
+          "oldJavaPid": 9,
+          "oldHostPid": 10042,
+          "oldBootId": "30d36679-3837-4554-889c-9fdd5ad035ca",
+          "originalStartedAt": "2026-10-25T22:02:28.049142773Z",
+          "finishedAt": "2026-10-25T22:04:00.887180568Z"
+        },
+        "newBootId": "38661f8c-29e3-455b-bda9-9e13300e96fb",
+        "recoverySeconds": 88.494,
+        "result": "ASSERTIONS_PASSED",
+        "afterSha256": "f65d49a69507eeb7d6f8e256ea4b9b59d3e5f6e7ae395bd4f631848e28c9a827",
+        "originalReceiptId": 5,
+        "receiptSha256": "2e6d99c0402e40d4019b49eabfb309dbc6ebd043525418cd98bd8b6260c484c7",
+        "financialTables": {
+          "cms_registration": {
+            "rows": 0,
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "ums_member": {
+            "rows": 2,
+            "sha256": "17d98104b4494d330f624e05d27266ea63e388b9fca21bfac3c37514baaa5ffa"
+          },
+          "ums_member_balance_detail": {
+            "rows": 0,
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "ums_member_points_detail": {
+            "rows": 0,
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "settlement_detail": {
+            "rows": 0,
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "wx_payment_callback_inbox": {
+            "rows": 0,
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "reward_drop_log": {
+            "rows": 0,
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "roam_poi_reward_log": {
+            "rows": 0,
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "cms_topic_completion_coupon_reward_log": {
+            "rows": 0,
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          }
+        },
+        "runtimeEpoch": "NOT_APPLICABLE_NO_SUCH_INPUT_ON_THIS_COMMAND",
+        "originalExpectedAndTargetConflictsRejected": true,
+        "rejectedAllGameFactsSha256": "165259a5deeafb6be4fd8d4b6642b38cb9413bc56108e9e9d4a676069d30f65e"
+      }
+    ],
+    "cleanup": "PENDING_ORIGINAL_OUTER_OWNER",
+    "limits": {
+      "wallSeconds": 900,
+      "appMemoryBytes": 1073741824,
+      "appCpu": 1,
+      "httpSeconds": 100
+    },
+    "scope": "Real chapter command and receipt; not provider/cash/runtime-epoch/all-T13 acceptance",
+    "configSha256": "dc5cf6515c480ee44c5132363f5d58f4860a02cf964e98bb5709455d454ea26c",
+    "originalActors": {
+      "a": {
+        "memberId": 990005
+      },
+      "b": {
+        "memberId": 990006
+      }
+    },
+    "ownedAppCid": "c0fc9b469fa0c31ec0fce05d0bb15db5eda1fe24b23b937a3cd08c01c1f915c7",
+    "coreBusinessCurve": {
+      "waves": [
+        {
+          "concurrency": 1,
+          "newCommands": 24,
+          "readReplayForeign": 24,
+          "originalIntentSha256": "90a12946d5d826b41b65132f45d8c95919c377656dd9b291f63ee1ddecb6ecd6",
+          "status": "ASSERTIONS_PASSED",
+          "writeCurve": {
+            "requestsRecorded": 24,
+            "counts": {
+              "SUCCESS": 24,
+              "LEGAL_AUTH_REJECTION": 0,
+              "SYSTEM_FAILURE": 0,
+              "UNKNOWN": 0,
+              "TRANSPORT_TIMEOUT": 0,
+              "TRANSPORT_ERROR": 0,
+              "CONTRACT_MISMATCH": 0,
+              "NOT_SENT": 0
+            },
+            "durationSeconds": 4.462818878999997,
+            "completedResponsesPerSecond": 5.377766978833294,
+            "successfulRequestsPerSecond": 5.377766978833294,
+            "p50Seconds": 0.18867044900002838,
+            "p95Seconds": 0.2944276409999702,
+            "p99Seconds": 0.30358236099993974,
+            "latencyPopulation": "all sent attempts including failures/timeouts",
+            "slo": "NOT_DEFINED_BY_THIS_PROBE",
+            "records": [
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.1552695909999784,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_00"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.1230649109999149,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_01"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.12493389399992338,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_02"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.14608467599998676,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_03"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.12034905899997739,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_04"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.12416147299995828,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_05"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.11861806700005673,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_06"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.13839792099997794,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_07"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.119108945999983,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_08"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.10944338500007689,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_09"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.11218004199997722,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_10"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.2700798679999252,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_11"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.2930848070000138,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_12"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.22086173000002418,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_13"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.20632125299994186,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_14"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.2705974729999525,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_15"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.2944276409999702,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_16"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.30358236099993974,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_17"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.22569488199997068,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_18"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.19233812900006342,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_19"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.2071940859999586,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_20"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.2041043910001008,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_21"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.18867044900002838,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_22"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.1902723089999654,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_23"
+              }
+            ],
+            "configuredConcurrency": 1,
+            "maxOutstandingClientFutures": 1,
+            "serverConcurrentRequests": "UNKNOWN_NOT_MEASURED",
+            "additionalClientWaitingQueue": 0
+          },
+          "readbackCurve": {
+            "requestsRecorded": 24,
+            "counts": {
+              "SUCCESS": 16,
+              "LEGAL_AUTH_REJECTION": 8,
+              "SYSTEM_FAILURE": 0,
+              "UNKNOWN": 0,
+              "TRANSPORT_TIMEOUT": 0,
+              "TRANSPORT_ERROR": 0,
+              "CONTRACT_MISMATCH": 0,
+              "NOT_SENT": 0
+            },
+            "durationSeconds": 2.5132823789999748,
+            "completedResponsesPerSecond": 9.549265216091438,
+            "successfulRequestsPerSecond": 6.366176810727626,
+            "p50Seconds": 0.10189168399995197,
+            "p95Seconds": 0.11067030599997452,
+            "p99Seconds": 0.1488484009998956,
+            "latencyPopulation": "all sent attempts including failures/timeouts",
+            "slo": "NOT_DEFINED_BY_THIS_PROBE",
+            "records": [
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.10109632599994711,
+                "kind": "replay",
+                "fixtureKey": "CAPACITY_00"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.1488484009998956,
+                "kind": "receipt",
+                "fixtureKey": "CAPACITY_01"
+              },
+              {
+                "category": "LEGAL_AUTH_REJECTION",
+                "elapsedSeconds": 0.09979282100005094,
+                "kind": "foreign",
+                "fixtureKey": "CAPACITY_02"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.10661807300004966,
+                "kind": "replay",
+                "fixtureKey": "CAPACITY_03"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.09838471000000482,
+                "kind": "receipt",
+                "fixtureKey": "CAPACITY_04"
+              },
+              {
+                "category": "LEGAL_AUTH_REJECTION",
+                "elapsedSeconds": 0.10161567099999047,
+                "kind": "foreign",
+                "fixtureKey": "CAPACITY_05"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.10011581499998101,
+                "kind": "replay",
+                "fixtureKey": "CAPACITY_06"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.09809987699998146,
+                "kind": "receipt",
+                "fixtureKey": "CAPACITY_07"
+              },
+              {
+                "category": "LEGAL_AUTH_REJECTION",
+                "elapsedSeconds": 0.1054292759999953,
+                "kind": "foreign",
+                "fixtureKey": "CAPACITY_08"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.10275762599997051,
+                "kind": "replay",
+                "fixtureKey": "CAPACITY_09"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.10557764999998653,
+                "kind": "receipt",
+                "fixtureKey": "CAPACITY_10"
+              },
+              {
+                "category": "LEGAL_AUTH_REJECTION",
+                "elapsedSeconds": 0.10124876600002608,
+                "kind": "foreign",
+                "fixtureKey": "CAPACITY_11"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.10613961299998209,
+                "kind": "replay",
+                "fixtureKey": "CAPACITY_12"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.10189168399995197,
+                "kind": "receipt",
+                "fixtureKey": "CAPACITY_13"
+              },
+              {
+                "category": "LEGAL_AUTH_REJECTION",
+                "elapsedSeconds": 0.10019266100005098,
+                "kind": "foreign",
+                "fixtureKey": "CAPACITY_14"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.11067030599997452,
+                "kind": "replay",
+                "fixtureKey": "CAPACITY_15"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.10767414499991901,
+                "kind": "receipt",
+                "fixtureKey": "CAPACITY_16"
+              },
+              {
+                "category": "LEGAL_AUTH_REJECTION",
+                "elapsedSeconds": 0.10412072799999805,
+                "kind": "foreign",
+                "fixtureKey": "CAPACITY_17"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.10488626200003637,
+                "kind": "replay",
+                "fixtureKey": "CAPACITY_18"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.09819534700000077,
+                "kind": "receipt",
+                "fixtureKey": "CAPACITY_19"
+              },
+              {
+                "category": "LEGAL_AUTH_REJECTION",
+                "elapsedSeconds": 0.097946919999913,
+                "kind": "foreign",
+                "fixtureKey": "CAPACITY_20"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.1054863030000206,
+                "kind": "replay",
+                "fixtureKey": "CAPACITY_21"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.10223713100003806,
+                "kind": "receipt",
+                "fixtureKey": "CAPACITY_22"
+              },
+              {
+                "category": "LEGAL_AUTH_REJECTION",
+                "elapsedSeconds": 0.09967287500001021,
+                "kind": "foreign",
+                "fixtureKey": "CAPACITY_23"
+              }
+            ],
+            "configuredConcurrency": 1,
+            "maxOutstandingClientFutures": 1,
+            "serverConcurrentRequests": "UNKNOWN_NOT_MEASURED",
+            "additionalClientWaitingQueue": 0
+          },
+          "committedGameFactsSha256": "f3af9532d714599c449e2559f9396ce3f2f26dd3f36ed5818158526524d96efb"
+        },
+        {
+          "concurrency": 3,
+          "newCommands": 24,
+          "readReplayForeign": 24,
+          "originalIntentSha256": "f23746a62c85af9e263b9df9ce7f3e585055dcd248e25a2900ea1fcddcfdfac1",
+          "status": "ASSERTIONS_PASSED",
+          "writeCurve": {
+            "requestsRecorded": 24,
+            "counts": {
+              "SUCCESS": 24,
+              "LEGAL_AUTH_REJECTION": 0,
+              "SYSTEM_FAILURE": 0,
+              "UNKNOWN": 0,
+              "TRANSPORT_TIMEOUT": 0,
+              "TRANSPORT_ERROR": 0,
+              "CONTRACT_MISMATCH": 0,
+              "NOT_SENT": 0
+            },
+            "durationSeconds": 2.8372095030000537,
+            "completedResponsesPerSecond": 8.459015795140436,
+            "successfulRequestsPerSecond": 8.459015795140436,
+            "p50Seconds": 0.32009111100001064,
+            "p95Seconds": 0.46824137999999493,
+            "p99Seconds": 0.49344107899992196,
+            "latencyPopulation": "all sent attempts including failures/timeouts",
+            "slo": "NOT_DEFINED_BY_THIS_PROBE",
+            "records": [
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.2312382620000335,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_25"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.32009111100001064,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_24"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.42964295100000527,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_26"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.38456128799998623,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_27"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.32107041200004005,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_28"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.3728455179999628,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_29"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.27010307000000466,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_31"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.3163447270000006,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_30"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.40925549700000374,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_32"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.40267308799991497,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_33"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.4000493879999567,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_34"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.39577760800000306,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_35"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.30140943799995057,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_37"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.49344107899992196,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_36"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.4085044639999751,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_38"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.46824137999999493,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_39"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.3988189510000666,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_40"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.3049430989999564,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_41"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.30407374599997183,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_42"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.23712531000001036,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_43"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.28536824799994065,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_44"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.26497583800005486,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_46"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.316142689000003,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_45"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.22792939199996454,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_47"
+              }
+            ],
+            "configuredConcurrency": 3,
+            "maxOutstandingClientFutures": 3,
+            "serverConcurrentRequests": "UNKNOWN_NOT_MEASURED",
+            "additionalClientWaitingQueue": 0
+          },
+          "readbackCurve": {
+            "requestsRecorded": 24,
+            "counts": {
+              "SUCCESS": 16,
+              "LEGAL_AUTH_REJECTION": 8,
+              "SYSTEM_FAILURE": 0,
+              "UNKNOWN": 0,
+              "TRANSPORT_TIMEOUT": 0,
+              "TRANSPORT_ERROR": 0,
+              "CONTRACT_MISMATCH": 0,
+              "NOT_SENT": 0
+            },
+            "durationSeconds": 1.8001845710000453,
+            "completedResponsesPerSecond": 13.3319662809172,
+            "successfulRequestsPerSecond": 8.887977520611468,
+            "p50Seconds": 0.20554097399997318,
+            "p95Seconds": 0.29711683400000766,
+            "p99Seconds": 0.29770272099995054,
+            "latencyPopulation": "all sent attempts including failures/timeouts",
+            "slo": "NOT_DEFINED_BY_THIS_PROBE",
+            "records": [
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.20431264500007273,
+                "kind": "receipt",
+                "fixtureKey": "CAPACITY_25"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.20628248599996368,
+                "kind": "replay",
+                "fixtureKey": "CAPACITY_24"
+              },
+              {
+                "category": "LEGAL_AUTH_REJECTION",
+                "elapsedSeconds": 0.21413664800002152,
+                "kind": "foreign",
+                "fixtureKey": "CAPACITY_26"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.2016349350000155,
+                "kind": "replay",
+                "fixtureKey": "CAPACITY_27"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.20112934899998436,
+                "kind": "receipt",
+                "fixtureKey": "CAPACITY_28"
+              },
+              {
+                "category": "LEGAL_AUTH_REJECTION",
+                "elapsedSeconds": 0.21620265399997152,
+                "kind": "foreign",
+                "fixtureKey": "CAPACITY_29"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.20043866900005014,
+                "kind": "receipt",
+                "fixtureKey": "CAPACITY_31"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.20536264599991227,
+                "kind": "replay",
+                "fixtureKey": "CAPACITY_30"
+              },
+              {
+                "category": "LEGAL_AUTH_REJECTION",
+                "elapsedSeconds": 0.19837514699997882,
+                "kind": "foreign",
+                "fixtureKey": "CAPACITY_32"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.19700915700002497,
+                "kind": "receipt",
+                "fixtureKey": "CAPACITY_34"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.20554097399997318,
+                "kind": "replay",
+                "fixtureKey": "CAPACITY_33"
+              },
+              {
+                "category": "LEGAL_AUTH_REJECTION",
+                "elapsedSeconds": 0.19940502700001161,
+                "kind": "foreign",
+                "fixtureKey": "CAPACITY_35"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.20062876099996174,
+                "kind": "receipt",
+                "fixtureKey": "CAPACITY_37"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.20631916199999978,
+                "kind": "replay",
+                "fixtureKey": "CAPACITY_36"
+              },
+              {
+                "category": "LEGAL_AUTH_REJECTION",
+                "elapsedSeconds": 0.264425220000021,
+                "kind": "foreign",
+                "fixtureKey": "CAPACITY_38"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.19611217699991812,
+                "kind": "receipt",
+                "fixtureKey": "CAPACITY_40"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.19931939299999613,
+                "kind": "replay",
+                "fixtureKey": "CAPACITY_39"
+              },
+              {
+                "category": "LEGAL_AUTH_REJECTION",
+                "elapsedSeconds": 0.20902346299999408,
+                "kind": "foreign",
+                "fixtureKey": "CAPACITY_41"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.2822671820000551,
+                "kind": "replay",
+                "fixtureKey": "CAPACITY_42"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.28531909699995595,
+                "kind": "receipt",
+                "fixtureKey": "CAPACITY_43"
+              },
+              {
+                "category": "LEGAL_AUTH_REJECTION",
+                "elapsedSeconds": 0.22146087900000566,
+                "kind": "foreign",
+                "fixtureKey": "CAPACITY_44"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.29711683400000766,
+                "kind": "replay",
+                "fixtureKey": "CAPACITY_45"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.29770272099995054,
+                "kind": "receipt",
+                "fixtureKey": "CAPACITY_46"
+              },
+              {
+                "category": "LEGAL_AUTH_REJECTION",
+                "elapsedSeconds": 0.2744943319999038,
+                "kind": "foreign",
+                "fixtureKey": "CAPACITY_47"
+              }
+            ],
+            "configuredConcurrency": 3,
+            "maxOutstandingClientFutures": 3,
+            "serverConcurrentRequests": "UNKNOWN_NOT_MEASURED",
+            "additionalClientWaitingQueue": 0
+          },
+          "committedGameFactsSha256": "ace342816ae03ce16ff41869b357acc5f3dae9f116949f14112b5610cdcf64db"
+        },
+        {
+          "concurrency": 6,
+          "newCommands": 24,
+          "readReplayForeign": 24,
+          "originalIntentSha256": "36ef13282fb7c44fd8928337d450942874232944aafbfdc5d2a4c271eac5cbb2",
+          "status": "ASSERTIONS_PASSED",
+          "writeCurve": {
+            "requestsRecorded": 24,
+            "counts": {
+              "SUCCESS": 24,
+              "LEGAL_AUTH_REJECTION": 0,
+              "SYSTEM_FAILURE": 0,
+              "UNKNOWN": 0,
+              "TRANSPORT_TIMEOUT": 0,
+              "TRANSPORT_ERROR": 0,
+              "CONTRACT_MISMATCH": 0,
+              "NOT_SENT": 0
+            },
+            "durationSeconds": 2.0252250749999803,
+            "completedResponsesPerSecond": 11.850534686866956,
+            "successfulRequestsPerSecond": 11.850534686866956,
+            "p50Seconds": 0.47932119099993997,
+            "p95Seconds": 0.5708794790000411,
+            "p99Seconds": 0.6418586180000148,
+            "latencyPopulation": "all sent attempts including failures/timeouts",
+            "slo": "NOT_DEFINED_BY_THIS_PROBE",
+            "records": [
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.42033682999999655,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_48"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.43566933700003574,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_53"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.4502693160000035,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_52"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.5275202059999629,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_51"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.5605516299999636,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_50"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.6418586180000148,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_49"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.40117361500006155,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_54"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.4785609120000345,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_55"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.4904216490000408,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_56"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.4962711410000793,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_57"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.5524329410000064,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_58"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.5708794790000411,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_59"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.48700662199996714,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_60"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.4257489959999248,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_61"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.49197972399997525,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_62"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.4859248940000498,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_63"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.4945474419999982,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_64"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.3999978539999347,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_65"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.39712936699993406,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_66"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.48832712099999753,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_67"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.47932119099993997,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_68"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.42964009599995734,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_69"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.39928297500000554,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_71"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.4148777880000125,
+                "kind": "command",
+                "fixtureKey": "CAPACITY_70"
+              }
+            ],
+            "configuredConcurrency": 6,
+            "maxOutstandingClientFutures": 6,
+            "serverConcurrentRequests": "UNKNOWN_NOT_MEASURED",
+            "additionalClientWaitingQueue": 0
+          },
+          "readbackCurve": {
+            "requestsRecorded": 24,
+            "counts": {
+              "SUCCESS": 16,
+              "LEGAL_AUTH_REJECTION": 8,
+              "SYSTEM_FAILURE": 0,
+              "UNKNOWN": 0,
+              "TRANSPORT_TIMEOUT": 0,
+              "TRANSPORT_ERROR": 0,
+              "CONTRACT_MISMATCH": 0,
+              "NOT_SENT": 0
+            },
+            "durationSeconds": 1.8316463539999859,
+            "completedResponsesPerSecond": 13.102966054330478,
+            "successfulRequestsPerSecond": 8.735310702886984,
+            "p50Seconds": 0.41546838700003264,
+            "p95Seconds": 0.6655236709999599,
+            "p99Seconds": 0.7214392989999396,
+            "latencyPopulation": "all sent attempts including failures/timeouts",
+            "slo": "NOT_DEFINED_BY_THIS_PROBE",
+            "records": [
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.33409830100004,
+                "kind": "replay",
+                "fixtureKey": "CAPACITY_51"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.4161853570000176,
+                "kind": "replay",
+                "fixtureKey": "CAPACITY_48"
+              },
+              {
+                "category": "LEGAL_AUTH_REJECTION",
+                "elapsedSeconds": 0.42438656599995284,
+                "kind": "foreign",
+                "fixtureKey": "CAPACITY_53"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.42814703299995926,
+                "kind": "receipt",
+                "fixtureKey": "CAPACITY_49"
+              },
+              {
+                "category": "LEGAL_AUTH_REJECTION",
+                "elapsedSeconds": 0.4446274820001008,
+                "kind": "foreign",
+                "fixtureKey": "CAPACITY_50"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.7214392989999396,
+                "kind": "receipt",
+                "fixtureKey": "CAPACITY_52"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.40486863400008133,
+                "kind": "receipt",
+                "fixtureKey": "CAPACITY_55"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.4958887259999756,
+                "kind": "replay",
+                "fixtureKey": "CAPACITY_54"
+              },
+              {
+                "category": "LEGAL_AUTH_REJECTION",
+                "elapsedSeconds": 0.4854400539999233,
+                "kind": "foreign",
+                "fixtureKey": "CAPACITY_56"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.49249780399998144,
+                "kind": "replay",
+                "fixtureKey": "CAPACITY_57"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.6655236709999599,
+                "kind": "receipt",
+                "fixtureKey": "CAPACITY_58"
+              },
+              {
+                "category": "LEGAL_AUTH_REJECTION",
+                "elapsedSeconds": 0.40825873699998283,
+                "kind": "foreign",
+                "fixtureKey": "CAPACITY_59"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.3254913349999242,
+                "kind": "replay",
+                "fixtureKey": "CAPACITY_60"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.39974677999998676,
+                "kind": "receipt",
+                "fixtureKey": "CAPACITY_61"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.40323975500007236,
+                "kind": "replay",
+                "fixtureKey": "CAPACITY_63"
+              },
+              {
+                "category": "LEGAL_AUTH_REJECTION",
+                "elapsedSeconds": 0.496714116000021,
+                "kind": "foreign",
+                "fixtureKey": "CAPACITY_62"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.41148972600001343,
+                "kind": "receipt",
+                "fixtureKey": "CAPACITY_64"
+              },
+              {
+                "category": "LEGAL_AUTH_REJECTION",
+                "elapsedSeconds": 0.404332783999962,
+                "kind": "foreign",
+                "fixtureKey": "CAPACITY_65"
+              },
+              {
+                "category": "LEGAL_AUTH_REJECTION",
+                "elapsedSeconds": 0.30482695099999546,
+                "kind": "foreign",
+                "fixtureKey": "CAPACITY_68"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.487439474000098,
+                "kind": "receipt",
+                "fixtureKey": "CAPACITY_67"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.5764676670000881,
+                "kind": "replay",
+                "fixtureKey": "CAPACITY_66"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.29353159799995865,
+                "kind": "receipt",
+                "fixtureKey": "CAPACITY_70"
+              },
+              {
+                "category": "SUCCESS",
+                "elapsedSeconds": 0.41546838700003264,
+                "kind": "replay",
+                "fixtureKey": "CAPACITY_69"
+              },
+              {
+                "category": "LEGAL_AUTH_REJECTION",
+                "elapsedSeconds": 0.2942314870000473,
+                "kind": "foreign",
+                "fixtureKey": "CAPACITY_71"
+              }
+            ],
+            "configuredConcurrency": 6,
+            "maxOutstandingClientFutures": 6,
+            "serverConcurrentRequests": "UNKNOWN_NOT_MEASURED",
+            "additionalClientWaitingQueue": 0
+          },
+          "committedGameFactsSha256": "93a7f3d5ddd4f9866683f4b2999a1a2baeca81120a1628da278f4114f80cad7e"
+        }
+      ],
+      "status": "BUSINESS_ASSERTIONS_PASSED",
+      "expectedHttpRequests": 144,
+      "newIntents": 72,
+      "latencyScope": "Owned Docker-exec transport plus ownership guards, not server-only service latency",
+      "realHttpRequests": 144,
+      "scope": "Chapter command/receipt/replay/foreign refusal only; no cash/provider/all-Q8 claim"
+    },
+    "failureType": "RuntimeError",
+    "reason": "financial fixture not empty; no cash workload permitted",
+    "elapsedSeconds": 402.84,
+    "businessResultBeforeCleanup": "FAIL_OR_UNKNOWN_NO_RETRY",
+    "finalizationFailureType": "RuntimeError"
+  },
+  "public_projection_note": "Two original credential digest values omitted from public projection; untouched original artifact/private receipt retained with original hash. No scanner exceptions added."
+}

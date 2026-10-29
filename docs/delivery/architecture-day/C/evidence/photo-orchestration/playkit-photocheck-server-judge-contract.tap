@@ -1,0 +1,46 @@
+TAP version 13
+# Subtest: ★本地算分那套整段删除:不再读像素、不再有 scoreOf / readPixels
+ok 1 - ★本地算分那套整段删除:不再读像素、不再有 scoreOf / readPixels
+  ---
+  duration_ms: 1.752236
+  type: 'test'
+  ...
+# Subtest: ★shoot 事件只给临时路径与大小,不带任何分数
+ok 2 - ★shoot 事件只给临时路径与大小,不带任何分数
+  ---
+  duration_ms: 4.026059
+  type: 'test'
+  ...
+# Subtest: ★不过时必须把服务端的 lastReason 渲染出来,不能只说「再拍一张」
+ok 3 - ★不过时必须把服务端的 lastReason 渲染出来,不能只说「再拍一张」
+  ---
+  duration_ms: 0.652579
+  type: 'test'
+  ...
+# Subtest: 负控:把 reason 的 wxml 节点摘掉,上一条必须红
+ok 4 - 负控:把 reason 的 wxml 节点摘掉,上一条必须红
+  ---
+  duration_ms: 0.265981
+  type: 'test'
+  ...
+# Subtest: ★分发器把 degraded / lastReason 传给组件 —— 少一个绑定,降级与理由都到不了这一屏
+ok 5 - ★分发器把 degraded / lastReason 传给组件 —— 少一个绑定,降级与理由都到不了这一屏
+  ---
+  duration_ms: 0.332859
+  type: 'test'
+  ...
+# Subtest: ★降级(degraded)只说「没能审」,不许出现通过 / 不通过这类假结论
+ok 6 - ★降级(degraded)只说「没能审」,不许出现通过 / 不通过这类假结论
+  ---
+  duration_ms: 0.445525
+  type: 'test'
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 23.830916

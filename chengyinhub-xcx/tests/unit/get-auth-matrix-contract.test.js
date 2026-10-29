@@ -83,6 +83,8 @@ const MATRIX = [
   ['pages/activity/official-inbox/index.js', "url: '/api/official/v2/party-inbox'", 'required', 'member', 'self-party'],
   ['pages/merchant/coop-center/index.js', "url: '/api/official/events'", 'optional', 'visitor/member', 'public-list+viewer-personalization'],
   ['pages/coop/list/index.js', "url: '/api/official/merchant-invites'", 'required', 'merchant', 'self-merchant'],
+  // 已认证主题 owner / 商家 PROJECT_MANAGE 派生 owner，仅查该主题和指定商家的合法未占用站点。
+  ['pages/coop/invite/index.js', "url: '/api/coop/supply-stations'", 'required', 'topic-owner/merchant-PROJECT_MANAGE', 'owned-topic-target-merchant-stations'],
   ['pages/activity/list/index.js', "url: '/api/official/can-publish'", 'required', 'publisher', 'self-capability'],
   ['pages/activity/list/index.js', "url: '/api/official/events'", 'optional', 'visitor/member', 'public-list+viewer-personalization'],
   ['pages/activity/list/index.js', "url: '/api/official/my-events'", 'required', 'member', 'self-registration'],
@@ -215,6 +217,7 @@ const MATRIX = [
   ['subpackageMember/components/cy/npc-chat/index.js', "url: '/api/ai/npc/chat/request'", 'required', 'member', 'self-account'],
   // W10b #22:简易 AI 起草按 requestId 只读回读,ApiAiController.themeDraftRequest 键按登录会员隔离。
   ['pages/publish/simple/index.js', "url: '/api/ai/theme/draft/request'", 'required', 'author', 'self-account'],
+  ['pages/publish/simple/index.js', "url: '/api/ai/theme/draft/recovery'", 'required', 'author', 'self-account'],
   // W10b #25:本人资料审核回执(只取登录态)与门店 AI 形象审核回执(商家 PROFILE_WRITE,按登录商家派生)。
   ['pages/gerenziliao/gerenziliao.js', "url: '/api/user/profile/review'", 'required', 'member', 'self-account'],
   ['pages/merchant/decor/ai-npc/index.js', "url: '/api/merchant/npc/review'", 'required', 'merchant', 'self-merchant'],
@@ -249,6 +252,7 @@ const MATRIX = [
   ['pages/play/index.js', "req('/api/play/action-receipt', 'GET', { activityId: data.activityId", 'required', 'member', 'current-session'],
   ['pages/play/index.js', "req('/api/play/action-receipt', 'GET', { activityId: body.activityId", 'required', 'member', 'current-session'],
   ['pages/play/index.js', "req('/api/play/action-context'", 'required', 'member', 'current-session'],
+  ['pages/play/index.js', "req('/api/club/lead/unlock-chapter-receipt'", 'required', 'leader', 'current-session'],
   //   定向计分明确不适用时回退原排行榜(与上一条 /api/play/leaderboard 同端点同权限档)。
   ['pages/play/index.js', "req('/api/play/leaderboard', 'GET', params);\n    loadBoard", 'required', 'member', 'current-session'],
   // 2026-10-28 文档二 L5 游玩页:状态栏第二行 / 全屏角色卡读本人角色卡(后端按登录会员只读自己),
@@ -268,7 +272,7 @@ const VALID_SCOPES = new Set([
   'self-merchant-game-entry', 'club-owned-activity',
   'owned-merchant-resource', 'self-marketing-consent',
   'share-token-snapshot', 'owned-merchant-or-club-receivable', 'owned-media-asset',
-  'controlled-event-operator', 'public-profile-gallery', 'active-team-member',
+  'controlled-event-operator', 'public-profile-gallery', 'active-team-member', 'owned-topic-target-merchant-stations',
 ]);
 
 function productionJsFiles(dir) {
@@ -406,7 +410,9 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-10-28 L9 集成:主题详情可玩时段 / 开局前准备读 L8 GET /api/topic/play-setup(创作者,同 state-keys 档),107 → 108。
   // 2026-10-27 真机走查 P-08(owner 要求删除首页「继续探索」卡):首页 /api/play/run-session/list 退场,79 → 78。
   // 2026-10-28 L9 再并 master:P-08 首页 run-session/list 退场 −1,108 → 107。
-  assert.equal(directCount, 107, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // Frozen-master calls + creator-scoped supply stations + V2 original-request recovery.
+  // Source accounting only; this merged tree has NOT_RUN validation.
+  assert.equal(directCount, 109, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
   // 2026-10-09 U04 只读主题请求增加6处，22 → 28。
   // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):漫游 BL-41 可参与官方活动 req 包装 GET +1(已入 MATRIX),28 → 29。
   // 2026-10-22 L21 BL-186:pages/play 本章结算 GET /api/play/journey/stage-end(与 /ending 同档),29 → 30。
@@ -415,7 +421,7 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-10-28 文档二 L5:pages/play 角色卡一处、本局计分与本场排名两处(权限档见 MATRIX 同日注释)，35 → 38。
   // 2026-10-28 L9 集成:游玩菜单联系主办 / 商家改读 L8 GET /api/play/contact(已入 MATRIX),38 → 39。
   // 2026-10-28 并 master(#658 后)合流 integrate/devfix-20261027:master 39 叠加本线 p74 20km 兜底读一处,39 → 40。
-  assert.equal(wrapperCount, 40, 'req 包装 GET 数量变化时必须逐条复核权限并更新矩阵');
+  assert.equal(wrapperCount, 41, 'req 包装 GET 数量变化时必须逐条复核权限并更新矩阵');
   assert.equal(ownMediaWrapperCount, 5, '作者媒体实际GET调用点变化需显式复核');
   assert.equal(MATRIX.length, directCount + wrapperCount + ownMediaWrapperCount);
 
@@ -521,57 +527,195 @@ test('team-progress 后端必须同时校验登录身份与本场资源归属', 
   assert.match(ownership, /probe\.setRegistrationStatus\(2\)/);
 });
 
-test('偏好题组与新生活 OS GET 都绑定当前会员及其游玩/完成事实', () => {
-  const controller = fs.readFileSync(PLAY_PROGRESS_CONTROLLER, 'utf8');
-  const application = fs.readFileSync(PLAY_PREFERENCE_APPLICATION, 'utf8');
-  const preferenceRoute = controller.slice(
-    controller.indexOf('@GetMapping("/preference/{nodeId}")'),
-    controller.indexOf('@PostMapping("/preference/{nodeId}/submit")')
-  );
-  const operatingSystemRoute = controller.slice(
-    controller.indexOf('@GetMapping("/os/{topicId}")'),
-    controller.indexOf('\n    }', controller.indexOf('@GetMapping("/os/{topicId}")'))
-  );
-  const preference = application.slice(
-    application.indexOf('public AjaxResult preference(Long actorMemberId'),
-    application.indexOf('public AjaxResult submitPreference(')
-  );
-  const resolver = application.slice(
-    application.indexOf('private PreferencePlayCtx resolvePreferencePlayCtx')
-  );
-  const operatingSystem = application.slice(
-    application.indexOf('public AjaxResult newLifeOperatingSystem(Long actorMemberId'),
-    application.indexOf('public PreferencePlayCtx resolvePreferencePlayCtx')
-  );
+// Java owners moved out of the HTTP adapter. Inspect complete, comment-free methods
+// along the real call chain; another endpoint/comment cannot stand in for a guard.
+function playGetSources() {
+  const java = (file) => fs.readFileSync(path.resolve(XCX_ROOT, '..', file), 'utf8');
+  const app = 'chengyinhub-admin/src/main/java/com/chengyinhub/web/service/';
+  const support = 'chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/';
+  return {
+    controller: fs.readFileSync(PLAY_PROGRESS_CONTROLLER, 'utf8'),
+    preference: java(app + 'play/PlayPreferenceApplication.java'),
+    player: java(app + 'play/PlayPlayerQueryApplication.java'),
+    context: java(app + 'play/PlayNodeContext.java'),
+    facts: java(app + 'play/PlayCompletionFacts.java'),
+    access: java(support + 'PlayNodeAccessService.java'),
+    registration: java(support + 'CurrentPlayRegistration.java'),
+    preferenceService: java(app + 'PreferencePlayService.java'),
+  };
+}
 
-  assert.match(preferenceRoute, /playPreferenceApplication\.preference\(currentMemberId\(\), nodeId, activityId, topicId\)/);
-  assert.match(preference, /Long memberId = actorMemberId;\s*if \(memberId <= 0\) return error\("请先登录"\)/);
-  assert.match(preference, /resolvePreferencePlayCtx\(memberId, nodeId, activityId, topicId, null\)/);
-  assert.match(resolver, /resolveCtx\(memberId, activityId, topicId, out\.node\)/);
-  assert.match(resolver, /unlockGateError\(memberId, out\.playCtx\.actId, out\.node\)/);
-  assert.match(operatingSystemRoute, /playPreferenceApplication\.newLifeOperatingSystem\(currentMemberId\(\), topicId\)/);
-  assert.match(operatingSystem, /Long memberId = actorMemberId;\s*if \(memberId <= 0\) return error\("请先登录"\)/);
-  assert.match(operatingSystem, /operatingSystem\(memberId, topicId\)/);
+function javaMethod(source, declaration) {
+  const code = source.replace(/"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|\/\/[^\n]*|\/\*[\s\S]*?\*\//g,
+    (token) => token.startsWith('"') || token.startsWith("'") ? token : ' '.repeat(token.length));
+  assert.equal(code.split(declaration).length, 2, `必须唯一定位 Java 方法 ${declaration}`);
+  const start = code.indexOf(declaration);
+  const open = code.indexOf('{', start);
+  assert.ok(open >= 0, `缺少方法体 ${declaration}`);
+  const braces = code.replace(/"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'/g, token => ' '.repeat(token.length));
+  let depth = 0;
+  for (let i = open; i < braces.length; i += 1) {
+    if (braces[i] === '{') depth += 1;
+    else if (braces[i] === '}' && --depth === 0) return code.slice(start, i + 1);
+  }
+  assert.fail(`Java 方法未闭合 ${declaration}`);
+}
+
+function inOrder(method, ...statements) {
+  let after = -1;
+  for (const statement of statements) {
+    const at = method.indexOf(statement, after + 1);
+    assert.ok(at > after, `实际可达方法必须按原顺序包含 ${statement}`);
+    after = at;
+  }
+}
+
+function actorEntry(source, methodName) {
+  const method = javaMethod(source, `public AjaxResult ${methodName}(`);
+  inOrder(method, 'Long memberId = actorMemberId;', 'if (memberId <= 0) return error("请先登录");');
+  return method;
+}
+
+function assertPreferenceGetContract(s) {
+  const controller = javaMethod(s.controller, 'public AjaxResult preference(');
+  assert.match(controller, /return playPreferenceApplication\.preference\(currentMemberId\(\), nodeId, activityId, topicId\);/);
+  const osController = javaMethod(s.controller, 'public AjaxResult newLifeOperatingSystem(');
+  assert.match(osController, /return playPreferenceApplication\.newLifeOperatingSystem\(currentMemberId\(\), topicId\);/);
+  const principal = javaMethod(s.controller, 'private Long currentMemberId(');
+  assert.match(principal, /Long id = getAppUserId\(\);/);
+  assert.match(principal, /return id == null \? 0L : id;/);
+  assert.match(s.controller, /private PlayPreferenceApplication playPreferenceApplication;/);
+  assert.match(s.preference, /private PlayNodeContext playNodeContext;/);
+  assert.match(s.preference, /private PreferencePlayService preferencePlayService;/);
+  inOrder(actorEntry(s.preference, 'preference'),
+    'resolvePreferencePlayCtx(memberId, nodeId, activityId, topicId, null)',
+    'if (pctx.error != null) return pctx.error;',
+    'preferencePlayService.load(', 'memberId, pctx.playCtx.topicId, nodeId, pctx.template');
+  const resolverEntry = javaMethod(s.preference, 'public PreferencePlayCtx resolvePreferencePlayCtx(');
+  assert.match(resolverEntry, /return resolvePreferencePlayCtx\(memberId, nodeId, activityId, topicId, routeActionId, null\);/);
+  // The public GET overload delegates to the same guarded resolver used by original-run submission.
+  const resolver = javaMethod(s.preference, 'private PreferencePlayCtx resolvePreferencePlayCtx(');
+  inOrder(resolver, 'playNodeContext.resolveCtx(memberId, activityId, topicId, out.node)',
+    'if (out.playCtx.error != null) { out.error = out.playCtx.error; return out; }',
+    'playNodeContext.leadGateError(out.playCtx.actId, out.node)',
+    'if (leadErr != null) { out.error = error(leadErr); return out; }',
+    'playNodeContext.unlockGateError(memberId, out.playCtx.actId, out.node)',
+    'playNodeContext.routeAccessError(memberId, out.playCtx.actId, out.playCtx.topicId, out.node, routeActionId)',
+    'if (unlockErr != null) { out.error = error(unlockErr); return out; }');
+  assert.match(resolver, /playNodeContext\.frozenAnswer\(memberId, out\.playCtx\.topicId, out\.playCtx\.actId, out\.node\.getId\(\), originalRun\)/);
+  const context = javaMethod(s.context, 'public PlayCtx resolveCtx(Long memberId, String activityId, String topicId, CmsTopicNode node)');
+  assert.match(context, /playNodeAccessService\.resolveContext\(memberId, activityId, topicId, nodeScope\(node\)\)/);
+  const access = javaMethod(s.access, 'public Context resolveContext(Long actor, String activityId, String topicId, NodeScope node)');
+  assert.match(access, /resolveCtx\(actor,activityId,topicId,nodeEntity\(node\)\)/);
+  const entry = javaMethod(s.access, 'private PlayCtx resolveCtx(Long memberId, String activityId, String topicId, CmsTopicNode node)');
+  assert.match(entry, /return resolveCtx\(memberId, activityId, topicId, node, null\);/);
+  const admission = javaMethod(s.access, 'private PlayCtx resolveCtx(Long memberId, String activityId, String topicId, CmsTopicNode node,');
+  assert.match(admission, /if \(!activity\.getTopicId\(\)\.equals\(node\.getTopicId\(\)\)\) \{ c\.error = error\("该节点不属于本次活动"\); return c; \}/);
+  assert.match(admission, /CurrentPlayRegistration\.require\(\s*currentPlayActivityMapper,cmsRegistrationMapper,memberId,2L,actId,registrationId,new Date\(\)\)/);
+  assert.match(admission, /if \(ticket == null\) \{ c\.error = error\("请先报名并完成支付"\); return c; \}/);
+  assert.match(admission, /if \(node\.getTopicId\(\) == null \|\| !node\.getTopicId\(\)\.equals\(tId\)\) \{ c\.error = error\("该节点不属于本主题"\); return c; \}/);
+  assert.match(admission, /hasRunningSession\(memberId, tId, 0L\)/);
+  for (const port of ['requireToContinue', 'require']) {
+    assert.match(admission, new RegExp(`CurrentPlayRegistration\\.${port}\\(\\s*currentPlayActivityMapper,cmsRegistrationMapper,memberId,1L,tId,registrationId,new Date\\(\\)\\)`));
+  }
+  assert.match(admission, /if \(pass == null\) \{ c\.error = new Failure\(402, "请先购买自玩通行证"\); return c; \}/);
+  const registrationArgs = 'CmsActivityMapper activities,CmsRegistrationMapper registrations,\n            Long memberId,long ownerType,Long ownerId,Long requestedId,Date now';
+  assert.match(javaMethod(s.registration, `public static CmsRegistration require(${registrationArgs})`),
+    /return require\(activities,registrations,memberId,ownerType,ownerId,requestedId,now,false\);/);
+  assert.match(javaMethod(s.registration, `public static CmsRegistration require(${registrationArgs},boolean originallyRequiresPaid)`),
+    /return collect\(activities,registrations,memberId,ownerType,ownerId,requestedId,now,originallyRequiresPaid,true,false\)\.get\(0\);/);
+  assert.match(javaMethod(s.registration, `public static CmsRegistration requireToContinue(${registrationArgs})`),
+    /return collect\(activities,registrations,memberId,ownerType,ownerId,requestedId,now,false,true,true\)\.get\(0\);/);
+  const collect = javaMethod(s.registration, 'private static List<CmsRegistration> collect(');
+  inOrder(collect, 'probe.setMemberId(memberId);probe.setOwnerType(ownerType);',
+    'probe.setOwnerId(ownerId);probe.setRegistrationStatus(2);',
+    'registrations.selectCmsRegistrationByIdForUpdate(snapshot.getId())',
+    'if(!currentOwner(current,memberId,ownerType,ownerId)) continue;');
+  assert.match(collect, /if\(\(originallyRequiresPaid \|\| Integer\.valueOf\(3\)\.equals\(current\.getPurchaseKind\(\)\)\)\s*&& !Integer\.valueOf\(2\)\.equals\(current\.getPaymentStatus\(\)\)\) continue;/);
+  const owner = javaMethod(s.registration, 'public static boolean currentOwner(');
+  for (const predicate of ['memberId.equals(current.getMemberId())', 'Long.valueOf(ownerType).equals(current.getOwnerType())',
+    'ownerId.equals(current.getOwnerId())', 'Integer.valueOf(2).equals(current.getRegistrationStatus())']) assert.ok(owner.includes(predicate), predicate);
+  assert.match(javaMethod(s.context, 'public String unlockGateError(Long memberId, Long actId, CmsTopicNode node)'),
+    /return playNodeAccessService\.unlockGateError\(memberId, actId, nodeScope\(node\)\);/);
+  assert.match(javaMethod(s.access, 'public String unlockGateError(Long actor,Long activityId,NodeScope node)'),
+    /return unlockGateError\(actor,activityId,nodeEntity\(node\)\);/);
+  const unlock = javaMethod(s.access, 'private String unlockGateError(Long memberId, Long actId, CmsTopicNode node)');
+  inOrder(unlock, 'probe.setMemberId(memberId);', 'probe.setActivityId(actId);',
+    'probe.setNodeId(node.getUnlockAfterNodeId());', 'playerNodeProgressService.selectPlayerNodeProgressList(probe)');
+  assert.match(unlock, /if \(p\.getStatus\(\) != null && p\.getStatus\(\) == 1\) return null;/);
+  inOrder(actorEntry(s.preference, 'newLifeOperatingSystem'), 'preferencePlayService.operatingSystem(memberId, topicId)');
+  const os = javaMethod(s.preferenceService, 'public Map<String, Object> operatingSystem(');
+  inOrder(os, 'attemptMapper.selectPreferenceResults(memberId, topicId)',
+    'if (!completedByMember(memberId, topicId, attempts))',
+    'throw new IllegalArgumentException("完成主题后才能生成新生活操作系统");');
+  const completed = javaMethod(s.preferenceService, 'private boolean completedByMember(');
+  for (const fact of ['probe.setMemberId(memberId);', 'probe.setOwnerType(2L);', 'probe.setRegistrationStatus(2);',
+    'registrationService.selectCmsRegistrationList(probe)', 'activityIds.contains(row.getOwnerId())',
+    'Integer.valueOf(PurchaseKind.EXPLORE_PASS).equals(row.getPurchaseKind())',
+    'perkLedgerService.isExploreCompleted(row.getId(), topicId)']) assert.ok(completed.includes(fact), fact);
+}
+
+function assertLeaderboardGetContract(s) {
+  const controller = javaMethod(s.controller, 'public AjaxResult leaderboard(');
+  assert.match(controller, /return playPlayerQueryApplication\.leaderboard\(currentMemberId\(\), activityId, topicId\);/);
+  assert.match(s.controller, /private PlayPlayerQueryApplication playPlayerQueryApplication;/);
+  assert.match(s.player, /private PlayCompletionFacts playCompletionFacts;/);
+  const board = actorEntry(s.player, 'leaderboard');
+  inOrder(board, 'if (tId > 0 && !activity.getTopicId().equals(tId)) return error("活动与主题不匹配");',
+    'boardTopicId = activity.getTopicId();',
+    'if (!playCompletionFacts.isRegistered(memberId, actId)) return error("请先报名并完成支付");',
+    '} else if (playCompletionFacts.validSelfPlayPass(memberId, tId) == null)',
+    'return new AjaxResult(402, "请先购买自玩通行证");',
+    'playerNodeProgressService.selectRouteLeaderboard(boardActivityId, boardTopicId, 50)');
+  assert.match(board, /selectActivityLeaderboard\(\s*actId > 0 \? actId : null, actId > 0 \? null : tId, 50\)/);
+  assert.match(board, /selectRouteLeaderboardRow\(boardActivityId, boardTopicId, memberId\)/);
+  const registered = javaMethod(s.facts, 'public boolean isRegistered(');
+  inOrder(registered, 'regProbe.setMemberId(memberId);', 'regProbe.setOwnerType(2L);',
+    'regProbe.setOwnerId(actId);', 'regProbe.setRegistrationStatus(2);',
+    'cmsRegistrationService.selectCmsRegistrationList(regProbe)', 'return regs != null && !regs.isEmpty();');
+  const passEntry = javaMethod(s.facts, 'public CmsRegistration validSelfPlayPass(Long memberId, Long topicId)');
+  assert.match(passEntry, /return validSelfPlayPass\(memberId, topicId, null\);/);
+  const pass = javaMethod(s.facts, 'public CmsRegistration validSelfPlayPass(Long memberId, Long topicId, Long registrationId)');
+  inOrder(pass, 'probe.setMemberId(memberId);', 'probe.setOwnerType(1L);', 'probe.setOwnerId(topicId);',
+    'probe.setRegistrationStatus(2);', 'cmsRegistrationService.selectCmsRegistrationList(probe)');
+  assert.match(pass, /r\.getExpiresAt\(\) == null \|\| r\.getExpiresAt\(\)\.after\(now\)/);
+}
+
+test('偏好题组与新生活 OS GET 都绑定当前会员及其游玩/完成事实', () => {
+  assertPreferenceGetContract(playGetSources());
 });
 
 test('排行榜 GET 绑定当前会员及本场报名支付或自玩通行证', () => {
-  const controller = fs.readFileSync(PLAY_PROGRESS_CONTROLLER, 'utf8');
-  const route = controller.slice(
-    controller.indexOf('@GetMapping("/leaderboard")'),
-    controller.indexOf('@Operation(summary = "我的成长+徽章")')
-  );
-  const application = fs.readFileSync(PLAY_PLAYER_QUERY_APPLICATION, 'utf8');
-  const leaderboard = application.slice(
-    application.indexOf('public AjaxResult leaderboard(Long actorMemberId, String activityId, String topicId)'),
-    application.indexOf('List<LeaderboardItemVO> list', application.indexOf('public AjaxResult leaderboard(Long actorMemberId'))
-  );
+  assertLeaderboardGetContract(playGetSources());
+});
 
-  assert.match(route, /playPlayerQueryApplication\.leaderboard\(currentMemberId\(\), activityId, topicId\)/);
-  assert.match(leaderboard, /Long memberId = actorMemberId;/);
-  assert.match(leaderboard, /if \(memberId <= 0\) return error\("请先登录"\)/);
-  assert.match(leaderboard, /if \(!playCompletionFacts\.isRegistered\(memberId, actId\)\) return error\("请先报名并完成支付"\)/);
-  assert.match(leaderboard, /validSelfPlayPass\(memberId, tId\) == null/);
-  assert.match(leaderboard, /return new AjaxResult\(402, "请先购买自玩通行证"\)/);
+test('玩法 GET 真实身份和实际 owner 守卫被改动时合同必须判红', () => {
+  const sources = playGetSources();
+  const mutations = [
+    [assertPreferenceGetContract, 'controller', 'playPreferenceApplication.preference(currentMemberId(),', 'playPreferenceApplication.preference(999L,'],
+    [assertPreferenceGetContract, 'controller', 'playPreferenceApplication.newLifeOperatingSystem(currentMemberId(),', 'playPreferenceApplication.newLifeOperatingSystem(999L,'],
+    [assertPreferenceGetContract, 'preference', 'if (out.playCtx.error != null) { out.error = out.playCtx.error; return out; }', ''],
+    [assertPreferenceGetContract, 'preference', 'return resolvePreferencePlayCtx(memberId, nodeId, activityId, topicId, routeActionId, null);', 'return null;'],
+    [assertPreferenceGetContract, 'preference', 'return resolvePreferencePlayCtx(memberId, nodeId, activityId, topicId, routeActionId, null);', 'return resolvePreferencePlayCtx(999L, nodeId, activityId, topicId, routeActionId, null);'],
+    [assertPreferenceGetContract, 'preference', 'out.node.getId(), originalRun)', 'out.node.getId(), null)'],
+    [assertPreferenceGetContract, 'preference', 'playNodeContext.unlockGateError(memberId, out.playCtx.actId, out.node)', 'null'],
+    [assertPreferenceGetContract, 'access', 'memberId,2L,actId,registrationId,new Date()', '999L,2L,actId,registrationId,new Date()'],
+    [assertPreferenceGetContract, 'registration', 'if(!currentOwner(current,memberId,ownerType,ownerId)) continue;', ''],
+    [assertPreferenceGetContract, 'registration', 'return collect(activities,registrations,memberId,ownerType,ownerId,requestedId,now,originallyRequiresPaid,true,false).get(0);', 'return null;'],
+    [assertPreferenceGetContract, 'access', 'if (p.getStatus() != null && p.getStatus() == 1) return null;', 'return null;'],
+    [assertPreferenceGetContract, 'preferenceService', 'if (!completedByMember(memberId, topicId, attempts))', 'if (false)'],
+    [assertLeaderboardGetContract, 'controller', 'playPlayerQueryApplication.leaderboard(currentMemberId(),', 'playPlayerQueryApplication.leaderboard(999L,'],
+    [assertLeaderboardGetContract, 'player', 'if (!playCompletionFacts.isRegistered(memberId, actId)) return error("请先报名并完成支付");', ''],
+    [assertLeaderboardGetContract, 'player', 'if (!playCompletionFacts.isRegistered(memberId, actId)) return error("请先报名并完成支付");', '/* if (!playCompletionFacts.isRegistered(memberId, actId)) return error("请先报名并完成支付"); */'],
+    [assertLeaderboardGetContract, 'player', 'playCompletionFacts.validSelfPlayPass(memberId, tId) == null', 'false'],
+    [assertLeaderboardGetContract, 'facts', 'regProbe.setOwnerId(actId);', 'regProbe.setOwnerId(999L);'],
+    [assertLeaderboardGetContract, 'facts', 'probe.setMemberId(memberId);\n        probe.setOwnerType(1L); // 1=主题(自玩通行证)', 'probe.setMemberId(999L);\n        probe.setOwnerType(1L); // 1=主题(自玩通行证)'],
+  ];
+  for (const [check, file, before, after] of mutations) {
+    assert.ok(sources[file].includes(before), `负控必须改到真实源码 ${file}: ${before}`);
+    const changed = { ...sources, [file]: sources[file].replace(before, after) };
+    assert.throws(() => check(changed), { code: 'ERR_ASSERTION' }, `${file}: ${before}`);
+  }
 });
 
 test('roam GET scope 与后端资源模型一致：tiles 是 member-owned，pois 是全局读取+本人 found 投影', () => {
@@ -588,4 +732,38 @@ test('roam GET scope 与后端资源模型一致：tiles 是 member-owned，pois
   assert.match(tiles, /Long memberId = uid\(\)/);
   assert.match(tiles, /selectTilesByMember\(memberId,/);
   assert.match(tiles, /selectTilePageByMember\(memberId, cursor, pageSize \+ 1\)/);
+});
+
+test('广场商业身份权限仍来自当前账号与授权，不以俱乐部发布角色替代', () => {
+  const app = fs.readFileSync(path.join(XCX_ROOT, 'app.js'), 'utf8');
+  const policy = app.match(/canUseCommunity:\s*function\s*\(write\)\s*\{([\s\S]*?)\n\s*\},/);
+  assert.ok(policy, '必须读取真实当前身份权限投影');
+  assert.match(policy[1], /this\._communityFeatureOwner === String\(this\.getUserID\(\) \|\| ''\)/);
+  assert.match(policy[1], /this\._communityFeatureAuthorization === this\.getAuthorization\(\)/);
+  assert.match(policy[1], /\[write \? 'communityPostWrite' : 'communityPostRead'\] === true/);
+  const square = fs.readFileSync(path.join(XCX_ROOT, 'pages/square/list/index.js'), 'utf8');
+  assert.match(square, /if \(!write\) this\.setData\(\{ composeShow: false, composeEdit: null \}\)/);
+  assert.match(square, /if \(!read\) \{[\s\S]*?list: \[\]/, '读资格失效仍撤下原列表');
+  assert.doesNotMatch(square, /submitFormData\s*\(/, '不能复活 master 已迁出的旧发布写入口');
+});
+
+test('迁移到真实共用发布器的续登仍绑定原俱乐部、引用、编辑稿与内容，广场写拒绝闸不丢', () => {
+  const source = fs.readFileSync(path.join(XCX_ROOT, 'pages/square/components/cy/post-compose/index.js'), 'utf8');
+  const publish = source.slice(source.indexOf('    onPublish() {'), source.indexOf('    publishClubPost(content) {'));
+  assert.match(publish, /owner: this/);
+  assert.match(publish, /target: \(\) => \[this\.data\.clubId, !!this\.data\.editMode, this\._editId/);
+  assert.match(publish, /this\.data\.postRef && this\.data\.postRef\.refType/);
+  assert.match(publish, /this\.data\.postRef && this\.data\.postRef\.refId/);
+  assert.match(publish, /this\.composeSnapshot\(\)/);
+  assert.match(publish, /this\._editDataId, this\._editDataType, this\.data\.selectedActivity && this\.data\.selectedActivity\.activityId, this\._composeVisible/);
+  assert.match(publish, /\(!that\.data\.clubId \|\| that\.data\.editMode\)[\s\S]*?typeof app\.canUseCommunity !== 'function' \|\| !app\.canUseCommunity\(true\)/);
+  assert.ok(publish.indexOf('!app.canUseCommunity(true)') < publish.indexOf('publishIntent.begin('), '拒绝须早于原发布意图与外呼');
+  assert.match(publish, /if \(that\.data\.clubId && !that\.data\.editMode\) \{ that\.publishClubPost\(content\); return; \}/);
+  const cancel = source.slice(source.indexOf('    cancelPublish() {'), source.indexOf('    isCurrentPublish(pending) {'));
+  assert.match(cancel, /this\._loginContinuationEpoch = \(this\._loginContinuationEpoch \|\| 0\) \+ 1/);
+  assert.match(cancel, /publishIntent\.settle\(wx, 'square:compose', pending\.memberId, pending\.intent\.key, 'unknown'\)/);
+  assert.match(source, /hide\(\) \{ this\._loginContinuationEpoch = \(this\._loginContinuationEpoch \|\| 0\) \+ 1; this\._composeVisible = false; this\.cancelPublish\(\); \}/);
+  const club = fs.readFileSync(path.join(XCX_ROOT, 'pages/club/detail/index.js'), 'utf8');
+  assert.match(club, /onComposePublished\(\) \{\s*this\.setData\(\{ postRef: null \}\);\s*this\.loadPosts\(\);/);
+  assert.doesNotMatch(club, /onPostSubmit\s*\(/, '原俱乐部命令只保留实际组件路径，不恢复被迁出的旧实现');
 });

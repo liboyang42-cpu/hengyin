@@ -50,6 +50,14 @@ public class PlayerRoleServiceImpl implements IPlayerRoleService {
     }
 
     @Override
+    public PlayerActivityRole readAssigned(Long memberId, Long activityId) {
+        if (memberId == null || memberId <= 0 || activityId == null || activityId <= 0) {
+            return null;
+        }
+        return playerActivityRoleMapper.selectByActivityAndMember(activityId, memberId);
+    }
+
+    @Override
     public String roleName(String roleCode) {
         for (int i = 0; i < ROLE_CODES.length; i++) {
             if (ROLE_CODES[i].equals(roleCode)) return ROLE_NAMES[i];

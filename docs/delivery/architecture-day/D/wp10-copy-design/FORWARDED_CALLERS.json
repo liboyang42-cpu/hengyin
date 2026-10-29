@@ -1,0 +1,44 @@
+[
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OrientGeoServiceImpl.java",
+    "line": 48,
+    "call": "OrientOwnership.requireTopicOwner(topicService, memberId, topicId);",
+    "resolution": "转入已统计的OrientOwnership公开辅助方法；不是额外copy入口"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OrientSafetyServiceImpl.java",
+    "line": 42,
+    "call": "CmsTopic topic = OrientOwnership.requireTopic(topicService, topicId);",
+    "resolution": "转入已统计的OrientOwnership公开辅助方法；不是额外copy入口"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OrientSafetyServiceImpl.java",
+    "line": 69,
+    "call": "OrientOwnership.requireTopicOwner(topicService, memberId, topicId);",
+    "resolution": "转入已统计的OrientOwnership公开辅助方法；不是额外copy入口"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OrientTaskServiceImpl.java",
+    "line": 76,
+    "call": "OrientOwnership.requireTopicOwner(topicService, memberId, topicId);",
+    "resolution": "转入已统计的OrientOwnership公开辅助方法；不是额外copy入口"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OrientTaskServiceImpl.java",
+    "line": 239,
+    "call": "CmsTopic topic = OrientOwnership.requireTopicOwner(topicService, reviewerId, attempt.getTopicId());",
+    "resolution": "转入已统计的OrientOwnership公开辅助方法；不是额外copy入口"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OrientTaskServiceImpl.java",
+    "line": 300,
+    "call": "CmsTopic topic = OrientOwnership.requireTopic(topicService, topicId);",
+    "resolution": "转入已统计的OrientOwnership公开辅助方法；不是额外copy入口"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OrientTeamBoardServiceImpl.java",
+    "line": 218,
+    "call": "CmsTopic topic = OrientOwnership.requireTopic(topicService, topicId);",
+    "resolution": "转入已统计的OrientOwnership公开辅助方法；不是额外copy入口"
+  }
+]

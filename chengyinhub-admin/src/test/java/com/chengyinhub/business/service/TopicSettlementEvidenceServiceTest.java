@@ -26,7 +26,9 @@ class TopicSettlementEvidenceServiceTest {
         TopicSettlementEvidenceService service = new TopicSettlementEvidenceService(
                 activityMapper, registrationMapper, groupVerifyMapper, evidenceMapper);
         CoopSettlementSnapshot snapshot = new CoopSettlementSnapshot();
-        snapshot.setCommercialContextId(23L);
+        snapshot.setTopicId(23L);
+        snapshot.setCommercialContextType("ACTIVITY");
+        snapshot.setCommercialContextId(201L);
         Date cutoff = new Date(1234L);
         when(activityMapper.selectActiveActivityIdsByTopicId(23L)).thenReturn(Arrays.asList(201L, 202L));
 

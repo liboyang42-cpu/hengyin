@@ -210,7 +210,7 @@ class ChapterFlowWriteServiceTest
         ReflectionTestUtils.setField(service, "mediaPublicationGuard", media);
         set("themeStateKeyService", new com.chengyinhub.business.service.support.ThemeStateKeyService(
                 mock(com.chengyinhub.business.mapper.ThemeStateKeyMapper.class)));
-        // The current production owner implements V2 writes directly; all collaborators are wired above.
+        service = com.chengyinhub.business.service.support.TopicPublicationTestWiring.transactional(service);
     }
 
     @Test
@@ -254,7 +254,7 @@ class ChapterFlowWriteServiceTest
         block.setLocationRequired(false);
         chapter.setBlocks(Collections.singletonList(block));
         assertThrows(ChapterFlowValidationException.class,
-                () -> service.updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester"));
         verify(chapterMapper, never()).insertCmsTopicChapter(any());
         verify(nodeMapper, never()).insertCmsTopicNode(any());
     }
@@ -286,23 +286,36 @@ class ChapterFlowWriteServiceTest
         ChapterDTO chapter = chapter("第一章", draftNode);
         chapter.setBlocks(Collections.singletonList(nodeBlock(0)));
 
-        // Observe admission at the first actual graph write, preserving the insert Answer.
-        // This base has no separate lockTopicContentBudget mapper contract.
-        var originalInsert = org.mockito.Mockito.mockingDetails(chapterMapper).getStubbings().stream()
-                .filter(stub -> "insertCmsTopicChapter".equals(stub.getInvocation().getMethod().getName()))
+        // Preserve the exact two original admission locks before graph writes, separately from
+        // the new compiler/declaration current reads. Keep the original budget Answer and lock order.
+        var originalBudget = org.mockito.Mockito.mockingDetails(topicMapper).getStubbings().stream()
+                .filter(stub -> "lockTopicContentBudget".equals(stub.getInvocation().getMethod().getName()))
                 .findFirst().orElseThrow();
         java.util.concurrent.atomic.AtomicBoolean admissionObserved = new java.util.concurrent.atomic.AtomicBoolean();
         org.mockito.Mockito.doAnswer(call -> {
             if (admissionObserved.compareAndSet(false, true))
                 verify(topicMapper, times(2)).selectCmsTopicByIdForUpdate(TOPIC_ID);
+            return originalBudget.answer(call);
+        }).when(topicMapper).lockTopicContentBudget(TOPIC_ID);
+
+        // Also retain master's first-write observation. Later compiler reads may lock the parent
+        // again, so the exact two admission reads are checked above, before that first budget lock.
+        var originalInsert = org.mockito.Mockito.mockingDetails(chapterMapper).getStubbings().stream()
+                .filter(stub -> "insertCmsTopicChapter".equals(stub.getInvocation().getMethod().getName()))
+                .findFirst().orElseThrow();
+        java.util.concurrent.atomic.AtomicBoolean graphWriteObserved = new java.util.concurrent.atomic.AtomicBoolean();
+        org.mockito.Mockito.doAnswer(call -> {
+            assertTrue(admissionObserved.get(), "章节写入之前必须已经经过原父栅栏及两次准入锁");
+            graphWriteObserved.set(true);
             return originalInsert.answer(call);
         }).when(chapterMapper).insertCmsTopicChapter(any());
 
-        service.updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester");
 
         verify(bundleReviewService).freezeForSubmission(TOPIC_ID, MEMBER_ID);
         verify(auditTaskService).submitOrRefreshTopicBundle(TOPIC_ID, MEMBER_ID, submission.getSnapshotJson());
-        assertTrue(admissionObserved.get(), "必须实际写入章节，且写入前已完成两次准入锁");
+        assertTrue(admissionObserved.get(), "必须实际经过原父栅栏，不能跳过两次准入锁断言");
+        assertTrue(graphWriteObserved.get(), "必须实际写入章节，且写入前已完成两次准入锁");
         org.mockito.InOrder lockOrder = inOrder(auditTaskService, topicMapper);
         lockOrder.verify(topicMapper).selectCmsTopicByIdForUpdate(TOPIC_ID);
         lockOrder.verify(auditTaskService).lockOpenTopicBundleTask(TOPIC_ID);
@@ -323,7 +336,7 @@ class ChapterFlowWriteServiceTest
         chapter.setBlocks(Collections.singletonList(nodeBlock(0)));
 
         com.chengyinhub.business.domain.vo.TopicBundleSubmitResultVO result =
-                service.updateTopicByOwnerV2WithReview(update(chapter), MEMBER_ID, "tester");
+                com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwnerV2WithReview(update(chapter), MEMBER_ID, "tester");
 
         assertEquals("ESCALATED", result.getReviewState());
         assertEquals(Long.valueOf(91L), result.getAuditTaskId());
@@ -340,13 +353,13 @@ class ChapterFlowWriteServiceTest
 
         // 回读为 null(读不到任务)
         IllegalStateException missing = assertThrows(IllegalStateException.class,
-                () -> service.updateTopicByOwnerV2WithReview(update(chapter), MEMBER_ID, "tester"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwnerV2WithReview(update(chapter), MEMBER_ID, "tester"));
         assertEquals("审核任务状态读取失败", missing.getMessage());
 
         // 回读为终态(已过审)同样不能当成提交成功
         stubAuditTaskReadback(com.chengyinhub.business.domain.AuditTask.STATUS_APPROVED);
         IllegalStateException finished = assertThrows(IllegalStateException.class,
-                () -> service.updateTopicByOwnerV2WithReview(update(chapter), MEMBER_ID, "tester"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwnerV2WithReview(update(chapter), MEMBER_ID, "tester"));
         assertEquals("审核任务状态读取失败", finished.getMessage());
     }
 
@@ -387,7 +400,7 @@ class ChapterFlowWriteServiceTest
         TopicUpdateDTO dto = update(chapter);
         dto.setPublishMode("simple");
         dto.setSaveDraft(1);
-        service.updateTopicByOwnerV2WithReview(dto, MEMBER_ID, "tester");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwnerV2WithReview(dto, MEMBER_ID, "tester");
         assertFalse(updatedTopics.stream().anyMatch(topic -> Integer.valueOf(1).equals(topic.getStatus())
                 && Integer.valueOf(1).equals(topic.getUserStatus())));
         verify(topicMapper, never()).updateTopicDraftState(TOPIC_ID, 0);
@@ -395,13 +408,13 @@ class ChapterFlowWriteServiceTest
         updatedTopics.clear();
         when(topicMapper.updateTopicDraftState(TOPIC_ID, 0)).thenReturn(1);
         dto.setSaveDraft(0);
-        service.updateTopicByOwnerV2WithReview(dto, MEMBER_ID, "tester");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwnerV2WithReview(dto, MEMBER_ID, "tester");
 
         verify(topicMapper).updateTopicDraftState(TOPIC_ID, 0);
         assertTrue(updatedTopics.stream().anyMatch(topic -> Integer.valueOf(1).equals(topic.getStatus())
                 && Integer.valueOf(1).equals(topic.getUserStatus())));
         verify((com.chengyinhub.business.service.IQuotaService)
-                ReflectionTestUtils.getField(service, "quotaService"))
+                com.chengyinhub.business.service.support.TopicPublicationTestWiring.get(service, "quotaService"))
                 .lockAndCheckThemeOnline(MEMBER_ID, TOPIC_ID);
         verify(topicMapper).publishRouteSnapshot(any(), any(), any());
         verify(auditTaskService, never()).submitOrRefreshTopicBundle(any(), any(), any());
@@ -415,7 +428,7 @@ class ChapterFlowWriteServiceTest
         dto.setPublishMode("simple");
 
         IllegalStateException error = assertThrows(IllegalStateException.class,
-                () -> service.updateTopicByOwnerV2(dto, MEMBER_ID, "tester"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwnerV2(dto, MEMBER_ID, "tester"));
 
         assertTrue(error.getMessage().contains("审核中"));
         verify(bundleReviewService, never()).freezeForSubmission(any(), any());
@@ -442,7 +455,7 @@ class ChapterFlowWriteServiceTest
         dto.setPublishMode("simple");
 
         RuntimeException error = assertThrows(RuntimeException.class,
-                () -> service.updateTopicByOwnerV2(dto, MEMBER_ID, "tester"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwnerV2(dto, MEMBER_ID, "tester"));
 
         assertTrue(error.getMessage().contains("尚未通过审核") || error.getMessage().contains("草稿模板"),
                 error.getMessage());
@@ -471,7 +484,7 @@ class ChapterFlowWriteServiceTest
         dto.setRecruitDeadline(new Date(System.currentTimeMillis() + 3600_000L));
 
         RuntimeException error = assertThrows(RuntimeException.class,
-                () -> service.updateTopicByOwnerV2(dto, MEMBER_ID, "tester"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwnerV2(dto, MEMBER_ID, "tester"));
 
         assertTrue(error.getMessage().contains("尚未通过审核") || error.getMessage().contains("草稿模板"),
                 error.getMessage());
@@ -496,7 +509,7 @@ class ChapterFlowWriteServiceTest
         DistanceCalculatorUtils distance = new DistanceCalculatorUtils();
         set("distanceCalculatorUtils", distance);
 
-        service.updateTopicByOwnerV2(update(first, second), MEMBER_ID, "tester");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwnerV2(update(first, second), MEMBER_ID, "tester");
 
         assertEquals(Arrays.asList(2L, 1L, 3L, 4L), Arrays.asList(
                 insertedNodes.get(0).getSortId(), insertedNodes.get(1).getSortId(),
@@ -559,7 +572,7 @@ class ChapterFlowWriteServiceTest
         chapter.setBlocks(Arrays.asList(
                 text("第一段\n第二段"), text("相邻文本块"), nodeBlock(0), text("锁后正文")));
 
-        service.updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester");
 
         assertEquals("第一段\n第二段\n相邻文本块", insertedChapters.get(0).getDescription(),
                 "description 只投影首个 node 前的全部 text，块间用换行隔开");
@@ -585,7 +598,7 @@ class ChapterFlowWriteServiceTest
                 beat("outcome", "line", 1, "乙站结论"),
                 beat("deliver", "reward", 1, "乙站纪念章")));
 
-        service.updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester");
 
         List<Map<String, Object>> stored = storedBlocks(updatedChapters.get(0));
         assertEquals(8, stored.size(), "叙事块原样保留,不与 node 块合并");
@@ -632,7 +645,7 @@ class ChapterFlowWriteServiceTest
         chapter.setBlocks(Arrays.asList(nodeBlock(0), nodeBlock(0)));
 
         ChapterFlowValidationException error = assertThrows(ChapterFlowValidationException.class,
-                () -> service.updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester"));
 
         assertTrue(error.getMessage().contains("重复引用"),
                 "必须由 I2 重复引用闸拒绝: " + error.getMessage());
@@ -672,7 +685,7 @@ class ChapterFlowWriteServiceTest
         chapter.setRequired(null);
         chapter.setBlocks(Collections.singletonList(nodeBlock(0)));
 
-        service.updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester");
 
         assertEquals(Integer.valueOf(1), insertedChapters.get(0).getRequired(),
                 "进入故事流的章节必须强制落 required=1，不能依赖数据库隐式默认");
@@ -687,7 +700,7 @@ class ChapterFlowWriteServiceTest
         dto.setProductType(ProductType.FREE_EXPLORE);
         dto.setRecruitDeadline(new Date(System.currentTimeMillis() + 3600_000L));
 
-        service.updateTopicByOwnerV2(dto, MEMBER_ID, "tester");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwnerV2(dto, MEMBER_ID, "tester");
 
         assertEquals(1, insertedChapters.size());
         assertEquals(1, updatedChapters.size());
@@ -702,7 +715,7 @@ class ChapterFlowWriteServiceTest
         dto.setProductType(ProductType.FREE_EXPLORE);
         dto.setRecruitDeadline(new Date(System.currentTimeMillis() + 3600_000L));
 
-        service.updateTopicByOwnerV2(dto, MEMBER_ID, "tester");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwnerV2(dto, MEMBER_ID, "tester");
 
         assertEquals(1, insertedChapters.size());
         assertNull(insertedChapters.get(0).getBlocksJson(),
@@ -718,7 +731,7 @@ class ChapterFlowWriteServiceTest
         legacy.setSchemaVersion(null);
         legacy.setBlocks(null);
 
-        service.updateTopicByOwner(update(legacy), MEMBER_ID, "tester");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwner(update(legacy), MEMBER_ID, "tester");
 
         assertEquals(1, insertedChapters.size());
         assertNull(insertedChapters.get(0).getBlocksJson(),
@@ -736,7 +749,7 @@ class ChapterFlowWriteServiceTest
         when(chapterMapper.selectCmsTopicChapterList(any())).thenReturn(Collections.singletonList(materialized));
 
         ChapterFlowValidationException error = assertThrows(ChapterFlowValidationException.class,
-                () -> service.updateTopicByOwner(update(legacyChapter()), MEMBER_ID, "tester"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwner(update(legacyChapter()), MEMBER_ID, "tester"));
 
         assertTrue(error.getMessage().contains("请更新小程序"),
                 "必须命中 §8.3 老客户端写守卫: " + error.getMessage());
@@ -751,7 +764,7 @@ class ChapterFlowWriteServiceTest
         chapter.setBlocks(Collections.singletonList(nodeBlock(0)));
 
         ChapterFlowValidationException error = assertThrows(ChapterFlowValidationException.class,
-                () -> service.updateTopicByOwner(update(chapter), MEMBER_ID, "tester"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwner(update(chapter), MEMBER_ID, "tester"));
 
         assertTrue(error.getMessage().contains("v2/update"),
                 "块 payload 必须显式选择 V2 seam，旧接口不得静默吃掉: " + error.getMessage());
@@ -768,7 +781,7 @@ class ChapterFlowWriteServiceTest
         }
 
         ChapterFlowValidationException error = assertThrows(ChapterFlowValidationException.class,
-                () -> service.updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester"));
 
         assertTrue(error.getMessage().contains("块数超过"),
                 "必须命中块数硬上限，不能静默截断: " + error.getMessage());
@@ -781,7 +794,7 @@ class ChapterFlowWriteServiceTest
         chapter.setBlocks(Collections.singletonList(text(repeat("字", ChapterFlowCompiler.MAX_TEXT_LENGTH + 1))));
 
         ChapterFlowValidationException error = assertThrows(ChapterFlowValidationException.class,
-                () -> service.updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester"));
 
         assertTrue(error.getMessage().contains("正文超过"),
                 "必须命中文本长度硬上限，不能静默截断: " + error.getMessage());
@@ -799,7 +812,7 @@ class ChapterFlowWriteServiceTest
         }
 
         ChapterFlowValidationException error = assertThrows(ChapterFlowValidationException.class,
-                () -> service.updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester"));
 
         assertTrue(error.getMessage().contains("序列化后超过 64 KB"),
                 "中文必须按 UTF-8 字节计 64 KB 上限: " + error.getMessage());
@@ -817,7 +830,7 @@ class ChapterFlowWriteServiceTest
             chapter.getBlocks().add(text(""));
         }
 
-        service.updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester");
 
         assertEquals(ChapterFlowCompiler.MAX_BLOCKS_PER_CHAPTER,
                 storedBlocks(updatedChapters.get(0)).size(),
@@ -831,7 +844,7 @@ class ChapterFlowWriteServiceTest
         chapter.setBlocks(Arrays.asList(text(repeat("甲", 4000)), text(repeat("乙", 4000))));
 
         ChapterFlowValidationException error = assertThrows(ChapterFlowValidationException.class,
-                () -> service.updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester"));
 
         assertTrue(error.getMessage().contains("第 1 章")
                         && error.getMessage().contains("剧情投影超过 8000 字符"),
@@ -845,7 +858,7 @@ class ChapterFlowWriteServiceTest
         ChapterDTO chapter = chapter("投影边界");
         chapter.setBlocks(Arrays.asList(text(repeat("甲", 3999)), text(repeat("乙", 4000))));
 
-        service.updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester");
 
         assertEquals(ChapterFlowCompiler.MAX_DESCRIPTION_LENGTH,
                 insertedChapters.get(0).getDescription().length(),
@@ -859,7 +872,7 @@ class ChapterFlowWriteServiceTest
         wrongVersion.setSchemaVersion(2);
         wrongVersion.setBlocks(Collections.<ChapterBlockDTO>emptyList());
         ChapterFlowValidationException versionError = assertThrows(ChapterFlowValidationException.class,
-                () -> service.updateTopicByOwnerV2(update(wrongVersion), MEMBER_ID, "tester"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwnerV2(update(wrongVersion), MEMBER_ID, "tester"));
         assertTrue(versionError.getMessage().contains("schemaVersion"), versionError.getMessage());
 
         // 2026-08-16:image / audio 已是合法块类型，未知类型的样本换成 video ——
@@ -871,7 +884,7 @@ class ChapterFlowWriteServiceTest
         unknown.setType("video");
         wrongType.setBlocks(Collections.singletonList(unknown));
         ChapterFlowValidationException typeError = assertThrows(ChapterFlowValidationException.class,
-                () -> service.updateTopicByOwnerV2(update(wrongType), MEMBER_ID, "tester"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwnerV2(update(wrongType), MEMBER_ID, "tester"));
         assertTrue(typeError.getMessage().contains("块类型"), typeError.getMessage());
 
         ChapterDTO textWithIndex = chapter("字段串位", node("节点"));
@@ -879,7 +892,7 @@ class ChapterFlowWriteServiceTest
         invalidText.setNodeIndex(0);
         textWithIndex.setBlocks(Arrays.asList(invalidText, nodeBlock(0)));
         ChapterFlowValidationException textFieldError = assertThrows(ChapterFlowValidationException.class,
-                () -> service.updateTopicByOwnerV2(update(textWithIndex), MEMBER_ID, "tester"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwnerV2(update(textWithIndex), MEMBER_ID, "tester"));
         assertTrue(textFieldError.getMessage().contains("text 块不能携带 nodeIndex"),
                 "必须由 text 字段形状闸拒绝: " + textFieldError.getMessage());
 
@@ -888,7 +901,7 @@ class ChapterFlowWriteServiceTest
         invalidNode.setContent("不该出现");
         nodeWithContent.setBlocks(Collections.singletonList(invalidNode));
         ChapterFlowValidationException nodeFieldError = assertThrows(ChapterFlowValidationException.class,
-                () -> service.updateTopicByOwnerV2(update(nodeWithContent), MEMBER_ID, "tester"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwnerV2(update(nodeWithContent), MEMBER_ID, "tester"));
         assertTrue(nodeFieldError.getMessage().contains("node 块不能携带 content"),
                 "必须由 node 字段形状闸拒绝: " + nodeFieldError.getMessage());
     }
@@ -905,7 +918,7 @@ class ChapterFlowWriteServiceTest
         ChapterDTO chapter = chapter("媒体章", node("关卡"));
         chapter.setBlocks(Arrays.asList(text("开场"), image, nodeBlock(0), audio));
 
-        service.updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester");
 
         CmsTopicChapter saved = updatedChapters.get(0);
         List<Map<String, Object>> stored = storedBlocks(saved);
@@ -935,7 +948,7 @@ class ChapterFlowWriteServiceTest
         ChapterDTO chapter = chapter("旧媒体章", node("关卡"));
         chapter.setBlocks(Arrays.asList(image, audio, empty, nodeBlock(0)));
 
-        service.updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester");
 
         List<Map<String, Object>> stored = storedBlocks(updatedChapters.get(0));
         assertFalse(stored.get(0).containsKey("altText"));
@@ -961,7 +974,7 @@ class ChapterFlowWriteServiceTest
 
             media.setAltText(repeat("字", 2001));
             ChapterFlowValidationException failure = assertThrows(ChapterFlowValidationException.class,
-                    () -> service.updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester"));
+                    () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester"));
             assertTrue(failure.getMessage().contains("媒体文字替代最多 2000 字"));
         }
         verify(chapterMapper, never()).insertCmsTopicChapter(any());
@@ -980,7 +993,7 @@ class ChapterFlowWriteServiceTest
                 text("开场"), imageBlock("media-asset:901"),
                 nodeBlock(0), text("锁后正文")));
 
-        service.updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester");
 
         List<Map<String, Object>> stored = storedBlocks(updatedChapters.get(0));
         assertEquals(4, stored.size(), "媒体块必须原样落库，不得被静默丢弃");
@@ -1002,7 +1015,7 @@ class ChapterFlowWriteServiceTest
         chapter.setBlocks(Arrays.asList(
                 text("开场"), audioBlock("media-asset:902"), nodeBlock(0)));
 
-        service.updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester");
 
         List<Map<String, Object>> stored = storedBlocks(updatedChapters.get(0));
         assertEquals("audio", stored.get(1).get("type"));
@@ -1018,7 +1031,7 @@ class ChapterFlowWriteServiceTest
         chapter.setAudioUrl("media-asset:903");
         chapter.setBlocks(Arrays.asList(text("开场"), nodeBlock(0)));
 
-        service.updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester");
 
         assertEquals("media-asset:903", insertedChapters.get(0).getAudioUrl());
     }
@@ -1034,7 +1047,7 @@ class ChapterFlowWriteServiceTest
         chapter.setBlocks(Arrays.asList(
                 text("第一段"), imageBlock("media-asset:901"), text("第二段"), nodeBlock(0)));
 
-        service.updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester");
 
         assertEquals("第一段\n第二段", insertedChapters.get(0).getDescription(),
                 "媒体块既不进摘要，也不能把它后面的文字块挡在投影窗口之外");
@@ -1046,7 +1059,7 @@ class ChapterFlowWriteServiceTest
         ChapterDTO noUrl = chapter("缺地址", node("节点"));
         noUrl.setBlocks(Arrays.asList(imageBlock("   "), nodeBlock(0)));
         ChapterFlowValidationException urlError = assertThrows(ChapterFlowValidationException.class,
-                () -> service.updateTopicByOwnerV2(update(noUrl), MEMBER_ID, "tester"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwnerV2(update(noUrl), MEMBER_ID, "tester"));
         assertTrue(urlError.getMessage().contains("image 块缺少 url"),
                 "必须由媒体 url 闸拒绝: " + urlError.getMessage());
 
@@ -1055,7 +1068,7 @@ class ChapterFlowWriteServiceTest
         dirty.setContent("不该出现");
         withContent.setBlocks(Arrays.asList(dirty, nodeBlock(0)));
         ChapterFlowValidationException contentError = assertThrows(ChapterFlowValidationException.class,
-                () -> service.updateTopicByOwnerV2(update(withContent), MEMBER_ID, "tester"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwnerV2(update(withContent), MEMBER_ID, "tester"));
         assertTrue(contentError.getMessage().contains("image 块不能携带 content"),
                 "必须由媒体字段形状闸拒绝: " + contentError.getMessage());
 
@@ -1063,14 +1076,14 @@ class ChapterFlowWriteServiceTest
         longUrl.setBlocks(Arrays.asList(
                 imageBlock(repeat("u", ChapterFlowCompiler.MAX_URL_LENGTH + 1)), nodeBlock(0)));
         ChapterFlowValidationException lengthError = assertThrows(ChapterFlowValidationException.class,
-                () -> service.updateTopicByOwnerV2(update(longUrl), MEMBER_ID, "tester"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwnerV2(update(longUrl), MEMBER_ID, "tester"));
         assertTrue(lengthError.getMessage().contains("url 超过"),
                 "必须由 url 长度闸拒绝: " + lengthError.getMessage());
     }
 
     private void set(String field, Object value)
     {
-        ReflectionTestUtils.setField(service, field, value);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, field, value);
     }
 
     @Test
@@ -1080,7 +1093,7 @@ class ChapterFlowWriteServiceTest
         ChapterBlockDTO point = nodeBlock(0); point.setKey("place-entry");
         ChapterBlockDTO image = imageBlock("media-asset:901");
         chapter.setBlocks(Arrays.asList(first, point, image));
-        service.updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester");
         com.fasterxml.jackson.databind.JsonNode read = JSON.valueToTree(
                 com.chengyinhub.business.util.ChapterBlockReadSupport.resolve(updatedChapters.get(0), insertedNodes));
         assertEquals("paragraph-first", read.get(0).path("key").asText());
@@ -1089,7 +1102,7 @@ class ChapterFlowWriteServiceTest
         first.setKey(read.get(0).path("key").asText());
         image.setKey(generated);
         chapter.setBlocks(Arrays.asList(image, point, first));
-        service.updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester");
         com.fasterxml.jackson.databind.JsonNode reread = JSON.valueToTree(
                 com.chengyinhub.business.util.ChapterBlockReadSupport.resolve(updatedChapters.get(1), insertedNodes));
         assertEquals("paragraph-first", reread.get(2).path("key").asText());
@@ -1118,7 +1131,7 @@ class ChapterFlowWriteServiceTest
         first.setId(12L);
         first.setBlocks(Collections.singletonList(text("街道")));
         existing.setJourneyStoryJson("{\"schemaVersion\":1,\"stages\":[{\"chapterId\":12,\"question\":\"开始了吗\"}]}");
-        service.updateTopicByOwnerV2(update(opening, first), MEMBER_ID, "tester");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwnerV2(update(opening, first), MEMBER_ID, "tester");
         String saved = updatedTopics.stream().map(CmsTopic::getJourneyStoryJson)
                 .filter(java.util.Objects::nonNull).reduce((a, b) -> b).orElse(null);
         assertNotNull(saved);
@@ -1151,14 +1164,14 @@ class ChapterFlowWriteServiceTest
         ChapterDTO opening = chapter("序章");
         opening.setId(10L);
         opening.setBlocks(Collections.singletonList(text("开局文字")));
-        service.updateTopicByOwnerV2(update(opening), MEMBER_ID, "tester");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwnerV2(update(opening), MEMBER_ID, "tester");
         assertTrue(Boolean.TRUE.equals(opening.getOpening()));
         String saved = updatedTopics.stream().map(CmsTopic::getJourneyStoryJson)
                 .filter(java.util.Objects::nonNull).reduce((a, b) -> b).orElseThrow(AssertionError::new);
         assertEquals(insertedChapters.get(0).getId().longValue(), JSON.readTree(saved).path("openingChapterId").asLong());
         updatedTopics.clear();
         opening.setOpening(false);
-        service.updateTopicByOwnerV2(update(opening), MEMBER_ID, "tester");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwnerV2(update(opening), MEMBER_ID, "tester");
         saved = updatedTopics.stream().map(CmsTopic::getJourneyStoryJson)
                 .filter(java.util.Objects::nonNull).reduce((a, b) -> b).orElseThrow(AssertionError::new);
         assertFalse(JSON.readTree(saved).has("openingChapterId"));
@@ -1174,7 +1187,7 @@ class ChapterFlowWriteServiceTest
         ChapterDTO first = chapter("出发", destination);
         first.setBlocks(Collections.singletonList(nodeBlock(0)));
         existing.setAddressName("旧街道");
-        service.updateTopicByOwnerV2(update(opening, first), MEMBER_ID, "tester");
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwnerV2(update(opening, first), MEMBER_ID, "tester");
         assertTrue(updatedTopics.stream().anyMatch(topic -> "新街道 1 号".equals(topic.getAddressName())));
     }
 

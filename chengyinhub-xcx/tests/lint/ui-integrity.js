@@ -41,6 +41,7 @@ const NON_INCREASING_CEILING = Object.freeze({
   u1Variable: 13,
   u3Debt: 103,
   u4Debt: 196,
+  // Retain master's ratchet; merged exact projections still require final key/digest accounting.
   u4Dynamic: 65,
   // 2026-08-26 12 → 13:merchant/customer 触达历史改为「有旧记录时刷新失败静默降级」,
   //   fail 不再写可见错误态,故该 silentError 调用点需要逐项登记理由(已登记,见 baseline)。

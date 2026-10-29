@@ -871,7 +871,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
           )
     </select>
 
-    <select id="selectCmsTopicByIdForUpdate" parameterType="Long" resultMap="CmsTopicResult">
+    <select id="lockTopicContentBudget" resultType="java.lang.Long" useCache="false" flushCache="true">
+        select id from cms_topic where id = #{id} for update
+    </select>
+
+    <select id="selectCmsTopicByIdForUpdate" parameterType="Long" resultMap="CmsTopicResult" useCache="false" flushCache="true">
         <include refid="selectCmsTopicVo"/>
         where id = #{id} for update
     </select>
@@ -1238,10 +1242,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <!-- 2026-09-16 用户硬规则同上:合作结算按此刻销售额冻结发起人保底/毛利并 T+7 入余额,
          票有效期晚于主题结束时,冻结后玩家仍可退。截止口径与 RefundPolicy 同源:
          下单快照优先,否则自由定向(mode=2)=票 end_time,其余=票 start_time。 -->
-    <select id="selectTopicsForSettlement" resultMap="CmsTopicResult">
+    <sql id="topicSettlementEligibility">
         <![CDATA[
-        SELECT * FROM cms_topic
-        WHERE del_flag = 0
+        del_flag = 0
           AND status = 1
           AND is_settlement = 0
           AND end_date <= DATE_SUB(NOW(), INTERVAL 12 HOUR)
@@ -1255,6 +1258,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
                 AND COALESCE(r.refund_deadline, CASE WHEN t.mode = 2 THEN t.end_time ELSE t.start_time END) > NOW()
           )
         ]]>
+    </sql>
+    <select id="selectTopicsForSettlement" resultMap="CmsTopicResult">
+        SELECT * FROM cms_topic
+        WHERE <include refid="topicSettlementEligibility"/>
     </select>
 
     <!-- 双死线②:招募中(lifecycle=1)且招募截止已过 -->
@@ -1278,7 +1285,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <update id="claimTopicForSettlement">
         UPDATE cms_topic
         SET is_settlement = 1, update_by = 'system', update_time = NOW()
-        WHERE id = #{id} AND is_settlement = 0
+        WHERE id = #{id} AND <include refid="topicSettlementEligibility"/>
     </update>
 
     <!-- 俱乐部对自己主题的三个展示/招商开关(Figma J4)。

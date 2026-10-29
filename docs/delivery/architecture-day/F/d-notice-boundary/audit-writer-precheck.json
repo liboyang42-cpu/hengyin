@@ -1,0 +1,35 @@
+{
+  "kind": "READ_ONLY_STATIC_RECOMPUTE_NOT_CI",
+  "source": "0d32d888e29c6d5ef51322b10d7aca736be856ff",
+  "advertised_default_branch": "master",
+  "fetched_default_sha": "e1083c6c5f4dd5fa992a43015d2ae8c764626d52",
+  "unique_merge_base": "e1083c6c5f4dd5fa992a43015d2ae8c764626d52",
+  "origin": "https://github.com/liboyang42-cpu/hengyin.git",
+  "findings": [
+    {
+      "rule": "NEW_TABLE_WRITER",
+      "key": "chengyinhub-system/src/main/resources/mapper/business/CommittedNoticeRejectionMapper.xml#insertIgnore",
+      "detail": "business_audit_event <- chengyinhub-system:com.chengyinhub.business.mapper.CommittedNoticeRejectionMapper"
+    }
+  ],
+  "existing_table_writers": {
+    "chengyinhub-system:com.chengyinhub.business.mapper.BusinessAuditEventMapper": [
+      "action",
+      "actor_member_id",
+      "actor_role_code",
+      "actor_type",
+      "after_json",
+      "before_json",
+      "create_time",
+      "domain_id",
+      "domain_type",
+      "owner_member_id",
+      "reason",
+      "relation_id",
+      "request_id",
+      "target_id",
+      "target_type"
+    ]
+  },
+  "limitations": "Not actual CI event/run; later default-branch changes can change compare-base."
+}

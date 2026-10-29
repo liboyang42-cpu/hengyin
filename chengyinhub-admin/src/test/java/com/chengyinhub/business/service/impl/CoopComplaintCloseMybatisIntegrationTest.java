@@ -91,7 +91,8 @@ class CoopComplaintCloseMybatisIntegrationTest {
         ReflectionTestUtils.setField(detailService, "umsMemberBalanceDetailMapper", session.getMapper(UmsMemberBalanceDetailMapper.class));
         details = spy(detailService);
         CoopComplaintServiceImpl target = new CoopComplaintServiceImpl();
-        ReflectionTestUtils.setField(target, "businessNotice", mock(com.chengyinhub.business.service.support.CommittedBusinessNotice.class));
+        ReflectionTestUtils.setField(target, "complaintCloseReporterNotice", mock(com.chengyinhub.business.service.support.ComplaintCloseReporterNotice.class));
+        ReflectionTestUtils.setField(target, "committedOfficialNoticeService", mock(com.chengyinhub.business.service.support.CommittedOfficialNoticeService.class));
         ReflectionTestUtils.setField(target, "coopComplaintMapper", mapper);
         ReflectionTestUtils.setField(target, "umsMemberService", members);
         ReflectionTestUtils.setField(target, "umsMemberBalanceDetailService", details);

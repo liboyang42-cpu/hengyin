@@ -47,6 +47,7 @@ class PaymentCallbackFenceEntryTest
     private CmsRegistrationMapper registrations;
     private IWxPaymentCallbackInboxService inbox;
     private AlarmService alarm;
+    private IWechatPayService gateway;
     private CmsRegistration registration;
     private Map<String, String> payload;
 
@@ -60,16 +61,22 @@ class PaymentCallbackFenceEntryTest
         ReflectionTestUtils.setField(service, "cmsRegistrationMapper", registrations);
         ReflectionTestUtils.setField(service, "wxPaymentCallbackInboxService", inbox);
         ReflectionTestUtils.setField(service, "alarmService", alarm);
-        var gateway = mock(com.chengyinhub.business.service.IWechatPayService.class);
-        when(gateway.lockPaymentAttemptForUpdate("A-ORIGINAL", "A-ORIGINAL")).thenReturn(true);
+        gateway = mock(IWechatPayService.class);
+        when(gateway.lockClosablePaymentAttemptForUpdate("A-ORIGINAL", "A-ORIGINAL")).thenReturn(true);
         var attempts = mock(org.springframework.beans.factory.ObjectProvider.class);
         when(attempts.getObject()).thenReturn(gateway);
         ReflectionTestUtils.setField(service, "paymentAttemptGateway", attempts);
         registration = new CmsRegistration();
         registration.setId(11L);
         registration.setRegistrationNo("A-ORIGINAL");
+        registration.setOwnerType(1L); registration.setOwnerId(7L); registration.setMemberId(42L);
         registration.setWechatPaymentAmount(new BigDecimal("1.00"));
         when(registrations.selectByRegistrationNo("A-ORIGINAL")).thenReturn(registration);
+        when(registrations.selectCmsRegistrationByIdForUpdate(11L)).thenReturn(registration);
+        var topics = mock(com.chengyinhub.business.mapper.CmsTopicMapper.class);
+        var topic = new com.chengyinhub.business.domain.CmsTopic(); topic.setId(7L);
+        when(topics.selectCmsTopicByIdForUpdate(7L)).thenReturn(topic);
+        ReflectionTestUtils.setField(service, "cmsTopicMapper", topics);
         payload = new HashMap<>();
         payload.put("out_trade_no", "A-ORIGINAL");
         payload.put("wx_out_trade_no", "A-ORIGINAL");
@@ -82,6 +89,7 @@ class PaymentCallbackFenceEntryTest
     void registrationCallbackRegistersThenAcquiresFenceBeforeMutatingOrder()
     {
         CmsRegistration closedAlready = new CmsRegistration();
+        org.springframework.beans.BeanUtils.copyProperties(registration, closedAlready);
         closedAlready.setPaymentStatus(3);
         closedAlready.setRegistrationStatus(1);
         when(registrations.selectCmsRegistrationByIdForUpdate(11L)).thenReturn(closedAlready);
@@ -147,6 +155,23 @@ class PaymentCallbackFenceEntryTest
     }
 
     @Test
+    void matchingAttemptWithDurableSuccessCannotCloseOrReturnReservedPoints()
+    {
+        when(gateway.lockPaymentAttemptForUpdate("A-ORIGINAL", "A-ORIGINAL")).thenReturn(true);
+        when(gateway.lockClosablePaymentAttemptForUpdate("A-ORIGINAL", "A-ORIGINAL")).thenReturn(false);
+        when(inbox.process(anyString(), any())).thenAnswer(call -> runMutation(call.getArgument(1), row(11L, "CLOSED")));
+
+        assertEquals("FAIL", service.handleWechatPayCallback(payload));
+
+        verify(gateway).lockClosablePaymentAttemptForUpdate("A-ORIGINAL", "A-ORIGINAL");
+        verify(gateway, never()).lockPaymentAttemptForUpdate(anyString(), anyString());
+        verify(registrations, never()).claimPaymentFailure(anyLong(), any());
+        verify(registrations, never()).claimPointsReturn(anyLong(), anyString(), any());
+        verify(alarm).alarmThrottled(eq("payment.callback.registration"), anyString(),
+                contains("reason=payment_attempt_conflict"));
+    }
+
+    @Test
     void busyFenceKeepsOrderUnchangedAndAsksWechatToRetry()
     {
         when(inbox.process(anyString(), any())).thenReturn(false);
@@ -167,8 +192,8 @@ class PaymentCallbackFenceEntryTest
         assertEquals("FAIL", service.handleWechatPayCallback(payload));
 
         verify(alarm).alarmThrottled(eq("payment.callback.registration"), anyString(),
-                contains("reason=order_disappeared"));
-        verify(alarm, never()).alarmThrottled(anyString(), anyString(), contains("callback_not_completed"));
+                contains("reason=callback_not_completed"));
+        verify(alarm, never()).alarmThrottled(anyString(), anyString(), contains("order_disappeared"));
     }
 
     @Test
@@ -176,6 +201,18 @@ class PaymentCallbackFenceEntryTest
     {
         payload.put("trade_state", "SUCCESS");
         payload.put("total", "99");
+        var fact = new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact(
+                com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Kind.PAYMENT,
+                "mch-fence", "wx-fence", "A-ORIGINAL", "A-ORIGINAL", "A-ORIGINAL", "TX-ORIGINAL",
+                "TX-ORIGINAL", "JSAPI", "CNY", 99, 99, java.time.Instant.parse("2026-10-24T00:00:00Z"), null, "SUCCESS");
+        var reference = new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference(1L, fact.factHash());
+        var reader = mock(com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService.class);
+        when(reader.requireVerified(reference)).thenReturn(
+                new com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService.Stored(reference, fact));
+        ReflectionTestUtils.setField(service, "verifiedPaymentFacts", reader);
+        payload.put("verified_fact_id", "1"); payload.put("verified_fact_hash", reference.hash());
+        payload.put("mchid", fact.mchid()); payload.put("appid", fact.appid());
+        payload.put("trade_type", fact.tradeType()); payload.put("currency", fact.currency());
 
         assertEquals("FAIL", service.handleWechatPayCallback(payload));
 

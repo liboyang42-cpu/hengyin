@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.WechatVerifiedPaymentFactMapper">
+    <insert id="insertIgnore" parameterType="map" useGeneratedKeys="true" keyProperty="id">
+        INSERT IGNORE INTO wx_verified_payment_fact
+          (fact_kind,mchid,appid,business_out_trade_no,wx_out_trade_no,merchant_event_no,provider_id,
+           transaction_id,trade_type,currency,total_fen,amount_fen,success_at,intent_request_hash,
+           fact_hash,verification_version,verification_outcome,verification_method,original_payment_state)
+        VALUES (#{fact_kind},#{mchid},#{appid},#{business_out_trade_no},#{wx_out_trade_no},#{merchant_event_no},#{provider_id},
+           #{transaction_id},#{trade_type},#{currency},#{total_fen},#{amount_fen},#{success_at},#{intent_request_hash},
+           #{fact_hash},1,'VERIFIED','SDK_QUERY_ORIGINAL_ORDER',#{original_payment_state})
+    </insert>
+    <select id="selectMatching" resultType="map">
+        SELECT * FROM wx_verified_payment_fact WHERE fact_kind=#{kind} AND mchid=#{mchid}
+          AND (provider_id=#{providerId} OR merchant_event_no=#{eventNo}) ORDER BY id
+    </select>
+    <select id="selectSuccessesByBusiness" resultType="map" useCache="false">
+        SELECT * FROM wx_verified_payment_fact WHERE business_out_trade_no=#{businessNo} ORDER BY id
+    </select>
+    <!-- Writer has read the frozen intent before INSERT IGNORE. A conflicting unique winner may be
+         newer than that RR snapshot; use a current shared read without upgrading duplicate insert locks. -->
+    <select id="selectMatchingCurrent" resultType="map" useCache="false" flushCache="true">
+        SELECT * FROM wx_verified_payment_fact WHERE fact_kind=#{kind} AND mchid=#{mchid}
+          AND (provider_id=#{providerId} OR merchant_event_no=#{eventNo}) ORDER BY id FOR SHARE
+    </select>
+    <select id="selectById" resultType="map">SELECT * FROM wx_verified_payment_fact WHERE id=#{id}</select>
+    <insert id="insertRejection" parameterType="map">
+        INSERT IGNORE INTO wx_verified_payment_fact_rejection
+          (rejection_key,rejection_reason,original_fact_id,candidate_fact_hash,notify_hash,candidate_facts)
+        VALUES (#{rejection_key},#{rejection_reason},#{original_fact_id},#{candidate_fact_hash},#{notify_hash},#{candidate_facts})
+    </insert>
+    <!-- Existing manual-required outbox only: never dispatch a second payment or change financial state. -->
+    <insert id="insertRecovery" parameterType="map">
+        INSERT IGNORE INTO wx_payment_callback_outbox
+            (biz_type,biz_id,idempotency_key,money_affecting,state,fence_token,attempt_count,max_attempts,last_error_code,create_time,update_time)
+        VALUES (1,#{biz_id},#{idempotency_key},0,4,0,0,3,#{reason},NOW(3),NOW(3))
+    </insert>
+    <select id="selectRecovery" resultType="map" useCache="false" flushCache="true">
+        SELECT id,biz_type,biz_id,idempotency_key,money_affecting,state,last_error_code
+        FROM wx_payment_callback_outbox WHERE idempotency_key=#{key}
+    </select>
+    <update id="completeRecovery">
+        UPDATE wx_payment_callback_outbox SET state=2,last_error_code=NULL,update_time=NOW(3)
+        WHERE idempotency_key=#{key} AND biz_type=1 AND biz_id=#{businessId} AND money_affecting=0 AND state=4
+    </update>
+    <select id="selectRecoveryCurrent" resultType="map" useCache="false" flushCache="true">
+        SELECT id,biz_type,biz_id,idempotency_key,money_affecting,state,last_error_code
+        FROM wx_payment_callback_outbox WHERE idempotency_key=#{key} FOR UPDATE
+    </select>
+    <insert id="insertInboxLink" parameterType="map">
+        INSERT IGNORE INTO wx_payment_callback_fact_link (inbox_id,notify_hash,fact_id,fact_hash)
+        VALUES (#{inbox_id},#{notify_hash},#{fact_id},#{fact_hash})
+    </insert>
+    <select id="selectInboxLink" resultType="map" useCache="false" flushCache="true">
+        SELECT inbox_id,notify_hash,fact_id,fact_hash FROM wx_payment_callback_fact_link WHERE notify_hash IN (LOWER(#{notifyHash}),UPPER(#{notifyHash})) FOR SHARE
+    </select>
+</mapper>

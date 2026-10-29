@@ -144,6 +144,55 @@ class TemplatePublishQuestionMediaTest
     }
 
     @Test
+    void interactionAndCompletePresentationReachCanonicalMarketAndTheirAuditContent() throws Exception
+    {
+        CmsTemplatePublishRequest request = request();
+        request.setInteractionType("city_story_card"); request.setMerchantGuide("店员说明");
+        request.setFeedbackText("完成反馈"); request.setMedalImg("media-asset:1");
+        request.setMedalName("城市印记"); request.setMedalStyle("enamel");
+        request.setRewardRulesJson("[{\"outcomeCode\":\"COMPLETED\",\"xp\":2,\"feedbackText\":\"条件反馈\"}]");
+        request.setStoryText("剧情"); request.setStoryImg("media-asset:1");
+        request.setStoryJson("[{\"text\":\"故事节点\",\"tag\":\"提示\"}]");
+        request.setHint1("一级提示"); request.setHint2("二级提示"); request.setAnswerReveal("解析");
+        request.setPhotoRequireDesc("拍到标识"); request.setPhotoReview(1);
+        request.setAudioUrl("media-asset:2"); request.setAudioDuration(12);
+        publishAndSubmitMarket(request);
+        for (String field : new String[]{"interactionType", "merchantGuide", "feedbackText", "rewardRulesJson",
+                "storyText", "storyImg", "storyJson", "hint1", "hint2", "answerReveal",
+                "photoRequireDesc", "photoReview", "audioUrl", "audioDuration"}) {
+            Object expected = new org.springframework.beans.BeanWrapperImpl(request).getPropertyValue(field);
+            assertEquals(expected, new org.springframework.beans.BeanWrapperImpl(memberRow.get()).getPropertyValue(field), field);
+            assertEquals(expected, new org.springframework.beans.BeanWrapperImpl(libraryRow.get()).getPropertyValue(field), field);
+        }
+        assertEquals("城市印记", memberRow.get().getMedalName());
+        assertEquals("media-asset:1", memberRow.get().getMedalImg());
+        assertEquals("enamel", memberRow.get().getMedalStyle());
+        com.fasterxml.jackson.databind.ObjectMapper json = new com.fasterxml.jackson.databind.ObjectMapper();
+        assertEquals("city_story_card", json.readTree(com.chengyinhub.business.service.support.TemplateAuditSnapshot
+                .personal(memberRow.get())).path("interactionType").asText());
+        String market = com.chengyinhub.business.service.support.TemplateAuditSnapshot.market(libraryRow.get());
+        assertEquals("city_story_card", json.readTree(market).path("interactionType").asText());
+        libraryRow.get().setInteractionType("hidden_menu");
+        assertEquals(false, com.chengyinhub.business.service.support.TemplateAuditSnapshot.matches(market,
+                com.chengyinhub.business.service.support.TemplateAuditSnapshot.market(libraryRow.get())));
+    }
+
+    @Test
+    void interactionIsRequestContentButReadOnlyInPublicMarketProjection() throws Exception
+    {
+        com.fasterxml.jackson.databind.ObjectMapper json = new com.fasterxml.jackson.databind.ObjectMapper();
+        CmsTemplatePublishRequest left = request(); CmsTemplatePublishRequest right = request();
+        left.setInteractionType("hidden_menu"); right.setInteractionType("city_story_card");
+        assertEquals(false, left.equals(right));
+        assertEquals(false, left.hashCode() == right.hashCode());
+        assertEquals("hidden_menu", json.readValue("{\"interactionType\":\"hidden_menu\"}",
+                CmsTemplatePublishRequest.class).getInteractionType());
+        assertNull(json.readValue("{\"interactionType\":\"client-invented\"}", CmsTemplateLibrary.class).getInteractionType());
+        CmsTemplateLibrary source = new CmsTemplateLibrary(); source.setInteractionType("hidden_menu");
+        assertEquals("hidden_menu", json.readTree(json.writeValueAsString(source)).path("interactionType").asText());
+    }
+
+    @Test
     void malformedAdvancedGameConfigurationIsRejectedBeforeAnyRowIsWritten()
     {
         CmsTemplatePublishRequest request = request();

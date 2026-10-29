@@ -1,0 +1,422 @@
+{
+  "status": "ROOT_CONTROLLED_VALIDATION_PLAN_NOT_EXECUTION",
+  "base": "9a2dcf21aef4d7aec7a14065a2601bd86aaad805",
+  "root_original_related_unit_set": "Root指定原94相关unit固定集合全部保留；不以本源盘点取代或削减；新direct16另加，不从原94挪走用例",
+  "source_reference_selectors": [
+    {
+      "class_name": "com.chengyinhub.business.it.ComplaintPickerOwnerType3RealDbIT",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/ComplaintPickerOwnerType3RealDbIT.java",
+      "storage_suite": true,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.business.it.PlayHintUnlockMySqlIT",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/PlayHintUnlockMySqlIT.java",
+      "storage_suite": true,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.business.it.PlayLeadAdmissionFailureMySqlIT",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/PlayLeadAdmissionFailureMySqlIT.java",
+      "storage_suite": true,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.business.service.ShopDayGameThenPhotoH2Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ShopDayGameThenPhotoH2Test.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.business.service.SpoilerIsNotAnswerGateTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/SpoilerIsNotAnswerGateTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.business.service.impl.ChapterFlowWriteServiceTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.business.service.impl.NodeHintUnlockApplicationTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/NodeHintUnlockApplicationTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.business.service.impl.PlayKitBingoRuntimeTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayKitBingoRuntimeTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.business.service.impl.PuzzlePlayServiceImplTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PuzzlePlayServiceImplTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.business.service.impl.PuzzleRevealArrivalFactTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PuzzleRevealArrivalFactTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.business.util.AdvancedGamePublicProjectionTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/util/AdvancedGamePublicProjectionTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.business.util.ChapterAtmospherePresetTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/util/ChapterAtmospherePresetTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.common.utils.GeoDistanceUtilsTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/common/utils/GeoDistanceUtilsTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.framework.aspectj.DeadlockRetryEntryPointContractTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/framework/aspectj/DeadlockRetryEntryPointContractTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.web.controller.api.ApiPlayBranchNodeVisibilityTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayBranchNodeVisibilityTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.web.controller.api.ApiPlayCheckinDuplicateCodeTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayCheckinDuplicateCodeTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.web.controller.api.ApiPlayCheckinLiveCodeTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayCheckinLiveCodeTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.web.controller.api.ApiPlayCompletedRouteSourcesTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayCompletedRouteSourcesTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.web.controller.api.ApiPlayCurrentUseBoundaryTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayCurrentUseBoundaryTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.web.controller.api.ApiPlayDelistedCompletedRetryContractTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayDelistedCompletedRetryContractTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.web.controller.api.ApiPlayEndingCompanionFactTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayEndingCompanionFactTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.web.controller.api.ApiPlayGpsGeofenceValidationTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayGpsGeofenceValidationTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.web.controller.api.ApiPlayHintUnlockTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayHintUnlockTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.web.controller.api.ApiPlayHistoryFulfillmentAccessTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayHistoryFulfillmentAccessTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.web.controller.api.ApiPlayHistoryNodesContractTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayHistoryNodesContractTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.web.controller.api.ApiPlayHistoryNodesOldEntryContractTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayHistoryNodesOldEntryContractTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.web.controller.api.ApiPlayLeadSpectatorGateTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayLeadSpectatorGateTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.web.controller.api.ApiPlayLeaderboardTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayLeaderboardTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.web.controller.api.ApiPlayMyCompletedSelfPlayContractTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayMyCompletedSelfPlayContractTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.web.controller.api.ApiPlayNodeNpcPreferenceTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayNodeNpcPreferenceTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.web.controller.api.ApiPlayPhotoRetryAndFailureContractTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayPhotoRetryAndFailureContractTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.web.controller.api.ApiPlayProgressCompletionTruthTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressCompletionTruthTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.web.controller.api.ApiPlayProgressCouponGrantFailureTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressCouponGrantFailureTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.web.controller.api.ApiPlayProgressIdempotencyTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressIdempotencyTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.web.controller.api.ApiPlayPuzzleHintTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayPuzzleHintTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.web.controller.api.ApiPlayRouteConflictHttpContractTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayRouteConflictHttpContractTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.web.controller.api.ApiPlayRouteContractTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayRouteContractTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.web.controller.api.ApiPlaySelfPlayPassGateTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySelfPlayPassGateTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.web.controller.api.ApiPlaySensorResultTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySensorResultTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.web.controller.api.ApiPlayUnlockGateTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayUnlockGateTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.web.controller.api.ApiPlayVitalsOnTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayVitalsOnTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.web.controller.api.ArchitectureDayGCompletionFallbackTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ArchitectureDayGCompletionFallbackTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.web.controller.api.CityStationOrderAcceptanceTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/CityStationOrderAcceptanceTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.web.controller.api.ClubLeadGateTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ClubLeadGateTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.web.controller.api.ClubTopicNodeAnswerAccessTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ClubTopicNodeAnswerAccessTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.web.controller.api.CollectIdempotencyTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/CollectIdempotencyTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.web.controller.api.FreeOrderCancelEntryGateAcceptanceTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/FreeOrderCancelEntryGateAcceptanceTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.web.controller.api.GameplayControllerProtectionTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/GameplayControllerProtectionTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.web.controller.api.JourneyPublishFreezeTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/JourneyPublishFreezeTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.web.controller.api.LogAttemptFailureTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/LogAttemptFailureTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.web.controller.api.NodeMedalClaimTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/NodeMedalClaimTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.web.controller.api.O08PrivateLocationReadPathTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/O08PrivateLocationReadPathTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.web.controller.api.PhotoOwnerBindingContractTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PhotoOwnerBindingContractTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.web.controller.api.PhotoReviewRewardContractTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PhotoReviewRewardContractTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.web.controller.api.PlayCommandIntentTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PlayCommandIntentTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.web.controller.api.PlayLeadAdmissionFailureTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PlayLeadAdmissionFailureTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.web.controller.api.PlayProgressVarsTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PlayProgressVarsTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.web.controller.api.PlayResolveModeTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PlayResolveModeTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.web.controller.api.PlaySelfPlayCompletionTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PlaySelfPlayCompletionTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.web.controller.api.ShopDayExperienceLayerContractTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ShopDayExperienceLayerContractTest.java",
+      "storage_suite": false,
+      "source_only": true
+    },
+    {
+      "class_name": "com.chengyinhub.web.controller.api.TopicRouteFrozenSessionReadSideTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/TopicRouteFrozenSessionReadSideTest.java",
+      "storage_suite": false,
+      "source_only": true
+    }
+  ],
+  "direct_application": {
+    "class_name": "com.chengyinhub.business.service.impl.NodeHintUnlockApplicationTest",
+    "source_tests": 16,
+    "executed": false,
+    "limit": "real Spring transaction boundary; mock leaves, no DB undo/isolation proof"
+  },
+  "required_storage": [
+    {
+      "class_name": "com.chengyinhub.business.it.PlayHintUnlockMySqlIT",
+      "expected_tests": 10,
+      "root_owned": true,
+      "patch": "PlayHintUnlockMySqlIT.review.patch",
+      "assertions": "two ordinary wrappers, case bodies, economic/rollback/concurrency/cleanup unchanged"
+    },
+    {
+      "class_name": "com.chengyinhub.business.it.PlayLeadAdmissionFailureMySqlIT",
+      "expected_tests": 4,
+      "root_owned": false,
+      "assertions": "hint application writable TX, basic claim rollback, preference no outer TX/zero real route entry + recovered session"
+    }
+  ],
+  "gates": [
+    "same-source backend compilation + original94 related unit set + direct16 + all affected regressions",
+    "real MySQL hint10+B1 IT4, zero fail/error/skip, exact XML cases/source/receipt hashes, both CLEAN",
+    "full Spring startup + DI/module SCC; no new @Lazy",
+    "HTTP auth/RateLimiter/response adapter regression; no VM HTTP here",
+    "root-owned action ledger/architecture source owner readback; no baseline expansion"
+  ],
+  "equivalence": {
+    "old_oracle": "B1 fixed source9a2 (scope63 blobs also equal6ec)",
+    "new": "final M1-B commit + root hint review patch as separately recorded integration delta",
+    "separate_scratch_schemas": true,
+    "vectors": [
+      "code/msg/hint1/hint2/cost including null and original punctuation",
+      "member balance/event14 ledger identity+amount+count",
+      "registration/progress/reward/receipt vector",
+      "actual SQL/lock order/transaction propagation/query count",
+      "rollback after insert/after debit/concurrent original identity"
+    ],
+    "normalization": "only explicitly registered generated IDs/timestamps; never money/state/error/query count"
+  },
+  "not_run": [
+    "Java",
+    "JUnit",
+    "MySQL",
+    "HTTP",
+    "CI dispatch"
+  ],
+  "no_production_schema_changes": true
+}

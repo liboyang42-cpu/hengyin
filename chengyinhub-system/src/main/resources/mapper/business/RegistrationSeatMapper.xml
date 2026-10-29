@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.RegistrationSeatMapper">
+    <resultMap id="seat" type="com.chengyinhub.business.domain.RegistrationSeat">
+        <id property="id" column="id"/>
+        <result property="registrationId" column="registration_id"/>
+        <result property="seatNo" column="seat_no"/>
+        <result property="status" column="status"/>
+        <result property="topicId" column="topic_id"/>
+        <result property="activityId" column="activity_id"/>
+        <result property="verifierMemberId" column="verifier_member_id"/>
+        <result property="verifiedAt" column="verified_at"/>
+    </resultMap>
+    <select id="lockRegistration" useCache="false" flushCache="true" resultType="long">
+        select id from cms_registration where id = #{id} for update
+    </select>
+    <select id="lockClubOwner" useCache="false" flushCache="true" resultType="long">
+        select member_id from club where id = #{id} and status = 1 and del_flag = 0 for update
+    </select>
+    <select id="selectByRegistrationForUpdate" useCache="false" flushCache="true" resultMap="seat">
+        select * from cms_registration_seat where registration_id = #{registrationId} order by seat_no for update
+    </select>
+    <insert id="insertSeat" useGeneratedKeys="true" keyProperty="id">
+        insert into cms_registration_seat (registration_id, seat_no, status)
+        values (#{registrationId}, #{seatNo}, 0)
+    </insert>
+    <update id="markVerified">
+        update cms_registration_seat set status = 1, topic_id = #{topicId}, activity_id = #{activityId},
+            verifier_member_id = #{verifierMemberId}, verified_at = #{verifiedAt}
+        where id = #{id} and registration_id = #{registrationId} and seat_no = #{seatNo} and status = 0
+    </update>
+    <select id="selectGroupForUpdate" useCache="false" flushCache="true"
+            resultType="com.chengyinhub.business.domain.CoopGroupMemberVerify">
+        select id, topic_id as topicId, activity_id as activityId, registration_id as registrationId,
+               verifier_member_id as verifierMemberId, verify_time as verifyTime
+        from coop_group_member_verify where registration_id = #{registrationId} for update
+    </select>
+    <select id="selectUnprovenMultiGroupOrdersForUpdate" useCache="false" flushCache="true" resultType="long">
+        select r.id from cms_registration r
+        left join cms_activity a on r.owner_type = 2 and a.id = r.owner_id
+        left join coop_group_member_verify gm on gm.registration_id = r.id
+        left join cms_registration_seat s on s.registration_id = r.id
+            and s.topic_id = #{topicId} and s.activity_id = #{activityId} and s.status = 1
+        where r.order_num &gt; 1 and s.id is null
+          and ((r.owner_type = 1 and r.owner_id = #{topicId} and gm.topic_id = #{topicId}
+                and gm.activity_id = #{activityId} and gm.verify_time &lt; #{cutoff})
+            or (r.owner_type = 2 and r.owner_id = #{activityId} and a.topic_id = #{topicId}
+                and r.verification_status = 1 and r.verification_time &lt; #{cutoff}))
+        order by r.id for update
+    </select>
+    <!-- Facts only, not fee eligibility. Refunded rows remain historical facts; G applies its original
+         frozen financial eligibility/reversal rules. No order_num expansion or date normalization. -->
+    <select id="selectVerifiedForGroupForUpdate" useCache="false" flushCache="true" resultMap="seat">
+        select s.* from cms_registration_seat s
+        join cms_registration r on r.id = s.registration_id
+        left join cms_activity a on r.owner_type = 2 and a.id = r.owner_id
+        left join coop_group_member_verify gm on gm.registration_id = s.registration_id
+            and gm.topic_id = s.topic_id and gm.activity_id = s.activity_id
+        where s.topic_id = #{topicId} and s.activity_id = #{activityId} and s.status = 1
+          and s.verified_at &lt; #{cutoff}
+          and ((r.owner_type = 1 and r.owner_id = s.topic_id and gm.id is not null)
+            or (r.owner_type = 2 and r.owner_id = s.activity_id and a.topic_id = s.topic_id))
+        order by s.registration_id, s.seat_no for update
+    </select>
+</mapper>

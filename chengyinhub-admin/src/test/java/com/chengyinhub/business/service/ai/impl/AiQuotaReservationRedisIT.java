@@ -130,11 +130,13 @@ class AiQuotaReservationRedisIT {
         assertEquals(Long.valueOf(-1L),reserve(service,Arrays.<Object>asList(counter,counter+":generation",receipt),0));
         assertFalse(Boolean.TRUE.equals(raw.hasKey(counter)));
     }
-    @Test void photoUnknownReplyPreservesUnmeteredFallbackAfterActualCompensation() {
+    @Test void photoUnknownReservationReplyStopsBeforeModelAfterActualCompensation() {
         AiGatewayServiceImpl service=gateway(recording(false,true,true));
         PhotoCheckVisionService photo=new PhotoCheckVisionService();
         ReflectionTestUtils.setField(photo,"aiGatewayService",service);
-        assertEquals("",ReflectionTestUtils.invokeMethod(photo,"chargeQuota",member));
+        IllegalStateException failure=assertThrows(IllegalStateException.class,
+                ()->ReflectionTestUtils.invokeMethod(photo,"chargeQuota",member,(String)null));
+        assertEquals("AI quota reservation unavailable",failure.getMessage());
         String counter=owned.stream().filter(k->k.startsWith("ai:gen:limit:photo:")&&!k.endsWith(":generation")).findFirst().get();
         assertEquals("0",raw.opsForValue().get(counter));
     }

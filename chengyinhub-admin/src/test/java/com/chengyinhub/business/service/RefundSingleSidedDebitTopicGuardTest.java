@@ -70,6 +70,23 @@ class RefundSingleSidedDebitTopicGuardTest {
         umsMemberBalanceDetailMapper = mock(UmsMemberBalanceDetailMapper.class);
 
         svc = new RefundServiceImpl();
+        // Explicit legacy fixture: no new frozen components; preserve the original financial owner/amount assertions.
+        var originalOwner = mock(com.chengyinhub.business.service.ICoopSettlementClaimService.class);
+        when(originalOwner.hasFrozenOriginalRefundComponents(org.mockito.ArgumentMatchers.anyLong())).thenReturn(false);
+        ReflectionTestUtils.setField(svc, "coopSettlementClaimService", originalOwner);
+        when(refundApplicationMapper.selectRegistrationHistoryForUpdate(org.mockito.ArgumentMatchers.anyLong()))
+                .thenAnswer(call -> {
+                    RefundApplication row = refundApplicationMapper.selectRefundApplicationById(2L);
+                    if (row == null || !java.util.Objects.equals(row.getSourceId(), call.getArgument(0)))
+                        return java.util.List.of();
+                    // Old mock rows omitted the real table's default pending status.
+                    if (row.getStatus() == null) row.setStatus(0);
+                    return java.util.List.of(row);
+                });
+        CmsTopic originalTopic = new CmsTopic(); originalTopic.setId(TOPIC_ID); originalTopic.setMemberId(PUBLISHER_ID);
+        when(cmsTopicMapper.selectCmsTopicById(TOPIC_ID)).thenReturn(originalTopic);
+        when(cmsTopicMapper.selectCmsTopicByIdForUpdate(org.mockito.ArgumentMatchers.anyLong()))
+                .thenAnswer(call -> cmsTopicMapper.selectCmsTopicById(call.getArgument(0)));
 
         org.springframework.test.util.ReflectionTestUtils.setField(svc, "firstReviewPointsClawback",
 

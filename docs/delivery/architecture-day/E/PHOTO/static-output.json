@@ -1,0 +1,1 @@
+{"scope": "PASS", "sourceOnlyTree": "c1bc76bfc3f42b52896658d5db2fe6a15ad2d65f", "xmlStatements": 11, "plannedJavaCases": {"PhotoCheckIntentServiceTest": 16, "PhotoCheckIntentMySqlIT": 10}, "limitedSecretPatterns": "PASS", "javaExecuted": false, "mysqlExecuted": false}

@@ -1,0 +1,23 @@
+area	path_under_business	role	assembly_or_lock_contract
+production	service/impl/AdvancedGameRuntimeServiceImpl.java	actPhoto.executeOnce	prepare TX finished; no actual business TX for provider; original commitPhoto TX follows
+production	service/impl/AdvancedGameRuntimeServiceImpl.java	admitPhoto/commitPhoto.read4;prepare;markApplied	original session-then-intent locks and writable TX unchanged
+self	service/ai/PhotoCheckIntentService.java	executeOnce;read3;owned	three execute-owned reads now existing REQUIRES_NEW; public read unchanged
+test	service/ai/PhotoCheckIntentServiceTest.java	state units and resource lifecycle	original16 retained; 3 new wiring controls plus 4 actual Spring/Mapper/XML binding controls with bounded JDBC/row doubles
+test	it/CombinedContextConfigurationTest.java	original configuration9	C original whole file unchanged; no duplicated lifecycle controls
+test	service/ai/PhotoCheckIntentMySqlIT.java	actual service constructor/context	original real manager/source/mapper and transaction proxy unchanged
+test	service/ai/PhotoCheckIntentFreshReadMySqlIT.java	actual fixture reuse	original3 exact plus1 actual MySQL/proxy owned-resource test; existing schema/cleanup unchanged
+test	service/ai/PhotoCheckIntentRecoveryMySqlIT.java	actual fixture reuse	original current key recovery/read transaction unchanged
+test	service/ai/PhotoCheckIntentLockReadMySqlIT.java	actual mapper	original locking SQL/cache guards unchanged
+test	service/ai/PhotoCheckIntentRecoveryReadTest.java	public read-only units	mock manager is not invoked by unchanged read4; original no-interaction assertions unchanged
+test	service/ai/AiNotSentQuotaRecoveryMySqlRedisIT.java	actual Spring service bean	original real transaction-manager/context wiring unchanged
+test	it/AdvancedPhotoMySqlFixture.java	actual service constructor	original DataSourceTransactionManager and production Mapper; constructor unchanged
+test	it/CrossDomainStorageFixture.java	actual service constructor/proxy	original same-source transactions and annotation interceptor; C prepare diagnostics unchanged
+test	it/CrossDomainFaultIsolationMySqlIT.java	actual CrossDomain fixture consumer	original fixed schema/intent/provider/cleanup contract unchanged
+test	it/CrossDomainCombinedLoadMySqlIT.java	actual CrossDomain fixture consumer	original baseline; four physical held calls; exact replays; no source change
+test	it/ThemeRuntimeMySqlIT.java	original runtime/AdvancedPhoto fixture	original methods/parameters unchanged
+test	service/impl/AdvancedActionTestFixtures.java	persisted result double	does not instantiate production Photo service or prove its resources
+test	service/impl/AdvancedCommandFingerprintTest.java	original action fixture	original caller assertions unchanged
+test	service/impl/AdvancedPhotoOrchestrationTest.java	original orchestration units	original prepare/execute/final-transaction boundaries unchanged
+test	service/impl/PlayKitPhotoCheckRuntimeTest.java	original runtime units	original state/result fixture unchanged
+test	service/impl/ObjectCardMintHookTest.java	original proxy/fixture consumer	original actual transaction-refusal and reward semantics unchanged
+test	service/impl/RestoreDispatchConsumersTest.java	guard units/constructor	original restore refusal precedes any execute-owned read; constructor unchanged

@@ -1,0 +1,221 @@
+{
+  "source": "6fcdf747e17cb5094121f609ae33f7734fda2ae7",
+  "state": "ACTUAL_FAILURES_SOURCE_PURPOSE_PACKAGES_ASSIGNED_NOT_RETESTED",
+  "backend": {
+    "run": 40231848588,
+    "selected_CI": "SUCCESS",
+    "admin_tests": 15772,
+    "passed": 15139,
+    "skipped": 633,
+    "failures": 0,
+    "errors": 0,
+    "original40_failed_identity_now_passed": true
+  },
+  "storage": {
+    "run": 40232916855,
+    "verdict": "FAIL",
+    "accepted_classes": 2,
+    "accepted_cases": 13,
+    "failed_class": "CrossDomainFaultIsolationMySqlIT",
+    "failed_case": "sameWindowRetainsOriginalEconomicIdentitiesAndRequiresUnpoisonedNotificationProgress",
+    "actual_main_failure": "held providers/notification may not keep a parent domain SQL transaction open: expected0 got1",
+    "line": 110,
+    "suppressed": "owned transport cleanup failed; OutOfMemoryError Java heap space, Fastjson JSONReader/TransportStage handler61",
+    "independent_DB_Redis_CLEAN": true,
+    "not_transport_cleanup_acceptance": true
+  },
+  "payment_gap_diagnostic": {
+    "run": 40232934720,
+    "artifact": 12614105173,
+    "ZIP_sha256": "e24fa808b69dd28f253ccdccc5018d18fe87ce82e438e3fe574aa8e11c385601",
+    "host": {
+      "acceptance": "NOT_FULL_T20_OR_PRODUCTION_ACCEPTANCE",
+      "cleanupFailures": [],
+      "cohort": "payment-gap",
+      "exitCode": 1,
+      "firstFailure": {
+        "errorType": "OwnerGuardFailure",
+        "failureType": "HOST_EXCEPTION_UNKNOWN",
+        "guardCode": "BINDING_MISSING",
+        "operation": "OWNER",
+        "reasonCode": "UNKNOWN",
+        "returnCode": null,
+        "safeReasonExcerpt": "No reviewed safe reason matched; do not infer the Docker rejection cause",
+        "stage": "source-create",
+        "stderrBytes": null,
+        "stderrCaptured": false,
+        "stderrSha256": null,
+        "substage": "loopback-binding"
+      },
+      "lastStage": "source-create",
+      "originalExit": 1,
+      "probeFinalized": false,
+      "resourceCleanup": "EXACT_ABSENCE",
+      "runAttempt": "1",
+      "runId": "40232934720",
+      "scope": "4615cd7cd10b46c2a6ac732eddd533a6",
+      "sourceSha": "6fcdf747e17cb5094121f609ae33f7734fda2ae7"
+    },
+    "owner": "B",
+    "purpose": "strict loopback binding/source readiness entire caller closure; no internal/loopback weakening"
+  },
+  "restore_application": {
+    "run": 40232928297,
+    "artifact": 12613549604,
+    "ZIP_sha256": "17d7c79fca06332536a727f3fb74a01931cb6b2e41aa85951e2b4ef391954914",
+    "firstFailureDiagnostic": {
+      "phase": "SOURCE_WORKLOAD",
+      "reasonCode": "APP_STOP_EXIT_NOT_CONFIRMED",
+      "substage": "SOURCE_QUIESCENT_STOP",
+      "type": "ValueError"
+    },
+    "readyBootObservations": [
+      {
+        "appCid": "ad4b9adda61b79b4109d4ac8130c97d57958e438690b9f587ba19f1b15a9c71f",
+        "bootId": "65f297b3-98d6-4231-81ea-39b59f40581a",
+        "guardHeld": false,
+        "jarSha256": "c793fd6b45fea0d42dea80bd2d677acfb905d3b5d8f97eee52b79aad14704a99",
+        "javaPid": 9,
+        "restoreMode": "false",
+        "schedulerStarted": true,
+        "schema": "cy_e2e_auth_ede52c5453da4a32be1318082513196a",
+        "serverUuid": "70f9df31-d0b6-11f1-993d-4ead1f60e0ca",
+        "side": "source",
+        "sourceSha": "6fcdf747e17cb5094121f609ae33f7734fda2ae7"
+      }
+    ],
+    "stoppedApp": {
+      "cid": "ad4b9adda61b79b4109d4ac8130c97d57958e438690b9f587ba19f1b15a9c71f",
+      "exitCode": 137,
+      "hostPid": 0,
+      "oomKilled": false,
+      "restarting": false,
+      "running": false
+    },
+    "lastHttpObservation": {
+      "businessCode": 200,
+      "method": "GET",
+      "result": "JSON_OBJECT_RECEIVED",
+      "route": "/api/club/lead/unlock-chapter-receipt",
+      "status": 200
+    },
+    "applicationStop": "UNKNOWN",
+    "completeBoots": [],
+    "result": "NOT_COMPLETED",
+    "cleanup": {
+      "absence": [
+        {
+          "absent": true,
+          "id": "cy-auth-ede52c5453da4a32be1318082513196a-app",
+          "kind": "container"
+        },
+        {
+          "absent": true,
+          "id": "cy-auth-ede52c5453da4a32be1318082513196a-restore-mysql",
+          "kind": "container"
+        },
+        {
+          "absent": true,
+          "id": "cy-auth-ede52c5453da4a32be1318082513196a-mysql",
+          "kind": "container"
+        },
+        {
+          "absent": true,
+          "id": "cy-auth-ede52c5453da4a32be1318082513196a-redis",
+          "kind": "container"
+        },
+        {
+          "absent": true,
+          "id": "cy-auth-ede52c5453da4a32be1318082513196a",
+          "kind": "network"
+        },
+        {
+          "absent": true,
+          "id": "ad4b9adda61b79b4109d4ac8130c97d57958e438690b9f587ba19f1b15a9c71f",
+          "kind": "container"
+        },
+        {
+          "absent": true,
+          "id": "40059b046ceb7db6b48787bc4deaeb6b3942051e782dbd9c9586297d4ed9c070",
+          "kind": "container"
+        },
+        {
+          "absent": true,
+          "id": "1b320f7156be3af5057d5549a243712b88452e893b744caf4952d273183372d7",
+          "kind": "container"
+        },
+        {
+          "absent": true,
+          "id": "c550a9b2706fb4e2a6c529ac2a33666ead3d4450a013278d5dec6edb99fe17d7",
+          "kind": "container"
+        }
+      ],
+      "applicationLogStatus": "PRESERVED",
+      "applicationStartAttempted": true,
+      "confirmedPreStartFailure": false,
+      "finalizationFailures": [],
+      "firstFailurePhase": "SOURCE_WORKLOAD",
+      "firstFailureType": "ValueError",
+      "originalExit": 1,
+      "originalOwnerCleanup": {
+        "cleanup": "CONFIRMED_EXACT_OWNED_REMOVAL",
+        "ownedRemoved": [
+          {
+            "id": "ad4b9adda61b79b4109d4ac8130c97d57958e438690b9f587ba19f1b15a9c71f",
+            "independentNoSuch": true,
+            "name": "cy-auth-ede52c5453da4a32be1318082513196a-app"
+          },
+          {
+            "id": "40059b046ceb7db6b48787bc4deaeb6b3942051e782dbd9c9586297d4ed9c070",
+            "independentNoSuch": true,
+            "name": "cy-auth-ede52c5453da4a32be1318082513196a-restore-mysql"
+          },
+          {
+            "id": "1b320f7156be3af5057d5549a243712b88452e893b744caf4952d273183372d7",
+            "independentNoSuch": true,
+            "name": "cy-auth-ede52c5453da4a32be1318082513196a-mysql"
+          },
+          {
+            "id": "c550a9b2706fb4e2a6c529ac2a33666ead3d4450a013278d5dec6edb99fe17d7",
+            "independentNoSuch": true,
+            "name": "cy-auth-ede52c5453da4a32be1318082513196a-redis"
+          }
+        ]
+      },
+      "productionDispatchRelease": false,
+      "resourceCleanup": "CONFIRMED_EXACT_OWNED_REMOVAL",
+      "result": "NOT_ACCEPTED",
+      "runAttempt": "1",
+      "runId": "40232928297",
+      "schema": "cy_e2e_auth_ede52c5453da4a32be1318082513196a",
+      "sourceSha": "6fcdf747e17cb5094121f609ae33f7734fda2ae7"
+    },
+    "provenance": {
+      "canonicalToolSha256": "fead7bfce99af5aadeb15b696190fade40109f37d25233aa401116d10ea1279c",
+      "classPostimages": {
+        "RestoreHttpApplicationChild$FixtureEndpoints.class": "9a9bda9d4614ff0dfc2745a3602ca0eefac91416e74c52cde24efc682f0dd35f",
+        "RestoreHttpApplicationChild$MapperObservations.class": "ab4a5429fc05603f34cdd21534468f1dcddfa8327e8a3bf9533fcd6374549197",
+        "RestoreHttpApplicationChild$Observations.class": "4d26d9a1158ad9364eb3ac723353584599483a67ad9e4edb01ec0cc680ae2bcc",
+        "RestoreHttpApplicationChild.class": "422618d6cf210f4a22eeedbf223fd78667b31d582a4967c9aa861c1d2ad583f7"
+      },
+      "fullHttpBoundary": "TEST_CLASSPATH_CHILD_PLUS_UNCHANGED_PRODUCTION_JAR",
+      "jarSha256": "c793fd6b45fea0d42dea80bd2d677acfb905d3b5d8f97eee52b79aad14704a99",
+      "providerBoundary": "CONTROLLED_WITHDRAWAL_WIRE_AND_HISTORICAL_PAYMENT_FACT_NOT_WECHAT_SDK_OR_SIGNATURE_ACCEPTANCE",
+      "runAttempt": "1",
+      "runId": "40232928297",
+      "sourceMysqlCid": "1b320f7156be3af5057d5549a243712b88452e893b744caf4952d273183372d7",
+      "sourceSha": "6fcdf747e17cb5094121f609ae33f7734fda2ae7",
+      "targetMysqlCid": "40059b046ceb7db6b48787bc4deaeb6b3942051e782dbd9c9586297d4ed9c070"
+    },
+    "owner": "E",
+    "purpose": "exact original Java/app graceful quiescent stop, original full5boot restore contract unchanged; never accept137"
+  },
+  "new_SOURCE_owners": {
+    "B": "host missing loopback-binding",
+    "C": "CrossDomain actual transaction/connection predicate and necessary actual TXowner",
+    "F": "CrossDomainTransportStage bounded RPC/decoder and cleanup OOM",
+    "E": "restore ApplicationSlot stop/entrypoint/actual Java quiescence"
+  },
+  "new_SOURCE_verification": "NOT_RUN_UNTIL_COMPLETE_PACKAGES_ROOT_ASSEMBLED",
+  "all_complete": false
+}

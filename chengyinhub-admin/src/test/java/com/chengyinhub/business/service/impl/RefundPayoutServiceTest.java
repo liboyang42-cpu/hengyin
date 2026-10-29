@@ -2,6 +2,13 @@ package com.chengyinhub.business.service.impl;
 
 import com.chengyinhub.business.domain.CmsRegistration;
 import com.chengyinhub.business.domain.RefundApplication;
+import com.chengyinhub.business.domain.dto.RegistrationPaymentFactReceipt;
+import com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference;
+import com.chengyinhub.business.mapper.CmsRegistrationPaymentFactMapper;
+import com.chengyinhub.business.service.support.RegistrationPaymentConsumptionReadService;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+import java.util.List;
+import java.util.Map;
 import com.chengyinhub.business.mapper.CmsRegistrationMapper;
 import com.chengyinhub.business.mapper.RefundApplicationMapper;
 import com.chengyinhub.business.service.IRefundService;
@@ -39,6 +46,8 @@ class RefundPayoutServiceTest {
     private IRefundService refundService;
     private IWechatPayService wechatPayService;
     private RefundPayoutServiceImpl svc;
+    private CmsRegistrationPaymentFactMapper consumptionMapper;
+    private final Reference originalPayment = new Reference(41L, "a".repeat(64));
 
     @BeforeEach
     void setUp() {
@@ -52,6 +61,13 @@ class RefundPayoutServiceTest {
         ReflectionTestUtils.setField(svc, "cmsRegistrationMapper", cmsRegistrationMapper);
         ReflectionTestUtils.setField(svc, "refundService", refundService);
         ReflectionTestUtils.setField(svc, "wechatPayService", wechatPayService);
+        consumptionMapper = mock(CmsRegistrationPaymentFactMapper.class);
+        ReflectionTestUtils.setField(svc, "paymentConsumption", new RegistrationPaymentConsumptionReadService(consumptionMapper));
+        ReflectionTestUtils.setField(svc, "payoutTransactions", WechatVerifiedFactTestSupport.unitWriteTransactions());
+        when(consumptionMapper.selectByRegistrationForUpdate(10L)).thenAnswer(call -> {
+            assertTrue(TransactionSynchronizationManager.isActualTransactionActive(), "receipt read requires a real transaction boundary");
+            return new RegistrationPaymentFactReceipt(10L, "REG20260716001", originalPayment.id(), originalPayment.hash(), "TX10");
+        });
     }
 
     /**
@@ -73,12 +89,19 @@ class RefundPayoutServiceTest {
         refund.setReason("主办方取消");
         refund.setPayoutStatus(payoutStatus);
         when(refundApplicationMapper.selectRefundApplicationById(7L)).thenReturn(refund);
+        when(refundApplicationMapper.selectRegistrationHistoryForUpdate(10L)).thenReturn(List.of(refund));
         when(refundApplicationMapper.claimPayoutDispatch(eq(7L), anyLong(), anyString())).thenReturn(1);
         when(refundApplicationMapper.ensureRefundNo(7L, "RF10")).thenReturn(1);
+        when(refundApplicationMapper.updatePayoutResultWithLease(eq(7L), anyString(),
+                eq(RefundApplication.PAYOUT_DISPATCHING), anyString())).thenAnswer(call -> {
+            refund.setPayoutStatus(RefundApplication.PAYOUT_DISPATCHING);refund.setPayoutRemark(call.getArgument(3));
+            refund.setRefundNo("RF10");return 1;
+        });
 
         CmsRegistration reg = new CmsRegistration();
         reg.setId(10L);
         reg.setRegistrationNo("REG20260716001");
+        reg.setTransactionId("TX10");
         reg.setWechatPaymentAmount(paidCash == null ? null : new BigDecimal(paidCash));
         when(cmsRegistrationMapper.selectCmsRegistrationById(10L)).thenReturn(reg);
     }
@@ -87,13 +110,17 @@ class RefundPayoutServiceTest {
     @Test
     void approvedRefund_actuallyCallsWechatRefund_andMarksPayout() {
         given(1, "100.00", "100.00");
-        when(wechatPayService.submitRefund(anyString(), anyString(), any(), any(), any()))
-                .thenReturn(RefundRequestResult.ACCEPTED);
+        when(wechatPayService.submitRefund(eq(originalPayment), anyString(), anyString(), any(), any(), any()))
+                .thenAnswer(call -> {
+                    org.junit.jupiter.api.Assertions.assertFalse(TransactionSynchronizationManager.isActualTransactionActive(),
+                            "all claim and receipt transactions must have completed before SDK");
+                    return RefundRequestResult.ACCEPTED;
+                });
 
         svc.payoutAfterReview(7L);
 
-        // out_trade_no=registrationNo,out_refund_no=RF+regId(回调按此反查,必须确定性)
-        verify(wechatPayService).submitRefund(eq("REG20260716001"), eq("RF10"),
+        // Same consumed original reference, business number and deterministic refund number.
+        verify(wechatPayService).submitRefund(eq(originalPayment), eq("REG20260716001"), eq("RF10"),
                 eq(new BigDecimal("100.00")), eq(new BigDecimal("100.00")), eq("主办方取消"));
         verify(refundService).markPayoutResult(eq(7L), anyString(), eq(true), any());
     }
@@ -102,12 +129,12 @@ class RefundPayoutServiceTest {
     @Test
     void dispatchPendingRefund_actuallyCallsWechatRefund() {
         given(1, "100.00", "100.00", RefundApplication.PAYOUT_DISPATCH_PENDING);
-        when(wechatPayService.submitRefund(anyString(), anyString(), any(), any(), any()))
+        when(wechatPayService.submitRefund(eq(originalPayment), anyString(), anyString(), any(), any(), any()))
                 .thenReturn(RefundRequestResult.ACCEPTED);
 
         svc.payoutAfterReview(7L);
 
-        verify(wechatPayService).submitRefund(eq("REG20260716001"), eq("RF10"),
+        verify(wechatPayService).submitRefund(eq(originalPayment), eq("REG20260716001"), eq("RF10"),
                 eq(new BigDecimal("100.00")), eq(new BigDecimal("100.00")), eq("主办方取消"));
         verify(refundService).markPayoutResult(eq(7L), anyString(), eq(true), any());
     }
@@ -122,10 +149,10 @@ class RefundPayoutServiceTest {
         RefundApplication refund = refundApplicationMapper.selectRefundApplicationById(7L);
         refund.setRefundNo("RF10-6");
         when(refundApplicationMapper.ensureRefundNo(7L, "RF10-6")).thenReturn(1);
-        when(wechatPayService.submitRefund(anyString(), anyString(), any(), any(), any()))
+        when(wechatPayService.submitRefund(eq(originalPayment), anyString(), anyString(), any(), any(), any()))
                 .thenReturn(RefundRequestResult.ACCEPTED);
         svc.payoutAfterReview(7L);
-        verify(wechatPayService).submitRefund(eq("REG20260716001"), eq("RF10-6"),
+        verify(wechatPayService).submitRefund(eq(originalPayment), eq("REG20260716001"), eq("RF10-6"),
                 eq(new BigDecimal("20.00")), eq(new BigDecimal("100.00")), any());
         verify(refundApplicationMapper, never()).ensureRefundNo(7L, "RF10");
     }
@@ -133,14 +160,14 @@ class RefundPayoutServiceTest {
     @Test
     void partialRefund_passesOriginalPaidAmountAsTotal_notRefundAmount() {
         given(1, "30.00", "100.00");
-        when(wechatPayService.submitRefund(anyString(), anyString(), any(), any(), any()))
+        when(wechatPayService.submitRefund(eq(originalPayment), anyString(), anyString(), any(), any(), any()))
                 .thenReturn(RefundRequestResult.ACCEPTED);
 
         svc.payoutAfterReview(7L);
 
         ArgumentCaptor<BigDecimal> refundAmt = ArgumentCaptor.forClass(BigDecimal.class);
         ArgumentCaptor<BigDecimal> totalAmt = ArgumentCaptor.forClass(BigDecimal.class);
-        verify(wechatPayService).submitRefund(anyString(), anyString(), refundAmt.capture(), totalAmt.capture(), any());
+        verify(wechatPayService).submitRefund(eq(originalPayment), anyString(), anyString(), refundAmt.capture(), totalAmt.capture(), any());
         assertEquals(0, new BigDecimal("30.00").compareTo(refundAmt.getValue()), "退款额应为 30");
         assertEquals(0, new BigDecimal("100.00").compareTo(totalAmt.getValue()),
                 "total_amount 必须是原订单实付 100,实际 " + totalAmt.getValue());
@@ -150,7 +177,7 @@ class RefundPayoutServiceTest {
     @Test
     void wechatRejects_marksPendingManual() {
         given(1, "100.00", "100.00");
-        when(wechatPayService.submitRefund(anyString(), anyString(), any(), any(), any()))
+        when(wechatPayService.submitRefund(eq(originalPayment), anyString(), anyString(), any(), any(), any()))
                 .thenReturn(RefundRequestResult.DEFINITIVE_FAILED);
 
         svc.payoutAfterReview(7L);
@@ -161,17 +188,18 @@ class RefundPayoutServiceTest {
                 "受理失败须写明原因,实际 remark=" + remark.getValue());
     }
 
-    /** 微信调用抛异常 ⇒ 结果不确定，释放待重试且不能穿出。 */
+    /** 微信调用抛异常 ⇒ 保留原派发身份，只查单且不能穿出。 */
     @Test
-    void wechatThrows_releasesDispatchForIdempotentRetry_andDoesNotPropagate() {
+    void wechatThrows_retainsOriginalDispatchForQuery_andDoesNotPropagate() {
         given(1, "100.00", "100.00");
-        when(wechatPayService.submitRefund(anyString(), anyString(), any(), any(), any()))
+        when(wechatPayService.submitRefund(eq(originalPayment), anyString(), anyString(), any(), any(), any()))
                 .thenThrow(new RuntimeException("connect timeout"));
 
         svc.payoutAfterReview(7L);
 
         ArgumentCaptor<String> remark = ArgumentCaptor.forClass(String.class);
-        verify(refundApplicationMapper).releasePayoutDispatch(eq(7L), anyString(), remark.capture());
+        verify(refundApplicationMapper).updatePayoutResultWithLease(eq(7L), anyString(),
+                eq(RefundApplication.PAYOUT_DISPATCHING), remark.capture());
         assertTrue(remark.getValue() != null && remark.getValue().contains("异常"),
                 "异常须落进 remark,实际 remark=" + remark.getValue());
         verify(refundService, never()).markPayoutResult(anyLong(), anyString(),
@@ -185,7 +213,7 @@ class RefundPayoutServiceTest {
 
         svc.payoutAfterReview(7L);
 
-        verify(wechatPayService, never()).submitRefund(anyString(), anyString(), any(), any(), any());
+        verify(wechatPayService, never()).submitRefund(eq(originalPayment), anyString(), anyString(), any(), any(), any());
         verify(refundService, never()).markPayoutResult(anyLong(), anyString(),
                 org.mockito.ArgumentMatchers.anyBoolean(), any());
     }
@@ -200,7 +228,7 @@ class RefundPayoutServiceTest {
 
         svc.payoutAfterReview(7L);
 
-        verify(wechatPayService, never()).submitRefund(anyString(), anyString(), any(), any(), any());
+        verify(wechatPayService, never()).submitRefund(eq(originalPayment), anyString(), anyString(), any(), any(), any());
         verify(refundService).markPayoutResult(eq(7L), anyString(), eq(false), any());
     }
 
@@ -215,7 +243,7 @@ class RefundPayoutServiceTest {
 
         svc.payoutAfterReview(7L);
 
-        verify(wechatPayService, never()).submitRefund(anyString(), anyString(), any(), any(), any());
+        verify(wechatPayService, never()).submitRefund(eq(originalPayment), anyString(), anyString(), any(), any(), any());
         ArgumentCaptor<String> remark = ArgumentCaptor.forClass(String.class);
         verify(refundService).markPayoutResult(eq(7L), anyString(), eq(false), remark.capture());
         assertTrue(remark.getValue() != null && remark.getValue().contains("报名单不存在"),
@@ -244,7 +272,7 @@ class RefundPayoutServiceTest {
 
         svc.payoutAfterReview(7L);
 
-        verify(wechatPayService, never()).submitRefund(anyString(), anyString(), any(), any(), any());
+        verify(wechatPayService, never()).submitRefund(eq(originalPayment), anyString(), anyString(), any(), any(), any());
         verify(refundService, never()).markPayoutResult(anyLong(), anyString(),
                 org.mockito.ArgumentMatchers.anyBoolean(), any());
     }
@@ -272,6 +300,52 @@ class RefundPayoutServiceTest {
 
         svc.payoutAfterReview(999L);
 
-        verify(wechatPayService, never()).submitRefund(anyString(), anyString(), any(), any(), any());
+        verify(wechatPayService, never()).submitRefund(eq(originalPayment), anyString(), anyString(), any(), any(), any());
     }
+    @Test void unknownReplayQueriesSameReferenceAndNotFoundNeverSubmitsAgain() {
+        given(1, "30.00", "100.00", RefundApplication.PAYOUT_DISPATCH_PENDING);
+        when(wechatPayService.submitRefund(eq(originalPayment), anyString(), anyString(), any(), any(), any()))
+                .thenReturn(RefundRequestResult.UNKNOWN);
+        svc.payoutAfterReview(7L);
+        when(wechatPayService.queryRefundFacts(originalPayment, "RF10")).thenReturn(Map.of("status", "NOT_FOUND"));
+        svc.payoutAfterReview(7L);
+        verify(wechatPayService, org.mockito.Mockito.times(1)).submitRefund(eq(originalPayment),
+                eq("REG20260716001"), eq("RF10"), eq(new BigDecimal("30.00")), eq(new BigDecimal("100.00")), any());
+        verify(wechatPayService).queryRefundFacts(originalPayment, "RF10");
+        verify(refundApplicationMapper, never()).releasePayoutDispatch(anyLong(), anyString(), any());
+        verify(refundService, never()).markPayoutResult(anyLong(), anyString(), org.mockito.ArgumentMatchers.anyBoolean(), any());
+    }
+
+    @Test void missingOrConflictingConsumptionNeverChoosesAnotherPayment() {
+        given(1, "30.00", "100.00");
+        org.mockito.Mockito.doReturn(null).when(consumptionMapper).selectByRegistrationForUpdate(10L);
+        svc.payoutAfterReview(7L);
+        org.mockito.Mockito.doReturn(new RegistrationPaymentFactReceipt(10L,"REG-OTHER",41L,originalPayment.hash(),"TX10"))
+                .when(consumptionMapper).selectByRegistrationForUpdate(10L);
+        svc.payoutAfterReview(7L);
+        org.mockito.Mockito.verifyNoInteractions(wechatPayService);
+        verify(refundService, never()).markPayoutResult(anyLong(), anyString(), org.mockito.ArgumentMatchers.anyBoolean(), any());
+    }
+
+    @Test void recoveredBareSuccessCannotPretendToBeVerifiedRefundCompletion() {
+        given(1, "30.00", "100.00", RefundApplication.PAYOUT_DISPATCHING);
+        refundApplicationMapper.selectRefundApplicationById(7L).setRefundNo("RF10");
+        when(wechatPayService.queryRefundFacts(originalPayment,"RF10")).thenReturn(Map.of(
+                "status","SUCCESS","outRefundNo","RF10","outTradeNo","REG20260716001",
+                "transactionId","TX10","currency","CNY","total","10000","refund","3000"));
+        svc.payoutAfterReview(7L);
+        verify(wechatPayService, never()).submitRefund(any(Reference.class),anyString(),anyString(),any(),any(),any());
+        verify(refundService, never()).handleRefundNotify(any());
+        verify(refundApplicationMapper).updatePayoutResultWithLease(eq(7L),anyString(),eq(RefundApplication.PAYOUT_DISPATCHING),any());
+    }
+
+    @Test void activeOuterTransactionCannotClaimOrReadAReferenceOrReachSdk() {
+        given(1, "30.00", "100.00");
+        TransactionSynchronizationManager.setActualTransactionActive(true);
+        try {svc.payoutAfterReview(7L);}
+        finally {TransactionSynchronizationManager.setActualTransactionActive(false);}
+        verify(refundApplicationMapper, never()).selectRegistrationHistoryForUpdate(anyLong());
+        org.mockito.Mockito.verifyNoInteractions(consumptionMapper,wechatPayService);
+    }
+
 }

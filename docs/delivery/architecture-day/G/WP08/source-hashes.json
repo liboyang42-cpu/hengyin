@@ -1,0 +1,39 @@
+{
+  "baseline": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+  "branch": "codex/architecture-day-g-wp08-task-admission",
+  "worktree": "/workspace/hengyin-g-wp08",
+  "source_sha256": "a7b0d882e8331fed8ac963caea2ad3933ec2fe59341086f58387b0e4388e7536",
+  "files": {
+    "chengyinhub-admin/sql/migration_20261023_g_wp08_delivery_jobs_paused.sql": "9d5b05113ddbf878735ae391313814540a855bd41f21aeaa61b63578e76ee7ab",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/Wp08DeliveryJobsMySqlIT.java": "54f0ab8c07b99c1a247d6ef507b00aae7208b4afe908f3ee24d138e7054d045b",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/quartz/service/Wp08DeliveryJobInvocationTest.java": "f16357c4901061ef1be452eb4b8b2d6cffb2bbb4cfd6e0495ede97ce17656905",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/quartz/util/ScheduleUtilsTest.java": "a9adab21b0f52dc537f61bbeccd19f1d777f24c05637ea63e81e7a6b743bf2f3",
+    "chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/util/ScheduleUtils.java": "90dd7154c56fa192e467b80ebfd88e5a96147f70ff6cc652c20503fdf2f31c11"
+  },
+  "protected_files": {
+    "chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/service/MySqlSchedulerCoordinator.java": "a419e344dd6513ed7cbc562dff608172e5a1989abd298e4d403c9f5b61d3b6d1",
+    "chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/util/MySqlSessionLock.java": "4ed674d724d3ff35491eaba04f736fe52989cc08cf14f1d8b734bbdcdb970085",
+    "chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/util/AbstractQuartzJob.java": "6cc0f8881407d253be272bc1497ea07dba58ac0eb2381d3e991932ca2b8612f6",
+    "chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/util/CanonicalJobTarget.java": "048b54a646c86beea1046e0434f8d6b2332ac532f020e8024690e20415dfe2c2",
+    "chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/util/JobInvokeUtil.java": "2b00d179b5aa4c0a45a2d890860416f3756a616fb9484b4a0450dbf4369cc78f",
+    "chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/util/QuartzDisallowConcurrentExecution.java": "de3578fce2114f9e4f5d2a198a0ed91e802f75e139e6cefefda18a7273e18fc8",
+    "chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/service/impl/SysJobServiceImpl.java": "c170bbbbd1f3f9596619b994c5cb0b1c69801a5a5a9b9dedc9cb0e0aee85c892",
+    "chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/controller/SysJobController.java": "bff6b31903594b2306604a538bcb6e95431765eae71021a179e5c5488010cdb6",
+    "chengyinhub-common/src/main/java/com/chengyinhub/common/constant/Constants.java": "534068b4f0541c82158414ee022f24eea6b4de64b07aa8f609c4423c5f053edd",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/task/ImNotificationDeliveryTask.java": "4b7e09df442d7311e24fbc52def8022fb0db22e98e16bbc4563c35e8304bff2d",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/task/RoamRewardDeliveryTask.java": "bae467e9a74638cd12141c697c9b7fdc87b48354e1ca16e082ca74772d0ce717",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ImServiceImpl.java": "14c10081c8e82a14b05e05962a62194c905bf08a231a342d23941e0330a2b243",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RoamRewardDeliveryService.java": "90378122d957bdc2df719fc79f94989a6606f48c689c7590260adbdec3871d9a",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RoamBadgeDeliveryService.java": "32b54af080b2f4cb580ad4801bc33539a4738fa77e810fbb85072213707d4009",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java": "7cb41e27de48229c10688084fd7450defe590ea07b78673db25a9485a0846cda",
+    "chengyinhub-system/src/main/resources/mapper/business/ImNotificationIntentMapper.xml": "d1036113aa06903155a3a414851ca7ce212f55942c94b18f1ecde45f5eb41f53",
+    "chengyinhub-system/src/main/resources/mapper/business/RoamRewardDeliveryMapper.xml": "eb534b53098f70ad59fdc677fc0302249bea262c5d075274359354d20c24ad1f",
+    "chengyinhub-admin/sql/migration_20261013_b_im_notification_intent.sql": "9225abc336584d27262982eddbde50eef404656222afeff7032db4bcf964aec6",
+    "chengyinhub-admin/sql/migration_20261013_roam_reward_delivery.sql": "1c0bb85009f68b3ed5e631a26136175fc64cbaa53a2f5285843449360c6111b1",
+    "chengyinhub-admin/sql/migration_20261013_roam_badge_delivery.sql": "d61e3da63b28e46cff6b77acc22cfb2f665dd6bcf9b0315c763189d56e79dec7"
+  },
+  "java_executed": false,
+  "mysql_executed": false,
+  "migration_executed": false,
+  "ci_dispatched": false
+}

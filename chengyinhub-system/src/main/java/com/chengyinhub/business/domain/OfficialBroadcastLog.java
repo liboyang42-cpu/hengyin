@@ -10,6 +10,17 @@ import java.util.Date;
  */
 public class OfficialBroadcastLog
 {
+    public static final String PENDING = "PENDING";
+    public static final String SUCCESS = "SUCCESS";
+    public static final String FAILED = "FAILED";
+    public static final String UNKNOWN = "UNKNOWN";
+
+    private String deliveryState;
+    private String deliveryTitle;
+    private String deliverySub;
+    private String failureCode;
+    private Long messageId;
+    private Date reachedTime;
     private Long id;
     private Long broadcastId;
     private Long memberId;
@@ -18,6 +29,19 @@ public class OfficialBroadcastLog
     private Integer reached;
     private Integer clicked;
     private Date createTime;
+
+    public String getDeliveryState() { return deliveryState; }
+    public void setDeliveryState(String value) { deliveryState = value; }
+    public String getDeliveryTitle() { return deliveryTitle; }
+    public void setDeliveryTitle(String value) { deliveryTitle = value; }
+    public String getDeliverySub() { return deliverySub; }
+    public void setDeliverySub(String value) { deliverySub = value; }
+    public String getFailureCode() { return failureCode; }
+    public void setFailureCode(String value) { failureCode = value; }
+    public Long getMessageId() { return messageId; }
+    public void setMessageId(Long value) { messageId = value; }
+    public Date getReachedTime() { return reachedTime; }
+    public void setReachedTime(Date value) { reachedTime = value; }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

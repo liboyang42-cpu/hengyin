@@ -1,0 +1,9 @@
+PASS: exact 13 source/test scope; B deposit and payout methods unchanged
+PASS: frozen 051c seven files and old SQL IT untouched; root harness delta safe to retain
+PASS: five explicit uncached locking reads; real activity parent including deleted shells; no ordinary COUNT cash admission
+PASS: original test names/assertion counts retained; added 10 unit and 4 SQL, explicit IT env/UUID-only cleanup
+PASS: source manifest SHA256 1a5ef51192cf530bc142eb764d021ad5eb5d1a3e08855338999641d226900cab
+NOT_RUN: Java compile/unit, MySQL 4 new SQL, full financial services, late payment/refund fence, production/DDL
+SECRET-FILE-GATE PASS: 当前 Git tree 无密钥/证书文件或私钥正文
+PASS: staged git diff --check
+Gitleaks: NOT_RUN locally (not installed); root must scan candidate

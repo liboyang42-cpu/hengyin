@@ -4,7 +4,7 @@ const CLEARABLE = ['rewardRulesJson', 'merchantGuide', 'sensorType', 'sensorConf
 const COPY_FIELDS = [
   'originalTemplateId', 'categoryId', 'title', 'description', 'imgUrl', 'players',
   'usageLocation', 'requiredMaterials', 'duration', 'difficulty', 'isSync',
-  'ruleInstructions', 'merchantGuide', 'rewardRulesJson', 'validationMethod',
+  'ruleInstructions', 'merchantGuide', 'rewardRulesJson', 'validationMethod', 'interactionType',
   'sensorType', 'sensorConfig', 'questionName', 'questionAnswer', 'feedbackText',
   'couponId', 'medalImg', 'medalName', 'medalStyle', 'questionA', 'questionB',
   'questionC', 'questionD', 'correctAnswer', 'questionImg', 'questionAudio',

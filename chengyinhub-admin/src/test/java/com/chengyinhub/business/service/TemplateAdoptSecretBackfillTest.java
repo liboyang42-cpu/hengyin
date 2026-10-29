@@ -152,6 +152,80 @@ class TemplateAdoptSecretBackfillTest {
     }
 
     @Test
+    void sourceOnlyAdoptionDoesNotApplyClientClearFlagsOrInventCanonicalFields() {
+        CmsTemplateLibrary source = visibleSource(SOURCE_CONFIG);
+        source.setTitle("完整原玩法"); source.setMerchantGuide("只给店员的说明");
+        source.setRewardRulesJson("[{\"outcomeCode\":\"COMPLETED\",\"xp\":2}]");
+        source.setStoryImg("media-asset:1");
+        when(libraryService.selectCmsTemplateLibraryById(9001L)).thenReturn(source);
+        CmsTemplatePublishRequest request = adoptedRequest(9001L, STRIPPED_CONFIG);
+        request.setAdoptSourceOnly(true);
+        request.setClearFields(new java.util.HashSet<>(java.util.Arrays.asList(
+                "merchantGuide", "rewardRulesJson", "storyImg")));
+        request.setInteractionType("client-invented");
+        request.setMedalName("客户端夹带"); request.setMedalStyle("enamel");
+
+        service.saveOrUpdateDraft(request, 7L, "member7");
+
+        assertEquals("只给店员的说明", inserted.get().getMerchantGuide());
+        assertEquals(source.getRewardRulesJson(), inserted.get().getRewardRulesJson());
+        assertEquals("media-asset:1", inserted.get().getStoryImg());
+        org.junit.jupiter.api.Assertions.assertNull(inserted.get().getClearFields());
+        org.junit.jupiter.api.Assertions.assertNull(inserted.get().getInteractionType());
+        org.junit.jupiter.api.Assertions.assertNull(inserted.get().getMedalName());
+        assertEquals("glow", inserted.get().getMedalStyle());
+    }
+
+    @Test
+    void sourceOnlyAdoptionReadsCanonicalInteractionAndMedalWithoutRequiringPersonalListing() {
+        CmsTemplateLibrary source = visibleSource(SOURCE_CONFIG);
+        source.setMemberId(99L); source.setMemberTemplateId(700L);
+        CmsMemberTemplate canonical = new CmsMemberTemplate();
+        canonical.setId(700L); canonical.setMemberId(99L); canonical.setStatus(1L);
+        canonical.setDelFlag(0); canonical.setPublishStatus(0L);
+        canonical.setInteractionType("hidden_menu");
+        canonical.setMedalName("原奖章"); canonical.setMedalImg("media-asset:1");
+        canonical.setMedalStyle("enamel");
+        ICmsMemberTemplateService members = (ICmsMemberTemplateService)
+                ReflectionTestUtils.getField(service, "memberTemplateService");
+        when(members.selectCmsMemberTemplateById(700L)).thenReturn(canonical);
+        when(libraryService.selectCmsTemplateLibraryById(9001L)).thenReturn(source);
+        CmsTemplatePublishRequest request = adoptedRequest(9001L, STRIPPED_CONFIG);
+        request.setAdoptSourceOnly(true);
+
+        service.saveOrUpdateDraft(request, 7L, "member7");
+
+        assertEquals("hidden_menu", inserted.get().getInteractionType());
+        assertEquals("原奖章", inserted.get().getMedalName());
+        assertEquals("media-asset:1", inserted.get().getMedalImg());
+        assertEquals("enamel", inserted.get().getMedalStyle());
+        assertEquals(99L, canonical.getMemberId());
+        assertEquals(0L, canonical.getPublishStatus());
+    }
+
+    @Test
+    void sourceOnlyAdoptionRejectsMissingForeignDeletedOrUnapprovedCanonicalBeforeWriting() {
+        CmsTemplateLibrary source = visibleSource(SOURCE_CONFIG);
+        source.setMemberId(99L); source.setMemberTemplateId(700L);
+        when(libraryService.selectCmsTemplateLibraryById(9001L)).thenReturn(source);
+        ICmsMemberTemplateService members = (ICmsMemberTemplateService)
+                ReflectionTestUtils.getField(service, "memberTemplateService");
+        for (String state : java.util.Arrays.asList("missing", "foreign", "deleted", "pending")) {
+            CmsMemberTemplate canonical = new CmsMemberTemplate();
+            canonical.setId(700L); canonical.setMemberId("foreign".equals(state) ? 98L : 99L);
+            canonical.setStatus("pending".equals(state) ? 0L : 1L);
+            canonical.setDelFlag("deleted".equals(state) ? 2 : 0);
+            when(members.selectCmsMemberTemplateById(700L))
+                    .thenReturn("missing".equals(state) ? null : canonical);
+            CmsTemplatePublishRequest request = adoptedRequest(9001L, STRIPPED_CONFIG);
+            request.setAdoptSourceOnly(true);
+            assertThrows(IllegalArgumentException.class,
+                    () -> service.saveOrUpdateDraft(request, 7L, "member7"), state);
+            org.junit.jupiter.api.Assertions.assertNull(inserted.get(), state);
+        }
+    }
+
+    @Test
     void adoptedPublishBackfillsR3AnswersAndQaCorrectFlagsFromSourceTemplate() throws Exception {
         // 采用方的配置不是手写的,而是投影真正下发的那一份 —— 这条链路整体走一遍
         String stripped = AdvancedGamePublicProjection.safeConfigJson(R3_SOURCE_CONFIG);
@@ -293,6 +367,30 @@ class TemplateAdoptSecretBackfillTest {
 
         assertThrows(BadSqlGrammarException.class,
                 () -> service.publishTemplateWithTransaction(request, 7L, "member7"));
+    }
+
+    @Test
+    void ownedAdoptedDraftBackfillsOnlyItsStoredAnswersAfterPublicSourceDrifts() throws Exception {
+        ICmsMemberTemplateService members = (ICmsMemberTemplateService)
+                ReflectionTestUtils.getField(service, "memberTemplateService");
+        CmsMemberTemplate owned = new CmsMemberTemplate();
+        owned.setId(71L); owned.setMemberId(7L); owned.setDelFlag(0); owned.setOriginalTemplateId(9001L);
+        String ownedConfig = SOURCE_CONFIG.replace("\"answerKey\":\"B\"", "\"answerKey\":\"A\"");
+        owned.setAdvancedConfigJson(ownedConfig);
+        when(members.selectCmsMemberTemplateById(71L)).thenReturn(owned);
+        when(members.updateCmsMemberTemplate(any())).thenAnswer(call -> {
+            inserted.set(call.getArgument(0));
+            return 1;
+        });
+        when(libraryService.selectCmsTemplateLibraryById(9001L))
+                .thenThrow(new IllegalStateException("live 来源不可用或已被修改"));
+        CmsTemplatePublishRequest request = adoptedRequest(9001L, STRIPPED_CONFIG); request.setId(71L);
+        service.saveOrUpdateDraft(request, 7L, "member7");
+        JsonNode saved = new ObjectMapper().readTree(inserted.get().getAdvancedConfigJson());
+        assertEquals("A", saved.path("blindTaste").path("answerKey").asText());
+        assertEquals("第一行", saved.path("dailySign").path("poems").get(0).get(0).asText());
+        org.mockito.Mockito.verify(libraryService, org.mockito.Mockito.never()).selectCmsTemplateLibraryById(any());
+        assertEquals(ownedConfig, owned.getAdvancedConfigJson());
     }
 
     private CmsTemplateLibrary visibleSource(String configJson) {

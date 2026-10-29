@@ -1,0 +1,42 @@
+{
+  "ci_cost_exit_code": 0,
+  "code_commit": "f4c5b18db69e8bc55ba96e4a9202aa9f4a82b808",
+  "conclusion": "LAYOUT_FIXED_SQL_SAFETY_BLOCKED",
+  "evidence_sha256": {
+    "before-layout.txt": "20861524895b0813e9e9d7390124e3b0df5da3aea2f2d6a0d2f52f2cf7a67022",
+    "before-seeds.txt": "d460c9005f1b6fd0f5075b13f555d9c9fbcd3a6caf0f7e72f4f31419f8119c23",
+    "ci-cost.txt": "c2b47836e684d07c67a70e10a79e609b73ad4783ed0a47c89f8eafac43e270f4",
+    "full-gate-status.json": "6272fc0980d79811dac55ad3014117120bae8c391362539ab2c0a870519a3faa",
+    "layout-full.txt": "56c24868b24ad45fe55e263a8be3737cf565bcac3ea1901df7d198a078c91efa",
+    "permissions.txt": "961e6a8ef800622b54a68897f159af84129fed1463c28234e0790b1e1b67e4f5",
+    "review.json": "2415e5abeb66a24d65169483d741a6d10089862126479260ac8159ed96990708",
+    "safety-full.txt": "2b28686f626d732ed609f316750a5350dd923f367c3a0df984a255f143784dff",
+    "sql-contract.txt": "44d25b3231b039365ff1af327f62166a803ea44793638a6a77c62a6c6353ae4f",
+    "static-gates.txt": "e4c329a08a0ca8609e6138b21ed2b850855acbcd4c4706c27fa11e4e34d085f7"
+  },
+  "gitleaks": "8.21.2 scoped patch no leaks",
+  "layout_exit_code": 0,
+  "not_run": [
+    "Java compilation/tests",
+    "MySQL/Redis/DDL",
+    "VPS/SSH/Docker",
+    "GitHub workflow dispatch",
+    "deployment",
+    "PR title/body declaration in a real PR event"
+  ],
+  "parent_commit": "089790aaf3254f62ebbc79394b8aaf5fa66cb2b5",
+  "permissions_test_exit_code": 0,
+  "safety_embedded_selftests": [
+    130,
+    52
+  ],
+  "safety_exit_code": 1,
+  "secret_file_gate": "PASS",
+  "sql_bytes_preserved": true,
+  "static_tests": {
+    "errors": 1,
+    "failures": 1,
+    "passed": 222,
+    "total": 224
+  }
+}

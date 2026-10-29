@@ -1,0 +1,60 @@
+{
+  "source_sha": "b626f425625ccae793aa84a44147fe557c8df6ef",
+  "failure_run": 40135082606,
+  "failure_job": 120994889568,
+  "actual_class_findings": 11,
+  "actual_owner_directions": 5,
+  "C": {
+    "thread": "01a16a22-c697-7637-ae29-cdff6341000b",
+    "turn": "01a16fe9-e7aa-7159-aa4e-e20dbdd232ce",
+    "source": "CityNodeRedemptionApplication.DYN_TTL_MS",
+    "target": "RegistrationTicketApplication.DYN_TTL_MS",
+    "meaning": "Only compile-time public TTL constant300000; CityNode independently checks merchant VERIFY/HMAC/owner/member lock/audit; no Bean/method call or reverse reference",
+    "decision": "Remove peer constant reference preserving300000, rather than pretending a class grant permits only a field",
+    "status": "e1f22fda55b0a26a4261eba49dcd048932cbbec6 exact one-line source patch applied, Java/compiled pending new candidate"
+  },
+  "B": {
+    "thread": "01a16a22-956c-723f-b51b-afcbee69802b",
+    "turn": "01a16fe9-f493-7438-990a-f074360631e4",
+    "directions": [
+      {
+        "source_owner": "B_PAYMENT_ROUTER",
+        "target_owner": "B_VERIFIED_PAYMENT_FACT_DTO",
+        "callers": "WechatPaymentCallbackRouter:39-49,95-99",
+        "symbols": [
+          "WechatVerifiedPaymentFact",
+          "WechatVerifiedPaymentFact$Reference"
+        ],
+        "meaning": "Pass already verified factID/hash Reference to original domain owners; no SDK verification/ledger/transaction change; no Kind or wildcard nested types"
+      },
+      {
+        "source_owner": "B_VERIFIED_PAYMENT_FACT_STORE",
+        "target_owner": "B_PAYMENT_ORDER_LOCK",
+        "callers": "WechatVerifiedPaymentFactService:47-48,84-100,134-136,163-187",
+        "symbols": [
+          "WechatPaymentOrderOwner",
+          "WechatPaymentOrderOwner$Snapshot",
+          "WechatPaymentOrderOwner$MissingOrderException"
+        ],
+        "meaning": "lock(String) original row/current business-attempt binding; keep verified external fact and rejection evidence on MissingOrderException; no concrete business Service or SDK"
+      },
+      {
+        "source_owner": "B_PAYMENT_INTENTS",
+        "target_owner": "B_VERIFIED_PAYMENT_FACT_STORE",
+        "callers": "WechatPaymentIntentStore:58,134,152,161",
+        "symbols": [
+          "WechatVerifiedPaymentFactService"
+        ],
+        "meaning": "Only original boolean hasConfirmedExternalSuccess overloads prevent new prepay/identity release/close/channel switch after confirmed external success"
+      }
+    ],
+    "reverse_reference_check": "DTO JDK only; FactStore no IntentStore/Router; OrderOwner interface/Jdbc impl JDBC row-lock only, no FactStore/IntentStore/Router reference",
+    "decision": "F minimal exact contracts and negative controls; no money source change needed"
+  },
+  "G_claim_dto": {
+    "status": "F checking actual original interface and consumers",
+    "expected_role": "Public immutable verified payment fact/reference input, not private Mapper write access"
+  },
+  "not_proven": "Owner scoped source evidence does not replace real compiled negative/restored controls or all-system SCC acceptance",
+  "all_complete": false
+}

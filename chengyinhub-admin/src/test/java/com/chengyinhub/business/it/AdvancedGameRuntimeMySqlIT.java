@@ -177,7 +177,7 @@ class AdvancedGameRuntimeMySqlIT {
             try (Connection connection = source.getConnection()) {
                 createTemplateTables(connection);
                 ItSchema.applyMigrations(connection, "sql/migration_20260822_advanced_game_runtime.sql",
-                        "sql/migration_m9_play_attempt_log.sql", "sql/migration_20260820_new_city_preference_chain.sql");
+                        "sql/migration_m9_play_attempt_log.sql", "sql/migration_20260820_new_city_preference_chain.sql", "sql/migration_20261023_advanced_command_fingerprint.sql");
                 execute(connection, "ALTER TABLE game_runtime_session ADD play_instance_id VARCHAR(64) NOT NULL DEFAULT 'default'");
                 execute(connection, "CREATE TABLE play_team_member (team_id BIGINT, member_id BIGINT, status INT) ENGINE=InnoDB");
             }
@@ -192,6 +192,7 @@ class AdvancedGameRuntimeMySqlIT {
             }
             SqlSessionTemplate sql = new SqlSessionTemplate(new SqlSessionFactoryBuilder().build(config));
             AdvancedGameRuntimeServiceImpl target = new AdvancedGameRuntimeServiceImpl();
+        ReflectionTestUtils.setField(target, "transactionManager", new org.springframework.jdbc.datasource.DataSourceTransactionManager(source));
             ReflectionTestUtils.setField(target, "sessionMapper", sql.getMapper(GameRuntimeSessionMapper.class));
             ReflectionTestUtils.setField(target, "attemptMapper", sql.getMapper(PlayAttemptLogMapper.class));
             // 只验证冻结会话的持久化；报名、节点与活动入口使用夹具，不冒充真实业务验收。
@@ -236,6 +237,13 @@ class AdvancedGameRuntimeMySqlIT {
                     assertEquals(51L, service.start(7L, 9L, 19L, 29L, null).get("sessionId"));
                     String key = "legacy-mysql-" + i;
                     service.act(7L, 51L, 0, key, "CHOOSE", Collections.singletonMap("optionId", "go"));
+                    String originalHash = scalar(readback, "SELECT request_fingerprint FROM play_attempt_log WHERE idempotency_key='" + key + "'");
+                    assertTrue(originalHash.matches("[0-9a-f]{64}"));
+                    assertThrows(ServiceException.class, () -> service.act(7L, 51L, 1, key, "CHOOSE", Collections.singletonMap("optionId", "go")));
+                    assertThrows(ServiceException.class, () -> service.act(7L, 51L, 0, key, "CHOOSE", Collections.singletonMap("optionId", "changed")));
+                    assertThrows(ServiceException.class, () -> service.act(7L, 51L, 0, key, "DRAW", Collections.emptyMap()));
+                    assertEquals(originalHash, scalar(readback, "SELECT request_fingerprint FROM play_attempt_log WHERE idempotency_key='" + key + "'"));
+                    assertEquals("1", scalar(readback, "SELECT version FROM game_runtime_session WHERE id=51"));
                     assertEquals("end", scalar(readback, "SELECT JSON_UNQUOTE(JSON_EXTRACT(state_json,'$.branch.currentStepId')) FROM game_runtime_session WHERE id=51"));
                     if (i < codes.length) {
                         assertEquals(codes[i], service.completeGate(7L, 9L, 19L, 29L));
@@ -286,7 +294,7 @@ class AdvancedGameRuntimeMySqlIT {
             try (Connection connection = source.getConnection()) {
                 createTemplateTables(connection);
                 ItSchema.applyMigrations(connection, "sql/migration_20260822_advanced_game_runtime.sql",
-                        "sql/migration_m9_play_attempt_log.sql", "sql/migration_20260820_new_city_preference_chain.sql",
+                        "sql/migration_m9_play_attempt_log.sql", "sql/migration_20260820_new_city_preference_chain.sql", "sql/migration_20261023_advanced_command_fingerprint.sql",
                         "sql/migration_20260820_play_team_core.sql");
                 execute(connection, "ALTER TABLE game_runtime_session ADD play_instance_id VARCHAR(64) NOT NULL DEFAULT 'default'");
                 execute(connection, "ALTER TABLE play_team ADD invite_code VARCHAR(64)");
@@ -312,6 +320,7 @@ class AdvancedGameRuntimeMySqlIT {
             }
             SqlSessionTemplate sql = new SqlSessionTemplate(new SqlSessionFactoryBuilder().build(config));
             AdvancedGameRuntimeServiceImpl target = new AdvancedGameRuntimeServiceImpl();
+        ReflectionTestUtils.setField(target, "transactionManager", new org.springframework.jdbc.datasource.DataSourceTransactionManager(source));
             ReflectionTestUtils.setField(target, "sessionMapper", sql.getMapper(GameRuntimeSessionMapper.class));
             ReflectionTestUtils.setField(target, "attemptMapper", sql.getMapper(PlayAttemptLogMapper.class));
             ReflectionTestUtils.setField(target, "teamMapper", sql.getMapper(PlayTeamMapper.class));

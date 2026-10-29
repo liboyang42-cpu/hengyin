@@ -1,0 +1,51 @@
+$ /opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 -m unittest discover -s ci/architecture -p test_*.py -v
+exit_code=0
+test_candidate_run_attempt_and_maven_mismatch_are_red (test_gate.EvidenceTest.test_candidate_run_attempt_and_maven_mismatch_are_red) ... ok
+test_cli_returns_failure_on_forged_success (test_gate.EvidenceTest.test_cli_returns_failure_on_forged_success) ... ok
+test_cli_returns_success_only_with_consistent_reports (test_gate.EvidenceTest.test_cli_returns_success_only_with_consistent_reports) ... ok
+test_exact_full_name_cases_and_candidate_are_green (test_gate.EvidenceTest.test_exact_full_name_cases_and_candidate_are_green) ... ok
+test_full_name_collision_duplicate_and_foreign_suites_are_red (test_gate.EvidenceTest.test_full_name_collision_duplicate_and_foreign_suites_are_red) ... ok
+test_hidden_skipped_failure_error_flaky_cases_are_red (test_gate.EvidenceTest.test_hidden_skipped_failure_error_flaky_cases_are_red) ... ok
+test_invalid_plan_and_receipt_schema_are_red (test_gate.EvidenceTest.test_invalid_plan_and_receipt_schema_are_red) ... ok
+test_malformed_xml_and_negative_counts_are_red (test_gate.EvidenceTest.test_malformed_xml_and_negative_counts_are_red) ... ok
+test_missing_duplicate_unnamed_foreign_cases_are_red (test_gate.EvidenceTest.test_missing_duplicate_unnamed_foreign_cases_are_red) ... ok
+test_missing_report_and_empty_plan_are_red (test_gate.EvidenceTest.test_missing_report_and_empty_plan_are_red) ... ok
+test_report_mutation_without_new_attestation_is_red (test_gate.EvidenceTest.test_report_mutation_without_new_attestation_is_red) ... ok
+test_skip_zero_failure_error_counts_are_red (test_gate.EvidenceTest.test_skip_zero_failure_error_counts_are_red) ... ok
+test_symlink_and_unplanned_reports_are_red (test_gate.EvidenceTest.test_symlink_and_unplanned_reports_are_red) ... ok
+test_approval_cannot_waive_unapproved_dependency (test_gate.ExternalReviewTest.test_approval_cannot_waive_unapproved_dependency) ... ok
+test_cli_rejects_candidate_local_review_and_incomplete_review_inputs (test_gate.ExternalReviewTest.test_cli_rejects_candidate_local_review_and_incomplete_review_inputs) ... ok
+test_exact_review_and_verified_test_plan_are_green (test_gate.ExternalReviewTest.test_exact_review_and_verified_test_plan_are_green) ... ok
+test_missing_extra_and_duplicate_contracts_are_red (test_gate.ExternalReviewTest.test_missing_extra_and_duplicate_contracts_are_red) ... ok
+test_missing_recovery_or_empty_contract_is_red (test_gate.ExternalReviewTest.test_missing_recovery_or_empty_contract_is_red) ... ok
+test_missing_reviewer_reference_and_unknown_schema_are_red (test_gate.ExternalReviewTest.test_missing_reviewer_reference_and_unknown_schema_are_red) ... ok
+test_stale_candidate_and_changed_findings_are_red (test_gate.ExternalReviewTest.test_stale_candidate_and_changed_findings_are_red) ... ok
+test_wrong_suite_plan_or_unverified_evidence_is_red (test_gate.ExternalReviewTest.test_wrong_suite_plan_or_unverified_evidence_is_red) ... ok
+test_baseline_laundering_is_red (test_gate.InventoryAndDeltaTest.test_baseline_laundering_is_red) ... ok
+test_candidate_cannot_edit_or_add_policy_exception (test_gate.InventoryAndDeltaTest.test_candidate_cannot_edit_or_add_policy_exception) ... ok
+test_clean_exact_candidate_and_trusted_policy_are_green (test_gate.InventoryAndDeltaTest.test_clean_exact_candidate_and_trusted_policy_are_green) ... ok
+test_cross_namespace_transitive_fragment_is_fingerprinted (test_gate.InventoryAndDeltaTest.test_cross_namespace_transitive_fragment_is_fingerprinted) ... ok
+test_dangerous_write_scope_removal_is_red (test_gate.InventoryAndDeltaTest.test_dangerous_write_scope_removal_is_red) ... ok
+test_dependency_removal_does_not_expand_but_requires_build_review (test_gate.InventoryAndDeltaTest.test_dependency_removal_does_not_expand_but_requires_build_review) ... ok
+test_dirty_and_mismatched_candidate_are_red (test_gate.InventoryAndDeltaTest.test_dirty_and_mismatched_candidate_are_red) ... ok
+test_dynamic_refid_fragment_only_change_cannot_escape_review (test_gate.InventoryAndDeltaTest.test_dynamic_refid_fragment_only_change_cannot_escape_review) ... ok
+test_dynamic_sql_remains_unknown_and_red (test_gate.InventoryAndDeltaTest.test_dynamic_sql_remains_unknown_and_red) ... ok
+test_existing_table_new_namespace_is_red (test_gate.InventoryAndDeltaTest.test_existing_table_new_namespace_is_red) ... ok
+test_fragment_change_invalidates_dependent_statement (test_gate.InventoryAndDeltaTest.test_fragment_change_invalidates_dependent_statement) ... ok
+test_migration_and_maven_flags_cannot_bypass_gate (test_gate.InventoryAndDeltaTest.test_migration_and_maven_flags_cannot_bypass_gate) ... ok
+test_new_cross_table_writer_is_red (test_gate.InventoryAndDeltaTest.test_new_cross_table_writer_is_red) ... ok
+test_new_dependency_version_or_scope_is_red (test_gate.InventoryAndDeltaTest.test_new_dependency_version_or_scope_is_red) ... ok
+test_non_descendant_candidate_is_red (test_gate.InventoryAndDeltaTest.test_non_descendant_candidate_is_red) ... ok
+test_query_disguised_write_is_reviewed (test_gate.InventoryAndDeltaTest.test_query_disguised_write_is_reviewed) ... ok
+test_removed_recovery_statement_is_red (test_gate.InventoryAndDeltaTest.test_removed_recovery_statement_is_red) ... ok
+test_shared_gate_and_test_skip_change_are_red (test_gate.InventoryAndDeltaTest.test_shared_gate_and_test_skip_change_are_red) ... ok
+test_unchanged_and_documentation_are_green (test_gate.InventoryAndDeltaTest.test_unchanged_and_documentation_are_green) ... ok
+test_unknown_build_file_is_red (test_gate.InventoryAndDeltaTest.test_unknown_build_file_is_red) ... ok
+test_unknown_java_and_side_effect_are_red (test_gate.InventoryAndDeltaTest.test_unknown_java_and_side_effect_are_red) ... ok
+test_unresolved_cycle_and_entities_fail_closed (test_gate.InventoryAndDeltaTest.test_unresolved_cycle_and_entities_fail_closed) ... ok
+test_command_checklist_references_real_baseline_sources (test_gate.RegisteredReferencesTest.test_command_checklist_references_real_baseline_sources) ... ok
+
+----------------------------------------------------------------------
+Ran 44 tests in 0.882s
+
+OK

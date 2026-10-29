@@ -1,0 +1,28 @@
+Authorized direct pure Python controls; no MySQL/Java/Redis/provider/CI execution.
+
+Command:
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=. python3 -m unittest -v scripts.e2e.test_build_schema.NoticeFreshForwardSelectionTest scripts.e2e.test_build_schema.BuildSchemaMigrationSelectionTest.test_schema_entrypoint_runs_predeploy_schema_but_defers_postdeploy_jobs scripts.e2e.test_build_schema.BuildSchemaMigrationSelectionTest.test_policy_preflight_runs_before_database_connection scripts.e2e.test_build_schema.BuildSchemaExecutionFailureTest
+
+Observed method results (class qualifications abbreviated; routing-double print lines omitted):
+test_any_manifest_identity_hash_or_phase_drift_fails_before_connect ... ok
+test_any_original_or_forward_file_byte_drift_fails_before_connect ... ok
+test_concurrent_create_is_not_adopted_or_imported ... ok
+test_exact_canonical_pair_preserves_every_other_pending_item_and_phase ... ok
+test_existing_including_typed_or_unknown_schema_rejects_even_drop_before_mutation ... ok
+test_fresh_route_runs_real_v2_gate_and_stops_before_ddl_even_keep_going ... ok
+test_missing_duplicate_or_nonpending_pair_fails_before_connect ... ok
+test_no_pair_does_not_add_notice_identity_or_freshness_requirements ... ok
+test_producer_dependency_global_order_or_pending_order_drift_fails_before_connect ... ok
+test_schema_entrypoint_runs_predeploy_schema_but_defers_postdeploy_jobs ... ok
+test_policy_preflight_runs_before_database_connection ... ok
+test_default_stops_before_second_migration_and_closes_connections ... ok
+test_explicit_keep_going_runs_second_but_stays_failed_and_closes ... ok
+test_migration_read_exception_closes_connection ... ok
+
+----------------------------------------------------------------------
+Ran 14 tests in 1.856s
+
+OK
+
+V2's first real SQL statement is deliberately rejected by a controlled cursor in the routing test.
+This proves refusal propagation/no ALTER, not successful MySQL schema execution or business acceptance.

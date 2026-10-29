@@ -1,0 +1,82 @@
+{
+  "source_sha": "4cf548c3e8b05c6d23f3252c7e5d063691ef0eaa",
+  "run_id": "40054552123",
+  "run_attempt": "1",
+  "workflow": "SUCCESS",
+  "xml_hashes_verified": 1842,
+  "xml_report_totals": {
+    "tests": 14495,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 619
+  },
+  "report_totals_limit": "Multi-phase reports, not unique business scenarios; existing skipped cases not accepted as executed",
+  "http_related_suites": [
+    {
+      "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.ai.AiHttpAdmissionTest.xml",
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  ],
+  "jar_sha256": "a39ece1911c398ce6bc224e0d7a9731c77b0321161d5917498baabe0a2feb5f3",
+  "jar_bytes": 118439157,
+  "startup_verified_in_same_job": true,
+  "jdeps_evidence_hashes_verified": 11,
+  "private_compiled_ports": {
+    "verdict": "PASS_SCOPED_COMPILED_REFERENCES",
+    "coverage_complete": true,
+    "scope": "Exactly two declared Mapper target classes",
+    "actual_system_class_hashes_verified": 4,
+    "references": {
+      "com.chengyinhub.business.mapper.AiQuotaReservationMapper": [
+        {
+          "source_class": "com.chengyinhub.business.service.ai.AiQuotaRecoveryService",
+          "source_owner": "chengyinhub-system",
+          "source_sha256": "cf578c30770aa68cda63632b1a581a350904fcc630163759d9387889a3e1e00a",
+          "target_class": "com.chengyinhub.business.mapper.AiQuotaReservationMapper",
+          "target_owner": "chengyinhub-system",
+          "target_sha256": "6f8ce586fbb7cc0b33862fbd82b1a86f09c4ca2c0fa3a90f40126a802c0b7639"
+        }
+      ],
+      "com.chengyinhub.business.mapper.PhotoCheckIntentMapper": [
+        {
+          "source_class": "com.chengyinhub.business.service.ai.PhotoCheckIntentService",
+          "source_owner": "chengyinhub-system",
+          "source_sha256": "61a4ee7290bf0083aa6679e84aa6838351dd015fbfff3806a9c8c97b91702d7c",
+          "target_class": "com.chengyinhub.business.mapper.PhotoCheckIntentMapper",
+          "target_owner": "chengyinhub-system",
+          "target_sha256": "03446bffd536cc73c8fea106c6dfbafa8d871fb70ce6308eff44e7fbb34b3633"
+        }
+      ]
+    }
+  },
+  "source_gate": {
+    "verdict": "PASS_WITH_REVIEW_ITEMS",
+    "findings": 0,
+    "review_items": 121,
+    "business_policy": {
+      "coverage": "PARTIAL",
+      "fact_ids": [
+        "AI_QUOTA_RESERVATION",
+        "PHOTO_CHECK_INTENT"
+      ]
+    }
+  },
+  "negative_control": {
+    "first_source": "7d9a8702f5651b7ecce5f1f06fa83ab27b47d541",
+    "first_run": "40054582158",
+    "first_outcome": "FAILED_BEFORE_TARGET_CHECK",
+    "reason": "HTTP cleanup saturation fixture raced before all existing workers entered; no production/gate violation conclusion",
+    "corrected_source": "ef5331db7a4424acca5dfde5325e83149ff3e472",
+    "corrected_run": "40055275716",
+    "corrected_outcome": "FAILED_BEFORE_TARGET_CHECK",
+    "second_reason": "Root fixture correction assumed core=max. Actual disconnect executor is core1/max4; awaiting4 initial blockers did not start all4. Independent fixture review assigned to A; no repeated CI yet."
+  },
+  "not_proven": [
+    "Actual compiled forbidden-consumer negative until separate CI result",
+    "Reflection/XML/runtime dependencies or method-level mandatory Service route",
+    "Other business owners, full graph/SCC or entire WP01"
+  ]
+}

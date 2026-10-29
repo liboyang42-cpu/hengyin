@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.AiThemeDraftIntentMapper">
+    <resultMap id="Intent" type="com.chengyinhub.business.domain.AiThemeDraftIntentRow">
+        <id property="id" column="id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="prepareKey" column="prepare_key"/>
+        <result property="requestId" column="request_id"/>
+        <result property="requestHash" column="request_hash"/>
+        <result property="productType" column="product_type"/>
+        <result property="planHash" column="plan_hash"/>
+        <result property="role" column="role"/>
+        <result property="pool" column="pool"/>
+        <result property="originalDay" column="original_day"/>
+        <result property="counterKey" column="counter_key"/>
+        <result property="nonce" column="nonce"/>
+        <result property="receiptKey" column="receipt_key"/>
+        <result property="reservation" column="reservation"/>
+        <result property="creatorConfigHash" column="creator_config_hash"/>
+        <result property="gatewayConfigHash" column="gateway_config_hash"/>
+        <result property="state" column="state"/>
+        <result property="providerState" column="provider_state"/>
+        <result property="reasonCode" column="reason_code"/>
+        <result property="claimToken" column="claim_token"/>
+        <result property="resultHash" column="result_hash"/>
+        <result property="outcomeHash" column="outcome_hash"/>
+        <result property="claimedAt" column="claimed_at"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <result property="completedAt" column="completed_at"/>
+        <result property="executeBefore" column="execute_before"/>
+        <result property="contextExpiresAt" column="context_expires_at"/>
+        <result property="resultExpiresAt" column="result_expires_at"/>
+        <result property="contextPurgedAt" column="context_purged_at"/>
+        <result property="resultPurgedAt" column="result_purged_at"/>
+    </resultMap>
+    <insert id="insertPrepared" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO ai_theme_draft_request_intent
+        (member_id, prepare_key, request_id, request_hash, product_type, plan_hash, role, pool, original_day, counter_key, nonce, receipt_key, reservation, creator_config_hash, gateway_config_hash, state, created_at, execute_before, context_expires_at, updated_at)
+        VALUES (#{memberId}, #{prepareKey}, #{requestId}, #{requestHash}, #{productType}, #{planHash}, #{role}, #{pool}, #{originalDay}, #{counterKey}, #{nonce}, #{receiptKey}, #{reservation}, #{creatorConfigHash}, #{gatewayConfigHash}, #{state}, #{createdAt}, #{executeBefore}, #{contextExpiresAt}, #{createdAt})
+    </insert>
+    <!-- New short transactions plus both flags prevent L1 cached-null/old state reuse. -->
+    <select id="selectByPrepareKey" resultMap="Intent" useCache="false" flushCache="true">
+        SELECT * FROM ai_theme_draft_request_intent WHERE member_id=#{memberId} AND prepare_key=#{prepareKey}
+    </select>
+    <select id="selectByPrepareKeyForUpdate" resultMap="Intent" useCache="false" flushCache="true">
+        SELECT * FROM ai_theme_draft_request_intent WHERE member_id=#{memberId} AND prepare_key=#{prepareKey} FOR UPDATE
+    </select>
+    <select id="selectOwned" resultMap="Intent" useCache="false" flushCache="true">
+        SELECT * FROM ai_theme_draft_request_intent WHERE member_id=#{memberId} AND request_id=#{requestId}
+    </select>
+    <update id="claim">
+        UPDATE ai_theme_draft_request_intent SET state='PROCESSING', claim_token=#{claimToken},
+            claimed_at=#{now}, updated_at=#{now}
+        WHERE id=#{id} AND member_id=#{memberId} AND request_hash=#{requestHash} AND plan_hash=#{planHash}
+          AND state='PREPARED' AND claim_token IS NULL
+    </update>
+    <!-- Owner/id backwards range. All v2 states remain discoverable; body is read only by original GET. -->
+    <select id="selectRecovery" resultMap="Intent" useCache="false" flushCache="true">
+        SELECT id,member_id,prepare_key,request_id,state,reason_code,created_at,execute_before,result_expires_at,product_type
+        FROM ai_theme_draft_request_intent FORCE INDEX(idx_atdi_v2_recovery)
+        WHERE member_id=#{memberId}
+        <if test="beforeId != null">AND id&lt;#{beforeId}</if>
+        ORDER BY id DESC LIMIT 21
+    </select>
+    <update id="rejectPrepared">
+        UPDATE ai_theme_draft_request_intent SET state='FAILED', provider_state='NOT_SENT', reason_code=#{reasonCode},
+            outcome_hash=#{outcomeHash}, completed_at=#{completedAt}, updated_at=#{completedAt}
+        WHERE id=#{id} AND member_id=#{memberId} AND request_hash=#{requestHash} AND plan_hash=#{planHash}
+          AND state='PREPARED' AND claim_token IS NULL
+    </update>
+    <update id="complete">
+        UPDATE ai_theme_draft_request_intent SET state=#{state}, provider_state=#{providerState}, reason_code=#{reasonCode},
+            result_hash=#{resultHash}, outcome_hash=#{outcomeHash}, result_expires_at=#{resultExpiresAt},
+            completed_at=#{completedAt}, updated_at=#{completedAt}
+        WHERE id=#{id} AND member_id=#{memberId} AND request_hash=#{requestHash} AND plan_hash=#{planHash}
+          AND nonce=#{nonce} AND claim_token=#{claimToken} AND state='PROCESSING'
+    </update>
+    <select id="selectExpiredContexts" resultMap="Intent" useCache="false" flushCache="true">
+        SELECT * FROM ai_theme_draft_request_intent WHERE context_purged_at IS NULL
+          AND context_expires_at &lt;=#{now} ORDER BY context_expires_at,id LIMIT #{limit}
+    </select>
+    <select id="selectExpiredResults" resultMap="Intent" useCache="false" flushCache="true">
+        SELECT * FROM ai_theme_draft_request_intent WHERE result_purged_at IS NULL
+          AND result_expires_at &lt;=#{now} ORDER BY result_expires_at,id LIMIT #{limit}
+    </select>
+    <update id="markContextPurged">
+        UPDATE ai_theme_draft_request_intent SET context_purged_at=#{now}
+        WHERE id=#{id} AND request_id=#{requestId} AND context_purged_at IS NULL AND context_expires_at=#{expiry} AND context_expires_at &lt;=#{now}
+    </update>
+    <update id="markResultPurged">
+        UPDATE ai_theme_draft_request_intent SET result_purged_at=#{now}
+        WHERE id=#{id} AND request_id=#{requestId} AND result_purged_at IS NULL AND result_expires_at=#{expiry} AND result_expires_at &lt;=#{now}
+    </update>
+</mapper>

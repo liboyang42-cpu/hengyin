@@ -50,9 +50,10 @@ class ThemeRuntimeMySqlIT {
             exec(c,"ALTER TABLE cms_topic DROP COLUMN theme_runtime_config_json, DROP COLUMN published_theme_runtime_config_json");
             exec(c,"ALTER TABLE player_node_progress DROP COLUMN play_instance_id, ADD UNIQUE KEY uk_progress(member_id,topic_id,node_id,activity_id), ADD UNIQUE KEY uk_member_activity_node(member_id,activity_id,node_id)");
             String advancedMigration=new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get("sql/migration_20260822_advanced_game_runtime.sql")),java.nio.charset.StandardCharsets.UTF_8);int advancedCreate=advancedMigration.indexOf("CREATE TABLE IF NOT EXISTS game_runtime_session");exec(c,ItSchema.splitStatements(advancedMigration.substring(advancedCreate)).get(0));
-            ItSchema.applyMigrations(c,"sql/migration_m9_play_attempt_log.sql","sql/migration_20260820_new_city_preference_chain.sql","sql/migration_20260917_play_note.sql");
+            ItSchema.applyMigrations(c,"sql/migration_m9_play_attempt_log.sql","sql/migration_20260820_new_city_preference_chain.sql","sql/migration_20260917_play_note.sql","sql/migration_20261023_advanced_command_fingerprint.sql");
             exec(c,"CREATE TABLE play_team_member (team_id BIGINT, member_id BIGINT, status INT) ENGINE=InnoDB");
-            ItSchema.applyMigrations(c,"sql/migration_theme_runtime_20261004.sql","sql/migration_play_predict_20260906.sql");
+            ItSchema.applyMigrations(c,"sql/migration_theme_runtime_20261004.sql","sql/migration_play_predict_20260906.sql","sql/migration_photo_check_intent_20261023.sql");
+            ItSchema.applyMigrations(c,"sql/migration_theme_state_key_20260916.sql","sql/migration_20261022_theme_state_key_attribute_def.sql");
             String medalMigration=new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get("sql/migration_20260902_node_medal_claim.sql")),java.nio.charset.StandardCharsets.UTF_8);
             int start=medalMigration.indexOf("CREATE TABLE IF NOT EXISTS `node_medal_claim`");
             exec(c,"DROP TABLE IF EXISTS node_medal_claim");
@@ -60,7 +61,7 @@ class ThemeRuntimeMySqlIT {
         }
         Configuration cfg=new Configuration();cfg.setEnvironment(new Environment("theme",new SpringManagedTransactionFactory(),ds));
         cfg.getTypeAliasRegistry().registerAliases("com.chengyinhub.business.domain");
-        for(String mapper:Arrays.asList("CmsTopicMapper","CmsTopicNodeMapper","CmsTopicChapterMapper","CmsMemberTemplateMapper","PlayerNodeProgressMapper","CmsRegistrationMapper","GameRuntimeSessionMapper","PlayAttemptLogMapper","TopicRouteSessionMapper","ThemeBroadcastMapper","NodeMedalClaimMapper","PlayNoteMapper","PlayPredictMapper")) {
+        for(String mapper:Arrays.asList("CmsTopicMapper","CmsTopicNodeMapper","CmsTopicChapterMapper","CmsMemberTemplateMapper","PlayerNodeProgressMapper","CmsRegistrationMapper","GameRuntimeSessionMapper","PlayAttemptLogMapper","TopicRouteSessionMapper","ThemeBroadcastMapper","NodeMedalClaimMapper","PlayNoteMapper","PlayPredictMapper","PhotoCheckIntentMapper","ThemeStateKeyMapper")) {
             String resource="mapper/business/"+mapper+".xml";
             try(InputStream in=ThemeRuntimeMySqlIT.class.getClassLoader().getResourceAsStream(resource)){new XMLMapperBuilder(in,cfg,resource,cfg.getSqlFragments()).parse();}
         }
@@ -69,6 +70,7 @@ class ThemeRuntimeMySqlIT {
         org.mockito.Mockito.when(arrival.hasArrived(org.mockito.ArgumentMatchers.anyLong(),org.mockito.ArgumentMatchers.anyLong(),org.mockito.ArgumentMatchers.anyLong())).thenReturn(true);
         target=new TopicRouteRuntimeServiceImpl(sql.getMapper(TopicRouteSessionMapper.class),sql.getMapper(CmsTopicMapper.class),sql.getMapper(CmsTopicNodeMapper.class),sql.getMapper(CmsMemberTemplateMapper.class),sql.getMapper(PlayerNodeProgressMapper.class),null,sql.getMapper(CmsRegistrationMapper.class),null,arrival,()->123L,()->10,Clock.systemUTC(),RouteReachabilityProvider.UNKNOWN);
         ReflectionTestUtils.setField(target,"cmsTopicChapterMapper",sql.getMapper(CmsTopicChapterMapper.class));
+        ReflectionTestUtils.setField(target,"themeStateKeyMapper",sql.getMapper(ThemeStateKeyMapper.class));
         ReflectionTestUtils.setField(target,"themeNodeMedals",sql.getMapper(NodeMedalClaimMapper.class));
         im=org.mockito.Mockito.mock(com.chengyinhub.business.service.IImService.class);
         ReflectionTestUtils.setField(target,"themeBroadcastService",new com.chengyinhub.business.service.support.ThemeBroadcastService(sql.getMapper(ThemeBroadcastMapper.class),im));
@@ -78,7 +80,7 @@ class ThemeRuntimeMySqlIT {
         org.mockito.Mockito.reset(im);
         ReflectionTestUtils.setField(target,"clock",Clock.systemUTC());
         try(Connection c=ds.getConnection()) {
-            for(String table:Arrays.asList("play_predict_bet","play_predict_result","play_attempt_log","game_runtime_session","node_medal_claim","theme_broadcast_delivery","topic_route_action","topic_route_session","player_node_progress","cms_registration","cms_topic_node","cms_member_template","cms_topic_chapter","cms_topic"))exec(c,"DELETE FROM "+table);
+            for(String table:Arrays.asList("theme_state_key","photo_check_intent","play_predict_bet","play_predict_result","play_attempt_log","game_runtime_session","node_medal_claim","theme_broadcast_delivery","topic_route_action","topic_route_session","player_node_progress","cms_registration","cms_topic_node","cms_member_template","cms_topic_chapter","cms_topic"))exec(c,"DELETE FROM "+table);
             String config="{\"schemaVersion\":1,\"capacity\":3,\"replayEnabled\":true,\"items\":[{\"id\":\"food\",\"kind\":\"ITEM\",\"name\":\"口粮\",\"image\":\"https://example.test/food.png\",\"stat\":\"HP\",\"delta\":2}],\"endings\":[{\"id\":\"end\",\"title\":\"结束\",\"fallback\":true,\"success\":false}]}";
             try(PreparedStatement st=c.prepareStatement("INSERT INTO cms_topic(id,member_id,name,del_flag,route_mode,published_config_version,journey_rules_json,theme_runtime_config_json,published_theme_runtime_config_json) VALUES(10,7,'测试',0,'LINEAR',1,?,?,?)")) {
                 st.setString(1,"{\"schemaVersion\":1,\"checkEnabled\":true,\"hp\":{\"enabled\":true,\"max\":10,\"init\":6},\"recovery\":{\"stageRestHpFloor\":0,\"stageRestLuckFloor\":0,\"stationEndIfHurt\":0}}");st.setString(2,config);st.setString(3,config);st.executeUpdate();
@@ -124,7 +126,7 @@ class ThemeRuntimeMySqlIT {
             CmsTopic topic = sql.getMapper(CmsTopicMapper.class).selectCmsTopicById(topicId);
             assertEquals(JSON.readTree(topic.getPublishedRouteGraphJson()).path("nodeConfigs"), JSON.readTree(runtime.freezePublishedJourney(topic)).path("nodeConfigs"));
             Map<String, Object> view = runtime.themeView(7L, topicId, 0L, null); long sessionId = ((Number) view.get("sessionId")).longValue();
-            Map<String, Object> arrived = runtime.recordPlayerArrival(7L, topicId, 0L, nodeId, "scan", null);
+            Map<String, Object> arrived = runtime.recordPlayerArrival(7L, topicId, 0L, nodeId, "scan", ((Number) view.get("version")).intValue());
             Map<String, Object> started = runtime.gameplayAction(7L, sessionId, ((Number) arrived.get("version")).intValue(), "start", "QUEST_START", "node_" + nodeId, null);
             Map<String, Object> done = runtime.gameplayAction(7L, sessionId, ((Number) started.get("version")).intValue(), "resolve", "QUEST_RESOLVE", "node_" + nodeId, null);
             TopicRouteSession stored = sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(sessionId, 7L);
@@ -133,7 +135,7 @@ class ThemeRuntimeMySqlIT {
             assertEquals(topicId == 10 ? 5 : 4, state.path("variables").path("counter.x").asInt());
             assertEquals(1, state.path("themeRuntime").path("inventory").path(topicId == 10 ? "a" : "b").asInt());
             assertEquals(0, state.path("themeRuntime").path("inventory").path(topicId == 10 ? "b" : "a").asInt());
-            assertEquals(JSON.readTree(JSON.writeValueAsString(done)), JSON.readTree(JSON.writeValueAsString(runtime.gameplayAction(7L, sessionId, 0, "resolve", "QUEST_RESOLVE", "node_" + nodeId, null))));
+            assertEquals(JSON.readTree(JSON.writeValueAsString(done)), JSON.readTree(JSON.writeValueAsString(runtime.gameplayAction(7L, sessionId, ((Number) started.get("version")).intValue(), "resolve", "QUEST_RESOLVE", "node_" + nodeId, null))));
             assertEquals(stored.getStateJson(), sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(sessionId, 7L).getStateJson());
         }
     }
@@ -195,8 +197,8 @@ class ThemeRuntimeMySqlIT {
             CmsTopic topic=sql.getMapper(CmsTopicMapper.class).selectCmsTopicById(10L);
             try(PreparedStatement st=c.prepareStatement("UPDATE cms_topic SET published_route_graph_json=? WHERE id=10")){st.setString(1,runtime.freezePublication(topic,null));st.executeUpdate();}
         }
-        runtime.themeView(7L,10L,0L,null);
-        return runtime.recordPlayerArrival(7L,10L,0L,11L,"scan",null,basicMethod!=null && basicMethod==5?"GPS":basicMethod!=null && (basicMethod==1 || basicMethod==3)?"ANSWER":"SCAN");
+        Map<String,Object> original=runtime.themeView(7L,10L,0L,null);
+        return runtime.recordPlayerArrival(7L,10L,0L,11L,"scan",((Number)original.get("version")).intValue(),basicMethod!=null && basicMethod==5?"GPS":basicMethod!=null && (basicMethod==1 || basicMethod==3)?"ANSWER":"SCAN");
     }
     private final java.util.concurrent.atomic.AtomicLong advancedNow=new java.util.concurrent.atomic.AtomicLong(System.currentTimeMillis());
     @Test void r5OutcomeOnlyTemplateAdoptsRealTasksWithoutTheRemovedCostTool() throws Exception {
@@ -207,7 +209,7 @@ class ThemeRuntimeMySqlIT {
             CmsTopic topic=sql.getMapper(CmsTopicMapper.class).selectCmsTopicById(10L);assertEquals(2,JSON.readTree(runtime.compileTemplateRules(topic)).path("gameplayRuntime").path("quests").size());
             try(PreparedStatement st=c.prepareStatement("UPDATE cms_topic SET published_route_graph_json=? WHERE id=10")){st.setString(1,runtime.freezePublication(topic,null));st.executeUpdate();}
         }
-        runtime.themeView(7L,10L,0L,null);Map<String,Object> arrived=runtime.recordPlayerArrival(7L,10L,0L,11L,"scan-r5",null);long id=((Number)arrived.get("sessionId")).longValue();runtime.gameplayAction(7L,id,((Number)arrived.get("version")).intValue(),"start-r5","QUEST_START","node_11",null);
+        Map<String,Object> original=runtime.themeView(7L,10L,0L,null);Map<String,Object> arrived=runtime.recordPlayerArrival(7L,10L,0L,11L,"scan-r5",((Number)original.get("version")).intValue());long id=((Number)arrived.get("sessionId")).longValue();runtime.gameplayAction(7L,id,((Number)arrived.get("version")).intValue(),"start-r5","QUEST_START","node_11",null);
         com.chengyinhub.business.service.IAdvancedGameRuntimeService advanced=advancedService();Map<String,Object> started=advanced.start(7L,0L,10L,11L,null);
         advanced.act(7L,((Number)started.get("sessionId")).longValue(),((Number)started.get("version")).intValue(),"wrong-r5","SUBMIT_QA",Collections.singletonMap("input","错误"));
         assertEquals(3,JSON.readTree(sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(id,7L).getStateJson()).path("variables").path("sys.hp").asInt());
@@ -220,6 +222,7 @@ class ThemeRuntimeMySqlIT {
     }
     private com.chengyinhub.business.service.IAdvancedGameRuntimeService advancedService() {
         com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl advanced=new com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl();
+        ReflectionTestUtils.setField(advanced, "transactionManager", new org.springframework.jdbc.datasource.DataSourceTransactionManager(ds));
         ReflectionTestUtils.setField(advanced,"predictMapper",sql.getMapper(PlayPredictMapper.class));ReflectionTestUtils.setField(advanced,"sessionMapper",sql.getMapper(com.chengyinhub.business.mapper.GameRuntimeSessionMapper.class));ReflectionTestUtils.setField(advanced,"playNoteMapper",sql.getMapper(com.chengyinhub.business.mapper.PlayNoteMapper.class));ReflectionTestUtils.setField(advanced,"attemptMapper",sql.getMapper(com.chengyinhub.business.mapper.PlayAttemptLogMapper.class));ReflectionTestUtils.setField(advanced,"registrationMapper",sql.getMapper(CmsRegistrationMapper.class));ReflectionTestUtils.setField(advanced,"nodeMapper",sql.getMapper(CmsTopicNodeMapper.class));ReflectionTestUtils.setField(advanced,"templateMapper",sql.getMapper(CmsMemberTemplateMapper.class));ReflectionTestUtils.setField(advanced,"topicRouteRuntimeService",runtime);ReflectionTestUtils.setField(advanced,"clock",(com.chengyinhub.business.service.support.AdvancedGameClock)()->new java.util.Date(advancedNow.get()));
         ProxyFactory proxy=new ProxyFactory(advanced);proxy.setInterfaces(com.chengyinhub.business.service.IAdvancedGameRuntimeService.class);proxy.addAdvice(new TransactionInterceptor(new DataSourceTransactionManager(ds),new AnnotationTransactionAttributeSource()));return (com.chengyinhub.business.service.IAdvancedGameRuntimeService)proxy.getProxy();
     }
@@ -267,7 +270,8 @@ class ThemeRuntimeMySqlIT {
     @Test void r5ChallengeTwoActualCoinSessionsRestoreOnceWithoutCompletingTheRegularTask() throws Exception {
         Map<String,Object> initial=personalTask(false,null,"CHALLENGE");long id=((Number)initial.get("sessionId")).longValue();runtime.gameplayAction(7L,id,((Number)initial.get("version")).intValue(),"start","QUEST_START","north",null);
         runtime.recordGameplayOutcome(7L,10L,0L,11L,runtime.gameplayInstance(7L,10L,0L,11L),"advanced:1:1",JSON.createObjectNode().put("nodeId",11).put("outcome","FAIL"),Collections.emptyList());
-        runtime.recordPlayerArrival(7L,10L,0L,13L,"recovery-arrival",null);
+        Map<String,Object> recoveryContext=runtime.themeView(7L,10L,0L,id);
+        runtime.recordPlayerArrival(7L,10L,0L,13L,"recovery-arrival",((Number)recoveryContext.get("version")).intValue());
         com.chengyinhub.business.service.IAdvancedGameRuntimeService advanced=advancedService();Map<String,Object> first=advanced.start(7L,0L,10L,13L,null);long firstId=((Number)first.get("sessionId")).longValue();
         JsonNode before=JSON.readTree(sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(id,7L).getStateJson());long deadline=before.path("themeRuntime").path("challenge").path("deadlineAt").asLong();
         Map<String,Object> firstCompleted=advanced.act(7L,firstId,((Number)first.get("version")).intValue(),"first-coin","FLIP_COIN",Collections.emptyMap());
@@ -329,7 +333,7 @@ class ThemeRuntimeMySqlIT {
         Map<String,Object> initial=personalTask(false,null,"BLOCK_HP_COST",false,false,false,kit);long id=((Number)initial.get("sessionId")).longValue();runtime.gameplayAction(7L,id,((Number)initial.get("version")).intValue(),"start","QUEST_START","north",null);
         com.chengyinhub.business.service.IAdvancedGameRuntimeService advanced=advancedService();Object advancedTarget=((org.springframework.aop.framework.Advised)advanced).getTargetSource().getTarget();
         ReflectionTestUtils.setField(advancedTarget,"verifiedWeRunService",R5WeRunFixture.service());ReflectionTestUtils.setField(advancedTarget,"photoEvidenceVerifier",(java.util.function.BiConsumer<String,Long>)(url,member)->{if(!url.startsWith("fixture-owned-"+member))throw new IllegalArgumentException("foreign upload");});
-        com.chengyinhub.business.service.ai.PhotoCheckVisionService vision=mock(com.chengyinhub.business.service.ai.PhotoCheckVisionService.class);when(vision.review(any(),any(),any())).thenReturn(com.chengyinhub.business.service.ai.PhotoCheckVisionResult.concluded(true,99,"passed"));ReflectionTestUtils.setField(advancedTarget,"photoCheckVisionService",vision);
+        AdvancedPhotoMySqlFixture.install((com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl)advancedTarget, sql, ds, com.chengyinhub.business.service.ai.PhotoCheckVisionResult.concluded(true,99,"passed"));
         Map<String,Object> opened=advanced.start(7L,0L,10L,11L,null);long advancedId=((Number)opened.get("sessionId")).longValue();Map<String,Object> payload=new java.util.LinkedHashMap<>();String action;
         if("steps".equals(kit)){payload=JSON.convertValue(R5WeRunFixture.today(advancedNow.get(),7,"",100),Map.class);payload.remove("episodeId");action="SUBMIT_STEPS";}
         else if("album".equals(kit)){payload.put("imageUrls",Arrays.asList("fixture-owned-7-a","fixture-owned-7-b"));action="SUBMIT_ALBUM";}
@@ -337,6 +341,102 @@ class ThemeRuntimeMySqlIT {
         assertEquals(true,advanced.act(7L,advancedId,((Number)opened.get("version")).intValue(),"complete",action,payload).get("readyForBase"));assertEquals(6,JSON.readTree(sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(id,7L).getStateJson()).path("variables").path("sys.hp").asInt());
         TopicRouteSession row=sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(id,7L);runtime.gameplayAction(7L,id,row.getVersion(),"confirm","QUEST_RESOLVE","north",null);assertEquals(5,JSON.readTree(sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(id,7L).getStateJson()).path("variables").path("sys.hp").asInt());
     }
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(strings={"CAS","RECEIPT","APPLIED","CONCURRENT"})
+    void photoOriginalResultSurvivesLocalRollbackAndSameCommandAppliesOnce(String fault) throws Exception {
+        Map<String,Object> initial=personalTask(false,null,"BLOCK_HP_COST",false,false,false,"photoCheck");
+        long routeId=((Number)initial.get("sessionId")).longValue();
+        runtime.gameplayAction(7L,routeId,((Number)initial.get("version")).intValue(),"photo-route-start","QUEST_START","north",null);
+        com.chengyinhub.business.service.IAdvancedGameRuntimeService advanced=advancedService();
+        com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl advancedTarget=
+                (com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl)((org.springframework.aop.framework.Advised)advanced).getTargetSource().getTarget();
+        com.chengyinhub.business.service.ai.PhotoCheckVisionService vision=AdvancedPhotoMySqlFixture.install(advancedTarget,sql,ds,
+                com.chengyinhub.business.service.ai.PhotoCheckVisionResult.concluded(true,99,"first saved result"));
+        ReflectionTestUtils.setField(advancedTarget,"photoEvidenceVerifier",(java.util.function.BiConsumer<String,Long>)(url,member)->
+                assertFalse(org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()));
+        Map<String,Object> opened=advanced.start(7L,0L,10L,11L,null);
+        long sessionId=((Number)opened.get("sessionId")).longValue();int version=((Number)opened.get("version")).intValue();
+        GameRuntimeSessionMapper realSessions=sql.getMapper(GameRuntimeSessionMapper.class);
+        PlayAttemptLogMapper realAttempts=sql.getMapper(PlayAttemptLogMapper.class);
+        GameRuntimeSession before=realSessions.selectAccessibleById(sessionId,7L);
+        String routeBefore=sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(routeId,7L).getStateJson();
+        com.chengyinhub.business.service.ai.PhotoCheckIntentService actualIntents =
+                (com.chengyinhub.business.service.ai.PhotoCheckIntentService)
+                        ReflectionTestUtils.getField(advancedTarget, "photoCheckIntentService");
+        PhotoCheckIntentMapper realPhotoRows = sql.getMapper(PhotoCheckIntentMapper.class);
+        if("CAS".equals(fault)) {
+            GameRuntimeSessionMapper failing=mock(GameRuntimeSessionMapper.class,org.mockito.AdditionalAnswers.delegatesTo(realSessions));
+            doReturn(0).when(failing).updateStateCas(any());ReflectionTestUtils.setField(advancedTarget,"sessionMapper",failing);
+        } else if ("RECEIPT".equals(fault)) {
+            PlayAttemptLogMapper failing=mock(PlayAttemptLogMapper.class,org.mockito.AdditionalAnswers.delegatesTo(realAttempts));
+            doThrow(new IllegalStateException("fixture receipt insert failed")).when(failing).insertPlayAttemptLog(any());
+            ReflectionTestUtils.setField(advancedTarget,"attemptMapper",failing);
+        }
+        if ("APPLIED".equals(fault)) {
+            PhotoCheckIntentMapper failing = mock(PhotoCheckIntentMapper.class,
+                    org.mockito.AdditionalAnswers.delegatesTo(realPhotoRows));
+            doAnswer(i -> {
+                assertEquals(1, realPhotoRows.markApplied(i.getArgument(0), i.getArgument(1), i.getArgument(2)));
+                throw new IllegalStateException("fixture failure after actual APPLIED update");
+            }).when(failing).markApplied(anyLong(), anyString(), anyLong());
+            ReflectionTestUtils.setField(actualIntents, "mapper", failing);
+        }
+        Map<String,Object> payload=Collections.singletonMap("imageUrl","media-asset:701");
+        if ("CONCURRENT".equals(fault)) {
+            CountDownLatch entered=new CountDownLatch(1),release=new CountDownLatch(1);
+            com.chengyinhub.business.service.ai.PhotoCheckVisionService raceVision=AdvancedPhotoMySqlFixture.install(advancedTarget,sql,ds,
+                    com.chengyinhub.business.service.ai.PhotoCheckVisionResult.concluded(true,99,"first saved result"),()->{
+                        entered.countDown();try{assertTrue(release.await(10,TimeUnit.SECONDS));}
+                        catch(InterruptedException interrupted){Thread.currentThread().interrupt();throw new IllegalStateException(interrupted);}
+                    });
+            ExecutorService pool=Executors.newFixedThreadPool(2);
+            try {
+                Future<Map<String,Object>> first=pool.submit(()->advanced.act(7L,sessionId,version,"photo-fault","SUBMIT_PHOTO_CHECK",payload));
+                assertTrue(entered.await(5,TimeUnit.SECONDS));
+                Future<Throwable> second=pool.submit(()->{
+                    try{advanced.act(7L,sessionId,version,"photo-fault","SUBMIT_PHOTO_CHECK",payload);return null;}
+                    catch(Throwable outcome){return outcome;}
+                });
+                assertInstanceOf(com.chengyinhub.business.service.ai.AiProviderOutcomeUnknownException.class,second.get(5,TimeUnit.SECONDS),
+                        "loser must read IN_FLIGHT without waiting on provider-held business locks or inventing fallback");
+                sql.clearCache();assertEquals(before.getVersion(),realSessions.selectAccessibleById(sessionId,7L).getVersion());
+                assertEquals(JSON.readTree(routeBefore),JSON.readTree(sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(routeId,7L).getStateJson()));
+                String originalKey=ReflectionTestUtils.invokeMethod(advancedTarget,"scopedActionKey",before,7L,"photo-fault");
+                assertNull(realAttempts.selectByIdempotencyKey(originalKey));
+                PhotoCheckIntentRow inFlight=sql.getMapper(PhotoCheckIntentMapper.class).selectByKey(7L,sessionId,originalKey);
+                assertEquals("IN_FLIGHT",inFlight.getState());String originalNonce=inFlight.getNonce();
+                release.countDown();Map<String,Object> applied=first.get(10,TimeUnit.SECONDS);
+                assertEquals(JSON.valueToTree(applied),JSON.valueToTree(advanced.act(7L,sessionId,version,"photo-fault","SUBMIT_PHOTO_CHECK",payload)));
+                sql.clearCache();PhotoCheckIntentRow saved=sql.getMapper(PhotoCheckIntentMapper.class).selectByKey(7L,sessionId,originalKey);
+                assertEquals("APPLIED",saved.getState());assertEquals(originalNonce,saved.getNonce());
+                assertEquals(realAttempts.selectByIdempotencyKey(originalKey).getId(),saved.getAttemptLogId());
+                verify(raceVision,times(1)).reviewPrepared(anyLong(),anyString(),anyString(),anyString(),any());
+            } finally {release.countDown();pool.shutdownNow();assertTrue(pool.awaitTermination(10,TimeUnit.SECONDS));}
+            return;
+        }
+        assertThrows(com.chengyinhub.business.service.ai.AiProviderOutcomeUnknownException.class,
+                ()->advanced.act(7L,sessionId,version,"photo-fault","SUBMIT_PHOTO_CHECK",payload));
+        sql.clearCache();GameRuntimeSession rolledBack=realSessions.selectAccessibleById(sessionId,7L);
+        assertEquals(before.getVersion(),rolledBack.getVersion());assertEquals(before.getScore(),rolledBack.getScore());
+        assertEquals(JSON.readTree(before.getStateJson()),JSON.readTree(rolledBack.getStateJson()));
+        assertEquals(JSON.readTree(routeBefore),JSON.readTree(sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(routeId,7L).getStateJson()));
+        String scopedKey=ReflectionTestUtils.invokeMethod(advancedTarget,"scopedActionKey",before,7L,"photo-fault");
+        assertNull(realAttempts.selectByIdempotencyKey(scopedKey));
+        PhotoCheckIntentMapper photoRows=sql.getMapper(PhotoCheckIntentMapper.class);
+        PhotoCheckIntentRow ready=photoRows.selectByKey(7L,sessionId,scopedKey);
+        assertNotNull(ready);assertEquals("RESULT_READY",ready.getState());assertEquals("RECEIVED",ready.getProviderState());
+        String originalNonce=ready.getNonce();assertEquals("first saved result",ready.getResultReason());
+        ReflectionTestUtils.setField(actualIntents, "mapper", realPhotoRows);
+        ReflectionTestUtils.setField(advancedTarget,"sessionMapper",realSessions);ReflectionTestUtils.setField(advancedTarget,"attemptMapper",realAttempts);
+        Map<String,Object> applied=advanced.act(7L,sessionId,version,"photo-fault","SUBMIT_PHOTO_CHECK",payload);
+        Map<String,Object> replay=advanced.act(7L,sessionId,version,"photo-fault","SUBMIT_PHOTO_CHECK",payload);
+        assertEquals(JSON.valueToTree(applied),JSON.valueToTree(replay));sql.clearCache();
+        PhotoCheckIntentRow saved=photoRows.selectByKey(7L,sessionId,scopedKey);
+        assertEquals("APPLIED",saved.getState());assertEquals(originalNonce,saved.getNonce());
+        assertEquals(realAttempts.selectByIdempotencyKey(scopedKey).getId(),saved.getAttemptLogId());
+        verify(vision,times(1)).reviewPrepared(anyLong(),anyString(),anyString(),anyString(),any());
+    }
+
     @org.junit.jupiter.params.ParameterizedTest @org.junit.jupiter.params.provider.ValueSource(strings={"PASS","FAIL","ENDED"})
     void r5FeedbackStartsOnlyAfterSettlementAndNeverResettlesTheMainResult(String outcome) throws Exception {
         Map<String,Object> initial=personalTask(false,null,"BLOCK_HP_COST",false,false,false,"qaFeedback");long id=((Number)initial.get("sessionId")).longValue();runtime.gameplayAction(7L,id,((Number)initial.get("version")).intValue(),"start","QUEST_START","north",null);
@@ -344,7 +444,35 @@ class ThemeRuntimeMySqlIT {
         Map<String,Object> judged=advanced.act(7L,advancedId,0,"judge","SUBMIT_QA",Collections.singletonMap("input","FAIL".equals(outcome)?"wrong":"correct"));if(!"FAIL".equals(outcome)){assertEquals("",JSON.valueToTree(judged).path("branch").path("currentStepId").asText());TopicRouteSession row=sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(id,7L);runtime.gameplayAction(7L,id,row.getVersion(),"confirm","QUEST_RESOLVE","north",null);}
         TopicRouteSession row=sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(id,7L);String receipt=JSON.readTree(row.getStateJson()).path("themeRuntime").path("lastOutcome").toString();int hp=JSON.readTree(row.getStateJson()).path("variables").path("sys.hp").asInt();
         if("ENDED".equals(outcome)){row.setStatus(TopicRouteSession.STATUS_COMPLETED);sql.getMapper(TopicRouteSessionMapper.class).updateStateCas(row);assertFalse(JSON.valueToTree(advanced.state(7L,advancedId)).path("branch").path("writable").asBoolean());assertThrows(RuntimeException.class,()->advanced.act(7L,advancedId,1,"ended-choice","CHOOSE",Collections.singletonMap("optionId","continue")));}
-        else{Map<String,Object> done=advanced.act(7L,advancedId,1,"feedback-choice","CHOOSE",Collections.singletonMap("optionId","continue"));assertTrue(JSON.valueToTree(done).path("branch").path("ended").asBoolean());advanced.act(7L,advancedId,0,"feedback-choice","CHOOSE",Collections.singletonMap("optionId","continue"));assertEquals(hp+1,JSON.readTree(sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(id,7L).getStateJson()).path("variables").path("sys.hp").asInt());assertThrows(IllegalStateException.class,()->advanced.act(7L,advancedId,2,"new-key-terminal","CHOOSE",Collections.singletonMap("optionId","continue")));}
+        else {
+            int choiceExpected=((Number)judged.get("version")).intValue();
+            Map<String,Object> choicePayload=Collections.singletonMap("optionId","continue");
+            GameRuntimeSession originalChoice=sql.getMapper(GameRuntimeSessionMapper.class).selectAccessibleById(advancedId,7L);
+            Object advancedTarget=((org.springframework.aop.framework.Advised)advanced).getTargetSource().getTarget();
+            String choiceKey=ReflectionTestUtils.invokeMethod(advancedTarget,"scopedActionKey",originalChoice,7L,"feedback-choice");
+            String choiceFingerprint=ReflectionTestUtils.invokeMethod(advancedTarget,"commandFingerprint",originalChoice,7L,choiceExpected,"feedback-choice","CHOOSE",choicePayload);
+            Map<String,Object> done=advanced.act(7L,advancedId,choiceExpected,"feedback-choice","CHOOSE",choicePayload);
+            assertTrue(JSON.valueToTree(done).path("branch").path("ended").asBoolean());
+            PlayAttemptLog choiceReceipt=sql.getMapper(PlayAttemptLogMapper.class).selectByIdempotencyKey(choiceKey);
+            assertNotNull(choiceReceipt);assertEquals(Integer.valueOf(8),choiceReceipt.getAttemptType());
+            assertEquals(choiceFingerprint,choiceReceipt.getRequestFingerprint(),"receipt must bind original CHOOSE, not its feedback effects");
+            Map<String,Object> replay=advanced.act(7L,advancedId,choiceExpected,"feedback-choice","CHOOSE",choicePayload);
+            assertEquals(JSON.readTree(JSON.writeValueAsString(done)),JSON.readTree(JSON.writeValueAsString(replay)));
+            GameRuntimeSession afterChoice=sql.getMapper(GameRuntimeSessionMapper.class).selectAccessibleById(advancedId,7L);
+            TopicRouteSession afterFeedback=sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(id,7L);
+            assertConflict409(()->advanced.act(7L,advancedId,choiceExpected+1,"feedback-choice","CHOOSE",choicePayload));
+            assertConflict409(()->advanced.act(7L,advancedId,choiceExpected,"feedback-choice","CHOOSE",Collections.singletonMap("optionId","different")));
+            assertConflict409(()->advanced.act(7L,advancedId,choiceExpected,"feedback-choice","SUBMIT_QA",choicePayload));
+            GameRuntimeSession afterRefusals=sql.getMapper(GameRuntimeSessionMapper.class).selectAccessibleById(advancedId,7L);
+            assertEquals(afterChoice.getVersion(),afterRefusals.getVersion());assertEquals(afterChoice.getStateJson(),afterRefusals.getStateJson());
+            assertEquals(afterChoice.getScore(),afterRefusals.getScore());assertEquals(afterChoice.getStatus(),afterRefusals.getStatus());
+            TopicRouteSession routeAfterRefusals=sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(id,7L);
+            assertEquals(afterFeedback.getVersion(),routeAfterRefusals.getVersion());assertEquals(afterFeedback.getStateJson(),routeAfterRefusals.getStateJson());
+            PlayAttemptLog unchangedReceipt=sql.getMapper(PlayAttemptLogMapper.class).selectByIdempotencyKey(choiceKey);
+            assertEquals(choiceReceipt.getId(),unchangedReceipt.getId());assertEquals(choiceReceipt.getRequestFingerprint(),unchangedReceipt.getRequestFingerprint());assertEquals(choiceReceipt.getResultJson(),unchangedReceipt.getResultJson());
+            assertEquals(hp+1,JSON.readTree(routeAfterRefusals.getStateJson()).path("variables").path("sys.hp").asInt());
+            assertThrows(IllegalStateException.class,()->advanced.act(7L,advancedId,((Number)done.get("version")).intValue(),"new-key-terminal","CHOOSE",choicePayload));
+        }
         assertEquals(receipt,JSON.readTree(sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(id,7L).getStateJson()).path("themeRuntime").path("lastOutcome").toString());
     }
     @Test void r5TamperedAuthorHpWriteCannotAcquirePublishedValidationMarker() throws Exception {
@@ -369,13 +497,29 @@ class ThemeRuntimeMySqlIT {
         Map<String,Object> initial=personalTask(false,null,"STEPS");long id=((Number)initial.get("sessionId")).longValue();runtime.gameplayAction(7L,id,((Number)initial.get("version")).intValue(),"start","QUEST_START","north",null);
         runtime.recordGameplayOutcome(7L,10L,0L,11L,runtime.gameplayInstance(7L,10L,0L,11L),"advanced:1:1",JSON.createObjectNode().put("nodeId",11).put("outcome","FAIL"),Collections.emptyList());
         TopicRouteSession row=sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(id,7L);String episode=JSON.readTree(row.getStateJson()).path("themeRuntime").path("zeroHp").path("episodeId").asText();assertFalse(episode.isEmpty());
-        com.fasterxml.jackson.databind.node.ObjectNode base=R5WeRunFixture.today(now,7,episode,1000);Map<String,Object> first=runtime.syncZeroHpSteps(7L,id,row.getVersion(),"steps-base",base);assertEquals(0,JSON.valueToTree(first).path("zeroHp").path("progress").asInt());assertEquals(JSON.readTree(JSON.writeValueAsString(first)),JSON.readTree(JSON.writeValueAsString(runtime.syncZeroHpSteps(7L,id,0,"steps-base",base))));
+        int baselineExpected=row.getVersion();
+        com.fasterxml.jackson.databind.node.ObjectNode base=R5WeRunFixture.today(now,7,episode,1000);
+        Map<String,Object> first=runtime.syncZeroHpSteps(7L,id,baselineExpected,"steps-base",base);
+        assertEquals(0,JSON.valueToTree(first).path("zeroHp").path("progress").asInt());
+        assertEquals(JSON.readTree(JSON.writeValueAsString(first)),JSON.readTree(JSON.writeValueAsString(runtime.syncZeroHpSteps(7L,id,baselineExpected,"steps-base",base))));
+        TopicRouteSession afterBaseline=sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(id,7L);
+        TopicRouteAction baselineReceipt=sql.getMapper(TopicRouteSessionMapper.class).selectActionByAction(id,7L,"gameplay:steps-base");
+        assertNotNull(baselineReceipt);assertEquals("ZERO_HP_STEPS",baselineReceipt.getOutcomeCode());
+        assertConflict409(()->runtime.syncZeroHpSteps(7L,id,baselineExpected+1,"steps-base",base));
+        JsonNode changedReading=R5WeRunFixture.today(now,7,episode,1050);
+        assertConflict409(()->runtime.syncZeroHpSteps(7L,id,baselineExpected,"steps-base",changedReading));
+        assertConflict409(()->runtime.gameplayAction(7L,id,baselineExpected,"steps-base","ZERO_HP_SYNC",episode,null));
+        TopicRouteSession afterRefusals=sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(id,7L);
+        assertEquals(afterBaseline.getVersion(),afterRefusals.getVersion());assertEquals(afterBaseline.getStateJson(),afterRefusals.getStateJson());
+        TopicRouteAction unchangedBaseline=sql.getMapper(TopicRouteSessionMapper.class).selectActionByAction(id,7L,"gameplay:steps-base");
+        assertEquals(baselineReceipt.getId(),unchangedBaseline.getId());assertEquals(baselineReceipt.getReceiptId(),unchangedBaseline.getReceiptId());assertEquals(baselineReceipt.getResponseJson(),unchangedBaseline.getResponseJson());
         row=sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(id,7L);int version=row.getVersion();assertThrows(IllegalArgumentException.class,()->runtime.syncZeroHpSteps(7L,id,version,"other-identity",R5WeRunFixture.today(now,8,episode,10000)));
         runtime.syncZeroHpSteps(7L,id,row.getVersion(),"steps-progress",R5WeRunFixture.today(now,7,episode,1050));row=sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(id,7L);String before=row.getStateJson();int expected=row.getVersion();
+        JsonNode completeReading=R5WeRunFixture.today(now,7,episode,1100);
         try(Connection c=ds.getConnection()){exec(c,"CREATE TRIGGER fail_steps_restore BEFORE UPDATE ON topic_route_session FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='local restore rollback'");}
-        try{assertThrows(RuntimeException.class,()->runtime.syncZeroHpSteps(7L,id,expected,"steps-complete",R5WeRunFixture.today(now,7,episode,1100)));assertEquals(before,sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(id,7L).getStateJson());}
+        try{assertThrows(RuntimeException.class,()->runtime.syncZeroHpSteps(7L,id,expected,"steps-complete",completeReading));assertEquals(before,sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(id,7L).getStateJson());}
         finally{try(Connection c=ds.getConnection()){exec(c,"DROP TRIGGER fail_steps_restore");}}
-        runtime.syncZeroHpSteps(7L,id,expected,"steps-complete",R5WeRunFixture.today(now,7,episode,1100));String restored=sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(id,7L).getStateJson();assertEquals(4,JSON.readTree(restored).path("variables").path("sys.hp").asInt());assertEquals(1,JSON.readTree(restored).path("themeRuntime").path("zeroHp").path("used").asInt());assertFalse(restored.contains("fixture-code"));assertFalse(restored.contains("encryptedData"));assertFalse(restored.contains("fixture-player"));
+        runtime.syncZeroHpSteps(7L,id,expected,"steps-complete",completeReading);String restored=sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(id,7L).getStateJson();assertEquals(4,JSON.readTree(restored).path("variables").path("sys.hp").asInt());assertEquals(1,JSON.readTree(restored).path("themeRuntime").path("zeroHp").path("used").asInt());assertFalse(restored.contains("fixture-code"));assertFalse(restored.contains("encryptedData"));assertFalse(restored.contains("fixture-player"));
     }
 
     @Test void r5TimeoutCompletedUsesPassPendingAndRetainsFixedProofWhenBalanceFalls() throws Exception {
@@ -428,7 +572,7 @@ class ThemeRuntimeMySqlIT {
         assertEquals(3,JSON.readTree(stored.getStateJson()).path("variables").path("sys.hp").asInt());
         Map<String,Object> done=runtime.gameplayAction(7L,id,stored.getVersion(),"r5-confirm","QUEST_RESOLVE","north",null);
         assertEquals(2,((Number)done.get("hp")).intValue());
-        assertEquals(JSON.readTree(JSON.writeValueAsString(done)),JSON.readTree(JSON.writeValueAsString(runtime.gameplayAction(7L,id,0,"r5-confirm","QUEST_RESOLVE","north",null))));
+        assertEquals(JSON.readTree(JSON.writeValueAsString(done)),JSON.readTree(JSON.writeValueAsString(runtime.gameplayAction(7L,id,stored.getVersion(),"r5-confirm","QUEST_RESOLVE","north",null))));
         try(Connection independent=ds.getConnection();Statement st=independent.createStatement();ResultSet rs=st.executeQuery("SELECT state_json FROM topic_route_session WHERE id="+id)){assertTrue(rs.next());assertEquals(2,JSON.readTree(rs.getString(1)).path("variables").path("sys.hp").asInt());}
     }
     @Test void r5ZeroFailureFreezesFailureCardFromActualFeeTransaction() throws Exception {
@@ -464,7 +608,7 @@ class ThemeRuntimeMySqlIT {
     }
     private long readyPersonalOperation() throws Exception {
         Map<String,Object> initial=personalTask(true);long id=((Number)initial.get("sessionId")).longValue();
-        Map<String,Object> arrived=runtime.recordPlayerArrival(7L,10L,0L,12L,"operation-scan",null);
+        Map<String,Object> arrived=runtime.recordPlayerArrival(7L,10L,0L,12L,"operation-scan",((Number)initial.get("version")).intValue());
         runtime.gameplayAction(7L,id,((Number)arrived.get("version")).intValue(),"operation-start","OPERATION_START","warm",null);
         runtime.recordNodeResult(7L,10L,0L,12L,runtime.gameplayInstance(7L,10L,0L,12L),"operation-proof",true,false,0,Collections.emptyList());return id;
     }
@@ -473,7 +617,7 @@ class ThemeRuntimeMySqlIT {
         Map<String,Object> result=runtime.gameplayAction(7L,id,((Number)before.get("version")).intValue(),"operation-use","FACILITY_USE","warm",null);
         assertEquals(7,((Number)result.get("hp")).intValue());assertEquals(1,((Number)result.get("used")).intValue());
         assertNull(result.get("activeOperation"));assertThrows(RuntimeException.class,()->runtime.gameplayAction(7L,id,((Number)result.get("version")).intValue(),"operation-again","FACILITY_USE","warm",null));
-        assertEquals(JSON.readTree(JSON.writeValueAsString(result)),JSON.readTree(JSON.writeValueAsString(runtime.gameplayAction(7L,id,0,"operation-use","FACILITY_USE","warm",null))));
+        assertEquals(JSON.readTree(JSON.writeValueAsString(result)),JSON.readTree(JSON.writeValueAsString(runtime.gameplayAction(7L,id,((Number)before.get("version")).intValue(),"operation-use","FACILITY_USE","warm",null))));
     }
     @Test void concurrentPersonalOperationCannotUseTheSameProofTwice() throws Exception {
         long id=readyPersonalOperation();int version=((Number)runtime.themeView(7L,10L,0L,id).get("version")).intValue();CountDownLatch go=new CountDownLatch(1);ExecutorService pool=Executors.newFixedThreadPool(2);
@@ -489,7 +633,7 @@ class ThemeRuntimeMySqlIT {
         Map<String,Object> ready=runtime.themeView(7L,10L,0L,id);
         Map<String,Object> done=runtime.gameplayAction(7L,id,((Number)ready.get("version")).intValue(),"done","QUEST_RESOLVE","north",null);
         assertEquals("COMPLETED",done.get("status"));assertEquals(5,((Number)done.get("hp")).intValue());assertEquals(2,((Number)done.get("used")).intValue());
-        assertEquals(JSON.readTree(JSON.writeValueAsString(done)),JSON.readTree(JSON.writeValueAsString(runtime.gameplayAction(7L,id,0,"done","QUEST_RESOLVE","north",null))));
+        assertEquals(JSON.readTree(JSON.writeValueAsString(done)),JSON.readTree(JSON.writeValueAsString(runtime.gameplayAction(7L,id,((Number)ready.get("version")).intValue(),"done","QUEST_RESOLVE","north",null))));
         assertThrows(RuntimeException.class,()->runtime.themeAction(7L,id,((Number)done.get("version")).intValue(),"bypass","CHAPTER_END","0"));
     }
     @Test void personalTaskDatabaseFailureRollsBackInventoryStateAndReceipt() throws Exception {
@@ -669,5 +813,165 @@ class ThemeRuntimeMySqlIT {
         assertEquals(0,((List)runtime.themeView(7L,10L,0L,((Number)fresh.get("sessionId")).longValue()).get("contents")).size());
         assertEquals(2,((List)runtime.themeCard(7L,id).get("medals")).size());
     }
+    private static void assertConflict409(org.junit.jupiter.api.function.Executable action) {
+        assertEquals(Integer.valueOf(409),assertThrows(com.chengyinhub.common.exception.ServiceException.class,action).getCode());
+    }
     private static void exec(Connection c,String text)throws SQLException{try(Statement st=c.createStatement()){st.execute(text);}}
+    // G WP05 negative-only additions: production unchanged; not executed here.
+    @Test void replayArrivalMustBeReadableFromTheCurrentPlayInstance() throws Exception {
+        Map<String,Object> first=runtime.themeView(7L,10L,0L,null);
+        long oldId=((Number)first.get("sessionId")).longValue();
+        runtime.themeAction(7L,oldId,((Number)first.get("version")).intValue(),"g-end","END",null);
+        Map<String,Object> replay=runtime.replayTheme(7L,oldId);
+        String expected=(String)replay.get("playInstanceId");
+        assertNotEquals("default",expected);
+        com.chengyinhub.business.service.impl.ShopDayProofServiceImpl realArrival=new com.chengyinhub.business.service.impl.ShopDayProofServiceImpl();
+        ReflectionTestUtils.setField(realArrival,"playerNodeProgressMapper",sql.getMapper(PlayerNodeProgressMapper.class));
+        ReflectionTestUtils.setField(realArrival,"playerNodeProgressService",arrivalProgressOwner());
+        com.chengyinhub.business.domain.CmsTopicNode node=sql.getMapper(CmsTopicNodeMapper.class).selectCmsTopicNodeById(11L);
+        realArrival.markArrived(7L,0L,node);
+        com.chengyinhub.business.domain.PlayerNodeProgress probe=new com.chengyinhub.business.domain.PlayerNodeProgress();
+        probe.setMemberId(7L);probe.setActivityId(0L);probe.setTopicId(10L);probe.setNodeId(11L);
+        List<com.chengyinhub.business.domain.PlayerNodeProgress> visible=sql.getMapper(PlayerNodeProgressMapper.class).selectPlayerNodeProgressList(probe);
+        assertEquals(1,visible.size(),"a newly accepted arrival must be visible in this same current replay");
+        assertEquals(expected,visible.get(0).getPlayInstanceId());
+        assertEquals(0,visible.get(0).getStatus(),"arrival is not node completion or reward eligibility");
+    }
+    @Test void replayArrivalMustNotCollideWithTheOldDefaultArrival() throws Exception {
+        Map<String,Object> first=runtime.themeView(7L,10L,0L,null);
+        long oldId=((Number)first.get("sessionId")).longValue();
+        try(Connection c=ds.getConnection()) {
+            exec(c,"INSERT INTO player_node_progress(member_id,activity_id,topic_id,node_id,play_instance_id,status,checkin_time,del_flag) VALUES(7,0,10,11,'default',0,'2026-01-01 12:00:00',0)");
+        }
+        runtime.themeAction(7L,oldId,((Number)first.get("version")).intValue(),"g-end-old-arrival","END",null);
+        Map<String,Object> replay=runtime.replayTheme(7L,oldId);
+        com.chengyinhub.business.service.impl.ShopDayProofServiceImpl realArrival=new com.chengyinhub.business.service.impl.ShopDayProofServiceImpl();
+        ReflectionTestUtils.setField(realArrival,"playerNodeProgressMapper",sql.getMapper(PlayerNodeProgressMapper.class));
+        ReflectionTestUtils.setField(realArrival,"playerNodeProgressService",arrivalProgressOwner());
+        com.chengyinhub.business.domain.CmsTopicNode node=sql.getMapper(CmsTopicNodeMapper.class).selectCmsTopicNodeById(11L);
+        assertDoesNotThrow(()->realArrival.markArrived(7L,0L,node),"old-run arrival must not make the replay action fail");
+        com.chengyinhub.business.domain.PlayerNodeProgress probe=new com.chengyinhub.business.domain.PlayerNodeProgress();
+        probe.setMemberId(7L);probe.setActivityId(0L);probe.setTopicId(10L);probe.setNodeId(11L);probe.setPlayInstanceId((String)replay.get("playInstanceId"));
+        assertEquals(1,sql.getMapper(PlayerNodeProgressMapper.class).selectPlayerNodeProgressList(probe).size());
+        probe.setPlayInstanceId("default");
+        List<com.chengyinhub.business.domain.PlayerNodeProgress> old=sql.getMapper(PlayerNodeProgressMapper.class).selectPlayerNodeProgressList(probe);
+        assertEquals(1,old.size());assertEquals(0,old.get(0).getStatus());
+    }
+
+
+    @Test void repeatedArrivalPreservesAllStoredColumnsAndPhotoWithinOneReplay() throws Exception {
+        Map<String,Object> replay=arrivalReplay();
+        String instance=(String)replay.get("playInstanceId");
+        com.chengyinhub.business.service.impl.ShopDayProofServiceImpl realArrival=arrivalService();
+        CmsTopicNode node=sql.getMapper(CmsTopicNodeMapper.class).selectCmsTopicNodeById(11L);
+        PlayerNodeProgress first=realArrival.markArrived(7L,0L,node);
+        realArrival.submitPhoto(7L,0L,11L,"https://img/same-run-proof.jpg");
+        List<List<String>> before=arrivalStoredRows(instance,null);
+
+        PlayerNodeProgress again=realArrival.markArrived(7L,0L,node);
+
+        assertEquals(first.getId(),again.getId());
+        assertEquals(instance,again.getPlayInstanceId());
+        assertEquals(Integer.valueOf(0),again.getStatus());
+        assertEquals("https://img/same-run-proof.jpg",again.getPicUrl());
+        assertEquals(1,before.size());
+        assertEquals(before,arrivalStoredRows(instance,null),"repeat arrival must not change any stored column");
+        assertTrue(arrivalStoredRows("default",null).isEmpty());
+    }
+
+    @Test void replaySiblingArrivalSharesOneInstanceWithoutMovingOldPhotosOrStatuses() throws Exception {
+        configureArrivalSiblings();
+        try(Connection c=ds.getConnection()) {
+            exec(c,"INSERT INTO player_node_progress(member_id,activity_id,topic_id,node_id,play_instance_id,status,checkin_time,pic_url,review_status,puzzle_score,completion_mode,del_flag,create_time) VALUES(7,0,10,11,'default',1,'2026-01-01 12:00:00','https://img/old-main.jpg',1,80,'SOLVED',0,'2026-01-01 12:00:00'),(7,0,10,12,'default',0,'2026-01-01 12:00:00','https://img/old-sibling.jpg',0,NULL,NULL,0,'2026-01-01 12:00:00')");
+        }
+        List<List<String>> old=arrivalStoredRows("default",null);
+        Map<String,Object> replay=arrivalReplay();String instance=(String)replay.get("playInstanceId");
+        com.chengyinhub.business.service.impl.ShopDayProofServiceImpl realArrival=arrivalService();
+        CmsTopicNode node=sql.getMapper(CmsTopicNodeMapper.class).selectCmsTopicNodeById(11L);
+
+        realArrival.markArrived(7L,0L,node);
+
+        PlayerNodeProgress probe=new PlayerNodeProgress();probe.setMemberId(7L);probe.setActivityId(0L);
+        probe.setTopicId(10L);probe.setPlayInstanceId(instance);
+        List<PlayerNodeProgress> current=sql.getMapper(PlayerNodeProgressMapper.class).selectPlayerNodeProgressList(probe);
+        assertEquals(2,current.size());
+        Set<Long> nodes=new HashSet<>();
+        for(PlayerNodeProgress row:current) {
+            nodes.add(row.getNodeId());assertEquals(instance,row.getPlayInstanceId());
+            assertEquals(Integer.valueOf(0),row.getStatus());assertNull(row.getPicUrl());
+            assertNotNull(row.getCheckinTime());assertEquals(current.get(0).getCheckinTime(),row.getCheckinTime());
+        }
+        assertEquals(new HashSet<>(Arrays.asList(11L,12L)),nodes);
+        assertEquals(old,arrivalStoredRows("default",null),"every old column, completion and photo must remain unchanged");
+        List<List<String>> once=arrivalStoredRows(instance,null);
+        realArrival.markArrived(7L,0L,node);
+        assertEquals(once,arrivalStoredRows(instance,null));
+        assertEquals(old,arrivalStoredRows("default",null));
+    }
+
+    @Test void anExistingSameRunSiblingKeepsItsCompletionAndPhoto() throws Exception {
+        configureArrivalSiblings();
+        Map<String,Object> replay=arrivalReplay();String instance=(String)replay.get("playInstanceId");
+        try(Connection c=ds.getConnection();PreparedStatement st=c.prepareStatement("INSERT INTO player_node_progress(member_id,activity_id,topic_id,node_id,play_instance_id,status,checkin_time,pic_url,review_status,del_flag,create_time) VALUES(7,0,10,12,?,1,'2026-01-01 12:00:00','https://img/current-sibling.jpg',1,0,'2026-01-01 12:00:00')")) {
+            st.setString(1,instance);assertEquals(1,st.executeUpdate());
+        }
+        List<List<String>> sibling=arrivalStoredRows(instance,12L);
+        com.chengyinhub.business.service.impl.ShopDayProofServiceImpl realArrival=arrivalService();
+
+        PlayerNodeProgress main=realArrival.markArrived(7L,0L,sql.getMapper(CmsTopicNodeMapper.class).selectCmsTopicNodeById(11L));
+
+        assertEquals(instance,main.getPlayInstanceId());assertEquals(Integer.valueOf(0),main.getStatus());assertNull(main.getPicUrl());
+        assertEquals(1,sibling.size());assertEquals(sibling,arrivalStoredRows(instance,12L));
+        assertEquals(2,arrivalStoredRows(instance,null).size());
+        assertTrue(arrivalStoredRows("default",null).isEmpty());
+    }
+
+    private com.chengyinhub.business.service.impl.PlayerNodeProgressServiceImpl arrivalProgressOwner() {
+        com.chengyinhub.business.service.impl.PlayerNodeProgressServiceImpl owner=new com.chengyinhub.business.service.impl.PlayerNodeProgressServiceImpl();
+        ReflectionTestUtils.setField(owner,"playerNodeProgressMapper",sql.getMapper(PlayerNodeProgressMapper.class));
+        ReflectionTestUtils.setField(owner,"routeSessions",sql.getMapper(TopicRouteSessionMapper.class));
+        return owner;
+    }
+
+    private com.chengyinhub.business.service.impl.ShopDayProofServiceImpl arrivalService() {
+        com.chengyinhub.business.service.impl.ShopDayProofServiceImpl service=new com.chengyinhub.business.service.impl.ShopDayProofServiceImpl();
+        ReflectionTestUtils.setField(service,"playerNodeProgressMapper",sql.getMapper(PlayerNodeProgressMapper.class));
+        ReflectionTestUtils.setField(service,"playerNodeProgressService",arrivalProgressOwner());
+        ReflectionTestUtils.setField(service,"cmsTopicNodeMapper",sql.getMapper(CmsTopicNodeMapper.class));
+        return service;
+    }
+
+    private Map<String,Object> arrivalReplay() throws Exception {
+        Map<String,Object> first=runtime.themeView(7L,10L,0L,null);
+        long oldId=((Number)first.get("sessionId")).longValue();
+        runtime.themeAction(7L,oldId,((Number)first.get("version")).intValue(),"arrival-test-end","END",null);
+        Map<String,Object> replay=runtime.replayTheme(7L,oldId);
+        assertNotNull(replay.get("playInstanceId"));assertNotEquals("default",replay.get("playInstanceId"));
+        return replay;
+    }
+
+    private void configureArrivalSiblings() throws Exception {
+        // Existing host-node tables: one real chapter, same address/coordinates; no merchant evidence fabricated.
+        try(Connection c=ds.getConnection()) {
+            exec(c,"INSERT INTO cms_topic_chapter(id,topic_id,name,sort_id) VALUES(100,10,'arrival-chapter',1)");
+            exec(c,"UPDATE cms_topic_node SET chapter_id=100,address='same-place',latitude='31.200000',longitude='121.400000' WHERE topic_id=10 AND id IN (11,12)");
+        }
+    }
+
+    private List<List<String>> arrivalStoredRows(String instance,Long nodeId) throws Exception {
+        List<List<String>> rows=new ArrayList<>();
+        String query="SELECT * FROM player_node_progress WHERE member_id=7 AND activity_id=0 AND topic_id=10 AND play_instance_id=?"+(nodeId==null?"":" AND node_id=?")+" ORDER BY id";
+        try(Connection c=ds.getConnection();PreparedStatement st=c.prepareStatement(query)) {
+            st.setString(1,instance);if(nodeId!=null)st.setLong(2,nodeId);
+            try(ResultSet rs=st.executeQuery()) {
+                int columns=rs.getMetaData().getColumnCount();
+                while(rs.next()) {
+                    List<String> row=new ArrayList<>();
+                    for(int column=1;column<=columns;column++)row.add(rs.getString(column));
+                    rows.add(row);
+                }
+            }
+        }
+        return rows;
+    }
 }

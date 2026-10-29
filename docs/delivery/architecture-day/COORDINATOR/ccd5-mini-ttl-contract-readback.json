@@ -1,0 +1,17 @@
+{
+  "source_sha": "ccd55005c75d105f8245b0591e63adcd0dd15280",
+  "run": 40138581031,
+  "job": 121005393924,
+  "shard": "1/20",
+  "actual_case": "the original five-minute TTL and signing configuration have equal local values and keep local PNG generation",
+  "case_verdict": "PASS",
+  "shard_actual_tap_counts": {
+    "tests": 813,
+    "pass": 813,
+    "fail": 0,
+    "skipped": 0
+  },
+  "original_log_sha256": "708fcd3e2fe4bbe124e7faf0d7f53e6d284e19f20a76991ea442749e95c0b1f2",
+  "test_source": "chengyinhub-xcx/tests/unit/registration-ticket-application-source.test.js:51",
+  "scope": "Exact final previously failing TTL contract and its shard, not device/business acceptance"
+}

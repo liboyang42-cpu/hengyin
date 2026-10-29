@@ -1,0 +1,5 @@
+c86fb8aa439c85be1985ef2573e4743d5f2714b57e87ae6eb1f02ece326b1ec0  chengyinhub-admin/src/test/java/com/chengyinhub/business/it/ClmCommercePaymentProofMySqlIT.java
+bce1bafd9d587364f5f985de4031faa2750fa600d82947f6535a25b4ae5fc252  chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CommittedOfficialNoticeMySqlFixture.java
+38684d4b181e596f84f254184f3eb14fbb2c35333ea06bc8de6840eb8805c30a  chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/SignupNoticeAfterCommitPersistenceMySqlIT.java
+9750d615431aeeccb7447167867641621c0ca000681ce7968c44d9cfedfb6448  docs/delivery/architecture-day/G/ca0e-notice-commerce-repair/shared-consumption-denial.review.patch
+90fddb4619788a9431c127d57078fb3509665bef4a797dffc91a4bf25188bd16  docs/delivery/architecture-day/G/ca0e-notice-commerce-repair/README.md

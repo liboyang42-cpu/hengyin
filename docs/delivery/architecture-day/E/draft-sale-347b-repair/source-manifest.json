@@ -1,0 +1,27 @@
+{
+  "parent": "2b68c327d0c6f247e76af108700ca626b6fb7197",
+  "helper_dependency": "bc2b738fbd58dea6c8eabdb9d00eea22b21f364c",
+  "original_baseline": "347bcd0226c3bed71616e38ea7c1391fc76efe5c",
+  "code_patch_sha256": "540a3fb00b84b0dabdc6848da95fc8a35707b5eb5601521db6464c8c746369c8",
+  "code_files": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CmsTopicPublishDraftTest.java",
+      "original_347b_blob_sha1": "6135f23addec5099df369e9be20325fa4122fdf0",
+      "original_347b_sha256": "e01073023a449a446071aad8cbba275f335afa9481eff33dc22403f311853c1c",
+      "donor_WIP_blob_sha1": "e1320f68eff5d9f1f2a4ef2115468a58eef349b2",
+      "donor_WIP_sha256": "fa80846b8cb43d105bf5961813f6961244bae5dc69708a2e1b6e9a6c0567f8ea",
+      "postimage_blob_sha1": "54184e38ba965b8900c8396a6325bebf4e05c633",
+      "postimage_sha256": "6ce5768307140e695858e95cbcb70772c8d56e8f183e5eac327eeda2357daa85"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleReviewDecouplingTest.java",
+      "original_347b_blob_sha1": "90ba3694557b234a45a38afcb7b22b617eda3fb3",
+      "original_347b_sha256": "73d390de65aa156dc947b67a4475598316fa0566a3e6cb63e9bbfc207be3f2b3",
+      "donor_WIP_blob_sha1": "702d3f331fa81716994f607e26a25605fb41795e",
+      "donor_WIP_sha256": "0147fb7f627f3e163808baa660fa8de3d20c520dc4fe22a85216bf9df9eed5e9",
+      "postimage_blob_sha1": "661bcf99ac73ec752a5c7588d3fffccdccdd94eb",
+      "postimage_sha256": "8b19d43f7ab263ea4a17bd287acf7569c2a83ce3bfc8e07998aa11fd97d5955a"
+    }
+  ],
+  "tests_parse_compile_db_ci": "NOT_RUN"
+}

@@ -6,7 +6,6 @@ const { isRecordList } = require('../../../utils/response-shape.js');
 
 const app = getApp();
 const PAGE_SIZE = 50;          // 后端 startPage 单页上限 50,一次拿不全，要翻页
-const MAX_PAGES = 10;
 const THEME_SEGMENT_TITLE = /^G\d+｜/;
 const RAIL_STEP_RPX = 642;     // 主题精选卡 622rpx + 间距 20rpx,算当前第几张
 
@@ -130,12 +129,16 @@ Component({
 
   lifetimes: {
     attached() {
+      this._hidden = false; this._detached = false;
+      this._shelfEpoch = (this._shelfEpoch || 0) + 1;
       this._topics = [];
       this._games = [];
       this.loadTopics();
       this.loadGames();
     },
     detached() {
+      this._detached = true; this._shelfEpoch = (this._shelfEpoch || 0) + 1;
+      this._topicSeq = (this._topicSeq || 0) + 1; this._gameSeq = (this._gameSeq || 0) + 1;
       this._seq = (this._seq || 0) + 1;
     }
   },
@@ -143,14 +146,22 @@ Component({
   pageLifetimes: {
     // 回到模板页时静默刷新(后台改了上架不用重进小程序)
     show() {
-      if (this.data.topicLoaded) this.loadTopics();
-      if (this.data.gameLoaded) this.loadGames();
+      this._hidden = false;
+      this.loadTopics();
+      this.loadGames();
+    },
+    hide() {
+      this._hidden = true;
+      this._shelfEpoch = (this._shelfEpoch || 0) + 1;
     }
   },
 
   methods: {
     loadTopics() {
       const seq = this._topicSeq = (this._topicSeq || 0) + 1;
+      const owner = app.getUserID && app.getUserID(), scope = this.data.scope, epoch = this._shelfEpoch;
+      const current = () => !this._hidden && !this._detached && seq === this._topicSeq && epoch === this._shelfEpoch
+        && owner === (app.getUserID && app.getUserID()) && scope === this.data.scope;
       app.sendRequest({
         hideLoading: true,
         silentError: true,
@@ -158,7 +169,7 @@ Component({
         method: 'POST',
         data: {},
         success: (res) => {
-          if (seq !== this._topicSeq) return;
+          if (!current()) return;
           if (res && res.code == '200' && isRecordList(res.data)) {
             this._topics = res.data.filter((t) => art.HIDDEN_TOPICS.indexOf(art.themeKey(t.name)) < 0).map(decorateTopic);
             this.setData({ topicLoaded: true, topicError: '' });
@@ -168,7 +179,7 @@ Component({
           }
         },
         fail: (res) => {
-          if (seq !== this._topicSeq || this.data.topicLoaded) return;
+          if (!current() || this.data.topicLoaded) return;
           this.setData({ topicError: app.getRequestErrorMessage(res, '主题模板加载失败') });
         }
       });
@@ -177,9 +188,12 @@ Component({
     // 后端单页最多 50 条：满页且没到 total 就接着取下一页，取全再上货架
     loadGames() {
       const seq = this._gameSeq = (this._gameSeq || 0) + 1;
-      const rows = [];
+      const owner = app.getUserID && app.getUserID(), scope = this.data.scope, epoch = this._shelfEpoch;
+      const current = () => !this._hidden && !this._detached && seq === this._gameSeq && epoch === this._shelfEpoch
+        && owner === (app.getUserID && app.getUserID()) && scope === this.data.scope;
+      const rows = [], seen = new Set();
       const failed = (res) => {
-        if (seq !== this._gameSeq || this.data.gameLoaded) return;
+        if (!current() || this.data.gameLoaded) return;
         this.setData({ gameError: app.getRequestErrorMessage(res, '玩法模板加载失败') });
       };
       const page = (n) => app.sendRequest({
@@ -189,19 +203,25 @@ Component({
         method: 'POST',
         data: { pageNum: n, pageSize: PAGE_SIZE, pack_type: 0 },
         success: (res) => {
-          if (seq !== this._gameSeq) return;
+          if (!current()) return;
           const data = res && res.data;
           const list = data ? (data.rows || data) : null;
           if (!res || res.code != '200' || !isRecordList(list)) { failed(res); return; }
-          list.forEach((r) => rows.push(r));
-          const total = Number(data.total || 0);
-          if (list.length >= PAGE_SIZE && !(total && rows.length >= total) && n < MAX_PAGES) { page(n + 1); return; }
+          if (list.some(r => !/^[1-9]\d*$/.test(String(r.id))
+              || typeof r.id === 'number' && !Number.isSafeInteger(r.id) || seen.has(String(r.id)))
+              || new Set(list.map(r => String(r.id))).size !== list.length) { failed(); return; }
+          list.forEach((r) => { seen.add(String(r.id)); rows.push(r); });
+          if (Object.prototype.hasOwnProperty.call(data, 'total')) {
+            const total = Number(data.total);
+            if (!Number.isSafeInteger(total) || total < 0 || rows.length > total || (!list.length && rows.length < total)) { failed(); return; }
+            if (rows.length < total) { page(n + 1); return; }
+          } else if (list.length >= PAGE_SIZE) { page(n + 1); return; }
           this._games = pickGames(rows);
           this.setData({ gameLoaded: true, gameError: '' });
           this.buildGames();
         },
         fail: (res) => {
-          if (seq !== this._gameSeq || this.data.gameLoaded) return;
+          if (!current() || this.data.gameLoaded) return;
           this.setData({ gameError: app.getRequestErrorMessage(res, '玩法模板加载失败') });
         }
       });

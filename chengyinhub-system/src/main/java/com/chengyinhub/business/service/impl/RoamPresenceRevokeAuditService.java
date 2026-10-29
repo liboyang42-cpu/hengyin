@@ -5,6 +5,8 @@ import com.chengyinhub.business.domain.RoamPresenceRevokeIntent;
 import com.chengyinhub.business.mapper.ConsentRecordMapper;
 import com.chengyinhub.business.mapper.RoamPresenceRevokeIntentMapper;
 import com.chengyinhub.business.mapper.UmsMemberMapper;
+import com.chengyinhub.common.utils.LogCorrelation;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -61,6 +63,20 @@ public class RoamPresenceRevokeAuditService {
     }
 
     public boolean deliver(String requestId) {
+        // Durable business command, not the HTTP request ID or the lease owner capability.
+        try (LogCorrelation.Scope ignored = LogCorrelation.with(Map.of(
+                "commandId", LogCorrelation.safe("commandId", requestId), "event", "roam.presence.audit"))) {
+            log.info("event=roam.presence.audit.attempt commandId={} jobRunId={}",
+                    LogCorrelation.value("commandId"), LogCorrelation.value(LogCorrelation.JOB_RUN_ID));
+            boolean delivered = deliverAudit(requestId);
+            log.info("event=roam.presence.audit.result commandId={} jobRunId={} observedResult={}",
+                    LogCorrelation.value("commandId"), LogCorrelation.value(LogCorrelation.JOB_RUN_ID),
+                    delivered ? "DELIVERED" : "NOT_CONFIRMED");
+            return delivered;
+        }
+    }
+
+    private boolean deliverAudit(String requestId) {
         String owner = UUID.randomUUID().toString();
         RoamPresenceRevokeIntent row;
         java.util.concurrent.atomic.AtomicBoolean escalated = new java.util.concurrent.atomic.AtomicBoolean(false);
@@ -106,7 +122,8 @@ public class RoamPresenceRevokeAuditService {
     }
 
     private void reportFailure(String requestId) {
-        try { alarm.alarm("位置分享撤回记录失败", "关闭事实已保存，撤回审计需恢复 requestId=" + requestId); }
+        try { alarm.alarm("位置分享撤回记录失败", "关闭事实已保存，撤回审计需恢复 commandId="
+                + LogCorrelation.safe("commandId", requestId) + " jobRunId=" + LogCorrelation.value(LogCorrelation.JOB_RUN_ID)); }
         catch (RuntimeException failure) { log.warn("位置分享审计告警未送达 type={}", failure.getClass().getSimpleName()); }
     }
 }

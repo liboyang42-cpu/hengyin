@@ -1,0 +1,32 @@
+{
+  "purpose": "Isolated combined CI candidate; not accepted, merged or deployed",
+  "base_sha": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+  "source_candidates": {
+    "A": "3bc4bb08caaba4cc300f2df25f90c4a070033bfc",
+    "C": "9a90123b4a3735eb9303f4b38b72e81e51694be5",
+    "D": "e71777f375fcbb19a17b46647c36391ec03ed3b4",
+    "E": "a3d6ba28228efd991c206ac747e7d2a95af59293",
+    "F": "527adf3fe003b6e9022c255f9e7a3716a9aabe95"
+  },
+  "assembly": "Exact non-overlapping base-to-candidate patches; six-file ROOT Photo direct safety patch appended",
+  "remaining_blockers": [
+    "B full four-route persistent payment intent and provider classification not yet included",
+    "Advanced runtime request fingerprint not yet implemented",
+    "H-PH-01 photo provider may be called twice after gameplay rollback; durable original action intent and split orchestration pending",
+    "G completed-route query not wired and FREE_EXPLORE no-ticket fallback not yet fixed",
+    "A/D/C new MySQL classes need explicit registry execution",
+    "Java compile and all business tests not yet verified",
+    "Full construction WP00-WP17/Q1-Q10/G0-G5 not accepted"
+  ],
+  "test_counts_from_existing_source_scanner": {
+    "CashWithdrawFundEvidenceMySqlIT": 19,
+    "OfficialBroadcastDeliveryMySqlIT": 7,
+    "ClubLeadChapterIntentMySqlIT": 3
+  },
+  "production_access": false,
+  "ddl_executed": false,
+  "user_decisions": [
+    "First payment attempt locks channel; close original payment before new attempt",
+    "Isolated CI candidate commit/push permitted before Java validation; no formal integration/merge/deploy until acceptance"
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "task": "E/WP11",
+  "base_sha": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+  "head_sha": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+  "branch": "codex/architecture-day-e-wp11-im-batch",
+  "worktree": "/workspace/hengyin-e-wp11",
+  "frozen_cache_tree": "9fcff59e1dfe0da5fbf265125d35acd30a7214b1",
+  "wp11_source_tree": "d62ceb5f19683292a529cdc5fa9399bc00b2912e",
+  "combined_source_tree": "dff239cc5be7507d2e24729b10d022321874e3f8",
+  "patch_sha256": "d267264ff83dbd7e4b07cdd8469cbb8a1b780d195ea59f27816c8ea8aa02bcbc",
+  "files": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ImConversationBatchReadMySqlIT.java",
+      "sha256": "08716f908390ae12c4b1237f3a0c44ad594e8d60b560402e42f8ecaf724b121d",
+      "junit_test_count": 4
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ImConversationBatchReadTest.java",
+      "sha256": "571bdb9c8583aeeeaae15fc30d19b03ae8fad605778909c8497cc6a79a6d0532",
+      "junit_test_count": 7
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ImRouteProjectionTest.java",
+      "sha256": "fb77013302c5024e253efb4af56c9a0ce527976729b362258c742743ed3df8fc",
+      "junit_test_count": 9
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ImSendIdempotencyMybatisIntegrationTest.java",
+      "sha256": "10289327e64a49b71bd8238a88c52b271b1b0061821bf80ac2e6c51b44d6d040",
+      "junit_test_count": 14
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ImServiceImplTest.java",
+      "sha256": "cffbaede7c0907c6f761a5843db564899bcc3e3878331a84cfe6e67e1db56f77",
+      "junit_test_count": 53
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/ImConversationMemberMapper.java",
+      "sha256": "28bddacaff037fb690d8a25058db51a29f3609da087cfe7fa9896df0cdd0ff24",
+      "junit_test_count": 0
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ImServiceImpl.java",
+      "sha256": "c42698d6d21525fd17921e5f1beaaa757b92d5f8ace5af8e4a6327693b1d1c4b",
+      "junit_test_count": 0
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/ImConversationMemberMapper.xml",
+      "sha256": "a034229232ab8fea83f8f7fb61fd0b1bac84395aee4b979d29ff85209d527818",
+      "junit_test_count": 0
+    }
+  ],
+  "java_compile_executed": false,
+  "junit_executed": false,
+  "mysql_executed": false,
+  "explain_or_performance_executed": false,
+  "test_inventory": {
+    "new_unit": 7,
+    "new_mysql_it": 4,
+    "existing_service": 53,
+    "existing_route": 9,
+    "existing_send_mysql_it": 14
+  },
+  "originating_worktree": "/workspace/hengyin-e",
+  "originating_branch": "codex/architecture-day-e-resources",
+  "cache_source_paths": [
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicRouteGeometryCacheTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicRouteServiceImplTest.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteServiceImpl.java"
+  ],
+  "ci_candidate_commit_push_exception_authorized": true,
+  "publication_receipt": "Reported separately after isolated CI candidate commit/push attempt",
+  "patch_export": "git diff --binary --full-index 2ec68899099a1e250df0949a8383bf85b5d3ffe0 -- <8 manifest source paths>"
+}

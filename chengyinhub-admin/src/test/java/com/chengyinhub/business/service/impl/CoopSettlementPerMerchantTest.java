@@ -35,6 +35,8 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -49,6 +51,7 @@ import static org.mockito.Mockito.when;
  *
  * 数据本来就有,只是没人读:CmsRegistrationScan 里 registration_type=1 的那批
  * 记的就是真正扫码的商家(:1119-1130)。
+ * WP04：显式计划替身下的五分项组合测试；不证明模拟的 CLUB/团路径已开放现金结算。
  */
 class CoopSettlementPerMerchantTest {
 
@@ -87,6 +90,7 @@ class CoopSettlementPerMerchantTest {
         ReflectionTestUtils.setField(svc, "cmsRegistrationMapper", cmsRegistrationMapper);
         ReflectionTestUtils.setField(svc, "coopOrderMapper", coopOrderMapper);
         ReflectionTestUtils.setField(svc, "coopSettlementMapper", coopSettlementMapper);
+        PreparedCoopPlanFixture.install(svc, cmsRegistrationMapper, coopOrderMapper, null, coopSettlementMapper);
         ReflectionTestUtils.setField(svc, "pricingService", pricingService);
         ReflectionTestUtils.setField(svc, "umsMemberService", mock(IUmsMemberService.class));
         ReflectionTestUtils.setField(svc, "umsMemberBalanceDetailService", mock(IUmsMemberBalanceDetailService.class));
@@ -150,6 +154,28 @@ class CoopSettlementPerMerchantTest {
         assertEquals(0, new BigDecimal(expected).compareTo(s.getAmount()), msg + "(实际 " + s.getAmount() + ")");
     }
 
+    @Test
+    void declaredCompositionScopeCannotTurnAnUnvisitedMerchantIntoPositivePayable() {
+        topicWideVerified(); merchantVerified(MERCHANT_A, 100, "5000"); merchantVerified(MERCHANT_B, 0, "0");
+        when(coopOrderMapper.selectEffectiveOrdersByTopicId(TOPIC)).thenReturn(Arrays.asList(
+                merchantOrder(1L, MERCHANT_A, 2, null, "20"), merchantOrder(2L, MERCHANT_B, 2, null, "20")));
+        PreparedCoopPlanFixture.topic(TOPIC);
+        var claims = (com.chengyinhub.business.service.ICoopSettlementClaimService)
+                ReflectionTestUtils.getField(svc, "coopSettlementClaimService");
+        var plans = coopOrderMapper.selectEffectiveOrdersByTopicId(TOPIC).stream()
+                .map(order -> claims.prepare(order, new java.util.Date())).toList();
+        com.chengyinhub.business.service.support.CoopSettlementContract.requireIndependentOrderScopes(plans);
+        assertEquals(0, new BigDecimal("2000").compareTo(plans.get(0).getOriginAmount()));
+        assertEquals(0, BigDecimal.ZERO.compareTo(plans.get(1).getOriginAmount()));
+        assertEquals(0, plans.get(1).getVerifiedHeads());
+        assertEquals(0, BigDecimal.ZERO.compareTo(plans.get(1).getEligibleSales()));
+        for (var plan : plans) for (var line : plan.getOriginLines()) {
+            assertEquals(Long.valueOf(1), line.getRegistrationId());
+            com.chengyinhub.business.service.support.CoopSettlementContract.requireHeaderEquality(plan.getSnapshot(), line);
+        }
+        verify(coopSettlementMapper, never()).insertCoopSettlement(any());
+    }
+
     /**
      * ★ 端到端断言(自由探索常态):3 家中标固定型 ¥20/人头,100 人全在 A 处核销。
      * 旧口径:三家各按全主题 100 人头拿 2000 → 商家合计 6000 > 销售额-平台-保底
@@ -166,7 +192,9 @@ class CoopSettlementPerMerchantTest {
                 merchantOrder(2L, MERCHANT_B, 2, null, "20"),
                 merchantOrder(3L, MERCHANT_C, 2, null, "20")));
 
-        svc.settleCoopTopic(topic(), new BigDecimal("5000"));
+        PreparedCoopPlanFixture.topic(TOPIC);
+
+        PreparedCoopPlanFixture.settle(svc, topic(), new BigDecimal("5000"));
 
         Map<String, List<CoopSettlement>> lines = capturedLines();
         assertAmount("2000.00", lineOf(lines, "MERCHANT_VERIFY", MERCHANT_A), "A 接待 100 人 → 20×100");
@@ -198,7 +226,9 @@ class CoopSettlementPerMerchantTest {
                 merchantOrder(1L, MERCHANT_A, 1, "30", null),
                 merchantOrder(2L, MERCHANT_B, 1, "30", null)));
 
-        svc.settleCoopTopic(topic(), new BigDecimal("5000"));
+        PreparedCoopPlanFixture.topic(TOPIC);
+
+        PreparedCoopPlanFixture.settle(svc, topic(), new BigDecimal("5000"));
 
         Map<String, List<CoopSettlement>> lines = capturedLines();
         assertAmount("1200.00", lineOf(lines, "MERCHANT_VERIFY", MERCHANT_A), "A:自己的 4000×30%,不是全主题 5000×30%");
@@ -221,7 +251,9 @@ class CoopSettlementPerMerchantTest {
                 merchantOrder(1L, MERCHANT_A, 2, null, "5"),
                 merchantOrder(2L, MERCHANT_B, 2, null, "5")));
 
-        svc.settleCoopTopic(topic(), new BigDecimal("50"));
+        PreparedCoopPlanFixture.topic(TOPIC);
+
+        PreparedCoopPlanFixture.settle(svc, topic(), new BigDecimal("50"));
 
         Map<String, List<CoopSettlement>> lines = capturedLines();
         assertAmount("5.00", lineOf(lines, "MERCHANT_VERIFY", MERCHANT_A), "玩家只到过 A");
@@ -249,7 +281,9 @@ class CoopSettlementPerMerchantTest {
         when(coopOrderMapper.selectEffectiveOrdersByTopicId(TOPIC))
                 .thenReturn(Collections.singletonList(clubOrder));
 
-        svc.settleCoopTopic(topic(), new BigDecimal("5000"));
+        PreparedCoopPlanFixture.topic(TOPIC);
+
+        PreparedCoopPlanFixture.settle(svc, topic(), new BigDecimal("5000"));
 
         Map<String, List<CoopSettlement>> lines = capturedLines();
         assertAmount("1000.00", lineOf(lines, "LEAD_FEE", 900009L), "俱乐部带队按全主题 100 人头 × ¥10");
@@ -268,7 +302,9 @@ class CoopSettlementPerMerchantTest {
                 merchantOrder(1L, MERCHANT_A, 2, null, "20"),
                 merchantOrder(2L, MERCHANT_B, 2, null, "20")));
 
-        svc.settleCoopTopic(topic(), new BigDecimal("5000"));
+        PreparedCoopPlanFixture.topic(TOPIC);
+
+        PreparedCoopPlanFixture.settle(svc, topic(), new BigDecimal("5000"));
 
         Map<String, List<CoopSettlement>> lines = capturedLines();
         assertEquals(Integer.valueOf(100), lineOf(lines, "MERCHANT_VERIFY", MERCHANT_A).getVerifiedHeads(),

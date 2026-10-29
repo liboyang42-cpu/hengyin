@@ -13,6 +13,7 @@ import com.chengyinhub.business.mapper.CmsRegistrationMerchantMapper;
 import com.chengyinhub.business.mapper.CmsSettingMapper;
 import com.chengyinhub.business.mapper.CmsTopicMapper;
 import com.chengyinhub.business.mapper.CoopOrderMapper;
+import com.chengyinhub.business.mapper.CoopSettlementEvidenceMapper;
 import com.chengyinhub.business.mapper.SettlementDetailMapper;
 import com.chengyinhub.business.service.impl.CmsActivityServiceImpl;
 import com.chengyinhub.business.service.impl.CmsTopicServiceImpl;
@@ -380,6 +381,7 @@ class SettlementRateConvergenceTest {
         when(settlementRuleService.getActiveRule(0L, "activity"))
                 .thenReturn(rule("0.10", "0.90", "0.00", "0.00"));
         primeActivity(new BigDecimal("1000"), 77L, 7L);
+        when(cmsActivityMapper.claimActivityForSettlement(100L)).thenReturn(1, 0);
 
         assertEquals(1, activitySvc.executeActivitySettlement());
         BigDecimal activityPayout = capturePayouts().values().stream()
@@ -391,6 +393,7 @@ class SettlementRateConvergenceTest {
         when(topicRuleService.getActiveRule(0L, "topic"))
                 .thenReturn(topicRule("0.03", "0.90", "0.00", "0.00"));
         primeTopic(BigDecimal.ZERO, 77L);
+        when(topicMapper.claimTopicForSettlement(200L)).thenReturn(1, 0);
 
         assertEquals(1, topicSvc.executeTopicSettlement());
         verify(topicRegMapper).selectTotalSalesByTopicId(200L);
@@ -399,6 +402,17 @@ class SettlementRateConvergenceTest {
         verify(topicMember, never()).addBalance(anyLong(), any());
         verify(pointsAwardService).awardPublisherSettlement(77L, 50L);
         verify(pointsAwardService, never()).awardPublisherSettlement(77L, 200L);
+        verify(pointsAwardService, never()).awardPublisherSettlement(77L, 100L);
+        verify(cmsRegistrationMapper).selectTotalSalesByActivityId(100L);
+        verify(topicEvidenceMapper).selectTopicCashRowsForUpdate(200L);
+        assertEquals(0, activitySvc.executeActivitySettlement(), "活动重复 CAS 未领取，票款和积分均零新增");
+        assertEquals(0, topicSvc.executeTopicSettlement(), "零销售主题重复 CAS 未领取，不能补发结算积分");
+        BigDecimal afterReplay = capturePayouts().values().stream().reduce(BigDecimal.ZERO, BigDecimal::add);
+        assertEquals(0, activityPayout.compareTo(afterReplay), "重跑后全部实际出票款仍恰好 ¥1000");
+        verify(pointsAwardService, times(1)).awardPublisherSettlement(77L, 50L);
+        verify(topicRegMapper, times(1)).selectTotalSalesByTopicId(200L);
+        verify(topicEvidenceMapper, times(1)).selectTopicCashRowsForUpdate(200L);
+        verify(topicMember, never()).addBalance(anyLong(), any());
     }
 
     @Test
@@ -468,6 +482,7 @@ class SettlementRateConvergenceTest {
     private CmsRegistrationMapper topicRegMapper;
     private CmsRegistrationMerchantMapper merchantMapper;
     private CoopOrderMapper coopOrderMapper;
+    private CoopSettlementEvidenceMapper topicEvidenceMapper;
     private IUmsMemberService topicMember;
     private ISettlementRuleService topicRuleService;
     private PlatformTransactionManager topicTransactionManager;
@@ -489,6 +504,9 @@ class SettlementRateConvergenceTest {
         topicRegMapper = mock(CmsRegistrationMapper.class);
         merchantMapper = mock(CmsRegistrationMerchantMapper.class);
         coopOrderMapper = mock(CoopOrderMapper.class);
+        topicEvidenceMapper = mock(CoopSettlementEvidenceMapper.class);
+        // 主题票原合计为零，且没有该主题的已付活动壳资金；不能依赖 null/默认服务跳过证据闸。
+        when(topicEvidenceMapper.countPaidActivityRegistrations(200L)).thenReturn(0);
         topicMember = mock(IUmsMemberService.class);
         topicRuleService = mock(ISettlementRuleService.class);
 
@@ -504,12 +522,15 @@ class SettlementRateConvergenceTest {
         // CmsTopicServiceImpl 上不再有这个字段。merchantMapper 仍留着是因为下面的用例要 stub 它
         // 来证明**没有人再去读商家表**。
         ReflectionTestUtils.setField(topicSvc, "coopOrderMapper", coopOrderMapper);
+        ReflectionTestUtils.setField(topicSvc, "coopSettlementEvidenceMapper", topicEvidenceMapper);
+        com.chengyinhub.business.service.impl.OriginalCloseRefundHistoryFixture.install(topicSvc, 200L, Collections.emptyList());
         ReflectionTestUtils.setField(topicSvc, "umsMemberService", topicMember);
         ReflectionTestUtils.setField(topicSvc, "umsMemberBalanceDetailService",
                 mock(IUmsMemberBalanceDetailService.class));
         ReflectionTestUtils.setField(topicSvc, "settlementRuleService", topicRuleService);
         ReflectionTestUtils.setField(topicSvc, "pointsAwardService", pointsAwardService);
         // 无销售收口也要登记该主题的保证金退款意图(d7593ff37),本类不测保证金
+        ReflectionTestUtils.setField(topicSvc, "coopInviteMapper", mock(com.chengyinhub.business.mapper.CoopInviteMapper.class));
         ReflectionTestUtils.setField(topicSvc, "coopInviteService", mock(ICoopInviteService.class));
         // A3-7:主题结算改「每主题独立事务 + CAS 原子领取」——注入 txm,并让领取默认成功(1),
         // 否则 settleTopic 入口即因抢不到而跳过、settledCount 恒 0。
@@ -533,6 +554,7 @@ class SettlementRateConvergenceTest {
         t.setMemberId(publisherMemberId); // 发布者
         t.setProductType(ProductType.ORIENTEERING);
         when(topicMapper.selectTopicsForSettlement()).thenReturn(Collections.singletonList(t));
+        when(topicMapper.selectCmsTopicByIdForUpdate(t.getId())).thenReturn(t);
         when(topicRegMapper.selectTotalSalesByTopicId(200L)).thenReturn(totalSales);
         // 无 coop 单 → 走存量 else 分支
         when(coopOrderMapper.selectEffectiveOrdersByTopicId(200L)).thenReturn(Collections.emptyList());

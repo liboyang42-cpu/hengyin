@@ -11,6 +11,10 @@ import java.util.Map;
 
 /** 活动级三身份游戏深模块公开 seam。 */
 public interface IGameSessionRuntimeService {
+    /** Persisted projection: null only when no shared session applies; a missing shared RUN rejects without initialization/refresh. */
+    com.chengyinhub.business.domain.route.TopicRouteState querySharedRouteState(Long memberId, Long topicId, Long activityId);
+    /** Server-only original snapshot. No initialization, zero-HP refresh, effects or writes. */
+    default com.fasterxml.jackson.databind.JsonNode querySharedRouteSnapshot(Long memberId, Long topicId, Long activityId, Long nodeId) { return null; }
     default com.chengyinhub.business.domain.route.TopicRouteState sharedRouteState(Long memberId, Long topicId, Long activityId) { return null; }
     default com.fasterxml.jackson.databind.JsonNode sharedRouteSnapshot(Long memberId, Long topicId, Long activityId, Long nodeId) { return null; }
     default com.fasterxml.jackson.databind.JsonNode recordSharedZeroChallengeResult(Long memberId,Long topicId,Long activityId,Long nodeId,String instance,String submissionId,boolean passed,Long hits,boolean retry,Integer authorityEpoch) { throw new UnsupportedOperationException(); }
@@ -43,8 +47,6 @@ public interface IGameSessionRuntimeService {
     GameCommandReceiptView recordFailure(GameActorContext actor, GameSessionCommand command, GameSessionException failure);
     GameCommandReceiptView receipt(GameActorContext actor, Long activityId, String requestId);
 
-    com.chengyinhub.business.domain.route.TopicRouteState querySharedRouteState(Long memberId, Long topicId, Long activityId);
-    com.fasterxml.jackson.databind.JsonNode querySharedRouteSnapshot(Long memberId, Long topicId, Long activityId, Long nodeId);
 
     boolean isOriginalSharedRouteEligible(Long memberId, Long topicId, Long activityId, Long nodeId,
                                           Long sessionId, String runtimeInstance, Integer authorityEpoch);

@@ -10,6 +10,7 @@ import com.chengyinhub.business.domain.ClubEventOccurrence;
 import com.chengyinhub.business.domain.ClubEventSeries;
 import com.chengyinhub.business.domain.ClubWaitlistEntry;
 import com.chengyinhub.business.domain.dto.ActivityCancelResult;
+import com.chengyinhub.business.domain.dto.RegistrationCancellationPayments;
 import com.chengyinhub.business.mapper.ClubEventOpsMapper;
 import com.chengyinhub.business.mapper.ClubLeadMapper;
 import com.chengyinhub.business.mapper.ClubMemberMapper;
@@ -63,6 +64,7 @@ class ClubActivityCancelWrapUpTest {
     private IClubRoleAssignmentService roleService;
     private ITeamGroupService teamGroupService;
     private ClubEventOpsServiceImpl service;
+    private RegistrationCancellationPayments payments;
 
     @BeforeEach
     void setUp() {
@@ -73,6 +75,18 @@ class ClubActivityCancelWrapUpTest {
         service = new ClubEventOpsServiceImpl(accessService, new ClubEventScheduleMaterializer(),
                 mock(IClubSessionService.class), mapper, mock(ClubMemberMapper.class),
                 mock(ClubLeadMapper.class), roleService, teamGroupService);
+        CancellationPhaseTestSupport.wireTransactions(service,CancellationPhaseTestSupport.memoryTransactions());
+        payments = CancellationPhaseTestSupport.stubEmptyObservation(teamGroupService,ACTIVITY);
+        com.chengyinhub.business.mapper.CmsActivityMapper activities = mock(com.chengyinhub.business.mapper.CmsActivityMapper.class);
+        com.chengyinhub.business.mapper.CmsTopicMapper topics = mock(com.chengyinhub.business.mapper.CmsTopicMapper.class);
+        com.chengyinhub.business.domain.CmsActivity activity = new com.chengyinhub.business.domain.CmsActivity();
+        activity.setId(ACTIVITY); activity.setClubId(CLUB); activity.setTopicId(TOPIC); activity.setMemberId(OWNER);
+        com.chengyinhub.business.domain.CmsTopic topic = new com.chengyinhub.business.domain.CmsTopic(); topic.setId(TOPIC);
+        when(activities.selectCmsActivityById(ACTIVITY)).thenReturn(activity);
+        when(activities.selectCmsActivityByIdForUpdate(ACTIVITY)).thenReturn(activity);
+        when(topics.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(topic);
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "cancellationActivityMapper", activities);
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "cancellationTopicMapper", topics);
     }
 
     private void stubSeries(ClubEventOccurrence occurrence) {
@@ -130,7 +144,7 @@ class ClubActivityCancelWrapUpTest {
         stubSeries(occurrence(ClubEventOccurrence.STATUS_ACTIVE));
         when(mapper.selectRegisteredRecipients(CLUB, ACTIVITY)).thenReturn(Arrays.asList(101L, 102L));
         when(mapper.selectWaitlistRecipients(CLUB, ACTIVITY)).thenReturn(Collections.singletonList(201L));
-        when(teamGroupService.cancelActivityByClubOperator(ACTIVITY, OWNER, ACTOR, REASON))
+        when(teamGroupService.cancelActivityWithObservedPayments(ACTIVITY, OWNER, ACTOR, REASON, false, payments))
                 .thenReturn(new ActivityCancelResult(2, 1, 1));
         when(mapper.cancelOccurrenceCas(81L, 0)).thenReturn(1);
         when(mapper.selectActiveWaitlistsForUpdate(CLUB, ACTIVITY)).thenReturn(Collections.singletonList(
@@ -149,7 +163,7 @@ class ClubActivityCancelWrapUpTest {
         lifecycle.verify(mapper).selectWaitlistRecipients(CLUB, ACTIVITY);
         lifecycle.verify(roleService).revokeEventLeadForCancelledOccurrence(
                 ACTOR, CLUB, ACTIVITY, "api-activity-cancel-role-" + ACTIVITY);
-        lifecycle.verify(teamGroupService).cancelActivityByClubOperator(ACTIVITY, OWNER, ACTOR, REASON);
+        lifecycle.verify(teamGroupService).cancelActivityWithObservedPayments(ACTIVITY, OWNER, ACTOR, REASON, false, payments);
         lifecycle.verify(mapper).cancelOccurrenceCas(81L, 0);
         verify(mapper).cancelActiveWaitlistCas(91L, 0, ClubWaitlistEntry.OFFERED, 201L, ACTIVITY, 301L);
         verify(mapper).restoreWaitlistHold(301L, ACTIVITY);
@@ -167,13 +181,13 @@ class ClubActivityCancelWrapUpTest {
     @Test
     void standaloneActivity_keepsOldBehaviour_refundOnly() {
         when(mapper.selectSeriesByActivityAnyStatusForUpdate(ACTIVITY)).thenReturn(null);
-        when(teamGroupService.cancelActivityByOwner(ACTIVITY, ACTOR, REASON))
+        when(teamGroupService.cancelActivityWithObservedPayments(ACTIVITY, ACTOR, ACTOR, REASON, false, payments))
                 .thenReturn(new ActivityCancelResult(0, 0, 0));
 
         ActivityCancelResult result = service.cancelActivityByOwnerWithClubWrapUp(ACTOR, ACTIVITY, REASON);
 
         assertEquals(Integer.valueOf(0), result.getRefundedOrders());
-        verify(teamGroupService).cancelActivityByOwner(ACTIVITY, ACTOR, REASON);
+        verify(teamGroupService).cancelActivityWithObservedPayments(ACTIVITY, ACTOR, ACTOR, REASON, false, payments);
         verify(roleService, never()).revokeEventLeadForCancelledOccurrence(anyLong(), anyLong(), anyLong(), anyString());
         verify(mapper, never()).cancelOccurrenceCas(anyLong(), any());
         verify(mapper, never()).insertCampaign(any(ClubEventCampaign.class));
@@ -190,7 +204,7 @@ class ClubActivityCancelWrapUpTest {
                 () -> service.cancelActivityByOwnerWithClubWrapUp(ACTOR, ACTIVITY, REASON));
 
         assertEquals(Integer.valueOf(403), denied.getCode());
-        verify(teamGroupService, never()).cancelActivityByOwner(anyLong(), anyLong(), anyString());
+        verify(teamGroupService, never()).cancelActivityWithObservedPayments(anyLong(), eq(ACTOR), eq(ACTOR), anyString(), eq(false), any(RegistrationCancellationPayments.class));
         verify(roleService, never()).revokeEventLeadForCancelledOccurrence(anyLong(), anyLong(), anyLong(), anyString());
         verify(mapper, never()).insertCampaign(any(ClubEventCampaign.class));
     }
@@ -200,7 +214,7 @@ class ClubActivityCancelWrapUpTest {
         stubSeries(occurrence(ClubEventOccurrence.STATUS_ACTIVE));
         when(accessService.require(ACTOR, CLUB, ACTIVITY, ClubPermission.ACTIVITY_MANAGE))
                 .thenThrow(new ServiceException("旧主理人已失权", 403));
-        when(teamGroupService.cancelActivityByClubOperator(ACTIVITY, OWNER, OWNER, REASON))
+        when(teamGroupService.cancelActivityWithObservedPayments(ACTIVITY, OWNER, OWNER, REASON, false, payments))
                 .thenReturn(new ActivityCancelResult(1, 0, 0));
         when(mapper.cancelOccurrenceCas(81L, 0)).thenReturn(1);
         stubCampaignInserts();
@@ -209,10 +223,10 @@ class ClubActivityCancelWrapUpTest {
                 ACTOR, TOPIC, CLUB, ACTIVITY, REASON);
 
         assertEquals(Integer.valueOf(1), result.getRefundedOrders());
-        verify(mapper).selectClubOwnerForUpdate(CLUB);
+        verify(mapper, times(2)).selectClubOwnerForUpdate(CLUB);
         verify(roleService).revokeEventLeadForCancelledOccurrence(
                 OWNER, CLUB, ACTIVITY, "topic-cancel-role-" + ACTIVITY);
-        verify(teamGroupService).cancelActivityByClubOperator(ACTIVITY, OWNER, OWNER, REASON);
+        verify(teamGroupService).cancelActivityWithObservedPayments(ACTIVITY, OWNER, OWNER, REASON, false, payments);
         verify(mapper).cancelOccurrenceCas(81L, 0);
     }
 
@@ -221,16 +235,16 @@ class ClubActivityCancelWrapUpTest {
         when(mapper.selectSeriesByActivityAnyStatusForUpdate(ACTIVITY)).thenReturn(null);
         when(mapper.selectActivityTopicForUpdate(ACTIVITY, CLUB)).thenReturn(TOPIC);
         when(mapper.selectClubOwnerForUpdate(CLUB)).thenReturn(OWNER);
-        when(teamGroupService.cancelActivityByClubOperator(ACTIVITY, OWNER, OWNER, REASON))
+        when(teamGroupService.cancelActivityWithObservedPayments(ACTIVITY, OWNER, OWNER, REASON, false, payments))
                 .thenReturn(new ActivityCancelResult(1, 0, 0));
 
         ActivityCancelResult result = service.cancelActivityForAuthorizedTopicCancellation(
                 ACTOR, TOPIC, CLUB, ACTIVITY, REASON);
 
         assertEquals(Integer.valueOf(1), result.getRefundedOrders());
-        verify(mapper).selectClubOwnerForUpdate(CLUB);
-        verify(teamGroupService).cancelActivityByClubOperator(ACTIVITY, OWNER, OWNER, REASON);
-        verify(teamGroupService, never()).cancelActivityByOwner(anyLong(), anyLong(), anyString());
+        verify(mapper, times(2)).selectClubOwnerForUpdate(CLUB);
+        verify(teamGroupService).cancelActivityWithObservedPayments(ACTIVITY, OWNER, OWNER, REASON, false, payments);
+        verify(teamGroupService, never()).cancelActivityWithObservedPayments(anyLong(), eq(ACTOR), eq(ACTOR), anyString(), eq(false), any(RegistrationCancellationPayments.class));
     }
 
     @Test
@@ -242,14 +256,13 @@ class ClubActivityCancelWrapUpTest {
                         ACTOR, TOPIC + 1, CLUB, ACTIVITY, REASON));
 
         assertEquals(Integer.valueOf(409), denied.getCode());
-        verify(teamGroupService, never()).cancelActivityByClubOperator(
-                anyLong(), anyLong(), anyLong(), anyString());
+        verify(teamGroupService, never()).cancelActivityWithObservedPayments(anyLong(), anyLong(), anyLong(), anyString(), eq(false), any(RegistrationCancellationPayments.class));
     }
 
     @Test
     void alreadyWrappedOccurrence_doesNotNotifyOrTerminateAgain() {
         stubSeries(occurrence(ClubEventOccurrence.STATUS_CANCELLED));
-        when(teamGroupService.cancelActivityByClubOperator(ACTIVITY, OWNER, ACTOR, REASON))
+        when(teamGroupService.cancelActivityWithObservedPayments(ACTIVITY, OWNER, ACTOR, REASON, false, payments))
                 .thenReturn(new ActivityCancelResult(1, 0, 0));
 
         ActivityCancelResult result = service.cancelActivityByOwnerWithClubWrapUp(ACTOR, ACTIVITY, REASON);
@@ -257,7 +270,7 @@ class ClubActivityCancelWrapUpTest {
         assertEquals(Integer.valueOf(1), result.getRefundedOrders());
         verify(mapper, never()).cancelOccurrenceCas(anyLong(), any());
         verify(mapper, never()).insertCampaign(any(ClubEventCampaign.class));
-        verify(teamGroupService).cancelActivityByClubOperator(ACTIVITY, OWNER, ACTOR, REASON);
+        verify(teamGroupService).cancelActivityWithObservedPayments(ACTIVITY, OWNER, ACTOR, REASON, false, payments);
     }
 
     @Test
@@ -266,6 +279,6 @@ class ClubActivityCancelWrapUpTest {
                 () -> service.cancelActivityByOwnerWithClubWrapUp(ACTOR, ACTIVITY, "  "));
 
         assertEquals(Integer.valueOf(400), bad.getCode());
-        verify(teamGroupService, never()).cancelActivityByOwner(anyLong(), anyLong(), anyString());
+        verify(teamGroupService, never()).cancelActivityWithObservedPayments(anyLong(), eq(ACTOR), eq(ACTOR), anyString(), eq(false), any(RegistrationCancellationPayments.class));
     }
 }

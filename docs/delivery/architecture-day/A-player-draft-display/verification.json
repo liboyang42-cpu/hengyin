@@ -1,0 +1,30 @@
+{
+  "base": "4197f6a6b11d62cb0a742aae73d7167c93114585",
+  "production_scope": "only themeDraftQuota player projection; all other production bytes unchanged",
+  "old_cases": "37 authored, all original methods preserved; one policy assertion 0 -> 3; NOT_RUN",
+  "new_cases": "2 authored legacy/prepared real Creator+Gateway with unit doubles; NOT_RUN",
+  "source_hashes": {
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java": {
+      "before": "5388516d3fd387d0386c1cd584e2a4c085369db4efbb2f08b788a51824e9a698",
+      "candidate": "e5d2c97497b8f44ea9dd4029c6efcc935052e0ab2b7552921bb59285aa453d04"
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AiCreatorServiceImplTest.java": {
+      "before": "cfe5a151b39ce394531b6eb6fe5856cec60d57cc98060a633617a90ed571638c",
+      "candidate": "dd1d5e405af9456289d4b7f829b45c8bc2e236ab6596ac97321f749731b1e31b"
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AiCreatorPlayerDraftQuotaTest.java": {
+      "before": null,
+      "candidate": "c50fe3f5359d8d5802e4950a15ce861e223ea19452831518bff96042deb1c121"
+    }
+  },
+  "checks": "PASS: exact source/test delta, scope, method/case preservation, lexical delimiters, git diff --check",
+  "not_run": [
+    "Java compile",
+    "JUnit",
+    "MySQL",
+    "Redis",
+    "CI",
+    "HTTP/provider",
+    "real role change"
+  ]
+}

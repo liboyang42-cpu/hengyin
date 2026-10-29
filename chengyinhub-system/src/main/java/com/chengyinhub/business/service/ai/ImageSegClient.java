@@ -83,6 +83,7 @@ public class ImageSegClient {
      * @return 抠好的透明 PNG 临时地址;没有任何结果时返回 null,不抛异常
      */
     public String segment(String imageUrl) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         if (!usable()) {
             return null;
         }
@@ -94,6 +95,8 @@ public class ImageSegClient {
         String body;
         try {
             body = get(signedUrl(image));
+        } catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) {
+            throw paused;
         } catch (Exception e) {
             // 只打异常类名:hutool 的异常原文会带上请求地址,而地址里有签名 —— 那是可重放的凭据
             log.error("[ImageSeg] 调用失败:{}", e.getClass().getSimpleName());

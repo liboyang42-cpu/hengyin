@@ -86,7 +86,7 @@
       <section class="cy-panel template-detail__section">
         <div class="cy-panel__heading">
           <div>
-            <h2>验证方式</h2>
+            <h2>基础完成方式</h2>
             <p>{{ validationLabel(templateDetail.validationMethod) }}</p>
           </div>
           <cy-status-tag :label="validationLabel(templateDetail.validationMethod)" :tone="validationTone(templateDetail.validationMethod)" />
@@ -117,7 +117,12 @@
           <el-descriptions-item label="选项 D">{{ valueOrFallback(templateDetail.questionD) }}</el-descriptions-item>
           <el-descriptions-item label="正确答案">{{ valueOrFallback(templateDetail.correctAnswer) }}</el-descriptions-item>
         </el-descriptions>
-        <p v-else class="template-detail__muted">尚未配置验证方式。</p>
+        <p v-else class="template-detail__muted">{{ validationLabel(templateDetail.validationMethod) }}；具体内容与运行参数见下方原配置。</p>
+      </section>
+
+      <section class="cy-panel template-detail__section" aria-label="完整游戏内容">
+        <div class="cy-panel__heading"><div><h2>完整游戏内容与素材</h2><p>只读原模板配置；高级机制、资源槽与基础完成方式分开展示，不能用基础方式数量代替游戏支持范围。</p></div></div>
+        <template-content-fields :value="templateDetail" read-only />
       </section>
 
       <section v-if="templateDetail.feedbackText || templateDetail.couponId" class="cy-panel template-detail__section">
@@ -169,10 +174,12 @@ import CyMediaPreview from '@/components/CyMediaPreview'
 import CyPageHeader from '@/components/CyPageHeader'
 import CyResourceState from '@/components/CyResourceState'
 import CyStatusTag from '@/components/CyStatusTag'
+import TemplateContentFields from './TemplateContentFields.vue'
+import { validationLabel } from './template-content'
 
 export default {
   name: 'MembertemplateDetail',
-  components: { CyEntityHeader, CyMediaPreview, CyPageHeader, CyResourceState, CyStatusTag },
+  components: { CyEntityHeader, CyMediaPreview, CyPageHeader, CyResourceState, CyStatusTag, TemplateContentFields },
   data() {
     return {
       loading: false,
@@ -311,14 +318,9 @@ export default {
     syncTone(isSync) {
       return Number(isSync) === 1 ? 'brand' : 'neutral'
     },
-    validationLabel(method) {
-      if (Number(method) === 1) return '问答验证'
-      if (Number(method) === 2) return '图片验证'
-      if (Number(method) === 3) return '选项验证'
-      return '未设置验证方式'
-    },
+    validationLabel,
     validationTone(method) {
-      return Number(method) >= 1 && Number(method) <= 3 ? 'info' : 'neutral'
+      return method !== null && method !== '' && Number(method) >= 0 && Number(method) <= 10 ? 'info' : 'neutral'
     },
     couponTypeLabel(type) {
       if (Number(type) === 0) return '礼品券'

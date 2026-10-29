@@ -49,6 +49,7 @@ class ChapterServiceCapacityTest
         service = new CmsTopicChapterServiceImpl();
         ReflectionTestUtils.setField(service, "cmsTopicChapterMapper", chapterMapper);
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
+        com.chengyinhub.business.service.support.TopicContentBudgetTestWiring.chapter(service);
         ReflectionTestUtils.setField(service, "cmsTopicTemplateMetaMapper", metaMapper);
         ReflectionTestUtils.setField(service, "topicOperationsScopeAuthorizer", scopeAuthorizer);
 
@@ -96,6 +97,7 @@ class ChapterServiceCapacityTest
 
         assertTrue(error.getMessage().contains(expectedField), error.getMessage());
         verify(chapterMapper, never()).lockChaptersForCapacity(org.mockito.ArgumentMatchers.anyList());
+        verify(chapterMapper, never()).selectContentByIdForUpdate(org.mockito.ArgumentMatchers.anyLong());
         verify(topicMapper, never()).selectCmsTopicByIdForUpdate(org.mockito.ArgumentMatchers.anyLong());
         verify(metaMapper, never()).upsertChapterServiceCapacity(
                 org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.anyLong(),
@@ -111,6 +113,7 @@ class ChapterServiceCapacityTest
 
         assertTrue(error.getMessage().contains("缺少章节服务容量配置"));
         verify(chapterMapper, never()).lockChaptersForCapacity(org.mockito.ArgumentMatchers.anyList());
+        verify(chapterMapper, never()).selectContentByIdForUpdate(org.mockito.ArgumentMatchers.anyLong());
         verify(topicMapper, never()).selectCmsTopicByIdForUpdate(org.mockito.ArgumentMatchers.anyLong());
         verify(metaMapper, never()).upsertChapterServiceCapacity(
                 org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.anyLong(),

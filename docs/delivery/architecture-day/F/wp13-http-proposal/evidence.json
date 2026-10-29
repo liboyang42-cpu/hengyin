@@ -1,0 +1,124 @@
+{
+  "status": "READ_ONLY_SOURCE_EVIDENCE_NOT_RUNTIME_PROOF",
+  "source_sha": "addeb6edc912223ce2a5d3d9d89d87b2ebb84adf",
+  "source_tree": "60d7567d028ae05d9a6c730609f25f0ea142104c",
+  "repository": "https://github.com/liboyang42-cpu/hengyin",
+  "earlier_source": "00fc58c50febc3366f78af600c8f12636cd13de5",
+  "scanned_production_roots": [
+    "chengyinhub-system/src/main/java",
+    "chengyinhub-admin/src/main/java"
+  ],
+  "direct_production_llm_calls": [
+    {
+      "class": "AiGatewayServiceImpl",
+      "method": "generate",
+      "call": "client.chat",
+      "line": 206
+    },
+    {
+      "class": "PhotoCheckVisionService",
+      "method": "reviewOnce",
+      "call": "visionClient.chatVision",
+      "line": 151
+    },
+    {
+      "class": "ObjectNamer",
+      "method": "name",
+      "call": "visionClient.chatVision",
+      "line": 97
+    }
+  ],
+  "explicit_stream_callers_found": 0,
+  "runtime_configuration_read": false,
+  "java_executed": false,
+  "production_changed": false,
+  "limits": [
+    "Text queries are not a complete Java call graph.",
+    "Runtime provider origins/alias groups, capacity and actual provider billing were not observed.",
+    "No static or mock result is a MySQL/Redis/remote execution proof.",
+    "Existing source debt is reported to its owner, not changed or accepted."
+  ],
+  "production_blob_comparisons": [
+    {
+      "compared_source": "00fc58c50febc3366f78af600c8f12636cd13de5",
+      "production_paths": 39,
+      "identical": 39,
+      "different": [],
+      "compared_pathset_sha256": "d7f84440b244d68e9a633411f65498e3f3514ed139318e926e2a9e798f50b1b6"
+    },
+    {
+      "compared_source": "66e9e1798bf0b3e1c2b7e6cb2b6ab13a3b3e1329",
+      "production_paths": 39,
+      "identical": 39,
+      "different": [],
+      "compared_pathset_sha256": "d7f84440b244d68e9a633411f65498e3f3514ed139318e926e2a9e798f50b1b6"
+    },
+    {
+      "compared_source": "9b92fb5738244c677fea7470232f67d3b97b7a98",
+      "production_paths": 39,
+      "identical": 39,
+      "different": [],
+      "compared_pathset_sha256": "d7f84440b244d68e9a633411f65498e3f3514ed139318e926e2a9e798f50b1b6"
+    }
+  ],
+  "coordinator_reported_not_independently_downloaded": {
+    "run": 40036832794,
+    "source_sha": "66e9e1798bf0b3e1c2b7e6cb2b6ab13a3b3e1329",
+    "backend_unit_failures": 5,
+    "source_gate_findings": 0,
+    "source_gate_review_items": 87,
+    "compiled_jdeps": "UNKNOWN; no independent artifact readback in this task"
+  },
+  "records": [
+    {"path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAiController.java","sha256": "425657497b964ee73ba1fb2e53b8adad2e1561878e7482d27d9a4a711f5e0b0d","lines": 435,"anchors": [],"git_blob": "5470ba47cf79fe95bb37bc7087e886f44c56d3f5"},
+    {"path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAiNpcController.java","sha256": "2c471bc4da446268a91b12e5d9f52eb5085f4269436784ac0da1655ee1790a2e","lines": 461,"anchors": [],"git_blob": "0d20947de8ad3fca8dda2183f31a10307ad69e9a"},
+    {"path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiLoginController.java","sha256": "e9f1dbed57d5038506d91c41ab8fb5fce04c7f6221db010affd71beaec08b642","lines": 868,"anchors": [],"git_blob": "284627542f12d9fe6df624274f0a681ccf8ae281"},
+    {"path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiMerchantController.java","sha256": "61d830384e48eadec6c0d709f412b7aad9fbf48081a8d5e4c6092be9eaeed559","lines": 2197,"anchors": [],"git_blob": "05a83b7f6dc55df549fb3bfe67db96fd872ab5b8"},
+    {"path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/AppUploadService.java","sha256": "36b1e06163da9e5c64861c2a3bd4831f0e6bd3b8dd0917daca630547c84330ca","lines": 615,"anchors": [],"git_blob": "1368efe45ba666ba218c97ef33a4751b8d5a13a6"},
+    {"path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/AiQuotaRecoveryMySqlRedisIT.java","sha256": "fdae31c2432aedbb33fc2a0294ea1b585595d0f6c3c30eedc35535b59401f4e9","lines": 164,"anchors": [],"git_blob": "aa8554319faea0f723bc1cd34addcd37d1372685"},
+    {"path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/ObjectNamerTest.java","sha256": "321e1ee6fc6291623122da2f4b009ab7d8348d9a461e0f8475eed6313f770282","lines": 319,"anchors": [],"git_blob": "13ee2ba76ebd193ac819710adfe6992bff224cfd"},
+    {"path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/OpenAiCompatibleLlmClientLogRedactionTest.java","sha256": "50ab9307e7b56182203f7029bbeffbe525262036f34e5ed14a923dfbca305fbd","lines": 83,"anchors": [],"git_blob": "6f13eb0a2975895a01276b2984d4d7ca824e7fa7"},
+    {"path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/OpenAiCompatibleLlmClientVisionTest.java","sha256": "77a394afc417d9c936a3943a5337286e5a925d42e8cedbae9de6f7e32101d24b","lines": 79,"anchors": [],"git_blob": "4ec7db848e415656e5a532b9b9d18881076df289"},
+    {"path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/PhotoCheckIntentMySqlIT.java","sha256": "2338ca0c8d2b65a052fd952930cd005866c392b2810c4720f6e60121c2b8f2af","lines": 249,"anchors": [],"git_blob": "3c0ae949c7f752575b51eeb7bb5d43ce5b9745e3"},
+    {"path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/impl/AiQuotaRefundRulesD08Test.java","sha256": "4cfbea1398db52974231fe63b7c9a6e6725b0db91695f22bfa990d5782e72359","lines": 270,"anchors": [],"git_blob": "e4e19c80df7d889da309adb3e2992b4fbfb9f140"},
+    {"path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/impl/AiQuotaReservationRedisIT.java","sha256": "60bf44a2fd2310de771562d042ac9f5c5488384c6b59a8152a27f1e854787802","lines": 259,"anchors": [],"git_blob": "d669b1cdb677b6b9cc0f1418fe9258685f9f8773"},
+    {"path": "chengyinhub-admin/src/test/java/com/chengyinhub/common/utils/http/HttpUtilsSecurityTest.java","sha256": "f5c56e6ac68fb895f9ea1d840db3a4779c67045a0cc71ac35f90ef91218cad0c","lines": 1037,"anchors": [],"git_blob": "bc7dbbcc403b9aab711fd3c36177b7bd716e3b07"},
+    {"path": "chengyinhub-common/src/main/java/com/chengyinhub/common/config/AiModelConfig.java","sha256": "ae7dd9672500b27a0c52b7051f3d57ebbfc0a7e9a3b0654e3a8f89e889dad78e","lines": 94,"anchors": [],"git_blob": "613fb457af5b420d7ddb78ce49922fb9ba1b399d"},
+    {"path": "chengyinhub-common/src/main/java/com/chengyinhub/common/config/AiProviderProperties.java","sha256": "ddaf40cb94bfe6085fa597b51a0d5a8b079a9b76fc138fe1717259224a969429","lines": 59,"anchors": [],"git_blob": "e599dfffe7754e0b51ec7459ceec54dc29c64217"},
+    {"path": "chengyinhub-common/src/main/java/com/chengyinhub/common/utils/http/HttpRequestException.java","sha256": "e2bf7ebb103a336759da413748c34734fec209187f126f1e99e078afcacb99e5","lines": 42,"anchors": [],"git_blob": "6adacb888831e1bece2593108862d8871a80a4da"},
+    {"path": "chengyinhub-common/src/main/java/com/chengyinhub/common/utils/http/HttpUtils.java","sha256": "e26c0409a887880d2fcd15a68ac39cedbc20fdb70efcfdb4bb7e0ee0ae7caaf1","lines": 625,"anchors": [{"literal": "private static final int MAX_RESPONSE_BYTES","lines": [62]},{"literal": "8, 32,","lines": [70]},{"literal": "1, 4,","lines": [73]},{"literal": "public static String sendPost(String url, String param, String contentType)","lines": [126]},{"literal": "private static AttemptResult executeAttempt","lines": [195]},{"literal": "private static AttemptResult executeBlocking","lines": [243]},{"literal": "client.execute(request)","lines": [265]},{"literal": "private static String readLimited","lines": [440]},{"literal": ".disableAutomaticRetries()","lines": [496]},{"literal": ".disableRedirectHandling()","lines": [497]}],"git_blob": "f0d22fdc7cb0a923fb0e1125668221ff3bdbd7bd"},
+    {"path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/TencentMapClient.java","sha256": "9eee58bd2da63c8e659b1e14eeebf90765f1d51d4b6497a55d0b74d87b86a0f6","lines": 51,"anchors": [],"git_blob": "a21cd0674cbebcc9cef29879022cc75329061129"},
+    {"path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiProviderOutcomeUnknownException.java","sha256": "dab186e293fd8ab73ac0efcc4a6d3f30eb50dccea61fc4df6d798fce0753a515","lines": 10,"anchors": [],"git_blob": "241b35fcde9443f7d5beb864625703fc5d90f306"},
+    {"path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiQuotaRecoveryService.java","sha256": "d943ee2dcffe2ba25fb7027b74aeff65fc95eb9f33ece84de26e504c5e6e372f","lines": 133,"anchors": [{"literal": "public void requireRefund(","lines": [74]},{"literal": "\"PROVIDER_OUTCOME_UNKNOWN\"","lines": [111]}],"git_blob": "05d6fda769001b49d21d36bd0c3fdcc62f85a10e"},
+    {"path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/DashScopeVoiceClient.java","sha256": "fbc4f6e216445d3c87e203a1d6417f02b4d54a2d42964b2008e9ca82527ef76b","lines": 203,"anchors": [],"git_blob": "e01052276667cb5dca377a3c989062568c140516"},
+    {"path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/HttpVisionImageProbe.java","sha256": "be73c486887689804de858ae417c08201e7e0d1cd9177c14decb79d4eacab0d1","lines": 144,"anchors": [],"git_blob": "ee7245c56d5aabf914aaa965a9b3cfe0c18bb332"},
+    {"path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/ImageSegClient.java","sha256": "d80b21bab3d5394b83dec486594f1179a5fbe066e037fa00c9939162c9dd7778","lines": 251,"anchors": [{"literal": "public String segment(","lines": [85]},{"literal": "String get(String url)","lines": [226]},{"literal": "JSON.parseObject(body)","lines": [207]}],"git_blob": "f36bcb638babeab165a08a0b6cb28ddb0d53c3c0"},
+    {"path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/LlmClient.java","sha256": "b6aef8583c4d1f140842cdf29a919a9ed7c0710ffc1ef914cebd47f2cbeff40d","lines": 60,"anchors": [],"git_blob": "acd38ef4cd013c9c4b25a7c199d408b8d5dcaef7"},
+    {"path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/LlmClientConfig.java","sha256": "4b3aa5ff2663aea15eaa149426803238b0bb926879d91963b19e6f943f10b22b","lines": 64,"anchors": [],"git_blob": "add4739601f59efe46279aa3864c862df23e8685"},
+    {"path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/ObjectNamer.java","sha256": "fa81430630fd0c1e3cbcec36005c366bc6be7a067635cf7811bbb6ad245411ee","lines": 163,"anchors": [{"literal": "public Naming name(","lines": [76]},{"literal": "visionClient.chatVision(","lines": [97]}],"git_blob": "2f135f4f820e73406de812846a45ac273cba28f2"},
+    {"path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/OpenAiCompatibleLlmClient.java","sha256": "1cd2d40a37a66bd080e9c941c8997d0fa7948f9183a972ff33b5e827398cac2a","lines": 213,"anchors": [{"literal": "public String chat(","lines": [71]},{"literal": "public String chatVision(","lines": [97]},{"literal": "public void requireReady()","lines": [132]},{"literal": "private String post(JSONObject body)","lines": [145]},{"literal": "HttpRequest.post(url)","lines": [153]},{"literal": "String result = resp.body();","lines": [162]},{"literal": "log.error(","lines": [176]}],"git_blob": "806c3d12325697f4f1f57d1ce417e95db2bd1360"},
+    {"path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckIntentService.java","sha256": "36be3f1a0c904506e389b2e10fd19d73b47a89f3e7208f1e1e80873e5eb4bb1a","lines": 230,"anchors": [],"git_blob": "a997f4fc3d91c13fd79775a11f281c63d09ab45a"},
+    {"path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckVisionService.java","sha256": "b8591c99ba2d5dc24b695950491755ace3e67be431e14747ae9c981f528cf5b2","lines": 300,"anchors": [{"literal": "PreparedReview reviewOnce","lines": [98]},{"literal": "visionClient.chatVision(","lines": [151]},{"literal": "\"UNKNOWN\", \"PROVIDER_RESULT_UNKNOWN\"","lines": [158]}],"git_blob": "c293ad5e32d84c8f4538a7f83aed396abe921115"},
+    {"path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/VisionImageEncoder.java","sha256": "be184b2a3817d94a853b9c59a7a822d0aea9bd250e3bb44016774f9ea4add171","lines": 386,"anchors": [{"literal": "private static final int DOWNLOAD_TIMEOUT_MS","lines": [52]},{"literal": "HttpRequest.get(url)","lines": [206]},{"literal": "readUpTo(resp.bodyStream()","lines": [220]}],"git_blob": "81524576cb90346b1ac6ed92874e5e248bf76534"},
+    {"path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/VisionImageGuard.java","sha256": "e40e38300d97ec665745387887e73eefe120af2d99d4d83edf456256d9a22fdb","lines": 217,"anchors": [],"git_blob": "4b24674231bc2b0cd25a4a2bf3eb1df1880886f0"},
+    {"path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/VisionModelConfig.java","sha256": "753d646ddc5b40a98e509b819e5727bee9e42bb3e9ede2452a7a1f4058e4d24c","lines": 64,"anchors": [],"git_blob": "08a8beb177f2c1eb51bec6baa65593ca1623526f"},
+    {"path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java","sha256": "57ac8d76590de725edc3f8d8710715449a6ae56db72f017c31af66224eb7588b","lines": 641,"anchors": [{"literal": "boolean playerThemeDraft","lines": [131]},{"literal": "stageQuota(memberId,bizType,reservation,\"MODEL_STARTED\")","lines": [197]},{"literal": "modelText = client.chat(","lines": [206]},{"literal": "AiProviderOutcomeUnknownException","lines": [221]},{"literal": "public void refundQuota","lines": [378]}],"git_blob": "f0ce857ae758ee88f30999696d4beb7c5531a2db"},
+    {"path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/DashScopeSpeechToTextService.java","sha256": "95b2020bc2529217c04a83c6056526d70230ff63e90189ed1e539d9a8e6b5d4e","lines": 146,"anchors": [],"git_blob": "9b49f42c30ae928cf582de673dca022cc74997a2"},
+    {"path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/OssCardCutoutStorage.java","sha256": "9726202aaf62b61cd51e60ab15fefe1dba75b2ac0020f16bc6dbe31474b2712d","lines": 492,"anchors": [{"literal": "byte[] download(","lines": [248]},{"literal": "stageGeneratedAudio(","lines": [369]}],"git_blob": "b8ce10f8e6358b5b886763cf9dd1d87d0f6ffc00"},
+    {"path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AdvancedGameRuntimeServiceImpl.java","sha256": "3ad4a9f11d6803908fec8e9ce1b083dcf5fc9d39ad750649e672539fb67daf7c","lines": 4850,"anchors": [],"git_blob": "a657dd8c6cdc0301ef81a2b22fbf53e74ac207e0"},
+    {"path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java","sha256": "fbdb80c85519890a59a244c5be120baf1292180b97edc363ce8a3171b5b44ccc","lines": 804,"anchors": [{"literal": "public AiThemeDraftResp themeDraft(","lines": [101]},{"literal": "gateway.generate(memberId, role, \"theme_draft\"","lines": [122]},{"literal": "if (!accepted && !inputBlocked)","lines": [157]},{"literal": "private void releasePlayerThemeDraftQuota","lines": [631]}],"git_blob": "9ecce1a934c52827b1023b2130cc5c8d705a74c9"},
+    {"path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiTopicPlanServiceImpl.java","sha256": "bb8dbde165ea035d674992a40a4dffc6755d56a4dbeec2c615cb4a12a89fe16e","lines": 358,"anchors": [],"git_blob": "a3cc7b407e68a62284f6a520f60a0299e5746e5d"},
+    {"path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/HttpWebhookTransport.java","sha256": "a4a902bb01305607a61d68d97e53e6b33d741710cb3f100fd8b8ef81d2271c75","lines": 106,"anchors": [],"git_blob": "91831c7791b44ae776c17ff0f6fcbb51177aa1aa"},
+    {"path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantInsightServiceImpl.java","sha256": "59707a87140c58a7fb6471e5847024134b6629deffd5a8ad2721e6014450ee03","lines": 857,"anchors": [],"git_blob": "28261fd4c73a94fc6f8b0f0dd18395d2ccc825a3"},
+    {"path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NodeNpcService.java","sha256": "76d5ae75f052d15c150fcc2d34afc3b5bbbcd8c584165d63ff0ec603aca45ae6","lines": 314,"anchors": [],"git_blob": "5649485982ec0b7bcce411cdf7b8a5ed878cda52"},
+    {"path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcChatService.java","sha256": "6b6c2d203f6c6f038b882e2bccb4d8743df18723bf1cad40d6ce676e3bedca77","lines": 850,"anchors": [{"literal": "aiGatewayService.generate(","lines": [335]},{"literal": "private void applyGatewayFailure","lines": [455]},{"literal": "voiceCloneClient.synthesize(","lines": [395]}],"git_blob": "c9d88eca1295cd7ec63bf6d1a15a278b585b312c"},
+    {"path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ObjectCardServiceImpl.java","sha256": "d048a8363453bcd44629c1fe200254542e569d40da9980e8da9ec62a2e3ccf93","lines": 323,"anchors": [],"git_blob": "d0d779195e5cd3f83de10a11b801d0412e05f88d"},
+    {"path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WeChatMiniSessionServiceImpl.java","sha256": "26f47a06167badcdb8e76d8e5b2f60286f2bf2a22ec02c8b312882034388c92f","lines": 86,"anchors": [],"git_blob": "6285f7c88f6bc8574ff7ca2a50d0227fbf442049"},
+    {"path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxSubscribeMsgServiceImpl.java","sha256": "cca6f5c7fd293627a5b6331e556470f7c918e1b5f51f34ff0a984715cf761b5f","lines": 380,"anchors": [],"git_blob": "f57d5584bfe22d26f9b1db85065da16bf054386f"},
+    {"path": "ci/assert_it_ran.py","sha256": "d29f61ea2c554b310fb2dbe6b26299c65a38327e399f4659f26f86ffc3d53b6d","lines": 72,"anchors": [],"git_blob": "27f92671b4149a03040f9dd7467123bd054c2de5"},
+    {"path": "ci/real-storage-it-registry.json","sha256": "dd80cad3ed0cda8ec356a8e7fc4dcba6f70f1d2d326d7963b1a26eb155cd7b90","lines": 1031,"anchors": [],"git_blob": "1c2c34383f0f7bf6dd78ee4a5db96c11361c46c1"},
+    {"path": "docs/delivery/architecture-day/COORDINATOR/governance-scope.md","sha256": "aa0469b16953b604639305f1db13400e16545519d9c386a4f6a5c2ab8da24043","lines": 391,"anchors": [],"git_blob": "083ffae0db6c6c02d019de1b1766e786a2a9af4a"},
+    {"path": "chengyinhub-system/src/main/resources/mapper/business/AiQuotaReservationMapper.xml","sha256": "de0be94334ef7fad441aa8a47a9ed21340ccbe61e18850f16f67364145ec1d5d","lines": 75,"anchors": [],"git_blob": "192fbbc2b4c10fbe7c7bf06a36b17b5075aa7cc9"},
+    {"path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiServiceException.java","sha256": "ee05a3155af68b7d059b18bd973b88295a5f4a3ddb30d744c30e2b7b1d002507","lines": 48,"anchors": [],"git_blob": "6a582982fe7e5899713ae1c21e60425b8cfcf0da"}
+  ]
+}

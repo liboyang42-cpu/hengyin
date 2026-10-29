@@ -49,6 +49,7 @@ class ChapterWorkPackageTest
         service = new CmsTopicChapterServiceImpl();
         ReflectionTestUtils.setField(service, "cmsTopicChapterMapper", chapterMapper);
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
+        com.chengyinhub.business.service.support.TopicContentBudgetTestWiring.chapter(service);
         ReflectionTestUtils.setField(service, "cmsTopicTemplateMetaMapper", metaMapper);
         ReflectionTestUtils.setField(service, "topicOperationsScopeAuthorizer", scopeAuthorizer);
 

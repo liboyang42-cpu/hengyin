@@ -24,7 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  *
  * <p>调用次数计入 {@link AiGatewayService} 的 **photo 独立池**(bizType=photo_check,
  * 上限 ai.model.photoDailyLimit):拍照与创作频次量级不同,共用 gen 池会让真审核静默停掉。
- * 键名/上限/分池全在网关,这里不新造计数。只在「调用失败、用户没拿到结论」时退还那一次,口径同网关。
+ * 键名/上限/分池全在网关,这里不新造计数。仅确定未调用模型时补偿；结果未知保留原预占。
  *
  * <p>⚠️ 照片会离开本站发给模型供应商(默认 DeepSeek,见 ai.vision.*,可配成百炼/DashScope)。
  * 上传链路里的微信 img_sec_check 合规机审是另一回事,保留不动
@@ -58,7 +58,7 @@ public class PhotoCheckVisionService
     @Qualifier("visionLlmClient")
     private LlmClient visionClient;
 
-    /** 额度池;测试可排空(排空则不计次,不影响判定)。 */
+    /** 未取得额度原预占时不调用模型。 */
     @Autowired(required = false)
     private AiGatewayService aiGatewayService;
 
@@ -77,57 +77,149 @@ public class PhotoCheckVisionService
 
     public PhotoCheckVisionResult review(Long memberId, String imageUrl, String requirement)
     {
+        return reviewOnce(memberId, imageUrl, requirement, null, null).result();
+    }
+
+    public record InputSnapshot(String encodedInputSha256, String modelName,
+            String promptVersion, String encoderVersion) {}
+
+    public record PreparedReview(PhotoCheckVisionResult result, String providerState, String reasonCode) {}
+
+    public PreparedReview reviewPrepared(Long memberId, String imageReference, String requirement,
+            String reservation, java.util.function.Consumer<InputSnapshot> beforeModel)
+    {
+        if (org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive())
+            throw new IllegalStateException("Photo provider execution cannot hold a business transaction");
+        if (reservation == null || reservation.isBlank() || beforeModel == null)
+            throw new IllegalArgumentException("Original photo reservation and snapshot writer required");
+        return reviewOnce(memberId, imageReference, requirement, reservation, beforeModel);
+    }
+
+    private PreparedReview reviewOnce(Long memberId, String imageUrl, String requirement,
+            String plannedReservation, java.util.function.Consumer<InputSnapshot> beforeModel)
+    {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         consentGuard.requireCurrentAgreement(memberId, "photo_model_processing", "object_photo");
         String url = imageUrl == null ? "" : imageUrl.trim();
         if (url.isEmpty())
-        {
-            return PhotoCheckVisionResult.degraded("照片地址为空");
-        }
+            return unavailable("照片地址为空", "NOT_SENT", "IMAGE_EMPTY");
         url = mediaReferences.processingUrl(url, memberId, "IMAGE");
-        // 供应商的图片限制在发请求前就拒掉,不要发出去等它报错;超限也算降级。
-        // 这类拒绝是玩家输入问题,不占额度、不打告警(告警留给我们自己的链路故障)。
-        // photoCheck 固定发 base64 data URL(不能发 URL,原因见 VisionImageEncoder 类注释)。
         VisionImageEncoder.Encoded encoded = imageEncoder.encode(url);
         if (encoded.isRejected())
         {
             log.info("[PhotoCheckVision] image-rejected memberId={} reason={}", memberId, encoded.getRejectReason());
-            return PhotoCheckVisionResult.degraded(encoded.getRejectReason());
+            return unavailable(encoded.getRejectReason(), "NOT_SENT", "IMAGE_REJECTED");
         }
-        String reservation = chargeQuota(memberId);
-        if (reservation == null)
+        String reservation;
+        try
         {
-            return PhotoCheckVisionResult.degraded("今天的照片审核次数用完了");
+            reservation = chargeQuota(memberId, plannedReservation);
+        }
+        catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) { throw paused; }
+        catch (RuntimeException unavailable)
+        {
+            alarm("拍照视觉审核额度不可用", "memberId=" + memberId);
+            return unavailable("照片审核额度暂时不可用", "NOT_SENT", "QUOTA_UNAVAILABLE");
+        }
+        if (reservation == null)
+            return unavailable("今天的照片审核次数用完了", "NOT_SENT", "QUOTA_EXHAUSTED");
+
+        try
+        {
+            if (visionClient == null)
+                throw new IllegalStateException("视觉审核通道未装配");
+            if (visionClient instanceof OpenAiCompatibleLlmClient client)
+                client.requireReady();
+            if (beforeModel != null)
+            {
+                String model = visionClient instanceof OpenAiCompatibleLlmClient client
+                        ? client.configuredModel() : "client:" + visionClient.name();
+                beforeModel.accept(new InputSnapshot(encodedInputHash(encoded.getDataUrl()), model,
+                        "photo-review-v1", "vision-image-encoder-v1"));
+            }
+            aiGatewayService.stageQuota(memberId, BIZ_TYPE, reservation, "MODEL_STARTED");
+        }
+        catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) { throw paused; }
+        catch (RuntimeException unsent)
+        {
+            // chatVision 尚未调用，只有此路径可以按原预占补偿。
+            refundQuota(memberId, reservation);
+            alarm("拍照视觉审核发送前失败", "memberId=" + memberId);
+            return unavailable("照片暂时无法审核", "NOT_SENT", "PRE_SEND_FAILED");
         }
 
         String answer;
         try
         {
-            if (visionClient == null)
-            {
-                throw new IllegalStateException("视觉审核通道未装配");
-            }
-            if(aiGatewayService!=null) aiGatewayService.stageQuota(memberId,BIZ_TYPE,reservation,"MODEL_STARTED");
             answer = visionClient.chatVision(SYSTEM_PROMPT, encoded.getDataUrl(), buildUserPrompt(requirement));
         }
-        catch (Exception e)
+        catch (AiProviderNotSentException notSent)
         {
-            // 没走到模型(未配置 key / 未启用)或调用失败(超时 / 限流 / HTTP 错):
-            // 用户没拿到结论,按网关口径退还这一次,再按降级处理。
+            // This proof belongs only to this chatVision attempt, not to any older UNKNOWN.
             refundQuota(memberId, reservation);
-            String reason = e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage();
-            alarm("拍照视觉审核调用失败", "memberId=" + memberId + " reason=" + truncate(reason, 200));
-            return PhotoCheckVisionResult.degraded("照片暂时无法审核(" + truncate(reason, MAX_REASON_LENGTH) + ")");
+            alarm("拍照视觉审核请求未发送", "memberId=" + memberId);
+            return unavailable("照片暂时无法审核", "NOT_SENT", "PROVIDER_NOT_SENT");
         }
-
-        if(aiGatewayService!=null) aiGatewayService.retainQuota(memberId,BIZ_TYPE,reservation,"PHOTO_RESULT");
+        catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) { throw paused; }
+        catch (RuntimeException unknown)
+        {
+            // 供应商可能已计费；保留原预占，首个本地降级结果仍由原意图持久化。
+            alarm("拍照视觉审核结果待确认", "memberId=" + memberId);
+            return unavailable("照片审核结果待确认", "UNKNOWN", "PROVIDER_RESULT_UNKNOWN");
+        }
+        try
+        {
+            // A failure here follows an actual answer and cannot prove the attempt was unsent.
+            aiGatewayService.retainQuota(memberId, BIZ_TYPE, reservation, "PHOTO_RESULT");
+        }
+        catch (RuntimeException unknown)
+        {
+            // 供应商可能已计费；保留原预占，首个本地降级结果仍由原意图持久化。
+            alarm("拍照视觉审核结果待确认", "memberId=" + memberId);
+            return unavailable("照片审核结果待确认", "UNKNOWN", "PROVIDER_RESULT_UNKNOWN");
+        }
         PhotoCheckVisionResult parsed = parse(answer);
         if (parsed == null)
         {
-            // 模型回话了但拿不出结论(非 JSON / 关键字段缺失):调用真实发生了,不退额度。
             alarm("拍照视觉审核返回无法解析", "memberId=" + memberId);
-            return PhotoCheckVisionResult.degraded("照片暂时无法审核(模型没有给出结论)");
+            return unavailable("照片暂时无法审核(模型没有给出结论)", "RECEIVED", "RESULT_UNPARSEABLE");
         }
-        return parsed;
+        return new PreparedReview(parsed, "RECEIVED", "RESULT_RECEIVED");
+    }
+
+    private static PreparedReview unavailable(String reason, String providerState, String reasonCode)
+    {
+        return new PreparedReview(PhotoCheckVisionResult.degraded(reason), providerState, reasonCode);
+    }
+
+    private static String encodedInputHash(String encoded)
+    {
+        try
+        {
+            var digest = java.security.MessageDigest.getInstance("SHA-256");
+            // Preserve String.getBytes(UTF_8) replacement/continuation semantics with bounded buffers.
+            // The writer carries a surrogate across chunk boundaries and flushes it on close.
+            try (var writer = new java.io.OutputStreamWriter(new java.security.DigestOutputStream(
+                    java.io.OutputStream.nullOutputStream(), digest), java.nio.charset.StandardCharsets.UTF_8))
+            {
+                char[] chunk = new char[4096];
+                for (int offset = 0; offset < encoded.length(); offset += chunk.length)
+                {
+                    int count = Math.min(chunk.length, encoded.length() - offset);
+                    encoded.getChars(offset, offset + count, chunk, 0);
+                    writer.write(chunk, 0, count);
+                }
+            }
+            return java.util.HexFormat.of().formatHex(digest.digest());
+        }
+        catch (java.security.NoSuchAlgorithmException impossible)
+        {
+            throw new IllegalStateException("SHA-256 unavailable", impossible);
+        }
+        catch (java.io.IOException impossible)
+        {
+            throw new IllegalStateException("Photo input hash unavailable", impossible);
+        }
     }
 
     private String buildUserPrompt(String requirement)
@@ -137,31 +229,35 @@ public class PhotoCheckVisionService
     }
 
     /**
-     * 抢一次每日额度。超限不是错误,是降级原因之一 —— 玩家侧绝不因为额度耗尽被硬拦。
-     *
-     * @return 凭证=已计费；空串=原基础服务故障降级；null=真实超限
+     * @return 原预占凭证；null 仅表示额度已耗尽；基础设施故障停止供应商调用。
      */
-    private String chargeQuota(Long memberId)
+    private String chargeQuota(Long memberId, String plannedReservation)
     {
         if (aiGatewayService == null || memberId == null)
         {
-            return "";
+            throw new IllegalStateException("Photo quota service or member unavailable");
         }
         try
         {
-            return aiGatewayService.consumeQuota(memberId, BIZ_TYPE);
+            String reservation = plannedReservation == null
+                    ? aiGatewayService.consumeQuota(memberId, BIZ_TYPE)
+                    : aiGatewayService.consumePlannedQuota(memberId, BIZ_TYPE, plannedReservation);
+            if (plannedReservation != null && !plannedReservation.equals(reservation))
+                throw new IllegalStateException("Photo quota reservation identity changed");
+            if (reservation == null || reservation.trim().isEmpty())
+            {
+                throw new IllegalStateException("Photo quota reservation unavailable");
+            }
+            return reservation;
         }
         catch (AiServiceException overLimit)
         {
+            if (overLimit.getReason() != AiServiceException.Reason.RATE_LIMITED)
+            {
+                throw overLimit;
+            }
             log.info("[PhotoCheckVision] quota-exhausted memberId={}", memberId);
             return null;
-        }
-        catch (RuntimeException quotaBroken)
-        {
-            // 额度层自身故障(Redis 抖动等)不该把玩家拦死:放行去调模型,
-            // 与 remainingQuota 读不到时报满额的 fail-open 口径一致。
-            log.warn("[PhotoCheckVision] quota-charge-failed memberId={}", memberId, quotaBroken);
-            return "";
         }
     }
 

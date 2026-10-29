@@ -1,0 +1,194 @@
+{
+  "schema": 1,
+  "source_baseline": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+  "status": "REVIEW_CHECKLIST_NOT_RUNTIME_PROOF",
+  "common_contract": {
+    "local_commit": "业务效果与业务回执终态同一事务提交；唯一业务身份不随响应正文 TTL 释放。",
+    "external_action": "先持久化原意图与确定业务号，事务外调用；UNKNOWN 按原号查证，租约到期不证明外部未执行。",
+    "reject": "拒绝保持业务、经济、权益和外部动作零变化；仅允许必要脱敏拒绝审计与限流记录。",
+    "review_required": "scope、业务身份、意图、版本/CAS、恢复入口及其持久源、回执原子性逐项指向代码与故障/并发测试；不适用项必须说明原因，不接受空白。"
+  },
+  "commands": [
+    {
+      "id": "registration-create-or-replay",
+      "owner": "chengyinhub-system:RegistrationOrderServiceImpl",
+      "entry": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationOrderServiceImpl.java",
+      "symbol": "createOrReplay",
+      "callers": ["chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationCheckoutServiceImpl.java"],
+      "persistent_sources": ["chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml"],
+      "check": "member/requestId/fingerprint 与报名持久身份；唯一冲突必须回读赢家；回放拒绝不得释放身份；不要根据控制器返回值认定事务完成。",
+      "existing_test_sources": ["chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RegistrationOrderServiceBoundaryTest.java"],
+      "test_limit": "现有边界测试不是 MySQL 并发、HTTP 身份或经济效果证明；集成人需补/选择受控真库合同测试。"
+    },
+    {
+      "id": "payment-callback-mutation",
+      "owner": "chengyinhub-system:WxPaymentCallbackInboxServiceImpl",
+      "entry": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackInboxServiceImpl.java",
+      "symbol": "process",
+      "callers": ["chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java"],
+      "persistent_sources": ["chengyinhub-system/src/main/resources/mapper/business/WxPaymentCallbackInboxMapper.xml", "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackMutationService.java"],
+      "check": "渠道事实与原支付身份匹配；inbox 处理权和业务 mutation/DONE 原子性；重复/拒绝不重复记账；通知只有 afterCommit 不足以证明持久恢复。",
+      "existing_test_sources": ["chengyinhub-admin/src/test/java/com/chengyinhub/business/it/WxPaymentCallbackFencingMySqlIT.java", "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationPaymentAtomicityContractTest.java"],
+      "test_limit": "源码字符串合同测试不能替代 MySQL fencing 测试；真库测试也不证明微信真实渠道。"
+    },
+    {
+      "id": "registration-refund-dispatch",
+      "owner": "chengyinhub-system:RefundPayoutServiceImpl",
+      "entry": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundPayoutServiceImpl.java",
+      "symbol": "payoutAfterReview",
+      "callers": ["chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/RefundController.java", "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java", "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java", "chengyinhub-system/src/main/java/com/chengyinhub/business/task/RefundReconcileTask.java"],
+      "persistent_sources": ["chengyinhub-system/src/main/resources/mapper/business/RefundApplicationMapper.xml", "chengyinhub-system/src/main/java/com/chengyinhub/business/task/RefundReconcileTask.java"],
+      "check": "先保存退款意图及原退款号；claim/CAS 只决定当前 worker；租约过期与 UNKNOWN 不产生新的退款身份；查证/恢复不能覆盖已确认终态。",
+      "existing_test_sources": ["chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundPayoutMybatisIntegrationTest.java", "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundPayoutAtomicityContractTest.java"],
+      "test_limit": "登记现有测试不表示其覆盖完整 UNKNOWN/租约合同，需逐案核对；不得调用真实付款/退款。"
+    },
+    {
+      "id": "coop-deposit-refund",
+      "owner": "chengyinhub-system:CoopDepositRefundService",
+      "entry": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopDepositRefundService.java",
+      "symbol": "requestLocked",
+      "callers": ["chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopInviteServiceImpl.java", "chengyinhub-system/src/main/java/com/chengyinhub/business/task/RefundReconcileTask.java"],
+      "persistent_sources": ["chengyinhub-system/src/main/resources/mapper/business/CoopInviteMapper.xml"],
+      "check": "原支付号/退款号/金额匹配；持久状态与 token CAS；UNKNOWN 原号查单，历史已退/归档不得猜测补发；afterCommit 必须有可达的持久恢复入口。",
+      "existing_test_sources": ["chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopDepositRefundMybatisIntegrationTest.java"],
+      "test_limit": "CHENGYIN_FUNDS_MYSQL_IT 门控未就绪必须红，不能 skip；不代表真实渠道回执。"
+    },
+    {
+      "id": "coop-original-produce",
+      "source_sha": "54c524ca99204804b6b84af517359eabc8c6ee8d",
+      "owner": "chengyinhub-system:CoopSettlementOriginalProducer",
+      "entry": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementOriginalProducer.java",
+      "symbol": "freezeOriginals",
+      "callers": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java"
+      ],
+      "persistent_sources": [
+        "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementOriginalMapper.xml",
+        "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementCashEvidenceMapper.xml"
+      ],
+      "check": "原topic事务/锁/原payment fact/seat及五分项守恒合同不变；负毛利只在物理rollback后持久MANUAL_REQUIRED，不扣款/批准/冲账。",
+      "existing_test_sources": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/Wp04OriginalProducerMySqlIT.java"
+      ],
+      "test_limit": "登记不是执行；源方法/事务与金额语义不能由class graph证明。"
+    },
+    {
+      "id": "npc-asr-original-quota-handoff",
+      "source_sha": "379d5615608663c47302598ba238447b264c2bba",
+      "owner": "chengyinhub-system:AiQuotaRecoveryService",
+      "entry": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiQuotaRecoveryService.java",
+      "symbol": "requireNpcAsrHandoff",
+      "callers": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java"
+      ],
+      "persistent_sources": [
+        "chengyinhub-system/src/main/resources/mapper/business/AiQuotaReservationMapper.xml",
+        "chengyinhub-system/src/main/resources/mapper/business/NpcAsrIntentMapper.xml"
+      ],
+      "check": "沿用原ASR reservation与持久handoff；退款只读原NOT_SENT proof并CAS原pending，UNKNOWN不当NOT_SENT，不放宽原额度/恢复合同。",
+      "existing_test_sources": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/NpcAsrIntentMySqlIT.java"
+      ],
+      "test_limit": "NOT_RUN；类型及Mapper owner登记不证明方法级经济授权或Redis/MySQL原子性。"
+    },
+    {
+      "id": "coop-original-manual-read",
+      "source_sha": "e57f0a32037bf88b2abf1626cca4760714d88592",
+      "owner": "chengyinhub-system:CoopSettlementManualCaseReadService",
+      "entry": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementManualCaseReadService.java",
+      "symbol": "detail",
+      "callers": [
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/SettlementController.java"
+      ],
+      "http_entries": [
+        "GET /business/settlement/manual-case/list",
+        "GET /business/settlement/manual-case/{id}"
+      ],
+      "authorization": "business:settlement:list",
+      "persistent_sources": [
+        "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementManualCaseReadMapper.xml"
+      ],
+      "check": "原list/detail只读投影与脱敏来源；不注册business write command，不授manual-case表写权。VERSION类引用只表示源码常量复用，不能证明方法级只读。",
+      "existing_test_sources": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CoopSettlementManualCaseReadMySqlIT.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/business/SettlementManualCaseControllerTest.java"
+      ],
+      "test_limit": "NOT_RUN；classgraph/SELECT源码身份不证明权限、脱敏、传递只读或生产链。"
+    }
+  ],
+  "business_commands": [
+    {
+      "id": "ai-quota-recovery",
+      "business_owner": "AI_QUOTA_RECOVERY",
+      "writes": [
+        "AI_QUOTA_RESERVATION"
+      ],
+      "public_methods": [
+        "com.chengyinhub.business.service.ai.AiQuotaRecoveryService#prepare",
+        "com.chengyinhub.business.service.ai.AiQuotaRecoveryService#reserved",
+        "com.chengyinhub.business.service.ai.AiQuotaRecoveryService#stage",
+        "com.chengyinhub.business.service.ai.AiQuotaRecoveryService#retain",
+        "com.chengyinhub.business.service.ai.AiQuotaRecoveryService#requireRefund",
+        "com.chengyinhub.business.service.ai.AiQuotaRecoveryService#runDue",
+        "com.chengyinhub.business.service.ai.AiQuotaRecoveryService#requireNpcAsrHandoff",
+        "com.chengyinhub.business.service.ai.AiQuotaRecoveryService#refundNpcAsrNotSent"
+      ]
+    },
+    {
+      "id": "photo-check-intent",
+      "business_owner": "AI_PHOTO_INTENT",
+      "writes": [
+        "PHOTO_CHECK_INTENT"
+      ],
+      "public_methods": [
+        "com.chengyinhub.business.service.ai.PhotoCheckIntentService#prepare",
+        "com.chengyinhub.business.service.ai.PhotoCheckIntentService#executeOnce",
+        "com.chengyinhub.business.service.ai.PhotoCheckIntentService#read",
+        "com.chengyinhub.business.service.ai.PhotoCheckIntentService#markApplied"
+      ]
+    },
+    {
+      "id": "npc-voice-enrollment-intent",
+      "business_owner": "E_NPC_VOICE_ENROLLMENT",
+      "writes": [
+        "NPC_VOICE_ENROLLMENT_INTENT"
+      ],
+      "public_methods": [
+        "com.chengyinhub.business.service.ai.NpcVoiceEnrollmentService#enroll",
+        "com.chengyinhub.business.service.ai.NpcVoiceEnrollmentService#status",
+        "com.chengyinhub.business.service.ai.NpcVoiceEnrollmentService#history"
+      ]
+    },
+    {
+      "id": "npc-asr-intent",
+      "business_owner": "D_NPC_ASR_INTENT",
+      "writes": [
+        "NPC_ASR_INTENT"
+      ],
+      "public_methods": [
+        "com.chengyinhub.business.service.impl.NpcAsrIntentService#read",
+        "com.chengyinhub.business.service.impl.NpcAsrIntentService#recognize",
+        "com.chengyinhub.business.service.impl.NpcAsrIntentService#beginHandoff",
+        "com.chengyinhub.business.service.impl.NpcAsrIntentService#readOutcome",
+        "com.chengyinhub.business.service.impl.NpcChatWriteService#admit",
+        "com.chengyinhub.business.service.impl.NpcChatWriteService#deleteForUser",
+        "com.chengyinhub.business.service.impl.DataRetentionServiceImpl#cleanNpcChatRequests",
+        "com.chengyinhub.business.service.impl.NpcChatWriteService#admitShop",
+        "com.chengyinhub.business.service.ai.AiQuotaRecoveryService#refundNpcAsrNotSent",
+        "com.chengyinhub.business.service.ai.AiQuotaRecoveryService#runDue"
+      ]
+    },
+    {
+      "id": "coop-original-manual-case",
+      "business_owner": "G_ORIGINAL_MANUAL_CASES",
+      "writes": [
+        "COOP_SETTLEMENT_MANUAL_CASE"
+      ],
+      "public_methods": [
+        "com.chengyinhub.business.service.impl.CoopSettlementManualCases#requireNoOpenCase",
+        "com.chengyinhub.business.service.impl.CoopSettlementManualCases#afterRollback"
+      ]
+    }
+  ],
+  "business_commands_limit": "root批准的应用合同引用；read两个重载同方法名。登记不证明Java调用必经Service，不授play或其它domain直接Mapper写权；scope/原身份/退款/原子恢复仍由既有业务合同验证。"
+}

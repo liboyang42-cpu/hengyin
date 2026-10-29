@@ -53,6 +53,13 @@ public interface ICoopInviteService {
      */
     public CoopInvite acceptInviteWithLock(Long inviteId, Long nodeId);
 
+    /** Explicit confirmation of the original persisted supply station; no replacement on accept. */
+    CoopInvite acceptInviteWithLock(Long inviteId, Long nodeId, Long confirmedSupplyStationId);
+    /** Creator-scoped classic supplier picker; caller passes only its server-resolved contract owner. */
+    List<com.chengyinhub.business.domain.CmsRegistrationMerchant> listSupplyStations(
+            Long topicId, Long merchantMemberId, Long creatorMemberId);
+
+
     /** 官方邀约接受：锁邀约并幂等创建/复用商家承接档案，返回档案 ID。 */
     public Long acceptOfficialInviteWithLock(Long inviteId, Long merchantMemberId);
 
@@ -143,8 +150,9 @@ public interface ICoopInviteService {
     /** 兼容旧调用：只查既有退款号的可信渠道 SUCCESS；不得凭受理直接置4。 */
     public int settleDepositRefunded(Long inviteId, String refundNo);
 
-    /** 仅供已验证渠道归属/币种的回调或查单结果调用，实际金额/交易号与CAS仍在此校验。 */
-    boolean markDepositPaid(String outTradeNo, Long paidCents, String transactionId);
+    /** Exact verified SUCCESS reference; original paid CAS and any recovery ticket complete in one transaction. */
+    boolean markDepositPaid(String outTradeNo, Long paidCents, String transactionId,
+            com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference reference);
     void requestDepositRefund(Long inviteId, Long operatorMemberId);
     void requestTopicDepositRefunds(Long topicId);
     boolean handleDepositRefundResult(java.util.Map<String,String> facts);

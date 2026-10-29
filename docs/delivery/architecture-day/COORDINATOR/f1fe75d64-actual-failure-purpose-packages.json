@@ -1,0 +1,59 @@
+{
+  "storage": {
+    "run": 40237886431,
+    "job": 121303347255,
+    "state": "FAILED_AT_REAL_ORACLE_CALIBRATION_RELEASE_BEFORE_HELD_TRANSPORT",
+    "readback": "f1fe75d64-cross-domain-failure-readback.json",
+    "owner": "C",
+    "thread": "01a16a22-c697-7637-ae29-cdff6341000b",
+    "dispatch": "COMPLETE_PURPOSE_SOURCE_ONLY_TASK_SENT",
+    "first_failure": "expected released calibration transactions0 observed1;activePool0;rowsModified0;original assertion retained",
+    "official_source": "https://github.com/mysql/mysql-server/blob/mysql-8.0.45/storage/innobase/trx/trx0i_s.cc",
+    "source_verified_lineage": "100ms min idle keyed by last_read; every cache read updates it; current20ms loop requires whole sampling-chain freshness fix; no businessTX-normal claim"
+  },
+  "payment_gap": {
+    "run": 40237893397,
+    "job": 121303678122,
+    "state": "FAILED_SOURCE_CHILD_BEFORE_FIXED_BOUNDARY_AND_SECONDARY_FINALIZE_REASON",
+    "readback": "f1fe75d64-payment-gap-failure-readback.json",
+    "owner": "B",
+    "thread": "01a16a22-956c-723f-b51b-afcbee69802b",
+    "dispatch": "COMPLETE_PURPOSE_SOURCE_ONLY_TASK_SENT",
+    "original_binding_guard_crossed": true,
+    "root_cause": "UNKNOWN_NO_REVIEWED_CHILD_EXIT_CAUSE_YET",
+    "cleanup": "EXACT_ABSENCE",
+    "scope": "e6d02c14170747a1b71236e4be784fbe",
+    "all_seven_accepted": false
+  },
+  "restore_http": {
+    "run": 40237890983,
+    "job": 121303282684,
+    "owner": "E",
+    "thread": "01a16a23-2723-72e4-813f-03d7f1aa6017",
+    "dispatch": "COMPLETE_PURPOSE_SOURCE_ONLY_TASK_SENT",
+    "state": "FAIL_SOURCE_APPLICATION_START_APP_READINESS_TIMEOUT",
+    "readback": "f1fe75d64-restore-http-failure-readback.json",
+    "actual_application_exception_type": "java.lang.IllegalStateException",
+    "exact_cause": "UNKNOWN_FIXED_SAFE_MARKERS_ONLY",
+    "independent_exact_cleanup": "CONFIRMED",
+    "no_old_137_pass_claim": true
+  },
+  "mixed": {
+    "run": 40237888671,
+    "job": 121303274475,
+    "owner": "H",
+    "thread": "01a16a23-aeb0-70ec-b671-6f778f1fd011",
+    "dispatch": "COMPLETE_PURPOSE_SOURCE_ONLY_TASK_SENT",
+    "state": "FAIL_AFTER_FIXED_GAMEPLAY_PROFILE_PASSED_AT_NO_CASH_EMPTY_PRECONDITION",
+    "readback": "f1fe75d64-mixed-failure-readback.json",
+    "old_profile_guard_crossed": true,
+    "partial_runtime": [
+      "original3 physical boundaries assertions passed",
+      "144 core business HTTP at1/3/6 assertions passed"
+    ],
+    "not_whole_capacity": true,
+    "technical_seam": "FINANCIAL_TABLES includes ums_member; actual gameplay original A/B rows2 conflict with default all-empty gate",
+    "root_decision": "Default exact all-empty gate unchanged. Only strict known gameplay profile may prove its exact original2 noncash identities and unchanged full money/permission rows, reject any additional identity or any economic mutation; not a generic dirty baseline allowance",
+    "independent_exact_cleanup": "CONFIRMED_OWNED3_CID_ABSENCE"
+  }
+}

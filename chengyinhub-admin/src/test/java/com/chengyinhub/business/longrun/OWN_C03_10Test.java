@@ -36,6 +36,7 @@ class OWN_C03_10Test {
                 ReflectionTestUtils.setField(service, field.getName(), mock(field.getType()));
             }
         }
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.wireRelocatedCollaborators(service, publicationField -> org.mockito.Mockito.mock(publicationField.getType()));
         topics = (CmsTopicMapper) ReflectionTestUtils.getField(service, "cmsTopicMapper");
         nodes = (CmsTopicNodeMapper) ReflectionTestUtils.getField(service, "cmsTopicNodeMapper");
         chapters = (CmsTopicChapterMapper) ReflectionTestUtils.getField(service, "cmsTopicChapterMapper");
@@ -70,7 +71,7 @@ class OWN_C03_10Test {
     void zeroMainRowUpdateStopsBeforeDeletingChildren() {
         when(topics.updateCmsTopic(any(CmsTopic.class))).thenReturn(0);
         IllegalStateException failure = assertThrows(IllegalStateException.class,
-                () -> service.updateTopicByOwner(dto, 42L, "creator"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwner(dto, 42L, "creator"));
         assertTrue(failure.getMessage().contains("未重建章节与节点"));
         verify(nodes, never()).deleteCmsTopicNodeById(any());
         verify(chapters, never()).deleteCmsTopicChapterById(any());
@@ -81,7 +82,7 @@ class OWN_C03_10Test {
     @Test
     void oneMainRowPreservesExistingExplicitReplacementBehavior() {
         when(topics.updateCmsTopic(any(CmsTopic.class))).thenReturn(1);
-        assertEquals(Long.valueOf(700L), service.updateTopicByOwner(dto, 42L, "creator"));
+        assertEquals(Long.valueOf(700L), com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwner(dto, 42L, "creator"));
         verify(nodes).deleteCmsTopicNodeById(11L);
         verify(chapters).deleteCmsTopicChapterById(1L);
     }
@@ -90,7 +91,7 @@ class OWN_C03_10Test {
     void unexpectedAffectedCountDoesNotContinueReplacement() {
         when(topics.updateCmsTopic(any(CmsTopic.class))).thenReturn(2);
         assertThrows(IllegalStateException.class,
-                () -> service.updateTopicByOwner(dto, 42L, "creator"));
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwner(dto, 42L, "creator"));
         verify(nodes, never()).deleteCmsTopicNodeById(any());
         verify(chapters, never()).deleteCmsTopicChapterById(any());
     }

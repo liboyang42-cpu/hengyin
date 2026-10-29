@@ -35,7 +35,7 @@ import com.chengyinhub.common.core.domain.entity.SysUser;
 import com.chengyinhub.common.core.domain.model.LoginAppUser;
 import com.chengyinhub.common.core.domain.model.LoginUser;
 import com.chengyinhub.common.enums.OperatorType;
-import com.chengyinhub.common.utils.Threads;
+import com.chengyinhub.common.utils.LogCorrelation;
 import com.chengyinhub.framework.config.ThreadPoolConfig;
 import com.chengyinhub.framework.manager.AsyncManager;
 import com.chengyinhub.system.domain.SysOperLog;
@@ -221,13 +221,15 @@ class LogAspectAuditTest
         doThrow(new IllegalStateException("audit-db-down")).when(operLogService).insertOperlog(any(SysOperLog.class));
 
         CountDownLatch errorLogged = new CountDownLatch(1);
-        Logger threadsLogger = (Logger) LoggerFactory.getLogger(Threads.class);
+        Logger threadsLogger = (Logger) LoggerFactory.getLogger(LogCorrelation.class);
         AppenderBase<ILoggingEvent> appender = new AppenderBase<ILoggingEvent>()
         {
             @Override
             protected void append(ILoggingEvent event)
             {
-                if (event.getLevel() == Level.ERROR && event.getFormattedMessage().contains("audit-db-down"))
+                if (event.getLevel() == Level.ERROR && event.getFormattedMessage().contains("event=async.failure")
+                        && event.getFormattedMessage().contains("errorType=IllegalStateException")
+                        && !event.getFormattedMessage().contains("audit-db-down"))
                 {
                     errorLogged.countDown();
                 }
@@ -316,6 +318,31 @@ class LogAspectAuditTest
         {
             return token;
         }
+    }
+
+    @Test
+    void actualAsyncManagerInlineExecutionRestoresContextEvenWhenTaskThrows()
+    {
+        org.slf4j.MDC.put("requestId", "audit_original_123");
+        org.slf4j.MDC.put("commandId", "audit-command");
+        org.slf4j.MDC.put("Authorization", "private-header-fixture");
+        java.util.Map<String, String> before = org.slf4j.MDC.getCopyOfContextMap();
+        IllegalStateException original = new IllegalStateException("private-payload-fixture");
+        try
+        {
+            org.junit.jupiter.api.Assertions.assertSame(original, assertThrows(IllegalStateException.class,
+                    () -> AsyncManager.me().execute(new java.util.TimerTask() {
+                        @Override public void run() {
+                            org.junit.jupiter.api.Assertions.assertEquals("audit_original_123", org.slf4j.MDC.get("requestId"));
+                            org.junit.jupiter.api.Assertions.assertEquals("audit-command", org.slf4j.MDC.get("commandId"));
+                            assertNull(org.slf4j.MDC.get("Authorization"));
+                            org.slf4j.MDC.put("requestId", "changed_inside_task");
+                            throw original;
+                        }
+                    })));
+            org.junit.jupiter.api.Assertions.assertEquals(before, org.slf4j.MDC.getCopyOfContextMap());
+        }
+        finally { org.slf4j.MDC.clear(); }
     }
 
     /** Avoid eager class initialization in the static field reflection helper. */

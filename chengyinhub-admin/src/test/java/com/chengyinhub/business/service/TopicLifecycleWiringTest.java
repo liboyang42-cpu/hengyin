@@ -53,21 +53,23 @@ class TopicLifecycleWiringTest {
     @Test
     void topicCreationCannotWriteRecruitingOrdinalAroundCommercialProjectReview() throws Exception {
         String source = WiringSource.read(TOPIC_SERVICE).replaceAll("\\s+", "");
-        assertCreationCommercialReviewWiring(source);
+        String publication = WiringSource.read("chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicPublicationService.java").replaceAll("\\s+", "");
+        assertCreationCommercialReviewWiring(source, publication);
     }
 
     @Test
     void removingPublishedReviewCallerOrHelperSubmissionFailsTheContract() throws Exception {
         String source = WiringSource.read(TOPIC_SERVICE).replaceAll("\\s+", "");
+        String publication = WiringSource.read("chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicPublicationService.java").replaceAll("\\s+", "");
         String disconnected = source.replace("submitPublishedProjectReview(topicId,memberId,dto.getRecruitDeadline());", "");
         assertFalse(disconnected.equals(source));
-        assertThrows(AssertionError.class, () -> assertCreationCommercialReviewWiring(disconnected));
-        String missingSubmit = source.replace("topicCommercialReviewService.submitProjectReview(topicId,memberId,", "");
-        assertFalse(missingSubmit.equals(source));
-        assertThrows(AssertionError.class, () -> assertCreationCommercialReviewWiring(missingSubmit));
+        assertThrows(AssertionError.class, () -> assertCreationCommercialReviewWiring(disconnected, publication));
+        String missingSubmit = publication.replace("topicCommercialReviewService.submitProjectReview(topicId,memberId,", "");
+        assertFalse(missingSubmit.equals(publication));
+        assertThrows(AssertionError.class, () -> assertCreationCommercialReviewWiring(source, missingSubmit));
     }
 
-    private static void assertCreationCommercialReviewWiring(String source) {
+    private static void assertCreationCommercialReviewWiring(String source, String publication) {
         String method = between(source, "publicLongcreateTopic(TopicCreateDTOdto,", "publicLongupdateTopicByOwner(");
         assertFalse(method.contains("topic.setLifecycle(1)"), "创建主链不得直接写 DRAFT→RECRUITING ordinal");
         assertTrue(method.contains("returncreateTopicInternal(dto,memberId,username,false).getTopicId()"));
@@ -75,7 +77,10 @@ class TopicLifecycleWiringTest {
         int tickets = method.indexOf("saveTickets(dto.getTickets(),topicId,memberId,username,productType,saveDraft)");
         int review = method.indexOf("submitPublishedProjectReview(topicId,memberId,dto.getRecruitDeadline())");
         assertTrue(tickets >= 0 && review > tickets, "票落库后必须通过真实商业立项审接线");
-        String helper = between(source, "privatevoidsubmitPublishedProjectReview(", "privatevoidattachCommercialPublicationState(");
+        String forwarder = between(source, "privatevoidsubmitPublishedProjectReview(", "privateTopicBundleSubmitResultVOnoBundleReview(");
+        assertTrue(forwarder.contains("topicPublicationService.submitPublishedProjectReview(topicId,memberId,recruitDeadline)"),
+                "原创建门面必须委托真实发布owner");
+        String helper = between(publication, "publicvoidsubmitPublishedProjectReview(", "privatevoidattachCommercialPublicationState(");
         assertTrue(helper.contains("commercialTopicPolicy.evaluate(topicId).isCommercial()"));
         assertTrue(helper.contains("if(!commercial&&recruitDeadline==null)return;"));
         assertTrue(helper.contains("topicCommercialReviewService.submitProjectReview(topicId,memberId,recruitDeadline!=null?TopicLifecycleState.RECRUITING:TopicLifecycleState.PRICING)"),

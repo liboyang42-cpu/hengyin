@@ -1,0 +1,41 @@
+{
+  "all_architecture_tests": 75,
+  "ci_cost": "PASS",
+  "dedicated_tests": 18,
+  "evidence_sha256": {
+    "architecture-selftests.txt": "c963129c7c771ed4094ff3ef8de0fb0bd192238fde9ef191dc9f1109ec37bdd1",
+    "ci-cost.txt": "c2b47836e684d07c67a70e10a79e609b73ad4783ed0a47c89f8eafac43e270f4",
+    "existing-resource-tests.txt": "ea258b48c177c8bebc752896eee78825e8e7effe17f7e6884c7b33809922a242",
+    "producer-selftests.txt": "a04334f900ce183935e94c52a315f50a32b349b87932aa2e7e326fd19b22b608"
+  },
+  "existing_resource_dependency_tests": 16,
+  "git_diff_check": "PASS",
+  "gitleaks": "8.21.2 scoped patch exit 0 no leaks",
+  "integration_precondition": "Root backend-test-identity.json path currently untracked; preserve original report but relocate to runner temp/ignored target independently",
+  "kind": "PRODUCER_IMPLEMENTED_REAL_JDEPS_NOT_YET_EXECUTED",
+  "new_baseline_created": false,
+  "not_run": [
+    "real Java/jdeps/JAR collection",
+    "GitHub workflow dispatch",
+    "MySQL/Redis/DDL",
+    "Docker/SSH/VPS",
+    "production/deployment"
+  ],
+  "parent_sha": "361ef3b23a94c6be2f73f74134a40d827f2ee3da",
+  "producer_sha256": "44f1bdb9194429a7bdce0686bc4d0fa5be530175c8841255c998ada5891308bf",
+  "scc_acceptance_added": false,
+  "secret_file_gate": "PASS scoped patch",
+  "shared_files_unchanged": [
+    "ci/architecture/gate.py",
+    "ci/architecture/baseline.json",
+    "ci/architecture/owners.json",
+    "ci/architecture/commands.json",
+    "ci/real_storage_it.py",
+    "ci/real-storage-it-registry.json",
+    "ci/test_real_storage_it.py",
+    ".github/workflows/real-storage-it.yml",
+    "pom.xml"
+  ],
+  "tests_sha256": "db389df3d924d72d6f84b6baf2651fed67a3817e397f18b4d610457336cc504f",
+  "workflow_diff_outside_one_producer_upload_block": "BYTE_IDENTICAL"
+}

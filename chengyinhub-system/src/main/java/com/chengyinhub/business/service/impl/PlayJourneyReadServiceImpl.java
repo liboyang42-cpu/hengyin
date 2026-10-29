@@ -159,10 +159,13 @@ public class PlayJourneyReadServiceImpl implements IPlayJourneyReadService {
         if (!memberId.equals(session.getMemberId())) throw new ServiceException("无权访问这一局");
 
         TopicRouteEngine.State state = readState(session);
-        String frozenRules = NodeJourneySnapshot.journeyRules(session.getConfigSnapshotJson());
+        List<ThemeStateKey> definitions = JourneyInitialState.frozenDefinitions(session.getConfigSnapshotJson());
+        String frozenRules = definitions == null ? NodeJourneySnapshot.journeyRules(session.getConfigSnapshotJson())
+                : JourneyInitialState.frozenDefinitionRules(session.getConfigSnapshotJson());
         JourneyRules rules = JourneyRules.parse(frozenRules != null ? frozenRules : topic.getJourneyRulesJson());
-        List<ThemeStateKey> keys = JourneyInitialState.visibleKeys(themeStateKeyService.listByTopic(topicId),
-                rules, session.getConfigSnapshotJson());
+        List<ThemeStateKey> keys = definitions == null
+                ? JourneyInitialState.visibleKeys(themeStateKeyService.listByTopic(topicId), rules, session.getConfigSnapshotJson())
+                : JourneyInitialState.visibleKeys(definitions, rules);
         String storyJson = casebookStoryJson(topicId, session);
 
         Map<String, Object> data = new LinkedHashMap<String, Object>();

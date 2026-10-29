@@ -25,6 +25,7 @@ import com.chengyinhub.business.service.IAuditTaskService;
 import com.chengyinhub.business.service.support.SensorChallengePolicy;
 import com.chengyinhub.business.service.support.PreferenceResultEvaluator;
 import com.chengyinhub.business.service.ICapabilityGuard;
+import com.chengyinhub.business.service.ICouponRewardAuthorizationService;
 import com.chengyinhub.business.service.support.AdvancedGameConfigValidator;
 import com.chengyinhub.business.service.support.RewardRulesValidator;
 import com.chengyinhub.common.constant.ValidationMethod;
@@ -57,6 +58,9 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
      *  留在 controller 就写不出行为测试(与 ICmsTopicService 那条注释同一理由)。 */
     @Autowired
     private ICapabilityGuard capabilityGuard;
+
+    @Autowired
+    private ICouponRewardAuthorizationService couponRewardAuthorizationService;
 
     @Autowired
     private ICmsMemberTemplateService memberTemplateService;
@@ -102,15 +106,17 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
             }
         }
 
+        preserveAdoptionIdentity(request, existing);
         prepareClearFields(request, existing);
         validateSensorFields(request);
-        normalizeAdvancedConfig(request);
-        normalizeAdoptedReward(request);
+        normalizeAdvancedConfig(request, existing, true);
+        normalizeAdoptedReward(request, existing);
         assertCapabilities(request, memberId);
 
         // 1. 保存到我的模板表
         CmsMemberTemplate memberTemplate = new CmsMemberTemplate();
         copyPropertiesToMemberTemplate(request, memberTemplate);
+        assertTemplateRewardOwnership(memberId, memberTemplate, existing);
         mediaPublicationGuard.requireTemplate(memberId, memberTemplate, true);
         validatePreferenceForReview(memberTemplate);
 
@@ -196,6 +202,7 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         }
         normalizeAndValidateSensorFields(template);
         normalizeAdvancedConfig(template);
+        assertTemplateRewardOwnership(template.getMemberId(), template, null);
         mediaPublicationGuard.requireTemplate(template.getMemberId(), template, true);
         validatePreferenceForReview(template);
         Date now = new Date();
@@ -221,6 +228,7 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         normalizeAdvancedConfig(template);
         CmsMemberTemplate existing = requireActiveTemplate(template.getId());
         template.setMemberId(existing.getMemberId());
+        assertTemplateRewardOwnership(existing.getMemberId(), template, existing);
         mediaPublicationGuard.requireTemplate(existing.getMemberId(), template, true);
         template.setOriginalTemplateId(existing.getOriginalTemplateId());
         if (Integer.valueOf(ValidationMethod.PREFERENCE_GROUP).equals(template.getValidationMethod())
@@ -246,6 +254,7 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         CmsMemberTemplate template = requireActiveTemplate(templateId);
         validatePreferenceForReview(template);
         if (!Integer.valueOf(1).equals(template.getDraftStatus())) throw new ServiceException("草稿请先发布");
+        assertTemplateRewardOwnership(template.getMemberId(), template, null);
         mediaPublicationGuard.requireTemplate(template.getMemberId(), template, true);
         withdrawProjections(templateId, false, template.getUpdateBy());
         prepareForReview(template, template.getUpdateBy(), new Date(), false);
@@ -273,6 +282,7 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         }
         validatePreferenceForReview(template);
         rejectSameTitleByAuthor(template, memberId);
+        assertTemplateRewardOwnership(memberId, template, null);
         Date now = new Date();
         CmsTemplateLibrary projection = findLiveProjection(templateId);
         boolean creating = projection == null;
@@ -324,6 +334,9 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
                 || !Integer.valueOf(1).equals(canonical.getCheckStatus())) {
             throw new RuntimeException("玩法个人审核通过后才能编辑模板广场投影");
         }
+        assertRewardCouponsOwned(canonical.getMemberId(),
+                projection.getCouponId() == null ? stored.getCouponId() : projection.getCouponId(),
+                projection.getRewardRulesJson() == null ? stored.getRewardRulesJson() : projection.getRewardRulesJson());
         projection.setId(stored.getId());
         projection.setMemberTemplateId(stored.getMemberTemplateId());
         projection.setMemberId(stored.getMemberId());
@@ -425,9 +438,10 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
             }
         }
         validateSensorFields(request);
-        normalizeAdvancedConfig(request);
+        normalizeAdvancedConfig(request, existing, true);
         CmsMemberTemplate saved = new CmsMemberTemplate();
         copyPropertiesToMemberTemplate(request, saved);
+        assertTemplateRewardOwnership(memberId, saved, existing);
         mediaPublicationGuard.requireTemplate(memberId, saved, true);
         saved.setInteractionType(input.getInteractionType());
         saved.setId(existing == null ? null : existing.getId());
@@ -543,6 +557,7 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         template.setMerchantGuide(request.getMerchantGuide());
         template.setRewardRulesJson(request.getRewardRulesJson());
         template.setValidationMethod(request.getValidationMethod());
+        template.setInteractionType(request.getInteractionType());
         template.setSensorType(request.getSensorType());
         template.setSensorConfig(request.getSensorConfig());
         template.setQuestionName(request.getQuestionName());
@@ -576,6 +591,33 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         template.setPhotoReview(request.getPhotoReview());
         template.setAudioUrl(request.getAudioUrl());
         template.setAudioDuration(request.getAudioDuration());
+    }
+
+    /** 出身只能在创建采用副本时确定；编辑不能抹除或换成另一公共库 ID。 */
+    private void preserveAdoptionIdentity(CmsTemplatePublishRequest request, CmsMemberTemplate existing) {
+        if (existing == null) return;
+        Long sourceId = existing.getOriginalTemplateId() == null ? 0L : existing.getOriginalTemplateId();
+        if (request.getOriginalTemplateId() != null && !sourceId.equals(request.getOriginalTemplateId())) {
+            throw new IllegalArgumentException("不能修改已有模板的来源，请从目标来源重新采用");
+        }
+        request.setOriginalTemplateId(sourceId);
+    }
+
+    /** 库表未存储的互动语义和奖章沿现有 canonical 关联读取，不猜 library/member ID。 */
+    private void copyAdoptedCanonicalFields(CmsTemplateLibrary source, CmsTemplatePublishRequest request) {
+        if (source.getMemberTemplateId() == null) return; // 历史直接入库内容没有个人原单关联。
+        CmsMemberTemplate canonical = memberTemplateService.selectCmsMemberTemplateById(source.getMemberTemplateId());
+        if (canonical == null || !source.getMemberTemplateId().equals(canonical.getId())
+                || source.getMemberId() == null || !source.getMemberId().equals(canonical.getMemberId())
+                || !Integer.valueOf(0).equals(canonical.getDelFlag())
+                || !Long.valueOf(1L).equals(canonical.getStatus())) {
+            throw new IllegalArgumentException("源模板内容关联缺失或不一致，无法完整采用");
+        }
+        // 公共库已经审核且在架；个人列表是否上架不改变这份内容的已审核身份。
+        request.setInteractionType(canonical.getInteractionType());
+        request.setMedalImg(canonical.getMedalImg());
+        request.setMedalName(canonical.getMedalName());
+        request.setMedalStyle(canonical.getMedalStyle());
     }
 
     private String normalizeMedalStyle(String medalStyle) {
@@ -617,6 +659,13 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
             request.setScope(scope);
             request.setOriginalTemplateId(sourceId);
             request.setIsSync(0);
+            // 采用是完整服务端复制，不应用客户端旧表单的清空标记或未在库中存储的字段。
+            request.setClearFields(null);
+            request.setInteractionType(null);
+            request.setMedalImg(null);
+            request.setMedalName(null);
+            request.setMedalStyle(null);
+            copyAdoptedCanonicalFields(source, request);
             // 优惠券是原商家的资产，采用内容不能顺带复制发券权限。
             if (source.getCouponId() != null && source.getCouponId() > 0) {
                 throw new IllegalArgumentException("该模板含商家专属优惠券，请先由原作者提供不含优惠券的可采用版本");
@@ -642,10 +691,13 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
                 throw new RuntimeException("草稿不存在或无权修改");
             }
         }
+        preserveAdoptionIdentity(request, existingDraft);
         prepareClearFields(request, existingDraft);
         validateSensorFields(request);
-        normalizeAdvancedConfig(request);
-        normalizeAdoptedReward(request);
+        normalizeAdvancedConfig(request, existingDraft, !Boolean.TRUE.equals(request.getAdoptSourceOnly()));
+        if (!Boolean.TRUE.equals(request.getAdoptSourceOnly())) {
+            normalizeAdoptedReward(request, existingDraft);
+        }
         assertCapabilities(request, memberId);
         if (existingDraft != null && StringUtils.isBlank(request.getMedalStyle())) {
             request.setMedalStyle(existingDraft.getMedalStyle());
@@ -653,6 +705,7 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         Date now = new Date();
         CmsMemberTemplate t = new CmsMemberTemplate();
         copyPropertiesToMemberTemplate(request, t);
+        assertTemplateRewardOwnership(memberId, t, existingDraft);
         mediaPublicationGuard.requireTemplate(memberId, t, false);
         t.setMemberId(memberId);
         t.setUpdateBy(username);
@@ -687,6 +740,21 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         }
     }
 
+    private void assertTemplateRewardOwnership(Long owner, CmsMemberTemplate patch, CmsMemberTemplate existing) {
+        Long coupon = patch.getCouponId() == null && existing != null ? existing.getCouponId() : patch.getCouponId();
+        String rules = patch.getRewardRulesJson();
+        boolean clearsRules = patch.getClearFields() != null && patch.getClearFields().contains("rewardRulesJson");
+        if (rules == null && existing != null && !clearsRules) rules = existing.getRewardRulesJson();
+        assertRewardCouponsOwned(owner, coupon, rules);
+    }
+
+    private void assertRewardCouponsOwned(Long owner, Long coupon, String rules) {
+        Set<Long> ids = new LinkedHashSet<>();
+        if (coupon != null && coupon > 0L) ids.add(coupon);
+        ids.addAll(rewardRulesValidator.couponIds(rules));
+        for (Long id : ids) couponRewardAuthorizationService.assertOwnedRewardCoupon(id, owner);
+    }
+
     /**
      * X03:身份能力位闸。界面的「权益清单」已经告诉用户哪些解锁了哪些没有,
      * 这里让服务端和那句承诺保持一致 —— 此前它只是一句话,后端照收。
@@ -719,9 +787,16 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
     /**
      * 采用公共模板时奖励来自服务端真源，客户端既不能篡改，也不应被当作重新设计勋章。
      */
-    private void normalizeAdoptedReward(CmsTemplatePublishRequest request) {
+    private void normalizeAdoptedReward(CmsTemplatePublishRequest request, CmsMemberTemplate existing) {
         if (request == null || request.getOriginalTemplateId() == null
                 || request.getOriginalTemplateId() <= 0) {
+            return;
+        }
+        if (existing != null) {
+            // 采用后已成为自己的内容副本。后续编辑不再追随来源改动或来源下架。
+            request.setMedalImg(existing.getMedalImg());
+            request.setMedalName(existing.getMedalName());
+            request.setMedalStyle(existing.getMedalStyle());
             return;
         }
         request.setMedalImg(null);
@@ -807,8 +882,9 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         throw new IllegalArgumentException("拍照滤镜类型无效");
     }
 
-    private void normalizeAdvancedConfig(CmsTemplatePublishRequest request) {
-        backfillAdoptedSecrets(request);
+    private void normalizeAdvancedConfig(CmsTemplatePublishRequest request, CmsMemberTemplate existing,
+                                        boolean backfillSecrets) {
+        if (backfillSecrets) backfillAdoptedSecrets(request, existing);
         request.setAdvancedConfigJson(normalizeAdvancedConfigValue(request.getAdvancedConfigJson()));
         // 条件奖励与玩法配置同期规范化:两者都是「商家写、服务端认」的 JSON,
         // 校验放在同一处,免得一个走校验另一个裸奔。
@@ -823,8 +899,8 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
      * 服务端在这里从源库模板补回:秘密字段全程只在服务端流转,绝不下发给非 owner 客户端。
      * 补不回来(源模板没了/它也没配)就原样交给校验器报错,不静默吞。
      */
-    private void backfillAdoptedSecrets(CmsTemplatePublishRequest request) {
-        Long sourceId = request.getOriginalTemplateId();
+    private void backfillAdoptedSecrets(CmsTemplatePublishRequest request, CmsMemberTemplate existing) {
+        Long sourceId = existing == null ? request.getOriginalTemplateId() : existing.getOriginalTemplateId();
         String raw = request.getAdvancedConfigJson();
         if (sourceId == null || sourceId <= 0 || StringUtils.isBlank(raw)) return;
         com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
@@ -876,19 +952,25 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         if (!needAnswerKey && !needPoems && !needEstimate && !needPrices && !needSpots
                 && !needSortOrder && !needPairs && !needClassifyAnswer && !needQaCorrect
                 && !needCompareAnswer && !needD20Text) return;
-        CmsTemplateLibrary source = templateLibraryService.selectCmsTemplateLibraryById(sourceId);
-        if (source == null || StringUtils.isBlank(source.getAdvancedConfigJson())) return;
-        // originalTemplateId 是客户端提交的:必须按公开货架同一套可见性口径过滤
-        // (对齐 ApiTemplateController /info 的判定),否则指向未过审/已下架/已删除的
-        // 库行就成了绕过 TemplateSecrets.strip 的秘密窃取路径。不可见即不回填,fail-closed。
-        if (source.getDelFlag() == null || source.getDelFlag() == 2
-                || source.getStatus() == null || source.getStatus() != 1
-                || source.getPublishStatus() == null || source.getPublishStatus() != 1) {
-            return;
+        final String sourceConfig;
+        if (existing != null) {
+            // 该行已由当前 owner 锁定；副本缺失字段只可从自己的原内容补回。
+            sourceConfig = existing.getAdvancedConfigJson();
+        } else {
+            CmsTemplateLibrary source = templateLibraryService.selectCmsTemplateLibraryById(sourceId);
+            if (source == null) return;
+            // 新建兼容路径仍须核对公共来源可见性，不能借来源 ID 读取私有答案。
+            if (source.getDelFlag() == null || source.getDelFlag() == 2
+                    || source.getStatus() == null || source.getStatus() != 1
+                    || source.getPublishStatus() == null || source.getPublishStatus() != 1) {
+                return;
+            }
+            sourceConfig = source.getAdvancedConfigJson();
         }
+        if (StringUtils.isBlank(sourceConfig)) return;
         final com.fasterxml.jackson.databind.JsonNode sourceRoot;
         try {
-            sourceRoot = mapper.readTree(source.getAdvancedConfigJson());
+            sourceRoot = mapper.readTree(sourceConfig);
         } catch (Exception unusableSource) {
             logger.warn("公共库模板 {} 的配置不是合法 JSON,跳过秘密字段回填:{}",
                     sourceId, unusableSource.toString());
@@ -1184,6 +1266,11 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
             }
             if (review == null || !review.matches(memberTemplateId, memberId, libraryTemplates)) {
                 throw new ServiceException("上架复检暂不可用，请刷新后重试", HttpStatus.BAD_REQUEST);
+            }
+            assertTemplateRewardOwnership(memberId, memberTemplate, null);
+            for (CmsTemplateLibrary projection : libraryTemplates) {
+                if (projection != null && Integer.valueOf(0).equals(projection.getDelFlag()))
+                    assertRewardCouponsOwned(memberId, projection.getCouponId(), projection.getRewardRulesJson());
             }
         }
         boolean hasActiveProjection = false;

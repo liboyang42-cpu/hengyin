@@ -62,6 +62,7 @@ class PredictBetAfterSettleGuardTest {
         predictMapper = mock(PlayPredictMapper.class);
         attemptMapper = mock(PlayAttemptLogMapper.class);
         service = new AdvancedGameRuntimeServiceImpl();
+        com.chengyinhub.business.service.impl.AdvancedActionTestFixtures.transactions(service);
         ReflectionTestUtils.setField(service, "sessionMapper", sessionMapper);
         ReflectionTestUtils.setField(service, "nodeMapper", mock(CmsTopicNodeMapper.class));
         ReflectionTestUtils.setField(service, "templateMapper", mock(CmsMemberTemplateMapper.class));

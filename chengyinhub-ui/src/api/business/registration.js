@@ -17,15 +17,6 @@ export function getRegistration(id) {
   })
 }
 
-// 新增活动/主题报名
-export function addRegistration(data) {
-  return request({
-    url: '/business/registration',
-    method: 'post',
-    data: data
-  })
-}
-
 // 修改活动/主题报名
 export function updateRegistration(data) {
   return request({

@@ -78,6 +78,9 @@ public class ApiAiNpcController extends BaseController
     @Autowired
     private SpeechToTextService speechToTextService;
 
+    @Autowired
+    private com.chengyinhub.business.service.impl.NpcAsrIntentService npcAsrIntentService;
+
     /**
      * 取出场 NPC。
      * scope=global -> 全局 NPC; scope=activity -> 局内 NPC(活动角色+门店分身);
@@ -202,7 +205,14 @@ public class ApiAiNpcController extends BaseController
                                   @RequestParam(required = false) String scope,
                                   @RequestParam(required = false) Long bizId)
     {
-        return success(npcChatService.readOriginalRequest(scope, bizId, requestId, getAppUserId()));
+        Long userId=getAppUserId();
+        com.chengyinhub.business.domain.vo.ai.NpcChatResp original=
+                npcChatService.readOriginalRequest(scope,bizId,requestId,userId);
+        if (original!=null && NpcChatService.STATUS_NOT_FOUND.equals(original.getOutcomeStatus())) {
+            com.chengyinhub.business.domain.vo.ai.NpcChatResp asr=npcAsrIntentService.readOutcome(scope,bizId,requestId,userId);
+            if (asr!=null) return success(asr);
+        }
+        return success(original);
     }
 
     /**
@@ -232,6 +242,9 @@ public class ApiAiNpcController extends BaseController
         com.chengyinhub.business.domain.vo.ai.NpcChatResp stored=
                 npcChatService.storedShopRequest(req.getRequestId(),userId,req.getNodeId());
         if(stored!=null) return success(stored);
+        com.chengyinhub.business.domain.vo.ai.NpcChatResp asr=
+                npcAsrIntentService.readOutcome("shop",req.getNodeId(),req.getRequestId(),userId);
+        if(asr!=null) return success(asr);
         ShopGate gate = gateShopChat(userId, req.getNodeId());
         if (gate.deny != null) return gate.deny;
         return success(npcChatService.chatWithShop(req.getRequestId(), userId, gate.node.getId(),
@@ -285,12 +298,12 @@ public class ApiAiNpcController extends BaseController
      * ASR 没配好时在**进模型之前**就返回,不扣额度、不留假记录。
      *
      * <p>⚠️ 音频只在内存里过一遍,<b>不落盘也不进 OSS</b>。留下来的只有识别出的文字,
-     * 而文字已被 /chat/data/export 与 /chat/data/delete 两个数据权利端点覆盖。
+     * 转写正文短期保留；到期及 /chat/data/delete 均只擦正文，永久请求身份不释放。
      */
     @Operation(summary = "门店分身语音提问")
     @RateLimiter(time = 60, count = 15, limitType = LimitType.MEMBER)
     @PostMapping("/voice-chat")
-    public AjaxResult voiceChat(@RequestPart("file") MultipartFile file,
+    public AjaxResult voiceChat(@RequestPart(value="file",required=false) MultipartFile file,
                                 @RequestParam("nodeId") Long nodeId,
                                 @RequestParam("requestId") String requestId)
     {
@@ -302,61 +315,71 @@ public class ApiAiNpcController extends BaseController
         com.chengyinhub.business.domain.vo.ai.NpcChatResp stored=
                 npcChatService.storedShopRequest(requestId,userId,nodeId);
         if(stored!=null) return success(stored);
-        if (!speechToTextService.available())
-        {
-            // 说清楚缺的是什么,不要含糊成「暂时不可用」——含糊会让人以为是抖动、反复重试
-            return AjaxResult.error("语音识别还没接入，先打字问我");
+        try {
+            com.chengyinhub.business.domain.NpcAsrIntent receipt=npcAsrIntentService.read(userId,requestId,nodeId);
+            if (file==null || file.isEmpty()) {
+                if (receipt==null) return AjaxResult.error("参数有误");
+                // Explicit POST may continue the original saved transcription; GET never takes this branch.
+            } else {
+                if (receipt==null && !speechToTextService.available())
+                    return AjaxResult.error("语音识别还没接入，先打字问我");
+                if (file.getSize()>VOICE_MAX_BYTES) return AjaxResult.error("这段录音太长了，说短一点");
+                ShopGate before=gateShopChat(userId,nodeId);
+                if (before.deny!=null) return before.deny;
+                byte[] audio;
+                try { audio=file.getBytes(); }
+                catch(IOException missing) { return AjaxResult.error("录音没收全，再传一次"); }
+                if (audio.length>VOICE_MAX_BYTES) return AjaxResult.error("这段录音太长了，说短一点");
+                String format=NpcVoiceAudioFormat.detect(audio);
+                if (format==null) return AjaxResult.error(HttpStatus.BAD_REQUEST,"录音格式不支持");
+                receipt=npcAsrIntentService.recognize(userId,requestId,nodeId,before.node.getMerchantMemberId(),audio,format);
+            }
+            stored=npcChatService.storedShopRequest(requestId,userId,nodeId);
+            if (stored!=null) return success(stored);
+            if (!"RECEIVED".equals(receipt.getState()) || receipt.isBodyErased()
+                    || receipt.isHandoffStarted() || receipt.getTranscript()==null || receipt.getTranscript().isEmpty())
+                return asrOnly(receipt);
+            ShopGate gate=gateShopChat(userId,nodeId);
+            if (gate.deny!=null) return gate.deny;
+            CmsTopicNode node=gate.node;
+            if (!npcAsrIntentService.beginHandoff(userId,requestId,nodeId,node.getMerchantMemberId())) {
+                stored=npcChatService.storedShopRequest(requestId,userId,nodeId);
+                if (stored!=null) return success(stored);
+                return asrOnly(npcAsrIntentService.read(userId,requestId,nodeId));
+            }
+            AjaxResult ok=success(npcChatService.chatWithShop(requestId,userId,node.getId(),
+                    node.getMerchantMemberId(),shopMemoryOf(node),receipt.getTranscript()));
+            // Deletion/expiry may have revoked the body while the text request was running.
+            // Read its current persisted snapshot, never resurrect the captured pre-handoff transcript.
+            com.chengyinhub.business.domain.NpcAsrIntent echo=npcAsrIntentService.read(userId,requestId,nodeId);
+            if(echo!=null && !echo.isBodyErased() && echo.getTranscript()!=null)
+                ok.put("asr",echo.getTranscript());
+            return ok;
+        } catch(IllegalArgumentException conflict) {
+            return success(com.chengyinhub.business.service.impl.NpcAsrIntentService.unavailable(requestId,"INVALID_REQUEST"));
+        } catch(RuntimeException unknown) {
+            // Save/claim commit may already have succeeded. Read only; never grant a second paid attempt.
+            stored=npcChatService.storedShopRequest(requestId,userId,nodeId);
+            if (stored!=null) return success(stored);
+            com.chengyinhub.business.domain.vo.ai.NpcChatResp asr=npcAsrIntentService.readOutcome("shop",nodeId,requestId,userId);
+            return AjaxResult.success("语音识别没成功，稍后再试",
+                    asr!=null?asr:com.chengyinhub.business.service.impl.NpcAsrIntentService.unavailable(requestId,"ASR_STATE_UNAVAILABLE"));
         }
-        if (file == null || file.isEmpty()) return AjaxResult.error("参数有误");
-        if (file.getSize() > VOICE_MAX_BYTES) return AjaxResult.error("这段录音太长了，说短一点");
-        ShopGate gate = gateShopChat(userId, nodeId);
-        if (gate.deny != null) return gate.deny;
-        CmsTopicNode node = gate.node;
+    }
 
-        byte[] audio;
-        try
-        {
-            audio = file.getBytes();
-        }
-        catch (IOException e)
-        {
-            log.warn("[npc/voice-chat] 录音读取失败 nodeId={}", nodeId, e);
-            return AjaxResult.error("录音没收全，再传一次");
-        }
-        String format = NpcVoiceAudioFormat.detect(audio);
-        if (format == null)
-        {
-            return AjaxResult.error(HttpStatus.BAD_REQUEST, "录音格式不支持");
-        }
-        String text;
-        try
-        {
-            text = speechToTextService.transcribe(audio, format);
-        }
-        catch (RuntimeException e)
-        {
-            log.warn("[npc/voice-chat] 转写失败 nodeId={}, format={}", nodeId, format, e);
-            // Another call using the original requestId may have completed while ASR was in flight.
-            stored = npcChatService.storedShopRequest(requestId, userId, nodeId);
-            if (stored != null) return success(stored);
-            return AjaxResult.error("语音识别没成功，稍后再试");
-        }
-        // Recovery retains its existing priority over current eligibility and new transcript echo.
-        stored = npcChatService.storedShopRequest(requestId, userId, nodeId);
-        if (stored != null) return success(stored);
-        if (text == null || text.trim().isEmpty())
-        {
-            // 拿空问题去调模型 = 白花钱且必然答非所问
-            return AjaxResult.error("没听清，再说一次");
-        }
-        // 转写可能跨过通行证有效期，进模型前重新读取当前资格与节点归属。
-        gate = gateShopChat(userId, nodeId);
-        if (gate.deny != null) return gate.deny;
-        node = gate.node;
-        AjaxResult ok = success(npcChatService.chatWithShop(requestId, userId, node.getId(),
-                node.getMerchantMemberId(), shopMemoryOf(node), text));
-        ok.put("asr", text);   // 回显识别文本:玩家要能看见自己"说了什么"被听成了什么
-        return ok;
+    private AjaxResult asrOnly(com.chengyinhub.business.domain.NpcAsrIntent receipt) {
+        if (receipt==null) return success(com.chengyinhub.business.service.impl.NpcAsrIntentService.unavailable(null,"ASR_STATE_UNAVAILABLE"));
+        AjaxResult result;
+        if ("RECEIVED".equals(receipt.getState()) && !receipt.isBodyErased()
+                && !receipt.isHandoffStarted() && "".equals(receipt.getTranscript()))
+            result=AjaxResult.error("没听清，再说一次");
+        else if ("NOT_SENT".equals(receipt.getState()))
+            result=AjaxResult.error("语音识别没成功，稍后再试");
+        else if ("UNKNOWN".equals(receipt.getState()))
+            result=AjaxResult.success("语音识别没成功，稍后再试");
+        else result=AjaxResult.success();
+        result.put("data",com.chengyinhub.business.service.impl.NpcAsrIntentService.outcome(receipt));
+        return result;
     }
 
     /**

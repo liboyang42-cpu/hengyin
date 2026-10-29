@@ -1,0 +1,93 @@
+{
+  "root_base": "8ba0f0ca7dfde37b2e7cfcd82314636b8d0337ad",
+  "source_candidates": [
+    "062c6cb71ffa0ab6b005ee622e8a2045e4c496cd",
+    "c84cc557d5f0d36b37ef2c70f39ed73608678410",
+    "2fa7f983f865fe3bc343e60ed092adae7172e1dc",
+    "ce49f49b6a4ccd92c67f53f72d4fe387aa734f1f"
+  ],
+  "source_files_exact": 14,
+  "files": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameSharedRouteQueryTest.java",
+      "source": "ce49f49b6a4ccd92c67f53f72d4fe387aa734f1f",
+      "sha256": "3762af99dfa9b4c062a28c643da4f3320cb3727b867b1928796f8aed3b76d38d"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IGameSessionRuntimeService.java",
+      "source": "ce49f49b6a4ccd92c67f53f72d4fe387aa734f1f",
+      "sha256": "f9e1c4b06adc45d1ce349dd9c008339d1085be93f48e4b7e6ede3a0631a42407"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImpl.java",
+      "source": "ce49f49b6a4ccd92c67f53f72d4fe387aa734f1f",
+      "sha256": "733357741a3e74a70797f4b7f1113b82b158432ae8aeec49489bf1e12d5f0d7b"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/GameSharedRunControl.java",
+      "source": "062c6cb71ffa0ab6b005ee622e8a2045e4c496cd",
+      "sha256": "f49118b9965bb5f517082d96ef7f50a53a814133427bc3c8425e40ab7b43e879"
+    },
+    {
+      "path": "docs/delivery/architecture-day/A/RUNTIME-RUN-CONTROL/README.md",
+      "source": "062c6cb71ffa0ab6b005ee622e8a2045e4c496cd",
+      "sha256": "7210216fe6b15baa9d41da90b5ac52fe94f44c18c5f7021a7d0a15bb4fc2cae2"
+    },
+    {
+      "path": "docs/delivery/architecture-day/A/RUNTIME-RUN-CONTROL/static-result.json",
+      "source": "062c6cb71ffa0ab6b005ee622e8a2045e4c496cd",
+      "sha256": "b7f3870bd23d439f670dbca9e3fb50324d8a63e47af003d88edfa43c5037d80c"
+    },
+    {
+      "path": "docs/delivery/architecture-day/A/RUNTIME-RUN-CONTROL/verify_static.py",
+      "source": "062c6cb71ffa0ab6b005ee622e8a2045e4c496cd",
+      "sha256": "12bcc0b87b3905b69d97b6d869342096654ab728867467443278b7538fd35ee2"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiAiThemeDraftHttpSecurityTest.java",
+      "source": "c84cc557d5f0d36b37ef2c70f39ed73608678410",
+      "sha256": "670660e442aa73b2f55a6c68bb2c2921a595082845a78217761d8ec4f609cc43"
+    },
+    {
+      "path": "docs/delivery/architecture-day/A/HTTP-JWT-CLAIMS-FIX.md",
+      "source": "c84cc557d5f0d36b37ef2c70f39ed73608678410",
+      "sha256": "d560edbfafea526f953129d1dddaad5179177d1c7f097830b82816b8a8c4346d"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ITopicRouteRuntimeService.java",
+      "source": "2fa7f983f865fe3bc343e60ed092adae7172e1dc",
+      "sha256": "9e1fb049054290fb28b3d0d8c3f5334fde22e3973f3723cafe0fd52a67bb16f1"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRoutePublicationCompiler.java",
+      "source": "2fa7f983f865fe3bc343e60ed092adae7172e1dc",
+      "sha256": "5799262a8c2454b01fdc9e097248d61e96d3336b8fe7ad9138f33ca82a2fe6dc"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java",
+      "source": "2fa7f983f865fe3bc343e60ed092adae7172e1dc",
+      "sha256": "1cc4dd607761431f473b56d454d205d05a9da60416529854606a6bca4be24e70"
+    },
+    {
+      "path": "docs/delivery/architecture-day/E/ROUTE-PUBLICATION/README.md",
+      "source": "2fa7f983f865fe3bc343e60ed092adae7172e1dc",
+      "sha256": "f5947faa2cada30e7e7a3f15ad29f13997e5f00e6a76a43d3324e9a65c39be30"
+    },
+    {
+      "path": "docs/delivery/architecture-day/A/QUERY-MISSING-RUN/README.md",
+      "source": "ce49f49b6a4ccd92c67f53f72d4fe387aa734f1f",
+      "sha256": "1b4021f0f541a38b88d303febaf542c18b2c9ddf49b0c97789e7ab367112b4ee"
+    }
+  ],
+  "independent_review": "H: original command/receipt/transaction boundaries and 39 compiler method bodies retained; H-AE-01 missing-RUN fallback confirmed and ce49 fix applied",
+  "missing_run_fix": "Existing shared run without RUN rejects with GAME_CONFIG_INVALID after scope authorization; null only for non-applicable shared session; no initialization or fallback to stale individual run",
+  "verification": {
+    "source_bytes": "PASS",
+    "diff_check": "PASS",
+    "java": "NOT_RUN",
+    "mysql": "NOT_RUN",
+    "joint_ci": "NOT_RUN"
+  },
+  "ios_adoption": "Main construction v1.1 section17 synchronized; six contracts and eight scenarios, same original full scope; no iOS source or toolchain verification claimed",
+  "scope": "isolated candidate, not master merge/deploy/business acceptance"
+}

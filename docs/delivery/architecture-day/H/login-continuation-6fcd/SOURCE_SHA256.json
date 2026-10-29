@@ -1,0 +1,102 @@
+[
+  {
+    "path": "chengyinhub-xcx/pages/activity/baoming/baoming.js",
+    "sha256": "1c492f6d9a8ee0a2507e4384bd5ef7473b5b8fb6e9a514fc5920e045cb73dbbc",
+    "lines_delta": 1
+  },
+  {
+    "path": "chengyinhub-xcx/pages/activity/official-detail/index.js",
+    "sha256": "1613143fc6c0173d6e76bbb05e4fb35aa9d5ad4b2b18c5230e27c255c2f76730",
+    "lines_delta": 0
+  },
+  {
+    "path": "chengyinhub-xcx/pages/club/detail/index.js",
+    "sha256": "a325f3c2e012991529ce0e4e1e069c38413c927231e3576cb4debd16de1e0ed4",
+    "lines_delta": 1
+  },
+  {
+    "path": "chengyinhub-xcx/pages/publish/activity/index.js",
+    "sha256": "31d1d362a4dd0f2c2f07743f26acf0c5ded95158d0e4e36a732d45ce51013ae1",
+    "lines_delta": 0
+  },
+  {
+    "path": "chengyinhub-xcx/pages/publish/fabu/index.js",
+    "sha256": "b08c2387f92ffaea66bcd3aa52f6625b96a19b188baf1b10151c18850043eef8",
+    "lines_delta": 0
+  },
+  {
+    "path": "chengyinhub-xcx/pages/publish/temp/index.js",
+    "sha256": "be8f526921f755cf35983e017599a2ab87259a03312aa54d6a3848a84ae8aece",
+    "lines_delta": 0
+  },
+  {
+    "path": "chengyinhub-xcx/pages/square/components/cy/post-compose/index.js",
+    "sha256": "76e37ea6052c20ced39ae3dcaf2c308f02174ff89b0fdaf41655e84aa16a42b6",
+    "lines_delta": 0
+  },
+  {
+    "path": "chengyinhub-xcx/pages/square/detail/index.js",
+    "sha256": "617df3be87f6cc169a54a8a40b2c7466f2c63463b48cf52f038e26d852c5e84a",
+    "lines_delta": 1
+  },
+  {
+    "path": "chengyinhub-xcx/pages/square/list/index.js",
+    "sha256": "594afd87772e33be858e43b6db4f1968d3e569e2c60c785916f9bd03ab0985ee",
+    "lines_delta": 0
+  },
+  {
+    "path": "chengyinhub-xcx/pages/talent/list/index.js",
+    "sha256": "acc38e7eb146ee3288fc3b2281c68b3a2b9e67db6b0f03b977c01ede7e3c2ad6",
+    "lines_delta": 0
+  },
+  {
+    "path": "chengyinhub-xcx/pages/team/join/index.js",
+    "sha256": "6f3e93253835b5f5ec8457c3cc46533e8bb8103a2035c3fc8521a40e7da9c339",
+    "lines_delta": 2
+  },
+  {
+    "path": "chengyinhub-xcx/pages/template/index.js",
+    "sha256": "5ba7517495186395aad57efe1c07ad1986d37332517927a7e2ebbe7e22ea7466",
+    "lines_delta": 0
+  },
+  {
+    "path": "chengyinhub-xcx/pages/topic/index/index.js",
+    "sha256": "5b9d3169244287cc858b5f9878c0b9675df781bf7224062f0012d022447508cc",
+    "lines_delta": 0
+  },
+  {
+    "path": "chengyinhub-xcx/subpackageMember/components/cy/report-sheet/index.js",
+    "sha256": "a1b3a25ec6247ba900aac6b84caf5a960458e25eda2f782420eb98cd98dd41be",
+    "lines_delta": 2
+  },
+  {
+    "path": "chengyinhub-xcx/subpackageMember/utils/team-up.js",
+    "sha256": "b2f8599870ba360ba19369d41445caed26e7a1661a1b5e7ce80e8a10b5959a0d",
+    "lines_delta": 0
+  },
+  {
+    "path": "chengyinhub-xcx/utils/content-report.js",
+    "sha256": "8e2c3c8bf0bff680fa531e6d9ac94b68b89f4aaf7dcd33026c0ad527cd2c4055",
+    "lines_delta": 0
+  },
+  {
+    "path": "chengyinhub-xcx/app.js",
+    "sha256": "85aa41555950463553095e4b2f08e21dc96efcee0e5ed26352adc65464b4c24c",
+    "lines_delta": 3
+  },
+  {
+    "path": "chengyinhub-xcx/utils/auth/require-login.js",
+    "sha256": "0fafe56efcc5abeb93949da4ea4f1f765a4c1fe0c0eee9136296f6d1301748b1",
+    "lines_delta": 56
+  },
+  {
+    "path": "chengyinhub-xcx/subpackageMember/components/cy/scene-member-order-detail/index.js",
+    "sha256": "a0d2d829b3ffdc5d8d9b47869aaf9647237549c19cf14ef3fce624ff0d64c219",
+    "lines_delta": 2
+  },
+  {
+    "path": "chengyinhub-xcx/tests/unit/guest-browse-login-on-write.test.js",
+    "sha256": "e736a2dd6e2126a968ec71eae7014cf4f2ccbb15e8db13f9adcebaf17bfe4d0a",
+    "lines_delta": 107
+  }
+]

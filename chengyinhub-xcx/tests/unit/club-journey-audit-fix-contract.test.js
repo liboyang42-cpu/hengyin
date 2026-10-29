@@ -41,6 +41,7 @@ function loadClubDetail(activityList) {
     }),
     Page(config) { definition = config },
     require(request) {
+      if (request === '../../../utils/registration-seat.js') return require('../../utils/registration-seat.js')
       const modules = {
         '../../../utils/motion.js': { haptic() {} },
         // 邀约/合作池整形与 coop/list 共用一份(2026-09-08 抽出);这里给真实现,

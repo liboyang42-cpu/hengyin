@@ -79,6 +79,11 @@ public interface CmsRegistrationMapper
     /** 事务内当前读；CAS 失败后必须用它看见竞争事务刚提交的终态，不能用 RR 快照普通读。 */
     public CmsRegistration selectCmsRegistrationByIdForUpdate(Long id);
 
+    /** Parent scope is already locked; current read in stable order, independent of an older RR view. */
+    List<CmsRegistration> selectCancellationRowsForUpdate(@Param("ownerType") Long ownerType,
+                                                         @Param("ownerId") Long ownerId);
+
+
     /** 只记录这张本人有效订单的首次合法扫码，不覆盖已有事实或核销字段。 */
     int markFirstSuccessfulScan(@Param("id") Long id, @Param("memberId") Long memberId,
                                 @Param("ownerType") Long ownerType, @Param("ownerId") Long ownerId,

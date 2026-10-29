@@ -24,7 +24,7 @@ class OWN_C03_15Test {
         activities = mock(CmsActivityMapper.class);
         tickets = mock(IOmsTicketService.class);
         ReflectionTestUtils.setField(service, "cmsActivityMapper", activities);
-        ReflectionTestUtils.setField(service, "omsTicketService", tickets);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "omsTicketService", tickets);
         ReflectionTestUtils.setField(service, "settlementDebtLedger", mock(SettlementDebtLedger.class));
     }
     @Test void zeroRowsCannotCopyTicketsEvenIfIdIsPresent() {
@@ -58,7 +58,7 @@ class OWN_C03_15Test {
         topic.setId(700L);
         topic.setMemberId(42L);
         topic.setName("原自办主题");
-        ReflectionTestUtils.invokeMethod(service, "generateSelfHostActivity", topic, 700L, 42L, "creator");
+        ReflectionTestUtils.invokeMethod(com.chengyinhub.business.service.support.TopicPublicationTestWiring.owner(service, "generateSelfHostActivity"), "generateSelfHostActivity", topic, 700L, 42L, "creator");
     }
     private void assertRejected() {
         IllegalStateException failure = assertThrows(IllegalStateException.class, this::generate);

@@ -43,6 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -50,6 +51,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -289,6 +291,7 @@ class AiCreatorServiceImplTest {
         AiThemeDraftResp resp = service.themeDraft(new AiThemeDraftReq(), MEMBER_ID);
 
         assertNotNull(resp.getDraft());
+        assertEquals(Integer.valueOf(2), resp.getRemainingQuota());
         assertEquals(1, reserved.size());
         assertEquals(0, refunded.size());
         LocalDateTime after = LocalDateTime.now(beijing);
@@ -387,6 +390,7 @@ class AiCreatorServiceImplTest {
     @Test
     @SuppressWarnings("unchecked")
     void playerThemeDraftQuotaReportsZeroWhenSharedGatewayPoolIsExhausted() {
+        // 保留历史用例标识；人类已裁决 player 只受专用起草额度限制，旧0预期改为3。
         redisTemplate = mock(RedisTemplate.class);
         valueOperations = mock(ValueOperations.class);
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
@@ -399,7 +403,8 @@ class AiCreatorServiceImplTest {
 
         assertTrue(resp.isLimited());
         assertEquals(Integer.valueOf(3), resp.getLimit());
-        assertEquals(Integer.valueOf(0), resp.getRemaining());
+        assertEquals(Integer.valueOf(3), resp.getRemaining());
+        verify(gateway, never()).remainingQuota(MEMBER_ID, "theme_draft");
     }
 
     // ---- nodeGenerate ----
@@ -847,6 +852,36 @@ class AiCreatorServiceImplTest {
     @Test
     void playerReviewRequiredUnknownRetainsOldRefundPolicy() {
         playerInputFailure(com.chengyinhub.business.service.ai.AiServiceException.Reason.UNKNOWN, 1);
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
+    void playerProviderUnknownKeepsOriginalReservation(boolean durableRecovery) {
+        redisTemplate = mock(RedisTemplate.class);
+        installReservationStub();
+        ReflectionTestUtils.setField(service, "redisTemplate", redisTemplate);
+        com.chengyinhub.business.service.ai.AiQuotaRecoveryService recovery = durableRecovery
+                ? mock(com.chengyinhub.business.service.ai.AiQuotaRecoveryService.class) : null;
+        ReflectionTestUtils.setField(service, "quotaRecovery", recovery);
+        when(roleService.resolveRole(any(UmsMember.class))).thenReturn("player");
+        com.chengyinhub.business.service.ai.AiProviderOutcomeUnknownException unknown =
+                new com.chengyinhub.business.service.ai.AiProviderOutcomeUnknownException("provider outcome unknown", null);
+        when(gateway.generate(eq(MEMBER_ID), eq("player"), eq("theme_draft"), anyString(), anyString()))
+                .thenThrow(unknown);
+        assertSame(unknown, assertThrows(com.chengyinhub.business.service.ai.AiProviderOutcomeUnknownException.class,
+                () -> service.themeDraft(new AiThemeDraftReq(), MEMBER_ID)));
+        assertEquals(1, reserved.size());
+        assertTrue(refunded.isEmpty());
+        verify(gateway, times(1)).generate(eq(MEMBER_ID), eq("player"), eq("theme_draft"), anyString(), anyString());
+        if (recovery != null) {
+            String receipt = String.valueOf(reserved.get(0).get(2));
+            verify(recovery).prepare(eq(MEMBER_ID), eq("theme_draft"), eq("player-draft"),
+                    eq(String.valueOf(reserved.get(0).get(0))), eq(receipt));
+            verify(recovery).stage(receipt, "INPUT_REVIEW_STARTED");
+            verify(recovery).reserved(receipt, 1L);
+            verify(recovery, never()).requireRefund(anyString(), anyString());
+            verify(recovery, never()).retain(anyString(), anyString());
+        }
     }
 
     private void playerInputFailure(com.chengyinhub.business.service.ai.AiServiceException.Reason reason, int refunds) {

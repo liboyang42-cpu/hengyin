@@ -82,15 +82,18 @@ class BothWithdrawalLegsRejectPlayerCooldownTest {
                 com.chengyinhub.business.longrun.OWN_C04_21Test.bankFixture(umsMemberMapper, resolver));
 
         wechatLeg = new CashWithdrawServiceImpl();
-        evidence = new CashWithdrawIntentTestSupport();
+        evidence = new com.chengyinhub.business.service.CashWithdrawIntentTestSupport();
         ReflectionTestUtils.setField(wechatLeg, "transferIntents", evidence.mapper);
+        org.springframework.transaction.PlatformTransactionManager cashTransactions = mock(org.springframework.transaction.PlatformTransactionManager.class);
+        when(cashTransactions.getTransaction(any())).thenReturn(mock(org.springframework.transaction.TransactionStatus.class));
+        ReflectionTestUtils.setField(wechatLeg, "transactionManager", cashTransactions);
         ReflectionTestUtils.setField(wechatLeg, "mapper", cashMapper);
         ReflectionTestUtils.setField(wechatLeg, "umsMemberService", umsMemberService);
         ReflectionTestUtils.setField(wechatLeg, "wechatPayService", wechatPayService);
         ReflectionTestUtils.setField(wechatLeg, "alarmService", mock(AlarmService.class));
         { com.chengyinhub.common.config.WxPayConfig __cfg = org.mockito.Mockito.mock(com.chengyinhub.common.config.WxPayConfig.class);
           org.mockito.Mockito.when(__cfg.getAppid()).thenReturn("wx-mp-appid");
-          org.mockito.Mockito.when(__cfg.getMerchantId()).thenReturn("merchant");
+          org.mockito.Mockito.when(__cfg.getMerchantId()).thenReturn("unit-merchant");
           org.mockito.Mockito.when(__cfg.getAppAppid()).thenReturn("wx-app-appid");
           // R1 起 withdraw 要按来源选同源 appid,不注入这个新依赖就是 NPE
           ReflectionTestUtils.setField(wechatLeg, "wxPayConfig", __cfg); }
@@ -176,9 +179,9 @@ class BothWithdrawalLegsRejectPlayerCooldownTest {
             return 1;
         });
         when(cashMapper.selectById(500L)).thenAnswer(invocation -> original.get());
-        when(cashMapper.updateMemberCashWithdraw(any())).thenReturn(1); // 原提现单写入 CW/CD 原业务号
+        // cashFixture retains the inserted original and binds an explicit DEBIT fact.
 
-        when(wechatPayService.transferToBalance(any(CashWithdrawTransferIntent.class)))
+        when(wechatPayService.transferToBalance(any(com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent.class)))
                 .thenReturn(java.util.Collections.singletonMap("ok", "true"));
         when(cashMapper.updateReceiptIfProcessing(any())).thenReturn(1);
 

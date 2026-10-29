@@ -1,0 +1,15 @@
+diff --git a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java
+--- a/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java
++++ b/chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java
+@@ -2695,5 +2695,11 @@
+         if (intentId != null && intentId <= 0) throw new ServiceException("报名通知原意图身份无效");
+         final Long signupIntentId = intentId;
++        // Preserve the original paid registration and any signup intent registered above.
++        // QR recovery reads paid-missing-qrcode rows; IM recovery reads its existing intent.
++        // CommittedBusinessNotice has no durable runnable queue: do not enqueue/catch Blocked as delivery.
++        if (RestoreDispatchGuard.isRestoreMode()) {
++            return;
++        }
+         Runnable effects = () -> {
+             for (Long registrationId : registrationIds) {
+                 committedBusinessNotice.dispatchInNewTransaction("registration-qrcode", registrationId, () -> {

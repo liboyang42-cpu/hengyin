@@ -21,6 +21,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 DOCKER = ['docker', '--context', 'default']
+RESTORE_MYSQL_IMAGE = 'mysql:8.0.45@sha256:4af1f8815716546f5b12410f7621f37f93db8dd11a184706ef59111930b8c2ff'
 LEASE_COLUMNS = {'payout_lease_owner', 'payout_lease_token', 'payout_lease_expires_at', 'update_time'}
 FINANCIAL_TABLES = ('cms_registration', 'ums_member', 'ums_member_balance_detail',
                     'ums_member_points_detail', 'settlement_detail', 'wx_payment_callback_inbox',
@@ -55,6 +56,12 @@ def validate_execution_env(env):
                        ('CHENGYIN_CI_AUTH_REDIS_RECOVERY', 'true')]:
         require(env.get(key) == value, 'wrong hosted scope: ' + key)
     require(env.get('GITHUB_EVENT_NAME') in ('pull_request', 'workflow_dispatch'), 'unsupported event')
+    if env.get('CHENGYIN_CI_RESTORE_HTTP_STARTUP') == 'true':
+        require(env.get('GITHUB_EVENT_NAME') == 'workflow_dispatch', 'restore startup is manual only')
+        require('CHENGYIN_RESTORE_MODE' not in env, 'restore mode belongs to the owned application child')
+        require(all(env.get(key, 'false') == 'false' for key in
+                    ('CHENGYIN_CI_CAPACITY_MIXED', 'CHENGYIN_CI_GAMEPLAY_PROCESS_RECOVERY',
+                     'CHENGYIN_CI_GAMEPLAY_CAPACITY')), 'restore startup cannot mix workload modes')
     require(not env.get('DOCKER_HOST') and not env.get('DOCKER_CONTEXT'), 'Docker override forbidden')
     require(env.get('GITHUB_WORKFLOW_REF', '').startswith(
         'liboyang42-cpu/hengyin/.github/workflows/isolated-authenticated-redis-recovery.yml@refs/'),
@@ -163,13 +170,16 @@ def write_report(out, name, report):
     path.chmod(0o600)
 
 
-def mysql_endpoint(name):
-    obj = json.loads(command(DOCKER + ['inspect', name + '-mysql'], timeout=5))[0]
+def mysql_endpoint(name, suffix='mysql'):
+    require(suffix in ('mysql', 'restore-mysql'), 'unknown owned MySQL slot')
+    obj = json.loads(command(DOCKER + ['inspect', name + '-' + suffix], timeout=5))[0]
     network = json.loads(command(DOCKER + ['network', 'inspect', name], timeout=5))[0]
-    require(obj['Name'] == '/' + name + '-mysql'
+    require(obj['Name'] == '/' + name + '-' + suffix
             and obj['Config'].get('Labels', {}).get('chengyin.auth-recovery') == name
             and re.fullmatch(r'[0-9a-f]{64}', obj['Id']) is not None,
             'MySQL relay target not owned')
+    if suffix == 'restore-mysql':
+        require(obj['Config'].get('Image') == RESTORE_MYSQL_IMAGE, 'restore MySQL image changed')
     require(network['Name'] == name and network['Internal'] is True
             and network.get('Labels', {}).get('chengyin.auth-recovery') == name
             and set(obj['NetworkSettings']['Networks']) == {name}, 'MySQL relay network not owned')
@@ -185,10 +195,26 @@ def mysql_endpoint(name):
 
 
 @contextlib.contextmanager
-def mysql_relay(name, baseline):
+def mysql_relay(name, baseline, suffix='mysql'):
     """Host-only transport for the original loopback-only builder/bootstrap."""
     expected = baseline['endpoint']
-    require(mysql_endpoint(name) == expected, 'MySQL relay identity changed before bind')
+    with _owned_mysql_relay(expected, lambda: mysql_endpoint(name, suffix)) as server:
+        yield server.server_address[1]
+
+
+@contextlib.contextmanager
+def _owned_mysql_relay(expected, current_endpoint, *, loopback_port=0):
+    """Internal reuse seam: caller proves one original MySQL endpoint, never a CLI target/port option."""
+    require(type(loopback_port) is int and loopback_port in (0, 33080), 'unreviewed relay listener')
+    if loopback_port:
+        require(os.environ.get('GITHUB_ACTIONS') == 'true' and os.environ.get('RUNNER_ENVIRONMENT') == 'github-hosted'
+                and os.environ.get('GITHUB_REPOSITORY') == 'liboyang42-cpu/hengyin'
+                and os.environ.get('GITHUB_EVENT_NAME') == 'workflow_dispatch'
+                and os.environ.get('HTTP_SCOPE') == 'controlled-combination'
+                and os.environ.get('CHENGYIN_HTTP_E2E_TESTS') == 'CrossDomainCombinedLoadMySqlIT'
+                and re.fullmatch('[0-9a-f]{40}', os.environ.get('SOURCE_SHA', '')),
+                'fixed combined relay requires original manual owned scope')
+    require(current_endpoint() == expected, 'MySQL relay identity changed before bind')
     closing = threading.Event()
     sockets = set()
     guard = threading.Lock()
@@ -198,7 +224,7 @@ def mysql_relay(name, baseline):
         def handle(self):
             upstream = None
             try:
-                require(mysql_endpoint(name) == expected, 'MySQL relay identity changed before connect')
+                require(current_endpoint() == expected, 'MySQL relay identity changed before connect')
                 upstream = socket.create_connection((expected['ip'], 3306), timeout=5)
                 with guard:
                     sockets.update((self.request, upstream))
@@ -228,13 +254,20 @@ def mysql_relay(name, baseline):
                 if upstream:
                     upstream.close()
 
-    server = socketserver.ThreadingTCPServer(('127.0.0.1', 0), Handler)
+    if loopback_port == 0:
+        server = socketserver.ThreadingTCPServer(('127.0.0.1', 0), Handler)
+    else:
+        class RelayServer(socketserver.ThreadingTCPServer):
+            # Fixed-port reuse covers closed TIME_WAIT tuples, never a live listener or SO_REUSEPORT.
+            allow_reuse_address = True
+
+        server = RelayServer(('127.0.0.1', 33080), Handler)
     thread = threading.Thread(target=server.serve_forever, kwargs={'poll_interval': 0.1})
     thread.start()
     phase_error = None
     try:
-        yield server.server_address[1]
-        require(mysql_endpoint(name) == expected, 'MySQL relay identity changed after phase')
+        yield server
+        require(current_endpoint() == expected, 'MySQL relay identity changed after phase')
     except BaseException as exc:
         phase_error = exc
         raise
@@ -265,15 +298,17 @@ def mysql_relay(name, baseline):
             require(not failures, 'MySQL relay failed: ' + '; '.join(failures))
 
 
-def mysql_ready(name, schema, out, private, port):
+def mysql_ready(name, schema, out, private, port, suffix='mysql'):
     """Wait for the one created server, not its socket-only initialization server."""
+    require(suffix in ('mysql', 'restore-mysql'), 'unknown owned MySQL readiness slot')
+    report_name = 'schema-summary.json' if suffix == 'mysql' else 'restore-mysql-readiness.json'
     deadline = time.monotonic() + 120
     cid = None
     facts = {'result': 'NOT_READY'}
     try:
         while time.monotonic() < deadline:
-            obj = json.loads(command(DOCKER + ['inspect', name + '-mysql'], timeout=5))[0]
-            require(obj['Name'] == '/' + name + '-mysql'
+            obj = json.loads(command(DOCKER + ['inspect', name + '-' + suffix], timeout=5))[0]
+            require(obj['Name'] == '/' + name + '-' + suffix
                     and obj['Config'].get('Labels', {}).get('chengyin.auth-recovery') == name
                     and re.fullmatch(r'[0-9a-f]{64}', obj['Id']) is not None,
                     'MySQL readiness target not owned')
@@ -283,7 +318,7 @@ def mysql_ready(name, schema, out, private, port):
                          ('Pid', 'Running', 'Paused', 'Restarting', 'ExitCode', 'OOMKilled')},
                          requestedPortBindings=obj['HostConfig'].get('PortBindings'),
                          actualPorts=obj['NetworkSettings'].get('Ports'))
-            write_report(out, 'schema-summary.json', {'mysqlReadiness': facts})
+            write_report(out, report_name, {'mysqlReadiness': facts})
             require(obj['State']['Running'] and not obj['State']['OOMKilled']
                     and not obj['State']['Restarting'], 'MySQL exited or unhealthy before TCP readiness')
             try:
@@ -295,7 +330,14 @@ def mysql_ready(name, schema, out, private, port):
                     uuid, version = check.stdout.decode().strip().split('\t')
                     require(version == '8.0.45' and re.fullmatch(r'[a-f0-9-]{36}', uuid) is not None,
                             'unexpected MySQL native identity/version')
-                    facts.update(endpoint=mysql_endpoint(name), serverUuid=uuid, version=version)
+                    facts.update(endpoint=mysql_endpoint(name, suffix), serverUuid=uuid, version=version)
+                    if suffix == 'restore-mysql':
+                        source = json.loads((out / 'schema-summary.json').read_text())['mysqlReadiness']
+                        require(source['result'] == 'OWNED_MYSQL_TCP_READY'
+                                and source['version'] == version and source['serverUuid'] != uuid
+                                and source['id'] != cid
+                                and source['endpoint']['networkId'] == facts['endpoint']['networkId'],
+                                'restore target is not an independent same-version server in the owned network')
                     facts['result'] = 'OWNED_MYSQL_TCP_READY'
                     break
             except subprocess.TimeoutExpired:
@@ -315,7 +357,7 @@ def mysql_ready(name, schema, out, private, port):
                              logTail=redact((logs.stdout + logs.stderr).decode(errors='replace'), SECRET_VALUES))
             except (OSError, subprocess.TimeoutExpired) as exc:
                 facts['logFailureType'] = type(exc).__name__
-        write_report(out, 'schema-summary.json', {'mysqlReadiness': facts})
+        write_report(out, report_name, {'mysqlReadiness': facts})
 
 
 def prepare(name, schema, out, private, port):
@@ -395,38 +437,161 @@ def prepare(name, schema, out, private, port):
                    'redactions': SECRET_VALUES}, stream)
 
 
+def prepare_restore_runtime_user(name, schema, out, private, port):
+    """Prepare only the original least-privilege app user on the owned restored server."""
+    validate_execution_env(os.environ)
+    require(os.environ.get('CHENGYIN_CI_RESTORE_HTTP_STARTUP') == 'true'
+            and os.environ.get('GITHUB_EVENT_NAME') == 'workflow_dispatch', 'restore runtime user not admitted')
+    require(re.fullmatch(r'cy-auth-[0-9a-f]{32}', name) is not None
+            and schema == 'cy_e2e_auth_' + name[8:], 'fixed restore user scope required')
+    require(private.is_file() and not private.is_symlink() and private.stat().st_mode & 0o777 == 0o600,
+            'original private restore identity required')
+    saved = json.loads(private.read_text())
+    source = json.loads((out / 'schema-summary.json').read_text())['mysqlReadiness']
+    target = json.loads((out / 'restore-mysql-readiness.json').read_text())['mysqlReadiness']
+    require(saved['schema'] == schema and saved['serverUuid'] == source['serverUuid']
+            and source['result'] == target['result'] == 'OWNED_MYSQL_TCP_READY'
+            and source['version'] == target['version'] == '8.0.45'
+            and source['serverUuid'] != target['serverUuid'] and source['id'] != target['id'],
+            'restored runtime user target differs from original scope')
+    require(re.fullmatch(r'[a-f0-9]{40}', os.environ.get('GITHUB_SHA', '')) is not None,
+            'restore runtime user needs the exact source identity')
+    SECRET_VALUES.extend(saved.get('redactions', []))
+    SECRET_VALUES.append('synthetic-local-only')
+    with mysql_relay(name, target, suffix='restore-mysql') as relay_port, database(relay_port) as db, db.cursor() as cur:
+        cur.execute('SELECT @@server_uuid')
+        require(cur.fetchone() == (target['serverUuid'],), 'restored server identity changed')
+        cur.execute('SELECT COUNT(*) FROM information_schema.SCHEMATA WHERE SCHEMA_NAME=%s', (schema,))
+        require(cur.fetchone() == (1,), 'exact restored schema must exist before runtime user setup')
+        cur.execute('SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA=%s AND TABLE_NAME=%s',
+                    (schema, 'sys_user'))
+        require(cur.fetchone() == (1,), 'restored authentication table missing')
+        cur.execute('SELECT COUNT(*) FROM mysql.user WHERE User=%s AND Host=%s', ('startup_probe', '%'))
+        require(cur.fetchone() == (0,), 'runtime user already exists; do not rebind its credentials or grants')
+        cur.execute("CREATE USER 'startup_probe'@'%%' IDENTIFIED BY %s", ('synthetic-local-only',))
+        cur.execute('GRANT SELECT,INSERT,UPDATE,DELETE ON `' + schema + "`.* TO 'startup_probe'@'%'")
+        grantee = "'startup_probe'@'%'"
+        cur.execute('SELECT TABLE_SCHEMA,PRIVILEGE_TYPE,IS_GRANTABLE FROM information_schema.SCHEMA_PRIVILEGES '
+                    'WHERE GRANTEE=%s ORDER BY TABLE_SCHEMA,PRIVILEGE_TYPE', (grantee,))
+        privileges = list(cur.fetchall())
+        require(privileges == [(schema, action, 'NO') for action in ('DELETE', 'INSERT', 'SELECT', 'UPDATE')],
+                'runtime schema privilege scope widened')
+        cur.execute("SELECT COUNT(*) FROM information_schema.USER_PRIVILEGES WHERE GRANTEE=%s AND PRIVILEGE_TYPE<>'USAGE'",
+                    (grantee,))
+        require(cur.fetchone() == (0,), 'runtime global privilege scope widened')
+    write_report(out, 'restore-runtime-user.json', {'sourceSha': os.environ['GITHUB_SHA'], 'schema': schema,
+                 'serverUuid': target['serverUuid'], 'mysqlCid': target['id'], 'runtimeUser': 'startup_probe',
+                 'privileges': privileges, 'result': 'OWNED_RESTORED_RUNTIME_USER_PREPARED'})
+
+
+def restore_http_not_started(name, schema, out, summary):
+    """Only an explicit same-run pre-start C failure can waive an impossible app log.
+
+    Called after exact outer cleanup. This recognizes absence, never business success.
+    Missing/old/corrupt reports retain the existing unavailable-log failure.
+    """
+    env = os.environ
+    if (env.get('CHENGYIN_CI_RESTORE_HTTP_STARTUP') != 'true'
+            or env.get('GITHUB_EVENT_NAME') != 'workflow_dispatch'
+            or env.get('GITHUB_REPOSITORY') != 'liboyang42-cpu/hengyin'
+            or not re.fullmatch('[a-f0-9]{40}', env.get('GITHUB_SHA', ''))
+            or not all(re.fullmatch('[1-9][0-9]*', env.get(key, ''))
+                       for key in ('GITHUB_RUN_ID', 'GITHUB_RUN_ATTEMPT'))
+            or not re.fullmatch('cy-auth-[a-f0-9]{32}', name)
+            or schema != 'cy_e2e_auth_' + name[8:]):
+        return False
+    path = out / 'restore-http-application.json'
+    try:
+        if path.is_symlink() or not path.is_file() or path.stat().st_size > 8 * 1024 * 1024:
+            return False
+        report = json.loads(path.read_text())
+        if not isinstance(report, dict):
+            return False
+        if (report.get('sourceSha') != env['GITHUB_SHA'] or report.get('schema') != schema
+                or report.get('runId') != env['GITHUB_RUN_ID'] or report.get('runAttempt') != env['GITHUB_RUN_ATTEMPT']
+                or not isinstance(report.get('jarSha256'), str)
+                or not re.fullmatch('[a-f0-9]{64}', report['jarSha256'])
+                or report.get('applicationStartAttempted') is not False or report.get('boots') != []
+                or report.get('completeBoots') != [] or report.get('checks') != []
+                or report.get('ownedAppCids') != [] or report.get('removedAppCids') != []
+                or report.get('applicationStop') != 'NO_ACTIVE_APP_SLOT' or report.get('result') != 'NOT_COMPLETED'
+                or report.get('privateCleanup') != 'EXACT_OWN_SUBTREE_REMOVED'
+                or report.get('firstFailurePhase') not in ('PRE_APPLICATION_PREPARATION', 'SOURCE_DATABASE_PREPARATION')
+                or not isinstance(report.get('firstFailureType'), str)
+                or not re.fullmatch('[A-Za-z_][A-Za-z0-9_]{0,95}', report['firstFailureType'])
+                or report.get('productionDispatchRelease') is not False):
+            return False
+        expected = {name + '-' + suffix: report.get(key) for suffix, key in
+                    (('mysql', 'sourceMysqlCid'), ('restore-mysql', 'targetMysqlCid'), ('redis', 'redisCid'))}
+        removed = summary.get('ownedRemoved', [])
+        return (summary.get('cleanup') == 'CONFIRMED_EXACT_OWNED_REMOVAL'
+                and all(isinstance(cid, str) and re.fullmatch('[a-f0-9]{64}', cid) for cid in expected.values())
+                and len(set(expected.values())) == 3 and len(removed) == 3
+                and all(isinstance(row, dict) and row.get('independentNoSuch') is True for row in removed)
+                and {row.get('name'): row.get('id') for row in removed} == expected)
+    except (OSError, ValueError, TypeError):
+        return False
+
+
 def cleanup(name, schema, out, private, port):
     """Resolve even a lost docker-run reply by exact name and its original ownership label."""
     if private.exists():
         require(not private.is_symlink() and private.stat().st_mode & 0o777 == 0o600,
                 'private cleanup input changed')
         SECRET_VALUES.extend(json.loads(private.read_text()).get('redactions', []))
+    path = out / 'authenticated-redis-recovery.json'
+    try:
+        report = json.loads(path.read_text())
+        if not isinstance(report, dict):
+            raise ValueError('report root must be an object')
+    except FileNotFoundError:
+        report = {'result': 'FAIL_BEFORE_BUSINESS_PROBE'}
+    except (OSError, UnicodeError, ValueError) as exc:
+        report = {'result': 'FAIL_UNKNOWN', 'reportReadFailure': {'type': type(exc).__name__}}
+    # The shell exits on either failed pre-app phase, before docker run ...-app.
+    pre_app_failure = (report.get('fixturePhase') in ('mysql-ready', 'prepare', 'restore-mysql-ready')
+                       and report.get('result') == 'FAIL_OR_UNKNOWN_NO_RETRY'
+                       and bool(report.get('failureType')) and not report.get('events'))
     summary = {'cleanup': 'NOT_CONFIRMED', 'ownedRemoved': []}
     logs_available = False
-    for suffix in ('app', 'mysql', 'redis'):
+    app_absent = False
+    suffixes = ('app', 'mysql', 'redis')
+    if os.environ.get('CHENGYIN_CI_RESTORE_HTTP_STARTUP') == 'true':
+        suffixes = ('app', 'restore-mysql', 'mysql', 'redis')
+    for suffix in suffixes:
         target = name + '-' + suffix
         inspected = subprocess.run(DOCKER + ['container', 'inspect', target], capture_output=True, timeout=20)
         if inspected.returncode:
             require_absent('container', target, inspected.returncode, inspected.stderr)
+            if suffix == 'app':
+                app_absent = True
             continue
         obj = json.loads(inspected.stdout)[0]
         require(obj['Name'] == '/' + target and obj['Config'].get('Labels', {}).get('chengyin.auth-recovery') == name,
                 'cleanup container not owned')
         cid = obj['Id']
         require(re.fullmatch(r'[0-9a-f]{64}', cid) is not None, 'invalid owned CID')
+        if suffix == 'restore-mysql':
+            require(obj['Config'].get('Image') == RESTORE_MYSQL_IMAGE
+                    and set(obj['NetworkSettings']['Networks']) <= {name}, 'restore MySQL provenance changed')
+            readiness = out / 'restore-mysql-readiness.json'
+            require(not readiness.is_symlink(), 'restore readiness is not an owned regular receipt')
+            if readiness.is_file():
+                recorded = json.loads(readiness.read_text())['mysqlReadiness'].get('id')
+                require(recorded is None or recorded == cid, 'restore MySQL CID changed before cleanup')
         if suffix == 'app':
             # Fence an unsettled HTTP request before bringing its authentication store back.
             if obj['State']['Running']:
                 command(DOCKER + ['stop', '--time', '10', cid], timeout=25)
                 stopped = json.loads(command(DOCKER + ['inspect', cid]))[0]
                 require(stopped['Id'] == cid and not stopped['State']['Running'], 'application stop unknown')
-            raw = subprocess.run(DOCKER + ['logs', cid], capture_output=True, timeout=20)
-            logs_available = raw.returncode == 0
             try:
+                raw = subprocess.run(DOCKER + ['logs', cid], capture_output=True, timeout=20)
+                logs_available = raw.returncode == 0
                 path = out / 'application.log'
                 path.write_text(redact_log((raw.stdout + raw.stderr).decode(errors='replace'), SECRET_VALUES))
                 path.chmod(0o600)
-            except OSError:
+            except (OSError, subprocess.TimeoutExpired):
                 logs_available = False
         if suffix == 'redis' and obj['State']['Paused']:
             command(DOCKER + ['unpause', cid])
@@ -452,13 +617,42 @@ def cleanup(name, schema, out, private, port):
     require_absent('network', name, check.returncode, check.stderr)
     summary['cleanup'] = 'CONFIRMED_EXACT_OWNED_REMOVAL'
     path = out / 'authenticated-redis-recovery.json'
-    report = json.loads(path.read_text()) if path.exists() else {'result': 'FAIL_BEFORE_BUSINESS_PROBE'}
     report['resourceCleanup'] = summary
     report['applicationLogPreserved'] = logs_available
-    if not logs_available:
-        report['result'] = 'FAIL_APPLICATION_LOG_UNAVAILABLE'
+    restore_pre_start = (report.get('result') == 'FAIL_BEFORE_BUSINESS_PROBE'
+                         and not report.get('reportReadFailure')
+                         and restore_http_not_started(name, schema, out, summary))
+    not_started = app_absent and (pre_app_failure or restore_pre_start)
+    report['applicationLogStatus'] = ('PRESERVED' if logs_available else
+                                      'NOT_STARTED' if not_started else 'UNAVAILABLE')
     write_report(out, path.name, report)
-    require(logs_available, 'application logs unavailable after exact resource cleanup')
+    require(not report.get('reportReadFailure'),
+            'original report unreadable; original phase unknown after exact resource cleanup')
+    require(logs_available or not_started, 'application logs unavailable after exact resource cleanup')
+
+
+def record_phase_failure(out, mode, exc):
+    failure = {'fixturePhase': mode, 'result': 'FAIL_OR_UNKNOWN_NO_RETRY',
+               'failureType': type(exc).__name__, 'reason': redact(str(exc), SECRET_VALUES)}
+    path = out / 'authenticated-redis-recovery.json'
+    try:
+        report = json.loads(path.read_text())
+        if not isinstance(report, dict):
+            raise ValueError('report root must be an object')
+    except FileNotFoundError:
+        report = {}
+    except (OSError, UnicodeError, ValueError) as read_exc:
+        report = {'reportReadFailure': {'type': type(read_exc).__name__}}
+    if report.get('reportReadFailure'):
+        failure['result'] = 'FAIL_UNKNOWN'
+    first_failure = bool(report.get('fixturePhase') and report.get('failureType'))
+    if mode == 'cleanup':
+        report['cleanupFailure'] = failure
+        report.setdefault('resourceCleanup', {'cleanup': 'NOT_CONFIRMED'})
+    if not first_failure:
+        report.update(failure)
+    write_report(out, path.name, report)
+    return failure
 
 
 def exercise(name, schema, out, private, port):
@@ -681,7 +875,10 @@ def main():
     mode, name, schema, output, private_file, port = sys.argv[1:]
     require(re.fullmatch(r'cy-auth-[0-9a-f]{32}', name) is not None
             and schema == 'cy_e2e_auth_' + name[8:], 'fixed fixture scope required')
-    require(mode in ('mysql-ready', 'prepare', 'exercise', 'cleanup'), 'unknown fixture phase')
+    require(mode in ('mysql-ready', 'prepare', 'exercise', 'cleanup', 'restore-mysql-ready', 'restore-runtime-user'), 'unknown fixture phase')
+    if mode in ('restore-mysql-ready', 'restore-runtime-user'):
+        require(os.environ.get('CHENGYIN_CI_RESTORE_HTTP_STARTUP') == 'true'
+                and os.environ.get('GITHUB_EVENT_NAME') == 'workflow_dispatch', 'restore readiness not admitted')
     require(command(DOCKER + ['context', 'inspect', '--format', '{{.Endpoints.docker.Host}}']).strip()
             == b'unix:///var/run/docker.sock', 'not local hosted daemon')
     SECRET_VALUES.extend([os.environ['CHENGYIN_AUTH_FIXTURE_DB_PASSWORD'], 'synthetic-local-only'])
@@ -693,14 +890,14 @@ def main():
             require(baseline['result'] == 'OWNED_MYSQL_TCP_READY', 'native MySQL readiness missing')
             with mysql_relay(name, baseline) as relay_port:
                 {'prepare': prepare, 'exercise': exercise}[mode](name, schema, out, private, relay_port)
+        elif mode == 'restore-mysql-ready':
+            mysql_ready(name, schema, out, private, port, suffix='restore-mysql')
+        elif mode == 'restore-runtime-user':
+            prepare_restore_runtime_user(name, schema, out, private, port)
         else:
             {'mysql-ready': mysql_ready, 'cleanup': cleanup}[mode](name, schema, out, private, port)
     except BaseException as exc:
-        failure = {'fixturePhase': mode, 'result': 'FAIL_OR_UNKNOWN_NO_RETRY',
-                   'failureType': type(exc).__name__, 'reason': redact(str(exc), SECRET_VALUES)}
-        report_path = out / 'authenticated-redis-recovery.json'
-        report = json.loads(report_path.read_text()) if report_path.exists() else {}
-        write_report(out, report_path.name, {**report, **failure})
+        failure = record_phase_failure(out, mode, exc)
         print(json.dumps(failure))
         raise SystemExit(1)
 

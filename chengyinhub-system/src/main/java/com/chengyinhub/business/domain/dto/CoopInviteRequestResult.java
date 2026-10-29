@@ -15,6 +15,7 @@ public class CoopInviteRequestResult {
     private String toType;
     private String toId;
     private String scope;
+    private String supplyStationId;
 
     public static CoopInviteRequestResult state(String state, String requestId) {
         CoopInviteRequestResult result = new CoopInviteRequestResult();
@@ -23,6 +24,12 @@ public class CoopInviteRequestResult {
         return result;
     }
     public static CoopInviteRequestResult created(CoopInviteRequestReceipt receipt, Boolean replayed) {
+        return created(receipt, replayed, null);
+    }
+    public static CoopInviteRequestResult created(CoopInviteRequestReceipt receipt, Boolean replayed, Long supplyStationId) {
+        if (supplyStationId != null && (supplyStationId <= 0 || !Integer.valueOf(0).equals(receipt.getInviteType()))) {
+            throw new IllegalArgumentException("原邀请据点身份不合法");
+        }
         CoopInviteRequestResult result = state("CREATED", receipt.getRequestId());
         result.inviteId = receipt.getInviteId().toString();
         result.replayed = replayed;
@@ -31,6 +38,7 @@ public class CoopInviteRequestResult {
         result.toType = receipt.getToType();
         result.toId = receipt.getToId().toString();
         result.scope = receipt.getScope();
+        result.supplyStationId = supplyStationId == null ? null : supplyStationId.toString();
         return result;
     }
     public String getState() { return state; }
@@ -42,4 +50,5 @@ public class CoopInviteRequestResult {
     public String getToType() { return toType; }
     public String getToId() { return toId; }
     public String getScope() { return scope; }
+    public String getSupplyStationId() { return supplyStationId; }
 }

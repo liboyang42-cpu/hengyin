@@ -20,6 +20,8 @@ public class OmsOrder extends BaseEntity
 
     /** 订单id */
     private Long id;
+    private Long verifiedPaymentFactId;
+    private String verifiedPaymentFactHash;
 
     /** 订单类型：1积分商城 */
     @Excel(name = "订单类型：1积分商城")
@@ -157,6 +159,14 @@ public class OmsOrder extends BaseEntity
     private Integer entitlementDays;
     private String paymentTransactionId;
     private String commerceRequestId;
+
+    /** Internal immutable successful consumption proof, never a client-writable API field. */
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    public Long getVerifiedPaymentFactId() { return verifiedPaymentFactId; }
+    public void setVerifiedPaymentFactId(Long value) { verifiedPaymentFactId = value; }
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    public String getVerifiedPaymentFactHash() { return verifiedPaymentFactHash; }
+    public void setVerifiedPaymentFactHash(String value) { verifiedPaymentFactHash = value; }
 
     public void setId(Long id) 
     {

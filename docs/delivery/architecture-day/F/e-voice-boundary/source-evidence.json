@@ -1,0 +1,136 @@
+{
+  "kind": "PUBLIC_SOURCE_ONLY_NOT_JDK",
+  "source": "0d32d888e29c6d5ef51322b10d7aca736be856ff",
+  "records": [
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/VoiceCloneClient.java",
+      "sha256": "3d5f7199b4d780421f26586d7a2afbe35f0d90e1448b2a244abc29bd269fc06a",
+      "git_blob": "745cf4edb8dac828aff722919242a2c0f97af04a",
+      "lines": []
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/DashScopeVoiceClient.java",
+      "sha256": "79a1403f9730e3bc2464180deba394fb927633e36c53631d2615d9fd2f0371bf",
+      "git_blob": "cf12d065b3bbdc5fdd0c35c2479e9071a7fcea9f",
+      "lines": [
+        {
+          "line": 36,
+          "source": "    private AiVoiceConfig config;"
+        },
+        {
+          "line": 39,
+          "source": "    private AiHttpAdmission admission = AiHttpAdmission.closed();"
+        },
+        {
+          "line": 76,
+          "source": "            log.error(\"[VoiceClient] 复刻返回里没有音色 id: {}\", truncate(out.toJSONString(), 400));"
+        },
+        {
+          "line": 131,
+          "source": "            log.error(\"[VoiceClient] 合成返回里没有音频地址: {}\", truncate(out.toJSONString(), 400));"
+        },
+        {
+          "line": 151,
+          "source": "        try (HttpUtils.AttemptLease lease = admission.acquire(url))"
+        },
+        {
+          "line": 153,
+          "source": "            raw = HttpUtils.sendJsonPost(url, body.toJSONString(), config.getApiKey(), deadline, lease);"
+        },
+        {
+          "line": 161,
+          "source": "            log.error(\"[VoiceClient] {} 调用异常\", what, e);"
+        },
+        {
+          "line": 173,
+          "source": "            log.error(\"[VoiceClient] {} 返回不是 JSON: {}\", what, truncate(raw, 300));"
+        },
+        {
+          "line": 181,
+          "source": "            log.error(\"[VoiceClient] {} 业务失败 code={} msg={}\", what, code, json.getString(\"message\"));"
+        },
+        {
+          "line": 187,
+          "source": "            log.error(\"[VoiceClient] {} 返回没有 output: {}\", what, truncate(raw, 300));"
+        }
+      ]
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/LlmClientConfig.java",
+      "sha256": "157e8ae2c08eed72f6eca926740f2342b8db1c02857e5c4fcda84f8bfcae3cb3",
+      "git_blob": "5f6459b40017ca39335f639bd8ed1dadbd5aff8e",
+      "lines": [
+        {
+          "line": 24,
+          "source": "    public AiHttpAdmission aiHttpAdmission(AiModelConfig text, VisionModelConfig vision, AiProviderProperties props,"
+        },
+        {
+          "line": 25,
+          "source": "            AiVoiceConfig voice)"
+        },
+        {
+          "line": 30,
+          "source": "        endpoints.add(voice.baseUrl()); // Fixed startup voice origin; the same registry/permits as text and vision."
+        },
+        {
+          "line": 34,
+          "source": "        return new AiHttpAdmission(endpoints);"
+        }
+      ]
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiHttpAdmission.java",
+      "sha256": "f15ee61e7ad4f8d69be20ba9485d21ff24b90c875cb967edaa923a33d8e8a8f6",
+      "git_blob": "cd54f35107b0462f11e1a05d2d54df4e16c4fcc4",
+      "lines": []
+    },
+    {
+      "path": "chengyinhub-common/src/main/java/com/chengyinhub/common/config/AiVoiceConfig.java",
+      "sha256": "bec90c800c74b73c1fd0d03b0374ac4a1b40fce1977196263ec5cc314e315ec9",
+      "git_blob": "5bf5d57b3fa0a28ba8f6cbd3762945467c3a080e",
+      "lines": []
+    }
+  ],
+  "actual_literal_callers": [
+    "0d32d888e29c6d5ef51322b10d7aca736be856ff:chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiMerchantController.java:13:import com.chengyinhub.business.service.ai.VoiceCloneClient;",
+    "0d32d888e29c6d5ef51322b10d7aca736be856ff:chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiMerchantController.java:111:    private VoiceCloneClient voiceCloneClient;",
+    "0d32d888e29c6d5ef51322b10d7aca736be856ff:chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/DashScopeVoiceClient.java:28:public class DashScopeVoiceClient implements VoiceCloneClient",
+    "0d32d888e29c6d5ef51322b10d7aca736be856ff:chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/DashScopeVoiceClient.java:162:            // Keep VoiceCloneClient's existing exception contract. Do not turn a dispatched failure into NOT_SENT.",
+    "0d32d888e29c6d5ef51322b10d7aca736be856ff:chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/VoiceCloneClient.java:15:public interface VoiceCloneClient",
+    "0d32d888e29c6d5ef51322b10d7aca736be856ff:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NodeNpcService.java:8:import com.chengyinhub.business.service.ai.VoiceCloneClient;",
+    "0d32d888e29c6d5ef51322b10d7aca736be856ff:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NodeNpcService.java:52:    private final VoiceCloneClient voiceCloneClient;",
+    "0d32d888e29c6d5ef51322b10d7aca736be856ff:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NodeNpcService.java:57:                          VoiceCloneClient voiceCloneClient) {",
+    "0d32d888e29c6d5ef51322b10d7aca736be856ff:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcChatService.java:33:import com.chengyinhub.business.service.ai.VoiceCloneClient;",
+    "0d32d888e29c6d5ef51322b10d7aca736be856ff:chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NpcChatService.java:75:    private VoiceCloneClient voiceCloneClient;"
+  ],
+  "technical_directions": [
+    {
+      "edge": [
+        "E_VOICE_PROVIDER_CLIENT",
+        "E_VOICE_CONFIGURATION"
+      ],
+      "field": "DashScopeVoiceClient.config"
+    },
+    {
+      "edge": [
+        "E_VOICE_PROVIDER_CLIENT",
+        "F_AI_HTTP_ADMISSION"
+      ],
+      "field": "DashScopeVoiceClient.admission/acquire(url)"
+    },
+    {
+      "edge": [
+        "E_LLM_CLIENT_FACTORY",
+        "E_VOICE_CONFIGURATION"
+      ],
+      "method": "aiHttpAdmission(AiModelConfig,VisionModelConfig,AiProviderProperties,AiVoiceConfig): fourth parameter/baseUrl()"
+    },
+    {
+      "edge": [
+        "E_LLM_CLIENT_FACTORY",
+        "F_AI_HTTP_ADMISSION"
+      ],
+      "method": "new AiHttpAdmission(endpoints)"
+    }
+  ]
+}

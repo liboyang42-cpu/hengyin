@@ -1,6 +1,7 @@
 package com.chengyinhub.quartz.util;
 
 import java.util.Date;
+import com.chengyinhub.common.utils.LogCorrelation;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -8,8 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.chengyinhub.common.constant.Constants;
 import com.chengyinhub.common.constant.ScheduleConstants;
-import com.chengyinhub.common.utils.ExceptionUtil;
-import com.chengyinhub.common.utils.StringUtils;
 import com.chengyinhub.common.utils.bean.BeanUtils;
 import com.chengyinhub.common.utils.spring.SpringUtils;
 import com.chengyinhub.quartz.domain.SysJob;
@@ -35,6 +34,18 @@ public abstract class AbstractQuartzJob implements Job
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException
     {
+        try (LogCorrelation.Scope ignored = QuartzJobCorrelation.open(context))
+        {
+            executeCorrelated(context);
+        }
+        finally
+        {
+            threadLocal.remove();
+        }
+    }
+
+    private void executeCorrelated(JobExecutionContext context) throws JobExecutionException
+    {
         SysJob sysJob = new SysJob();
         Exception executionFailure = null;
         java.util.concurrent.atomic.AtomicReference<Exception> failure = new java.util.concurrent.atomic.AtomicReference<>();
@@ -42,6 +53,7 @@ public abstract class AbstractQuartzJob implements Job
         try
         {
             BeanUtils.copyBeanProp(sysJob, context.getMergedJobDataMap().get(ScheduleConstants.TASK_PROPERTIES));
+            if (sysJob.getJobId() != null) org.slf4j.MDC.put("jobId", sysJob.getJobId().toString());
             boolean executed = SpringUtils.getBean(MySqlSchedulerCoordinator.class).execute(
                     sysJob.getInvokeTarget(), context.getScheduledFireTime(), () -> {
                         if (!SpringUtils.getBean(SysJobServiceImpl.class).isCurrentInvocation(sysJob,
@@ -56,7 +68,8 @@ public abstract class AbstractQuartzJob implements Job
         }
         catch (Exception e)
         {
-            log.error("任务执行异常  - ：", e);
+            log.error("event=quartz.run.failure jobRunId={} errorType={}",
+                    LogCorrelation.value(LogCorrelation.JOB_RUN_ID), e.getClass().getSimpleName());
             executionFailure = failure.get();
             if (executionFailure == null) executionFailure = e;
             else executionFailure.addSuppressed(e);
@@ -68,7 +81,8 @@ public abstract class AbstractQuartzJob implements Job
         }
         catch (Exception logFailure)
         {
-            log.error("任务日志写入异常 - jobId:{}", sysJob.getJobId(), logFailure);
+            log.error("任务日志写入异常 jobId={} jobRunId={} errorType={}", sysJob.getJobId(),
+                    LogCorrelation.value(LogCorrelation.JOB_RUN_ID), logFailure.getClass().getSimpleName());
             if (executionFailure == null)
             {
                 executionFailure = logFailure;
@@ -118,11 +132,12 @@ public abstract class AbstractQuartzJob implements Job
         sysJobLog.setStartTime(startTime);
         sysJobLog.setStopTime(new Date());
         long runMs = sysJobLog.getStopTime().getTime() - sysJobLog.getStartTime().getTime();
-        sysJobLog.setJobMessage(sysJobLog.getJobName() + " 总共耗时：" + runMs + "毫秒");
+        sysJobLog.setJobMessage(sysJobLog.getJobName() + " 总共耗时：" + runMs + "毫秒 jobId="
+                + LogCorrelation.value("jobId") + " jobRunId=" + LogCorrelation.value(LogCorrelation.JOB_RUN_ID));
         if (e != null)
         {
             sysJobLog.setStatus(Constants.FAIL);
-            String errorMsg = StringUtils.substring(ExceptionUtil.getExceptionMessage(e), 0, 2000);
+            String errorMsg = e.getClass().getSimpleName(); // Original cause still propagates to Quartz; no body in diagnostics.
             sysJobLog.setExceptionInfo(errorMsg);
         }
         else

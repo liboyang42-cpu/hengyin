@@ -47,3 +47,11 @@ export function getSettlementReconciliation(merchantId) {
     params: { merchantId }
   })
 }
+
+export function listSettlementManualCases(query) {
+  return request({ url: '/business/settlement/manual-case/list', method: 'get', params: query })
+}
+
+export function getSettlementManualCase(id) {
+  return request({ url: '/business/settlement/manual-case/' + id, method: 'get' })
+}

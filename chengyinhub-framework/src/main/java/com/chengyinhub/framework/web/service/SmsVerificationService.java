@@ -48,6 +48,7 @@ public class SmsVerificationService
 
     public SendResult send(String phone, String ipAddress)
     {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         if (StringUtils.isEmpty(phone) || !phone.matches("^1\\d{10}$"))
         {
             return SendResult.error("手机号格式不正确");
@@ -88,6 +89,7 @@ public class SmsVerificationService
             sent = sender.send(configuration.accessKeyId, configuration.accessKeySecret,
                     configuration.signName, configuration.templateCode, phone, code);
         }
+        catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) { throw paused; }
         catch (RuntimeException exception)
         {
             sent = false;

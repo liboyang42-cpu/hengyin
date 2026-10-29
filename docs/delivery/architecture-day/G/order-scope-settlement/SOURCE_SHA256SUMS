@@ -1,0 +1,4 @@
+74622bce9554e44748803efb848c60b5bd09805d484845a11ac220db1807f987  chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java
+1e7794d522c2225901edb9af2d2eee6712e8fe879ec54ee8bc8cc99a0581c3b6  chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementOriginalProducer.java
+c25e5564513a6874c4aa2fae8f88d84b409cf1da2c7d34f8a0c31c169f0a744f  chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/CoopSettlementContract.java
+be749802f485b67201c58c6f8752726b8387496e2afb0ff26a6cacac12c7c378  chengyinhub-admin/src/test/java/com/chengyinhub/business/it/Wp04CoopOrderScopeMySqlIT.java

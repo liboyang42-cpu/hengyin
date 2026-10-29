@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.web.service.verify.CityNodeRedemptionApplication;
+
 import com.chengyinhub.business.access.merchant.MerchantAccessServiceImpl;
 import com.chengyinhub.business.access.merchant.MerchantRoleCode;
 import com.chengyinhub.business.domain.MerchantOperator;
@@ -87,10 +89,8 @@ class MerchantStaffRevocationAcceptanceTest {
         when(auditMapper.insertBusinessAuditEvent(any())).thenReturn(1);
         controller = new StaffController();
         ReflectionTestUtils.setField(controller, "merchantAccessService", access);
-        ReflectionTestUtils.setField(controller, "roamMapper", roamMapper);
-        ReflectionTestUtils.setField(controller, "businessAuditEventMapper", auditMapper);
-        ReflectionTestUtils.setField(controller, "couponHistoryService", mock(ISmsCouponHistoryService.class));
-        ReflectionTestUtils.setField(controller, "dynSecret", SECRET);
+        ReflectionTestUtils.setField(controller, "cityNodeRedemptionApplication", new CityNodeRedemptionApplication(
+                access, roamMapper, mock(ISmsCouponHistoryService.class), auditMapper, mock(com.chengyinhub.business.service.impl.QrcodeServiceImpl.class), SECRET));
     }
 
     private static MerchantOperator activeCheckinStaff() {

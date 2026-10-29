@@ -50,6 +50,19 @@ import static org.mockito.Mockito.when;
  */
 class TopicSaleReviewDecouplingTest {
 
+    private javax.sql.DataSource publicationDataSource;
+    private boolean callerTransactionActive;
+
+    @org.junit.jupiter.api.AfterEach
+    void publicationTransactionReleasesItsResource() {
+        if (publicationDataSource != null)
+            org.junit.jupiter.api.Assertions.assertFalse(
+                    org.springframework.transaction.support.TransactionSynchronizationManager.hasResource(publicationDataSource));
+        org.junit.jupiter.api.Assertions.assertEquals(callerTransactionActive,
+                org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive());
+    }
+
+
     private static final Long ME = 100L;
     private static final Long TOPIC = 7L;
 
@@ -59,22 +72,57 @@ class TopicSaleReviewDecouplingTest {
     private ITopicCommercialReviewService commercialReviewService;
     private CmsTopicServiceImpl svc;
     private CmsTopic stored;
+    private com.chengyinhub.business.domain.CmsTopicChapter originalChapter;
 
     @BeforeEach
     void setUp() {
+        callerTransactionActive = org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive();
         topicMapper = mock(CmsTopicMapper.class);
         CmsTopicChapterMapper chapterMapper = mock(CmsTopicChapterMapper.class);
         CmsTopicNodeMapper nodeMapper = mock(CmsTopicNodeMapper.class);
+        java.util.List<com.chengyinhub.business.domain.CmsTopicChapter> writtenChapters = new ArrayList<>();
+        java.util.List<com.chengyinhub.business.domain.CmsTopicNode> writtenNodes = new ArrayList<>();
+        // This case edits existing content, not an empty topic into a new commercial chapter.
+        // Freeze all four original sale-term columns explicitly; the DTO copies these exact facts, not database defaults.
+        originalChapter = new com.chengyinhub.business.domain.CmsTopicChapter();
+        originalChapter.setId(11L); originalChapter.setTopicId(TOPIC); originalChapter.setName("第一章");
+        originalChapter.setRecruitEnabled(0); originalChapter.setRequired(1);
+        originalChapter.setTermsMode(com.chengyinhub.common.constant.TermsMode.PERK); originalChapter.setMaxMerchant(1);
+        writtenChapters.add(originalChapter);
+        com.chengyinhub.business.domain.CmsTopicNode originalNode = new com.chengyinhub.business.domain.CmsTopicNode();
+        originalNode.setId(12L); originalNode.setTopicId(TOPIC); originalNode.setChapterId(11L);
+        originalNode.setStatus(1L); originalNode.setName("第一站"); originalNode.setAddress("人民广场"); originalNode.setNodeTime(30);
+        writtenNodes.add(originalNode);
+        when(chapterMapper.deleteCmsTopicChapterById(anyLong())).thenAnswer(call ->
+                writtenChapters.removeIf(row -> call.getArgument(0).equals(row.getId())) ? 1 : 0);
+        when(nodeMapper.deleteCmsTopicNodeById(anyLong())).thenAnswer(call ->
+                writtenNodes.removeIf(row -> call.getArgument(0).equals(row.getId())) ? 1 : 0);
+        when(chapterMapper.selectByTopicForUpdate(anyLong())).thenAnswer(call -> writtenChapters.stream()
+                .filter(row -> call.getArgument(0).equals(row.getTopicId())).collect(java.util.stream.Collectors.toCollection(ArrayList::new)));
+        when(nodeMapper.selectByTopicForUpdate(anyLong())).thenAnswer(call -> writtenNodes.stream()
+                .filter(row -> call.getArgument(0).equals(row.getTopicId())).collect(java.util.stream.Collectors.toCollection(ArrayList::new)));
+        when(chapterMapper.selectCmsTopicChapterList(any())).thenAnswer(call -> {
+            com.chengyinhub.business.domain.CmsTopicChapter query = call.getArgument(0);
+            if (query == null) return Collections.emptyList();
+            return writtenChapters.stream().filter(row -> java.util.Objects.equals(query.getTopicId(), row.getTopicId()))
+                    .collect(java.util.stream.Collectors.toCollection(ArrayList::new));
+        });
+        when(nodeMapper.selectCmsTopicNodeList(any())).thenAnswer(call -> {
+            com.chengyinhub.business.domain.CmsTopicNode query = call.getArgument(0);
+            if (query == null) return Collections.emptyList();
+            return writtenNodes.stream().filter(row -> java.util.Objects.equals(query.getTopicId(), row.getTopicId()))
+                    .collect(java.util.stream.Collectors.toCollection(ArrayList::new));
+        });
         java.util.concurrent.atomic.AtomicLong chapterIds = new java.util.concurrent.atomic.AtomicLong(100L);
         java.util.concurrent.atomic.AtomicLong nodeIds = new java.util.concurrent.atomic.AtomicLong(200L);
         when(chapterMapper.insertCmsTopicChapter(any())).thenAnswer(call -> {
-            ((com.chengyinhub.business.domain.CmsTopicChapter) call.getArgument(0))
-                    .setId(chapterIds.incrementAndGet());
+            com.chengyinhub.business.domain.CmsTopicChapter row = call.getArgument(0);
+            row.setId(chapterIds.incrementAndGet()); writtenChapters.add(row);
             return 1;
         });
         when(nodeMapper.insertCmsTopicNode(any())).thenAnswer(call -> {
-            ((com.chengyinhub.business.domain.CmsTopicNode) call.getArgument(0))
-                    .setId(nodeIds.incrementAndGet());
+            com.chengyinhub.business.domain.CmsTopicNode row = call.getArgument(0);
+            row.setId(nodeIds.incrementAndGet()); writtenNodes.add(row);
             return 1;
         });
         OmsTicketMapper ticketMapper = mock(OmsTicketMapper.class);
@@ -95,7 +143,7 @@ class TopicSaleReviewDecouplingTest {
                 invocation -> "lockTopic".equals(invocation.getMethod().getName())
                         ? topicMapper.selectCmsTopicByIdForUpdate(invocation.getArgument(0))
                         : org.mockito.Answers.RETURNS_DEFAULTS.answer(invocation)));
-        ReflectionTestUtils.setField(svc, "quotaService", mock(IQuotaService.class));
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(svc, "quotaService", mock(IQuotaService.class));
         when(topicMapper.publishRouteSnapshot(any(), any(), any())).thenReturn(1);
         ReflectionTestUtils.setField(svc, "settlementDebtLedger",
                 mock(com.chengyinhub.business.service.support.SettlementDebtLedger.class));
@@ -113,7 +161,7 @@ class TopicSaleReviewDecouplingTest {
         ReflectionTestUtils.setField(svc, "clubService", mock(IClubService.class));
         ReflectionTestUtils.setField(svc, "xpBudgetService", mock(IXpBudgetService.class));
         ReflectionTestUtils.setField(svc, "auditTaskService", auditTaskService);
-        ReflectionTestUtils.setField(svc, "omsTicketService", mock(IOmsTicketService.class));
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(svc, "omsTicketService", mock(IOmsTicketService.class));
         ReflectionTestUtils.setField(svc, "canonicalMutationService", canonicalMutationService);
         ReflectionTestUtils.setField(svc, "topicCommercialReviewService", commercialReviewService);
         when(registrationMapper.selectCmsRegistrationList(any())).thenReturn(Collections.<CmsRegistration>emptyList());
@@ -124,6 +172,8 @@ class TopicSaleReviewDecouplingTest {
         stored = new CmsTopic();
         stored.setId(TOPIC);
         stored.setMemberId(ME);
+        stored.setProductType(ProductType.ORIENTEERING);
+        stored.setPublishMode("pro");
         stored.setStatus(2);
         stored.setLifecycle(TopicLifecycleState.PRICING.getCode());
         stored.setDelFlag(0);
@@ -133,11 +183,16 @@ class TopicSaleReviewDecouplingTest {
         stored.setSelfPlay(1);
         stored.setSelfPlayPrice(new BigDecimal("5"));
         when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(stored);
+        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(stored);
         when(topicMapper.selectTopicIsDraft(TOPIC)).thenReturn(0);
         doAnswer(invocation -> {
             CmsTopic patch = invocation.getArgument(0);
             if (patch.getName() != null) stored.setName(patch.getName());
             if (patch.getSelfPlayPrice() != null) stored.setSelfPlayPrice(patch.getSelfPlayPrice());
+            if (patch.getProductType() != null) stored.setProductType(patch.getProductType());
+            if (patch.getPublishMode() != null) stored.setPublishMode(patch.getPublishMode());
+            if (patch.getCheckStatus() != null) stored.setCheckStatus(patch.getCheckStatus());
+            if (patch.getThemeRuntimeConfigJson() != null) stored.setThemeRuntimeConfigJson(patch.getThemeRuntimeConfigJson());
             if (patch.getStatus() != null) stored.setStatus(patch.getStatus());
             if (patch.getUserStatus() != null) stored.setUserStatus(patch.getUserStatus());
             return 1;
@@ -153,6 +208,29 @@ class TopicSaleReviewDecouplingTest {
             return AuditTask.BIZ_TOPIC_SALE_REVIEW.equals(q.getBizType())
                     ? new ArrayList<>(Collections.singletonList(pendingSale)) : new ArrayList<AuditTask>();
         });
+        com.chengyinhub.business.mapper.ThemeStateKeyMapper keys =
+                mock(com.chengyinhub.business.mapper.ThemeStateKeyMapper.class);
+        when(keys.lockTopicForStateKeyWrite(TOPIC)).thenAnswer(call -> {
+            org.junit.jupiter.api.Assertions.assertTrue(org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive());
+            org.junit.jupiter.api.Assertions.assertTrue(org.springframework.transaction.support.TransactionSynchronizationManager.hasResource(publicationDataSource));
+            return topicMapper.selectCmsTopicByIdForUpdate(TOPIC).getId();
+        });
+        when(keys.selectByTopicIdForUpdate(TOPIC)).thenReturn(Collections.emptyList());
+        ReflectionTestUtils.setField(svc, "themeStateKeyService",
+                new com.chengyinhub.business.service.support.ThemeStateKeyService(keys));
+        svc = com.chengyinhub.business.service.support.TopicPublicationTestWiring.transactional(svc);
+        org.springframework.jdbc.datasource.DataSourceTransactionManager transactions =
+                (org.springframework.jdbc.datasource.DataSourceTransactionManager)
+                com.chengyinhub.business.service.support.TopicPublicationTestWiring.get(svc, "transactionManager");
+        publicationDataSource = transactions.getDataSource();
+    }
+
+    private java.util.Map<String,Object> frozenSaleTerms() {
+        com.chengyinhub.business.service.support.CommercialTopicPolicy policy =
+                (com.chengyinhub.business.service.support.CommercialTopicPolicy)
+                ReflectionTestUtils.getField(svc, "commercialTopicPolicy");
+        return com.chengyinhub.business.service.support.TopicSaleTerms.of(
+                policy.saleParameters(stored, policy.evaluate(TOPIC)));
     }
 
     private static Date daysFromNow(int days) {
@@ -176,6 +254,10 @@ class TopicSaleReviewDecouplingTest {
         node.setNodeTime(30);
         ChapterDTO chapter = new ChapterDTO();
         chapter.setName("第一章");
+        chapter.setRecruitEnabled(originalChapter.getRecruitEnabled());
+        chapter.setRequired(originalChapter.getRequired());
+        chapter.setTermsMode(originalChapter.getTermsMode());
+        chapter.setMaxMerchant(originalChapter.getMaxMerchant());
         chapter.setNodes(new ArrayList<>(Arrays.asList(node)));
         dto.setChapters(new ArrayList<>(Arrays.asList(chapter)));
         dto.setTickets(new ArrayList<ActivityTicketRequest>());
@@ -184,16 +266,22 @@ class TopicSaleReviewDecouplingTest {
 
     @Test
     void storyAndNameEdit_keepsSaleReview_andRefreshesThePendingTask() {
-        svc.updateTopicByOwner(dto("新名字", null, "5"), ME, "me");
+        java.util.Map<String,Object> before = frozenSaleTerms();
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(dto("新名字", null, "5"), ME, "me");
 
+        org.junit.jupiter.api.Assertions.assertEquals(before, frozenSaleTerms(), "same-price content edits must preserve the full sale-terms fingerprint");
+        org.junit.jupiter.api.Assertions.assertEquals(new BigDecimal("5"), stored.getSelfPlayPrice());
         verify(canonicalMutationService, never()).invalidateApprovedCanonical(anyLong(), anyString());
         verify(commercialReviewService, times(1)).submitSaleReview(TOPIC, ME);
     }
 
     @Test
     void priceEdit_resetsSaleReview() {
-        svc.updateTopicByOwner(dto("旧名字", null, "8"), ME, "me");
+        java.util.Map<String,Object> before = frozenSaleTerms();
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(dto("旧名字", null, "8"), ME, "me");
 
+        org.junit.jupiter.api.Assertions.assertNotEquals(before, frozenSaleTerms(), "5 to 8 changes the original price fact");
+        org.junit.jupiter.api.Assertions.assertEquals(new BigDecimal("8"), stored.getSelfPlayPrice());
         verify(canonicalMutationService, times(1)).invalidateApprovedCanonical(eq(TOPIC), eq("topic-content-rebuild"));
         verify(commercialReviewService, never()).submitSaleReview(anyLong(), anyLong());
     }

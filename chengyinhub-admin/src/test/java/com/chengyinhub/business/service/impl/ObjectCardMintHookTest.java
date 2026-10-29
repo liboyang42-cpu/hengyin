@@ -4,6 +4,7 @@ import com.chengyinhub.business.domain.CmsActivity;
 import com.chengyinhub.business.domain.CmsTopicNode;
 import com.chengyinhub.business.domain.GameRuntimeSession;
 import com.chengyinhub.business.domain.PlayerObjectCard;
+import com.chengyinhub.business.domain.PlayAttemptLog;
 import com.chengyinhub.business.domain.vo.PlayerObjectCardVO;
 import com.chengyinhub.business.mapper.CmsActivityMapper;
 import com.chengyinhub.business.mapper.CmsMemberTemplateMapper;
@@ -14,6 +15,9 @@ import com.chengyinhub.business.mapper.PlayAttemptLogMapper;
 import com.chengyinhub.business.mapper.PlayTeamMapper;
 import com.chengyinhub.business.service.ObjectCardService;
 import com.chengyinhub.business.service.ai.LlmClient;
+import com.chengyinhub.business.service.ai.AiGatewayService;
+import com.chengyinhub.business.service.ai.PhotoCheckIntentService;
+import com.chengyinhub.business.service.ai.PhotoCheckIntentCommand;
 import com.chengyinhub.business.service.ai.OpenAiCompatibleLlmClient;
 import com.chengyinhub.business.service.ai.PhotoCheckVisionService;
 import com.chengyinhub.business.service.support.AdvancedGameClock;
@@ -25,6 +29,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.annotation.AnnotationTransactionAttributeSource;
+import org.springframework.transaction.interceptor.TransactionAttribute;
+import org.springframework.transaction.support.AbstractPlatformTransactionManager;
+import org.springframework.transaction.support.DefaultTransactionStatus;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
@@ -32,6 +43,9 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Date;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -40,14 +54,18 @@ import javax.imageio.ImageIO;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.AdditionalAnswers.delegatesTo;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.clearInvocations;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -93,6 +111,8 @@ class ObjectCardMintHookTest {
     private GameRuntimeSessionMapper sessionMapper;
     private PlayAttemptLogMapper attemptMapper;
     private PhotoCheckVisionService visionService;
+    private AiGatewayService quota;
+    private PhotoCheckIntentService photoIntents;
     private ObjectCardService objectCardService;
     private GameRuntimeSession session;
     private AdvancedGameRuntimeServiceImpl service;
@@ -115,6 +135,7 @@ class ObjectCardMintHookTest {
         CmsActivityMapper activityMapper = mock(CmsActivityMapper.class);
 
         service = new AdvancedGameRuntimeServiceImpl();
+        AdvancedActionTestFixtures.transactions(service);
         ReflectionTestUtils.setField(service, "sessionMapper", sessionMapper);
         ReflectionTestUtils.setField(service, "nodeMapper", nodeMapper);
         ReflectionTestUtils.setField(service, "templateMapper", mock(CmsMemberTemplateMapper.class));
@@ -125,7 +146,10 @@ class ObjectCardMintHookTest {
         ReflectionTestUtils.setField(service, "clock", (AdvancedGameClock) Date::new);
         ReflectionTestUtils.setField(service, "random", (AdvancedGameRandom) bound -> 0);
 
-        visionService = new PhotoCheckVisionService();
+        visionService = spy(new PhotoCheckVisionService());
+        quota = mock(AiGatewayService.class);
+        when(quota.consumeQuota(MEMBER_ID, "photo_check")).thenReturn("reservation");
+        ReflectionTestUtils.setField(visionService, "aiGatewayService", quota);
         org.springframework.test.util.ReflectionTestUtils.setField(visionService, "consentGuard", org.mockito.Mockito.mock(com.chengyinhub.business.service.ConsentGuard.class));
         com.chengyinhub.business.mapper.AppMediaAssetMapper reviewedImages = mock(com.chengyinhub.business.mapper.AppMediaAssetMapper.class);
         when(reviewedImages.selectByObjectKey("/profile/upload/2026/10/12/0123456789abcdef0123456789abcdef.jpg")).thenReturn(Map.of(
@@ -134,7 +158,8 @@ class ObjectCardMintHookTest {
         com.chengyinhub.business.service.support.AppMediaReferenceGuard reviewedMedia = new com.chengyinhub.business.service.support.AppMediaReferenceGuard();
         ReflectionTestUtils.setField(reviewedMedia, "mapper", reviewedImages);
         ReflectionTestUtils.setField(visionService, "mediaReferences", reviewedMedia);
-        ReflectionTestUtils.setField(service, "photoCheckVisionService", visionService);
+        photoIntents = AdvancedActionTestFixtures.photos(service, command -> visionService.review(
+                command.memberId(), command.imageReference(), command.requirement()));
         objectCardService = mock(ObjectCardService.class);
         ReflectionTestUtils.setField(service, "objectCardService", objectCardService);
         com.chengyinhub.business.service.support.AppMediaReferenceGuard media = mock(com.chengyinhub.business.service.support.AppMediaReferenceGuard.class);
@@ -184,7 +209,16 @@ class ObjectCardMintHookTest {
         modelSays("{\"pass\":true,\"confidence\":88,\"reason\":\"拍到了\"}");
         act("card-twice-1");
 
-        assertThrows(IllegalStateException.class, () -> act("card-twice-2"));
+        verify(quota).consumeQuota(MEMBER_ID, "photo_check");
+        verify(visionService).review(anyLong(), anyString(), anyString());
+        String committedState = session.getStateJson();
+        Integer committedVersion = session.getVersion();
+        clearInvocations(quota, visionService, photoIntents, sessionMapper, attemptMapper);
+        AdvancedActionTestFixtures.assertPhotoNotExecuted(() -> act("card-twice-2"), "这一张已经过了");
+        assertEquals(committedState, session.getStateJson());
+        assertEquals(committedVersion, session.getVersion());
+        assertEquals(5, session.getScore());
+        assertNoNewPhotoEffects();
         verify(objectCardService, times(1)).mint(anyLong(), anyString(), any(JsonNode.class), anyString(),
                 anyString());
     }
@@ -417,25 +451,101 @@ class ObjectCardMintHookTest {
         verify(objectCardService, times(1)).mint(anyLong(), anyString(), any(JsonNode.class), anyString(), anyString());
     }
 
-    /**
-     * 事务边界只有在 Spring 代理里才看得见,单测起不了容器,所以这里钉注解形状:
-     * act 必须在事务里(判定与扣次原子),收尾必须不在(否则又回到占着连接等 4 秒)。
-     */
+    /** Actual Spring transaction scopes, a NEVER provider, and post-commit mint; no database claim. */
     @Test
-    void act带事务而收尾不带() throws Exception {
-        Class<?> impl = AdvancedGameRuntimeServiceImpl.class;
-        assertFalse(impl.isAnnotationPresent(org.springframework.transaction.annotation.Transactional.class),
-                "类级 @Transactional 会把收尾也包进事务");
-        assertTrue(impl.getMethod("act", Long.class, Long.class, Integer.class, String.class, String.class, Map.class)
-                .isAnnotationPresent(org.springframework.transaction.annotation.Transactional.class));
-        assertFalse(impl.getMethod("finishPendingCardMint", Map.class)
-                .isAnnotationPresent(org.springframework.transaction.annotation.Transactional.class),
-                "收尾进了事务,就又回到占着连接等 4 秒");
+    void 照片先提交原意图_模型NEVER_玩法回执与APPLIED同事务_提交后铸卡() throws Exception {
+        given(CARD_CONFIG);
+        modelSays("{\"pass\":true,\"confidence\":88,\"reason\":\"拍到了\"}");
+        List<String> phases = new ArrayList<>();
+        AbstractPlatformTransactionManager tx = new AbstractPlatformTransactionManager() {
+            protected Object doGetTransaction() { return new Object(); }
+            protected boolean isExistingTransaction(Object transaction) {
+                return TransactionSynchronizationManager.isActualTransactionActive();
+            }
+            protected void doBegin(Object transaction, TransactionDefinition definition) {
+                assertFalse(definition.isReadOnly());
+                assertEquals(TransactionDefinition.ISOLATION_READ_COMMITTED, definition.getIsolationLevel());
+                phases.add("begin");
+            }
+            protected void doCommit(DefaultTransactionStatus status) { phases.add("commit"); }
+            protected void doRollback(DefaultTransactionStatus status) { phases.add("rollback"); }
+        };
+        ReflectionTestUtils.setField(service, "transactionManager", tx);
+        TransactionAttribute providerBoundary = new AnnotationTransactionAttributeSource().getTransactionAttribute(
+                PhotoCheckIntentService.class.getMethod("executeOnce", Long.class, Long.class, String.class), PhotoCheckIntentService.class);
+        org.junit.jupiter.api.Assertions.assertNotNull(providerBoundary);
+        assertEquals(TransactionDefinition.PROPAGATION_NEVER, providerBoundary.getPropagationBehavior());
+        TransactionTemplate providerNever = new TransactionTemplate(tx, providerBoundary);
+        PhotoCheckIntentService storedIntents = photoIntents;
+        PhotoCheckIntentService observed = mock(PhotoCheckIntentService.class, delegatesTo(storedIntents));
+        AtomicReference<PhotoCheckIntentCommand> original = new AtomicReference<>();
+        doAnswer(i -> {
+            assertWritableTransaction(); phases.add("prepare"); original.set(i.getArgument(0));
+            return storedIntents.prepare(i.getArgument(0));
+        }).when(observed).prepare(any());
+        doAnswer(i -> {
+            assertEquals(List.of("begin", "prepare", "commit"), phases, "original intent must commit before provider");
+            return providerNever.execute(status -> {
+                assertFalse(TransactionSynchronizationManager.isActualTransactionActive());
+                phases.add("provider");
+                return storedIntents.executeOnce(i.getArgument(0), i.getArgument(1), i.getArgument(2));
+            });
+        }).when(observed).executeOnce(anyLong(), anyLong(), anyString());
+        doAnswer(i -> {
+            assertWritableTransaction();
+            PlayAttemptLog receipt = attemptMapper.selectByIdempotencyKeyForUpdate(original.get().actionKey());
+            assertEquals(receipt.getId(), i.<Long>getArgument(2));
+            assertEquals(original.get().requestFingerprint(), receipt.getRequestFingerprint());
+            assertEquals(Integer.valueOf(8), receipt.getAttemptType());
+            assertEquals(MEMBER_ID, receipt.getMemberId().longValue());
+            phases.add("markApplied");
+            storedIntents.markApplied(i.getArgument(0), i.getArgument(1), i.getArgument(2));
+            return null;
+        }).when(observed).markApplied(anyLong(), anyString(), anyLong());
+        ReflectionTestUtils.setField(service, "photoCheckIntentService", observed);
+        doAnswer(i -> { assertWritableTransaction(); phases.add("cas"); return 1; })
+                .when(sessionMapper).updateStateCas(any());
+        doAnswer(i -> {
+            assertFalse(TransactionSynchronizationManager.isActualTransactionActive());
+            assertEquals(List.of("begin", "prepare", "commit", "provider", "begin", "cas", "markApplied", "commit"), phases);
+            phases.add("mint"); return card();
+        }).when(objectCardService).mint(anyLong(), anyString(), any(JsonNode.class), anyString(), anyString());
+
+        Map<String, Object> result = act("card-transaction-scopes");
+        assertEquals(true, kit(result).get("passed")); assertEquals(5, result.get("score"));
+        assertTrue(result.get("objectCard") instanceof PlayerObjectCardVO);
+        assertEquals(List.of("begin", "prepare", "commit", "provider", "begin", "cas", "markApplied", "commit", "mint"), phases);
+        verify(quota).consumeQuota(MEMBER_ID, "photo_check");
+        verify(visionService).review(anyLong(), anyString(), anyString());
+        verify(attemptMapper).insertPlayAttemptLog(any());
+        // The provider's NEVER scope must reject a business transaction before touching Vision/quota.
+        TransactionTemplate enclosing = new TransactionTemplate(tx);
+        enclosing.setIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED);
+        org.junit.jupiter.api.Assertions.assertThrowsExactly(
+                org.springframework.transaction.IllegalTransactionStateException.class,
+                () -> enclosing.execute(status -> providerNever.execute(inner -> { throw new AssertionError("provider entered"); })));
+        verify(quota).consumeQuota(MEMBER_ID, "photo_check");
+        verify(visionService).review(anyLong(), anyString(), anyString());
+    }
+
+    private void assertWritableTransaction() {
+        assertTrue(TransactionSynchronizationManager.isActualTransactionActive());
+        assertFalse(TransactionSynchronizationManager.isCurrentTransactionReadOnly());
     }
 
     private void given(String config) {
         session = running(config);
         arm();
+    }
+
+    private void assertNoNewPhotoEffects() {
+        verifyNoInteractions(quota);
+        verify(visionService, never()).review(anyLong(), anyString(), anyString());
+        verify(photoIntents, never()).prepare(any());
+        verify(photoIntents, never()).executeOnce(anyLong(), anyLong(), anyString());
+        verify(photoIntents, never()).markApplied(anyLong(), anyString(), anyLong());
+        verify(sessionMapper, never()).updateStateCas(any());
+        verify(attemptMapper, never()).insertPlayAttemptLog(any());
     }
 
     private void arm() {
@@ -468,7 +578,7 @@ class ObjectCardMintHookTest {
                         "", "qwen-vl-max", true, 3000));
     }
 
-    /** 与控制器同一个顺序:先 act(事务内只判定),事务提交、连接归还之后再收尾铸卡。 */
+    /** 与控制器同序:act 完成短事务编排后,事务外收尾铸卡。 */
     private Map<String, Object> act(String key) {
         return service.finishPendingCardMint(judgeOnly(key));
     }

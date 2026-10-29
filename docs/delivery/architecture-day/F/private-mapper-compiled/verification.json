@@ -1,0 +1,101 @@
+{
+  "status": "IMPLEMENTED_REVIEW_CANDIDATE_NOT_ACTIVATED_OR_REAL_COMPILED_VALIDATED",
+  "parent_sha": "1c63e55a167f235930b5811bf28203a29231c8ef",
+  "branch": "codex/architecture-day-f-private-mapper-compiled",
+  "allowed_existing_files": [
+    "ci/architecture/gate.py",
+    "ci/architecture/test_gate.py",
+    "ci/architecture/collect_jdeps.py",
+    "ci/architecture/test_collect_jdeps.py",
+    "ci/architecture/owners.json",
+    "ci/architecture/README.md"
+  ],
+  "delivery_directory": "docs/delivery/architecture-day/F/private-mapper-compiled/",
+  "actual_tests": {
+    "python": "3.12.14",
+    "dedicated_new_controls": 26,
+    "total_architecture_selftests": 141,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "last_full_seconds": 7.906,
+    "CI_cost_contract": "PASS",
+    "original_five_parse_returns": "unchanged, tested",
+    "original_module_graph_format": "unchanged, synthetic nine-edge invariance only"
+  },
+  "legacy_baseline_or_exception_changes": 0,
+  "business_fact_scope_changes": 0,
+  "private_target_types": 2,
+  "exact_allowed_consumers": 2,
+  "post_check_exit_codes": {
+    "0": "PASS_SCOPED_COMPILED_REFERENCES",
+    "1": "definite BLOCKED",
+    "2": "UNKNOWN incomplete input or coverage"
+  },
+  "protected_files": [
+    "gate.py",
+    "baseline.json",
+    "locking-select-baseline.proposal.json",
+    "owners.json",
+    "commands.json",
+    "collect_jdeps.py"
+  ],
+  "unchanged_parent_files": [
+    {
+      "path": "ci/architecture/commands.json",
+      "sha256": "55f5773dd613d6728985d3daea7e4fca6c3788171c5338d97d5919cf1ab7b0de",
+      "equal_parent": true
+    },
+    {
+      "path": "ci/architecture/baseline.json",
+      "sha256": "1997d73ccf6133b3eb3ceb55eb26357181ec1df02bcd22f519f7cfc30a905bc3",
+      "equal_parent": true
+    },
+    {
+      "path": "ci/architecture/locking-select-baseline.proposal.json",
+      "sha256": "c71bbc7fdbf4996b68f5977ebd344dac150f56128dea4837c69ec3f91b83e52b",
+      "equal_parent": true
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "sha256": "acfc9b732df97708bac7bb2d044e57e4c9d10d6979a0ad9a25c44d0368c6665b",
+      "equal_parent": true
+    },
+    {
+      "path": "ci/real_storage_it.py",
+      "sha256": "269813582a0ae72efc2d397cca9376658cadf9bdcd5c635fb1dd95dce1084678",
+      "equal_parent": true
+    },
+    {
+      "path": "ci/real-storage-it-registry.json",
+      "sha256": "b84637a2b696d9a509d1190b9c862642dc3ce477ae6faf2fae4cff1b6b258f60",
+      "equal_parent": true
+    }
+  ],
+  "actual_compiled_port_CI": "NOT_RUN_BY_F; root real negative/positive remains required",
+  "Java_JDK_DB_Redis_models_CI_dispatch": "NOT_RUN_BY_F",
+  "root_workflow_edits": "NONE; contract suggestion only",
+  "code_sha256": {
+    "ci/architecture/gate.py": "4ed706853cd6579424a2da3efb98621230b0ec216bfdf2fbc1bfdd750e67f535",
+    "ci/architecture/test_gate.py": "2e8da9731bcd615f3536809dda4a33d7d791fb1b9ef81f73ec2db34fcb2dee51",
+    "ci/architecture/collect_jdeps.py": "215ff69269c1df48040259733cb512528ba3dfe9111f51223028d7d8b8cd5f40",
+    "ci/architecture/test_collect_jdeps.py": "54e023b082760856fc7024c771e85b37981e7993b8b4c1481188a472bc83073e",
+    "ci/architecture/owners.json": "43038c6eb11e2938272822308ed1c09605aa9d859787eb7076da4b26559a5ee5",
+    "ci/architecture/README.md": "a17931fceb9fa83cab17901bed48d8eb7122df647f19e8e9199d949974188fef"
+  },
+  "artifact_sha256": {
+    "checks.txt": "5e9359813fa3d419e85d31e75159963ad899b9b93c6be3c7a3f414f6194c3c1d",
+    "evidence.json": "84a55a2381cb3dbddd1933098d6ce3019430cf80fed36d983259cc43b7d83bbf",
+    "REPORT.md": "ff6d2bc6f4f463240732c0c139107243edece02dd8f19cd5fff0b8f346fa1294",
+    "CONTRACT.md": "505f41c50f4514792457382d364a8cd3dbe572558c1ef61b37509dfb44096477"
+  },
+  "final_scope_checks": {
+    "authorized_files": 11,
+    "unchanged_parent_files": 6,
+    "doc_JSON_links_hashes": "PASS",
+    "relative_links_checked": 3,
+    "secret_file_gate": "PASS scoped 11 files",
+    "gitleaks": "v8.21.2 PASS scoped 11 files, 0 findings",
+    "git_diff_check": "PASS"
+  }
+}

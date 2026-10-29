@@ -15,7 +15,8 @@ function setup(submit) {
   const storage = {};
   const toasts = [];
   global.getApp = () => ({ getUserID: () => '7', globalData: {} });
-  global.getCurrentPages = () => [];
+  const pages = [];
+  global.getCurrentPages = () => pages;
   global.wx = {
     getStorageSync: (k) => storage[k],
     setStorageSync: (k, v) => { storage[k] = v; },
@@ -36,6 +37,8 @@ function setup(submit) {
     loadProjection() {},
     fetchDetail() {},
   });
+  // The real lifecycle guard must see this fixture as an active page; never stub the guard itself.
+  pages.push(ctx);
   return { ctx, toasts, storage };
 }
 
@@ -56,6 +59,9 @@ test('CL-20 广播请求断网(结果待核对):草稿原文保留,解锁后重�
   assert.equal(sent[0].payload.content, '集合点改到南门，十分钟后出发');
   await settle();
   assert.equal(ctx.data.writeState, 'unknown-write');
+  assert.equal(ctx.data.writeLocked, true, '结果未确认期间仍禁止重复发送');
+  ctx.confirmBroadcast();
+  assert.equal(sent.length, 1, '未知结果不能当作未发送而重发');
   assert.equal(ctx.data.broadcastDraft.content, '集合点改到南门，十分钟后出发', '断网后草稿不得清空');
 
   // 核对结束(这里直接模拟解锁)后再开半屏,原文要回到输入框

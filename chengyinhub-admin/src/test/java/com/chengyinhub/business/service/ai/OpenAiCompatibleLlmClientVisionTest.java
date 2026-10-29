@@ -46,7 +46,7 @@ class OpenAiCompatibleLlmClientVisionTest {
         try {
             String baseUrl = "http://127.0.0.1:" + server.getAddress().getPort();
             OpenAiCompatibleLlmClient client = new OpenAiCompatibleLlmClient(
-                    "vision", baseUrl, "sk-test-key", "qwen-vl-max", true, 3000);
+                    "vision", baseUrl, "sk-test-key", "qwen-vl-max", true, 3000, new AiHttpAdmission(java.util.List.of(baseUrl)));
 
             String answer = client.chatVision("你是照片审核员", "https://cdn.example.com/window.jpg", "要拍到窗外");
 

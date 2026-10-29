@@ -1,0 +1,19 @@
+{
+  "base": "88fae34ca16597b69f55271078d028658e438ffb",
+  "branch": "codex/architecture-day-a-rollback-fixture",
+  "excluded_self": "docs/delivery/architecture-day/A-rollback-fixture/candidate-files.json",
+  "files": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CashWithdrawFundEvidenceMySqlIT.java",
+      "sha256": "125fa642954273673319ce8d5dff71de33155e03fbe402af3f1fdc854c6fc8ef"
+    },
+    {
+      "path": "docs/delivery/architecture-day/A-rollback-fixture/README.md",
+      "sha256": "1398a8920841d067c70a8cc2c6a13bf0ca41574594f9964705d2fffe93d75d59"
+    },
+    {
+      "path": "docs/delivery/architecture-day/A-rollback-fixture/verification.txt",
+      "sha256": "1cbc6ea694f495cc044c9870f898a4c373cee2e52757784ff8f90fcaa588320b"
+    }
+  ]
+}

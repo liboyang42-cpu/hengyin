@@ -1,0 +1,221 @@
+{
+  "status": "TRANSPORT_SOURCE_WRITTEN_JAVA_NOT_RUN_NOT_ENABLEABLE_WITHOUT_E",
+  "repository": "https://github.com/liboyang42-cpu/hengyin",
+  "source_parent": "05f4aa69e61752dcafb0bec73ca9ae9b2ff7a7f5",
+  "branch": "codex/architecture-day-f-wp13-http",
+  "approved_resources": {
+    "ai_global": 4,
+    "per_canonical_origin": 2,
+    "extra_ai_queue": 0,
+    "new_production_executors": 0,
+    "new_dependencies": 0
+  },
+  "records": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/AiHttpAdmissionTest.java",
+      "parent_blob": null,
+      "sha256": "62bf6b45aa42cacb684d3d1a52b5978b0da603128207a807d8428bf9677591c5"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/OpenAiCompatibleLlmClientLogRedactionTest.java",
+      "parent_blob": "6f13eb0a2975895a01276b2984d4d7ca824e7fa7",
+      "sha256": "5f15a6a15d0c55da5cb6e7ebbbf643adbc1a4ccd02ee6158902509fbff311e36"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/OpenAiCompatibleLlmClientVisionTest.java",
+      "parent_blob": "4ec7db848e415656e5a532b9b9d18881076df289",
+      "sha256": "07198091e8eeee01edb4edb555031ee272af1318a905098072eb3ab28d1a1258"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/common/utils/http/HttpUtilsJsonPostTest.java",
+      "parent_blob": null,
+      "sha256": "1a7eb4d151abe61e8f602aedfbc7b840852bf8744860754f0a37b8f9459d5b91"
+    },
+    {
+      "path": "chengyinhub-common/src/main/java/com/chengyinhub/common/utils/http/HttpRequestException.java",
+      "parent_blob": "6adacb888831e1bece2593108862d8871a80a4da",
+      "sha256": "f92551a92165d4d8c9d05869c4ccbf8defbe83a858217eeaf24e37114f033306"
+    },
+    {
+      "path": "chengyinhub-common/src/main/java/com/chengyinhub/common/utils/http/HttpUtils.java",
+      "parent_blob": "f0d22fdc7cb0a923fb0e1125668221ff3bdbd7bd",
+      "sha256": "d9e793fe14e041910cbe1132425a87ac5b681c7b2f481a7134e1932fdb1d0308"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiHttpAdmission.java",
+      "parent_blob": null,
+      "sha256": "f15ee61e7ad4f8d69be20ba9485d21ff24b90c875cb967edaa923a33d8e8a8f6"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiProviderNotSentException.java",
+      "parent_blob": null,
+      "sha256": "733f48f551bf0b8890aef16de0c6a3090783b9ec1b7173e23cbbce5beb7652c9"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/LlmClientConfig.java",
+      "parent_blob": "add4739601f59efe46279aa3864c862df23e8685",
+      "sha256": "00554c25aaaff36e31c2448ba2ec6452be8a7622668192cc37f5000ec83d72da"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/OpenAiCompatibleLlmClient.java",
+      "parent_blob": "806c3d12325697f4f1f57d1ce417e95db2bd1360",
+      "sha256": "931779733e07189cfcf71c61933e8f54a7b05383e725c6612c8f730e6ad1bd1c"
+    }
+  ],
+  "static_checks": "PASS (lexical/diff/source-body/protected-range checks only; not compile/type proof)",
+  "ci_cost_contract": {
+    "command": "python3 ci/test_ci_cost_contract.py",
+    "exit_code": 0,
+    "stdout": "CI cost routing contract: PASS"
+  },
+  "test_declarations_not_execution": {
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/AiHttpAdmissionTest.java": {
+      "declared_tests": 7,
+      "methods": [
+        "canonicalOriginsShareTwoSlotsAndDoNotDynamicallyRegister",
+        "processGlobalFourCannotBeBypassedByDifferentAdmissionInstances",
+        "invalidOriginsAndInterruptFailBeforeAdmissionWithoutLosingSlots",
+        "oldConstructorCannotSendWithoutStartupAdmissionButReadinessRemainsLocal",
+        "configurationAndSerializationFailuresAreTypedUnsentAndReleaseOriginalAdmission",
+        "productionBeansUseOneFixedOriginRegistry",
+        "fourRealAiCallsLeaveOtherCommonHttpUsableAndFifthNeverReachesServer"
+      ],
+      "execution": "NOT_RUN"
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/OpenAiCompatibleLlmClientLogRedactionTest.java": {
+      "declared_tests": 2,
+      "methods": [
+        "非2xx响应体不进日志也不进异常",
+        "解析失败时异常信息不回显响应字节"
+      ],
+      "execution": "NOT_RUN"
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/OpenAiCompatibleLlmClientVisionTest.java": {
+      "declared_tests": 2,
+      "methods": [
+        "视觉请求体是OpenAI数组格式且鉴权头正确",
+        "负控_未配置key时不发请求直接抛"
+      ],
+      "execution": "NOT_RUN"
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/common/utils/http/HttpUtilsJsonPostTest.java": {
+      "declared_tests": 15,
+      "methods": [
+        "legacyExceptionNeverInventsNotSentEvidence",
+        "callerCloseCannotReleaseATransferredRunningAttempt",
+        "queuedCancellationWinsCasAndPreventsEveryLaterDispatch",
+        "cancellationDuringPreparationWaitsForPhysicalWorkerFinally",
+        "concurrentCancelAndDispatchHaveOneWinnerAndNoPrematureRelease",
+        "invalidHeaderUrlAndExpiredDeadlineAreUnsentAndReleaseOnce",
+        "authenticatedJsonPostPreservesProtocolAndReleasesItsLease",
+        "providerErrorsRedirectAndAuthChallengeNeverRetryOrBecomeUnsent",
+        "lostProviderResponseNeverReplaysThePost",
+        "decodedGzipAndChunkedBodiesCannotExceedOneMiB",
+        "knownOversizedLengthIsRejectedBeforeWaitingForBody",
+        "exactOneMiBResponseIsAccepted",
+        "slowDripIsBoundedByAbsoluteTotalAndIsNeverUnsent",
+        "ownQueuedTimeoutRemovesOnlyThatTaskAndSaturationNeverDispatches",
+        "blockedPhysicalPostRetainsLeaseWhenDeadlineAndCleanupRejectionReturnToCaller"
+      ],
+      "execution": "NOT_RUN"
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/common/utils/http/HttpUtilsSecurityTest.java": {
+      "declared_tests": 19,
+      "methods": [
+        "infoLogsOnlyMetadataAndNeverQueryCredentialsPhoneOrResponseBody",
+        "defaultGetAndPostNeverRetry",
+        "noRetryGetIsNotAutomaticallyReplayedByTransport",
+        "postIsNotAutomaticallyReplayedByTransport",
+        "sslPostEntryPointIsNotAutomaticallyReplayedByTransport",
+        "idempotentGetRetryComesOnlyFromOurPolicy",
+        "transportDoesNotFollowRedirectsForAnyEntryPoint",
+        "explicitlyIdempotentGetRetriesOnceWithBoundedBackoff",
+        "streamedResponseBodyLimitFailsExplicitlyWithoutRetry",
+        "retryPolicyAllowsOnlyKnownTransientNetworkFailures",
+        "retryBackoffIsInterruptibleAndDoesNotStartAnotherAttempt",
+        "realBlockedConnectHonorsConnectTimeoutAndWorkerReturns",
+        "shorterTotalDeadlineCapsRealBlockedConnectAndWorkerReturns",
+        "disconnectQueueSaturationRejectsWithoutRunningInCaller",
+        "knownOversizedContentLengthIsRejectedBeforeWaitingForBody",
+        "totalTimeoutStopsAResponseThatKeepsDrippingBytes",
+        "readTimeoutAppliesBeforeTheLongerTotalDeadline",
+        "successfulResponsesReturnTheirConnectionToTheJdkKeepAlivePool",
+        "totalTimeoutDisconnectsABlockedPostBody"
+      ],
+      "execution": "NOT_RUN"
+    }
+  },
+  "compatibility_classes_not_execution": [
+    {
+      "class": "OWN_C05_15Test",
+      "unchanged_sha256": "845351464dc28eaa5ca1ffcce05be43dea812e13a41925cb94d49381acccf503",
+      "declared_tests": 1,
+      "execution": "NOT_RUN"
+    },
+    {
+      "class": "OWN_C05_16Test",
+      "unchanged_sha256": "a985e5e3718cf744810219c0f5aa09a633a54f27a1cb6e7d9b37c0dc933cd4bf",
+      "declared_tests": 1,
+      "execution": "NOT_RUN"
+    },
+    {
+      "class": "OWN_C05_20Test",
+      "unchanged_sha256": "858969e904cad37a6e6f5c14ddd2d1575f356390f0dd31e5cb79c0a9ccacacaf",
+      "declared_tests": 1,
+      "execution": "NOT_RUN"
+    }
+  ],
+  "focused_declared_total_not_executed": 48,
+  "legacy_unchanged_methods": [
+    "chengyinhub-common/src/main/java/com/chengyinhub/common/utils/http/HttpUtils.java#public static String sendGet(String url)",
+    "chengyinhub-common/src/main/java/com/chengyinhub/common/utils/http/HttpUtils.java#public static String sendGetWithRetry(String url)",
+    "chengyinhub-common/src/main/java/com/chengyinhub/common/utils/http/HttpUtils.java#public static String sendPost(String url, String param, String contentType)",
+    "chengyinhub-common/src/main/java/com/chengyinhub/common/utils/http/HttpUtils.java#public static String sendSSLPost(String url, String param, String contentType)",
+    "chengyinhub-common/src/main/java/com/chengyinhub/common/utils/http/HttpUtils.java#private static String execute(String method",
+    "chengyinhub-common/src/main/java/com/chengyinhub/common/utils/http/HttpUtils.java#private static HttpRequestBase createRequest",
+    "chengyinhub-common/src/main/java/com/chengyinhub/common/utils/http/HttpUtils.java#private static String readLimited",
+    "chengyinhub-common/src/main/java/com/chengyinhub/common/utils/http/HttpUtils.java#private static CloseableHttpClient buildHttpClient",
+    "chengyinhub-common/src/main/java/com/chengyinhub/common/utils/http/HttpUtils.java#private static void waitBeforeRetry",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/OpenAiCompatibleLlmClient.java#public String chat(String systemPrompt",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/OpenAiCompatibleLlmClient.java#public String chatVision(String systemPrompt",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/OpenAiCompatibleLlmClient.java#private String responseText",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/OpenAiCompatibleLlmClient.java#private String truncate"
+  ],
+  "protected_unchanged": [
+    "pom.xml",
+    ".github/workflows/ci.yml",
+    "ci/backend-test.sh",
+    "ci/real-storage-it-registry.json",
+    "ci/architecture/gate.py",
+    "ci/architecture/collect_jdeps.py",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckVisionService.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckIntentService.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiQuotaRecoveryService.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/common/utils/http/HttpUtilsSecurityTest.java"
+  ],
+  "secret_file_gate": "PASS: 15 scoped staged files, 0 violations",
+  "gitleaks": "PASS: 15 scoped files, redacted scan, 0 findings",
+  "java_compilation": "NOT_RUN",
+  "java_unit_and_http_fixtures": "NOT_RUN",
+  "mysql_redis": "NOT_RUN",
+  "compiled_jdeps": "UNKNOWN/NOT_RUN",
+  "ci_dispatch": false,
+  "production_provider_calls": false,
+  "production_access": false,
+  "schema_or_ddl": false,
+  "gateway_photo_quota_changed": false,
+  "ai_creator_changed": false,
+  "enablement_blockers": [
+    "E catches AiProviderNotSentException by exact type before generic UNKNOWN, compensates/persists only the original receipt; E owns gateway/Photo changes.",
+    "Root must compile/run actual focused Java/controlled HTTP suites, inspect raw XML and source/run/attempt hashes; static declarations are not executions.",
+    "Root/E must run actual quota/Photo MySQL/Redis compensation/UNKNOWN recovery tests and preserve original nonce."
+  ],
+  "remaining_wp13": [
+    "image preparation/request heap and download budgets",
+    "voice/STT/ImageSeg/OSS/maps and business correlation observability",
+    "whole-application T19 resource isolation",
+    "commercial provider/DNS aliases beyond canonical configured origins"
+  ]
+}

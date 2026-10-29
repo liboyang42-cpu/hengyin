@@ -1,0 +1,10 @@
+{
+  "algorithm": "SHA-256",
+  "excludes_self": true,
+  "files": {
+    "PARAMETERIZED-SOURCE.md": "49ebb499a4461483fd745786db776fbc4cd4d153634d2d6dffead5869b5f90d9",
+    "README.md": "fef46f4558c8bac9ff71c651fcb6c5ff4aa76fc03b0230eacbe3de48e90aa03f",
+    "count-reconciliation.json": "89791374e33b34147b0fb9fc7db372803f699d3c56652471d801bd72d1122ca3",
+    "parameter-inputs.json": "aa732cdb879ce1f617b5a2893cf55798bcfb8cd49025b54196838122659689f0"
+  }
+}

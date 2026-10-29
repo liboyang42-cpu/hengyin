@@ -1,0 +1,97 @@
+{
+  "sourceSha": "6fcd5ac009cec1dd82c438528d24da30c1f302f4",
+  "run": 40162310692,
+  "scope": "ISOLATED_HTTP_FIXTURE_ONLY",
+  "all_complete": false,
+  "raw_original_xml_independently_downloaded": false,
+  "classes": [
+    {
+      "class": "GenericGameplayHttpE2eIT",
+      "tests": 26,
+      "source_java_sha256": "fe43794be85b4e3b441887ffb427b418455b84cb11269adadfbe74fa6fd0f588",
+      "artifact": 12587225690,
+      "zip_sha256": "04d547ce3671c38e9d0ca4aeff956708d935699a9b81db70cce86e96d35afc28",
+      "zip_crc": "PASS",
+      "derived_xml_sha256": "69cc02c5e2886842ba0ef969401b39de4fb6484c0d016f10b8fc2338fe02630d",
+      "source_identity_cases_verified": true,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0,
+      "duplicates": 0,
+      "cleanup": {
+        "mysqlAbsent": true,
+        "redisStoppedAndPortFree": true
+      },
+      "fixtureReportVerified": true,
+      "fixtureFiles": 300,
+      "raw_original_xml_evidence": "RUNNER_DIGEST_ONLY"
+    },
+    {
+      "class": "FreezeGameHttpE2eIT",
+      "tests": 8,
+      "source_java_sha256": "539145f05d48b11a740b16967155d943a2802da1d745549c866bfa18fb86005b",
+      "artifact": 12587206359,
+      "zip_sha256": "09a08059cbbb9025133d97d72ee3c8fe94f1477579f8833b7b9d0cafe347d6c7",
+      "zip_crc": "PASS",
+      "derived_xml_sha256": "fb4b1e7fc9f3d5ce7d6433d27f719a8e7b9a8065666dcadd83d14a009c804c5c",
+      "source_identity_cases_verified": true,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0,
+      "duplicates": 0,
+      "cleanup": {
+        "mysqlAbsent": true,
+        "redisStoppedAndPortFree": true
+      },
+      "fixtureReportVerified": true,
+      "fixtureFiles": 300,
+      "raw_original_xml_evidence": "RUNNER_DIGEST_ONLY"
+    },
+    {
+      "class": "FreezeReuseThemeHttpE2eIT",
+      "tests": 2,
+      "source_java_sha256": "f028fc38af87e467cc4f52304fc506df212791d1d130677f77dc637163125200",
+      "artifact": 12585824228,
+      "zip_sha256": "54bcceaff68fe7300af6f115b69b10e13eba9d46721e6d79f36cc0122529ce42",
+      "zip_crc": "PASS",
+      "derived_xml_sha256": "b4793b483feae91218262df34367600a41fe75c5727dbbaf5c134bf940535201",
+      "source_identity_cases_verified": true,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0,
+      "duplicates": 0,
+      "cleanup": {
+        "mysqlAbsent": true,
+        "redisStoppedAndPortFree": true
+      },
+      "fixtureReportVerified": true,
+      "fixtureFiles": 300,
+      "raw_original_xml_evidence": "RUNNER_DIGEST_ONLY"
+    }
+  ],
+  "verified_summary": {
+    "sourceSha": "6fcd5ac009cec1dd82c438528d24da30c1f302f4",
+    "state": "PASS_HTTP_FIXTURE_ONLY",
+    "classes": {
+      "GenericGameplayHttpE2eIT": 26,
+      "FreezeGameHttpE2eIT": 8,
+      "FreezeReuseThemeHttpE2eIT": 2
+    },
+    "tests": 36,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cleanupAllVerified": true,
+    "businessAccepted": false,
+    "migrationAccepted": false
+  },
+  "summary_artifact": {
+    "id": 12587650042,
+    "zip_sha256": "6f3f6ab27f928ccccb887d619068d712fe3e33a9bc8a515024fe7bff7edab0da",
+    "crc": "PASS",
+    "published_summary_matches_source_count_scope": true
+  },
+  "state": "PASS_36_SAME_SOURCE_HTTP_FIXTURE_ONLY",
+  "businessAccepted": false,
+  "migrationAccepted": false
+}

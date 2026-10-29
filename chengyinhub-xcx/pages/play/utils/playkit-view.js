@@ -514,6 +514,7 @@ function pickPlayKit(view, now) {
     if (name === 'qa') {
       const MODE = { TYPE: 'type', PICK: 'pick', SHOT: 'shot' };
       return Object.assign(base, {
+        ...(view.nodeId != null ? { nodeId: view.nodeId } : {}),
         mode: MODE[seg.mode] || 'type',
         theme: 'dark',
         title: seg.title || '',

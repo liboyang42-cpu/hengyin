@@ -1,0 +1,218 @@
+== [1/5] 分句器 + migration 台账单测(含负控)==
+test_actual_schema_runner_uses_ledger_order_and_mutations_are_rejected (__main__.SharedLedgerExecutionOrder.test_actual_schema_runner_uses_ledger_order_and_mutations_are_rejected) ... ok
+test_missing_edge_reversed_order_and_missing_batch_path_are_rejected (__main__.SharedLedgerExecutionOrder.test_missing_edge_reversed_order_and_missing_batch_path_are_rejected) ... ok
+test_real_ledger_rejects_missing_dependency_and_cycle (__main__.SharedLedgerExecutionOrder.test_real_ledger_rejects_missing_dependency_and_cycle) ... ok
+test_real_ledger_resolves_filename_conflict_and_covers_all_edges (__main__.SharedLedgerExecutionOrder.test_real_ledger_resolves_filename_conflict_and_covers_all_edges) ... ok
+test_canonical_cash_candidate_keeps_both_triggers_and_original_bytes (__main__.SingleRejectTriggerContract.test_canonical_cash_candidate_keeps_both_triggers_and_original_bytes) ... ok
+test_compound_trigger_still_requires_custom_delimiter (__main__.SingleRejectTriggerContract.test_compound_trigger_still_requires_custom_delimiter) ... ok
+test_incomplete_or_extended_trigger_statement_cannot_match_the_rejection_grammar (__main__.SingleRejectTriggerContract.test_incomplete_or_extended_trigger_statement_cannot_match_the_rejection_grammar) ... ok
+test_literal_semicolons_stay_data_and_following_unbounded_write_stays_rejected (__main__.SingleRejectTriggerContract.test_literal_semicolons_stay_data_and_following_unbounded_write_stays_rejected) ... ok
+test_other_bodies_timing_events_and_dynamic_expressions_still_require_delimiter (__main__.SingleRejectTriggerContract.test_other_bodies_timing_events_and_dynamic_expressions_still_require_delimiter) ... ok
+test_single_literal_rejection_triggers_need_no_client_delimiter (__main__.SingleRejectTriggerContract.test_single_literal_rejection_triggers_need_no_client_delimiter) ... ok
+test_加新条目放行 (__main__.依赖声明棘轮.test_加新条目放行) ... ok
+test_加边放行 (__main__.依赖声明棘轮.test_加边放行) ... ok
+test_原样不动放行 (__main__.依赖声明棘轮.test_原样不动放行) ... ok
+test_负控_一次删多条要全部点名 (__main__.依赖声明棘轮.test_负控_一次删多条要全部点名)
+只报第一条 = 修完一条又红一条,人会以为门禁在抖。 ... ok
+test_负控_删掉一条依赖边必须红并点名 (__main__.依赖声明棘轮.test_负控_删掉一条依赖边必须红并点名) ... ok
+test_负控_删掉整条条目必须红 (__main__.依赖声明棘轮.test_负控_删掉整条条目必须红) ... ok
+test_有依赖也算已声明 (__main__.依赖声明门禁.test_有依赖也算已声明) ... ok
+test_空依赖数组算已声明 (__main__.依赖声明门禁.test_空依赖数组算已声明)
+写 [] 是一句「我确认它不依赖任何其它迁移」的明确断言,不是省略。 ... ok
+test_空批不红 (__main__.依赖声明门禁.test_空批不红) ... ok
+test_负控_全都没声明时要全部点名不能只报第一条 (__main__.依赖声明门禁.test_负控_全都没声明时要全部点名不能只报第一条)
+只报第一条 = 修完一条又红一条,人会以为门禁在抖(同 dep-order 那条的理由)。 ... ok
+test_负控_新增迁移没有依赖条目必须红并点名 (__main__.依赖声明门禁.test_负控_新增迁移没有依赖条目必须红并点名) ... ok
+test_collation_key_忽略标点并小写 (__main__.依赖顺序_collation双序.test_collation_key_忽略标点并小写) ... ok
+test_两种序都满足则绿 (__main__.依赖顺序_collation双序.test_两种序都满足则绿) ... ok
+test_负控_两种序都不满足当然红 (__main__.依赖顺序_collation双序.test_负控_两种序都不满足当然红) ... ok
+test_负控_码点序满足但locale序不满足必须红 (__main__.依赖顺序_collation双序.test_负控_码点序满足但locale序不满足必须红)
+migration_club.sql vs migration_club_apply_fields.sql 就是这一族: ... ok
+test_依赖在批外的不算违反 (__main__.依赖顺序门禁.test_依赖在批外的不算违反)
+指向 master 里早已落库的迁移:它已经就位了,本批顺序管不着也不该管。 ... ok
+test_依赖指向仓库里没有的迁移不崩 (__main__.依赖顺序门禁.test_依赖指向仓库里没有的迁移不崩)
+依赖声明可能引用被删/改名的文件。这里只管顺序,别在这条上炸掉整道门禁。 ... ok
+test_负控_依赖排在后面必须红且点名是哪两条 (__main__.依赖顺序门禁.test_负控_依赖排在后面必须红且点名是哪两条)
+★ 本门禁的主目标。它坏了,落库那一刻才会发现,而那时已经在生产上了。 ... ok
+test_负控_同一批里第二对也要抓到 (__main__.依赖顺序门禁.test_负控_同一批里第二对也要抓到)
+只抓第一对就停 = 修完一条又红一条,人会以为门禁在抖。 ... ok
+test_负控_自己依赖自己也要抓 (__main__.依赖顺序门禁.test_负控_自己依赖自己也要抓)
+dep_name >= name 里的等号:自依赖是声明写错了,不能静默放行。 ... ok
+test_顺序正确必须绿 (__main__.依赖顺序门禁.test_顺序正确必须绿)
+收紧过头会制造假故障:把被依赖者改名排到前面就该转绿。 ... ok
+test_子目录里的_sql_不进批 (__main__.依赖顺序门禁_选批口径.test_子目录里的_sql_不进批)
+要落库的迁移只认 chengyinhub-admin/sql 第一层(与 migration-layout 门同口径)。 ... ok
+test_改名一个历史迁移新名字必须进批 (__main__.依赖顺序门禁_选批口径.test_改名一个历史迁移新名字必须进批)
+改名是修这类顺序问题的正规手法(候选就是这么修的)。 ... ok
+test_本分支新增的迁移必须进批 (__main__.依赖顺序门禁_选批口径.test_本分支新增的迁移必须进批)
+收紧过头就成了「永远不会红」,那比假阳性更坏。 ... ok
+test_负控_只改了历史迁移的注释不许进批 (__main__.依赖顺序门禁_选批口径.test_负控_只改了历史迁移的注释不许进批)
+★ 本次假阳性的回归钉子。 ... ok
+test_负控_端到端_新增两条且依赖排在后面必须红并点名 (__main__.依赖顺序门禁_选批口径.test_负控_端到端_新增两条且依赖排在后面必须红并点名)
+★「不能漏」这一头:选批 + 判定串起来跑一遍,重现候选那条真场景的形状。 ... ok
+test_辅助前缀的_sql_不进批 (__main__.依赖顺序门禁_选批口径.test_辅助前缀的_sql_不进批)
+_precheck_ / _deploy_ / bak_ 不是要落库的迁移。 ... ok
+test_runner_assertion_comment_is_bound_to_following_statement (__main__.分句器.test_runner_assertion_comment_is_bound_to_following_statement) ... ok
+test_分隔线整行剥掉不漏破折号进SQL (__main__.分句器.test_分隔线整行剥掉不漏破折号进SQL)
+回归:`--- xxx` / `-------` 这类分隔线必须整行丢掉。 ... ok
+test_双引号与反引号内的分号不切 (__main__.分句器.test_双引号与反引号内的分号不切) ... ok
+test_可执行注释不被剥掉 (__main__.分句器.test_可执行注释不被剥掉)
+/*! */ 是 MySQL 可执行注释,剥掉 = 静默丢语句 —— 正是要杀的失败类型。 ... ok
+test_块注释里的分号不切 (__main__.分句器.test_块注释里的分号不切) ... ok
+test_字符串里的分号不切 (__main__.分句器.test_字符串里的分号不切)
+病根本体:引号内的分号是数据,不是分隔符。 ... ok
+test_整行注释里的分号不切 (__main__.分句器.test_整行注释里的分号不切)
+边界要说准:整行 -- 注释里的分号【本来就是安全的】,别传「注释里不能有分号」。 ... ok
+test_末尾无分号也算一条 (__main__.分句器.test_末尾无分号也算一条) ... ok
+test_正常多语句正确切分 (__main__.分句器.test_正常多语句正确切分) ... ok
+test_没闭合的块注释会吞掉后面的语句 (__main__.分句器.test_没闭合的块注释会吞掉后面的语句)
+没闭合的 /* 把后面的语句整块吞掉 —— 不报错、零告警,正是要杀的失败类型。 ... ok
+test_空文件与纯注释切出零条 (__main__.分句器.test_空文件与纯注释切出零条) ... ok
+test_符号闭合判定 (__main__.分句器.test_符号闭合判定) ... ok
+test_行内减号不当成注释 (__main__.分句器.test_行内减号不当成注释)
+MySQL 规则:`a--b` 是两个减号,不是注释。行尾规则不能松成「见 -- 就剥」。 ... ok
+test_行尾注释里的分号不切 (__main__.分句器.test_行尾注释里的分号不切) ... ok
+test_负控_判据2数分号检测不出这个病 (__main__.分句器.test_负控_判据2数分号检测不出这个病)
+负控:钉死「判据②(语句数 == 分号数)」为什么作废,防有人好心加回来。 ... ok
+test_负控_裸split会切坏而tokenizer不会 (__main__.分句器.test_负控_裸split会切坏而tokenizer不会)
+负控:证明 tokenizer 确实不是裸 split —— 换回去就红。 ... ok
+test_转义引号不误判为闭合 (__main__.分句器.test_转义引号不误判为闭合)
+'It\'s' 和 'It''s' 都是一个字符串,里头的分号仍不该切。 ... ok
+test_pause_repair_exact_three_fail_closed且可重放 (__main__.商家俱乐部Quartz提前启用_暂停Repair合同.test_pause_repair_exact_three_fail_closed且可重放) ... ok
+test_负控_去掉binary身份比较必须红 (__main__.商家俱乐部Quartz提前启用_暂停Repair合同.test_负控_去掉binary身份比较必须红) ... ok
+test_负控_去掉同名target并集守卫必须红 (__main__.商家俱乐部Quartz提前启用_暂停Repair合同.test_负控_去掉同名target并集守卫必须红) ... ok
+test_负控_把生产job_id写进canonical_update必须红 (__main__.商家俱乐部Quartz提前启用_暂停Repair合同.test_负控_把生产job_id写进canonical_update必须红) ... ok
+test_schema与post_deploy_job物理拆分且依赖有向 (__main__.商家俱乐部Quartz迁移_部署阶段合同.test_schema与post_deploy_job物理拆分且依赖有向) ... ok
+test_负控_schema重新混入sys_job必须红 (__main__.商家俱乐部Quartz迁移_部署阶段合同.test_负控_schema重新混入sys_job必须红) ... ok
+test_新增迁移逐表逐唯一键结构回读 (__main__.商家俱乐部新增迁移_结构回读合同.test_新增迁移逐表逐唯一键结构回读) ... ok
+test_负控_CHECK括号分组毒化必须红 (__main__.商家俱乐部新增迁移_结构回读合同.test_负控_CHECK括号分组毒化必须红) ... ok
+test_负控_CHECK正文毒化必须红 (__main__.商家俱乐部新增迁移_结构回读合同.test_负控_CHECK正文毒化必须红) ... ok
+test_负控_ClubPost首段成功后重跑守卫不得摘除 (__main__.商家俱乐部新增迁移_结构回读合同.test_负控_ClubPost首段成功后重跑守卫不得摘除) ... ok
+test_负控_回读列不存在于CREATE必须红 (__main__.商家俱乐部新增迁移_结构回读合同.test_负控_回读列不存在于CREATE必须红) ... ok
+test_负控_承重nullable毒化必须红 (__main__.商家俱乐部新增迁移_结构回读合同.test_负控_承重nullable毒化必须红) ... ok
+test_负控_摘掉任一唯一键精确列回读必须红 (__main__.商家俱乐部新增迁移_结构回读合同.test_负控_摘掉任一唯一键精确列回读必须红) ... ok
+test_负控_生成表达式毒化必须红 (__main__.商家俱乐部新增迁移_结构回读合同.test_负控_生成表达式毒化必须红) ... ok
+test_负控_精确回读hash毒化必须红 (__main__.商家俱乐部新增迁移_结构回读合同.test_负控_精确回读hash毒化必须红) ... ok
+test_DEFINER普通VIEW_EVENT即使正文含routine关键字也通过 (__main__.门禁1b_迁移SQL可执行.test_DEFINER普通VIEW_EVENT即使正文含routine关键字也通过) ... ok
+test_DELIMITER双斜线过程也能完整分句 (__main__.门禁1b_迁移SQL可执行.test_DELIMITER双斜线过程也能完整分句) ... ok
+test_DELIMITER过程按客户端分隔符完整分句 (__main__.门禁1b_迁移SQL可执行.test_DELIMITER过程按客户端分隔符完整分句) ... ok
+test_P1资金历史奖励回填必须在preflight_guard之后 (__main__.门禁1b_迁移SQL可执行.test_P1资金历史奖励回填必须在preflight_guard之后) ... ok
+test_VIEW固定头部顺序的可选子句组合 (__main__.门禁1b_迁移SQL可执行.test_VIEW固定头部顺序的可选子句组合) ... ok
+test_account_identifier的引号数字美元与BMP边界 (__main__.门禁1b_迁移SQL可执行.test_account_identifier的引号数字美元与BMP边界) ... ok
+test_delete修饰词与alias带where时通过 (__main__.门禁1b_迁移SQL可执行.test_delete修饰词与alias带where时通过) ... ok
+test_合法未引号account的routine用正确delimiter通过 (__main__.门禁1b_迁移SQL可执行.test_合法未引号account的routine用正确delimiter通过) ... ok
+test_块注释里的routine文字不误红 (__main__.门禁1b_迁移SQL可执行.test_块注释里的routine文字不误红) ... ok
+test_声明readback且绑定机器断言通过 (__main__.门禁1b_迁移SQL可执行.test_声明readback且绑定机器断言通过) ... ok
+test_字符串里的routine文字不误红 (__main__.门禁1b_迁移SQL可执行.test_字符串里的routine文字不误红) ... ok
+test_带sql注释的readback绑定机器断言后通过 (__main__.门禁1b_迁移SQL可执行.test_带sql注释的readback绑定机器断言后通过) ... ok
+test_带where的窄范围update通过 (__main__.门禁1b_迁移SQL可执行.test_带where的窄范围update通过) ... ok
+test_干净文件通过 (__main__.门禁1b_迁移SQL可执行.test_干净文件通过) ... ok
+test_探店日三份迁移的回读声明真的被门禁认出来 (__main__.门禁1b_迁移SQL可执行.test_探店日三份迁移的回读声明真的被门禁认出来)
+★这三份文件曾经全程在门禁盲区里。 ... ok
+test_探店日承重权限必须真授到角色而不是只种菜单 (__main__.门禁1b_迁移SQL可执行.test_探店日承重权限必须真授到角色而不是只种菜单)
+★只种 sys_menu 不写 sys_role_menu = 又一颗谁也拿不到的功能位。 ... ok
+test_注释掉的存储过程不误红 (__main__.门禁1b_迁移SQL可执行.test_注释掉的存储过程不误红)
+剥注释是分句器干的活,所以这条能免费拿到 —— 注释里提一嘴不该红。 ... ok
+test_真病例形状现在通过_因为分句器修好了 (__main__.门禁1b_迁移SQL可执行.test_真病例形状现在通过_因为分句器修好了)
+F-1 的回归断言:字符串里的半角分号【不再是病】,不该再拦它。 ... ok
+test_负控_CURRENT_USER是完整排他的DEFINER值 (__main__.门禁1b_迁移SQL可执行.test_负控_CURRENT_USER是完整排他的DEFINER值) ... ok
+test_负控_DEFINER裸账号对象关键字碰撞仍识别routine (__main__.门禁1b_迁移SQL可执行.test_负控_DEFINER裸账号对象关键字碰撞仍识别routine)
+user/host 都可是合法裸 identifier，必须先消费完整账号。 ... ok
+test_负控_DELIMITER不能与井号注释冲突 (__main__.门禁1b_迁移SQL可执行.test_负控_DELIMITER不能与井号注释冲突) ... ok
+test_负控_DELIMITER使用字母数字必须红 (__main__.门禁1b_迁移SQL可执行.test_负控_DELIMITER使用字母数字必须红) ... ok
+test_负控_DELIMITER未恢复默认值必须红 (__main__.门禁1b_迁移SQL可执行.test_负控_DELIMITER未恢复默认值必须红) ... ok
+test_负控_DELIMITER运算符必须红 (__main__.门禁1b_迁移SQL可执行.test_负控_DELIMITER运算符必须红)
+自定义 delimiter 若会自然出现在 routine 正文，会提前切句却整体放绿。 ... ok
+test_负控_P1资金历史奖励回填早于preflight_guard必须红 (__main__.门禁1b_迁移SQL可执行.test_负控_P1资金历史奖励回填早于preflight_guard必须红) ... ok
+test_负控_VIEW头部子句非法或乱序必须红 (__main__.门禁1b_迁移SQL可执行.test_负控_VIEW头部子句非法或乱序必须红) ... ok
+test_负控_VIEW的ALGORITHM前缀不得绕过非法DEFINER (__main__.门禁1b_迁移SQL可执行.test_负控_VIEW的ALGORITHM前缀不得绕过非法DEFINER) ... ok
+test_负控_runner断言前缀不能绕过无where写门禁 (__main__.门禁1b_迁移SQL可执行.test_负控_runner断言前缀不能绕过无where写门禁) ... ok
+test_负控_runner断言开头的存储过程仍必须红 (__main__.门禁1b_迁移SQL可执行.test_负控_runner断言开头的存储过程仍必须红)
+★合并 #732 时手写的那一处判据的负控:routine 头必须在【剥掉 runner 元数据之后】判。 ... ok
+test_负控_合法DEFINER变体的裸routine必须红 (__main__.门禁1b_迁移SQL可执行.test_负控_合法DEFINER变体的裸routine必须红) ... ok
+test_负控_合法未引号account的裸routine仍必须红 (__main__.门禁1b_迁移SQL可执行.test_负控_合法未引号account的裸routine仍必须红) ... ok
+test_负控_块注释未闭合必须红 (__main__.门禁1b_迁移SQL可执行.test_负控_块注释未闭合必须红)
+吞掉 DELETE 却一声不吭 —— 门禁必须红。逐条判的话这里恒绿。 ... ok
+test_负控_声明readback且select前有sql注释仍必须红 (__main__.门禁1b_迁移SQL可执行.test_负控_声明readback且select前有sql注释仍必须红) ... ok
+test_负控_声明readback却没有机器断言必须红 (__main__.门禁1b_迁移SQL可执行.test_负控_声明readback却没有机器断言必须红) ... ok
+test_负控_子查询where不能冒充外层update_delete边界 (__main__.门禁1b_迁移SQL可执行.test_负控_子查询where不能冒充外层update_delete边界) ... ok
+test_负控_存储过程必须红 (__main__.门禁1b_迁移SQL可执行.test_负控_存储过程必须红)
+没有 DELIMITER 的过程会被普通分号切坏,必须显式红。 ... ok
+test_负控_引号未闭合必须红 (__main__.门禁1b_迁移SQL可执行.test_负控_引号未闭合必须红) ... ok
+test_负控_把承重权限的授权行摘掉之后上一条必须红 (__main__.门禁1b_迁移SQL可执行.test_负控_把承重权限的授权行摘掉之后上一条必须红)
+绿是廉价的,能变红才是价值(总纲「写完门禁必须做负控」)。 ... ok
+test_负控_摘掉runner断言绑定后这三份迁移必须红 (__main__.门禁1b_迁移SQL可执行.test_负控_摘掉runner断言绑定后这三份迁移必须红)
+★门禁自己的负控:把承重的那一行删掉,它必须真的红。 ... ok
+test_负控_无where写的四种逃逸形状必须红 (__main__.门禁1b_迁移SQL可执行.test_负控_无where写的四种逃逸形状必须红) ... ok
+test_负控_无where的update与delete必须红 (__main__.门禁1b_迁移SQL可执行.test_负控_无where的update与delete必须红) ... ok
+test_负控_非法或不完整DEFINER必须fail_closed (__main__.门禁1b_迁移SQL可执行.test_负控_非法或不完整DEFINER必须fail_closed) ... ok
+test_Scheduled自调度豁免 (__main__.门禁2_task_bean注册.test_Scheduled自调度豁免)
+★ 放宽正则的核心风险闸:@Scheduled = Spring 自己驱动,不经 quartz、不进 sys_job。 ... ok
+test_leader_schedule_requires_actual_startup_and_matching_typed_callback (__main__.门禁2_task_bean注册.test_leader_schedule_requires_actual_startup_and_matching_typed_callback) ... ok
+test_不叫Task的Component不管 (__main__.门禁2_task_bean注册.test_不叫Task的Component不管)
+只管 *Task 命名的 bean —— 普通 @Component 不是定时任务,别误红。 ... ok
+test_删掉bean后不再要求注册 (__main__.门禁2_task_bean注册.test_删掉bean后不再要求注册)
+方向单向:没 bean 就不该因为「注册也没了」而报错。 ... ok
+test_前缀相似的bean不互相蹭注册 (__main__.门禁2_task_bean注册.test_前缀相似的bean不互相蹭注册)
+fooTask 不该被 barFooTask 的注册蹭中 —— 所以带前引号搜。 ... ok
+test_有注册则通过 (__main__.门禁2_task_bean注册.test_有注册则通过) ... ok
+test_负控_Service注解也要注册 (__main__.门禁2_task_bean注册.test_负控_Service注解也要注册) ... ok
+test_负控_bean名叫Job也要注册 (__main__.门禁2_task_bean注册.test_负控_bean名叫Job也要注册)
+命名约定不是机器强制的:叫 fooJob 的 quartz 任务同样得注册。 ... ok
+test_负控_value写法也要注册 (__main__.门禁2_task_bean注册.test_负控_value写法也要注册) ... ok
+test_负控_放在task目录外的bean照样要注册 (__main__.门禁2_task_bean注册.test_负控_放在task目录外的bean照样要注册)
+「保护半径的另一半是目录」—— 只扫 task/ 的话,放 tasks/ 的任务就无声逃逸。 ... ok
+test_负控_无注册必须红 (__main__.门禁2_task_bean注册.test_负控_无注册必须红) ... ok
+test_负控_注册被注释掉算没注册 (__main__.门禁2_task_bean注册.test_负控_注册被注释掉算没注册)
+假绿防护:被注释掉的 INSERT 长得和真注册一模一样,裸 grep 会放行。 ... ok
+test_负控_注销SQL不算注册 (__main__.门禁2_task_bean注册.test_负控_注销SQL不算注册)
+★ 方向陷阱:DELETE FROM sys_job 是【注销】,把它算成「有注册」= 方向搞反。 ... ok
+test_负控_裸Component靠类名推bean也要注册 (__main__.门禁2_task_bean注册.test_负控_裸Component靠类名推bean也要注册)
+Spring 默认 bean 名 = 类名首字母小写 ⇒ FooTask 类的 bean 名就是 fooTask。 ... ok
+test_负控_部署包里的注册不算数 (__main__.门禁2_task_bean注册.test_负控_部署包里的注册不算数)
+_deploy_/bak_/_precheck_ 是不在库上跑的辅助件(与 migration-layout-check.sh 同口径)。 ... ok
+test_影响分类是标题下方表格也通过 (__main__.门禁3_PR迁移声明.test_影响分类是标题下方表格也通过)
+本仓真实格式:「## 影响分类」标题 + 下方列表里写 ③,不在同一行。 ... ok
+test_标了影响分类三通过 (__main__.门禁3_PR迁移声明.test_标了影响分类三通过) ... ok
+test_没动迁移则不管 (__main__.门禁3_PR迁移声明.test_没动迁移则不管) ... ok
+test_真迁移PR的肯定写法仍通过 (__main__.门禁3_PR迁移声明.test_真迁移PR的肯定写法仍通过)
+反向护栏:同行别处出现「无/不」不能把真声明判成否定(#1113/#1097/#1134/#1091)。 ... ok
+test_负控_写不含迁移也算声明必须红 (__main__.门禁3_PR迁移声明.test_负控_写不含迁移也算声明必须红)
+★ 最反直觉的一条:「本 PR 不含迁移」含「迁移」二字 ⇒ 旧规则判为已声明并放行。 ... ok
+test_负控_列举序号三不算声明必须红 (__main__.门禁3_PR迁移声明.test_负控_列举序号三不算声明必须红)
+本仓 ①②③ 常用作列举序号(#80「### ③ NPC 收编进网关」),与影响分类无关。 ... ok
+test_负控_只写迁移二字不算声明必须红 (__main__.门禁3_PR迁移声明.test_负控_只写迁移二字不算声明必须红)
+正文顺嘴提一句「迁移」不是声明。旧规则会放行。 ... ok
+test_负控_各种否定写法都必须红 (__main__.门禁3_PR迁移声明.test_负控_各种否定写法都必须红) ... ok
+test_负控_夹带迁移却没声明必须红 (__main__.门禁3_PR迁移声明.test_负控_夹带迁移却没声明必须红)
+44797404 那个病:标题写 test(xcx),却夹带了碰钱的 sys_job 注册。 ... ok
+test_负控_影响分类里写无三必须红 (__main__.门禁3_PR迁移声明.test_负控_影响分类里写无三必须红)
+★ 本条的主目标:「## 部署影响分类 ... ok
+
+----------------------------------------------------------------------
+Ran 136 tests in 0.655s
+
+OK
+....................................................
+----------------------------------------------------------------------
+Ran 52 tests in 0.653s
+
+OK
+== [2/5] 迁移 SQL 门:新增/修改的执行 SQL 必须能被真执行器正确分句 ==
+  · chengyinhub-admin/sql/migration_20261023_cash_withdraw_fund_fact.sql
+  · chengyinhub-admin/sql/migration_20261023_d_official_broadcast_delivery.sql
+::error::迁移 SQL 无法被真执行器正确分句 —— 落库时会 1064 或跑错
+  ✗ chengyinhub-admin/sql/migration_20261023_d_official_broadcast_delivery.sql: 第 2 条 UPDATE 没有 WHERE（TRUNCATE 等同全表无 WHERE 写），可能扩大到全表；必须改为窄范围写入或用可执行 guard 明确证明范围
+  ✗ chengyinhub-admin/sql/migration_20261023_d_official_broadcast_delivery.sql: 第 3 条 UPDATE 没有 WHERE（TRUNCATE 等同全表无 WHERE 写），可能扩大到全表；必须改为窄范围写入或用可执行 guard 明确证明范围
+  为什么:CI 与 run_migration.py 共用 ci/sql_splitter.py 分句。这里切不对,
+          落库时就切不对 —— 实证:autoRefundTask 因此 8 天零告警地从没跑过。
+== [3/5] 定时任务注册门:有 task bean 就必须有注册 SQL ==
+  · 已登记(MySqlSchedulerCoordinator 启动计划,不进 sys_job):accountDeregistrationJob  (chengyinhub-admin/src/main/java/com/chengyinhub/web/job/AccountDeregistrationJob.java)
+  · 已登记(MySqlSchedulerCoordinator 启动计划,不进 sys_job):merchantCrmExportJob  (chengyinhub-admin/src/main/java/com/chengyinhub/web/job/MerchantCrmExportJob.java)
+  OK: 全部 task bean 都有配套注册 SQL 或真实启动调度计划
+== [4/5] 迁移声明门:PR 动了迁移就必须标明 ==
+  (非 PR 事件,拿不到标题/描述,跳过)
+== [5/5] 批内依赖顺序门:共享台账拓扑序及实际 schema 执行器 ==
+  OK: 依赖声明相对 origin/master 只增未减
+::error::无法验证共享 migration 台账执行序: SQL inventory is unsafe
+迁移安全门禁:未通过

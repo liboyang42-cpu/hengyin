@@ -1,0 +1,1084 @@
+{
+  "schema": 1,
+  "created_utc": "2026-10-24T10:06:53.166019+00:00",
+  "parent": "de7f432ec6f0c1c6225168ecf2e4808210de42e0",
+  "scope": "source composition, no runtime acceptance",
+  "candidates": {
+    "A": "e6dc689acd16f8354096fa6017cec85b36171c4e",
+    "B": "f6f382500ff1a1dfd6fad120b3895f70ae563278",
+    "C": "6d113bd0ec177ea6d2423fa2f76e7e50b44ed5ac",
+    "D_notice": "9a193f95430f503b198cb4f984edebce4ef5793c",
+    "D_audit": "83cb32fd771d4dcba590968f2464a465481c2c57",
+    "E": "7ac91effdb84e61a8a5ee8172696ad87a5c37356",
+    "F_verifier": "e9a9db4949e5bf8d51647ccb3d44ea5684960901",
+    "F_tools": "6150bdecff72072ea9f0fc5531ebeb4ddaa6c2f7"
+  },
+  "files": {
+    ".github/workflows/ci.yml": {
+      "sha256": "93db77ce23bb0591615c0fc06b8e679c9b29d56fc4447272829df8b40fcbbe02",
+      "exact_candidates": [],
+      "composition": true
+    },
+    ".github/workflows/real-storage-it.yml": {
+      "sha256": "288051e6d51ae25d0935da87d075cfa6c6c96a1fd46da0d304d8fe0a4d8d77d2",
+      "exact_candidates": [],
+      "composition": true
+    },
+    "chengyinhub-admin/sql/migration_20261024_d_committed_official_notice_wx.sql": {
+      "sha256": "132e2d74d13a3729e40266969d6501aa48a37bd8264361eb81b1f8f0e85b88f3",
+      "exact_candidates": [
+        "D_notice"
+      ],
+      "composition": false
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java": {
+      "sha256": "edceeb9eff9bb32e44cfecb6bcc2f042378a8667153a02c14bdf1c74fd588fa8",
+      "exact_candidates": [
+        "C"
+      ],
+      "composition": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RegistrationCallbackIntentMySqlIT.java": {
+      "sha256": "91592e5fb54864b3e84fc8d89ab5e929be14497899485e4283102677bf613306",
+      "exact_candidates": [
+        "B"
+      ],
+      "composition": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RegistrationTopicFenceMySqlIT.java": {
+      "sha256": "aa1a5407f8e7738db8e36013382ef33f1cd189ccbd53e594abc74dab5c5b2150",
+      "exact_candidates": [],
+      "composition": true
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/Wp04OriginalRefundMySqlIT.java": {
+      "sha256": "52233b8cfa3e9583470943f8e6a9871c37b80085940d037d1860e52f0b9c22c0",
+      "exact_candidates": [],
+      "composition": true
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/WechatVerifiedPaymentFactMapperXmlTest.java": {
+      "sha256": "c8129f3ac2c1060c3f769edfe26dbed73d909e02c40bfab2440c11f483ab94ca",
+      "exact_candidates": [],
+      "composition": true
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/AuditStatusTruthConsistencyTest.java": {
+      "sha256": "791bf2178121aafd746b1ec36308d03d342fd0cbf5570edc87ddcb3aef6a678e",
+      "exact_candidates": [
+        "D_audit"
+      ],
+      "composition": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/AuditTopicApprovalQuotaTest.java": {
+      "sha256": "76d350505ceb66f048c888745ce28693396e4b483a6a7d25955f18c64ae147a4",
+      "exact_candidates": [
+        "D_audit"
+      ],
+      "composition": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/AuditTopicApprovalSelfHostShellTest.java": {
+      "sha256": "0b93c3f134c015e7fb712ccb6b91fae29209aa4e09387c2ae9976280a74c41b6",
+      "exact_candidates": [
+        "D_audit"
+      ],
+      "composition": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/AuditTopicApproveBetaFlagTest.java": {
+      "sha256": "386e50db2eb98ca0fb3c796af80a74d1fc0f398eeb6c345412783fe2f50dc743",
+      "exact_candidates": [
+        "D_audit"
+      ],
+      "composition": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PaymentCallbackFenceEntryTest.java": {
+      "sha256": "a80110353319bc1f6e3b744ae7ba6eb75ea4c2c05512c6415d47ad799b9da135",
+      "exact_candidates": [
+        "A"
+      ],
+      "composition": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PaymentCallbackInboxStubs.java": {
+      "sha256": "3ee114cc76406f6e2c5eb8c0d194f445873b914eb006a53a3bf837f036d3670b",
+      "exact_candidates": [
+        "A"
+      ],
+      "composition": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundBalanceFloorTest.java": {
+      "sha256": "67a4d00bf65693be9f1644b5038fb328f202465cc6295acf6730e2001e278a45",
+      "exact_candidates": [
+        "A"
+      ],
+      "composition": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundMultiPartyClawbackTest.java": {
+      "sha256": "bc31b24334e757dbc1db30dd8907cf2f1d6ecda98d89def5ed24450bb5268ebb",
+      "exact_candidates": [
+        "A"
+      ],
+      "composition": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundPartialClawbackTest.java": {
+      "sha256": "c6f9408207e1913dc0a0f8cc651b3363211eb7f126609f262abdee78811dccbe",
+      "exact_candidates": [
+        "A"
+      ],
+      "composition": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundSingleSidedDebitGuardTest.java": {
+      "sha256": "2489d193ab75d478fccde2003573619f50ba2e5936a44752c144bc1c7672c240",
+      "exact_candidates": [
+        "A"
+      ],
+      "composition": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundSingleSidedDebitTopicGuardTest.java": {
+      "sha256": "41570c3b237f2c4d49eea9932c4b7c0cc38b8ab6b7eb2ff519c8b4df38130afb",
+      "exact_candidates": [
+        "A"
+      ],
+      "composition": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationFundsMybatisIntegrationTest.java": {
+      "sha256": "1c7d52717a0bb9e412776527632ba2f5d9a5643e6a380982f6f3ea2c7e0fef2f",
+      "exact_candidates": [
+        "A"
+      ],
+      "composition": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationPaymentAtomicityContractTest.java": {
+      "sha256": "c0bb56bc80c6e0e50a6e8fc3e36dcde2058860c839793d4b197779944a22eec8",
+      "exact_candidates": [
+        "A"
+      ],
+      "composition": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/StoreVerifyGrowthDeliveryTransactionTest.java": {
+      "sha256": "06d0c1524ab442a175851ca80f4ed32b04c596e36e14582847740208376edaa1",
+      "exact_candidates": [
+        "A"
+      ],
+      "composition": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicContentSafetyHoldTest.java": {
+      "sha256": "fa749fd64aa4cad88e2b0ca9c25b063bcfa346ac2375f2f83b52e7157bff2c5e",
+      "exact_candidates": [
+        "D_audit"
+      ],
+      "composition": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicCreativePostVisibilitySyncTest.java": {
+      "sha256": "b0502bf370f6942b60f5c36e73e7cab3ed3ce2f5476c73258650b7146fafda31",
+      "exact_candidates": [
+        "D_audit"
+      ],
+      "composition": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicReviewFlagSpotCheckTest.java": {
+      "sha256": "f419d89f5fe6ff7a740cc564bfbcd92fda2171e9903b6ac8470bd61dcd56299f",
+      "exact_candidates": [
+        "D_audit"
+      ],
+      "composition": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicTemplateMetaBuildTest.java": {
+      "sha256": "c1257ae22dd9ae3b263f33b706984613cc2ee50962f5363069d096e2bbda9f78",
+      "exact_candidates": [],
+      "composition": true
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicTemplateRecruitBuildTest.java": {
+      "sha256": "2513ec63d002a0e546cc94f4eebe2f4dbca2fa5e23948753f004c3ec8e6afc2d",
+      "exact_candidates": [],
+      "composition": true
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/WholeOrderVerificationReverseTest.java": {
+      "sha256": "7029037197a6e99fba582825a818de39a9a4b9edec10c46d91a976ba29010cbd",
+      "exact_candidates": [
+        "A"
+      ],
+      "composition": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AuditTopicBudgetDecisionTest.java": {
+      "sha256": "ced2099388367402b6ada9a8a3bf1416ef0331d463e41ce93ae3f090eb298012",
+      "exact_candidates": [
+        "D_audit"
+      ],
+      "composition": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AuditTopicBundleModerationTest.java": {
+      "sha256": "329ac5f8bf857944f3f03142d9c492040c97da4053b1b09ced38940e07cbb491",
+      "exact_candidates": [
+        "D_audit"
+      ],
+      "composition": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AuditTopicBundleTransactionTest.java": {
+      "sha256": "fd419d1d59c497e41d49d26301e543947eeb55d4637799ddb7d7f641c7afbe28",
+      "exact_candidates": [
+        "D_audit"
+      ],
+      "composition": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AuditTopicCurrentPublicationMySqlIT.java": {
+      "sha256": "40917c3af0c67801ef68baf63a14d6e3802ea9b80cd80cbcac96e267d8c07b7a",
+      "exact_candidates": [
+        "D_audit"
+      ],
+      "composition": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CommittedOfficialNoticeMySqlFixture.java": {
+      "sha256": "d2d7e80e84e841861036d33abe41f1cd7286fdbc8b9e8a810aff27f4c147c47e",
+      "exact_candidates": [
+        "D_notice"
+      ],
+      "composition": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CommittedOfficialNoticeMySqlIT.java": {
+      "sha256": "375c7c74dfec989859783b2378c84a5d50d248a5ce778f9800d06d25df56d83b",
+      "exact_candidates": [
+        "D_notice"
+      ],
+      "composition": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopComplaintCloseMybatisIntegrationTest.java": {
+      "sha256": "585e1843a144c2f399a705c709e894acd6150ed3dbff911410b01d84b300491e",
+      "exact_candidates": [
+        "D_notice"
+      ],
+      "composition": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopComplaintCommittedNoticeMySqlIT.java": {
+      "sha256": "7bf3e9ad4f24dcb5bc940e8175e77e2fa5953c761376b7a8d4333f2d37e4b41d",
+      "exact_candidates": [
+        "D_notice"
+      ],
+      "composition": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopComplaintServiceImplTest.java": {
+      "sha256": "761370dda904f061f3ed421c28cb2d4d9c9f13efafad898dedb18a62f65cbc75",
+      "exact_candidates": [
+        "D_notice"
+      ],
+      "composition": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundManualPayoutTest.java": {
+      "sha256": "60176bfbc3644c85bc03e1d5f068b773d6188563cbd6f93791426a200eeec30f",
+      "exact_candidates": [
+        "A"
+      ],
+      "composition": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundOriginalComponentOwnerTest.java": {
+      "sha256": "795c42c4419cbf2dded519bfd8dae8fd9a0ebfabca11ca640c0c351702f3aaf2",
+      "exact_candidates": [
+        "A"
+      ],
+      "composition": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundPayoutReceiptUrlGateTest.java": {
+      "sha256": "76466c8976cd20ab224e58e9228dbb3276e183fc8fd98d75ef1e6897ea842660",
+      "exact_candidates": [
+        "A"
+      ],
+      "composition": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicQueryIdBudgetTest.java": {
+      "sha256": "ff227fa08b25b15f3f3e126f709b5005b3b66945adb92073ee1adc3358a184fb",
+      "exact_candidates": [
+        "E"
+      ],
+      "composition": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicQueryRecruitmentBatchTest.java": {
+      "sha256": "07734ad5854683571d997e3915ee170727387cad026e4a444823c3db90cb13ad",
+      "exact_candidates": [
+        "E"
+      ],
+      "composition": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/VerifiedRegistrationReceiptGuardTest.java": {
+      "sha256": "178616c9fc8da93421d90dea49c453d614d554d877263adb56a3db31c22e7e30",
+      "exact_candidates": [
+        "A"
+      ],
+      "composition": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatVerifiedFactTestSupport.java": {
+      "sha256": "f393c189842db33ef3c788f3c07db3c02b776f4828d5391b83b6e8f50cd02703",
+      "exact_candidates": [
+        "B"
+      ],
+      "composition": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatVerifiedPaymentFactServiceTest.java": {
+      "sha256": "98bad233edf02abf5ec99e3b65f0ae1fd4c2c65db2df27c3a3e3392ddd1c5100",
+      "exact_candidates": [
+        "B"
+      ],
+      "composition": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/util/VerifyDynCodeUtilTest.java": {
+      "sha256": "152e730b7564a86b0e756f7feb6f15ccca00c6cde0b67b580b6596bb514739fc",
+      "exact_candidates": [
+        "C"
+      ],
+      "composition": false
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/quartz/util/ScheduleUtilsTest.java": {
+      "sha256": "e88800284a6d11d950759321ddac15ffa2dc6fcb8e71c231488eef1c74c523f2",
+      "exact_candidates": [],
+      "composition": true
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/RegistrationSeatReplayBoundaryTest.java": {
+      "sha256": "a3d5ddf572cfb1be5fc1e0aac1f2a64506667f203409d906ba7bd577bffadbd2",
+      "exact_candidates": [
+        "C"
+      ],
+      "composition": false
+    },
+    "chengyinhub-common/src/main/java/com/chengyinhub/common/utils/VerifyDynCodeUtil.java": {
+      "sha256": "4eab03db0636048814b6a478103b94c5ba459d8ae66758974d35af7a34e45de5",
+      "exact_candidates": [
+        "C"
+      ],
+      "composition": false
+    },
+    "chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/util/ScheduleUtils.java": {
+      "sha256": "908134983a04bf48e7701e0a1d83c984a6534286be20ddb992e0f5aed4a2b9cf",
+      "exact_candidates": [],
+      "composition": true
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/CommittedOfficialNoticeWx.java": {
+      "sha256": "c353e33bda802decf5fce797ae85a6cf73c48ce48a5b68972be2433f33fc4d16",
+      "exact_candidates": [
+        "D_notice"
+      ],
+      "composition": false
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CommittedOfficialNoticeWxMapper.java": {
+      "sha256": "2c6c4f7d358b6704085768378a298828adc50ffeb5ed4f225d2096def7e69c61",
+      "exact_candidates": [
+        "D_notice"
+      ],
+      "composition": false
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/RegistrationSeatService.java": {
+      "sha256": "298d1eebd53fa66fee65d24ddda9d757afe61d4b0fcfc68241328e480377c0c2",
+      "exact_candidates": [
+        "C"
+      ],
+      "composition": false
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AuditTaskServiceImpl.java": {
+      "sha256": "9dc8c75eaf56d04d6b8bd48d32bfe453e2e67f6f78acb49ff6525bef438e684a",
+      "exact_candidates": [
+        "D_audit"
+      ],
+      "composition": false
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java": {
+      "sha256": "c24279dc5f97d90d6ab5b6c41fda290e9b0f27cb2a0455a1fd1666e7de8ef75c",
+      "exact_candidates": [],
+      "composition": true
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopComplaintServiceImpl.java": {
+      "sha256": "c6daee54590799f46a9b0a4ca9fc0e0cdac271e81875f972a4167f2a7c455b22",
+      "exact_candidates": [
+        "D_notice"
+      ],
+      "composition": false
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java": {
+      "sha256": "d2c85a82e45c5d5d3595ada047d95b04b8305d68ab7d0152ac8d60d159f6c32f",
+      "exact_candidates": [
+        "A"
+      ],
+      "composition": false
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicQueryService.java": {
+      "sha256": "c7ae11d29a2fc7e68e5bbc6eb94cef764513d4cf403ba9af94218a4012745161",
+      "exact_candidates": [
+        "E"
+      ],
+      "composition": false
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatVerifiedPaymentFactService.java": {
+      "sha256": "d0c8cc20974ff421edb0792a894245090ce42065c0bb5667e189ea894f92912f",
+      "exact_candidates": [
+        "B"
+      ],
+      "composition": false
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackInboxServiceImpl.java": {
+      "sha256": "70398c25999dc5de59fc5fdd490763b0bd9798a8aec04f1e83f3ddeb5eda3bb1",
+      "exact_candidates": [
+        "B"
+      ],
+      "composition": false
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/CommittedOfficialNoticeService.java": {
+      "sha256": "c4ee3b936d916b81a15490175e19635eb7c00a7cc632641b4f45d989ece18eb7",
+      "exact_candidates": [
+        "D_notice"
+      ],
+      "composition": false
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/task/CommittedOfficialNoticeTask.java": {
+      "sha256": "e070ecfdcd38c712532d5063b97b38f42236088a99911b4582cf7bae6e7b9533",
+      "exact_candidates": [
+        "D_notice"
+      ],
+      "composition": false
+    },
+    "chengyinhub-system/src/main/resources/mapper/business/CommittedOfficialNoticeWxMapper.xml": {
+      "sha256": "b74abb9f82b67f0d519bcca75e002744b12f961ace0880a855bd107066ea2d67",
+      "exact_candidates": [
+        "D_notice"
+      ],
+      "composition": false
+    },
+    "chengyinhub-system/src/main/resources/mapper/business/WechatVerifiedPaymentFactMapper.xml": {
+      "sha256": "e8df1c0e6b19dd2600b85b722b75590b4e2a1967b58f16d967c73fa10caed44a",
+      "exact_candidates": [],
+      "composition": true
+    },
+    "chengyinhub-xcx/components/cy/scene-qr-ticket/index.js": {
+      "sha256": "923ebf722e68fba44da5f7f408292e63b5f94c62cba394fff452c90107bda1f1",
+      "exact_candidates": [
+        "C"
+      ],
+      "composition": false
+    },
+    "chengyinhub-xcx/components/cy/scene-qr-ticket/index.wxml": {
+      "sha256": "a118f8defe44d2ddd509ad159f10f4c96b5dc4a8014c69916fd17c83fb1e8a33",
+      "exact_candidates": [
+        "C"
+      ],
+      "composition": false
+    },
+    "chengyinhub-xcx/components/cy/scene-qr-ticket/index.wxss": {
+      "sha256": "2f202a05a14878ef649947902d4d2b4850d3fd2886e5445ae147cff58e32caa5",
+      "exact_candidates": [
+        "C"
+      ],
+      "composition": false
+    },
+    "chengyinhub-xcx/pages/club/detail/index.js": {
+      "sha256": "a2ae58f3457040144c80f3db4d4100465cc870e86b59b5e2e37a05add53a3dd2",
+      "exact_candidates": [
+        "C"
+      ],
+      "composition": false
+    },
+    "chengyinhub-xcx/pages/merchant/index/index.js": {
+      "sha256": "d4ef7572e724e9291b1b78778e59a16f486501061551ae613858deb2954605da",
+      "exact_candidates": [
+        "C"
+      ],
+      "composition": false
+    },
+    "chengyinhub-xcx/pages/play/index.js": {
+      "sha256": "ffa1ef02558a7a6cf9e85f046afe098e4946736cab53e3ddbde079430723c1e5",
+      "exact_candidates": [
+        "C"
+      ],
+      "composition": false
+    },
+    "chengyinhub-xcx/scripts/uiaudit/action-ledger.json": {
+      "sha256": "d906dfb6054d9448b9de9e30a28fcc9407d141c732e5305f0687a8df652c64e5",
+      "exact_candidates": [],
+      "composition": true
+    },
+    "chengyinhub-xcx/subpackageMember/components/cy/profile/index.js": {
+      "sha256": "2f986f536b5556015df77be4d33c214af255ac75597df35842c87fab952b89be",
+      "exact_candidates": [
+        "C"
+      ],
+      "composition": false
+    },
+    "chengyinhub-xcx/subpackageMember/components/scene-member-participation-detail/index.js": {
+      "sha256": "31d17a4f62fa09cb452b9529ca6c9a142428d51d95b247a8fe331f87c57f6e57",
+      "exact_candidates": [
+        "C"
+      ],
+      "composition": false
+    },
+    "chengyinhub-xcx/tests/unit/club-detail-g1a-fixes.test.js": {
+      "sha256": "5d7225b73187815602af5e66ddf3717d3309d7ed7bcdc457d37064680b263763",
+      "exact_candidates": [
+        "C"
+      ],
+      "composition": false
+    },
+    "chengyinhub-xcx/tests/unit/coupon-scan-duplicate-toast.test.js": {
+      "sha256": "eebd0b1eb3b56816f0a1e461d3a3aaa059f73ce37b3fb85f77bb52ef66d71d76",
+      "exact_candidates": [
+        "C"
+      ],
+      "composition": false
+    },
+    "chengyinhub-xcx/tests/unit/longrun-own-c01-40.test.js": {
+      "sha256": "e57860327dadc619ddfec189f9cff43dd51442567f5b953c1388c36149cb4691",
+      "exact_candidates": [
+        "C"
+      ],
+      "composition": false
+    },
+    "chengyinhub-xcx/tests/unit/merchant-station-verification.test.js": {
+      "sha256": "9cf38672fc912b4d5f8a1b1a745851958046e7f90b7a938aa89ed2b98dec0861",
+      "exact_candidates": [
+        "C"
+      ],
+      "composition": false
+    },
+    "chengyinhub-xcx/tests/unit/merchant-verification-scope-epoch.test.js": {
+      "sha256": "57e710e3d0ff76da9bf5dd1f57340bcc2190ced31cfd8a7e87dcb1e6db7494e1",
+      "exact_candidates": [
+        "C"
+      ],
+      "composition": false
+    },
+    "chengyinhub-xcx/tests/unit/registration-seat-callers.test.js": {
+      "sha256": "4cf09c9d81881b5130dd00819974294de367024d69c1a90011be7247386c2d42",
+      "exact_candidates": [
+        "C"
+      ],
+      "composition": false
+    },
+    "chengyinhub-xcx/tests/unit/registration-seat-contract.test.js": {
+      "sha256": "3e9c47c929817c1f8f1d4e5139855125f3ba985c4bfd80cd98a309dff27f6c69",
+      "exact_candidates": [
+        "C"
+      ],
+      "composition": false
+    },
+    "chengyinhub-xcx/tests/unit/registration-seat-replay-source.test.js": {
+      "sha256": "4d12643f12aa1e9eb68bd1511cc46d4501a10ef5c45f97f21ea118b77f67c6af",
+      "exact_candidates": [
+        "C"
+      ],
+      "composition": false
+    },
+    "chengyinhub-xcx/tests/unit/registration-seat-session-revision.test.js": {
+      "sha256": "bae0e13fca560ec735d94d024dd6a8c588c973e2d34525974dc91172802e44df",
+      "exact_candidates": [
+        "C"
+      ],
+      "composition": false
+    },
+    "chengyinhub-xcx/tests/unit/remaining-scene-state-contract.test.js": {
+      "sha256": "df1794f56ace88bb7b9d3060e617d82fa29fc6df73d938223d1c0bc5d0522737",
+      "exact_candidates": [
+        "C"
+      ],
+      "composition": false
+    },
+    "chengyinhub-xcx/tests/unit/scene-content-contract.test.js": {
+      "sha256": "94891f5fb9cbc328cdc9b46ef1f98c4d29db5ae101b952fa79fb21b17eddb214",
+      "exact_candidates": [
+        "C"
+      ],
+      "composition": false
+    },
+    "chengyinhub-xcx/tests/unit/verification-unknown-adapters.test.js": {
+      "sha256": "252f944002053e7adeeb5bdf66bdda9d7c1981d0fbfa8f5143c8da378a38b7f8",
+      "exact_candidates": [
+        "C"
+      ],
+      "composition": false
+    },
+    "chengyinhub-xcx/utils/merchant-verification.js": {
+      "sha256": "40682a3c3fed0822edb4570f00d2e8898660e6d86703911137de8473aa5f3772",
+      "exact_candidates": [
+        "C"
+      ],
+      "composition": false
+    },
+    "chengyinhub-xcx/utils/registration-seat.js": {
+      "sha256": "879617712f8225394a4d0463aea1e335f9d37bef61d595157829be0955891304",
+      "exact_candidates": [
+        "C"
+      ],
+      "composition": false
+    },
+    "chengyinhub-xcx/utils/verification-readback.js": {
+      "sha256": "3dc896a8a900822eb7337079da3e24e2ded8294663ebb685bf332eca0f3a119a",
+      "exact_candidates": [
+        "C"
+      ],
+      "composition": false
+    },
+    "chengyinhub-xcx/utils/verification-scan.js": {
+      "sha256": "1fd5f8d915350e4a109ae87ece49cffec91c4df83e71dc0b2d243332ab7e042e",
+      "exact_candidates": [
+        "C"
+      ],
+      "composition": false
+    },
+    "ci/architecture/compiled_controls.py": {
+      "sha256": "606f44e5f6d69385486bcf0b93da345aeab593e33a03a39a9a94e94e8a53be1a",
+      "exact_candidates": [
+        "F_tools"
+      ],
+      "composition": false
+    },
+    "ci/architecture/gate.py": {
+      "sha256": "743fc9933f3f5f89898016a8d7947a1e4f331d8976b191b4233d6e2f3c414f84",
+      "exact_candidates": [
+        "F_verifier"
+      ],
+      "composition": false
+    },
+    "ci/architecture/owners.json": {
+      "sha256": "a2595493fe84cfa0a196df37fcf3679ded01971f388a3dcb8e92eb8b318409dc",
+      "exact_candidates": [
+        "F_verifier"
+      ],
+      "composition": false
+    },
+    "ci/architecture/test_collect_jdeps.py": {
+      "sha256": "d2117a9dfd9a902de3f1a0a15319a6df1f375628d408d7e30782b165c9bd4d27",
+      "exact_candidates": [
+        "F_verifier"
+      ],
+      "composition": false
+    },
+    "ci/architecture/test_compiled_controls.py": {
+      "sha256": "273fdebbca6c3f4a71f39e8aa04835b1cfe50165eb3014d5cc38487c0679714f",
+      "exact_candidates": [
+        "F_tools"
+      ],
+      "composition": false
+    },
+    "ci/architecture/test_gate.py": {
+      "sha256": "cb38ec0f79fb4bb70e2256dd24f2153a4be49d06843ceb57754c09a8b1492fa2",
+      "exact_candidates": [
+        "F_verifier"
+      ],
+      "composition": false
+    },
+    "ci/migration-dependencies.json": {
+      "sha256": "5cc4b9da3aea4d99ea1dab61474eaeb2e23a6674b485193a6c4081b62ff92746",
+      "exact_candidates": [],
+      "composition": true
+    },
+    "ci/real-storage-it-registry.json": {
+      "sha256": "c326dfcdfd53b606adbc6b3b9dcc119031bf474ebd69b6981f28ad0ffeeb11ae",
+      "exact_candidates": [],
+      "composition": true
+    },
+    "ci/test_real_storage_it.py": {
+      "sha256": "c4dd5b1476996ca2bc4eb6a45245c570c31ca600c6d2b0d76d5f18bb78da8532",
+      "exact_candidates": [],
+      "composition": true
+    },
+    "docs/delivery/architecture-day/A/ORIGINAL-REFUND-TERMINAL/G-RECOVERY-SEAM.md": {
+      "sha256": "883e55d7cd3dd6f8bbd4d4037d84ada0bc010ea31b6c89dec6f0d4b1211b4c25",
+      "exact_candidates": [
+        "A"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/A/ORIGINAL-REFUND-TERMINAL/README.md": {
+      "sha256": "000362bd59a7cfb36e82793399aa871fee4551a1dacb57052e833874f976ddfa",
+      "exact_candidates": [
+        "A"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/A/ORIGINAL-REFUND-TERMINAL/static-result.json": {
+      "sha256": "53a607b247b73863d5f8821e896b6f2aaa0b54099ae934029b258f6f8b9521f7",
+      "exact_candidates": [
+        "A"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/A/SEAT-REVERSE-GUARD/README.md": {
+      "sha256": "78d0118649174c21ed7c2f8e29c30dc0fa2a8e7eabd8690c470bb59775348780",
+      "exact_candidates": [
+        "A"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/A/SEAT-REVERSE-GUARD/static-result.json": {
+      "sha256": "b15df6852ea06f3cf3a41f30ac450ae9d5b161eeb7972d3cd6fc1a2811b5d49e",
+      "exact_candidates": [
+        "A"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/A/WP04-VERIFIED-FACTS/B-reader-base.json": {
+      "sha256": "ca9914b6ddc9def3d00de8854901b0f1e888c490a9fc4a120d99be1a67b2e29f",
+      "exact_candidates": [
+        "A"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/A/WP04-VERIFIED-FACTS/G-typed-refund-callsite.review.patch": {
+      "sha256": "3a18ba3211545756593e59e1d76f6df3d119c628ca5d3809990bd137e96c3026",
+      "exact_candidates": [
+        "A"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/A/WP04-VERIFIED-FACTS/README.md": {
+      "sha256": "36849b14e53616955e2e800c490fa0147cb78e0c3c9b1355993cb366ab2248c0",
+      "exact_candidates": [
+        "A"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/A/WP04-VERIFIED-FACTS/required-B-current-reader.review.patch": {
+      "sha256": "5ba45cd52e4cfb6f8b45a713926fbc2723d43830b8766aa76e632984b6538b86",
+      "exact_candidates": [
+        "A"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/A/WP04-VERIFIED-FACTS/static-result.json": {
+      "sha256": "c7b8b98830e855cd26d406705b2df6f4f8c670f422d4dca2198c4492ad45132f",
+      "exact_candidates": [
+        "A"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/A/WP04-VERIFIED-FACTS/verify_static.py": {
+      "sha256": "79cc6aa25d05bee7feeb4a4930fc5c5f0bba06b65dd3fcf6f1ba9c65178068b0",
+      "exact_candidates": [
+        "A"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/B/fact-reader-rr-minimal.txt": {
+      "sha256": "6011bb3c45ece86965fb57dc4843608e518717f5d443e18417371577334edbf3",
+      "exact_candidates": [
+        "B"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/C/seats/activity-replay-node-results.json": {
+      "sha256": "b703f82a9829158cffd1283b1f50af04ab3576993e5a81e67ff83c3f08e01a85",
+      "exact_candidates": [
+        "C"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/C/seats/activity-replay.md": {
+      "sha256": "5b0123e4b58c27e934c250fcce3839e029042ceda3e8701acdd1d266419bc376",
+      "exact_candidates": [
+        "C"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/C/seats/caller-followup-node-results.json": {
+      "sha256": "c162e9ddba9e5581c5d2428ca13c5db5f006425d8aa00fd80a67ad6a6357ea84",
+      "exact_candidates": [
+        "C"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/C/seats/caller-followup.md": {
+      "sha256": "2236c40b824e8fdb58cec0914a05109296f7d2ddb3da2b4583ab54bbbeb28075",
+      "exact_candidates": [
+        "C"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/C/seats/session-revision-node-results.json": {
+      "sha256": "858f480f8dfa74da92c71237aedb1e19bed865e6dd1dd8a10bd811afb72f9de2",
+      "exact_candidates": [
+        "C"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/C/seats/session-revision.md": {
+      "sha256": "e4d9eacd6a8d62a53999b459bf1286a4cf7b294c483bae62ba9929bde6bc956a",
+      "exact_candidates": [
+        "C"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/D/audit-current-publication/CANDIDATE.sha256": {
+      "sha256": "2e5f720688a5c2acaee8bb407fc11f162bcf6c9937f239b21bb6f77c1ac59592",
+      "exact_candidates": [
+        "D_audit"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/D/audit-current-publication/README.md": {
+      "sha256": "d67e9a59843c528f63081ed1eeda4ed292840e7b7d8bc51238e248c142d14f52",
+      "exact_candidates": [
+        "D_audit"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/D/committed-notice-intent/CANDIDATE.sha256": {
+      "sha256": "63f46f2afcde2aa7b9d6a83e7f5ab652e4d121785d3fad5a1cf3b125b8a522d1",
+      "exact_candidates": [
+        "D_notice"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/D/committed-notice-intent/README.md": {
+      "sha256": "d3fcb3a86177c683f7ffe13246fc3c6d5daba68e1e3083d2f5e95bd056bb6517",
+      "exact_candidates": [
+        "D_notice"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/D/committed-notice-intent/REVIEW-PREIMAGES.json": {
+      "sha256": "5924b2994cb24f0b4273ccb2817f99694ba689417f91e15a3ca829082c8ffa38",
+      "exact_candidates": [
+        "D_notice"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/D/committed-notice-intent/review.patch": {
+      "sha256": "fb2400795c695d7c62695b2e2f8122a9c63a29e246adbe8c8a0b1c61b5c2d350",
+      "exact_candidates": [
+        "D_notice"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/D/complaint-close-notice-hook/CANDIDATE.sha256": {
+      "sha256": "3b44eea2d55bf2130328b024acac12c4b0a406a01bff884047512dfc508201f3",
+      "exact_candidates": [
+        "D_notice"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/D/complaint-close-notice-hook/README.md": {
+      "sha256": "199092f4f2953fc4dd22da6fa3b9536cbab0405e52ebfdda68fa62dc5d4a737c",
+      "exact_candidates": [
+        "D_notice"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/D/complaint-notice-hook/CANDIDATE.sha256": {
+      "sha256": "1ac3dc7cafab1551a135e043629bccc74770406817515a92d2cd3af5437ff545",
+      "exact_candidates": [
+        "D_notice"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/D/complaint-notice-hook/README.md": {
+      "sha256": "bf16bb89d0153ce4bc2284d0ac3f0997d92474837ab432b773306c0d570a8cc4",
+      "exact_candidates": [
+        "D_notice"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/E/TOPIC-ID-BUDGET/README.md": {
+      "sha256": "6b0907e6632d11f33c6b2452c67f4540f4c827f48ad5eafd02b0595ffb27db47",
+      "exact_candidates": [
+        "E"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/E/TOPIC-ID-BUDGET/verify-static.py": {
+      "sha256": "ea26202b49171f800ec8c3eefb7ce1c8005db3cfb87caea14a19b5420a7fd0bc",
+      "exact_candidates": [
+        "E"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/E/TOPIC-RECRUITMENT-BATCH/README.md": {
+      "sha256": "30e6027ea8b0ad5b5a6b437d66656aa2a2a36ebb75ed029689e483da2c7f91be",
+      "exact_candidates": [
+        "E"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/E/TOPIC-RECRUITMENT-BATCH/legacy-fixture-evidence.json": {
+      "sha256": "7c236cdf283f2348bb5037ad55aa194d64eb96b1b576ddfbe19501cd1fb73183",
+      "exact_candidates": [
+        "E"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/E/TOPIC-RECRUITMENT-BATCH/legacy-fixture.review.patch": {
+      "sha256": "4e0c2abfa52e5c9966cc806f3e4bfa23c3c891a91151c60f88d4ebfae2ba27ff",
+      "exact_candidates": [
+        "E"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/E/TOPIC-RECRUITMENT-BATCH/verify-static.py": {
+      "sha256": "55008f28ddf84cc77348b76c0ae9e16386fbe2fe33ad88d4b6ff414a8b150856",
+      "exact_candidates": [
+        "E"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/F/controls-fact-ledger/HANDOFF.md": {
+      "sha256": "b7b0adf358cd38d8de735cdd1b18d1226bee605b5f3aeb609f5050bef9891a4c",
+      "exact_candidates": [
+        "F_tools"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/F/controls-fact-ledger/python-tests.txt": {
+      "sha256": "637ad693971420b70a01476cd5d51065ecc3c7af270c41cfe91899ec8c2db4bd",
+      "exact_candidates": [
+        "F_tools"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/F/controls-fact-ledger/trusted-files.sha256": {
+      "sha256": "8ea8f662c7bb0359e48d104536c79decc6fe2edf2e70ac8ac46eaac87d6dfa42",
+      "exact_candidates": [
+        "F_tools"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/F/controls-fact-ledger/trusted-ref.review.patch": {
+      "sha256": "53bcd3fe85f39fa48b3aa853f6c1002d14e6c7a750733125c38ac1fcbeafaae9",
+      "exact_candidates": [
+        "F_tools"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/F/controls-query-size/HANDOFF.md": {
+      "sha256": "5490ea3b506ded3f048015d88717906d81c625756ea9f58c6a1b5eba1cdc2bdf",
+      "exact_candidates": [
+        "F_tools"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/F/controls-query-size/python-tests.txt": {
+      "sha256": "133449d6f429f0588126e0403937f271f33f90517460d5c4b39d69c2eeda0f25",
+      "exact_candidates": [
+        "F_tools"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/F/controls-query-size/trusted-files.sha256": {
+      "sha256": "303f7626333e4144c0a3becc94146b4c862332e5c9dc9aef2574e5bfc7b77935",
+      "exact_candidates": [
+        "F_tools"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/F/controls-query-size/trusted-ref.review.patch": {
+      "sha256": "769518238ca8309fac957f9aabe7bc7cce4e752faeb0995765cceed66ebc006a",
+      "exact_candidates": [
+        "F_tools"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/F/literal-write-scope/HANDOFF.md": {
+      "sha256": "35c2bbdc253737b43948f5793642f96f9f8e105e8a4b136b46b06fb41da7bf31",
+      "exact_candidates": [
+        "F_verifier"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/F/literal-write-scope/before-source-cli.jsonl": {
+      "sha256": "cd3d1d27393f01259a06c08a15aec583cfed81d35d89011d36570dcdb3780a2e",
+      "exact_candidates": [
+        "F_verifier"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/F/literal-write-scope/old-verifier-negative-control.txt": {
+      "sha256": "3fec62d7124af01d7b210483ec253b0bb4cdf7cb85fbe6cbacc1803b7f303fb6",
+      "exact_candidates": [
+        "F_verifier"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/F/literal-write-scope/python-tests.txt": {
+      "sha256": "6467e4edc3b69b73803b45ed386ad3dcd8475a570834810e7cf9d2cc5d5b56e7",
+      "exact_candidates": [
+        "F_verifier"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/F/literal-write-scope/trusted-files.sha256": {
+      "sha256": "d29b1cab139d9b1dd605d5f53cf2db624ef3654775fd05a508b6e968ebcbeb59",
+      "exact_candidates": [
+        "F_verifier"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/F/payment-fact-ledger-policy/HANDOFF.md": {
+      "sha256": "14518e8433916a1ac7649a77f24d97094b4e95d3594ea63396c8a4eb749235e6",
+      "exact_candidates": [
+        "F_verifier"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/F/payment-fact-ledger-policy/python-tests.txt": {
+      "sha256": "0efc7f8b08cb9a7a4617a8c474e7f3919d9c66b6bef522f58f7ec9ad4b9cb70b",
+      "exact_candidates": [
+        "F_verifier"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/F/payment-fact-ledger-policy/source-evidence.json": {
+      "sha256": "8e6dba310319402c58657b612131de2a1f4b450202f6c8f7dc5fdaec4606bfcb",
+      "exact_candidates": [
+        "F_verifier"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/F/payment-fact-ledger-policy/trusted-files.sha256": {
+      "sha256": "8ea8f662c7bb0359e48d104536c79decc6fe2edf2e70ac8ac46eaac87d6dfa42",
+      "exact_candidates": [
+        "F_verifier"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/F/query-size-direction/HANDOFF.md": {
+      "sha256": "712d43370215d53f98a20c1f72444f3f3770f47c0fed127ffd3f02dde6f2b8ed",
+      "exact_candidates": [
+        "F_verifier"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/F/query-size-direction/python-tests.txt": {
+      "sha256": "f2f26cd96cee6693d4bd65d23207fba3e5ac291299a5b07f8afa6b7783e148eb",
+      "exact_candidates": [
+        "F_verifier"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/F/query-size-direction/source-evidence.json": {
+      "sha256": "1e5298e941c9c8a2ae8de3310ce97d7465b462b7940c61a9da49d78c3f0dc28a",
+      "exact_candidates": [
+        "F_verifier"
+      ],
+      "composition": false
+    },
+    "docs/delivery/architecture-day/F/query-size-direction/trusted-files.sha256": {
+      "sha256": "303f7626333e4144c0a3becc94146b4c862332e5c9dc9aef2574e5bfc7b77935",
+      "exact_candidates": [
+        "F_verifier"
+      ],
+      "composition": false
+    }
+  },
+  "checks": {
+    "source_precheck_classes": 104,
+    "registry_controls": 14,
+    "F_new_policy_tools": 14,
+    "Node": [
+      308,
+      6,
+      63
+    ],
+    "Node_skipped": 0,
+    "action_controls": 5113,
+    "action_runtime_receipts": 0
+  },
+  "not_run": [
+    "Java compilation/tests",
+    "MySQL/Redis",
+    "HTTP/device/provider/business acceptance"
+  ],
+  "known_open": [
+    "B outer failure release self-lock",
+    "original allocation producer and old refund fixtures",
+    "three pending money policies"
+  ],
+  "production_ddl_executed": false,
+  "deployed": false
+}
