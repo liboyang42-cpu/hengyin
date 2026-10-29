@@ -59,11 +59,11 @@
             <text class="wc__bn ep1">{{item.wTitle}}</text>
             <view class="wc__qr">
               <image wx:if="{{qrState === 'ready'}}" class="wc__qr-img" src="{{qrUrl}}" mode="aspectFit" />
+              <view wx:if="{{qrState === 'ready'}}" class="wc__qr-logo"><image class="wc__qr-logo-img" src="/images/cy_logo_mark.png" mode="aspectFit" /></view>
               <text wx:elif="{{qrState === 'error'}}" class="wc__qr-tip" catchtap="retryQr" aria-role="button" aria-label="重新生成入场码" hover-class="cy-pressed" hover-stay-time="80">重新生成</text>
               <text wx:else class="wc__qr-tip">生成中…</text>
             </view>
-            <text class="wc__code" wx:if="{{qrCode}}">Code : {{qrCode}}</text>
-            <text class="wc__exp">{{qrCountdown}}</text>
+            <text class="wc__exp">{{item.wValidity}}</text>
           </view>
         </view>
       </view>

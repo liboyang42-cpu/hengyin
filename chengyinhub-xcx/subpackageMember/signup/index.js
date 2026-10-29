@@ -1,4 +1,7 @@
 const toast = require('../../utils/toast.js');
+const QR_REFRESH_LEAD_MS = 30000; // 到期前 30 秒续签
+const QR_MIN_REFRESH_MS = 5000;
+const QR_RETRY_MS = 5000;
 const { isLoginRequired, retryLogin } = require('../../utils/session/login-reload.js');
 const app = getApp();
 function walletOwner() { return typeof app.getUserID === 'function' ? String(app.getUserID() || '') : ''; }
@@ -266,6 +269,7 @@ Page({
         kind: 'topic',
         wKey: 'topic-' + item.id,
         wTitle: t.name || '—',
+        wValidity: ticketValidity(t.startDate),
         wImg: t.imgUrl || '/images/route_city_cover.png', wType: Number(t.productType) === 2 ? '自由探索' : '城市定向', wColor: Number(t.productType) === 2 ? '#7CF0A0' : '#5AA9FF', wUntil: item.expiresAt || t.endDate || '', // ds-ok v13 类型色
       });
     });
@@ -275,6 +279,7 @@ Page({
         kind: 'activity',
         wKey: 'activity-' + item.id,
         wTitle: a.name || '—',
+        wValidity: ticketValidity(a.startDate),
         wImg: a.imgUrl || '/images/route_city_cover.png',
         wType: '场次', wColor: '#E8B86B', wUntil: a.endTime || a.endDate || '', // ds-ok v13 卡角色
       });
@@ -339,19 +344,27 @@ Page({
     const flipped = !this.data.flipped;
     this.setData({ flipped });
     const item = (this.data.ticketList || [])[index];
-    if (flipped && item && String(item.id) !== this._qrFor) this._loadQr(item);
+    if (!flipped || !item) return;
+    if (String(item.id) !== this._qrFor || !(this._qrExpiresAt > Date.now() + QR_REFRESH_LEAD_MS)) this._loadQr(item);
+    else if (!this._qrTimer) this._scheduleQrRefresh(item, this._qrExpiresAt - Date.now() - QR_REFRESH_LEAD_MS);
   },
   retryQr() {
     const item = (this.data.ticketList || [])[this.data.currentSwiperTicket];
     if (item) this._loadQr(item);
   },
-  _loadQr(item) {
+  // V-02:动态码到期前在后台静默续签，不给玩家显示倒计时；续签期间旧码照常出示，真过期了才落错误态。
+  _loadQr(item, silent) {
     const registrationId = exactRegistrationId(item.id);
     const token = this._qrToken = (this._qrToken || 0) + 1;
     this._clearQrTimer();
-    this._qrFor = '';
+    if (!silent) this._qrFor = '';
     if (!registrationId) { this.setData({ qrState: 'error', qrUrl: '', qrCode: '', qrCountdown: '' }); return; }
-    this.setData({ qrState: 'loading', qrUrl: '', qrCode: '', qrCountdown: '' });
+    if (!silent) this.setData({ qrState: 'loading', qrUrl: '', qrCode: '', qrCountdown: '' });
+    const failed = () => {
+      if (this._unloaded || token !== this._qrToken) return;
+      if (silent && this._qrExpiresAt > Date.now() + QR_RETRY_MS) { this._scheduleQrRefresh(item, QR_RETRY_MS); return; }
+      this._qrFor = ''; this.setData({ qrState: 'error', qrUrl: '', qrCode: '' });
+    };
     app.sendRequest({
       url: '/api/verify/dyncode/issue', method: 'POST', data: { registrationId }, hideLoading: true, silentError: true,
       success: (res) => {
@@ -359,22 +372,24 @@ Page({
         const payload = res && (res.code === 200 || res.code === '200') && res.data;
         const raw = payload && payload.expiresAt;
         const expiresAt = typeof raw === 'number' && Number.isFinite(raw) ? (raw < 100000000000 ? raw * 1000 : raw) : 0;
-        if (!payload || !payload.qrcodeUrl || !(expiresAt > Date.now())) { this.setData({ qrState: 'error' }); return; }
+        if (!payload || !payload.qrcodeUrl || !(expiresAt > Date.now())) { failed(); return; }
         this._qrFor = registrationId; this._qrExpiresAt = expiresAt;
         this.setData({ qrState: 'ready', qrUrl: payload.qrcodeUrl, qrCode: payload.code || '' });
-        this._qrTick(); this._qrTimer = setInterval(() => this._qrTick(), 1000);
+        this._scheduleQrRefresh(item, Math.max(QR_MIN_REFRESH_MS, expiresAt - Date.now() - QR_REFRESH_LEAD_MS));
       },
-      fail: () => { if (!this._unloaded && token === this._qrToken) this.setData({ qrState: 'error' }); },
-      successStatusAbnormal: () => { if (!this._unloaded && token === this._qrToken) this.setData({ qrState: 'error' }); },
+      fail: failed,
+      successStatusAbnormal: failed,
     });
   },
-  _qrTick() {
-    const left = Math.max(0, (this._qrExpiresAt || 0) - Date.now());
-    if (!left) { this._clearQrTimer(); this._qrFor = ''; this.setData({ qrState: 'error', qrUrl: '', qrCode: '', qrCountdown: '' }); return; }
-    const s = Math.ceil(left / 1000);
-    this.setData({ qrCountdown: '有效期剩余 ' + Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0') });
+  _scheduleQrRefresh(item, delay) {
+    this._clearQrTimer();
+    this._qrTimer = setTimeout(() => {
+      this._qrTimer = null;
+      if (this._unloaded || !this.data.flipped) return;
+      this._loadQr(item, true);
+    }, delay);
   },
-  _clearQrTimer() { if (this._qrTimer) { clearInterval(this._qrTimer); this._qrTimer = null; } },
+  _clearQrTimer() { if (this._qrTimer) { clearTimeout(this._qrTimer); this._qrTimer = null; } },
 
   /* 重试。哪条支线错了就重拉哪条;两条都错就都拉。 */
   retryWallet() {
@@ -687,6 +702,13 @@ function reducedMotionOn() {
 // v13 卡堆每一层的位置:往上错开 / 缩小 / 变暗,第 4 张以后藏在最后
 const DECK_POSE = [{ y: 0, s: 1, b: 1, o: 1 }, { y: -26, s: 0.93, b: 0.5, o: 1 }, { y: -48, s: 0.86, b: 0.32, o: 1 }, { y: -62, s: 0.8, b: 0.2, o: 1 }, { y: -62, s: 0.8, b: 0.2, o: 0 }];
 /* 卡面文字:类型 · 剩几天(有到期日才写),状态不是待使用时写状态;tab 归类 */
+/* V-02:票面背面写票本身的有效期 —— 有活动时间写时间，没有就是长期开放(与首页卡同一格式) */
+function ticketValidity(startDate) {
+  const date = startDate ? new Date(String(startDate).replace(/-/g, '/')) : null;
+  if (!date || isNaN(date.getTime())) return '长期开放';
+  const pad = n => String(n).padStart(2, '0');
+  return date.getFullYear() + '年' + (date.getMonth() + 1) + '月' + date.getDate() + '日 ' + pad(date.getHours()) + ':' + pad(date.getMinutes());
+}
 function walletCard(item) {
   const until = item.wUntil ? new Date(String(item.wUntil).replace(/-/g, '/')) : null;
   const days = until && !isNaN(until.getTime()) ? Math.ceil((until.getTime() - Date.now()) / 86400000) : null;
