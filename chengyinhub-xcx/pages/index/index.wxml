@@ -46,7 +46,7 @@
                 <image class="v3-hero-mem-ic" src="/images/index-figma/icon-member.png" mode="aspectFit" />
               </view>
               <text class="v3-hero-mem-txt">玩家</text>
-              <text wx:if="{{city}}" class="v3-hero-mem-loc">· {{city}}</text>
+              <text wx:if="{{city}}" class="v3-hero-mem-loc" catchtap="onTapHomeCity">· {{city}}</text>
               <cy-dropdown wx:if="{{cityManual && !city}}" mode="selector" range="{{manualCityOptions}}" value="{{-1}}" bind:change="onManualCityChange" aria-label="选择城市">
                 <text class="v3-hero-mem-loc">· 选择城市</text>
               </cy-dropdown>
@@ -199,7 +199,7 @@
           <view class="v2-fitem" wx:for="{{bottomTopicList}}" wx:key="id">
             <!-- 2026-10-28 业主:主题必须有图,卡片整张用封面,名字一行压在底部渐变上 -->
             <view class="v2-fcard" bindtap="goTopic" data-index="{{index}}" data-id="{{item.id}}" hover-class="cy-pressed" hover-stay-time="80">
-              <image class="v2-fcover" src="{{item.cover || '/images/route_city_cover.png'}}" mode="aspectFill" lazy-load="true" />
+              <image class="v2-fcover" src="{{item.cover || '/images/home-route-city-placeholder.jpg'}}" mode="aspectFill" lazy-load="true" />
               <view class="v2-fcard-l">
                 <view class="v2-feyebrow ep1" wx:if="{{item.feedTypeLabel}}">{{item.feedTypeLabel}}</view>
                 <view class="v2-ftitle ep1">{{item.name}}</view>
@@ -234,7 +234,7 @@
         <view class="v2-feed" wx:if="{{activeTab === '1'}}" style="{{pmFeed === 1 ? '--pm-f:1;' : (pmFeed === 2 ? '--pm-f-d:.32s;--pm-f-s:1;' : '')}}">
           <view class="v2-fitem" wx:for="{{bottomActivityList}}" wx:key="id">
             <view class="v2-fcard" bindtap="goActivity" data-index="{{index}}" data-id="{{item.id}}" hover-class="cy-pressed" hover-stay-time="80">
-              <image class="v2-fcover" src="{{item.cover || '/images/route_city_cover.png'}}" mode="aspectFill" lazy-load="true" />
+              <image class="v2-fcover" src="{{item.cover || '/images/home-route-city-placeholder.jpg'}}" mode="aspectFill" lazy-load="true" />
               <view class="v2-fcard-l">
                 <view class="v2-feyebrow ep1" wx:if="{{item.feedTypeLabel}}">{{item.feedTypeLabel}}</view>
                 <view class="v2-ftitle ep1">{{item.name}}</view>

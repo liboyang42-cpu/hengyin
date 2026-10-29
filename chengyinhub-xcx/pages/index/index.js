@@ -132,7 +132,11 @@ function isCurrentLocationRequest(page, scope) {
 
 const homeCity = require('../../utils/index/home-city-location.js');
 function showHomeCityLocationError(page, scope, kind) {
-  hideLocationLoading(page, scope); if (isCurrentLocationRequest(page, scope)) cyToast(homeCity.message(kind));
+  hideLocationLoading(page, scope);
+  if (!isCurrentLocationRequest(page, scope)) return;
+  // V-01:冷启动/onShow 的自动定位失败不弹提示，保留上次城市，没有就露出手动选择；只有用户主动点定位才提示。
+  if (scope.userInitiated) cyToast(homeCity.message(kind));
+  else if (!page.data.city) page.setData({ cityManual: true });
 }
 
 function hideLocationLoading(page, scope) {
@@ -1442,12 +1446,13 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
     return indexFormat.processTopicDate(list);
   },
 
-  getHomeCityLocation() {
+  getHomeCityLocation(opts) {
     if (this._unloaded || this._homeLocationHidden) return;
     const scope = captureLocationRequest(this);
+    scope.userInitiated = !!(opts && opts.userInitiated);
     if (!(Number(scope.memberId) > 0) || !scope.authorization || scope.authorization === 'dev-token') return;
     const that = this;
-    this.setData({ city: '', cityManual: false });
+    this.setData({ city: this.data.city || homeCity.readLastCity(), cityManual: false });
     app.sendRequest({
       url: '/api/compliance/consents/latest',
       method: 'POST',
@@ -1542,7 +1547,7 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
         if (!isCurrentLocationRequest(that, scope)) return;
         const data = res && Number(res.code) === 200 && res.data;
         const city = data && data.city;
-        if (typeof city === 'string' && city.trim()) { that.setData({ city: city.trim(), cityManual: false }); return; }
+        if (typeof city === 'string' && city.trim()) { that.setData({ city: city.trim(), cityManual: false }); homeCity.saveLastCity(city.trim()); return; }
         if (data && data.manualInputRequired) { offerManualCity(that, scope, data.reason); return; }
         showHomeCityLocationError(that, scope, 'empty');
       },
@@ -1555,7 +1560,12 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
   onManualCityChange(e) {
     const idx = Number(e && e.detail && e.detail.value);
     const city = String(homeCity.CITY_OPTIONS[idx] || '').trim();
-    if (city) this.setData({ city: city, cityManual: false });
+    if (city) { this.setData({ city: city, cityManual: false }); homeCity.saveLastCity(city); }
+  },
+
+  // V-01:用户主动点城市重新定位，失败时才提示。
+  onTapHomeCity() {
+    this.getHomeCityLocation({ userInitiated: true });
   },
 })
 
@@ -1563,14 +1573,15 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
 function offerManualCity(page, scope, reason) {
   hideLocationLoading(page, scope);
   if (!isCurrentLocationRequest(page, scope)) return;
-  page.setData({ cityManual: true });
-  cyToast(reason === 'MAP_RATE_LIMITED' ? '定位请求较频繁，请手动选择城市' : '暂时无法自动识别城市，请手动选择');
+  page.setData({ cityManual: !page.data.city });
+  if (scope.userInitiated) cyToast(reason === 'MAP_RATE_LIMITED' ? '定位请求较频繁，请手动选择城市' : '暂时无法自动识别城市，请手动选择');
 }
 
 // 权限被拒/系统定位关闭:只引导打开设置一次(本页面实例内)。
 function offerLocationSettings(page, scope) {
   hideLocationLoading(page, scope);
   if (!isCurrentLocationRequest(page, scope)) return;
+  if (!scope.userInitiated) { if (!page.data.city) page.setData({ cityManual: true }); return; }
   if (page._locationSettingsOffered) { cyToast(homeCity.message('device')); return; }
   page._locationSettingsOffered = true;
   modal.show({
