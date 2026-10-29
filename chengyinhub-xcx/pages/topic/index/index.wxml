@@ -107,7 +107,7 @@
           <text class="hero-by__n">{{publisher.name}}</text><text class="hero-by__k">发布</text>
         </view>
         <view class="hero-title">{{info.name}}</view>
-        <view class="hero-desc {{heroDescOpen ? 'is-open' : ''}}" wx:if="{{info.description && info.description !== 'null'}}" bindtap="toggleHeroDesc" aria-role="button" aria-label="{{heroDescOpen ? '收起简介' : '展开简介'}}">{{info.description}}</view>
+        <view class="hero-desc {{heroDescOpen ? 'is-open' : ''}}" wx:if="{{info.description && info.description !== 'null'}}" bindtap="toggleHeroDesc" aria-role="button" aria-label="{{heroDescOpen ? '收起简介' : '展开简介'}}" hover-class="cy-pressed" hover-stay-time="80">{{info.description}}</view>
         <view class="hero-acts" id="heroActs">
           <view wx:if="{{heroCta.text}}" class="hero-cta {{heroCta.kind === 'locked' ? 'is-off' : ''}} {{docked ? 'is-away' : ''}}" bindtap="onHeroCta" aria-role="button" aria-label="{{heroCta.text}}" hover-class="cy-pressed" hover-stay-time="80">{{heroCta.text}}</view>
           <view class="hero-fav {{faved ? 'is-on' : ''}} {{docked ? 'is-away' : ''}}" bindtap="toggleFav" aria-role="button" aria-label="{{faved ? '取消收藏' : '收藏主题'}}" hover-class="cy-pressed" hover-stay-time="80"><image class="bm-ic" src="{{faved ? '/pages/topic/images/icon_bm_on.svg' : '/pages/topic/images/icon_bm.svg'}}" mode="aspectFit" /></view>

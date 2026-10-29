@@ -46,7 +46,7 @@
                 <image class="v3-hero-mem-ic" src="/images/index-figma/icon-member.png" mode="aspectFit" />
               </view>
               <text class="v3-hero-mem-txt">玩家</text>
-              <text wx:if="{{city}}" class="v3-hero-mem-loc" catchtap="onTapHomeCity">· {{city}}</text>
+              <view wx:if="{{city}}" class="v3-hero-mem-loc" catchtap="onTapHomeCity" aria-role="button" aria-label="重新定位城市：{{city}}" hover-class="cy-pressed" hover-stay-time="80">· {{city}}</view>
               <cy-dropdown wx:if="{{cityManual && !city}}" mode="selector" range="{{manualCityOptions}}" value="{{-1}}" bind:change="onManualCityChange" aria-label="选择城市">
                 <text class="v3-hero-mem-loc">· 选择城市</text>
               </cy-dropdown>

@@ -76,7 +76,7 @@ function loadTopic(h, info) {
 test('FOLLOWUP-A-1 主题:别人公开的主题出举报入口,提交到 /api/topic/report 带 id + 所选原因', async () => {
   const h = harness('pages/topic/index/index.js');
   loadTopic(h, topicInfo());
-  assert.equal(h.page.data.canReport, true);
+  assert.equal(h.page._canReport, true);
   const submit = await runReport(h, () => h.page.reportTopic(), r => r.success({ code: 200, msg: '举报已提交，内容将进入审核' }));
   assert.equal(submit.url, '/api/topic/report');
   assert.equal(submit.method, 'POST');
@@ -88,7 +88,7 @@ test('FOLLOWUP-A-1 主题:本人的、未上架或审核未过的主题不出举
   for (const over of [{ isOwner: 1 }, { memberId: 11 }, { userStatus: 0 }, { status: 2 }, { status: 0 }]) {
     const h = harness('pages/topic/index/index.js');
     loadTopic(h, topicInfo(over));
-    assert.equal(h.page.data.canReport, false, JSON.stringify(over));
+    assert.equal(h.page._canReport, false, JSON.stringify(over));
     h.page.reportTopic();
     assert.equal(h.modals.length, 0, JSON.stringify(over));
     assert.equal(h.requests.length, 0);

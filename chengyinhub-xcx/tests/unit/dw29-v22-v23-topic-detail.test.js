@@ -31,7 +31,7 @@ test('V-23 详情正文不再有「举报这个主题」行', () => {
 
 test('V-23 头图简介点按展开 / 收起', () => {
   const x = wxml()
-  assert.match(x, /<view class="hero-desc \{\{heroDescOpen \? 'is-open' : ''\}\}"[^>]*bindtap="toggleHeroDesc"/)
+  assert.match(x, /<view class="hero-desc \{\{heroDescOpen \? 'is-open' : ''\}\}"[^>]*bindtap="toggleHeroDesc"[^>]*hover-class="cy-pressed"/)
   assert.match(read('pages/topic/index/index.wxss'), /\.hero-desc\.is-open \{ height: auto;[^}]*mask: none;/)
   let config
   global.getApp = () => ({ globalData: {} })

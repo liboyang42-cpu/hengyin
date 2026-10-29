@@ -67,5 +67,5 @@ test('V-01 用户主动点定位失败才提示',()=>{
 })
 test('V-01 首页城市文字可点击重新定位',()=>{
   const wxml=require('fs').readFileSync(require('path').join(__dirname,'../../pages/index/index.wxml'),'utf8')
-  assert.match(wxml,/class="v3-hero-mem-loc" catchtap="onTapHomeCity">· \{\{city\}\}/)
+  assert.match(wxml,/<view wx:if="\{\{city\}\}" class="v3-hero-mem-loc" catchtap="onTapHomeCity"[^>]*hover-class="cy-pressed"[^>]*>· \{\{city\}\}<\/view>/)
 })
