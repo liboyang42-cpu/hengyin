@@ -190,10 +190,11 @@
           <text class="dc-name">让合作发生在店里</text>
         </view>
         <view class="dc-card dc-inset">
+          <!-- M-30(m700):承接摘要(如「免费承接」)与下面「合作诉求」同一行式,标题左、摘要右对齐 -->
           <view class="dc-heading" bindtap="goCoopSetting" aria-role="button" hover-class="cy-pressed">
             承接设置
+            <text class="dc-muted">{{coopSummary || '完善你的承接能力'}}</text>
           </view>
-          <text class="dc-muted">{{coopSummary || '完善你的承接能力'}}</text>
           <view class="dc-inner-row">
             <cy-cell arrow-icon="chevron-right"
               title="合作诉求" hairline="{{false}}"
