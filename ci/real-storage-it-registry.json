@@ -1134,7 +1134,7 @@
       "database_base": "e04_scratch"
     },
     "com.chengyinhub.business.service.B04ScheduleReadbackMySqlIT": {
-      "tests": 5,
+      "tests": 9,
       "storage": [
         "mysql"
       ],
