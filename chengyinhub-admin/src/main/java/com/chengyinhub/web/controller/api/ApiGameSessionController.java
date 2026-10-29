@@ -13,6 +13,7 @@ import com.chengyinhub.business.domain.dto.GameSessionCommand;
 import com.chengyinhub.business.domain.dto.GameCommandReceiptView;
 import com.chengyinhub.business.service.GameSessionException;
 import com.chengyinhub.business.service.IGameSessionRuntimeService;
+import com.chengyinhub.business.service.support.rpg.adapter.ResourceSourceAdapter;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import com.chengyinhub.common.core.text.Convert;
@@ -128,7 +129,15 @@ public class ApiGameSessionController extends BaseController {
     @GetMapping("/receipt")
     public AjaxResult receipt(String activityId, String requestId, @RequestParam(required = false) String perspective) {
         try {
-            return success(runtimeService.receipt(actor(perspective), Convert.toLong(activityId, 0L), requestId));
+            GameActorContext actor = actor(perspective);
+            Long activity = Convert.toLong(activityId, 0L);
+            GameCommandReceiptView found = runtimeService.receipt(actor, activity, requestId);
+            ResourceSourceAdapter.GameReceiptRead checked = new ResourceSourceAdapter()
+                    .recoverFromGameReceipt(actor, activity, requestId, (a, act, id) -> found);
+            if (checked == null) {
+                throw new GameSessionException("GAME_RECEIPT_IDENTITY", "回执与本次活动或请求不符");
+            }
+            return success(found);
         } catch (GameSessionException e) {
             return gameError(e);
         } catch (RuntimeException e) {
