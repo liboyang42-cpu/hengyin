@@ -25,7 +25,7 @@ def _tlon(x, y):
     return r
 
 
-def wgs84_to_gcj02(lon, lat):
+def wgs84_to_gcj02_raw(lon, lat):
     dlat = _tlat(lon - 105.0, lat - 35.0)
     dlon = _tlon(lon - 105.0, lat - 35.0)
     rad = lat / 180.0 * math.pi
@@ -33,7 +33,21 @@ def wgs84_to_gcj02(lon, lat):
     sq = math.sqrt(magic)
     dlat = (dlat * 180.0) / ((A * (1 - EE)) / (magic * sq) * math.pi)
     dlon = (dlon * 180.0) / (A / sq * math.cos(rad) * math.pi)
-    return round(lon + dlon, 6), round(lat + dlat, 6)
+    return lon + dlon, lat + dlat
+
+
+def wgs84_to_gcj02(lon, lat):
+    g = wgs84_to_gcj02_raw(lon, lat)
+    return round(g[0], 6), round(g[1], 6)
+
+
+def gcj02_to_wgs84(lon, lat):
+    """迭代反解（误差 < 0.5 m）。"""
+    wlon, wlat = lon, lat
+    for _ in range(30):
+        glon, glat = wgs84_to_gcj02_raw(wlon, wlat)
+        wlon, wlat = wlon - (glon - lon), wlat - (glat - lat)
+    return round(wlon, 6), round(wlat, 6)
 
 
 def haversine(a, b):
