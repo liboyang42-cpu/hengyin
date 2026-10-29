@@ -571,7 +571,9 @@ def capture_packaged_subject(probe, identities, actor_proof):
             "PACKAGED_CAPTURE_NOT_ADMITTED")
     require(probe.identity == source_identity(), "PACKAGED_CAPTURE_FOREIGN_SOURCE")
     objects, network = probe.inspect()
-    require(probe.rows("SELECT @@server_uuid,DATABASE()") == [(probe.saved["serverUuid"], probe.schema)],
+    database_identity = probe.rows("SELECT @@server_uuid,DATABASE()")
+    require(len(database_identity) == 1
+            and tuple(database_identity[0]) == (probe.saved["serverUuid"], probe.schema),
             "PACKAGED_NATIVE_DATABASE_CHANGED")
     binding = probe.gameplay_binding
     validate_gameplay_binding(objects, binding)

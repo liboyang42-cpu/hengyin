@@ -822,7 +822,7 @@ class PackagedBusinessContractControls(unittest.TestCase):
             fixture.jar_identity.return_value = probe.file_digest(jar)
             fixture.inspect.return_value = ([app] + stores, {"Id": subject["networkId"]})
             fixture.protected.return_value = subject["protectedBefore"]
-            fixture.rows.return_value = [(subject["serverUuid"], subject["schema"])]
+            fixture.rows.return_value = ((subject["serverUuid"], subject["schema"]),)
             fixture.db = mock.MagicMock()
             cursor = fixture.db.cursor.return_value.__enter__.return_value
             cursor.description = [(key,) for key in columns]
@@ -855,6 +855,13 @@ class PackagedBusinessContractControls(unittest.TestCase):
                 self.assertEqual(set(probe.PACKAGED_BUSINESS_CLASSES), set(observed["classEvidence"]))
                 self.assertNotIn("13800000", json.dumps(observed))
                 self.assertNotIn("aaa.bbb.ccc", json.dumps(observed))
+                for wrong in (((subject["serverUuid"], "foreign_schema"),),
+                              (("foreign_uuid", subject["schema"]),),
+                              ((subject["serverUuid"], subject["schema"]),) * 2):
+                    fixture.rows.return_value = wrong
+                    with self.subTest(identity=wrong), self.assertRaisesRegex(RuntimeError, "NATIVE_DATABASE"):
+                        probe.capture_packaged_subject(fixture, identities, subject["actorProof"])
+                fixture.rows.return_value = ((subject["serverUuid"], subject["schema"]),)
                 reads["/sys/fs/cgroup/source-owned/memory.max"] = str(2 * 1024 ** 3)
                 with self.assertRaisesRegex(RuntimeError, "ACTUAL_CGROUP"):
                     probe.capture_packaged_subject(fixture, identities, subject["actorProof"])
