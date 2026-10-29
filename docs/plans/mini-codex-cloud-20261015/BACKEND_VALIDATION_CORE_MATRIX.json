@@ -1,0 +1,2602 @@
+{
+  "protocol": "CORE_BACKEND_VALIDATION_MATRIX_STATIC_PREPARATION",
+  "source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964",
+  "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
+  "source_checkout_head_readback": "2b1984b59a0929a360e8095d5fc1955a1aed7964",
+  "handoff_source": "/workspace/hengyin-coordination/docs/plans/mini-codex-cloud-20261015/LONGRUN_VALIDATION_HANDOFF.json",
+  "preparation_status": "COMPLETE_SOURCE_MATRIX_NO_JAVA_MAVEN_DB_EXECUTED_BY_WORKER",
+  "execution_authority": "Only local verifier thread01a13eed performs actual VPS test/compile. C00 returns to source coordination. No Cloud Java, manual CI runs or worker execution authorized.",
+  "compile_checkpoint": {
+    "parent_evidence": "/workspace/backend-validation-20261015/evidence/core-compile-errors.json",
+    "baseline": "Parent reported main-source compilation success, 1392 test-source compile failure, 18 diagnostics, zero tests executed.",
+    "pending_c06_correction": {
+      "files": 14,
+      "sites": 16,
+      "snapshot": "/tmp/longrun-snapshots/C06_CONSTRUCTOR_FIXTURE_REPAIR",
+      "diff": "/tmp/c06-constructor-fixture-fix.patch",
+      "changes": "Only use actual existing 13-argument runtime constructor, full mapper/service mocks, deterministic seed/d20 and UTC Clock; original assertions intact.",
+      "verification": "NOT_RUN_BY_THIS_WORKER",
+      "public_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c",
+      "status": "PUBLISHED_BY_C00_NOT_RUN"
+    },
+    "other_parent_diagnostics": "Original2b evidence also had two C03_20 int-to-Long errors. Parent reports fixture corrections published b810b505→f7e; this worker did not edit C03 or run compiler."
+  },
+  "counts": {
+    "distinct_java_source_classes": 91,
+    "source_declared_test_methods": 510,
+    "new_or_modified_since_base": "91 Java test source entries match handoff; all added longrun Java included plus modified regressions and OWN_C01_51/OWN_C02_27 outside longrun",
+    "unit_regular_classes": 82,
+    "unit_regular_methods": 477,
+    "h2_classes": 1,
+    "h2_methods": 6,
+    "full_class_mysql_gated_classes": 7,
+    "full_class_mysql_methods": 22,
+    "mixed_c01_class_methods": 5,
+    "mixed_c01_outer_unit_methods": 4,
+    "mixed_c01_nested_mysql_methods": 1,
+    "total_real_mysql_gated_methods": 23,
+    "total_ungated_methods_in_primary_sources": 487,
+    "parameterized_annotations": 0,
+    "dynamic_factories": 0,
+    "disabled_annotations": 0,
+    "expected_is_source_declaration_only": true,
+    "supplemental_existing_redis_classes": 2,
+    "supplemental_existing_redis_methods": 22
+  },
+  "entries": [
+    {
+      "class_name": "com.chengyinhub.business.longrun.E03_01Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E03_01Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 4,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.E03_01Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.E03_11Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E03_11Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 7,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.E03_11Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.E04_13Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_13Test.java",
+      "primary_group": "real_mysql",
+      "source_declared_test_methods": 2,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [
+        "@EnabledIfEnvironmentVariable(named=\"CHENGYIN_FUNDS_MYSQL_IT\",matches=\"1\")"
+      ],
+      "static_markers": [
+        "MysqlIntegrationTestConfig",
+        "TransactionTemplate",
+        "EnabledIfEnvironmentVariable",
+        "DataSourceTransactionManager"
+      ],
+      "resource_prerequisites": {
+        "gate": {
+          "CHENGYIN_FUNDS_MYSQL_IT": "1"
+        },
+        "env_family": "funds_mysql",
+        "overrides": {
+          "CHENGYIN_TEST_MYSQL_DATABASE_BASE": "e04_scratch"
+        },
+        "required_explicit": [
+          "CHENGYIN_TEST_MYSQL_HOST",
+          "CHENGYIN_TEST_MYSQL_PORT",
+          "CHENGYIN_TEST_MYSQL_DATABASE_BASE",
+          "CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX",
+          "CHENGYIN_TEST_MYSQL_USER",
+          "CHENGYIN_TEST_MYSQL_PASSWORD"
+        ],
+        "scratch": "e04_scratch_e04_13_it${CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX}; CREATE refuses existing; DROP only after successful create",
+        "checks": "MySQL>=8 (MariaDB rejected); fixed base=e04_scratch; nonempty suffix; password explicitly present",
+        "spring": "Real TransactionTemplate + SpringManagedTransactionFactory/SqlSessionTemplate; not full application/proxy/provider",
+        "cwd": "Ascends from CWD until sql/base_schema_20260818.sql exists; module/root CWD both work only when complete repo parent tree is present",
+        "risk": "Creates/drops owned DB and reads base schema to create two fixture tables; never pass production host"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.E04_13Test'",
+      "gate_environment": {
+        "CHENGYIN_FUNDS_MYSQL_IT": "1"
+      }
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_03Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_03Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 5,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C03_03Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_05Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_05Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 3,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C03_05Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_10Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_10Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 3,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C03_10Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_11Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_11Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 6,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C03_11Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_12Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_12Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 4,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C03_12Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_13Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_13Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 5,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C03_13Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_15Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_15Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 5,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C03_15Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_16Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_16Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 6,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C03_16Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_17Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_17Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 6,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C03_17Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_18Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_18Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 4,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C03_18Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_19Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_19Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 5,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C03_19Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_20Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_20Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 1,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C03_20Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_21Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_21Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 6,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C03_21Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_22Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_22Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 4,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C03_22Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_23Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_23Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 3,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C03_23Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_24Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_24Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 6,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C03_24Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_25Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_25Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 6,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C03_25Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_01Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_01Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 1,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C04_01Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_02Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_02Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 1,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C04_02Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_07Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_07Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 1,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C04_07Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_09Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_09Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 2,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C04_09Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_10Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_10Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 6,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C04_10Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_11Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_11Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 4,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C04_11Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_12Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_12Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 1,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C04_12Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_13Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_13Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 2,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C04_13Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_14Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_14Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 1,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [
+        "Redis"
+      ],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C04_14Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_15Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_15Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 1,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [
+        "Redis"
+      ],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C04_15Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_16Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_16Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 1,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C04_16Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_18Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_18Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 1,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [
+        "Redis"
+      ],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C04_18Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_19Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_19Test.java",
+      "primary_group": "real_mysql",
+      "source_declared_test_methods": 4,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [
+        "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_RUN_SESSION_ORDER_IT\", matches = \"1\")"
+      ],
+      "static_markers": [
+        "EnabledIfEnvironmentVariable"
+      ],
+      "resource_prerequisites": {
+        "gate": {
+          "CHENGYIN_RUN_SESSION_ORDER_IT": "1"
+        },
+        "env_family": "mybatis_it_mysql",
+        "required_explicit": [
+          "CHENGYIN_MYBATIS_IT_HOST",
+          "CHENGYIN_MYBATIS_IT_PORT",
+          "CHENGYIN_MYBATIS_IT_USER",
+          "CHENGYIN_MYBATIS_IT_PASSWORD",
+          "CHENGYIN_MYBATIS_IT_DB_SUFFIX"
+        ],
+        "scratch": "chengyin_mybatis_c04_run_order_${random12to16}${DB_SUFFIX}; helper DROP+CREATE on first URL access; owns randomized name",
+        "checks": "Source gate only; helper defaults to 127.0.0.1:3306 root/empty password if omitted. Explicit dedicated VPS test env mandatory in matrix. DB_SUFFIX must be short/safe to leave >=12 random chars.",
+        "spring": "Real MyBatis SQL, JDBC transactions; no Spring service proxy or deployed routing",
+        "cwd": "Checks chengyinhub-admin/sql/migration_20260917_player_run_session.sql then sql/...; choose repo root or admin module CWD",
+        "risk": "MybatisItDatabase recreates schema at URL construction; isolate server and suffix before enable"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C04_19Test'",
+      "gate_environment": {
+        "CHENGYIN_RUN_SESSION_ORDER_IT": "1"
+      }
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_20MySqlIT",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_20MySqlIT.java",
+      "primary_group": "real_mysql",
+      "source_declared_test_methods": 2,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [
+        "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+      ],
+      "static_markers": [
+        "MysqlIntegrationTestConfig",
+        "ProxyFactory",
+        "EnabledIfEnvironmentVariable",
+        "DataSourceTransactionManager"
+      ],
+      "resource_prerequisites": {
+        "gate": {
+          "CHENGYIN_FUNDS_MYSQL_IT": "1"
+        },
+        "env_family": "funds_mysql",
+        "required_explicit": [
+          "CHENGYIN_TEST_MYSQL_HOST",
+          "CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX"
+        ],
+        "scratch": "${base}_c04_pay_guard${suffix}; preemptive DROP DATABASE IF EXISTS then CREATE, cleanup DROP",
+        "checks": "Host must be present; suffix nonempty. Source permits other helper defaults; matrix requires all six explicit funds vars.",
+        "spring": "Actual MerchantPayable service ProxyFactory + TransactionInterceptor + real mapper/CAS",
+        "cwd": "Reads sql/base_schema_20260818.sql then ../sql/base_schema_20260818.sql; root/admin module CWD; do not run from unrelated folder",
+        "risk": "Deterministic schema name is dropped before creation; globally unique per-run suffix and dedicated server required"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C04_20MySqlIT'",
+      "gate_environment": {
+        "CHENGYIN_FUNDS_MYSQL_IT": "1"
+      }
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_20Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_20Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 4,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C04_20Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_21MySqlIT",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_21MySqlIT.java",
+      "primary_group": "real_mysql",
+      "source_declared_test_methods": 3,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [
+        "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+      ],
+      "static_markers": [
+        "MysqlIntegrationTestConfig",
+        "TransactionTemplate",
+        "EnabledIfEnvironmentVariable",
+        "DataSourceTransactionManager"
+      ],
+      "resource_prerequisites": {
+        "gate": {
+          "CHENGYIN_FUNDS_MYSQL_IT": "1"
+        },
+        "env_family": "funds_mysql",
+        "required_explicit": [
+          "CHENGYIN_TEST_MYSQL_HOST",
+          "CHENGYIN_TEST_MYSQL_PORT",
+          "CHENGYIN_TEST_MYSQL_DATABASE_BASE",
+          "CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX",
+          "CHENGYIN_TEST_MYSQL_USER",
+          "CHENGYIN_TEST_MYSQL_PASSWORD"
+        ],
+        "scratch": "c0421_${uuid}; replaces configured schema in URL; creates minimal fixture tables; DROP only created UUID schema",
+        "checks": "Explicit six vars required (source checks not-null); MySQL>=8 and not MariaDB",
+        "spring": "Real Spring AnnotationConfigApplicationContext @EnableTransactionManagement + actual WithdrawalBalanceAdmissionService proxy + SqlSessionTemplate; independent connections",
+        "coverage": [
+          "bankAdmissionUsesCommittedBalanceAndBothFreezesAfterOuterOldRrSnapshot",
+          "cashRequiresNewCommitsAndReleasesFinancialRowsBeforeCallerContinues",
+          "insufficientCashAdmissionFinalizesOriginalRowAndCannotDebitAfterLaterCredit"
+        ],
+        "limits": "Does not prove complete bank/provider flow, application datasource routing or deployed NESTED transaction-manager behavior",
+        "cwd": "Production XML loaded by classpath; no migration/host working-tree DDL",
+        "risk": "Creates/drops UUID schema; provider/WeChat APIs are not invoked"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C04_21MySqlIT'",
+      "gate_environment": {
+        "CHENGYIN_FUNDS_MYSQL_IT": "1"
+      }
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_21Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_21Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 7,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C04_21Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_22Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_22Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 3,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C04_22Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C05_01Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C05_01Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 1,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C05_01Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C05_09Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C05_09Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 1,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [
+        "Redis"
+      ],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C05_09Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C05_10Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C05_10Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 1,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [
+        "Redis"
+      ],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C05_10Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C05_11Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C05_11Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 1,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C05_11Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C05_15Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C05_15Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 1,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C05_15Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C05_16Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C05_16Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 1,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C05_16Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C05_17Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C05_17Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 1,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [
+        "Redis"
+      ],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C05_17Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C05_18Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C05_18Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 1,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C05_18Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C05_19Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C05_19Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 1,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C05_19Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C05_20Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C05_20Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 1,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C05_20Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C05_21Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C05_21Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 1,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C05_21Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C05_23Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C05_23Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 4,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C05_23Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C05_25MySqlIT",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C05_25MySqlIT.java",
+      "primary_group": "real_mysql",
+      "source_declared_test_methods": 4,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [
+        "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+      ],
+      "static_markers": [
+        "MysqlIntegrationTestConfig",
+        "Redis",
+        "TransactionTemplate",
+        "EnabledIfEnvironmentVariable",
+        "DataSourceTransactionManager"
+      ],
+      "resource_prerequisites": {
+        "gate": {
+          "CHENGYIN_FUNDS_MYSQL_IT": "1"
+        },
+        "env_family": "funds_mysql",
+        "required_explicit": [
+          "CHENGYIN_TEST_MYSQL_HOST",
+          "CHENGYIN_TEST_MYSQL_PORT",
+          "CHENGYIN_TEST_MYSQL_DATABASE_BASE",
+          "CHENGYIN_TEST_MYSQL_USER",
+          "CHENGYIN_TEST_MYSQL_PASSWORD"
+        ],
+        "scratch": "${base}_c0525_${uuid}; source overrides DATABASE_SUFFIX with random _uuid; CREATE without adopting existing; DROP after create",
+        "checks": "Explicit nonblank host/port/base/user; password must be present (empty allowed); MySQL>=8 not MariaDB",
+        "spring": "Real TransactionTemplate + SpringManagedTransactionFactory + actual SysConfig/Cooldown services; RedisCache is Mockito mock",
+        "coverage": [
+          "competingWriterActuallyTimesOutThenRetriesAgainstCommittedBefore",
+          "currentReadBeatsAnAlreadyEstablishedRepeatableReadSnapshot",
+          "updateFailureRollsBackRealAuditAndDoesNotInvalidateCache",
+          "cacheDeleteFailureDoesNotUndoCommitOrBecomeAuthority"
+        ],
+        "limits": "No application context, routing aspect, scheduled job, external provider, real Redis or deployed AOP",
+        "cwd": "XML from classpath; task fixture DDL in test",
+        "risk": "Creates/drops UUID schema; mock Redis deletion error does not establish real Redis behavior"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C05_25MySqlIT'",
+      "gate_environment": {
+        "CHENGYIN_FUNDS_MYSQL_IT": "1"
+      }
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C05_25Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C05_25Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 4,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [
+        "Redis",
+        "TransactionTemplate"
+      ],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C05_25Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_01Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_01Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 2,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C06_01Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_05Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_05Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 2,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C06_05Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_07Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_07Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 2,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C06_07Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_09Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_09Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 2,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C06_09Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_10Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_10Test.java",
+      "primary_group": "real_mysql",
+      "source_declared_test_methods": 2,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [
+        "@EnabledIfEnvironmentVariable(named=\"CHENGYIN_FUNDS_MYSQL_IT\", matches=\"1\")"
+      ],
+      "static_markers": [
+        "MysqlIntegrationTestConfig",
+        "ProxyFactory",
+        "TransactionTemplate",
+        "EnabledIfEnvironmentVariable",
+        "DataSourceTransactionManager"
+      ],
+      "resource_prerequisites": {
+        "gate": {
+          "CHENGYIN_FUNDS_MYSQL_IT": "1"
+        },
+        "env_family": "funds_mysql",
+        "required_explicit": [
+          "CHENGYIN_TEST_MYSQL_HOST",
+          "CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX"
+        ],
+        "scratch": "${base}_c06_snapshot${suffix}; CREATE refuses existing; drops only after created",
+        "checks": "No extra class-specific env gate beyond FUNDS=1; explicit host/nonempty suffix; matrix requires all funds vars despite helper defaults",
+        "spring": "Real GameSession view Spring ProxyFactory and real MySQL snapshot_probe; mapper data is a minimal probe/mock adapter, not production mapper-schema coverage",
+        "coverage": [
+          "proxiedViewKeepsOldRevisionAndTeamThenNextRequestSeesNewState",
+          "negativeControlWithoutProxyMixesOldRevisionAndNewTeam"
+        ],
+        "cwd": "No source-file CWD dependency",
+        "risk": "Creates/drops configured scratch schema, no production app/provider"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C06_10Test'",
+      "gate_environment": {
+        "CHENGYIN_FUNDS_MYSQL_IT": "1"
+      }
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_11Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_11Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 2,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C06_11Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_13Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_13Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 3,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C06_13Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_15Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_15Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 3,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C06_15Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_16Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_16Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 3,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C06_16Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_17Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_17Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 3,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C06_17Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_18Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_18Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 2,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C06_18Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_19Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_19Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 2,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C06_19Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_20Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_20Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 4,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C06_20Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_21Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_21Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 5,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C06_21Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_22Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_22Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 3,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C06_22Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_23Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_23Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 3,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C06_23Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_24Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_24Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 3,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C06_24Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_25Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_25Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 5,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C06_25Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_26Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_26Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 4,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C06_26Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_27Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_27Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 7,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C06_27Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_28Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_28Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 4,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C06_28Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_29Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_29Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 4,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C06_29Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_30Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_30Test.java",
+      "primary_group": "real_mysql",
+      "source_declared_test_methods": 5,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [
+        "@EnabledIfEnvironmentVariable(named=\"CHENGYIN_FUNDS_MYSQL_IT\",matches=\"1\")"
+      ],
+      "static_markers": [
+        "MysqlIntegrationTestConfig",
+        "EnabledIfEnvironmentVariable"
+      ],
+      "resource_prerequisites": {
+        "gate": {
+          "CHENGYIN_FUNDS_MYSQL_IT": "1"
+        },
+        "env_family": "funds_mysql",
+        "required_explicit": [
+          "CHENGYIN_TEST_MYSQL_HOST",
+          "CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX"
+        ],
+        "scratch": "${base}_c06_week${suffix}; CREATE refuses existing; drops only after created",
+        "checks": "Explicit host/nonempty suffix; session SET time_zone='+00:00' and SET timestamp=UNIX_TIMESTAMP(...) must be supported",
+        "spring": "Real production MyBatis XML for balance/points; plain JDBC/MyBatis sessions, not application Spring proxy",
+        "coverage": [
+          "sundayUsesPreviousMondayAndRetainsMemberDirectionAndDeletionFilters",
+          "nextMondayStartsNewWeekAtMidnight",
+          "sundayPointsUseSameMondayBoundaryAndOriginalFilters",
+          "nextMondayPointsStartNewWeekAtMidnight",
+          "negativeControlOldSundayExpressionSelectsFutureWeekFixture"
+        ],
+        "cwd": "Both production XMLs from classpath; no external source file",
+        "risk": "Session-local test time only; future rows are explicit boundary probes, never change host/global time"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.longrun.OWN_C06_30Test'",
+      "gate_environment": {
+        "CHENGYIN_FUNDS_MYSQL_IT": "1"
+      }
+    },
+    {
+      "class_name": "com.chengyinhub.business.service.BothWithdrawalLegsRejectPlayerCooldownTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/BothWithdrawalLegsRejectPlayerCooldownTest.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 6,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.service.BothWithdrawalLegsRejectPlayerCooldownTest'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.service.CashWithdrawStateMachineTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CashWithdrawStateMachineTest.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 30,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.service.CashWithdrawStateMachineTest'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.service.CooldownConfigWriteThroughRealConfigServiceTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CooldownConfigWriteThroughRealConfigServiceTest.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 10,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [
+        "Redis"
+      ],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.service.CooldownConfigWriteThroughRealConfigServiceTest'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.service.FundIdempotencyConcurrencyTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/FundIdempotencyConcurrencyTest.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 2,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.service.FundIdempotencyConcurrencyTest'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.service.MerchantReferralBountyTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/MerchantReferralBountyTest.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 28,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.service.MerchantReferralBountyTest'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.service.PlayerWithdrawalCooldownServiceTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayerWithdrawalCooldownServiceTest.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 16,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.service.PlayerWithdrawalCooldownServiceTest'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.service.impl.BankWithdrawalIdempotencyConcurrencyTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/BankWithdrawalIdempotencyConcurrencyTest.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 2,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.service.impl.BankWithdrawalIdempotencyConcurrencyTest'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.service.impl.CashWithdrawServiceTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CashWithdrawServiceTest.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 14,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.service.impl.CashWithdrawServiceTest'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.service.impl.FundActionPreflightServiceImplTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/FundActionPreflightServiceImplTest.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 5,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.service.impl.FundActionPreflightServiceImplTest'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImplTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImplTest.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 122,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImplTest'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.service.impl.NpcChatServiceTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/NpcChatServiceTest.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 22,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.service.impl.NpcChatServiceTest'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.service.impl.OWN_C01_51Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OWN_C01_51Test.java",
+      "primary_group": "mixed_unit_nested_mysql",
+      "source_declared_test_methods": 5,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [
+        "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_RUN_OWN_C01_51_MYSQL\", matches = \"true\")"
+      ],
+      "static_markers": [
+        "MysqlIntegrationTestConfig",
+        "EnabledIfEnvironmentVariable"
+      ],
+      "resource_prerequisites": {
+        "gate": {
+          "CHENGYIN_RUN_OWN_C01_51_MYSQL": "true"
+        },
+        "env_family": "funds_mysql",
+        "required_explicit": [
+          "CHENGYIN_TEST_MYSQL_HOST",
+          "CHENGYIN_TEST_MYSQL_PORT",
+          "CHENGYIN_TEST_MYSQL_DATABASE_BASE",
+          "CHENGYIN_TEST_MYSQL_USER",
+          "CHENGYIN_TEST_MYSQL_PASSWORD"
+        ],
+        "overrides": {
+          "CHENGYIN_TEST_MYSQL_HOST": "127.0.0.1"
+        },
+        "scratch": "${base}_own_c01_51_${uuid}${optionalSuffix}; CREATE refuses existing; DROP and information_schema cleanup check",
+        "checks": "Nested RealMysqlRepeatableRead only gated. Must use literal true, not 1. Host must equal127.0.0.1; MySQL>=8 not MariaDB; keep BASE/SUFFIX short enough for <=64 DB identifier.",
+        "spring": "Four outer Mockito tests; one nested real MyBatis/JDBC REPEATABLE_READ test; no actual bank/provider HTTP",
+        "counts": {
+          "outer_unit_methods": 4,
+          "nested_mysql_methods": 1,
+          "total_with_gate_open": 5,
+          "total_with_gate_closed_executed": 4,
+          "nested_with_gate_closed": "SKIPPED/DISABLED, not pass"
+        },
+        "cwd": "FundActionPreflightMapper.xml classpath; fixture table local constant",
+        "risk": "Explicit loopback CI MySQL socket required; same host string does not authorize production tunnel"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.service.impl.OWN_C01_51Test'",
+      "gate_environment": {
+        "CHENGYIN_RUN_OWN_C01_51_MYSQL": "true"
+      },
+      "per_class_expected": "4 outer unit +1 nested only with CHENGYIN_RUN_OWN_C01_51_MYSQL=true; gate closed gives4 run and1 disabled"
+    },
+    {
+      "class_name": "com.chengyinhub.business.service.impl.OWN_C02_27Test",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OWN_C02_27Test.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 3,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.service.impl.OWN_C02_27Test'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.service.impl.WithdrawalPayoutStateMybatisTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WithdrawalPayoutStateMybatisTest.java",
+      "primary_group": "h2",
+      "source_declared_test_methods": 6,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [
+        "jdbc:h2",
+        "TransactionTemplate",
+        "DataSourceTransactionManager"
+      ],
+      "resource_prerequisites": {
+        "url": "jdbc:h2:mem:withdrawal_payout_${System.nanoTime()};MODE=MySQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1",
+        "user": "sa",
+        "external_services": "none",
+        "spring": "Real MyBatis and DataSourceTransactionManager/TransactionTemplate against H2; not MySQL dialect/concurrency acceptance"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.service.impl.WithdrawalPayoutStateMybatisTest'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.service.impl.WithdrawalPiiStorageTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WithdrawalPiiStorageTest.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 1,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.service.impl.WithdrawalPiiStorageTest'",
+      "gate_environment": {}
+    },
+    {
+      "class_name": "com.chengyinhub.business.service.impl.WithdrawalStateMachineServiceTest",
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WithdrawalStateMachineServiceTest.java",
+      "primary_group": "unit_mock",
+      "source_declared_test_methods": 4,
+      "parameterized_methods": 0,
+      "dynamic_factories": 0,
+      "disabled_annotations": 0,
+      "annotation_count_is_not_execution_result": true,
+      "source_environment_annotations": [],
+      "static_markers": [],
+      "resource_prerequisites": {
+        "external_services": "none observed in selected fixture; mappers/providers/Redis are mocks where present",
+        "cwd": "Complete checkout and test resources required; production XML/resource contract checks use classpath"
+      },
+      "fixture_repair_pending": false,
+      "maven_command_template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='com.chengyinhub.business.service.impl.WithdrawalStateMachineServiceTest'",
+      "gate_environment": {}
+    }
+  ],
+  "disjoint_execution_groups": [
+    {
+      "id": "unit_mock",
+      "classes": [
+        "com.chengyinhub.business.longrun.E03_01Test",
+        "com.chengyinhub.business.longrun.E03_11Test",
+        "com.chengyinhub.business.longrun.OWN_C03_03Test",
+        "com.chengyinhub.business.longrun.OWN_C03_05Test",
+        "com.chengyinhub.business.longrun.OWN_C03_10Test",
+        "com.chengyinhub.business.longrun.OWN_C03_11Test",
+        "com.chengyinhub.business.longrun.OWN_C03_12Test",
+        "com.chengyinhub.business.longrun.OWN_C03_13Test",
+        "com.chengyinhub.business.longrun.OWN_C03_15Test",
+        "com.chengyinhub.business.longrun.OWN_C03_16Test",
+        "com.chengyinhub.business.longrun.OWN_C03_17Test",
+        "com.chengyinhub.business.longrun.OWN_C03_18Test",
+        "com.chengyinhub.business.longrun.OWN_C03_19Test",
+        "com.chengyinhub.business.longrun.OWN_C03_20Test",
+        "com.chengyinhub.business.longrun.OWN_C03_21Test",
+        "com.chengyinhub.business.longrun.OWN_C03_22Test",
+        "com.chengyinhub.business.longrun.OWN_C03_23Test",
+        "com.chengyinhub.business.longrun.OWN_C03_24Test",
+        "com.chengyinhub.business.longrun.OWN_C03_25Test",
+        "com.chengyinhub.business.longrun.OWN_C04_01Test",
+        "com.chengyinhub.business.longrun.OWN_C04_02Test",
+        "com.chengyinhub.business.longrun.OWN_C04_07Test",
+        "com.chengyinhub.business.longrun.OWN_C04_09Test",
+        "com.chengyinhub.business.longrun.OWN_C04_10Test",
+        "com.chengyinhub.business.longrun.OWN_C04_11Test",
+        "com.chengyinhub.business.longrun.OWN_C04_12Test",
+        "com.chengyinhub.business.longrun.OWN_C04_13Test",
+        "com.chengyinhub.business.longrun.OWN_C04_14Test",
+        "com.chengyinhub.business.longrun.OWN_C04_15Test",
+        "com.chengyinhub.business.longrun.OWN_C04_16Test",
+        "com.chengyinhub.business.longrun.OWN_C04_18Test",
+        "com.chengyinhub.business.longrun.OWN_C04_20Test",
+        "com.chengyinhub.business.longrun.OWN_C04_21Test",
+        "com.chengyinhub.business.longrun.OWN_C04_22Test",
+        "com.chengyinhub.business.longrun.OWN_C05_01Test",
+        "com.chengyinhub.business.longrun.OWN_C05_09Test",
+        "com.chengyinhub.business.longrun.OWN_C05_10Test",
+        "com.chengyinhub.business.longrun.OWN_C05_11Test",
+        "com.chengyinhub.business.longrun.OWN_C05_15Test",
+        "com.chengyinhub.business.longrun.OWN_C05_16Test",
+        "com.chengyinhub.business.longrun.OWN_C05_17Test",
+        "com.chengyinhub.business.longrun.OWN_C05_18Test",
+        "com.chengyinhub.business.longrun.OWN_C05_19Test",
+        "com.chengyinhub.business.longrun.OWN_C05_20Test",
+        "com.chengyinhub.business.longrun.OWN_C05_21Test",
+        "com.chengyinhub.business.longrun.OWN_C05_23Test",
+        "com.chengyinhub.business.longrun.OWN_C05_25Test",
+        "com.chengyinhub.business.longrun.OWN_C06_01Test",
+        "com.chengyinhub.business.longrun.OWN_C06_05Test",
+        "com.chengyinhub.business.longrun.OWN_C06_07Test",
+        "com.chengyinhub.business.longrun.OWN_C06_09Test",
+        "com.chengyinhub.business.longrun.OWN_C06_11Test",
+        "com.chengyinhub.business.longrun.OWN_C06_13Test",
+        "com.chengyinhub.business.longrun.OWN_C06_15Test",
+        "com.chengyinhub.business.longrun.OWN_C06_16Test",
+        "com.chengyinhub.business.longrun.OWN_C06_17Test",
+        "com.chengyinhub.business.longrun.OWN_C06_18Test",
+        "com.chengyinhub.business.longrun.OWN_C06_19Test",
+        "com.chengyinhub.business.longrun.OWN_C06_20Test",
+        "com.chengyinhub.business.longrun.OWN_C06_21Test",
+        "com.chengyinhub.business.longrun.OWN_C06_22Test",
+        "com.chengyinhub.business.longrun.OWN_C06_23Test",
+        "com.chengyinhub.business.longrun.OWN_C06_24Test",
+        "com.chengyinhub.business.longrun.OWN_C06_25Test",
+        "com.chengyinhub.business.longrun.OWN_C06_26Test",
+        "com.chengyinhub.business.longrun.OWN_C06_27Test",
+        "com.chengyinhub.business.longrun.OWN_C06_28Test",
+        "com.chengyinhub.business.longrun.OWN_C06_29Test",
+        "com.chengyinhub.business.service.BothWithdrawalLegsRejectPlayerCooldownTest",
+        "com.chengyinhub.business.service.CashWithdrawStateMachineTest",
+        "com.chengyinhub.business.service.CooldownConfigWriteThroughRealConfigServiceTest",
+        "com.chengyinhub.business.service.FundIdempotencyConcurrencyTest",
+        "com.chengyinhub.business.service.MerchantReferralBountyTest",
+        "com.chengyinhub.business.service.PlayerWithdrawalCooldownServiceTest",
+        "com.chengyinhub.business.service.impl.BankWithdrawalIdempotencyConcurrencyTest",
+        "com.chengyinhub.business.service.impl.CashWithdrawServiceTest",
+        "com.chengyinhub.business.service.impl.FundActionPreflightServiceImplTest",
+        "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImplTest",
+        "com.chengyinhub.business.service.impl.NpcChatServiceTest",
+        "com.chengyinhub.business.service.impl.OWN_C02_27Test",
+        "com.chengyinhub.business.service.impl.WithdrawalPiiStorageTest",
+        "com.chengyinhub.business.service.impl.WithdrawalStateMachineServiceTest"
+      ],
+      "source_expected_methods": 477,
+      "environment": "Do not set MySQL/Redis opt-in gates for this group; no full application context",
+      "note": "Includes C04_21Test7/C04_22Test3, C05_25Test4, integrated E03_01Test4/E03_11Test7. C05_25Test uses a synchronization-only transaction manager and mock storage, not DB rollback proof.",
+      "maven_selector": "com.chengyinhub.business.longrun.E03_01Test,com.chengyinhub.business.longrun.E03_11Test,com.chengyinhub.business.longrun.OWN_C03_03Test,com.chengyinhub.business.longrun.OWN_C03_05Test,com.chengyinhub.business.longrun.OWN_C03_10Test,com.chengyinhub.business.longrun.OWN_C03_11Test,com.chengyinhub.business.longrun.OWN_C03_12Test,com.chengyinhub.business.longrun.OWN_C03_13Test,com.chengyinhub.business.longrun.OWN_C03_15Test,com.chengyinhub.business.longrun.OWN_C03_16Test,com.chengyinhub.business.longrun.OWN_C03_17Test,com.chengyinhub.business.longrun.OWN_C03_18Test,com.chengyinhub.business.longrun.OWN_C03_19Test,com.chengyinhub.business.longrun.OWN_C03_20Test,com.chengyinhub.business.longrun.OWN_C03_21Test,com.chengyinhub.business.longrun.OWN_C03_22Test,com.chengyinhub.business.longrun.OWN_C03_23Test,com.chengyinhub.business.longrun.OWN_C03_24Test,com.chengyinhub.business.longrun.OWN_C03_25Test,com.chengyinhub.business.longrun.OWN_C04_01Test,com.chengyinhub.business.longrun.OWN_C04_02Test,com.chengyinhub.business.longrun.OWN_C04_07Test,com.chengyinhub.business.longrun.OWN_C04_09Test,com.chengyinhub.business.longrun.OWN_C04_10Test,com.chengyinhub.business.longrun.OWN_C04_11Test,com.chengyinhub.business.longrun.OWN_C04_12Test,com.chengyinhub.business.longrun.OWN_C04_13Test,com.chengyinhub.business.longrun.OWN_C04_14Test,com.chengyinhub.business.longrun.OWN_C04_15Test,com.chengyinhub.business.longrun.OWN_C04_16Test,com.chengyinhub.business.longrun.OWN_C04_18Test,com.chengyinhub.business.longrun.OWN_C04_20Test,com.chengyinhub.business.longrun.OWN_C04_21Test,com.chengyinhub.business.longrun.OWN_C04_22Test,com.chengyinhub.business.longrun.OWN_C05_01Test,com.chengyinhub.business.longrun.OWN_C05_09Test,com.chengyinhub.business.longrun.OWN_C05_10Test,com.chengyinhub.business.longrun.OWN_C05_11Test,com.chengyinhub.business.longrun.OWN_C05_15Test,com.chengyinhub.business.longrun.OWN_C05_16Test,com.chengyinhub.business.longrun.OWN_C05_17Test,com.chengyinhub.business.longrun.OWN_C05_18Test,com.chengyinhub.business.longrun.OWN_C05_19Test,com.chengyinhub.business.longrun.OWN_C05_20Test,com.chengyinhub.business.longrun.OWN_C05_21Test,com.chengyinhub.business.longrun.OWN_C05_23Test,com.chengyinhub.business.longrun.OWN_C05_25Test,com.chengyinhub.business.longrun.OWN_C06_01Test,com.chengyinhub.business.longrun.OWN_C06_05Test,com.chengyinhub.business.longrun.OWN_C06_07Test,com.chengyinhub.business.longrun.OWN_C06_09Test,com.chengyinhub.business.longrun.OWN_C06_11Test,com.chengyinhub.business.longrun.OWN_C06_13Test,com.chengyinhub.business.longrun.OWN_C06_15Test,com.chengyinhub.business.longrun.OWN_C06_16Test,com.chengyinhub.business.longrun.OWN_C06_17Test,com.chengyinhub.business.longrun.OWN_C06_18Test,com.chengyinhub.business.longrun.OWN_C06_19Test,com.chengyinhub.business.longrun.OWN_C06_20Test,com.chengyinhub.business.longrun.OWN_C06_21Test,com.chengyinhub.business.longrun.OWN_C06_22Test,com.chengyinhub.business.longrun.OWN_C06_23Test,com.chengyinhub.business.longrun.OWN_C06_24Test,com.chengyinhub.business.longrun.OWN_C06_25Test,com.chengyinhub.business.longrun.OWN_C06_26Test,com.chengyinhub.business.longrun.OWN_C06_27Test,com.chengyinhub.business.longrun.OWN_C06_28Test,com.chengyinhub.business.longrun.OWN_C06_29Test,com.chengyinhub.business.service.BothWithdrawalLegsRejectPlayerCooldownTest,com.chengyinhub.business.service.CashWithdrawStateMachineTest,com.chengyinhub.business.service.CooldownConfigWriteThroughRealConfigServiceTest,com.chengyinhub.business.service.FundIdempotencyConcurrencyTest,com.chengyinhub.business.service.MerchantReferralBountyTest,com.chengyinhub.business.service.PlayerWithdrawalCooldownServiceTest,com.chengyinhub.business.service.impl.BankWithdrawalIdempotencyConcurrencyTest,com.chengyinhub.business.service.impl.CashWithdrawServiceTest,com.chengyinhub.business.service.impl.FundActionPreflightServiceImplTest,com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImplTest,com.chengyinhub.business.service.impl.NpcChatServiceTest,com.chengyinhub.business.service.impl.OWN_C02_27Test,com.chengyinhub.business.service.impl.WithdrawalPiiStorageTest,com.chengyinhub.business.service.impl.WithdrawalStateMachineServiceTest"
+    },
+    {
+      "id": "h2",
+      "classes": [
+        "com.chengyinhub.business.service.impl.WithdrawalPayoutStateMybatisTest"
+      ],
+      "source_expected_methods": 6,
+      "environment": "No external DB/Redis; H2 in-memory",
+      "note": "Production MyBatis mappings against reduced H2 fixture; JDBC MYSQL behavior still separate.",
+      "maven_selector": "com.chengyinhub.business.service.impl.WithdrawalPayoutStateMybatisTest"
+    },
+    {
+      "id": "mysql_funds_main",
+      "classes": [
+        "com.chengyinhub.business.longrun.OWN_C04_20MySqlIT",
+        "com.chengyinhub.business.longrun.OWN_C04_21MySqlIT",
+        "com.chengyinhub.business.longrun.OWN_C05_25MySqlIT",
+        "com.chengyinhub.business.longrun.OWN_C06_10Test",
+        "com.chengyinhub.business.longrun.OWN_C06_30Test"
+      ],
+      "source_expected_methods": 16,
+      "environment_profile": "funds_mysql_common",
+      "note": "Run serially with per-run isolated short suffix. C05_25 uses its own UUID suffix; C04_21 its own UUID schema.",
+      "maven_selector": "com.chengyinhub.business.longrun.OWN_C04_20MySqlIT,com.chengyinhub.business.longrun.OWN_C04_21MySqlIT,com.chengyinhub.business.longrun.OWN_C05_25MySqlIT,com.chengyinhub.business.longrun.OWN_C06_10Test,com.chengyinhub.business.longrun.OWN_C06_30Test"
+    },
+    {
+      "id": "mysql_e04_fixed_base",
+      "classes": [
+        "com.chengyinhub.business.longrun.E04_13Test"
+      ],
+      "source_expected_methods": 2,
+      "environment_profile": "funds_mysql_e04",
+      "note": "DATABASE_BASE must equal e04_scratch; cannot reuse a base chosen for the other groups.",
+      "maven_selector": "com.chengyinhub.business.longrun.E04_13Test"
+    },
+    {
+      "id": "mysql_run_order",
+      "classes": [
+        "com.chengyinhub.business.longrun.OWN_C04_19Test"
+      ],
+      "source_expected_methods": 4,
+      "environment_profile": "mybatis_run_order",
+      "note": "Different env family and gate; FUNDS_MYSQL_IT does not enable it.",
+      "maven_selector": "com.chengyinhub.business.longrun.OWN_C04_19Test"
+    },
+    {
+      "id": "mixed_c01_51",
+      "classes": [
+        "com.chengyinhub.business.service.impl.OWN_C01_51Test"
+      ],
+      "source_expected_methods": 5,
+      "environment_profile": "c01_nested_mysql",
+      "note": "Four outer unit + one nested real MySQL. Select outer class so Jupiter discovers nested; literal true gate. This disjoint plan does not also include outer in unit group.",
+      "maven_selector": "com.chengyinhub.business.service.impl.OWN_C01_51Test"
+    }
+  ],
+  "environment_profiles": {
+    "funds_mysql_common": {
+      "gate": {
+        "CHENGYIN_FUNDS_MYSQL_IT": "1"
+      },
+      "vars": {
+        "CHENGYIN_TEST_MYSQL_HOST": "127.0.0.1 dedicated VPS test service/forward only",
+        "CHENGYIN_TEST_MYSQL_PORT": "explicit dedicated VPS test port",
+        "CHENGYIN_TEST_MYSQL_DATABASE_BASE": "short safe identifier, e.g. cv",
+        "CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX": "short unique run suffix, e.g. _r123; identifier chars only",
+        "CHENGYIN_TEST_MYSQL_USER": "explicit isolated create/drop user",
+        "CHENGYIN_TEST_MYSQL_PASSWORD": "explicit CI secret/empty only if isolated service configured"
+      },
+      "admin_url": "jdbc:mysql://${HOST}:${PORT}/?useSSL=false&allowPublicKeyRetrieval=true&connectionTimeZone=LOCAL",
+      "database_url": "jdbc:mysql://${HOST}:${PORT}/${base}_${suite}${suffix}?useSSL=false&allowPublicKeyRetrieval=true&connectionTimeZone=LOCAL",
+      "warning": "Helper defaults are localhost3306/root/empty/basechengyin/suffixempty; matrix requires explicit vars even if individual class checks fewer. MySQL8.0.45 recommended CI target, source validators generally accept MySQL>=8 and reject MariaDB where present. No production DNS, tunnel or preexisting schema."
+    },
+    "funds_mysql_e04": {
+      "inherits": "funds_mysql_common",
+      "overrides": {
+        "CHENGYIN_TEST_MYSQL_DATABASE_BASE": "e04_scratch"
+      },
+      "gate": {
+        "CHENGYIN_FUNDS_MYSQL_IT": "1"
+      }
+    },
+    "mybatis_run_order": {
+      "gate": {
+        "CHENGYIN_RUN_SESSION_ORDER_IT": "1"
+      },
+      "vars": {
+        "CHENGYIN_MYBATIS_IT_HOST": "127.0.0.1",
+        "CHENGYIN_MYBATIS_IT_PORT": "dedicated VPS test port",
+        "CHENGYIN_MYBATIS_IT_USER": "explicit",
+        "CHENGYIN_MYBATIS_IT_PASSWORD": "explicit",
+        "CHENGYIN_MYBATIS_IT_DB_SUFFIX": "short unique identifier suffix"
+      },
+      "url": "jdbc:mysql://${HOST}:${PORT}/chengyin_mybatis_${suite}${DB_SUFFIX}?serverTimezone=GMT%2B8&useSSL=false&allowPublicKeyRetrieval=true",
+      "warning": "Different env family; helper DROP+CREATE before fixture setup. Do not rely on FUNDS variables."
+    },
+    "c01_nested_mysql": {
+      "inherits": "funds_mysql_common",
+      "gate": {
+        "CHENGYIN_RUN_OWN_C01_51_MYSQL": "true"
+      },
+      "constraints": "Loopback host exact127.0.0.1; short base+suffix to preserve <=64 DB name after UUID suite. Four outer run regardless; one nested skips without literaltrue. FUNDS_MYSQL_IT does not enable nested."
+    }
+  },
+  "redis_semantic_group": {
+    "new_real_redis_suites": [],
+    "new_and_modified_mock_redis_evidence": [
+      {
+        "class_name": "com.chengyinhub.business.longrun.OWN_C04_14Test",
+        "note": "Redis/template/cache mock or comment; not real Redis"
+      },
+      {
+        "class_name": "com.chengyinhub.business.longrun.OWN_C04_15Test",
+        "note": "Redis/template/cache mock or comment; not real Redis"
+      },
+      {
+        "class_name": "com.chengyinhub.business.longrun.OWN_C04_18Test",
+        "note": "Redis/template/cache mock or comment; not real Redis"
+      },
+      {
+        "class_name": "com.chengyinhub.business.longrun.OWN_C05_09Test",
+        "note": "Comment explicitly says no provider or Redis calls"
+      },
+      {
+        "class_name": "com.chengyinhub.business.longrun.OWN_C05_10Test",
+        "note": "Redis/template/cache mock or comment; not real Redis"
+      },
+      {
+        "class_name": "com.chengyinhub.business.longrun.OWN_C05_17Test",
+        "note": "Redis/template/cache mock or comment; not real Redis"
+      },
+      {
+        "class_name": "com.chengyinhub.business.longrun.OWN_C05_25MySqlIT",
+        "note": "Real MySQL; RedisCache mock"
+      },
+      {
+        "class_name": "com.chengyinhub.business.longrun.OWN_C05_25Test",
+        "note": "Redis/template/cache mock or comment; not real Redis"
+      },
+      {
+        "class_name": "com.chengyinhub.business.service.CooldownConfigWriteThroughRealConfigServiceTest",
+        "note": "Redis/template/cache mock or comment; not real Redis"
+      }
+    ],
+    "coverage_gap": "Passing primary510 does not prove actual Redis Lua, cache availability or mysql/redis recovery. Supplemental existing suites below require separate explicit gates and fresh reports.",
+    "supplemental_existing_suites": [
+      {
+        "class_name": "com.chengyinhub.business.service.ai.impl.AiQuotaReservationRedisIT",
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/impl/AiQuotaReservationRedisIT.java",
+        "in_new91": false,
+        "source_declared_methods": 15,
+        "parameterized": 0,
+        "dynamic": 0,
+        "gate": {
+          "CHENGYIN_AI_RESERVATION_REDIS_IT": "1"
+        },
+        "required_env": {
+          "CHENGYIN_AI_REDIS_IT_HOST": "127.0.0.1 (asserted)",
+          "CHENGYIN_AI_REDIS_IT_PORT": "explicit dedicated port1..65535",
+          "CHENGYIN_AI_REDIS_IT_DATABASE": "explicit dedicated Redis DB0..15",
+          "CHENGYIN_AI_REDIS_IT_PASSWORD": "optional, set explicitly for VPS test service if configured"
+        },
+        "url": "redis://127.0.0.1:${PORT}/${DATABASE}; password optional",
+        "ownership": "Random task member/key set; refuses existing keys; deletes only tracked keys; no FLUSHDB",
+        "external_provider": "No model HTTP; recording wrapper simulates lost reply while real Redis Lua/serializer executes",
+        "docker": "Does not create Testcontainers/Docker; CI must provision dedicated Redis",
+        "scope": "Supplemental existing A02/C04/C05 regression, not part of 510 primary declarations"
+      },
+      {
+        "class_name": "com.chengyinhub.business.service.ai.AiQuotaRecoveryMySqlRedisIT",
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/AiQuotaRecoveryMySqlRedisIT.java",
+        "in_new91": false,
+        "source_declared_methods": 7,
+        "parameterized": 0,
+        "dynamic": 0,
+        "gate": {
+          "CHENGYIN_AI_RECOVERY_IT": "1"
+        },
+        "required_env": {
+          "CHENGYIN_AI_MYSQL_IT_PORT": "explicit dedicated localhost MySQL port",
+          "CHENGYIN_AI_MYSQL_IT_USER": "explicit create/drop schema user",
+          "CHENGYIN_AI_MYSQL_IT_PASSWORD": "explicit, may be empty only for isolated CI",
+          "CHENGYIN_AI_REDIS_IT_PORT": "explicit",
+          "CHENGYIN_AI_REDIS_IT_DATABASE": "explicit0..15",
+          "CHENGYIN_AI_REDIS_IT_PASSWORD": "optional"
+        },
+        "url": "jdbc:mysql://127.0.0.1:${CHENGYIN_AI_MYSQL_IT_PORT}/?serverTimezone=UTC; Redis127.0.0.1 hardcoded (no HOST env)",
+        "scratch": "chengyin_ai_recovery_${uuid}, task-created/dropped; random tracked Redis keys and existing-key refusal",
+        "cwd": "Reads chengyinhub-admin/sql/migration_ai_quota_reservation_recovery_20261013.sql then sql/...; repo/admin CWD",
+        "docker": "No Testcontainers/Docker self-start",
+        "scope": "Supplemental existing MySQL+Redis recovery regression; not part of primary510"
+      }
+    ]
+  },
+  "spring_runtime_semantic_group": {
+    "overlaps_primary_groups": true,
+    "spring_proxy_real_mysql": [
+      "com.chengyinhub.business.longrun.OWN_C04_20MySqlIT",
+      "com.chengyinhub.business.longrun.OWN_C04_21MySqlIT",
+      "com.chengyinhub.business.longrun.OWN_C06_10Test"
+    ],
+    "real_spring_transactions_without_full_application": [
+      "com.chengyinhub.business.longrun.E04_13Test",
+      "com.chengyinhub.business.longrun.OWN_C05_25MySqlIT",
+      "com.chengyinhub.business.service.impl.WithdrawalPayoutStateMybatisTest"
+    ],
+    "synchronization_only_mock": [
+      "com.chengyinhub.business.longrun.OWN_C05_25Test"
+    ],
+    "runtime_http_classes_in_primary": [],
+    "limitations": "No full SpringBoot application startup, deployed datasource routing/NESTED manager, bank/Wechat/AI provider calls, real-identity HTTP or device acceptance is established by this matrix."
+  },
+  "cwd_and_resources": {
+    "checkout": "Complete repository checkout and chengyinhub-admin/src/test resources/main mapper resources must be present. Use root reactor -pl chengyinhub-admin -am; Surefire module CWD is supported by listed fallbacks.",
+    "special_cases": [
+      {
+        "class_name": "com.chengyinhub.business.longrun.E04_13Test",
+        "path": "Ascends until sql/base_schema_20260818.sql"
+      },
+      {
+        "class_name": "com.chengyinhub.business.longrun.OWN_C04_19Test",
+        "path": "root chengyinhub-admin/sql/migration_20260917_player_run_session.sql OR module sql/..."
+      },
+      {
+        "class_name": "com.chengyinhub.business.longrun.OWN_C04_20MySqlIT",
+        "path": "root sql/base_schema_20260818.sql OR module ../sql/base_schema_20260818.sql"
+      },
+      {
+        "class_name": "com.chengyinhub.business.service.ai.AiQuotaRecoveryMySqlRedisIT",
+        "path": "Reads chengyinhub-admin/sql/migration_ai_quota_reservation_recovery_20261013.sql then sql/...; repo/admin CWD"
+      }
+    ],
+    "classpath_mapper_contracts": "Do not copy only Java source files to a temp working directory; XML and schema/migration inputs remain required."
+  },
+  "maven_preparation": {
+    "template": "mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest='<comma-separated exact class selectors from group>'",
+    "not_run_here": true,
+    "explicit_it_selection": "Names ending MySqlIT may not be included in default Surefire patterns; select exact classes, not just *Test.",
+    "fresh_evidence": "Archive/clear report outputs per invocation, bind report to exact new SHA + selectors + gates; check tests/skips/errors and per-class XML. Flags only tolerate empty upstream modules, never treat missing admin report or disabled IT as pass.",
+    "c01_nested": "Use outer OWN_C01_51Test selector in mixed group with nested gate=true. Expect4 outer+1 nested, not five MySQL tests; if gate closed, one nested disabled is not acceptance.",
+    "expected_total": "Disjoint primary groups sum510 source declarations with all gates enabled, absent runtime failures. Supplemental existing Redis suites add22 separate declarations; do not conflate totals."
+  },
+  "external_access_and_exclusions": {
+    "selected_primary_network": "No primary selected fixture observed invoking live bank/Wechat/AI/OSS HTTP; real connections are dedicated scratch MySQL only. Mockito providers in C04-21Test/C04-22Test, parser-only clients in C05-15/16/20, and example/OSS URL strings in GameSession tests are not live-provider tests.",
+    "explicit_exclusions": [
+      {
+        "scope": "Any production/remote MySQL or Redis endpoint, including localhost tunnels to production",
+        "reason": "Enabled fixture suites issue CREATE/DROP database, table resets and task Redis key deletes; authorization is dedicated GitHub VPS test services only."
+      },
+      {
+        "scope": "Full application HTTP/provider/OSS/runtime suites outside the exact91/supplemental2 selectors",
+        "reason": "Not inventoried here; do not wildcard-enable unknown external configs or inherit application production endpoints. Separately review endpoint identity, credentials, scheduler/provider activation before execution."
+      },
+      {
+        "scope": "Automatic ci/backend-test.sh / ci/funds-mysql-it-gate.sh broad suite expansion",
+        "reason": "Scripts select many historical IT classes and env families; this matrix does not authorize their unreviewed fixture/connection surface. Root may explicitly schedule reviewed broader regression separately."
+      },
+      {
+        "scope": "Device, real-identity HTTP, payment/provider calls, production deployment or migrations",
+        "reason": "Not demonstrated by source fixture matrix; separate business acceptance scope, not inferred from green unit/IT reports."
+      }
+    ],
+    "safe_not_excluded_examples": [
+      "OWN_C04_22Test uses mocked IWechatPayService despite transfer/query method calls.",
+      "OWN_C05_15Test responseText, OWN_C05_16Test requireReady and OWN_C05_20Test truncate use https://unused.invalid only as constructor data; no HTTP method invoked.",
+      "Existing WechatPayOrderQueryTest outside primary has mocked JsapiService; literal api.mch.weixin URL alone is not evidence of actual network."
+    ]
+  },
+  "worker_actions": {
+    "java_runs": 0,
+    "maven_runs": 0,
+    "db_or_sql_runs": 0,
+    "business_source_edits": 0,
+    "test_fixture_edits": "Only separately authorized14 C06 constructors; not part of baseline2b matrix acceptance",
+    "control_file_edits": 0,
+    "output": "/tmp/backend-validation-core-matrix.json",
+    "execution_destination": "Local VPS thread01a13eed only; no Cloud or manual CI"
+  },
+  "target_validation_sha": "e0e3f517b8e6deb26ed3697a00d38ae14f015e76",
+  "inventory_source_sha": "2b1984b59a0929a360e8095d5fc1955a1aed7964",
+  "inventory_note": "Historical0d full-source matrix retained; latest production/test delta and minimal2class10declared suite in latest_source_delta. No old results inherited.",
+  "execution_owner": "LOCAL_VPS_COORDINATOR/01a13eed-e4d9-77f3-b875-c72d26ea7d59",
+  "status": "CORE_E01_19_ORDINARY10_PASS_LOCAL_REPORTED_PUBLIC_REPORT_PENDING",
+  "repair_round_1": "VPS_REPAIR_ROUND_1.json",
+  "latest_regression_history": {
+    "candidate_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c",
+    "result": "FAIL",
+    "evidence_commit": "6e7a22025192710fa5edfd8be5a10ed425edc0ee",
+    "evidence_pr": 24,
+    "summary_path": "docs/verification/mini-bug-arch-20261015/VPS_CORE_f7e0e523/summary.json",
+    "C00_read_public_evidence": true,
+    "tests": 483,
+    "passed": 470,
+    "failures": 5,
+    "errors": 8,
+    "skipped": 0,
+    "classes": 83,
+    "fresh_reports": true,
+    "exact_selected_class_set_match": true,
+    "status_scope": "ordinary offline83 selected classes only;8 gated/JDBC deferred",
+    "resource_guard": "212;1536MiB/no extra swap/1CPU/256PIDs/network none/shared lock",
+    "source_repair_candidate": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
+    "new_candidate_verification": "0d targeted157 PASS public evidence read; no full483 rerun",
+    "not_business_bugs_count": "13 failing methods are not13 confirmed production bugs; source diagnosis fixture/boundary mismatches",
+    "record_kind": "HISTORICAL_F7_FAILURE_RETAINED"
+  },
+  "current_targeted_vps_result": {
+    "candidate_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
+    "result": "TARGETED_PASS",
+    "location": "VPS",
+    "validation_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+    "classes": 8,
+    "tests": 157,
+    "passed": 157,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "guard_exit_code": 0,
+    "guard_state": "completed",
+    "resource_entry": "212 guard and shared lock, local verifier execution",
+    "exact_class_set_match": true,
+    "all_reports_fresh": true,
+    "source_diff_scope": "f7..0d only8 test classes and repair docs, no production changes",
+    "closed_original_failed_methods": 13,
+    "full_483_rerun": false,
+    "unchanged_classes_not_rerun": 75,
+    "evidence_pr": 24,
+    "evidence_directory": "docs/verification/mini-bug-arch-20261015/VPS_CORE_0d63043a/",
+    "evidence_commit": "0e9695fc47689aa73cb1f4a6e8395f0a703ff2d7",
+    "C00_read_public_evidence": true,
+    "evidence_level": "C00 fully read public README/summary at exact independent evidence SHA; per-class fresh XML/log/source hashes retained, raw logs on VPS",
+    "historical_result_retained": "f7e0e523:83 classes483 tests470pass/5fail/8error/0skip",
+    "not_accepted": [
+      "new-SHA full matrix execution",
+      "deferred real database classes",
+      "real MySQL/Redis",
+      "runtime HTTP real identities",
+      "devices",
+      "merge",
+      "deployment",
+      "business migrations"
+    ],
+    "cloud_manual_runs": 0,
+    "previous_source_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c",
+    "environment": "DEDICATED_TEST_VPS_OFFLINE_GUARD_212",
+    "readme_url": "https://github.com/liboyang42-cpu/hengyin/blob/0e9695fc47689aa73cb1f4a6e8395f0a703ff2d7/docs/verification/mini-bug-arch-20261015/VPS_CORE_0d63043a/README.md",
+    "summary_url": "https://github.com/liboyang42-cpu/hengyin/blob/0e9695fc47689aa73cb1f4a6e8395f0a703ff2d7/docs/verification/mini-bug-arch-20261015/VPS_CORE_0d63043a/summary.json",
+    "source_archive_sha256": "1b863845183aedeefc9e7ecabb911e8d77265784603b7935e13c985efb319b13",
+    "log_sha256": "20f136760c990852114d808df8a03a0c5ea093c94b6cffd35beaf84668ee163a",
+    "started_at": "2026-10-15T20:23:49.505347+00:00",
+    "finished_at": "2026-10-15T20:26:34.035720+00:00",
+    "class_reports": [
+      {
+        "class": "com.chengyinhub.business.longrun.OWN_C03_22Test",
+        "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C03_22Test.xml",
+        "sha256": "3e76229aab0d1d7796c1d6e2be9105702dad595705d2f079cf90231a15d846b4",
+        "fresh": true,
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.OWN_C03_24Test",
+        "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C03_24Test.xml",
+        "sha256": "27a0ee917162c6bae313d3ae9467cbdce69b569220baf531d7be50fac028f68c",
+        "fresh": true,
+        "tests": 6,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.OWN_C04_21Test",
+        "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C04_21Test.xml",
+        "sha256": "dbdfc52641b0e32c6464c854d79b78fb04a0a1798a9f96422a5a6fc84a9130ea",
+        "fresh": true,
+        "tests": 7,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.OWN_C04_22Test",
+        "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C04_22Test.xml",
+        "sha256": "1f9e13b11c54d0d00267f7923d63f69ce5845c5538b974748d23d5246b2dcd28",
+        "fresh": true,
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.OWN_C06_25Test",
+        "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C06_25Test.xml",
+        "sha256": "bf67e6b62989cbddfa407e789640c6178ec0683f9807fa25f1eb164a16305176",
+        "fresh": true,
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.OWN_C06_29Test",
+        "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C06_29Test.xml",
+        "sha256": "b841b81d8fc832b04d7a4927efc5d1e6f9ff8615bb1705ee51a61addb0b9fa11",
+        "fresh": true,
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "com.chengyinhub.business.service.BothWithdrawalLegsRejectPlayerCooldownTest",
+        "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.BothWithdrawalLegsRejectPlayerCooldownTest.xml",
+        "sha256": "a8404d0abceee4c369408022e65b7e731158b3fd8910729fed1c6be0d3e137aa",
+        "fresh": true,
+        "tests": 6,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImplTest",
+        "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImplTest.xml",
+        "sha256": "4b6d003a0e7897ed1bd8b67238537ec63588b2f3153ffc9fc62aae5b48cfeb69",
+        "fresh": true,
+        "tests": 122,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    ],
+    "full_matrix_rerun": false,
+    "source_repairs": "Original-author test fixture-only repairs, no production changes in repair diff"
+  },
+  "latest_source_delta": {
+    "candidate_sha": "e0e3f517b8e6deb26ed3697a00d38ae14f015e76",
+    "parent_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
+    "status": "NOT_RUN",
+    "owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+    "classes": [
+      {
+        "name": "com.chengyinhub.web.controller.api.TopicLikeExplicitCancelConcurrencyTest",
+        "source_declarations": 5,
+        "new": true
+      },
+      {
+        "name": "com.chengyinhub.web.controller.api.ApiTopicLikeDirectionTest",
+        "source_declarations": 5,
+        "new": false
+      }
+    ],
+    "source_declared_total": 10,
+    "actual_executed_tests": null,
+    "environment": "Existing local approved212 offline entry; existing test dependencies, no DB/Redis/new config or dependency",
+    "command_template_local_only": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.web.controller.api.TopicLikeExplicitCancelConcurrencyTest,com.chengyinhub.web.controller.api.ApiTopicLikeDirectionTest test",
+    "new_database_acceptance": "NOT_RUN",
+    "runtime_HTTP": "NOT_RUN",
+    "no_inherited_results": "0d targeted157PASS does not cover new production SHA; old1e231/b4565/third24 separate",
+    "Cloud_execution": false
+  },
+  "latest_core_e01_19_validation": {
+    "candidate_sha": "e0e3f517b8e6deb26ed3697a00d38ae14f015e76",
+    "result": "ORDINARY_TARGETED_PASS",
+    "tests": 10,
+    "passed": 10,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "classes": [
+      "com.chengyinhub.web.controller.api.TopicLikeExplicitCancelConcurrencyTest",
+      "com.chengyinhub.web.controller.api.ApiTopicLikeDirectionTest"
+    ],
+    "class_test_counts": [
+      5,
+      5
+    ],
+    "fresh_reports": true,
+    "exact_class_set_match": true,
+    "guard_exit_code": 0,
+    "guard_reason": "completed",
+    "started_at": "2026-10-16T03:35:37Z",
+    "finished_at": "2026-10-16T03:38:22Z",
+    "container_id": "8347b02d787f5a47d173aeb1f2e36ec570184023566e6ca96022a31d9d14e9d0",
+    "cleanup": "Local explicitly confirmed exact container cleaned with chengyin-aws filter",
+    "source_archive_sha256": "077de1ece285e129060a22e382ffdae45f23cf39b5dc2818e48bfa8316b8dbf0",
+    "validator": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+    "environment": "Dedicated VPS approved212 ordinary only",
+    "evidence_pr": 24,
+    "evidence_commit": null,
+    "public_evidence_status": "Pending local batch publication; direct actual verifier result, C00 has not read new public raw report",
+    "full483_rerun": false,
+    "not_accepted": [
+      "real MySQL/Redis",
+      "runtime HTTP",
+      "device/business acceptance",
+      "merge/deployment/migrations"
+    ],
+    "cloud_manual_runs": 0
+  }
+}

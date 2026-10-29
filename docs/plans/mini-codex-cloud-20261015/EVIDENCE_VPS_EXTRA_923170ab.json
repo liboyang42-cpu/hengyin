@@ -1,0 +1,226 @@
+{
+  "source_sha": "923170abd8e468d62eb8404b16b990609a4da42a",
+  "direct_parent_sha": "13be997646c88b9eea282cc8c8225b42820dc3b3",
+  "previous_source_sha": "dedb44d54a4a277273943c0cbbca9f6e7528482a",
+  "packages": [
+    "E02-23",
+    "E04-07-B including A behavior"
+  ],
+  "archive_sha256": "f53588eea5481ea40d9f80513e43b3d038ef5ce48e46ec2510028f4beeabd2ec",
+  "task": "cy-vps-extra-923170ab-20261016",
+  "entry_sha256": "12374f742dcf1547c8eabf28c28403c94c8307fe20cba0a3a63d7f2b49764fba",
+  "selectors": [
+    "com.chengyinhub.business.longrun.E02_23Test",
+    "com.chengyinhub.web.controller.api.ApiCreativeSquareCommunityPolicyTest",
+    "com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicyMyBatisTest",
+    "com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicySqlTest",
+    "com.chengyinhub.business.longrun.E04_07Test",
+    "com.chengyinhub.business.service.impl.TopicCompletionCouponRewardServiceImplTest"
+  ],
+  "declared_class_counts": {
+    "com.chengyinhub.business.longrun.E02_23Test": 6,
+    "com.chengyinhub.web.controller.api.ApiCreativeSquareCommunityPolicyTest": 14,
+    "com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicyMyBatisTest": 2,
+    "com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicySqlTest": 2,
+    "com.chengyinhub.business.longrun.E04_07Test": 7,
+    "com.chengyinhub.business.service.impl.TopicCompletionCouponRewardServiceImplTest": 4
+  },
+  "declared_tests": 35,
+  "static_review": {
+    "scope": "Exact production/fixture/migration diffs match C00 supplemental grant225b59efa72bf54423fc3a5f6069bff6cc72353e; no dependency/entry/CI changes.",
+    "E02": "Resolver/favoriteOnly/batch state share protected migration JSON identity predicate; author upsert excludes marker, invalid or removed provenance denied. H2 aliases do not prove MySQL JSON behavior.",
+    "E04": "Reuses transactional exact grantCouponWithReceipt; positive receipt bind requires1 affected row; no temporal/MAX fallback; oldNULL/unknown no coupon/log/reopen mutation; USED rule retained.",
+    "migration": "One new nullable-column migration source only; historical migration/base schema unchanged; NOT_EXECUTED. New-column-dependent code cannot be deployed to an unmigrated database."
+  },
+  "not_validated": [
+    "true MySQL: E04_07MySqlIT 5; RedemptionRewardClawbackMyBatisTest 3",
+    "true Redis",
+    "runtime HTTP",
+    "device",
+    "business acceptance",
+    "migration execution",
+    "merge/deploy"
+  ],
+  "true_mysql": [
+    {
+      "class": "com.chengyinhub.business.longrun.E04_07MySqlIT",
+      "declared_tests": 5,
+      "status": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP"
+    },
+    {
+      "class": "com.chengyinhub.business.it.RedemptionRewardClawbackMyBatisTest",
+      "declared_tests": 3,
+      "status": "NOT_RUN_NO_FRESH_RUN"
+    }
+  ],
+  "result": "ORDINARY_TARGETED_35_NOT_PASS",
+  "actual_tests": 35,
+  "totals": {
+    "tests": 35,
+    "failures": 0,
+    "errors": 7,
+    "skipped": 0,
+    "passed": 28
+  },
+  "fresh_xml_count": 6,
+  "fresh_exact_xml": true,
+  "reports": [
+    {
+      "class": "com.chengyinhub.business.longrun.E02_23Test",
+      "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E02_23Test.xml",
+      "sha256": "ba04be2b8071042dd8f7d810b9d39940ba4b9e9b8e2cbaadc6c93da4a0c4f14f",
+      "fresh": true,
+      "testcases": 6,
+      "tests": 6,
+      "failures": 0,
+      "errors": 5,
+      "skipped": 0
+    },
+    {
+      "class": "com.chengyinhub.business.longrun.E04_07Test",
+      "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E04_07Test.xml",
+      "sha256": "417c80b646f55210f75a577d2ff3485405c15b8c2a77a183c75ee1e62fc2b261",
+      "fresh": true,
+      "testcases": 7,
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "class": "com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicyMyBatisTest",
+      "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicyMyBatisTest.xml",
+      "sha256": "22c3d6454c1f6e5b69482d6fb64f5d17df896964391e86d90d4daa888b6d517c",
+      "fresh": true,
+      "testcases": 2,
+      "tests": 2,
+      "failures": 0,
+      "errors": 2,
+      "skipped": 0
+    },
+    {
+      "class": "com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicySqlTest",
+      "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicySqlTest.xml",
+      "sha256": "3fde7761cc888afad9342a1ada67d6e4e03320c6f7ee05c5c813cb61a7424e4a",
+      "fresh": true,
+      "testcases": 2,
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.TopicCompletionCouponRewardServiceImplTest",
+      "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.impl.TopicCompletionCouponRewardServiceImplTest.xml",
+      "sha256": "db62518d28aef97ddf4b814ecd11c549deb793a4ea1ec0b6a91f16c8f381a5b0",
+      "fresh": true,
+      "testcases": 4,
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "class": "com.chengyinhub.web.controller.api.ApiCreativeSquareCommunityPolicyTest",
+      "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.web.controller.api.ApiCreativeSquareCommunityPolicyTest.xml",
+      "sha256": "6e7a513106f0cca1a39c3acae8da88ea8868f513b04435841b73fddee708110e",
+      "fresh": true,
+      "testcases": 14,
+      "tests": 14,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  ],
+  "started_at": "2026-10-16T13:54:12.303208+00:00",
+  "finished_at": "2026-10-16T13:57:02.825513+00:00",
+  "guard": {
+    "exitCode": 1,
+    "reason": "child_command_failed",
+    "containerId": "c2bb12cb40d9b43ef08847f80ebd8cf9adef6fa37f58a2ffb08639ad13c707dd"
+  },
+  "memavailable_before_kib": 2824240,
+  "required_start_mib": 2560,
+  "build_success": false,
+  "log_sha256": "c961a2468344a7873d3902ec425a1d3eddab08023c6b061e4a95f1f1d06b9251",
+  "run_sha256": "b2cf44d7e56b0b20bcbb1b2f87cc99b66d0f85bfe433f204f341364b42b25f69",
+  "guard_result_sha256": "16100f2f3fbbcdb9b9407aec2a725ae554e7633ade3ac753a73b27854ca4def1",
+  "targeted_summary_sha256": "ca79ff8681865396b7e1daa07a849a9d2451d5db75892c2dde6200dd9f187a46",
+  "prior_admission_attempts": [
+    {
+      "started_at": "2026-10-16T13:09:03.037086+00:00",
+      "finished_at": "2026-10-16T13:09:03.105105+00:00",
+      "memavailable_before_kib": 2192124,
+      "guard": {
+        "exitCode": 75,
+        "reason": "insufficient_start_memory",
+        "containerId": null
+      },
+      "actual_tests": 0,
+      "fresh_xml_count": 0,
+      "run_sha256": "278a9023eedc05c3d9a3eead30ad7e45780f9487e8384bd4f0cfde97fef2da55",
+      "guard_result_sha256": "f29e845a9ac00966b482739258b993d60bc49253c7b9122a9e6cb9fd9c51fa00",
+      "retained_run": "unit-run-admission-refused-130903Z.json",
+      "retained_result": "unit-guard-result-admission-refused-130903Z.json"
+    },
+    {
+      "started_at": "2026-10-16T13:22:31.317566+00:00",
+      "finished_at": "2026-10-16T13:22:31.372736+00:00",
+      "memavailable_before_kib": 2460648,
+      "guard": {
+        "exitCode": 75,
+        "reason": "insufficient_start_memory",
+        "containerId": null
+      },
+      "actual_tests": 0,
+      "fresh_xml_count": 0,
+      "run_sha256": "b50e351be93475eb9f4c08b32c5077424935b1f5ddcd15ffa4ce6e8607cab09b",
+      "guard_result_sha256": "edf47afdf0d402c49ea44f41a7b4f4cc25be1e6a453686601e206e1269d051bf",
+      "retained_run": "unit-run-admission-refused-132231Z.json",
+      "retained_result": "unit-guard-result-admission-refused-132231Z.json"
+    }
+  ],
+  "exact_context_container_filter": "chengyin-aws; exact id=c2bb12cb40d9b43ef08847f80ebd8cf9adef6fa37f58a2ffb08639ad13c707dd; empty result, exit0",
+  "retained_remote": [
+    "unit-run.json",
+    "unit-guard-result.json",
+    "targeted-summary.json",
+    "selection.json",
+    "incoming/source.tar.gz",
+    "source/vps-targeted.log",
+    "source/chengyinhub-admin/target/surefire-reports",
+    "source",
+    "cache",
+    "unit-run-admission-refused-130903Z.json",
+    "unit-guard-result-admission-refused-130903Z.json",
+    "unit-run-admission-refused-132231Z.json",
+    "unit-guard-result-admission-refused-132231Z.json"
+  ],
+  "failure_feedback": {
+    "original_author": "E02",
+    "repair_slots": 1,
+    "classes": {
+      "com.chengyinhub.business.longrun.E02_23Test": {
+        "tests": 6,
+        "passed": 1,
+        "errors": 5
+      },
+      "com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicyMyBatisTest": {
+        "tests": 2,
+        "passed": 0,
+        "errors": 2
+      }
+    },
+    "root_cause_observed": "H2 1.4.200 rejects CREATE ALIAS JSON_TYPE FOR 'com.chengyinhub.business.longrun.E02_23Test.jsonType': expected identifier, SQLState42001-200; fixture line177 and old MyBatis fixture line106.",
+    "requested_scope": "Original author only; correct H2 alias fixture syntax in two already-granted tests, retain all8 methods/assertions and production XML. No production/dependency change, skip, mock weakening or full35 rerun.",
+    "next_validation": "Only original two failing classes, planned8 invocations, at new frozen SHA."
+  },
+  "notes": [
+    "All35 actual test cases belong only to frozen923170ab. No previous candidate PASS inherited.",
+    "E04_07Test7 and TopicCompletionCouponRewardServiceImplTest4 passed ordinary mocks only; realMySQL and transaction behavior not accepted.",
+    "Original35 errors and both0-item admission refusals remain preserved; no migration executed or merge/deploy."
+  ],
+  "evidence_commit": "3489ce72995b840af2196deab80fa8f2a88e527c",
+  "readme_url": "https://github.com/liboyang42-cpu/hengyin/blob/3489ce72995b840af2196deab80fa8f2a88e527c/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_923170ab/README.md",
+  "c00_read_scope": "Public README and summary actually read; no original VPS XML/log fetched/reparsed, no Cloud rerun"
+}

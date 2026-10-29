@@ -1,0 +1,43 @@
+{
+  "id": "E02-12",
+  "classification": "QUERY_CONTRACT_NULL_COMPATIBILITY_NOT_NEW_CONFIRMED_PRODUCTION_BUG",
+  "source_sha": "1bfa81a5a58ffa8112c10414dad9fdb1701ef188",
+  "parent_sha": "62f5f4e57ee01dd44455f4a10d96821991f5c01d",
+  "previous_application_sha": "29fe9236ede15a8f1bbd3aaf2b93e3fc25409726",
+  "pr": 36,
+  "branch": "codex/extra-six-rolling-20261015",
+  "original_child_sha": "9db88ac5c21c09c79abd862d5fa0d0eb0eae4fbf",
+  "owner": "EXTRA6/E02",
+  "writer": "/root/external_e02",
+  "writer_stopped": true,
+  "actual_source_writers": 0,
+  "paths": [
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_12Test.java",
+    "chengyinhub-system/src/main/resources/mapper/business/CommunityPostMapper.xml",
+    "docs/verification/mini-longrun-20261015/EXTRA6/E02-12.md"
+  ],
+  "grant": "Control78197cf8 plus PR36#6209006760 closure",
+  "scope": "OnlyPOI selectReferenceOptions predicateCOALESCE(p.status,1)=1 top.status=1; snapshot/count/city/projection/order/limit unchanged. NoJava/DDL/dependency/config/auth/CI changes.",
+  "basis": "Existingpublic/save snapshot requireexplicitstatus1; NULLnot provenonline. Legalproducer0/1unchanged; historicalproductionNULLprovenance remainsunproved, syntheticNULL iscompatibilitynegativecontrol only.",
+  "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+  "ordinary": {
+    "status": "H2_PRODUCTION_XML_TARGETED_PASS",
+    "class": "com.chengyinhub.business.longrun.E02_12Test",
+    "source_declarations": 2,
+    "actual_executed": 2,
+    "command_template_local_only": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E02_12Test test",
+    "requires": "Existing212 cachedprojectH2/MyBatis/JdbcTemplate/Jupiter; realproductionMapperXML onclasspath, noexternalMySQL/Redis/env/newdependencies",
+    "boundary": "H2actualSELECT, notrealMySQL/productionNULL/HTTP; no29fe64inheritance or repeat required",
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "result_packet": "E02_12_ORDINARY_VPS_RESULT.json",
+    "evidence_commit": "1ae7b60cab62696ec0a9259907cfad265496c554"
+  },
+  "c00_review": "Read publiccommit3paths fulltest/doc and exactXMLonehunk; no build/tests run",
+  "receipt": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6209046388",
+  "cloud_manual_runs": 0,
+  "test_deployed": false,
+  "docs_head": "02b99bea07c82aa0b0b0d045b54a26f93fb041de",
+  "docs_only_diff_confirmed": true
+}

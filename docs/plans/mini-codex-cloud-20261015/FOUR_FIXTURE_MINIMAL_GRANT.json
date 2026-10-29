@@ -1,0 +1,229 @@
+{
+  "id": "FOUR_EXISTING_MYSQL_FIXTURE_PREREQUISITES_20261018",
+  "authorization": "Latest explicit user via local root: exact4files only empty cms_activity prerequisite/self scratch cleanup; source only, root validates existing entry",
+  "source_base": "26d8245b458d18497eb9040a4c7d9f1509b41bb1",
+  "reference_source": "6c6f82d7d9049f3f2d65f609be6b01c4a5643ec4",
+  "policy": "Existing entry only; no CI/212/network/test execution/dependency/gate/production change; no migration/merge/deploy",
+  "source_status": "ALL_FOUR_GRANTED_ACKED_SOURCE_DELIVERED",
+  "global_editor": "C00 only",
+  "packages": [
+    {
+      "id": "EXTRA_E02_THREE_FIXTURES",
+      "owner": "EXTRA6/E02",
+      "writer": "original /root/external_e02",
+      "thread": "01a13f9c-e8ba-753e-9c39-03840bb4900b/durable",
+      "child_thread": "01a13fa2-edb5-73da-99d7-848a5391f002",
+      "files": [
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_01Test.java",
+          "baseline_sha256": "2627ca71ca9992e5290989adf3a012c0573cc0b6304eef91fe853609c1f4dfb7",
+          "insert_after_line": 131,
+          "insert_before_line": 132,
+          "exact_added_line": "        jdbc.execute(\"create table cms_activity(id bigint primary key,publish_status int,cancel_time datetime)\");",
+          "cleanup_line": 94,
+          "cleanup_rule": "Existing if(created) drops only successfully-created own scratch schema; preserve, no extra cleanup changes needed",
+          "methods": 1,
+          "gate": "CHENGYIN_E02_01_MYSQL_IT=1",
+          "scope": "Exactly one empty table Java SQL string, no seed/production/XML/gate/requirements/method/assertion changes"
+        },
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_11Test.java",
+          "baseline_sha256": "02613df6ce654fba1d52ef36e765c4906b9bfb14ba4e5cf2ffc40d771ca1ba22",
+          "insert_after_line": 144,
+          "insert_before_line": 145,
+          "exact_added_line": "        jdbc.execute(\"create table cms_activity(id bigint primary key,publish_status int,cancel_time datetime)\");",
+          "cleanup_line": 94,
+          "cleanup_rule": "Existing if(created) drops only successfully-created own scratch schema; preserve, no extra cleanup changes needed",
+          "methods": 1,
+          "gate": "CHENGYIN_E02_11_MYSQL_IT=1",
+          "scope": "Exactly one empty table Java SQL string, no seed/production/XML/gate/requirements/method/assertion changes"
+        },
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_06Test.java",
+          "baseline_sha256": "4bc235033bdd93649ba0e262aa3c21088ea147df3515070715f0a8336ac5ee7a",
+          "insert_after_line": 133,
+          "insert_before_line": 134,
+          "exact_added_line": "        jdbc.execute(\"create table cms_activity(id bigint primary key,publish_status int,cancel_time datetime)\");",
+          "cleanup_line": 93,
+          "cleanup_rule": "Existing if(created) drops only successfully-created own scratch schema; preserve, no extra cleanup changes needed",
+          "methods": 1,
+          "gate": "CHENGYIN_E02_06_MYSQL_IT=1",
+          "scope": "Exactly one empty table Java SQL string, no seed/production/XML/gate/requirements/method/assertion changes"
+        }
+      ],
+      "state": "PUBLIC_SOURCE_DELIVERED_AUTHOR_STOPPED_LOCK_RETAINED",
+      "actual_writers": 0,
+      "preparation_receipt": "C00 actually read latest EXTRA chat: original E02 readonly exact3file prep, insert132/145/134, guarded cleanup94/94/93; no edit",
+      "communication": "Private tool not available to C00; local root forwards grant. Never substitute public internal comments.",
+      "root_private_forward": "Root privately forwarded full public grant; subsequent original author ACK and source delivery actually read by C00 (see post_publication_ack)",
+      "post_publication_ack": {
+        "sha": "fa3f81a108610e07a562d0deb771138e32b37ead",
+        "verified_by": "C00 directly read original external_e02 two latest private child turns",
+        "scope": "Exact3baseline SHA256 checked, 3singleline patches then stopped, no other path edit/Git/test",
+        "core_transfer": "Original E02 separately confirmed B05 stopped and no future concurrent writes"
+      },
+      "source_sha": "6c44636974220ca9876386ee638c99981488db42",
+      "parent_sha": "26d8245b458d18497eb9040a4c7d9f1509b41bb1",
+      "source_packet": "EXTRA_E02_THREE_FIXTURE_SOURCE_DELIVERY.json",
+      "original_child_sha": "f74dd9be0c17a17db506ee8e0c46c60804a1a785",
+      "validation_packet": "E02_6C446_TEST_COMPILE_RESULT.json"
+    },
+    {
+      "id": "CORE_B05_SINGLE_FIXTURE",
+      "owner": "CORE/B05",
+      "writer": "/root/core_b05_fixture_sol",
+      "model": "gpt-6.1-sol",
+      "files": [
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B05CommunityVisibilityMySqlIT.java",
+          "baseline_sha256": "ea819e85946dd9336c430cb1f879884a3e61b8311f18373368571a5426f6fdfb",
+          "insert_after_line": 156,
+          "insert_before_line": 157,
+          "exact_added_line": "        jdbc.execute(\"create table cms_activity(id bigint primary key,publish_status int,cancel_time datetime)\");",
+          "cleanup_line": 67,
+          "cleanup_rule": "Existing if(created) drops only successfully-created own scratch schema; preserve, no extra cleanup changes needed",
+          "methods": 3,
+          "gate": "CHENGYIN_B05_MYSQL_IT=1",
+          "scope": "Exactly one empty table Java SQL string, no seed/production/XML/gate/requirements/method/assertion changes"
+        }
+      ],
+      "state": "PUBLIC_SOURCE_DELIVERED_AUTHOR_STOPPED_LOCK_RETAINED",
+      "actual_writers": 0,
+      "old_owner": "EXTRA6/E02 test creator",
+      "transfer_evidence": [
+        "EXTERNAL_SIX_HANDOFF E02 explicitly assigned B05 test and acknowledged launch; no prior activeCORE test writer",
+        "Public sole creator ba910732f9275ec6a2990830df072f6dc80685f9",
+        "Current45openPR allfiles paginated hits only same owner PR30/integrationPR36; current EXTRA original author stopped and explicitly refuses B05 without CORE handoff",
+        "Latest user requests preciseCORE responsibility; new receiver explicitly declared, not pretending historical author online. CORE production policy owner remains C00."
+      ],
+      "pre_publication_ack": "NewCORE receiver read AGENTS and exact public source, explicitly accepts solepath, confirmed3 methods/B05 gate/created-protected cleanup; stopped until full public grant and newACK",
+      "post_publication_ack": {
+        "state": "ACK_RECEIVED_SOURCE_PREPARATION_RELEASED",
+        "control_sha": "fa3f81a108610e07a562d0deb771138e32b37ead",
+        "writer": "/root/core_b05_fixture_sol",
+        "basis": "Direct child ACK exact publicSHA and onepath; C00 then released only /tmp sourcepatch; no repo/Git/validation",
+        "current_source": "PUBLIC_SOURCE_DELIVERED_AUTHOR_STOPPED"
+      },
+      "delivery": "C00 serial source publication based exact26d snapshot; no broad branch integration",
+      "source_sha": "2ac55d20a9f4932be8d411e53191c69e5141772c",
+      "parent_sha": "26d8245b458d18497eb9040a4c7d9f1509b41bb1",
+      "source_packet": "CORE_B05_FIXTURE_SOURCE_DELIVERY.json",
+      "validation_packet": "B05_2AC55_TEST_COMPILE_RESULT.json"
+    }
+  ],
+  "method_totals": {
+    "extra3": 3,
+    "core_b05": 3,
+    "actual_tests": 0,
+    "execution": "NOT_RUN_REAL_MYSQL_EXISTING_ENTRY_COVERAGE_GAP"
+  },
+  "conflict_scan": {
+    "open_prs": 45,
+    "full_pagination": true,
+    "hits": [
+      {
+        "pr": 30,
+        "sha": "9a27f6b0d8fe532320cbe646775464cf49ba1d10",
+        "title": "[E02] CY-HANDOFF 社区读取快照与隐私回归（未验证）",
+        "files": [
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_01Test.java",
+            "status": "added"
+          },
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_06Test.java",
+            "status": "added"
+          },
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_11Test.java",
+            "status": "added"
+          },
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B05CommunityVisibilityMySqlIT.java",
+            "status": "added"
+          }
+        ]
+      },
+      {
+        "pr": 36,
+        "sha": "26d8245b458d18497eb9040a4c7d9f1509b41bb1",
+        "title": "fix: hide cancelled or unpublished activity reference cards",
+        "files": [
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_01Test.java",
+            "status": "added"
+          },
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_06Test.java",
+            "status": "added"
+          },
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_11Test.java",
+            "status": "added"
+          },
+          {
+            "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B05CommunityVisibilityMySqlIT.java",
+            "status": "added"
+          }
+        ]
+      }
+    ],
+    "errors": []
+  },
+  "non_granted": [
+    "All production/mapper/app/dependency/config/CI/gate files",
+    "Existing migration/base schema/entry/VPS/network/DB",
+    "Other tests including already delivered E02_25MySqlIT",
+    "Assertion/method deletion/skip/default/mock hiding prerequisites"
+  ],
+  "remaining": "Only existingCORE remaining items with proven caller/contract+ownedpaths; E01-13/E03-04/E02-03 already delivered per evidence, no refill/filler audit",
+  "old_author_B05_freeze_ack": "C00 directly read originalE02 final message: B05 transferredtoCORE namedreceiver, oldauthor stopped and willnotwrite it",
+  "new_test_results": "B05 and E02 independent candidates both test-compile PASS only; actual0, all6 trueMySQL methods NOT_RUN. Original E02 ENOSPC retained as history, no longer current blocker.",
+  "local_validation": {
+    "evidence_commit": "8fdb9fdb72975f7617a4ac70eb4e4eeacd27c3ac",
+    "source_delivery": "ALL_FOUR_COMPLETE_GRANTED_ACKED_FROZEN",
+    "B05": {
+      "source_sha": "2ac55d20a9f4932be8d411e53191c69e5141772c",
+      "compile": "TEST_COMPILE_PASS",
+      "actual_tests": 0,
+      "true_mysql3": "NOT_RUN",
+      "packet": "B05_2AC55_TEST_COMPILE_RESULT.json"
+    },
+    "E02": {
+      "source_sha": "6c44636974220ca9876386ee638c99981488db42",
+      "compile": "TEST_COMPILE_PASS",
+      "state": "TEST_COMPILE_PASS",
+      "actual_tests": 0,
+      "true_mysql3": "NOT_RUN",
+      "packet": "E02_6C446_TEST_COMPILE_RESULT.json",
+      "fresh_selected_classes": 3,
+      "prior_preparation_failure_packet": "E02_6C446_PREPARATION_BLOCKED_RESULT.json"
+    },
+    "actual_source_writers": 0,
+    "locks_retained": true,
+    "repair_slot_opened": false,
+    "missing_file_authorization": false,
+    "entry_decision": "KEEP_EXISTING_NO_NEW_ENTRY",
+    "retry": "Uncompleted E02 compile resumed by local verifier after natural resource recovery and passed. No further compile retry or old ordinary rerun required; no Cloud substitute.",
+    "two_CORE_policy_choices": "User confirmed both existing contracts: OWN-C04-01 first-result replay; OWN-C05-22 photo exception count refund. Both NO_SOURCE_CHANGE, no new source/test/bug; see CORE_COMPATIBILITY_DECISIONS_20261018.json",
+    "joint_four_file_candidate": false,
+    "latest_E02_evidence_commit": "90b81ee7af715f0c72598a7b7a9f59e235910ea6",
+    "current_disk_blocker": false,
+    "current_compile_summary": "Both same-parent independent candidates test-compile PASS only, actual0 each; not joint four-file integration or real MySQL execution."
+  },
+  "core_compatibility_decision_receipt": {
+    "packet": "CORE_COMPATIBILITY_DECISIONS_20261018.json",
+    "state": "BOTH_USER_CONFIRMED_EXISTING_CONTRACTS_NO_SOURCE_CHANGE",
+    "closed_items": [
+      "OWN-C04-01",
+      "OWN-C05-22"
+    ],
+    "remaining_CORE_decision_blocked": 0,
+    "new_source_changes": 0,
+    "new_tests_run": 0,
+    "new_bug_count": 0,
+    "ack": "C00 actually received the latest explicit human answers relayed by local coordinator and applied them to the global ledger; no new child/author ACK, rescan or execution claimed.",
+    "owner_records": "Original named owners retained; no new writer, repair slot or file transfer.",
+    "fixture_validation_unchanged": "All four fixture sources delivered; B05 and E02 separate same-parent candidates both test-compile PASS only/actual0; all6 realMySQL methods NOT_RUN. Earlier E02 ENOSPC preserved as history; business decisions do not change verification acceptance."
+  }
+}

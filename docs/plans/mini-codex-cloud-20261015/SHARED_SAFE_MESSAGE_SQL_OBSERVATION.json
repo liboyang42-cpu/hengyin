@@ -1,0 +1,40 @@
+{
+  "id": "SHARED-SAFE-MESSAGE-BARE-SQL",
+  "status": "NEEDS_REACHABILITY",
+  "severity_not_inferred_from_synthetic_endpoint": true,
+  "paths": [
+    "chengyinhub-common/src/main/java/com/chengyinhub/common/utils/UserSafeMessage.java",
+    "chengyinhub-framework/src/main/java/com/chengyinhub/framework/web/exception/GlobalExceptionHandler.java"
+  ],
+  "source_readback": {
+    "ed598": "ed598258c0f614385940f326099b9626531fab02",
+    "previous": "e72eff7e9ec6309262e55c7cdca56afdcdb86dc0",
+    "UserSafeMessage_identical_between_candidates": true,
+    "GlobalExceptionHandler_identical_between_candidates": true
+  },
+  "observed_input": "SQL SELECT private unrelated table",
+  "observed_mockmvc_output": "same raw SQL in AjaxResult.msg",
+  "static_cause": "Global RuntimeException advice passes e.getMessage() to UserSafeMessage.of; existing pattern matches bad SQL grammar/Error querying database/java.sql etc, not this short bare SQL string, then returns trimmed raw.",
+  "contract_basis": "UserSafeMessage class comment says SQL/internal technical detail must be masked, while preserving ordinary business messages.",
+  "evidence": {
+    "pr": 24,
+    "commit": "77cb3320fbbf47ef061db811fdc51a0a07c462f8",
+    "failure_method": "E06_17Test.unrelatedControllerDataAccessFailureStillUsesUnchangedGlobalAdvice"
+  },
+  "evidence_limit": "Synthetic unrelated test Controller supplied the bare string; not evidence of production endpoint SQL leak or real DB failure payload. Need real caller/exception-shape and legacy regression contract before deciding shared source change.",
+  "write_authorized_to_E06": false,
+  "original_writer_identification": "Not recorded in current exact source-owner entries; unresolved, no transfer performed",
+  "coordination_owner": "C00",
+  "followup_rule": "Keep independently open even if E06 fixes isolation fixture. Determine exact original owner/caller and minimal shared contract; no regex/global-handler edits by E06, no weakened security assertions or blanket business-message masking.",
+  "state": "NEEDS_REACHABILITY",
+  "source_action": "NO_SOURCE_CHANGE",
+  "confirmed_new_bug": false,
+  "production_reachability_proven": false,
+  "read_only_check": {
+    "checkout": "CORE0d63043a (common/advice verified identical ed598/e72 by exact public readbacks)",
+    "production_chain": "GlobalExceptionHandler RuntimeException/Exception -> UserSafeMessage.of; AjaxResult non-success safeMessage -> same helper",
+    "existing_fixture": "GlobalExceptionHandlerErrorMappingTest.sqlLeak_isMaskedToGeneric already uses Error querying database/java.sql shape",
+    "targeted_production_search": "No literal synthetic SQL SELECT private unrelated table or direct bare SQL exception literal in searched admin/system/framework/common main Java. This is bounded static search, not proof of all dynamic message shapes.",
+    "conclusion": "No actual business endpoint/exception chain proven to emit the unmarked short SQL shape; retain NEEDS_REACHABILITY, no source changes or new write grant."
+  }
+}

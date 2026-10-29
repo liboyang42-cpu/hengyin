@@ -1,0 +1,31 @@
+{
+  "source_sha": "6c6f82d7d9049f3f2d65f609be6b01c4a5643ec4",
+  "direct_parent_sha": "c35a46357cbbadfbcc61c881db46b6e51e7cc725",
+  "verification_type": "STATIC_ONLY",
+  "source_diff_paths": [
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_25MySqlIT.java"
+  ],
+  "added_lines": 1,
+  "deleted_lines": 0,
+  "exact_added_java_line": "jdbc.execute(\"create table cms_activity(id bigint primary key,publish_status int,cancel_time datetime)\");",
+  "unchanged_after_removing_exact_line": true,
+  "test_methods_preserved": 2,
+  "gate_preserved": true,
+  "own_scratch_database_creation_and_cleanup_unchanged": true,
+  "production_or_dependency_changes": false,
+  "actual_tests": 0,
+  "real_mysql_status": "NOT_RUN_EXISTING_ENTRY_GAP",
+  "compile_status": "NOT_RUN",
+  "compile_reason": "Only one Java SQL string literal added; all surrounding source byte-for-byte unchanged. Static verification cannot establish real MySQL execution.",
+  "ordinary_4_result_inherited": false,
+  "remaining_fixture_handoffs": [
+    "E02_01Test.java",
+    "E02_11Test.java",
+    "E02_06Test.java",
+    "B05CommunityVisibilityMySqlIT.java"
+  ],
+  "file_sha256": "5e583b44aedf8157097c4c090aa42fb24c821e45a5e675200833158ec96417d9",
+  "evidence_commit": "fb56b38de2e6eed9011023325789b7470aac06e6",
+  "readme_url": "https://github.com/liboyang42-cpu/hengyin/blob/fb56b38de2e6eed9011023325789b7470aac06e6/docs/verification/mini-bug-arch-20261015/SOURCE_EXTRA_6c6f82d7/README.md",
+  "c00_read_scope": "Public README and summary actually read; no original VPS XML/log fetched/reparsed, no Cloud rerun"
+}

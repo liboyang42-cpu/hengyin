@@ -1,0 +1,914 @@
+{
+  "protocol": "CY-THIRD-CLOUD-EXACT-HANDOFF-20261015-v1",
+  "team": "ANALYTICS_THIRD",
+  "thread_id": "01a140c1-6379-71fd-8711-f0b55889c01b",
+  "state": "SOURCE_DELIVERED_UNVERIFIED",
+  "global_source_owner": "C00 global register maintainer; local coordinator owns new team scheduling and VPS",
+  "local_workflow_and_validation_coordinator": "01a13eed-e4d9-77f3-b875-c72d26ea7d59",
+  "base_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
+  "model": "gpt-6.1-sol",
+  "initial_real_tasks": 2,
+  "parallel_task_writers": 0,
+  "not_a_six_item_pool": "Do not split these shared-file tasks to fill6; at most6 if real independently owned new tasks subsequently approved",
+  "activation": "New coordinator posts real thread/child/branch/full base SHA/exact per-worker files ACK to PR16. Listed whitelist allocation then effective immediately; no second general approval or Mac relay required. C00 records actual receipt. Before named child ACK no source writer claimed running.",
+  "items": [
+    {
+      "id": "AN01",
+      "title": "既有后台漏斗查询的提供日期与顺序校验",
+      "status": "SOURCE_DELIVERED_UNVERIFIED",
+      "production_paths": [
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/AnalyticsController.java"
+      ],
+      "test_paths": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/business/AnalyticsControllerTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/forward20261015/AnalyticsDateContractTest.java"
+      ],
+      "evidence_path": "docs/verification/mini-analytics-cloud-20261015/AN01.md",
+      "basis": {
+        "admin_api": "chengyinhub-ui/src/api/business/analytics.js:3 listFunnel -> GET /business/analytics/funnel",
+        "admin_page": "chengyinhub-ui/src/views/business/analytics/index.vue:49 queryParams null/null; created→getList; reset→clear/query; independently clearable start/end date pickers; no disabledDate or reverse-order guard",
+        "reachable_trigger": "Admin chooses start2026-07-02/end2026-07-01 then Search; valid picker strings passed unchanged and server returns success(empty rows) instead of rejecting invalid range. Authenticated API caller may supply impossible day2026-02-30 or arbitrary date string, which currently reaches DB comparison.",
+        "mini": "No /business/analytics/funnel or selectBizFunnelDailyList caller found in xcx. /api/merchant/funnel is separate windowDays read model, must not merge contracts.",
+        "response": "AjaxResult data={startDate,endDate,rows}; full array, no total/page metadata; frontend consumes response.data.rows directly. Null/null initial and cleared query intentionally requests whole result. Single-bound filters currently supported.",
+        "permission": "business:analytics:list unchanged"
+      },
+      "implementation_contract": "Only nonblank supplied endpoints get strict ISO yyyy-MM-dd true-calendar parsing before Mapper. If both present reject start>end; same day accepted. Invalid input returns existing BaseController.error style; mapper must not be called. Keep null/empty/whitespace absent according to current StringUtils semantics, one-sided queries, unlimited valid range and unpaged complete rows; keep original response echo strings and permission. Do not silently trim malformed supplied dates or normalize them into other days.",
+      "existing_tests_to_preserve": "Existing AnalyticsControllerTest two qualified-pilot cases untouched, add funnel cases here; P3AdminControllersTest untouched. Final whitelist uses existing AnalyticsControllerTest, supersedes earlier proposed new AnalyticsFunnelDateValidationTest filename. TASKS AnalyticsDateContractTest is separately authorized and reserved, but no need to create it merely to duplicate the delivered existing-class coverage.",
+      "acceptance": "Malformed/non-calendar/reversed provided dates do not reach mapper; omitted/blank/one-sided/same-day/leap-day/wide range and complete rows envelope remain. No pagination/default interval/62day cap.",
+      "dependencies": [
+        "BizFunnelDailyMapper Java/XML read-only; AnalyticsEventService/ApiAnalytics/Task read-only",
+        "Actual caller is existing admin Vue; no mini caller found, no UI changes"
+      ],
+      "original_author": "header/history author not a current source assignment; no active exact path lock or change in64openPR snapshots",
+      "verification": "ORDINARY_CLASS_12_PASS; runtime business unaccepted",
+      "thread_id": "01a140c1-6379-71fd-8711-f0b55889c01b",
+      "host_id": "durable",
+      "worker": "/root/stat",
+      "ack_url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6199048354",
+      "new_regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/forward20261015/AnalyticsDateContractTest.java",
+      "source_sha": "add1534cd63c6ffd95467795126246c8d3581594",
+      "writer_state": "FROZEN_SOURCE_DELIVERED",
+      "new_regression_file_state": "RESERVED_NOT_CREATED"
+    },
+    {
+      "id": "AN02",
+      "title": "玩家成长聚合并发覆盖：不同主题合法通关丢累计里程/节点数",
+      "status": "SOURCE_DELIVERED_UNVERIFIED",
+      "production_paths": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayerProgressionServiceImpl.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/PlayerGrowthMapper.java",
+        "chengyinhub-system/src/main/resources/mapper/business/PlayerGrowthMapper.xml"
+      ],
+      "test_paths": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayerProgressionServiceImplTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/forward20261015/PlayerGrowthConcurrencyMySqlIT.java"
+      ],
+      "evidence_path": "docs/verification/mini-analytics-cloud-20261015/AN02.md",
+      "basis": [
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java",
+          "line": 1473,
+          "fact": "Real exploration redemption entry invokes redeemExploreChapterAndRecord."
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+          "line": 2999,
+          "fact": "Transactional exploration redemption locks its own activity and registration, not a shared player growth row; :3077 calls topicCompletionAwardService.grantOnce after genuine required-chapter completion."
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicCompletionAwardServiceImpl.java",
+          "line": 91,
+          "fact": "First completion invokes playerProgressionService.onTopicComplete before event-13 points awarding. Different topics claim different TOPIC_FINISH badges, so that unique key does not serialize this player aggregate."
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayerProgressionServiceImpl.java",
+          "line": 160,
+          "fact": "ensureGrowth uses ordinary selectByMember; onTopicComplete :143-147 computes a new absolute mileage in Java, then updates the aggregate."
+        },
+        {
+          "path": "chengyinhub-system/src/main/resources/mapper/business/PlayerGrowthMapper.xml",
+          "line": 53,
+          "fact": "updatePlayerGrowth overwrites every non-null aggregate field under only WHERE member_id; no version predicate or atomic increment. selectByMember :17 is an ordinary cached read."
+        },
+        {
+          "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java",
+          "line": 2999,
+          "fact": "A second real writer calls onNodeDone; onNodeDone :121 also writes the full aggregate from an ordinary read, allowing unrelated mileage/checkin fields to overwrite one another."
+        }
+      ],
+      "trigger": {
+        "preconditions": "Existing player_growth row; same player completes two distinct topics through distinct activity/registration redemptions in concurrent valid requests. Choose merchants with no active referral relationship to that player so unrelated referral activation cannot incidentally lock this player. No new API/authentication policy is required.",
+        "interleaving": [
+          "A and B claim different topic completion badge keys and both ordinary-read total_mileage=0.",
+          "A computes topic X mileage 10; B computes topic Y mileage 20.",
+          "A UPDATE writes 10 and holds the growth-row write lock until commit. B waits at its UPDATE, then writes its stale absolute 20 after A commits.",
+          "Both real first-completion badges remain, but mileage is 20 instead of 30. Existing transaction boundaries do not make the earlier ordinary read current. Whole-row payload can also revert total_checkins when a node-completion writer overlaps."
+        ],
+        "counterprotections_checked": [
+          "Topic-specific badge unique keys do not conflict across X and Y.",
+          "Per-activity/per-registration locks differ across the two valid requests.",
+          "Node event-12 points can lock a member on some classic routes; this is not a universal guard, and the explored redemption route reaches progression before event-13 points.",
+          "No other PlayerGrowthMapper insert/update writer was found outside PlayerProgressionServiceImpl in current production Java."
+        ]
+      },
+      "implementation_contract": "Inside PlayerProgressionServiceImpl and PlayerGrowthMapper Java/XML, make growth mutation a single transaction with real current member-growth row read (cache disabled/flushed) before computing and persisting the aggregate; handle existing unique member initialization without DDL. Keep all growth writers on that same current-read protocol, including onNodeDone and onTopicComplete, and retain existing first-completion/badge guards. An atomic delta plus authoritative readback is an alternative only if unchanged level/streak/threshold semantics are preserved. No caller/source-owned controller needs editing.",
+      "acceptance": "Different-topic legitimate completion mileage10+20 must retain30; crossing onNodeDone/onTopicComplete cannot overwrite independent fields; initialization and same-topic idempotency preserved; existing level/streak/threshold/date semantics unchanged. Source-only regression, actual database validation local. New writer first rechecks outer real call-chain locks; concrete counterevidence closes this candidate with no source edit. Original PR70 TASKS explicitly grants PlayerGrowthConcurrencyMySqlIT; six existing files do not include these new regression files. Source-only NOT_RUN; actual database validation local.",
+      "dependencies": [
+        "Existing player_growth uk_member; no DDL",
+        "TopicCompletionAward/Registration/Progress controllers read-only",
+        "No PointsAward/PointsMapper/UmsMemberMapper or shared member source edits; need any extra file first request C00"
+      ],
+      "original_author": {
+        "source_header_author": "cy, 2026-06-21 on PlayerProgressionServiceImpl and PlayerGrowthMapper",
+        "current_exact_owner": "Not listed in LONGRUN_SOURCE_OWNERS files/reserved arrays at audit time; no ownership transfer performed. C00 must grant exact files to a new worker before edits.",
+        "runtime_or_git_authorship_claim": "No Git history command run; source-header author is not represented as verified commit authorship."
+      },
+      "verification": "ORDINARY_CLASS_12_PASS; real MySQL11 NOT_RUN",
+      "thread_id": "01a140c1-6379-71fd-8711-f0b55889c01b",
+      "host_id": "durable",
+      "worker": "/root/grow",
+      "ack_url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6199048354",
+      "new_regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/forward20261015/PlayerGrowthConcurrencyMySqlIT.java",
+      "source_sha": "2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd",
+      "writer_state": "FROZEN_SOURCE_DELIVERED",
+      "new_regression_file_state": "SOURCE_DELIVERED_UNVERIFIED"
+    }
+  ],
+  "additional_requested_scope_read_only": [
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAnalyticsController.java",
+      "prior": "foundation B / PR7→11→18"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/task/AnalyticsAggregationTask.java",
+      "prior": "foundation B / PR7→11→18"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AnalyticsEventServiceImpl.java",
+      "prior": "foundation B / PR7→11→18"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/BizFunnelDailyMapper.xml",
+      "prior": "foundation B / PR4"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/BizFunnelDailyMapper.java",
+      "prior": "No active lock, but no justified modification inAN01; read-only until concrete new task claimed"
+    }
+  ],
+  "test_scope": "Existing AnalyticsControllerTest and PlayerProgressionServiceImplTest plus TASKS named AnalyticsDateContractTest and PlayerGrowthConcurrencyMySqlIT. Preserve assertions, source-only NOT_RUN.",
+  "evidence_and_queue_scope": [
+    "Own QUEUE/CLAIMS/DELIVERY documentation paths as precisely named in local startup plan; no C00 control-table writes"
+  ],
+  "conflict_readback": {
+    "observed_open_pr_count": 64,
+    "open_pr_heads": [
+      {
+        "pr": 69,
+        "sha": "5773e779b323e7f945970e8e472a654c3ea359e5",
+        "changed_file_count": 68
+      },
+      {
+        "pr": 68,
+        "sha": "41680f1ed5eed0f0787e63183258de66c58002b0",
+        "changed_file_count": 17
+      },
+      {
+        "pr": 67,
+        "sha": "6a65324557aab652ff351aca6710f4eba292e800",
+        "changed_file_count": 12
+      },
+      {
+        "pr": 66,
+        "sha": "5af31c9ad8ed57c35555e31f5e912744df3ef7f9",
+        "changed_file_count": 0
+      },
+      {
+        "pr": 65,
+        "sha": "a86a1fd80481dc8e07ccb5f00e07d05976f824b5",
+        "changed_file_count": 5
+      },
+      {
+        "pr": 64,
+        "sha": "4f1462dd6b7703f5031124fff5417cbb456602b6",
+        "changed_file_count": 1
+      },
+      {
+        "pr": 63,
+        "sha": "4646683a7f905f45023d8f65bf2822600b5be610",
+        "changed_file_count": 0
+      },
+      {
+        "pr": 62,
+        "sha": "b82447950dd3eed6bb1f9468d7aac76d12198b3d",
+        "changed_file_count": 2
+      },
+      {
+        "pr": 61,
+        "sha": "6c3bb33c7f720a64d175d1b6a552ebf0289507ad",
+        "changed_file_count": 0
+      },
+      {
+        "pr": 60,
+        "sha": "3cbbd6494f85a4734329577cdfbcdc516ebeb200",
+        "changed_file_count": 4
+      },
+      {
+        "pr": 59,
+        "sha": "f55170581c905a017e76eea825457fb7c1b73cb5",
+        "changed_file_count": 5
+      },
+      {
+        "pr": 58,
+        "sha": "96675007f241104570e30df974d1c1a15b5ccf72",
+        "changed_file_count": 16
+      },
+      {
+        "pr": 57,
+        "sha": "435a9d8d331a14f948a9db58f74cb82d1878afb7",
+        "changed_file_count": 9
+      },
+      {
+        "pr": 56,
+        "sha": "da18d2d7d5a03ac77dd48eea950d8a58853a0206",
+        "changed_file_count": 3
+      },
+      {
+        "pr": 55,
+        "sha": "c393bc64e87c9fbc3ef2b53d34ce79f398655fbb",
+        "changed_file_count": 2
+      },
+      {
+        "pr": 54,
+        "sha": "39f2e2cd906362e16d17aa7d17733c913bde258a",
+        "changed_file_count": 3
+      },
+      {
+        "pr": 53,
+        "sha": "25fdcb1b2d9fca756f8905bff1bc846f6f089b22",
+        "changed_file_count": 0
+      },
+      {
+        "pr": 52,
+        "sha": "6342022edae65217ddad21bd9a3de130e71b7421",
+        "changed_file_count": 3
+      },
+      {
+        "pr": 51,
+        "sha": "e41ed65c4362c54168312053d3e40d6bbd022304",
+        "changed_file_count": 3
+      },
+      {
+        "pr": 50,
+        "sha": "b65c94e849e7e7e20c648ee86589bfce5107bcbb",
+        "changed_file_count": 12
+      },
+      {
+        "pr": 49,
+        "sha": "8200e05b4b51c4d2ce5d419f2e321dd08ecfec4a",
+        "changed_file_count": 11
+      },
+      {
+        "pr": 48,
+        "sha": "0804977273f608e2a34b0614638f95eab867f197",
+        "changed_file_count": 0
+      },
+      {
+        "pr": 47,
+        "sha": "f3326594305e096a11913cb75204b71968c12a6d",
+        "changed_file_count": 0
+      },
+      {
+        "pr": 46,
+        "sha": "ffb4ecad926c5840024e597da5b8a5e3e10b811e",
+        "changed_file_count": 24
+      },
+      {
+        "pr": 45,
+        "sha": "04659214158f949fa3dfb0ec2f66adbf6a875f92",
+        "changed_file_count": 23
+      },
+      {
+        "pr": 44,
+        "sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
+        "changed_file_count": 405
+      },
+      {
+        "pr": 43,
+        "sha": "3e56b31d4e821bbcd859ffd0616dea962292e618",
+        "changed_file_count": 5
+      },
+      {
+        "pr": 42,
+        "sha": "38c993a432d27cfe0966f77d7413262d1af88f42",
+        "changed_file_count": 5
+      },
+      {
+        "pr": 41,
+        "sha": "bf7c63e57e77b93d6be3fa098c657e565ebe1cb0",
+        "changed_file_count": 0
+      },
+      {
+        "pr": 40,
+        "sha": "095738b6fbeaa8950c00bb1a7af563f086cb157e",
+        "changed_file_count": 6
+      },
+      {
+        "pr": 39,
+        "sha": "20144d1076fab628f19451c79ca86958cf65dd31",
+        "changed_file_count": 4
+      },
+      {
+        "pr": 38,
+        "sha": "e6e46fed81e086c4ab39c374fbc4468410d43970",
+        "changed_file_count": 4
+      },
+      {
+        "pr": 37,
+        "sha": "dbe1cef6deb38ef72bb417515ecb1970e0fe81c8",
+        "changed_file_count": 8
+      },
+      {
+        "pr": 36,
+        "sha": "700e754be0a49431638246036a2298d1d5f3e23e",
+        "changed_file_count": 219
+      },
+      {
+        "pr": 35,
+        "sha": "57db7dc0dd394a716037503d2c3dea0e90e4238c",
+        "changed_file_count": 7
+      },
+      {
+        "pr": 34,
+        "sha": "d11375f70dd8ddc5488eb3e7769f5dd1fa49d1ad",
+        "changed_file_count": 33
+      },
+      {
+        "pr": 33,
+        "sha": "f01b5c06657cfb654a0cdc86dc77159ac53b6940",
+        "changed_file_count": 40
+      },
+      {
+        "pr": 32,
+        "sha": "5cadf0cbb2fb24c8565d8d6ba6d26653e51c8788",
+        "changed_file_count": 37
+      },
+      {
+        "pr": 31,
+        "sha": "48c39663f63995a4e5365d2d615e40135bdc1ef1",
+        "changed_file_count": 32
+      },
+      {
+        "pr": 30,
+        "sha": "a8e4c1f5de56c05da8114c9c53e38ec2a5b1adbc",
+        "changed_file_count": 38
+      },
+      {
+        "pr": 29,
+        "sha": "f4b807958290d5a3cdf34615b9244ab5b9d9a4aa",
+        "changed_file_count": 37
+      },
+      {
+        "pr": 28,
+        "sha": "4a943501262cb533158428d9748d8ac49aaa8950",
+        "changed_file_count": 31
+      },
+      {
+        "pr": 27,
+        "sha": "6f1dc99b0b974c5cfa00538485498bc8acba52f4",
+        "changed_file_count": 33
+      },
+      {
+        "pr": 26,
+        "sha": "78c9b38903397b573eea722b7daa28731648dc76",
+        "changed_file_count": 2
+      },
+      {
+        "pr": 25,
+        "sha": "87c9ce5bbd02f0a9c5b45c9cdd3d424ed133026c",
+        "changed_file_count": 28
+      },
+      {
+        "pr": 24,
+        "sha": "6e7a22025192710fa5edfd8be5a10ed425edc0ee",
+        "changed_file_count": 13
+      },
+      {
+        "pr": 23,
+        "sha": "79570ed243e44b7c5534991a4bc9bccc64ebdaf1",
+        "changed_file_count": 25
+      },
+      {
+        "pr": 22,
+        "sha": "9ff0edc372fbf5c6d31e3d9115e4b7b9639e4ab4",
+        "changed_file_count": 4
+      },
+      {
+        "pr": 21,
+        "sha": "eadc5ef4b5da2f01bca84160aa34ee8a6f8bce92",
+        "changed_file_count": 3
+      },
+      {
+        "pr": 20,
+        "sha": "2b0bc025783d349f9c2b80118eb7ba218263fa0d",
+        "changed_file_count": 132
+      },
+      {
+        "pr": 18,
+        "sha": "1e403b135206844a34219753a36e2dee39c7dd59",
+        "changed_file_count": 603
+      },
+      {
+        "pr": 17,
+        "sha": "c2f43d0caf55ca63ea4a9e4468b09f90f6592f5a",
+        "changed_file_count": 27
+      },
+      {
+        "pr": 16,
+        "sha": "e2163ab8fdd93c9548c74949604c9668c97f03ad",
+        "changed_file_count": 46
+      },
+      {
+        "pr": 15,
+        "sha": "8884a678ea30f21205d9dedda0cf5bc685a0f019",
+        "changed_file_count": 61
+      },
+      {
+        "pr": 14,
+        "sha": "6a96477142867e20bc6f9f87c7813182ba8a1d0f",
+        "changed_file_count": 64
+      },
+      {
+        "pr": 13,
+        "sha": "d6cd231e9354ae6d95aee82d7a262df771a999fa",
+        "changed_file_count": 11
+      },
+      {
+        "pr": 12,
+        "sha": "a5af41f57fa3771a151f8f662241e432b9233944",
+        "changed_file_count": 10
+      },
+      {
+        "pr": 11,
+        "sha": "0b301c9b8d1853a86ed689c701eaad40cb3b70d7",
+        "changed_file_count": 317
+      },
+      {
+        "pr": 9,
+        "sha": "e65d5f79fbd0505716d387b4970025e99b571eb6",
+        "changed_file_count": 99
+      },
+      {
+        "pr": 8,
+        "sha": "f99745260b24e45dbc38d1366287cbdc70e920be",
+        "changed_file_count": 97
+      },
+      {
+        "pr": 7,
+        "sha": "aaf6a7be657921c9ffaaa352ea778de096e6a320",
+        "changed_file_count": 73
+      },
+      {
+        "pr": 4,
+        "sha": "138f1cd65c4abc3e0e8e75fade682382f2a6b903",
+        "changed_file_count": 446
+      },
+      {
+        "pr": 3,
+        "sha": "0f0c32f1edc955f6117108daecbb492652212931",
+        "changed_file_count": 31
+      },
+      {
+        "pr": 2,
+        "sha": "41dfcee04da0ce7e24a9bdc25228e43dbfac25b1",
+        "changed_file_count": 1
+      }
+    ],
+    "errors": [],
+    "direct_package_hits": [],
+    "expanded_analytics_hits": [
+      {
+        "pr": 18,
+        "sha": "1e403b135206844a34219753a36e2dee39c7dd59",
+        "files": [
+          "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAnalyticsController.java",
+          "chengyinhub-admin/src/main/java/com/chengyinhub/web/task/AnalyticsAggregationTask.java",
+          "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AnalyticsEventServiceImpl.java"
+        ]
+      },
+      {
+        "pr": 11,
+        "sha": "0b301c9b8d1853a86ed689c701eaad40cb3b70d7",
+        "files": [
+          "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAnalyticsController.java",
+          "chengyinhub-admin/src/main/java/com/chengyinhub/web/task/AnalyticsAggregationTask.java",
+          "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AnalyticsEventServiceImpl.java"
+        ]
+      },
+      {
+        "pr": 7,
+        "sha": "aaf6a7be657921c9ffaaa352ea778de096e6a320",
+        "files": [
+          "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAnalyticsController.java",
+          "chengyinhub-admin/src/main/java/com/chengyinhub/web/task/AnalyticsAggregationTask.java",
+          "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AnalyticsEventServiceImpl.java"
+        ]
+      },
+      {
+        "pr": 4,
+        "sha": "138f1cd65c4abc3e0e8e75fade682382f2a6b903",
+        "files": [
+          "chengyinhub-system/src/main/resources/mapper/business/BizFunnelDailyMapper.xml"
+        ]
+      }
+    ],
+    "master_sha": "cbcc44261939cb9972e05929e8f73f8cf8862d6b",
+    "master_blob_comparison": [
+      {
+        "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/AnalyticsController.java",
+        "remote_master_blob": "7e5e475f1535e245b4428523c8c295ecd7cbca92",
+        "core_blob": "7e5e475f1535e245b4428523c8c295ecd7cbca92",
+        "same": true
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayerProgressionServiceImpl.java",
+        "remote_master_blob": "066939e5f13c1827bac6a47e5989077013fcd47b",
+        "core_blob": "066939e5f13c1827bac6a47e5989077013fcd47b",
+        "same": true
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/PlayerGrowthMapper.java",
+        "remote_master_blob": "cae824ea99fadab5af1ad3486bfd1e0c5a11b3dd",
+        "core_blob": "cae824ea99fadab5af1ad3486bfd1e0c5a11b3dd",
+        "same": true
+      },
+      {
+        "path": "chengyinhub-system/src/main/resources/mapper/business/PlayerGrowthMapper.xml",
+        "remote_master_blob": "632ab4e1d66080330c9fb7a92b4a87b14e68f93b",
+        "core_blob": "632ab4e1d66080330c9fb7a92b4a87b14e68f93b",
+        "same": true
+      }
+    ],
+    "scope": "Actual all-pages filename tool checked every open PR; summary retains exact heads/counts and target hits rather than all unrelated filenames"
+  },
+  "default_boundary": [
+    "Existing bugs/shared backend only; no UI/new features/iOS/Flutter",
+    "No new reward/fee/date-window/pagination/auth policy, no DDL/new dependency/CI/deploy/production",
+    "Cloud source development only, no Java/Maven/Node/DB/manual CI/alternative environments",
+    "Preserve original assertions; necessary new regression source NOT_RUN; source delivery not acceptance",
+    "One file one writer; each task small commits/push fullSHA/paths/dependencies/test sources to PR16 and local coordinator",
+    "One repair slot per team; independent other tasks continue without waiting for tests/CI, real task exhaustion honest"
+  ],
+  "future_package_note": "Source-based candidates not run/reproduced on DB; actual implementation and local validation remain pending. Whole P048 unbounded-query performance issue not declared solved.",
+  "scheduling_coordinator": "LOCAL/01a13eed-e4d9-77f3-b875-c72d26ea7d59",
+  "startup_plan": "docs/plans/mini-forward-cloud-20261015/ (owned by local coordinator, not edited by C00)",
+  "initial_source_file_count": 6,
+  "source_only_boundary": "Exactly6 existing files plus2 named new regression files; no directory glob or unrelated Mapper/DDL/authorization expansion",
+  "startup_pr": {
+    "number": 70,
+    "url": "https://github.com/liboyang42-cpu/hengyin/pull/70",
+    "commit": "9f96f7a858866dd2a09cd244f90c6f0ecbac5e88",
+    "marker": "CY-FORWARD3-20261015",
+    "source_base": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
+    "full_readback": [
+      "README.md",
+      "START_PROMPT.md",
+      "TASKS.json",
+      "OWNERSHIP_CHECK.json"
+    ]
+  },
+  "task_aliases": {
+    "AN01": "F3-STAT-01 / STAT",
+    "AN02": "F3-GROW-01 / GROW"
+  },
+  "host_id": "durable",
+  "thread_title": "修复日期边界与成长并发一致性",
+  "status": "SOURCE_DELIVERED_UNVERIFIED",
+  "running_claim": false,
+  "observed_child_writer_count": 0,
+  "child_workers": {
+    "AN01": "/root/stat",
+    "AN02": "/root/grow"
+  },
+  "source_branch": "codex/mini-forward-source-20261015",
+  "ack_url": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6199048354",
+  "running_count_basis": "Latest PR72 QUEUE and CLAIMS read back: both original writers frozen; earlier 2-child startup ACK is historical",
+  "verification": "ORDINARY_24_PASS_MYSQL_11_NOT_RUN",
+  "active_source_writers": 0,
+  "ready_source_items": 0,
+  "scope_state": "EXHAUSTED",
+  "source_candidate_sha": "2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd",
+  "delivery_head_sha": "7bf99128e0f136f7bc3d13b25f62e4099a073078",
+  "delivery_pr": 72,
+  "delivery_receipt_url": "https://github.com/liboyang42-cpu/hengyin/blob/7bf99128e0f136f7bc3d13b25f62e4099a073078/docs/verification/mini-forward-cloud-20261015/CLAIMS.json",
+  "initial_existing_file_count": 6,
+  "authorized_new_regression_file_count": 2,
+  "total_authorized_source_test_paths": 8,
+  "new_extra_test_grants": true,
+  "no_new_regression_files_yet": false,
+  "authorized_new_regression_paths": [
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/forward20261015/AnalyticsDateContractTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/forward20261015/PlayerGrowthConcurrencyMySqlIT.java"
+  ],
+  "parallel_task_writer_limit": 2,
+  "initial_source_file_count_meaning": "Existing source and old tests only; additional 2 new regression paths separately authorized by original PR70 TASKS",
+  "regression_authority_correction": {
+    "origin": "PR70 TASKS.json F3-STAT-01/F3-GROW-01 new_regression_file; local total coordinator explicitly reconfirmed existing grant",
+    "local_coordinator_thread": "01a13eed-e4d9-77f3-b875-c72d26ea7d59",
+    "correction_receipt": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6201571952",
+    "meaning": "6 existing source/old-test files plus 2 explicitly named new regression paths; corrects C00 register omission, not a new scope expansion",
+    "new_regression_paths": [
+      "chengyinhub-admin/src/test/java/com/chengyinhub/business/forward20261015/AnalyticsDateContractTest.java",
+      "chengyinhub-admin/src/test/java/com/chengyinhub/business/forward20261015/PlayerGrowthConcurrencyMySqlIT.java"
+    ]
+  },
+  "verification_progress": {
+    "candidate_sha": "2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd",
+    "verification_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+    "status": "ORDINARY_24_PASS_REAL_MYSQL_11_NOT_RUN",
+    "ordinary_status": "PASS",
+    "ordinary_result": "PASS",
+    "ordinary_classes": 2,
+    "ordinary_source_declarations": 24,
+    "actual_executed_tests": 24,
+    "passed": 24,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "compilation_status": "COMPILE_PASS",
+    "reactor_modules_success": 7,
+    "compilation_started": true,
+    "test_container_started": true,
+    "test_container_cleanup": "Exact container confirmed cleaned by local verifier",
+    "guard_exit_code": 0,
+    "guard_reason": "completed",
+    "guard_container_id": "55813804e48154622238ae78c3687d6444221e95cb7d504a16b59a958a5189ab",
+    "source_archive_sha256": "8740184baf0fbe8e9d873d6c6a2c226818e18f9f2943dda9ec2882d43946567f",
+    "selected_classes": [
+      "com.chengyinhub.business.service.PlayerProgressionServiceImplTest",
+      "com.chengyinhub.web.controller.business.AnalyticsControllerTest"
+    ],
+    "exact_class_set_match": true,
+    "fresh_reports": true,
+    "log_sha256": "934783e1f65f240f41379ccea314dc5c989ec6e452ea3a308ae77e14c00c8bee",
+    "class_reports": [
+      {
+        "class": "com.chengyinhub.business.service.PlayerProgressionServiceImplTest",
+        "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.PlayerProgressionServiceImplTest.xml",
+        "sha256": "2ec94992410be4866192470bc70afd21645d0a6af43f97ae3f6275ec1d91433c",
+        "fresh": true,
+        "tests": 12,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "com.chengyinhub.web.controller.business.AnalyticsControllerTest",
+        "path": "chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.web.controller.business.AnalyticsControllerTest.xml",
+        "sha256": "e7e7b0791bed67e7bc95c0985547d55bb3bd9896a6a67dfb061027a55985ebc5",
+        "fresh": true,
+        "tests": 12,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    ],
+    "started_at": "2026-10-15T20:44:37.183604+00:00",
+    "finished_at": "2026-10-15T20:47:21.589299+00:00",
+    "evidence_pr": 24,
+    "evidence_commit": "fbcf8e0ed40e226552c3c90eb068b2b34a76bc0f",
+    "evidence_directory": "docs/verification/mini-bug-arch-20261015/VPS_FORWARD_2babbe28/",
+    "evidence_json": "summary.json",
+    "C00_read_public_evidence": true,
+    "mysql_source_declarations": 11,
+    "mysql_actual_executed_tests": 0,
+    "mysql_status": "NOT_RUN_APPROVED_REAL_DATABASE_ENTRY_UNCONFIRMED",
+    "mysql_resource_note": "212 network none cannot replace MySQL; inspected existing funds CI fixed class list does not cover this11, no CI extension or bypass authorized",
+    "no_inherited_results": true,
+    "source_status": "SOURCE_DELIVERED_UNVERIFIED_AT_DATABASE_AND_RUNTIME_LAYERS",
+    "scope_state": "EXHAUSTED",
+    "active_source_writers": 0,
+    "not_accepted": [
+      "11 real MySQL concurrency tests",
+      "real database/Redis",
+      "runtime HTTP real identities",
+      "devices and business acceptance",
+      "merge",
+      "deployment",
+      "business migrations"
+    ],
+    "admission_history": [
+      {
+        "candidate_sha": "2babbe283ed2bfd2bf94859e0f5a589f12dcf9bd",
+        "verification_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+        "status": "NOT_RUN_ADMISSION_REFUSED",
+        "ordinary_classes": 2,
+        "ordinary_source_declarations": 24,
+        "ordinary_status": "NOT_RUN_ADMISSION_REFUSED",
+        "ordinary_result": null,
+        "mysql_source_declarations": 11,
+        "mysql_status": "NOT_RUN_PENDING_SEPARATE_REAL_MYSQL_VALIDATION",
+        "actual_executed_tests": 0,
+        "compilation_started": false,
+        "test_container_started": false,
+        "guard_exit_code": 75,
+        "guard_reason": "another_build_holds_lock",
+        "container_id": null,
+        "queue_reason": "Other task holds shared java-build.lock; no bypass or termination",
+        "source_failure": false,
+        "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+        "source_archive_sha256": "8740184baf0fbe8e9d873d6c6a2c226818e18f9f2943dda9ec2882d43946567f",
+        "selected_classes": [
+          "com.chengyinhub.web.controller.business.AnalyticsControllerTest",
+          "com.chengyinhub.business.service.PlayerProgressionServiceImplTest"
+        ],
+        "admission_finished_at": "2026-10-15T20:35:49.300199+00:00",
+        "evidence_pr": 24,
+        "evidence_commit": "8cfa51c099de362540d67cff71225e1ef778d6a4",
+        "evidence_directory": "docs/verification/mini-bug-arch-20261015/VPS_FORWARD_2babbe28/",
+        "evidence_json": "admission-refused.json",
+        "C00_read_public_evidence": true,
+        "no_inherited_results": true,
+        "retry_owner": "Local verifier via normal approved212 admission only; Cloud no fallback",
+        "scope_state": "EXHAUSTED",
+        "active_source_writers": 0
+      }
+    ]
+  },
+  "verification_evidence_commit": "fbcf8e0ed40e226552c3c90eb068b2b34a76bc0f",
+  "latest_source_candidate_sha": "d592334abee1a379963e7b72a58eec5e0f7bd5ad",
+  "latest_tasks": [
+    "F3-STAT-02",
+    "F3-GROW-02"
+  ],
+  "latest_verification": "TEST_COMPILE_PASS_ONLY_PUBLIC_EVIDENCE_READ_TRUE_MYSQL11_NOT_RUN",
+  "latest_validation": {
+    "candidate_sha": "bde356f3f0944f4c1a00726fbf821de2267a3eea",
+    "result": "ORDINARY_TARGETED_PASS",
+    "tests": 28,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "passed": 28,
+    "classes": [
+      "com.chengyinhub.web.controller.business.AnalyticsControllerTest",
+      "com.chengyinhub.business.service.PlayerProgressionServiceImplTest"
+    ],
+    "class_test_counts": [
+      14,
+      14
+    ],
+    "fresh_reports": true,
+    "exact_class_set_match": true,
+    "guard_exit_code": 0,
+    "guard_reason": "completed",
+    "started_at": "2026-10-16T03:47:03.567744+00:00",
+    "finished_at": "2026-10-16T03:49:49.990667+00:00",
+    "container_id": "d8a22f9badbdb11ce65e3b6ef17f8cbc619053b3fdfd2c1e68ac55210c312c0b",
+    "cleanup": {
+      "observed_absent": true,
+      "endpoint": "chengyin-aws",
+      "container_id": "d8a22f9badbdb11ce65e3b6ef17f8cbc619053b3fdfd2c1e68ac55210c312c0b"
+    },
+    "task": "cy-vps-forward-bde356f3-20261016",
+    "source_archive_sha256": "db41f1932d70354b67645a2b5277beeac15ef4050ce305b0d7a666dd2081feab",
+    "entry_sha256": "12374f742dcf1547c8eabf28c28403c94c8307fe20cba0a3a63d7f2b49764fba",
+    "validator": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+    "environment": "Dedicated VPS approved212 ordinary only",
+    "evidence_pr": 24,
+    "evidence_commit": "cae72e05ee668271d79ea9c95e505d7e8971d3a5",
+    "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_FORWARD_bde356f3/README.md",
+    "summary_url": "https://github.com/liboyang42-cpu/hengyin/blob/cae72e05ee668271d79ea9c95e505d7e8971d3a5/docs/verification/mini-bug-arch-20261015/VPS_FORWARD_bde356f3/summary.json",
+    "public_evidence_status": "C00 read public README and structured summary; local retains original logs/XML",
+    "log_sha256": "12821ce1b428d88377b2c97ab1ae8ff53625cf145a4bd63ebf74f1ccb857c42d",
+    "reports": [
+      {
+        "class": "com.chengyinhub.business.service.PlayerProgressionServiceImplTest",
+        "tests": 14,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "8ca7f79bba82372ec8616e04de6683c2dd1a86ffaebe6793f7d784e499a79add",
+        "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.PlayerProgressionServiceImplTest.xml"
+      },
+      {
+        "class": "com.chengyinhub.web.controller.business.AnalyticsControllerTest",
+        "tests": 14,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "b5e9dd8ab2b3a016b903537189bf2580226fd78a9425764ee55815bde1da1f92",
+        "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.web.controller.business.AnalyticsControllerTest.xml"
+      }
+    ],
+    "not_accepted": [
+      "true MySQL/Redis",
+      "runtime HTTP",
+      "device/business acceptance",
+      "candidate integration",
+      "merge/deployment/migrations",
+      "later source SHAs"
+    ],
+    "cloud_manual_runs": 0
+  },
+  "effective_validation_entry_decision": {
+    "packet": "VALIDATION_ENTRY_DECISION.json",
+    "user_decision": "保持现有入口，不新增",
+    "state": "EXISTING_ENTRIES_ONLY_NEW_PROPOSAL_CLOSED",
+    "new_entry_approval_pending": false,
+    "real_storage_uncovered_status": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+    "ordinary_run_only_for": "New real source candidate or unresolved failure via existing approved212",
+    "manual_ci_trigger_or_repeat": false,
+    "changes_to_212_ci_or_network": false,
+    "no_new_work_or_rerun_task": true
+  },
+  "latest_production_source_sha": "bde356f3f0944f4c1a00726fbf821de2267a3eea",
+  "latest_test_source_change": {
+    "task": "F3-GROW-03",
+    "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/forward20261015/PlayerGrowthConcurrencyMySqlIT.java",
+    "source_sha": "d592334abee1a379963e7b72a58eec5e0f7bd5ad",
+    "parent_sha": "b36fd45845889f78c18819826e4e5ed9d10f3e8e",
+    "scope": "Onlyfixed logicalday clock override matchingseed; same11methods/assertions/gates, production0change",
+    "c00_public_diff_read": true,
+    "ordinary_rerun": "NOT_REQUIRED_UNCHANGED",
+    "test_compile": "PASS_ONLY_PUBLIC1d266f99_FRESH2CLASSES_TESTS0_MYSQL11_NOT_RUN",
+    "mysql11": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+    "fixture_classification": "REGRESSION_SOURCE_CORRECTION_NOT_NEW_BUSINESS_BUG",
+    "receipt": "PR16#6209005869",
+    "test_compile_queue_packet": "LOCAL_VALIDATION_QUEUE_STATUS.json"
+  },
+  "current_local_validation_queue": {
+    "packet": "LOCAL_VALIDATION_QUEUE_STATUS.json",
+    "state": "CORE5752_SINGLE31_PENDING_EXTRA2_H2_PASS_FORWARD_COMPILE_ONLY_PASS",
+    "source_failure": false,
+    "cloud_runs": 0,
+    "new_entry": false,
+    "guard_refusal_scope": "Historicalfirstrefusalsretained; latestExtraH2/FORWARDcompilepassed. CurrentCORE31awaitactualresult, no newrefusalinferred"
+  },
+  "latest_extra_e02_12_validation": {
+    "candidate_sha": "1bfa81a5a58ffa8112c10414dad9fdb1701ef188",
+    "result": "H2_PRODUCTION_XML_TARGETED_PASS",
+    "actual_tests": 2,
+    "passed": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "fresh_exact_xml": true,
+    "evidence_commit": "1ae7b60cab62696ec0a9259907cfad265496c554",
+    "result_packet": "E02_12_ORDINARY_VPS_RESULT.json",
+    "production_null_reachability_proven": false,
+    "no_real_mysql_claim": true
+  },
+  "latest_forward_d592_test_compile": {
+    "candidate_sha": "d592334abee1a379963e7b72a58eec5e0f7bd5ad",
+    "result": "TEST_COMPILE_PASS_ONLY",
+    "validator": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+    "environment": "ExistingVPS212",
+    "guard_exit_code": 0,
+    "actual_tests": 0,
+    "fresh_main_class_verified_by_local": true,
+    "fresh_anonymous_clock_class_verified_by_local": true,
+    "exact_artifact_paths_not_yet_supplied": false,
+    "container_cleanup_confirmed_by_local": true,
+    "container_id": "528f45346b1fe71f5db5d028bbf9e47bbd50bbf782eaf195d59c0a116d9eac3c",
+    "evidence_pr": 24,
+    "evidence_commit": "1d266f99ec55a50008bdc56057b9487adf7a3bd0",
+    "public_evidence_status": "C00readpublicREADMEandsummary; originalclassfilesretainedbylocal, notreadbyCloud",
+    "source_archive_sha256": "69bcf8ee5c2347030bf81c7f780556b914b94a3225c59b669f65134813ac6a38",
+    "task": "cy-vps-forward-d592334a-20261016",
+    "first_shared_lock_refusal_retained": true,
+    "ordinary28_rerun": false,
+    "mysql11": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+    "true_db_redis_http_device_merge_deploy_accepted": false,
+    "cloud_manual_runs": 0,
+    "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/1d266f99ec55a50008bdc56057b9487adf7a3bd0/docs/verification/mini-bug-arch-20261015/VPS_FORWARD_d592334a/README.md",
+    "result_packet": "FORWARD_D592_TEST_COMPILE_RESULT.json",
+    "guard_reason": "completed",
+    "started_at": "2026-10-16T06:08:19.135291+00:00",
+    "finished_at": "2026-10-16T06:10:59.528066+00:00",
+    "compiled_files": [
+      {
+        "path": "source/chengyinhub-admin/target/test-classes/com/chengyinhub/business/forward20261015/PlayerGrowthConcurrencyMySqlIT.class",
+        "sha256": "3fd6bb37e0213df11c7f45264781055ffd94849c4e8d27407bfcd5590e6d61d5",
+        "fresh": true
+      },
+      {
+        "path": "source/chengyinhub-admin/target/test-classes/com/chengyinhub/business/forward20261015/PlayerGrowthConcurrencyMySqlIT$1.class",
+        "sha256": "a28ed9d73b5cd4a0cc4be9b61ae98fd2a87bd633feb85a56d576806bd2bbb2c1",
+        "fresh": true
+      }
+    ],
+    "log_sha256": "49c557f5c969ce3424f37bdc836f9030df80126b10e460de2db695d0fb0ab38f",
+    "reports": []
+  },
+  "forward_d592_public_compile_receipt": {
+    "source_sha": "d592334abee1a379963e7b72a58eec5e0f7bd5ad",
+    "result_packet": "FORWARD_D592_TEST_COMPILE_RESULT.json",
+    "evidence_commit": "1d266f99ec55a50008bdc56057b9487adf7a3bd0",
+    "result": "COMPILE_PASS_ONLY",
+    "actual_tests": 0,
+    "fresh_class_files": 2,
+    "mysql11": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+    "ordinary28_not_repeated": true
+  }
+}

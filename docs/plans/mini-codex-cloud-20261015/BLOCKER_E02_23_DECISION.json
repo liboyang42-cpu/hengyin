@@ -1,0 +1,202 @@
+{
+  "item": "E02-23",
+  "status": "USER_DECIDED_SOURCE_DELIVERED_UNVERIFIED",
+  "source_sha": "b45664de6136eb97c46ed0c86e95fc25686dc1b7",
+  "decision_owner": "本地root/C00确认身份合同及精确文件归属；不是等待测试资源",
+  "known_facts": [
+    {
+      "path": "chengyinhub-xcx/pages/square/components/cy/post-compose/index.js",
+      "method": "发布/编辑提交",
+      "lines": [
+        479,
+        499,
+        511
+      ],
+      "fact": "新建和编辑均POST /api/creativesquare/action；编辑id为旧square id，新建request_id仅旧发布幂等键。"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/square/list/index.js",
+      "line": 242,
+      "method": "收藏请求",
+      "fact": "POST /api/creativesquare/bookmark，id=item.id；详情/detail/index.js:560、profile/index.js:1676、mylike/mylike.js:334同样传旧id。"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCreativeSquareController.java",
+      "method": "creativeSquareActoin",
+      "lines": [
+        540,
+        647,
+        656,
+        690,
+        730,
+        745
+      ],
+      "fact": "旧发布/编辑调用IUmsCreativeSquareService；审核结果也更新旧status。"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsCreativeSquareServiceImpl.java",
+      "method": "insertUmsCreativeSquare / insertUmsCreativeSquareIdempotent",
+      "lines": [
+        54,
+        57,
+        65,
+        79
+      ],
+      "fact": "调用UmsCreativeSquareMapper，仅写旧表。"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/UmsCreativeSquareMapper.xml",
+      "method": "insertUmsCreativeSquare / updateUmsCreativeSquare",
+      "lines": [
+        78,
+        79,
+        130,
+        131
+      ],
+      "fact": "ums_creative_square独立自增主键；无community映射创建。"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCreativeSquareController.java",
+      "method": "creativeSquareBookmark",
+      "lines": [
+        1018,
+        1020,
+        1031,
+        1033
+      ],
+      "fact": "直接把旧id交communityPostService.act/unact作为postId。"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/ViewCreativeSquareMapper.xml",
+      "method": "selectViewCreativeSquareList / selectCommunityBookmarkedPostIds",
+      "lines": [
+        71,
+        74,
+        129,
+        136
+      ],
+      "fact": "旧列表收藏筛选/状态按数值同号新帖关联。"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CommunityPostServiceImpl.java",
+      "method": "act",
+      "lines": [
+        398,
+        404,
+        414
+      ],
+      "fact": "按community_post.id查可见新帖并写收藏；无对应404，同号其他PUBLIC帖可能错收藏；不宣称private绕过。"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_community_post_platform_20260909.sql",
+      "lines": [
+        853,
+        865
+      ],
+      "fact": "一次offline回填明确新旧不双写、保留原ID，写legacy-square-<id>及LEGACY_MIGRATED；只覆盖迁移时存量。"
+    }
+  ],
+  "minimum_missing_authority": {
+    "logical_fields": [
+      "legacy_source_type=UMS_CREATIVE_SQUARE（服务端保留）",
+      "legacy_square_id",
+      "community_post_id",
+      "原legacy作者member_id一致性",
+      "服务端产生且不可被客户端声明的provenance/迁移或桥创建回执"
+    ],
+    "invariants": [
+      "旧身份至多映射一个目标；目标确属该旧来源，不能equal-id兜底",
+      "映射与目标创建原子或有可恢复的持久回执；重试不可新建另一目标",
+      "新投稿、编辑、审核、删除时谁写哪份权威状态必须明确"
+    ],
+    "physical_schema": "这些是逻辑能力缺口，不预断必须新增列/表。现有client_request_id字符串不足；若需新字段/表或回填须C00另行批准DDL与归属，不改历史migration。",
+    "marker_limit": "Superseded by current static guarded-label proof only for exact migrated conjunction; clientRequestId alone still untrusted. See implementation_grant revision2. No runtime data/deployment evidence.",
+    "original_producer": "旧/action -> UmsCreativeSquareServiceImpl/Mapper是仍活动的实际producer；若保留旧写，桥创建/映射持久化责任必须交给此写事务或明确受控投影worker，不可把收藏消费者临时猜映射。"
+  },
+  "choices_for_root": [
+    {
+      "choice": "A 旧写入口适配切源至新帖聚合",
+      "visible_effect": "现有请求URL不变；新发布需可由旧list/info/编辑/分享id正确回读；旧审核/附件等原语义须明确适配。只改发布写表会使旧列表看不到新帖。",
+      "cross_owner": "是：旧Controller/service/mapper及新community service/interface；若改xcx则需Claude owner，但本包不要求新增或改变入口。",
+      "ddl": "不一定；仅当旧id兼容需持久映射且现有受保护字段不能承载时另决。",
+      "decision": "确认旧响应id/分享链接命名空间及读写权威切源边界。"
+    },
+    {
+      "choice": "B 保留旧写，明确授权持续桥投影",
+      "visible_effect": "旧发布/list/info继续工作，新帖可收藏；桥未就绪时必须明确未就绪/失败，不能收藏同号别人帖。",
+      "cross_owner": "是：旧producer、community聚合、旧收藏Controller及View mapper；需要原作者移交精确路径。",
+      "ddl": "可能；须有受保护来源映射和唯一性。与现有一次offline不双写合同不同，不能自行选择。",
+      "decision": "确认同步事务或异步回执、幂等/失败补偿，以及编辑/审核/删除同步责任。"
+    },
+    {
+      "choice": "C 无权威映射明确拒绝（止错范围）",
+      "visible_effect": "无映射旧帖点击收藏明确失败；不再错收藏其他帖。只有被证明的历史映射才可操作；列表和isBookmarked必须同步按该映射读。不能声称所有旧帖收藏恢复。",
+      "cross_owner": "是：旧bookmark Controller、View mapper及新聚合解析接口；可不触碰旧发布producer。",
+      "ddl": "可无DDL，但必须先证明历史provenance校验可靠；禁止仅凭客户端可声明字符串放行。",
+      "decision": "确认接受未映射帖暂不可收藏及明确返回语义；这不是完整功能修复。"
+    }
+  ],
+  "lifecycle_to_freeze": [
+    "创建：谁分配新post id并原子保存映射/回执，重试/已有迁移身份如何处理。",
+    "编辑：Controller creativeSquareActoin:647当前只改旧表；明确目标内容/媒体/关联与版本更新责任及失败可见性。",
+    "删除：Controller ceativeSquareDelete:1046-1066当前owner校验后旧del_flag=2；明确新帖终态及收藏清单隐藏责任，不猜历史物理删除政策。",
+    "审核/下架/恢复：同一b456源码Controller:730-746及AuditTaskServiceImpl处理BIZ_SQUARE:911-920只写旧status/checkStatus；同类:907-910对新帖另走applyAuditDecision。须明确谁驱动新帖lifecycle/interaction/search及恢复边界。",
+    "收藏读写：新聚合仍执行既有可见性/互动/幂等规则；旧收藏列表、isBookmarked、取消收藏均用同一权威身份转换。"
+  ],
+  "ownership": {
+    "existing_EXTRAE02": [
+      "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CommunityPostServiceImpl.java",
+      "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CommunityPostMapper.java",
+      "chengyinhub-system/src/main/resources/mapper/business/CommunityPostMapper.xml",
+      "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CreativeSquareCommunityPolicyServiceImpl.java"
+    ],
+    "grant_or_transfer_required": [
+      "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCreativeSquareController.java",
+      "chengyinhub-system/src/main/resources/mapper/business/ViewCreativeSquareMapper.xml",
+      "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ICommunityPostService.java（若新增解析接口）"
+    ],
+    "producer_if_A_or_B": [
+      "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsCreativeSquareServiceImpl.java",
+      "chengyinhub-system/src/main/resources/mapper/business/UmsCreativeSquareMapper.xml",
+      "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AuditTaskServiceImpl.java（若审核同步涉及）"
+    ],
+    "note": "新旧作者必须由C00核当前全局owner并正式冻结/转交；既有CommunityPostMapper.java授权备注仅nullable notification-preference signature，不自动扩为桥写权。不得抢写Claude/iOS。"
+  },
+  "entry_constraint": "保持用户现有入口约束，不新增入口、网络例外或测试执行方式。身份合同决定与后续本地真库验证准入分别处理。",
+  "not_done": [
+    "未替root选择产品合同",
+    "未改仓库/业务/测试/控制表",
+    "未运行Java/Node/测试/CI/DB/VPS",
+    "未声称已有新源运行证据"
+  ],
+  "current_coordination": "RESUME_KNOWN_BLOCKERS.json; user existing-entry-only constraint unchanged; this is source/input/identity evidence, not awaiting new verification resources",
+  "previous_decision_state": "BLOCKED_CONTRACT_DECISION_REQUIRED",
+  "effective_decision": {
+    "source": "Explicit human choices relayed by authorized local coordinator 01a13eed-e4d9-77f3-b875-c72d26ea7d59; latest delegation in C00 chat",
+    "choices": {
+      "E02-23": "No trusted legacy-to-community mapping: explicitly reject bookmark; same numeric ID and client legacy-square-* are not proof. Read list/bookmark state must not identify unrelated new post as old post.",
+      "E04-07_legacy": "Unknown original completion coupon identity: audit only, coupon unchanged, continue other already-authorized reward reversals. Preserve USED audit-only; no time/MAX/substitute inference or refund policy change.",
+      "E04-07_future": "Prepare minimal production/regression/new migration source for exact original coupon history ID persistence; review only, no migration execution, merge/deployment or guessed historical backfill."
+    }
+  },
+  "implementation_grant": "BUSINESS_DECISIONS_IMPLEMENTATION_GRANT.json",
+  "old_choices_are_historical_not_pending": true,
+  "trusted_historical_source_rule": {
+    "source_sha": "a76268d5454c8a5c5e3181ae7574bfb93932f800",
+    "migration": "chengyinhub-admin/sql/migration_community_post_platform_20260909.sql:853-884 inserts preserved source ID/author/clientRequestId and JSON_ARRAY(LEGACY_MIGRATED)",
+    "author_guard": "CommunityPostServiceImpl.java:49-50 AUTHOR_SAFETY_LABELS excludes LEGACY_MIGRATED; validateUpsert:1349-1359 rejects any unlisted label; both createDraft:145 and edit:180 call validation before mapPost/write",
+    "production_writers": "Bounded git grep of all current admin/system main source and sql: mapPost:1293 serializes validated author labels; CommunityPostMapper insertPost/updateContentCas writes them, prepareAccountPostsForErasure only replaces with empty array. Only migration produces protected marker; no runtime producer found assigning it. Do not extend allowlist/producer. Future integration that changes these paths must recheck invariant.",
+    "negative_controls": [
+      "spoof requestId alone",
+      "same id/author with unprotected labels",
+      "literal marker substring not JSON element",
+      "wrong author",
+      "no row",
+      "trusted migration JSON marker combined with all preserved mapping predicates",
+      "author edit/erasure removes marker -> deny, no self-heal"
+    ]
+  },
+  "current_source_delivery_packet": "E02_23_SOURCE_DELIVERY.json",
+  "current_source_sha": "13be997646c88b9eea282cc8c8225b42820dc3b3",
+  "actual_author_ack": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6216061116"
+}

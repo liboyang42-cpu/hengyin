@@ -1,0 +1,135 @@
+{
+  "total_prs": 212,
+  "scans": 212,
+  "hits": [
+    {
+      "pr": 231,
+      "sha": "b0dc1019f9d2485dc8ea8ca74184eb6728e4474a",
+      "title": "fix: 社区附件短期授权与稳定媒体重试",
+      "files": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ICommunityPostService.java",
+          "status": "modified"
+        }
+      ]
+    },
+    {
+      "pr": 32,
+      "sha": "5cadf0cbb2fb24c8565d8d6ba6d26653e51c8788",
+      "title": "[E04] CY-HANDOFF 券生命周期回归与真实调用链审计（未验证）",
+      "files": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RedemptionRewardClawbackService.java",
+          "status": "modified"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SmsCouponHistoryServiceImpl.java",
+          "status": "modified"
+        }
+      ]
+    },
+    {
+      "pr": 9,
+      "sha": "e65d5f79fbd0505716d387b4970025e99b571eb6",
+      "title": "fix: C包AI原日补偿与漫游玩法恢复（含暂停迁移）",
+      "files": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ISmsCouponHistoryService.java",
+          "status": "modified"
+        }
+      ]
+    },
+    {
+      "pr": 8,
+      "sha": "f99745260b24e45dbc38d1366287cbdc70e920be",
+      "title": "fix: A包原订单票务资格、维护与资金恢复（待运行验证）",
+      "files": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ISmsCouponHistoryService.java",
+          "status": "modified"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SmsCouponHistoryServiceImpl.java",
+          "status": "modified"
+        }
+      ]
+    },
+    {
+      "pr": 36,
+      "sha": "a76268d5454c8a5c5e3181ae7574bfb93932f800",
+      "title": "fix: Chengyin extra-six rolling source fixes and backend regression gaps",
+      "files": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RedemptionRewardClawbackService.java",
+          "status": "modified"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SmsCouponHistoryServiceImpl.java",
+          "status": "modified"
+        }
+      ]
+    },
+    {
+      "pr": 44,
+      "sha": "5752ee6fd302dab9e610f65cb8f3dc5b2b66201d",
+      "title": "fix: 小程序现有bug与共享后端修复（协作者输入与取消幂等）",
+      "files": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RedemptionRewardClawbackService.java",
+          "status": "modified"
+        }
+      ]
+    },
+    {
+      "pr": 11,
+      "sha": "0b301c9b8d1853a86ed689c701eaad40cb3b70d7",
+      "title": "feat: 小程序底层A/B/C集成（CI全绿候选，draft）",
+      "files": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ISmsCouponHistoryService.java",
+          "status": "modified"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SmsCouponHistoryServiceImpl.java",
+          "status": "modified"
+        }
+      ]
+    },
+    {
+      "pr": 4,
+      "sha": "138f1cd65c4abc3e0e8e75fade682382f2a6b903",
+      "title": "fix: 恢复后端升级并修复社区审核与提交闭环",
+      "files": [
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ICommunityPostService.java",
+          "status": "modified"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SmsCouponHistoryServiceImpl.java",
+          "status": "modified"
+        }
+      ]
+    },
+    {
+      "pr": 18,
+      "sha": "1e403b135206844a34219753a36e2dee39c7dd59",
+      "title": "fix: 小程序回调隔离、账务一致性与旧局快照候选",
+      "files": [
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RedemptionRewardClawbackMyBatisTest.java",
+          "status": "modified"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ISmsCouponHistoryService.java",
+          "status": "modified"
+        },
+        {
+          "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SmsCouponHistoryServiceImpl.java",
+          "status": "modified"
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "scope_note": "All 212 currently open PRs, each files endpoint paginated to end. Historical hits are not active writers; PR231 interface excluded. Targets list is bounded to production/interface/old two tests; new named files checked absent in public tree."
+}

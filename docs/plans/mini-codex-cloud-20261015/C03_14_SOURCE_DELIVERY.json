@@ -1,0 +1,81 @@
+{
+  "id": "OWN-C03-14",
+  "scope": "splitA null/nonpositive ID shape protection; existing duplicatepositive behavior retained as explicitly requested, no dedup policy change",
+  "source_sha": "adf597917da2654b6b753141180bbbcb6db92fc5",
+  "parent_sha": "e0e3f517b8e6deb26ed3697a00d38ae14f015e76",
+  "pr": 44,
+  "branch": "codex/mini-longrun-core-20261015",
+  "writer": "/root/topic_like_cancel_sol",
+  "owner": "CORE/C03",
+  "grant_control_sha": "78197cf835ff9f0542114560cc0645678a9f59e6",
+  "paths": [
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_14Test.java",
+    "docs/verification/mini-longrun-20261015/CORE/OWN-C03-14.md"
+  ],
+  "production_delta": "14 added lines: create afterpublisher/name checks and FULLrebuild afterexistingmoney/completenessguards validateexplicit elementsnull/<=0; helperthrowsIllegalArgumentException短安全文案. NoController/mapper/auth/DDL/dependencychange.",
+  "contract": {
+    "bad_element": "Reject whole create/FULL before aggregate writes; existing AjaxResult default code500 remains",
+    "preserved": [
+      "null wholelist omission",
+      "explicit[] clear",
+      "existingrows omissionguard",
+      "positive duplicateIDs and order",
+      "WHITELIST ignoringcollaborator list",
+      "owner and completenessguard order"
+    ],
+    "not_added": [
+      "member existence/permission/invitation",
+      "JSsafeinteger max bound",
+      "silent filtering/dedup",
+      "stored-data cleanup"
+    ]
+  },
+  "source_status": "SOURCE_DELIVERED_UNVERIFIED",
+  "actual_writers": 0,
+  "writer_stopped": true,
+  "c00_static_review": "Reviewed full3path diff and existing methodordering, same-tree publicparent alignment; GitHubcompare readback confirms exactly3paths. No compilation/test executed.",
+  "ordinary": {
+    "status": "ACTUAL51_FAIL_35PASS_1FAILURE_15ERROR_0SKIP",
+    "validator": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+    "classes": [
+      {
+        "name": "com.chengyinhub.business.longrun.OWN_C03_14Test",
+        "source_declarations": 10,
+        "new": true
+      },
+      {
+        "name": "com.chengyinhub.business.longrun.OWN_C03_12Test",
+        "source_declarations": 4,
+        "new": false
+      },
+      {
+        "name": "com.chengyinhub.business.service.TopicUpdateByOwnerTest",
+        "source_declarations": 31,
+        "new": false
+      },
+      {
+        "name": "com.chengyinhub.business.deadbuttons.TopicCreateBusinessErrorPassthroughTest",
+        "source_declarations": 6,
+        "new": false
+      }
+    ],
+    "source_declared_total": 51,
+    "actual_executed": 51,
+    "command_template_local_only": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.OWN_C03_14Test,com.chengyinhub.business.longrun.OWN_C03_12Test,com.chengyinhub.business.service.TopicUpdateByOwnerTest,com.chengyinhub.business.deadbuttons.TopicCreateBusinessErrorPassthroughTest test",
+    "environment": "Existing212 ordinary offline dependencies; noMySQL/Redis/newconfig/dependency",
+    "result_packet": "C03_ADF51_VPS_FAILURE.json",
+    "passing_new_class": "OWN_C03_14Test10PASS_ONLYATadf",
+    "repair_candidate": "5752ee6fd302dab9e610f65cb8f3dc5b2b66201d",
+    "repair_retest": "TopicUpdateByOwnerTest31ONLY_NOT_RUN"
+  },
+  "evidence_limits": "Known caller rejects malformed readback and drafts can restore/send suchlists; no realuserbadDraft or realviewDDL observed, no claimDB constraint failed.",
+  "old_results_not_inherited": [
+    "e0 ordinary10",
+    "0d targeted157",
+    "original1e231"
+  ],
+  "handoff_receipt": "https://github.com/liboyang42-cpu/hengyin/pull/24#issuecomment-6209026011",
+  "cloud_manual_runs": 0,
+  "test_deployed": false
+}

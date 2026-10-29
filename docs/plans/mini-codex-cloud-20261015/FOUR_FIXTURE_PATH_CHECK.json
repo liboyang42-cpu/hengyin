@@ -1,0 +1,53 @@
+{
+  "open_prs": 45,
+  "full_pagination": true,
+  "hits": [
+    {
+      "pr": 30,
+      "sha": "9a27f6b0d8fe532320cbe646775464cf49ba1d10",
+      "title": "[E02] CY-HANDOFF 社区读取快照与隐私回归（未验证）",
+      "files": [
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_01Test.java",
+          "status": "added"
+        },
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_06Test.java",
+          "status": "added"
+        },
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_11Test.java",
+          "status": "added"
+        },
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B05CommunityVisibilityMySqlIT.java",
+          "status": "added"
+        }
+      ]
+    },
+    {
+      "pr": 36,
+      "sha": "26d8245b458d18497eb9040a4c7d9f1509b41bb1",
+      "title": "fix: hide cancelled or unpublished activity reference cards",
+      "files": [
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_01Test.java",
+          "status": "added"
+        },
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_06Test.java",
+          "status": "added"
+        },
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_11Test.java",
+          "status": "added"
+        },
+        {
+          "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B05CommunityVisibilityMySqlIT.java",
+          "status": "added"
+        }
+      ]
+    }
+  ],
+  "errors": []
+}

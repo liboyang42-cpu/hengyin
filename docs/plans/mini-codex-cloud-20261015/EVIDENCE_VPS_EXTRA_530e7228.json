@@ -1,0 +1,162 @@
+{
+  "source_sha": "530e72281a9bd1a443f58a21119367d55eca3623",
+  "previous_source_sha": "b034a4aabdacffbf7a2ef4f400b56eb2c6eed6cf",
+  "direct_parent_sha": "0ee9a998ff04f033c9518e7c7139a62a0f6dc585",
+  "task": "cy-vps-extra-530e7228-20261017",
+  "archive_sha256": "742495efc683e0c544aec8152ec1e7debdaa366a1199d4ca279d6fff3e99f9ad",
+  "validation_phase": "two newly changed services: new regressions plus two directly affected existing classes",
+  "selectors": [
+    "com.chengyinhub.business.longrun.E01_13Test",
+    "com.chengyinhub.business.longrun.E03_04Test",
+    "com.chengyinhub.business.service.ClubWaitlistServiceImplTest",
+    "com.chengyinhub.business.service.impl.PlayJourneyStoryServiceImplTest"
+  ],
+  "declared_class_counts": {
+    "com.chengyinhub.business.longrun.E01_13Test": 6,
+    "com.chengyinhub.business.longrun.E03_04Test": 4,
+    "com.chengyinhub.business.service.ClubWaitlistServiceImplTest": 24,
+    "com.chengyinhub.business.service.impl.PlayJourneyStoryServiceImplTest": 25
+  },
+  "expected_declared_tests": 59,
+  "entry_sha256": "12374f742dcf1547c8eabf28c28403c94c8307fe20cba0a3a63d7f2b49764fba",
+  "not_validated": [
+    "trueMySQL/Redis/runtimeHTTP/device/business",
+    "migration/merge/deploy"
+  ],
+  "started_at": "2026-10-17T11:36:28.685565+00:00",
+  "command": [
+    "/home/ubuntu/.local/bin/chengyin-build-budget-212",
+    "--name",
+    "cy-budget-212-extra-530e7228",
+    "--source",
+    "/home/ubuntu/previews/cy-vps-extra-530e7228-20261017/source",
+    "--cache",
+    "/home/ubuntu/previews/cy-vps-extra-530e7228-20261017/cache",
+    "--",
+    "mvn",
+    "-o",
+    "-B",
+    "-ntp",
+    "-l",
+    "/home/ubuntu/previews/cy-vps-extra-530e7228-20261017/source/vps-targeted.log",
+    "-pl",
+    "chengyinhub-admin",
+    "-am",
+    "-Dmaven.test.skip=false",
+    "-DskipTests=false",
+    "-Dsurefire.failIfNoSpecifiedTests=false",
+    "-DforkCount=1",
+    "-Dtest=com.chengyinhub.business.longrun.E01_13Test,com.chengyinhub.business.longrun.E03_04Test,com.chengyinhub.business.service.ClubWaitlistServiceImplTest,com.chengyinhub.business.service.impl.PlayJourneyStoryServiceImplTest",
+    "test"
+  ],
+  "memavailable_before": "MemAvailable:    2802396 kB",
+  "guard": {
+    "returncode": 0,
+    "stdout": "{\"exitCode\": 0, \"reason\": \"completed\", \"containerId\": \"829eb2b3519753b39ef712810b96201fe7039b21214283582f00f2d7764a9822\"}\n",
+    "stderr": "",
+    "finished_at": "2026-10-17T11:39:15.680563+00:00"
+  },
+  "guard_receipt": {
+    "exitCode": 0,
+    "reason": "completed",
+    "containerId": "829eb2b3519753b39ef712810b96201fe7039b21214283582f00f2d7764a9822"
+  },
+  "reports": [
+    {
+      "class": "com.chengyinhub.business.longrun.E01_13Test",
+      "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E01_13Test.xml",
+      "sha256": "f069ed7a3349de46333a50524cbe55c40a6dcdccad2153cf4a962e56d7bfb859",
+      "fresh": true,
+      "testcases": 6,
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "class": "com.chengyinhub.business.longrun.E03_04Test",
+      "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E03_04Test.xml",
+      "sha256": "b0cad381f966c746a0c90894109aedd471505aec03c53b6356d5713ed37dc24e",
+      "fresh": true,
+      "testcases": 4,
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "class": "com.chengyinhub.business.service.ClubWaitlistServiceImplTest",
+      "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.ClubWaitlistServiceImplTest.xml",
+      "sha256": "a13d87f6448c159b8f31ad8bfe79728420f0da203dc307bdf60809901e392fd2",
+      "fresh": true,
+      "testcases": 24,
+      "tests": 24,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.PlayJourneyStoryServiceImplTest",
+      "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.impl.PlayJourneyStoryServiceImplTest.xml",
+      "sha256": "0a4e09e24ad5422b1879b8684bdfaea65f557238ed6bc50b36175bd5b457647e",
+      "fresh": true,
+      "testcases": 26,
+      "tests": 26,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  ],
+  "totals": {
+    "tests": 60,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "passed": 60
+  },
+  "fresh_exact_xml": true,
+  "integrity_ok": true,
+  "log_sha256": "a2f064aaf88eb951608d382e3e8612d1b3e654522e2f72615f1c6b25b2c1f402",
+  "build_success": true,
+  "evidence_result": "PASS",
+  "test_count_audit": {
+    "planned_tests_preserved": 59,
+    "source_annotation_counts": {
+      "com.chengyinhub.business.longrun.E01_13Test": 6,
+      "com.chengyinhub.business.longrun.E03_04Test": 4,
+      "com.chengyinhub.business.service.ClubWaitlistServiceImplTest": 24,
+      "com.chengyinhub.business.service.impl.PlayJourneyStoryServiceImplTest": 26
+    },
+    "actual_tests": 60,
+    "exact_source_method_names_match_fresh_xml": true,
+    "cause": "Initial static count missed fully qualified @org.junit.jupiter.api.Test on one existing archive test; no parameterization, duplicate execution or new source change.",
+    "original_collector_result": "NOT_PASS due solely to planned-count mismatch; original summary archived",
+    "rerun_performed": false,
+    "result": "PASS"
+  },
+  "container_cleanup": {
+    "context": "chengyin-aws",
+    "exact_id": "829eb2b3519753b39ef712810b96201fe7039b21214283582f00f2d7764a9822",
+    "observed_remaining_containers": 0,
+    "query_exit_code": 0
+  },
+  "source_integrity": {
+    "archive_source_file_match": true,
+    "files_verified": 4327,
+    "dependencies_changed": false,
+    "source_diff_paths": 6,
+    "docs_head": "541d36b29d4f1db5ef977a6ffc3fa6eaa77f317b",
+    "docs_head_diff": "Only original team BACKLOG/CLAIMS/QUEUE"
+  },
+  "retained_original_count_receipt": {
+    "path": "targeted-summary-before-count-audit.json",
+    "sha256": "0ab506a0d9a59f7a79403686ef76df65881c290d301c61e1d63637ba15c71c13",
+    "planned_tests": 59,
+    "initial_collector_result": "NOT_PASS solely due to missed fully qualified test annotation",
+    "test_rerun": false
+  },
+  "evidence_scope": "Ordinary mock persistence/service regression only. No true database, Redis, runtime HTTP, device, business, integration, migration execution, merge or deploy acceptance.",
+  "evidence_commit": "dc74c300ef11e203ac98b1baaf15efe77bcfbd20",
+  "readme_url": "https://github.com/liboyang42-cpu/hengyin/blob/dc74c300ef11e203ac98b1baaf15efe77bcfbd20/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_530e7228/README.md",
+  "c00_read_scope": "Public README and summary actually read; no original VPS XML/log fetched/reparsed, no Cloud rerun"
+}

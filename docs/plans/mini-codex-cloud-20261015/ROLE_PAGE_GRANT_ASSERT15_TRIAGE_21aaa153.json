@@ -1,0 +1,141 @@
+{
+  "source_sha": "21aaa1536cec8a9baa0f7b0494c2597bf5e09243",
+  "state": "SOURCE_DELIVERED_EXACT_APPROVAL_FRESH_SQL_PASS_POST_DEPLOY_AND_OLD_JAR_NOT_RUN",
+  "prior_engineering_closure": {
+    "control_sha": "837b0255debc8a0b9800b389de42b39e02d8a459",
+    "source_sha": "663729b8623fa63c2f1c2a0812ea2a287d70c4fc",
+    "changed": false
+  },
+  "failure_evidence": {
+    "mysql": "8.0.45",
+    "fresh_schema": {
+      "sql_errors": 0,
+      "tables": 378,
+      "statement15_scalar_true": 0,
+      "classification": "DATA_ASSERT"
+    },
+    "fresh_and_old_readback": "Both isolated test databases retained operator payout and finance verify but also held finance payout and operator verify after the page-grant migration. Those crossed additions violate the existing 20260816 exclusive split.",
+    "legal_old_grants": "cy_operator business:clubpayee:payout and cy_finance business:clubpayee:verify are intentional legal existing grants; operator payout is not itself a new unauthorized grant.",
+    "producer": "chengyinhub-admin/sql/migration_20260816_tandianri_batch3_funds_club_payee.sql",
+    "regression_producer": "chengyinhub-admin/sql/migration_20261013_admin_role_page_grants.sql",
+    "root_reported_order": {
+      "payee": 457,
+      "page_grant": 467
+    },
+    "evidence_files": [
+      "evidence/fresh-role-assert-readback.tsv",
+      "fresh-builder.log"
+    ],
+    "boundary": "Root supplied actual readbacks; C00 did not access databases. Keep original red21aaa evidence; zero SQL errors is not a full migration PASS."
+  },
+  "approval": {
+    "decision": "User explicitly approved the limited source correction and isolated regression; no further approval pending for this exact scope.",
+    "plan_sha256": "cb6647ec129356a9c3004d23034919b6b7420a3b23d30609d20aa14913bd0eff",
+    "one_use_protected_file": "chengyinhub-admin/sql/migration_20261013_admin_role_page_grants.sql",
+    "original_sha256": "1f147a2136e999b6fd87a7e0a865d8fde5b0c332170d561b28e415b9fccaf56e",
+    "approved_candidate_sha256": "1df695567871dc154a03cddd2ebe9495ddb60346dc2279db44a17558fe6504af",
+    "after_commit": "Restore the protected-file guard after this exact one-use edit. No other historical migration exception.",
+    "supplemental_null_boundary_approval": {
+      "decision": "User explicitly approved the single-line null handling correction and same-batch isolated regression; actual approval and source-owner acceptance read.",
+      "previous_approved_candidate_sha256": "1df695567871dc154a03cddd2ebe9495ddb60346dc2279db44a17558fe6504af",
+      "final_approved_candidate_sha256": "0834bcafb1c9a2f169377445d463cc34a6dce7fa2e96e6b6f81d09ab65254ead",
+      "scope": "Only change the legacy payout menu-type check to COALESCE(m.menu_type, '') = 'F'; keep legitimate F grants and fail closed for C, empty and NULL types.",
+      "protected_file": "chengyinhub-admin/sql/migration_20261013_admin_role_page_grants.sql"
+    },
+    "one_use_status": "CONSUMED_IN_6054b634_NORMAL_PROTECTION_RESTORED_SOURCE_OWNER_RECEIPT"
+  },
+  "exclusive_grant": {
+    "owner": "Existing PR392 source owner only",
+    "public_pr": "https://github.com/liboyang42-cpu/hengyin/pull/392",
+    "branch": "feature/audit-final-reconcile-20261020",
+    "observed_public_head_before_repair": "033e626d1cc505cab65af1ab60076482e31b4cb4",
+    "author_ack": "Actual existing source-owner acceptance of the exact limited correction and isolated regression was read; source delivery is not assumed.",
+    "state": "SOURCE_DELIVERED_FROZEN_LOCK_RETAINED",
+    "paths": [
+      "chengyinhub-admin/sql/migration_20261013_admin_role_page_grants.sql",
+      "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubCorporatePayeeMybatisIntegrationTest.java",
+      "ci/funds_it_gate.py",
+      "ci/test_funds_it_gate.py"
+    ],
+    "test_scope": "Targeted positive/negative MySQL regression for retained legal grants, forbidden crossed additions, existing anomalous grants failing closed without deletion, configured-role preservation and rerun behavior under the approved plan. Preserve existing business assertions.",
+    "count_scope": "Only the actual ClubCorporatePayeeMybatisIntegrationTest method count and necessary matching existing gate fixture/expected counts. No class removal, skip, threshold weakening, runner or workflow changes.",
+    "test_existing_count_observed": 11,
+    "C00_and_root_source_write": false,
+    "other_source_files": "Read-only; no new author, forward migration, role policy, permission reassignment or broader production source expansion.",
+    "frozen_source_sha": "6054b634785fc8af8c2deba44d40e3aab96ae4c2",
+    "test_delivered_count": 14,
+    "count_scope_delivery": "Existing test gate and fixture both updated11 to14; no class removal/skip or threshold weakening in the two count-file patches."
+  },
+  "runtime_rehearsal_current": {
+    "owner": "Existing local validation coordinator",
+    "reported_delta": "Same task database366 to378 tables;18 exact delta migrations passed, retained original role failure separately.",
+    "database_restore": "After full backup, restored366 tables and9 members; full data SHA256 equal; global settings and other database counts unchanged.",
+    "restored_full_data_sha256": "fd68f2c9757884e6035d7a37b1f20fd46a251372823f7b89dafbcfd449404f5f",
+    "java_admission": "Existing2560 admission refused; actual Java execution0.",
+    "old_jar_rollback": "NOT_RUN; database snapshot restore is not old JAR compatibility acceptance.",
+    "approved_correction_regression": "FIXED_605_FRESH_SQL_PASS_ONLY",
+    "fresh605": {
+      "source_sha": "6054b634785fc8af8c2deba44d40e3aab96ae4c2",
+      "mysql": "8.0.45",
+      "ledger_inventory": 485,
+      "pre_app_migrations": 205,
+      "tables": 378,
+      "seed_and_migration_problems": 0,
+      "seed_negative_controls": {
+        "passed": 6,
+        "selected": 6
+      },
+      "schema_only": false,
+      "data_assert_observations": 0,
+      "data_assert_suppression": false,
+      "builder_exit": 0,
+      "client_exit": 0,
+      "oom": false,
+      "role_readback": {
+        "finance_verify": true,
+        "operator_payout": true,
+        "finance_payout": false,
+        "operator_verify": false
+      },
+      "old_database_anomalies": "Preserved unchanged; no cleanup or deletion of crossed old grants.",
+      "client_cleanup": "Exact owned full-ID container35e86dc1a09808b88ece79c53c5aab1ba2108ad921141322bed896e9073ea311 confirmed absent via explicit context full-ID query.",
+      "global_and_other_database_counts": "Unchanged as reported by validation coordinator; original212 guard/hash/budget unchanged.",
+      "evidence_files": [
+        "evidence/fresh605-result.json",
+        "evidence/fresh605-builder.log",
+        "evidence/fresh605-client-run.json",
+        "evidence/role-two-way605-readback.tsv"
+      ],
+      "evidence_provenance": "Actual execution and independent readbacks supplied by validation coordinator; local downloads in progress at receipt. C00 did not execute/review raw database artifacts.",
+      "unrun": {
+        "post_deploy_checks": 3,
+        "post_deploy_requires": "Candidate bean plus health; NOT_RUN",
+        "java_actual_executions": 0,
+        "old_jar_runtime": "NOT_RUN"
+      },
+      "not_inherited": "Only605 current SQL replay PASS. Do not reassign21 HTTP/JAR or18delta/restore results to605."
+    },
+    "history_preserved": "Original21 fresh full snapshot/four original reports/first role-both raw files preserved;605 fresh and role readback stored separately without overwriting."
+  },
+  "delivery_required": {
+    "frozen_source_sha": "6054b634785fc8af8c2deba44d40e3aab96ae4c2",
+    "parent_sha": "033e626d1cc505cab65af1ab60076482e31b4cb4",
+    "public_commit": "https://github.com/liboyang42-cpu/hengyin/commit/6054b634785fc8af8c2deba44d40e3aab96ae4c2",
+    "precise_granted_changed_paths": [
+      "chengyinhub-admin/sql/migration_20261013_admin_role_page_grants.sql",
+      "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubCorporatePayeeMybatisIntegrationTest.java",
+      "ci/funds_it_gate.py",
+      "ci/test_funds_it_gate.py"
+    ],
+    "protected_sql_actual_sha256": "0834bcafb1c9a2f169377445d463cc34a6dce7fa2e96e6b6f81d09ab65254ead",
+    "C00_readback": "Public commit/diff and SQL bytes read; actual SQL SHA256 equals the separately approved final NULL-safe candidate. No C00 source edit or database/test execution.",
+    "other_changes_in_same_commit": "The public commit also contains separately owned existing HTTP/JAR entry work and the three PR397 followup paths. Those are outside this four-path grant; root reports PR397 source size/hash verified and included, without merging PR397 or master. No new authority is conferred here.",
+    "regression_boundary": "Complete fresh SQL replay and role readbackPASS supplied by validation coordinator; not14 targeted Java test execution, POST_DEPLOY bean checks or old JAR runtime."
+  },
+  "restrictions": [
+    "Preserve every legal old grant; old anomalies fail closed without deletion.",
+    "No production database, master merge, deployment or production migration.",
+    "C00 only edits global documentation; source and CI remain with the existing PR392 source owner.",
+    "Do not assign a second writer or publish private coordination details."
+  ]
+}

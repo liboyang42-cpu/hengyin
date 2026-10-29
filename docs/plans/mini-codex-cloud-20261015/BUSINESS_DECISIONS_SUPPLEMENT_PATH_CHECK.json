@@ -1,0 +1,13 @@
+{
+  "targets": [
+    "ViewCreativeSquareMapper.java",
+    "IViewCreativeSquareService.java",
+    "ViewCreativeSquareServiceImpl.java",
+    "ApiCreativeSquareCommunityPolicyTest.java",
+    "ViewCreativeSquareCommunityPolicyMyBatisTest.java"
+  ],
+  "prs": 212,
+  "scans": 212,
+  "hits": [],
+  "errors": []
+}

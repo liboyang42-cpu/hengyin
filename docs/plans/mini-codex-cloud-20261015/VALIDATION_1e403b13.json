@@ -1,0 +1,34 @@
+{
+  "candidate_sha": "1e403b135206844a34219753a36e2dee39c7dd59",
+  "result": "PASS",
+  "scope": "frozen candidate selected automated VPS matrix only",
+  "groups": {
+    "B03_mysql": 7,
+    "unit_and_H2": 202,
+    "ai_mysql_redis": 22
+  },
+  "tests": 231,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "evidence_pr": 24,
+  "evidence_commit": "43ca53274b345bf344037e1fe60afa49b8e53dd1",
+  "github_ci": {
+    "run": 38733056178,
+    "status": "success"
+  },
+  "funds_ci": {
+    "run": 38733056167,
+    "status": "success"
+  },
+  "report_mtime_verified": true,
+  "serial_maven_verified": true,
+  "cleanup_verified": true,
+  "test_deployed": false,
+  "not_accepted": [
+    "runtime HTTP business reads with real test identities and deployed SHA/database binding",
+    "WeChat/iOS device acceptance",
+    "merge, business migration, deployment and upload"
+  ],
+  "historical_failure_retained": "69c281af FAIL_SETUP_SQL_FIXTURE; 7 business methods not executed"
+}

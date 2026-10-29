@@ -1,0 +1,50 @@
+{
+  "id": "E04-07-A-UNKNOWN_AUDIT",
+  "status": "SOURCE_DELIVERED_UNVERIFIED",
+  "source_sha": "dedb44d54a4a277273943c0cbbca9f6e7528482a",
+  "parent_sha": "a76268d5454c8a5c5e3181ae7574bfb93932f800",
+  "owner": "EXTRA6/E04",
+  "writer": "/root/external_e04",
+  "original_child_commit": "e617b3e158cf86972c037c73e5ed4e085e008346",
+  "original_child_parent": "5cadf0cbb2fb24c8565d8d6ba6d26653e51c8788",
+  "paths": [
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_07Test.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RedemptionRewardClawbackService.java",
+    "docs/verification/mini-longrun-20261015/EXTRA6/E04-07-A.md"
+  ],
+  "author_receipt": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6215963891",
+  "local_handoff_receipt": "https://github.com/liboyang42-cpu/hengyin/pull/24#issuecomment-6215964142",
+  "c00_source_review": "Full public commit parent + exact3 file patches actually read. Consumer branch only4 added/17 removed: current no-exact-identity logs audit UNKNOWN instead of temporal lookup/any coupon mutation; no new schema reference; no grant remains null. Point/XP/audit/transaction and all other production untouched. New ordinary3 tests static only; no execution or acceptance.",
+  "ordinary_regression": {
+    "classes": [
+      "com.chengyinhub.business.longrun.E04_07Test"
+    ],
+    "declared_methods": 3,
+    "actual_tests": null,
+    "status": "NOT_RUN",
+    "local_only_command": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E04_07Test test",
+    "prerequisites": "Existing212 offline + existing Mockito/Fastjson/project dependencies; no MySQL/Redis/env/new dependency",
+    "vectors": [
+      "unknown onlyaudit, no coupon/log/reopen mutation",
+      "already-authorized point5/XP3 reversals continue",
+      "no grant remains no reward"
+    ]
+  },
+  "old_pass_inherited": false,
+  "real_mysql_redis_http": "NOT_RUN",
+  "migration_dependencies": [],
+  "new_schema_reads": false,
+  "continuation": {
+    "package": "E04-07-B-EXACT_RECEIPT_SOURCE",
+    "writer": "same original /root/external_e04",
+    "actual_author_ack": "Original E04 ACK A public SHA and started B per independent public coordinator receipt; no need to wait local A test",
+    "source_sha": null,
+    "actual_source_writers": 1,
+    "new_migration": "chengyinhub-admin/sql/migration_topic_completion_coupon_history_receipt_20261016.sql",
+    "migration_execution": false
+  },
+  "cloud_manual_runs": 0,
+  "source_stage": "SOURCE_READY_SOURCE_ONLY_NOT_DEPLOYED",
+  "test_deployed": false,
+  "current_E02": "Decision/scope ACK received; supplemental5path grant published225b; actual post-grant child source-writing ACK not yet independently received, do not count second writer"
+}
