@@ -107,7 +107,7 @@
           <text class="hero-by__n">{{publisher.name}}</text><text class="hero-by__k">发布</text>
         </view>
         <view class="hero-title">{{info.name}}</view>
-        <view class="hero-desc {{heroDescOpen ? 'is-open' : ''}}" wx:if="{{info.description && info.description !== 'null'}}" bindtap="toggleHeroDesc" aria-role="button" aria-label="{{heroDescOpen ? '收起简介' : '展开简介'}}" hover-class="cy-pressed" hover-stay-time="80">{{info.description}}</view>
+        <view class="hero-desc" wx:if="{{info.heroIntro}}">{{info.heroIntro}}</view>
         <view class="hero-acts" id="heroActs">
           <view wx:if="{{heroCta.text}}" class="hero-cta {{heroCta.kind === 'locked' ? 'is-off' : ''}} {{docked ? 'is-away' : ''}}" bindtap="onHeroCta" aria-role="button" aria-label="{{heroCta.text}}" hover-class="cy-pressed" hover-stay-time="80">{{heroCta.text}}</view>
           <view class="hero-fav {{faved ? 'is-on' : ''}} {{docked ? 'is-away' : ''}}" bindtap="toggleFav" aria-role="button" aria-label="{{faved ? '取消收藏' : '收藏主题'}}" hover-class="cy-pressed" hover-stay-time="80"><image class="bm-ic" src="{{faved ? '/pages/topic/images/icon_bm_on.svg' : '/pages/topic/images/icon_bm.svg'}}" mode="aspectFit" /></view>
@@ -140,8 +140,8 @@
          ⚠️ 原来这里是两列网格,格子还是另一套(章节/预计用时/总里程/参与玩家),
             同一条路线两个身份看到的关键数字对不上。 -->
     <scroll-view scroll-x class="statbar" wx:if="{{statBar.length}}" enhanced show-scrollbar="{{false}}">
-      <view class="statbar__row">
-        <cy-theme-badge name="{{info.finishMedalName}}" img="{{info.finishMedalImg}}" product-type="{{info.productType == 2 ? 2 : 1}}" reduced-motion="{{reducedMotion}}" />
+      <view class="statbar__row {{statBar.length >= 5 ? 'statbar__row--dense' : ''}}">
+        <cy-theme-badge class="statbar__badge" name="{{info.finishMedalName}}" img="{{info.finishMedalImg}}" product-type="{{info.productType == 2 ? 2 : 1}}" reduced-motion="{{reducedMotion}}" />
         <view class="statbar__sep"></view>
         <block wx:for="{{statBar}}" wx:key="key">
           <view class="statbar__sep" wx:if="{{index > 0}}"></view>
@@ -171,16 +171,7 @@
       <view class="{{tabPre ? 'tab-pre ' : ''}}tabcont" wx:if="{{ activeTab=='0' }}">
         <view class="det3" style="padding-top: 0;">
           <view class="wp">
-            <!-- 场地卡(Figma 2233:11677):名称+地址+定位图标,有坐标时点击打开内置地图。V-22 业主 2026-10-29:地址放详情顶部 -->
-            <view class="venue-card" wx:if="{{info.venue}}" bindtap="goLocation"
-              data-latitude="{{info.venue.latitude}}" data-longitude="{{info.venue.longitude}}"
-              data-name="{{info.venue.name}}" data-address="{{info.venue.addr || info.venue.name}}" hover-class="cy-pressed" hover-stay-time="80">
-              <view class="venue-card__main">
-                <view class="venue-card__name">{{info.venue.name}}</view>
-                <view class="venue-card__addr" wx:if="{{info.venue.addr}}">{{info.venue.addr}}</view>
-              </view>
-              <image class="venue-card__pin" src="/pages/topic/images/icon_pin_line.svg" mode="aspectFit" />
-            </view>
+            <!-- V-22b 业主 2026-10-29「而且删除掉地址吧」:详情 tab 不再放场地/地址卡 -->
             <view class="det-type">{{info.name}}</view>
             <view class="cont1">
               <view class="txt1">

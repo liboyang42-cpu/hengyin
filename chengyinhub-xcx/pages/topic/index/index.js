@@ -51,6 +51,17 @@ function nodeText(value) {
   return out === 'null' ? '' : out;
 }
 
+// V-23c 业主 2026-10-29「简介最多20个字 在主题配置那里配置好的」:头图下只放主题配置里的短简介(subtitle),最多 20 字一行。
+const HERO_INTRO_MAX = 20;
+function heroIntro(subtitle) {
+  return Array.from(nodeText(decodeDisplayText(subtitle))).slice(0, HERO_INTRO_MAX).join('');
+}
+
+function templateCover(template) {
+  const first = String(template.imgUrl || template.imgArr || '').split(/[,;]/).map((src) => src.trim()).filter(Boolean)[0] || '';
+  return app.getImgUrl(first) || '/images/home-route-city-placeholder.jpg';
+}
+
 function normalizeChaptersList(chaptersList) {
   if (chaptersList == null) return [];
   if (!Array.isArray(chaptersList)) return null;
@@ -173,7 +184,6 @@ Page({
     topBarHeight: 0, // 顶部栏高度
     tabHeight: 100, // 标签栏高度
     totalStickyHeight: 0, // 吸顶总高度（状态栏+导航栏+标签栏）
-    heroDescOpen: false,
   },
 
   onLoad(options) {
@@ -369,11 +379,6 @@ Page({
     if (this._scrollTimer) {
       clearTimeout(this._scrollTimer);
     }
-  },
-
-  // V-23:头图简介点按展开 / 收起
-  toggleHeroDesc() {
-    this.setData({ heroDescOpen: !this.data.heroDescOpen });
   },
 
   // V-22 业主 2026-10-29:主题音频只在游戏里播放,详情页不再放「主题音频讲解」行(播放代码随之删除)
@@ -2064,6 +2069,7 @@ Page({
           res.data['contentIncludes'] = that.buildContentIncludes(res.data);
 
           res.data['venue'] = that.buildVenue(res.data);
+          res.data['heroIntro'] = heroIntro(res.data.subtitle);
           const rounded = Math.max(0, Math.min(5, Math.round(Number(res.data.averageRating) || 0)));
           const ratingStars = [];
           for (let i = 1; i <= rounded; i++) ratingStars.push({ star: i });
@@ -2227,6 +2233,8 @@ Page({
         if (firstMerchant && firstMerchant.mmsMerchant) {
           firstMerchant.mmsMerchant.name = nodeText(firstMerchant.mmsMerchant.name);
         }
+        // V-22b:节点介绍卡的玩法图原样给 <image> 时,相对路径/http 签名链接/逗号多图在真机上都出不来,卡上一块空白。
+        if (ns[n].cmsMemberTemplate) ns[n].cmsMemberTemplate.imgUrl = templateCover(ns[n].cmsMemberTemplate);
         ns[n].walkText = prevNode ? walkText(prevNode, ns[n]) : '';
         seq += 1; ns[n].seq = seq; prevNode = ns[n];
         ns[n].giftText = firstMerchant && firstMerchant.mmsMerchant ? nodeText(firstMerchant.mmsMerchant.derivativeBenefits) : '';

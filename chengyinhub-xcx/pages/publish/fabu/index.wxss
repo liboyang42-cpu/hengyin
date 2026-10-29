@@ -4267,6 +4267,15 @@ page { background: var(--cy-btn-solid-bg); }
   color: var(--cy-color-text-primary);
 }
 
+/* V-23c:主题描述(详情页头图短简介)最多 20 字,编辑时显示字数 */
+.pd-card-count {
+  display: block;
+  margin-top: var(--cy-space-2);
+  text-align: right;
+  font-size: var(--cy-font-label);
+  color: var(--cy-color-text-secondary);
+}
+
 .node-card .pd-gallery {
   display: flex;
   flex-wrap: wrap;
