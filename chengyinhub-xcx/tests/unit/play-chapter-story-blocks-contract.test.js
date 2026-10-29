@@ -417,31 +417,24 @@ test('罗盘点开小地图;没有带坐标的地点时照旧回卡包;导航交
   assert.match(wxml, /<free-map class="story-map__map" wx:if="\{\{storyMap\}\}"/)
 })
 
-// 2026-09-23 用户裁决(优化顺序第 2 项):环境音跟章节氛围走、梦块换梦的和弦,关键节点有音效;
-// 右上角菜单能关,记在本机。
-test('故事流声音:开场门有启动声,关掉后记住并停,玩法完成有提示音', () => {
-  const page = makePage({ id: 3, name: '学习', atmosphereClass: 'atmosphere--yellow' }, [])
-  const calls = []
-  page._storySound = () => ({ bed: (n) => calls.push('bed:' + n), sfx: (n) => calls.push('sfx:' + n), setOn: (on) => calls.push('on:' + on), dispose() {} })
-  page.data.chapterCards = [{ id: 3 }]
-  page.showChapterGate()
-  assert.ok(calls.includes('sfx:boot'), '章节开场门没有启动声')
-
-  page._syncStoryBed({ kind: 'text' })
-  assert.ok(calls.includes('bed:afternoon'), '黄色氛围应是午后蝉鸣那层')
-  page._syncStoryBed({ kind: 'dream' })
-  assert.equal(calls.filter((c) => c === 'sfx:dream').length, 0, '相册是通用多照片块，读到它不再响「梦」的和弦')
-  assert.ok(!calls.includes('bed:dream'))
-
-  const stored = {}
-  global.wx.setStorageSync = (k, v) => { stored[k] = v }
-  page.toggleStorySound()
-  assert.equal(page.data.soundOn, false)
-  assert.ok(calls.includes('on:false'))
-  assert.equal(stored.cy_story_sound_off, '1', '关掉要记在本机，下次进来还是关的')
-
-  const wxml = read('pages/play/index.wxml')
-  assert.match(wxml, /catchtap="toggleStorySound"/)
+test('故事流开章和换景不再创建合成环境音或音效', () => {
+  let contexts = 0
+  const original = global.wx.createWebAudioContext
+  global.wx.createWebAudioContext = () => { contexts++; throw new Error('不应创建合成声音') }
+  try {
+    const page = makePage({ id: 3, name: '学习', atmosphereClass: 'atmosphere--yellow' }, [])
+    page.data.chapterCards = [{ id: 3 }]
+    page.showChapterGate()
+    page._syncStoryScene()
+    assert.equal(page._sceneTarget, 'afternoon', '声音删除后仍按章节氛围换景')
+    assert.equal(contexts, 0)
+    assert.equal(page.toggleStorySound, undefined)
+    assert.equal(Object.hasOwn(page.data, 'soundOn'), false)
+    assert.doesNotMatch(read('pages/play/index.js'), /createWebAudioContext|story-audio|_storySound/)
+    assert.doesNotMatch(read('pages/play/index.wxml'), /toggleStorySound|环境音与音效/)
+  } finally {
+    global.wx.createWebAudioContext = original
+  }
 })
 
 test('故事玩法入口卡不拿站点兜底文案当说明(「走到这里,留意四周」是地点卡的话)', () => {

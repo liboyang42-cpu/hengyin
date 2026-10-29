@@ -57,11 +57,6 @@
       "sourceBlob": "bfafaf8e23ac2278f1aef7080dc8bd5e5c958c6b"
     },
     {
-      "from": "utils/story-audio.js",
-      "to": "pages/play/utils/story-audio.js",
-      "sourceBlob": "40a2ce1d728e83ec0173035ff119a0e7d4033e60"
-    },
-    {
       "from": "utils/team-up.js",
       "to": "subpackageMember/utils/team-up.js",
       "sourceBlob": "4623d744af8ce3b19af58155e8af5650afea9e97"
