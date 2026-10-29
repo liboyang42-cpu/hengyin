@@ -199,7 +199,7 @@ page {
   gap: var(--cy-space-3);
   padding: 0 40rpx;  /* ds-ok: 40rpx 与本页其余分节左右内距对齐,量表无半步 token */
   margin-bottom: var(--cy-space-6);
-  --xb-share-bg: rgba(255, 255, 255, 0.1);
+  --xb-share-bg: rgba(255, 255, 255, 0.1); /* ds-ok: 原 .xb-share 底色原值挪进变量,供「应用」与分享键共用,不改色 */
 }
 .xb-cta-btn { flex: 1; min-width: 0; }
 /* V-24(2026-10-29 业主「应用和旁边分享一样的样式」):cy-btn 是样式隔离组件,改不到内层背景,
