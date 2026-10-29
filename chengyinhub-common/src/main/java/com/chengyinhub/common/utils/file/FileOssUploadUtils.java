@@ -791,9 +791,16 @@ public class FileOssUploadUtils {
     }
 
     private static OSSClient createOssClient(ClientConfiguration configuration) {
-        return new OSSClient(requiredEnv(OSS_ENDPOINT_ENV),
+        return createOssClient(requiredEnv(OSS_ENDPOINT_ENV),
                 new DefaultCredentialProvider(requiredEnv(OSS_ACCESS_KEY_ID_ENV), requiredEnv(OSS_ACCESS_KEY_SECRET_ENV)),
                 configuration);
+    }
+
+    /** 新签出的链接一律 https(同 createCommunityOssClient):小程序 getImgUrl 只放行 https,http 签名链接会被拒。 */
+    static OSSClient createOssClient(String endpoint, DefaultCredentialProvider credentials, ClientConfiguration configuration) {
+        configuration.setProtocol(Protocol.HTTPS);
+        String httpsEndpoint = endpoint.regionMatches(true, 0, "http://", 0, 7) ? "https://" + endpoint.substring(7) : endpoint;
+        return new OSSClient(httpsEndpoint, credentials, configuration);
     }
 
     /**

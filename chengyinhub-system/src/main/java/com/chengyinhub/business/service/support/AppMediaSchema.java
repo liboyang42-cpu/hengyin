@@ -13,6 +13,12 @@ public final class AppMediaSchema {
     public static boolean isBundledMerchantGameAudio(String reference) {
         return reference != null && BUNDLED_MERCHANT_GAME_AUDIO.contains(reference);
     }
+    /** 官方模板自带图(服务端静态目录,见 migration_20260822/20260825/20261009):任何采用或应用模板的人都可直接用;也不是克隆/第三方处理输入。 */
+    private static final java.util.regex.Pattern OFFICIAL_TEMPLATE_IMAGE = java.util.regex.Pattern.compile(
+            "https://www\\.chengyinhub\\.com/prod-api/profile/(?:template-covers|topic-covers|merchant-game-covers)/[a-z0-9-]+\\.(?:webp|jpg|jpeg|png)");
+    public static boolean isOfficialTemplateImage(String reference) {
+        return reference != null && OFFICIAL_TEMPLATE_IMAGE.matcher(reference).matches();
+    }
     public static final Set<String> MEDIA_FIELDS = Set.of("logo", "cover", "caseImages", "certImages", "avatar",
             "clubLogo", "images", "imgUrl", "imgArr", "medalImg", "storyImg", "audioUrl", "questionImg",
             "questionAudio", "finishMedalImg", "coverImage", "gallery", "pics", "casePics", "routePreviewImg",

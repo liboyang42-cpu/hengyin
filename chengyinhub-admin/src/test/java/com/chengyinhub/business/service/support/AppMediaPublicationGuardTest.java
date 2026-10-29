@@ -66,6 +66,48 @@ class AppMediaPublicationGuardTest {
         verify(assets,atLeastOnce()).selectByObjectKey(IMAGE_KEY);
         assertEquals("media-asset:8",new ObjectMapper().readTree(result).path("A").path("audio").asText());
     }
+    // ===== V-13 / V-11(2026-10-29):公开模板自带的图,采用的人直接能用 =====
+    private static final String OFFICIAL_COVER = "https://www.chengyinhub.com/prod-api/profile/template-covers/p03-capture-this-moment.webp";
+    private static final String LEGACY_STORY = "https://xianghuioss.oss-cn-shanghai.aliyuncs.com/legacy/story.png";
+    private CmsTemplateLibraryMapper sourceLibrary(Long status) {
+        com.chengyinhub.business.domain.CmsTemplateLibrary source = new com.chengyinhub.business.domain.CmsTemplateLibrary();
+        source.setId(5L); source.setDelFlag(0); source.setStatus(status);
+        source.setImgUrl(OFFICIAL_COVER); source.setStoryImg(LEGACY_STORY); source.setQuestionImg("media-asset:7");
+        source.setAdvancedConfigJson("{\"album\":{\"images\":[{\"url\":\"" + LEGACY_STORY + "\",\"line\":\"配文\"}]}}");
+        CmsTemplateLibraryMapper libraries = mock(CmsTemplateLibraryMapper.class);
+        when(libraries.selectCmsTemplateLibraryById(5L)).thenReturn(source);
+        ReflectionTestUtils.setField(guard, "libraries", libraries);
+        return libraries;
+    }
+    private CmsMemberTemplate adopted(String storyImg) {
+        CmsMemberTemplate template = new CmsMemberTemplate(); template.setOriginalTemplateId(5L);
+        template.setImgUrl(OFFICIAL_COVER); template.setStoryImg(storyImg);
+        template.setAdvancedConfigJson("{\"album\":{\"images\":[{\"url\":\"" + LEGACY_STORY + "\",\"line\":\"配文\"}]}}");
+        return template;
+    }
+    @Test void adoptedTemplateKeepsTheSourceTemplatesOwnCoverAndGameplayImages() {
+        sourceLibrary(1L);
+        for (boolean publish : new boolean[]{false, true}) {
+            CmsMemberTemplate template = adopted(LEGACY_STORY);
+            guard.requireTemplate(22L, template, publish);
+            assertEquals(OFFICIAL_COVER, template.getImgUrl());
+            assertEquals(LEGACY_STORY, template.getStoryImg());
+            assertTrue(template.getAdvancedConfigJson().contains(LEGACY_STORY));
+        }
+    }
+    @Test void inheritanceCoversOnlyTheSourcesImagesAndNeverRegisteredMediaOrAWithdrawnSource() {
+        sourceLibrary(1L);
+        assertThrows(ServiceException.class, () -> guard.requireTemplate(22L,
+                adopted("https://xianghuioss.oss-cn-shanghai.aliyuncs.com/legacy/other.png"), false));
+        // 来源里的已登记媒体仍按审核事实与归属判:别人的待审图不因「沿用」放行
+        CmsMemberTemplate held = adopted(LEGACY_STORY); held.setQuestionImg("media-asset:7");
+        assertThrows(ServiceException.class, () -> guard.requireTemplate(22L, held, false));
+        // 没有来源编号的普通稿,同一张旧图照旧拒
+        CmsMemberTemplate own = adopted(LEGACY_STORY); own.setOriginalTemplateId(0L);
+        assertThrows(ServiceException.class, () -> guard.requireTemplate(22L, own, false));
+        sourceLibrary(0L);
+        assertThrows(ServiceException.class, () -> guard.requireTemplate(22L, adopted(LEGACY_STORY), false));
+    }
     @Test void topicPublicationChecksActuallyReferencedNodeTemplateAndRejectsHeldMedia() {
         CmsTopic topic=new CmsTopic();topic.setId(1L);topic.setMemberId(9L);
         when(topics.selectCmsTopicById(1L)).thenReturn(topic);
@@ -110,11 +152,14 @@ class AppMediaPublicationGuardTest {
         for (String reference : new String[]{"/audio/merchant-games/unknown.mp3",
                 "/audio/merchant-games/../rhythm-one.mp3", "/audio/merchant-games/%72hythm-one.mp3",
                 "/audio/merchant-games/rhythm-one.mp3?anything=1", "/pages/play/audio/merchant-games/rhythm-one.mp3.evil",
-                "https://www.chengyinhub.com/audio/merchant-games/rhythm-one.mp3",
-                "https://www.chengyinhub.com/prod-api/profile/merchant-game-covers/rhythm-blind-guess.jpg"}) {
+                "https://www.chengyinhub.com/audio/merchant-games/rhythm-one.mp3"}) {
             assertFalse(AppMediaSchema.isBundledMerchantGameAudio(reference));
             assertThrows(ServiceException.class,()->guard.requireMedia(9L,reference,true));
         }
+        // 2026-10-29 业主口径:官方模板封面谁都能用,但它仍不是自带音频
+        String cover = "https://www.chengyinhub.com/prod-api/profile/merchant-game-covers/rhythm-blind-guess.jpg";
+        assertFalse(AppMediaSchema.isBundledMerchantGameAudio(cover));
+        assertEquals(cover, guard.requireMedia(9L, cover, true));
     }
     @Test void publishingRefusesAbsoluteExternalLinkInNonMediaField() {
         for (String link : new String[]{"https://evil.example/landing", "HTTP://evil.example", " https://evil.example ",
