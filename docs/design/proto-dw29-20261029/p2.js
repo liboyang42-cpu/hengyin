@@ -74,7 +74,7 @@
   }
 
   var N_EDIT = [
-    [1, '页顶铺我的主页背景图(和「我的 · 主页」同一张),往下渐隐到页面底色。'],
+    [1, '页顶铺我的主页背景图(和「我的 · 主页」同一张),第二轮按业主批注套上模糊蒙版:整张高斯模糊 + 半透明压暗(浅色是提亮),往下渐隐到页面底色,像 Revolut;头像和名字压在上面更清楚。'],
     [2, '背景右下角「更换背景」,点开选拍照 / 相册,选完立刻换上(现在只存在本机,见 README 决定 4)。'],
     [3, '头像居中放大到 104pt;点头像或下面的笔都打开选图半屏(iOS 样式:拍照 / 从相册选择 / 使用微信头像)。'],
     [4, '编辑笔改成头像正下方居中的实心圆(原来在右下角、偏心)。'],
@@ -90,7 +90,7 @@
     ['p2-uploading', '上传中 · 立即预览', '头像', 'cyp theme-dark pg-edit', edit({ avatar: NEW, uploading: true, progress: .4 }), 'pages/gerenziliao/gerenziliao.js uploadPic', notes([[3, 'V-15:选完立刻用本地图显示新头像,外圈细环表示上传进度;上传完成环消失。审核中也不清空、不回退旧头像。'], [6, '同时把新头像写进全局用户信息,主页 / 帖文 / 俱乐部成员列表下一次渲染就用新图(G-5 全站同步)。']])],
     ['p2-done', '上传完成', '头像', 'cyp theme-dark pg-edit', edit({ avatar: NEW }), 'pages/gerenziliao/gerenziliao.wxml', notes([[3, '新头像。没有「审核中」小字。']])],
     ['p2-rejected', '头像未通过审核', '头像', 'cyp theme-dark pg-edit', edit({ avatar: NEW, rejected: true }), 'utils/profile-review.js memberAvatarText(REJECTED)', notes([[5, '只在未通过时出一行红色提示,文字照 utils/profile-review.js 原样。']])],
-    ['p2-bg', '更换背景 · 立即生效', '背景', 'cyp theme-dark pg-edit', edit({ avatar: NEW, bg: BG2 }), 'subpackageMember/components/cy/profile/index.js onChangeHeroBg', notes([[1, '选完立刻换上新背景;回到主页也是这一张。'], [2, '入口从主页「⋯」菜单挪到这里(主页那条保留)。']])],
+    ['p2-bg', '更换背景 · 立即生效', '背景', 'cyp theme-dark pg-edit', edit({ avatar: NEW, bg: BG2 }), 'subpackageMember/components/cy/profile/index.js onChangeHeroBg', notes([[1, '选完立刻换上新背景(编辑页里同样是模糊蒙版);回到主页是这张原图,不模糊。'], [2, '入口从主页「⋯」菜单挪到这里(主页那条保留)。']])],
     ['p2-intro', '个人介绍 · 编辑半屏', '个人介绍', 'cyp theme-dark pg-edit', edit({ avatar: NEW }), 'pages/gerenziliao/gerenziliao.wxml(原「城市签名」cy-sheet)', notes([[9, '60% 半屏:左「取消」、右「完成」,输入框 140 字,右下角计数。占位「介绍一下你自己」。']])],
     ['p2-intro-empty', '个人介绍 · 未填写', '个人介绍', 'cyp theme-dark pg-edit', edit({ avatar: NEW, intro: '' }), 'pages/gerenziliao/gerenziliao.wxml', notes([[7, '没填时行里显示灰色占位「介绍一下你自己」,不写「未填写」。']])],
     ['p2-about', '主页 · 关于(有介绍)', '个人介绍', 'cyp theme-dark pg-profile', about({ avatar: NEW, introGo: 'p2-intro' }), 'subpackageMember/components/cy/profile/index.wxml「关于」', notes([[1, 'V-21:「编辑」直接进资料编辑页并打开个人介绍半屏(goEditIntro 带 focus=intro)。'], [2, '个人介绍卡显示全文。']])],

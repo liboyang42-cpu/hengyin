@@ -3,7 +3,7 @@ const { chromium } = require('playwright');
 const path = require('path');
 const fs = require('fs');
 const ROOT = path.resolve(__dirname, '..');
-const pages = process.argv.slice(2).length ? process.argv.slice(2) : ['p1-posts.html', 'p2-profile.html', 'p3-achievements.html', 'p4-theme-publish.html'];
+const pages = process.argv.slice(2).length ? process.argv.slice(2) : ['p1-posts.html', 'p2-profile.html', 'p3-achievements.html', 'p4-theme-publish.html', 'p5-merchant.html'];
 (async () => {
   const browser = await chromium.launch();
   const ctx = await browser.newContext({ viewport: { width: 1400, height: 1000 }, deviceScaleFactor: 2 });
@@ -19,6 +19,8 @@ const pages = process.argv.slice(2).length ? process.argv.slice(2) : ['p1-posts.
     for (const id of ids) {
       await page.evaluate((id) => PROTO.show(id), id);
       await page.waitForTimeout(450);
+      await page.evaluate((id) => (window.SHOT ? window.SHOT(id) : null), id);
+      await page.waitForTimeout(80);
       const f = path.join(ROOT, 'shots', id + '.png');
       await page.locator('#phone').screenshot({ path: f });
       out.push(path.relative(ROOT, f));

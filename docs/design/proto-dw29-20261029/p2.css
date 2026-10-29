@@ -1,8 +1,11 @@
 /* P-2 提案:资料编辑页(Revolut 式)。只用 master token。 */
 .rv{position:relative;min-height:100%;padding-bottom:140px;color:var(--cy-color-text-primary)}
-.rv-bg{position:absolute;left:0;right:0;top:0;height:300px;overflow:hidden}
-.rv-bg img{width:100%;height:100%;object-fit:cover;display:block;transition:opacity .3s}
-.rv-bg:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.25) 0%,rgba(0,0,0,.05) 40%,var(--cy-color-bg-page) 100%)}
+.rv-bg{position:absolute;left:0;right:0;top:0;height:300px;overflow:hidden;z-index:0}
+.rv-bg img{width:100%;height:100%;object-fit:cover;display:block;transition:opacity .3s;filter:blur(22px) saturate(1.2);transform:scale(1.2)}
+/* 第二轮(业主 V-15「背景要套上模糊的蒙版」):背景图整张高斯模糊 + 一层半透明蒙版,像 Revolut 资料页;头像、名字压在上面更清楚 */
+.rv-bg:before{content:"";position:absolute;inset:0;z-index:1;background:rgba(0,0,0,.28)}
+.rv-bg:after{content:"";position:absolute;inset:0;z-index:2;background:linear-gradient(180deg,rgba(0,0,0,0) 0%,rgba(0,0,0,0) 45%,var(--cy-color-bg-page) 100%)}
+.theme-merchant .rv-bg:before{background:rgba(255,255,255,.34)}
 .theme-merchant .rv-bg:after{background:linear-gradient(180deg,rgba(255,255,255,0) 0%,rgba(255,255,255,0) 45%,var(--cy-color-bg-page) 100%)}
 .rv-bg-btn{position:absolute;right:16px;top:206px;z-index:2;display:flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:999px;background:rgba(28,28,30,.62);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);color:#fff;font-size:13px;font-weight:500;cursor:pointer}
 .rv-head{position:relative;z-index:1;padding-top:118px;display:flex;flex-direction:column;align-items:center}

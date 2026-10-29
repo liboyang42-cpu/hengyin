@@ -80,7 +80,8 @@ const PAGES = {
   profile: ['subpackageMember/components/cy/profile/index.wxss'], edit: ['pages/gerenziliao/gerenziliao.wxss'],
   tp: ['pages/templatedetail/topic-preview/index.wxss'], td: ['pages/templatedetail/templatedetail.wxss'],
   fabu: ['pages/publish/fabu/index.wxss'], bw: ['subpackageP3/pages/badge-wall/index/index.wxss'],
-  al: ['subpackageP3/pages/stamp-album/index/index.wxss'], oc: ['subpackageP3/pages/object-cards/index/index.wxss']
+  al: ['subpackageP3/pages/stamp-album/index/index.wxss'], oc: ['subpackageP3/pages/object-cards/index/index.wxss'],
+  cu: ['pages/merchant/customer/index.wxss'], crop: ['pages/crop/index.wxss']
 };
 Object.keys(PAGES).forEach((k) => PAGES[k].forEach((f) => add(f, scope(read(f), '.pg-' + k))));
 

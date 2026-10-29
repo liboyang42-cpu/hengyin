@@ -51,3 +51,30 @@
 .sp-ticket{margin:12px 20px 0;padding:14px 16px;border-radius:14px;background:var(--cy-color-bg-elevated);display:flex;justify-content:space-between;align-items:center;font-size:15px}
 .sp-ticket b{font-size:17px}
 .c-btn.p4-ghost .btn{background:transparent;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.55);color:#fff}
+/* 第二轮:主题模板详情 —— 「应用」与分享同一套样式(.xb-share:104rpx 高、rgba(255,255,255,.1) 底) */
+.pg-td .p4-apply{flex:1;min-width:0;height:54px;border-radius:999px;background:rgba(255,255,255,.1);color:var(--xb-text,#fff);display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:600;cursor:pointer}
+.p4-medal{width:64px;height:64px;flex:none;overflow:visible}
+.sp-end .p4-medal{width:84px;height:84px}
+/* 剧情 */
+.st-ch{margin-top:14px;padding:14px 16px;border-radius:16px;background:rgba(255,255,255,.06)}
+.st-ch__hd{display:flex;align-items:baseline;gap:8px}
+.st-ch__no{font-size:12px;font-weight:700;letter-spacing:.08em;color:var(--cy-color-text-tertiary)}
+.st-ch__t{font-size:17px;font-weight:700;color:var(--cy-color-text-primary)}
+.st-ch__p{margin-top:6px;font-size:15px;line-height:1.6;color:var(--cy-color-text-secondary)}
+.st-ch__path{margin-top:12px;display:flex;flex-direction:column;gap:8px;position:relative}
+.st-ch__path:before{content:"";position:absolute;left:10px;top:10px;bottom:10px;width:1px;background:rgba(255,255,255,.18)}
+.st-ch__stop{position:relative;display:flex;align-items:center;gap:10px;font-size:14px;color:var(--cy-color-text-primary);min-width:0}
+.st-ch__dot{flex:none;width:21px;height:21px;border-radius:50%;background:var(--cy-color-text-primary);color:var(--cy-color-bg-page);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.st-end{margin-top:12px;display:flex;gap:10px;font-size:15px;line-height:1.6;color:var(--cy-color-text-secondary)}
+.st-end__k{flex:none;font-weight:700;color:var(--cy-color-text-primary)}
+/* 能力:每站一个玩法 */
+.cap-sum{display:flex;flex-wrap:wrap;gap:8px;padding:4px 20px 12px}
+.cap-list{margin:0 20px;border-radius:16px;background:rgba(255,255,255,.06);overflow:hidden}
+.cap-stop{display:flex;gap:12px;padding:14px 16px;border-bottom:.5px solid rgba(255,255,255,.1)}
+.cap-stop:last-child{border-bottom:0}
+.cap-stop__no{flex:none;width:24px;height:24px;border-radius:50%;background:var(--cy-color-text-primary);color:var(--cy-color-bg-page);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.cap-stop__main{flex:1;min-width:0}
+.cap-stop__name{font-size:16px;font-weight:600;color:var(--cy-color-text-primary)}
+.cap-stop__game{display:inline-flex;align-items:center;gap:5px;margin-top:8px;padding:4px 10px 4px 8px;border-radius:999px;background:rgba(255,255,255,.12);font-size:13px;font-weight:600;color:var(--cy-color-text-primary)}
+.cap-stop__do{margin-top:8px;font-size:15px;line-height:1.5;color:var(--cy-color-text-secondary)}
+.cap-stop__dur{display:flex;align-items:center;gap:4px;margin-top:6px;font-size:13px;color:var(--cy-color-text-tertiary)}

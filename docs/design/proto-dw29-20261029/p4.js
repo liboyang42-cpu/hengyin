@@ -4,11 +4,23 @@
   var C = 'assets/covers/';
   var COVER = C + 'flavor-tour.jpg';
   var NODES = [
-    ['春启新巷 · 老字号新春市集', '上海市黄浦区山西南路、福州路口', '风味印章', 'old-movie.jpg'],
+    ['春启新巷 · 老字号新春市集', '上海市黄浦区山西南路、福州路口', '拍照打卡', 'old-movie.jpg'],
     ['上海第一食品商店', '上海市黄浦区南京东路720号', '盲品三选一', 'treasure-hunter.jpg'],
-    ['国际饭店帆声饼屋', '上海市黄浦区黄河路28号', '招牌菜拍照', 'time-pollution.jpg'],
-    ['光明邨大酒家', '上海市黄浦区淮海中路588号', '沉默点单', 'midlife-day.jpg']
+    ['国际饭店帆声饼屋', '上海市黄浦区黄河路28号', '拍物成卡', 'time-pollution.jpg'],
+    ['光明邨大酒家', '上海市黄浦区淮海中路588号', '猜数字', 'midlife-day.jpg']
   ];
+  // 每站的玩法:能力 key 与作者入口名照《全游戏复用索引》,只换题面,调用原判定
+  var GAMES = [
+    ['qaShot', '拍照打卡', 'camera', '在市集里找到一块老字号招牌，拍下来交卷', '约 10 分钟'],
+    ['qaPick + blindTaste', '选项问答 · 闭眼盲品', 'category-food', '闭眼尝三块糕点，选出哪一块是苔条饼', '约 15 分钟'],
+    ['objectCard', '拍物成卡', 'image', '拍下刚出炉的蝴蝶酥，抠出来收进藏品册', '约 10 分钟'],
+    ['estimate', '猜数字', 'sort', '猜光明邨一天卖出多少只鲜肉月饼，猜中就盖章', '约 15 分钟']
+  ];
+  var STORY = {
+    open: '南京东路的午后，空气里一半是糖炒栗子，一半是葱油。你手里有一张空白的风味护照，四个印章位还空着 —— 老字号的掌柜们各藏着一枚。',
+    ch: [['第 1 章', '上海自由探索', '从市集出发，沿南京东路一路吃到淮海中路。每到一家，完成掌柜出的小题，就能在护照上盖一枚风味印章。']],
+    end: '四枚印章盖满，护照最后一页会自己合上，盖下「老饕」。'
+  };
   function notes(list) { return '<ol class="notes">' + list.map(function (t) { return '<li data-n="' + t[0] + '">' + t[1] + '</li>'; }).join('') + '</ol>'; }
 
   // ===== ① 模板预览(pages/templatedetail/topic-preview)=====
@@ -43,22 +55,33 @@
   function detail(tab) {
     tab = tab || 'details';
     var gallery = NODES.map(function (n) { return C + n[3]; });
+    var story = '<view class="xb-block xb-block--lead"' + U.mk(4) + '><view class="xb-section-title">' + I('info', 30) + '<text>剧情</text></view>' +
+      '<view class="xb-body xb-body--soft">' + STORY.open + '</view>' +
+      STORY.ch.map(function (c) {
+        return '<view class="st-ch"><view class="st-ch__hd"><text class="st-ch__no">' + c[0] + '</text><text class="st-ch__t">' + c[1] + '</text></view><view class="st-ch__p">' + c[2] + '</view>' +
+          '<view class="st-ch__path">' + NODES.map(function (n, i) { return '<view class="st-ch__stop"><text class="st-ch__dot">' + (i + 1) + '</text><text class="ep1">' + n[0] + '</text></view>'; }).join('') + '</view></view>';
+      }).join('') +
+      '<view class="st-end"><text class="st-end__k">结局</text><text>' + STORY.end + '</text></view></view>';
     var details = '<view class="xb-mosaic-wrap"><scroll-view class="xb-mosaic-scroll" scroll-x><view class="xb-mosaic-inner">' + gallery.map(function (g) { return '<view class="xb-mosaic-cell"><img src="' + g + '" style="width:100%;height:100%;object-fit:cover"></view>'; }).join('') + '</view></scroll-view></view>' +
-      '<view class="xb-block xb-block--lead"><view class="xb-section-title">' + I('info', 30) + '<text>剧情</text></view><view class="xb-body xb-body--soft xb-body--clamp">沿着南京东路一路吃过去：一碗老字号的汤、一块刚出炉的蝴蝶酥、一家只做熟客的本帮菜。每到一站完成一个小动作，盖下一枚风味印章，集满四枚就通关。</view><view class="xb-link-more">更多</view></view>' +
+      story +
       '<view class="xb-stat-grid">' + [['1', '章节'], ['4', '节点'], ['2 小时', '总时长']].map(function (s) { return '<view class="xb-stat-card"><view class="xb-stat-value">' + s[0] + '</view><view class="xb-stat-label">' + s[1] + '</view></view>'; }).join('') + '</view>' +
-      '<view class="xb-block"' + U.mk(4) + '><view class="xb-section-title">' + I('route', 30) + '<text>规则</text></view><view class="xb-rule-card"><view class="xb-rule-box"><view class="xb-rule-list">' +
-      ['随时开始，可以跨天，进度自动保存。', '每到一站，完成这一站的小动作就盖章。', '四站都盖章即通关，领取主题勋章。'].map(function (t, i) { return '<view class="xb-rule-step"><view class="xb-rule-mark">' + (i + 1) + '</view><view class="xb-rule-copy"><text class="xb-body xb-body--soft">' + t + '</text></view></view>'; }).join('') + '</view></view></view></view>' +
-      '<view class="xb-block"' + U.mk(5) + '><view class="xb-section-title">' + I('image', 30) + '<text>节点</text></view><scroll-view class="xb-node-scroll" scroll-x><view class="xb-node-inner">' +
+      '<view class="xb-block"><view class="xb-section-title">' + I('route', 30) + '<text>规则</text></view><view class="xb-rule-card"><view class="xb-rule-box"><view class="xb-rule-list">' +
+      ['随时开始，可以跨天，进度自动保存。', '每到一站，完成这一站的玩法就盖章。', '四站都盖章即通关，领取主题勋章。'].map(function (t, i) { return '<view class="xb-rule-step"><view class="xb-rule-mark">' + (i + 1) + '</view><view class="xb-rule-copy"><text class="xb-body xb-body--soft">' + t + '</text></view></view>'; }).join('') + '</view></view></view></view>' +
+      '<view class="xb-block"><view class="xb-section-title">' + I('image', 30) + '<text>节点</text></view><scroll-view class="xb-node-scroll" scroll-x><view class="xb-node-inner">' +
       NODES.map(function (n) { return '<view class="xb-node-card"><img class="xb-node-img" src="' + C + n[3] + '" style="object-fit:cover"><view class="xb-node-foot"><text class="xb-node-name">' + n[0] + '</text><text class="xb-node-desc ep1">' + n[2] + '</text></view></view>'; }).join('') + '</view></scroll-view></view>' +
-      '<view class="xb-block"><view class="xb-section-title">' + I('star', 30) + '<text>通关勋章</text></view><view class="xb-quote-card"><canvas data-medal="t-flavor" width="120" height="120" style="width:60px;height:60px;flex:none"></canvas><view class="xb-quote-copy"><text class="xb-quote-author">老饕</text><text class="xb-quote-text">走完四站时点亮</text></view></view></view>';
-    var caps = '<view class="xb-caps"' + U.mk(6) + '>' + [['方式', ['自由探索', '单人可玩', '可跨天']], ['玩法', ['风味印章', '盲品三选一', '招牌菜拍照', '沉默点单']], ['场景', ['到店互动', '城市探索']], ['素材', ['模板封面可直接使用', '节点照片可直接使用']]].map(function (r) {
-      return '<view class="xb-caprow"><text class="xb-caprow-k">' + r[0] + '</text><view class="xb-caprow-v">' + r[1].map(function (c) { return '<text class="xb-chip">' + c + '</text>'; }).join('') + '</view></view>';
-    }).join('') + '</view>';
+      '<view class="xb-block"><view class="xb-section-title">' + I('star', 30) + '<text>通关勋章</text></view><view class="xb-quote-card">' + MEDALS2.svg('t-flavor', { cls: 'p4-medal' }) + '<view class="xb-quote-copy"><text class="xb-quote-author">老饕</text><text class="xb-quote-text">走完四站时点亮</text></view></view></view>';
+    var caps = '<view class="cap-sum"' + U.mk(5) + '>' + ['自由探索', '单人可玩', '可跨天', '4 个玩法', '约 2 小时'].map(function (c) { return '<text class="xb-chip">' + c + '</text>'; }).join('') + '</view>' +
+      '<view class="cap-list"' + U.mk(6) + '>' + NODES.map(function (n, i) {
+        var g = GAMES[i];
+        return '<view class="cap-stop"><view class="cap-stop__no">' + (i + 1) + '</view><view class="cap-stop__main"><view class="cap-stop__name ep1">' + n[0] + '</view>' +
+          '<view class="cap-stop__game">' + I(g[2], 26) + '<text>' + g[1] + '</text></view><view class="cap-stop__do">' + g[3] + '</view><view class="cap-stop__dur">' + I('clock', 22) + '<text>' + g[4] + '</text></view></view></view>';
+      }).join('') + '</view>' +
+      '<view class="xb-caps" style="margin-top:8px"><view class="xb-caprow"><text class="xb-caprow-k">素材</text><view class="xb-caprow-v"><text class="xb-chip">模板封面可直接使用</text><text class="xb-chip">节点照片可直接使用</text></view></view></view>';
     return '<view class="theme-dark" style="height:100%"><view class="xb-page" style="height:100%">' +
       '<view class="xb-bg"><img class="xb-bg-img" src="' + COVER + '" style="object-fit:cover"><view class="xb-bg-mask"></view></view>' +
       '<scroll-view class="xb-scroll xb-scroll--bleed" scroll-y style="height:100%;position:relative"><view style="height:87px"></view>' +
       '<view class="xb-head"' + U.mk(1) + '><view class="xb-head-cover"><img src="' + COVER + '" style="width:100%;height:100%;object-fit:cover"></view><view class="xb-head-meta"><view class="xb-head-title ep2">风味巡游</view><view class="xb-head-sub ep1">城瘾官方</view><text class="xb-head-badge">官方</text></view></view>' +
-      '<view class="xb-cta"' + U.mk(2) + '><view class="c-btn xb-cta-btn p4-ghost"><view class="btn btn--ghost" data-go="p4-config">应用</view></view><button class="xb-share" data-toast="分享给微信好友">' + I('share', 40) + '</button></view>' +
+      '<view class="xb-cta"' + U.mk(2) + '><view class="p4-apply" data-go="p4-config">应用</view><button class="xb-share" data-toast="分享给微信好友">' + I('share', 40) + '</button></view>' +
       '<view class="xb-tabs-wrap"' + U.mk(3) + '>' + U.tabs({ tabs: [{ key: 'details', label: '详情' }, { key: 'capabilities', label: '能力' }], active: tab, group: 'tdt' }) + '</view>' +
       '<view data-pane="tdt:details"' + (tab === 'details' ? '' : ' hidden') + '>' + details + '</view><view data-pane="tdt:capabilities"' + (tab === 'capabilities' ? '' : ' hidden') + '>' + caps + '</view>' +
       '<view style="height:60px"></view></scroll-view></view></view>' + U.navBar({ overlay: true, pill: true });
@@ -141,39 +164,40 @@
       '<view class="sp-ticket" data-go="p4-ticket"' + U.mk(4) + '><text>标准票</text><b>¥0</b></view>' +
       '<view class="sp-ch"><b>第 1 章</b><text>上海自由探索</text></view>' +
       '<view' + U.mk(5) + '>' + blocks.join('') + '</view>' +
-      '<view class="sp-end"' + U.mk(6) + '><canvas data-medal="t-flavor" width="168" height="168"></canvas><view><view class="t">通关勋章</view><view class="n">老饕</view></view></view>' +
+      '<view class="sp-end"' + U.mk(6) + '>' + MEDALS2.svg('t-flavor', { cls: 'p4-medal' }) + '<view><view class="t">通关勋章</view><view class="n">老饕</view></view></view>' +
       '</view></view>' +
       '<view class="sp-top"><view class="sp-x" data-go="p4-config"' + U.mk(1) + '>' + I('close', 32) + '</view><view class="sp-done" data-act="publish"' + U.mk(2) + '>完成</view></view>';
   }
 
-  // 改前:文字版发布确认(master pages/publish/fabu 的 publishCheck 弹层)
-  function confirmBefore() {
-    return '<view style="height:100%;background:#8E8E93"><view class="ios-sheet open" data-detent="full" style="display:block"><view class="mask" style="background:transparent"></view><view class="panel theme-topic-editor" style="height:86%;background:#fff;color:#111">' +
-      '<view style="text-align:center;font-size:20px;font-weight:700;padding:28px 0 18px">发布确认</view>' +
-      '<view style="padding:0 22px;font-size:13px;color:#666">发布后平台审核</view><view style="padding:12px 22px 6px;font-size:13px;color:#C0283A">需要先处理</view>' +
-      ['请选择开始时间', '请选择结束时间', '请上传主题封面', '请选择招商截止日期', '发布者实名未填写'].map(function (t, i) { return '<view style="margin:6px 22px;border:1px solid #E5E5EA;border-radius:12px;padding:14px 16px;display:flex;justify-content:space-between;font-size:16px"><text>● ' + t + '</text><text style="color:#C0283A;font-size:13px">' + (i === 4 ? '在下方填写' : '去填写 →') + '</text></view>'; }).join('') +
-      '<view style="padding:14px 22px 0;font-size:13px;color:#666">本次发布</view><view style="padding:10px 30px;font-size:15px;line-height:1.6">「风味巡游」将按自由探索发布，共 1 个章节、4 个节点。<br>完成全部节点后通关；当前配置 0 种票单。</view>' +
-      '</view></view></view>';
-  }
-
+  var N_DETAIL = [
+    [1, '主题模板详情页 = templatedetail 的主题档(Figma 4312:13285):封面 + 标题 + 发布方。'],
+    [2, '第二轮(业主「应用和旁边分享一样的样式」):「应用」做成和分享按钮同一套 —— 同样的半透明圆角底、同样高、白字,不描边;点了直接复制草稿进主题配置,不再二次确认。'],
+    [3, '详情 / 能力两个 tab。'],
+    [4, '新增「剧情」:开场白、每章一段 + 这一章的节点顺序、结局(见「剧情」屏)。']
+  ];
   var SCREENS = [
     ['p4-preview-before', '改前 · 模板预览(按钮出屏)', '① 模板预览', 'cyp theme-dark pg-tp', preview(), 'pages/templatedetail/topic-preview/index.wxml', ''],
     ['p4-preview', '模板预览 · 查看详情', '① 模板预览', 'cyp theme-dark pg-tp', preview({ fixed: true }), 'pages/templatedetail/topic-preview/index.wxml', notes([[1, '按钮回到屏内:master 里 <code>.tp &gt; view:not(.tp-glow){position:relative}</code> 把 fixed 的按钮条改成了 relative,left/right 32rpx 变成整宽再右移 → 溢出。改为 <code>.tp &gt; .tp-cta{position:fixed}</code>。'], [2, '「用这个模板」改成「查看详情」:这一页只是预览,点了进主题模板详情页,不再直接复制草稿。']])],
     ['p4-preview-flip', '模板预览 · 翻面', '① 模板预览', 'cyp theme-dark pg-tp', preview({ fixed: true, flip: true }), 'pages/templatedetail/topic-preview/index.wxss .bk', notes([[3, '翻面后的卡背去掉 1rpx 白描边,只留深色卡面和阴影。'], [2, '同上。']])],
-    ['p4-detail', '主题模板详情 · 详情', '② 主题模板详情', 'cyp theme-dark pg-td', detail('details'), 'pages/templatedetail/templatedetail.wxml(isTopicTemplate 档)', notes([[1, '还原的主题模板详情页:就是 templatedetail 的主题档(Figma 4312:13285),封面 + 标题 + 发布方。git 历史里主题模板没有单独的详情页 —— 10-20 起点主题卡就直接进配置(见 README 决定 P4-2)。'], [2, '主按钮「开始应用」→「应用」,改成透明底 + 细描边(cy-btn ghost 现在是玻璃底,这里再去掉底色),与 V-11 玩法模板详情一致;右边保留分享。点「应用」才复制草稿进主题配置。'], [3, '详情 / 能力两个 tab 都在。'], [4, '规则按 1. 2. 3. 分条(V-12 同一组件)。'], [5, '节点横滑:每个节点的照片、名字、玩法。']])],
-    ['p4-detail-cap', '主题模板详情 · 能力', '② 主题模板详情', 'cyp theme-dark pg-td', detail('capabilities'), 'pages/templatedetail/templatedetail.wxml「能力」', notes([[6, '能力 tab:方式 / 玩法 / 场景 / 素材。模板自带的封面和节点照片「可直接使用」,应用时一起带进草稿,不走媒体授权(V-11 / V-13,后端配合)。'], [3, '同详情。']])],
+    ['p4-detail', '主题模板详情 · 详情', '② 主题模板详情', 'cyp theme-dark pg-td', detail('details'), 'pages/templatedetail/templatedetail.wxml(isTopicTemplate 档)', notes(N_DETAIL)],
+    ['p4-detail-story', '主题模板详情 · 剧情', '② 主题模板详情', 'cyp theme-dark pg-td', detail('details'), 'pages/templatedetail/templatedetail.wxml(isTopicTemplate 档)', notes([[4, '「剧情」一节:开场白全文 → 每一章(章名 + 一段 + 这一章依次经过的节点)→ 结局。玩家看到的就是这个故事,不用点开配置。']])],
+    ['p4-detail-cap', '主题模板详情 · 能力', '② 主题模板详情', 'cyp theme-dark pg-td', detail('capabilities'), 'pages/templatedetail/templatedetail.wxml「能力」', notes([[5, '能力顶上一行:方式 / 人数 / 跨天 / 玩法数 / 总时长。'], [6, '按站列出这个主题实际有什么游戏:第几站、站名、玩法(拍照打卡 / 选项问答 · 闭眼盲品 / 拍物成卡 / 猜数字,名字与能力 key 照《全游戏复用索引》的作者入口)、玩家具体做什么、大概多久。'], [2, '「应用」与右边分享同一个样式。']])],
     ['p4-config', '主题配置 · 还有未填项', '③ 主题配置', 'cyp theme-topic-editor pg-fabu', config(), 'pages/publish/fabu/index.wxml(第 1 页)', notes([[1, 'V-25:票务卡的「编辑」在有必填项没填时换成红色「* 还有 4 项未填」;点它直接进票务页并定位到第一项。'], [2, '主题详情卡的摘要同一套说法:没填完显示红色「* 还有 N 项未填」,填完是「已填完」。模板自带封面算已填(V-13)。'], [3, '右下「发布」→「下一步」,永远可点,去票务页;原来必填没齐就是灰的、点不了。']])],
     ['p4-config-ok', '主题配置 · 票务已填完', '③ 主题配置', 'cyp theme-topic-editor pg-fabu', config({ ticketMissing: 0 }), 'pages/publish/fabu/index.wxml(第 1 页)', notes([[1, '填完后票务卡回到「编辑 ›」。']])],
     ['p4-ticket', '票务 · 内联必填', '④ 票务', 'cyp theme-topic-editor pg-fabu', ticket(), 'pages/publish/fabu/step3.wxml', notes([[1, '每个分区标题右边红色「* 还有 N 项未填」,点它滚到并闪一下第一项;没填的行值显示成红色占位。'], [2, '「发布者实名」从发布确认搬到票务页最后一个分区,字段与同意文案照 master 原样。'], [3, '实名字段与同意勾选照 master cy-field / cy-consent-check。'], [4, '底部「预览」:还有未填项时点它跳到第一项(不再弹文字版发布确认);都填完进剧情预览。']])],
     ['p4-ticket-ok', '票务 · 已填完', '④ 票务', 'cyp theme-topic-editor pg-fabu', ticket({ filled: true }), 'pages/publish/fabu/step3.wxml', notes([[4, '全部填完,「预览」进剧情预览页。']])],
-    ['p4-story', '剧情预览(取代发布确认)', '⑤ 剧情预览', 'cyp theme-dark', story(), '新页面(取代 pages/publish/fabu 的 publishCheck 弹层)', notes([[1, '左上 ✕ 退出预览,回到配置。'], [2, '右上「完成」= 发布;发布结果的提示照后端回执原文。'], [3, '玩家看到的样子:封面、名字、模式 / 节点数 / 时长 / 档期。'], [4, '票价一行,点它回票务页。'], [5, '按章节把剧情和节点串起来,像玩的时候一样往下读;每一块右上角有笔,点哪块就跳回配置里对应的位置。'], [6, '通关勋章(P-3 的主题勋章)。']])],
-    ['p4-confirm-before', '改前 · 文字版发布确认', '⑤ 剧情预览', 'cyp theme-topic-editor', confirmBefore(), 'pages/publish/fabu/index.wxml publishCheck(删除)', '']
+    ['p4-story', '剧情预览(直接发布)', '⑤ 剧情预览', 'cyp theme-dark', story(), '新页面(取代 pages/publish/fabu 的 publishCheck 弹层)', notes([[1, '左上 ✕ 退出预览,回到配置。'], [2, '右上「完成」= 直接发布,没有任何发布确认弹层;master 的 publishCheck 文字版发布确认整块删除(上一轮的「改前」对照屏也撤掉)。发布结果的提示照后端回执原文。'], [3, '玩家看到的样子:封面、名字、模式 / 节点数 / 时长 / 档期。'], [4, '票价一行,点它回票务页。'], [5, '按章节把剧情和节点串起来,像玩的时候一样往下读;每一块右上角有笔,点哪块就跳回配置里对应的位置。'], [6, '通关勋章(P-3 第二版插画勋章)。']])],
   ];
   var host = document.getElementById('screens');
   host.innerHTML = SCREENS.map(function (s) {
     return '<section class="scr ' + s[3] + '" data-id="' + s[0] + '" data-title="' + s[1] + '" data-group="' + s[2] + '" data-src="' + s[5] + '">' + s[4] + s[6] + '</section>';
   }).join('');
   THEME_MEDALS.paintAll(host);
+  window.ON_ENTER = function (id) {
+    if (id !== 'p4-detail-story') return;
+    var s = PROTO.cur(), sc = s.querySelector('.xb-scroll'), t = s.querySelector('.st-ch');
+    setTimeout(function () { sc.scrollTop = t.offsetTop - 180; }, 0);
+  };
 
   window.ACT = {
     flip: function () {
