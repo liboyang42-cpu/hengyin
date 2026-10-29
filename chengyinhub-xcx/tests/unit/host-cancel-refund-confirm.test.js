@@ -10,6 +10,7 @@ const PAGE = '../../subpackageA/pages/myproject/index.js';
 let sent = [];
 let toasts = [];
 let pageConfig = null;
+let pendingStorage = new Map();
 
 global.getApp = () => ({
   globalData: { statusBarHeight: 20, navBarHeight: 44 },
@@ -19,8 +20,9 @@ global.getApp = () => ({
   getRequestErrorMessage: (res, fallback) => (res && res.msg) || fallback,
 });
 global.wx = {
-  getStorageSync: () => undefined,
-  setStorageSync: () => {},
+  getStorageSync: (key) => pendingStorage.get(key),
+  setStorageSync: (key, value) => pendingStorage.set(key, value),
+  removeStorageSync: (key) => pendingStorage.delete(key),
   showToast: (o) => { toasts.push(o && o.title); },
   showLoading: () => {},
   hideLoading: () => {},
@@ -38,6 +40,7 @@ beforeEach(() => {
   sent = [];
   toasts = [];
   pageConfig = null;
+  pendingStorage = new Map();
   delete require.cache[require.resolve(PAGE)];
   require(PAGE);
 });
@@ -123,7 +126,7 @@ test('主题取消:预览人数 → 确认框写明 N → 确认后调 /api/topi
 
   assert.equal(sent[0].url, '/api/topic/cancel_preview');
   assert.deepEqual(sent[0].data, { id: 42, scope: 'MERCHANT' });
-  sent[0].success({ code: '200', data: { paidPlayers: 5 } });
+  sent[0].success({ code: '200', data: { paidPlayers: 5, cancellationEpoch: '3' } });
 
   const dc = page.dialogs['#dcCancelTopic'];
   assert.equal(dc.opened[0].key, 'topic.cancel-refund');
@@ -137,7 +140,10 @@ test('主题取消:预览人数 → 确认框写明 N → 确认后调 /api/topi
   assert.equal(req.url, '/api/topic/cancel');
   assert.equal(req.data.id, 42);
   assert.equal(req.data.scope, 'MERCHANT');
+  assert.equal(req.data.cancellationEpoch, '3');
   assert.ok(req.data.reason && req.data.reason.trim(), '后端要求原因非空，会展示给已付款玩家');
-  req.success({ code: '200', msg: '主题已取消，已为 5 笔订单全额退款' });
+  req.success({ code: '200', msg: '主题已取消，已为 5 笔订单全额退款', data: {
+    cancellationEpoch: '3', cancellationState: 'DONE', refundedOrders: 5, manualOrders: 0, closedPendingOrders: 0,
+  } });
   assert.deepEqual(dc.states, ['busy', 'done']);
 });

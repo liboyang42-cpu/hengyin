@@ -81,12 +81,13 @@ class ClubActivityCancelWrapUpTest {
         com.chengyinhub.business.mapper.CmsTopicMapper topics = mock(com.chengyinhub.business.mapper.CmsTopicMapper.class);
         com.chengyinhub.business.domain.CmsActivity activity = new com.chengyinhub.business.domain.CmsActivity();
         activity.setId(ACTIVITY); activity.setClubId(CLUB); activity.setTopicId(TOPIC); activity.setMemberId(OWNER);
-        com.chengyinhub.business.domain.CmsTopic topic = new com.chengyinhub.business.domain.CmsTopic(); topic.setId(TOPIC);
+        com.chengyinhub.business.domain.CmsTopic topic = new com.chengyinhub.business.domain.CmsTopic(); topic.setId(TOPIC);topic.setMemberId(ACTOR);
         when(activities.selectCmsActivityById(ACTIVITY)).thenReturn(activity);
         when(activities.selectCmsActivityByIdForUpdate(ACTIVITY)).thenReturn(activity);
         when(topics.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(topic);
         org.springframework.test.util.ReflectionTestUtils.setField(service, "cancellationActivityMapper", activities);
         org.springframework.test.util.ReflectionTestUtils.setField(service, "cancellationTopicMapper", topics);
+        CancellationPhaseTestSupport.wireReceiptMocks(service);
     }
 
     private void stubSeries(ClubEventOccurrence occurrence) {
@@ -180,6 +181,9 @@ class ClubActivityCancelWrapUpTest {
 
     @Test
     void standaloneActivity_keepsOldBehaviour_refundOnly() {
+        var activities=(com.chengyinhub.business.mapper.CmsActivityMapper)org.springframework.test.util.ReflectionTestUtils.getField(service,"cancellationActivityMapper");
+        var standalone=activities.selectCmsActivityById(ACTIVITY);
+        standalone.setClubId(null);standalone.setMemberId(ACTOR);
         when(mapper.selectSeriesByActivityAnyStatusForUpdate(ACTIVITY)).thenReturn(null);
         when(teamGroupService.cancelActivityWithObservedPayments(ACTIVITY, ACTOR, ACTOR, REASON, false, payments))
                 .thenReturn(new ActivityCancelResult(0, 0, 0));
@@ -261,16 +265,27 @@ class ClubActivityCancelWrapUpTest {
 
     @Test
     void alreadyWrappedOccurrence_doesNotNotifyOrTerminateAgain() {
-        stubSeries(occurrence(ClubEventOccurrence.STATUS_CANCELLED));
+        stubSeries(occurrence(ClubEventOccurrence.STATUS_ACTIVE));
         when(teamGroupService.cancelActivityWithObservedPayments(ACTIVITY, OWNER, ACTOR, REASON, false, payments))
                 .thenReturn(new ActivityCancelResult(1, 0, 0));
+        when(mapper.cancelOccurrenceCas(81L,0)).thenReturn(1);
+        stubCampaignInserts();
+        ActivityCancelResult original=service.cancelActivityByOwnerWithClubWrapUp(ACTOR,ACTIVITY,REASON);
+        var activities=(com.chengyinhub.business.mapper.CmsActivityMapper)org.springframework.test.util.ReflectionTestUtils.getField(service,"cancellationActivityMapper");
+        activities.selectCmsActivityById(ACTIVITY).setCancelTime(new Date());
+        activities.selectCmsActivityById(ACTIVITY).setStatus(0L);
+        activities.selectCmsActivityById(ACTIVITY).setPublishStatus(0L);
+        stubSeries(occurrence(ClubEventOccurrence.STATUS_CANCELLED));
+        org.mockito.Mockito.clearInvocations(mapper,teamGroupService,roleService);
 
         ActivityCancelResult result = service.cancelActivityByOwnerWithClubWrapUp(ACTOR, ACTIVITY, REASON);
 
         assertEquals(Integer.valueOf(1), result.getRefundedOrders());
+        assertEquals(original.getManualOrders(),result.getManualOrders());
+        assertEquals(original.getClosedPendingOrders(),result.getClosedPendingOrders());
         verify(mapper, never()).cancelOccurrenceCas(anyLong(), any());
         verify(mapper, never()).insertCampaign(any(ClubEventCampaign.class));
-        verify(teamGroupService).cancelActivityWithObservedPayments(ACTIVITY, OWNER, ACTOR, REASON, false, payments);
+        verify(teamGroupService,never()).cancelActivityWithObservedPayments(ACTIVITY, OWNER, ACTOR, REASON, false, payments);
     }
 
     @Test

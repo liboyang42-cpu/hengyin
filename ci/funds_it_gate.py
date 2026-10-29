@@ -37,6 +37,8 @@ REQUIRED_TRIGGER_PATHS = (
     "chengyinhub-admin/sql/migration_20261012_member_password_width.sql",
     "chengyinhub-admin/sql/migration_20261012_roam_presence_revoke_intent.sql",
     "chengyinhub-admin/sql/migration_20261012_roam_presence_revoke_job.sql",
+    "chengyinhub-admin/sql/migration_20261029_activity_cancellation_receipt.sql",
+    "chengyinhub-admin/sql/migration_20261029_topic_cancellation_receipt.sql",
 )
 
 
@@ -257,7 +259,7 @@ EXPECTED = {
     "RoamShareSnapshotConcurrencyMySqlIT": 3,
     # 2026-09-21 CYV-P1-002:主理人转让与活动取消在 MySQL RR/RC 下的锁后权限、
     # 精确 topic/club/activity scope 和并发退款幂等。
-    "ClubEventTransferCancellationMySqlIT": 3,
+    "ClubEventTransferCancellationMySqlIT": 14,
     # Frozen merge retains master nine financial cases plus original UNKNOWN recovery.
     "RefundRetryAndRemainderMySqlIT": 10,
     "SignupNoticeAfterCommitPersistenceMySqlIT": 18,

@@ -136,7 +136,9 @@ class ActivityCancelFreeOrderMybatisIT {
         DriverManagerDataSource ds = new DriverManagerDataSource(databaseUrl(), USER, PASSWORD);
         try (Connection connection = ds.getConnection()) {
             com.chengyinhub.business.it.ItSchema.applyMigrations(connection,
-                    "sql/migration_20260930_registration_first_successful_scan.sql");
+                    "sql/migration_20260930_registration_first_successful_scan.sql",
+                    "sql/migration_20261029_activity_cancellation_receipt.sql",
+                    "sql/migration_20261029_topic_cancellation_receipt.sql");
         }
         jdbc = new JdbcTemplate(ds);
         Configuration cfg = new Configuration(new Environment("r916-cancel",

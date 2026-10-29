@@ -3,6 +3,20 @@
 PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.chengyinhub.business.mapper.CmsActivityMapper">
+
+    <select id="selectCancellationReceiptForUpdate" resultType="java.lang.String" useCache="false" flushCache="true">
+        select cancellation_receipt_json from cms_activity where id = #{id} for update
+    </select>
+    <update id="compareAndSetCancellationReceipt" flushCache="true">
+        update cms_activity set cancellation_receipt_json = #{receipt} where id = #{id}
+        <choose>
+            <when test="first">and cancellation_receipt_json is null</when>
+            <otherwise>
+                and JSON_UNQUOTE(JSON_EXTRACT(cancellation_receipt_json, '$.state')) = 'PENDING'
+                and JSON_UNQUOTE(JSON_EXTRACT(cancellation_receipt_json, '$.requestHash')) = #{requestHash}
+            </otherwise>
+        </choose>
+    </update>
     
     <resultMap type="CmsActivity" id="CmsActivityResult">
         <result property="id"    column="id"    />

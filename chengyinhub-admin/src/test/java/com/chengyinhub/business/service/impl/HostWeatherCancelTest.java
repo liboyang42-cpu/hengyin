@@ -479,14 +479,14 @@ class HostWeatherCancelTest {
         verify(refundService, never()).saveRefund(any(RefundApplication.class));
     }
 
-    /** 重复点:第一次退完后库里这些单已是 4、场次已取消 ⇒ 第二次零退款单,不会退两遍。 */
+    /** 重复点:第二次重放原两单回执，但不再创建任何退款；不是把原结果重新统计成零。 */
     @Test
     void repeatTopicCancelRefundsNothingTheSecondTime() {
         CmsTopic t = topic(OWNER);
         paid(1L, 1L, TOPIC, 0);
         CmsActivity shell = activity(SHELL, TOPIC, OWNER);
         paid(3L, 2L, SHELL, 0);
-        service.cancelTopicByHost(TOPIC, OWNER, STAFF, "台风停运");
+        ActivityCancelResult original=service.cancelTopicByHost(TOPIC, OWNER, STAFF, "台风停运");
         verify(refundService, times(2)).saveRefund(any(RefundApplication.class));
 
         // 第一次提交后的库:停售、单已退、场次已取消
@@ -496,7 +496,9 @@ class HostWeatherCancelTest {
 
         ActivityCancelResult again = service.cancelTopicByHost(TOPIC, OWNER, STAFF, "台风停运");
 
-        assertEquals(0, again.getRefundedOrders());
+        assertEquals(2, again.getRefundedOrders());
+        assertEquals(original.getManualOrders(),again.getManualOrders());
+        assertEquals(original.getClosedPendingOrders(),again.getClosedPendingOrders());
         verify(refundService, times(2)).saveRefund(any(RefundApplication.class));
         verify(topicService, times(1)).casUserStatus(anyLong(), anyInt(), anyInt());
     }

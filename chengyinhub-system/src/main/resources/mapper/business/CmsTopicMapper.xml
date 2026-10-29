@@ -3,6 +3,30 @@
 PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.chengyinhub.business.mapper.CmsTopicMapper">
+
+    <select id="selectCancellationEpoch" resultType="java.lang.Long" useCache="false" flushCache="true">
+        select cancellation_epoch from cms_topic where id=#{id}
+    </select>
+    <select id="selectCancellationEpochForUpdate" resultType="java.lang.Long" useCache="false" flushCache="true">
+        select cancellation_epoch from cms_topic where id=#{id} for update
+    </select>
+    <select id="selectCancellationReceiptForUpdate" resultType="java.lang.String" useCache="false" flushCache="true">
+        select receipt_json from cms_topic_cancellation_receipt where topic_id=#{id} and cancellation_epoch=#{epoch} for update
+    </select>
+    <update id="compareAndSetCancellationReceipt" flushCache="true">
+        <choose>
+            <when test="first">
+                insert into cms_topic_cancellation_receipt(topic_id,cancellation_epoch,request_hash,receipt_json)
+                values(#{id},#{epoch},#{requestHash},#{receipt})
+            </when>
+            <otherwise>
+                update cms_topic_cancellation_receipt set receipt_json=#{receipt}
+                where topic_id=#{id} and cancellation_epoch=#{epoch} and request_hash=#{requestHash}
+                and JSON_UNQUOTE(JSON_EXTRACT(receipt_json, '$.state'))='PENDING'
+                and JSON_UNQUOTE(JSON_EXTRACT(receipt_json, '$.requestHash'))=#{requestHash}
+            </otherwise>
+        </choose>
+    </update>
     
     <resultMap type="CmsTopic" id="CmsTopicResult">
         <result property="id"    column="id"    />
@@ -1124,9 +1148,15 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
          COALESCE 把 NULL 当 0(未上架),与 Java 侧 normalize 同口径。 -->
     <update id="casUserStatus">
         update cms_topic
-        set user_status = #{target}, update_time = #{updateTime}
+        set cancellation_epoch=case when #{target}=1 and coalesce(user_status,0)=0
+                then cancellation_epoch+1 else cancellation_epoch end,
+            user_status = #{target}, update_time = #{updateTime}
         where id = #{id} and coalesce(user_status, 0) = #{expected} and del_flag = 0
         <if test="target == 1">
+            and cancellation_epoch &lt; 9223372036854775807
+            and not exists (select 1 from cms_topic_cancellation_receipt cr
+                where cr.topic_id=cms_topic.id and cr.cancellation_epoch=cms_topic.cancellation_epoch
+                and coalesce(JSON_UNQUOTE(JSON_EXTRACT(cr.receipt_json,'$.state')),'UNKNOWN') &lt;&gt; 'DONE')
             and status = 1 and is_draft = 0
             <!-- AUDIT-G2-1:内容安全下架留置(check_status=2)中不得自助上架,须人工复核 -->
             and coalesce(check_status, 0) &lt;&gt; 2

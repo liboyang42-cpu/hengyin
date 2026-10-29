@@ -270,4 +270,4 @@ function createVerificationWorkflow(options) {
   };
 }
 
-module.exports = { offerVerificationReadback, createVerificationWorkflow };
+module.exports = { offerVerificationReadback, createVerificationWorkflow, sha256 };

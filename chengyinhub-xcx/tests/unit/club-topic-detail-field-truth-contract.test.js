@@ -439,7 +439,7 @@ test('主题设置成功后仍按原字段投影进入 ready，不沿用失败�
     code: 200,
     data: {
       topicName: '周末路线', lifecycleText: '进行中', coopOpen: true, pinned: false,
-      memberOnly: true, canManage: true,
+      memberOnly: true, canManage: true, cancellationEpoch: '3',
       chapters: [
         { chapterId: 1, name: '第一章', recruiting: true, category: '咖啡', merchantCount: 0 },
         { chapterId: 2, name: '第二章', recruiting: false, merchantCount: 3 },
@@ -450,7 +450,7 @@ test('主题设置成功后仍按原字段投影进入 ready，不沿用失败�
   assert.equal(vm.data.settingErrorText, '');
   assert.deepEqual(vm.data.setting, {
     topicName: '周末路线', lifecycleText: '进行中', coopOpen: true, pinned: false,
-    memberOnly: true, canManage: true,
+    memberOnly: true, canManage: true, cancellationEpoch: '3',
     chapterRows: [
       { id: 1, title: '第一章', value: '咖啡 · 0 家', valueTone: 'default' },
       { id: 2, title: '第二章', value: '未开放', valueTone: 'muted' },

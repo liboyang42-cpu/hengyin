@@ -856,6 +856,22 @@ jobs:
       #   门禁永久锁死(存量 503 条(U2 0 + U3 95 + U4 408)),直接放行又等于"测试存在但从没被跑过",棘轮是这两者之间唯一的解。
       - name: Check mini program JavaScript and JSON (incl. U2/U3/U4 wxml-js bind gates)
         run: bash ci/xcx-check.sh
+      - name: Generate canonical action ledger candidate on selected source preparation
+        id: canonical_action_ledger
+        if: ${{ failure() && github.event_name == 'workflow_dispatch' && inputs.validation_scope == 'selected' && inputs.selected_jobs == 'mini_static' }}
+        run: |
+          node chengyinhub-xcx/scripts/uiaudit/build-action-ledger.js --write
+          mkdir -p /tmp/hengyin-canonical-action-ledger
+          cp chengyinhub-xcx/scripts/uiaudit/action-ledger.json /tmp/hengyin-canonical-action-ledger/action-ledger.json
+          git rev-parse HEAD > /tmp/hengyin-canonical-action-ledger/source-sha.txt
+          git rev-parse HEAD^{tree} > /tmp/hengyin-canonical-action-ledger/source-tree.txt
+      - name: Export canonical action ledger candidate without changing gate result
+        if: ${{ always() && steps.canonical_action_ledger.outcome == 'success' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: canonical-action-ledger-candidate-${{ github.run_id }}-${{ github.run_attempt }}
+          if-no-files-found: error
+          path: /tmp/hengyin-canonical-action-ledger/
 
   admin_ui:
     name: ${{ github.event_name == 'workflow_dispatch' && inputs.validation_scope == 'selected' && 'PARTIAL SELECTED - Admin UI build gate' || 'Admin UI build gate' }}

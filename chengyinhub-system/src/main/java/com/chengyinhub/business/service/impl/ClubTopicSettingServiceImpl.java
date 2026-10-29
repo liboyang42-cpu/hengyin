@@ -8,6 +8,12 @@ import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.CmsTopicChapter;
 import com.chengyinhub.business.domain.CmsTopicNode;
 import com.chengyinhub.business.mapper.CmsTopicMapper;
+import com.chengyinhub.business.mapper.CmsActivityMapper;
+import com.chengyinhub.business.service.support.CancellationReceiptStore;
+import com.chengyinhub.business.service.support.CancellationReceiptStore.Request;
+import com.chengyinhub.business.service.support.CancellationReceiptStore.Resource;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 import com.chengyinhub.business.service.IClubTopicSettingService;
 import com.chengyinhub.business.service.ICmsTopicChapterService;
 import com.chengyinhub.business.service.ICmsTopicNodeService;
@@ -47,6 +53,8 @@ public class ClubTopicSettingServiceImpl implements IClubTopicSettingService {
     @Autowired private ICmsActivityService cmsActivityService;
     @Autowired private IClubEventOpsService clubEventOpsService;
     @Autowired private ITeamGroupService teamGroupService;
+    @Autowired private CmsActivityMapper cancellationActivityMapper;
+    @Autowired private PlatformTransactionManager cancellationTransactions;
 
     @Override
     public Map<String, Object> detail(Long principalMemberId, Long clubId, Long topicId) {
@@ -65,6 +73,9 @@ public class ClubTopicSettingServiceImpl implements IClubTopicSettingService {
         // 上架态给前端:「结束主题」那一行要拿它做 CAS(update_user_status 的 expectedUserStatus),
         // 已经下架时也不该再给一个点了没反应的入口。0=未上架 1=已上架,与 CmsTopic 同口径。
         out.put("userStatus", Integer.valueOf(1).equals(topic.getUserStatus()) ? 1 : 0);
+        Long epoch=cmsTopicMapper.selectCancellationEpoch(topicId);
+        if(epoch==null || epoch<0) throw new ServiceException("原主题取消轮次无法确认",409);
+        out.put("cancellationEpoch",epoch);
         out.put("chapters", chapters(topicId));
         return out;
     }
@@ -82,17 +93,123 @@ public class ClubTopicSettingServiceImpl implements IClubTopicSettingService {
     @Override
     public Map<String, Object> endTopic(Long principalMemberId, String username,
                                         Long clubId, Long topicId, String reason) {
-        CmsTopic topic = requireTopic(principalMemberId, clubId, topicId, ClubPermission.ACTIVITY_MANAGE);
+        return endTopic(principalMemberId,username,clubId,topicId,reason,null);
+    }
+
+    @Override
+    public Map<String,Object> endTopic(Long principalMemberId,String username,Long clubId,Long topicId,
+                                      String reason,Long cancellationEpoch) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+        if (org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive())
+            throw new IllegalStateException("结束主题的逐场观察不得悬挂原持锁事务");
         // 稿 J5 164:118 是纯确认框,没有原因输入框 —— 所以原因是选填的。
         // 空的时候给一句陈述事实的系统文案,不替主理人编一个理由塞给用户看。
         String why = reason == null ? "" : reason.trim();
         if (why.isEmpty()) why = "主办方已结束该主题，为你全额退款";
 
-        // ① 停售。已经是未上架就不重复写。
-        boolean wasOnSale = Integer.valueOf(1).equals(topic.getUserStatus());
-        if (wasOnSale && cmsTopicService.casUserStatus(topicId, 1, 0) < 1) {
-            throw new ServiceException("主题状态刚刚变过，请刷新后重试");
+        final String originalReason=why;
+        EndPreparation prepared=endTransaction(() -> prepareEnd(principalMemberId,clubId,topicId,originalReason,cancellationEpoch));
+        if(prepared.receipt().done()) return prepared.receipt().topicEnd(topicId);
+        int cancelled=0,refundedOrders=0,manualOrders=0,closedOrders=0;
+        List<String> failed=new ArrayList<>();
+        for(Long id:prepared.receipt().activities()) {
+            String caption="场次 #"+id;
+            try {
+                // Fresh permission/scope before each independent child. Do not switch identity after UNKNOWN.
+                EndPreparation current=endTransaction(() -> prepareEnd(principalMemberId,clubId,topicId,originalReason,prepared.request().epoch()));
+                if(current.receipt().done()) return current.receipt().topicEnd(topicId);
+                CmsActivity row=cmsActivityService.selectCmsActivityById(id);
+                if(row==null || !topicId.equals(row.getTopicId())
+                        || (row.getClubId()!=null && !clubId.equals(row.getClubId())))
+                    throw new ServiceException("原结束主题场次范围已变化",HttpStatus.CONFLICT);
+                if(row.getName()!=null) caption=row.getName();
+                ActivityCancelResult result;
+                if(row.getClubId()!=null) {
+                    ClubEventCancellationRequest req=new ClubEventCancellationRequest();
+                    req.setClubId(clubId);req.setActivityId(id);req.setReason(originalReason);
+                    req.setRequestId(topicEndRequestId(topicId,id));
+                    ClubEventCancellationResult out=clubEventOpsService.cancelOccurrence(principalMemberId,username,req);
+                    if(out==null || out.getRefundedOrders()==null || out.getManualOrders()==null
+                            || out.getClosedPendingOrders()==null) throw new ServiceException("原场次取消回执不完整",409);
+                    result=new ActivityCancelResult(out.getRefundedOrders(),out.getManualOrders(),out.getClosedPendingOrders());
+                } else {
+                    result=teamGroupService.cancelActivityByClubOperator(id,current.request().owner(),principalMemberId,originalReason);
+                }
+                if(result==null) throw new ServiceException("退款回执为空，无法确认是否退成");
+                if(result.getRefundedOrders()<0 || result.getManualOrders()<0 || result.getClosedPendingOrders()<0)
+                    throw new ServiceException("原场次取消计数不完整",409);
+                int nextRefunded=Math.addExact(refundedOrders,result.getRefundedOrders());
+                int nextManual=Math.addExact(manualOrders,result.getManualOrders());
+                int nextClosed=Math.addExact(closedOrders,result.getClosedPendingOrders());
+                refundedOrders=nextRefunded;manualOrders=nextManual;closedOrders=nextClosed;cancelled++;
+            } catch(RuntimeException uncertain) {
+                failed.add(caption+"："+(uncertain instanceof ServiceException && uncertain.getMessage()!=null
+                        ?uncertain.getMessage():"取消尚未确认，请保留原请求重试或人工核对"));
+            }
         }
+        if(failed.isEmpty()) {
+            ActivityCancelResult totals=new ActivityCancelResult(refundedOrders,manualOrders,closedOrders);
+            return endTransaction(() -> {
+                EndPreparation current=prepareEnd(principalMemberId,clubId,topicId,originalReason,prepared.request().epoch());
+                if(current.receipt().done()) return current.receipt().topicEnd(topicId);
+                // Counts came only from exact durable child receipts, never current table reconstruction.
+                return receipts().completeTopicEnd(current.request(),totals).topicEnd(topicId);
+            });
+        }
+        Map<String,Object> pending=new LinkedHashMap<>();
+        pending.put("topicId",topicId);pending.put("stoppedSelling",prepared.receipt().stoppedSelling());
+        pending.put("cancellationEpoch",prepared.request().epoch());
+        pending.put("sessionTotal",prepared.receipt().activities().size());pending.put("cancelledSessions",cancelled);
+        pending.put("refundedOrders",refundedOrders);pending.put("manualOrders",manualOrders);
+        pending.put("closedPendingOrders",closedOrders);pending.put("failedSessions",failed);
+        pending.put("cancellationState","PENDING");return pending;
+    }
+
+    private record EndPreparation(Request request,CancellationReceiptStore.Snapshot receipt) { }
+    private String topicEndRequestId(Long topic,Long activity) {
+        String original="topic-end-"+topic+"-"+activity;
+        return original.length()<=40?original:"te-"+Long.toString(topic,36)+"-"+Long.toString(activity,36);
+    }
+    private <T> T endTransaction(java.util.function.Supplier<T> work) {
+        TransactionTemplate tx=new TransactionTemplate(cancellationTransactions);
+        tx.setIsolationLevel(org.springframework.transaction.TransactionDefinition.ISOLATION_READ_COMMITTED);
+        return tx.execute(status -> work.get());
+    }
+    private CancellationReceiptStore receipts() {return new CancellationReceiptStore(cancellationActivityMapper,cmsTopicMapper);}
+
+    private EndPreparation prepareEnd(Long actor,Long clubId,Long topicId,String reason,Long suppliedEpoch) {
+        requireTopic(actor,clubId,topicId,ClubPermission.ACTIVITY_MANAGE);
+        CmsTopic topic=cmsTopicMapper.selectCmsTopicByIdForUpdate(topicId);
+        if(topic==null || !clubId.equals(topic.getClubId()) || Integer.valueOf(2).equals(topic.getDelFlag()))
+            throw new ServiceException("原主题范围已变化",403);
+        // Recheck current permission after the shared topic lock. No external I/O under this transaction.
+        requireTopic(actor,clubId,topicId,ClubPermission.ACTIVITY_MANAGE);
+        ClubAccessContext access=clubAccessService.resolve(actor,clubId,null);
+        if(access==null || access.getOwnerMemberId()==null) throw new ServiceException("俱乐部归属缺失",403);
+        Request request=new Request(Resource.TOPIC,topicId,actor,access.getOwnerMemberId(),topic.getMemberId(),
+                topicId,clubId,"CLUB_TOPIC_END","club-topic-end-"+topicId,reason,receipts().requestEpoch(topicId,suppliedEpoch));
+        long currentEpoch=receipts().currentTopicEpoch(topicId);
+        String existing=cmsTopicMapper.selectCancellationReceiptForUpdate(topicId,request.epoch());
+        if(existing!=null) {
+            var receipt=receipts().current(request);
+            if(request.epoch()<currentEpoch) {
+                if(!receipt.done()) throw new ServiceException("原轮次取消尚未确认",409);
+                return new EndPreparation(request,receipt);
+            }
+            if(Integer.valueOf(1).equals(topic.getUserStatus()))
+                throw new ServiceException("原结束主题生命周期已变化，请人工核对",409);
+            CmsActivity scope=new CmsActivity();scope.setTopicId(topicId);scope.setExcludeCancelled(1);scope.setDelFlag(0);
+            List<CmsActivity> current=cmsActivityService.selectCmsActivityList(scope);
+            if(current!=null) for(CmsActivity row:current) {
+                if(row==null || row.getId()==null)
+                    throw new ServiceException("原结束主题场次范围不完整",409);
+                if(!topicId.equals(row.getTopicId())) continue;
+                if((row.getClubId()==null || clubId.equals(row.getClubId())) && !receipt.activities().contains(row.getId()))
+                    throw new ServiceException("原结束主题批次已变化，请人工核对",409);
+            }
+            return new EndPreparation(request,receipt);
+        }
+        if(request.epoch()!=currentEpoch) throw new ServiceException("原轮次缺少可核验取消结果",409);
 
         // ② 捞这个主题名下、属于本俱乐部、还没取消也没删的场次
         CmsActivity probe = new CmsActivity();
@@ -121,57 +238,18 @@ public class ClubTopicSettingServiceImpl implements IClubTopicSettingService {
         // S14-4/5-07:兜底取消传下去的 owner 必须是【俱乐部当前主理人】,不能再传主题作者。
         // 转让主理人后,主题作者既不是活动创建人(cms_activity.member_id 写死)也不是当前主理人,
         // 传他必被归属校验拒掉 ⇒ 这一场报「无权」且不退款。与 event-ops 那条路径同口径。
-        ClubAccessContext access = clubAccessService.resolve(principalMemberId, clubId, null);
-        Long clubOwnerMemberId = access == null ? null : access.getOwnerMemberId();
-
-        int cancelled = 0, refundedOrders = 0, manualOrders = 0;
-        List<String> failed = new ArrayList<>();
-        for (CmsActivity row : rows) {
-            if (row == null || row.getId() == null) continue;
-            try {
-                // 俱乐部场次系列物化出来的场次走这条:除了退款还会通知候补、回收领队角色
-                ClubEventCancellationRequest req = new ClubEventCancellationRequest();
-                req.setClubId(clubId);
-                req.setActivityId(row.getId());
-                req.setReason(why);
-                req.setRequestId("topic-end-" + topicId + "-" + row.getId());
-                ClubEventCancellationResult res = clubEventOpsService.cancelOccurrence(
-                        principalMemberId, username, req);
-                cancelled += 1;
-                refundedOrders += res.getRefundedOrders() == null ? 0 : res.getRefundedOrders();
-                manualOrders += res.getManualOrders() == null ? 0 : res.getManualOrders();
-            } catch (ServiceException notAnOccurrence) {
-                // 不是从场次系列物化出来的活动(没有 occurrence 行)—— 退款链路是同一条,
-                // 只是少了候补与领队那两步。这里不能静默跳过:跳过等于这一场的钱没人退。
-                try {
-                    if (clubOwnerMemberId == null) {
-                        throw new ServiceException("这个俱乐部没有归属主理人，退款要人工处理");
-                    }
-                    ActivityCancelResult res = teamGroupService.cancelActivityByClubOperator(
-                            row.getId(), clubOwnerMemberId, principalMemberId, why);
-                    if (res == null) throw new ServiceException("退款回执为空，无法确认是否退成");
-                    // ⚠️ 计数放在拿到回执**之后**:放前面的话,退失败的那一场会同时进
-                    // cancelledSessions 和 failedSessions,主理人看到「已取消 2 场」其实只退了 1 场。
-                    cancelled += 1;
-                    refundedOrders += res.getRefundedOrders();
-                    manualOrders += res.getManualOrders();
-                } catch (Exception hard) {
-                    failed.add((row.getName() == null ? ("场次 #" + row.getId()) : row.getName())
-                            + "：" + (hard.getMessage() == null ? "取消失败" : hard.getMessage()));
-                }
-            }
+        List<Long> ids=new ArrayList<>();
+        for(CmsActivity row:rows) {
+            if(row==null || row.getId()==null || !topicId.equals(row.getTopicId())
+                    || (row.getClubId()!=null && !clubId.equals(row.getClubId())))
+                throw new ServiceException("原结束主题场次范围不完整",409);
+            ids.add(row.getId());
         }
-
-        Map<String, Object> out = new LinkedHashMap<>();
-        out.put("topicId", topicId);
-        out.put("stoppedSelling", wasOnSale);
-        out.put("sessionTotal", rows == null ? 0 : rows.size());
-        out.put("cancelledSessions", cancelled);
-        out.put("refundedOrders", refundedOrders);
-        // 含已核销票的整单退不了,留给人工 —— 这个数必须原样报出去,吞掉等于钱在系统里蒸发
-        out.put("manualOrders", manualOrders);
-        out.put("failedSessions", failed);
-        return out;
+        ids.sort(Long::compareTo);
+        var receipt=receipts().beginTopicEnd(request,ids,Integer.valueOf(1).equals(topic.getUserStatus()));
+        if(Integer.valueOf(1).equals(topic.getUserStatus()) && cmsTopicService.casUserStatus(topicId,1,0)!=1)
+            throw new ServiceException("主题状态刚刚变过，请刷新后重试",409);
+        return new EndPreparation(request,receipt);
     }
 
     @Override

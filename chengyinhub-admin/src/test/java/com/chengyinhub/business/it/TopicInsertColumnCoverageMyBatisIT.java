@@ -60,6 +60,11 @@ class TopicInsertColumnCoverageMyBatisIT {
         return new SqlSessionFactoryBuilder().build(cfg);
     }
 
+    private void applyTopicSchema(java.sql.Connection connection) throws Exception {
+        ItSchema.apply(connection,"it-schema/cms-topic-it-schema.sql");
+        ItSchema.applyMigrations(connection,"sql/migration_20261029_topic_cancellation_receipt.sql");
+    }
+
     private SqlSessionFactory connectedFactory() {
         try {
             SqlSessionFactory f = factory();
@@ -104,7 +109,7 @@ class TopicInsertColumnCoverageMyBatisIT {
     void insertCmsTopic_persistsRecruitDeadline_notJustReturnsOk() throws Exception {
         SqlSessionFactory f = connectedFactory();
         try (SqlSession s = f.openSession(true)) {
-            ItSchema.apply(s.getConnection(), "it-schema/cms-topic-it-schema.sql");
+            applyTopicSchema(s.getConnection());
             CmsTopicMapper m = s.getMapper(CmsTopicMapper.class);
 
             Date deadline = at("2026-09-06 23:59:59");
@@ -125,7 +130,7 @@ class TopicInsertColumnCoverageMyBatisIT {
     void insertCmsTopic_persistsLifecycle_notTheDbDefault() throws Exception {
         SqlSessionFactory f = connectedFactory();
         try (SqlSession s = f.openSession(true)) {
-            ItSchema.apply(s.getConnection(), "it-schema/cms-topic-it-schema.sql");
+            applyTopicSchema(s.getConnection());
             CmsTopicMapper m = s.getMapper(CmsTopicMapper.class);
 
             CmsTopic t = exploreDayTopic(at("2026-09-06 23:59:59"));
@@ -147,7 +152,7 @@ class TopicInsertColumnCoverageMyBatisIT {
     void unsetColumns_stillFallBackToDbDefaults() throws Exception {
         SqlSessionFactory f = connectedFactory();
         try (SqlSession s = f.openSession(true)) {
-            ItSchema.apply(s.getConnection(), "it-schema/cms-topic-it-schema.sql");
+            applyTopicSchema(s.getConnection());
             CmsTopicMapper m = s.getMapper(CmsTopicMapper.class);
 
             CmsTopic copyLike = new CmsTopic();
@@ -175,7 +180,7 @@ class TopicInsertColumnCoverageMyBatisIT {
     void insertCmsTopic_persistsJourneyRulesJson_andUpdateWithoutItKeepsValue() throws Exception {
         SqlSessionFactory f = connectedFactory();
         try (SqlSession s = f.openSession(true)) {
-            ItSchema.apply(s.getConnection(), "it-schema/cms-topic-it-schema.sql");
+            applyTopicSchema(s.getConnection());
             CmsTopicMapper m = s.getMapper(CmsTopicMapper.class);
             com.fasterxml.jackson.databind.ObjectMapper json =
                     new com.fasterxml.jackson.databind.ObjectMapper();
@@ -206,7 +211,7 @@ class TopicInsertColumnCoverageMyBatisIT {
     void insertCmsTopic_persistsJourneyStoryJson_andUpdateWithoutItKeepsValue() throws Exception {
         SqlSessionFactory f = connectedFactory();
         try (SqlSession s = f.openSession(true)) {
-            ItSchema.apply(s.getConnection(), "it-schema/cms-topic-it-schema.sql");
+            applyTopicSchema(s.getConnection());
             CmsTopicMapper m = s.getMapper(CmsTopicMapper.class);
             com.fasterxml.jackson.databind.ObjectMapper json =
                     new com.fasterxml.jackson.databind.ObjectMapper();
@@ -241,7 +246,7 @@ class TopicInsertColumnCoverageMyBatisIT {
     void casUserStatus_flipsWhenExpectationMatches() throws Exception {
         SqlSessionFactory f = connectedFactory();
         try (SqlSession s = f.openSession(true)) {
-            ItSchema.apply(s.getConnection(), "it-schema/cms-topic-it-schema.sql");
+            applyTopicSchema(s.getConnection());
             CmsTopicMapper m = s.getMapper(CmsTopicMapper.class);
             CmsTopic t = exploreDayTopic(at("2026-09-06 23:59:59"));
             t.setUserStatus(1);
@@ -262,7 +267,7 @@ class TopicInsertColumnCoverageMyBatisIT {
     void casUserStatus_writesNothingWhenExpectationIsStale() throws Exception {
         SqlSessionFactory f = connectedFactory();
         try (SqlSession s = f.openSession(true)) {
-            ItSchema.apply(s.getConnection(), "it-schema/cms-topic-it-schema.sql");
+            applyTopicSchema(s.getConnection());
             CmsTopicMapper m = s.getMapper(CmsTopicMapper.class);
             CmsTopic t = exploreDayTopic(at("2026-09-06 23:59:59"));
             t.setUserStatus(0);   // 已被内容安全回调下架
@@ -284,7 +289,7 @@ class TopicInsertColumnCoverageMyBatisIT {
     void casUserStatus_treatsNullUserStatusAsOffline() throws Exception {
         SqlSessionFactory f = connectedFactory();
         try (SqlSession s = f.openSession(true)) {
-            ItSchema.apply(s.getConnection(), "it-schema/cms-topic-it-schema.sql");
+            applyTopicSchema(s.getConnection());
             CmsTopicMapper m = s.getMapper(CmsTopicMapper.class);
             CmsTopic t = exploreDayTopic(at("2026-09-06 23:59:59"));
             t.setStatus(1);
@@ -303,7 +308,7 @@ class TopicInsertColumnCoverageMyBatisIT {
     void casUserStatus_refusesSoftDeletedTopic() throws Exception {
         SqlSessionFactory f = connectedFactory();
         try (SqlSession s = f.openSession(true)) {
-            ItSchema.apply(s.getConnection(), "it-schema/cms-topic-it-schema.sql");
+            applyTopicSchema(s.getConnection());
             CmsTopicMapper m = s.getMapper(CmsTopicMapper.class);
             CmsTopic t = exploreDayTopic(at("2026-09-06 23:59:59"));
             t.setUserStatus(0);
@@ -317,7 +322,7 @@ class TopicInsertColumnCoverageMyBatisIT {
     @Test
     void casOnlineRequiresPublishedNonDraftButPendingAuditMayBePublic() throws Exception {
         try (SqlSession s = connectedFactory().openSession(true)) {
-            ItSchema.apply(s.getConnection(), "it-schema/cms-topic-it-schema.sql");
+            applyTopicSchema(s.getConnection());
             CmsTopicMapper mapper = s.getMapper(CmsTopicMapper.class);
             for (int[] state : new int[][] {{2, 0}, {0, 0}, {1, 1}, {1, 0}}) {
                 CmsTopic topic = exploreDayTopic(at("2026-09-06 23:59:59"));
@@ -359,7 +364,7 @@ class TopicInsertColumnCoverageMyBatisIT {
     void updateCmsTopic_persistsPublishMode_soReviewGateIsNotBypassed() throws Exception {
         SqlSessionFactory f = connectedFactory();
         try (SqlSession s = f.openSession(true)) {
-            ItSchema.apply(s.getConnection(), "it-schema/cms-topic-it-schema.sql");
+            applyTopicSchema(s.getConnection());
             CmsTopicMapper m = s.getMapper(CmsTopicMapper.class);
             CmsTopic t = exploreDayTopic(at("2026-09-06 23:59:59"));
             t.setPublishMode("ai_simple");

@@ -67,6 +67,7 @@ public final class CancellationPhaseTestSupport {
         doThrow(new AssertionError("this cancellation fixture does not synthesize verified provider success"))
                 .when(facts).requireVerified(any());
         ReflectionTestUtils.setField(service,"verifiedPaymentFacts",facts);
+        wireReceiptMocks(service);
     }
 
     /** Unit only: adapt each fixture's explicit scoped row source to the new locking-read port.
@@ -74,6 +75,7 @@ public final class CancellationPhaseTestSupport {
     public static void wireTeamUnit(com.chengyinhub.business.service.impl.TeamGroupServiceImpl service,
                                     com.chengyinhub.business.mapper.CmsRegistrationMapper registrations) {
         wireTeamTransactions(service,memoryTransactions());
+        wireReceiptMocks(service);
         doAnswer(call -> {
             assertTrue(TransactionSynchronizationManager.isActualTransactionActive());
             assertFalse(TransactionSynchronizationManager.isCurrentTransactionReadOnly());
@@ -81,5 +83,63 @@ public final class CancellationPhaseTestSupport {
             query.setOwnerType(call.getArgument(0));query.setOwnerId(call.getArgument(1));
             return registrations.selectCmsRegistrationList(query);
         }).when(registrations).selectCancellationRowsForUpdate(anyLong(),anyLong());
+    }
+
+    /** Explicit in-memory unit adapter ONLY; real SQL Mappers are never replaced.
+     * Staged JSON follows the enclosing Spring transaction, including rollback. This is not DB evidence. */
+    public static void wireReceiptMocks(Object service) {
+        boolean club=service instanceof ClubEventOpsServiceImpl;
+        Object activities=ReflectionTestUtils.getField(service,club?"cancellationActivityMapper":"cmsActivityMapper");
+        Object topics=ReflectionTestUtils.getField(service,club?"cancellationTopicMapper":"cmsTopicMapper");
+        wireReceiptMocks((com.chengyinhub.business.mapper.CmsActivityMapper)activities,
+                (com.chengyinhub.business.mapper.CmsTopicMapper)topics);
+    }
+    public static void wireReceiptMocks(com.chengyinhub.business.mapper.CmsActivityMapper activities,
+                                        com.chengyinhub.business.mapper.CmsTopicMapper topics) {
+        if(activities!=null && mockingDetails(activities).isMock() && !mockingDetails(activities).isSpy()) {
+            UnitReceipts rows=new UnitReceipts();
+            doAnswer(call->rows.read(call.getArgument(0))).when(activities).selectCancellationReceiptForUpdate(anyLong());
+            doAnswer(call->rows.cas(call.getArgument(0),call.getArgument(1),call.getArgument(2),call.getArgument(3)))
+                    .when(activities).compareAndSetCancellationReceipt(anyLong(),anyString(),anyString(),anyBoolean());
+        }
+        if(topics!=null && mockingDetails(topics).isMock() && !mockingDetails(topics).isSpy()) {
+            UnitReceipts rows=new UnitReceipts();
+            doReturn(0L).when(topics).selectCancellationEpoch(anyLong());
+            doReturn(0L).when(topics).selectCancellationEpochForUpdate(anyLong());
+            doAnswer(call->rows.read(call.getArgument(0)+":"+call.getArgument(1))).when(topics).selectCancellationReceiptForUpdate(anyLong(),anyLong());
+            doAnswer(call->rows.cas(call.getArgument(0)+":"+call.getArgument(1),call.getArgument(2),call.getArgument(3),call.getArgument(4)))
+                    .when(topics).compareAndSetCancellationReceipt(anyLong(),anyLong(),anyString(),anyString(),anyBoolean());
+        }
+    }
+    private static final class UnitReceipts {
+        private final java.util.Map<Object,String> committed=new java.util.HashMap<>();
+        @SuppressWarnings("unchecked") private java.util.Map<Object,String> rows(boolean write) {
+            assertTrue(TransactionSynchronizationManager.isActualTransactionActive());
+            var staged=(java.util.Map<Object,String>)TransactionSynchronizationManager.getResource(this);
+            if(staged==null && write) {
+                staged=new java.util.HashMap<>(committed);
+                TransactionSynchronizationManager.bindResource(this,staged);
+                var changes=staged;
+                TransactionSynchronizationManager.registerSynchronization(new org.springframework.transaction.support.TransactionSynchronization() {
+                    @Override public void afterCompletion(int status) {
+                        TransactionSynchronizationManager.unbindResourceIfPossible(UnitReceipts.this);
+                        if(status==STATUS_COMMITTED) {committed.clear();committed.putAll(changes);}
+                    }
+                });
+            }
+            return staged==null?committed:staged;
+        }
+        String read(Object id) {return rows(false).get(id);}
+        int cas(Object id,String hash,String next,boolean first) {
+            var rows=rows(true);String old=rows.get(id);
+            if(first?old!=null:old==null) return 0;
+            if(!first) {
+                var original=com.alibaba.fastjson2.JSON.parseObject(old);
+                if(!"PENDING".equals(original.getString("state")) || !hash.equals(original.getString("requestHash"))) return 0;
+            }
+            var supplied=com.alibaba.fastjson2.JSON.parseObject(next);
+            if(!hash.equals(supplied.getString("requestHash"))) return 0;
+            rows.put(id,next);return 1;
+        }
     }
 }
