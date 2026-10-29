@@ -210,6 +210,8 @@ class PlayCompletionLockFailureTest {
         ReflectionTestUtils.setField(intents, "cmsTopicNodeService", nodes);
         ReflectionTestUtils.setField(intents, "cmsActivityService", activities);
         ReflectionTestUtils.setField(intents, "cmsRegistrationService", registrations);
+        ReflectionTestUtils.setField(intents, "responseObjectMapper", org.springframework.http.converter.json.Jackson2ObjectMapperBuilder.json()
+                .timeZone(java.util.TimeZone.getTimeZone("Asia/Shanghai")).build());
         ReflectionTestUtils.setField(intents, "playCommandReceiptMapper", receipts);
         ReflectionTestUtils.setField(intents, "playCommandRouteMapper", routes);
         PlayPhotoCommandApplication application = new PlayPhotoCommandApplication();

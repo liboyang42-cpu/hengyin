@@ -39,6 +39,8 @@ public class PlayBasicIntentApplication {
     private ICmsTopicNodeService cmsTopicNodeService;
     @Autowired
     private ICmsRegistrationService cmsRegistrationService;
+    @Autowired
+    private com.fasterxml.jackson.databind.ObjectMapper responseObjectMapper;
 
     private static class BasicIntentScope {
         Long activityId;
@@ -179,7 +181,10 @@ public class PlayBasicIntentApplication {
         AjaxResult response = execute.apply(new PlayOriginalRun(originalSession, routeSessionId, runtimeInstance, authorityEpoch));
         response.put("intentTerminal", true);
         claim.setOutcome(Integer.valueOf(200).equals(response.get("code")) ? "APPLIED" : "FAILED");
-        claim.setResultJson(basicJson(response)); claim.setUpdateTime(new Date());
+        // Persist the HTTP representation so dates keep the same format and timezone on replay.
+        try { claim.setResultJson(responseObjectMapper.writeValueAsString(response)); }
+        catch (com.fasterxml.jackson.core.JsonProcessingException e) { throw new IllegalStateException("动作回执不可编码", e); }
+        claim.setUpdateTime(new Date());
         if (playCommandReceiptMapper.completeReceipt(claim) != 1) throw new IllegalStateException("动作终态回执保存失败");
         return response;
     }

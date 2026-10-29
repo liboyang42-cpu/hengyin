@@ -106,6 +106,7 @@ EXPLICIT_AUXILIARY_SQL = {
     # 由 ci/release_migration_rehearsal.py 逐句校验只含 SELECT 并在一次性 MySQL 上回读。
     "docs/delivery/release-closeout-20261022/release-migration-precheck.sql": "AUXILIARY_NOT_EXECUTED",
     "docs/delivery/release-closeout-20261028/release-migration-precheck.sql": "AUXILIARY_NOT_EXECUTED",
+    "docs/delivery/release-closeout-20261029/release-migration-precheck.sql": "AUXILIARY_NOT_EXECUTED",
 }
 IGNORED_DIRS = {".git", "node_modules", "target"}
 MIGRATION_ID = re.compile(r"^[a-z0-9][a-z0-9_]*$")
