@@ -1,0 +1,54 @@
+/* P-1 提案:帖文卡 Threads 版。只用 master token;尺寸写成 390 宽下的 px(= rpx × 0.52),
+   落代码时按 1pt = 2rpx 换回 components/cy/post-card/index.wxss。 */
+.tpc{position:relative;display:grid;grid-template-columns:36px 1fr;column-gap:10px;padding:12px var(--cy-page-x) 6px;border-bottom:1px solid var(--cy-color-border-subtle);color:var(--cy-color-text-primary)}
+.tpc__rail{position:relative;display:flex;flex-direction:column;align-items:center}
+.tpc__avatar{width:36px;height:36px;border-radius:50%;object-fit:cover;background:var(--cy-color-bg-elevated);display:block}
+.tpc__follow{position:absolute;left:22px;top:22px;width:16px;height:16px;border-radius:50%;background:var(--cy-color-text-primary);color:var(--cy-color-bg-page);border:2px solid var(--cy-color-bg-page);display:flex;align-items:center;justify-content:center}
+.tpc__main{min-width:0}
+.tpc__repost{grid-column:1 / -1;display:flex;align-items:center;gap:6px;margin:0 0 6px 18px;font-size:13px;color:var(--cy-color-text-tertiary)}
+.tpc__head{display:flex;align-items:center;min-height:20px;gap:6px}
+.tpc__who{flex:1;min-width:0;display:flex;align-items:baseline;gap:6px;white-space:nowrap;overflow:hidden}
+.tpc__nick{font-size:15px;font-weight:600;overflow:hidden;text-overflow:ellipsis;flex-shrink:1}
+.tpc__ctx{font-size:15px;color:var(--cy-color-text-primary);overflow:hidden;text-overflow:ellipsis;flex-shrink:2}
+.tpc__ctx-sep{color:var(--cy-color-text-tertiary);font-size:13px}
+.tpc__time{font-size:15px;color:var(--cy-color-text-tertiary);flex:none}
+.tpc__lv{flex:none;padding:0 5px;border:1px solid var(--cy-info);border-radius:999px;color:var(--cy-info);font-size:10px;font-weight:700;line-height:14px;align-self:center}
+.tpc__more{flex:none;width:28px;height:20px;display:flex;align-items:center;justify-content:flex-end;color:var(--cy-color-text-secondary)}
+.tpc__text{margin-top:2px;font-size:15px;line-height:1.45;white-space:pre-wrap;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:6;overflow:hidden}
+.tpc__text.is-open{display:block;-webkit-line-clamp:unset}
+.tpc__more-text{font-size:15px;color:var(--cy-color-text-tertiary)}
+.tpc__audit{display:inline-block;margin-top:6px;padding:2px 8px;border-radius:999px;background:var(--cy-danger-soft);color:var(--cy-danger);font-size:12px}
+/* 图:单张按原比例(竖图不超过 4:5,横图不低于 16:9),多张横滑等高、按各自比例定宽,一直滑到屏幕右缘 */
+.tpc__media{margin-top:8px}
+.tpc__one{display:block;width:100%;border-radius:8px;object-fit:cover;background:var(--cy-color-bg-surface-subtle);border:.5px solid var(--cy-color-border-subtle)}
+.tpc__strip{position:relative;margin-right:calc(-1 * var(--cy-page-x));overflow-x:auto;scrollbar-width:none;display:flex;gap:6px;padding-right:var(--cy-page-x)}
+.tpc__strip::-webkit-scrollbar{display:none}
+.tpc__strip img{flex:none;height:220px;border-radius:8px;object-fit:cover;background:var(--cy-color-bg-surface-subtle);border:.5px solid var(--cy-color-border-subtle)}
+.tpc__strip img.p{width:165px}.tpc__strip img.l{width:280px}.tpc__strip img.s{width:220px}
+.tpc__count{position:absolute;right:calc(var(--cy-page-x) + 8px);top:8px;padding:3px 8px;border-radius:999px;background:rgba(0,0,0,.6);color:#fff;font-size:12px;font-weight:500;line-height:1;pointer-events:none}
+.tpc__mwrap{position:relative}
+.tpc__loc{display:flex;align-items:center;gap:4px;margin-top:8px;font-size:13px;color:var(--cy-color-text-tertiary)}
+.tpc__att{margin-top:8px}
+.tpc__att .feed-play-card{margin:0}
+.tpc__quote{margin-top:8px;border:1px solid var(--cy-color-border-strong);border-radius:12px;padding:10px 12px}
+.tpc__quote .tpc__nick{font-size:14px}.tpc__quote .tpc__time{font-size:14px}.tpc__quote .tpc__text{font-size:14px;-webkit-line-clamp:3}
+.tpc__actions{display:flex;align-items:center;gap:4px;margin:6px 0 0 -8px;height:36px}
+.tpc__act{display:flex;align-items:center;gap:4px;min-width:36px;height:36px;padding:0 8px;border-radius:999px;color:var(--cy-color-text-primary);font-size:13px}
+.tpc__act.is-on{color:var(--cy-color-status-danger)}
+.tpc__act img{width:20px;height:20px}
+.cy-light-ico{filter:invert(1)}
+.theme-merchant .cy-light-ico{filter:none}
+.tpc__comments{margin:2px 0 6px;font-size:13px;color:var(--cy-color-text-tertiary)}
+/* 发帖入口(俱乐部详情 / 俱乐部帖文流 / 主页帖文):Threads 同款,一行头像 + 占位,工具图标在下一行 */
+.tpc-compose{display:grid;grid-template-columns:36px 1fr;column-gap:10px;padding:12px var(--cy-page-x);border-bottom:1px solid var(--cy-color-border-subtle);cursor:pointer}
+.tpc-compose__nick{font-size:15px;font-weight:600;color:var(--cy-color-text-primary)}
+.tpc-compose__ph{margin-top:2px;font-size:15px;color:var(--cy-color-text-tertiary)}
+.tpc-compose__tools{display:flex;gap:18px;margin-top:10px;color:var(--cy-color-text-secondary)}
+/* ⋯ 操作:iOS 半屏里的分组按钮 */
+.ios-group{margin:4px 16px 12px;border-radius:12px;overflow:hidden;background:var(--cy-color-bg-surface-subtle)}
+.ios-row{display:flex;align-items:center;justify-content:space-between;height:52px;padding:0 16px;font-size:16px;color:var(--cy-color-text-primary);border-bottom:.5px solid var(--cy-color-border-subtle);cursor:pointer}
+.ios-row:last-child{border-bottom:0}
+.ios-row.danger{color:var(--cy-color-status-danger)}
+.theme-merchant .ios-sheet .panel,.ios-sheet.theme-merchant .panel{background:var(--cy-color-bg-page)}
+/* 原型总表里的变体标签:标注层,不是产品文字 */
+.proto-lab{display:block;padding:18px var(--cy-page-x) 4px;font:600 11px/1.4 ui-monospace,Menlo,monospace;letter-spacing:.04em;color:#FF5A1F}

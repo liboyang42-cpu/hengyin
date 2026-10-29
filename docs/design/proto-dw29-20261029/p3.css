@@ -1,0 +1,113 @@
+/* P-3 第二轮提案:收集册(纸面集邮册 + 齿孔邮票 + 掉落藏品)、全屏放大、行图标两案、主题勋章第二版。颜色走 master token;
+   纸面、插袋、齿孔是集邮册插画色(master stamp-album 同样用纸感浅色),不进主题 token。 */
+.paper{background-color:#F1EBDD;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .37 0 0 0 0 .25 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+/* 齿孔邮票:外层负责落影(mask 会裁掉自身阴影),内层白边 + mask 咬口 */
+.stp-w{display:inline-block;filter:drop-shadow(0 1px 1.2px rgba(60,40,20,.28)) drop-shadow(0 5px 8px rgba(60,40,20,.12))}
+.stp{background:#FFFDF8;padding:7px;box-sizing:border-box}
+.stp-in{width:100%;height:100%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#ECE6DA}
+.stp-photo{width:100%;height:100%;object-fit:cover;display:block}
+.stp-medal{width:84px;height:84px;overflow:visible}
+canvas.stp-medal{width:80px;height:80px}
+.stp.is-locked .stp-in{filter:grayscale(1);opacity:.55}
+.m2{display:block;overflow:visible}
+.m2.is-locked{filter:grayscale(1) brightness(.62) contrast(.9)}
+.glassine{position:absolute;z-index:2;pointer-events:none;background:linear-gradient(180deg,rgba(255,255,255,.36),rgba(255,255,255,.16) 60%,rgba(255,255,255,.22));border-top:1px solid rgba(255,255,255,.9);box-shadow:0 -1px 0 rgba(120,100,70,.14),0 2px 3px rgba(120,100,70,.08)}
+
+/* 成就 tab 入口:一页集邮册 */
+.cj-book{position:relative;margin:16px 16px 0;height:100px;border-radius:16px;overflow:hidden;cursor:pointer;display:block}
+.cj-book__t{position:absolute;left:18px;top:34px;font-size:20px;font-weight:700;color:#2B2118;letter-spacing:.02em}
+.cj-book__stamps{position:absolute;left:142px;top:0;right:40px;bottom:0}
+.cj-book__stamps .stp-w{position:absolute}
+.cj-book .bk-s1{left:0;top:14px;transform:rotate(-5deg)}
+.cj-book .bk-s2{left:62px;top:17px;transform:rotate(4deg)}
+.cj-book .bk-s1 .stp-medal{width:44px;height:44px}
+.cj-book .bk-s1 .stp,.cj-book .bk-s2 .stp{padding:4px}
+.cj-book .bk-s3{position:absolute;left:116px;top:20px;width:56px;height:56px;transform:rotate(9deg)}
+.sticker-img{object-fit:contain;filter:drop-shadow(1.6px 0 0 #fff) drop-shadow(-1.6px 0 0 #fff) drop-shadow(0 1.6px 0 #fff) drop-shadow(0 -1.6px 0 #fff) drop-shadow(0 3px 3px rgba(60,40,20,.3))}
+.cj-book .glassine{left:-170px;right:-60px;top:60px;height:40px}
+.cj-book__arr{position:absolute;right:14px;top:34px;z-index:3;color:#7A6A55}
+
+/* 收集册页 */
+.sb{position:absolute;inset:0;display:flex;flex-direction:column;color:var(--cy-color-text-primary)}
+.sb-head{flex:none;padding-top:87px}
+.sb-bar{display:flex;align-items:center;gap:8px;padding:0 var(--cy-page-x) 10px}
+.sb-seg{flex:none;--cy-tabs-fade-bg:transparent}
+.sb-tools{margin-left:auto;display:flex;align-items:center;gap:8px}
+.sb-filter{height:32px;padding:0 12px 0 10px;border-radius:999px;display:flex;align-items:center;gap:4px;background:rgba(43,33,24,.07);font-size:14px;font-weight:500;color:var(--cy-color-text-primary);white-space:nowrap}
+.sb-filter.is-on{background:#2B2118;color:#FFFDF8}
+.sb-gather{width:32px;height:32px;border-radius:50%;background-color:rgba(43,33,24,.07);background-repeat:no-repeat;background-position:center;background-size:16px 16px;cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20stroke%3D%22%232B2118%22%20stroke-width%3D%221.5%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M9%201.5%2010.3%205.7%2014.5%207%2010.3%208.3%209%2012.5%207.7%208.3%203.5%207%207.7%205.7z%22%2F%3E%3Cpath%20d%3D%22M3.5%2011.5l.6%201.4%201.4.6-1.4.6-.6%201.4-.6-1.4-1.4-.6%201.4-.6z%22%2F%3E%3C%2Fsvg%3E")}
+.sb-gather.is-on{background-color:#2B2118;background-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20stroke%3D%22%23FFFDF8%22%20stroke-width%3D%221.5%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M9%201.5%2010.3%205.7%2014.5%207%2010.3%208.3%209%2012.5%207.7%208.3%203.5%207%207.7%205.7z%22%2F%3E%3Cpath%20d%3D%22M3.5%2011.5l.6%201.4%201.4.6-1.4.6-.6%201.4-.6-1.4-1.4-.6%201.4-.6z%22%2F%3E%3C%2Fsvg%3E")}
+.sb-body{flex:1;min-height:0;overflow-y:auto;scrollbar-width:none}
+.sb-body::-webkit-scrollbar{display:none}
+.sb-pane{padding-bottom:40px}
+.sb-pane--object{height:100%;padding:0}
+.sb-sum{display:flex;align-items:baseline;gap:6px;padding:2px var(--cy-page-x) 6px}
+.sb-h{display:block;padding:14px var(--cy-page-x) 0;font-size:13px;font-weight:600;letter-spacing:.06em;color:#7A6A55}
+.sb-row{position:relative;display:flex;gap:23px;padding:12px var(--cy-page-x) 6px}
+.sb-row .glassine{left:0;right:0;top:86px;height:58px}
+.sb-cell{width:104px;display:flex;flex-direction:column;align-items:center;cursor:pointer}
+.sb-name{margin-top:12px;font-size:13px;line-height:1.3;color:#3B3127;max-width:104px;text-align:center;position:relative;z-index:3}
+.sb-collage{position:relative;height:920px;margin:6px var(--cy-page-x) 0}
+.sb-collage .stp-w{cursor:pointer}
+.sb .sb-fab{position:absolute;right:20px;bottom:40px;z-index:5}
+.sb-pile{position:relative;height:100%}
+.sb-pile__cv{position:absolute;left:0;top:0;cursor:pointer}
+
+/* 分类半屏 */
+.sh-hd{text-align:center;font-size:17px;font-weight:600;padding:2px 0 12px}
+.sh-list{margin:0 16px;border-radius:12px;overflow:hidden;background:var(--cy-color-bg-surface-subtle,#F2F2F4)}
+.sh-row{display:flex;align-items:center;justify-content:space-between;height:48px;padding:0 16px;font-size:16px;color:var(--cy-color-text-primary);border-bottom:.5px solid var(--cy-color-border-subtle);cursor:pointer}
+.sh-row:last-child{border-bottom:0}
+
+/* 全屏放大 */
+.vw,.vw.ios-sheet.open{position:absolute;inset:0;z-index:8000;display:flex;flex-direction:column;align-items:center;color:#fff}
+.vw-bg{position:absolute;inset:0;background:rgba(12,12,14,.86);-webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px)}
+.vw-x{position:absolute;left:12px;top:51px;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;z-index:2;color:#fff;cursor:pointer}
+.vw-stage{position:relative;margin-top:140px;width:100%;height:340px;display:flex;align-items:center;justify-content:center;perspective:1000px}
+.vw-name{position:relative;margin-top:14px;font-size:24px;font-weight:700;letter-spacing:-.01em}
+.vw-info{position:relative;width:100%;padding:22px 16px 0}
+.vw-group{background:rgba(255,255,255,.08);border-radius:14px;overflow:hidden}
+.vw-row{display:flex;align-items:center;height:52px;padding:0 16px;font-size:16px;border-bottom:.5px solid rgba(255,255,255,.1)}
+.vw-row:last-child{border-bottom:0}
+.vw-k{flex:none;color:#fff}.vw-v{flex:1;min-width:0;text-align:right;color:rgba(255,255,255,.55);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-left:16px}
+.vw .oc-dot{width:26px;height:26px;border-radius:50%;margin-right:11px;flex:none;display:flex;align-items:center;justify-content:center;color:#fff}
+.coin-3d{width:290px;height:290px;cursor:grab;touch-action:none}
+.coin{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .9s cubic-bezier(.2,.8,.2,1)}
+.face{position:absolute;inset:0;-webkit-backface-visibility:hidden;backface-visibility:hidden;display:flex;align-items:center;justify-content:center}
+.face.back{transform:rotateY(180deg)}
+.face svg{width:100%;height:100%}
+.face canvas{width:260px;height:260px}
+.coin-back{width:236px;height:236px;border-radius:50%;background:repeating-linear-gradient(0deg,rgba(255,255,255,.06) 0 1px,transparent 1px 2px),linear-gradient(135deg,#E9EEF3,#7A8692 55%,#CDD5DE)}
+.tilt{transition:transform .25s ease-out;transform-style:preserve-3d}
+.vw-obj{width:250px;height:250px;object-fit:contain;filter:drop-shadow(2.5px 0 0 #fff) drop-shadow(-2.5px 0 0 #fff) drop-shadow(0 2.5px 0 #fff) drop-shadow(0 -2.5px 0 #fff) drop-shadow(0 22px 30px rgba(0,0,0,.55))}
+.vw--stamp .stp-w{filter:drop-shadow(0 22px 34px rgba(0,0,0,.55))}
+
+/* 主题勋章第二版样张 */
+.cj-page{min-height:100%;padding:87px 0 60px;background:var(--cy-color-bg-page)}
+.tm-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 8px;padding:4px var(--cy-page-x) 0}
+.tm-cell{display:flex;flex-direction:column;align-items:center;padding:6px 0 16px;cursor:pointer}
+.tm-cell .m2{width:156px;height:156px}
+.tm-cell .n{margin-top:4px;font-size:15px;font-weight:600;color:var(--cy-color-text-primary);text-align:center}
+.tm-cell .t{margin-top:2px;font-size:12px;color:var(--cy-color-text-tertiary);text-align:center;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* 行图标 A:3D 图标 + 40pt 圆角方块,iOS 设置式分组 */
+.ig-group{margin:0;border-radius:14px;background:var(--cy-color-bg-elevated);overflow:hidden}
+.theme-merchant .ig-group{background:var(--cy-color-bg-surface)}
+.ig-row{position:relative;display:flex;align-items:center;gap:12px;min-height:56px;padding:8px 14px}
+.ig-row+.ig-row:before{content:"";position:absolute;left:66px;right:0;top:0;height:.5px;background:var(--cy-color-border-subtle)}
+.ig-tile{width:40px;height:40px;border-radius:10px;flex:none;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.08)}
+.theme-merchant .ig-tile{background:var(--cy-color-bg-surface-subtle,#F2F2F4)}
+.ig-tile img{width:32px;height:32px;object-fit:contain;display:block}
+.ig-t{flex:1;min-width:0;font-size:var(--cy-type-body);color:var(--cy-color-text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ig-row.is-lock .ig-tile img{filter:grayscale(1);opacity:.45}
+.ig-row.is-lock .ig-t{color:var(--cy-color-text-secondary)}
+.ig-lock,.ig-arr{flex:none;color:var(--cy-color-text-tertiary)}
+
+/* 行图标 B:原线条图标放大,无圆底 */
+.ln-row{gap:12px;padding:12px 0}
+.ln-ic{flex:none;color:var(--cy-color-text-primary)}
+.ln-row .pc-benefit-text{font-size:var(--cy-type-body)}
+.ln-row.is-lock .ln-ic{color:var(--cy-color-text-tertiary)}
+.ln-lock{flex:none;margin-left:auto;color:var(--cy-color-text-tertiary)}
