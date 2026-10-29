@@ -15,6 +15,7 @@ import com.chengyinhub.business.mapper.CmsActivityMapper;
 import com.chengyinhub.business.mapper.CmsTopicMapper;
 import com.chengyinhub.business.mapper.CmsRegistrationMapper;
 import com.chengyinhub.business.mapper.OmsTicketMapper;
+import com.chengyinhub.business.mapper.SettlementDetailMapper;
 import com.chengyinhub.business.mapper.UmsMemberMapper;
 import com.chengyinhub.business.service.impl.ClubEventOpsServiceImpl;
 import com.chengyinhub.business.service.impl.ClubEventScheduleMaterializer;
@@ -104,7 +105,7 @@ class ClubEventTransferCancellationMySqlIT {
             "club", "cms_topic", "cms_topic_cancellation_receipt", "cms_topic_chapter", "cms_topic_node", "cms_activity", "oms_ticket", "cms_registration",
             "club_event_series", "club_event_occurrence", "club_event_waitlist",
             "club_event_notification_campaign", "club_event_notification_delivery",
-            "club_event_notification_outbox");
+            "club_event_notification_outbox", "settlement_detail");
 
     private static String database;
     private static String url;
@@ -118,6 +119,7 @@ class ClubEventTransferCancellationMySqlIT {
     private final AtomicInteger refundApplications = new AtomicInteger();
     private final AtomicInteger payouts = new AtomicInteger();
     private final AtomicReference<RefundApplication> lastRefund = new AtomicReference<>();
+    private final java.util.List<RefundApplication> originalRefundRequests = new java.util.concurrent.CopyOnWriteArrayList<>();
     private DbClubAccess access;
     private IClubEventOpsService eventOps;
     private ITeamGroupService group;
@@ -166,7 +168,7 @@ class ClubEventTransferCancellationMySqlIT {
                 mysql.user(), mysql.password());
         jdbc = new JdbcTemplate(dataSource);
         // Existing canonical base DDL, not an imitation table: the real listing size guard reads this table.
-        com.chengyinhub.business.it.P0AcceptanceSchema.baseTables(jdbc,"cms_topic_node");
+        com.chengyinhub.business.it.P0AcceptanceSchema.baseTables(jdbc,"cms_topic_node","settlement_detail");
         transactionManager = new DataSourceTransactionManager(dataSource);
         sql = mybatisTemplate();
     }
@@ -194,6 +196,7 @@ class ClubEventTransferCancellationMySqlIT {
         refundApplications.set(0);
         payouts.set(0);
         lastRefund.set(null);
+        originalRefundRequests.clear();
         observationBoundary=name -> { };
         refuseDoneWrite.set(false);
         seed();
@@ -413,18 +416,26 @@ class ClubEventTransferCancellationMySqlIT {
 
     @Test
     void multiOrderCancellationCommitsEveryOriginalOrderAndReplaysFullBatchCounts() {
+        // This is a second independent paid order on the SAME original ticket: reserve its unit.
+        assertEquals(1,jdbc.update("update oms_ticket set remaining_inventory=remaining_inventory-1 "
+                +"where id=? and remaining_inventory>0",TICKET));
         jdbc.update("insert into cms_registration(id,registration_no,owner_type,owner_id,activity_title,ticket_id,ticket_name,ticket_price,member_id,"
                 +"order_num,original_amount,total_amount,point_used,payable_amount,payment_status,payment_time,wechat_payment_amount,registration_status,verification_status,create_time,pay_expire_time) "
                 +"select id+100,concat(registration_no,'-2'),owner_type,owner_id,activity_title,ticket_id,ticket_name,ticket_price,member_id+1,"
                 +"order_num,original_amount,total_amount,point_used,payable_amount,payment_status,payment_time,wechat_payment_amount,registration_status,verification_status,create_time,pay_expire_time "
                 +"from cms_registration where id=?",REGISTRATION);
-        ActivityCancelResult first=(ActivityCancelResult)authorizedCancelOutcome();
+        assertEquals(8,number("select remaining_inventory from oms_ticket where id=?",TICKET));
+        assertEquals(2,number("select count(*) from cms_registration where owner_type=2 and owner_id=? "
+                +"and ticket_id=? and payment_status=2 and registration_status=2 and parent_order_no is null",ACTIVITY,TICKET));
+        ActivityCancelResult first=requireSuccessfulAuthorizedCancel();
         assertEquals(2,first.getRefundedOrders());assertEquals(0,first.getManualOrders());assertEquals(0,first.getClosedPendingOrders());
         assertEquals(2,refundApplications.get());assertEquals(2,payouts.get());
-        sameResult(first,(ActivityCancelResult)authorizedCancelOutcome());
+        sameResult(first,requireSuccessfulAuthorizedCancel());
         assertEquals(2,refundApplications.get());assertEquals(2,payouts.get());
         assertEquals(2,number("select count(*) from cms_registration where owner_type=2 and owner_id=? and registration_status=3",ACTIVITY));
         assertEquals(2,number("select count(*) from club_event_notification_campaign where activity_id=?",ACTIVITY));
+        assertEquals(10,number("select remaining_inventory from oms_ticket where id=?",TICKET));
+        assertOriginalRefunds(REGISTRATION,REGISTRATION+100);
     }
 
     private void sameResult(ActivityCancelResult original,ActivityCancelResult replay) {
@@ -480,6 +491,9 @@ class ClubEventTransferCancellationMySqlIT {
         assertEquals(parent,scalar("select receipt_json from cms_topic_cancellation_receipt where topic_id=? and cancellation_epoch=0",TOPIC));
         assertEquals(2,refundApplications.get());assertEquals(2,payouts.get());
         assertEquals(0,number("select count(*) from cms_registration where owner_type=2 and owner_id in (?,?) and registration_status<>3",ACTIVITY,ordinary));
+        assertEquals(10,number("select remaining_inventory from oms_ticket where id=?",TICKET));
+        assertEquals(10,number("select remaining_inventory from oms_ticket where id=?",TICKET+100));
+        assertOriginalRefunds(REGISTRATION,REGISTRATION+100);
     }
 
     @Test
@@ -520,15 +534,7 @@ class ClubEventTransferCancellationMySqlIT {
         assertEquals(1,publisher.casUserStatus(TOPIC,0,1));
         assertEquals(1,number("select cancellation_epoch from cms_topic where id=?",TOPIC));
         for(int sequence=1;sequence<=2;sequence++) {
-            long extra=500L+sequence;
-            jdbc.update("insert into oms_ticket(id,member_id,owner_type,owner_id,name,price,total_inventory,remaining_inventory,del_flag,create_time) "
-                    +"select id+?, ?,1,?,name,price,total_inventory,remaining_inventory,del_flag,create_time from oms_ticket where id=?",
-                    extra,HOST_ACTOR,TOPIC,TICKET);
-            jdbc.update("insert into cms_registration(id,registration_no,owner_type,owner_id,activity_title,ticket_id,ticket_name,ticket_price,member_id,"
-                    +"order_num,original_amount,total_amount,point_used,payable_amount,payment_status,payment_time,wechat_payment_amount,registration_status,verification_status,create_time,pay_expire_time) "
-                    +"select id+?,concat(registration_no,'-cycle-',?),1,?,activity_title,ticket_id+?,ticket_name,ticket_price,member_id+?,"
-                    +"order_num,original_amount,total_amount,point_used,payable_amount,2,payment_time,wechat_payment_amount,2,verification_status,create_time,pay_expire_time "
-                    +"from cms_registration where id=?",extra,sequence,TOPIC,extra,extra,REGISTRATION);
+            insertOriginalTopicCashOrder(500L+sequence,"cycle-"+sequence);
         }
         sameResult(first,group.cancelTopicByHost(TOPIC,HOST_ACTOR,HOST_ACTOR,REASON,0L));
         assertEquals(2,number("select count(*) from cms_registration where owner_type=1 and owner_id=? and payment_status=2 and registration_status=2",TOPIC));
@@ -545,6 +551,9 @@ class ClubEventTransferCancellationMySqlIT {
         assertEquals(old,scalar("select receipt_json from cms_topic_cancellation_receipt where topic_id=? and cancellation_epoch=0",TOPIC));
         assertEquals(2,number("select count(*) from club_event_notification_campaign where activity_id=?",ACTIVITY));
         org.mockito.Mockito.verifyNoInteractions(unusedTemplates,unusedRoles,unusedCategories);
+        assertEquals(10,number("select remaining_inventory from oms_ticket where id=?",TICKET+501));
+        assertEquals(10,number("select remaining_inventory from oms_ticket where id=?",TICKET+502));
+        assertOriginalRefunds(REGISTRATION,REGISTRATION+501,REGISTRATION+502);
     }
 
     @Test
@@ -565,6 +574,82 @@ class ClubEventTransferCancellationMySqlIT {
         assertEquals(1,refundApplications.get());assertEquals(1,payouts.get());
     }
 
+    @Test
+    void settledOriginalTopicOrderRejectsCancellationWithoutEconomicOrChildEffects() {
+        jdbc.update("update cms_topic set user_status=1 where id=?",TOPIC);
+        long registration=insertOriginalTopicCashOrder(700L,"settled");
+        var detail=new com.chengyinhub.business.domain.SettlementDetail();
+        // Canonical nullable-claim historical row; no invented claim or producer success.
+        detail.setBatchId(1L);detail.setMerchantId(HOST_ACTOR);detail.setSourceType("registration");
+        detail.setSourceId(registration);detail.setReceiverType("creator");detail.setReceiverId(HOST_ACTOR);
+        detail.setGrossAmount(new java.math.BigDecimal("10.00"));detail.setCommissionAmount(java.math.BigDecimal.ZERO);
+        detail.setSettlementAmount(new java.math.BigDecimal("10.00"));detail.setStatus(1);
+        detail.setIdempotencyKey("original-settled-registration-"+registration);
+        SettlementDetailMapper details=sql.getMapper(SettlementDetailMapper.class);
+        assertEquals(1,details.batchInsert(Collections.singletonList(detail)));
+        assertEquals(1,details.selectSettledDetails("registration",registration).size());
+        assertTrue(details.selectSettledDetails("registration",REGISTRATION).isEmpty());
+        String original=jdbc.queryForObject("select cast(json_object('id',id,'source_id',source_id,'status',status,"
+                +"'gross',gross_amount,'net',settlement_amount,'key',idempotency_key) as char) "
+                +"from settlement_detail where source_id=?",String.class,registration);
+        for(int retry=0;retry<2;retry++) {
+            ServiceException denied=assertThrows(ServiceException.class,
+                    () -> group.cancelTopicByHost(TOPIC,HOST_ACTOR,HOST_ACTOR,REASON,0L));
+            assertEquals(Integer.valueOf(409),denied.getCode());
+            assertEquals("有订单的钱已结算给主办或承办方，需平台人工处理后再取消主题",denied.getMessage());
+            assertEquals(0,refundApplications.get());assertEquals(0,payouts.get());assertTrue(originalRefundRequests.isEmpty());
+            assertEquals(1,number("select user_status from cms_topic where id=?",TOPIC));
+            assertEquals(2,number("select payment_status from cms_registration where id=?",registration));
+            assertEquals(2,number("select registration_status from cms_registration where id=?",registration));
+            assertEquals(2,number("select registration_status from cms_registration where id=?",REGISTRATION));
+            assertEquals(9,number("select remaining_inventory from oms_ticket where id=?",TICKET+700));
+            assertEquals(9,number("select remaining_inventory from oms_ticket where id=?",TICKET));
+            assertEquals(0,number("select count(*) from cms_activity where id=? and cancel_time is not null",ACTIVITY));
+            assertEquals("ACTIVE",scalar("select status from club_event_occurrence where activity_id=?",ACTIVITY));
+            assertEquals("WAITING",scalar("select state from club_event_waitlist where activity_id=?",ACTIVITY));
+            assertEquals(0,number("select count(*) from club_event_notification_campaign where activity_id=?",ACTIVITY));
+            var pending=com.alibaba.fastjson2.JSON.parseObject(scalar("select receipt_json from cms_topic_cancellation_receipt "
+                    +"where topic_id=? and cancellation_epoch=0",TOPIC));
+            assertEquals("PENDING",pending.getString("state"));assertEquals(null,pending.get("result"));
+            assertEquals(original,jdbc.queryForObject("select cast(json_object('id',id,'source_id',source_id,'status',status,"
+                    +"'gross',gross_amount,'net',settlement_amount,'key',idempotency_key) as char) "
+                    +"from settlement_detail where source_id=?",String.class,registration));
+        }
+    }
+
+    private long insertOriginalTopicCashOrder(long offset,String suffix) {
+        assertEquals(1,jdbc.update("insert into oms_ticket(id,member_id,owner_type,owner_id,name,price,total_inventory,remaining_inventory,del_flag,create_time) "
+                +"select id+?, ?,1,?,name,price,total_inventory,total_inventory-1,del_flag,create_time "
+                +"from oms_ticket where id=? and total_inventory>=1",offset,HOST_ACTOR,TOPIC,TICKET));
+        assertEquals(1,jdbc.update("insert into cms_registration(id,registration_no,owner_type,owner_id,activity_title,ticket_id,ticket_name,ticket_price,member_id,"
+                +"order_num,original_amount,total_amount,point_used,payable_amount,payment_status,payment_time,wechat_payment_amount,registration_status,verification_status,create_time,pay_expire_time) "
+                +"select id+?,concat(registration_no,'-',?),1,?,activity_title,ticket_id+?,ticket_name,ticket_price,member_id+?,"
+                +"order_num,original_amount,total_amount,point_used,payable_amount,2,payment_time,wechat_payment_amount,2,verification_status,create_time,pay_expire_time "
+                +"from cms_registration where id=?",offset,suffix,TOPIC,offset,offset,REGISTRATION));
+        assertEquals(1,number("select count(*) from cms_registration r join oms_ticket t on t.id=r.ticket_id "
+                +"where r.id=? and r.owner_type=1 and r.owner_id=? and t.owner_type=1 and t.owner_id=? "
+                +"and r.parent_order_no is null and r.payment_status=2 and r.registration_status=2 "
+                +"and r.payable_amount=10.00 and r.wechat_payment_amount=10.00 "
+                +"and t.remaining_inventory=t.total_inventory-1",REGISTRATION+offset,TOPIC,TOPIC));
+        return REGISTRATION+offset;
+    }
+
+    private void assertOriginalRefunds(Long... originalIds) {
+        assertEquals(originalIds.length,originalRefundRequests.size());
+        assertEquals(java.util.Set.of(originalIds),originalRefundRequests.stream().map(RefundApplication::getSourceId)
+                .collect(java.util.stream.Collectors.toSet()));
+        for(RefundApplication request:originalRefundRequests) {
+            assertEquals("registration",request.getSourceType());assertEquals("RF"+request.getSourceId(),request.getRefundNo());
+            assertEquals(0,new java.math.BigDecimal("10.00").compareTo(request.getRefundAmount()));
+        }
+    }
+
+    private ActivityCancelResult requireSuccessfulAuthorizedCancel() {
+        Object result=authorizedCancelOutcome();
+        if(result instanceof ServiceException rejected) throw new AssertionError("原授权取消应成功，保留原拒绝原因",rejected);
+        assertTrue(result instanceof ActivityCancelResult);return (ActivityCancelResult)result;
+    }
+
     private Object authorizedCancelOutcome() {
         try {
             return eventOps.cancelActivityForAuthorizedTopicCancellation(
@@ -580,6 +665,7 @@ class ClubEventTransferCancellationMySqlIT {
             RefundApplication refund = invocation.getArgument(0, RefundApplication.class);
             refund.setId(1700L + refundApplications.incrementAndGet());
             lastRefund.set(refund);
+            originalRefundRequests.add(refund);
             return 1;
         });
         when(refundService.reviewRefund(any(RefundReviewDTO.class), anyLong())).thenReturn(1);
@@ -615,6 +701,7 @@ class ClubEventTransferCancellationMySqlIT {
         ReflectionTestUtils.setField(teamTarget, "cmsRegistrationMapper", sql.getMapper(CmsRegistrationMapper.class));
         ReflectionTestUtils.setField(teamTarget, "omsTicketMapper", sql.getMapper(OmsTicketMapper.class));
         ReflectionTestUtils.setField(teamTarget, "clubMapper", sql.getMapper(ClubMapper.class));
+        ReflectionTestUtils.setField(teamTarget, "settlementDetailMapper", sql.getMapper(SettlementDetailMapper.class));
         ReflectionTestUtils.setField(teamTarget, "refundService", refundService);
         ReflectionTestUtils.setField(teamTarget, "refundPayoutService", payoutService);
         ReflectionTestUtils.setField(teamTarget, "perkLedgerService", mock(IPerkLedgerService.class));
@@ -681,7 +768,7 @@ class ClubEventTransferCancellationMySqlIT {
                 "cyv-p1002", new SpringManagedTransactionFactory(), dataSource));
         configuration.getTypeAliasRegistry().registerAliases("com.chengyinhub.business.domain");
         for (String mapper : Arrays.asList("ClubEventOpsMapper", "ClubMapper",
-                "CmsActivityMapper", "CmsTopicMapper", "CmsRegistrationMapper", "OmsTicketMapper","CmsTopicChapterMapper","CmsTopicNodeMapper")) {
+                "CmsActivityMapper", "CmsTopicMapper", "CmsRegistrationMapper", "OmsTicketMapper","CmsTopicChapterMapper","CmsTopicNodeMapper","SettlementDetailMapper")) {
             String path = "mapper/business/" + mapper + ".xml";
             try (InputStream input = ClubEventTransferCancellationMySqlIT.class
                     .getClassLoader().getResourceAsStream(path)) {

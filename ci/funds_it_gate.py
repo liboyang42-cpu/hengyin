@@ -259,7 +259,7 @@ EXPECTED = {
     "RoamShareSnapshotConcurrencyMySqlIT": 3,
     # 2026-09-21 CYV-P1-002:主理人转让与活动取消在 MySQL RR/RC 下的锁后权限、
     # 精确 topic/club/activity scope 和并发退款幂等。
-    "ClubEventTransferCancellationMySqlIT": 13,
+    "ClubEventTransferCancellationMySqlIT": 14,
     # Frozen merge retains master nine financial cases plus original UNKNOWN recovery.
     "RefundRetryAndRemainderMySqlIT": 10,
     "SignupNoticeAfterCommitPersistenceMySqlIT": 18,

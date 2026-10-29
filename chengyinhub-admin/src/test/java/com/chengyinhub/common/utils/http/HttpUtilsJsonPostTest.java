@@ -394,16 +394,30 @@ class HttpUtilsJsonPostTest
         });
         try
         {
-            int capacity = cleanup.getMaximumPoolSize() + cleanup.getQueue().remainingCapacity();
-            for (int i = 0; i < capacity; i++)
+            int workers = cleanup.getMaximumPoolSize();
+            int queued = cleanup.getQueue().remainingCapacity();
+            int capacity = workers + queued;
+            Runnable blockCleanup = () -> {
+                cleanupStarted.countDown();
+                try { releaseCleanup.await(); }
+                catch (InterruptedException interrupted) { Thread.currentThread().interrupt(); }
+            };
+            // Retained idle workers can still be counted in poolSize before taking queued tasks.
+            // Submit beyond the first worker wave only while the pool can grow: a full queue
+            // then starts a new worker instead of rejecting against already-counted idle workers.
+            for (int i = 0; i < capacity
+                    && (i < workers || cleanup.getPoolSize() < workers); i++)
             {
-                ownedCleanup.add(cleanup.submit(() -> {
-                    cleanupStarted.countDown();
-                    try { releaseCleanup.await(); }
-                    catch (InterruptedException interrupted) { Thread.currentThread().interrupt(); }
-                }));
+                ownedCleanup.add(cleanup.submit(blockCleanup));
             }
             assertTrue(cleanupStarted.await(5, TimeUnit.SECONDS));
+            // All workers now hold our blockers, so every remaining submission must stay queued.
+            for (int i = ownedCleanup.size(); i < capacity; i++)
+            {
+                ownedCleanup.add(cleanup.submit(blockCleanup));
+            }
+            assertEquals(queued, cleanup.getQueue().size(), "all original cleanup queue slots must be held");
+            assertEquals(0, cleanup.getQueue().remainingCapacity());
             long rejected = HttpUtils.disconnectRejectionCount();
             String largeBody = "x".repeat(16 * 1024 * 1024);
             HttpRequestException failure = assertThrows(HttpRequestException.class,
