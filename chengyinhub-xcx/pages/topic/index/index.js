@@ -57,9 +57,9 @@ function heroIntro(subtitle) {
   return Array.from(nodeText(decodeDisplayText(subtitle))).slice(0, HERO_INTRO_MAX).join('');
 }
 
-function templateCover(template) {
-  const first = String(template.imgUrl || template.imgArr || '').split(/[,;]/).map((src) => src.trim()).filter(Boolean)[0] || '';
-  return app.getImgUrl(first) || '/images/home-route-city-placeholder.jpg';
+function templateCover(template, node) {
+  const urls = [node && node.imgUrl, template.imgUrl, template.imgArr].map((v) => String(v || '').split(/[,;]/).map((src) => src.trim()).filter(Boolean)[0] || '');
+  return urls.map((src) => app.getImgUrl(src)).filter(Boolean)[0] || '/images/home-route-city-placeholder.jpg';
 }
 
 function normalizeChaptersList(chaptersList) {
@@ -2233,8 +2233,8 @@ Page({
         if (firstMerchant && firstMerchant.mmsMerchant) {
           firstMerchant.mmsMerchant.name = nodeText(firstMerchant.mmsMerchant.name);
         }
-        // V-22b:节点介绍卡的玩法图原样给 <image> 时,相对路径/http 签名链接/逗号多图在真机上都出不来,卡上一块空白。
-        if (ns[n].cmsMemberTemplate) ns[n].cmsMemberTemplate.imgUrl = templateCover(ns[n].cmsMemberTemplate);
+        // V-22b:节点介绍卡先用站点自己的图,再用玩法图;相对路径/http 签名链接/逗号多图在真机上都出不来,卡上一块空白。
+        if (ns[n].cmsMemberTemplate) ns[n].cmsMemberTemplate.imgUrl = templateCover(ns[n].cmsMemberTemplate, ns[n]);
         ns[n].walkText = prevNode ? walkText(prevNode, ns[n]) : '';
         seq += 1; ns[n].seq = seq; prevNode = ns[n];
         ns[n].giftText = firstMerchant && firstMerchant.mmsMerchant ? nodeText(firstMerchant.mmsMerchant.derivativeBenefits) : '';

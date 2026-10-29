@@ -109,3 +109,21 @@ test('V-23 玩家详情数据条:总里程右边照常出参与商家与已参�
   assert.deepEqual(buildTopicStatBar({ productType: 1, totalMileage: 3 }).map(c => c.key), ['mileage'])
   assert.match(read('pages/topic/index/index.js'), /buildTopicStatBar\(res\.data, \{ keepZeroCounts: true \}\)/)
 })
+
+test('V-22b R2 节点介绍卡先用站点自己的图，站点图不可用再退回玩法图', () => {
+  const app = { globalData: {}, getImgUrl(v) {
+    if (!v) return ''
+    if (/^https?:\/\//.test(v)) { const s = v.replace(/^http:/, 'https:'); return s.includes('trusted') ? s : '' }
+    return 'https://cdn.trusted/' + v
+  } }
+  const config = loadTopicPage(app)
+  const page = { formatTimeToChinese: () => '' }
+  const list = config.processChaptersList.call(page, [{ name: '一', nodes: [
+    { name: 'a', imgUrl: 'http://oss.trusted/stop.jpg?Expires=1', cmsMemberTemplate: { imgUrl: 'upload/tpl.png' } },
+    { name: 'b', imgUrl: null, cmsMemberTemplate: { imgUrl: 'upload/tpl.png' } },
+    { name: 'c', imgUrl: 'http://evil.example/x.png', cmsMemberTemplate: { imgUrl: 'upload/tpl.png' } },
+    { name: 'd', imgUrl: null, cmsMemberTemplate: { imgUrl: '' } },
+  ] }])
+  assert.deepEqual(list[0].nodes.map(n => n.cmsMemberTemplate.imgUrl), ['https://oss.trusted/stop.jpg?Expires=1',
+    'https://cdn.trusted/upload/tpl.png', 'https://cdn.trusted/upload/tpl.png', '/images/home-route-city-placeholder.jpg'])
+})
