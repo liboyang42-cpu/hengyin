@@ -3,8 +3,8 @@
   "kind": "release-migration-pack",
   "releaseCloseout": "release-closeout-20261029",
   "generatedFor": {
-    "masterCommit": "146f94967b52d19d5c59f2057443c95221f17e3c",
-    "sourceTree": "ecca398b8a0bd74411fbc8d7483ed78738d89c80",
+    "masterCommit": "60048713ab6a57890a056fe3091f5be441919939",
+    "sourceTree": "13c8857e937b54eb9c363fad6018a25ba25ca486",
     "migrationTree": "e8a6ecc5d0169807de4643e1656b7e4f607f09e1",
     "dependencySha256": "2a81586be28c40e6949d2432bd764309a93bc11f80351f7811dea19320d5ab61",
     "date": "2026-10-29"
@@ -2104,5 +2104,6 @@
   "previousPack": "docs/delivery/release-closeout-20261028/release-migration-pack.json",
   "statuses": {
     "REPLACED_UNAPPLIED": "已被替代的迁移：永不执行（旧 C 通知由 v2 原样替代；10-26 旧广播协议由 D + union 组合替代）"
-  }
+  },
+  "finalSha": "963b351c5adf55934a20e34010e2f90e473296dd"
 }

@@ -1,14 +1,14 @@
-# 发布迁移包（release-closeout-20261028）
+# 发布迁移包（release-closeout-20261029）
 
-本包为 2026-10-28「先部署新后端、再上传小程序体验版」准备发布顺序、只读预检与隔离演练。**全部生产执行状态保持 UNKNOWN**；参考基线不等于生产已应用状态。本任务不连接生产、不执行生产 SQL、不部署。
+本包为 2026-10-29「先部署新后端、再上传小程序体验版」准备发布顺序、只读预检与隔离演练，取代过期的 [release-closeout-20261028](../release-closeout-20261028/release-migration-pack.md)（#660 合入后又多了 27 个迁移）。**全部生产执行状态保持 UNKNOWN**；参考基线不等于生产已应用状态。本任务不连接生产、不执行生产 SQL、不部署。
 
-机器契约为 [release-migration-pack.json](release-migration-pack.json)，预检为 [release-migration-precheck.sql](release-migration-precheck.sql)，owner 操作清单为 [release-steps.md](release-steps.md)。演练使用现有 `ci/release_migration_rehearsal.py`、`ci/test_release_migration_rehearsal.py` 及 `.github/workflows/release-migration-rehearsal.yml`（现指向本包；10-22 包原样保留为历史记录）。
+机器契约为 [release-migration-pack.json](release-migration-pack.json)，预检为 [release-migration-precheck.sql](release-migration-precheck.sql)，owner 操作清单为 [release-steps.md](release-steps.md)。演练使用 `ci/release_migration_rehearsal.py`、`ci/test_release_migration_rehearsal.py` 及 `.github/workflows/release-migration-rehearsal.yml`（现指向本包；10-22、10-28 包原样保留为历史记录）。
 
 ## 发布集口径
 
-- 生产参考基线仍是 10-22 包的 `19408d49`（Merge #452）。10-22 包（源 `11c8055e`）列出的 35 项**从未在生产确认执行**，所以本包把它们与 `11c8055e` 之后合入 master 的 25 项合成一个发布集：`release_manifest.migration_diff(19408d49, 源提交)`，共 60 项（新增 59、修改 1、删除 0）。
-- 10-22 那 35 项的阶段、守卫、风险、回读与演练状态契约原样沿用（见 10-22 包），执行序按源提交的全量拓扑序重算。
-- 新增 25 项对应 PR #655 正文列出的 17 个（#625 W8 收口 15 + 文档二 L8 2）、#641 的 `20261027_merchant_brand_images_to_gallery`，以及 10-23 之后其他已合入 PR 带来的 7 个（`20261023_wx_pay_order_intent`、`20261024_cash_withdraw_transfer_intent`、`20261024_community_open_flags`、`20261024_official_roam_challenges`、`20261025_official_poi_quotes`、`20261028_remove_wildlife_theme`、`20261028_template_shelf_list_free_explore`）。#661 / #640 没有带迁移。
+- 生产参考基线仍是 10-22 / 10-28 包的 `19408d49`（Merge #452）。10-22 包（35 项）与 10-28 包（60 项）都**没有在生产确认执行**，所以本包按 `release_manifest.migration_diff(19408d49, 源提交)` 重新取全量发布集：共 88 项（新增 87、修改 1、删除 0）= 10-28 包 60 项 + #660 带来的 27 项 + 本包新增 1 项（`20261029_unlist_test_topics`）。#659、#662 没有带迁移。
+- 10-28 那 60 项的阶段、守卫、风险、回读与演练状态契约原样沿用，只有 `20261026_official_broadcast_delivery` 改为 **REPLACED_UNAPPLIED**（见第 4 节）。执行序按源提交的全量拓扑序重算（#660 给 `20261024_cash_withdraw_transfer_intent` 补了对 `20261023_cash_withdraw_fund_fact` 的依赖，所以它的位置后移）。
+- **源提交与 FINAL SHA 的关系**：后端 jar 与小程序体验版只用 FINAL SHA（见 release-steps.md 第 0 节）。`generatedFor.masterCommit` 是 FINAL SHA 之上只多一个提交（新增下架测试主题的数据迁移 + 它的依赖声明）的那个提交；两者的其余 SQL 文件字节相同，jar 不需要这个数据迁移。
 
 <!-- BEGIN GENERATED RELEASE INVENTORY -->
 ## 0 来源与覆盖范围
@@ -16,8 +16,8 @@
 | 项 | 值 |
 |---|---|
 | 仓库参考基线 | `19408d49172c1d8fd16ec012f4498ff8ea584a37`；不声明生产已执行 |
-| 源提交 | `146f94967b52d19d5c59f2057443c95221f17e3c` |
-| 源 tree | `ecca398b8a0bd74411fbc8d7483ed78738d89c80` |
+| 源提交 | `60048713ab6a57890a056fe3091f5be441919939` |
+| 源 tree | `13c8857e937b54eb9c363fad6018a25ba25ca486` |
 | SQL 子树 | `e8a6ecc5d0169807de4643e1656b7e4f607f09e1` |
 | 依赖台账 SHA-256 | `2a81586be28c40e6949d2432bd764309a93bc11f80351f7811dea19320d5ab61` |
 | 发布集 | 88 项；新增 87、修改 1、删除 0 |
@@ -309,72 +309,112 @@ expectedAtBaseline 只指仓库重建的合成库，不是生产当前状态；D
 
 ## 2 阶段与只读预检的处置
 
-- `PRE_DEPLOY_REQUIRED`：新 jar 的 mapper / JDBC 直接读写该表或列，必须先于新 jar 落库，否则对应接口在新 jar 上直接报错。
+- `PRE_DEPLOY_REQUIRED`：新 jar 的 mapper / JDBC 直接读写该表或列，必须先于新 jar 落库。#660 的 26 个结构迁移全部属于此类（逐个核对过 `src/main` 里都有读写方）。
 - `PRE_DEPLOY`：本 SHA 主代码对缺失有容错（开关关闭 / 尚无读写方 / 后台菜单），发布顺序仍统一放在新 jar 之前。
-- `OWNER_GATED_DATA`：数据回填/搬迁/上下架；先跑只读预览（预检附录 B / C）并由 owner 抽检，再执行。不阻塞 jar，但必须在打开相关功能前完成。
+- `OWNER_GATED_DATA`：数据回填/搬迁/上下架/暂停任务登记；先跑只读预览（预检附录 B / C）并由 owner 抽检，再执行。不阻塞 jar，但必须在打开相关功能前完成。
 - `APPLIED`：对象/目标状态符合预检契约；不能据此推断迁移执行历史。**单次执行项（见第 3 节）的 APPLIED 必须跳过原 SQL**；其他项按各自守卫可重跑。
-- `NEEDED`：需执行；`20261013_admin_role_page_grants` 例外，见第 4 节。
+- `NEEDED`：需执行；`20261013_admin_role_page_grants` 例外（NEEDED 时禁止执行，沿用 10-22 包第 4 节）。
+- `REPLACED_UNAPPLIED`：**永不执行**该文件（第 4 节）。
 - `PARTIAL`：只有守卫说明可续跑的迁移才允许恢复；单次执行项的 PARTIAL 一律停止交 owner。
 - `CONFLICT` / `BLOCKED_PREREQ`：停止，交 owner 处理；不跳过错误继续执行。
 - `DATA_PREVIEW`：前置结构可用，数据仍须核对；它不证明已完成。
 
-新增项的表结构指纹沿用 10-22 预检的算法（列 = 序号/列名/类型/可空/默认；索引 = 名称/唯一/序号/列），由迁移文本推出，演练在 MySQL 8.0.45 上回读钉住；加列类迁移逐列比对类型/可空/默认。
+#660 的 27 项分类器按名称核对（新表 = 表存在且建表文件里的每一列都在；加列/加索引/加约束/加触发器 = 逐个对象计数），因为这些表随后还会被同一发布集里的后续迁移加列，固定列指纹会在执行后误判。演练在 MySQL 8.0.45 上回读钉住每一项的基线/执行后状态。
 
-## 3 单次执行迁移
+## 3 单次执行迁移（预检 APPLIED 时必须跳过）
 
-以下迁移使用普通 `CREATE TABLE` / `ALTER TABLE ADD COLUMN`，直接重跑必然报错（1050 / 1060），原 SQL 字节保持不变：
+直接重跑必然报错（1050 / 1060 / 1061，或文件自带的“对象必须不存在”前置断言），原 SQL 字节保持不变。共 25 项：
 
-| migrationId | 直接重跑 | 处置 |
+| migrationId | 直接重跑 | 文件头标注 |
 |---|---|---|
-| `club_welcome_note_20261022` | 1060 Duplicate column | 10-22 包第 3 节原样适用（演练保留直接重跑负控） |
-| `20261023_wx_pay_order_intent` | 1050 Table exists | NEEDED 执行一次；APPLIED 跳过；其他停止 |
-| `20261024_cash_withdraw_transfer_intent` | 1050 Table exists | 同上 |
-| `20261026_official_broadcast_delivery` | 1060 Duplicate column | 同上；中途失败会留下 PARTIAL（前面的 ALTER 已隐式提交），不得整文件重跑，交 owner 写前向修复 |
+| `club_welcome_note_20261022` | 1060 | 10-22 包第 3 节（演练保留直接重跑负控） |
+| `20261023_wx_pay_order_intent` | 1050 | **PROPOSAL ONLY**（本 SHA 支付代码已读写此表） |
+| `20261024_cash_withdraw_transfer_intent` | 1050 | — |
+| `20261023_cash_withdraw_fund_fact` | 1050 + 触发器已存在 | CI REVIEW CANDIDATE ONLY |
+| `20261025_cash_withdraw_fund_request_compat` | 1060 | No production DDL is executed by this change |
+| `20261023_d_official_broadcast_delivery` | 1060 | **CANDIDATE ONLY**；先停全部广播 worker/发布者 |
+| `20261028_official_broadcast_protocol_union` | SQL 守卫拒绝 | **Candidate … do not execute without integrator approval** |
+| `20261024_d_committed_official_notice_wx` | 1050 | Run only after preflight + coordinator approval |
+| `20261024_g_before_start_notice_metadata_v2` | 前置断言 | No production execution is authorized here |
+| `20261024_d_npc_asr_intent` | 1050 | **SOURCE ONLY** |
+| `20261024_d_npc_asr_shared_quota` | 1060 | DDL NOT EXECUTED |
+| `20261024_registration_verified_seats` | 1050 | separately authorized migration |
+| `ai_theme_draft_request_intent_20261024` | 前置断言 | candidate only |
+| `20261024_d_chapter_application_round` | 1060 | Source candidate only |
+| `npc_voice_enrollment_intent_20261024` | 前置断言 | candidate only |
+| `npc_voice_confirmed_attempt_20261024` | 前置断言 | Candidate only |
+| `photo_check_intent_20261023` | 1050 | Never execute on production as part of this change |
+| `20261023_g_cash_evidence_expand` | 前置断言 | **EXPAND ONLY; no production execution** |
+| `20261025_coop_order_station_fulfillment` | 前置断言 | no production execution authorized |
+| `20261024_wx_verified_payment_fact` | 1050 | **SOURCE-ONLY PROPOSAL** |
+| `20261024_clm_commerce_payment_proof` | 前置断言 | Source-only |
+| `20261024_coop_original_refund_components` | 前置断言 | **NOT approved for application** |
+| `20261024_coop_negative_margin_manual` | 1050 | ADDITIVE SOURCE ONLY |
+| `20261024_registration_payment_fact` | 1050 + 触发器已存在 | SOURCE-ONLY CANDIDATE |
+| `20261024_wx_success_fact_business_index` | 1061 | SOURCE-ONLY proposal |
 
-`20261023_wx_pay_order_intent.sql` 文件头写着 “PROPOSAL ONLY … Integrator approval and isolated MySQL preflight required”。本 SHA 的 `WechatPayServiceImpl` 已直接读写这张表，所以它列为 PRE_DEPLOY_REQUIRED；**执行前请 owner 明确确认这一项**。
+**#660 的迁移文件头几乎都写着 “candidate / source only / proposal / not approved”。** 这些是写给“合入源码时不执行 DDL”的标注；本 FINAL SHA 的主代码已经读写这些表/列（PRE_DEPLOY_REQUIRED），所以发布新 jar 就必须先执行它们。owner 在 chengyin-db-migrate 确认这些文件时，请把“文件头写着候选/未批准”当成需要逐个点头的事项，尤其是加粗的几项（支付事实、退款组件、现金证据、广播）。
 
-演练第二遍对这四项先跑新鲜预检，APPLIED 才跳过并单独记账；负控制造坏表/缺表后必须拒绝跳过。
+演练第二遍对这 25 项先跑新鲜预检，APPLIED 才跳过并单独记账；负控制造坏表/缺表/缺触发器/缺索引后必须拒绝跳过。
 
-## 4 沿用 10-22 的闸门
+## 4 已被替代、永不执行的迁移（REPLACED_UNAPPLIED）
 
-- D-PAYEE（`20261016`）与 `20261013` checksum 对账、fresh-roles 风险探针：见 10-22 包第 4 节，本包不改。**`20261013` 预检 NEEDED 时禁止执行，交 owner。**
-- 商家 `category_ids` / `wechat_qrcode` 回读、态度唯一键重复不自动删除：见 10-22 包第 2 节。
+| 永不执行 | 替代者 | 原因 |
+|---|---|---|
+| `20261024_c_before_start_notice_typed` | `20261024_g_before_start_notice_metadata_v2` | v2 是 C 的原样替代（DDL 逐字相同，只修正 CHECK 元数据比较时的转义）；C 的前置断言在 MySQL 8.0.45 上会误判失败。v2 文件头：“NEVER run both entries”。 |
+| `20261026_official_broadcast_delivery` | `20261023_d_official_broadcast_delivery` + `20261028_official_broadcast_protocol_union` | 与 D 同加 `delivery_state` / `message_id`，二者不能先后执行；union 只接受“D 已落、10-26 未落”的前缀，组合出两套协议的超集。 |
 
-## 5 新增项要特别看的
+这与仓库重建库的 runner（`scripts/e2e/build_schema.py` 的 `notice_forward_plan` / `broadcast_forward_plan`）一致：它在全新库上同样把这两个文件记为 `REPLACED_UNAPPLIED` 并跳过。
 
-- `20261024_community_open_flags`：键缺失时插入 `true` / `true` / `*`，即上线即对所有玩家开放专业广场浏览与发帖（owner 2026-10-24 决定）。已配置的值不会被覆盖。
-- `20261026_official_broadcast_delivery` 给 `official_broadcast` 加唯一键、`w8_refund_fulfillment_recovery_20261026` 给 `refund_application` 加带 `CURRENT_TIMESTAMP(6)` 默认的 NOT NULL 列和 4 列索引：可能需要建索引/重建表，先看预检 [6/7] 体量与 [7/7] 长事务，低峰执行。
-- `20261028_remove_wildlife_theme`：`_precheck_remove_wildlife_theme_20261028.sql` 的注释记录了“2026-10-28 生产实跑……随后迁移已执行”。本包不据此改判，仍为 UNKNOWN；预检对无在架目标行判 APPLIED（跳过即可）。
-- `20261027_user_invoice_processing_backfill`：开票主体映射 `user_invoice_issuer_owner` 是空配置，未配置时回填 0 行；回填后仍无处理行的申请交 owner 人工核对（附录 C1）。
-- `20261027_merchant_brand_images_to_gallery`：整表 `UPDATE … JOIN`，先跑附录 C2 预览。演练用合成商家证明“已在相册的图不重复、按原顺序追加、derivatives 原值保留”。
-- 菜单两项（发票处理、计分申诉）走 `runner: requires=transaction`，任一前置/回读不成立整批回滚；计分申诉权限只授 `cy_operator`。
+### 4.1 生产上广播三件套到底怎么做
+
+#660 正文：“canonical union 仅用于不存在的新隔离库，10/26 记为 REPLACED_UNAPPLIED，既有库/部分前缀拒绝；正式持久库升级未验证”。读 union 文件与守卫后，生产按预检 [2/7] 这三行判定：
+
+| 预检状态（D / 10-26 / union） | 生产现状 | owner 怎么做 |
+|---|---|---|
+| NEEDED / REPLACED_UNAPPLIED / NEEDED | 两套协议都没落（10-28 包未执行时的预期） | **先停广播 worker 与发布入口**，执行 D（一次）→ **跳过** 10-26 → 执行 union（一次）→ 回读 → 新 jar 启动后再恢复。这条路径就是演练验证的路径。 |
+| APPLIED / REPLACED_UNAPPLIED / NEEDED | D 已落、union 未落 | 跳过 D、跳过 10-26，只执行 union。 |
+| APPLIED / APPLIED / APPLIED | 已组合完成 | 三个都跳过。 |
+| CONFLICT / CONFLICT / CONFLICT | 10-26 旧协议曾被单独执行（例如 10-28 包被部分执行过） | **停下。** D 会因重复列失败、union 的守卫会拒绝；仓库里没有“从 10-26 升级到 union”的迁移。不要手工补列，交 Claude 另写前向修复迁移并重新演练。 |
+| 任一 PARTIAL | 中途失败的残留 | 停下，保存输出，交 owner 核对；不得整文件重跑。 |
+
+结论：**生产只执行 D 和 union 两个文件，永远不执行 `migration_20261026_official_broadcast_delivery.sql`。** 前提是预检显示两套协议列都不存在；否则停。
+
+## 5 其他要特别看的
+
+- `20261023_g_cash_evidence_expand`：给 `coop_settlement` 加 STORED 生成列与外键（COPY 重建、持写锁），并要求存量结算行**没有**平台受款行/空受款人、调整行没有悬空 claim。预检对这种脏数据判 `BLOCKED_PREREQ`；仓库另有只读预检 `chengyinhub-admin/sql/_precheck_g_cash_evidence_20261023.sql`。低峰执行。
+- `20261024_clm_commerce_payment_proof` 给 `oms_order`、`club_membership_invoice` 加外键与唯一键；`20261025_coop_order_station_fulfillment` 给 `coop_invite` 加外键；`20261024_d_chapter_application_round` 给 `merchant_chapter_application` 加 CHECK：都需校验存量行，先看 [6/7] 体量与 [7/7] 长事务。
+- `20261023_g_wp08_delivery_jobs_paused`（OWNER_GATED_DATA）与 `20261024_d_committed_official_notice_wx` 只登记**暂停**的 sys_job，不启用任何任务；启用需另行批准。wp08 文件头写的是 “POST_DEPLOY DML”，所以放在 C 轮（jar 之后也可以）。
+- `20261024_community_open_flags`：键缺失时上线即对所有玩家开放专业广场浏览与发帖（owner 2026-10-24 决定）。已配置的值不会被覆盖。
+- `20261028_remove_wildlife_theme`：`_precheck_remove_wildlife_theme_20261028.sql` 记载已在生产执行；本包仍记 UNKNOWN，预检对无在架目标行判 APPLIED（跳过即可）。
+- `20261029_unlist_test_topics`（本包新增，OWNER_GATED_DATA）：按 id + 名称 + member_id 三者钉住软删 5 个测试主题（990062、8、7、6、1），**不碰** 990052–990056、990068、990069。软删值按 owner 要求写 `del_flag=1`（读端一律按 `del_flag = 0` 过滤，所以同样下架；仓库此前的 `remove_wildlife_theme` 用的是 2，两者都可改回 0 恢复）。有未取消报名 / 支付中或已支付 / 未结束会话的主题自动跳过，先跑文件头或附录 C5 的只读预检看 `live_*` 计数。
 
 ## 6 隔离演练与验证范围
 
 GitHub 托管 workflow 使用钉 digest 的 MySQL 8.0.45 一次性容器，不连接 VPS 或生产：
 
 1. 从参考基线与当前源提交计算发布集，逐项核对 path/hash/order/dependsOn；数量不写死。
-2. 从仓库基线 schema/seed 和非发布集迁移重建合成库，写入合成行（含品牌形象图商家）。
-3. 逐项检查 `expectedAtBaseline`，按 owner 执行顺序（`execution_rounds`：A 轮 PRE_DEPLOY_REQUIRED 及其发布集内前置 → B 轮其余 PRE_DEPLOY → C 轮 OWNER_GATED_DATA，每轮内按 step）执行全部 60 项，任何错误或断言失败立即停止；脚本先校验该顺序不违反任何声明的依赖。
-4. 检查 `expectedAfterApply`；回读商家回填、积分种子与品牌相册搬迁。
+2. 从仓库基线 schema/seed 和非发布集迁移重建合成库，写入合成行（含品牌形象图商家、4 个测试主题与 1 条已支付报名）。
+3. 逐项检查 `expectedAtBaseline`，按 owner 执行顺序（A 轮 PRE_DEPLOY_REQUIRED 及其发布集内前置 → B 轮其余 PRE_DEPLOY → C 轮 OWNER_GATED_DATA，每轮内按 step）执行全部 88 项（两项 REPLACED_UNAPPLIED 只记账不执行），任何错误或断言失败立即停止。
+4. 检查 `expectedAfterApply`；回读商家回填、积分种子、品牌相册搬迁、测试主题下架（1、8 软删；6 因已支付报名被守卫跳过；7 member_id 不吻合不动）。
 5. welcome_note 原文件直接重跑的 1060 负控；第二遍可重入项实际重跑、单次执行项按预检跳过，全库 schema/索引/约束/CHECKSUM 零变更（唯一声明差异仍是 `o14_city_code_backfill_log.write_time`）。
-6. 负控：10-22 的全部负控 + 新增单次执行坏表/缺表、加列漂移、配置键重复、菜单形状漂移、授权越权、索引缺失。
+6. 负控：10-28 的全部负控（10-26 那条改指 union）+ 新增：业务单号索引缺失、提现事实触发器缺失、请求指纹列漂移、暂停任务重复登记。
 7. fresh-roles 风险探针与容器清理。
 
-验证层级必须分开：源码/静态测试不等于 hosted MySQL；hosted scratch MySQL 不等于 VPS；二者均不证明生产已应用或真机/真 HTTP 行为。演练运行链接与结果记录在本包对应 PR 的正文与总结评论里（不提交回执）。
+验证层级必须分开：源码/静态测试不等于 hosted MySQL；hosted scratch MySQL 不等于 VPS；二者均不证明生产已应用或真机/真 HTTP 行为。演练运行链接与结果记录在本包对应 PR 的正文与总结评论里。
 
 ## 7 备份、停止与回滚
 
 由 owner 在执行任何生产写入前完成只读预检、维护窗口与带指纹的可恢复备份，按 [release-steps.md](release-steps.md) 留存回执。没有备份不执行；任一步失败立即停止，不继续后续文件。
 
-DDL 会隐式提交，失败前的语句可能已生效。保存失败输出并重新只读回读；只在具体迁移的幂等契约允许时从同一步恢复。JAR 回滚不会撤销 DDL，本批迁移都只加表/加列/加菜单或做可逆数据更新，“旧 jar + 新 schema”可运行；撤销结构或数据须另写前向迁移并经 owner 批准，禁止直接执行注释里的破坏性回滚语句。
+DDL 会隐式提交，失败前的语句可能已生效。保存失败输出并重新只读回读；只在具体迁移的幂等契约允许时从同一步恢复。JAR 回滚不会撤销 DDL；本批迁移只加表/加列/加约束/加菜单或做可逆数据更新，但 #660 的若干表带只追加触发器与外键，“旧 jar + 新 schema”可以运行，撤销结构或数据须另写前向迁移并经 owner 批准，禁止直接执行注释里的破坏性回滚语句。
 
 ## 8 合并新迁移后可复现刷新
 
 ```sh
 python3 ci/release_migration_rehearsal.py --inventory
 python3 ci/release_migration_rehearsal.py --refresh-pack
-python3 -m unittest -v ci.test_release_migration_rehearsal
+python3 -B ci/test_release_migration_rehearsal.py -v
 git diff --check
 ```
 

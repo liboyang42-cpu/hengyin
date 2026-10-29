@@ -1020,7 +1020,9 @@ ORDER BY config_key;
 
 SELECT job_id, job_name, invoke_target, cron_expression, status
 FROM sys_job
-WHERE invoke_target IN ('recommendationScoreDailyTask.run()', 'contentSearchProjectionTask.refresh()')
+WHERE invoke_target IN ('recommendationScoreDailyTask.run()', 'contentSearchProjectionTask.refresh()',
+                        'committedOfficialNoticeTask.deliverPending()', 'imNotificationDeliveryTask.deliverPending()',
+                        'roamRewardDeliveryTask.run()')
 ORDER BY invoke_target, job_id;
 
 -- [5/7] 依赖前置（基线之前的迁移；任一为 0 都要先查清楚再执行对应发布迁移）
@@ -1042,7 +1044,17 @@ UNION ALL SELECT 'p3_phase_c_web_rules_refund (refund_application)', COUNT(*) FR
 UNION ALL SELECT 'merchant_decor_20260708 (mms_merchant.gallery)', COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'mms_merchant' AND column_name = 'gallery'
 UNION ALL SELECT '20261012_missing_business_menu (funds-aftercare M 菜单恰好 1 行)', COUNT(*) = 1 FROM sys_menu WHERE menu_type = 'M' AND path = 'funds-aftercare'
 UNION ALL SELECT 'topic_source_menu_20260722 (official-topic C 菜单恰好 1 行)', COUNT(*) = 1 FROM sys_menu WHERE menu_type = 'C' AND component = 'business/topic/index' AND path = 'official-topic'
-UNION ALL SELECT 'topic_journey_rules_20260916 (cms_topic.journey_rules_json)', COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'cms_topic' AND column_name = 'journey_rules_json';
+UNION ALL SELECT 'topic_journey_rules_20260916 (cms_topic.journey_rules_json)', COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'cms_topic' AND column_name = 'journey_rules_json'
+UNION ALL SELECT '20261013_b_im_notification_intent (im_notification_intent)', COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'im_notification_intent'
+UNION ALL SELECT 'member_cash_withdraw (member_cash_withdraw)', COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'member_cash_withdraw'
+UNION ALL SELECT 'wx_payment_callback_inbox_outbox_20260725 (wx_payment_callback_inbox)', COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'wx_payment_callback_inbox'
+UNION ALL SELECT '20261011_npc_voice_version (npc_profile.voice_version)', COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'npc_profile' AND column_name = 'voice_version'
+UNION ALL SELECT 'chapter_recruitment_20260722 (merchant_chapter_application)', COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'merchant_chapter_application'
+UNION ALL SELECT '20260820_new_city_preference_chain (play_attempt_log)', COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'play_attempt_log'
+UNION ALL SELECT 'club_role_media_review_outbox_20260824 (club_post_media_review_outbox)', COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'club_post_media_review_outbox'
+UNION ALL SELECT 'coop_settlement / coop_settlement_line (coop_settlement, coop_settlement_adjustment)', COUNT(*) = 2 FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN ('coop_settlement', 'coop_settlement_adjustment')
+UNION ALL SELECT 'club_role_membership_20260823 / commerce (club_membership_invoice, oms_order)', COUNT(*) = 2 FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN ('club_membership_invoice', 'oms_order')
+UNION ALL SELECT 'w2_terms_axes / business_audit_event (coop_invite, cms_registration_merchant, business_audit_event)', COUNT(*) = 3 FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN ('coop_invite', 'cms_registration_merchant', 'business_audit_event');
 
 -- [6/7] 锁/体量：被 ALTER 或回填的既有表（table_rows 为估算值）
 SELECT table_name, engine, table_rows AS approx_rows,
@@ -1053,7 +1065,10 @@ WHERE table_schema = DATABASE()
                      'roam_share_snapshot', 'theme_state_key', 'sys_role_menu', 'sys_config', 'sys_job',
                      'club', 'mms_merchant', 'ums_creative_square_like', 'official_broadcast',
                      'official_broadcast_log', 'roam_poi', 'roam_poi_reward_log', 'refund_application',
-                     'user_invoice_application', 'sys_menu')
+                     'user_invoice_application', 'sys_menu', 'coop_settlement', 'coop_settlement_adjustment',
+                     'coop_invite', 'oms_order', 'club_membership_invoice', 'merchant_chapter_application',
+                     'play_attempt_log', 'club_post_media_review_outbox', 'member_cash_withdraw',
+                     'wx_payment_callback_inbox', 'cms_registration')
 ORDER BY table_name;
 
 -- [7/7] 执行窗口前：长事务会让 ALTER 卡在元数据锁上（需要 PROCESS 权限；无权限时本句报错，不影响前面结果）
@@ -1113,4 +1128,12 @@ ORDER BY trx_started;
 --     SELECT id, name, is_template, status, user_status, template_status, del_flag FROM cms_topic
 --     WHERE del_flag = 0 AND name IN ('风味巡游', '不惑之年', '预制人生', '高温末日逃生', '上海像一部旧电影', '生活不掉线');
 --     期望 6 行、is_template 全为 1；同名多行或 is_template<>1 先停下核对。
+--   C5 下架 5 个测试主题（20261029_unlist_test_topics）：执行迁移文件头那条只读 SELECT。
+--     期望最多 5 行；live_registrations / live_runs / live_routes 全为 0 且 del_flag=0 的行会被软删，
+--     非 0 的行被跳过（留给 owner 另定退款/保留只读）。不在结果里的 id 说明名称或 member_id 不吻合，不会被改动。
+--   C6 现金证据前置脏数据（[2/7] 对 20261023_g_cash_evidence_expand 判 BLOCKED_PREREQ 时）：
+--     执行仓库里的 chengyinhub-admin/sql/_precheck_g_cash_evidence_20261023.sql，找出平台受款行/空受款人/悬空 claim，
+--     交 owner 处置后再重跑预检；不得删除或改写结算行来“通过”前置断言。
+--   C7 广播三件套（D / 10-26 / union）：按 release-migration-pack.md 第 4.1 节的表处置；只执行 D 与 union，
+--     永不执行 migration_20261026_official_broadcast_delivery.sql。
 -- =====================================================================================
