@@ -224,7 +224,7 @@ test('原发帖组件已离页/隐藏时不登录不dispatch，合法可见入�
   Object.assign(page, { _disposed: false, _composeVisible: true }); page.onPublish(); assert.equal(login, 1);
 });
 test('C 工具层写入口:举报 run() 与建队 createActivityTeam 也先过闸', () => {
-  assert.match(read('utils/content-report.js'), /app\.ensureLoginFor && !app\.ensureLoginFor\('report', function \(\) \{ run\(page, app, id, submit\); \}, \{ owner: page, target: \(\) => \[id, page\.data && page\.data\.id, page\.data && page\.data\.clubId\] \}\)\) return false;/);
+  assert.match(read('pages/topic/utils/content-report.js'), /app\.ensureLoginFor && !app\.ensureLoginFor\('report', function \(\) \{ run\(page, app, id, submit\); \}, \{ owner: page, target: \(\) => \[id, page\.data && page\.data\.id, page\.data && page\.data\.clubId\] \}\)\) return false;/);
   assert.match(read('subpackageMember/utils/team-up.js'), /app\.ensureLoginFor && !app\.ensureLoginFor\('team', \(\) => createActivityTeam\(app, activityId, maxMembers, joinMode, callbacks\), callbacks && callbacks\.loginContext\)\) return/);
 });
 

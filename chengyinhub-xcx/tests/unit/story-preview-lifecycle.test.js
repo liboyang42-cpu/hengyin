@@ -39,7 +39,7 @@ test('输入挑战收到完成/次数耗尽结果后取消截止计时且禁止�
 
 test('开场点击继续后切后台，取消退出回调，回到前台仍能继续', () => {
   const timers = new Map();
-  const { instance: gate, spec } = component('components/cy/chapter-gate/index.js', timers);
+  const { instance: gate, spec } = component('pages/publish/components/chapter-gate/index.js', timers);
   let events = 0; gate.triggerEvent = () => { events += 1; };
   gate.continueStory(); spec.pageLifetimes.hide.call(gate);
   for (const fn of timers.values()) fn();

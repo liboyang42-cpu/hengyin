@@ -127,7 +127,7 @@ test('模板：句子行、分段、步进器、添加层都接上 handler，用
  for(const name of ['toggleRow','onTopMode','onGroupMode','onNegate','onPickName','onCompare','onResult','onVarOp','onAmount','onRemove','openAdd','openRename','onLayerKind','onLayerName','toggleSort','onMoveUp'])
   assert.match(view,new RegExp('bind(?::press|:change|:action|tap)="'+name+'"'));
  const json=JSON.parse(fs.readFileSync(path.join(__dirname,'../../pages/publish/components/story-rule-editor/index.json'),'utf8'));
- for(const c of ['list-group','list-row','segmented','stepper']) assert.equal(json.usingComponents['cy-'+c],'/components/cy/'+c+'/index');
+ for(const c of ['list-group','list-row','segmented','stepper']) assert.equal(json.usingComponents['cy-'+c],'/pages/publish/components/'+c+'/index');
  assert.match(view,/bindinput="onLayerQuery"/);
  assert.doesNotMatch(view,/<button|▾|代码|撤销未完成|cy-dropdown|textarea|JSON/);
 });

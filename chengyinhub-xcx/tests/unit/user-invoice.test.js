@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const invoice = require('../../utils/user-invoice.js');
+const invoice = require('../../subpackageMember/utils/user-invoice.js');
 
 test('invoice IDs retain the complete positive Java Long domain and reject rounded numeric IDs', () => {
   for (const value of ['1', '9007199254740993', '9223372036854775807']) assert.equal(invoice.exactId(value), value);

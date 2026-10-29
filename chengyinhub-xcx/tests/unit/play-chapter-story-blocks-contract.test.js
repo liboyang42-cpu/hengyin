@@ -883,7 +883,7 @@ test('序章:顶栏眉标与标题同名时不出,开场门不把序数标签再
   page.showChapterGate()
   assert.equal(page.data.chapterGate.subtitle, '', '开场门眉标已是「第 1 章 / 共 1 章」,副标题再印「第一章」')
 
-  const gate = read('components/cy/chapter-gate/index.wxml')
+  const gate = read('pages/publish/components/chapter-gate/index.wxml')
   assert.match(gate, /class="gate__meta" wx:if="\{\{number !== 0 \|\| title !== '序章'\}\}"/, '序章标题下又印一个「序章」眉标')
 })
 

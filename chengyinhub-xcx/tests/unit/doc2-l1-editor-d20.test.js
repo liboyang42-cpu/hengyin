@@ -153,14 +153,14 @@ test('开局前准备组件:最多 6 项、重复不加、建议点一下就加�
 });
 
 test('通用小件:步进器挡上下限、底部选择卡点一项即收(stay 不收)、药丸重名', () => {
-  const stp = loadComponent('components/cy/stepper/index.js');
+  const stp = loadComponent('pages/publish/components/stepper/index.js');
   Object.assign(stp.vm.data, { value: 5, min: 0, max: 5, step: 1 });
   stp.vm.onStep({ currentTarget: { dataset: { d: '1' } } });
   assert.equal(stp.events.length, 0);
   stp.vm.onStep({ currentTarget: { dataset: { d: '-1' } } });
   assert.deepEqual(stp.events[0].detail, { value: 4 });
 
-  const chips = loadComponent('components/cy/chips/index.js');
+  const chips = loadComponent('pages/publish/components/chips/index.js');
   chips.vm.data.taken = ['观察'];
   chips.vm.onAddTap();
   chips.vm.onInput({ detail: { value: '观察' } });
@@ -171,7 +171,7 @@ test('通用小件:步进器挡上下限、底部选择卡点一项即收(stay �
   chips.vm.onConfirm();
   assert.deepEqual(chips.events[0], { name: 'add', detail: { value: '洞察' } });
 
-  const cs = loadComponent('components/cy/choice-sheet/index.js');
+  const cs = loadComponent('pages/publish/components/choice-sheet/index.js');
   cs.vm.data.options = d20.WINDOWS;
   const timers = [];
   const realSet = global.setTimeout;

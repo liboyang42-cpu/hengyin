@@ -4,8 +4,8 @@
 // 纯函数在 utils/map-team.js(卡片五态 / errorCode 分支 / P6 三态)与 utils/roam-hangout*.js(主题点位 canvas),本文件只做接线。
 // ⚠️ 失败只按 errorCode 分支(map-team.resolveTeamError),走 cy-result-sheet 失败半屏,不解析 msg。
 const app = getApp();
-const teamOperation = require('../../utils/roam-team-operation.js');
-const teamRecovery = require('../../utils/roam-team-recovery.js');
+const teamOperation = require('../utils/roam-team-operation.js');
+const teamRecovery = require('../utils/roam-team-recovery.js');
 const session = require('../../utils/session/login-reload.js');
 const { MAP_STYLE } = require('../../utils/map-style.js');
 const { getCurrentLocation } = require('../../utils/location/location-manager.js');

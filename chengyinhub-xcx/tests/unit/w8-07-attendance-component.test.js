@@ -1,7 +1,7 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const {createRequire}=require('node:module');
-const file=path.resolve(__dirname,'../../components/cy/event-attendance/index.js');
+const file=path.resolve(__dirname,'../../pages/activity/components/event-attendance/index.js');
 const tick=async()=>{for(let i=0;i<6;i++)await Promise.resolve();};
 function mount(organizer=false,store={}){
  let def,owner='7',serial=0;const requests=[],modals=[],calls=[];

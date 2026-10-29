@@ -298,7 +298,7 @@ Page({
         if (!current()) return;
         const ok = res && (res.code == '200' || res.code === 200);
         const access = normalizeMerchantAccess(ok ? res.data : null);
-        require('../../../../utils/predict-entry.js').showIfPending(that, app, access, current); // owner 10-22:无待答不出这一行
+        require('../../../utils/predict-entry.js').showIfPending(that, app, access, current); // owner 10-22:无待答不出这一行
       },
       fail() { if (current()) that.setData({ canSettlePredict: false }); },
     });

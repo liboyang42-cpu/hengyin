@@ -4,12 +4,7 @@
     "pages/template/index",
     "pages/talent/list/index",
     "pages/member/index/index",
-    "pages/roam/index",
-    "pages/privacy/index",
-    "pages/agreement/index",
-    "pages/deregister/index",
-    "pages/team/detail/index",
-    "pages/team/join/index"
+    "pages/roam/index"
   ],
   "subPackages": [
     {
@@ -298,6 +293,35 @@
         "exploration-goals/index",
         "anniversary/index",
         "exploration-export/index"
+      ]
+    },
+    {
+      "root": "pages/privacy",
+      "name": "subpackagePrivacy",
+      "pages": [
+        "index"
+      ]
+    },
+    {
+      "root": "pages/agreement",
+      "name": "subpackageAgreement",
+      "pages": [
+        "index"
+      ]
+    },
+    {
+      "root": "pages/deregister",
+      "name": "subpackageDeregister",
+      "pages": [
+        "index"
+      ]
+    },
+    {
+      "root": "pages/team",
+      "name": "subpackageTeam",
+      "pages": [
+        "detail/index",
+        "join/index"
       ]
     }
   ],

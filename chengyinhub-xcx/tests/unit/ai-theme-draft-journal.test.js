@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const journal = require('../../utils/ai-theme-draft-journal.js');
+const journal = require('../../pages/publish/utils/ai-theme-draft-journal.js');
 const PREPARE_ID = '7c9e6679-7425-40de-944b-e07fc1f90ae7';
 const RID = 'td2_0123456789abcdef0123456789abcdef';
 function storage() {
