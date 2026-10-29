@@ -1047,9 +1047,24 @@ def run_packaged(name, schema, out, credentials):
         if expected_exit is None:
             require(row['State']['Running'], 'normal retirement requires the original live subject')
         if row['State']['Running']:
-            command(DOCKER + ['stop', '--time', '10', app], timeout=25)
+            # PID 1 is the tracer. Signal the independently identified JVM, then
+            # require its original graceful container exit rather than accepting a forced stop.
+            process = subject()
+            require(process['cid'] == app and process['hostInitPid'] == row['State']['Pid'],
+                    'retirement process no longer belongs to the original app')
+            report.setdefault('processStopIntents', []).append({
+                'cid': app, 'javaPid': process['javaPid'], 'hostJavaPid': process['hostJavaPid'],
+                'javaStartTicks': process['javaStartTicks'], 'signal': 'TERM',
+                'javaArgvSha256': process['javaArgvSha256']})
+            save()
+            command(DOCKER + ['exec', app, 'sh', '-c', 'kill -TERM "$1"',
+                              'packaged-stop', str(process['javaPid'])], timeout=10)
         code = int(command(DOCKER + ['wait', app], timeout=20).strip())
         ended = owner(app)
+        report.setdefault('processExitReadbacks', []).append({
+            'cid': app, 'waitExitCode': code, 'inspectExitCode': ended['State']['ExitCode'],
+            'running': ended['State']['Running'], 'oomKilled': ended['State']['OOMKilled']})
+        save()
         require(not ended['State']['Running'] and not ended['State']['OOMKilled']
                 and code == ended['State']['ExitCode']
                 and code in ((0, 143) if expected_exit is None else (expected_exit,)), 'app exit/OOM unaccepted')
@@ -1503,6 +1518,19 @@ def finalize_packaged(name, schema, out, original_exit):
                 and all(row['exitCode'] in (0, 143) and row['oomKilled'] is False for row in retired)
                 and all(row['independentNoSuch'] is True and row['nameAbsent'] is True for row in retired[:2])
                 and retired[-1]['id'] == report['subjects'][-1]['cid'], 'original slot exits incomplete')
+        exits = report.get('processExitReadbacks', [])
+        require(len(exits) == 3 and all(
+            row['cid'] == old['id'] and row['waitExitCode'] == row['inspectExitCode'] == old['exitCode']
+            and row['running'] is False and row['oomKilled'] is False
+            for row, old in zip(exits, retired)), 'independent original process exits incomplete')
+        stops = report.get('processStopIntents', [])
+        require(len(stops) == 2 and all(
+            row['cid'] == original['cid'] and row['javaPid'] == original['javaPid']
+            and row['hostJavaPid'] == original['hostJavaPid']
+            and row['javaStartTicks'] == original['javaStartTicks']
+            and row['javaArgvSha256'] == original['javaArgvSha256'] and row['signal'] == 'TERM'
+            for row, original in zip(stops, report['subjects'])),
+            'original JVM stop targets not proved')
         outer = json.loads((out / 'authenticated-redis-recovery.json').read_text())
         cleanup = outer['resourceCleanup']
         expected = {name + '-app': report['subjects'][-1]['cid'],
