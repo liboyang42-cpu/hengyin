@@ -1,12 +1,16 @@
 package com.chengyinhub.business.service;
 
-import com.chengyinhub.business.access.club.ClubAccessContext;
-import com.chengyinhub.business.access.club.ClubRoleCode;
+import com.chengyinhub.business.access.club.ClubAccessServiceImpl;
+import com.chengyinhub.business.access.club.ClubPermission;
 import com.chengyinhub.business.access.club.IClubAccessService;
 import com.chengyinhub.business.domain.dto.ClubEventSeriesRequest;
 import com.chengyinhub.business.mapper.ClubEventOpsMapper;
 import com.chengyinhub.business.mapper.ClubLeadMapper;
 import com.chengyinhub.business.mapper.ClubMemberMapper;
+import com.chengyinhub.business.mapper.ClubMapper;
+import com.chengyinhub.business.mapper.ClubRoleAssignmentMapper;
+import com.chengyinhub.business.mapper.CmsActivityMapper;
+import com.chengyinhub.business.mapper.UmsMemberMapper;
 import com.chengyinhub.business.service.impl.ClubEventOpsServiceImpl;
 import com.chengyinhub.business.service.impl.ClubEventScheduleMaterializer;
 import com.chengyinhub.common.exception.ServiceException;
@@ -24,6 +28,8 @@ import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.transaction.annotation.AnnotationTransactionAttributeSource;
 import org.springframework.transaction.interceptor.TransactionInterceptor;
+import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -34,6 +40,8 @@ import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.TimeZone;
@@ -54,6 +62,9 @@ class B04ScheduleReadbackMySqlIT {
     private MysqlIntegrationTestConfig mysql;
     private JdbcTemplate jdbc;
     private ClubEventOpsMapper mapper;
+    private SqlSessionTemplate sql;
+    private DataSourceTransactionManager transactions;
+    private IClubAccessService access;
     private IClubEventOpsService service;
     private IClubSessionService sessions;
     private IClubRoleAssignmentService roles;
@@ -85,16 +96,26 @@ class B04ScheduleReadbackMySqlIT {
             }
         }
         for (String table : Arrays.asList("club", "cms_activity", "cms_registration")) createTable(base, table);
+        com.chengyinhub.business.it.P0AcceptanceSchema.baseTables(jdbc, "ums_member", "club_member");
         String migration = new String(Files.readAllBytes(Paths.get("sql/migration_club_role_event_ops_20260823.sql")), StandardCharsets.UTF_8);
         for (String table : Arrays.asList("club_event_series", "club_event_occurrence", "club_event_waitlist")) createTable(migration, table);
+        createTable(Files.readString(Paths.get("sql/migration_club_role_assignment_20260823.sql"),
+                StandardCharsets.UTF_8), "club_role_assignment");
         Configuration configuration = new Configuration(new Environment("e01", new SpringManagedTransactionFactory(), dataSource()));
         configuration.getTypeAliasRegistry().registerAliases("com.chengyinhub.business.domain");
-        String resource = "mapper/business/ClubEventOpsMapper.xml";
-        try (InputStream input = getClass().getClassLoader().getResourceAsStream(resource)) {
-            assertNotNull(input);
-            new XMLMapperBuilder(input, configuration, resource, configuration.getSqlFragments()).parse();
+        for (String name : Arrays.asList("ClubEventOps", "Club", "ClubMember", "ClubRoleAssignment", "CmsActivity", "UmsMember")) {
+            String resource = "mapper/business/" + name + "Mapper.xml";
+            try (InputStream input = getClass().getClassLoader().getResourceAsStream(resource)) {
+                assertNotNull(input);
+                new XMLMapperBuilder(input, configuration, resource, configuration.getSqlFragments()).parse();
+            }
         }
-        mapper = new SqlSessionTemplate(new SqlSessionFactoryBuilder().build(configuration)).getMapper(ClubEventOpsMapper.class);
+        sql = new SqlSessionTemplate(new SqlSessionFactoryBuilder().build(configuration));
+        mapper = sql.getMapper(ClubEventOpsMapper.class);
+        transactions = new DataSourceTransactionManager(dataSource());
+        // Force MySQL's READ ONLY mode, not just Connection.setReadOnly's driver hint.
+        // The old service annotations must fail at the real SELECT FOR UPDATE in this fixture.
+        transactions.setEnforceReadOnly(true);
         wire();
     }
 
@@ -199,6 +220,102 @@ class B04ScheduleReadbackMySqlIT {
         verifyNoInteractions(sessions, roles);
     }
 
+    @Test
+    void ownerReadsAllThreeSeriesViewsThroughRealLockedAuthorizationWithoutWrites() {
+        Map<String, List<Map<String, Object>>> before = persistedRows();
+        assertEquals(Long.valueOf(SERIES), service.listSeries(OWNER, CLUB).get(0).getId());
+        assertEquals("00:30", service.getSeries(OWNER, CLUB, SERIES).getStartTime());
+        Map<String, Object> occurrence = service.listSeriesOccurrences(OWNER, CLUB, SERIES).get(0);
+        assertEquals(ACTIVITY, ((Number) occurrence.get("activityId")).longValue());
+        assertEquals(true, occurrence.get("editable"));
+        assertEquals(before, persistedRows());
+        verifyNoInteractions(sessions, roles);
+    }
+
+    @Test
+    void nonOwnerMemberAndForeignScopesAreDeniedBeforeAnyPersistedChange() {
+        // 43 is an active merchant without membership; 44 is an ordinary active member.
+        for (long actor : Arrays.asList(43L, 44L)) assertReadDeniedWithoutWrites(actor, CLUB, SERIES, 403);
+        assertReadDeniedWithoutWrites(OWNER, 22L, SERIES, 403);
+        Map<String, List<Map<String, Object>>> before = persistedRows();
+        assertEquals(Integer.valueOf(409), assertThrows(ServiceException.class,
+                () -> service.getSeries(OWNER, CLUB, 62L)).getCode());
+        assertEquals(Integer.valueOf(409), assertThrows(ServiceException.class,
+                () -> service.listSeriesOccurrences(OWNER, CLUB, 62L)).getCode());
+        assertEquals(before, persistedRows());
+
+        // An EVENT-only role is not a CLUB management grant even for the original activity.
+        jdbc.update("insert into club_role_assignment(club_id,target_member_id,role_code,scope_type,scope_id,"
+                + "status,assigned_by_member_id,assigned_at,version,create_time)"
+                + " values (21,44,'EVENT_LEAD','EVENT',71,'ACTIVE',42,now(),0,now())");
+        assertReadDeniedWithoutWrites(44L, CLUB, SERIES, 403);
+        jdbc.update("update ums_member set status=2 where id=42");
+        assertReadDeniedWithoutWrites(OWNER, CLUB, SERIES, 403);
+        jdbc.update("update ums_member set status=1 where id=42");
+        jdbc.update("update club set member_id=45 where id=21");
+        assertReadDeniedWithoutWrites(OWNER, CLUB, SERIES, 403);
+        before = persistedRows();
+        assertEquals(Long.valueOf(SERIES), service.listSeries(45L, CLUB).get(0).getId());
+        assertEquals(Long.valueOf(SERIES), service.getSeries(45L, CLUB, SERIES).getId());
+        assertEquals(1, service.listSeriesOccurrences(45L, CLUB, SERIES).size());
+        assertEquals(before, persistedRows());
+        verifyNoInteractions(sessions, roles);
+    }
+
+    @Test
+    void realAuthorizationLockFailsInEnforcedMysqlReadOnlyTransaction() {
+        Map<String, List<Map<String, Object>>> before = persistedRows();
+        TransactionTemplate readOnly = new TransactionTemplate(transactions);
+        readOnly.setReadOnly(true);
+        org.springframework.dao.DataAccessException denied = assertThrows(
+                org.springframework.dao.DataAccessException.class,
+                () -> readOnly.execute(status -> access.require(OWNER, CLUB, null, ClubPermission.ACTIVITY_MANAGE)));
+        java.sql.SQLException mysqlFailure = assertInstanceOf(java.sql.SQLException.class, denied.getMostSpecificCause());
+        assertEquals(1792, mysqlFailure.getErrorCode(), "The real principal FOR UPDATE must hit MySQL's read-only guard");
+        assertEquals(before, persistedRows());
+    }
+
+    @Test
+    void seriesReadsRetainThePrincipalLockUntilTheirWritableOuterTransactionCompletes() {
+        Map<String, List<Map<String, Object>>> before = persistedRows();
+        TransactionTemplate outer = new TransactionTemplate(transactions);
+        outer.setIsolationLevel(org.springframework.transaction.TransactionDefinition.ISOLATION_REPEATABLE_READ);
+        outer.executeWithoutResult(status -> {
+            assertEquals(Long.valueOf(SERIES), service.listSeries(OWNER, CLUB).get(0).getId());
+            assertEquals(Long.valueOf(SERIES), service.getSeries(OWNER, CLUB, SERIES).getId());
+            assertEquals(1, service.listSeriesOccurrences(OWNER, CLUB, SERIES).size());
+            org.springframework.dao.DataAccessException blocked = assertThrows(
+                    org.springframework.dao.DataAccessException.class,
+                    () -> independentJdbc().queryForList("select id from ums_member where id=42 for update nowait"));
+            java.sql.SQLException mysqlFailure = assertInstanceOf(java.sql.SQLException.class, blocked.getMostSpecificCause());
+            assertEquals(3572, mysqlFailure.getErrorCode(), "An independent connection must not acquire the still-held principal lock");
+        });
+        assertEquals(1, independentJdbc().queryForList("select id from ums_member where id=42 for update nowait").size());
+        assertEquals(before, persistedRows());
+        verifyNoInteractions(sessions, roles);
+    }
+
+    private void assertReadDeniedWithoutWrites(long actor, long club, long series, int code) {
+        Map<String, List<Map<String, Object>>> before = persistedRows();
+        assertEquals(Integer.valueOf(code), assertThrows(ServiceException.class,
+                () -> service.listSeries(actor, club)).getCode());
+        assertEquals(Integer.valueOf(code), assertThrows(ServiceException.class,
+                () -> service.getSeries(actor, club, series)).getCode());
+        assertEquals(Integer.valueOf(code), assertThrows(ServiceException.class,
+                () -> service.listSeriesOccurrences(actor, club, series)).getCode());
+        assertEquals(before, persistedRows());
+    }
+
+    private Map<String, List<Map<String, Object>>> persistedRows() {
+        JdbcTemplate committed = independentJdbc();
+        Map<String, List<Map<String, Object>>> rows = new LinkedHashMap<>();
+        for (String table : Arrays.asList("ums_member", "club", "club_member", "club_role_assignment",
+                "cms_activity", "cms_registration", "club_event_series", "club_event_occurrence", "club_event_waitlist")) {
+            rows.put(table, committed.queryForList("select * from " + table + " order by id"));
+        }
+        return rows;
+    }
+
     private void protect(String fact) {
         if (fact.startsWith("REG_")) {
             independentJdbc().update("insert into cms_registration(registration_no,owner_type,owner_id,ticket_id,ticket_price,member_id,original_amount,total_amount,payable_amount,registration_status,pay_expire_time) values ('E01',2,71,91,1,99,1,1,1,?,now())", Integer.parseInt(fact.substring(4)));
@@ -211,11 +328,16 @@ class B04ScheduleReadbackMySqlIT {
     }
 
     private void seed(String time) {
-        for (String table : Arrays.asList("club_event_waitlist", "cms_registration", "club_event_occurrence", "club_event_series", "cms_activity", "club")) jdbc.execute("delete from " + table);
+        for (String table : Arrays.asList("club_role_assignment", "club_member", "club_event_waitlist", "cms_registration", "club_event_occurrence", "club_event_series", "cms_activity", "club", "ums_member")) jdbc.execute("delete from " + table);
+        jdbc.update("insert into ums_member(id,role,status,del_flag) values (42,'club',1,0),(43,'merchant',1,0),(44,'player',1,0),(45,'club',1,0)");
         jdbc.update("insert into club(id,member_id,name,status,del_flag) values (21,42,'E01 synthetic',1,0)");
+        jdbc.update("insert into club(id,member_id,name,status,del_flag) values (22,45,'E01 foreign',1,0)");
+        jdbc.update("insert into club_member(id,club_id,member_id,role,status,join_time,del_flag) values (1,21,44,0,1,now(),0)");
         jdbc.update("insert into cms_activity(id,member_id,name,status,publish_status,del_flag,start_date,topic_id,club_id) values (71,42,'E01 synthetic',1,1,0,?,31,21)", moment(time));
         jdbc.update("insert into club_event_series(id,club_id,topic_id,recurrence_type,timezone,default_lead_member_id,waitlist_enabled,offer_minutes,status,version,created_by_member_id,request_id,request_fingerprint,create_time) values (61,21,31,'CUSTOM_DATES','Asia/Shanghai',42,1,20,'ACTIVE',0,42,'e01',?,now())",
                 String.join("", Collections.nCopies(64, "a")));
+        jdbc.update("insert into club_event_series(id,club_id,topic_id,recurrence_type,timezone,default_lead_member_id,waitlist_enabled,offer_minutes,status,version,created_by_member_id,request_id,request_fingerprint,create_time) values (62,22,32,'CUSTOM_DATES','Asia/Shanghai',45,1,20,'ACTIVE',0,45,'e01-foreign',?,now())",
+                String.join("", Collections.nCopies(64, "b")));
         jdbc.update("insert into club_event_occurrence(id,series_id,activity_id,occurrence_at,default_lead_member_id,status,version,create_time) values (81,61,71,?,42,'ACTIVE',0,now())", moment(time));
     }
 
@@ -236,17 +358,20 @@ class B04ScheduleReadbackMySqlIT {
     }
 
     private void wire() {
-        // Authorization is a fixed owner fixture, not an RBAC integration assertion.
-        IClubAccessService access = mock(IClubAccessService.class);
-        when(access.require(eq(OWNER), eq(CLUB), isNull(), anyString())).thenReturn(
-                new ClubAccessContext(OWNER, CLUB, OWNER, null, Collections.singleton(ClubRoleCode.CLUB_OWNER)));
+        ClubAccessServiceImpl realAccess = new ClubAccessServiceImpl();
+        ReflectionTestUtils.setField(realAccess, "clubMapper", sql.getMapper(ClubMapper.class));
+        ReflectionTestUtils.setField(realAccess, "clubMemberMapper", sql.getMapper(ClubMemberMapper.class));
+        ReflectionTestUtils.setField(realAccess, "clubRoleAssignmentMapper", sql.getMapper(ClubRoleAssignmentMapper.class));
+        ReflectionTestUtils.setField(realAccess, "cmsActivityMapper", sql.getMapper(CmsActivityMapper.class));
+        ReflectionTestUtils.setField(realAccess, "umsMemberMapper", sql.getMapper(UmsMemberMapper.class));
+        access = realAccess;
         sessions = mock(IClubSessionService.class);
         roles = mock(IClubRoleAssignmentService.class);
         ClubEventOpsServiceImpl target = new ClubEventOpsServiceImpl(access, new ClubEventScheduleMaterializer(),
                 sessions, mapper, mock(ClubMemberMapper.class), mock(ClubLeadMapper.class), roles);
         ProxyFactory factory = new ProxyFactory(target);
         factory.setInterfaces(IClubEventOpsService.class);
-        factory.addAdvice(new TransactionInterceptor(new DataSourceTransactionManager(dataSource()),
+        factory.addAdvice(new TransactionInterceptor(transactions,
                 new AnnotationTransactionAttributeSource()));
         service = (IClubEventOpsService) factory.getProxy();
     }
