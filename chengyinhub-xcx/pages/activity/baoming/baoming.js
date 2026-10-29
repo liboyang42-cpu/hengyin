@@ -1438,7 +1438,7 @@ Page({
         if (!regId) { cb({ ok: false, errMsg: '缺少订单编号' }); return; }
         return verifyRegistrationPayment({ registrationId: regId }, cb);
       },
-      isPayable: function (d) { return d && Number(d.payableAmount) > 0; },
+      isPayable: function (d) { return !!(d && (d.payParams || Number(d.payableAmount) > 0)); },
       validatePayment: hasCompletePaymentParams
     });
   },

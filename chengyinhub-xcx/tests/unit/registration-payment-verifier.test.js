@@ -6,8 +6,16 @@ const {
 } = require('../../utils/checkout/registration-payment-verifier.js');
 
 test('报名支付状态只把服务端已支付判 success，关闭/退款判 failed', () => {
-  assert.equal(classifyRegistrationStatus({ paymentStatus: 2 }), 'success');
-  assert.equal(classifyRegistrationStatus({ registrationStatus: 2 }), 'success');
+  assert.equal(classifyRegistrationStatus({ paymentStatus: 2, registrationStatus: 2 }), 'success');
+  assert.equal(classifyRegistrationStatus({ paymentStatus: '2', registrationStatus: '2' }), 'success');
+  assert.equal(classifyRegistrationStatus({ paymentStatus: 2 }), 'pending');
+  assert.equal(classifyRegistrationStatus({ registrationStatus: 2 }), 'pending');
+  for (const paymentStatus of [0, 1, null, undefined]) {
+    assert.equal(classifyRegistrationStatus({ paymentStatus, registrationStatus: 2 }), 'pending');
+  }
+  for (const paymentStatus of [3, 4]) {
+    assert.equal(classifyRegistrationStatus({ paymentStatus, registrationStatus: 2 }), 'failed');
+  }
   assert.equal(classifyRegistrationStatus({ paymentStatus: 3 }), 'failed');
   assert.equal(classifyRegistrationStatus({ paymentStatus: 4 }), 'failed');
   assert.equal(classifyRegistrationStatus({ paymentStatus: 0, registrationStatus: 1 }), 'pending');
