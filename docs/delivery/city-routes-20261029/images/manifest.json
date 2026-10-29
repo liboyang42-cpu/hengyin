@@ -1,0 +1,122 @@
+[
+ {
+  "route": "commercial-press",
+  "station": "A1",
+  "slug": "a1-movable-type",
+  "file": "Lead-made Chinese Movable Types, Hangzhou National Archives 112.jpg"
+ },
+ {
+  "route": "commercial-press",
+  "station": "A1",
+  "slug": "a1-metal-type",
+  "file": "Metal movable type.jpg"
+ },
+ {
+  "route": "commercial-press",
+  "station": "A3",
+  "slug": "a3-foochow-road-1927",
+  "file": "Shanghai of Today, Plate 22 - Foochow (Fuzhou) Road.jpg"
+ },
+ {
+  "route": "commercial-press",
+  "station": "A3",
+  "slug": "a3-henan-road",
+  "file": "Middle Henan Rd. Shanghai.JPG"
+ },
+ {
+  "route": "commercial-press",
+  "station": "A3",
+  "slug": "a3-xia-ruifang",
+  "file": "夏瑞芳.jpg"
+ },
+ {
+  "route": "commercial-press",
+  "station": "A4",
+  "slug": "a4-shun-pao",
+  "file": "Former Shun Pao Building Shanghai.JPG"
+ },
+ {
+  "route": "commercial-press",
+  "station": "A5",
+  "slug": "a5-ruins-1932",
+  "file": "Commercial Press Ruins Shanghai, 1932, from Japanese postcard.jpg"
+ },
+ {
+  "route": "commercial-press",
+  "station": "A6",
+  "slug": "a6-press-1922",
+  "file": "Commercial Press Shanghai 1922.jpg"
+ },
+ {
+  "route": "commercial-press",
+  "station": "A6",
+  "slug": "a6-wang-yunwu",
+  "file": "王雲五2.jpg"
+ },
+ {
+  "route": "post",
+  "station": "B1",
+  "slug": "b1-customs-house",
+  "file": "Shanghai Customs House.JPG"
+ },
+ {
+  "route": "post",
+  "station": "B1",
+  "slug": "b1-bund-customs-historic",
+  "file": "The Bund with Chinese Custom House and tower (NYPL Hades-2359396-4043752).jpg"
+ },
+ {
+  "route": "post",
+  "station": "B1",
+  "slug": "b1-robert-hart",
+  "file": "Sir Robert Hart, seated with book LCCN2014683527.jpg"
+ },
+ {
+  "route": "post",
+  "station": "B2",
+  "slug": "b2-bund-7",
+  "file": "Bangkok Bank Building in Shanghai (Former Great Northern Telegraph Building) (2024) - img 01.jpg"
+ },
+ {
+  "route": "post",
+  "station": "B2",
+  "slug": "b2-telegraph-1905",
+  "file": "Telegraph Co in Shanghai (1905).jpg"
+ },
+ {
+  "route": "post",
+  "station": "B4",
+  "slug": "b4-gpo-from-creek",
+  "file": "Shanghai General Post Office Building from Suzhou Creek.jpg"
+ },
+ {
+  "route": "post",
+  "station": "B5",
+  "slug": "b5-gpo-2019",
+  "file": "Former Shanghai General Post Office Building, 2019-10-18 01.jpg"
+ },
+ {
+  "route": "post",
+  "station": "B5",
+  "slug": "b5-gpo-2019-b",
+  "file": "Former Shanghai General Post Office Building, 2019-10-18 02.jpg"
+ },
+ {
+  "route": "post",
+  "station": "B6",
+  "slug": "b6-red-revenue",
+  "file": "Stamp China 1897 overprint 1 dollar on 3 cents.jpg"
+ },
+ {
+  "route": "post",
+  "station": "B6",
+  "slug": "b6-red-revenue-b",
+  "file": "紅印花小一元.jpg"
+ },
+ {
+  "route": "post",
+  "station": "B7",
+  "slug": "b7-suzhou-creek-1987",
+  "file": "Shanghai Suzhou Creek 1987.jpg"
+ }
+]
