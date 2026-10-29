@@ -414,9 +414,9 @@ class ClubEventTransferCancellationMySqlIT {
     @Test
     void multiOrderCancellationCommitsEveryOriginalOrderAndReplaysFullBatchCounts() {
         jdbc.update("insert into cms_registration(id,registration_no,owner_type,owner_id,activity_title,ticket_id,ticket_name,ticket_price,member_id,"
-                +"order_num,original_amount,total_amount,point_used,payable_amount,payment_status,payment_time,wechat_payment_amount,registration_status,verification_status,create_time) "
+                +"order_num,original_amount,total_amount,point_used,payable_amount,payment_status,payment_time,wechat_payment_amount,registration_status,verification_status,create_time,pay_expire_time) "
                 +"select id+100,concat(registration_no,'-2'),owner_type,owner_id,activity_title,ticket_id,ticket_name,ticket_price,member_id+1,"
-                +"order_num,original_amount,total_amount,point_used,payable_amount,payment_status,payment_time,wechat_payment_amount,registration_status,verification_status,create_time "
+                +"order_num,original_amount,total_amount,point_used,payable_amount,payment_status,payment_time,wechat_payment_amount,registration_status,verification_status,create_time,pay_expire_time "
                 +"from cms_registration where id=?",REGISTRATION);
         ActivityCancelResult first=(ActivityCancelResult)authorizedCancelOutcome();
         assertEquals(2,first.getRefundedOrders());assertEquals(0,first.getManualOrders());assertEquals(0,first.getClosedPendingOrders());
@@ -465,9 +465,9 @@ class ClubEventTransferCancellationMySqlIT {
                 +"select id+100,?,owner_type,?,name,price,total_inventory,remaining_inventory,del_flag,create_time from oms_ticket where id=?",
                 HOST_ACTOR,ordinary,TICKET);
         jdbc.update("insert into cms_registration(id,registration_no,owner_type,owner_id,activity_title,ticket_id,ticket_name,ticket_price,member_id,"
-                +"order_num,original_amount,total_amount,point_used,payable_amount,payment_status,payment_time,wechat_payment_amount,registration_status,verification_status,create_time) "
+                +"order_num,original_amount,total_amount,point_used,payable_amount,payment_status,payment_time,wechat_payment_amount,registration_status,verification_status,create_time,pay_expire_time) "
                 +"select id+100,concat(registration_no,'-ordinary'),owner_type,?,activity_title,ticket_id+100,ticket_name,ticket_price,member_id+1,"
-                +"order_num,original_amount,total_amount,point_used,payable_amount,payment_status,payment_time,wechat_payment_amount,registration_status,verification_status,create_time "
+                +"order_num,original_amount,total_amount,point_used,payable_amount,payment_status,payment_time,wechat_payment_amount,registration_status,verification_status,create_time,pay_expire_time "
                 +"from cms_registration where id=?",ordinary,REGISTRATION);
         ActivityCancelResult first=group.cancelTopicByHost(TOPIC,HOST_ACTOR,HOST_ACTOR,REASON);
         assertEquals(2,first.getRefundedOrders());assertEquals(2,refundApplications.get());assertEquals(2,payouts.get());
@@ -525,9 +525,9 @@ class ClubEventTransferCancellationMySqlIT {
                     +"select id+?, ?,1,?,name,price,total_inventory,remaining_inventory,del_flag,create_time from oms_ticket where id=?",
                     extra,HOST_ACTOR,TOPIC,TICKET);
             jdbc.update("insert into cms_registration(id,registration_no,owner_type,owner_id,activity_title,ticket_id,ticket_name,ticket_price,member_id,"
-                    +"order_num,original_amount,total_amount,point_used,payable_amount,payment_status,payment_time,wechat_payment_amount,registration_status,verification_status,create_time) "
+                    +"order_num,original_amount,total_amount,point_used,payable_amount,payment_status,payment_time,wechat_payment_amount,registration_status,verification_status,create_time,pay_expire_time) "
                     +"select id+?,concat(registration_no,'-cycle-',?),1,?,activity_title,ticket_id+?,ticket_name,ticket_price,member_id+?,"
-                    +"order_num,original_amount,total_amount,point_used,payable_amount,2,payment_time,wechat_payment_amount,2,verification_status,create_time "
+                    +"order_num,original_amount,total_amount,point_used,payable_amount,2,payment_time,wechat_payment_amount,2,verification_status,create_time,pay_expire_time "
                     +"from cms_registration where id=?",extra,sequence,TOPIC,extra,extra,REGISTRATION);
         }
         sameResult(first,group.cancelTopicByHost(TOPIC,HOST_ACTOR,HOST_ACTOR,REASON,0L));

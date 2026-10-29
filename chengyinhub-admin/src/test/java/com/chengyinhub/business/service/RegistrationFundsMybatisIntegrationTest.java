@@ -276,7 +276,7 @@ class RegistrationFundsMybatisIntegrationTest {
                 "DROP TABLE IF EXISTS activity_cancel_manual_refund_case",
                 "DROP TABLE IF EXISTS refund_application",
                 "DROP TABLE IF EXISTS oms_ticket", "DROP TABLE IF EXISTS cms_activity",
-                "DROP TABLE IF EXISTS cms_topic",
+                "DROP TABLE IF EXISTS cms_topic_cancellation_receipt", "DROP TABLE IF EXISTS cms_topic",
                 "DROP TABLE IF EXISTS cms_points_setting", "DROP TABLE IF EXISTS ums_member_points_detail",
                 "DROP TABLE IF EXISTS ums_member_balance_detail",
                 "DROP TABLE IF EXISTS ums_member", "DROP TABLE IF EXISTS cms_registration");

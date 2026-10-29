@@ -1093,7 +1093,7 @@ Page({
           that.setData({ endErrorText: '原结束请求仍在处理中，请按原请求查回' }); return;
         }
         try { cancellationIntent.acknowledge(intent.actor, intent.scope, intent.id, intent.epoch); }
-        catch (error) { that.setData({ endErrorText: '原结束回执本地确认失败，请按原请求查回' }); return; }
+        catch (error) { that.setData({ endErrorText: '结束结果暂未确认，请重新查看' }); return; }
         that.setData({ endConfirmVisible: false });
         toast(endResultText(d));
         that.fetchDetail();

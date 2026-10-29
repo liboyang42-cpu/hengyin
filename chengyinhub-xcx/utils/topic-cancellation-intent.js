@@ -39,7 +39,7 @@ function remember(actor, scope, id, selectedEpoch, count) {
 }
 function acknowledge(actor, scope, id, selectedEpoch) {
   const who = identity(actor, scope, id), selected = epoch(selectedEpoch), original = peek(actor, scope, id);
-  if (!original || original.epoch !== selected) throw new Error('原取消回执轮次不符');
+  if (!original || original.epoch !== selected) throw new Error('这次结果与上次取消不一致，请重新查看');
   wx.removeStorageSync(who.key);
   if (peek(actor, scope, id) !== null) throw new Error('原取消记录清理未确认，请保留原请求');
 }

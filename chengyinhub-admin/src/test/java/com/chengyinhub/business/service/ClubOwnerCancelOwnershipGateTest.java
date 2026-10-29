@@ -225,7 +225,8 @@ class ClubOwnerCancelOwnershipGateTest {
         // turning any ServiceException/UNKNOWN into a second cancellation identity.
         when(accessService.require(CURRENT_OWNER,CLUB_ID,ACTIVITY_ID,
                 com.chengyinhub.business.access.club.ClubPermission.ACTIVITY_MANAGE))
-                .thenAnswer(call -> accessService.resolve(CURRENT_OWNER,CLUB_ID,null));
+                .thenReturn(new ClubAccessContext(CURRENT_OWNER,CLUB_ID,CURRENT_OWNER,ACTIVITY_ID,
+                        new LinkedHashSet<>(Collections.singletonList(ClubRoleCode.CLUB_OWNER))));
         var ops=mock(com.chengyinhub.business.mapper.ClubEventOpsMapper.class);
         when(ops.selectActivityTopicForUpdate(ACTIVITY_ID,CLUB_ID)).thenReturn(TOPIC_ID);
         when(ops.selectClubOwnerForUpdate(CLUB_ID)).thenReturn(CURRENT_OWNER);

@@ -981,7 +981,7 @@ Page({
             throw new Error((res && res.code != '200' && res.msg) || '取消结果尚未确认，请保留原请求');
           cancellationIntent.acknowledge(intent.actor, intent.scope, intent.id, intent.epoch);
           dc.done(res.msg); that.reload();
-        } catch (error) { dc.failed(error.message || '原取消回执尚未确认'); }
+        } catch (error) { dc.failed(error.message || '取消结果暂未确认，请重新查看'); }
       },
       fail() { if (current()) dc.failed('网络异常，请重试'); }
     });

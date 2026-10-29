@@ -1018,8 +1018,12 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
             Long actor,String operation,String reason) {
         // Legacy HTTP bodies have no requestId: original aggregate ID is the permanent action key,
         // never a fresh UUID. Mutable counters/versions are deliberately absent from the identity.
+        // The existing owner and standalone-notice paths explicitly treat legacy club_id=0 as
+        // standalone. Normalize only that known sentinel in the receipt; keep the raw order /
+        // payment-observation scope unchanged. Negative/other invalid clubs still fail validation.
+        Long receiptClubId=Long.valueOf(0L).equals(activity.getClubId())?null:activity.getClubId();
         return new Request(Resource.ACTIVITY,activity.getId(),actor,owner,activity.getMemberId(),
-                activity.getTopicId(),activity.getClubId(),operation,"activity-cancel-"+activity.getId(),reason);
+                activity.getTopicId(),receiptClubId,operation,"activity-cancel-"+activity.getId(),reason);
     }
 
     private Request topicCancellationRequest(CmsTopic topic,Long owner,Long actor,String reason,Long suppliedEpoch) {
