@@ -65,6 +65,13 @@ function hasCompletePaymentParams(data) {
   });
 }
 
+function isCompletedZeroAmountOrder(data, registrationId) {
+  return !!data && data.payParams == null && registrationId != null && data.registrationId != null
+    && String(registrationId).trim() !== '' && String(data.registrationId) === String(registrationId)
+    && (data.payableAmount === 0 || typeof data.payableAmount === 'string' && /^0(?:\.0+)?$/.test(data.payableAmount))
+    && Number(data.paymentStatus) === 2 && Number(data.registrationStatus) === 2;
+}
+
 function createCheckoutWorkflow(deps) {
   deps = deps || {};
   var createOrder = deps.createOrder;
@@ -184,6 +191,7 @@ function createCheckoutWorkflow(deps) {
 module.exports = {
   createCheckoutWorkflow: createCheckoutWorkflow,
   hasCompletePaymentParams: hasCompletePaymentParams,
+  isCompletedZeroAmountOrder: isCompletedZeroAmountOrder,
   isOrderExpiredFailure: isOrderExpiredFailure,
   isTerminalOrderConflict: isTerminalOrderConflict,
   ORDER_REBUILD_REQUIRED: ORDER_REBUILD_REQUIRED,

@@ -1515,14 +1515,14 @@
       "note": "Default paused exact task seeds, preserved existing definitions, real original IM/XP/badge effects and MySQL task fence; no real cron/operator/provider claim"
     },
     "com.chengyinhub.business.service.RegistrationFundsMybatisIntegrationTest": {
-      "tests": 101,
+      "tests": 108,
       "storage": [
         "mysql"
       ],
       "gates": {
         "CHENGYIN_FUNDS_MYSQL_IT": "1"
       },
-      "note": "Exact101 ordinary Test declarations in the reviewed public source; all original methods retained. Dedicated scratch MySQL. Provider doubles, not full settlement or HTTP authorization acceptance."
+      "note": "Exact108 ordinary Test declarations: original101 retained plus7 zero-cash retry controls. Dedicated scratch MySQL. Provider doubles, not full settlement or HTTP authorization acceptance."
     },
     "com.chengyinhub.business.service.impl.ImActivityTeamRevocationMySqlIT": {
       "tests": 2,

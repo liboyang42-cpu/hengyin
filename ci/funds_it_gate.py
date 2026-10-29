@@ -123,8 +123,8 @@ EXPECTED = {
     # 2026-09-19 RUN-01:88 → 89,+1 = autoVerifyExpiredSessions_scansOnlyEligibleAndCasGuardsRace。
     # 2026-09-21 CYV-P1-003:+2 人工退款冻结/解冻与 RR 旧快照并发负控；+1 服务端版本锁定 8.0.45。
     # 2026-10-03:92 → 93，新增已取消活动在 RR 旧快照下仍拒核销的真库用例。
-    # Frozen merge retains both original source sets: 101 real @Test methods.
-    "RegistrationFundsMybatisIntegrationTest": 101,
+    # Frozen merge retains 101 original cases plus 7 zero-cash retry controls: 108 real @Test methods.
+    "RegistrationFundsMybatisIntegrationTest": 108,
     # 2026-09-15:9 → 10,+1 = cityNodeFrozenCouponSurvivesStockFailureAndConcurrentRetry
     # (f178b58ae 有意新增:据点冻结券在库存失败后保留权益、并发重试只发一张)。
     # 2026-09-17 release-0917 集成:fix-club-0917 拍板6 停用 verify_answer,删掉 5 条答题验票真库 IT

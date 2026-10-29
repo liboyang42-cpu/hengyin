@@ -702,6 +702,68 @@ test('R2 orderinfo:re-pay 畸形200缺任一必需支付字段都明确失败', 
   }
 });
 
+test('订单列表与详情只接受同一原单已完成的零元恢复，不调用微信且不重复提交', () => {
+  for (const modulePath of [ORDER_PATH, ORDERINFO_PATH]) {
+    for (const amount of [0, '0.00']) {
+      sandbox.requests = []; sandbox.payments = []; sandbox.toasts = []; sandbox.modals = []; sandbox.navigations = [];
+      const vm = loadPage(modulePath);
+      vm.data.info = { id: 1001 }; vm._orderId = 1001;
+      vm.data.list = [{ id: 1001, registrationStatus: 1, paymentStatus: 0 }];
+      vm._initWorkflow();
+      if (modulePath === ORDER_PATH) vm.payOrderRequest(1001, 0);
+      else vm.payOrder();
+
+      sandbox.requests[0].success(httpOk({ registrationId: 1001, registrationNo: 'REG-ZERO-ORIGINAL',
+        payableAmount: amount, paymentStatus: 2, registrationStatus: 2 }));
+
+      assert.equal(sandbox.payments.length, 0);
+      assert.equal(vm._workflow.getState(), 'done');
+      if (modulePath === ORDER_PATH) {
+        assert.equal(vm.data.isPaying, false);
+        assert.equal(sandbox.modals[0].title, '支付成功');
+        assert.deepEqual(sandbox.navigations, ['/subpackageMember/signup/index?focusId=1001']);
+      } else {
+        assert.equal(vm.data.paying, false);
+        assert.ok(sandbox.toasts.includes('支付成功'));
+        assert.equal(sandbox.requests.find(r => r.url === '/api/registration/info').data.id, 1001);
+      }
+      assert.equal(vm._workflow.submit({ id: 1001 }), false);
+      assert.equal(sandbox.requests.filter(r => r.url === '/api/registration/pay').length, 1);
+    }
+  }
+});
+
+test('订单列表与详情拒绝缺金额、未完成、异单或冲突支付参数的零元响应', () => {
+  const invalid = [
+    { payableAmount: undefined }, { payableAmount: null }, { payableAmount: '' }, { payableAmount: ' ' },
+    { payableAmount: false }, { payableAmount: [] }, { payableAmount: '0x0' }, { payableAmount: -1 },
+    { payableAmount: 1 }, { paymentStatus: 0 }, { paymentStatus: 1 }, { paymentStatus: undefined },
+    { registrationStatus: 1 }, { registrationStatus: 3 }, { registrationStatus: null },
+    { registrationId: 1002 }, { registrationId: undefined }, { payParams: {} }
+  ];
+  for (const modulePath of [ORDER_PATH, ORDERINFO_PATH]) {
+    for (const override of invalid) {
+      sandbox.requests = []; sandbox.payments = []; sandbox.toasts = []; sandbox.modals = []; sandbox.navigations = [];
+      const vm = loadPage(modulePath);
+      vm.data.info = { id: 1001 };
+      vm._initWorkflow();
+      if (modulePath === ORDER_PATH) vm.payOrderRequest(1001, 0);
+      else vm.payOrder();
+
+      sandbox.requests[0].success(httpOk(Object.assign({ registrationId: 1001, payableAmount: 0,
+        paymentStatus: 2, registrationStatus: 2 }, override)));
+
+      assert.equal(sandbox.payments.length, 0);
+      assert.equal(vm._workflow.getState(), 'idle');
+      assert.equal(sandbox.toasts.includes('支付成功'), false);
+      assert.equal(sandbox.modals.length, 0);
+      assert.equal(sandbox.navigations.length, 0);
+      assert.ok(sandbox.toasts.includes('支付参数不完整，请重试'));
+      assert.equal(vm.data[modulePath === ORDER_PATH ? 'isPaying' : 'paying'], false);
+    }
+  }
+});
+
 test('order:onShow 会重新拉取列表以检测未确认支付恢复', () => {
   const vm = loadPage(ORDER_PATH);
 
