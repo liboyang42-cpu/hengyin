@@ -5,6 +5,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 
 function load(file, app = {}, wx = {}, pages = []) {
+  app = Object.assign({ ensureLoginFor: () => true }, app);
   let config;
   const sandbox = {
     Component(value) { config = value; },
@@ -114,4 +115,92 @@ test('L09 先跳转后收菜单:成功后才 close,失败时菜单保持打开',
   sheet.goTemplate();
   pending.fail(); pending.complete();
   assert.deepEqual(order, ['navigate:/pages/publish/template-intro/index'], '跳转失败时菜单不应关闭');
+});
+
+function guestPublish() {
+  const { createRequireLogin, hasSession } = require('../../utils/auth/require-login.js');
+  const requests = [], prompts = [], pages = [{ route: 'pages/template/index' }];
+  let owner = '', token = '', loginCount = 0, finishLogin;
+  const app = {
+    getUserID: () => owner, getAuthorization: () => token,
+    firstLogin() {
+      loginCount++;
+      return new Promise(resolve => { finishLogin = ok => {
+        if (ok) { owner = '7'; token = 'session'; }
+        resolve({ ok });
+      }; });
+    },
+    sendRequest: options => requests.push(options)
+  };
+  const guard = createRequireLogin({ getApp: () => app, getPages: () => pages,
+    show: options => prompts.push(options) });
+  app.ensureLoginFor = (reason, resume, context) => {
+    if (hasSession(app)) return true;
+    guard.withLogin(Object.assign({}, context, { reason }), resume);
+    return false;
+  };
+  const { instance: bar, config } = load('components/tabBar/index.js', app, {}, pages);
+  return { bar, config, requests, prompts, pages,
+    loginCount: () => loginCount, owner: () => owner,
+    finishLogin: ok => finishLogin(ok) };
+}
+const flushLogin = () => new Promise(resolve => setImmediate(resolve));
+
+test('游客发布先显示统一登录确认；取消保留游客且不读发布能力', async () => {
+  const h = guestPublish();
+  h.bar.openPublishSheet();
+  assert.equal(h.prompts.length, 1);
+  assert.equal(h.prompts[0].title, '登录后继续');
+  assert.equal(h.prompts[0].content, '登录后即可发布作品');
+  assert.equal(h.bar.data.publishSheetShow, false);
+  assert.equal(h.requests.length, 0);
+  h.prompts[0].success({ confirm: false });
+  await flushLogin();
+  assert.equal(h.loginCount(), 0);
+  assert.equal(h.owner(), '');
+  assert.equal(h.requests.length, 0);
+});
+
+test('游客重复点击只登录一次，成功后仅续开一次发布菜单并读取真实能力', async () => {
+  const h = guestPublish();
+  h.bar.openPublishSheet(); h.bar.openPublishSheet();
+  assert.equal(h.prompts.length, 1);
+  h.prompts[0].success({ confirm: true });
+  await flushLogin();
+  assert.equal(h.loginCount(), 1);
+  assert.equal(h.requests.length, 0);
+  h.finishLogin(true);
+  await flushLogin();
+  assert.equal(h.bar.data.publishSheetShow, true);
+  assert.equal(h.requests.length, 1);
+  assert.equal(h.requests[0].url, '/api/publish/home');
+  h.requests[0].success({ code: 200, data: { permission: { canSimplePublish: false } } });
+  assert.equal(h.bar.data.publishSnapshot.permission.canSimplePublish, false);
+});
+
+for (const invalidation of ['hide', 'detached', 'target']) {
+  test('登录在途发生' + invalidation + '时不在过期页面续开发布菜单', async () => {
+    const h = guestPublish();
+    h.bar.openPublishSheet();
+    h.prompts[0].success({ confirm: true });
+    await flushLogin();
+    if (invalidation === 'hide') h.config.pageLifetimes.hide.call(h.bar);
+    else if (invalidation === 'detached') h.config.lifetimes.detached.call(h.bar);
+    else h.bar.data.mode = 'merchant';
+    h.finishLogin(true);
+    await flushLogin();
+    assert.equal(h.requests.length, 0);
+    assert.equal(h.bar.data.publishSheetShow, false);
+  });
+}
+
+test('游客登录失败不展开菜单也不读取发布能力', async () => {
+  const h = guestPublish();
+  h.bar.openPublishSheet();
+  h.prompts[0].success({ confirm: true });
+  await flushLogin();
+  h.finishLogin(false);
+  await flushLogin();
+  assert.equal(h.bar.data.publishSheetShow, false);
+  assert.equal(h.requests.length, 0);
 });
