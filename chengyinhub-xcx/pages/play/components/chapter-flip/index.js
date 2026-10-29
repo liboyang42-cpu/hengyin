@@ -135,7 +135,7 @@ Component({
       this._showScene();
       this._at(() => this._turnTo(this._rot + 1080, 1500, E.easeInCubic, () => {
         this._turnTo(1320, 560, E.easeOutBack, () => {
-          this._rot = 240; this._flare = Date.now(); this._shakeT = Date.now();
+          this._rot = 240; this._flare = Date.now();
           this._at(() => this._explode(), 420);
         });
       }), 420);

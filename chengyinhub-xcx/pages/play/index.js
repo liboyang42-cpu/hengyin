@@ -1735,7 +1735,7 @@ Page({
           const cy = it.top + it.height / 2 - box.top;
           const inView = that.data.reducedMotion || (it.bottom > box.top + 80 && it.top < box.bottom - 40);
           if (ln.in && !inView) return { ...ln, in: false, dir: cy < 0 ? 'down' : 'up', d: 0 };
-          if (!ln.in && inView) { const d = (order++) * 0.05; return { ...ln, in: true, dir, d }; }
+          if (!ln.in && inView) { const d = (order++) * 0.35; return { ...ln, in: true, dir, d }; }
           return ln;
         });
         // 只发显形状态中真正改变的路径,不把文字、图片与玩法配置整表重传。
@@ -1757,7 +1757,6 @@ Page({
    *  视差幅度大于手指位移:k>1 的层跟手跑得比手快,近的才「近」。 */
   _startStoryDust() {
     this._stopStoryDust();
-    if (this.data.chapterFull) return;
     if (this.data.reducedMotion) return;      // 降低动态:静止的星点即可,不跑 rAF
     // 越往后越不正常 · 第 1 档起「字偶尔闪」:隔几秒挑一段带档位的闪 90ms(不占 keyframes 额度)
     this._oddTimer = setInterval(() => {
@@ -3724,7 +3723,6 @@ Page({
       if (!wasOpen) this._storyTop = 0;
       this.showChapterGate();
       if (!wasOpen) this._resumeStory();
-      if (autoNodeId != null) this._autoInline(autoNodeId);
       this.measureChapter();
       if (!this.data.chapterGate.show) this.playChapterAudio();
       this._enterThemeChapter();
@@ -4304,6 +4302,7 @@ Page({
       timeText: c.totalTime ? Math.round(c.totalTime / 60) + ' 分钟' : '',
       description: c.description || '',
       blocks: Array.isArray(c.blocks) ? c.blocks : null,
+      audioUrl: c.audioUrl || '',
       atmospherePreset: normalizeAtmosphere(c.atmospherePreset),
       atmosphereClass: atmosphereClass(c.atmospherePreset),
       nodeCount: 0,   // 回填于 loadData:按 chapterId 数节点
@@ -4409,6 +4408,7 @@ Page({
           mileage: card.mileage || '',
           timeText: card.timeText || '',
           blocks: card.blocks || null,
+          audioUrl: card.audioUrl || '',
           atmospherePreset: normalizeAtmosphere(card.atmospherePreset),
           atmosphereClass: atmosphereClass(card.atmospherePreset),
         };
@@ -6741,7 +6741,7 @@ Page({
     /* 分支走到结局时不自动接着走:结局那段话就是这一站的全部回报,0.9 秒就被翻走等于没看到
        (2026-10-27 生产实测:南京路结案三选一,选完直接跳进附录章节卡)。玩家读完点下面的「继续」。 */
     const advanceStory = this.data.chapterFull && this._storyOpenNode && ready && !this.data.playKit.readyForBase
-      && kit.type !== 'branch';
+      && kit.type !== 'branch' && previous.sessionId != null && String(previous.sessionId) === String(kit.sessionId);
     // 填了一半的草稿按「账号 + 局 + 站」存本地(建档 / 留言组件自取);试玩不存
     if (kit.type === 'profile') this._profileNodeId = String(active.node.nodeId);
     if ((kit.type === 'profile' || kit.type === 'note') && !this.data.isPreview && !this.data.isMock) kit.draftKey = storyResume.draftKey(this._runSessionScope(), active.node.nodeId);

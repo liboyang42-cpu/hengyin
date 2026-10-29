@@ -83,16 +83,8 @@
     <!-- 2026-09-23 用户:左上角要一直看得见的小地图(像 GTA 的雷达),点一下切到大地图。
          原生 <map> 会穿透盖在它上面的层,所以只在故事流「上面没东西」时挂载:大地图 / 章节门 / 工具菜单 /
          试玩结局 / 整屏玩法任一在场都卸掉,这时退回画出来的罗盘。 -->
-    <view class="fx-story__compass fx-story__radar" bindtap="openStoryMap" aria-role="button" aria-label="打开地图{{storyDistText ? ',下一站 ' + storyDistText : ''}}" hover-class="cy-pressed" hover-stay-time="80">
-      <view class="radar__disc">
-        <free-map class="fx-story__radar-map" wx:if="{{!storyMap && !chapterGate.show && !sessionToolsOpen && !previewEnding.show && !themeBackpackOpen && !album.show && !playKit.show && !(advancedPlay.show && !playKit.kit) && screen !== 'gamePlay'}}"
-                  nodes="{{fmNodes}}" player="{{fmPlayer}}" target="{{nextNode}}"
-                  center="{{fmPlayer && fmPlayer.lat ? fmPlayer : (nextNode && nextNode.lat ? nextNode : fmCenter)}}" scale="16" fit="{{true}}" fit-padding="{{[54, 54, 54, 54]}}"
-                  subkey="{{fmSubkey}}" layer-style="{{fmLayerStyle}}" interactive="{{false}}" show-controls="{{false}}" show-photo-callouts="{{false}}"
-                  accessibility-label="小地图" reduced-motion="{{reducedMotion}}" compact="{{true}}" />
-        <view class="compass__n radar__n" wx:else>N</view>
-        <view class="radar__hit"></view>
-      </view>
+    <view class="fx-story__compass" bindtap="openStoryMap" aria-role="button" aria-label="打开地图{{storyDistText ? ',下一站 ' + storyDistText : ''}}" hover-class="cy-pressed" hover-stay-time="80">
+      <view class="compass__dial"><view class="compass__n">N</view><view class="compass__dot"></view></view>
       <text class="compass__dist" wx:if="{{storyDistText}}">{{storyDistText}}</text>
     </view>
     <view class="fx-story__t theme-chapter-nav {{isPreview ? 'theme-chapter-nav--preview' : ''}}" style="top:{{chrome.actionTop}}px">{{chapter.name}}</view>
@@ -294,6 +286,7 @@
           <view class="dsw {{reducedMotion ? '' : 'is-on'}}" catchtap="toggleReducedMotion" aria-role="switch" aria-checked="{{!reducedMotion}}" aria-label="动态效果" hover-class="cy-pressed" hover-stay-time="80"><view class="dsw-i"></view></view>
         </view>
     </scroll-view>
+  <canvas type="2d" id="stBack" class="fx-story__dust"></canvas>
   <view class="chfull__stage">
     <scroll-view class="chfull__scroll st-scroll" scroll-y enhanced bounces show-scrollbar="{{false}}"
                  bindscroll="onChapterScroll" scroll-into-view="{{chapterGameAnchor}}" scroll-with-animation>

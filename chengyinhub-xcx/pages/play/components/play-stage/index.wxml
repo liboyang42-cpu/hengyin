@@ -5,7 +5,7 @@
 <!-- ⚠️ --pk-top 必须把顶上这两行(限时条 / 还能错)算进去。原型里它们是 `flex:none`
      排在流里、天然把内容顶下去(见 .tlimit);我们为了让各屏自己刷底色做成了绝对定位,
      那就得手动让位 —— 2026-09-16 实证:限时条接通那天起,它正好压在题干上。 -->
-<view class="st skin-{{skin || 'none'}} {{shaking ? 'st--shake' : ''}} {{verdict ? 'st--verdict' : ''}}" wx:if="{{show}}" style="--pk-top:{{contentTop}}px;--pe-go:{{peGo}};--pe-on:{{peOn}}">
+<view class="st skin-{{skin || 'none'}} {{verdict ? 'st--verdict' : ''}}" wx:if="{{show}}" style="--pk-top:{{contentTop}}px;--pe-go:{{peGo}};--pe-on:{{peOn}}">
   <view class="st__back" style="top:{{topPad + 12}}px" bindtap="onBack"
         aria-role="button" aria-label="退出这个玩法"
         hover-class="st__press" hover-stay-time="80"><cy-icon name="back" size="40" /></view>

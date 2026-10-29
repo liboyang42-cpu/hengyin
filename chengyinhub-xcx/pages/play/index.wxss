@@ -1580,7 +1580,7 @@ page { background: var(--cy-color-bg-page); }
 .st-line{ margin:0 96rpx 360rpx; text-align:center;
   font-size:34rpx; line-height:1.95; color:var(--cy-color-text-primary); /* ds-ok 故事流正文比常规正文大一档 */
   opacity:0; transform:translateY(1.95em) scale(.78); filter:blur(22rpx);   /* ds-ok 样机 blur(11px);rpx→px 折半,22rpx≈11px */
-  transition:opacity .5s ease, transform .5s cubic-bezier(.34,1.46,.5,1), filter .5s ease;
+  transition:opacity 1.4s ease, transform 1.6s cubic-bezier(.22,1,.36,1), filter 1.4s ease;
   transition-delay:var(--d, 0s); }   /* 同一批错开 50ms:一起亮就成了整块淡入 */
 .st-line.from-top{ transform:translateY(-1.95em) scale(.78); }   /* 向上滚:从上方落下来 */
 .st-line.is-in{ opacity:1; transform:translateY(0) scale(1); filter:blur(0); }
