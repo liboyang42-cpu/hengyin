@@ -253,6 +253,19 @@ test('baoming:重放命中已有订单(无 payParams)走 /api/registration/pay �
     '重放单不能被取消');
 });
 
+test('baoming:重放取参数缺金额不能误当免费，取消微信支付不显示购票成功', () => {
+  const vm = loadBaomingCheckout();
+  vm.handlePayment();
+  sandbox.requests[0].success(httpOk({ registrationId: 1001, payableAmount: 50 }));
+  sandbox.requests[1].success(httpOk(validRepayData()));
+  assert.equal(sandbox.payments.length, 1);
+  assert.notEqual(vm.data.resultSheet.kind, 'success');
+  assert.deepEqual(sandbox.navigations, []);
+  sandbox.payments[0].fail({ errMsg: 'requestPayment:fail cancel' });
+  assert.notEqual(vm.data.resultSheet.kind, 'success');
+  assert.deepEqual(sandbox.navigations, []);
+});
+
 test('baoming:重放取参数失败时不取消订单,保留可重试出口', () => {
   const vm = loadBaomingCheckout();
 

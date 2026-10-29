@@ -26,7 +26,7 @@ function reply(request, rows, total = rows.length) {
   request.success({ code: 200, data: request.url === '/api/team/my' ? rows : { rows, total } });
   if (request.complete) request.complete();
 }
-const topic = id => ({ id, registrationStatus: 2, cmsTopic: { id: 10, name: '路线' } });
+const topic = id => ({ id, paymentStatus: 2, registrationStatus: 2, cmsTopic: { id: 10, name: '路线' } });
 const activity = id => ({ id, paymentStatus: 2, registrationStatus: 2, cmsActivity: { id: 63, name: '场次' } });
 
 test('首show不重复加载；隐藏取消后返回重读两类票与队伍，移除旧票', () => {
