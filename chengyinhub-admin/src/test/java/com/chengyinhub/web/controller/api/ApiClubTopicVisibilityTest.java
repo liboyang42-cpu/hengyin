@@ -158,8 +158,6 @@ class ApiClubTopicVisibilityTest {
             ReflectionTestUtils.setField(controller, "clubMemberService", members);
             ReflectionTestUtils.setField(controller, "cmsTopicService", topics);
             ReflectionTestUtils.setField(controller, "clubPostService", posts);
-            ReflectionTestUtils.setField(controller, "clubPostRepostService",
-                    mock(com.chengyinhub.business.service.IClubPostRepostService.class));
             ClubPost postQuery = new ClubPost();
             postQuery.setClubId(73L);
             boolean allowed = scenario < 4;

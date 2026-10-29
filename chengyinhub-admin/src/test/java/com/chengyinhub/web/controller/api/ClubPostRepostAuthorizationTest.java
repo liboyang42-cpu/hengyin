@@ -11,7 +11,6 @@ import com.chengyinhub.business.access.club.IClubAccessService;
 import com.chengyinhub.business.mapper.ClubGovernanceMapper;
 import com.chengyinhub.business.service.IClubMemberService;
 import com.chengyinhub.business.service.IClubPostLikeService;
-import com.chengyinhub.business.service.IClubPostRepostService;
 import com.chengyinhub.business.service.IClubPostService;
 import com.chengyinhub.business.service.IClubService;
 import com.chengyinhub.business.service.ICoopInviteService;
@@ -54,7 +53,8 @@ class ClubPostRepostAuthorizationTest {
     private IClubService clubs;
     private IClubMemberService members;
     private IClubPostService posts;
-    private IClubPostRepostService reposts;
+    /** 转发方法长在 IClubPostService 上(与转发数同一聚合);单独起个名字读起来清楚 */
+    private IClubPostService reposts;
     private ClubGovernanceMapper governance;
     private Club club;
 
@@ -65,14 +65,13 @@ class ClubPostRepostAuthorizationTest {
         clubs = mock(IClubService.class);
         members = mock(IClubMemberService.class);
         posts = mock(IClubPostService.class);
-        reposts = mock(IClubPostRepostService.class);
+        reposts = posts;
         governance = mock(ClubGovernanceMapper.class);
         ClubParticipationGuardImpl guard = new ClubParticipationGuardImpl();
         ReflectionTestUtils.setField(guard, "clubGovernanceMapper", governance);
         ReflectionTestUtils.setField(controller, "clubService", clubs);
         ReflectionTestUtils.setField(controller, "clubMemberService", members);
         ReflectionTestUtils.setField(controller, "clubPostService", posts);
-        ReflectionTestUtils.setField(controller, "clubPostRepostService", reposts);
         ReflectionTestUtils.setField(controller, "clubPostLikeService", mock(IClubPostLikeService.class));
         ReflectionTestUtils.setField(controller, "clubParticipationGuard", guard);
         club = club(CLUB, 1);
@@ -171,12 +170,12 @@ class ClubPostRepostAuthorizationTest {
         @Test
         void clubThenPostLocksAndGuardPrecedeTheWrite() {
             controller.postRepost(body());
-            InOrder order = inOrder(posts, clubs, governance, reposts);
+            InOrder order = inOrder(posts, clubs, governance);
             order.verify(posts).selectClubPostById(POST);
             order.verify(clubs).selectClubByIdForUpdate(CLUB);
             order.verify(posts).selectClubPostByIdForUpdate(POST);
             order.verify(governance).selectEffectiveByClubAndMember(eq(CLUB), eq(VIEWER), any(Date.class));
-            order.verify(reposts).setReposted(POST, VIEWER, true);
+            order.verify(posts).setReposted(POST, VIEWER, true);
         }
     }
 

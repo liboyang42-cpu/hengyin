@@ -2,7 +2,7 @@ package com.chengyinhub.business.mapper;
 
 import com.chengyinhub.business.domain.ClubPost;
 import com.chengyinhub.business.domain.ClubPostRepost;
-import com.chengyinhub.business.service.impl.ClubPostRepostServiceImpl;
+import com.chengyinhub.business.service.impl.ClubPostServiceImpl;
 import org.apache.ibatis.builder.xml.XMLMapperBuilder;
 import org.apache.ibatis.mapping.Environment;
 import org.apache.ibatis.session.Configuration;
@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * dw29 L8 转发:真 SQL 跑 ClubPostRepostServiceImpl + 两个 mapper XML。
+ * dw29 L8 转发:真 SQL 跑 ClubPostServiceImpl 的转发方法 + ClubPostMapper.xml。
  * 去重(同一人同一帖至多一条有效转发、重复转发不重复计数)、撤销(置 del_flag=2,再转发复用同一行)、
  * 转发数跟着真实状态走,以及动态流取转发条目的范围与时间窗。
  */
@@ -41,7 +41,7 @@ class ClubPostRepostMyBatisTest {
 
     private SqlSession session;
     private JdbcTemplate jdbc;
-    private ClubPostRepostServiceImpl service;
+    private ClubPostServiceImpl service;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -49,8 +49,7 @@ class ClubPostRepostMyBatisTest {
         jdbc = new JdbcTemplate(ds);
         seed();
         session = factory(ds).openSession(true);
-        service = new ClubPostRepostServiceImpl();
-        ReflectionTestUtils.setField(service, "clubPostRepostMapper", session.getMapper(ClubPostRepostMapper.class));
+        service = new ClubPostServiceImpl();
         ReflectionTestUtils.setField(service, "clubPostMapper", session.getMapper(ClubPostMapper.class));
     }
 
@@ -198,8 +197,7 @@ class ClubPostRepostMyBatisTest {
         configuration.getTypeAliasRegistry().registerAlias("ClubPost", ClubPost.class);
         configuration.getTypeAliasRegistry().registerAlias("ClubPostRepost", ClubPostRepost.class);
         configuration.addMapper(ClubPostMapper.class);
-        configuration.addMapper(ClubPostRepostMapper.class);
-        for (String resource : new String[] {"mapper/business/ClubPostMapper.xml", "mapper/business/ClubPostRepostMapper.xml"}) {
+        for (String resource : new String[] {"mapper/business/ClubPostMapper.xml"}) {
             try (InputStream input = getClass().getClassLoader().getResourceAsStream(resource)) {
                 if (input == null) throw new IllegalStateException("missing " + resource);
                 new XMLMapperBuilder(input, configuration, resource, configuration.getSqlFragments()).parse();

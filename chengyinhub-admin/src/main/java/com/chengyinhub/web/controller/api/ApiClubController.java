@@ -55,7 +55,6 @@ import com.chengyinhub.business.service.IClubLifecycleCommandService;
 import com.chengyinhub.business.service.IClubRoleAssignmentService;
 import com.chengyinhub.business.service.IClubPostCommentService;
 import com.chengyinhub.business.service.IClubPostLikeService;
-import com.chengyinhub.business.service.IClubPostRepostService;
 import com.chengyinhub.business.service.IClubPostService;
 import com.chengyinhub.business.service.IViewCreativeSquareService;
 import com.chengyinhub.business.service.IClubService;
@@ -178,9 +177,6 @@ public class ApiClubController extends BaseController {
 
     @Autowired
     private IClubPostLikeService clubPostLikeService;
-
-    @Autowired
-    private IClubPostRepostService clubPostRepostService;
 
     @Autowired
     private com.chengyinhub.business.service.ICoopInviteService coopInviteService;
@@ -1676,7 +1672,7 @@ public class ApiClubController extends BaseController {
             until = cursor == null ? null : cursor.getCreateTime();
         }
         Date since = rest.size() >= limit ? rest.get(rest.size() - 1).getCreateTime() : null;
-        List<ClubPostRepostItemVO> reposts = repostItems(clubPostRepostService.selectFeedReposts(
+        List<ClubPostRepostItemVO> reposts = repostItems(clubPostService.selectFeedReposts(
                 java.util.Collections.singletonList(body.getClubId()), since, until, POST_PAGE_MAX));
         List<ClubPost> all = withRepostOriginals(posts, reposts);
         projectPostReferences(all);
@@ -1704,7 +1700,7 @@ public class ApiClubController extends BaseController {
         if (memberId == null || posts.isEmpty()) return;
         List<Long> ids = new ArrayList<>();
         for (ClubPost p : posts) if (p.getId() != null && !ids.contains(p.getId())) ids.add(p.getId());
-        Set<Long> reposted = clubPostRepostService.selectRepostedPostIds(memberId, ids);
+        Set<Long> reposted = clubPostService.selectRepostedPostIds(memberId, ids);
         for (ClubPost p : posts) p.setViewerReposted(reposted.contains(p.getId()));
     }
 
@@ -1718,7 +1714,7 @@ public class ApiClubController extends BaseController {
         List<Long> postIds = new ArrayList<>();
         for (ClubPostRepost r : reposts) if (r.getPostId() != null && !postIds.contains(r.getPostId())) postIds.add(r.getPostId());
         Map<Long, ClubPost> originals = new HashMap<>();
-        for (ClubPost p : clubPostRepostService.selectOriginalPosts(postIds)) {
+        for (ClubPost p : clubPostService.selectOriginalPosts(postIds)) {
             if (p != null && p.getId() != null) originals.put(p.getId(), p);
         }
         Map<Long, Boolean> readableClub = new HashMap<>();
@@ -1866,7 +1862,7 @@ public class ApiClubController extends BaseController {
         List<ClubPost> posts = clubPostService.selectFeedByClubIds(new ArrayList<>(scope), limit);
         // dw29 L8:范围内俱乐部成员的转发与帖文按时间合并,整体仍只取 limit 条。
         List<ClubPostRepostItemVO> reposts = repostItems(
-                clubPostRepostService.selectFeedReposts(new ArrayList<>(scope), null, null, limit));
+                clubPostService.selectFeedReposts(new ArrayList<>(scope), null, null, limit));
         List<ClubPost> all = withRepostOriginals(posts, reposts);
         // 聚合流与俱乐部页是同一批帖子,引用投影也得给 —— 不给的话前端拿不到 sportName,
         // variant 判定恒假,成绩卡/模板卡在达人页永远不出现(俱乐部页里却出现),同一条帖两种样子。
@@ -1990,10 +1986,10 @@ public class ApiClubController extends BaseController {
             if (!canViewClub(club)) return error("这个俱乐部只对成员开放");
             clubParticipationGuard.requireAllowed(club.getId(), memberId);
         }
-        clubPostRepostService.setReposted(targetPost.getId(), memberId, reposted);
+        clubPostService.setReposted(targetPost.getId(), memberId, reposted);
         ClubPost after = clubPostService.selectClubPostById(targetPost.getId());
         Map<String, Object> d = new HashMap<>();
-        d.put("reposted", clubPostRepostService.isReposted(targetPost.getId(), memberId));
+        d.put("reposted", clubPostService.isReposted(targetPost.getId(), memberId));
         d.put("repostCount", after == null || after.getRepostCount() == null ? 0 : after.getRepostCount());
         return AjaxResult.success(d);
     }
