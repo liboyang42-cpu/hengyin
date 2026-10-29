@@ -70,15 +70,8 @@ function bundle(id, body) {
 }
 const ok = data => ({ code: 200, data });
 
-test('广场列表 / 帖文详情 / 评论:帖文正文与评论按解码后的纯文本展示', async () => {
-  const list = load('pages/square/list/index.js', { '/api/v1/community/feeds/LATEST': ok({ items: [bundle(56, RAW)], hasMore: false, nextCursor: 56 }) });
-  list.page.getList(); await flush();
-  assert.equal(list.page.data.list[0].contents, SHOWN);
-  // 编辑入口回填的是解码值
-  list.page._actionIndex = 0; list.page.closePostActions = () => {};
-  list.page.editCurrentSquarePost(56);
-  assert.equal(list.page.data.composeEdit.contents, SHOWN);
-
+// 2026-10-29:广场列表页(pages/square/list)已删,列表侧用例随页撤走;详情与评论仍按解码值展示。
+test('帖文详情 / 评论:帖文正文与评论按解码后的纯文本展示', async () => {
   const detail = load('pages/square/detail/index.js', {
     '/api/v1/community/posts/56/comments': ok({ items: [{ id: 9, postId: 56, body: 'x&lt;y &amp; z', authorId: 1 }], hasMore: false, nextCursor: null }),
     '/api/v1/community/posts/56': ok(bundle(56, RAW)),
@@ -173,13 +166,15 @@ test('俱乐部资料:enrichClub 解码名称、简介、审核原因;编辑表�
   assert.equal(detail.page.data.club.myJoinReviewReason, '请写<理由');
 });
 
-test('达人页俱乐部动态:帖子正文解码', async () => {
+test('发现页全站帖文:俱乐部帖与社区帖正文都解码', async () => {
+  // 2026-10-29:俱乐部 tab 改名发现,帖文流 = 俱乐部帖(scope=all) + 社区帖(feeds/LATEST)按时间合并
   const h = load('pages/talent/list/index.js', {
-    '/api/club/post/feed': ok({ rows: [{ id: 1, content: RAW, createTime: '2026-10-15 10:00:00' }], clubCount: 1 }),
+    '/api/club/post/feed': ok({ rows: [{ id: 1, content: RAW, createTime: '2026-10-15 10:00:00' }], hasMore: false }),
+    '/api/v1/community/feeds/LATEST': ok({ items: [bundle(56, RAW)], hasMore: false, nextCursor: null }),
   });
-  const loader = Object.keys(h.page).find(k => typeof h.page[k] === 'function' && /\/api\/club\/post\/feed/.test(String(h.page[k])));
-  h.page[loader](); await flush();
-  assert.equal(h.page.data.feed[0].contents, SHOWN);
+  h.page.loadFeed(); await flush(); await flush(); await flush();
+  assert.equal(h.page.data.feed.length, 2);
+  h.page.data.feed.forEach(row => assert.equal(row.contents, SHOWN));
 });
 
 test('入会申请:申请理由解码', async () => {

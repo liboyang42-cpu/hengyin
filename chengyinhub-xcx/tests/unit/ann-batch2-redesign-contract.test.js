@@ -8,8 +8,6 @@ const read = (relativePath) => fs.readFileSync(path.join(ROOT, relativePath), 'u
 
 function sources() {
   return {
-    squareWxml: read('pages/square/list/index.wxml'),
-    squareWxss: read('pages/square/list/index.wxss'),
     badgeJs: read('subpackageP3/pages/badge-wall/index/index.js'),
     badgeWxml: read('subpackageP3/pages/badge-wall/index/index.wxml'),
     badgeWxss: read('subpackageP3/pages/badge-wall/index/index.wxss'),
@@ -41,15 +39,7 @@ function isPurple(hex) {
   return hue >= 250 && hue <= 330
 }
 
-function assertSquareContract(files) {
-  assert.match(files.squareWxml, /<scroll-view[^>]*class="sq-upcoming-track"[^>]*scroll-x/)
-  assert.match(files.squareWxml, /wx:for="\{\{upcomingCards\}\}"/)
-  assert.match(files.squareWxml, /class="up-avatar-stack"[\s\S]*?wx:for="\{\{item\.avatars\}\}"/)
-  assert.match(files.squareWxml, /wx:if="\{\{item\.avatarOverflow > 0\}\}"[^>]*>\+\{\{item\.avatarOverflow\}\}/)
-  assert.match(files.squareWxss, /\.sq-upcoming-track\s*\{[^}]*white-space:\s*nowrap/)
-  assert.match(files.squareWxss, /\.sq-upcoming-card\s*\{[^}]*display:\s*inline-flex/)
-}
-
+// 2026-10-29:A05 的广场列表页(pages/square/list)已删,横滑即将开始卡随页撤走,A05 契约与负控一并移除。
 function assertBadgeWallContract(files) {
   assert.match(files.badgeWxml, /<canvas[^>]*type="webgl"[^>]*id="wall"/, '单 canvas WebGL 引擎必须保留')
   // 2026-10-27 owner P-30:墙 / 列表切换按业主要求撤掉,只剩一页(上已点亮、下未解锁)
@@ -85,19 +75,12 @@ function assertGrowthContract(files) {
 }
 
 function assertAll(files) {
-  assertSquareContract(files)
   assertBadgeWallContract(files)
   assertGrowthContract(files)
 }
 
-test('A05/B67/B68：多卡横滑、WebGL 墙/列表双视图与中性成长层级全部落地', () => {
+test('B67/B68：WebGL 墙/列表双视图与中性成长层级全部落地', () => {
   assertAll(sources())
-})
-
-test('负控一：A05 去掉横向滚动能力必须判红', () => {
-  const files = sources()
-  files.squareWxml = files.squareWxml.replace(' scroll-x', '')
-  assert.throws(() => assertAll(files), assert.AssertionError)
 })
 
 test('负控二：B68 恢复彩色 discStyle 内联仪表必须判红', () => {

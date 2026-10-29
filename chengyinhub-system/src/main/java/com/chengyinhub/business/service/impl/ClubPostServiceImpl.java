@@ -317,6 +317,13 @@ public class ClubPostServiceImpl implements IClubPostService
         return clubPostMapper.selectFeedByClubIds(clubIds, limit <= 0 ? 20 : Math.min(limit, 50));
     }
 
+    @Override
+    public List<ClubPost> selectSiteFeed(Long viewerId, Long beforeId, int limit) {
+        // 51 = 单页上限 50 + 1 条探针(调用方据此判断 hasMore)。
+        return clubPostMapper.selectSiteFeed(viewerId, beforeId != null && beforeId > 0 ? beforeId : null,
+                limit <= 0 ? 21 : Math.min(limit, 51));
+    }
+
     private void audit(ClubAccessContext access, String action, ClubPost post,
                        int beforeVersion, int afterVersion, String requestId, String reason) {
         BusinessAuditEvent event = new BusinessAuditEvent();

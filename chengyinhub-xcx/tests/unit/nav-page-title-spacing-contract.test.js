@@ -74,7 +74,6 @@ const NAV_WITHOUT_L1_TITLE = new Set([
   'subpackageRoam/citynode-code/index.wxml',
   'pages/search2/result/index.wxml',
   'pages/square/detail/index.wxml',
-  'pages/square/list/index.wxml', // 2026-08-07 用户裁决:帖文流无大标题
   'pages/templatedetail/templatedetail.wxml',
   'pages/templatedetail/topic-preview/index.wxml', // 2026-10-28 卡堆预览：封面卡堆 + 主题名承担标题，导航只留返回
   'pages/topic/index/index.wxml',

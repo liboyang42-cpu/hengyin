@@ -92,8 +92,8 @@ test('漫游分享回执:成功记 complete,失败/取消记 fail(只放渠道�
   ])
 })
 
-test('广场列表/详情转发:success/fail 回调记回执', () => {
-  for (const rel of ['pages/square/list/index.js', 'pages/square/detail/index.js']) {
+test('广场详情转发:success/fail 回调记回执(2026-10-29 列表页已删)', () => {
+  for (const rel of ['pages/square/detail/index.js']) {
     const src = fs.readFileSync(path.join(ROOT, rel), 'utf8')
     const share = src.slice(src.indexOf('onShareAppMessage'), src.indexOf('onShareAppMessage') + 1800)
     assert.match(share, /success: function[\s\S]*?analytics\.track\('square_share_complete'/, rel)

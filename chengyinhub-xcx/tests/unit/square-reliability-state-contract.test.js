@@ -84,78 +84,13 @@ function loadPage(relativePath) {
   }
 }
 
-test('广场刷新失败保留旧帖并在 complete 后收起系统刷新动画', () => {
-  const h = loadPage('pages/square/list/index.js')
-  const previous = [{ id: 7, contents: '已有帖文' }]
-  Object.assign(h.page.data, { list: previous, listLoading: false, hasMore: true, page_no: 2 })
-
-  h.page.refreshList()
-
-  assert.deepEqual(h.page.data.list, previous)
-  assert.equal(h.page.data.isRefreshing, true)
-  assert.equal(h.requests.length, 1)
-  assert.equal(h.requests[0].data.pageNum, 1)
-
-  h.requests[0].success({ code: 500, msg: '刷新暂时失败' })
-  assert.deepEqual(h.page.data.list, previous)
-  assert.equal(h.pullStops, 0)
-
-  h.requests[0].complete()
-  assert.equal(h.page.data.isRefreshing, false)
-  assert.equal(h.pullStops, 1)
-})
-
-test('广场加载更多单飞，失败保留分页资格并提供原位重试', () => {
-  const h = loadPage('pages/square/list/index.js')
-  Object.assign(h.page.data, {
-    list: [{ id: 1 }],
-    listLoading: false,
-    page_no: 1,
-    hasMore: true,
-  })
-
-  h.page.onReachBottom()
-  h.page.onReachBottom()
-
-  assert.equal(h.requests.length, 1)
-  assert.equal(h.requests[0].data.pageNum, 2)
-  assert.equal(h.page.data.isLoadingMore, true)
-
-  h.requests[0].fail({ errMsg: 'request:fail timeout' })
-  h.requests[0].complete()
-  assert.equal(h.page.data.page_no, 1)
-  assert.equal(h.page.data.hasMore, true)
-  assert.match(h.page.data.loadMoreError, /网络/)
-
-  h.page.retryLoadMore()
-  assert.equal(h.requests.length, 2)
-  assert.equal(h.requests[1].data.pageNum, 2)
-})
-
+// 2026-10-29:广场列表页(pages/square/list)已删,列表刷新/分页/点赞关注用例随页撤走;发现页全站流见 discover-feed 单测。
 // 2026-10-27 P-20 owner:广场行内发布框撤掉,新建帖统一走全屏发帖弹窗 cy-post-compose。
 // 原「广场发布有可见忙碌态，失败保留草稿并能重试」「广场发布成功关闭编辑层…」两条钉的是页内发布流水,
 // 随之撤走;组件侧的单飞 / 失败保留 / 关闭即存由 square-post-compose-context 与 club-post-compose-unified 覆盖。
 
 test('帖子与评论的点赞、关注微操作单飞，失败不会提前改写界面状态', () => {
-  const list = loadPage('pages/square/list/index.js')
-  Object.assign(list.page.data, {
-    list: [{ id: 3, memberId: 8, isLiked: 0, likeCount: 4, isFollowTheUser: 0 }],
-  })
   const event = { currentTarget: { dataset: { index: 0, type: 1 } } }
-
-  list.page.lickClick(event)
-  list.page.lickClick(event)
-  assert.equal(list.requests.length, 1)
-  assert.equal(list.page.data.list[0].isLiked, 0)
-  list.requests[0].fail({ errMsg: 'request:fail timeout' })
-  list.requests[0].complete()
-  assert.equal(list.page.data.list[0].isLiked, 0)
-
-  list.page.followClick(event)
-  list.page.followClick(event)
-  assert.equal(list.requests.length, 2)
-  assert.equal(list.page.data.list[0].isFollowTheUser, 0)
-
   const detail = loadPage('pages/square/detail/index.js')
   Object.assign(detail.page.data, {
     id: 3,
@@ -268,21 +203,9 @@ test('评论和回复提交单飞，失败保留输入并展示持久恢复入�
   assert.equal(h.page.data.replySubmitError, '回复暂时失败')
 })
 
-test('两个广场页面把恢复状态和按钮忙碌语义呈现在界面上', () => {
-  const listWxml = read('pages/square/list/index.wxml')
-  const listJson = JSON.parse(read('pages/square/list/index.json'))
+test('广场详情页把恢复状态和按钮忙碌语义呈现在界面上', () => {
   const detailWxml = read('pages/square/detail/index.wxml')
   const detailJson = JSON.parse(read('pages/square/detail/index.json'))
-
-  assert.equal(listJson.usingComponents['cy-inline-error'], '/components/cy/inline-error/index')
-  assert.equal(listJson.usingComponents['cy-btn'], '/components/cy/btn/index')
-  assert.equal(listJson.usingComponents['cy-post-card'], '/components/cy/post-card/index')
-  assert.doesNotMatch(listWxml, /<cy-inline-error[^>]*staleError/s)
-  assert.match(listWxml, /<cy-inline-error[^>]*wx:if="\{\{loadMoreError\}\}"[^>]*bind:action="retryLoadMore"/s)
-  // 2026-10-27 P-20 owner:行内发布区(submitError 原位重试 / compose-submit 忙碌钮)整块撤掉,
-  // 列表页只留一行入口拉起全屏发帖弹窗;发布的忙碌 / 禁用语义在 cy-post-compose 的「发布」钮上。
-  assert.doesNotMatch(listWxml, /submitFormData|retrySubmit|compose-submit/)
-  assert.match(listWxml, /class="compose-entry" bindtap="openCompose" aria-role="button" aria-label="发布帖文"/)
 
   assert.equal(detailJson.usingComponents['cy-inline-error'], '/components/cy/inline-error/index')
   assert.match(detailWxml, /<cy-skeleton[^>]*wx:if="\{\{commentsState === 'loading' && !list\.length\}\}"/s)
@@ -309,12 +232,9 @@ test('两个广场页面把恢复状态和按钮忙碌语义呈现在界面上',
 })
 
 test('发布附件、帖子操作和评论操作均保留至少 88rpx 触达区', () => {
-  const listWxss = read('pages/square/list/index.wxss')
   const postCardWxss = read('components/cy/post-card/index.wxss')
   const detailWxss = read('pages/square/detail/index.wxss')
 
-  // 2026-10-27 P-20:行内发布框的附件按钮随之撤掉;发帖弹窗的工具钮热区见 club-detail-visual-state-contract
-  assert.doesNotMatch(listWxss, /\.compose-body \.btns button/)
   assert.match(postCardWxss, /\.post-card__action\s*\{[^}]*min-width:\s*88rpx[^}]*min-height:\s*88rpx/s)
   assert.match(postCardWxss, /\.post-card__share\s*\{[^}]*min-width:\s*88rpx[^}]*min-height:\s*88rpx/s)
   assert.match(detailWxss, /\.item-link button\s*\{[^}]*min-height:\s*88rpx/s)
@@ -324,26 +244,21 @@ test('发布附件、帖子操作和评论操作均保留至少 88rpx 触达区'
 })
 
 test('广场评论与举报入口有准确可读名称，举报不再错用默认头像', () => {
-  const listWxml = read('pages/square/list/index.wxml')
   const postCardWxml = read('components/cy/post-card/index.wxml')
   const postActionsWxml = read('pages/square/components/cy/post-actions/index.wxml')
-  // 2026-10-27 P-20:行内 textarea 撤掉,正文输入在 cy-post-compose 里(同样带「帖文内容」可读名称)
-  assert.doesNotMatch(listWxml, /<textarea/)
+  // 正文输入在 cy-post-compose 里(带「帖文内容」可读名称)
   assert.match(read('pages/square/components/cy/post-compose/index.wxml'), /<textarea[^>]*aria-label="帖文内容"/s)
   assert.match(postCardWxml, /catchtap="emitComment"[^>]*aria-role="button"[^>]*aria-label="查看评论，当前 \{\{post\.commentCount \|\| 0\}\}"/s)
   // 2026-09-16(H050/H051 收口):举报行从列表页自绘弹层退役,搬进三合一 cy-post-actions
   // (编辑/删除/举报)。守的判据不变:举报必须有可读名称,且不许顶一张默认头像冒充。
-  assert.match(listWxml, /<cy-post-actions id="post-actions"[\s\S]{0,200}?bind:select="onPostAction"/s)
   assert.match(postActionsWxml, /aria-label="举报这条帖文"/s)
-  assert.doesNotMatch(listWxml, /report-icon|bmClose/, '旧自绘举报弹层必须整体退役，不许留半截')
-  assert.doesNotMatch(listWxml, /bindtap="reportSquare"[\s\S]*?src="\/images\/d_profile\.png"/)
 })
 
 test('负控：移除原位错误或单飞状态时契约会判红', () => {
-  const source = read('pages/square/list/index.wxml')
-  const mutated = source.replace(/<cy-inline-error[^>]*wx:if="\{\{loadMoreError\}\}"[^>]*\/>/, '')
-  assert.notEqual(mutated, source, '负控锚点失效：加载更多错误组件不存在')
-  assert.throws(() => assert.match(mutated, /wx:if="\{\{loadMoreError\}\}"/), assert.AssertionError)
+  const source = read('pages/square/detail/index.wxml')
+  const mutated = source.replace(/<cy-inline-error[^>]*wx:if="\{\{commentLoadMoreError\}\}"[^>]*\/>/, '')
+  assert.notEqual(mutated, source, '负控锚点失效：评论加载更多错误组件不存在')
+  assert.throws(() => assert.match(mutated, /<cy-inline-error[^>]*wx:if="\{\{commentLoadMoreError\}\}"[^>]*bind:action="retryCommentLoadMore"/s), assert.AssertionError)
 
   const detailSource = read('pages/square/detail/index.js')
   const dataSource = detailSource.slice(detailSource.indexOf('data:'), detailSource.indexOf('onImageLoad:'))

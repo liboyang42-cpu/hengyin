@@ -32,9 +32,11 @@ const SKIP = new Set(['node_modules', 'miniprogram_npm', 'dist', '.git', 'tests'
 // 原生 toast 全部改成 toast.success(...) 后逐个可数,实测 110(不是涨了,是原来数漏了)。
 // 2026-09-06 合入 github/master:专业发布页删掉 previewTopic 与合作者选择器,
 // 连带 4 处 cyToast.success/成功提示一起没了 ⇒ 上限贴实测调小 110 → 106。
-const SUCCESS_TOAST_CEILING = 101
+const SUCCESS_TOAST_CEILING = 97
 
 /* CHANGELOG
+ * 2026-10-29 101 → 97(**收紧**)。「动态」二级页 pages/square/list 整页删除(业主:帖文流只剩发现 / 俱乐部详情 / 我的),
+ *   页内的成功提示随页面一起没了。
  * 2026-09-11 106 → 101(**收紧**)。并入 master 后贴实测:本 PR 的结果面板替换再叠 master 上专业发布页等处减掉的成功 toast。
  * 2026-09-06 110 → 106(**收紧**)。结果面板 cy-result-sheet 接进 9 条链路,
  *   把「发布成功 / 已保存 / 购买成功 / 报名支付成功」这几处 icon:'success' 的一次性提示

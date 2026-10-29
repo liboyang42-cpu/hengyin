@@ -45,11 +45,12 @@ test('CL-01 列表卡(未开 expandable-text):长帖出「展开」提示,点正
   assert.deepEqual(JSON.parse(JSON.stringify(card.events)), [{ name: 'detail', detail: { index: 2, postId: 8, memberId: 5, clubId: 3 } }]);
 });
 
-test('CL-01 宿主链路:俱乐部详情原地展开;广场/收藏/达人列表接 detail 进详情页', () => {
+test('CL-01 宿主链路:俱乐部详情原地展开;发现/收藏列表接 detail 进详情页', () => {
   assert.match(postCardTag(read('pages/club/detail/index.wxml')), /\bexpandable-text\b/, '俱乐部详情必须能原地展开');
 
   const hosts = [
-    { wxml: 'pages/square/list/index.wxml', js: 'pages/square/list/index.js', handler: 'jumpDetail', target: /\/pages\/square\/detail\/index\?id=/ },
+    // 2026-10-29「动态」二级页已删;发现页全站流里的社区帖文进 square/detail
+    { wxml: 'pages/talent/list/index.wxml', js: 'pages/talent/list/index.js', handler: 'onPostTap', target: /\/pages\/square\/detail\/index\?id=/ },
     { wxml: 'pages/mylike/mylike.wxml', js: 'pages/mylike/mylike.js', handler: 'goPost', target: /\/pages\/square\/detail\/index\?id=/ },
     { wxml: 'pages/talent/list/index.wxml', js: 'pages/talent/list/index.js', handler: 'onPostTap', target: /\/pages\/club\/detail\/index\?id=' \+ clubId \+ '&postId=/ },
   ];

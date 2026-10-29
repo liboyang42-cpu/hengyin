@@ -11,7 +11,7 @@ const read = (relativePath) => fs.readFileSync(path.join(ROOT, relativePath), 'u
 function assertSharedPostCard(overrides = {}) {
   const componentWxml = overrides.componentWxml || read('components/cy/post-card/index.wxml')
   const componentWxss = overrides.componentWxss || read('components/cy/post-card/index.wxss')
-  const pages = ['pages/square/list', 'pages/club/detail', 'pages/talent/list']
+  const pages = ['pages/club/detail', 'pages/talent/list']
 
   pages.forEach((page) => {
     const json = JSON.parse(read(page + '/index.json'))

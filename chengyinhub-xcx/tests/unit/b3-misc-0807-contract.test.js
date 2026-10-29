@@ -12,7 +12,8 @@ const renderable = (source) => source.replace(/<!--[\s\S]*?-->/g, '').replace(/\
 function assertCompletionShareContract(listJs, cardHostWxml, completionWxml) {
   const wxml = renderable(cardHostWxml)
   const card = renderable(completionWxml)
-  assert.match(listJs, /isCompletionShare\s*=\s*isCompletedShare\(newlist\[i\]\)/)
+  // 2026-10-29:广场列表页已删,社区帖的 variant 判定在发现页全站流 utils/discover-feed.js
+  assert.match(listJs, /item\.isCompletionShare\s*=\s*isCompletedShare\(item\)/)
   assert.match(wxml, /<cy-completion-share-card\b[^>]*wx:if="\{\{post\.isCompletionShare\}\}"/)
   assert.match(card, /class="completion-share-card__cover"[^>]*src="\{\{cover\}\}"[^>]*mode="\{\{roamResult \? 'aspectFit' : 'aspectFill'\}\}"/)
   // 2026-09-02 Figma 297:1827 Roam variant:成绩卡不再是「820rpx 全幅封面 + overlay 叠字」。
@@ -44,7 +45,7 @@ function assertImListStillLive(appJson, talentJs, ledgerJs, imListJs) {
 }
 
 test('A05: 完赛分享使用单张图片成绩卡，模板/路线分享继续使用既有沉浸卡', () => {
-  const listJs = read('pages/square/list/index.js')
+  const listJs = read('utils/discover-feed.js')
   const listWxml = read('components/cy/post-card/index.wxml')
   const completionWxml = read('components/cy/completion-share-card/index.wxml')
   const completionWxss = read('components/cy/completion-share-card/index.wxss')
@@ -69,7 +70,7 @@ test('A05: 完赛分享使用单张图片成绩卡，模板/路线分享继续�
 })
 
 test('A05 negative control: 让完赛帖重新落入沉浸卡必须判红', () => {
-  const js = read('pages/square/list/index.js')
+  const js = read('utils/discover-feed.js')
   const source = read('components/cy/post-card/index.wxml')
   const card = read('components/cy/completion-share-card/index.wxml')
   const mutated = source.replace(

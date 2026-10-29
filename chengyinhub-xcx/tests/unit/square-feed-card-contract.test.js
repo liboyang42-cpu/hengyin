@@ -13,9 +13,6 @@ function sources() {
     componentWxss: read('components/cy/feed-play-card/index.wxss'),
     completionWxml: read('components/cy/completion-share-card/index.wxml'),
     completionWxss: read('components/cy/completion-share-card/index.wxss'),
-    listWxml: renderable(read('pages/square/list/index.wxml')),
-    listWxss: read('pages/square/list/index.wxss'),
-    listJson: JSON.parse(read('pages/square/list/index.json')),
     postCardWxml: renderable(read('components/cy/post-card/index.wxml')),
     postCardJson: JSON.parse(read('components/cy/post-card/index.json')),
     postCardWxss: read('components/cy/post-card/index.wxss'),
@@ -72,10 +69,7 @@ function assertImmersiveCardContract(files) {
   assert.equal(files.detailJson.usingComponents['cy-completion-share-card'], '/components/cy/completion-share-card/index')
   assert.match(files.postCardWxml, /<cy-completion-share-card\b[^>]*wx:if="\{\{post\.isCompletionShare\}\}"[^>]*roam-result="\{\{post\.isRoamResultShare\}\}"/s,
     '完赛分享必须走独立图片成绩卡')
-  assert.doesNotMatch(files.listWxml, /<cy-(?:completion-share|feed-play)-card\b/,
-    '★ 列表页不许再自己判 variant —— 那正是俱乐部页/达人页漏渲染的原因')
-  assert.match(files.listWxml, /bind:playdetail="goPlayTopicDetail"[\s\S]{0,80}bind:remix="goRemixTemplate"[\s\S]{0,40}bind:play="goPlay"/,
-    '列表页要把三个动作从帖文卡上接回来，否则成绩卡/模板卡点了没反应')
+  // 2026-10-29:广场列表页(pages/square/list)已删,列表页侧的 variant / 三动作接线断言随页撤走。
   assert.match(files.detailWxml, /<cy-completion-share-card\b[^>]*wx:if="\{\{info\.isCompletionShare\}\}"[^>]*roam-result="\{\{info\.isRoamResultShare\}\}"/s,
     '详情完赛分享必须与列表共用图片成绩卡')
   // 2026-09-02 Figma 297:1827 Roam variant:成绩不再叠在图片内部,改为 TitleRow → Stats → 轨迹图 竖排。
@@ -125,10 +119,9 @@ function assertImmersiveCardContract(files) {
   assert.match(files.detailWxml, /class="act act--comment[^>]*catchtap="focusCommentInput"[\s\S]*?name="comment"[\s\S]*?\{\{\s*info\.commentCount/)
   assert.match(files.postCardWxml, /class="post-card__share"[^>]*open-type="share"/)
   assert.match(files.detailWxml, /class="act-share act-share--end"[^>]*open-type="share"/)
-  assert.doesNotMatch(files.listWxml + files.detailWxml, /class="act-report"/, '动作行只保留点赞、评论与分享')
-  assert.doesNotMatch(files.listWxml + files.detailWxml, />\s*赞\s*</, '动作行不得出现“赞”字')
+  assert.doesNotMatch(files.detailWxml, /class="act-report"/, '动作行只保留点赞、评论与分享')
+  assert.doesNotMatch(files.detailWxml, />\s*赞\s*</, '动作行不得出现“赞”字')
 
-  assert.doesNotMatch(files.listWxss, /\.play-card\b|\.pc-(?:cover|body|title|sub|actions|btn)\b/, '列表页不得留一份平行卡样式')
   assert.doesNotMatch(files.detailWxss, /\.play-actions\b|\.pa-btn\b/, '详情页不得留一份平行卡样式')
 }
 
@@ -182,9 +175,8 @@ test('可玩卡副标题与完赛分享图片按真实字段生成', () => {
 })
 
 test('模板改编按钮调用真实 /use 接口并进入复制出的草稿', () => {
-  const listJs = read('pages/square/list/index.js')
   const detailJs = read('pages/square/detail/index.js')
-  for (const source of [listJs, detailJs]) {
+  for (const source of [detailJs]) {
     assert.match(source, /goRemixTemplate[\s\S]*remixTopicTemplate\(app,\s*(?:item|info)\.sportTopicId\)/)
   }
   assert.match(sources().remixJs, /url:\s*'\/api\/template\/topic-template\/use'/)

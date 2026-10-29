@@ -80,15 +80,18 @@ test('我的模板接口 rows 含空元素不得生成伪模板卡片', () => {
   assert.deepEqual(page.data.list, []);
 });
 
-test('广场列表 200 空 payload 进入错误态，不得抛异常', () => {
-  const { page, requests } = loadPage('pages/square/list/index.js');
-  page.getList();
+// 2026-10-29:广场列表页已删,全站帖文流在发现页(pages/talent/list)。
+test('发现页帖文流 200 空 payload 进入错误态，不得抛异常', async () => {
+  const { page, requests } = loadPage('pages/talent/list/index.js');
+  page.loadFeed();
+  await new Promise(resolve => setImmediate(resolve));
+  const feed = requests.find(r => r.url === '/api/club/post/feed');
+  assert.ok(feed, '首屏必须请求全站俱乐部帖文');
+  assert.doesNotThrow(() => feed.success({ code: 200, data: null }));
+  await new Promise(resolve => setImmediate(resolve));
 
-  assert.doesNotThrow(() => requests[0].success({ code: 200, data: null }));
-  requests[0].complete();
-
-  assert.equal(page.data.loadError, true);
-  assert.equal(page.data.listLoading, false);
+  assert.equal(page.data.feedState, 'error');
+  assert.deepEqual(page.data.feed, []);
 });
 
 test('动态详情评论 200 空 payload 进入可重试错误态', () => {

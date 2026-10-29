@@ -6,7 +6,8 @@ if (process.env.COMMUNITY_LEDGER_BASELINE) {
  const m = new Module(file, module); m.filename = file; m.paths = Module._nodeModulePaths(path.dirname(file));
  m._compile(execFileSync('git', ['show', 'HEAD:chengyinhub-xcx/scripts/uiaudit/build-action-ledger.js'], {encoding:'utf8'}), file); g=m.exports;
 } else g=require(file);
-const real = () => g.targetsForHandler(path.resolve(__dirname,'../../pages/square/list/index.js'),'lickClick');
+// 2026-10-29 R2:广场列表页已删,真实点赞改用帖文详情的同名 handler。
+const real = () => g.targetsForHandler(path.resolve(__dirname,'../../pages/square/detail/index.js'),'lickClick');
 test('real like resolves only canonical enable/cancel and remains write',()=>{
  const t=real(); assert.deepEqual(t.primaryApis, ['/api/v1/community/posts/{param}/actions','/api/v1/community/posts/{param}/actions/LIKE']);
  assert.ok(t.apiContracts.some(c=>c.method==='DELETE')); assert.ok(g.inferEffectClasses('lickClick','community.request({})',new Map(),t).includes('write'));
@@ -16,10 +17,9 @@ test('bookmark and comment likes keep distinct POST and DELETE',()=>{
  for(const u of ['/api/creativesquare/bookmark','/api/comment/like'])assert.deepEqual(map(u).map(c=>c.method),['POST','DELETE']);
  assert.ok(map('/api/creativesquare/bookmark')[1].url.endsWith('/BOOKMARK'));
 });
-test('three actual feed handlers resolve only their genuine branches',()=>{
+test('actual feed handlers resolve only their genuine branches',()=>{
  for (const [file,handler,expected] of [
   ['pages/mylike/mylike.js','getPostFavoriteList',['/api/v1/community/me/bookmarks']],
-  ['pages/square/list/index.js','getList',['/api/v1/community/feeds/LATEST']],
   ['subpackageMember/components/cy/profile/index.js','getCreativesquareList',['/api/v1/community/feeds/LATEST','/api/v1/community/me/posts']],
  ]) assert.deepEqual(g.targetsForHandler(path.resolve(__dirname,'../..',file),handler).primaryApis,expected);
 });
@@ -35,7 +35,7 @@ test('unknown commands and nonliteral URLs fail closed; unrelated passthrough un
  assert.deepEqual(g.communityRequestContracts("other.request({url:'/api/comment/unknown'})",['community']).contracts,[]);
 });
 test('adapter dependency already changes source digest',()=>{
- const c={entry:{wxml:'pages/square/list/index.wxml',js:'pages/square/list/index.js'}};
+ const c={entry:{wxml:'pages/square/detail/index.wxml',js:'pages/square/detail/index.js'}};
  assert.ok(g.sourceFilesFor(c).includes('utils/community-post-api.js'));
  assert.notEqual(g.sourceDigestFor(c),g.sourceDigestFor(c,{'utils/community-post-api.js':'changed adapter'}));
 });
@@ -56,7 +56,7 @@ test('self relation keeps visibility failures separate from owner denial',()=>{
 });
 
 test('comments and string literals cannot bind fake adapters or fake requests',()=>{
- const file=path.resolve(__dirname,'../../pages/square/list/index.js');
+ const file=path.resolve(__dirname,'../../pages/square/detail/index.js');
  const declaration="const community = require('../../../utils/community-post-api.js').createClient(app, wx);";
  assert.deepEqual(g.communityAliasesForSource(declaration,file),['community']);
  for(const fake of ['// '+declaration, '/* '+declaration+' */',JSON.stringify(declaration)])

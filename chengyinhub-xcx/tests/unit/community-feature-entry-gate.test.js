@@ -68,13 +68,17 @@ test('play publish and IM read entries enforce distinct server gates before navi
   let read = true; let write = false;
   const navigation = [];
   const app = { canUseCommunity: writing => writing ? write : read };
-  const context = { app, cyToast() {}, setTimeout: fn => fn(), wx: { navigateTo: target => navigation.push(target.url) } };
+  // 2026-10-29:两个入口都改去发现页的全站帖文(utils/discover-nav.js)
+  const discoverNav = { markDiscoverFeed: a => { a.globalData = { discoverFeedTab: true }; } };
+  const context = { app, discoverNav, cyToast() {}, setTimeout: fn => fn(), wx: { switchTab: target => navigation.push(target.url) } };
   const play = method('pages/play/index.js', 'shareFinish', context);
   const im = method('subpackageB/pages/im/list/index.js', 'onEmptyCta', context);
   play.call({}); assert.equal(navigation.length, 0);
   im.call({ data: { activeTab: 'in' } }); assert.equal(navigation.length, 1);
   read = false; im.call({ data: { activeTab: 'in' } }); assert.equal(navigation.length, 1);
   write = true; play.call({}); assert.equal(navigation.length, 2);
+  assert.equal(app.globalData.discoverFeedTab, true);
+  assert.deepEqual(navigation, ['/pages/talent/list/index', '/pages/talent/list/index']);
 });
 
 test('roam cannot begin an upload or publish flow while server write is closed', async () => {

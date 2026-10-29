@@ -39,7 +39,7 @@ const LAYOUT_PROPS = new Set([
    整套退场 —— 它是本仓布局属性动画最大的一处。 */
 /* 2026-10-22 12 → 13:主题详情「故事」标签的章节卡点开展开(业主口述 A10)。展开要把下面的卡往下推,
    只能过渡 height —— transform 不占位,会叠到下一张卡上。同批的进度条宽度、卡内标题上移已改成 transform。 */
-const LAYOUT_ANIMATION_CEILING = 11 // 2026-10-22 v13 票夹换成卡堆,旧 swiper 的 height 过渡随死样式一起删,13 → 12;2026-10-28 p81 预览进度圆点换成分段条(width 过渡随旧圆点删),12 → 11
+const LAYOUT_ANIMATION_CEILING = 9 // 2026-10-29 pages/square/list 整页删除(padding-top / height 两处过渡随页面删),11 → 9;2026-10-22 v13 票夹换成卡堆,旧 swiper 的 height 过渡随死样式一起删,13 → 12;2026-10-28 p81 预览进度圆点换成分段条(width 过渡随旧圆点删),12 → 11
 // 2026-09-06 原生弹层全删:新组件 cy-loading-mask 的转圈是唯一新增的一组 @keyframes(替代 39 处 wx.showLoading);
 // cy-toast 进出场按棘轮要求改用 transition,不占 keyframes。129→130。
 /* 2026-09-10 130 → 129:同上,集邮册的 album-page-in 那一组随「收藏夹」退场。

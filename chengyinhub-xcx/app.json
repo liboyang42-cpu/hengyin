@@ -164,7 +164,6 @@
       "root": "pages/square",
       "name": "subpackageSquare",
       "pages": [
-        "list/index",
         "detail/index"
       ]
     },
@@ -313,12 +312,6 @@
       "packages": [
         "subpackageA",
         "subpackageTemplateDetail"
-      ]
-    },
-    "pages/square/list/index": {
-      "network": "wifi",
-      "packages": [
-        "subpackageTopic"
       ]
     },
     "subpackageMember/signup/index": {
