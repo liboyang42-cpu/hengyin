@@ -107,6 +107,8 @@ public final class PlayNodeAccessTestFixtures {
             input.put("clubLeadMapper",leads);
         }
         input.computeIfAbsent("omsTicketService",key -> mock(IOmsTicketService.class));
+        input.computeIfAbsent("responseObjectMapper",key -> org.springframework.http.converter.json.Jackson2ObjectMapperBuilder.json()
+                .timeZone(java.util.TimeZone.getTimeZone("Asia/Shanghai")).build());
         PlayNodeAccessService access=input.containsKey("playNodeAccessService")
                 ? (PlayNodeAccessService)input.get("playNodeAccessService") : new PlayNodeAccessService(
                 (ICmsActivityService)input.get("cmsActivityService"),

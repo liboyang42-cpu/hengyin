@@ -901,8 +901,19 @@ class GenericGameplayHttpE2eIT {
                 .put("code","lc-"+s.nodeId).put("routeActionId","arrive")
                 .put("routeSessionId",arrivalContext.path("routeSessionId").textValue())
                 .put("expectedRouteVersion",arrivalContext.path("expectedRouteVersion").intValue());
-        success(formFields("/api/play/checkin",arrival,s.headers));
+        ObjectNode missingContext=arrival.deepCopy();
+        missingContext.remove("routeSessionId");
+        missingContext.remove("expectedRouteVersion");
+        JsonNode beforeArrival=stored(s);
+        rejected(formFields("/api/play/checkin",missingContext,s.headers));
+        assertEquals(beforeArrival,stored(s),"Missing original intent context must not change the route");
+        JsonNode arrived=success(formFields("/api/play/checkin",arrival,s.headers));
         httpSourceStage = HttpSourceStage.PLAYER_SCAN_READBACK;
+        JsonNode afterArrival=stored(s);
+        JsonNode replayedArrival=success(formFields("/api/play/checkin",arrival,s.headers));
+        assertEquals(arrived.path("arrivedAt"),replayedArrival.path("arrivedAt"),"Scan replay must preserve the HTTP timestamp");
+        assertEquals(arrived,replayedArrival);
+        assertEquals(afterArrival,stored(s),"Replaying the same scan intent must not change the route");
         if(config.has("outcomeRules"))assertScanHasNotCompleted(s);
         httpSourceStage = HttpSourceStage.PLAYER_QUEST_START;
         success(route(s,"QUEST_START","start"));
