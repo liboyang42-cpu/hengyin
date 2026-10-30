@@ -323,6 +323,11 @@ public class TopicCreateDTO implements Serializable {
     public String getThemeRuntimeConfig() { return themeRuntimeConfig; }
     public void setThemeRuntimeConfig(String v) { themeRuntimeConfig = v; }
 
+    /** 主题画面风格（ThemeLook）。不传 = 不改原值；空串 = 恢复默认风格。 */
+    private String look;
+    public String getLook() { return look; }
+    public void setLook(String v) { look = v; }
+
     private String journeyRules;
     public String getJourneyRules() { return journeyRules; }
     public void setJourneyRules(String journeyRules) { this.journeyRules = journeyRules; }

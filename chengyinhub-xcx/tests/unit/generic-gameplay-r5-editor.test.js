@@ -219,12 +219,13 @@ test('输入挑战已接通统一 timer，旧 seconds 只读回显保存', () =>
   assert.equal(p.data.r5Editor.legacyRows.find(row => row.path === 'typeIn.seconds').displayValue, '19');
 });
 
-test('B 批扫码只作参与方式，内嵌按主玩法判断，旧独立扫码仍全屏', () => {
+// 2026-10-30 所有玩法都内嵌:扫码、反应等原「只能全屏」段配 inline 不再报错,两种呈现都合法
+test('扫码与原只能全屏段配 inline / fullscreen 都合法', () => {
   const c = cfg.parse({ schemaVersion: 1, present: 'inline', scan: { enabled: true, kind: 'TEXT', reply: '欢迎' }, qa: { enabled: true, mode: 'TYPE', title: '问题', answerText: '答案' } }).value;
   assert.equal(cfg.presentError(c), '');
-  c.qa.enabled = false; c.reaction = { enabled: true }; assert.match(cfg.presentError(c), /reaction 只能整屏/);
+  c.qa.enabled = false; c.reaction = { enabled: true }; assert.equal(cfg.presentError(c), '');
   c.present = 'fullscreen'; assert.equal(cfg.presentError(c), '');
-  assert.equal(cfg.presentError({ present: 'inline', scan: { enabled: true } }).includes('scan'), true);
+  assert.equal(cfg.presentError({ present: 'inline', scan: { enabled: true } }), '');
 });
 
 

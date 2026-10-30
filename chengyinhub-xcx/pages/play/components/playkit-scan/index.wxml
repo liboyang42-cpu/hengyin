@@ -3,7 +3,7 @@
      摆一个等于在问「你要不要收」,而这本来就不是能拒绝的东西。
      ⚠️ 逐值照原型编辑页 PV.scan 的 .pv-q / .pv-scan / .pv-bub(那份也是 375px 画布)。 -->
 <cy-play-stage id="cy-play-stage" skin="qadark" show="{{show}}" back-label="退出" bind:back="onClose">
-  <view class="g-col sc">
+  <view class="g-col sc {{inline ? 'sc--embed' : ''}}">
     <!-- 显形档是整屏相机(上面不留玩法页的地址栏,用户 2026-09-22 纠正):
          标题跟着内容走 —— 取景时在底部说明条里,相机起不来时是旁路块的第一行。 -->
     <view class="sc__q" wx:if="{{kindKey !== '显形'}}">{{titleText}}</view>

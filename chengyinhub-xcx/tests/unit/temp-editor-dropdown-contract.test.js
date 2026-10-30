@@ -57,9 +57,11 @@ test('十组单选都是 cy-dropdown,且接回原来那个处理器', () => {
   }
 })
 
-test('「只能整屏」时呈现方式下拉整个置灰,原因照旧写出来', () => {
-  assert.match(WXML, /<cy-dropdown [^>]*disabled="\{\{presentInlineLocked\}\}"[^>]*bind:change="onPickPresent"/)
-  assert.match(WXML, /只能整屏：\{\{presentLockReason\}\}/)
+// 2026-10-30 所有玩法都能内嵌:呈现方式下拉不再置灰,也不再写「只能整屏」
+test('呈现方式下拉对任何玩法都可选,没有置灰和「只能整屏」', () => {
+  assert.match(WXML, /<cy-dropdown [^>]*range="\{\{presentOptions\}\}"[^>]*bind:change="onPickPresent"/)
+  assert.doesNotMatch(WXML, /disabled="\{\{presentInlineLocked\}\}"/)
+  assert.doesNotMatch(WXML, /只能整屏/)
 })
 
 /* 空值(没选过 / 老模板里存了不认识的值)统一显示「请选择」,不留一个空白框 */
@@ -158,7 +160,8 @@ test('pickEffectOp 仍认检定段芯片的 data-op(那一段不在本次改动�
   assert.ok(JSON.stringify(calls[calls.length - 1]).includes('"op":"DEC"'))
 })
 
-test('呈现方式:下拉选「整屏」写 fullscreen;被锁时硬选内嵌也写不进去(真防线在 applyPresent)', () => {
+// 2026-10-30 所有玩法都内嵌:原「只能整屏」的段(reaction 等)选内嵌也要写得进去
+test('呈现方式:下拉选「整屏」写 fullscreen;原只能整屏的段选内嵌同样写进去', () => {
   const { self, calls } = instance({ gameSection: 'qa' })
   const full = self.data.presentOptions.findIndex((o) => o.key === 'fullscreen')
   self.onPickPresent(pick(full))
@@ -167,7 +170,7 @@ test('呈现方式:下拉选「整屏」写 fullscreen;被锁时硬选内嵌也�
   const locked = instance({ gameSection: 'reaction' })
   const inline = locked.self.data.presentOptions.findIndex((o) => o.key === 'inline')
   locked.self.onPickPresent(pick(inline))
-  assert.deepEqual(locked.calls, [], '「只能整屏」的段被选内嵌，不该写任何东西')
+  assert.ok(locked.calls.some((c) => c.presentChoice === 'inline'), '原只能整屏的段选内嵌没有写进去')
 })
 
 /* 2026-09-23 用户:「选框应该下拉应该是向下的箭头」。图标集是脚本生成、禁手改,没有 chevron-down;

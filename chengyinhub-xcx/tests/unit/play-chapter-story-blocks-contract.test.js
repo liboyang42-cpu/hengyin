@@ -412,8 +412,26 @@ test('罗盘点开小地图;没有带坐标的地点时照旧回卡包;导航交
   assert.equal(opened.length, 1)
   assert.deepEqual([opened[0].latitude, opened[0].longitude, opened[0].name], [31.2304, 121.4737, '上海城市规划展示馆'])
 
+  // 2026-10-30 业主定稿:左上角两种显示 —— 罗盘点一下切地图(GTA III 式雷达),地图点一下进大地图,右下角收回罗盘
+  const stored = {}
+  global.wx.setStorageSync = (k, v) => { stored[k] = v }
+  page.data.navMap = false
+  page.onNavTap()
+  assert.equal(page.data.navMap, true, '罗盘点一下切到地图')
+  assert.equal(stored.cy_play_nav_mode, 'map', '选过的显示记在本机')
+  page.data.storyMap = false
+  page.data.fmNodes = [{ nodeId: 7, lat: 31.2304, lng: 121.4737 }]
+  page.onNavTap()
+  assert.equal(page.data.storyMap, true, '地图点一下进大地图')
+  page.closeStoryMap()
+  page.foldNavMap()
+  assert.equal(page.data.navMap, false)
+  assert.equal(stored.cy_play_nav_mode, 'compass')
+
   const wxml = read('pages/play/index.wxml')
-  assert.match(wxml, /class="fx-story__compass fx-story__radar" bindtap="openStoryMap"/)
+  assert.match(wxml, /class="fx-story__compass \{\{navMap \? 'fx-story__radar is-big' : ''\}\}" bindtap="onNavTap"/)
+  assert.match(wxml, /<free-map class="fx-story__radar-map"[^>]*rotate="\{\{navHeading\}\}"/, '雷达跟朝向转')
+  assert.match(wxml, /class="radar__fold" wx:if="\{\{navMap\}\}"[^>]*catchtap="foldNavMap"/)
   assert.match(wxml, /<free-map class="story-map__map" wx:if="\{\{storyMap\}\}"/)
 })
 
@@ -823,7 +841,8 @@ test('章节剧情复用探店日故事流并连接章节开场', () => {
   const storyWxml = wxml.slice(storyStart, storyEnd)
 
   assert.doesNotMatch(storyWxml, /chfull__eyebrow/)
-  assert.match(storyWxml, /class="fx-story__t[^"\n]*"[^>]*>\{\{chapter\.name/)
+  // 2026-10-30 业主:顶栏标题要带主题名 ——「主题名 · 章节名」,主题名为空或与章节同名时只显示章节名
+  assert.match(storyWxml, /class="fx-story__t[^"\n]*"[^>]*>\{\{topicName && topicName !== chapter\.name \? topicName \+ ' · ' : ''\}\}\{\{chapter\.name\}\}/)
   assert.match(storyWxml, /item\.kind === 'cover'[^>]*class="chfull__cover"/,
     '主物件进入与正文相同的滚动衰减序列')
   assert.match(storyWxml, /class="chfull__continue"[^>]*bindtap="continueChapterStory"/,
@@ -1382,8 +1401,11 @@ test('内嵌玩法读到就直接铺开(不出「进入」),每站只自动开�
   inline.openChapterFull()
   const card = inline.data.chapterParas.find(p => p.kind === 'game')
   assert.equal(card.auto, true, '铺开前那一瞬只是占位，没有「进入」')
+  // 2026-10-29 业主:正文要读到才展开,开章不再直接跳到第一个内嵌玩法;读到它时由滚动结算(_settleStory)调 _autoInline
+  assert.deepEqual(started, [], '开章不提前打开,不跳过正文')
+  inline._autoInline(71)
   assert.deepEqual(started, [71])
-  inline.openChapterFull()
+  inline._autoInline(71)
   assert.deepEqual(started, [71], '同一站不重复自动开')
   const full = makePage(chapter, [{ nodeId: 71, name: '拍下招牌', hasAdvanced: true, vm: 0, done: false, advancedConfig: { present: 'fullscreen' } }])
   const fullStarted = []

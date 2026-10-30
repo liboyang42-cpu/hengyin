@@ -254,3 +254,9 @@
   --cy-comp-btn-primary-fg: #FFFFFF;   /* ds-ok 纸的世界:热敏纸/台面/墨,刻意不随主题 */
 }
 .cy-pressed { opacity: .88; }
+
+/* 内嵌档(2026-10-30 所有玩法都内嵌):整屏的纸台收成故事流里的一块,打印机与小票照旧;
+   不 fixed、不压 modal 层,高度由内容撑开(打印机 + 出纸余量)。 */
+.ds--embed { position: relative; left: auto; right: auto; top: auto; bottom: auto; z-index: auto;
+  min-height: 1100rpx; margin: 0 var(--cy-page-x); border-radius: var(--cy-radius-lg); overflow: hidden; }
+.ds--embed .ds__stage { padding-top: var(--cy-space-6); }

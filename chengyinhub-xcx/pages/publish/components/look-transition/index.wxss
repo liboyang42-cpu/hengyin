@@ -1,0 +1,71 @@
+/* 颜色取宿主根节点的风格变量（pages/play/index.wxss 的 .look--*），没配风格时落回章节默认黑。
+   三态：基础样式 = 起点（is-pre，无过渡）→ .is-in = 盖住 → .is-out = 揭开后的终点。 */
+.lt { position: fixed; left: 0; top: 0; right: 0; bottom: 0; z-index: 980; overflow: hidden; pointer-events: auto; background: transparent;
+  --a: var(--look-a, #E9E2D0); --b: var(--look-b, #9AA0AA); --g: var(--look-bg, #0A0A0A); perspective: 1200px; } /* ds-ok 转场的风格色与噪点/风痕是画面效果,随 .look--* 取色,兜底=章节默认黑 */
+.lt__panel, .lt__circle, .lt__lines, .lt__bolt, .lt__slat, .lt__band, .lt__tile, .lt__half { transition: none; }
+.is-in .lt__panel, .is-in .lt__circle, .is-in .lt__lines, .is-in .lt__bolt, .is-in .lt__slat, .is-in .lt__band, .is-in .lt__half
+  { transition-property: transform, opacity, left; transition-duration: 460ms; transition-timing-function: cubic-bezier(.6,0,.3,1); }
+.is-out .lt__panel, .is-out .lt__circle, .is-out .lt__lines, .is-out .lt__bolt, .is-out .lt__slat, .is-out .lt__band, .is-out .lt__half
+  { transition-property: transform, opacity, left; transition-duration: 560ms; transition-timing-function: cubic-bezier(.4,0,.2,1); }
+
+.lt__panel { position: absolute; left: 0; top: 0; right: 0; bottom: 0; background: var(--g); }
+.lt__circle { position: absolute; left: 50%; top: 50%; width: 260vmax; height: 260vmax; margin: -130vmax 0 0 -130vmax; border-radius: 50%; background: var(--g); transform: scale(0); }
+.is-in .lt__circle { transform: scale(1); }
+.is-out .lt__circle { transform: scale(0); }
+
+/* 淡出 */
+.lt--fade .lt__panel { opacity: 0; } .lt--fade.is-in .lt__panel { opacity: 1; } .lt--fade.is-out .lt__panel { opacity: 0; }
+/* 光圈：圆从中心铺满，再从四周收回中心 */
+.lt--iris.is-in .lt__circle { transform: scale(1); } .lt--iris.is-out .lt__circle { transform: scale(0); }
+/* 翻页 */
+.lt--page .lt__panel { transform-origin: 100% 50%; transform: rotateY(90deg); }
+.lt--page.is-in .lt__panel { transform: none; }
+.lt--page.is-out .lt__panel { transform-origin: 0 50%; transform: rotateY(-90deg); }
+/* 擦除 */
+.lt--wipe .lt__panel { transform: translateX(-100%); } .lt--wipe.is-in .lt__panel { transform: none; } .lt--wipe.is-out .lt__panel { transform: translateX(100%); }
+/* 百叶 */
+.lt__slat { position: absolute; left: 0; right: 0; height: 12.6%; background: var(--g); transform-origin: 50% 0; transform: scaleY(0); }
+.lt--shutter.is-in .lt__slat { transform: scaleY(1); transition-duration: 300ms; }
+.lt--shutter.is-out .lt__slat { transform-origin: 50% 100%; transform: scaleY(0); transition-duration: 340ms; }
+/* 像素 */
+.lt__grid { position: absolute; left: 0; top: 0; right: 0; bottom: 0; display: flex; flex-wrap: wrap; }
+.lt__tile { width: 16.667%; height: 12.5%; background: var(--g); opacity: 0; }
+.lt--pixel.is-in .lt__tile { opacity: 1; transition: opacity 180ms steps(2); }
+.lt--pixel.is-out .lt__tile { opacity: 0; transition: opacity 200ms steps(2); }
+/* 跃迁：主色圆铺满的同时放射线往里收，揭开时线冲出去 */
+.lt--warp .lt__circle { background: var(--a); }
+.lt__lines { position: absolute; left: 50%; top: 50%; width: 200vmax; height: 200vmax; margin: -100vmax 0 0 -100vmax; border-radius: 50%; opacity: 0; transform: scale(.1);
+  background: repeating-conic-gradient(from 0deg, transparent 0deg 6deg, var(--b) 6deg 6.6deg, transparent 6.6deg 13deg, var(--g) 13deg 13.4deg); }
+.lt--warp.is-in .lt__lines { opacity: .9; transform: scale(.6); }
+.lt--warp.is-out .lt__lines { opacity: 0; transform: scale(1.8) rotate(8deg); }
+/* 风刮：整块被风从一侧推过来，带斜切和风痕 */
+.lt--gust .lt__panel { background: repeating-linear-gradient(176deg, transparent 0 22px, rgba(255,255,255,.05) 22px 23px), var(--g); transform: translateX(-115%) skewX(-14deg); } /* ds-ok 转场的风格色与噪点/风痕是画面效果,随 .look--* 取色,兜底=章节默认黑 */
+.lt--gust.is-in .lt__panel { transform: none; } .lt--gust.is-out .lt__panel { transform: translateX(115%) skewX(-14deg); }
+/* 调频：噪点一格一格亮起再暗下 */
+.lt--static .lt__panel { background: repeating-linear-gradient(0deg, rgba(255,255,255,.08) 0 1px, transparent 1px 3px), repeating-linear-gradient(90deg, rgba(255,255,255,.05) 0 2px, transparent 2px 5px), var(--g); opacity: 0; } /* ds-ok 转场的风格色与噪点/风痕是画面效果,随 .look--* 取色,兜底=章节默认黑 */
+.lt--static.is-in .lt__panel { opacity: 1; transition: opacity 420ms steps(5); }
+.lt--static.is-out .lt__panel { opacity: 0; transition: opacity 520ms steps(6); }
+/* 故障：横带交错滑入，带主色 / 对比色的错位边 */
+.lt__band { position: absolute; left: 0; right: 0; height: 16.8%; background: var(--g); transform: translateX(-104%); box-shadow: 4rpx 0 0 var(--b), -4rpx 0 0 var(--a); }
+.lt__band--r { transform: translateX(104%); }
+.lt--glitch.is-in .lt__band { transform: none; transition-duration: 340ms; transition-timing-function: cubic-bezier(.2,1.4,.4,1); }
+.lt--glitch.is-out .lt__band { transform: translateX(104%); transition-duration: 380ms; }
+.lt--glitch.is-out .lt__band--r { transform: translateX(-104%); }
+/* 电流：一道亮线从左扫到右，身后的画面被“通电”换掉；揭开时亮线扫回来 */
+.lt--surge .lt__panel { transform-origin: 0 50%; transform: scaleX(0); }
+.lt--surge.is-in .lt__panel { transform: scaleX(1); } .lt--surge.is-out .lt__panel { transform: scaleX(0); }
+.lt__bolt { position: absolute; top: 0; bottom: 0; left: 0; width: 6rpx; background: var(--b); box-shadow: 0 0 24rpx 6rpx var(--b), 0 0 4rpx 2rpx #FFFFFF; } /* ds-ok 转场的风格色与噪点/风痕是画面效果,随 .look--* 取色,兜底=章节默认黑 */
+.lt--surge.is-in .lt__bolt { left: 100%; } .lt--surge.is-out .lt__bolt { left: 0; opacity: 0; } /* ds-ok 转场的风格色与噪点/风痕是画面效果,随 .look--* 取色,兜底=章节默认黑 */
+/* 墨晕：从左下角洇开 */
+.lt--ink .lt__circle { left: 0; top: 100%; filter: blur(30px); }
+.lt--ink.is-in .lt__circle { transform: scale(1); transition-duration: 520ms; }
+.lt--ink.is-out .lt__circle { transform: scale(1.2); opacity: 0; }
+/* 幕布 */
+.lt__half { position: absolute; top: 0; bottom: 0; width: 50.5%; background: var(--g); }
+.lt__half--l { left: 0; transform: translateX(-100%); } .lt__half--r { right: 0; transform: translateX(100%); }
+.lt--curtain.is-in .lt__half { transform: none; }
+.lt--curtain.is-out .lt__half--l { transform: translateX(-100%); } .lt--curtain.is-out .lt__half--r { transform: translateX(100%); }
+/* 推近 */
+.lt--zoom .lt__panel { transform: scale(.2); opacity: 0; border-radius: 50%; }
+.lt--zoom.is-in .lt__panel { transform: none; opacity: 1; border-radius: 0; }
+.lt--zoom.is-out .lt__panel { transform: scale(1.6); opacity: 0; }

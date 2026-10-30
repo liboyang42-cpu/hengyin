@@ -163,6 +163,7 @@ public class TopicContentCopyServiceImpl implements ITopicContentCopyService {
         // 同一份手抄清单:漏抄副本会静默丢规则,玩家侧只读下发直接变回「未配置」。
         newTopic.setJourneyRulesJson(original.getJourneyRulesJson());
         newTopic.setThemeRuntimeConfigJson(original.getThemeRuntimeConfigJson());
+        newTopic.setLookJson(original.getLookJson());
         // [R8] 主题级剧情配置同样属于内容的一部分:模板 / 官方复制必须一起带 ——
         // 章节复制完成后由 copyCmsTopicWithContentOwner 按 old→new 章节 id 重映射。
         newTopic.setJourneyStoryJson(original.getJourneyStoryJson());

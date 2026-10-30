@@ -1,0 +1,49 @@
+/* 画面风格选择层(look-sheet.wxml)。色卡只是示意四种风格的底色与主色,不是可配的颜色。 */
+.look-styles { display: flex; gap: var(--cy-space-3, 24rpx); padding: var(--cy-space-4, 32rpx) var(--cy-space-4, 32rpx) var(--cy-space-3, 24rpx); }
+.look-style { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 12rpx; padding: 16rpx 0; border-radius: var(--cy-radius-lg); border: 2rpx solid transparent; }
+.look-style.is-on { border-color: var(--cy-color-text-primary); }
+.look-sw { width: 112rpx; height: 112rpx; border-radius: 50%; }
+.look-sw--stardust { background: radial-gradient(circle at 70% 30%, #FFFFFF 0 4rpx, transparent 6rpx), radial-gradient(circle at 30% 65%, #FFFFFF 0 3rpx, transparent 5rpx), #0E1A33; } /* ds-ok 风格示意色 */
+.look-sw--paper { background: linear-gradient(135deg, #E6DCC4 60%, #A3281D 60%); } /* ds-ok 风格示意色 */
+.look-sw--survival { background: repeating-linear-gradient(105deg, transparent 0 10rpx, rgba(255,255,255,.18) 10rpx 12rpx), linear-gradient(135deg, #0E1012 55%, #FF8A3D 55%); } /* ds-ok 风格示意色 */
+.look-sw--cyber { background: linear-gradient(135deg, #0B0B0F 55%, #F3E600 55%); box-shadow: inset 0 0 0 3rpx #24E0E8; } /* ds-ok 风格示意色 */
+.look-style__name { font-size: var(--cy-type-body, 28rpx); color: var(--cy-color-text-primary); }
+.look-font--SONG { font-family: "Songti SC", "STSong", serif; } /* ds-ok 系统宋体预览 */
+.look-font--KAI { font-family: "Kaiti SC", "STKaiti", "KaiTi", serif; } /* ds-ok 系统楷体预览 */
+.look-font--HAND { font-family: 'CyStoryHand', "Kaiti SC", serif; } /* ds-ok 手写体(在线加载)预览 */
+.look-font--HEI { font-family: -apple-system, "PingFang SC", sans-serif; } /* ds-ok 系统黑体预览 */
+.look-card { padding: 8rpx 0; }
+.look-row { display: flex; align-items: flex-start; gap: 24rpx; padding: 20rpx 28rpx; }
+.look-row + .look-row { border-top: 1rpx solid var(--cy-color-border-subtle, rgba(0,0,0,.08)); } /* ds-ok 分隔线兜底 */
+.look-chips { flex: 1; display: flex; flex-wrap: wrap; gap: 12rpx; }
+.look-chip { padding: 10rpx 24rpx; border-radius: 999rpx; font-size: var(--cy-type-label, 26rpx); color: var(--cy-color-text-primary); background: var(--cy-color-surface-muted, rgba(0,0,0,.05)); } /* ds-ok 底色兜底 */
+.look-chip.is-on { background: var(--cy-color-text-primary); color: var(--cy-color-surface, #FFFFFF); } /* ds-ok 反色兜底 */
+/* 预览常驻后一屏要放下 预览 + 风格 + 配色 + 字体:色卡缩小一档 */
+.look-sheet .look-sw { width: 88rpx; height: 88rpx; }
+.look-sheet .look-style { gap: 8rpx; padding: 12rpx 0; }
+.look-palettes { margin: 0 var(--cy-space-4, 32rpx) var(--cy-space-3, 24rpx); }
+.look-font--BOLD { font-family: -apple-system, "PingFang SC", sans-serif; font-weight: 900; font-style: italic; } /* ds-ok 粗斜(NRC 式)预览 */
+/* 预览常驻:钉在面板顶部,下面的风格 / 参数 / 配色 / 字体在它底下滚 */
+.look-pin { display: block; position: sticky; top: 0; z-index: 3; padding-bottom: var(--cy-space-2, 16rpx); background: var(--cy-comp-sheet-bg); }
+/* 主题配色色卡跟着所选风格变:同一档「黄」在纸本里是牛皮纸、在末世里是热浪的焦土(原型 v7 PAL) */
+.look-pal--stardust .atmosphere-swatch--default{ background:#0A0A0A; color:#F2F2F0; } /* ds-ok 原型 v7 PAL */
+.look-pal--stardust .atmosphere-swatch--blue{ background:#0E1A33; color:#F5F8FF; } /* ds-ok 原型 v7 PAL */
+.look-pal--stardust .atmosphere-swatch--red{ background:#2A0E12; color:#FFF4F5; } /* ds-ok 原型 v7 PAL */
+.look-pal--stardust .atmosphere-swatch--yellow{ background:#2A2208; color:#FFFBEF; } /* ds-ok 原型 v7 PAL */
+.look-pal--stardust .atmosphere-swatch--white{ background:#F5F6F8; color:#111318; } /* ds-ok 原型 v7 PAL */
+.look-pal--paper .atmosphere-swatch--default{ background:#1D1B18; color:#ECE6D8; } /* ds-ok 原型 v7 PAL */
+.look-pal--paper .atmosphere-swatch--blue{ background:#1C2A44; color:#EEF0EA; } /* ds-ok 原型 v7 PAL */
+.look-pal--paper .atmosphere-swatch--red{ background:#3A1A17; color:#F4E6DC; } /* ds-ok 原型 v7 PAL */
+.look-pal--paper .atmosphere-swatch--yellow{ background:#E6DCC4; color:#2B241A; } /* ds-ok 原型 v7 PAL */
+.look-pal--paper .atmosphere-swatch--white{ background:#F4F1EA; color:#1E1C19; } /* ds-ok 原型 v7 PAL */
+.look-pal--survival .atmosphere-swatch--default{ background:#0E1012; color:#E4E7E9; } /* ds-ok 原型 v7 PAL */
+.look-pal--survival .atmosphere-swatch--blue{ background:#0B1626; color:#EAF3FB; } /* ds-ok 原型 v7 PAL */
+.look-pal--survival .atmosphere-swatch--red{ background:#1C0A0A; color:#F3E3E0; } /* ds-ok 原型 v7 PAL */
+.look-pal--survival .atmosphere-swatch--yellow{ background:#2A1D0C; color:#FFF2DC; } /* ds-ok 原型 v7 PAL */
+.look-pal--survival .atmosphere-swatch--white{ background:#E3E9EE; color:#14202B; } /* ds-ok 原型 v7 PAL */
+.look-pal--cyber .atmosphere-swatch--default{ background:#0B0B0F; color:#ECEBE4; } /* ds-ok 原型 v7 PAL */
+.look-pal--cyber .atmosphere-swatch--blue{ background:#06101C; color:#E2F1FF; } /* ds-ok 原型 v7 PAL */
+.look-pal--cyber .atmosphere-swatch--red{ background:#12060A; color:#FFE8EA; } /* ds-ok 原型 v7 PAL */
+.look-pal--cyber .atmosphere-swatch--yellow{ background:#100E04; color:#FFF6CC; } /* ds-ok 原型 v7 PAL */
+.look-pal--cyber .atmosphere-swatch--white{ background:#E6E7EA; color:#101216; } /* ds-ok 原型 v7 PAL */
+.look-row__k--chapter { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

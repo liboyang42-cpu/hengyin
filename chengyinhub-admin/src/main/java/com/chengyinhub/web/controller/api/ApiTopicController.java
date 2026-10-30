@@ -97,6 +97,8 @@ public class ApiTopicController extends BaseController {
 
     @Autowired
     private ICmsTopicService cmsTopicService;
+    @Autowired(required = false)
+    private com.chengyinhub.business.mapper.CmsTopicMapper cmsTopicMapper;
 
     /**
      * 「来源」栏投影（官方 / 俱乐部 / 会员）。
@@ -917,6 +919,7 @@ public class ApiTopicController extends BaseController {
         // R2-B10 编辑器回显:顶层单列一份 journeyRules(与保存入参同名),老编辑器不读它也不受影响。
         data.put("journeyRules", topic.getJourneyRulesJson());
         data.put("themeRuntimeConfig", topic.getThemeRuntimeConfigJson());
+        data.put("look", cmsTopicMapper == null ? null : cmsTopicMapper.selectLookJsonById(topic.getId()));
         // R8-STORY 同款回显:主题级剧情配置与保存入参同名
         data.put("journeyStory", topic.getJourneyStoryJson());
         data.put("openingChapterId", com.chengyinhub.business.domain.JourneyStory.openingChapterId(topic.getJourneyStoryJson()));

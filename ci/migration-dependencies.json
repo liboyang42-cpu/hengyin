@@ -1,6 +1,7 @@
 {
   "schemaVersion": 1,
   "dependencies": {
+    "x12_topic_look_20261029": ["theme_runtime_20261004"],
     "20261029_activity_cancellation_receipt": [],
     "20261029_topic_cancellation_receipt": ["20261029_activity_cancellation_receipt"],
     "20261029_unlist_test_topics": ["20260823_topic_route_graph", "20260917_player_run_session"],

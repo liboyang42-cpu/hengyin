@@ -93,3 +93,7 @@
 .bt__dark-t { font-size: var(--cy-type-body); letter-spacing: 4rpx; color: #8A8A92; } /* ds-ok 同上 */
 
 .bt--reduced .bt__cup, .bt--reduced .bt__opt, .bt--reduced ~ .bt__lid, .bt--reduced ~ .bt__dark, .bt--reduced .bt__breath { transition: none; }
+/* 内嵌档(2026-10-30 所有玩法都内嵌):台面不裁切,睁眼时收在块外的眼皮会露在故事流上 ——
+   只在闭眼 / 偷看时显出来;整屏档眼皮本就在屏外,观感不变。 */
+.bt__lid { opacity: 0; transition: transform .55s cubic-bezier(.6, 0, .3, 1), opacity .2s; }
+.bt--closed ~ .bt__lid--top, .bt--closed ~ .bt__lid--bot, .bt--peek ~ .bt__lid--top, .bt--peek ~ .bt__lid--bot { opacity: 1; }

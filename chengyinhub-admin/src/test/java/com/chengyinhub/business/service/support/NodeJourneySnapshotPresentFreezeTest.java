@@ -27,7 +27,7 @@ class NodeJourneySnapshotPresentFreezeTest {
     void defaultPresentationIsResolvedBeforeOtherMechanicsAreDiscarded() throws Exception {
         for (String extra : new String[] { "", ",\"diceRoll\":{\"enabled\":true}" }) {
             ObjectNode config = (ObjectNode) json.readTree("{\"check\":{\"enabled\":true}" + extra + "}");
-            String expected = extra.isEmpty() ? "inline" : "fullscreen";
+            String expected = "inline"; // 2026-10-30 所有玩法默认内嵌:多开一个原默认全屏的 diceRoll 也不再翻成 fullscreen
             ObjectNode mechanics = json.createObjectNode();
             NodeJourneySnapshot.copyMechanicSegments(config, mechanics);
             assertEquals(expected, mechanics.path("present").asText());
