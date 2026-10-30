@@ -675,3 +675,32 @@
 }
 
 .more-card { margin-bottom: var(--cy-space-3); }
+
+/* 走查 v2 R04/R16:底部进度(参考 shedsgns 视频:洋红勾、蓝色状态字、子项分支、最后一步蓝锁 + 琥珀标签) */
+.pg { margin: var(--cy-space-5) var(--cy-page-x) var(--cy-space-6); padding: var(--cy-space-4) var(--cy-space-4) var(--cy-space-1); border-radius: var(--cy-radius-xl); background: var(--cy-bg-card); }
+.pg-h { margin-bottom: var(--cy-space-3); }
+.pg-t { font-size: var(--cy-type-section-title); font-weight: 700; color: var(--cy-text-title); }
+.pg-row { display: flex; gap: var(--cy-space-3); padding-bottom: var(--cy-space-4); }
+.pg-rail { width: 36rpx; flex: none; display: flex; flex-direction: column; align-items: center; }
+.pg-dot { width: 36rpx; height: 36rpx; border-radius: 50%; flex: none; box-sizing: border-box; display: flex; align-items: center; justify-content: center; background: var(--cy-bg-card); box-shadow: 0 0 0 2rpx rgba(0, 0, 0, 0.06), 0 4rpx 12rpx rgba(0, 0, 0, 0.08); /* ds-ok: 进度圆点浮起,按参考 */ color: var(--cy-text-inverse, #fff); }
+.pg-dot--done { background: #E5338F; box-shadow: none; } /* ds-ok: 进度洋红,按业主参考视频 */
+.pg-dot--run { border: 4rpx solid #E5338F; box-shadow: 0 0 0 8rpx rgba(229, 51, 143, 0.14); } /* ds-ok: 同上 */
+.pg-dot--lock { border: 3rpx solid #2F7FEA; box-shadow: none; color: #2F7FEA; } /* ds-ok: 锁定步蓝色,按参考 */
+.pg-line { flex: 1; width: 4rpx; min-height: 28rpx; margin-top: 4rpx; background: var(--cy-bg-card-2); }
+.pg-line--done { background: #E5338F; } /* ds-ok: 同上 */
+.pg-row:last-child .pg-line { display: none; }
+.pg-m { flex: 1; min-width: 0; }
+.pg-top { display: flex; align-items: center; justify-content: space-between; gap: var(--cy-space-2); min-height: 36rpx; }
+.pg-lab { font-size: var(--cy-font-body); font-weight: 600; color: var(--cy-text-title); }
+.pg-row--todo .pg-lab { color: var(--cy-text-tertiary); font-weight: 500; }
+.pg-row--done .pg-lab { color: var(--cy-text-secondary); font-weight: 500; }
+.pg-row--lock .pg-lab { color: var(--cy-text-title); font-weight: 600; }
+.pg-stat { font-size: var(--cy-font-label); font-weight: 600; color: #2F7FEA; } /* ds-ok: 状态蓝字,按参考 */
+.pg-ask { font-size: var(--cy-font-caption); font-weight: 600; color: #B8650A; background: #FDEBD3; padding: 4rpx 18rpx; border-radius: 12rpx; } /* ds-ok: 琥珀标签,按参考 */
+.pg-sub { margin-top: var(--cy-space-2); display: flex; flex-direction: column; gap: var(--cy-space-2); }
+.pg-si { display: flex; align-items: center; gap: var(--cy-space-2); font-size: var(--cy-font-label); color: var(--cy-text-secondary); }
+.pg-si-dot { width: 10rpx; height: 10rpx; border-radius: 50%; flex: none; background: var(--cy-bg-card-2); }
+.pg-si--now { color: var(--cy-text-title); }
+.pg-si--now .pg-si-dot { background: #E5338F; } /* ds-ok: 同上 */
+.pg-si-t { flex: 1; min-width: 0; }
+.pg-go { flex: none; font-weight: 600; color: #2F7FEA; } /* ds-ok: 同上 */

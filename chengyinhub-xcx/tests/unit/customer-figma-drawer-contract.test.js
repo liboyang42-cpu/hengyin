@@ -52,8 +52,9 @@ test('项目客户抽屉贴住安全区且只有一层面板背景', () => {
 
   assert.doesNotMatch(wxml, /class="dw-stack"/, '导航下的长面板不得再向上伸出装饰堆叠层');
   assert.match(wxml, /--cy-drawer-top:\{\{panelTop\}\}px/, '顶边必须消费胶囊实测坐标');
-  assert.match(wxss, /\.dw--customer\s*\{[^}]*bottom:\s*0;[^}]*overflow:\s*hidden;/s,
-    '客户抽屉必须贴底并裁掉圆角外溢');
+  // 走查 v2 R07(业主 2026-10-30):客户弹窗和其他长面板一样到胶囊下沿,只保留裁切,不再单独卡 70vh
+  assert.match(wxss, /\.dw--customer\s*\{[^}]*overflow:\s*hidden;/s, '客户抽屉裁掉圆角外溢');
+  assert.doesNotMatch(wxss, /\.dw--customer\s*\{[^}]*70vh/s, '客户抽屉不再单独限高 70vh');
   assert.match(wxml, /<view class="dw-scroll-pad"><\/view>/,
     '客户抽屉安全区应留在同色面板内部');
   assert.match(wxss, /\.dw\s*\{[^}]*top:\s*var\(--cy-drawer-top[^}]*bottom:\s*0;[^}]*overflow:\s*hidden;/s, '项目长面板避开导航并贴底，正文独立滚动');

@@ -2309,7 +2309,8 @@ Page({
     this.setData({
       'clubSheet.show': true,
       clubActions: this.data.role === 'host'
-        ? [{ key: 'goInviteClub', label: '去找俱乐部' }, { key: 'goReceivedApplies', label: '查看收到的申请', ghost: true }]
+        // 走查 v2 R05:从主题打开的俱乐部弹窗不再跳出去看「收到的申请」
+        ? [{ key: 'goInviteClub', label: '去找俱乐部' }]
         : [{ key: 'goInviteClub', label: this.data.clubSheet.items.length ? '再找一家俱乐部带团' : '去找俱乐部' }],
     });
   },

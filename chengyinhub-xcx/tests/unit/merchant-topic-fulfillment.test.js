@@ -500,8 +500,9 @@ test('俱乐部抽屉的动作按身份/空态给不同文案', () => {
   const host = makePage();
   host.data.role = 'host';
   host.openClubSheet();
-  assert.deepEqual(host.data.clubActions.map((a) => a.key), ['goInviteClub', 'goReceivedApplies'],
-    '主办方是两个并排:邀请 + 收到的申请');
+  // 走查 v2 R05(业主 2026-10-30):从主题打开的俱乐部弹窗不跳出去看「收到的申请」
+  assert.deepEqual(host.data.clubActions.map((a) => a.key), ['goInviteClub'],
+    '主办方只留邀请,申请不跳出主题');
 });
 
 /**
