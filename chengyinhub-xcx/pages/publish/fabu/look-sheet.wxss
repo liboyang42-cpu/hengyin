@@ -1,6 +1,6 @@
 /* 画面风格选择层(look-sheet.wxml)。色卡只是示意四种风格的底色与主色,不是可配的颜色。 */
 .look-styles { display: flex; gap: var(--cy-space-3, 24rpx); padding: 0 var(--cy-space-4, 32rpx) var(--cy-space-4, 32rpx); }
-.look-style { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 12rpx; padding: 16rpx 0; border-radius: 24rpx; border: 2rpx solid transparent; }
+.look-style { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 12rpx; padding: 16rpx 0; border-radius: var(--cy-radius-lg); border: 2rpx solid transparent; }
 .look-style.is-on { border-color: var(--cy-color-text-primary); }
 .look-sw { width: 112rpx; height: 112rpx; border-radius: 50%; }
 .look-sw--stardust { background: radial-gradient(circle at 70% 30%, #FFFFFF 0 4rpx, transparent 6rpx), radial-gradient(circle at 30% 65%, #FFFFFF 0 3rpx, transparent 5rpx), #0E1A33; } /* ds-ok 风格示意色 */

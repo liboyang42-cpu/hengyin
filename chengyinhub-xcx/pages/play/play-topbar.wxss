@@ -8,7 +8,7 @@
 .radar__me{ position:absolute; left:50%; top:50%; z-index:2; width:0; height:0; margin:-14rpx 0 0 -11rpx;
   border-left:11rpx solid transparent; border-right:11rpx solid transparent; border-bottom:26rpx solid #FFFFFF; } /* ds-ok 玩家箭头 */
 .radar__n{ position:absolute; left:0; top:0; right:0; bottom:0; z-index:3; pointer-events:none; }
-.radar__n text{ position:absolute; left:50%; top:4rpx; width:30rpx; height:30rpx; margin-left:-15rpx; border-radius:50%; background:#0A0A0A;
+.radar__n text{ position:absolute; left:50%; top:4rpx; width:30rpx; height:30rpx; margin-left:-15rpx; border-radius:50%; background:#0A0A0A; /* ds-ok 雷达北针 / 画出来的背包图标(图标库没有背包) */
   color:#FFFFFF; font-size:18rpx; font-weight:700; line-height:30rpx; text-align:center; } /* ds-ok 北针 */
 .radar__rim{ position:absolute; left:0; top:0; right:0; bottom:0; z-index:3; pointer-events:none; }
 .radar__rim-tip{ position:absolute; left:50%; top:6rpx; margin-left:-10rpx; width:0; height:0;
@@ -19,9 +19,9 @@
 /* 地图档时正文让位:顶部留白跟着雷达加高 */
 .chfull.is-navmap .chfull__pad{ height:560rpx; }
 /* 背包图标:图标库没有背包,画一个(与发布页 rt-bag-glyph 同法) */
-.ptb-bag{ position:relative; width:30rpx; height:26rpx; margin-top:8rpx; border:3rpx solid currentColor; border-radius:6rpx; box-sizing:border-box; }
+.ptb-bag{ position:relative; width:30rpx; height:26rpx; margin-top:8rpx; border:3rpx solid currentColor; border-radius:6rpx; box-sizing:border-box; } /* ds-ok 雷达北针 / 画出来的背包图标(图标库没有背包) */
 .ptb-bag::before{ content:""; position:absolute; left:50%; top:-12rpx; width:14rpx; height:10rpx; margin-left:-7rpx;
-  border:3rpx solid currentColor; border-bottom:0; border-radius:8rpx 8rpx 0 0; box-sizing:border-box; }
+  border:3rpx solid currentColor; border-bottom:0; border-radius:8rpx 8rpx 0 0; box-sizing:border-box; } /* ds-ok 雷达北针 / 画出来的背包图标(图标库没有背包) */
 /* 半屏右侧读数(关系 / 时间 / 领取状态) */
 .ptb__r{ flex:none; font-size:var(--cy-type-label); color:var(--cy-comp-sheet-player-muted); font-variant-numeric:tabular-nums; }
 .ptb__r--ally{ color:var(--cy-color-play-accent); }

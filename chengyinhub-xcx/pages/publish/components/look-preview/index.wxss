@@ -7,7 +7,7 @@
 .lp__tex { position: absolute; left: 0; top: 0; right: 0; bottom: 0; pointer-events: none; }
 .lp__body { position: absolute; left: 40rpx; right: 40rpx; bottom: 48rpx; display: flex; flex-direction: column; }
 .lp__kick { font-size: var(--cy-type-label); letter-spacing: 6rpx; color: var(--lp-mute); }
-.lp__title { margin-top: 12rpx; font-size: 52rpx; font-weight: 700; letter-spacing: 4rpx; color: var(--lp-title); }
+.lp__title { margin-top: 12rpx; font-size: 52rpx; font-weight: 700; letter-spacing: 4rpx; color: var(--lp-title); } /* ds-ok 预览示例标题的展示字号 */
 .lp__story { margin-top: 20rpx; font-size: 34rpx; line-height: 1.8; font-family: 'CyStoryHand', "Kaiti SC", serif; } /* ds-ok 手写体在线加载,失败回落楷体 */
 .lp__opt { margin-top: 28rpx; display: flex; gap: 20rpx; align-items: baseline; padding: 22rpx 24rpx; border-left: 4rpx solid var(--lp-acc); background: var(--lp-soft); font-size: var(--cy-type-body); }
 .lp__opt-k { color: var(--lp-acc); font-weight: 700; }

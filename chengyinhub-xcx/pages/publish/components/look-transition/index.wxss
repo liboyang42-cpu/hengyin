@@ -1,7 +1,7 @@
 /* 颜色取宿主根节点的风格变量（pages/play/index.wxss 的 .look--*），没配风格时落回章节默认黑。
    三态：基础样式 = 起点（is-pre，无过渡）→ .is-in = 盖住 → .is-out = 揭开后的终点。 */
-.lt { position: fixed; left: 0; top: 0; right: 0; bottom: 0; z-index: 980; overflow: hidden; pointer-events: auto;
-  --a: var(--look-a, #E9E2D0); --b: var(--look-b, #9AA0AA); --g: var(--look-bg, #0A0A0A); perspective: 1200px; }
+.lt { position: fixed; left: 0; top: 0; right: 0; bottom: 0; z-index: 980; overflow: hidden; pointer-events: auto; background: transparent;
+  --a: var(--look-a, #E9E2D0); --b: var(--look-b, #9AA0AA); --g: var(--look-bg, #0A0A0A); perspective: 1200px; } /* ds-ok 转场的风格色与噪点/风痕是画面效果,随 .look--* 取色,兜底=章节默认黑 */
 .lt__panel, .lt__circle, .lt__lines, .lt__bolt, .lt__slat, .lt__band, .lt__tile, .lt__half { transition: none; }
 .is-in .lt__panel, .is-in .lt__circle, .is-in .lt__lines, .is-in .lt__bolt, .is-in .lt__slat, .is-in .lt__band, .is-in .lt__half
   { transition-property: transform, opacity, left; transition-duration: 460ms; transition-timing-function: cubic-bezier(.6,0,.3,1); }
@@ -39,10 +39,10 @@
 .lt--warp.is-in .lt__lines { opacity: .9; transform: scale(.6); }
 .lt--warp.is-out .lt__lines { opacity: 0; transform: scale(1.8) rotate(8deg); }
 /* 风刮：整块被风从一侧推过来，带斜切和风痕 */
-.lt--gust .lt__panel { background: repeating-linear-gradient(176deg, transparent 0 22px, rgba(255,255,255,.05) 22px 23px), var(--g); transform: translateX(-115%) skewX(-14deg); }
+.lt--gust .lt__panel { background: repeating-linear-gradient(176deg, transparent 0 22px, rgba(255,255,255,.05) 22px 23px), var(--g); transform: translateX(-115%) skewX(-14deg); } /* ds-ok 转场的风格色与噪点/风痕是画面效果,随 .look--* 取色,兜底=章节默认黑 */
 .lt--gust.is-in .lt__panel { transform: none; } .lt--gust.is-out .lt__panel { transform: translateX(115%) skewX(-14deg); }
 /* 调频：噪点一格一格亮起再暗下 */
-.lt--static .lt__panel { background: repeating-linear-gradient(0deg, rgba(255,255,255,.08) 0 1px, transparent 1px 3px), repeating-linear-gradient(90deg, rgba(255,255,255,.05) 0 2px, transparent 2px 5px), var(--g); opacity: 0; }
+.lt--static .lt__panel { background: repeating-linear-gradient(0deg, rgba(255,255,255,.08) 0 1px, transparent 1px 3px), repeating-linear-gradient(90deg, rgba(255,255,255,.05) 0 2px, transparent 2px 5px), var(--g); opacity: 0; } /* ds-ok 转场的风格色与噪点/风痕是画面效果,随 .look--* 取色,兜底=章节默认黑 */
 .lt--static.is-in .lt__panel { opacity: 1; transition: opacity 420ms steps(5); }
 .lt--static.is-out .lt__panel { opacity: 0; transition: opacity 520ms steps(6); }
 /* 故障：横带交错滑入，带主色 / 对比色的错位边 */
@@ -54,8 +54,8 @@
 /* 电流：一道亮线从左扫到右，身后的画面被“通电”换掉；揭开时亮线扫回来 */
 .lt--surge .lt__panel { transform-origin: 0 50%; transform: scaleX(0); }
 .lt--surge.is-in .lt__panel { transform: scaleX(1); } .lt--surge.is-out .lt__panel { transform: scaleX(0); }
-.lt__bolt { position: absolute; top: 0; bottom: 0; left: 0; width: 6rpx; background: var(--b); box-shadow: 0 0 24rpx 6rpx var(--b), 0 0 4rpx 2rpx #FFFFFF; }
-.lt--surge.is-in .lt__bolt { left: 100%; } .lt--surge.is-out .lt__bolt { left: 0; opacity: 0; }
+.lt__bolt { position: absolute; top: 0; bottom: 0; left: 0; width: 6rpx; background: var(--b); box-shadow: 0 0 24rpx 6rpx var(--b), 0 0 4rpx 2rpx #FFFFFF; } /* ds-ok 转场的风格色与噪点/风痕是画面效果,随 .look--* 取色,兜底=章节默认黑 */
+.lt--surge.is-in .lt__bolt { left: 100%; } .lt--surge.is-out .lt__bolt { left: 0; opacity: 0; } /* ds-ok 转场的风格色与噪点/风痕是画面效果,随 .look--* 取色,兜底=章节默认黑 */
 /* 墨晕：从左下角洇开 */
 .lt--ink .lt__circle { left: 0; top: 100%; filter: blur(30px); }
 .lt--ink.is-in .lt__circle { transform: scale(1); transition-duration: 520ms; }
