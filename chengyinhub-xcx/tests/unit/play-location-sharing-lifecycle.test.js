@@ -15,7 +15,7 @@ function harness() {
     stopLocationUpdate(opts) { stops++; opts.success(); }
   };
   const module = { exports: {} };
-  vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../../utils/location/bg-tracker.js'), 'utf8'), { wx, module });
+  vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../../utils/location/bg-tracker.js'), 'utf8'), { wx, module, setTimeout, clearTimeout });
   const bgTracker = module.exports;
   const source = fs.readFileSync(path.join(__dirname, '../../pages/play/index.js'), 'utf8');
   const context = { wx, bgTracker, playLocationOwnerSequence: 0, app: { getUserID: () => 9 } };

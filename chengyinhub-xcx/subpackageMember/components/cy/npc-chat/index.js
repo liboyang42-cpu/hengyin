@@ -37,9 +37,9 @@ Component({
         else this._recoverPending();
       },
     },
-    sessionId: { type: Number, value: 0 },
+    sessionId: { type: Number, value: 0, observer: function () { this._resetForTrackChange(); } },
     /** 'roam' | 'merchant'。决定打哪个端点、以及 bizId 缺席时说什么。 */
-    scope: { type: String, value: 'roam' },
+    scope: { type: String, value: 'roam', observer: function () { this._resetForTrackChange(); } },
     /** scope='merchant' 时的标题(形象名)与空态招呼语,由店铺主页传入。 */
     npcName: { type: String, value: '' },
     greeting: { type: String, value: '' },
@@ -91,6 +91,7 @@ Component({
 
       this._invalidate(false);
       const generation = ++this._generation;
+      this._activeTrack = { scope: this.properties.scope, bizId: this.properties.sessionId };
       const retry = this._retryRequested && this._retryMessage
         && this._retryMessage.bizId === this.properties.sessionId && this._retryMessage.scope === this.properties.scope;
       this._retryRequested = false;
@@ -288,6 +289,7 @@ Component({
       if (!pending || pending.bizId !== this.properties.sessionId || pending.scope !== this.properties.scope) return;
       this._invalidate(false);
       const generation = ++this._generation;
+      this._activeTrack = { scope: this.properties.scope, bizId: this.properties.sessionId };
       this._retryMessage = pending;
       this._retryMode = 'readback';
       const messages = (this.data.messages || []).some((item) => item.id === pending.userMessage.id)
@@ -413,6 +415,11 @@ Component({
       }
     },
 
+    _resetForTrackChange: function () {
+      this._resetForClose();
+      if (this.properties.show) this._recoverPending();
+    },
+
     _resetForClose: function () {
       this._invalidate(false);
       // _pendingRecovery 刻意保留:重开时按 requestId 回读,而不是让用户再发一遍。
@@ -443,7 +450,9 @@ Component({
     },
 
     _isCurrent: function (generation) {
-      return this.properties.show && generation === this._generation;
+      return this.properties.show && generation === this._generation
+        && (!this._activeTrack || this._activeTrack.scope === this.properties.scope
+          && this._activeTrack.bizId === this.properties.sessionId);
     },
 
     _message: function (role, text) {

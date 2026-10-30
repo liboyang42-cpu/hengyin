@@ -10,7 +10,7 @@ function harness() {
   const bg = [], fg = [], stops = [];
   const module = { exports: {} };
   const filename = path.resolve(__dirname, '../../utils/location/bg-tracker.js');
-  vm.runInNewContext(fs.readFileSync(filename, 'utf8'), { module, wx: {
+  vm.runInNewContext(fs.readFileSync(filename, 'utf8'), { module, setTimeout, clearTimeout, wx: {
     startLocationUpdateBackground: options => bg.push(options),
     startLocationUpdate: options => fg.push(options),
     stopLocationUpdate: options => stops.push(options),
@@ -29,7 +29,7 @@ test('success force-release cancels old batch despite same-key replacement waiti
   assert.deepEqual(seen, ['first']);
   assert.equal(t.isRunning(), false);
   assert.equal(stops.length, 1); assert.equal(bg.length, 1);
-  stops[0].complete(); assert.equal(bg.length, 2);
+  stops[0].complete({ errMsg: 'stopLocationUpdate:ok' }); assert.equal(bg.length, 2);
   bg[1].success();
   assert.deepEqual(seen, ['first', 'new-second']);
   assert.equal(t.isRunning(), true);

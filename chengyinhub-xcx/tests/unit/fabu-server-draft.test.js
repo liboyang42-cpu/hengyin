@@ -19,6 +19,26 @@ test('回读校验：必须仍是草稿、节点都有编号且与本机一致',
   assert.match(readbackIssue(payload, detail({ topic: { name: '别的' } }), true), /主题名/);
 });
 
+test('封面回读只忽略本站同一对象的完整OSS签名，保留对象、来源及版本差异', () => {
+  const asset = 'https://chengyin-oss.oss-cn-shanghai.aliyuncs.com/upload/' + 'a'.repeat(32) + '.jpg';
+  const before = asset + '?Expires=100&OSSAccessKeyId=old&Signature=a%2Bb';
+  const after = asset + '?Signature=new%3D&Expires=200&OSSAccessKeyId=rotated';
+  const sent = Object.assign({}, payload, { imgUrl: before, imgArr: before + ',' + before });
+  assert.equal(readbackIssue(sent, detail({ topic: { imgUrl: after, imgArr: after + ',' + after } }), true), '');
+  for (const changed of [
+    after.replace('/' + 'a'.repeat(32), '/' + 'b'.repeat(32)),
+    after.replace('chengyin-oss.', 'another-bucket.'), after.replace('https:', 'http:'),
+    after + '&versionId=changed', after + '&Signature=duplicate',
+    after.replace('&Expires=200', ''), after.replace('Expires=200', 'Expires=invalid'),
+    after.replace('new%3D', '%ZZ'), after + '#fragment',
+  ]) {
+    assert.match(readbackIssue(Object.assign({}, payload, { imgUrl: before }), detail({ topic: { imgUrl: changed } }), true), /主封面/);
+  }
+  assert.match(readbackIssue(sent, detail({ topic: { imgUrl: after, imgArr: after } }), true), /多图封面/);
+  assert.match(readbackIssue(Object.assign({}, payload, { imgUrl: 'https://external.example/p.png?Signature=one' }),
+    detail({ topic: { imgUrl: 'https://external.example/p.png?Signature=two' } }), true), /主封面/);
+});
+
 test('保存草稿：带 saveDraft=1、回读确认后才成功；连点只发一次；失败可重试；存不进去就不发布', () => {
   const calls = [];
   const saver = createServerDraftSaver({

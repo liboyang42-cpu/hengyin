@@ -39,7 +39,7 @@ const FIXTURE_OVERRIDES = {
     searchLoading: true, showSearchSkeleton: true, activeResultType: 'all',
     resultTabs: [{ key: 'all', label: '全部' }], resultGroups: [], visibleResults: [],
   },
-  A58: { pendingAuthorization: false, submitting: false, submitError: '', failedAction: '' },
+  A58: { pendingAuthorization: false, submitting: false, submitError: '' },
   C01: { dashboardLoading: false, joinLoading: false, hostLoading: false, todoLoading: false },
   C03: { consoleError: '工作台暂时无法加载', dashboardError: '' },
   B66: {

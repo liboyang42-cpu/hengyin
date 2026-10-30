@@ -8,7 +8,7 @@ const vm = require('node:vm');
 function load(wx) {
   const module = { exports: {} };
   const filename = path.resolve(__dirname, '../../utils/location/bg-tracker.js');
-  vm.runInNewContext(fs.readFileSync(filename, 'utf8'), { module, wx }, { filename });
+  vm.runInNewContext(fs.readFileSync(filename, 'utf8'), { module, wx, setTimeout, clearTimeout }, { filename });
   return module.exports;
 }
 
@@ -22,7 +22,7 @@ for (const callback of ['success', 'fail', 'complete']) test('stop ' + callback 
       t.acquire('new-a', { success() { seen.push('a'); throw error; } });
       t.acquire('new-b', { success: () => seen.push('b') });
       assert.equal(starts, 1, 'new owners wait for stop completion');
-      options[callback]();
+      options[callback]({ errMsg: callback === 'fail' ? 'stopLocationUpdate:fail unavailable' : 'stopLocationUpdate:ok' });
     },
   });
   t.acquire('old', {});
@@ -43,7 +43,7 @@ test('stop completion preserves restarted failure consumer error without repeati
       stopOptions = options;
       t.acquire('new-a', { fail() { seen.push('a'); throw error; } });
       t.acquire('new-b', { fail: () => seen.push('b') });
-      options.complete();
+      options.complete({ errMsg: 'stopLocationUpdate:ok' });
     },
   });
   t.acquire('old', {});
@@ -66,7 +66,7 @@ test('stop callback rethrows even a falsy value from the restarted consumer', ()
   let t, starts = 0; let caught = false, thrown = 'unset';
   t = load({ startLocationUpdateBackground(options) { starts++; options.success(); },
     startLocationUpdate() { assert.fail('unexpected fallback'); },
-    stopLocationUpdate(options) { t.acquire('new', { success() { throw null; } }); options.complete(); } });
+    stopLocationUpdate(options) { t.acquire('new', { success() { throw null; } }); options.complete({ errMsg: 'stopLocationUpdate:ok' }); } });
   t.acquire('old', {});
   try { t.release('old'); } catch (value) { caught = true; thrown = value; }
   assert.equal(caught, true); assert.equal(thrown, null); assert.equal(starts, 2);

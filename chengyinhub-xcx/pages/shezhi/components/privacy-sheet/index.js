@@ -18,7 +18,7 @@ Component({
     theme: { type: String, value: 'player' },
   },
   data: {
-    submitting: false,
+    submitting: false, submitError: '',
   },
   lifetimes: {
     attached() { this._privacyHidden = false; this.setData({ submitting: false }); },
@@ -73,21 +73,35 @@ Component({
 
     withdrawRoamLocationConsent() {
       if (this.data.submitting) return;
-      this.setData({ submitting: true });
+      if (!this._roamWithdrawalPending || !this._roamConsentReader || !sameReader(app, this._roamConsentReader)) {
+        this._roamConsentReader = reader(app); this._roamAuditConfirmed = false; this._roamStopFailed = false;
+      }
+      this._roamWithdrawalPending = true;
+      const captured = this._roamConsentReader;
+      const sameOperation = () => this._roamConsentReader === captured && sameReader(app, captured);
+      this.setData({ submitting: true, submitError: '' });
       const current = this.privacyActionCurrent();
       // 撤回先作用于本机用途；审计失败仍由 consent-client 保留原账号/requestId 补传。
-      bgTracker.revoke('roam');
+      const stop = this._roamStopFailed ? bgTracker.retryStop() : bgTracker.revoke('roam');
       let audit;
       try {
-        audit = current() ? app.recordConsent({ docType: 'privacy_policy', scene: 'roam_location', eventType: 'REVOKE' })
+        audit = current() ? (this._roamAuditConfirmed ? Promise.resolve() : app.recordConsent({ docType: 'privacy_policy', scene: 'roam_location', eventType: 'REVOKE' }))
           : Promise.reject(new Error('账号已变化'));
       } catch (error) { audit = Promise.reject(error); }
-      Promise.resolve(audit).then(() => {
+      const recordedAudit = Promise.resolve(audit).then(() => {
+        if (sameOperation()) this._roamAuditConfirmed = true;
+        return true;
+      }, () => false);
+      Promise.all([stop, recordedAudit]).then(([stopped, recorded]) => {
+        if (sameOperation()) {
+          this._roamStopFailed = !stopped || !stopped.ok;
+          if (stopped && stopped.ok && recorded) this._roamWithdrawalPending = false;
+        }
         if (!current()) return;
-        toast('已撤回漫游定位同意');
-      }).catch(() => {
-        if (!current()) return;
-        toast('本机漫游已停，记录待确认');
+        const message = this._roamStopFailed ? '系统停止定位未确认，请再次点击撤回按钮重试'
+          : !recorded ? '本机漫游已停，记录待确认' : '';
+        this.setData({ submitError: message });
+        toast(message || '已撤回漫游定位同意');
       }).finally(() => {
         if (current()) this.setData({ submitting: false });
       });

@@ -1409,6 +1409,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         NodeJourneySnapshot.requireContentSnapshot(original);
         ObjectNode snapshot = original.deepCopy();
         snapshot.put("gameSessionId", session.getId()).put("teamId", player.teamId).put("authorityEpoch", epoch);
+        snapshot.put("runtimeInstance", sharedInstance(session, state, nodeId));
         snapshot.set("contentTags", objectMapper.valueToTree(state.getTags()));
         JsonNode operation = state.getThemeRuntime().path("activeOperation");
         java.util.Set<Long> targets = new java.util.LinkedHashSet<>();

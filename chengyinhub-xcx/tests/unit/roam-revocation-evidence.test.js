@@ -59,7 +59,7 @@ function harness(noBackground) {
   h.privacy = { ...definition, data: JSON.parse(JSON.stringify(definition.data)), setData: h.roam.setData }
   h.tracker = require('../../utils/location/bg-tracker.js')
   const revoke = h.tracker.revoke
-  h.tracker.revoke = key => { h.revokedOrder = ++h.order; revoke(key) }
+  h.tracker.revoke = key => { h.revokedOrder = ++h.order; return revoke(key) }
   const playSource = fs.readFileSync(require.resolve('../../pages/play/index.js'), 'utf8')
   const context = { wx, app, playLocationOwnerSequence: 0, bgTracker: h.tracker, cyModal: { show: o => h.modals.push(o) },
     playAccuracy: require('../../pages/play/utils/play-accuracy.js') }
@@ -91,13 +91,14 @@ function harness(noBackground) {
       }
     } else call.options.fail({ errMsg: 'denied' })
   }
-  h.frame = () => ({ roamOwner: h.tracker.hasOwner('roam'), revision: h.tracker.revision('roam'), trackerRunning: h.tracker.isRunning(),
+  h.frame = () => ({ roamOwner: h.tracker.hasOwner('roam'), revision: h.tracker.revision('roam'), trackerRunning: h.tracker.isRunning(), stopState: h.tracker.stopState(),
     realEpoch: h.roam._realStartEpoch || 0, realOn: !!h.roam._realOn, listener: !!h.roam._onRealLoc,
     starting: !!h.roam._realStarting, goPending: !!h.roam._roamStartPending,
     fogPending: !!(h.roam._fogStartPending && h.roam._fogStartPending.startTracking) })
   return h
 }
 const sources = {
+  stopState: 'utils/location/bg-tracker.js#stopState',
   roamOwner: 'utils/location/bg-tracker.js#hasOwner:roam', revision: 'utils/location/bg-tracker.js#revision:roam',
   trackerRunning: 'utils/location/bg-tracker.js#isRunning', realEpoch: 'pages/roam/index.js#_realStartEpoch',
   realOn: 'pages/roam/index.js#_realOn', listener: 'pages/roam/index.js#_onRealLoc',
@@ -107,8 +108,9 @@ const sources = {
 const ref = source => ({ captureId: 'unit-capture', sourceDigest, source })
 async function receiptFor(kind, branch = 'success') {
   const h = harness(kind.startsWith('fg-only'))
-  if (kind === 'cold') h.roam._startReal()
-  else { h.roam._startReal(true); if (kind !== 'inflight-success' && kind !== 'inflight-denied' && !kind.startsWith('pending-play')) h.fire(h.calls[0]) }
+  // cold means no collection intent or native start has existed; pending-consent cancellation
+  // remains covered by roam-location-revocation.test.js and is not this no-active proof.
+  if (kind !== 'cold') { h.roam._startReal(true); if (kind !== 'inflight-success' && kind !== 'inflight-denied' && !kind.startsWith('pending-play')) h.fire(h.calls[0]) }
   if (kind === 'already-stopped') { h.roam._stopReal(); h.fire(h.calls.at(-1)) }
   if (kind === 'retained' || kind === 'record-failed-retained' || kind.startsWith('pending-play')) h.startPlay()
   if (kind === 'prior-stop') { h.roam._stopReal(); h.roam._startReal() }
@@ -116,7 +118,7 @@ async function receiptFor(kind, branch = 'success') {
   if (kind.startsWith('record-failed')) h.rejectRecord = true
   h.privacy.withdrawRoamLocationConsent(); await settle()
   if (['bg-restart', 'fg-restart', 'both-denied', 'fg-only-restart', 'fg-only-denied'].includes(kind)) h.startPlay()
-  if (kind !== 'retained' && kind !== 'record-failed-retained' && !kind.startsWith('pending-play')) h.fire(h.calls.find(c => c.method === 'stopLocationUpdate' && c.outcome === 'pending'))
+  if (kind !== 'cold' && kind !== 'already-stopped' && kind !== 'retained' && kind !== 'record-failed-retained' && !kind.startsWith('pending-play')) h.fire(h.calls.find(c => c.method === 'stopLocationUpdate' && c.outcome === 'pending'))
   if (kind === 'inflight-success' || kind === 'inflight-denied') {
     h.fire(h.calls[0], kind === 'inflight-success' ? 'success' : 'denied')
     if (kind === 'inflight-success') h.fire(h.calls.at(-1))
@@ -129,7 +131,7 @@ async function receiptFor(kind, branch = 'success') {
     h.fire(h.calls[0], kind === 'pending-play-bg' ? 'success' : 'denied')
     if (kind !== 'pending-play-bg') h.fire(h.calls.at(-1), kind === 'pending-play-fg' ? 'success' : 'denied')
   }
-  const scenario = ({ cold: 'stop-confirmed', stopped: 'stop-confirmed', 'already-stopped': 'stop-confirmed', 'inflight-success': 'stop-confirmed',
+  const scenario = ({ cold: 'no-active-collection', stopped: 'stop-confirmed', 'already-stopped': 'no-active-collection', 'inflight-success': 'stop-confirmed',
     'inflight-denied': 'stop-confirmed', 'prior-stop': 'prior-stop-completed', retained: 'independent-play-retained',
     'bg-restart': 'independent-play-bg-restarted', 'fg-restart': 'independent-play-fg-restarted',
     'both-denied': 'independent-play-both-denied', 'record-failed': 'record-failed', 'record-failed-retained': 'record-failed',
@@ -274,3 +276,26 @@ test('本次actual consent-client请求是new，但latest/proof/echo都old REVOK
   receipt.authoritativeReadback.authority.after.requestId = 'old-revoke'
   assert.throws(() => validate(receipt), /proof未绑定原审计请求/)
 })
+
+for (const kind of ['cold', 'already-stopped']) test('no-active-collection ' + kind + ' rejects unknown native state, active owner and synthetic callback shortcuts', async () => {
+  const { receipt } = await receiptFor(kind); validate(receipt);
+  const mutations = [
+    p => { p.before.stopState = 'failed'; p.sourceRefs.stopState.beforeValue = 'failed'; },
+    p => { p.after.stopState = 'stopping'; p.sourceRefs.stopState.afterValue = 'stopping'; },
+    p => { p.before.stopState = 'unknown'; p.sourceRefs.stopState.beforeValue = 'unknown'; },
+    p => { delete p.sourceRefs.stopState; },
+    p => { p.before.roamOwner = true; p.sourceRefs.roamOwner.beforeValue = true; },
+    p => { p.before.trackerRunning = true; p.sourceRefs.trackerRunning.beforeValue = true; },
+    p => { p.before.starting = true; p.sourceRefs.starting.beforeValue = true; },
+    p => { p.sdk.calls.push({ id: 'unknown-pending', method: 'startLocationUpdate', outcome: 'pending', startedOrder: p.sdk.revokedOrder + 1 }); },
+    p => { p.sdk.calls.push({ id: 'late-failed-stop', method: 'stopLocationUpdate', outcome: 'denied', startedOrder: p.sdk.revokedOrder - 2, completedOrder: p.sdk.revokedOrder - 1 }); },
+    p => { p.sdk.calls.push({ id: 'late-start', method: 'startLocationUpdate', outcome: 'success', startedOrder: p.sdk.revokedOrder + 1, completedOrder: p.sdk.settledOrder - 1 }); },
+  ];
+  for (const mutate of mutations) { const changed = structuredClone(receipt); mutate(changed.observed.roamRevocation); assert.throws(() => validate(changed)); }
+});
+test('active and late-start scenarios cannot masquerade as no-active-collection', async () => {
+  for (const kind of ['stopped', 'inflight-success', 'inflight-denied', 'prior-stop', 'retained']) {
+    const { receipt } = await receiptFor(kind); receipt.observed.roamRevocation.scenario = 'no-active-collection';
+    assert.throws(() => validate(receipt));
+  }
+});
