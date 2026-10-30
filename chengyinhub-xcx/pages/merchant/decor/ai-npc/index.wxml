@@ -19,12 +19,7 @@
     <view class="dc-content">
       <block wx:if="{{view === 'home'}}">
         <text class="dc-brand-title">AI 店铺角色</text>
-        <!-- M-28:第一次进来先说清楚这是什么;点「知道了」后不再出现 -->
-        <view class="dc-card npc-intro" wx:if="{{introVisible}}">
-          <text class="npc-intro__title">AI 店铺角色是什么</text>
-          <text class="npc-intro__text">它是你的店在城瘾里的分身：出现在漫游地图和店铺主页上，玩家路过会和它打招呼、聊天，问菜单和营业时间。起个名字、选个性格、录一段声音，它就按你的方式招呼客人。</text>
-          <view class="npc-intro__ok" bindtap="dismissIntro" aria-role="button" aria-label="知道了" hover-class="cy-pressed" hover-stay-time="80">知道了</view>
-        </view>
+        <!-- 走查 v2 R12(业主 2026-10-30):页顶常驻说明卡撤掉,改成只在第一次进入时弹出的四步介绍(见页尾 cy-sheet) -->
       </block>
       <view class="{{view === 'home' ? 'npc-hero' : 'npc-stage'}}">
         <view class="npc-preview {{view === 'avatar' ? 'npc-preview--large' : ''}}">
@@ -117,6 +112,24 @@
       </block>
     </view>
   </scroll-view>
+  <!-- 走查 v2 R12:第一次进入的四步介绍。每步两个 AI 角色相关的 3D 物件(店铺分身 + 星光 → 挥手 + 对话 → 菜单 + 闹钟 → 名牌 + 性格面具),
+       翻页时旧物件缩走、新物件弹出,底下光晕换色。✕ 和「知道了」都算看过,之后不再弹。 -->
+  <cy-sheet show="{{introVisible}}" inset bind:close="dismissIntro">
+    <view class="ni">
+      <view class="ni-stage">
+        <view class="ni-glow ni-glow--{{introStep}}"></view>
+        <block wx:for="{{introSteps}}" wx:key="key">
+          <image class="ni-o {{index === introStep ? 'ni-o--on' : ''}}" src="/pages/merchant/images/npc-intro/{{item.a}}.png" mode="aspectFit" />
+          <image class="ni-o ni-o--sm {{index === introStep ? 'ni-o--on' : ''}}" src="/pages/merchant/images/npc-intro/{{item.b}}.png" mode="aspectFit" />
+        </block>
+      </view>
+      <text class="ni-t">{{introSteps[introStep].t}}</text>
+      <text class="ni-s">{{introSteps[introStep].s}}</text>
+      <view class="ni-dots"><view class="ni-dot {{index === introStep ? 'ni-dot--on' : ''}}" wx:for="{{introSteps}}" wx:key="key"></view></view>
+      <view class="ni-btn" bindtap="nextIntro" aria-role="button" aria-label="{{introStep === introSteps.length - 1 ? '知道了' : '下一步'}}" hover-class="cy-pressed" hover-stay-time="80">{{introStep === introSteps.length - 1 ? '知道了' : '下一步'}}</view>
+    </view>
+  </cy-sheet>
+
   <cy-sheet show="{{presetVisible}}" title="选现成的" bind:close="closePresets">
     <view class="dc-sheet-content">
       <view class="npc-grid">

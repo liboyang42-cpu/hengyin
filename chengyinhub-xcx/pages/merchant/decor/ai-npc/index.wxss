@@ -227,3 +227,22 @@
 .npc-intro__title { font-size: var(--cy-type-body); font-weight: 700; color: var(--cy-color-text-primary); }
 .npc-intro__text { font-size: var(--cy-type-label); line-height: 1.6; color: var(--cy-color-text-secondary); }
 .npc-intro__ok { align-self: flex-end; min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: flex-end; font-size: var(--cy-type-label); font-weight: 600; color: var(--cy-color-text-primary); }
+
+/* 走查 v2 R12:首次四步介绍 */
+.ni { display: flex; flex-direction: column; align-items: center; padding: var(--cy-space-4) var(--cy-space-5) var(--cy-space-5); }
+.ni-stage { position: relative; width: 100%; height: 360rpx; }
+.ni-glow { position: absolute; left: 50%; top: 50%; width: 360rpx; height: 360rpx; margin: -180rpx 0 0 -180rpx; border-radius: 50%; transition: background 0.5s; }
+.ni-glow--0 { background: radial-gradient(circle, rgba(165, 166, 232, 0.5), rgba(255, 255, 255, 0) 65%); } /* ds-ok: 光晕按定稿原型 */
+.ni-glow--1 { background: radial-gradient(circle, rgba(242, 196, 107, 0.5), rgba(255, 255, 255, 0) 65%); } /* ds-ok: 同上 */
+.ni-glow--2 { background: radial-gradient(circle, rgba(127, 209, 166, 0.5), rgba(255, 255, 255, 0) 65%); } /* ds-ok: 同上 */
+.ni-glow--3 { background: radial-gradient(circle, rgba(240, 138, 160, 0.45), rgba(255, 255, 255, 0) 65%); } /* ds-ok: 同上 */
+.ni-o { position: absolute; left: 50%; top: 50%; width: 240rpx; height: 240rpx; margin: -120rpx 0 0 -150rpx; opacity: 0; transform: scale(0.4) rotate(-20deg); transition: transform 0.5s cubic-bezier(0.3, 1.5, 0.45, 1), opacity 0.3s; }
+.ni-o--sm { width: 128rpx; height: 128rpx; margin: -150rpx 0 0 40rpx; }
+.ni-o--on { opacity: 1; transform: scale(1) rotate(-6deg); }
+.ni-o--sm.ni-o--on { transform: scale(1) rotate(10deg); }
+.ni-t { margin-top: var(--cy-space-3); font-size: var(--cy-type-sheet-title); font-weight: 700; color: var(--cy-text-title); text-align: center; }
+.ni-s { margin-top: var(--cy-space-2); font-size: var(--cy-font-label); color: var(--cy-text-secondary); text-align: center; line-height: 1.5; }
+.ni-dots { display: flex; gap: 12rpx; margin: var(--cy-space-5) 0; }
+.ni-dot { width: 36rpx; height: 12rpx; border-radius: 6rpx; background: var(--cy-bg-card-2); transform: scaleX(0.34); transition: transform 0.3s; }
+.ni-dot--on { transform: scaleX(1); background: var(--cy-text-title); }
+.ni-btn { width: 100%; height: var(--cy-btn-h); line-height: var(--cy-btn-h); border-radius: var(--cy-radius-pill); background: var(--cy-btn-solid-bg); color: var(--cy-btn-solid-fg); text-align: center; font-size: var(--cy-font-body); font-weight: 700; }

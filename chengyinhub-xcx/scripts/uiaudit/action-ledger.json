@@ -386235,7 +386235,7 @@
       }
     },
     {
-      "id": "components/cy/scene-asset-earnings/index.wxml:28:bind:close:closeMore:7",
+      "id": "components/cy/scene-asset-earnings/index.wxml:30:bind:close:closeMore:7",
       "route": "component:components/cy/scene-asset-earnings/index",
       "hostRoutes": [
         "subpackageA/pages/assetcenter/earnings/index",
@@ -386298,7 +386298,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closeMore",
-        "line": 28,
+        "line": 30,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -386342,118 +386342,7 @@
       }
     },
     {
-      "id": "components/cy/scene-asset-earnings/index.wxml:31:bindtap:openSettlement:8",
-      "route": "component:components/cy/scene-asset-earnings/index",
-      "hostRoutes": [
-        "subpackageA/pages/assetcenter/earnings/index",
-        "subpackageMember/coupon-wallet/index",
-        "subpackageRoam/poi-detail/index"
-      ],
-      "hostComponentPaths": [
-        {
-          "route": "subpackageA/pages/assetcenter/earnings/index",
-          "segments": [
-            {
-              "selector": "#assetEarnings",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/coupon-wallet/index",
-          "segments": [
-            {
-              "selector": "cy-scene-deep-link",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-asset-earnings",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageRoam/poi-detail/index",
-          "segments": [
-            {
-              "selector": "#roamDeepLink",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-asset-earnings",
-              "index": 0
-            }
-          ]
-        }
-      ],
-      "role": "inherited",
-      "entry": {
-        "wxml": "components/cy/scene-asset-earnings/index.wxml",
-        "js": "components/cy/scene-asset-earnings/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "openSettlement",
-        "line": 31,
-        "selectorHint": ".tm-row",
-        "visibleCondition": "{{theme === 'merchant'}}",
-        "disabledCondition": null,
-        "ariaLabel": "结算明细",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "navigation",
-      "interactionMode": "tap",
-      "baseActionClass": "navigation",
-      "effectClasses": [
-        "navigation",
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/merchant/ledger/index?view=settlement"
-        ],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "components/cy/scene-asset-earnings/index.js:156"
-      }
-    },
-    {
-      "id": "components/cy/scene-asset-earnings/index.wxml:32:bindtap:openWithdrawHistory:9",
+      "id": "components/cy/scene-asset-earnings/index.wxml:33:bindtap:openWithdrawHistory:8",
       "route": "component:components/cy/scene-asset-earnings/index",
       "hostRoutes": [
         "subpackageA/pages/assetcenter/earnings/index",
@@ -386516,7 +386405,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openWithdrawHistory",
-        "line": 32,
+        "line": 33,
         "selectorHint": ".tm-row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -386561,7 +386450,7 @@
       }
     },
     {
-      "id": "components/cy/scene-asset-earnings/index.wxml:33:bindtap:openInvite:10",
+      "id": "components/cy/scene-asset-earnings/index.wxml:34:bindtap:openInvite:9",
       "route": "component:components/cy/scene-asset-earnings/index",
       "hostRoutes": [
         "subpackageA/pages/assetcenter/earnings/index",
@@ -386624,7 +386513,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openInvite",
-        "line": 33,
+        "line": 34,
         "selectorHint": ".tm-row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -469370,6 +469259,24 @@
           "segments": [
             {
               "selector": "cy-sheet",
+              "index": 10
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/decor/ai-npc/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 11
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/decor/ai-npc/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
               "index": 2
             }
           ]
@@ -508560,6 +508467,24 @@
             {
               "selector": "cy-sheet",
               "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/decor/ai-npc/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 10
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/decor/ai-npc/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 11
             }
           ]
         },
@@ -547765,6 +547690,24 @@
           "segments": [
             {
               "selector": "cy-sheet",
+              "index": 10
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/decor/ai-npc/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 11
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/decor/ai-npc/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
               "index": 2
             }
           ]
@@ -586954,6 +586897,24 @@
             {
               "selector": "cy-sheet",
               "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/decor/ai-npc/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 10
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/decor/ai-npc/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 11
             }
           ]
         },
@@ -626159,6 +626120,24 @@
           "segments": [
             {
               "selector": "cy-sheet",
+              "index": 10
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/decor/ai-npc/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 11
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/decor/ai-npc/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
               "index": 2
             }
           ]
@@ -665348,6 +665327,24 @@
             {
               "selector": "cy-sheet",
               "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/decor/ai-npc/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 10
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/decor/ai-npc/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 11
             }
           ]
         },
@@ -704554,6 +704551,24 @@
           "segments": [
             {
               "selector": "cy-sheet",
+              "index": 10
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/decor/ai-npc/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 11
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/decor/ai-npc/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
               "index": 2
             }
           ]
@@ -743744,6 +743759,24 @@
             {
               "selector": "cy-sheet",
               "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/decor/ai-npc/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 10
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/decor/ai-npc/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 11
             }
           ]
         },
@@ -782950,6 +782983,24 @@
           "segments": [
             {
               "selector": "cy-sheet",
+              "index": 10
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/decor/ai-npc/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 11
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/decor/ai-npc/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
               "index": 2
             }
           ]
@@ -822140,6 +822191,24 @@
             {
               "selector": "cy-sheet",
               "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/decor/ai-npc/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 10
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/decor/ai-npc/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 11
             }
           ]
         },
@@ -861346,6 +861415,24 @@
           "segments": [
             {
               "selector": "cy-sheet",
+              "index": 10
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/decor/ai-npc/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 11
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/decor/ai-npc/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
               "index": 2
             }
           ]
@@ -900536,6 +900623,24 @@
             {
               "selector": "cy-sheet",
               "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/decor/ai-npc/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 10
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/decor/ai-npc/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 11
             }
           ]
         },
@@ -1020263,75 +1020368,7 @@
       }
     },
     {
-      "id": "pages/merchant/decor/ai-npc/index.wxml:102:bind:tap:onHomeAction:11",
-      "route": "pages/merchant/decor/ai-npc/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/merchant/decor/ai-npc/index.wxml",
-        "js": "pages/merchant/decor/ai-npc/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-cell",
-        "event": "bind:tap",
-        "handler": "onHomeAction",
-        "line": 102,
-        "selectorHint": "cy-cell[bind:tap]",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "other",
-      "interactionMode": "tap",
-      "baseActionClass": "other",
-      "effectClasses": [
-        "other"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:156"
-      }
-    },
-    {
-      "id": "pages/merchant/decor/ai-npc/index.wxml:106:bindtap:toggleEditing:12",
+      "id": "pages/merchant/decor/ai-npc/index.wxml:101:bindtap:toggleEditing:11",
       "route": "pages/merchant/decor/ai-npc/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1020354,7 +1020391,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "toggleEditing",
-        "line": 106,
+        "line": 101,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{saving || processing}}",
@@ -1020394,11 +1020431,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:151"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:162"
       }
     },
     {
-      "id": "pages/merchant/decor/ai-npc/index.wxml:111:bindtap:save:13",
+      "id": "pages/merchant/decor/ai-npc/index.wxml:106:bindtap:save:12",
       "route": "pages/merchant/decor/ai-npc/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1020421,7 +1020458,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "save",
-        "line": 111,
+        "line": 106,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{processing || (!photoReady && source === 'photo')}}",
@@ -1020538,11 +1020575,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:706"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:717"
       }
     },
     {
-      "id": "pages/merchant/decor/ai-npc/index.wxml:120:bind:close:closePresets:14",
+      "id": "pages/merchant/decor/ai-npc/index.wxml:117:bind:close:dismissIntro:13",
       "route": "pages/merchant/decor/ai-npc/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1020564,8 +1020601,8 @@
       "control": {
         "tag": "cy-sheet",
         "event": "bind:close",
-        "handler": "closePresets",
-        "line": 120,
+        "handler": "dismissIntro",
+        "line": 117,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1020605,11 +1020642,145 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:328"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:158"
       }
     },
     {
-      "id": "pages/merchant/decor/ai-npc/index.wxml:128:bindtap:pickPreset:15",
+      "id": "pages/merchant/decor/ai-npc/index.wxml:129:bindtap:nextIntro:14",
+      "route": "pages/merchant/decor/ai-npc/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/merchant/decor/ai-npc/index.wxml",
+        "js": "pages/merchant/decor/ai-npc/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "nextIntro",
+        "line": 129,
+        "selectorHint": ".ni-btn",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "{{introStep === introSteps.length - 1 ? '知道了' : '下一步'}}",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:154"
+      }
+    },
+    {
+      "id": "pages/merchant/decor/ai-npc/index.wxml:133:bind:close:closePresets:15",
+      "route": "pages/merchant/decor/ai-npc/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/merchant/decor/ai-npc/index.wxml",
+        "js": "pages/merchant/decor/ai-npc/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-sheet",
+        "event": "bind:close",
+        "handler": "closePresets",
+        "line": 133,
+        "selectorHint": "cy-sheet[bind:close]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:339"
+      }
+    },
+    {
+      "id": "pages/merchant/decor/ai-npc/index.wxml:141:bindtap:pickPreset:16",
       "route": "pages/merchant/decor/ai-npc/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1020632,7 +1020803,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "pickPreset",
-        "line": 128,
+        "line": 141,
         "selectorHint": ".npc-option",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1020672,11 +1020843,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:324"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:335"
       }
     },
     {
-      "id": "pages/merchant/decor/ai-npc/index.wxml:137:bindtap:confirmPreset:16",
+      "id": "pages/merchant/decor/ai-npc/index.wxml:150:bindtap:confirmPreset:17",
       "route": "pages/merchant/decor/ai-npc/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1020699,7 +1020870,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "confirmPreset",
-        "line": 137,
+        "line": 150,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1020739,11 +1020910,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:331"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:342"
       }
     },
     {
-      "id": "pages/merchant/decor/ai-npc/index.wxml:143:bind:close:closeField:17",
+      "id": "pages/merchant/decor/ai-npc/index.wxml:156:bind:close:closeField:18",
       "route": "pages/merchant/decor/ai-npc/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1020766,7 +1020937,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closeField",
-        "line": 143,
+        "line": 156,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1020806,11 +1020977,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:391"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:402"
       }
     },
     {
-      "id": "pages/merchant/decor/ai-npc/index.wxml:153:bindinput:onFieldInput:18",
+      "id": "pages/merchant/decor/ai-npc/index.wxml:166:bindinput:onFieldInput:19",
       "route": "pages/merchant/decor/ai-npc/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1020833,7 +1021004,7 @@
         "tag": "textarea",
         "event": "bindinput",
         "handler": "onFieldInput",
-        "line": 153,
+        "line": 166,
         "selectorHint": ".dc-textarea",
         "visibleCondition": "{{field.multiline}}",
         "disabledCondition": "{{saving}}",
@@ -1020873,11 +1021044,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:388"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:399"
       }
     },
     {
-      "id": "pages/merchant/decor/ai-npc/index.wxml:162:bindinput:onFieldInput:19",
+      "id": "pages/merchant/decor/ai-npc/index.wxml:175:bindinput:onFieldInput:20",
       "route": "pages/merchant/decor/ai-npc/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1020900,7 +1021071,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onFieldInput",
-        "line": 162,
+        "line": 175,
         "selectorHint": ".dc-input",
         "visibleCondition": null,
         "disabledCondition": "{{saving}}",
@@ -1020940,11 +1021111,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:388"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:399"
       }
     },
     {
-      "id": "pages/merchant/decor/ai-npc/index.wxml:168:bindtap:saveField:20",
+      "id": "pages/merchant/decor/ai-npc/index.wxml:181:bindtap:saveField:21",
       "route": "pages/merchant/decor/ai-npc/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1020967,7 +1021138,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "saveField",
-        "line": 168,
+        "line": 181,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1021084,11 +1021255,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:398"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:409"
       }
     },
     {
-      "id": "pages/merchant/decor/ai-npc/index.wxml:173:bind:close:closePersona:21",
+      "id": "pages/merchant/decor/ai-npc/index.wxml:186:bind:close:closePersona:22",
       "route": "pages/merchant/decor/ai-npc/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1021111,7 +1021282,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closePersona",
-        "line": 173,
+        "line": 186,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1021151,11 +1021322,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:357"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:368"
       }
     },
     {
-      "id": "pages/merchant/decor/ai-npc/index.wxml:178:bindtap:pickPersona:22",
+      "id": "pages/merchant/decor/ai-npc/index.wxml:191:bindtap:pickPersona:23",
       "route": "pages/merchant/decor/ai-npc/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1021178,7 +1021349,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "pickPersona",
-        "line": 178,
+        "line": 191,
         "selectorHint": ".tm-row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1021295,11 +1021466,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:360"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:371"
       }
     },
     {
-      "id": "pages/merchant/decor/ai-npc/index.wxml:188:bind:close:keepEditing:23",
+      "id": "pages/merchant/decor/ai-npc/index.wxml:201:bind:close:keepEditing:24",
       "route": "pages/merchant/decor/ai-npc/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1021322,7 +1021493,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "keepEditing",
-        "line": 188,
+        "line": 201,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1021362,11 +1021533,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:458"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:469"
       }
     },
     {
-      "id": "pages/merchant/decor/ai-npc/index.wxml:192:bindtap:discardChanges:24",
+      "id": "pages/merchant/decor/ai-npc/index.wxml:205:bindtap:discardChanges:25",
       "route": "pages/merchant/decor/ai-npc/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1021389,7 +1021560,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "discardChanges",
-        "line": 192,
+        "line": 205,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1021433,11 +1021604,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:461"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:472"
       }
     },
     {
-      "id": "pages/merchant/decor/ai-npc/index.wxml:193:bindtap:keepEditing:25",
+      "id": "pages/merchant/decor/ai-npc/index.wxml:206:bindtap:keepEditing:26",
       "route": "pages/merchant/decor/ai-npc/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1021460,7 +1021631,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "keepEditing",
-        "line": 193,
+        "line": 206,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1021500,11 +1021671,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:458"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:469"
       }
     },
     {
-      "id": "pages/merchant/decor/ai-npc/index.wxml:200:bind:close:closeVoice:26",
+      "id": "pages/merchant/decor/ai-npc/index.wxml:213:bind:close:closeVoice:27",
       "route": "pages/merchant/decor/ai-npc/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1021527,7 +1021698,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closeVoice",
-        "line": 200,
+        "line": 213,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1021567,11 +1021738,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:752"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:763"
       }
     },
     {
-      "id": "pages/merchant/decor/ai-npc/index.wxml:210:bind:change:onVoiceConsentChange:27",
+      "id": "pages/merchant/decor/ai-npc/index.wxml:223:bind:change:onVoiceConsentChange:28",
       "route": "pages/merchant/decor/ai-npc/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1021594,7 +1021765,7 @@
         "tag": "cy-consent-check",
         "event": "bind:change",
         "handler": "onVoiceConsentChange",
-        "line": 210,
+        "line": 223,
         "selectorHint": "cy-consent-check[bind:change]",
         "visibleCondition": "{{voiceStatus !== 1}}",
         "disabledCondition": null,
@@ -1021634,11 +1021805,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:889"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:900"
       }
     },
     {
-      "id": "pages/merchant/decor/ai-npc/index.wxml:215:bindtap:refreshVoice:28",
+      "id": "pages/merchant/decor/ai-npc/index.wxml:228:bindtap:refreshVoice:29",
       "route": "pages/merchant/decor/ai-npc/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1021661,7 +1021832,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "refreshVoice",
-        "line": 215,
+        "line": 228,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1021744,11 +1021915,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:775"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:786"
       }
     },
     {
-      "id": "pages/merchant/decor/ai-npc/index.wxml:220:bindtap:playVoice:29",
+      "id": "pages/merchant/decor/ai-npc/index.wxml:233:bindtap:playVoice:30",
       "route": "pages/merchant/decor/ai-npc/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1021771,7 +1021942,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "playVoice",
-        "line": 220,
+        "line": 233,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": "{{voiceSample}}",
         "disabledCondition": null,
@@ -1021821,11 +1021992,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:1139"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:1150"
       }
     },
     {
-      "id": "pages/merchant/decor/ai-npc/index.wxml:223:bindtap:resetVoiceRecording:30",
+      "id": "pages/merchant/decor/ai-npc/index.wxml:236:bindtap:resetVoiceRecording:31",
       "route": "pages/merchant/decor/ai-npc/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1021848,7 +1022019,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "resetVoiceRecording",
-        "line": 223,
+        "line": 236,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1021888,11 +1022059,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:1101"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:1112"
       }
     },
     {
-      "id": "pages/merchant/decor/ai-npc/index.wxml:225:bindtap:clearVoice:31",
+      "id": "pages/merchant/decor/ai-npc/index.wxml:238:bindtap:clearVoice:32",
       "route": "pages/merchant/decor/ai-npc/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1021915,7 +1022086,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "clearVoice",
-        "line": 225,
+        "line": 238,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{voiceBusy}}",
@@ -1022008,11 +1022179,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:1063"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:1074"
       }
     },
     {
-      "id": "pages/merchant/decor/ai-npc/index.wxml:249:bindtap:confirmVoiceSentence:32",
+      "id": "pages/merchant/decor/ai-npc/index.wxml:262:bindtap:confirmVoiceSentence:33",
       "route": "pages/merchant/decor/ai-npc/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1022035,7 +1022206,7 @@
         "tag": "button",
         "event": "bindtap",
         "handler": "confirmVoiceSentence",
-        "line": 249,
+        "line": 262,
         "selectorHint": ".npc-voice-hold",
         "visibleCondition": "{{voiceSentenceReady}}",
         "disabledCondition": null,
@@ -1022075,11 +1022246,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:1033"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:1044"
       }
     },
     {
-      "id": "pages/merchant/decor/ai-npc/index.wxml:250:bindtouchcancel:onVoiceHoldEnd:35",
+      "id": "pages/merchant/decor/ai-npc/index.wxml:263:bindtouchcancel:onVoiceHoldEnd:36",
       "route": "pages/merchant/decor/ai-npc/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1022102,7 +1022273,7 @@
         "tag": "button",
         "event": "bindtouchcancel",
         "handler": "onVoiceHoldEnd",
-        "line": 250,
+        "line": 263,
         "selectorHint": ".npc-voice-hold",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1022142,11 +1022313,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:1024"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:1035"
       }
     },
     {
-      "id": "pages/merchant/decor/ai-npc/index.wxml:250:bindtouchend:onVoiceHoldEnd:34",
+      "id": "pages/merchant/decor/ai-npc/index.wxml:263:bindtouchend:onVoiceHoldEnd:35",
       "route": "pages/merchant/decor/ai-npc/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1022169,7 +1022340,7 @@
         "tag": "button",
         "event": "bindtouchend",
         "handler": "onVoiceHoldEnd",
-        "line": 250,
+        "line": 263,
         "selectorHint": ".npc-voice-hold",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1022209,11 +1022380,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:1024"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:1035"
       }
     },
     {
-      "id": "pages/merchant/decor/ai-npc/index.wxml:250:bindtouchstart:onVoiceHoldStart:33",
+      "id": "pages/merchant/decor/ai-npc/index.wxml:263:bindtouchstart:onVoiceHoldStart:34",
       "route": "pages/merchant/decor/ai-npc/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1022238,7 +1022409,7 @@
         "tag": "button",
         "event": "bindtouchstart",
         "handler": "onVoiceHoldStart",
-        "line": 250,
+        "line": 263,
         "selectorHint": ".npc-voice-hold",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1022317,11 +1022488,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:966"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:977"
       }
     },
     {
-      "id": "pages/merchant/decor/ai-npc/index.wxml:258:bindtap:playVoice:36",
+      "id": "pages/merchant/decor/ai-npc/index.wxml:271:bindtap:playVoice:37",
       "route": "pages/merchant/decor/ai-npc/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1022344,7 +1022515,7 @@
         "tag": "button",
         "event": "bindtap",
         "handler": "playVoice",
-        "line": 258,
+        "line": 271,
         "selectorHint": ".npc-voice-hold",
         "visibleCondition": "{{voiceFile}}",
         "disabledCondition": null,
@@ -1022394,78 +1022565,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:1139"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:1150"
       }
     },
     {
-      "id": "pages/merchant/decor/ai-npc/index.wxml:26:bindtap:dismissIntro:2",
-      "route": "pages/merchant/decor/ai-npc/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/merchant/decor/ai-npc/index.wxml",
-        "js": "pages/merchant/decor/ai-npc/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "dismissIntro",
-        "line": 26,
-        "selectorHint": ".npc-intro__ok",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "知道了",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:147"
-      }
-    },
-    {
-      "id": "pages/merchant/decor/ai-npc/index.wxml:261:bindtap:resetVoiceRecording:37",
+      "id": "pages/merchant/decor/ai-npc/index.wxml:274:bindtap:resetVoiceRecording:38",
       "route": "pages/merchant/decor/ai-npc/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1022488,7 +1022592,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "resetVoiceRecording",
-        "line": 261,
+        "line": 274,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{voiceBusy || voiceUnknown}}",
@@ -1022528,11 +1022632,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:1101"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:1112"
       }
     },
     {
-      "id": "pages/merchant/decor/ai-npc/index.wxml:264:bindtap:uploadVoice:38",
+      "id": "pages/merchant/decor/ai-npc/index.wxml:277:bindtap:uploadVoice:39",
       "route": "pages/merchant/decor/ai-npc/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1022555,7 +1022659,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "uploadVoice",
-        "line": 264,
+        "line": 277,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{voiceUnknown || !voiceConsent}}",
@@ -1022687,11 +1022791,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:1156"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:1167"
       }
     },
     {
-      "id": "pages/merchant/decor/ai-npc/index.wxml:272:bindtap:refreshVoice:39",
+      "id": "pages/merchant/decor/ai-npc/index.wxml:285:bindtap:refreshVoice:40",
       "route": "pages/merchant/decor/ai-npc/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1022714,7 +1022818,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "refreshVoice",
-        "line": 272,
+        "line": 285,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{voiceBusy}}",
@@ -1022797,11 +1022901,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:775"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:786"
       }
     },
     {
-      "id": "pages/merchant/decor/ai-npc/index.wxml:273:bindtap:confirmNewVoiceRequest:40",
+      "id": "pages/merchant/decor/ai-npc/index.wxml:286:bindtap:confirmNewVoiceRequest:41",
       "route": "pages/merchant/decor/ai-npc/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1023231,7 +1023335,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "confirmNewVoiceRequest",
-        "line": 273,
+        "line": 286,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{voiceBusy}}",
@@ -1023350,11 +1023454,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:828"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:839"
       }
     },
     {
-      "id": "pages/merchant/decor/ai-npc/index.wxml:277:bindtap:readVoiceHistory:41",
+      "id": "pages/merchant/decor/ai-npc/index.wxml:290:bindtap:readVoiceHistory:42",
       "route": "pages/merchant/decor/ai-npc/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1023377,7 +1023481,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "readVoiceHistory",
-        "line": 277,
+        "line": 290,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1023460,11 +1023564,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:813"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:824"
       }
     },
     {
-      "id": "pages/merchant/decor/ai-npc/index.wxml:281:bind:action:refreshVoice:42",
+      "id": "pages/merchant/decor/ai-npc/index.wxml:294:bind:action:refreshVoice:43",
       "route": "pages/merchant/decor/ai-npc/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1023487,7 +1023591,7 @@
         "tag": "cy-inline-error",
         "event": "bind:action",
         "handler": "refreshVoice",
-        "line": 281,
+        "line": 294,
         "selectorHint": "cy-inline-error[bind:action]",
         "visibleCondition": "{{voiceError}}",
         "disabledCondition": null,
@@ -1023570,11 +1023674,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:775"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:786"
       }
     },
     {
-      "id": "pages/merchant/decor/ai-npc/index.wxml:283:bindtap:openRecordSetting:43",
+      "id": "pages/merchant/decor/ai-npc/index.wxml:296:bindtap:openRecordSetting:44",
       "route": "pages/merchant/decor/ai-npc/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1023600,7 +1023704,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "openRecordSetting",
-        "line": 283,
+        "line": 296,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": "{{voiceNeedSetting}}",
         "disabledCondition": null,
@@ -1023650,11 +1023754,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:1015"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:1026"
       }
     },
     {
-      "id": "pages/merchant/decor/ai-npc/index.wxml:284:bindtap:refreshVoice:44",
+      "id": "pages/merchant/decor/ai-npc/index.wxml:297:bindtap:refreshVoice:45",
       "route": "pages/merchant/decor/ai-npc/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1023677,7 +1023781,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "refreshVoice",
-        "line": 284,
+        "line": 297,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": "{{voiceUnknown}}",
         "disabledCondition": null,
@@ -1023760,11 +1023864,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:775"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:786"
       }
     },
     {
-      "id": "pages/merchant/decor/ai-npc/index.wxml:290:bind:settled:onPrivacyGateSettled:45",
+      "id": "pages/merchant/decor/ai-npc/index.wxml:303:bind:settled:onPrivacyGateSettled:46",
       "route": "pages/merchant/decor/ai-npc/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1023787,7 +1023891,7 @@
         "tag": "cy-privacy-gate",
         "event": "bind:settled",
         "handler": "onPrivacyGateSettled",
-        "line": 290,
+        "line": 303,
         "selectorHint": "cy-privacy-gate[bind:settled]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1023827,11 +1023931,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:133"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:140"
       }
     },
     {
-      "id": "pages/merchant/decor/ai-npc/index.wxml:48:bindtap:choosePhoto:3",
+      "id": "pages/merchant/decor/ai-npc/index.wxml:43:bindtap:choosePhoto:2",
       "route": "pages/merchant/decor/ai-npc/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1023857,7 +1023961,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "choosePhoto",
-        "line": 48,
+        "line": 43,
         "selectorHint": "view[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1023909,11 +1024013,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:550"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:561"
       }
     },
     {
-      "id": "pages/merchant/decor/ai-npc/index.wxml:56:bindtap:openPresets:4",
+      "id": "pages/merchant/decor/ai-npc/index.wxml:51:bindtap:openPresets:3",
       "route": "pages/merchant/decor/ai-npc/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1023936,7 +1024040,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openPresets",
-        "line": 56,
+        "line": 51,
         "selectorHint": "view[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1023976,11 +1024080,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:320"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:331"
       }
     },
     {
-      "id": "pages/merchant/decor/ai-npc/index.wxml:71:bind:tap:onHomeAction:5",
+      "id": "pages/merchant/decor/ai-npc/index.wxml:66:bind:tap:onHomeAction:4",
       "route": "pages/merchant/decor/ai-npc/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1024003,7 +1024107,7 @@
         "tag": "cy-cell",
         "event": "bind:tap",
         "handler": "onHomeAction",
-        "line": 71,
+        "line": 66,
         "selectorHint": "cy-cell[bind:tap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1024044,7 +1024148,75 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:156"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:167"
+      }
+    },
+    {
+      "id": "pages/merchant/decor/ai-npc/index.wxml:70:bind:tap:onHomeAction:5",
+      "route": "pages/merchant/decor/ai-npc/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/merchant/decor/ai-npc/index.wxml",
+        "js": "pages/merchant/decor/ai-npc/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-cell",
+        "event": "bind:tap",
+        "handler": "onHomeAction",
+        "line": 70,
+        "selectorHint": "cy-cell[bind:tap]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "tap",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:167"
       }
     },
     {
@@ -1024112,7 +1024284,75 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:156"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:167"
+      }
+    },
+    {
+      "id": "pages/merchant/decor/ai-npc/index.wxml:79:bind:tap:onHomeAction:7",
+      "route": "pages/merchant/decor/ai-npc/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/merchant/decor/ai-npc/index.wxml",
+        "js": "pages/merchant/decor/ai-npc/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-cell",
+        "event": "bind:tap",
+        "handler": "onHomeAction",
+        "line": 79,
+        "selectorHint": "cy-cell[bind:tap]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "tap",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:167"
       }
     },
     {
@@ -1024183,11 +1024423,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:433"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:444"
       }
     },
     {
-      "id": "pages/merchant/decor/ai-npc/index.wxml:80:bind:tap:onHomeAction:7",
+      "id": "pages/merchant/decor/ai-npc/index.wxml:85:bind:tap:onHomeAction:8",
       "route": "pages/merchant/decor/ai-npc/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1024210,7 +1024450,7 @@
         "tag": "cy-cell",
         "event": "bind:tap",
         "handler": "onHomeAction",
-        "line": 80,
+        "line": 85,
         "selectorHint": "cy-cell[bind:tap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1024251,11 +1024491,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:156"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:167"
       }
     },
     {
-      "id": "pages/merchant/decor/ai-npc/index.wxml:84:bind:tap:onHomeAction:8",
+      "id": "pages/merchant/decor/ai-npc/index.wxml:91:bind:tap:onHomeAction:9",
       "route": "pages/merchant/decor/ai-npc/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1024278,7 +1024518,7 @@
         "tag": "cy-cell",
         "event": "bind:tap",
         "handler": "onHomeAction",
-        "line": 84,
+        "line": 91,
         "selectorHint": "cy-cell[bind:tap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1024319,11 +1024559,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:156"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:167"
       }
     },
     {
-      "id": "pages/merchant/decor/ai-npc/index.wxml:90:bind:tap:onHomeAction:9",
+      "id": "pages/merchant/decor/ai-npc/index.wxml:97:bind:tap:onHomeAction:10",
       "route": "pages/merchant/decor/ai-npc/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1024346,7 +1024586,7 @@
         "tag": "cy-cell",
         "event": "bind:tap",
         "handler": "onHomeAction",
-        "line": 90,
+        "line": 97,
         "selectorHint": "cy-cell[bind:tap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1024387,75 +1024627,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:156"
-      }
-    },
-    {
-      "id": "pages/merchant/decor/ai-npc/index.wxml:96:bind:tap:onHomeAction:10",
-      "route": "pages/merchant/decor/ai-npc/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/merchant/decor/ai-npc/index.wxml",
-        "js": "pages/merchant/decor/ai-npc/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-cell",
-        "event": "bind:tap",
-        "handler": "onHomeAction",
-        "line": 96,
-        "selectorHint": "cy-cell[bind:tap]",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "other",
-      "interactionMode": "tap",
-      "baseActionClass": "other",
-      "effectClasses": [
-        "other"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:156"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:167"
       }
     },
     {
