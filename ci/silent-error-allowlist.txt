@@ -110,6 +110,8 @@ chengyinhub-xcx/pages/club/detail/index.js 2  # 2026-08-26 会员摘要失败落
 chengyinhub-xcx/pages/club/detail/index.js 6  # 2026-09-10 设置弹窗五处 + 发帖选择器一处:客户人数与已结算分润取不到就在原位显示「暂时读不到」(留空会被读成「一个客户都没有」「一分钱都没有」);开放设置三个开关(俱乐部公开可见 / 允许成员发帖 / 开放商家承接)失败落 openSettingErrorText 由该行下的 cy-inline-error 承接并可重试。「带上一次游玩记录」选择器失败落 postRefState=error,由半屏里的 cy-error 带重试承接。六处都有页内承接,通用 toast 会双弹
 chengyinhub-xcx/pages/club/detail/index.js 1  # 2026-10-22 W10a:期次空原因读取失败落中性空态「暂时无法确认原因」+ 重新加载,有页内承接,通用 toast 会双弹(2026-10-27 P-14:俱乐部活动月历整体删除,月历场次那一处随之撤掉,2→1)
 chengyinhub-xcx/pages/club/detail/index.js 1  # 2026-10-22 业主「入会欢迎语」:设置 → 开放设置里保存欢迎语失败(含送检拒绝 / 迁移未落库)落 openSettingErrorKey=welcomeNote,由该行下的 cy-inline-error 带原因与「重试」承接;通用 toast 会双弹
+chengyinhub-xcx/pages/club/detail/index.js 1  # 2026-10-30 帖文第三轮 头像「+」关注:先把同作者帖子的「+」收起,失败回滚角标并用 cyToast 原样显示后端提示(网络失败写「网络错误，请重试」);通用 toast 会双弹
+chengyinhub-xcx/utils/post-feed-actions.js 2  # 2026-10-30 帖文第三轮 发现页点赞与「+」关注:先改卡面,业务失败或网络失败都回滚卡面并由页面传入的 toast 原样显示后端提示;请求层通用 toast 会双弹
 chengyinhub-xcx/pages/club/event-ops/index.js 11  # 2026-08-25 活动运营:权限/系列/名册/取消状态失败落 errorText / seriesError / rosterError / cancellationError,写操作落当前表单错误;通用 toast 会双弹(2026-09-10 补记:场次取消提交与取消后的独立状态回读是两处,册子只记了一处)
 chengyinhub-xcx/pages/club/governance/index.js 4  # 2026-08-25 治理页:权限、案件、成员与封禁失败统一落页面 errorText 状态并可重试;通用 toast 会双弹
 chengyinhub-xcx/pages/club/notify/index.js 6  # 投递状态自动回读失败保留上次结果、手动刷新失败可见toast； 2026-08-25 通知运营:权限/预览失败落页内状态,发送与重试失败落精确操作错误;通用 toast 会双弹(2026-09-10 +1:R4 各分组人数是行内装饰,算不出来就不显示)

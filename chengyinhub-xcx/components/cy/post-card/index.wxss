@@ -192,7 +192,7 @@
 /* 双击点赞:图片中间飘出一颗大心 */
 /* 双击点赞:图片中间飘出一颗大心(两段过渡:弹出 → 上飘淡出;不用 keyframes,快速连点不抖) */
 .post-card__bigheart { position: absolute; left: 50%; top: 50%; width: 168rpx; height: 168rpx; margin: -84rpx 0 0 -84rpx; color: #ffffff; /* ds-ok: 压在照片上的常量白心 */
-  pointer-events: none; filter: drop-shadow(0 8rpx 28rpx rgba(0, 0, 0, .4)); opacity: 0; transform: scale(0); }
+  pointer-events: none; filter: drop-shadow(0 8rpx 28rpx rgba(0, 0, 0, .4)); opacity: 0; transform: scale(0); } /* ds-ok: 大心压在照片上的落影 */
 .post-card__bigheart.is-in { opacity: 1; transform: scale(1); transition: transform 260ms var(--cy-ease-spring), opacity 120ms ease; }
 .post-card__bigheart.is-out { opacity: 0; transform: scale(1.1) translateY(-40rpx); transition: transform 260ms ease-out, opacity 260ms ease-out; }
 /* 分享出来的内容自成一张卡:带边框,卡顶一行类型 */
