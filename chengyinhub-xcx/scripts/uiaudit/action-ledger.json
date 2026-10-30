@@ -28379,7 +28379,7 @@
           "route": "pages/merchant/customer/index",
           "segments": [
             {
-              "selector": "cy-btn.cu-filter-reset",
+              "selector": "cy-btn.cu-fx-go",
               "index": 0
             }
           ]
@@ -28390,42 +28390,6 @@
             {
               "selector": "cy-btn",
               "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/customer/index",
-          "segments": [
-            {
-              "selector": "cy-btn",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/customer/index",
-          "segments": [
-            {
-              "selector": "cy-btn",
-              "index": 2
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/customer/index",
-          "segments": [
-            {
-              "selector": "cy-btn",
-              "index": 3
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/customer/index",
-          "segments": [
-            {
-              "selector": "cy-btn",
-              "index": 4
             }
           ]
         },
@@ -1018462,7 +1018426,7 @@
       }
     },
     {
-      "id": "pages/merchant/customer/index.wxml:104:bind:close:closeTools:15",
+      "id": "pages/merchant/customer/index.wxml:105:bind:close:closeTools:15",
       "route": "pages/merchant/customer/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1018485,7 +1018449,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closeTools",
-        "line": 104,
+        "line": 105,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1018525,11 +1018489,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/customer/index.js:245"
+        "staticSource": "pages/merchant/customer/index.js:244"
       }
     },
     {
-      "id": "pages/merchant/customer/index.wxml:107:bindtap:toggleSelectMode:16",
+      "id": "pages/merchant/customer/index.wxml:108:bindtap:toggleSelectMode:16",
       "route": "pages/merchant/customer/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1018552,7 +1018516,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "toggleSelectMode",
-        "line": 107,
+        "line": 108,
         "selectorHint": ".tm-row",
         "visibleCondition": "{{canSegment}}",
         "disabledCondition": null,
@@ -1018592,11 +1018556,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/customer/index.js:671"
+        "staticSource": "pages/merchant/customer/index.js:669"
       }
     },
     {
-      "id": "pages/merchant/customer/index.wxml:111:bindtap:createExport:17",
+      "id": "pages/merchant/customer/index.wxml:112:bindtap:createExport:17",
       "route": "pages/merchant/customer/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1018619,7 +1018583,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "createExport",
-        "line": 111,
+        "line": 112,
         "selectorHint": ".tm-row",
         "visibleCondition": "{{canExport}}",
         "disabledCondition": null,
@@ -1018710,11 +1018674,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/customer/index.js:785"
+        "staticSource": "pages/merchant/customer/index.js:813"
       }
     },
     {
-      "id": "pages/merchant/customer/index.wxml:117:bindtap:goCampaigns:18",
+      "id": "pages/merchant/customer/index.wxml:118:bindtap:goCampaigns:18",
       "route": "pages/merchant/customer/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1018737,7 +1018701,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goCampaigns",
-        "line": 117,
+        "line": 118,
         "selectorHint": ".tm-row",
         "visibleCondition": "{{canCampaigns}}",
         "disabledCondition": null,
@@ -1018781,78 +1018745,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/customer/index.js:912"
+        "staticSource": "pages/merchant/customer/index.js:940"
       }
     },
     {
-      "id": "pages/merchant/customer/index.wxml:12:bindtap:toggleFilters:0",
-      "route": "pages/merchant/customer/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/merchant/customer/index.wxml",
-        "js": "pages/merchant/customer/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "toggleFilters",
-        "line": 12,
-        "selectorHint": ".cu-seg",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "筛选客户",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/merchant/customer/index.js:248"
-      }
-    },
-    {
-      "id": "pages/merchant/customer/index.wxml:124:bind:close:closeFilters:19",
+      "id": "pages/merchant/customer/index.wxml:128:bind:close:closeFilters:19",
       "route": "pages/merchant/customer/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1018875,7 +1018772,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closeFilters",
-        "line": 124,
+        "line": 128,
         "selectorHint": ".cu-filter-sheet",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1018915,11 +1018812,254 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/customer/index.js:246"
+        "staticSource": "pages/merchant/customer/index.js:245"
       }
     },
     {
-      "id": "pages/merchant/customer/index.wxml:126:bind:action:loadSavedSegments:20",
+      "id": "pages/merchant/customer/index.wxml:13:bindtap:toggleFilters:0",
+      "route": "pages/merchant/customer/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/merchant/customer/index.wxml",
+        "js": "pages/merchant/customer/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "toggleFilters",
+        "line": 13,
+        "selectorHint": ".cu-seg",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "筛选客户",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/customer/index.js:247"
+      }
+    },
+    {
+      "id": "pages/merchant/customer/index.wxml:130:bindtap:closeFilters:20",
+      "route": "pages/merchant/customer/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/merchant/customer/index.wxml",
+        "js": "pages/merchant/customer/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "closeFilters",
+        "line": 130,
+        "selectorHint": ".cu-fx-hd__btn",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "取消",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/customer/index.js:245"
+      }
+    },
+    {
+      "id": "pages/merchant/customer/index.wxml:132:bindtap:clearFilters:21",
+      "route": "pages/merchant/customer/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/merchant/customer/index.wxml",
+        "js": "pages/merchant/customer/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "clearFilters",
+        "line": 132,
+        "selectorHint": ".cu-fx-hd__btn",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "重置筛选",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": "{{!(segment !== 'all' || sourceType || sourceStart || sourceEnd || tagId)}}",
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "tap",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/merchant/crm/customers/list",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/merchant/crm/customers/list"
+        ],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/crm/customers/list",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/customer/index.js:267"
+      }
+    },
+    {
+      "id": "pages/merchant/customer/index.wxml:135:bind:action:loadSavedSegments:22",
       "route": "pages/merchant/customer/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1018942,7 +1019082,7 @@
         "tag": "cy-inline-error",
         "event": "bind:action",
         "handler": "loadSavedSegments",
-        "line": 126,
+        "line": 135,
         "selectorHint": "cy-inline-error[bind:action]",
         "visibleCondition": "{{savedSegmentsError}}",
         "disabledCondition": null,
@@ -1019024,11 +1019164,121 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/customer/index.js:740"
+        "staticSource": "pages/merchant/customer/index.js:768"
       }
     },
     {
-      "id": "pages/merchant/customer/index.wxml:129:bindtap:onSegmentTap:21",
+      "id": "pages/merchant/customer/index.wxml:140:bindtap:applySavedSegment:23",
+      "route": "pages/merchant/customer/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/merchant/customer/index.wxml",
+        "js": "pages/merchant/customer/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "text",
+        "event": "bindtap",
+        "handler": "applySavedSegment",
+        "line": 140,
+        "selectorHint": ".cu-saved-item",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "套用分群{{item.name}}",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "write",
+      "interactionMode": "tap",
+      "baseActionClass": "write",
+      "effectClasses": [
+        "write",
+        "state"
+      ],
+      "accessBoundary": "owned-resource",
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/merchant/crm/customers/list",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/merchant/crm/customers/list"
+        ],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/crm/customers/list",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/customer/index.js:798"
+      }
+    },
+    {
+      "id": "pages/merchant/customer/index.wxml:145:bindtap:onSegmentTap:24",
       "route": "pages/merchant/customer/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1019051,7 +1019301,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onSegmentTap",
-        "line": 129,
+        "line": 145,
         "selectorHint": ".cu-filter-chip",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1019133,11 +1019383,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/customer/index.js:236"
+        "staticSource": "pages/merchant/customer/index.js:235"
       }
     },
     {
-      "id": "pages/merchant/customer/index.wxml:137:bindtap:onSourceTap:22",
+      "id": "pages/merchant/customer/index.wxml:153:bindtap:onSourceTap:25",
       "route": "pages/merchant/customer/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1019160,12 +1019410,12 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onSourceTap",
-        "line": 137,
+        "line": 153,
         "selectorHint": ".cu-filter-chip",
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
-        "ariaLabelExpression": null,
+        "ariaLabelExpression": "全部{{sourceType === '' ? '，已选中' : ''}}",
         "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
@@ -1019242,11 +1019492,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/customer/index.js:250"
+        "staticSource": "pages/merchant/customer/index.js:249"
       }
     },
     {
-      "id": "pages/merchant/customer/index.wxml:138:bindtap:onSourceTap:23",
+      "id": "pages/merchant/customer/index.wxml:154:bindtap:onSourceTap:26",
       "route": "pages/merchant/customer/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1019269,12 +1019519,12 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onSourceTap",
-        "line": 138,
+        "line": 154,
         "selectorHint": ".cu-filter-chip",
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
-        "ariaLabelExpression": null,
+        "ariaLabelExpression": "主题{{sourceType === '1' ? '，已选中' : ''}}",
         "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
@@ -1019351,11 +1019601,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/customer/index.js:250"
+        "staticSource": "pages/merchant/customer/index.js:249"
       }
     },
     {
-      "id": "pages/merchant/customer/index.wxml:139:bindtap:onSourceTap:24",
+      "id": "pages/merchant/customer/index.wxml:155:bindtap:onSourceTap:27",
       "route": "pages/merchant/customer/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1019378,12 +1019628,12 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onSourceTap",
-        "line": 139,
+        "line": 155,
         "selectorHint": ".cu-filter-chip",
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
-        "ariaLabelExpression": null,
+        "ariaLabelExpression": "活动{{sourceType === '2' ? '，已选中' : ''}}",
         "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
@@ -1019460,11 +1019710,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/customer/index.js:250"
+        "staticSource": "pages/merchant/customer/index.js:249"
       }
     },
     {
-      "id": "pages/merchant/customer/index.wxml:143:bind:change:onSourceStartChange:25",
+      "id": "pages/merchant/customer/index.wxml:159:bind:change:onSourceStartChange:28",
       "route": "pages/merchant/customer/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1019487,7 +1019737,183 @@
         "tag": "cy-date-field",
         "event": "bind:change",
         "handler": "onSourceStartChange",
-        "line": 143,
+        "line": 159,
+        "selectorHint": ".cu-date-field",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "event-contract",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/merchant/crm/customers/list",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/merchant/crm/customers/list"
+        ],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/crm/customers/list",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/customer/index.js:264"
+      }
+    },
+    {
+      "id": "pages/merchant/customer/index.wxml:16:bindtap:toggleTools:1",
+      "route": "pages/merchant/customer/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/merchant/customer/index.wxml",
+        "js": "pages/merchant/customer/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "toggleTools",
+        "line": 16,
+        "selectorHint": ".cu-seg",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "打开客户管理工具",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/customer/index.js:242"
+      }
+    },
+    {
+      "id": "pages/merchant/customer/index.wxml:161:bind:change:onSourceEndChange:29",
+      "route": "pages/merchant/customer/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/merchant/customer/index.wxml",
+        "js": "pages/merchant/customer/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-date-field",
+        "event": "bind:change",
+        "handler": "onSourceEndChange",
+        "line": 161,
         "selectorHint": ".cu-date-field",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1019573,116 +1019999,7 @@
       }
     },
     {
-      "id": "pages/merchant/customer/index.wxml:145:bind:change:onSourceEndChange:26",
-      "route": "pages/merchant/customer/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/merchant/customer/index.wxml",
-        "js": "pages/merchant/customer/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-date-field",
-        "event": "bind:change",
-        "handler": "onSourceEndChange",
-        "line": 145,
-        "selectorHint": ".cu-date-field",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "read",
-      "interactionMode": "event-contract",
-      "baseActionClass": "read",
-      "effectClasses": [
-        "read",
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/privacy/index"
-        ],
-        "apis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/merchant/crm/customers/list",
-          "/api/role/info"
-        ],
-        "primaryApis": [
-          "/api/merchant/crm/customers/list"
-        ],
-        "auxiliaryApis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/config/features",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/merchant/crm/customers/list",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": []
-      },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/merchant/customer/index.js:266"
-      }
-    },
-    {
-      "id": "pages/merchant/customer/index.wxml:149:bindtap:onTagFilterTap:27",
+      "id": "pages/merchant/customer/index.wxml:166:bindtap:onTagFilterTap:30",
       "route": "pages/merchant/customer/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1019705,12 +1020022,12 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onTagFilterTap",
-        "line": 149,
+        "line": 166,
         "selectorHint": ".cu-filter-chip",
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
-        "ariaLabelExpression": null,
+        "ariaLabelExpression": "全部标签{{tagId === '' ? '，已选中' : ''}}",
         "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
@@ -1019787,78 +1020104,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/customer/index.js:257"
+        "staticSource": "pages/merchant/customer/index.js:256"
       }
     },
     {
-      "id": "pages/merchant/customer/index.wxml:15:bindtap:toggleTools:1",
-      "route": "pages/merchant/customer/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/merchant/customer/index.wxml",
-        "js": "pages/merchant/customer/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "toggleTools",
-        "line": 15,
-        "selectorHint": ".cu-seg",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "打开客户管理工具",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/merchant/customer/index.js:243"
-      }
-    },
-    {
-      "id": "pages/merchant/customer/index.wxml:151:bindtap:onTagFilterTap:28",
+      "id": "pages/merchant/customer/index.wxml:167:bindtap:onTagFilterTap:31",
       "route": "pages/merchant/customer/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1019881,12 +1020131,12 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onTagFilterTap",
-        "line": 151,
+        "line": 167,
         "selectorHint": ".cu-filter-chip",
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
-        "ariaLabelExpression": null,
+        "ariaLabelExpression": "{{item.tagName}}{{tagId === item.id ? '，已选中' : ''}}",
         "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
@@ -1019963,11 +1020213,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/customer/index.js:257"
+        "staticSource": "pages/merchant/customer/index.js:256"
       }
     },
     {
-      "id": "pages/merchant/customer/index.wxml:155:bindinput:onSegmentNameInput:29",
+      "id": "pages/merchant/customer/index.wxml:172:bindtap:promptSaveSegment:32",
       "route": "pages/merchant/customer/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1019985,101 +1020235,34 @@
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {},
       "requestMode": "ordered",
-      "confirmationMode": null,
+      "confirmationMode": "wx.showModal",
       "control": {
-        "tag": "input",
-        "event": "bindinput",
-        "handler": "onSegmentNameInput",
-        "line": 155,
-        "selectorHint": ".cu-segment-input",
-        "visibleCondition": null,
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "promptSaveSegment",
+        "line": 172,
+        "selectorHint": ".cu-fx-save",
+        "visibleCondition": "{{canSegment}}",
         "disabledCondition": null,
-        "ariaLabel": null,
+        "ariaLabel": "存为分群",
         "ariaLabelExpression": null,
-        "ariaRole": null,
+        "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
-        "ariaDisabledExpression": null,
+        "ariaDisabledExpression": "{{!(segment !== 'all' || sourceType || sourceStart || sourceEnd || tagId)}}",
         "ariaExpanded": null,
         "ariaExpandedExpression": null,
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
+      "actionClass": "read",
+      "interactionMode": "tap",
+      "baseActionClass": "read",
       "effectClasses": [
+        "read",
         "state"
       ],
       "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/merchant/customer/index.js:708"
-      }
-    },
-    {
-      "id": "pages/merchant/customer/index.wxml:156:bindtap:saveCurrentSegment:30",
-      "route": "pages/merchant/customer/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/merchant/customer/index.wxml",
-        "js": "pages/merchant/customer/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-btn",
-        "event": "bindtap",
-        "handler": "saveCurrentSegment",
-        "line": 156,
-        "selectorHint": "cy-btn[bindtap]",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "write",
-      "interactionMode": "tap",
-      "baseActionClass": "write",
-      "effectClasses": [
-        "write",
-        "state"
-      ],
-      "accessBoundary": "owned-resource",
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
@@ -1020134,242 +1020317,23 @@
         ],
         "writeApis": []
       },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger",
-        "forbidden-owner"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/merchant/customer/index.js:710"
-      }
-    },
-    {
-      "id": "pages/merchant/customer/index.wxml:160:bindtap:applySavedSegment:31",
-      "route": "pages/merchant/customer/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/merchant/customer/index.wxml",
-        "js": "pages/merchant/customer/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "text",
-        "event": "bindtap",
-        "handler": "applySavedSegment",
-        "line": 160,
-        "selectorHint": ".cu-saved-item",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "write",
-      "interactionMode": "tap",
-      "baseActionClass": "write",
-      "effectClasses": [
-        "write",
-        "state"
-      ],
-      "accessBoundary": "owned-resource",
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/privacy/index"
-        ],
-        "apis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/merchant/crm/customers/list",
-          "/api/role/info"
-        ],
-        "primaryApis": [
-          "/api/merchant/crm/customers/list"
-        ],
-        "auxiliaryApis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/config/features",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/merchant/crm/customers/list",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": []
-      },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger",
-        "forbidden-owner"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/merchant/customer/index.js:770"
-      }
-    },
-    {
-      "id": "pages/merchant/customer/index.wxml:164:bindtap:clearFilters:32",
-      "route": "pages/merchant/customer/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/merchant/customer/index.wxml",
-        "js": "pages/merchant/customer/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-btn",
-        "event": "bindtap",
-        "handler": "clearFilters",
-        "line": 164,
-        "selectorHint": ".cu-filter-reset",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "read",
-      "interactionMode": "tap",
-      "baseActionClass": "read",
-      "effectClasses": [
-        "read",
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/privacy/index"
-        ],
-        "apis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/merchant/crm/customers/list",
-          "/api/role/info"
-        ],
-        "primaryApis": [
-          "/api/merchant/crm/customers/list"
-        ],
-        "auxiliaryApis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/config/features",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/merchant/crm/customers/list",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": []
-      },
       "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
         "success",
         "error",
         "timeout",
-        "duplicate-trigger"
+        "duplicate-trigger",
+        "modal-cancelled"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/customer/index.js:268"
+        "staticSource": "pages/merchant/customer/index.js:707"
       }
     },
     {
-      "id": "pages/merchant/customer/index.wxml:165:bindtap:closeFilters:33",
+      "id": "pages/merchant/customer/index.wxml:175:bindtap:closeFilters:33",
       "route": "pages/merchant/customer/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1020392,8 +1020356,8 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "closeFilters",
-        "line": 165,
-        "selectorHint": "cy-btn[bindtap]",
+        "line": 175,
+        "selectorHint": ".cu-fx-go",
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
@@ -1020432,11 +1020396,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/customer/index.js:246"
+        "staticSource": "pages/merchant/customer/index.js:245"
       }
     },
     {
-      "id": "pages/merchant/customer/index.wxml:176:bind:close:onResultSheetClose:34",
+      "id": "pages/merchant/customer/index.wxml:186:bind:close:onResultSheetClose:34",
       "route": "pages/merchant/customer/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1020459,7 +1020423,7 @@
         "tag": "cy-result-sheet",
         "event": "bind:close",
         "handler": "onResultSheetClose",
-        "line": 176,
+        "line": 186,
         "selectorHint": "cy-result-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1020499,11 +1020463,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/customer/index.js:651"
+        "staticSource": "pages/merchant/customer/index.js:649"
       }
     },
     {
-      "id": "pages/merchant/customer/index.wxml:21:bind:confirm:onKeywordConfirm:3",
+      "id": "pages/merchant/customer/index.wxml:22:bind:confirm:onKeywordConfirm:3",
       "route": "pages/merchant/customer/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1020526,7 +1020490,7 @@
         "tag": "cy-search",
         "event": "bind:confirm",
         "handler": "onKeywordConfirm",
-        "line": 21,
+        "line": 22,
         "selectorHint": "cy-search[bind:confirm]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1020608,11 +1020572,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/customer/index.js:231"
+        "staticSource": "pages/merchant/customer/index.js:230"
       }
     },
     {
-      "id": "pages/merchant/customer/index.wxml:21:bind:input:onKeywordInput:2",
+      "id": "pages/merchant/customer/index.wxml:22:bind:input:onKeywordInput:2",
       "route": "pages/merchant/customer/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1020635,7 +1020599,7 @@
         "tag": "cy-search",
         "event": "bind:input",
         "handler": "onKeywordInput",
-        "line": 21,
+        "line": 22,
         "selectorHint": "cy-search[bind:input]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1020717,11 +1020681,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/customer/index.js:223"
+        "staticSource": "pages/merchant/customer/index.js:222"
       }
     },
     {
-      "id": "pages/merchant/customer/index.wxml:28:bindtap:toggleSelectMode:4",
+      "id": "pages/merchant/customer/index.wxml:29:bindtap:toggleSelectMode:4",
       "route": "pages/merchant/customer/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1020744,7 +1020708,7 @@
         "tag": "button",
         "event": "bindtap",
         "handler": "toggleSelectMode",
-        "line": 28,
+        "line": 29,
         "selectorHint": ".cu-inline-button",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1020784,11 +1020748,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/customer/index.js:671"
+        "staticSource": "pages/merchant/customer/index.js:669"
       }
     },
     {
-      "id": "pages/merchant/customer/index.wxml:29:bindinput:onBatchTagInput:5",
+      "id": "pages/merchant/customer/index.wxml:30:bindinput:onBatchTagInput:5",
       "route": "pages/merchant/customer/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1020811,7 +1020775,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onBatchTagInput",
-        "line": 29,
+        "line": 30,
         "selectorHint": ".cu-batch-input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1020851,11 +1020815,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/customer/index.js:677"
+        "staticSource": "pages/merchant/customer/index.js:675"
       }
     },
     {
-      "id": "pages/merchant/customer/index.wxml:30:bindtap:submitBatchTag:6",
+      "id": "pages/merchant/customer/index.wxml:31:bindtap:submitBatchTag:6",
       "route": "pages/merchant/customer/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1020878,7 +1020842,7 @@
         "tag": "button",
         "event": "bindtap",
         "handler": "submitBatchTag",
-        "line": 30,
+        "line": 31,
         "selectorHint": ".cu-inline-button",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1020969,11 +1020933,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/customer/index.js:679"
+        "staticSource": "pages/merchant/customer/index.js:677"
       }
     },
     {
-      "id": "pages/merchant/customer/index.wxml:42:bindtap:downloadExport:7",
+      "id": "pages/merchant/customer/index.wxml:43:bindtap:downloadExport:7",
       "route": "pages/merchant/customer/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1020996,7 +1020960,7 @@
         "tag": "button",
         "event": "bindtap",
         "handler": "downloadExport",
-        "line": 42,
+        "line": 43,
         "selectorHint": ".cu-inline-button",
         "visibleCondition": "{{exportState === 'SUCCESS' || exportState === 'DOWNLOAD_FAILED'}}",
         "disabledCondition": null,
@@ -1021051,11 +1021015,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/customer/index.js:865"
+        "staticSource": "pages/merchant/customer/index.js:893"
       }
     },
     {
-      "id": "pages/merchant/customer/index.wxml:44:bindtap:retryExportStatus:8",
+      "id": "pages/merchant/customer/index.wxml:45:bindtap:retryExportStatus:8",
       "route": "pages/merchant/customer/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1021078,7 +1021042,7 @@
         "tag": "button",
         "event": "bindtap",
         "handler": "retryExportStatus",
-        "line": 44,
+        "line": 45,
         "selectorHint": ".cu-inline-button",
         "visibleCondition": "{{exportError && (exportState === 'PENDING' || exportState === 'RUNNING')}}",
         "disabledCondition": null,
@@ -1021160,11 +1021124,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/customer/index.js:855"
+        "staticSource": "pages/merchant/customer/index.js:883"
       }
     },
     {
-      "id": "pages/merchant/customer/index.wxml:57:bind:cta:onEmptyAction:10",
+      "id": "pages/merchant/customer/index.wxml:58:bind:cta:onEmptyAction:10",
       "route": "pages/merchant/customer/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1021187,7 +1021151,7 @@
         "tag": "cy-empty",
         "event": "bind:cta",
         "handler": "onEmptyAction",
-        "line": 57,
+        "line": 58,
         "selectorHint": ".cy-fade-in",
         "visibleCondition": "{{!rows.length}}",
         "disabledCondition": null,
@@ -1021271,11 +1021235,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/customer/index.js:366"
+        "staticSource": "pages/merchant/customer/index.js:364"
       }
     },
     {
-      "id": "pages/merchant/customer/index.wxml:59:bindscrolltolower:loadMore:11",
+      "id": "pages/merchant/customer/index.wxml:60:bindscrolltolower:loadMore:11",
       "route": "pages/merchant/customer/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1021298,7 +1021262,7 @@
         "tag": "scroll-view",
         "event": "bindscrolltolower",
         "handler": "loadMore",
-        "line": 59,
+        "line": 60,
         "selectorHint": ".cu-scroll",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1021380,11 +1021344,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/customer/index.js:420"
+        "staticSource": "pages/merchant/customer/index.js:418"
       }
     },
     {
-      "id": "pages/merchant/customer/index.wxml:63:bindtap:openCustomer:12",
+      "id": "pages/merchant/customer/index.wxml:64:bindtap:openCustomer:12",
       "route": "pages/merchant/customer/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1021407,7 +1021371,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openCustomer",
-        "line": 63,
+        "line": 64,
         "selectorHint": ".cu-row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1021449,11 +1021413,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/customer/index.js:655"
+        "staticSource": "pages/merchant/customer/index.js:653"
       }
     },
     {
-      "id": "pages/merchant/customer/index.wxml:81:catchtap:callCustomer:13",
+      "id": "pages/merchant/customer/index.wxml:82:catchtap:callCustomer:13",
       "route": "pages/merchant/customer/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1021478,7 +1021442,7 @@
         "tag": "text",
         "event": "catchtap",
         "handler": "callCustomer",
-        "line": 81,
+        "line": 82,
         "selectorHint": ".cu-phone",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1021570,11 +1021534,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/customer/index.js:600"
+        "staticSource": "pages/merchant/customer/index.js:598"
       }
     },
     {
-      "id": "pages/merchant/customer/index.wxml:82:catchtap:copyCustomerPhone:14",
+      "id": "pages/merchant/customer/index.wxml:83:catchtap:copyCustomerPhone:14",
       "route": "pages/merchant/customer/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1021599,7 +1021563,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "copyCustomerPhone",
-        "line": 82,
+        "line": 83,
         "selectorHint": ".cu-copy",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1021691,7 +1021655,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/customer/index.js:604"
+        "staticSource": "pages/merchant/customer/index.js:602"
       }
     },
     {
