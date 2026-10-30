@@ -39,8 +39,8 @@
   function steps(list) {
     return list.map(function (s, i) {
       var c = s.st;
-      return '<view class="pg7-row ' + c + '"><view class="pg7-rail"><view class="pg7-dot ' + c + '"></view><view class="pg7-line ' + (c === 'done' ? 'done' : '') + '"></view></view>' +
-        '<view class="pg7-m"><view class="pg7-t"><text class="lab">' + s.label + '</text>' + (s.tag ? '<text class="chip7 chip7--' + (s.tagKind || 'warn') + '">' + s.tag + '</text>' : (s.time ? '<text class="pg7-time">' + s.time + '</text>' : '')) + '</view>' +
+      return '<view class="pg7-row ' + c + (s.lock ? ' lock' : '') + '"><view class="pg7-rail"><view class="pg7-dot ' + c + (s.lock ? ' lock' : '') + '">' + (s.lock ? I('lock', 20) : '') + '</view><view class="pg7-line ' + (c === 'done' ? 'done' : '') + '"></view></view>' +
+        '<view class="pg7-m"><view class="pg7-t"><text class="lab">' + s.label + '</text>' + (s.lock ? '<text class="pg7-ask">' + s.lock + '</text>' : s.tag ? (s.st === 'run' && !s.tagKind ? '<text class="pg7-stat">' + s.tag + '</text>' : '<text class="chip7 chip7--' + (s.tagKind || 'warn') + '">' + s.tag + '</text>') : (s.time ? '<text class="pg7-time">' + s.time + '</text>' : '')) + '</view>' +
         (s.sub ? '<view class="pg7-sub">' + s.sub.map(function (x) { return '<view class="pg7-si ' + (x[1] || '') + '"><i></i><text>' + x[0] + '</text>' + (x[2] ? '<text class="go" data-act="' + x[2] + '">' + (x[3] || '去处理') + ' ›</text>' : '') + '</view>'; }).join('') + '</view>' : '') +
         '</view></view>';
     }).join('');
@@ -61,6 +61,7 @@
       o.st = i < cur ? 'done' : (i === cur ? 'run' : 'todo');
       if (o.st === 'run') o.tag = ['', '待发布', '待邀约', '待核销', '待核销', '待结算'][i];
       if (o.st !== 'run') { o.sub = i < cur ? null : null; }
+      if (i === 5 && o.st === 'todo') o.lock = '每月 5 日';
       if (i < cur && !o.time) o.time = ['10-26', '10-27', '10-29', '11-01', '11-30', ''][i];
       return o;
     });
@@ -68,7 +69,7 @@
   function joinSteps() {
     return [{ label: '报名已提交', time: '10-27 10:20', st: 'done' }, { label: '主办审核', time: '10-28 09:12', st: 'done' },
       { label: '补供给', st: 'run', tag: '待补齐', sub: [['门店照片', 'ok'], ['接待时段', 'ok'], ['到店权益说明', 'now', 'supply', '去补']] },
-      { label: '接待核销', st: 'todo', time: '11-01 起' }, { label: '结算', st: 'todo' }];
+      { label: '接待核销', st: 'todo', time: '11-01 起' }, { label: '结算', st: 'todo', lock: '每月 5 日' }];
   }
   function freeSteps(ok) {
     return [{ label: '配置主题', time: '10-29', st: 'done' }, { label: '发布', time: '10-30', st: 'done' },
@@ -76,12 +77,12 @@
          : { label: '邀请俱乐部承办', st: 'run', tag: '待邀约', sub: [['有 1 家俱乐部接受承办,才能开始售票', 'now', 'dw-club', '去邀请']] },
       ok ? { label: '招商', st: 'run', tag: '待邀约', sub: [['承办:城市定向免费测试俱乐部', 'ok', 'dw-club', '看看'], ['商家 1/3 章 · 1 个申请待处理', 'now', 'dw-recruit', '去处理']] }
          : { label: '招商', st: 'todo' },
-      { label: '售票', st: 'todo', time: ok ? '' : '俱乐部接受后开放' }, { label: '核销接待', st: 'todo' }, { label: '结算', st: 'todo' }];
+      { label: '售票', st: 'todo', time: ok ? '' : '俱乐部接受后开放' }, { label: '核销接待', st: 'todo' }, { label: '结算', st: 'todo', lock: '每月 5 日' }];
   }
   function chapterJoinSteps() {
     return [{ label: '申请承接', time: '10-27 10:20', st: 'done' }, { label: '主办确认', time: '10-28 09:12', st: 'done' },
       { label: '填写供给', st: 'run', tag: '待补齐', sub: [['接待时段', 'ok'], ['节点地址 2/3', 'now', 'supply', '去补'], ['到店权益说明', 'now', 'supply', '去补']] },
-      { label: '接待核销', st: 'todo', time: '11-01 起' }, { label: '结算', st: 'todo' }];
+      { label: '接待核销', st: 'todo', time: '11-01 起' }, { label: '结算', st: 'todo', lock: '每月 5 日' }];
   }
   function mineBlock(m) {
     if (m === 'jn') return '<view class="sec"><view class="sec-head"><text class="sec-title">我承接的节点</text></view></view><view class="mine7"' + mk(2) + '>' +
@@ -128,28 +129,53 @@
   S.push(scr('ws-free', '主办 · 自由探索 · 待俱乐部承办', '主题工作台', 'pages/topic/components/project-host/index.wxml', workbench({ free: true }), FREE_NOTES));
   S.push(scr('ws-free-ok', '主办 · 自由探索 · 俱乐部已承办', '主题工作台', 'project-host', workbench({ free: true, ok: true }), [[1, '俱乐部接受后:提示条消失,进度里「俱乐部承办」打勾,开始按章招商,售票随后开放。']]));
 
-  // ---------------- 推入页:正式俱乐部主页 / 商家主页 ----------------
-  S.push(scr('club-home', '俱乐部主页(正式页)', '主题工作台', 'pages/club/detail(P-1 定稿)',
-    '<view class="ph7"><img class="ph7-img" src="assets/pages/club-head.jpg"><view class="c-post-card" style="background:var(--o-page)">' + [['林小满', '2小时', '周六下午走完了「上海像一部旧电影」。第三站的老唱片店老板还记得九十年代的进货单,一张张翻给我们看。', 'treasure-hunter.jpg'], ['何以解忧', '昨天', '武康大楼下的黄昏。', 'old-movie.jpg']].map(function (p) {
-      return '<view class="post-card post-card--light"><view class="post-card__avatar"><img class="post-card__avatar-img" src="' + C + p[3] + '"></view><view class="post-card__main"><view class="post-card__head"><view class="post-card__identity"><view class="post-card__name"><text class="post-card__nick">' + p[0] + '</text></view><view class="post-card__meta"><text>' + p[1] + '</text></view></view></view><view class="post-card__body"><view class="post-card__text">' + p[2] + '</view></view></view></view>'; }).join('') + '</view></view>' +
+  // ---------------- 推入页:正式俱乐部主页(落在「概览」)/ 商家主页(按店铺装修字段)----------------
+  S.push(scr('club-home', '俱乐部主页 · 概览', '主题工作台', 'pages/club/detail(activeTab=overview)',
+    '<view class="ph7"><img class="ph7-img" src="assets/pages/club-top.jpg">' +
+    '<view class="ct7"><text>帖子</text><text>活动</text><text class="on">概览</text></view>' +
+    '<view class="ov7"' + mk(1) + '><view class="ov7-intro">在上海老建筑里走城市定向。每周六下午一场,4–6 人一队,走完一起吃饭。</view>' +
+    '<view class="ov7-facts">' + [['林小满', '主理人'], ['兴趣社群', '俱乐部类型'], ['上海', '所在城市']].map(function (f) { return '<view><b>' + f[0] + '</b><span>' + f[1] + '</span></view>'; }).join('') + '</view>' +
+    '<view class="ov7-row"><text>俱乐部勋章</text><view class="tl-chev"></view></view>' +
+    '<view class="ov7-h"><b>成员 128</b></view><view class="ov7-strip">' + [['林小满', '主理人', 'treasure-hunter.jpg'], ['何以解忧', '管理员', 'old-movie.jpg'], ['阿乔', '', 'flavor-tour.jpg'], ['Mia', '', 'midlife-day.jpg'], ['周周', '', 'heat-escape.jpg']].map(function (m) { return '<view class="ov7-m"><img src="' + C + m[2] + '"><text>' + m[0] + '</text>' + (m[1] ? '<span>' + m[1] + '</span>' : '') + '</view>'; }).join('') + '</view>' +
+    '<view class="ov7-h"><b>正在进行</b></view><view class="st7" style="border:0"><img class="st7-img" src="' + C + 'old-movie.jpg"><view class="mr-m"><view class="mr-n">上海像一部旧电影</view><view class="mr-s">11-01 起 · 4 站</view></view></view>' +
+    '<view style="height:40px"></view></view></view>' +
     '<view style="position:absolute;left:0;top:47px;width:60px;height:44px;z-index:70" data-back></view>',
-    [[1, '「主页」打开的就是正式俱乐部主页(pages/club/detail),不是新做的一页;左上返回回到工作台,刚才的弹窗还在。']]));
-  function qrCanvas() { return '<canvas class="qr7" data-qr="1" width="120" height="120"></canvas>'; }
-  S.push(scr('mer-home', '商家主页', '主题工作台', 'pages/merchant/home(canonical 商家主页)',
-    '<view class="ph7"><view class="mh-cover"><img src="' + C + 'midlife-day.jpg"></view><view class="mh-head"><img class="mh-logo" src="' + C + 'flavor-tour.jpg"><view class="mh-name">苏河茶室</view></view>' +
-    '<view class="mh-tags"><view class="mh-tag"><img src="' + D3 + 'hot_beverage_3d.png">茶饮</view><view class="mh-tag"><img src="' + D3 + 'round_pushpin_3d.png">320m</view><view class="mh-tag">营业中 · 10:00–22:00</view></view>' +
-    '<view class="mh-card"' + mk(1) + '><view class="kv7"><text>门店地址</text><span>天潼路 133 号</span></view><view class="kv7"><text>门店微信</text><span>suhe-tea</span></view><view style="display:flex;gap:14px;align-items:center;padding:12px 0">' + qrCanvas() + '<view class="mr-s" style="white-space:normal">扫码加门店微信,商量接待细节</view></view></view>' +
-    '<view class="mh-btns"' + mk(2) + '><view class="os-btn os-btn--g" data-toast7="已复制微信号">复制微信号</view><view class="os-btn" data-toast7="打开和苏河茶室的会话">发消息</view></view></view>' + U.navBar({ overlay: true, pill: true, tint: 'light' }),
-    [[1, '通过招商后能看到对方:门店地址、门店微信和二维码。'], [2, '底部直接「发消息」进站内会话,或复制微信号线下沟通。']]));
+    [[1, '「主页」打开正式俱乐部主页,默认落在「概览」(简介、主理人 / 类型 / 城市、勋章、成员、正在进行),不是帖子流。左上返回,回到工作台,刚才那层弹窗还开着。']]));
 
-  // ---------------- 消息(不改,点卡进主题工作台)----------------
-  S.push(scr('msg', '消息 · 协作邀请(不改)', '消息', 'subpackageB/pages/im/list/index.wxml',
+  function qrCanvas() { return '<canvas class="qr7" data-qr="1" width="120" height="120"></canvas>'; }
+  // 商家主页 = 店铺装修(pages/merchant/decor)里商家自己配的那些字段,原样排出来给别人看
+  S.push(scr('mer-home', '商家主页', '主题工作台', 'pages/merchant/decor 字段:coverImage / logo / name / cityRole / description / gallery / perks / ai-npc / businessTime / address / phone / coop-setting',
+    '<view class="ph7 mh7">' +
+    '<view class="mh7-cover"><img src="' + C + 'midlife-day.jpg"><view class="mh7-shade"></view></view>' +
+    '<view class="mh7-head"' + mk(1) + '><img class="mh7-logo" src="' + C + 'flavor-tour.jpg"><view class="mh7-id"><view class="mh7-name">苏河茶室</view><view class="mh7-role">苏州河边的老派茶馆</view></view></view>' +
+    '<view class="mh7-tags"><text class="on">营业中 · 10:00–22:00</text><text>茶饮</text><text>可接团</text><text>320m</text></view>' +
+    '<view class="mh7-sec"><b>品牌故事</b><p>1998 年开在北苏州路,三代人守着一口老铜壶。窗外就是邮政博物馆,很多走城市路线的人在这里歇脚。</p></view>' +
+    '<view class="mh7-sec"' + mk(2) + '><b>店里</b><view class="mh7-gal">' + ['time-pollution.jpg', 'old-movie.jpg', 'treasure-hunter.jpg', 'heat-escape.jpg'].map(function (g) { return '<img src="' + C + g + '">'; }).join('') + '</view></view>' +
+    '<view class="mh7-sec"><b>到店权益</b><view class="mh7-perk"><img src="' + D3 + 'hot_beverage_3d.png"><view class="mr-m"><view class="mr-n">招牌茉莉冷泡一杯</view><view class="mr-s">持本主题门票到店核销</view></view></view></view>' +
+    '<view class="mh7-sec"><b>店铺角色</b><view class="mh7-npc"><img src="' + D3 + 'detective.png"><view class="mh7-bub">走累了吧?先坐,茶马上好。</view></view></view>' +
+    '<view class="mh7-sec"' + mk(3) + '><b>合作偏好</b><view class="kv7"><text>想要的合作</text><span>城市定向节点 · 周末带团</span></view><view class="kv7" style="border:0"><text>能接待</text><span>每场 20 人以内</span></view></view>' +
+    '<view class="mh7-sec"><b>联系</b><view class="kv7"><text>北苏州路 250 号</text><span class="link7">导航</span></view><view class="mh7-qr">' + qrCanvas() + '<view class="mr-m"><view class="mr-n">门店微信</view><view class="mr-s">suhe-tea · 长按识别二维码</view><view class="mh7-acts"><view class="pill7 pill7--g" data-toast7="已复制微信号">复制微信号</view><view class="pill7" data-toast7="打开和苏河茶室的对话">发消息</view></view></view></view></view>' +
+    '<view style="height:40px"></view></view>' +
+    '<view style="position:absolute;left:0;top:47px;width:60px;height:44px;z-index:70" data-back></view>' + U.navBar({ overlay: true, pill: true, tint: 'light' }),
+    [[1, '封面、Logo、店名、城市角色一句话,都是店铺装修里商家自己配的。'], [2, '下面依次是品牌故事、店内相册、到店权益、AI 店铺角色招呼语。'], [3, '合作偏好(合作设置页)和联系方式:地址、门店微信二维码、复制微信号、发消息。']]));
+
+  // ---------------- 消息 · 协作邀请卡(邀请人 / 主题 / 时间 / 邀请语 + 回复 · 拒绝 · 同意)----------------
+  var INV = [
+    { st: 'pending', who: '城瘾官方', av: 'old-movie.jpg', time: '09-29 14:20', topic: '【零元续测0929】自由探索供给', kind: 'free', cover: 'flavor-tour.jpg', msg: '想请你们承接其中一章,玩家到店打卡、你们提供一份到店权益,章节可以自己挑。' },
+    { st: 'accepted', who: '副本人生', av: 'treasure-hunter.jpg', time: '10-12 09:05', topic: '上海像一部旧电影', kind: 'city', cover: 'old-movie.jpg', msg: '第 2 站在上海邮政博物馆旁边,想请你们承接这一站,引流档。' }];
+  function invCard(v, i) {
+    var acts = v.st === 'pending'
+      ? '<view class="ic7-acts"><view class="ic7-b" data-act="invReply" data-i="' + i + '">回复</view><view class="ic7-b" data-act="invNo" data-i="' + i + '">拒绝</view><view class="ic7-b ic7-b--on" data-act="invYes" data-i="' + i + '">同意</view></view>'
+      : '<view class="ic7-acts"><view class="ic7-b" data-act="invReply" data-i="' + i + '">回复</view><view class="ic7-b ic7-b--on ic7-b--wide" data-go="' + (v.kind === 'free' ? 'join-chapter' : 'join-node') + '">进入工作台</view></view>';
+    return '<view class="ic7"' + (i ? '' : mk(1)) + '>' +
+      '<view class="ic7-top"><img src="' + C + v.av + '"><view class="mr-m"><view class="ic7-who">' + v.who + ' <span>邀请你承接</span></view><view class="mr-s">' + v.time + '</view></view>' + (v.st === 'pending' ? '<i class="ic7-new"></i>' : '<text class="chip7 chip7--ok">已同意</text>') + '</view>' +
+      '<view class="ic7-cv" data-act="invOpen" data-i="' + i + '"><img src="' + C + v.cover + '"><view class="ic7-cvs"></view><view class="ic7-cvt"><span>' + (v.kind === 'free' ? '自由探索 · 承接章节' : '城市定向 · 承接节点') + '</span><b>' + v.topic + '</b></view></view>' +
+      '<view class="ic7-msg">' + v.msg + '</view>' + acts + '</view>';
+  }
+  S.push(scr('msg', '消息 · 协作邀请', '消息', 'subpackageB/pages/im/list/index.wxml + pages/coop/invite-detail',
     '<view class="sv"><view class="theme-merchant pg-im"><view class="im-list" style="padding-top:87px"><view class="message-tools">' + U.tabs({ variant: 'fill', wide: true, active: 'in', tabs: [{ key: 'in', label: '收件箱' }, { key: 'out', label: '发件箱' }] }) + '</view>' +
-    '<view class="invite-strip"><text class="invite-strip__title">协作邀请</text><scroll-view class="invite-strip__scroll" scroll-x><view class="invite-strip__track">' +
-    [['待接受', 'pending', '来自 城瘾官方', '09-29', '【零元续测0929】自由探索供给', '到店探索', 'flavor-tour.jpg'], ['已接受', 'accepted', '来自 副本人生', '10-12', '上海像一部旧电影', '上海市黄浦区', 'old-movie.jpg']].map(function (v, i) {
-      return '<view class="invite-card" data-go="' + (i ? 'join-node' : 'join-chapter') + '"' + (i ? '' : mk(1)) + '><view class="invite-card__top"><text class="invite-status is-' + v[1] + '">' + v[0] + '</text><text class="invite-card__from">' + v[2] + '</text></view><view class="invite-card__main"><img class="invite-card__cover" src="' + C + v[6] + '"><view class="invite-card__info"><text class="invite-card__date">' + v[3] + ' 起</text><text class="invite-card__name">' + v[4] + '</text><text class="invite-card__sub">' + v[5] + '</text></view></view><text class="invite-card__time">点开看主题工作台</text></view>';
-    }).join('') + '</view></scroll-view></view></view></view></view>' + U.navBar({ title: '消息' }),
-    [[1, '协作邀请卡用你已经定好的样子,不改;只是点卡直接进这个主题的工作台(进度在工作台最下面)。']]));
+    '<view class="ic7-h">协作邀请<span>1 条待回复</span></view><scroll-view class="ic7-row" scroll-x id="invRow">' + INV.map(invCard).join('') + '</scroll-view></view></view></view>' + U.navBar({ title: '消息' }),
+    [[1, '卡片上直接写清:谁邀请的、什么时候、哪个主题(自由探索承接章节 / 城市定向承接节点)、邀请语。待回复的卡底部三个按钮:回复 / 拒绝 / 同意;点主题那一行看完整邀约(条款)。同意自由探索 → 先选章节 → 填供给 → 进工作台;同意城市定向 → 确认这一站 → 填供给 → 进工作台。拒绝要写理由(后端要求)。']]));
 
   // ---------------- 账户收益 · 更多(Threads)----------------
   S.push(scr('earn-more', '账户收益 · 更多', '账户收益', 'components/cy/scene-asset-earnings/index.wxml',
@@ -158,30 +184,40 @@
     U.empty({ title: '还没有收益', cta: '去发布路线', art: true, fill: true, size: 'lg' }) + '</view></view></view></view>' + U.navBar({}),
     [[1, '「更多」按 Threads:白色底部弹窗、居中标题、行之间发丝线、右侧图标;只留提现记录、邀请记录。']]));
 
-  // ---------------- 店铺参谋 · 经营优化(inspora 海报卡)----------------
-  var POSTERS = [
-    { k: 'arrow', label: '带客 · 主题', t: '承接一条主题路线', d: '玩家按路线来店打卡,0 成本带来第一批客流。', meta: '附近 6 条路线招商中', bg: '#2F5D3A', fg: '#fff', dot: '#5FB36B', go: '去看看', gobg: '#3F7F4C' },
-    { k: 'pin', label: '地图 · 曝光', t: '把门店设成打卡点', d: '漫游地图上出现你的店,路过的玩家一眼看到。', meta: '本周 128 人路过附近', bg: '#D7D8F3', fg: '#2B2C7A', dot: '#5A5DE0', go: '去设置', gobg: '#4B4ED6' },
-    { k: 'ticket', label: '复购 · 券', t: '发一张到店券', d: '新客到店核销,复购率会算进店铺参谋。', meta: '同商圈平均核销率 41%', bg: '#F1E3C9', fg: '#5A3B12', dot: '#E08A2E', go: '去发券', gobg: '#C9741F' },
-    { k: 'chat', label: 'AI · 招呼', t: '让店铺角色招呼客人', d: '玩家路过时它会打招呼、介绍菜单。', meta: '已有 312 家店启用', bg: '#1C1C1E', fg: '#fff', dot: '#A5A6E8', go: '去配置', gobg: '#3A3A3C' }];
-  S.push(scr('ins', '店铺参谋 · 经营优化', '店铺参谋', 'pages/merchant/marketing/ai-insight/index.wxml',
-    '<view class="sv"><view class="page theme-merchant pg-ins"><view style="height:87px"></view><view class="body"><view class="greet"><view class="greet-b"><view class="greet-line" style="font-size:24px;font-weight:600"><text>下午好，</text><text>星巴克咖啡厅</text></view></view>' + U.avatar(IMG + 'mer1.jpg', 112, 'greet-avatar') + '</view>' +
-    '<view class="hero value-card"><view class="hero-top"><view class="hero-main"><text class="hero-k">近30天，城瘾为你带来</text><view class="hero-big"><text class="hero-num">0</text><text class="hero-unit">位玩家到店</text></view></view></view></view>' +
-    '<view class="sec-head"' + mk(1) + '><text class="sec-title">经营优化</text></view><view class="pc-row">' + POSTERS.map(function (p, i) {
-      return '<view class="pc"><canvas width="472" height="400" data-art="' + p.k + '" data-dot="' + p.dot + '"></canvas><view class="pc-b" style="background:' + p.bg + ';color:' + p.fg + '"><view class="pc-top"><text>' + p.label + '</text><view class="pc-add">＋ 收藏</view></view><view class="pc-t">' + p.t + '</view><view class="pc-d">' + p.d + '</view><view class="pc-f"><text class="pc-meta"><i></i>' + p.meta + '</text><view class="pc-go" style="background:' + p.gobg + ';color:#fff" data-toast7="' + p.go + '">' + p.go + '</view></view></view></view>';
-    }).join('') + '</view><view style="height:40px"></view></view></view></view>' + U.navBar({ title: '店铺参谋' }),
-    [[1, '「经营优化」改成一排横滑的海报卡(参考 inspora 两条):上半是点阵生成图(箭头 / 定位 / 票 / 对话,每张一个颜色),下半色块写标题、一句话、一个数和按钮。左右滑,不往下堆。问候语按时段、字号加大(D05,已在 PR #684)。']]));
+  // ---------------- 店铺参谋:其他区块照原样,只改「经营解读」----------------
+  // 经营解读的三段(总结 / 机会 / 问题)来自 ai.summary / ai.opportunity / ai.problem,做成一叠可翻的卡
+  var READS = [
+    { k: 'sum', tab: '总结', label: '这 30 天', t: '客人集中在周末下午', d: '近 30 天 41 位玩家到店,七成在周六、周日 14–17 点,工作日几乎没人。', bg: '#E9E4FF', fg: '#2B2470', dot: '#6C5CE7', art: 'arrow' },
+    { k: 'op', tab: '机会', label: '可以做', t: '承接一条周末路线', d: '「上海像一部旧电影」第 2 站离你 300 米,周末每场 20 人,正好补上下午的空位。', bg: '#DDF3E6', fg: '#14532D', dot: '#22A55B', art: 'pin', go: '去看看' },
+    { k: 'pb', tab: '问题', label: '要留意', t: '到店后没人复购', d: '41 位里只有 3 位回来过。到店权益只送一杯茶,没有留下下次来的理由。', bg: '#FFE9D6', fg: '#6B2F05', dot: '#F07A1A', art: 'ticket', go: '去设权益' }];
+  function readDeck() {
+    return '<view class="rd7"' + mk(2) + '><view class="rd7-tabs">' + READS.map(function (r, i) { return '<view class="rd7-tab' + (i ? '' : ' on') + '" data-act="rdGo" data-i="' + i + '"><i style="background:' + r.dot + '"></i>' + r.tab + '</view>'; }).join('') + '</view>' +
+      '<view class="rd7-stack">' + READS.map(function (r, i) {
+        return '<view class="rd7-card" data-i="' + i + '" data-act="rdNext" style="background:' + r.bg + ';color:' + r.fg + '"><canvas width="560" height="300" data-art="' + r.art + '" data-dot="' + r.dot + '"></canvas>' +
+          '<view class="rd7-b"><view class="rd7-l"><text>' + r.label + '</text><text>' + (i + 1) + ' / 3</text></view><view class="rd7-t">' + r.t + '</view><view class="rd7-d">' + r.d + '</view>' + (r.go ? '<view class="rd7-go" style="background:' + r.fg + '" data-toast7="' + r.go + '">' + r.go + '</view>' : '') + '</view></view>';
+      }).join('') + '</view><view class="ai-source7">解读依据今天 06:00 的经营数据</view></view>';
+  }
+  S.push(scr('ins', '店铺参谋 · 经营解读', '店铺参谋', 'pages/merchant/marketing/ai-insight/index.wxml',
+    '<view class="sv"><view class="page theme-merchant pg-ins"><view style="height:87px"></view><view class="body">' +
+    '<view class="greet"><view class="greet-b"><view class="greet-line" style="font-size:24px;font-weight:600"><text>下午好，</text><text>星巴克咖啡厅</text></view></view>' + U.avatar(IMG + 'mer1.jpg', 112, 'greet-avatar') + '</view>' +
+    '<view class="hero value-card"><view class="hero-top"><view class="hero-main"><text class="hero-k">近30天，城瘾为你带来</text><view class="hero-big"><text class="hero-num">41</text><text class="hero-unit">位玩家到店</text></view></view></view>' +
+    '<view class="seg"><view class="seg-btn">近7天</view><view class="seg-btn seg-btn--on">近30天</view><view class="seg-btn">近90天</view></view></view>' +
+    '<view class="sec-head"' + mk(1) + '><text class="sec-title">为你推荐的主题</text></view><scroll-view class="tscroll" scroll-x><view class="trow">' + [['自由探索合作验收0929', 'heat-escape.jpg'], ['外滩夜行', 'time-pollution.jpg']].map(function (t) {
+      return '<view class="tcard"><view class="tcard-cover"><img class="tcard-img" src="' + C + t[1] + '"><view class="tcard-shade"></view><view class="tcard-over"><view class="tcard-title"><text class="tcard-name">' + t[0] + '</text><view class="tcard-tag">招商中</view></view><text class="tcard-reason">平台招商中的自由探索主题</text><view class="tcard-foot"><view class="tcard-cta">看看</view></view></view></view></view>'; }).join('') + '</view></scroll-view>' +
+    '<view class="sec-head"><text class="sec-title">经营解读</text></view>' + readDeck() +
+    '<view style="height:40px"></view></view></view></view>' + U.navBar({ title: '店铺参谋' }),
+    [[1, '问候、主卡、推荐主题等其他区块都照原页面,不改。'], [2, '只改「经营解读」:原来一张纯文字卡(总结 / 机会 / 问题),改成三张叠放的卡。点卡或点上面的小标签切换:当前这张往左滑出、落到最后面,下一张升上来;每张一个颜色和一幅会流动的点阵图。机会和问题各带一个去处理的按钮。']]));
 
   // ---------------- AI 店铺角色 首次介绍 ----------------
   S.push(scr('npc', 'AI 店铺角色 · 首次介绍', 'AI 店铺角色', 'pages/merchant/decor/ai-npc/index.wxml',
-    '<view class="sv"><view class="dc-page theme-merchant pg-npc"><view style="height:87px"></view><view class="dc-content"><text class="dc-brand-title">AI 店铺角色</text><view class="npc-hero"><view class="npc-preview" style="display:flex;align-items:center;justify-content:center;background:#ECECF8"><img src="' + D3 + 'robot_3d.png" style="width:70%;height:70%"></view><text class="dc-name">当兵的</text></view>' +
+    '<view class="sv"><view class="dc-page theme-merchant pg-npc"><view style="height:87px"></view><view class="dc-content"><text class="dc-brand-title">AI 店铺角色</text><view class="npc-hero"><view class="npc-preview" style="display:flex;align-items:center;justify-content:center;background:#4c6fd8"><img src="' + D3 + 'detective.png" style="width:70%;height:70%"></view><text class="dc-name">当兵的</text></view>' +
     '<view style="text-align:center;margin-top:16px;font-size:13px;color:var(--o-mute)" data-act="aiIntro">再看一遍介绍</view></view></view></view>' + U.navBar({}),
     [[1, '只在第一次进入时弹。四步图都是 AI 角色相关的 3D 物件(机器人分身 → 挥手打招呼 + 对话气泡 → 菜单 + 闹钟 → 名牌 + 性格面具),翻页时旧物件缩小转走、新物件弹出,底下光晕换色。不用 logo。']]));
 
   document.getElementById('screens').innerHTML = S.join('');
 
   // ================= 弹层引擎(10-23 规范)=================
-  var CAP = 756, LV = { peek: 253, half: 506, full: 675 };
+  var CAP = 756, LV = { peek: 253, half: 506, full: 756 };
   var stacks = {};
   function cur() { return PROTO.cur(); }
   function layer() { return cur().querySelector('.os-layer'); }
@@ -280,9 +316,11 @@
   var TIERS = { all: { sold: 36, price: '—', parts: [['主办', 40, '#A5A6E8', 168.0], ['承接商家', 35, '#F2C46B', 147.0], ['带团俱乐部', 15, '#7FD1A6', 63.0], ['平台', 10, '#5A5A60', 42.0]] },
     exp: { sold: 24, price: '¥68', parts: [['主办', 40, '#A5A6E8', 168.0], ['承接商家', 35, '#F2C46B', 147.0], ['带团俱乐部', 15, '#7FD1A6', 63.0], ['平台', 10, '#5A5A60', 42.0]] },
     lead: { sold: 12, price: '¥0', parts: [['承接商家', 100, '#F2C46B', 0]] } };
+  // 档位不是商家能改的:按章节在开售时定死。这里只列这位商家在本主题真有的档,只有一档就不给切换。
+  var MY_TIERS = [['exp', '第 1 章 · 体验档'], ['lead', '第 3 章 · 引流档']];
   function profitBody(k) {
-    var t = TIERS[k], idx = ['all', 'exp', 'lead'].indexOf(k);
-    return '<view class="pf-seg"><i style="width:calc((100% - 6px)/3);transform:translateX(' + (idx * 100) + '%)"></i>' + [['all', '全部'], ['exp', '体验档 ¥68'], ['lead', '引流档 ¥0']].map(function (x) { return '<div class="' + (x[0] === k ? 'on' : '') + '" data-act="pfTier" data-k="' + x[0] + '">' + x[1] + '</div>'; }).join('') + '</view>' +
+    var t = TIERS[k], idx = MY_TIERS.map(function (x) { return x[0]; }).indexOf(k);
+    return '<view class="pf-lock">' + I('lock', 24) + '<text>档位按章节在开售时定好,不能改</text></view>' + (MY_TIERS.length < 2 ? '' : '<view class="pf-seg"><i style="width:calc((100% - 6px)/' + MY_TIERS.length + ');transform:translateX(' + (idx * 100) + '%)"></i>' + MY_TIERS.map(function (x) { return '<div class="' + (x[0] === k ? 'on' : '') + '" data-act="pfTier" data-k="' + x[0] + '">' + x[1] + '</div>'; }).join('') + '</view>') +
       '<view class="pf-hero"><view class="pf-k">本主题已入账</view><view class="pf-big">¥420.00</view><view class="pf-sub"><text>待结算 <b>¥1,080.00</b></text><text>已售 <b>' + t.sold + ' 份</b></text></view></view>' +
       '<view class="pf-flow"' + mk(1) + '><view class="pf-flow-h"><text>每卖出 1 份' + (t.price !== '—' ? ' · <b>' + t.price + '</b>' : '') + '</text><text>怎么分</text></view><view class="pf-bar">' + t.parts.map(function (p, i) { return '<div style="flex:' + p[1] + ';background:' + p[2] + ';animation-delay:' + (i * 90) + 'ms"><span>' + p[1] + '%</span></div>'; }).join('') + '</view>' +
       '<view class="pf-legend">' + t.parts.map(function (p) { return '<div><i style="background:' + p[2] + '"></i>' + p[0] + '<b>' + p[1] + '%</b></div>'; }).join('') + '</view></view>' +
@@ -298,7 +336,7 @@
     'dw-recruit': function () { open({ id: 'recruit', title: '招商', level: 'full', fixed: true, body: recruitBody() }); },
     'dw-cust': function () { open({ id: 'cust', title: '客户', level: 'full', fixed: true, body: custBody('') }); },
     'dw-more': function () { open({ id: 'more', title: '更多', center: true, level: 'half', body: moreBody(false) }); },
-    'dw-profit': function () { open({ id: 'profit', title: '分润明细', level: 'full', fixed: true, body: profitBody('all') }); },
+    'dw-profit': function () { open({ id: 'profit', title: '分润明细', level: 'full', fixed: true, body: profitBody('exp') }); },
     scan: function () { toast('打开扫码核销'); }, publish: function () { toast('进入发布确认'); }, supply: function () { toast('进入补供给'); },
     inviteClub: function (el) { var c = clubs()[+el.getAttribute('data-i')]; inviteSheet('club', c.n, c.m, c.img, 'club-home'); },
     station: function (el) { var s = STATIONS[+el.getAttribute('data-i')];
@@ -315,8 +353,35 @@
     bcSend: function () { var n = cur().querySelector('#bcN').textContent; closeTop(); toast('已发送给 ' + n); },
     sw7: function (el) { el.classList.toggle('on'); toast(el.classList.contains('on') ? '已开放商家承接申请' : '已关闭商家承接申请'); },
     pfTier: function (el) { topSheet().querySelector('.os-b').innerHTML = profitBody(el.getAttribute('data-k')); },
-    earnMore: function () { open({ id: 'em', title: '更多', center: true, inset: true, body: '<view class="tl">' + [['提现记录', 'clock'], ['邀请记录', 'gift']].map(function (r) { return '<view class="tl-r" data-toast7="打开' + r[0] + '"><text class="l">' + r[0] + '</text>' + I(r[1], 40) + '</view>'; }).join('') + '</view>' }); },
+    earnMore: function () { open({ id: 'em', body: '<view class="tl">' + [['提现记录', 'clock'], ['邀请记录', 'gift']].map(function (r) { return '<view class="tl-r" data-toast7="打开' + r[0] + '"><text class="l">' + r[0] + '</text>' + I(r[1], 40) + '</view>'; }).join('') + '</view>' }); },
     aiIntro: function () { aiIntro(); },
+    invOpen: function (el) { var v = INV[+el.getAttribute('data-i')];
+      open({ id: 'invd', title: '协作邀请', level: 'full', fixed: true, body: '<view class="ic7-cv" style="margin:0 0 12px"><img src="' + C + v.cover + '"><view class="ic7-cvs"></view><view class="ic7-cvt"><span>' + (v.kind === 'free' ? '自由探索 · 承接章节' : '城市定向 · 承接节点') + '</span><b>' + v.topic + '</b></view></view>' +
+        '<view class="kv7"><text>邀请人</text><span>' + v.who + '</span></view><view class="kv7"><text>邀请时间</text><span>' + v.time + '</span></view><view class="kv7"><text>承接</text><span>' + (v.kind === 'free' ? '任选一章(同意后选)' : '第 2 站 · 上海邮政博物馆') + '</span></view><view class="kv7"><text>分润</text><span>' + (v.kind === 'free' ? '按所选章节的档位' : '引流档 · 无分成') + '</span></view><view class="kv7"><text>保证金</text><span>无</span></view>' +
+        '<view class="lbl7"><text>邀请语</text></view><view class="ic7-msg" style="margin:0">' + v.msg + '</view>',
+        foot: v.st === 'pending' ? '<view class="os-row2"><view class="os-btn os-btn--g" data-act="invNo" data-i="' + INV.indexOf(v) + '">拒绝</view><view class="os-btn" data-act="invYes" data-i="' + INV.indexOf(v) + '">同意</view></view>' : '' }); },
+    invReply: function (el) { var v = INV[+el.getAttribute('data-i')];
+      open({ id: 'invr', title: '回复 ' + v.who, back: true, level: 'half', body: '<textarea class="field7" placeholder="例:想先了解一下第 2 章的人数"></textarea>', foot: '<view class="os-btn" data-act="invSent">发送</view>' }); },
+    invSent: function () { closeTop(); toast('已发送,对方在消息里能看到'); },
+    invNo: function (el) { var v = INV[+el.getAttribute('data-i')];
+      open({ id: 'invn', title: '拒绝这条邀约', back: true, level: 'half', body: '<view class="fchips">' + ['这段时间太忙', '离店太远', '档位不合适'].map(function (t) { return '<view class="fchip" data-act="pickChip">' + t + '</view>'; }).join('') + '</view><textarea class="field7" style="margin-top:12px" placeholder="写一句理由,对方能看到"></textarea>', foot: '<view class="os-btn" data-act="invNoDone">拒绝</view>' }); },
+    pickChip: function (el) { [].forEach.call(el.parentNode.children, function (c) { c.classList.toggle('on', c === el); }); var ta = el.parentNode.nextElementSibling; if (ta) ta.value = el.textContent; },
+    invNoDone: function () { closeAll(); toast('已拒绝'); },
+    invYes: function (el) { var v = INV[+el.getAttribute('data-i')]; invKind = v.kind;
+      if (v.kind === 'free') open({ id: 'pickch', title: '选择承接的章节', back: true, level: 'full', fixed: true, body: '<view class="lbl7" style="margin-top:0"><text>一家只接一章 · 档位跟着章节走</text></view>' +
+        [['苏河北岸', '四行仓库 · 上海邮政博物馆 · 河滨大楼', '体验档', 'time-pollution.jpg', ''], ['老城厢', '豫园老街 · 城隍庙小吃', '引流档', 'flavor-tour.jpg', ''], ['外滩源', '圆明园路 · 光陆大楼 · 亚洲文会', '体验档', 'old-movie.jpg', '已有商家承接']].map(function (c, k) {
+          return '<view class="pk7' + (c[4] ? ' dis' : '') + '" data-act="pickCh"><img src="' + C + c[3] + '"><view class="mr-m"><view class="mr-n">第 ' + (k + 1) + ' 章 · ' + c[0] + '</view><view class="mr-s">' + (c[4] || c[1]) + '</view></view><text class="chip7 chip7--g">' + c[2] + '</text><i class="pk7-r"></i></view>'; }).join(''),
+        foot: '<view class="os-btn dis" id="pkGo" data-act="supplySheet">下一步</view>' });
+      else open({ id: 'cfnode', title: '确认承接这一站', back: true, level: 'half', body: '<view class="pk7 on" style="cursor:default"><img src="' + C + 'flavor-tour.jpg"><view class="mr-m"><view class="mr-n">第 2 站 · 上海邮政博物馆</view><view class="mr-s">北苏州路 250 号 · 引流档</view></view></view>', foot: '<view class="os-btn" data-act="supplySheet">下一步</view>' }); },
+    pickCh: function (el) { if (el.classList.contains('dis')) return; [].forEach.call(el.parentNode.querySelectorAll('.pk7'), function (c) { c.classList.toggle('on', c === el); }); topSheet().querySelector('#pkGo').classList.remove('dis'); },
+    supplySheet: function () { open({ id: 'sup', title: '填写供给', back: true, level: 'full', fixed: true, body:
+      '<view class="lbl7" style="margin-top:0"><text>到店权益</text></view>' + [['招牌茉莉冷泡一杯', 'hot_beverage_3d.png'], ['第二杯半价券', 'admission_tickets_3d.png']].map(function (p, k) { return '<view class="pk7' + (k ? '' : ' on') + '" data-act="pickCh"><img src="' + D3 + p[1] + '" style="object-fit:contain;background:var(--o-sub)"><view class="mr-m"><view class="mr-n">' + p[0] + '</view><view class="mr-s">来自店铺装修 · 到店权益</view></view><i class="pk7-r"></i></view>'; }).join('') +
+      '<view class="lbl7"><text>接待时段</text></view><view class="fchips">' + ['周六 14–17', '周日 14–17', '工作日晚上'].map(function (t, k) { return '<view class="fchip' + (k < 2 ? ' on' : '') + '">' + t + '</view>'; }).join('') + '</view>' +
+      '<view class="lbl7"><text>每场最多接待</text></view><view class="kv7"><text>20 人</text><span class="link7">改</span></view>',
+      foot: '<view class="os-btn" data-act="supplyDone">提交,进入工作台</view>' }); },
+    supplyDone: function () { var free = invKind === 'free'; closeAll(); INV[0].st = 'accepted'; var r = cur().querySelector('#invRow'); if (r) r.innerHTML = INV.map(invCard).join(''); setTimeout(function () { PROTO.show(free ? 'join-chapter' : 'join-node', true); ON_ENTER(free ? 'join-chapter' : 'join-node'); }, 350); },
+    rdGo: function (el) { rdShow(+el.getAttribute('data-i')); },
+    rdNext: function () { rdShow((rdI + 1) % READS.length); },
     contactHost: function () { open({ id: 'ch', title: '联系主办', center: true, level: 'half', body:
       '<view class="mr" style="border:0"><img class="mr-av" src="' + C + 'treasure-hunter.jpg"><view class="mr-m"><view class="mr-n">副本人生</view><view class="mr-s">主办 · 俱乐部</view></view></view>' +
       '<view class="tl">' + [['打电话', 'phone', '拨打主办电话(号码不显示)'], ['发消息', 'comment', '打开和主办的对话']].map(function (r) { return '<view class="tl-r" data-toast7="' + r[2] + '"><text class="l">' + r[0] + '</text>' + I(r[1], 40) + '</view>'; }).join('') +
@@ -329,11 +394,20 @@
     selfTakeCh: function (el) { var i = +el.getAttribute('data-i'); CHAPTERS[i].kind = 'self'; cur().querySelector('#chRows').innerHTML = chapterRows(); toast('这一章由你自己承接'); },
     aiNext: function () { if (aiI < 3) { aiI++; paintAi(); } else { closeAll(); aiSeen = true; } }
   };
+  var rdI = 0, invKind = '';
+  function rdShow(n) {
+    var root = cur().querySelector('.rd7'); if (!root) return; rdI = n;
+    [].forEach.call(root.querySelectorAll('.rd7-card'), function (c) {
+      var i = +c.getAttribute('data-i'), pos = (i - n + READS.length) % READS.length;
+      c.className = 'rd7-card p' + pos;
+    });
+    [].forEach.call(root.querySelectorAll('.rd7-tab'), function (t, i) { t.classList.toggle('on', i === n); });
+  }
   // data-toast7 小提示
   document.addEventListener('click', function (e) { var t = e.target.closest('[data-toast7]'); if (t && cur().contains(t)) toast(t.getAttribute('data-toast7')); }, true);
 
   // ---------------- AI 介绍 ----------------
-  var AI = [{ a: 'robot_3d.png', b: 'sparkles_3d.png', glow: 'rgba(165,166,232,.5)', t: '它是你的店在城瘾里的分身', s: '出现在漫游地图和店铺主页上,替你招呼路过的玩家' },
+  var AI = [{ a: 'convenience_store_3d.png', b: 'sparkles_3d.png', glow: 'rgba(165,166,232,.5)', t: '它是你的店在城瘾里的分身', s: '出现在漫游地图和店铺主页上,替你招呼路过的玩家' },
     { a: 'waving_hand_3d_default.png', b: 'speech_balloon_3d.png', glow: 'rgba(242,196,107,.5)', t: '玩家路过,它先打招呼', s: '按你写的招呼语和性格说话' },
     { a: 'fork_and_knife_with_plate_3d.png', b: 'alarm_clock_3d.png', glow: 'rgba(127,209,166,.5)', t: '菜单和营业时间它都答得上', s: '读的是你门店资料里的内容' },
     { a: 'name_badge_3d.png', b: 'performing_arts_3d.png', glow: 'rgba(240,138,160,.45)', t: '起个名字、选个性格就能用', s: '温柔 / 可爱 / 毒舌,随时可改' }];
@@ -389,6 +463,7 @@
     var arts = cur().querySelectorAll('canvas[data-art]'); if (arts.length) { [].forEach.call(arts, drawArt); artTimer = setInterval(function () { [].forEach.call(arts, drawArt); }, 120); }
     var auto = /[?&]open=([\w-]+)/.exec(location.search);
     if (auto && !keep) setTimeout(function () { var f = ACT[auto[1]]; if (f) f(document.createElement('view')); var sub = /[?&]then=([\w-]+)(?:&i=(\d+))?/.exec(location.search); if (sub) setTimeout(function () { var el = document.createElement('view'); el.setAttribute('data-i', sub[2] || '0'); el.setAttribute('data-k', sub[2] || 'all'); ACT[sub[1]](el); }, 420); }, 120);
+    if (id === 'ins') { rdI = 0; setTimeout(function () { rdShow(0); }, 30); }
     if (id === 'npc' && !aiSeen) setTimeout(aiIntro, 300);
     var m = /[?&]scroll=(\d+)/.exec(location.search); if (m) setTimeout(function () { var sv = cur().querySelector('.sv,.ph7'); if (sv) sv.scrollTop = +m[1]; }, 80);
   };
