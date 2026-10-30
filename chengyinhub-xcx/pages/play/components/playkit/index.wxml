@@ -33,7 +33,7 @@
 <cy-playkit-diyname wx:elif="{{kit.type === 'diyname'}}"
   show="{{show}}" eyebrow="{{kit.eyebrow}}" title="{{kit.title}}" photo-url="{{kit.photoUrl}}"
   value="{{kit.value}}" suggestions="{{kit.suggestions}}" cta-label="{{kit.ctaLabel}}"
-  submitting="{{kit.submitting}}"
+  submitting="{{kit.submitting}}" named="{{kit.named}}"
   bind:namechange="onNameChange" bind:submit="onSubmit"
   bind:close="onClose" bind:requestclose="onRequestClose" />
 
@@ -113,7 +113,7 @@
   attempt-id="{{kit.attemptId}}" reward-ceiling="{{kit.rewardCeiling}}"
   bind:start="onStart" bind:submit="onSubmit" bind:verdict="onVerdict" bind:close="onClose" />
 
-<cy-playkit-qa wx:elif="{{kit.type === 'qa'}}"
+<cy-playkit-qa wx:elif="{{kit.type === 'qa'}}" inline="{{inline}}"
   session-id="{{kit.sessionId}}" node-id="{{kit.nodeId}}"
   show="{{show}}" mode="{{kit.mode}}" theme="{{kit.theme}}" title="{{kit.title}}"
   image-url="{{kit.imageUrl}}" audio-url="{{kit.audioUrl}}" lead="{{kit.lead}}"
@@ -224,15 +224,21 @@
 
 <!-- R3 排序 / 连线 / 分类。⚠️ 每个属性都必须真有人喂(kit.X 由 pickPlayKit 产出):
      漏一个不会报错,那一行字只是恒空 —— 由「kit 属性没人喂」门禁与属性契约钉住。 -->
-<cy-playkit-sort wx:elif="{{kit.type === 'sort'}}"
+<cy-playkit-sort wx:elif="{{kit.type === 'sort'}}" inline="{{inline}}"
   show="{{show}}" prompt="{{kit.prompt}}" items="{{kit.items}}"
   attempts="{{kit.attempts}}" passed="{{kit.passed}}" finished="{{kit.finished}}"
   last-correct="{{kit.lastCorrect}}" last-order="{{kit.lastOrder}}"
   bind:submit="onSubmit" bind:close="onClose" />
 
-<cy-playkit-match wx:elif="{{kit.type === 'match'}}"
+<cy-playkit-match wx:elif="{{kit.type === 'match'}}" inline="{{inline}}"
   show="{{show}}" prompt="{{kit.prompt}}" left="{{kit.left}}" right="{{kit.right}}"
   attempts="{{kit.attempts}}" passed="{{kit.passed}}" last-correct="{{kit.lastCorrect}}"
+  bind:submit="onSubmit" bind:close="onClose" />
+
+<cy-playkit-compare wx:elif="{{kit.type === 'compare'}}" inline="{{inline}}"
+  show="{{show}}" prompt="{{kit.prompt}}" left="{{kit.left}}" right="{{kit.right}}"
+  attempts="{{kit.attempts}}" passed="{{kit.passed}}" finished="{{kit.finished}}"
+  last-correct="{{kit.lastCorrect}}" last-marked="{{kit.lastMarked}}"
   bind:submit="onSubmit" bind:close="onClose" />
 
 <cy-playkit-classify wx:elif="{{kit.type === 'classify'}}"

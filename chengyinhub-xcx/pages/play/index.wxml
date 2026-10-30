@@ -289,7 +289,7 @@
              ⚠️ 这一行此前被写在「设置」那一行的内部(标签没闭合就插了新行),
              于是屏上出现两行「设置」,里外两层还都可点。 -->
         <view class="drow" wx:if="{{topicAudioUrl}}">
-          <view class="dic pic pic--gear"></view>
+          <view class="dic pic pic--play"></view>
           <view class="dcopy"><text class="dt">背景音乐</text></view>
           <view class="dsw {{themeBgmOn ? 'is-on' : ''}}" catchtap="toggleThemeBgm" aria-role="switch" aria-checked="{{themeBgmOn}}" aria-label="背景音乐" hover-class="cy-pressed" hover-stay-time="80"><view class="dsw-i"></view></view>
         </view>
@@ -952,7 +952,7 @@
 <!-- ===================== C. 节点详情卡 ===================== -->
 <view class="mask {{chapterFull ? 'mask--story' : ''}} {{sheetOut ? 'is-out' : ''}}" wx:if="{{sheet.show}}" bindtap="closeSheet" aria-role="button" aria-label="关闭面板" hover-class="cy-pressed" hover-stay-time="80"></view>
 <view class="sheet {{chapterFull ? 'sheet--story' : ''}} {{sheetOut ? 'is-out' : ''}}" wx:if="{{sheet.show}}">
-  <view class="sheet-cover" bindtap="previewNodeImages" data-imgs="{{sheet.node.imgUrl}}" hover-class="cy-pressed" hover-stay-time="80">
+  <view class="sheet-cover {{sheet.node.imgUrl ? '' : 'sheet-cover--bare'}}" bindtap="previewNodeImages" data-imgs="{{sheet.node.imgUrl}}" hover-class="cy-pressed" hover-stay-time="80">
     <image wx:if="{{sheet.node.imgUrl}}" src="{{img.first(sheet.node.imgUrl)}}" mode="aspectFill"></image>
     
     <view class="cover-photos" wx:if="{{img.list(sheet.node.imgUrl).length > 1}}"><cy-icon name="image" size="22" />{{img.list(sheet.node.imgUrl).length}} 图 · 点击查看</view>
@@ -970,7 +970,7 @@
     <view class="sheet-grab"></view>
     <view class="sheet-name serif">{{sheet.node.name}}</view>
     <view class="sheet-meta">{{sheet.node.metaLine}}</view>
-    <view class="sheet-desc serif">{{sheet.node.description}}</view>
+    <view class="sheet-desc serif" wx:if="{{sheet.node.description}}">{{sheet.node.description}}</view>
 
     <view class="place-hook" wx:if="{{mode==2 && sheet.node.cardHook}}">
       <text class="place-hook__npc">小瘾说</text>
@@ -1058,7 +1058,8 @@
     <view class="gp2__back" bindtap="closeGame" aria-role="button" aria-label="关闭任务" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close" size="44" /></view>
   </view>
 
-  <scroll-view scroll-y class="gp2__scroll">
+  <!-- 作答结果(答错 / 未到 50 米 / 未送达)只在题卡里写一次,不再弹 toast;题目长时这行在可视区下面,出现时滚到它(实走复核) -->
+  <scroll-view scroll-y class="gp2__scroll" scroll-into-view="{{gWrong ? 'gp2Feedback' : (gNetErr ? 'gp2NetErr' : '')}}" scroll-with-animation>
     <view class="gp2__card">
       <view class="gp2__audio {{audioError?'is-error':''}}" wx:if="{{game.audio}}" bindtap="toggleAudio"
             aria-role="button" aria-label="{{audioPlaying?'暂停录音':'播放录音'}}" hover-class="cy-pressed" hover-stay-time="80">
@@ -1164,8 +1165,8 @@
         </view>
       </block>
 
-      <view class="gp2__feedback" wx:if="{{gWrong}}">{{game.feedback}}</view>
-      <view class="gp2__neterr" wx:if="{{gNetErr}}">
+      <view class="gp2__feedback" id="gp2Feedback" wx:if="{{gWrong}}">{{game.feedback}}</view>
+      <view class="gp2__neterr" id="gp2NetErr" wx:if="{{gNetErr}}">
         <text class="gp2__neterr-t">{{gNetErr}}</text>
           <text class="gp2__neterr-r" wx:if="{{gNetRetryable}}" bindtap="retryGameSubmission" hover-class="cy-pressed" hover-stay-time="80">{{gRetryType === 'photo' ? '重新上传照片' : (gRetryType === 'gameScan' ? '重新扫码' : (gRetryType === 'puzzleReveal' ? '重新查看答案' : (gRetryType === 'gameCheckin' ? '重新核验' : '重新提交')))}}</text>
       </view>

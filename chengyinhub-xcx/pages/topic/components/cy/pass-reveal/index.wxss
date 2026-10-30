@@ -81,7 +81,10 @@
 .pr__kind { font-size: 20rpx; letter-spacing: 2rpx; color: rgba(255, 255, 255, .6); } /* ds-ok 卡上次文 */
 .pr__name { font-size: 42rpx; font-weight: 700; line-height: 1.2; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
 .pr__row { position: absolute; left: 32rpx; right: 32rpx; bottom: 36rpx; display: flex; gap: 12rpx; padding-top: 24rpx; border-top: 2rpx solid rgba(255, 255, 255, .14); } /* ds-ok */
-.pr__cell { flex: 1; display: flex; flex-direction: column; gap: 4rpx; }
+.pr__cell { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4rpx; }
+/* 票种名最长(如「自玩通行证」),等分时最后一个字被挤到第二行(实走复核 A6):最后一格多给宽度,仍过长才省略 */
+.pr__cell:last-child { flex: 1.5; }
+.pr__cell:last-child .pr__v { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pr__k { font-size: 20rpx; color: rgba(255, 255, 255, .55); } /* ds-ok */
 .pr__v { font-size: 28rpx; font-weight: 600; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
 /* 镭射:彩虹带 color-dodge 叠在照片和卡底上,持续扫动 */

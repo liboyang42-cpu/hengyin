@@ -1,4 +1,4 @@
-<cy-sheet show="{{show}}" handle="{{true}}" dirty="{{!!value}}"
+<cy-sheet show="{{show}}" handle="{{true}}" footer dirty="{{!!value}}"
           bind:close="onClose" bind:requestclose="onRequestClose">
   <view class="dn">
     <view class="pk-eyebrow">{{eyebrow}}</view>

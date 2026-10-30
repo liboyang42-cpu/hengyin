@@ -73,12 +73,15 @@ function mount(rel) {
 }
 
 /** 组件声明的属性都该被喂。show 是分发器自己的开合;reducedMotion 由 behavior 注入。 */
-const NOT_FED = new Set(['show', 'reducedMotion'])
+// inline 与 show 一样由分发器自己的属性喂(故事流内嵌),不来自 kit.*
+const NOT_FED = new Set(['show', 'reducedMotion', 'inline'])
 
 const SHELLS = [
   { type: 'sort', rel: 'pages/play/components/playkit-sort/index.js' },
   { type: 'match', rel: 'pages/play/components/playkit-match/index.js' },
   { type: 'classify', rel: 'pages/play/components/playkit-classify/index.js' },
+  // 2026-10-30 实走复核补上的时间轴对照,与排序 / 连线同一份接线合同
+  { type: 'compare', rel: 'pages/play/components/playkit-compare/index.js' },
 ]
 
 test('★属性契约:三个组件声明的每个属性都从分发器的 kit.* 喂进来', () => {

@@ -59,8 +59,9 @@
 
       <view class="qa__shot-note" wx:if="{{submitted && !finished && !passed}}" aria-live="polite">正在确认答案</view>
       <view class="qa__fb qa__fb-enter {{multi ? (passed ? 'qa__fb--ok' : 'qa__fb--no') : ''}}"
-            wx:if="{{feedback || shownFeedbackImages.length || (judge !== false && !finished && (passed || (multi && attempts > 0)))}}">
-        <view class="qa__fb-h" wx:if="{{judge !== false && !finished}}">{{fbHead}}</view>
+            wx:if="{{feedback || shownFeedbackImages.length || (judge !== false && (passed || (!finished && multi && attempts > 0)))}}">
+        <!-- 过了就一直写着结果:拍照题过了以后 finished 也为真,原来整块被藏掉,屏上只剩题面,看不出照片过没过(实走复核) -->
+        <view class="qa__fb-h" wx:if="{{judge !== false && (passed || !finished)}}">{{fbHead}}</view>
         {{feedback || (judge !== false && multi && attempts > 0 && !finished && !passed ? '还不对，可以再选一次。' : '')}}
         <view class="qa__media" wx:for="{{shownFeedbackImages}}" wx:key="*this"
               data-i="{{index}}" bindtap="onPreviewFeedback" aria-role="button" aria-label="查看反馈图片"
@@ -71,7 +72,8 @@
     </view>
   </view>
 
-  <view class="g-btn {{ctaDisabled ? 'g-btn--disabled' : ''}} {{intro ? 'qa__cta--hold' : ''}} {{burning ? 'qa__cta--burn' : ''}}"
+  <!-- 故事流内嵌且已答对:下面就是「继续故事」,这里不再叠一枚同义的「继续」(实走复核:两枚白按钮上下摞着) -->
+  <view wx:if="{{!(inline && passed)}}" class="g-btn {{ctaDisabled ? 'g-btn--disabled' : ''}} {{intro ? 'qa__cta--hold' : ''}} {{burning ? 'qa__cta--burn' : ''}}"
         bindtap="onCta"
         aria-role="button" aria-label="{{ctaLabel}}" hover-class="g-btn--press" hover-stay-time="80">
     {{ctaLabel}}

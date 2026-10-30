@@ -22,7 +22,7 @@
               wx:for="{{bars}}" wx:key="*this"
               style="height:{{item || 16}}rpx"></view>
       </view>
-      <view class="mc__meta">{{trackName}} · {{positionLabel}}</view>
+      <view class="mc__meta">{{trackName}}{{positionLabel ? ' · ' + positionLabel : ''}}</view>
     </view>
 
     <view class="pk-desc pk-desc--dim">{{hint}}</view>

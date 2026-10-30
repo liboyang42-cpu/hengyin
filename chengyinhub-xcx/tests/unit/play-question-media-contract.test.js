@@ -219,3 +219,33 @@ test('未知旧商家音频不创建播放器、不覆盖正在播放的状态',
   assert.deepEqual({ src: audio.src, played: audio.played, stopped: audio.stopped }, before)
   assert.equal(page.data.audioNodeId, 'optA')
 })
+
+// 实走复核:后端签名链接是 http://,真机不放 http 音频。自有域名升 https,外域原样不动
+test('站点语音与题面媒体的自有域名 http 链接升 https', () => {
+  const page = makePage()
+  const node = page.normNode({ nodeId: 7, validationMethod: 3,
+    audioUrl: 'http://chengyin-oss.oss-cn-shanghai.aliyuncs.com/upload/a.mp3?Signature=x',
+    questionAudio: 'http://www.chengyinhub.com/prod-api/profile/q.mp3',
+    questionImg: 'http://example.com/q.jpg' }, 0)
+  assert.equal(node.audio, 'https://chengyin-oss.oss-cn-shanghai.aliyuncs.com/upload/a.mp3?Signature=x')
+  assert.equal(node.questionAudio, 'https://www.chengyinhub.com/prod-api/profile/q.mp3')
+  assert.equal(node.questionImg, 'http://example.com/q.jpg')
+})
+
+// 实走复核:站点卡不写「00:00–23:59」、导语不从句中硬切、简介与标题重复时不再写一遍
+test('站点卡:全天营业不挂、导语取整句、简介重复标题时隐藏', () => {
+  const page = makePage()
+  page._routeInteractionBlocked = () => false
+  page._lockedTip = () => false
+  page.selectComponent = () => null
+  const node = page.normNode({ nodeId: 9, name: '结语 · 1945年以后', description: '1945年以后', address: '故事玩法',
+    businessTime: '00:00-23:59', storyText: '你面前的霍山路119—121号，曾是美犹联合分配委员会的上海办公处。JDC 1914年成立于纽约。' }, 0)
+  page.openSheet(node)
+  const s = page.data.sheet.node
+  assert.equal(s.metaLine, '故事玩法')
+  assert.equal(s.gameLede, '你面前的霍山路119—121号，曾是美犹联合分配委员会的上海办公处。')
+  assert.equal(s.description, '')
+  page.openSheet(Object.assign({}, node, { businessTime: '06:00-18:00', description: '纪念碑' }))
+  assert.equal(page.data.sheet.node.metaLine, '故事玩法 · 06:00-18:00')
+  assert.equal(page.data.sheet.node.description, '纪念碑')
+})

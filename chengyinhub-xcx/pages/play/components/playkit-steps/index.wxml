@@ -1,4 +1,4 @@
-<cy-sheet show="{{show}}" handle="{{true}}" bind:close="onClose">
+<cy-sheet show="{{show}}" handle="{{true}}" footer bind:close="onClose">
   <view class="st">
     <view class="pk-eyebrow">{{eyebrow}}</view>
     <!-- 图标步骤行(ADA 借鉴卡 E):替代原来那行整句说明;整句降级为本行 aria-label -->

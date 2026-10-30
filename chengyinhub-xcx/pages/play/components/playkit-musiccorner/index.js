@@ -40,7 +40,7 @@ Component({
     bars: BAR_HEIGHTS,
     litBars: 0,
     percent: 0,
-    positionLabel: '0:00',
+    positionLabel: '',
   },
   observers: {
     'position, duration': function (position, duration) {
@@ -48,7 +48,9 @@ Component({
       this.setData({
         litBars: litBarCount(position, duration, BAR_HEIGHTS.length),
         percent: pct,
-        positionLabel: formatTime(position),
+        // 没开始播时不写「0:00」:知道时长就写时长,不知道就不写;播放中写「进度 / 时长」(实走复核)
+        positionLabel: position > 0 ? (duration > 0 ? formatTime(position) + ' / ' + formatTime(duration) : formatTime(position))
+          : (duration > 0 ? formatTime(duration) : ''),
       });
     },
   },

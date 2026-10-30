@@ -201,6 +201,7 @@ page { background: var(--cy-color-bg-page); }
 .sheet.is-out{ animation:none; transform:translateY(105%); transition:transform var(--cy-motion-sheet-full-out) var(--cy-ease-standard); pointer-events:none; }
 .play--reduced-motion .mask, .play--reduced-motion .sheet{ animation:none; }
 .sheet-cover{ position:relative; height:364rpx; background: var(--cy-color-bg-elevated); display:flex; align-items:center; justify-content:center; }
+.sheet-cover--bare{ height:calc(var(--cy-space-8) + var(--cy-space-6)); } /* 没配图(故事站)只留角标那一条,不再空出一大块黑底 */
 .sheet-cover image{ width:100%; height:100%; position:absolute; inset:0; } /* ds-ok Figma 实测(用户裁决字面值) */
 /* 原占位字在封面底上实测 3.68:1,不达 4.5 ⇒ 收编 text-tertiary(4.72:1) */
 .cover-tip{ font-size: var(--cy-type-caption); color: var(--cy-color-text-tertiary); } /* ds-ok Figma 实测(用户裁决字面值) */

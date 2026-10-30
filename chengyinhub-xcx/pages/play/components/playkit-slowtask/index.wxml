@@ -1,4 +1,4 @@
-<cy-sheet show="{{show}}" handle="{{true}}" bind:close="onClose">
+<cy-sheet show="{{show}}" handle="{{true}}" footer bind:close="onClose">
   <view class="sl">
     <!-- 关闭一律是右上角的叉号(§6.5)。这枚画在卡自己身上而不是交给 cy-sheet 的头部:
          cy-sheet 只有传了 title 才出 ✕,而传 title 会把标题挪到眉标上面 —— 那是重排一张过了稿的卡。 -->
