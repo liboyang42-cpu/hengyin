@@ -414,22 +414,6 @@ public class PlayBasicCommandApplication {
         return AjaxResult.success(firstTime ? "答对了！" : "该节点已完成", data);
     }
 
-    /** 与小程序 normNode 的 hasAdvanced 同一判据:除 schemaVersion 外任一段是 enabled 的对象。坏 JSON 视为没有。 */
-    private static boolean hasEnabledAdvancedGame(String configJson) {
-        if (StringUtils.isBlank(configJson)) return false;
-        try {
-            com.fasterxml.jackson.databind.JsonNode root = new com.fasterxml.jackson.databind.ObjectMapper().readTree(configJson);
-            java.util.Iterator<Map.Entry<String, com.fasterxml.jackson.databind.JsonNode>> fields = root.fields();
-            while (fields.hasNext()) {
-                Map.Entry<String, com.fasterxml.jackson.databind.JsonNode> f = fields.next();
-                if (!"schemaVersion".equals(f.getKey()) && f.getValue().isObject() && f.getValue().path("enabled").asBoolean(false)) return true;
-            }
-        } catch (Exception badJson) {
-            return false;
-        }
-        return false;
-    }
-
     /** 作答时定位的到站围栏,与 arrive 坐标判定同口径;null = 在站内。 */
     private String answerFenceError(CmsTopicNode node, String longitude, String latitude, String accuracy) {
         if (StringUtils.isBlank(longitude) || StringUtils.isBlank(latitude) || StringUtils.isBlank(accuracy)) {
@@ -594,11 +578,9 @@ public class PlayBasicCommandApplication {
         // 验证方式闸：答题(1)/拍照(2)/选项(3)/扫码(4) 类节点必须走对应接口完成，
         // 不能用"到达/到点"绕过任务白拿分+券+勋章+通关(反作弊)。仅 0/null(到点即完成) 或 5(GPS) 放行。
         Integer arriveValidationMethod = null;
-        CmsMemberTemplate arriveTpl = null;
         if (node.getTemplateId() != null && node.getTemplateId() > 0L) {
             // R18-FREEZE:完成方式按开局快照判定;老局快照没有该键时回退实时模板
             CmsMemberTemplate vmTpl = playNodeContext.effectiveTemplate(memberId, ctx.topicId, ctx.actId, node, originalRun);
-            arriveTpl = vmTpl;
             // G-R1:悬空 templateId(行读不到)是配置损坏,必须缺合同失败关闭。
             // 否则 arriveValidationMethod 停 null ⇒ vm=5 节点被当成普通无验证节点,缺坐标也放行完成。
             if (vmTpl == null) {
@@ -678,11 +660,15 @@ public class PlayBasicCommandApplication {
             if(personalArrival)data.put("themeRuntime",topicRouteRuntimeService.recordPlayerArrival(memberId,ctx.topicId,actId,node.getId(),routeActionId,expectedRouteVersion,"GPS"));
             if(sharedArrival!=null)data.put("sharedRuntime",gameSessionRuntimeService.recordSharedBasicArrival(memberId,ctx.topicId,actId,node.getId(),routeActionId,"GPS",runtimeInstance,authorityEpoch));
             recordFirstSuccessfulScan(memberId,ctx);return AjaxResult.success("已记录本局到达，请继续当前任务或操作",data);}
-        // 到达只是收尾:这一站配了玩法(高级玩法段有启用)就要先过玩法。否则人走到门口 GPS 自动点亮,
-        // 主玩法(连线、排序…)根本没开就完成了(实走 2026-10-30 复核:霍山公园连线被到达直接跳过)。
-        if (arriveTpl != null && hasEnabledAdvancedGame(arriveTpl.getAdvancedConfigJson()) && advancedGameRuntimeService != null
-                && !advancedGameRuntimeService.readyForBase(memberId, actId, ctx.topicId, node.getId())) {
-            return error("先完成本站玩法，再到达收尾").put("errorCode", "ADVANCED_FIRST");
+        // 玩法没过就到达:原闸在完成链里以异常拒绝,小程序收不到明确回执会把到达记成「结果待确认」,
+        // 之后玩法做完「我已到达此站」也点不动,只能退出重进(2026-10-30 开发者工具复核)。
+        // 这里先按同一闸判一次,拒绝时给出明确的业务回执。
+        if (advancedGameRuntimeService != null) {
+            try {
+                advancedGameRuntimeService.completeGate(memberId, actId, ctx.topicId, node.getId());
+            } catch (ServiceException notPassed) {
+                return error(notPassed.getMessage()).put("errorCode", "ADVANCED_FIRST");
+            }
         }
         playNodeCompletionApplication.logAttempt(memberId, node, actId, 3, 1, null); // M9 GPS到达成功
         Map<String, Object> data = playNodeCompletionApplication.advanceProgress(memberId, node, actId, null, null, null,
