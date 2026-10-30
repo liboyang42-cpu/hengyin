@@ -1458,7 +1458,7 @@
       "pagePath": "pages/crop/index",
       "pkg": "pages/crop",
       "tabBar": false,
-      "role": "player",
+      "role": "merchant",
       "needsLogin": false,
       "needsData": false,
       "dataKeys": [],

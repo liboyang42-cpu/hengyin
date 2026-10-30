@@ -617,7 +617,8 @@ App({
         },
         // 临时路径可能有 9 条,塞 query 会超长 → 经 eventChannel 递
         success: function (res) {
-          res.eventChannel.emit('cropInit', { paths: paths, ratio: ratio || 'free', shape: shape || '' });
+          // M-09(2026-10-30):商家浅色、玩家深色 —— 视角在这里定好一并递过去,裁剪页不再自己判身份
+          res.eventChannel.emit('cropInit', { paths: paths, ratio: ratio || 'free', shape: shape || '', merchant: roleGuard.isMerchantView() });
         },
         // 页面栈满(10 层)等原因打不开 → 退回原图上传,别让整条流程断在这
         fail: function () { once(paths); },

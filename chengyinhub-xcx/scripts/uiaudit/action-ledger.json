@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 5551,
+  "controlCount": 5552,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -391312,14 +391312,17 @@
         "apis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
-          "/api/media/asset/{param}/retry"
+          "/api/media/asset/{param}/retry",
+          "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
           "/api/media/asset/{param}/retry"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
@@ -391334,6 +391337,12 @@
           },
           {
             "url": "/api/media/asset/{param}/retry",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -391546,14 +391555,17 @@
         "apis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
-          "/api/media/asset/{param}/retry"
+          "/api/media/asset/{param}/retry",
+          "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
           "/api/media/asset/{param}/retry"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
@@ -391568,6 +391580,12 @@
           },
           {
             "url": "/api/media/asset/{param}/retry",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -944188,14 +944206,17 @@
         "apis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
-          "/api/media/asset/{param}/retry"
+          "/api/media/asset/{param}/retry",
+          "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
           "/api/media/asset/{param}/retry"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
@@ -944210,6 +944231,12 @@
           },
           {
             "url": "/api/media/asset/{param}/retry",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -950213,14 +950240,17 @@
         "apis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
-          "/api/media/asset/{param}/retry"
+          "/api/media/asset/{param}/retry",
+          "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
           "/api/media/asset/{param}/retry"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
@@ -950235,6 +950265,12 @@
           },
           {
             "url": "/api/media/asset/{param}/retry",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -951759,14 +951795,17 @@
         "apis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
-          "/api/media/asset/{param}/retry"
+          "/api/media/asset/{param}/retry",
+          "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
           "/api/media/asset/{param}/retry"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
@@ -951781,6 +951820,12 @@
           },
           {
             "url": "/api/media/asset/{param}/retry",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -994481,11 +994526,11 @@
       }
     },
     {
-      "id": "pages/crop/index.wxml:16:catchtouchstart:onTouchStart:0",
+      "id": "pages/crop/index.wxml:18:catchtouchstart:onTouchStart:0",
       "route": "pages/crop/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "pages/crop/index.wxml",
         "js": "pages/crop/index.js"
@@ -994504,141 +994549,6 @@
         "tag": "view",
         "event": "catchtouchstart",
         "handler": "onTouchStart",
-        "line": 16,
-        "selectorHint": ".crop__stage",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "other",
-      "interactionMode": "event-contract",
-      "baseActionClass": "other",
-      "effectClasses": [
-        "other"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/crop/index.js:177"
-      }
-    },
-    {
-      "id": "pages/crop/index.wxml:17:catchtouchmove:onTouchMove:1",
-      "route": "pages/crop/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/crop/index.wxml",
-        "js": "pages/crop/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "catchtouchmove",
-        "handler": "onTouchMove",
-        "line": 17,
-        "selectorHint": ".crop__stage",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/crop/index.js:186"
-      }
-    },
-    {
-      "id": "pages/crop/index.wxml:18:catchtouchend:onTouchEnd:2",
-      "route": "pages/crop/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/crop/index.wxml",
-        "js": "pages/crop/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "catchtouchend",
-        "handler": "onTouchEnd",
         "line": 18,
         "selectorHint": ".crop__stage",
         "visibleCondition": null,
@@ -994680,15 +994590,15 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/crop/index.js:208"
+        "staticSource": "pages/crop/index.js:186"
       }
     },
     {
-      "id": "pages/crop/index.wxml:19:catchtouchcancel:onTouchEnd:3",
+      "id": "pages/crop/index.wxml:19:catchtouchmove:onTouchMove:1",
       "route": "pages/crop/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "pages/crop/index.wxml",
         "js": "pages/crop/index.js"
@@ -994705,9 +994615,76 @@
       "confirmationMode": null,
       "control": {
         "tag": "view",
-        "event": "catchtouchcancel",
-        "handler": "onTouchEnd",
+        "event": "catchtouchmove",
+        "handler": "onTouchMove",
         "line": 19,
+        "selectorHint": ".crop__stage",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/crop/index.js:195"
+      }
+    },
+    {
+      "id": "pages/crop/index.wxml:20:catchtouchend:onTouchEnd:2",
+      "route": "pages/crop/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/crop/index.wxml",
+        "js": "pages/crop/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "catchtouchend",
+        "handler": "onTouchEnd",
+        "line": 20,
         "selectorHint": ".crop__stage",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -994748,15 +994725,83 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/crop/index.js:208"
+        "staticSource": "pages/crop/index.js:217"
       }
     },
     {
-      "id": "pages/crop/index.wxml:47:bind:action:onUseOriginal:5",
+      "id": "pages/crop/index.wxml:21:catchtouchcancel:onTouchEnd:3",
       "route": "pages/crop/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/crop/index.wxml",
+        "js": "pages/crop/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "catchtouchcancel",
+        "handler": "onTouchEnd",
+        "line": 21,
+        "selectorHint": ".crop__stage",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "event-contract",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/crop/index.js:217"
+      }
+    },
+    {
+      "id": "pages/crop/index.wxml:50:bind:action:onUseOriginal:5",
+      "route": "pages/crop/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
       "entry": {
         "wxml": "pages/crop/index.wxml",
         "js": "pages/crop/index.js"
@@ -994775,7 +994820,7 @@
         "tag": "cy-inline-error",
         "event": "bind:action",
         "handler": "onUseOriginal",
-        "line": 47,
+        "line": 50,
         "selectorHint": "cy-inline-error[bind:action]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -994819,15 +994864,15 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/crop/index.js:140"
+        "staticSource": "pages/crop/index.js:146"
       }
     },
     {
-      "id": "pages/crop/index.wxml:52:bindtap:onCancel:6",
+      "id": "pages/crop/index.wxml:55:bindtap:onCancel:6",
       "route": "pages/crop/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "pages/crop/index.wxml",
         "js": "pages/crop/index.js"
@@ -994846,7 +994891,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onCancel",
-        "line": 52,
+        "line": 55,
         "selectorHint": ".crop__action",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -994889,15 +994934,82 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/crop/index.js:287"
+        "staticSource": "pages/crop/index.js:296"
       }
     },
     {
-      "id": "pages/crop/index.wxml:55:bindtap:onConfirm:7",
+      "id": "pages/crop/index.wxml:58:bindtap:onReset:7",
       "route": "pages/crop/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/crop/index.wxml",
+        "js": "pages/crop/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "onReset",
+        "line": 58,
+        "selectorHint": ".crop__action",
+        "visibleCondition": "{{sourceState === 'ready'}}",
+        "disabledCondition": null,
+        "ariaLabel": "还原",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/crop/index.js:299"
+      }
+    },
+    {
+      "id": "pages/crop/index.wxml:61:bindtap:onConfirm:8",
+      "route": "pages/crop/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
       "entry": {
         "wxml": "pages/crop/index.wxml",
         "js": "pages/crop/index.js"
@@ -994916,7 +995028,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onConfirm",
-        "line": 55,
+        "line": 61,
         "selectorHint": ".crop__action",
         "visibleCondition": "{{sourceState === 'ready'}}",
         "disabledCondition": null,
@@ -994960,15 +995072,15 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/crop/index.js:224"
+        "staticSource": "pages/crop/index.js:233"
       }
     },
     {
-      "id": "pages/crop/index.wxml:58:bindtap:onUseOriginal:8",
+      "id": "pages/crop/index.wxml:64:bindtap:onUseOriginal:9",
       "route": "pages/crop/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "pages/crop/index.wxml",
         "js": "pages/crop/index.js"
@@ -994987,7 +995099,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onUseOriginal",
-        "line": 58,
+        "line": 64,
         "selectorHint": ".crop__action",
         "visibleCondition": "{{sourceState === 'error'}}",
         "disabledCondition": null,
@@ -995031,7 +995143,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/crop/index.js:140"
+        "staticSource": "pages/crop/index.js:146"
       }
     },
     {
@@ -995438,14 +995550,17 @@
         "apis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
-          "/api/media/asset/{param}/retry"
+          "/api/media/asset/{param}/retry",
+          "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
           "/api/media/asset/{param}/retry"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
@@ -995460,6 +995575,12 @@
           },
           {
             "url": "/api/media/asset/{param}/retry",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -995938,14 +996059,17 @@
         "apis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
-          "/api/media/asset/{param}/retry"
+          "/api/media/asset/{param}/retry",
+          "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
           "/api/media/asset/{param}/retry"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
@@ -995960,6 +996084,12 @@
           },
           {
             "url": "/api/media/asset/{param}/retry",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -996904,14 +997034,17 @@
         "apis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
-          "/api/media/asset/{param}/retry"
+          "/api/media/asset/{param}/retry",
+          "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
           "/api/media/asset/{param}/retry"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
@@ -996926,6 +997059,12 @@
           },
           {
             "url": "/api/media/asset/{param}/retry",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -997016,14 +997155,17 @@
         "apis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
-          "/api/media/asset/{param}/retry"
+          "/api/media/asset/{param}/retry",
+          "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
           "/api/media/asset/{param}/retry"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
@@ -997038,6 +997180,12 @@
           },
           {
             "url": "/api/media/asset/{param}/retry",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -997128,14 +997276,17 @@
         "apis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
-          "/api/media/asset/{param}/retry"
+          "/api/media/asset/{param}/retry",
+          "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
           "/api/media/asset/{param}/retry"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
@@ -997150,6 +997301,12 @@
           },
           {
             "url": "/api/media/asset/{param}/retry",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1000393,14 +1000550,17 @@
         "apis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
-          "/api/media/asset/{param}/retry"
+          "/api/media/asset/{param}/retry",
+          "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
           "/api/media/asset/{param}/retry"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
@@ -1000415,6 +1000575,12 @@
           },
           {
             "url": "/api/media/asset/{param}/retry",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1002311,14 +1002477,17 @@
         "apis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
-          "/api/media/asset/{param}/retry"
+          "/api/media/asset/{param}/retry",
+          "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
           "/api/media/asset/{param}/retry"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
@@ -1002333,6 +1002502,12 @@
           },
           {
             "url": "/api/media/asset/{param}/retry",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1002557,14 +1002732,17 @@
         "apis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
-          "/api/media/asset/{param}/retry"
+          "/api/media/asset/{param}/retry",
+          "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
           "/api/media/asset/{param}/retry"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
@@ -1002579,6 +1002757,12 @@
           },
           {
             "url": "/api/media/asset/{param}/retry",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1015552,14 +1015736,17 @@
         "apis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
-          "/api/media/asset/{param}/retry"
+          "/api/media/asset/{param}/retry",
+          "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
           "/api/media/asset/{param}/retry"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
@@ -1015574,6 +1015761,12 @@
           },
           {
             "url": "/api/media/asset/{param}/retry",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1033695,14 +1033888,17 @@
         "apis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
-          "/api/media/asset/{param}/retry"
+          "/api/media/asset/{param}/retry",
+          "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
           "/api/media/asset/{param}/retry"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
@@ -1033717,6 +1033913,12 @@
           },
           {
             "url": "/api/media/asset/{param}/retry",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1033807,14 +1034009,17 @@
         "apis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
-          "/api/media/asset/{param}/retry"
+          "/api/media/asset/{param}/retry",
+          "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
           "/api/media/asset/{param}/retry"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
@@ -1033829,6 +1034034,12 @@
           },
           {
             "url": "/api/media/asset/{param}/retry",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1049206,14 +1049417,17 @@
         "apis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
-          "/api/media/asset/{param}/retry"
+          "/api/media/asset/{param}/retry",
+          "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
           "/api/media/asset/{param}/retry"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
@@ -1049228,6 +1049442,12 @@
           },
           {
             "url": "/api/media/asset/{param}/retry",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1088893,14 +1089113,17 @@
         "apis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
-          "/api/media/asset/{param}/retry"
+          "/api/media/asset/{param}/retry",
+          "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
           "/api/media/asset/{param}/retry"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
@@ -1088915,6 +1089138,12 @@
           },
           {
             "url": "/api/media/asset/{param}/retry",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1147577,14 +1147806,17 @@
         "apis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
-          "/api/media/asset/{param}/retry"
+          "/api/media/asset/{param}/retry",
+          "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
           "/api/media/asset/{param}/retry"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
@@ -1147599,6 +1147831,12 @@
           },
           {
             "url": "/api/media/asset/{param}/retry",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1188483,7 +1188721,8 @@
           "/api/media/asset/",
           "/api/media/asset/{param}/retry",
           "/api/publisher/identity",
-          "/api/publisher/identity/status"
+          "/api/publisher/identity/status",
+          "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
@@ -1188492,7 +1188731,9 @@
           "/api/publisher/identity",
           "/api/publisher/identity/status"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
@@ -1188519,6 +1188760,12 @@
           },
           {
             "url": "/api/publisher/identity/status",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1209840,7 +1210087,8 @@
           "/api/media/asset/",
           "/api/media/asset/{param}/retry",
           "/api/publisher/identity",
-          "/api/publisher/identity/status"
+          "/api/publisher/identity/status",
+          "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
@@ -1209849,7 +1210097,9 @@
           "/api/publisher/identity",
           "/api/publisher/identity/status"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
@@ -1209876,6 +1210126,12 @@
           },
           {
             "url": "/api/publisher/identity/status",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1211320,7 +1211576,8 @@
           "/api/media/asset/",
           "/api/media/asset/{param}/retry",
           "/api/publisher/identity",
-          "/api/publisher/identity/status"
+          "/api/publisher/identity/status",
+          "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
@@ -1211329,7 +1211586,9 @@
           "/api/publisher/identity",
           "/api/publisher/identity/status"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
@@ -1211356,6 +1211615,12 @@
           },
           {
             "url": "/api/publisher/identity/status",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1212809,7 +1213074,8 @@
           "/api/media/asset/",
           "/api/media/asset/{param}/retry",
           "/api/publisher/identity",
-          "/api/publisher/identity/status"
+          "/api/publisher/identity/status",
+          "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
@@ -1212818,7 +1213084,9 @@
           "/api/publisher/identity",
           "/api/publisher/identity/status"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
@@ -1212845,6 +1213113,12 @@
           },
           {
             "url": "/api/publisher/identity/status",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1215256,7 +1215530,8 @@
           "/api/media/asset/",
           "/api/media/asset/{param}/retry",
           "/api/publisher/identity",
-          "/api/publisher/identity/status"
+          "/api/publisher/identity/status",
+          "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
@@ -1215265,7 +1215540,9 @@
           "/api/publisher/identity",
           "/api/publisher/identity/status"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
@@ -1215292,6 +1215569,12 @@
           },
           {
             "url": "/api/publisher/identity/status",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1218936,14 +1219219,17 @@
         "apis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
-          "/api/media/asset/{param}/retry"
+          "/api/media/asset/{param}/retry",
+          "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
           "/api/media/asset/{param}/retry"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
@@ -1218958,6 +1219244,12 @@
           },
           {
             "url": "/api/media/asset/{param}/retry",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1220334,14 +1220626,17 @@
         "apis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
-          "/api/media/asset/{param}/retry"
+          "/api/media/asset/{param}/retry",
+          "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
           "/api/media/asset/{param}/retry"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
@@ -1220356,6 +1220651,12 @@
           },
           {
             "url": "/api/media/asset/{param}/retry",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1222017,14 +1222318,17 @@
         "apis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
-          "/api/media/asset/{param}/retry"
+          "/api/media/asset/{param}/retry",
+          "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
           "/api/media/asset/{param}/retry"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
@@ -1222039,6 +1222343,12 @@
           },
           {
             "url": "/api/media/asset/{param}/retry",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1227035,14 +1227345,17 @@
         "apis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
-          "/api/media/asset/{param}/retry"
+          "/api/media/asset/{param}/retry",
+          "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
           "/api/media/asset/{param}/retry"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
@@ -1227057,6 +1227370,12 @@
           },
           {
             "url": "/api/media/asset/{param}/retry",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1232214,7 +1232533,8 @@
           "/api/media/asset/",
           "/api/media/asset/{param}/retry",
           "/api/publisher/identity",
-          "/api/publisher/identity/status"
+          "/api/publisher/identity/status",
+          "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
@@ -1232223,7 +1232543,9 @@
           "/api/publisher/identity",
           "/api/publisher/identity/status"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
@@ -1232250,6 +1232572,12 @@
           },
           {
             "url": "/api/publisher/identity/status",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1232340,14 +1232668,17 @@
         "apis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
-          "/api/media/asset/{param}/retry"
+          "/api/media/asset/{param}/retry",
+          "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
           "/api/media/asset/{param}/retry"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
@@ -1232362,6 +1232693,12 @@
           },
           {
             "url": "/api/media/asset/{param}/retry",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1237832,7 +1238169,8 @@
           "/api/common/uploadOSS",
           "/api/media/asset/",
           "/api/media/asset/{param}/retry",
-          "/api/play/theme/support-matrix"
+          "/api/play/theme/support-matrix",
+          "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
@@ -1237840,7 +1238178,9 @@
           "/api/media/asset/{param}/retry",
           "/api/play/theme/support-matrix"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
@@ -1237862,6 +1238202,12 @@
           {
             "url": "/api/play/theme/support-matrix",
             "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
           }
@@ -1237952,7 +1238298,8 @@
           "/api/common/uploadOSS",
           "/api/media/asset/",
           "/api/media/asset/{param}/retry",
-          "/api/play/theme/support-matrix"
+          "/api/play/theme/support-matrix",
+          "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
@@ -1237960,7 +1238307,9 @@
           "/api/media/asset/{param}/retry",
           "/api/play/theme/support-matrix"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
@@ -1237982,6 +1238331,12 @@
           {
             "url": "/api/play/theme/support-matrix",
             "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
           }
@@ -1238596,7 +1238951,8 @@
           "/api/common/uploadOSS",
           "/api/media/asset/",
           "/api/media/asset/{param}/retry",
-          "/api/play/theme/support-matrix"
+          "/api/play/theme/support-matrix",
+          "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
@@ -1238604,7 +1238960,9 @@
           "/api/media/asset/{param}/retry",
           "/api/play/theme/support-matrix"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
@@ -1238626,6 +1238984,12 @@
           {
             "url": "/api/play/theme/support-matrix",
             "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
           }
@@ -1239651,7 +1240015,8 @@
           "/api/common/uploadOSS",
           "/api/media/asset/",
           "/api/media/asset/{param}/retry",
-          "/api/play/theme/support-matrix"
+          "/api/play/theme/support-matrix",
+          "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
@@ -1239659,7 +1240024,9 @@
           "/api/media/asset/{param}/retry",
           "/api/play/theme/support-matrix"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
@@ -1239681,6 +1240048,12 @@
           {
             "url": "/api/play/theme/support-matrix",
             "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
           }
@@ -1241793,7 +1242166,8 @@
           "/api/common/uploadOSS",
           "/api/media/asset/",
           "/api/media/asset/{param}/retry",
-          "/api/play/theme/support-matrix"
+          "/api/play/theme/support-matrix",
+          "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
@@ -1241801,7 +1242175,9 @@
           "/api/media/asset/{param}/retry",
           "/api/play/theme/support-matrix"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
@@ -1241823,6 +1242199,12 @@
           {
             "url": "/api/play/theme/support-matrix",
             "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
           }
@@ -1242722,7 +1243104,8 @@
           "/api/common/uploadOSS",
           "/api/media/asset/",
           "/api/media/asset/{param}/retry",
-          "/api/play/theme/support-matrix"
+          "/api/play/theme/support-matrix",
+          "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
@@ -1242730,7 +1243113,9 @@
           "/api/media/asset/{param}/retry",
           "/api/play/theme/support-matrix"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
@@ -1242752,6 +1243137,12 @@
           {
             "url": "/api/play/theme/support-matrix",
             "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
           }
@@ -1251177,14 +1251568,17 @@
         "apis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
-          "/api/media/asset/{param}/retry"
+          "/api/media/asset/{param}/retry",
+          "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
           "/api/media/asset/{param}/retry"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
@@ -1251199,6 +1251593,12 @@
           },
           {
             "url": "/api/media/asset/{param}/retry",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1255860,7 +1256260,8 @@
           "/api/common/uploadOSS",
           "/api/media/asset/",
           "/api/media/asset/{param}/retry",
-          "/api/play/theme/support-matrix"
+          "/api/play/theme/support-matrix",
+          "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
@@ -1255868,7 +1256269,9 @@
           "/api/media/asset/{param}/retry",
           "/api/play/theme/support-matrix"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
@@ -1255890,6 +1256293,12 @@
           {
             "url": "/api/play/theme/support-matrix",
             "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
           }
@@ -1261177,7 +1261586,8 @@
           "/api/common/uploadOSS",
           "/api/media/asset/",
           "/api/media/asset/{param}/retry",
-          "/api/play/theme/support-matrix"
+          "/api/play/theme/support-matrix",
+          "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
@@ -1261185,7 +1261595,9 @@
           "/api/media/asset/{param}/retry",
           "/api/play/theme/support-matrix"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
@@ -1261207,6 +1261619,12 @@
           {
             "url": "/api/play/theme/support-matrix",
             "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
           }
@@ -1269000,7 +1269418,8 @@
           "/api/common/uploadOSS",
           "/api/media/asset/",
           "/api/media/asset/{param}/retry",
-          "/api/play/theme/support-matrix"
+          "/api/play/theme/support-matrix",
+          "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
@@ -1269008,7 +1269427,9 @@
           "/api/media/asset/{param}/retry",
           "/api/play/theme/support-matrix"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
@@ -1269030,6 +1269451,12 @@
           {
             "url": "/api/play/theme/support-matrix",
             "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
           }
@@ -1270494,7 +1270921,8 @@
           "/api/common/uploadOSS",
           "/api/media/asset/",
           "/api/media/asset/{param}/retry",
-          "/api/play/theme/support-matrix"
+          "/api/play/theme/support-matrix",
+          "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
@@ -1270502,7 +1270930,9 @@
           "/api/media/asset/{param}/retry",
           "/api/play/theme/support-matrix"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
@@ -1270524,6 +1270954,12 @@
           {
             "url": "/api/play/theme/support-matrix",
             "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
           }
@@ -1271189,7 +1271625,8 @@
           "/api/common/uploadOSS",
           "/api/media/asset/",
           "/api/media/asset/{param}/retry",
-          "/api/play/theme/support-matrix"
+          "/api/play/theme/support-matrix",
+          "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
@@ -1271197,7 +1271634,9 @@
           "/api/media/asset/{param}/retry",
           "/api/play/theme/support-matrix"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
@@ -1271219,6 +1271658,12 @@
           {
             "url": "/api/play/theme/support-matrix",
             "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
           }
@@ -1271719,7 +1272164,8 @@
           "/api/common/uploadOSS",
           "/api/media/asset/",
           "/api/media/asset/{param}/retry",
-          "/api/play/theme/support-matrix"
+          "/api/play/theme/support-matrix",
+          "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
@@ -1271727,7 +1272173,9 @@
           "/api/media/asset/{param}/retry",
           "/api/play/theme/support-matrix"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
@@ -1271749,6 +1272197,12 @@
           {
             "url": "/api/play/theme/support-matrix",
             "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
           }
@@ -1275854,7 +1276308,8 @@
           "/api/common/uploadOSS",
           "/api/media/asset/",
           "/api/media/asset/{param}/retry",
-          "/api/play/theme/support-matrix"
+          "/api/play/theme/support-matrix",
+          "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
@@ -1275862,7 +1276317,9 @@
           "/api/media/asset/{param}/retry",
           "/api/play/theme/support-matrix"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
@@ -1275884,6 +1276341,12 @@
           {
             "url": "/api/play/theme/support-matrix",
             "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
           }
@@ -1276056,7 +1276519,8 @@
           "/api/common/uploadOSS",
           "/api/media/asset/",
           "/api/media/asset/{param}/retry",
-          "/api/play/theme/support-matrix"
+          "/api/play/theme/support-matrix",
+          "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
@@ -1276064,7 +1276528,9 @@
           "/api/media/asset/{param}/retry",
           "/api/play/theme/support-matrix"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
@@ -1276086,6 +1276552,12 @@
           {
             "url": "/api/play/theme/support-matrix",
             "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
           }
@@ -1291832,10 +1292304,21 @@
         "routes": [
           "pages/crop/index"
         ],
-        "apis": [],
+        "apis": [
+          "/api/role/info"
+        ],
         "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
         "writeApis": []
       },
       "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
@@ -1316571,14 +1317054,17 @@
         "apis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
-          "/api/media/asset/{param}/retry"
+          "/api/media/asset/{param}/retry",
+          "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
           "/api/media/asset/{param}/retry"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
@@ -1316593,6 +1317079,12 @@
           },
           {
             "url": "/api/media/asset/{param}/retry",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1346713,14 +1347205,17 @@
         "apis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
-          "/api/media/asset/{param}/retry"
+          "/api/media/asset/{param}/retry",
+          "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
           "/api/media/asset/{param}/retry"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
@@ -1346735,6 +1347230,12 @@
           },
           {
             "url": "/api/media/asset/{param}/retry",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1350205,14 +1350706,17 @@
         "apis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
-          "/api/media/asset/{param}/retry"
+          "/api/media/asset/{param}/retry",
+          "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
           "/api/media/asset/{param}/retry"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
@@ -1350227,6 +1350731,12 @@
           },
           {
             "url": "/api/media/asset/{param}/retry",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1350384,14 +1350894,17 @@
         "apis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
-          "/api/media/asset/{param}/retry"
+          "/api/media/asset/{param}/retry",
+          "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
           "/api/media/asset/{param}/retry"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
@@ -1350406,6 +1350919,12 @@
           },
           {
             "url": "/api/media/asset/{param}/retry",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1363742,14 +1364261,17 @@
         "apis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
-          "/api/media/asset/{param}/retry"
+          "/api/media/asset/{param}/retry",
+          "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
           "/api/media/asset/{param}/retry"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
@@ -1363764,6 +1364286,12 @@
           },
           {
             "url": "/api/media/asset/{param}/retry",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1382246,14 +1382774,17 @@
         "apis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
-          "/api/media/asset/{param}/retry"
+          "/api/media/asset/{param}/retry",
+          "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
           "/api/media/asset/{param}/retry"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
@@ -1382268,6 +1382799,12 @@
           },
           {
             "url": "/api/media/asset/{param}/retry",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1394444,14 +1394981,17 @@
         "apis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
-          "/api/media/asset/{param}/retry"
+          "/api/media/asset/{param}/retry",
+          "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
           "/api/media/asset/{param}/retry"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
@@ -1394466,6 +1395006,12 @@
           },
           {
             "url": "/api/media/asset/{param}/retry",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1438819,14 +1439365,17 @@
         "apis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
-          "/api/media/asset/{param}/retry"
+          "/api/media/asset/{param}/retry",
+          "/api/role/info"
         ],
         "primaryApis": [
           "/api/common/uploadOSS",
           "/api/media/asset/",
           "/api/media/asset/{param}/retry"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
         "apiContracts": [
           {
             "url": "/api/common/uploadOSS",
@@ -1438841,6 +1439390,12 @@
           },
           {
             "url": "/api/media/asset/{param}/retry",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"

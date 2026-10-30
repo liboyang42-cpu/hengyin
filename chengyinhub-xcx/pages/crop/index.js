@@ -12,6 +12,10 @@
  */
 const { parseRatio, clampTransform, computeCropRect } = require('./utils/crop-geometry');
 
+// 2026-10-30 P-5(M-09):取景框最宽 342pt,左右至少留 24pt、上下至少留 24pt
+const FRAME_MAX_W = 342;
+const FRAME_GAP = 24;
+
 const NAV_CONTENT_H = 44;     // 导航栏内容区(状态栏之外),对齐微信胶囊
 const BOTTOM_BAR_H = 56;      // 底栏 取消/选取
 const MAX_OUTPUT_EDGE = 1440; // 导出长边上限:防止大图裁完仍是几 MB 拖垮上传
@@ -41,6 +45,7 @@ Page({
     ready: false,
     busy: false,
     round: false,
+    merchant: false, // 商家浅色、玩家深色(M-09 业主批注)
   },
 
   onLoad() {
@@ -79,7 +84,8 @@ Page({
       this.queue = (d && d.paths) || [];
       this.ratioLiteral = (d && d.ratio) || 'free';
       // M-08(2026-10-27):Logo 走圆形取景框;只改取景遮罩,几何与导出(正方形)不变
-      this.setData({ round: !!(d && d.shape === 'circle') });
+      // M-09(2026-10-30):商家浅色、玩家深色,视角由 app.cropAll 递来
+      this.setData({ round: !!(d && d.shape === 'circle'), merchant: !!(d && d.merchant) });
       // 通道通了但一张图都没给 = 真的没有可裁的图,不是还在等。
       if (!this.queue.length) { this.showMissingSource(); return; }
       this.startAt(0);
@@ -148,10 +154,15 @@ Page({
 
     // 自由比例 = 跟随原图比例(此时框即全图,用户仍可放大取局部)
     const ratio = parseRatio(this.ratioLiteral) || natW / natH;
-    let frameW = this.avail.w;
+    // M-09:整张图按放得下缩进舞台(四周留 24pt),取景框取图里能放下的最大一块、最宽 342pt;
+    // 框外那部分图照样显示、压暗,看得到自己在裁哪一块
+    const fit = Math.min((this.avail.w - FRAME_GAP * 2) / natW, (this.avail.h - FRAME_GAP * 2) / natH);
+    const shownW = natW * fit;
+    const shownH = natH * fit;
+    let frameW = Math.min(FRAME_MAX_W, shownW);
     let frameH = frameW / ratio;
-    if (frameH > this.avail.h) {           // 竖长框放不下 → 以高为准回算宽
-      frameH = this.avail.h;
+    if (frameH > shownH) {                 // 框比图扁不下 → 以图高为准回算宽
+      frameH = shownH;
       frameW = frameH * ratio;
     }
 
@@ -285,6 +296,13 @@ Page({
 
   // 取消 = 放弃整批(用户看得到「3/9」,知道自己在放弃什么);调用方负责提示
   onCancel() { this.finish(null); },
+
+  // M-09「还原」:回到刚载入时的位置和大小(图满框、居中)
+  onReset() {
+    if (!this.data.ready || this.data.busy) return;
+    this.gesture = null;
+    this.setData({ tx: 0, ty: 0, scale: 1, exportError: '' });
+  },
 
   finish(paths) {
     if (this.done) return;
