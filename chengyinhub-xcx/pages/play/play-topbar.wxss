@@ -25,3 +25,5 @@
 /* 半屏右侧读数(关系 / 时间 / 领取状态) */
 .ptb__r{ flex:none; font-size:var(--cy-type-label); color:var(--cy-comp-sheet-player-muted); font-variant-numeric:tabular-nums; }
 .ptb__r--ally{ color:var(--cy-color-play-accent); }
+/* 收起钮看着 52rpx,热区用透明 ::after 撑到 88rpx(cy-info-pop 同法) */
+.radar__fold::after{ content:""; position:absolute; left:-18rpx; top:-18rpx; right:-18rpx; bottom:-18rpx; }
