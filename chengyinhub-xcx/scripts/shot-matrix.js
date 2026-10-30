@@ -213,7 +213,7 @@ const RAW = [
   ['A56', 'A56-agreement-service.png', '/pages/agreement/index?type=service', 'player', 'normal', null, undefined, TITLE, 'real-data', 'P0', '', '★删框线、更新日期置底。query 已核实：原 ?type=1 是未知 type，被 resolveKey 回落到默认文档，和 A57 拍成同一张；页面认的是 utils/agreement-docs.js 的正式 key 或短别名(service/deregister)'],
   ['A57', 'A57-agreement-deregister.png', '/pages/agreement/index?type=deregister', 'player', 'normal', null, undefined, TITLE, 'real-data', 'P0', '', '★与 A56 的 md5 必须不同（旧证据两张相同，根因是 ?type=1/2 都不是合法 key）'],
   ['A58b', 'A58b-privacy-pending.png', '/pages/privacy/index', 'player', 'normal', { pendingAuthorization: true }, undefined, TITLE, 'setData', 'P0', '', '★待授权态(两颗按钮那一支)。2026-08-06 用户定:两颗并排、不同意在左同意在右。⚠️ 同意钮必须是原生 <button open-type="agreePrivacyAuthorization">，微信强制，不能收编 cy-btn'],
-  ['A58', 'A58-privacy-revoked.png', '/pages/privacy/index', 'player', 'normal', { pendingAuthorization: false, submitting: false, submitError: '', failedAction: '' }, undefined, TITLE, 'setData', 'P1', '', '撤回态由真实 pendingAuthorization 分支驱动；保留可逆撤回入口'],
+  ['A58', 'A58-privacy-revoked.png', '/pages/privacy/index', 'player', 'normal', { pendingAuthorization: false, submitting: false, submitError: '' }, undefined, TITLE, 'setData', 'P1', '', '撤回态由真实 pendingAuthorization 分支驱动；保留可逆撤回入口'],
   ['A59', 'A59-shezhi-club.png', '/pages/shezhi/shezhi', 'club', 'normal', null, undefined, TITLE, 'identity+setData', 'P0', '', '无描边按钮（Revolut 7/9）；间距加大'],
   // ⚠️ 字段名必须跟 address.wxml 里读的一致(fullName/mobilePhone)。原来写 name/phone,
   // 两个 text 渲染成空串,截图上姓名电话整行消失 —— 走查据此误报成"姓名是黑色的"。

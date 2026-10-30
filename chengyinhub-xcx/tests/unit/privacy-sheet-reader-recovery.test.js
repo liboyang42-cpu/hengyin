@@ -14,7 +14,7 @@ function mount() {
   vm.runInNewContext(fs.readFileSync(file, 'utf8'), { Component: d => { definition = d; }, getApp: () => app,
     wx: {}, require: name => name.endsWith('/toast.js') ? value => toasts.push(value)
       : name.endsWith('/roam-presence-privacy.js') ? { setSharing: () => pending }
-      : name.endsWith('/bg-tracker.js') ? { revoke: purpose => revoked.push(purpose) } : createRequire(file)(name) });
+      : name.endsWith('/bg-tracker.js') ? { revoke: purpose => { revoked.push(purpose); return Promise.resolve({ ok: true }); } } : createRequire(file)(name) });
   const component = { ...definition.methods, data: { ...definition.data }, setData(patch) { changes.push(patch); Object.assign(this.data, patch); } };
   return { component, definition, toasts, changes, revoked, resolve, reject,
     switch(kind) { if (kind === 'owner') owner = '2'; else token = 'b'; } };

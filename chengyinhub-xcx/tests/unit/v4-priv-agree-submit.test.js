@@ -120,7 +120,7 @@ test('SC-PRIV-05 未勾选服务协议导致提交失败:调用方不结算,页�
   page.agreePrivacy({ detail: { buttonId: 'p1' } });
   await settle();
   assert.deepEqual(caller, []);
-  assert.equal(page.data.failedAction, 'agree'); assert.ok(page.data.submitError);
+  assert.equal(page._failedAction, 'agree'); assert.ok(page.data.submitError);
   assert.equal(page.data.submitting, false); assert.equal(h.requests.length, 0); assert.equal(h.backs, 0);
   page.data.serviceAgreed = true;
   page.retrySubmit();

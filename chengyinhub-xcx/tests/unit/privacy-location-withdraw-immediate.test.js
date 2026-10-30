@@ -34,7 +34,7 @@ function harness(t, entry, storage = new Map(), realTransport = false) {
     getStorageSync: () => '', setStorageSync() {}, showToast: options => h.toasts.push(options.title),
     getWindowInfo: () => ({ statusBarHeight: 20 }), getSystemInfoSync: () => ({ statusBarHeight: 20 }),
     startLocationUpdateBackground(options) { h.starts.push(options); },
-    stopLocationUpdate(options) { h.stops++; if (options && options.complete) options.complete(); },
+    stopLocationUpdate(options) { h.stops++; if (options && options.success) options.success(); },
     onLocationChange(fn) { h.listeners.add(fn); }, offLocationChange(fn) { h.listeners.delete(fn); },
     setKeepScreenOn() {}, showModal(options) { h.modals.push(options); },
   };
@@ -51,6 +51,7 @@ function harness(t, entry, storage = new Map(), realTransport = false) {
   h.privacy = { ...definition, data: JSON.parse(JSON.stringify(definition.data)), setData };
   global.Component = value => { definition = value; };
   require(SHEET);
+  h.sheetLifecycle = definition.pageLifetimes;
   h.sheet = { ...definition.methods, data: JSON.parse(JSON.stringify(definition.data)), setData };
   h.target = h[entry];
   h.posts = () => h.requests.filter(row => row.url === '/api/compliance/consents');
@@ -231,3 +232,48 @@ for (const scope of ['missing-type', 'wrong-type', 'missing-id', 'wrong-id', 'ex
     assert.equal(storage.size, scope === 'exact' ? 0 : 1);
   });
 }
+
+for (const entry of ['privacy', 'sheet']) test(entry + ': native stop failure is visible; retry only stops and never repeats confirmed audit', async t => {
+  const h = harness(t, entry); h.start(); let failed = true;
+  global.wx.stopLocationUpdate = options => { h.stops++; failed ? options.fail({ errMsg: 'stopLocationUpdate:fail unavailable' }) : options.success(); };
+  h.target.withdrawRoamLocationConsent(); h.posts()[0].success(receipt(h.posts()[0])); await settle();
+  assert.match(h.target.data.submitError, /系统停止定位.*未确认/); assert.equal(h.target.data.submitting, false);
+  assert.equal(h.tracker.hasOwner('roam'), false); const posts = h.posts().length, starts = h.starts.length;
+  failed = false;
+  if (entry === 'privacy') h.target.retrySubmit(); else h.target.withdrawRoamLocationConsent();
+  await settle(); assert.equal(h.target.data.submitError, ''); assert.equal(h.posts().length, posts);
+  assert.equal(h.starts.length, starts); assert.equal(h.tracker.stopState(), 'confirmed');
+});
+
+for (const entry of ['privacy', 'sheet']) test(entry + ': confirmed audit survives hide while native stop remains pending; retry shares native flight', async t => {
+  const h = harness(t, entry); h.start(); const stops = [];
+  global.wx.stopLocationUpdate = options => { h.stops++; stops.push(options); };
+  h.target.withdrawRoamLocationConsent();
+  h.posts()[0].success(receipt(h.posts()[0])); await settle();
+  assert.equal(h.target._roamAuditConfirmed, true); assert.equal(h.stops, 1);
+  if (entry === 'privacy') {
+    h.app.hasPendingPrivacyAuthorization = () => true; h.target.onHide(); h.target.onShow();
+    assert.equal(h.target._failedAction, 'stop'); h.target.retrySubmit();
+  } else {
+    h.sheetLifecycle.hide.call(h.target); h.sheetLifecycle.show.call(h.target);
+    h.target.withdrawRoamLocationConsent();
+  }
+  assert.equal(h.posts().length, 1); assert.equal(h.stops, 1, 'in-flight native stop is shared');
+  stops[0].fail({ errMsg: 'stopLocationUpdate:fail unavailable' }); await settle();
+  assert.match(h.target.data.submitError, /系统停止定位.*未确认/);
+  if (entry === 'privacy') h.target.retrySubmit(); else h.target.withdrawRoamLocationConsent();
+  assert.equal(h.posts().length, 1); assert.equal(h.stops, 2);
+  stops[1].success(); await settle();
+  assert.equal(h.target.data.submitError, ''); assert.equal(h.tracker.stopState(), 'confirmed');
+  assert.equal(h.starts.length, 1);
+});
+
+for (const entry of ['privacy', 'sheet']) test(entry + ': a later independent withdrawal records a new audit after full success', async t => {
+  const h = harness(t, entry); h.start();
+  h.target.withdrawRoamLocationConsent(); h.posts()[0].success(receipt(h.posts()[0])); await settle();
+  h.start(); h.target.withdrawRoamLocationConsent();
+  assert.equal(h.posts().length, 2);
+  assert.notEqual(JSON.parse(h.posts()[0].data).requestId, JSON.parse(h.posts()[1].data).requestId);
+  h.posts()[1].success(receipt(h.posts()[1])); await settle();
+  assert.equal(h.target.data.submitError, ''); assert.equal(h.target.data.submitting, false);
+});

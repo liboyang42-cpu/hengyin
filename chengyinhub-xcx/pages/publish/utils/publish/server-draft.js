@@ -233,12 +233,32 @@ function storedBlock(block, nodes, submitted, keepKey) {
   return row;
 }
 
+// 本站已审核图片会按每次读取重新签名；只去掉传输签名，保留对象及其它查询参数。
+function imageIdentity(raw) {
+  const value = raw == null ? '' : String(raw);
+  const match = value.match(/^(https:\/\/chengyin-oss\.oss-cn-shanghai\.aliyuncs\.com\/upload\/[0-9a-f]{32}\.(?:jpg|jpeg|png|gif))\?([^#]+)$/);
+  if (!match) return value;
+  const signed = {}, rest = [];
+  for (const pair of match[2].split('&')) {
+    const at = pair.indexOf('='), key = pair.slice(0, at), val = pair.slice(at + 1);
+    if (['Expires', 'Signature', 'OSSAccessKeyId'].includes(key)) {
+      if (at < 0 || signed[key] || !val) return value;
+      try { if (!decodeURIComponent(val)) return value; } catch (invalid) { return value; }
+      signed[key] = val;
+    } else rest.push(pair);
+  }
+  if (!/^[0-9]+$/.test(signed.Expires || '') || !signed.Signature || !signed.OSSAccessKeyId) return value;
+  return match[1] + (rest.length ? '?' + rest.join('&') : '');
+}
+
 function savedContentIssue(sent, detail) {
   const topicFields = { subtitle: '副标题', description: '说明', imgUrl: '主封面', imgArr: '多图封面',
     startDate: '开始时间', endDate: '结束时间', categoryIds: '分类' };
   for (const field of Object.keys(topicFields)) {
     if (sent[field] === undefined) continue;
-    const value = raw => raw == null ? '' : String(raw);
+    const value = raw => ['imgUrl', 'imgArr'].includes(field)
+      ? String(raw == null ? '' : raw).split(',').map(imageIdentity).join(',')
+      : raw == null ? '' : String(raw);
     if (value(sent[field]) !== value(detail.topic[field])) return '云端保存的' + topicFields[field] + '与本机不一致';
   }
   if (sent.collaboratorIds !== undefined) {

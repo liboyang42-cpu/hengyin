@@ -78,8 +78,8 @@ test('两份分包副本逐字一致,且不放进主包 utils/(3 MiB 棘轮)', (
   assert.equal(fs.existsSync(path.join(ROOT, 'utils/story-font.js')), false)
 })
 
-test('业主选定龙藏体:两份副本都指向 OSS 上的 https 子集文件', () => {
+test('业主选定龙藏体:两份副本都指向已验证的官方完整 https 字库', () => {
   for (const f of ['pages/play/utils/story-font.js', 'pages/publish/utils/publish/story-font.js']) {
-    assert.match(read(f), /var STORY_FONT_URL = 'https:\/\/chengyin-oss\.oss-cn-shanghai\.aliyuncs\.com\/fonts\/cy-story-longcang-v\d+\.woff2';/)
+    assert.match(read(f), /var STORY_FONT_URL = 'https:\/\/fonts\.gstatic\.com\/s\/longcang\/v21\/LYjAdGP8kkgoTec8zkRgrQ\.ttf';/)
   }
 })

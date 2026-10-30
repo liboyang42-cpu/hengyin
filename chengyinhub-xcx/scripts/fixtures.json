@@ -1587,6 +1587,7 @@
  "A58b": {
   "data": {
    "pendingAuthorization": true,
+   "homeCityError": "",
    "mediaRows": [
     {
      "typeLabel": "示例typeLabel",
@@ -1599,16 +1600,15 @@
    ],
    "mediaLoading": false,
    "mediaError": "",
-   "submitError": "",
-   "failedAction": ""
+   "submitError": ""
   },
   "dropped": [],
   "switchKeys": [
+   "homeCityError",
    "mediaRows",
    "mediaLoading",
    "mediaError",
-   "submitError",
-   "failedAction"
+   "submitError"
   ]
  },
  "A58": {
@@ -1616,7 +1616,7 @@
    "pendingAuthorization": false,
    "submitting": false,
    "submitError": "",
-   "failedAction": "",
+   "homeCityError": "",
    "mediaRows": [
     {
      "typeLabel": "示例typeLabel",
@@ -1632,11 +1632,11 @@
   },
   "dropped": [],
   "switchKeys": [
+   "homeCityError",
    "mediaRows",
    "mediaLoading",
    "mediaError",
-   "submitError",
-   "failedAction"
+   "submitError"
   ]
  },
  "A59": {
@@ -18091,5 +18091,4 @@
   "dropped": [],
   "switchKeys": []
  }
-
 }

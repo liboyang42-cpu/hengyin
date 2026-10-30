@@ -680,7 +680,7 @@ Page({
     this.setData = (patch, callback) => {
       // 是否算一次草稿编辑按「发起 setData 的那一刻」判定:真机回调是异步的,回填/换上回读版本时
       // (_draftAutosaveReady=false)发起的 patch,回调可能在 ready 复位后才执行,不能再回写恢复稿、把草稿标脏。
-      const draftEdit = this._draftAutosaveReady && this._isDraftPatch(patch);
+      const draftEdit = this._draftAutosaveReady && !this._draftHydrationDepth && this._isDraftPatch(patch);
       nativeSetData.call(this, patch, () => {
         const finish = () => {
           if (draftEdit && this._draftAutosaveReady) {
@@ -845,6 +845,13 @@ Page({
     }
   },
 
+  // 只包内部回填发起 patch 的同步片段，不跨原生回调等待，真实用户编辑仍按原路径计脏。
+  _withDraftHydration(apply) {
+    this._draftHydrationDepth = (this._draftHydrationDepth || 0) + 1;
+    try { return apply(); }
+    finally { this._draftHydrationDepth -= 1; }
+  },
+
   _applyDraftEnvelope(envelope) {
     if (!envelope) return;
     this._invalidateCoverUpload('imgUrl');
@@ -880,7 +887,7 @@ Page({
         ? ('已恢复上次未编排完的 ' + pendingMaterials.length + ' 个素材')
         : '已恢复上次本地草稿');
     const restored = Object.assign({}, this.data, patch);
-    this.setData({
+    this._withDraftHydration(() => this.setData({
       formData: restored.formData,
       imgArrList: restored.imgArrList,
       pendingMaterials: restored.pendingMaterials,
@@ -896,11 +903,11 @@ Page({
       bingoRows: restored.bingoRows,
       publishToCreative: restored.publishToCreative,
       aiSimple: restored.aiSimple,
-    }, () => {
+    }, () => this._withDraftHydration(() => {
       this._ensureLocalIds();
       this._materializeCityStoryChapters();
       this.updateAllStatistics();
-    });
+    })));
   },
 
   _newDraftUuid(options, memberId) {

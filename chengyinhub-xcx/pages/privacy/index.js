@@ -8,6 +8,7 @@ const { reader, sameReader } = require('../../utils/user-character.js');
 
 Page({
   _mediaBeforeId: '',
+  _failedAction: '',
   data: {
     submitting: false,
     homeCityBusy: false,
@@ -25,7 +26,6 @@ Page({
     serviceAgreed: false, // 进入弹窗:一行勾选同意两份文件后才能点「同意并继续」
     showServiceSheet: false,
     submitError: '',
-    failedAction: '',
     roamCollectionText: '',
     pendingAuthorization: false,
     scrollInto: '',
@@ -43,18 +43,21 @@ Page({
 
   onShow() {
     this._roamRevokeHidden = false;
-    if (this._roamRevokeReader && (this._roamRevokeInFlight || this.data.failedAction === 'revoke')
+    if (this._roamRevokeReader && (this._roamRevokeInFlight || ['revoke', 'stop'].indexOf(this._failedAction) >= 0)
         && !sameReader(app, this._roamRevokeReader)) {
       this._roamRevokeEpoch = (this._roamRevokeEpoch || 0) + 1;
       this._roamRevokeReader = null;
       this._roamRevokeInFlight = false;
-      this.data.failedAction = '';
+      this._failedAction = '';
       this.setData({ submitting: false, submitError: '' });
     } else if (this._roamRevokeInFlight) {
       this._roamRevokeEpoch = (this._roamRevokeEpoch || 0) + 1;
       this._roamRevokeInFlight = false;
-      this.data.failedAction = 'revoke';
-      this.setData({ submitting: false, submitError: '本机定位已停，撤回记录待确认，请重试' });
+      const stopped = bgTracker.stopState() === 'confirmed';
+      this._failedAction = this._roamAuditConfirmed ? (stopped ? '' : 'stop') : 'revoke';
+      this.setData({ submitting: false,
+        submitError: this._roamAuditConfirmed ? (stopped ? '' : '系统停止定位尚未确认，请重试停止')
+          : stopped ? '本机定位已停，撤回记录待确认，请重试' : '系统停止定位及撤回记录尚未确认，请重试' });
     }
     this.syncRoamCollection();
     this._homeCityConsentEpoch = (this._homeCityConsentEpoch || 0) + 1;
@@ -294,7 +297,7 @@ Page({
   agreePrivacy(event) {
     if (this.data.submitting) return;
     this._lastPrivacyButtonId = event && event.detail && event.detail.buttonId;
-    this.data.failedAction = '';
+    this._failedAction = '';
     this.setData({ submitting: true, submitError: '' });
     app.agreeUsageConsent(event, this.data.serviceAgreed).then(() => {
       wx.navigateBack({
@@ -309,7 +312,7 @@ Page({
         });
         return;
       }
-      Object.assign(this.data, { failedAction: 'agree' });
+      this._failedAction = 'agree';
       this.setData({
         submitting: false,
         submitError: '同意记录失败，请检查网络后重试',
@@ -392,7 +395,9 @@ Page({
 
   // PC-168:只读本机按用途的持有状态(bg-tracker),不改撤回核心(#439)。
   syncRoamCollection() {
-    const text = bgTracker.hasOwner('roam') ? '本机正在为漫游采集位置'
+    const text = bgTracker.stopState() === 'failed' ? '系统停止定位尚未确认，请重试停止'
+      : bgTracker.stopState() === 'stopping' ? '正在请求系统停止定位'
+      : bgTracker.hasOwner('roam') ? '本机正在为漫游采集位置'
       : bgTracker.isRunning() ? '漫游已停止采集；其他已开启的功能仍在使用定位'
         : '本机未在为漫游采集位置';
     this.setData({ roamCollectionText: text });
@@ -400,32 +405,42 @@ Page({
 
   withdrawRoamLocationConsent() {
     if (this.data.submitting) return;
-    this.data.failedAction = '';
+    this._failedAction = '';
     this.setData({ submitting: true, submitError: '' });
     const captured = this._roamRevokeReader = reader(app);
+    this._roamAuditConfirmed = false;
     this._roamRevokeInFlight = true;
     const epoch = this._roamRevokeEpoch = (this._roamRevokeEpoch || 0) + 1;
     const current = () => !this._roamRevokeHidden && epoch === this._roamRevokeEpoch
       && sameReader(app, captured);
     // 撤回先作用于本机用途；审计失败仍由 consent-client 保留原账号/requestId 补传。
-    bgTracker.revoke('roam');
+    const stop = bgTracker.revoke('roam');
     this.syncRoamCollection();
     let audit;
     try {
       audit = current() ? app.recordConsent({ docType: 'privacy_policy', scene: 'roam_location', eventType: 'REVOKE' })
         : Promise.reject(new Error('账号已变化'));
     } catch (error) { audit = Promise.reject(error); }
-    Promise.resolve(audit).then(() => {
+    const recordedAudit = Promise.resolve(audit).then(() => {
+      if (this._roamRevokeReader === captured && sameReader(app, captured)) this._roamAuditConfirmed = true;
+      return true;
+    }, () => false);
+    Promise.all([stop, recordedAudit]).then(([stopped, recorded]) => {
       if (!current()) return;
-      toast('已撤回漫游定位同意');
-      this.data.failedAction = '';
-      this.setData({ submitError: '' });
-    }).catch(() => {
-      if (!current()) return;
-      Object.assign(this.data, { failedAction: 'revoke' });
-      this.setData({
-        submitError: '本机定位已停，撤回记录待确认，请重试',
-      });
+      this.syncRoamCollection();
+      if (!stopped || !stopped.ok) {
+        this._failedAction = recorded ? 'stop' : 'revoke';
+        this.setData({
+          submitError: recorded ? '已撤回漫游用途，但系统停止定位未确认，请重试停止'
+            : '系统停止定位及撤回记录尚未确认，请重试' });
+      } else if (!recorded) {
+        this._failedAction = 'revoke';
+        this.setData({ submitError: '本机定位已停，撤回记录待确认，请重试' });
+      } else {
+        toast('已撤回漫游定位同意');
+        this._failedAction = '';
+        this.setData({ submitError: '' });
+      }
     }).finally(() => {
       if (current()) {
         this._roamRevokeInFlight = false;
@@ -434,12 +449,28 @@ Page({
     });
   },
 
+  retryRoamNativeStop() {
+    const captured = this._roamRevokeReader;
+    if (!captured || !sameReader(app, captured)) return;
+    const epoch = this._roamRevokeEpoch = (this._roamRevokeEpoch || 0) + 1;
+    const current = () => !this._roamRevokeHidden && epoch === this._roamRevokeEpoch && sameReader(app, captured);
+    this._roamRevokeInFlight = true;
+    this.setData({ submitting: true, submitError: '' });
+    bgTracker.retryStop().then(result => {
+      if (!current()) return;
+      this.syncRoamCollection();
+      this._failedAction = result.ok ? '' : 'stop';
+      this.setData({ submitError: result.ok ? '' : '系统停止定位仍未确认，请重试停止' });
+    }).finally(() => { if (current()) { this._roamRevokeInFlight = false; this.setData({ submitting: false }); } });
+  },
+
   retrySubmit() {
     if (this.data.submitting) return;
-    if (this.data.failedAction === 'agree') {
+    if (this._failedAction === 'agree') {
       this.agreePrivacy({ detail: { buttonId: this._lastPrivacyButtonId } });
       return;
     }
-    if (this.data.failedAction === 'revoke') this.withdrawRoamLocationConsent();
+    if (this._failedAction === 'stop') this.retryRoamNativeStop();
+    else if (this._failedAction === 'revoke') this.withdrawRoamLocationConsent();
   },
 });

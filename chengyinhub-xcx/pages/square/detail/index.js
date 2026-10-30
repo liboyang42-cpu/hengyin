@@ -266,6 +266,7 @@ Page({
             commentSubmitError: ''
           });
           that.refreshComments();
+          that.refreshCommentCount();
         } else {
           that.setData({
             commentSubmitError: app.getRequestErrorMessage(res, '评论失败，请稍后重试'),
@@ -344,6 +345,7 @@ Page({
             replySubmitError: ''
           });
           that.refreshComments();
+          that.refreshCommentCount();
         } else {
           that.setData({
             replySubmitError: app.getRequestErrorMessage(res, '回复失败，请稍后重试'),
@@ -1051,17 +1053,21 @@ Page({
     mediaPreview.open(picList, picList && picList[index]);
   },
 
-  getData: function () {
+  getData: function (commentCountOnly) {
     var that = this;
-    if (!that.data.id) return;
-    if (that._detailRequestInFlight) return;
-    const requestId = (that._detailRequestId || 0) + 1;
-    that._detailRequestId = requestId;
-    that._detailRequestInFlight = true;
+    const countOnly = commentCountOnly === true;
+    if (!that.data.id || (!countOnly && that._detailRequestInFlight)) return;
+    const id = String(that.data.id), current = that._captureCommunityContext();
+    const requestId = countOnly ? 0 : (that._detailRequestId || 0) + 1;
+    const countEpoch = countOnly ? (that._commentCountEpoch = (that._commentCountEpoch || 0) + 1) : 0;
+    if (!countOnly) {
+      that._detailRequestId = requestId;
+      that._detailRequestInFlight = true;
+      that.setData({ detailState: 'loading', detailError: '' });
+    }
     const feedVersion = (app.globalData && app.globalData.squareListDirtyVersion) || 0;
-    that.setData({ detailState: 'loading', detailError: '' });
-    that._detailRequestTask = community.request({
-      current: that._captureCommunityContext(),
+    const task = community.request({
+      current: () => current() && (!countOnly || countEpoch === that._commentCountEpoch),
       hideLoading: true,
       silentError: true,
       url: '/api/creativesquare/info',
@@ -1070,6 +1076,16 @@ Page({
       },
       method: "POST",
       success: function (res) {
+        if (countOnly) {
+          const count = res && res.data && Number(res.data.commentCount);
+          if (!res || res.code != 200 || !res.data || String(res.data.id) !== id
+              || res.data.commentCount == null || !Number.isSafeInteger(count) || count < 0) {
+            toast('评论已发送，计数请刷新查看');
+            return;
+          }
+          that.setData({ 'info.commentCount': count });
+          return;
+        }
         if (requestId !== that._detailRequestId) return;
         if (res.code != "200") {
           that.setData({
@@ -1119,6 +1135,7 @@ Page({
         }
       },
       fail: function () {
+        if (countOnly) { toast('评论已发送，计数请刷新查看'); return; }
         if (requestId !== that._detailRequestId) return;
         that.setData({
           detailState: 'error',
@@ -1126,11 +1143,12 @@ Page({
         });
       },
       complete: function () {
-        if (requestId !== that._detailRequestId) return;
+        if (countOnly || requestId !== that._detailRequestId) return;
         that._detailRequestInFlight = false;
         that._detailRequestTask = null;
       }
-    })
+    });
+    if (!countOnly) that._detailRequestTask = task;
   },
 
   onRetryDetail() {
@@ -1294,6 +1312,11 @@ Page({
 
   refreshComments: function () {
     this.getList(1, true);
+  },
+
+  // 原意图回放也可能是第一次收到成功：计数只读服务端，不在客户端再加一。
+  refreshCommentCount: function () {
+    return this.getData(true);
   },
 
   retryCommentLoadMore: function () {
